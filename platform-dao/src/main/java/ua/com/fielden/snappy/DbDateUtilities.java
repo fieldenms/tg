@@ -6,7 +6,7 @@ import java.util.List;
 
 import org.hibernate.Query;
 
-public class DbDateUtilities extends DateUtilities {
+public class DbDateUtilities {
     /**
      * This method initializes all date parameters that exist in "query" and are relative to previously retrieved "currentDbDate". </br> For instance : "BEG_PREV_MONTH",
      * "MID_CURR_YEAR" or "END_NEXT_DAY" etc.
@@ -23,7 +23,7 @@ public class DbDateUtilities extends DateUtilities {
                 final DateRangeSelectorEnum begMidEnd = DateRangeSelectorEnum.valueOf(paramParts[0]);
                 final DateRangePrefixEnum prevCurrNext = DateRangePrefixEnum.valueOf(paramParts[1]);
                 final MnemonicEnum rangeWidth = MnemonicEnum.valueOf(paramParts[2]);
-                final Date date = dateOfRangeThatIncludes(currentDbDate, begMidEnd, prevCurrNext, rangeWidth);
+                final Date date = DateUtilities.dateOfRangeThatIncludes(currentDbDate, begMidEnd, prevCurrNext, rangeWidth);
                 query.setDate(param, date);
                 System.err.println("param :" + param + " == " + date);
             } catch (final Exception e) {

@@ -9,6 +9,8 @@ import static ua.com.fielden.platform.utils.EntityUtils.isDate;
 import static ua.com.fielden.platform.utils.EntityUtils.isEntityType;
 import static ua.com.fielden.platform.utils.EntityUtils.isRangeType;
 import static ua.com.fielden.platform.utils.EntityUtils.isString;
+import static ua.com.fielden.platform.utils.Pair.pair;
+import static ua.com.fielden.snappy.DateUtilities.dateOfRangeThatIncludes;
 
 import java.util.ArrayList;
 import java.util.Date;
@@ -51,7 +53,6 @@ import ua.com.fielden.platform.web.centre.CentreContext;
 import ua.com.fielden.platform.web.centre.IQueryEnhancer;
 import ua.com.fielden.snappy.DateRangePrefixEnum;
 import ua.com.fielden.snappy.DateRangeSelectorEnum;
-import ua.com.fielden.snappy.DateUtilities;
 import ua.com.fielden.snappy.MnemonicEnum;
 
 /**
@@ -63,6 +64,8 @@ import ua.com.fielden.snappy.MnemonicEnum;
 public class DynamicQueryBuilder {
     private static final Logger logger = Logger.getLogger(DynamicQueryBuilder.class);
 
+    private DynamicQueryBuilder() {}
+    
     /**
      * This is a class which represents high-level abstraction for criterion in dynamic criteria. <br>
      * <br>
@@ -632,12 +635,11 @@ public class DynamicQueryBuilder {
      * @return
      */
     public static Pair<Date, Date> getDateValuesFrom(final DateRangePrefixEnum datePrefix, final MnemonicEnum dateMnemonic, final Boolean andBefore) {
-        final DateUtilities du = new DateUtilities();
         final Date currentDate = new Date();
-        final Date from = Boolean.TRUE.equals(andBefore) ? null : du.dateOfRangeThatIncludes(currentDate, DateRangeSelectorEnum.BEGINNING, datePrefix, dateMnemonic), //
-        /*         */to = Boolean.FALSE.equals(andBefore) ? null : du.dateOfRangeThatIncludes(currentDate, DateRangeSelectorEnum.ENDING, datePrefix, dateMnemonic);
+        final Date from = Boolean.TRUE.equals(andBefore) ? null : dateOfRangeThatIncludes(currentDate, DateRangeSelectorEnum.BEGINNING, datePrefix, dateMnemonic);
+        final Date to = Boolean.FALSE.equals(andBefore) ? null : dateOfRangeThatIncludes(currentDate, DateRangeSelectorEnum.ENDING, datePrefix, dateMnemonic);
         // left boundary should be inclusive and right -- exclusive!
-        return new Pair<Date, Date>(from, to);
+        return pair(from, to);
     }
 
     /**
