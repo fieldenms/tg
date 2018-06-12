@@ -412,6 +412,7 @@ public class CentreUpdater {
                 });
             }
         }
+        loadableConfigurations.remove(new LoadableCentreConfig().setKey(LINK_CONFIG_TITLE));
         Collections.sort(loadableConfigurations);
         return loadableConfigurations;
     }

@@ -3,6 +3,7 @@ package ua.com.fielden.platform.web.centre;
 import static java.lang.String.format;
 import static java.util.regex.Pattern.quote;
 import static ua.com.fielden.platform.domaintree.impl.GlobalDomainTreeManager.DEFAULT_CONFIG_TITLE;
+import static ua.com.fielden.platform.domaintree.impl.GlobalDomainTreeManager.LINK_CONFIG_TITLE;
 import static ua.com.fielden.platform.domaintree.impl.GlobalDomainTreeManager.UNDEFINED_CONFIG_TITLE;
 import static ua.com.fielden.platform.error.Result.failuref;
 import static ua.com.fielden.platform.error.Result.successful;
@@ -13,6 +14,7 @@ import static ua.com.fielden.platform.web.utils.EntityResourceUtils.CENTRE_CONFI
 
 import java.lang.annotation.Annotation;
 import java.util.Set;
+
 import com.google.inject.Inject;
 
 import ua.com.fielden.platform.entity.meta.MetaProperty;
@@ -40,7 +42,7 @@ public class CentreConfigEditActionTitleValidator implements IBeforeChangeEventH
         final String spaceQuoted = quote(" "); // spaces are allowed and they must be encoded using %20 in URIs
         final String specialCharacters = "$-_.+!*'(),"; // these special characters are not required to be encoded in URIs (see https://perishablepress.com/stop-using-unsafe-characters-in-urls/ for more details)
         final String specialCharactersQuoted = quote(specialCharacters);
-        if (newValue == null || UNDEFINED_CONFIG_TITLE.equals(newValue) || !newValue.matches(format("[\\w%s%s]*", specialCharactersQuoted, spaceQuoted))) {
+        if (newValue == null || UNDEFINED_CONFIG_TITLE.equals(newValue) || LINK_CONFIG_TITLE.equals(newValue) || !newValue.matches(format("[\\w%s%s]*", specialCharactersQuoted, spaceQuoted))) {
             return failuref("Only alfanumeric characters, spaces and %s are allowed.", specialCharacters);
         } else {
             final CentreConfigEditAction entity = property.getEntity();

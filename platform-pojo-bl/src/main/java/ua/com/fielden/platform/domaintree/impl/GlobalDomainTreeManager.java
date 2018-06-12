@@ -72,7 +72,7 @@ public class GlobalDomainTreeManager extends AbstractDomainTree implements IGlob
     private final static Logger logger = Logger.getLogger(GlobalDomainTreeManager.class);
     public final static String DEFAULT_CONFIG_DESC = "Default configuration";
     public final static String DEFAULT_CONFIG_TITLE = "[Default]";
-    public final static String UNDEFINED_CONFIG_TITLE = "undefined";
+    public final static String UNDEFINED_CONFIG_TITLE = "_______________________undefined";
     public final static String LINK_CONFIG_TITLE = "_______________________link";
     private final EntityFactory factory;
     private final IUserProvider userProvider;

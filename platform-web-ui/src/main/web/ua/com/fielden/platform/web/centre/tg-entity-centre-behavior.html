@@ -165,7 +165,7 @@
                  */
                 saveAsName: {
                     type: String,
-                    value: 'undefined', // this default value means that preferred configuration is not yet known and will be loaded during first 'retrieve' request
+                    value: '_______________________undefined', // this default value means that preferred configuration is not yet known and will be loaded during first 'retrieve' request
                     observer: '_saveAsNameChanged'
                 },
                 
@@ -1089,21 +1089,23 @@
             
             _saveAsNameChanged: function (newSaveAsName, oldSaveAsName) {
                 const self = this;
-                if (newSaveAsName !== 'undefined' // initial 'saveAsName' definition (value 'undefined', that means unknown config) will be disregarded
-                    && oldSaveAsName !== 'undefined' // first time retrieval should also be disregarded -- at that stage preferred configuration loads (value 'undefined' is equal to oldSaveAsName)
+                if (newSaveAsName !== '_______________________undefined' // initial 'saveAsName' definition (value '_______________________undefined', that means unknown config) will be disregarded
+                    && oldSaveAsName !== '_______________________undefined' // first time retrieval should also be disregarded -- at that stage preferred configuration loads (value '_______________________undefined' is equal to oldSaveAsName)
                     && newSaveAsName !== undefined // undefined is a marker value to make saveAsName changed when setting actual value (including '')
                 ) {
                     self.$.selection_criteria._wasRun = null; // reset wasRun to make user unable to see stale run results using View button
                     self.retrieve().then(function () { // perform full centre refresh on each and every change of 'saveAsName'
                         self._fireSaveAsNameChanged(newSaveAsName, self);
                     });
-                } else if (oldSaveAsName === 'undefined') {
+                } else if (oldSaveAsName === '_______________________undefined') {
                     self._fireSaveAsNameChanged(newSaveAsName, self);
                 }
             },
             
             _fireSaveAsNameChanged: function (newSaveAsName, self) {
-                self.fire('tg-save-as-name-changed', { saveAsName: newSaveAsName, saveAsDesc: self.$.selection_criteria._saveAsDesc });
+                if ('_______________________link' !== newSaveAsName) {
+                    self.fire('tg-save-as-name-changed', { saveAsName: newSaveAsName, saveAsDesc: self.$.selection_criteria._saveAsDesc });
+                }
             },
             
             runInsertionPointActions: function () {
