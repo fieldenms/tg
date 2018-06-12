@@ -23,7 +23,6 @@ import fielden.test_app.close_leave.TgCloseLeaveExampleMaster_OpenMain_MenuItem;
 import fielden.test_app.close_leave.producers.OpenTgCloseLeaveExampleMasterActionProducer;
 import fielden.test_app.close_leave.producers.TgCloseLeaveExampleDetailProducer;
 import fielden.test_app.close_leave.producers.TgCloseLeaveExampleDetailUnpersistedProducer;
-import fielden.test_app.close_leave.producers.TgCloseLeaveExampleProducer;
 import fielden.test_app.main.menu.close_leave.MiTgCloseLeaveExample;
 import ua.com.fielden.platform.web.PrefDim;
 import ua.com.fielden.platform.web.PrefDim.Unit;
@@ -118,7 +117,7 @@ public class TgCloseLeaveExampleWebUiConfig {
             .setLayoutFor(Device.TABLET, Optional.empty(), layout)
             .setLayoutFor(Device.MOBILE, Optional.empty(), layout)
         .done();
-        return new EntityMaster<TgCloseLeaveExample>(TgCloseLeaveExample.class, TgCloseLeaveExampleProducer.class, masterConfig, injector);
+        return new EntityMaster<>(TgCloseLeaveExample.class, masterConfig, injector);
     }
     
     private EntityMaster<TgCloseLeaveExampleDetail> createDetailMaster(final Injector injector) {
