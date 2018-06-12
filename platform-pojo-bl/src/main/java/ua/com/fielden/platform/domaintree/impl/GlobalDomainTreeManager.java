@@ -72,7 +72,13 @@ public class GlobalDomainTreeManager extends AbstractDomainTree implements IGlob
     private final static Logger logger = Logger.getLogger(GlobalDomainTreeManager.class);
     public final static String DEFAULT_CONFIG_DESC = "Default configuration";
     public final static String DEFAULT_CONFIG_TITLE = "[Default]";
+    /**
+     * The surrogate title of not yet known configuration. This is used during first time centre loading.
+     */
     public final static String UNDEFINED_CONFIG_TITLE = "_______________________undefined";
+    /**
+     * The surrogate title of centre 'link' configuration. This is used when link with centre parameters opens.
+     */
     public final static String LINK_CONFIG_TITLE = "_______________________link";
     private final EntityFactory factory;
     private final IUserProvider userProvider;

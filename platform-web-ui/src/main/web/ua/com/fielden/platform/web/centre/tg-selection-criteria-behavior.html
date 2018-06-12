@@ -357,7 +357,7 @@
                 if (typeof customObject.saveAsDesc !== 'undefined') {
                     this._saveAsDesc = customObject.saveAsDesc; // initialise description before to be able to use it for 'tg-save-as-name-changed' event firing when preferred config is loading
                 }
-                if (typeof customObject.saveAsName !== 'undefined' && this.saveAsName === 'undefined') {
+                if (typeof customObject.saveAsName !== 'undefined' && this.saveAsName === this._reflector().UNDEFINED_CONFIG_TITLE) {
                     this.saveAsName = customObject.saveAsName;
                 }
             },

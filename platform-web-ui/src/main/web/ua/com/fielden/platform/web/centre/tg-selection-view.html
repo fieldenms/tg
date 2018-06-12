@@ -4,6 +4,7 @@
 <link rel="import" href="/resources/polymer/polymer/polymer.html">
 <link rel="import" href="/resources/polymer/paper-styles/paper-styles-classes.html">
 
+<link rel="import" href="/app/tg-reflector.html">
 <link rel="import" href="/resources/components/tg-scrollable-component.html">
 <link rel="import" href="/resources/actions/tg-shortcut-processing-behavior.html">
 <link rel="import" href="/resources/actions/tg-ui-action.html">
@@ -32,6 +33,7 @@
         }
     </style>
     <template>
+        <tg-reflector id="reflector"></tg-reflector>
         <!--Selection view toolbar-->
         <div class="toolbar layout horizontal wrap">
             <div class="toolbar-content layout horizontal center">
@@ -160,11 +162,11 @@
             },
             
             _computeConfigButtonDisabled: function (saveAsName) {
-                return saveAsName === '_______________________link';
+                return saveAsName === this.$.reflector.LINK_CONFIG_TITLE;
             },
             
             _computeConfigButtonStyle: function (saveAsName) {
-                return saveAsName === '_______________________link' ? 'cursor:initial' : '';
+                return saveAsName === this.$.reflector.LINK_CONFIG_TITLE ? 'cursor:initial' : '';
             }
         });
     </script>

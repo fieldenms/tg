@@ -165,7 +165,6 @@
                  */
                 saveAsName: {
                     type: String,
-                    value: '_______________________undefined', // this default value means that preferred configuration is not yet known and will be loaded during first 'retrieve' request
                     observer: '_saveAsNameChanged'
                 },
                 
@@ -494,7 +493,8 @@
              */
             ready: function () {
                 const self = this;
-
+                
+                self.saveAsName = self.$.selection_criteria._reflector().UNDEFINED_CONFIG_TITLE; // this default value means that preferred configuration is not yet known and will be loaded during first 'retrieve' request
                 self._selectedView = 0;
                 self._showProgress = false;
                 //Configures the egi's margin.
@@ -1089,21 +1089,23 @@
             
             _saveAsNameChanged: function (newSaveAsName, oldSaveAsName) {
                 const self = this;
-                if (newSaveAsName !== '_______________________undefined' // initial 'saveAsName' definition (value '_______________________undefined', that means unknown config) will be disregarded
-                    && oldSaveAsName !== '_______________________undefined' // first time retrieval should also be disregarded -- at that stage preferred configuration loads (value '_______________________undefined' is equal to oldSaveAsName)
+                const reflector = self.$.selection_criteria._reflector();
+                if (newSaveAsName !== reflector.UNDEFINED_CONFIG_TITLE // initial 'saveAsName' definition (value UNDEFINED_CONFIG_TITLE, that means unknown config) will be disregarded
+                    && oldSaveAsName !== reflector.UNDEFINED_CONFIG_TITLE // first time retrieval should also be disregarded -- at that stage preferred configuration loads (value UNDEFINED_CONFIG_TITLE is equal to oldSaveAsName)
                     && newSaveAsName !== undefined // undefined is a marker value to make saveAsName changed when setting actual value (including '')
                 ) {
                     self.$.selection_criteria._wasRun = null; // reset wasRun to make user unable to see stale run results using View button
                     self.retrieve().then(function () { // perform full centre refresh on each and every change of 'saveAsName'
                         self._fireSaveAsNameChanged(newSaveAsName, self);
                     });
-                } else if (oldSaveAsName === '_______________________undefined') {
+                } else if (oldSaveAsName === reflector.UNDEFINED_CONFIG_TITLE) {
                     self._fireSaveAsNameChanged(newSaveAsName, self);
                 }
             },
             
             _fireSaveAsNameChanged: function (newSaveAsName, self) {
-                if ('_______________________link' !== newSaveAsName) {
+                const reflector = self.$.selection_criteria._reflector();
+                if (reflector.LINK_CONFIG_TITLE !== newSaveAsName) {
                     self.fire('tg-save-as-name-changed', { saveAsName: newSaveAsName, saveAsDesc: self.$.selection_criteria._saveAsDesc });
                 }
             },
