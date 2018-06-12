@@ -96,7 +96,11 @@ public class DefaultEntityProducerWithContext<T extends AbstractEntity<?>> imple
                 
                 // otherwise let's report the problem...
                 throw new EntityProducingException(format("Could not find entity of type [%s] with ID [%s].", entityEditAction.getEntityType(), entityEditAction.getEntityId()));
-            }            
+            }
+        } else if (masterEntityInstanceOf(AbstractFunctionalEntityForCompoundMenuItem.class) && keyOfMasterEntityInstanceOf(entityType)) { // in the case of compound master's main view entity
+            final T compoundMasterEntity = keyOfMasterEntity(entityType); // this entity must be taken from Open*MasterAction producer (set as the key of menu item functional entity)
+            producedEntity = compoundMasterEntity.isPersisted() ? refetchInstrumentedEntityById(compoundMasterEntity.getId()) : compoundMasterEntity; // but refetched when it is persisted
+            // please also note that no custom logic (provideDefaultValues) will be applied to that entity, the process of its initiation is a sole prerogative of compound master opener's producer -- this is the only place where it should be produced (or retrieved)
         } else {
             final T entity = new_();
             
