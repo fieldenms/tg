@@ -310,10 +310,9 @@ public class DynamicQueryBuilderSqlTest {
         property.setDatePrefix(DateRangePrefixEnum.PREV);
         property.setDateMnemonic(MnemonicEnum.QRT2);
 
-        final DateUtilities du = new DateUtilities();
         final Date currentDate = new Date();
-        final Date from = du.dateOfRangeThatIncludes(currentDate, DateRangeSelectorEnum.BEGINNING, property.getDatePrefix(), property.getDateMnemonic()), //
-        /*         */to = du.dateOfRangeThatIncludes(currentDate, DateRangeSelectorEnum.ENDING, property.getDatePrefix(), property.getDateMnemonic());
+        final Date from = DateUtilities.dateOfRangeThatIncludes(currentDate, DateRangeSelectorEnum.BEGINNING, property.getDatePrefix(), property.getDateMnemonic()), //
+        /*         */to = DateUtilities.dateOfRangeThatIncludes(currentDate, DateRangeSelectorEnum.ENDING, property.getDatePrefix(), property.getDateMnemonic());
 
         final String cbn = property.getConditionBuildingName();
 
@@ -342,9 +341,8 @@ public class DynamicQueryBuilderSqlTest {
         property.setDateMnemonic(MnemonicEnum.QRT2);
         property.setAndBefore(true);
 
-        final DateUtilities du = new DateUtilities();
         final Date currentDate = new Date();
-        final Date to = du.dateOfRangeThatIncludes(currentDate, DateRangeSelectorEnum.ENDING, property.getDatePrefix(), property.getDateMnemonic());
+        final Date to = DateUtilities.dateOfRangeThatIncludes(currentDate, DateRangeSelectorEnum.ENDING, property.getDatePrefix(), property.getDateMnemonic());
 
         final String cbn = property.getConditionBuildingName();
 
@@ -373,9 +371,8 @@ public class DynamicQueryBuilderSqlTest {
         property.setDateMnemonic(MnemonicEnum.QRT2);
         property.setAndBefore(false);
 
-        final DateUtilities du = new DateUtilities();
         final Date currentDate = new Date();
-        final Date from = du.dateOfRangeThatIncludes(currentDate, DateRangeSelectorEnum.BEGINNING, property.getDatePrefix(), property.getDateMnemonic()); //
+        final Date from = DateUtilities.dateOfRangeThatIncludes(currentDate, DateRangeSelectorEnum.BEGINNING, property.getDatePrefix(), property.getDateMnemonic()); //
 
         final String cbn = property.getConditionBuildingName();
 
