@@ -114,7 +114,7 @@ public class UserTestCase extends AbstractDaoTestCase {
     
     @Test
     public void strong_user_passwords_are_identified() {
-        assertTrue(coUser.isPasswordStrong("today123A"));
+        assertTrue(coUser.isPasswordStrong("today725A !"));
         assertTrue(coUser.isPasswordStrong("My voice is my password. Verify!"));
         assertTrue(coUser.isPasswordStrong("Sentances are strong and memorable passwords"));
     }

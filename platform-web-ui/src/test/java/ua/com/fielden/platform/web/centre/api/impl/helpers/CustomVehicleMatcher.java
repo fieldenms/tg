@@ -21,10 +21,4 @@ public class CustomVehicleMatcher extends AbstractSearchEntityByKeyWithCentreCon
     public CustomVehicleMatcher(final IEntityDao<TgVehicle> dao) {
         super(dao);
     }
-
-    @Override
-    protected EntityResultQueryModel<TgVehicle> completeEqlBasedOnContext(final CentreContext<TgVehicle, ?> context, final String searchString, final ICompoundCondition0<TgVehicle> incompleteEql) {
-        return null;
-    }
-
 }

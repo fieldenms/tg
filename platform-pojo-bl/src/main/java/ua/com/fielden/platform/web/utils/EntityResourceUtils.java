@@ -136,6 +136,7 @@ public class EntityResourceUtils {
     public static <M extends AbstractEntity<?>> M apply(final Map<String, Object> modifiedPropertiesHolder, final M entity, final ICompanionObjectFinder companionFinder) {
         final Class<M> type = (Class<M>) entity.getType();
         final boolean isEntityStale = entity.getVersion() > getVersion(modifiedPropertiesHolder);
+        final boolean isCriteriaEntity = EntityQueryCriteria.class.isAssignableFrom(type);
 
         final Set<String> touchedProps = new LinkedHashSet<>((List<String>) modifiedPropertiesHolder.get("@@touchedProps"));
 
@@ -147,12 +148,12 @@ public class EntityResourceUtils {
                 final Map<String, Object> valAndOrigVal = (Map<String, Object>) nameAndVal.getValue();
                 // The 'modified' properties are marked using the existence of "val" sub-property.
                 if (valAndOrigVal.containsKey("val")) { // this is a modified property
-                    applyModifiedPropertyValue(type, name, valAndOrigVal, entity, companionFinder, isEntityStale);
+                    applyModifiedPropertyValue(type, name, valAndOrigVal, entity, companionFinder, isEntityStale, isCriteriaEntity);
                     // logPropertyApplication("   Apply untouched   modified", true, true, type, name, isEntityStale, valAndOrigVal, entity /* insert interested properties here for e.g. [, "propX", "propY", "prop1", "prop2"] */);
                 } else { // this is unmodified property
                     // IMPORTANT:
                     // Untouched properties should not be applied, but validation for conflicts should be performed.
-                    validateUnmodifiedPropertyValue(type, name, valAndOrigVal, entity, companionFinder, isEntityStale);
+                    validateUnmodifiedPropertyValue(type, name, valAndOrigVal, entity, companionFinder, isEntityStale, isCriteriaEntity);
                     // logPropertyApplication("Validate untouched unmodified", false, true, type, name, isEntityStale, valAndOrigVal, entity /* insert interested properties here for e.g. [, "propX", "propY", "prop1", "prop2"] */);
                 }
             }
@@ -165,7 +166,7 @@ public class EntityResourceUtils {
             final Map<String, Object> valAndOrigVal = (Map<String, Object>) modifiedPropertiesHolder.get(name);
             // The 'modified' properties are marked using the existence of "val" sub-property.
             if (valAndOrigVal.containsKey("val")) { // this is a modified property
-                applyModifiedPropertyValue(type, name, valAndOrigVal, entity, companionFinder, isEntityStale);
+                applyModifiedPropertyValue(type, name, valAndOrigVal, entity, companionFinder, isEntityStale, isCriteriaEntity);
                 // logPropertyApplication("   Apply   touched   modified", true, true, type, name, isEntityStale, valAndOrigVal, entity /* insert interested properties here for e.g. [, "propX", "propY", "prop1", "prop2"] */);
             } else { // this is unmodified property
                 // IMPORTANT:
@@ -173,7 +174,7 @@ public class EntityResourceUtils {
                 //  even unmodified ones.
                 // This is necessary in order to mimic the user interaction with the entity (like was in Swing client)
                 //  to have the ACE handlers executed for all touched properties.
-                applyUnmodifiedPropertyValue(type, name, valAndOrigVal, entity, companionFinder, isEntityStale);
+                applyUnmodifiedPropertyValue(type, name, valAndOrigVal, entity, companionFinder, isEntityStale, isCriteriaEntity);
                 // logPropertyApplication("   Apply   touched unmodified", true, true, type, name, isEntityStale, valAndOrigVal, entity /* insert interested properties here for e.g. [, "propX", "propY", "prop1", "prop2"] */);
             }
         }
@@ -237,8 +238,9 @@ public class EntityResourceUtils {
      * @param entity
      * @param companionFinder
      * @param isEntityStale
+     * @param isCriteriaEntity
      */
-    private static <M extends AbstractEntity<?>> void processPropertyValue(final boolean apply, final boolean shouldApplyOriginalValue, final Class<M> type, final String name, final Map<String, Object> valAndOrigVal, final M entity, final ICompanionObjectFinder companionFinder, final boolean isEntityStale) {
+    private static <M extends AbstractEntity<?>> void processPropertyValue(final boolean apply, final boolean shouldApplyOriginalValue, final Class<M> type, final String name, final Map<String, Object> valAndOrigVal, final M entity, final ICompanionObjectFinder companionFinder, final boolean isEntityStale, final boolean isCriteriaEntity) {
         if (apply) {
             // in case where application is necessary (modified touched, modified untouched, unmodified touched) the value (valueToBeApplied) should be checked on existence and then (if successful) it should be applied
             final String valueToBeAppliedName = shouldApplyOriginalValue ? "origVal" : "val";
@@ -267,7 +269,7 @@ public class EntityResourceUtils {
                 return valueToBeApplied;
             }, () -> {
                 return shouldApplyOriginalValue ? valueToBeApplied : convert(type, name, valAndOrigVal.get("origVal"), reflectedValueId(valAndOrigVal, "origVal"), companionFinder);
-            }, type, name, valAndOrigVal, entity, companionFinder, isEntityStale);
+            }, type, name, valAndOrigVal, entity, companionFinder, isEntityStale, isCriteriaEntity);
         } else {
             // in case where no application is needed (unmodified untouched) the value should be validated only
             validateAnd(() -> {
@@ -278,7 +280,7 @@ public class EntityResourceUtils {
                                 : convert(type, name, valAndOrigVal.get("val"), reflectedValueId(valAndOrigVal, "val"), companionFinder);
             }, () -> {
                 return convert(type, name, valAndOrigVal.get("origVal"), reflectedValueId(valAndOrigVal, "origVal"), companionFinder);
-            }, type, name, valAndOrigVal, entity, companionFinder, isEntityStale);
+            }, type, name, valAndOrigVal, entity, companionFinder, isEntityStale, isCriteriaEntity);
         }
     }
     
@@ -305,15 +307,16 @@ public class EntityResourceUtils {
      * @param entity
      * @param companionFinder
      * @param isEntityStale
+     * @param isCriteriaEntity
      */
-    private static <M extends AbstractEntity<?>> void validateAnd(final Runnable performAction, final Supplier<Object> calculateStaleNewValue, final Supplier<Object> calculateStaleOriginalValue, final Class<M> type, final String name, final Map<String, Object> valAndOrigVal, final M entity, final ICompanionObjectFinder companionFinder, final boolean isEntityStale) {
+    private static <M extends AbstractEntity<?>> void validateAnd(final Runnable performAction, final Supplier<Object> calculateStaleNewValue, final Supplier<Object> calculateStaleOriginalValue, final Class<M> type, final String name, final Map<String, Object> valAndOrigVal, final M entity, final ICompanionObjectFinder companionFinder, final boolean isEntityStale, final boolean isCriteriaEntity) {
         if (!isEntityStale) {
             performAction.run();
         } else {
             final Object staleOriginalValue = calculateStaleOriginalValue.get();
             final Object freshValue = entity.get(name);
             final Object staleNewValue = calculateStaleNewValue.get();
-            if (EntityUtils.isConflicting(staleNewValue, staleOriginalValue, freshValue)) {
+            if (!isCriteriaEntity && EntityUtils.isConflicting(staleNewValue, staleOriginalValue, freshValue)) {
                 // 1) are we trying to revert the value to previous stale value to perform "recovery" to actual persisted value? (this is following of 'Please revert property value to resolve conflict' instruction)
                 // or 2) has previously touched / untouched property value "recovered" to actual persisted value?
                 if (EntityUtils.equalsEx(staleNewValue, staleOriginalValue)) {
@@ -354,9 +357,10 @@ public class EntityResourceUtils {
      * @param entity
      * @param companionFinder
      * @param isEntityStale
+     * @param isCriteriaEntity
      */
-    private static <M extends AbstractEntity<?>> void applyModifiedPropertyValue(final Class<M> type, final String name, final Map<String, Object> valAndOrigVal, final M entity, final ICompanionObjectFinder companionFinder, final boolean isEntityStale) {
-        processPropertyValue(true, false, type, name, valAndOrigVal, entity, companionFinder, isEntityStale);
+    private static <M extends AbstractEntity<?>> void applyModifiedPropertyValue(final Class<M> type, final String name, final Map<String, Object> valAndOrigVal, final M entity, final ICompanionObjectFinder companionFinder, final boolean isEntityStale, final boolean isCriteriaEntity) {
+        processPropertyValue(true, false, type, name, valAndOrigVal, entity, companionFinder, isEntityStale, isCriteriaEntity);
     }
 
     /**
@@ -368,9 +372,10 @@ public class EntityResourceUtils {
      * @param entity
      * @param companionFinder
      * @param isEntityStale
+     * @param isCriteriaEntity
      */
-    private static <M extends AbstractEntity<?>> void applyUnmodifiedPropertyValue(final Class<M> type, final String name, final Map<String, Object> valAndOrigVal, final M entity, final ICompanionObjectFinder companionFinder, final boolean isEntityStale) {
-        processPropertyValue(true, true, type, name, valAndOrigVal, entity, companionFinder, isEntityStale);
+    private static <M extends AbstractEntity<?>> void applyUnmodifiedPropertyValue(final Class<M> type, final String name, final Map<String, Object> valAndOrigVal, final M entity, final ICompanionObjectFinder companionFinder, final boolean isEntityStale, final boolean isCriteriaEntity) {
+        processPropertyValue(true, true, type, name, valAndOrigVal, entity, companionFinder, isEntityStale, isCriteriaEntity);
     }
 
     /**
@@ -382,9 +387,10 @@ public class EntityResourceUtils {
      * @param entity
      * @param companionFinder
      * @param isEntityStale
+     * @param isCriteriaEntity
      */
-    private static <M extends AbstractEntity<?>> void validateUnmodifiedPropertyValue(final Class<M> type, final String name, final Map<String, Object> valAndOrigVal, final M entity, final ICompanionObjectFinder companionFinder, final boolean isEntityStale) {
-        processPropertyValue(false, true, type, name, valAndOrigVal, entity, companionFinder, isEntityStale);
+    private static <M extends AbstractEntity<?>> void validateUnmodifiedPropertyValue(final Class<M> type, final String name, final Map<String, Object> valAndOrigVal, final M entity, final ICompanionObjectFinder companionFinder, final boolean isEntityStale, final boolean isCriteriaEntity) {
+        processPropertyValue(false, true, type, name, valAndOrigVal, entity, companionFinder, isEntityStale, isCriteriaEntity);
     }
 
     /**

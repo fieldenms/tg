@@ -1,13 +1,16 @@
 package ua.com.fielden.platform.basic.autocompleter;
 
+import static ua.com.fielden.platform.entity.AbstractEntity.DESC;
 import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.cond;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.orderBy;
+import static ua.com.fielden.platform.utils.EntityUtils.hasDescProperty;
 
 import ua.com.fielden.platform.basic.IValueMatcherWithCentreContext;
 import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ICompoundCondition0;
-import ua.com.fielden.platform.utils.EntityUtils;
+import ua.com.fielden.platform.entity.query.model.ConditionModel;
+import ua.com.fielden.platform.entity.query.model.OrderingModel;
 import ua.com.fielden.platform.web.centre.CentreContext;
 
 /**
@@ -24,7 +27,6 @@ public class FallbackValueMatcherWithCentreContext<T extends AbstractEntity<?>> 
 
     public FallbackValueMatcherWithCentreContext(final IEntityDao<T> co) {
         super(co);
-
         entityType = co.getEntityType();
     }
 
@@ -34,18 +36,23 @@ public class FallbackValueMatcherWithCentreContext<T extends AbstractEntity<?>> 
     }
 
     @Override
-    protected ICompoundCondition0<T> startEqlBasedOnContext(
-            final CentreContext<T, ?> context,
-            final String searchString) {
-        if (EntityUtils.hasDescProperty(entityType)) {
-            return select(entityType).where()
-                    .begin()
-                    .prop(KEY).iLike().val(searchString).or()
-                    .upperCase().prop(AbstractEntity.DESC).iLike().val("%" + searchString)
-                    .end();
+    protected ConditionModel makeSearchCriteriaModel(final CentreContext<T, ?> context, final String searchString) {
+        if ("%".equals(searchString)) {
+        	return cond().val(1).eq().val(1).model();
+        }
+    	
+    	if (hasDescProperty(entityType)) {
+            return cond().prop(KEY).iLike().val(searchString).or().prop(DESC).iLike().val("%" + searchString).model();
         } else {
-            return select(entityType).where().prop(KEY).iLike().val(searchString);
+            return super.makeSearchCriteriaModel(context, searchString);
         }
     }
 
+    @Override
+    protected OrderingModel makeOrderingModel(final String searchString) {
+    	if (hasDescProperty(entityType) && !"%".equals(searchString)) {
+    		return orderBy().order(createKeyBeforeDescOrderingModel(searchString)).order(super.makeOrderingModel(searchString)).model();
+    	} 
+        return super.makeOrderingModel(searchString);
+    }
 }
