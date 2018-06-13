@@ -69,47 +69,50 @@ import ua.com.fielden.platform.utils.Pair;
  *
  */
 public class GlobalDomainTreeManager extends AbstractDomainTree implements IGlobalDomainTreeManager {
-    private final static Logger logger = Logger.getLogger(GlobalDomainTreeManager.class);
-    public final static String DEFAULT_CONFIG_DESC = "Default configuration";
-    public final static String DEFAULT_CONFIG_TITLE = "[Default]";
+    private static final Logger logger = Logger.getLogger(GlobalDomainTreeManager.class);
+    public static final String DEFAULT_CONFIG_DESC = "Default configuration";
+    public static final String DEFAULT_CONFIG_TITLE = "[Default]";
+    
     /**
      * The surrogate title of not yet known configuration. This is used during first time centre loading.
      */
-    public final static String UNDEFINED_CONFIG_TITLE = "_______________________undefined";
+    public static final String UNDEFINED_CONFIG_TITLE = "_______________________undefined";
+    
     /**
      * The surrogate title of centre 'link' configuration. This is used when link with centre parameters opens.
      */
-    public final static String LINK_CONFIG_TITLE = "_______________________link";
+    public static final String LINK_CONFIG_TITLE = "_______________________link";
+    
     private final EntityFactory factory;
     private final IUserProvider userProvider;
     private final IGlobalDomainTreeRepresentation gdtr;
     private final IMainMenuItem mainMenuItemController;
-    private final IEntityCentreConfig entityCentreConfigController;
+    private final IEntityCentreConfig coEntityCentreConfig;
     private final IEntityCentreAnalysisConfig entityCentreAnalysisConfigController;
     private final IEntityMasterConfig entityMasterConfigController;
     private final DomainTreeVersionMaintainer versionMaintainer;
 
     private EnhancementPropertiesMap<ICentreDomainTreeManagerAndEnhancer> persistentCentres;
-    private final transient EnhancementPropertiesMap<ICentreDomainTreeManagerAndEnhancer> currentCentres;
-    private final transient EnhancementPropertiesMap<ICentreDomainTreeManagerAndEnhancer> freezedCentres;
-    private final transient EnhancementPropertiesMap<Boolean> centresOwning;
+    private final EnhancementPropertiesMap<ICentreDomainTreeManagerAndEnhancer> currentCentres;
+    private final EnhancementPropertiesMap<ICentreDomainTreeManagerAndEnhancer> freezedCentres;
+    private final EnhancementPropertiesMap<Boolean> centresOwning;
 
     private final EnhancementRootsMap<IMasterDomainTreeManager> persistentMasters;
-    private final transient EnhancementRootsMap<IMasterDomainTreeManager> currentMasters;
+    private final EnhancementRootsMap<IMasterDomainTreeManager> currentMasters;
 
     private Map<Class<?>, Map<String, List<String>>> initialCacheOfNonPrincipleItems = null;
     private final IUser coUser;
 
     @Inject
-    public GlobalDomainTreeManager(final ISerialiser serialiser, final ISerialiser0 serialiser0, final EntityFactory factory, final IUserProvider userProvider, final IMainMenuItem mainMenuItemController, final IEntityCentreConfig entityCentreConfigController, final IEntityCentreAnalysisConfig entityCentreAnalysisConfigController, final IEntityMasterConfig entityMasterConfigController, final IEntityLocatorConfig entityLocatorConfigController, final IUser coUser) {
+    public GlobalDomainTreeManager(final ISerialiser serialiser, final ISerialiser0 serialiser0, final EntityFactory factory, final IUserProvider userProvider, final IMainMenuItem mainMenuItemController, final IEntityCentreConfig coEntityCentreConfig, final IEntityCentreAnalysisConfig entityCentreAnalysisConfigController, final IEntityMasterConfig entityMasterConfigController, final IEntityLocatorConfig entityLocatorConfigController, final IUser coUser) {
         super(serialiser);
         this.factory = factory;
         this.userProvider = userProvider;
         this.mainMenuItemController = mainMenuItemController;
-        this.entityCentreConfigController = entityCentreConfigController;
+        this.coEntityCentreConfig = coEntityCentreConfig;
         this.entityCentreAnalysisConfigController = entityCentreAnalysisConfigController;
         this.entityMasterConfigController = entityMasterConfigController;
-        final GlobalDomainTreeRepresentation gdtr0 = new GlobalDomainTreeRepresentation(serialiser, serialiser0, factory, userProvider, entityCentreConfigController, entityMasterConfigController, entityLocatorConfigController);
+        final GlobalDomainTreeRepresentation gdtr0 = new GlobalDomainTreeRepresentation(serialiser, serialiser0, factory, userProvider, coEntityCentreConfig, entityMasterConfigController, entityLocatorConfigController);
         this.versionMaintainer = gdtr0.versionMaintainer();
         this.gdtr = gdtr0;
         // lazy stuff
@@ -138,7 +141,7 @@ public class GlobalDomainTreeManager extends AbstractDomainTree implements IGlob
     private Map<Class<?>, Map<String, List<String>>> loadEntityCentreSkeleton() {
         logger.info("Loading entity centre skeleton...");
         // load all non-principle entity centres for this user
-        final List<EntityCentreConfig> centresFromTheCloud = entityCentreConfigController.getAllEntities(from(nonPrincipleECCmodel()).with(fetchOnly(EntityCentreConfig.class).with("title").with("menuItem", fetchOnly(MainMenuItem.class).with("key"))).model());
+        final List<EntityCentreConfig> centresFromTheCloud = coEntityCentreConfig.getAllEntities(from(nonPrincipleECCmodel()).with(fetchOnly(EntityCentreConfig.class).with("title").with("menuItem", fetchOnly(MainMenuItem.class).with("key"))).model());
 
         final Map<Class<?>, Map<String, List<String>>> map = new LinkedHashMap<>();
         for (final EntityCentreConfig ecc : centresFromTheCloud) {
@@ -319,7 +322,7 @@ public class GlobalDomainTreeManager extends AbstractDomainTree implements IGlob
             // for the new generation of Web UI centres (where persistentCentres == null and avoidPersistentCentres switch is on)
             // the model for initialised configuration existence should not look on base configurations.
             final EntityResultQueryModel<EntityCentreConfig> model = persistentCentres == null ? modelForCurrentUser(menuItemTypeName, title) : modelForCurrentAndBaseUsers(menuItemTypeName, title);
-            final int count = entityCentreConfigController.count(model);
+            final int count = coEntityCentreConfig.count(model);
             if (count == 1) { // the persistence layer contains a entity-centre, so it should be retrieved and deserialised
                 retrieveAndInit(menuItemType, name, root, centreConfigurator, model);
             } else if (count < 1) { // there is no entity-centre
@@ -334,7 +337,7 @@ public class GlobalDomainTreeManager extends AbstractDomainTree implements IGlob
                 }
             } else if (count == 2) {
                 final EntityResultQueryModel<EntityCentreConfig> model1 = modelForCurrentUser(menuItemTypeName, title);
-                final int count1 = entityCentreConfigController.count(model1);
+                final int count1 = coEntityCentreConfig.count(model1);
                 if (count1 == 1) { // for current user => 1 entity-centre, for base => another one with same title
                     // initialise an instance for current user (base configuration will be ignored)
                     retrieveAndInit(menuItemType, name, root, centreConfigurator, model1);
@@ -523,7 +526,7 @@ public class GlobalDomainTreeManager extends AbstractDomainTree implements IGlob
      * @param model
      */
     private void retrieveAndInit(final Class<?> menuItemType, final String name, final Class<?> root, final CentreManagerConfigurator centreConfigurator, final EntityResultQueryModel<EntityCentreConfig> model) {
-        final EntityCentreConfig ecc = entityCentreConfigController.getEntity(from(model).model());
+        final EntityCentreConfig ecc = coEntityCentreConfig.getEntity(from(model).model());
         final boolean owning = ecc.getOwner().equals(currentUser());
         try {
             init(menuItemType, name, versionMaintainer.maintainCentreVersion(ecc), owning);
@@ -572,7 +575,7 @@ public class GlobalDomainTreeManager extends AbstractDomainTree implements IGlob
             throw new DomainTreeException("Version should exist.");
         }
         // logger.debug(String.format("Checking the staleness of the centre with ID [%s] and version [%s]: started...", id, version));
-        final boolean stale = entityCentreConfigController.isStale(id, version);
+        final boolean stale = coEntityCentreConfig.isStale(id, version);
         // logger.debug(String.format("Checking the staleness of the centre with ID [%s] and version [%s]: %s.", id, version, stale));
         return stale;
     }
@@ -857,9 +860,9 @@ public class GlobalDomainTreeManager extends AbstractDomainTree implements IGlob
             final String title = title(menuItemType, name);
 
             final EntityResultQueryModel<EntityCentreConfig> model = modelForCurrentUser(menuItemType.getName(), title);
-            final int count = entityCentreConfigController.count(model);
+            final int count = coEntityCentreConfig.count(model);
             if (count == 1) { // for current user => 1 entity-centre
-                final EntityCentreConfig ecc = entityCentreConfigController.getEntity(from(model).model());
+                final EntityCentreConfig ecc = coEntityCentreConfig.getEntity(from(model).model());
                 ecc.setConfigBody(getSerialiser().serialise(currentMgr));
                 if (newDesc != null) {
                     ecc.setDesc(newDesc);
@@ -967,7 +970,7 @@ public class GlobalDomainTreeManager extends AbstractDomainTree implements IGlob
             final EntityResultQueryModel<EntityCentreConfig> model = persistentCentres == null ? modelForCurrentUser(menuItemTypeName, newTitle) : modelForCurrentAndBaseUsers(menuItemTypeName, newTitle);
             // entityCentreConfigController.getAllEntities(from(model).model());
             
-            final int count = entityCentreConfigController.count(model);
+            final int count = coEntityCentreConfig.count(model);
             if (count == 0) { // for current user [or its base] => there are no entity-centres, so persist a copy with a new title
                 final User user = currentUser();
                 final MainMenuItem menuItemToUse;
@@ -995,7 +998,7 @@ public class GlobalDomainTreeManager extends AbstractDomainTree implements IGlob
             entityCentreAnalysisConfigController.delete(analysesForConcreteECCmodel(ecc));
         }
 
-        final EntityCentreConfig newECC = entityCentreConfigController.save(ecc);
+        final EntityCentreConfig newECC = coEntityCentreConfig.save(ecc);
         // populate Id and Version to be able to determine staleness of the centre
         ((CentreDomainTreeManagerAndEnhancer) copyMgr).setSavedEntityId(newECC.getId());
         ((CentreDomainTreeManagerAndEnhancer) copyMgr).setSavedEntityVersion(newECC.getVersion());
@@ -1039,13 +1042,13 @@ public class GlobalDomainTreeManager extends AbstractDomainTree implements IGlob
                 removeCentre(menuItemType, name);
 
                 final EntityResultQueryModel<EntityCentreConfig> model = modelForCurrentUser(menuItemType.getName(), title(menuItemType, name));
-                final EntityCentreConfig ecc = entityCentreConfigController.getEntity(from(model).model());
+                final EntityCentreConfig ecc = coEntityCentreConfig.getEntity(from(model).model());
 
                 // remove all analyses dependencies
                 entityCentreAnalysisConfigController.delete(analysesForConcreteECCmodel(ecc));
 
                 // remove an instance of EntityCentreConfig which should exist in DB
-                entityCentreConfigController.delete(ecc);
+                coEntityCentreConfig.delete(ecc);
             }
             return this;
         } else {
@@ -1082,7 +1085,7 @@ public class GlobalDomainTreeManager extends AbstractDomainTree implements IGlob
      * @param names
      */
     public void removeCentres(final Class<?> menuItemType, final String ... names) {
-        entityCentreConfigController.delete(multiModelForCurrentUser(menuItemType.getName(), stream(names).map(name -> title(menuItemType, name)).toArray(String[]::new)));
+        coEntityCentreConfig.delete(multiModelForCurrentUser(menuItemType.getName(), stream(names).map(name -> title(menuItemType, name)).toArray(String[]::new)));
     }
     
     public void removeCentre(final Class<?> menuItemType, final String name) {
@@ -1102,7 +1105,7 @@ public class GlobalDomainTreeManager extends AbstractDomainTree implements IGlob
 
         final List<String> names = new ArrayList<String>();
 
-        final List<EntityCentreConfig> nonPricipalCentresFromTheCloud = entityCentreConfigController.getAllEntities(from(modelForCurrentAndBaseUsersNonPrincipal(menuItemType.getName())).with(fetchOnly(EntityCentreConfig.class).with("title").with("principal")).model());
+        final List<EntityCentreConfig> nonPricipalCentresFromTheCloud = coEntityCentreConfig.getAllEntities(from(modelForCurrentAndBaseUsersNonPrincipal(menuItemType.getName())).with(fetchOnly(EntityCentreConfig.class).with("title").with("principal")).model());
         for (final EntityCentreConfig ecc : nonPricipalCentresFromTheCloud) {
             if (ecc.isPrincipal()) {
                 throw new IllegalStateException("There should be no principal entity centre retrieved.");
@@ -1257,14 +1260,14 @@ public class GlobalDomainTreeManager extends AbstractDomainTree implements IGlob
     
     @Override
     public EntityCentreConfig findConfig(final Class<?> menuItemType, final String name) {
-        return entityCentreConfigController.getEntity(
+        return coEntityCentreConfig.getEntity(
             from(modelForCurrentUser(menuItemType.getName(), title(menuItemType, name))).with(fetchWithKeyAndDesc(EntityCentreConfig.class, true).with("preferred").fetchModel()).model()
         );
     }
     
     @Override
-    public EntityCentreConfig saveConfig(final EntityCentreConfig config) {
-        return entityCentreConfigController.save(config);
+    public void saveConfig(final EntityCentreConfig config) {
+        coEntityCentreConfig.quickSave(config);
     }
-    
+
 }

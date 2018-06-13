@@ -57,11 +57,9 @@ public interface IGlobalDomainTreeManager {
     EntityCentreConfig findConfig(final Class<?> menuItemType, final String name);
     
     /**
-     * Saves configuration.
-     * 
-     * @return
+     * Saves configuration using {@code quickSave} instead of {@code save}.
      */
-    EntityCentreConfig saveConfig(final EntityCentreConfig config);
+    void saveConfig(final EntityCentreConfig config);
     
     /**
      * Returns a user provider. The user is a part of domain tree context. Some domain tree actions is permitted only for base users. Some behaviour also can differ for different
@@ -276,9 +274,10 @@ public interface IGlobalDomainTreeManager {
      *            -- new description for configuration
      */
     IGlobalDomainTreeManager saveEntityCentreManager(final Class<?> menuItemType, final String name, final String newDesc);
+    
     default IGlobalDomainTreeManager saveEntityCentreManager(final Class<?> menuItemType, final String name) {
         return saveEntityCentreManager(menuItemType, name, null);
-    };
+    }
 
     /**
      * Duplicates an <b>entity-centre manager</b> for menu item type <b>menuItemType</b> with <b>originalName</b> to an <b>entity-centre manager</b> with <b>newName</b> and then

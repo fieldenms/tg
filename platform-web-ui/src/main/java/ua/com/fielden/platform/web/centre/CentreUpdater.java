@@ -465,9 +465,7 @@ public class CentreUpdater {
     public static void makePreferred(final boolean preferred, final IGlobalDomainTreeManager gdtm, final Class<? extends MiWithConfigurationSupport<?>> miType, final Optional<String> saveAsName, final DeviceProfile device, final ICompanionObjectFinder companionFinder) {
         if (preferred) {
             try (final Stream<EntityCentreConfig> stream = streamPreferredConfigs(gdtm, miType, device, companionFinder) ) {
-                stream.forEach(ecc -> {
-                    gdtm.saveConfig(ecc.setPreferred(false));
-                });
+                stream.forEach(ecc -> gdtm.saveConfig(ecc.setPreferred(false)));
             }
         }
         gdtm.saveConfig(
