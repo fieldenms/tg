@@ -62,11 +62,29 @@ class MasterWithCentre<T extends AbstractEntity<?>> implements IMaster<T> {
                         + "    element-name='tg-%s-centre'>"
                         + "</tg-element-loader>",
                         entityCentre.getMenuItemType().getName(), entityCentre.getMenuItemType().getSimpleName()))
-                .replace("//@ready-callback", 
+                .replace("//@ready-callback",
                         "self.masterWithCentre = true;\n" +
-                        "self.classList.remove('canLeave');")
-                .replace("//@attached-callback", 
-                        format("" 
+                        "self.classList.remove('canLeave');\n" +
+                        "self._focusEmbededView = function () {\n" +
+                        "    if (this.$.loader.loadedElement && this.$.loader.loadedElement.focusView) {\n" +
+                        "        this.$.loader.loadedElement.focusView();\n" +
+                        "    }\n" +
+                        "}.bind(self);\n" +
+                        "self._hasEmbededView = function () {\n" +
+                        "    return true;\n" +
+                        "}.bind(self);\n"+
+                        "self._focusNextEmbededView = function (e) {\n" +
+                        "    if (this.$.loader.loadedElement && this.$.loader.loadedElement.focusNextView) {\n" +
+                        "        this.$.loader.loadedElement.focusNextView(e);\n" +
+                        "    }\n" +
+                        "}.bind(self);\n" +
+                        "self._focusPreviousEmbededView = function (e) {\n" +
+                        "    if (this.$.loader.loadedElement && this.$.loader.loadedElement.focusPreviousView) {\n" +
+                        "        this.$.loader.loadedElement.focusPreviousView(e);\n" +
+                        "    }\n" +
+                        "}.bind(self);\n")
+                .replace("//@attached-callback",
+                        format(""
                         + "self.$.loader.attrs = %s;\n"
                         + "self.registerCentreRefreshRedirector();\n",
                         attributes))
@@ -94,7 +112,7 @@ class MasterWithCentre<T extends AbstractEntity<?>> implements IMaster<T> {
     public Optional<Class<? extends IValueMatcherWithContext<T, ?>>> matcherTypeFor(final String propName) {
         return Optional.empty();
     }
-    
+
     @Override
     public EntityActionConfig actionConfig(final FunctionalActionKind actionKind, final int actionNumber) {
         throw new UnsupportedOperationException("Getting of action configuration is not supported.");
