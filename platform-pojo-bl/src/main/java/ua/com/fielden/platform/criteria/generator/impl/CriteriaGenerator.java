@@ -107,7 +107,7 @@ public class CriteriaGenerator implements ICriteriaGenerator {
             if (miType != null && generatedClasses.containsKey(miType)) {
                 queryCriteriaClass = (Class<? extends EntityQueryCriteria<CDTME, T, IEntityDao<T>>>) generatedClasses.get(miType);
             } else {
-                final List<NewProperty> newProperties = new ArrayList<NewProperty>();
+                final List<NewProperty> newProperties = new ArrayList<>();
                 for (final String propertyName : cdtme.getFirstTick().checkedProperties(root)) {
                     if (!AbstractDomainTree.isPlaceholder(propertyName)) {
                         newProperties.addAll(generateCriteriaProperties(root, cdtme.getEnhancer(), propertyName));
@@ -120,8 +120,7 @@ public class CriteriaGenerator implements ICriteriaGenerator {
             }
 
             final DefaultEntityProducerWithContext<EntityQueryCriteria<CDTME, T, IEntityDao<T>>> entityProducer = new DefaultEntityProducerWithContext<>(entityFactory, (Class<EntityQueryCriteria<CDTME, T, IEntityDao<T>>>) queryCriteriaClass, coFinder);
-            entityProducer.newEntity();
-            final EntityQueryCriteria<CDTME, T, IEntityDao<T>> entity = entityProducer.newEntity(); // entityFactory.newByKey(queryCriteriaClass, "not required");
+            final EntityQueryCriteria<CDTME, T, IEntityDao<T>> entity = entityProducer.newEntity();
             entity.beginInitialising();
             entity.setKey("not required");
             entity.endInitialising();
