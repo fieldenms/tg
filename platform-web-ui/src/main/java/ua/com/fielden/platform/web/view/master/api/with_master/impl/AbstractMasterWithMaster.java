@@ -27,8 +27,26 @@ public abstract class AbstractMasterWithMaster<T extends AbstractEntity<?>> impl
                         + "    attrs='[[_calcAttrs(_currBindingEntity)]]'"
                         + "    >"
                         + "</tg-element-loader>")
-                .replace("//@ready-callback", 
+                .replace("//@ready-callback",
                         "this.masterWithMaster = true;\n" +
+                        "this._focusEmbededView = function () {\n" +
+                        "    if (this.$.loader.loadedElement && this.$.loader.loadedElement.focusView) {\n" +
+                        "        this.$.loader.loadedElement.focusView();\n" +
+                        "    }\n" +
+                        "}.bind(this);\n" +
+                        "this._hasEmbededView = function () {\n" +
+                        "    return true;\n" +
+                        "}.bind(this);\n" +
+                        "this._focusNextEmbededView = function (e) {\n" +
+                        "    if (this.$.loader.loadedElement && this.$.loader.loadedElement.focusNextView) {\n" +
+                        "        this.$.loader.loadedElement.focusNextView(e);\n" +
+                        "    }\n" +
+                        "}.bind(this);\n" +
+                        "this._focusPreviousEmbededView = function (e) {\n" +
+                        "    if (this.$.loader.loadedElement && this.$.loader.loadedElement.focusPreviousView) {\n" +
+                        "        this.$.loader.loadedElement.focusPreviousView(e);\n" +
+                        "    }\n" +
+                        "}.bind(this);\n" +
                         "this._calcAttrs = (function(_currBindingEntity){\n" +
                         "   if (_currBindingEntity !== null) {\n" +
                         "       return " + getAttributes(embededMasterType, "_currBindingEntity", shouldRefreshParentCentreAfterSave) +
@@ -70,7 +88,7 @@ public abstract class AbstractMasterWithMaster<T extends AbstractEntity<?>> impl
     public IRenderable render() {
         return renderable;
     }
-    
+
     @Override
     public EntityActionConfig actionConfig(final FunctionalActionKind actionKind, final int actionNumber) {
         throw new UnsupportedOperationException("Getting of action configuration is not supported.");

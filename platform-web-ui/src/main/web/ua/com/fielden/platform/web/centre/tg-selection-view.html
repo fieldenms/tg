@@ -60,10 +60,6 @@
                 Polymer.TgBehaviors.TgShortcutProcessingBehavior
             ],
             
-            hostAttributes: {
-                'tabindex' : '0'
-            },
-            
             properties: {
                 _showDialog: Function,
                 /**
@@ -151,10 +147,10 @@
             
             _getKeyEventTarget: function () {
                 var parent = this;
-                while (parent && parent.tagName !== 'TG-CUSTOM-ACTION-DIALOG') {
+                while (parent && (parent.tagName !== 'TG-CUSTOM-ACTION-DIALOG' && parent.tagName !== 'TG-MENU-ITEM-VIEW')) {
                     parent = parent.parentElement;
                 }
-                return parent || this;
+                return parent || this.parentElement.parentElement;
             },
             
             _shortcutPressed: function (e) {

@@ -5,6 +5,7 @@
 <link rel="import" href="/resources/components/postal-lib.html">
 <link rel="import" href="/resources/actions/tg-focus-restoration-behavior.html">
 <link rel="import" href="/resources/actions/tg-ui-action.html">
+<link rel="import" href="/resources/reflection/tg-polymer-utils.html">
 
 <script>
     (function () {
@@ -862,6 +863,35 @@
 
             detached: function () {
                 this.masterSavedListener.unsubscribe();
+            },
+            
+            focusNextView: function (e) {
+                this._focusView(e, true);
+            },
+            
+            focusPreviousView: function (e) {
+                this._focusView(e, false);
+            },
+            
+            _focusView: function (e, forward) {
+                const focusables = this._getCurrentFocusableElements();
+                const frirstIndex = forward ? 0 : focusables.length - 1;
+                const lastIndex = forward ? focusables.length - 1 : 0;
+                if (!isInHierarchy(this, document.activeElement)) {
+                    if (focusables.length > 0) {
+                        focusables[frirstIndex].focus();
+                        tearDownEvent(e);
+                    } else {
+                        this.fire("tg-last-item-focused", {forward: forward, event: e});
+                    }
+                } else if (focusables.length === 0 || document.activeElement == focusables[lastIndex]) {
+                    this.fire("tg-last-item-focused", {forward: forward, event: e});
+                }
+            },
+            
+            _getCurrentFocusableElements: function() {
+                const _componentsToFocus = Array.from(this.querySelectorAll(FOCUSABLE_ELEMENTS_SELECTOR));
+                return _componentsToFocus.filter(element => !element.disabled && element.offsetParent !== null);
             },
 
             _saveColumnWidth: function (e) {
