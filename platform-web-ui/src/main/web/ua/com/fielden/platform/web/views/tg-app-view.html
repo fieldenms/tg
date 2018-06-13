@@ -125,30 +125,30 @@
                     node: this
                 });
             },
-            
+
             getSelectedPage: function () {
-                var view = this.$$("#view");
+                const view = this.$$("#view");
                 if (view.getSelectedPage) {
                     return view.getSelectedPage();
                 }
             },
-            
+
             searchMenu: function () {
-                var view = this.$$("#view");
+                const view = this.$$("#view");
                 if (view.searchMenu) {
                     view.searchMenu();
                 }
             },
-            
+
             openModuleMenu: function () {
-                var view = this.$$("#view");
+                const view = this.$$("#view");
                 if (view.openModuleMenu) {
                     view.openModuleMenu();
                 }
             },
-            
+
             selectSubroute: function (subroute) {
-                var view = this.$$("#view");
+                const view = this.$$("#view");
                 if (view._selectMenu) {
                     view._selectMenu(subroute);
                 }
@@ -157,27 +157,27 @@
             load: function () {
                 this.$$("#view").load();
             },
-            
+
             canLeave: function() {
-                var viewThatWasChanged = this.$$("#view").canLeave();
-                var viewsDesc = [];
+                const viewThatWasChanged = this.$$("#view").canLeave();
+                const viewsDesc = [];
                 if (Array.isArray(viewThatWasChanged)) {
                     viewThatWasChanged.forEach(function (element) {
                         viewsDesc.push(this.menuItem.key + " \u2192 " +  element);
                     }.bind(this));
                     return viewsDesc;
                 }
-                return viewThatWasChanged; 
+                return viewThatWasChanged;
             },
-            
+
             _isMenuPresent: function (menu) {
                 return menu && menu.length > 0;
             },
-            
+
             _calcStyleForItem: function (menuItem) {
                 return "background-color: " + menuItem.bgColor + ";";
             },
-            
+
             _calcSvgStyleForItem: function (menuItem) {
                 return "color: " + menuItem.bgColor + "; opacity:0.5;";
             }
