@@ -55,7 +55,7 @@ public class EntityCentreBuilder<T extends AbstractEntity<?>> implements IEntity
 
     protected Optional<String> currGroup = Optional.empty();
     protected final List<Pair<EntityActionConfig, Optional<String>>> topLevelActions = new ArrayList<>();
-    protected final List<EntityActionConfig> selectionCriteriaActions = new ArrayList<>();
+    protected final List<EntityActionConfig> frontActions = new ArrayList<>();
     protected final List<InsertionPointConfig> insertionPointConfigs = new ArrayList<>();
 
     protected boolean draggable = false;
@@ -174,7 +174,7 @@ public class EntityCentreBuilder<T extends AbstractEntity<?>> implements IEntity
                 egiHeight,
                 fitToHeight,
                 topLevelActions,
-                selectionCriteriaActions,
+                frontActions,
                 insertionPointConfigs,
                 selectionCriteria,
                 defaultMultiValueAssignersForEntityAndStringSelectionCriteria,

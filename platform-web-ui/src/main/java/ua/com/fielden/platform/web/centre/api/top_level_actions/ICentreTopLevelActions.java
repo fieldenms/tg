@@ -2,7 +2,7 @@ package ua.com.fielden.platform.web.centre.api.top_level_actions;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig;
-import ua.com.fielden.platform.web.centre.api.selection_crit_actions.ISelectionCriteriaActions;
+import ua.com.fielden.platform.web.centre.api.front_actions.IFrontActions;
 
 /**
  * A contract to specify top level actions for an entity centre. Top level actions have generic nature and may be applicable to one or more selection entities. They may have even
@@ -13,7 +13,7 @@ import ua.com.fielden.platform.web.centre.api.selection_crit_actions.ISelectionC
  *
  * @param <T>
  */
-public interface ICentreTopLevelActions<T extends AbstractEntity<?>> extends ISelectionCriteriaActions<T> {
+public interface ICentreTopLevelActions<T extends AbstractEntity<?>> extends IFrontActions<T>{
 
     IAlsoCentreTopLevelActions<T> addTopAction(final EntityActionConfig actionConfig);
 

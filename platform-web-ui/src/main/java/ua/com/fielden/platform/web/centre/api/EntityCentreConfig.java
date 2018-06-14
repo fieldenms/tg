@@ -80,7 +80,7 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
     /**
      * A list of custom selection criteria actions.
      */
-    private final List<EntityActionConfig> selectionCriteriaActions = new ArrayList<>();
+    private final List<EntityActionConfig> frontActions = new ArrayList<>();
 
     /////////////////////////////////////////////
     /////////// INSERTION POINT ACTIONS /////////
@@ -335,7 +335,7 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
             final boolean fitToHeight,
 
             final List<Pair<EntityActionConfig, Optional<String>>> topLevelActions,
-            final List<EntityActionConfig> selectionCriteriaActions,
+            final List<EntityActionConfig> frontActions,
             final List<InsertionPointConfig> insertionPointConfigs,
             final List<String> selectionCriteria,
             final Map<String, Class<? extends IValueAssigner<MultiCritStringValueMnemonic, T>>> defaultMultiValueAssignersForEntityAndStringSelectionCriteria,
@@ -401,7 +401,7 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
         this.fitToHeight = fitToHeight;
 
         this.topLevelActions.addAll(topLevelActions);
-        this.selectionCriteriaActions.addAll(selectionCriteriaActions);
+        this.frontActions.addAll(frontActions);
         this.insertionPointConfigs.addAll(insertionPointConfigs);
         this.selectionCriteria.addAll(selectionCriteria);
         this.defaultMultiValueAssignersForEntityAndStringSelectionCriteria.putAll(defaultMultiValueAssignersForEntityAndStringSelectionCriteria);
@@ -775,6 +775,10 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
             return Optional.empty();
         }
         return Optional.of(Collections.unmodifiableList(topLevelActions));
+    }
+
+    public List<EntityActionConfig> getFrontActions() {
+        return Collections.unmodifiableList(frontActions);
     }
 
     public Optional<List<InsertionPointConfig>> getInsertionPointConfigs() {

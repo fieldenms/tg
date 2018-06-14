@@ -8,7 +8,7 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.utils.Pair;
 import ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig;
 import ua.com.fielden.platform.web.centre.api.crit.ISelectionCritKindSelector;
-import ua.com.fielden.platform.web.centre.api.selection_crit_actions.IAlsoSelectionCriteriaActions;
+import ua.com.fielden.platform.web.centre.api.front_actions.IAlsoFrontActions;
 import ua.com.fielden.platform.web.centre.api.top_level_actions.IAlsoCentreTopLevelActions;
 import ua.com.fielden.platform.web.centre.api.top_level_actions.ICentreTopLevelActions;
 import ua.com.fielden.platform.web.centre.api.top_level_actions.ICentreTopLevelActionsInGroup;
@@ -25,7 +25,7 @@ import ua.com.fielden.platform.web.centre.api.top_level_actions.ICentreTopLevelA
  * @param <T>
  */
 class TopLevelActionsBuilder<T extends AbstractEntity<?>> extends ResultSetBuilder<T> implements
-        ICentreTopLevelActionsWithRunConfig<T>, ICentreTopLevelActions<T>, ICentreTopLevelActionsInGroup<T>, ICentreTopLevelActionsInGroup0<T>, IAlsoCentreTopLevelActions<T>, IAlsoSelectionCriteriaActions<T>{
+        ICentreTopLevelActionsWithRunConfig<T>, ICentreTopLevelActions<T>, ICentreTopLevelActionsInGroup<T>, ICentreTopLevelActionsInGroup0<T>, IAlsoCentreTopLevelActions<T>, IAlsoFrontActions<T>{
 
     private final EntityCentreBuilder<T> builder;
 
@@ -74,7 +74,7 @@ class TopLevelActionsBuilder<T extends AbstractEntity<?>> extends ResultSetBuild
 
     @Override
     public ISelectionCritKindSelector<T> addCrit(final String propName) {
-        return new SelectionCriteriaActionBuilder<>(builder).addCrit(propName);
+        return new FrontActionBuilder<>(builder).addCrit(propName);
     }
 
     @Override
@@ -99,7 +99,7 @@ class TopLevelActionsBuilder<T extends AbstractEntity<?>> extends ResultSetBuild
     }
 
     @Override
-    public IAlsoSelectionCriteriaActions<T> addSelectionCriteriaAction(final EntityActionConfig actionConfig) {
-        return new SelectionCriteriaActionBuilder<>(builder).addSelectionCriteriaAction(actionConfig);
+    public IAlsoFrontActions<T> addFrontAction(final EntityActionConfig actionConfig) {
+        return new FrontActionBuilder<>(builder).addFrontAction(actionConfig);
     }
 }

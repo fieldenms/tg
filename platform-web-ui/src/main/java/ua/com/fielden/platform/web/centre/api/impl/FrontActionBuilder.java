@@ -8,14 +8,14 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig;
 import ua.com.fielden.platform.web.centre.api.crit.ISelectionCritKindSelector;
-import ua.com.fielden.platform.web.centre.api.selection_crit_actions.IAlsoSelectionCriteriaActions;
-import ua.com.fielden.platform.web.centre.api.selection_crit_actions.ISelectionCriteriaActions;
+import ua.com.fielden.platform.web.centre.api.front_actions.IAlsoFrontActions;
+import ua.com.fielden.platform.web.centre.api.front_actions.IFrontActions;
 
-public class SelectionCriteriaActionBuilder<T extends AbstractEntity<?>> extends ResultSetBuilder<T> implements ISelectionCriteriaActions<T>, IAlsoSelectionCriteriaActions<T> {
+public class FrontActionBuilder<T extends AbstractEntity<?>> extends ResultSetBuilder<T> implements IFrontActions<T>, IAlsoFrontActions<T> {
 
     private final EntityCentreBuilder<T> builder;
 
-    public SelectionCriteriaActionBuilder(final EntityCentreBuilder<T> builder) {
+    public FrontActionBuilder(final EntityCentreBuilder<T> builder) {
         super(builder);
         this.builder = builder;
     }
@@ -40,13 +40,13 @@ public class SelectionCriteriaActionBuilder<T extends AbstractEntity<?>> extends
     }
 
     @Override
-    public IAlsoSelectionCriteriaActions<T> addSelectionCriteriaAction(final EntityActionConfig actionConfig) {
-        builder.selectionCriteriaActions.add(actionConfig);
+    public IAlsoFrontActions<T> addFrontAction(final EntityActionConfig actionConfig) {
+        builder.frontActions.add(actionConfig);
         return this;
     }
 
     @Override
-    public ISelectionCriteriaActions<T> also() {
+    public IFrontActions<T> also() {
         // this could be a genuine also call to add more top level actions
         // or a polymorphic call inherited from ResultSetBuilder to add more properties into the result set
         // they need to be differentiated
