@@ -34,10 +34,10 @@ import ua.com.fielden.platform.reflection.TitlesDescsGetter;
  */
 public class EntityExistsValidator<T extends AbstractEntity<?>> implements IBeforeChangeEventHandler<T> {
 
-    private static final String WAS_NOT_FOUND_CONCRETE_ERR = "%s [%s] was not found.";
+    public static final String WAS_NOT_FOUND_CONCRETE_ERR = "%s [%s] was not found.";
     private static final String WAS_NOT_FOUND_ERR = "%s was not found.";
     public static final String EXISTS_BUT_NOT_ACTIVE_ERR = "%s [%s] exists, but is not active.";
-    
+
     private final Class<T> type;
     private final ICompanionObjectFinder coFinder;
 
@@ -66,7 +66,7 @@ public class EntityExistsValidator<T extends AbstractEntity<?>> implements IBefo
                 final String entityTitle = TitlesDescsGetter.getEntityTitleAndDesc(newValue.getType()).getKey();
                 return failure(entity, format("EntityExists validator: dirty entity %s (%s) is not acceptable.", newValue, entityTitle));
             }
-            
+
             if (EntityQueryCriteria.class.isAssignableFrom(entity.getType())) {
                 return successful(entity);
             }
@@ -109,5 +109,4 @@ public class EntityExistsValidator<T extends AbstractEntity<?>> implements IBefo
             return failure(entity, e);
         }
     }
-
 }
