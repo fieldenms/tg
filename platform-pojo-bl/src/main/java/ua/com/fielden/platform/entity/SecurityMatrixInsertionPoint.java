@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.Map;
 
 import ua.com.fielden.platform.entity.annotation.CompanionObject;
+import ua.com.fielden.platform.entity.annotation.EntityTitle;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.KeyTitle;
 import ua.com.fielden.platform.entity.annotation.KeyType;
@@ -16,8 +17,9 @@ import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.entity.annotation.Title;
 import ua.com.fielden.platform.security.user.UserRole;
 
+@EntityTitle(value = "Security Matrix", desc = "A tool to manage user role authorisations.")
 @KeyType(NoKey.class)
-@KeyTitle("Security Matrix Insertion Point")
+@KeyTitle("Security Matrix")
 @CompanionObject(ISecurityMatrixInsertionPoint.class)
 public class SecurityMatrixInsertionPoint extends AbstractFunctionalEntityWithCentreContext<NoKey> {
 
@@ -31,15 +33,15 @@ public class SecurityMatrixInsertionPoint extends AbstractFunctionalEntityWithCe
 
     @IsProperty(SecurityTokenTreeNodeEntity.class)
     @Title(value = "Tokens", desc = "Security Tokens")
-    private List<SecurityTokenTreeNodeEntity> tokens = new ArrayList<>();
+    private final List<SecurityTokenTreeNodeEntity> tokens = new ArrayList<>();
 
     @IsProperty(UserRole.class)
     @Title(value = "User roles", desc = "Available user roles")
-    private List<UserRole> userRoles = new ArrayList<>();
+    private final List<UserRole> userRoles = new ArrayList<>();
 
     @IsProperty(Object.class)
     @Title(value = "Token - Role association", desc = "Desc")
-    private Map<String, List<Long>> tokenRoleMap = new HashMap<>();
+    private final Map<String, List<Long>> tokenRoleMap = new HashMap<>();
 
     @IsProperty
     @Title(value = "Was Calculated", desc = "Desc")

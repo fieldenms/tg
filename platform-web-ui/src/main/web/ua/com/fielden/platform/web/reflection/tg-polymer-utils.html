@@ -1,4 +1,9 @@
 <script>
+    
+    /**
+     * 
+     */
+    const FOCUSABLE_ELEMENTS_SELECTOR = 'a[href], area[href], input, select, textarea, button, iframe, object, embed, [tabindex="0"], [contenteditable]';
     /**
      * Removes all Light DOM children from Polymer 'element'.
      *
@@ -70,10 +75,21 @@
     };
 
     /**
+     * Returns true if the descendant is has parent as ancestor, otherwise returns false.
+     */
+    const isInHierarchy = function (parent, descendant) {
+        let current = descendant;
+        while (current !== null && current !== parent) {
+            current = current.parentElement;
+        }
+        return current !== null;
+    };
+
+    /**
      * The class that can be used like an entity for entity grid inspector or any other place.
      */
     class EntityStub {
-        
+
         constructor(id) {
             this['id'] = id;
         }

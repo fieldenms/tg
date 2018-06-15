@@ -103,7 +103,7 @@ public class SimpleMasterBuilder<T extends AbstractEntity<?>> implements ISimple
 
     public static Optional<String> getFocusingCallback(final MasterActions masterAction) {
         if (MasterActions.SAVE == masterAction) {
-            return Optional.of("focusFirstInputBound");
+            return Optional.of("focusViewBound");
         } else {
             return Optional.empty();
         }

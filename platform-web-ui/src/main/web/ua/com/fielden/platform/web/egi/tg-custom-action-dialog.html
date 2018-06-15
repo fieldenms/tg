@@ -15,6 +15,7 @@
 <link rel="import" href="/resources/actions/tg-focus-restoration-behavior.html">
 <link rel="import" href="/resources/components/tg-tooltip-behavior.html">
 <link rel="import" href="/resources/views/tg-back-button-behavior.html">
+<link rel="import" href="/resources/reflection/tg-polymer-utils.html">
 
 <dom-module id="tg-custom-action-dialog">
     <template>
@@ -136,8 +137,8 @@
 </dom-module>
 <script>
     (function () {
-        var findParentDialog = function (action) {
-            var parent = action;
+        const findParentDialog = function (action) {
+            let parent = action;
             while (parent && parent.tagName !== 'TG-CUSTOM-ACTION-DIALOG') {
                 parent = parent.parentElement;
             }
@@ -308,6 +309,10 @@
                     Polymer.dom.flush();
                     this.$.titleBar.classList.add('reverse');
                 }
+                //Add listener for custom event that was thrown when dialogs view is about to lost focus, then this focus should go to title-bar.
+                this.addEventListener("tg-last-item-focused", this._viewFocusLostEventListener.bind(this));
+                //Retrieve title's bar element to focus.
+                this._componentsToFocus = Array.from(this.$.titleBar.querySelectorAll(FOCUSABLE_ELEMENTS_SELECTOR));
             },
             
             attached: function () {
@@ -322,6 +327,53 @@
                 this.removeEventListener(clickEvent, this._onCaptureClick, true);
                 this.removeEventListener('focus', this._onCaptureFocus, true);
                 this.removeEventListener('keydown', this._onCaptureKeyDown, true);
+            },
+            
+            _getCurrentFocusableElements: function() {
+                return this._componentsToFocus.filter(element => !element.disabled && element.offsetParent !== null);
+            },
+            
+            _onTabDown: function (e) {
+                this._focusChange(e, true);
+            },
+            
+            _onShiftTabDown: function (e) {
+                this._focusChange(e, false);
+            },
+            
+            _focusChange: function (e, forward) {
+                const focusables = this._getCurrentFocusableElements();
+                const lastIndex = forward ? focusables.length - 1 : 0;
+                const firstIndex = forward ? 0 : focusables.length - 1;
+                const callback = this._lastElement ? (forward ? this._lastElement.focusNextView.bind(this._lastElement) : this._lastElement.focusPreviousView.bind(this._lastElement)) : null;
+                if (document.activeElement === this || isInHierarchy(this.$.titleBar, document.activeElement)) {
+                    if (document.activeElement === focusables[lastIndex]) {
+                        if (callback) {
+                            callback(e);
+                        } else {
+                            focusables[firstIndex].focus();
+                            tearDownEvent(e);
+                        }
+                    }
+                } else if (callback){
+                    callback(e);
+                }
+            },
+            
+            _viewFocusLostEventListener: function (e) {
+                const focusables = this._getCurrentFocusableElements();
+                const callback = this._lastElement ? (e.detail.forward ? this._lastElement.focusNextView : this._lastElement.focusPreviousView) : null;
+                if (focusables.length > 0) {
+                    if (e.detail.forward) {
+                        focusables[0].focus();
+                    } else {
+                        focusables[focusables.length - 1].focus();
+                    }
+                    tearDownEvent(e.detail.event);
+                } else if (callback) {
+                    callback(e.detail.event);
+                }
+                tearDownEvent(e);
             },
 
             _onCaptureClick: function (event) {
@@ -339,9 +391,16 @@
             },
 
             _onCaptureKeyDown: function (event) {
-                if (Polymer.IronA11yKeysBehavior.keyboardEventMatchesKeys(event, 'tab') && this._manager.currentOverlay() !== this) {
-                    console.log("select overlay");
-                    this._bringToFront();
+                if (Polymer.IronA11yKeysBehavior.keyboardEventMatchesKeys(event, 'tab')) {
+                    if (event.shiftKey) {
+                        this._onShiftTabDown(event);
+                    } else {
+                        this._onTabDown(event);
+                    }
+                    if (this._manager.currentOverlay() !== this) {
+                        console.log("select overlay");
+                        this._bringToFront();
+                    }
                 }
             },
 
@@ -723,7 +782,6 @@
                         const resultsAppearedEvent = resultsName + '-appeared';
                         const resultsDidNotAppearEvent = resultsName + '-did-not-appear';
                         
-                        this.addEventListener(resultsAppearedEvent, this._focusDialogWithInput);
                         this.addEventListener(resultsAppearedEvent, this._fitWhenFirstTimeOpened);
                         
                         this._openOnceConcrete = this._openOnce.bind(this, closeEventChannel, closeEventTopics, action, resultsAppearedEvent, resultsDidNotAppearEvent);
@@ -731,7 +789,6 @@
                         this._doNotOpenConcrete = this._doNotOpen.bind(this, resultsAppearedEvent, resultsDidNotAppearEvent);
                         this.addEventListener(resultsDidNotAppearEvent, this._doNotOpenConcrete);
                     } else {
-                        this.addEventListener('binding-entity-appeared', this._focusDialogWithInput);
                         this.addEventListener('binding-entity-appeared', this._fitWhenFirstTimeOpened);
                         
                         this._openOnce(closeEventChannel, closeEventTopics, action, null, null);
@@ -826,8 +883,8 @@
                 // Desktop app specific: focus first input when opening dialog.
                 // This is also used when closing dialog: if child dialog was not closed, then its first input should be focused (this however can not be reproduced on mobile due to maximised nature of all dialogs).
                 // So, in mobile app the input will not be focused on dialog opening (and the keyboard will not appear suddenly until the user explicitly clicks on some editor). 
-                if (this.$.appConfig.mobile === false && this._lastElement.focusFirstInput) {
-                    this._lastElement.focusFirstInput();
+                if (this.$.appConfig.mobile === false && this._lastElement.focusView) {
+                    this._lastElement.focusView();
                 }
             },
 
