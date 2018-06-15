@@ -149,7 +149,7 @@ public class EntityCentreBuilder<T extends AbstractEntity<?>> implements IEntity
     @Override
     public ICentreTopLevelActionsWithRunConfig<T> forEntity(final Class<T> type) {
         this.entityType = type;
-        return new TopLevelActionsBuilder<T>(this);
+        return new GenericCentreConfigBuilder<T>(this);
     }
 
     public EntityCentreConfig<T> build() {

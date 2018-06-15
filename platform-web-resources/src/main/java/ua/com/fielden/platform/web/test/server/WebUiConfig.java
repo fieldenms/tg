@@ -1295,6 +1295,14 @@ public class WebUiConfig extends AbstractWebUiConfig {
         ICentreTopLevelActions<TgPersistentEntityWithProperties> actionConf = (runAutomatically ? partialCentre.runAutomatically() : partialCentre)
                 .hasEventSourceAt("/entity-centre-events")
                 .enforcePostSaveRefresh()
+                .addFrontAction(action(EntityNewAction.class).
+                        withContext(context().withSelectionCrit().build()).
+                        icon("add-circle-outline").
+                        shortDesc("Add new").
+                        longDesc("Start coninuous creatio of entities").
+                        shortcut("alt+n").
+                        withNoParentCentreRefresh().
+                        build())
                 .addTopAction(action(EntityNewAction.class).
                         withContext(context().withSelectionCrit().build()).
                         icon("add-circle-outline").
@@ -1403,15 +1411,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
                                 .icon("icons:attachment")
                                 .shortDesc("Attach file to a selected entity")
                                 .build()
-                ).also()
-                .addFrontAction(action(EntityNewAction.class).
-                        withContext(context().withSelectionCrit().build()).
-                        icon("add-circle-outline").
-                        shortDesc("Add new").
-                        longDesc("Start coninuous creatio of entities").
-                        shortcut("alt+n").
-                        withNoParentCentreRefresh().
-                        build())
+                )
                 .addCrit("this").asMulti().autocompleter(TgPersistentEntityWithProperties.class)
                 .withMatcher(KeyPropValueMatcherForCentre.class, context().withSelectedEntities()./*withMasterEntity().*/build())
                 .withProps(pair("desc", true), pair("booleanProp", false), pair("compositeProp", true), pair("compositeProp.desc", true))
