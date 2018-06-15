@@ -36,22 +36,23 @@ public class CentreConfigUpdaterDefaultActionProducer extends DefaultEntityProdu
             final EnhancedCentreEntityQueryCriteria<?, ?> criteriaEntity = ofMasterEntity().selectionCrit();
             
             final Class<?> root = criteriaEntity.getEntityClass();
-            final ICentreDomainTreeManagerAndEnhancer defaultCentre = criteriaEntity.defaultCentreSupplier().get();
-            final Class<?> defaultManagedType = defaultCentre.getEnhancer().getManagedType(root);
+            final ICentreDomainTreeManagerAndEnhancer baseCentre = criteriaEntity.baseCentreSupplier().get();
+            final Class<?> defaultManagedType = baseCentre.getEnhancer().getManagedType(root);
             
             // provide default visible properties into the action
-            final List<String> defaultCheckedPropertiesWithoutSummaries = checkedPropertiesWithoutSummaries(defaultCentre.getSecondTick().checkedProperties(root), defaultManagedType);
+            final List<String> defaultUsedProperties = baseCentre.getSecondTick().usedProperties(root);
             entity.setDefaultVisibleProperties(
-                defaultCheckedPropertiesWithoutSummaries.stream()
+                defaultUsedProperties.stream()
                 .map(checkedProperty -> dslName(checkedProperty))
                 .collect(Collectors.toCollection(LinkedHashSet::new))
             );
             
+            final List<String> defaultCheckedPropertiesWithoutSummaries = checkedPropertiesWithoutSummaries(baseCentre.getSecondTick().checkedProperties(root), defaultManagedType);
             // provide default sorting values into the action
             entity.setDefaultSortingVals(createSortingVals(
                 createCustomisableColumns(
                     defaultCheckedPropertiesWithoutSummaries,
-                    defaultCentre.getSecondTick().orderedProperties(root),
+                    baseCentre.getSecondTick().orderedProperties(root),
                     defaultManagedType,
                     factory()
                 )
