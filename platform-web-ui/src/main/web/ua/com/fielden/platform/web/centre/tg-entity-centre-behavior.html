@@ -511,10 +511,12 @@
                         this.$.egi.renderingHints = renderingHints;
                         this.$.egi._adjustColumnWidths(columnWidths);
                         this.$.egi._adjustColumns(visibleColumnsWithOrder.map(column => column === "this" ? "" : column));
-                        if (this._triggerRun && this._selectedView === 0) {
-                            this.async(function () {
-                                this._selectedView = 1;
-                            }, 100);
+                        if (this._triggerRun) {
+                            if (this._selectedView === 0) {
+                                this.async(function () {
+                                    this._selectedView = 1;
+                                }, 100);
+                            }
                             this._triggerRun = false;
                         }
                         if (this.$.selection_criteria._wasRun !== 'yes') {
