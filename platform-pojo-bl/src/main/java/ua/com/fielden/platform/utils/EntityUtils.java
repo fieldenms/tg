@@ -11,8 +11,11 @@ import static ua.com.fielden.platform.entity.AbstractEntity.ID;
 import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
 import static ua.com.fielden.platform.entity.AbstractEntity.VERSION;
 import static ua.com.fielden.platform.reflection.AnnotationReflector.getKeyType;
+import static ua.com.fielden.platform.reflection.Finder.getKeyMembers;
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.PROPERTY_SPLITTER;
 import static ua.com.fielden.platform.types.tuples.T2.t2;
+import static ua.com.fielden.platform.utils.EntityUtils.isCompositeEntity;
+import static ua.com.fielden.platform.utils.EntityUtils.isPersistedEntityType;
 import static ua.com.fielden.platform.utils.StreamUtils.takeWhile;
 
 import java.io.Serializable;
@@ -1251,5 +1254,25 @@ public class EntityUtils {
             final String propName = indexOfLastDot > 0 ? path.substring(indexOfLastDot + 1) : path;
             return t2(propName, ofNullable(root.get(path)));
         });
+    }
+    
+    public static List<String> getPathsToLeafPropertiesOfEntityWithCompositeKey(final String parentPath, final Class<? extends AbstractEntity<DynamicEntityKey>> propType) {
+    	List<String> result = new ArrayList<>();
+    	
+    	String parentPrefix = parentPath != null ? parentPath + "." : ""; 
+    	
+    	for (Field field : getKeyMembers(propType)) {
+			if (isPersistedEntityType(field.getType())) {
+				if (isCompositeEntity((Class<? extends AbstractEntity<?>>) field.getType()) ) {
+					result.addAll(getPathsToLeafPropertiesOfEntityWithCompositeKey(parentPrefix + field.getName(), (Class<? extends AbstractEntity<DynamicEntityKey>>) field.getType()));
+				} else {
+					result.add(parentPrefix + field.getName() + ".key");
+				}
+			} else {
+				result.add(parentPrefix + field.getName());
+			}
+		}
+    	
+    	return result;
     }
 }

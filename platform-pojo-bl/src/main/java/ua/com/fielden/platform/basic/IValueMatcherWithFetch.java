@@ -1,15 +1,21 @@
 package ua.com.fielden.platform.basic;
 
+import static ua.com.fielden.platform.entity.AbstractEntity.DESC;
 import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.cond;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.orderBy;
+import static ua.com.fielden.platform.utils.EntityUtils.hasDescProperty;
+import static ua.com.fielden.platform.utils.EntityUtils.isCompositeEntity;
 
+import java.util.Iterator;
 import java.util.List;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.DynamicEntityKey;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.entity.query.model.ConditionModel;
 import ua.com.fielden.platform.entity.query.model.OrderingModel;
+import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.web.centre.CentreContext;
 
 /**
@@ -45,7 +51,20 @@ public interface IValueMatcherWithFetch<T extends AbstractEntity<?>> extends IVa
     	return orderBy().caseWhen().prop(KEY).iLike().val(searchString).then().val(0).otherwise().val(1).endAsInt().asc().model();
     }
     
-    default ConditionModel createSearchByKeyCriteriaModel(final String searchString) {
-        return cond().prop(KEY).iLike().val(searchString).model();
+    static ConditionModel createSearchByKeyCriteriaModel(Class<? extends AbstractEntity<?>> entityType, final String searchString) {
+    	
+        if ("%".equals(searchString)) {
+        	return cond().val(1).eq().val(1).model();
+        }
+    	
+        ConditionModel keyCriteria = cond().prop(KEY).iLike().val(searchString).model(); 				
+        		
+        if (isCompositeEntity((Class<? extends AbstractEntity<?>>) entityType) ) {
+        	for (String propName : EntityUtils.getPathsToLeafPropertiesOfEntityWithCompositeKey(null, (Class<? extends AbstractEntity<DynamicEntityKey>>) entityType)) {
+        		keyCriteria = cond().condition(keyCriteria).or().prop(propName).iLike().val(searchString).model();
+			}
+        }
+    	
+        return hasDescProperty(entityType) ? cond().condition(keyCriteria).or().prop(DESC).iLike().val("%" + searchString).model() : keyCriteria;
     }
 }

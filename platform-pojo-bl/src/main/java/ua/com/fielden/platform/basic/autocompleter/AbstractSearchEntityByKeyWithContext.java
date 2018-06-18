@@ -8,6 +8,7 @@ import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetch
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.orderBy;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
+import static ua.com.fielden.platform.basic.IValueMatcherWithFetch.createSearchByKeyCriteriaModel;
 
 import java.util.HashMap;
 import java.util.List;
@@ -52,7 +53,7 @@ public abstract class AbstractSearchEntityByKeyWithContext<CONTEXT extends Abstr
      * @return
      */
     protected ConditionModel makeSearchCriteriaModel(final CONTEXT context, final String searchString) {
-        return createSearchByKeyCriteriaModel(searchString);
+        return createSearchByKeyCriteriaModel(companion.getEntityType(), searchString);
     }
 
     /**

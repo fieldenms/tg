@@ -1,8 +1,5 @@
 package ua.com.fielden.platform.basic.autocompleter;
 
-import static ua.com.fielden.platform.entity.AbstractEntity.DESC;
-import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.cond;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.orderBy;
 import static ua.com.fielden.platform.utils.EntityUtils.hasDescProperty;
 
@@ -37,15 +34,7 @@ public class FallbackValueMatcherWithCentreContext<T extends AbstractEntity<?>> 
 
     @Override
     protected ConditionModel makeSearchCriteriaModel(final CentreContext<T, ?> context, final String searchString) {
-        if ("%".equals(searchString)) {
-        	return cond().val(1).eq().val(1).model();
-        }
-    	
-    	if (hasDescProperty(entityType)) {
-            return cond().prop(KEY).iLike().val(searchString).or().prop(DESC).iLike().val("%" + searchString).model();
-        } else {
-            return super.makeSearchCriteriaModel(context, searchString);
-        }
+    	return super.makeSearchCriteriaModel(context, searchString);
     }
 
     @Override

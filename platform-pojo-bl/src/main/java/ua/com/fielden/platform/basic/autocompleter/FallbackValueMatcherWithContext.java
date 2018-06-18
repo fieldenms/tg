@@ -50,13 +50,7 @@ public class FallbackValueMatcherWithContext<CONTEXT extends AbstractEntity<?>, 
     @Override
     protected ConditionModel makeSearchCriteriaModel(final CONTEXT context, final String searchString) {
         final ConditionModel originalSearchCriteria = super.makeSearchCriteriaModel(context, searchString);
-
-        final ConditionModel secondStepSearchCriteria = "%".equals(searchString) ? cond().val(1).eq().val(1).model() : 
-        	(hasDescProperty(entityType) ? cond().condition(originalSearchCriteria).or().prop(DESC).iLike().val("%" + searchString).model() : originalSearchCriteria);
-
-        final ConditionModel finalStepSearchCriteria = activeOnly ? cond().condition(secondStepSearchCriteria).and().prop(ACTIVE).eq().val(true).model() : secondStepSearchCriteria;
-
-    	return finalStepSearchCriteria;
+        return activeOnly ? cond().condition(originalSearchCriteria).and().prop(ACTIVE).eq().val(true).model() : originalSearchCriteria;
     }
     
     @Override
