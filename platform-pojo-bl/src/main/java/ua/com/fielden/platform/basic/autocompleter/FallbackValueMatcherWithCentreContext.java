@@ -40,7 +40,7 @@ public class FallbackValueMatcherWithCentreContext<T extends AbstractEntity<?>> 
     @Override
     protected OrderingModel makeOrderingModel(final String searchString) {
     	if (hasDescProperty(entityType) && !"%".equals(searchString)) {
-    		return orderBy().order(createKeyBeforeDescOrderingModel(searchString)).order(super.makeOrderingModel(searchString)).model();
+    		return orderBy().order(createKeyBeforeDescOrderingModel(entityType, searchString)).order(super.makeOrderingModel(searchString)).model();
     	} 
         return super.makeOrderingModel(searchString);
     }

@@ -4,6 +4,7 @@ import static ua.com.fielden.platform.entity.AbstractEntity.DESC;
 import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.cond;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.orderBy;
+import static ua.com.fielden.platform.utils.EntityUtils.getPathsToLeafPropertiesOfEntityWithCompositeKey;
 import static ua.com.fielden.platform.utils.EntityUtils.hasDescProperty;
 import static ua.com.fielden.platform.utils.EntityUtils.isCompositeEntity;
 
@@ -47,8 +48,8 @@ public interface IValueMatcherWithFetch<T extends AbstractEntity<?>> extends IVa
     List<T> findMatchesWithModel(final String value);
     
     
-    default OrderingModel createKeyBeforeDescOrderingModel (final String searchString) {
-    	return orderBy().caseWhen().prop(KEY).iLike().val(searchString).then().val(0).otherwise().val(1).endAsInt().asc().model();
+    default OrderingModel createKeyBeforeDescOrderingModel (Class<? extends AbstractEntity<?>> entityType, final String searchString) {
+    	return orderBy().caseWhen().condition(createSearchByKeyCriteriaModel(entityType, searchString)).then().val(0).otherwise().val(1).endAsInt().asc().model();
     }
     
     static ConditionModel createSearchByKeyCriteriaModel(Class<? extends AbstractEntity<?>> entityType, final String searchString) {
@@ -60,7 +61,7 @@ public interface IValueMatcherWithFetch<T extends AbstractEntity<?>> extends IVa
         ConditionModel keyCriteria = cond().prop(KEY).iLike().val(searchString).model(); 				
         		
         if (isCompositeEntity((Class<? extends AbstractEntity<?>>) entityType) ) {
-        	for (String propName : EntityUtils.getPathsToLeafPropertiesOfEntityWithCompositeKey(null, (Class<? extends AbstractEntity<DynamicEntityKey>>) entityType)) {
+        	for (String propName : getPathsToLeafPropertiesOfEntityWithCompositeKey(null, (Class<? extends AbstractEntity<DynamicEntityKey>>) entityType)) {
         		keyCriteria = cond().condition(keyCriteria).or().prop(propName).iLike().val(searchString).model();
 			}
         }

@@ -5,6 +5,7 @@ import static ua.com.fielden.platform.entity.AbstractEntity.DESC;
 import static ua.com.fielden.platform.entity.ActivatableAbstractEntity.ACTIVE;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.cond;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.orderBy;
+import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getEntityTitleAndDesc;
 import static ua.com.fielden.platform.utils.EntityUtils.hasDescProperty;
 
 import ua.com.fielden.platform.basic.IValueMatcherWithContext;
@@ -36,7 +37,7 @@ public class FallbackValueMatcherWithContext<CONTEXT extends AbstractEntity<?>, 
         entityType = co.getEntityType();
         this.activeOnly = activeOnly;
         if (activeOnly && !ActivatableAbstractEntity.class.isAssignableFrom(entityType)) {
-            final String entityTitle = TitlesDescsGetter.getEntityTitleAndDesc(entityType).getKey();
+            final String entityTitle = getEntityTitleAndDesc(entityType).getKey();
             throw new EntityException(format("Activatable type is expected. Entity [%s] is not activatable.", entityTitle));
         }
 
@@ -56,7 +57,7 @@ public class FallbackValueMatcherWithContext<CONTEXT extends AbstractEntity<?>, 
     @Override
     protected OrderingModel makeOrderingModel(final String searchString) {
     	if (hasDescProperty(entityType) && !"%".equals(searchString)) {
-    		return orderBy().order(createKeyBeforeDescOrderingModel(searchString)).order(super.makeOrderingModel(searchString)).model();
+    		return orderBy().order(createKeyBeforeDescOrderingModel(entityType, searchString)).order(super.makeOrderingModel(searchString)).model();
     	} 
         return super.makeOrderingModel(searchString);
     }
