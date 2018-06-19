@@ -1083,20 +1083,21 @@
             },
 
             /**
-             * Contract that allows one to determines whether this component can be closed/left or not.
+             * Contract that allows one to determine whether this component can be closed/left or not.
+             *
+             * Currently entity centre can be closed without prompt in almost all situations except the edge-cases where 
+             * its insertion point has 'canLeave' contract and this insertion point has unsaved changes (unlikely situation).
+             * 
+             * Please note that selection criteria can have unsaved changes but it does not prevent user from centre closing.
+             * This is due to the fact that most of these unsaved changes are actually saved (except the changes to the editor
+             * for which tab-off wasn't actioned).
              */
             canLeave: function () {
-                // Check whether selection criteria can be left.
-                var canLeaveThisCentre = this.$.selection_criteria.classList.contains('canLeave') && this.$.selection_criteria.canLeave();
-                var insertionPoints, insPoIndex, elementWithCanLeave, canLeaveChild;
-                if (canLeaveThisCentre) {
-                    return canLeaveThisCentre;
-                }
                 // Check whether all insertion points can be left.
-                insertionPoints = this.querySelectorAll('tg-entity-centre-insertion-point');
-                for (insPoIndex = 0; insPoIndex < insertionPoints.length; insPoIndex++) {
-                    elementWithCanLeave = insertionPoints[insPoIndex].querySelector('.canLeave');
-                    canLeaveChild = elementWithCanLeave && elementWithCanLeave.canLeave();
+                const insertionPoints = this.querySelectorAll('tg-entity-centre-insertion-point');
+                for (let insPoIndex = 0; insPoIndex < insertionPoints.length; insPoIndex++) {
+                    const elementWithCanLeave = insertionPoints[insPoIndex].querySelector('.canLeave');
+                    const canLeaveChild = elementWithCanLeave && elementWithCanLeave.canLeave();
                     if (canLeaveChild) {
                         return canLeaveChild;
                     }
