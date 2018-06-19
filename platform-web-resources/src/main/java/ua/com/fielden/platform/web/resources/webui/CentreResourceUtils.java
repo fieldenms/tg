@@ -465,10 +465,9 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
             final Optional<String> newName = editKindAndNewNameAndPreferredVal._2;
             if (COPY.equals(editKindAndNewNameAndPreferredVal._1)) {
                 final ICentreDomainTreeManagerAndEnhancer freshCentre = updateCentre(gdtm, miType, FRESH_CENTRE_NAME, saveAsName, device);
-                final ICentreDomainTreeManagerAndEnhancer savedCentre = updateCentre(gdtm, miType, SAVED_CENTRE_NAME, saveAsName, device);
-                
+                // save the 'fresh' centre with a new name -- buttons SAVE / DISCARD will be disabled
                 initAndCommit(gdtm, miType, FRESH_CENTRE_NAME, newName, device, freshCentre, newDesc);
-                initAndCommit(gdtm, miType, SAVED_CENTRE_NAME, newName, device, savedCentre, null);
+                initAndCommit(gdtm, miType, SAVED_CENTRE_NAME, newName, device, freshCentre, null);
             } else {
                 editCentreTitleAndDesc(gdtm, miType, saveAsName, device, newName.get(), newDesc);
                 if (!saveAsName.isPresent()) {
