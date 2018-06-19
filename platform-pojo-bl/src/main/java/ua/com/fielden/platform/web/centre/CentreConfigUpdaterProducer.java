@@ -47,7 +47,7 @@ public class CentreConfigUpdaterProducer extends AbstractFunctionalEntityForColl
         entity.setMasterEntityHolder(masterEntity.centreContextHolder());
         
         final Class<?> root = masterEntity.getEntityClass();
-        final ICentreDomainTreeManagerAndEnhancer freshCentre = masterEntity.freshCentreSupplier().get();
+        final ICentreDomainTreeManagerAndEnhancer freshCentre = masterEntity.freshCentreSupplier().get(); // TODO maybe it would be more correct to use PREVIOUSLY_RUN centre here
         
         final List<String> freshCheckedProperties = freshCentre.getSecondTick().checkedProperties(root);
         final List<String> freshUsedProperties = freshCentre.getSecondTick().usedProperties(root);

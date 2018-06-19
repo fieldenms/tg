@@ -436,9 +436,6 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
             centreConsumer.accept(updateCentre(gdtm, miType, FRESH_CENTRE_NAME, saveAsName, device));
             commitCentre(gdtm, miType, FRESH_CENTRE_NAME, saveAsName, device);
             
-            centreConsumer.accept(updateCentre(gdtm, miType, SAVED_CENTRE_NAME, saveAsName, device));
-            commitCentre(gdtm, miType, SAVED_CENTRE_NAME, saveAsName, device);
-            
             centreConsumer.accept(updateCentre(gdtm, miType, PREVIOUSLY_RUN_CENTRE_NAME, saveAsName, device));
             commitCentre(gdtm, miType, PREVIOUSLY_RUN_CENTRE_NAME, saveAsName, device);
         });
