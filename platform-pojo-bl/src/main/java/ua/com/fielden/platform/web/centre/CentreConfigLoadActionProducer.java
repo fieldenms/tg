@@ -4,6 +4,8 @@ import static ua.com.fielden.platform.domaintree.impl.GlobalDomainTreeManager.DE
 import static ua.com.fielden.platform.error.Result.failure;
 
 import java.util.LinkedHashSet;
+import java.util.Set;
+
 import com.google.inject.Inject;
 
 import ua.com.fielden.platform.dao.IEntityDao;
@@ -21,6 +23,7 @@ import ua.com.fielden.platform.entity_centre.review.criteria.EnhancedCentreEntit
  *
  */
 public class CentreConfigLoadActionProducer extends AbstractFunctionalEntityForCollectionModificationProducer<EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, IEntityDao<AbstractEntity<?>>>, CentreConfigLoadAction, String, LoadableCentreConfig> {
+    private static final String ERR_NO_CONFIGURATIONS_TO_LOAD = "There are no configurations to load.";
     private final ICollectionModificationController<EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, IEntityDao<AbstractEntity<?>>>, CentreConfigLoadAction, String, LoadableCentreConfig> controller;
     
     @Inject
@@ -41,11 +44,11 @@ public class CentreConfigLoadActionProducer extends AbstractFunctionalEntityForC
             entity.setCentreConfigurations(new LinkedHashSet<>(selectionCrit().loadableCentresSupplier().get()));
             
             if (entity.getCentreConfigurations().isEmpty()) {
-                throw failure("There are no configurations to load.");
+                throw failure(ERR_NO_CONFIGURATIONS_TO_LOAD);
             }
             
             final LinkedHashSet<String> chosenIds = new LinkedHashSet<>();
-            chosenIds.add(selectionCrit().saveAsNameSupplier().get().orElse(DEFAULT_CONFIG_TITLE));
+            selectionCrit().saveAsNameSupplier().get().map(saveAsName -> chosenIds.add(saveAsName));
             
             // provide chosenIds into the action
             entity.setChosenIds(chosenIds);

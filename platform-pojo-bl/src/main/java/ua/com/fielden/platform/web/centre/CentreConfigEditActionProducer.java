@@ -1,10 +1,13 @@
 package ua.com.fielden.platform.web.centre;
 
 import static ua.com.fielden.platform.domaintree.impl.GlobalDomainTreeManager.DEFAULT_CONFIG_TITLE;
+import static ua.com.fielden.platform.error.Result.failure;
 import static ua.com.fielden.platform.utils.EntityUtils.equalsEx;
 import static ua.com.fielden.platform.web.centre.CentreConfigEditAction.EditKind.COPY;
 
 import java.util.Map;
+import java.util.Optional;
+
 import com.google.inject.Inject;
 
 import ua.com.fielden.platform.dao.IEntityDao;
@@ -24,6 +27,7 @@ import ua.com.fielden.platform.types.tuples.T2;
  */
 public class CentreConfigEditActionProducer extends DefaultEntityProducerWithContext<CentreConfigEditAction> {
     private static final String COPY_ACTION_SUFFIX = " (copy)";
+    private static final String ERR_CANNOT_BE_EDITED = "Can not be edited.";
     
     @Inject
     public CentreConfigEditActionProducer(final EntityFactory factory, final ICompanionObjectFinder companionFinder) {
@@ -38,6 +42,14 @@ public class CentreConfigEditActionProducer extends DefaultEntityProducerWithCon
             
             final EnhancedCentreEntityQueryCriteria<?, ?> previouslyRunSelectionCrit = selectionCrit();
             
+            entity.setEditKind(chosenProperty());
+            final boolean copyAction = COPY.name().equals(entity.getEditKind());
+            
+            final Optional<String> saveAsName = previouslyRunSelectionCrit.saveAsNameSupplier().get();
+            if (!copyAction && isDefaultOrInherited(saveAsName, previouslyRunSelectionCrit)) {
+                throw failure(ERR_CANNOT_BE_EDITED);
+            }
+            
             // get modifHolder and apply it against 'fresh' centre to be able to identify validity of 'fresh' centre
             final Map<String, Object> freshModifHolder = previouslyRunSelectionCrit.centreContextHolder().getModifHolder();
             
@@ -46,12 +58,10 @@ public class CentreConfigEditActionProducer extends DefaultEntityProducerWithCon
             // configuration copy / edit will not be performed if current recently applied 'fresh' centre configuration is invalid
             appliedFreshSelectionCrit.isValid().ifFailure(Result::throwRuntime);
             
-            entity.setEditKind(chosenProperty());
             final T2<String, String> titleAndDesc = previouslyRunSelectionCrit.centreTitleAndDescGetter().get();
             final String title = titleAndDesc._1;
             final String desc = titleAndDesc._2;
             
-            final boolean copyAction = COPY.name().equals(entity.getEditKind());
             final String actionKindSuffix = copyAction ? COPY_ACTION_SUFFIX : "";
             if (DEFAULT_CONFIG_TITLE.equals(title)) {
                 // remove brackets from title when copying / editing 'default' centre configuration; brackets are not allowed as per CentreConfigEditActionTitleValidator
@@ -61,11 +71,27 @@ public class CentreConfigEditActionProducer extends DefaultEntityProducerWithCon
             }
             if (!copyAction) {
                 // in case of EDIT action (when EDIT button pressed) we need to provide information whether currently edited configuration is preferred -- in such case just compare preferred config with current
-                entity.setPreferred(equalsEx(previouslyRunSelectionCrit.saveAsNameSupplier().get(), previouslyRunSelectionCrit.preferredConfigSupplier().get()));
+                entity.setPreferred(equalsEx(saveAsName, previouslyRunSelectionCrit.preferredConfigSupplier().get()));
             }
             entity.setDesc(desc + actionKindSuffix);
         }
         return entity;
+    }
+    
+    /**
+     * Returns <code>true</code> in case where <code>saveAsName</code>d configuration represents default configuration or inherited from base user configuration,
+     * otherwise <code>false</code>.
+     * 
+     * @param saveAsName
+     * @param criteriaEntity
+     * @return
+     */
+    public static boolean isDefaultOrInherited(final Optional<String> saveAsName, final EnhancedCentreEntityQueryCriteria<?, ?> criteriaEntity) {
+        return !saveAsName.isPresent() // default configuration name and title cannot be edited
+            ||
+            criteriaEntity.loadableCentresSupplier().get().stream() // inherited configuration name and title cannot be edited
+            .filter(lcc -> lcc.getKey().equals(saveAsName.get()))
+            .findAny().map(lcc -> lcc.isInherited()).orElse(true);
     }
     
 }
