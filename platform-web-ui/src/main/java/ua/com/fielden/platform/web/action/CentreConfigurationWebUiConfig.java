@@ -99,8 +99,8 @@ public class CentreConfigurationWebUiConfig {
                                         + "editor.entity.setAndRegisterPropertyTouch('sortingVals', functionalEntity.get('defaultSortingVals'));\n"
                                         + "editor._invokeValidation.bind(editor)();\n"
                                     ))
-                        .shortDesc("Default")
-                        .longDesc("Load default configuration")
+                        .shortDesc("Discard")
+                        .longDesc("Load last known previously saved configuration")
                         .shortcut("ctrl+d")
                         .withNoParentCentreRefresh() // avoid refreshing of parent centres; 'Default' button just loads default configuration but it should be either applied or canceled
                         .build())
