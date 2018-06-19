@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.web.centre;
 
 import static ua.com.fielden.platform.domaintree.impl.GlobalDomainTreeManager.DEFAULT_CONFIG_TITLE;
+import static ua.com.fielden.platform.error.Result.failure;
 
 import java.util.LinkedHashSet;
 import com.google.inject.Inject;
@@ -38,6 +39,10 @@ public class CentreConfigLoadActionProducer extends AbstractFunctionalEntityForC
         if (contextNotEmpty()) {
             // provide loadable configurations into the action
             entity.setCentreConfigurations(new LinkedHashSet<>(selectionCrit().loadableCentresSupplier().get()));
+            
+            if (entity.getCentreConfigurations().isEmpty()) {
+                throw failure("There are no configurations to load.");
+            }
             
             final LinkedHashSet<String> chosenIds = new LinkedHashSet<>();
             chosenIds.add(selectionCrit().saveAsNameSupplier().get().orElse(DEFAULT_CONFIG_TITLE));
