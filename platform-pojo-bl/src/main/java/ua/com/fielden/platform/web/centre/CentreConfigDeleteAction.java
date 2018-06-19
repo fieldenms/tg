@@ -19,6 +19,7 @@ import ua.com.fielden.platform.entity.annotation.Title;
 @CompanionObject(ICentreConfigDeleteAction.class)
 @KeyType(NoKey.class)
 public class CentreConfigDeleteAction extends AbstractFunctionalEntityWithCentreContext<NoKey> {
+    public enum DeleteKind { DELETE, NEW }
     
     public CentreConfigDeleteAction() {
         setKey(NO_KEY);
@@ -27,6 +28,20 @@ public class CentreConfigDeleteAction extends AbstractFunctionalEntityWithCentre
     @IsProperty
     @Title(value = "Preferred Config", desc = "Preferred configuration after delete action success.")
     private String preferredConfig;
+    
+    @IsProperty
+    @Title("Delete Kind")
+    private String deleteKind;
+    
+    @Observable
+    public CentreConfigDeleteAction setDeleteKind(final String deleteKind) {
+        this.deleteKind = deleteKind;
+        return this;
+    }
+    
+    public String getDeleteKind() {
+        return deleteKind;
+    }
     
     @Observable
     public CentreConfigDeleteAction setPreferredConfig(final String preferredConfig) {

@@ -1,5 +1,7 @@
 package ua.com.fielden.platform.web.centre;
 
+import static ua.com.fielden.platform.web.centre.CentreConfigDeleteAction.DeleteKind.DELETE;
+
 import com.google.inject.Inject;
 
 import ua.com.fielden.platform.entity.DefaultEntityProducerWithContext;
@@ -22,8 +24,15 @@ public class CentreConfigDeleteActionProducer extends DefaultEntityProducerWithC
     @Override
     protected CentreConfigDeleteAction provideDefaultValues(final CentreConfigDeleteAction entity) {
         if (contextNotEmpty()) {
-            selectionCrit().centreDeleter().run();
-            entity.setPreferredConfig(selectionCrit().preferredConfigSupplier().get().orElse(""));
+            entity.setDeleteKind(chosenProperty());
+            
+            if (DELETE.name().equals(entity.getDeleteKind())) {
+                selectionCrit().centreDeleter().run();
+                entity.setPreferredConfig(selectionCrit().preferredConfigSupplier().get().orElse(""));
+            } else {
+                selectionCrit().defaultCentreClearer().run();
+                entity.setPreferredConfig("");
+            }
         }
         return entity;
     }

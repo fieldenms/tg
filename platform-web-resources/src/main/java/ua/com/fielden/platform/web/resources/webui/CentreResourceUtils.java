@@ -450,6 +450,9 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
                 updateCentre(gdtm, miType, SAVED_CENTRE_NAME, empty(), device);
             }
         });
+        validationPrototype.setDefaultCentreClearer(() -> {
+            clearDefaultCentre(gdtm, miType, device);
+        });
         validationPrototype.setFreshCentreApplier((modifHolder) -> {
             return createCriteriaEntity(modifHolder, companionFinder, critGenerator, miType, saveAsName, gdtm, device);
         });
