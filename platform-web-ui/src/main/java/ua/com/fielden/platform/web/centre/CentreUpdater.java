@@ -2,6 +2,7 @@ package ua.com.fielden.platform.web.centre;
 
 import static java.lang.String.format;
 import static java.util.Arrays.stream;
+import static java.util.Optional.empty;
 import static java.util.Optional.of;
 import static org.apache.commons.lang.StringUtils.isEmpty;
 import static ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.IAddToCriteriaTickManager.MetaValueType.ALL_ORDERING;
@@ -295,6 +296,23 @@ public class CentreUpdater {
             globalManager.removeCentresLocally(miType, deviceSpecificDiffNames);
             globalManager.removeCentres(miType, deviceSpecificDiffNames);
         }
+    }
+    
+    /**
+     * Clears 'default' centre and fully prepares it for usage.
+     * <p>
+     * Please note that {@link #PREVIOUSLY_RUN_CENTRE_NAME} surrogate centre will not be initialised.
+     * For user it means that VIEW button will become disabled and this is consistent with user expectation after 
+     * pressing NEW / DELETE button.
+     * 
+     * @param gdtm
+     * @param miType
+     * @param device
+     */
+    public static void clearDefaultCentre(final IGlobalDomainTreeManager gdtm, final Class<? extends MiWithConfigurationSupport<?>> miType, final DeviceProfile device) {
+        removeCentres(gdtm, miType, device, empty(), FRESH_CENTRE_NAME, SAVED_CENTRE_NAME, PREVIOUSLY_RUN_CENTRE_NAME);
+        updateCentre(gdtm, miType, FRESH_CENTRE_NAME, empty(), device);
+        updateCentre(gdtm, miType, SAVED_CENTRE_NAME, empty(), device);
     }
     
     /**
@@ -696,7 +714,7 @@ public class CentreUpdater {
                 // Default centre is used as a 'base' for all centres; all diffs are created comparing to default centre.
                 // Default centre is now needed for both cases: base or non-base user.
                 final ICentreDomainTreeManagerAndEnhancer defaultCentre = getDefaultCentre(globalManager, miType); // it is safer to init current user's default centre (user-specific) for both cases: base and non-base
-                if (currentUser.isBase() || of(LINK_CONFIG_TITLE).equals(saveAsName)) { // for non-base user 'link' configuration need to be derived from default user-specific configuration instead of base configuration
+                if (currentUser.isBase() || of(LINK_CONFIG_TITLE).equals(saveAsName) || empty().equals(saveAsName)) { // for non-base user 'link' and 'default' configurations need to be derived from default user-specific configuration instead of base configuration
                     // diff centre does not exist in persistent storage yet -- initialise EMPTY diff (there potentially can be some values from 'default centre',
                     //   but diff centre will be empty disregarding that fact -- no properties were marked as changed; but initialisation from 'default centre' is important --
                     //   this makes diff centre nicely synchronised with Web UI default values)
