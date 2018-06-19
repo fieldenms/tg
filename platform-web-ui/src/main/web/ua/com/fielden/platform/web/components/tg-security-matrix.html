@@ -395,6 +395,14 @@
                         }
                     });
                 },
+                
+                canLeave: function () {
+                    if (this.entities.some(entity => entity.isChanged())) {
+                        return {
+                            msg: "Please save or cancel changes."
+                        };
+                    }
+                },
 
                 filterTokens: function (text) {
                     this.$.securityMatrix.filterTokens(text.replace(/\s*,\s*/, "|"));
