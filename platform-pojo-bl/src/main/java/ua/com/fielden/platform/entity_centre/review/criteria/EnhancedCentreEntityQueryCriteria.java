@@ -20,6 +20,7 @@ import ua.com.fielden.platform.entity.functional.centre.CentreContextHolder;
 import ua.com.fielden.platform.entity.matcher.IValueMatcherFactory;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
 import ua.com.fielden.platform.types.tuples.T2;
+import ua.com.fielden.platform.types.tuples.T3;
 import ua.com.fielden.platform.web.centre.CentreConfigEditAction.EditKind;
 import ua.com.fielden.platform.web.centre.LoadableCentreConfig;
 
@@ -34,11 +35,13 @@ import ua.com.fielden.platform.web.centre.LoadableCentreConfig;
 public class EnhancedCentreEntityQueryCriteria<T extends AbstractEntity<?>, DAO extends IEntityDao<T>> extends EntityQueryCriteria<ICentreDomainTreeManagerAndEnhancer, T, DAO> {
     private Supplier<ICentreDomainTreeManagerAndEnhancer> freshCentreSupplier;
     private Function<Map<String, Object>, EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, ? extends IEntityDao<AbstractEntity<?>>>> freshCentreApplier;
-    private BiConsumer<T2<EditKind, Optional<String>>, String> centreEditor;
+    private BiConsumer<T3<EditKind, Optional<String>, Optional<Boolean>>, String> centreEditor;
     private Runnable centreDeleter;
-    private Supplier<T2<List<LoadableCentreConfig>, Optional<String>>> loadableCentresSupplier;
+    private Supplier<List<LoadableCentreConfig>> loadableCentresSupplier;
+    private Supplier<Optional<String>> saveAsNameSupplier;
+    private Supplier<Optional<String>> preferredConfigSupplier;
     private Supplier<T2<String, String>> centreTitleAndDescGetter;
-    private Supplier<ICentreDomainTreeManagerAndEnhancer> defaultCentreSupplier;
+    private Supplier<ICentreDomainTreeManagerAndEnhancer> baseCentreSupplier;
     /**
      * This function represents centre query runner for export action which is dependent on configuration of the passed <code>customObject</code>.
      * Running of this fully-fledged query depends on query context (see property centreContextHolder).
@@ -83,11 +86,11 @@ public class EnhancedCentreEntityQueryCriteria<T extends AbstractEntity<?>, DAO 
         return freshCentreApplier;
     }
 
-    public void setCentreEditor(final BiConsumer<T2<EditKind, Optional<String>>, String> centreEditor) {
+    public void setCentreEditor(final BiConsumer<T3<EditKind, Optional<String>, Optional<Boolean>>, String> centreEditor) {
         this.centreEditor = centreEditor;
     }
 
-    public BiConsumer<T2<EditKind, Optional<String>>, String> centreEditor() {
+    public BiConsumer<T3<EditKind, Optional<String>, Optional<Boolean>>, String> centreEditor() {
         return centreEditor;
     }
 
@@ -99,12 +102,28 @@ public class EnhancedCentreEntityQueryCriteria<T extends AbstractEntity<?>, DAO 
         return centreDeleter;
     }
 
-    public void setLoadableCentresSupplier(final Supplier<T2<List<LoadableCentreConfig>, Optional<String>>> loadableCentresSupplier) {
+    public void setLoadableCentresSupplier(final Supplier<List<LoadableCentreConfig>> loadableCentresSupplier) {
         this.loadableCentresSupplier = loadableCentresSupplier;
     }
 
-    public Supplier<T2<List<LoadableCentreConfig>, Optional<String>>> loadableCentresSupplier() {
+    public Supplier<List<LoadableCentreConfig>> loadableCentresSupplier() {
         return loadableCentresSupplier;
+    }
+
+    public void setSaveAsNameSupplier(final Supplier<Optional<String>> saveAsNameSupplier) {
+        this.saveAsNameSupplier = saveAsNameSupplier;
+    }
+
+    public Supplier<Optional<String>> saveAsNameSupplier() {
+        return saveAsNameSupplier;
+    }
+
+    public void setPreferredConfigSupplier(final Supplier<Optional<String>> preferredConfigSupplier) {
+        this.preferredConfigSupplier = preferredConfigSupplier;
+    }
+
+    public Supplier<Optional<String>> preferredConfigSupplier() {
+        return preferredConfigSupplier;
     }
 
     public void setCentreTitleAndDescGetter(final Supplier<T2<String, String>> centreTitleAndDescGetter) {
@@ -115,12 +134,12 @@ public class EnhancedCentreEntityQueryCriteria<T extends AbstractEntity<?>, DAO 
         return centreTitleAndDescGetter;
     }
 
-    public void setDefaultCentreSupplier(final Supplier<ICentreDomainTreeManagerAndEnhancer> defaultCentreSupplier) {
-        this.defaultCentreSupplier = defaultCentreSupplier;
+    public void setBaseCentreSupplier(final Supplier<ICentreDomainTreeManagerAndEnhancer> defaultCentreSupplier) {
+        this.baseCentreSupplier = defaultCentreSupplier;
     }
 
-    public Supplier<ICentreDomainTreeManagerAndEnhancer> defaultCentreSupplier() {
-        return defaultCentreSupplier;
+    public Supplier<ICentreDomainTreeManagerAndEnhancer> baseCentreSupplier() {
+        return baseCentreSupplier;
     }
 
     public Function<Map<String, Object>, Stream<AbstractEntity<?>>> exportQueryRunner() {
