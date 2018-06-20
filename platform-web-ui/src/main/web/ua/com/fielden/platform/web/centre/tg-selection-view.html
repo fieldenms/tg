@@ -39,14 +39,14 @@
         <!--Selection view toolbar-->
         <div class="toolbar layout horizontal wrap">
             <div class="toolbar-content layout horizontal center">
-                <tg-ui-action ui-role='ICON' short-desc='New configuration' long-desc='Create new configuration' icon='av:playlist-add' icon-style='' component-uri='/master_ui/ua.com.fielden.platform.web.centre.CentreConfigDeleteAction' element-name='tg-CentreConfigDeleteAction-master' action-kind='TOP_LEVEL' element-alias='tg-CentreConfigDeleteAction-master_4_TOP_LEVEL' show-dialog='[[_showDialog]]' create-context-holder='[[_createContextHolder]]' chosen-property="NEW" attrs='[[topLevelActions.4.attrs]]' pre-action='[[topLevelActions.4.preAction]]' post-action-success='[[topLevelActions.4.postActionSuccess]]' post-action-error='[[topLevelActions.4.postActionError]]' require-selection-criteria='true' require-selected-entities='NONE' require-master-entity='false' is-action-in-progress='[[_computeConfigButtonDisabled(saveAsName)]]' style='[[_computeConfigButtonStyle(saveAsName)]]'></tg-ui-action>
-                <tg-ui-action ui-role='ICON' short-desc='Save configuration as' long-desc='Save current configuration as...' icon='tg-icons:content-save-settings' icon-style='' component-uri='/master_ui/ua.com.fielden.platform.web.centre.CentreConfigEditAction' element-name='tg-CentreConfigEditAction-master' action-kind='TOP_LEVEL' element-alias='tg-CentreConfigEditAction-master_0_TOP_LEVEL' show-dialog='[[_showDialog]]' create-context-holder='[[_createContextHolder]]' chosen-property="COPY" attrs='[[topLevelActions.0.attrs]]' pre-action='[[topLevelActions.0.preAction]]' post-action-success='[[topLevelActions.0.postActionSuccess]]' post-action-error='[[topLevelActions.0.postActionError]]' require-selection-criteria='true' require-selected-entities='NONE' require-master-entity='false' is-action-in-progress='[[_computeConfigButtonDisabled(saveAsName)]]' style='[[_computeConfigButtonStyle(saveAsName)]]'></tg-ui-action>
-                <tg-ui-action ui-role='ICON' short-desc='Load configuration' long-desc='Load configuration...' icon='icons:folder-open' icon-style='' component-uri='/master_ui/ua.com.fielden.platform.web.centre.CentreConfigLoadAction' element-name='tg-CentreConfigLoadAction-master' action-kind='TOP_LEVEL' element-alias='tg-CentreConfigLoadAction-master_1_TOP_LEVEL' show-dialog='[[_showDialog]]' create-context-holder='[[_createContextHolder]]' attrs='[[topLevelActions.1.attrs]]' pre-action='[[topLevelActions.1.preAction]]' post-action-success='[[topLevelActions.1.postActionSuccess]]' post-action-error='[[topLevelActions.1.postActionError]]' require-selection-criteria='true' require-selected-entities='NONE' require-master-entity='false' is-action-in-progress='[[_computeConfigButtonDisabled(saveAsName)]]' style='[[_computeConfigButtonStyle(saveAsName)]]'></tg-ui-action>
-                <tg-ui-action ui-role='ICON' short-desc='Edit configuration' long-desc='Edit title and description...' icon='icons:create' icon-style='' component-uri='/master_ui/ua.com.fielden.platform.web.centre.CentreConfigEditAction' element-name='tg-CentreConfigEditAction-master' action-kind='TOP_LEVEL' element-alias='tg-CentreConfigEditAction-master_2_TOP_LEVEL' show-dialog='[[_showDialog]]' create-context-holder='[[_createContextHolder]]' chosen-property="EDIT" attrs='[[topLevelActions.2.attrs]]' pre-action='[[topLevelActions.2.preAction]]' post-action-success='[[topLevelActions.2.postActionSuccess]]' post-action-error='[[topLevelActions.2.postActionError]]' require-selection-criteria='true' require-selected-entities='NONE' require-master-entity='false' is-action-in-progress='[[_computeConfigButtonDisabled(saveAsName)]]' style='[[_computeConfigButtonStyle(saveAsName)]]'></tg-ui-action>
-                <tg-ui-action ui-role='ICON' short-desc='Delete configuration' long-desc='Delete current configuration' icon='icons:remove-circle-outline' icon-style='' component-uri='/master_ui/ua.com.fielden.platform.web.centre.CentreConfigDeleteAction' element-name='tg-CentreConfigDeleteAction-master' action-kind='TOP_LEVEL' element-alias='tg-CentreConfigDeleteAction-master_3_TOP_LEVEL' show-dialog='[[_showDialog]]' create-context-holder='[[_createContextHolder]]' chosen-property="DELETE" attrs='[[topLevelActions.3.attrs]]' pre-action='[[topLevelActions.3.preAction]]' post-action-success='[[topLevelActions.3.postActionSuccess]]' post-action-error='[[topLevelActions.3.postActionError]]' require-selection-criteria='true' require-selected-entities='NONE' require-master-entity='false' is-action-in-progress='[[_computeConfigButtonDisabled(saveAsName)]]' style='[[_computeConfigButtonStyle(saveAsName)]]'></tg-ui-action>
+                <content id="custom_action_selector" select=".custom-front-action"></content>
             </div>
             <div class="toolbar-content layout horizontal center" style="margin-left:auto">
-                <tg-ui-action ui-role='ICON' short-desc='Settings' long-desc='Customize selection criteria and resultset of the current configuration' icon='icons:settings' icon-style='' component-uri='/master_ui/fielden.work.ui_actions.OpenWorkActivityMasterAction' element-name='tg-OpenWorkActivityMasterAction-master' number-of-action='0' action-kind='TOP_LEVEL' element-alias='tg-OpenWorkActivityMasterAction-master_0_TOP_LEVEL' show-dialog='[[_showDialog]]' create-context-holder='[[_createContextHolder]]' attrs='[[topLevelActions.0.attrs]]' pre-action='[[topLevelActions.0.preAction]]' post-action-success='[[topLevelActions.0.postActionSuccess]]' post-action-error='[[topLevelActions.0.postActionError]]' require-selection-criteria='true' require-selected-entities='NONE' require-master-entity='false' is-action-in-progress style='cursor:initial'></tg-ui-action>
+              <tg-ui-action ui-role='ICON' short-desc='Clone configuration' long-desc='Clone the current configuration' icon='icons:content-copy' icon-style='' component-uri='/master_ui/ua.com.fielden.platform.web.centre.CentreConfigEditAction' element-name='tg-CentreConfigEditAction-master' action-kind='TOP_LEVEL' element-alias='tg-CentreConfigEditAction-master_0_TOP_LEVEL' show-dialog='[[_showDialog]]' create-context-holder='[[_createContextHolder]]' chosen-property="COPY" attrs='[[topLevelActions.0.attrs]]' pre-action='[[topLevelActions.0.preAction]]' post-action-success='[[topLevelActions.0.postActionSuccess]]' post-action-error='[[topLevelActions.0.postActionError]]' require-selection-criteria='true' require-selected-entities='NONE' require-master-entity='false' is-action-in-progress='[[_computeConfigButtonDisabled(saveAsName)]]' style='[[_computeConfigButtonStyle(saveAsName)]]'></tg-ui-action>
+              <tg-ui-action ui-role='ICON' short-desc='Load configuration' long-desc='Load another configuration' icon='icons:folder-open' icon-style='' component-uri='/master_ui/ua.com.fielden.platform.web.centre.CentreConfigLoadAction' element-name='tg-CentreConfigLoadAction-master' action-kind='TOP_LEVEL' element-alias='tg-CentreConfigLoadAction-master_1_TOP_LEVEL' show-dialog='[[_showDialog]]' create-context-holder='[[_createContextHolder]]' attrs='[[topLevelActions.1.attrs]]' pre-action='[[topLevelActions.1.preAction]]' post-action-success='[[topLevelActions.1.postActionSuccess]]' post-action-error='[[topLevelActions.1.postActionError]]' require-selection-criteria='true' require-selected-entities='NONE' require-master-entity='false' is-action-in-progress='[[_computeConfigButtonDisabled(saveAsName)]]' style='[[_computeConfigButtonStyle(saveAsName)]]'></tg-ui-action>
+              <tg-ui-action ui-role='ICON' short-desc='Edit configuration' long-desc='Edit title and description' icon='icons:create' icon-style='' component-uri='/master_ui/ua.com.fielden.platform.web.centre.CentreConfigEditAction' element-name='tg-CentreConfigEditAction-master' action-kind='TOP_LEVEL' element-alias='tg-CentreConfigEditAction-master_2_TOP_LEVEL' show-dialog='[[_showDialog]]' create-context-holder='[[_createContextHolder]]' chosen-property="EDIT" attrs='[[topLevelActions.2.attrs]]' pre-action='[[topLevelActions.2.preAction]]' post-action-success='[[topLevelActions.2.postActionSuccess]]' post-action-error='[[topLevelActions.2.postActionError]]' require-selection-criteria='true' require-selected-entities='NONE' require-master-entity='false' is-action-in-progress='[[_computeConfigButtonDisabled(saveAsName)]]' style='[[_computeConfigButtonStyle(saveAsName)]]'></tg-ui-action>
+              <tg-ui-action ui-role='ICON' short-desc='Delete configuration' long-desc='Delete the current configuration' icon='icons:delete' icon-style='' component-uri='/master_ui/ua.com.fielden.platform.web.centre.CentreConfigDeleteAction' element-name='tg-CentreConfigDeleteAction-master' action-kind='TOP_LEVEL' element-alias='tg-CentreConfigDeleteAction-master_3_TOP_LEVEL' show-dialog='[[_showDialog]]' create-context-holder='[[_createContextHolder]]' attrs='[[topLevelActions.3.attrs]]' pre-action='[[topLevelActions.3.preAction]]' post-action-success='[[topLevelActions.3.postActionSuccess]]' post-action-error='[[topLevelActions.3.postActionError]]' require-selection-criteria='true' require-selected-entities='NONE' require-master-entity='false' is-action-in-progress='[[_computeConfigButtonDisabled(saveAsName)]]' style='[[_computeConfigButtonStyle(saveAsName)]]'></tg-ui-action>
+              <tg-ui-action ui-role='ICON' short-desc='Settings' long-desc='Customize selection criteria and resultset of the current configuration' icon='icons:settings' icon-style='' component-uri='/master_ui/fielden.work.ui_actions.OpenWorkActivityMasterAction' element-name='tg-OpenWorkActivityMasterAction-master' number-of-action='0' action-kind='TOP_LEVEL' element-alias='tg-OpenWorkActivityMasterAction-master_0_TOP_LEVEL' show-dialog='[[_showDialog]]' create-context-holder='[[_createContextHolder]]' attrs='[[topLevelActions.0.attrs]]' pre-action='[[topLevelActions.0.preAction]]' post-action-success='[[topLevelActions.0.postActionSuccess]]' post-action-error='[[topLevelActions.0.postActionError]]' require-selection-criteria='true' require-selected-entities='NONE' require-master-entity='false' is-action-in-progress style='cursor:initial'></tg-ui-action>
             </div>
         </div>
         <tg-scrollable-component class="flex relative">
@@ -57,12 +57,12 @@
     <script>
         Polymer({
             is: 'tg-selection-view',
-            
+
             behaviors: [
                 Polymer.IronA11yKeysBehavior,
                 Polymer.TgBehaviors.TgShortcutProcessingBehavior
             ],
-            
+
             properties: {
                 _showDialog: Function,
                 /**
@@ -76,17 +76,24 @@
                 uuid: String,
                 _confirm: Function
             },
-            
-            _ownKeyBindings: {
-                'ctrl+s ctrl+e ctrl+r f5': '_shortcutPressed'
+
+            ready: function() {
+                const customShortcuts = [];
+                Array.prototype.forEach.call(Polymer.dom(this.$.custom_action_selector).getDistributedNodes(), function (item) {
+                    if (item.getAttribute("shortcut")) {
+                        customShortcuts.push(item.getAttribute("shortcut"));
+                    }
+                }.bind(this));
+                this._ownKeyBindings = {};
+                this._ownKeyBindings[customShortcuts.join(" ") + (customShortcuts.length > 0 ? " " : "") + "ctrl+s ctrl+e ctrl+r f5"] = '_shortcutPressed';
             },
-            
+
             attached: function () {
                 const self = this;
                 this.async(function () {
                     self.keyEventTarget = self._getKeyEventTarget();
                 }, 1);
-                
+
                 self.topLevelActions = [
                     {
                         preAction: function (action) {
@@ -161,7 +168,7 @@
                     }
                 ];
             },
-            
+
             _getKeyEventTarget: function () {
                 var parent = this;
                 while (parent && (parent.tagName !== 'TG-CUSTOM-ACTION-DIALOG' && parent.tagName !== 'TG-MENU-ITEM-VIEW')) {
@@ -169,15 +176,15 @@
                 }
                 return parent || this.parentElement.parentElement;
             },
-            
+
             _shortcutPressed: function (e) {
-                this.processShortcut(e, ['paper-button']);
+                this.processShortcut(e, ['paper-button', 'tg-ui-action']);
             },
-            
+
             _computeConfigButtonDisabled: function (saveAsName) {
                 return saveAsName === this.$.reflector.LINK_CONFIG_TITLE;
             },
-            
+
             _computeConfigButtonStyle: function (saveAsName) {
                 return saveAsName === this.$.reflector.LINK_CONFIG_TITLE ? 'cursor:initial' : '';
             }

@@ -27,6 +27,7 @@ import ua.com.fielden.platform.security.user.UserRole;
 public interface IDomainDrivenData {
 
     public static final String ADMIN = "ADMIN";
+    public static final String BASE_SUFFIX = "_BASE";
     public static final String SUPER_SECRET_PASSWORD = "cooking with rocket fuel";
 
     <T extends AbstractEntity<?>> T save(final T instance);

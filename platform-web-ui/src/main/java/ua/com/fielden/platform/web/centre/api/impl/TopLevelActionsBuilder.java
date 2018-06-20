@@ -9,13 +9,22 @@ import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
 import ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig;
 import ua.com.fielden.platform.web.centre.api.crit.ISelectionCritKindSelector;
+import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder1Toolbar;
+import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder1aScroll;
+import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder1bPageCapacity;
+import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder1cVisibleRows;
+import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder1dFitBehaviour;
+import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder2Properties;
+import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder2aDraggable;
+import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder3Ordering;
+import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder4aWidth;
+import ua.com.fielden.platform.web.centre.api.resultset.PropDef;
+import ua.com.fielden.platform.web.centre.api.resultset.scrolling.IScrollConfig;
+import ua.com.fielden.platform.web.centre.api.resultset.toolbar.IToolbarConfig;
 import ua.com.fielden.platform.web.centre.api.top_level_actions.IAlsoCentreTopLevelActions;
 import ua.com.fielden.platform.web.centre.api.top_level_actions.ICentreTopLevelActions;
 import ua.com.fielden.platform.web.centre.api.top_level_actions.ICentreTopLevelActionsInGroup;
 import ua.com.fielden.platform.web.centre.api.top_level_actions.ICentreTopLevelActionsInGroup0;
-import ua.com.fielden.platform.web.centre.api.top_level_actions.ICentreTopLevelActionsWithEnforcePostSaveRefreshConfig;
-import ua.com.fielden.platform.web.centre.api.top_level_actions.ICentreTopLevelActionsWithRunConfig;
-import ua.com.fielden.platform.web.centre.api.top_level_actions.ICentreTopLevelActionsWithSse;
 
 /**
  * A package private helper class to decompose the task of implementing the Entity Centre DSL. It has direct access to protected fields in {@link EntityCentreBuilder}.
@@ -24,13 +33,11 @@ import ua.com.fielden.platform.web.centre.api.top_level_actions.ICentreTopLevelA
  *
  * @param <T>
  */
-class TopLevelActionsBuilder<T extends AbstractEntity<?>> extends ResultSetBuilder<T> implements
-        ICentreTopLevelActionsWithRunConfig<T>, ICentreTopLevelActions<T>, ICentreTopLevelActionsInGroup<T>, ICentreTopLevelActionsInGroup0<T>, IAlsoCentreTopLevelActions<T> {
+class TopLevelActionsBuilder<T extends AbstractEntity<?>> implements ICentreTopLevelActions<T>, ICentreTopLevelActionsInGroup<T>, ICentreTopLevelActionsInGroup0<T>, IAlsoCentreTopLevelActions<T>{
 
     private final EntityCentreBuilder<T> builder;
 
     public TopLevelActionsBuilder(final EntityCentreBuilder<T> builder) {
-        super(builder);
         this.builder = builder;
     }
 
@@ -62,13 +69,6 @@ class TopLevelActionsBuilder<T extends AbstractEntity<?>> extends ResultSetBuild
 
     @Override
     public ICentreTopLevelActions<T> also() {
-        // this could be a genuine also call to add more top level actions
-        // or a polymorphic call inherited from ResultSetBuilder to add more properties into the result set
-        // they need to be differentiated
-        if (propName.isPresent() || propDef.isPresent()) {
-            super.also();
-        }
-
         return this;
     }
 
@@ -92,24 +92,62 @@ class TopLevelActionsBuilder<T extends AbstractEntity<?>> extends ResultSetBuild
     }
 
     @Override
-    public ICentreTopLevelActionsWithSse<T> runAutomatically() {
-        builder.runAutomatically = true;
-        return this;
+    public IResultSetBuilder1Toolbar<T> hideCheckboxes() {
+        return new ResultSetBuilder<>(builder).hideCheckboxes();
     }
-    
-	@Override
-	public ICentreTopLevelActionsWithEnforcePostSaveRefreshConfig<T> hasEventSourceAt(final String uri) {
-		if (StringUtils.isEmpty(uri)) {
-			throw new IllegalArgumentException("Server-Side Eventing URI should not be empty.");
-		}
-        builder.sseUri = uri;
-        return this;
-	}
 
     @Override
-    public ICentreTopLevelActions<T> enforcePostSaveRefresh() {
-        builder.enforcePostSaveRefresh = true;
-        return this;
+    public IResultSetBuilder1aScroll<T> setToolbar(final IToolbarConfig toolbar) {
+        return new ResultSetBuilder<>(builder).setToolbar(toolbar);
     }
-	
+
+    @Override
+    public IResultSetBuilder1aScroll<T> hideToolbar() {
+        return new ResultSetBuilder<>(builder).hideToolbar();
+    }
+
+    @Override
+    public IResultSetBuilder2aDraggable<T> notScrollable() {
+        return new ResultSetBuilder<>(builder).notScrollable();
+    }
+
+    @Override
+    public IResultSetBuilder2aDraggable<T> withScrollingConfig(final IScrollConfig scrollConfig) {
+        return new ResultSetBuilder<>(builder).withScrollingConfig(scrollConfig);
+    }
+
+    @Override
+    public IResultSetBuilder1bPageCapacity<T> draggable() {
+        return new ResultSetBuilder<>(builder).draggable();
+    }
+
+    @Override
+    public IResultSetBuilder1cVisibleRows<T> setPageCapacity(final int pageCapacity) {
+        return new ResultSetBuilder<>(builder).setPageCapacity(pageCapacity);
+    }
+
+    @Override
+    public IResultSetBuilder1dFitBehaviour<T> setVisibleRowsCount(final int visibleRowsCount) {
+        return new ResultSetBuilder<>(builder).setVisibleRowsCount(visibleRowsCount);
+    }
+
+    @Override
+    public IResultSetBuilder1dFitBehaviour<T> setHeight(final String height) {
+        return new ResultSetBuilder<>(builder).setHeight(height);
+    }
+
+    @Override
+    public IResultSetBuilder2Properties<T> fitToHeight() {
+        return new ResultSetBuilder<>(builder).fitToHeight();
+    }
+
+    @Override
+    public IResultSetBuilder3Ordering<T> addProp(final String propName) {
+        return new ResultSetBuilder<>(builder).addProp(propName);
+    }
+
+    @Override
+    public IResultSetBuilder4aWidth<T> addProp(final PropDef<?> propDef) {
+        return new ResultSetBuilder<>(builder).addProp(propDef);
+    }
 }

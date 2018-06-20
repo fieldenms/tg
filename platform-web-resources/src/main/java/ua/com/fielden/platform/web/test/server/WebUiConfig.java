@@ -1295,13 +1295,21 @@ public class WebUiConfig extends AbstractWebUiConfig {
         ICentreTopLevelActions<TgPersistentEntityWithProperties> actionConf = (runAutomatically ? partialCentre.runAutomatically() : partialCentre)
                 .hasEventSourceAt("/entity-centre-events")
                 .enforcePostSaveRefresh()
+                .addFrontAction(action(EntityNewAction.class).
+                        withContext(context().withSelectionCrit().build()).
+                        icon("add-circle-outline").
+                        shortDesc("Add new").
+                        longDesc("Start coninuous creatio of entities").
+                        shortcut("alt+n").
+                        withNoParentCentreRefresh().
+                        build())
                 .addTopAction(action(EntityNewAction.class).
-                                withContext(context().withSelectionCrit().build()).
-                                icon("add-circle-outline").
-                                shortDesc("Add new").
-                                longDesc("Start coninuous creatio of entities").
-                                shortcut("alt+n").
-                                build())
+                        withContext(context().withSelectionCrit().build()).
+                        icon("add-circle-outline").
+                        shortDesc("Add new").
+                        longDesc("Start coninuous creatio of entities").
+                        shortcut("alt+n").
+                        build())
                 .also()
                 .addTopAction(StandardActions.SEQUENTIAL_EDIT_ACTION.mkAction(TgPersistentEntityWithProperties.class))
                 .also()
