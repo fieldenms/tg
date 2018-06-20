@@ -147,6 +147,7 @@ public class CentreConfigurationWebUiConfig {
                                     + "        return self.retrieve().then(function () { self.run(true); });\n"
                                     + "    } else {\n"
                                     + "        self.$.egi._adjustColumns(functionalEntity.get('chosenIds').map(column => column === 'this' ? '' : column));\n"
+                                    + "        self._centreChanged = functionalEntity.get('centreChanged');\n"
                                     + "    }\n"
                                     + ""))
                         .icon("av:sort-by-alpha")

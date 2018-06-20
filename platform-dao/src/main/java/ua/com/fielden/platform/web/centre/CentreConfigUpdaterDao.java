@@ -46,7 +46,7 @@ public class CentreConfigUpdaterDao extends CommonEntityDao<CentreConfigUpdater>
         actionToSave.getProperty("sortingVals").setOriginalValue(action.getProperty("sortingVals").getOriginalValue());
         
         // retrieve criteria entity
-        final EnhancedCentreEntityQueryCriteria criteriaEntityBeingUpdated = actionAndCriteriaBeingUpdated._2;
+        final EnhancedCentreEntityQueryCriteria<?, ?> criteriaEntityBeingUpdated = actionAndCriteriaBeingUpdated._2;
         final Class<?> root = criteriaEntityBeingUpdated.getEntityClass();
         final Consumer<Consumer<ICentreDomainTreeManagerAndEnhancer>> centreAdjuster = criteriaEntityBeingUpdated.centreAdjuster();
         
@@ -83,6 +83,9 @@ public class CentreConfigUpdaterDao extends CommonEntityDao<CentreConfigUpdater>
             }
         });
         actionToSave.setSortingChanged(actionToSave.getProperty("sortingVals").isChangedFromOriginal());
+        if (!actionToSave.isSortingChanged()) {
+            actionToSave.setCentreChanged(criteriaEntityBeingUpdated.centreChangedGetter().get());
+        }
         return super.save(actionToSave);
     }
 }

@@ -1,14 +1,11 @@
 package ua.com.fielden.platform.web.centre;
 
+import static java.util.stream.Collectors.toCollection;
 import static ua.com.fielden.platform.web.centre.CentreConfigUpdaterUtils.createCustomisableColumns;
 import static ua.com.fielden.platform.web.centre.CentreConfigUpdaterUtils.createSortingVals;
 import static ua.com.fielden.platform.web.centre.WebApiUtils.checkedPropertiesWithoutSummaries;
-import static ua.com.fielden.platform.web.centre.WebApiUtils.dslName;
-
 import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.stream.Collectors;
-
 import com.google.inject.Inject;
 
 import ua.com.fielden.platform.dao.IEntityDao;
@@ -47,22 +44,29 @@ public class CentreConfigUpdaterProducer extends AbstractFunctionalEntityForColl
         entity.setMasterEntityHolder(masterEntity.centreContextHolder());
         
         final Class<?> root = masterEntity.getEntityClass();
-        final ICentreDomainTreeManagerAndEnhancer freshCentre = masterEntity.freshCentreSupplier().get(); // TODO maybe it would be more correct to use PREVIOUSLY_RUN centre here
         
-        final List<String> freshCheckedProperties = freshCentre.getSecondTick().checkedProperties(root);
-        final List<String> freshUsedProperties = freshCentre.getSecondTick().usedProperties(root);
-        final List<Pair<String, Ordering>> freshSortedProperties = freshCentre.getSecondTick().orderedProperties(root);
-        final Class<?> freshManagedType = freshCentre.getEnhancer().getManagedType(root);
+        // When opening Customise Columns dialog we need to show the order / sort / visibility that is currently present in EGI.
+        // It however does not mean that this configuration is synchronised with 'fresh' centre configuration.
+        // In such case 'Show selection criteria' has orange colour.
+        // When APPLY is made in Customise Columns dialog the changes are applied against 'fresh' and 'previouslyRun' centres, but not against 'saved' one.
+        // Thus Discard button on selection criteria can be used to Discard all centre changes including those made in Customise Columns dialog.
+        // Very similar situation is with Change Columns Width action.
+        final ICentreDomainTreeManagerAndEnhancer previouslyRunCentre = masterEntity.previouslyRunCentreSupplier().get();
+        
+        final List<String> previouslyRunCheckedProperties = previouslyRunCentre.getSecondTick().checkedProperties(root);
+        final List<String> previouslyRunUsedProperties = previouslyRunCentre.getSecondTick().usedProperties(root);
+        final List<Pair<String, Ordering>> previouslyRunSortedProperties = previouslyRunCentre.getSecondTick().orderedProperties(root);
+        final Class<?> previouslyRunManagedType = previouslyRunCentre.getEnhancer().getManagedType(root);
         
         // provide chosenIds into the action
         entity.setChosenIds(
-            freshUsedProperties.stream()
-            .map(usedProperty -> dslName(usedProperty))
-            .collect(Collectors.toCollection(LinkedHashSet::new))
+            previouslyRunUsedProperties.stream()
+            .map(WebApiUtils::dslName)
+            .collect(toCollection(LinkedHashSet::new))
         );
         
         // provide customisable columns into the action
-        final LinkedHashSet<CustomisableColumn> customisableColumns = createCustomisableColumns(checkedPropertiesWithoutSummaries(freshCheckedProperties, freshManagedType), freshSortedProperties, freshManagedType, factory());
+        final LinkedHashSet<CustomisableColumn> customisableColumns = createCustomisableColumns(checkedPropertiesWithoutSummaries(previouslyRunCheckedProperties, previouslyRunManagedType), previouslyRunSortedProperties, previouslyRunManagedType, factory());
         entity.setCustomisableColumns(customisableColumns);
         
         // provide sorting values into the action

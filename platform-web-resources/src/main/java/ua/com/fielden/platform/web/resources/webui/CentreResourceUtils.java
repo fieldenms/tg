@@ -180,13 +180,11 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
     }
 
     /**
-     * Creates the pair of 'custom object' (that contain 'critMetaValues', 'isCentreChanged' flag, 'resultEntities' and 'pageCount') and 'resultEntities' (query run is performed
+     * Creates the pair of 'custom object' (that contain 'resultEntities' and 'pageCount') and 'resultEntities' (query run is performed
      * inside).
      *
      * @param customObject
-     * @param criteriaMetaValues
      * @param criteriaEntity
-     * @param isCentreChanged
      * @param additionalFetchProvider
      * @param additionalFetchProviderForTooltipProperties
      * @param createdByUserConstraint -- if exists then constraints the query by equality to the property 'createdBy'
@@ -430,7 +428,8 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
             final DeviceProfile device) {
         final Class<T> entityType = getEntityType(miType);
         final M validationPrototype = (M) critGenerator.generateCentreQueryCriteria(entityType, cdtmae, miType, new MiTypeAnnotation().newInstance(miType, saveAsName));
-        validationPrototype.setFreshCentreSupplier(() -> updateCentre(gdtm, miType, FRESH_CENTRE_NAME, saveAsName, device));
+        validationPrototype.setPreviouslyRunCentreSupplier(() -> updateCentre(gdtm, miType, PREVIOUSLY_RUN_CENTRE_NAME, saveAsName, device));
+        validationPrototype.setCentreChangedGetter(() -> isFreshCentreChanged(updateCentre(gdtm, miType, FRESH_CENTRE_NAME, saveAsName, device), updateCentre(gdtm, miType, SAVED_CENTRE_NAME, saveAsName, device)));
         validationPrototype.setBaseCentreSupplier(() -> baseCentre(gdtm, miType, saveAsName, device));
         validationPrototype.setCentreAdjuster((centreConsumer) -> {
             centreConsumer.accept(updateCentre(gdtm, miType, FRESH_CENTRE_NAME, saveAsName, device));
