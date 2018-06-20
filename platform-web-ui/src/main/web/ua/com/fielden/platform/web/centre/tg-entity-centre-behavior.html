@@ -152,14 +152,14 @@
                 centreSelection: {
                     type: Object
                 },
-                
+
                 /**
                  * The menu item type, that identifies this entity centre.
                  */
                 miType: {
                     type: String
                 },
-                
+
                 /**
                  * The 'saveAs' name, which identifies this centre; or empty string if the centre represents unnamed configuration.
                  * This parameter could be changed during centre's lifecycle in case where user loads different centre or copies currently loaded centre.
@@ -168,7 +168,7 @@
                     type: String,
                     observer: '_saveAsNameChanged'
                 },
-                
+
                 /**
                  * Universal identifier of this element instance (used for pub / sub communication).
                  *
@@ -299,17 +299,17 @@
                     type: Boolean,
                     computed: '_computeSaverDisabled(_centreChanged, _bindingEntityNotPersistentOrNotPersistedOrModified, _editedPropsExist, _currEntity, _actionInProgress)'
                 },
-                
+
                 _discarderDisabled: {
                     type: Boolean,
                     computed: '_computeDiscarderDisabled(_centreChanged, _bindingEntityNotPersistentOrNotPersistedOrModified, _editedPropsExist, _currEntity, _actionInProgress)'
                 },
-                
+
                 _defaulterDisabled: {
                     type: Boolean,
                     computed: '_computeDefaulterDisabled(_actionInProgress)'
                 },
-                
+
                 _runnerDisabled: {
                     type: Boolean,
                     computed: '_computeRunnerDisabled(_criteriaLoaded, _actionInProgress)'
@@ -319,17 +319,17 @@
                     type: Boolean,
                     computed: '_computeViewerDisabled(_criteriaLoaded, _wasRun, _actionInProgress)'
                 },
-                
+
                 _url: {
                     type: String,
                     computed: '_computeUrl(miType, saveAsName)'
                 },
-                
+
                 _defaulterUrl: {
                     type: String,
                     computed: '_computeDefaulterUrl(miType, saveAsName)'
                 },
-                
+
                 /**
                  * The currently selected view.
                  */
@@ -364,21 +364,21 @@
                 save: {
                     type: Function
                 },
-                
+
                 /**
                  * Starts the process of centre discarding.
                  */
                 discard: {
                     type: Function
                 },
-                
+
                 /**
                  * Starts the process of centre defaulting.
                  */
                 _default: {
                     type: Function
                 },
-                
+
                 /**
                  * Starts the process of centre run.
                  *
@@ -460,15 +460,15 @@
             _computeSaverDisabled: function (_centreChanged, _bindingEntityNotPersistentOrNotPersistedOrModified, _editedPropsExist, _currEntity, _actionInProgress) {
                 return _actionInProgress === true || !this.canSave(_centreChanged, _bindingEntityNotPersistentOrNotPersistedOrModified, _editedPropsExist, _currEntity);
             },
-            
+
             _computeDiscarderDisabled: function (_centreChanged, _bindingEntityNotPersistentOrNotPersistedOrModified, _editedPropsExist, _currEntity, _actionInProgress) {
                 return _actionInProgress === true || !this.canDiscard(_centreChanged, _bindingEntityNotPersistentOrNotPersistedOrModified, _editedPropsExist, _currEntity);
             },
-            
+
             _computeDefaulterDisabled: function (_actionInProgress) {
                 return _actionInProgress === true;
             },
-            
+
             _computeRunnerDisabled: function (_criteriaLoaded, _actionInProgress) {
                 return _actionInProgress === true || _criteriaLoaded === false;
             },
@@ -494,7 +494,7 @@
              */
             ready: function () {
                 const self = this;
-                
+
                 self.saveAsName = self.$.selection_criteria._reflector().UNDEFINED_CONFIG_TITLE; // this default value means that preferred configuration is not yet known and will be loaded during first 'retrieve' request
                 self._selectedView = 0;
                 self._showProgress = false;
@@ -512,10 +512,12 @@
                         this.$.egi.renderingHints = renderingHints;
                         this.$.egi._adjustColumnWidths(columnWidths);
                         this.$.egi._adjustColumns(visibleColumnsWithOrder.map(column => column === "this" ? "" : column));
-                        if (this._triggerRun && this._selectedView === 0) {
-                            this.async(function () {
-                                this._selectedView = 1;
-                            }, 100);
+                        if (this._triggerRun) {
+                            if (this._selectedView === 0) {
+                                this.async(function () {
+                                    this._selectedView = 1;
+                                }, 100);
+                            }
                             this._triggerRun = false;
                         }
                         if (this.$.selection_criteria._wasRun !== 'yes') {
@@ -543,7 +545,7 @@
                         self.$.selection_criteria._postSavedDefaultError(errorResult);
                     });
                 };
-                
+
                 self._processDiscarderResponse = function (e) {
                     self.$.selection_criteria._processResponse(e, "discard", function (entityAndCustomObject, exceptionOccured) {
                         console.log("CENTRE DISCARDED", entityAndCustomObject);
@@ -558,7 +560,7 @@
                         self.$.selection_criteria._postRetrievedDefaultError(errorResult);
                     });
                 };
-                
+
                 self._processDefaulterResponse = function (e) {
                     self.$.selection_criteria._processResponse(e, "default", function (entityAndCustomObject, exceptionOccured) {
                         console.log("CENTRE DEFAULTED", entityAndCustomObject);
@@ -573,7 +575,7 @@
                         self.$.selection_criteria._postRetrievedDefaultError(errorResult);
                     });
                 };
-                
+
                 self._activateInsertionPoint = (function (insertionPointId, action) {
                     this.async(function () {
                         this.$[insertionPointId].activate(action);
@@ -626,7 +628,7 @@
                             // cancel the 'invoke-saving' debouncer if there is any active one:
                             slf.cancelDebouncer('invoke-saving');
 
-                            // cancel previous validation requests except the last one -- if it exists then saving process will be chained on top of that last validation process, 
+                            // cancel previous validation requests except the last one -- if it exists then saving process will be chained on top of that last validation process,
                             // otherwise -- saving process will simply start immediately
                             const lastValidationPromise = sc._validator().abortValidationExceptLastOne();
                             if (lastValidationPromise !== null) {
@@ -667,7 +669,7 @@
                             // cancel the 'invoke-discard' debouncer if there is any active one:
                             slf.cancelDebouncer('invoke-discard');
 
-                            // cancel previous validation requests except the last one -- if it exists then discarding process will be chained on top of that last validation process, 
+                            // cancel previous validation requests except the last one -- if it exists then discarding process will be chained on top of that last validation process,
                             // otherwise -- discard process will simply start immediately
                             const lastValidationPromise = sc._validator().abortValidationExceptLastOne();
                             const customObject = {};
@@ -683,7 +685,7 @@
                         }, 50);
                     });
                 }).bind(self);
-                
+
                 self._createDefaultPromise = function (customObject) { // very similar to tg-entity-binder-behavior._createRetrievalPromise
                     const slf = this;
                     this._ajaxDefaulter().body = JSON.stringify(customObject);
@@ -695,7 +697,7 @@
                         }
                     );
                 }.bind(self);
-                
+
                 self._default = (function () { // very similar to tg-entity-binder-behavior.retrieve
                     const slf = this;
                     slf._actionInProgress = true;
@@ -704,13 +706,13 @@
                         sc._retrievalInitiated = true;
                         sc.disableView();
                     }
-                    
+
                     return new Promise(function (resolve, reject) {
                         slf.debounce('invoke-default', function () {
                             // cancel the 'invoke-default' debouncer if there is any active one:
                             slf.cancelDebouncer('invoke-default');
-                            
-                            // cancel previous validation requests except the last one -- if it exists then defaulting process will be chained on top of that last validation process, 
+
+                            // cancel previous validation requests except the last one -- if it exists then defaulting process will be chained on top of that last validation process,
                             // otherwise -- default process will simply start immediately
                             const lastValidationPromise = sc._validator().abortValidationExceptLastOne();
                             const customObject = {};
@@ -726,7 +728,7 @@
                         }, 50);
                     });
                 }).bind(self);
-                
+
                 self.run = (function (isSortingAction, forceRegeneration) {
                     if (this._criteriaLoaded === false) {
                         throw "Cannot run centre (not initialised criteria).";
@@ -864,15 +866,15 @@
             detached: function () {
                 this.masterSavedListener.unsubscribe();
             },
-            
+
             focusNextView: function (e) {
                 this._focusView(e, true);
             },
-            
+
             focusPreviousView: function (e) {
                 this._focusView(e, false);
             },
-            
+
             _focusView: function (e, forward) {
                 const focusables = this._getCurrentFocusableElements();
                 const frirstIndex = forward ? 0 : focusables.length - 1;
@@ -888,7 +890,7 @@
                     this.fire("tg-last-item-focused", {forward: forward, event: e});
                 }
             },
-            
+
             _getCurrentFocusableElements: function() {
                 const _componentsToFocus = Array.from(this.querySelectorAll(FOCUSABLE_ELEMENTS_SELECTOR));
                 return _componentsToFocus.filter(element => !element.disabled && element.offsetParent !== null);
@@ -972,7 +974,7 @@
              * Starts the process of refreshing the current page (only after run() has been already performed).
              */
             currentPage: function () {
-                var self = this;
+                const self = this;
                 self.persistActiveElement();
                 return this.$.selection_criteria.currentPage()
                     .then(function () {
@@ -1034,12 +1036,14 @@
              *     from the result-set if they became unmatchable to the selection criteria after modification).
              */
             refreshEntities: function (entities) {
-                // if there is no data or refresh is enforeced then simply refresh the current page
-                if (this.enforcePostSaveRefresh === true || this.$.egi.egiModel.length === 0) {
-                    return this.currentPage();
-                } else if (entities === null || entities.length === 0 || this.$.egi.containsAnyEntity(entities)) {
-                    return this.currentPage();
-                }
+              if (this._selectedView === 1 && (// only if the selectedView is the resultset do we need to refresh entitites and...
+                  // there is no data or refresh is enforeced or...
+                  this.enforcePostSaveRefresh === true || this.$.egi.egiModel.length === 0 ||
+                  // there are no entities specified or the currrent result contains any of them then...
+                  entities === null || entities.length === 0 || this.$.egi.containsAnyEntity(entities))) {
+                  // refresh the current page
+                  this.currentPage();
+              }
             },
 
             canNotPrev: function (pageNumber, isRunning) {
@@ -1102,21 +1106,21 @@
                     }
                 }
             },
-            
+
             /**
              * Computes URL for 'ajaxSaver' and 'ajaxDiscarder'.
              */
             _computeUrl: function (miType, saveAsName) {
                 return '/centre/' + this.$.selection_criteria._reflector()._centreKey(miType, saveAsName);
             },
-            
+
             /**
              * Computes URL for 'ajaxDefaulter'.
              */
             _computeDefaulterUrl: function (miType, saveAsName) {
                 return '/centre/default/' + this.$.selection_criteria._reflector()._centreKey(miType, saveAsName);
             },
-            
+
             _saveAsNameChanged: function (newSaveAsName, oldSaveAsName) {
                 const self = this;
                 const reflector = self.$.selection_criteria._reflector();
@@ -1132,14 +1136,14 @@
                     self._fireSaveAsNameChanged(newSaveAsName, self);
                 }
             },
-            
+
             _fireSaveAsNameChanged: function (newSaveAsName, self) {
                 const reflector = self.$.selection_criteria._reflector();
                 if (reflector.LINK_CONFIG_TITLE !== newSaveAsName) {
                     self.fire('tg-save-as-name-changed', { saveAsName: newSaveAsName, saveAsDesc: self.$.selection_criteria._saveAsDesc });
                 }
             },
-            
+
             runInsertionPointActions: function () {
                 var self = this;
                 var actions = Polymer.dom(self.$.egi).querySelectorAll('.insertion-point-action');
@@ -1151,7 +1155,7 @@
                     });
                 }
             },
-            
+
             disableView: function () {
                 this._disablementCounter += 1;
                 if (this._disablementCounter > 0 && this.currentState !== 'VIEW') {
@@ -1177,8 +1181,8 @@
                 this.$.egi.lock = false;
             }
         };
-        
+
         Polymer.TgBehaviors.TgEntityCentreBehavior = [Polymer.TgBehaviors.TgEntityCentreBehaviorImpl, Polymer.TgBehaviors.TgTooltipBehavior, Polymer.TgBehaviors.TgSseBehavior, Polymer.TgBehaviors.TgFocusRestorationBehavior];
-        
+
     })();
 </script>
