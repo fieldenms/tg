@@ -34,12 +34,12 @@ public class CentreColumnWidthConfigUpdaterDao extends CommonEntityDao<CentreCol
     @SessionRequired
     public CentreColumnWidthConfigUpdater save(final CentreColumnWidthConfigUpdater action) {
         // retrieve criteria entity
-        final EnhancedCentreEntityQueryCriteria criteriaEntityBeingUpdated = criteriaEntityRestorer.restoreCriteriaEntity(action.getCriteriaEntityHolder());
+        final EnhancedCentreEntityQueryCriteria<?, ?> criteriaEntityBeingUpdated = criteriaEntityRestorer.restoreCriteriaEntity(action.getCriteriaEntityHolder());
         final Class<?> root = criteriaEntityBeingUpdated.getEntityClass();
-        final Consumer<Consumer<ICentreDomainTreeManagerAndEnhancer>> centreAdjuster = criteriaEntityBeingUpdated.centreAdjuster();
+        final Consumer<Consumer<ICentreDomainTreeManagerAndEnhancer>> centreColumnWidthsAdjuster = criteriaEntityBeingUpdated.centreColumnWidthsAdjuster();
 
-        // use centreAdjuster to update all centre managers ('fresh', 'saved' and 'previouslyRun') with column widths information; also commit them to the database
-        centreAdjuster.accept(centreManager -> {
+        // use centreColumnWidthsAdjuster to update column widths in PREVIOUSLY_RUN and FRESH centre managers; commit them to the database
+        centreColumnWidthsAdjuster.accept(centreManager -> {
             action.getColumnParameters().entrySet().forEach(entry -> {
                 if (entry.getValue().containsKey("width")) {
                     centreManager.getSecondTick().setWidth(root, entry.getKey(), entry.getValue().get("width"));
@@ -51,6 +51,8 @@ public class CentreColumnWidthConfigUpdaterDao extends CommonEntityDao<CentreCol
         });
         
         action.setColumnParameters(new HashMap<>());
+        action.setCentreChanged(criteriaEntityBeingUpdated.centreChangedGetter().get());
+        action.setStaleCriteriaMessage(criteriaEntityBeingUpdated.staleCriteriaMessageGetter().get());
         return super.save(action);
     }
 }

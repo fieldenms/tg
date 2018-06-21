@@ -440,6 +440,20 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
             centreConsumer.accept(updateCentre(gdtm, miType, PREVIOUSLY_RUN_CENTRE_NAME, saveAsName, device));
             commitCentre(gdtm, miType, PREVIOUSLY_RUN_CENTRE_NAME, saveAsName, device);
         });
+        validationPrototype.setCentreColumnWidthsAdjuster((centreConsumer) -> {
+            // we have diffs that need to be applied against 'previouslyRun' centre 
+            centreConsumer.accept(updateCentre(gdtm, miType, PREVIOUSLY_RUN_CENTRE_NAME, saveAsName, device));
+            commitCentre(gdtm, miType, PREVIOUSLY_RUN_CENTRE_NAME, saveAsName, device);
+            
+            // however those diffs are not applicable to 'fresh' centre due to ability of 'fresh' centre to differ from 'previouslyRun' centre;
+            // the only way to get such mismatch is to press Discard on selection criteria;
+            // that's why we need to carefully override only widths and grow factors of 'fresh' centre from 'previouslyRun' centre;
+            // all other unrelated to CentreColumnWidthConfigUpdater information should remain 'as is'.
+            final ICentreDomainTreeManagerAndEnhancer previouslyRunCentre = centre(gdtm, miType, PREVIOUSLY_RUN_CENTRE_NAME, saveAsName, device);
+            final ICentreDomainTreeManagerAndEnhancer freshCentre = updateCentre(gdtm, miType, FRESH_CENTRE_NAME, saveAsName, device);
+            freshCentre.getSecondTick().setWidthsAndGrowFactors(previouslyRunCentre. getSecondTick().getWidthsAndGrowFactors());
+            commitCentre(gdtm, miType, FRESH_CENTRE_NAME, saveAsName, device);
+        });
         validationPrototype.setCentreDeleter(() -> {
             // perform deletion of centre 'saveAs' configuration even if it is inherited from its base; still such config could loaded again from base config
             removeCentres(gdtm, miType, device, saveAsName, FRESH_CENTRE_NAME, SAVED_CENTRE_NAME, PREVIOUSLY_RUN_CENTRE_NAME);

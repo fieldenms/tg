@@ -51,6 +51,7 @@ public class EnhancedCentreEntityQueryCriteria<T extends AbstractEntity<?>, DAO 
      */
     private Function<Map<String, Object>, Stream<AbstractEntity<?>>> exportQueryRunner;
     private Consumer<Consumer<ICentreDomainTreeManagerAndEnhancer>> centreAdjuster;
+    private Consumer<Consumer<ICentreDomainTreeManagerAndEnhancer>> centreColumnWidthsAdjuster;
     private CentreContextHolder centreContextHolder;
     
     /**
@@ -64,7 +65,15 @@ public class EnhancedCentreEntityQueryCriteria<T extends AbstractEntity<?>, DAO 
     protected EnhancedCentreEntityQueryCriteria(final IValueMatcherFactory valueMatcherFactory, final IGeneratedEntityController generatedEntityController, final ISerialiser serialiser, final ICompanionObjectFinder controllerProvider) {
         super(valueMatcherFactory, generatedEntityController, serialiser, controllerProvider);
     }
-    
+
+    public void setCentreColumnWidthsAdjuster(final Consumer<Consumer<ICentreDomainTreeManagerAndEnhancer>> centreColumnWidthsAdjuster) {
+        this.centreColumnWidthsAdjuster = centreColumnWidthsAdjuster;
+    }
+
+    public Consumer<Consumer<ICentreDomainTreeManagerAndEnhancer>> centreColumnWidthsAdjuster() {
+        return centreColumnWidthsAdjuster;
+    }
+
     public void setCentreAdjuster(final Consumer<Consumer<ICentreDomainTreeManagerAndEnhancer>> centreAdjuster) {
         this.centreAdjuster = centreAdjuster;
     }
