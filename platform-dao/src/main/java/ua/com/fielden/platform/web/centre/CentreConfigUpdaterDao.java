@@ -85,6 +85,7 @@ public class CentreConfigUpdaterDao extends CommonEntityDao<CentreConfigUpdater>
         actionToSave.setSortingChanged(actionToSave.getProperty("sortingVals").isChangedFromOriginal());
         if (!actionToSave.isSortingChanged()) {
             actionToSave.setCentreChanged(criteriaEntityBeingUpdated.centreChangedGetter().get());
+            actionToSave.setStaleCriteriaMessage(criteriaEntityBeingUpdated.staleCriteriaMessageGetter().get());
         }
         return super.save(actionToSave);
     }
