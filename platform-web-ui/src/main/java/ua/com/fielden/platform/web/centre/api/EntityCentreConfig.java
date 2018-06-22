@@ -766,7 +766,13 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
                 throw new IllegalArgumentException("No insertion point exists.");
             }
             return getInsertionPointConfigs().get().get(actionNumber).getInsertionPointAction();
-        } // TODO implement other types
+        } else if (FunctionalActionKind.FRONT == actionKind) {
+            if (getFrontActions().isEmpty()) {
+                throw new IllegalArgumentException("No front action exists.");
+            }
+            return getFrontActions().get(actionNumber);
+        }
+        // TODO implement other types
         throw new UnsupportedOperationException(actionKind + " is not supported yet.");
     }
 

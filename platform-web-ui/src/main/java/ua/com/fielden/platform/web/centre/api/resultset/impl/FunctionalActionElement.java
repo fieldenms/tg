@@ -104,6 +104,8 @@ public class FunctionalActionElement implements IRenderable, IImportable {
         } else if (FunctionalActionKind.MENU_ITEM == functionalActionKind) {
             attrs.put("class", "menu-item-action");
             attrs.put("data-route", getDataRoute());
+        } else if (FunctionalActionKind.FRONT == functionalActionKind) {
+            attrs.put("class", "custom-front-action");
         }
 
         attrs.put("ui-role", conf().role.toString());
