@@ -13,6 +13,7 @@
 <link rel="import" href="/resources/polymer/iron-a11y-keys-behavior/iron-a11y-keys-behavior.html">
 <link rel="import" href="/resources/polymer/iron-resizable-behavior/iron-resizable-behavior.html">
 <link rel="import" href="/resources/actions/tg-focus-restoration-behavior.html">
+<link rel="import" href="/resources/reflection/tg-polymer-utils.html">
 
 <dom-module id="tg-app-template">
     <template>
@@ -169,24 +170,32 @@
                 behaviors: [Polymer.TgBehaviors.TgEntityMasterBehavior, Polymer.IronA11yKeysBehavior, Polymer.TgBehaviors.TgFocusRestorationBehavior, Polymer.IronResizableBehavior],
                 
                 keyBindings: {
-                    'f3': '_searchMenu'
+                    'f3': '_searchMenu',
+                    'f2': '_openModuleMenu'
                 },
 
                 listeners: {
                     "main-menu": "_showMainMenu",
                     "menu-item-selected": "_showView",
-                    "menu-search-list-closed": "_restoreLastFocusedElement"
+                    "menu-search-list-closed": "_restoreLastFocusedElement",
+                    "tg-module-menu-closed": "_restoreLastFocusedElement"
                 },
                 
                 _searchMenu: function (event) {
-                    var selectedElement = this.$$("[name='" + this.$.pages.selected + "']");
+                    const selectedElement = this.$$("[name='" + this.$.pages.selected + "']");
                     if (selectedElement && selectedElement.searchMenu) {
                         this.persistActiveElement();
                         selectedElement.searchMenu();
-                        if (event.stopPropagation) event.stopPropagation();
-                        if (event.preventDefault) event.preventDefault();
-                        event.cancelBubble = true;
-                        event.returnValue = false;
+                        tearDownEvent(event);
+                    }
+                },
+                
+                _openModuleMenu: function (event) {
+                    const selectedElement = this.$$("[name='" + this.$.pages.selected + "']");
+                    if (selectedElement && selectedElement.openModuleMenu) {
+                        this.persistActiveElement();
+                        selectedElement.openModuleMenu();
+                        tearDownEvent(event);
                     }
                 },
                 

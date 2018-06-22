@@ -1,9 +1,10 @@
 package ua.com.fielden.platform.web.centre;
 
 import static ua.com.fielden.platform.domaintree.impl.GlobalDomainTreeManager.DEFAULT_CONFIG_TITLE;
+import static ua.com.fielden.platform.utils.EntityUtils.equalsEx;
 import static ua.com.fielden.platform.web.centre.CentreConfigEditAction.EditKind.COPY;
-import java.util.Map;
 
+import java.util.Map;
 import com.google.inject.Inject;
 
 import ua.com.fielden.platform.dao.IEntityDao;
@@ -50,12 +51,17 @@ public class CentreConfigEditActionProducer extends DefaultEntityProducerWithCon
             final String title = titleAndDesc._1;
             final String desc = titleAndDesc._2;
             
-            final String actionKindSuffix = COPY.name().equals(entity.getEditKind()) || DEFAULT_CONFIG_TITLE.equals(title) ? COPY_ACTION_SUFFIX : "";
+            final boolean copyAction = COPY.name().equals(entity.getEditKind());
+            final String actionKindSuffix = copyAction ? COPY_ACTION_SUFFIX : "";
             if (DEFAULT_CONFIG_TITLE.equals(title)) {
-                // remove brackets from title when copying 'default' centre configuration; brackets are not allowed as per CentreConfigEditActionTitleValidator
+                // remove brackets from title when copying / editing 'default' centre configuration; brackets are not allowed as per CentreConfigEditActionTitleValidator
                 entity.setTitle(title.replace("[", "").replace("]", "") + actionKindSuffix);
             } else {
                 entity.setTitle(title + actionKindSuffix);
+            }
+            if (!copyAction) {
+                // in case of EDIT action (when EDIT button pressed) we need to provide information whether currently edited configuration is preferred -- in such case just compare preferred config with current
+                entity.setPreferred(equalsEx(previouslyRunSelectionCrit.saveAsNameSupplier().get(), previouslyRunSelectionCrit.preferredConfigSupplier().get()));
             }
             entity.setDesc(desc + actionKindSuffix);
         }

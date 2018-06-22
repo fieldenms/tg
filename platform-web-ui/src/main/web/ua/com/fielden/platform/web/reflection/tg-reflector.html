@@ -19,6 +19,9 @@
      */
     const DEFAULT_TRAILING_ZEROS = true;
     
+    const _UNDEFINED_CONFIG_TITLE = '_______________________undefined';
+    const _LINK_CONFIG_TITLE = '_______________________link';
+    
     /**
      * Determines whether the result represents the error.
      */
@@ -1702,7 +1705,22 @@
          */
         _centreKey: function (miType, saveAsName) {
             return miType + '/default' + saveAsName;
+        },
+        
+        /**
+         * The surrogate title of not yet known configuration. This is used during first time centre loading.
+         */
+        get UNDEFINED_CONFIG_TITLE() {
+            return _UNDEFINED_CONFIG_TITLE;
+        },
+        
+        /**
+         * The surrogate title of centre 'link' configuration. This is used when link with centre parameters opens.
+         */
+        get LINK_CONFIG_TITLE() {
+            return _LINK_CONFIG_TITLE;
         }
+        
     });
-})();    
+})();
 </script>

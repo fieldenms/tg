@@ -99,11 +99,14 @@ public class SecurityMatrixInsertionPointMaster implements IMaster<SecurityMatri
 
     private String readyCallback() {
         return realodActionConfig.code().toString() + "\n"
-                +"self.classList.remove('canLeave');\n"
                 + "self.classList.add('layout');\n"
                 + "self.classList.add('vertical');\n"
                 + "self._masterDom().classList.add('layout');\n"
                 + "self._masterDom().classList.add('vertical');\n"
+                + "//Implemented can leave to check whether user has saved changes or not.\n"
+                + "self.canLeave = function () {\n"
+                + "    return this.$.securityMatrix.canLeave();\n"
+                + "}.bind(self);\n"
                 + "//Need for security marix editors binding.\n"
                 + "self._isNecessaryForConversion = function (propertyName) { \n"
                 + "    return ['tokenFilter', 'roleFilter'].indexOf(propertyName) >= 0; \n"

@@ -157,6 +157,9 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
     private final String EGI_FUNCTIONAL_ACTION_DOM = "<!--@functional_actions-->";
     private final String EGI_PRIMARY_ACTION_DOM = "<!--@primary_action-->";
     private final String EGI_SECONDARY_ACTIONS_DOM = "<!--@secondary_actions-->";
+    //Fron actions
+    private final String FRONT_ACTIONS_DOM = "<!--@custom-front-actions-->";
+    private final String FRONT_ACTIONS = "//generatedFrontActionObjects";
     //Toolbar related
     private final String TOOLBAR_DOM = "<!--@toolbar-->";
     private final String TOOLBAR_JS = "//toolbarGeneratedFunction";
@@ -728,13 +731,13 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
             return Optional.empty();
         }
     }
-    
+
     @Override
     public IRenderable buildFor(final DeviceProfile device) {
         logger.debug("Initiating fresh centre...");
         return createRenderableRepresentation(getAssociatedEntityCentreManager(device));
     }
-    
+
     private final ICentreDomainTreeManagerAndEnhancer getAssociatedEntityCentreManager(final DeviceProfile device) {
         final IGlobalDomainTreeManager userSpecificGlobalManager = getUserSpecificGlobalManager();
         if (userSpecificGlobalManager == null) {
@@ -894,8 +897,22 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
             primaryActionDom.add(el.render().clazz("primary-action").attr("hidden", null));
             primaryActionObject.append(prefix + createActionObject(el));
         }
+        ////////////////////Primary result-set action [END] //////////////
 
-        //////////////////// Primary result-set action [END] //////////////
+        logger.debug("Initiating front actions...");
+        //////////////////// front action ////////////////////
+        final StringBuilder frontActionsObjects = new StringBuilder();
+        final DomContainer frontActionsDom = new DomContainer();
+
+        final List<EntityActionConfig> frontActions = this.dslDefaultConfig.getFrontActions();
+        for (int actionIndex = 0; actionIndex < frontActions.size(); actionIndex++) {
+            final FunctionalActionElement actionElement = new FunctionalActionElement(frontActions.get(actionIndex), actionIndex, FunctionalActionKind.TOP_LEVEL);
+            importPaths.add(actionElement.importPath());
+            frontActionsDom.add(actionElement.render().clazz("custom-front-action"));
+            frontActionsObjects.append(prefix + createActionObject(actionElement));
+        }
+        ////////////////////front action (END)////////////////////
+
         logger.debug("Initiating secondary actions...");
 
         final List<FunctionalActionElement> secondaryActionElements = new ArrayList<>();
@@ -971,6 +988,7 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
             }
         }
         ///////////////////////////////////////
+        final String frontActionString = frontActionsObjects.toString();
         final String funcActionString = functionalActionsObjects.toString();
         final String secondaryActionString = secondaryActionsObjects.toString();
         final String insertionPointActionsString = insertionPointActionsObjects.toString();
@@ -1010,6 +1028,8 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
                 replace(QUERY_ENHANCER_CONFIG, queryEnhancerContextConfigString()).
                 replace(CRITERIA_DOM, editorContainer.toString()).
                 replace(EGI_DOM, egiColumns.toString()).
+                replace(FRONT_ACTIONS_DOM, frontActionsDom.toString()).
+                replace(FRONT_ACTIONS, frontActionString.length() > prefixLength ? frontActionString.substring(prefixLength): frontActionString).
                 replace(EGI_ACTIONS, funcActionString.length() > prefixLength ? funcActionString.substring(prefixLength) : funcActionString).
                 replace(EGI_SECONDARY_ACTIONS, secondaryActionString.length() > prefixLength ? secondaryActionString.substring(prefixLength) : secondaryActionString).
                 replace(INSERTION_POINT_ACTIONS, insertionPointActionsString.length() > prefixLength ? insertionPointActionsString.substring(prefixLength)

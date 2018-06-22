@@ -69,6 +69,21 @@ public class EntityCentreConfig extends AbstractConfiguration<DynamicEntityKey> 
     @MapTo("IS_PRINCIPAL")
     private boolean principal = false;
 
+    @IsProperty
+    @Title(value = "Is preferred?", desc = "Indicates whether this configuration is preferred over the others on the same menu item")
+    @MapTo
+    private boolean preferred = false;
+
+    public boolean isPreferred() {
+        return preferred;
+    }
+
+    @Observable
+    public EntityCentreConfig setPreferred(final boolean value) {
+        preferred = value;
+        return this;
+    }
+
     public MainMenuItem getMenuItem() {
         return menuItem;
     }
