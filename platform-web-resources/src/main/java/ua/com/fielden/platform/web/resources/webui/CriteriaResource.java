@@ -251,7 +251,11 @@ public class CriteriaResource extends AbstractWebResource {
 
     public static <T extends AbstractEntity<?>, M extends EnhancedCentreEntityQueryCriteria<T, ? extends IEntityDao<T>>> String createStaleCriteriaMessage(final String wasRun, final ICentreDomainTreeManagerAndEnhancer freshCentre, final Class<? extends MiWithConfigurationSupport<?>> miType, final Optional<String> saveAsName, final IGlobalDomainTreeManager gdtm, final ICompanionObjectFinder companionFinder, final ICriteriaGenerator critGenerator, final DeviceProfile device) {
         if (wasRun != null) {
-            final boolean isCriteriaStale = !equalsEx(updateCentre(gdtm, miType, PREVIOUSLY_RUN_CENTRE_NAME, saveAsName, device), freshCentre);
+            // When changing centre we can change selection criteria and mnemonics, but also columns sorting, order, visibility and width / grow factors.
+            // From end-user perspective it is only relevant to 'know' whether selection criteria change was not applied against currently visible result-set.
+            // Thus need to only compare 'firstTick's of centre managers.
+            // Please be careful when adding some new contracts to 'firstTick' not to violate this premise.
+            final boolean isCriteriaStale = !equalsEx(updateCentre(gdtm, miType, PREVIOUSLY_RUN_CENTRE_NAME, saveAsName, device).getFirstTick(), freshCentre.getFirstTick());
             if (isCriteriaStale) {
                 logger.info(staleCriteriaMessage);
                 return staleCriteriaMessage;
