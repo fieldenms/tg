@@ -45,20 +45,6 @@ public class CentreConfigUpdater extends AbstractFunctionalEntityForCollectionMo
     @Title(value = "Centre Changed", desc = "Indicates whether successful saving of this entity actually changed centre. Only populated when centre sorting wasn't changed.")
     private boolean centreChanged;
     
-    @IsProperty
-    @Title(value = "Stale Criteria Message", desc = "Indicates whether successful saving of this entity actually changed whether previously run results do not match fresh criteria. Only populated when centre sorting wasn't changed.")
-    private String staleCriteriaMessage;
-    
-    @Observable
-    public CentreConfigUpdater setStaleCriteriaMessage(final String staleCriteriaMessage) {
-        this.staleCriteriaMessage = staleCriteriaMessage;
-        return this;
-    }
-    
-    public String getStaleCriteriaMessage() {
-        return staleCriteriaMessage;
-    }
-    
     @Observable
     public CentreConfigUpdater setCentreChanged(final boolean centreChanged) {
         this.centreChanged = centreChanged;

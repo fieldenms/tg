@@ -87,7 +87,6 @@
             };
             actionModel.postActionSuccess = function (functionalEntity) {
                 entityCentre._centreChanged = functionalEntity.get('centreChanged');
-                entityCentre.$.selection_criteria.staleCriteriaMessage = functionalEntity.get('staleCriteriaMessage');
             };
             actionModel.postActionError = function (functionalEntity) {};
             actionModel.attrs = {

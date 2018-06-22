@@ -148,7 +148,6 @@ public class CentreConfigurationWebUiConfig {
                                     + "    } else {\n"
                                     + "        self.$.egi._adjustColumns(functionalEntity.get('chosenIds').map(column => column === 'this' ? '' : column));\n"
                                     + "        self._centreChanged = functionalEntity.get('centreChanged');\n"
-                                    + "        self.$.selection_criteria.staleCriteriaMessage = functionalEntity.get('staleCriteriaMessage');\n"
                                     + "    }\n"
                                     + ""))
                         .icon("av:sort-by-alpha")

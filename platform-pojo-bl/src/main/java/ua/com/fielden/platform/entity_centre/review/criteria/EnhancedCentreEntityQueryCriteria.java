@@ -44,7 +44,6 @@ public class EnhancedCentreEntityQueryCriteria<T extends AbstractEntity<?>, DAO 
     private Supplier<T2<String, String>> centreTitleAndDescGetter;
     private Supplier<ICentreDomainTreeManagerAndEnhancer> baseCentreSupplier;
     private Supplier<Boolean> centreChangedGetter;
-    private Supplier<String> staleCriteriaMessageGetter;
     /**
      * This function represents centre query runner for export action which is dependent on configuration of the passed <code>customObject</code>.
      * Running of this fully-fledged query depends on query context (see property centreContextHolder).
@@ -168,14 +167,6 @@ public class EnhancedCentreEntityQueryCriteria<T extends AbstractEntity<?>, DAO 
 
     public Supplier<Boolean> centreChangedGetter() {
         return centreChangedGetter;
-    }
-
-    public void setStaleCriteriaMessageGetter(final Supplier<String> staleCriteriaMessageGetter) {
-        this.staleCriteriaMessageGetter = staleCriteriaMessageGetter;
-    }
-
-    public Supplier<String> staleCriteriaMessageGetter() {
-        return staleCriteriaMessageGetter;
     }
 
     public Function<Map<String, Object>, Stream<AbstractEntity<?>>> exportQueryRunner() {

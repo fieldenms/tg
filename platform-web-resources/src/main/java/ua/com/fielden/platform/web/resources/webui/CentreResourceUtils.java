@@ -16,7 +16,6 @@ import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract
 import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.isOrNullDefault;
 import static ua.com.fielden.platform.types.tuples.T2.t2;
 import static ua.com.fielden.platform.web.centre.CentreConfigEditAction.EditKind.COPY;
-import static ua.com.fielden.platform.web.resources.webui.CriteriaResource.createStaleCriteriaMessage;
 import static ua.com.fielden.platform.web.utils.EntityResourceUtils.getEntityType;
 import static ua.com.fielden.platform.web.utils.EntityResourceUtils.getOriginalManagedType;
 import static ua.com.fielden.platform.web.utils.EntityResourceUtils.getVersion;
@@ -431,7 +430,6 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
         final M validationPrototype = (M) critGenerator.generateCentreQueryCriteria(entityType, cdtmae, miType, new MiTypeAnnotation().newInstance(miType, saveAsName));
         validationPrototype.setPreviouslyRunCentreSupplier(() -> updateCentre(gdtm, miType, PREVIOUSLY_RUN_CENTRE_NAME, saveAsName, device));
         validationPrototype.setCentreChangedGetter(() -> isFreshCentreChanged(updateCentre(gdtm, miType, FRESH_CENTRE_NAME, saveAsName, device), updateCentre(gdtm, miType, SAVED_CENTRE_NAME, saveAsName, device)));
-        validationPrototype.setStaleCriteriaMessageGetter(() -> createStaleCriteriaMessage("yes", updateCentre(gdtm, miType, FRESH_CENTRE_NAME, saveAsName, device), miType, saveAsName, gdtm, companionFinder, critGenerator, device));
         validationPrototype.setBaseCentreSupplier(() -> baseCentre(gdtm, miType, saveAsName, device));
         validationPrototype.setCentreAdjuster((centreConsumer) -> {
             centreConsumer.accept(updateCentre(gdtm, miType, FRESH_CENTRE_NAME, saveAsName, device));

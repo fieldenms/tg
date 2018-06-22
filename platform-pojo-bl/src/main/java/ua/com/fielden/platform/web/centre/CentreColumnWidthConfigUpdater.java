@@ -34,20 +34,6 @@ public class CentreColumnWidthConfigUpdater extends AbstractFunctionalEntityWith
     @Title(value = "Centre Changed", desc = "Indicates whether successful saving of this entity actually changed centre.")
     private boolean centreChanged;
     
-    @IsProperty
-    @Title(value = "Stale Criteria Message", desc = "Indicates whether successful saving of this entity actually changed whether previously run results do not match fresh criteria.")
-    private String staleCriteriaMessage;
-    
-    @Observable
-    public CentreColumnWidthConfigUpdater setStaleCriteriaMessage(final String staleCriteriaMessage) {
-        this.staleCriteriaMessage = staleCriteriaMessage;
-        return this;
-    }
-    
-    public String getStaleCriteriaMessage() {
-        return staleCriteriaMessage;
-    }
-    
     @Observable
     public CentreColumnWidthConfigUpdater setCentreChanged(final boolean centreChanged) {
         this.centreChanged = centreChanged;

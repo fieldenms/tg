@@ -52,7 +52,6 @@ public class CentreColumnWidthConfigUpdaterDao extends CommonEntityDao<CentreCol
         
         action.setColumnParameters(new HashMap<>());
         action.setCentreChanged(criteriaEntityBeingUpdated.centreChangedGetter().get());
-        action.setStaleCriteriaMessage(criteriaEntityBeingUpdated.staleCriteriaMessageGetter().get());
         return super.save(action);
     }
 }
