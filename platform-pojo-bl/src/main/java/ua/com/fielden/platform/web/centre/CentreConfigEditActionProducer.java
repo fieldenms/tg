@@ -2,7 +2,6 @@ package ua.com.fielden.platform.web.centre;
 
 import static ua.com.fielden.platform.domaintree.impl.GlobalDomainTreeManager.DEFAULT_CONFIG_TITLE;
 import static ua.com.fielden.platform.error.Result.failure;
-import static ua.com.fielden.platform.utils.EntityUtils.equalsEx;
 import static ua.com.fielden.platform.web.centre.CentreConfigEditAction.EditKind.COPY;
 
 import java.util.Map;
@@ -68,10 +67,6 @@ public class CentreConfigEditActionProducer extends DefaultEntityProducerWithCon
                 entity.setTitle(title.replace("[", "").replace("]", "") + actionKindSuffix);
             } else {
                 entity.setTitle(title + actionKindSuffix);
-            }
-            if (!copyAction) {
-                // in case of EDIT action (when EDIT button pressed) we need to provide information whether currently edited configuration is preferred -- in such case just compare preferred config with current
-                entity.setPreferred(equalsEx(saveAsName, previouslyRunSelectionCrit.preferredConfigSupplier().get()));
             }
             entity.setDesc(desc + actionKindSuffix);
         }

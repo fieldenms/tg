@@ -36,11 +36,8 @@ public class CentreConfigDeleteActionProducer extends DefaultEntityProducerWithC
                     throw failure(ERR_CANNOT_BE_DELETED);
                 }
                 criteriaEntity.centreDeleter().run();
-                entity.setPreferredConfig(criteriaEntity.preferredConfigSupplier().get().orElse(""));
-            } else {
-                criteriaEntity.defaultCentreClearer().run();
-                entity.setPreferredConfig("");
             }
+            criteriaEntity.defaultCentreClearer().run();
         }
         return entity;
     }

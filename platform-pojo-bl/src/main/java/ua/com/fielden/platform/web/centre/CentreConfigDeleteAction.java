@@ -26,10 +26,6 @@ public class CentreConfigDeleteAction extends AbstractFunctionalEntityWithCentre
     }
     
     @IsProperty
-    @Title(value = "Preferred Config", desc = "Preferred configuration after delete action success.")
-    private String preferredConfig;
-    
-    @IsProperty
     @Title("Delete Kind")
     private String deleteKind;
     
@@ -41,16 +37,6 @@ public class CentreConfigDeleteAction extends AbstractFunctionalEntityWithCentre
     
     public String getDeleteKind() {
         return deleteKind;
-    }
-    
-    @Observable
-    public CentreConfigDeleteAction setPreferredConfig(final String preferredConfig) {
-        this.preferredConfig = preferredConfig;
-        return this;
-    }
-    
-    public String getPreferredConfig() {
-        return preferredConfig;
     }
     
 }

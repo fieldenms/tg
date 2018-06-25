@@ -168,13 +168,12 @@ public class CentreConfigurationWebUiConfig {
      */
     private static EntityMaster<CentreConfigEditAction> createCentreConfigEditActionMaster(final Injector injector) {
         final String actionLayout = mkActionLayoutForMaster();
-        final String layout = mkGridForMasterFitWidth(3, 1);
+        final String layout = mkGridForMasterFitWidth(2, 1);
         
         final IMaster<CentreConfigEditAction> masterConfig = new SimpleMasterBuilder<CentreConfigEditAction>()
             .forEntity(CentreConfigEditAction.class)
             .addProp("title").asSinglelineText().also()
             .addProp("desc").asMultilineText().also()
-            .addProp("preferred").asCheckbox().also()
             .addAction(REFRESH).shortDesc("CANCEL").longDesc("Cancels creation of configuration copy.")
             .addAction(SAVE).shortDesc("SAVE").longDesc("Saves new configuration copy.")
             .setActionBarLayoutFor(DESKTOP, empty(), actionLayout)
@@ -183,7 +182,7 @@ public class CentreConfigurationWebUiConfig {
             .setLayoutFor(DESKTOP, empty(), layout)
             .setLayoutFor(TABLET, empty(), layout)
             .setLayoutFor(MOBILE, empty(), layout)
-            .withDimensions(mkDim(400, 309))
+            .withDimensions(mkDim(400, 248))
             .done();
         return new EntityMaster<>(CentreConfigEditAction.class, CentreConfigEditActionProducer.class, masterConfig, injector);
     }

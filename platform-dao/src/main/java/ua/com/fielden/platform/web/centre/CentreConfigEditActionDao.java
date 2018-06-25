@@ -1,12 +1,8 @@
 package ua.com.fielden.platform.web.centre;
 
-import static java.util.Optional.empty;
 import static java.util.Optional.of;
-import static ua.com.fielden.platform.types.tuples.T3.t3;
-import static ua.com.fielden.platform.web.centre.CentreConfigEditAction.EditKind.EDIT;
+import static ua.com.fielden.platform.types.tuples.T2.t2;
 import static ua.com.fielden.platform.web.centre.CentreConfigEditAction.EditKind.valueOf;
-
-import java.util.Optional;
 
 import com.google.inject.Inject;
 
@@ -17,6 +13,7 @@ import ua.com.fielden.platform.entity.annotation.EntityType;
 import ua.com.fielden.platform.entity.query.IFilter;
 import ua.com.fielden.platform.entity_centre.review.criteria.EnhancedCentreEntityQueryCriteria;
 import ua.com.fielden.platform.error.Result;
+import ua.com.fielden.platform.types.tuples.T2;
 import ua.com.fielden.platform.web.utils.ICriteriaEntityRestorer;
 
 /** 
@@ -48,15 +45,8 @@ public class CentreConfigEditActionDao extends CommonEntityDao<CentreConfigEditA
         
         final EnhancedCentreEntityQueryCriteria<?, ?> criteriaEntity = criteriaEntityRestorer.restoreCriteriaEntity(entity.getCentreContextHolder());
         
-        final Optional<Boolean> preferredValue = 
-            // make optional 'preferred' value in case where 'preferred' property has changed
-            entity.getProperty("preferred").isDirty()
-            // also in case where [Default] configuration is edited to be with some other name and [Default] config was preferred (aka no database record with preferred == true) and checkbox was remained
-            // with 'true' value then we also need to update database state (edited config with another name should be given preferred == true value)
-            || entity.isPreferred() && EDIT.name().equals(entity.getEditKind()) && empty().equals(criteriaEntity.saveAsNameSupplier().get())
-            ? of(entity.isPreferred()) : empty(); // otherwise there is no need to make preferred configuration adjustments in persistent storage
         // perform actual copy / edit using centreEditor() closure
-        criteriaEntity.centreEditor().accept(t3(valueOf(entity.getEditKind()), of(entity.getTitle()), preferredValue), entity.getDesc());
+        criteriaEntity.centreEditor().accept(t2(valueOf(entity.getEditKind()), of(entity.getTitle())), entity.getDesc());
         return super.save(entity);
     }
     

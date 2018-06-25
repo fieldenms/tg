@@ -471,9 +471,9 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
                 .map(name -> t2(name, updateCentreDesc(gdtm, miType, of(name), device)))
                 .orElse(t2(DEFAULT_CONFIG_TITLE, DEFAULT_CONFIG_DESC));
         });
-        validationPrototype.setCentreEditor((editKindAndNewNameAndPreferredVal, newDesc) -> {
-            final Optional<String> newName = editKindAndNewNameAndPreferredVal._2;
-            if (COPY.equals(editKindAndNewNameAndPreferredVal._1)) {
+        validationPrototype.setCentreEditor((editKindAndNewName, newDesc) -> {
+            final Optional<String> newName = editKindAndNewName._2;
+            if (COPY.equals(editKindAndNewName._1)) {
                 final ICentreDomainTreeManagerAndEnhancer freshCentre = updateCentre(gdtm, miType, FRESH_CENTRE_NAME, saveAsName, device);
                 // save the 'fresh' centre with a new name -- buttons SAVE / DISCARD will be disabled
                 initAndCommit(gdtm, miType, FRESH_CENTRE_NAME, newName, device, freshCentre, newDesc);
@@ -484,10 +484,6 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
                     updateCentre(gdtm, miType, FRESH_CENTRE_NAME, empty(), device);
                     updateCentre(gdtm, miType, SAVED_CENTRE_NAME, empty(), device);
                 }
-            }
-            final Optional<Boolean> preferredValue = editKindAndNewNameAndPreferredVal._3;
-            if (preferredValue.isPresent()) {
-                makePreferred(preferredValue.get(), gdtm, miType, newName, device, companionFinder);
             }
         });
         validationPrototype.setLoadableCentresSupplier(() -> {

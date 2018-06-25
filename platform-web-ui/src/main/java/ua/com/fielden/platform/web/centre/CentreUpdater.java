@@ -481,17 +481,17 @@ public class CentreUpdater {
      * @param device
      * @return
      */
-    public static void makePreferred(final boolean preferred, final IGlobalDomainTreeManager gdtm, final Class<? extends MiWithConfigurationSupport<?>> miType, final Optional<String> saveAsName, final DeviceProfile device, final ICompanionObjectFinder companionFinder) {
-        if (preferred) {
-            try (final Stream<EntityCentreConfig> stream = streamPreferredConfigs(gdtm, miType, device, companionFinder) ) {
-                stream.forEach(ecc -> gdtm.saveConfig(ecc.setPreferred(false)));
-            }
+    public static void makePreferred(final IGlobalDomainTreeManager gdtm, final Class<? extends MiWithConfigurationSupport<?>> miType, final Optional<String> saveAsName, final DeviceProfile device, final ICompanionObjectFinder companionFinder) {
+        try (final Stream<EntityCentreConfig> stream = streamPreferredConfigs(gdtm, miType, device, companionFinder) ) {
+            stream.forEach(ecc -> gdtm.saveConfig(ecc.setPreferred(false)));
         }
-        gdtm.saveConfig(
-            gdtm
-            .findConfig(miType, deviceSpecific(saveAsSpecific(FRESH_CENTRE_NAME, saveAsName), device) + DIFFERENCES_SUFFIX)
-            .setPreferred(preferred)
-        );
+        if (saveAsName.isPresent()) {
+            gdtm.saveConfig(
+                gdtm
+                .findConfig(miType, deviceSpecific(saveAsSpecific(FRESH_CENTRE_NAME, saveAsName), device) + DIFFERENCES_SUFFIX)
+                .setPreferred(true)
+            );
+        }
     }
     
     /**

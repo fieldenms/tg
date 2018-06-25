@@ -47,20 +47,6 @@ public class CentreConfigEditAction extends AbstractFunctionalEntityWithCentreCo
     @Title("Edit Kind")
     private String editKind;
     
-    @IsProperty
-    @Title(value = "Is preferred?", desc = "Indicates whether this configuration is preferred over the others.")
-    private boolean preferred = false;
-    
-    public boolean isPreferred() {
-        return preferred;
-    }
-    
-    @Observable
-    public CentreConfigEditAction setPreferred(final boolean value) {
-        preferred = value;
-        return this;
-    }
-    
     @Observable
     public CentreConfigEditAction setEditKind(final String editKind) {
         this.editKind = editKind;

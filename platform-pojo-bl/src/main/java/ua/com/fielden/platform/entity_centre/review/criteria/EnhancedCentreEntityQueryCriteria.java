@@ -20,7 +20,6 @@ import ua.com.fielden.platform.entity.functional.centre.CentreContextHolder;
 import ua.com.fielden.platform.entity.matcher.IValueMatcherFactory;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
 import ua.com.fielden.platform.types.tuples.T2;
-import ua.com.fielden.platform.types.tuples.T3;
 import ua.com.fielden.platform.web.centre.CentreConfigEditAction.EditKind;
 import ua.com.fielden.platform.web.centre.LoadableCentreConfig;
 
@@ -35,7 +34,7 @@ import ua.com.fielden.platform.web.centre.LoadableCentreConfig;
 public class EnhancedCentreEntityQueryCriteria<T extends AbstractEntity<?>, DAO extends IEntityDao<T>> extends EntityQueryCriteria<ICentreDomainTreeManagerAndEnhancer, T, DAO> {
     private Supplier<ICentreDomainTreeManagerAndEnhancer> previouslyRunCentreSupplier;
     private Function<Map<String, Object>, EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, ? extends IEntityDao<AbstractEntity<?>>>> freshCentreApplier;
-    private BiConsumer<T3<EditKind, Optional<String>, Optional<Boolean>>, String> centreEditor;
+    private BiConsumer<T2<EditKind, Optional<String>>, String> centreEditor;
     private Runnable centreDeleter;
     private Runnable defaultCentreClearer;
     private Supplier<List<LoadableCentreConfig>> loadableCentresSupplier;
@@ -97,11 +96,11 @@ public class EnhancedCentreEntityQueryCriteria<T extends AbstractEntity<?>, DAO 
         return freshCentreApplier;
     }
 
-    public void setCentreEditor(final BiConsumer<T3<EditKind, Optional<String>, Optional<Boolean>>, String> centreEditor) {
+    public void setCentreEditor(final BiConsumer<T2<EditKind, Optional<String>>, String> centreEditor) {
         this.centreEditor = centreEditor;
     }
 
-    public BiConsumer<T3<EditKind, Optional<String>, Optional<Boolean>>, String> centreEditor() {
+    public BiConsumer<T2<EditKind, Optional<String>>, String> centreEditor() {
         return centreEditor;
     }
 
