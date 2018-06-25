@@ -91,7 +91,7 @@ public class CentreConfigEditActionProducer extends DefaultEntityProducerWithCon
             ||
             criteriaEntity.loadableCentresSupplier().get().stream() // inherited configuration name and title cannot be edited
             .filter(lcc -> lcc.getKey().equals(saveAsName.get()))
-            .findAny().map(lcc -> lcc.isInherited()).orElse(true);
+            .findAny().map(lcc -> lcc.isInherited()).orElseThrow(() -> new IllegalStateException("Configuration has been deleted."));
     }
     
 }

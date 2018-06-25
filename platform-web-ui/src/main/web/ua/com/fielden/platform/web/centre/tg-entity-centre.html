@@ -139,7 +139,6 @@
 
         <iron-ajax id="ajaxSaver" url="[[_url]]" method="POST" handle-as="json" on-response="_processSaverResponse" on-error="_processSaverError"></iron-ajax>
         <iron-ajax id="ajaxDiscarder" url="[[_url]]" method="PUT" handle-as="json" on-response="_processDiscarderResponse" on-error="_processDiscarderError"></iron-ajax>
-        <iron-ajax id="ajaxDefaulter" url="[[_defaulterUrl]]" method="PUT" handle-as="json" on-response="_processDefaulterResponse" on-error="_processDefaulterError"></iron-ajax>
 
         <tg-confirmation-dialog id="confirmationDialog"></tg-confirmation-dialog>
 
@@ -153,7 +152,6 @@
                             <div class="layout horizontal button-group">
                                 <paper-button id="saver" raised shortcut="ctrl+s" roll="button" on-tap="saveAsync" disabled$="[[_saverDisabled]]" tooltip-text="Save configuration">Save</paper-button>
                                 <paper-button id="discarder" raised shortcut="ctrl+r" roll="button" on-tap="discardAsync" disabled$="[[_discarderDisabled]]" tooltip-text="Discard the latest changes to selection criteria, which effectively returns them to the last saved configuration.">Discard</paper-button>
-                                <paper-button id="defaulter" raised shortcut="ctrl+d" roll="button" on-tap="defaultAsync" disabled$="[[_defaulterDisabled]]" tooltip-text="Loads default selection criteria from base configuration, disregarding all previously saved and unsaved local changes.">Default</paper-button>
                             </div>
                             <div class="layout horizontal button-group right-button-group">
                                 <paper-button id="view" raised shortcut="ctrl+e" roll="button" on-tap="_activateResultSetView" disabled$="[[_viewerDisabled]]" tooltip-text="Show result view">View</paper-button>
@@ -211,21 +209,16 @@
                 observer: '_selectedViewChanged'
             },
             _url: Function,
-            _defaulterUrl: Function,
             _processSaverResponse: Function,
             _processSaverError: Function,
             _processDiscarderResponse: Function,
             _processDiscarderError: Function,
-            _processDefaulterResponse: Function,
-            _processDefaulterError: Function,
             _saverDisabled: Boolean,
             _discarderDisabled: Boolean,
-            _defaulterDisabled: Boolean,
             _runnerDisabled: Boolean,
             _viewerDisabled: Boolean,
             save: Function,
             discard: Function,
-            _default: Function,
             run: Function,
             _showDialog: Function,
             saveAsName: {
@@ -392,13 +385,6 @@
         },
 
         /**
-         * The iron-ajax component for centre defaulting.
-         */
-        _ajaxDefaulter: function () {
-            return this.$.ajaxDefaulter;
-        },
-
-        /**
          * The iron-ajax component for centre saving.
          */
         _ajaxSaver: function () {
@@ -522,16 +508,6 @@
             this.async(function () {
                 self.persistActiveElement();
                 self.discard().then(function () {
-                    self.restoreActiveElement();
-                });
-            }, 100);
-        },
-
-        defaultAsync: function () {
-            const self = this;
-            this.async(function () {
-                self.persistActiveElement();
-                self._default().then(function () {
                     self.restoreActiveElement();
                 });
             }, 100);

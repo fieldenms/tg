@@ -307,11 +307,6 @@
                     computed: '_computeDiscarderDisabled(_centreChanged, _bindingEntityNotPersistentOrNotPersistedOrModified, _editedPropsExist, _currEntity, _actionInProgress)'
                 },
 
-                _defaulterDisabled: {
-                    type: Boolean,
-                    computed: '_computeDefaulterDisabled(_actionInProgress)'
-                },
-
                 _runnerDisabled: {
                     type: Boolean,
                     computed: '_computeRunnerDisabled(_criteriaLoaded, _actionInProgress)'
@@ -325,11 +320,6 @@
                 _url: {
                     type: String,
                     computed: '_computeUrl(miType, saveAsName)'
-                },
-
-                _defaulterUrl: {
-                    type: String,
-                    computed: '_computeDefaulterUrl(miType, saveAsName)'
                 },
 
                 /**
@@ -373,14 +363,7 @@
                 discard: {
                     type: Function
                 },
-
-                /**
-                 * Starts the process of centre defaulting.
-                 */
-                _default: {
-                    type: Function
-                },
-
+                
                 /**
                  * Starts the process of centre run.
                  *
@@ -465,10 +448,6 @@
 
             _computeDiscarderDisabled: function (_centreChanged, _bindingEntityNotPersistentOrNotPersistedOrModified, _editedPropsExist, _currEntity, _actionInProgress) {
                 return _actionInProgress === true || !this.canDiscard(_centreChanged, _bindingEntityNotPersistentOrNotPersistedOrModified, _editedPropsExist, _currEntity);
-            },
-
-            _computeDefaulterDisabled: function (_actionInProgress) {
-                return _actionInProgress === true;
             },
 
             _computeRunnerDisabled: function (_criteriaLoaded, _actionInProgress) {
@@ -557,21 +536,6 @@
                 };
                 self._processDiscarderError = function (e) {
                     self.$.selection_criteria._processError(e, "discard", function (errorResult) {
-                        // This function will be invoked after server-side error appear.
-                        console.warn("SERVER ERROR: ", errorResult);
-                        self.$.selection_criteria._postRetrievedDefaultError(errorResult);
-                    });
-                };
-
-                self._processDefaulterResponse = function (e) {
-                    self.$.selection_criteria._processResponse(e, "default", function (entityAndCustomObject, exceptionOccured) {
-                        console.log("CENTRE DEFAULTED", entityAndCustomObject);
-                        self.$.selection_criteria._provideExceptionOccured(entityAndCustomObject[0], exceptionOccured);
-                        self.$.selection_criteria._postRetrievedDefault(entityAndCustomObject);
-                    });
-                };
-                self._processDefaulterError = function (e) {
-                    self.$.selection_criteria._processError(e, "default", function (errorResult) {
                         // This function will be invoked after server-side error appear.
                         console.warn("SERVER ERROR: ", errorResult);
                         self.$.selection_criteria._postRetrievedDefaultError(errorResult);
@@ -684,49 +648,6 @@
                                     }));
                             }
                             return resolve(slf._createDiscardPromise(customObject));
-                        }, 50);
-                    });
-                }).bind(self);
-
-                self._createDefaultPromise = function (customObject) { // very similar to tg-entity-binder-behavior._createRetrievalPromise
-                    const slf = this;
-                    this._ajaxDefaulter().body = JSON.stringify(customObject);
-                    return this._ajaxDefaulter().generateRequest().completes.then(
-                        function () {
-                            slf._actionInProgress = false;
-                        }, function (error) {
-                            slf._actionInProgress = false;
-                        }
-                    );
-                }.bind(self);
-
-                self._default = (function () { // very similar to tg-entity-binder-behavior.retrieve
-                    const slf = this;
-                    slf._actionInProgress = true;
-                    const sc = this.$.selection_criteria;
-                    if (!sc._retrievalInitiated) {
-                        sc._retrievalInitiated = true;
-                        sc.disableView();
-                    }
-
-                    return new Promise(function (resolve, reject) {
-                        slf.debounce('invoke-default', function () {
-                            // cancel the 'invoke-default' debouncer if there is any active one:
-                            slf.cancelDebouncer('invoke-default');
-
-                            // cancel previous validation requests except the last one -- if it exists then defaulting process will be chained on top of that last validation process,
-                            // otherwise -- default process will simply start immediately
-                            const lastValidationPromise = sc._validator().abortValidationExceptLastOne();
-                            const customObject = {};
-                            customObject['@@wasRun'] = sc._wasRun;
-                            if (lastValidationPromise !== null) {
-                                console.warn("Default is chained to the last validation promise...");
-                                return resolve(lastValidationPromise
-                                    .then(function () {
-                                        return slf._createDefaultPromise(customObject);
-                                    }));
-                            }
-                            return resolve(slf._createDefaultPromise(customObject));
                         }, 50);
                     });
                 }).bind(self);
@@ -1115,13 +1036,6 @@
              */
             _computeUrl: function (miType, saveAsName) {
                 return '/centre/' + this.$.selection_criteria._reflector()._centreKey(miType, saveAsName);
-            },
-
-            /**
-             * Computes URL for 'ajaxDefaulter'.
-             */
-            _computeDefaulterUrl: function (miType, saveAsName) {
-                return '/centre/default/' + this.$.selection_criteria._reflector()._centreKey(miType, saveAsName);
             },
 
             _saveAsNameChanged: function (newSaveAsName, oldSaveAsName) {

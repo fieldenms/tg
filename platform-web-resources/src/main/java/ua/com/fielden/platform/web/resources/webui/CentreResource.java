@@ -4,8 +4,11 @@ import static java.util.Optional.empty;
 import static ua.com.fielden.platform.web.centre.CentreUpdater.FRESH_CENTRE_NAME;
 import static ua.com.fielden.platform.web.centre.CentreUpdater.SAVED_CENTRE_NAME;
 import static ua.com.fielden.platform.web.centre.CentreUpdater.centre;
+import static ua.com.fielden.platform.web.centre.CentreUpdater.commitCentreDesc;
 import static ua.com.fielden.platform.web.centre.CentreUpdater.initAndCommit;
+import static ua.com.fielden.platform.web.centre.CentreUpdater.removeCentres;
 import static ua.com.fielden.platform.web.centre.CentreUpdater.updateCentre;
+import static ua.com.fielden.platform.web.centre.CentreUpdater.updateCentreDesc;
 import static ua.com.fielden.platform.web.centre.CentreUtils.isFreshCentreChanged;
 import static ua.com.fielden.platform.web.factories.webui.ResourceFactoryUtils.getUserSpecificGlobalManager;
 import static ua.com.fielden.platform.web.resources.webui.CentreResourceUtils.createCriteriaEntity;
@@ -142,15 +145,16 @@ public class CentreResource<CRITERIA_TYPE extends AbstractEntity<?>> extends Abs
             final Map<String, Object> wasRunHolder = restoreModifiedPropertiesHolderFrom(envelope, restUtil);
             final String wasRun = (String) wasRunHolder.get("@@wasRun");
             
-            final ICentreDomainTreeManagerAndEnhancer updatedFreshCentre = updateCentre(gdtm, miType, FRESH_CENTRE_NAME, saveAsName, device());
-            final ICentreDomainTreeManagerAndEnhancer updatedSavedCentre = updateCentre(gdtm, miType, SAVED_CENTRE_NAME, saveAsName, device());
-            // discards fresh centre's changes (fresh centre could have no changes)
-            if (isFreshCentreChanged(updatedFreshCentre, updatedSavedCentre)) {
-                initAndCommit(gdtm, miType, FRESH_CENTRE_NAME, saveAsName, device(), updatedSavedCentre, null);
-            }
+            final String customDesc = updateCentreDesc(gdtm, miType, saveAsName, device());
             
-            // it is necessary to use "fresh" instance of cdtme (after the discarding process)
-            final ICentreDomainTreeManagerAndEnhancer newFreshCentre = centre(gdtm, miType, FRESH_CENTRE_NAME, saveAsName, device());
+            removeCentres(gdtm, miType, device(), saveAsName, FRESH_CENTRE_NAME, SAVED_CENTRE_NAME);
+            
+            // it is necessary to use "fresh" instance of cdtme (after the defaulting process)
+            final ICentreDomainTreeManagerAndEnhancer newFreshCentre = updateCentre(gdtm, miType, FRESH_CENTRE_NAME, saveAsName, device());
+            
+            // commit custom description after user-specific copy was deleted and default centre copy made 
+            commitCentreDesc(gdtm, miType, saveAsName, device(), customDesc);
+            
             final String staleCriteriaMessage = createStaleCriteriaMessage(wasRun, newFreshCentre, miType, saveAsName, gdtm, companionFinder, critGenerator, device());
             return createCriteriaDiscardEnvelope(newFreshCentre, miType, saveAsName, gdtm, restUtil, companionFinder, critGenerator, staleCriteriaMessage, device());
         }, restUtil);
