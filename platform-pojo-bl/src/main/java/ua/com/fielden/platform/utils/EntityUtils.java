@@ -1256,20 +1256,24 @@ public class EntityUtils {
         });
     }
     
+    
+    
+    /**
+     * @param parentPath
+     * @param propType
+     * @return
+     */
     public static List<String> getPathsToLeafPropertiesOfEntityWithCompositeKey(final String parentPath, final Class<? extends AbstractEntity<DynamicEntityKey>> propType) {
     	List<String> result = new ArrayList<>();
     	
-    	String parentPrefix = parentPath != null ? parentPath + "." : ""; 
-    	
-    	for (Field field : getKeyMembers(propType)) {
-			if (isPersistedEntityType(field.getType())) {
-				if (isCompositeEntity((Class<? extends AbstractEntity<?>>) field.getType()) ) {
-					result.addAll(getPathsToLeafPropertiesOfEntityWithCompositeKey(parentPrefix + field.getName(), (Class<? extends AbstractEntity<DynamicEntityKey>>) field.getType()));
-				} else {
-					result.add(parentPrefix + field.getName() + ".key");
-				}
+    	for (Field keyMemberField : getKeyMembers(propType)) {
+			final String pathToSubprop = parentPath != null ? parentPath + "."  + keyMemberField.getName() : keyMemberField.getName();
+			if (!isPersistedEntityType(keyMemberField.getType())) {
+				result.add(pathToSubprop);
+			} else if (!isCompositeEntity((Class<? extends AbstractEntity<?>>) keyMemberField.getType()) ){
+				result.add(pathToSubprop + "." + KEY);
 			} else {
-				result.add(parentPrefix + field.getName());
+				result.addAll(getPathsToLeafPropertiesOfEntityWithCompositeKey(pathToSubprop, (Class<? extends AbstractEntity<DynamicEntityKey>>) keyMemberField.getType()));
 			}
 		}
     	
