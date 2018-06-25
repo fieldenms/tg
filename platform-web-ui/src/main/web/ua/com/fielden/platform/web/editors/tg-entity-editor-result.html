@@ -5,11 +5,13 @@
 <link rel="import" href="/resources/polymer/iron-selector/iron-selector.html">
 <link rel="import" href="/resources/polymer/iron-fit-behavior/iron-fit-behavior.html">
 
+<link rel="import" href="/resources/polymer/paper-button/paper-button.html">
 <link rel="import" href="/resources/polymer/paper-styles/color.html">
 <link rel="import" href="/resources/polymer/paper-item/paper-item.html">
 <link rel="import" href="/resources/components/lodash-lib.html">
 
 <link rel="import" href="/resources/editors/tg-highlighting-behavior.html">
+<link rel="import" href="/resources/components/tg-tooltip-behavior.html">
 
 <dom-module id="tg-entity-editor-result">
     <template>
@@ -23,7 +25,7 @@
 	            -webkit-overflow-scrolling: touch;
 	            box-shadow: rgba(0, 0, 0, 0.24) -2.3408942051048403px 5.524510324047423px 12.090680100755666px 0px, rgba(0, 0, 0, 0.12) 0px 0px 12px 0px;
 	        }
-	        
+
 	        .tg-item {
 	        	@apply(--layout-vertical);
 	        	@apply(--layout-start);
@@ -36,27 +38,27 @@
 	            border-top: 1px solid #e3e3e3;
 	            min-height: 24px;
 	        }
-	        
+
 	        .tg-item:hover {
 	            cursor: pointer;
 	            background: var(--paper-blue-50);
 	            color: var(--paper-blue-500);
 	        }
-	        
+
 	        .tg-item.iron-selected {
 	            background: var(--paper-blue-500);
 	            color: var(--paper-blue-50);
 	        }
-	        
+
 	        .key-value {
 	            font-size: small;
 	            min-width: 100px;
 	        }
-	        
+
 	        paper-item:not(.iron-selected) span.key-value-highlighted {
 	            background-color: #ffff46;
 	        }
-	        
+
 	        .additional-prop {
 	        	@apply(--layout-horizontal);
 	            font-size: x-small;
@@ -66,16 +68,16 @@
 	            padding-top: 0.5em;
 	            line-height: 15px;
 	        }
-	        
+
 	        .prop-name {
 	            font-weight: bold;
 	            padding-right: 0.5em;
 	        }
-	        
+
 	        .tg-snatchback-button {
 	            color: #03A9F4;
 	        }
-	        
+
 	        .tg-snatchback {
 	            background-color: #FFFFFF;
 	            color: #000;
@@ -85,15 +87,27 @@
 	            -webkit-overflow-scrolling: touch;
 	            text-overflow: ellipsis;
 	        }
-	        
+
 	        .no-result {
 	            display: flex;
 	            flex-direction: column;
 	            align-items: center;
 	            line-height: 50px;
 	        }
+
+          .toolbar {
+              padding: 0 12px;
+              height: auto;
+              position: relative;
+              overflow: hidden;
+              flex-grow: 0;
+              flex-shrink: 0;
+          }
+          .toolbar-content::content > * {
+              margin-top: 8px;
+          }
 	    </style>
-    
+
         <iron-selector id="selector" class="tg-snatchback" multi$="[[multi]]" attr-for-selected="value" on-iron-deselect="_itemDeselected" on-iron-select="_itemSelected">
             <!-- begin of dom-repeat -->
             <template is="dom-repeat" items="[[_values]]" as="v">
@@ -102,10 +116,18 @@
             </template>
             <!-- end of dom-repeat -->
         </iron-selector>
-        
         <div hidden$="[[_foundSome]]" class="no-result">
             <span>Found no matching values.</span>
         </div>
+        <div class="toolbar layout horizontal wrap">
+          <div class="toolbar-content layout horizontal center">
+          </div>
+          <div class="toolbar-content layout horizontal center" style="margin-left:auto">
+            <paper-button tooltip-text="Discard and close" on-tap="close">Cancel</paper-button>
+            <paper-button tooltip-text="Accept selected" on-tap="acceptValues">Ok</paper-button>
+          </div>
+        </div>
+
     </template>
 
 </dom-module>
@@ -114,8 +136,8 @@
     (function () {
         Polymer({
             is: 'tg-entity-editor-result',
-            
-            behaviors: [Polymer.IronOverlayBehavior, Polymer.TgBehaviors.TgHighlightingBehavior],
+
+            behaviors: [Polymer.IronOverlayBehavior, Polymer.TgBehaviors.TgHighlightingBehavior, Polymer.TgBehaviors.TgTooltipBehavior],
 
             properties: {
                 /* Indicates whether multiple (true) or a single (false, default) value is acceptable. */
@@ -123,7 +145,7 @@
                 	type: Boolean,
                 	value: false
                 },
-                
+
                 /* An array of entities that match the search request.
                  * Should NOT be manipulated directly -- only via methods pushValue and clearSelection.*/
                 _values: {
@@ -132,12 +154,12 @@
                         return [];
                     }
                 },
-                
+
                 _foundSome: {
                     type: Boolean,
                     value: false
                 },
-                /* Contains selected entities in a form of key:entity pairs. 
+                /* Contains selected entities in a form of key:entity pairs.
                  * Can be empty. Should contain at most one entity in case of single selection mode.
                  */
                 selectedValues: {
@@ -146,13 +168,13 @@
                         return {};
                     }
                 },
-                
+
                 /* Represents the search query string that was used to find resultant values to be displayed */
                 searchQuery: {
                     type: String,
                     value: ''
                 },
-                
+
                 /* Should contain the names of additional properties to be displayed. */
                 additionalProperties: {
                 	type: Object,
@@ -160,39 +182,44 @@
                 		return {};
                 	}
                 },
-                
+
                 _selectedIndex: {
                     type: Number,
                     value: 0
                 },
-                
+
                 /**
-                 * A private property to indicate the fact that the internal state of the component is ready for keyboard navigation (up/down keys). 
+                 * A private property to indicate the fact that the internal state of the component is ready for keyboard navigation (up/down keys).
                  */
                 _keyBoardNavigationReady: {
                     type: Boolean,
                     value: false
                 },
-                
+
                 /** A property to pass in an instance of tg-reflector, used for value conversion during rendering. */
                 reflector: {
                     type: Object,
                     value: null
                 },
-                
+
                 /**
                  * The function that retrives boundClientRect and offsetHeight from wrapping decorator (paper-input-container) from parent tg-entity-editor.
                  */
                 retrieveContainerSizes: {
                     type: Function
+                },
+
+                acceptValues: {
+                    type: Function
                 }
+
             },
 
             ready: function () {
                 this.noAutoFocus = true;
                 this.alwaysOnTop = true;
             },
-            
+
 			clearSelection: function () {
 				this._selectedIndex = 0;
 				this._keyBoardNavigationReady = false;
@@ -212,7 +239,7 @@
             pushValue: function(value) {
                 this.push('_values', value);
             },
-            
+
             /*
              * Determines a title of the specified entity.propName.
              */
@@ -230,10 +257,10 @@
                 const propValue = this.reflector.convert(entity.get(propName));
                 return (propValue === null ? '' : propValue) + '';
             },
-            
+
             /**
              * Makes a value for attribute id based on the provided index.
-             * Such id values are used for paperItem HTML elements representing list items. 
+             * Such id values are used for paperItem HTML elements representing list items.
              */
             _makeId: function(index) {
             	return "id" + index;
@@ -252,14 +279,14 @@
 				this.async(function() {
 				    this._foundSome = this._values.length > 0;
 					for (let index = 0; index < this._values.length; index++) {
-						let html = '';                	
+						let html = '';
 						const v = this._values[index];
-						
+
 						// add key value with highlighting of matching parts
 						const descProp = 'desc';
 						const withDesc = this.additionalProperties.hasOwnProperty(descProp);
 						html = html + this._addHighlightedKeyProp(v, withDesc);
-		
+
 						// add values for additional properties with highlighting of matching parts if required
 						for (let propName in this.additionalProperties) {
 							// interested only in the object's direct properties
@@ -269,7 +296,7 @@
 								html = html + this._addHighlightedPropByName(v, propName, highlight);
 							}
 						}
-						
+
 						// put the composed for the current item HTML into the content of paper-item
 						const id = this._makeId(index);
 						const paperItem = Polymer.dom(this.root).querySelector("#" + id);
@@ -280,10 +307,10 @@
 					Polymer.dom.flush();
 				}.bind(this));
 			},
-			
+
 			_addHighlightedKeyProp : function(v, withDesc) {
 				let html = '<div style="white-space: nowrap">';
-				
+
 				// let's first handle the key
 				let matchedParts = this._matchedParts(v.key, this.searchQuery);
 				if (matchedParts.length === 0) {
@@ -301,11 +328,11 @@
 						}
 					}
 				}
-				
+
 				if (withDesc === true) {
 				    let propValueAsString = this._propValueByName(v, 'desc');
 				    if (propValueAsString && propValueAsString !== 'null' && propValueAsString !== '') {
-					    html = html	+ '<span style="color:#737373"> &ndash; <i>';				
+					    html = html	+ '<span style="color:#737373"> &ndash; <i>';
 						matchedParts = this._matchedParts(propValueAsString, this.searchQuery);
 						if (matchedParts.length === 0) {
 						    html = html + propValueAsString;
@@ -329,10 +356,10 @@
 
 			_addHighlightedPropByName : function(v, propName, highlight) {
 				var html = '<div class="additional-prop">';
-				// add prop title				
+				// add prop title
 				html = html + '<span class="prop-name"><span>' + this._propTitleByName(v, propName) + '</span>:</span>';
 
-				
+
 				// add prop value
 				const propValueAsString = this._propValueByName(v, propName);
 				if (highlight === false) {
@@ -357,7 +384,7 @@
 				return html + '</div>';
 			},
 
-			
+
 			/*********************************************************
 			 ****************** SELECTION HANDLERS *******************
 			 *********************************************************/
@@ -389,16 +416,16 @@
 				const paperItem = Polymer.dom(this.root).querySelector("#" + id);
 				if (paperItem) {
 					paperItem.focus();
-				}  
+				}
 			},
-			
+
 			selectFirst: function () {
 			    if (this._values.length > 0) {
 			        this._selectedIndex = 0;
 			        this.$.selector.select(this.$.selector._indexToValue(this._selectedIndex));
 			    }
 			},
-			
+
 			selectNext: function () {
 				if (this._keyBoardNavigationReady === false) {
 					this._keyBoardNavigationReady = true;
@@ -466,7 +493,7 @@
                     }
                 }
             },
-            
+
             /* Iron reseze event listener for correct resizing and positioning of an open result overlay. */
             refit: function () {
                 var clientRectAndOffsetHeight = this.retrieveContainerSizes();
@@ -482,13 +509,13 @@
                 this.style.position = 'absolute';
                 this.style.top = top + 'px';
 
-                // let's try to accomodate the width of the overlay so that in case 
+                // let's try to accomodate the width of the overlay so that in case
                 // the input field is narrow, but there is additional window width available to the
                 // left or right of the input, it would be used.
                 var minWidth = 200;
                 this.style['min-width'] = minWidth + 'px'; // set mid-width, which is important for shifting overlay to the left
                 var visibleWidth = Math.max(document.documentElement.clientWidth, window.innerWidth || 0);
-                var spaceToRightWindowSide = (visibleWidth - right) + width;                        
+                var spaceToRightWindowSide = (visibleWidth - right) + width;
                 this.style['max-width'] = spaceToRightWindowSide + 'px';
                 // is there sufficient space to the right?
                 if (spaceToRightWindowSide >= minWidth) {
@@ -496,24 +523,24 @@
                     // ideally the overlay width should be the same as the intput's
                     // but, if it gets too narrow the min-widht would fix it
                     this.style.width = width + 'px';
-                } else { 
+                } else {
                     // otherwise, move the overlay to the left side, but not beyond
                     var resultRect = this.getClientRects()[0];
                     var adjustment = 5; // minor adjustment to make the overlay fully visible
                     var newLeft = (visibleWidth - (minWidth + adjustment));
                     if (newLeft > 0) {
-                        this.style.left = newLeft + 'px'; 
+                        this.style.left = newLeft + 'px';
                     } else {
                         this.style.left = adjustment + 'px';
                     }
                 }
-                
-                // let's try also to determine the best height depending on the window height and 
+
+                // let's try also to determine the best height depending on the window height and
                 // the current vertical location of the element
                 var visibleHeight = Math.max(document.documentElement.clientHeight, window.innerHeight || 0);
-                this.style['max-height'] = (visibleHeight - top - 10) + 'px'; // 10 pixels is an arbitrary adjustment 
+                this.style['max-height'] = (visibleHeight - top - 10) + 'px'; // 10 pixels is an arbitrary adjustment
             },
-            
+
             /**
              * Defines reasonable rule for 'small height for showing autocompleter results'. For now three items need to be shown, otherwise scrolling will be triggered.
              */
@@ -522,7 +549,7 @@
                 const rect = clientRectAndOffsetHeight[0];
                 const scrollTop = document.documentElement.scrollTop || document.body.scrollTop;
                 const top = rect.top + scrollTop + clientRectAndOffsetHeight[1];
-                
+
                 // let's try to determine the height under the editor to bottom of the screen
                 const visibleHeight = Math.max(document.documentElement.clientHeight, window.innerHeight || 0);
                 const itemHeight = 24 + 2 * 6 + 1; // see tg-item styles with min-height, top / bottom padding and top border
