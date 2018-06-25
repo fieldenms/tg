@@ -360,11 +360,12 @@
                     type: Function
                 }
             },
-            
+
             observers: ["_changeTitle(entity)"],
 
             ready: function () {
-                var result = this.$.result;
+                const result = this.$.result;
+                result.acceptValues = this._done.bind(this);
                 result.multi = this.multi;
                 if (this.additionalProperties) {
                     result.additionalProperties = JSON.parse(this.additionalProperties);
@@ -376,7 +377,7 @@
 
                     // check whether relatedTarget has anything to do with this.$.result
                     // if it is then there is no need to cancel the overlay, which is this.$.result
-                    var parent = e.relatedTarget;
+                    let parent = e.relatedTarget;
                     while (parent !== null && parent !== this.$.result) {
                         parent = parent.parentElement;
                     }
@@ -473,10 +474,10 @@
                 }
 
                 // collect new matching values
-                var self = this;
-                var result = self.$.result;
+                const self = this;
+                const result = self.$.result;
                 result.searchQuery = self._searchQuery;
-                var container = self.$.container;
+                const container = self.$.container;
 
                 if (this._searchQuery /*&& this.hasFocus === true*/ ) {
 
@@ -486,7 +487,7 @@
                     }).bind(self), 1);
 
                     // prepare the AJAX request based on the raw search string
-                    var serialisedSearchQuery = this.$.serialiser.serialise(this.createContextHolder(inputText));
+                    const serialisedSearchQuery = this.$.serialiser.serialise(this.createContextHolder(inputText));
                     this.$.ajaxSearcher.body = JSON.stringify(serialisedSearchQuery);
                     this.$.ajaxSearcher.generateRequest();
                 } else if (result.opened) { // make sure overlay is closed is no search is performed
@@ -520,7 +521,7 @@
                     Polymer.dom(document.body).appendChild(this.$.result);
                     Polymer.dom.flush();
                 }
-                
+
                 this.async(function () {
                     if (result.opened) {
                         this._resultOpened();
@@ -537,7 +538,7 @@
                     result.notifyResize();
                 }.bind(this), 100);
             },
-            
+
             /**
              * Create context holder with custom '@@searchString' property ('tg-entity-editor' and 'tg-entity-search-criteria' only).
              */
@@ -774,7 +775,7 @@
                 }
                 return '';
             },
-            
+
             _createEntityTooltip: function (entity) {
                 const titles = this._createEntityTitleObject(entity);
                 if (titles.length === 1) {
@@ -785,11 +786,11 @@
                     "</table>"  + (entity.get('desc') ? "<br>" + entity.get('desc') : "");
                 }
             },
-            
+
             _changeTitle: function (entity) {
                 this._customPropTitle = this._createTitleObject(entity);
             },
-            
+
             _valueStyle: function (item, index) {
                 if (this._customPropTitle && this._customPropTitle.length > 1) {
                     if (index < this._customPropTitle.length - 1) {
@@ -798,7 +799,7 @@
                 }
                 return "";
             },
-            
+
             _createTitleObject: function (entity) {
                 if (entity !== null) {
                     var entityValue = this.reflector()._getValueFor(entity, this.propertyName);
@@ -808,14 +809,14 @@
                 }
                 return [{value: ""}];
             },
-            
+
             _createEntityTitleObject: function (entity) {
                 if (entity.type().isCompositeEntity()) {
                     return this._createCompositeTitle(entity);
                 }
                 return this._createSimpleTitle(entity);
             },
-            
+
             _createCompositeTitle: function (entityValue) {
                 const titles = [];
                 const entityType = entityValue.type();
@@ -832,7 +833,7 @@
                 }
                 return titles;
             },
-            
+
             _createSimpleTitle: function (entityValue) {
                 return [{value: this.reflector().convert(entityValue)}];
             },
