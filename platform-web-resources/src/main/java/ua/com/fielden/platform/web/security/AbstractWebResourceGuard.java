@@ -51,7 +51,7 @@ public abstract class AbstractWebResourceGuard extends ChallengeAuthenticator {
      * @param injector
      * @throws IllegalArgumentException
      */
-    public AbstractWebResourceGuard(final Context context, final String domainName, final String path, final Injector injector) throws IllegalArgumentException {
+    public AbstractWebResourceGuard(final Context context, final String domainName, final String path, final Injector injector) {
         super(context, ChallengeScheme.CUSTOM, "TG");
         if (injector == null) {
             throw new IllegalArgumentException("Injector is required.");
