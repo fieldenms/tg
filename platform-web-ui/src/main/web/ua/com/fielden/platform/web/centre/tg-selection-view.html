@@ -144,7 +144,7 @@
                             return self._confirm('Should this configuration be deleted?', [{name:'YES', confirm:true, autofocus:true}, {name:'NO'}]);
                         },
                         postActionSuccess: function (functionalEntity, action) {
-                            // update saveAsName with new name after successful DELETE action -- preferred config
+                            // update saveAsName with new name after successful DELETE action -- default config
                             self.saveAsName = undefined;
                             self.saveAsName = '';
                         },
@@ -158,9 +158,9 @@
                             return Promise.resolve(true);
                         },
                         postActionSuccess: function (functionalEntity, action) {
-                            // update saveAsName with new name after successful NEW action -- preferred config
+                            // update saveAsName with new name after successful NEW action -- default config
                             self.saveAsName = undefined;
-                            self.saveAsName = functionalEntity.get('preferredConfig'); // TODO update this logic
+                            self.saveAsName = '';
                         },
                         attrs: {
                             entityType:'ua.com.fielden.platform.web.centre.CentreConfigDeleteAction', currentState:'EDIT', centreUuid: self.uuid
