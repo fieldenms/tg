@@ -149,7 +149,7 @@ public class ValueMatcherFactory implements IValueMatcherFactory {
     private Map<String, IValueMatcher> getEntityMap(final Class<? extends AbstractEntity<?>> propertyOwnerEntityType) {
         Map<String, IValueMatcher> entityEntry = map.get(isOwnerACriteria(propertyOwnerEntityType) ? EntityQueryCriteria.class : propertyOwnerEntityType);
         if (entityEntry == null) {
-            entityEntry = new HashMap<String, IValueMatcher>();
+            entityEntry = new HashMap<>();
             map.put(propertyOwnerEntityType, entityEntry);
         }
         return entityEntry;
