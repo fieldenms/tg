@@ -10,6 +10,7 @@ import ua.com.fielden.platform.entity.annotation.CompanionObject;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.entity.annotation.Title;
+import ua.com.fielden.platform.entity.functional.centre.CentreContextHolder;
 
 /** 
  * Functional entity for loading centre configuration.
@@ -26,6 +27,20 @@ public class CentreConfigLoadAction extends AbstractFunctionalEntityForCollectio
     @IsProperty(LoadableCentreConfig.class)
     @Title("Configurations")
     private Set<LoadableCentreConfig> centreConfigurations = new LinkedHashSet<>();
+    
+    @IsProperty
+    @Title("Context Holder")
+    private CentreContextHolder centreContextHolder;
+    
+    @Observable
+    public CentreConfigLoadAction setCentreContextHolder(final CentreContextHolder centreContextHolder) {
+        this.centreContextHolder = centreContextHolder;
+        return this;
+    }
+    
+    public CentreContextHolder getCentreContextHolder() {
+        return centreContextHolder;
+    }
     
     @Observable
     protected CentreConfigLoadAction setCentreConfigurations(final Set<LoadableCentreConfig> centreConfigurations) {

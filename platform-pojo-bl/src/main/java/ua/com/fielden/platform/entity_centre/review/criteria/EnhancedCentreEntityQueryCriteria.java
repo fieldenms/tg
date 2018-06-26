@@ -36,6 +36,7 @@ public class EnhancedCentreEntityQueryCriteria<T extends AbstractEntity<?>, DAO 
     private Function<Map<String, Object>, EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, ? extends IEntityDao<AbstractEntity<?>>>> freshCentreApplier;
     private BiConsumer<T2<EditKind, Optional<String>>, String> centreEditor;
     private Runnable centreDeleter;
+    private Consumer<String> inheritedCentreUpdater;
     private Runnable defaultCentreClearer;
     private Supplier<List<LoadableCentreConfig>> loadableCentresSupplier;
     private Supplier<Optional<String>> saveAsNameSupplier;
@@ -110,6 +111,14 @@ public class EnhancedCentreEntityQueryCriteria<T extends AbstractEntity<?>, DAO 
 
     public Runnable defaultCentreClearer() {
         return defaultCentreClearer;
+    }
+
+    public void setInheritedCentreUpdater(final Consumer<String> inheritedCentreUpdater) {
+        this.inheritedCentreUpdater = inheritedCentreUpdater;
+    }
+
+    public Consumer<String> inheritedCentreUpdater() {
+        return inheritedCentreUpdater;
     }
 
     public void setCentreDeleter(final Runnable centreDeleter) {

@@ -1,11 +1,8 @@
 package ua.com.fielden.platform.web.centre;
 
-import static ua.com.fielden.platform.domaintree.impl.GlobalDomainTreeManager.DEFAULT_CONFIG_TITLE;
 import static ua.com.fielden.platform.error.Result.failure;
 
 import java.util.LinkedHashSet;
-import java.util.Set;
-
 import com.google.inject.Inject;
 
 import ua.com.fielden.platform.dao.IEntityDao;
@@ -40,6 +37,9 @@ public class CentreConfigLoadActionProducer extends AbstractFunctionalEntityForC
     @Override
     protected CentreConfigLoadAction provideCurrentlyAssociatedValues(final CentreConfigLoadAction entity, final EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, IEntityDao<AbstractEntity<?>>> masterEntity) {
         if (contextNotEmpty()) {
+            // centre context holder is needed to restore criteria entity during saving and to perform 'nheritedCentreUpdater' closure
+            entity.setCentreContextHolder(selectionCrit().centreContextHolder());
+            
             // provide loadable configurations into the action
             entity.setCentreConfigurations(new LinkedHashSet<>(selectionCrit().loadableCentresSupplier().get()));
             

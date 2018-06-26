@@ -123,7 +123,6 @@ public class WebHibernateModule extends CommonFactoryModule {
         bind(ISecurityTokenInfo.class).to(SecurityTokenInfoDao.class);
         bind(ICentreConfigUpdaterDefaultAction.class).to(CentreConfigUpdaterDefaultActionDao.class);
         bind(ICustomisableColumn.class).to(CustomisableColumnDao.class);
-        bind(ICentreConfigLoadAction.class).to(CentreConfigLoadActionDao.class);
         bind(ILoadableCentreConfig.class).to(LoadableCentreConfigDao.class);
         bind(ICentreConfigDeleteAction.class).to(CentreConfigDeleteActionDao.class);
         bind(IOverrideCentreConfig.class).to(OverrideCentreConfigDao.class);
@@ -157,5 +156,6 @@ public class WebHibernateModule extends CommonFactoryModule {
         bind(ICentreConfigUpdater.class).to(CentreConfigUpdaterDao.class);
         bind(ICentreColumnWidthConfigUpdater.class).to(CentreColumnWidthConfigUpdaterDao.class);
         bind(ICentreConfigEditAction.class).to(CentreConfigEditActionDao.class);
+        bind(ICentreConfigLoadAction.class).to(CentreConfigLoadActionDao.class);
     }
 }

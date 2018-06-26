@@ -118,7 +118,7 @@
                             // update saveAsName with new name after successful load action
                             const chosenId = functionalEntity.get('chosenIds')[0];
                             self.saveAsName = undefined;
-                            self.saveAsName = chosenId === '[Default]' ? '' : chosenId;
+                            self.saveAsName = chosenId === '[Default]' ? '' : chosenId; /* TODO remove [Default] here */
                         },
                         attrs: {
                             entityType:'ua.com.fielden.platform.web.centre.CentreConfigLoadAction', currentState:'EDIT', centreUuid: self.uuid
@@ -160,7 +160,7 @@
                         postActionSuccess: function (functionalEntity, action) {
                             // update saveAsName with new name after successful NEW action -- preferred config
                             self.saveAsName = undefined;
-                            self.saveAsName = functionalEntity.get('preferredConfig');
+                            self.saveAsName = functionalEntity.get('preferredConfig'); // TODO update this logic
                         },
                         attrs: {
                             entityType:'ua.com.fielden.platform.web.centre.CentreConfigDeleteAction', currentState:'EDIT', centreUuid: self.uuid

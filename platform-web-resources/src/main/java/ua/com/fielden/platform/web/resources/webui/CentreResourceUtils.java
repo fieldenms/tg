@@ -460,6 +460,19 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
                 updateCentre(gdtm, miType, SAVED_CENTRE_NAME, empty(), device);
             }
         });
+        validationPrototype.setInheritedCentreUpdater(saveAsNameToLoad -> {
+            final boolean centreChanged = isFreshCentreChanged(
+                updateCentre(gdtm, miType, FRESH_CENTRE_NAME, of(saveAsNameToLoad), device),
+                updateCentre(gdtm, miType, SAVED_CENTRE_NAME, of(saveAsNameToLoad), device)
+            );
+            if (centreChanged) {
+                removeCentres(gdtm, miType, device, of(saveAsNameToLoad), SAVED_CENTRE_NAME);
+            } else {
+                removeCentres(gdtm, miType, device, of(saveAsNameToLoad), FRESH_CENTRE_NAME, SAVED_CENTRE_NAME);
+            }
+            updateCentre(gdtm, miType, FRESH_CENTRE_NAME, of(saveAsNameToLoad), device);
+            updateCentre(gdtm, miType, SAVED_CENTRE_NAME, of(saveAsNameToLoad), device);
+        });
         validationPrototype.setDefaultCentreClearer(() -> {
             clearDefaultCentre(gdtm, miType, device);
         });
