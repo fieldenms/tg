@@ -44,6 +44,7 @@ public class EnhancedCentreEntityQueryCriteria<T extends AbstractEntity<?>, DAO 
     private Supplier<T2<String, String>> centreTitleAndDescGetter;
     private Supplier<ICentreDomainTreeManagerAndEnhancer> baseCentreSupplier;
     private Supplier<Boolean> centreChangedGetter;
+    private Function<EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, ? extends IEntityDao<AbstractEntity<?>>>, Map<String, Object>> centreCustomObjectGetter;
     /**
      * This function represents centre query runner for export action which is dependent on configuration of the passed <code>customObject</code>.
      * Running of this fully-fledged query depends on query context (see property centreContextHolder).
@@ -167,6 +168,14 @@ public class EnhancedCentreEntityQueryCriteria<T extends AbstractEntity<?>, DAO 
 
     public Supplier<ICentreDomainTreeManagerAndEnhancer> baseCentreSupplier() {
         return baseCentreSupplier;
+    }
+
+    public void setCentreCustomObjectGetter(final Function<EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, ? extends IEntityDao<AbstractEntity<?>>>, Map<String, Object>> centreCustomObjectGetter) {
+        this.centreCustomObjectGetter = centreCustomObjectGetter;
+    }
+
+    public Function<EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, ? extends IEntityDao<AbstractEntity<?>>>, Map<String, Object>> centreCustomObjectGetter() {
+        return centreCustomObjectGetter;
     }
 
     public void setCentreChangedGetter(final Supplier<Boolean> centreChangedGetter) {

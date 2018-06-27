@@ -519,6 +519,10 @@
                         self.$.selection_criteria._postSavedDefault(entityAndCustomObject);
                     });
                 };
+                self._bindCentreInfo = function (entityAndCustomObject, exceptionOccured) {
+                    self.$.selection_criteria._provideExceptionOccured(entityAndCustomObject[0], exceptionOccured);
+                    self.$.selection_criteria._postSavedDefault(entityAndCustomObject);
+                };
                 self._processSaverError = function (e) {
                     self.$.selection_criteria._processError(e, "save", function (errorResult) {
                         // This function will be invoked after server-side error appear.
@@ -1046,9 +1050,9 @@
                     && newSaveAsName !== undefined // undefined is a marker value to make saveAsName changed when setting actual value (including '')
                 ) {
                     self.$.selection_criteria._wasRun = null; // reset wasRun to make user unable to see stale run results using View button
-                    self.retrieve().then(function () { // perform full centre refresh on each and every change of 'saveAsName'
+                    // TODO self.retrieve().then(function () { // perform full centre refresh on each and every change of 'saveAsName'
                         self._fireSaveAsNameChanged(newSaveAsName, self);
-                    });
+                    // TODO });
                 } else if (oldSaveAsName === reflector.UNDEFINED_CONFIG_TITLE) {
                     self._fireSaveAsNameChanged(newSaveAsName, self);
                 }

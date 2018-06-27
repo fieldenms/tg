@@ -71,7 +71,7 @@ import ua.com.fielden.platform.utils.Pair;
 public class GlobalDomainTreeManager extends AbstractDomainTree implements IGlobalDomainTreeManager {
     private static final Logger logger = Logger.getLogger(GlobalDomainTreeManager.class);
     public static final String DEFAULT_CONFIG_DESC = "Default configuration";
-    public static final String DEFAULT_CONFIG_TITLE = "[Default]";
+    public static final String DEFAULT_CONFIG_TITLE = "_______________________default";
     
     /**
      * The surrogate title of not yet known configuration. This is used during first time centre loading.

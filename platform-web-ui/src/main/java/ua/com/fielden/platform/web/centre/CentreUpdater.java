@@ -350,6 +350,8 @@ public class CentreUpdater {
     
     /**
      * Initialises and commits centre from the passed <code>centreToBeInitialisedAndCommitted</code> instance for surrogate centre with concrete <code>name</code>.
+     * <p>
+     * Please note that this operation is immutable in regard to the surrogate centre instance being copied.
      *
      * @param gdtm
      * @param miType

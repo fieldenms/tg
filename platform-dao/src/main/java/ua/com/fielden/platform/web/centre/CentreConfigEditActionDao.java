@@ -13,7 +13,6 @@ import ua.com.fielden.platform.entity.annotation.EntityType;
 import ua.com.fielden.platform.entity.query.IFilter;
 import ua.com.fielden.platform.entity_centre.review.criteria.EnhancedCentreEntityQueryCriteria;
 import ua.com.fielden.platform.error.Result;
-import ua.com.fielden.platform.types.tuples.T2;
 import ua.com.fielden.platform.web.utils.ICriteriaEntityRestorer;
 
 /** 
@@ -36,17 +35,22 @@ public class CentreConfigEditActionDao extends CommonEntityDao<CentreConfigEditA
     @Override
     @SessionRequired
     public CentreConfigEditAction save(final CentreConfigEditAction entity) {
-        // validate centre configuration edit / copy action before performing actual edit / copy
-        entity.isValid().ifFailure(Result::throwRuntime);
-        
-        if (entity.hasWarnings() && !moreData(CONTINUATION_KEY).isPresent()) {
-            throw new NeedMoreData("Override configuration?", OverrideCentreConfig.class, CONTINUATION_KEY);
+        if (!entity.isSkipUi()) {
+            // validate centre configuration edit / copy action before performing actual edit / copy
+            entity.isValid().ifFailure(Result::throwRuntime);
+            
+            if (entity.hasWarnings() && !moreData(CONTINUATION_KEY).isPresent()) {
+                throw new NeedMoreData("Override configuration?", OverrideCentreConfig.class, CONTINUATION_KEY);
+            }
+            
+            final EnhancedCentreEntityQueryCriteria<?, ?> selectionCrit = criteriaEntityRestorer.restoreCriteriaEntity(entity.getCentreContextHolder());
+            
+            // TODO in case of successful save we need to return new customObject with relevant criteriaEntity (new title!) 
+            // TODO perhaps turn on centre refreshing for other actions except SAVE2?
+            
+            // perform actual copy / edit using centreEditor() closure
+            selectionCrit.centreEditor().accept(t2(valueOf(entity.getEditKind()), of(entity.getTitle())), entity.getDesc());
         }
-        
-        final EnhancedCentreEntityQueryCriteria<?, ?> criteriaEntity = criteriaEntityRestorer.restoreCriteriaEntity(entity.getCentreContextHolder());
-        
-        // perform actual copy / edit using centreEditor() closure
-        criteriaEntity.centreEditor().accept(t2(valueOf(entity.getEditKind()), of(entity.getTitle())), entity.getDesc());
         return super.save(entity);
     }
     

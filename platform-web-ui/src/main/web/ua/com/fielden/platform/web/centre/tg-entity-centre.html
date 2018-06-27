@@ -12,6 +12,7 @@
 <link rel="import" href="/resources/centre/tg-centre-result-view.html">
 <link rel="import" href="/resources/actions/tg-focus-restoration-behavior.html">
 <link rel="import" href="/resources/reflection/tg-polymer-utils.html">
+<link rel="import" href="/resources/actions/tg-ui-action.html">
 
 <link rel="import" href="/resources/polymer/iron-pages/iron-pages.html">
 <link rel="import" href="/resources/polymer/iron-ajax/iron-ajax.html">
@@ -151,6 +152,7 @@
                         <div class="selection-criteria-buttons layout horizontal justified wrap">
                             <div class="layout horizontal button-group">
                                 <paper-button id="saver" raised shortcut="ctrl+s" roll="button" on-tap="saveAsync" disabled$="[[_saverDisabled]]" tooltip-text="Save configuration">Save</paper-button>
+                                <tg-ui-action ui-role='BUTTON' short-desc='SAVE2' long-desc='SAVE2' component-uri='/master_ui/ua.com.fielden.platform.web.centre.CentreConfigEditAction' element-name='tg-CentreConfigEditAction-master' show-dialog='[[_showDialog]]' create-context-holder='[[_createContextHolder]]' chosen-property="SAVE" attrs='[[bottomActions.0.attrs]]' pre-action='[[bottomActions.0.preAction]]' post-action-success='[[bottomActions.0.postActionSuccess]]' post-action-error='[[bottomActions.0.postActionError]]' require-selection-criteria='true' require-selected-entities='NONE' require-master-entity='false' is-action-in-progress='[[_computeSaveButtonDisabled(saveAsName)]]' style='[[_computeSaveButtonStyle(saveAsName)]]'></tg-ui-action>
                                 <paper-button id="discarder" raised shortcut="ctrl+r" roll="button" on-tap="discardAsync" disabled$="[[_discarderDisabled]]" tooltip-text="Discard the latest changes to selection criteria, which effectively returns them to the last saved configuration.">Discard</paper-button>
                             </div>
                             <div class="layout horizontal button-group right-button-group">
@@ -210,6 +212,7 @@
             },
             _url: Function,
             _processSaverResponse: Function,
+            _bindCentreInfo: Function,
             _processSaverError: Function,
             _processDiscarderResponse: Function,
             _processDiscarderError: Function,
@@ -246,8 +249,33 @@
             this._rightInsertionPointContainerUpdater = this._rightInsertionPointContainerUpdater.bind(this);
             this._confirm = this.confirm.bind(this);
         },
-
-        //Splitter functionality
+        
+        attached: function () {
+            const self = this;
+            self.bottomActions = [
+                {
+                    preAction: function (action) {
+                        return Promise.resolve(true);
+                    },
+                    postActionSuccess: function (functionalEntity, action) {
+                        // update saveAsName with new name after successful copy action
+                        self.saveAsName = undefined;
+                        const title = functionalEntity.get('title');
+                        self.saveAsName = title === '_______________________default' ? '' : title;
+                        const customObject = functionalEntity.get('customObject');
+                        const entityAndCustomObject = [customObject['appliedCriteriaEntity'], customObject];
+                        const exceptionOccured = null; // ????????????????????
+                        self._bindCentreInfo(entityAndCustomObject, exceptionOccured);
+                    },
+                    attrs: {
+                        entityType:'ua.com.fielden.platform.web.centre.CentreConfigEditAction', currentState:'EDIT', centreUuid: self.uuid
+                    },
+                    postActionError: function (functionalEntity, action) {}
+                }
+            ];
+        },
+        
+        // Splitter functionality
         _expandLeftInsertionPoint: function () {
             this._expandContainer(this.$.leftInsertionPointContainer);
         },
