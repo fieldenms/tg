@@ -45,6 +45,12 @@
         }
         :host {
             display: inline-block;
+            --paper-menu-selected-item: {
+                background-color: var(--paper-blue-50) /*var(--paper-blue-grey-50)*/; 
+            };
+            --paper-menu-focused-item: {
+                background-color: inherit;
+            };
         }
         paper-scroll-header-panel {
             height: 100%;
@@ -56,9 +62,6 @@
         paper-menu iron-icon {
             margin-right: 33px;
             opacity: 0.54;
-        }
-        .paper-menu > .iron-selected {
-            color: var(--default-primary-color);
         }
         .tool-bar {
             padding: 0 16px;
