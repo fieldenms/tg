@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.web.resources.webui;
 
+import static ua.com.fielden.platform.utils.MiscUtilities.prepare;
 import static ua.com.fielden.platform.web.centre.CentreUpdater.FRESH_CENTRE_NAME;
 import static ua.com.fielden.platform.web.centre.CentreUpdater.updateCentre;
 import static ua.com.fielden.platform.web.factories.webui.ResourceFactoryUtils.getUserSpecificGlobalManager;
@@ -21,7 +22,6 @@ import org.restlet.representation.Representation;
 import org.restlet.resource.Post;
 
 import ua.com.fielden.platform.basic.IValueMatcherWithCentreContext;
-import ua.com.fielden.platform.basic.autocompleter.PojoValueMatcher;
 import ua.com.fielden.platform.criteria.generator.ICriteriaGenerator;
 import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.domaintree.IGlobalDomainTreeManager;
@@ -162,7 +162,7 @@ public class CriteriaEntityAutocompletionResource<T extends AbstractEntity<?>, M
             
             // prepare search string
             final String searchStringVal = (String) centreContextHolder.getCustomObject().get("@@searchString"); // custom property inside customObject
-            final String searchString = PojoValueMatcher.prepare(searchStringVal.contains("*") ? searchStringVal : searchStringVal + "*");
+            final String searchString = prepare(searchStringVal.contains("*") ? searchStringVal : searchStringVal + "*");
             logger.debug(String.format("SEARCH STRING %s", searchString));
             
             // find matches with a fetch model that should be defined at the custom matcher level or based on the fall-back logic
