@@ -2,8 +2,6 @@ package ua.com.fielden.platform.reflection.test_entities;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.DynamicEntityKey;
-import ua.com.fielden.platform.entity.annotation.CompositeKeyMember;
-import ua.com.fielden.platform.entity.annotation.CritOnly;
 import ua.com.fielden.platform.entity.annotation.DescTitle;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.KeyTitle;
@@ -26,49 +24,38 @@ import ua.com.fielden.platform.entity.annotation.titles.Subtitles;
 public class FirstLevelEntityPathDependentTitles extends AbstractEntity<DynamicEntityKey> implements ISomeInterface {
 
     @IsProperty
-    @CompositeKeyMember(2)
-    @CritOnly
-    @Title("Two")
-    private String propertyTwo;
-
-    @IsProperty
-    @Title("Property")
-    @CompositeKeyMember(1)
-    private String property;
-
-    @IsProperty
-    @Title("Property")
+    @Title("Property 1")
     @Subtitles(@PathTitle(path = "property", title = "Nested title", desc = "Nested desc"))
-    private SimpleEntity critOnlyAEProperty;
+    private SimpleEntity prop1;
+    
+    @IsProperty
+    @MapTo
+    @Title("Property 2")
+    @Subtitles({@PathTitle(path = "critOnlyAEProperty", title = "First Level Nested Title", desc = "First Level Nested Desc"),
+                @PathTitle(path = "critOnlyAEProperty.propertyTwo", title = "Second Level Nested Title", desc = "Second Level Nested Desc")})
+    private FirstLevelEntity prop2;
 
-    public String getProperty() {
-        return property;
+    @Observable
+    public FirstLevelEntityPathDependentTitles setProp2(final FirstLevelEntity prop2) {
+        this.prop2 = prop2;
+        return this;
+    }
+
+    public SimpleEntity getProp1() {
+        return prop1;
     }
 
     @Observable
-    public void setProperty(final String property) {
-        this.property = property;
+    public void setProp1(final SimpleEntity critOnlyAEProperty) {
+        this.prop1 = critOnlyAEProperty;
     }
-
-    public String getPropertyTwo() {
-        return propertyTwo;
-    }
-
-    @Observable
-    public void setPropertyTwo(final String propertyTwo) {
-        this.propertyTwo = propertyTwo;
+    
+    public FirstLevelEntity getProp2() {
+        return prop2;
     }
 
     public boolean methodFirstLevel() {
         return true;
     }
 
-    public SimpleEntity getCritOnlyAEProperty() {
-        return critOnlyAEProperty;
-    }
-
-    @Observable
-    public void setCritOnlyAEProperty(final SimpleEntity critOnlyAEProperty) {
-        this.critOnlyAEProperty = critOnlyAEProperty;
-    }
 }
