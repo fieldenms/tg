@@ -16,6 +16,7 @@ import ua.com.fielden.platform.entity.annotation.KeyTitle;
 import ua.com.fielden.platform.entity.annotation.KeyType;
 import ua.com.fielden.platform.entity.annotation.Title;
 import ua.com.fielden.platform.reflection.test_entities.FirstLevelEntity;
+import ua.com.fielden.platform.reflection.test_entities.FirstLevelEntityPathDependentTitles;
 import ua.com.fielden.platform.reflection.test_entities.SimpleEntity;
 import ua.com.fielden.platform.utils.Pair;
 
@@ -85,7 +86,6 @@ public class TitlesDescsGetterTest {
         assertEquals(entityTitleAndDesc.getKey(), propTitleAndDesc.getValue());
     }
 
-    
     @Test
     public void getTitleAndDescOfPropertyType_can_determine_title_and_desc_of_entity_type_by_property_path() {
         final Optional<Pair<String, String>> titleAndDesc = TitlesDescsGetter.getTitleAndDescOfPropertyType("critOnlyAEProperty", FirstLevelEntity.class);
@@ -94,11 +94,40 @@ public class TitlesDescsGetterTest {
         assertEquals("Simple Entity", titleAndDesc.get().getKey());
         assertEquals("Simple Entity entity", titleAndDesc.get().getValue());
     }
-    
+
     @Test
     public void getTitleAndDescOfPropertyType_returns_empty_result_if_non_entity_typed_property_is_specified() {
         final Optional<Pair<String, String>> titleAndDesc = TitlesDescsGetter.getTitleAndDescOfPropertyType("property", FirstLevelEntity.class);
         
         assertFalse(titleAndDesc.isPresent());
     }
+
+    @Test
+    public void getTitleAndDescOfPropertyType_can_determine_path_dependent_title_and_desc_for_one_level_deep_property_path() {
+        final Pair<String, String> titleAndDesc = TitlesDescsGetter.getTitleAndDesc("prop1.property", FirstLevelEntityPathDependentTitles.class);
+        
+        assertEquals("Nested title", titleAndDesc.getKey());
+        assertEquals("Nested desc", titleAndDesc.getValue());
+    }
+
+    @Test
+    public void getTitleAndDescOfPropertyType_can_determine_path_dependent_title_and_desc_for_one_and_two_level_deep_property_paths_defined_for_the_same_root_prop() {
+        final Pair<String, String> level1TitleAndDesc = TitlesDescsGetter.getTitleAndDesc("prop2.critOnlyAEProperty", FirstLevelEntityPathDependentTitles.class);
+        
+        assertEquals("First Level Nested Title", level1TitleAndDesc.getKey());
+        assertEquals("First Level Nested Desc", level1TitleAndDesc.getValue());
+        
+        final Pair<String, String> level2TitleAndDesc = TitlesDescsGetter.getTitleAndDesc("prop2.critOnlyAEProperty.propertyTwo", FirstLevelEntityPathDependentTitles.class);
+        
+        assertEquals("Second Level Nested Title", level2TitleAndDesc.getKey());
+        assertEquals("Second Level Nested Desc", level2TitleAndDesc.getValue());
+    }
+
+    @Test
+    public void getTitleAndDescOfPropertyType_can_determine_path_independent_title_and_desc_in_the_presence_of_annotation_subtitles_for_root_property() {
+        final Pair<String, String> baseCaseTitleAndDesc = TitlesDescsGetter.getTitleAndDesc("prop2.propertyTwo", FirstLevelEntityPathDependentTitles.class);
+        assertEquals("Two", baseCaseTitleAndDesc.getKey());
+        assertEquals("Two", baseCaseTitleAndDesc.getValue());
+    }
+
 }

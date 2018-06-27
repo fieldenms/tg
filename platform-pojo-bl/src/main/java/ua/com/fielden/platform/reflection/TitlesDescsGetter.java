@@ -3,6 +3,8 @@ package ua.com.fielden.platform.reflection;
 import static ua.com.fielden.platform.entity.AbstractEntity.DESC;
 import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
 import static ua.com.fielden.platform.reflection.AnnotationReflector.getPropertyAnnotationOptionally;
+import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.firstAndRest;
+import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.isDotNotation;
 import static ua.com.fielden.platform.utils.Pair.pair;
 
 import java.lang.reflect.Method;
@@ -11,6 +13,7 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Stream;
 
 import org.apache.commons.lang.StringUtils;
 
@@ -21,6 +24,7 @@ import ua.com.fielden.platform.entity.annotation.EntityTitle;
 import ua.com.fielden.platform.entity.annotation.KeyTitle;
 import ua.com.fielden.platform.entity.annotation.Required;
 import ua.com.fielden.platform.entity.annotation.Title;
+import ua.com.fielden.platform.entity.annotation.titles.Subtitles;
 import ua.com.fielden.platform.entity.validation.annotation.EntityExists;
 import ua.com.fielden.platform.reflection.exceptions.ReflectionException;
 import ua.com.fielden.platform.utils.Pair;
@@ -120,31 +124,53 @@ public class TitlesDescsGetter {
     }
 
     /**
-     * Returns {@link Pair} with key set to property title (taken either from {@link Title}, or {@link KeyTitle}, or {@link DescTitle}) and value set to property description
+     * Returns a {@link Pair} with {@code key} set to property title (taken either from {@link Title}, or {@link KeyTitle}, or {@link DescTitle}, or {@link Subtitles}) and {@code value} set to property description.
      *
-     * @param propertyName
+     * @param propPath -- a property name or a dot-notated property path.
+     * @param entityType -- a type that holds the first property in {@code propPath}
+     * @return
+     */
+    public static Pair<String, String> getTitleAndDesc(final String propPath, final Class<?> entityType) {
+        final boolean containsKey = KEY.equals(propPath) || propPath.endsWith("." + KEY);
+        final boolean containsDesc = DESC.equals(propPath) || propPath.endsWith("." + DESC);
+        
+        if (!containsKey && !containsDesc) {
+            return processSubtitles(propPath, entityType)
+                   .orElseGet(() -> 
+                       getPropertyAnnotationOptionally(Title.class, entityType, propPath)
+                       .map(annotation -> pair(annotation.value(), annotation.desc().isEmpty() ? annotation.value() : annotation.desc()))
+                       .orElseGet(() -> getTitleAndDescOfPropertyType(propPath, entityType).map(p -> pair(p.getKey(), p.getKey())).orElse(EMPTY_TITLE_AND_DESC)));
+        } 
+        
+        if (containsKey) {
+            return getPropertyAnnotationOptionally(KeyTitle.class, entityType, propPath)
+                   .map(annotation -> pair(annotation.value(), annotation.desc().isEmpty() ? annotation.value() : annotation.desc()))
+                   .orElse(EMPTY_TITLE_AND_DESC);
+        }
+        
+        return getPropertyAnnotationOptionally(DescTitle.class, entityType, propPath)
+                    .map(annotation -> pair(annotation.value(), annotation.desc().isEmpty() ? annotation.value() : annotation.desc()))
+                    .orElse(EMPTY_TITLE_AND_DESC);
+        
+    }
+
+    /**
+     * Determines property title and desc from {@link Subtitles} if applicable. Returns an empty optional otherwise. 
+     *  
+     * @param propPath
      * @param entityType
      * @return
      */
-    public static Pair<String, String> getTitleAndDesc(final String propertyName, final Class<?> entityType) {
-        final boolean containsKey = KEY.equals(propertyName) || propertyName.endsWith("." + KEY);
-        final boolean containsDesc = DESC.equals(propertyName) || propertyName.endsWith("." + DESC);
-        
-        if (!containsKey && !containsDesc) {
-            return getPropertyAnnotationOptionally(Title.class, entityType, propertyName)
-                   .map(annotation -> pair(annotation.value(), annotation.desc().isEmpty() ? annotation.value() : annotation.desc()))
-                   .orElseGet(() -> getTitleAndDescOfPropertyType(propertyName, entityType).map(p -> pair(p.getKey(), p.getKey())).orElse(EMPTY_TITLE_AND_DESC));
-        } else if (containsKey) {
-            return getPropertyAnnotationOptionally(KeyTitle.class, entityType, propertyName)
-                   .map(annotation -> pair(annotation.value(), annotation.desc().isEmpty() ? annotation.value() : annotation.desc()))
-                   .orElse(EMPTY_TITLE_AND_DESC);
-        } else  {
-            return getPropertyAnnotationOptionally(DescTitle.class, entityType, propertyName)
-                    .map(annotation -> pair(annotation.value(), annotation.desc().isEmpty() ? annotation.value() : annotation.desc()))
-                    .orElse(EMPTY_TITLE_AND_DESC);
+    private static Optional<Pair<String, String>> processSubtitles(final String propPath, final Class<?> entityType) {
+        if (isDotNotation(propPath)) {
+            final String propName = firstAndRest(propPath).getKey();
+            final Optional<Subtitles> subtitles = getPropertyAnnotationOptionally(Subtitles.class, entityType, propName);
+            return subtitles.flatMap(sub -> Stream.of(sub.value()).filter(pt -> (propName + "." + pt.path()).equals(propPath)).findFirst().map(pt -> Pair.pair(pt.title(), pt.desc()))); 
+        } else {
+            return Optional.empty();
         }
     }
-    
+
     /**
      * If <code>dotNotationExp</code> refers to an entity-typed property of <code>propOwnerType</code> then a pair of title and description of of the entity-type is returned.
      * Otherwise, an empty result is returned. 
