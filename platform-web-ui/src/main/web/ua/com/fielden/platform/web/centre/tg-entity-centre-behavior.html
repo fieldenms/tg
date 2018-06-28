@@ -299,7 +299,7 @@
 
                 _saverDisabled: {
                     type: Boolean,
-                    computed: '_computeSaverDisabled(_centreChanged, _bindingEntityNotPersistentOrNotPersistedOrModified, _editedPropsExist, _currEntity, _actionInProgress)'
+                    computed: '_computeSaverDisabled(saveAsName, _centreChanged, _bindingEntityNotPersistentOrNotPersistedOrModified, _editedPropsExist, _currEntity, _actionInProgress)'
                 },
 
                 _discarderDisabled: {
@@ -442,8 +442,8 @@
                 }
             },
 
-            _computeSaverDisabled: function (_centreChanged, _bindingEntityNotPersistentOrNotPersistedOrModified, _editedPropsExist, _currEntity, _actionInProgress) {
-                return _actionInProgress === true || !this.canSave(_centreChanged, _bindingEntityNotPersistentOrNotPersistedOrModified, _editedPropsExist, _currEntity);
+            _computeSaverDisabled: function (saveAsName, _centreChanged, _bindingEntityNotPersistentOrNotPersistedOrModified, _editedPropsExist, _currEntity, _actionInProgress) {
+                return saveAsName !== '' && (_actionInProgress === true || !this.canSave(_centreChanged, _bindingEntityNotPersistentOrNotPersistedOrModified, _editedPropsExist, _currEntity));
             },
 
             _computeDiscarderDisabled: function (_centreChanged, _bindingEntityNotPersistentOrNotPersistedOrModified, _editedPropsExist, _currEntity, _actionInProgress) {

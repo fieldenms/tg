@@ -46,6 +46,9 @@ public class CentreConfigEditActionTitleValidator implements IBeforeChangeEventH
             return failuref("Only alfanumeric characters, spaces and %s are allowed.", specialCharacters);
         } else {
             final CentreConfigEditAction entity = property.getEntity();
+            if (entity.isSkipUi()) {
+                return successful("ok");
+            }
             final EnhancedCentreEntityQueryCriteria<?, ?> criteriaEntity = criteriaEntityRestorer.restoreCriteriaEntity(entity.getCentreContextHolder());
             final String currentTitle = criteriaEntity.saveAsNameSupplier().get().orElse(DEFAULT_CONFIG_TITLE);
             

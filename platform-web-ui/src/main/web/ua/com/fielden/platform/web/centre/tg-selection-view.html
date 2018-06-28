@@ -66,6 +66,7 @@
 
             properties: {
                 _showDialog: Function,
+                _bindCentreInfo: Function,
                 /**
                  * Current saveAsName for centre configuration. This will flow upward to main centre elements and will trigger centre reload immediately after change.
                  */
@@ -98,12 +99,18 @@
                 self.topLevelActions = [
                     {
                         preAction: function (action) {
+                            action.modifyFunctionalEntity = function (bindingEntity, master, action) {
+                                const customObject = master._currEntity.get('customObject');
+                                const entityAndCustomObject = [customObject['appliedCriteriaEntity'], customObject];
+                                self._bindCentreInfo(entityAndCustomObject, null);
+                            };
                             return Promise.resolve(true);
                         },
                         postActionSuccess: function (functionalEntity, action) {
-                            // update saveAsName with new name after successful copy action
+                            // update saveAsName with new name after successful EDIT action
                             self.saveAsName = undefined;
-                            self.saveAsName = functionalEntity.get('title');
+                            const title = functionalEntity.get('title');
+                            self.saveAsName = title === '_______________________default' ? '' : title;
                         },
                         attrs: {
                             entityType:'ua.com.fielden.platform.web.centre.CentreConfigEditAction', currentState:'EDIT', centreUuid: self.uuid
@@ -127,12 +134,18 @@
                     },
                     {
                         preAction: function (action) {
+                            action.modifyFunctionalEntity = function (bindingEntity, master, action) {
+                                const customObject = master._currEntity.get('customObject');
+                                const entityAndCustomObject = [customObject['appliedCriteriaEntity'], customObject];
+                                self._bindCentreInfo(entityAndCustomObject, null);
+                            };
                             return Promise.resolve(true);
                         },
                         postActionSuccess: function (functionalEntity, action) {
-                            // update saveAsName with new name after successful edit action
+                            // update saveAsName with new name after successful EDIT action
                             self.saveAsName = undefined;
-                            self.saveAsName = functionalEntity.get('title');
+                            const title = functionalEntity.get('title');
+                            self.saveAsName = title === '_______________________default' ? '' : title;
                         },
                         attrs: {
                             entityType:'ua.com.fielden.platform.web.centre.CentreConfigEditAction', currentState:'EDIT', centreUuid: self.uuid

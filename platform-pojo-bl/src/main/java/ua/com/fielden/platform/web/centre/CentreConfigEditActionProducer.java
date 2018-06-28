@@ -2,6 +2,7 @@ package ua.com.fielden.platform.web.centre;
 
 import static java.util.Optional.empty;
 import static java.util.Optional.of;
+import static ua.com.fielden.platform.domaintree.impl.GlobalDomainTreeManager.DEFAULT_CONFIG_DESC;
 import static ua.com.fielden.platform.domaintree.impl.GlobalDomainTreeManager.DEFAULT_CONFIG_TITLE;
 import static ua.com.fielden.platform.error.Result.failure;
 import static ua.com.fielden.platform.web.centre.CentreConfigEditAction.EditKind.COPY;
@@ -10,7 +11,6 @@ import static ua.com.fielden.platform.web.centre.CentreConfigEditAction.EditKind
 
 import java.util.Map;
 import java.util.Optional;
-
 import com.google.inject.Inject;
 
 import ua.com.fielden.platform.dao.IEntityDao;
@@ -44,118 +44,58 @@ public class CentreConfigEditActionProducer extends DefaultEntityProducerWithCon
             entity.setCentreContextHolder(selectionCrit().centreContextHolder());
             
             final EnhancedCentreEntityQueryCriteria<?, ?> selectionCrit = selectionCrit();
-            
             entity.setEditKind(chosenProperty());
             final Optional<String> saveAsName = selectionCrit.saveAsNameSupplier().get();
-            if (EDIT.name().equals(entity.getEditKind())) {
-                if (isDefaultOrInherited(saveAsName, selectionCrit)) {
-                    throw failure(ERR_CANNOT_BE_EDITED);
-                } else {
-                    // get modifHolder and apply it against 'fresh' centre to be able to identify validity of 'fresh' centre
-                    final Map<String, Object> freshModifHolder = selectionCrit.centreContextHolder().getModifHolder();
-                    final EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, ? extends IEntityDao<AbstractEntity<?>>> appliedFreshSelectionCrit = selectionCrit.freshCentreApplier().apply(freshModifHolder);
-                    
-                    // configuration copy / edit will not be performed if current recently applied 'fresh' centre configuration is invalid
-                    appliedFreshSelectionCrit.isValid().ifFailure(Result::throwRuntime); // TODO this should not throw any exception instead continue information flow and bind invalid criteria to tg-entity-centre; error toast must be preserved however
-                    
-                    final T2<String, String> titleAndDesc = selectionCrit.centreTitleAndDescGetter().get();
-                    final String title = titleAndDesc._1;
-                    final String desc = titleAndDesc._2;
-                    
-                    if (DEFAULT_CONFIG_TITLE.equals(title)) {
-                        // remove brackets from title when copying / editing 'default' centre configuration; brackets are not allowed as per CentreConfigEditActionTitleValidator
-                        entity.setTitle(title.replace("[", "").replace("]", ""));
-                    } else {
-                        entity.setTitle(title);
-                    }
-                    entity.setDesc(desc);
-                }
-            } else if (SAVE.name().equals(entity.getEditKind())) { // SAVE button at the bottom of selection criteria or EDIT button in top right corner
-                if (isDefaultOrInherited(saveAsName, selectionCrit)) {
-                    final EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, ? extends IEntityDao<AbstractEntity<?>>> appliedCriteriaEntity = applyCriteria(selectionCrit);
-                    final Map<String, Object> customObject = invalidCustomObject(selectionCrit, appliedCriteriaEntity)
-                        .map(customObj -> {
-                            entity.setSkipUi(true);
-                            final T2<String, String> titleAndDesc = selectionCrit.centreTitleAndDescGetter().get();
-                            entity.setTitle(titleAndDesc._1);
-                            entity.setDesc(titleAndDesc._2);
-                            return customObj;
-                        }).orElseGet(() -> {
+            final EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, ? extends IEntityDao<AbstractEntity<?>>> appliedCriteriaEntity = applyCriteria(selectionCrit);
+            final Map<String, Object> customObject = invalidCustomObject(selectionCrit, appliedCriteriaEntity)
+                .map(customObj -> {
+                    setSkipUi(entity);
+                    setTitleAndDesc(entity, selectionCrit);
+                    return customObj;
+                })
+                .orElseGet(() -> {
+                    if (EDIT.name().equals(entity.getEditKind())) {
+                        if (isDefaultOrInherited(saveAsName, selectionCrit)) {
+                            throw failure(ERR_CANNOT_BE_EDITED);
+                        } else {
+                            setTitleAndDesc(entity, selectionCrit);
+                        }
+                    } else if (SAVE.name().equals(entity.getEditKind())) { // SAVE button at the bottom of selection criteria or EDIT button in top right corner
+                        if (isDefaultOrInherited(saveAsName, selectionCrit)) {
                             if (!isDefault(saveAsName)) {
-                                final T2<String, String> titleAndDesc = selectionCrit.centreTitleAndDescGetter().get();
-                                entity.setTitle(titleAndDesc._1 + COPY_ACTION_SUFFIX);
-                                entity.setDesc(titleAndDesc._2 + COPY_ACTION_SUFFIX);
+                                setTitleAndDesc(entity, selectionCrit, COPY_ACTION_SUFFIX);
                             }
-                            return getCustomObject(selectionCrit, appliedCriteriaEntity);
-                        });
-                    entity.setCustomObject(customObject);
-                    
-                    
-                    
-                    
-                    
-//                    // get modifHolder and apply it against 'fresh' centre to be able to identify validity of 'fresh' centre
-//                    final Map<String, Object> freshModifHolder = selectionCrit.centreContextHolder().getModifHolder();
-//                    final EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, ? extends IEntityDao<AbstractEntity<?>>> appliedFreshSelectionCrit = selectionCrit.freshCentreApplier().apply(freshModifHolder);
-//                    
-//                    // configuration copy / edit will not be performed if current recently applied 'fresh' centre configuration is invalid
-//                    appliedFreshSelectionCrit.isValid().ifFailure(Result::throwRuntime); // TODO this should not throw any exception instead continue information flow and bind invalid criteria to tg-entity-centre; error toast must be preserved however
-//                    
-//                    final T2<String, String> titleAndDesc = selectionCrit.centreTitleAndDescGetter().get();
-//                    final String title = titleAndDesc._1;
-//                    final String desc = titleAndDesc._2;
-//                    
-//                    final String actionKindSuffix = COPY_ACTION_SUFFIX;
-//                    if (DEFAULT_CONFIG_TITLE.equals(title)) {
-//                        // remove brackets from title when copying / editing 'default' centre configuration; brackets are not allowed as per CentreConfigEditActionTitleValidator
-//                        entity.setTitle(title.replace("[", "").replace("]", "") + actionKindSuffix);
-//                    } else {
-//                        entity.setTitle(title + actionKindSuffix);
-//                    }
-//                    entity.setDesc(desc + actionKindSuffix);
-                } else { // owned configuration should be saved without opening 'Save As...' dialog
-                    entity.setSkipUi(true);
-                    final T2<String, String> titleAndDesc = selectionCrit.centreTitleAndDescGetter().get();
-                    entity.setTitle(titleAndDesc._1);
-                    entity.setDesc(titleAndDesc._2);
-                    
-                    // get modifHolder and apply it against 'fresh' centre to be able to identify validity of 'fresh' centre
-                    final Map<String, Object> freshModifHolder = selectionCrit.centreContextHolder().getModifHolder();
-                    final EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, ? extends IEntityDao<AbstractEntity<?>>> appliedCriteriaEntity = selectionCrit.freshCentreApplier().apply(freshModifHolder);
-                    
-                    
-//                  // Validate criteria entity with the check for 'required' properties.
-//                  final Result validationResult = appliedCriteriaEntity.isValid();
-//                  final ICentreDomainTreeManagerAndEnhancer freshCentre = appliedCriteriaEntity.getCentreDomainTreeMangerAndEnhancer();
-//                  if (validationResult.isSuccessful()) { // If applied criteria entity is valid then perform actual saving.
-//                      initAndCommit(gdtm, miType, SAVED_CENTRE_NAME, saveAsName, device, freshCentre, null);
-//                  }
-                    
-                    entity.setCustomObject(selectionCrit.centreCustomObjectGetter().apply(appliedCriteriaEntity));
-                }
-            } else if (COPY.name().equals(entity.getEditKind())) {
-                // get modifHolder and apply it against 'fresh' centre to be able to identify validity of 'fresh' centre
-                final Map<String, Object> freshModifHolder = selectionCrit.centreContextHolder().getModifHolder();
-                final EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, ? extends IEntityDao<AbstractEntity<?>>> appliedFreshSelectionCrit = selectionCrit.freshCentreApplier().apply(freshModifHolder);
-                
-                // configuration copy / edit will not be performed if current recently applied 'fresh' centre configuration is invalid
-                appliedFreshSelectionCrit.isValid().ifFailure(Result::throwRuntime); // TODO this should not throw any exception instead continue information flow and bind invalid criteria to tg-entity-centre; error toast must be preserved however
-                
-                final T2<String, String> titleAndDesc = selectionCrit.centreTitleAndDescGetter().get();
-                final String title = titleAndDesc._1;
-                final String desc = titleAndDesc._2;
-                
-                final String actionKindSuffix = COPY_ACTION_SUFFIX;
-                if (DEFAULT_CONFIG_TITLE.equals(title)) {
-                    // remove brackets from title when copying / editing 'default' centre configuration; brackets are not allowed as per CentreConfigEditActionTitleValidator
-                    entity.setTitle(title.replace("[", "").replace("]", "") + actionKindSuffix);
-                } else {
-                    entity.setTitle(title + actionKindSuffix);
-                }
-                entity.setDesc(desc + actionKindSuffix);
-            }
+                        } else { // owned configuration should be saved without opening 'Save As...' dialog
+                            setSkipUi(entity);
+                            setTitleAndDesc(entity, selectionCrit);
+                            selectionCrit.freshCentreSaver().run();
+                        }
+                    } else if (COPY.name().equals(entity.getEditKind())) {
+                        setSkipUi(entity);
+                        entity.setTitle(DEFAULT_CONFIG_TITLE);
+                        entity.setDesc(DEFAULT_CONFIG_DESC);
+                        selectionCrit.freshCentreCopier().run();
+                        return getCustomObject(selectionCrit, appliedCriteriaEntity, empty());
+                    }
+                    return getCustomObject(selectionCrit, appliedCriteriaEntity);
+                });
+            entity.setCustomObject(customObject);
         }
         return entity;
+    }
+    
+    private void setSkipUi(final CentreConfigEditAction entity) {
+        entity.setSkipUi(true);
+    }
+    
+    private void setTitleAndDesc(final CentreConfigEditAction entity, final EnhancedCentreEntityQueryCriteria<?, ?> selectionCrit) {
+        setTitleAndDesc(entity, selectionCrit, "");
+    }
+    
+    private void setTitleAndDesc(final CentreConfigEditAction entity, final EnhancedCentreEntityQueryCriteria<?, ?> selectionCrit, final String suffix) {
+        final T2<String, String> titleAndDesc = selectionCrit.centreTitleAndDescGetter().get();
+        entity.setTitle(titleAndDesc._1 + suffix);
+        entity.setDesc(titleAndDesc._2 + suffix);
     }
     
     private static EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, ? extends IEntityDao<AbstractEntity<?>>> applyCriteria(final EnhancedCentreEntityQueryCriteria<?, ?> selectionCrit) {
@@ -173,7 +113,11 @@ public class CentreConfigEditActionProducer extends DefaultEntityProducerWithCon
     }
     
     private static Map<String, Object> getCustomObject(final EnhancedCentreEntityQueryCriteria<?, ?> selectionCrit, final EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, ? extends IEntityDao<AbstractEntity<?>>> appliedCriteriaEntity) {
-        return selectionCrit.centreCustomObjectGetter().apply(appliedCriteriaEntity);
+        return getCustomObject(selectionCrit, appliedCriteriaEntity, selectionCrit.saveAsNameSupplier().get());
+    }
+    
+    private static Map<String, Object> getCustomObject(final EnhancedCentreEntityQueryCriteria<?, ?> selectionCrit, final EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, ? extends IEntityDao<AbstractEntity<?>>> appliedCriteriaEntity, final Optional<String> saveAsNameToCompare) {
+        return selectionCrit.centreCustomObjectGetter().apply(appliedCriteriaEntity, saveAsNameToCompare);
     }
     
     /**

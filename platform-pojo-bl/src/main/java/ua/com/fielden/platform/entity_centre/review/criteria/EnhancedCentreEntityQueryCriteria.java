@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.BiConsumer;
+import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
@@ -36,6 +37,8 @@ public class EnhancedCentreEntityQueryCriteria<T extends AbstractEntity<?>, DAO 
     private Function<Map<String, Object>, EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, ? extends IEntityDao<AbstractEntity<?>>>> freshCentreApplier;
     private BiConsumer<T2<EditKind, Optional<String>>, String> centreEditor;
     private Runnable centreDeleter;
+    private Runnable freshCentreSaver;
+    private Runnable freshCentreCopier;
     private Consumer<String> inheritedCentreUpdater;
     private Runnable defaultCentreClearer;
     private Supplier<List<LoadableCentreConfig>> loadableCentresSupplier;
@@ -44,7 +47,7 @@ public class EnhancedCentreEntityQueryCriteria<T extends AbstractEntity<?>, DAO 
     private Supplier<T2<String, String>> centreTitleAndDescGetter;
     private Supplier<ICentreDomainTreeManagerAndEnhancer> baseCentreSupplier;
     private Supplier<Boolean> centreChangedGetter;
-    private Function<EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, ? extends IEntityDao<AbstractEntity<?>>>, Map<String, Object>> centreCustomObjectGetter;
+    private BiFunction<EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, ? extends IEntityDao<AbstractEntity<?>>>, Optional<String>, Map<String, Object>> centreCustomObjectGetter;
     /**
      * This function represents centre query runner for export action which is dependent on configuration of the passed <code>customObject</code>.
      * Running of this fully-fledged query depends on query context (see property centreContextHolder).
@@ -122,6 +125,22 @@ public class EnhancedCentreEntityQueryCriteria<T extends AbstractEntity<?>, DAO 
         return inheritedCentreUpdater;
     }
 
+    public void setFreshCentreCopier(final Runnable freshCentreCopier) {
+        this.freshCentreCopier = freshCentreCopier;
+    }
+
+    public Runnable freshCentreCopier() {
+        return freshCentreCopier;
+    }
+
+    public void setFreshCentreSaver(final Runnable freshCentreSaver) {
+        this.freshCentreSaver = freshCentreSaver;
+    }
+
+    public Runnable freshCentreSaver() {
+        return freshCentreSaver;
+    }
+
     public void setCentreDeleter(final Runnable centreDeleter) {
         this.centreDeleter = centreDeleter;
     }
@@ -170,11 +189,11 @@ public class EnhancedCentreEntityQueryCriteria<T extends AbstractEntity<?>, DAO 
         return baseCentreSupplier;
     }
 
-    public void setCentreCustomObjectGetter(final Function<EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, ? extends IEntityDao<AbstractEntity<?>>>, Map<String, Object>> centreCustomObjectGetter) {
+    public void setCentreCustomObjectGetter(final BiFunction<EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, ? extends IEntityDao<AbstractEntity<?>>>, Optional<String>, Map<String, Object>> centreCustomObjectGetter) {
         this.centreCustomObjectGetter = centreCustomObjectGetter;
     }
 
-    public Function<EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, ? extends IEntityDao<AbstractEntity<?>>>, Map<String, Object>> centreCustomObjectGetter() {
+    public BiFunction<EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, ? extends IEntityDao<AbstractEntity<?>>>, Optional<String>, Map<String, Object>> centreCustomObjectGetter() {
         return centreCustomObjectGetter;
     }
 
