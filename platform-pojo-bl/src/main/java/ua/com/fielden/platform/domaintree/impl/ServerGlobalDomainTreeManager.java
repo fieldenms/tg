@@ -21,7 +21,7 @@ public class ServerGlobalDomainTreeManager implements IServerGlobalDomainTreeMan
     @Inject
     public ServerGlobalDomainTreeManager(final Provider<IGlobalDomainTreeManager> gdtmProvider) {
         this.gdtmProvider = gdtmProvider;
-        this.managersByUser = new ConcurrentHashMap<>();
+        this.managersByUser = new ConcurrentHashMap<>(512);
     }
     
     @Override

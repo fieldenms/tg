@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.web.resources.webui;
 
+import static ua.com.fielden.platform.utils.EntityUtils.fetchWithKeyAndDesc;
 import static ua.com.fielden.platform.utils.MiscUtilities.prepare;
 import static ua.com.fielden.platform.web.centre.CentreUpdater.FRESH_CENTRE_NAME;
 import static ua.com.fielden.platform.web.centre.CentreUpdater.updateCentre;
@@ -40,6 +41,7 @@ import ua.com.fielden.platform.web.centre.EntityCentre;
 import ua.com.fielden.platform.web.centre.api.context.CentreContextConfig;
 import ua.com.fielden.platform.web.interfaces.IDeviceProvider;
 import ua.com.fielden.platform.web.resources.RestServerUtil;
+import ua.com.fielden.platform.web.utils.EntityResourceUtils;
 
 /**
  * The web resource for entity autocompletion serves as a back-end mechanism of searching entities by search strings and using additional parameters.
@@ -166,6 +168,12 @@ public class CriteriaEntityAutocompletionResource<T extends AbstractEntity<?>, M
             logger.debug(String.format("SEARCH STRING %s", searchString));
             
             // find matches with a fetch model that should be defined at the custom matcher level or based on the fall-back logic
+            // however, if there is no fetch model then instead of using the default one, it should be more optimal to use the KEY_AND_DESC model
+            if (valueMatcher.getFetch() == null) {
+                final Class<T> type = (Class<T>) EntityResourceUtils.getOriginalType(criteriaType);
+                valueMatcher.setFetch(fetchWithKeyAndDesc(type).fetchModel());
+            }
+
             final List<? extends AbstractEntity<?>> entities = valueMatcher.findMatchesWithModel(searchString != null ? searchString : "%");
             
             logger.debug("CRITERIA_ENTITY_AUTOCOMPLETION_RESOURCE: search finished.");
