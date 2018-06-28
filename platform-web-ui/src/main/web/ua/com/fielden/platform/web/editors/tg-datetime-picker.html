@@ -336,9 +336,8 @@
               domBind._dialogOpened = function () {
                 document.addEventListener('keydown', this._onCaptureKeyDown, true);
                 domBind.$.datePicker.addEventListener("tg-accept-date", function (e) {
-                  const dialog = this.$.dateDialog;
                   this._acceptDateBind();
-                  dialog.close();
+                  this.$.dateDialog.close();
                   tearDownEvent(e);
                 }.bind(domBind));
               }.bind(domBind);
