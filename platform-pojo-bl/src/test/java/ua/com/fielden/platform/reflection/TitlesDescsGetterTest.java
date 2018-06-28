@@ -111,6 +111,22 @@ public class TitlesDescsGetterTest {
     }
 
     @Test
+    public void getTitleAndDescOfPropertyType_can_determine_path_dependent_title_and_desc_for_one_level_deep_property_path_referencing_key() {
+        final Pair<String, String> titleAndDesc = TitlesDescsGetter.getTitleAndDesc("prop1.key", FirstLevelEntityPathDependentTitles.class);
+        
+        assertEquals("New Key Title", titleAndDesc.getKey());
+        assertEquals("New Key desc", titleAndDesc.getValue());
+    }
+
+    @Test
+    public void getTitleAndDescOfPropertyType_can_determine_path_dependent_title_and_desc_for_one_level_deep_property_path_referencing_desc() {
+        final Pair<String, String> titleAndDesc = TitlesDescsGetter.getTitleAndDesc("prop1.desc", FirstLevelEntityPathDependentTitles.class);
+        
+        assertEquals("New Desc Title", titleAndDesc.getKey());
+        assertEquals("New Desc desc", titleAndDesc.getValue());
+    }
+
+    @Test
     public void getTitleAndDescOfPropertyType_can_determine_path_dependent_title_and_desc_for_one_and_two_level_deep_property_paths_defined_for_the_same_root_prop() {
         final Pair<String, String> level1TitleAndDesc = TitlesDescsGetter.getTitleAndDesc("prop2.critOnlyAEProperty", FirstLevelEntityPathDependentTitles.class);
         

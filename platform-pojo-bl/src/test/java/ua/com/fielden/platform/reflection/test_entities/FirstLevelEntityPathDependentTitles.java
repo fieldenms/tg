@@ -25,7 +25,9 @@ public class FirstLevelEntityPathDependentTitles extends AbstractEntity<DynamicE
 
     @IsProperty
     @Title("Property 1")
-    @Subtitles(@PathTitle(path = "property", title = "Nested title", desc = "Nested desc"))
+    @Subtitles({@PathTitle(path = "property", title = "Nested title", desc = "Nested desc"),
+                @PathTitle(path = "key", title = "New Key Title", desc = "New Key desc"),
+                @PathTitle(path = "desc", title = "New Desc Title", desc = "New Desc desc")})
     private SimpleEntity prop1;
     
     @IsProperty

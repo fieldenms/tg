@@ -131,15 +131,25 @@ public class TitlesDescsGetter {
      * @return
      */
     public static Pair<String, String> getTitleAndDesc(final String propPath, final Class<?> entityType) {
+            return processSubtitles(propPath, entityType).orElseGet(() -> processTitles(propPath, entityType));
+    }
+
+    /**
+     * Determines property titles and desc without analysing {@link Subtitles}. Effectively this represents the logic before subtitles were introduced.
+     * This method should not be used directly and therefore it is private.
+     * 
+     * @param propPath
+     * @param entityType
+     * @return
+     */
+    private static Pair<String, String> processTitles(final String propPath, final Class<?> entityType) {
         final boolean containsKey = KEY.equals(propPath) || propPath.endsWith("." + KEY);
         final boolean containsDesc = DESC.equals(propPath) || propPath.endsWith("." + DESC);
         
         if (!containsKey && !containsDesc) {
-            return processSubtitles(propPath, entityType)
-                   .orElseGet(() -> 
-                       getPropertyAnnotationOptionally(Title.class, entityType, propPath)
+            return getPropertyAnnotationOptionally(Title.class, entityType, propPath)
                        .map(annotation -> pair(annotation.value(), annotation.desc().isEmpty() ? annotation.value() : annotation.desc()))
-                       .orElseGet(() -> getTitleAndDescOfPropertyType(propPath, entityType).map(p -> pair(p.getKey(), p.getKey())).orElse(EMPTY_TITLE_AND_DESC)));
+                       .orElseGet(() -> getTitleAndDescOfPropertyType(propPath, entityType).map(p -> pair(p.getKey(), p.getKey())).orElse(EMPTY_TITLE_AND_DESC));
         } 
         
         if (containsKey) {
