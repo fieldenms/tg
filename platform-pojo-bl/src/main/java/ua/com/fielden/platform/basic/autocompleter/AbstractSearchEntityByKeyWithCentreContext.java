@@ -123,8 +123,9 @@ public abstract class AbstractSearchEntityByKeyWithCentreContext<T extends Abstr
     }
 
     @Override
-    public void setContext(final CentreContext<T, ?> context) {
+    public AbstractSearchEntityByKeyWithCentreContext<T> setContext(final CentreContext<T, ?> context) {
         this.context = context;
+        return this;
     }
 
     @Override
