@@ -152,7 +152,7 @@
                         <div class="selection-criteria-buttons layout horizontal justified wrap">
                             <div class="layout horizontal button-group">
                                 <paper-button id="saver" raised shortcut="ctrl+s" roll="button" on-tap="saveAsync" disabled$="[[_saverDisabled]]" tooltip-text="Save configuration">Save</paper-button>
-                                <tg-ui-action ui-role='BUTTON' short-desc='SAVE2' long-desc='SAVE2' component-uri='/master_ui/ua.com.fielden.platform.web.centre.CentreConfigEditAction' element-name='tg-CentreConfigEditAction-master' show-dialog='[[_showDialog]]' create-context-holder='[[_createContextHolder]]' chosen-property="SAVE" attrs='[[bottomActions.0.attrs]]' pre-action='[[bottomActions.0.preAction]]' post-action-success='[[bottomActions.0.postActionSuccess]]' post-action-error='[[bottomActions.0.postActionError]]' require-selection-criteria='true' require-selected-entities='NONE' require-master-entity='false' is-action-in-progress='[[_saverDisabled]]' style='[[_computeSaveButtonStyle(_saverDisabled)]]'></tg-ui-action>
+                                <tg-ui-action ui-role='BUTTON' short-desc='SAVE2' long-desc='SAVE2' component-uri='/master_ui/ua.com.fielden.platform.web.centre.CentreConfigEditAction' element-name='tg-CentreConfigEditAction-master' show-dialog='[[_showDialog]]' create-context-holder='[[_createContextHolder]]' chosen-property="SAVE" attrs='[[bottomActions.0.attrs]]' pre-action='[[bottomActions.0.preAction]]' post-action-success='[[bottomActions.0.postActionSuccess]]' post-action-error='[[bottomActions.0.postActionError]]' require-selection-criteria='true' require-selected-entities='NONE' require-master-entity='false' disabled='[[_saverDisabled]]' style='[[_computeSaveButtonStyle(_saverDisabled)]]'></tg-ui-action>
                                 <paper-button id="discarder" raised shortcut="ctrl+r" roll="button" on-tap="discardAsync" disabled$="[[_discarderDisabled]]" tooltip-text="Discard the latest changes to selection criteria, which effectively returns them to the last saved configuration.">Discard</paper-button>
                             </div>
                             <div class="layout horizontal button-group right-button-group">
@@ -252,28 +252,29 @@
         
         attached: function () {
             const self = this;
+            
+            self._bindCustomObject = function (customObject) {
+                if (Object.keys(customObject).length > 0) {
+                    const entityAndCustomObject = [customObject['appliedCriteriaEntity'], customObject];
+                    self._bindCentreInfo(entityAndCustomObject, null);
+                }
+            };
+            
             self.bottomActions = [
                 {
                     preAction: function (action) {
                         action.modifyFunctionalEntity = function (bindingEntity, master, action) {
-                            const customObject = master._currEntity.get('customObject');
-                            const entityAndCustomObject = [customObject['appliedCriteriaEntity'], customObject];
-                            self._bindCentreInfo(entityAndCustomObject, null);
+                            self._bindCustomObject(master._currEntity.get('customObject'));
                         };
                         return Promise.resolve(true);
                     },
                     postActionSuccess: function (functionalEntity, action) {
-                        // update saveAsName with new name after successful SAVE action
-                        self.saveAsName = undefined;
-                        const title = functionalEntity.get('title');
-                        self.saveAsName = title === '_______________________default' ? '' : title;
+                        self._bindCustomObject(functionalEntity.get('customObject'));
                     },
                     attrs: {
                         entityType:'ua.com.fielden.platform.web.centre.CentreConfigEditAction', currentState:'EDIT', centreUuid: self.uuid
                     },
-                    postActionError: function (functionalEntity, action) {
-                        console.debug('postActionError');
-                    }
+                    postActionError: function (functionalEntity, action) {}
                 }
             ];
         },

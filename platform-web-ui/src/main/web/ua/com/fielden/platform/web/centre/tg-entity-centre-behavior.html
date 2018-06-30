@@ -1046,14 +1046,8 @@
                 const self = this;
                 const reflector = self.$.selection_criteria._reflector();
                 if (newSaveAsName !== reflector.UNDEFINED_CONFIG_TITLE // initial 'saveAsName' definition (value UNDEFINED_CONFIG_TITLE, that means unknown config) will be disregarded
-                    && oldSaveAsName !== reflector.UNDEFINED_CONFIG_TITLE // first time retrieval should also be disregarded -- at that stage preferred configuration loads (value UNDEFINED_CONFIG_TITLE is equal to oldSaveAsName)
                     && newSaveAsName !== undefined // undefined is a marker value to make saveAsName changed when setting actual value (including '')
                 ) {
-                    self.$.selection_criteria._wasRun = null; // reset wasRun to make user unable to see stale run results using View button
-                    // TODO self.retrieve().then(function () { // perform full centre refresh on each and every change of 'saveAsName'
-                        self._fireSaveAsNameChanged(newSaveAsName, self);
-                    // TODO });
-                } else if (oldSaveAsName === reflector.UNDEFINED_CONFIG_TITLE) {
                     self._fireSaveAsNameChanged(newSaveAsName, self);
                 }
             },
@@ -1061,7 +1055,7 @@
             _fireSaveAsNameChanged: function (newSaveAsName, self) {
                 const reflector = self.$.selection_criteria._reflector();
                 if (reflector.LINK_CONFIG_TITLE !== newSaveAsName) {
-                    self.fire('tg-save-as-name-changed', { saveAsName: newSaveAsName, saveAsDesc: self.$.selection_criteria._saveAsDesc });
+                    self.fire('tg-save-as-name-changed', newSaveAsName);
                 }
             },
 

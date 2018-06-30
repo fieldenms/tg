@@ -3,7 +3,6 @@ package ua.com.fielden.platform.entity_centre.review.criteria;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -35,7 +34,7 @@ import ua.com.fielden.platform.web.centre.LoadableCentreConfig;
 public class EnhancedCentreEntityQueryCriteria<T extends AbstractEntity<?>, DAO extends IEntityDao<T>> extends EntityQueryCriteria<ICentreDomainTreeManagerAndEnhancer, T, DAO> {
     private Supplier<ICentreDomainTreeManagerAndEnhancer> previouslyRunCentreSupplier;
     private Function<Map<String, Object>, EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, ? extends IEntityDao<AbstractEntity<?>>>> freshCentreApplier;
-    private BiConsumer<T2<EditKind, Optional<String>>, String> centreEditor;
+    private BiFunction<T2<EditKind, Optional<String>>, String, Optional<Map<String, Object>>> centreEditor;
     private Runnable centreDeleter;
     private Runnable freshCentreSaver;
     private Runnable freshCentreCopier;
@@ -101,11 +100,11 @@ public class EnhancedCentreEntityQueryCriteria<T extends AbstractEntity<?>, DAO 
         return freshCentreApplier;
     }
 
-    public void setCentreEditor(final BiConsumer<T2<EditKind, Optional<String>>, String> centreEditor) {
+    public void setCentreEditor(final BiFunction<T2<EditKind, Optional<String>>, String, Optional<Map<String, Object>>> centreEditor) {
         this.centreEditor = centreEditor;
     }
 
-    public BiConsumer<T2<EditKind, Optional<String>>, String> centreEditor() {
+    public BiFunction<T2<EditKind, Optional<String>>, String, Optional<Map<String, Object>>> centreEditor() {
         return centreEditor;
     }
 

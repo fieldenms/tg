@@ -8,7 +8,6 @@ import static ua.com.fielden.platform.data.generator.IGenerator.shouldForceRegen
 import static ua.com.fielden.platform.domaintree.impl.GlobalDomainTreeManager.LINK_CONFIG_TITLE;
 import static ua.com.fielden.platform.domaintree.impl.GlobalDomainTreeManager.UNDEFINED_CONFIG_TITLE;
 import static ua.com.fielden.platform.streaming.ValueCollectors.toLinkedHashMap;
-import static ua.com.fielden.platform.types.tuples.T2.t2;
 import static ua.com.fielden.platform.utils.EntityUtils.equalsEx;
 import static ua.com.fielden.platform.web.centre.CentreUpdater.FRESH_CENTRE_NAME;
 import static ua.com.fielden.platform.web.centre.CentreUpdater.PREVIOUSLY_RUN_CENTRE_NAME;
@@ -67,7 +66,6 @@ import ua.com.fielden.platform.entity.meta.MetaProperty;
 import ua.com.fielden.platform.entity_centre.review.criteria.EnhancedCentreEntityQueryCriteria;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.security.user.IUserProvider;
-import ua.com.fielden.platform.types.tuples.T2;
 import ua.com.fielden.platform.ui.menu.MiWithConfigurationSupport;
 import ua.com.fielden.platform.utils.Pair;
 import ua.com.fielden.platform.web.app.IWebUiConfig;
@@ -168,7 +166,7 @@ public class CriteriaResource extends AbstractWebResource {
                 makePreferred(gdtm, miType, saveAsName, device(), companionFinder);
             }
             final String customDesc = updateCentreDesc(gdtm, miType, actualSaveAsName, device());
-            return createCriteriaRetrievalEnvelope(updatedFreshCentre, miType, actualSaveAsName, gdtm, restUtil, companionFinder, critGenerator, device(), of(t2(actualSaveAsName, customDesc)));
+            return createCriteriaRetrievalEnvelope(updatedFreshCentre, miType, actualSaveAsName, gdtm, restUtil, companionFinder, critGenerator, device(), customDesc);
         }, restUtil);
     }
     
@@ -200,14 +198,15 @@ public class CriteriaResource extends AbstractWebResource {
             final ICompanionObjectFinder companionFinder,
             final ICriteriaGenerator critGenerator,
             final DeviceProfile device,
-            final Optional<T2<Optional<String>, String>> saveAsNameAndDesc
+            final String saveAsDesc
                     ) {
         return restUtil.rawListJSONRepresentation(
                 createCriteriaValidationPrototype(miType, saveAsName, updatedFreshCentre, companionFinder, critGenerator, -1L, gdtm, device),
                 createCriteriaMetaValuesCustomObjectWithSaveAsInfo(
                         createCriteriaMetaValues(updatedFreshCentre, getEntityType(miType)),
                         isFreshCentreChanged(updatedFreshCentre, updateCentre(gdtm, miType, SAVED_CENTRE_NAME, saveAsName, device)),
-                        saveAsNameAndDesc
+                        of(saveAsName),
+                        of(saveAsDesc)
                 )//
         );
     }

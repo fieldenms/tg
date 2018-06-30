@@ -75,8 +75,11 @@ public class CentreConfigEditActionProducer extends DefaultEntityProducerWithCon
                         entity.setTitle(DEFAULT_CONFIG_TITLE);
                         entity.setDesc(DEFAULT_CONFIG_DESC);
                         selectionCrit.freshCentreCopier().run();
+                        // after copying of criteria values against default centre we need to compare it with SAVED version of default centre,
+                        // which always holds empty Centre DSL-configured configuration
                         return getCustomObject(selectionCrit, appliedCriteriaEntity, empty());
                     }
+                    // in all other situations customObject will hold the same values, applied originally (appliedCriteriaEntity)
                     return getCustomObject(selectionCrit, appliedCriteriaEntity);
                 });
             entity.setCustomObject(customObject);

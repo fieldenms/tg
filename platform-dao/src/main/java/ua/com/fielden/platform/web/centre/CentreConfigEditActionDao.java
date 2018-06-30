@@ -4,6 +4,8 @@ import static java.util.Optional.of;
 import static ua.com.fielden.platform.types.tuples.T2.t2;
 import static ua.com.fielden.platform.web.centre.CentreConfigEditAction.EditKind.valueOf;
 
+import java.util.HashMap;
+
 import com.google.inject.Inject;
 
 import ua.com.fielden.platform.continuation.NeedMoreData;
@@ -45,11 +47,15 @@ public class CentreConfigEditActionDao extends CommonEntityDao<CentreConfigEditA
             
             final EnhancedCentreEntityQueryCriteria<?, ?> selectionCrit = criteriaEntityRestorer.restoreCriteriaEntity(entity.getCentreContextHolder());
             
-            // TODO in case of successful save we need to return new customObject with relevant criteriaEntity (new title!) 
-            // TODO perhaps turn on centre refreshing for other actions except SAVE2?
-            
             // perform actual copy / edit using centreEditor() closure
-            selectionCrit.centreEditor().accept(t2(valueOf(entity.getEditKind()), of(entity.getTitle())), entity.getDesc());
+            entity.setCustomObject(
+                selectionCrit.centreEditor().apply(
+                    t2(valueOf(entity.getEditKind()), of(entity.getTitle())),
+                    entity.getDesc()
+                ).orElse(new HashMap<>())
+            );
+        } else {
+            entity.setCustomObject(new HashMap<>());
         }
         return super.save(entity);
     }
