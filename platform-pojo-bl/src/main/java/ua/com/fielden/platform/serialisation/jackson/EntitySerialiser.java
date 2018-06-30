@@ -239,7 +239,7 @@ public class EntitySerialiser<T extends AbstractEntity<?>> {
 
     public static <T extends AbstractEntity<?>> List<CachedProperty> createCachedProperties(final Class<T> type) {
         final boolean hasCompositeKey = EntityUtils.isCompositeEntity(type);
-        final List<CachedProperty> properties = new ArrayList<CachedProperty>();
+        final List<CachedProperty> properties = new ArrayList<>();
         for (final Field propertyField : Finder.findRealProperties(type)) {
             // take into account only persistent properties
             //if (!propertyField.isAnnotationPresent(Calculated.class)) {
