@@ -439,6 +439,7 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
                 of(customObjectSaveAsName),
                 of(validationPrototype.centreTitleAndDescGetter().apply(customObjectSaveAsName)._2)
             );
+            customObject.put("wasRun", null);
             customObject.put("appliedCriteriaEntity", appliedCriteriaEntity);
             return customObject;
         });
