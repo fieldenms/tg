@@ -430,14 +430,14 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
         final M validationPrototype = (M) critGenerator.generateCentreQueryCriteria(getEntityType(miType), cdtmae, miType, new MiTypeAnnotation().newInstance(miType, saveAsName));
         validationPrototype.setPreviouslyRunCentreSupplier(() -> updateCentre(gdtm, miType, PREVIOUSLY_RUN_CENTRE_NAME, saveAsName, device));
         validationPrototype.setCentreChangedGetter(() -> isFreshCentreChanged(updateCentre(gdtm, miType, FRESH_CENTRE_NAME, saveAsName, device), updateCentre(gdtm, miType, SAVED_CENTRE_NAME, saveAsName, device)));
-        validationPrototype.setCentreCustomObjectGetter((appliedCriteriaEntity, saveAsNameToCompare) -> {
+        validationPrototype.setCentreCustomObjectGetter((appliedCriteriaEntity, customObjectSaveAsName) -> {
             final ICentreDomainTreeManagerAndEnhancer freshCentre = appliedCriteriaEntity.getCentreDomainTreeMangerAndEnhancer();
             // In both cases (criteria entity valid or not) create customObject with criteriaEntity to be returned and bound into tg-entity-centre after save.
             final Map<String, Object> customObject = createCriteriaMetaValuesCustomObjectWithSaveAsInfo(
                 createCriteriaMetaValues(freshCentre, getEntityType(miType)),
-                isFreshCentreChanged(freshCentre, updateCentre(gdtm, miType, SAVED_CENTRE_NAME, saveAsNameToCompare, device)),
-                of(saveAsName),
-                of(validationPrototype.centreTitleAndDescGetter().get()._2)
+                isFreshCentreChanged(freshCentre, updateCentre(gdtm, miType, SAVED_CENTRE_NAME, customObjectSaveAsName, device)),
+                of(customObjectSaveAsName),
+                of(validationPrototype.centreTitleAndDescGetter().apply(customObjectSaveAsName)._2)
             );
             customObject.put("appliedCriteriaEntity", appliedCriteriaEntity);
             return customObject;
@@ -501,8 +501,8 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
         validationPrototype.setFreshCentreApplier((modifHolder) -> {
             return createCriteriaEntity(modifHolder, companionFinder, critGenerator, miType, saveAsName, gdtm, device);
         });
-        validationPrototype.setCentreTitleAndDescGetter(() -> {
-            return saveAsName
+        validationPrototype.setCentreTitleAndDescGetter((saveAsNameForTitleAndDesc) -> {
+            return saveAsNameForTitleAndDesc
                 .map(name -> t2(name, updateCentreDesc(gdtm, miType, of(name), device)))
                 .orElse(t2(DEFAULT_CONFIG_TITLE, DEFAULT_CONFIG_DESC));
         });

@@ -50,7 +50,7 @@ public class CentreConfigEditActionProducer extends DefaultEntityProducerWithCon
             final Map<String, Object> customObject = invalidCustomObject(selectionCrit, appliedCriteriaEntity)
                 .map(customObj -> {
                     setSkipUi(entity);
-                    setTitleAndDesc(entity, selectionCrit);
+                    setTitleAndDesc(entity, saveAsName, selectionCrit);
                     return customObj;
                 })
                 .orElseGet(() -> {
@@ -58,16 +58,16 @@ public class CentreConfigEditActionProducer extends DefaultEntityProducerWithCon
                         if (isDefaultOrInherited(saveAsName, selectionCrit)) {
                             throw failure(ERR_CANNOT_BE_EDITED);
                         } else {
-                            setTitleAndDesc(entity, selectionCrit);
+                            setTitleAndDesc(entity, saveAsName, selectionCrit);
                         }
                     } else if (SAVE.name().equals(entity.getEditKind())) { // SAVE button at the bottom of selection criteria or EDIT button in top right corner
                         if (isDefaultOrInherited(saveAsName, selectionCrit)) {
                             if (!isDefault(saveAsName)) {
-                                setTitleAndDesc(entity, selectionCrit, COPY_ACTION_SUFFIX);
+                                setTitleAndDesc(entity, saveAsName, selectionCrit, COPY_ACTION_SUFFIX);
                             }
                         } else { // owned configuration should be saved without opening 'Save As...' dialog
                             setSkipUi(entity);
-                            setTitleAndDesc(entity, selectionCrit);
+                            setTitleAndDesc(entity, saveAsName, selectionCrit);
                             selectionCrit.freshCentreSaver().run();
                         }
                     } else if (COPY.name().equals(entity.getEditKind())) {
@@ -91,12 +91,12 @@ public class CentreConfigEditActionProducer extends DefaultEntityProducerWithCon
         entity.setSkipUi(true);
     }
     
-    private void setTitleAndDesc(final CentreConfigEditAction entity, final EnhancedCentreEntityQueryCriteria<?, ?> selectionCrit) {
-        setTitleAndDesc(entity, selectionCrit, "");
+    private void setTitleAndDesc(final CentreConfigEditAction entity, final Optional<String> saveAsName, final EnhancedCentreEntityQueryCriteria<?, ?> selectionCrit) {
+        setTitleAndDesc(entity, saveAsName, selectionCrit, "");
     }
     
-    private void setTitleAndDesc(final CentreConfigEditAction entity, final EnhancedCentreEntityQueryCriteria<?, ?> selectionCrit, final String suffix) {
-        final T2<String, String> titleAndDesc = selectionCrit.centreTitleAndDescGetter().get();
+    private void setTitleAndDesc(final CentreConfigEditAction entity, final Optional<String> saveAsName, final EnhancedCentreEntityQueryCriteria<?, ?> selectionCrit, final String suffix) {
+        final T2<String, String> titleAndDesc = selectionCrit.centreTitleAndDescGetter().apply(saveAsName);
         entity.setTitle(titleAndDesc._1 + suffix);
         entity.setDesc(titleAndDesc._2 + suffix);
     }
