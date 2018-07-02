@@ -14,8 +14,6 @@ import static ua.com.fielden.platform.reflection.AnnotationReflector.getKeyType;
 import static ua.com.fielden.platform.reflection.Finder.getKeyMembers;
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.PROPERTY_SPLITTER;
 import static ua.com.fielden.platform.types.tuples.T2.t2;
-import static ua.com.fielden.platform.utils.EntityUtils.isCompositeEntity;
-import static ua.com.fielden.platform.utils.EntityUtils.isPersistedEntityType;
 import static ua.com.fielden.platform.utils.StreamUtils.takeWhile;
 
 import java.io.Serializable;
@@ -31,6 +29,7 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Date;
 import java.util.EnumSet;
 import java.util.HashSet;
@@ -43,6 +42,7 @@ import java.util.TreeSet;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import org.apache.commons.collections.ListUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 import org.joda.time.DateTime;
@@ -1256,24 +1256,24 @@ public class EntityUtils {
         });
     }
     
-    
-    
     /**
-     * @param parentPath
-     * @param propType
+     * Gets list of all properties paths representing value of composite entity key. Props are listed in composite key members declaration order taking into account cases of multilevel nested composite keys.   
+     * 
+     * @param parentContextPath -- path to composite key property within EQL query context.
+     * @param compositeEntityType -- entity type containg composite key property.
      * @return
      */
-    public static List<String> getPathsToLeafPropertiesOfEntityWithCompositeKey(final String parentPath, final Class<? extends AbstractEntity<DynamicEntityKey>> propType) {
+    public static List<String> getSubpropsPathsForQueryingByCompositeEntityKeyValue(final Class<? extends AbstractEntity<DynamicEntityKey>> compositeEntityType, final String parentContextPath) {
     	List<String> result = new ArrayList<>();
-    	
-    	for (Field keyMemberField : getKeyMembers(propType)) {
-			final String pathToSubprop = parentPath != null ? parentPath + "."  + keyMemberField.getName() : keyMemberField.getName();
-			if (!isPersistedEntityType(keyMemberField.getType())) {
+
+    	for (Field keyMember : getKeyMembers(compositeEntityType)) {
+			final String pathToSubprop = parentContextPath != null ? parentContextPath + PROPERTY_SPLITTER  + keyMember.getName() : keyMember.getName();
+			if (!isPersistedEntityType(keyMember.getType())) {
 				result.add(pathToSubprop);
-			} else if (!isCompositeEntity((Class<? extends AbstractEntity<?>>) keyMemberField.getType()) ){
-				result.add(pathToSubprop + "." + KEY);
+			} else if (!isCompositeEntity((Class<? extends AbstractEntity<?>>) keyMember.getType()) ){
+				result.add(pathToSubprop + PROPERTY_SPLITTER + KEY);
 			} else {
-				result.addAll(getPathsToLeafPropertiesOfEntityWithCompositeKey(pathToSubprop, (Class<? extends AbstractEntity<DynamicEntityKey>>) keyMemberField.getType()));
+				result.addAll(getSubpropsPathsForQueryingByCompositeEntityKeyValue((Class<? extends AbstractEntity<DynamicEntityKey>>) keyMember.getType(), pathToSubprop));
 			}
 		}
     	

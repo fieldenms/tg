@@ -4,7 +4,7 @@ import static ua.com.fielden.platform.entity.AbstractEntity.DESC;
 import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.cond;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.orderBy;
-import static ua.com.fielden.platform.utils.EntityUtils.getPathsToLeafPropertiesOfEntityWithCompositeKey;
+import static ua.com.fielden.platform.utils.EntityUtils.getSubpropsPathsForQueryingByCompositeEntityKeyValue;
 import static ua.com.fielden.platform.utils.EntityUtils.hasDescProperty;
 import static ua.com.fielden.platform.utils.EntityUtils.isCompositeEntity;
 
@@ -61,7 +61,7 @@ public interface IValueMatcherWithFetch<T extends AbstractEntity<?>> extends IVa
         ConditionModel keyCriteria = cond().prop(KEY).iLike().val(searchString).model(); 				
         		
         if (isCompositeEntity((Class<? extends AbstractEntity<?>>) entityType) ) {
-        	for (String propName : getPathsToLeafPropertiesOfEntityWithCompositeKey(null, (Class<? extends AbstractEntity<DynamicEntityKey>>) entityType)) {
+        	for (String propName : getSubpropsPathsForQueryingByCompositeEntityKeyValue((Class<? extends AbstractEntity<DynamicEntityKey>>) entityType, null)) {
         		keyCriteria = cond().condition(keyCriteria).or().prop(propName).iLike().val(searchString).model();
 			}
         }
