@@ -12,6 +12,7 @@ import static ua.com.fielden.platform.entity.AbstractEntity.VERSION;
 import static ua.com.fielden.platform.utils.EntityUtils.coalesce;
 import static ua.com.fielden.platform.utils.EntityUtils.equalsEx;
 import static ua.com.fielden.platform.utils.EntityUtils.getCollectionalProperties;
+import static ua.com.fielden.platform.utils.EntityUtils.getSubpropsPathsForQueryingByCompositeEntityKeyValue;
 import static ua.com.fielden.platform.utils.EntityUtils.isPersistedEntityType;
 import static ua.com.fielden.platform.utils.EntityUtils.isSyntheticBasedOnPersistentEntityType;
 import static ua.com.fielden.platform.utils.EntityUtils.isSyntheticEntityType;
@@ -24,6 +25,7 @@ import java.math.BigDecimal;
 import java.math.MathContext;
 import java.math.RoundingMode;
 import java.sql.Timestamp;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.NoSuchElementException;
@@ -45,6 +47,11 @@ import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.sample.domain.TgAuthor;
 import ua.com.fielden.platform.sample.domain.TgAverageFuelUsage;
+import ua.com.fielden.platform.sample.domain.TgMeterReading;
+import ua.com.fielden.platform.sample.domain.TgOrgUnit2;
+import ua.com.fielden.platform.sample.domain.TgOrgUnit3;
+import ua.com.fielden.platform.sample.domain.TgOrgUnit4;
+import ua.com.fielden.platform.sample.domain.TgOrgUnit5;
 import ua.com.fielden.platform.sample.domain.TgReVehicleModel;
 import ua.com.fielden.platform.sample.domain.UnionEntity;
 import ua.com.fielden.platform.security.user.User;
@@ -58,7 +65,6 @@ public class EntityUtilsTest {
     private final EntityModuleWithPropertyFactory module = new CommonTestEntityModuleWithPropertyFactory();
     private final Injector injector = new ApplicationInjectorFactory().add(module).getInjector();
     private final EntityFactory factory = injector.getInstance(EntityFactory.class);
-
 
     @Test
     public void safe_comparison_considers_two_null_values_equal() {
@@ -76,7 +82,7 @@ public class EntityUtilsTest {
         assertEquals(Integer.valueOf(42).compareTo(Integer.valueOf(13)), EntityUtils.safeCompare(42, 13));
         assertEquals(Integer.valueOf(13).compareTo(Integer.valueOf(42)), EntityUtils.safeCompare(13, 42));
     }
-    
+
     @Test
     public void copy_copies_all_properties_if_non_are_skipped() {
         final Entity entity = factory.newEntity(Entity.class);
@@ -86,7 +92,7 @@ public class EntityUtilsTest {
         entity.setDesc("description");
         entity.setMoney(new Money("23.25"));
 
-        final Entity copy = factory.newEntity(Entity.class); 
+        final Entity copy = factory.newEntity(Entity.class);
         EntityUtils.copy(entity, copy);
 
         assertEquals("Copy does not equal to the original instance", entity, copy);
@@ -106,7 +112,7 @@ public class EntityUtilsTest {
         entity.setDesc("description");
         entity.setMoney(new Money("23.25"));
 
-        final Entity copy = factory.newEntity(Entity.class); 
+        final Entity copy = factory.newEntity(Entity.class);
         EntityUtils.copy(entity, copy, VERSION, ID);
 
         assertEquals("Copy does not equal to the original instance", entity, copy);
@@ -126,7 +132,7 @@ public class EntityUtilsTest {
         entity.setDesc("description");
         entity.setMoney(new Money("23.25"));
 
-        final Entity copy = factory.newEntity(Entity.class); 
+        final Entity copy = factory.newEntity(Entity.class);
         EntityUtils.copy(entity, copy, "money", DESC);
 
         assertEquals("Copy does not equal to the original instance", entity, copy);
@@ -171,32 +177,32 @@ public class EntityUtilsTest {
         assertEquals("Incorrect collectional entity class", UserAndRoleAssociation.class, AnnotationReflector.getAnnotation(userRolesField, IsProperty.class).value());
         assertEquals("Incorrect collectional entity link property", "user", AnnotationReflector.getAnnotation(userRolesField, IsProperty.class).linkProperty());
     }
-    
+
     @Test
     public void two_nulls_are_comparible_and_equal() {
         assertEquals(0, EntityUtils.compare(null, null));
     }
-    
+
     @Test
     public void null_is_smaller_than_non_null() {
         assertTrue(EntityUtils.compare(null, factory.newEntity(Entity.class)) < 0);
     }
-    
+
     @Test
     public void non_null_is_greater_than_null() {
         assertTrue(EntityUtils.compare(factory.newEntity(Entity.class), null) > 0);
     }
-    
+
     @Test
     public void the_result_of_comparing_two_non_nulls_matches_the_result_of_comparing_them_with_compareTo() {
         final Entity entity1 = factory.newByKey(Entity.class, "1");
         final Entity entity2 = factory.newByKey(Entity.class, "2");
-        
+
         assertEquals(entity1.compareTo(entity2), EntityUtils.compare(entity1, entity2));
         assertEquals(entity2.compareTo(entity1), EntityUtils.compare(entity2, entity1));
         assertEquals(entity1.compareTo(entity1), EntityUtils.compare(entity1, entity1));
     }
-    
+
     @Test
     public void non_persistent_and_non_synthetic_and_non_union_entities_are_recognised_as_such() {
         assertFalse(isPersistedEntityType(Entity.class));
@@ -204,16 +210,16 @@ public class EntityUtilsTest {
         assertFalse(isSyntheticBasedOnPersistentEntityType(Entity.class));
         assertFalse(isUnionEntityType(Entity.class));
     }
-    
-    @Test 
+
+    @Test
     public void union_entity_is_recognised_as_such() {
         assertFalse(isPersistedEntityType(UnionEntity.class));
         assertFalse(isSyntheticEntityType(UnionEntity.class));
         assertFalse(isSyntheticBasedOnPersistentEntityType(UnionEntity.class));
         assertTrue(isUnionEntityType(UnionEntity.class));
     }
-    
-    @Test 
+
+    @Test
     public void persistent_entity_is_recognised_as_such() {
         assertTrue(isPersistedEntityType(TgAuthor.class));
         assertFalse(isSyntheticEntityType(TgAuthor.class));
@@ -221,7 +227,7 @@ public class EntityUtilsTest {
         assertFalse(isUnionEntityType(TgAuthor.class));
     }
 
-    @Test 
+    @Test
     public void synthetic_entity_is_recognised_as_such() {
         assertFalse(isPersistedEntityType(TgAverageFuelUsage.class));
         assertTrue(isSyntheticEntityType(TgAverageFuelUsage.class));
@@ -229,22 +235,22 @@ public class EntityUtilsTest {
         assertFalse(isUnionEntityType(TgAverageFuelUsage.class));
     }
 
-    @Test 
+    @Test
     public void synthetic_entity_derived_from_persisten_entity_is_recognised_as_synthetic_and_as_synthetic_based_on_persistent_entity_type() {
         assertFalse(isPersistedEntityType(TgReVehicleModel.class));
         assertTrue(isSyntheticEntityType(TgReVehicleModel.class));
         assertTrue(isSyntheticBasedOnPersistentEntityType(TgReVehicleModel.class));
         assertFalse(isUnionEntityType(TgReVehicleModel.class));
     }
-    
-    @Test 
+
+    @Test
     public void null_does_not_belong_to_any_of_entity_type_classiciations() {
         assertFalse(isPersistedEntityType(null));
         assertFalse(isSyntheticEntityType(null));
         assertFalse(isSyntheticBasedOnPersistentEntityType(null));
         assertFalse(isUnionEntityType(null));
     }
-    
+
     @Test
     public void equalsEx_correctly_compares_instances_of_BigDecimal() {
         assertTrue(equalsEx(new BigDecimal("0.42"), new BigDecimal("0.42")));
@@ -268,7 +274,7 @@ public class EntityUtilsTest {
     public void coalesce_returns_the_first_non_null_value() {
         assertEquals("third", coalesce(null, null, "third"));
     }
-    
+
     @Test(expected = NoSuchElementException.class)
     public void coalesce_throws_exception_if_all_values_are_null() {
         coalesce(null, null, null, null);
@@ -343,9 +349,9 @@ public class EntityUtilsTest {
         entity2.setKey("E2");
         final Entity entity3 = factory.newEntity(Entity.class);
         entity3.setKey("E3");
-        
+
         entity1.setEntity(entity2.setEntity(entity3));
-        
+
         final List<T2<String, Optional<? extends AbstractEntity<?>>>> trace = EntityUtils.traversePropPath(entity1, "entity.entity.date").collect(toList());
         assertEquals(2, trace.size());
         final T2<String, Optional<? extends AbstractEntity<?>>> t2_1 = trace.get(0);
@@ -364,9 +370,9 @@ public class EntityUtilsTest {
         entity2.setKey("E2");
         final Entity entity3 = factory.newEntity(Entity.class);
         entity3.setKey("E3");
-        
+
         entity1.setEntity(entity2.setEntity(entity3));
-        
+
         final List<T2<String, Optional<? extends AbstractEntity<?>>>> trace = EntityUtils.traversePropPath(entity1, "entity.entity").collect(toList());
         assertEquals(2, trace.size());
         final T2<String, Optional<? extends AbstractEntity<?>>> t2_1 = trace.get(0);
@@ -385,9 +391,9 @@ public class EntityUtilsTest {
         entity2.setKey("E2");
         final Entity entity3 = factory.newEntity(Entity.class);
         entity3.setKey("E3");
-        
+
         entity1.setEntity(entity2.setEntity(entity3));
-        
+
         final List<T2<String, Optional<? extends AbstractEntity<?>>>> trace = EntityUtils.traversePropPath(entity1, "entity.entity.entity.date").collect(toList());
         assertEquals(3, trace.size());
         final T2<String, Optional<? extends AbstractEntity<?>>> t2_1 = trace.get(0);
@@ -410,10 +416,10 @@ public class EntityUtilsTest {
         final Entity entity3 = factory.newEntity(Entity.class);
         entity3.setKey("E3");
         entity3.setDate(new Date());
-        
+
         entity1.setEntity(entity2.setEntity(entity3));
         assertNull(entity1.getEntity().getEntity().getEntity());
-        
+
         final Stream<?> stream = EntityUtils.traversePropPath(entity1, "entity.entity.date.entity");
         assertEquals(0, stream.count());
     }
@@ -422,7 +428,7 @@ public class EntityUtilsTest {
     public void traversing_path_with_one_non_entity_typed_property_produces_empty_stream() {
         final Entity entity1 = factory.newEntity(Entity.class);
         entity1.setKey("E1");
-        
+
         final List<T2<String, Optional<? extends AbstractEntity<?>>>> trace = EntityUtils.traversePropPath(entity1, "date").collect(toList());
         assertEquals(0, trace.size());
     }
@@ -431,7 +437,7 @@ public class EntityUtilsTest {
     public void traversing_path_with_one_entity_typed_property_produces_stream_with_one_element() {
         final Entity entity1 = factory.newEntity(Entity.class);
         entity1.setKey("E1");
-        
+
         final List<T2<String, Optional<? extends AbstractEntity<?>>>> trace = EntityUtils.traversePropPath(entity1, "entity").collect(toList());
         assertEquals(1, trace.size());
 
@@ -439,4 +445,73 @@ public class EntityUtilsTest {
         assertEquals("entity", t2_1._1);
     }
 
+    @Test
+    public void getting_subprops_paths_for_querying_composite_entity_key_works_for_composite_key_without_further_nesting() {
+        final List<String> actual = getSubpropsPathsForQueryingByCompositeEntityKeyValue(TgMeterReading.class, null);
+        final List<String> expected = new ArrayList<>();
+        expected.add("vehicle.key");
+        expected.add("readingDate");
+        assertEquals(expected, actual);
+    }
+    
+    @Test
+    public void getting_subprops_paths_for_querying_composite_entity_key_works_for_composite_key_without_further_nesting_and_with_parent_context_path() {
+        final List<String> actual = getSubpropsPathsForQueryingByCompositeEntityKeyValue(TgMeterReading.class, "mr");
+        final List<String> expected = new ArrayList<>();
+        expected.add("mr.vehicle.key");
+        expected.add("mr.readingDate");
+        assertEquals(expected, actual);
+    }
+
+    
+    @Test
+    public void getting_subprops_paths_for_querying_composite_entity_key_works_for_composite_key_with_one_level_nesting() {
+        final List<String> actual = getSubpropsPathsForQueryingByCompositeEntityKeyValue(TgOrgUnit2.class, null);
+        final List<String> expected = new ArrayList<>();
+        expected.add("parent.key");
+        expected.add("name");
+        assertEquals(expected, actual);
+    }
+    
+    @Test
+    public void getting_subprops_paths_for_querying_composite_entity_key_works_for_composite_key_with_one_level_nesting_and_with_parent_context_path() {
+        final List<String> actual = getSubpropsPathsForQueryingByCompositeEntityKeyValue(TgOrgUnit2.class, "parent.parent");
+        final List<String> expected = new ArrayList<>();
+        expected.add("parent.parent.parent.key");
+        expected.add("parent.parent.name");
+        assertEquals(expected, actual);
+    }
+
+    @Test
+    public void getting_subprops_paths_for_querying_composite_entity_key_works_for_composite_key_with_two_levels_nesting() {
+        final List<String> actual = getSubpropsPathsForQueryingByCompositeEntityKeyValue(TgOrgUnit3.class, null);
+        final List<String> expected = new ArrayList<>();
+        expected.add("parent.parent.key");
+        expected.add("parent.name");
+        expected.add("name");
+        assertEquals(expected, actual);
+    }
+
+    @Test
+    public void getting_subprops_paths_for_querying_composite_entity_key_works_for_composite_key_with_three_levels_nesting() {
+        final List<String> actual = getSubpropsPathsForQueryingByCompositeEntityKeyValue(TgOrgUnit4.class, null);
+        final List<String> expected = new ArrayList<>();
+        expected.add("parent.parent.parent.key");
+        expected.add("parent.parent.name");
+        expected.add("parent.name");
+        expected.add("name");
+        assertEquals(expected, actual);
+    }
+
+    @Test
+    public void getting_subprops_paths_for_querying_composite_entity_key_works_for_composite_key_with_four_levels_nesting() {
+        final List<String> actual = getSubpropsPathsForQueryingByCompositeEntityKeyValue(TgOrgUnit5.class, null);
+        final List<String> expected = new ArrayList<>();
+        expected.add("parent.parent.parent.parent.key");
+        expected.add("parent.parent.parent.name");
+        expected.add("parent.parent.name");
+        expected.add("parent.name");
+        expected.add("name");
+        assertEquals(expected, actual);
+    }
 }
