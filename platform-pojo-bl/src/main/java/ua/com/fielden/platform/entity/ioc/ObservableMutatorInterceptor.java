@@ -20,7 +20,6 @@ import ua.com.fielden.platform.entity.validation.annotation.ValidationAnnotation
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
-import ua.com.fielden.platform.utils.PropertyChangeSupportEx.CheckingStrategy;
 
 /**
  *
@@ -113,9 +112,6 @@ public class ObservableMutatorInterceptor implements MethodInterceptor {
                 final Result result = property.validate(newValue, property.getValidationAnnotations(), false);
                 if (!result.isSuccessful()) {
                     logger.debug(format("Property \"%s\" validation failed: %s", fullPropertyName, property.getFirstFailure()));
-                    // IMPORTANT : it fires ONLY the PropertyChangeOrIncorrectAttemptListeners!!!
-                    entity.getChangeSupport().firePropertyChange(propertyName, currValue, newValue, propertyWasValidAndNotEnforced(property, wasValid)
-                            ? CheckingStrategy.CHECK_EQUALITY : CheckingStrategy.CHECK_NOTHING, true);
                     // This return is a tricky one, since there in no really information as to what should be returned by the original method call.
                     // However, so far, validation was associated only with entity setters, which should return an instance of its owner or void.
                     return entity;
@@ -172,10 +168,6 @@ public class ObservableMutatorInterceptor implements MethodInterceptor {
             } else {
                 final Object newValue = mutator.getArguments()[0];
                 // ///// ALL validation succeeded : ///////
-                // fire change event: if wasValid - use standard equality checking, if wasInvalid -> fire all listeners events always!
-                // IMPORTANT : it fires ALL the listeners - including the PropertyChangeOrIncorrectAttemptListeners and all other listeners added externally by the user
-                entity.getChangeSupport().firePropertyChange(propertyName, oldValue, newValue, wasValidAndNotEnforced ? CheckingStrategy.CHECK_EQUALITY
-                        : CheckingStrategy.CHECK_NOTHING, false);
                 // update meta-property information
                 final MetaProperty metaProperty = entity.getProperty(propertyName);
                 // set previous value and recalculate meta-property properties based on the new value
@@ -228,24 +220,6 @@ public class ObservableMutatorInterceptor implements MethodInterceptor {
             } else {
                 // get new value and size
                 final Collection<?> newValue = entity.get(propertyName);
-                final Integer newSize = newValue == null ? 0 : newValue.size();
-                
-                // At this stage firing of property changes will occur in most cases:
-                if (Mutator.SETTER == Mutator.getValueByMethod(mutator.getMethod())) {
-                    // firing will occur always, collection is not checked on equality with its previous value
-                    // TODO the statement above is no longer valid... however, the change support with fire property changes is most likely irrelevant and needs to be phased out. 
-                    entity.getChangeSupport().firePropertyChange(propertyName, 0, 1);
-                } else {
-                    if (Mutator.INCREMENTOR == Mutator.getValueByMethod(mutator.getMethod())) {
-                        // firing will occur always, collection is not checked on equality with its previous value. Edge-case: if collection elements is of type Integer and newAddedValue equals to old size of collection.
-                        final Object newAddedValue = mutator.getArguments()[0];
-                        entity.getChangeSupport().firePropertyChange(propertyName, currSize, newAddedValue);
-                    } else { // is DECREMENTOR
-                        // firing will occur always, collection is not checked on equality with its previous value. Edge-case: if collection elements is of type Integer and oldRemovedValue equals to new size of collection.
-                        final Object oldRemovedValue = mutator.getArguments()[0];
-                        entity.getChangeSupport().firePropertyChange(propertyName, oldRemovedValue, newSize);
-                    }
-                }
                 // update meta-property information
                 final MetaProperty<Collection<?>> metaProperty = entity.getProperty(propertyName);
                 // set previous value and recalculate meta-property properties based on the new value
@@ -307,29 +281,20 @@ public class ObservableMutatorInterceptor implements MethodInterceptor {
                 metaProperty.setValidationResult(ValidationAnnotation.DYNAMIC, StubValidator.singleton, new Result(entity, "Dynamic validation (inside the setter) passed correctly."));
             }
             return new SetterResult(true, setterReturningValue);
-        } catch (final Throwable ex) {
-            if (ex instanceof Result) {
-                if (!metaProperty.containsDynamicValidator()) {
-                    metaProperty.putDynamicValidator();
-                }
-                // All validation proceeded successfully except the validation inside the setter (DYNAMIC validation).
-                metaProperty.setValidationResult(ValidationAnnotation.DYNAMIC, StubValidator.singleton, (Result) ex);
-                final boolean isWarning = ((Result) ex).isWarning();
-                if (!isWarning) {
-                    final Object oldValue = newAndOldValues.getValue();
-                    final Object newValue = newAndOldValues.getKey();
-                    // Important : some components (such as Autocompleter) use LastInvalidValue as updating value. So it HAVE TO BE correctly updated!
-                    metaProperty.setLastInvalidValue(newValue);
-                    // fire IncorrectAttemptListeners :
-                    entity.getChangeSupport().firePropertyChange(propertyName, oldValue, newValue, wasValidAndNotEnforced ? CheckingStrategy.CHECK_EQUALITY
-                            : CheckingStrategy.CHECK_NOTHING, true);
-                }
-                return new SetterResult(isWarning, null);
-            } else {
-                // the exception occurred in setter - is of unknown type - so throw it on the higher level.
-                throw ex;
+        } catch (final Result ex) {
+            if (!metaProperty.containsDynamicValidator()) {
+                metaProperty.putDynamicValidator();
             }
-        }
+            // All validation proceeded successfully except the validation inside the setter (DYNAMIC validation).
+            metaProperty.setValidationResult(ValidationAnnotation.DYNAMIC, StubValidator.singleton, (Result) ex);
+            final boolean isWarning = ((Result) ex).isWarning();
+            if (!isWarning) {
+                final Object newValue = newAndOldValues.getKey();
+                // Important : some components (such as Autocompleter) use LastInvalidValue as updating value. So it HAS TO BE correctly updated!
+                metaProperty.setLastInvalidValue(newValue);
+            }
+            return new SetterResult(isWarning, null);
+       }
     }
 
     /**
