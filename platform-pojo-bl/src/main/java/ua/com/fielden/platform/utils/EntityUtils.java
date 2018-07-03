@@ -936,30 +936,6 @@ public class EntityUtils {
     public static class BigDecimalWithTwoPlaces {
     };
 
-    /**
-     * Produces list of props that should be added to order model instead of composite key.
-     *
-     * @param entityType
-     * @param prefix
-     * @return
-     */
-    public static List<String> getOrderPropsFromCompositeEntityKey(final Class<? extends AbstractEntity<DynamicEntityKey>> entityType, final String prefix) {
-        final List<String> result = new ArrayList<>();
-        final List<Field> keyProps = Finder.getKeyMembers(entityType);
-        for (final Field keyMemberProp : keyProps) {
-            if (DynamicEntityKey.class.equals(getKeyType(keyMemberProp.getType()))) {
-                result.addAll(getOrderPropsFromCompositeEntityKey((Class<AbstractEntity<DynamicEntityKey>>) keyMemberProp.getType(), (prefix != null ? prefix + "." : "")
-                        + keyMemberProp.getName()));
-            } else if (isEntityType(keyMemberProp.getType())) {
-                result.add((prefix != null ? prefix + "." : "") + keyMemberProp.getName() + ".key");
-            } else {
-                result.add((prefix != null ? prefix + "." : "") + keyMemberProp.getName());
-            }
-        }
-
-        return result;
-    }
-
     public static SortedSet<String> getFirstLevelProps(final Set<String> allProps) {
         final SortedSet<String> result = new TreeSet<>();
         for (final String prop : allProps) {

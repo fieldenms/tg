@@ -1,7 +1,8 @@
 package ua.com.fielden.platform.entity.query.generation.elements;
 
 import static ua.com.fielden.platform.reflection.AnnotationReflector.getKeyType;
-import static ua.com.fielden.platform.utils.EntityUtils.getOrderPropsFromCompositeEntityKey;
+import static ua.com.fielden.platform.utils.EntityUtils.getSubpropsPathsForQueryingByCompositeEntityKeyValue;
+import static ua.com.fielden.platform.utils.EntityUtils.isCompositeEntity;
 import static ua.com.fielden.platform.utils.EntityUtils.isPersistedEntityType;
 import static ua.com.fielden.platform.utils.EntityUtils.isSyntheticBasedOnPersistentEntityType;
 import static ua.com.fielden.platform.utils.EntityUtils.isUnionEntityType;
@@ -37,6 +38,7 @@ import ua.com.fielden.platform.entity.query.generation.elements.AbstractSource.P
 import ua.com.fielden.platform.entity.query.generation.elements.ResultQueryYieldDetails.YieldDetailsType;
 import ua.com.fielden.platform.entity.query.model.ConditionModel;
 import ua.com.fielden.platform.types.Money;
+import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
 
 public class EntQuery implements ISingleOperand {
@@ -277,8 +279,8 @@ public class EntQuery implements ISingleOperand {
         final List<OrderBy> toBeAdded = new ArrayList<>();
         for (final OrderBy orderBy : orderings.getModels()) {
             if (orderBy.getYieldName() != null) {
-                if (orderBy.getYieldName().equals("key") && DynamicEntityKey.class.equals(getKeyType(resultType))) {
-                    final List<String> keyOrderProps = getOrderPropsFromCompositeEntityKey((Class<? extends AbstractEntity<DynamicEntityKey>>) resultType, sources.getMain().getAlias());
+                if (orderBy.getYieldName().equals("key") && isCompositeEntity(resultType)) {
+                    final List<String> keyOrderProps = getSubpropsPathsForQueryingByCompositeEntityKeyValue((Class<? extends AbstractEntity<DynamicEntityKey>>) resultType, sources.getMain().getAlias());
                     for (final String keyMemberProp : keyOrderProps) {
                         toBeAdded.add(new OrderBy(new EntProp(keyMemberProp), orderBy.isDesc()));
                     }
@@ -315,8 +317,8 @@ public class EntQuery implements ISingleOperand {
         if (original.getYieldName().endsWith(".key")) {
             final String prop = original.getYieldName().substring(0, original.getYieldName().length() - 4);
             final PropertyMetadata info = domainMetadataAnalyser.getInfoForDotNotatedProp(resultType, prop);
-            if (DynamicEntityKey.class.equals(getKeyType(info.getJavaType()))) {
-                final List<String> keyOrderProps = getOrderPropsFromCompositeEntityKey(info.getJavaType(), propName.substring(0, propName.length() - 4));
+            if (isCompositeEntity(info.getJavaType())) {
+                final List<String> keyOrderProps = getSubpropsPathsForQueryingByCompositeEntityKeyValue(info.getJavaType(), propName.substring(0, propName.length() - 4));
                 for (final String keyMemberProp : keyOrderProps) {
                     result.add(new OrderBy(new EntProp(keyMemberProp), original.isDesc()));
                 }
