@@ -145,7 +145,7 @@
         <iron-pages id="views" selected="[[_selectedView]]" on-iron-select="_pageSelectionChanged">
             <div class="fit layout vertical">
                 <paper-material class="selection-material layout vertical">
-                    <tg-selection-view id="selectionView" _show-dialog="[[_showDialog]]" save-as-name="{{saveAsName}}" _create-context-holder="[[_createContextHolder]]" uuid="[[uuid]]" _confirm="[[_confirm]]" _bind-centre-info="[[_bindCentreInfo]]">
+                    <tg-selection-view id="selectionView" _show-dialog="[[_showDialog]]" save-as-name="{{saveAsName}}" _create-context-holder="[[_createContextHolder]]" uuid="[[uuid]]" _confirm="[[_confirm]]" _create-action-object="[[_createActionObject]]">
                         <content select=".custom-front-action"></content>
                         <content select=".custom-selection-criteria"></content>
                         <div class="selection-criteria-buttons layout horizontal justified wrap">
@@ -210,6 +210,12 @@
             },
             _url: Function,
             _bindCentreInfo: Function,
+            /**
+             * Creates standard action object for centre config action like EDIT, LOAD etc.
+             */
+            _createActionObject: {
+                type: Function
+            },
             _processDiscarderResponse: Function,
             _processDiscarderError: Function,
             _saverDisabled: Boolean,
@@ -248,23 +254,26 @@
         
         attached: function () {
             const self = this;
-            
-            self.bottomActions = [
-                {
+            self._createActionObject = function (entityType, createPreActionPromise) {
+                return {
                     preAction: function (action) {
                         action.modifyFunctionalEntity = function (bindingEntity, master, action) {
                             self._bindCentreInfo(master._currEntity.get('customObject'));
                         };
-                        return Promise.resolve(true);
+                        return createPreActionPromise ? createPreActionPromise() : Promise.resolve(true);
                     },
                     postActionSuccess: function (functionalEntity, action) {
                         self._bindCentreInfo(functionalEntity.get('customObject'));
                     },
                     attrs: {
-                        entityType:'ua.com.fielden.platform.web.centre.CentreConfigEditAction', currentState:'EDIT', centreUuid: self.uuid
+                        entityType: entityType, currentState: 'EDIT', centreUuid: self.uuid
                     },
                     postActionError: function (functionalEntity, action) {}
-                }
+                };
+            };
+            
+            self.bottomActions = [
+                self._createActionObject('ua.com.fielden.platform.web.centre.CentreConfigEditAction')
             ];
         },
         

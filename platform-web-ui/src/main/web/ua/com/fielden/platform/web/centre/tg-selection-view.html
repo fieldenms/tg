@@ -66,7 +66,12 @@
 
             properties: {
                 _showDialog: Function,
-                _bindCentreInfo: Function,
+                /**
+                 * Creates standard action object for centre config action like EDIT, LOAD etc.
+                 */
+                _createActionObject: {
+                    type: Function
+                },
                 /**
                  * Current saveAsName for centre configuration. This will flow upward to main centre elements.
                  */
@@ -97,81 +102,11 @@
                 }, 1);
                 
                 self.topLevelActions = [
-                    {
-                        preAction: function (action) {
-                            action.modifyFunctionalEntity = function (bindingEntity, master, action) {
-                                self._bindCentreInfo(master._currEntity.get('customObject'));
-                            };
-                            return Promise.resolve(true);
-                        },
-                        postActionSuccess: function (functionalEntity, action) {
-                            self._bindCentreInfo(functionalEntity.get('customObject'));
-                        },
-                        attrs: {
-                            entityType:'ua.com.fielden.platform.web.centre.CentreConfigEditAction', currentState:'EDIT', centreUuid: self.uuid
-                        },
-                        postActionError: function (functionalEntity, action) {}
-                    },
-                    {
-                        preAction: function (action) {
-                            action.modifyFunctionalEntity = function (bindingEntity, master, action) {
-                                self._bindCentreInfo(master._currEntity.get('customObject'));
-                            };
-                            return Promise.resolve(true);
-                        },
-                        postActionSuccess: function (functionalEntity, action) {
-                            self._bindCentreInfo(functionalEntity.get('customObject'));
-                        },
-                        attrs: {
-                            entityType:'ua.com.fielden.platform.web.centre.CentreConfigLoadAction', currentState:'EDIT', centreUuid: self.uuid
-                        },
-                        postActionError: function (functionalEntity, action) {}
-                    },
-                    {
-                        preAction: function (action) {
-                            action.modifyFunctionalEntity = function (bindingEntity, master, action) {
-                                self._bindCentreInfo(master._currEntity.get('customObject'));
-                            };
-                            return Promise.resolve(true);
-                        },
-                        postActionSuccess: function (functionalEntity, action) {
-                            self._bindCentreInfo(functionalEntity.get('customObject'));
-                        },
-                        attrs: {
-                            entityType:'ua.com.fielden.platform.web.centre.CentreConfigEditAction', currentState:'EDIT', centreUuid: self.uuid
-                        },
-                        postActionError: function (functionalEntity, action) {}
-                    },
-                    {
-                        preAction: function (action) {
-                            action.modifyFunctionalEntity = function (bindingEntity, master, action) {
-                                self._bindCentreInfo(master._currEntity.get('customObject'));
-                            };
-                            return self._confirm('Should this configuration be deleted?', [{name:'YES', confirm:true, autofocus:true}, {name:'NO'}]);
-                        },
-                        postActionSuccess: function (functionalEntity, action) {
-                            self._bindCentreInfo(functionalEntity.get('customObject'));
-                        },
-                        attrs: {
-                            entityType:'ua.com.fielden.platform.web.centre.CentreConfigDeleteAction', currentState:'EDIT', centreUuid: self.uuid
-                        },
-                        postActionError: function (functionalEntity, action) {}
-                    },
-                    {
-                        preAction: function (action) {
-                            action.modifyFunctionalEntity = function (bindingEntity, master, action) {
-                                self._bindCentreInfo(master._currEntity.get('customObject'));
-                            };
-                            return Promise.resolve(true);
-                        },
-                        postActionSuccess: function (functionalEntity, action) {
-                            self._bindCentreInfo(functionalEntity.get('customObject'));
-                        },
-                        attrs: {
-                            entityType:'ua.com.fielden.platform.web.centre.CentreConfigDeleteAction', currentState:'EDIT', centreUuid: self.uuid
-                        },
-                        postActionError: function (functionalEntity, action) {}
-                    }
+                    self._createActionObject('ua.com.fielden.platform.web.centre.CentreConfigEditAction'),
+                    self._createActionObject('ua.com.fielden.platform.web.centre.CentreConfigLoadAction'),
+                    self._createActionObject('ua.com.fielden.platform.web.centre.CentreConfigEditAction'),
+                    self._createActionObject('ua.com.fielden.platform.web.centre.CentreConfigDeleteAction', () => self._confirm('Should this configuration be deleted?', [{name:'YES', confirm:true, autofocus:true}, {name:'NO'}])),
+                    self._createActionObject('ua.com.fielden.platform.web.centre.CentreConfigDeleteAction')
                 ];
             },
 
