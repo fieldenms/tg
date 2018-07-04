@@ -9,10 +9,11 @@ import static org.junit.Assert.assertTrue;
 import static ua.com.fielden.platform.entity.AbstractEntity.DESC;
 import static ua.com.fielden.platform.entity.AbstractEntity.ID;
 import static ua.com.fielden.platform.entity.AbstractEntity.VERSION;
+import static ua.com.fielden.platform.utils.CollectionUtil.listOf;
 import static ua.com.fielden.platform.utils.EntityUtils.coalesce;
 import static ua.com.fielden.platform.utils.EntityUtils.equalsEx;
 import static ua.com.fielden.platform.utils.EntityUtils.getCollectionalProperties;
-import static ua.com.fielden.platform.utils.EntityUtils.getSubpropsPathsForQueryingByCompositeEntityKeyValue;
+import static ua.com.fielden.platform.utils.EntityUtils.keyPaths;
 import static ua.com.fielden.platform.utils.EntityUtils.isPersistedEntityType;
 import static ua.com.fielden.platform.utils.EntityUtils.isSyntheticBasedOnPersistentEntityType;
 import static ua.com.fielden.platform.utils.EntityUtils.isSyntheticEntityType;
@@ -25,7 +26,6 @@ import java.math.BigDecimal;
 import java.math.MathContext;
 import java.math.RoundingMode;
 import java.sql.Timestamp;
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.NoSuchElementException;
@@ -53,6 +53,7 @@ import ua.com.fielden.platform.sample.domain.TgOrgUnit3;
 import ua.com.fielden.platform.sample.domain.TgOrgUnit4;
 import ua.com.fielden.platform.sample.domain.TgOrgUnit5;
 import ua.com.fielden.platform.sample.domain.TgReVehicleModel;
+import ua.com.fielden.platform.sample.domain.TgVehicle;
 import ua.com.fielden.platform.sample.domain.UnionEntity;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.security.user.UserAndRoleAssociation;
@@ -446,72 +447,50 @@ public class EntityUtilsTest {
     }
 
     @Test
-    public void getting_subprops_paths_for_querying_composite_entity_key_works_for_composite_key_without_further_nesting() {
-        final List<String> actual = getSubpropsPathsForQueryingByCompositeEntityKeyValue(TgMeterReading.class, null);
-        final List<String> expected = new ArrayList<>();
-        expected.add("vehicle.key");
-        expected.add("readingDate");
-        assertEquals(expected, actual);
+    public void key_paths_works_for_simple_key() {
+        assertEquals(listOf("key"), 
+                keyPaths(TgVehicle.class));
     }
     
     @Test
-    public void getting_subprops_paths_for_querying_composite_entity_key_works_for_composite_key_without_further_nesting_and_with_parent_context_path() {
-        final List<String> actual = getSubpropsPathsForQueryingByCompositeEntityKeyValue(TgMeterReading.class, "mr");
-        final List<String> expected = new ArrayList<>();
-        expected.add("mr.vehicle.key");
-        expected.add("mr.readingDate");
-        assertEquals(expected, actual);
-    }
-
-    
-    @Test
-    public void getting_subprops_paths_for_querying_composite_entity_key_works_for_composite_key_with_one_level_nesting() {
-        final List<String> actual = getSubpropsPathsForQueryingByCompositeEntityKeyValue(TgOrgUnit2.class, null);
-        final List<String> expected = new ArrayList<>();
-        expected.add("parent.key");
-        expected.add("name");
-        assertEquals(expected, actual);
+    public void key_paths_works_for_composite_key_without_further_nesting() {
+        assertEquals(listOf("vehicle.key", "readingDate"), 
+                keyPaths(TgMeterReading.class));
     }
     
     @Test
-    public void getting_subprops_paths_for_querying_composite_entity_key_works_for_composite_key_with_one_level_nesting_and_with_parent_context_path() {
-        final List<String> actual = getSubpropsPathsForQueryingByCompositeEntityKeyValue(TgOrgUnit2.class, "parent.parent");
-        final List<String> expected = new ArrayList<>();
-        expected.add("parent.parent.parent.key");
-        expected.add("parent.parent.name");
-        assertEquals(expected, actual);
+    public void key_paths_works_for_composite_key_without_further_nesting_and_with_parent_context_path() {
+        assertEquals(listOf("mr.vehicle.key", "mr.readingDate"),
+                keyPaths(TgMeterReading.class, "mr"));
+    }
+    
+    @Test
+    public void key_paths_works_for_composite_key_with_one_level_nesting() {
+        assertEquals(listOf("parent.key", "name"),
+                keyPaths(TgOrgUnit2.class));
+    }
+    
+    @Test
+    public void key_paths_works_for_composite_key_with_one_level_nesting_and_with_parent_context_path() {
+        assertEquals(listOf("parent.parent.parent.key", "parent.parent.name"),
+                keyPaths(TgOrgUnit2.class, "parent.parent"));
     }
 
     @Test
-    public void getting_subprops_paths_for_querying_composite_entity_key_works_for_composite_key_with_two_levels_nesting() {
-        final List<String> actual = getSubpropsPathsForQueryingByCompositeEntityKeyValue(TgOrgUnit3.class, null);
-        final List<String> expected = new ArrayList<>();
-        expected.add("parent.parent.key");
-        expected.add("parent.name");
-        expected.add("name");
-        assertEquals(expected, actual);
+    public void key_paths_works_for_composite_key_with_two_levels_nesting() {
+        assertEquals(listOf("parent.parent.key", "parent.name", "name"), 
+                keyPaths(TgOrgUnit3.class));
     }
 
     @Test
-    public void getting_subprops_paths_for_querying_composite_entity_key_works_for_composite_key_with_three_levels_nesting() {
-        final List<String> actual = getSubpropsPathsForQueryingByCompositeEntityKeyValue(TgOrgUnit4.class, null);
-        final List<String> expected = new ArrayList<>();
-        expected.add("parent.parent.parent.key");
-        expected.add("parent.parent.name");
-        expected.add("parent.name");
-        expected.add("name");
-        assertEquals(expected, actual);
+    public void key_paths_works_for_composite_key_with_three_levels_nesting() {
+        assertEquals(listOf("parent.parent.parent.key", "parent.parent.name", "parent.name", "name"),
+                keyPaths(TgOrgUnit4.class));
     }
 
     @Test
-    public void getting_subprops_paths_for_querying_composite_entity_key_works_for_composite_key_with_four_levels_nesting() {
-        final List<String> actual = getSubpropsPathsForQueryingByCompositeEntityKeyValue(TgOrgUnit5.class, null);
-        final List<String> expected = new ArrayList<>();
-        expected.add("parent.parent.parent.parent.key");
-        expected.add("parent.parent.parent.name");
-        expected.add("parent.parent.name");
-        expected.add("parent.name");
-        expected.add("name");
-        assertEquals(expected, actual);
+    public void key_paths_works_for_composite_key_with_four_levels_nesting() {
+        assertEquals(listOf("parent.parent.parent.parent.key", "parent.parent.parent.name", "parent.parent.name", "parent.name", "name"),
+                keyPaths(TgOrgUnit5.class));
     }
 }

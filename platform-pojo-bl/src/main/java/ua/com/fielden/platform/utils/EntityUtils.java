@@ -1233,26 +1233,34 @@ public class EntityUtils {
     }
     
     /**
-     * Gets list of all properties paths representing value of composite entity key. Props are listed in composite key members declaration order taking into account cases of multilevel nested composite keys.   
+     * Gets list of all properties paths representing value of entity key. For composite entities props are listed in key members declaration order taking into account cases of multilevel nesting.   
      * 
-     * @param parentContextPath -- path to composite key property within EQL query context.
-     * @param compositeEntityType -- entity type containg composite key property.
+     * @param parentContextPath -- path to key property within EQL query context.
+     * @param entityType -- entity type containing key property.
      * @return
      */
-    public static List<String> getSubpropsPathsForQueryingByCompositeEntityKeyValue(final Class<? extends AbstractEntity<DynamicEntityKey>> compositeEntityType, final String parentContextPath) {
+    public static List<String> keyPaths(final Class<? extends AbstractEntity<?>> entityType, final String parentContextPath) {
     	List<String> result = new ArrayList<>();
 
-    	for (Field keyMember : getKeyMembers(compositeEntityType)) {
+    	for (Field keyMember : getKeyMembers(entityType)) {
 			final String pathToSubprop = parentContextPath != null ? parentContextPath + PROPERTY_SPLITTER  + keyMember.getName() : keyMember.getName();
 			if (!isPersistedEntityType(keyMember.getType())) {
 				result.add(pathToSubprop);
-			} else if (!isCompositeEntity((Class<? extends AbstractEntity<?>>) keyMember.getType()) ){
-				result.add(pathToSubprop + PROPERTY_SPLITTER + KEY);
 			} else {
-				result.addAll(getSubpropsPathsForQueryingByCompositeEntityKeyValue((Class<? extends AbstractEntity<DynamicEntityKey>>) keyMember.getType(), pathToSubprop));
+				result.addAll(keyPaths((Class<? extends AbstractEntity<?>>) keyMember.getType(), pathToSubprop));
 			}
 		}
     	
     	return result;
+    }
+    
+    /**
+     * Gets list of all properties paths representing value of entity key. For composite entities props are listed in key members declaration order taking into account cases of multilevel nesting.   
+     * 
+     * @param entityType -- entity type containing key property.
+     * @return
+     */
+    public static List<String> keyPaths(final Class<? extends AbstractEntity<?>> entityType) {
+        return keyPaths(entityType, null);
     }
 }

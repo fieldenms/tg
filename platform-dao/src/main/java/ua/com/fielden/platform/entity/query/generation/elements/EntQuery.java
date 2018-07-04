@@ -1,7 +1,7 @@
 package ua.com.fielden.platform.entity.query.generation.elements;
 
 import static ua.com.fielden.platform.reflection.AnnotationReflector.getKeyType;
-import static ua.com.fielden.platform.utils.EntityUtils.getSubpropsPathsForQueryingByCompositeEntityKeyValue;
+import static ua.com.fielden.platform.utils.EntityUtils.keyPaths;
 import static ua.com.fielden.platform.utils.EntityUtils.isCompositeEntity;
 import static ua.com.fielden.platform.utils.EntityUtils.isPersistedEntityType;
 import static ua.com.fielden.platform.utils.EntityUtils.isSyntheticBasedOnPersistentEntityType;
@@ -280,7 +280,7 @@ public class EntQuery implements ISingleOperand {
         for (final OrderBy orderBy : orderings.getModels()) {
             if (orderBy.getYieldName() != null) {
                 if (orderBy.getYieldName().equals("key") && isCompositeEntity(resultType)) {
-                    final List<String> keyOrderProps = getSubpropsPathsForQueryingByCompositeEntityKeyValue((Class<? extends AbstractEntity<DynamicEntityKey>>) resultType, sources.getMain().getAlias());
+                    final List<String> keyOrderProps = keyPaths((Class<? extends AbstractEntity<DynamicEntityKey>>) resultType, sources.getMain().getAlias());
                     for (final String keyMemberProp : keyOrderProps) {
                         toBeAdded.add(new OrderBy(new EntProp(keyMemberProp), orderBy.isDesc()));
                     }
@@ -318,7 +318,7 @@ public class EntQuery implements ISingleOperand {
             final String prop = original.getYieldName().substring(0, original.getYieldName().length() - 4);
             final PropertyMetadata info = domainMetadataAnalyser.getInfoForDotNotatedProp(resultType, prop);
             if (isCompositeEntity(info.getJavaType())) {
-                final List<String> keyOrderProps = getSubpropsPathsForQueryingByCompositeEntityKeyValue(info.getJavaType(), propName.substring(0, propName.length() - 4));
+                final List<String> keyOrderProps = keyPaths(info.getJavaType(), propName.substring(0, propName.length() - 4));
                 for (final String keyMemberProp : keyOrderProps) {
                     result.add(new OrderBy(new EntProp(keyMemberProp), original.isDesc()));
                 }
