@@ -2,8 +2,6 @@ package ua.com.fielden.platform.web.centre;
 
 import static java.util.Optional.empty;
 import static java.util.Optional.of;
-import static ua.com.fielden.platform.domaintree.impl.GlobalDomainTreeManager.DEFAULT_CONFIG_DESC;
-import static ua.com.fielden.platform.domaintree.impl.GlobalDomainTreeManager.DEFAULT_CONFIG_TITLE;
 import static ua.com.fielden.platform.error.Result.failure;
 import static ua.com.fielden.platform.web.centre.CentreConfigEditAction.EditKind.COPY;
 import static ua.com.fielden.platform.web.centre.CentreConfigEditAction.EditKind.EDIT;
@@ -52,24 +50,24 @@ public class CentreConfigEditActionProducer extends DefaultEntityProducerWithCon
             final Map<String, Object> customObject = invalidCustomObject(selectionCrit, appliedCriteriaEntity)
                 .map(customObj -> {
                     setSkipUi(entity);
-                    setTitleAndDesc(entity, saveAsName, selectionCrit);
                     return customObj;
                 })
                 .orElseGet(() -> {
-                    if (EDIT.name().equals(entity.getEditKind())) {
+                    if (EDIT.name().equals(entity.getEditKind())) { // EDIT button in top right corner
                         if (isDefaultOrInherited(saveAsName, selectionCrit)) {
                             throw failure(ERR_CANNOT_BE_EDITED);
                         } else {
-                            setTitleAndDesc(entity, saveAsName, selectionCrit);
+                            setTitleAndDesc(entity, saveAsName.get(), selectionCrit);
                         }
-                    } else if (SAVE.name().equals(entity.getEditKind())) { // SAVE button at the bottom of selection criteria or EDIT button in top right corner
+                    } else if (SAVE.name().equals(entity.getEditKind())) { // SAVE button at the bottom of selection criteria
                         if (isDefaultOrInherited(saveAsName, selectionCrit)) {
                             if (!isDefault(saveAsName)) {
-                                setTitleAndDesc(entity, saveAsName, selectionCrit, COPY_ACTION_SUFFIX);
+                                setTitleAndDesc(entity, saveAsName.get(), selectionCrit, COPY_ACTION_SUFFIX);
+                            } else {
+                                makeTitleAndDescRequired(entity);
                             }
                         } else { // owned configuration should be saved without opening 'Save As...' dialog
                             setSkipUi(entity);
-                            setTitleAndDesc(entity, saveAsName, selectionCrit);
                             selectionCrit.freshCentreSaver().run();
                             final Map<String, Object> customObj = getCustomObject(selectionCrit, appliedCriteriaEntity);
                             customObj.remove("wasRun");
@@ -77,8 +75,6 @@ public class CentreConfigEditActionProducer extends DefaultEntityProducerWithCon
                         }
                     } else if (COPY.name().equals(entity.getEditKind())) {
                         setSkipUi(entity);
-                        entity.setTitle(DEFAULT_CONFIG_TITLE);
-                        entity.setDesc(DEFAULT_CONFIG_DESC);
                         selectionCrit.freshCentreCopier().run();
                         // after copying of criteria values against default centre we need to compare it with SAVED version of default centre,
                         // which always holds empty Centre DSL-configured configuration
@@ -92,18 +88,27 @@ public class CentreConfigEditActionProducer extends DefaultEntityProducerWithCon
         return entity;
     }
     
-    private void setSkipUi(final CentreConfigEditAction entity) {
+    private static void setSkipUi(final CentreConfigEditAction entity) {
         entity.setSkipUi(true);
     }
     
-    private void setTitleAndDesc(final CentreConfigEditAction entity, final Optional<String> saveAsName, final EnhancedCentreEntityQueryCriteria<?, ?> selectionCrit) {
+    private static void setTitleAndDesc(final CentreConfigEditAction entity, final String saveAsName, final EnhancedCentreEntityQueryCriteria<?, ?> selectionCrit) {
         setTitleAndDesc(entity, saveAsName, selectionCrit, "");
     }
     
-    private void setTitleAndDesc(final CentreConfigEditAction entity, final Optional<String> saveAsName, final EnhancedCentreEntityQueryCriteria<?, ?> selectionCrit, final String suffix) {
-        final T2<String, String> titleAndDesc = selectionCrit.centreTitleAndDescGetter().apply(saveAsName);
+    private static void setTitleAndDesc(final CentreConfigEditAction entity, final String saveAsName, final EnhancedCentreEntityQueryCriteria<?, ?> selectionCrit, final String suffix) {
+        makeTitleAndDescRequired(entity);
+        
+        // change values
+        final T2<String, String> titleAndDesc = selectionCrit.centreTitleAndDescGetter().apply(of(saveAsName)).get();
         entity.setTitle(titleAndDesc._1 + suffix);
         entity.setDesc(titleAndDesc._2 + suffix);
+    }
+    
+    private static void makeTitleAndDescRequired(final CentreConfigEditAction entity) {
+        // make title and desc required
+        entity.getProperty("title").setRequired(true);
+        entity.getProperty("desc").setRequired(true);
     }
     
     private static EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, ? extends IEntityDao<AbstractEntity<?>>> applyCriteria(final EnhancedCentreEntityQueryCriteria<?, ?> selectionCrit) {
@@ -120,7 +125,7 @@ public class CentreConfigEditActionProducer extends DefaultEntityProducerWithCon
         return empty();
     }
     
-    public static Map<String, Object> getCustomObject(final EnhancedCentreEntityQueryCriteria<?, ?> selectionCrit, final EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, ? extends IEntityDao<AbstractEntity<?>>> appliedCriteriaEntity) {
+    private static Map<String, Object> getCustomObject(final EnhancedCentreEntityQueryCriteria<?, ?> selectionCrit, final EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, ? extends IEntityDao<AbstractEntity<?>>> appliedCriteriaEntity) {
         return getCustomObject(selectionCrit, appliedCriteriaEntity, selectionCrit.saveAsNameSupplier().get());
     }
     

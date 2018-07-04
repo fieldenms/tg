@@ -9,12 +9,10 @@ import java.util.Map;
 import ua.com.fielden.platform.entity.AbstractFunctionalEntityWithCentreContext;
 import ua.com.fielden.platform.entity.NoKey;
 import ua.com.fielden.platform.entity.annotation.CompanionObject;
-import ua.com.fielden.platform.entity.annotation.DescRequired;
 import ua.com.fielden.platform.entity.annotation.DescTitle;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.KeyType;
 import ua.com.fielden.platform.entity.annotation.Observable;
-import ua.com.fielden.platform.entity.annotation.Required;
 import ua.com.fielden.platform.entity.annotation.Title;
 import ua.com.fielden.platform.entity.annotation.mutator.BeforeChange;
 import ua.com.fielden.platform.entity.annotation.mutator.Handler;
@@ -29,7 +27,6 @@ import ua.com.fielden.platform.entity.functional.centre.CentreContextHolder;
 @CompanionObject(ICentreConfigEditAction.class)
 @KeyType(NoKey.class)
 @DescTitle(value = "Description", desc = "Centre configuration description.")
-@DescRequired
 public class CentreConfigEditAction extends AbstractFunctionalEntityWithCentreContext<NoKey> {
     public enum EditKind { COPY, EDIT, SAVE }
     
@@ -39,7 +36,6 @@ public class CentreConfigEditAction extends AbstractFunctionalEntityWithCentreCo
     
     @IsProperty
     @Title(value = "Title", desc = "Centre configuration title.")
-    @Required
     @BeforeChange(@Handler(CentreConfigEditActionTitleValidator.class))
     private String title;
     

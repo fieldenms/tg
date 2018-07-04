@@ -5,8 +5,6 @@ import static java.util.Optional.of;
 import static ua.com.fielden.platform.criteria.generator.impl.SynchroniseCriteriaWithModelHandler.CRITERIA_ENTITY_ID;
 import static ua.com.fielden.platform.domaintree.impl.AbstractDomainTree.isBooleanCriterion;
 import static ua.com.fielden.platform.domaintree.impl.AbstractDomainTree.isDoubleCriterion;
-import static ua.com.fielden.platform.domaintree.impl.GlobalDomainTreeManager.DEFAULT_CONFIG_DESC;
-import static ua.com.fielden.platform.domaintree.impl.GlobalDomainTreeManager.DEFAULT_CONFIG_TITLE;
 import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.isAndBeforeDefault;
 import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.isDateMnemonicDefault;
 import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.isDatePrefixDefault;
@@ -440,7 +438,7 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
                 createCriteriaMetaValues(freshCentre, getEntityType(miType)),
                 isFreshCentreChanged(freshCentre, updateCentre(gdtm, miType, SAVED_CENTRE_NAME, customObjectSaveAsName, device)),
                 of(customObjectSaveAsName),
-                of(validationPrototype.centreTitleAndDescGetter().apply(customObjectSaveAsName)._2)
+                validationPrototype.centreTitleAndDescGetter().apply(customObjectSaveAsName).map(titleDesc -> titleDesc._2)
             );
             customObject.put("wasRun", null);
             customObject.put("appliedCriteriaEntity", appliedCriteriaEntity);
@@ -506,9 +504,7 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
             return createCriteriaEntity(modifHolder, companionFinder, critGenerator, miType, saveAsName, gdtm, device);
         });
         validationPrototype.setCentreTitleAndDescGetter((saveAsNameForTitleAndDesc) -> {
-            return saveAsNameForTitleAndDesc
-                .map(name -> t2(name, updateCentreDesc(gdtm, miType, of(name), device)))
-                .orElse(t2(DEFAULT_CONFIG_TITLE, DEFAULT_CONFIG_DESC));
+            return saveAsNameForTitleAndDesc.map(name -> t2(name, updateCentreDesc(gdtm, miType, of(name), device)));
         });
         validationPrototype.setCentreEditor((editKindAndNewName, newDesc) -> {
             final Optional<String> newName = editKindAndNewName._2;

@@ -70,8 +70,6 @@ import ua.com.fielden.platform.utils.Pair;
  */
 public class GlobalDomainTreeManager extends AbstractDomainTree implements IGlobalDomainTreeManager {
     private static final Logger logger = Logger.getLogger(GlobalDomainTreeManager.class);
-    public static final String DEFAULT_CONFIG_DESC = "Default configuration";
-    public static final String DEFAULT_CONFIG_TITLE = "_______________________default";
     
     /**
      * The surrogate title of not yet known configuration. This is used during first time centre loading.
@@ -883,7 +881,7 @@ public class GlobalDomainTreeManager extends AbstractDomainTree implements IGlob
                         ecc.setPrincipal(true);
                         final ICentreDomainTreeManagerAndEnhancer centre = getEntityCentreManager(menuItemType, null);
                         ecc.setConfigBody(getSerialiser().serialise(centre));
-                        ecc.setDesc(newDesc == null ? DEFAULT_CONFIG_DESC : newDesc);
+                        ecc.setDesc(newDesc);
                         saveCentre(centre, ecc);
                         if (persistentCentres != null) {
                             persistentCentres.put(key(menuItemType, null), copyCentre(currentMgr));
@@ -981,7 +979,7 @@ public class GlobalDomainTreeManager extends AbstractDomainTree implements IGlob
                     menuItemToUse = mainMenuItemController.save(factory.newByKey(MainMenuItem.class, menuItemTypeName));
                 }
                 final EntityCentreConfig ecc = factory.newByKey(EntityCentreConfig.class, user, newTitle, menuItemToUse);
-                ecc.setDesc(newDesc == null ? DEFAULT_CONFIG_DESC : newDesc);
+                ecc.setDesc(newDesc);
                 ecc.setConfigBody(getSerialiser().serialise(copyMgr));
                 saveCentre(copyMgr, ecc);
                 init(menuItemType, newName, copyMgr, true);

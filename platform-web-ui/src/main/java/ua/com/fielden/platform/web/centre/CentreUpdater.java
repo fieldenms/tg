@@ -22,7 +22,6 @@ import static ua.com.fielden.platform.domaintree.impl.AbstractDomainTree.isDoubl
 import static ua.com.fielden.platform.domaintree.impl.AbstractDomainTree.isDummyMarker;
 import static ua.com.fielden.platform.domaintree.impl.AbstractDomainTree.isPlaceholder;
 import static ua.com.fielden.platform.domaintree.impl.AbstractDomainTree.reflectionProperty;
-import static ua.com.fielden.platform.domaintree.impl.GlobalDomainTreeManager.DEFAULT_CONFIG_TITLE;
 import static ua.com.fielden.platform.domaintree.impl.GlobalDomainTreeManager.LINK_CONFIG_TITLE;
 import static ua.com.fielden.platform.entity.AbstractPersistentEntity.LAST_UPDATED_BY;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetch;
@@ -433,7 +432,6 @@ public class CentreUpdater {
             }
         }
         loadableConfigurations.remove(new LoadableCentreConfig().setKey(LINK_CONFIG_TITLE)); // exclude 'link' configuration from load dialog if it is present (aka centre 'link' with criteria parameters was loaded at least once)
-        loadableConfigurations.remove(new LoadableCentreConfig().setKey(DEFAULT_CONFIG_TITLE)); // exclude 'default' configuration from load dialog
         Collections.sort(loadableConfigurations);
         return loadableConfigurations;
     }
@@ -530,11 +528,13 @@ public class CentreUpdater {
      */
     private static String obtainTitleFrom(final String surrogateName, final String surrogateNamePrefix) {
         final String surrogateWithSuffix = surrogateName.replaceFirst(surrogateNamePrefix, "");
-        return surrogateWithSuffix.startsWith("[") ? surrogateWithSuffix.substring(1, surrogateWithSuffix.lastIndexOf("]")) : DEFAULT_CONFIG_TITLE;
+        return surrogateWithSuffix.substring(1, surrogateWithSuffix.lastIndexOf("]"));
     }
     
     /**
      * Creates a query to find centre configurations persisted for <code>user</code>.
+     * <p>
+     * Looks only for named / link configurations, default configurations are avoided.
      * 
      * @param user
      * @param miType
@@ -542,10 +542,11 @@ public class CentreUpdater {
      * @return
      */
     private static ICompoundCondition0<EntityCentreConfig> centreConfigQueryFor(final User user, final Class<? extends MiWithConfigurationSupport<?>> miType, final DeviceProfile device) {
+        final String escapedOpeningBracket = "[[]"; // need to provide escaping for opening bracket to find records with [, see https://stackoverflow.com/questions/439495/how-can-i-escape-square-brackets-in-a-like-clause
         return select(EntityCentreConfig.class).where().
             begin().prop("owner").eq().val(user).end().and().
-            prop("title").like().val(deviceSpecific(FRESH_CENTRE_NAME, device) + "%").and().
-            prop("title").notLike().val(deviceSpecific(FRESH_CENTRE_NAME, opposite(device)) + "%").and().
+            prop("title").like().val(deviceSpecific(FRESH_CENTRE_NAME, device) + escapedOpeningBracket + "%").and().
+            prop("title").notLike().val(deviceSpecific(FRESH_CENTRE_NAME, opposite(device)) + escapedOpeningBracket + "%").and().
             prop("menuItem.key").eq().val(miType.getName());
     }
     

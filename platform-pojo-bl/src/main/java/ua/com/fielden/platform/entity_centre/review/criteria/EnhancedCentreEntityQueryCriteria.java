@@ -44,7 +44,7 @@ public class EnhancedCentreEntityQueryCriteria<T extends AbstractEntity<?>, DAO 
     private Supplier<Optional<String>> saveAsNameSupplier;
     private Supplier<Optional<String>> preferredConfigSupplier;
     private Consumer<Optional<String>> preferredConfigMaker;
-    private Function<Optional<String>, T2<String, String>> centreTitleAndDescGetter;
+    private Function<Optional<String>, Optional<T2<String, String>>> centreTitleAndDescGetter;
     private Supplier<ICentreDomainTreeManagerAndEnhancer> baseCentreSupplier;
     private Supplier<Boolean> centreChangedGetter;
     private Function<Optional<String>, EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, ? extends IEntityDao<AbstractEntity<?>>>> criteriaValidationPrototypeCreator;
@@ -182,11 +182,11 @@ public class EnhancedCentreEntityQueryCriteria<T extends AbstractEntity<?>, DAO 
         return preferredConfigMaker;
     }
 
-    public void setCentreTitleAndDescGetter(final Function<Optional<String>, T2<String, String>> centreTitleAndDescGetter) {
+    public void setCentreTitleAndDescGetter(final Function<Optional<String>, Optional<T2<String, String>>> centreTitleAndDescGetter) {
         this.centreTitleAndDescGetter = centreTitleAndDescGetter;
     }
 
-    public Function<Optional<String>, T2<String, String>> centreTitleAndDescGetter() {
+    public Function<Optional<String>, Optional<T2<String, String>>> centreTitleAndDescGetter() {
         return centreTitleAndDescGetter;
     }
 

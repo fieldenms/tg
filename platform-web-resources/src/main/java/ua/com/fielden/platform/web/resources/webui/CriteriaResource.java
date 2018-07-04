@@ -153,7 +153,7 @@ public class CriteriaResource extends AbstractWebResource {
                         ? retrievePreferredConfigName(gdtm, miType, device(), companionFinder) // preferred configuration should be loaded
                         : of(LINK_CONFIG_TITLE)) // 'link' configuration should be loaded
                     : of(name) // in case where first time loading has been occurred earlier then 'saveAsName' has non-empty actual configuration that needs to be loaded
-                ); // in case where 'saveAsName' has empty value then first time loading has been occurred earlier and _______________________default configuration needs to be loaded
+                ); // in case where 'saveAsName' has empty value then first time loading has been occurred earlier and default configuration needs to be loaded
             if (saveAsName.isPresent() && UNDEFINED_CONFIG_TITLE.equals(saveAsName.get()) && !getQuery().isEmpty()) { // if first time loading with centre criteria parameters occurs then
                 // clear current 'link' surrogate centres -- this is to make them empty before applying new selection criteria parameters (client-side action after this request's response will be delivered)
                 removeCentres(gdtm, miType, device(), actualSaveAsName, FRESH_CENTRE_NAME, SAVED_CENTRE_NAME, PREVIOUSLY_RUN_CENTRE_NAME);
@@ -201,7 +201,7 @@ public class CriteriaResource extends AbstractWebResource {
                         createCriteriaMetaValues(updatedFreshCentre, getEntityType(miType)),
                         isFreshCentreChanged(updatedFreshCentre, updateCentre(gdtm, miType, SAVED_CENTRE_NAME, saveAsName, device)),
                         of(saveAsName),
-                        of(saveAsDesc)
+                        ofNullable(saveAsDesc)
                 )//
         );
     }

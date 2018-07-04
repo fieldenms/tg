@@ -2,7 +2,6 @@ package ua.com.fielden.platform.web.centre;
 
 import static java.lang.String.format;
 import static java.util.regex.Pattern.quote;
-import static ua.com.fielden.platform.domaintree.impl.GlobalDomainTreeManager.DEFAULT_CONFIG_TITLE;
 import static ua.com.fielden.platform.domaintree.impl.GlobalDomainTreeManager.LINK_CONFIG_TITLE;
 import static ua.com.fielden.platform.domaintree.impl.GlobalDomainTreeManager.UNDEFINED_CONFIG_TITLE;
 import static ua.com.fielden.platform.error.Result.failuref;
@@ -50,11 +49,11 @@ public class CentreConfigEditActionTitleValidator implements IBeforeChangeEventH
                 return successful("ok");
             }
             final EnhancedCentreEntityQueryCriteria<?, ?> criteriaEntity = criteriaEntityRestorer.restoreCriteriaEntity(entity.getCentreContextHolder());
-            final String currentTitle = criteriaEntity.saveAsNameSupplier().get().orElse(DEFAULT_CONFIG_TITLE);
             
             final boolean titleCanBeCurrent = EDIT.equals(valueOf(entity.getEditKind()));
-            if (criteriaEntity.loadableCentresSupplier().get().stream()
-                .filter(lcc -> titleCanBeCurrent ? !lcc.getKey().equals(currentTitle) : true)
+            if (criteriaEntity.saveAsNameSupplier().get().isPresent() 
+                && criteriaEntity.loadableCentresSupplier().get().stream()
+                .filter(lcc -> titleCanBeCurrent ? !lcc.getKey().equals(criteriaEntity.saveAsNameSupplier().get().get()) : true)
                 .anyMatch(lcc -> lcc.getKey().equals(newValue)))
             {
                 return warning(CENTRE_CONFIG_CONFLICT_WARNING);
