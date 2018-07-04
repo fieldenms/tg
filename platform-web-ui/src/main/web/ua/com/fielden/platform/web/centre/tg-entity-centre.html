@@ -138,7 +138,6 @@
     <template>
         <tg-serialiser id="serialiser"></tg-serialiser>
 
-        <iron-ajax id="ajaxSaver" url="[[_url]]" method="POST" handle-as="json" on-response="_processSaverResponse" on-error="_processSaverError"></iron-ajax>
         <iron-ajax id="ajaxDiscarder" url="[[_url]]" method="PUT" handle-as="json" on-response="_processDiscarderResponse" on-error="_processDiscarderError"></iron-ajax>
 
         <tg-confirmation-dialog id="confirmationDialog"></tg-confirmation-dialog>
@@ -151,8 +150,7 @@
                         <content select=".custom-selection-criteria"></content>
                         <div class="selection-criteria-buttons layout horizontal justified wrap">
                             <div class="layout horizontal button-group">
-                                <paper-button id="saver" raised shortcut="ctrl+s" roll="button" on-tap="saveAsync" disabled$="[[_saverDisabled]]" tooltip-text="Save configuration">Save</paper-button>
-                                <tg-ui-action ui-role='BUTTON' short-desc='SAVE2' long-desc='SAVE2' component-uri='/master_ui/ua.com.fielden.platform.web.centre.CentreConfigEditAction' element-name='tg-CentreConfigEditAction-master' show-dialog='[[_showDialog]]' create-context-holder='[[_createContextHolder]]' chosen-property="SAVE" attrs='[[bottomActions.0.attrs]]' pre-action='[[bottomActions.0.preAction]]' post-action-success='[[bottomActions.0.postActionSuccess]]' post-action-error='[[bottomActions.0.postActionError]]' require-selection-criteria='true' require-selected-entities='NONE' require-master-entity='false' disabled='[[_saverDisabled]]' style='[[_computeSaveButtonStyle(_saverDisabled)]]'></tg-ui-action>
+                                <tg-ui-action shortcut="ctrl+s" ui-role='BUTTON' short-desc='SAVE' long-desc='Save configuration' component-uri='/master_ui/ua.com.fielden.platform.web.centre.CentreConfigEditAction' element-name='tg-CentreConfigEditAction-master' show-dialog='[[_showDialog]]' create-context-holder='[[_createContextHolder]]' chosen-property="SAVE" attrs='[[bottomActions.0.attrs]]' pre-action='[[bottomActions.0.preAction]]' post-action-success='[[bottomActions.0.postActionSuccess]]' post-action-error='[[bottomActions.0.postActionError]]' require-selection-criteria='true' require-selected-entities='NONE' require-master-entity='false' disabled='[[_saverDisabled]]' style='[[_computeSaveButtonStyle(_saverDisabled)]]'></tg-ui-action>
                                 <paper-button id="discarder" raised shortcut="ctrl+r" roll="button" on-tap="discardAsync" disabled$="[[_discarderDisabled]]" tooltip-text="Discard the latest changes to selection criteria, which effectively returns them to the last saved configuration.">Discard</paper-button>
                             </div>
                             <div class="layout horizontal button-group right-button-group">
@@ -211,9 +209,7 @@
                 observer: '_selectedViewChanged'
             },
             _url: Function,
-            _processSaverResponse: Function,
             _bindCentreInfo: Function,
-            _processSaverError: Function,
             _processDiscarderResponse: Function,
             _processDiscarderError: Function,
             _saverDisabled: Boolean,
@@ -415,14 +411,7 @@
         _ajaxDiscarder: function () {
             return this.$.ajaxDiscarder;
         },
-
-        /**
-         * The iron-ajax component for centre saving.
-         */
-        _ajaxSaver: function () {
-            return this.$.ajaxSaver;
-        },
-
+        
         /**
          * The component for entity serialisation.
          */
@@ -525,16 +514,6 @@
             }
         },
 
-        saveAsync: function () {
-            var self = this;
-            this.async(function () {
-                self.persistActiveElement();
-                self.save().then(function () {
-                    self.restoreActiveElement();
-                });
-            }, 100);
-        },
-
         discardAsync: function () {
             var self = this;
             this.async(function () {
@@ -558,7 +537,7 @@
         },
         
         _computeSaveButtonStyle: function (_saverDisabled) {
-            return _saverDisabled ? 'cursor:initial' : '';
+            return 'width:70px;margin-right:8px;' + (_saverDisabled ? 'cursor:initial' : '');
         }
     });
 </script>

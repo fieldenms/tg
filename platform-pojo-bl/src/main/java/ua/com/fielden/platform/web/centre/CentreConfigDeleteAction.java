@@ -2,6 +2,10 @@ package ua.com.fielden.platform.web.centre;
 
 import static ua.com.fielden.platform.entity.NoKey.NO_KEY;
 
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
+
 import ua.com.fielden.platform.entity.AbstractFunctionalEntityWithCentreContext;
 import ua.com.fielden.platform.entity.NoKey;
 import ua.com.fielden.platform.entity.annotation.CompanionObject;
@@ -28,6 +32,21 @@ public class CentreConfigDeleteAction extends AbstractFunctionalEntityWithCentre
     @IsProperty
     @Title("Delete Kind")
     private String deleteKind;
+    
+    @IsProperty(Object.class)
+    @Title(value = "Custom object", desc = "Custom object")
+    private final Map<String, Object> customObject = new HashMap<>();
+    
+    @Observable
+    protected CentreConfigDeleteAction setCustomObject(final Map<String, Object> customObject) {
+        this.customObject.clear();
+        this.customObject.putAll(customObject);
+        return this;
+    }
+    
+    public Map<String, Object> getCustomObject() {
+        return Collections.unmodifiableMap(customObject);
+    }
     
     @Observable
     public CentreConfigDeleteAction setDeleteKind(final String deleteKind) {

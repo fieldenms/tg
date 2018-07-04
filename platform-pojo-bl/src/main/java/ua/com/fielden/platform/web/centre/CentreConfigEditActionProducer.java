@@ -8,9 +8,11 @@ import static ua.com.fielden.platform.error.Result.failure;
 import static ua.com.fielden.platform.web.centre.CentreConfigEditAction.EditKind.COPY;
 import static ua.com.fielden.platform.web.centre.CentreConfigEditAction.EditKind.EDIT;
 import static ua.com.fielden.platform.web.centre.CentreConfigEditAction.EditKind.SAVE;
-
 import java.util.Map;
 import java.util.Optional;
+import java.util.function.Supplier;
+import java.util.stream.Stream;
+
 import com.google.inject.Inject;
 
 import ua.com.fielden.platform.dao.IEntityDao;
@@ -69,6 +71,9 @@ public class CentreConfigEditActionProducer extends DefaultEntityProducerWithCon
                             setSkipUi(entity);
                             setTitleAndDesc(entity, saveAsName, selectionCrit);
                             selectionCrit.freshCentreSaver().run();
+                            final Map<String, Object> customObj = getCustomObject(selectionCrit, appliedCriteriaEntity);
+                            customObj.remove("wasRun");
+                            return customObj;
                         }
                     } else if (COPY.name().equals(entity.getEditKind())) {
                         setSkipUi(entity);
@@ -115,11 +120,11 @@ public class CentreConfigEditActionProducer extends DefaultEntityProducerWithCon
         return empty();
     }
     
-    private static Map<String, Object> getCustomObject(final EnhancedCentreEntityQueryCriteria<?, ?> selectionCrit, final EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, ? extends IEntityDao<AbstractEntity<?>>> appliedCriteriaEntity) {
+    public static Map<String, Object> getCustomObject(final EnhancedCentreEntityQueryCriteria<?, ?> selectionCrit, final EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, ? extends IEntityDao<AbstractEntity<?>>> appliedCriteriaEntity) {
         return getCustomObject(selectionCrit, appliedCriteriaEntity, selectionCrit.saveAsNameSupplier().get());
     }
     
-    private static Map<String, Object> getCustomObject(final EnhancedCentreEntityQueryCriteria<?, ?> selectionCrit, final EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, ? extends IEntityDao<AbstractEntity<?>>> appliedCriteriaEntity, final Optional<String> saveAsNameToCompare) {
+    public static Map<String, Object> getCustomObject(final EnhancedCentreEntityQueryCriteria<?, ?> selectionCrit, final EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, ? extends IEntityDao<AbstractEntity<?>>> appliedCriteriaEntity, final Optional<String> saveAsNameToCompare) {
         return selectionCrit.centreCustomObjectGetter().apply(appliedCriteriaEntity, saveAsNameToCompare);
     }
     
@@ -143,11 +148,21 @@ public class CentreConfigEditActionProducer extends DefaultEntityProducerWithCon
      * @return
      */
     public static boolean isDefaultOrInherited(final Optional<String> saveAsName, final EnhancedCentreEntityQueryCriteria<?, ?> selectionCrit) {
-        return isDefault(saveAsName) // default configuration name and title cannot be edited
-            ||
-            selectionCrit.loadableCentresSupplier().get().stream() // inherited configuration name and title cannot be edited
+        return isDefault(saveAsName) || isInherited(saveAsName, () -> selectionCrit.loadableCentresSupplier().get().stream());
+    }
+    
+    /**
+     * Returns <code>true</code> in case where <code>saveAsName</code>d configuration represents inherited from base user configuration, <code>false</code> otherwise.
+     * 
+     * @param saveAsName
+     * @param streamLoadableConfigurations -- a function to stream loadable configurations for current user
+     * @return
+     */
+    public static boolean isInherited(final Optional<String> saveAsName, final Supplier<Stream<LoadableCentreConfig>> streamLoadableConfigurations) {
+        return saveAsName.isPresent() &&
+            streamLoadableConfigurations.get()
             .filter(lcc -> lcc.getKey().equals(saveAsName.get()))
-            .findAny().map(lcc -> lcc.isInherited()).orElseThrow(() -> new IllegalStateException("Configuration has been deleted."));
+            .findAny().map(lcc -> lcc.isInherited()).orElseThrow(() -> failure("Configuration has been deleted."));
     }
     
 }

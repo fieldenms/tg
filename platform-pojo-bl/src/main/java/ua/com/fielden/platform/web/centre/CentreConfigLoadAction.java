@@ -2,7 +2,10 @@ package ua.com.fielden.platform.web.centre;
 
 import static java.util.Collections.unmodifiableSet;
 
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.LinkedHashSet;
+import java.util.Map;
 import java.util.Set;
 
 import ua.com.fielden.platform.entity.AbstractFunctionalEntityForCollectionModification;
@@ -31,6 +34,21 @@ public class CentreConfigLoadAction extends AbstractFunctionalEntityForCollectio
     @IsProperty
     @Title("Context Holder")
     private CentreContextHolder centreContextHolder;
+    
+    @IsProperty(Object.class)
+    @Title(value = "Custom object", desc = "Custom object")
+    private final Map<String, Object> customObject = new HashMap<>();
+    
+    @Observable
+    protected CentreConfigLoadAction setCustomObject(final Map<String, Object> customObject) {
+        this.customObject.clear();
+        this.customObject.putAll(customObject);
+        return this;
+    }
+    
+    public Map<String, Object> getCustomObject() {
+        return Collections.unmodifiableMap(customObject);
+    }
     
     @Observable
     public CentreConfigLoadAction setCentreContextHolder(final CentreContextHolder centreContextHolder) {

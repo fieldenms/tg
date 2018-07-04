@@ -2,10 +2,12 @@ package ua.com.fielden.platform.web.resources.webui;
 
 import static ua.com.fielden.platform.web.centre.CentreUpdater.FRESH_CENTRE_NAME;
 import static ua.com.fielden.platform.web.centre.CentreUpdater.SAVED_CENTRE_NAME;
-import static ua.com.fielden.platform.web.centre.CentreUpdater.commitCentreDesc;
+import static ua.com.fielden.platform.web.centre.CentreUpdater.centre;
+import static ua.com.fielden.platform.web.centre.CentreUpdater.initAndCommit;
+import static ua.com.fielden.platform.web.centre.CentreUpdater.loadableConfigurations;
 import static ua.com.fielden.platform.web.centre.CentreUpdater.removeCentres;
 import static ua.com.fielden.platform.web.centre.CentreUpdater.updateCentre;
-import static ua.com.fielden.platform.web.centre.CentreUpdater.updateCentreDesc;
+import static ua.com.fielden.platform.web.centre.CentreUtils.isFreshCentreChanged;
 import static ua.com.fielden.platform.web.factories.webui.ResourceFactoryUtils.getUserSpecificGlobalManager;
 import static ua.com.fielden.platform.web.resources.webui.CriteriaResource.createCriteriaDiscardEnvelope;
 import static ua.com.fielden.platform.web.resources.webui.CriteriaResource.createStaleCriteriaMessage;
@@ -20,7 +22,6 @@ import org.restlet.Context;
 import org.restlet.Request;
 import org.restlet.Response;
 import org.restlet.representation.Representation;
-import org.restlet.resource.Post;
 import org.restlet.resource.Put;
 
 import ua.com.fielden.platform.criteria.generator.ICriteriaGenerator;
@@ -31,6 +32,7 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.ui.menu.MiWithConfigurationSupport;
+import ua.com.fielden.platform.web.centre.CentreConfigEditActionProducer;
 import ua.com.fielden.platform.web.centre.EntityCentre;
 import ua.com.fielden.platform.web.interfaces.IDeviceProvider;
 import ua.com.fielden.platform.web.resources.RestServerUtil;
@@ -85,44 +87,6 @@ public class CentreResource<CRITERIA_TYPE extends AbstractEntity<?>> extends Abs
     }
     
     /**
-     * Handles POST request resulting from tg-entity-centre <code>save()</code> method.
-     *
-     * Internally validation process is also performed.
-     */
-    @Post
-    public Representation save(final Representation envelope) {
-        return handleUndesiredExceptions(getResponse(), () -> {
-//            final IGlobalDomainTreeManager gdtm = getUserSpecificGlobalManager(serverGdtm, userProvider);
-//            final Map<String, Object> modifiedPropertiesHolder = restoreModifiedPropertiesHolderFrom(envelope, restUtil);
-//            
-//            // before SAVING process there is a need to apply all actual criteria from modifHolder:
-//            final EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, ? extends IEntityDao<AbstractEntity<?>>> appliedCriteriaEntity = createCriteriaEntity(modifiedPropertiesHolder, companionFinder, critGenerator, miType, saveAsName, gdtm, device());
-//            
-//            // There is a need to validate criteria entity with the check for 'required' properties. If it is not successful -- immediately return result without saving.
-//            final Result validationResult = appliedCriteriaEntity.isValid();
-//            final ICentreDomainTreeManagerAndEnhancer updatedFreshCentre = appliedCriteriaEntity.getCentreDomainTreeMangerAndEnhancer();
-//            if (!validationResult.isSuccessful()) {
-//                logger.debug("CENTRE_RESOURCE: save finished (validation failed).");
-//                return restUtil.rawListJSONRepresentation(
-//                    appliedCriteriaEntity,
-//                    createCriteriaMetaValuesCustomObject(
-//                            createCriteriaMetaValues(updatedFreshCentre, getEntityType(miType)),
-//                            isFreshCentreChanged(updatedFreshCentre, updateCentre(gdtm, miType, SAVED_CENTRE_NAME, saveAsName, device())),
-//                            createStaleCriteriaMessage((String) modifiedPropertiesHolder.get("@@wasRun"), updatedFreshCentre, miType, saveAsName, gdtm, companionFinder, critGenerator, device())
-//                    )
-//                );
-//            }
-//            
-//            final ICentreDomainTreeManagerAndEnhancer freshCentre = centre(gdtm, miType, FRESH_CENTRE_NAME, saveAsName, device());
-//            initAndCommit(gdtm, miType, SAVED_CENTRE_NAME, saveAsName, device(), freshCentre, null);
-//            
-//            // it is necessary to use "fresh" instance of cdtme (after the saving process)
-//            return createCriteriaRetrievalEnvelope(freshCentre, miType, saveAsName, gdtm, restUtil, companionFinder, critGenerator, device(), empty());
-            return null;
-        }, restUtil);
-    }
-    
-    /**
      * Handles PUT request resulting from tg-entity-centre <code>discard()</code> method.
      *
      * Internally validation process is also performed.
@@ -134,15 +98,24 @@ public class CentreResource<CRITERIA_TYPE extends AbstractEntity<?>> extends Abs
             final Map<String, Object> wasRunHolder = restoreModifiedPropertiesHolderFrom(envelope, restUtil);
             final String wasRun = (String) wasRunHolder.get("@@wasRun");
             
-            final String customDesc = updateCentreDesc(gdtm, miType, saveAsName, device());
+            final ICentreDomainTreeManagerAndEnhancer newFreshCentre;
             
-            removeCentres(gdtm, miType, device(), saveAsName, FRESH_CENTRE_NAME, SAVED_CENTRE_NAME);
-            
-            // it is necessary to use "fresh" instance of cdtme (after the defaulting process)
-            final ICentreDomainTreeManagerAndEnhancer newFreshCentre = updateCentre(gdtm, miType, FRESH_CENTRE_NAME, saveAsName, device());
-            
-            // commit custom description after user-specific copy was deleted and default centre copy made 
-            commitCentreDesc(gdtm, miType, saveAsName, device(), customDesc);
+            if (CentreConfigEditActionProducer.isInherited(saveAsName, () -> loadableConfigurations(gdtm, miType, device(), companionFinder).stream()) ) { 
+                removeCentres(gdtm, miType, device(), saveAsName, FRESH_CENTRE_NAME, SAVED_CENTRE_NAME);
+                
+                // it is necessary to use "fresh" instance of cdtme (after the defaulting process)
+                newFreshCentre = updateCentre(gdtm, miType, FRESH_CENTRE_NAME, saveAsName, device());
+            } else {
+                final ICentreDomainTreeManagerAndEnhancer updatedFreshCentre = updateCentre(gdtm, miType, FRESH_CENTRE_NAME, saveAsName, device());
+                final ICentreDomainTreeManagerAndEnhancer updatedSavedCentre = updateCentre(gdtm, miType, SAVED_CENTRE_NAME, saveAsName, device());
+                // discards fresh centre's changes (fresh centre could have no changes)
+                if (isFreshCentreChanged(updatedFreshCentre, updatedSavedCentre)) {
+                    initAndCommit(gdtm, miType, FRESH_CENTRE_NAME, saveAsName, device(), updatedSavedCentre, null);
+                }
+                
+                // it is necessary to use "fresh" instance of cdtme (after the discarding process)
+                newFreshCentre = centre(gdtm, miType, FRESH_CENTRE_NAME, saveAsName, device());
+            }
             
             final String staleCriteriaMessage = createStaleCriteriaMessage(wasRun, newFreshCentre, miType, saveAsName, gdtm, companionFinder, critGenerator, device());
             return createCriteriaDiscardEnvelope(newFreshCentre, miType, saveAsName, gdtm, restUtil, companionFinder, critGenerator, staleCriteriaMessage, device());

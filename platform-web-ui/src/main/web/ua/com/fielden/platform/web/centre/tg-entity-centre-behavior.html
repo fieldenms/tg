@@ -351,13 +351,6 @@
                 },
 
                 /**
-                 * Starts the process of centre saving.
-                 */
-                save: {
-                    type: Function
-                },
-
-                /**
                  * Starts the process of centre discarding.
                  */
                 discard: {
@@ -511,26 +504,12 @@
                 self._getSelectedEntities = (function () {
                     return this.$.egi.getSelectedEntities();
                 }).bind(self);
-
-                self._processSaverResponse = function (e) {
-                    self.$.selection_criteria._processResponse(e, "save", function (entityAndCustomObject, exceptionOccured) {
-                        console.log("CENTRE SAVED", entityAndCustomObject);
-                        self.$.selection_criteria._provideExceptionOccured(entityAndCustomObject[0], exceptionOccured);
-                        self.$.selection_criteria._postSavedDefault(entityAndCustomObject);
-                    });
-                };
+                
                 self._bindCentreInfo = function (entityAndCustomObject, exceptionOccured) {
                     self.$.selection_criteria._provideExceptionOccured(entityAndCustomObject[0], exceptionOccured);
                     self.$.selection_criteria._postSavedDefault(entityAndCustomObject);
                 };
-                self._processSaverError = function (e) {
-                    self.$.selection_criteria._processError(e, "save", function (errorResult) {
-                        // This function will be invoked after server-side error appear.
-                        console.warn("SERVER ERROR: ", errorResult);
-                        self.$.selection_criteria._postSavedDefaultError(errorResult);
-                    });
-                };
-
+                
                 self._processDiscarderResponse = function (e) {
                     self.$.selection_criteria._processResponse(e, "discard", function (entityAndCustomObject, exceptionOccured) {
                         console.log("CENTRE DISCARDED", entityAndCustomObject);
@@ -569,50 +548,7 @@
                 self._createContextHolder = (function (requireSelectionCriteria, requireSelectedEntities, requireMasterEntity, actionKind, actionNumber) {
                     return this.$.selection_criteria.createContextHolder(requireSelectionCriteria, requireSelectedEntities, requireMasterEntity, actionKind, actionNumber);
                 }).bind(self);
-
-                self._createSavingPromise = function () { // very similar to tg-entity-master-behavior._createSavingPromise
-                    const slf = this;
-                    const sc = this.$.selection_criteria;
-                    const holder = sc._extractModifiedPropertiesHolder(sc._currBindingEntity, sc._originalBindingEntity);
-                    this._ajaxSaver().body = JSON.stringify(sc._serialiser().serialise(sc._reset(holder)));
-                    return this._ajaxSaver().generateRequest().completes.then(
-                        function () {
-                            slf._actionInProgress = false;
-                        }, function (error) {
-                            slf._actionInProgress = false;
-                        }
-                    );
-                }.bind(self);
-
-                self.save = (function () { // very similar to tg-entity-master-behavior.save
-                    const slf = this;
-                    slf._actionInProgress = true;
-                    const sc = this.$.selection_criteria;
-                    if (!sc._savingInitiated) {
-                        sc._savingInitiated = true;
-                        sc.disableView();
-                    }
-
-                    return new Promise(function (resolve, reject) {
-                        slf.debounce('invoke-saving', function () {
-                            // cancel the 'invoke-saving' debouncer if there is any active one:
-                            slf.cancelDebouncer('invoke-saving');
-
-                            // cancel previous validation requests except the last one -- if it exists then saving process will be chained on top of that last validation process,
-                            // otherwise -- saving process will simply start immediately
-                            const lastValidationPromise = sc._validator().abortValidationExceptLastOne();
-                            if (lastValidationPromise !== null) {
-                                console.warn("Saving is chained to the last validation promise...");
-                                return resolve(lastValidationPromise
-                                    .then(function () {
-                                        return slf._createSavingPromise();
-                                    }));
-                            }
-                            return resolve(slf._createSavingPromise());
-                        }, 50);
-                    });
-                }).bind(self);
-
+                
                 self._createDiscardPromise = function (customObject) { // very similar to tg-entity-binder-behavior._createRetrievalPromise
                     const slf = this;
                     this._ajaxDiscarder().body = JSON.stringify(customObject);
@@ -1036,7 +972,7 @@
             },
 
             /**
-             * Computes URL for 'ajaxSaver' and 'ajaxDiscarder'.
+             * Computes URL for 'ajaxDiscarder'.
              */
             _computeUrl: function (miType, saveAsName) {
                 return '/centre/' + this.$.selection_criteria._reflector()._centreKey(miType, saveAsName);

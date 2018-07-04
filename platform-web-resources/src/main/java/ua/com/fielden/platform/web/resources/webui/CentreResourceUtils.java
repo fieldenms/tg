@@ -430,6 +430,9 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
         final M validationPrototype = (M) critGenerator.generateCentreQueryCriteria(getEntityType(miType), cdtmae, miType, new MiTypeAnnotation().newInstance(miType, saveAsName));
         validationPrototype.setPreviouslyRunCentreSupplier(() -> updateCentre(gdtm, miType, PREVIOUSLY_RUN_CENTRE_NAME, saveAsName, device));
         validationPrototype.setCentreChangedGetter(() -> isFreshCentreChanged(updateCentre(gdtm, miType, FRESH_CENTRE_NAME, saveAsName, device), updateCentre(gdtm, miType, SAVED_CENTRE_NAME, saveAsName, device)));
+        validationPrototype.setCriteriaValidationPrototypeCreator((validationPrototypeSaveAsName) -> {
+            return createCriteriaValidationPrototype(miType, validationPrototypeSaveAsName, updateCentre(gdtm, miType, FRESH_CENTRE_NAME, validationPrototypeSaveAsName, device), companionFinder, critGenerator, -1L, gdtm, device);
+        });
         validationPrototype.setCentreCustomObjectGetter((appliedCriteriaEntity, customObjectSaveAsName) -> {
             final ICentreDomainTreeManagerAndEnhancer freshCentre = appliedCriteriaEntity.getCentreDomainTreeMangerAndEnhancer();
             // In both cases (criteria entity valid or not) create customObject with criteriaEntity to be returned and bound into tg-entity-centre after save.
@@ -530,6 +533,9 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
         });
         validationPrototype.setPreferredConfigSupplier(() -> {
             return retrievePreferredConfigName(gdtm, miType, device, companionFinder);
+        });
+        validationPrototype.setPreferredConfigMaker((saveAsNameToBecomePreferred) -> {
+            makePreferred(gdtm, miType, saveAsNameToBecomePreferred, device, companionFinder);
         });
         
         final Field idField = Finder.getFieldByName(validationPrototype.getType(), AbstractEntity.ID);
