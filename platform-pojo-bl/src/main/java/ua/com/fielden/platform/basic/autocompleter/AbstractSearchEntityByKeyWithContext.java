@@ -52,7 +52,7 @@ public abstract class AbstractSearchEntityByKeyWithContext<CONTEXT extends Abstr
      * @return
      */
     protected ConditionModel makeSearchCriteriaModel(final CONTEXT context, final String searchString) {
-        return createSearchByKeyCriteriaModel(searchString);
+        return createRelaxedSearchByKeyCriteriaModel(searchString);
     }
 
     /**
@@ -86,7 +86,7 @@ public abstract class AbstractSearchEntityByKeyWithContext<CONTEXT extends Abstr
         fillParamsBasedOnContext(getContext(), params);
         return from(queryModel).with(ordering).with(params).lightweight();
     }
-    
+
     @Override
     public List<T> findMatches(final String searchString) {
         return companion.firstPage(createCommonQueryBuilderForFindMatches(searchString).with(defaultFetchModel).model(), getPageSize()).data();
