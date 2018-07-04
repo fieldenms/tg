@@ -13,7 +13,6 @@ import static ua.com.fielden.platform.web.centre.CentreUpdater.FRESH_CENTRE_NAME
 import static ua.com.fielden.platform.web.centre.CentreUpdater.PREVIOUSLY_RUN_CENTRE_NAME;
 import static ua.com.fielden.platform.web.centre.CentreUpdater.SAVED_CENTRE_NAME;
 import static ua.com.fielden.platform.web.centre.CentreUpdater.initAndCommit;
-import static ua.com.fielden.platform.web.centre.CentreUpdater.makePreferred;
 import static ua.com.fielden.platform.web.centre.CentreUpdater.removeCentres;
 import static ua.com.fielden.platform.web.centre.CentreUpdater.retrievePreferredConfigName;
 import static ua.com.fielden.platform.web.centre.CentreUpdater.updateCentre;
@@ -155,16 +154,12 @@ public class CriteriaResource extends AbstractWebResource {
                         : of(LINK_CONFIG_TITLE)) // 'link' configuration should be loaded
                     : of(name) // in case where first time loading has been occurred earlier then 'saveAsName' has non-empty actual configuration that needs to be loaded
                 ); // in case where 'saveAsName' has empty value then first time loading has been occurred earlier and _______________________default configuration needs to be loaded
-            final boolean firstTimeLoading = saveAsName.isPresent() && UNDEFINED_CONFIG_TITLE.equals(saveAsName.get());
-            if (firstTimeLoading && !getQuery().isEmpty()) {
+            if (saveAsName.isPresent() && UNDEFINED_CONFIG_TITLE.equals(saveAsName.get()) && !getQuery().isEmpty()) { // if first time loading with centre criteria parameters occurs then
                 // clear current 'link' surrogate centres -- this is to make them empty before applying new selection criteria parameters (client-side action after this request's response will be delivered)
                 removeCentres(gdtm, miType, device(), actualSaveAsName, FRESH_CENTRE_NAME, SAVED_CENTRE_NAME, PREVIOUSLY_RUN_CENTRE_NAME);
             }
             
             final ICentreDomainTreeManagerAndEnhancer updatedFreshCentre = updateCentre(gdtm, miType, FRESH_CENTRE_NAME, actualSaveAsName, device());
-            if (!firstTimeLoading) {
-                makePreferred(gdtm, miType, saveAsName, device(), companionFinder);
-            }
             final String customDesc = updateCentreDesc(gdtm, miType, actualSaveAsName, device());
             return createCriteriaRetrievalEnvelope(updatedFreshCentre, miType, actualSaveAsName, gdtm, restUtil, companionFinder, critGenerator, device(), customDesc);
         }, restUtil);
