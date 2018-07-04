@@ -2,6 +2,7 @@ package ua.com.fielden.platform.web.centre;
 
 import static java.lang.String.format;
 import static java.util.regex.Pattern.quote;
+import static java.util.stream.Collectors.partitioningBy;
 import static ua.com.fielden.platform.domaintree.impl.GlobalDomainTreeManager.LINK_CONFIG_TITLE;
 import static ua.com.fielden.platform.domaintree.impl.GlobalDomainTreeManager.UNDEFINED_CONFIG_TITLE;
 import static ua.com.fielden.platform.error.Result.failuref;
@@ -9,9 +10,12 @@ import static ua.com.fielden.platform.error.Result.successful;
 import static ua.com.fielden.platform.error.Result.warning;
 import static ua.com.fielden.platform.web.centre.CentreConfigEditAction.EditKind.EDIT;
 import static ua.com.fielden.platform.web.centre.CentreConfigEditAction.EditKind.valueOf;
+import static ua.com.fielden.platform.web.utils.EntityResourceUtils.CENTRE_CONFIG_CONFLICT_ERROR;
 import static ua.com.fielden.platform.web.utils.EntityResourceUtils.CENTRE_CONFIG_CONFLICT_WARNING;
 
 import java.lang.annotation.Annotation;
+import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import com.google.inject.Inject;
@@ -51,11 +55,12 @@ public class CentreConfigEditActionTitleValidator implements IBeforeChangeEventH
             final EnhancedCentreEntityQueryCriteria<?, ?> criteriaEntity = criteriaEntityRestorer.restoreCriteriaEntity(entity.getCentreContextHolder());
             
             final boolean titleCanBeCurrent = EDIT.equals(valueOf(entity.getEditKind()));
-            if (criteriaEntity.saveAsNameSupplier().get().isPresent() 
-                && criteriaEntity.loadableCentresSupplier().get().stream()
-                .filter(lcc -> titleCanBeCurrent ? !lcc.getKey().equals(criteriaEntity.saveAsNameSupplier().get().get()) : true)
-                .anyMatch(lcc -> lcc.getKey().equals(newValue)))
-            {
+            final Map<Boolean, List<LoadableCentreConfig>> possibleIntersections = criteriaEntity.loadableCentresSupplier().get().stream()
+                .filter(lcc -> titleCanBeCurrent ? criteriaEntity.saveAsNameSupplier().get().map(name -> !lcc.getKey().equals(name)).orElse(true) : true)
+                .collect(partitioningBy(lcc -> lcc.isInherited()));
+            if (possibleIntersections.get(true).stream().anyMatch(lcc -> lcc.getKey().equals(newValue))) {
+                return failuref(CENTRE_CONFIG_CONFLICT_ERROR);
+            } else if (possibleIntersections.get(false).stream().anyMatch(lcc -> lcc.getKey().equals(newValue))) {
                 return warning(CENTRE_CONFIG_CONFLICT_WARNING);
             }
         }
