@@ -278,7 +278,7 @@ public class ObservableMutatorInterceptor implements MethodInterceptor {
             // setter proceeded successfully (no exception or result were thrown). -> update DYNAMIC validator by correct result if validator exists and if no warning was detected
             // :
             if (metaProperty.containsDynamicValidator() && !metaProperty.hasWarnings()) {
-                metaProperty.setValidationResult(ValidationAnnotation.DYNAMIC, StubValidator.singleton, new Result(entity, "Dynamic validation (inside the setter) passed correctly."));
+                metaProperty.setValidationResult(ValidationAnnotation.DYNAMIC, StubValidator.singleton(), new Result(entity, "Dynamic validation (inside the setter) passed correctly."));
             }
             return new SetterResult(true, setterReturningValue);
         } catch (final Result ex) {
@@ -286,8 +286,8 @@ public class ObservableMutatorInterceptor implements MethodInterceptor {
                 metaProperty.putDynamicValidator();
             }
             // All validation proceeded successfully except the validation inside the setter (DYNAMIC validation).
-            metaProperty.setValidationResult(ValidationAnnotation.DYNAMIC, StubValidator.singleton, (Result) ex);
-            final boolean isWarning = ((Result) ex).isWarning();
+            metaProperty.setValidationResult(ValidationAnnotation.DYNAMIC, StubValidator.singleton(), ex);
+            final boolean isWarning = ex.isWarning();
             if (!isWarning) {
                 final Object newValue = newAndOldValues.getKey();
                 // Important : some components (such as Autocompleter) use LastInvalidValue as updating value. So it HAS TO BE correctly updated!
