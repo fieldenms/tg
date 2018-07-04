@@ -3,11 +3,13 @@ package ua.com.fielden.platform.serialisation.jackson.serialisers;
 import static ua.com.fielden.platform.entity.AbstractFunctionalEntityForCollectionModification.MASTER_ENTITY_PROPERTY_NAME;
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.stripIfNeeded;
 import static ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader.isGenerated;
+import static ua.com.fielden.platform.utils.EntityUtils.isEntityType;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import com.fasterxml.jackson.core.JsonGenerator;
@@ -23,6 +25,9 @@ import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.serialisation.api.impl.TgJackson;
 import ua.com.fielden.platform.serialisation.jackson.EntityType;
 import ua.com.fielden.platform.utils.EntityUtils;
+import ua.com.fielden.platform.web.centre.CentreConfigDeleteAction;
+import ua.com.fielden.platform.web.centre.CentreConfigEditAction;
+import ua.com.fielden.platform.web.centre.CentreConfigLoadAction;
 
 /**
  * Serialiser for {@link Result} type.
@@ -86,6 +91,13 @@ public class ResultJsonSerialiser extends StdSerializer<Result> {
                                     generatedTypes.add(stripIfNeeded(value.getClass()));
                                 }
                             }
+                        } else if (CentreConfigEditAction.class.isAssignableFrom(itemClass) || CentreConfigLoadAction.class.isAssignableFrom(itemClass) || CentreConfigDeleteAction.class.isAssignableFrom(itemClass)) {
+                            final Map<String, Object> customObject = ((AbstractEntity<?>) item).get("customObject");
+                            if (customObject.get("appliedCriteriaEntity") != null && EntityQueryCriteria.class.isAssignableFrom(customObject.get("appliedCriteriaEntity").getClass())) {
+                                generatedTypes.add(stripIfNeeded(customObject.get("appliedCriteriaEntity").getClass()));
+                            }
+                        } else if (isEntityType(itemClass) && EntityQueryCriteria.class.isAssignableFrom(itemClass)) {
+                            generatedTypes.add(itemClass);
                         }
                     }
                 });
@@ -99,6 +111,16 @@ public class ResultJsonSerialiser extends StdSerializer<Result> {
                 generator.writeObject(tgJackson.registerNewEntityType(newType));
             } else {
                 generator.writeObject(type.getName());
+                if (CentreConfigEditAction.class.isAssignableFrom(type) || CentreConfigLoadAction.class.isAssignableFrom(type) || CentreConfigDeleteAction.class.isAssignableFrom(type)) {
+                    final Map<String, Object> customObject = ((AbstractEntity<?>) result.getInstance()).get("customObject");
+                    if (customObject.get("appliedCriteriaEntity") != null && EntityQueryCriteria.class.isAssignableFrom(customObject.get("appliedCriteriaEntity").getClass())) {
+                        generator.writeFieldName("@instanceTypes");
+                        final ArrayList<EntityType> genList = new ArrayList<>();
+                        final Class<AbstractEntity<?>> newType = (Class<AbstractEntity<?>>) stripIfNeeded(customObject.get("appliedCriteriaEntity").getClass());
+                        genList.add(tgJackson.registerNewEntityType(newType));
+                        generator.writeObject(genList);
+                    }
+                }
             }
 
             generator.writeFieldName("instance");
