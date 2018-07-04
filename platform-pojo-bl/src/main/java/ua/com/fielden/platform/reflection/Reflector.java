@@ -182,21 +182,20 @@ public final class Reflector {
         }
     }
 
-    private static synchronized Method getDeclaredMethod(final Class<?> klass, final String methodName, final Class<?>... arguments) throws NoSuchMethodException,
-            SecurityException {
-        // return klass.getDeclaredMethod(methodName, arguments);
+    private static synchronized Method getDeclaredMethod(final Class<?> klass, final String methodName, final Class<?>... arguments) throws NoSuchMethodException {
         final MethodKey methodKey = new MethodKey(klass, methodName, arguments);
         final Pair<Method, NoSuchMethodException> methodOrException = methods.get(methodKey);
         if (methodOrException == null) {
             try {
                 final Method method = klass.getDeclaredMethod(methodName, arguments);
-                methods.put(methodKey, new Pair<Method, NoSuchMethodException>(method, null));
+                // let's avoid caching for generated types to reduce potential for memory leaks
+                if (!DynamicEntityClassLoader.isGenerated(klass)) {
+                    methods.put(methodKey, pair(method, null));
+                }
                 return method;
-            } catch (final NoSuchMethodException e1) {
-                methods.put(methodKey, new Pair<Method, NoSuchMethodException>(null, e1));
-                throw e1;
-            } catch (final SecurityException e2) {
-                throw e2;
+            } catch (final NoSuchMethodException ex) {
+                methods.put(methodKey, pair(null, ex));
+                throw ex;
             }
         } else if (methodOrException.getKey() != null) {
             return methodOrException.getKey();
