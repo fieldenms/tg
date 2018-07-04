@@ -314,29 +314,6 @@ public class ReflectorTest {
         assertTrue(isMethodOverriddenOrDeclared(AbstractEntity.class, EntityWithValidationLimits.class, "setMonth", Integer.class));
     }
     
-    @Test
-    public void reflector_does_not_cache_methods_for_generated_types() throws Exception {
-        // test method caching for ordinary types
-        Reflector.clearMethodsCache();
-        assertTrue(Reflector.methodCache().isEmpty());
-        Reflector.obtainPropertySetter(Entity.class, "firstProperty");
-        assertTrue(Reflector.methodCache().size() == 1);
-        
-        // generate a type and test method caching for this new type 
-        final DynamicEntityClassLoader cl = DynamicEntityClassLoader.getInstance(ClassLoader.getSystemClassLoader());
-        final String NEW_PROPERTY_DESC = "Description  for new money property";
-        final String NEW_PROPERTY_TITLE = "New money property";
-        final String NEW_PROPERTY_1 = "newProperty_1";
-        final Calculated calculated = new CalculatedAnnotation().contextualExpression("2 * 3 - [integerProp]").newInstance();
-        final NewProperty pd1 = new NewProperty(NEW_PROPERTY_1, Money.class, false, NEW_PROPERTY_TITLE, NEW_PROPERTY_DESC, calculated);
-        final Class<? extends AbstractEntity<String>> newType = (Class<? extends AbstractEntity<String>>) cl.startModification(Entity.class.getName()).addProperties(pd1).endModification();
-        
-        Reflector.clearMethodsCache();
-        assertTrue(Reflector.methodCache().isEmpty());
-        Reflector.obtainPropertySetter(newType, "firstProperty");
-        assertTrue(Reflector.methodCache().isEmpty());
-    }
-
     @KeyType(String.class)
     protected static class EntityWithValidationLimits extends AbstractEntity<String> {
 

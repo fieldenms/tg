@@ -13,10 +13,13 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.TimeUnit;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
+
+import com.google.common.cache.Cache;
+import com.google.common.cache.CacheBuilder;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.AbstractUnionEntity;
@@ -42,14 +45,14 @@ public final class Reflector {
     /**
      * A cache for {@link Method} instances.
      */
-    private static final Map<MethodKey, Pair<Method, NoSuchMethodException>> METHOD_CACHE = new ConcurrentHashMap<>(1024);
+    private static final Cache<MethodKey, Pair<Method, NoSuchMethodException>> METHOD_CACHE = CacheBuilder.newBuilder().expireAfterWrite(10, TimeUnit.SECONDS).concurrencyLevel(50).build();
     
     /**
      * A convenient way to access a cache of methods as an immutable map. Could be used for inspection.
      * @return
      */
     public static Map<MethodKey, Pair<Method, NoSuchMethodException>> methodCache() {
-        return Collections.unmodifiableMap(METHOD_CACHE);
+        return Collections.unmodifiableMap(METHOD_CACHE.asMap());
     }
 
     /** A symbol that represents a separator between properties in property path expressions. */
@@ -107,7 +110,7 @@ public final class Reflector {
 
     /** Clear cached methods. */
     public static void clearMethodsCache() {
-        METHOD_CACHE.clear();
+        METHOD_CACHE.cleanUp();
     }
 
     /**
@@ -196,16 +199,11 @@ public final class Reflector {
 
     private static synchronized Method getDeclaredMethod(final Class<?> klass, final String methodName, final Class<?>... arguments) throws NoSuchMethodException {
         final MethodKey methodKey = new MethodKey(klass, methodName, arguments);
-        final Pair<Method, NoSuchMethodException> methodOrException = METHOD_CACHE.get(methodKey);
+        final Pair<Method, NoSuchMethodException> methodOrException = METHOD_CACHE.getIfPresent(methodKey);
         if (methodOrException == null) {
             try {
                 final Method method = klass.getDeclaredMethod(methodName, arguments);
-                // let's avoid caching for generated types to reduce potential for memory leaks
-                // TODO Need to consider the use of a cache with an eviction strategy (https://github.com/google/guava/wiki/CachesExplained)
-                // which would potentially allow caching even for generated typed, but would ensure eventual eviction.
-                if (!DynamicEntityClassLoader.isGenerated(klass)) {
-                    METHOD_CACHE.put(methodKey, pair(method, null));
-                }
+                METHOD_CACHE.put(methodKey, pair(method, null));
                 return method;
             } catch (final NoSuchMethodException ex) {
                 METHOD_CACHE.put(methodKey, pair(null, ex));
