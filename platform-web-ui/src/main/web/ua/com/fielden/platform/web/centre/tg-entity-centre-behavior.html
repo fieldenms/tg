@@ -505,9 +505,12 @@
                     return this.$.egi.getSelectedEntities();
                 }).bind(self);
                 
-                self._bindCentreInfo = function (entityAndCustomObject, exceptionOccured) {
-                    self.$.selection_criteria._provideExceptionOccured(entityAndCustomObject[0], exceptionOccured);
-                    self.$.selection_criteria._postSavedDefault(entityAndCustomObject);
+                self._bindCentreInfo = function (customObject) {
+                    if (Object.keys(customObject).length > 0) {
+                        const entityAndCustomObject = [customObject['appliedCriteriaEntity'], customObject];
+                        self.$.selection_criteria._provideExceptionOccured(entityAndCustomObject[0], null);
+                        self.$.selection_criteria._postSavedDefault(entityAndCustomObject);
+                    }
                 };
                 
                 self._processDiscarderResponse = function (e) {

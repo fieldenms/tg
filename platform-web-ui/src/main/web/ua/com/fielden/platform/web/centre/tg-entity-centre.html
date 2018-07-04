@@ -249,23 +249,16 @@
         attached: function () {
             const self = this;
             
-            self._bindCustomObject = function (customObject) {
-                if (Object.keys(customObject).length > 0) {
-                    const entityAndCustomObject = [customObject['appliedCriteriaEntity'], customObject];
-                    self._bindCentreInfo(entityAndCustomObject, null);
-                }
-            };
-            
             self.bottomActions = [
                 {
                     preAction: function (action) {
                         action.modifyFunctionalEntity = function (bindingEntity, master, action) {
-                            self._bindCustomObject(master._currEntity.get('customObject'));
+                            self._bindCentreInfo(master._currEntity.get('customObject'));
                         };
                         return Promise.resolve(true);
                     },
                     postActionSuccess: function (functionalEntity, action) {
-                        self._bindCustomObject(functionalEntity.get('customObject'));
+                        self._bindCentreInfo(functionalEntity.get('customObject'));
                     },
                     attrs: {
                         entityType:'ua.com.fielden.platform.web.centre.CentreConfigEditAction', currentState:'EDIT', centreUuid: self.uuid
