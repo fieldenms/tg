@@ -906,9 +906,9 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
 
         final List<EntityActionConfig> frontActions = this.dslDefaultConfig.getFrontActions();
         for (int actionIndex = 0; actionIndex < frontActions.size(); actionIndex++) {
-            final FunctionalActionElement actionElement = new FunctionalActionElement(frontActions.get(actionIndex), actionIndex, FunctionalActionKind.TOP_LEVEL);
+            final FunctionalActionElement actionElement = new FunctionalActionElement(frontActions.get(actionIndex), actionIndex, FunctionalActionKind.FRONT);
             importPaths.add(actionElement.importPath());
-            frontActionsDom.add(actionElement.render().clazz("custom-front-action"));
+            frontActionsDom.add(actionElement.render());
             frontActionsObjects.append(prefix + createActionObject(actionElement));
         }
         ////////////////////front action (END)////////////////////

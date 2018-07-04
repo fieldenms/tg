@@ -2,6 +2,7 @@ package ua.com.fielden.platform.basic.autocompleter;
 
 import static java.lang.String.format;
 import static ua.com.fielden.platform.entity.AbstractEntity.DESC;
+import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
 import static ua.com.fielden.platform.entity.ActivatableAbstractEntity.ACTIVE;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.cond;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.orderBy;
@@ -29,11 +30,13 @@ import ua.com.fielden.platform.reflection.TitlesDescsGetter;
 public class FallbackValueMatcherWithContext<CONTEXT extends AbstractEntity<?>, T extends AbstractEntity<?>> extends AbstractSearchEntityByKeyWithContext<CONTEXT, T> {
 
     private final Class<T> entityType;
+    private final boolean hasDescProp;
     private final boolean activeOnly;
 
     public FallbackValueMatcherWithContext(final IEntityDao<T> co, final boolean activeOnly) {
         super(co);
-        entityType = co.getEntityType();
+        this.entityType = co.getEntityType();
+        this.hasDescProp = hasDescProperty(entityType);
         this.activeOnly = activeOnly;
         if (activeOnly && !ActivatableAbstractEntity.class.isAssignableFrom(entityType)) {
             final String entityTitle = TitlesDescsGetter.getEntityTitleAndDesc(entityType).getKey();
@@ -51,19 +54,17 @@ public class FallbackValueMatcherWithContext<CONTEXT extends AbstractEntity<?>, 
     protected ConditionModel makeSearchCriteriaModel(final CONTEXT context, final String searchString) {
         final ConditionModel originalSearchCriteria = super.makeSearchCriteriaModel(context, searchString);
 
-        final ConditionModel secondStepSearchCriteria = "%".equals(searchString) ? cond().val(1).eq().val(1).model() : 
-        	(hasDescProperty(entityType) ? cond().condition(originalSearchCriteria).or().prop(DESC).iLike().val("%" + searchString).model() : originalSearchCriteria);
+        final ConditionModel matchCondition = hasDescProp ? cond().condition(originalSearchCriteria).or().prop(DESC).iLike().val("%" + searchString).model() : originalSearchCriteria;
+        final ConditionModel secondStepSearchCriteria = "%".equals(searchString) ? cond().val(1).eq().val(1).model() : matchCondition;
 
-        final ConditionModel finalStepSearchCriteria = activeOnly ? cond().condition(secondStepSearchCriteria).and().prop(ACTIVE).eq().val(true).model() : secondStepSearchCriteria;
-
-    	return finalStepSearchCriteria;
+        return activeOnly ? cond().condition(secondStepSearchCriteria).and().prop(ACTIVE).eq().val(true).model() : secondStepSearchCriteria;
     }
-    
+
     @Override
     protected OrderingModel makeOrderingModel(final String searchString) {
-    	if (hasDescProperty(entityType) && !"%".equals(searchString)) {
-    		return orderBy().order(createKeyBeforeDescOrderingModel(searchString)).order(super.makeOrderingModel(searchString)).model();
-    	} 
+        if (hasDescProp && !"%".equals(searchString)) {
+            return orderBy().order(createKeyBeforeDescOrderingModel(searchString)).order(super.makeOrderingModel(searchString)).model();
+        }
         return super.makeOrderingModel(searchString);
     }
 }

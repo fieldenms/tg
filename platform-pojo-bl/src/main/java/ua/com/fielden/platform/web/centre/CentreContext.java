@@ -2,6 +2,7 @@ package ua.com.fielden.platform.web.centre;
 
 import static java.lang.String.format;
 
+import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -82,10 +83,10 @@ public final class CentreContext<T extends AbstractEntity<?>, M extends Abstract
             for (final AbstractEntity<?> el: selectedEntities) {
                 final Class<? extends AbstractEntity<?>> originalType = el.getDerivedFromType();
                 final List<String> originalTypeProperties = Finder.streamRealProperties(originalType)
-                    .map(field -> field.getName())
+                    .map(Field::getName)
                     .collect(Collectors.toList());
                 final String[] propsToBeProxied = Finder.streamRealProperties(el.getClass())
-                    .map(field -> field.getName())
+                    .map(Field::getName)
                     .filter(name -> Reflector.isPropertyProxied(el, name) && originalTypeProperties.contains(name))
                     .collect(Collectors.toList())
                     .toArray(new String[] {});
@@ -101,16 +102,18 @@ public final class CentreContext<T extends AbstractEntity<?>, M extends Abstract
         return selectionCrit;
     }
 
-    public void setSelectionCrit(final EnhancedCentreEntityQueryCriteria<T, ? extends IEntityDao<T>> selectionCrit) {
+    public CentreContext<T,M> setSelectionCrit(final EnhancedCentreEntityQueryCriteria<T, ? extends IEntityDao<T>> selectionCrit) {
         this.selectionCrit = selectionCrit;
+        return this;
     }
 
     public M getMasterEntity() {
         return masterEntity;
     }
 
-    public void setMasterEntity(final M masterEntity) {
+    public CentreContext<T,M> setMasterEntity(final M masterEntity) {
         this.masterEntity = masterEntity;
+        return this;
     }
 
     @Override

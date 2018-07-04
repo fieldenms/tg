@@ -37,7 +37,7 @@ public abstract class AbstractSearchEntityByKeyWithCentreContext<T extends Abstr
 
     private static final int DEFAULT_PAGE_SIZE = 10;
     private static final Supplier<? extends EntityCentreExecutionException> CO_MISSING_EXCEPTION_SUPPLIER = () -> new EntityCentreExecutionException("A companion is massing to perform this operation.");
-    
+
     private final Optional<IEntityDao<T>> maybeCompanion;
     private final fetch<T> defaultFetchModel;
     private fetch<T> fetchModel;
@@ -123,8 +123,9 @@ public abstract class AbstractSearchEntityByKeyWithCentreContext<T extends Abstr
     }
 
     @Override
-    public void setContext(final CentreContext<T, ?> context) {
+    public AbstractSearchEntityByKeyWithCentreContext<T> setContext(final CentreContext<T, ?> context) {
         this.context = context;
+        return this;
     }
 
     @Override

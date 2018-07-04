@@ -9,6 +9,7 @@ import static ua.com.fielden.platform.utils.EntityUtils.isDate;
 import static ua.com.fielden.platform.utils.EntityUtils.isEntityType;
 import static ua.com.fielden.platform.utils.EntityUtils.isRangeType;
 import static ua.com.fielden.platform.utils.EntityUtils.isString;
+import static ua.com.fielden.platform.utils.MiscUtilities.prepare;
 import static ua.com.fielden.platform.utils.Pair.pair;
 import static ua.com.fielden.snappy.DateUtilities.dateOfRangeThatIncludes;
 
@@ -24,7 +25,6 @@ import java.util.stream.Collectors;
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 
-import ua.com.fielden.platform.basic.autocompleter.PojoValueMatcher;
 import ua.com.fielden.platform.domaintree.ICalculatedProperty.CalculatedPropertyAttribute;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.AbstractUnionEntity;
@@ -659,7 +659,7 @@ public class DynamicQueryBuilder {
             if (!crits[index].contains("*")) {
                 crits[index] = "*" + crits[index] + "*";
             }
-            crits[index] = PojoValueMatcher.prepare(crits[index]);
+            crits[index] = prepare(crits[index]);
         }
         return crits;
     }
@@ -671,7 +671,7 @@ public class DynamicQueryBuilder {
      * @return
      */
     public static String[] prepCritValuesForEntityTypedProp(final List<String> criteria) {
-        return MiscUtilities.prepare(criteria);
+        return prepare(criteria);
     }
 
     /**

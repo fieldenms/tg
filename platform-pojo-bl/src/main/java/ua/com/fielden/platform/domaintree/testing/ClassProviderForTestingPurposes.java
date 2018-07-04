@@ -10,7 +10,7 @@ import ua.com.fielden.platform.serialisation.api.impl.ProvidedSerialisationClass
 
 public class ClassProviderForTestingPurposes extends ProvidedSerialisationClassProvider {
 
-    private static final List<Class<?>> testTypes = new ArrayList<Class<?>>();
+    private static final List<Class<?>> testTypes = new ArrayList<>();
     static {
         testTypes.addAll(DefaultSerialisationClassProvider.utilityGeneratedClasses());
         testTypes.add(findClass("ua.com.fielden.platform.domaintree.testing.MiMasterEntityForGlobalDomainTree"));
@@ -58,7 +58,7 @@ public class ClassProviderForTestingPurposes extends ProvidedSerialisationClassP
     }
 
     private static Class<?>[] concatenate(final Class<?>[] array, final Class<?>[] classes) {
-        final Class<?> concatenated[] = new Class<?>[array.length + classes.length];
+        final Class<?>[] concatenated = new Class<?>[array.length + classes.length];
         addToArray(concatenated, 0, array);
         addToArray(concatenated, array.length, classes);
         return concatenated;

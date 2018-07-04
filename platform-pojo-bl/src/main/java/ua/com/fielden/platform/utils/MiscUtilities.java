@@ -12,12 +12,11 @@ import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.List;
 import java.util.Properties;
+import java.util.regex.Pattern;
 
 import javax.swing.filechooser.FileFilter;
 
 import org.apache.commons.lang.StringUtils;
-
-import ua.com.fielden.platform.basic.autocompleter.PojoValueMatcher;
 
 public class MiscUtilities {
 
@@ -62,7 +61,7 @@ public class MiscUtilities {
         final List<String> result = new ArrayList<>();
         if (criteria != null) {
             for (final String crit : criteria) {
-                result.add(PojoValueMatcher.prepare(crit));
+                result.add(prepare(crit));
             }
         }
         // eliminate empty or null values
@@ -74,6 +73,37 @@ public class MiscUtilities {
         }
         return finalRes.toArray(new String[] {});
     }
+
+    /**
+     * Returns true if value matches valuePattern, false otherwise. This method behaves like autocompleter's value matcher
+     *
+     * @param value
+     * @param valuePattern
+     * @return
+     */
+    public static boolean valueMatchesPattern(final String value, final String valuePattern) {
+        final String adjustedValuePattern = valuePattern.contains("*") ? valuePattern.replaceAll("\\*", "%") : valuePattern + "%";
+
+        final String prefex = adjustedValuePattern.startsWith("%") ? "" : "^";
+        final String postfix = adjustedValuePattern.endsWith("%") ? "" : "$";
+        final String strPattern = prefex + adjustedValuePattern.replaceAll("\\%", ".*") + postfix;
+
+        return Pattern.compile(strPattern).matcher(value).find();
+    }
+
+    /**
+     * Converts auto-completer-like regular expression to normal regular expression (simply replaces all '*' with '%' characters)
+     *
+     * @param autocompleterExp
+     * @return
+     */
+    public static String prepare(final String autocompleterExp) {
+        if ("*".equals(autocompleterExp.trim())) {
+            return null;
+        }
+        return autocompleterExp.replaceAll("\\*", "%").trim();
+    }
+    
 
     /**
      * Converts the content of the input stream into a string.

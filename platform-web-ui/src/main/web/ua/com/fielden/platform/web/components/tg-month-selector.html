@@ -223,6 +223,9 @@
             _selectDay: function (event, detail, el) {
                 var yearMonthDay = { year: this.year, month: this.month, day: event.model.day };
                 this.selectedDate = _momentTz(yearMonthDay, this.timeZone).valueOf();
+                if (event.detail.sourceEvent.detail > 1) {
+                    this.fire("tg-accept-date");
+                }
             },
 
             /**
