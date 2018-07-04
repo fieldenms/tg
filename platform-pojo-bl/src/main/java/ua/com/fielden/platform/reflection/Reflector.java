@@ -9,6 +9,7 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -38,7 +39,18 @@ import ua.com.fielden.platform.utils.Pair;
  *
  */
 public final class Reflector {
-    private static final Map<MethodKey, Pair<Method, NoSuchMethodException>> methods = new ConcurrentHashMap<>();
+    /**
+     * A cache for {@link Method} instances.
+     */
+    private static final Map<MethodKey, Pair<Method, NoSuchMethodException>> METHOD_CACHE = new ConcurrentHashMap<>(1024);
+    
+    /**
+     * A convenient way to access a cache of methods as an immutable map. Could be used for inspection.
+     * @return
+     */
+    public static Map<MethodKey, Pair<Method, NoSuchMethodException>> methodCache() {
+        return Collections.unmodifiableMap(METHOD_CACHE);
+    }
 
     /** A symbol that represents a separator between properties in property path expressions. */
     public static final String DOT_SPLITTER = "\\.";
@@ -95,7 +107,7 @@ public final class Reflector {
 
     /** Clear cached methods. */
     public static void clearMethodsCache() {
-        methods.clear();
+        METHOD_CACHE.clear();
     }
 
     /**
@@ -184,17 +196,19 @@ public final class Reflector {
 
     private static synchronized Method getDeclaredMethod(final Class<?> klass, final String methodName, final Class<?>... arguments) throws NoSuchMethodException {
         final MethodKey methodKey = new MethodKey(klass, methodName, arguments);
-        final Pair<Method, NoSuchMethodException> methodOrException = methods.get(methodKey);
+        final Pair<Method, NoSuchMethodException> methodOrException = METHOD_CACHE.get(methodKey);
         if (methodOrException == null) {
             try {
                 final Method method = klass.getDeclaredMethod(methodName, arguments);
                 // let's avoid caching for generated types to reduce potential for memory leaks
+                // TODO Need to consider the use of a cache with an eviction strategy (https://github.com/google/guava/wiki/CachesExplained)
+                // which would potentially allow caching even for generated typed, but would ensure eventual eviction.
                 if (!DynamicEntityClassLoader.isGenerated(klass)) {
-                    methods.put(methodKey, pair(method, null));
+                    METHOD_CACHE.put(methodKey, pair(method, null));
                 }
                 return method;
             } catch (final NoSuchMethodException ex) {
-                methods.put(methodKey, pair(null, ex));
+                METHOD_CACHE.put(methodKey, pair(null, ex));
                 throw ex;
             }
         } else if (methodOrException.getKey() != null) {
