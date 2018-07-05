@@ -2,7 +2,6 @@ package ua.com.fielden.platform.basic.autocompleter;
 
 import static java.lang.String.format;
 import static ua.com.fielden.platform.entity.AbstractEntity.DESC;
-import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
 import static ua.com.fielden.platform.entity.ActivatableAbstractEntity.ACTIVE;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.cond;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.orderBy;
@@ -52,19 +51,21 @@ public class FallbackValueMatcherWithContext<CONTEXT extends AbstractEntity<?>, 
 
     @Override
     protected ConditionModel makeSearchCriteriaModel(final CONTEXT context, final String searchString) {
-        final ConditionModel originalSearchCriteria = super.makeSearchCriteriaModel(context, searchString);
+        if ("%".equals(searchString)) {
+            return cond().val(1).eq().val(1).model();
+        }
 
-        final ConditionModel matchCondition = hasDescProp ? cond().condition(originalSearchCriteria).or().prop(DESC).iLike().val("%" + searchString).model() : originalSearchCriteria;
-        final ConditionModel secondStepSearchCriteria = "%".equals(searchString) ? cond().val(1).eq().val(1).model() : matchCondition;
-
-        return activeOnly ? cond().condition(secondStepSearchCriteria).and().prop(ACTIVE).eq().val(true).model() : secondStepSearchCriteria;
+        final ConditionModel originalCondition = super.makeSearchCriteriaModel(context, searchString);
+        final ConditionModel descCondition = hasDescProp ? cond().condition(originalCondition).or().prop(DESC).iLike().val("%" + searchString).model() : originalCondition;
+        return activeOnly ? cond().condition(descCondition).and().prop(ACTIVE).eq().val(true).model() : descCondition;
     }
 
     @Override
     protected OrderingModel makeOrderingModel(final String searchString) {
-        if (hasDescProp && !"%".equals(searchString)) {
-            return orderBy().order(createKeyBeforeDescOrderingModel(searchString)).order(super.makeOrderingModel(searchString)).model();
+        if ("%".equals(searchString)) {
+            return super.makeOrderingModel(searchString);
+        } else {
+            return orderBy().order(createRelaxedKeyDescOrderingModel(searchString)).order(super.makeOrderingModel(searchString)).model();
         }
-        return super.makeOrderingModel(searchString);
     }
 }
