@@ -20,7 +20,6 @@ import ua.com.fielden.platform.entity.functional.centre.CentreContextHolder;
 import ua.com.fielden.platform.entity.matcher.IValueMatcherFactory;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
 import ua.com.fielden.platform.types.tuples.T2;
-import ua.com.fielden.platform.web.centre.CentreConfigEditAction.EditKind;
 import ua.com.fielden.platform.web.centre.LoadableCentreConfig;
 
 /**
@@ -34,7 +33,8 @@ import ua.com.fielden.platform.web.centre.LoadableCentreConfig;
 public class EnhancedCentreEntityQueryCriteria<T extends AbstractEntity<?>, DAO extends IEntityDao<T>> extends EntityQueryCriteria<ICentreDomainTreeManagerAndEnhancer, T, DAO> {
     private Supplier<ICentreDomainTreeManagerAndEnhancer> previouslyRunCentreSupplier;
     private Function<Map<String, Object>, EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, ? extends IEntityDao<AbstractEntity<?>>>> freshCentreApplier;
-    private BiFunction<T2<EditKind, Optional<String>>, String, Map<String, Object>> centreEditor; // TODO be splitted on centreEditor and centreSaver
+    private BiFunction<Optional<String>, String, Map<String, Object>> centreEditor;
+    private BiFunction<Optional<String>, String, Map<String, Object>> centreSaver;
     private Runnable centreDeleter;
     private Runnable freshCentreSaver;
     private Runnable configDuplicateAction;
@@ -102,12 +102,20 @@ public class EnhancedCentreEntityQueryCriteria<T extends AbstractEntity<?>, DAO 
         return freshCentreApplier;
     }
 
-    public void setCentreEditor(final BiFunction<T2<EditKind, Optional<String>>, String, Map<String, Object>> centreEditor) {
+    public void setCentreEditor(final BiFunction<Optional<String>, String, Map<String, Object>> centreEditor) {
         this.centreEditor = centreEditor;
     }
 
-    public BiFunction<T2<EditKind, Optional<String>>, String, Map<String, Object>> centreEditor() {
+    public BiFunction<Optional<String>, String, Map<String, Object>> centreEditor() {
         return centreEditor;
+    }
+
+    public void setCentreSaver(final BiFunction<Optional<String>, String, Map<String, Object>> centreSaver) {
+        this.centreSaver = centreSaver;
+    }
+
+    public BiFunction<Optional<String>, String, Map<String, Object>> centreSaver() {
+        return centreSaver;
     }
 
     public void setDefaultCentreClearer(final Runnable defaultCentreClearer) {

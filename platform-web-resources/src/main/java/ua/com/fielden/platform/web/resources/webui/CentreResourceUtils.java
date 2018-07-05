@@ -14,8 +14,6 @@ import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract
 import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.isOrNullDefault;
 import static ua.com.fielden.platform.types.tuples.T2.t2;
 import static ua.com.fielden.platform.utils.EntityUtils.equalsEx;
-import static ua.com.fielden.platform.web.centre.CentreConfigEditAction.EditKind.EDIT;
-import static ua.com.fielden.platform.web.centre.CentreConfigEditAction.EditKind.SAVE;
 import static ua.com.fielden.platform.web.utils.EntityResourceUtils.getEntityType;
 import static ua.com.fielden.platform.web.utils.EntityResourceUtils.getOriginalManagedType;
 import static ua.com.fielden.platform.web.utils.EntityResourceUtils.getVersion;
@@ -507,19 +505,21 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
         validationPrototype.setCentreTitleAndDescGetter((saveAsNameForTitleAndDesc) -> {
             return saveAsNameForTitleAndDesc.map(name -> t2(name, updateCentreDesc(gdtm, miType, of(name), device)));
         });
-        validationPrototype.setCentreEditor((editKindAndNewName, newDesc) -> {
-            final Optional<String> newName = editKindAndNewName._2;
-            if (SAVE.equals(editKindAndNewName._1)) {
-                final ICentreDomainTreeManagerAndEnhancer freshCentre = updateCentre(gdtm, miType, FRESH_CENTRE_NAME, saveAsName, device);
-                // save the 'fresh' centre with a new name -- buttons SAVE / DISCARD will be disabled
-                initAndCommit(gdtm, miType, FRESH_CENTRE_NAME, newName, device, freshCentre, newDesc);
-                initAndCommit(gdtm, miType, SAVED_CENTRE_NAME, newName, device, freshCentre, null);
-                // when switching to new configuration we need to make it preferred
-                validationPrototype.preferredConfigMaker().accept(newName);
-            } else if (EDIT.equals(editKindAndNewName._1)) {
-                editCentreTitleAndDesc(gdtm, miType, saveAsName, device, newName.get(), newDesc);
-                // currently loaded configuration should remain preferred -- no action is required
-            }
+        validationPrototype.setCentreEditor((newName, newDesc) -> {
+            editCentreTitleAndDesc(gdtm, miType, saveAsName, device, newName.get(), newDesc);
+            // currently loaded configuration should remain preferred -- no action is required
+            return validationPrototype.centreCustomObjectGetter().apply(
+                createCriteriaEntity(validationPrototype.centreContextHolder().getModifHolder(), companionFinder, critGenerator, miType, newName, gdtm, device),
+                newName
+            );
+        });
+        validationPrototype.setCentreSaver((newName, newDesc) -> {
+            final ICentreDomainTreeManagerAndEnhancer freshCentre = updateCentre(gdtm, miType, FRESH_CENTRE_NAME, saveAsName, device);
+            // save the 'fresh' centre with a new name -- buttons SAVE / DISCARD will be disabled
+            initAndCommit(gdtm, miType, FRESH_CENTRE_NAME, newName, device, freshCentre, newDesc);
+            initAndCommit(gdtm, miType, SAVED_CENTRE_NAME, newName, device, freshCentre, null);
+            // when switching to new configuration we need to make it preferred
+            validationPrototype.preferredConfigMaker().accept(newName);
             return validationPrototype.centreCustomObjectGetter().apply(
                 createCriteriaEntity(validationPrototype.centreContextHolder().getModifHolder(), companionFinder, critGenerator, miType, newName, gdtm, device),
                 newName

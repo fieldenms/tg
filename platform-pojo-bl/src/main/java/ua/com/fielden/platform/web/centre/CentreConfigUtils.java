@@ -3,7 +3,6 @@ package ua.com.fielden.platform.web.centre;
 import static java.util.Optional.empty;
 import static java.util.Optional.of;
 import static ua.com.fielden.platform.error.Result.failure;
-
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.Supplier;
