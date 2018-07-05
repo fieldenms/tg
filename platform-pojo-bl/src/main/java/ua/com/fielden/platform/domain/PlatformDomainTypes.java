@@ -46,6 +46,7 @@ import ua.com.fielden.platform.ui.config.EntityMasterConfig;
 import ua.com.fielden.platform.ui.config.MainMenuItem;
 import ua.com.fielden.platform.web.centre.CentreColumnWidthConfigUpdater;
 import ua.com.fielden.platform.web.centre.CentreConfigDeleteAction;
+import ua.com.fielden.platform.web.centre.CentreConfigDuplicateAction;
 import ua.com.fielden.platform.web.centre.CentreConfigEditAction;
 import ua.com.fielden.platform.web.centre.CentreConfigLoadAction;
 import ua.com.fielden.platform.web.centre.CentreConfigUpdater;
@@ -69,11 +70,16 @@ public class PlatformDomainTypes {
         types.add(CentreConfigUpdaterDefaultAction.class);
         types.add(CustomisableColumn.class);
         types.add(CentreColumnWidthConfigUpdater.class);
-        types.add(CentreConfigEditAction.class);
+        
+        // TODO types.add(CentreConfigNewAction.class);
+        types.add(CentreConfigDuplicateAction.class);
         types.add(CentreConfigLoadAction.class);
+        types.add(CentreConfigEditAction.class);
+        types.add(CentreConfigDeleteAction.class);
+        // TODO types.add(CentreConfigSaveAction.class);
         types.add(LoadableCentreConfig.class);
         types.add(OverrideCentreConfig.class);
-        types.add(CentreConfigDeleteAction.class);
+        
         types.add(UserAndRoleAssociation.class);
         types.add(SecurityRoleAssociation.class);
         types.add(EntityCentreConfig.class);

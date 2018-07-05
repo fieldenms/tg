@@ -13,7 +13,6 @@ import ua.com.fielden.platform.dao.CommonEntityDao;
 import ua.com.fielden.platform.dao.annotations.SessionRequired;
 import ua.com.fielden.platform.entity.annotation.EntityType;
 import ua.com.fielden.platform.entity.query.IFilter;
-import ua.com.fielden.platform.entity_centre.review.criteria.EnhancedCentreEntityQueryCriteria;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.web.utils.ICriteriaEntityRestorer;
 
@@ -38,26 +37,25 @@ public class CentreConfigEditActionDao extends CommonEntityDao<CentreConfigEditA
     @SessionRequired
     public CentreConfigEditAction save(final CentreConfigEditAction entity) {
         if (!entity.isSkipUi()) {
-            // validate centre configuration edit / copy action before performing actual edit / copy
+            // validate centre configuration action entity before performing actual edit / saveAs
             entity.isValid().ifFailure(Result::throwRuntime);
             
-            if (entity.hasWarnings() && !moreData(CONTINUATION_KEY).isPresent()) {
+            if (entity.hasWarnings() && !moreData(CONTINUATION_KEY).isPresent()) { // confirm overriding behaviour for owned configuration; the only warning could be in 'title' property as per CentreConfigEditActionTitleValidator
                 throw new NeedMoreData("Override configuration?", OverrideCentreConfig.class, CONTINUATION_KEY);
             }
             
-            final EnhancedCentreEntityQueryCriteria<?, ?> selectionCrit = criteriaEntityRestorer.restoreCriteriaEntity(entity.getCentreContextHolder());
-            
-            // perform actual copy / edit using centreEditor() closure
+            // perform actual edit / saveAs using centreEditor() closure
             entity.setCustomObject(
-                selectionCrit.centreEditor().apply(
+                criteriaEntityRestorer.restoreCriteriaEntity(entity.getCentreContextHolder())
+                .centreEditor().apply(
                     t2(valueOf(entity.getEditKind()), of(entity.getTitle())),
                     entity.getDesc()
-                ).orElse(new HashMap<>())
+                )
             );
         } else {
-            entity.setCustomObject(new HashMap<>());
+            entity.setCustomObject(new HashMap<>()); // clear custom object not to bind centre information second time (first time -- after retrieval, see client-side _bindCentreInfo method)
         }
-        return super.save(entity);
+        return entity;
     }
     
 }

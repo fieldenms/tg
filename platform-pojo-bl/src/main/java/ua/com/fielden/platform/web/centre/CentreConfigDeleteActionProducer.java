@@ -1,13 +1,10 @@
 package ua.com.fielden.platform.web.centre;
 
 import static java.util.Optional.empty;
-import static java.util.Optional.of;
 import static ua.com.fielden.platform.error.Result.failure;
-import static ua.com.fielden.platform.utils.EntityUtils.equalsEx;
 import static ua.com.fielden.platform.web.centre.CentreConfigDeleteAction.DeleteKind.DELETE;
-import static ua.com.fielden.platform.web.centre.CentreConfigEditActionProducer.isDefaultOrInherited;
-
-import java.util.Optional;
+import static ua.com.fielden.platform.web.centre.CentreConfigUtils.getCustomObject;
+import static ua.com.fielden.platform.web.centre.CentreConfigUtils.isDefaultOrInherited;
 
 import com.google.inject.Inject;
 
@@ -43,10 +40,8 @@ public class CentreConfigDeleteActionProducer extends DefaultEntityProducerWithC
                 selectionCrit.centreDeleter().run();
             }
             selectionCrit.defaultCentreClearer().run();
-            if (!equalsEx(empty(), selectionCrit.saveAsNameSupplier().get())) {
-                selectionCrit.preferredConfigMaker().accept(empty());
-            }
-            entity.setCustomObject(CentreConfigEditActionProducer.getCustomObject(selectionCrit, selectionCrit.criteriaValidationPrototypeCreator().apply(empty()), empty()));
+            selectionCrit.preferredConfigMaker().accept(empty());
+            entity.setCustomObject(getCustomObject(selectionCrit, selectionCrit.criteriaValidationPrototypeCreator().apply(empty()), empty()));
         }
         return entity;
     }

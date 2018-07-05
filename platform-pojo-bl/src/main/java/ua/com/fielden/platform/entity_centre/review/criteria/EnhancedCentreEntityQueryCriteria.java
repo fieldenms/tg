@@ -34,10 +34,10 @@ import ua.com.fielden.platform.web.centre.LoadableCentreConfig;
 public class EnhancedCentreEntityQueryCriteria<T extends AbstractEntity<?>, DAO extends IEntityDao<T>> extends EntityQueryCriteria<ICentreDomainTreeManagerAndEnhancer, T, DAO> {
     private Supplier<ICentreDomainTreeManagerAndEnhancer> previouslyRunCentreSupplier;
     private Function<Map<String, Object>, EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, ? extends IEntityDao<AbstractEntity<?>>>> freshCentreApplier;
-    private BiFunction<T2<EditKind, Optional<String>>, String, Optional<Map<String, Object>>> centreEditor;
+    private BiFunction<T2<EditKind, Optional<String>>, String, Map<String, Object>> centreEditor; // TODO be splitted on centreEditor and centreSaver
     private Runnable centreDeleter;
     private Runnable freshCentreSaver;
-    private Runnable freshCentreCopier;
+    private Runnable configDuplicateAction;
     private Consumer<String> inheritedCentreUpdater;
     private Runnable defaultCentreClearer;
     private Supplier<List<LoadableCentreConfig>> loadableCentresSupplier;
@@ -102,11 +102,11 @@ public class EnhancedCentreEntityQueryCriteria<T extends AbstractEntity<?>, DAO 
         return freshCentreApplier;
     }
 
-    public void setCentreEditor(final BiFunction<T2<EditKind, Optional<String>>, String, Optional<Map<String, Object>>> centreEditor) {
+    public void setCentreEditor(final BiFunction<T2<EditKind, Optional<String>>, String, Map<String, Object>> centreEditor) {
         this.centreEditor = centreEditor;
     }
 
-    public BiFunction<T2<EditKind, Optional<String>>, String, Optional<Map<String, Object>>> centreEditor() {
+    public BiFunction<T2<EditKind, Optional<String>>, String, Map<String, Object>> centreEditor() {
         return centreEditor;
     }
 
@@ -126,12 +126,12 @@ public class EnhancedCentreEntityQueryCriteria<T extends AbstractEntity<?>, DAO 
         return inheritedCentreUpdater;
     }
 
-    public void setFreshCentreCopier(final Runnable freshCentreCopier) {
-        this.freshCentreCopier = freshCentreCopier;
+    public void setConfigDuplicateAction(final Runnable configDuplicateAction) {
+        this.configDuplicateAction = configDuplicateAction;
     }
 
-    public Runnable freshCentreCopier() {
-        return freshCentreCopier;
+    public Runnable configDuplicateAction() {
+        return configDuplicateAction;
     }
 
     public void setFreshCentreSaver(final Runnable freshCentreSaver) {

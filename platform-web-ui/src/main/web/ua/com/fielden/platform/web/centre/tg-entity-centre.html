@@ -258,11 +258,14 @@
                 return {
                     preAction: function (action) {
                         action.modifyFunctionalEntity = function (bindingEntity, master, action) {
+                            // bind custom object (if it is not empty) after every retrieval
                             self._bindCentreInfo(master._currEntity.get('customObject'));
                         };
+                        // use createPreActionPromise function to create custom preAction; otherwise preAction will always be successful and will immediately return true.
                         return createPreActionPromise ? createPreActionPromise() : Promise.resolve(true);
                     },
                     postActionSuccess: function (functionalEntity, action) {
+                        // bind custom object (if it is not empty) after every save
                         self._bindCentreInfo(functionalEntity.get('customObject'));
                     },
                     attrs: {

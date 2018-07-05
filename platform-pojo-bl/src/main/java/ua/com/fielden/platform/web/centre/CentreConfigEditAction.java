@@ -19,7 +19,7 @@ import ua.com.fielden.platform.entity.annotation.mutator.Handler;
 import ua.com.fielden.platform.entity.functional.centre.CentreContextHolder;
 
 /** 
- * Functional entity for editing / copying centre configuration.
+ * Functional entity for editing / saving centre configuration.
  * 
  * @author TG Team
  *
@@ -28,7 +28,7 @@ import ua.com.fielden.platform.entity.functional.centre.CentreContextHolder;
 @KeyType(NoKey.class)
 @DescTitle(value = "Description", desc = "Centre configuration description.")
 public class CentreConfigEditAction extends AbstractFunctionalEntityWithCentreContext<NoKey> {
-    public enum EditKind { COPY, EDIT, SAVE }
+    public enum EditKind { EDIT, SAVE }
     
     public CentreConfigEditAction() {
         setKey(NO_KEY);

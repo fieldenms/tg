@@ -37,7 +37,7 @@ public class CentreColumnWidthConfigUpdaterDao extends CommonEntityDao<CentreCol
         final EnhancedCentreEntityQueryCriteria<?, ?> criteriaEntityBeingUpdated = criteriaEntityRestorer.restoreCriteriaEntity(action.getCriteriaEntityHolder());
         final Class<?> root = criteriaEntityBeingUpdated.getEntityClass();
         final Consumer<Consumer<ICentreDomainTreeManagerAndEnhancer>> centreColumnWidthsAdjuster = criteriaEntityBeingUpdated.centreColumnWidthsAdjuster();
-
+        
         // use centreColumnWidthsAdjuster to update column widths in PREVIOUSLY_RUN and FRESH centre managers; commit them to the database
         centreColumnWidthsAdjuster.accept(centreManager -> {
             action.getColumnParameters().entrySet().forEach(entry -> {
@@ -51,7 +51,7 @@ public class CentreColumnWidthConfigUpdaterDao extends CommonEntityDao<CentreCol
         });
         
         action.setColumnParameters(new HashMap<>());
-        action.setCentreChanged(criteriaEntityBeingUpdated.centreChangedGetter().get());
+        action.setCentreChanged(criteriaEntityBeingUpdated.centreChangedGetter().get()); // centre will be changed after this action; changes can be discarded using DISCARD button on selection criteria
         return super.save(action);
     }
 }

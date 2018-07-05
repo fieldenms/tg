@@ -13,6 +13,7 @@ import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract
 import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.isNotDefault;
 import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.isOrNullDefault;
 import static ua.com.fielden.platform.types.tuples.T2.t2;
+import static ua.com.fielden.platform.utils.EntityUtils.equalsEx;
 import static ua.com.fielden.platform.web.centre.CentreConfigEditAction.EditKind.EDIT;
 import static ua.com.fielden.platform.web.centre.CentreConfigEditAction.EditKind.SAVE;
 import static ua.com.fielden.platform.web.utils.EntityResourceUtils.getEntityType;
@@ -478,11 +479,11 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
             final ICentreDomainTreeManagerAndEnhancer freshCentre = updateCentre(gdtm, miType, FRESH_CENTRE_NAME, saveAsName, device);
             initAndCommit(gdtm, miType, SAVED_CENTRE_NAME, saveAsName, device, freshCentre, null);
         }); 
-        validationPrototype.setFreshCentreCopier(() -> {
+        validationPrototype.setConfigDuplicateAction(() -> {
             final ICentreDomainTreeManagerAndEnhancer freshCentre = updateCentre(gdtm, miType, FRESH_CENTRE_NAME, saveAsName, device);
             initAndCommit(gdtm, miType, FRESH_CENTRE_NAME, empty(), device, freshCentre, null);
             // when switching to default configuration we need to make it preferred
-            makePreferred(gdtm, miType, empty(), device, companionFinder);
+            validationPrototype.preferredConfigMaker().accept(empty());
         }); 
         validationPrototype.setInheritedCentreUpdater(saveAsNameToLoad -> {
             final boolean centreChanged = isFreshCentreChanged(
@@ -514,12 +515,15 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
                 initAndCommit(gdtm, miType, FRESH_CENTRE_NAME, newName, device, freshCentre, newDesc);
                 initAndCommit(gdtm, miType, SAVED_CENTRE_NAME, newName, device, freshCentre, null);
                 // when switching to new configuration we need to make it preferred
-                makePreferred(gdtm, miType, newName, device, companionFinder);
+                validationPrototype.preferredConfigMaker().accept(newName);
             } else if (EDIT.equals(editKindAndNewName._1)) {
                 editCentreTitleAndDesc(gdtm, miType, saveAsName, device, newName.get(), newDesc);
                 // currently loaded configuration should remain preferred -- no action is required
             }
-            return of(validationPrototype.centreCustomObjectGetter().apply(createCriteriaEntity(validationPrototype.centreContextHolder().getModifHolder(), companionFinder, critGenerator, miType, newName, gdtm, device), newName));
+            return validationPrototype.centreCustomObjectGetter().apply(
+                createCriteriaEntity(validationPrototype.centreContextHolder().getModifHolder(), companionFinder, critGenerator, miType, newName, gdtm, device),
+                newName
+            );
         });
         validationPrototype.setLoadableCentresSupplier(() -> {
             return loadableConfigurations(gdtm, miType, device, companionFinder);
@@ -531,7 +535,9 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
             return retrievePreferredConfigName(gdtm, miType, device, companionFinder);
         });
         validationPrototype.setPreferredConfigMaker((saveAsNameToBecomePreferred) -> {
-            makePreferred(gdtm, miType, saveAsNameToBecomePreferred, device, companionFinder);
+            if (!equalsEx(saveAsNameToBecomePreferred, saveAsName)) {
+                makePreferred(gdtm, miType, saveAsNameToBecomePreferred, device, companionFinder);
+            }
         });
         
         final Field idField = Finder.getFieldByName(validationPrototype.getType(), AbstractEntity.ID);

@@ -2,7 +2,7 @@ package ua.com.fielden.platform.web.centre;
 
 import static java.util.Optional.of;
 import static ua.com.fielden.platform.error.Result.failure;
-import static ua.com.fielden.platform.utils.EntityUtils.equalsEx;
+import static ua.com.fielden.platform.web.centre.CentreConfigUtils.getCustomObject;
 
 import com.google.inject.Inject;
 
@@ -52,10 +52,8 @@ public class CentreConfigLoadActionDao extends CommonEntityDao<CentreConfigLoadA
                     selectionCrit.inheritedCentreUpdater().accept(saveAsNameToLoad);
                 }
             });
-        if (!equalsEx(of(saveAsNameToLoad), selectionCrit.saveAsNameSupplier().get())) {
-            selectionCrit.preferredConfigMaker().accept(of(saveAsNameToLoad));
-        }
-        entity.setCustomObject(CentreConfigEditActionProducer.getCustomObject(selectionCrit, selectionCrit.criteriaValidationPrototypeCreator().apply(of(saveAsNameToLoad)), of(saveAsNameToLoad)));
+        selectionCrit.preferredConfigMaker().accept(of(saveAsNameToLoad));
+        entity.setCustomObject(getCustomObject(selectionCrit, selectionCrit.criteriaValidationPrototypeCreator().apply(of(saveAsNameToLoad)), of(saveAsNameToLoad)));
         return super.save(entity);
     }
     

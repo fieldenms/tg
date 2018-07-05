@@ -76,8 +76,10 @@ public interface IBasicWebApplicationServerModule {
         bindType(IEntityExportAction.class).to(EntityExportActionDao.class);
         bindType(ICentreConfigUpdater.class).to(CentreConfigUpdaterDao.class);
         bindType(ICentreColumnWidthConfigUpdater.class).to(CentreColumnWidthConfigUpdaterDao.class);
-        bindType(ICentreConfigEditAction.class).to(CentreConfigEditActionDao.class);
+        
         bindType(ICentreConfigLoadAction.class).to(CentreConfigLoadActionDao.class);
+        bindType(ICentreConfigEditAction.class).to(CentreConfigEditActionDao.class);
+        // TODO bindType(ICentreConfigSaveAction.class).to(CentreConfigSaveActionDao.class);
     }
 
     /**

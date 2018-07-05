@@ -3,6 +3,7 @@ package ua.com.fielden.platform.web.centre;
 import static java.util.Collections.unmodifiableMap;
 import static ua.com.fielden.platform.entity.NoKey.NO_KEY;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -15,30 +16,25 @@ import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.entity.annotation.Title;
 
 /** 
- * Functional entity for deleting centre configuration.
+ * Functional entity for duplicating centre configuration.
  * 
  * @author TG Team
  *
  */
-@CompanionObject(ICentreConfigDeleteAction.class)
+@CompanionObject(ICentreConfigDuplicateAction.class)
 @KeyType(NoKey.class)
-public class CentreConfigDeleteAction extends AbstractFunctionalEntityWithCentreContext<NoKey> {
-    public enum DeleteKind { DELETE, NEW }
+public class CentreConfigDuplicateAction extends AbstractFunctionalEntityWithCentreContext<NoKey> {
     
-    public CentreConfigDeleteAction() {
+    public CentreConfigDuplicateAction() {
         setKey(NO_KEY);
     }
-    
-    @IsProperty
-    @Title("Delete Kind")
-    private String deleteKind;
     
     @IsProperty(Object.class)
     @Title("Custom object")
     private final Map<String, Object> customObject = new HashMap<>();
     
     @Observable
-    protected CentreConfigDeleteAction setCustomObject(final Map<String, Object> customObject) {
+    protected CentreConfigDuplicateAction setCustomObject(final Map<String, Object> customObject) {
         this.customObject.clear();
         this.customObject.putAll(customObject);
         return this;
@@ -46,16 +42,6 @@ public class CentreConfigDeleteAction extends AbstractFunctionalEntityWithCentre
     
     public Map<String, Object> getCustomObject() {
         return unmodifiableMap(customObject);
-    }
-    
-    @Observable
-    public CentreConfigDeleteAction setDeleteKind(final String deleteKind) {
-        this.deleteKind = deleteKind;
-        return this;
-    }
-    
-    public String getDeleteKind() {
-        return deleteKind;
     }
     
 }

@@ -82,8 +82,9 @@ public class PlatformTestDomainTypes implements IApplicationDomainProvider {
         entityTypes.remove(EntityExportAction.class);
         entityTypes.remove(CentreColumnWidthConfigUpdater.class);
         entityTypes.remove(CentreConfigUpdater.class);
-        entityTypes.remove(CentreConfigEditAction.class);
         entityTypes.remove(CentreConfigLoadAction.class);
+        entityTypes.remove(CentreConfigEditAction.class);
+        // TODO entityTypes.remove(CentreConfigSaveAction.class);
         // and test domain entities
         add(TgPerson.class);
         add(TgPersonName.class);

@@ -48,6 +48,7 @@ import ua.com.fielden.platform.test.IDbDrivenTestCaseConfiguration;
 import ua.com.fielden.platform.types.Money;
 import ua.com.fielden.platform.web.centre.CentreColumnWidthConfigUpdater;
 import ua.com.fielden.platform.web.centre.CentreConfigDeleteAction;
+import ua.com.fielden.platform.web.centre.CentreConfigDuplicateAction;
 import ua.com.fielden.platform.web.centre.CentreConfigEditAction;
 import ua.com.fielden.platform.web.centre.CentreConfigLoadAction;
 import ua.com.fielden.platform.web.centre.CentreConfigUpdater;
@@ -97,11 +98,16 @@ public class PlatformWebDbDrivenTestCaseConfiguration implements IDbDrivenTestCa
             domainTypes.add(CentreConfigUpdaterDefaultAction.class);
             domainTypes.add(CustomisableColumn.class);
             domainTypes.add(CentreColumnWidthConfigUpdater.class);
-            domainTypes.add(CentreConfigEditAction.class);
+            
+            // TODO types.add(CentreConfigNewAction.class);
+            domainTypes.add(CentreConfigDuplicateAction.class);
             domainTypes.add(CentreConfigLoadAction.class);
+            domainTypes.add(CentreConfigEditAction.class);
+            domainTypes.add(CentreConfigDeleteAction.class);
+            // TODO types.add(CentreConfigSaveAction.class);
             domainTypes.add(LoadableCentreConfig.class);
             domainTypes.add(OverrideCentreConfig.class);
-            domainTypes.add(CentreConfigDeleteAction.class);
+            
             domainTypes.add(UserAndRoleAssociation.class);
             domainTypes.add(UserAndRoleAssociationBatchAction.class);
             domainTypes.add(SecurityRoleAssociation.class);
