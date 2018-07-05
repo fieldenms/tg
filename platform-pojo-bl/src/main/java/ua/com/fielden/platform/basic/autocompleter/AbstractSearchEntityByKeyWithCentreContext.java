@@ -43,7 +43,7 @@ public abstract class AbstractSearchEntityByKeyWithCentreContext<T extends Abstr
     private fetch<T> fetchModel;
     private CentreContext<T, ?> context;
 
-    
+
 
     public AbstractSearchEntityByKeyWithCentreContext(final IEntityDao<T> companion) {
         this.maybeCompanion = Optional.ofNullable(companion);
@@ -58,7 +58,7 @@ public abstract class AbstractSearchEntityByKeyWithCentreContext<T extends Abstr
      * @return
      */
     protected ConditionModel makeSearchCriteriaModel(final CentreContext<T, ?> context, final String searchString) {
-        return createSearchByKeyCriteriaModel(searchString);
+        return createRelaxedSearchByKeyCriteriaModel(searchString);
     }
 
     /**
@@ -85,7 +85,7 @@ public abstract class AbstractSearchEntityByKeyWithCentreContext<T extends Abstr
 
     private Builder<T, EntityResultQueryModel<T>> createCommonQueryBuilderForFindMatches(final String searchString) {
         final IEntityDao<T> companion = maybeCompanion.orElseThrow(CO_MISSING_EXCEPTION_SUPPLIER);
-        
+
         final ConditionModel searchCriteria = makeSearchCriteriaModel(getContext(), searchString);
         final EntityResultQueryModel<T> queryModel = searchCriteria != null ? select(companion.getEntityType()).where().condition(searchCriteria).model() : select(companion.getEntityType()).model();
         queryModel.setFilterable(true);
@@ -94,7 +94,7 @@ public abstract class AbstractSearchEntityByKeyWithCentreContext<T extends Abstr
         fillParamsBasedOnContext(getContext(), params);
         return from(queryModel).with(ordering).with(params).lightweight();
     }
-    
+
     @Override
     public List<T> findMatches(final String searchString) {
         final IEntityDao<T> companion = maybeCompanion.orElseThrow(CO_MISSING_EXCEPTION_SUPPLIER);

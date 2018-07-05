@@ -1,7 +1,6 @@
 package ua.com.fielden.platform.basic.autocompleter;
 
 import static ua.com.fielden.platform.entity.AbstractEntity.DESC;
-import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.cond;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.orderBy;
 import static ua.com.fielden.platform.utils.EntityUtils.hasDescProperty;
@@ -43,18 +42,17 @@ public class FallbackValueMatcherWithCentreContext<T extends AbstractEntity<?>> 
             return cond().val(1).eq().val(1).model();
         }
 
-        if (hasDescProp) {
-            return cond().prop(KEY).iLike().val(searchString).or().prop(DESC).iLike().val("%" + searchString).model();
-        } else {
-            return super.makeSearchCriteriaModel(context, searchString);
-        }
+        final ConditionModel originalcondition = super.makeSearchCriteriaModel(context, searchString);
+
+        return hasDescProp ? cond().condition(originalcondition).or().prop(DESC).iLike().val("%" + searchString).model() : originalcondition;
     }
 
     @Override
     protected OrderingModel makeOrderingModel(final String searchString) {
-        if (hasDescProp && !"%".equals(searchString)) {
-            return orderBy().order(createKeyBeforeDescOrderingModel(searchString)).order(super.makeOrderingModel(searchString)).model();
+        if ("%".equals(searchString)) {
+            return super.makeOrderingModel(searchString);
+        } else {
+            return orderBy().order(createRelaxedKeyDescOrderingModel(searchString)).order(super.makeOrderingModel(searchString)).model();
         }
-        return super.makeOrderingModel(searchString);
     }
 }
