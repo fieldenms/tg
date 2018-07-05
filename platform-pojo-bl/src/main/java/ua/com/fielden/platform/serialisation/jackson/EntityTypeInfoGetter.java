@@ -36,7 +36,6 @@ public final class EntityTypeInfoGetter {
             LOGGER.debug(format("Registering new type with name [%s] = %s", entityType.getKey(), entityType));
         }
 
-        entityType.endInitialising();
         return entityType;
     }
 
