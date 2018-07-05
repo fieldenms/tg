@@ -1,13 +1,13 @@
 package ua.com.fielden.platform.serialisation.jackson;
 
 import static java.lang.String.format;
-import static java.util.Collections.unmodifiableMap;
 
-import java.util.Collections;
-import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.log4j.Logger;
+
+import ua.com.fielden.platform.reflection.asm.impl.DynamicTypeNamingService;
 
 /**
  * Utility to register entity types by their full class names (type table).
@@ -16,8 +16,9 @@ import org.apache.log4j.Logger;
  *
  */
 public final class EntityTypeInfoGetter {
-    private final Map<String, EntityType> typeTable = new LinkedHashMap<>();
-    private static final Logger logger = Logger.getLogger(EntityTypeInfoGetter.class);
+    private static final Logger LOGGER = Logger.getLogger(EntityTypeInfoGetter.class);
+
+    private final ConcurrentHashMap<String, EntityType> typeTable = new ConcurrentHashMap<>(512);
 
     public EntityType get(final String typeName) {
         return typeTable.get(typeName);
@@ -29,23 +30,26 @@ public final class EntityTypeInfoGetter {
      * @param entityType
      */
     public EntityType register(final EntityType entityType) {
-        if (!typeTable.containsKey(entityType.getKey())) {
-            typeTable.put(entityType.getKey(), entityType);
-            entityType.endInitialising();
-
-            logger.debug(format("Registering new type with name [%s] = %s", entityType.getKey(), entityType));
-        } else {
-            logger.warn(format("Is trying to register already registered new type [%s]. Has disregarded.", entityType.getKey()));
+        // lets avoid registering EntityType for generated types as not needed
+        if (!entityType.getKey().contains(DynamicTypeNamingService.APPENDIX)) {
+            typeTable.putIfAbsent(entityType.getKey(), entityType);
+            LOGGER.debug(format("Registering new type with name [%s] = %s", entityType.getKey(), entityType));
         }
-        return typeTable.get(entityType.getKey());
+
+        entityType.endInitialising();
+        return entityType;
     }
 
     /**
-     * Returns a map of full class names and corresponding entity types.
+     * Returns a map of full class names and corresponding entity types, which is primarily used for serialisation and sending to the client.
      *
      * @return
      */
     public Map<String, EntityType> getTypeTable() {
-        return unmodifiableMap(typeTable);
+        // before, when typeTable was containing instances representing generated types, it was required to purge it before returning for serialisation
+        //final Map<String, EntityType> cleaned = typeTable.entrySet().stream().filter(v -> !v.getKey().contains(DynamicTypeNamingService.APPENDIX))
+        //        .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue))
+        
+        return typeTable;
     }
 }
