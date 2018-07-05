@@ -22,9 +22,12 @@ import ua.com.fielden.platform.associations.one2one.DetailEntityForOneToOneAssoc
 import ua.com.fielden.platform.associations.one2one.MasterEntityWithOneToOneAssociation;
 import ua.com.fielden.platform.associations.test_entities.EntityWithManyToOneAssociations;
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.Entity;
+import ua.com.fielden.platform.entity.annotation.Calculated;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.KeyType;
 import ua.com.fielden.platform.entity.annotation.Observable;
+import ua.com.fielden.platform.entity.annotation.factory.CalculatedAnnotation;
 import ua.com.fielden.platform.entity.annotation.factory.HandlerAnnotation;
 import ua.com.fielden.platform.entity.annotation.factory.ParamAnnotation;
 import ua.com.fielden.platform.entity.annotation.mutator.DateParam;
@@ -35,12 +38,15 @@ import ua.com.fielden.platform.entity.validation.annotation.GreaterOrEqual;
 import ua.com.fielden.platform.entity.validation.annotation.Max;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
+import ua.com.fielden.platform.reflection.asm.api.NewProperty;
+import ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader;
 import ua.com.fielden.platform.reflection.test_entities.ComplexKeyEntity;
 import ua.com.fielden.platform.reflection.test_entities.SecondLevelEntity;
 import ua.com.fielden.platform.reflection.test_entities.SimplePartEntity;
 import ua.com.fielden.platform.reflection.test_entities.UnionEntityForReflector;
 import ua.com.fielden.platform.reflection.test_entities.UnionEntityHolder;
 import ua.com.fielden.platform.test.CommonTestEntityModuleWithPropertyFactory;
+import ua.com.fielden.platform.types.Money;
 import ua.com.fielden.platform.utils.Pair;
 
 /**
@@ -307,13 +313,10 @@ public class ReflectorTest {
     public void reflector_correctly_identifies_declared_methods_as_such() {
         assertTrue(isMethodOverriddenOrDeclared(AbstractEntity.class, EntityWithValidationLimits.class, "setMonth", Integer.class));
     }
-
+    
     @KeyType(String.class)
-    private static class EntityWithValidationLimits extends AbstractEntity<String> {
+    protected static class EntityWithValidationLimits extends AbstractEntity<String> {
 
-        public EntityWithValidationLimits() {
-        }
-        
         @IsProperty
         private Integer month;
         @IsProperty

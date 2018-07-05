@@ -61,7 +61,7 @@ public class EntityFactory {
      * @param modules
      */
     private EntityFactory(final List<Module> modules) {
-        if (modules == null || modules.size() == 0) {
+        if (modules == null || modules.isEmpty()) {
             throw new IllegalArgumentException("One or more modules are expected.");
         }
         injector = Guice.createInjector(modules);

@@ -9,13 +9,17 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.TimeUnit;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
+
+import com.google.common.cache.Cache;
+import com.google.common.cache.CacheBuilder;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.AbstractUnionEntity;
@@ -38,7 +42,18 @@ import ua.com.fielden.platform.utils.Pair;
  *
  */
 public final class Reflector {
-    private static final Map<MethodKey, Pair<Method, NoSuchMethodException>> methods = new ConcurrentHashMap<>();
+    /**
+     * A cache for {@link Method} instances.
+     */
+    private static final Cache<MethodKey, Pair<Method, NoSuchMethodException>> METHOD_CACHE = CacheBuilder.newBuilder().expireAfterWrite(10, TimeUnit.SECONDS).concurrencyLevel(50).build();
+    
+    /**
+     * A convenient way to access a cache of methods as an immutable map. Could be used for inspection.
+     * @return
+     */
+    public static Map<MethodKey, Pair<Method, NoSuchMethodException>> methodCache() {
+        return Collections.unmodifiableMap(METHOD_CACHE.asMap());
+    }
 
     /** A symbol that represents a separator between properties in property path expressions. */
     public static final String DOT_SPLITTER = "\\.";
@@ -95,7 +110,7 @@ public final class Reflector {
 
     /** Clear cached methods. */
     public static void clearMethodsCache() {
-        methods.clear();
+        METHOD_CACHE.cleanUp();
     }
 
     /**
@@ -182,21 +197,17 @@ public final class Reflector {
         }
     }
 
-    private static synchronized Method getDeclaredMethod(final Class<?> klass, final String methodName, final Class<?>... arguments) throws NoSuchMethodException,
-            SecurityException {
-        // return klass.getDeclaredMethod(methodName, arguments);
+    private static synchronized Method getDeclaredMethod(final Class<?> klass, final String methodName, final Class<?>... arguments) throws NoSuchMethodException {
         final MethodKey methodKey = new MethodKey(klass, methodName, arguments);
-        final Pair<Method, NoSuchMethodException> methodOrException = methods.get(methodKey);
+        final Pair<Method, NoSuchMethodException> methodOrException = METHOD_CACHE.getIfPresent(methodKey);
         if (methodOrException == null) {
             try {
                 final Method method = klass.getDeclaredMethod(methodName, arguments);
-                methods.put(methodKey, new Pair<Method, NoSuchMethodException>(method, null));
+                METHOD_CACHE.put(methodKey, pair(method, null));
                 return method;
-            } catch (final NoSuchMethodException e1) {
-                methods.put(methodKey, new Pair<Method, NoSuchMethodException>(null, e1));
-                throw e1;
-            } catch (final SecurityException e2) {
-                throw e2;
+            } catch (final NoSuchMethodException ex) {
+                METHOD_CACHE.put(methodKey, pair(null, ex));
+                throw ex;
             }
         } else if (methodOrException.getKey() != null) {
             return methodOrException.getKey();

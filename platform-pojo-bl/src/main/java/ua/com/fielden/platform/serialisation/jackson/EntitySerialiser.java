@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.serialisation.jackson;
 
+import static ua.com.fielden.platform.entity.factory.EntityFactory.newPlainEntity;
 import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.getTimeZone;
 import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.isCompositeKeySeparatorDefault;
 import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.isCritOnlyDefault;
@@ -62,7 +63,6 @@ public class EntitySerialiser<T extends AbstractEntity<?>> {
     public static final String ID_ONLY_PROXY_PREFIX = "_______id_only_proxy_______";
     private final Class<T> type;
     private final List<CachedProperty> properties;
-    private final EntityFactory factory;
     private final EntityType entityTypeInfo;
 
     public EntitySerialiser(final Class<T> type, final TgJacksonModule module, final ObjectMapper mapper, final EntityFactory factory, final EntityTypeInfoGetter entityTypeInfoGetter, final ISerialisationTypeEncoder serialisationTypeEncoder, final IIdOnlyProxiedEntityTypeCache idOnlyProxiedEntityTypeCache) {
@@ -85,7 +85,6 @@ public class EntitySerialiser<T extends AbstractEntity<?>> {
      */
     public EntitySerialiser(final Class<T> type, final TgJacksonModule module, final ObjectMapper mapper, final EntityFactory factory, final EntityTypeInfoGetter entityTypeInfoGetter, final boolean excludeNulls, final ISerialisationTypeEncoder serialisationTypeEncoder, final IIdOnlyProxiedEntityTypeCache idOnlyProxiedEntityTypeCache, final boolean propertyDescriptorType) {
         this.type = type;
-        this.factory = factory;
 
         // cache all properties annotated with @IsProperty
         properties = createCachedProperties(type);
@@ -100,8 +99,7 @@ public class EntitySerialiser<T extends AbstractEntity<?>> {
     }
 
     private EntityType createEntityTypeInfo(final EntityTypeInfoGetter entityTypeInfoGetter, final ISerialisationTypeEncoder serialisationTypeEncoder) {
-        final EntityType entityTypeInfo = this.factory.newEntity(EntityType.class, 1L); // use id to have not dirty properties (reduce the amount of serialised JSON)
-        entityTypeInfo.beginInitialising();
+        final EntityType entityTypeInfo = newPlainEntity(EntityType.class, 1L); // use id to have not dirty properties (reduce the amount of serialised JSON)
         entityTypeInfo.setKey(type.getName());
 
         // let's inform the client of the type's persistence nature
@@ -146,12 +144,7 @@ public class EntitySerialiser<T extends AbstractEntity<?>> {
             for (final CachedProperty prop : properties) {
                 // non-composite keys should be persisted by identifying their actual type
                 final String name = prop.field().getName();
-                final EntityTypeProp entityTypeProp = this.factory.newEntity(EntityTypeProp.class, 1L); // use id to have not dirty properties (reduce the amount of serialised JSON);
-                entityTypeProp.beginInitialising();
-
-                //                if (String.class == prop.getPropertyType()) {
-                //                    entityTypeProp.set_type("s");
-                //                }
+                final EntityTypeProp entityTypeProp = newPlainEntity(EntityTypeProp.class, 1L); // use id to have not dirty properties (reduce the amount of serialised JSON)
 
                 final Boolean secrete = AnnotationReflector.isSecreteProperty(type, name);
                 if (!isSecreteDefault(secrete)) {
@@ -206,8 +199,6 @@ public class EntitySerialiser<T extends AbstractEntity<?>> {
                     entityTypeProp.set_timeZone(timeZone);
                 }
 
-                entityTypeProp.endInitialising();
-
                 props.put(name, entityTypeProp);
             }
             entityTypeInfo.set_props(props);
@@ -230,19 +221,12 @@ public class EntitySerialiser<T extends AbstractEntity<?>> {
         return newId.toString();
     }
 
-    private static ThreadLocal<JacksonContext> contextThreadLocal = new ThreadLocal<JacksonContext>() {
-        @Override
-        protected JacksonContext initialValue() {
-            return new JacksonContext();
-        }
-    };
+    private static ThreadLocal<JacksonContext> contextThreadLocal = ThreadLocal.withInitial(JacksonContext::new);
 
     public static <T extends AbstractEntity<?>> List<CachedProperty> createCachedProperties(final Class<T> type) {
         final boolean hasCompositeKey = EntityUtils.isCompositeEntity(type);
         final List<CachedProperty> properties = new ArrayList<>();
         for (final Field propertyField : Finder.findRealProperties(type)) {
-            // take into account only persistent properties
-            //if (!propertyField.isAnnotationPresent(Calculated.class)) {
             propertyField.setAccessible(true);
             // need to handle property key in a special way -- composite key does not have to be serialised
             if (AbstractEntity.KEY.equals(propertyField.getName())) {
@@ -264,7 +248,6 @@ public class EntitySerialiser<T extends AbstractEntity<?>> {
                     prop.setPropertyType(fieldType);
                 }
             }
-            //}
         }
         return Collections.unmodifiableList(properties);
     }

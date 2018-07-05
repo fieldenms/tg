@@ -21,8 +21,6 @@ import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.isNume
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.stripIfNeeded;
 import static ua.com.fielden.platform.utils.EntityUtils.isString;
 
-import java.beans.PropertyChangeListener;
-import java.beans.PropertyChangeSupport;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
@@ -37,7 +35,6 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.apache.commons.lang.StringUtils;
@@ -93,10 +90,7 @@ import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.reflection.Reflector;
-import ua.com.fielden.platform.reflection.exceptions.ReflectionException;
 import ua.com.fielden.platform.utils.EntityUtils;
-import ua.com.fielden.platform.utils.PropertyChangeSupportEx;
-import ua.com.fielden.platform.utils.PropertyChangeSupportEx.PropertyChangeOrIncorrectAttemptListener;
 
 /**
  * <h3>General Info</h3>
@@ -267,7 +261,7 @@ import ua.com.fielden.platform.utils.PropertyChangeSupportEx.PropertyChangeOrInc
  *
  * @author TG Team
  */
-public abstract class AbstractEntity<K extends Comparable> implements Comparable<AbstractEntity<K>>, IBindingEntity {
+public abstract class AbstractEntity<K extends Comparable> implements Comparable<AbstractEntity<K>> {
 
     protected final Logger logger;
 
@@ -325,10 +319,6 @@ public abstract class AbstractEntity<K extends Comparable> implements Comparable
     public static final Set<String> COMMON_PROPS = unmodifiableSet(new HashSet<>(Arrays.asList(new String[] {KEY, DESC, "referencesCount", "referenced"})));
 
     /**
-     * Provides property change support.
-     */
-    private final PropertyChangeSupportEx changeSupport;
-    /**
      * Holds meta-properties for entity properties.
      */
     private final Map<String, MetaProperty<?>> properties;
@@ -368,7 +358,6 @@ public abstract class AbstractEntity<K extends Comparable> implements Comparable
     protected AbstractEntity() {
         actualEntityType = (Class<? extends AbstractEntity<?>>) stripIfNeeded(getClass());
 
-        changeSupport = new PropertyChangeSupportEx(this);
         properties = new LinkedHashMap<>();
 
         keyType = (Class<K>) AnnotationReflector.getKeyType(this.getClass());
@@ -532,25 +521,6 @@ public abstract class AbstractEntity<K extends Comparable> implements Comparable
     }
 
     /**
-     * Registers property change listener.<br>
-     * <br>
-     * Note : Please, refer also to {@link PropertyChangeOrIncorrectAttemptListener} JavaDocs.
-     *
-     * @param propertyName
-     * @param listener
-     */
-    @Override
-    public final synchronized void addPropertyChangeListener(final String propertyName, final PropertyChangeListener listener) {
-        if (listener == null) {
-            throw new EntityException(format("Property change listener for property [%s] in entity [%s] cannot be null.", propertyName, getType().getName()));
-        }
-        if (!isObservable(propertyName)) {
-            throw new EntityException(format("Cannot register a property change listener for a non-observable property [%s] in entity [%s].",  propertyName, getType().getName()));
-        }
-        changeSupport.addPropertyChangeListener(propertyName, listener);
-    }
-
-    /**
      * Determines whether class was enhanced in order to get the correct entity class.
      *
      * @return
@@ -560,53 +530,11 @@ public abstract class AbstractEntity<K extends Comparable> implements Comparable
     }
 
     /**
-     * Removes property change listener.
-     */
-    @Override
-    public final synchronized void removePropertyChangeListener(final String propertyName, final PropertyChangeListener listener) {
-        changeSupport.removePropertyChangeListener(propertyName, listener);
-    }
-
-    @Override
-    public final PropertyChangeSupportEx getChangeSupport() {
-        return changeSupport;
-    }
-
-    protected final void firePropertyChange(final String propertyName, final Object oldValue, final Object newValue) {
-        final PropertyChangeSupport aChangeSupport = this.changeSupport;
-        if (aChangeSupport == null) {
-            return;
-        }
-        aChangeSupport.firePropertyChange(propertyName, oldValue, newValue);
-    }
-
-    /**
-     * Determines whether the specified property is observable.
-     * <p>
-     * The main purpose for this method is to identify at early runtime situations where property change listeners are bound to non-observable properties.
-     *
-     * @param startWithClass
-     * @param propertyName
-     * @return
-     * @throws Exception
-     */
-    private final boolean isObservable(final String propertyName) {
-        try {
-            final Class<?> type = getType();
-            final Method setter = Reflector.obtainPropertySetter(type, propertyName);
-            return AnnotationReflector.isAnnotationPresent(setter, Observable.class);
-        } catch (final ReflectionException e) {
-        }
-        return false;
-    }
-
-    /**
      * Dynamic getter for accessing property value.
      *
      * @param propertyName
      * @return
      */
-    @Override
     public <T> T get(final String propertyName) {
         if (Reflector.isPropertyProxied(this, propertyName)) {
             throw new StrictProxyException(format("Cannot get value for proxied property [%s] of entity [%s].", propertyName, getType().getName()));
@@ -632,7 +560,6 @@ public abstract class AbstractEntity<K extends Comparable> implements Comparable
      * @param propertyName
      * @param value
      */
-    @Override
     public AbstractEntity<K> set(final String propertyName, final Object value) {
         try {
             final Class<?> propertyType = Finder.findFieldByName(getType(), propertyName).getType();
@@ -1161,7 +1088,6 @@ public abstract class AbstractEntity<K extends Comparable> implements Comparable
      * @param name
      * @return
      */
-    @Override
     public final <T> MetaProperty<T> getProperty(final String name) {
         final MetaProperty<T> mp = (MetaProperty<T>) getProperties().get(name);
         if (mp != null) {
@@ -1399,7 +1325,6 @@ public abstract class AbstractEntity<K extends Comparable> implements Comparable
         return version;
     }
 
-    @Override
     public Class<?> getPropertyType(final String propertyName) {
         return getProperty(propertyName).getType();
     }

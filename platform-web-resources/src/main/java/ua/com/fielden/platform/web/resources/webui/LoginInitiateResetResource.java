@@ -20,6 +20,7 @@ import org.restlet.representation.Representation;
 import org.restlet.resource.Post;
 import org.restlet.resource.ServerResource;
 
+import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.mail.SmtpEmailSender;
 import ua.com.fielden.platform.security.user.IUser;
 import ua.com.fielden.platform.security.user.IUserProvider;
@@ -44,7 +45,7 @@ public class LoginInitiateResetResource extends ServerResource {
     private final Logger logger = Logger.getLogger(LoginInitiateResetResource.class);
 
     private final String appUri;
-    private final IUser coUser;
+    private final ICompanionObjectFinder coFinder;
     private final IUserProvider up;
     private final IUniversalConstants constants;
 
@@ -54,15 +55,15 @@ public class LoginInitiateResetResource extends ServerResource {
     public LoginInitiateResetResource(//
             @AppUri final String appUri,
             final IUniversalConstants constants,
-            final IUser coUser,
+            final ICompanionObjectFinder coFinder,
             final IUserProvider userProvider,
             final Context context, //
             final Request request, //
             final Response response) {
         init(context, request, response);
         this.appUri = appUri;
+        this.coFinder = coFinder;
         this.constants = constants;
-        this.coUser = coUser;
         this.up = userProvider;
     }
 
@@ -92,9 +93,10 @@ public class LoginInitiateResetResource extends ServerResource {
             final String usernameOrEmail = form.getValues("username_or_email");
             
             // the user initiating a password reset is not logged in, therefore SU is used as the current user for auditing purposes
-            up.setUsername(User.system_users.SU.name(), coUser);
+            up.setUsername(User.system_users.SU.name(), coFinder.find(User.class, true));
             
-            final Optional<User> opUser = coUser.assignPasswordResetUuid(usernameOrEmail);
+            final IUser co$User = coFinder.find(User.class, false);
+            final Optional<User> opUser = co$User.assignPasswordResetUuid(usernameOrEmail);
             
             if (opUser.isPresent()) {
                 final User user = opUser.get(); 

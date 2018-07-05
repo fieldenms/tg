@@ -32,8 +32,7 @@ public class PropertyFactoryModule extends TransactionalModule {
 
     protected final EntityFactory entityFactory;
 
-    public PropertyFactoryModule(final Properties props, final Map<Class, Class> defaultHibernateTypes, final List<Class<? extends AbstractEntity<?>>> applicationEntityTypes)
-            throws Exception {
+    public PropertyFactoryModule(final Properties props, final Map<Class, Class> defaultHibernateTypes, final List<Class<? extends AbstractEntity<?>>> applicationEntityTypes) {
         super(props, defaultHibernateTypes, applicationEntityTypes);
         entityFactory = new EntityFactory() {};
 
@@ -42,8 +41,7 @@ public class PropertyFactoryModule extends TransactionalModule {
 
     public PropertyFactoryModule(final SessionFactory sessionFactory, final DomainMetadata domainMetadata, final IdOnlyProxiedEntityTypeCache idOnlyProxiedEntityTypeCache) {
         super(sessionFactory, domainMetadata, idOnlyProxiedEntityTypeCache);
-        entityFactory = new EntityFactory() {
-        };
+        entityFactory = new EntityFactory() {};
     }
 
     @Override

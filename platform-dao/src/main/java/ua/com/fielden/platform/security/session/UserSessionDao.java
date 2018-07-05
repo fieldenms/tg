@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.security.session;
 
 import static java.lang.String.format;
+import static ua.com.fielden.platform.entity.factory.EntityFactory.newPlainEntity;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchAll;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
@@ -24,6 +25,7 @@ import ua.com.fielden.platform.dao.CommonEntityDao;
 import ua.com.fielden.platform.dao.QueryExecutionModel;
 import ua.com.fielden.platform.dao.annotations.SessionRequired;
 import ua.com.fielden.platform.entity.annotation.EntityType;
+import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.query.IFilter;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.security.annotations.SessionCache;
@@ -333,18 +335,19 @@ public class UserSessionDao extends CommonEntityDao<UserSession> implements IUse
         // therefore, in case the save call fails, we hope that an updated session has already been placed into the cache by a concurrent process
         try {
             final UserSession updated = save(session);
+            final UserSession userSessionForCache = updated.copyTo(newPlainEntity(UserSession.class,  updated.getId()));
             // assign authenticator, but in way not to disturb the entity meta-state
-            updated.beginInitialising();
-            updated.setAuthenticator(mkAuthenticator(updated.getUser(), seriesId /* un-hashed */, updated.getExpiryTime()));
-            updated.endInitialising();
+            userSessionForCache.setAuthenticator(mkAuthenticator(userSessionForCache.getUser(), seriesId /* un-hashed */, userSessionForCache.getExpiryTime()));
 
             // in order to support concurrent request from the same user it is necessary to
             // associate the presented and verified authenticator as well as the new authenticator with an updated session in the session cache
-            final String newAuthenticator = updated.getAuthenticator().get().toString();
-            cache.put(authenticator, updated);
-            cache.put(newAuthenticator, updated);
+            final String newAuthenticator = userSessionForCache.getAuthenticator().get().toString();
 
-            return Optional.of(updated);
+            
+            cache.put(authenticator, userSessionForCache);
+            cache.put(newAuthenticator, userSessionForCache);
+
+            return Optional.of(userSessionForCache);
         } catch (final Exception e) {
             logger.warn(e);
             logger.debug(format("Saving of a new session for user %s has failed due to concurrent update. Trying to recover a session from cache...", user.getKey()));
@@ -364,7 +367,8 @@ public class UserSessionDao extends CommonEntityDao<UserSession> implements IUse
     public UserSession newSession(final User user, final boolean isDeviceTrusted) {
         // let's first construct the next series id
         final String seriesId = crypto.nextSessionId();
-        final UserSession session = user.getEntityFactory().newByKey(UserSession.class, user, seriesHash(seriesId));
+        final UserSession session = new_().setUser(user).setSeriesId(seriesHash(seriesId));
+        
         session.setTrusted(isDeviceTrusted);
         final Date expiryTime = calcExpiryTime(isDeviceTrusted);
         session.setExpiryTime(expiryTime);

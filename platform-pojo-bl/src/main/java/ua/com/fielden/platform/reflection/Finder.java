@@ -19,19 +19,21 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.SortedMap;
 import java.util.SortedSet;
 import java.util.TreeMap;
 import java.util.TreeSet;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.apache.commons.lang.StringUtils;
+
+import com.google.common.cache.Cache;
+import com.google.common.cache.CacheBuilder;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.AbstractUnionEntity;
@@ -59,7 +61,7 @@ import ua.com.fielden.platform.utils.Pair;
  *
  */
 public class Finder {
-    private static final Map<Class<?>, List<Field>> entityKeyMembers = new ConcurrentHashMap<>();
+    private static final Cache<Class<?>, List<Field>> entityKeyMembers = CacheBuilder.newBuilder().expireAfterWrite(10, TimeUnit.SECONDS).concurrencyLevel(50).build();
 
     /**
      * Let's hide default constructor, which is not needed for a static class.
@@ -330,7 +332,7 @@ public class Finder {
      * @param klass
      * @return
      */
-    public final static List<Field> getKeyMembers(final Class<?> type) {
+    public static final List<Field> getKeyMembers(final Class<?> type) {
         // NOTE: please note that perhaps for generated types the key members are often similar as in
         // original types. But this is not the case when someone changed a key member property
         // by adding another property inside it etc. (this is fully allowed in TG). Thus such an optimisation
@@ -338,9 +340,8 @@ public class Finder {
         //
         // final Class<?> referenceTypeFromWhichKeyMembersCanBeDetermined = DynamicEntityClassLoader.getOriginalType(type); ?
 
-        final List<Field> cachedKeyMembers = entityKeyMembers.get(type); // TODO consider soft references here..
-        return cachedKeyMembers == null ? new ArrayList<>(loadAndCacheKeyMembers(type)) : new ArrayList<>(cachedKeyMembers); // new list should be returned, not the same reference
-        // old implementation -- return loadKeyMembers(type);
+        final List<Field> cachedKeyMembers = entityKeyMembers.getIfPresent(type);
+        return new ArrayList<>(cachedKeyMembers == null ? loadAndCacheKeyMembers(type) : cachedKeyMembers); // new list should be returned, not the same reference
     }
 
     /**
@@ -349,7 +350,7 @@ public class Finder {
      * @param type
      * @return
      */
-    private final static List<Field> loadAndCacheKeyMembers(final Class<?> type) {
+    private static final List<Field> loadAndCacheKeyMembers(final Class<?> type) {
         final List<Field> loadedKeyMembers = Collections.unmodifiableList(loadKeyMembers(type)); // should be immutable
         entityKeyMembers.put(type, loadedKeyMembers);
         return loadedKeyMembers;
@@ -365,9 +366,9 @@ public class Finder {
      * @param klass
      * @return
      */
-    private final static List<Field> loadKeyMembers(final Class<?> type) {
+    private static final List<Field> loadKeyMembers(final Class<?> type) {
         // the use of SortedMap ensures the correct order of properties to be used for composite key
-        final SortedMap<Integer, Field> properties = new TreeMap<Integer, Field>();
+        final SortedMap<Integer, Field> properties = new TreeMap<>();
         final List<Field> compositeKeyFields = findRealProperties(type, CompositeKeyMember.class);
 
         for (final Field field : compositeKeyFields) {
@@ -380,10 +381,10 @@ public class Finder {
             }
             properties.put(order, field);
         }
-        final List<Field> keyMembers = new ArrayList<Field>(properties.values());
+        final List<Field> keyMembers = new ArrayList<>(properties.values());
         // if there where no fields annotated with CompositeKeyMember then this
         // entity uses a non-composite (simple) key.
-        if (keyMembers.size() == 0) {
+        if (keyMembers.isEmpty()) {
             keyMembers.add(getFieldByName(type, KEY));
         }
         return keyMembers;
