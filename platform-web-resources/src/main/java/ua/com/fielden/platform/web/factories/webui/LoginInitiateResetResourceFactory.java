@@ -8,8 +8,10 @@ import org.restlet.data.Method;
 import com.google.inject.Injector;
 import com.google.inject.Key;
 
+import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.security.user.IUser;
 import ua.com.fielden.platform.security.user.IUserProvider;
+import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.utils.IUniversalConstants;
 import ua.com.fielden.platform.web.annotations.AppUri;
 import ua.com.fielden.platform.web.resources.webui.LoginInitiateResetResource;
@@ -37,7 +39,7 @@ public class LoginInitiateResetResourceFactory extends Restlet {
             new LoginInitiateResetResource(
                     injector.getInstance(Key.get(String.class, AppUri.class)),
                     injector.getInstance(IUniversalConstants.class),
-                    injector.getInstance(IUser.class),
+                    injector.getInstance(ICompanionObjectFinder.class),
                     injector.getInstance(IUserProvider.class),
                     getContext(),
                     request,

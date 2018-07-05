@@ -20,6 +20,7 @@ import org.restlet.representation.Representation;
 import org.restlet.resource.Post;
 import org.restlet.resource.ServerResource;
 
+import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.security.exceptions.SecurityException;
 import ua.com.fielden.platform.security.user.IUser;
 import ua.com.fielden.platform.security.user.IUserProvider;
@@ -44,7 +45,7 @@ public class LoginCompleteResetResource extends ServerResource {
 
     private static final Logger LOGGER = Logger.getLogger(LoginCompleteResetResource.class);
 
-    private final IUser coUser;
+    private final ICompanionObjectFinder coFinder;
     private final IUserProvider up;
     
     /**
@@ -52,14 +53,14 @@ public class LoginCompleteResetResource extends ServerResource {
      */
     public LoginCompleteResetResource(//
             final String demoSecret,
-            final IUser coUser,
+            final ICompanionObjectFinder coFinder,
             final IUserProvider up,
             final Context context,
             final Request request,
             final Response response) {
         init(context, request, response);
         this.demoSecret = demoSecret;
-        this.coUser = coUser;
+        this.coFinder = coFinder;
         this.up = up;
     }
 
@@ -67,6 +68,8 @@ public class LoginCompleteResetResource extends ServerResource {
     protected Representation get() {
         try {
             final String uuid = (String) getRequest().getAttributes().get("uuid");
+
+            final IUser coUser = coFinder.find(User.class, true);
 
             // if the UUID is invalid then redirect the user to the password reset resource
             if (StringUtils.isEmpty(uuid) || !coUser.isPasswordResetUuidValid(uuid)) {
@@ -122,8 +125,8 @@ public class LoginCompleteResetResource extends ServerResource {
         try {
             final Form form = new Form(entity);
             final String uuid = form.getValues("uuid");
+            final IUser coUser = coFinder.find(User.class, true);
             // if the UUID is invalid then redirect the user to the password reset resource
-            
             if (StringUtils.isEmpty(uuid) || !coUser.isPasswordResetUuidValid(uuid)) {
                 getResponse().setEntity(new JsonRepresentation(format(msgTemplate, UUID_EXPIRED_ERROR)));
                 getResponse().setStatus(Status.CLIENT_ERROR_BAD_REQUEST);
@@ -150,7 +153,8 @@ public class LoginCompleteResetResource extends ServerResource {
                     getResponse().setStatus(Status.CLIENT_ERROR_BAD_REQUEST);
                 } else {
                     // the password has passed the validation, so it can be associated with the user
-                    coUser.resetPasswd(user.get(), passwd);
+                    final IUser co$User = coFinder.find(User.class, false);
+                    co$User.resetPasswd(co$User.findUser(user.get().getKey()), passwd);
                 }
             }
         } catch (final Exception ex) {

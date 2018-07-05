@@ -8,7 +8,7 @@ import ua.com.fielden.platform.security.user.User;
 /**
  * Companion object for entity {@link UserSession}.
  *
- * @author Developers
+ * @author TG Team
  *
  */
 public interface IUserSession extends IEntityDao<UserSession> {
