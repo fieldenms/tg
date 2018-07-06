@@ -29,6 +29,7 @@ import ua.com.fielden.platform.web.centre.CentreConfigDeleteAction;
 import ua.com.fielden.platform.web.centre.CentreConfigDuplicateAction;
 import ua.com.fielden.platform.web.centre.CentreConfigEditAction;
 import ua.com.fielden.platform.web.centre.CentreConfigLoadAction;
+import ua.com.fielden.platform.web.centre.CentreConfigNewAction;
 import ua.com.fielden.platform.web.centre.CentreConfigSaveAction;
 
 /**
@@ -93,7 +94,7 @@ public class ResultJsonSerialiser extends StdSerializer<Result> {
                                     generatedTypes.add(stripIfNeeded(value.getClass()));
                                 }
                             }
-                        } else if (CentreConfigDuplicateAction.class.isAssignableFrom(itemClass) || CentreConfigLoadAction.class.isAssignableFrom(itemClass) || CentreConfigEditAction.class.isAssignableFrom(itemClass) || CentreConfigDeleteAction.class.isAssignableFrom(itemClass) || CentreConfigSaveAction.class.isAssignableFrom(itemClass)) {
+                        } else if (CentreConfigNewAction.class.isAssignableFrom(itemClass) || CentreConfigDuplicateAction.class.isAssignableFrom(itemClass) || CentreConfigLoadAction.class.isAssignableFrom(itemClass) || CentreConfigEditAction.class.isAssignableFrom(itemClass) || CentreConfigDeleteAction.class.isAssignableFrom(itemClass) || CentreConfigSaveAction.class.isAssignableFrom(itemClass)) {
                             final Map<String, Object> customObject = ((AbstractEntity<?>) item).get("customObject");
                             if (customObject.get("appliedCriteriaEntity") != null && EntityQueryCriteria.class.isAssignableFrom(customObject.get("appliedCriteriaEntity").getClass())) {
                                 generatedTypes.add(stripIfNeeded(customObject.get("appliedCriteriaEntity").getClass()));
@@ -113,7 +114,7 @@ public class ResultJsonSerialiser extends StdSerializer<Result> {
                 generator.writeObject(tgJackson.registerNewEntityType(newType));
             } else {
                 generator.writeObject(type.getName());
-                if (CentreConfigDuplicateAction.class.isAssignableFrom(type) || CentreConfigLoadAction.class.isAssignableFrom(type) || CentreConfigEditAction.class.isAssignableFrom(type) || CentreConfigDeleteAction.class.isAssignableFrom(type) || CentreConfigSaveAction.class.isAssignableFrom(type)) {
+                if (CentreConfigNewAction.class.isAssignableFrom(type) || CentreConfigDuplicateAction.class.isAssignableFrom(type) || CentreConfigLoadAction.class.isAssignableFrom(type) || CentreConfigEditAction.class.isAssignableFrom(type) || CentreConfigDeleteAction.class.isAssignableFrom(type) || CentreConfigSaveAction.class.isAssignableFrom(type)) {
                     final Map<String, Object> customObject = ((AbstractEntity<?>) result.getInstance()).get("customObject");
                     if (customObject.get("appliedCriteriaEntity") != null && EntityQueryCriteria.class.isAssignableFrom(customObject.get("appliedCriteriaEntity").getClass())) {
                         generator.writeFieldName("@instanceTypes");

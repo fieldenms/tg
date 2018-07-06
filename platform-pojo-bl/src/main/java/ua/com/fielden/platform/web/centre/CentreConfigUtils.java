@@ -74,6 +74,18 @@ public class CentreConfigUtils {
     }
     
     /**
+     * Prepares default centre before its loading. This is applicable to both {@link CentreConfigNewAction} and {@link CentreConfigDeleteAction}.
+     * 
+     * @param selectionCrit
+     * @return
+     */
+    public static Map<String, Object> prepareDefaultCentre(final EnhancedCentreEntityQueryCriteria<?, ?> selectionCrit) {
+        selectionCrit.defaultCentreClearer().run(); // clear it first
+        selectionCrit.preferredConfigMaker().accept(empty()); // then make it preferred
+        return getCustomObject(selectionCrit, selectionCrit.criteriaValidationPrototypeCreator().apply(empty()), empty()); // return corresponding custom object
+    }
+    
+    /**
      * Returns <code>true</code> in case where <code>saveAsName</code>d configuration represents default configuration,
      * otherwise <code>false</code>.
      * 

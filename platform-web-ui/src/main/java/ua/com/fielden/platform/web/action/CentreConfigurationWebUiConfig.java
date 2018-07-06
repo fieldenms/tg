@@ -28,6 +28,8 @@ import ua.com.fielden.platform.web.centre.CentreConfigEditAction;
 import ua.com.fielden.platform.web.centre.CentreConfigEditActionProducer;
 import ua.com.fielden.platform.web.centre.CentreConfigLoadAction;
 import ua.com.fielden.platform.web.centre.CentreConfigLoadActionProducer;
+import ua.com.fielden.platform.web.centre.CentreConfigNewAction;
+import ua.com.fielden.platform.web.centre.CentreConfigNewActionProducer;
 import ua.com.fielden.platform.web.centre.CentreConfigSaveAction;
 import ua.com.fielden.platform.web.centre.CentreConfigSaveActionProducer;
 import ua.com.fielden.platform.web.centre.CentreConfigUpdater;
@@ -54,22 +56,24 @@ public class CentreConfigurationWebUiConfig {
     public final EntityMaster<CentreConfigUpdater> centreConfigUpdater;
     public final EntityMaster<CentreConfigUpdaterDefaultAction> centreConfigUpdaterDefaultAction;
     public final EntityMaster<CentreColumnWidthConfigUpdater> centreColumnWidthConfigUpdater;
+    public final EntityMaster<CentreConfigNewAction> centreConfigNewActionMaster;
     public final EntityMaster<CentreConfigDuplicateAction> centreConfigDuplicateActionMaster;
     public final EntityMaster<CentreConfigLoadAction> centreConfigLoadActionMaster;
     public final EntityMaster<CentreConfigEditAction> centreConfigEditActionMaster;
-    public final EntityMaster<CentreConfigSaveAction> centreConfigSaveActionMaster;
     public final EntityMaster<CentreConfigDeleteAction> centreConfigDeleteActionMaster;
+    public final EntityMaster<CentreConfigSaveAction> centreConfigSaveActionMaster;
     public final EntityMaster<OverrideCentreConfig> overrideCentreConfigMaster;
     
     public CentreConfigurationWebUiConfig(final Injector injector) {
         centreConfigUpdater = createCentreConfigUpdater(injector);
         centreConfigUpdaterDefaultAction = createCentreConfigUpdaterDefaultAction(injector);
         centreColumnWidthConfigUpdater = createCentreColumnWidthConfigUpdater(injector);
+        centreConfigNewActionMaster = createCentreConfigNewActionMaster(injector);
         centreConfigDuplicateActionMaster = createCentreConfigDuplicateActionMaster(injector);
         centreConfigLoadActionMaster = createCentreConfigLoadActionMaster(injector);
         centreConfigEditActionMaster = createCentreConfigEditActionMaster(injector);
-        centreConfigSaveActionMaster = createCentreConfigSaveActionMaster(injector);
         centreConfigDeleteActionMaster = createCentreConfigDeleteActionMaster(injector);
+        centreConfigSaveActionMaster = createCentreConfigSaveActionMaster(injector);
         overrideCentreConfigMaster = createOverrideCentreConfigMaster(injector);
     }
     
@@ -242,6 +246,15 @@ public class CentreConfigurationWebUiConfig {
             .withDimensions(mkDim("'30%'", "'50%'"))
             .done();
         return new EntityMaster<>(CentreConfigLoadAction.class, CentreConfigLoadActionProducer.class, masterConfig, injector);
+    }
+    
+    /**
+     * Creates no-UI entity master for {@link CentreConfigNewAction}.
+     *
+     * @return
+     */
+    private static EntityMaster<CentreConfigNewAction> createCentreConfigNewActionMaster(final Injector injector) {
+        return new EntityMaster<>(CentreConfigNewAction.class, CentreConfigNewActionProducer.class, null, injector);
     }
     
     /**

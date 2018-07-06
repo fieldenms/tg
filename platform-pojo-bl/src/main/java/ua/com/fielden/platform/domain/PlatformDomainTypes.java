@@ -49,6 +49,7 @@ import ua.com.fielden.platform.web.centre.CentreConfigDeleteAction;
 import ua.com.fielden.platform.web.centre.CentreConfigDuplicateAction;
 import ua.com.fielden.platform.web.centre.CentreConfigEditAction;
 import ua.com.fielden.platform.web.centre.CentreConfigLoadAction;
+import ua.com.fielden.platform.web.centre.CentreConfigNewAction;
 import ua.com.fielden.platform.web.centre.CentreConfigSaveAction;
 import ua.com.fielden.platform.web.centre.CentreConfigUpdater;
 import ua.com.fielden.platform.web.centre.CentreConfigUpdaterDefaultAction;
@@ -72,7 +73,7 @@ public class PlatformDomainTypes {
         types.add(CustomisableColumn.class);
         types.add(CentreColumnWidthConfigUpdater.class);
         
-        // TODO types.add(CentreConfigNewAction.class);
+        types.add(CentreConfigNewAction.class);
         types.add(CentreConfigDuplicateAction.class);
         types.add(CentreConfigLoadAction.class);
         types.add(CentreConfigEditAction.class);

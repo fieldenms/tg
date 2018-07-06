@@ -15,16 +15,16 @@ import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.entity.annotation.Title;
 
 /** 
- * Functional entity for deleting centre configuration.
+ * Functional entity for loading new centre configuration.
  * 
  * @author TG Team
  *
  */
-@CompanionObject(ICentreConfigDeleteAction.class)
+@CompanionObject(ICentreConfigNewAction.class)
 @KeyType(NoKey.class)
-public class CentreConfigDeleteAction extends AbstractFunctionalEntityWithCentreContext<NoKey> {
+public class CentreConfigNewAction extends AbstractFunctionalEntityWithCentreContext<NoKey> {
     
-    public CentreConfigDeleteAction() {
+    public CentreConfigNewAction() {
         setKey(NO_KEY);
     }
     
@@ -33,7 +33,7 @@ public class CentreConfigDeleteAction extends AbstractFunctionalEntityWithCentre
     private final Map<String, Object> customObject = new HashMap<>();
     
     @Observable
-    protected CentreConfigDeleteAction setCustomObject(final Map<String, Object> customObject) {
+    protected CentreConfigNewAction setCustomObject(final Map<String, Object> customObject) {
         this.customObject.clear();
         this.customObject.putAll(customObject);
         return this;
