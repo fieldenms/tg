@@ -14,6 +14,8 @@ import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract
 import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.isOrNullDefault;
 import static ua.com.fielden.platform.types.tuples.T2.t2;
 import static ua.com.fielden.platform.utils.EntityUtils.equalsEx;
+import static ua.com.fielden.platform.web.centre.AbstractCentreConfigAction.APPLIED_CRITERIA_ENTITY_NAME;
+import static ua.com.fielden.platform.web.centre.AbstractCentreConfigAction.WAS_RUN_NAME;
 import static ua.com.fielden.platform.web.utils.EntityResourceUtils.getEntityType;
 import static ua.com.fielden.platform.web.utils.EntityResourceUtils.getOriginalManagedType;
 import static ua.com.fielden.platform.web.utils.EntityResourceUtils.getVersion;
@@ -439,8 +441,8 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
                 of(customObjectSaveAsName),
                 validationPrototype.centreTitleAndDescGetter().apply(customObjectSaveAsName).map(titleDesc -> titleDesc._2)
             );
-            customObject.put("wasRun", null); // make VIEW button disabled by default; this behaviour can be overridden by removing 'wasRun' customObject's entry
-            customObject.put("appliedCriteriaEntity", appliedCriteriaEntity);
+            customObject.put(WAS_RUN_NAME, null); // make VIEW button disabled by default; this behaviour can be overridden by removing 'wasRun' customObject's entry
+            customObject.put(APPLIED_CRITERIA_ENTITY_NAME, appliedCriteriaEntity);
             return customObject;
         });
         validationPrototype.setBaseCentreSupplier(() -> baseCentre(gdtm, miType, saveAsName, device));

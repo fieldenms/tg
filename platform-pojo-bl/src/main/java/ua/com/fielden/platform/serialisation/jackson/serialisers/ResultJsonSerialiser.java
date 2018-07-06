@@ -1,15 +1,20 @@
 package ua.com.fielden.platform.serialisation.jackson.serialisers;
 
+import static java.util.Arrays.asList;
+import static java.util.Optional.empty;
+import static java.util.Optional.of;
 import static ua.com.fielden.platform.entity.AbstractFunctionalEntityForCollectionModification.MASTER_ENTITY_PROPERTY_NAME;
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.stripIfNeeded;
 import static ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader.isGenerated;
-import static ua.com.fielden.platform.utils.EntityUtils.isEntityType;
+import static ua.com.fielden.platform.web.centre.AbstractCentreConfigAction.APPLIED_CRITERIA_ENTITY_NAME;
+import static ua.com.fielden.platform.web.centre.AbstractCentreConfigAction.CUSTOM_OBJECT_PROPERTY_NAME;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 
 import com.fasterxml.jackson.core.JsonGenerator;
@@ -25,12 +30,8 @@ import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.serialisation.api.impl.TgJackson;
 import ua.com.fielden.platform.serialisation.jackson.EntityType;
 import ua.com.fielden.platform.utils.EntityUtils;
-import ua.com.fielden.platform.web.centre.CentreConfigDeleteAction;
-import ua.com.fielden.platform.web.centre.CentreConfigDuplicateAction;
-import ua.com.fielden.platform.web.centre.CentreConfigEditAction;
+import ua.com.fielden.platform.web.centre.AbstractCentreConfigAction;
 import ua.com.fielden.platform.web.centre.CentreConfigLoadAction;
-import ua.com.fielden.platform.web.centre.CentreConfigNewAction;
-import ua.com.fielden.platform.web.centre.CentreConfigSaveAction;
 
 /**
  * Serialiser for {@link Result} type.
@@ -94,13 +95,8 @@ public class ResultJsonSerialiser extends StdSerializer<Result> {
                                     generatedTypes.add(stripIfNeeded(value.getClass()));
                                 }
                             }
-                        } else if (CentreConfigNewAction.class.isAssignableFrom(itemClass) || CentreConfigDuplicateAction.class.isAssignableFrom(itemClass) || CentreConfigLoadAction.class.isAssignableFrom(itemClass) || CentreConfigEditAction.class.isAssignableFrom(itemClass) || CentreConfigDeleteAction.class.isAssignableFrom(itemClass) || CentreConfigSaveAction.class.isAssignableFrom(itemClass)) {
-                            final Map<String, Object> customObject = ((AbstractEntity<?>) item).get("customObject");
-                            if (customObject.get("appliedCriteriaEntity") != null && EntityQueryCriteria.class.isAssignableFrom(customObject.get("appliedCriteriaEntity").getClass())) {
-                                generatedTypes.add(stripIfNeeded(customObject.get("appliedCriteriaEntity").getClass()));
-                            }
-                        } else if (isEntityType(itemClass) && EntityQueryCriteria.class.isAssignableFrom(itemClass)) {
-                            generatedTypes.add(itemClass);
+                        } else if (isCentreConfigAction(itemClass)) {
+                            possiblyUnregisteredCriteriaTypeFrom(item).ifPresent((unregisteredType) -> generatedTypes.add(unregisteredType));
                         }
                     }
                 });
@@ -114,14 +110,11 @@ public class ResultJsonSerialiser extends StdSerializer<Result> {
                 generator.writeObject(tgJackson.registerNewEntityType(newType));
             } else {
                 generator.writeObject(type.getName());
-                if (CentreConfigNewAction.class.isAssignableFrom(type) || CentreConfigDuplicateAction.class.isAssignableFrom(type) || CentreConfigLoadAction.class.isAssignableFrom(type) || CentreConfigEditAction.class.isAssignableFrom(type) || CentreConfigDeleteAction.class.isAssignableFrom(type) || CentreConfigSaveAction.class.isAssignableFrom(type)) {
-                    final Map<String, Object> customObject = ((AbstractEntity<?>) result.getInstance()).get("customObject");
-                    if (customObject.get("appliedCriteriaEntity") != null && EntityQueryCriteria.class.isAssignableFrom(customObject.get("appliedCriteriaEntity").getClass())) {
+                if (isCentreConfigAction(type)) {
+                    final Optional<Class<?>> possiblyUnregisteredType = possiblyUnregisteredCriteriaTypeFrom(result.getInstance());
+                    if (possiblyUnregisteredType.isPresent()) { // isPresent was used here instead of ifPresent due to the need to pass exceptions from 'write' methods upward
                         generator.writeFieldName("@instanceTypes");
-                        final ArrayList<EntityType> genList = new ArrayList<>();
-                        final Class<AbstractEntity<?>> newType = (Class<AbstractEntity<?>>) stripIfNeeded(customObject.get("appliedCriteriaEntity").getClass());
-                        genList.add(tgJackson.registerNewEntityType(newType));
-                        generator.writeObject(genList);
+                        generator.writeObject(new ArrayList<>(asList(tgJackson.registerNewEntityType((Class<AbstractEntity<?>>) possiblyUnregisteredType.get())))); // deliberately used ArrayList for graceful serialisation
                     }
                 }
             }
@@ -137,4 +130,35 @@ public class ResultJsonSerialiser extends StdSerializer<Result> {
 
         generator.writeEndObject();
     }
+    
+    /**
+     * Returns <code>true</code> if entity is centre config action containing custom object with possibly unregistered criteria entity type.
+     * 
+     * @param type
+     * @return
+     */
+    private static boolean isCentreConfigAction(final Class<?> type) {
+        return AbstractCentreConfigAction.class.isAssignableFrom(type) || CentreConfigLoadAction.class.isAssignableFrom(type);
+    }
+    
+    /**
+     * Returns 
+     * 
+     * @param centreConfigActionObj
+     * @return
+     */
+    private static Optional<Class<?>> possiblyUnregisteredCriteriaTypeFrom(final Object centreConfigActionObj) {
+        final AbstractEntity<?> centreConfigAction = (AbstractEntity<?>) centreConfigActionObj;
+        if (!centreConfigAction.proxiedPropertyNames().contains(CUSTOM_OBJECT_PROPERTY_NAME)) {
+            final Map<String, Object> customObject = centreConfigAction.get(CUSTOM_OBJECT_PROPERTY_NAME);
+            if (customObject != null) {
+                final Object appliedCriteriaEntity = customObject.get(APPLIED_CRITERIA_ENTITY_NAME);
+                if (appliedCriteriaEntity != null && EntityQueryCriteria.class.isAssignableFrom(appliedCriteriaEntity.getClass())) {
+                    return of(stripIfNeeded(appliedCriteriaEntity.getClass()));
+                }
+            }
+        }
+        return empty();
+    }
+    
 }

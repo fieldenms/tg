@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.web.centre;
 
+import static ua.com.fielden.platform.web.centre.AbstractCentreConfigAction.WAS_RUN_NAME;
 import static ua.com.fielden.platform.web.centre.CentreConfigUtils.getCustomObject;
 import static ua.com.fielden.platform.web.centre.CentreConfigUtils.isDefault;
 import static ua.com.fielden.platform.web.centre.CentreConfigUtils.isDefaultOrInherited;
@@ -43,7 +44,7 @@ public class CentreConfigSaveActionProducer extends AbstractCentreConfigCommitAc
             entity.setSkipUi(true);
             selectionCrit.freshCentreSaver().run();
             final Map<String, Object> customObj = getCustomObject(selectionCrit, appliedCriteriaEntity);
-            customObj.remove("wasRun"); // avoid making VIEW button disabled if it is enabled
+            customObj.remove(WAS_RUN_NAME); // avoid making VIEW button disabled if it is enabled
             return customObj;
         }
     }
