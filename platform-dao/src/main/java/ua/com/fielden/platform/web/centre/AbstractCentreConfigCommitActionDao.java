@@ -11,16 +11,16 @@ import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.web.utils.ICriteriaEntityRestorer;
 
 /** 
- * Abstract DAO implementation for companion object {@link ICentreConfigSaveAction}.
+ * Abstract DAO implementation for companion objects of {@link AbstractCentreConfigCommitAction} descendants.
  * 
  * @author TG Team
  *
  */
-public abstract class AbstractCentreConfigEditActionDao<T extends AbstractCentreConfigEditAction> extends CommonEntityDao<T> {
+public abstract class AbstractCentreConfigCommitActionDao<T extends AbstractCentreConfigCommitAction> extends CommonEntityDao<T> {
     private static final String CONTINUATION_KEY = "overrideConfig";
     protected final ICriteriaEntityRestorer criteriaEntityRestorer;
     
-    public AbstractCentreConfigEditActionDao(final IFilter filter, final ICriteriaEntityRestorer criteriaEntityRestorer) {
+    public AbstractCentreConfigCommitActionDao(final IFilter filter, final ICriteriaEntityRestorer criteriaEntityRestorer) {
         super(filter);
         this.criteriaEntityRestorer = criteriaEntityRestorer;
     }

@@ -15,14 +15,14 @@ import ua.com.fielden.platform.entity_centre.review.criteria.EnhancedCentreEntit
 import ua.com.fielden.platform.types.tuples.T2;
 
 /**
- * An abstract producer for new instances of entity {@link CentreConfigEditAction} or {@link CentreConfigSaveAction}.
+ * An abstract producer for new instances of {@link AbstractCentreConfigCommitAction} descendants.
  *
  * @author TG Team
  *
  */
-public abstract class AbstractCentreConfigEditActionProducer<T extends AbstractCentreConfigEditAction> extends DefaultEntityProducerWithContext<T> {
+public abstract class AbstractCentreConfigCommitActionProducer<T extends AbstractCentreConfigCommitAction> extends DefaultEntityProducerWithContext<T> {
     
-    public AbstractCentreConfigEditActionProducer(final EntityFactory factory, final ICompanionObjectFinder companionFinder, final Class<T> entityType) {
+    public AbstractCentreConfigCommitActionProducer(final EntityFactory factory, final ICompanionObjectFinder companionFinder, final Class<T> entityType) {
         super(factory, entityType, companionFinder);
     }
     
@@ -33,7 +33,9 @@ public abstract class AbstractCentreConfigEditActionProducer<T extends AbstractC
             entity.setCentreContextHolder(selectionCrit().centreContextHolder());
             // apply criteria entity
             final EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, ? extends IEntityDao<AbstractEntity<?>>> appliedCriteriaEntity = applyCriteria(selectionCrit());
-            entity.setCustomObject(invalidCustomObject(selectionCrit(), appliedCriteriaEntity)
+            entity.setCustomObject(
+                // and avoid configuration saveAs / edit if centre is invalid
+                invalidCustomObject(selectionCrit(), appliedCriteriaEntity)
                 .map(customObj -> {
                     entity.setSkipUi(true);
                     return customObj;

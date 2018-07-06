@@ -9,6 +9,6 @@ import ua.com.fielden.platform.entity.annotation.CompanionObject;
  *
  */
 @CompanionObject(ICentreConfigEditAction.class)
-public class CentreConfigEditAction extends AbstractCentreConfigEditAction {
+public class CentreConfigEditAction extends AbstractCentreConfigCommitAction {
     
 }

@@ -18,6 +18,7 @@ import static ua.com.fielden.platform.web.view.master.api.actions.MasterActions.
 
 import com.google.inject.Injector;
 
+import ua.com.fielden.platform.web.centre.AbstractCentreConfigCommitAction;
 import ua.com.fielden.platform.web.centre.CentreColumnWidthConfigUpdater;
 import ua.com.fielden.platform.web.centre.CentreColumnWidthConfigUpdaterProducer;
 import ua.com.fielden.platform.web.centre.CentreConfigDeleteAction;
@@ -179,15 +180,33 @@ public class CentreConfigurationWebUiConfig {
      * @return
      */
     private static EntityMaster<CentreConfigEditAction> createCentreConfigEditActionMaster(final Injector injector) {
+        return new EntityMaster<>(
+            CentreConfigEditAction.class,
+            CentreConfigEditActionProducer.class,
+            createCentreConfigCommitActionMaster(injector, CentreConfigEditAction.class, "Saves title and description changes.", "Cancels changes."),
+            injector
+        );
+    }
+    
+    /**
+     * Creates {@link IMaster} configuration for {@link AbstractCentreConfigCommitAction} descendant entities.
+     * 
+     * @param injector
+     * @param entityType
+     * @param customSaveDesc -- custom tooltip of SAVE button
+     * @param customCancelDesc -- custom tooltip of CANCEL button
+     * @return
+     */
+    private static <T extends AbstractCentreConfigCommitAction> IMaster<T> createCentreConfigCommitActionMaster(final Injector injector, final Class<T> entityType, final String customSaveDesc, final String customCancelDesc) {
         final String actionLayout = mkActionLayoutForMaster();
         final String layout = mkGridForMasterFitWidth(2, 1);
         
-        final IMaster<CentreConfigEditAction> masterConfig = new SimpleMasterBuilder<CentreConfigEditAction>()
-            .forEntity(CentreConfigEditAction.class)
+        return new SimpleMasterBuilder<T>()
+            .forEntity(entityType)
             .addProp("title").asSinglelineText().also()
             .addProp("desc").asMultilineText().also()
-            .addAction(REFRESH).shortDesc("CANCEL").longDesc("Cancels changes.")
-            .addAction(SAVE).shortDesc("SAVE").longDesc("Saves title and description changes.")
+            .addAction(REFRESH).shortDesc("CANCEL").longDesc(customCancelDesc)
+            .addAction(SAVE).shortDesc("SAVE").longDesc(customSaveDesc)
             .setActionBarLayoutFor(DESKTOP, empty(), actionLayout)
             .setActionBarLayoutFor(TABLET, empty(), actionLayout)
             .setActionBarLayoutFor(MOBILE, empty(), actionLayout)
@@ -196,33 +215,19 @@ public class CentreConfigurationWebUiConfig {
             .setLayoutFor(MOBILE, empty(), layout)
             .withDimensions(mkDim(400, 249))
             .done();
-        return new EntityMaster<>(CentreConfigEditAction.class, CentreConfigEditActionProducer.class, masterConfig, injector);
-    }
-    
+    }    
     /**
      * Creates entity master for {@link CentreConfigSaveAction}.
      *
      * @return
      */
     private static EntityMaster<CentreConfigSaveAction> createCentreConfigSaveActionMaster(final Injector injector) {
-        final String actionLayout = mkActionLayoutForMaster();
-        final String layout = mkGridForMasterFitWidth(2, 1);
-        
-        final IMaster<CentreConfigSaveAction> masterConfig = new SimpleMasterBuilder<CentreConfigSaveAction>()
-            .forEntity(CentreConfigSaveAction.class)
-            .addProp("title").asSinglelineText().also()
-            .addProp("desc").asMultilineText().also()
-            .addAction(REFRESH).shortDesc("CANCEL").longDesc("Cancels creation of configuration copy.")
-            .addAction(SAVE).shortDesc("SAVE").longDesc("Saves new configuration copy.")
-            .setActionBarLayoutFor(DESKTOP, empty(), actionLayout)
-            .setActionBarLayoutFor(TABLET, empty(), actionLayout)
-            .setActionBarLayoutFor(MOBILE, empty(), actionLayout)
-            .setLayoutFor(DESKTOP, empty(), layout)
-            .setLayoutFor(TABLET, empty(), layout)
-            .setLayoutFor(MOBILE, empty(), layout)
-            .withDimensions(mkDim(400, 249))
-            .done();
-        return new EntityMaster<>(CentreConfigSaveAction.class, CentreConfigSaveActionProducer.class, masterConfig, injector);
+        return new EntityMaster<>(
+            CentreConfigSaveAction.class,
+            CentreConfigSaveActionProducer.class,
+            createCentreConfigCommitActionMaster(injector, CentreConfigSaveAction.class, "Saves new configuration copy.", "Cancels creation of configuration copy."),
+            injector
+        );
     }
     
     /**

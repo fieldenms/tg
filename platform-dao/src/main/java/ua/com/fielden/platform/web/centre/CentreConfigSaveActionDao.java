@@ -15,7 +15,7 @@ import ua.com.fielden.platform.web.utils.ICriteriaEntityRestorer;
  *
  */
 @EntityType(CentreConfigSaveAction.class)
-public class CentreConfigSaveActionDao extends AbstractCentreConfigEditActionDao<CentreConfigSaveAction> implements ICentreConfigSaveAction {
+public class CentreConfigSaveActionDao extends AbstractCentreConfigCommitActionDao<CentreConfigSaveAction> implements ICentreConfigSaveAction {
     
     @Inject
     public CentreConfigSaveActionDao(final IFilter filter, final ICriteriaEntityRestorer criteriaEntityRestorer) {

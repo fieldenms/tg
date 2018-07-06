@@ -21,7 +21,7 @@ import ua.com.fielden.platform.entity_centre.review.criteria.EnhancedCentreEntit
  * @author TG Team
  *
  */
-public class CentreConfigEditActionProducer extends AbstractCentreConfigEditActionProducer<CentreConfigEditAction> {
+public class CentreConfigEditActionProducer extends AbstractCentreConfigCommitActionProducer<CentreConfigEditAction> {
     private static final String ERR_CANNOT_BE_EDITED = "Can not be edited.";
     
     @Inject

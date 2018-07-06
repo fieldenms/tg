@@ -26,7 +26,8 @@ public class CentreConfigDuplicateActionDao extends CommonEntityDao<CentreConfig
     @Override
     @SessionRequired
     public CentreConfigDuplicateAction save(final CentreConfigDuplicateAction entity) {
-        return entity.setCustomObject(new HashMap<>()); // clear custom object not to bind centre information second time (it binds after retrieval for the first time, see client-side _bindCentreInfo method)
+        entity.setCustomObject(new HashMap<>()); // clear custom object not to bind centre information second time (it binds after retrieval for the first time, see client-side _bindCentreInfo method)
+        return entity;
     }
     
 }

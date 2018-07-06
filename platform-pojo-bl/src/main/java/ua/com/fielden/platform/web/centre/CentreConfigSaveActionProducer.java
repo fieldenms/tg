@@ -21,7 +21,7 @@ import ua.com.fielden.platform.entity_centre.review.criteria.EnhancedCentreEntit
  * @author TG Team
  *
  */
-public class CentreConfigSaveActionProducer extends AbstractCentreConfigEditActionProducer<CentreConfigSaveAction> {
+public class CentreConfigSaveActionProducer extends AbstractCentreConfigCommitActionProducer<CentreConfigSaveAction> {
     private static final String COPY_ACTION_SUFFIX = " (copy)";
     
     @Inject
