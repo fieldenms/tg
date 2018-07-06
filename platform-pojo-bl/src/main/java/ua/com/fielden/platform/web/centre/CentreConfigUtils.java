@@ -21,24 +21,54 @@ import ua.com.fielden.platform.error.Result;
  */
 public class CentreConfigUtils {
     
-    static EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, ? extends IEntityDao<AbstractEntity<?>>> applyCriteria(final EnhancedCentreEntityQueryCriteria<?, ?> selectionCrit) {
-        // Get modifHolder and apply it against 'fresh' centre to be able to identify validity of 'fresh' centre
+    /**
+     * Applies modifHolder from <code>selectionCrit</code> against fresh centre.
+     * 
+     * @param selectionCrit
+     * @return
+     */
+    public static EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, ? extends IEntityDao<AbstractEntity<?>>> applyCriteria(final EnhancedCentreEntityQueryCriteria<?, ?> selectionCrit) {
+        // get modifHolder and apply it against 'fresh' centre to be able to later identify validity of 'fresh' centre
         return selectionCrit.freshCentreApplier().apply(selectionCrit.centreContextHolder().getModifHolder());
     }
     
-    static Optional<Map<String, Object>> invalidCustomObject(final EnhancedCentreEntityQueryCriteria<?, ?> selectionCrit, final EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, ? extends IEntityDao<AbstractEntity<?>>> appliedCriteriaEntity) {
-        // Validate criteriaEntity.
+    /**
+     * Returns custom object with centre information in case where centre criteria is invalid, otherwise returns empty {@link Optional}. 
+     * 
+     * @param selectionCrit
+     * @param appliedCriteriaEntity
+     * @return
+     */
+    public static Optional<Map<String, Object>> invalidCustomObject(final EnhancedCentreEntityQueryCriteria<?, ?> selectionCrit, final EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, ? extends IEntityDao<AbstractEntity<?>>> appliedCriteriaEntity) {
+        // validate criteriaEntity
         final Result validationResult = appliedCriteriaEntity.isValid();
-        if (!validationResult.isSuccessful()) { // If applied criteria entity is valid then perform actual saving.
+        if (!validationResult.isSuccessful()) { // if applied criteria entity is invalid then return corresponding custom object
             return of(getCustomObject(selectionCrit, appliedCriteriaEntity));
         }
         return empty();
     }
     
+    /**
+     * Creates custom object with centre information for concrete <code>appliedCriteriaEntity</code>.
+     * 
+     * @param selectionCrit
+     * @param appliedCriteriaEntity
+     * @return
+     */
     static Map<String, Object> getCustomObject(final EnhancedCentreEntityQueryCriteria<?, ?> selectionCrit, final EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, ? extends IEntityDao<AbstractEntity<?>>> appliedCriteriaEntity) {
         return getCustomObject(selectionCrit, appliedCriteriaEntity, selectionCrit.saveAsNameSupplier().get());
     }
     
+    /**
+     * Creates custom object with centre information for concrete <code>appliedCriteriaEntity</code>.
+     * <p>
+     * Contains <code>centreChanged</code> flag which is calculated comparing <code>appliedCriteriaEntity</code>'s centre against saved version of <code>saveAsNameToCompare</code>'s centre.
+     * 
+     * @param selectionCrit
+     * @param appliedCriteriaEntity
+     * @param saveAsNameToCompare
+     * @return
+     */
     public static Map<String, Object> getCustomObject(final EnhancedCentreEntityQueryCriteria<?, ?> selectionCrit, final EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, ? extends IEntityDao<AbstractEntity<?>>> appliedCriteriaEntity, final Optional<String> saveAsNameToCompare) {
         return selectionCrit.centreCustomObjectGetter().apply(appliedCriteriaEntity, saveAsNameToCompare);
     }

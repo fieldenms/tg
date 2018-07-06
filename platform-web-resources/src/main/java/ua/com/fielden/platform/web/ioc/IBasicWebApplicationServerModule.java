@@ -21,10 +21,12 @@ import ua.com.fielden.platform.web.app.ThreadLocalDeviceProvider;
 import ua.com.fielden.platform.web.centre.CentreColumnWidthConfigUpdaterDao;
 import ua.com.fielden.platform.web.centre.CentreConfigEditActionDao;
 import ua.com.fielden.platform.web.centre.CentreConfigLoadActionDao;
+import ua.com.fielden.platform.web.centre.CentreConfigSaveActionDao;
 import ua.com.fielden.platform.web.centre.CentreConfigUpdaterDao;
 import ua.com.fielden.platform.web.centre.ICentreColumnWidthConfigUpdater;
 import ua.com.fielden.platform.web.centre.ICentreConfigEditAction;
 import ua.com.fielden.platform.web.centre.ICentreConfigLoadAction;
+import ua.com.fielden.platform.web.centre.ICentreConfigSaveAction;
 import ua.com.fielden.platform.web.centre.ICentreConfigUpdater;
 import ua.com.fielden.platform.web.interfaces.IDeviceProvider;
 import ua.com.fielden.platform.web.resources.webui.AbstractWebUiConfig;
@@ -79,7 +81,7 @@ public interface IBasicWebApplicationServerModule {
         
         bindType(ICentreConfigLoadAction.class).to(CentreConfigLoadActionDao.class);
         bindType(ICentreConfigEditAction.class).to(CentreConfigEditActionDao.class);
-        // TODO bindType(ICentreConfigSaveAction.class).to(CentreConfigSaveActionDao.class);
+        bindType(ICentreConfigSaveAction.class).to(CentreConfigSaveActionDao.class);
     }
 
     /**

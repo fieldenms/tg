@@ -8,8 +8,6 @@ import static ua.com.fielden.platform.domaintree.impl.GlobalDomainTreeManager.UN
 import static ua.com.fielden.platform.error.Result.failuref;
 import static ua.com.fielden.platform.error.Result.successful;
 import static ua.com.fielden.platform.error.Result.warning;
-import static ua.com.fielden.platform.web.centre.CentreConfigEditAction.EditKind.EDIT;
-import static ua.com.fielden.platform.web.centre.CentreConfigEditAction.EditKind.valueOf;
 import static ua.com.fielden.platform.web.utils.EntityResourceUtils.CENTRE_CONFIG_CONFLICT_ERROR;
 import static ua.com.fielden.platform.web.utils.EntityResourceUtils.CENTRE_CONFIG_CONFLICT_WARNING;
 
@@ -48,13 +46,13 @@ public class CentreConfigEditActionTitleValidator implements IBeforeChangeEventH
         if (newValue == null || UNDEFINED_CONFIG_TITLE.equals(newValue) || LINK_CONFIG_TITLE.equals(newValue) || !newValue.matches(format("[\\w%s%s]*", specialCharactersQuoted, spaceQuoted))) {
             return failuref("Only alfanumeric characters, spaces and %s are allowed.", specialCharacters);
         } else {
-            final CentreConfigEditAction entity = property.getEntity();
+            final AbstractCentreConfigEditAction entity = property.getEntity();
             if (entity.isSkipUi()) {
                 return successful("ok");
             }
             final EnhancedCentreEntityQueryCriteria<?, ?> criteriaEntity = criteriaEntityRestorer.restoreCriteriaEntity(entity.getCentreContextHolder());
             
-            final boolean titleCanBeCurrent = EDIT.equals(valueOf(entity.getEditKind()));
+            final boolean titleCanBeCurrent = CentreConfigEditAction.class.isAssignableFrom(entity.getType());
             final Map<Boolean, List<LoadableCentreConfig>> possibleIntersections = criteriaEntity.loadableCentresSupplier().get().stream()
                 .filter(lcc -> titleCanBeCurrent ? criteriaEntity.saveAsNameSupplier().get().map(name -> !lcc.getKey().equals(name)).orElse(true) : true)
                 .collect(partitioningBy(lcc -> lcc.isInherited()));

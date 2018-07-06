@@ -3,7 +3,9 @@ package ua.com.fielden.platform.web.centre;
 import static java.util.Optional.of;
 import static ua.com.fielden.platform.web.centre.CentreConfigUtils.applyCriteria;
 import static ua.com.fielden.platform.web.centre.CentreConfigUtils.invalidCustomObject;
+
 import java.util.Map;
+
 import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.DefaultEntityProducerWithContext;
@@ -29,15 +31,14 @@ public abstract class AbstractCentreConfigEditActionProducer<T extends AbstractC
         if (contextNotEmpty()) {
             // centre context holder is needed to restore criteria entity during saving and to perform appropriate closure
             entity.setCentreContextHolder(selectionCrit().centreContextHolder());
-            
-            final EnhancedCentreEntityQueryCriteria<?, ?> selectionCrit = selectionCrit();
-            final EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, ? extends IEntityDao<AbstractEntity<?>>> appliedCriteriaEntity = applyCriteria(selectionCrit);
-            entity.setCustomObject(invalidCustomObject(selectionCrit, appliedCriteriaEntity)
+            // apply criteria entity
+            final EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, ? extends IEntityDao<AbstractEntity<?>>> appliedCriteriaEntity = applyCriteria(selectionCrit());
+            entity.setCustomObject(invalidCustomObject(selectionCrit(), appliedCriteriaEntity)
                 .map(customObj -> {
                     entity.setSkipUi(true);
                     return customObj;
                 })
-                .orElseGet(() -> performProduce(entity, selectionCrit, appliedCriteriaEntity))
+                .orElseGet(() -> performProduce(entity, selectionCrit(), appliedCriteriaEntity))
             );
         }
         return entity;
@@ -53,10 +54,27 @@ public abstract class AbstractCentreConfigEditActionProducer<T extends AbstractC
      */
     protected abstract Map<String, Object> performProduce(final T entity, final EnhancedCentreEntityQueryCriteria<?, ?> selectionCrit, final EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, ? extends IEntityDao<AbstractEntity<?>>> appliedCriteriaEntity);
     
+    /**
+     * Initialises <code>title</code> and <code>desc</code> inside <code>entity</code>. Takes them from persisted configuration with concrete name <code>saveAsName</code>.
+     * 
+     * @param entity
+     * @param saveAsName
+     * @param selectionCrit
+     */
     protected void setTitleAndDesc(final T entity, final String saveAsName, final EnhancedCentreEntityQueryCriteria<?, ?> selectionCrit) {
         setTitleAndDesc(entity, saveAsName, selectionCrit, "");
     }
     
+    /**
+     * Initialises <code>title</code> and <code>desc</code> inside <code>entity</code>. Takes them from persisted configuration with concrete name <code>saveAsName</code>.
+     * <p>
+     * Concatenates <code>suffix</code> to both <code>title</code> and <code>desc</code>.
+     * 
+     * @param entity
+     * @param saveAsName
+     * @param selectionCrit
+     * @param suffix
+     */
     protected void setTitleAndDesc(final T entity, final String saveAsName, final EnhancedCentreEntityQueryCriteria<?, ?> selectionCrit, final String suffix) {
         makeTitleAndDescRequired(entity);
         
@@ -66,6 +84,11 @@ public abstract class AbstractCentreConfigEditActionProducer<T extends AbstractC
         entity.setDesc(titleAndDesc._2 + suffix);
     }
     
+    /**
+     * Makes <code>title</code> and <code>desc</code> required inside <code>entity</code>.
+     * 
+     * @param entity
+     */
     protected void makeTitleAndDescRequired(final T entity) {
         // make title and desc required
         entity.getProperty("title").setRequired(true);

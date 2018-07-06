@@ -70,6 +70,7 @@ import ua.com.fielden.platform.web.centre.CentreConfigDeleteActionDao;
 import ua.com.fielden.platform.web.centre.CentreConfigDuplicateActionDao;
 import ua.com.fielden.platform.web.centre.CentreConfigEditActionDao;
 import ua.com.fielden.platform.web.centre.CentreConfigLoadActionDao;
+import ua.com.fielden.platform.web.centre.CentreConfigSaveActionDao;
 import ua.com.fielden.platform.web.centre.CentreConfigUpdaterDao;
 import ua.com.fielden.platform.web.centre.CentreConfigUpdaterDefaultActionDao;
 import ua.com.fielden.platform.web.centre.CustomisableColumnDao;
@@ -78,6 +79,7 @@ import ua.com.fielden.platform.web.centre.ICentreConfigDeleteAction;
 import ua.com.fielden.platform.web.centre.ICentreConfigDuplicateAction;
 import ua.com.fielden.platform.web.centre.ICentreConfigEditAction;
 import ua.com.fielden.platform.web.centre.ICentreConfigLoadAction;
+import ua.com.fielden.platform.web.centre.ICentreConfigSaveAction;
 import ua.com.fielden.platform.web.centre.ICentreConfigUpdater;
 import ua.com.fielden.platform.web.centre.ICentreConfigUpdaterDefaultAction;
 import ua.com.fielden.platform.web.centre.ICustomisableColumn;
@@ -163,6 +165,6 @@ public class WebHibernateModule extends CommonFactoryModule {
         
         bind(ICentreConfigLoadAction.class).to(CentreConfigLoadActionDao.class);
         bind(ICentreConfigEditAction.class).to(CentreConfigEditActionDao.class);
-        // TODO bind(ICentreConfigSaveAction.class).to(CentreConfigSaveActionDao.class);
+        bind(ICentreConfigSaveAction.class).to(CentreConfigSaveActionDao.class);
     }
 }

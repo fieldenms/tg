@@ -43,7 +43,7 @@ public class CentreConfigSaveActionProducer extends AbstractCentreConfigEditActi
             entity.setSkipUi(true);
             selectionCrit.freshCentreSaver().run();
             final Map<String, Object> customObj = getCustomObject(selectionCrit, appliedCriteriaEntity);
-            customObj.remove("wasRun");
+            customObj.remove("wasRun"); // avoid making VIEW button disabled if it is enabled
             return customObj;
         }
     }

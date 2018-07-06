@@ -1,7 +1,5 @@
 package ua.com.fielden.platform.web.centre;
 
-import static java.util.Optional.of;
-
 import java.util.Map;
 
 import com.google.inject.Inject;
@@ -30,7 +28,7 @@ public class CentreConfigEditActionDao extends AbstractCentreConfigEditActionDao
             .restoreCriteriaEntity(entity.getCentreContextHolder())
             .centreEditor()
             .apply(
-                of(entity.getTitle()),
+                entity.getTitle(),
                 entity.getDesc()
             );
     }

@@ -28,6 +28,8 @@ import ua.com.fielden.platform.web.centre.CentreConfigEditAction;
 import ua.com.fielden.platform.web.centre.CentreConfigEditActionProducer;
 import ua.com.fielden.platform.web.centre.CentreConfigLoadAction;
 import ua.com.fielden.platform.web.centre.CentreConfigLoadActionProducer;
+import ua.com.fielden.platform.web.centre.CentreConfigSaveAction;
+import ua.com.fielden.platform.web.centre.CentreConfigSaveActionProducer;
 import ua.com.fielden.platform.web.centre.CentreConfigUpdater;
 import ua.com.fielden.platform.web.centre.CentreConfigUpdaterDefaultAction;
 import ua.com.fielden.platform.web.centre.CentreConfigUpdaterDefaultActionProducer;
@@ -55,6 +57,7 @@ public class CentreConfigurationWebUiConfig {
     public final EntityMaster<CentreConfigDuplicateAction> centreConfigDuplicateActionMaster;
     public final EntityMaster<CentreConfigLoadAction> centreConfigLoadActionMaster;
     public final EntityMaster<CentreConfigEditAction> centreConfigEditActionMaster;
+    public final EntityMaster<CentreConfigSaveAction> centreConfigSaveActionMaster;
     public final EntityMaster<CentreConfigDeleteAction> centreConfigDeleteActionMaster;
     public final EntityMaster<OverrideCentreConfig> overrideCentreConfigMaster;
     
@@ -65,6 +68,7 @@ public class CentreConfigurationWebUiConfig {
         centreConfigDuplicateActionMaster = createCentreConfigDuplicateActionMaster(injector);
         centreConfigLoadActionMaster = createCentreConfigLoadActionMaster(injector);
         centreConfigEditActionMaster = createCentreConfigEditActionMaster(injector);
+        centreConfigSaveActionMaster = createCentreConfigSaveActionMaster(injector);
         centreConfigDeleteActionMaster = createCentreConfigDeleteActionMaster(injector);
         overrideCentreConfigMaster = createOverrideCentreConfigMaster(injector);
     }
@@ -178,6 +182,32 @@ public class CentreConfigurationWebUiConfig {
             .forEntity(CentreConfigEditAction.class)
             .addProp("title").asSinglelineText().also()
             .addProp("desc").asMultilineText().also()
+            .addAction(REFRESH).shortDesc("CANCEL").longDesc("Cancels changes.")
+            .addAction(SAVE).shortDesc("SAVE").longDesc("Saves title and description changes.")
+            .setActionBarLayoutFor(DESKTOP, empty(), actionLayout)
+            .setActionBarLayoutFor(TABLET, empty(), actionLayout)
+            .setActionBarLayoutFor(MOBILE, empty(), actionLayout)
+            .setLayoutFor(DESKTOP, empty(), layout)
+            .setLayoutFor(TABLET, empty(), layout)
+            .setLayoutFor(MOBILE, empty(), layout)
+            .withDimensions(mkDim(400, 249))
+            .done();
+        return new EntityMaster<>(CentreConfigEditAction.class, CentreConfigEditActionProducer.class, masterConfig, injector);
+    }
+    
+    /**
+     * Creates entity master for {@link CentreConfigSaveAction}.
+     *
+     * @return
+     */
+    private static EntityMaster<CentreConfigSaveAction> createCentreConfigSaveActionMaster(final Injector injector) {
+        final String actionLayout = mkActionLayoutForMaster();
+        final String layout = mkGridForMasterFitWidth(2, 1);
+        
+        final IMaster<CentreConfigSaveAction> masterConfig = new SimpleMasterBuilder<CentreConfigSaveAction>()
+            .forEntity(CentreConfigSaveAction.class)
+            .addProp("title").asSinglelineText().also()
+            .addProp("desc").asMultilineText().also()
             .addAction(REFRESH).shortDesc("CANCEL").longDesc("Cancels creation of configuration copy.")
             .addAction(SAVE).shortDesc("SAVE").longDesc("Saves new configuration copy.")
             .setActionBarLayoutFor(DESKTOP, empty(), actionLayout)
@@ -188,7 +218,7 @@ public class CentreConfigurationWebUiConfig {
             .setLayoutFor(MOBILE, empty(), layout)
             .withDimensions(mkDim(400, 249))
             .done();
-        return new EntityMaster<>(CentreConfigEditAction.class, CentreConfigEditActionProducer.class, masterConfig, injector);
+        return new EntityMaster<>(CentreConfigSaveAction.class, CentreConfigSaveActionProducer.class, masterConfig, injector);
     }
     
     /**

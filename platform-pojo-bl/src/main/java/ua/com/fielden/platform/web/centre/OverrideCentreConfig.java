@@ -10,7 +10,7 @@ import ua.com.fielden.platform.entity.annotation.EntityTitle;
 import ua.com.fielden.platform.entity.annotation.KeyType;
 
 /** 
- * An entity representing prompt before overriding existing centre configuration in {@link CentreConfigEditAction} during configuration editing / savingAs.
+ * An entity representing prompt before overriding existing centre configuration in {@link CentreConfigEditAction} or {@link CentreConfigSaveAction} during configuration editing / savingAs.
  * 
  * @author TG Team
  *

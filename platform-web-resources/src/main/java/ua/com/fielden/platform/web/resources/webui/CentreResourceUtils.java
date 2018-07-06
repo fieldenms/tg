@@ -439,7 +439,7 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
                 of(customObjectSaveAsName),
                 validationPrototype.centreTitleAndDescGetter().apply(customObjectSaveAsName).map(titleDesc -> titleDesc._2)
             );
-            customObject.put("wasRun", null);
+            customObject.put("wasRun", null); // make VIEW button disabled by default; this behaviour can be overridden by removing 'wasRun' customObject's entry
             customObject.put("appliedCriteriaEntity", appliedCriteriaEntity);
             return customObject;
         });
@@ -506,23 +506,24 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
             return saveAsNameForTitleAndDesc.map(name -> t2(name, updateCentreDesc(gdtm, miType, of(name), device)));
         });
         validationPrototype.setCentreEditor((newName, newDesc) -> {
-            editCentreTitleAndDesc(gdtm, miType, saveAsName, device, newName.get(), newDesc);
+            editCentreTitleAndDesc(gdtm, miType, saveAsName, device, newName, newDesc);
             // currently loaded configuration should remain preferred -- no action is required
             return validationPrototype.centreCustomObjectGetter().apply(
-                createCriteriaEntity(validationPrototype.centreContextHolder().getModifHolder(), companionFinder, critGenerator, miType, newName, gdtm, device),
-                newName
+                createCriteriaEntity(validationPrototype.centreContextHolder().getModifHolder(), companionFinder, critGenerator, miType, of(newName), gdtm, device),
+                of(newName)
             );
         });
         validationPrototype.setCentreSaver((newName, newDesc) -> {
+            final Optional<String> newSaveAsName = of(newName);
             final ICentreDomainTreeManagerAndEnhancer freshCentre = updateCentre(gdtm, miType, FRESH_CENTRE_NAME, saveAsName, device);
             // save the 'fresh' centre with a new name -- buttons SAVE / DISCARD will be disabled
-            initAndCommit(gdtm, miType, FRESH_CENTRE_NAME, newName, device, freshCentre, newDesc);
-            initAndCommit(gdtm, miType, SAVED_CENTRE_NAME, newName, device, freshCentre, null);
+            initAndCommit(gdtm, miType, FRESH_CENTRE_NAME, newSaveAsName, device, freshCentre, newDesc);
+            initAndCommit(gdtm, miType, SAVED_CENTRE_NAME, newSaveAsName, device, freshCentre, null);
             // when switching to new configuration we need to make it preferred
-            validationPrototype.preferredConfigMaker().accept(newName);
+            validationPrototype.preferredConfigMaker().accept(newSaveAsName);
             return validationPrototype.centreCustomObjectGetter().apply(
-                createCriteriaEntity(validationPrototype.centreContextHolder().getModifHolder(), companionFinder, critGenerator, miType, newName, gdtm, device),
-                newName
+                createCriteriaEntity(validationPrototype.centreContextHolder().getModifHolder(), companionFinder, critGenerator, miType, newSaveAsName, gdtm, device),
+                newSaveAsName
             );
         });
         validationPrototype.setLoadableCentresSupplier(() -> {
