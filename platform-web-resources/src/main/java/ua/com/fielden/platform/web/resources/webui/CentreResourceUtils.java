@@ -486,20 +486,24 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
             validationPrototype.preferredConfigMaker().accept(empty());
         }); 
         validationPrototype.setInheritedCentreUpdater(saveAsNameToLoad -> {
+            // determine whether inherited configuration is changed
             final boolean centreChanged = isFreshCentreChanged(
                 updateCentre(gdtm, miType, FRESH_CENTRE_NAME, of(saveAsNameToLoad), device),
                 updateCentre(gdtm, miType, SAVED_CENTRE_NAME, of(saveAsNameToLoad), device)
             );
-            if (centreChanged) {
+            if (centreChanged) { // if there are some user changes, only SAVED surrogate must be updated; if such centre will be discarded the base user changes will be loaded immediately
                 removeCentres(gdtm, miType, device, of(saveAsNameToLoad), SAVED_CENTRE_NAME);
-            } else {
+            } else { // otherwise base user changes will be loaded immediately after centre loading
                 removeCentres(gdtm, miType, device, of(saveAsNameToLoad), FRESH_CENTRE_NAME, SAVED_CENTRE_NAME);
             }
             updateCentre(gdtm, miType, FRESH_CENTRE_NAME, of(saveAsNameToLoad), device);
             updateCentre(gdtm, miType, SAVED_CENTRE_NAME, of(saveAsNameToLoad), device);
         });
         validationPrototype.setDefaultCentreClearer(() -> {
-            clearDefaultCentre(gdtm, miType, device);
+            // clears default centre and fully prepares it for usage
+            removeCentres(gdtm, miType, device, empty(), FRESH_CENTRE_NAME, SAVED_CENTRE_NAME, PREVIOUSLY_RUN_CENTRE_NAME);
+            updateCentre(gdtm, miType, FRESH_CENTRE_NAME, empty(), device);
+            updateCentre(gdtm, miType, SAVED_CENTRE_NAME, empty(), device);
         });
         validationPrototype.setFreshCentreApplier((modifHolder) -> {
             return createCriteriaEntity(modifHolder, companionFinder, critGenerator, miType, saveAsName, gdtm, device);
@@ -533,9 +537,6 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
         });
         validationPrototype.setSaveAsNameSupplier(() -> {
             return saveAsName;
-        });
-        validationPrototype.setPreferredConfigSupplier(() -> {
-            return retrievePreferredConfigName(gdtm, miType, device, companionFinder);
         });
         validationPrototype.setPreferredConfigMaker((saveAsNameToBecomePreferred) -> {
             if (!equalsEx(saveAsNameToBecomePreferred, saveAsName)) {

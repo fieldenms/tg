@@ -42,7 +42,6 @@ public class EnhancedCentreEntityQueryCriteria<T extends AbstractEntity<?>, DAO 
     private Runnable defaultCentreClearer;
     private Supplier<List<LoadableCentreConfig>> loadableCentresSupplier;
     private Supplier<Optional<String>> saveAsNameSupplier;
-    private Supplier<Optional<String>> preferredConfigSupplier;
     private Consumer<Optional<String>> preferredConfigMaker;
     private Function<Optional<String>, Optional<T2<String, String>>> centreTitleAndDescGetter;
     private Supplier<ICentreDomainTreeManagerAndEnhancer> baseCentreSupplier;
@@ -172,14 +171,6 @@ public class EnhancedCentreEntityQueryCriteria<T extends AbstractEntity<?>, DAO 
 
     public Supplier<Optional<String>> saveAsNameSupplier() {
         return saveAsNameSupplier;
-    }
-
-    public void setPreferredConfigSupplier(final Supplier<Optional<String>> preferredConfigSupplier) {
-        this.preferredConfigSupplier = preferredConfigSupplier;
-    }
-
-    public Supplier<Optional<String>> preferredConfigSupplier() {
-        return preferredConfigSupplier;
     }
 
     public void setPreferredConfigMaker(final Consumer<Optional<String>> preferredConfigMaker) {

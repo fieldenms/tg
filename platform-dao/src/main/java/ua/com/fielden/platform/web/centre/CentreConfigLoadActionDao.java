@@ -52,6 +52,7 @@ public class CentreConfigLoadActionDao extends CommonEntityDao<CentreConfigLoadA
                     selectionCrit.inheritedCentreUpdater().accept(saveAsNameToLoad);
                 }
             });
+        // configuration being loaded need to become preferred
         selectionCrit.preferredConfigMaker().accept(of(saveAsNameToLoad));
         entity.setCustomObject(getCustomObject(selectionCrit, selectionCrit.criteriaValidationPrototypeCreator().apply(of(saveAsNameToLoad)), of(saveAsNameToLoad)));
         return super.save(entity);

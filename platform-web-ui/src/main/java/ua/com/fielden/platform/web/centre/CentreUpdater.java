@@ -298,23 +298,6 @@ public class CentreUpdater {
     }
     
     /**
-     * Clears 'default' centre and fully prepares it for usage.
-     * <p>
-     * Please note that {@link #PREVIOUSLY_RUN_CENTRE_NAME} surrogate centre will not be initialised.
-     * For user it means that VIEW button will become disabled and this is consistent with user expectation after 
-     * pressing NEW / DELETE button.
-     * 
-     * @param gdtm
-     * @param miType
-     * @param device
-     */
-    public static void clearDefaultCentre(final IGlobalDomainTreeManager gdtm, final Class<? extends MiWithConfigurationSupport<?>> miType, final DeviceProfile device) {
-        removeCentres(gdtm, miType, device, empty(), FRESH_CENTRE_NAME, SAVED_CENTRE_NAME, PREVIOUSLY_RUN_CENTRE_NAME);
-        updateCentre(gdtm, miType, FRESH_CENTRE_NAME, empty(), device);
-        updateCentre(gdtm, miType, SAVED_CENTRE_NAME, empty(), device);
-    }
-    
-    /**
      * Commits the centre's diff to the database and removes it from cache (needs to be updated to be able to be used).
      *
      * @param gdtm

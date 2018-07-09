@@ -100,7 +100,7 @@ public class CentreResource<CRITERIA_TYPE extends AbstractEntity<?>> extends Abs
             
             final ICentreDomainTreeManagerAndEnhancer newFreshCentre;
             
-            if (isInherited(saveAsName, () -> loadableConfigurations(gdtm, miType, device(), companionFinder).stream()) ) { 
+            if (isInherited(saveAsName, () -> loadableConfigurations(gdtm, miType, device(), companionFinder).stream()) ) { // this will also throw early failure in case where current configuration was deleted
                 removeCentres(gdtm, miType, device(), saveAsName, FRESH_CENTRE_NAME, SAVED_CENTRE_NAME);
                 
                 // it is necessary to use "fresh" instance of cdtme (after the defaulting process)

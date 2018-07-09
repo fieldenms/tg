@@ -80,23 +80,26 @@ public class ResultJsonSerialiser extends StdSerializer<Result> {
                         final Class<?> itemClass = stripIfNeeded(item.getClass());
                         if (isGenerated(itemClass)) {
                             generatedTypes.add(itemClass);
-                        } else if (AbstractFunctionalEntityForCollectionModification.class.isAssignableFrom(itemClass)) {
-                            // As it was mentioned above there could be a deep hierarchy of generated types, not only 'root' value.
-                            // This is especially relevant to the situation of domain trees with calculated properties on different levels.
-                            // At this stage we have only one situation where generated type (potentially not registered in serialiser) exists on first level of root type's properties.
-                            // This is the case for both CentreConfigUpdater and CentreConfigLoadAction, but potentially may occur in other collectional functional entities.
-                            // At this stage only this small case will be handled -- generated type of 'masterEntity' value will be registered in TgJackson.
-                            // In future, traversal of entity instance tree can be done similarly as in DefinersExecutor using DFS algorithm.
-                            // The checks on proxiness and idOnlyProxiness was heavily inspired by DefinersExecutor logic.
-                            final AbstractFunctionalEntityForCollectionModification collectionUpdater = (AbstractFunctionalEntityForCollectionModification) item;
-                            if (!collectionUpdater.proxiedPropertyNames().contains(MASTER_ENTITY_PROPERTY_NAME)) {
-                                final AbstractEntity<?> value = collectionUpdater.getMasterEntity();
-                                if (value != null && !value.isIdOnlyProxy() && isGenerated(value.getClass())) {
-                                    generatedTypes.add(stripIfNeeded(value.getClass()));
+                        } else {
+                            if (AbstractFunctionalEntityForCollectionModification.class.isAssignableFrom(itemClass)) {
+                                // As it was mentioned above there could be a deep hierarchy of generated types, not only 'root' value.
+                                // This is especially relevant to the situation of domain trees with calculated properties on different levels.
+                                // At this stage we have only one situation where generated type (potentially not registered in serialiser) exists on first level of root type's properties.
+                                // This is the case for both CentreConfigUpdater and CentreConfigLoadAction, but potentially may occur in other collectional functional entities.
+                                // At this stage only this small case will be handled -- generated type of 'masterEntity' value will be registered in TgJackson.
+                                // In future, traversal of entity instance tree can be done similarly as in DefinersExecutor using DFS algorithm.
+                                // The checks on proxiness and idOnlyProxiness was heavily inspired by DefinersExecutor logic.
+                                final AbstractFunctionalEntityForCollectionModification collectionUpdater = (AbstractFunctionalEntityForCollectionModification) item;
+                                if (!collectionUpdater.proxiedPropertyNames().contains(MASTER_ENTITY_PROPERTY_NAME)) {
+                                    final AbstractEntity<?> value = collectionUpdater.getMasterEntity();
+                                    if (value != null && !value.isIdOnlyProxy() && isGenerated(value.getClass())) {
+                                        generatedTypes.add(stripIfNeeded(value.getClass()));
+                                    }
                                 }
                             }
-                        } else if (isCentreConfigAction(itemClass)) {
-                            possiblyUnregisteredCriteriaTypeFrom(item).ifPresent((unregisteredType) -> generatedTypes.add(unregisteredType));
+                            if (isCentreConfigAction(itemClass)) {
+                                possiblyUnregisteredCriteriaTypeFrom(item).ifPresent((unregisteredType) -> generatedTypes.add(unregisteredType));
+                            }
                         }
                     }
                 });
@@ -111,10 +114,10 @@ public class ResultJsonSerialiser extends StdSerializer<Result> {
             } else {
                 generator.writeObject(type.getName());
                 if (isCentreConfigAction(type)) {
-                    final Optional<Class<?>> possiblyUnregisteredType = possiblyUnregisteredCriteriaTypeFrom(result.getInstance());
-                    if (possiblyUnregisteredType.isPresent()) { // isPresent was used here instead of ifPresent due to the need to pass exceptions from 'write' methods upward
+                    final Optional<Class<?>> possiblyUnregisteredCriteriaType = possiblyUnregisteredCriteriaTypeFrom(result.getInstance());
+                    if (possiblyUnregisteredCriteriaType.isPresent()) { // isPresent was used here instead of ifPresent due to the need to pass exceptions from 'write' methods upward
                         generator.writeFieldName("@instanceTypes");
-                        generator.writeObject(new ArrayList<>(asList(tgJackson.registerNewEntityType((Class<AbstractEntity<?>>) possiblyUnregisteredType.get())))); // deliberately used ArrayList for graceful serialisation
+                        generator.writeObject(new ArrayList<>(asList(tgJackson.registerNewEntityType((Class<AbstractEntity<?>>) possiblyUnregisteredCriteriaType.get())))); // deliberately used ArrayList for graceful serialisation
                     }
                 }
             }
@@ -132,7 +135,7 @@ public class ResultJsonSerialiser extends StdSerializer<Result> {
     }
     
     /**
-     * Returns <code>true</code> if entity is centre config action containing custom object with possibly unregistered criteria entity type.
+     * Returns <code>true</code> if entity is centre config action containing custom object with possibly unregistered criteria entity type, <code>false</code> otherwise.
      * 
      * @param type
      * @return
@@ -142,9 +145,11 @@ public class ResultJsonSerialiser extends StdSerializer<Result> {
     }
     
     /**
-     * Returns 
+     * Returns the type of criteria entity from custom object of <code>centreConfigActionObj</code>.
+     * This type may not be registered in serialiser due to origination on other server node. In this case it is needed to
+     * provide adhoc registration.
      * 
-     * @param centreConfigActionObj
+     * @param centreConfigActionObj -- entity of type {@link AbstractCentreConfigAction} or {@link CentreConfigLoadAction}
      * @return
      */
     private static Optional<Class<?>> possiblyUnregisteredCriteriaTypeFrom(final Object centreConfigActionObj) {

@@ -3,8 +3,6 @@ package ua.com.fielden.platform.web.centre;
 import static ua.com.fielden.platform.web.centre.AbstractCentreConfigAction.WAS_RUN_NAME;
 import static ua.com.fielden.platform.web.centre.CentreConfigUtils.getCustomObject;
 import static ua.com.fielden.platform.web.centre.CentreConfigUtils.isDefault;
-import static ua.com.fielden.platform.web.centre.CentreConfigUtils.isDefaultOrInherited;
-
 import java.util.Map;
 import java.util.Optional;
 
@@ -31,9 +29,9 @@ public class CentreConfigSaveActionProducer extends AbstractCentreConfigCommitAc
     }
     
     @Override
-    protected Map<String, Object> performProduce(final CentreConfigSaveAction entity, final EnhancedCentreEntityQueryCriteria<?, ?> selectionCrit, final EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, ? extends IEntityDao<AbstractEntity<?>>> appliedCriteriaEntity) {
+    protected Map<String, Object> performProduce(final CentreConfigSaveAction entity, final EnhancedCentreEntityQueryCriteria<?, ?> selectionCrit, final EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, ? extends IEntityDao<AbstractEntity<?>>> appliedCriteriaEntity, final boolean isDefaultOrInherited) {
         final Optional<String> saveAsName = selectionCrit.saveAsNameSupplier().get();
-        if (isDefaultOrInherited(saveAsName, selectionCrit)) {
+        if (isDefaultOrInherited) {
             if (!isDefault(saveAsName)) {
                 setTitleAndDesc(entity, saveAsName.get(), selectionCrit, COPY_ACTION_SUFFIX);
             } else {

@@ -50,7 +50,7 @@ public class CentreConfigUpdaterDao extends CommonEntityDao<CentreConfigUpdater>
         final Class<?> root = criteriaEntityBeingUpdated.getEntityClass();
         final Consumer<Consumer<ICentreDomainTreeManagerAndEnhancer>> centreAdjuster = criteriaEntityBeingUpdated.centreAdjuster();
         
-        // use centreAdjuster to update all centre managers ('fresh', 'saved' and 'previouslyRun') with columns visibility / order / sorting information; also commit them to the database
+        // use centreAdjuster to update all centre managers ('fresh' and 'saved') with columns visibility / order / sorting information; also commit them to the database
         centreAdjuster.accept(centreManager -> {
             // remove sorting information
             final List<Pair<String, Ordering>> currOrderedProperties = new ArrayList<>(centreManager.getSecondTick().orderedProperties(root));

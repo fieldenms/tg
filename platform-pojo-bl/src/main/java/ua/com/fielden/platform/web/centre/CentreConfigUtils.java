@@ -104,7 +104,7 @@ public class CentreConfigUtils {
      * @param selectionCrit
      * @return
      */
-    public static boolean isDefaultOrInherited(final Optional<String> saveAsName, final EnhancedCentreEntityQueryCriteria<?, ?> selectionCrit) {
+    public static boolean isDefaultOrInherited(final Optional<String> saveAsName, final EnhancedCentreEntityQueryCriteria<?, ?> selectionCrit) throws Result {
         return isDefault(saveAsName) || isInherited(saveAsName, () -> selectionCrit.loadableCentresSupplier().get().stream());
     }
     
@@ -115,7 +115,7 @@ public class CentreConfigUtils {
      * @param streamLoadableConfigurations -- a function to stream loadable configurations for current user
      * @return
      */
-    public static boolean isInherited(final Optional<String> saveAsName, final Supplier<Stream<LoadableCentreConfig>> streamLoadableConfigurations) {
+    public static boolean isInherited(final Optional<String> saveAsName, final Supplier<Stream<LoadableCentreConfig>> streamLoadableConfigurations) throws Result {
         return saveAsName.isPresent() &&
             streamLoadableConfigurations.get()
             .filter(lcc -> lcc.getKey().equals(saveAsName.get()))

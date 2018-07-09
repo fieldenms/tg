@@ -3,9 +3,9 @@ package ua.com.fielden.platform.web.centre;
 import static java.util.Optional.of;
 import static ua.com.fielden.platform.web.centre.CentreConfigUtils.applyCriteria;
 import static ua.com.fielden.platform.web.centre.CentreConfigUtils.invalidCustomObject;
+import static ua.com.fielden.platform.web.centre.CentreConfigUtils.isDefaultOrInherited;
 
 import java.util.Map;
-
 import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.DefaultEntityProducerWithContext;
@@ -31,6 +31,11 @@ public abstract class AbstractCentreConfigCommitActionProducer<T extends Abstrac
         if (contextNotEmpty()) {
             // centre context holder is needed to restore criteria entity during saving and to perform appropriate closure
             entity.setCentreContextHolder(selectionCrit().centreContextHolder());
+            
+            // in most cases the following check will be needed to determine the course of action
+            // also it will throw early failure in case where current configuration was deleted
+            final boolean isDefaultOrInherited = isDefaultOrInherited(selectionCrit().saveAsNameSupplier().get(), selectionCrit());
+            
             // apply criteria entity
             final EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, ? extends IEntityDao<AbstractEntity<?>>> appliedCriteriaEntity = applyCriteria(selectionCrit());
             entity.setCustomObject(
@@ -40,7 +45,7 @@ public abstract class AbstractCentreConfigCommitActionProducer<T extends Abstrac
                     entity.setSkipUi(true);
                     return customObj;
                 })
-                .orElseGet(() -> performProduce(entity, selectionCrit(), appliedCriteriaEntity))
+                .orElseGet(() -> performProduce(entity, selectionCrit(), appliedCriteriaEntity, isDefaultOrInherited))
             );
         }
         return entity;
@@ -52,9 +57,10 @@ public abstract class AbstractCentreConfigCommitActionProducer<T extends Abstrac
      * @param entity
      * @param selectionCrit
      * @param appliedCriteriaEntity
+     * @param isDefaultOrInherited -- indicates whether current configuration is default or inherited
      * @return
      */
-    protected abstract Map<String, Object> performProduce(final T entity, final EnhancedCentreEntityQueryCriteria<?, ?> selectionCrit, final EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, ? extends IEntityDao<AbstractEntity<?>>> appliedCriteriaEntity);
+    protected abstract Map<String, Object> performProduce(final T entity, final EnhancedCentreEntityQueryCriteria<?, ?> selectionCrit, final EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, ? extends IEntityDao<AbstractEntity<?>>> appliedCriteriaEntity, boolean isDefaultOrInherited);
     
     /**
      * Initialises <code>title</code> and <code>desc</code> inside <code>entity</code>. Takes them from persisted configuration with concrete name <code>saveAsName</code>.

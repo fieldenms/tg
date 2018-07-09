@@ -2,10 +2,8 @@ package ua.com.fielden.platform.web.centre;
 
 import static ua.com.fielden.platform.error.Result.failure;
 import static ua.com.fielden.platform.web.centre.CentreConfigUtils.getCustomObject;
-import static ua.com.fielden.platform.web.centre.CentreConfigUtils.isDefaultOrInherited;
 
 import java.util.Map;
-import java.util.Optional;
 
 import com.google.inject.Inject;
 
@@ -30,12 +28,11 @@ public class CentreConfigEditActionProducer extends AbstractCentreConfigCommitAc
     }
     
     @Override
-    protected Map<String, Object> performProduce(final CentreConfigEditAction entity, final EnhancedCentreEntityQueryCriteria<?, ?> selectionCrit, final EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, ? extends IEntityDao<AbstractEntity<?>>> appliedCriteriaEntity) {
-        final Optional<String> saveAsName = selectionCrit.saveAsNameSupplier().get();
-        if (isDefaultOrInherited(saveAsName, selectionCrit)) {
+    protected Map<String, Object> performProduce(final CentreConfigEditAction entity, final EnhancedCentreEntityQueryCriteria<?, ?> selectionCrit, final EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, ? extends IEntityDao<AbstractEntity<?>>> appliedCriteriaEntity, final boolean isDefaultOrInherited) {
+        if (isDefaultOrInherited) {
             throw failure(ERR_CANNOT_BE_EDITED);
         } else {
-            setTitleAndDesc(entity, saveAsName.get(), selectionCrit);
+            setTitleAndDesc(entity, selectionCrit.saveAsNameSupplier().get().get(), selectionCrit);
             return getCustomObject(selectionCrit, appliedCriteriaEntity);
         }
     }
