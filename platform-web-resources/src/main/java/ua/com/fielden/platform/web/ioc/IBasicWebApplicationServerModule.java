@@ -90,7 +90,7 @@ public interface IBasicWebApplicationServerModule {
      *
      * @param injector
      */
-    default public void initWebApp(final Injector injector) {
+    default void initWebApp(final Injector injector) {
         final AbstractWebUiConfig webApp = (AbstractWebUiConfig) injector.getInstance(IWebUiConfig.class);
         webApp.setInjector(injector);
 

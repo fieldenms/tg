@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.entity.validation;
 
+import java.lang.annotation.Annotation;
 import java.util.Set;
 
 import ua.com.fielden.platform.entity.meta.MetaProperty;
@@ -12,15 +13,19 @@ import ua.com.fielden.platform.error.Result;
  * @author TG Team
  *
  */
-public class StubValidator implements IBeforeChangeEventHandler {
+public class StubValidator<T> implements IBeforeChangeEventHandler<T> {
 
-    public static final StubValidator singleton = new StubValidator();
-
+    private static final StubValidator singleton = new StubValidator<>();
+    
     private StubValidator() {
     }
 
+    public static <T> StubValidator<T> singleton() {
+        return singleton;
+    }
+
     @Override
-    public Result handle(final MetaProperty property, final Object oldValue, final Set mutatorAnnotations) {
+    public Result handle(final MetaProperty<T> property, final T newValue, final Set<Annotation> mutatorAnnotations) {
         throw new IllegalStateException("Handling BCE with stub validator is illegal. It should only be used for referencing purposes.");
     }
 

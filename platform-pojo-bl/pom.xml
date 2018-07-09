@@ -17,10 +17,22 @@
         </description>
 
 	<dependencies>
+		<!-- https://mvnrepository.com/artifact/com.google.guava/guava -->
 		<dependency>
-			<groupId>com.google.guava</groupId>
-			<artifactId>guava</artifactId>
-			<version>19.0</version>
+		    <groupId>com.google.guava</groupId>
+		    <artifactId>guava</artifactId>
+		    <version>25.1-jre</version>
+		</dependency>
+		<dependency>
+			<groupId>com.google.inject</groupId>
+  			<artifactId>guice</artifactId>
+  			<version>4.2.0</version>
+		</dependency>
+
+		<dependency>
+			<groupId>joda-time</groupId>
+			<artifactId>joda-time</artifactId>
+			<version>2.10</version>
 		</dependency>
 
 		<!-- start of Kryo specific libs -->

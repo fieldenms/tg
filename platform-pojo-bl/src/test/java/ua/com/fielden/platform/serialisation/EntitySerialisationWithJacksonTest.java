@@ -5,8 +5,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
-import java.beans.PropertyChangeEvent;
-import java.beans.PropertyChangeListener;
+
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -85,7 +84,6 @@ public class EntitySerialisationWithJacksonTest {
     private final FactoryForTestingEntities factory = new FactoryForTestingEntities(injector.getInstance(EntityFactory.class), testingDate);
     private final ISerialiserEngine jacksonSerialiser = Serialiser.createSerialiserWithKryoAndJackson(factory.getFactory(), createClassProvider(), createSerialisationTypeEncoder(), createIdOnlyProxiedEntityTypeCache()).getEngine(SerialiserEngines.JACKSON);
     private final ISerialiserEngine jacksonDeserialiser = Serialiser.createSerialiserWithKryoAndJackson(factory.getFactory(), createClassProvider(), createSerialisationTypeEncoder(), createIdOnlyProxiedEntityTypeCache()).getEngine(SerialiserEngines.JACKSON);
-    private boolean observed = false;
     
     private IIdOnlyProxiedEntityTypeCache createIdOnlyProxiedEntityTypeCache() {
         return new IdOnlyProxiedEntityTypeCacheForTests();
@@ -224,16 +222,9 @@ public class EntitySerialisationWithJacksonTest {
 
     @Test
     public void entity_with_prop_should_be_restored_and_have_observable_property() throws Exception {
-        observed = false;
         final EntityWithBigDecimal entity = factory.createEntityWithBigDecimal();
 
         final EntityWithBigDecimal restoredEntity = jacksonDeserialiser.deserialise(jacksonSerialiser.serialise(entity), EntityWithBigDecimal.class);
-        restoredEntity.addPropertyChangeListener("prop", new PropertyChangeListener() {
-            @Override
-            public void propertyChange(final PropertyChangeEvent event) {
-                observed = true;
-            }
-        });
 
         assertNotNull("Entity has not been deserialised successfully.", restoredEntity);
         assertFalse("Restored entity should not be the same entity.", entity == restoredEntity);
@@ -242,7 +233,6 @@ public class EntitySerialisationWithJacksonTest {
         assertFalse("Incorrect prop dirtiness.", restoredEntity.getProperty("prop").isDirty());
 
         restoredEntity.setProp(BigDecimal.ONE);
-        assertTrue("Property 'prop' should have been observed.", observed);
     }
 
     @Test

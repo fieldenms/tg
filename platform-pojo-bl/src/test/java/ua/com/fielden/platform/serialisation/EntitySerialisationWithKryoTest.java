@@ -56,7 +56,6 @@ import com.google.inject.Module;
  *
  */
 public class EntitySerialisationWithKryoTest {
-    private boolean observed = false; // used
     private final Module module = new CommonTestEntityModuleWithPropertyFactory();
     private final Injector injector = new ApplicationInjectorFactory().add(module).getInjector();
     private final EntityFactory factory = injector.getInstance(EntityFactory.class);
@@ -68,8 +67,6 @@ public class EntitySerialisationWithKryoTest {
 
     @Before
     public void setUp() {
-        observed = false;
-
         entityForResult = factory.newEntity(Entity.class, 1L, "key", "description");
         assertFalse("Property should not be dirty.", entityForResult.getProperty("dependent").isDirty()); // has default value
         entityForResult.setDirty(false);
@@ -137,18 +134,10 @@ public class EntitySerialisationWithKryoTest {
         //////////////////////////////////////////////////////////////////////////////////////////
         final ByteBuffer readBuffer = ByteBuffer.wrap(data);
         final Entity restoredEntity = ((Kryo) kryoReader).readObject(readBuffer, Entity.class);
-        restoredEntity.addPropertyChangeListener("observableProperty", new PropertyChangeListener() {
-            @Override
-            public void propertyChange(final PropertyChangeEvent event) {
-                observed = true;
-            }
-        });
 
         assertEquals("'key' should be equal.", entity.getKey(), restoredEntity.getKey());
-
         assertEquals("'observableProperty' has incorrect value", new Double(0.0), restoredEntity.getObservableProperty());
         restoredEntity.setObservableProperty(22.0);
-        assertFalse("Property 'observableProperty' should have not been observed.", observed);
 
         // test property of entity type
         assertEquals("'entity' has incorrect value", entity.getEntity(), restoredEntity.getEntity());

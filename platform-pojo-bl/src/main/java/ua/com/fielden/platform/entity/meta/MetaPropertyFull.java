@@ -8,8 +8,6 @@ import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getTitleAndDe
 import static ua.com.fielden.platform.reflection.TitlesDescsGetter.processReqErrorMsg;
 import static ua.com.fielden.platform.types.tuples.T2.t2;
 
-import java.beans.PropertyChangeListener;
-import java.beans.PropertyChangeSupport;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
@@ -28,7 +26,6 @@ import org.apache.log4j.Logger;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.AbstractFunctionalEntityForCollectionModification;
 import ua.com.fielden.platform.entity.DynamicEntityKey;
-import ua.com.fielden.platform.entity.annotation.CritOnly;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.exceptions.EntityDefinitionException;
 import ua.com.fielden.platform.entity.proxy.StrictProxyException;
@@ -131,9 +128,7 @@ public final class MetaPropertyFull<T> extends MetaProperty<T> {
     // the boolean value captures the value of attribute persistentOnly
     private final Optional<Boolean> persistentOnlySettingForFinalAnnotation;
 
-    private final PropertyChangeSupport changeSupport = new PropertyChangeSupport(this);
-
-    private final Logger logger = Logger.getLogger(this.getClass());
+    private static final Logger logger = Logger.getLogger(MetaPropertyFull.class);
 
     /** Enforced mutation happens as part of the error recovery to indicate processing of dependent properties. */
     private boolean enforceMutator = false;
@@ -345,14 +340,7 @@ public final class MetaPropertyFull<T> extends MetaProperty<T> {
         // fire validationResults change event!!
         if (validators.get(key) != null) {
             final Map<IBeforeChangeEventHandler<T>, Result> annotationHandlers = validators.get(key);
-            final Result oldValue = annotationHandlers.get(handler);// getValue();
             annotationHandlers.put(handler, validationResult);
-            final Result firstFailure = getFirstFailure();
-            if (firstFailure != null) {
-                changeSupport.firePropertyChange(VALIDATION_RESULTS_PROPERTY_NAME, oldValue, firstFailure);
-            } else {
-                changeSupport.firePropertyChange(VALIDATION_RESULTS_PROPERTY_NAME, oldValue, validationResult);
-            }
         }
     }
 
@@ -394,7 +382,7 @@ public final class MetaPropertyFull<T> extends MetaProperty<T> {
      * @param validationResult
      */
     @Override
-    public synchronized final void setDomainValidationResult(final Result validationResult) {
+    public final synchronized void setDomainValidationResult(final Result validationResult) {
         setValidationResultForFirtsValidator(validationResult, ValidationAnnotation.DOMAIN);
     }
 
@@ -405,23 +393,14 @@ public final class MetaPropertyFull<T> extends MetaProperty<T> {
      * @param annotationHandlers
      */
     private void setValidationResultForFirtsValidator(final Result validationResult, final ValidationAnnotation va) {
-        Map<IBeforeChangeEventHandler<T>, Result> annotationHandlers = validators.get(va);
-
-        if (annotationHandlers == null) {
-            annotationHandlers = new HashMap<>();
-            annotationHandlers.put(StubValidator.singleton, null);
-            validators.put(va, annotationHandlers);
-        }
+        final Map<IBeforeChangeEventHandler<T>, Result> annotationHandlers = validators.computeIfAbsent(va, key -> {
+                final Map<IBeforeChangeEventHandler<T>, Result> newValue = new HashMap<>();
+                newValue.put(StubValidator.singleton(), null);
+                return newValue;
+            });
 
         final IBeforeChangeEventHandler<T> handler = annotationHandlers.keySet().iterator().next();
-        final Result oldValue = annotationHandlers.get(handler);
         annotationHandlers.put(handler, validationResult);
-        final Result firstFailure = getFirstFailure();
-        if (firstFailure != null) {
-            changeSupport.firePropertyChange(VALIDATION_RESULTS_PROPERTY_NAME, oldValue, firstFailure);
-        } else {
-            changeSupport.firePropertyChange(VALIDATION_RESULTS_PROPERTY_NAME, oldValue, validationResult);
-        }
     }
 
     /**
@@ -495,7 +474,7 @@ public final class MetaPropertyFull<T> extends MetaProperty<T> {
 
                 final Result result1 = mkRequiredError();
 
-                setValidationResultNoSynch(ValidationAnnotation.REQUIRED, StubValidator.singleton, result1);
+                setValidationResultNoSynch(ValidationAnnotation.REQUIRED, StubValidator.singleton(), result1);
                 return false;
             }
         }
@@ -584,77 +563,6 @@ public final class MetaPropertyFull<T> extends MetaProperty<T> {
     @Override
     public final int numberOfValidators() {
         return validators.size();
-    }
-
-    /**
-     * Registers property change listener to validationResults. This listener fires when setValidationResult(..) method invokes.
-     *
-     * @param propertyName
-     * @param listener
-     */
-    @Override
-    public final synchronized void addValidationResultsChangeListener(final PropertyChangeListener listener) {
-        if (listener == null) {
-            throw new IllegalArgumentException("PropertyChangeListener cannot be null.");
-        }
-        changeSupport.addPropertyChangeListener(VALIDATION_RESULTS_PROPERTY_NAME, listener);
-    }
-
-    /**
-     * Removes validationResults change listener.
-     */
-    @Override
-    public synchronized final void removeValidationResultsChangeListener(final PropertyChangeListener listener) {
-        changeSupport.removePropertyChangeListener(VALIDATION_RESULTS_PROPERTY_NAME, listener);
-    }
-
-    /**
-     * Registers property change listener for property <code>editable</code>.
-     *
-     * @param propertyName
-     * @param listener
-     */
-    @Override
-    public final synchronized void addEditableChangeListener(final PropertyChangeListener listener) {
-        if (listener == null) {
-            throw new IllegalArgumentException("PropertyChangeListener cannot be null.");
-        }
-        changeSupport.addPropertyChangeListener(EDITABLE_PROPERTY_NAME, listener);
-    }
-
-    /**
-     * Removes change listener for property <code>editable</code>.
-     */
-    @Override
-    public final synchronized void removeEditableChangeListener(final PropertyChangeListener listener) {
-        changeSupport.removePropertyChangeListener(EDITABLE_PROPERTY_NAME, listener);
-    }
-
-    /**
-     * Registers property change listener for property <code>required</code>.
-     *
-     * @param propertyName
-     * @param listener
-     */
-    @Override
-    public final synchronized void addRequiredChangeListener(final PropertyChangeListener listener) {
-        if (listener == null) {
-            throw new IllegalArgumentException("PropertyChangeListener cannot be null.");
-        }
-        changeSupport.addPropertyChangeListener(REQUIRED_PROPERTY_NAME, listener);
-    }
-
-    /**
-     * Removes change listener for property <code>required</code>.
-     */
-    @Override
-    public final synchronized void removeRequiredChangeListener(final PropertyChangeListener listener) {
-        changeSupport.removePropertyChangeListener(REQUIRED_PROPERTY_NAME, listener);
-    }
-
-    @Override
-    public final PropertyChangeSupport getChangeSupport() {
-        return changeSupport;
     }
 
     @Override
@@ -806,9 +714,7 @@ public final class MetaPropertyFull<T> extends MetaProperty<T> {
 
     @Override
     public final void setEditable(final boolean editable) {
-        final boolean oldValue = this.editable;
         this.editable = editable;
-        changeSupport.firePropertyChange(EDITABLE_PROPERTY_NAME, oldValue, editable);
     }
 
     /**
@@ -931,13 +837,12 @@ public final class MetaPropertyFull<T> extends MetaProperty<T> {
                         setEnforceMutator(false);
                     }
                 } else { // associated a successful result with requiredness validator
-                    setValidationResultNoSynch(ValidationAnnotation.REQUIRED, StubValidator.singleton, new Result(this.getEntity(), "'Required' became false. The validation result cleared."));
+                    setValidationResultNoSynch(ValidationAnnotation.REQUIRED, StubValidator.singleton(), new Result(this.getEntity(), "'Required' became false. The validation result cleared."));
                 }
             } else {
                 throw new IllegalStateException("The metaProperty was required but RequiredValidator didn't exist.");
             }
         }
-        changeSupport.firePropertyChange(REQUIRED_PROPERTY_NAME, oldRequired, required);
         return this;
     }
 
@@ -1029,7 +934,7 @@ public final class MetaPropertyFull<T> extends MetaProperty<T> {
      */
     private void putValidator(final ValidationAnnotation valAnnotation) {
         final Map<IBeforeChangeEventHandler<T>, Result> map = new HashMap<>(2); // optimised with 2 as default value for this map -- not to create map with unnecessary 16 elements
-        map.put(StubValidator.singleton, null);
+        map.put(StubValidator.singleton(), null);
         getValidators().put(valAnnotation, map);
     }
 

@@ -39,11 +39,20 @@ public interface IValueMatcherWithFetch<T extends AbstractEntity<?>> extends IVa
      */
     List<T> findMatchesWithModel(final String value);
 
-    default OrderingModel createKeyBeforeDescOrderingModel(final String searchString) {
-        return orderBy().caseWhen().prop(KEY).iLike().val(searchString).then().val(0).otherwise().val(1).endAsInt().asc().model();
+    default OrderingModel createRelaxedKeyDescOrderingModel(final String searchString) {
+        return orderBy()
+                .caseWhen().prop(KEY).iLike().val(searchString).then().val(0).otherwise()
+                .caseWhen().prop(KEY).iLike().val("%" + searchString).then().val(1)
+                .otherwise().val(2).end()
+                .endAsInt().asc().model();
     }
 
-    default ConditionModel createSearchByKeyCriteriaModel(final String searchString) {
+    default ConditionModel createStrictSearchByKeyCriteriaModel(final String searchString) {
         return cond().prop(KEY).iLike().val(searchString).model();
     }
+
+    default ConditionModel createRelaxedSearchByKeyCriteriaModel(final String searchString) {
+        return cond().prop(KEY).iLike().val(searchString).or().prop(KEY).iLike().val("%" + searchString).model();
+    }
+
 }
