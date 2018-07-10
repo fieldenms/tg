@@ -304,7 +304,7 @@
 
                 _discarderDisabled: {
                     type: Boolean,
-                    computed: '_computeDiscarderDisabled(_centreChanged, _bindingEntityNotPersistentOrNotPersistedOrModified, _editedPropsExist, _currEntity, _actionInProgress)'
+                    computed: '_computeDiscarderDisabled(saveAsName, _centreChanged, _bindingEntityNotPersistentOrNotPersistedOrModified, _editedPropsExist, _currEntity, _actionInProgress)'
                 },
 
                 _runnerDisabled: {
@@ -436,11 +436,18 @@
             },
 
             _computeSaverDisabled: function (saveAsName, _centreChanged, _bindingEntityNotPersistentOrNotPersistedOrModified, _editedPropsExist, _currEntity, _actionInProgress) {
-                return saveAsName !== '' && (_actionInProgress === true || !this.canSave(_centreChanged, _bindingEntityNotPersistentOrNotPersistedOrModified, _editedPropsExist, _currEntity));
+                return saveAsName !== '' && (this._isLinkConfig(saveAsName) || _actionInProgress === true || !this.canSave(_centreChanged, _bindingEntityNotPersistentOrNotPersistedOrModified, _editedPropsExist, _currEntity));
             },
-
-            _computeDiscarderDisabled: function (_centreChanged, _bindingEntityNotPersistentOrNotPersistedOrModified, _editedPropsExist, _currEntity, _actionInProgress) {
-                return _actionInProgress === true || !this.canDiscard(_centreChanged, _bindingEntityNotPersistentOrNotPersistedOrModified, _editedPropsExist, _currEntity);
+            
+            /**
+             * Returns 'true' in case where current saveAsName represent link configuration, 'false' otherwise.
+             */
+            _isLinkConfig: function (saveAsName) {
+                return saveAsName === this.$.selection_criteria._reflector().LINK_CONFIG_TITLE;
+            },
+            
+            _computeDiscarderDisabled: function (saveAsName, _centreChanged, _bindingEntityNotPersistentOrNotPersistedOrModified, _editedPropsExist, _currEntity, _actionInProgress) {
+                return this._isLinkConfig(saveAsName) || _actionInProgress === true || !this.canDiscard(_centreChanged, _bindingEntityNotPersistentOrNotPersistedOrModified, _editedPropsExist, _currEntity);
             },
 
             _computeRunnerDisabled: function (_criteriaLoaded, _actionInProgress) {
