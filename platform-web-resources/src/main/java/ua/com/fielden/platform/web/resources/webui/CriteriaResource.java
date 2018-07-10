@@ -201,7 +201,8 @@ public class CriteriaResource extends AbstractWebResource {
                         createCriteriaMetaValues(updatedFreshCentre, getEntityType(miType)),
                         isFreshCentreChanged(updatedFreshCentre, updateCentre(gdtm, miType, SAVED_CENTRE_NAME, saveAsName, device)),
                         of(saveAsName),
-                        ofNullable(saveAsDesc)
+                        ofNullable(saveAsDesc),
+                        empty()
                 )//
         );
     }
@@ -215,14 +216,17 @@ public class CriteriaResource extends AbstractWebResource {
             final ICompanionObjectFinder companionFinder,
             final ICriteriaGenerator critGenerator,
             final String staleCriteriaMessage,
-            final DeviceProfile device
+            final DeviceProfile device,
+            final Optional<String> saveAsDesc
                     ) {
         return restUtil.rawListJSONRepresentation(
                 createCriteriaValidationPrototype(miType, saveAsName, updatedFreshCentre, companionFinder, critGenerator, -1L, gdtm, device),
-                createCriteriaMetaValuesCustomObject(
+                createCriteriaMetaValuesCustomObjectWithSaveAsInfo(
                         createCriteriaMetaValues(updatedFreshCentre, getEntityType(miType)),
                         isFreshCentreChanged(updatedFreshCentre, updateCentre(gdtm, miType, SAVED_CENTRE_NAME, saveAsName, device)),
-                        staleCriteriaMessage
+                        empty(),
+                        saveAsDesc,
+                        of(ofNullable(staleCriteriaMessage))
                 )//
         );
     }

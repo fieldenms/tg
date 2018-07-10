@@ -129,15 +129,20 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
      * @param isCentreChanged
      * @param saveAsName
      * @param saveAsDesc
+     * @param staleCriteriaMessage
+     *  
      * @return
      */
-    static Map<String, Object> createCriteriaMetaValuesCustomObjectWithSaveAsInfo(final Map<String, Map<String, Object>> criteriaMetaValues, final boolean isCentreChanged, final Optional<Optional<String>> saveAsName, final Optional<String> saveAsDesc) {
+    static Map<String, Object> createCriteriaMetaValuesCustomObjectWithSaveAsInfo(final Map<String, Map<String, Object>> criteriaMetaValues, final boolean isCentreChanged, final Optional<Optional<String>> saveAsName, final Optional<String> saveAsDesc, final Optional<Optional<String>> staleCriteriaMessage) {
         final Map<String, Object> customObject = createCriteriaMetaValuesCustomObject(criteriaMetaValues, isCentreChanged);
         saveAsName.ifPresent(name -> {
             customObject.put("saveAsName", name.orElse(""));
         });
         saveAsDesc.ifPresent(desc -> {
             customObject.put("saveAsDesc", desc);
+        });
+        staleCriteriaMessage.ifPresent(message -> {
+            customObject.put("staleCriteriaMessage", message.orElse(null));
         });
         return customObject;
     }
@@ -447,7 +452,8 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
                 createCriteriaMetaValues(freshCentre, getEntityType(miType)),
                 isFreshCentreChanged(freshCentre, updateCentre(gdtm, miType, SAVED_CENTRE_NAME, customObjectSaveAsName, device)),
                 of(customObjectSaveAsName),
-                validationPrototype.centreTitleAndDescGetter().apply(customObjectSaveAsName).map(titleDesc -> titleDesc._2)
+                validationPrototype.centreTitleAndDescGetter().apply(customObjectSaveAsName).map(titleDesc -> titleDesc._2),
+                empty()
             );
             customObject.put(WAS_RUN_NAME, null); // make VIEW button disabled by default; this behaviour can be overridden by removing 'wasRun' customObject's entry
             customObject.put(APPLIED_CRITERIA_ENTITY_NAME, appliedCriteriaEntity);

@@ -1,5 +1,7 @@
 package ua.com.fielden.platform.web.resources.webui;
 
+import static java.util.Optional.empty;
+import static java.util.Optional.of;
 import static ua.com.fielden.platform.web.centre.CentreConfigUtils.isInherited;
 import static ua.com.fielden.platform.web.centre.CentreUpdater.FRESH_CENTRE_NAME;
 import static ua.com.fielden.platform.web.centre.CentreUpdater.SAVED_CENTRE_NAME;
@@ -9,6 +11,7 @@ import static ua.com.fielden.platform.web.centre.CentreUpdater.loadableConfigura
 import static ua.com.fielden.platform.web.centre.CentreUpdater.makePreferred;
 import static ua.com.fielden.platform.web.centre.CentreUpdater.removeCentres;
 import static ua.com.fielden.platform.web.centre.CentreUpdater.updateCentre;
+import static ua.com.fielden.platform.web.centre.CentreUpdater.updateCentreDesc;
 import static ua.com.fielden.platform.web.centre.CentreUtils.isFreshCentreChanged;
 import static ua.com.fielden.platform.web.factories.webui.ResourceFactoryUtils.getUserSpecificGlobalManager;
 import static ua.com.fielden.platform.web.resources.webui.CriteriaResource.createCriteriaDiscardEnvelope;
@@ -101,7 +104,8 @@ public class CentreResource<CRITERIA_TYPE extends AbstractEntity<?>> extends Abs
             
             final ICentreDomainTreeManagerAndEnhancer newFreshCentre;
             
-            if (isInherited(saveAsName, () -> loadableConfigurations(gdtm, miType, device(), companionFinder).stream()) ) { // this will also throw early failure in case where current configuration was deleted
+            final boolean isInherited = isInherited(saveAsName, () -> loadableConfigurations(gdtm, miType, device(), companionFinder).stream()); // this will also throw early failure in case where current configuration was deleted
+            if (isInherited) {
                 // remove cached instances of surrogate centres before updating from base user
                 removeCentres(gdtm, miType, device(), saveAsName, FRESH_CENTRE_NAME, SAVED_CENTRE_NAME);
                 // it is necessary to use "fresh" instance of cdtme (after the discarding process)
@@ -121,7 +125,7 @@ public class CentreResource<CRITERIA_TYPE extends AbstractEntity<?>> extends Abs
             }
             
             final String staleCriteriaMessage = createStaleCriteriaMessage(wasRun, newFreshCentre, miType, saveAsName, gdtm, companionFinder, critGenerator, device());
-            return createCriteriaDiscardEnvelope(newFreshCentre, miType, saveAsName, gdtm, restUtil, companionFinder, critGenerator, staleCriteriaMessage, device());
+            return createCriteriaDiscardEnvelope(newFreshCentre, miType, saveAsName, gdtm, restUtil, companionFinder, critGenerator, staleCriteriaMessage, device(), isInherited ? of(updateCentreDesc(gdtm, miType, saveAsName, device())) : empty());
         }, restUtil);
     }
     
