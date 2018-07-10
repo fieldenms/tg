@@ -427,7 +427,7 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
             final IGlobalDomainTreeManager gdtm,
             final DeviceProfile device) {
         // generates validation prototype
-        final M validationPrototype = (M) critGenerator.generateCentreQueryCriteria(getEntityType(miType), cdtmae, miType, new MiTypeAnnotation().newInstance(miType, saveAsName));
+        final M validationPrototype = (M) critGenerator.generateCentreQueryCriteria((Class<T>) getEntityType(miType), cdtmae, miType, new MiTypeAnnotation().newInstance(miType, saveAsName));
         
         // Functions for companion implementations:
         
