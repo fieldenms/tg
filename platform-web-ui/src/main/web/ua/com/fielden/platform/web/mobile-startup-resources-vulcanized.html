@@ -26875,7 +26875,7 @@ context. You should place this element as a child of `<body>` whenever possible.
             },
             
             /**
-             * Updates saveAsDesc from its 'change' event. It controls the title change.
+             * Updates saveAsDesc from its 'change' event. It controls the tooltip change of configuration title.
              */
             _updateSaveAsDesc: function (event) {
                 this._initSaveAsNamesAndDescsEntry();
@@ -49197,6 +49197,10 @@ postActionError: function (functionalEntity, action) {
                 observer: '_selectedViewChanged'
             },
             _url: Function,
+            /**
+             * Binds centre info from custom object that contains it. In case where custom object is deliberately empty then does nothing.
+             * This function is bound from tg-entity-centre-behavior implementation.
+             */
             _bindCentreInfo: Function,
             /**
              * Creates standard action object for centre config action like EDIT, LOAD etc.
@@ -49752,6 +49756,7 @@ postActionError: function (functionalEntity, action) {
                 return true;
             };
             actionModel.postActionSuccess = function (functionalEntity) {
+                // update disablement of save / discard buttons after changing column widths
                 entityCentre._centreChanged = functionalEntity.get('centreChanged');
             };
             actionModel.postActionError = function (functionalEntity) {};
@@ -50100,9 +50105,12 @@ postActionError: function (functionalEntity, action) {
                     this._dom().$.spinner.style.visibility = 'hidden';
                 }
             },
-
+            
+            /**
+             * Computes SAVE button disablement: always enabled for default configurations, always disabled for link configurations and when action is in progress. Otherwise enabled when centre is changed from last saved version.
+             */
             _computeSaverDisabled: function (saveAsName, _centreChanged, _bindingEntityNotPersistentOrNotPersistedOrModified, _editedPropsExist, _currEntity, _actionInProgress) {
-                return saveAsName !== '' && (this._isLinkConfig(saveAsName) || _actionInProgress === true || !this.canSave(_centreChanged, _bindingEntityNotPersistentOrNotPersistedOrModified, _editedPropsExist, _currEntity));
+                return saveAsName !== '' /* always enabled for default configuration */ && (this._isLinkConfig(saveAsName) || _actionInProgress === true || !this.canSave(_centreChanged, _bindingEntityNotPersistentOrNotPersistedOrModified, _editedPropsExist, _currEntity));
             },
             
             /**
@@ -50112,10 +50120,13 @@ postActionError: function (functionalEntity, action) {
                 return saveAsName === this.$.selection_criteria._reflector().LINK_CONFIG_TITLE;
             },
             
+            /**
+             * Computes DISCARD button disablement: always disabled for link configurations and when action is in progress. Otherwise enabled when centre is changed from last saved version.
+             */
             _computeDiscarderDisabled: function (saveAsName, _centreChanged, _bindingEntityNotPersistentOrNotPersistedOrModified, _editedPropsExist, _currEntity, _actionInProgress) {
                 return this._isLinkConfig(saveAsName) || _actionInProgress === true || !this.canDiscard(_centreChanged, _bindingEntityNotPersistentOrNotPersistedOrModified, _editedPropsExist, _currEntity);
             },
-
+            
             _computeRunnerDisabled: function (_criteriaLoaded, _actionInProgress) {
                 return _actionInProgress === true || _criteriaLoaded === false;
             },
@@ -50178,6 +50189,9 @@ postActionError: function (functionalEntity, action) {
                     return this.$.egi.getSelectedEntities();
                 }).bind(self);
                 
+                /**
+                 * Binds centre info from custom object that contains it. In case where custom object is deliberately empty then does nothing.
+                 */
                 self._bindCentreInfo = function (customObject) {
                     if (Object.keys(customObject).length > 0) {
                         const entityAndCustomObject = [customObject['appliedCriteriaEntity'], customObject];
