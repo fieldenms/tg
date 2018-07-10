@@ -209,6 +209,10 @@
                 observer: '_selectedViewChanged'
             },
             _url: Function,
+            /**
+             * Binds centre info from custom object that contains it. In case where custom object is deliberately empty then does nothing.
+             * This function is bound from tg-entity-centre-behavior implementation.
+             */
             _bindCentreInfo: Function,
             /**
              * Creates standard action object for centre config action like EDIT, LOAD etc.
