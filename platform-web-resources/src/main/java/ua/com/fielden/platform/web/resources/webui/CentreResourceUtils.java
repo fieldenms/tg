@@ -486,6 +486,8 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
             validationPrototype.preferredConfigMaker().accept(empty());
         }); 
         validationPrototype.setInheritedCentreUpdater(saveAsNameToLoad -> {
+            // determine current preferred configuration
+            final Optional<String> preferredConfigName = retrievePreferredConfigName(gdtm, miType, device, companionFinder);
             // determine whether inherited configuration is changed
             final boolean centreChanged = isFreshCentreChanged(
                 updateCentre(gdtm, miType, FRESH_CENTRE_NAME, of(saveAsNameToLoad), device),
@@ -498,6 +500,10 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
             }
             updateCentre(gdtm, miType, FRESH_CENTRE_NAME, of(saveAsNameToLoad), device);
             updateCentre(gdtm, miType, SAVED_CENTRE_NAME, of(saveAsNameToLoad), device);
+            
+            if (equalsEx(preferredConfigName, of(saveAsNameToLoad))) { // if inherited configuration being updated was preferred
+                makePreferred(gdtm, miType, of(saveAsNameToLoad), device, companionFinder); // then must leave it preferred after deletion
+            }
         });
         validationPrototype.setDefaultCentreClearer(() -> {
             // clears default centre and fully prepares it for usage

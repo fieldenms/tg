@@ -6,6 +6,7 @@ import static ua.com.fielden.platform.web.centre.CentreUpdater.SAVED_CENTRE_NAME
 import static ua.com.fielden.platform.web.centre.CentreUpdater.centre;
 import static ua.com.fielden.platform.web.centre.CentreUpdater.initAndCommit;
 import static ua.com.fielden.platform.web.centre.CentreUpdater.loadableConfigurations;
+import static ua.com.fielden.platform.web.centre.CentreUpdater.makePreferred;
 import static ua.com.fielden.platform.web.centre.CentreUpdater.removeCentres;
 import static ua.com.fielden.platform.web.centre.CentreUpdater.updateCentre;
 import static ua.com.fielden.platform.web.centre.CentreUtils.isFreshCentreChanged;
@@ -101,10 +102,12 @@ public class CentreResource<CRITERIA_TYPE extends AbstractEntity<?>> extends Abs
             final ICentreDomainTreeManagerAndEnhancer newFreshCentre;
             
             if (isInherited(saveAsName, () -> loadableConfigurations(gdtm, miType, device(), companionFinder).stream()) ) { // this will also throw early failure in case where current configuration was deleted
+                // remove cached instances of surrogate centres before updating from base user
                 removeCentres(gdtm, miType, device(), saveAsName, FRESH_CENTRE_NAME, SAVED_CENTRE_NAME);
-                
-                // it is necessary to use "fresh" instance of cdtme (after the defaulting process)
+                // it is necessary to use "fresh" instance of cdtme (after the discarding process)
                 newFreshCentre = updateCentre(gdtm, miType, FRESH_CENTRE_NAME, saveAsName, device());
+                // must leave current configuration preferred after deletion
+                makePreferred(gdtm, miType, saveAsName, device(), companionFinder);
             } else {
                 final ICentreDomainTreeManagerAndEnhancer updatedFreshCentre = updateCentre(gdtm, miType, FRESH_CENTRE_NAME, saveAsName, device());
                 final ICentreDomainTreeManagerAndEnhancer updatedSavedCentre = updateCentre(gdtm, miType, SAVED_CENTRE_NAME, saveAsName, device());
