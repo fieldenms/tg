@@ -426,12 +426,20 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
             final Long previousVersion,
             final IGlobalDomainTreeManager gdtm,
             final DeviceProfile device) {
+        // generates validation prototype
         final M validationPrototype = (M) critGenerator.generateCentreQueryCriteria(getEntityType(miType), cdtmae, miType, new MiTypeAnnotation().newInstance(miType, saveAsName));
+        
+        // Functions for companion implementations:
+        
+        // returns an updated version of PREVIOUSLY_RUN centre
         validationPrototype.setPreviouslyRunCentreSupplier(() -> updateCentre(gdtm, miType, PREVIOUSLY_RUN_CENTRE_NAME, saveAsName, device));
+        // returns whether centre is changed from previously saved (or the very original) version
         validationPrototype.setCentreChangedGetter(() -> isFreshCentreChanged(updateCentre(gdtm, miType, FRESH_CENTRE_NAME, saveAsName, device), updateCentre(gdtm, miType, SAVED_CENTRE_NAME, saveAsName, device)));
+        // creates criteria validation prototype for concrete saveAsName
         validationPrototype.setCriteriaValidationPrototypeCreator((validationPrototypeSaveAsName) -> {
             return createCriteriaValidationPrototype(miType, validationPrototypeSaveAsName, updateCentre(gdtm, miType, FRESH_CENTRE_NAME, validationPrototypeSaveAsName, device), companionFinder, critGenerator, -1L, gdtm, device);
         });
+        // creates custom object representing centre information for concrete criteriaEntity and saveAsName
         validationPrototype.setCentreCustomObjectGetter((appliedCriteriaEntity, customObjectSaveAsName) -> {
             final ICentreDomainTreeManagerAndEnhancer freshCentre = appliedCriteriaEntity.getCentreDomainTreeMangerAndEnhancer();
             // In both cases (criteria entity valid or not) create customObject with criteriaEntity to be returned and bound into tg-entity-centre after save.
@@ -445,7 +453,9 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
             customObject.put(APPLIED_CRITERIA_ENTITY_NAME, appliedCriteriaEntity);
             return customObject;
         });
+        // returns base centre for current one (it is either base user's version of inherited configuration or default configuration for all other situations)
         validationPrototype.setBaseCentreSupplier(() -> baseCentre(gdtm, miType, saveAsName, device));
+        // performs mutation function centreConsumer against FRESH and PREVIOUSLY_RUN centres and saves them into persistent storage
         validationPrototype.setCentreAdjuster((centreConsumer) -> {
             centreConsumer.accept(updateCentre(gdtm, miType, FRESH_CENTRE_NAME, saveAsName, device));
             commitCentre(gdtm, miType, FRESH_CENTRE_NAME, saveAsName, device);
@@ -453,6 +463,7 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
             centreConsumer.accept(updateCentre(gdtm, miType, PREVIOUSLY_RUN_CENTRE_NAME, saveAsName, device));
             commitCentre(gdtm, miType, PREVIOUSLY_RUN_CENTRE_NAME, saveAsName, device);
         });
+        // performs mutation function centreConsumer (column widths adjustments) against PREVIOUSLY_RUN centre and copies column widths / grow factors directly to FRESH centre; saves them both into persistent storage
         validationPrototype.setCentreColumnWidthsAdjuster((centreConsumer) -> {
             // we have diffs that need to be applied against 'previouslyRun' centre 
             centreConsumer.accept(updateCentre(gdtm, miType, PREVIOUSLY_RUN_CENTRE_NAME, saveAsName, device));
@@ -467,24 +478,24 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
             freshCentre.getSecondTick().setWidthsAndGrowFactors(previouslyRunCentre. getSecondTick().getWidthsAndGrowFactors());
             commitCentre(gdtm, miType, FRESH_CENTRE_NAME, saveAsName, device);
         });
+        // performs deletion of current owned configuration
         validationPrototype.setCentreDeleter(() -> {
-            // perform deletion of centre 'saveAs' configuration even if it is inherited from its base; still such config could loaded again from base config
+            // removes the associated surrogate centres
             removeCentres(gdtm, miType, device, saveAsName, FRESH_CENTRE_NAME, SAVED_CENTRE_NAME, PREVIOUSLY_RUN_CENTRE_NAME);
-            if (!saveAsName.isPresent()) {
-                updateCentre(gdtm, miType, FRESH_CENTRE_NAME, empty(), device);
-                updateCentre(gdtm, miType, SAVED_CENTRE_NAME, empty(), device);
-            }
         });
+        // overrides SAVED centre configuration by FRESH one -- 'saves' centre
         validationPrototype.setFreshCentreSaver(() -> {
             final ICentreDomainTreeManagerAndEnhancer freshCentre = updateCentre(gdtm, miType, FRESH_CENTRE_NAME, saveAsName, device);
             initAndCommit(gdtm, miType, SAVED_CENTRE_NAME, saveAsName, device, freshCentre, null);
-        }); 
+        });
+        // overrides FRESH default centre configuration by FRESH current centre configuration; makes default config as preferred -- 'duplicates' centre
         validationPrototype.setConfigDuplicateAction(() -> {
             final ICentreDomainTreeManagerAndEnhancer freshCentre = updateCentre(gdtm, miType, FRESH_CENTRE_NAME, saveAsName, device);
             initAndCommit(gdtm, miType, FRESH_CENTRE_NAME, empty(), device, freshCentre, null);
             // when switching to default configuration we need to make it preferred
             validationPrototype.preferredConfigMaker().accept(empty());
         }); 
+        // updates inherited centre with title 'saveAsNameToLoad' from upstream base user's configuration -- just before LOAD action
         validationPrototype.setInheritedCentreUpdater(saveAsNameToLoad -> {
             // determine current preferred configuration
             final Optional<String> preferredConfigName = retrievePreferredConfigName(gdtm, miType, device, companionFinder);
@@ -505,18 +516,21 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
                 makePreferred(gdtm, miType, of(saveAsNameToLoad), device, companionFinder); // then must leave it preferred after deletion
             }
         });
+        // clears default centre and fully prepares it for usage
         validationPrototype.setDefaultCentreClearer(() -> {
-            // clears default centre and fully prepares it for usage
             removeCentres(gdtm, miType, device, empty(), FRESH_CENTRE_NAME, SAVED_CENTRE_NAME, PREVIOUSLY_RUN_CENTRE_NAME);
             updateCentre(gdtm, miType, FRESH_CENTRE_NAME, empty(), device);
             updateCentre(gdtm, miType, SAVED_CENTRE_NAME, empty(), device);
         });
+        // applies new criteria from client application against FRESH centre and returns respective criteria entity
         validationPrototype.setFreshCentreApplier((modifHolder) -> {
             return createCriteriaEntity(modifHolder, companionFinder, critGenerator, miType, saveAsName, gdtm, device);
         });
+        // returns title / desc for named (inherited or owned) configuration and empty optional for unnamed (default) configuration
         validationPrototype.setCentreTitleAndDescGetter((saveAsNameForTitleAndDesc) -> {
             return saveAsNameForTitleAndDesc.map(name -> t2(name, updateCentreDesc(gdtm, miType, of(name), device)));
         });
+        // changes title / desc for current saveAsName'd configuration; returns custom object containing centre information
         validationPrototype.setCentreEditor((newName, newDesc) -> {
             editCentreTitleAndDesc(gdtm, miType, saveAsName, device, newName, newDesc);
             // currently loaded configuration should remain preferred -- no action is required
@@ -525,6 +539,7 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
                 of(newName)
             );
         });
+        // performs copying of current configuration with the specified title / desc; makes it preferred; returns custom object containing centre information
         validationPrototype.setCentreSaver((newName, newDesc) -> {
             final Optional<String> newSaveAsName = of(newName);
             final ICentreDomainTreeManagerAndEnhancer freshCentre = updateCentre(gdtm, miType, FRESH_CENTRE_NAME, saveAsName, device);
@@ -538,14 +553,17 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
                 newSaveAsName
             );
         });
+        // returns ordered alphabetically list of 'loadable' configurations for current user 
         validationPrototype.setLoadableCentresSupplier(() -> {
             return loadableConfigurations(gdtm, miType, device, companionFinder);
         });
+        // returns currently loaded configuration's saveAsName
         validationPrototype.setSaveAsNameSupplier(() -> {
             return saveAsName;
         });
+        // makes 'saveAsNameToBecomePreferred' configuration preferred in case where it differs from currently loaded configuration; does nothing otherwise
         validationPrototype.setPreferredConfigMaker((saveAsNameToBecomePreferred) -> {
-            if (!equalsEx(saveAsNameToBecomePreferred, saveAsName)) {
+            if (!equalsEx(saveAsNameToBecomePreferred, saveAsName)) { // please note that currently loaded configuration must be preferred at this stage
                 makePreferred(gdtm, miType, saveAsNameToBecomePreferred, device, companionFinder);
             }
         });

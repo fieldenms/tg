@@ -274,6 +274,8 @@ public class CentreUpdater {
     
     /**
      * Removes centres from local cache and persistent storage (diffs) by their <code>names</code>.
+     * <p>
+     * Please be careful when removing centres for the purpose of later update: preferred state and custom description need to be maintained properly.
      *
      * @param gdtm
      * @param miType

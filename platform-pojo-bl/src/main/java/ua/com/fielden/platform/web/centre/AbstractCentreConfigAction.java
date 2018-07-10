@@ -21,6 +21,9 @@ import ua.com.fielden.platform.entity.annotation.Title;
  */
 @KeyType(NoKey.class)
 public abstract class AbstractCentreConfigAction extends AbstractFunctionalEntityWithCentreContext<NoKey> {
+    public static final String CUSTOM_OBJECT_PROPERTY_NAME = "customObject";
+    public static final String APPLIED_CRITERIA_ENTITY_NAME = "appliedCriteriaEntity";
+    public static final String WAS_RUN_NAME = "wasRun";
     
     public AbstractCentreConfigAction() {
         setKey(NO_KEY);
@@ -29,9 +32,6 @@ public abstract class AbstractCentreConfigAction extends AbstractFunctionalEntit
     @IsProperty(Object.class)
     @Title("Custom object")
     private final Map<String, Object> customObject = new HashMap<>();
-    public static final String CUSTOM_OBJECT_PROPERTY_NAME = "customObject";
-    public static final String APPLIED_CRITERIA_ENTITY_NAME = "appliedCriteriaEntity";
-    public static final String WAS_RUN_NAME = "wasRun";
     
     @Observable
     protected AbstractCentreConfigAction setCustomObject(final Map<String, Object> customObject) {
