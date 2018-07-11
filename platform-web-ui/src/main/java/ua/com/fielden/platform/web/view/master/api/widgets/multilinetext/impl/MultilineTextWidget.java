@@ -20,6 +20,7 @@ import ua.com.fielden.platform.web.view.master.api.widgets.impl.AbstractWidget;
 public class MultilineTextWidget extends AbstractWidget {
 
     private final Class<? extends AbstractEntity<?>> entityType;
+    private int maxRows = 5;
 
     /**
      * Creates {@link MultilineTextWidget} from <code>entityType</code> type and <code>propertyName</code>.
@@ -46,7 +47,13 @@ public class MultilineTextWidget extends AbstractWidget {
         } catch (final NoSuchMethodException e) {
             e.printStackTrace();
         }
+        attributes.put("max-rows", maxRows);
         return attributes;
+    }
+
+    public MultilineTextWidget setMaxVisibleRows(final int maxRows) {
+        this.maxRows = maxRows;
+        return this;
     }
 
     public MultilineTextWidget resizable() {
