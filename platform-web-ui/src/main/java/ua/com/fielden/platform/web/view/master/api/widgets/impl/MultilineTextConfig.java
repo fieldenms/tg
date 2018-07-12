@@ -29,12 +29,6 @@ public class MultilineTextConfig<T extends AbstractEntity<?>>
     }
 
     @Override
-    public IMultilineTextConfig1<T> flexible() {
-        this.widget().setMaxVisibleRows(0);
-        return this;
-    }
-
-    @Override
     public IMultilineTextConfig1<T> withMaxVisibleRows(final int maxRows) {
         this.widget().setMaxVisibleRows(maxRows);
         return this;

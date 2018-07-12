@@ -8,37 +8,43 @@
 <dom-module id="tg-multiline-text-editor"> <!-- TODO layout vertical -->
     <style>
         iron-autogrow-textarea {
-            overflow: hidden;
             @apply(--layout-flex);
+            min-height: fit-content;
+            overflow: hidden;
         }
         .upper-case {
             --iron-autogrow-textarea: {
                 text-transform: uppercase;
             };
         }
-        :host, 
-        tg-editor {
+        :host{
+            /*min-height: fit-content;*/
             @apply(--layout-vertical);
-            @apply(--layout-flex);
         }
         tg-editor {
+            @apply(--layout-vertical);
+            @apply(--layout-flex-auto);
             --tg-editor-paper-input-container-mixin: {
                 @apply(--layout-vertical);
-                @apply(--layout-flex);
+                flex: 1 0 auto;
             };
             --tg-editor-input-content-mixin: {
+                @apply(--layout-flex-auto);
+                @apply(--layout-vertical);
                 @apply(--layout-start);
-                height: 100%;
             };
             --tg-editor-label-and-input-container-mixin: {
-                height: 100%;
+                @apply(--layout-horizontal);
             };
             --tg-editor-main-container-mixin: {
-                height: 100%;
+                @apply(--layout-vertical);
+                @apply(--layout-start);
+                @apply(--layout-flex);
             };
             --tg-editor-input-container-mixin: {
+                @apply(--layout-flex-auto);
                 @apply(--layout-vertical);
-                height: 100%;
+                @apply(--layout-self-stretch);
                 overflow: auto;
             };
         }
