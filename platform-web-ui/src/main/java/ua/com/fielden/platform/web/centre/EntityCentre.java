@@ -1278,7 +1278,7 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
             dslDefaultConfig.getValueMatchersForSelectionCriteria() // take all matchers
             .map(matchers -> matchers.get(dslName(originalPropertyName))) // choose single matcher with concrete property name
             .map(customMatcherAndConfig -> pair((IValueMatcherWithCentreContext<V>) injector.getInstance(customMatcherAndConfig.getKey()), customMatcherAndConfig.getValue())) // instantiate the matcher: [matcherType; config] => [matcherInstance; config]
-            .orElse(pair(new FallbackValueMatcherWithCentreContext<>(coFinder.find(propType)), empty())); // if no custom matcher was created then create default matcher
+            .orElseGet(() -> pair(new FallbackValueMatcherWithCentreContext<>(coFinder.find(propType)), empty())); // if no custom matcher was created then create default matcher
         
         // provide fetch model for created matcher
         matcherAndConfig.getKey().setFetch(createFetchModelForAutocompleter(originalPropertyName, propType));
