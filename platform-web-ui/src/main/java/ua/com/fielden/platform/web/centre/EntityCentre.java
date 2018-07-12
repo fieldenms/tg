@@ -2,6 +2,7 @@ package ua.com.fielden.platform.web.centre;
 
 import static java.lang.String.format;
 import static java.util.Optional.empty;
+import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.determinePropertyType;
 import static ua.com.fielden.platform.utils.Pair.pair;
 import static ua.com.fielden.platform.web.centre.CentreUpdater.FRESH_CENTRE_NAME;
 import static ua.com.fielden.platform.web.centre.CentreUpdater.updateCentre;
@@ -17,6 +18,8 @@ import static ua.com.fielden.platform.web.centre.EgiConfigurations.SUMMARY_FIXED
 import static ua.com.fielden.platform.web.centre.EgiConfigurations.TOOLBAR_VISIBLE;
 import static ua.com.fielden.platform.web.centre.WebApiUtils.dslName;
 import static ua.com.fielden.platform.web.centre.WebApiUtils.treeName;
+import static ua.com.fielden.platform.web.utils.EntityResourceUtils.getOriginalPropertyName;
+import static ua.com.fielden.platform.web.utils.EntityResourceUtils.getOriginalType;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
@@ -40,7 +43,6 @@ import com.google.inject.Injector;
 import ua.com.fielden.platform.basic.IValueMatcherWithCentreContext;
 import ua.com.fielden.platform.basic.autocompleter.FallbackValueMatcherWithCentreContext;
 import ua.com.fielden.platform.criteria.generator.impl.CriteriaReflector;
-import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.data.generator.IGenerator;
 import ua.com.fielden.platform.dom.DomContainer;
 import ua.com.fielden.platform.dom.DomElement;
@@ -1260,47 +1262,43 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
     }
 
     /**
-     * Creates value matcher instance.
+     * Creates value matcher instance with its context configuration.
      *
-     * @param injector
+     * @param criteriaType
+     * @param criterionPropertyName
      * @return
      */
     public <V extends AbstractEntity<?>> Pair<IValueMatcherWithCentreContext<V>, Optional<CentreContextConfig>> createValueMatcherAndContextConfig(final Class<? extends AbstractEntity<?>> criteriaType, final String criterionPropertyName) {
-
-        final String originalPropertyName = EntityResourceUtils.getOriginalPropertyName(criteriaType, criterionPropertyName);
-        final String dslProp = dslName(originalPropertyName);
-        logger.debug(String.format("createValueMatcherAndContextConfig: propertyName = %s originalPropertyName = %s", criterionPropertyName, dslProp));
-
-        final Optional<Pair<Class<? extends IValueMatcherWithCentreContext<? extends AbstractEntity<?>>>, Optional<CentreContextConfig>>> matcherConfig = dslDefaultConfig.getValueMatchersForSelectionCriteria().map(m -> m.get(dslProp));
-
-        return matcherConfig.map(p -> pair((IValueMatcherWithCentreContext<V>) injector.getInstance(p.getKey()), p.getValue()))
-                .orElse(createDefaultValueMatcherAndContextConfig(EntityResourceUtils.getOriginalType(criteriaType), originalPropertyName, coFinder));
+        final String originalPropertyName = getOriginalPropertyName(criteriaType, criterionPropertyName);
+        final Class<V> propType = dslDefaultConfig.getProvidedTypeForAutocompletedSelectionCriterion(originalPropertyName)
+                .map(propertyType -> (Class<V>) propertyType)
+                .orElseGet(() -> (Class<V>) ("".equals(originalPropertyName) ? getOriginalType(criteriaType) : determinePropertyType(getOriginalType(criteriaType), originalPropertyName)));
+        
+        final Pair<IValueMatcherWithCentreContext<V>, Optional<CentreContextConfig>> matcherAndConfig = 
+            dslDefaultConfig.getValueMatchersForSelectionCriteria() // take all matchers
+            .map(matchers -> matchers.get(dslName(originalPropertyName))) // choose single matcher with concrete property name
+            .map(customMatcherAndConfig -> pair((IValueMatcherWithCentreContext<V>) injector.getInstance(customMatcherAndConfig.getKey()), customMatcherAndConfig.getValue())) // instantiate the matcher: [matcherType; config] => [matcherInstance; config]
+            .orElse(pair(new FallbackValueMatcherWithCentreContext<>(coFinder.find(propType)), empty())); // if no custom matcher was created then create default matcher
+        
+        // provide fetch model for created matcher
+        matcherAndConfig.getKey().setFetch(createFetchModelForAutocompleter(originalPropertyName, propType));
+        return matcherAndConfig;
     }
-
+    
     /**
-     * Creates default value matcher and context config for the specified entity property.
-     *
-     * @param propertyName
-     * @param criteriaType
-     * @param coFinder
+     * Creates fetch model for entity-typed criteria autocompleted values. Fetches key and description complemented with additional properties specified in Centre DSL configuration.
+     * 
+     * @param originalPropertyName
+     * @param propType
      * @return
      */
-    private <V extends AbstractEntity<?>> Pair<IValueMatcherWithCentreContext<V>, Optional<CentreContextConfig>> createDefaultValueMatcherAndContextConfig(final Class<? extends AbstractEntity<?>> originalType, final String originalPropertyName, final ICompanionObjectFinder coFinder) {
-        final Class<V> propType = dslDefaultConfig.getProvidedTypeForAutocompletedSelectionCriterion(originalPropertyName)
-                                   .map(propertyType -> (Class<V>) propertyType)
-                                   .orElseGet(() -> (Class<V>) ("".equals(originalPropertyName) ? originalType : PropertyTypeDeterminator.determinePropertyType(originalType, originalPropertyName)));
-
-        final IEntityDao<V> co = coFinder.find(propType);
-        final IValueMatcherWithCentreContext<V> matcher = new FallbackValueMatcherWithCentreContext<>(co);
-        final fetch<V> fetch = dslDefaultConfig.getAdditionalPropsForAutocompleter(originalPropertyName).stream()
-                                .map(Pair::getKey)
-                                .reduce(EntityQueryUtils.fetchKeyAndDescOnly(propType), (f, propName) -> f.with(propName), (f1, f2) -> {throw new UnsupportedOperationException("Parallelisation is not supported.");});
-
-        matcher.setFetch(fetch);
-
-        return pair(matcher, Optional.empty());
+    private <V extends AbstractEntity<?>> fetch<V> createFetchModelForAutocompleter(final String originalPropertyName, final Class<V> propType) {
+        return
+            dslDefaultConfig.getAdditionalPropsForAutocompleter(originalPropertyName).stream()
+            .map(Pair::getKey)
+            .reduce(EntityQueryUtils.fetchKeyAndDescOnly(propType), (f, propName) -> f.with(propName), (f1, f2) -> {throw new UnsupportedOperationException("Parallelisation is not supported.");});
     }
-
+    
     public Optional<Class<? extends ICustomPropsAssignmentHandler>> getCustomPropertiesAsignmentHandler() {
         return dslDefaultConfig.getResultSetCustomPropAssignmentHandlerType();
     }
