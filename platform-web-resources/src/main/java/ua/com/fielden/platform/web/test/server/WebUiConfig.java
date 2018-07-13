@@ -15,6 +15,12 @@ import static ua.com.fielden.platform.web.centre.api.context.impl.EntityCentreCo
 import static ua.com.fielden.platform.web.centre.api.crit.defaults.mnemonics.construction.options.DefaultValueOptions.multi;
 import static ua.com.fielden.platform.web.centre.api.crit.defaults.mnemonics.construction.options.DefaultValueOptions.single;
 import static ua.com.fielden.platform.web.centre.api.resultset.PropDef.mkProp;
+import static ua.com.fielden.platform.web.layout.api.impl.LayoutBuilder.cell;
+import static ua.com.fielden.platform.web.layout.api.impl.LayoutBuilder.subheaderOpen;
+import static ua.com.fielden.platform.web.layout.api.impl.LayoutCellBuilder.layout;
+import static ua.com.fielden.platform.web.layout.api.impl.LayoutComposer.CELL_LAYOUT;
+import static ua.com.fielden.platform.web.layout.api.impl.LayoutComposer.MARGIN;
+import static ua.com.fielden.platform.web.layout.api.impl.LayoutComposer.MARGIN_PIX;
 
 import java.math.BigDecimal;
 import java.util.Date;
@@ -139,6 +145,7 @@ import ua.com.fielden.platform.web.centre.api.resultset.tooltip.IWithTooltip;
 import ua.com.fielden.platform.web.centre.api.top_level_actions.ICentreTopLevelActions;
 import ua.com.fielden.platform.web.centre.api.top_level_actions.ICentreTopLevelActionsWithRunConfig;
 import ua.com.fielden.platform.web.interfaces.ILayout.Device;
+import ua.com.fielden.platform.web.layout.api.impl.FlexLayoutConfig;
 import ua.com.fielden.platform.web.layout.api.impl.LayoutComposer;
 import ua.com.fielden.platform.web.minijs.JsCode;
 import ua.com.fielden.platform.web.resources.webui.AbstractWebUiConfig;
@@ -432,6 +439,20 @@ public class WebUiConfig extends AbstractWebUiConfig {
         final String mr = "'margin-right: 20px', 'width:300px'";
         final String fmr = "'flex', 'margin-right: 20px'";
         final String actionMr = format("'margin-top: 20px', 'margin-left: 20px', 'width: %s'", MASTER_ACTION_DEFAULT_WIDTH + "px");
+
+        final FlexLayoutConfig layoutConfig = layout().withStyle("height", "100%").withStyle("box-sizing", "border-box")
+                .withStyle("min-height", "fit-content").withStyle("padding", MARGIN_PIX).end();
+        final String desktopLayout = cell(
+                subheaderOpen("Other components", CELL_LAYOUT)
+                .cell(cell(CELL_LAYOUT).repeat(5).withGapBetweenCells(MARGIN))
+                .subheaderOpen("Other components 1", CELL_LAYOUT)
+                .cell(cell(CELL_LAYOUT).repeat(5).withGapBetweenCells(MARGIN))
+                .subheaderOpen("Other components 2", CELL_LAYOUT)
+                .cell(cell(CELL_LAYOUT).repeat(4).withGapBetweenCells(MARGIN))
+                .cell(cell(CELL_LAYOUT).repeat(5).withGapBetweenCells(MARGIN))
+                .html("<span>This is binded text for String prop: </span><span id=\"stringProp_bind\" style=\"color:blue\">{{stringProp}}</span>", layout().withStyle("padding-top", MARGIN_PIX).flex().end())
+                .html("<span>This is binded text for Status.desc: </span><span id=\"stringProp_bind\" style=\"color:blue\">{{status.desc}}</span>", layout().withStyle("padding-top", MARGIN_PIX).flex().end()),
+                layoutConfig).toString();
         // Add entity masters.
         final SimpleMasterBuilder<TgPersistentEntityWithProperties> smb = new SimpleMasterBuilder<TgPersistentEntityWithProperties>();
         @SuppressWarnings("unchecked")
