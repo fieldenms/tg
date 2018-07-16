@@ -8,6 +8,8 @@
 <link rel="import" href="/resources/polymer/paper-toast/paper-toast.html">
 <link rel="import" href="/resources/polymer/paper-spinner/paper-spinner.html">
 
+<link rel="import" href="/resources/reflection/tg-polymer-utils.html">
+
 <!-- <core-style id="toast-progress-indicator">
     paper-spinner { position: absolute; top: 9px; right: 9px; padding: 0px; margin: 0px;}
 
@@ -66,7 +68,7 @@
                 --paper-spinner-layer-4-color: var(--paper-blue-500);
             }
         </style>
-        <paper-toast id="toast" class="paper-toast" text="[[_text]]" always-on-top>
+        <paper-toast id="toast" class="paper-toast" text="[[_text]]" on-tap="_showMoreIfPossible" always-on-top>
             <!-- TODO responsive-width="250px" -->
             <paper-spinner id="spinner" hidden$="[[_skipShowProgress]]" active alt="in progress..." tabIndex="-1"></paper-spinner>
             <div id='btnMore' hidden$="[[_skipShowMore(_showProgress, _hasMore)]]" class="more" on-tap="_showMessageDlg">MORE</div>
@@ -155,6 +157,12 @@
                 //Indicates whether toast overlay can be closed via history (back button or not)
                 this.$.toast.skipHistoryAction = true;
             },
+            
+            _showMoreIfPossible: function (e) {
+                if (!this._showProgress || this._hasMore) {
+                    this._showMessageDlg(e);
+                }
+            },
 
             _showMessageDlg: function (event) {
                 const self = this;
@@ -213,7 +221,7 @@
 
                     self.$.toast.close();
                 }, 100);
-
+                tearDownEvent(event);
             },
 
             _shouldSkipProgress: function (progress, hasMore) {
