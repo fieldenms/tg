@@ -44,7 +44,9 @@ public interface IValueMatcherWithFetch<T extends AbstractEntity<?>> extends IVa
                 .caseWhen().prop(KEY).iLike().val(searchString).then().val(0).otherwise()
                 .caseWhen().prop(KEY).iLike().val("%" + searchString).then().val(1)
                 .otherwise().val(2).end()
-                .endAsInt().asc().model();
+                .endAsInt().asc()
+                .prop(KEY).asc()
+                .model();
     }
 
     default ConditionModel createStrictSearchByKeyCriteriaModel(final String searchString) {
@@ -52,7 +54,7 @@ public interface IValueMatcherWithFetch<T extends AbstractEntity<?>> extends IVa
     }
 
     default ConditionModel createRelaxedSearchByKeyCriteriaModel(final String searchString) {
-        return cond().prop(KEY).iLike().val(searchString).or().prop(KEY).iLike().val("%" + searchString).model();
+        return cond().prop(KEY).iLike().val("%" + searchString).model();
     }
 
 }
