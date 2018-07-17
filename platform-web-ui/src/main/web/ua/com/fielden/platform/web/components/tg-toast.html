@@ -78,6 +78,11 @@
 
 <script>
     (function () {
+        const PROGRESS_DURATION = 3600000; //1 hour
+        const CRITICAL_DURATION = 5000; //5 seconds
+        const MORE_DURATION = 4000; //4 seconds
+        const STANDARD_DURATION = 3000; //3 seconds
+        
         function containsRestictedTags(htmlText) {
             const offensiveTag = new RegExp('<html|<body|<script|<img|<a', 'mi');
             return offensiveTag.exec(htmlText) !== null;
@@ -288,11 +293,13 @@
 
                 const oldDuration = this.$.toast.duration;
                 if (this._showProgress && !this._hasMore) {
-                    this.$.toast.duration = 3600000; //1 hour
+                    this.$.toast.duration = PROGRESS_DURATION;
                 } else if (this._isCritical === true) {
-                    this.$.toast.duration = 5000; //5 seconds
-                } else {
-                    this.$.toast.duration = 3000; //3 seconds
+                    this.$.toast.duration = CRITICAL_DURATION;
+                } else if (this._hasMore === true) {
+                    this.$.toast.duration = MORE_DURATION;
+                }else {
+                    this.$.toast.duration = STANDARD_DURATION;
                 }
                 // due to the fact, that current version of paper-toast does not react to 'duration' changes (reaction is performed only on _openedChanged), there is a need to react manually:
                 if (this.$.toast.duration !== oldDuration) { // if duration changed
