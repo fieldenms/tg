@@ -24,7 +24,7 @@ import ua.com.fielden.platform.web.view.master.api.widgets.impl.AbstractWidget;
 public class MultilineTextWidget extends AbstractWidget {
 
     private static final Logger LOGGER = Logger.getLogger(MultilineTextWidget.class);
-    
+
     private final Class<? extends AbstractEntity<?>> entityType;
     private int maxRows = 5;
 
@@ -62,15 +62,4 @@ public class MultilineTextWidget extends AbstractWidget {
         return this;
     }
 
-    public MultilineTextWidget resizable() {
-        // TODO implement
-        // TODO implement
-        // TODO implement
-        // TODO implement
-        // TODO implement
-
-        // TODO must provide an ability to specify whether multiline text widget is resizable or not. Also provide an attribute in the appropriate
-        // polymer component that specify whether multiline text widget is resizable or not.
-        return this;
-    }
 }
