@@ -1,7 +1,11 @@
 package ua.com.fielden.platform.web.view.master.api.widgets.multilinetext.impl;
 
+import static ua.com.fielden.platform.entity.Mutator.SETTER;
+
 import java.lang.reflect.Method;
 import java.util.Map;
+
+import org.apache.log4j.Logger;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.validation.annotation.Max;
@@ -19,6 +23,8 @@ import ua.com.fielden.platform.web.view.master.api.widgets.impl.AbstractWidget;
  */
 public class MultilineTextWidget extends AbstractWidget {
 
+    private static final Logger LOGGER = Logger.getLogger(MultilineTextWidget.class);
+    
     private final Class<? extends AbstractEntity<?>> entityType;
     private int maxRows = 5;
 
@@ -39,13 +45,13 @@ public class MultilineTextWidget extends AbstractWidget {
         final Pair<Class<?>, String> typeAndName = PropertyTypeDeterminator.transform(entityType, propertyName());
         final Class<?> propertyType = PropertyTypeDeterminator.determinePropertyType(typeAndName.getKey(), typeAndName.getValue());
         try {
-            final Method setter = Reflector.getMethod(typeAndName.getKey(), "set" + typeAndName.getValue().toUpperCase().charAt(0) + typeAndName.getValue().substring(1), propertyType);
+            final Method setter = Reflector.getMethod(typeAndName.getKey(), SETTER.getName(typeAndName.getValue()), propertyType);
             final Max maxAnnotation = AnnotationReflector.getAnnotation(setter, Max.class);
             if (maxAnnotation != null) {
                 attributes.put("max", maxAnnotation.value());
             }
-        } catch (final NoSuchMethodException e) {
-            e.printStackTrace();
+        } catch (final NoSuchMethodException ex) {
+            LOGGER.warn(ex);
         }
         attributes.put("max-rows", maxRows);
         return attributes;
