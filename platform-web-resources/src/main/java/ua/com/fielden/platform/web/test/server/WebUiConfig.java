@@ -452,7 +452,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 .cell(cell(CELL_LAYOUT).repeat(4).withGapBetweenCells(MARGIN))
                 .cell(cell(CELL_LAYOUT).repeat(5).withGapBetweenCells(MARGIN))
                 .html("<span>This is binded text for String prop: </span><span id='stringProp_bind' style='color:blue'>{{stringProp}}</span>", layout().withStyle("padding-top", MARGIN_PIX).end())
-                .html("<span>This is binded text for Status.desc: </span><span id='stringProp_bind' style='color:blue'>{{status.desc}}</span>", layout().withStyle("padding-top", MARGIN_PIX).end()),
+                .html("<span>This is binded text for Status.desc: </span><span id='status_Desc_bind' style='color:blue'>{{status.desc}}</span>", layout().withStyle("padding-top", MARGIN_PIX).end()),
                 layoutConfig).toString();
         final String tabletLayout = cell(
                 cell(cell(CELL_LAYOUT).repeat(3).withGapBetweenCells(MARGIN))
@@ -461,7 +461,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 .cell(cell(CELL_LAYOUT).repeat(3).withGapBetweenCells(MARGIN))
                 .cell(cell(CELL_LAYOUT).repeat(3).withGapBetweenCells(MARGIN))
                 .html("<span>This is binded text for String prop: </span><span id='stringProp_bind' style='color:blue'>{{stringProp}}</span>", layout().withStyle("padding-top", MARGIN_PIX).end())
-                .html("<span>This is binded text for Status.desc: </span><span id='stringProp_bind' style='color:blue'>{{status.desc}}</span>", layout().withStyle("padding-top", MARGIN_PIX).end()),
+                .html("<span>This is binded text for Status.desc: </span><span id='status_Desc_bind' style='color:blue'>{{status.desc}}</span>", layout().withStyle("padding-top", MARGIN_PIX).end()),
                 layoutConfig).toString();
         final String mobileLayout = cell(
                 cell(cell(CELL_LAYOUT).repeat(2).withGapBetweenCells(MARGIN))
@@ -472,7 +472,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 .cell(cell(CELL_LAYOUT).repeat(2).withGapBetweenCells(MARGIN))
                 .cell(cell(CELL_LAYOUT).repeat(2).withGapBetweenCells(MARGIN))
                 .html("<span>This is binded text for String prop: </span><span id='stringProp_bind' style='color:blue'>{{stringProp}}</span>", layout().withStyle("padding-top", MARGIN_PIX).end())
-                .html("<span>This is binded text for Status.desc: </span><span id='stringProp_bind' style='color:blue'>{{status.desc}}</span>", layout().withStyle("padding-top", MARGIN_PIX).end()),
+                .html("<span>This is binded text for Status.desc: </span><span id='status_Desc_bind' style='color:blue'>{{status.desc}}</span>", layout().withStyle("padding-top", MARGIN_PIX).end()),
                 layoutConfig).toString();
         // Add entity masters.
         final SimpleMasterBuilder<TgPersistentEntityWithProperties> smb = new SimpleMasterBuilder<TgPersistentEntityWithProperties>();
