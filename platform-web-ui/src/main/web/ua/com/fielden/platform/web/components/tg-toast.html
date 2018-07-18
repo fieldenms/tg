@@ -82,7 +82,7 @@
         const CRITICAL_DURATION = 5000; //5 seconds
         const MORE_DURATION = 4000; //4 seconds
         const STANDARD_DURATION = 3000; //3 seconds
-        
+
         function containsRestictedTags(htmlText) {
             const offensiveTag = new RegExp('<html|<body|<script|<img|<a', 'mi');
             return offensiveTag.exec(htmlText) !== null;
@@ -144,7 +144,8 @@
                 },
 
                 _hasMore: {
-                    type: Boolean
+                    type: Boolean,
+                    observer: '_hasMoreChanged'
                 },
 
                 _isCritical: {
@@ -162,7 +163,13 @@
                 //Indicates whether toast overlay can be closed via history (back button or not)
                 this.$.toast.skipHistoryAction = true;
             },
-            
+
+            _hasMoreChanged: function(newValue, oldValue) {
+              // let's set a cursor for the whole toast if it can be "clicked"
+              const cursor = newValue === true ? 'pointer' : 'inherit';
+              this.$.toast.style.cursor = cursor;
+            },
+
             _showMoreIfPossible: function (e) {
                 if (this._hasMore) {
                     this._showMessageDlg(e);
@@ -174,14 +181,14 @@
                 // need to open dialog asynchronously for it to open on mobile devices
                 this.async(function () {
                     // build and display the dialog
-                    var domBind = document.createElement('template', 'dom-bind');
+                    const domBind = document.createElement('template', 'dom-bind');
 
                     domBind._dialogClosed = function () {
                         Polymer.dom(document.body).removeChild(this);
                         Polymer.dom.flush();
                     }.bind(domBind);
 
-                    var paperDialog = domBind.content.ownerDocument.createElement('paper-dialog');
+                    const paperDialog = domBind.content.ownerDocument.createElement('paper-dialog');
                     Polymer.dom(paperDialog).setAttribute("class", "toast-dialog");
                     Polymer.dom(paperDialog).setAttribute("id", "msgDialog");
                     Polymer.dom(paperDialog).setAttribute("on-iron-overlay-closed", "_dialogClosed");
@@ -189,8 +196,8 @@
                     Polymer.dom(paperDialog).setAttribute("entry-animation", "scale-up-animation");
                     Polymer.dom(paperDialog).setAttribute("exit-animation", "fade-out-animation");
 
-                    var paperDialogScrollable = domBind.content.ownerDocument.createElement('paper-dialog-scrollable');
-                    var msgPar = domBind.content.ownerDocument.createElement('p');
+                    const paperDialogScrollable = domBind.content.ownerDocument.createElement('paper-dialog-scrollable');
+                    const msgPar = domBind.content.ownerDocument.createElement('p');
                     Polymer.dom(msgPar).setAttribute("style", "padding: 10px");
                     if (containsRestictedTags(this._msgText) === true) {
                         Polymer.dom(msgPar).textContent = this._msgText;
@@ -199,15 +206,15 @@
                     }
                     Polymer.dom(paperDialogScrollable).appendChild(msgPar);
 
-                    var buttonsDiv = domBind.content.ownerDocument.createElement('div');
+                    const buttonsDiv = domBind.content.ownerDocument.createElement('div');
                     Polymer.dom(buttonsDiv).setAttribute("class", "buttons");
 
-                    var buttons = domBind.content.ownerDocument.createElement('paper-button');
+                    const buttons = domBind.content.ownerDocument.createElement('paper-button');
                     Polymer.dom(buttons).setAttribute("dialog-confirm", "dialog-confirm");
                     Polymer.dom(buttons).setAttribute("affirmative", "affirmative");
                     Polymer.dom(buttons).setAttribute("autofocus", "autofocus");
 
-                    var textSpan = domBind.content.ownerDocument.createElement('span');
+                    const textSpan = domBind.content.ownerDocument.createElement('span');
                     Polymer.dom(textSpan).textContent = 'Close';
                     Polymer.dom(buttons).appendChild(textSpan);
 
@@ -226,6 +233,7 @@
 
                     self.$.toast.close();
                 }, 100);
+
                 tearDownEvent(event);
             },
 
