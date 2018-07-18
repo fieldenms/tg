@@ -6,6 +6,7 @@ import static java.util.Optional.ofNullable;
 import static java.util.stream.Stream.concat;
 import static java.util.stream.Stream.empty;
 import static java.util.stream.Stream.of;
+import static org.apache.commons.lang.StringUtils.isEmpty;
 import static ua.com.fielden.platform.entity.AbstractEntity.DESC;
 import static ua.com.fielden.platform.entity.AbstractEntity.ID;
 import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
@@ -1240,18 +1241,11 @@ public class EntityUtils {
      * @return
      */
     public static List<String> keyPaths(final Class<? extends AbstractEntity<?>> entityType, final String parentContextPath) {
-    	List<String> result = new ArrayList<>();
-
-    	for (Field keyMember : getKeyMembers(entityType)) {
-			final String pathToSubprop = parentContextPath != null ? parentContextPath + PROPERTY_SPLITTER  + keyMember.getName() : keyMember.getName();
-			if (!isPersistedEntityType(keyMember.getType())) {
-				result.add(pathToSubprop);
-			} else {
-				result.addAll(keyPaths((Class<? extends AbstractEntity<?>>) keyMember.getType(), pathToSubprop));
-			}
-		}
+    	if (isEmpty(parentContextPath)) {
+    		throw new IllegalArgumentException("Parent context path is required.");
+    	}
     	
-    	return result;
+        return keyPaths(entityType, Optional.of(parentContextPath));
     }
     
     /**
@@ -1261,6 +1255,22 @@ public class EntityUtils {
      * @return
      */
     public static List<String> keyPaths(final Class<? extends AbstractEntity<?>> entityType) {
-        return keyPaths(entityType, null);
+        return keyPaths(entityType, Optional.empty());
+    }
+    
+    private static List<String> keyPaths(final Class<? extends AbstractEntity<?>> entityType, final Optional<String> parentContextPath) {
+  	
+    	final List<String> result = new ArrayList<>();
+
+    	for (final Field keyMember : getKeyMembers(entityType)) {
+			final String pathToSubprop = parentContextPath.map(path -> path + PROPERTY_SPLITTER  + keyMember.getName()).orElse(keyMember.getName());
+			if (!isPersistedEntityType(keyMember.getType())) {
+				result.add(pathToSubprop);
+			} else {
+				result.addAll(keyPaths((Class<? extends AbstractEntity<?>>) keyMember.getType(), pathToSubprop));
+			}
+		}
+    	
+    	return result;
     }
 }
