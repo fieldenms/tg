@@ -18,7 +18,7 @@
             font-family: 'Roboto', 'Noto', sans-serif;
             --paper-checkbox-checked-color: var(--paper-light-blue-700);
             --paper-checkbox-checked-ink-color: var(--paper-light-blue-700);
-            height: 1.8rem;
+            height: 24px;
         }
         
         paper-checkbox::shadow #checkboxContainer {
@@ -26,7 +26,9 @@
         }
         paper-checkbox::shadow #checkboxLabel {
             display:grid !important;
-            font-size: 0.9rem;
+            transform:scale(0.75);
+            transform-origin: left;
+            /*TODO consider adding width:130% as the lable was scaled down*/
             font-weight: 400;
             -webkit-font-smoothing: antialiased;
             text-rendering: optimizeLegibility;
