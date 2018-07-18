@@ -109,9 +109,9 @@ public class SessionInterceptor implements MethodInterceptor {
         invocationOwner.setSession(session);
         final boolean shouldCommit = !tr.isActive();
         if (!tr.isActive()) {
-            session.setHibernateFlushMode(FlushMode.COMMIT);
             LOGGER.debug("Starting new DB transaction");
             tr.begin();
+            session.setHibernateFlushMode(FlushMode.COMMIT);
             LOGGER.debug("Started new DB transaction");
             
             // generate a GUID for the current transaction
