@@ -130,57 +130,57 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
 
     private static final CentreContextConfig defaultCentreContextConfig = new CentreContextConfig(false, false, false, false, null);
 
-    private final String IMPORTS = "<!--@imports-->";
-    private final String FULL_ENTITY_TYPE = "@full_entity_type";
-    private final String FULL_MI_TYPE = "@full_mi_type";
-    private final String MI_TYPE = "@mi_type";
+    private static final String IMPORTS = "<!--@imports-->";
+    private static final String FULL_ENTITY_TYPE = "@full_entity_type";
+    private static final String FULL_MI_TYPE = "@full_mi_type";
+    private static final String MI_TYPE = "@mi_type";
     //egi related properties
-    private final String EGI_LAYOUT = "@gridLayout";
-    private final String EGI_LAYOUT_CONFIG = "//gridLayoutConfig";
-    private final String EGI_SHORTCUTS = "@customShortcuts";
-    private final String EGI_TOOLBAR_VISIBLE = "@toolbarVisible";
-    private final String EGI_DRAGGABLE = "@canDragFrom";
-    private final String EGI_DRAG_ANCHOR_FIXED = "@dragAnchorFixed";
-    private final String EGI_CHECKBOX_VISIBILITY = "@checkboxVisible";
-    private final String EGI_CHECKBOX_FIXED = "@checkboxesFixed";
-    private final String EGI_CHECKBOX_WITH_PRIMARY_ACTION_FIXED = "@checkboxesWithPrimaryActionsFixed";
-    private final String EGI_NUM_OF_FIXED_COLUMNS = "@numOfFixedCols";
-    private final String EGI_SECONDARY_ACTION_FIXED = "@secondaryActionsFixed";
-    private final String EGI_HEADER_FIXED = "@headerFixed";
-    private final String EGI_SUMMARY_FIXED = "@summaryFixed";
-    private final String EGI_VISIBLE_ROW_COUNT = "@visibleRowCount";
-    private final String EGI_HEIGHT = "@egiHeight";
-    private final String EGI_FIT_TO_HEIGHT = "@fitToHeight";
-    private final String EGI_PAGE_CAPACITY = "@pageCapacity";
-    private final String EGI_ACTIONS = "//generatedActionObjects";
-    private final String EGI_PRIMARY_ACTION = "//generatedPrimaryAction";
-    private final String EGI_SECONDARY_ACTIONS = "//generatedSecondaryActions";
-    private final String EGI_PROPERTY_ACTIONS = "//generatedPropActions";
-    private final String EGI_DOM = "<!--@egi_columns-->";
-    private final String EGI_FUNCTIONAL_ACTION_DOM = "<!--@functional_actions-->";
-    private final String EGI_PRIMARY_ACTION_DOM = "<!--@primary_action-->";
-    private final String EGI_SECONDARY_ACTIONS_DOM = "<!--@secondary_actions-->";
+    private static final String EGI_LAYOUT = "@gridLayout";
+    private static final String EGI_LAYOUT_CONFIG = "//gridLayoutConfig";
+    private static final String EGI_SHORTCUTS = "@customShortcuts";
+    private static final String EGI_TOOLBAR_VISIBLE = "@toolbarVisible";
+    private static final String EGI_DRAGGABLE = "@canDragFrom";
+    private static final String EGI_DRAG_ANCHOR_FIXED = "@dragAnchorFixed";
+    private static final String EGI_CHECKBOX_VISIBILITY = "@checkboxVisible";
+    private static final String EGI_CHECKBOX_FIXED = "@checkboxesFixed";
+    private static final String EGI_CHECKBOX_WITH_PRIMARY_ACTION_FIXED = "@checkboxesWithPrimaryActionsFixed";
+    private static final String EGI_NUM_OF_FIXED_COLUMNS = "@numOfFixedCols";
+    private static final String EGI_SECONDARY_ACTION_FIXED = "@secondaryActionsFixed";
+    private static final String EGI_HEADER_FIXED = "@headerFixed";
+    private static final String EGI_SUMMARY_FIXED = "@summaryFixed";
+    private static final String EGI_VISIBLE_ROW_COUNT = "@visibleRowCount";
+    private static final String EGI_HEIGHT = "@egiHeight";
+    private static final String EGI_FIT_TO_HEIGHT = "@fitToHeight";
+    private static final String EGI_PAGE_CAPACITY = "@pageCapacity";
+    private static final String EGI_ACTIONS = "//generatedActionObjects";
+    private static final String EGI_PRIMARY_ACTION = "//generatedPrimaryAction";
+    private static final String EGI_SECONDARY_ACTIONS = "//generatedSecondaryActions";
+    private static final String EGI_PROPERTY_ACTIONS = "//generatedPropActions";
+    private static final String EGI_DOM = "<!--@egi_columns-->";
+    private static final String EGI_FUNCTIONAL_ACTION_DOM = "<!--@functional_actions-->";
+    private static final String EGI_PRIMARY_ACTION_DOM = "<!--@primary_action-->";
+    private static final String EGI_SECONDARY_ACTIONS_DOM = "<!--@secondary_actions-->";
     //Fron actions
-    private final String FRONT_ACTIONS_DOM = "<!--@custom-front-actions-->";
-    private final String FRONT_ACTIONS = "//generatedFrontActionObjects";
+    private static final String FRONT_ACTIONS_DOM = "<!--@custom-front-actions-->";
+    private static final String FRONT_ACTIONS = "//generatedFrontActionObjects";
     //Toolbar related
-    private final String TOOLBAR_DOM = "<!--@toolbar-->";
-    private final String TOOLBAR_JS = "//toolbarGeneratedFunction";
-    private final String TOOLBAR_STYLES = "/*toolbarStyles*/";
+    private static final String TOOLBAR_DOM = "<!--@toolbar-->";
+    private static final String TOOLBAR_JS = "//toolbarGeneratedFunction";
+    private static final String TOOLBAR_STYLES = "/*toolbarStyles*/";
     //Selection criteria related
-    private final String QUERY_ENHANCER_CONFIG = "@queryEnhancerContextConfig";
-    private final String CRITERIA_DOM = "<!--@criteria_editors-->";
-    private final String SELECTION_CRITERIA_LAYOUT_CONFIG = "//@layoutConfig";
+    private static final String QUERY_ENHANCER_CONFIG = "@queryEnhancerContextConfig";
+    private static final String CRITERIA_DOM = "<!--@criteria_editors-->";
+    private static final String SELECTION_CRITERIA_LAYOUT_CONFIG = "//@layoutConfig";
     //Insertion points
-    private final String INSERTION_POINT_ACTIONS = "//generatedInsertionPointActions";
-    private final String INSERTION_POINT_ACTIONS_DOM = "<!--@insertion_point_actions-->";
-    private final String LEFT_INSERTION_POINT_DOM = "<!--@left_insertion_points-->";
-    private final String RIGHT_INSERTION_POINT_DOM = "<!--@right_insertion_points-->";
-    private final String TOP_INSERTION_POINT_DOM = "<!--@top_insertion_points-->";
-    private final String BOTTOM_INSERTION_POINT_DOM = "<!--@bottom_insertion_points-->";
+    private static final String INSERTION_POINT_ACTIONS = "//generatedInsertionPointActions";
+    private static final String INSERTION_POINT_ACTIONS_DOM = "<!--@insertion_point_actions-->";
+    private static final String LEFT_INSERTION_POINT_DOM = "<!--@left_insertion_points-->";
+    private static final String RIGHT_INSERTION_POINT_DOM = "<!--@right_insertion_points-->";
+    private static final String TOP_INSERTION_POINT_DOM = "<!--@top_insertion_points-->";
+    private static final String BOTTOM_INSERTION_POINT_DOM = "<!--@bottom_insertion_points-->";
     // generic custom code
-    private final String READY_CUSTOM_CODE = "//@centre-is-ready-custom-code";
-    private final String ATTACHED_CUSTOM_CODE = "//@centre-has-been-attached-custom-code";
+    private static final String READY_CUSTOM_CODE = "//@centre-is-ready-custom-code";
+    private static final String ATTACHED_CUSTOM_CODE = "//@centre-has-been-attached-custom-code";
 
 
     private final Logger logger = Logger.getLogger(getClass());
@@ -264,7 +264,7 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
                         final String customPropName = CalculatedProperty.generateNameFrom(property.propDef.get().title);
                         enhanceCentreManagerWithCustomProperty(cdtmae, entityType, customPropName, property.propDef.get(), dslDefaultConfig.getResultSetCustomPropAssignmentHandlerType());
                     } else {
-                        throw new IllegalStateException(String.format("The state of result-set property [%s] definition is not correct, need to exist either a 'propName' for the property or 'propDef'.", property));
+                        throw new IllegalStateException(format("The state of result-set property [%s] definition is not correct, need to exist either a 'propName' for the property or 'propDef'.", property));
                     }
                 }
             }
