@@ -40,7 +40,7 @@
         }
         #input-container[has-layer][disabled]::content .input-layer,
         #input-container[has-layer]:not([focused])::content .input-layer {
-            display: inherit;
+            display: var(--tg-editor-default-input-layer-display, inherit);
         }
         #input-container::content .input-layer {
             color: var(--paper-input-container-input-color, --primary-text-color);
@@ -49,7 +49,10 @@
         #input-container[has-layer]:not([focused])::content .custom-input {
             opacity: 0;
         }
-        
+        .main-container::content .custom-icon-buttons, 
+        .main-container::content .property-action {
+            padding-bottom: 1px;
+        }
         paper-input-container::shadow .add-on-content {
             position: relative;
         }
