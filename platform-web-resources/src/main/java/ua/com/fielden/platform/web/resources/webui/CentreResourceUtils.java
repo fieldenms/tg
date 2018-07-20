@@ -441,9 +441,9 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
         // returns whether centre is changed from previously saved (or the very original) version
         validationPrototype.setCentreChangedGetter(() -> isFreshCentreChanged(updateCentre(gdtm, miType, FRESH_CENTRE_NAME, saveAsName, device), updateCentre(gdtm, miType, SAVED_CENTRE_NAME, saveAsName, device)));
         // creates criteria validation prototype for concrete saveAsName
-        validationPrototype.setCriteriaValidationPrototypeCreator((validationPrototypeSaveAsName) -> {
-            return createCriteriaValidationPrototype(miType, validationPrototypeSaveAsName, updateCentre(gdtm, miType, FRESH_CENTRE_NAME, validationPrototypeSaveAsName, device), companionFinder, critGenerator, -1L, gdtm, device);
-        });
+        validationPrototype.setCriteriaValidationPrototypeCreator(validationPrototypeSaveAsName -> 
+            createCriteriaValidationPrototype(miType, validationPrototypeSaveAsName, updateCentre(gdtm, miType, FRESH_CENTRE_NAME, validationPrototypeSaveAsName, device), companionFinder, critGenerator, -1L, gdtm, device)
+        );
         // creates custom object representing centre information for concrete criteriaEntity and saveAsName
         validationPrototype.setCentreCustomObjectGetter((appliedCriteriaEntity, customObjectSaveAsName) -> {
             final ICentreDomainTreeManagerAndEnhancer freshCentre = appliedCriteriaEntity.getCentreDomainTreeMangerAndEnhancer();
@@ -462,7 +462,7 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
         // returns base centre for current one (it is either base user's version of inherited configuration or default configuration for all other situations)
         validationPrototype.setBaseCentreSupplier(() -> baseCentre(gdtm, miType, saveAsName, device));
         // performs mutation function centreConsumer against FRESH and PREVIOUSLY_RUN centres and saves them into persistent storage
-        validationPrototype.setCentreAdjuster((centreConsumer) -> {
+        validationPrototype.setCentreAdjuster(centreConsumer -> {
             centreConsumer.accept(updateCentre(gdtm, miType, FRESH_CENTRE_NAME, saveAsName, device));
             commitCentre(gdtm, miType, FRESH_CENTRE_NAME, saveAsName, device);
             
@@ -470,25 +470,25 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
             commitCentre(gdtm, miType, PREVIOUSLY_RUN_CENTRE_NAME, saveAsName, device);
         });
         // performs mutation function centreConsumer (column widths adjustments) against PREVIOUSLY_RUN centre and copies column widths / grow factors directly to FRESH centre; saves them both into persistent storage
-        validationPrototype.setCentreColumnWidthsAdjuster((centreConsumer) -> {
+        validationPrototype.setCentreColumnWidthsAdjuster(centreConsumer -> {
             // we have diffs that need to be applied against 'previouslyRun' centre 
             centreConsumer.accept(updateCentre(gdtm, miType, PREVIOUSLY_RUN_CENTRE_NAME, saveAsName, device));
             commitCentre(gdtm, miType, PREVIOUSLY_RUN_CENTRE_NAME, saveAsName, device);
             
-            // however those diffs are not applicable to 'fresh' centre due to ability of 'fresh' centre to differ from 'previouslyRun' centre;
-            // the only way to get such mismatch is to press Discard on selection criteria;
-            // that's why we need to carefully override only widths and grow factors of 'fresh' centre from 'previouslyRun' centre;
-            // all other unrelated to CentreColumnWidthConfigUpdater information should remain 'as is'.
+            // however those diffs are not applicable to 'fresh' centre due to ability of 'fresh' centre to differ from 'previouslyRun' centre
+            // the only way to get such mismatch is to press Discard on selection criteria
+            // that's why we need to carefully override only widths and grow factors of 'fresh' centre from 'previouslyRun' centre
+            // all other unrelated to CentreColumnWidthConfigUpdater information should remain 'as is'
             final ICentreDomainTreeManagerAndEnhancer previouslyRunCentre = centre(gdtm, miType, PREVIOUSLY_RUN_CENTRE_NAME, saveAsName, device);
             final ICentreDomainTreeManagerAndEnhancer freshCentre = updateCentre(gdtm, miType, FRESH_CENTRE_NAME, saveAsName, device);
             freshCentre.getSecondTick().setWidthsAndGrowFactors(previouslyRunCentre. getSecondTick().getWidthsAndGrowFactors());
             commitCentre(gdtm, miType, FRESH_CENTRE_NAME, saveAsName, device);
         });
         // performs deletion of current owned configuration
-        validationPrototype.setCentreDeleter(() -> {
+        validationPrototype.setCentreDeleter(() -> 
             // removes the associated surrogate centres
-            removeCentres(gdtm, miType, device, saveAsName, FRESH_CENTRE_NAME, SAVED_CENTRE_NAME, PREVIOUSLY_RUN_CENTRE_NAME);
-        });
+            removeCentres(gdtm, miType, device, saveAsName, FRESH_CENTRE_NAME, SAVED_CENTRE_NAME, PREVIOUSLY_RUN_CENTRE_NAME)
+        );
         // overrides SAVED centre configuration by FRESH one -- 'saves' centre
         validationPrototype.setFreshCentreSaver(() -> {
             final ICentreDomainTreeManagerAndEnhancer freshCentre = updateCentre(gdtm, miType, FRESH_CENTRE_NAME, saveAsName, device);

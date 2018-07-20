@@ -20,7 +20,7 @@ import ua.com.fielden.platform.entity_centre.review.criteria.EnhancedCentreEntit
  *
  */
 public class CentreConfigEditActionProducer extends AbstractCentreConfigCommitActionProducer<CentreConfigEditAction> {
-    private static final String ERR_CANNOT_BE_EDITED = "Can not be edited.";
+    private static final String ERR_CANNOT_BE_EDITED = "Only saved configurations can be edited.";
     
     @Inject
     public CentreConfigEditActionProducer(final EntityFactory factory, final ICompanionObjectFinder companionFinder) {
