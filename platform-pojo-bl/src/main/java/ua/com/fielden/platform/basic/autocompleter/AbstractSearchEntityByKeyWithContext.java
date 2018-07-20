@@ -89,12 +89,12 @@ public abstract class AbstractSearchEntityByKeyWithContext<CONTEXT extends Abstr
 
     @Override
     public List<T> findMatches(final String searchString) {
-        return companion.firstPage(createCommonQueryBuilderForFindMatches(searchString).with(defaultFetchModel).model(), getPageSize()).data();
+        return companion.getFirstEntities(createCommonQueryBuilderForFindMatches(searchString).with(defaultFetchModel).model(), getPageSize());
     }
 
     @Override
     public List<T> findMatchesWithModel(final String searchString) {
-        return companion.firstPage(createCommonQueryBuilderForFindMatches(searchString).with(getFetch()).model(), getPageSize()).data();
+        return companion.getFirstEntities(createCommonQueryBuilderForFindMatches(searchString).with(getFetch()).model(), getPageSize());
     }
 
     @Override

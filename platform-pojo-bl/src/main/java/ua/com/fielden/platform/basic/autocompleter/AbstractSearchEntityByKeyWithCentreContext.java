@@ -98,13 +98,13 @@ public abstract class AbstractSearchEntityByKeyWithCentreContext<T extends Abstr
     @Override
     public List<T> findMatches(final String searchString) {
         final IEntityDao<T> companion = maybeCompanion.orElseThrow(CO_MISSING_EXCEPTION_SUPPLIER);
-        return companion.firstPage(createCommonQueryBuilderForFindMatches(searchString).with(defaultFetchModel).model(), getPageSize()).data();
+        return companion.getFirstEntities(createCommonQueryBuilderForFindMatches(searchString).with(defaultFetchModel).model(), getPageSize());
     }
 
     @Override
     public List<T> findMatchesWithModel(final String searchString) {
         final IEntityDao<T> companion = maybeCompanion.orElseThrow(CO_MISSING_EXCEPTION_SUPPLIER);
-        return companion.firstPage(createCommonQueryBuilderForFindMatches(searchString).with(getFetch()).model(), getPageSize()).data();
+        return companion.getFirstEntities(createCommonQueryBuilderForFindMatches(searchString).with(getFetch()).model(), getPageSize());
     }
 
     @Override
