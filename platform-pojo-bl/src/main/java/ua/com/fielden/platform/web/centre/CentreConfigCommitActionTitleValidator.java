@@ -46,7 +46,7 @@ public class CentreConfigCommitActionTitleValidator implements IBeforeChangeEven
         final String specialCharacters = "$-_.+!*'(),"; // these special characters are not required to be encoded in URIs (see https://perishablepress.com/stop-using-unsafe-characters-in-urls/ for more details)
         final String specialCharactersQuoted = quote(specialCharacters);
         if (newTitle == null || UNDEFINED_CONFIG_TITLE.equals(newTitle) || LINK_CONFIG_TITLE.equals(newTitle) || !newTitle.matches(format("[\\w%s%s]*", specialCharactersQuoted, spaceQuoted))) {
-            return failuref("Only alfanumeric characters, spaces and %s are allowed.", specialCharacters);
+            return failuref("Only alphanumeric characters, spaces and %s are allowed.", specialCharacters);
         } else {
             final AbstractCentreConfigCommitAction entity = property.getEntity();
             final EnhancedCentreEntityQueryCriteria<?, ?> criteriaEntity = criteriaEntityRestorer.restoreCriteriaEntity(entity.getCentreContextHolder());
@@ -58,7 +58,7 @@ public class CentreConfigCommitActionTitleValidator implements IBeforeChangeEven
             final boolean titleCanBeCurrent = CentreConfigEditAction.class.isAssignableFrom(entity.getType());
             final Map<Boolean, List<LoadableCentreConfig>> possibleIntersections = criteriaEntity.loadableCentresSupplier().get().stream()
                 .filter(config -> titleCanBeCurrent ? saveAsName.map(name -> !config.getKey().equals(name)).orElse(true) : true)
-                .collect(partitioningBy(config -> config.isInherited())); // split possible intersections by 'inherited' marker
+                .collect(partitioningBy(LoadableCentreConfig::isInherited)); // split possible intersections by 'inherited' marker
             
             if (match(newTitle, possibleIntersections.get(true))) { // inherited configuration conflict should fail title editing
                 return failure(CENTRE_CONFIG_CONFLICT_ERROR);
@@ -77,7 +77,7 @@ public class CentreConfigCommitActionTitleValidator implements IBeforeChangeEven
      * @return
      */
     private static boolean match(final String title, final List<LoadableCentreConfig> intersections) {
-        return intersections.stream().anyMatch(config -> config.getKey().equals(title));
+        return intersections.stream().anyMatch(config -> config.getKey().equalsIgnoreCase(title));
     }
     
 }
