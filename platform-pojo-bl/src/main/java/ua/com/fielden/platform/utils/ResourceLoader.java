@@ -4,6 +4,9 @@ import java.awt.Image;
 import java.awt.Toolkit;
 import java.io.InputStream;
 import java.net.URL;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.Optional;
 
 import javax.swing.ImageIcon;
 
@@ -78,7 +81,35 @@ public class ResourceLoader {
         }
     }
 
+    /**
+     * Returns the URL for given resource path. Returns null if the resource doesn't exists.
+     *
+     * @param pathAndFileName
+     * @return
+     */
     public static URL getURL(final String pathAndFileName) {
         return Thread.currentThread().getContextClassLoader().getResource(pathAndFileName);
+    }
+
+    /**
+     * Returns Optional<Path> for given resource path.
+     * Performs URL -> URI -> Path conversion to convert %20 to spaces. 
+     * Returns Optional.empty() if the resource doesn't exists.
+     *
+     * @param pathAndFileName
+     * @return
+     */
+    public static Optional<Path> getPath(final String pathAndFileName) {
+        final URL url = getURL(pathAndFileName);
+        if (url == null) {
+            return Optional.empty();
+        } else {
+            try {
+                return Optional.of(Paths.get(url.toURI()));
+            } catch (final Exception e) {
+                logger.error(e.getMessage() + " for path: " + pathAndFileName);
+                return Optional.empty();
+            }
+        }
     }
 }
