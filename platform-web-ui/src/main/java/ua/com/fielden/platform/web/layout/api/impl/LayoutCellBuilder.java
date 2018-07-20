@@ -114,4 +114,10 @@ public class LayoutCellBuilder implements ICell {
     public FlexLayoutConfig end() {
         return new FlexLayoutConfig(styles, classes);
     }
+
+    @Override
+    public ILayoutCellCompleted flexAuto() {
+        classes.add("flex-auto");
+        return this;
+    }
 }

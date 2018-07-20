@@ -16,6 +16,13 @@ public interface IFlex extends ILayoutCellCompleted {
     ILayoutCellCompleted flex();
 
     /**
+     * Enables component flexibility according to it's default sizes (i.e flex-basis: auto)
+     *
+     * @return
+     */
+    ILayoutCellCompleted flexAuto();
+
+    /**
      * Enables element to grow according to specified ratio.
      *
      * @param ratio
