@@ -29,7 +29,7 @@ public class CentreConfigUtils {
      */
     public static EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, ? extends IEntityDao<AbstractEntity<?>>> applyCriteria(final EnhancedCentreEntityQueryCriteria<?, ?> selectionCrit) {
         // get modifHolder and apply it against 'fresh' centre to be able to later identify validity of 'fresh' centre
-        return selectionCrit.freshCentreApplier().apply(selectionCrit.centreContextHolder().getModifHolder());
+        return selectionCrit.freshCentreApplier(selectionCrit.centreContextHolder().getModifHolder());
     }
     
     /**
@@ -56,7 +56,7 @@ public class CentreConfigUtils {
      * @return
      */
     static Map<String, Object> getCustomObject(final EnhancedCentreEntityQueryCriteria<?, ?> selectionCrit, final EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, ? extends IEntityDao<AbstractEntity<?>>> appliedCriteriaEntity) {
-        return getCustomObject(selectionCrit, appliedCriteriaEntity, selectionCrit.saveAsNameSupplier().get());
+        return getCustomObject(selectionCrit, appliedCriteriaEntity, selectionCrit.saveAsName());
     }
     
     /**
@@ -70,7 +70,7 @@ public class CentreConfigUtils {
      * @return
      */
     public static Map<String, Object> getCustomObject(final EnhancedCentreEntityQueryCriteria<?, ?> selectionCrit, final EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, ? extends IEntityDao<AbstractEntity<?>>> appliedCriteriaEntity, final Optional<String> saveAsNameToCompare) {
-        return selectionCrit.centreCustomObjectGetter().apply(appliedCriteriaEntity, saveAsNameToCompare);
+        return selectionCrit.centreCustomObject(appliedCriteriaEntity, saveAsNameToCompare);
     }
     
     /**
@@ -80,9 +80,9 @@ public class CentreConfigUtils {
      * @return
      */
     public static Map<String, Object> prepareDefaultCentre(final EnhancedCentreEntityQueryCriteria<?, ?> selectionCrit) {
-        selectionCrit.defaultCentreClearer().run(); // clear it first
-        selectionCrit.preferredConfigMaker().accept(empty()); // then make it preferred
-        return getCustomObject(selectionCrit, selectionCrit.criteriaValidationPrototypeCreator().apply(empty()), empty()); // return corresponding custom object
+        selectionCrit.clearDefaultCentre(); // clear it first
+        selectionCrit.makePreferredConfig(empty()); // then make it preferred
+        return getCustomObject(selectionCrit, selectionCrit.createCriteriaValidationPrototype(empty()), empty()); // return corresponding custom object
     }
     
     /**
@@ -104,8 +104,8 @@ public class CentreConfigUtils {
      * @param selectionCrit
      * @return
      */
-    public static boolean isDefaultOrInherited(final Optional<String> saveAsName, final EnhancedCentreEntityQueryCriteria<?, ?> selectionCrit) throws Result {
-        return isDefault(saveAsName) || isInherited(saveAsName, () -> selectionCrit.loadableCentresSupplier().get().stream());
+    public static boolean isDefaultOrInherited(final Optional<String> saveAsName, final EnhancedCentreEntityQueryCriteria<?, ?> selectionCrit) {
+        return isDefault(saveAsName) || isInherited(saveAsName, () -> selectionCrit.loadableCentreConfigs().stream());
     }
     
     /**

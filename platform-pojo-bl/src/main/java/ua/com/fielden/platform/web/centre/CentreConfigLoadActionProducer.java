@@ -3,6 +3,7 @@ package ua.com.fielden.platform.web.centre;
 import static ua.com.fielden.platform.error.Result.failure;
 
 import java.util.LinkedHashSet;
+
 import com.google.inject.Inject;
 
 import ua.com.fielden.platform.dao.IEntityDao;
@@ -41,14 +42,14 @@ public class CentreConfigLoadActionProducer extends AbstractFunctionalEntityForC
             entity.setCentreContextHolder(selectionCrit().centreContextHolder());
             
             // provide loadable configurations into the action
-            entity.setCentreConfigurations(new LinkedHashSet<>(selectionCrit().loadableCentresSupplier().get()));
+            entity.setCentreConfigurations(new LinkedHashSet<>(selectionCrit().loadableCentreConfigs()));
             
             if (entity.getCentreConfigurations().isEmpty()) {
                 throw failure(ERR_NO_CONFIGURATIONS_TO_LOAD);
             }
             
             final LinkedHashSet<String> chosenIds = new LinkedHashSet<>();
-            selectionCrit().saveAsNameSupplier().get().map(saveAsName -> chosenIds.add(saveAsName));
+            selectionCrit().saveAsName().ifPresent(chosenIds::add);
             
             // provide chosenIds into the action
             entity.setChosenIds(chosenIds);

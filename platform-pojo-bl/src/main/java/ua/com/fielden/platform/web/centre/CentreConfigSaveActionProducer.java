@@ -30,7 +30,7 @@ public class CentreConfigSaveActionProducer extends AbstractCentreConfigCommitAc
     
     @Override
     protected Map<String, Object> performProduce(final CentreConfigSaveAction entity, final EnhancedCentreEntityQueryCriteria<?, ?> selectionCrit, final EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, ? extends IEntityDao<AbstractEntity<?>>> appliedCriteriaEntity, final boolean isDefaultOrInherited) {
-        final Optional<String> saveAsName = selectionCrit.saveAsNameSupplier().get();
+        final Optional<String> saveAsName = selectionCrit.saveAsName();
         if (isDefaultOrInherited) {
             if (!isDefault(saveAsName)) {
                 setTitleAndDesc(entity, saveAsName.get(), selectionCrit, COPY_ACTION_SUFFIX);
@@ -40,7 +40,7 @@ public class CentreConfigSaveActionProducer extends AbstractCentreConfigCommitAc
             return getCustomObject(selectionCrit, appliedCriteriaEntity);
         } else { // owned configuration should be saved without opening 'Save As...' dialog
             entity.setSkipUi(true);
-            selectionCrit.freshCentreSaver().run();
+            selectionCrit.saveFreshCentre();
             final Map<String, Object> customObj = getCustomObject(selectionCrit, appliedCriteriaEntity);
             customObj.remove(WAS_RUN_NAME); // avoid making VIEW button disabled if it is enabled
             return customObj;

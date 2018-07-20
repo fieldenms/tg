@@ -32,7 +32,7 @@ public class CentreConfigEditActionProducer extends AbstractCentreConfigCommitAc
         if (isDefaultOrInherited) {
             throw failure(ERR_CANNOT_BE_EDITED);
         } else {
-            setTitleAndDesc(entity, selectionCrit.saveAsNameSupplier().get().get(), selectionCrit);
+            setTitleAndDesc(entity, selectionCrit.saveAsName().get(), selectionCrit);
             return getCustomObject(selectionCrit, appliedCriteriaEntity);
         }
     }

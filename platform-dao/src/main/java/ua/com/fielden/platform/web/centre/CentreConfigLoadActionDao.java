@@ -49,12 +49,12 @@ public class CentreConfigLoadActionDao extends CommonEntityDao<CentreConfigLoadA
             .ifPresent(centreConfig -> {
                 if (centreConfig.isInherited()) {
                     // if configuration being loaded is inherited we need to update it from base user changes
-                    selectionCrit.inheritedCentreUpdater().accept(saveAsNameToLoad);
+                    selectionCrit.updateInheritedCentre(saveAsNameToLoad);
                 }
             });
         // configuration being loaded need to become preferred
-        selectionCrit.preferredConfigMaker().accept(of(saveAsNameToLoad));
-        entity.setCustomObject(getCustomObject(selectionCrit, selectionCrit.criteriaValidationPrototypeCreator().apply(of(saveAsNameToLoad)), of(saveAsNameToLoad)));
+        selectionCrit.makePreferredConfig(of(saveAsNameToLoad));
+        entity.setCustomObject(getCustomObject(selectionCrit, selectionCrit.createCriteriaValidationPrototype(of(saveAsNameToLoad)), of(saveAsNameToLoad)));
         return super.save(entity);
     }
     

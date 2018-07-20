@@ -37,7 +37,7 @@ public class CentreConfigDuplicateActionProducer extends DefaultEntityProducerWi
                 invalidCustomObject(selectionCrit(), appliedCriteriaEntity)
                 .orElseGet(() -> {
                     // otherwise perform actual copy
-                    selectionCrit().configDuplicateAction().run();
+                    selectionCrit().configDuplicateAction();
                     // and after copying of criteria values against default centre compare it with SAVED version of default centre,
                     // which always holds empty Centre DSL-configured configuration
                     return getCustomObject(selectionCrit(), appliedCriteriaEntity, empty());

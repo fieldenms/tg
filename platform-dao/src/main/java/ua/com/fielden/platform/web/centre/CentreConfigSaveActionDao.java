@@ -26,11 +26,7 @@ public class CentreConfigSaveActionDao extends AbstractCentreConfigCommitActionD
     protected Map<String, Object> performSave(final CentreConfigSaveAction entity) {
         return criteriaEntityRestorer
             .restoreCriteriaEntity(entity.getCentreContextHolder())
-            .centreSaver()
-            .apply(
-                entity.getTitle(),
-                entity.getDesc()
-            );
+            .saveCentre(entity.getTitle(), entity.getDesc());
     }
     
 }
