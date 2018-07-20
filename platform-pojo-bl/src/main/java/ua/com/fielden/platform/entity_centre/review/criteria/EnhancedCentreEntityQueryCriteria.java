@@ -153,8 +153,10 @@ public class EnhancedCentreEntityQueryCriteria<T extends AbstractEntity<?>, DAO 
         this.centreDeleter = centreDeleter;
     }
 
-    public Runnable centreDeleter() {
-        return centreDeleter;
+    public void deleteCentre() {
+        if (centreDeleter != null) {
+            centreDeleter.run();
+        }
     }
 
     public void setLoadableCentresSupplier(final Supplier<List<LoadableCentreConfig>> loadableCentresSupplier) {

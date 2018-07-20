@@ -17,7 +17,7 @@ import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
  *
  */
 public class CentreConfigDeleteActionProducer extends DefaultEntityProducerWithContext<CentreConfigDeleteAction> {
-    private static final String ERR_CANNOT_BE_DELETED = "Can not be deleted.";
+    private static final String ERR_CANNOT_BE_DELETED = "Only saved configurations can be deleted.";
     
     @Inject
     public CentreConfigDeleteActionProducer(final EntityFactory factory, final ICompanionObjectFinder companionFinder) {
@@ -30,7 +30,7 @@ public class CentreConfigDeleteActionProducer extends DefaultEntityProducerWithC
             if (isDefaultOrInherited(selectionCrit().saveAsNameSupplier().get(), selectionCrit())) { // this will also throw early failure in case where current configuration was deleted
                 throw failure(ERR_CANNOT_BE_DELETED);
             }
-            selectionCrit().centreDeleter().run();
+            selectionCrit().deleteCentre();
             entity.setCustomObject(prepareDefaultCentre(selectionCrit()));
         }
         return entity;
