@@ -138,6 +138,15 @@ public interface IEntityReader<T extends AbstractEntity<?>> extends IEntityInsta
     }
 
     /**
+     * Returns at most {@code numberOfEntities) first entities matching {@code query}.
+     *
+     * @param query
+     * @param numberOfEntities
+     * @return
+     */
+    List<T> getFirstEntities(final QueryExecutionModel<T, ?> query, final int numberOfEntities);
+    
+    /**
      * Should return a reference to the first page of the specified size containing entity instances.
      *
      * @param pageCapacity

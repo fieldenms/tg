@@ -165,14 +165,6 @@ public class CriteriaEntityAutocompletionResource<T extends AbstractEntity<?>, M
             final String searchString = prepare(searchStringVal.contains("*") ? searchStringVal : searchStringVal + "*");
             logger.debug(String.format("SEARCH STRING %s", searchString));
 
-            // find matches with a fetch model that should be defined at the custom matcher level or based on the fall-back logic
-            // FIXME This for some reason breaks some of the matchers, e.g. LeaveRequestPayrollCodeCentreMatcher and LeaveRequestCommonPersonCentreMatcher
-            // however, if there is no fetch model then instead of using the default one, it should be more optimal to use the KEY_AND_DESC model
-            // if (valueMatcher.getFetch() == null) {
-            //     final Class<T> type = (Class<T>) EntityResourceUtils.getOriginalType(criteriaType);
-            //     valueMatcher.setFetch(fetchWithKeyAndDesc(type).fetchModel());
-            // }
-
             final List<? extends AbstractEntity<?>> entities = valueMatcher.findMatchesWithModel(searchString != null ? searchString : "%");
 
             logger.debug("CRITERIA_ENTITY_AUTOCOMPLETION_RESOURCE: search finished.");

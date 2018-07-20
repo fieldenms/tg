@@ -67,14 +67,4 @@ public interface IEntityDao<T extends AbstractEntity<?>> extends IEntityReader<T
      */
     byte[] export(final QueryExecutionModel<T, ?> query, final String[] propertyNames, final String[] propertyTitles) throws IOException;
 
-    /**
-     * Returns first entities produced by the provided query.
-     *
-     * @param quert
-     * @return
-     * @deprecated Streaming API must be used instead.
-     */
-    @Deprecated
-    List<T> getFirstEntities(final QueryExecutionModel<T, ?> query, final int numberOfEntities);
-
 }
