@@ -8,6 +8,7 @@ import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetch
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.orderBy;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
+import static ua.com.fielden.platform.utils.Pair.pair;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -191,6 +192,15 @@ public abstract class AbstractEntityReader<T extends AbstractEntity<?>> implemen
         return new EntityFetcher(newQueryExecutionContext()).streamEntities(qem, Optional.of(fetchSize));
     }
     
+    /**
+     * Returns at most {@code numberOfEntities) first entities matching {@code query}. 
+     */
+    @Override
+    @SessionRequired
+    public List<T> getFirstEntities(final QueryExecutionModel<T, ?> query, final int numberOfEntities) {
+        return getEntitiesOnPage(query, 0, numberOfEntities);
+    }
+
     /**
      * Returns a first page holding up to <code>pageCapacity</code> instance of entities retrieved by query with no filtering conditions. Useful for things like autocompleters.
      */
