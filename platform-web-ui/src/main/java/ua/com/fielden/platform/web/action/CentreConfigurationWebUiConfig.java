@@ -64,7 +64,7 @@ public class CentreConfigurationWebUiConfig {
     public final EntityMaster<CentreConfigDeleteAction> centreConfigDeleteActionMaster;
     public final EntityMaster<CentreConfigSaveAction> centreConfigSaveActionMaster;
     public final EntityMaster<OverrideCentreConfig> overrideCentreConfigMaster;
-    
+
     public CentreConfigurationWebUiConfig(final Injector injector) {
         centreConfigUpdater = createCentreConfigUpdater(injector);
         centreConfigUpdaterDefaultAction = createCentreConfigUpdaterDefaultAction(injector);
@@ -77,8 +77,8 @@ public class CentreConfigurationWebUiConfig {
         centreConfigSaveActionMaster = createCentreConfigSaveActionMaster(injector);
         overrideCentreConfigMaster = createOverrideCentreConfigMaster(injector);
     }
-    
-    
+
+
     /**
      * Creates entity master for {@link CentreConfigUpdater}.
      *
@@ -118,7 +118,7 @@ public class CentreConfigurationWebUiConfig {
                         .withNoParentCentreRefresh() // avoid refreshing of parent centres; 'Default' button just loads default configuration but it should be either applied or canceled
                         .build())
                 .addAction(REFRESH).shortDesc("CANCEL").longDesc("Cancel action")
-                .addAction(SAVE).shortDesc("APPLY").longDesc("Apply columns customisation")
+                .addAction(SAVE).shortDesc("APPLY").longDesc("Apply columns customisation").dontCloseAfterExecution()
                 .setActionBarLayoutFor(DESKTOP, empty(), actionLayout)
                 .setActionBarLayoutFor(TABLET, empty(), actionLayout)
                 .setActionBarLayoutFor(MOBILE, empty(), actionLayout)
@@ -129,7 +129,7 @@ public class CentreConfigurationWebUiConfig {
                 .done();
         return new EntityMaster<>(CentreConfigUpdater.class, CentreConfigUpdaterProducer.class, masterConfig, injector);
     }
-    
+
     /**
      * Creates no-ui entity master for {@link CentreConfigUpdaterDefaultAction}.
      *
@@ -138,7 +138,7 @@ public class CentreConfigurationWebUiConfig {
     private static EntityMaster<CentreConfigUpdaterDefaultAction> createCentreConfigUpdaterDefaultAction(final Injector injector) {
         return new EntityMaster<>(CentreConfigUpdaterDefaultAction.class, CentreConfigUpdaterDefaultActionProducer.class, null, injector);
     }
-    
+
     /**
      * Creates no-ui entity master for {@link CentreColumWidthConfigUpdater}.
      *
@@ -147,7 +147,7 @@ public class CentreConfigurationWebUiConfig {
     private static EntityMaster<CentreColumnWidthConfigUpdater> createCentreColumnWidthConfigUpdater(final Injector injector) {
         return new EntityMaster<>(CentreColumnWidthConfigUpdater.class, CentreColumnWidthConfigUpdaterProducer.class, null, injector);
     }
-    
+
     public enum CentreConfigActions {
         CUSTOMISE_COLUMNS_ACTION {
             @Override
@@ -170,10 +170,10 @@ public class CentreConfigurationWebUiConfig {
                         .build();
             }
         };
-        
+
         public abstract EntityActionConfig mkAction();
     }
-    
+
     /**
      * Creates entity master for {@link CentreConfigEditAction}.
      *
@@ -187,10 +187,10 @@ public class CentreConfigurationWebUiConfig {
             injector
         );
     }
-    
+
     /**
      * Creates {@link IMaster} configuration for {@link AbstractCentreConfigCommitAction} descendant entities.
-     * 
+     *
      * @param injector
      * @param entityType
      * @param customSaveDesc -- custom tooltip of SAVE button
@@ -200,7 +200,7 @@ public class CentreConfigurationWebUiConfig {
     private static <T extends AbstractCentreConfigCommitAction> IMaster<T> createCentreConfigCommitActionMaster(final Injector injector, final Class<T> entityType, final String customSaveDesc, final String customCancelDesc) {
         final String actionLayout = mkActionLayoutForMaster();
         final String layout = mkGridForMasterFitWidth(2, 1);
-        
+
         return new SimpleMasterBuilder<T>()
             .forEntity(entityType)
             .addProp("title").asSinglelineText().also()
@@ -215,7 +215,7 @@ public class CentreConfigurationWebUiConfig {
             .setLayoutFor(MOBILE, empty(), layout)
             .withDimensions(mkDim(400, 256))
             .done();
-    }    
+    }
     /**
      * Creates entity master for {@link CentreConfigSaveAction}.
      *
@@ -229,7 +229,7 @@ public class CentreConfigurationWebUiConfig {
             injector
         );
     }
-    
+
     /**
      * Creates entity master for {@link CentreConfigLoadAction}.
      *
@@ -252,7 +252,7 @@ public class CentreConfigurationWebUiConfig {
             .done();
         return new EntityMaster<>(CentreConfigLoadAction.class, CentreConfigLoadActionProducer.class, masterConfig, injector);
     }
-    
+
     /**
      * Creates no-UI entity master for {@link CentreConfigNewAction}.
      *
@@ -261,7 +261,7 @@ public class CentreConfigurationWebUiConfig {
     private static EntityMaster<CentreConfigNewAction> createCentreConfigNewActionMaster(final Injector injector) {
         return new EntityMaster<>(CentreConfigNewAction.class, CentreConfigNewActionProducer.class, null, injector);
     }
-    
+
     /**
      * Creates no-UI entity master for {@link CentreConfigDuplicateAction}.
      *
@@ -270,7 +270,7 @@ public class CentreConfigurationWebUiConfig {
     private static EntityMaster<CentreConfigDuplicateAction> createCentreConfigDuplicateActionMaster(final Injector injector) {
         return new EntityMaster<>(CentreConfigDuplicateAction.class, CentreConfigDuplicateActionProducer.class, null, injector);
     }
-    
+
     /**
      * Creates no-UI entity master for {@link CentreConfigDeleteAction}.
      *
@@ -279,7 +279,7 @@ public class CentreConfigurationWebUiConfig {
     private static EntityMaster<CentreConfigDeleteAction> createCentreConfigDeleteActionMaster(final Injector injector) {
         return new EntityMaster<>(CentreConfigDeleteAction.class, CentreConfigDeleteActionProducer.class, null, injector);
     }
-    
+
     /**
      * Creates entity master for {@link OverrideCentreConfig}.
      *
@@ -291,7 +291,7 @@ public class CentreConfigurationWebUiConfig {
             layout().withStyle("padding", "24px 24px 28px 24px").end()
         ).toString();
         final String actionLayout = mkActionLayoutForMaster();
-        
+
         final IMaster<OverrideCentreConfig> masterConfig = new SimpleMasterBuilder<OverrideCentreConfig>().forEntity(OverrideCentreConfig.class)
                 .addAction(REFRESH).shortDesc("NO")
                 .addAction(SAVE).shortDesc("YES")
@@ -303,8 +303,8 @@ public class CentreConfigurationWebUiConfig {
                 .setLayoutFor(MOBILE, empty(), layout)
                 // initial dimensions are defined by 'Configuration with this title already exists. Override?' message length
                 .done();
-        
+
         return new EntityMaster<>(OverrideCentreConfig.class, masterConfig, injector);
     }
-    
+
 }

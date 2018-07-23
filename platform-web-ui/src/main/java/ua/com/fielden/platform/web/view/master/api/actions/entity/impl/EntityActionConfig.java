@@ -15,6 +15,7 @@ import ua.com.fielden.platform.web.view.master.api.actions.entity.IEntityActionC
 import ua.com.fielden.platform.web.view.master.api.actions.entity.IEntityActionConfig5;
 import ua.com.fielden.platform.web.view.master.api.actions.entity.IEntityActionConfig6;
 import ua.com.fielden.platform.web.view.master.api.actions.entity.IEntityActionConfig7;
+import ua.com.fielden.platform.web.view.master.api.actions.entity.IEntityActionConfig7AfterExecutionClose;
 import ua.com.fielden.platform.web.view.master.api.actions.entity.IEntityActionConfig8;
 import ua.com.fielden.platform.web.view.master.api.actions.impl.AbstractAction;
 import ua.com.fielden.platform.web.view.master.api.actions.impl.AbstractFunctionalAction;
@@ -56,7 +57,7 @@ public class EntityActionConfig<T extends AbstractEntity<?>> implements IEntityA
     }
 
     @Override
-    public IEntityActionConfig8<T> shortcut(final String shortcut) {
+    public IEntityActionConfig7AfterExecutionClose<T> shortcut(final String shortcut) {
         action.setShortcut(shortcut);
         return this;
     }
@@ -104,5 +105,11 @@ public class EntityActionConfig<T extends AbstractEntity<?>> implements IEntityA
     @Override
     public IEntityActionConfig8<T> addAction(final ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig actionConfig) {
         return simpleMasterBuilder.addAction(actionConfig);
+    }
+
+    @Override
+    public IEntityActionConfig8<T> dontCloseAfterExecution() {
+        action.setCloseAfterExecution(false);
+        return this;
     }
 }

@@ -473,7 +473,7 @@
                                 console.log('postActionSuccess: ' + actionDesc, functionalEntity);
                                 self.save(functionalEntity, continuationProperty)
                                     .then(
-                                        Polymer.TgBehaviors.TgEntityMasterClosingBehavior.createEntityActionThenCallback(self.centreUuid, 'save', postal, null),
+                                        Polymer.TgBehaviors.TgEntityMasterClosingBehavior.createEntityActionThenCallback(self.centreUuid, 'save', postal, null, true),
                                         function (value) { console.log('AJAX PROMISE CATCH', value); }
                                     );
                             };
