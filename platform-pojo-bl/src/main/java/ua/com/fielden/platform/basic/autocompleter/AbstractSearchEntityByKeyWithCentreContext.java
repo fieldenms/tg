@@ -65,9 +65,10 @@ public abstract class AbstractSearchEntityByKeyWithCentreContext<T extends Abstr
     		return cond().val(1).eq().val(1).model();
     	}
       	
-    	ConditionModel keyCriteria = createRelaxedSearchByKeyCriteriaModel(searchString);
+    	final ConditionModel keyCriteria = createRelaxedSearchByKeyCriteriaModel(searchString);
+        final Class<T> entityType = maybeCompanion.orElseThrow(CO_MISSING_EXCEPTION_SUPPLIER).getEntityType();
       
-	return hasDescProperty(companion.getEntityType()) ? cond().condition(keyCriteria).or().prop(AbstractEntity.DESC).iLike().val("%" + searchString).model() : keyCriteria;
+    	return hasDescProperty(entityType) ? cond().condition(keyCriteria).or().prop(AbstractEntity.DESC).iLike().val("%" + searchString).model() : keyCriteria;
     }
 
     /**
@@ -92,22 +93,20 @@ public abstract class AbstractSearchEntityByKeyWithCentreContext<T extends Abstr
         return orderBy().prop(KEY).asc().model();
     }
 
-    private Builder<T, EntityResultQueryModel<T>> createCommonQueryBuilderForFindMatches(final String searchString) {
-        final IEntityDao<T> companion = maybeCompanion.orElseThrow(CO_MISSING_EXCEPTION_SUPPLIER);
-
+    private Builder<T, EntityResultQueryModel<T>> createCommonQueryBuilderForFindMatches(final String searchString, final Class<T> entityType) {
         final ConditionModel searchCriteria = makeSearchCriteriaModel(getContext(), searchString);
-        final EntityResultQueryModel<T> queryModel = searchCriteria != null ? select(companion.getEntityType()).where().condition(searchCriteria).model() : select(companion.getEntityType()).model();
+        final EntityResultQueryModel<T> queryModel = searchCriteria != null ? select(entityType).where().condition(searchCriteria).model() : select(entityType).model();
         queryModel.setFilterable(true);
-        final OrderingModel ordering = composeOrderingModelForQuery(searchString);
+        final OrderingModel ordering = composeOrderingModelForQuery(searchString, entityType);
         final Map<String, Object> params = new HashMap<>();
         fillParamsBasedOnContext(getContext(), params);
         return from(queryModel).with(ordering).with(params).lightweight();
     }
     
-    private OrderingModel composeOrderingModelForQuery(final String searchString) {
+    private OrderingModel composeOrderingModelForQuery(final String searchString, final Class<T> entityType) {
     	return "%".equals(searchString) ? makeOrderingModel(searchString) : 
         	orderBy().
-        	expr(makeSearchResultOrderingPriority(companion.getEntityType(), searchString)).asc().
+        	expr(makeSearchResultOrderingPriority(entityType, searchString)).asc().
         	order(makeOrderingModel(searchString)).
         	model();
     }
@@ -115,13 +114,13 @@ public abstract class AbstractSearchEntityByKeyWithCentreContext<T extends Abstr
     @Override
     public List<T> findMatches(final String searchString) {
         final IEntityDao<T> companion = maybeCompanion.orElseThrow(CO_MISSING_EXCEPTION_SUPPLIER);
-        return companion.getFirstEntities(createCommonQueryBuilderForFindMatches(searchString).with(defaultFetchModel).model(), getPageSize());
+        return companion.getFirstEntities(createCommonQueryBuilderForFindMatches(searchString, companion.getEntityType()).with(defaultFetchModel).model(), getPageSize());
     }
 
     @Override
     public List<T> findMatchesWithModel(final String searchString) {
         final IEntityDao<T> companion = maybeCompanion.orElseThrow(CO_MISSING_EXCEPTION_SUPPLIER);
-        return companion.getFirstEntities(createCommonQueryBuilderForFindMatches(searchString).with(getFetch()).model(), getPageSize());
+        return companion.getFirstEntities(createCommonQueryBuilderForFindMatches(searchString, companion.getEntityType()).with(getFetch()).model(), getPageSize());
     }
 
     @Override

@@ -24,14 +24,11 @@ import ua.com.fielden.platform.entity.query.model.ConditionModel;
  */
 public class FallbackValueMatcherWithContext<CONTEXT extends AbstractEntity<?>, T extends AbstractEntity<?>> extends AbstractSearchEntityByKeyWithContext<CONTEXT, T> {
 
-    private final Class<T> entityType;
-    private final boolean hasDescProp;
     private final boolean activeOnly;
 
     public FallbackValueMatcherWithContext(final IEntityDao<T> co, final boolean activeOnly) {
         super(co);
-        this.entityType = co.getEntityType();
-        this.hasDescProp = hasDescProperty(entityType);
+        final Class<T> entityType = co.getEntityType();
         this.activeOnly = activeOnly;
         if (activeOnly && !ActivatableAbstractEntity.class.isAssignableFrom(entityType)) {
             final String entityTitle = getEntityTitleAndDesc(entityType).getKey();

@@ -3,6 +3,7 @@
  */
 package ua.com.fielden.platform.basic.autocompleter;
 
+import static ua.com.fielden.platform.entity.AbstractEntity.DESC;
 import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.cond;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchKeyAndDescOnly;
@@ -60,8 +61,8 @@ public abstract class AbstractSearchEntityByKeyWithContext<CONTEXT extends Abstr
     	}
       	
     	final ConditionModel keyCriteria = createRelaxedSearchByKeyCriteriaModel(searchString);
-      
-	return hasDescProperty(companion.getEntityType()) ? cond().condition(keyCriteria).or().prop(AbstractEntity.DESC).iLike().val("%" + searchString).model() : keyCriteria;
+    	
+    	return hasDescProperty(companion.getEntityType()) ? cond().condition(keyCriteria).or().prop(DESC).iLike().val("%" + searchString).model() : keyCriteria;
     }
 
     /**
