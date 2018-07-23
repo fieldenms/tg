@@ -10,9 +10,6 @@ import java.util.Optional;
  */
 public class MiTypeAnnotation {
     
-    public MiTypeAnnotation() {
-    }
-    
     public MiType newInstance(final Class<? extends MiWithConfigurationSupport<?>> miType, final Optional<String> saveAsName) {
         return new MiType() {
             

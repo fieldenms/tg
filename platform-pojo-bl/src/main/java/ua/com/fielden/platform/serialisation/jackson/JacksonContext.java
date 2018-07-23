@@ -12,19 +12,16 @@ import com.esotericsoftware.kryo.Kryo;
  * buffers and object storage that serializers can use to remain thread safe.
  *
  * @see Kryo#getContext()
- * @author Nathan Sweet <misc@n4te.com>
+ * @author TG Team
  */
 public class JacksonContext {
-    private HashMap<Object, Object> map;
-    private HashMap<Object, Object> tempMap;
+    private final HashMap<String, Object> map = new HashMap<>();
+    private final HashMap<String, Object> tempMap = new HashMap<>();
 
     /**
      * Stores an object in thread local storage. This allows serializers to easily make repeated use of objects that are not thread safe.
      */
     public void put(final String key, final Object value) {
-        if (map == null) {
-            map = new HashMap();
-        }
         map.put(key, value);
     }
 
@@ -34,9 +31,6 @@ public class JacksonContext {
      * @see #put(Serializer, String, Object)
      */
     public Object get(final String key) {
-        if (map == null) {
-            map = new HashMap();
-        }
         return map.get(key);
     }
 
@@ -45,9 +39,6 @@ public class JacksonContext {
      * when the entire object graph has been serialized or deserialized.
      */
     public void putTemp(final String key, final Object value) {
-        if (tempMap == null) {
-            tempMap = new HashMap();
-        }
         tempMap.put(key, value);
     }
 
@@ -57,9 +48,6 @@ public class JacksonContext {
      * @see #put(Serializer, String, Object)
      */
     public Object getTemp(final String key) {
-        if (tempMap == null) {
-            tempMap = new HashMap();
-        }
         return tempMap.get(key);
     }
 
@@ -69,8 +57,24 @@ public class JacksonContext {
      */
     public void reset() {
         if (tempMap != null) {
+            for (Object el : tempMap.values()) {
+                if (el instanceof References) {
+                    ((References) el).reset();
+                }
+            }
             tempMap.clear();
         }
+        
+        if (map != null) {
+            for (Object el : map.values()) {
+                if (el instanceof References) {
+                    ((References) el).reset();
+                }
+            }
+            
+            map.clear();
+        }
+
         if (TRACE) {
             trace("kryo", "Context reset.");
         }

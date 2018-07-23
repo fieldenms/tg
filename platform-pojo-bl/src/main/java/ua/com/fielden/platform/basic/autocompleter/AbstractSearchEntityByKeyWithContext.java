@@ -59,9 +59,9 @@ public abstract class AbstractSearchEntityByKeyWithContext<CONTEXT extends Abstr
     		return cond().val(1).eq().val(1).model();
     	}
       	
-    	ConditionModel keyCriteria = createRelaxedSearchByKeyCriteriaModel(searchString);
+    	final ConditionModel keyCriteria = createRelaxedSearchByKeyCriteriaModel(searchString);
       
-		return hasDescProperty(companion.getEntityType()) ? cond().condition(keyCriteria).or().prop(AbstractEntity.DESC).iLike().val("%" + searchString).model() : keyCriteria;
+	return hasDescProperty(companion.getEntityType()) ? cond().condition(keyCriteria).or().prop(AbstractEntity.DESC).iLike().val("%" + searchString).model() : keyCriteria;
     }
 
     /**
@@ -103,15 +103,15 @@ public abstract class AbstractSearchEntityByKeyWithContext<CONTEXT extends Abstr
         	order(makeOrderingModel(searchString)).
         	model();
     }
-    
+
     @Override
     public List<T> findMatches(final String searchString) {
-        return companion.firstPage(createCommonQueryBuilderForFindMatches(searchString).with(defaultFetchModel).model(), getPageSize()).data();
+        return companion.getFirstEntities(createCommonQueryBuilderForFindMatches(searchString).with(defaultFetchModel).model(), getPageSize());
     }
 
     @Override
     public List<T> findMatchesWithModel(final String searchString) {
-        return companion.firstPage(createCommonQueryBuilderForFindMatches(searchString).with(getFetch()).model(), getPageSize()).data();
+        return companion.getFirstEntities(createCommonQueryBuilderForFindMatches(searchString).with(getFetch()).model(), getPageSize());
     }
 
     @Override

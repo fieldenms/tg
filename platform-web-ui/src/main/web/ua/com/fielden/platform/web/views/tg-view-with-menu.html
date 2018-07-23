@@ -2,7 +2,6 @@
 
 <link rel="import" href="/resources/polymer/iron-icons/iron-icons.html">
 <link rel="import" href="/resources/polymer/iron-icons/av-icons.html">
-<link rel="import" href="/resources/polymer/iron-a11y-keys-behavior/iron-a11y-keys-behavior.html">
 
 <link rel="import" href="/resources/polymer/paper-styles/default-theme.html">
 <link rel="import" href="/resources/polymer/paper-styles/color.html">
@@ -282,18 +281,12 @@
             behaviors: [
                 Polymer.NeonAnimatableBehavior,
                 Polymer.TgBehaviors.TgTooltipBehavior,
-                Polymer.IronA11yKeysBehavior,
                 Polymer.TgBehaviors.TgFocusRestorationBehavior,
                 Polymer.TgBehaviors.TgBackButtonBehavior
             ],
 
-            keyBindings: {
-                'f2': '_showSideMenu'
-            },
-
             hostAttributes: {
-                class: "layout vertical",
-                tabindex: 0
+                class: "layout vertical"
             },
 
             observers: [
@@ -306,17 +299,6 @@
             
             ready: function () {
                 this.$.menu.addEventListener("keydown", this._menuKeyDown.bind(this));
-                this.$.drawerPanel.$.scrim.addEventListener("transitionend", event => {
-                    if (this.$.drawerPanel.selected === 'main' && event.propertyName === 'visibility' && this._wasClosedByEsc) {
-                        if (this._lastActiveElement && isDescendant(this, this._lastActiveElement)) {
-                            this._lastActiveElement.focus();
-                            delete this._lastActiveElement;
-                        } else {
-                            this.focus();
-                        }
-                        delete this._wasClosedByEsc;
-                    }
-                });
                 
                 this.mobile = this.$.app_config.mobile;
                 if (this.$.app_config.mobile === true && this.$.app_config.iPhoneOs()) {
@@ -370,18 +352,13 @@
 
             _menuKeyDown: function (event) {
                 if (event.keyCode === 27 /*Escape*/ ) {
-                    this._wasClosedByEsc = true;
                     this.$.drawerPanel.closeDrawer();
+                    this.fire("tg-module-menu-closed");
                 }
             },
 
-            _showSideMenu: function (event) {
-                this._lastActiveElement = document.activeElement;
+            openModuleMenu: function (event) {
                 this.$.drawerPanel.openDrawer();
-                if (event.stopPropagation) event.stopPropagation();
-                if (event.preventDefault) event.preventDefault();
-                event.cancelBubble = true;
-                event.returnValue = false;
             },
 
             _calcCheckboxTooltip: function (menu, visible) {

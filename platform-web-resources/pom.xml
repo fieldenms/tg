@@ -13,9 +13,6 @@
 	<name>Trident Genesis Platform Web Resources</name>
 	<dependencies>
 		<!-- inner module dependencies -->
-		<!-- Note that pojo-bl dependency transitively goes from "dao" and "rao". 
-			<dependency> <groupId>fielden</groupId> <artifactId>platform-pojo-bl</artifactId> 
-			<version>${project.version}</version> </dependency> -->
 		<dependency>
 			<groupId>fielden</groupId>
 			<artifactId>platform-dao</artifactId>
@@ -101,15 +98,16 @@
 			<artifactId>jetty-io</artifactId>
 			<version>9.2.14.v20151106</version>
 		</dependency>
-
 		<!-- end of RESTlet and Jetty libraries -->
 
+		<!-- unit test dependencies -->		
 		<dependency>
 			<groupId>com.h2database</groupId>
 			<artifactId>h2</artifactId>
 			<version>1.4.187</version>
 			<scope>test</scope>
 		</dependency>
+
 	</dependencies>
 	<build>
 		<resources>

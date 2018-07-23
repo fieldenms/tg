@@ -15,6 +15,8 @@ import static ua.com.fielden.platform.utils.EntityUtils.hasDescProperty;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
+import java.util.function.Supplier;
 
 import ua.com.fielden.platform.basic.IValueMatcherWithCentreContext;
 import ua.com.fielden.platform.basic.IValueMatcherWithFetch;
@@ -25,6 +27,7 @@ import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.entity.query.model.ConditionModel;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.OrderingModel;
+import ua.com.fielden.platform.entity_centre.exceptions.EntityCentreExecutionException;
 import ua.com.fielden.platform.web.centre.CentreContext;
 
 /**
@@ -35,17 +38,19 @@ import ua.com.fielden.platform.web.centre.CentreContext;
 public abstract class AbstractSearchEntityByKeyWithCentreContext<T extends AbstractEntity<?>>
                       implements IValueMatcherWithCentreContext<T>, IValueMatcherWithFetch<T> {
 
-    private final IEntityDao<T> companion;
+    private static final int DEFAULT_PAGE_SIZE = 10;
+    private static final Supplier<? extends EntityCentreExecutionException> CO_MISSING_EXCEPTION_SUPPLIER = () -> new EntityCentreExecutionException("A companion is massing to perform this operation.");
+
+    private final Optional<IEntityDao<T>> maybeCompanion;
     private final fetch<T> defaultFetchModel;
     private fetch<T> fetchModel;
     private CentreContext<T, ?> context;
 
-    private final int pageSize = 10;
-    
+
 
     public AbstractSearchEntityByKeyWithCentreContext(final IEntityDao<T> companion) {
-        this.companion = companion;
-        this.defaultFetchModel = companion == null ? null : fetchKeyAndDescOnly(companion.getEntityType());
+        this.maybeCompanion = Optional.ofNullable(companion);
+        this.defaultFetchModel = maybeCompanion.map(co -> fetchKeyAndDescOnly(co.getEntityType())).orElse(null);
     }
 
     /**
@@ -62,7 +67,7 @@ public abstract class AbstractSearchEntityByKeyWithCentreContext<T extends Abstr
       	
     	ConditionModel keyCriteria = createRelaxedSearchByKeyCriteriaModel(searchString);
       
-		return hasDescProperty(companion.getEntityType()) ? cond().condition(keyCriteria).or().prop(AbstractEntity.DESC).iLike().val("%" + searchString).model() : keyCriteria;
+	return hasDescProperty(companion.getEntityType()) ? cond().condition(keyCriteria).or().prop(AbstractEntity.DESC).iLike().val("%" + searchString).model() : keyCriteria;
     }
 
     /**
@@ -88,6 +93,8 @@ public abstract class AbstractSearchEntityByKeyWithCentreContext<T extends Abstr
     }
 
     private Builder<T, EntityResultQueryModel<T>> createCommonQueryBuilderForFindMatches(final String searchString) {
+        final IEntityDao<T> companion = maybeCompanion.orElseThrow(CO_MISSING_EXCEPTION_SUPPLIER);
+
         final ConditionModel searchCriteria = makeSearchCriteriaModel(getContext(), searchString);
         final EntityResultQueryModel<T> queryModel = searchCriteria != null ? select(companion.getEntityType()).where().condition(searchCriteria).model() : select(companion.getEntityType()).model();
         queryModel.setFilterable(true);
@@ -104,15 +111,17 @@ public abstract class AbstractSearchEntityByKeyWithCentreContext<T extends Abstr
         	order(makeOrderingModel(searchString)).
         	model();
     }
-    
+
     @Override
     public List<T> findMatches(final String searchString) {
-        return companion.firstPage(createCommonQueryBuilderForFindMatches(searchString).with(defaultFetchModel).model(), getPageSize()).data();
+        final IEntityDao<T> companion = maybeCompanion.orElseThrow(CO_MISSING_EXCEPTION_SUPPLIER);
+        return companion.getFirstEntities(createCommonQueryBuilderForFindMatches(searchString).with(defaultFetchModel).model(), getPageSize());
     }
 
     @Override
     public List<T> findMatchesWithModel(final String searchString) {
-    	return companion.firstPage(createCommonQueryBuilderForFindMatches(searchString).with(getFetch()).model(), getPageSize()).data();
+        final IEntityDao<T> companion = maybeCompanion.orElseThrow(CO_MISSING_EXCEPTION_SUPPLIER);
+        return companion.getFirstEntities(createCommonQueryBuilderForFindMatches(searchString).with(getFetch()).model(), getPageSize());
     }
 
     @Override
@@ -131,12 +140,13 @@ public abstract class AbstractSearchEntityByKeyWithCentreContext<T extends Abstr
     }
 
     @Override
-    public void setContext(final CentreContext<T, ?> context) {
+    public AbstractSearchEntityByKeyWithCentreContext<T> setContext(final CentreContext<T, ?> context) {
         this.context = context;
+        return this;
     }
 
     @Override
     public Integer getPageSize() {
-        return pageSize;
+        return DEFAULT_PAGE_SIZE;
     }
 }

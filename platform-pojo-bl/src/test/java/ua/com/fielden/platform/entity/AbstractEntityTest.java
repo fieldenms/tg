@@ -13,8 +13,6 @@ import static ua.com.fielden.platform.entity.exceptions.EntityDefinitionExceptio
 import static ua.com.fielden.platform.entity.exceptions.EntityDefinitionException.INVALID_VALUES_FOR_PRECITION_AND_SCALE_MSG;
 import static ua.com.fielden.platform.types.try_wrapper.TryWrapper.Try;
 
-import java.beans.PropertyChangeEvent;
-import java.beans.PropertyChangeListener;
 import java.lang.annotation.Annotation;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -62,7 +60,6 @@ import ua.com.fielden.platform.test.EntityModuleWithPropertyFactory;
 import ua.com.fielden.platform.types.Money;
 import ua.com.fielden.platform.types.either.Either;
 import ua.com.fielden.platform.types.either.Left;
-import ua.com.fielden.platform.utils.PropertyChangeSupportEx.PropertyChangeOrIncorrectAttemptListener;
 
 /**
  * Unit test for :
@@ -76,7 +73,6 @@ import ua.com.fielden.platform.utils.PropertyChangeSupportEx.PropertyChangeOrInc
  *
  */
 public class AbstractEntityTest {
-    private boolean observed = false; // used
     private boolean observedForIncorrectAttempt = false; // used
     private final EntityModuleWithPropertyFactory module = new CommonTestEntityModuleWithPropertyFactory();
     {
@@ -101,25 +97,12 @@ public class AbstractEntityTest {
 
     @Before
     public void setUp() {
-        observed = false;
         entity = factory.newEntity(Entity.class, "key", "description"); // this ensures all listeners are removed
     }
 
     @Test
     public void testEntityFactoryReferenceIsSet() {
         assertEquals(factory, entity.getEntityFactory());
-    }
-
-    @Test
-    public void testThatObservablePropertyIsObserved() {
-        entity.addPropertyChangeListener("observableProperty", new PropertyChangeListener() {
-            @Override
-            public void propertyChange(final PropertyChangeEvent event) {
-                observed = true;
-            }
-        });
-        entity.setObservableProperty(22.0);
-        assertEquals("Property should have been observed.", true, observed);
     }
 
     @Test
@@ -141,18 +124,6 @@ public class AbstractEntityTest {
         assertEquals("Property change count is incorrect", 3, entity.getProperty("observableProperty").getValueChangeCount());
         assertEquals("current value must be changed (original value 2)", true, entity.getProperty("observableProperty").isChangedFromOriginal());
         assertEquals("current value must be changed (previous value 2)", true, entity.getProperty("observableProperty").isChangedFromPrevious());
-    }
-
-    @Test
-    public void testThatNotObservablePropertyIsNotObserved() {
-        entity.addPropertyChangeListener("observableProperty", new PropertyChangeListener() {
-            @Override
-            public void propertyChange(final PropertyChangeEvent event) {
-                observed = true;
-            }
-        });
-        entity.setFirstProperty(22);
-        assertEquals("Property should not have been observed.", false, observed);
     }
 
     @Test
@@ -180,32 +151,6 @@ public class AbstractEntityTest {
         assertTrue("Domain validator for property firstProperty should be successful.", result.isSuccessful());
         assertTrue("Entity and result's instance should match.", result.getInstance() == entity);
         assertNull("Incorrect value for last invalid value.", entity.getProperty("firstProperty").getLastInvalidValue());
-    }
-
-    /**
-     * This test ensures that validation happens before observing.
-     */
-    @Test
-    public void testThatPropertyValidationWorksForObservableProperty() {
-        // test validation of the observableProperty
-        entity.addPropertyChangeListener("observableProperty", new PropertyChangeListener() {
-            @Override
-            public void propertyChange(final PropertyChangeEvent event) {
-                observed = true;
-            }
-        });
-        final Double value = 23.0;
-        entity.setObservableProperty(value);
-        assertTrue("Property observableProperty validation failed.", entity.getProperty("observableProperty").isValid());
-        assertEquals("Property change should have been observed.", true, observed);
-        observed = false;
-        // try to assign null
-        entity.setObservableProperty(null);
-        assertFalse("Property observableProperty validation failed.", entity.getProperty("observableProperty").isValid());
-        assertEquals("Incorrect validation error message.", Entity.NOT_NULL_MSG, entity.getProperty("observableProperty").getFirstFailure().getMessage());
-        assertEquals("Value assignment should have been prevented by the validator,", value, entity.getObservableProperty());
-        assertEquals("Property change should have not been observed.", false, observed);
-
     }
 
     @Test
@@ -321,18 +266,8 @@ public class AbstractEntityTest {
         assertNull("There should be no domain validation result at this stage.", doublesProperty.getValidationResult(ValidationAnnotation.DOMAIN));
         assertNull("There should be no rquiredness validation result at this stage.", doublesProperty.getValidationResult(ValidationAnnotation.REQUIRED));
         entity.setDoubles(Arrays.asList(new Double[] { 2.0, 3.0 }));
-        entity.addPropertyChangeListener("doubles", new PropertyChangeListener() {
-            @Override
-            public void propertyChange(final PropertyChangeEvent event) {
-                assertEquals("Incorrect old value.", 0, event.getOldValue()); // should always be 0
-                assertEquals("Incorrect new value.", 1, event.getNewValue()); // should always be 1
-                observed = true;
-            }
-        });
         entity.setDoubles(Arrays.asList(new Double[] { 2.0 }));
 
-        assertEquals("Property should have been observed.", true, observed);
-        
         assertNull("Incorrect original value", doublesProperty.getOriginalValue());
         assertTrue("Incorrect isChangedFrom original.", doublesProperty.isChangedFromOriginal());
         assertEquals("Incorrect previous value", Arrays.asList(new Double[] { 2.0, 3.0 }), doublesProperty.getPrevValue());
@@ -363,17 +298,8 @@ public class AbstractEntityTest {
         final MetaProperty<List<Double>> doublesProperty = entity.getProperty("doubles");
         entity.setDoubles(Arrays.asList(new Double[] { -2.0, -3.0 }));
 
-        entity.addPropertyChangeListener("doubles", new PropertyChangeListener() {
-            @Override
-            public void propertyChange(final PropertyChangeEvent event) {
-                assertEquals("Incorrect old value.", 2, event.getOldValue()); // oldValue == oldSize
-                assertEquals("Incorrect new value.", 2.0, event.getNewValue()); // newValue == newAddedValue!!!
-                observed = true;
-            }
-        });
         entity.addToDoubles(2.0);
 
-        assertEquals("Property should have been observed.", true, observed);
         assertEquals("Incorrect size for doubles", 3, entity.getDoubles().size());
 
         assertNull("Incorrect original value", doublesProperty.getOriginalValue());
@@ -406,17 +332,8 @@ public class AbstractEntityTest {
         final MetaProperty<List<Double>> doublesProperty = entity.getProperty("doubles");
         entity.setDoubles(Arrays.asList(new Double[] { -2.0, -3.0 }));
 
-        entity.addPropertyChangeListener("doubles", new PropertyChangeListener() {
-            @Override
-            public void propertyChange(final PropertyChangeEvent event) {
-                assertEquals("Incorrect old value.", -2.0, event.getOldValue()); // oldValue = oldRemovedValue!!!
-                assertEquals("Incorrect new value.", 1, event.getNewValue()); // newValue = newSize
-                observed = true;
-            }
-        });
         entity.removeFromDoubles(-2.0);
 
-        assertTrue("Property should have been observed.", observed);
         assertEquals("Incorrect size for doubles", 1, entity.getDoubles().size());
         
         assertNull("Incorrect original value", doublesProperty.getOriginalValue());
@@ -455,44 +372,30 @@ public class AbstractEntityTest {
     @Test
     public void testValidationAndSettingRestrictionInObservableMutator() {
         // preparing
-        entity.addPropertyChangeListener("observableProperty", new PropertyChangeListener() {
-            @Override
-            public void propertyChange(final PropertyChangeEvent event) {
-                observed = true;
-            }
-        });
         final MetaProperty<Double> metaProperty = entity.getProperty("observableProperty");
         // 1. test the error recovery by the same value
         entity.setObservableProperty(100.0);
         entity.setObservableProperty(null);
-        observed = false;
         entity.setObservableProperty(100.0);
         assertTrue("the property after the error recovery have to be valid", metaProperty.isValid());
-        assertTrue("observing logic have to be invoked after the error recovery", observed);
 
         // 2. test the error recovery by the different value
         entity.setObservableProperty(100.0);
         entity.setObservableProperty(null);
-        observed = false;
         entity.setObservableProperty(101.0);
         assertTrue("the property after the error recovery have to be valid", metaProperty.isValid());
-        assertTrue("observing logic have to be invoked after the error recovery", observed);
 
         // 3. collectional property validation/observation tested in previous tests
 
         // 4. test simple property validation/observation invoking for different new/old values :
         entity.setObservableProperty(100.0);
-        observed = false;
         entity.setObservableProperty(101.0);
         assertTrue("the property after different value setted have to be valid", metaProperty.isValid());
-        assertTrue("observing logic have to be invoked after different value setted ", observed);
 
         // 5. test simple property validation/observation not invoking for the same new/old values :
         entity.setObservableProperty(100.0);
-        observed = false;
         entity.setObservableProperty(100.0);
         assertTrue("the property after the same value setted have to be valid", metaProperty.isValid());
-        assertFalse("observing logic have not be invoked after the same value setted ", observed);
 
         // 6. test simple property validation/observation in case where it is initialised with NULL at construction time
         // previous value, which is also original, is null
@@ -505,92 +408,43 @@ public class AbstractEntityTest {
     @Test
     public void testValidationWarnings() {
         // preparing
-        entity.addPropertyChangeListener("number", new PropertyChangeListener() {
-            @Override
-            public void propertyChange(final PropertyChangeEvent event) {
-                observed = true;
-            }
-        });
         final MetaProperty<Integer> metaProperty = entity.getProperty("number");
         entity.setNumber(40);
         // 1. test warning generation on Domain Validation level:
-        observed = false;
         entity.setNumber(77);
         assertTrue("DOMAIN : The property should be valid with warning.", metaProperty.isValid());
         assertTrue("DOMAIN : The property should have warnings.", metaProperty.hasWarnings());
-        assertTrue("DOMAIN : Observing logic should be invoked after setting warning value.", observed);
         assertEquals("DOMAIN : Warning value should be set.", Integer.valueOf(77), entity.get("number"));
 
         // 2. recovery :
-        observed = false;
         entity.setNumber(40);
         assertTrue("DOMAIN : The property should remain valid after recovery.", metaProperty.isValid());
         assertFalse("DOMAIN : The property should not have warnings after recovery.", metaProperty.hasWarnings());
-        assertTrue("DOMAIN : Observing logic should be invoked during recovery.", observed);
         assertEquals("DOMAIN : Recovery value should be set.", Integer.valueOf(40), entity.get("number"));
 
         // 3. test warning generation on Dynamic Validation level (validation inside setter):
-        observed = false;
         entity.setNumber(777);
         assertTrue("DYNAMIC : The property should be valid with warning.", metaProperty.isValid());
         assertTrue("DYNAMIC : The property should have warnings.", metaProperty.hasWarnings());
-        assertTrue("DYNAMIC : Observing logic should be invoked after setting warning value.", observed);
         assertEquals("DYNAMIC : Warning value should be set.", Integer.valueOf(777), entity.get("number"));
 
         // 4. recovery :
-        observed = false;
         entity.setNumber(40);
         assertTrue("The property should remain valid after recovery.", metaProperty.isValid());
         assertFalse("The property should not have warnings after recovery.", metaProperty.hasWarnings());
-        assertTrue("Observing logic should be invoked during recovery.", observed);
         assertEquals("Recovery value should be set.", Integer.valueOf(40), entity.get("number"));
 
         // 5. test warning generation on Dynamic Validation level (validation inside setter):
-        observed = false;
         entity.setNumber(777);
         assertTrue("DYNAMIC : The property should be valid with warning.", metaProperty.isValid());
         assertTrue("DYNAMIC : The property should have warnings.", metaProperty.hasWarnings());
-        assertTrue("DYNAMIC : Observing logic should be invoked after setting warning value.", observed);
         assertEquals("DYNAMIC : Warning value should be set.", Integer.valueOf(777), entity.get("number"));
 
         // 6. recovery by setting another warning value! :
-        observed = false;
         entity.setNumber(77);
         assertTrue("The property should remain valid after recovery (by setting another warning value).", metaProperty.isValid());
         assertTrue("The property should have warnings after recovery (by setting another warning value).", metaProperty.hasWarnings());
-        assertTrue("Observing logic should be invoked during recovery.", observed);
         assertEquals("Recovery warning value should be set.", Integer.valueOf(77), entity.get("number"));
-    }
-
-    @Test
-    public void testIncorrectAttemptFiringInObservableMutator() {
-        // simple property change listener
-        entity.addPropertyChangeListener("observableProperty", new PropertyChangeListener() {
-            @Override
-            public void propertyChange(final PropertyChangeEvent event) {
-                observed = true;
-            }
-        });
-        // incorrect attempt or property change listener
-        entity.addPropertyChangeListener("observableProperty", new PropertyChangeOrIncorrectAttemptListener() {
-            @Override
-            public void propertyChange(final PropertyChangeEvent event) {
-                observedForIncorrectAttempt = true;
-            }
-        });
-        // 1. test that incorrect setting attempt fires PropertyChangeOrIncorrectAttemptListener and not fires simple PropertyChangeListener
-        observed = false;
-        observedForIncorrectAttempt = false;
-        entity.setObservableProperty(null);
-        assertTrue("incorrect attempt firing have to be invoked", observedForIncorrectAttempt);
-        assertFalse("observing logic for simple PropertyChangeListeners haven't to be invoked", observed);
-
-        // 2. test that correct setting attempt fires ALL PropertyChangeListeners
-        observed = false;
-        observedForIncorrectAttempt = false;
-        entity.setObservableProperty(100.0);
-        assertTrue("all types of Listeners have to be invoked (even PropertyChangeOrIncorrectAttemptListener!)", observedForIncorrectAttempt);
-        assertTrue("observing logic for simple PropertyChangeListeners have to be invoked", observed);
     }
 
     @Test
@@ -733,13 +587,6 @@ public class AbstractEntityTest {
     @Test
     public void testPropertyDependencies() {
         try {
-            entity.addPropertyChangeListener("dependent", new PropertyChangeListener() {
-                @Override
-                public void propertyChange(final PropertyChangeEvent event) {
-                    observed = true;
-                }
-            });
-
             entity.setDependent(15);
             assertTrue("Dependent property have to be valid.", entity.getProperty("dependent").isValid());
             assertEquals("Incorrect value.", (Integer) 15, entity.getDependent());
@@ -749,10 +596,8 @@ public class AbstractEntityTest {
             assertEquals("Incorrect value.", (Integer) 15, entity.getDependent());
             assertEquals("Incorrect lastInvalidValue.", 25, entity.getProperty("dependent").getLastInvalidValue());
 
-            observed = false;
             // Update incorrect value of the dependent property by setting the main property.
             entity.setMain(30);
-            assertTrue("Dependent property setter need to be invoked! Because dependent property is invalid and need to be error recovered.", observed);
             assertTrue("Dependent property have to be valid.", entity.getProperty("dependent").isValid());
             assertEquals("Incorrect value.", (Integer) 25, entity.getDependent());
             assertEquals("Incorrect lastInvalidValue.", null, entity.getProperty("dependent").getLastInvalidValue());
@@ -766,9 +611,7 @@ public class AbstractEntityTest {
             assertTrue("Dependent property have to be valid.", entity.getProperty("dependent").isValid());
             assertEquals("Incorrect value.", (Integer) 15, entity.getDependent());
 
-            observed = false;
             entity.setMain(35);
-            assertFalse("Dependent property setter should not have been invoked.", observed);
             assertTrue("Dependent property have to be valid.", entity.getProperty("dependent").isValid());
             assertEquals("Incorrect value.", (Integer) 15, entity.getDependent());
             assertEquals("Incorrect lastInvalidValue.", null, entity.getProperty("dependent").getLastInvalidValue());

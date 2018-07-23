@@ -57,9 +57,6 @@ public class SerialisationTypeEncoder implements ISerialisationTypeEncoder {
     @Override
     public <T extends AbstractEntity<?>> String encode(final Class<T> entityType) {
         final String entityTypeName = entityType.getName();
-        if (entityTypeInfoGetter.get(entityTypeName) == null) {
-            throw new IllegalStateException("The type [" + entityTypeName + "] should be already registered at this stage.");
-        }
         if (isGenerated(entityType)) { // here we have both simple entity types AND criteria entity types
             final MiType miTypeAnnotation = entityType.getAnnotation(MiType.class);
             final Class<? extends MiWithConfigurationSupport<?>> miType = miTypeAnnotation.value();

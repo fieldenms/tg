@@ -2,6 +2,9 @@ package ua.com.fielden.platform.web.centre;
 
 import static java.lang.String.format;
 import static java.util.Optional.empty;
+import static java.util.stream.Collectors.toSet;
+import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.determinePropertyType;
+import static ua.com.fielden.platform.utils.EntityUtils.fetchWithKeyAndDesc;
 import static ua.com.fielden.platform.utils.Pair.pair;
 import static ua.com.fielden.platform.web.centre.CentreUpdater.FRESH_CENTRE_NAME;
 import static ua.com.fielden.platform.web.centre.CentreUpdater.updateCentre;
@@ -17,6 +20,8 @@ import static ua.com.fielden.platform.web.centre.EgiConfigurations.SUMMARY_FIXED
 import static ua.com.fielden.platform.web.centre.EgiConfigurations.TOOLBAR_VISIBLE;
 import static ua.com.fielden.platform.web.centre.WebApiUtils.dslName;
 import static ua.com.fielden.platform.web.centre.WebApiUtils.treeName;
+import static ua.com.fielden.platform.web.utils.EntityResourceUtils.getOriginalPropertyName;
+import static ua.com.fielden.platform.web.utils.EntityResourceUtils.getOriginalType;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
@@ -40,7 +45,6 @@ import com.google.inject.Injector;
 import ua.com.fielden.platform.basic.IValueMatcherWithCentreContext;
 import ua.com.fielden.platform.basic.autocompleter.FallbackValueMatcherWithCentreContext;
 import ua.com.fielden.platform.criteria.generator.impl.CriteriaReflector;
-import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.data.generator.IGenerator;
 import ua.com.fielden.platform.dom.DomContainer;
 import ua.com.fielden.platform.dom.DomElement;
@@ -56,7 +60,6 @@ import ua.com.fielden.platform.domaintree.impl.GlobalDomainTreeManager;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.entity.fetch.IFetchProvider;
-import ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader;
@@ -127,54 +130,57 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
 
     private static final CentreContextConfig defaultCentreContextConfig = new CentreContextConfig(false, false, false, false, null);
 
-    private final String IMPORTS = "<!--@imports-->";
-    private final String FULL_ENTITY_TYPE = "@full_entity_type";
-    private final String FULL_MI_TYPE = "@full_mi_type";
-    private final String MI_TYPE = "@mi_type";
+    private static final String IMPORTS = "<!--@imports-->";
+    private static final String FULL_ENTITY_TYPE = "@full_entity_type";
+    private static final String FULL_MI_TYPE = "@full_mi_type";
+    private static final String MI_TYPE = "@mi_type";
     //egi related properties
-    private final String EGI_LAYOUT = "@gridLayout";
-    private final String EGI_LAYOUT_CONFIG = "//gridLayoutConfig";
-    private final String EGI_SHORTCUTS = "@customShortcuts";
-    private final String EGI_TOOLBAR_VISIBLE = "@toolbarVisible";
-    private final String EGI_DRAGGABLE = "@canDragFrom";
-    private final String EGI_DRAG_ANCHOR_FIXED = "@dragAnchorFixed";
-    private final String EGI_CHECKBOX_VISIBILITY = "@checkboxVisible";
-    private final String EGI_CHECKBOX_FIXED = "@checkboxesFixed";
-    private final String EGI_CHECKBOX_WITH_PRIMARY_ACTION_FIXED = "@checkboxesWithPrimaryActionsFixed";
-    private final String EGI_NUM_OF_FIXED_COLUMNS = "@numOfFixedCols";
-    private final String EGI_SECONDARY_ACTION_FIXED = "@secondaryActionsFixed";
-    private final String EGI_HEADER_FIXED = "@headerFixed";
-    private final String EGI_SUMMARY_FIXED = "@summaryFixed";
-    private final String EGI_VISIBLE_ROW_COUNT = "@visibleRowCount";
-    private final String EGI_HEIGHT = "@egiHeight";
-    private final String EGI_FIT_TO_HEIGHT = "@fitToHeight";
-    private final String EGI_PAGE_CAPACITY = "@pageCapacity";
-    private final String EGI_ACTIONS = "//generatedActionObjects";
-    private final String EGI_PRIMARY_ACTION = "//generatedPrimaryAction";
-    private final String EGI_SECONDARY_ACTIONS = "//generatedSecondaryActions";
-    private final String EGI_PROPERTY_ACTIONS = "//generatedPropActions";
-    private final String EGI_DOM = "<!--@egi_columns-->";
-    private final String EGI_FUNCTIONAL_ACTION_DOM = "<!--@functional_actions-->";
-    private final String EGI_PRIMARY_ACTION_DOM = "<!--@primary_action-->";
-    private final String EGI_SECONDARY_ACTIONS_DOM = "<!--@secondary_actions-->";
+    private static final String EGI_LAYOUT = "@gridLayout";
+    private static final String EGI_LAYOUT_CONFIG = "//gridLayoutConfig";
+    private static final String EGI_SHORTCUTS = "@customShortcuts";
+    private static final String EGI_TOOLBAR_VISIBLE = "@toolbarVisible";
+    private static final String EGI_DRAGGABLE = "@canDragFrom";
+    private static final String EGI_DRAG_ANCHOR_FIXED = "@dragAnchorFixed";
+    private static final String EGI_CHECKBOX_VISIBILITY = "@checkboxVisible";
+    private static final String EGI_CHECKBOX_FIXED = "@checkboxesFixed";
+    private static final String EGI_CHECKBOX_WITH_PRIMARY_ACTION_FIXED = "@checkboxesWithPrimaryActionsFixed";
+    private static final String EGI_NUM_OF_FIXED_COLUMNS = "@numOfFixedCols";
+    private static final String EGI_SECONDARY_ACTION_FIXED = "@secondaryActionsFixed";
+    private static final String EGI_HEADER_FIXED = "@headerFixed";
+    private static final String EGI_SUMMARY_FIXED = "@summaryFixed";
+    private static final String EGI_VISIBLE_ROW_COUNT = "@visibleRowCount";
+    private static final String EGI_HEIGHT = "@egiHeight";
+    private static final String EGI_FIT_TO_HEIGHT = "@fitToHeight";
+    private static final String EGI_PAGE_CAPACITY = "@pageCapacity";
+    private static final String EGI_ACTIONS = "//generatedActionObjects";
+    private static final String EGI_PRIMARY_ACTION = "//generatedPrimaryAction";
+    private static final String EGI_SECONDARY_ACTIONS = "//generatedSecondaryActions";
+    private static final String EGI_PROPERTY_ACTIONS = "//generatedPropActions";
+    private static final String EGI_DOM = "<!--@egi_columns-->";
+    private static final String EGI_FUNCTIONAL_ACTION_DOM = "<!--@functional_actions-->";
+    private static final String EGI_PRIMARY_ACTION_DOM = "<!--@primary_action-->";
+    private static final String EGI_SECONDARY_ACTIONS_DOM = "<!--@secondary_actions-->";
+    //Fron actions
+    private static final String FRONT_ACTIONS_DOM = "<!--@custom-front-actions-->";
+    private static final String FRONT_ACTIONS = "//generatedFrontActionObjects";
     //Toolbar related
-    private final String TOOLBAR_DOM = "<!--@toolbar-->";
-    private final String TOOLBAR_JS = "//toolbarGeneratedFunction";
-    private final String TOOLBAR_STYLES = "/*toolbarStyles*/";
+    private static final String TOOLBAR_DOM = "<!--@toolbar-->";
+    private static final String TOOLBAR_JS = "//toolbarGeneratedFunction";
+    private static final String TOOLBAR_STYLES = "/*toolbarStyles*/";
     //Selection criteria related
-    private final String QUERY_ENHANCER_CONFIG = "@queryEnhancerContextConfig";
-    private final String CRITERIA_DOM = "<!--@criteria_editors-->";
-    private final String SELECTION_CRITERIA_LAYOUT_CONFIG = "//@layoutConfig";
+    private static final String QUERY_ENHANCER_CONFIG = "@queryEnhancerContextConfig";
+    private static final String CRITERIA_DOM = "<!--@criteria_editors-->";
+    private static final String SELECTION_CRITERIA_LAYOUT_CONFIG = "//@layoutConfig";
     //Insertion points
-    private final String INSERTION_POINT_ACTIONS = "//generatedInsertionPointActions";
-    private final String INSERTION_POINT_ACTIONS_DOM = "<!--@insertion_point_actions-->";
-    private final String LEFT_INSERTION_POINT_DOM = "<!--@left_insertion_points-->";
-    private final String RIGHT_INSERTION_POINT_DOM = "<!--@right_insertion_points-->";
-    private final String TOP_INSERTION_POINT_DOM = "<!--@top_insertion_points-->";
-    private final String BOTTOM_INSERTION_POINT_DOM = "<!--@bottom_insertion_points-->";
+    private static final String INSERTION_POINT_ACTIONS = "//generatedInsertionPointActions";
+    private static final String INSERTION_POINT_ACTIONS_DOM = "<!--@insertion_point_actions-->";
+    private static final String LEFT_INSERTION_POINT_DOM = "<!--@left_insertion_points-->";
+    private static final String RIGHT_INSERTION_POINT_DOM = "<!--@right_insertion_points-->";
+    private static final String TOP_INSERTION_POINT_DOM = "<!--@top_insertion_points-->";
+    private static final String BOTTOM_INSERTION_POINT_DOM = "<!--@bottom_insertion_points-->";
     // generic custom code
-    private final String READY_CUSTOM_CODE = "//@centre-is-ready-custom-code";
-    private final String ATTACHED_CUSTOM_CODE = "//@centre-has-been-attached-custom-code";
+    private static final String READY_CUSTOM_CODE = "//@centre-is-ready-custom-code";
+    private static final String ATTACHED_CUSTOM_CODE = "//@centre-has-been-attached-custom-code";
 
 
     private final Logger logger = Logger.getLogger(getClass());
@@ -258,7 +264,7 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
                         final String customPropName = CalculatedProperty.generateNameFrom(property.propDef.get().title);
                         enhanceCentreManagerWithCustomProperty(cdtmae, entityType, customPropName, property.propDef.get(), dslDefaultConfig.getResultSetCustomPropAssignmentHandlerType());
                     } else {
-                        throw new IllegalStateException(String.format("The state of result-set property [%s] definition is not correct, need to exist either a 'propName' for the property or 'propDef'.", property));
+                        throw new IllegalStateException(format("The state of result-set property [%s] definition is not correct, need to exist either a 'propName' for the property or 'propDef'.", property));
                     }
                 }
             }
@@ -728,13 +734,13 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
             return Optional.empty();
         }
     }
-    
+
     @Override
     public IRenderable buildFor(final DeviceProfile device) {
         logger.debug("Initiating fresh centre...");
         return createRenderableRepresentation(getAssociatedEntityCentreManager(device));
     }
-    
+
     private final ICentreDomainTreeManagerAndEnhancer getAssociatedEntityCentreManager(final DeviceProfile device) {
         final IGlobalDomainTreeManager userSpecificGlobalManager = getUserSpecificGlobalManager();
         if (userSpecificGlobalManager == null) {
@@ -894,8 +900,22 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
             primaryActionDom.add(el.render().clazz("primary-action").attr("hidden", null));
             primaryActionObject.append(prefix + createActionObject(el));
         }
+        ////////////////////Primary result-set action [END] //////////////
 
-        //////////////////// Primary result-set action [END] //////////////
+        logger.debug("Initiating front actions...");
+        //////////////////// front action ////////////////////
+        final StringBuilder frontActionsObjects = new StringBuilder();
+        final DomContainer frontActionsDom = new DomContainer();
+
+        final List<EntityActionConfig> frontActions = this.dslDefaultConfig.getFrontActions();
+        for (int actionIndex = 0; actionIndex < frontActions.size(); actionIndex++) {
+            final FunctionalActionElement actionElement = new FunctionalActionElement(frontActions.get(actionIndex), actionIndex, FunctionalActionKind.FRONT);
+            importPaths.add(actionElement.importPath());
+            frontActionsDom.add(actionElement.render());
+            frontActionsObjects.append(prefix + createActionObject(actionElement));
+        }
+        ////////////////////front action (END)////////////////////
+
         logger.debug("Initiating secondary actions...");
 
         final List<FunctionalActionElement> secondaryActionElements = new ArrayList<>();
@@ -971,6 +991,7 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
             }
         }
         ///////////////////////////////////////
+        final String frontActionString = frontActionsObjects.toString();
         final String funcActionString = functionalActionsObjects.toString();
         final String secondaryActionString = secondaryActionsObjects.toString();
         final String insertionPointActionsString = insertionPointActionsObjects.toString();
@@ -1010,6 +1031,8 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
                 replace(QUERY_ENHANCER_CONFIG, queryEnhancerContextConfigString()).
                 replace(CRITERIA_DOM, editorContainer.toString()).
                 replace(EGI_DOM, egiColumns.toString()).
+                replace(FRONT_ACTIONS_DOM, frontActionsDom.toString()).
+                replace(FRONT_ACTIONS, frontActionString.length() > prefixLength ? frontActionString.substring(prefixLength): frontActionString).
                 replace(EGI_ACTIONS, funcActionString.length() > prefixLength ? funcActionString.substring(prefixLength) : funcActionString).
                 replace(EGI_SECONDARY_ACTIONS, secondaryActionString.length() > prefixLength ? secondaryActionString.substring(prefixLength) : secondaryActionString).
                 replace(INSERTION_POINT_ACTIONS, insertionPointActionsString.length() > prefixLength ? insertionPointActionsString.substring(prefixLength)
@@ -1240,47 +1263,45 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
     }
 
     /**
-     * Creates value matcher instance.
+     * Creates value matcher instance with its context configuration.
      *
-     * @param injector
+     * @param criteriaType
+     * @param criterionPropertyName
      * @return
      */
     public <V extends AbstractEntity<?>> Pair<IValueMatcherWithCentreContext<V>, Optional<CentreContextConfig>> createValueMatcherAndContextConfig(final Class<? extends AbstractEntity<?>> criteriaType, final String criterionPropertyName) {
-
-        final String originalPropertyName = EntityResourceUtils.getOriginalPropertyName(criteriaType, criterionPropertyName);
-        final String dslProp = dslName(originalPropertyName);
-        logger.debug(String.format("createValueMatcherAndContextConfig: propertyName = %s originalPropertyName = %s", criterionPropertyName, dslProp));
-
-        final Optional<Pair<Class<? extends IValueMatcherWithCentreContext<? extends AbstractEntity<?>>>, Optional<CentreContextConfig>>> matcherConfig = dslDefaultConfig.getValueMatchersForSelectionCriteria().map(m -> m.get(dslProp));
-
-        return matcherConfig.map(p -> pair((IValueMatcherWithCentreContext<V>) injector.getInstance(p.getKey()), p.getValue()))
-                .orElse(createDefaultValueMatcherAndContextConfig(EntityResourceUtils.getOriginalType(criteriaType), originalPropertyName, coFinder));
+        final String originalPropertyName = getOriginalPropertyName(criteriaType, criterionPropertyName);
+        final Class<V> propType = dslDefaultConfig.getProvidedTypeForAutocompletedSelectionCriterion(originalPropertyName)
+                .map(propertyType -> (Class<V>) propertyType)
+                .orElseGet(() -> (Class<V>) ("".equals(originalPropertyName) ? getOriginalType(criteriaType) : determinePropertyType(getOriginalType(criteriaType), originalPropertyName)));
+        
+        final Pair<IValueMatcherWithCentreContext<V>, Optional<CentreContextConfig>> matcherAndConfig = 
+            dslDefaultConfig.getValueMatchersForSelectionCriteria() // take all matchers
+            .map(matchers -> matchers.get(dslName(originalPropertyName))) // choose single matcher with concrete property name
+            .map(customMatcherAndConfig -> pair((IValueMatcherWithCentreContext<V>) injector.getInstance(customMatcherAndConfig.getKey()), customMatcherAndConfig.getValue())) // instantiate the matcher: [matcherType; config] => [matcherInstance; config]
+            .orElseGet(() -> pair(new FallbackValueMatcherWithCentreContext<>(coFinder.find(propType)), empty())); // if no custom matcher was created then create default matcher
+        
+        // provide fetch model for created matcher
+        matcherAndConfig.getKey().setFetch(createFetchModelForAutocompleter(originalPropertyName, propType));
+        return matcherAndConfig;
     }
-
+    
     /**
-     * Creates default value matcher and context config for the specified entity property.
-     *
-     * @param propertyName
-     * @param criteriaType
-     * @param coFinder
+     * Creates fetch model for entity-typed criteria autocompleted values. Fetches key and description complemented with additional properties specified in Centre DSL configuration.
+     * 
+     * @param originalPropertyName
+     * @param propType
      * @return
      */
-    private <V extends AbstractEntity<?>> Pair<IValueMatcherWithCentreContext<V>, Optional<CentreContextConfig>> createDefaultValueMatcherAndContextConfig(final Class<? extends AbstractEntity<?>> originalType, final String originalPropertyName, final ICompanionObjectFinder coFinder) {
-        final Class<V> propType = dslDefaultConfig.getProvidedTypeForAutocompletedSelectionCriterion(originalPropertyName)
-                                   .map(propertyType -> (Class<V>) propertyType)
-                                   .orElseGet(() -> (Class<V>) ("".equals(originalPropertyName) ? originalType : PropertyTypeDeterminator.determinePropertyType(originalType, originalPropertyName)));
-
-        final IEntityDao<V> co = coFinder.find(propType);
-        final IValueMatcherWithCentreContext<V> matcher = new FallbackValueMatcherWithCentreContext<>(co);
-        final fetch<V> fetch = dslDefaultConfig.getAdditionalPropsForAutocompleter(originalPropertyName).stream()
-                                .map(Pair::getKey)
-                                .reduce(EntityQueryUtils.fetchKeyAndDescOnly(propType), (f, propName) -> f.with(propName), (f1, f2) -> {throw new UnsupportedOperationException("Parallelisation is not supported.");});
-
-        matcher.setFetch(fetch);
-
-        return pair(matcher, Optional.empty());
+    private <V extends AbstractEntity<?>> fetch<V> createFetchModelForAutocompleter(final String originalPropertyName, final Class<V> propType) {
+        return fetchWithKeyAndDesc(propType)
+            .with(
+                dslDefaultConfig.getAdditionalPropsForAutocompleter(originalPropertyName).stream()
+                .map(Pair::getKey)
+                .collect(toSet())
+            ).fetchModel();
     }
-
+    
     public Optional<Class<? extends ICustomPropsAssignmentHandler>> getCustomPropertiesAsignmentHandler() {
         return dslDefaultConfig.getResultSetCustomPropAssignmentHandlerType();
     }

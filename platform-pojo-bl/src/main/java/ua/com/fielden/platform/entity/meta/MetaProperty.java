@@ -2,8 +2,6 @@ package ua.com.fielden.platform.entity.meta;
 
 import static java.lang.String.format;
 
-import java.beans.PropertyChangeListener;
-import java.beans.PropertyChangeSupport;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.util.Arrays;
@@ -194,34 +192,6 @@ public class MetaProperty<T> implements Comparable<MetaProperty<T>> {
 
     public int numberOfValidators() {
         throw new StrictProxyException(format("Invalid call [numberOfValidators] for meta-property of proxied property [%s] in entity [%s].", getName(), getEntity().getType().getName()));
-    }
-
-    public void addValidationResultsChangeListener(final PropertyChangeListener listener) {
-        throw new StrictProxyException(format("Invalid call [addValidationResultsChangeListener] for meta-property of proxied property [%s] in entity [%s].", getName(), getEntity().getType().getName()));
-    }
-
-    public void removeValidationResultsChangeListener(final PropertyChangeListener listener) {
-        throw new StrictProxyException(format("Invalid call [removeValidationResultsChangeListener] for meta-property of proxied property [%s] in entity [%s].", getName(), getEntity().getType().getName()));
-    }
-
-    public void addEditableChangeListener(final PropertyChangeListener listener) {
-        throw new StrictProxyException(format("Invalid call [addEditableChangeListener] for meta-property of proxied property [%s] in entity [%s].", getName(), getEntity().getType().getName()));
-    }
-
-    public void removeEditableChangeListener(final PropertyChangeListener listener) {
-        throw new StrictProxyException(format("Invalid call [removeEditableChangeListener] for meta-property of proxied property [%s] in entity [%s].", getName(), getEntity().getType().getName()));
-    }
-
-    public void addRequiredChangeListener(final PropertyChangeListener listener) {
-        throw new StrictProxyException(format("Invalid call [addRequiredChangeListener] for meta-property of proxied property [%s] in entity [%s].", getName(), getEntity().getType().getName()));
-    }
-
-    public void removeRequiredChangeListener(final PropertyChangeListener listener) {
-        throw new StrictProxyException(format("Invalid call [removeRequiredChangeListener] for meta-property of proxied property [%s] in entity [%s].", getName(), getEntity().getType().getName()));
-    }
-
-    public PropertyChangeSupport getChangeSupport() {
-        throw new StrictProxyException(format("Invalid call [getChangeSupport] for meta-property of proxied property [%s] in entity [%s].", getName(), getEntity().getType().getName()));
     }
 
     public T getOriginalValue() {

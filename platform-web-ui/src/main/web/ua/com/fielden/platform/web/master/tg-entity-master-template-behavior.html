@@ -12,10 +12,6 @@
         Polymer.TgBehaviors = Polymer.TgBehaviors || {};
         Polymer.TgBehaviors.TgEntityMasterTemplateBehaviorImpl = {
 
-            hostAttributes: {
-                'tabindex': '0'
-            },
-
             ready: function () {
                 var self = this;
                 self.isMasterTemplate = true;
@@ -115,7 +111,7 @@
             _getKeyEventTarget: function () {
                 var parent = this;
                 var automaticAddKeyBindings = true;
-                while (parent && parent.tagName !== 'TG-CUSTOM-ACTION-DIALOG') {
+                while (parent && (parent.tagName !== 'TG-CUSTOM-ACTION-DIALOG' && parent.tagName !== 'TG-MENU-ITEM-VIEW')) {
                     if (parent.tagName === 'TG-MASTER-MENU-ITEM-SECTION') {
                         automaticAddKeyBindings = false;
                     }

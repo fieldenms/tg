@@ -14,13 +14,13 @@ import ua.com.fielden.platform.utils.ExpExec;
  * Provides a collection-based implementation of the {@link IValueMatcher} with wild card support. This implementation should be convenient in cases where there is a list of
  * instances of type T that needs to be used for autocomplition.
  *
- * @author 01es
+ * @author TG Team
  *
  * @param <T>
  */
 public class PojoValueMatcher<T extends AbstractEntity<?>> implements IValueMatcher<T> {
     private final Collection<T> instances;
-    private final ExpExec<T> exec = new ExpExec<T>("pojo");
+    private final ExpExec<T> exec = new ExpExec<>("pojo");
     private final boolean isCaseSensitive;
     /**
      * Controls the number of values that can be returned as the result of matching.
@@ -49,7 +49,7 @@ public class PojoValueMatcher<T extends AbstractEntity<?>> implements IValueMatc
         return exec;
     }
 
-    public final static Pattern SPECIAL_REGEX_CHARS = Pattern.compile("[{}()\\[\\].+*?^$\\\\|]");
+    public static final Pattern SPECIAL_REGEX_CHARS = Pattern.compile("[{}()\\[\\].+*?^$\\\\|]");
     
     @Override
     public List<T> findMatches(final String v) {
@@ -93,36 +93,6 @@ public class PojoValueMatcher<T extends AbstractEntity<?>> implements IValueMatc
     @Override
     public Integer getPageSize() {
         return limit;
-    }
-
-    /**
-     * Returns true if value matches valuePattern, false otherwise. This method behaves like autocompleter's value matcher
-     *
-     * @param value
-     * @param valuePattern
-     * @return
-     */
-    public static boolean valueMatchesPattern(final String value, final String valuePattern) {
-        final String adjustedValuePattern = valuePattern.contains("*") ? valuePattern.replaceAll("\\*", "%") : valuePattern + "%";
-
-        final String prefex = adjustedValuePattern.startsWith("%") ? "" : "^";
-        final String postfix = adjustedValuePattern.endsWith("%") ? "" : "$";
-        final String strPattern = prefex + adjustedValuePattern.replaceAll("\\%", ".*") + postfix;
-
-        return Pattern.compile(strPattern).matcher(value).find();
-    }
-
-    /**
-     * Converts auto-completer-like regular expression to normal regular expression (simply replaces all '*' with '%' characters)
-     *
-     * @param autocompleterExp
-     * @return
-     */
-    public static String prepare(final String autocompleterExp) {
-        if ("*".equals(autocompleterExp.trim())) {
-            return null;
-        }
-        return autocompleterExp.replaceAll("\\*", "%").trim();
     }
 
 }

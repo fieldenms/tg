@@ -30,16 +30,6 @@ import ua.com.fielden.platform.sample.domain.UnionEntity;
  *
  */
 public class AnnotationReflectorTest {
-    @Test
-    public void testGetValidationAnnotations() throws Exception {
-        final Method mutatorForProperty = Reflector.getMethod(SimpleEntity.class, "setProperty", String.class);
-        assertNotNull("Could not find mutator for property 'property'", mutatorForProperty);
-        assertEquals("Incorrect number for validation annotations.", 1, AnnotationReflector.getValidationAnnotations(mutatorForProperty).size());
-
-        final Method mutatorForPropertyTwo = Reflector.getMethod(SimpleEntity.class, "setPropertyTwo", String.class);
-        assertNotNull("Could not find mutator for property 'propertyTwo'", mutatorForProperty);
-        assertEquals("Incorrect number for validation annotations.", 0, AnnotationReflector.getValidationAnnotations(mutatorForPropertyTwo).size());
-    }
 
     @Test
     public void testGetKeyType() throws Exception {

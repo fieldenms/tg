@@ -15,7 +15,6 @@ import ua.com.fielden.platform.dao.DomainMetadata;
 import ua.com.fielden.platform.dao.ISessionEnabled;
 import ua.com.fielden.platform.dao.annotations.SessionRequired;
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.annotation.MapEntityTo;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.ioc.EntityModule;
 import ua.com.fielden.platform.entity.meta.DomainMetaPropertyConfig;
@@ -25,8 +24,6 @@ import ua.com.fielden.platform.entity.validation.DomainValidationConfig;
 import ua.com.fielden.platform.ioc.session.SessionInterceptor;
 import ua.com.fielden.platform.persistence.HibernateUtil;
 import ua.com.fielden.platform.persistence.ProxyInterceptor;
-import ua.com.fielden.platform.reflection.AnnotationReflector;
-import ua.com.fielden.platform.security.user.User;
 
 /**
  * Guice injector module for platform-wide Hibernate related injections such as transaction support and domain level validation configurations.

@@ -6,6 +6,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -42,13 +43,22 @@ public final class CollectionUtil {
 
     @SafeVarargs
     public static <K, V> Map<K, V> mapOf(final T2<K, V>... tupples) {
-        final Map<K, V> map = new HashMap<>();
+        final Map<K, V> map = new HashMap<>(tupples.length);
         for (final T2<K, V> t2 : tupples) {
             map.put(t2._1, t2._2);
         }
         return map;
     }
-    
+
+    @SafeVarargs
+    public static <K, V> Map<K, V> linkedMapOf(final T2<K, V>... tupples) {
+        final Map<K, V> map = new LinkedHashMap<>(tupples.length);
+        for (final T2<K, V> t2 : tupples) {
+            map.put(t2._1, t2._2);
+        }
+        return map;
+    }
+
     /**
      * A convenient method to obtain a tail of an array. Returns an empty optional if the length of arrays is 0.
      * 

@@ -41,8 +41,7 @@ public interface IValueMatcherWithFetch<T extends AbstractEntity<?>> extends IVa
      * @return
      */
     List<T> findMatchesWithModel(final String value);
-    
-    
+
     default ExpressionModel makeSearchResultOrderingPriority(Class<? extends AbstractEntity<?>> entityType, final String searchString) {
     	return hasDescProperty(entityType) ?
     			expr().caseWhen().condition(createStrictSearchByKeyCriteriaModel(entityType, searchString)).then().val(0).
@@ -51,7 +50,7 @@ public interface IValueMatcherWithFetch<T extends AbstractEntity<?>> extends IVa
     			expr().caseWhen().condition(createStrictSearchByKeyCriteriaModel(entityType, searchString)).then().val(0).
         				otherwise().val(1).endAsInt().model();
     }
-    
+
     static ConditionModel createStrictSearchByKeyCriteriaModel(Class<? extends AbstractEntity<?>> entityType, final String searchString) {
         ConditionModel keyCriteria = cond().prop(KEY).iLike().val(searchString).model(); 				
 		

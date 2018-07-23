@@ -7,8 +7,8 @@ import ua.com.fielden.platform.entity.query.model.ConditionModel;
 import ua.com.fielden.platform.web.centre.CentreContext;
 
 /**
- * This is a fall back implementation for {@link IValueMatcherWithCentreContext}, which does not do anything with the provided context.
- * It simply performs the search by key operation.
+ * This is a fall back implementation for {@link IValueMatcherWithCentreContext}, which does not do anything with the provided context. It simply performs the search by key
+ * operation.
  *
  * @author TG Team
  *
@@ -17,15 +17,17 @@ import ua.com.fielden.platform.web.centre.CentreContext;
 public class FallbackValueMatcherWithCentreContext<T extends AbstractEntity<?>> extends AbstractSearchEntityByKeyWithCentreContext<T> {
 
     private final Class<T> entityType;
+    private final boolean hasDescProp;
 
     public FallbackValueMatcherWithCentreContext(final IEntityDao<T> co) {
         super(co);
         entityType = co.getEntityType();
+        this.hasDescProp = hasDescProperty(entityType);
     }
 
     @Override
     public Integer getPageSize() {
-        return 10;
+        return IEntityDao.DEFAULT_PAGE_CAPACITY;
     }
 
     @Override

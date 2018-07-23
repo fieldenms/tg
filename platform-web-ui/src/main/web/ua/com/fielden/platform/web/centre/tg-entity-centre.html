@@ -45,16 +45,16 @@
             overflow: hidden;
         }
         paper-spinner {
-          position: absolute;
-          top: 0px;
-          padding: 2px;
-          margin: 0px;
-          width: 24px;
-          height: 24px;
-          --paper-spinner-layer-1-color: var(--paper-blue-500);
-          --paper-spinner-layer-2-color: var(--paper-blue-500);
-          --paper-spinner-layer-3-color: var(--paper-blue-500);
-          --paper-spinner-layer-4-color: var(--paper-blue-500);
+            position: absolute;
+            top: 0px;
+            padding: 2px;
+            margin: 0px;
+            width: 24px;
+            height: 24px;
+            --paper-spinner-layer-1-color: var(--paper-blue-500);
+            --paper-spinner-layer-2-color: var(--paper-blue-500);
+            --paper-spinner-layer-3-color: var(--paper-blue-500);
+            --paper-spinner-layer-4-color: var(--paper-blue-500);
         }
         .splitter {
             @apply(--layout-vertical);
@@ -147,6 +147,7 @@
             <div class="fit layout vertical">
                 <paper-material class="selection-material layout vertical">
                     <tg-selection-view id="selectionView" _show-dialog="[[_showDialog]]" save-as-name="{{saveAsName}}" _create-context-holder="[[_createContextHolder]]" uuid="[[uuid]]" _confirm="[[_confirm]]">
+                        <content select=".custom-front-action"></content>
                         <content select=".custom-selection-criteria"></content>
                         <div class="selection-criteria-buttons layout horizontal justified wrap">
                             <div class="layout horizontal button-group">
@@ -157,9 +158,9 @@
                             <div class="layout horizontal button-group right-button-group">
                                 <paper-button id="view" raised shortcut="ctrl+e" roll="button" on-tap="_activateResultSetView" disabled$="[[_viewerDisabled]]" tooltip-text="Show result view">View</paper-button>
                                 <paper-button id="runner" raised shortcut="f5" roll="button" on-tap="runAsync" style="margin-right: 0px;" disabled$="[[_runnerDisabled]]" tooltip-text="Execute entity centre and show result">
-                                  <paper-spinner id="spinner" active="[[_runnerDisabled]]" class="blue" style="visibility: 'hidden'" alt="in progress">
-                                  </paper-spinner>
-                                  <span>Run</span>
+                                    <paper-spinner id="spinner" active="[[_runnerDisabled]]" class="blue" style="visibility: 'hidden'" alt="in progress">
+                                    </paper-spinner>
+                                    <span>Run</span>
                                 </paper-button>
                             </div>
                         </div>
@@ -179,7 +180,7 @@
                     <content select=".custom-egi"></content>
                     <content select=".bottom-insertion-point"></content>
                 </div>
-                <div id="rightSplitter" class="splitter" hidden$="[[!rightInsertionPointPresent]]" on-down="_makeCentreUnselectable" on-up="_makeCentreSelectable"on-track="_changeRightInsertionPointSize">
+                <div id="rightSplitter" class="splitter" hidden$="[[!rightInsertionPointPresent]]" on-down="_makeCentreUnselectable" on-up="_makeCentreSelectable" on-track="_changeRightInsertionPointSize">
                     <div class="arrow-left" tooltip-text="Expand to default width" on-tap="_expandRightInsertionPoint"></div>
                     <div class="arrow-right" tooltip-text="Collapse" on-tap="_collapseRightInsertionPoint"></div>
                 </div>
@@ -289,17 +290,15 @@
         },
 
         _leftSplitterUpdater: function (newPos) {
-            this._updateSplitterPos(newPos, 0,
-                                    (this.rightInsertionPointPresent ?
-                                     this.$.rightSplitter.offsetLeft - this.$.fantomSplitter.offsetWidth :
-                                     this.$.centreResultContainer.offsetWidth - this.$.fantomSplitter.offsetWidth));
+            this._updateSplitterPos(newPos, 0, (this.rightInsertionPointPresent ?
+                this.$.rightSplitter.offsetLeft - this.$.fantomSplitter.offsetWidth :
+                this.$.centreResultContainer.offsetWidth - this.$.fantomSplitter.offsetWidth));
         },
 
         _rightSplitterUpdater: function (newPos) {
-            this._updateSplitterPos(newPos,
-                                   (this.leftInsertionPointPresent ?
-                                    this.$.leftSplitter.offsetLeft + this.$.fantomSplitter.offsetWidth : 0),
-                                    this.$.centreResultContainer.offsetWidth - this.$.fantomSplitter.offsetWidth);
+            this._updateSplitterPos(newPos, (this.leftInsertionPointPresent ?
+                    this.$.leftSplitter.offsetLeft + this.$.fantomSplitter.offsetWidth : 0),
+                this.$.centreResultContainer.offsetWidth - this.$.fantomSplitter.offsetWidth);
         },
 
         _updateSplitterPos(newPos, leftRange, rightRange) {
@@ -317,7 +316,7 @@
         },
 
         _rightInsertionPointContainerUpdater: function (newPos) {
-             this._updateInsertionPointContainerWidth(this.$.centreResultContainer.offsetWidth - this.$.fantomSplitter.offsetWidth - newPos, this.$.rightInsertionPointContainer);
+            this._updateInsertionPointContainerWidth(this.$.centreResultContainer.offsetWidth - this.$.fantomSplitter.offsetWidth - newPos, this.$.rightInsertionPointContainer);
         },
 
         _updateInsertionPointContainerWidth: function (newWidth, insertionPointContaier) {
@@ -331,7 +330,7 @@
             }
         },
 
-        _changeInsertionPointSize: function(e, splitterPosUpdater, insertionPointContainerUpdater) {
+        _changeInsertionPointSize: function (e, splitterPosUpdater, insertionPointContainerUpdater) {
             switch (e.detail.state) {
             case 'start':
                 this._startInsertionPointResizing(e, splitterPosUpdater);
@@ -384,28 +383,28 @@
         _staleCriteriaMessageChanged: function (newValue, oldValue) {
             console.debug('_staleCriteriaMessageChanged:', newValue, oldValue);
         },
-        
+
         /**
          * The iron-ajax component for centre discarding.
          */
         _ajaxDiscarder: function () {
             return this.$.ajaxDiscarder;
         },
-        
+
         /**
          * The iron-ajax component for centre defaulting.
          */
         _ajaxDefaulter: function () {
             return this.$.ajaxDefaulter;
         },
-        
+
         /**
          * The iron-ajax component for centre saving.
          */
         _ajaxSaver: function () {
             return this.$.ajaxSaver;
         },
-        
+
         /**
          * The component for entity serialisation.
          */
@@ -452,14 +451,24 @@
                 newView.addOwnKeyBinding(shortcuts, ownKeyBindings[shortcuts]);
             }
         },
-        
+
         _selectedViewChanged: function (newValue, oldValue) {
             this._prevSelectedView = oldValue;
         },
-        
+
+        _getVisibleFocusableElementIn: function (container) {
+            return Array.from(container.querySelectorAll(FOCUSABLE_ELEMENTS_SELECTOR)).filter(element => !element.disabled && element.offsetParent !== null)[0];
+        },
+
         focusSelectedView: function () {
             if (this._selectedView === 0) {
-                this.$.selectionView.focus(); // needs to be focused anyway (first-time loading, moving to selectionCrit from EGI or from another module)
+                const elementToFocus = this._getVisibleFocusableElementIn(this.$.selectionView);
+                // needs to be focused anyway (first-time loading, moving to selectionCrit from EGI or from another module)
+                if (elementToFocus) {
+                    elementToFocus.focus();
+                } else {
+                    this.$.selectionView.keyEventTarget.focus();
+                }
                 if (this._prevSelectedView === undefined) {
                     this.$.views.scrollTop = 0; // scrolls centre content to the top when first time loading the view
                     this._prevSelectedView = 0;
@@ -468,15 +477,18 @@
                     this.restoreActiveElement(); // restore active element (only if such element was persisted previously, for e.g. when using f5 and some editor is focused or when explicitly clicking on Run button)
                 }
             } else if (this._selectedView === 1) {
-                const elementToFocus = this.querySelector(".custom-egi").$$("#elementToFocus");
+                const egi = this.querySelector(".custom-egi");
+                const elementToFocus = this._getVisibleFocusableElementIn(egi);
                 // Element to focus is present only for grid representation of EGI. The card representation doesn't support focusing.
-                if (elementToFocus && typeof elementToFocus.focus === 'function') {
+                if (elementToFocus) {
                     elementToFocus.focus();
                     this.$.views.scrollTop = 0; // scrolls EGI to the top when changing selectionCrit -> EGI views or going to this centre from another centre / module
+                } else {
+                    egi.keyEventTarget.focus();
                 }
             }
         },
-        
+
         addOwnKeyBindings: function () {
             var egi = this.querySelector(".custom-egi");
             var selectionCriteria = this.$.selectionView;
@@ -504,7 +516,7 @@
                 });
             }, 100);
         },
-        
+
         discardAsync: function () {
             var self = this;
             this.async(function () {
@@ -514,7 +526,7 @@
                 });
             }, 100);
         },
-        
+
         defaultAsync: function () {
             const self = this;
             this.async(function () {
@@ -524,7 +536,7 @@
                 });
             }, 100);
         },
-        
+
         runAsync: function () {
             var self = this;
             this.async(function () {
@@ -532,7 +544,7 @@
                 self.run();
             }, 100);
         },
-        
+
         confirm: function (message, buttons) {
             return this.$.confirmationDialog.showConfirmationDialog(message, buttons);
         }

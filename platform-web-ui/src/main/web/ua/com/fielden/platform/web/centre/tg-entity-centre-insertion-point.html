@@ -316,7 +316,7 @@
                 Polymer.dom(this.$.pm).appendChild(this.$.insertionPointContent);
                 Polymer.dom.flush();
                 if (this.contextRetriever) {
-                    this.contextRetriever().$.egi.$.elementToFocus.focus();    
+                    this.contextRetriever().$.centreResultContainer.focus();    
                 }
                 this.notifyResize();
             },
@@ -474,7 +474,7 @@
              */
             _egiShortcutPressed: function (e) {
                 if (this.resultView) {
-                    this.resultView._shortcutPressed(e);
+                    this.resultView._findParentCentre().$.egi._shortcutPressed(e);
                 }
             },
             

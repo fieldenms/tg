@@ -12,7 +12,9 @@
 <link rel="import" href="/resources/polymer/paper-scroll-header-panel/paper-scroll-header-panel.html">
 <link rel="import" href="/resources/polymer/paper-styles/paper-styles-classes.html">
 <link rel="import" href="/resources/polymer/paper-toolbar/paper-toolbar.html">
-
+<!-- TG ELEMENTS -->
+<link rel="import" href="/resources/actions/tg-focus-restoration-behavior.html">
+<link rel="import" href="/resources/reflection/tg-polymer-utils.html">
 <link rel="import" href="/resources/components/tg-tooltip-behavior.html">
 <link rel="import" href="/resources/components/postal-lib.html">
 <link rel="import" href="/app/tg-reflector.html">
@@ -41,35 +43,31 @@
             --paper-menu-background-color: #fff;
             --menu-link-color: #111111;
         }
-        
         :host {
             display: inline-block;
+            --paper-menu-selected-item: {
+                background-color: var(--paper-blue-50) /*var(--paper-blue-grey-50)*/; 
+            };
+            --paper-menu-focused-item: {
+                background-color: inherit;
+            };
         }
-        
         paper-scroll-header-panel {
             height: 100%;
         }
-        
         paper-menu {
             padding: 0px;
             cursor: pointer;
         }
-        
         paper-menu iron-icon {
             margin-right: 33px;
             opacity: 0.54;
         }
-        
-        .paper-menu > .iron-selected {
-            color: var(--default-primary-color);
-        }
-        
         .tool-bar {
             padding: 0 16px;
             height: 44px;
             font-size: 18px;
         }
-        
         paper-material {
             border-radius: 2px;
             height: 100%;
@@ -80,17 +78,14 @@
             padding-left: 30px;
             padding-right: 30px;
         }
-            
         paper-drawer-panel {
             --paper-drawer-panel-drawer-container: {
                 border-right: 1px solid rgba(0, 0, 0, 0.14);
             }
         }
-        
         iron-pages {
             padding: 8px 8px;
         }
-            
         .truncate {
             white-space: nowrap;
             overflow: hidden;
@@ -101,389 +96,572 @@
         <tg-app-config id="appConfig"></tg-app-config>
         <tg-reflector id="reflector"></tg-reflector>
         <content id="menuItemActions" select=".menu-item-action"></content>
-        
+
         <paper-drawer-panel id="paperDrawerPanel" disable-swipe="[[!mobile]]">
             <paper-scroll-header-panel drawer fixed id="drawer">
-                <paper-menu attr-for-selected="data-route" selected="{{route}}">
+                <paper-menu id="menu" attr-for-selected="data-route" selected="{{route}}">
                     <content id="menuItems" select=".menu-item"></content>
                 </paper-menu>
             </paper-scroll-header-panel>
             <paper-scroll-header-panel main fixed class="relative">
                 <div>
-                    <iron-pages attr-for-selected="data-route" selected="[[sectionRoute]]">
+                    <iron-pages id="mainPages" attr-for-selected="data-route" selected="[[sectionRoute]]">
                         <content select=".menu-item-section"></content>
                     </iron-pages>
                 </div>
             </paper-scroll-header-panel>
         </paper-drawer-panel>
-        
+
     </template>
 </dom-module>
 
 <script>
-    Polymer({
-        is: 'tg-master-menu',
+    (function () {
+        const getKeyEventTarget = function (startFrom) {
+            let parent = startFrom;
+            while (parent && parent.tagName !== 'TG-CUSTOM-ACTION-DIALOG') {
+                parent = parent.parentElement;
+            }
+            return parent || startFrom;
+        }
+        Polymer({
+            is: 'tg-master-menu',
 
-        properties: {
-            mobile: Boolean,
-        	sectionTitle: {
-        		type: String,
-        		value: '[[sectionTitle]]',
-                observer: '_sectionTitleChanged'
-        	},
-        	
-        	/* active menu item */
-            route: {
-                type: String,
-                observer: '_routeChanged'
-            },
-            
-            /* active section that corresponds to value of this.route (i.e menu item)... in most cases...
-             * in case where the current section cannot be left (e.g. due to unsaved changes) and another route is selected, the section route remains unchanged
-             * under the same conditions the selected this.route (i.e. menu item) immediately gets changed back to correspond to unchanged this.sectionRoute.
-             */
-            sectionRoute: {
-                type: String,
-                observer: '_sectionRouteChanged'
-            },
-            
-            menuActions: {
-            	type: Object
-            },
-            
-            /* A menu route that should be activated when the master gets shoe*/
-        	defaultRoute: {
-        		type: String
-        	},
-        	
-            /**
-			 * A context holder creator that is used for tg-ui-action instances serving as menu items for compound masters.                
-             */
-            _createContextHolderForMenu: {
-            	type: Function
-            },
-            
-            /**
-             * A function that return a master entity instance from the master where this menu is embedded into.
-             */
-            getMasterEntity: {
-                type: Function,
-                observer: '_getMasterEntityChanged'
-            },
-            
-            /**
-             * UUID that gets assigned by the owning entity master in order to assign it to the tg-ui-action.attrs (that represent menu items) on attached callback.
-             */
-			uuid: {
-				type: String
-			},
-			
-            /**
-             * Centre UUID that gets assigned by the owning OpenCompoundMaster functional entity master in order to redirect 'detail.saved' messages from masters, embedded into menu items, 
-             * to centre, that is parent to OpenCompoundMaster functional entity master.
-             */
-            centreUuid: {
-                type: String
-            },
-            
-            /**
-             * Postal subscription to events that trigger compound master entity refreshing.
-             * It gets populated in attached callback only once, even though the same master instance gets used several time.
-             */
-            _subscriptions: {
-                type: Array,
-                value: function () {
-                    return [];
+            properties: {
+                mobile: Boolean,
+                sectionTitle: {
+                    type: String,
+                    value: '[[sectionTitle]]',
+                    observer: '_sectionTitleChanged'
+                },
+
+                /* active menu item */
+                route: {
+                    type: String,
+                    observer: '_routeChanged'
+                },
+
+                /* active section that corresponds to value of this.route (i.e menu item)... in most cases...
+                 * in case where the current section cannot be left (e.g. due to unsaved changes) and another route is selected, the section route remains unchanged
+                 * under the same conditions the selected this.route (i.e. menu item) immediately gets changed back to correspond to unchanged this.sectionRoute.
+                 */
+                sectionRoute: {
+                    type: String,
+                    observer: '_sectionRouteChanged'
+                },
+
+                menuActions: {
+                    type: Object
+                },
+
+                /* A menu route that should be activated when the master gets shoe*/
+                defaultRoute: {
+                    type: String
+                },
+
+                /**
+                 * A context holder creator that is used for tg-ui-action instances serving as menu items for compound masters.
+                 */
+                _createContextHolderForMenu: {
+                    type: Function
+                },
+
+                /**
+                 * A function that return a master entity instance from the master where this menu is embedded into.
+                 */
+                getMasterEntity: {
+                    type: Function,
+                    observer: '_getMasterEntityChanged'
+                },
+
+                /**
+                 * UUID that gets assigned by the owning entity master in order to assign it to the tg-ui-action.attrs (that represent menu items) on attached callback.
+                 */
+                uuid: {
+                    type: String
+                },
+
+                /**
+                 * Centre UUID that gets assigned by the owning OpenCompoundMaster functional entity master in order to redirect 'detail.saved' messages from masters, embedded into menu items,
+                 * to centre, that is parent to OpenCompoundMaster functional entity master.
+                 */
+                centreUuid: {
+                    type: String
+                },
+
+                /**
+                 * Postal subscription to events that trigger compound master entity refreshing.
+                 * It gets populated in attached callback only once, even though the same master instance gets used several time.
+                 */
+                _subscriptions: {
+                    type: Array,
+                    value: function () {
+                        return [];
+                    }
+                },
+
+                /**
+                 * Postal subscription to 'detail.saved' events of embedded masters from master-with-master menu items.
+                 * It gets populated in attached callback only once, even though the same master instance gets used several time.
+                 */
+                _centreRefreshRedirector: {
+                    type: Object,
+                    value: null
+                },
+
+                /**
+                 * Postal subscription to 'refresh.post.success' events of embedded masters from master-with-master menu items.
+                 * It gets populated in attached callback only once, even though the same master instance gets used several time.
+                 */
+                _dialogClosingRedirector: {
+                    type: Object,
+                    value: null
+                },
+
+                /**
+                 * An externally bound function to perfrom compound master refresh upon changes instigated from embedded masters.
+                 */
+                refreshCompoundMaster: {
+                    type: Function
+                },
+
+                /**
+                 * A helper flag to differentiate between setting of new context upon the openning of the master and the refresh cycle.
+                 */
+                _isRefreshCycle: {
+                    type: Boolean,
+                    value: false
+                },
+
+                /**
+                 * In case when main / detail entity has been just saved, there is a need to augment compound master "opener" functional entity to appropriately restore it on server.
+                 * If new main entity has been saved for the first time -- savedEntityId is promoted into "opener" functional entity's key (and marked as touched).
+                 * Otherwise if main / detail entity has been saved -- "opener" functional entity's key is marked as touched.
+                 *
+                 * @param savedEntityId -- the id of just saved main / detail entity to be promoted into compound master "opener"
+                 */
+                augmentCompoundMasterOpenerWith: {
+                    type: Function
+                },
+
+                /**
+                 * A master that contains this menu. It is used to access utility functions such as showing of toasts.
+                 */
+                parent: {
+                    type: Object
                 }
             },
-            
-            /**
-             * Postal subscription to 'detail.saved' events of embedded masters from master-with-master menu items.
-             * It gets populated in attached callback only once, even though the same master instance gets used several time.
-             */
-            _centreRefreshRedirector: {
-                type: Object,
-                value: null
+
+            behaviors: [Polymer.TgBehaviors.TgTooltipBehavior, Polymer.IronA11yKeysBehavior, Polymer.TgBehaviors.TgFocusRestorationBehavior],
+
+            listeners: {
+                transitionend: '_onTransitionEnd'
             },
-            
-            /**
-             * Postal subscription to 'refresh.post.success' events of embedded masters from master-with-master menu items.
-             * It gets populated in attached callback only once, even though the same master instance gets used several time.
-             */
-            _dialogClosingRedirector: {
-                type: Object,
-                value: null
+
+            keyBindings: {
+                'f4': '_showMenu'
             },
-            
-            /**
-             * An externally bound function to perfrom compound master refresh upon changes instigated from embedded masters.
-             */
-            refreshCompoundMaster: {
-            	type: Function
+
+
+            ready: function () {
+                var self = this;
+                self._createContextHolderForMenu = (function () {
+                    var contextHolder = this.$.reflector.createContextHolder(
+                        null, null, 'true',
+                        null, null, this.getMasterEntity);
+                    return contextHolder;
+                }).bind(self);
+                //Override esc functionality for paper menu so that it doesn't blur the focus.
+                this.$.menu._onEscKey = (event) => {
+                    this._closeMenu(event);
+                };
+                this.$.menu.addEventListener("keydown", this._menuKeyDown.bind(this));
+                this.$.menu.addEventListener("keyup", this._menuKeyUp.bind(this));
+                // change drawer panel to narrow layout automatically when moving from tablet|mobile to desktop application layout
+                this.$.paperDrawerPanel.responsiveWidth = this.$.appConfig.minDesktopWidth + 'px';
+                //Configure the profile mobile or desktop
+                this.mobile = this.$.appConfig.mobile;
+                //Add listener for custom event that was thrown when section is about to lost focus, then this focus should go to the menu if it is opened.
+                this.addEventListener("tg-last-item-focused", this._focusMenuAndTearDown.bind(this));
+            }, // end of ready 
+
+            attached: function () {
+                var self = this;
+                // assign _createContextHolderForMenu to all tg-ui-action instances
+                var tgUiActions = Polymer.dom(self.$.menuItemActions).getDistributedNodes();
+                if (tgUiActions && tgUiActions.length > 0) {
+                    for (var index = 0; index < tgUiActions.length; index++) {
+                        tgUiActions[index].createContextHolder = self._createContextHolderForMenu;
+                        tgUiActions[index].showDialog = self._showMenuItemView.bind(self);
+                        tgUiActions[index].attrs.centreUuid = self.uuid;
+                        tgUiActions[index].style.display = 'none';
+                    }
+                }
+
+                // subscribe to the channel and topics used by embedded masters (views for menu items) in order to 
+                // refresh the master entity that is bound to the top-most functional entity that is used for compound master header and gets propagated downwards to all menu items
+                // this ensures that changes to the master entity on any embedded master are correctly reflected everywhere else on the compound master
+                var eventChannel = self.uuid;
+                var eventTopics = ['save.post.success'];
+                // subscrive if needed
+                if (self._subscriptions.length === 0) {
+                    for (var index = 0; index < eventTopics.length; index++) {
+                        self._subscriptions.push(
+                            postal.subscribe({
+                                channel: eventChannel,
+                                topic: eventTopics[index],
+                                callback: self._refreshCompoundMaster.bind(self)
+                            }));
+                    }
+                }
+
+                // Every compound master gets opened from some centre as part of its functional action, usually 'result-set' action.
+                // This centre is needed to be refreshed in cases where some menu item embedded master has been saved and its flag 'shouldRefreshParentCentreAfterSave' is 'true'.
+                // Flag 'shouldRefreshParentCentreAfterSave' is now controlled using IMasterWithMasterBuilder API, specifically 
+                //   using methods 'withMaster' or 'withMasterAndWithNoParentCentreRefresh' on IMasterWithMaster0.
+                // Note, that centre could even be refreshed when:
+                //   1) Opening of compound master is performed; Updating of compound master header is performed;
+                //      -- need to just 'not specify' flag 'withNoParentCentreRefresh' on corresponding action, for e.g. for OpenVehicleMasterAction
+                //   2) Opening (or switching to) concrete compound master menu item;
+                //      -- need to just 'not specify' flag 'withNoParentCentreRefresh' on corresponding action, for e.g. for VehicleMaster_OpenTechDetails_MenuItem
+                // However, even if in 1) and 2) cases the centre could be refreshed, it is usually unpractical and should be avoided.
+                // TODO when Compound Master API will be implemented -- master-with-master menu item creation should hide the specification of flag 'withNoParentCentreRefresh' inside impl details.
+
+                // The following code subscribes tg-master-menu, which holds all menu items, to the events of successful save of its embedded masters.
+                // These events arrive only from those menu items, which have embedded masters inside (embedded centres or simple functional menu item do not generate such events).
+                // The channel contains uuid of parent OpenCompoundMaster master (for e.g. 'centre_tg-openvehiclemasteraction-master/b3e1343d-dd62-491e-89f9-f46d6fdf609f')
+                // After that the event is redirected to corresponding centre with tg-master-menu's centreUuid (for e.g. 'centre_Fleet/Vehicles')
+                if (self._centreRefreshRedirector === null) {
+                    var embeddedMasterPostSaveChannel = 'centre_' + self.uuid;
+                    var compoundMasterCentreRefreshChannel = 'centre_' + self.centreUuid;
+                    var centreRefreshTopic = 'detail.saved';
+                    self._centreRefreshRedirector = postal.subscribe({
+                        channel: embeddedMasterPostSaveChannel,
+                        topic: centreRefreshTopic,
+                        callback: function (data, envelope) {
+                            postal.publish({
+                                channel: compoundMasterCentreRefreshChannel,
+                                topic: centreRefreshTopic,
+                                data: data
+                            });
+                        }
+                    });
+                }
+                if (self._dialogClosingRedirector === null) {
+                    const embeddedMasterCancelChannel = self.uuid;
+                    const compoundMasterCancelChannel = self.centreUuid;
+                    const cancelTopic = 'refresh.post.success';
+                    self._dialogClosingRedirector = postal.subscribe({
+                        channel: embeddedMasterCancelChannel,
+                        topic: cancelTopic,
+                        callback: function (data, envelope) {
+                            postal.publish({
+                                channel: compoundMasterCancelChannel,
+                                topic: cancelTopic,
+                                data: data
+                            });
+                        }
+                    });
+                }
+                //Needed to set the dynamic title
+                this.fire('tg-dynamic-title-changed', this.sectionTitle);
+                this.fire('tg-menu-appeared', {
+                    appeared: true,
+                    func: self._toggleMenu.bind(self),
+                    drawer: self.$.paperDrawerPanel
+                });
+                //Configure key event target for menu triggering.
+                self.async(function () {
+                    self.keyEventTarget = getKeyEventTarget(self);
+                }, 1);
             },
-            
+
             /**
-             * A helper flag to differentiate between setting of new context upon the openning of the master and the refresh cycle.
-             */
-            _isRefreshCycle: {
-            	type: Boolean,
-            	value: false
-            }, 
-            
-            /**
-             * In case when main / detail entity has been just saved, there is a need to augment compound master "opener" functional entity to appropriately restore it on server.
-             * If new main entity has been saved for the first time -- savedEntityId is promoted into "opener" functional entity's key (and marked as touched).
-             * Otherwise if main / detail entity has been saved -- "opener" functional entity's key is marked as touched.
+             * Toggles menu: hiding / showing it through animation.
              *
-             * @param savedEntityId -- the id of just saved main / detail entity to be promoted into compound master "opener"
+             * In desktop mode menu shifts the main content to the right during showing (and back top the left during hiding).
+             * In tablet|mobile mode menu slides on top of the main content to the right during showing (and back top the left during hiding).
              */
-            augmentCompoundMasterOpenerWith: {
-            	type: Function
-            },
-            
-            /**
-             * A master that contains this menu. It is used to access utility functions such as showing of toasts.
-             */
-            parent: {
-            	type: Object
-            }
-        },
-        
-        behaviors: [Polymer.TgBehaviors.TgTooltipBehavior],
-
-        ready: function () {
-        	var self = this;
-            self._createContextHolderForMenu = (function () {
-                var contextHolder = this.$.reflector.createContextHolder(
-    				null, null, 'true',
-    				null, null, this.getMasterEntity);
-                return contextHolder;
-            }).bind(self);
-            // change drawer panel to narrow layout automatically when moving from tablet|mobile to desktop application layout
-            this.$.paperDrawerPanel.responsiveWidth = this.$.appConfig.minDesktopWidth + 'px';
-            //Configure the profile mobile or desktop
-            this.mobile = this.$.appConfig.mobile;
-        }, // end of ready 
-        
-        attached: function () {
-        	var self = this;
-        	// assign _createContextHolderForMenu to all tg-ui-action instances
-        	var tgUiActions = Polymer.dom(self.$.menuItemActions).getDistributedNodes();
-        	if (tgUiActions && tgUiActions.length > 0) {
-        		for (var index = 0; index < tgUiActions.length; index++) {
-        			tgUiActions[index].createContextHolder = self._createContextHolderForMenu;
-        			tgUiActions[index].showDialog = self._showMenuItemView.bind(self);
-        			tgUiActions[index].attrs.centreUuid = self.uuid;
-        			tgUiActions[index].style.display = 'none';
-        		}
-        	}
-        	
-        	// subscribe to the channel and topics used by embedded masters (views for menu items) in order to 
-        	// refresh the master entity that is bound to the top-most functional entity that is used for compound master header and gets propagated downwards to all menu items
-        	// this ensures that changes to the master entity on any embedded master are correctly reflected everywhere else on the compound master
-        	var eventChannel = self.uuid;
-            var eventTopics = ['save.post.success'];
-			// subscrive if needed
-            if (self._subscriptions.length === 0) {
-	            for (var index = 0; index < eventTopics.length; index++) {
-	                self._subscriptions.push(
-	                    postal.subscribe({
-	                        channel: eventChannel,
-	                        topic: eventTopics[index],
-	                        callback: self._refreshCompoundMaster.bind(self)
-	                    }));
-	            }
-            }
-            
-            // Every compound master gets opened from some centre as part of its functional action, usually 'result-set' action.
-            // This centre is needed to be refreshed in cases where some menu item embedded master has been saved and its flag 'shouldRefreshParentCentreAfterSave' is 'true'.
-            // Flag 'shouldRefreshParentCentreAfterSave' is now controlled using IMasterWithMasterBuilder API, specifically 
-            //   using methods 'withMaster' or 'withMasterAndWithNoParentCentreRefresh' on IMasterWithMaster0.
-            // Note, that centre could even be refreshed when:
-            //   1) Opening of compound master is performed; Updating of compound master header is performed;
-            //      -- need to just 'not specify' flag 'withNoParentCentreRefresh' on corresponding action, for e.g. for OpenVehicleMasterAction
-            //   2) Opening (or switching to) concrete compound master menu item;
-            //      -- need to just 'not specify' flag 'withNoParentCentreRefresh' on corresponding action, for e.g. for VehicleMaster_OpenTechDetails_MenuItem
-            // However, even if in 1) and 2) cases the centre could be refreshed, it is usually unpractical and should be avoided.
-            // TODO when Compound Master API will be implemented -- master-with-master menu item creation should hide the specification of flag 'withNoParentCentreRefresh' inside impl details.
-            
-            // The following code subscribes tg-master-menu, which holds all menu items, to the events of successful save of its embedded masters.
-            // These events arrive only from those menu items, which have embedded masters inside (embedded centres or simple functional menu item do not generate such events).
-            // The channel contains uuid of parent OpenCompoundMaster master (for e.g. 'centre_tg-openvehiclemasteraction-master/b3e1343d-dd62-491e-89f9-f46d6fdf609f')
-            // After that the event is redirected to corresponding centre with tg-master-menu's centreUuid (for e.g. 'centre_Fleet/Vehicles')
-            if (self._centreRefreshRedirector === null) {
-                var embeddedMasterPostSaveChannel = 'centre_' + self.uuid;
-                var compoundMasterCentreRefreshChannel = 'centre_' + self.centreUuid;
-                var centreRefreshTopic = 'detail.saved';
-                self._centreRefreshRedirector = postal.subscribe({
-                    channel: embeddedMasterPostSaveChannel,
-                    topic: centreRefreshTopic,
-                    callback: function (data, envelope) {
-                        postal.publish({
-                            channel: compoundMasterCentreRefreshChannel,
-                            topic: centreRefreshTopic,
-                            data: data
-                        });
-                    }
-                });
-            }
-            if (self._dialogClosingRedirector === null) {
-                const embeddedMasterCancelChannel = self.uuid;
-                const compoundMasterCancelChannel = self.centreUuid;
-                const cancelTopic = 'refresh.post.success';
-                self._dialogClosingRedirector = postal.subscribe({
-                    channel: embeddedMasterCancelChannel,
-                    topic: cancelTopic,
-                    callback: function (data, envelope) {
-                        postal.publish({
-                            channel: compoundMasterCancelChannel,
-                            topic: cancelTopic,
-                            data: data
-                        });
-                    }
-                });
-            }
-            //Needed to set the dynamic title
-            this.fire('tg-dynamic-title-changed', this.sectionTitle);
-            this.fire('tg-menu-appeared', {
-                appeared: true,
-                func: self._toggleMenu.bind(self),
-                drawer: self.$.paperDrawerPanel
-            });
-        },
-        
-        /**
-         * Toggles menu: hiding / showing it through animation.
-         *
-         * In desktop mode menu shifts the main content to the right during showing (and back top the left during hiding).
-         * In tablet|mobile mode menu slides on top of the main content to the right during showing (and back top the left during hiding).
-         */
-        _toggleMenu: function (e, detail, source) {
-            if (this.desktopMode()) {
-                this.$.paperDrawerPanel.forceNarrow = !this.$.paperDrawerPanel.forceNarrow;
-            } else {
-                this.$.paperDrawerPanel.togglePanel();
-            }
-        },
-        
-        /**
-         * Returns 'true' in case if application is in desktop mode, 'false' if application is in tablet / mobile mode. 
-         */
-        desktopMode: function () {
-            const viewportWidth = Math.max(document.documentElement.clientWidth, window.innerWidth || 0);
-            return viewportWidth >= this.$.appConfig.minDesktopWidth;
-        },
-        
-        _sectionTitleChanged: function (newValue, oldValue) {
-            this.fire('tg-dynamic-title-changed', newValue);
-        },
-        
-        _refreshCompoundMaster: function (data, envelope) {
-        	this._isRefreshCycle = true;
-        	
-        	// promotes saved entity (main or detail) id into compound master "opener" in case of successful save
-        	if (envelope.topic === 'save.post.success') {
-        		this.augmentCompoundMasterOpenerWith(data.id);
-        	}
-        	
-        	this.refreshCompoundMaster();
-        },
-        
-        _getMasterEntityChanged: function (newValue, oldValue) {
-            const context = newValue();
-            const sectionTitleValues = context.modifHolder.sectionTitle;
-            const menuToOpenValues = context.modifHolder.menuToOpen;
-            this.sectionTitle = (typeof sectionTitleValues.val !== 'undefined') ? sectionTitleValues.val : sectionTitleValues.origVal; 
-            const menuToOpen = (typeof menuToOpenValues.val !== 'undefined') ? menuToOpenValues.val : menuToOpenValues.origVal;
-            if (menuToOpen !== null) {
-                // If menuToOpen was explicitly specified in 'open compound master producer' (according to some domain rules),
-                //  we need to override default menu item -- domain-specific menu item takes precedence.
-                // Please note that default menu item is always the first menu item (Main),
-                //  unless 'CompoundMasterBuilder.andDefaultItemNumber' API method was used with item number different than zero.
-                this.defaultRoute = this.$.reflector.simpleClassName(menuToOpen);
-            }
-            
-            if (this._isRefreshCycle === false) {      	
-                if (this.route !== this.defaultRoute) {
-                    this.route = this.defaultRoute;
-                } else {
-                    this._sectionRouteChanged(this.defaultRoute, this.route);
+            _toggleMenu: function (e, detail, source) {
+                if (!this.isMenuVisible()) {
+                    this._openedByAction = true;
                 }
-            }
-            
-            this._isRefreshCycle = false;
-        },
-        
-        /**
-         * A function for show-dialog attribute of tg-ui-action, which is used in case of master with menu to load and display a corresponding menu item view.
-         */
-        _showMenuItemView: function (action) {
-        	var section = Polymer.dom(this).querySelector('tg-master-menu-item-section[data-route=' + action.getAttribute('data-route') + ']');
-        	section.activate(action);
-        },
-        
-        _routeChanged: function (newRoute, oldRoute) {
-            if (this.route !== this.sectionRoute) {
-                if (this.sectionRoute !== undefined) {
-                    const currentSection = Polymer.dom(this).querySelector('tg-master-menu-item-section[data-route=' + this.sectionRoute + ']');
-                    if (!currentSection) {
-                        throw 'Compound master\'s menu item section [' + this.sectionRoute + '] does not exist.';
+                if (this.desktopMode()) {
+                    this.$.paperDrawerPanel.forceNarrow = !this.$.paperDrawerPanel.forceNarrow;
+                } else {
+                    this.$.paperDrawerPanel.togglePanel();
+                }
+            },
+
+            /**
+             * Returns 'true' in case if application is in desktop mode, 'false' if application is in tablet / mobile mode.
+             */
+            desktopMode: function () {
+                const viewportWidth = Math.max(document.documentElement.clientWidth, window.innerWidth || 0);
+                return viewportWidth >= this.$.appConfig.minDesktopWidth;
+            },
+
+            isMenuVisible: function () {
+                return !this.$.paperDrawerPanel.narrow || this.$.paperDrawerPanel.selected === "drawer";
+            },
+
+            _menuKeyDown: function (e) {
+                if (e.keyCode === 13) { // enter key
+                    this._activateIfPossible(e.target);
+                }
+            },
+
+            _menuKeyUp: function (e) {
+                if (e.keyCode === 32) { //spacebar
+                    this._activateIfPossible(e.target);
+                }
+            },
+
+            _activateIfPossible: function (paperMenuItem) {
+                if (paperMenuItem.getAttribute("data-route") === this.sectionRoute) {
+                    if (this.$.paperDrawerPanel.narrow) {
+                        this.$.paperDrawerPanel.selected = 'main'; // select main if drawer is in narrow mode
                     }
-                    const cannotLeaveReason = currentSection.canLeave();
-                    const cannotLeaveMessage = cannotLeaveReason
-                        ? cannotLeaveReason.msg
-                        : (this.isMasterWithMasterAndNonPersisted(currentSection) ? 'A new entity is being created. Please save or cancel your changes.' : undefined);
-                    if (cannotLeaveMessage) {
-                        this.route = this.sectionRoute;
-                        this.parent._openToastForError('Cannot leave "' + currentSection.sectionTitle + '".', cannotLeaveMessage);
+                    this.focusView();
+                }
+            },
+
+            _showMenu: function () {
+                if (this.isMenuVisible()) {
+                    if (!isInHierarchy(this.$.paperDrawerPanel._getDrawerContent(), document.activeElement)) {
+                        this._previousActiveElement = document.activeElement;
+                        this._focusMenu();
+                    }
+                } else {
+                    this._previousActiveElement = document.activeElement;
+                    this._toggleMenu();
+                }
+            },
+
+            _closeMenu: function () {
+                if (this.$.paperDrawerPanel.narrow && this.$.paperDrawerPanel.selected === "drawer") {
+                    this._toggleMenu();
+                }
+            },
+
+            _focusMenu: function () {
+                const autoFocusedNode = this.$.paperDrawerPanel._getAutoFocusedNode();
+                if (autoFocusedNode) {
+                    autoFocusedNode.focus();
+                }
+            },
+
+            _onTransitionEnd: function (e) {
+                const target = Polymer.dom(e).localTarget;
+                if (target !== this) {
+                    // ignore events coming from the light dom
+                    return;
+                }
+                if (e.propertyName === 'transform') {
+                    if (this.isMenuVisible()) {
+                        if (this._openedByAction) {
+                            this._focusMenu();
+                            delete this._openedByAction;
+                        }
+                    } else {
+                        const drawerContent = this.$.paperDrawerPanel._getDrawerContent();
+                        if (isInHierarchy(drawerContent, document.activeElement) || !isInHierarchy(this.keyEventTarget, document.activeElement)) {
+                            if (this._previousActiveElement && !isInHierarchy(drawerContent, this._previousActiveElement) && isInHierarchy(this.keyEventTarget, this._previousActiveElement)) {
+                                this._previousActiveElement.focus();
+                            } else {
+                                this.focusView();
+                            }
+                        }
+                    }
+
+                }
+            },
+
+            _sectionTitleChanged: function (newValue, oldValue) {
+                this.fire('tg-dynamic-title-changed', newValue);
+            },
+
+            _refreshCompoundMaster: function (data, envelope) {
+                this._isRefreshCycle = true;
+
+                // promotes saved entity (main or detail) id into compound master "opener" in case of successful save
+                if (envelope.topic === 'save.post.success') {
+                    this.augmentCompoundMasterOpenerWith(data.id);
+                }
+
+                this.refreshCompoundMaster();
+            },
+
+            _getMasterEntityChanged: function (newValue, oldValue) {
+                const context = newValue();
+                const sectionTitleValues = context.modifHolder.sectionTitle;
+                const menuToOpenValues = context.modifHolder.menuToOpen;
+                this.sectionTitle = (typeof sectionTitleValues.val !== 'undefined') ? sectionTitleValues.val : sectionTitleValues.origVal;
+                const menuToOpen = (typeof menuToOpenValues.val !== 'undefined') ? menuToOpenValues.val : menuToOpenValues.origVal;
+                if (menuToOpen !== null) {
+                    // If menuToOpen was explicitly specified in 'open compound master producer' (according to some domain rules),
+                    //  we need to override default menu item -- domain-specific menu item takes precedence.
+                    // Please note that default menu item is always the first menu item (Main),
+                    //  unless 'CompoundMasterBuilder.andDefaultItemNumber' API method was used with item number different than zero.
+                    this.defaultRoute = this.$.reflector.simpleClassName(menuToOpen);
+                }
+
+                if (this._isRefreshCycle === false) {
+                    if (this.route !== this.defaultRoute) {
+                        this.route = this.defaultRoute;
+                    } else {
+                        this._sectionRouteChanged(this.defaultRoute, this.route);
+                    }
+                }
+
+                this._isRefreshCycle = false;
+            },
+
+            /**
+             * A function for show-dialog attribute of tg-ui-action, which is used in case of master with menu to load and display a corresponding menu item view.
+             */
+            _showMenuItemView: function (action) {
+                var section = Polymer.dom(this).querySelector('tg-master-menu-item-section[data-route=' + action.getAttribute('data-route') + ']');
+                section.activate(action);
+            },
+
+            /**
+             * Focuses currently slected view
+             */
+            focusView: function () {
+                if (this.sectionRoute !== undefined) {
+                    const section = Polymer.dom(this).querySelector('tg-master-menu-item-section[data-route=' + this.sectionRoute + ']');
+                    section.focusView();
+                }
+            },
+
+            focusNextView: function (e) {
+                const currentlyFocused = document.activeElement;
+                if (!isInHierarchy(this, currentlyFocused) && this.isMenuVisible()) {
+                    this._focusMenu();
+                    tearDownEvent(e);
+                } else {
+                    this._focusNextSectionView(e);
+                }
+            },
+
+            focusPreviousView: function (e) {
+                const currentlyFocused = document.activeElement;
+                if (isInHierarchy(this.$.paperDrawerPanel._getDrawerContent(), currentlyFocused)) {
+                    this.fire("tg-last-item-focused", {
+                        forward: false,
+                        event: e
+                    });
+                } else {
+                    this._focusPreviousSectionView(e);
+                }
+            },
+
+            _focusNextSectionView: function (e) {
+                if (this.sectionRoute !== undefined && (!this.$.paperDrawerPanel.narrow || this.$.paperDrawerPanel.selected === "main")) {
+                    const section = Polymer.dom(this).querySelector('tg-master-menu-item-section[data-route=' + this.sectionRoute + ']');
+                    section.focusNextView(e);
+                } else {
+                    this.fire("tg-last-item-focused", {
+                        forward: true,
+                        event: e
+                    });
+                }
+            },
+
+            _focusPreviousSectionView: function (e) {
+                if (this.sectionRoute !== undefined && (!this.$.paperDrawerPanel.narrow || this.$.paperDrawerPanel.selected === "main")) {
+                    const section = Polymer.dom(this).querySelector('tg-master-menu-item-section[data-route=' + this.sectionRoute + ']');
+                    section.focusPreviousView(e);
+                } else if (this.isMenuVisible()) {
+                    this._focusMenu();
+                    tearDownEvent(e);
+                } else {
+                    this.fire("tg-last-item-focused", {
+                        forward: false,
+                        event: e
+                    });
+                }
+            },
+
+            _focusMenuAndTearDown: function (e) {
+                if (!e.detail.forward && !isInHierarchy(this.$.paperDrawerPanel._getDrawerContent(), document.activeElement) && this.isMenuVisible()) {
+                    this._focusMenu();
+                    tearDownEvent(e.detail.event);
+                    tearDownEvent(e);
+                }
+            },
+
+            _routeChanged: function (newRoute, oldRoute) {
+                if (this.route !== this.sectionRoute) {
+                    if (this.sectionRoute !== undefined) {
+                        const currentSection = Polymer.dom(this).querySelector('tg-master-menu-item-section[data-route=' + this.sectionRoute + ']');
+                        if (!currentSection) {
+                            throw 'Compound master\'s menu item section [' + this.sectionRoute + '] does not exist.';
+                        }
+                        const cannotLeaveReason = currentSection.canLeave();
+                        const cannotLeaveMessage = cannotLeaveReason ? cannotLeaveReason.msg : (this.isMasterWithMasterAndNonPersisted(currentSection) ? 'A new entity is being created. Please save or cancel your changes.' : undefined);
+                        if (cannotLeaveMessage) {
+                            this.route = this.sectionRoute;
+                            this.parent._openToastForError('Cannot leave "' + currentSection.sectionTitle + '".', cannotLeaveMessage);
+                        } else {
+                            this.sectionRoute = newRoute;
+                        }
                     } else {
                         this.sectionRoute = newRoute;
                     }
-                } else {
-                    this.sectionRoute = newRoute;
                 }
-            }
-        },
-        
-        /**
-         * Returns 'true' if the specified 'section' represents a master with master, that contains non-persisted entity instance; 'false' otherwise.
-         * In case of 'true' the user will be warned to save or cancel and will be prevented from moving to another menu item on compound master.
-         *
-         * @param section
-         */
-        isMasterWithMasterAndNonPersisted: function (section) {
-            if (section
-                && section._element
-                && section._element.masterWithMaster
-                && section._element.$.loader
-                && section._element.$.loader.loadedElement
-            ) {
-                const embeddedMaster = section._element.$.loader.loadedElement;
-                if (embeddedMaster._currBindingEntity && !embeddedMaster._currBindingEntity.isPersisted()) {
+            },
+
+            /**
+             * Returns 'true' if the specified 'section' represents a master with master, that contains non-persisted entity instance; 'false' otherwise.
+             * In case of 'true' the user will be warned to save or cancel and will be prevented from moving to another menu item on compound master.
+             *
+             * @param section
+             */
+            isMasterWithMaster: function (section) {
+                if (section && section._element && section._element.masterWithMaster && section._element.$.loader && section._element.$.loader.loadedElement) {
+                    const embeddedMaster = section._element.$.loader.loadedElement;
                     return true;
                 }
+                return false;
+            },
+
+            /**
+             * Returns 'true' if the specified 'section' represents a master with master, that contains non-persisted entity instance; 'false' otherwise.
+             * In case of 'true' the user will be warned to save or cancel and will be prevented from moving to another menu item on compound master.
+             *
+             * @param section
+             */
+            isMasterWithMasterAndNonPersisted: function (section) {
+                if (section && section._element && section._element.masterWithMaster && section._element.$.loader && section._element.$.loader.loadedElement) {
+                    const embeddedMaster = section._element.$.loader.loadedElement;
+                    if (embeddedMaster._currBindingEntity && !embeddedMaster._currBindingEntity.isPersisted()) {
+                        return true;
+                    }
+                }
+                return false;
+            },
+
+            /** Used by the master, which incorporates this menu to check if it can be closed. */
+            canLeave: function () {
+                const section = Polymer.dom(this).querySelector('tg-master-menu-item-section[data-route=' + this.route + ']');
+                return section.canLeave();
+            },
+
+            _sectionRouteChanged: function (newRoute, oldRoute) {
+                if (!this.desktopMode()) {
+                    this.$.paperDrawerPanel.selected = 'main'; // close drawer in tablet|mobile mode when section route changes (menu item has been actioned by user)
+                }
+
+                var oldSection = Polymer.dom(this).querySelector('tg-master-menu-item-section[data-route=' + oldRoute + ']');
+                var action = Polymer.dom(this).querySelector('tg-ui-action[data-route=' + newRoute + ']');
+
+                if (oldSection && oldSection._element && typeof oldSection._element.removeOwnKeyBindings === 'function') {
+                    oldSection._element.removeOwnKeyBindings();
+                }
+                action._run();
             }
-            return false;
-        },
-        
-        /** Used by the master, which incorporates this menu to check if it can be closed. */
-        canLeave: function () {
-            const section = Polymer.dom(this).querySelector('tg-master-menu-item-section[data-route=' + this.route + ']');
-            return section.canLeave();
-        },
-        
-        _sectionRouteChanged: function (newRoute, oldRoute) {
-            if (!this.desktopMode()) {
-                this.$.paperDrawerPanel.selected = 'main'; // close drawer in tablet|mobile mode when section route changes (menu item has been actioned by user)
-            }
-            
-            var oldSection = Polymer.dom(this).querySelector('tg-master-menu-item-section[data-route=' + oldRoute + ']');
-         	var action = Polymer.dom(this).querySelector('tg-ui-action[data-route=' + newRoute + ']');
-            
-            if (oldSection && oldSection._element && typeof oldSection._element.removeOwnKeyBindings === 'function') {
-                oldSection._element.removeOwnKeyBindings();
-            }
- 			action._run();
- 		}
-    });
+        });
+    })();
 </script>

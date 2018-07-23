@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.web.resources.webui;
 
+import static java.util.Optional.empty;
 import static ua.com.fielden.platform.web.centre.CentreUpdater.FRESH_CENTRE_NAME;
 import static ua.com.fielden.platform.web.centre.CentreUpdater.SAVED_CENTRE_NAME;
 import static ua.com.fielden.platform.web.centre.CentreUpdater.centre;
@@ -125,7 +126,7 @@ public class CentreResource<CRITERIA_TYPE extends AbstractEntity<?>> extends Abs
             initAndCommit(gdtm, miType, SAVED_CENTRE_NAME, saveAsName, device(), freshCentre, null);
             
             // it is necessary to use "fresh" instance of cdtme (after the saving process)
-            return createCriteriaRetrievalEnvelope(freshCentre, miType, saveAsName, gdtm, restUtil, companionFinder, critGenerator, device(), null);
+            return createCriteriaRetrievalEnvelope(freshCentre, miType, saveAsName, gdtm, restUtil, companionFinder, critGenerator, device(), empty());
         }, restUtil);
     }
     

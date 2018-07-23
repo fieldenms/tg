@@ -1,5 +1,7 @@
 package ua.com.fielden.platform.web.view.master.api.with_centre.impl;
 
+import static java.lang.String.format;
+
 import java.util.Optional;
 
 import ua.com.fielden.platform.entity.AbstractFunctionalEntityWithCentreContext;
@@ -9,6 +11,7 @@ import ua.com.fielden.platform.web.view.master.api.IMaster;
 import ua.com.fielden.platform.web.view.master.api.IMasterWithCentreBuilder;
 import ua.com.fielden.platform.web.view.master.api.helpers.IComplete;
 import ua.com.fielden.platform.web.view.master.api.with_centre.IMasterWithCentre0;
+import ua.com.fielden.platform.web.view.master.exceptions.EntityMasterConfigurationException;
 
 public class MasterWithCentreBuilder<T extends AbstractFunctionalEntityWithCentreContext<?>> implements IMasterWithCentreBuilder<T>, IMasterWithCentre0<T>, IComplete<T> {
 
@@ -27,13 +30,16 @@ public class MasterWithCentreBuilder<T extends AbstractFunctionalEntityWithCentr
 
     @Override
     public IComplete<T> withCentre(final EntityCentre<?> entityCentre) {
+        if (!entityCentre.isRunAutomatically()) {
+            throw new EntityMasterConfigurationException(format("Master for [%s] is misconfigured: entity centre for [%s] is missing 'run-automatically' configuration option.", type.getSimpleName(), entityCentre.getEntityType().getSimpleName()));
+        }
         this.entityCentre = entityCentre;
         return this;
     }
 
     @Override
     public IMaster<T> done() {
-        return new MasterWithCentre<T>(type, saveOnActivate, entityCentre, customCode, customCodeOnAttach);
+        return new MasterWithCentre<>(type, saveOnActivate, entityCentre, customCode, customCodeOnAttach);
     }
     
     

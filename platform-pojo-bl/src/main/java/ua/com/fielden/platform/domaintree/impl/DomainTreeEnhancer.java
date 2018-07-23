@@ -1,5 +1,8 @@
 package ua.com.fielden.platform.domaintree.impl;
 
+import static ua.com.fielden.platform.types.tuples.T2.t2;
+import static ua.com.fielden.platform.utils.CollectionUtil.linkedMapOf;
+
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.nio.ByteBuffer;
@@ -37,6 +40,8 @@ import ua.com.fielden.platform.reflection.asm.api.NewProperty;
 import ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader;
 import ua.com.fielden.platform.reflection.asm.impl.DynamicTypeNamingService;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
+import ua.com.fielden.platform.types.tuples.T2;
+import ua.com.fielden.platform.utils.CollectionUtil;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
 
@@ -311,16 +316,6 @@ public final class DomainTreeEnhancer extends AbstractDomainTree implements IDom
         originalAndEnhancedRootTypesAndArrays.putAll(freshOriginalAndEnhancedRootTypesAndArrays);
     }
 
-    private static Ignore createIgnore() {
-        final Ignore ignoreAnnotation = new Ignore() {
-            @Override
-            public Class<Ignore> annotationType() {
-                return Ignore.class;
-            }
-        };
-        return ignoreAnnotation;
-    }
-
     /**
      * Fully generates a new hierarchy of "originalAndEnhancedRootTypes" that conform to "calculatedProperties".
      * <p>
@@ -344,11 +339,7 @@ public final class DomainTreeEnhancer extends AbstractDomainTree implements IDom
             final String predefinedRootTypeName = new DynamicTypeNamingService().nextTypeName(originalRoot.getName());
             if (entry.getValue() == null) {
                 final ByteArray newByteArray = new ByteArray(classLoader.getCachedByteArray(originalRoot.getName()));
-                originalAndEnhancedRootTypes.put(originalRoot, new Pair<Class<?>, Map<String, ByteArray>>(originalRoot, new LinkedHashMap<String, ByteArray>() {
-                    {
-                        put("", newByteArray);
-                    }
-                }));
+                originalAndEnhancedRootTypes.put(originalRoot, new Pair<Class<?>, Map<String, ByteArray>>(originalRoot,  linkedMapOf(t2("", newByteArray))));
             } else {
                 for (final Entry<String, Map<String, IProperty>> placeAndProps : entry.getValue().entrySet()) {
                     final Map<String, IProperty> props = placeAndProps.getValue();
@@ -386,7 +377,6 @@ public final class DomainTreeEnhancer extends AbstractDomainTree implements IDom
                             // replace relevant root type in cache
                             originalAndEnhancedRootTypes.put(originalRoot, new Pair<Class<?>, Map<String, ByteArray>>(rootAfterPropagation, existingByteArrays));
                         } catch (final ClassNotFoundException e) {
-                            e.printStackTrace();
                             logger.error(e);
                             throw new IllegalStateException(e);
                         }

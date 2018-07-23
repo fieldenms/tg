@@ -8,10 +8,12 @@ import org.restlet.data.Method;
 
 import com.google.inject.Injector;
 
+import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.security.session.IUserSession;
 import ua.com.fielden.platform.security.user.IAuthenticationModel;
 import ua.com.fielden.platform.security.user.IUser;
 import ua.com.fielden.platform.security.user.IUserProvider;
+import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.utils.IUniversalConstants;
 import ua.com.fielden.platform.web.app.IWebUiConfig;
 import ua.com.fielden.platform.web.resources.RestServerUtil;
@@ -44,13 +46,16 @@ public class LoginResourceFactory extends Restlet {
                 throw new IllegalStateException("Both the domain name and the applicatin binding path should be provided.");
             }
 
+            final ICompanionObjectFinder coFinder = injector.getInstance(ICompanionObjectFinder.class);
+            final IUser coUser = coFinder.find(User.class, true);
+
             new LoginResource(
                     webUiConfig.getDomainName(),
                     webUiConfig.getPath(),
                     injector.getInstance(IUniversalConstants.class),
                     injector.getInstance(IAuthenticationModel.class),
                     injector.getInstance(IUserProvider.class),
-                    injector.getInstance(IUser.class),
+                    coUser,
                     injector.getInstance(IUserSession.class),
                     util,
                     getContext(),

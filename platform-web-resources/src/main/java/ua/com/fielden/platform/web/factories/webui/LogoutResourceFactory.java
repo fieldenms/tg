@@ -7,9 +7,11 @@ import org.restlet.data.Method;
 
 import com.google.inject.Injector;
 
+import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.security.session.IUserSession;
 import ua.com.fielden.platform.security.user.IUser;
 import ua.com.fielden.platform.security.user.IUserProvider;
+import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.web.resources.webui.LogoutResource;
 
 /**
@@ -31,9 +33,13 @@ public class LogoutResourceFactory extends Restlet {
         super.handle(request, response);
 
         if (Method.GET.equals(request.getMethod())) {
+            
+            final ICompanionObjectFinder coFinder = injector.getInstance(ICompanionObjectFinder.class);
+            final IUser coUser = coFinder.find(User.class, true);
+            
             new LogoutResource(
                     injector.getInstance(IUserProvider.class),
-                    injector.getInstance(IUser.class),
+                    coUser,
                     injector.getInstance(IUserSession.class),
                     getContext(),
                     request,
