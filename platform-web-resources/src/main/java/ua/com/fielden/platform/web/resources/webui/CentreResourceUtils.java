@@ -452,7 +452,7 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
                 createCriteriaMetaValues(freshCentre, getEntityType(miType)),
                 isFreshCentreChanged(freshCentre, updateCentre(gdtm, miType, SAVED_CENTRE_NAME, customObjectSaveAsName, device)),
                 of(customObjectSaveAsName),
-                validationPrototype.centreTitleAndDescGetter().apply(customObjectSaveAsName).map(titleDesc -> titleDesc._2),
+                validationPrototype.centreTitleAndDesc(customObjectSaveAsName).map(titleDesc -> titleDesc._2),
                 empty()
             );
             customObject.put(WAS_RUN_NAME, null); // make VIEW button disabled by default; this behaviour can be overridden by removing 'wasRun' customObject's entry
@@ -499,7 +499,7 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
             final ICentreDomainTreeManagerAndEnhancer freshCentre = updateCentre(gdtm, miType, FRESH_CENTRE_NAME, saveAsName, device);
             initAndCommit(gdtm, miType, FRESH_CENTRE_NAME, empty(), device, freshCentre, null);
             // when switching to default configuration we need to make it preferred
-            validationPrototype.preferredConfigMaker().accept(empty());
+            validationPrototype.makePreferredConfig(empty());
         }); 
         // updates inherited centre with title 'saveAsNameToLoad' from upstream base user's configuration -- just before LOAD action
         validationPrototype.setInheritedCentreUpdater(saveAsNameToLoad -> {
@@ -540,7 +540,7 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
         validationPrototype.setCentreEditor((newName, newDesc) -> {
             editCentreTitleAndDesc(gdtm, miType, saveAsName, device, newName, newDesc);
             // currently loaded configuration should remain preferred -- no action is required
-            return validationPrototype.centreCustomObjectGetter().apply(
+            return validationPrototype.centreCustomObject(
                 createCriteriaEntity(validationPrototype.centreContextHolder().getModifHolder(), companionFinder, critGenerator, miType, of(newName), gdtm, device),
                 of(newName)
             );
@@ -553,22 +553,18 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
             initAndCommit(gdtm, miType, FRESH_CENTRE_NAME, newSaveAsName, device, freshCentre, newDesc);
             initAndCommit(gdtm, miType, SAVED_CENTRE_NAME, newSaveAsName, device, freshCentre, null);
             // when switching to new configuration we need to make it preferred
-            validationPrototype.preferredConfigMaker().accept(newSaveAsName);
-            return validationPrototype.centreCustomObjectGetter().apply(
+            validationPrototype.makePreferredConfig(newSaveAsName);
+            return validationPrototype.centreCustomObject(
                 createCriteriaEntity(validationPrototype.centreContextHolder().getModifHolder(), companionFinder, critGenerator, miType, newSaveAsName, gdtm, device),
                 newSaveAsName
             );
         });
         // returns ordered alphabetically list of 'loadable' configurations for current user 
-        validationPrototype.setLoadableCentresSupplier(() -> {
-            return loadableConfigurations(gdtm, miType, device, companionFinder);
-        });
+        validationPrototype.setLoadableCentresSupplier(() -> loadableConfigurations(gdtm, miType, device, companionFinder));
         // returns currently loaded configuration's saveAsName
-        validationPrototype.setSaveAsNameSupplier(() -> {
-            return saveAsName;
-        });
+        validationPrototype.setSaveAsNameSupplier(() -> saveAsName);
         // makes 'saveAsNameToBecomePreferred' configuration preferred in case where it differs from currently loaded configuration; does nothing otherwise
-        validationPrototype.setPreferredConfigMaker((saveAsNameToBecomePreferred) -> {
+        validationPrototype.setPreferredConfigMaker(saveAsNameToBecomePreferred -> {
             if (!equalsEx(saveAsNameToBecomePreferred, saveAsName)) { // please note that currently loaded configuration must be preferred at this stage
                 makePreferred(gdtm, miType, saveAsNameToBecomePreferred, device, companionFinder);
             }

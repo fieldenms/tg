@@ -36,10 +36,8 @@ public class CentreColumnWidthConfigUpdaterDao extends CommonEntityDao<CentreCol
         // retrieve criteria entity
         final EnhancedCentreEntityQueryCriteria<?, ?> criteriaEntityBeingUpdated = criteriaEntityRestorer.restoreCriteriaEntity(action.getCriteriaEntityHolder());
         final Class<?> root = criteriaEntityBeingUpdated.getEntityClass();
-        final Consumer<Consumer<ICentreDomainTreeManagerAndEnhancer>> centreColumnWidthsAdjuster = criteriaEntityBeingUpdated.centreColumnWidthsAdjuster();
-        
         // use centreColumnWidthsAdjuster to update column widths in PREVIOUSLY_RUN and FRESH centre managers; commit them to the database
-        centreColumnWidthsAdjuster.accept(centreManager -> {
+        criteriaEntityBeingUpdated.adjustColumnWidths(centreManager ->
             action.getColumnParameters().entrySet().forEach(entry -> {
                 if (entry.getValue().containsKey("width")) {
                     centreManager.getSecondTick().setWidth(root, entry.getKey(), entry.getValue().get("width"));
@@ -47,11 +45,11 @@ public class CentreColumnWidthConfigUpdaterDao extends CommonEntityDao<CentreCol
                 if (entry.getValue().containsKey("growFactor")) {
                     centreManager.getSecondTick().setGrowFactor(root, entry.getKey(), entry.getValue().get("growFactor"));
                 }
-            });
-        });
+            })
+        );
         
         action.setColumnParameters(new HashMap<>());
-        action.setCentreChanged(criteriaEntityBeingUpdated.centreChangedGetter().get()); // centre will be changed after this action; changes can be discarded using DISCARD button on selection criteria
+        action.setCentreChanged(criteriaEntityBeingUpdated.isCentreChanged()); // centre will be changed after this action; changes can be discarded using DISCARD button on selection criteria
         return super.save(action);
     }
 }

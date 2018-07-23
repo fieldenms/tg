@@ -1,13 +1,12 @@
 package ua.com.fielden.platform.web.centre;
 
+import static java.util.stream.Collectors.toCollection;
 import static ua.com.fielden.platform.web.centre.CentreConfigUpdaterUtils.createCustomisableColumns;
 import static ua.com.fielden.platform.web.centre.CentreConfigUpdaterUtils.createSortingVals;
 import static ua.com.fielden.platform.web.centre.WebApiUtils.checkedPropertiesWithoutSummaries;
-import static ua.com.fielden.platform.web.centre.WebApiUtils.dslName;
 
 import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import com.google.inject.Inject;
 
@@ -36,15 +35,15 @@ public class CentreConfigUpdaterDefaultActionProducer extends DefaultEntityProdu
             final EnhancedCentreEntityQueryCriteria<?, ?> criteriaEntity = ofMasterEntity().selectionCrit();
             
             final Class<?> root = criteriaEntity.getEntityClass();
-            final ICentreDomainTreeManagerAndEnhancer baseCentre = criteriaEntity.baseCentreSupplier().get();
+            final ICentreDomainTreeManagerAndEnhancer baseCentre = criteriaEntity.baseCentre();
             final Class<?> defaultManagedType = baseCentre.getEnhancer().getManagedType(root);
             
             // provide default visible properties into the action
             final List<String> defaultUsedProperties = baseCentre.getSecondTick().usedProperties(root);
             entity.setDefaultVisibleProperties(
                 defaultUsedProperties.stream()
-                .map(checkedProperty -> dslName(checkedProperty))
-                .collect(Collectors.toCollection(LinkedHashSet::new))
+                .map(WebApiUtils::dslName)
+                .collect(toCollection(LinkedHashSet::new))
             );
             
             final List<String> defaultCheckedPropertiesWithoutSummaries = checkedPropertiesWithoutSummaries(baseCentre.getSecondTick().checkedProperties(root), defaultManagedType);

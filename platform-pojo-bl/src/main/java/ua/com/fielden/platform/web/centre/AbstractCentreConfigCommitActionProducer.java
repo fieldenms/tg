@@ -34,7 +34,7 @@ public abstract class AbstractCentreConfigCommitActionProducer<T extends Abstrac
             
             // in most cases the following check will be needed to determine the course of action
             // also it will throw early failure in case where current configuration was deleted
-            final boolean isDefaultOrInherited = isDefaultOrInherited(selectionCrit().saveAsNameSupplier().get(), selectionCrit());
+            final boolean isDefaultOrInherited = isDefaultOrInherited(selectionCrit().saveAsName(), selectionCrit());
             
             // apply criteria entity
             final EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, ? extends IEntityDao<AbstractEntity<?>>> appliedCriteriaEntity = applyCriteria(selectionCrit());
@@ -87,9 +87,10 @@ public abstract class AbstractCentreConfigCommitActionProducer<T extends Abstrac
         makeTitleAndDescRequired(entity);
         
         // change values
-        final T2<String, String> titleAndDesc = selectionCrit.centreTitleAndDescGetter().apply(of(saveAsName)).get();
-        entity.setTitle(titleAndDesc._1 + suffix);
-        entity.setDesc(titleAndDesc._2 + suffix);
+        selectionCrit.centreTitleAndDesc(of(saveAsName)).ifPresent(titleAndDesc -> {
+            entity.setTitle(titleAndDesc._1 + suffix);
+            entity.setDesc(titleAndDesc._2 + suffix);
+        });
     }
     
     /**

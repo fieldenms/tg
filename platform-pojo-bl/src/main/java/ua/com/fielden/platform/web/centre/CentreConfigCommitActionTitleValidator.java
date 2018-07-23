@@ -50,13 +50,13 @@ public class CentreConfigCommitActionTitleValidator implements IBeforeChangeEven
         } else {
             final AbstractCentreConfigCommitAction entity = property.getEntity();
             final EnhancedCentreEntityQueryCriteria<?, ?> criteriaEntity = criteriaEntityRestorer.restoreCriteriaEntity(entity.getCentreContextHolder());
-            final Optional<String> saveAsName = criteriaEntity.saveAsNameSupplier().get();
+            final Optional<String> saveAsName = criteriaEntity.saveAsName();
             
             // find possible intersections -- configuration entities with 'inherited' marker to be compared with 'newValue' title
             // in case of EDIT action (unlike SAVEAS) we need to skip currently loaded configuration when determining 'possible intersections' -- this is because 
             //  when EDIT is performed the user could leave title unchanged and change only description
             final boolean titleCanBeCurrent = CentreConfigEditAction.class.isAssignableFrom(entity.getType());
-            final Map<Boolean, List<LoadableCentreConfig>> possibleIntersections = criteriaEntity.loadableCentresSupplier().get().stream()
+            final Map<Boolean, List<LoadableCentreConfig>> possibleIntersections = criteriaEntity.loadableCentreConfigs().stream()
                 .filter(config -> titleCanBeCurrent ? saveAsName.map(name -> !config.getKey().equals(name)).orElse(true) : true)
                 .collect(partitioningBy(LoadableCentreConfig::isInherited)); // split possible intersections by 'inherited' marker
             

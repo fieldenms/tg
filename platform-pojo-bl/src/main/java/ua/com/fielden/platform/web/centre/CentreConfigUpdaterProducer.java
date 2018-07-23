@@ -6,6 +6,9 @@ import static ua.com.fielden.platform.web.centre.CentreConfigUpdaterUtils.create
 import static ua.com.fielden.platform.web.centre.WebApiUtils.checkedPropertiesWithoutSummaries;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Optional;
+import java.util.Set;
+
 import com.google.inject.Inject;
 
 import ua.com.fielden.platform.dao.IEntityDao;
@@ -51,7 +54,7 @@ public class CentreConfigUpdaterProducer extends AbstractFunctionalEntityForColl
         // When APPLY is made in Customise Columns dialog the changes are applied against 'fresh' and 'previouslyRun' centres, but not against 'saved' one.
         // Thus Discard button on selection criteria can be used to Discard all centre changes including those made in Customise Columns dialog.
         // Very similar situation is with Change Columns Width action.
-        final ICentreDomainTreeManagerAndEnhancer previouslyRunCentre = masterEntity.previouslyRunCentreSupplier().get();
+        final ICentreDomainTreeManagerAndEnhancer previouslyRunCentre = masterEntity.previouslyRunCentre();
         
         final List<String> previouslyRunCheckedProperties = previouslyRunCentre.getSecondTick().checkedProperties(root);
         final List<String> previouslyRunUsedProperties = previouslyRunCentre.getSecondTick().usedProperties(root);
@@ -66,7 +69,7 @@ public class CentreConfigUpdaterProducer extends AbstractFunctionalEntityForColl
         );
         
         // provide customisable columns into the action
-        final LinkedHashSet<CustomisableColumn> customisableColumns = createCustomisableColumns(checkedPropertiesWithoutSummaries(previouslyRunCheckedProperties, previouslyRunManagedType), previouslyRunSortedProperties, previouslyRunManagedType, factory());
+        final Set<CustomisableColumn> customisableColumns = createCustomisableColumns(checkedPropertiesWithoutSummaries(previouslyRunCheckedProperties, previouslyRunManagedType), previouslyRunSortedProperties, previouslyRunManagedType, factory());
         entity.setCustomisableColumns(customisableColumns);
         
         // provide sorting values into the action

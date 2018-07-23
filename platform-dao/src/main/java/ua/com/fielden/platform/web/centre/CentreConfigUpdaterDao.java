@@ -48,10 +48,9 @@ public class CentreConfigUpdaterDao extends CommonEntityDao<CentreConfigUpdater>
         // retrieve criteria entity
         final EnhancedCentreEntityQueryCriteria<?, ?> criteriaEntityBeingUpdated = actionAndCriteriaBeingUpdated._2;
         final Class<?> root = criteriaEntityBeingUpdated.getEntityClass();
-        final Consumer<Consumer<ICentreDomainTreeManagerAndEnhancer>> centreAdjuster = criteriaEntityBeingUpdated.centreAdjuster();
-        
+
         // use centreAdjuster to update all centre managers ('fresh' and 'saved') with columns visibility / order / sorting information; also commit them to the database
-        centreAdjuster.accept(centreManager -> {
+        criteriaEntityBeingUpdated.adjustCentre(centreManager -> {
             // remove sorting information
             final List<Pair<String, Ordering>> currOrderedProperties = new ArrayList<>(centreManager.getSecondTick().orderedProperties(root));
             for (final Pair<String, Ordering> orderedProperty: currOrderedProperties) {
@@ -84,7 +83,7 @@ public class CentreConfigUpdaterDao extends CommonEntityDao<CentreConfigUpdater>
         });
         actionToSave.setSortingChanged(actionToSave.getProperty("sortingVals").isChangedFromOriginal());
         if (!actionToSave.isSortingChanged()) {
-            actionToSave.setCentreChanged(criteriaEntityBeingUpdated.centreChangedGetter().get());
+            actionToSave.setCentreChanged(criteriaEntityBeingUpdated.isCentreChanged());
         }
         return super.save(actionToSave);
     }

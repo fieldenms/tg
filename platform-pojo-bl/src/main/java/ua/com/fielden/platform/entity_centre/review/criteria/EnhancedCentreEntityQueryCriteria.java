@@ -73,80 +73,80 @@ public class EnhancedCentreEntityQueryCriteria<T extends AbstractEntity<?>, DAO 
         this.centreColumnWidthsAdjuster = centreColumnWidthsAdjuster;
     }
 
-    public Consumer<Consumer<ICentreDomainTreeManagerAndEnhancer>> centreColumnWidthsAdjuster() {
-        return centreColumnWidthsAdjuster;
+    public void adjustColumnWidths(final Consumer<ICentreDomainTreeManagerAndEnhancer> consumer) {
+        centreColumnWidthsAdjuster.accept(consumer);
     }
 
     public void setCentreAdjuster(final Consumer<Consumer<ICentreDomainTreeManagerAndEnhancer>> centreAdjuster) {
         this.centreAdjuster = centreAdjuster;
     }
 
-    public Consumer<Consumer<ICentreDomainTreeManagerAndEnhancer>> centreAdjuster() {
-        return centreAdjuster;
+    public void adjustCentre(final Consumer<ICentreDomainTreeManagerAndEnhancer> consumer) {
+        centreAdjuster.accept(consumer);
     }
 
     public void setPreviouslyRunCentreSupplier(final Supplier<ICentreDomainTreeManagerAndEnhancer> previouslyRunCentreSupplier) {
         this.previouslyRunCentreSupplier = previouslyRunCentreSupplier;
     }
 
-    public Supplier<ICentreDomainTreeManagerAndEnhancer> previouslyRunCentreSupplier() {
-        return previouslyRunCentreSupplier;
+    public ICentreDomainTreeManagerAndEnhancer previouslyRunCentre() {
+        return previouslyRunCentreSupplier.get();
     }
 
     public void setFreshCentreApplier(final Function<Map<String, Object>, EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, ? extends IEntityDao<AbstractEntity<?>>>> freshCentreApplier) {
         this.freshCentreApplier = freshCentreApplier;
     }
 
-    public Function<Map<String, Object>, EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, ? extends IEntityDao<AbstractEntity<?>>>> freshCentreApplier() {
-        return freshCentreApplier;
+    public EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, ? extends IEntityDao<AbstractEntity<?>>> freshCentreApplier(final Map<String, Object> modifHolder) {
+        return freshCentreApplier.apply(modifHolder);
     }
 
     public void setCentreEditor(final BiFunction<String, String, Map<String, Object>> centreEditor) {
         this.centreEditor = centreEditor;
     }
 
-    public BiFunction<String, String, Map<String, Object>> centreEditor() {
-        return centreEditor;
+    public Map<String, Object> editCentre(final String title, final String desc) {
+        return centreEditor.apply(title, desc);
     }
 
     public void setCentreSaver(final BiFunction<String, String, Map<String, Object>> centreSaver) {
         this.centreSaver = centreSaver;
     }
 
-    public BiFunction<String, String, Map<String, Object>> centreSaver() {
-        return centreSaver;
+    public Map<String, Object> saveCentre(final String title, final String desc) {
+        return centreSaver.apply(title, desc);
     }
 
     public void setDefaultCentreClearer(final Runnable defaultCentreClearer) {
         this.defaultCentreClearer = defaultCentreClearer;
     }
 
-    public Runnable defaultCentreClearer() {
-        return defaultCentreClearer;
+    public void clearDefaultCentre() {
+        defaultCentreClearer.run();
     }
 
     public void setInheritedCentreUpdater(final Consumer<String> inheritedCentreUpdater) {
         this.inheritedCentreUpdater = inheritedCentreUpdater;
     }
 
-    public Consumer<String> inheritedCentreUpdater() {
-        return inheritedCentreUpdater;
+    public void updateInheritedCentre(final String saveAsNameToLoad) {
+        inheritedCentreUpdater.accept(saveAsNameToLoad);
     }
 
     public void setConfigDuplicateAction(final Runnable configDuplicateAction) {
         this.configDuplicateAction = configDuplicateAction;
     }
 
-    public Runnable configDuplicateAction() {
-        return configDuplicateAction;
+    public void configDuplicateAction() {
+        configDuplicateAction.run();
     }
 
     public void setFreshCentreSaver(final Runnable freshCentreSaver) {
         this.freshCentreSaver = freshCentreSaver;
     }
 
-    public Runnable freshCentreSaver() {
-        return freshCentreSaver;
+    public void saveFreshCentre() {
+        freshCentreSaver.run();
     }
 
     public void setCentreDeleter(final Runnable centreDeleter) {
@@ -154,89 +154,87 @@ public class EnhancedCentreEntityQueryCriteria<T extends AbstractEntity<?>, DAO 
     }
 
     public void deleteCentre() {
-        if (centreDeleter != null) {
-            centreDeleter.run();
-        }
+        centreDeleter.run();
     }
 
     public void setLoadableCentresSupplier(final Supplier<List<LoadableCentreConfig>> loadableCentresSupplier) {
         this.loadableCentresSupplier = loadableCentresSupplier;
     }
 
-    public Supplier<List<LoadableCentreConfig>> loadableCentresSupplier() {
-        return loadableCentresSupplier;
+    public List<LoadableCentreConfig> loadableCentreConfigs() {
+        return loadableCentresSupplier.get();
     }
 
     public void setSaveAsNameSupplier(final Supplier<Optional<String>> saveAsNameSupplier) {
         this.saveAsNameSupplier = saveAsNameSupplier;
     }
 
-    public Supplier<Optional<String>> saveAsNameSupplier() {
-        return saveAsNameSupplier;
+    public Optional<String> saveAsName() {
+        return saveAsNameSupplier.get();
     }
 
     public void setPreferredConfigMaker(final Consumer<Optional<String>> preferredConfigMaker) {
         this.preferredConfigMaker = preferredConfigMaker;
     }
 
-    public Consumer<Optional<String>> preferredConfigMaker() {
-        return preferredConfigMaker;
+    public void makePreferredConfig(final Optional<String> saveAsName) {
+        preferredConfigMaker.accept(saveAsName);
     }
 
     public void setCentreTitleAndDescGetter(final Function<Optional<String>, Optional<T2<String, String>>> centreTitleAndDescGetter) {
         this.centreTitleAndDescGetter = centreTitleAndDescGetter;
     }
 
-    public Function<Optional<String>, Optional<T2<String, String>>> centreTitleAndDescGetter() {
-        return centreTitleAndDescGetter;
+    public Optional<T2<String, String>> centreTitleAndDesc(final Optional<String> saveAsName) {
+        return centreTitleAndDescGetter.apply(saveAsName);
     }
 
     public void setBaseCentreSupplier(final Supplier<ICentreDomainTreeManagerAndEnhancer> baseCentreSupplier) {
         this.baseCentreSupplier = baseCentreSupplier;
     }
 
-    public Supplier<ICentreDomainTreeManagerAndEnhancer> baseCentreSupplier() {
-        return baseCentreSupplier;
+    public ICentreDomainTreeManagerAndEnhancer baseCentre() {
+        return baseCentreSupplier.get();
     }
 
     public void setCentreCustomObjectGetter(final BiFunction<EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, ? extends IEntityDao<AbstractEntity<?>>>, Optional<String>, Map<String, Object>> centreCustomObjectGetter) {
         this.centreCustomObjectGetter = centreCustomObjectGetter;
     }
 
-    public BiFunction<EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, ? extends IEntityDao<AbstractEntity<?>>>, Optional<String>, Map<String, Object>> centreCustomObjectGetter() {
-        return centreCustomObjectGetter;
+    public Map<String, Object> centreCustomObject(final EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, ? extends IEntityDao<AbstractEntity<?>>> critEntity, final Optional<String> saveAsName) {
+        return centreCustomObjectGetter.apply(critEntity, saveAsName);
     }
 
     public void setCriteriaValidationPrototypeCreator(final Function<Optional<String>, EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, ? extends IEntityDao<AbstractEntity<?>>>> criteriaValidationPrototypeCreator) {
         this.criteriaValidationPrototypeCreator = criteriaValidationPrototypeCreator;
     }
 
-    public Function<Optional<String>, EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, ? extends IEntityDao<AbstractEntity<?>>>> criteriaValidationPrototypeCreator() {
-        return criteriaValidationPrototypeCreator;
+    public EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, ? extends IEntityDao<AbstractEntity<?>>> createCriteriaValidationPrototype(final Optional<String> saveAsName) {
+        return criteriaValidationPrototypeCreator.apply(saveAsName);
     }
 
     public void setCentreChangedGetter(final Supplier<Boolean> centreChangedGetter) {
         this.centreChangedGetter = centreChangedGetter;
     }
 
-    public Supplier<Boolean> centreChangedGetter() {
-        return centreChangedGetter;
-    }
-
-    public Function<Map<String, Object>, Stream<AbstractEntity<?>>> exportQueryRunner() {
-        return exportQueryRunner;
+    public boolean isCentreChanged() {
+        return centreChangedGetter.get();
     }
 
     public void setExportQueryRunner(final Function<Map<String, Object>, Stream<AbstractEntity<?>>> exportQueryRunner) {
         this.exportQueryRunner = exportQueryRunner;
     }
-    
-    public CentreContextHolder centreContextHolder() {
-        return centreContextHolder;
+
+    public Stream<AbstractEntity<?>> export(final Map<String, Object> queryParams) {
+        return exportQueryRunner.apply(queryParams);
     }
-    
+
     public EnhancedCentreEntityQueryCriteria<T, DAO> setCentreContextHolder(final CentreContextHolder centreContextHolder) {
         this.centreContextHolder = centreContextHolder;
         return this;
+    }
+
+    public CentreContextHolder centreContextHolder() {
+        return centreContextHolder;
     }
 }

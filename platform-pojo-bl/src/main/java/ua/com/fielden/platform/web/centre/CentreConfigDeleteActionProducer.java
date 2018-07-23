@@ -27,7 +27,7 @@ public class CentreConfigDeleteActionProducer extends DefaultEntityProducerWithC
     @Override
     protected CentreConfigDeleteAction provideDefaultValues(final CentreConfigDeleteAction entity) {
         if (contextNotEmpty()) {
-            if (isDefaultOrInherited(selectionCrit().saveAsNameSupplier().get(), selectionCrit())) { // this will also throw early failure in case where current configuration was deleted
+            if (isDefaultOrInherited(selectionCrit().saveAsName(), selectionCrit())) { // this will also throw early failure in case where current configuration was deleted
                 throw failure(ERR_CANNOT_BE_DELETED);
             }
             selectionCrit().deleteCentre();
