@@ -1,13 +1,9 @@
 package ua.com.fielden.platform.basic.autocompleter;
 
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.orderBy;
-import static ua.com.fielden.platform.utils.EntityUtils.hasDescProperty;
-
 import ua.com.fielden.platform.basic.IValueMatcherWithCentreContext;
 import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.model.ConditionModel;
-import ua.com.fielden.platform.entity.query.model.OrderingModel;
 import ua.com.fielden.platform.web.centre.CentreContext;
 
 /**
@@ -35,13 +31,5 @@ public class FallbackValueMatcherWithCentreContext<T extends AbstractEntity<?>> 
     @Override
     protected ConditionModel makeSearchCriteriaModel(final CentreContext<T, ?> context, final String searchString) {
     	return super.makeSearchCriteriaModel(context, searchString);
-    }
-
-    @Override
-    protected OrderingModel makeOrderingModel(final String searchString) {
-    	if (hasDescProperty(entityType) && !"%".equals(searchString)) {
-    		return orderBy().order(createKeyBeforeDescOrderingModel(entityType, searchString)).order(super.makeOrderingModel(searchString)).model();
-    	} 
-        return super.makeOrderingModel(searchString);
     }
 }

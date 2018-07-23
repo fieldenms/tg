@@ -4,11 +4,13 @@
 package ua.com.fielden.platform.basic.autocompleter;
 
 import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.cond;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchKeyAndDescOnly;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.orderBy;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
-import static ua.com.fielden.platform.basic.IValueMatcherWithFetch.createSearchByKeyCriteriaModel;
+import static ua.com.fielden.platform.utils.EntityUtils.hasDescProperty;
+import static ua.com.fielden.platform.basic.IValueMatcherWithFetch.createRelaxedSearchByKeyCriteriaModel;
 
 import java.util.HashMap;
 import java.util.List;
@@ -53,7 +55,13 @@ public abstract class AbstractSearchEntityByKeyWithContext<CONTEXT extends Abstr
      * @return
      */
     protected ConditionModel makeSearchCriteriaModel(final CONTEXT context, final String searchString) {
-        return createSearchByKeyCriteriaModel(companion.getEntityType(), searchString);
+    	if ("%".equals(searchString)) {
+    		return cond().val(1).eq().val(1).model();
+    	}
+      	
+    	ConditionModel keyCriteria = createRelaxedSearchByKeyCriteriaModel(searchString);
+      
+		return hasDescProperty(companion.getEntityType()) ? cond().condition(keyCriteria).or().prop(AbstractEntity.DESC).iLike().val("%" + searchString).model() : keyCriteria;
     }
 
     /**
@@ -82,10 +90,18 @@ public abstract class AbstractSearchEntityByKeyWithContext<CONTEXT extends Abstr
         final ConditionModel searchCriteria = makeSearchCriteriaModel(getContext(), searchString);
         final EntityResultQueryModel<T> queryModel = searchCriteria != null ? select(companion.getEntityType()).where().condition(searchCriteria).model() : select(companion.getEntityType()).model();
         queryModel.setFilterable(true);
-        final OrderingModel ordering = makeOrderingModel(searchString);
+        final OrderingModel ordering = composeOrderingModelForQuery(searchString);
         final Map<String, Object> params = new HashMap<>();
         fillParamsBasedOnContext(getContext(), params);
         return from(queryModel).with(ordering).with(params).lightweight();
+    }
+    
+    private OrderingModel composeOrderingModelForQuery(final String searchString) {
+    	return "%".equals(searchString) ? makeOrderingModel(searchString) : 
+        	orderBy().
+        	expr(makeSearchResultOrderingPriority(companion.getEntityType(), searchString)).asc().
+        	order(makeOrderingModel(searchString)).
+        	model();
     }
     
     @Override
