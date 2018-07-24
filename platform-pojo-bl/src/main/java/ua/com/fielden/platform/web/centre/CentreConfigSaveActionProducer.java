@@ -35,7 +35,7 @@ public class CentreConfigSaveActionProducer extends AbstractCentreConfigCommitAc
             if (!isDefault(saveAsName)) {
                 setTitleAndDesc(entity, saveAsName.get(), selectionCrit, COPY_ACTION_SUFFIX);
             } else {
-                makeTitleAndDescRequired(entity);
+                makeTitleRequired(entity);
             }
             return getCustomObject(selectionCrit, appliedCriteriaEntity);
         } else { // owned configuration should be saved without opening 'Save As...' dialog

@@ -183,7 +183,7 @@ public class CentreConfigurationWebUiConfig {
         return new EntityMaster<>(
             CentreConfigEditAction.class,
             CentreConfigEditActionProducer.class,
-            createCentreConfigCommitActionMaster(injector, CentreConfigEditAction.class, "Saves title and description changes.", "Cancels changes."),
+            createCentreConfigCommitActionMaster(injector, CentreConfigEditAction.class, "Save title and description changes.", "Cancel changes."),
             injector
         );
     }
