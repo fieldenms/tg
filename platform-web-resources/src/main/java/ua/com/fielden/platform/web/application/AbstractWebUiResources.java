@@ -17,7 +17,6 @@ import ua.com.fielden.platform.web.app.ISourceController;
 import ua.com.fielden.platform.web.app.IWebUiConfig;
 import ua.com.fielden.platform.web.factories.webui.AppIndexResourceFactory;
 import ua.com.fielden.platform.web.factories.webui.CentreComponentResourceFactory;
-import ua.com.fielden.platform.web.factories.webui.CentreDefaulterResourceFactory;
 import ua.com.fielden.platform.web.factories.webui.CentreEgiResourceFactory;
 import ua.com.fielden.platform.web.factories.webui.CentreResourceFactory;
 import ua.com.fielden.platform.web.factories.webui.CriteriaResourceFactory;
@@ -207,7 +206,6 @@ public abstract class AbstractWebUiResources extends Application {
         logger.info("\t\tCentre resources attaching...");
         router.attach("/criteria/{mitype}/{saveAsName}", new CriteriaResourceFactory(webUiConfig, injector));
         router.attach("/centre/{mitype}/{saveAsName}", new CentreResourceFactory(webUiConfig, injector));
-        router.attach("/centre/default/{mitype}/{saveAsName}", new CentreDefaulterResourceFactory(webUiConfig, injector));
         router.attach("/centre_ui/{mitype}", new CentreComponentResourceFactory(sourceController, restUtil, deviceProvider));
         router.attach("/centre_ui/egi/{mitype}", new CentreEgiResourceFactory(sourceController, restUtil, deviceProvider));
     }

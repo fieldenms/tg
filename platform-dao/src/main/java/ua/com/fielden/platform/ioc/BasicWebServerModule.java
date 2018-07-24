@@ -99,11 +99,13 @@ import ua.com.fielden.platform.ui.config.controller.EntityLocatorConfigDao;
 import ua.com.fielden.platform.ui.config.controller.EntityMasterConfigDao;
 import ua.com.fielden.platform.ui.config.controller.MainMenuItemDao;
 import ua.com.fielden.platform.web.centre.CentreConfigDeleteActionDao;
-import ua.com.fielden.platform.web.centre.CentreConfigLoadActionDao;
+import ua.com.fielden.platform.web.centre.CentreConfigDuplicateActionDao;
+import ua.com.fielden.platform.web.centre.CentreConfigNewActionDao;
 import ua.com.fielden.platform.web.centre.CentreConfigUpdaterDefaultActionDao;
 import ua.com.fielden.platform.web.centre.CustomisableColumnDao;
 import ua.com.fielden.platform.web.centre.ICentreConfigDeleteAction;
-import ua.com.fielden.platform.web.centre.ICentreConfigLoadAction;
+import ua.com.fielden.platform.web.centre.ICentreConfigDuplicateAction;
+import ua.com.fielden.platform.web.centre.ICentreConfigNewAction;
 import ua.com.fielden.platform.web.centre.ICentreConfigUpdaterDefaultAction;
 import ua.com.fielden.platform.web.centre.ICustomisableColumn;
 import ua.com.fielden.platform.web.centre.ILoadableCentreConfig;
@@ -235,7 +237,8 @@ public class BasicWebServerModule extends CommonFactoryModule {
 
         bind(ICentreConfigUpdaterDefaultAction.class).to(CentreConfigUpdaterDefaultActionDao.class);
         bind(ICustomisableColumn.class).to(CustomisableColumnDao.class);
-        bind(ICentreConfigLoadAction.class).to(CentreConfigLoadActionDao.class);
+        bind(ICentreConfigNewAction.class).to(CentreConfigNewActionDao.class);
+        bind(ICentreConfigDuplicateAction.class).to(CentreConfigDuplicateActionDao.class);
         bind(ICentreConfigDeleteAction.class).to(CentreConfigDeleteActionDao.class);
         bind(ILoadableCentreConfig.class).to(LoadableCentreConfigDao.class);
         bind(IOverrideCentreConfig.class).to(OverrideCentreConfigDao.class);

@@ -79,6 +79,14 @@
                 },
                 
                 /**
+                 * Description of currently loaded 'saveAs' configuration.
+                 */
+                saveAsDesc: {
+                    type: String,
+                    observer: '_saveAsDescChanged'
+                },
+                
+                /**
                  * Centre URI parameters taken from tg-entity-centre-behavior.
                  */
                 queryPart: {
@@ -355,11 +363,18 @@
                 this._setPropertyModel(customObject.metaValues);
                 this._centreChanged = customObject.isCentreChanged;
                 if (typeof customObject.saveAsDesc !== 'undefined') {
-                    this._saveAsDesc = customObject.saveAsDesc; // initialise description before to be able to use it for 'tg-save-as-name-changed' event firing when preferred config is loading
+                    this.saveAsDesc = customObject.saveAsDesc;
                 }
-                if (typeof customObject.saveAsName !== 'undefined' && this.saveAsName === this._reflector().UNDEFINED_CONFIG_TITLE) {
+                if (typeof customObject.saveAsName !== 'undefined') {
                     this.saveAsName = customObject.saveAsName;
                 }
+                if (typeof customObject.wasRun !== 'undefined') {
+                    this._wasRun = customObject.wasRun;
+                }
+            },
+            
+            _saveAsDescChanged: function (newSaveAsDesc) {
+                this.fire('tg-save-as-desc-changed', newSaveAsDesc);
             },
             
             _extractModifiedPropertiesHolder: function (bindingEntity, _originalBindingEntity) {
@@ -427,10 +442,6 @@
                 if (this.pageCount === null) {
                     throw "Do not execute methods firstPage(), nextPage() etc. before the method run().";
                 }
-            },
-
-            canLeave: function () {
-                return this.canManageCentreConfig(this._centreChanged, this._bindingEntityNotPersistentOrNotPersistedOrModified, this._editedPropsExist, this._currEntity) ? "Please save changes before leaving" : undefined;
             },
 
             /**
