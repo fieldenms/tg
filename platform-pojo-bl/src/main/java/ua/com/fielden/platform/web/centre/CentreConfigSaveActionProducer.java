@@ -30,8 +30,8 @@ public class CentreConfigSaveActionProducer extends AbstractCentreConfigCommitAc
     
     @Override
     protected Map<String, Object> performProduce(final CentreConfigSaveAction entity, final EnhancedCentreEntityQueryCriteria<?, ?> selectionCrit, final EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, ? extends IEntityDao<AbstractEntity<?>>> appliedCriteriaEntity, final boolean isDefaultOrInherited) {
-        final Optional<String> saveAsName = selectionCrit.saveAsName();
         if (isDefaultOrInherited) {
+            final Optional<String> saveAsName = selectionCrit.saveAsName();
             if (!isDefault(saveAsName)) {
                 setTitleAndDesc(entity, saveAsName.get(), selectionCrit, COPY_ACTION_SUFFIX);
             } else {
