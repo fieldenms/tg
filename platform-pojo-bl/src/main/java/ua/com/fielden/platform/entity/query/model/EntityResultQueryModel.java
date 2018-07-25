@@ -14,4 +14,10 @@ public class EntityResultQueryModel<T extends AbstractEntity<?>> extends SingleR
     public EntityResultQueryModel(final List<Pair<TokenCategory, Object>> tokens, final Class<T> resultType, final boolean yieldAll) {
         super(tokens, resultType, yieldAll);
     }
+
+    @Override
+    public EntityResultQueryModel<T> setFilterable(boolean filterable) {
+        super.setFilterable(filterable);
+        return this;
+    }
 }
