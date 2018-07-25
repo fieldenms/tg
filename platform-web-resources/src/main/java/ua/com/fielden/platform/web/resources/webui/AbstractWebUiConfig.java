@@ -82,7 +82,7 @@ public abstract class AbstractWebUiConfig implements IWebUiConfig {
         final LinkedHashSet<String> allResourcePaths = new LinkedHashSet<>();
         allResourcePaths.addAll(Arrays.asList("", "ua/com/fielden/platform/web/"));
         allResourcePaths.addAll(Arrays.asList(externalResourcePaths));
-        this.resourcePaths = new ArrayList<String>(Collections.unmodifiableSet(allResourcePaths));
+        this.resourcePaths = new ArrayList<>(Collections.unmodifiableSet(allResourcePaths));
         Collections.reverse(this.resourcePaths);
     }
 

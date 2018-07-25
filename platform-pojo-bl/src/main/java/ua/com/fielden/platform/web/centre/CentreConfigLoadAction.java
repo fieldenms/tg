@@ -24,7 +24,6 @@ import ua.com.fielden.platform.entity.functional.centre.CentreContextHolder;
  *
  */
 @CompanionObject(ICentreConfigLoadAction.class)
-//!@MapEntityTo -- here the entity is not persistent intentionally
 public class CentreConfigLoadAction extends AbstractFunctionalEntityForCollectionModification<String> {
     
     @IsProperty(LoadableCentreConfig.class)

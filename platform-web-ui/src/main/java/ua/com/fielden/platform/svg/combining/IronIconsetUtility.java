@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.svg.combining;
 
+import static java.lang.String.format;
 import static java.nio.file.Files.readAllBytes;
 
 import java.io.File;
@@ -23,7 +24,9 @@ public class IronIconsetUtility {
     private final String srcFolder;
 
     public IronIconsetUtility(final String iconsetId, final int svgWidth, final String srcFolder) {
-        this.fileBegin = String.format("<link rel=\"import\" href=\"/resources/polymer/iron-icon/iron-icon.html\"> \n <link rel=\"import\" href=\"/resources/polymer/iron-iconset-svg/iron-iconset-svg.html\"> \n <iron-iconset-svg name=\"%s\" size=\"%d\"> \n <svg> \n <defs> \n", iconsetId, svgWidth);
+        this.fileBegin = format("<link rel=\"import\" href=\"/resources/polymer/iron-icon/iron-icon.html\"> %n " +
+                                "<link rel=\"import\" href=\"/resources/polymer/iron-iconset-svg/iron-iconset-svg.html\"> %n " +
+                                "<iron-iconset-svg name=\"%s\" size=\"%d\"> \n <svg> \n <defs> %n", iconsetId, svgWidth);
         this.fileEnd = "</defs> \n </svg> \n </iron-iconset-svg>";
         this.srcFolder = srcFolder;
     }
@@ -51,7 +54,7 @@ public class IronIconsetUtility {
     }
 
     private Set<String> getFilesFromFolder(final String folder) throws IOException {
-        final Set<String> srcFiles = new HashSet<String>();
+        final Set<String> srcFiles = new HashSet<>();
         try (DirectoryStream<Path> stream = Files.newDirectoryStream(Paths.get(folder), "*.svg")) {
             for (final Path filePath : stream) {
                 srcFiles.add(filePath.toString());

@@ -6,13 +6,13 @@ import static ua.com.fielden.platform.web.centre.CentreConfigUtils.invalidCustom
 import static ua.com.fielden.platform.web.centre.CentreConfigUtils.isDefaultOrInherited;
 
 import java.util.Map;
+
 import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.DefaultEntityProducerWithContext;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.entity_centre.review.criteria.EnhancedCentreEntityQueryCriteria;
-import ua.com.fielden.platform.types.tuples.T2;
 
 /**
  * An abstract producer for new instances of {@link AbstractCentreConfigCommitAction} descendants.
@@ -76,7 +76,7 @@ public abstract class AbstractCentreConfigCommitActionProducer<T extends Abstrac
     /**
      * Initialises <code>title</code> and <code>desc</code> inside <code>entity</code>. Takes them from persisted configuration with concrete name <code>saveAsName</code>.
      * <p>
-     * Concatenates <code>suffix</code> to both <code>title</code> and <code>desc</code>.
+     * Concatenates <code>suffix</code> to <code>title</code>.
      * 
      * @param entity
      * @param saveAsName
@@ -84,12 +84,12 @@ public abstract class AbstractCentreConfigCommitActionProducer<T extends Abstrac
      * @param suffix
      */
     protected void setTitleAndDesc(final T entity, final String saveAsName, final EnhancedCentreEntityQueryCriteria<?, ?> selectionCrit, final String suffix) {
-        makeTitleAndDescRequired(entity);
+        makeTitleRequired(entity);
         
         // change values
         selectionCrit.centreTitleAndDesc(of(saveAsName)).ifPresent(titleAndDesc -> {
             entity.setTitle(titleAndDesc._1 + suffix);
-            entity.setDesc(titleAndDesc._2 + suffix);
+            entity.setDesc(titleAndDesc._2);
         });
     }
     
@@ -98,10 +98,9 @@ public abstract class AbstractCentreConfigCommitActionProducer<T extends Abstrac
      * 
      * @param entity
      */
-    protected void makeTitleAndDescRequired(final T entity) {
-        // make title and desc required
+    protected void makeTitleRequired(final T entity) {
+        // make title required, desc should be optional
         entity.getProperty("title").setRequired(true);
-        entity.getProperty("desc").setRequired(true);
     }
     
 }
