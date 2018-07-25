@@ -41,6 +41,20 @@ public class CentreConfigUpdater extends AbstractFunctionalEntityForCollectionMo
     @Title(value = "Master Entity Holder", desc = "Master entity's holder that is set during producing of this functional action and is used to restore master entity in companion object.")
     private CentreContextHolder masterEntityHolder;
     
+    @IsProperty
+    @Title(value = "Centre Changed", desc = "Indicates whether successful saving of this entity actually changed centre. Only populated when centre sorting wasn't changed.")
+    private boolean centreChanged;
+    
+    @Observable
+    public CentreConfigUpdater setCentreChanged(final boolean centreChanged) {
+        this.centreChanged = centreChanged;
+        return this;
+    }
+    
+    public boolean isCentreChanged() {
+        return centreChanged;
+    }
+    
     @Observable
     public CentreConfigUpdater setMasterEntityHolder(final CentreContextHolder masterEntityHolder) {
         this.masterEntityHolder = masterEntityHolder;

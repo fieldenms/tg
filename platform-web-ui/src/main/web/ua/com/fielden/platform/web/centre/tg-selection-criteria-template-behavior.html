@@ -5,16 +5,6 @@
 
         Polymer.TgBehaviors = Polymer.TgBehaviors || {};
         Polymer.TgBehaviors.TgSelectionCriteriaTemplateBehaviorImpl = {
-
-            /**
-             * Initialisation block. It has all children web components already initialised.
-             */
-            ready: function () {
-                var self = this;
-                //Add class list that indicates that component should be checked for whether it can be closed.
-                self.classList.add("canLeave");
-            },
-            
             
             ////////////// Template related method are here in order to reduce the template size ///////////////
             //////// Also this enforces user to provide appropriate elemnts and theitr ids when using it////////

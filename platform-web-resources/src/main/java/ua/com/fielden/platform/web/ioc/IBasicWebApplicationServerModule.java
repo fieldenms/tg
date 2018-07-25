@@ -20,9 +20,13 @@ import ua.com.fielden.platform.web.app.SerialisationTypeEncoder;
 import ua.com.fielden.platform.web.app.ThreadLocalDeviceProvider;
 import ua.com.fielden.platform.web.centre.CentreColumnWidthConfigUpdaterDao;
 import ua.com.fielden.platform.web.centre.CentreConfigEditActionDao;
+import ua.com.fielden.platform.web.centre.CentreConfigLoadActionDao;
+import ua.com.fielden.platform.web.centre.CentreConfigSaveActionDao;
 import ua.com.fielden.platform.web.centre.CentreConfigUpdaterDao;
 import ua.com.fielden.platform.web.centre.ICentreColumnWidthConfigUpdater;
 import ua.com.fielden.platform.web.centre.ICentreConfigEditAction;
+import ua.com.fielden.platform.web.centre.ICentreConfigLoadAction;
+import ua.com.fielden.platform.web.centre.ICentreConfigSaveAction;
 import ua.com.fielden.platform.web.centre.ICentreConfigUpdater;
 import ua.com.fielden.platform.web.interfaces.IDeviceProvider;
 import ua.com.fielden.platform.web.resources.webui.AbstractWebUiConfig;
@@ -50,7 +54,7 @@ public interface IBasicWebApplicationServerModule {
      *
      * @param webApp
      */
-    default public void bindWebAppResources(final IWebUiConfig webApp) {
+    default void bindWebAppResources(final IWebUiConfig webApp) {
         // bind IDeviceProvider to its implementation as singleton
         bindType(IDeviceProvider.class).to(ThreadLocalDeviceProvider.class).in(Scopes.SINGLETON);
         
@@ -74,7 +78,10 @@ public interface IBasicWebApplicationServerModule {
         bindType(IEntityExportAction.class).to(EntityExportActionDao.class);
         bindType(ICentreConfigUpdater.class).to(CentreConfigUpdaterDao.class);
         bindType(ICentreColumnWidthConfigUpdater.class).to(CentreColumnWidthConfigUpdaterDao.class);
+        
+        bindType(ICentreConfigLoadAction.class).to(CentreConfigLoadActionDao.class);
         bindType(ICentreConfigEditAction.class).to(CentreConfigEditActionDao.class);
+        bindType(ICentreConfigSaveAction.class).to(CentreConfigSaveActionDao.class);
     }
 
     /**

@@ -6,6 +6,7 @@ import static ua.com.fielden.platform.web.centre.WebApiUtils.dslName;
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import ua.com.fielden.platform.criteria.generator.impl.CriteriaReflector;
@@ -73,7 +74,7 @@ public class CentreConfigUpdaterUtils {
      * @param customisableColumns
      * @return
      */
-    public static List<String> createSortingVals(final LinkedHashSet<CustomisableColumn> customisableColumns) {
+    public static List<String> createSortingVals(final Set<CustomisableColumn> customisableColumns) {
         return new ArrayList<>(
             customisableColumns.stream()
             .filter(customisableColumn -> customisableColumn.getSortingNumber() >= 0) // consider only 'sorted' properties

@@ -30,6 +30,20 @@ public class CentreColumnWidthConfigUpdater extends AbstractFunctionalEntityWith
     @Title("Criteria Entity Holder")
     private CentreContextHolder criteriaEntityHolder;
     
+    @IsProperty
+    @Title(value = "Centre Changed", desc = "Indicates whether successful saving of this entity actually changed centre.")
+    private boolean centreChanged;
+    
+    @Observable
+    public CentreColumnWidthConfigUpdater setCentreChanged(final boolean centreChanged) {
+        this.centreChanged = centreChanged;
+        return this;
+    }
+    
+    public boolean isCentreChanged() {
+        return centreChanged;
+    }
+    
     @Observable
     public CentreColumnWidthConfigUpdater setCriteriaEntityHolder(final CentreContextHolder criteriaEntityHolder) {
         this.criteriaEntityHolder = criteriaEntityHolder;

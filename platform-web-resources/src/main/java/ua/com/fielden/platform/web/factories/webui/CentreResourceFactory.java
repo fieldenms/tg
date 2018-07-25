@@ -55,7 +55,7 @@ public class CentreResourceFactory extends Restlet {
     public void handle(final Request request, final Response response) {
         super.handle(request, response);
         
-        if (Method.POST == request.getMethod() || Method.PUT == request.getMethod()) {
+        if (Method.PUT == request.getMethod()) {
             new CentreResource<AbstractEntity<?>>(
                     restUtil,
                     getEntityCentre(request, webUiConfig),
