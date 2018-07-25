@@ -150,8 +150,12 @@
                         <content select=".custom-selection-criteria"></content>
                         <div class="selection-criteria-buttons layout horizontal justified wrap">
                             <div class="layout horizontal button-group">
-                                <tg-ui-action shortcut="ctrl+s" ui-role='BUTTON' short-desc='SAVE' long-desc='Save configuration' component-uri='/master_ui/ua.com.fielden.platform.web.centre.CentreConfigSaveAction' element-name='tg-CentreConfigSaveAction-master' show-dialog='[[_showDialog]]' create-context-holder='[[_createContextHolder]]' attrs='[[bottomActions.0.attrs]]' pre-action='[[bottomActions.0.preAction]]' post-action-success='[[bottomActions.0.postActionSuccess]]' post-action-error='[[bottomActions.0.postActionError]]' require-selection-criteria='true' require-selected-entities='NONE' require-master-entity='false' disabled='[[_saverDisabled]]' style='[[_computeSaveButtonStyle(_saverDisabled)]]'></tg-ui-action>
-                                <paper-button id="discarder" raised shortcut="ctrl+r" roll="button" on-tap="discardAsync" disabled$="[[_discarderDisabled]]" tooltip-text="Discard the latest changes to selection criteria, which effectively returns them to the last saved configuration.">Discard</paper-button>
+                                <tg-ui-action id="saveAction" shortcut="ctrl+s" ui-role='BUTTON' short-desc='Save' long-desc='Save configuration'
+                                              component-uri='/master_ui/ua.com.fielden.platform.web.centre.CentreConfigSaveAction' element-name='tg-CentreConfigSaveAction-master' show-dialog='[[_showDialog]]' create-context-holder='[[_createContextHolder]]'
+                                              attrs='[[bottomActions.0.attrs]]' pre-action='[[bottomActions.0.preAction]]' post-action-success='[[bottomActions.0.postActionSuccess]]' post-action-error='[[bottomActions.0.postActionError]]'
+                                              require-selection-criteria='true' require-selected-entities='NONE' require-master-entity='false'
+                                              disabled='[[_saverDisabled]]' style='[[_computeSaveButtonStyle(_saverDisabled)]]'></tg-ui-action>
+                                <paper-button id="discarder" raised shortcut="ctrl+r" roll="button" on-tap="discardAsync" disabled$="[[_discarderDisabled]]" tooltip-text="Discard the latest changes to selection criteria, which effectively returns configuration to the last saved state.">Discard</paper-button>
                             </div>
                             <div class="layout horizontal button-group right-button-group">
                                 <paper-button id="view" raised shortcut="ctrl+e" roll="button" on-tap="_activateResultSetView" disabled$="[[_viewerDisabled]]" tooltip-text="Show result view">View</paper-button>
@@ -226,7 +230,6 @@
             _discarderDisabled: Boolean,
             _runnerDisabled: Boolean,
             _viewerDisabled: Boolean,
-            save: Function,
             discard: Function,
             run: Function,
             _showDialog: Function,
@@ -255,7 +258,7 @@
             this._rightInsertionPointContainerUpdater = this._rightInsertionPointContainerUpdater.bind(this);
             this._confirm = this.confirm.bind(this);
         },
-        
+
         attached: function () {
             const self = this;
             self._createActionObject = function (entityType, createPreActionPromise) {
@@ -278,12 +281,12 @@
                     postActionError: function (functionalEntity, action) {}
                 };
             };
-            
+
             self.bottomActions = [
                 self._createActionObject('ua.com.fielden.platform.web.centre.CentreConfigSaveAction')
             ];
         },
-        
+
         // Splitter functionality
         _expandLeftInsertionPoint: function () {
             this._expandContainer(this.$.leftInsertionPointContainer);
@@ -420,7 +423,7 @@
         _ajaxDiscarder: function () {
             return this.$.ajaxDiscarder;
         },
-        
+
         /**
          * The component for entity serialisation.
          */
@@ -544,7 +547,7 @@
         confirm: function (message, buttons) {
             return this.$.confirmationDialog.showConfirmationDialog(message, buttons);
         },
-        
+
         _computeSaveButtonStyle: function (_saverDisabled) {
             return 'width:70px;margin-right:8px;' + (_saverDisabled ? 'cursor:initial' : '');
         }

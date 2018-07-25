@@ -34,8 +34,6 @@ import ua.com.fielden.platform.web.centre.CentreConfigNewActionProducer;
 import ua.com.fielden.platform.web.centre.CentreConfigSaveAction;
 import ua.com.fielden.platform.web.centre.CentreConfigSaveActionProducer;
 import ua.com.fielden.platform.web.centre.CentreConfigUpdater;
-import ua.com.fielden.platform.web.centre.CentreConfigUpdaterDefaultAction;
-import ua.com.fielden.platform.web.centre.CentreConfigUpdaterDefaultActionProducer;
 import ua.com.fielden.platform.web.centre.CentreConfigUpdaterProducer;
 import ua.com.fielden.platform.web.centre.OverrideCentreConfig;
 import ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig;
@@ -55,7 +53,6 @@ public class CentreConfigurationWebUiConfig {
     private static final String LAYOUT_FOR_COLLECTIONAL_MASTER = "['padding:20px', 'height: 100%', 'box-sizing: border-box', ['flex', ['flex']] ]";
 
     public final EntityMaster<CentreConfigUpdater> centreConfigUpdater;
-    public final EntityMaster<CentreConfigUpdaterDefaultAction> centreConfigUpdaterDefaultAction;
     public final EntityMaster<CentreColumnWidthConfigUpdater> centreColumnWidthConfigUpdater;
     public final EntityMaster<CentreConfigNewAction> centreConfigNewActionMaster;
     public final EntityMaster<CentreConfigDuplicateAction> centreConfigDuplicateActionMaster;
@@ -67,7 +64,6 @@ public class CentreConfigurationWebUiConfig {
 
     public CentreConfigurationWebUiConfig(final Injector injector) {
         centreConfigUpdater = createCentreConfigUpdater(injector);
-        centreConfigUpdaterDefaultAction = createCentreConfigUpdaterDefaultAction(injector);
         centreColumnWidthConfigUpdater = createCentreColumnWidthConfigUpdater(injector);
         centreConfigNewActionMaster = createCentreConfigNewActionMaster(injector);
         centreConfigDuplicateActionMaster = createCentreConfigDuplicateActionMaster(injector);
@@ -85,40 +81,14 @@ public class CentreConfigurationWebUiConfig {
      * @return
      */
     private static EntityMaster<CentreConfigUpdater> createCentreConfigUpdater(final Injector injector) {
-        final FlexLayoutConfig horizontal = layout().withClass("wrap").withStyle("padding", "20px 20px 0 20px").horizontal().justified().end();
-        final String actionLayout = cell(
-            cell(
-                layout().withStyle("width", MASTER_ACTION_DEFAULT_WIDTH + "px").withStyle("margin-bottom", "20px").end()
-            )
-            .cell(
-                cell().cell().layoutForEach(layout().withStyle("width", MASTER_ACTION_DEFAULT_WIDTH + "px").end()).withGapBetweenCells(20),
-                layout().withStyle("margin-left", "auto").withStyle("margin-bottom", "20px").end()
-            )
-            .withGapBetweenCells(20),
-            horizontal
-        ).toString();
+        final FlexLayoutConfig horizontal = layout().withClass("wrap").withStyle("padding", "10px").horizontal().centerJustified().end();
+        final String actionLayout = cell(cell().cell().layoutForEach(layout().withStyle("width", MASTER_ACTION_DEFAULT_WIDTH + "px").withStyle("margin", "0px 10px 10px 10px").end()), horizontal).toString();
         final IMaster<CentreConfigUpdater> masterConfig = new SimpleMasterBuilder<CentreConfigUpdater>()
                 .forEntity(CentreConfigUpdater.class)
                 .addProp("customisableColumns").asCollectionalEditor().reorderable().withHeader("title")
                 .also()
-                .addAction(
-                        action(CentreConfigUpdaterDefaultAction.class)
-                        .withContext(context().withMasterEntity().build())
-                        .postActionSuccess(() ->
-                                    new JsCode(""
-                                        + "const editor = self.$.masterDom.querySelector('[id=editor_4_customisableColumns]');\n"
-                                        + "editor._originalChosenIds = null; // this should trigger full refresh \n"
-                                        + "editor.entity.setAndRegisterPropertyTouch('chosenIds', functionalEntity.get('defaultVisibleProperties'));\n"
-                                        + "editor.entity.setAndRegisterPropertyTouch('sortingVals', functionalEntity.get('defaultSortingVals'));\n"
-                                        + "editor._invokeValidation.bind(editor)();\n"
-                                    ))
-                        .shortDesc("Discard")
-                        .longDesc("Load last known previously saved configuration")
-                        .shortcut("ctrl+d")
-                        .withNoParentCentreRefresh() // avoid refreshing of parent centres; 'Default' button just loads default configuration but it should be either applied or canceled
-                        .build())
-                .addAction(REFRESH).shortDesc("CANCEL").longDesc("Cancel action")
-                .addAction(SAVE).shortDesc("APPLY").longDesc("Apply columns customisation").dontCloseAfterExecution()
+                .addAction(REFRESH).shortDesc("CANCEL").longDesc("Cancel not applied changes and close the dialog.")
+                .addAction(SAVE).shortDesc("APPLY").longDesc("Apply changes.").keepMasterOpenAfterExecution()
                 .setActionBarLayoutFor(DESKTOP, empty(), actionLayout)
                 .setActionBarLayoutFor(TABLET, empty(), actionLayout)
                 .setActionBarLayoutFor(MOBILE, empty(), actionLayout)
@@ -128,15 +98,6 @@ public class CentreConfigurationWebUiConfig {
                 .withDimensions(mkDim("'30%'", "'50%'"))
                 .done();
         return new EntityMaster<>(CentreConfigUpdater.class, CentreConfigUpdaterProducer.class, masterConfig, injector);
-    }
-
-    /**
-     * Creates no-ui entity master for {@link CentreConfigUpdaterDefaultAction}.
-     *
-     * @return
-     */
-    private static EntityMaster<CentreConfigUpdaterDefaultAction> createCentreConfigUpdaterDefaultAction(final Injector injector) {
-        return new EntityMaster<>(CentreConfigUpdaterDefaultAction.class, CentreConfigUpdaterDefaultActionProducer.class, null, injector);
     }
 
     /**
@@ -183,7 +144,7 @@ public class CentreConfigurationWebUiConfig {
         return new EntityMaster<>(
             CentreConfigEditAction.class,
             CentreConfigEditActionProducer.class,
-            createCentreConfigCommitActionMaster(injector, CentreConfigEditAction.class, "Saves title and description changes.", "Cancels changes."),
+            createCentreConfigCommitActionMaster(injector, CentreConfigEditAction.class, "Save title and description changes.", "Cancel changes."),
             injector
         );
     }
@@ -225,7 +186,7 @@ public class CentreConfigurationWebUiConfig {
         return new EntityMaster<>(
             CentreConfigSaveAction.class,
             CentreConfigSaveActionProducer.class,
-            createCentreConfigCommitActionMaster(injector, CentreConfigSaveAction.class, "Saves new configuration copy.", "Cancels creation of configuration copy."),
+            createCentreConfigCommitActionMaster(injector, CentreConfigSaveAction.class, "Save this new configuration.", "Cancel saving this new configuration."),
             injector
         );
     }

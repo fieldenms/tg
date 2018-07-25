@@ -54,7 +54,7 @@ public interface IBasicWebApplicationServerModule {
      *
      * @param webApp
      */
-    default public void bindWebAppResources(final IWebUiConfig webApp) {
+    default void bindWebAppResources(final IWebUiConfig webApp) {
         // bind IDeviceProvider to its implementation as singleton
         bindType(IDeviceProvider.class).to(ThreadLocalDeviceProvider.class).in(Scopes.SINGLETON);
         
