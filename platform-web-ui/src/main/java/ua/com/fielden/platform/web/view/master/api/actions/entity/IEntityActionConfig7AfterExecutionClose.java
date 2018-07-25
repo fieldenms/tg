@@ -5,7 +5,12 @@ import ua.com.fielden.platform.web.view.master.api.actions.IEntityActionConfig;
 import ua.com.fielden.platform.web.view.master.api.helpers.IActionBarLayoutConfig0;
 
 /**
- * A contract that allows one to specify whether this action doesn't close dialog after execution (by default save and cancel actions close diaog after execution)
+ * An API to provide an action configuration hint that an Entity Master should not be closed as the result of executing the action.
+ * <p>
+ * In general the decision to close or keep an Entity Master open is governed by special algorithm a the client side that is based on the state and kind of the underlying entity instance.
+ * For example, a predefined action {@code SAVE} will always try to close the master upon successful execution.
+ * <p>
+ * This API provides a way to override such default behaviour.
  *
  * @author TG Team
  *
@@ -18,5 +23,5 @@ public interface IEntityActionConfig7AfterExecutionClose <T extends AbstractEnti
      *
      * @return
      */
-    IEntityActionConfig8<T> dontCloseAfterExecution();
+    IEntityActionConfig8<T> keepMasterOpenAfterExecution();
 }

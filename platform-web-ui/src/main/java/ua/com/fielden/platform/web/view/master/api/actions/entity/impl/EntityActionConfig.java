@@ -108,7 +108,7 @@ public class EntityActionConfig<T extends AbstractEntity<?>> implements IEntityA
     }
 
     @Override
-    public IEntityActionConfig8<T> dontCloseAfterExecution() {
+    public IEntityActionConfig8<T> keepMasterOpenAfterExecution() {
         action.setCloseAfterExecution(false);
         return this;
     }

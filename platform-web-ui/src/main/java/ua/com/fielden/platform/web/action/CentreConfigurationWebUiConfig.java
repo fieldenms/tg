@@ -118,7 +118,7 @@ public class CentreConfigurationWebUiConfig {
                         .withNoParentCentreRefresh() // avoid refreshing of parent centres; 'Default' button just loads default configuration but it should be either applied or canceled
                         .build())
                 .addAction(REFRESH).shortDesc("CANCEL").longDesc("Cancel action")
-                .addAction(SAVE).shortDesc("APPLY").longDesc("Apply columns customisation").dontCloseAfterExecution()
+                .addAction(SAVE).shortDesc("APPLY").longDesc("Apply columns customisation").keepMasterOpenAfterExecution()
                 .setActionBarLayoutFor(DESKTOP, empty(), actionLayout)
                 .setActionBarLayoutFor(TABLET, empty(), actionLayout)
                 .setActionBarLayoutFor(MOBILE, empty(), actionLayout)
