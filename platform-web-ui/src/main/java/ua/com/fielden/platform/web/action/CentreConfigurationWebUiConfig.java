@@ -34,8 +34,6 @@ import ua.com.fielden.platform.web.centre.CentreConfigNewActionProducer;
 import ua.com.fielden.platform.web.centre.CentreConfigSaveAction;
 import ua.com.fielden.platform.web.centre.CentreConfigSaveActionProducer;
 import ua.com.fielden.platform.web.centre.CentreConfigUpdater;
-import ua.com.fielden.platform.web.centre.CentreConfigUpdaterDefaultAction;
-import ua.com.fielden.platform.web.centre.CentreConfigUpdaterDefaultActionProducer;
 import ua.com.fielden.platform.web.centre.CentreConfigUpdaterProducer;
 import ua.com.fielden.platform.web.centre.OverrideCentreConfig;
 import ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig;
@@ -55,7 +53,6 @@ public class CentreConfigurationWebUiConfig {
     private static final String LAYOUT_FOR_COLLECTIONAL_MASTER = "['padding:20px', 'height: 100%', 'box-sizing: border-box', ['flex', ['flex']] ]";
 
     public final EntityMaster<CentreConfigUpdater> centreConfigUpdater;
-    public final EntityMaster<CentreConfigUpdaterDefaultAction> centreConfigUpdaterDefaultAction;
     public final EntityMaster<CentreColumnWidthConfigUpdater> centreColumnWidthConfigUpdater;
     public final EntityMaster<CentreConfigNewAction> centreConfigNewActionMaster;
     public final EntityMaster<CentreConfigDuplicateAction> centreConfigDuplicateActionMaster;
@@ -67,7 +64,6 @@ public class CentreConfigurationWebUiConfig {
 
     public CentreConfigurationWebUiConfig(final Injector injector) {
         centreConfigUpdater = createCentreConfigUpdater(injector);
-        centreConfigUpdaterDefaultAction = createCentreConfigUpdaterDefaultAction(injector);
         centreColumnWidthConfigUpdater = createCentreColumnWidthConfigUpdater(injector);
         centreConfigNewActionMaster = createCentreConfigNewActionMaster(injector);
         centreConfigDuplicateActionMaster = createCentreConfigDuplicateActionMaster(injector);
@@ -102,15 +98,6 @@ public class CentreConfigurationWebUiConfig {
                 .withDimensions(mkDim("'30%'", "'50%'"))
                 .done();
         return new EntityMaster<>(CentreConfigUpdater.class, CentreConfigUpdaterProducer.class, masterConfig, injector);
-    }
-
-    /**
-     * Creates no-ui entity master for {@link CentreConfigUpdaterDefaultAction}.
-     *
-     * @return
-     */
-    private static EntityMaster<CentreConfigUpdaterDefaultAction> createCentreConfigUpdaterDefaultAction(final Injector injector) {
-        return new EntityMaster<>(CentreConfigUpdaterDefaultAction.class, CentreConfigUpdaterDefaultActionProducer.class, null, injector);
     }
 
     /**
