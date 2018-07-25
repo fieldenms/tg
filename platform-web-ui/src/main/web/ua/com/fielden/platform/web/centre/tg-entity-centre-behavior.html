@@ -357,7 +357,7 @@
                 discard: {
                     type: Function
                 },
-                
+
                 /**
                  * Starts the process of centre run.
                  *
@@ -435,28 +435,30 @@
                     this._dom().$.spinner.style.visibility = 'hidden';
                 }
             },
-            
+
             /**
              * Computes SAVE button disablement: always enabled for default configurations, always disabled for link configurations and when action is in progress. Otherwise enabled when centre is changed from last saved version.
              */
             _computeSaverDisabled: function (saveAsName, _centreChanged, _bindingEntityNotPersistentOrNotPersistedOrModified, _editedPropsExist, _currEntity, _actionInProgress) {
-                return saveAsName !== '' /* always enabled for default configuration */ && (this._isLinkConfig(saveAsName) || _actionInProgress === true || !this.canSave(_centreChanged, _bindingEntityNotPersistentOrNotPersistedOrModified, _editedPropsExist, _currEntity));
+                return _actionInProgress === true /* disabled when some action is in progress */ ||
+                      (saveAsName !== '' /* always enabled for default configuration */ &&
+                      (this._isLinkConfig(saveAsName) || !this.canSave(_centreChanged, _bindingEntityNotPersistentOrNotPersistedOrModified, _editedPropsExist, _currEntity)));
             },
-            
+
             /**
              * Returns 'true' in case where current saveAsName represent link configuration, 'false' otherwise.
              */
             _isLinkConfig: function (saveAsName) {
                 return saveAsName === this.$.selection_criteria._reflector().LINK_CONFIG_TITLE;
             },
-            
+
             /**
              * Computes DISCARD button disablement: always disabled for link configurations and when action is in progress. Otherwise enabled when centre is changed from last saved version.
              */
             _computeDiscarderDisabled: function (saveAsName, _centreChanged, _bindingEntityNotPersistentOrNotPersistedOrModified, _editedPropsExist, _currEntity, _actionInProgress) {
                 return this._isLinkConfig(saveAsName) || _actionInProgress === true || !this.canDiscard(_centreChanged, _bindingEntityNotPersistentOrNotPersistedOrModified, _editedPropsExist, _currEntity);
             },
-            
+
             _computeRunnerDisabled: function (_criteriaLoaded, _actionInProgress) {
                 return _actionInProgress === true || _criteriaLoaded === false;
             },
@@ -518,7 +520,7 @@
                 self._getSelectedEntities = (function () {
                     return this.$.egi.getSelectedEntities();
                 }).bind(self);
-                
+
                 /**
                  * Binds centre info from custom object that contains it. In case where custom object is deliberately empty then does nothing.
                  */
@@ -529,7 +531,7 @@
                         self.$.selection_criteria._postSavedDefault(entityAndCustomObject);
                     }
                 };
-                
+
                 self._processDiscarderResponse = function (e) {
                     self.$.selection_criteria._processResponse(e, "discard", function (entityAndCustomObject, exceptionOccured) {
                         console.log("CENTRE DISCARDED", entityAndCustomObject);
@@ -568,7 +570,7 @@
                 self._createContextHolder = (function (requireSelectionCriteria, requireSelectedEntities, requireMasterEntity, actionKind, actionNumber) {
                     return this.$.selection_criteria.createContextHolder(requireSelectionCriteria, requireSelectedEntities, requireMasterEntity, actionKind, actionNumber);
                 }).bind(self);
-                
+
                 self._createDiscardPromise = function (customObject) { // very similar to tg-entity-binder-behavior._createRetrievalPromise
                     const slf = this;
                     this._ajaxDiscarder().body = JSON.stringify(customObject);
@@ -972,9 +974,9 @@
             /**
              * Contract that allows one to determine whether this component can be closed/left or not.
              *
-             * Currently entity centre can be closed without prompt in almost all situations except the edge-cases where 
+             * Currently entity centre can be closed without prompt in almost all situations except the edge-cases where
              * its insertion point has 'canLeave' contract and this insertion point has unsaved changes (unlikely situation).
-             * 
+             *
              * Please note that selection criteria can have unsaved changes but it does not prevent user from centre closing.
              * This is due to the fact that most of these unsaved changes are actually saved (except the changes to the editor
              * for which tab-off wasn't actioned).
