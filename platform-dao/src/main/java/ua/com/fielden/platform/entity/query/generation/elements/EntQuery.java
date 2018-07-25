@@ -1,11 +1,11 @@
 package ua.com.fielden.platform.entity.query.generation.elements;
 
-import static ua.com.fielden.platform.reflection.AnnotationReflector.getKeyType;
-import static ua.com.fielden.platform.utils.EntityUtils.keyPaths;
+import static org.apache.commons.lang.StringUtils.isNotEmpty;
 import static ua.com.fielden.platform.utils.EntityUtils.isCompositeEntity;
 import static ua.com.fielden.platform.utils.EntityUtils.isPersistedEntityType;
 import static ua.com.fielden.platform.utils.EntityUtils.isSyntheticBasedOnPersistentEntityType;
 import static ua.com.fielden.platform.utils.EntityUtils.isUnionEntityType;
+import static ua.com.fielden.platform.utils.EntityUtils.keyPaths;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -19,6 +19,7 @@ import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 
 import ua.com.fielden.platform.dao.DomainMetadataAnalyser;
@@ -38,7 +39,6 @@ import ua.com.fielden.platform.entity.query.generation.elements.AbstractSource.P
 import ua.com.fielden.platform.entity.query.generation.elements.ResultQueryYieldDetails.YieldDetailsType;
 import ua.com.fielden.platform.entity.query.model.ConditionModel;
 import ua.com.fielden.platform.types.Money;
-import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
 
 public class EntQuery implements ISingleOperand {
@@ -93,12 +93,18 @@ public class EntQuery implements ISingleOperand {
         sb.append(isSubQuery() ? "(" : "");
         sb.append("SELECT ");
         sb.append(yields.sql());
-        sb.append("\nFROM ");
-        sb.append(sources.sql());
+        String sourcesSql = sources.sql().trim();
+        
+        if (isNotEmpty(sourcesSql)) {
+            sb.append("\nFROM ");
+            sb.append(sourcesSql);
+        }
+        
         if (!conditions.ignore()) {
             sb.append("\nWHERE ");
             sb.append(conditions.sql());
         }
+        
         sb.append(groups.sql());
         sb.append(isSubQuery() ? ")" : "");
         sb.append(orderings.sql());

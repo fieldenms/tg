@@ -10,6 +10,7 @@ import ua.com.fielden.platform.dao.PersistedEntityMetadata;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory;
 import ua.com.fielden.platform.entity.query.generation.elements.EntQuery;
+import ua.com.fielden.platform.entity.query.generation.elements.NothingBasedSource;
 import ua.com.fielden.platform.entity.query.generation.elements.QueryBasedSource;
 import ua.com.fielden.platform.entity.query.generation.elements.TypeBasedSource;
 import ua.com.fielden.platform.entity.query.model.QueryModel;
@@ -37,6 +38,10 @@ public class QrySourceBuilder extends AbstractTokensBuilder {
         return getSize() == 1 && TokenCategory.QRY_MODELS_AS_QRY_SOURCE.equals(firstCat());
     }
 
+    private boolean isNothingAsSourceWithoutAliasTest() {
+        return getSize() == 1 && TokenCategory.VALUES_AS_QRY_SOURCE.equals(firstCat());
+    }
+    
     @Override
     public boolean isClosing() {
         return false;
@@ -44,7 +49,7 @@ public class QrySourceBuilder extends AbstractTokensBuilder {
 
     @Override
     public boolean canBeClosed() {
-        return isEntityTypeAsSourceTest() || isEntityModelAsSourceTest() || isEntityModelAsSourceWithoutAliasTest() || isEntityTypeAsSourceWithoutAliasTest();
+        return isEntityTypeAsSourceTest() || isEntityModelAsSourceTest() || isEntityModelAsSourceWithoutAliasTest() || isEntityTypeAsSourceWithoutAliasTest() || isNothingAsSourceWithoutAliasTest();
     }
 
     private Pair<TokenCategory, Object> getResultForEntityTypeAsSource() {
@@ -77,6 +82,8 @@ public class QrySourceBuilder extends AbstractTokensBuilder {
             return getResultForEntityTypeAsSource();
         } else if (isEntityModelAsSourceTest() || isEntityModelAsSourceWithoutAliasTest()) {
             return getResultForEntityModelAsSource(null, null, null);
+        } else if (isNothingAsSourceWithoutAliasTest()) {
+            return new Pair<TokenCategory, Object>(TokenCategory.QRY_SOURCE, new NothingBasedSource(getQueryBuilder().getDomainMetadataAnalyser()));
         } else {
             throw new RuntimeException("Unable to get result - unrecognised state.");
         }
