@@ -73,7 +73,6 @@ import ua.com.fielden.platform.web.centre.CentreConfigLoadActionDao;
 import ua.com.fielden.platform.web.centre.CentreConfigNewActionDao;
 import ua.com.fielden.platform.web.centre.CentreConfigSaveActionDao;
 import ua.com.fielden.platform.web.centre.CentreConfigUpdaterDao;
-import ua.com.fielden.platform.web.centre.CentreConfigUpdaterDefaultActionDao;
 import ua.com.fielden.platform.web.centre.CustomisableColumnDao;
 import ua.com.fielden.platform.web.centre.ICentreColumnWidthConfigUpdater;
 import ua.com.fielden.platform.web.centre.ICentreConfigDeleteAction;
@@ -83,7 +82,6 @@ import ua.com.fielden.platform.web.centre.ICentreConfigLoadAction;
 import ua.com.fielden.platform.web.centre.ICentreConfigNewAction;
 import ua.com.fielden.platform.web.centre.ICentreConfigSaveAction;
 import ua.com.fielden.platform.web.centre.ICentreConfigUpdater;
-import ua.com.fielden.platform.web.centre.ICentreConfigUpdaterDefaultAction;
 import ua.com.fielden.platform.web.centre.ICustomisableColumn;
 import ua.com.fielden.platform.web.centre.ILoadableCentreConfig;
 import ua.com.fielden.platform.web.centre.IOverrideCentreConfig;
@@ -127,7 +125,6 @@ public class WebHibernateModule extends CommonFactoryModule {
         bind(IUserRole.class).to(UserRoleDao.class);
         bind(IUserRoleTokensUpdater.class).to(UserRoleTokensUpdaterDao.class);
         bind(ISecurityTokenInfo.class).to(SecurityTokenInfoDao.class);
-        bind(ICentreConfigUpdaterDefaultAction.class).to(CentreConfigUpdaterDefaultActionDao.class);
         bind(ICustomisableColumn.class).to(CustomisableColumnDao.class);
         
         bind(ICentreConfigNewAction.class).to(CentreConfigNewActionDao.class);

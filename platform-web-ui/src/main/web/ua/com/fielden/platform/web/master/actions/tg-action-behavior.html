@@ -52,6 +52,13 @@
                 reflectToAttribute: true
             },
             
+            /**
+             * Determines whether action closes dialog after execution.
+             */
+            closeAfterExecution: {
+                type: Boolean,
+                value: false
+            },
         	/////////////////////////////////////////////////////////////////////////////////////////////////////////
         	//////////////////////////////////////////// INNER PROPERTIES ///////////////////////////////////////////
         	/////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -123,7 +130,7 @@
                 if (promise) {
                     promise
                     .then(  // first a handler for successful promise execution
-                            Polymer.TgBehaviors.TgEntityMasterClosingBehavior.createEntityActionThenCallback(self.eventChannel, self.role, postal, self._afterExecution.bind(self)),
+                            Polymer.TgBehaviors.TgEntityMasterClosingBehavior.createEntityActionThenCallback(self.eventChannel, self.role, postal, self._afterExecution.bind(self), self.closeAfterExecution),
                             // and in case of some exceptional situation let's provide a trivial catch handler
                             function (value) { 
                                 console.log('AJAX PROMISE CATCH', value);
