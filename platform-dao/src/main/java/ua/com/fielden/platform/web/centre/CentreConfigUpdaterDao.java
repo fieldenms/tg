@@ -5,14 +5,12 @@ import static ua.com.fielden.platform.web.centre.WebApiUtils.treeName;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.function.Consumer;
 
 import com.google.inject.Inject;
 
 import ua.com.fielden.platform.dao.CommonEntityDao;
 import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.dao.annotations.SessionRequired;
-import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.domaintree.centre.IOrderingRepresentation.Ordering;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.EntityType;
@@ -22,29 +20,29 @@ import ua.com.fielden.platform.types.tuples.T2;
 import ua.com.fielden.platform.utils.Pair;
 import ua.com.fielden.platform.web.utils.ICriteriaEntityRestorer;
 
-/** 
+/**
  * DAO implementation for companion object {@link ICentreConfigUpdater}.
- * 
+ *
  * @author Developers
  *
  */
 @EntityType(CentreConfigUpdater.class)
 public class CentreConfigUpdaterDao extends CommonEntityDao<CentreConfigUpdater> implements ICentreConfigUpdater {
     private final ICriteriaEntityRestorer criteriaEntityRestorer;
-    
+
     @Inject
     public CentreConfigUpdaterDao(final IFilter filter, final ICriteriaEntityRestorer criteriaEntityRestorer) {
         super(filter);
         this.criteriaEntityRestorer = criteriaEntityRestorer;
     }
-    
+
     @Override
     @SessionRequired
     public CentreConfigUpdater save(final CentreConfigUpdater action) {
         final T2<CentreConfigUpdater, EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, IEntityDao<AbstractEntity<?>>>> actionAndCriteriaBeingUpdated = validateAction(action, this, String.class, new CentreConfigUpdaterController(criteriaEntityRestorer));
         final CentreConfigUpdater actionToSave = actionAndCriteriaBeingUpdated._1;
         actionToSave.getProperty("sortingVals").setOriginalValue(action.getProperty("sortingVals").getOriginalValue());
-        
+
         // retrieve criteria entity
         final EnhancedCentreEntityQueryCriteria<?, ?> criteriaEntityBeingUpdated = actionAndCriteriaBeingUpdated._2;
         final Class<?> root = criteriaEntityBeingUpdated.getEntityClass();
@@ -59,18 +57,18 @@ public class CentreConfigUpdaterDao extends CommonEntityDao<CentreConfigUpdater>
                 }
                 centreManager.getSecondTick().toggleOrdering(root, orderedProperty.getKey());
             }
-            
+
             // remove usage information
             final List<String> currUsedProperties = centreManager.getSecondTick().usedProperties(root);
             for (final String currUsedProperty: currUsedProperties) {
                 centreManager.getSecondTick().use(root, currUsedProperty, false);
             }
-            
+
             // apply usage information
             for (final String chosenId : actionToSave.getChosenIds()) {
                 centreManager.getSecondTick().use(root, treeName(chosenId), true);
             }
-            
+
             // apply sorting information
             for (final String sortingVal: actionToSave.getSortingVals()) {
                 final String[] splitted = sortingVal.split(":");
@@ -85,6 +83,7 @@ public class CentreConfigUpdaterDao extends CommonEntityDao<CentreConfigUpdater>
         if (!actionToSave.isSortingChanged()) {
             actionToSave.setCentreChanged(criteriaEntityBeingUpdated.isCentreChanged());
         }
+        actionToSave.getProperty("customisableColumns").resetState();
         return super.save(actionToSave);
     }
 }

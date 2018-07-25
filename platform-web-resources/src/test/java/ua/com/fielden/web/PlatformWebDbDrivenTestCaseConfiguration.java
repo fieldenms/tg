@@ -54,7 +54,6 @@ import ua.com.fielden.platform.web.centre.CentreConfigLoadAction;
 import ua.com.fielden.platform.web.centre.CentreConfigNewAction;
 import ua.com.fielden.platform.web.centre.CentreConfigSaveAction;
 import ua.com.fielden.platform.web.centre.CentreConfigUpdater;
-import ua.com.fielden.platform.web.centre.CentreConfigUpdaterDefaultAction;
 import ua.com.fielden.platform.web.centre.CustomisableColumn;
 import ua.com.fielden.platform.web.centre.LoadableCentreConfig;
 import ua.com.fielden.platform.web.centre.OverrideCentreConfig;
@@ -72,7 +71,7 @@ public class PlatformWebDbDrivenTestCaseConfiguration implements IDbDrivenTestCa
 
     private final WebHibernateModule hibernateModule;
 
-    public static final Map<Class, Class> hibTypeDefaults = new HashMap<Class, Class>();
+    public static final Map<Class, Class> hibTypeDefaults = new HashMap<>();
 
     static {
         hibTypeDefaults.put(Date.class, DateTimeType.class);
@@ -97,7 +96,6 @@ public class PlatformWebDbDrivenTestCaseConfiguration implements IDbDrivenTestCa
             domainTypes.add(UserRoleTokensUpdater.class);
             domainTypes.add(SecurityTokenInfo.class);
             domainTypes.add(CentreConfigUpdater.class);
-            domainTypes.add(CentreConfigUpdaterDefaultAction.class);
             domainTypes.add(CustomisableColumn.class);
             domainTypes.add(CentreColumnWidthConfigUpdater.class);
             

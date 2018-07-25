@@ -52,7 +52,6 @@ import ua.com.fielden.platform.web.centre.CentreConfigLoadAction;
 import ua.com.fielden.platform.web.centre.CentreConfigNewAction;
 import ua.com.fielden.platform.web.centre.CentreConfigSaveAction;
 import ua.com.fielden.platform.web.centre.CentreConfigUpdater;
-import ua.com.fielden.platform.web.centre.CentreConfigUpdaterDefaultAction;
 import ua.com.fielden.platform.web.centre.CustomisableColumn;
 import ua.com.fielden.platform.web.centre.LoadableCentreConfig;
 import ua.com.fielden.platform.web.centre.OverrideCentreConfig;
@@ -211,7 +210,6 @@ public class DefaultSerialisationClassProvider implements ISerialisationClassPro
         types.add(UserRoleTokensUpdater.class);
         types.add(SecurityTokenInfo.class);
         types.add(CentreConfigUpdater.class);
-        types.add(CentreConfigUpdaterDefaultAction.class);
         types.add(CustomisableColumn.class);
         types.add(CentreColumnWidthConfigUpdater.class);
         

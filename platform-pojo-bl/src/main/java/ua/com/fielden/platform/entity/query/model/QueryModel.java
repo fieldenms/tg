@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.entity.query.model;
 
 import static java.lang.String.format;
+import static org.apache.commons.lang.StringUtils.rightPad;
 
 import java.util.List;
 
@@ -36,14 +37,14 @@ public abstract class QueryModel<T extends AbstractEntity<?>> extends AbstractMo
         return yieldAll;
     }
 
-    public void setFilterable(final boolean filterable) {
+    public QueryModel<T> setFilterable(final boolean filterable) {
         this.filterable = filterable;
+        return this;
     }
 
     @Override
     public String toString() {
-        return super.toString() +
-                format("\n\t%s%s", StringUtils.rightPad("is filterable", 32, '.'), filterable);
+        return super.toString() + format("%n\t%s%s", rightPad("is filterable", 32, '.'), filterable);
     }
 
     @Override
