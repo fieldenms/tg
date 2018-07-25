@@ -85,40 +85,14 @@ public class CentreConfigurationWebUiConfig {
      * @return
      */
     private static EntityMaster<CentreConfigUpdater> createCentreConfigUpdater(final Injector injector) {
-        final FlexLayoutConfig horizontal = layout().withClass("wrap").withStyle("padding", "20px 20px 0 20px").horizontal().justified().end();
-        final String actionLayout = cell(
-            cell(
-                layout().withStyle("width", MASTER_ACTION_DEFAULT_WIDTH + "px").withStyle("margin-bottom", "20px").end()
-            )
-            .cell(
-                cell().cell().layoutForEach(layout().withStyle("width", MASTER_ACTION_DEFAULT_WIDTH + "px").end()).withGapBetweenCells(20),
-                layout().withStyle("margin-left", "auto").withStyle("margin-bottom", "20px").end()
-            )
-            .withGapBetweenCells(20),
-            horizontal
-        ).toString();
+        final FlexLayoutConfig horizontal = layout().withClass("wrap").withStyle("padding", "10px").horizontal().centerJustified().end();
+        final String actionLayout = cell(cell().cell().layoutForEach(layout().withStyle("width", MASTER_ACTION_DEFAULT_WIDTH + "px").withStyle("margin", "0px 10px 10px 10px").end()), horizontal).toString();
         final IMaster<CentreConfigUpdater> masterConfig = new SimpleMasterBuilder<CentreConfigUpdater>()
                 .forEntity(CentreConfigUpdater.class)
                 .addProp("customisableColumns").asCollectionalEditor().reorderable().withHeader("title")
                 .also()
-                .addAction(
-                        action(CentreConfigUpdaterDefaultAction.class)
-                        .withContext(context().withMasterEntity().build())
-                        .postActionSuccess(() ->
-                                    new JsCode(""
-                                        + "const editor = self.$.masterDom.querySelector('[id=editor_4_customisableColumns]');\n"
-                                        + "editor._originalChosenIds = null; // this should trigger full refresh \n"
-                                        + "editor.entity.setAndRegisterPropertyTouch('chosenIds', functionalEntity.get('defaultVisibleProperties'));\n"
-                                        + "editor.entity.setAndRegisterPropertyTouch('sortingVals', functionalEntity.get('defaultSortingVals'));\n"
-                                        + "editor._invokeValidation.bind(editor)();\n"
-                                    ))
-                        .shortDesc("Discard")
-                        .longDesc("Load last known previously saved configuration")
-                        .shortcut("ctrl+d")
-                        .withNoParentCentreRefresh() // avoid refreshing of parent centres; 'Default' button just loads default configuration but it should be either applied or canceled
-                        .build())
-                .addAction(REFRESH).shortDesc("CANCEL").longDesc("Cancel action")
-                .addAction(SAVE).shortDesc("APPLY").longDesc("Apply columns customisation").keepMasterOpenAfterExecution()
+                .addAction(REFRESH).shortDesc("CANCEL").longDesc("Cancel not applied changes and close the dialog.")
+                .addAction(SAVE).shortDesc("APPLY").longDesc("Apply changes.").keepMasterOpenAfterExecution()
                 .setActionBarLayoutFor(DESKTOP, empty(), actionLayout)
                 .setActionBarLayoutFor(TABLET, empty(), actionLayout)
                 .setActionBarLayoutFor(MOBILE, empty(), actionLayout)
