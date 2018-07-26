@@ -1,6 +1,19 @@
 package ua.com.fielden.platform.entity.query.generation.elements;
 
+import static java.util.Arrays.asList;
+import static java.util.Collections.emptyList;
 import static org.apache.commons.lang.StringUtils.isNotEmpty;
+import static ua.com.fielden.platform.entity.AbstractEntity.ID;
+import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
+import static ua.com.fielden.platform.entity.query.fluent.enums.LogicalOperator.AND;
+import static ua.com.fielden.platform.entity.query.generation.elements.EntPropStage.EXTERNAL;
+import static ua.com.fielden.platform.entity.query.generation.elements.EntPropStage.PRELIMINARY_RESOLVED;
+import static ua.com.fielden.platform.entity.query.generation.elements.EntPropStage.UNPROCESSED;
+import static ua.com.fielden.platform.entity.query.generation.elements.QueryCategory.RESULT_QUERY;
+import static ua.com.fielden.platform.entity.query.generation.elements.QueryCategory.SOURCE_QUERY;
+import static ua.com.fielden.platform.entity.query.generation.elements.QueryCategory.SUB_QUERY;
+import static ua.com.fielden.platform.entity.query.generation.elements.ResultQueryYieldDetails.YieldDetailsType.AGGREGATED_EXPRESSION;
+import static ua.com.fielden.platform.entity.query.generation.elements.ResultQueryYieldDetails.YieldDetailsType.USUAL_PROP;
 import static ua.com.fielden.platform.utils.EntityUtils.isCompositeEntity;
 import static ua.com.fielden.platform.utils.EntityUtils.isPersistedEntityType;
 import static ua.com.fielden.platform.utils.EntityUtils.isSyntheticBasedOnPersistentEntityType;
@@ -8,7 +21,6 @@ import static ua.com.fielden.platform.utils.EntityUtils.isUnionEntityType;
 import static ua.com.fielden.platform.utils.EntityUtils.keyPaths;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -19,7 +31,6 @@ import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
 
-import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 
 import ua.com.fielden.platform.dao.DomainMetadataAnalyser;
@@ -30,7 +41,6 @@ import ua.com.fielden.platform.entity.DynamicEntityKey;
 import ua.com.fielden.platform.entity.query.EntityAggregates;
 import ua.com.fielden.platform.entity.query.IFilter;
 import ua.com.fielden.platform.entity.query.IRetrievalModel;
-import ua.com.fielden.platform.entity.query.fluent.enums.LogicalOperator;
 import ua.com.fielden.platform.entity.query.generation.EntQueryBlocks;
 import ua.com.fielden.platform.entity.query.generation.EntQueryGenerator;
 import ua.com.fielden.platform.entity.query.generation.StandAloneConditionBuilder;
@@ -58,17 +68,18 @@ public class EntQuery implements ISingleOperand {
     private EntQuery master;
 
     private static final Logger LOGGER = Logger.getLogger(EntQuery.class);
+    private static final String DOT = ".";
 
     private boolean isSubQuery() {
-        return QueryCategory.SUB_QUERY.equals(category);
+        return SUB_QUERY.equals(category);
     }
 
     private boolean isSourceQuery() {
-        return QueryCategory.SOURCE_QUERY.equals(category);
+        return SOURCE_QUERY.equals(category);
     }
 
     private boolean isResultQuery() {
-        return QueryCategory.RESULT_QUERY.equals(category);
+        return RESULT_QUERY.equals(category);
     }
 
     /**
@@ -148,14 +159,14 @@ public class EntQuery implements ISingleOperand {
     private void enhanceYieldsModel() {
         // enhancing short-cuts in yield section (e.g. the following: assign missing "id" alias in case yield().prop("someEntProp").modelAsEntity(entProp.class) is used
         if (idAliasEnhancementRequired()) {
-            final Yield idModel = new Yield(yields.getFirstYield().getOperand(), AbstractEntity.ID);
+            final Yield idModel = new Yield(yields.getFirstYield().getOperand(), ID);
             yields.clear();
             yields.addYield(idModel);
         } else if (idPropYieldEnhancementRequired()) {
-            final String yieldPropAliasPrefix = getSources().getMain().getAlias() == null ? "" : getSources().getMain().getAlias() + ".";
-            yields.addYield(new Yield(new EntProp(yieldPropAliasPrefix + AbstractEntity.ID), AbstractEntity.ID));
+            final String yieldPropAliasPrefix = getSources().getMain().getAlias() == null ? "" : getSources().getMain().getAlias() + DOT;
+            yields.addYield(new Yield(new EntProp(yieldPropAliasPrefix + ID), ID));
         } else if (allPropsYieldEnhancementRequired()) {
-            final String yieldPropAliasPrefix = getSources().getMain().getAlias() == null ? "" : getSources().getMain().getAlias() + ".";
+            final String yieldPropAliasPrefix = getSources().getMain().getAlias() == null ? "" : getSources().getMain().getAlias() + DOT;
             LOGGER.debug("enhanceYieldsModel.allPropsYieldEnhancementRequired");
             if (mainSourceIsTypeBased()) {
                 final Class<? extends AbstractEntity<?>> mainSourceType = getSources().getMain().sourceType();
@@ -177,7 +188,7 @@ public class EntQuery implements ISingleOperand {
             } else {
                 final QueryBasedSource sourceModel = (QueryBasedSource) getSources().getMain();
                 for (final ResultQueryYieldDetails ppi : sourceModel.sourceItems.values()) {
-                    final boolean skipProperty = (ppi.getYieldDetailsType() == YieldDetailsType.AGGREGATED_EXPRESSION && !isResultQuery());
+                    final boolean skipProperty = (ppi.getYieldDetailsType() == AGGREGATED_EXPRESSION && !isResultQuery());
                     if (!skipProperty) {
                         yields.addYield(new Yield(new EntProp(yieldPropAliasPrefix + ppi.getName()), ppi.getName()));
                     }
@@ -205,7 +216,7 @@ public class EntQuery implements ISingleOperand {
                 for (final GroupBy groupBy : groups.getGroups()) {
                     if (groupBy.getOperand() instanceof EntProp) {
                         final String groupPropName = ((EntProp) groupBy.getOperand()).getName();
-                        if (propName.startsWith(groupPropName + ".")) {
+                        if (propName.startsWith(groupPropName + DOT)) {
                             toBeAdded.add((EntProp) yield.getOperand());
                         }
                     }
@@ -226,7 +237,7 @@ public class EntQuery implements ISingleOperand {
                 for (final GroupBy groupBy : groups.getGroups()) {
                     if (groupBy.getOperand() instanceof EntProp) {
                         final String groupPropName = ((EntProp) groupBy.getOperand()).getName();
-                        if (propName.startsWith(groupPropName + ".")) {
+                        if (propName.startsWith(groupPropName + DOT)) {
                             toBeAdded.add((EntProp) orderBy.getOperand());
                         }
                     }
@@ -285,7 +296,7 @@ public class EntQuery implements ISingleOperand {
         final List<OrderBy> toBeAdded = new ArrayList<>();
         for (final OrderBy orderBy : orderings.getModels()) {
             if (orderBy.getYieldName() != null) {
-                if (orderBy.getYieldName().equals("key") && isCompositeEntity(resultType)) {
+                if (orderBy.getYieldName().equals(KEY) && isCompositeEntity(resultType)) {
                     final List<String> keyOrderProps = keyPaths((Class<? extends AbstractEntity<DynamicEntityKey>>) resultType, sources.getMain().getAlias());
                     for (final String keyMemberProp : keyOrderProps) {
                         toBeAdded.add(new OrderBy(new EntProp(keyMemberProp), orderBy.isDesc()));
@@ -320,7 +331,7 @@ public class EntQuery implements ISingleOperand {
         final List<OrderBy> result = new ArrayList<OrderBy>();
         final String propName = ((EntProp) bestYield.getOperand()).getName() + original.getYieldName().substring(bestYield.getAlias().length());
 
-        if (original.getYieldName().endsWith(".key")) {
+        if (original.getYieldName().endsWith(DOT + KEY)) {
             final String prop = original.getYieldName().substring(0, original.getYieldName().length() - 4);
             final PropertyMetadata info = domainMetadataAnalyser.getInfoForDotNotatedProp(resultType, prop);
             if (isCompositeEntity(info.getJavaType())) {
@@ -366,7 +377,7 @@ public class EntQuery implements ISingleOperand {
         if (finalPropInfo != null) {
             return finalPropInfo.getYieldDetailType();
         } else {
-            return yield.getInfo() != null ? yield.getInfo().getYieldDetailsType() : YieldDetailsType.USUAL_PROP;
+            return yield.getInfo() != null ? yield.getInfo().getYieldDetailsType() : USUAL_PROP;
         }
     }
 
@@ -432,7 +443,7 @@ public class EntQuery implements ISingleOperand {
             }
             LOGGER.debug("\nApplied user-driven-filter to query main source type [" + mainSource.sourceType().getSimpleName() + "]");
             final List<CompoundCondition> others = new ArrayList<CompoundCondition>();
-            others.add(new CompoundCondition(LogicalOperator.AND, new GroupedConditions(false, originalConditions)));
+            others.add(new CompoundCondition(AND, new GroupedConditions(false, originalConditions)));
             return originalConditions.ignore() ? new Conditions(new StandAloneConditionBuilder(generator, paramValues, filteringCondition, false).getModel())
                     : new Conditions(new StandAloneConditionBuilder(generator, paramValues, filteringCondition, false).getModel(), others);
         } else {
@@ -453,7 +464,7 @@ public class EntQuery implements ISingleOperand {
         this.groups = queryBlocks.getGroups();
         this.orderings = queryBlocks.getOrderings();
         this.resultType = resultType;// != null ? resultType : (yields.size() == 0 ? this.sources.getMain().sourceType() : null);
-        if (this.resultType == null && category != QueryCategory.SUB_QUERY) { // only primitive result queries have result type not assigned
+        if (this.resultType == null && category != SUB_QUERY) { // only primitive result queries have result type not assigned
             throw new IllegalStateException("This query is not subquery, thus its result type shouldn't be null!\n Query: " + queryBlocks);
         }
 
@@ -520,8 +531,8 @@ public class EntQuery implements ISingleOperand {
             associateSubqueriesWithMasterQuery(immediateSubqueries);
 
             final List<EntProp> propsToBeResolved = new ArrayList<>();
-            propsToBeResolved.addAll(getPropsByStage(getImmediateProps(), EntPropStage.UNPROCESSED));
-            propsToBeResolved.addAll(collectUnresolvedPropsFromSubqueries(immediateSubqueries, EntPropStage.UNPROCESSED));
+            propsToBeResolved.addAll(getPropsByStage(getImmediateProps(), UNPROCESSED));
+            propsToBeResolved.addAll(collectUnresolvedPropsFromSubqueries(immediateSubqueries, UNPROCESSED));
 
             countOfUnprocessed = propsToBeResolved.size();
 
@@ -531,20 +542,20 @@ public class EntQuery implements ISingleOperand {
                 throw new RuntimeException("Couldn't resolve the following props: " + unresolvedProps);
             }
 
-            final List<EntProp> immediatePropertiesFinally = getPropsByStage(getImmediateProps(), EntPropStage.PRELIMINARY_RESOLVED);
+            final List<EntProp> immediatePropertiesFinally = getPropsByStage(getImmediateProps(), PRELIMINARY_RESOLVED);
 
             final List<EntProp> propsToBeResolvedFinally = new ArrayList<EntProp>();
             propsToBeResolvedFinally.addAll(immediatePropertiesFinally);
-            propsToBeResolvedFinally.addAll(collectUnresolvedPropsFromSubqueries(getImmediateSubqueries(), EntPropStage.PRELIMINARY_RESOLVED));
+            propsToBeResolvedFinally.addAll(collectUnresolvedPropsFromSubqueries(getImmediateSubqueries(), PRELIMINARY_RESOLVED));
             propsToBeResolvedFinally.removeAll(unresolvedProps);
 
             resolveProps(propsToBeResolvedFinally, generator);
         }
 
-        for (final EntProp entProp : getPropsByStage(getImmediateProps(), EntPropStage.EXTERNAL)) {
+        for (final EntProp entProp : getPropsByStage(getImmediateProps(), EXTERNAL)) {
             entProp.setExternal(false);
             unresolvedProps.add(entProp);
-            if (!entProp.getStage().equals(EntPropStage.UNPROCESSED)) {
+            if (!entProp.getStage().equals(UNPROCESSED)) {
                 throw new RuntimeException("IS NOT UNPROCESSED!");
             }
         }
@@ -604,7 +615,7 @@ public class EntQuery implements ISingleOperand {
         final Map<ISource, PropResolutionInfo> result = new HashMap<ISource, PropResolutionInfo>();
 
         for (final ISource source : sources.getAllSources()) {
-            if ((prop.getStage().equals(EntPropStage.PRELIMINARY_RESOLVED) || (prop.getStage().equals(EntPropStage.UNPROCESSED) && !source.generated())) || (prop.isGenerated())) {
+            if ((prop.getStage().equals(PRELIMINARY_RESOLVED) || (prop.getStage().equals(UNPROCESSED) && !source.generated())) || (prop.isGenerated())) {
                 final PropResolutionInfo hasProp = source.containsProperty(prop);
                 if (hasProp != null) {
                     result.put(source, hasProp);
@@ -688,12 +699,12 @@ public class EntQuery implements ISingleOperand {
 
     @Override
     public List<EntProp> getLocalProps() {
-        return Collections.emptyList();
+        return emptyList();
     }
 
     @Override
     public List<EntQuery> getLocalSubQueries() {
-        return Arrays.asList(new EntQuery[] { this });
+        return asList(new EntQuery[] { this });
     }
 
     @Override

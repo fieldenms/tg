@@ -1,5 +1,11 @@
 package ua.com.fielden.platform.entity.query.generation;
 
+import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.ENTITY_TYPE_AS_QRY_SOURCE;
+import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.QRY_MODELS_AS_QRY_SOURCE;
+import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.QRY_SOURCE;
+import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.QRY_SOURCE_ALIAS;
+import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.VALUES_AS_QRY_SOURCE;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -23,23 +29,23 @@ public class QrySourceBuilder extends AbstractTokensBuilder {
     }
 
     private boolean isEntityTypeAsSourceTest() {
-        return getSize() == 2 && TokenCategory.ENTITY_TYPE_AS_QRY_SOURCE.equals(firstCat()) && TokenCategory.QRY_SOURCE_ALIAS.equals(secondCat());
+        return getSize() == 2 && ENTITY_TYPE_AS_QRY_SOURCE.equals(firstCat()) && QRY_SOURCE_ALIAS.equals(secondCat());
     }
 
     private boolean isEntityTypeAsSourceWithoutAliasTest() {
-        return getSize() == 1 && TokenCategory.ENTITY_TYPE_AS_QRY_SOURCE.equals(firstCat());
+        return getSize() == 1 && ENTITY_TYPE_AS_QRY_SOURCE.equals(firstCat());
     }
 
     private boolean isEntityModelAsSourceTest() {
-        return getSize() == 2 && TokenCategory.QRY_MODELS_AS_QRY_SOURCE.equals(firstCat()) && TokenCategory.QRY_SOURCE_ALIAS.equals(secondCat());
+        return getSize() == 2 && QRY_MODELS_AS_QRY_SOURCE.equals(firstCat()) && QRY_SOURCE_ALIAS.equals(secondCat());
     }
 
     private boolean isEntityModelAsSourceWithoutAliasTest() {
-        return getSize() == 1 && TokenCategory.QRY_MODELS_AS_QRY_SOURCE.equals(firstCat());
+        return getSize() == 1 && QRY_MODELS_AS_QRY_SOURCE.equals(firstCat());
     }
 
     private boolean isNothingAsSourceWithoutAliasTest() {
-        return getSize() == 1 && TokenCategory.VALUES_AS_QRY_SOURCE.equals(firstCat());
+        return getSize() == 1 && VALUES_AS_QRY_SOURCE.equals(firstCat());
     }
     
     @Override
@@ -56,7 +62,7 @@ public class QrySourceBuilder extends AbstractTokensBuilder {
         final Class<AbstractEntity<?>> resultType = (Class) firstValue();
         final AbstractEntityMetadata entityMetadata = getQueryBuilder().getDomainMetadataAnalyser().getEntityMetadata(resultType);
         if (entityMetadata instanceof PersistedEntityMetadata) {
-            return new Pair<TokenCategory, Object>(TokenCategory.QRY_SOURCE, new TypeBasedSource((PersistedEntityMetadata) entityMetadata, (String) secondValue(), getQueryBuilder().getDomainMetadataAnalyser()));
+            return new Pair<TokenCategory, Object>(QRY_SOURCE, new TypeBasedSource((PersistedEntityMetadata) entityMetadata, (String) secondValue(), getQueryBuilder().getDomainMetadataAnalyser()));
         } else {
             final List<QueryModel> readyModels = new ArrayList<QueryModel>();
             readyModels.addAll(((ModelledEntityMetadata) entityMetadata).getModels());
@@ -73,7 +79,7 @@ public class QrySourceBuilder extends AbstractTokensBuilder {
             queries.add(getQueryBuilder().generateEntQueryAsSourceQuery(qryModel, getParamValues(), resultType != null ? resultType : qryModel.getResultType()));
         }
 
-        return new Pair<TokenCategory, Object>(TokenCategory.QRY_SOURCE, new QueryBasedSource(alias, getQueryBuilder().getDomainMetadataAnalyser(), queries.toArray(new EntQuery[] {})));
+        return new Pair<TokenCategory, Object>(QRY_SOURCE, new QueryBasedSource(alias, getQueryBuilder().getDomainMetadataAnalyser(), queries.toArray(new EntQuery[] {})));
     }
 
     @Override
@@ -83,7 +89,7 @@ public class QrySourceBuilder extends AbstractTokensBuilder {
         } else if (isEntityModelAsSourceTest() || isEntityModelAsSourceWithoutAliasTest()) {
             return getResultForEntityModelAsSource(null, null, null);
         } else if (isNothingAsSourceWithoutAliasTest()) {
-            return new Pair<TokenCategory, Object>(TokenCategory.QRY_SOURCE, new NothingBasedSource(getQueryBuilder().getDomainMetadataAnalyser()));
+            return new Pair<TokenCategory, Object>(QRY_SOURCE, new NothingBasedSource(getQueryBuilder().getDomainMetadataAnalyser()));
         } else {
             throw new RuntimeException("Unable to get result - unrecognised state.");
         }
