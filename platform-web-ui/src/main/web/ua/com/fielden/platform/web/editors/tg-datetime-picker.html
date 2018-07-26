@@ -302,7 +302,7 @@
 
                 dialog.noCancelOnEscKey = false;
 
-           			datePicker.selectedDate = null;
+           	    datePicker.selectedDate = null;
                 datePicker.selectedHour = self.timePortionToBecomeEndOfDay ? 23 : null;
                 datePicker.selectedMinute = self.timePortionToBecomeEndOfDay ? 59 : null;
                 datePicker.seconds = self.timePortionToBecomeEndOfDay ? 59 : 0;
@@ -387,7 +387,6 @@
             _approximate: function (dateEditingValue) {
                 this._validMoment = null;
                 if (dateEditingValue) {
-
                     var firstSlashIndex = dateEditingValue.indexOf('/');
                     if (firstSlashIndex > -1) {
                         // remove all spaces and insert one after year digits (or [ /2017] or other current year in case of one slash)
@@ -408,6 +407,11 @@
                         }
                         if (aproximated !== undefined) {
                             return aproximated;
+                        }
+                    } else if (this.timeZone === 'UTC') { //As the last resort try utc formatting
+                        this._validMoment = _momentTz(dateEditingValue, 'YYYY-MM-DDTHH:mm:ssZ', true, this.timeZone);
+                        if (this._validMoment !== null) {
+                            return _millisDateRepresentation(this._validMoment.valueOf(), this.timeZone, this.datePortion);
                         }
                     } else {
                         var value = dateEditingValue.replace(new RegExp(' ', 'g'), '').trim();

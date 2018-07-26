@@ -28,7 +28,7 @@
         } else {
             format = "L " + (millisecondsExist || secondsExist ? "LTS" : "LT");
         }
-        return _momentTz(dateMillis, timeZone).format(format);
+        return _momentTz(dateMillis, timeZone).format(timeZone === 'UTC' ? undefined : format);
     };
     
     /**
