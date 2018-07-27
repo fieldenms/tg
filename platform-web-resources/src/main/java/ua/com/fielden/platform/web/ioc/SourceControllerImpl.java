@@ -3,6 +3,7 @@ package ua.com.fielden.platform.web.ioc;
 import static java.lang.String.format;
 
 import java.io.InputStream;
+import java.util.EnumMap;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
@@ -276,8 +277,8 @@ public class SourceControllerImpl implements ISourceController {
         }
     }
 
-    private LinkedHashMap<DeviceProfile, LinkedHashSet<String>> calculatePreloadedResourcesByProfile() {
-        final LinkedHashMap<DeviceProfile, LinkedHashSet<String>> result = new LinkedHashMap<>();
+    private EnumMap<DeviceProfile, LinkedHashSet<String>> calculatePreloadedResourcesByProfile() {
+        final EnumMap<DeviceProfile, LinkedHashSet<String>> result = new EnumMap<>(DeviceProfile.class);
         result.put(DeviceProfile.DESKTOP, calculatePreloadedResources("/resources/desktop-startup-resources-origin.html", DeviceProfile.DESKTOP));
         result.put(DeviceProfile.MOBILE, calculatePreloadedResources("/resources/mobile-startup-resources-origin.html", DeviceProfile.MOBILE));
         return result;
