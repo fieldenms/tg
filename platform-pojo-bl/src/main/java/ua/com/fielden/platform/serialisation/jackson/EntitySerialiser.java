@@ -143,7 +143,7 @@ public class EntitySerialiser<T extends AbstractEntity<?>> {
             final Map<String, EntityTypeProp> props = new LinkedHashMap<>();
             for (final CachedProperty prop : properties) {
                 // non-composite keys should be persisted by identifying their actual type
-                final String name = prop.field().getName();
+                final String name = prop.name;
                 final EntityTypeProp entityTypeProp = newPlainEntity(EntityTypeProp.class, 1L); // use id to have not dirty properties (reduce the amount of serialised JSON)
 
                 final Boolean secrete = AnnotationReflector.isSecreteProperty(type, name);
@@ -259,12 +259,12 @@ public class EntitySerialiser<T extends AbstractEntity<?>> {
      *
      */
     public static final class CachedProperty {
-        private final Field field;
+        public final String name;
         private Class<?> propertyType;
         private boolean entityTyped = false;
 
         CachedProperty(final Field field) {
-            this.field = field;
+            this.name = field.getName();
         }
 
         public Class<?> getPropertyType() {
@@ -280,8 +280,10 @@ public class EntitySerialiser<T extends AbstractEntity<?>> {
             return entityTyped;
         }
 
-        public Field field() {
-            return field;
+        public void assignValue(final AbstractEntity<?> entity, final Object value) throws IllegalAccessException {
+            final Field field = Finder.findFieldByName(entity.getClass(), name);
+            field.setAccessible(true);
+            field.set(entity, value);
         }
     }
 
