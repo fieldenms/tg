@@ -8,7 +8,6 @@ import static ua.com.fielden.platform.data.generator.IGenerator.shouldForceRegen
 import static ua.com.fielden.platform.domaintree.impl.GlobalDomainTreeManager.LINK_CONFIG_TITLE;
 import static ua.com.fielden.platform.domaintree.impl.GlobalDomainTreeManager.UNDEFINED_CONFIG_TITLE;
 import static ua.com.fielden.platform.streaming.ValueCollectors.toLinkedHashMap;
-import static ua.com.fielden.platform.types.tuples.T2.t2;
 import static ua.com.fielden.platform.utils.EntityUtils.equalsEx;
 import static ua.com.fielden.platform.web.centre.CentreUpdater.FRESH_CENTRE_NAME;
 import static ua.com.fielden.platform.web.centre.CentreUpdater.PREVIOUSLY_RUN_CENTRE_NAME;
@@ -66,7 +65,6 @@ import ua.com.fielden.platform.entity.meta.MetaProperty;
 import ua.com.fielden.platform.entity_centre.review.criteria.EnhancedCentreEntityQueryCriteria;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.security.user.IUserProvider;
-import ua.com.fielden.platform.types.tuples.T2;
 import ua.com.fielden.platform.ui.menu.MiWithConfigurationSupport;
 import ua.com.fielden.platform.utils.Pair;
 import ua.com.fielden.platform.web.app.IWebUiConfig;
@@ -155,14 +153,15 @@ public class CriteriaResource extends AbstractWebResource {
                         ? retrievePreferredConfigName(gdtm, miType, device(), companionFinder) // preferred configuration should be loaded
                         : of(LINK_CONFIG_TITLE)) // 'link' configuration should be loaded
                     : of(name) // in case where first time loading has been occurred earlier then 'saveAsName' has non-empty actual configuration that needs to be loaded
-                ); // in case where 'saveAsName' has empty value then first time loading has been occurred earlier and [Default] configuration needs to be loaded
-            if (saveAsName.isPresent() && UNDEFINED_CONFIG_TITLE.equals(saveAsName.get()) && !getQuery().isEmpty()) {
+                ); // in case where 'saveAsName' has empty value then first time loading has been occurred earlier and default configuration needs to be loaded
+            if (saveAsName.isPresent() && UNDEFINED_CONFIG_TITLE.equals(saveAsName.get()) && !getQuery().isEmpty()) { // if first time loading with centre criteria parameters occurs then
                 // clear current 'link' surrogate centres -- this is to make them empty before applying new selection criteria parameters (client-side action after this request's response will be delivered)
                 removeCentres(gdtm, miType, device(), actualSaveAsName, FRESH_CENTRE_NAME, SAVED_CENTRE_NAME, PREVIOUSLY_RUN_CENTRE_NAME);
             }
+            
             final ICentreDomainTreeManagerAndEnhancer updatedFreshCentre = updateCentre(gdtm, miType, FRESH_CENTRE_NAME, actualSaveAsName, device());
             final String customDesc = updateCentreDesc(gdtm, miType, actualSaveAsName, device());
-            return createCriteriaRetrievalEnvelope(updatedFreshCentre, miType, actualSaveAsName, gdtm, restUtil, companionFinder, critGenerator, device(), of(t2(actualSaveAsName, customDesc)));
+            return createCriteriaRetrievalEnvelope(updatedFreshCentre, miType, actualSaveAsName, gdtm, restUtil, companionFinder, critGenerator, device(), customDesc);
         }, restUtil);
     }
     
@@ -194,14 +193,16 @@ public class CriteriaResource extends AbstractWebResource {
             final ICompanionObjectFinder companionFinder,
             final ICriteriaGenerator critGenerator,
             final DeviceProfile device,
-            final Optional<T2<Optional<String>, String>> saveAsNameAndDesc
+            final String saveAsDesc
                     ) {
         return restUtil.rawListJSONRepresentation(
                 createCriteriaValidationPrototype(miType, saveAsName, updatedFreshCentre, companionFinder, critGenerator, -1L, gdtm, device),
                 createCriteriaMetaValuesCustomObjectWithSaveAsInfo(
                         createCriteriaMetaValues(updatedFreshCentre, getEntityType(miType)),
                         isFreshCentreChanged(updatedFreshCentre, updateCentre(gdtm, miType, SAVED_CENTRE_NAME, saveAsName, device)),
-                        saveAsNameAndDesc
+                        of(saveAsName),
+                        ofNullable(saveAsDesc),
+                        empty()
                 )//
         );
     }
@@ -215,14 +216,17 @@ public class CriteriaResource extends AbstractWebResource {
             final ICompanionObjectFinder companionFinder,
             final ICriteriaGenerator critGenerator,
             final String staleCriteriaMessage,
-            final DeviceProfile device
+            final DeviceProfile device,
+            final Optional<String> saveAsDesc
                     ) {
         return restUtil.rawListJSONRepresentation(
                 createCriteriaValidationPrototype(miType, saveAsName, updatedFreshCentre, companionFinder, critGenerator, -1L, gdtm, device),
-                createCriteriaMetaValuesCustomObject(
+                createCriteriaMetaValuesCustomObjectWithSaveAsInfo(
                         createCriteriaMetaValues(updatedFreshCentre, getEntityType(miType)),
                         isFreshCentreChanged(updatedFreshCentre, updateCentre(gdtm, miType, SAVED_CENTRE_NAME, saveAsName, device)),
-                        staleCriteriaMessage
+                        empty(),
+                        saveAsDesc,
+                        of(ofNullable(staleCriteriaMessage))
                 )//
         );
     }
@@ -251,7 +255,11 @@ public class CriteriaResource extends AbstractWebResource {
 
     public static <T extends AbstractEntity<?>, M extends EnhancedCentreEntityQueryCriteria<T, ? extends IEntityDao<T>>> String createStaleCriteriaMessage(final String wasRun, final ICentreDomainTreeManagerAndEnhancer freshCentre, final Class<? extends MiWithConfigurationSupport<?>> miType, final Optional<String> saveAsName, final IGlobalDomainTreeManager gdtm, final ICompanionObjectFinder companionFinder, final ICriteriaGenerator critGenerator, final DeviceProfile device) {
         if (wasRun != null) {
-            final boolean isCriteriaStale = !equalsEx(updateCentre(gdtm, miType, PREVIOUSLY_RUN_CENTRE_NAME, saveAsName, device), freshCentre);
+            // When changing centre we can change selection criteria and mnemonics, but also columns sorting, order, visibility and width / grow factors.
+            // From end-user perspective it is only relevant to 'know' whether selection criteria change was not applied against currently visible result-set.
+            // Thus need to only compare 'firstTick's of centre managers.
+            // Please be careful when adding some new contracts to 'firstTick' not to violate this premise.
+            final boolean isCriteriaStale = !equalsEx(updateCentre(gdtm, miType, PREVIOUSLY_RUN_CENTRE_NAME, saveAsName, device).getFirstTick(), freshCentre.getFirstTick());
             if (isCriteriaStale) {
                 logger.info(staleCriteriaMessage);
                 return staleCriteriaMessage;

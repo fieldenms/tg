@@ -358,25 +358,25 @@
                     }
                     this.selectAfterRender = selected;
                 },
-
-                _checkWeatherCanLeave: function (e) {
-                    var modules = this.querySelectorAll("tg-app-view");
-                    var customDialogs = document.body.querySelectorAll("tg-custom-action-dialog");
-                    var changedEntityCentres = [];
-                    var master, itemIndex, viewToCheck;
+                
+                _checkWhetherCanLeave: function (e) {
+                    const modules = this.querySelectorAll("tg-app-view");
+                    const customDialogs = document.body.querySelectorAll("tg-custom-action-dialog");
+                    const changedViews = [];
+                    let master, itemIndex, viewToCheck;
                     for (itemIndex = 0; itemIndex < modules.length; itemIndex++) {
                         viewToCheck = typeof modules[itemIndex].canLeave === 'function' && modules[itemIndex].canLeave();
                         if (Array.isArray(viewToCheck)) {
                             viewToCheck.forEach(function (element) {
-                                changedEntityCentres.push(element);
+                                changedViews.push(element);
                             });
                         } else if (viewToCheck) {
-                            changedEntityCentres.push(viewToCheck);
+                            changedViews.push(viewToCheck);
                         }
                     }
-                    if (changedEntityCentres.length > 0) {
+                    if (changedViews.length > 0) {
                         e.returnValue = "The following menu items were changed:\n";
-                        changedEntityCentres.forEach(function (element) {
+                        changedViews.forEach(function (element) {
                             e.returnValue += "\t * " + element + "\n";
                         });
                     }
@@ -460,7 +460,7 @@
                     //Setting dwellTime to 0 for iron-location that is in the shadow-dom of carbon-location component. This fixes the problem of delayong the history changes.
                     this.$.location.$$("iron-location").dwellTime = 0;
                     //Binding to 'this' functions those are used outside the scope of this component.
-                    this._checkWeatherCanLeave = this._checkWeatherCanLeave.bind(this);
+                    this._checkWhetherCanLeave = this._checkWhetherCanLeave.bind(this);
                     this._saveMenuVisibilityChanges = function (visibleItems, invisibleItems) {
                         if (this._saveIdentifier) {
                             this.cancelAsync(this._saveIdentifier);
@@ -520,11 +520,11 @@
                         this._toastGreeting().show();
                     });
                     
-                    window.addEventListener("beforeunload", this._checkWeatherCanLeave);
+                    window.addEventListener("beforeunload", this._checkWhetherCanLeave);
                 },
                 
                 detached: function () {
-                    window.removeEventListener("beforeunload", this._checkWeatherCanLeave);
+                    window.removeEventListener("beforeunload", this._checkWhetherCanLeave);
                 },
                 
                 /**

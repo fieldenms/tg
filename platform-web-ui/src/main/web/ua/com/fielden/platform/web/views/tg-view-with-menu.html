@@ -294,7 +294,8 @@
             ],
             
             listeners: {
-                'tg-save-as-name-changed': '_updateSaveAsNameAndDesc'
+                'tg-save-as-name-changed': '_updateSaveAsName',
+                'tg-save-as-desc-changed': '_updateSaveAsDesc'
             },
             
             ready: function () {
@@ -583,10 +584,31 @@
                 event.returnValue = false;
             },
             
-            _updateSaveAsNameAndDesc: function (event) {
-                this._saveAsNamesAndDescs()[this._selectedPage] = event.detail;
-                this.saveAsName = event.detail.saveAsName;
-                this.saveAsDesc = event.detail.saveAsDesc;
+            /**
+             * Updates saveAsName from its 'change' event. It controls the title change.
+             */
+            _updateSaveAsName: function (event) {
+                this._initSaveAsNamesAndDescsEntry();
+                this._saveAsNamesAndDescs()[this._selectedPage].saveAsName = event.detail;
+                this.saveAsName = event.detail;
+            },
+            
+            /**
+             * Updates saveAsDesc from its 'change' event. It controls the tooltip change of configuration title.
+             */
+            _updateSaveAsDesc: function (event) {
+                this._initSaveAsNamesAndDescsEntry();
+                this._saveAsNamesAndDescs()[this._selectedPage].saveAsDesc = event.detail;
+                this.saveAsDesc = event.detail;
+            },
+            
+            /**
+             * Initialises current entry of 'saveAs' object (name and desc) if not present.
+             */
+            _initSaveAsNamesAndDescsEntry: function () {
+                if (!this._saveAsNamesAndDescs()[this._selectedPage]) {
+                    this._saveAsNamesAndDescs()[this._selectedPage] = {};
+                }
             }
         });
     })();

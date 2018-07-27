@@ -234,8 +234,10 @@
             _isDisabled: function(item) {
                 return !isMenuPresent(item.menu);
             },
-            _logout: function () {
-                window.location.href = '/logout';
+            _logout: function (e) {
+                if (e.detail.sourceEvent.detail < 2) {
+                    window.location.href = '/logout';
+                }
             }
         });
     })();

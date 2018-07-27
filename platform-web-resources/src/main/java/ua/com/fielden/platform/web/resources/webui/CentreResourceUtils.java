@@ -5,8 +5,6 @@ import static java.util.Optional.of;
 import static ua.com.fielden.platform.criteria.generator.impl.SynchroniseCriteriaWithModelHandler.CRITERIA_ENTITY_ID;
 import static ua.com.fielden.platform.domaintree.impl.AbstractDomainTree.isBooleanCriterion;
 import static ua.com.fielden.platform.domaintree.impl.AbstractDomainTree.isDoubleCriterion;
-import static ua.com.fielden.platform.domaintree.impl.GlobalDomainTreeManager.DEFAULT_CONFIG_DESC;
-import static ua.com.fielden.platform.domaintree.impl.GlobalDomainTreeManager.DEFAULT_CONFIG_TITLE;
 import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.isAndBeforeDefault;
 import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.isDateMnemonicDefault;
 import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.isDatePrefixDefault;
@@ -15,7 +13,9 @@ import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract
 import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.isNotDefault;
 import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.isOrNullDefault;
 import static ua.com.fielden.platform.types.tuples.T2.t2;
-import static ua.com.fielden.platform.web.centre.CentreConfigEditAction.EditKind.COPY;
+import static ua.com.fielden.platform.utils.EntityUtils.equalsEx;
+import static ua.com.fielden.platform.web.centre.AbstractCentreConfigAction.APPLIED_CRITERIA_ENTITY_NAME;
+import static ua.com.fielden.platform.web.centre.AbstractCentreConfigAction.WAS_RUN_NAME;
 import static ua.com.fielden.platform.web.utils.EntityResourceUtils.getEntityType;
 import static ua.com.fielden.platform.web.utils.EntityResourceUtils.getOriginalManagedType;
 import static ua.com.fielden.platform.web.utils.EntityResourceUtils.getVersion;
@@ -61,7 +61,6 @@ import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.serialisation.jackson.DefaultValueContract;
-import ua.com.fielden.platform.types.tuples.T2;
 import ua.com.fielden.platform.ui.menu.MiTypeAnnotation;
 import ua.com.fielden.platform.ui.menu.MiWithConfigurationSupport;
 import ua.com.fielden.platform.utils.EntityUtils;
@@ -124,20 +123,26 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
     }
     
     /**
-     * Creates the 'custom object' that contains 'critMetaValues', 'isCentreChanged' flag and 'saveAsNameAndDesc' optional value.
+     * Creates the 'custom object' that contains 'critMetaValues', 'isCentreChanged' flag, optional 'saveAsName' value and optional 'saveAsDesc' value.
      *
      * @param criteriaMetaValues
      * @param isCentreChanged
-     * @param saveAsNameAndDesc
+     * @param saveAsName
+     * @param saveAsDesc
+     * @param staleCriteriaMessage
+     *  
      * @return
      */
-    static Map<String, Object> createCriteriaMetaValuesCustomObjectWithSaveAsInfo(final Map<String, Map<String, Object>> criteriaMetaValues, final boolean isCentreChanged, final Optional<T2<Optional<String>, String>> saveAsNameAndDesc) {
+    static Map<String, Object> createCriteriaMetaValuesCustomObjectWithSaveAsInfo(final Map<String, Map<String, Object>> criteriaMetaValues, final boolean isCentreChanged, final Optional<Optional<String>> saveAsName, final Optional<String> saveAsDesc, final Optional<Optional<String>> staleCriteriaMessage) {
         final Map<String, Object> customObject = createCriteriaMetaValuesCustomObject(criteriaMetaValues, isCentreChanged);
-        saveAsNameAndDesc.ifPresent(nameDesc -> {
-            customObject.put("saveAsName", nameDesc._1.orElse(""));
-            if (nameDesc._2 != null) {
-                customObject.put("saveAsDesc", nameDesc._2);
-            }
+        saveAsName.ifPresent(name -> {
+            customObject.put("saveAsName", name.orElse(""));
+        });
+        saveAsDesc.ifPresent(desc -> {
+            customObject.put("saveAsDesc", desc);
+        });
+        staleCriteriaMessage.ifPresent(message -> {
+            customObject.put("staleCriteriaMessage", message.orElse(null));
         });
         return customObject;
     }
@@ -180,13 +185,11 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
     }
 
     /**
-     * Creates the pair of 'custom object' (that contain 'critMetaValues', 'isCentreChanged' flag, 'resultEntities' and 'pageCount') and 'resultEntities' (query run is performed
+     * Creates the pair of 'custom object' (that contain 'resultEntities' and 'pageCount') and 'resultEntities' (query run is performed
      * inside).
      *
      * @param customObject
-     * @param criteriaMetaValues
      * @param criteriaEntity
-     * @param isCentreChanged
      * @param additionalFetchProvider
      * @param additionalFetchProviderForTooltipProperties
      * @param createdByUserConstraint -- if exists then constraints the query by equality to the property 'createdBy'
@@ -428,64 +431,143 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
             final Long previousVersion,
             final IGlobalDomainTreeManager gdtm,
             final DeviceProfile device) {
-        final Class<T> entityType = getEntityType(miType);
-        final M validationPrototype = (M) critGenerator.generateCentreQueryCriteria(entityType, cdtmae, miType, new MiTypeAnnotation().newInstance(miType, saveAsName));
-        validationPrototype.setFreshCentreSupplier(() -> updateCentre(gdtm, miType, FRESH_CENTRE_NAME, saveAsName, device));
+        // generates validation prototype
+        final M validationPrototype = (M) critGenerator.generateCentreQueryCriteria((Class<T>) getEntityType(miType), cdtmae, miType, new MiTypeAnnotation().newInstance(miType, saveAsName));
+        
+        // Functions for companion implementations:
+        
+        // returns an updated version of PREVIOUSLY_RUN centre
+        validationPrototype.setPreviouslyRunCentreSupplier(() -> updateCentre(gdtm, miType, PREVIOUSLY_RUN_CENTRE_NAME, saveAsName, device));
+        // returns whether centre is changed from previously saved (or the very original) version
+        validationPrototype.setCentreChangedGetter(() -> isFreshCentreChanged(updateCentre(gdtm, miType, FRESH_CENTRE_NAME, saveAsName, device), updateCentre(gdtm, miType, SAVED_CENTRE_NAME, saveAsName, device)));
+        // creates criteria validation prototype for concrete saveAsName
+        validationPrototype.setCriteriaValidationPrototypeCreator(validationPrototypeSaveAsName -> 
+            createCriteriaValidationPrototype(miType, validationPrototypeSaveAsName, updateCentre(gdtm, miType, FRESH_CENTRE_NAME, validationPrototypeSaveAsName, device), companionFinder, critGenerator, -1L, gdtm, device)
+        );
+        // creates custom object representing centre information for concrete criteriaEntity and saveAsName
+        validationPrototype.setCentreCustomObjectGetter((appliedCriteriaEntity, customObjectSaveAsName) -> {
+            final ICentreDomainTreeManagerAndEnhancer freshCentre = appliedCriteriaEntity.getCentreDomainTreeMangerAndEnhancer();
+            // In both cases (criteria entity valid or not) create customObject with criteriaEntity to be returned and bound into tg-entity-centre after save.
+            final Map<String, Object> customObject = createCriteriaMetaValuesCustomObjectWithSaveAsInfo(
+                createCriteriaMetaValues(freshCentre, getEntityType(miType)),
+                isFreshCentreChanged(freshCentre, updateCentre(gdtm, miType, SAVED_CENTRE_NAME, customObjectSaveAsName, device)),
+                of(customObjectSaveAsName),
+                validationPrototype.centreTitleAndDesc(customObjectSaveAsName).map(titleDesc -> titleDesc._2),
+                empty()
+            );
+            customObject.put(WAS_RUN_NAME, null); // make VIEW button disabled by default; this behaviour can be overridden by removing 'wasRun' customObject's entry
+            customObject.put(APPLIED_CRITERIA_ENTITY_NAME, appliedCriteriaEntity);
+            return customObject;
+        });
+        // returns base centre for current one (it is either base user's version of inherited configuration or default configuration for all other situations)
         validationPrototype.setBaseCentreSupplier(() -> baseCentre(gdtm, miType, saveAsName, device));
-        validationPrototype.setCentreAdjuster((centreConsumer) -> {
+        // performs mutation function centreConsumer against FRESH and PREVIOUSLY_RUN centres and saves them into persistent storage
+        validationPrototype.setCentreAdjuster(centreConsumer -> {
             centreConsumer.accept(updateCentre(gdtm, miType, FRESH_CENTRE_NAME, saveAsName, device));
             commitCentre(gdtm, miType, FRESH_CENTRE_NAME, saveAsName, device);
-            
-            centreConsumer.accept(updateCentre(gdtm, miType, SAVED_CENTRE_NAME, saveAsName, device));
-            commitCentre(gdtm, miType, SAVED_CENTRE_NAME, saveAsName, device);
             
             centreConsumer.accept(updateCentre(gdtm, miType, PREVIOUSLY_RUN_CENTRE_NAME, saveAsName, device));
             commitCentre(gdtm, miType, PREVIOUSLY_RUN_CENTRE_NAME, saveAsName, device);
         });
-        validationPrototype.setCentreDeleter(() -> {
-            // perform deletion of centre 'saveAs' configuration even if it is inherited from its base; still such config could loaded again from base config
-            removeCentres(gdtm, miType, device, saveAsName, FRESH_CENTRE_NAME, SAVED_CENTRE_NAME, PREVIOUSLY_RUN_CENTRE_NAME);
-            if (!saveAsName.isPresent()) {
-                updateCentre(gdtm, miType, FRESH_CENTRE_NAME, empty(), device);
-                updateCentre(gdtm, miType, SAVED_CENTRE_NAME, empty(), device);
+        // performs mutation function centreConsumer (column widths adjustments) against PREVIOUSLY_RUN centre and copies column widths / grow factors directly to FRESH centre; saves them both into persistent storage
+        validationPrototype.setCentreColumnWidthsAdjuster(centreConsumer -> {
+            // we have diffs that need to be applied against 'previouslyRun' centre 
+            centreConsumer.accept(updateCentre(gdtm, miType, PREVIOUSLY_RUN_CENTRE_NAME, saveAsName, device));
+            commitCentre(gdtm, miType, PREVIOUSLY_RUN_CENTRE_NAME, saveAsName, device);
+            
+            // however those diffs are not applicable to 'fresh' centre due to ability of 'fresh' centre to differ from 'previouslyRun' centre
+            // the only way to get such mismatch is to press Discard on selection criteria
+            // that's why we need to carefully override only widths and grow factors of 'fresh' centre from 'previouslyRun' centre
+            // all other unrelated to CentreColumnWidthConfigUpdater information should remain 'as is'
+            final ICentreDomainTreeManagerAndEnhancer previouslyRunCentre = centre(gdtm, miType, PREVIOUSLY_RUN_CENTRE_NAME, saveAsName, device);
+            final ICentreDomainTreeManagerAndEnhancer freshCentre = updateCentre(gdtm, miType, FRESH_CENTRE_NAME, saveAsName, device);
+            freshCentre.getSecondTick().setWidthsAndGrowFactors(previouslyRunCentre. getSecondTick().getWidthsAndGrowFactors());
+            commitCentre(gdtm, miType, FRESH_CENTRE_NAME, saveAsName, device);
+        });
+        // performs deletion of current owned configuration
+        validationPrototype.setCentreDeleter(() -> 
+            // removes the associated surrogate centres
+            removeCentres(gdtm, miType, device, saveAsName, FRESH_CENTRE_NAME, SAVED_CENTRE_NAME, PREVIOUSLY_RUN_CENTRE_NAME)
+        );
+        // overrides SAVED centre configuration by FRESH one -- 'saves' centre
+        validationPrototype.setFreshCentreSaver(() -> {
+            final ICentreDomainTreeManagerAndEnhancer freshCentre = updateCentre(gdtm, miType, FRESH_CENTRE_NAME, saveAsName, device);
+            initAndCommit(gdtm, miType, SAVED_CENTRE_NAME, saveAsName, device, freshCentre, null);
+        });
+        // overrides FRESH default centre configuration by FRESH current centre configuration; makes default config as preferred -- 'duplicates' centre
+        validationPrototype.setConfigDuplicateAction(() -> {
+            final ICentreDomainTreeManagerAndEnhancer freshCentre = updateCentre(gdtm, miType, FRESH_CENTRE_NAME, saveAsName, device);
+            initAndCommit(gdtm, miType, FRESH_CENTRE_NAME, empty(), device, freshCentre, null);
+            // when switching to default configuration we need to make it preferred
+            validationPrototype.makePreferredConfig(empty());
+        }); 
+        // updates inherited centre with title 'saveAsNameToLoad' from upstream base user's configuration -- just before LOAD action
+        validationPrototype.setInheritedCentreUpdater(saveAsNameToLoad -> {
+            // determine current preferred configuration
+            final Optional<String> preferredConfigName = retrievePreferredConfigName(gdtm, miType, device, companionFinder);
+            // determine whether inherited configuration is changed
+            final boolean centreChanged = isFreshCentreChanged(
+                updateCentre(gdtm, miType, FRESH_CENTRE_NAME, of(saveAsNameToLoad), device),
+                updateCentre(gdtm, miType, SAVED_CENTRE_NAME, of(saveAsNameToLoad), device)
+            );
+            if (centreChanged) { // if there are some user changes, only SAVED surrogate must be updated; if such centre will be discarded the base user changes will be loaded immediately
+                removeCentres(gdtm, miType, device, of(saveAsNameToLoad), SAVED_CENTRE_NAME);
+            } else { // otherwise base user changes will be loaded immediately after centre loading
+                removeCentres(gdtm, miType, device, of(saveAsNameToLoad), FRESH_CENTRE_NAME, SAVED_CENTRE_NAME);
+            }
+            updateCentre(gdtm, miType, FRESH_CENTRE_NAME, of(saveAsNameToLoad), device);
+            updateCentre(gdtm, miType, SAVED_CENTRE_NAME, of(saveAsNameToLoad), device);
+            
+            if (equalsEx(preferredConfigName, of(saveAsNameToLoad))) { // if inherited configuration being updated was preferred
+                makePreferred(gdtm, miType, of(saveAsNameToLoad), device, companionFinder); // then must leave it preferred after deletion
             }
         });
+        // clears default centre and fully prepares it for usage
+        validationPrototype.setDefaultCentreClearer(() -> {
+            removeCentres(gdtm, miType, device, empty(), FRESH_CENTRE_NAME, SAVED_CENTRE_NAME, PREVIOUSLY_RUN_CENTRE_NAME);
+            updateCentre(gdtm, miType, FRESH_CENTRE_NAME, empty(), device);
+            updateCentre(gdtm, miType, SAVED_CENTRE_NAME, empty(), device);
+        });
+        // applies new criteria from client application against FRESH centre and returns respective criteria entity
         validationPrototype.setFreshCentreApplier((modifHolder) -> {
             return createCriteriaEntity(modifHolder, companionFinder, critGenerator, miType, saveAsName, gdtm, device);
         });
-        validationPrototype.setCentreTitleAndDescGetter(() -> {
-            return saveAsName
-                .map(name -> t2(name, updateCentreDesc(gdtm, miType, of(name), device)))
-                .orElse(t2(DEFAULT_CONFIG_TITLE, DEFAULT_CONFIG_DESC));
+        // returns title / desc for named (inherited or owned) configuration and empty optional for unnamed (default) configuration
+        validationPrototype.setCentreTitleAndDescGetter((saveAsNameForTitleAndDesc) -> {
+            return saveAsNameForTitleAndDesc.map(name -> t2(name, updateCentreDesc(gdtm, miType, of(name), device)));
         });
-        validationPrototype.setCentreEditor((editKindAndNewNameAndPreferredVal, newDesc) -> {
-            final Optional<String> newName = editKindAndNewNameAndPreferredVal._2;
-            if (COPY.equals(editKindAndNewNameAndPreferredVal._1)) {
-                final ICentreDomainTreeManagerAndEnhancer freshCentre = updateCentre(gdtm, miType, FRESH_CENTRE_NAME, saveAsName, device);
-                final ICentreDomainTreeManagerAndEnhancer savedCentre = updateCentre(gdtm, miType, SAVED_CENTRE_NAME, saveAsName, device);
-                
-                initAndCommit(gdtm, miType, FRESH_CENTRE_NAME, newName, device, freshCentre, newDesc);
-                initAndCommit(gdtm, miType, SAVED_CENTRE_NAME, newName, device, savedCentre, null);
-            } else {
-                editCentreTitleAndDesc(gdtm, miType, saveAsName, device, newName.get(), newDesc);
-                if (!saveAsName.isPresent()) {
-                    updateCentre(gdtm, miType, FRESH_CENTRE_NAME, empty(), device);
-                    updateCentre(gdtm, miType, SAVED_CENTRE_NAME, empty(), device);
-                }
+        // changes title / desc for current saveAsName'd configuration; returns custom object containing centre information
+        validationPrototype.setCentreEditor((newName, newDesc) -> {
+            editCentreTitleAndDesc(gdtm, miType, saveAsName, device, newName, newDesc);
+            // currently loaded configuration should remain preferred -- no action is required
+            return validationPrototype.centreCustomObject(
+                createCriteriaEntity(validationPrototype.centreContextHolder().getModifHolder(), companionFinder, critGenerator, miType, of(newName), gdtm, device),
+                of(newName)
+            );
+        });
+        // performs copying of current configuration with the specified title / desc; makes it preferred; returns custom object containing centre information
+        validationPrototype.setCentreSaver((newName, newDesc) -> {
+            final Optional<String> newSaveAsName = of(newName);
+            final ICentreDomainTreeManagerAndEnhancer freshCentre = updateCentre(gdtm, miType, FRESH_CENTRE_NAME, saveAsName, device);
+            // save the 'fresh' centre with a new name -- buttons SAVE / DISCARD will be disabled
+            initAndCommit(gdtm, miType, FRESH_CENTRE_NAME, newSaveAsName, device, freshCentre, newDesc);
+            initAndCommit(gdtm, miType, SAVED_CENTRE_NAME, newSaveAsName, device, freshCentre, null);
+            // when switching to new configuration we need to make it preferred
+            validationPrototype.makePreferredConfig(newSaveAsName);
+            return validationPrototype.centreCustomObject(
+                createCriteriaEntity(validationPrototype.centreContextHolder().getModifHolder(), companionFinder, critGenerator, miType, newSaveAsName, gdtm, device),
+                newSaveAsName
+            );
+        });
+        // returns ordered alphabetically list of 'loadable' configurations for current user 
+        validationPrototype.setLoadableCentresSupplier(() -> loadableConfigurations(gdtm, miType, device, companionFinder));
+        // returns currently loaded configuration's saveAsName
+        validationPrototype.setSaveAsNameSupplier(() -> saveAsName);
+        // makes 'saveAsNameToBecomePreferred' configuration preferred in case where it differs from currently loaded configuration; does nothing otherwise
+        validationPrototype.setPreferredConfigMaker(saveAsNameToBecomePreferred -> {
+            if (!equalsEx(saveAsNameToBecomePreferred, saveAsName)) { // please note that currently loaded configuration must be preferred at this stage
+                makePreferred(gdtm, miType, saveAsNameToBecomePreferred, device, companionFinder);
             }
-            final Optional<Boolean> preferredValue = editKindAndNewNameAndPreferredVal._3;
-            if (preferredValue.isPresent()) {
-                makePreferred(preferredValue.get(), gdtm, miType, newName, device, companionFinder);
-            }
-        });
-        validationPrototype.setLoadableCentresSupplier(() -> {
-            return loadableConfigurations(gdtm, miType, device, companionFinder);
-        });
-        validationPrototype.setSaveAsNameSupplier(() -> {
-            return saveAsName;
-        });
-        validationPrototype.setPreferredConfigSupplier(() -> {
-            return retrievePreferredConfigName(gdtm, miType, device, companionFinder);
         });
         
         final Field idField = Finder.getFieldByName(validationPrototype.getType(), AbstractEntity.ID);

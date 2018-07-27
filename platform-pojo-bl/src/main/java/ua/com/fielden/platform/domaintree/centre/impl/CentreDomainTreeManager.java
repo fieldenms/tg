@@ -1,5 +1,7 @@
 package ua.com.fielden.platform.domaintree.centre.impl;
 
+import static ua.com.fielden.platform.types.tuples.T2.t2;
+
 import java.lang.ref.WeakReference;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
@@ -33,6 +35,7 @@ import ua.com.fielden.platform.domaintree.impl.LocatorManager;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
 import ua.com.fielden.platform.serialisation.api.SerialiserEngines;
 import ua.com.fielden.platform.serialisation.kryo.serialisers.TgSimpleSerializer;
+import ua.com.fielden.platform.types.tuples.T2;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
 import ua.com.fielden.snappy.DateRangePrefixEnum;
@@ -1036,6 +1039,19 @@ public class CentreDomainTreeManager extends AbstractDomainTreeManager implement
                     + root.getSimpleName() + "].");
             propertiesGrowFactors.put(key(root, property), width);
             return this;
+        }
+
+        @Override
+        public T2<EnhancementPropertiesMap<Integer>, EnhancementPropertiesMap<Integer>> getWidthsAndGrowFactors() {
+            return t2(propertiesWidths, propertiesGrowFactors);
+        }
+
+        @Override
+        public void setWidthsAndGrowFactors(final T2<EnhancementPropertiesMap<Integer>, EnhancementPropertiesMap<Integer>> widthsAndGrowFactors) {
+            propertiesWidths.clear();
+            propertiesWidths.putAll(widthsAndGrowFactors._1);
+            propertiesGrowFactors.clear();
+            propertiesGrowFactors.putAll(widthsAndGrowFactors._2);
         }
 
         @Override

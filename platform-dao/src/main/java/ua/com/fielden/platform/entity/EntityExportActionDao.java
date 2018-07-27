@@ -56,16 +56,16 @@ public class EntityExportActionDao extends CommonEntityDao<EntityExportAction> i
         final Map<String, Object> adhocParams = new LinkedHashMap<>();
         final Stream<AbstractEntity<?>> entities;
         if (entity.isExportAll()) {
-            entities = selectionCrit.exportQueryRunner().apply(adhocParams);
+            entities = selectionCrit.export(adhocParams);
         } else if (entity.isExportTop()) {
             adhocParams.put("fetchSize", entity.getNumber());
-            entities = selectionCrit.exportQueryRunner().apply(adhocParams).limit(entity.getNumber());
+            entities = selectionCrit.export(adhocParams).limit(entity.getNumber());
         } else {
             if (entity.getSelectedEntityIds().isEmpty()) {
                 throw Result.failure("Please select at least one entry to export.");
             }
             adhocParams.put("ids", entity.getSelectedEntityIds().toArray(new Long[0]));
-            entities = selectionCrit.exportQueryRunner().apply(adhocParams);
+            entities = selectionCrit.export(adhocParams);
         }
         try {
             final Pair<String[], String[]> propAndTitles = selectionCrit.generatePropTitlesToExport();

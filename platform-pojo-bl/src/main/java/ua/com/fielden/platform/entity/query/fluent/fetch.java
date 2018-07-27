@@ -23,9 +23,9 @@ public class fetch<T extends AbstractEntity<?>> {
     }
 
     private final Class<T> entityType;
-    private final Map<String, fetch<? extends AbstractEntity<?>>> includedPropsWithModels = new HashMap<String, fetch<? extends AbstractEntity<?>>>();
-    private final Set<String> includedProps = new HashSet<String>();
-    private final Set<String> excludedProps = new HashSet<String>();
+    private final Map<String, fetch<? extends AbstractEntity<?>>> includedPropsWithModels = new HashMap<>();
+    private final Set<String> includedProps = new HashSet<>();
+    private final Set<String> excludedProps = new HashSet<>();
     private final FetchCategory fetchCategory;
     private final boolean instrumented;
 
@@ -67,7 +67,7 @@ public class fetch<T extends AbstractEntity<?>> {
     }
 
     private static <T extends AbstractEntity<?>> fetch<T> copy(final fetch<T> fromFetch) {
-        final fetch<T> result = new fetch<T>(fromFetch.entityType, fromFetch.fetchCategory, fromFetch.isInstrumented());
+        final fetch<T> result = new fetch<>(fromFetch.entityType, fromFetch.fetchCategory, fromFetch.isInstrumented());
         result.includedPropsWithModels.putAll(fromFetch.includedPropsWithModels);
         result.includedProps.addAll(fromFetch.includedProps);
         result.excludedProps.addAll(fromFetch.excludedProps);

@@ -3,7 +3,6 @@ package ua.com.fielden.platform.ui.config;
 import ua.com.fielden.platform.entity.DynamicEntityKey;
 import ua.com.fielden.platform.entity.annotation.CompanionObject;
 import ua.com.fielden.platform.entity.annotation.CompositeKeyMember;
-import ua.com.fielden.platform.entity.annotation.DescRequired;
 import ua.com.fielden.platform.entity.annotation.DescTitle;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.KeyTitle;
@@ -43,7 +42,6 @@ import ua.com.fielden.platform.ui.config.api.IEntityCentreConfig;
 @CompanionObject(IEntityCentreConfig.class)
 @MapEntityTo("ENTITY_CENTRE_CONFIG")
 @DescTitle("Description")
-@DescRequired
 public class EntityCentreConfig extends AbstractConfiguration<DynamicEntityKey> {
 
     @IsProperty
