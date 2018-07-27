@@ -409,7 +409,7 @@
                             return aproximated;
                         }
                     } else if (this.timeZone === 'UTC') { //As the last resort try utc formatting
-                        this._validMoment = _momentTz(dateEditingValue, 'YYYY-MM-DDTHH:mm:ssZ', true, this.timeZone);
+                        this._validMoment = this._tryUTCFormats(dateEditingValue);
                         if (this._validMoment !== null) {
                             return _millisDateRepresentation(this._validMoment.valueOf(), this.timeZone, this.datePortion);
                         }
@@ -435,6 +435,21 @@
                     }
                 }
                 return undefined;
+            },
+            
+            /**
+             * Tries UTC formats one by one and returns valid moment or null if there are no appropriate format.
+             */
+            _tryUTCFormats: function (stringValue) {
+                const formats = Object.values(timeZoneFormats['UTC']);
+                for (let i = 0; i < formats.length; i++) {
+                    var format = formats[i];
+                    var tryingMoment = _momentTz(stringValue, format, true, this.timeZone);
+                    if (tryingMoment.isValid()) {
+                        return tryingMoment;
+                    }
+                }
+                return null;
             },
 
             /**
