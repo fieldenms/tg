@@ -1,5 +1,7 @@
 package ua.com.fielden.platform.entity.query.generation.elements;
 
+import static java.lang.String.join;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -176,29 +178,12 @@ public class QueryBasedSource extends AbstractSource {
         }
     }
 
-    /**
-     * Generates one dot.notated string from list of strings (subproperties).
-     *
-     * @param parts
-     * @return
-     */
-    private static String joinWithDot(final List<String> parts) {
-        final StringBuffer sb = new StringBuffer();
-        for (final Iterator<String> iterator = parts.iterator(); iterator.hasNext();) {
-            sb.append(iterator.next());
-            if (iterator.hasNext()) {
-                sb.append(".");
-            }
-        }
-        return sb.toString();
-    }
-
     private static List<Pair<String, String>> prepareCandidates(final String dotNotatedPropName) {
         final List<Pair<String, String>> result = new ArrayList<Pair<String, String>>();
         final List<String> parts = Arrays.asList(dotNotatedPropName.split("\\."));
 
         for (int i = parts.size(); i >= 1; i--) {
-            result.add(new Pair<String, String>(joinWithDot(parts.subList(0, i)), joinWithDot(parts.subList(i, parts.size()))));
+            result.add(new Pair<String, String>(join(".", parts.subList(0, i)), join(".", parts.subList(i, parts.size()))));
         }
 
         return result;
