@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.serialisation.kryo.serialisers;
 
+import static java.lang.String.format;
 import static ua.com.fielden.platform.serialisation.kryo.IoHelper.ENTITY_REFERENCES;
 
 import java.lang.reflect.Field;
@@ -11,6 +12,14 @@ import java.util.Optional;
 
 import org.apache.log4j.Logger;
 
+import com.esotericsoftware.kryo.Context;
+import com.esotericsoftware.kryo.Kryo;
+import com.esotericsoftware.kryo.Kryo.RegisteredClass;
+import com.esotericsoftware.kryo.SerializationException;
+import com.esotericsoftware.kryo.Serializer;
+import com.esotericsoftware.kryo.serialize.IntSerializer;
+import com.esotericsoftware.kryo.serialize.LongSerializer;
+
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
@@ -19,14 +28,6 @@ import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader;
 import ua.com.fielden.platform.utils.EntityUtils;
-
-import com.esotericsoftware.kryo.Context;
-import com.esotericsoftware.kryo.Kryo;
-import com.esotericsoftware.kryo.Kryo.RegisteredClass;
-import com.esotericsoftware.kryo.SerializationException;
-import com.esotericsoftware.kryo.Serializer;
-import com.esotericsoftware.kryo.serialize.IntSerializer;
-import com.esotericsoftware.kryo.serialize.LongSerializer;
 
 /**
  * Serialises descendants of {@link AbstractEntity}.
@@ -62,18 +63,16 @@ public final class EntitySerialiser extends Serializer {
         properties = createCachedProperties(type);
     }
 
-    private List<CachedProperty> createCachedProperties(final Class<AbstractEntity> type) {
+    private static List<CachedProperty> createCachedProperties(final Class<AbstractEntity> type) {
         final boolean hasCompositeKey = EntityUtils.isCompositeEntity(type);
-        final List<CachedProperty> properties = new ArrayList<CachedProperty>();
+        final List<CachedProperty> props = new ArrayList<>();
         for (final Field propertyField : Finder.findRealProperties(type)) {
-            // take into account only persistent properties
-            //if (!propertyField.isAnnotationPresent(Calculated.class)) {
             propertyField.setAccessible(true);
             // need to handle property key in a special way -- composite key does not have to be serialised
             if (AbstractEntity.KEY.equals(propertyField.getName())) {
                 if (!hasCompositeKey) {
                     final CachedProperty prop = new CachedProperty(propertyField);
-                    properties.add(prop);
+                    props.add(prop);
                     final Class<?> fieldType = AnnotationReflector.getKeyType(type);
                     final int modifiers = fieldType.getModifiers();
                     if (!Modifier.isAbstract(modifiers) && !Modifier.isInterface(modifiers)) {
@@ -82,16 +81,15 @@ public final class EntitySerialiser extends Serializer {
                 }
             } else {
                 final CachedProperty prop = new CachedProperty(propertyField);
-                properties.add(prop);
+                props.add(prop);
                 final Class<?> fieldType = PropertyTypeDeterminator.stripIfNeeded(propertyField.getType());
                 final int modifiers = fieldType.getModifiers();
                 if (!Modifier.isAbstract(modifiers) && !Modifier.isInterface(modifiers)) {
                     prop.setPropertyType(fieldType);
                 }
             }
-            //}
         }
-        return properties;
+        return props;
     }
 
     @Override
@@ -143,10 +141,10 @@ public final class EntitySerialiser extends Serializer {
         try {
             for (final CachedProperty prop : properties) {
                 // non-composite keys should be persisted by identifying their actual type
-                final String name = prop.field.getName();
+                final String name = prop.name;
                 lastProperty = name;
                 
-                Object protoValue = prop.field.get(entity);
+                Object protoValue = entity.get(name);
                 if (protoValue instanceof AbstractEntity) {
                     protoValue = ((AbstractEntity<?>) protoValue).isIdOnlyProxy() ? null : protoValue; 
                 }
@@ -250,7 +248,7 @@ public final class EntitySerialiser extends Serializer {
                     break;
                 case NULL_DIRTY:
                     if (entity.isInstrumented() && !DynamicEntityClassLoader.isGenerated(type)) {
-                        entity.getProperty(prop.field.getName()).setOriginalValue(null).setDirty(true);
+                        entity.getProperty(prop.name).setOriginalValue(null).setDirty(true);
                     }
                     break;
                 case NOT_NULL_NOT_DIRTY:
@@ -258,20 +256,18 @@ public final class EntitySerialiser extends Serializer {
                     break;
                 case NULL_NOT_DIRTY:
                     if (entity.isInstrumented() && !DynamicEntityClassLoader.isGenerated(type)) {
-                        entity.getProperty(prop.field.getName()).setOriginalValue(null);
+                        entity.getProperty(prop.name).setOriginalValue(null);
                     }
                     break;
 
                 default:
-                    throw new SerializationException("EntitySerialiser could not correctly identify state attribute for property " + prop.field.getName()
-                            + " when reading entity of type " + type.getName());
+                    throw new SerializationException(format("EntitySerialiser could not correctly identify state attribute for property %s when reading entity of type %s", prop.name, type.getName()));
                 }
 
             }
             return (T) entity;
         } catch (final Exception ex) {
-            ex.printStackTrace();
-            throw new SerializationException("Could not deserialise instance of type " + clazz.getName() + ": " + ex.getMessage());
+            throw new SerializationException(format("Could not deserialise instance of type %s: %s", clazz.getName(), ex.getMessage()));
         }
     }
 
@@ -284,11 +280,9 @@ public final class EntitySerialiser extends Serializer {
      * @return
      * @throws Exception
      */
-    private final MetaProperty readProperty(final ByteBuffer buffer, final AbstractEntity<?> entity, final CachedProperty prop) throws Exception {
-        if (prop.propertyType != null) {
-            if (prop.serialiser == null) {
-                prop.serialiser = kryo.getRegisteredClass(prop.propertyType).getSerializer();
-            }
+    private final MetaProperty<?> readProperty(final ByteBuffer buffer, final AbstractEntity<?> entity, final CachedProperty prop) throws IllegalAccessException {
+        if (prop.propertyType != null && prop.serialiser == null) {
+            prop.serialiser = kryo.getRegisteredClass(prop.propertyType).getSerializer();
         }
 
         Serializer serializer = prop.serialiser;
@@ -300,9 +294,9 @@ public final class EntitySerialiser extends Serializer {
             serializer = registeredClass.getSerializer();
         }
         final Object value = serializer.readObjectData(buffer, concreteType);
-        prop.field.set(entity, value);
+        prop.assignValue(entity, value);
 
-        return !DynamicEntityClassLoader.isGenerated(type) && entity.isInstrumented() ? entity.getProperty(prop.field.getName()).setOriginalValue(value) : null;
+        return !DynamicEntityClassLoader.isGenerated(type) && entity.isInstrumented() ? entity.getProperty(prop.name).setOriginalValue(value) : null;
     }
 
     /**
@@ -313,29 +307,23 @@ public final class EntitySerialiser extends Serializer {
      * @author TG Team
      *
      */
-    private final class CachedProperty {
-        final Field field;
+    private static final class CachedProperty {
+        private final String name;
         private Serializer serialiser;
         private Class<?> propertyType;
 
         CachedProperty(final Field field) {
-            this.field = field;
+            this.name = field.getName();
         }
 
-        public Class<?> getPropertyType() {
-            return propertyType;
+        public void assignValue(final AbstractEntity<?> entity, final Object value) throws IllegalAccessException {
+            final Field field = Finder.findFieldByName(entity.getClass(), name);
+            field.setAccessible(true);
+            field.set(entity, value);
         }
-
+        
         public void setPropertyType(final Class<?> type) {
             this.propertyType = type;
-        }
-
-        public Serializer getSerialiser() {
-            return serialiser;
-        }
-
-        public void setSerialiser(final Serializer serialiser) {
-            this.serialiser = serialiser;
         }
     }
 
