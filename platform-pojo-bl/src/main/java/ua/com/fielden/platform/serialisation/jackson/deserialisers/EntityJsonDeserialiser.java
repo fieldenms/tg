@@ -58,7 +58,6 @@ public class EntityJsonDeserialiser<T extends AbstractEntity<?>> extends StdDese
     private static final long serialVersionUID = 1L;
     private final EntityFactory factory;
     private final ObjectMapper mapper;
-    private final Field versionField;
     private final Class<T> type;
     private final List<CachedProperty> properties;
     private final ISerialisationTypeEncoder serialisationTypeEncoder;
@@ -74,8 +73,6 @@ public class EntityJsonDeserialiser<T extends AbstractEntity<?>> extends StdDese
         this.idOnlyProxiedEntityTypeCache = idOnlyProxiedEntityTypeCache;
 
         this.type = type;
-        versionField = Finder.findFieldByName(type, AbstractEntity.VERSION);
-        versionField.setAccessible(true);
         
         this.propertyDescriptorType = propertyDescriptorType;
     }
@@ -146,11 +143,13 @@ public class EntityJsonDeserialiser<T extends AbstractEntity<?>> extends StdDese
             if (!versionJsonNode.isNull()) {
                 final Long version = versionJsonNode.asLong();
                 try {
+                    final Field versionField = Finder.findFieldByName(type, AbstractEntity.VERSION);
+                    versionField.setAccessible(true);
                     versionField.set(entity, version); // at this stage the field should be already accessible
                 } catch (final IllegalAccessException ex) {
-                    throw new EntityDeserialisationException("The field [" + versionField + "] is not accessible. Fatal error during deserialisation process for entity [" + entity + "].", ex);
+                    throw new EntityDeserialisationException("The field [" + AbstractEntity.VERSION + "] is not accessible. Fatal error during deserialisation process for entity [" + entity + "].", ex);
                 } catch (final IllegalArgumentException ex) {
-                    throw new EntityDeserialisationException("The field [" + versionField + "] is not declared in entity with type [" + type.getName() + "]. Fatal error during deserialisation process for entity [" + entity + "].", ex);
+                    throw new EntityDeserialisationException("The field [" + AbstractEntity.VERSION + "] is not declared in entity with type [" + type.getName() + "]. Fatal error during deserialisation process for entity [" + entity + "].", ex);
                 }
             }
 

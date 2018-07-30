@@ -49,7 +49,6 @@ import ua.com.fielden.platform.utils.Pair;
  * @param <T>
  */
 public class EntityJsonSerialiser<T extends AbstractEntity<?>> extends StdSerializer<T> {
-    private final Class<T> type;
     private static final Logger LOGGER = Logger.getLogger(EntityJsonSerialiser.class);
     private final List<CachedProperty> properties;
     private final EntityType entityType;
@@ -59,7 +58,6 @@ public class EntityJsonSerialiser<T extends AbstractEntity<?>> extends StdSerial
     public EntityJsonSerialiser(final Class<T> type, final List<CachedProperty> properties, final EntityType entityType, final boolean excludeNulls, final boolean propertyDescriptorType) {
         super(type);
 
-        this.type = type;
         this.properties = properties;
         this.entityType = entityType;
         this.excludeNulls = excludeNulls;

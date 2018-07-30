@@ -26,6 +26,7 @@ import ua.com.fielden.platform.entity.meta.MetaProperty;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
+import ua.com.fielden.platform.reflection.Reflector;
 import ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader;
 import ua.com.fielden.platform.utils.EntityUtils;
 
@@ -45,7 +46,6 @@ public final class EntitySerialiser extends Serializer {
     private static final byte NOT_NULL_DIRTY = 4;
 
     private final Class<AbstractEntity> type;
-    private final Field versionField;
     private final List<CachedProperty> properties;
     private final EntityFactory factory; // is used during read (i.e. deserialisation)
 
@@ -55,9 +55,6 @@ public final class EntitySerialiser extends Serializer {
         this.kryo = kryo;
         this.type = type;
         this.factory = factory;
-
-        versionField = Finder.findFieldByName(type, AbstractEntity.VERSION);
-        versionField.setAccessible(true);
 
         // cache all properties annotated with @IsProperty
         properties = createCachedProperties(type);
@@ -143,21 +140,20 @@ public final class EntitySerialiser extends Serializer {
                 // non-composite keys should be persisted by identifying their actual type
                 final String name = prop.name;
                 lastProperty = name;
-                
-                Object protoValue = entity.get(name);
+
+                if (prop.propertyType != null && prop.serialiser == null) {
+                    prop.serialiser = kryo.getRegisteredClass(prop.propertyType).getSerializer();
+                }
+
+                final Optional<MetaProperty<?>> metaProp = entity.getPropertyOptionally(name);
+                final boolean dirty = !metaProp.isPresent() || metaProp.get().isProxy() ? false : metaProp.get().isDirty();
+
+                Object protoValue = !Reflector.isPropertyProxied(entity, name) ? entity.get(name) : null;
                 if (protoValue instanceof AbstractEntity) {
                     protoValue = ((AbstractEntity<?>) protoValue).isIdOnlyProxy() ? null : protoValue; 
                 }
                 
                 final Object value =  protoValue;
-                final Optional<MetaProperty<?>> metaProp = entity.getPropertyOptionally(name);
-                final boolean dirty = !metaProp.isPresent() || metaProp.get().isProxy() ? false : metaProp.get().isDirty();
-
-                if (prop.propertyType != null) {
-                    if (prop.serialiser == null) {
-                        prop.serialiser = kryo.getRegisteredClass(prop.propertyType).getSerializer();
-                    }
-                }
 
                 if (dirty && value != null) {
                     buffer.put(NOT_NULL_DIRTY);
@@ -232,6 +228,8 @@ public final class EntitySerialiser extends Serializer {
 
             // 2. read and set version
             buffer.get(); // read to just move to the next value
+            final Field versionField = Finder.findFieldByName(type, AbstractEntity.VERSION);
+            versionField.setAccessible(true);
             versionField.set(entity, LongSerializer.get(buffer, false));
 
             // 3. read the rest of properties
@@ -321,7 +319,7 @@ public final class EntitySerialiser extends Serializer {
             field.setAccessible(true);
             field.set(entity, value);
         }
-        
+
         public void setPropertyType(final Class<?> type) {
             this.propertyType = type;
         }

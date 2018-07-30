@@ -418,7 +418,7 @@ public final class DomainTreeEnhancer extends AbstractDomainTree implements IDom
             final String predefinedRootTypeName = root.getName() + DynamicTypeNamingService.APPENDIX + "_" + clientGeneratedTypeNameSuffix;
             final Class<?> rootWithPredefinedName = classLoader.startModification(managedType.getName()).modifyTypeName(predefinedRootTypeName).endModification();
             
-            final Map<String, ByteArray> byteArraysWithRenamedRoot = new LinkedHashMap<String, ByteArray>();
+            final Map<String, ByteArray> byteArraysWithRenamedRoot = new LinkedHashMap<>();
             final Pair<Class<?>, Map<String, ByteArray>> currentByteArrays = originalAndEnhancedRootTypesAndArrays.get(root);
             byteArraysWithRenamedRoot.putAll(currentByteArrays.getValue());
             byteArraysWithRenamedRoot.put("", new ByteArray(classLoader.getCachedByteArray(rootWithPredefinedName.getName())));

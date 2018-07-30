@@ -11,6 +11,7 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
+import org.apache.commons.lang.SerializationUtils;
 import org.apache.commons.lang.StringUtils;
 import org.kohsuke.asm5.ClassReader;
 import org.kohsuke.asm5.ClassWriter;
@@ -83,7 +84,7 @@ public class TypeMaker {
             return this;
         }
 
-        final Map<String, NewProperty> propertiesToAdd = new LinkedHashMap<String, NewProperty>();
+        final Map<String, NewProperty> propertiesToAdd = new LinkedHashMap<>();
         for (final NewProperty prop : properties) {
             propertiesToAdd.put(prop.name, prop);
         }
@@ -96,7 +97,6 @@ public class TypeMaker {
             currentType = cw.toByteArray();
             currentName = cv.getEnhancedName().replace('/', '.');
         } catch (final Exception e) {
-            e.printStackTrace();
             throw new IllegalStateException(e);
         }
 
@@ -146,7 +146,6 @@ public class TypeMaker {
            currentType = cw.toByteArray();
            currentName = cv.getEnhancedName().replace('/', '.');
        } catch (final Exception e) {
-           e.printStackTrace();
            throw new IllegalStateException(e);
        }
 
