@@ -6,7 +6,9 @@ import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 
 import ua.com.fielden.platform.basic.IValueMatcherWithContext;
@@ -15,6 +17,8 @@ import ua.com.fielden.platform.dom.DomElement;
 import ua.com.fielden.platform.dom.InnerTextElement;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.AbstractFunctionalEntityWithCentreContext;
+import ua.com.fielden.platform.entity.annotation.IsProperty;
+import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.utils.ResourceLoader;
 import ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig;
 import ua.com.fielden.platform.web.centre.api.resultset.impl.FunctionalActionElement;
@@ -90,6 +94,10 @@ class MasterWithMenu<T extends AbstractEntity<?>, F extends AbstractFunctionalEn
                     );
         }
 
+        //Get all properties that should be converted by reflector on client side
+        final String fields = StringUtils.join(Finder.streamProperties(functionalEntityType, IsProperty.class)
+                .map(filed -> "'" + filed.getName() + "'").collect(Collectors.toList()), ",");
+
         // generate the final master with menu
         final String entityMasterStr = ResourceLoader.getText("ua/com/fielden/platform/web/master/tg-entity-master-template.html")
                 .replace("<!--@imports-->", SimpleMasterBuilder.createImports(importPaths))
@@ -116,7 +124,7 @@ class MasterWithMenu<T extends AbstractEntity<?>, F extends AbstractFunctionalEn
                              + "            self.canLeave = self.$.menu.canLeave.bind(self.$.menu);\n"
                              + "            // Overridden to support hidden properties conversion on the client-side ('key' and 'sectionTitle'). \n"
                              + "            self._isNecessaryForConversion = function (propertyName) { \n"
-                             + "                return ['key', 'sectionTitle', 'menuToOpen'].indexOf(propertyName) !== -1; \n"
+                             + "                return [%s].indexOf(propertyName) !== -1; \n"
                              + "            }; \n"
                              + "            self._focusEmbededView = function () {\n"
                              + "                this.$.menu.focusView();\n"
@@ -130,7 +138,7 @@ class MasterWithMenu<T extends AbstractEntity<?>, F extends AbstractFunctionalEn
                              + "            self._hasEmbededView = function () {\n"
                              + "                return true;\n"
                              + "            }.bind(self);\n",
-                                jsMenuItemActionObjects)) //
+                                jsMenuItemActionObjects, fields)) //
                 .replace("@prefDim", "null")
                 .replace("@noUiValue", "false")
                 .replace("@saveOnActivationValue", "true");
