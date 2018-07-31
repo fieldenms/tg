@@ -395,7 +395,13 @@
                     const newEntity = newBindingEntity ? newBindingEntity['@@origin'] : null;
                     if (newEntity) {
                         if (newEntity.get("calculated")) {
-                            console.log(newEntity);
+                            this.menuItemIndicators.forEach(prop => {
+                                if (newEntity.get(prop)) {
+                                    const menuItem = Polymer.dom(this).querySelector('paper-item[indicator-property=' + prop + ']');
+                                    menuItem.style.color = "goldenrod";
+                                    console.log(menuItem);
+                                }
+                            });
                         }
                     }
                 },
