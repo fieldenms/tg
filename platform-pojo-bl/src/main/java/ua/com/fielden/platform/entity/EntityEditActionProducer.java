@@ -36,7 +36,7 @@ public class EntityEditActionProducer extends EntityManipulationActionProducer<E
                         if (currEntity != null && currEntity.getId() != null) {
                             return currEntity.getId();
                         } else {
-                            throw new IllegalStateException("The edit action context must contain current entity with its ID property present!");
+                            throw new IllegalStateException("There is nothing to edit.");
                         } 
                     });
             editedEntity.setEntityId(id.toString());

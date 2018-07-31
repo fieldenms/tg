@@ -59,20 +59,20 @@
 	            master.retrieve();
 	        };
 	        
-	        test('[1473057180015] to UTC [05/09/2016 06:33:00.015]', function (done) {
-	            correctlyApproximates(done, 1473057180015, '05/09/2016 06:33:00.015', 80);
+	        test('[1473057180015] to UTC [2016-09-05 06:33:00.015]', function (done) {
+	            correctlyApproximates(done, 1473057180015, '2016-09-05 06:33:00.015', 80);
 	        });
 	        
-	        test('[1473057204015] to UTC [05/09/2016 06:33:24.015]', function (done) {
-	            correctlyApproximates(done, 1473057204015, '05/09/2016 06:33:24.015', 81);
+	        test('[1473057204015] to UTC [2016-09-05 06:33:24.015]', function (done) {
+	            correctlyApproximates(done, 1473057204015, '2016-09-05 06:33:24.015', 81);
 	        });
 	        
-	        test('[1473057204000] to UTC [05/09/2016 06:33:24.000]', function (done) {
-	            correctlyApproximates(done, 1473057204000, '05/09/2016 06:33:24.000', 82);
+	        test('[1473057204000] to UTC [2016-09-05 06:33:24.000]', function (done) {
+	            correctlyApproximates(done, 1473057204000, '2016-09-05 06:33:24.000', 82);
 	        });
 	        
-	        test('[1473057180000] to UTC [05/09/2016 06:33]', function (done) {
-	            correctlyApproximates(done, 1473057180000, '05/09/2016 06:33', 83);
+	        test('[1473057180000] to UTC [2016-09-05 06:33]', function (done) {
+	            correctlyApproximates(done, 1473057180000, '2016-09-05 06:33', 83);
 	        });
 	    });
         
@@ -161,42 +161,42 @@
             };
             
             test('[01/01/1970 01:00:05.555] to local [01/01/1970 11:00:05.555]', function (done) {
-                correctlyApproximates(done, '01/01/1970 01:00:05.555', '01/01/1970 01:00:05.555', '01/01/1970 11:00:05.555', 3605555);
+                correctlyApproximates(done, '01/01/1970 01:00:05.555', '1970-01-01 01:00:05.555', '01/01/1970 11:00:05.555', 3605555);
             });
             
             test('[01/01/1972 00:00:05.555] to local [01/01/1972 11:00:05.555]', function (done) {
-                correctlyApproximates(done, '01/01/1972 00:00:05.555', '01/01/1972 00:00:05.555', '01/01/1972 11:00:05.555');
+                correctlyApproximates(done, '01/01/1972 00:00:05.555', '1972-01-01 00:00:05.555', '01/01/1972 11:00:05.555');
             });
             
             // return from DST
             test('[06/04/2013 15:30] to local [07/04/2013 02:30]', function (done) {
-                correctlyApproximates(done, '06/04/2013 15:30', '06/04/2013 15:30', '07/04/2013 02:30', 1365262200000);
+                correctlyApproximates(done, '06/04/2013 15:30', '2013-04-06 15:30', '07/04/2013 02:30', 1365262200000);
             });
             
             test('[06/04/2013 16:15] to local [07/04/2013 02:15] for the later duplicate daylight saving hour', function (done) {
-                correctlyApproximates(done, '06/04/2013 16:15', '06/04/2013 16:15', '07/04/2013 02:15', 1365264900000, true);
+                correctlyApproximates(done, '06/04/2013 16:15', '2013-04-06 16:15', '07/04/2013 02:15', 1365264900000, true);
             });
             
             test('[06/04/2013 17:15] to local [07/04/2013 03:15]', function (done) {
-                correctlyApproximates(done, '06/04/2013 17:15', '06/04/2013 17:15', '07/04/2013 03:15', 1365268500000);
+                correctlyApproximates(done, '06/04/2013 17:15', '2013-04-06 17:15', '07/04/2013 03:15', 1365268500000);
             });
             
             // go to DST
             test('[05/10/2013 15:30] to local [06/10/2013 01:30]', function (done) {
-                correctlyApproximates(done, '05/10/2013 15:30', '05/10/2013 15:30', '06/10/2013 01:30', 1380987000000);
+                correctlyApproximates(done, '05/10/2013 15:30', '2013-10-05 15:30', '06/10/2013 01:30', 1380987000000);
             });
             
             test('[05/10/2013 16:30] to local [06/10/2013 03:30]', function (done) {
-                correctlyApproximates(done, '05/10/2013 16:30', '05/10/2013 16:30', '06/10/2013 03:30', 1380990600000);
+                correctlyApproximates(done, '05/10/2013 16:30', '2013-10-05 16:30', '06/10/2013 03:30', 1380990600000);
             });
             
             test('[05/10/2013 17:30] to local [06/10/2013 04:30]', function (done) {
-                correctlyApproximates(done, '05/10/2013 17:30', '05/10/2013 17:30', '06/10/2013 04:30', 1380994200000);
+                correctlyApproximates(done, '05/10/2013 17:30', '2013-10-05 17:30', '06/10/2013 04:30', 1380994200000);
             });
             
             // weird values -- check complex approximations to work in UTC zone
             test('[9/9/7 9:5 : 34  .  567  ] to local [09/09/2007 09:05:34.567]', function(done) {
-                correctlyApproximates(done, '9/9/7 9:5 : 34  .  567  ', '09/09/2007 09:05:34.567', '09/09/2007 19:05:34.567');
+                correctlyApproximates(done, '9/9/7 9:5 : 34  .  567  ', '2007-09-09 09:05:34.567', '09/09/2007 19:05:34.567');
             });
         });
         
@@ -267,27 +267,27 @@
             
             // return from DST
             test('[07/04/2013 02:30] to UTC [06/04/2013 15:30]', function (done) {
-                correctlyApproximatesFromLocal(done, '07/04/2013 02:30', '07/04/2013 02:30', '06/04/2013 15:30', 1365262200000);
+                correctlyApproximatesFromLocal(done, '07/04/2013 02:30', '07/04/2013 02:30', '2013-04-06 15:30', 1365262200000);
             });
             
             // TODO there is no way at this stage to get UTC date 06/04/2013 16:15 from local
             
             test('[07/04/2013 03:15] to UTC [06/04/2013 17:15]', function (done) {
-                correctlyApproximatesFromLocal(done, '07/04/2013 03:15', '07/04/2013 03:15', '06/04/2013 17:15', 1365268500000);
+                correctlyApproximatesFromLocal(done, '07/04/2013 03:15', '07/04/2013 03:15', '2013-04-06 17:15', 1365268500000);
             });
             
             // go to DST
             test('[06/10/2013 01:30] to UTC [05/10/2013 15:30]', function (done) {
-                correctlyApproximatesFromLocal(done, '06/10/2013 01:30', '06/10/2013 01:30', '05/10/2013 15:30', 1380987000000);
+                correctlyApproximatesFromLocal(done, '06/10/2013 01:30', '06/10/2013 01:30', '2013-10-05 15:30', 1380987000000);
             });
             
             test('[06/10/2013 02:30] to UTC [05/10/2013 16:30]', function (done) {
                 // interesting case -- value immediately aproximates from "unexisting" time 2:30 to 3:30
-                correctlyApproximatesFromLocal(done, '06/10/2013 02:30', '06/10/2013 03:30', '05/10/2013 16:30', 1380990600000);
+                correctlyApproximatesFromLocal(done, '06/10/2013 02:30', '06/10/2013 03:30', '2013-10-05 16:30', 1380990600000);
             });
             
             test('[06/10/2013 03:30] to UTC [05/10/2013 16:30]', function (done) {
-                correctlyApproximatesFromLocal(done, '06/10/2013 03:30', '06/10/2013 03:30', '05/10/2013 16:30', 1380990600000);
+                correctlyApproximatesFromLocal(done, '06/10/2013 03:30', '06/10/2013 03:30', '2013-10-05 16:30', 1380990600000);
             });
         });
     </script>

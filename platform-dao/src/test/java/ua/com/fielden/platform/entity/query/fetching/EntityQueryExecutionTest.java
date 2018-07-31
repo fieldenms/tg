@@ -195,17 +195,15 @@ public class EntityQueryExecutionTest extends AbstractDaoTestCase {
         isNotNull().model();
     }
 
-    
-    
     @Test
-    public void test_select_without_from() {
-        AggregatedResultQueryModel a = select().
-                yield().caseWhen().exists(select(TgVehicle.class).where().prop("key").eq().val("CAR1").model()).then().val(1).otherwise().val(0).endAsInt().as("prop1").
+    public void select_without_from_clause_can_be_used_for_returning_a_tupple_of_values_as_aggregates() {
+        final AggregatedResultQueryModel a = select().
+                yield().caseWhen().exists(select(TgVehicle.class).where().prop("key").eq().val("CAR1").model()).then().val(true).otherwise().val(false).endAsBool().as("exists").
                 yield().val("aaa").as("prop2").
                 modelAsAggregate();
-        EntityAggregates result = aggregateDao.getAllEntities(from(a).model()).get(0);
-        assertTrue(result.get("prop1").equals(1));
-        assertEquals("Incorrect value", "aaa", result.get("prop2"));
+        final EntityAggregates result = aggregateDao.getAllEntities(from(a).model()).get(0);
+        assertEquals(Character.valueOf('Y'), result.get("exists"));
+        assertEquals("aaa", result.get("prop2"));
     }
     
     /////////////////////////////////////// TEST SQL FUNCTIONS ///////////////////////////////////////////////////////////////////

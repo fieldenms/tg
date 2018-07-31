@@ -26,8 +26,8 @@ public class IronIconsetUtility {
     public IronIconsetUtility(final String iconsetId, final int svgWidth, final String srcFolder) {
         this.fileBegin = format("<link rel=\"import\" href=\"/resources/polymer/iron-icon/iron-icon.html\"> %n " +
                                 "<link rel=\"import\" href=\"/resources/polymer/iron-iconset-svg/iron-iconset-svg.html\"> %n " +
-                                "<iron-iconset-svg name=\"%s\" size=\"%d\"> \n <svg> \n <defs> %n", iconsetId, svgWidth);
-        this.fileEnd = "</defs> \n </svg> \n </iron-iconset-svg>";
+                                "<iron-iconset-svg name=\"%s\" size=\"%d\"> %n <svg> %n <defs> %n", iconsetId, svgWidth);
+        this.fileEnd = "</defs> %n </svg> %n </iron-iconset-svg>";
         this.srcFolder = srcFolder;
     }
 
