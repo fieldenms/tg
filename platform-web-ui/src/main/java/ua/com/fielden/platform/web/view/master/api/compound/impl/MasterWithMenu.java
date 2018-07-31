@@ -5,6 +5,7 @@ import static java.lang.String.format;
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -20,6 +21,7 @@ import ua.com.fielden.platform.entity.AbstractFunctionalEntityWithCentreContext;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.utils.ResourceLoader;
+import ua.com.fielden.platform.web.annotations.BindToMenuItem;
 import ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig;
 import ua.com.fielden.platform.web.centre.api.resultset.impl.FunctionalActionElement;
 import ua.com.fielden.platform.web.centre.api.resultset.impl.FunctionalActionKind;
@@ -75,6 +77,10 @@ class MasterWithMenu<T extends AbstractEntity<?>, F extends AbstractFunctionalEn
         final DomContainer menuItemViewsDom = new DomContainer();
         final DomContainer menuItemsDom = new DomContainer();
 
+        //Get all properties those have associated menu item
+        final Map<String, String> propToItemMap = Finder.streamProperties(functionalEntityType, IsProperty.class, BindToMenuItem.class)
+                .collect(Collectors.toMap(field -> field.getAnnotation(BindToMenuItem.class).value(), field -> field.getName()));
+
         for (final FunctionalActionElement el : menuItemActionsElements) {
             importPaths.add(el.importPath());
             menuItemActionsDom.add(el.render());
@@ -89,15 +95,17 @@ class MasterWithMenu<T extends AbstractEntity<?>, F extends AbstractFunctionalEn
                     new DomElement("paper-item")
                             .attr("class", "menu-item").attr("data-route", el.getDataRoute())
                             .attr("tooltip-text", el.conf().longDesc.orElse("NOT SPECIFIED"))
+                            .attr("indicator-property", propToItemMap.getOrDefault(el.getShortDesc(), ""))
                     .add(new DomElement("iron-icon").attr("icon", el.getIcon()).attr("style", "margin-right: 10px"))
                     .add(new DomElement("span").add(new InnerTextElement(el.getShortDesc())))
                     );
         }
 
-        //Get all properties that should be converted by reflector on client side
+        //Get all properties those should be converted by reflector on client side
         final String fields = StringUtils.join(Finder.streamProperties(functionalEntityType, IsProperty.class)
                 .map(filed -> "'" + filed.getName() + "'").collect(Collectors.toList()), ",");
-
+        //Generating the list of properties those are menu item indicators.
+        final String menuItemIndicators = StringUtils.join(propToItemMap.values().stream().map(prop -> "'" + prop + "'").collect(Collectors.toList()), ",");
         // generate the final master with menu
         final String entityMasterStr = ResourceLoader.getText("ua/com/fielden/platform/web/master/tg-entity-master-template.html")
                 .replace("<!--@imports-->", SimpleMasterBuilder.createImports(importPaths))
@@ -112,7 +120,9 @@ class MasterWithMenu<T extends AbstractEntity<?>, F extends AbstractFunctionalEn
                         + "    centre-uuid='[[centreUuid]]'\n"
                         + "    get-master-entity='[[_createContextHolderForEmbeddedViews]]'\n"
                         + "    refresh-compound-master='[[save]]'\n"
-                        + "    augment-compound-master-opener-with='[[augmentCompoundMasterOpenerWith]]'>\n"
+                        + "    augment-compound-master-opener-with='[[augmentCompoundMasterOpenerWith]]'\n"
+                        + "    menu-item-indicators='[[menuItemIndicators]]'\n"
+                        + "    entity='[[_currBindingEntity]]'>\n"
                         + menuItemActionsDom + "\n"
                         + menuItemsDom + "\n"
                         + menuItemViewsDom + "\n"
@@ -121,6 +131,7 @@ class MasterWithMenu<T extends AbstractEntity<?>, F extends AbstractFunctionalEn
                 .replace("//@ready-callback",
                         format("            self.menuItemActions = [%s];\n"
                              + "            self.$.menu.parent = self;\n"
+                             + "            self.menuItemIndicators = [%s];\n"
                              + "            self.canLeave = self.$.menu.canLeave.bind(self.$.menu);\n"
                              + "            // Overridden to support hidden properties conversion on the client-side ('key' and 'sectionTitle'). \n"
                              + "            self._isNecessaryForConversion = function (propertyName) { \n"
@@ -138,7 +149,7 @@ class MasterWithMenu<T extends AbstractEntity<?>, F extends AbstractFunctionalEn
                              + "            self._hasEmbededView = function () {\n"
                              + "                return true;\n"
                              + "            }.bind(self);\n",
-                                jsMenuItemActionObjects, fields)) //
+                             jsMenuItemActionObjects, menuItemIndicators, fields)) //
                 .replace("@prefDim", "null")
                 .replace("@noUiValue", "false")
                 .replace("@saveOnActivationValue", "true");

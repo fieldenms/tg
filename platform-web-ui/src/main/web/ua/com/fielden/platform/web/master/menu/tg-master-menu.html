@@ -188,6 +188,21 @@
                 centreUuid: {
                     type: String
                 },
+                
+                /**
+                 * Holds the list of properties which are an indicators for menu items with centre.
+                 */
+                menuItemIndicators: {
+                    type: Array
+                },
+                
+                /**
+                 * The open compound master entity.
+                 */
+                entity: {
+                    type: Object,
+                    observer: "_entityChanged"
+                },
 
                 /**
                  * Postal subscription to events that trigger compound master entity refreshing.
@@ -375,6 +390,15 @@
                     self.keyEventTarget = getKeyEventTarget(self);
                 }, 1);
             },
+            
+            _entityChanged: function (newBindingEntity, oldOne) {
+                    const newEntity = newBindingEntity ? newBindingEntity['@@origin'] : null;
+                    if (newEntity) {
+                        if (newEntity.get("calculated")) {
+                            console.log(newEntity);
+                        }
+                    }
+                },
 
             /**
              * Toggles menu: hiding / showing it through animation.
