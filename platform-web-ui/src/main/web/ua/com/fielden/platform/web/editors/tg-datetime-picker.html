@@ -302,7 +302,7 @@
 
                 dialog.noCancelOnEscKey = false;
 
-           			datePicker.selectedDate = null;
+           	    datePicker.selectedDate = null;
                 datePicker.selectedHour = self.timePortionToBecomeEndOfDay ? 23 : null;
                 datePicker.selectedMinute = self.timePortionToBecomeEndOfDay ? 59 : null;
                 datePicker.seconds = self.timePortionToBecomeEndOfDay ? 59 : 0;
@@ -387,13 +387,12 @@
             _approximate: function (dateEditingValue) {
                 this._validMoment = null;
                 if (dateEditingValue) {
-
-                    var firstSlashIndex = dateEditingValue.indexOf('/');
+                    const firstSlashIndex = dateEditingValue.indexOf('/');
                     if (firstSlashIndex > -1) {
                         // remove all spaces and insert one after year digits (or [ /2017] or other current year in case of one slash)
-                        var numberOfDigitsAfterLastSlash = this._calculateNumberOfDigitsAfterLastSlash(dateEditingValue);
-                        var numberOfDigits = numberOfDigitsAfterLastSlash.number;
-                        var aproximated = undefined;
+                        const numberOfDigitsAfterLastSlash = this._calculateNumberOfDigitsAfterLastSlash(dateEditingValue);
+                        const numberOfDigits = numberOfDigitsAfterLastSlash.number;
+                        let aproximated = undefined;
                         if (numberOfDigitsAfterLastSlash.secondSlashExists === true) { // exactly two slashes
                             // If numberOfDigitsAfterSecondSlash equals 3, 5 or more -- the string could be potentially valid in formats like '../../Y ...'
                             // But they should not be valid. Only 1, 2 and 4 digits for years should be valid.
@@ -409,6 +408,11 @@
                         if (aproximated !== undefined) {
                             return aproximated;
                         }
+                    } else if (this.timeZone === 'UTC') { //As the last resort try utc formatting
+                        this._validMoment = this._tryUTCFormats(dateEditingValue);
+                        if (this._validMoment !== null) {
+                            return _millisDateRepresentation(this._validMoment.valueOf(), this.timeZone, this.datePortion);
+                        }
                     } else {
                         var value = dateEditingValue.replace(new RegExp(' ', 'g'), '').trim();
                         if (value) {
@@ -423,7 +427,7 @@
             },
 
             _approximateWithNumberOfDigits: function (dateEditingValue, numberOfDigits) {
-                var value = this._insertOneSpace(dateEditingValue.replace(new RegExp(' ', 'g'), ''), numberOfDigits).trim();
+                const value = this._insertOneSpace(dateEditingValue.replace(new RegExp(' ', 'g'), ''), numberOfDigits).trim();
                 if (value) {
                     this._validMoment = this._tryFormats(value, this._formats.slice() /* the copy is made  */);
                     if (this._validMoment !== null) {
@@ -431,6 +435,17 @@
                     }
                 }
                 return undefined;
+            },
+            
+            /**
+             * Tries UTC formats one by one and returns valid moment or null if there are no appropriate format.
+             */
+            _tryUTCFormats: function (stringValue) {
+                const timeZone = this.timeZone;
+                const tryingMoment = Object.values(timeZoneFormats['UTC'])
+                     .map(f => _momentTz(stringValue, f, true, timeZone))
+                     .find(m => m.isValid());
+                return tryingMoment ? tryingMoment : null;
             },
 
             /**
@@ -442,8 +457,8 @@
                     return null;
                 } else {
                     console.debug('formats', formats);
-                    var firstFormat = formats[0];
-                    var tryingMoment = _momentTz(stringValue, firstFormat, true, this.timeZone);
+                    const firstFormat = formats[0];
+                    let tryingMoment = _momentTz(stringValue, firstFormat, true, this.timeZone);
                     if (tryingMoment.isValid()) {
                         if (['D/M/Y H:m:ss.SSS', 'D/M/Y h:m:ss.SSSa', 'D/M/Y hmma', 'D/M/Y Hmm', 'D/M/Y h:ma', 'D/M/Y H:m', 'D/M/Y ha', 'D/M/Y H', 'D/M/Y'].indexOf(firstFormat) !== -1) {
                             tryingMoment = _momentTz(this._convertToDoubleDigitYear(stringValue), firstFormat.replace('D/M/Y', 'D/M/YY'), true, this.timeZone);

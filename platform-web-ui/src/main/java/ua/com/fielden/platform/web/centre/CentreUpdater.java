@@ -2,6 +2,7 @@ package ua.com.fielden.platform.web.centre;
 
 import static java.lang.String.format;
 import static java.util.Arrays.stream;
+import static java.util.Optional.empty;
 import static java.util.Optional.of;
 import static org.apache.commons.lang.StringUtils.isEmpty;
 import static ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.IAddToCriteriaTickManager.MetaValueType.ALL_ORDERING;
@@ -21,7 +22,6 @@ import static ua.com.fielden.platform.domaintree.impl.AbstractDomainTree.isDoubl
 import static ua.com.fielden.platform.domaintree.impl.AbstractDomainTree.isDummyMarker;
 import static ua.com.fielden.platform.domaintree.impl.AbstractDomainTree.isPlaceholder;
 import static ua.com.fielden.platform.domaintree.impl.AbstractDomainTree.reflectionProperty;
-import static ua.com.fielden.platform.domaintree.impl.GlobalDomainTreeManager.DEFAULT_CONFIG_TITLE;
 import static ua.com.fielden.platform.domaintree.impl.GlobalDomainTreeManager.LINK_CONFIG_TITLE;
 import static ua.com.fielden.platform.entity.AbstractPersistentEntity.LAST_UPDATED_BY;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetch;
@@ -274,6 +274,8 @@ public class CentreUpdater {
     
     /**
      * Removes centres from local cache and persistent storage (diffs) by their <code>names</code>.
+     * <p>
+     * Please be careful when removing centres for the purpose of later update: preferred state and custom description need to be maintained properly.
      *
      * @param gdtm
      * @param miType
@@ -332,6 +334,8 @@ public class CentreUpdater {
     
     /**
      * Initialises and commits centre from the passed <code>centreToBeInitialisedAndCommitted</code> instance for surrogate centre with concrete <code>name</code>.
+     * <p>
+     * Please note that this operation is immutable in regard to the surrogate centre instance being copied.
      *
      * @param gdtm
      * @param miType
@@ -462,17 +466,17 @@ public class CentreUpdater {
      * @param device
      * @return
      */
-    public static void makePreferred(final boolean preferred, final IGlobalDomainTreeManager gdtm, final Class<? extends MiWithConfigurationSupport<?>> miType, final Optional<String> saveAsName, final DeviceProfile device, final ICompanionObjectFinder companionFinder) {
-        if (preferred) {
-            try (final Stream<EntityCentreConfig> stream = streamPreferredConfigs(gdtm, miType, device, companionFinder) ) {
-                stream.forEach(ecc -> gdtm.saveConfig(ecc.setPreferred(false)));
-            }
+    public static void makePreferred(final IGlobalDomainTreeManager gdtm, final Class<? extends MiWithConfigurationSupport<?>> miType, final Optional<String> saveAsName, final DeviceProfile device, final ICompanionObjectFinder companionFinder) {
+        try (final Stream<EntityCentreConfig> stream = streamPreferredConfigs(gdtm, miType, device, companionFinder) ) {
+            stream.forEach(ecc -> gdtm.saveConfig(ecc.setPreferred(false)));
         }
-        gdtm.saveConfig(
-            gdtm
-            .findConfig(miType, deviceSpecific(saveAsSpecific(FRESH_CENTRE_NAME, saveAsName), device) + DIFFERENCES_SUFFIX)
-            .setPreferred(preferred)
-        );
+        if (saveAsName.isPresent()) {
+            gdtm.saveConfig(
+                gdtm
+                .findConfig(miType, deviceSpecific(saveAsSpecific(FRESH_CENTRE_NAME, saveAsName), device) + DIFFERENCES_SUFFIX)
+                .setPreferred(true)
+            );
+        }
     }
     
     /**
@@ -509,11 +513,13 @@ public class CentreUpdater {
      */
     private static String obtainTitleFrom(final String surrogateName, final String surrogateNamePrefix) {
         final String surrogateWithSuffix = surrogateName.replaceFirst(surrogateNamePrefix, "");
-        return surrogateWithSuffix.startsWith("[") ? surrogateWithSuffix.substring(1, surrogateWithSuffix.lastIndexOf("]")) : DEFAULT_CONFIG_TITLE;
+        return surrogateWithSuffix.substring(1, surrogateWithSuffix.lastIndexOf("]"));
     }
     
     /**
      * Creates a query to find centre configurations persisted for <code>user</code>.
+     * <p>
+     * Looks only for named / link configurations, default configurations are avoided.
      * 
      * @param user
      * @param miType
@@ -521,10 +527,11 @@ public class CentreUpdater {
      * @return
      */
     private static ICompoundCondition0<EntityCentreConfig> centreConfigQueryFor(final User user, final Class<? extends MiWithConfigurationSupport<?>> miType, final DeviceProfile device) {
+        final String escapedOpeningBracket = "[[]"; // need to provide escaping for opening bracket to find records with [, see https://stackoverflow.com/questions/439495/how-can-i-escape-square-brackets-in-a-like-clause
         return select(EntityCentreConfig.class).where().
             begin().prop("owner").eq().val(user).end().and().
-            prop("title").like().val(deviceSpecific(FRESH_CENTRE_NAME, device) + "%").and().
-            prop("title").notLike().val(deviceSpecific(FRESH_CENTRE_NAME, opposite(device)) + "%").and().
+            prop("title").like().val(deviceSpecific(FRESH_CENTRE_NAME, device) + escapedOpeningBracket + "%").and().
+            prop("title").notLike().val(deviceSpecific(FRESH_CENTRE_NAME, opposite(device)) + escapedOpeningBracket + "%").and().
             prop("menuItem.key").eq().val(miType.getName());
     }
     
@@ -696,7 +703,7 @@ public class CentreUpdater {
                 // Default centre is used as a 'base' for all centres; all diffs are created comparing to default centre.
                 // Default centre is now needed for both cases: base or non-base user.
                 final ICentreDomainTreeManagerAndEnhancer defaultCentre = getDefaultCentre(globalManager, miType); // it is safer to init current user's default centre (user-specific) for both cases: base and non-base
-                if (currentUser.isBase() || of(LINK_CONFIG_TITLE).equals(saveAsName)) { // for non-base user 'link' configuration need to be derived from default user-specific configuration instead of base configuration
+                if (currentUser.isBase() || of(LINK_CONFIG_TITLE).equals(saveAsName) || empty().equals(saveAsName)) { // for non-base user 'link' and 'default' configurations need to be derived from default user-specific configuration instead of base configuration
                     // diff centre does not exist in persistent storage yet -- initialise EMPTY diff (there potentially can be some values from 'default centre',
                     //   but diff centre will be empty disregarding that fact -- no properties were marked as changed; but initialisation from 'default centre' is important --
                     //   this makes diff centre nicely synchronised with Web UI default values)

@@ -34,6 +34,8 @@
             text-overflow: ellipsis;
             white-space: nowrap;
             overflow: hidden;
+            flex-direction: row;
+            align-items: center;
         }
         .search-button {
             --iron-icon-height: 1.3rem;
@@ -56,6 +58,9 @@
             --paper-spinner-layer-3-color: var(--paper-blue-500);
             --paper-spinner-layer-4-color: var(--paper-blue-500);
         }
+        tg-editor {
+             --tg-editor-default-input-layer-display: flex;
+        }
     </style>
 
     <template>
@@ -66,7 +71,7 @@
             <paper-spinner active hidden$="[[!searching]]" class="custom-icon-buttons" tabIndex="-1" alt="searching..." disabled$="[[_disabled]]"></paper-spinner>
             <div class="input-layer">
                 <template is="dom-repeat" items="[[_customPropTitle]]">
-                    <span hidden$="[[!item.title]]" style="color:#737373; font-size:0.8rem;"><span>[[item.title]]</span>:  </span>
+                    <span hidden$="[[!item.title]]" style="color:#737373; font-size:0.8rem; padding-right:2px;"><span>[[item.title]]</span>:  </span>
                     <span style$="[[_valueStyle(item, index)]]">[[item.value]]</span>
                 </template>
                 <span style="color:#737373" hidden$="[[!_hasDesc(entity)]]"> &ndash; <i>[[_formatDesc(entity)]]</i></span>

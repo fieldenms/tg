@@ -5,6 +5,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Map.Entry;
 import java.util.Set;
 
@@ -486,6 +487,19 @@ public abstract class AbstractDomainTreeManagerAndEnhancer implements IDomainTre
 
         protected IDomainTreeEnhancer enhancer() {
             return enhancerWithPropertiesPopulation;
+        }
+
+        @Override
+        public boolean equals(final Object obj) {
+            return this == obj ||
+                super.equals(obj)
+                && getClass() == obj.getClass()
+                && Objects.equals(base, ((TickManagerAndEnhancer) obj).base);
+        }
+
+        @Override
+        public int hashCode() {
+            return 31 * super.hashCode() + ((base == null) ? 0 : base.hashCode());
         }
     }
 

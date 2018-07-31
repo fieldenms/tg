@@ -82,7 +82,7 @@ public abstract class AbstractWebUiConfig implements IWebUiConfig {
         final LinkedHashSet<String> allResourcePaths = new LinkedHashSet<>();
         allResourcePaths.addAll(Arrays.asList("", "ua/com/fielden/platform/web/"));
         allResourcePaths.addAll(Arrays.asList(externalResourcePaths));
-        this.resourcePaths = new ArrayList<String>(Collections.unmodifiableSet(allResourcePaths));
+        this.resourcePaths = new ArrayList<>(Collections.unmodifiableSet(allResourcePaths));
         Collections.reverse(this.resourcePaths);
     }
 
@@ -107,11 +107,14 @@ public abstract class AbstractWebUiConfig implements IWebUiConfig {
         .addMaster(new MenuWebUiConfig(injector(), desktopMainMenuConfig).master)
         // centre configuration management
         .addMaster(centreConfigurationWebUiConfig.centreConfigUpdater)
-        .addMaster(centreConfigurationWebUiConfig.centreConfigUpdaterDefaultAction)
         .addMaster(centreConfigurationWebUiConfig.centreColumnWidthConfigUpdater)
-        .addMaster(centreConfigurationWebUiConfig.centreConfigEditActionMaster)
+        // centre config actions
+        .addMaster(centreConfigurationWebUiConfig.centreConfigNewActionMaster)
+        .addMaster(centreConfigurationWebUiConfig.centreConfigDuplicateActionMaster)
         .addMaster(centreConfigurationWebUiConfig.centreConfigLoadActionMaster)
+        .addMaster(centreConfigurationWebUiConfig.centreConfigEditActionMaster)
         .addMaster(centreConfigurationWebUiConfig.centreConfigDeleteActionMaster)
+        .addMaster(centreConfigurationWebUiConfig.centreConfigSaveActionMaster)
         .addMaster(centreConfigurationWebUiConfig.overrideCentreConfigMaster);
     }
 

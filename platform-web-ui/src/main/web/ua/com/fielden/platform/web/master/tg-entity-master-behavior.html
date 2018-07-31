@@ -473,7 +473,7 @@
                                 console.log('postActionSuccess: ' + actionDesc, functionalEntity);
                                 self.save(functionalEntity, continuationProperty)
                                     .then(
-                                        Polymer.TgBehaviors.TgEntityMasterClosingBehavior.createEntityActionThenCallback(self.centreUuid, 'save', postal, null),
+                                        Polymer.TgBehaviors.TgEntityMasterClosingBehavior.createEntityActionThenCallback(self.centreUuid, 'save', postal, null, true),
                                         function (value) { console.log('AJAX PROMISE CATCH', value); }
                                     );
                             };
@@ -949,10 +949,11 @@
                     }
                 }
 
-                if (this.classList.contains('canLeave')) {
+                if (this._currBindingEntity && this.classList.contains('canLeave')) {
                     // The master should remain open in case where there are some modifications and the entity is persisted.
                     // Refer to _bindingEntityModified property of tg-entity-binder-behavior for more information.
-                    if ((this._editedPropsExist || this._bindingEntityModified) && this._currBindingEntity.isPersisted()) {
+                    if (((this._editedPropsExist || this._bindingEntityModified) && this._currBindingEntity.isPersisted()) ||
+                        (this._currBindingEntity.type().isPersistent() && !this._currBindingEntity.isPersisted())) {
                         return {
                             isNew: undefined, // this could be not persistent entity (new) or persistent persisted entity (not new)
                             msg: "Please save or cancel your changes."

@@ -26,8 +26,9 @@
         }
 
         #input-container::content .input-layer {
-            font-size: 1rem;
-            line-height: 1.8rem;
+            font-size: 16px;
+            line-height: 24px;
+            font-weight: 500;
             display: none;
             position: absolute;
             pointer-events: none;
@@ -39,7 +40,7 @@
         }
         #input-container[has-layer][disabled]::content .input-layer,
         #input-container[has-layer]:not([focused])::content .input-layer {
-            display: inherit;
+            display: var(--tg-editor-default-input-layer-display, inherit);
         }
         #input-container::content .input-layer {
             color: var(--paper-input-container-input-color, --primary-text-color);
@@ -48,7 +49,10 @@
         #input-container[has-layer]:not([focused])::content .custom-input {
             opacity: 0;
         }
-        
+        .main-container::content .custom-icon-buttons, 
+        .main-container::content .property-action {
+            padding-bottom: 1px;
+        }
         paper-input-container::shadow .add-on-content {
             position: relative;
         }
@@ -63,18 +67,9 @@
         }
         
         paper-input-container {
-            --paper-input-container-label-floating {
-                overflow: hidden;
-                white-space: nowrap;
-                text-overflow: ellipsis;
-                font-size: 0.9rem;
-                transform: translate3d(0, -75%, 0);
-                width: auto;
-            };
             
             --paper-input-container-input: {
-                font-size: 1rem;
-                line-height: 1.8rem;
+                font-weight: 500;
             };
               
             @apply(--tg-editor-paper-input-container-mixin);

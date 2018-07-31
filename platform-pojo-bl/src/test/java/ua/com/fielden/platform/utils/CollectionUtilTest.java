@@ -12,6 +12,7 @@ import static ua.com.fielden.platform.utils.CollectionUtil.linkedMapOf;
 import static ua.com.fielden.platform.utils.CollectionUtil.tail;
 
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.junit.Test;
@@ -21,6 +22,13 @@ public class CollectionUtilTest {
     @Test
     public void listOf_with_no_arguments_returns_empty_list() {
         assertEquals(0, listOf().size());
+    }
+
+    @Test
+    public void listOf_returns_mutable_list() {
+        final List<String> list = listOf("one");
+        list.add("two");
+        assertEquals(2, list.size());
     }
 
     @Test

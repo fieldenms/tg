@@ -12,6 +12,8 @@ import ua.com.fielden.platform.utils.EntityUtils;
  *
  */
 public class FetchProviderFactory {
+    
+    private FetchProviderFactory() {}
 
     /**
      * A factory method to create a default fetch provider for specified <code>entityType</code> with instrumentation.
@@ -25,7 +27,7 @@ public class FetchProviderFactory {
      */
     public static <T extends AbstractEntity<?>> FetchProvider<T> createDefaultFetchProvider(final Class<T> entityType, final boolean instrumented) {
         // empty fetch provider -- version and id -- fetchOnly analog
-        return new FetchProvider<T>(entityType, false, instrumented);
+        return new FetchProvider<>(entityType, false, instrumented);
     }
 
     /**
@@ -40,6 +42,6 @@ public class FetchProviderFactory {
      */
     public static <T extends AbstractEntity<?>> FetchProvider<T> createFetchProviderWithKeyAndDesc(final Class<T> entityType, final boolean instrumented) {
         // empty fetch provider -- version and id -- fetchOnly analog
-        return new FetchProvider<T>(entityType, true, instrumented);
+        return new FetchProvider<>(entityType, true, instrumented);
     }
 }

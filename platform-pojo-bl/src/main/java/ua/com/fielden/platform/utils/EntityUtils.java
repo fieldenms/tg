@@ -6,11 +6,13 @@ import static java.util.Optional.ofNullable;
 import static java.util.stream.Stream.concat;
 import static java.util.stream.Stream.empty;
 import static java.util.stream.Stream.of;
+import static org.apache.commons.lang.StringUtils.isEmpty;
 import static ua.com.fielden.platform.entity.AbstractEntity.DESC;
 import static ua.com.fielden.platform.entity.AbstractEntity.ID;
 import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
 import static ua.com.fielden.platform.entity.AbstractEntity.VERSION;
 import static ua.com.fielden.platform.reflection.AnnotationReflector.getKeyType;
+import static ua.com.fielden.platform.reflection.Finder.getKeyMembers;
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.PROPERTY_SPLITTER;
 import static ua.com.fielden.platform.types.tuples.T2.t2;
 import static ua.com.fielden.platform.utils.StreamUtils.takeWhile;
@@ -28,6 +30,7 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Date;
 import java.util.EnumSet;
 import java.util.HashSet;
@@ -40,6 +43,7 @@ import java.util.TreeSet;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import org.apache.commons.collections.ListUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 import org.joda.time.DateTime;
@@ -933,30 +937,6 @@ public class EntityUtils {
     public static class BigDecimalWithTwoPlaces {
     };
 
-    /**
-     * Produces list of props that should be added to order model instead of composite key.
-     *
-     * @param entityType
-     * @param prefix
-     * @return
-     */
-    public static List<String> getOrderPropsFromCompositeEntityKey(final Class<? extends AbstractEntity<DynamicEntityKey>> entityType, final String prefix) {
-        final List<String> result = new ArrayList<>();
-        final List<Field> keyProps = Finder.getKeyMembers(entityType);
-        for (final Field keyMemberProp : keyProps) {
-            if (DynamicEntityKey.class.equals(getKeyType(keyMemberProp.getType()))) {
-                result.addAll(getOrderPropsFromCompositeEntityKey((Class<AbstractEntity<DynamicEntityKey>>) keyMemberProp.getType(), (prefix != null ? prefix + "." : "")
-                        + keyMemberProp.getName()));
-            } else if (isEntityType(keyMemberProp.getType())) {
-                result.add((prefix != null ? prefix + "." : "") + keyMemberProp.getName() + ".key");
-            } else {
-                result.add((prefix != null ? prefix + "." : "") + keyMemberProp.getName());
-            }
-        }
-
-        return result;
-    }
-
     public static SortedSet<String> getFirstLevelProps(final Set<String> allProps) {
         final SortedSet<String> result = new TreeSet<>();
         for (final String prop : allProps) {
@@ -1251,5 +1231,46 @@ public class EntityUtils {
             final String propName = indexOfLastDot > 0 ? path.substring(indexOfLastDot + 1) : path;
             return t2(propName, ofNullable(root.get(path)));
         });
+    }
+    
+    /**
+     * Gets list of all properties paths representing value of entity key. For composite entities props are listed in key members declaration order taking into account cases of multilevel nesting.   
+     * 
+     * @param parentContextPath -- path to key property within EQL query context.
+     * @param entityType -- entity type containing key property.
+     * @return
+     */
+    public static List<String> keyPaths(final Class<? extends AbstractEntity<?>> entityType, final String parentContextPath) {
+    	if (isEmpty(parentContextPath)) {
+    		throw new IllegalArgumentException("Parent context path is required.");
+    	}
+    	
+        return keyPaths(entityType, Optional.of(parentContextPath));
+    }
+    
+    /**
+     * Gets list of all properties paths representing value of entity key. For composite entities props are listed in key members declaration order taking into account cases of multilevel nesting.   
+     * 
+     * @param entityType -- entity type containing key property.
+     * @return
+     */
+    public static List<String> keyPaths(final Class<? extends AbstractEntity<?>> entityType) {
+        return keyPaths(entityType, Optional.empty());
+    }
+    
+    private static List<String> keyPaths(final Class<? extends AbstractEntity<?>> entityType, final Optional<String> parentContextPath) {
+  	
+    	final List<String> result = new ArrayList<>();
+
+    	for (final Field keyMember : getKeyMembers(entityType)) {
+			final String pathToSubprop = parentContextPath.map(path -> path + PROPERTY_SPLITTER  + keyMember.getName()).orElse(keyMember.getName());
+			if (!isPersistedEntityType(keyMember.getType())) {
+				result.add(pathToSubprop);
+			} else {
+				result.addAll(keyPaths((Class<? extends AbstractEntity<?>>) keyMember.getType(), pathToSubprop));
+			}
+		}
+    	
+    	return result;
     }
 }

@@ -9,6 +9,8 @@ import ua.com.fielden.platform.domaintree.IDomainTreeRepresentation.IPropertySta
 import ua.com.fielden.platform.domaintree.ILocatorManager;
 import ua.com.fielden.platform.domaintree.centre.analyses.IAbstractAnalysisDomainTreeManager;
 import ua.com.fielden.platform.domaintree.exceptions.DomainTreeException;
+import ua.com.fielden.platform.domaintree.impl.EnhancementPropertiesMap;
+import ua.com.fielden.platform.types.tuples.T2;
 import ua.com.fielden.snappy.DateRangePrefixEnum;
 import ua.com.fielden.snappy.MnemonicEnum;
 
@@ -860,5 +862,19 @@ public interface ICentreDomainTreeManager extends IDomainTreeManager {
          * @return -- a result tick representation
          */
         IAddToResultTickManager setGrowFactor(final Class<?> root, final String property, final int growFactor);
+        
+        /**
+         * Returns column widths and grow factors to facilitate exact copy through {@link #setWidthsAndGrowFactors(T2)} method.
+         * 
+         * @return
+         */
+        T2<EnhancementPropertiesMap<Integer>, EnhancementPropertiesMap<Integer>> getWidthsAndGrowFactors();
+        
+        /**
+         * Sets column widths and grow factors to facilitate full overriding of that information; need to get information using {@link #getWidthsAndGrowFactors()} method.
+         * 
+         * @param widthsAndGrowFactors
+         */
+        void setWidthsAndGrowFactors(final T2<EnhancementPropertiesMap<Integer>, EnhancementPropertiesMap<Integer>> widthsAndGrowFactors);
     }
 }
