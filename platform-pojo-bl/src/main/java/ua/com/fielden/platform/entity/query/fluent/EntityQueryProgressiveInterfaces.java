@@ -511,6 +511,11 @@ public interface EntityQueryProgressiveInterfaces {
 			extends IJoin<ET> {
 		IJoin<ET> as(String alias);
 	}
+	
+    interface IFromNone<ET extends AbstractEntity<?>> //
+            extends ICompleted<ET> {
+    }
+	
 
 	public interface IPlainJoin<ET extends AbstractEntity<?>> //
 			extends ICompleted<ET> {
