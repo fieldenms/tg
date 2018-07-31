@@ -33,7 +33,7 @@ public abstract class AbstractSource implements ISource {
     /**
      * List of props that are explicitly/implicitly associated with given source (e.g. dot.notation is supported)
      */
-    private final List<PropResolutionInfo> referencingProps = new ArrayList<PropResolutionInfo>();
+    private final List<PropResolutionInfo> referencingProps = new ArrayList<>();
 
     /**
      * Sql alias for query source table/query
@@ -43,7 +43,7 @@ public abstract class AbstractSource implements ISource {
     /**
      * Map between source properties business names and persistence infos.
      */
-    protected Map<String, ResultQueryYieldDetails> sourceItems = new HashMap<String, ResultQueryYieldDetails>();
+    protected Map<String, ResultQueryYieldDetails> sourceItems = new HashMap<>();
 
     /**
      * Reference to mappings generator instance - used for acquiring properties persistence infos.
@@ -98,7 +98,7 @@ public abstract class AbstractSource implements ISource {
 
     @Override
     public List<PropResolutionInfo> getReferencingProps() {
-        final List<PropResolutionInfo> result = new ArrayList<PropResolutionInfo>();
+        final List<PropResolutionInfo> result = new ArrayList<>();
 
         for (final PropResolutionInfo propResolutionInfo : referencingProps) {
             if (propResolutionInfo.entProp.getSource().equals(this)) {
@@ -180,10 +180,8 @@ public abstract class AbstractSource implements ISource {
             return propAsIs;
         } else if (propAsAliased != null) {
             return propAsAliased;
-        } else if (propAsImplicitId != null) {
-            return propAsImplicitId;
         } else {
-            throw new RuntimeException("Unforeseen branch!");
+            return propAsImplicitId;
         }
     }
 

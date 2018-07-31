@@ -75,6 +75,7 @@ import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.CO
 import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.END_COND;
 import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.END_EXPR;
 import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.END_FUNCTION;
+import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.VALUES_AS_QRY_SOURCE;
 import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.ENTITY_TYPE_AS_QRY_SOURCE;
 import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.EQUERY_TOKENS;
 import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.EXISTS_OPERATOR;
@@ -611,6 +612,11 @@ final class Tokens {
         return add(QRY_SOURCE_ALIAS, alias);
     }
 
+    public <E extends AbstractEntity<?>> Tokens from() {
+        this.mainSourceType = EntityAggregates.class;
+        return add(QUERY_TOKEN, FROM, VALUES_AS_QRY_SOURCE, EntityAggregates.class);
+    }
+    
     public <E extends AbstractEntity<?>> Tokens from(final Class<E> entityType) {
         if (entityType == null) {
             throw new IllegalArgumentException("Missing entity type in query: " + this.values);
