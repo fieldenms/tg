@@ -179,4 +179,10 @@ public class TgSystemDaoStub implements ITgSystem {
         return null;
     }
 
+	@Override
+	public boolean hasEmptyResult(EntityResultQueryModel<TgSystem> model, Map<String, Object> paramValues) {
+		// TODO Auto-generated method stub
+		return false;
+	}
+
 }

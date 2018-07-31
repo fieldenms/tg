@@ -177,4 +177,10 @@ public class TopLevelEntityDaoStub implements ITopLevelEntity {
         return null;
     }
 
+	@Override
+	public boolean hasEmptyResult(EntityResultQueryModel<TopLevelEntity> model, Map<String, Object> paramValues) {
+		// TODO Auto-generated method stub
+		return false;
+	}
+
 }

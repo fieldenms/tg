@@ -1,5 +1,8 @@
 package ua.com.fielden.platform.companion;
 
+import static java.util.Collections.emptyMap;
+
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -271,4 +274,31 @@ public interface IEntityReader<T extends AbstractEntity<?>> extends IEntityInsta
     int count(final EntityResultQueryModel<T> model, final Map<String, Object> paramValues);
 
     int count(final EntityResultQueryModel<T> model);
+    
+    /**
+     * Checks whether provided query model returns no result.
+     *
+     * @param model
+     * @return
+     */
+    boolean hasEmptyResult(final EntityResultQueryModel<T> model, final Map<String, Object> paramValues);
+
+    default boolean hasEmptyResult(final EntityResultQueryModel<T> model) {
+    	return hasEmptyResult(model, emptyMap());
+    };
+    
+    /**
+     * Checks whether provided query model returns some result.
+     *
+     * @param model
+     * @return
+     */
+    default boolean hasSomeResults(final EntityResultQueryModel<T> model, final Map<String, Object> paramValues) {
+    	return !hasEmptyResult(model, paramValues);
+    };
+
+    default boolean hasSomeResults(final EntityResultQueryModel<T> model) {
+    	return hasSomeResults(model, emptyMap());
+    };
+    
 }

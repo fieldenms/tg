@@ -202,4 +202,10 @@ public class LastLevelEntityDaoStub implements ILastLevelEntity {
         return null;
     }
 
+	@Override
+	public boolean hasEmptyResult(EntityResultQueryModel<LastLevelEntity> model, Map<String, Object> paramValues) {
+		// TODO Auto-generated method stub
+		return false;
+	}
+
 }

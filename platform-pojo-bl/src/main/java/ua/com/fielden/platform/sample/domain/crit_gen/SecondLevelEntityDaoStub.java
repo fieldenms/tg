@@ -199,4 +199,10 @@ public class SecondLevelEntityDaoStub implements ISecondLevelEntity {
         return null;
     }
 
+	@Override
+	public boolean hasEmptyResult(EntityResultQueryModel<SecondLevelEntity> model, Map<String, Object> paramValues) {
+		// TODO Auto-generated method stub
+		return false;
+	}
+
 }
