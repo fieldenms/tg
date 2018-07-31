@@ -2,6 +2,7 @@ package ua.com.fielden.platform.utils;
 
 import static java.util.Arrays.asList;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
@@ -39,7 +40,7 @@ public final class CollectionUtil {
     
     @SafeVarargs
     public static <T> List<T> listOf(final T ... elements) {
-        return asList(elements);
+        return new ArrayList<>(asList(elements));
     }
 
     @SafeVarargs
