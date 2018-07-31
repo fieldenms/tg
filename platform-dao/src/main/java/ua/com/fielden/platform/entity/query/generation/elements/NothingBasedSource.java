@@ -26,11 +26,7 @@ public class NothingBasedSource extends AbstractSource {
 
     @Override
     public String sql() {
-        if (dbVersion == DbVersion.ORACLE) {
-            return " DUAL ";
-        } else {
-            return " ";
-        }
+        return dbVersion == DbVersion.ORACLE ? " DUAL " : " ";
     }
 
     @Override

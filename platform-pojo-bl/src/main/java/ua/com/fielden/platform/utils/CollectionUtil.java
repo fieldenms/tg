@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.utils;
 
-import java.util.ArrayList;
+import static java.util.Arrays.asList;
+
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
@@ -38,7 +39,7 @@ public final class CollectionUtil {
     
     @SafeVarargs
     public static <T> List<T> listOf(final T ... elements) {
-        return new ArrayList<>(Arrays.asList(elements));
+        return asList(elements);
     }
 
     @SafeVarargs

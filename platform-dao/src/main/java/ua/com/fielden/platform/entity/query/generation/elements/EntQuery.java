@@ -1,6 +1,5 @@
 package ua.com.fielden.platform.entity.query.generation.elements;
 
-import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static org.apache.commons.lang.StringUtils.isNotEmpty;
 import static ua.com.fielden.platform.entity.AbstractEntity.ID;
@@ -14,14 +13,17 @@ import static ua.com.fielden.platform.entity.query.generation.elements.QueryCate
 import static ua.com.fielden.platform.entity.query.generation.elements.QueryCategory.SUB_QUERY;
 import static ua.com.fielden.platform.entity.query.generation.elements.ResultQueryYieldDetails.YieldDetailsType.AGGREGATED_EXPRESSION;
 import static ua.com.fielden.platform.entity.query.generation.elements.ResultQueryYieldDetails.YieldDetailsType.USUAL_PROP;
+import static ua.com.fielden.platform.utils.CollectionUtil.listOf;
 import static ua.com.fielden.platform.utils.EntityUtils.isCompositeEntity;
 import static ua.com.fielden.platform.utils.EntityUtils.isPersistedEntityType;
 import static ua.com.fielden.platform.utils.EntityUtils.isSyntheticBasedOnPersistentEntityType;
 import static ua.com.fielden.platform.utils.EntityUtils.isUnionEntityType;
 import static ua.com.fielden.platform.utils.EntityUtils.keyPaths;
+import static ua.com.fielden.platform.utils.Pair.pair;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -41,6 +43,7 @@ import ua.com.fielden.platform.entity.DynamicEntityKey;
 import ua.com.fielden.platform.entity.query.EntityAggregates;
 import ua.com.fielden.platform.entity.query.IFilter;
 import ua.com.fielden.platform.entity.query.IRetrievalModel;
+import ua.com.fielden.platform.entity.query.exceptions.EqlException;
 import ua.com.fielden.platform.entity.query.generation.EntQueryBlocks;
 import ua.com.fielden.platform.entity.query.generation.EntQueryGenerator;
 import ua.com.fielden.platform.entity.query.generation.StandAloneConditionBuilder;
@@ -52,6 +55,9 @@ import ua.com.fielden.platform.types.Money;
 import ua.com.fielden.platform.utils.Pair;
 
 public class EntQuery implements ISingleOperand {
+
+    private static final Logger LOGGER = Logger.getLogger(EntQuery.class);
+    private static final String DOT = ".";
 
     private final boolean resultTypeIsPersistedType;
     private final Sources sources;
@@ -66,9 +72,6 @@ public class EntQuery implements ISingleOperand {
     private final boolean yieldAll;
 
     private EntQuery master;
-
-    private static final Logger LOGGER = Logger.getLogger(EntQuery.class);
-    private static final String DOT = ".";
 
     private boolean isSubQuery() {
         return SUB_QUERY.equals(category);
@@ -100,12 +103,12 @@ public class EntQuery implements ISingleOperand {
         }
         sources.assignSqlAliases(getMasterIndex());
 
-        final StringBuffer sb = new StringBuffer();
-        sb.append(isSubQuery() ? "(" : "");
-        sb.append("SELECT ");
-        sb.append(yields.sql());
-        String sourcesSql = sources.sql().trim();
-        
+        final StringBuilder sb = new StringBuilder()
+                                 .append(isSubQuery() ? "(" : "")
+                                 .append("SELECT ")
+                                 .append(yields.sql());
+
+        final String sourcesSql = sources.sql().trim();
         if (isNotEmpty(sourcesSql)) {
             sb.append("\nFROM ");
             sb.append(sourcesSql);
@@ -261,7 +264,7 @@ public class EntQuery implements ISingleOperand {
     }
 
     private boolean yieldIsOfEntityType(final Yield yield) {
-        final Class yieldType = determineYieldJavaType(yield);
+        final Class<?> yieldType = determineYieldJavaType(yield);
         return yieldType != null && AbstractEntity.class.isAssignableFrom(yieldType);
     }
 
@@ -328,7 +331,7 @@ public class EntQuery implements ISingleOperand {
             throw new IllegalStateException("Could not find best yield match for order by yield [" + original.getYieldName() + "]");
         }
 
-        final List<OrderBy> result = new ArrayList<OrderBy>();
+        final List<OrderBy> result = new ArrayList<>();
         final String propName = ((EntProp) bestYield.getOperand()).getName() + original.getYieldName().substring(bestYield.getAlias().length());
 
         if (original.getYieldName().endsWith(DOT + KEY)) {
@@ -358,8 +361,7 @@ public class EntQuery implements ISingleOperand {
                     determineYieldHibType(yield),
                     "C" + yieldIndex,
                     determineYieldNullability(yield),
-                    determineYieldDetailsType(yield))
-                    );
+                    determineYieldDetailsType(yield)));
         }
     }
 
@@ -428,7 +430,7 @@ public class EntQuery implements ISingleOperand {
     }
 
     public Map<String, Object> getValuesForSqlParams() {
-        final Map<String, Object> result = new HashMap<String, Object>();
+        final Map<String, Object> result = new HashMap<>();
         for (final EntValue value : getAllValues()) {
             result.put(value.getSqlParamName(), value.getValue());
         }
@@ -442,7 +444,7 @@ public class EntQuery implements ISingleOperand {
                 return originalConditions;
             }
             LOGGER.debug("\nApplied user-driven-filter to query main source type [" + mainSource.sourceType().getSimpleName() + "]");
-            final List<CompoundCondition> others = new ArrayList<CompoundCondition>();
+            final List<CompoundCondition> others = new ArrayList<>();
             others.add(new CompoundCondition(AND, new GroupedConditions(false, originalConditions)));
             return originalConditions.ignore() ? new Conditions(new StandAloneConditionBuilder(generator, paramValues, filteringCondition, false).getModel())
                     : new Conditions(new StandAloneConditionBuilder(generator, paramValues, filteringCondition, false).getModel(), others);
@@ -454,7 +456,6 @@ public class EntQuery implements ISingleOperand {
     public EntQuery(final boolean filterable, final EntQueryBlocks queryBlocks, final Class resultType, final QueryCategory category,
             final DomainMetadataAnalyser domainMetadataAnalyser, final IFilter filter, final String username,
             final EntQueryGenerator generator, final IRetrievalModel fetchModel, final Map<String, Object> paramValues) {
-        super();
         this.category = category;
         this.domainMetadataAnalyser = domainMetadataAnalyser;
         this.sources = queryBlocks.getSources();
@@ -485,14 +486,14 @@ public class EntQuery implements ISingleOperand {
     }
 
     private Map<EntPropStage, List<EntProp>> groupPropsByStage(final List<EntProp> props) {
-        final Map<EntPropStage, List<EntProp>> result = new HashMap<EntPropStage, List<EntProp>>();
+        final Map<EntPropStage, List<EntProp>> result = new EnumMap<>(EntPropStage.class);
         for (final EntProp entProp : props) {
             final EntPropStage propStage = entProp.getStage();
             final List<EntProp> stageProps = result.get(propStage);
             if (stageProps != null) {
                 stageProps.add(entProp);
             } else {
-                final List<EntProp> newStageProps = new ArrayList<EntProp>();
+                final List<EntProp> newStageProps = new ArrayList<>();
                 newStageProps.add(entProp);
                 result.put(propStage, newStageProps);
             }
@@ -506,7 +507,7 @@ public class EntQuery implements ISingleOperand {
         return foundProps != null ? foundProps : Collections.<EntProp> emptyList();
     }
 
-    private void enhanceToFinalState(final EntQueryGenerator generator, final IRetrievalModel fetchModel) {
+    private void enhanceToFinalState(final EntQueryGenerator generator, final IRetrievalModel<?> fetchModel) {
         for (final Pair<ISource, Boolean> sourceAndItsJoinType : getSources().getAllSourcesAndTheirJoinType()) {
             final ISource source = sourceAndItsJoinType.getKey();
             source.assignNullability(sourceAndItsJoinType.getValue());
@@ -520,7 +521,6 @@ public class EntQuery implements ISingleOperand {
         enhanceGroupBysModelFromOrderBys();
 
         int countOfUnprocessed = 1;
-
         while (countOfUnprocessed > 0) {
             for (final Pair<ISource, Boolean> sourceAndItsJoinType : getSources().getAllSourcesAndTheirJoinType()) {
                 final ISource source = sourceAndItsJoinType.getKey();
@@ -538,13 +538,13 @@ public class EntQuery implements ISingleOperand {
 
             unresolvedProps.addAll(resolveProps(propsToBeResolved, generator));
 
-            if (!isSubQuery() && unresolvedProps.size() > 0) {
-                throw new RuntimeException("Couldn't resolve the following props: " + unresolvedProps);
+            if (!isSubQuery() && !unresolvedProps.isEmpty()) {
+                throw new EqlException("Couldn't resolve the following props: " + unresolvedProps);
             }
 
             final List<EntProp> immediatePropertiesFinally = getPropsByStage(getImmediateProps(), PRELIMINARY_RESOLVED);
 
-            final List<EntProp> propsToBeResolvedFinally = new ArrayList<EntProp>();
+            final List<EntProp> propsToBeResolvedFinally = new ArrayList<>();
             propsToBeResolvedFinally.addAll(immediatePropertiesFinally);
             propsToBeResolvedFinally.addAll(collectUnresolvedPropsFromSubqueries(getImmediateSubqueries(), PRELIMINARY_RESOLVED));
             propsToBeResolvedFinally.removeAll(unresolvedProps);
@@ -556,7 +556,7 @@ public class EntQuery implements ISingleOperand {
             entProp.setExternal(false);
             unresolvedProps.add(entProp);
             if (!entProp.getStage().equals(UNPROCESSED)) {
-                throw new RuntimeException("IS NOT UNPROCESSED!");
+                throw new EqlException("IS NOT UNPROCESSED!");
             }
         }
 
@@ -576,7 +576,7 @@ public class EntQuery implements ISingleOperand {
     }
 
     private List<EntProp> collectUnresolvedPropsFromSubqueries(final List<EntQuery> subqueries, final EntPropStage propStage) {
-        final List<EntProp> unresolvedPropsFromSubqueries = new ArrayList<EntProp>();
+        final List<EntProp> unresolvedPropsFromSubqueries = new ArrayList<>();
         for (final EntQuery entQuery : subqueries) {
             for (final EntProp entProp : entQuery.unresolvedProps) {
                 if (propStage.equals(entProp.getStage())) {
@@ -588,14 +588,14 @@ public class EntQuery implements ISingleOperand {
     }
 
     private List<EntProp> resolveProps(final List<EntProp> propsToBeResolved, final EntQueryGenerator generator) {
-        final List<EntProp> unresolvedProps = new ArrayList<EntProp>();
+        final List<EntProp> unresolved = new ArrayList<>();
 
         for (final EntProp propToBeResolvedPair : propsToBeResolved) {
             if (!propToBeResolvedPair.isFinallyResolved()) {
                 final Map<ISource, PropResolutionInfo> sourceCandidates = findSourceMatchCandidates(propToBeResolvedPair);
                 if (sourceCandidates.size() == 0) {
                     propToBeResolvedPair.setUnresolved(true);
-                    unresolvedProps.add(propToBeResolvedPair);
+                    unresolved.add(propToBeResolvedPair);
                 } else {
                     final Pair<PropResolutionInfo, ISource> propResolutionResult = performPropResolveAction(sourceCandidates);
                     final PropResolutionInfo pri = propResolutionResult.getKey();
@@ -608,11 +608,11 @@ public class EntQuery implements ISingleOperand {
             }
         }
 
-        return unresolvedProps;
+        return unresolved;
     }
 
     private Map<ISource, PropResolutionInfo> findSourceMatchCandidates(final EntProp prop) {
-        final Map<ISource, PropResolutionInfo> result = new HashMap<ISource, PropResolutionInfo>();
+        final Map<ISource, PropResolutionInfo> result = new HashMap<>();
 
         for (final ISource source : sources.getAllSources()) {
             if ((prop.getStage().equals(PRELIMINARY_RESOLVED) || (prop.getStage().equals(UNPROCESSED) && !source.generated())) || (prop.isGenerated())) {
@@ -635,10 +635,10 @@ public class EntQuery implements ISingleOperand {
      */
     private Pair<PropResolutionInfo, ISource> performPropResolveAction(final Map<ISource, PropResolutionInfo> candidates) {
         if (candidates.size() == 1) {
-            return new Pair<PropResolutionInfo, ISource>(candidates.values().iterator().next(), candidates.keySet().iterator().next());
+            return pair(candidates.values().iterator().next(), candidates.keySet().iterator().next());
         } else {
-            final SortedSet<Integer> preferenceNumbers = new TreeSet<Integer>();
-            final Map<Integer, List<ISource>> sourcesPreferences = new HashMap<Integer, List<ISource>>();
+            final SortedSet<Integer> preferenceNumbers = new TreeSet<>();
+            final Map<Integer, List<ISource>> sourcesPreferences = new HashMap<>();
             for (final Entry<ISource, PropResolutionInfo> entry : candidates.entrySet()) {
                 final Integer currPrefNumber = entry.getValue().getPreferenceNumber();
                 preferenceNumbers.add(currPrefNumber);
@@ -652,13 +652,13 @@ public class EntQuery implements ISingleOperand {
 
             final List<ISource> preferedSourceList = sourcesPreferences.get(preferenceResult);
             if (preferedSourceList.size() == 1) {
-                return new Pair<PropResolutionInfo, ISource>(candidates.get(sourcesPreferences.get(preferenceResult).get(0)), sourcesPreferences.get(preferenceResult).get(0));
+                return pair(candidates.get(sourcesPreferences.get(preferenceResult).get(0)), sourcesPreferences.get(preferenceResult).get(0));
             } else {
                 int notAliasedSourcesCount = 0;
                 Pair<PropResolutionInfo, ISource> resultPair = null;
                 for (final ISource qrySource : preferedSourceList) {
                     if (qrySource.getAlias() == null) {
-                        resultPair = new Pair<PropResolutionInfo, ISource>(candidates.get(qrySource), qrySource);
+                        resultPair = pair(candidates.get(qrySource), qrySource);
                         notAliasedSourcesCount = notAliasedSourcesCount + 1;
                     }
                 }
@@ -678,7 +678,7 @@ public class EntQuery implements ISingleOperand {
      * @return
      */
     public List<EntProp> getImmediateProps() {
-        final List<EntProp> result = new ArrayList<EntProp>();
+        final List<EntProp> result = new ArrayList<>();
         result.addAll(sources.getLocalProps());
         result.addAll(conditions.getLocalProps());
         result.addAll(groups.getLocalProps());
@@ -688,7 +688,7 @@ public class EntQuery implements ISingleOperand {
     }
 
     public List<EntQuery> getImmediateSubqueries() {
-        final List<EntQuery> result = new ArrayList<EntQuery>();
+        final List<EntQuery> result = new ArrayList<>();
         result.addAll(yields.getLocalSubQueries());
         result.addAll(groups.getLocalSubQueries());
         result.addAll(orderings.getLocalSubQueries());
@@ -704,12 +704,12 @@ public class EntQuery implements ISingleOperand {
 
     @Override
     public List<EntQuery> getLocalSubQueries() {
-        return asList(new EntQuery[] { this });
+        return listOf(this);
     }
 
     @Override
     public List<EntValue> getAllValues() {
-        final List<EntValue> result = new ArrayList<EntValue>();
+        final List<EntValue> result = new ArrayList<>();
         result.addAll(sources.getAllValues());
         result.addAll(conditions.getAllValues());
         result.addAll(groups.getAllValues());
