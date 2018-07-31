@@ -5,6 +5,7 @@ import ua.com.fielden.platform.dao.QueryExecutionModel.Builder;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.EntityAggregates;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IFromAlias;
+import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IFromNone;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IOrderingItem;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IStandAloneConditionOperand;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IStandAloneExprOperand;
@@ -24,6 +25,10 @@ public class EntityQueryUtils {
 	public static IFromAlias<EntityAggregates> select(final AggregatedResultQueryModel... sourceQueryModels) {
 		return new FromAlias<EntityAggregates>(new Tokens().from(sourceQueryModels));
 	}
+
+    public static <T extends AbstractEntity<?>> IFromNone<T> select() {
+        return new FromNone<T>(new Tokens().from());
+    }
 
 	//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
