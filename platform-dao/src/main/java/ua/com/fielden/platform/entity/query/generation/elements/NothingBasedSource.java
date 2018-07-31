@@ -41,6 +41,7 @@ public class NothingBasedSource extends AbstractSource {
 
     @Override
     public void populateSourceItems(boolean parentLeftJoinLegacy) {
+        // there is nothing to populate
     }
 
     @Override
