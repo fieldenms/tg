@@ -441,14 +441,11 @@
              * Tries UTC formats one by one and returns valid moment or null if there are no appropriate format.
              */
             _tryUTCFormats: function (stringValue) {
-                const formats = Object.values(timeZoneFormats['UTC']);
-                for (let i = 0; i < formats.length; i++) {
-                    const tryingMoment = _momentTz(stringValue, formats[i], true, this.timeZone);
-                    if (tryingMoment.isValid()) {
-                        return tryingMoment;
-                    }
-                }
-                return null;
+                const timeZone = this.timeZone;
+                const tryingMoment = Object.values(timeZoneFormats['UTC'])
+                     .map(f => _momentTz(stringValue, f, true, timeZone))
+                     .find(m => m.isValid());
+                return tryingMoment ? tryingMoment : null;
             },
 
             /**
