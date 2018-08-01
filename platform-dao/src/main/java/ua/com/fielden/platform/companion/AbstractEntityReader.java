@@ -168,14 +168,13 @@ public abstract class AbstractEntityReader<T extends AbstractEntity<?>> implemen
         return evalNumOfPages(model, paramValues, 1).getKey();
     }
     
-    
     @Override
     @SessionRequired
-    public boolean hasEmptyResult(final EntityResultQueryModel<T> model, final Map<String, Object> paramValues) {
+    public boolean exists(final EntityResultQueryModel<T> model, final Map<String, Object> paramValues) {
     	final AggregatedResultQueryModel existsQuery = select().yield().caseWhen().exists(model).then().val(1).otherwise().val(0).endAsInt().as("exists").modelAsAggregate();
     	final QueryExecutionModel<EntityAggregates, AggregatedResultQueryModel> countModel = from(existsQuery).with(paramValues).with(fetchAggregates().with("exists")).lightweight().model();
     	final int result = new EntityFetcher(newQueryExecutionContext()).getEntities(countModel).get(0).get("exists"); 
-    	return result != 1;
+    	return result == 1;
     }
 
     /**

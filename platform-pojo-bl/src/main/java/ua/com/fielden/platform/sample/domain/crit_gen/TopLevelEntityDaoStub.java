@@ -178,7 +178,7 @@ public class TopLevelEntityDaoStub implements ITopLevelEntity {
     }
 
 	@Override
-	public boolean hasEmptyResult(EntityResultQueryModel<TopLevelEntity> model, Map<String, Object> paramValues) {
+	public boolean exists(EntityResultQueryModel<TopLevelEntity> model, Map<String, Object> paramValues) {
 		// TODO Auto-generated method stub
 		return false;
 	}
