@@ -7,6 +7,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Set;
 import java.util.TreeSet;
+import java.util.concurrent.TimeUnit;
 
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
@@ -33,7 +34,7 @@ public class EntityProxyContainer {
 
     private static final MethodDelegation proxyChecker = MethodDelegation.to(ProxyPropertyInterceptor.class);
     
-    private static final Cache<Class<? extends AbstractEntity<?>>, Cache<String, Class<? extends AbstractEntity<?>>>> typesMap = CacheBuilder.newBuilder().weakKeys().initialCapacity(1000).build();
+    private static final Cache<Class<? extends AbstractEntity<?>>, Cache<String, Class<? extends AbstractEntity<?>>>> typesMap = CacheBuilder.newBuilder().expireAfterAccess(10, TimeUnit.SECONDS).weakKeys().initialCapacity(1000).build();
     
     private EntityProxyContainer() {
     }
