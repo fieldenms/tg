@@ -20,6 +20,7 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.AbstractFunctionalEntityWithCentreContext;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.reflection.Finder;
+import ua.com.fielden.platform.types.tuples.T2;
 import ua.com.fielden.platform.utils.ResourceLoader;
 import ua.com.fielden.platform.web.annotations.BindToMenuItem;
 import ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig;
@@ -42,7 +43,7 @@ class MasterWithMenu<T extends AbstractEntity<?>, F extends AbstractFunctionalEn
     /**
      * Actions that represent menu items in a compound view.
      */
-    private final List<EntityActionConfig> menuItemActions = new ArrayList<>();
+    private final List<T2<EntityActionConfig, Optional<String>>> menuItemActions = new ArrayList<>();
     private final IRenderable renderable;
     private final Logger logger = Logger.getLogger(getClass());
 
@@ -53,7 +54,7 @@ class MasterWithMenu<T extends AbstractEntity<?>, F extends AbstractFunctionalEn
      * @param menuItemActions
      * @param defaultMenuItemIndex
      */
-    MasterWithMenu(final Class<F> functionalEntityType, final List<EntityActionConfig> menuItemActions, final int defaultMenuItemIndex) {
+    MasterWithMenu(final Class<F> functionalEntityType, final List<T2<EntityActionConfig, Optional<String>>> menuItemActions, final int defaultMenuItemIndex) {
         logger.debug(format("Generating master with menu invoked by functional entity %s.", functionalEntityType.getSimpleName()));
         if (defaultMenuItemIndex < 0 || defaultMenuItemIndex >= menuItemActions.size()) {
             throw new IllegalArgumentException(format("The default menu item index %s is outside of the range for the provided menu items.", defaultMenuItemIndex));
@@ -67,8 +68,8 @@ class MasterWithMenu<T extends AbstractEntity<?>, F extends AbstractFunctionalEn
 
         final List<FunctionalActionElement> menuItemActionsElements = new ArrayList<>();
         for (int index = 0; index < menuItemActions.size(); index++) {
-            final EntityActionConfig eac = menuItemActions.get(index);
-            final FunctionalActionElement el = new FunctionalActionElement(eac, index, FunctionalActionKind.MENU_ITEM);
+            final T2<EntityActionConfig, Optional<String>> eac = menuItemActions.get(index);
+            final FunctionalActionElement el = new FunctionalActionElement(eac._1, index, FunctionalActionKind.MENU_ITEM);
             menuItemActionsElements.add(el);
         }
 
@@ -127,7 +128,7 @@ class MasterWithMenu<T extends AbstractEntity<?>, F extends AbstractFunctionalEn
                         + menuItemsDom + "\n"
                         + menuItemViewsDom + "\n"
                         + "</tg-master-menu>",
-                        this.menuItemActions.get(defaultMenuItemIndex).functionalEntity.get().getSimpleName()))
+                        this.menuItemActions.get(defaultMenuItemIndex)._1.functionalEntity.get().getSimpleName()))
                 .replace("//@ready-callback",
                         format("            self.menuItemActions = [%s];\n"
                              + "            self.$.menu.parent = self;\n"

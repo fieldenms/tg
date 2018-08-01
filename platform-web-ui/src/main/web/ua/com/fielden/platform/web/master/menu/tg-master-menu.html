@@ -398,8 +398,7 @@
                             this.menuItemIndicators.forEach(prop => {
                                 if (newEntity.get(prop)) {
                                     const menuItem = Polymer.dom(this).querySelector('paper-item[indicator-property=' + prop + ']');
-                                    menuItem.style.color = "goldenrod";
-                                    console.log(menuItem);
+                                    menuItem.children[0].style.color = "#039BE5";
                                 }
                             });
                         }
