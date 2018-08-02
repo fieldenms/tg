@@ -236,7 +236,7 @@ public class TypeMaker {
 
    public Class<?> endModification() {
        final Class<?> klass = cl.defineType(currentName, currentType, 0, currentType.length);
-       cl.putTypeIntoCache(currentName, new Pair<Class<?>, byte[]>(klass, currentType));
+       cl.registerClass(new Pair<Class<?>, byte[]>(klass, currentType));
 
        currentType = null;
        currentName = null;

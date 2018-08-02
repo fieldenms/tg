@@ -1,5 +1,7 @@
 package ua.com.fielden.platform.classloader;
 
+import static ua.com.fielden.platform.utils.Pair.pair;
+
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.net.URLStreamHandlerFactory;
@@ -38,10 +40,10 @@ public class TgSystemClassLoader extends URLClassLoader {
     }
 
     public Optional<Pair<Class<?>, byte[]>> classByName(final String name) {
-        return cache.asMap().entrySet().stream().filter(entry -> entry.getKey().getName().equals(name)).findFirst().map(entry -> Pair.pair(entry.getKey(), entry.getValue()));
+        return cache.asMap().entrySet().stream().filter(entry -> entry.getKey().getName().equals(name)).findFirst().map(entry -> pair(entry.getKey(), entry.getValue()));
     }
     
-    public TgSystemClassLoader putToCache(final Class<?> typeAsClass, final byte[] typeAsBytes) {
+    public TgSystemClassLoader cacheClassDefinition(final Class<?> typeAsClass, final byte[] typeAsBytes) {
         cache.put(typeAsClass, typeAsBytes);
         return this;
     }

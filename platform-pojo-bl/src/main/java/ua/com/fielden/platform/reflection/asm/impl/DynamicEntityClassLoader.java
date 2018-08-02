@@ -2,9 +2,7 @@ package ua.com.fielden.platform.reflection.asm.impl;
 
 import static ua.com.fielden.platform.utils.Pair.pair;
 
-import java.util.Map;
 import java.util.Optional;
-import java.util.concurrent.ConcurrentHashMap;
 
 import org.kohsuke.asm5.ClassReader;
 
@@ -42,9 +40,8 @@ public class DynamicEntityClassLoader extends ClassLoader {
         return parent.classByName(typeName);
     }
     
-    public DynamicEntityClassLoader putTypeIntoCache(final String typeName, final Pair<Class<?>, byte[]> typePair) {
-        // TODO typeName may need to be used at some stage later as an optimisation technique
-        parent.putToCache(typePair.getKey(), typePair.getValue());
+    public DynamicEntityClassLoader registerClass(final Pair<Class<?>, byte[]> typePair) {
+        parent.cacheClassDefinition(typePair.getKey(), typePair.getValue());
         return this;
     }
     
@@ -71,7 +68,7 @@ public class DynamicEntityClassLoader extends ClassLoader {
         return getTypeByNameFromCache(typeName).map(Pair::getKey).orElseGet(() -> {
             // the class was not yet loaded, so it needs to be loaded and cached to later reuse
             final Class klass = defineClass(null, currentType, 0, currentType.length);
-            putTypeIntoCache(klass.getName(), pair(klass, currentType));
+            registerClass(pair(klass, currentType));
             return klass;
         });
     }
