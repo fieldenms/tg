@@ -90,7 +90,6 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
 import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
-import ua.com.fielden.platform.entity.query.DynamicallyTypedQueryContainer;
 import ua.com.fielden.platform.entity.query.EntityAggregates;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.entity.query.fluent.enums.ArithmeticalOperator;
@@ -129,7 +128,6 @@ import ua.com.fielden.platform.serialisation.kryo.IoHelper;
 import ua.com.fielden.platform.serialisation.kryo.serialisers.ClassSerialiser;
 import ua.com.fielden.platform.serialisation.kryo.serialisers.ColorSerializer;
 import ua.com.fielden.platform.serialisation.kryo.serialisers.DateTimeSerializer;
-import ua.com.fielden.platform.serialisation.kryo.serialisers.DynamicallyTypedQueryContainerSerialiser;
 import ua.com.fielden.platform.serialisation.kryo.serialisers.EntitySerialiser;
 import ua.com.fielden.platform.serialisation.kryo.serialisers.IntervalSerializer;
 import ua.com.fielden.platform.serialisation.kryo.serialisers.LifecycleQueryContainerSerialiser;
@@ -213,7 +211,7 @@ class TgKryo extends Kryo implements ISerialiserEngine {
     private final Serializer multipleDecDomainTreeManagerSerialiser;
     private final Serializer locatorDomainTreeManagerAndEnhancerWithTransientAnalysesSerialiser;
     private final Serializer centreDomainTreeManagerAndEnhancerWithTransientAnalysesSerialiser;
-    private final Serializer dynamicallyTypedQueryContainerSerialiser;
+    //private final Serializer dynamicallyTypedQueryContainerSerialiser;
     private final Serializer lifecycleQueryContainerSerialiser;
 
     public TgKryo(final EntityFactory factory, final ISerialisationClassProvider provider, final Serialiser serialiser) {
@@ -262,7 +260,7 @@ class TgKryo extends Kryo implements ISerialiserEngine {
         multipleDecDomainTreeManagerSerialiser = new MultipleDecDomainTreeManagerSerialiser(serialiser);
         locatorDomainTreeManagerAndEnhancerWithTransientAnalysesSerialiser = new LocatorDomainTreeManagerAndEnhancerWithTransientAnalysesSerialiser(serialiser);
         centreDomainTreeManagerAndEnhancerWithTransientAnalysesSerialiser = new CentreDomainTreeManagerAndEnhancerWithTransientAnalysesSerialiser(serialiser);
-        dynamicallyTypedQueryContainerSerialiser = new DynamicallyTypedQueryContainerSerialiser(this);
+        //dynamicallyTypedQueryContainerSerialiser = new DynamicallyTypedQueryContainerSerialiser(this);
         lifecycleQueryContainerSerialiser = new LifecycleQueryContainerSerialiser(this);
 
         // the following order of class registration is important
@@ -318,7 +316,6 @@ class TgKryo extends Kryo implements ISerialiserEngine {
         register(ComparisonOperator.class);
         register(ArithmeticalOperator.class);
         register(Functions.class);
-        register(DynamicallyTypedQueryContainer.class);
         register(JoinType.class);
 
         register(Class.class);
@@ -476,8 +473,6 @@ class TgKryo extends Kryo implements ISerialiserEngine {
             return locatorDomainTreeManagerAndEnhancerWithTransientAnalysesSerialiser;
         } else if (CentreDomainTreeManagerAndEnhancer.class.isAssignableFrom(type)) {
             return centreDomainTreeManagerAndEnhancerWithTransientAnalysesSerialiser;
-        } else if (DynamicallyTypedQueryContainer.class.isAssignableFrom(type)) {
-            return dynamicallyTypedQueryContainerSerialiser;
         } else if (LifecycleQueryContainer.class.isAssignableFrom(type)) {
             return lifecycleQueryContainerSerialiser;
         }
