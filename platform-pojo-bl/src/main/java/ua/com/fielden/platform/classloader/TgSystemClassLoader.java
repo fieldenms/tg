@@ -21,7 +21,7 @@ import ua.com.fielden.platform.utils.Pair;
  */
 public class TgSystemClassLoader extends URLClassLoader {
 
-    private final Cache<Class<?>, byte[]> cache = CacheBuilder.newBuilder().weakKeys().initialCapacity(1000).build(); 
+    private final Cache<Class<?>, byte[]> cache = CacheBuilder.newBuilder().weakKeys().initialCapacity(1000).build();
 
     public TgSystemClassLoader(final ClassLoader parent) {
         super(((URLClassLoader) parent).getURLs(), parent);
@@ -68,11 +68,7 @@ public class TgSystemClassLoader extends URLClassLoader {
             }
             return super.loadClass(name);
         } catch (final ClassNotFoundException ex) {
-            try {
-                return DynamicEntityClassLoader.getInstance(this).loadClass(name);
-            } catch (final ClassNotFoundException e) {
-                throw ex;
-            }
+            return DynamicEntityClassLoader.getInstance(this).loadClass(name);
         }
     }
 }
