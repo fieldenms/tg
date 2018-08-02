@@ -16,9 +16,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.TimeUnit;
 
 import org.apache.log4j.Logger;
+
+import com.google.common.cache.Cache;
+import com.google.common.cache.CacheBuilder;
 
 import ua.com.fielden.platform.domaintree.IDomainTreeEnhancer;
 import ua.com.fielden.platform.entity.AbstractEntity;
@@ -39,10 +42,10 @@ import ua.com.fielden.platform.utils.Pair;
  *
  */
 public final class AnnotationReflector {
-    private final static Logger logger = Logger.getLogger(AnnotationReflector.class);
+    private static final Logger LOGGER = Logger.getLogger(AnnotationReflector.class);
 
     /** A global lazy static cache of annotations, which is used for annotation information retrieval. */
-    private final static ConcurrentHashMap<FieldOrMethodKey, Map<Class<? extends Annotation>, Annotation>> annotations = new ConcurrentHashMap<>();
+    private static final Cache<FieldOrMethodKey, Map<Class<? extends Annotation>, Annotation>> annotations = CacheBuilder.newBuilder().expireAfterWrite(10, TimeUnit.SECONDS).concurrencyLevel(50).build();
 
     /**
      * Let's hide default constructor, which is not needed for a static class.
@@ -70,20 +73,20 @@ public final class AnnotationReflector {
 
     /** Clear cached annotations. */
     public static void clearAnnotationsCache() {
-        annotations.clear();
+        annotations.invalidateAll();
     }
 
     private static Collection<Annotation> getAnnotations(final Method method) {
         final FieldOrMethodKey methodKey = new FieldOrMethodKey(method);
-        final Map<Class<? extends Annotation>, Annotation> cached = annotations.get(methodKey);
+        final Map<Class<? extends Annotation>, Annotation> cached = annotations.getIfPresent(methodKey);
         if (cached == null) {
             final Map<Class<? extends Annotation>, Annotation> newCached = new HashMap<>();
             for (final Annotation ann : method.getAnnotations()) {
                 newCached.put(ann.annotationType(), ann);
             }
-            annotations.putIfAbsent(methodKey, newCached);
+            annotations.put(methodKey, newCached);
         }
-        return annotations.get(methodKey).values();
+        return annotations.getIfPresent(methodKey).values();
         //	return Arrays.asList(method.getAnnotations()); // make some caching
     }
 
@@ -187,7 +190,7 @@ public final class AnnotationReflector {
             // return annotatedElement.getAnnotation(annotationClass); // make some caching
             final AccessibleObject accesibleObject = (AccessibleObject) annotatedElement;
             final FieldOrMethodKey fieldOrMethodKey = new FieldOrMethodKey(accesibleObject);
-            final Map<Class<? extends Annotation>, Annotation> annByAccObject = annotations.get(fieldOrMethodKey);
+            final Map<Class<? extends Annotation>, Annotation> annByAccObject = annotations.getIfPresent(fieldOrMethodKey);
             final Map<Class<? extends Annotation>, Annotation> annByAccObjectNotNull = annByAccObject == null ? cacheAllAnnotations(accesibleObject, fieldOrMethodKey)
                     : annByAccObject;
             final Annotation annByAccObjectAndAnnClass = annByAccObjectNotNull.get(annotationClass);
