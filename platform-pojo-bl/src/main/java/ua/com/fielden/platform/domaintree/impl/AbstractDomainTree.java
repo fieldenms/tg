@@ -269,7 +269,7 @@ public abstract class AbstractDomainTree {
      * @return
      */
     public static <T> EnhancementPropertiesMap<T> createPropertiesMap() {
-        return new EnhancementPropertiesMap<T>();
+        return new EnhancementPropertiesMap<>();
     }
 
     /**
@@ -292,7 +292,7 @@ public abstract class AbstractDomainTree {
      * @return
      */
     public static Pair<Class<?>, String> key(final Class<?> root, final String property) {
-        return new Pair<Class<?>, String>(root, property);
+        return new Pair<>(root, property);
     }
 
     /**

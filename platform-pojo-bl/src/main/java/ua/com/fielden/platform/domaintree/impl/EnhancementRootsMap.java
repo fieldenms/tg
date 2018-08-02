@@ -16,26 +16,22 @@ import ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader;
 public class EnhancementRootsMap<T> extends HashMap<Class<?>, T> {
     private static final long serialVersionUID = -2157556231184035447L;
 
-    public EnhancementRootsMap() {
-        super();
-    }
-
     @Override
     public boolean containsKey(final Object key) {
         final Class<?> key1 = (Class<?>) key;
         return super.containsKey(DynamicEntityClassLoader.getOriginalType(key1));
-    };
+    }
 
     @Override
     public T put(final Class<?> key, final T value) {
         return super.put(DynamicEntityClassLoader.getOriginalType(key), value);
-    };
+    }
 
     @Override
     public T get(final Object key) {
         final Class<?> key1 = (Class<?>) key;
         return super.get(DynamicEntityClassLoader.getOriginalType(key1));
-    };
+    }
 
     @Override
     public T remove(final Object key) {
