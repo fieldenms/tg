@@ -19,6 +19,8 @@ import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetch
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.orderBy;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
+import static ua.com.fielden.platform.types.tuples.T2.t2;
+import static ua.com.fielden.platform.utils.CollectionUtil.mapOf;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
@@ -196,7 +198,7 @@ public class EntityQueryExecutionTest extends AbstractDaoTestCase {
     }
 
     @Test
-    public void select_without_from_clause_can_be_used_for_returning_a_tupple_of_values_as_aggregates() {
+    public void select_without_from_clause_can_be_used_for_returning_a_tuple_of_values_as_aggregates() {
         final AggregatedResultQueryModel a = select().
                 yield().caseWhen().exists(select(TgVehicle.class).where().prop("key").eq().val("CAR1").model()).then().val(true).otherwise().val(false).endAsBool().as("exists").
                 yield().val("aaa").as("prop2").
@@ -204,6 +206,31 @@ public class EntityQueryExecutionTest extends AbstractDaoTestCase {
         final EntityAggregates result = aggregateDao.getAllEntities(from(a).model()).get(0);
         assertEquals(Character.valueOf('Y'), result.get("exists"));
         assertEquals("aaa", result.get("prop2"));
+    }
+    
+    @Test
+    public void exists_can_be_used_to_determine_that_query_result_exists() {
+        final EntityResultQueryModel<TgVehicle> a = select(TgVehicle.class).where().prop("key").eq().val("CAR1").model();
+        assertTrue(vehicleDao.exists(a));
+    }
+    
+    @Test
+    public void exists_can_be_used_to_determine_that_query_result_does_not_exist() {
+        final EntityResultQueryModel<TgVehicle> a = select(TgVehicle.class).where().prop("key").eq().val("CIR1").model();
+        assertFalse(vehicleDao.exists(a));
+    }
+    
+    
+    @Test
+    public void exists_can_be_used_to_determine_that_parameterised_query_result_exists() {
+        final EntityResultQueryModel<TgVehicle> a = select(TgVehicle.class).where().prop("key").eq().param("car_name").model();
+        assertTrue(vehicleDao.exists(a, mapOf(t2("car_name", "CAR1"))));
+    }
+    
+    @Test
+    public void exists_can_be_used_to_determine_that_parameterised_query_result_does_not_exist() {
+        final EntityResultQueryModel<TgVehicle> a = select(TgVehicle.class).where().prop("key").eq().param("car_name").model();
+        assertFalse(vehicleDao.exists(a, mapOf(t2("car_name", "CIR1"))));
     }
     
     /////////////////////////////////////// TEST SQL FUNCTIONS ///////////////////////////////////////////////////////////////////
