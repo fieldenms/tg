@@ -190,13 +190,6 @@
                 },
                 
                 /**
-                 * Holds the list of properties which are an indicators for menu items with centre.
-                 */
-                menuItemIndicators: {
-                    type: Array
-                },
-                
-                /**
                  * The open compound master entity.
                  */
                 entity: {
@@ -395,9 +388,9 @@
                     const newEntity = newBindingEntity ? newBindingEntity['@@origin'] : null;
                     if (newEntity) {
                         if (newEntity.get("calculated")) {
-                            this.menuItemIndicators.forEach(prop => {
-                                if (newEntity.get(prop)) {
-                                    const menuItem = Polymer.dom(this).querySelector('paper-item[indicator-property=' + prop + ']');
+                            Object.keys(newEntity.get("entityPresence")).forEach(prop => {
+                                if (newEntity.get("entityPresence").get(prop)) {
+                                    const menuItem = Polymer.dom(this).querySelector('paper-item[item-title=' + prop + ']');
                                     menuItem.children[0].style.color = "#039BE5";
                                 }
                             });

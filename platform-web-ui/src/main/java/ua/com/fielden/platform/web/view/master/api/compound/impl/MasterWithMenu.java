@@ -5,11 +5,8 @@ import static java.lang.String.format;
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
-import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 
 import ua.com.fielden.platform.basic.IValueMatcherWithContext;
@@ -18,11 +15,7 @@ import ua.com.fielden.platform.dom.DomElement;
 import ua.com.fielden.platform.dom.InnerTextElement;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.AbstractFunctionalEntityWithCentreContext;
-import ua.com.fielden.platform.entity.annotation.IsProperty;
-import ua.com.fielden.platform.reflection.Finder;
-import ua.com.fielden.platform.types.tuples.T2;
 import ua.com.fielden.platform.utils.ResourceLoader;
-import ua.com.fielden.platform.web.annotations.BindToMenuItem;
 import ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig;
 import ua.com.fielden.platform.web.centre.api.resultset.impl.FunctionalActionElement;
 import ua.com.fielden.platform.web.centre.api.resultset.impl.FunctionalActionKind;
@@ -43,7 +36,7 @@ class MasterWithMenu<T extends AbstractEntity<?>, F extends AbstractFunctionalEn
     /**
      * Actions that represent menu items in a compound view.
      */
-    private final List<T2<EntityActionConfig, Optional<String>>> menuItemActions = new ArrayList<>();
+    private final List<EntityActionConfig> menuItemActions = new ArrayList<>();
     private final IRenderable renderable;
     private final Logger logger = Logger.getLogger(getClass());
 
@@ -54,7 +47,7 @@ class MasterWithMenu<T extends AbstractEntity<?>, F extends AbstractFunctionalEn
      * @param menuItemActions
      * @param defaultMenuItemIndex
      */
-    MasterWithMenu(final Class<F> functionalEntityType, final List<T2<EntityActionConfig, Optional<String>>> menuItemActions, final int defaultMenuItemIndex) {
+    MasterWithMenu(final Class<F> functionalEntityType, final List<EntityActionConfig> menuItemActions, final int defaultMenuItemIndex) {
         logger.debug(format("Generating master with menu invoked by functional entity %s.", functionalEntityType.getSimpleName()));
         if (defaultMenuItemIndex < 0 || defaultMenuItemIndex >= menuItemActions.size()) {
             throw new IllegalArgumentException(format("The default menu item index %s is outside of the range for the provided menu items.", defaultMenuItemIndex));
@@ -68,8 +61,8 @@ class MasterWithMenu<T extends AbstractEntity<?>, F extends AbstractFunctionalEn
 
         final List<FunctionalActionElement> menuItemActionsElements = new ArrayList<>();
         for (int index = 0; index < menuItemActions.size(); index++) {
-            final T2<EntityActionConfig, Optional<String>> eac = menuItemActions.get(index);
-            final FunctionalActionElement el = new FunctionalActionElement(eac._1, index, FunctionalActionKind.MENU_ITEM);
+            final EntityActionConfig eac = menuItemActions.get(index);
+            final FunctionalActionElement el = new FunctionalActionElement(eac, index, FunctionalActionKind.MENU_ITEM);
             menuItemActionsElements.add(el);
         }
 
@@ -77,10 +70,6 @@ class MasterWithMenu<T extends AbstractEntity<?>, F extends AbstractFunctionalEn
         final DomContainer menuItemActionsDom = new DomContainer();
         final DomContainer menuItemViewsDom = new DomContainer();
         final DomContainer menuItemsDom = new DomContainer();
-
-        //Get all properties those have associated menu item
-        final Map<String, String> propToItemMap = Finder.streamProperties(functionalEntityType, IsProperty.class, BindToMenuItem.class)
-                .collect(Collectors.toMap(field -> field.getAnnotation(BindToMenuItem.class).value(), field -> field.getName()));
 
         for (final FunctionalActionElement el : menuItemActionsElements) {
             importPaths.add(el.importPath());
@@ -96,17 +85,12 @@ class MasterWithMenu<T extends AbstractEntity<?>, F extends AbstractFunctionalEn
                     new DomElement("paper-item")
                             .attr("class", "menu-item").attr("data-route", el.getDataRoute())
                             .attr("tooltip-text", el.conf().longDesc.orElse("NOT SPECIFIED"))
-                            .attr("indicator-property", propToItemMap.getOrDefault(el.getShortDesc(), ""))
+                            .attr("item-title", el.getShortDesc())
                     .add(new DomElement("iron-icon").attr("icon", el.getIcon()).attr("style", "margin-right: 10px"))
                     .add(new DomElement("span").add(new InnerTextElement(el.getShortDesc())))
                     );
         }
 
-        //Get all properties those should be converted by reflector on client side
-        final String fields = StringUtils.join(Finder.streamProperties(functionalEntityType, IsProperty.class)
-                .map(filed -> "'" + filed.getName() + "'").collect(Collectors.toList()), ",");
-        //Generating the list of properties those are menu item indicators.
-        final String menuItemIndicators = StringUtils.join(propToItemMap.values().stream().map(prop -> "'" + prop + "'").collect(Collectors.toList()), ",");
         // generate the final master with menu
         final String entityMasterStr = ResourceLoader.getText("ua/com/fielden/platform/web/master/tg-entity-master-template.html")
                 .replace("<!--@imports-->", SimpleMasterBuilder.createImports(importPaths))
@@ -122,21 +106,19 @@ class MasterWithMenu<T extends AbstractEntity<?>, F extends AbstractFunctionalEn
                         + "    get-master-entity='[[_createContextHolderForEmbeddedViews]]'\n"
                         + "    refresh-compound-master='[[save]]'\n"
                         + "    augment-compound-master-opener-with='[[augmentCompoundMasterOpenerWith]]'\n"
-                        + "    menu-item-indicators='[[menuItemIndicators]]'\n"
                         + "    entity='[[_currBindingEntity]]'>\n"
                         + menuItemActionsDom + "\n"
                         + menuItemsDom + "\n"
                         + menuItemViewsDom + "\n"
                         + "</tg-master-menu>",
-                        this.menuItemActions.get(defaultMenuItemIndex)._1.functionalEntity.get().getSimpleName()))
+                        this.menuItemActions.get(defaultMenuItemIndex).functionalEntity.get().getSimpleName()))
                 .replace("//@ready-callback",
                         format("            self.menuItemActions = [%s];\n"
                              + "            self.$.menu.parent = self;\n"
-                             + "            self.menuItemIndicators = [%s];\n"
                              + "            self.canLeave = self.$.menu.canLeave.bind(self.$.menu);\n"
                              + "            // Overridden to support hidden properties conversion on the client-side ('key' and 'sectionTitle'). \n"
                              + "            self._isNecessaryForConversion = function (propertyName) { \n"
-                             + "                return [%s].indexOf(propertyName) !== -1; \n"
+                             + "                return ['key', 'sectionTitle', 'menuToOpen', 'entityPresence', 'calculated'].indexOf(propertyName) !== -1; \n"
                              + "            }; \n"
                              + "            self._focusEmbededView = function () {\n"
                              + "                this.$.menu.focusView();\n"
@@ -150,7 +132,7 @@ class MasterWithMenu<T extends AbstractEntity<?>, F extends AbstractFunctionalEn
                              + "            self._hasEmbededView = function () {\n"
                              + "                return true;\n"
                              + "            }.bind(self);\n",
-                             jsMenuItemActionObjects, menuItemIndicators, fields)) //
+                             jsMenuItemActionObjects)) //
                 .replace("@prefDim", "null")
                 .replace("@noUiValue", "false")
                 .replace("@saveOnActivationValue", "true");

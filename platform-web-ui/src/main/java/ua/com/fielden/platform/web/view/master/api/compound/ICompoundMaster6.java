@@ -19,5 +19,5 @@ public interface ICompoundMaster6<T extends AbstractEntity<?>, F extends Abstrac
      * @param embeddedCentre
      * @return
      */
-    ICompoundMaster6CentreView<T, F> withView(final EntityCentre<?> embeddedCentre);
+    ICompoundMaster7<T, F> withView(final EntityCentre<?> embeddedCentre);
 }
