@@ -1,5 +1,8 @@
 package ua.com.fielden.platform.domaintree.impl;
 
+import static java.lang.String.format;
+import static ua.com.fielden.platform.utils.Pair.pair;
+
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.nio.ByteBuffer;
@@ -57,7 +60,7 @@ public final class DomainTreeEnhancer0 extends AbstractDomainTree implements IDo
     private final Map<Class<?>, Pair<Class<?>, Map<String, ByteArray>>> originalAndEnhancedRootTypesAndArrays;
 
     /** Holds current domain differences from "standard" domain (all calculated properties for all root types). */
-    private final transient Map<Class<?>, List<CalculatedProperty>> calculatedProperties;
+    private final Map<Class<?>, List<CalculatedProperty>> calculatedProperties;
 
     /**
      * Constructs a new instance of domain enhancer with clean, not enhanced, domain.
@@ -79,7 +82,7 @@ public final class DomainTreeEnhancer0 extends AbstractDomainTree implements IDo
     public DomainTreeEnhancer0(final ISerialiser serialiser, final Set<Class<?>> rootTypes, final Map<Class<?>, Map<String, ByteArray>> originalTypesAndEnhancedArrays) {
         super(serialiser);
 
-        this.originalAndEnhancedRootTypesAndArrays = new HashMap<Class<?>, Pair<Class<?>, Map<String, ByteArray>>>();
+        this.originalAndEnhancedRootTypesAndArrays = new HashMap<>();
         // init a map with NOT enhanced types and empty byte arrays.
         this.originalAndEnhancedRootTypesAndArrays.putAll(createOriginalAndEnhancedRootTypesAndArraysFromRootTypes(rootTypes));
 
@@ -98,7 +101,7 @@ public final class DomainTreeEnhancer0 extends AbstractDomainTree implements IDo
             }
         }
 
-        this.calculatedProperties = new HashMap<Class<?>, List<CalculatedProperty>>();
+        this.calculatedProperties = new HashMap<>();
         this.calculatedProperties.putAll(extractAll(this, true));
     }
 
@@ -242,7 +245,7 @@ public final class DomainTreeEnhancer0 extends AbstractDomainTree implements IDo
     public Class<?> adjustManagedTypeName(final Class<?> root, final String clientGeneratedTypeNameSuffix) {
         final Class<?> managedType = getManagedType(root);
         if (!DynamicEntityClassLoader.isGenerated(managedType)) {
-            throw new DomainTreeException(String.format("The type for root [%s] is not generated. But it should be, because the same type on client application is generated and its suffix is [%s].", root.getSimpleName(), clientGeneratedTypeNameSuffix));
+            throw new DomainTreeException(format("The type for root [%s] is not generated. But it should be, because the same type on client application is generated and its suffix is [%s].", root.getSimpleName(), clientGeneratedTypeNameSuffix));
         }
         // logger.debug(String.format("Started to adjustManagedTypeName for root [%s] and its generated type [%s].", root.getSimpleName(), managedType.getSimpleName()));
         final DynamicEntityClassLoader classLoader = DynamicEntityClassLoader.getInstance(ClassLoader.getSystemClassLoader());
@@ -251,11 +254,11 @@ public final class DomainTreeEnhancer0 extends AbstractDomainTree implements IDo
             final String predefinedRootTypeName = root.getName() + DynamicTypeNamingService.APPENDIX + "_" + clientGeneratedTypeNameSuffix;
             final Class<?> rootWithPredefinedName = classLoader.startModification(managedType.getName()).modifyTypeName(predefinedRootTypeName)./* TODO modifySupertypeName(originalRoot.getName()).*/endModification();
             
-            final Map<String, ByteArray> byteArraysWithRenamedRoot = new LinkedHashMap<String, ByteArray>();
+            final Map<String, ByteArray> byteArraysWithRenamedRoot = new LinkedHashMap<>();
             final Pair<Class<?>, Map<String, ByteArray>> currentByteArrays = originalAndEnhancedRootTypesAndArrays.get(root);
             byteArraysWithRenamedRoot.putAll(currentByteArrays.getValue());
             byteArraysWithRenamedRoot.put("", new ByteArray(classLoader.getCachedByteArray(rootWithPredefinedName.getName())));
-            originalAndEnhancedRootTypesAndArrays.put(root, new Pair<>(rootWithPredefinedName, byteArraysWithRenamedRoot));
+            originalAndEnhancedRootTypesAndArrays.put(root, pair(rootWithPredefinedName, byteArraysWithRenamedRoot));
         } catch (final ClassNotFoundException e) {
             logger.error(e.getMessage(), e);
             throw new IllegalStateException(e);
@@ -270,11 +273,11 @@ public final class DomainTreeEnhancer0 extends AbstractDomainTree implements IDo
     public Class<?> adjustManagedTypeAnnotations(final Class<?> root, final Annotation... additionalAnnotations) {
         final Class<?> managedType = getManagedType(root);
         if (!DynamicEntityClassLoader.isGenerated(managedType)) {
-            throw new DomainTreeException(String.format("The type for root [%s] is not generated. It is prohibited to generate additional annotations inside that type.", root.getSimpleName()));
+            throw new DomainTreeException(format("The type for root [%s] is not generated. It is prohibited to generate additional annotations inside that type.", root.getSimpleName()));
         }
         // logger.debug(String.format("Started to adjustManagedTypeAnnotations for root [%s] and its generated type [%s].", root.getSimpleName(), managedType.getSimpleName()));
         if (additionalAnnotations.length == 0) {
-            logger.warn(String.format("Ended to adjustManagedTypeAnnotations for root [%s]. No annotations have been specified, root's managed type was not changed.", root.getSimpleName()));
+            logger.warn(format("Ended to adjustManagedTypeAnnotations for root [%s]. No annotations have been specified, root's managed type was not changed.", root.getSimpleName()));
             return managedType;
         }
         final DynamicEntityClassLoader classLoader = DynamicEntityClassLoader.getInstance(ClassLoader.getSystemClassLoader());
@@ -282,11 +285,11 @@ public final class DomainTreeEnhancer0 extends AbstractDomainTree implements IDo
         try {
             final Class<?> managedTypeWithAnnotations = classLoader.startModification(managedType.getName()).addClassAnnotations(additionalAnnotations).endModification();
             
-            final Map<String, ByteArray> byteArraysWithRenamedRoot = new LinkedHashMap<String, ByteArray>();
+            final Map<String, ByteArray> byteArraysWithRenamedRoot = new LinkedHashMap<>();
             final Pair<Class<?>, Map<String, ByteArray>> currentByteArrays = originalAndEnhancedRootTypesAndArrays.get(root);
             byteArraysWithRenamedRoot.putAll(currentByteArrays.getValue());
             byteArraysWithRenamedRoot.put("", new ByteArray(classLoader.getCachedByteArray(managedTypeWithAnnotations.getName())));
-            originalAndEnhancedRootTypesAndArrays.put(root, new Pair<>(managedTypeWithAnnotations, byteArraysWithRenamedRoot));
+            originalAndEnhancedRootTypesAndArrays.put(root, pair(managedTypeWithAnnotations, byteArraysWithRenamedRoot));
         } catch (final ClassNotFoundException e) {
             logger.error(e.getMessage(), e);
             throw new IllegalStateException(e);
