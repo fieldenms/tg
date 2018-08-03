@@ -4,6 +4,7 @@ import static java.lang.String.format;
 import static ua.com.fielden.platform.reflection.asm.impl.DynamicTypeNamingService.APPENDIX;
 import static ua.com.fielden.platform.utils.EntityUtils.isDecimal;
 import static ua.com.fielden.platform.utils.EntityUtils.isInteger;
+import static ua.com.fielden.platform.utils.Pair.pair;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.GenericArrayType;
@@ -335,7 +336,7 @@ public class PropertyTypeDeterminator {
         final int indexOfFirstDot = dotNotationExp.indexOf(PROPERTY_SPLITTER);
         final String firstPart = dotNotationExp.substring(0, indexOfFirstDot);
         final String restPart = dotNotationExp.substring(indexOfFirstDot + 1);
-        return new Pair<String, String>(firstPart, restPart);
+        return pair(firstPart, restPart);
     }
 
     /**

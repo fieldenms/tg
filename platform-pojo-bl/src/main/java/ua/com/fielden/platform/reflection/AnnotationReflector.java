@@ -71,11 +71,6 @@ public final class AnnotationReflector {
         return getAnnotationForClass(annotationType, forType) != null;
     }
 
-    /** Clear cached annotations. */
-    public static void clearAnnotationsCache() {
-        annotations.invalidateAll();
-    }
-
     private static Collection<Annotation> getAnnotations(final Method method) {
         final FieldOrMethodKey methodKey = new FieldOrMethodKey(method);
         final Map<Class<? extends Annotation>, Annotation> cached = annotations.getIfPresent(methodKey);
@@ -85,9 +80,9 @@ public final class AnnotationReflector {
                 newCached.put(ann.annotationType(), ann);
             }
             annotations.put(methodKey, newCached);
+            return newCached.values();
         }
-        return annotations.getIfPresent(methodKey).values();
-        //	return Arrays.asList(method.getAnnotations()); // make some caching
+        return cached.values();
     }
 
     private static class FieldOrMethodKey {
