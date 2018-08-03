@@ -1,13 +1,14 @@
 package ua.com.fielden.platform.entity.query;
 
+import static java.util.stream.Collectors.toMap;
 import static ua.com.fielden.platform.entity.AbstractEntity.ID;
 import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
 
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 import ua.com.fielden.platform.dao.DomainMetadata;
 import ua.com.fielden.platform.dao.PropertyMetadata;
@@ -35,9 +36,8 @@ public class IdOnlyProxiedEntityTypeCache implements IIdOnlyProxiedEntityTypeCac
         .map(entry -> {
             final Class<? extends AbstractEntity<?>> key = entry.getKey();
             final Class<? extends AbstractEntity<?>> proxyType = produceIdOnlyProxiedResultType(key, entry.getValue().getProps().values());
-            return Pair.<Class<? extends AbstractEntity<?>>, Class<? extends AbstractEntity<?>>>pair(key, proxyType);
-        })
-        .collect(Collectors.toMap(v -> v.getKey(), v -> v.getValue()));
+            return Pair.<Class<? extends AbstractEntity<?>>, Class<? extends AbstractEntity<?>>>pair(key, proxyType);})
+        .collect(toMap(Entry::getKey, Entry::getValue));
     }
 
     private <T extends AbstractEntity<?>> Class<? extends T> produceIdOnlyProxiedResultType(final Class<T> originalType, final Collection<PropertyMetadata> propsMetadata) {
