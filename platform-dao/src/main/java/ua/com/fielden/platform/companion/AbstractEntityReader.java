@@ -8,7 +8,6 @@ import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetch
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.orderBy;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
-import static ua.com.fielden.platform.utils.Pair.pair;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -20,6 +19,7 @@ import java.util.stream.Stream;
 import org.hibernate.Session;
 import org.hibernate.type.LongType;
 
+import ua.com.fielden.platform.dao.ISessionEnabled;
 import ua.com.fielden.platform.dao.QueryExecutionModel;
 import ua.com.fielden.platform.dao.QueryExecutionModel.Builder;
 import ua.com.fielden.platform.dao.annotations.SessionRequired;
@@ -171,10 +171,10 @@ public abstract class AbstractEntityReader<T extends AbstractEntity<?>> implemen
     @Override
     @SessionRequired
     public boolean exists(final EntityResultQueryModel<T> model, final Map<String, Object> paramValues) {
-    	final AggregatedResultQueryModel existsQuery = select().yield().caseWhen().exists(model).then().val(1).otherwise().val(0).endAsInt().as("exists").modelAsAggregate();
-    	final QueryExecutionModel<EntityAggregates, AggregatedResultQueryModel> countModel = from(existsQuery).with(paramValues).with(fetchAggregates().with("exists")).lightweight().model();
-    	final int result = new EntityFetcher(newQueryExecutionContext()).getEntities(countModel).get(0).get("exists"); 
-    	return result == 1;
+        final AggregatedResultQueryModel existsQuery = select().yield().caseWhen().exists(model).then().val(1).otherwise().val(0).endAsInt().as("exists").modelAsAggregate();
+        final QueryExecutionModel<EntityAggregates, AggregatedResultQueryModel> countModel = from(existsQuery).with(paramValues).with(fetchAggregates().with("exists")).lightweight().model();
+        final int result = new EntityFetcher(newQueryExecutionContext()).getEntities(countModel).get(0).get("exists");
+        return result == 1;
     }
 
     /**

@@ -2,12 +2,10 @@ package ua.com.fielden.platform.companion;
 
 import static java.util.Collections.emptyMap;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.dao.QueryExecutionModel;
 import ua.com.fielden.platform.dao.exceptions.UnexpectedNumberOfReturnedEntities;
 import ua.com.fielden.platform.entity.AbstractEntity;
@@ -284,6 +282,6 @@ public interface IEntityReader<T extends AbstractEntity<?>> extends IEntityInsta
     boolean exists(final EntityResultQueryModel<T> model, final Map<String, Object> paramValues);
 
     default boolean exists(final EntityResultQueryModel<T> model) {
-    	return exists(model, emptyMap());
-    };
+        return exists(model, emptyMap());
+    }
 }
