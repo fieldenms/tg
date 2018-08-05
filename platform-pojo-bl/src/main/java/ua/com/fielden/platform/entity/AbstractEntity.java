@@ -19,6 +19,7 @@ import static ua.com.fielden.platform.entity.exceptions.EntityDefinitionExceptio
 import static ua.com.fielden.platform.entity.validation.custom.DefaultEntityValidator.validateWithCritOnly;
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.isNumeric;
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.stripIfNeeded;
+import static ua.com.fielden.platform.utils.CollectionUtil.unmodifiableSetOf;
 import static ua.com.fielden.platform.utils.EntityUtils.isString;
 
 import java.lang.annotation.Annotation;
@@ -90,6 +91,7 @@ import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.reflection.Reflector;
+import ua.com.fielden.platform.utils.CollectionUtil;
 import ua.com.fielden.platform.utils.EntityUtils;
 
 /**
@@ -282,32 +284,6 @@ public abstract class AbstractEntity<K extends Comparable> implements Comparable
     @IsProperty
     @MapTo("DESC_")
     private String desc;
-    //    @IsProperty
-    //    @Title(value = "Has references?", desc = "Desc")
-    //    private boolean referenced;
-    //    @IsProperty
-    //    @Title(value = "References Count", desc = "Desc")
-    //    private Integer referencesCount;
-    //
-    //    @Observable
-    //    public AbstractEntity setReferencesCount(final Integer referencesCount) {
-    //	this.referencesCount = referencesCount;
-    //	return this;
-    //    }
-    //
-    //    public Integer getReferencesCount() {
-    //	return referencesCount;
-    //    }
-    //
-    //    @Observable
-    //    public AbstractEntity setReferenced(final boolean referenced) {
-    //	this.referenced = referenced;
-    //	return this;
-    //    }
-    //
-    //    public boolean getReferenced() {
-    //	return referenced;
-    //    }
 
     /** Convenient constants to reference properties by name */
     public static final String ID = "id";
@@ -316,12 +292,12 @@ public abstract class AbstractEntity<K extends Comparable> implements Comparable
     public static final String GETKEY = "getKey()";
     public static final String DESC = "desc";
     public static final String KEY_NOT_ASSIGNED = "[key is not assigned]";
-    public static final Set<String> COMMON_PROPS = unmodifiableSet(new HashSet<>(Arrays.asList(new String[] {KEY, DESC, "referencesCount", "referenced"})));
+    public static final Set<String> COMMON_PROPS = unmodifiableSetOf(KEY, DESC, "referencesCount", "referenced");
 
     /**
      * Holds meta-properties for entity properties.
      */
-    private final Map<String, MetaProperty<?>> properties;
+    private final Map<String, MetaProperty<?>> properties = new LinkedHashMap<>();
     /**
      * Indicates if entity instance is being initialised.
      */
@@ -358,8 +334,6 @@ public abstract class AbstractEntity<K extends Comparable> implements Comparable
     protected AbstractEntity() {
         actualEntityType = (Class<? extends AbstractEntity<?>>) stripIfNeeded(getClass());
 
-        properties = new LinkedHashMap<>();
-
         keyType = (Class<K>) AnnotationReflector.getKeyType(this.getClass());
         if (keyType == null) {
             throw new EntityDefinitionException(format("Entity [%s] is not fully defined -- key type is missing.", actualEntityType.getName()));
@@ -373,7 +347,7 @@ public abstract class AbstractEntity<K extends Comparable> implements Comparable
         logger = Logger.getLogger(this.getType());
 
         compositeKey = DynamicEntityKey.class.equals(keyType);
-        if (hasCompositeKey()) {
+        if (compositeKey) {
             setKey((K) new DynamicEntityKey((AbstractEntity<DynamicEntityKey>) this));
         }
     }

@@ -2,6 +2,7 @@ package ua.com.fielden.platform.utils;
 
 import static java.util.Arrays.asList;
 import static java.util.Collections.unmodifiableList;
+import static java.util.Collections.unmodifiableSet;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -33,6 +34,11 @@ public final class CollectionUtil {
     @SafeVarargs
     public static <T> Set<T> setOf(final T ... elements) {
         return new HashSet<>(Arrays.asList(elements));
+    }
+
+    @SafeVarargs
+    public static <T> Set<T> unmodifiableSetOf(final T ... elements) {
+        return unmodifiableSet(new HashSet<>(Arrays.asList(elements)));
     }
     
     @SafeVarargs

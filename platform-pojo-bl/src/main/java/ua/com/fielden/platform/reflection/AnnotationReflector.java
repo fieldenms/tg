@@ -4,7 +4,6 @@ import static java.lang.String.format;
 import static ua.com.fielden.platform.reflection.Finder.findFieldByNameOptionally;
 
 import java.lang.annotation.Annotation;
-import java.lang.reflect.AccessibleObject;
 import java.lang.reflect.AnnotatedElement;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
