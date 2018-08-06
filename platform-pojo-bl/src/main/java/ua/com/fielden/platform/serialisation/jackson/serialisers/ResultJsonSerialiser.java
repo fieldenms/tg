@@ -16,9 +16,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import com.fasterxml.jackson.core.JsonGenerator;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.ser.std.StdSerializer;
 
@@ -50,7 +50,7 @@ public class ResultJsonSerialiser extends StdSerializer<Result> {
     }
 
     @Override
-    public void serialize(final Result result, final JsonGenerator generator, final SerializerProvider provider) throws IOException, JsonProcessingException {
+    public void serialize(final Result result, final JsonGenerator generator, final SerializerProvider provider) throws IOException {
         generator.writeStartObject();
 
         generator.writeFieldName("@resultType");
@@ -98,16 +98,12 @@ public class ResultJsonSerialiser extends StdSerializer<Result> {
                                 }
                             }
                             if (isCentreConfigAction(itemClass)) {
-                                possiblyUnregisteredCriteriaTypeFrom(item).ifPresent((unregisteredType) -> generatedTypes.add(unregisteredType));
+                                possiblyUnregisteredCriteriaTypeFrom(item).ifPresent(generatedTypes::add);
                             }
                         }
                     }
                 });
-                final ArrayList<EntityType> genList = new ArrayList<>();
-                generatedTypes.forEach(t -> {
-                    genList.add(tgJackson.registerNewEntityType((Class<AbstractEntity<?>>) t));
-                });
-                generator.writeObject(genList);
+                generator.writeObject(generatedTypes.stream().map(this::toEntityType).collect(Collectors.toList()));
             } else if (EntityUtils.isEntityType(type) && EntityQueryCriteria.class.isAssignableFrom(type)) {
                 final Class<AbstractEntity<?>> newType = (Class<AbstractEntity<?>>) type;
                 generator.writeObject(tgJackson.registerNewEntityType(newType));
@@ -132,6 +128,10 @@ public class ResultJsonSerialiser extends StdSerializer<Result> {
         }
 
         generator.writeEndObject();
+    }
+    
+    public EntityType toEntityType(final Class<?> type) {
+        return tgJackson.registerNewEntityType((Class<AbstractEntity<?>>) type); 
     }
     
     /**

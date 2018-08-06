@@ -131,7 +131,7 @@ public class GlobalDomainTreeManager extends AbstractDomainTree implements IGlob
         }
 
         if (!initialCacheOfNonPrincipleItems.containsKey(menuItemType)) {
-            return new LinkedHashMap<String, List<String>>();
+            return new LinkedHashMap<>();
         }
         return initialCacheOfNonPrincipleItems.get(menuItemType);
     }
@@ -848,7 +848,6 @@ public class GlobalDomainTreeManager extends AbstractDomainTree implements IGlob
         validateMenuItemTypeRootType(menuItemType);
         if (isFreezedEntityCentreManager(menuItemType, name)) {
             unfreeze(menuItemType, name);
-
             currentCentres.put(key(menuItemType, name), copyCentre(currentCentres.get(key(menuItemType, name)))); // this is necessary to dispose current manager with listeners and get equal "fresh" instance
         } else {
             final ICentreDomainTreeManagerAndEnhancer currentMgr = getEntityCentreManager(menuItemType, name);

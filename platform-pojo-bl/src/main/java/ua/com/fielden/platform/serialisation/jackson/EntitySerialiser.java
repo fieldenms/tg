@@ -88,7 +88,7 @@ public class EntitySerialiser<T extends AbstractEntity<?>> {
 
         // cache all properties annotated with @IsProperty
         properties = createCachedProperties(type);
-        this.entityTypeInfo = createEntityTypeInfo(entityTypeInfoGetter, serialisationTypeEncoder);
+        this.entityTypeInfo = createEntityTypeInfo(type, properties, entityTypeInfoGetter, serialisationTypeEncoder);
 
         final EntityJsonSerialiser<T> serialiser = new EntityJsonSerialiser<>(type, properties, this.entityTypeInfo, excludeNulls, propertyDescriptorType);
         final EntityJsonDeserialiser<T> deserialiser = new EntityJsonDeserialiser<>(mapper, factory, type, properties, serialisationTypeEncoder, idOnlyProxiedEntityTypeCache, propertyDescriptorType);
@@ -98,7 +98,7 @@ public class EntitySerialiser<T extends AbstractEntity<?>> {
         module.addDeserializer(type, deserialiser);
     }
 
-    private EntityType createEntityTypeInfo(final EntityTypeInfoGetter entityTypeInfoGetter, final ISerialisationTypeEncoder serialisationTypeEncoder) {
+    private static <T extends AbstractEntity<?>> EntityType createEntityTypeInfo(final Class<T> type, final List<CachedProperty> cachedProps, final EntityTypeInfoGetter entityTypeInfoGetter, final ISerialisationTypeEncoder serialisationTypeEncoder) {
         final EntityType entityTypeInfo = newPlainEntity(EntityType.class, 1L); // use id to have not dirty properties (reduce the amount of serialised JSON)
         entityTypeInfo.setKey(type.getName());
 
@@ -139,73 +139,77 @@ public class EntitySerialiser<T extends AbstractEntity<?>> {
             entityTypeInfo.set_entityDesc(entityTitleAndDesc.getValue());
         }
 
-        if (!properties.isEmpty()) {
-            final Map<String, EntityTypeProp> props = new LinkedHashMap<>();
-            for (final CachedProperty prop : properties) {
-                // non-composite keys should be persisted by identifying their actual type
-                final String name = prop.field().getName();
-                final EntityTypeProp entityTypeProp = newPlainEntity(EntityTypeProp.class, 1L); // use id to have not dirty properties (reduce the amount of serialised JSON)
-
-                final Boolean secrete = AnnotationReflector.isSecreteProperty(type, name);
-                if (!isSecreteDefault(secrete)) {
-                    entityTypeProp.set_secrete(secrete);
-                }
-                final Boolean upperCase = AnnotationReflector.isAnnotationPresentInHierarchy(UpperCase.class, type, name);
-                if (!isUpperCaseDefault(upperCase)) {
-                    entityTypeProp.set_upperCase(upperCase);
-                }
-                final Pair<String, String> titleAndDesc = TitlesDescsGetter.getTitleAndDesc(name, type);
-                entityTypeProp.set_title(titleAndDesc.getKey());
-                entityTypeProp.set_desc(titleAndDesc.getValue());
-                final Boolean critOnly = AnnotationReflector.isAnnotationPresentInHierarchy(CritOnly.class, type, name);
-                if (!isCritOnlyDefault(critOnly)) {
-                    entityTypeProp.set_critOnly(critOnly);
-                }
-                final Boolean resultOnly = AnnotationReflector.isAnnotationPresentInHierarchy(ResultOnly.class, type, name);
-                if (!isResultOnlyDefault(resultOnly)) {
-                    entityTypeProp.set_resultOnly(resultOnly);
-                }
-                final Boolean ignore = AnnotationReflector.isAnnotationPresentInHierarchy(Ignore.class, type, name);
-                if (!isIgnoreDefault(ignore)) {
-                    entityTypeProp.set_ignore(ignore);
-                }
-                if (AnnotationReflector.isPropertyAnnotationPresent(DateOnly.class, type, name)) {
-                    entityTypeProp.set_date(Boolean.TRUE);
-                }
-                if (AnnotationReflector.isPropertyAnnotationPresent(TimeOnly.class, type, name)) {
-                    entityTypeProp.set_time(Boolean.TRUE);
-                }
-                final IsProperty isPropertyAnnotation = AnnotationReflector.getPropertyAnnotation(IsProperty.class, type, name);
-                if (isPropertyAnnotation != null) {
-                    final Long length = Long.valueOf(isPropertyAnnotation.length());
-                    if (!isLengthDefault(length)) {
-                        entityTypeProp.set_length(length);
-                    }
-                    final Long precision = Long.valueOf(isPropertyAnnotation.precision());
-                    if (!isPrecisionDefault(precision)) {
-                        entityTypeProp.set_precision(precision);
-                    }
-                    final Long scale = Long.valueOf(isPropertyAnnotation.scale());
-                    if (!isScaleDefault(scale)) {
-                        entityTypeProp.set_scale(scale);
-                    }
-                    final boolean trailingZeros = isPropertyAnnotation.trailingZeros();
-                    if (DefaultValueContract.isTrailingZerosDefault(trailingZeros)) {
-                        entityTypeProp.set_trailingZeros(trailingZeros);
-                    }
-                }
-                final String timeZone = getTimeZone(type, name);
-                if (timeZone != null) {
-                    entityTypeProp.set_timeZone(timeZone);
-                }
-
-                props.put(name, entityTypeProp);
-            }
-            entityTypeInfo.set_props(props);
+        if (!cachedProps.isEmpty()) {
+            entityTypeInfo.set_props(toEntityTypeProps(type, cachedProps));
         }
         final EntityType registered = entityTypeInfoGetter.register(entityTypeInfo);
         registered.set_identifier(serialisationTypeEncoder.encode(type));
         return registered;
+    }
+
+    private static <T extends AbstractEntity<?>> Map<String, EntityTypeProp> toEntityTypeProps(final Class<T> type, final List<CachedProperty> cachedProps) {
+        final Map<String, EntityTypeProp> props = new LinkedHashMap<>();
+        for (final CachedProperty prop : cachedProps) {
+            // non-composite keys should be persisted by identifying their actual type
+            final String name = prop.name;
+            final EntityTypeProp entityTypeProp = newPlainEntity(EntityTypeProp.class, 1L); // use id to have not dirty properties (reduce the amount of serialised JSON)
+
+            final Boolean secrete = AnnotationReflector.isSecreteProperty(type, name);
+            if (!isSecreteDefault(secrete)) {
+                entityTypeProp.set_secrete(secrete);
+            }
+            final Boolean upperCase = AnnotationReflector.isAnnotationPresentInHierarchy(UpperCase.class, type, name);
+            if (!isUpperCaseDefault(upperCase)) {
+                entityTypeProp.set_upperCase(upperCase);
+            }
+            final Pair<String, String> titleAndDesc = TitlesDescsGetter.getTitleAndDesc(name, type);
+            entityTypeProp.set_title(titleAndDesc.getKey());
+            entityTypeProp.set_desc(titleAndDesc.getValue());
+            final Boolean critOnly = AnnotationReflector.isAnnotationPresentInHierarchy(CritOnly.class, type, name);
+            if (!isCritOnlyDefault(critOnly)) {
+                entityTypeProp.set_critOnly(critOnly);
+            }
+            final Boolean resultOnly = AnnotationReflector.isAnnotationPresentInHierarchy(ResultOnly.class, type, name);
+            if (!isResultOnlyDefault(resultOnly)) {
+                entityTypeProp.set_resultOnly(resultOnly);
+            }
+            final Boolean ignore = AnnotationReflector.isAnnotationPresentInHierarchy(Ignore.class, type, name);
+            if (!isIgnoreDefault(ignore)) {
+                entityTypeProp.set_ignore(ignore);
+            }
+            if (AnnotationReflector.isPropertyAnnotationPresent(DateOnly.class, type, name)) {
+                entityTypeProp.set_date(Boolean.TRUE);
+            }
+            if (AnnotationReflector.isPropertyAnnotationPresent(TimeOnly.class, type, name)) {
+                entityTypeProp.set_time(Boolean.TRUE);
+            }
+            final IsProperty isPropertyAnnotation = AnnotationReflector.getPropertyAnnotation(IsProperty.class, type, name);
+            if (isPropertyAnnotation != null) {
+                final Long length = Long.valueOf(isPropertyAnnotation.length());
+                if (!isLengthDefault(length)) {
+                    entityTypeProp.set_length(length);
+                }
+                final Long precision = Long.valueOf(isPropertyAnnotation.precision());
+                if (!isPrecisionDefault(precision)) {
+                    entityTypeProp.set_precision(precision);
+                }
+                final Long scale = Long.valueOf(isPropertyAnnotation.scale());
+                if (!isScaleDefault(scale)) {
+                    entityTypeProp.set_scale(scale);
+                }
+                final boolean trailingZeros = isPropertyAnnotation.trailingZeros();
+                if (DefaultValueContract.isTrailingZerosDefault(trailingZeros)) {
+                    entityTypeProp.set_trailingZeros(trailingZeros);
+                }
+            }
+            final String timeZone = getTimeZone(type, name);
+            if (timeZone != null) {
+                entityTypeProp.set_timeZone(timeZone);
+            }
+
+            props.put(name, entityTypeProp);
+        }
+        return props;
     }
 
     public EntityType getEntityTypeInfo() {
@@ -259,12 +263,12 @@ public class EntitySerialiser<T extends AbstractEntity<?>> {
      *
      */
     public static final class CachedProperty {
-        private final Field field;
+        public final String name;
         private Class<?> propertyType;
         private boolean entityTyped = false;
 
         CachedProperty(final Field field) {
-            this.field = field;
+            this.name = field.getName();
         }
 
         public Class<?> getPropertyType() {
@@ -280,8 +284,10 @@ public class EntitySerialiser<T extends AbstractEntity<?>> {
             return entityTyped;
         }
 
-        public Field field() {
-            return field;
+        public void assignValue(final AbstractEntity<?> entity, final Object value) throws IllegalAccessException {
+            final Field field = Finder.findFieldByName(entity.getClass(), name);
+            field.setAccessible(true);
+            field.set(entity, value);
         }
     }
 

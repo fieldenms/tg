@@ -143,7 +143,7 @@ public class ClassesRetriever {
      * @throws Exception
      */
     public static <T> List<Class<? extends T>> getAllNonAbstractClassesInPackageDerivedFrom(final String path, final String packageName, final Class<T> superClass) throws Exception {
-        return getClassesInPackage(path, packageName, (testClass) -> !Modifier.isAbstract(testClass.getModifiers()) && isClassDerivedFrom(testClass, superClass)).stream()
+        return getClassesInPackage(path, packageName, testClass -> !Modifier.isAbstract(testClass.getModifiers()) && isClassDerivedFrom(testClass, superClass)).stream()
                 .map(type -> (Class<? extends T>) type).collect(toList());
     }
 
@@ -157,7 +157,7 @@ public class ClassesRetriever {
      * @throws Exception
      */
     public static List<Class<?>> getAllClassesInPackageDirectlyDerivedFrom(final String path, final String packageName, final Class<?> superClass) throws Exception {
-        return getClassesInPackage(path, packageName, (testClass) -> !superClass.equals(testClass) ? superClass.equals(testClass.getSuperclass()) : false);
+        return getClassesInPackage(path, packageName, testClass -> !superClass.equals(testClass) ? superClass.equals(testClass.getSuperclass()) : false);
     }
 
     /**
@@ -171,7 +171,7 @@ public class ClassesRetriever {
      * @throws Exception
      */
     public static List<Class<?>> getAllClassInPackageWithAnnotatedMethods(final String path, final String packageName, final Class<? extends Annotation> annotation) throws Exception {
-        return getClassesInPackage(path, packageName, (testClass) -> AnnotationReflector.isClassHasMethodAnnotatedWith(testClass, annotation));
+        return getClassesInPackage(path, packageName, testClass -> AnnotationReflector.isClassHasMethodAnnotatedWith(testClass, annotation));
     }
 
     /**
@@ -184,7 +184,7 @@ public class ClassesRetriever {
      * @throws Exception
      */
     public static List<Class<?>> getAllNonAbstractClassesDerivedFrom(final String path, final String packageName, final Class<?> superClass) throws Exception {
-        return getClassesInPackage(path, packageName, (testClass) -> isClassDerivedFrom(testClass, superClass) && !Modifier.isAbstract(testClass.getModifiers()) && !testClass.getName().contains("$"));
+        return getClassesInPackage(path, packageName, testClass -> isClassDerivedFrom(testClass, superClass) && !Modifier.isAbstract(testClass.getModifiers()) && !testClass.getName().contains("$"));
     }
 
     /**
@@ -211,19 +211,17 @@ public class ClassesRetriever {
      * @throws ClassNotFoundException
      */
     private static List<Class<?>> getFromDirectory(final File directory, final String packageName, final IFilterClass filter) throws ClassNotFoundException {
-        final List<Class<?>> classes = new ArrayList<Class<?>>();
-        final List<Pair<File, String>> directories = new ArrayList<Pair<File, String>>();
+        final List<Class<?>> classes = new ArrayList<>();
+        final List<Pair<File, String>> directories = new ArrayList<>();
         directories.add(new Pair<File, String>(directory, packageName));
-        while (directories.size() > 0) {
+        while (!directories.isEmpty()) {
             final Pair<File, String> nextDirectory = directories.get(0);
             if (nextDirectory.getKey().exists()) {
                 for (final File file : nextDirectory.getKey().listFiles()) {
                     if (file.getName().endsWith(".class")) {
                         final String name = nextDirectory.getValue() + '.' + stripFilenameExtension(file.getName());
                         final Class<?> clazz = ClassLoader.getSystemClassLoader().loadClass(name);
-                        if (filter != null && filter.isSatisfies(clazz)) {
-                            classes.add(clazz);
-                        } else if (filter == null) {
+                        if (filter == null || filter.isSatisfies(clazz)) {
                             classes.add(clazz);
                         }
                     } else if (file.isDirectory() && hasNoSpaces(file.getName())) {

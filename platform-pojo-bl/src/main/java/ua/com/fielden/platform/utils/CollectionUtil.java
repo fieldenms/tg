@@ -1,10 +1,13 @@
 package ua.com.fielden.platform.utils;
 
 import static java.util.Arrays.asList;
+import static java.util.Collections.unmodifiableList;
+import static java.util.Collections.unmodifiableSet;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -32,6 +35,11 @@ public final class CollectionUtil {
     public static <T> Set<T> setOf(final T ... elements) {
         return new HashSet<>(Arrays.asList(elements));
     }
+
+    @SafeVarargs
+    public static <T> Set<T> unmodifiableSetOf(final T ... elements) {
+        return unmodifiableSet(new HashSet<>(Arrays.asList(elements)));
+    }
     
     @SafeVarargs
     public static <T> LinkedHashSet<T> linkedSetOf(final T ... elements) {
@@ -41,6 +49,11 @@ public final class CollectionUtil {
     @SafeVarargs
     public static <T> List<T> listOf(final T ... elements) {
         return new ArrayList<>(asList(elements));
+    }
+    
+    @SafeVarargs
+    public static <T> List<T> unmodifiableListOf(final T ... elements) {
+        return unmodifiableList(asList(elements));
     }
 
     @SafeVarargs

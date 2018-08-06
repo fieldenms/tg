@@ -2,7 +2,6 @@ package ua.com.fielden.platform.companion;
 
 import static java.lang.String.format;
 import static java.util.Collections.emptyMap;
-import static java.util.stream.Collectors.toList;
 import static ua.com.fielden.platform.companion.helper.KeyConditionBuilder.createQueryByKey;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchAggregates;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
@@ -286,10 +285,7 @@ public abstract class AbstractEntityReader<T extends AbstractEntity<?>> implemen
     @SessionRequired
     public T getEntity(final QueryExecutionModel<T, ?> model) {
         final QueryExecutionModel<T, ?> qem = !instrumented() ? model.lightweight() : model;
-        final List<T> data;
-        try(final Stream<T> stream = stream(qem, 2)) {
-            data = stream.limit(2).collect(toList());
-        }
+        final List<T> data = getFirstEntities(qem, 2);
         if (data.size() > 1) {
             throw new UnexpectedNumberOfReturnedEntities(format("The provided query model leads to retrieval of more than one entity (%s).", data.size()));
         }
@@ -357,7 +353,7 @@ public abstract class AbstractEntityReader<T extends AbstractEntity<?>> implemen
         }
 
         public EntityQueryPage(final QueryExecutionModel<T, ?> queryModel, final QueryExecutionModel<T, ?> summaryModel, final int pageNumber, final int pageCapacity, final Pair<Integer, Integer> numberOfPagesAndCount) {
-            this(queryModel, summaryModel != null && numberOfPagesAndCount.getValue() > 0 ? calcSummary(summaryModel) : null, pageNumber, pageCapacity, numberOfPagesAndCount);
+            this(queryModel, summaryModel != null && numberOfPagesAndCount.getValue() > 0 ? getEntity(summaryModel) : null, pageNumber, pageCapacity, numberOfPagesAndCount);
         }
 
         public EntityQueryPage(final QueryExecutionModel<T, ?> queryModel, final T summary, final int pageNumber, final int pageCapacity, final Pair<Integer, Integer> numberOfPagesAndCount) {
@@ -468,14 +464,6 @@ public abstract class AbstractEntityReader<T extends AbstractEntity<?>> implemen
         }
     }
     
-    /**
-     * Calculates summary based on the assumption that <code>model</code> represents summary model for the type T.
-     */
-    private T calcSummary(final QueryExecutionModel<T, ?> model) {
-        final List<T> list = stream(model).collect(toList());
-        return list.size() == 1 ? list.get(0) : null;
-    }
-
     protected QueryExecutionModel<T, EntityResultQueryModel<T>> produceDefaultQueryExecutionModel(final Class<T> entityType) {
         final EntityResultQueryModel<T> query = select(entityType).model();
         query.setFilterable(isFilterable());
