@@ -3,6 +3,7 @@ package ua.com.fielden.platform.serialisation.api.impl;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.List;
@@ -18,7 +19,9 @@ import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.JavaType;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.ser.DefaultSerializerProvider;
 import com.fasterxml.jackson.databind.type.TypeFactory;
+import com.fasterxml.jackson.databind.util.LRUMap;
 import com.google.common.base.Charsets;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
@@ -27,6 +30,7 @@ import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
 import ua.com.fielden.platform.entity.proxy.IIdOnlyProxiedEntityTypeCache;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.reflection.ClassesRetriever;
+import ua.com.fielden.platform.reflection.exceptions.ReflectionException;
 import ua.com.fielden.platform.serialisation.api.ISerialisationClassProvider;
 import ua.com.fielden.platform.serialisation.api.ISerialisationTypeEncoder;
 import ua.com.fielden.platform.serialisation.api.ISerialiserEngine;
@@ -62,7 +66,7 @@ import ua.com.fielden.platform.utils.EntityUtils;
  */
 public final class TgJackson extends ObjectMapper implements ISerialiserEngine {
     private static final long serialVersionUID = 8131371701442950310L;
-    private final Logger logger = Logger.getLogger(getClass());
+    private static final Logger logger = Logger.getLogger(TgJackson.class);
 
     private final TgJacksonModule module;
     private final EntityFactory factory;
@@ -71,7 +75,7 @@ public final class TgJackson extends ObjectMapper implements ISerialiserEngine {
     public final IIdOnlyProxiedEntityTypeCache idOnlyProxiedEntityTypeCache;
 
     public TgJackson(final EntityFactory entityFactory, final ISerialisationClassProvider provider, final ISerialisationTypeEncoder serialisationTypeEncoder, final IIdOnlyProxiedEntityTypeCache idOnlyProxiedEntityTypeCache) {
-        this.module = new TgJacksonModule();
+        this.module = new TgJacksonModule(this);
         this.factory = entityFactory;
         entityTypeInfoGetter = new EntityTypeInfoGetter();
         this.serialisationTypeEncoder = serialisationTypeEncoder.setTgJackson(this);
@@ -111,11 +115,33 @@ public final class TgJackson extends ObjectMapper implements ISerialiserEngine {
             if (EntityUtils.isPropertyDescriptor(type)) {
                 new EntitySerialiser<PropertyDescriptor<?>>((Class<PropertyDescriptor<?>>) ClassesRetriever.findClass("ua.com.fielden.platform.entity.meta.PropertyDescriptor"), this.module, this, this.factory, entityTypeInfoGetter, false, serialisationTypeEncoder, idOnlyProxiedEntityTypeCache, true);
             } else if (AbstractEntity.class.isAssignableFrom(type)) {
-                registerNewEntityType((Class<AbstractEntity<?>>) type);
+                //registerNewEntityType((Class<AbstractEntity<?>>) type);
+                new EntitySerialiser<AbstractEntity<?>>((Class<AbstractEntity<?>>) type, module, this, factory, entityTypeInfoGetter, serialisationTypeEncoder, idOnlyProxiedEntityTypeCache);
             }
         }
     }
 
+    
+    private void clearCaches() {
+        // TODO this is an experimental proof-of-concept code
+        // flushing cache is a synchronized operation, which would be ineffective in a concurrent setting...
+        getTypeFactory().clearCache();
+        final DefaultSerializerProvider defaultSerializerProvider = (DefaultSerializerProvider) getSerializerProvider();
+        defaultSerializerProvider.flushCachedSerializers();
+        try {
+            final Field field = getDeserializationConfig().getClassIntrospector().getClass().getDeclaredField("_cachedFCA");
+            field.setAccessible(true);
+            final LRUMap cachedFCAsToClear = (LRUMap) field.get(getDeserializationConfig().getClassIntrospector());
+            if (cachedFCAsToClear != null) {
+                //System.out.printf("========= clearing [%s]%n", cachedFCAsToClear);
+                cachedFCAsToClear.clear();
+            }
+        } catch (final Exception e) {
+            //throw new ReflectionException("We just could not get cachedFCAsToClear.");
+        }
+
+    }
+    
     /**
      * Registers the new type and returns the [number; EntityType].
      *
@@ -123,9 +149,10 @@ public final class TgJackson extends ObjectMapper implements ISerialiserEngine {
      * @return
      */
     public EntityType registerNewEntityType(final Class<AbstractEntity<?>> newType) {
+        clearCaches();
         return new EntitySerialiser<AbstractEntity<?>>(newType, module, this, factory, entityTypeInfoGetter, serialisationTypeEncoder, idOnlyProxiedEntityTypeCache).getEntityTypeInfo();
     }
-
+    
     @Override
     public <T> T deserialise(final byte[] content, final Class<T> type) {
         final ByteArrayInputStream bis = new ByteArrayInputStream(content);

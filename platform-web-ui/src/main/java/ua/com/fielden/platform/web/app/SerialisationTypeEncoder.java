@@ -58,7 +58,10 @@ public class SerialisationTypeEncoder implements ISerialisationTypeEncoder {
     public <T extends AbstractEntity<?>> String encode(final Class<T> entityType) {
         final String entityTypeName = entityType.getName();
         if (isGenerated(entityType)) { // here we have both simple entity types AND criteria entity types
-            final MiType miTypeAnnotation = entityType.getAnnotation(MiType.class);
+            final MiType miTypeAnnotation = entityType.getAnnotation(MiType.class); // final MiType miTypeAnnotation = AnnotationReflector.getAnnotationForClass(MiType.class, entityType);
+            if (miTypeAnnotation == null) {
+                return encode((Class<T>) entityType.getSuperclass());
+            }
             final Class<? extends MiWithConfigurationSupport<?>> miType = miTypeAnnotation.value();
             final String saveAsName = miTypeAnnotation.saveAsName();
             logger.debug(format("============encode============== miType = [%s], saveAsName = [%s]", miType, saveAsName));
