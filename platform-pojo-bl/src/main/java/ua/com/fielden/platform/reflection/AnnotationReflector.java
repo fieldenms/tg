@@ -260,7 +260,7 @@ public final class AnnotationReflector {
      * @param forType
      * @return
      */
-    private static <T extends Annotation> T getAnnotationForClass(final Class<T> annotationType, final Class<?> forType) {
+    public static <T extends Annotation> T getAnnotationForClass(final Class<T> annotationType, final Class<?> forType) {
         Class<?> runningType = forType;
         while (runningType != null && !runningType.equals(Object.class)) { // need to iterated thought entity hierarchy
             if (runningType.isAnnotationPresent(annotationType)) {
