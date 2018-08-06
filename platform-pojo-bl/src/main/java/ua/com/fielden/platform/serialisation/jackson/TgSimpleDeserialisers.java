@@ -19,6 +19,8 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader;
 import ua.com.fielden.platform.serialisation.exceptions.SerialisationException;
 
+import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.stripIfNeeded;
+
 public class TgSimpleDeserialisers extends SimpleDeserializers {
     private static final long serialVersionUID = 1L;
     private static final Logger LOGGER = Logger.getLogger(TgSimpleDeserialisers.class);
@@ -43,8 +45,8 @@ public class TgSimpleDeserialisers extends SimpleDeserializers {
     
     @Override
     public JsonDeserializer<?> findBeanDeserializer(final JavaType type, final DeserializationConfig config, final BeanDescription beanDesc) throws JsonMappingException {
-        final Class<?> klass = type.getRawClass();
-        if (DynamicEntityClassLoader.isGenerated(type.getRawClass())) {
+        final Class<?> klass = stripIfNeeded(type.getRawClass());
+        if (DynamicEntityClassLoader.isGenerated(klass)) {
             //final Class<?> origType = DynamicEntityClassLoader.getOriginalType(type.getRawClass());
             try {
                 return genClassDeserialisers.get(klass, () -> {

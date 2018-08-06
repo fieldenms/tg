@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.serialisation.jackson;
 
 import static java.lang.String.format;
+import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.stripIfNeeded;
 
 import java.util.concurrent.ExecutionException;
 
@@ -41,7 +42,7 @@ public class TgSimpleSerialisers extends SimpleSerializers {
 
     @Override
     public JsonSerializer<?> findSerializer(final SerializationConfig config, final JavaType type, final BeanDescription beanDesc) {
-        final Class<?> klass = type.getRawClass();
+        final Class<?> klass = stripIfNeeded(type.getRawClass());
         if (DynamicEntityClassLoader.isGenerated(klass)) {
             //final Class<?> origType = DynamicEntityClassLoader.getOriginalType(klass);
             try {
