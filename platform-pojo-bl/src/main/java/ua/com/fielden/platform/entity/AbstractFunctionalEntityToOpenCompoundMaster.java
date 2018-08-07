@@ -43,7 +43,7 @@ public abstract class AbstractFunctionalEntityToOpenCompoundMaster<K extends Abs
 
     @IsProperty
     @Title("Is Calculated?")
-    private boolean calculated;
+    private boolean calculated = false;
 
     @Observable
     public AbstractFunctionalEntityToOpenCompoundMaster<K> setCalculated(final boolean calculated) {
@@ -56,7 +56,7 @@ public abstract class AbstractFunctionalEntityToOpenCompoundMaster<K extends Abs
     }
 
     @Observable
-    protected AbstractFunctionalEntityToOpenCompoundMaster<K> setEntityPresence(final Map<String, Integer> entityPresence) {
+    public AbstractFunctionalEntityToOpenCompoundMaster<K> setEntityPresence(final Map<String, Integer> entityPresence) {
         this.entityPresence.clear();
         this.entityPresence.putAll(entityPresence);
         return this;
