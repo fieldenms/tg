@@ -3,6 +3,7 @@ package ua.com.fielden.platform.serialisation.jackson;
 import static java.lang.String.format;
 
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
 
 import org.apache.log4j.Logger;
 
@@ -26,7 +27,7 @@ public class TgSimpleDeserialisers extends SimpleDeserializers {
     private static final Logger LOGGER = Logger.getLogger(TgSimpleDeserialisers.class);
 
     private final transient TgJacksonModule module;
-    private final transient Cache<Class<?>,JsonDeserializer<?>> genClassDeserialisers = CacheBuilder.newBuilder().weakKeys().initialCapacity(1000).build();
+    private final transient Cache<Class<?>,JsonDeserializer<?>> genClassDeserialisers = CacheBuilder.newBuilder().expireAfterAccess(10, TimeUnit.SECONDS).initialCapacity(1000).build();
 
     public TgSimpleDeserialisers(final TgJacksonModule module) {
         this.module = module;
@@ -35,7 +36,6 @@ public class TgSimpleDeserialisers extends SimpleDeserializers {
     @Override
     public <T> void addDeserializer(final Class<T> type, final JsonDeserializer<? extends T> deser) {
         if (DynamicEntityClassLoader.isGenerated(type)) {
-            //final Class<?> origType = DynamicEntityClassLoader.getOriginalType(type);
             genClassDeserialisers.put(type, deser);
         } else {
             super.addDeserializer(type, deser);
@@ -47,7 +47,6 @@ public class TgSimpleDeserialisers extends SimpleDeserializers {
     public JsonDeserializer<?> findBeanDeserializer(final JavaType type, final DeserializationConfig config, final BeanDescription beanDesc) throws JsonMappingException {
         final Class<?> klass = stripIfNeeded(type.getRawClass());
         if (DynamicEntityClassLoader.isGenerated(klass)) {
-            //final Class<?> origType = DynamicEntityClassLoader.getOriginalType(type.getRawClass());
             try {
                 return genClassDeserialisers.get(klass, () -> {
                     module.getObjectMapper().registerNewEntityType((Class<AbstractEntity<?>>) klass);

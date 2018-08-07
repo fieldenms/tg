@@ -25,6 +25,7 @@ import java.util.SortedMap;
 import java.util.SortedSet;
 import java.util.TreeMap;
 import java.util.TreeSet;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -60,7 +61,7 @@ import ua.com.fielden.platform.utils.Pair;
  *
  */
 public class Finder {
-    private static final Cache<Class<?>, List<Field>> entityKeyMembers = CacheBuilder.newBuilder().weakKeys().concurrencyLevel(50).build();
+    private static final Cache<Class<?>, List<Field>> entityKeyMembers = CacheBuilder.newBuilder().expireAfterAccess(10, TimeUnit.SECONDS).concurrencyLevel(50).build();
 
     /**
      * Let's hide default constructor, which is not needed for a static class.

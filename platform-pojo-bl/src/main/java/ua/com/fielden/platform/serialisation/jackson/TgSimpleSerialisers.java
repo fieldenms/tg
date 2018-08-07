@@ -4,6 +4,7 @@ import static java.lang.String.format;
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.stripIfNeeded;
 
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
 
 import org.apache.log4j.Logger;
 
@@ -24,7 +25,7 @@ public class TgSimpleSerialisers extends SimpleSerializers {
     private static final Logger LOGGER = Logger.getLogger(TgSimpleSerialisers.class);
 
     private final transient TgJacksonModule module;
-    private final transient Cache<Class<?>, JsonSerializer<?>> genClassSerialisers = CacheBuilder.newBuilder().weakKeys().initialCapacity(1000).build();
+    public final transient Cache<Class<?>, JsonSerializer<?>> genClassSerialisers = CacheBuilder.newBuilder().expireAfterAccess(10, TimeUnit.SECONDS).initialCapacity(1000).build();
 
     public TgSimpleSerialisers(final TgJacksonModule module) {
         this.module = module;
@@ -33,7 +34,6 @@ public class TgSimpleSerialisers extends SimpleSerializers {
     @Override
     protected void _addSerializer(final Class<?> type, final JsonSerializer<?> ser) {
         if (DynamicEntityClassLoader.isGenerated(type)) {
-            //final Class<?> origType = DynamicEntityClassLoader.getOriginalType(type);
             genClassSerialisers.put(type, ser);
         } else {
             super._addSerializer(type, ser);
@@ -44,7 +44,6 @@ public class TgSimpleSerialisers extends SimpleSerializers {
     public JsonSerializer<?> findSerializer(final SerializationConfig config, final JavaType type, final BeanDescription beanDesc) {
         final Class<?> klass = stripIfNeeded(type.getRawClass());
         if (DynamicEntityClassLoader.isGenerated(klass)) {
-            //final Class<?> origType = DynamicEntityClassLoader.getOriginalType(klass);
             try {
                 return genClassSerialisers.get(klass, () -> {
                     module.getObjectMapper().registerNewEntityType((Class<AbstractEntity<?>>) klass);
