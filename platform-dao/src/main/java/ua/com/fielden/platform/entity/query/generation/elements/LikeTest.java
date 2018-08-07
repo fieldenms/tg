@@ -1,7 +1,11 @@
 package ua.com.fielden.platform.entity.query.generation.elements;
 
+import static ua.com.fielden.platform.utils.CollectionUtil.listOf;
+
 import java.util.ArrayList;
 import java.util.List;
+
+import ua.com.fielden.platform.entity.query.DbVersion;
 
 public class LikeTest extends AbstractCondition {
     private final ISingleOperand leftOperand;
@@ -74,11 +78,6 @@ public class LikeTest extends AbstractCondition {
 
     @Override
     protected List<IPropertyCollector> getCollection() {
-        return new ArrayList<IPropertyCollector>() {
-            {
-                add(leftOperand);
-                add(rightOperand);
-            }
-        };
+        return  listOf(leftOperand, rightOperand);
     }
 }
