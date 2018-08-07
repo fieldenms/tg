@@ -3,6 +3,7 @@ package ua.com.fielden.platform.entity.query.generation.elements;
 import static java.lang.String.format;
 import static ua.com.fielden.platform.entity.query.DbVersion.H2;
 import static ua.com.fielden.platform.entity.query.DbVersion.MSSQL;
+import static ua.com.fielden.platform.entity.query.DbVersion.MYSQL;
 import static ua.com.fielden.platform.entity.query.DbVersion.POSTGRESQL;
 import static ua.com.fielden.platform.utils.CollectionUtil.listOf;
 
@@ -19,7 +20,7 @@ public class LikeTest extends AbstractCondition {
 
     @Override
     public String sql() {
-        return String.format("%s %s %s", prepareOperandSql(leftOperand), prepareLikeOperand(), prepareOperandSql(rightOperand));//leftOperand.sql() + (negated ? " NOT LIKE " : " LIKE ") + rightOperand.sql();
+        return format("%s %s %s", prepareOperandSql(leftOperand), prepareLikeOperand(), prepareOperandSql(rightOperand));
     }
 
     public LikeTest(final ISingleOperand leftOperand, final ISingleOperand rightOperand, final boolean negated, final boolean caseInsensitive, final DbVersion dbVersion) {
@@ -31,7 +32,7 @@ public class LikeTest extends AbstractCondition {
     }
 
     private String prepareOperandSql(ISingleOperand operand) {
-        return /*dbVersion == H2 || */dbVersion == MSSQL || dbVersion == POSTGRESQL ? operand.sql() : format(" UPPER(%s) ", operand.sql()); 
+        return /*dbVersion == H2 || */dbVersion == MSSQL || dbVersion == MYSQL || dbVersion == POSTGRESQL ? operand.sql() : format(" UPPER(%s) ", operand.sql()); 
     }
     
     private String prepareLikeOperand() {
