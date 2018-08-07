@@ -23,7 +23,6 @@ import java.util.Optional;
 import org.apache.log4j.Logger;
 
 import com.fasterxml.jackson.core.JsonGenerator;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.ser.std.StdSerializer;
 
@@ -50,7 +49,6 @@ import ua.com.fielden.platform.utils.Pair;
  * @param <T>
  */
 public class EntityJsonSerialiser<T extends AbstractEntity<?>> extends StdSerializer<T> {
-    private final Class<T> type;
     private static final Logger LOGGER = Logger.getLogger(EntityJsonSerialiser.class);
     private final List<CachedProperty> properties;
     private final EntityType entityType;
@@ -60,7 +58,6 @@ public class EntityJsonSerialiser<T extends AbstractEntity<?>> extends StdSerial
     public EntityJsonSerialiser(final Class<T> type, final List<CachedProperty> properties, final EntityType entityType, final boolean excludeNulls, final boolean propertyDescriptorType) {
         super(type);
 
-        this.type = type;
         this.properties = properties;
         this.entityType = entityType;
         this.excludeNulls = excludeNulls;
@@ -68,7 +65,7 @@ public class EntityJsonSerialiser<T extends AbstractEntity<?>> extends StdSerial
     }
 
     @Override
-    public void serialize(final T entity, final JsonGenerator generator, final SerializerProvider provider) throws IOException, JsonProcessingException {
+    public void serialize(final T entity, final JsonGenerator generator, final SerializerProvider provider) throws IOException {
         if (entityType.get_identifier() == null) {
             throw new SerialisationException(format("The identifier of the type [%s] should be populated to be ready for serialisation.", entityType));
         }
@@ -132,21 +129,9 @@ public class EntityJsonSerialiser<T extends AbstractEntity<?>> extends StdSerial
             // serialise all the properties relying on the fact that property sequence is consistent with order of fields in the class declaration
             for (final CachedProperty prop : properties) {
                 // non-composite keys should be persisted by identifying their actual type
-                final String name = prop.field().getName();
+                final String name = prop.name;
                 if (!Reflector.isPropertyProxied(entity, name)) {
-                    Object value = null;
-                    try {
-                        // at this stage the field should be already accessible
-                        value = prop.field().get(entity);
-                    } catch (final IllegalAccessException e) {
-                        // developer error -- please ensure that all fields are accessible
-                        final String msg = format("The field [%s] is not accessible. Fatal error during serialisation process for entity [%s].", prop.field(), entity);
-                        LOGGER.error(msg, e);
-                        throw new SerialisationException(msg, e);
-                    } catch (final IllegalArgumentException e) {
-                        LOGGER.error(format("The field [%s] is not declared in entity with type [%s]. Fatal error during serialisation process for entity [%s].", prop.field(), type.getName(), entity), e);
-                        throw e;
-                    }
+                    final Object value = entity.get(name);
                     
                     if (!disregardValueSerialisation(value, excludeNulls)) {
                         // write actual property

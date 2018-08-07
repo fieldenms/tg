@@ -30,7 +30,6 @@ import com.google.inject.Inject;
 
 import ua.com.fielden.platform.dao.QueryExecutionModel;
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.query.DynamicallyTypedQueryContainer;
 import ua.com.fielden.platform.equery.lifecycle.LifecycleModel;
 import ua.com.fielden.platform.equery.lifecycle.LifecycleQueryContainer;
 import ua.com.fielden.platform.error.Result;
@@ -63,7 +62,7 @@ public class RestServerUtil {
         final ConcurrentMap<String, Object> attrs = message.getAttributes();
         Series<Header> headers = (Series<Header>) attrs.get(HEADERS_KEY);
         if (headers == null) {
-            headers = new Series<Header>(Header.class);
+            headers = new Series<>(Header.class);
             final Series<Header> prev = (Series<Header>) attrs.putIfAbsent(HEADERS_KEY, headers);
             if (prev != null) {
                 headers = prev;
@@ -391,17 +390,6 @@ public class RestServerUtil {
      */
     public QueryExecutionModel<?, ?> restoreQueryExecutionModel(final Representation representation) {
         return serialiser.deserialise(getStream(representation), QueryExecutionModel.class);
-    }
-
-    /**
-     * Converts representation of {@link DynamicallyTypedQueryContainer} to an instance of {@link QueryExecutionModel}.
-     *
-     * @param <T>
-     * @param representation
-     * @return
-     */
-    public QueryExecutionModel<?, ?> restoreQueryExecutionModelForGeneratedType(final Representation representation) {
-        return serialiser.deserialise(getStream(representation), DynamicallyTypedQueryContainer.class).getQem();
     }
 
     /**

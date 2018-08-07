@@ -14,6 +14,7 @@ import java.util.Date;
 import java.util.IdentityHashMap;
 import java.util.Iterator;
 import java.util.List;
+
 import org.restlet.Context;
 import org.restlet.Request;
 import org.restlet.Response;
@@ -201,7 +202,7 @@ public class SerialisationTestResource extends AbstractWebResource {
                     
                     final List<CachedProperty> props = EntitySerialiser.createCachedProperties(e1.getType());
                     for (final CachedProperty prop : props) {
-                        final String propName = prop.field().getName();
+                        final String propName = prop.name;
                         if (prop.getPropertyType() != null) {
                             // check property meta-info equality
                             if (e1Instrumented) {

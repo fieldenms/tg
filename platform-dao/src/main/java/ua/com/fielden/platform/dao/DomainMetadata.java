@@ -4,7 +4,6 @@ import static java.lang.String.format;
 import static org.apache.commons.lang.StringUtils.isEmpty;
 import static org.apache.commons.lang.StringUtils.isNotEmpty;
 import static ua.com.fielden.platform.dao.EntityCategory.PERSISTED;
-import static ua.com.fielden.platform.dao.EntityCategory.PURE;
 import static ua.com.fielden.platform.dao.EntityCategory.QUERY_BASED;
 import static ua.com.fielden.platform.dao.EntityCategory.UNION;
 import static ua.com.fielden.platform.dao.PropertyCategory.COLLECTIONAL;
@@ -33,16 +32,15 @@ import static ua.com.fielden.platform.reflection.Finder.getKeyMembers;
 import static ua.com.fielden.platform.reflection.Finder.hasLinkProperty;
 import static ua.com.fielden.platform.reflection.Finder.isOne2One_association;
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.determinePropertyType;
+import static ua.com.fielden.platform.utils.CollectionUtil.unmodifiableListOf;
 import static ua.com.fielden.platform.utils.EntityUtils.getRealProperties;
 import static ua.com.fielden.platform.utils.EntityUtils.isEntityType;
 import static ua.com.fielden.platform.utils.EntityUtils.isPersistedEntityType;
 import static ua.com.fielden.platform.utils.EntityUtils.isSyntheticBasedOnPersistentEntityType;
-import static ua.com.fielden.platform.utils.EntityUtils.isSyntheticEntityType;
 import static ua.com.fielden.platform.utils.EntityUtils.isUnionEntityType;
 
 import java.lang.reflect.Field;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
@@ -85,7 +83,6 @@ import ua.com.fielden.platform.entity.query.ICompositeUserTypeInstantiate;
 import ua.com.fielden.platform.entity.query.model.ExpressionModel;
 import ua.com.fielden.platform.eql.dbschema.ColumnDefinitionExtractor;
 import ua.com.fielden.platform.eql.dbschema.TableDdl;
-import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
 
 public class DomainMetadata {
@@ -99,7 +96,7 @@ public class DomainMetadata {
     private static final Type H_BIG_DECIMAL = typeResolver.basic("big_decimal");
     private static final Type H_BIG_INTEGER = typeResolver.basic("big_integer");
 
-    public final static List<String> specialProps = Arrays.asList(new String[] { ID, KEY, VERSION });
+    public static final List<String> specialProps = unmodifiableListOf(ID, KEY, VERSION);
 
     private final PropertyColumn id;
     private final PropertyColumn version;

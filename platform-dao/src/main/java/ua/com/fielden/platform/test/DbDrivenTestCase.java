@@ -4,6 +4,7 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.lang.reflect.Method;
 import java.sql.Connection;
+import java.sql.Statement;
 import java.util.List;
 import java.util.Properties;
 
@@ -23,7 +24,10 @@ import com.google.inject.Injector;
 import junit.framework.TestCase;
 import ua.com.fielden.platform.dao.HibernateMappingsGenerator;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
+import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.persistence.HibernateUtil;
+import ua.com.fielden.platform.types.either.Either;
+import ua.com.fielden.platform.types.try_wrapper.TryWrapper;
 
 /**
  * This is base class for any db driven test case. It takes care about Hibernate configuration, session and transaction management as well as test db creation and data population.
@@ -75,10 +79,12 @@ public abstract class DbDrivenTestCase extends TestCase {
         // recreating db schema
         final Session session = hibernateUtil.getSessionFactory().getCurrentSession();
         final Transaction tr = hibernateUtil.getSessionFactory().getCurrentSession().beginTransaction();
-        try {
-            final IDatabaseConnection connection = getConnection(session);
-            connection.getConnection().createStatement().execute("DROP ALL OBJECTS");
-            connection.getConnection().createStatement().execute(String.format("CREATE SEQUENCE %s START WITH 10000 INCREMENT BY 1 MINVALUE 1 CACHE  3;", HibernateMappingsGenerator.ID_SEQUENCE_NAME));
+        final IDatabaseConnection connection = getConnection(session).orElseThrow(Result::asRuntime);
+        try (final Statement dropObjects = connection.getConnection().createStatement();
+             final Statement createIdSequence = connection.getConnection().createStatement();) {
+            
+            dropObjects.execute("DROP ALL OBJECTS");
+            createIdSequence.execute(String.format("CREATE SEQUENCE %s START WITH 10000 INCREMENT BY 1 MINVALUE 1 CACHE  3;", HibernateMappingsGenerator.ID_SEQUENCE_NAME));
             
             final List<String> ddls = config.getDdl();
             if (ddls == null || ddls.isEmpty()) {
@@ -129,9 +135,11 @@ public abstract class DbDrivenTestCase extends TestCase {
         return new String[] {};
     }
 
-    protected static IDatabaseConnection getConnection(final Session session) throws Exception {
-        final Method getConnection = session.getClass().getDeclaredMethod("connection");
-        return new DatabaseConnection((Connection) getConnection.invoke(session));
+    protected static Either<Exception, IDatabaseConnection> getConnection(final Session session) {
+        return TryWrapper.Try(() -> {
+                    final Method getConnection = session.getClass().getDeclaredMethod("connection");
+                    return new DatabaseConnection((Connection) getConnection.invoke(session));
+               });
     }
 
     /**
@@ -141,7 +149,7 @@ public abstract class DbDrivenTestCase extends TestCase {
      * @return
      * @throws java.lang.Exception
      */
-    protected IDataSet getDataSet(final DataSetReason reason) throws java.lang.Exception {
+    protected IDataSet getDataSet(final DataSetReason reason) throws Exception {
         IDataSet compositeDataSet = null;
         final String[] dsPaths = reason == DataSetReason.INSERT ? getDataSetPathsForInsert() : getDataSetPathsForUpdate();
         if (dsPaths != null && dsPaths.length > 0) {
@@ -163,7 +171,7 @@ public abstract class DbDrivenTestCase extends TestCase {
         super.setUp();
         final Session session = hibernateUtil.getSessionFactory().getCurrentSession();
         final Transaction localTransaction = hibernateUtil.getSessionFactory().getCurrentSession().beginTransaction();
-        final IDatabaseConnection connection = getConnection(session);
+        final IDatabaseConnection connection = getConnection(session).orElseThrow(Result::asRuntime);
         try {
             DatabaseOperation.CLEAN_INSERT.execute(connection, getDataSet(DataSetReason.INSERT));
             final IDataSet updateDataSet = getDataSet(DataSetReason.UPDATE);
@@ -191,7 +199,7 @@ public abstract class DbDrivenTestCase extends TestCase {
         // delete all data from the test db
         final Session session = hibernateUtil.getSessionFactory().getCurrentSession();
         final Transaction localTransaction = hibernateUtil.getSessionFactory().getCurrentSession().beginTransaction();
-        final IDatabaseConnection connection = getConnection(session);
+        final IDatabaseConnection connection = getConnection(session).orElseThrow(Result::asRuntime);
         DatabaseOperation.DELETE_ALL.execute(connection, getDataSet(DataSetReason.INSERT));
         final IDataSet updateDataSet = getDataSet(DataSetReason.UPDATE);
         if (updateDataSet != null) {

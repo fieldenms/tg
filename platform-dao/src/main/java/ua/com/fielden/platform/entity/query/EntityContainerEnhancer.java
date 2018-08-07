@@ -31,7 +31,7 @@ public class EntityContainerEnhancer<E extends AbstractEntity<?>> {
     private final EntityContainerFetcher fetcher;
     private final DomainMetadataAnalyser domainMetadataAnalyser;
     private final IdOnlyProxiedEntityTypeCache idOnlyProxiedEntityTypeCache;
-    transient private final Logger logger = Logger.getLogger(this.getClass());
+    private static final Logger logger = Logger.getLogger(EntityContainerEnhancer.class);
 
     protected EntityContainerEnhancer(final EntityContainerFetcher fetcher, final DomainMetadataAnalyser domainMetadataAnalyser, final IdOnlyProxiedEntityTypeCache idOnlyProxiedEntityTypeCache) {
         this.fetcher = fetcher;

@@ -19,7 +19,6 @@ public class DomainMetadataAnalyser {
     private final BaseInfoForDomainMetadata baseInfoForDomainMetadata;
 
     public DomainMetadataAnalyser(final DomainMetadata domainMetadata) {
-        super();
         this.domainMetadata = domainMetadata;
         baseInfoForDomainMetadata = new BaseInfoForDomainMetadata();
         entityMetadataMap.putAll(domainMetadata.getPersistedEntityMetadataMap());
@@ -61,7 +60,6 @@ public class DomainMetadataAnalyser {
 
                 return newOne;
             } catch (final Exception e) {
-                e.printStackTrace();
                 throw new RuntimeException(e.getMessage() + "entityType = " + entityType);
             }
         }
@@ -137,12 +135,12 @@ public class DomainMetadataAnalyser {
     }
 
     public Set<String> getLeafPropsFromFirstLevelProps(final String parentProp, final Class<? extends AbstractEntity<?>> entityType, final Set<String> firstLevelProps) {
-        final Set<String> result = new HashSet<String>();
+        final Set<String> result = new HashSet<>();
 
         for (final String prop : firstLevelProps) {
             final PropertyMetadata propMetadata = getPropPersistenceInfoExplicitly(entityType, prop);
             if (propMetadata.isEntityOfPersistedType()) {
-                final Set<String> keyProps = new HashSet<String>(Finder.getFieldNames(Finder.getKeyMembers(propMetadata.getJavaType())));
+                final Set<String> keyProps = new HashSet<>(Finder.getFieldNames(Finder.getKeyMembers(propMetadata.getJavaType())));
                 if (EntityUtils.isCompositeEntity(propMetadata.getJavaType())) {
                     result.addAll(getLeafPropsFromFirstLevelProps(prop, propMetadata.getJavaType(), keyProps));
                 } else {

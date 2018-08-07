@@ -1,10 +1,17 @@
 package ua.com.fielden.platform.classloader;
 
+import static ua.com.fielden.platform.utils.Pair.pair;
+
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.net.URLStreamHandlerFactory;
+import java.util.Optional;
+
+import com.google.common.cache.Cache;
+import com.google.common.cache.CacheBuilder;
 
 import ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader;
+import ua.com.fielden.platform.utils.Pair;
 
 /**
  * A replacement for the system class loader, which has the ability to register derived loaders, and uses them in an attempt to find requested classes.
@@ -14,7 +21,7 @@ import ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader;
  */
 public class TgSystemClassLoader extends URLClassLoader {
 
-    private final DynamicEntityClassLoader dynamicEntityClassLoader = DynamicEntityClassLoader.getInstance(this);
+    private final Cache<Class<?>, byte[]> cache = CacheBuilder.newBuilder().weakKeys().initialCapacity(1000).build();
 
     public TgSystemClassLoader(final ClassLoader parent) {
         super(((URLClassLoader) parent).getURLs(), parent);
@@ -32,19 +39,24 @@ public class TgSystemClassLoader extends URLClassLoader {
         super(urls, parent, factory);
     }
 
+    public Optional<Pair<Class<?>, byte[]>> classByName(final String name) {
+        return cache.asMap().entrySet().stream().filter(entry -> entry.getKey().getName().equals(name)).findFirst().map(entry -> pair(entry.getKey(), entry.getValue()));
+    }
+    
+    public TgSystemClassLoader cacheClassDefinition(final Class<?> typeAsClass, final byte[] typeAsBytes) {
+        cache.put(typeAsClass, typeAsBytes);
+        return this;
+    }
+
     @Override
-    protected Class<?> findClass(final String name) throws ClassNotFoundException {
+    public Class<?> findClass(final String name) throws ClassNotFoundException {
         try {
             if (getClass().getName().equals(name)) {
                 return Class.forName(getClass().getName());
             }
             return super.findClass(name);
         } catch (final ClassNotFoundException ex) {
-            try {
-                return dynamicEntityClassLoader.findClass(name);
-            } catch (final ClassNotFoundException e) {
-            }
-            throw ex;
+            return classByName(name).map(Pair::getKey).orElseThrow(() -> ex);
         }
     }
 
@@ -56,11 +68,7 @@ public class TgSystemClassLoader extends URLClassLoader {
             }
             return super.loadClass(name);
         } catch (final ClassNotFoundException ex) {
-            try {
-                return dynamicEntityClassLoader.loadClass(name);
-            } catch (final ClassNotFoundException e) {
-            }
-            throw ex;
+            return DynamicEntityClassLoader.getInstance(this).loadClass(name);
         }
     }
 }

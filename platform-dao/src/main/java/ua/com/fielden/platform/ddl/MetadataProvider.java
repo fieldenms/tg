@@ -21,7 +21,9 @@ public class MetadataProvider implements SessionFactoryBuilderFactory {
 
     @Override
     public SessionFactoryBuilder getSessionFactoryBuilder(final MetadataImplementor metadata, final SessionFactoryBuilderImplementor defaultBuilder) {
-        MetadataProvider.metadata = metadata; // this should happen just once
+        if (MetadataProvider.metadata == null) {
+            MetadataProvider.metadata = metadata; // this should happen just once
+        }
         return defaultBuilder; //Just return the one provided in the argument itself. All we care about is the metadata :)
     }
 

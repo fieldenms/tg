@@ -114,7 +114,7 @@ public abstract class AbstractDomainTreeManagerAndEnhancer implements IDomainTre
          * @return
          */
         private Set<Pair<Class<?>, String>> migrateToSet(final Map<Class<?>, List<CalculatedProperty>> calculatedProperties) {
-            final Set<Pair<Class<?>, String>> set = new HashSet<Pair<Class<?>, String>>();
+            final Set<Pair<Class<?>, String>> set = new HashSet<>();
             for (final Entry<Class<?>, List<CalculatedProperty>> entry : calculatedProperties.entrySet()) {
                 for (final CalculatedProperty prop : entry.getValue()) {
                     set.add(new Pair<Class<?>, String>(entry.getKey(), prop.pathAndName()));
@@ -124,19 +124,19 @@ public abstract class AbstractDomainTreeManagerAndEnhancer implements IDomainTre
         }
 
         protected static Set<Pair<Class<?>, String>> union(final Set<Pair<Class<?>, String>> a, final Set<Pair<Class<?>, String>> b) {
-            final Set<Pair<Class<?>, String>> a_union_b = new HashSet<Pair<Class<?>, String>>(a);
+            final Set<Pair<Class<?>, String>> a_union_b = new HashSet<>(a);
             a_union_b.addAll(b);
             return a_union_b;
         }
 
         private static Set<Pair<Class<?>, String>> subtract(final Set<Pair<Class<?>, String>> a, final Set<Pair<Class<?>, String>> b) {
-            final Set<Pair<Class<?>, String>> a_subtract_b = new HashSet<Pair<Class<?>, String>>(a);
+            final Set<Pair<Class<?>, String>> a_subtract_b = new HashSet<>(a);
             a_subtract_b.removeAll(b);
             return a_subtract_b;
         }
 
         private static Set<Pair<Class<?>, String>> intersect(final Set<Pair<Class<?>, String>> a, final Set<Pair<Class<?>, String>> b) {
-            final Set<Pair<Class<?>, String>> a_intersect_b = new HashSet<Pair<Class<?>, String>>(a);
+            final Set<Pair<Class<?>, String>> a_intersect_b = new HashSet<>(a);
             a_intersect_b.retainAll(b);
             return a_intersect_b;
         }
@@ -144,14 +144,14 @@ public abstract class AbstractDomainTreeManagerAndEnhancer implements IDomainTre
         @Override
         public void apply() {
             final Map<Class<?>, List<CalculatedProperty>> oldCalculatedProperties = DomainTreeEnhancer.extractAll(baseEnhancer(), false);
-            final Map<Class<?>, List<CalculatedProperty>> newCalculatedProperties = new HashMap<Class<?>, List<CalculatedProperty>>(baseEnhancer().calculatedProperties());
+            final Map<Class<?>, List<CalculatedProperty>> newCalculatedProperties = new HashMap<>(baseEnhancer().calculatedProperties());
 
             final Set<Pair<Class<?>, String>> was = migrateToSet(oldCalculatedProperties);
             final Set<Pair<Class<?>, String>> is = migrateToSet(newCalculatedProperties);
 
             // form a set of retained calculated properties:
             final Set<Pair<Class<?>, String>> retained = intersect(was, is);
-            final Set<Pair<Class<?>, String>> retainedAndSignificantlyChanged = new HashSet<Pair<Class<?>, String>>();
+            final Set<Pair<Class<?>, String>> retainedAndSignificantlyChanged = new HashSet<>();
             for (final Pair<Class<?>, String> rootAndProp : retained) {
                 final CalculatedProperty newProp = DomainTreeEnhancer.calculatedProperty(newCalculatedProperties.get(rootAndProp.getKey()), rootAndProp.getValue());
                 final CalculatedProperty oldProp = DomainTreeEnhancer.calculatedProperty(oldCalculatedProperties.get(rootAndProp.getKey()), rootAndProp.getValue());

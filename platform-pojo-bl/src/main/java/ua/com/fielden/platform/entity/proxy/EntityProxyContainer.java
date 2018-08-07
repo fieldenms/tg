@@ -7,6 +7,8 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Set;
 import java.util.TreeSet;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
 
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
@@ -18,7 +20,9 @@ import net.bytebuddy.implementation.FixedValue;
 import net.bytebuddy.implementation.MethodDelegation;
 import net.bytebuddy.matcher.ElementMatchers;
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.exceptions.EntityException;
 import ua.com.fielden.platform.reflection.Reflector;
+import ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader;
 
 /**
  * 
@@ -33,7 +37,7 @@ public class EntityProxyContainer {
 
     private static final MethodDelegation proxyChecker = MethodDelegation.to(ProxyPropertyInterceptor.class);
     
-    private static final Cache<Class<? extends AbstractEntity<?>>, Cache<String, Class<? extends AbstractEntity<?>>>> typesMap = CacheBuilder.newBuilder().weakKeys().initialCapacity(1000).build();
+    private static final Cache<Class<? extends AbstractEntity<?>>, Cache<String, Class<? extends AbstractEntity<?>>>> typesMap = CacheBuilder.newBuilder().expireAfterAccess(10, TimeUnit.SECONDS).initialCapacity(1000).build();
     
     private EntityProxyContainer() {
     }
@@ -92,13 +96,16 @@ public class EntityProxyContainer {
 
 
     protected static <T extends AbstractEntity<?>> Cache<String, Class<? extends AbstractEntity<?>>> getOrCreateTypeCache(final Class<T> entityType) {
-        final Cache<String, Class<? extends AbstractEntity<?>>> typeCache = typesMap.getIfPresent(entityType);
-        if (typeCache != null) {
-            return typeCache;
-        } else {
-            final Cache<String, Class<? extends AbstractEntity<?>>> newTypeCache = CacheBuilder.newBuilder().build();
-            typesMap.put(entityType, newTypeCache);
-            return newTypeCache;
+        try {
+            return typesMap.get(entityType, () -> { 
+                final Cache<String, Class<? extends AbstractEntity<?>>> newTypeCache = CacheBuilder.newBuilder().build();
+                typesMap.put(entityType, newTypeCache);
+                return newTypeCache;
+            });
+        } catch (final ExecutionException ex) {
+            throw new EntityException("Could not create a proxy type.", ex);
+        } finally {
+            typesMap.cleanUp();
         }
     }
 }

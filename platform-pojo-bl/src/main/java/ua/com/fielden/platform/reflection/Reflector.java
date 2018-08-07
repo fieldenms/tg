@@ -88,7 +88,7 @@ public final class Reflector {
         try {
             // setKey is a special case, because property "key" has a parametrised type that extends comparable.
             // this means that there are two cases:
-            // 1. setter is overridden and a final key type is specified there -- need to use the assigned type as input parameter to setter in order to find it;
+            // 1. setter is overridden and a final key type is specified there -- need to use the assigned type as input parameter to setter in order to find it
             // 2. setter is not overridden -- need to use the lowest common denominator (Comparable) as input parameter to setter in order to find it.
             if ("setKey".equals(methodName)) {
                 try {

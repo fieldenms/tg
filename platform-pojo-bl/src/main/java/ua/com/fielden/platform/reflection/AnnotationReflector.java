@@ -1,9 +1,9 @@
 package ua.com.fielden.platform.reflection;
 
+import static java.lang.String.format;
 import static ua.com.fielden.platform.reflection.Finder.findFieldByNameOptionally;
 
 import java.lang.annotation.Annotation;
-import java.lang.reflect.AccessibleObject;
 import java.lang.reflect.AnnotatedElement;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
@@ -16,9 +16,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
 
 import org.apache.log4j.Logger;
+
+import com.google.common.cache.Cache;
+import com.google.common.cache.CacheBuilder;
 
 import ua.com.fielden.platform.domaintree.IDomainTreeEnhancer;
 import ua.com.fielden.platform.entity.AbstractEntity;
@@ -30,6 +34,7 @@ import ua.com.fielden.platform.entity.annotation.KeyType;
 import ua.com.fielden.platform.entity.annotation.Secrete;
 import ua.com.fielden.platform.entity.annotation.TransactionEntity;
 import ua.com.fielden.platform.entity.validation.annotation.ValidationAnnotation;
+import ua.com.fielden.platform.reflection.exceptions.ReflectionException;
 import ua.com.fielden.platform.utils.Pair;
 
 /**
@@ -39,15 +44,23 @@ import ua.com.fielden.platform.utils.Pair;
  *
  */
 public final class AnnotationReflector {
-    private final static Logger logger = Logger.getLogger(AnnotationReflector.class);
+    private static final Logger LOGGER = Logger.getLogger(AnnotationReflector.class);
 
     /** A global lazy static cache of annotations, which is used for annotation information retrieval. */
-    private final static ConcurrentHashMap<FieldOrMethodKey, Map<Class<? extends Annotation>, Annotation>> annotations = new ConcurrentHashMap<>();
+    private static final Cache<Class<?>, Map<String, Map<Class<? extends Annotation>, Annotation>>> methodAnnotations = CacheBuilder.newBuilder().expireAfterAccess(10, TimeUnit.SECONDS).concurrencyLevel(50).build();
+    private static final Cache<Class<?>, Map<String, Map<Class<? extends Annotation>, Annotation>>> fieldAnnotations = CacheBuilder.newBuilder().expireAfterAccess(10, TimeUnit.SECONDS).concurrencyLevel(50).build();
 
     /**
      * Let's hide default constructor, which is not needed for a static class.
      */
     private AnnotationReflector() {
+    }
+
+    /**
+     * Returns a collection of annotations that are associated with {@code method}.
+     */
+    private static Collection<Annotation> getAnnotations(final Method method) {
+        return getMethodAnnotations(method).values();
     }
 
     /**
@@ -68,109 +81,6 @@ public final class AnnotationReflector {
         return getAnnotationForClass(annotationType, forType) != null;
     }
 
-    /** Clear cached annotations. */
-    public static void clearAnnotationsCache() {
-        annotations.clear();
-    }
-
-    private static Collection<Annotation> getAnnotations(final Method method) {
-        final FieldOrMethodKey methodKey = new FieldOrMethodKey(method);
-        final Map<Class<? extends Annotation>, Annotation> cached = annotations.get(methodKey);
-        if (cached == null) {
-            final Map<Class<? extends Annotation>, Annotation> newCached = new HashMap<>();
-            for (final Annotation ann : method.getAnnotations()) {
-                newCached.put(ann.annotationType(), ann);
-            }
-            annotations.putIfAbsent(methodKey, newCached);
-        }
-        return annotations.get(methodKey).values();
-        //	return Arrays.asList(method.getAnnotations()); // make some caching
-    }
-
-    private static class FieldOrMethodKey {
-        private final String klassName;
-        private final String name;
-        private final Boolean isField;
-
-        public FieldOrMethodKey(final AccessibleObject accessibleObject) {
-            isField = accessibleObject instanceof Field;
-            if (isField) {
-                final Field field = (Field) accessibleObject;
-                klassName = field.getDeclaringClass().getName();
-                name = field.getName();
-            } else {
-                final Method method = (Method) accessibleObject;
-                klassName = method.getDeclaringClass().getName();
-                name = method.getName();
-            }
-        }
-
-        @Override
-        public int hashCode() {
-            final int prime = 31;
-            int result = 1;
-            result = prime * result + ((isField == null) ? 0 : isField.hashCode());
-            result = prime * result + ((klassName == null) ? 0 : klassName.hashCode());
-            result = prime * result + ((name == null) ? 0 : name.hashCode());
-            return result;
-        }
-
-        @Override
-        public boolean equals(final Object obj) {
-            if (this == obj) {
-                return true;
-            }
-            if (obj == null) {
-                return false;
-            }
-            if (getClass() != obj.getClass()) {
-                return false;
-            }
-            final FieldOrMethodKey other = (FieldOrMethodKey) obj;
-            if (isField == null) {
-                if (other.isField != null) {
-                    return false;
-                }
-            } else if (!isField.equals(other.isField)) {
-                return false;
-            }
-            if (klassName == null) {
-                if (other.klassName != null) {
-                    return false;
-                }
-            } else if (!klassName.equals(other.klassName)) {
-                return false;
-            }
-            if (name == null) {
-                if (other.name != null) {
-                    return false;
-                }
-            } else if (!name.equals(other.name)) {
-                return false;
-            }
-            return true;
-        }
-    }
-
-    private static Map<Class<? extends Annotation>, Annotation> cacheAllAnnotations(final AccessibleObject accesibleObject, final FieldOrMethodKey fieldOrMethodKey) {
-        // When at least one annotation on accesibleObject is requested -- all existing annotations will be cached.
-        // It guarantees that when all annotations are requested afterwards -- no additional caching will be performed.
-        final Map<Class<? extends Annotation>, Annotation> newCached = new HashMap<>();
-        for (final Annotation ann : accesibleObject.getAnnotations()) {
-            newCached.put(ann.annotationType(), ann);
-        }
-        annotations.put(fieldOrMethodKey, newCached);
-        return newCached;
-    }
-
-    private static final Empty emptyAnnotation = new Empty();
-    private static <T extends Annotation> Annotation cacheAnnotation(final AccessibleObject accesibleObject, final Class<T> annotationClass, final Map<Class<? extends Annotation>, Annotation> annByAccObjectNotNull) {
-        final T ann = accesibleObject.getAnnotation(annotationClass);
-        final Annotation annNotNull = ann == null ? emptyAnnotation : ann;
-        annByAccObjectNotNull.put(annotationClass, annNotNull);
-        return annNotNull;
-    }
-
     /**
      * Returns this element's annotation for the specified type if such an annotation is present, else null.
      *
@@ -183,20 +93,60 @@ public final class AnnotationReflector {
     public static <T extends Annotation> T getAnnotation(final AnnotatedElement annotatedElement, final Class<T> annotationClass) {
         if (annotatedElement instanceof Class) {
             return getAnnotationForClass(annotationClass, (Class<?>) annotatedElement);
+        } else if (annotatedElement instanceof Field) {
+            final Field field = (Field) annotatedElement;
+            return (T) getFieldAnnotations(field).get(annotationClass);
+        } else if (annotatedElement instanceof Method) {
+            final Method method = (Method) annotatedElement;
+            return (T) getMethodAnnotations(method).get(annotationClass);
         } else {
-            // return annotatedElement.getAnnotation(annotationClass); // make some caching
-            final AccessibleObject accesibleObject = (AccessibleObject) annotatedElement;
-            final FieldOrMethodKey fieldOrMethodKey = new FieldOrMethodKey(accesibleObject);
-            final Map<Class<? extends Annotation>, Annotation> annByAccObject = annotations.get(fieldOrMethodKey);
-            final Map<Class<? extends Annotation>, Annotation> annByAccObjectNotNull = annByAccObject == null ? cacheAllAnnotations(accesibleObject, fieldOrMethodKey)
-                    : annByAccObject;
-            final Annotation annByAccObjectAndAnnClass = annByAccObjectNotNull.get(annotationClass);
-            final Annotation annByAccObjectAndAnnClassNotNull = annByAccObjectAndAnnClass == null ? cacheAnnotation(accesibleObject, annotationClass, annByAccObjectNotNull)
-                    : annByAccObjectAndAnnClass;
-            return annByAccObjectAndAnnClassNotNull instanceof Empty ? null : (T) annByAccObjectAndAnnClassNotNull;
+            throw new ReflectionException(format("Reflecting on annotations for [%s] is not supported.", annotatedElement));
         }
     }
-    
+
+    private static Map<Class<? extends Annotation>, Annotation> getFieldAnnotations(final Field field) {
+        final Class<?> klass = field.getDeclaringClass();
+        final String name = field.getName();
+
+        final Map<String, Map<Class<? extends Annotation>, Annotation>> cachedMethods;
+        try {
+            cachedMethods = fieldAnnotations.get(klass, HashMap::new);
+        } catch (final ExecutionException ex) {
+            LOGGER.error(ex);
+            throw new ReflectionException(format("Could not get annotation for field [%s].", field), ex);
+        }
+
+        return annotationExtractionHelper(field, name, cachedMethods);
+    }
+
+    private static Map<Class<? extends Annotation>, Annotation> getMethodAnnotations(final Method method) {
+        final Class<?> klass = method.getDeclaringClass();
+        final String name = method.getName();
+
+        final Map<String, Map<Class<? extends Annotation>, Annotation>> cachedMethods;
+        try {
+            cachedMethods = methodAnnotations.get(klass, HashMap::new);
+        } catch (final ExecutionException ex) {
+            LOGGER.error(ex);
+            throw new ReflectionException(format("Could not get annotation for method [%s].", method), ex);
+        }
+
+        return annotationExtractionHelper(method, name, cachedMethods);
+    }
+
+    private static Map<Class<? extends Annotation>, Annotation> annotationExtractionHelper(final AnnotatedElement el, final String name, final Map<String, Map<Class<? extends Annotation>, Annotation>> cachedMethods) {
+        final Map<Class<? extends Annotation>, Annotation> cached = cachedMethods.get(name);
+        if (cached == null) {
+            final Map<Class<? extends Annotation>, Annotation> newCached = new HashMap<>();
+            for (final Annotation ann : el.getAnnotations()) {
+                newCached.put(ann.annotationType(), ann);
+            }
+            cachedMethods.put(name, newCached);
+            return newCached;
+        }
+        return cached;
+    }
+
     /**
      * The same as {@link #getAnnotation(AnnotatedElement, Class)}, but with an {@link Optional} result.
      * 
@@ -223,11 +173,11 @@ public final class AnnotationReflector {
      * @return
      */
     public static List<Method> getMethodsAnnotatedWith(final Class<?> type, final Optional<Class<? extends Annotation>> annotation) {
-        final List<Method> methods = new ArrayList<Method>();
+        final List<Method> methods = new ArrayList<>();
         Class<?> klass = type;
         while (klass != Object.class) { // need to iterated thought hierarchy in order to retrieve methods from above the current instance
             // iterate though the list of methods declared in the class represented by klass variable, and add those annotated with the specified annotation
-            final List<Method> allMethods = new ArrayList<Method>(Arrays.asList(klass.getDeclaredMethods()));
+            final List<Method> allMethods = new ArrayList<>(Arrays.asList(klass.getDeclaredMethods()));
             if (AbstractUnionEntity.class.isAssignableFrom(klass) && AbstractUnionEntity.class != klass) { // add common methods in case of AbstractUnionEntity descendant:
                 allMethods.addAll(AbstractUnionEntity.commonMethods((Class<? extends AbstractUnionEntity>) klass));
             }
@@ -250,7 +200,7 @@ public final class AnnotationReflector {
      * @return
      */
     public static boolean isClassHasMethodAnnotatedWith(final Class<?> type, final Class<? extends Annotation> annotation) {
-        return getMethodsAnnotatedWith(type, Optional.of(annotation)).size() != 0;
+        return !getMethodsAnnotatedWith(type, Optional.of(annotation)).isEmpty();
     }
 
     /**
@@ -311,7 +261,7 @@ public final class AnnotationReflector {
      * @param forType
      * @return
      */
-    private static <T extends Annotation> T getAnnotationForClass(final Class<T> annotationType, final Class<?> forType) {
+    public static <T extends Annotation> T getAnnotationForClass(final Class<T> annotationType, final Class<?> forType) {
         Class<?> runningType = forType;
         while (runningType != null && !runningType.equals(Object.class)) { // need to iterated thought entity hierarchy
             if (runningType.isAnnotationPresent(annotationType)) {

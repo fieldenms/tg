@@ -26,13 +26,15 @@ import ua.com.fielden.platform.utils.Pair;
  */
 public class TypeMaker {
 
-    private final DynamicEntityClassLoader loader;
+    private static final String NEW_SUPERTYPE_NAME_IS_NULL_OR_EMPTY = "New supertype name is 'null' or empty.";
+    private static final String CURRENT_TYPE_OR_NAME_ARE_NOT_SPECIFIED = "Current type or name are not specified.";
+    private final DynamicEntityClassLoader cl;
     private final DynamicTypeNamingService namingService = new DynamicTypeNamingService();
     private byte[] currentType;
     private String currentName;
 
     public TypeMaker(final DynamicEntityClassLoader loader) {
-        this.loader = loader;
+        this.cl = loader;
     }
     
     /**
@@ -47,12 +49,12 @@ public class TypeMaker {
             throw new IllegalArgumentException("Java system classes should not be enhanced.");
         }
         // try loading the specified type by either actually loading from disk or finding it in cache
-        if (loader.getTypeByNameFromCache(typeName).isPresent()) {
-            currentType = loader.getCachedByteArray(typeName);
+        if (cl.getTypeByNameFromCache(typeName).isPresent()) {
+            currentType = cl.getCachedByteArray(typeName);
             currentName = typeName;
         } else {
             final String resource = typeName.replace('.', '/') + ".class";
-            try (final InputStream is = loader.getResourceAsStream(resource)) {
+            try (final InputStream is = cl.getResourceAsStream(resource)) {
                 final ClassReader cr = new ClassReader(is);
                 final ClassWriter cw = new ClassWriter(ClassWriter.COMPUTE_FRAMES);
                 final DoNothingAdapter cv = new DoNothingAdapter(cw);
@@ -76,14 +78,14 @@ public class TypeMaker {
      */
     public TypeMaker addProperties(final NewProperty... properties) {
         if (currentType == null || currentName == null) {
-            throw new IllegalStateException("Current type or name are not specified.");
+            throw new IllegalStateException(CURRENT_TYPE_OR_NAME_ARE_NOT_SPECIFIED);
         }
 
         if (properties == null || properties.length == 0) {
             return this;
         }
 
-        final Map<String, NewProperty> propertiesToAdd = new LinkedHashMap<String, NewProperty>();
+        final Map<String, NewProperty> propertiesToAdd = new LinkedHashMap<>();
         for (final NewProperty prop : properties) {
             propertiesToAdd.put(prop.name, prop);
         }
@@ -96,7 +98,6 @@ public class TypeMaker {
             currentType = cw.toByteArray();
             currentName = cv.getEnhancedName().replace('/', '.');
         } catch (final Exception e) {
-            e.printStackTrace();
             throw new IllegalStateException(e);
         }
 
@@ -115,7 +116,7 @@ public class TypeMaker {
     */
    public TypeMaker addClassAnnotations(final Annotation... annotations) {
        if (currentType == null || currentName == null) {
-           throw new IllegalStateException("Current type or name are not specified.");
+           throw new IllegalStateException(CURRENT_TYPE_OR_NAME_ARE_NOT_SPECIFIED);
        }
 
        if (annotations == null || annotations.length == 0) {
@@ -146,7 +147,6 @@ public class TypeMaker {
            currentType = cw.toByteArray();
            currentName = cv.getEnhancedName().replace('/', '.');
        } catch (final Exception e) {
-           e.printStackTrace();
            throw new IllegalStateException(e);
        }
 
@@ -165,7 +165,7 @@ public class TypeMaker {
            throw new IllegalStateException("New type name is 'null' or empty.");
        }
        if (currentType == null || currentName == null) {
-           throw new IllegalStateException("Current type or name are not specified.");
+           throw new IllegalStateException(CURRENT_TYPE_OR_NAME_ARE_NOT_SPECIFIED);
        }
        try {
            final ClassReader cr = new ClassReader(currentType);
@@ -183,10 +183,10 @@ public class TypeMaker {
     
    public TypeMaker modifySupertypeName(final String newSupertypeName) {
        if (StringUtils.isEmpty(newSupertypeName)) {
-           throw new IllegalStateException("New supertype name is 'null' or empty.");
+           throw new IllegalStateException(NEW_SUPERTYPE_NAME_IS_NULL_OR_EMPTY);
        }
        if (currentType == null || currentName == null) {
-           throw new IllegalStateException("Current type or name are not specified.");
+           throw new IllegalStateException(CURRENT_TYPE_OR_NAME_ARE_NOT_SPECIFIED);
        }
        try {
            final ClassReader cr = new ClassReader(currentType);
@@ -208,14 +208,14 @@ public class TypeMaker {
     */
    public TypeMaker modifyProperties(final NewProperty... propertyReplacements) {
        if (currentType == null || currentName == null) {
-           throw new IllegalStateException("Current type or name are not specified.");
+           throw new IllegalStateException(CURRENT_TYPE_OR_NAME_ARE_NOT_SPECIFIED);
        }
 
        if (propertyReplacements == null || propertyReplacements.length == 0) {
            return this;
        }
 
-       final Map<String, NewProperty> propertiesToAdapt = new HashMap<String, NewProperty>();
+       final Map<String, NewProperty> propertiesToAdapt = new HashMap<>();
        for (final NewProperty prop : propertyReplacements) {
            propertiesToAdapt.put(prop.name, prop);
        }
@@ -235,8 +235,8 @@ public class TypeMaker {
    }
 
    public Class<?> endModification() {
-       final Class<?> klass = loader.defineType(currentName, currentType, 0, currentType.length);
-       loader.putTypeIntoCache(currentName, new Pair<Class<?>, byte[]>(klass, currentType));
+       final Class<?> klass = cl.defineType(currentName, currentType, 0, currentType.length);
+       cl.registerClass(new Pair<Class<?>, byte[]>(klass, currentType));
 
        currentType = null;
        currentName = null;

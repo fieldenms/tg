@@ -147,7 +147,7 @@ public class DomainMetadataExpressionsGenerator {
     }
 
     ExpressionModel getReferencesCountPropForEntity(final Set<Pair<Class<? extends AbstractEntity<?>>, String>> references) {
-        if (references.size() == 0) {
+        if (references.isEmpty()) {
             return expr().val(0).model();
         }
 
