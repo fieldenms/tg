@@ -6,6 +6,7 @@ import static java.util.Optional.of;
 import static ua.com.fielden.platform.entity.AbstractFunctionalEntityForCollectionModification.MASTER_ENTITY_PROPERTY_NAME;
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.stripIfNeeded;
 import static ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader.isGenerated;
+import static ua.com.fielden.platform.utils.CollectionUtil.listOf;
 import static ua.com.fielden.platform.web.centre.AbstractCentreConfigAction.APPLIED_CRITERIA_ENTITY_NAME;
 import static ua.com.fielden.platform.web.centre.AbstractCentreConfigAction.CUSTOM_OBJECT_PROPERTY_NAME;
 
@@ -29,6 +30,7 @@ import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.serialisation.api.impl.TgJackson;
 import ua.com.fielden.platform.serialisation.jackson.EntityType;
+import ua.com.fielden.platform.utils.CollectionUtil;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.web.centre.AbstractCentreConfigAction;
 import ua.com.fielden.platform.web.centre.CentreConfigLoadAction;
@@ -105,15 +107,14 @@ public class ResultJsonSerialiser extends StdSerializer<Result> {
                 });
                 generator.writeObject(generatedTypes.stream().map(this::toEntityType).collect(Collectors.toList()));
             } else if (EntityUtils.isEntityType(type) && EntityQueryCriteria.class.isAssignableFrom(type)) {
-                final Class<AbstractEntity<?>> newType = (Class<AbstractEntity<?>>) type;
-                generator.writeObject(tgJackson.registerNewEntityType(newType));
+                generator.writeObject(toEntityType(type)); 
             } else {
                 generator.writeObject(type.getName());
                 if (isCentreConfigAction(type)) {
                     final Optional<Class<?>> possiblyUnregisteredCriteriaType = possiblyUnregisteredCriteriaTypeFrom(result.getInstance());
                     if (possiblyUnregisteredCriteriaType.isPresent()) { // isPresent was used here instead of ifPresent due to the need to pass exceptions from 'write' methods upward
                         generator.writeFieldName("@instanceTypes");
-                        generator.writeObject(new ArrayList<>(asList(tgJackson.registerNewEntityType((Class<AbstractEntity<?>>) possiblyUnregisteredCriteriaType.get())))); // deliberately used ArrayList for graceful serialisation
+                        generator.writeObject(listOf(toEntityType(possiblyUnregisteredCriteriaType.get()))); // deliberately used ArrayList for graceful serialisation
                     }
                 }
             }
@@ -130,7 +131,7 @@ public class ResultJsonSerialiser extends StdSerializer<Result> {
         generator.writeEndObject();
     }
     
-    public EntityType toEntityType(final Class<?> type) {
+    private EntityType toEntityType(final Class<?> type) {
         return tgJackson.registerNewEntityType((Class<AbstractEntity<?>>) type); 
     }
     

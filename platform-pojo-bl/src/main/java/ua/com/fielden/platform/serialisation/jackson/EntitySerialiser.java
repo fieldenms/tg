@@ -61,8 +61,6 @@ import ua.com.fielden.platform.utils.Pair;
 public class EntitySerialiser<T extends AbstractEntity<?>> {
     public static final String ENTITY_JACKSON_REFERENCES = "entity-references";
     public static final String ID_ONLY_PROXY_PREFIX = "_______id_only_proxy_______";
-    private final Class<T> type;
-    private final List<CachedProperty> properties;
     private final EntityType entityTypeInfo;
 
     public EntitySerialiser(final Class<T> type, final TgJacksonModule module, final ObjectMapper mapper, final EntityFactory factory, final EntityTypeInfoGetter entityTypeInfoGetter, final ISerialisationTypeEncoder serialisationTypeEncoder, final IIdOnlyProxiedEntityTypeCache idOnlyProxiedEntityTypeCache) {
@@ -84,10 +82,8 @@ public class EntitySerialiser<T extends AbstractEntity<?>> {
      *            -- <code>true</code> to create {@link EntitySerialiser} for {@link PropertyDescriptor} entity type, <code>false</code> otherwise
      */
     public EntitySerialiser(final Class<T> type, final TgJacksonModule module, final ObjectMapper mapper, final EntityFactory factory, final EntityTypeInfoGetter entityTypeInfoGetter, final boolean excludeNulls, final ISerialisationTypeEncoder serialisationTypeEncoder, final IIdOnlyProxiedEntityTypeCache idOnlyProxiedEntityTypeCache, final boolean propertyDescriptorType) {
-        this.type = type;
-
         // cache all properties annotated with @IsProperty
-        properties = createCachedProperties(type);
+        final List<CachedProperty> properties = createCachedProperties(type);
         this.entityTypeInfo = createEntityTypeInfo(type, properties, entityTypeInfoGetter, serialisationTypeEncoder);
 
         final EntityJsonSerialiser<T> serialiser = new EntityJsonSerialiser<>(type, properties, this.entityTypeInfo, excludeNulls, propertyDescriptorType);
