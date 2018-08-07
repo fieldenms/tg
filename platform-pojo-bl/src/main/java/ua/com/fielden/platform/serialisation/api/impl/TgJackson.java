@@ -1,5 +1,8 @@
 package ua.com.fielden.platform.serialisation.api.impl;
 
+import static com.fasterxml.jackson.databind.type.SimpleType.constructUnsafe;
+import static java.lang.String.format;
+
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -20,6 +23,7 @@ import com.fasterxml.jackson.databind.JavaType;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ser.DefaultSerializerProvider;
+import com.fasterxml.jackson.databind.type.SimpleType;
 import com.fasterxml.jackson.databind.type.TypeFactory;
 import com.fasterxml.jackson.databind.util.LRUMap;
 import com.google.common.base.Charsets;
@@ -30,10 +34,10 @@ import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
 import ua.com.fielden.platform.entity.proxy.IIdOnlyProxiedEntityTypeCache;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.reflection.ClassesRetriever;
-import ua.com.fielden.platform.reflection.exceptions.ReflectionException;
 import ua.com.fielden.platform.serialisation.api.ISerialisationClassProvider;
 import ua.com.fielden.platform.serialisation.api.ISerialisationTypeEncoder;
 import ua.com.fielden.platform.serialisation.api.ISerialiserEngine;
+import ua.com.fielden.platform.serialisation.exceptions.SerialisationException;
 import ua.com.fielden.platform.serialisation.jackson.EntitySerialiser;
 import ua.com.fielden.platform.serialisation.jackson.EntityType;
 import ua.com.fielden.platform.serialisation.jackson.EntityTypeInfoGetter;
@@ -73,6 +77,8 @@ public final class TgJackson extends ObjectMapper implements ISerialiserEngine {
     private final EntityTypeInfoGetter entityTypeInfoGetter;
     private final ISerialisationTypeEncoder serialisationTypeEncoder;
     public final IIdOnlyProxiedEntityTypeCache idOnlyProxiedEntityTypeCache;
+    
+    //private final LRUMap<?, ?> cachedFCAsToClear; EXPERIMENTAL
 
     public TgJackson(final EntityFactory entityFactory, final ISerialisationClassProvider provider, final ISerialisationTypeEncoder serialisationTypeEncoder, final IIdOnlyProxiedEntityTypeCache idOnlyProxiedEntityTypeCache) {
         this.module = new TgJacksonModule(this);
@@ -103,6 +109,17 @@ public final class TgJackson extends ObjectMapper implements ISerialiserEngine {
         this.module.addDeserializer((Class<List>) ClassesRetriever.findClass("java.util.Arrays$ArrayList"), new ArraysArrayListJsonDeserialiser(this, serialisationTypeEncoder));
 
         registerModule(module);
+        
+        // the following is required strictly for the use in clearCaches()
+        // EXPERIMENTAL
+//        try {
+//            final Field field = getDeserializationConfig().getClassIntrospector().getClass().getDeclaredField("_cachedFCA");
+//            field.setAccessible(true);
+//            cachedFCAsToClear = (LRUMap<?,?>) field.get(getDeserializationConfig().getClassIntrospector());
+//        } catch (final Exception ex) {
+//            throw new SerialisationException("Could obtain a field referene to _cachedFCA.", ex);
+//        }
+
     }
 
     /**
@@ -115,31 +132,30 @@ public final class TgJackson extends ObjectMapper implements ISerialiserEngine {
             if (EntityUtils.isPropertyDescriptor(type)) {
                 new EntitySerialiser<PropertyDescriptor<?>>((Class<PropertyDescriptor<?>>) ClassesRetriever.findClass("ua.com.fielden.platform.entity.meta.PropertyDescriptor"), this.module, this, this.factory, entityTypeInfoGetter, false, serialisationTypeEncoder, idOnlyProxiedEntityTypeCache, true);
             } else if (AbstractEntity.class.isAssignableFrom(type)) {
-                //registerNewEntityType((Class<AbstractEntity<?>>) type);
                 new EntitySerialiser<AbstractEntity<?>>((Class<AbstractEntity<?>>) type, module, this, factory, entityTypeInfoGetter, serialisationTypeEncoder, idOnlyProxiedEntityTypeCache);
             }
         }
     }
-
     
+    /**
+     * This is very much an experimental attempt to remedy accumulation of generated types inside Jackson caches.
+     */
     private void clearCaches() {
-        // TODO this is an experimental proof-of-concept code
-        // flushing cache is a synchronized operation, which would be ineffective in a concurrent setting...
-        getTypeFactory().clearCache();
+//        getTypeFactory().clearCache();
+        TypeFactory.defaultInstance().clearCache();
+        // flushing cache is a synchronized operation
         final DefaultSerializerProvider defaultSerializerProvider = (DefaultSerializerProvider) getSerializerProvider();
         defaultSerializerProvider.flushCachedSerializers();
-        try {
-            final Field field = getDeserializationConfig().getClassIntrospector().getClass().getDeclaredField("_cachedFCA");
-            field.setAccessible(true);
-            final LRUMap cachedFCAsToClear = (LRUMap) field.get(getDeserializationConfig().getClassIntrospector());
-            if (cachedFCAsToClear != null) {
-                //System.out.printf("========= clearing [%s]%n", cachedFCAsToClear);
-                cachedFCAsToClear.clear();
-            }
-        } catch (final Exception e) {
-            //throw new ReflectionException("We just could not get cachedFCAsToClear.");
-        }
-
+        // EXPERIMENTAL
+//        synchronized (this) {
+//            try {
+//                if (cachedFCAsToClear != null) {
+//                    cachedFCAsToClear.clear();
+//                }
+//            } catch (final Exception ex) {
+//                logger.error("Could not clear _cachedFCA.", ex);
+//            }
+//        }
     }
     
     /**
@@ -165,56 +181,57 @@ public final class TgJackson extends ObjectMapper implements ISerialiserEngine {
             final String contentString = IOUtils.toString(content, "UTF-8");
             logger.debug("JSON before deserialisation = |" + contentString + "|.");
 
-            final JavaType concreteType = extractConcreteType(getTypeFactory().constructType(type), () -> {
-                try {
-                    EntitySerialiser.getContext().reset();
-                    final JsonNode treeNode = readTree(contentString);
-                    return treeNode.get("@id") == null ? treeNode.get("@id_ref") : treeNode.get("@id");
-                } catch (final IOException e) {
-                    logger.error(e.getMessage(), e);
-                    throw new RuntimeException(e);
-                }
-            }, getTypeFactory(), serialisationTypeEncoder);
+            final JavaType concreteType;
+            if (EntityUtils.isEntityType(type)) {
+                concreteType = extractConcreteType(constructUnsafe(type), () -> {
+                    try {
+                        EntitySerialiser.getContext().reset();
+                        final JsonNode treeNode = readTree(contentString);
+                        return treeNode.get("@id") == null ? treeNode.get("@id_ref") : treeNode.get("@id");
+                    } catch (final IOException e) {
+                        logger.error(e.getMessage(), e);
+                        throw new SerialisationException(format("Could not construct JavaType during deserialisation of [%s].", type.getName()), e);
+                    }
+                }, getTypeFactory(), serialisationTypeEncoder);
 
+            } else {
+                concreteType = getTypeFactory().constructType(type);
+            }
             EntitySerialiser.getContext().reset();
             return readValue(contentString, concreteType);
         } catch (final IOException e) {
             logger.error(e.getMessage(), e);
-            throw new RuntimeException(e);
+            throw new SerialisationException(format("Error during deserialisation of [%s].", type.getName()), e);
         }
     }
 
     /**
      * Extracts concrete type for 'type' in case whether the 'type' is entity and abstract.
      *
-     * @param type
      * @param idNodeSupplier
      *            -- the supplier function to retrieve idNode
      * @param typeFactory
      * @return
      */
-    public static <T> JavaType extractConcreteType(final ResolvedType type, final Supplier<JsonNode> idNodeSupplier, final TypeFactory typeFactory, final ISerialisationTypeEncoder serialisationTypeEncoder) {
-        final JavaType concreteType;
+    public static JavaType extractConcreteType(final ResolvedType type, final Supplier<JsonNode> idNodeSupplier, final TypeFactory typeFactory, final ISerialisationTypeEncoder serialisationTypeEncoder) {
         if (EntityUtils.isEntityType(type.getRawClass()) && Modifier.isAbstract(type.getRawClass().getModifiers())) {
             // when we are trying to deserialise an entity of unknown concrete type (e.g. passing AbstractEntity.class) -- there is a need to determine concrete type from @id property
             final JsonNode idNode = idNodeSupplier.get();
             if (idNode != null && !idNode.isNull()) {
                 final String entityTypeId = idNode.asText().split("#")[0];
                 final Class<?> decodedType = serialisationTypeEncoder.decode(entityTypeId);
-                concreteType = typeFactory.constructType(decodedType);
+                return constructUnsafe(decodedType);
             } else {
-                concreteType = (JavaType) type;
+                return (JavaType) type;
             }
         } else {
-            concreteType = (JavaType) type;
+            return (JavaType) type;
         }
-        return concreteType;
     }
 
     @Override
     public byte[] serialise(final Object obj) {
         try {
-            // EntitySerialiser.getContext().reset();
             // logger.debug("Serialised pretty JSON = |" + new String(writerWithDefaultPrettyPrinter().writeValueAsBytes(obj), Charsets.UTF_8) + "|.");
             EntitySerialiser.getContext().reset();
             final byte[] bytes = writeValueAsBytes(obj); // default encoding is Charsets.UTF_8
@@ -223,7 +240,7 @@ public final class TgJackson extends ObjectMapper implements ISerialiserEngine {
             return bytes;
         } catch (final JsonProcessingException e) {
             logger.error(e.getMessage(), e);
-            throw new RuntimeException(e);
+            throw new SerialisationException("Serialisation failed.", e);
         }
     }
 
