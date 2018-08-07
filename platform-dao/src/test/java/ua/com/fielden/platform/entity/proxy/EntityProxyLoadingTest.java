@@ -92,7 +92,6 @@ public class EntityProxyLoadingTest extends AbstractDaoTestCase {
         final EntityResultQueryModel<TgVehicle> model = select(TgVehicle.class).where().prop("key").eq().val("CAR2").model();
         final TgVehicle vehicle = coVehicle.getEntity(from(model).model());
         assertNotNull("Should be not null", vehicle.getReplacedBy().getId());
-        System.out.println(vehicle.getReplacedBy().getClass().getName());
         shouldBeProxy(vehicle.getReplacedBy(), "model");
         shouldBeProxy(vehicle.getReplacedBy(), "key");
     }

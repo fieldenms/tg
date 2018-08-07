@@ -1,7 +1,6 @@
 package ua.com.fielden.platform.serialisation.jackson;
 
 import com.fasterxml.jackson.core.Version;
-import com.fasterxml.jackson.databind.JsonSerializer;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 
 import ua.com.fielden.platform.serialisation.api.SerialiserEngines;
