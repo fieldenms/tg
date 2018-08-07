@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.entity.query.generation.elements;
 
-import java.util.ArrayList;
+import static ua.com.fielden.platform.utils.CollectionUtil.listOf;
+
 import java.util.List;
 
 import ua.com.fielden.platform.entity.query.fluent.enums.ComparisonOperator;
@@ -75,11 +76,6 @@ public class ComparisonTest extends AbstractCondition {
 
     @Override
     protected List<IPropertyCollector> getCollection() {
-        return new ArrayList<IPropertyCollector>() {
-            {
-                add(leftOperand);
-                add(rightOperand);
-            }
-        };
+        return  listOf(leftOperand, rightOperand);
     }
 }
