@@ -90,7 +90,7 @@
                         groupDescProp: "groupDescProp",
                         valueProp: "valueProp",
                     },
-                    barColour: "#0288D1",
+                    barColour: d => "#0288D1",
                     barLabel: d => value("valueProp", d),
                     selectedColour: colour => shadeColor(colour, 0.3),
                     tooltip: d => "<b>" + value("groupKeyProp", d) + "</b>(<i>" + value("groupDescProp", d) + "</i>)",
@@ -418,7 +418,7 @@
             _updateBar(selection) {
                 selection.attr("id", d => "bar_" + value(this._options.dataPropertyNames.id, d));
 
-                selection.style("fill", d => this._isEntitySelected(d) ? this._options.selectedColour(this._options.barColour) : this._options.barColour)
+                selection.style("fill", d => this._isEntitySelected(d) ? this._options.selectedColour(this._options.barColour(d)) : this._options.barColour(d))
                     .attr("selected", d => this._isEntitySelected(d) ? "" : null)
                     .attr("x", d => this._xs(value(this._options.dataPropertyNames.groupKeyProp, d)))
                     .attr("y", d => {
@@ -530,7 +530,7 @@
 
             _selectBar(bar, marker, entity, select) {
                 const indexOfBar = this._selectedBars.indexOf(bar);
-                d3.select(bar).style("fill", select ? this._options.selectedColour(this._options.barColour) : this._options.barColour)
+                d3.select(bar).style("fill", select ? this._options.selectedColour(this._options.barColour(d)) : this._options.barColour(d))
                     .attr("selected", select ? "" : null);
                 d3.select(marker).attr("selected", select ? "" : null);
 
