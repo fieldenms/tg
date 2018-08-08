@@ -22,9 +22,11 @@ import ua.com.fielden.platform.basic.IValueMatcherWithFetch;
 import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
+import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ISingleOperandOrderable;
 import ua.com.fielden.platform.entity.query.model.ConditionModel;
 import ua.com.fielden.platform.entity.query.model.OrderingModel;
 import ua.com.fielden.platform.entity_centre.exceptions.EntityCentreExecutionException;
+import ua.com.fielden.platform.reflection.Reflector;
 import ua.com.fielden.platform.web.centre.CentreContext;
 
 /**
@@ -79,7 +81,9 @@ public abstract class AbstractSearchEntityByKeyWithCentreContext<T extends Abstr
      * @return alternative ordering model
      */
     protected OrderingModel makeOrderingModel(final String searchString) {
-        return orderBy().prop(KEY).asc().model();
+        final IEntityDao<T> companion = maybeCompanion.orElseThrow(CO_MISSING_EXCEPTION_SUPPLIER);
+        final ISingleOperandOrderable prop = orderBy().prop(KEY);
+        return Reflector.shouldBeInDescendingOrder(companion.getEntityType()) ? prop.desc().model() : prop.asc().model();
     }
 
     private OrderingModel composeOrderingModelForQuery(final String searchString, final Class<T> entityType) {
