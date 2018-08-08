@@ -39,11 +39,15 @@ public class CommonOpenCompoundMasterDao<T extends AbstractFunctionalEntityToOpe
             final EntityAggregates existEntity = coAggregates.getEntity(from(queryPart.modelAsAggregate()).model());
             final Map<String, Integer> newPresence = new HashMap<>();
             compoundMasterConfig.stream().forEach(pair -> {
-                newPresence.put(pair._3, existEntity.get(pair._3));
+                newPresence.put(pair._1, existEntity.get(pair._1));
             });
             entity.setEntityPresence(newPresence);
             entity.setCalculated(true);
         }
         return super.save(entity);
+    }
+
+    public void addViewBinding(final String binding, final Class<? extends AbstractEntity<?>> type, final String propertyName) {
+        compoundMasterConfig.add(T3.t3(binding, type, propertyName));
     }
 }

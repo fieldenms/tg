@@ -38,7 +38,7 @@ public abstract class AbstractFunctionalEntityToOpenCompoundMaster<K extends Abs
     private Class<? extends AbstractFunctionalEntityForCompoundMenuItem<K>> menuToOpen;
 
     @IsProperty(Object.class)
-    @Title(value = "Entity Presence", desc = "Desc")
+    @Title("Entity Presence")
     private Map<String, Integer> entityPresence = new HashMap<>();
 
     @IsProperty
