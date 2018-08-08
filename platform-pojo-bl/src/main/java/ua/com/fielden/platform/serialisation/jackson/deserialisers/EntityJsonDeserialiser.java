@@ -1,6 +1,5 @@
 package ua.com.fielden.platform.serialisation.jackson.deserialisers;
 
-import static java.util.stream.Collectors.toList;
 import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.getEditableDefault;
 import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.getRequiredDefault;
 import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.getValueChangeCountDefault;
@@ -26,6 +25,7 @@ import com.fasterxml.jackson.databind.JavaType;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.deser.std.StdDeserializer;
+import com.fasterxml.jackson.databind.type.SimpleType;
 import com.fasterxml.jackson.databind.type.TypeFactory;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
@@ -58,6 +58,7 @@ public class EntityJsonDeserialiser<T extends AbstractEntity<?>> extends StdDese
     private static final long serialVersionUID = 1L;
     private final EntityFactory factory;
     private final ObjectMapper mapper;
+    private final Field versionField;
     private final Class<T> type;
     private final List<CachedProperty> properties;
     private final ISerialisationTypeEncoder serialisationTypeEncoder;
@@ -73,6 +74,8 @@ public class EntityJsonDeserialiser<T extends AbstractEntity<?>> extends StdDese
         this.idOnlyProxiedEntityTypeCache = idOnlyProxiedEntityTypeCache;
 
         this.type = type;
+        versionField = Finder.findFieldByName(type, AbstractEntity.VERSION);
+        versionField.setAccessible(true);
         
         this.propertyDescriptorType = propertyDescriptorType;
     }
@@ -110,9 +113,9 @@ public class EntityJsonDeserialiser<T extends AbstractEntity<?>> extends StdDese
             final boolean uninstrumented = uninstrumentedJsonNode != null;
 
             final String[] proxiedProps = properties.stream()
-                    .map(cachedProp -> cachedProp.name)
+                    .map(cachedProp -> cachedProp.field().getName())
                     .filter(prop -> node.get(prop) == null)
-                    .collect(toList())
+                    .collect(Collectors.toList())
                     .toArray(new String[] {});
             final T entity;
             // Property Descriptor: key and desc properties of propDescriptor are set through setters, not through fields; avoid validators on these properties or otherwise isInitialising:=true would be needed here
@@ -143,29 +146,28 @@ public class EntityJsonDeserialiser<T extends AbstractEntity<?>> extends StdDese
             if (!versionJsonNode.isNull()) {
                 final Long version = versionJsonNode.asLong();
                 try {
-                    final Field versionField = Finder.findFieldByName(type, AbstractEntity.VERSION);
-                    versionField.setAccessible(true);
                     versionField.set(entity, version); // at this stage the field should be already accessible
                 } catch (final IllegalAccessException ex) {
-                    throw new EntityDeserialisationException("The field [" + AbstractEntity.VERSION + "] is not accessible. Fatal error during deserialisation process for entity [" + entity + "].", ex);
+                    throw new EntityDeserialisationException("The field [" + versionField + "] is not accessible. Fatal error during deserialisation process for entity [" + entity + "].", ex);
                 } catch (final IllegalArgumentException ex) {
-                    throw new EntityDeserialisationException("The field [" + AbstractEntity.VERSION + "] is not declared in entity with type [" + type.getName() + "]. Fatal error during deserialisation process for entity [" + entity + "].", ex);
+                    throw new EntityDeserialisationException("The field [" + versionField + "] is not declared in entity with type [" + type.getName() + "]. Fatal error during deserialisation process for entity [" + entity + "].", ex);
                 }
             }
 
-            final List<CachedProperty> nonProxiedProps = properties.stream().filter(prop -> node.get(prop.name) != null).collect(Collectors.toList()); 
+            final List<CachedProperty> nonProxiedProps = properties.stream().filter(prop -> node.get(prop.field().getName()) != null).collect(Collectors.toList()); 
             for (final CachedProperty prop : nonProxiedProps) {
-                final String propName = prop.name;
-                final Field propField = Finder.findFieldByName(entity.getClass(), propName);
-                final JsonNode propNode = node.get(propName);
-                final Object value = determineValue(propNode, propField);
+                final String propertyName = prop.field().getName();
+                final JsonNode propNode = node.get(propertyName);
+                final Object value = determineValue(propNode, prop.field());
                 try {
-                    prop.assignValue(entity, value); // at this stage the field should be already accessible
+                    prop.field().set(entity, value); // at this stage the field should be already accessible
                 } catch (final IllegalAccessException ex) {
-                    throw new EntityDeserialisationException("The field [" + propName + "] is not accessible. Fatal error during deserialisation process for entity [" + entity + "].", ex);
+                    throw new EntityDeserialisationException("The field [" + prop.field() + "] is not accessible. Fatal error during deserialisation process for entity [" + entity + "].", ex);
+                } catch (final IllegalArgumentException ex) {
+                    throw new EntityDeserialisationException("The field [" + prop.field() + "] is not declared in entity with type [" + type.getName() + "]. Fatal error during deserialisation process for entity [" + entity + "].", ex);
                 }
-                entity.getPropertyOptionally(propName).ifPresent(metaProperty -> 
-                    deserialiseMetaProperty((MetaProperty<Object>) metaProperty, node.get("@" + propName), propField)
+                entity.getPropertyOptionally(propertyName).map(metaProperty -> 
+                    deserialiseMetaProperty((MetaProperty<Object>) metaProperty, node.get("@" + propertyName), prop.field())
                 );
             }
             return entity;
@@ -186,7 +188,7 @@ public class EntityJsonDeserialiser<T extends AbstractEntity<?>> extends StdDese
         if (valueNode.isNull()) {
             value = null;
         } else {
-            final JavaType concreteType = concreteTypeOf(constructType(mapper.getTypeFactory(), propertyField), () -> valueNode.get("@id") == null ? valueNode.get("@id_ref") : valueNode.get("@id"));
+            final JavaType concreteType = concreteTypeOf(constructType(type, mapper.getTypeFactory(), propertyField), () -> valueNode.get("@id") == null ? valueNode.get("@id_ref") : valueNode.get("@id"));
             if (valueNode.isTextual() && EntityUtils.isEntityType(concreteType.getRawClass()) && valueNode.asText().startsWith(ID_ONLY_PROXY_PREFIX)) { // id-only proxy instance is represented as id-only proxy prefix concatenated with id number
                 final Long determinedId = Long.valueOf(valueNode.asText().replaceFirst(Pattern.quote(ID_ONLY_PROXY_PREFIX), ""));
                 value = EntityFactory.newPlainEntity(idOnlyProxiedEntityTypeCache.getIdOnlyProxiedTypeFor((Class) concreteType.getRawClass()), determinedId);
@@ -332,7 +334,7 @@ public class EntityJsonDeserialiser<T extends AbstractEntity<?>> extends StdDese
         }
     }
     
-    private ResolvedType constructType(final TypeFactory typeFactory, final Field propertyField) {
+    private static <T extends AbstractEntity<?>> ResolvedType constructType(final Class<T> type, final TypeFactory typeFactory, final Field propertyField) {
         final Class<?> fieldType = AbstractEntity.KEY.equals(propertyField.getName()) ? AnnotationReflector.getKeyType(type) : PropertyTypeDeterminator.stripIfNeeded(propertyField.getType());
         if (Set.class.isAssignableFrom(fieldType) || List.class.isAssignableFrom(fieldType)) {
             final ParameterizedType paramType = (ParameterizedType) propertyField.getGenericType();
@@ -346,6 +348,8 @@ public class EntityJsonDeserialiser<T extends AbstractEntity<?>> extends StdDese
             final Class<?> valueClass = PropertyTypeDeterminator.classFrom(paramType.getActualTypeArguments()[1]);
 
             return typeFactory.constructMapType((Class<? extends Map>) fieldType, keyClass, valueClass);
+        } else if (EntityUtils.isEntityType(fieldType)) {
+            return SimpleType.constructUnsafe(fieldType);
         } else {
             // TODO no other collectional types are supported at this stage -- should be added one by one
             return typeFactory.constructType(fieldType);
