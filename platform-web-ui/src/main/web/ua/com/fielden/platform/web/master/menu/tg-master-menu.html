@@ -389,8 +389,8 @@
                     if (newEntity) {
                         if (newEntity.get("calculated")) {
                             Object.keys(newEntity.get("entityPresence")).forEach(prop => {
-                                if (newEntity.get("entityPresence").get(prop)) {
-                                    const menuItem = Polymer.dom(this).querySelector('paper-item[item-title=' + prop + ']');
+                                if (newEntity.get("entityPresence")[prop]) {
+                                    const menuItem = Polymer.dom(this).querySelector('paper-item[item-title="' + prop + '"]');
                                     menuItem.children[0].style.color = "#039BE5";
                                 }
                             });

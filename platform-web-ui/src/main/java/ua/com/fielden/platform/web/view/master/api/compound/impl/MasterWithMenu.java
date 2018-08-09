@@ -118,7 +118,7 @@ class MasterWithMenu<T extends AbstractEntity<?>, F extends AbstractFunctionalEn
                              + "            self.canLeave = self.$.menu.canLeave.bind(self.$.menu);\n"
                              + "            // Overridden to support hidden properties conversion on the client-side ('key' and 'sectionTitle'). \n"
                              + "            self._isNecessaryForConversion = function (propertyName) { \n"
-                             + "                return ['key', 'sectionTitle', 'menuToOpen', 'entityPresence', 'calculated'].indexOf(propertyName) !== -1; \n"
+                             + "                return ['key', 'sectionTitle', 'menuToOpen', 'calculated'].indexOf(propertyName) !== -1; \n"
                              + "            }; \n"
                              + "            self._focusEmbededView = function () {\n"
                              + "                this.$.menu.focusView();\n"
