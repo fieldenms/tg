@@ -14,10 +14,12 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.AbstractFunctionalEntityToOpenCompoundMaster;
 import ua.com.fielden.platform.entity.query.EntityAggregates;
 import ua.com.fielden.platform.entity.query.IFilter;
+import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ICompleted;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ISubsequentCompletedAndYielded;
+import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IWhere0;
 import ua.com.fielden.platform.types.tuples.T3;
 
-public class CommonOpenCompoundMasterDao<T extends AbstractFunctionalEntityToOpenCompoundMaster<?>> extends CommonEntityDao<T> implements IOpenCompoundMasterAction<T> {
+public class CommonOpenCompoundMasterDao<T extends AbstractFunctionalEntityToOpenCompoundMaster<?>> extends CommonEntityDao<T>{
 
     private final IEntityAggregatesOperations coAggregates;
     private final List<T3<String, Class<? extends AbstractEntity<?>>, String>> compoundMasterConfig = new ArrayList<>();
@@ -49,5 +51,9 @@ public class CommonOpenCompoundMasterDao<T extends AbstractFunctionalEntityToOpe
 
     public void addViewBinding(final String binding, final Class<? extends AbstractEntity<?>> type, final String propertyName) {
         compoundMasterConfig.add(T3.t3(binding, type, propertyName));
+    }
+
+    public static <K extends AbstractEntity<?>> ICompleted<K> enhnaceEmbededCentreQuery(final IWhere0<K> where, final String prop, final Object value) {
+        return where.prop(prop).eq().val(value);
     }
 }
