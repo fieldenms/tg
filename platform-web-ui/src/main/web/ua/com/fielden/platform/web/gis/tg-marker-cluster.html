@@ -66,35 +66,49 @@
             maxClusterRadius: function (zoom) {
                 return 60;
             },
+            spiderfyOnMaxZoom: false,
+            zoomToBoundsOnClick: false,
             iconCreateFunction: function (cluster) {
-                const markers = cluster.getAllChildMarkers();
-                let chosenMarker; // = markers[0];
-                const count = markers.length;
-                for (let i = 0; i < count; i++) {
-                    if (markers[i] instanceof self._markerFactory.ArrowMarker) { // arrow marker
-                    
-                    } else { // circle marker
-                        return self._createCircleClusterIcon();
-                        
-                        // self._markerFactory.createClusterIcon(
-                        //     '<div class="img-overlay"><img src="resources/gis/images/circle-orange.png" /><div class="overlay" >&#x2194</div></div>'
-                        // );
-                    }
-                }
-                if (!chosenMarker) {
-                    chosenMarker = markers[Math.floor(count / 2)]; // use middle arrow marker as the marker for the cluster when no circle markers exist
-                }
-                
-                return self._markerFactory.createClusterIcon(
-                    '<div class="img-overlay"><img src="resources/gis/images/arrow-blue.png" style="-webkit-transform: rotate(' +
-                    chosenMarker.options.angle +
-                    'deg); " /><div class="overlay" style="-webkit-transform: rotate(' +
-                    (chosenMarker.options.angle + 90) +
-                    'deg); ">&#x2194</div></div>'
-                );
+                return self.iconCreateFunction(cluster, self);
+            }
+        });
+        self._getMarkers().on('clusterclick', function (cluster) {
+            cluster.layer.zoomToBounds();
+        });
+        self._getMarkers().on('clustermouseover', function (cluster) {
+            if (cluster.layer._iconObj && cluster.layer._iconObj.title && !cluster.layer.options.title) {
+                cluster.layer.refreshIconOptions({title: cluster.layer._iconObj.title}, true);
             }
         });
     };
+    
+    MarkerCluster.prototype.iconCreateFunction = function (cluster, self) {
+        const markers = cluster.getAllChildMarkers();
+        let chosenMarker; // = markers[0];
+        const count = markers.length;
+        for (let i = 0; i < count; i++) {
+            if (markers[i] instanceof self._markerFactory.ArrowMarker) { // arrow marker
+            
+            } else { // circle marker
+                return self._createCircleClusterIcon();
+                
+                // self._markerFactory.createClusterIcon(
+                //     '<div class="img-overlay"><img src="resources/gis/images/circle-orange.png" /><div class="overlay" >&#x2194</div></div>'
+                // );
+            }
+        }
+        if (!chosenMarker) {
+            chosenMarker = markers[Math.floor(count / 2)]; // use middle arrow marker as the marker for the cluster when no circle markers exist
+        }
+        
+        return self._markerFactory.createClusterIcon(
+            '<div class="img-overlay"><img src="resources/gis/images/arrow-blue.png" style="-webkit-transform: rotate(' +
+            chosenMarker.options.angle +
+            'deg); " /><div class="overlay" style="-webkit-transform: rotate(' +
+            (chosenMarker.options.angle + 90) +
+            'deg); ">&#x2194</div></div>'
+        );
+    }
     
     MarkerCluster.prototype.setShouldFitToBounds = function (shouldFitToBounds) {
         return this._progressBarUpdater.setShouldFitToBounds(shouldFitToBounds);
