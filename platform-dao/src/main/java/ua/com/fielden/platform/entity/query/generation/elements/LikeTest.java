@@ -1,9 +1,5 @@
 package ua.com.fielden.platform.entity.query.generation.elements;
 
-import static java.lang.String.format;
-import static ua.com.fielden.platform.entity.query.DbVersion.MSSQL;
-import static ua.com.fielden.platform.entity.query.DbVersion.MYSQL;
-import static ua.com.fielden.platform.entity.query.DbVersion.POSTGRESQL;
 import static ua.com.fielden.platform.utils.CollectionUtil.listOf;
 import static ua.com.fielden.platform.utils.EntityUtils.equalsEx;
 
@@ -32,7 +28,7 @@ public class LikeTest extends AbstractCondition {
 
     @Override
     public String sql() {
-        return dbVersion.likeSql(negated, leftOperand.sql(), rightOperand.sql(), caseInsensitive);// format("%s %s %s", prepareOperandSql(leftOperand), prepareLikeOperand(), prepareOperandSql(rightOperand));
+        return dbVersion.likeSql(negated, leftOperand.sql(), rightOperand.sql(), caseInsensitive);
     }
 
     @Override
