@@ -1,8 +1,14 @@
 package ua.com.fielden.platform.entity.query.generation.elements;
 
+import static java.util.Collections.emptyList;
+import static ua.com.fielden.platform.entity.query.generation.elements.EntPropStage.EXTERNAL;
+import static ua.com.fielden.platform.entity.query.generation.elements.EntPropStage.FINALLY_RESOLVED;
+import static ua.com.fielden.platform.entity.query.generation.elements.EntPropStage.PRELIMINARY_RESOLVED;
+import static ua.com.fielden.platform.entity.query.generation.elements.EntPropStage.UNPROCESSED;
+import static ua.com.fielden.platform.entity.query.generation.elements.EntPropStage.UNRESOLVED;
+import static ua.com.fielden.platform.utils.CollectionUtil.listOf;
+
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 
 public class EntProp implements ISingleOperand {
@@ -27,15 +33,15 @@ public class EntProp implements ISingleOperand {
 
     public EntPropStage getStage() {
         if (unresolved) {
-            return EntPropStage.UNRESOLVED;
+            return UNRESOLVED;
         } else if (external) {
-            return EntPropStage.EXTERNAL;
+            return EXTERNAL;
         } else if (isFinallyResolved()) {
-            return EntPropStage.FINALLY_RESOLVED;
+            return FINALLY_RESOLVED;
         } else if (isPreliminaryResolved()) {
-            return EntPropStage.PRELIMINARY_RESOLVED;
+            return PRELIMINARY_RESOLVED;
         } else {
-            return EntPropStage.UNPROCESSED;
+            return UNPROCESSED;
         }
     }
 
@@ -59,7 +65,6 @@ public class EntProp implements ISingleOperand {
     }
 
     public EntProp(final String name, final boolean external, final boolean generated) {
-        super();
         this.name = name;
         this.external = external;
         this.generated = generated;
@@ -75,17 +80,17 @@ public class EntProp implements ISingleOperand {
 
     @Override
     public List<EntProp> getLocalProps() {
-        return isExpression() ? expression.getLocalProps() : Arrays.asList(new EntProp[] { this });
+        return isExpression() ? expression.getLocalProps() : listOf(this);
     }
 
     @Override
     public List<EntQuery> getLocalSubQueries() {
-        return isExpression() ? expression.getLocalSubQueries() : Collections.<EntQuery> emptyList();
+        return isExpression() ? expression.getLocalSubQueries() : emptyList();
     }
 
     @Override
     public List<EntValue> getAllValues() {
-        return isExpression() ? expression.getAllValues() : Collections.<EntValue> emptyList();
+        return isExpression() ? expression.getAllValues() : emptyList();
     }
 
     public Class getPropType() {
@@ -195,7 +200,7 @@ public class EntProp implements ISingleOperand {
                 prop.setName(prefix + "." + prop.getName());
             }
 
-            final List<EntProp> unresolvedPropsFromSubqueries = new ArrayList<EntProp>();
+            final List<EntProp> unresolvedPropsFromSubqueries = new ArrayList<>();
             for (final EntQuery entQuery : getLocalSubQueries()) {
                 unresolvedPropsFromSubqueries.addAll(entQuery.getUnresolvedProps());
             }

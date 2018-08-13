@@ -14,7 +14,6 @@ public class EntityHibernateDeletionQueryProducer {
     private final Logger logger = Logger.getLogger(this.getClass());
 
     public EntityHibernateDeletionQueryProducer(String sql, Map<String, Object> queryParams) {
-        super();
         this.sql = sql;
         this.queryParams = queryParams;
     }

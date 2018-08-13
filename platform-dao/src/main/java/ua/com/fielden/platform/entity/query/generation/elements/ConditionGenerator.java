@@ -14,7 +14,6 @@ public class ConditionGenerator {
     private final DomainMetadataAnalyser domainMetadataAnalyser;
 
     public ConditionGenerator(final DomainMetadata domainMetadata) {
-        super();
         this.domainMetadataAnalyser = new DomainMetadataAnalyser(domainMetadata);
     }
 

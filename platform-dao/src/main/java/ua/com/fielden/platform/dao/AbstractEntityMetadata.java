@@ -15,7 +15,6 @@ public abstract class AbstractEntityMetadata<ET extends AbstractEntity<?>> {
     private final SortedMap<String, PropertyMetadata> props;
 
     protected AbstractEntityMetadata(final Class<ET> type, final SortedMap<String, PropertyMetadata> props) {
-        super();
         this.type = type;
         if (type == null) {
             throw new IllegalArgumentException("Missing entity type!");
@@ -36,7 +35,7 @@ public abstract class AbstractEntityMetadata<ET extends AbstractEntity<?>> {
     }
 
     public Set<String> getNotNullableProps() {
-        final Set<String> result = new HashSet<String>();
+        final Set<String> result = new HashSet<>();
         for (final Entry<String, PropertyMetadata> entry : props.entrySet()) {
             if (!entry.getValue().isNullable()) {
                 result.add(entry.getKey());
@@ -112,5 +111,4 @@ public abstract class AbstractEntityMetadata<ET extends AbstractEntity<?>> {
         }
         return result;
     }
-
 }

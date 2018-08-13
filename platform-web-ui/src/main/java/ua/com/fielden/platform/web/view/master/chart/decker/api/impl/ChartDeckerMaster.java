@@ -101,7 +101,7 @@ public class ChartDeckerMaster<T extends AbstractEntity<?>> implements IMaster<T
                     + "        groupDescProp: '" + deck.getGroupDescProperty() + "',\n"
                     + "        valueProp: " + generateValueAccessor(deck.getPropertyType(), deck.getAggregationProperty()) + "\n"
                     + "    },\n"
-                    + "    barColour: '" + deck.getBarColour() + "',\n"
+                    + "    barColour: d => '" + deck.getBarColour() + "',\n"
                     + "    barLabel: this._labelFormatter('" + deck.getPropertyType().getSimpleName() + "', '" + deck.getAggregationProperty() + "'),\n"
                     + "    tooltip: " + generateTooltipRetriever(deck, deckIndex) + (deck.getAction() != null ? ",\n" : "\n")
                     + (deck.getAction() != null ? "    click: this._click(" + deckIndex + ")\n" : "")
