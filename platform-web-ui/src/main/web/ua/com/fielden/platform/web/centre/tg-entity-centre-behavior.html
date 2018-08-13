@@ -866,6 +866,7 @@
                         console.log("current page invocation");
                         self.runInsertionPointActions();
                         self.restoreActiveElement();
+                        self.fire("tg-entity-centre-refreshed", {entities: self.$.egi.entities, pageCount: self.$.selection_criteria.pageCount});
                     });
             },
 
