@@ -19,7 +19,6 @@ public class QueryExecutionContext {
     private final IdOnlyProxiedEntityTypeCache idOnlyProxiedEntityTypeCache;
     
     public QueryExecutionContext(Session session, EntityFactory entityFactory, ICompanionObjectFinder coFinder, DomainMetadata domainMetadata, IFilter filter, String username, IUniversalConstants universalConstants, final IdOnlyProxiedEntityTypeCache idOnlyProxiedEntityTypeCache) {
-        super();
         this.session = session;
         this.entityFactory = entityFactory;
         this.coFinder = coFinder;

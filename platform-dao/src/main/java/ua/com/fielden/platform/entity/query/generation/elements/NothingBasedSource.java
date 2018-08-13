@@ -1,5 +1,7 @@
 package ua.com.fielden.platform.entity.query.generation.elements;
 
+import static ua.com.fielden.platform.entity.query.DbVersion.ORACLE;
+
 import java.util.Collections;
 import java.util.List;
 
@@ -26,7 +28,7 @@ public class NothingBasedSource extends AbstractSource {
 
     @Override
     public String sql() {
-        return dbVersion == DbVersion.ORACLE ? " DUAL " : " ";
+        return dbVersion == ORACLE ? " DUAL " : " ";
     }
 
     @Override

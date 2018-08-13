@@ -8,7 +8,6 @@ public class GroupBy {
     }
 
     public GroupBy(final ISingleOperand operand) {
-        super();
         this.operand = operand;
     }
 

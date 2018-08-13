@@ -7,6 +7,10 @@ import java.util.List;
 public class OperandsBasedSet implements ISetOperand {
     private final List<ISingleOperand> operands;
 
+    public OperandsBasedSet(final List<ISingleOperand> operands) {
+        this.operands = operands;
+    }
+
     @Override
     public String sql() {
         final StringBuffer sb = new StringBuffer();
@@ -22,14 +26,10 @@ public class OperandsBasedSet implements ISetOperand {
         return sb.toString();
     }
 
-    public OperandsBasedSet(final List<ISingleOperand> operands) {
-        super();
-        this.operands = operands;
-    }
 
     @Override
     public List<EntProp> getLocalProps() {
-        final List<EntProp> result = new ArrayList<EntProp>();
+        final List<EntProp> result = new ArrayList<>();
         for (final ISingleOperand operand : operands) {
             result.addAll(operand.getLocalProps());
         }
@@ -38,7 +38,7 @@ public class OperandsBasedSet implements ISetOperand {
 
     @Override
     public List<EntQuery> getLocalSubQueries() {
-        final List<EntQuery> result = new ArrayList<EntQuery>();
+        final List<EntQuery> result = new ArrayList<>();
         for (final ISingleOperand operand : operands) {
             result.addAll(operand.getLocalSubQueries());
         }
@@ -47,7 +47,7 @@ public class OperandsBasedSet implements ISetOperand {
 
     @Override
     public List<EntValue> getAllValues() {
-        final List<EntValue> result = new ArrayList<EntValue>();
+        final List<EntValue> result = new ArrayList<>();
         for (final ISingleOperand operand : operands) {
             result.addAll(operand.getAllValues());
         }

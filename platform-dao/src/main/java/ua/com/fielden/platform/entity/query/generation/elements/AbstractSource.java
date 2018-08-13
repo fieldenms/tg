@@ -1,5 +1,9 @@
 package ua.com.fielden.platform.entity.query.generation.elements;
 
+import static ua.com.fielden.platform.entity.AbstractEntity.ID;
+import static ua.com.fielden.platform.entity.query.fluent.enums.ComparisonOperator.EQ;
+import static ua.com.fielden.platform.entity.query.fluent.enums.JoinType.IJ;
+import static ua.com.fielden.platform.entity.query.fluent.enums.JoinType.LJ;
 import static ua.com.fielden.platform.utils.EntityUtils.isPersistedEntityType;
 import static ua.com.fielden.platform.utils.EntityUtils.isSyntheticBasedOnPersistentEntityType;
 
@@ -13,12 +17,9 @@ import java.util.TreeMap;
 import org.hibernate.type.LongType;
 
 import ua.com.fielden.platform.dao.DomainMetadataAnalyser;
-import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.DbVersion;
-import ua.com.fielden.platform.entity.query.fluent.enums.ComparisonOperator;
 import ua.com.fielden.platform.entity.query.fluent.enums.JoinType;
 import ua.com.fielden.platform.entity.query.model.ExpressionModel;
-import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
 
 public abstract class AbstractSource implements ISource {
@@ -145,7 +146,7 @@ public abstract class AbstractSource implements ISource {
 
     protected PropResolutionInfo propAsImplicitId(final EntProp prop) {
         if ((isPersistedEntityType(sourceType()) || isSyntheticBasedOnPersistentEntityType(sourceType())) && prop.getName().equalsIgnoreCase(getAlias())) {
-            final PurePropInfo idProp = new PurePropInfo(AbstractEntity.ID, /*sourceType()*/Long.class, LongType.INSTANCE, false || isNullable());
+            final PurePropInfo idProp = new PurePropInfo(ID, /*sourceType()*/Long.class, LongType.INSTANCE, false || isNullable());
             return new PropResolutionInfo(prop, getAlias(), idProp, idProp, true); // id property is meant here, but is it for all contexts?
         } else {
             return null;
@@ -197,7 +198,6 @@ public abstract class AbstractSource implements ISource {
         private ExpressionModel expressionModel;
 
         public PurePropInfo(final String name, final Class type, final Object hibType, final boolean nullable) {
-            super();
             this.name = name;
             this.type = type;
             this.hibType = hibType;
@@ -290,13 +290,13 @@ public abstract class AbstractSource implements ISource {
     }
 
     protected SortedMap<PurePropInfo, List<EntProp>> determineGroups(final List<PropResolutionInfo> refProps) {
-        final SortedMap<PurePropInfo, List<EntProp>> result = new TreeMap<PurePropInfo, List<EntProp>>();
+        final SortedMap<PurePropInfo, List<EntProp>> result = new TreeMap<>();
 
         for (final PropResolutionInfo propResolutionInfo : refProps) {
             if (!propResolutionInfo.entProp.isFinallyResolved()) {
-                if (!propResolutionInfo.allExplicit() && EntityUtils.isPersistedEntityType(propResolutionInfo.explicitProp.type)) {
+                if (!propResolutionInfo.allExplicit() && isPersistedEntityType(propResolutionInfo.explicitProp.type)) {
                     if (!result.containsKey(propResolutionInfo.explicitProp)) {
-                        result.put(propResolutionInfo.explicitProp, new ArrayList<EntProp>());
+                        result.put(propResolutionInfo.explicitProp, new ArrayList<>());
                     }
                     result.get(propResolutionInfo.explicitProp).add(propResolutionInfo.entProp);
                 }
@@ -311,16 +311,16 @@ public abstract class AbstractSource implements ISource {
         final EntProp leftEntProp = new EntProp(leftProp, false, true);
         final EntProp rightEntProp = new EntProp(rightProp, false, true);
         rightEntProp.setSource(source);
-        return new Conditions(new ComparisonTest(leftEntProp, ComparisonOperator.EQ, rightEntProp));
+        return new Conditions(new ComparisonTest(leftEntProp, EQ, rightEntProp));
     }
 
     protected JoinType joinType(final boolean leftJoin) {
-        return leftJoin ? JoinType.LJ : JoinType.IJ;
+        return leftJoin ? LJ : IJ;
     }
 
     @Override
     public List<CompoundSource> generateMissingSources() {
-        final List<CompoundSource> result = new ArrayList<CompoundSource>();
+        final List<CompoundSource> result = new ArrayList<>();
 
         final SortedMap<PurePropInfo, List<EntProp>> groups = determineGroups(getReferencingProps());
 
