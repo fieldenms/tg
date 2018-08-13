@@ -315,7 +315,7 @@
                 this.detached = false;
                 Polymer.dom(this.$.pm).appendChild(this.$.insertionPointContent);
                 Polymer.dom.flush();
-                if (this.contextRetriever) {
+                if (this.contextRetriever && this.contextRetriever().$.centreResultContainer) {
                     this.contextRetriever().$.centreResultContainer.focus();    
                 }
                 this.notifyResize();
