@@ -404,14 +404,16 @@
                     if (potentiallySavedOrNewEntity.isValidWithoutException()) {
                         // in case where overridden _resetState function will not be invoked it is necessary to reset _continuations after successful save
                         this._continuations = {};
-
-                        // Context creator should assigned only after successful master entity saving.
-                        // In case of successful assignment it gets promoted to embedded views by means of binding.
-                        this._createContextHolderForEmbeddedViews = (function () {
-                            const holder = this._extractModifiedPropertiesHolder(this._currBindingEntity, this._originalBindingEntity);
-                            this._reflector().setCustomProperty(this.savingContext, "@@funcEntityType", this.entityType);
-                            return this._reflector().createSavingInfoHolder(this._originallyProducedEntity, this._reset(holder), this.savingContext, this._continuations);
-                        }).bind(this);
+                        
+                        if (!this.shouldSkipUi()) { // need to skip propagation of context creator to embedded views in case where the master has skipUi -- no need to trigger embedded view activation for non-visible master
+                            // Context creator should assigned only after successful master entity saving.
+                            // In case of successful assignment it gets promoted to embedded views by means of binding.
+                            this._createContextHolderForEmbeddedViews = (function () {
+                                const holder = this._extractModifiedPropertiesHolder(this._currBindingEntity, this._originalBindingEntity);
+                                this._reflector().setCustomProperty(this.savingContext, "@@funcEntityType", this.entityType);
+                                return this._reflector().createSavingInfoHolder(this._originallyProducedEntity, this._reset(holder), this.savingContext, this._continuations);
+                            }).bind(this);
+                        }
                     }
 
                     const _exceptionOccured = potentiallySavedOrNewEntity.exceptionOccured();
