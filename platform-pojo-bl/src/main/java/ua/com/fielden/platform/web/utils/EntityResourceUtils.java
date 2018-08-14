@@ -3,6 +3,7 @@ package ua.com.fielden.platform.web.utils;
 import static java.lang.String.format;
 import static java.util.Locale.getDefault;
 import static org.apache.commons.lang.StringUtils.uncapitalize;
+import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
 import static ua.com.fielden.platform.entity.factory.EntityFactory.newPlainEntity;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
@@ -30,7 +31,9 @@ import java.util.stream.Stream;
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 
+import ua.com.fielden.platform.attachment.Attachment;
 import ua.com.fielden.platform.basic.autocompleter.PojoValueMatcher;
+import ua.com.fielden.platform.companion.IEntityReader;
 import ua.com.fielden.platform.criteria.generator.impl.CriteriaReflector;
 import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.dao.QueryExecutionModel;
@@ -45,6 +48,7 @@ import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.entity.fetch.IFetchProvider;
 import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
+import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.entity.validation.EntityExistsValidator;
 import ua.com.fielden.platform.entity_centre.review.criteria.EntityQueryCriteria;
@@ -509,14 +513,15 @@ public class EntityResourceUtils {
                 return propertyCompanion.findById(reflectedValueId.get(), fetchForProperty(companionFinder, type, propertyName).fetchModel());
             } else if (EntityUtils.isCompositeEntity(entityPropertyType)) {
                 logger.debug(format("KEY-based restoration of value: type [%s] property [%s] propertyType [%s] id [%s] reflectedValue [%s].", type.getSimpleName(), propertyName, entityPropertyType.getSimpleName(), reflectedValueId, reflectedValue));
-                final String compositeKeyAsString = buildSearchByValue(propertyType, entityPropertyType, (String) reflectedValue);
-                final EntityResultQueryModel<AbstractEntity<?>> model = select(entityPropertyType).where().//
-                /*      */prop(AbstractEntity.KEY).iLike().anyOfValues((Object[]) MiscUtilities.prepare(Arrays.asList(compositeKeyAsString))).//
-                /*      */model();
-                final QueryExecutionModel<AbstractEntity<?>, EntityResultQueryModel<AbstractEntity<?>>> qem = from(model).with(fetchForProperty(companionFinder, type, propertyName).fetchModel()).model();
+                final String compositeKeyAsString = MiscUtilities.prepare(prepSearchStringForCompositeKey(propertyType, entityPropertyType, (String) reflectedValue));
+                final EntityResultQueryModel<AbstractEntity<?>> model = select(entityPropertyType).where().prop(KEY).iLike().val(compositeKeyAsString).model();
+                final fetch<AbstractEntity<?>> fetchModel = fetchForProperty(companionFinder, type, propertyName).fetchModel();
+                final QueryExecutionModel<AbstractEntity<?>, EntityResultQueryModel<AbstractEntity<?>>> qem = from(model).with(fetchModel).model();
                 try {
                     final IEntityDao<AbstractEntity<?>> propertyCompanion = companionFinder.<IEntityDao<AbstractEntity<?>>, AbstractEntity<?>> find(entityPropertyType, true);
-                    return propertyCompanion.getEntity(qem);
+                    final Object converted = propertyCompanion.getEntity(qem);
+                    
+                    return orElseFindByKey(converted, propertyCompanion, fetchModel, compositeKeyAsString);
                 } catch (final UnexpectedNumberOfReturnedEntities e) {
                     return null;
                 }
@@ -615,6 +620,29 @@ public class EntityResourceUtils {
     }
 
     /**
+     * Returns {@code converted} is not {@code null}. Otherwise, tries to call {@link IEntityReader#findByKeyAndFetch(fetch, Object...)}.
+     * If that call is unsuccessful then {@code null} is returned.
+     * <p>
+     * The main purpose of this behaviour is to support ad hoc creation of entities with composite keys, similar as for entities with simple keys.
+     *
+     * @param converted
+     * @param propertyCompanion
+     * @param fetchModel
+     * @param compositeKeyAsString
+     * @return
+     */
+    private static Object orElseFindByKey(Object converted, final IEntityDao<AbstractEntity<?>> propertyCompanion, fetch<AbstractEntity<?>> fetchModel, String compositeKeyAsString) {
+        if (converted == null) {
+            try {
+                return propertyCompanion.findByKeyAndFetch(fetchModel, compositeKeyAsString);
+            } catch (final Exception ex) {
+                // we can safely ignore any exceptions in this case
+            }
+        }
+        return converted;
+    }
+
+    /**
      * Extracts from number-like <code>reflectedValue</code> its {@link Long} representation.
      *
      * @param reflectedValue
@@ -633,19 +661,23 @@ public class EntityResourceUtils {
     }
 
     /**
-     * If one of the composite key members is of type {@link PropertyDescriptor} then the search-by value needs to be modified by converting the provided string representation
+     * This method prepares a search-by string to search for an entity of type {@code propertyType}, which has a composite key.
+     * Special processing is required for some specific platform-level entity types such as {@link PropertyDescriptor}:
+     * <ul>
+     * <li>If one of the composite key members is of type {@link PropertyDescriptor} then the search-by value needs to be modified by converting the provided string representation
      * for property descriptors to the required form.
+     * </ul>
      *
      * @param propertyType
      * @param entityPropertyType
      * @param compositeKeyAsString
      * @return
      */
-    private static String buildSearchByValue(final Class<?> propertyType, final Class<AbstractEntity<?>> entityPropertyType, final String compositeKeyAsString) {
+    private static String prepSearchStringForCompositeKey(final Class<?> propertyType, final Class<AbstractEntity<?>> entityPropertyType, final String compositeKeyAsString) {
         // if one or more composite key members are of type ProperyDescriptor then those values need to be converted to a DB aware representation
         // regrettable this process is error prone due to a potential use of the key member separator as part of property titles...
         final List<Field> keyMembers = Finder.getKeyMembers(entityPropertyType);
-        final boolean hasPropDescKeyMembers = keyMembers.stream().filter(f -> EntityUtils.isPropertyDescriptor(f.getType())).findFirst().map(f -> true).orElse(false);
+        final boolean hasPropDescKeyMembers = keyMembers.stream().anyMatch(f -> EntityUtils.isPropertyDescriptor(f.getType()));
         // do we have key members of type PropertyDescriptor
         if (!hasPropDescKeyMembers) {
             return compositeKeyAsString;
