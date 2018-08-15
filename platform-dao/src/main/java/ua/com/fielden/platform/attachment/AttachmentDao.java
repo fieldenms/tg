@@ -45,6 +45,7 @@ import ua.com.fielden.platform.attachment.validators.CanBeUsedAsPrevAttachmentRe
 import ua.com.fielden.platform.cypher.HexString;
 import ua.com.fielden.platform.dao.CommonEntityDao;
 import ua.com.fielden.platform.dao.annotations.SessionRequired;
+import ua.com.fielden.platform.entity.DynamicEntityKey;
 import ua.com.fielden.platform.entity.annotation.EntityType;
 import ua.com.fielden.platform.entity.fetch.IFetchProvider;
 import ua.com.fielden.platform.entity.query.IFilter;
@@ -106,7 +107,7 @@ public class AttachmentDao extends CommonEntityDao<Attachment> implements IAttac
     @SessionRequired
     public Attachment findByKeyAndFetch(final fetch<Attachment> fetchModel, final Object... keyValues) {
         // is this a special case of partial match by title?
-        if (keyValues != null && keyValues.length == 1) {
+        if (keyValues != null && keyValues.length == 1 && keyValues[0] instanceof String) {
             final String[] keys = ((String) keyValues[0]).split(KEY_MEMBER_SEPARATOR);
             final String potentialUri = keys[0].trim();
             return newAsHyperlink(potentialUri).orElse(null);
