@@ -35,10 +35,10 @@ import ua.com.fielden.platform.types.Money;
 /**
  * Entity class used for testing.
  *
- * @author 01es
+ * @author TG Team
  *
  */
-@KeyType(String.class)
+@KeyType(value = String.class, descendingOrder = true)
 @KeyTitle(value = "Entity No", desc = "Key Property")
 @DescTitle(value = "Description", desc = "Description Property")
 @DescRequired("Property \"{{prop-title}}\" in entity \"{{entity-title}}\" does not permit blank values.")

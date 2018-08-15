@@ -580,16 +580,6 @@ public final class Reflector {
     }
     
     /**
-     * A convenient method checking whether entity values should be enlisted in descending (key) order.
-     *
-     * @param type
-     * @return
-     */
-    public static boolean shouldBeInDescendingOrder(final Class<? extends AbstractEntity<?>> type) {
-        return AnnotationReflector.getAnnotation(type, KeyType.class).descendingOrder();
-    }
-    
-    /**
      * Returns <code>true</code> if the specified property is proxied for a given entity instance.
      *  
      * @param entity
