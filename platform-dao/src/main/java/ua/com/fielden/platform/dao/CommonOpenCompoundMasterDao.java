@@ -54,6 +54,7 @@ public class CommonOpenCompoundMasterDao<T extends AbstractFunctionalEntityToOpe
             parameters.stream().map(paramMap -> enhanceParametersWithCustomValue(paramMap._3, entity.getKey()))
                     .flatMap(m -> m.entrySet().stream())
                     .forEach(entry -> queryParams.put(entry.getKey(), entry.getValue()));
+            additionalParameters.entrySet().stream().forEach(entry -> queryParams.put(entry.getKey(), entry.getValue().apply(entity.getKey())));
             final EntityAggregates existEntity = coAggregates.getEntity(from(queryPart.modelAsAggregate()).with(queryParams).model());
             final Map<String, Integer> newPresence = new HashMap<>();
             compoundMasterConfig.stream().forEach(pair -> {
@@ -68,20 +69,28 @@ public class CommonOpenCompoundMasterDao<T extends AbstractFunctionalEntityToOpe
         return super.save(entity);
     }
 
-    public void addViewBinding(final String binding, final Class<? extends AbstractEntity<?>> type, final String propertyName) {
-        compoundMasterConfig.add(t3(binding, type, (where, value) -> enhanceEmbededCentreQuery(where, propertyName, value)));
+    @SafeVarargs
+    public final void addViewBinding(final String binding, final Class<? extends AbstractEntity<?>> type, final String propertyName, final T2<String, String>... paramConfig) {
+        addViewBinding(binding, type, (where, value) -> enhanceEmbededCentreQuery(where, propertyName, value), paramConfig);
     }
 
-    public void addViewBinding(final String binding, final Class<? extends AbstractEntity<?>> type, final String propertyName, final String relativeValueProperty) {
-        compoundMasterConfig.add(t3(binding, type, (where, value) -> enhanceEmbededCentreQuery(where, propertyName, value, relativeValueProperty)));
+    @SafeVarargs
+    public final void addViewBinding(final String binding, final Class<? extends AbstractEntity<?>> type, final String propertyName, final String relativeValueProperty, final T2<String, String>... paramConfig) {
+        addViewBinding(binding, type, (where, value) -> enhanceEmbededCentreQuery(where, propertyName, value, relativeValueProperty), paramConfig);
     }
 
-    public void addViewBinding(final String binding, final Class<? extends AbstractEntity<?>> type, final BiFunction<IWhere0<? extends AbstractEntity<?>>, Object, ICompleted<? extends AbstractEntity<?>>> queryEnhnacer) {
+    @SafeVarargs
+    public final void addViewBinding(
+            final String binding,
+            final Class<? extends AbstractEntity<?>> type,
+            final BiFunction<IWhere0<? extends AbstractEntity<?>>, Object, ICompleted<? extends AbstractEntity<?>>> queryEnhnacer,
+            final T2<String, String>... paramConfig) {
         compoundMasterConfig.add(t3(binding, type, queryEnhnacer));
+        additionalParameters.putAll(Arrays.stream(paramConfig).collect(Collectors.toMap(entry -> entry._1, entry -> (value) -> getValue(value, entry._2))));
     }
 
-    @SuppressWarnings("unchecked")
-    public void addViewBinding(final String binding, final Class<? extends AbstractEntity<?>> type, final T2<String, String>... parameters) {
+    @SafeVarargs
+    public final void addViewBinding(final String binding, final Class<? extends AbstractEntity<?>> type, final T2<String, String>... parameters) {
         this.parameters.add(t3(binding, type, Arrays.stream(parameters).collect(Collectors.toMap(parameter -> parameter._1, parameter -> (value) -> getValue(value, parameter._2)))));
     }
 
