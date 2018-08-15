@@ -17,6 +17,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
 
 import org.apache.log4j.Logger;
 
@@ -46,8 +47,8 @@ public final class AnnotationReflector {
     private static final Logger LOGGER = Logger.getLogger(AnnotationReflector.class);
 
     /** A global lazy static cache of annotations, which is used for annotation information retrieval. */
-    private static final Cache<Class<?>, Map<String, Map<Class<? extends Annotation>, Annotation>>> methodAnnotations = CacheBuilder.newBuilder().weakKeys().concurrencyLevel(50).build();
-    private static final Cache<Class<?>, Map<String, Map<Class<? extends Annotation>, Annotation>>> fieldAnnotations = CacheBuilder.newBuilder().weakKeys().concurrencyLevel(50).build();
+    private static final Cache<Class<?>, Map<String, Map<Class<? extends Annotation>, Annotation>>> methodAnnotations = CacheBuilder.newBuilder().expireAfterAccess(10, TimeUnit.SECONDS).concurrencyLevel(50).build();
+    private static final Cache<Class<?>, Map<String, Map<Class<? extends Annotation>, Annotation>>> fieldAnnotations = CacheBuilder.newBuilder().expireAfterAccess(10, TimeUnit.SECONDS).concurrencyLevel(50).build();
 
     /**
      * Let's hide default constructor, which is not needed for a static class.
@@ -260,7 +261,7 @@ public final class AnnotationReflector {
      * @param forType
      * @return
      */
-    private static <T extends Annotation> T getAnnotationForClass(final Class<T> annotationType, final Class<?> forType) {
+    public static <T extends Annotation> T getAnnotationForClass(final Class<T> annotationType, final Class<?> forType) {
         Class<?> runningType = forType;
         while (runningType != null && !runningType.equals(Object.class)) { // need to iterated thought entity hierarchy
             if (runningType.isAnnotationPresent(annotationType)) {

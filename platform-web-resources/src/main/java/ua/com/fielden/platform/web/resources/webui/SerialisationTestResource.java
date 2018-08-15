@@ -202,7 +202,7 @@ public class SerialisationTestResource extends AbstractWebResource {
                     
                     final List<CachedProperty> props = EntitySerialiser.createCachedProperties(e1.getType());
                     for (final CachedProperty prop : props) {
-                        final String propName = prop.name;
+                        final String propName = prop.field().getName();
                         if (prop.getPropertyType() != null) {
                             // check property meta-info equality
                             if (e1Instrumented) {

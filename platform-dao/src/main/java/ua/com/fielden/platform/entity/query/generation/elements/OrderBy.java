@@ -6,6 +6,18 @@ public class OrderBy {
     private Yield yield;
     private final boolean desc;
 
+    public OrderBy(final ISingleOperand operand, final boolean desc) {
+        this.operand = operand;
+        this.yieldName = null;
+        this.desc = desc;
+    }
+
+    public OrderBy(final String yieldName, final boolean desc) {
+        this.operand = null;
+        this.yieldName = yieldName;
+        this.desc = desc;
+    }
+
     public String sql() {
         return sqlWithoutSortOrder() + (desc ? " DESC" : " ASC");
     }
@@ -21,20 +33,6 @@ public class OrderBy {
     @Override
     public String toString() {
         return (yieldName == null ? operand : yieldName) + (desc ? " DESC" : " ASC");
-    }
-
-    public OrderBy(final ISingleOperand operand, final boolean desc) {
-        super();
-        this.operand = operand;
-        this.yieldName = null;
-        this.desc = desc;
-    }
-
-    public OrderBy(final String yieldName, final boolean desc) {
-        super();
-        this.operand = null;
-        this.yieldName = yieldName;
-        this.desc = desc;
     }
 
     public ISingleOperand getOperand() {

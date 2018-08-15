@@ -1,24 +1,34 @@
 package ua.com.fielden.platform.entity.query.generation.elements;
 
-import java.util.ArrayList;
+import static ua.com.fielden.platform.utils.CollectionUtil.listOf;
+import static ua.com.fielden.platform.utils.EntityUtils.equalsEx;
+
 import java.util.List;
+
+import ua.com.fielden.platform.entity.query.DbVersion;
+import ua.com.fielden.platform.entity.query.exceptions.EqlException;
 
 public class LikeTest extends AbstractCondition {
     private final ISingleOperand leftOperand;
     private final ISingleOperand rightOperand;
     private final boolean negated;
     private final boolean caseInsensitive;
+    private final DbVersion dbVersion;
 
-    @Override
-    public String sql() {
-        return leftOperand.sql() + (negated ? " NOT LIKE " : " LIKE ") + rightOperand.sql();
-    }
-
-    public LikeTest(final ISingleOperand leftOperand, final ISingleOperand rightOperand, final boolean negated, final boolean caseInsensitive) {
+    public LikeTest(final ISingleOperand leftOperand, final ISingleOperand rightOperand, final boolean negated, final boolean caseInsensitive, final DbVersion dbVersion) {
+        if (dbVersion == null) {
+            throw new EqlException("The dabase version is missing.");
+        }
         this.leftOperand = leftOperand;
         this.rightOperand = rightOperand;
         this.negated = negated;
         this.caseInsensitive = caseInsensitive;
+        this.dbVersion = dbVersion;
+    }
+
+    @Override
+    public String sql() {
+        return dbVersion.likeSql(negated, leftOperand.sql(), rightOperand.sql(), caseInsensitive);
     }
 
     @Override
@@ -27,58 +37,36 @@ public class LikeTest extends AbstractCondition {
     }
 
     @Override
+    protected List<IPropertyCollector> getCollection() {
+        return  listOf(leftOperand, rightOperand);
+    }
+
+    @Override
     public int hashCode() {
         final int prime = 31;
         int result = 1;
         result = prime * result + (caseInsensitive ? 1231 : 1237);
-        result = prime * result + ((leftOperand == null) ? 0 : leftOperand.hashCode());
+        result = prime * result + dbVersion.hashCode();
+        result = prime * result + (leftOperand == null ? 0 : leftOperand.hashCode());
         result = prime * result + (negated ? 1231 : 1237);
-        result = prime * result + ((rightOperand == null) ? 0 : rightOperand.hashCode());
+        result = prime * result + (rightOperand == null ? 0 : rightOperand.hashCode());
         return result;
     }
 
     @Override
-    public boolean equals(final Object obj) {
+    public boolean equals(Object obj) {
         if (this == obj) {
             return true;
-        }
-        if (obj == null) {
-            return false;
         }
         if (!(obj instanceof LikeTest)) {
             return false;
         }
-        final LikeTest other = (LikeTest) obj;
-        if (caseInsensitive != other.caseInsensitive) {
-            return false;
-        }
-        if (leftOperand == null) {
-            if (other.leftOperand != null) {
-                return false;
-            }
-        } else if (!leftOperand.equals(other.leftOperand)) {
-            return false;
-        }
-        if (negated != other.negated) {
-            return false;
-        }
-        if (rightOperand == null) {
-            if (other.rightOperand != null) {
-                return false;
-            }
-        } else if (!rightOperand.equals(other.rightOperand)) {
-            return false;
-        }
-        return true;
-    }
 
-    @Override
-    protected List<IPropertyCollector> getCollection() {
-        return new ArrayList<IPropertyCollector>() {
-            {
-                add(leftOperand);
-                add(rightOperand);
-            }
-        };
+        final LikeTest other = (LikeTest) obj;
+        return caseInsensitive == other.caseInsensitive &&
+               negated == other.negated &&
+               dbVersion == other.dbVersion &&
+               equalsEx(leftOperand, other.leftOperand) && 
+               equalsEx(rightOperand, other.rightOperand);
     }
 }

@@ -1,7 +1,8 @@
 package ua.com.fielden.platform.entity.query.generation.elements;
 
-import java.util.Arrays;
-import java.util.Collections;
+import static java.util.Collections.emptyList;
+import static ua.com.fielden.platform.utils.CollectionUtil.listOf;
+
 import java.util.List;
 
 public class EntValue implements ISingleOperand {
@@ -19,7 +20,6 @@ public class EntValue implements ISingleOperand {
     }
 
     public EntValue(final Object value, final boolean ignoreNull) {
-        super();
         this.value = value;
         this.ignoreNull = ignoreNull;
         if (!ignoreNull && value == null) {
@@ -30,17 +30,17 @@ public class EntValue implements ISingleOperand {
 
     @Override
     public List<EntProp> getLocalProps() {
-        return Collections.emptyList();
+        return emptyList();
     }
 
     @Override
     public List<EntQuery> getLocalSubQueries() {
-        return Collections.emptyList();
+        return emptyList();
     }
 
     @Override
     public List<EntValue> getAllValues() {
-        return Arrays.asList(new EntValue[] { this });
+        return  listOf(this);
     }
 
     @Override
