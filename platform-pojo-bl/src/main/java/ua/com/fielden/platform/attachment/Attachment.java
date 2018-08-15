@@ -59,6 +59,7 @@ import ua.com.fielden.platform.utils.Pair;
 @MapEntityTo
 @CompanionObject(IAttachment.class)
 public class Attachment extends AbstractPersistentEntity<DynamicEntityKey> {
+    public static final String HYPERLINK = "[hyperlink]";
     public static final String pn_TITLE = "title";
     public static final String pn_SHA1 = "sha1";
     public static final String pn_ORIG_FILE_NAME = "origFileName";

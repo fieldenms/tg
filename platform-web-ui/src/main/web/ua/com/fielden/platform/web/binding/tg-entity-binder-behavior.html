@@ -369,8 +369,7 @@
             /* Returns a function that accepts an instance of Attachment to start the download of the associated file. The passed in attachment must not be null.*/
             mkDownloadAttachmentFunction: function() {
                 return attachment => {
-                    console.log('ATTACHMENT:', attachment.title);
-                    if (attachment.title.startsWith('https://')) {
+                    if (attachment.origFileName === '[hyperlink]') {
                         const win = window.open(attachment.title, '_blank');
                         win.focus();
                     } else {

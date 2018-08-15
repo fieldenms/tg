@@ -4,6 +4,7 @@ import static java.lang.String.format;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Optional.empty;
 import static java.util.Optional.of;
+import static ua.com.fielden.platform.attachment.Attachment.HYPERLINK;
 import static ua.com.fielden.platform.attachment.Attachment.pn_IS_LATEST_REV;
 import static ua.com.fielden.platform.attachment.Attachment.pn_LAST_MODIFIED;
 import static ua.com.fielden.platform.attachment.Attachment.pn_LAST_REVISION;
@@ -134,7 +135,7 @@ public class AttachmentDao extends CommonEntityDao<Attachment> implements IAttac
                 return Optional.of(new_()
                         .setTitle(potentialUri)
                         .setSha1(sha1)
-                        .setOrigFileName("[hyperlink]"));
+                        .setOrigFileName(HYPERLINK));
 
             } catch (final NoSuchAlgorithmException e) {
                 return Optional.empty();
