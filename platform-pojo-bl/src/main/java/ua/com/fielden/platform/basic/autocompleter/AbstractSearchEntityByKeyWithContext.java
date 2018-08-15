@@ -12,6 +12,7 @@ import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.cond;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchKeyAndDescOnly;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.orderBy;
 import static ua.com.fielden.platform.utils.EntityUtils.hasDescProperty;
+import static ua.com.fielden.platform.utils.EntityUtils.isNaturalOrderDescending;
 
 import java.util.List;
 import java.util.Map;
@@ -20,9 +21,11 @@ import ua.com.fielden.platform.basic.IValueMatcherWithContext;
 import ua.com.fielden.platform.basic.IValueMatcherWithFetch;
 import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ISingleOperandOrderable;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.entity.query.model.ConditionModel;
 import ua.com.fielden.platform.entity.query.model.OrderingModel;
+import ua.com.fielden.platform.utils.EntityUtils;
 
 /**
  * Key based value matcher, which supports context assignment.
@@ -73,7 +76,8 @@ public abstract class AbstractSearchEntityByKeyWithContext<CONTEXT extends Abstr
      * @return alternative ordering model
      */
     protected OrderingModel makeOrderingModel(final String searchString) {
-        return orderBy().prop(KEY).asc().model();
+        final ISingleOperandOrderable prop = orderBy().prop(KEY);
+        return isNaturalOrderDescending(companion.getEntityType()) ? prop.desc().model() : prop.asc().model();
     }
 
     private OrderingModel composeOrderingModelForQuery(final String searchString) {

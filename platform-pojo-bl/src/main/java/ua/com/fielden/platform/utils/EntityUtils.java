@@ -1240,10 +1240,10 @@ public class EntityUtils {
      * @return
      */
     public static List<String> keyPaths(final Class<? extends AbstractEntity<?>> entityType, final String parentContextPath) {
-    	if (isEmpty(parentContextPath)) {
-    		throw new IllegalArgumentException("Parent context path is required.");
-    	}
-    	
+        if (isEmpty(parentContextPath)) {
+            throw new IllegalArgumentException("Parent context path is required.");
+        }
+
         return keyPaths(entityType, Optional.of(parentContextPath));
     }
     
@@ -1258,18 +1258,27 @@ public class EntityUtils {
     }
     
     private static List<String> keyPaths(final Class<? extends AbstractEntity<?>> entityType, final Optional<String> parentContextPath) {
-  	
-    	final List<String> result = new ArrayList<>();
+        final List<String> result = new ArrayList<>();
 
-    	for (final Field keyMember : getKeyMembers(entityType)) {
-			final String pathToSubprop = parentContextPath.map(path -> path + PROPERTY_SPLITTER  + keyMember.getName()).orElse(keyMember.getName());
-			if (!isPersistedEntityType(keyMember.getType())) {
-				result.add(pathToSubprop);
-			} else {
-				result.addAll(keyPaths((Class<? extends AbstractEntity<?>>) keyMember.getType(), pathToSubprop));
-			}
-		}
-    	
-    	return result;
+        for (final Field keyMember : getKeyMembers(entityType)) {
+            final String pathToSubprop = parentContextPath.map(path -> path + PROPERTY_SPLITTER + keyMember.getName()).orElse(keyMember.getName());
+            if (!isPersistedEntityType(keyMember.getType())) {
+                result.add(pathToSubprop);
+            } else {
+                result.addAll(keyPaths((Class<? extends AbstractEntity<?>>) keyMember.getType(), pathToSubprop));
+            }
+        }
+
+        return result;
+    }
+
+    /**
+     * A convenient method checking whether entity values should be enlisted in descending (key) order.
+     *
+     * @param type
+     * @return
+     */
+    public static boolean isNaturalOrderDescending(final Class<? extends AbstractEntity<?>> type) {
+        return AnnotationReflector.getAnnotation(type, KeyType.class).descendingOrder();
     }
 }
