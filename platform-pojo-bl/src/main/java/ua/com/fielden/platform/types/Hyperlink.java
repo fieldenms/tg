@@ -2,6 +2,8 @@ package ua.com.fielden.platform.types;
 
 import static java.lang.String.format;
 import static org.apache.commons.validator.routines.UrlValidator.ALLOW_LOCAL_URLS;
+import static ua.com.fielden.platform.error.Result.failure;
+import static ua.com.fielden.platform.error.Result.successful;
 import static ua.com.fielden.platform.types.Hyperlink.SupportedProtocols.FTP;
 import static ua.com.fielden.platform.types.Hyperlink.SupportedProtocols.FTPS;
 import static ua.com.fielden.platform.types.Hyperlink.SupportedProtocols.HTTP;
@@ -13,6 +15,7 @@ import java.util.Optional;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.validator.routines.UrlValidator;
 
+import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.types.exceptions.ValueObjectException;
 
 /**
@@ -52,13 +55,19 @@ public class Hyperlink {
     public final String value;
 
     public Hyperlink(final String value) {
-        validate(value);
+        validate(value).ifFailure(Result::throwRuntime);
         this.value = value;
     }
 
-    private void validate(final String value) {
+    /**
+     * Function to validate a string {@code value} whether it represent a valid URI.
+     *
+     * @param value
+     * @return
+     */
+    public static Result validate(final String value) {
         if (StringUtils.isBlank(value)) {
-            throw new ValueObjectException("Hyperlink value should not be blank.");
+            return failure(new ValueObjectException("Hyperlink value should not be blank."));
         }
 
         // if the value is not associated with mailto protocol then use UrlValidator
@@ -70,10 +79,11 @@ public class Hyperlink {
                     ALLOW_LOCAL_URLS);
 
             if (!validator.isValid(value)) {
-                throw new ValueObjectException(format("Value [%s] is not a valid hyperlink.", value));
+                return failure(new ValueObjectException(format("Value [%s] is not a valid hyperlink.", value)));
             }
         }
-
+        
+        return successful(value);
     }
 
     @Override

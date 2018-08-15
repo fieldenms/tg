@@ -59,6 +59,7 @@ import ua.com.fielden.platform.utils.Pair;
 @MapEntityTo
 @CompanionObject(IAttachment.class)
 public class Attachment extends AbstractPersistentEntity<DynamicEntityKey> {
+    public static final String HYPERLINK = "[hyperlink]";
     public static final String pn_TITLE = "title";
     public static final String pn_SHA1 = "sha1";
     public static final String pn_ORIG_FILE_NAME = "origFileName";
@@ -76,7 +77,7 @@ public class Attachment extends AbstractPersistentEntity<DynamicEntityKey> {
 
     @IsProperty
     @MapTo
-    @Title(value = "Title", desc = "A convenient attachment title that would indicate what it is about")
+    @Title(value = "Title or Link", desc = "A convenient document title or a link to an external resource")
     @CompositeKeyMember(1)
     private String title;
 
@@ -90,7 +91,7 @@ public class Attachment extends AbstractPersistentEntity<DynamicEntityKey> {
 
     @IsProperty
     @MapTo
-    @Title(value = "File Name", desc = "The file name of the document, uploading which resulted in creation of this attachment.")
+    @Title(value = "File Name", desc = "The file name of the uploaded document or a link indication.")
     @Readonly
     @Required
     @Final(persistentOnly = false)

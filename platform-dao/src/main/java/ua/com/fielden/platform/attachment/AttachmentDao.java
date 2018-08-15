@@ -1,8 +1,10 @@
 package ua.com.fielden.platform.attachment;
 
 import static java.lang.String.format;
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Optional.empty;
 import static java.util.Optional.of;
+import static ua.com.fielden.platform.attachment.Attachment.HYPERLINK;
 import static ua.com.fielden.platform.attachment.Attachment.pn_IS_LATEST_REV;
 import static ua.com.fielden.platform.attachment.Attachment.pn_LAST_MODIFIED;
 import static ua.com.fielden.platform.attachment.Attachment.pn_LAST_REVISION;
@@ -25,6 +27,8 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.Collection;
 import java.util.Objects;
 import java.util.Optional;
@@ -38,28 +42,32 @@ import com.google.inject.Inject;
 import com.google.inject.name.Named;
 
 import ua.com.fielden.platform.attachment.validators.CanBeUsedAsPrevAttachmentRev;
+import ua.com.fielden.platform.cypher.HexString;
 import ua.com.fielden.platform.dao.CommonEntityDao;
 import ua.com.fielden.platform.dao.annotations.SessionRequired;
+import ua.com.fielden.platform.entity.DynamicEntityKey;
 import ua.com.fielden.platform.entity.annotation.EntityType;
-import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.fetch.IFetchProvider;
 import ua.com.fielden.platform.entity.query.IFilter;
+import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.error.Result;
+import ua.com.fielden.platform.reflection.Reflector;
 import ua.com.fielden.platform.security.Authorise;
 import ua.com.fielden.platform.security.tokens.attachment.AttachmentDownload_CanExecute_Token;
 import ua.com.fielden.platform.security.tokens.attachment.Attachment_CanDelete_Token;
 import ua.com.fielden.platform.security.tokens.attachment.Attachment_CanSave_Token;
+import ua.com.fielden.platform.types.Hyperlink;
 
 @EntityType(Attachment.class)
 public class AttachmentDao extends CommonEntityDao<Attachment> implements IAttachment {
     private static final Logger LOGGER = Logger.getLogger(AttachmentDao.class);
-    
+    private static final String KEY_MEMBER_SEPARATOR = Reflector.getKeyMemberSeparator(Attachment.class);
+
     private final String attachmentsLocation;
 
     @Inject
     protected AttachmentDao(
             final IFilter filter,
-            final EntityFactory factory,
             final @Named("attachments.location") String attachmentsLocation) {
         super(filter);
         this.attachmentsLocation = attachmentsLocation;
@@ -91,7 +99,52 @@ public class AttachmentDao extends CommonEntityDao<Attachment> implements IAttac
             return savedAttachment;
         }
     }
-    
+
+    /**
+     * Overridden to provide special handling of partial searches, which is especially important for ad hoc created hyperlink-attachments.
+     */
+    @Override
+    @SessionRequired
+    public Attachment findByKeyAndFetch(final fetch<Attachment> fetchModel, final Object... keyValues) {
+        // is this a special case of partial match by title?
+        if (keyValues != null && keyValues.length == 1 && keyValues[0] instanceof String) {
+            final String[] keys = ((String) keyValues[0]).split(KEY_MEMBER_SEPARATOR);
+            final String potentialUri = keys[0].trim();
+            return newAsHyperlink(potentialUri).orElse(null);
+        }
+        // otherwise, proceed as usual
+        return super.findByKeyAndFetch(fetchModel, keyValues);
+    }
+
+    @Override
+    public Attachment new_() {
+        return super.new_().setRevNo(0);
+    }
+
+    @Override
+    @SessionRequired
+    public Optional<Attachment> newAsHyperlink(final String potentialUri) {
+        final Result result = Hyperlink.validate(potentialUri);
+        if (result.isSuccessful()) {
+            try {
+                // create SHA1 from URI
+                final MessageDigest md = MessageDigest.getInstance("SHA1");
+                md.update(potentialUri.getBytes(UTF_8));
+                final byte[] digest = md.digest();
+                final String sha1 = HexString.bufferToHex(digest, 0, digest.length);
+
+                return Optional.of(new_()
+                        .setTitle(potentialUri)
+                        .setSha1(sha1)
+                        .setOrigFileName(HYPERLINK));
+
+            } catch (final NoSuchAlgorithmException e) {
+                return Optional.empty();
+            }
+        }
+        return Optional.empty();
+    }
+
     /**
      * Ensures correct revision history, including revision numbering and references.
      * 
@@ -154,11 +207,6 @@ public class AttachmentDao extends CommonEntityDao<Attachment> implements IAttac
                 pn_TITLE, pn_SHA1, pn_ORIG_FILE_NAME, pn_REV_NO, 
                 pn_PREV_REVISION, pn_PREV_REVISION + "." + pn_REV_NO, pn_PREV_REVISION + "." + pn_LAST_REVISION, 
                 pn_LAST_REVISION, pn_LAST_MODIFIED, pn_MIME, pn_IS_LATEST_REV);
-    }
-    
-    @Override
-    public Attachment new_() {
-        return super.new_().setRevNo(0);
     }
     
     public byte[] download(final Attachment attachment) {
