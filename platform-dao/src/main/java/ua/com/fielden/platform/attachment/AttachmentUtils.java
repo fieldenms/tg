@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.attachment;
 
+import static java.lang.String.format;
 import static ua.com.fielden.platform.error.Result.failure;
 
 import java.lang.reflect.Field;
@@ -7,6 +8,7 @@ import java.util.List;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.MapTo;
+import ua.com.fielden.platform.entity.exceptions.EntityException;
 import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.types.tuples.T2;
 
@@ -21,9 +23,19 @@ public class AttachmentUtils {
      * @param entity
      */
     public static void persistAttachmentIfRequired(final AbstractEntity<?> entity, final IAttachment coAttachment) {
-        final List<Field> attachmentProps = Finder.findPropertiesOfSpecifiedType(entity.getType(), Attachment.class, MapTo.class);
-        attachmentProps.stream().map(f -> value(f, entity)).filter(t2 -> t2._2 != null && !t2._2.isPersisted())
-        .forEach(t2 -> entity.set(t2._1, coAttachment.save(t2._2)));
+        if (!entity.isInstrumented()) {
+            throw new EntityException(format("Only instrumented entities of type [%s] can be used for persisting attachments.", entity.getType().getName()));
+        }
+        
+        // let's kick in initialisation to prevent unnecessary revalidation upon reassignment of persisted attachment values
+        entity.beginInitialising();
+        try {
+            final List<Field> attachmentProps = Finder.findPropertiesOfSpecifiedType(entity.getType(), Attachment.class);
+            attachmentProps.stream().map(f -> value(f, entity)).filter(t2 -> t2._2 != null && !t2._2.isPersisted())
+            .forEach(t2 -> entity.getProperty(t2._1).setValue(coAttachment.save(t2._2), true));
+        } finally {
+            entity.endInitialising();
+        }
     }
 
     private static T2<String, Attachment> value(final Field field, final AbstractEntity<?> entity) {

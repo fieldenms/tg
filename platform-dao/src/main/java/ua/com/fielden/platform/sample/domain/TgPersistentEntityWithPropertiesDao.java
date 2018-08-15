@@ -15,7 +15,6 @@ import ua.com.fielden.platform.attachment.ICanAttach;
 import ua.com.fielden.platform.continuation.NeedMoreData;
 import ua.com.fielden.platform.dao.CommonEntityDao;
 import ua.com.fielden.platform.dao.annotations.SessionRequired;
-import ua.com.fielden.platform.dao.exceptions.EntityAlreadyExists;
 import ua.com.fielden.platform.entity.annotation.EntityType;
 import ua.com.fielden.platform.entity.fetch.IFetchProvider;
 import ua.com.fielden.platform.entity.functional.master.AcknowledgeWarnings;
@@ -157,13 +156,12 @@ public class TgPersistentEntityWithPropertiesDao extends CommonEntityDao<TgPersi
 
     @Override
     public TgPersistentEntityWithPropertiesAttachment attach(final Attachment attachment, final TgPersistentEntityWithProperties entity) {
-        final TgPersistentEntityWithPropertiesAttachment entityAttachment = co$(TgPersistentEntityWithPropertiesAttachment.class).new_()
+        final ITgPersistentEntityWithPropertiesAttachment co$ = co$(TgPersistentEntityWithPropertiesAttachment.class);
+        final TgPersistentEntityWithPropertiesAttachment entityAttachment = co$.new_()
                 .setMaster(entity)
                 .setAttachment(attachment);
-        try {
-            return co$(TgPersistentEntityWithPropertiesAttachment.class).save(entityAttachment);
-        } catch (final EntityAlreadyExists ex) {
-            return co$(TgPersistentEntityWithPropertiesAttachment.class).findByEntityAndFetch(co(TgPersistentEntityWithPropertiesAttachment.class).getFetchProvider().fetchModel(), entityAttachment);
-        }
+        
+        return co$.findByEntityAndFetchOptional(co$.getFetchProvider().fetchModel(), entityAttachment)
+                  .orElseGet(() -> co$.save(entityAttachment));        
     }
 }
