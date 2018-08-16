@@ -400,9 +400,7 @@
                 if (newEntity) {
                     if (newEntity.get("calculated")) {
                         Object.keys(newEntity.get("entityPresence")).forEach(prop => {
-                            if (newEntity.get("entityPresence")[prop]) {
-                                this._setHighlightMenuItem(prop, true);
-                            }
+                            this._setHighlightMenuItem(prop, newEntity.get("entityPresence")[prop]);
                         });
                     }
                 }

@@ -40,32 +40,30 @@ public class CommonOpenCompoundMasterDao<T extends AbstractFunctionalEntityToOpe
 
     @Override
     public T save(final T entity) {
-        if (!entity.isCalculated()) {
-            ISubsequentCompletedAndYielded<AbstractEntity<?>> queryPart = select().yield().val(1).as("#common_one#");
-            for(final T3<String, Class<? extends AbstractEntity<?>>, BiFunction<IWhere0<? extends AbstractEntity<?>>, Object, ICompleted<? extends AbstractEntity<?>>>> pair: compoundMasterConfig) {
-                queryPart = queryPart.yield().caseWhen().exists(pair._3.apply(select(pair._2).where(), entity.getKey()).model())
-                        .then().val(1).otherwise().val(0).endAsInt().as(pair._1);
-            }
-            for (final T3<String, Class<? extends AbstractEntity<?>>, Map<String, Function<Object, Object>>> pair : parameters) {
-                queryPart = queryPart.yield().caseWhen().exists(select(pair._2).model())
-                        .then().val(1).otherwise().val(0).endAsInt().as(pair._1);
-            }
-            final Map<String, Object> queryParams = new HashMap<>();
-            parameters.stream().map(paramMap -> enhanceParametersWithCustomValue(paramMap._3, entity.getKey()))
-                    .flatMap(m -> m.entrySet().stream())
-                    .forEach(entry -> queryParams.put(entry.getKey(), entry.getValue()));
-            additionalParameters.entrySet().stream().forEach(entry -> queryParams.put(entry.getKey(), entry.getValue().apply(entity.getKey())));
-            final EntityAggregates existEntity = coAggregates.getEntity(from(queryPart.modelAsAggregate()).with(queryParams).model());
-            final Map<String, Integer> newPresence = new HashMap<>();
-            compoundMasterConfig.stream().forEach(pair -> {
-                newPresence.put(pair._1, existEntity.get(pair._1));
-            });
-            parameters.stream().forEach(pair -> {
-                newPresence.put(pair._1, existEntity.get(pair._1));
-            });
-            entity.setEntityPresence(newPresence);
-            entity.setCalculated(true);
+        ISubsequentCompletedAndYielded<AbstractEntity<?>> queryPart = select().yield().val(1).as("#common_one#");
+        for(final T3<String, Class<? extends AbstractEntity<?>>, BiFunction<IWhere0<? extends AbstractEntity<?>>, Object, ICompleted<? extends AbstractEntity<?>>>> pair: compoundMasterConfig) {
+            queryPart = queryPart.yield().caseWhen().exists(pair._3.apply(select(pair._2).where(), entity.getKey()).model())
+                    .then().val(1).otherwise().val(0).endAsInt().as(pair._1);
         }
+        for (final T3<String, Class<? extends AbstractEntity<?>>, Map<String, Function<Object, Object>>> pair : parameters) {
+            queryPart = queryPart.yield().caseWhen().exists(select(pair._2).model())
+                    .then().val(1).otherwise().val(0).endAsInt().as(pair._1);
+        }
+        final Map<String, Object> queryParams = new HashMap<>();
+        parameters.stream().map(paramMap -> enhanceParametersWithCustomValue(paramMap._3, entity.getKey()))
+                .flatMap(m -> m.entrySet().stream())
+                .forEach(entry -> queryParams.put(entry.getKey(), entry.getValue()));
+        additionalParameters.entrySet().stream().forEach(entry -> queryParams.put(entry.getKey(), entry.getValue().apply(entity.getKey())));
+        final EntityAggregates existEntity = coAggregates.getEntity(from(queryPart.modelAsAggregate()).with(queryParams).model());
+        final Map<String, Integer> newPresence = new HashMap<>();
+        compoundMasterConfig.stream().forEach(pair -> {
+            newPresence.put(pair._1, existEntity.get(pair._1));
+        });
+        parameters.stream().forEach(pair -> {
+            newPresence.put(pair._1, existEntity.get(pair._1));
+        });
+        entity.setEntityPresence(newPresence);
+        entity.setCalculated(true);
         return super.save(entity);
     }
 
