@@ -15,18 +15,18 @@
             width: 1.3rem;
             height: 1.3rem;
             padding: 0;
-        }    
+        }
     </style>
     <template>
-    	<tg-editor 
-    		id="editorDom" 
+    	<tg-editor
+    		id="editorDom"
     		prop-title="[[propTitle]]"
-    		_disabled="[[_disabled]]" 
-    		_editing-value="{{_editingValue}}" 
-    		action="[[action]]" 
-    		_error="[[_error]]" 
-    		_comm-value="[[_commValue]]" 
-    		_accepted-value="[[_acceptedValue]]" 
+    		_disabled="[[_disabled]]"
+    		_editing-value="{{_editingValue}}"
+    		action="[[action]]"
+    		_error="[[_error]]"
+    		_comm-value="[[_commValue]]"
+    		_accepted-value="[[_acceptedValue]]"
     		debug="[[debug]]">
     		<input id="input" class="custom-input hyperlink-input" is="iron-input" bind-value="{{_editingValue}}" on-change="_onChange"	on-input="_onInput" on-tap="_onTap" on-mousedown="_onTap" on-keydown="_onKeydown"	disabled$="[[_disabled]]" tooltip-text$="[[_getTooltip(_editingValue)]]"/>
     		<paper-icon-button on-tap="_openLink" icon="open-in-browser" class="open-button custom-icon-buttons" tabIndex="-1" tooltip-text="Open link"></paper-icon-button>
@@ -39,14 +39,14 @@
     Polymer({
         is: 'tg-hyperlink-editor',
         behaviors: [ Polymer.TgBehaviors.TgEditorBehavior ],
-        
+
         /**
          * Converts a JSON object represneting a value of Java type Hyperlink into a string.
          */
         convertToString: function (link) {
             return link === null ? "" : link.value;
         },
-        
+
         /**
          * Converts the value from string representation into a JSON object that is used for representing value of Java type Hyperlink.
          */
@@ -55,17 +55,18 @@
             if (strValue === '') {
                 return null;
             } else {
-                if ((strValue.startsWith('https://') || strValue.startsWith('http://') || 
-                     strValue.startsWith('ftp://') || strValue.startsWith('ftps://')) == false) {
-                	throw "One of http, https, ftp or ftps hyperlink protocols is expected.";
+                if ((strValue.startsWith('https://') || strValue.startsWith('http://') ||
+                     strValue.startsWith('ftp://') || strValue.startsWith('ftps://') ||
+                     strValue.startsWith('mailto:')) === false) {
+                	throw "One of http, https, ftp, ftps or mailto hyperlink protocols is expected.";
                 }
-                
+
                 return {
                     value: strValue
                 };
-            }            
+            }
         },
-        
+
         /**
          * A handler to open a linked resource in browser
          */

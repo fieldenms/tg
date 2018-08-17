@@ -11,7 +11,6 @@
         .map {
             width: 100%;
             height: 100%;
-            border: 1px solid #ccc;
         }
         .progress {
             display: none;
@@ -56,6 +55,13 @@
             
             properties: {
                 /**
+                 * Binding functional entity. This tg-map component is embedded into entity master with this entity as '_currBindingEntity'.
+                 */
+                entity: {
+                    type: Object
+                },
+                
+                /**
                  * The entities retrieved when running parent centre of this map embedded into insertion point.
                  */
                 retrievedEntities: {
@@ -97,6 +103,7 @@
             },
             
             observers: [
+                '_entityChanged(entity, _initialised)',
                 '_retrievedEntitiesChanged(retrievedEntities, _initialised)',
                 '_centreSelectionChanged(centreSelection, _initialised)',
                 '_columnPropertiesMapperChanged(columnPropertiesMapper, _initialised)'
@@ -133,6 +140,13 @@
             _columnPropertiesMapperChanged: function (columnPropertiesMapper, _initialised) {
                 // console.debug('tg-map: columnPropertiesMapper = ', columnPropertiesMapper);
                 this.columnPropertiesMapperHandler(columnPropertiesMapper);
+            },
+            
+            _entityChanged: function (entity, _initialised) {
+                this.entityHandler(entity);
+            },
+            
+            entityHandler: function (newEntity) {
             },
             
             _retrievedEntitiesChanged: function (retrievedEntities, _initialised) {

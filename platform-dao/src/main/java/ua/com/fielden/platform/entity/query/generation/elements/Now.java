@@ -1,5 +1,7 @@
 package ua.com.fielden.platform.entity.query.generation.elements;
 
+import static java.util.Collections.emptyList;
+
 import java.util.Collections;
 import java.util.List;
 
@@ -28,17 +30,17 @@ public class Now implements ISingleOperand {
 
     @Override
     public List<EntProp> getLocalProps() {
-        return Collections.emptyList();
+        return emptyList();
     }
 
     @Override
     public List<EntQuery> getLocalSubQueries() {
-        return Collections.emptyList();
+        return emptyList();
     }
 
     @Override
     public List<EntValue> getAllValues() {
-        return Collections.emptyList();
+        return emptyList();
     }
 
     @Override
@@ -86,5 +88,4 @@ public class Now implements ISingleOperand {
         }
         return true;
     }
-
 }

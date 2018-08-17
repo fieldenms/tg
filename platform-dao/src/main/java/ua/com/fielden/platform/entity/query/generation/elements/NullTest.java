@@ -1,6 +1,9 @@
 package ua.com.fielden.platform.entity.query.generation.elements;
 
-import java.util.ArrayList;
+import static ua.com.fielden.platform.utils.CollectionUtil.listOf;
+import static ua.com.fielden.platform.utils.EntityUtils.isUnionEntityType;
+import static ua.com.fielden.platform.utils.EntityUtils.splitPropByFirstDot;
+
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -8,20 +11,24 @@ import java.util.Set;
 
 import ua.com.fielden.platform.dao.DomainMetadataAnalyser;
 import ua.com.fielden.platform.dao.PropertyMetadata;
-import ua.com.fielden.platform.utils.EntityUtils;
 
 public class NullTest extends AbstractCondition {
     private final ISingleOperand operand;
     private final boolean negated;
     private final DomainMetadataAnalyser domainMetadataAnalyser;
 
+    public NullTest(final ISingleOperand operand, final boolean negated, final DomainMetadataAnalyser domainMetadataAnalyser) {
+        this.operand = operand;
+        this.negated = negated;
+        this.domainMetadataAnalyser = domainMetadataAnalyser;
+    }
+
     @Override
     public String sql() {
         if (operand instanceof EntProp) {
             final EntProp prop = (EntProp) operand;
-            if (EntityUtils.isUnionEntityType(prop.getPropType())) {
-                //System.out.println(prop.getSource().sourceType() + " --- " + prop.getName());
-                final String propName = prop.getSource().getAlias() != null && prop.getName().startsWith(prop.getSource().getAlias() + ".") ? EntityUtils.splitPropByFirstDot(prop.getName()).getValue()
+            if (isUnionEntityType(prop.getPropType())) {
+                final String propName = prop.getSource().getAlias() != null && prop.getName().startsWith(prop.getSource().getAlias() + ".") ? splitPropByFirstDot(prop.getName()).getValue()
                         : prop.getName();
                 final PropertyMetadata ppi = domainMetadataAnalyser.getInfoForDotNotatedProp(prop.getSource().sourceType(), propName);
 
@@ -53,12 +60,6 @@ public class NullTest extends AbstractCondition {
         }
         sb.append(")");
         return sb.toString();
-    }
-
-    public NullTest(final ISingleOperand operand, final boolean negated, final DomainMetadataAnalyser domainMetadataAnalyser) {
-        this.operand = operand;
-        this.negated = negated;
-        this.domainMetadataAnalyser = domainMetadataAnalyser;
     }
 
     @Override
@@ -102,10 +103,6 @@ public class NullTest extends AbstractCondition {
 
     @Override
     protected List<IPropertyCollector> getCollection() {
-        return new ArrayList<IPropertyCollector>() {
-            {
-                add(operand);
-            }
-        };
+        return  listOf(operand);
     }
 }

@@ -1,13 +1,13 @@
 package ua.com.fielden.platform.entity.query.generation.elements;
 
+import static ua.com.fielden.platform.entity.query.fluent.enums.LogicalOperator.AND;
+
 import java.util.ArrayList;
 import java.util.List;
 
-import ua.com.fielden.platform.entity.query.fluent.enums.LogicalOperator;
-
 public class Conditions extends AbstractCondition {
     private final ICondition firstCondition;
-    private final List<CompoundCondition> otherConditions = new ArrayList<CompoundCondition>();
+    private final List<CompoundCondition> otherConditions = new ArrayList<>();
 
     public Conditions(final ICondition firstCondition, final List<CompoundCondition> otherConditions) {
         this.firstCondition = firstCondition;
@@ -44,12 +44,12 @@ public class Conditions extends AbstractCondition {
     }
 
     private List<List<ICondition>> formConditionIntoLogicalGroups() {
-        final List<List<ICondition>> result = new ArrayList<List<ICondition>>();
-        List<ICondition> currGroup = new ArrayList<ICondition>();
+        final List<List<ICondition>> result = new ArrayList<>();
+        List<ICondition> currGroup = new ArrayList<>();
         currGroup.add(firstCondition);
 
         for (final CompoundCondition compoundCondition : otherConditions) {
-            if (compoundCondition.getLogicalOperator() == LogicalOperator.AND) {
+            if (compoundCondition.getLogicalOperator() == AND) {
                 currGroup.add(compoundCondition.getCondition());
             } else {
                 result.add(currGroup);
@@ -80,7 +80,7 @@ public class Conditions extends AbstractCondition {
 
     @Override
     protected List<IPropertyCollector> getCollection() {
-        final List<IPropertyCollector> result = new ArrayList<IPropertyCollector>();
+        final List<IPropertyCollector> result = new ArrayList<>();
         if (firstCondition != null && !firstCondition.ignore()) {
             result.add(firstCondition);
         }

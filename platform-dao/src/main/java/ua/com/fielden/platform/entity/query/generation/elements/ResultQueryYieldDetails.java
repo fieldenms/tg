@@ -1,10 +1,14 @@
 package ua.com.fielden.platform.entity.query.generation.elements;
 
+import static ua.com.fielden.platform.entity.query.generation.elements.ResultQueryYieldDetails.YieldDetailsType.COMPOSITE_TYPE_HEADER;
+import static ua.com.fielden.platform.entity.query.generation.elements.ResultQueryYieldDetails.YieldDetailsType.UNION_ENTITY_HEADER;
+import static ua.com.fielden.platform.entity.query.generation.elements.ResultQueryYieldDetails.YieldDetailsType.USUAL_PROP;
+import static ua.com.fielden.platform.utils.EntityUtils.isPersistedEntityType;
+
 import org.hibernate.type.Type;
 
 import ua.com.fielden.platform.entity.query.ICompositeUserTypeInstantiate;
 import ua.com.fielden.platform.entity.query.IUserTypeInstantiate;
-import static ua.com.fielden.platform.utils.EntityUtils.isPersistedEntityType;
 
 public class ResultQueryYieldDetails implements Comparable<ResultQueryYieldDetails> {
 
@@ -16,7 +20,6 @@ public class ResultQueryYieldDetails implements Comparable<ResultQueryYieldDetai
     private final YieldDetailsType yieldDetailsType;
 
     public ResultQueryYieldDetails(final String name, final Class javaType, final Object hibType, final String column, final boolean nullable, final YieldDetailsType yieldDetailsType) {
-        super();
         this.name = name;
         this.javaType = javaType;
         this.hibType = hibType;
@@ -48,15 +51,15 @@ public class ResultQueryYieldDetails implements Comparable<ResultQueryYieldDetai
     }
 
     public boolean isCompositeProperty() {
-        return yieldDetailsType.equals(YieldDetailsType.COMPOSITE_TYPE_HEADER);
+        return yieldDetailsType == COMPOSITE_TYPE_HEADER;
     }
 
     public boolean isEntity() {
-        return isPersistedEntityType(javaType) && yieldDetailsType.equals(YieldDetailsType.USUAL_PROP);
+        return isPersistedEntityType(javaType) && yieldDetailsType == USUAL_PROP;
     }
 
     public boolean isUnionEntity() {
-        return yieldDetailsType.equals(YieldDetailsType.UNION_ENTITY_HEADER);
+        return yieldDetailsType == UNION_ENTITY_HEADER;
     }
 
     public String getTypeString() {

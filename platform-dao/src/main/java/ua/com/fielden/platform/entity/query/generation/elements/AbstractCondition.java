@@ -1,7 +1,8 @@
 package ua.com.fielden.platform.entity.query.generation.elements;
 
+import static java.util.Collections.emptyList;
+
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -22,9 +23,9 @@ public abstract class AbstractCondition implements ICondition {
     @Override
     public List<EntQuery> getLocalSubQueries() {
         if (ignore()) {
-            return Collections.emptyList();
+            return emptyList();
         } else {
-            final List<EntQuery> result = new ArrayList<EntQuery>();
+            final List<EntQuery> result = new ArrayList<>();
 
             for (final IPropertyCollector item : getCollection()) {
                 result.addAll(item.getLocalSubQueries());
@@ -37,9 +38,9 @@ public abstract class AbstractCondition implements ICondition {
     @Override
     public List<EntProp> getLocalProps() {
         if (ignore()) {
-            return Collections.emptyList();
+            return emptyList();
         } else {
-            final List<EntProp> result = new ArrayList<EntProp>();
+            final List<EntProp> result = new ArrayList<>();
 
             for (final IPropertyCollector item : getCollection()) {
                 result.addAll(item.getLocalProps());
@@ -52,9 +53,9 @@ public abstract class AbstractCondition implements ICondition {
     @Override
     public List<EntValue> getAllValues() {
         if (ignore()) {
-            return Collections.emptyList();
+            return emptyList();
         } else {
-            final List<EntValue> result = new ArrayList<EntValue>();
+            final List<EntValue> result = new ArrayList<>();
 
             for (final IPropertyCollector item : getCollection()) {
                 result.addAll(item.getAllValues());

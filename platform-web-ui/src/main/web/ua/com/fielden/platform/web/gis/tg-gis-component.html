@@ -68,11 +68,9 @@
                 feature.properties.layerId = layerId; 
                 
                 layer.on('mouseover', function() {
-                    // console.debug("mouseover (entered):");
-                    // console.debug(layer);
-                    if (typeof feature.properties.popupContent === 'undefined') {
-                        feature.properties.popupContent = self.createPopupContent(feature);
-                        layer.bindPopup(feature.properties.popupContent);
+                    if (!feature.properties.popupContentInitialised) { // initialise popupContent (text or even heavyweight HTMLElement) only once when mouseOver occurs
+                        layer.bindPopup(self.createPopupContent(feature));
+                        feature.properties.popupContentInitialised = true;
                     }
                 });
                 

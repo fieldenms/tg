@@ -1,5 +1,8 @@
 package ua.com.fielden.platform.attachment.definers;
 
+import static ua.com.fielden.platform.attachment.Attachment.HYPERLINK;
+import static ua.com.fielden.platform.attachment.Attachment.pn_TITLE;
+
 import org.apache.commons.lang.StringUtils;
 
 import ua.com.fielden.platform.attachment.Attachment;
@@ -20,7 +23,8 @@ public class AssignAttachmentTitle implements IAfterChangeEventHandler<String> {
         if (!attachment.isInitialising() && StringUtils.isEmpty(attachment.getTitle())) {
             attachment.setTitle(value);
         }
-
+        
+        attachment.getProperty(pn_TITLE).setEditable(!HYPERLINK.equals(value));
     }
 
 }

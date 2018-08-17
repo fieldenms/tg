@@ -13,11 +13,12 @@ import static ua.com.fielden.platform.utils.CollectionUtil.listOf;
 import static ua.com.fielden.platform.utils.EntityUtils.coalesce;
 import static ua.com.fielden.platform.utils.EntityUtils.equalsEx;
 import static ua.com.fielden.platform.utils.EntityUtils.getCollectionalProperties;
-import static ua.com.fielden.platform.utils.EntityUtils.keyPaths;
+import static ua.com.fielden.platform.utils.EntityUtils.isNaturalOrderDescending;
 import static ua.com.fielden.platform.utils.EntityUtils.isPersistedEntityType;
 import static ua.com.fielden.platform.utils.EntityUtils.isSyntheticBasedOnPersistentEntityType;
 import static ua.com.fielden.platform.utils.EntityUtils.isSyntheticEntityType;
 import static ua.com.fielden.platform.utils.EntityUtils.isUnionEntityType;
+import static ua.com.fielden.platform.utils.EntityUtils.keyPaths;
 import static ua.com.fielden.platform.utils.EntityUtils.safeCompare;
 import static ua.com.fielden.platform.utils.EntityUtils.toDecimal;
 
@@ -40,7 +41,9 @@ import org.junit.Test;
 import com.google.inject.Injector;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.ChildEntity;
 import ua.com.fielden.platform.entity.Entity;
+import ua.com.fielden.platform.entity.EntityExt;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
@@ -492,5 +495,12 @@ public class EntityUtilsTest {
     public void key_paths_works_for_composite_key_with_four_levels_nesting() {
         assertEquals(listOf("parent.parent.parent.parent.key", "parent.parent.parent.name", "parent.parent.name", "parent.name", "name"),
                 keyPaths(TgOrgUnit5.class));
+    }
+    
+    @Test
+    public void isNaturalOrderDescending_correctly_identifies_natural_ordering_for_entities() {
+        assertTrue(isNaturalOrderDescending(Entity.class));
+        assertTrue(isNaturalOrderDescending(EntityExt.class));
+        assertFalse(isNaturalOrderDescending(ChildEntity.class));
     }
 }
