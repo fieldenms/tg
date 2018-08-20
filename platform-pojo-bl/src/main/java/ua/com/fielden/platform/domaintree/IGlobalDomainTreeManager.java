@@ -10,6 +10,7 @@ import ua.com.fielden.platform.domaintree.master.IMasterDomainTreeManager;
 import ua.com.fielden.platform.security.user.IUser;
 import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.security.user.User;
+import ua.com.fielden.platform.types.either.Either;
 import ua.com.fielden.platform.ui.config.EntityCentreConfig;
 
 /**
@@ -215,7 +216,7 @@ public interface IGlobalDomainTreeManager {
      * @param name
      *            -- should represent a name of non-principle entity-centre or <code>null</code> for principle entity-centre.
      */
-    IGlobalDomainTreeManager initEntityCentreManager(final Class<?> menuItemType, final String name);
+    Either<ICentreDomainTreeManagerAndEnhancer, DomainTreeException> initEntityCentreManager(final Class<?> menuItemType, final String name);
 
     /**
      * Discards a current version of <b>entity-centre manager</b> for menu item type <b>menuItemType</b> with specified <b>name</b>. If a current version of <b>entity-centre
@@ -308,9 +309,9 @@ public interface IGlobalDomainTreeManager {
      * @param newDesc 
      *            -- new description for configuration
      */
-    IGlobalDomainTreeManager saveAsEntityCentreManager(final Class<?> menuItemType, final String originalName, final String newName, final String newDesc);
-    default IGlobalDomainTreeManager saveAsEntityCentreManager(final Class<?> menuItemType, final String originalName, final String newName) {
-        return saveAsEntityCentreManager(menuItemType, originalName, newName, null);
+    ICentreDomainTreeManagerAndEnhancer saveAsEntityCentreManager(final Class<?> menuItemType, final ICentreDomainTreeManagerAndEnhancer centre, final String newName, final String newDesc);
+    default ICentreDomainTreeManagerAndEnhancer saveAsEntityCentreManager(final Class<?> menuItemType, final ICentreDomainTreeManagerAndEnhancer centre, final String newName) {
+        return saveAsEntityCentreManager(menuItemType, centre, newName, null);
     };
 
     /**

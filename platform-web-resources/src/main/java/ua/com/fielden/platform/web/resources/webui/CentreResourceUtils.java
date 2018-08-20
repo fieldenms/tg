@@ -479,7 +479,7 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
             // the only way to get such mismatch is to press Discard on selection criteria
             // that's why we need to carefully override only widths and grow factors of 'fresh' centre from 'previouslyRun' centre
             // all other unrelated to CentreColumnWidthConfigUpdater information should remain 'as is'
-            final ICentreDomainTreeManagerAndEnhancer previouslyRunCentre = centre(gdtm, miType, PREVIOUSLY_RUN_CENTRE_NAME, saveAsName, device);
+            final ICentreDomainTreeManagerAndEnhancer previouslyRunCentre = updateCentre(gdtm, miType, PREVIOUSLY_RUN_CENTRE_NAME, saveAsName, device);
             final ICentreDomainTreeManagerAndEnhancer freshCentre = updateCentre(gdtm, miType, FRESH_CENTRE_NAME, saveAsName, device);
             freshCentre.getSecondTick().setWidthsAndGrowFactors(previouslyRunCentre. getSecondTick().getWidthsAndGrowFactors());
             commitCentre(gdtm, miType, FRESH_CENTRE_NAME, saveAsName, device);

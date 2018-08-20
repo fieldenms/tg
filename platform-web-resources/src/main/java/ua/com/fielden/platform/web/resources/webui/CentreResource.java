@@ -5,7 +5,6 @@ import static java.util.Optional.of;
 import static ua.com.fielden.platform.web.centre.CentreConfigUtils.isInherited;
 import static ua.com.fielden.platform.web.centre.CentreUpdater.FRESH_CENTRE_NAME;
 import static ua.com.fielden.platform.web.centre.CentreUpdater.SAVED_CENTRE_NAME;
-import static ua.com.fielden.platform.web.centre.CentreUpdater.centre;
 import static ua.com.fielden.platform.web.centre.CentreUpdater.initAndCommit;
 import static ua.com.fielden.platform.web.centre.CentreUpdater.loadableConfigurations;
 import static ua.com.fielden.platform.web.centre.CentreUpdater.makePreferred;
@@ -121,7 +120,7 @@ public class CentreResource<CRITERIA_TYPE extends AbstractEntity<?>> extends Abs
                 }
                 
                 // it is necessary to use "fresh" instance of cdtme (after the discarding process)
-                newFreshCentre = centre(gdtm, miType, FRESH_CENTRE_NAME, saveAsName, device());
+                newFreshCentre = updateCentre(gdtm, miType, FRESH_CENTRE_NAME, saveAsName, device());
             }
             
             final String staleCriteriaMessage = createStaleCriteriaMessage(wasRun, newFreshCentre, miType, saveAsName, gdtm, companionFinder, critGenerator, device());
