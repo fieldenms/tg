@@ -274,10 +274,10 @@ public interface IGlobalDomainTreeManager {
      * @param newDesc
      *            -- new description for configuration
      */
-    IGlobalDomainTreeManager saveEntityCentreManager(final Class<?> menuItemType, final String name, final String newDesc);
+    IGlobalDomainTreeManager saveEntityCentreManager(final Class<?> menuItemType, final String name, final ICentreDomainTreeManagerAndEnhancer centre, final String newDesc);
     
     default IGlobalDomainTreeManager saveEntityCentreManager(final Class<?> menuItemType, final String name) {
-        return saveEntityCentreManager(menuItemType, name, null);
+        return saveEntityCentreManager(menuItemType, name, null, null);
     }
 
     /**

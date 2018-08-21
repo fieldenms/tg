@@ -463,17 +463,20 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
         validationPrototype.setBaseCentreSupplier(() -> baseCentre(gdtm, miType, saveAsName, device));
         // performs mutation function centreConsumer against FRESH and PREVIOUSLY_RUN centres and saves them into persistent storage
         validationPrototype.setCentreAdjuster(centreConsumer -> {
-            centreConsumer.accept(updateCentre(gdtm, miType, FRESH_CENTRE_NAME, saveAsName, device));
-            commitCentre(gdtm, miType, FRESH_CENTRE_NAME, saveAsName, device);
+            final ICentreDomainTreeManagerAndEnhancer freshCentre = updateCentre(gdtm, miType, FRESH_CENTRE_NAME, saveAsName, device);
+            centreConsumer.accept(freshCentre);
+            commitCentre(gdtm, miType, FRESH_CENTRE_NAME, saveAsName, device, freshCentre);
             
-            centreConsumer.accept(updateCentre(gdtm, miType, PREVIOUSLY_RUN_CENTRE_NAME, saveAsName, device));
-            commitCentre(gdtm, miType, PREVIOUSLY_RUN_CENTRE_NAME, saveAsName, device);
+            final ICentreDomainTreeManagerAndEnhancer previouslyRunCentre = updateCentre(gdtm, miType, PREVIOUSLY_RUN_CENTRE_NAME, saveAsName, device);
+            centreConsumer.accept(previouslyRunCentre);
+            commitCentre(gdtm, miType, PREVIOUSLY_RUN_CENTRE_NAME, saveAsName, device, previouslyRunCentre);
         });
         // performs mutation function centreConsumer (column widths adjustments) against PREVIOUSLY_RUN centre and copies column widths / grow factors directly to FRESH centre; saves them both into persistent storage
         validationPrototype.setCentreColumnWidthsAdjuster(centreConsumer -> {
-            // we have diffs that need to be applied against 'previouslyRun' centre 
-            centreConsumer.accept(updateCentre(gdtm, miType, PREVIOUSLY_RUN_CENTRE_NAME, saveAsName, device));
-            commitCentre(gdtm, miType, PREVIOUSLY_RUN_CENTRE_NAME, saveAsName, device);
+            // we have diffs that need to be applied against 'previouslyRun' centre
+            final ICentreDomainTreeManagerAndEnhancer centre = updateCentre(gdtm, miType, PREVIOUSLY_RUN_CENTRE_NAME, saveAsName, device);
+            centreConsumer.accept(centre);
+            commitCentre(gdtm, miType, PREVIOUSLY_RUN_CENTRE_NAME, saveAsName, device, centre);
             
             // however those diffs are not applicable to 'fresh' centre due to ability of 'fresh' centre to differ from 'previouslyRun' centre
             // the only way to get such mismatch is to press Discard on selection criteria
@@ -482,7 +485,7 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
             final ICentreDomainTreeManagerAndEnhancer previouslyRunCentre = updateCentre(gdtm, miType, PREVIOUSLY_RUN_CENTRE_NAME, saveAsName, device);
             final ICentreDomainTreeManagerAndEnhancer freshCentre = updateCentre(gdtm, miType, FRESH_CENTRE_NAME, saveAsName, device);
             freshCentre.getSecondTick().setWidthsAndGrowFactors(previouslyRunCentre. getSecondTick().getWidthsAndGrowFactors());
-            commitCentre(gdtm, miType, FRESH_CENTRE_NAME, saveAsName, device);
+            commitCentre(gdtm, miType, FRESH_CENTRE_NAME, saveAsName, device, freshCentre);
         });
         // performs deletion of current owned configuration
         validationPrototype.setCentreDeleter(() -> 
@@ -900,7 +903,7 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
         ).getKey();
         
         // need to commit changed fresh centre after modifiedPropertiesHolder has been applied!
-        commitCentre(gdtm, miType, FRESH_CENTRE_NAME, saveAsName, device);
+        commitCentre(gdtm, miType, FRESH_CENTRE_NAME, saveAsName, device, originalCdtmae);
         return appliedCriteriaEntity;
     }
 

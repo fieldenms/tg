@@ -1,7 +1,5 @@
 package ua.com.fielden.platform.web.resources.webui;
 
-import static ua.com.fielden.platform.web.centre.CentreUpdater.clearAllCentres;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -232,10 +230,6 @@ public abstract class AbstractWebUiConfig implements IWebUiConfig {
         this.desktopMainMenuConfig = new MainMenuBuilder(this);
         this.mobileMainMenuConfig = new MainMenuBuilder(this);
         logger.error("Clearing configurations...done");
-        
-        logger.error(String.format("Clearing centres for user [%s] and both devices (DESKTOP and MOBILE)...", gdtm.getUserProvider().getUser()));
-        clearAllCentres(gdtm);
-        logger.error(String.format("Clearing centres for user [%s] and both devices (DESKTOP and MOBILE)...done", gdtm.getUserProvider().getUser()));
     }
     
     @Override

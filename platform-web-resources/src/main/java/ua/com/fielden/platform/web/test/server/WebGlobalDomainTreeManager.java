@@ -10,7 +10,6 @@ import com.google.inject.Inject;
 import ua.com.fielden.platform.domaintree.IGlobalDomainTreeManager;
 import ua.com.fielden.platform.domaintree.IServerGlobalDomainTreeManager;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
-import ua.com.fielden.platform.domaintree.impl.CentreManagerConfigurator;
 import ua.com.fielden.platform.domaintree.impl.GlobalDomainTreeManager;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.security.user.IUser;
@@ -48,12 +47,12 @@ public class WebGlobalDomainTreeManager extends GlobalDomainTreeManager implemen
     }
     
     @Override
-    protected ICentreDomainTreeManagerAndEnhancer createDefaultCentre(final CentreManagerConfigurator centreConfigurator, final Class<?> root, final Class<?> menuItemType) {
+    protected ICentreDomainTreeManagerAndEnhancer createDefaultCentre(final Class<?> root, final Class<?> menuItemType) {
         final EntityCentre entityCentre = webApp.getCentres().get(menuItemType);
         if (entityCentre != null) {
             return entityCentre.getDefaultCentre();
         } else {
-            return super.createDefaultCentre(centreConfigurator, root, menuItemType);
+            return super.createDefaultCentre(root, menuItemType);
         }
     }
     

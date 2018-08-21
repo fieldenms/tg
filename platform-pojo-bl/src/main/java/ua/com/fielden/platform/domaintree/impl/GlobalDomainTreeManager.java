@@ -515,8 +515,8 @@ public class GlobalDomainTreeManager extends AbstractDomainTree implements IGlob
             logger.error("Started saving of default entity-centre configuration for type [" + menuItemType.getSimpleName() + "] with title [" + title(menuItemType, name)
             + "] for current user [" + currentUser() + "].");
 
-            ecc.setConfigBody(getSerialiser().serialise(getEntityCentreManager(menuItemType, name)));
-            saveCentre(getEntityCentreManager(menuItemType, name), ecc);
+            ecc.setConfigBody(getSerialiser().serialise(newCentreManager));
+            saveCentre(newCentreManager, ecc);
 
             logger.error("Ended creation and saving of default entity-centre configuration for type [" + menuItemType.getSimpleName() + "] with title [" + title(menuItemType, name)
             + "] for current user [" + currentUser() + "]. For now it can be used.");
@@ -680,31 +680,6 @@ public class GlobalDomainTreeManager extends AbstractDomainTree implements IGlob
     /**
      * Initiates an application instances with a new <code>mgr</code> instance.
      *
-     * @param menuItemType
-     * @param name
-     * @param mgr
-     * @param owning
-     */
-    public void init(final Class<?> menuItemType, final String name, final ICentreDomainTreeManagerAndEnhancer mgr, final boolean owning) {
-        final ICentreDomainTreeManagerAndEnhancer fullyDefinedMgr = initCentreManagerCrossReferences(mgr);
-        currentCentres.put(key(menuItemType, name), fullyDefinedMgr);
-        if (persistentCentres != null) {
-            persistentCentres.put(key(menuItemType, name), copyCentre(fullyDefinedMgr));
-        }
-        centresOwning.put(key(menuItemType, name), owning);
-    }
-
-    public void overrideCentre(final Class<?> menuItemType, final String name, final ICentreDomainTreeManagerAndEnhancer mgr) {
-        if (mgr == null) {
-            currentCentres.remove(key(menuItemType, name));
-        } else {
-            currentCentres.put(key(menuItemType, name), initCentreManagerCrossReferences(mgr));
-        }
-    }
-
-    /**
-     * Initiates an application instances with a new <code>mgr</code> instance.
-     *
      * @param root
      * @param name
      * @param mgr
@@ -817,88 +792,53 @@ public class GlobalDomainTreeManager extends AbstractDomainTree implements IGlob
     }
 
     @Override
-    public IGlobalDomainTreeManager saveEntityCentreManager(final Class<?> menuItemType, final String name, final String newDesc) {
+    public IGlobalDomainTreeManager saveEntityCentreManager(final Class<?> menuItemType, final String name, final ICentreDomainTreeManagerAndEnhancer centre, final String newDesc) {
         validateMenuItemType(menuItemType);
         validateMenuItemTypeRootType(menuItemType);
-        if (isFreezedEntityCentreManager(menuItemType, name)) {
-            unfreeze(menuItemType, name);
-            currentCentres.put(key(menuItemType, name), copyCentre(currentCentres.get(key(menuItemType, name)))); // this is necessary to dispose current manager with listeners and get equal "fresh" instance
-        } else {
-            final ICentreDomainTreeManagerAndEnhancer currentMgr = getEntityCentreManager(menuItemType, name);
-            validateBeforeSaving(currentMgr, menuItemType, name);
-
-            // save an instance of EntityCentreConfig with overridden body, which should exist in DB
-            final String title = title(menuItemType, name);
-
-            final EntityResultQueryModel<EntityCentreConfig> model = modelForCurrentUser(menuItemType.getName(), title);
-            final int count = coEntityCentreConfig.count(model);
-            if (count == 1) { // for current user => 1 entity-centre
-                final EntityCentreConfig ecc = coEntityCentreConfig.getEntity(from(model).model());
-                ecc.setConfigBody(getSerialiser().serialise(currentMgr));
-                if (newDesc != null) {
-                    ecc.setDesc(newDesc);
-                }
-                saveCentre(currentMgr, ecc);
-                // TODO entityCentreAnalysisConfigController.save(entity)
-                if (persistentCentres != null) {
-                    persistentCentres.put(key(menuItemType, name), copyCentre(currentMgr));
-                }
-            } else if (count < 1) { // there is no saved entity-centre
-                if (name == null) { // principle centre
-                    if (!isEntityCentreManagerOwner(menuItemType, null)) {
-                        error("Unable to save PRINCIPLE entity-centre instance for type [" + menuItemType.getSimpleName() + "] for current NON-base user [" + currentUser() + "].");
-                    } else {
-                        // In this case the centre can exist virtually, without its cloud counter-part
-                        // But explicit save has been requested by base user => in this case save should be done.
-                        final EntityCentreConfig ecc = factory.newByKey(EntityCentreConfig.class, baseOfTheCurrentUser(), title, mainMenuItemController.findByKey(menuItemType.getName()));
-                        ecc.setPrincipal(true);
-                        final ICentreDomainTreeManagerAndEnhancer centre = getEntityCentreManager(menuItemType, null);
-                        ecc.setConfigBody(getSerialiser().serialise(centre));
-                        ecc.setDesc(newDesc);
-                        saveCentre(centre, ecc);
-                        if (persistentCentres != null) {
-                            persistentCentres.put(key(menuItemType, null), copyCentre(currentMgr));
-                        }
-                    }
-                } else {
-                    if (!isEntityCentreManagerOwner(menuItemType, null)) {
-                        error("Unable to save a NON-PRINCIPLE entity-centre instance for type [" + menuItemType.getSimpleName() + "] with title [" + title + "] for current user ["
-                                + currentUser() + "] -- the base user [id = " + baseOfTheCurrentUser().getId() + "] owns this entity centre.");
-                    } else {
-                        error("Unable to save non-existent entity-centre instance for type [" + menuItemType.getSimpleName() + "] with title [" + title + "] for current user ["
-                                + currentUser() + "].");
-                    }
-                }
-            } else { // > 1
-                error("There are more than one entity-centre instance for type [" + menuItemType.getSimpleName() + "] with title [" + title + "] for current user ["
-                        + currentUser() + "].");
+        final ICentreDomainTreeManagerAndEnhancer currentMgr = centre;
+        
+        // save an instance of EntityCentreConfig with overridden body, which should exist in DB
+        final String title = title(menuItemType, name);
+        
+        final EntityResultQueryModel<EntityCentreConfig> model = modelForCurrentUser(menuItemType.getName(), title);
+        final int count = coEntityCentreConfig.count(model);
+        if (count == 1) { // for current user => 1 entity-centre
+            final EntityCentreConfig ecc = coEntityCentreConfig.getEntity(from(model).model());
+            ecc.setConfigBody(getSerialiser().serialise(currentMgr));
+            if (newDesc != null) {
+                ecc.setDesc(newDesc);
             }
+            saveCentre(currentMgr, ecc);
+        } else if (count < 1) { // there is no saved entity-centre
+            error("Unable to save non-existent entity-centre instance for type [" + menuItemType.getSimpleName() + "] with title [" + title + "] for current user [" + currentUser() + "].");
+        } else { // > 1
+            error("There are more than one entity-centre instance for type [" + menuItemType.getSimpleName() + "] with title [" + title + "] for current user [" + currentUser() + "].");
         }
         return this;
     }
 
-    /**
-     * Checks if an instance of manager has been initialised and its inner parts (locators, analyses) have been fully accepted/discarded.
-     *
-     * @param currentMgr
-     * @param menuItemType
-     * @param name
-     */
-    private void validateBeforeSaving(final ICentreDomainTreeManagerAndEnhancer currentMgr, final Class<?> menuItemType, final String name) {
-        notInitiliasedError(currentMgr, menuItemType, name);
-        // let's iterate through all locators and ask if they are in USAGE phase!
-        for (final Pair<Class<?>, String> locatorKey : currentMgr.getFirstTick().locatorKeys()) {
-            if (USAGE_PHASE != currentMgr.getFirstTick().phaseAndTypeOfLocatorManager(locatorKey.getKey(), locatorKey.getValue()).getKey()) {
-                error("The inner part of entity centre [locator " + locatorKey + "] is not in Usage phase. It should be accepted or discarded before save operation.");
-            }
-        }
-        // let's iterate through all analyses and ask if they are accepted
-        for (final String analysisKey : currentMgr.analysisKeys()) {
-            if (currentMgr.isChangedAnalysisManager(analysisKey)) {
-                error("The inner part of entity centre [analysis " + analysisKey + "] is not accepted. It should be accepted or discarded before save operation.");
-            }
-        }
-    }
+//    /**
+//     * Checks if an instance of manager has been initialised and its inner parts (locators, analyses) have been fully accepted/discarded.
+//     *
+//     * @param currentMgr
+//     * @param menuItemType
+//     * @param name
+//     */
+//    private void validateBeforeSaving(final ICentreDomainTreeManagerAndEnhancer currentMgr, final Class<?> menuItemType, final String name) {
+//        notInitiliasedError(currentMgr, menuItemType, name);
+//        // let's iterate through all locators and ask if they are in USAGE phase!
+//        for (final Pair<Class<?>, String> locatorKey : currentMgr.getFirstTick().locatorKeys()) {
+//            if (USAGE_PHASE != currentMgr.getFirstTick().phaseAndTypeOfLocatorManager(locatorKey.getKey(), locatorKey.getValue()).getKey()) {
+//                error("The inner part of entity centre [locator " + locatorKey + "] is not in Usage phase. It should be accepted or discarded before save operation.");
+//            }
+//        }
+//        // let's iterate through all analyses and ask if they are accepted
+//        for (final String analysisKey : currentMgr.analysisKeys()) {
+//            if (currentMgr.isChangedAnalysisManager(analysisKey)) {
+//                error("The inner part of entity centre [analysis " + analysisKey + "] is not accepted. It should be accepted or discarded before save operation.");
+//            }
+//        }
+//    }
 
     /**
      * Checks if an instance of manager has been initialised and its inner parts (locators, analyses) have been fully accepted/discarded.
@@ -922,24 +862,16 @@ public class GlobalDomainTreeManager extends AbstractDomainTree implements IGlob
         synchronized (this) {
             validateMenuItemType(menuItemType);
             validateMenuItemTypeRootType(menuItemType);
-
-            if (isFreezedEntityCentreManager(menuItemType, originalName)) {
-                errorf("Unable to SaveAs the 'freezed' entity-centre instance for type [%s] with title [%s] for current user [%s].",
-                        menuItemType.getSimpleName(), title(menuItemType, originalName), currentUser());
-            }
-            final ICentreDomainTreeManagerAndEnhancer originationMgr = getEntityCentreManager(menuItemType, originalName);
-            validateBeforeSaving(originationMgr, menuItemType, originalName);
+            
+            final ICentreDomainTreeManagerAndEnhancer originationMgr = centre;
             // create a copy of current instance of entity centre
             final ICentreDomainTreeManagerAndEnhancer copyMgr = copyCentre(originationMgr);
-
+            
             // save an instance of EntityCentreConfig with overridden body, which should exist in DB
             final String menuItemTypeName = menuItemType.getName();
             final String newTitle = title(menuItemType, newName);
             
-            // for the new generation of Web UI centres (where persistentCentres == null and avoidPersistentCentres switch is on)
-            // the model for saveAs configuration existence should not look on base configurations.
-            final EntityResultQueryModel<EntityCentreConfig> model = persistentCentres == null ? modelForCurrentUser(menuItemTypeName, newTitle) : modelForCurrentAndBaseUsers(menuItemTypeName, newTitle);
-            // entityCentreConfigController.getAllEntities(from(model).model());
+            final EntityResultQueryModel<EntityCentreConfig> model = modelForCurrentUser(menuItemTypeName, newTitle);
             
             final int count = coEntityCentreConfig.count(model);
             if (count == 0) { // for current user [or its base] => there are no entity-centres, so persist a copy with a new title
@@ -955,12 +887,11 @@ public class GlobalDomainTreeManager extends AbstractDomainTree implements IGlob
                 ecc.setDesc(newDesc);
                 ecc.setConfigBody(getSerialiser().serialise(copyMgr));
                 saveCentre(copyMgr, ecc);
-                init(menuItemType, newName, copyMgr, true);
             } else { // > 1
                 errorf("There are at least one entity-centre instance for type [%s] with title [%s] for current user [%s%s].",
                         menuItemType.getSimpleName(), newTitle, currentUser(), isNull(persistentCentres) ? "" : "] or its base [id = " + baseOfTheCurrentUser().getId());
             }
-            return this;
+            return copyMgr;
         }
     }
 
@@ -1025,28 +956,6 @@ public class GlobalDomainTreeManager extends AbstractDomainTree implements IGlob
         } else {
             throw new UnsupportedOperationException("avoidPersistentCentres switch is on.");
         }
-    }
-    
-    /**
-     * Removes locally cached instances of centre configuration on current server node.
-     * 
-     * @param menuItemType
-     * @param names
-     */
-    public void removeCentresLocally(final Class<?> menuItemType, final String ... names) {
-        for (final String name: names) {
-            currentCentres.remove(key(menuItemType, name));
-        }
-    }
-    
-    /**
-     * Removes all locally cached instances of centre configurations on current server node.
-     * 
-     * @param menuItemType
-     * @param names
-     */
-    public void removeAllCentresLocally() {
-        currentCentres.clear();
     }
     
     /**

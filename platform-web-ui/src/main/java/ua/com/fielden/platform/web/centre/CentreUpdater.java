@@ -53,7 +53,6 @@ import org.joda.time.Period;
 import ua.com.fielden.platform.domaintree.IGlobalDomainTreeManager;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.domaintree.centre.IOrderingRepresentation.Ordering;
-import ua.com.fielden.platform.domaintree.centre.impl.CentreDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.domaintree.exceptions.DomainTreeException;
 import ua.com.fielden.platform.domaintree.impl.GlobalDomainTreeManager;
 import ua.com.fielden.platform.entity.AbstractEntity;
@@ -228,12 +227,6 @@ public class CentreUpdater {
         if (!equalsEx(saveAsName, of(newTitle))) {
             final GlobalDomainTreeManager globalManager = (GlobalDomainTreeManager) gdtm;
             globalManager.removeCentres(miType, freshConfig.getTitle(), savedConfig.getTitle(), previouslyRunNewTitle);
-            // remove locally cached instances of centres
-            final Function<String, String> currentNameOfWithoutDiff = (surrogateName) -> deviceSpecific(saveAsSpecific(surrogateName, saveAsName), device);
-            final String currentNameFreshWithoutDiff = currentNameOfWithoutDiff.apply(FRESH_CENTRE_NAME);
-            final String currentNameSavedWithoutDiff = currentNameOfWithoutDiff.apply(SAVED_CENTRE_NAME);
-            final String currentNamePreviouslyRunWithoutDiff = currentNameOfWithoutDiff.apply(PREVIOUSLY_RUN_CENTRE_NAME);
-            globalManager.removeCentresLocally(miType, currentNameFresh, currentNameSaved, currentNamePreviouslyRun, currentNameFreshWithoutDiff, currentNameSavedWithoutDiff, currentNamePreviouslyRunWithoutDiff);
         }
         
         // save
@@ -241,27 +234,6 @@ public class CentreUpdater {
         gdtm.saveConfig(savedConfig);
         if (previouslyRunConfig != null) { // previouslyRun centre may not exist
             gdtm.saveConfig(previouslyRunConfig);
-        }
-    }
-    
-    /**
-     * Commits new centre description.
-     *
-     * @param gdtm
-     * @param miType
-     * @param saveAsName -- user-defined title of 'saveAs' centre configuration or empty {@link Optional} for unnamed centre
-     * @param device -- device profile (mobile or desktop) for which the centre is accessed / maintained
-     * @param newDesc -- new description to be committed
-     * @return
-     */
-    public static void commitCentreDesc(final IGlobalDomainTreeManager gdtm, final Class<? extends MiWithConfigurationSupport<?>> miType, final Optional<String> saveAsName, final DeviceProfile device, final String newDesc) {
-        commitCentreDesc0(gdtm, miType, deviceSpecific(saveAsSpecific(FRESH_CENTRE_NAME, saveAsName), device), newDesc);
-    }
-    private static void commitCentreDesc0(final IGlobalDomainTreeManager gdtm, final Class<? extends MiWithConfigurationSupport<?>> miType, final String deviceSpecificName, final String newDesc) {
-        synchronized (gdtm) {
-            if (newDesc != null) {
-                gdtm.saveEntityCentreManager(miType, deviceSpecificName + DIFFERENCES_SUFFIX, newDesc);
-            }
         }
     }
     
@@ -298,15 +270,13 @@ public class CentreUpdater {
      * @param saveAsName -- user-defined title of 'saveAs' centre configuration or empty {@link Optional} for unnamed centre
      * @param device -- device profile (mobile or desktop) for which the centre is accessed / maintained
      */
-    public static ICentreDomainTreeManagerAndEnhancer commitCentre(final IGlobalDomainTreeManager gdtm, final Class<? extends MiWithConfigurationSupport<?>> miType, final String name, final Optional<String> saveAsName, final DeviceProfile device) {
-        return commitCentre0(gdtm, miType, deviceSpecific(saveAsSpecific(name, saveAsName), device), saveAsName, device, null);
+    public static ICentreDomainTreeManagerAndEnhancer commitCentre(final IGlobalDomainTreeManager gdtm, final Class<? extends MiWithConfigurationSupport<?>> miType, final String name, final Optional<String> saveAsName, final DeviceProfile device, final ICentreDomainTreeManagerAndEnhancer centre) {
+        return commitCentre0(gdtm, miType, deviceSpecific(saveAsSpecific(name, saveAsName), device), saveAsName, device, null, centre);
     }
-    private static ICentreDomainTreeManagerAndEnhancer commitCentre0(final IGlobalDomainTreeManager gdtm, final Class<? extends MiWithConfigurationSupport<?>> miType, final String deviceSpecificName, final Optional<String> saveAsName, final DeviceProfile device, final String newDesc) {
+    private static ICentreDomainTreeManagerAndEnhancer commitCentre0(final IGlobalDomainTreeManager gdtm, final Class<? extends MiWithConfigurationSupport<?>> miType, final String deviceSpecificName, final Optional<String> saveAsName, final DeviceProfile device, final String newDesc, final ICentreDomainTreeManagerAndEnhancer centre) {
         synchronized (gdtm) {
             logger.debug(format("%s '%s' centre for miType [%s] for user %s...", "Committing", deviceSpecificName, miType.getSimpleName(), gdtm.getUserProvider().getUser()));
             final DateTime start = new DateTime();
-            // gets the centre (that was created from the chain 'default centre' + 'saved diff centre' + 'current user diff' := 'centre')
-            final ICentreDomainTreeManagerAndEnhancer centre = updateCentre0(gdtm, miType, deviceSpecificName);
             
             final ICentreDomainTreeManagerAndEnhancer defaultCentre = getDefaultCentre(gdtm, miType);
             // creates differences centre from the differences between 'default centre' and 'centre'
@@ -346,10 +316,8 @@ public class CentreUpdater {
             // there is a need to copy passed instance not to have shared state between surrogate centres (for e.g.
             //  same 'fresh' centre instance should not be used for 'previouslyRun' centre, it will cause unpredictable results after changing 'fresh' centre's criteria)
             final ICentreDomainTreeManagerAndEnhancer copiedInstance = copyCentre(centreToBeInitialisedAndCommitted, gdtm);
-            // initialises centre from copied instance
-            initCentre(gdtm, miType, deviceSpecificName, copiedInstance);
             // and then commit it to the database (save its diff)
-            commitCentre0(gdtm, miType, deviceSpecificName, saveAsName, device, newDesc);
+            commitCentre0(gdtm, miType, deviceSpecificName, saveAsName, device, newDesc, copiedInstance);
             
             final DateTime end = new DateTime();
             final Period pd = new Period(start, end);
@@ -628,12 +596,7 @@ public class CentreUpdater {
      * @return
      */
     private static ICentreDomainTreeManagerAndEnhancer updateDifferencesCentreOnlyIfNotInitialised(final IGlobalDomainTreeManager globalManager, final Class<? extends MiWithConfigurationSupport<?>> miType, final String deviceSpecificName, final Optional<String> saveAsName, final DeviceProfile device) {
-        // the name consists of 'deviceSpecificName' and 'DIFFERENCES_SUFFIX'
-        final String deviceSpecificDiffName = deviceSpecificName + DIFFERENCES_SUFFIX;
-        if (globalManager.getEntityCentreManager(miType, deviceSpecificDiffName) == null) {
-            return updateDifferencesCentre(globalManager, miType, deviceSpecificName, saveAsName, device);
-        }
-        return globalManager.getEntityCentreManager(miType, deviceSpecificDiffName);
+        return updateDifferencesCentre(globalManager, miType, deviceSpecificName, saveAsName, device);
     }
     
     /**
@@ -677,7 +640,7 @@ public class CentreUpdater {
                     // diff centre does not exist in persistent storage yet -- initialise EMPTY diff (there potentially can be some values from 'default centre',
                     //   but diff centre will be empty disregarding that fact -- no properties were marked as changed; but initialisation from 'default centre' is important --
                     //   this makes diff centre nicely synchronised with Web UI default values)
-                    centreManager = globalManager.saveAsEntityCentreManager(miType, null, deviceSpecificDiffName, null);
+                    centreManager = globalManager.saveAsEntityCentreManager(miType, defaultCentre, deviceSpecificDiffName, null);
                 } else { // non-base user
                     // diff centre does not exist in persistent storage yet -- create a diff by comparing basedOnCentre (configuration created by base user) and default centre
                     final IGlobalDomainTreeManager basedOnManager = beginBaseManagerOperations(globalManager, currentUser);
@@ -689,7 +652,7 @@ public class CentreUpdater {
                     endBaseManagerOperations(basedOnManager, currentUser);
                     
                     // promotes diff to local cache and saves it into persistent storage
-                    centreManager = globalManager.saveAsEntityCentreManager(miType, null, deviceSpecificDiffName, upstreamDesc); // differencesCentre
+                    centreManager = globalManager.saveAsEntityCentreManager(miType, differencesCentre, deviceSpecificDiffName, upstreamDesc); // differencesCentre
                 }
             } else {
                 throw e;
@@ -770,22 +733,6 @@ public class CentreUpdater {
                 endBaseManagerOperations(basedOnManager, currentUser);
                 return basedOnCentre;
             }
-        }
-    }
-    
-    /**
-     * Initialises 'virtual' (should never be persistent) centre -- caches it on the server (into currentCentres only).
-     *
-     * @param gdtm
-     * @param miType
-     * @param name -- name of the centre to be initialised; used for surrogate device-specific centres, their diff counterparts and for 'null'-named aka 'default' centres  
-     * @param centre
-     *
-     * @return
-     */
-    private static void initCentre(final IGlobalDomainTreeManager gdtm, final Class<? extends MiWithConfigurationSupport<?>> miType, final String name, final ICentreDomainTreeManagerAndEnhancer centre) {
-        synchronized (gdtm) {
-            ((GlobalDomainTreeManager) gdtm).overrideCentre(miType, name, centre);
         }
     }
     
@@ -1118,18 +1065,7 @@ public class CentreUpdater {
      * @return
      */
     private static void overrideAndSaveDifferencesCentre(final IGlobalDomainTreeManager gdtm, final Class<? extends MiWithConfigurationSupport<?>> miType, final ICentreDomainTreeManagerAndEnhancer newDiffCentre, final String deviceSpecificDiffName, final String newDesc) {
-        initCentre(gdtm, miType, deviceSpecificDiffName, newDiffCentre);
-        gdtm.saveEntityCentreManager(miType, deviceSpecificDiffName, newDesc);
-    }
-    
-    /**
-     * Clears all cached instances of centre managers for concrete user's {@link IGlobalDomainTreeManager}.
-     *
-     * @param gdtm
-     */
-    public static void clearAllCentres(final IGlobalDomainTreeManager gdtm) {
-        final GlobalDomainTreeManager globalManager = (GlobalDomainTreeManager) gdtm;
-        globalManager.removeAllCentresLocally();
+        gdtm.saveEntityCentreManager(miType, deviceSpecificDiffName, newDiffCentre, newDesc);
     }
     
 }
