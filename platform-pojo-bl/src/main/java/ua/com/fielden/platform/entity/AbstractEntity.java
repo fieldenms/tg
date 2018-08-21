@@ -1006,7 +1006,7 @@ public abstract class AbstractEntity<K extends Comparable> implements Comparable
      * @return
      */
     private static List<Annotation> extractFieldBeforeChangeAnnotations(final Field field) {
-        final List<Annotation> propertyValidationAnotations = new ArrayList<Annotation>();
+        final List<Annotation> propertyValidationAnotations = new ArrayList<>();
         final BeforeChange bce = AnnotationReflector.getAnnotation(field, BeforeChange.class);
         if (bce != null) {
             propertyValidationAnotations.add(bce);
