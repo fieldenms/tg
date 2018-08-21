@@ -2,6 +2,8 @@ package ua.com.fielden.platform.reflection;
 
 import static java.lang.String.format;
 import static ua.com.fielden.platform.reflection.Finder.findFieldByNameOptionally;
+import static ua.com.fielden.platform.reflection.Reflector.MAXIMUM_CACHE_SIZE;
+import static ua.com.fielden.platform.types.tuples.T2.t2;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.AnnotatedElement;
@@ -17,7 +19,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeUnit;
 
 import org.apache.log4j.Logger;
 
@@ -35,6 +36,7 @@ import ua.com.fielden.platform.entity.annotation.Secrete;
 import ua.com.fielden.platform.entity.annotation.TransactionEntity;
 import ua.com.fielden.platform.entity.validation.annotation.ValidationAnnotation;
 import ua.com.fielden.platform.reflection.exceptions.ReflectionException;
+import ua.com.fielden.platform.types.tuples.T2;
 import ua.com.fielden.platform.utils.Pair;
 
 /**
@@ -47,8 +49,14 @@ public final class AnnotationReflector {
     private static final Logger LOGGER = Logger.getLogger(AnnotationReflector.class);
 
     /** A global lazy static cache of annotations, which is used for annotation information retrieval. */
-    private static final Cache<Class<?>, Map<String, Map<Class<? extends Annotation>, Annotation>>> methodAnnotations = CacheBuilder.newBuilder().expireAfterAccess(10, TimeUnit.SECONDS).concurrencyLevel(50).build();
-    private static final Cache<Class<?>, Map<String, Map<Class<? extends Annotation>, Annotation>>> fieldAnnotations = CacheBuilder.newBuilder().expireAfterAccess(10, TimeUnit.SECONDS).concurrencyLevel(50).build();
+    private static final Cache<Class<?>, Map<String, Map<Class<? extends Annotation>, Annotation>>> METHOD_ANNOTATIONS = CacheBuilder.newBuilder().weakKeys().initialCapacity(1000).maximumSize(MAXIMUM_CACHE_SIZE).concurrencyLevel(50).build();
+    private static final Cache<Class<?>, Map<String, Map<Class<? extends Annotation>, Annotation>>> FIELD_ANNOTATIONS = CacheBuilder.newBuilder().weakKeys().initialCapacity(1000).maximumSize(MAXIMUM_CACHE_SIZE).concurrencyLevel(50).build();
+    
+    public static T2<Long, Long> cleanUp() {
+        METHOD_ANNOTATIONS.cleanUp();
+        FIELD_ANNOTATIONS.cleanUp();
+        return t2(METHOD_ANNOTATIONS.size(), FIELD_ANNOTATIONS.size());
+    }
 
     /**
      * Let's hide default constructor, which is not needed for a static class.
@@ -110,7 +118,7 @@ public final class AnnotationReflector {
 
         final Map<String, Map<Class<? extends Annotation>, Annotation>> cachedMethods;
         try {
-            cachedMethods = fieldAnnotations.get(klass, HashMap::new);
+            cachedMethods = FIELD_ANNOTATIONS.get(klass, HashMap::new);
         } catch (final ExecutionException ex) {
             LOGGER.error(ex);
             throw new ReflectionException(format("Could not get annotation for field [%s].", field), ex);
@@ -125,7 +133,7 @@ public final class AnnotationReflector {
 
         final Map<String, Map<Class<? extends Annotation>, Annotation>> cachedMethods;
         try {
-            cachedMethods = methodAnnotations.get(klass, HashMap::new);
+            cachedMethods = METHOD_ANNOTATIONS.get(klass, HashMap::new);
         } catch (final ExecutionException ex) {
             LOGGER.error(ex);
             throw new ReflectionException(format("Could not get annotation for method [%s].", method), ex);
