@@ -39,11 +39,10 @@ public class WebGlobalDomainTreeManager extends GlobalDomainTreeManager implemen
     
     @Inject
     public WebGlobalDomainTreeManager(final ISerialiser serialiser, final ISerialiser0 serialiser0, final EntityFactory factory, final IUserProvider userProvider, final IMainMenuItem mainMenuItemController, final IEntityCentreConfig entityCentreConfigController, final IEntityCentreAnalysisConfig entityCentreAnalysisConfigController, final IEntityMasterConfig entityMasterConfigController, final IEntityLocatorConfig entityLocatorConfigController, final IWebUiConfig webApp, final IServerGlobalDomainTreeManager serverManager, final IUser coUser) {
-        super(serialiser, serialiser0, factory, userProvider, mainMenuItemController, entityCentreConfigController, entityCentreAnalysisConfigController, entityMasterConfigController, entityLocatorConfigController, coUser);
+        super(serialiser, factory, userProvider, mainMenuItemController, entityCentreConfigController, coUser);
         
         this.webApp = webApp;
         this.serverManager = serverManager;
-        this.avoidPersistentCentres();
     }
     
     @Override

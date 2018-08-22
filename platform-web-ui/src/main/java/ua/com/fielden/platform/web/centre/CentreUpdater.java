@@ -125,26 +125,6 @@ public class CentreUpdater {
         return saveAsName.map(san -> format("%s[%s]", name, san)).orElse(name);
     }
     
-//    /**
-//     * Returns the current version of centre manager (it assumes that it should be initialised!).
-//     *
-//     * @param gdtm
-//     * @param miType
-//     * @param name -- surrogate name of the centre (fresh, previouslyRun etc.)
-//     * @param saveAsName -- user-defined title of 'saveAs' centre configuration or empty {@link Optional} for unnamed centre
-//     * @param device -- device profile (mobile or desktop) for which the centre is accessed / maintained
-//     * @return
-//     */
-//    public static ICentreDomainTreeManagerAndEnhancer centre(final IGlobalDomainTreeManager gdtm, final Class<? extends MiWithConfigurationSupport<?>> miType, final String name, final Optional<String> saveAsName, final DeviceProfile device) {
-//        return centre0(gdtm, miType, deviceSpecific(saveAsSpecific(name, saveAsName), device));
-//    }
-//    private static ICentreDomainTreeManagerAndEnhancer centre0(final IGlobalDomainTreeManager gdtm, final Class<? extends MiWithConfigurationSupport<?>> miType, final String deviceSpecificName) {
-//        if (gdtm.getEntityCentreManager(miType, deviceSpecificName) == null) {
-//            throw new IllegalStateException(String.format("The '%s' centre should be initialised.", deviceSpecificName));
-//        }
-//        return gdtm.getEntityCentreManager(miType, deviceSpecificName);
-//    }
-    
     /**
      * Returns the current version of centre (initialises it in case if it is not created yet, updates it in case where it is stale).
      * <p>

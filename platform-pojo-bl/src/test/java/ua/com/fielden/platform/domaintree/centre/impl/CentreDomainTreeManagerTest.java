@@ -17,10 +17,8 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 import ua.com.fielden.platform.domaintree.IDomainTreeManager;
-import ua.com.fielden.platform.domaintree.IGlobalDomainTreeManager;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.IAddToCriteriaTickManager.IPropertyValueListener;
-import ua.com.fielden.platform.domaintree.centre.ILocatorDomainTreeManager.ILocatorDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.domaintree.centre.IOrderingRepresentation.Ordering;
 import ua.com.fielden.platform.domaintree.exceptions.DomainTreeException;
 import ua.com.fielden.platform.domaintree.impl.AbstractDomainTree;
@@ -28,7 +26,6 @@ import ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeManagerTest;
 import ua.com.fielden.platform.domaintree.testing.EntityForCentreCheckedProperties;
 import ua.com.fielden.platform.domaintree.testing.EntityWithCompositeKey;
 import ua.com.fielden.platform.domaintree.testing.EntityWithKeyTitleAndWithAEKeyType;
-import ua.com.fielden.platform.domaintree.testing.EntityWithStringKeyType;
 import ua.com.fielden.platform.domaintree.testing.MasterEntity;
 import ua.com.fielden.platform.domaintree.testing.MasterEntityForCentreDomainTree;
 import ua.com.fielden.platform.domaintree.testing.MasterEntityForIncludedPropertiesLogic;
@@ -717,20 +714,6 @@ public class CentreDomainTreeManagerTest extends AbstractDomainTreeManagerTest {
         // Alter and check //
         assertTrue("The first tick reference should be the same", dtm().getFirstTick() == dtm().getFirstTick().setColumnsNumber(3));
         assertEquals("The number of columns should be 3", dtm().getFirstTick().getColumnsNumber(), 3);
-    }
-
-    private ILocatorDomainTreeManagerAndEnhancer initDefaultLocatorForSomeTestType(final IGlobalDomainTreeManager managerForNonBaseUser) {
-        // initialise a default locator for type EntityWithStringKeyType which will affect initialisation of [MasterEntity.entityProp.simpleEntityProp] property.
-        final ILocatorDomainTreeManagerAndEnhancer ldtmae = new LocatorDomainTreeManagerAndEnhancer(serialiser(), new HashSet<Class<?>>() {
-            {
-                add(EntityWithStringKeyType.class);
-            }
-        });
-        ldtmae.getFirstTick().check(EntityWithStringKeyType.class, "integerProp", true);
-        managerForNonBaseUser.getGlobalRepresentation().setLocatorManagerByDefault(EntityWithStringKeyType.class, ldtmae);
-        assertFalse("Should not be the same instance, it should be retrived every time.", ldtmae == managerForNonBaseUser.getGlobalRepresentation().getLocatorManagerByDefault(EntityWithStringKeyType.class));
-        assertTrue("Should be equal instance, because no one has been changed default locator.", ldtmae.equals(managerForNonBaseUser.getGlobalRepresentation().getLocatorManagerByDefault(EntityWithStringKeyType.class)));
-        return ldtmae;
     }
 
     @Test

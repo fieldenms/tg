@@ -3,8 +3,6 @@ package ua.com.fielden.platform.domaintree.impl;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchOnly;
 import static ua.com.fielden.platform.utils.CollectionUtil.setOf;
 
-import java.util.HashSet;
-
 import org.apache.log4j.Logger;
 
 import ua.com.fielden.platform.domaintree.IGlobalDomainTreeRepresentation;
@@ -19,7 +17,6 @@ import ua.com.fielden.platform.ui.config.EntityLocatorConfig;
 import ua.com.fielden.platform.ui.config.api.IEntityCentreConfig;
 import ua.com.fielden.platform.ui.config.api.IEntityLocatorConfig;
 import ua.com.fielden.platform.ui.config.api.IEntityMasterConfig;
-import ua.com.fielden.platform.utils.CollectionUtil;
 
 /**
  * A global domain tree implementation.
