@@ -9,6 +9,7 @@ import ua.com.fielden.platform.entity.annotation.MapEntityTo;
 import ua.com.fielden.platform.entity.annotation.MapTo;
 import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.entity.annotation.Secrete;
+import ua.com.fielden.platform.entity.annotation.SkipEntityExistsValidation;
 import ua.com.fielden.platform.entity.annotation.Title;
 import ua.com.fielden.platform.entity.annotation.Unique;
 
@@ -27,6 +28,14 @@ import ua.com.fielden.platform.entity.annotation.Unique;
 @MapEntityTo
 @CompanionObject(IUserSecret.class)
 public class UserSecret extends AbstractPersistentEntity<User> {
+
+    public static final String SECRET_RESET_UUID_SEPERATOR = "-";
+
+    @IsProperty
+    @MapTo
+    @Title("User")
+    @SkipEntityExistsValidation
+    private User key;
 
     @IsProperty(length = 255)
     @MapTo
@@ -48,6 +57,17 @@ public class UserSecret extends AbstractPersistentEntity<User> {
     @Title(value = "Reset UUID", desc = "The hash of the password reset request UUID")
     private String resetUuid;
 
+    @Observable
+    @Override
+    public UserSecret setKey(final User key) {
+        this.key = key;
+        return this;
+    }
+
+    @Override
+    public User getKey() {
+        return key;
+    }
 
     @Observable
     public UserSecret setPassword(final String password) {

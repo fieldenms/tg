@@ -126,7 +126,7 @@ public class LoginResource extends ServerResource {
     }
 
     @Post
-    public void login(final Representation entity) throws ResourceException {
+    public void login(final Representation entity) {
         try {
             final Form form = new Form(entity);
             final Credentials credo = new Credentials();
