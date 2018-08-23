@@ -17,6 +17,7 @@ import ua.com.fielden.platform.entity.annotation.KeyType;
 import ua.com.fielden.platform.entity.annotation.MapEntityTo;
 import ua.com.fielden.platform.entity.annotation.MapTo;
 import ua.com.fielden.platform.entity.annotation.Observable;
+import ua.com.fielden.platform.entity.annotation.Secrete;
 import ua.com.fielden.platform.entity.annotation.Title;
 import ua.com.fielden.platform.entity.annotation.Unique;
 import ua.com.fielden.platform.entity.annotation.mutator.AfterChange;
@@ -85,9 +86,9 @@ public class User extends ActivatableAbstractEntity<String> {
     private String key;
     
     @IsProperty(length = 255)
-    @Invisible
     @MapTo
     @Title(desc = "A hash code of the actual password that only the user should know")
+    @Secrete
     private String password;
 
     @IsProperty(value = UserAndRoleAssociation.class, linkProperty = "user")
@@ -117,16 +118,16 @@ public class User extends ActivatableAbstractEntity<String> {
 
     @IsProperty
     @MapTo
-    @Invisible
     @Unique // UUID gets generated and hashed, thus should be algorithmically unique, but just in case let's enforce it at the model level
+    @Secrete
     @Title(value = "Reset UUID", desc = "The hash of the password reset request UUID")
     private String resetUuid;
 
     @IsProperty
     @MapTo
-    @Invisible
     @Unique // salt gets generated randomly for every user and needs to be unique
     @Title(value = "Salt", desc = "Random password hashing salt to protect agains the rainbow table attack.")
+    @Secrete
     private String salt;
 
     @IsProperty

@@ -15,6 +15,7 @@ import java.util.Optional;
 
 import org.junit.Test;
 
+import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.entity.annotation.Unique;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
 import ua.com.fielden.platform.entity.validation.UniqueValidator;
@@ -253,31 +254,73 @@ public class UserTestCase extends AbstractDaoTestCase {
     }
     
     @Test
-    public void self_modification_of_user_instance_result_in_correct_assignment_of_the_last_updated_by_group_of_properties() {
+    public void curren_user_has_no_sensitive_information_retrieved_by_default() {
         final IUserProvider up = getInstance(IUserProvider.class);
         up.setUsername(up.getUser().getKey(), co$(User.class)); // refresh the user
 
         final User currUser = up.getUser();
+        assertTrue(currUser.isInstrumented());
+        assertFalse(currUser.getProperty(KEY).isProxy());
+        assertTrue(currUser.getProperty("password").isProxy());
+        assertTrue(currUser.getProperty("email").isProxy());
+        assertTrue(currUser.getProperty("salt").isProxy());
+        assertTrue(currUser.getProperty("resetUuid").isProxy());
+        assertFalse(currUser.getProperty("active").isProxy());
+        assertFalse(currUser.getProperty("base").isProxy());
+        assertFalse(currUser.getProperty("basedOnUser").isProxy());
+        assertFalse(currUser.getProperty("roles").isProxy());
+    }
+
+    @Test
+    public void findUser_returns_a_user_with_expected_fetch_model() {
+        final User user5 = coUser.findByKeyAndFetch(co$(User.class).getFetchProvider().fetchModel(), "USER5");
+        assertTrue(user5.getProperty("basedOnUser").isValid());
+        assertEquals("USER1", user5.getBasedOnUser().getKey());
+        
+        final User baseUser3 = coUser.findByKeyAndFetch(co$(User.class).getFetchProvider().fetchModel(), "USER3");
+        user5.setBasedOnUser(baseUser3);
+        save(user5);
+
+        final User user5Again = coUser.findUser("USER5"); 
+        assertTrue(user5Again.isInstrumented());
+        assertFalse(user5Again.getProperty(KEY).isProxy());
+        assertTrue(user5Again.getProperty("password").isProxy());
+        assertTrue(user5Again.getProperty("email").isProxy());
+        assertTrue(user5Again.getProperty("salt").isProxy());
+        assertTrue(user5Again.getProperty("resetUuid").isProxy());
+        assertFalse(user5Again.getProperty("active").isProxy());
+        assertFalse(user5Again.getProperty("base").isProxy());
+        assertFalse(user5Again.getProperty("basedOnUser").isProxy());
+        assertTrue(user5Again.getBasedOnUser().isIdOnlyProxy());
+        assertEquals(user5Again.getBasedOnUser().getId(), baseUser3.getId());
+    }
+
+    @Test
+    public void self_modification_of_user_instance_result_in_correct_assignment_of_the_last_updated_by_group_of_properties() {
+        final IUser co$ = co$(User.class);
+        final IUserProvider up = getInstance(IUserProvider.class);
+        up.setUsername(up.getUser().getKey(), co$); // refresh the user
+
+        final User currUser = co$.findByEntityAndFetch(co$.getFetchProvider().fetchModel(), up.getUser());
         assertNotNull(currUser);
         assertTrue(currUser.isPersisted());
         assertEquals(1L, currUser.getVersion().longValue());
-        
+
         final UniversalConstantsForTesting constants = (UniversalConstantsForTesting) getInstance(IUniversalConstants.class);
         constants.setNow(dateTime("2016-05-16 16:36:57"));
-        
+
         // modify and save
         final String email = "new_email@company.com";
         final User savedUser = save(currUser.setEmail(email));
         assertEquals(2L, savedUser.getVersion().longValue());
-        
+
         // refresh the user instance in the provider
         up.setUsername(currUser.getKey(), co$(User.class));
-        
+
         final User user = up.getUser();
         assertTrue(user.isPersisted());
         assertEquals(2L, savedUser.getVersion().longValue());
-        assertEquals(email, user.getEmail());
-        
+
         assertNotNull(user.getLastUpdatedBy());
         assertEquals(user, user.getLastUpdatedBy());
         assertNotNull(user.getLastUpdatedDate());
@@ -381,7 +424,6 @@ public class UserTestCase extends AbstractDaoTestCase {
         assertFalse(user3.isBase());
     }
 
-    
     @Override
     protected void populateDomain() {
         super.populateDomain();
