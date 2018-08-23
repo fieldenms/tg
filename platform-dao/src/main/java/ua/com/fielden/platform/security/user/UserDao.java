@@ -5,6 +5,8 @@ import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
 import static ua.com.fielden.platform.entity.AbstractPersistentEntity.LAST_UPDATED_BY;
 import static ua.com.fielden.platform.entity.ActivatableAbstractEntity.ACTIVE;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetch;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchOnly;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchIdOnly;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchAll;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.orderBy;
@@ -190,7 +192,9 @@ public class UserDao extends CommonEntityDao<User> implements IUser {
 
     @Override
     public User findUser(final String username) {
-        return findByKeyAndFetch(fetch(User.class).with(LAST_UPDATED_BY), username);
+        // it is critical that the fetch is as tight here as possible in order not to leak any sensitive info to the client
+        final fetch<User> fetch = fetchOnly(User.class).with(KEY).with(ACTIVE).with("base").with("basedOnUser", fetchIdOnly(User.class));                
+        return findByKeyAndFetch(fetch, username);
     }
 
     @Override
@@ -300,7 +304,7 @@ public class UserDao extends CommonEntityDao<User> implements IUser {
         } else {
             // if a corresponding user was found then UUID is valid if it is not expired
             final String[] uuidParts = uuid.split(User.SECRET_RESET_UUID_SEPERATOR);
-            final long expirationTime = Long.valueOf(uuidParts[2]);
+            final long expirationTime = Long.parseLong(uuidParts[2]);
             final boolean expired = getUniversalConstants().now().getMillis() >= expirationTime;
             // dissociation UUID form user if has expired
             if (expired) {

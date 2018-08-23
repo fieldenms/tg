@@ -1022,7 +1022,7 @@ public abstract class AbstractEntity<K extends Comparable> implements Comparable
      * @return
      */
     private static List<Annotation> extractFieldUniqueAnnotation(final Field field) {
-        final List<Annotation> propertyValidationAnotations = new ArrayList<Annotation>();
+        final List<Annotation> propertyValidationAnotations = new ArrayList<>();
         final Unique uniqueAnnotation = AnnotationReflector.getAnnotation(field, Unique.class);
         if (uniqueAnnotation != null) {
             propertyValidationAnotations.add(uniqueAnnotation);
@@ -1037,7 +1037,7 @@ public abstract class AbstractEntity<K extends Comparable> implements Comparable
      * @return
      */
     private static List<Annotation> extractFieldFinalAnnotation(final Field field) {
-        final List<Annotation> propertyValidationAnotations = new ArrayList<Annotation>();
+        final List<Annotation> propertyValidationAnotations = new ArrayList<>();
         final Final finalAnnotation = AnnotationReflector.getAnnotation(field, Final.class);
         if (finalAnnotation != null) {
             propertyValidationAnotations.add(finalAnnotation);
@@ -1310,9 +1310,9 @@ public abstract class AbstractEntity<K extends Comparable> implements Comparable
         beginInitialising();
         try {
             // restore property value state to original
-            nonProxiedProperties().forEach(mp -> mp.restoreToOriginal());
+            nonProxiedProperties().forEach(MetaProperty::restoreToOriginal);
             // run definers to restore meta-state that could have been set as part of some property after change logic
-            nonProxiedProperties().filter(mp -> !mp.isCollectional()).forEach(mp -> mp.defineForOriginalValue());
+            nonProxiedProperties().filter(mp -> !mp.isCollectional()).forEach(MetaProperty::defineForOriginalValue);
         } finally {
             endInitialising();
         }
