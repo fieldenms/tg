@@ -1,10 +1,14 @@
 package ua.com.fielden.platform.serialisation;
 
+import static java.lang.String.format;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+import static ua.com.fielden.platform.serialisation.api.impl.TgJackson.ERR_RESTRICTED_TYPE_SERIALISATION;
+import static ua.com.fielden.platform.serialisation.jackson.serialisers.EntityJsonSerialiser.ERR_RESTRICTED_TYPE_SERIALISATION_DUE_TO_PROP_TYPE;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
@@ -33,6 +37,7 @@ import ua.com.fielden.platform.entity.proxy.IIdOnlyProxiedEntityTypeCache;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.error.Warning;
 import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
+import ua.com.fielden.platform.security.user.UserSecret;
 import ua.com.fielden.platform.serialisation.api.ISerialisationTypeEncoder;
 import ua.com.fielden.platform.serialisation.api.ISerialiserEngine;
 import ua.com.fielden.platform.serialisation.api.SerialiserEngines;
@@ -60,10 +65,14 @@ import ua.com.fielden.platform.serialisation.jackson.entities.EntityWithPolymorp
 import ua.com.fielden.platform.serialisation.jackson.entities.EntityWithSameEntity;
 import ua.com.fielden.platform.serialisation.jackson.entities.EntityWithSetOfEntities;
 import ua.com.fielden.platform.serialisation.jackson.entities.EntityWithString;
+import ua.com.fielden.platform.serialisation.jackson.entities.EntityWithUserSecret;
 import ua.com.fielden.platform.serialisation.jackson.entities.FactoryForTestingEntities;
 import ua.com.fielden.platform.serialisation.jackson.entities.OtherEntity;
 import ua.com.fielden.platform.serialisation.jackson.entities.SubBaseEntity1;
 import ua.com.fielden.platform.serialisation.jackson.entities.SubBaseEntity2;
+import ua.com.fielden.platform.serialisation.jackson.exceptions.EntityDeserialisationException;
+import ua.com.fielden.platform.serialisation.jackson.exceptions.EntitySerialisationException;
+import ua.com.fielden.platform.serialisation.jackson.serialisers.EntityJsonSerialiser;
 import ua.com.fielden.platform.test.CommonTestEntityModuleWithPropertyFactory;
 import ua.com.fielden.platform.types.Money;
 import ua.com.fielden.platform.types.tuples.T2;
@@ -118,7 +127,8 @@ public class EntitySerialisationWithJacksonTest {
                 EntityWithCompositeKey.class,
                 EntityWithMoney.class,
                 EntityWithPolymorphicAEProp.class,
-                PropertyDescriptor.class);
+                PropertyDescriptor.class,
+                UserSecret.class);
     }
 
     @Test
@@ -1313,4 +1323,5 @@ public class EntitySerialisationWithJacksonTest {
         assertEquals("Incorrect entityType.", EntityWithInteger.class, restoredEntity.getEntityType());
         assertEquals("Incorrect propertyName.", "prop", restoredEntity.getPropertyName());
     }
+
 }
