@@ -1,6 +1,10 @@
 package ua.com.fielden.platform.entity.query;
 
 import static java.lang.String.format;
+import static ua.com.fielden.platform.dao.PropertyCategory.ENTITY_AS_KEY;
+import static ua.com.fielden.platform.dao.PropertyCategory.ENTITY_MEMBER_OF_COMPOSITE_KEY;
+import static ua.com.fielden.platform.dao.PropertyCategory.UNION_ENTITY_DETAILS;
+import static ua.com.fielden.platform.dao.PropertyCategory.UNION_ENTITY_HEADER;
 import static ua.com.fielden.platform.entity.AbstractEntity.DESC;
 import static ua.com.fielden.platform.entity.AbstractEntity.ID;
 import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
@@ -29,7 +33,6 @@ import java.util.Map.Entry;
 import org.apache.log4j.Logger;
 
 import ua.com.fielden.platform.dao.DomainMetadataAnalyser;
-import ua.com.fielden.platform.dao.PropertyCategory;
 import ua.com.fielden.platform.dao.PropertyMetadata;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.AbstractPersistentEntity;
@@ -135,10 +138,10 @@ public class EntityRetrievalModel<T extends AbstractEntity<?>> extends AbstractR
         for (final PropertyMetadata ppi : propsMetadata) {
             if (!ppi.isCalculated()/* && !ppi.isSynthetic()*/) {
                 logger.debug("adding not calculated prop to fetch model: " + ppi.getName());
-                final boolean skipEntities = !(ppi.getType().equals(PropertyCategory.ENTITY_MEMBER_OF_COMPOSITE_KEY) ||
-                        ppi.getType().equals(PropertyCategory.ENTITY_AS_KEY) ||
-                        ppi.getType().equals(PropertyCategory.UNION_ENTITY_DETAILS) ||
-                        ppi.getType().equals(PropertyCategory.UNION_ENTITY_HEADER));
+                final boolean skipEntities = !(ppi.getType() == ENTITY_MEMBER_OF_COMPOSITE_KEY ||
+                        ppi.getType() == ENTITY_AS_KEY ||
+                        ppi.getType() == UNION_ENTITY_DETAILS ||
+                        ppi.getType() == UNION_ENTITY_HEADER);
                 with(ppi.getName(), skipEntities);
             }
         }
@@ -206,10 +209,10 @@ public class EntityRetrievalModel<T extends AbstractEntity<?>> extends AbstractR
     private void with(final String propName, final boolean skipEntities) {
         final PropertyMetadata ppi = getPropMetadata(propName);
         final Class propType = ppi.getJavaType();
-        if (propName.equals("key") && ppi.isVirtual()) {
+        if (propName.equals(KEY) && ppi.isVirtual()) {
             includeAllCompositeKeyMembers();
-        } else if (propName.equals("key") && isUnionEntityType(getEntityType())) {
-            getPrimProps().add("key");
+        } else if (propName.equals(KEY) && isUnionEntityType(getEntityType())) {
+            getPrimProps().add(KEY);
             includeAllUnionEntityKeyMembers();
         } else {
             if (AbstractEntity.class.isAssignableFrom(propType)/* && !ppi.isId()*/) {
