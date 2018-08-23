@@ -476,7 +476,7 @@
             
             test('[t] to todays date with time set to start of the day', function(done) {
                 const todayDate = moment().startOf("day");
-                const expectedDate = todayDate.format('DD/MM/YYYY HH:mm:ss.SSS');
+                const expectedDate = todayDate.format('DD/MM/YYYY HH:mm');
                 correctlyApproximates(done, 't', expectedDate);
             });
         });
