@@ -64,7 +64,7 @@ public class EntityRetrievalModel<T extends AbstractEntity<?>> extends AbstractR
             break;
         case NONE:
         	break;
-        case ID:
+        case ID_ONLY:
             includeIdOly();
             break;
         case ID_AND_VERSTION:

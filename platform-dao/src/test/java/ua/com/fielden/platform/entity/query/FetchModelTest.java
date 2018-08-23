@@ -276,7 +276,7 @@ public class FetchModelTest extends BaseEntQueryTCase {
 
     @Test
     public void fetch_id_only_works() {
-        final fetch<TgAuthorship> fetch = new fetch<TgAuthorship>(TgAuthorship.class, FetchCategory.ID);
+        final fetch<TgAuthorship> fetch = new fetch<TgAuthorship>(TgAuthorship.class, FetchCategory.ID_ONLY);
         final IRetrievalModel<TgAuthorship> fetchModel = produceRetrievalModel(fetch);
         assertTrue(fetchModel.containsProxy("title"));
         assertTrue(fetchModel.containsProxy("author"));
@@ -287,7 +287,7 @@ public class FetchModelTest extends BaseEntQueryTCase {
 
     @Test
     public void fetch_id_only_works_for_union_entity_props() {
-        final fetch<TgBogie> fetch = new fetch<TgBogie>(TgBogie.class, FetchCategory.ID);
+        final fetch<TgBogie> fetch = new fetch<TgBogie>(TgBogie.class, FetchCategory.ID_ONLY);
         final IRetrievalModel<TgBogie> fetchModel = produceRetrievalModel(fetch);
         assertTrue(fetchModel.containsProp("id"));
         assertTrue(fetchModel.containsProxy("version"));

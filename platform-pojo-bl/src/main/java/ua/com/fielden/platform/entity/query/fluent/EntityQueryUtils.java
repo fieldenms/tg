@@ -57,7 +57,7 @@ public class EntityQueryUtils {
 	}
 
 	public static <T extends AbstractEntity<?>> fetch<T> fetchIdOnly(final Class<T> entityType) {
-		return new fetch<>(entityType, FetchCategory.ID);
+		return new fetch<>(entityType, FetchCategory.ID_ONLY);
 	}
 
 	public static <T extends AbstractEntity<?>> fetch<T> fetch(final Class<T> entityType) {

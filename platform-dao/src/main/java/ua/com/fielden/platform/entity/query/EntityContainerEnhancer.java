@@ -3,6 +3,7 @@ package ua.com.fielden.platform.entity.query;
 import static java.lang.String.format;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
+import static ua.com.fielden.platform.entity.query.fluent.fetch.FetchCategory.ID_ONLY;
 
 import java.lang.reflect.Field;
 import java.util.ArrayList;
@@ -102,7 +103,7 @@ public class EntityContainerEnhancer<E extends AbstractEntity<?>> {
     }
 
     private boolean isFetchIdOnly(final fetch<? extends AbstractEntity<?>> fetchModel) {
-        return fetchModel.getFetchCategory().equals(FetchCategory.ID);
+        return fetchModel.getFetchCategory() == ID_ONLY;
     }
 
     private void assignInstrumentationSetting(final List<EntityContainer<E>> entities, final IRetrievalModel<E> fetchModel) {
