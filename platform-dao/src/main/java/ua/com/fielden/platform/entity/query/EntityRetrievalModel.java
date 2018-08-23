@@ -245,10 +245,6 @@ public class EntityRetrievalModel<T extends AbstractEntity<?>> extends AbstractR
             throw new EqlException(format(MSG_MISMATCH_BETWEEN_PROPERTY_AND_FETCH_MODEL_TYPES, propType, propName, getEntityType(), fetchModel.getEntityType())); 
         }
 
-        if (AbstractEntity.class.isAssignableFrom(fetchModel.getEntityType())) {
-            addEntityPropsModel(propName, fetchModel);
-        } else {
-            throw new IllegalArgumentException(propName + " has fetch model for type " + fetchModel.getEntityType().getName() + ". Fetch model with entity type is required.");
-        }
+        addEntityPropsModel(propName, fetchModel);
     }
 }
