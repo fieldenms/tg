@@ -1,6 +1,12 @@
 package ua.com.fielden.platform.entity.query.fluent;
 
 import static java.lang.String.format;
+import static ua.com.fielden.platform.entity.AbstractEntity.ID;
+import static ua.com.fielden.platform.entity.AbstractEntity.VERSION;
+import static ua.com.fielden.platform.entity.query.fluent.fetch.FetchCategory.ALL;
+import static ua.com.fielden.platform.entity.query.fluent.fetch.FetchCategory.DEFAULT;
+import static ua.com.fielden.platform.entity.query.fluent.fetch.FetchCategory.ID_AND_VERSTION;
+import static ua.com.fielden.platform.entity.query.fluent.fetch.FetchCategory.KEY_AND_DESC;
 
 import java.util.Collections;
 import java.util.HashMap;
@@ -33,7 +39,7 @@ public class fetch<T extends AbstractEntity<?>> {
      * Used mainly for serialisation.
      */
     protected fetch() {
-        this(null, FetchCategory.ID_AND_VERSTION);
+        this(null, ID_AND_VERSTION);
     }
 
     public fetch(final Class<T> entityType, final FetchCategory fetchCategory, final boolean instrumented) {
@@ -59,8 +65,8 @@ public class fetch<T extends AbstractEntity<?>> {
     
     private void checkForExistence(final String propName) {
         if (entityType != EntityAggregates.class && // 
-                !"id".equals(propName) && //
-                !"version".equals(propName) && //
+                !ID.equals(propName) && //
+                !VERSION.equals(propName) && //
                 !Finder.isPropertyPresent(entityType, propName)) {
             throw new IllegalArgumentException("Property [" + propName + "] is not present within [" + entityType.getSimpleName() + "] entity!");
         }
@@ -238,20 +244,20 @@ public class fetch<T extends AbstractEntity<?>> {
     }
 
     private FetchCategory getMergedFetchCategory(final fetch<?> second) {
-        if (fetchCategory == FetchCategory.ALL || second.fetchCategory == FetchCategory.ALL) {
-            return FetchCategory.ALL;
+        if (fetchCategory == ALL || second.fetchCategory == ALL) {
+            return ALL;
         }
 
-        if (fetchCategory == FetchCategory.DEFAULT || second.fetchCategory == FetchCategory.DEFAULT) {
-            return FetchCategory.DEFAULT;
+        if (fetchCategory == DEFAULT || second.fetchCategory == DEFAULT) {
+            return DEFAULT;
         }
 
-        if (fetchCategory == FetchCategory.KEY_AND_DESC || second.fetchCategory == FetchCategory.KEY_AND_DESC) {
-            return FetchCategory.KEY_AND_DESC;
+        if (fetchCategory == KEY_AND_DESC || second.fetchCategory == KEY_AND_DESC) {
+            return KEY_AND_DESC;
         }
 
-        if (fetchCategory == FetchCategory.ID_AND_VERSTION || second.fetchCategory == FetchCategory.ID_AND_VERSTION) {
-            return FetchCategory.ID_AND_VERSTION;
+        if (fetchCategory == ID_AND_VERSTION || second.fetchCategory == ID_AND_VERSTION) {
+            return ID_AND_VERSTION;
         }
 
         return FetchCategory.ID;
