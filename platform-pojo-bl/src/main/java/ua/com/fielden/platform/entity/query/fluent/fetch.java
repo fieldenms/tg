@@ -1,14 +1,18 @@
 package ua.com.fielden.platform.entity.query.fluent;
 
 import static java.lang.String.format;
+import static java.util.Collections.unmodifiableMap;
+import static java.util.Collections.unmodifiableSet;
 import static ua.com.fielden.platform.entity.AbstractEntity.ID;
 import static ua.com.fielden.platform.entity.AbstractEntity.VERSION;
 import static ua.com.fielden.platform.entity.query.fluent.fetch.FetchCategory.ALL;
 import static ua.com.fielden.platform.entity.query.fluent.fetch.FetchCategory.DEFAULT;
 import static ua.com.fielden.platform.entity.query.fluent.fetch.FetchCategory.ID_AND_VERSTION;
+import static ua.com.fielden.platform.entity.query.fluent.fetch.FetchCategory.ID_ONLY;
 import static ua.com.fielden.platform.entity.query.fluent.fetch.FetchCategory.KEY_AND_DESC;
+import static ua.com.fielden.platform.reflection.Finder.isPropertyPresent;
+import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.determinePropertyType;
 
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -18,14 +22,12 @@ import java.util.Set;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.EntityAggregates;
 import ua.com.fielden.platform.entity.query.exceptions.EqlException;
-import ua.com.fielden.platform.reflection.Finder;
-import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 
 public class fetch<T extends AbstractEntity<?>> {
     public static final String MSG_MISMATCH_BETWEEN_PROPERTY_AND_FETCH_MODEL_TYPES = "Mismatch between actual type [%s] of property [%s] in entity type [%s] and its fetch model type [%s]!";
 
     public enum FetchCategory {
-        ALL, DEFAULT, KEY_AND_DESC, ID_AND_VERSTION, ID_ONLY, ALL_INCL_CALC, NONE
+        ALL, ALL_INCL_CALC, DEFAULT, KEY_AND_DESC, ID_ONLY, ID_AND_VERSTION, NONE
     }
 
     private final Class<T> entityType;
@@ -67,7 +69,7 @@ public class fetch<T extends AbstractEntity<?>> {
         if (entityType != EntityAggregates.class && // 
                 !ID.equals(propName) && //
                 !VERSION.equals(propName) && //
-                !Finder.isPropertyPresent(entityType, propName)) {
+                !isPropertyPresent(entityType, propName)) {
             throw new IllegalArgumentException("Property [" + propName + "] is not present within [" + entityType.getSimpleName() + "] entity!");
         }
     }
@@ -122,7 +124,7 @@ public class fetch<T extends AbstractEntity<?>> {
         validate(propName);
         // if the entityType is not an aggregate entity then we must validate that the type of propName and the type of fetchModel match
         if (entityType != EntityAggregates.class) {
-            final Class<?> propType = PropertyTypeDeterminator.determinePropertyType(entityType, propName);
+            final Class<?> propType = determinePropertyType(entityType, propName);
             if (propType != fetchModel.entityType) {
                 throw new EqlException(format(MSG_MISMATCH_BETWEEN_PROPERTY_AND_FETCH_MODEL_TYPES, propType, propName, entityType, fetchModel.getEntityType()));
             }
@@ -142,15 +144,15 @@ public class fetch<T extends AbstractEntity<?>> {
     }
 
     public Map<String, fetch<? extends AbstractEntity<?>>> getIncludedPropsWithModels() {
-        return Collections.unmodifiableMap(includedPropsWithModels);
+        return unmodifiableMap(includedPropsWithModels);
     }
 
     public Set<String> getIncludedProps() {
-        return Collections.unmodifiableSet(includedProps);
+        return unmodifiableSet(includedProps);
     }
 
     public Set<String> getExcludedProps() {
-        return Collections.unmodifiableSet(excludedProps);
+        return unmodifiableSet(excludedProps);
     }
 
     public FetchCategory getFetchCategory() {
@@ -260,7 +262,7 @@ public class fetch<T extends AbstractEntity<?>> {
             return ID_AND_VERSTION;
         }
 
-        return FetchCategory.ID_ONLY;
+        return ID_ONLY;
     }
 
     public fetch<?> unionWith(final fetch<?> second) {
