@@ -153,7 +153,11 @@ public abstract class AbstractOpenCompoundMasterDao<T extends AbstractFunctional
     }
 
     public static <K extends AbstractEntity<?>> Map<String, Object> enhanceParametersWithCustomValue(final Map<String, Function<Object, Object>> parameters, final K entity) {
-        return parameters.entrySet().stream().collect(toMap(Map.Entry::getKey, entry -> entry.getValue().apply(entity)));
+        final Map<String, Object> queryParams = new HashMap<>();
+        parameters.entrySet().stream().forEach(entry -> {
+            queryParams.put(entry.getKey(), entry.getValue().apply(entity));
+        });
+        return queryParams;
     }
 
     private static Object getValue(final Object value, final String propertyName) {
