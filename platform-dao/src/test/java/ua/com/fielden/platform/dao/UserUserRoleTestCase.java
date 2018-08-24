@@ -52,10 +52,9 @@ public class UserUserRoleTestCase extends AbstractDaoTestCase {
             }
             
             assertEquals("incorrect key of the " + userIndex + "-th person in the testThatTheUsersWereRetrievedCorrectly", "user" + Integer.toString(userIndex), user.getKey());
-            assertEquals("incorrect password of the " + userIndex + "-th person in the testThatTheUsersWereRetrievedCorrectly", "userpass" + Integer.toString(userIndex), user.getPassword());
 
             final Set<UserAndRoleAssociation> userRolesAssociation = user.getRoles();
-            final Set<UserRole> userRoles = new HashSet<UserRole>();
+            final Set<UserRole> userRoles = new HashSet<>();
             for (final UserAndRoleAssociation userAssociation : userRolesAssociation) {
                 userRoles.add(userAssociation.getUserRole());
             }
@@ -87,7 +86,7 @@ public class UserUserRoleTestCase extends AbstractDaoTestCase {
     public void test_that_save_for_users() {
         // retrieving the user, modifying it's password and saving changes
         User user = coUser.findUserByKeyWithRoles("user1");
-        user.setPassword("new password");
+        user.setEmail("new_email@gmail.com");
         UserAndRoleAssociation userAssociation = new_composite(UserAndRoleAssociation.class, user, new_(UserRole.class, "role1", ""));
         final Set<UserAndRoleAssociation> associations = new HashSet<UserAndRoleAssociation>();
         for (final UserAndRoleAssociation roleAssociation : user.getRoles()) {
@@ -101,7 +100,7 @@ public class UserUserRoleTestCase extends AbstractDaoTestCase {
         // retrieving saved user and checking it
         user = coUser.findUserByKeyWithRoles("user1");
         assertEquals("incorrect key of the first person in the testWhetherTheSaveWorksProperlyForUsers", "user" + Integer.toString(1), user.getKey());
-        assertEquals("incorrect password of the first person in the testWhetherTheSaveWorksProperlyForUsers", "new password", user.getPassword());
+        assertEquals("incorrect password of the first person in the testWhetherTheSaveWorksProperlyForUsers", "new_email@gmail.com", user.getEmail());
 
         // checking whether the user role1 was removed or not
         final Set<UserAndRoleAssociation> userRoleAssociations = user.getRoles();
@@ -119,7 +118,7 @@ public class UserUserRoleTestCase extends AbstractDaoTestCase {
         final UserRole userRole3 = save(new_(UserRole.class, "nrole3", "nrole desc 3"));
 
         final String newUserName = "new_user";
-        User user = save(new_(User.class, newUserName, "new user desc").setPassword("new user password"));
+        User user = save(new_(User.class, newUserName, "new user desc").setEmail("new_email@gmail.com"));
 
         Set<UserAndRoleAssociation> userRolesAssociation = new HashSet<UserAndRoleAssociation>();
         userRolesAssociation.add(new_composite(UserAndRoleAssociation.class, user, userRole1));
@@ -133,7 +132,7 @@ public class UserUserRoleTestCase extends AbstractDaoTestCase {
         // final checking weather the final person was saved final correctly with user final roles
         user = coUser.findUserByKeyWithRoles(newUserName);
         assertNotNull("Saved user should have been found.", user);
-        assertEquals("incorrect password of the 'new user' person in the testWhetherTheCreatedUserWereCorrectlySaved", "new user password", user.getPassword());
+        assertEquals("incorrect password of the 'new user' person in the testWhetherTheCreatedUserWereCorrectlySaved", "new_email@gmail.com", user.getEmail());
 
         // checking whether the user roles were saved correctly
         userRolesAssociation = user.getRoles();
@@ -187,10 +186,10 @@ public class UserUserRoleTestCase extends AbstractDaoTestCase {
         final UserRole role7 = save(new_(UserRole.class, "role7", "role desc 7").setActive(true));
         final UserRole role8 = save(new_(UserRole.class, "role8", "role desc 8").setActive(true));
 
-        final User user1 = save(new_(User.class, "user1", "user desc 1").setBase(true).setPassword("userpass1"));
-        final User user2 = save(new_(User.class, "user2", "user desc 2").setBase(true).setPassword("userpass2"));
-        final User user3 = save(new_(User.class, "user3", "user desc 3").setBase(true).setPassword("userpass3"));
-        final User user4 = save(new_(User.class, "user4", "user desc 4").setBase(true).setPassword("userpass4"));
+        final User user1 = save(new_(User.class, "user1", "user desc 1").setBase(true));
+        final User user2 = save(new_(User.class, "user2", "user desc 2").setBase(true));
+        final User user3 = save(new_(User.class, "user3", "user desc 3").setBase(true));
+        final User user4 = save(new_(User.class, "user4", "user desc 4").setBase(true));
 
         save(new_composite(UserAndRoleAssociation.class, user1, role1));
         save(new_composite(UserAndRoleAssociation.class, user1, role2));

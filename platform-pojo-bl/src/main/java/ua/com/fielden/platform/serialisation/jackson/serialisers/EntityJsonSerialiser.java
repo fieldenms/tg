@@ -19,11 +19,11 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.function.Consumer;
 
 import org.apache.log4j.Logger;
 
 import com.fasterxml.jackson.core.JsonGenerator;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.ser.std.StdSerializer;
 
@@ -32,12 +32,14 @@ import ua.com.fielden.platform.entity.meta.MetaProperty;
 import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.reflection.Reflector;
+import ua.com.fielden.platform.security.user.UserSecret;
 import ua.com.fielden.platform.serialisation.exceptions.SerialisationException;
 import ua.com.fielden.platform.serialisation.jackson.EntitySerialiser;
 import ua.com.fielden.platform.serialisation.jackson.EntitySerialiser.CachedProperty;
 import ua.com.fielden.platform.serialisation.jackson.EntityType;
 import ua.com.fielden.platform.serialisation.jackson.JacksonContext;
 import ua.com.fielden.platform.serialisation.jackson.References;
+import ua.com.fielden.platform.serialisation.jackson.exceptions.EntitySerialisationException;
 import ua.com.fielden.platform.types.tuples.T2;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
@@ -50,16 +52,27 @@ import ua.com.fielden.platform.utils.Pair;
  * @param <T>
  */
 public class EntityJsonSerialiser<T extends AbstractEntity<?>> extends StdSerializer<T> {
+
+    public static final String ERR_RESTRICTED_TYPE_SERIALISATION_DUE_TO_PROP_TYPE = "Type [%s] containst property [%s] that is not permitted for serialisation.";
+
     private final Class<T> type;
     private static final Logger LOGGER = Logger.getLogger(EntityJsonSerialiser.class);
-    private final List<CachedProperty> properties;
-    private final EntityType entityType;
+    private final transient List<CachedProperty> properties;
+    private final transient EntityType entityType;
     private final boolean excludeNulls;
     private final boolean propertyDescriptorType;
 
     public EntityJsonSerialiser(final Class<T> type, final List<CachedProperty> properties, final EntityType entityType, final boolean excludeNulls, final boolean propertyDescriptorType) {
         super(type);
 
+        // let's do due diligence to restrict serialisation of not permitted types...
+        if (UserSecret.class.isAssignableFrom(type)) {
+            throw new EntitySerialisationException(format("Type [%s] is not permitted for serialisation.", type.getName()));
+        }
+        // or types that contain properties of not permitted for serialisation types
+        final Consumer<? super CachedProperty> error = cp -> {throw new EntitySerialisationException(format(ERR_RESTRICTED_TYPE_SERIALISATION_DUE_TO_PROP_TYPE, type.getSimpleName(), cp.field().getName()));};
+        properties.stream().filter(cp -> UserSecret.class.isAssignableFrom(cp.field().getType())).findFirst().ifPresent(error);
+        
         this.type = type;
         this.properties = properties;
         this.entityType = entityType;
@@ -68,7 +81,7 @@ public class EntityJsonSerialiser<T extends AbstractEntity<?>> extends StdSerial
     }
 
     @Override
-    public void serialize(final T entity, final JsonGenerator generator, final SerializerProvider provider) throws IOException, JsonProcessingException {
+    public void serialize(final T entity, final JsonGenerator generator, final SerializerProvider provider) throws IOException {
         if (entityType.get_identifier() == null) {
             throw new SerialisationException(format("The identifier of the type [%s] should be populated to be ready for serialisation.", entityType));
         }

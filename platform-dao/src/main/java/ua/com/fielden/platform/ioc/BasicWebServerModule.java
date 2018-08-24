@@ -82,7 +82,9 @@ import ua.com.fielden.platform.security.user.ISecurityTokenInfo;
 import ua.com.fielden.platform.security.user.IUser;
 import ua.com.fielden.platform.security.user.IUserRoleTokensUpdater;
 import ua.com.fielden.platform.security.user.IUserRolesUpdater;
+import ua.com.fielden.platform.security.user.IUserSecret;
 import ua.com.fielden.platform.security.user.UserDao;
+import ua.com.fielden.platform.security.user.UserSecretDao;
 import ua.com.fielden.platform.serialisation.api.ISerialisationClassProvider;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
 import ua.com.fielden.platform.serialisation.api.ISerialiser0;
@@ -224,6 +226,7 @@ public class BasicWebServerModule extends CommonFactoryModule {
 
         // user security related bindings
         bind(IUser.class).to(UserDao.class);
+        bind(IUserSecret.class).to(UserSecretDao.class);
         bind(IUserRolesUpdater.class).to(UserRolesUpdaterDao.class);
 
         bind(IUserRole.class).to(UserRoleDao.class);

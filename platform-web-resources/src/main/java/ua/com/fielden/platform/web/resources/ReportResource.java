@@ -47,7 +47,7 @@ public class ReportResource extends AbstractWebResource {
      */
     @Post
     @Override
-    public Representation post(final Representation envelope) throws ResourceException {
+    public Representation post(final Representation envelope) {
         try {
             final List<?> list = restUtil.restoreList(envelope);
             final String reportName = (String) list.get(0);

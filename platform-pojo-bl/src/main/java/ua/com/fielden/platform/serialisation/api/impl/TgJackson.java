@@ -6,7 +6,6 @@ import static java.lang.String.format;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.List;
@@ -23,9 +22,7 @@ import com.fasterxml.jackson.databind.JavaType;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ser.DefaultSerializerProvider;
-import com.fasterxml.jackson.databind.type.SimpleType;
 import com.fasterxml.jackson.databind.type.TypeFactory;
-import com.fasterxml.jackson.databind.util.LRUMap;
 import com.google.common.base.Charsets;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
@@ -34,6 +31,7 @@ import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
 import ua.com.fielden.platform.entity.proxy.IIdOnlyProxiedEntityTypeCache;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.reflection.ClassesRetriever;
+import ua.com.fielden.platform.security.user.UserSecret;
 import ua.com.fielden.platform.serialisation.api.ISerialisationClassProvider;
 import ua.com.fielden.platform.serialisation.api.ISerialisationTypeEncoder;
 import ua.com.fielden.platform.serialisation.api.ISerialiserEngine;
@@ -49,6 +47,8 @@ import ua.com.fielden.platform.serialisation.jackson.deserialisers.ColourJsonDes
 import ua.com.fielden.platform.serialisation.jackson.deserialisers.HyperlinkJsonDeserialiser;
 import ua.com.fielden.platform.serialisation.jackson.deserialisers.MoneyJsonDeserialiser;
 import ua.com.fielden.platform.serialisation.jackson.deserialisers.ResultJsonDeserialiser;
+import ua.com.fielden.platform.serialisation.jackson.exceptions.EntityDeserialisationException;
+import ua.com.fielden.platform.serialisation.jackson.exceptions.EntitySerialisationException;
 import ua.com.fielden.platform.serialisation.jackson.serialisers.ColourJsonSerialiser;
 import ua.com.fielden.platform.serialisation.jackson.serialisers.HyperlinkJsonSerialiser;
 import ua.com.fielden.platform.serialisation.jackson.serialisers.MoneyJsonSerialiser;
@@ -72,6 +72,9 @@ public final class TgJackson extends ObjectMapper implements ISerialiserEngine {
     private static final long serialVersionUID = 8131371701442950310L;
     private static final Logger logger = Logger.getLogger(TgJackson.class);
 
+    public static final String ERR_RESTRICTED_TYPE_SERIALISATION = "Type [%s] is not permitted for serialisation.";
+    public static final String ERR_RESTRICTED_TYPE_DESERIALISATION = "Type [%s] is not permitted for deserialisation.";
+    
     private final TgJacksonModule module;
     private final EntityFactory factory;
     private final EntityTypeInfoGetter entityTypeInfoGetter;
@@ -131,7 +134,7 @@ public final class TgJackson extends ObjectMapper implements ISerialiserEngine {
         for (final Class<?> type : provider.classes()) {
             if (EntityUtils.isPropertyDescriptor(type)) {
                 new EntitySerialiser<PropertyDescriptor<?>>((Class<PropertyDescriptor<?>>) ClassesRetriever.findClass("ua.com.fielden.platform.entity.meta.PropertyDescriptor"), this.module, this, this.factory, entityTypeInfoGetter, false, serialisationTypeEncoder, idOnlyProxiedEntityTypeCache, true);
-            } else if (AbstractEntity.class.isAssignableFrom(type)) {
+            } else if (AbstractEntity.class.isAssignableFrom(type) && !UserSecret.class.isAssignableFrom(type)) {
                 new EntitySerialiser<AbstractEntity<?>>((Class<AbstractEntity<?>>) type, module, this, factory, entityTypeInfoGetter, serialisationTypeEncoder, idOnlyProxiedEntityTypeCache);
             }
         }
@@ -177,6 +180,10 @@ public final class TgJackson extends ObjectMapper implements ISerialiserEngine {
 
     @Override
     public <T> T deserialise(final InputStream content, final Class<T> type) {
+        if (UserSecret.class.isAssignableFrom(type)) {
+            throw new EntityDeserialisationException(format(ERR_RESTRICTED_TYPE_DESERIALISATION, type.getSimpleName()));
+        }
+        
         try {
             final String contentString = IOUtils.toString(content, "UTF-8");
             logger.debug("JSON before deserialisation = |" + contentString + "|.");
@@ -231,6 +238,10 @@ public final class TgJackson extends ObjectMapper implements ISerialiserEngine {
 
     @Override
     public byte[] serialise(final Object obj) {
+        if (obj instanceof UserSecret) {
+            throw new EntitySerialisationException(format(ERR_RESTRICTED_TYPE_SERIALISATION, obj.getClass().getSimpleName()));
+        }
+
         try {
             // logger.debug("Serialised pretty JSON = |" + new String(writerWithDefaultPrettyPrinter().writeValueAsBytes(obj), Charsets.UTF_8) + "|.");
             EntitySerialiser.getContext().reset();

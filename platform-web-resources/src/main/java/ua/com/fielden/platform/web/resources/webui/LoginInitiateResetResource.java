@@ -12,6 +12,7 @@ import org.restlet.Request;
 import org.restlet.Response;
 import org.restlet.data.Encoding;
 import org.restlet.data.Form;
+import org.restlet.data.MediaType;
 import org.restlet.data.Status;
 import org.restlet.engine.application.EncodeRepresentation;
 import org.restlet.ext.json.JsonRepresentation;
@@ -25,6 +26,7 @@ import ua.com.fielden.platform.mail.SmtpEmailSender;
 import ua.com.fielden.platform.security.user.IUser;
 import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.security.user.User;
+import ua.com.fielden.platform.security.user.UserSecret;
 import ua.com.fielden.platform.utils.IUniversalConstants;
 import ua.com.fielden.platform.utils.ResourceLoader;
 import ua.com.fielden.platform.web.annotations.AppUri;
@@ -79,7 +81,7 @@ public class LoginInitiateResetResource extends ServerResource {
                     .replace("@unidentifiedUser", unidentifiedUserError)
                     .replace("@missingEmail", missingEmailError)
                     .getBytes("UTF-8");
-            return new EncodeRepresentation(Encoding.GZIP, new InputRepresentation(new ByteArrayInputStream(body)));
+            return new EncodeRepresentation(Encoding.GZIP, new InputRepresentation(new ByteArrayInputStream(body), MediaType.TEXT_HTML));
         } catch (final Exception ex) {
             logger.fatal(ex);
             throw new IllegalStateException(ex);
@@ -96,15 +98,16 @@ public class LoginInitiateResetResource extends ServerResource {
             up.setUsername(User.system_users.SU.name(), coFinder.find(User.class, true));
             
             final IUser co$User = coFinder.find(User.class, false);
-            final Optional<User> opUser = co$User.assignPasswordResetUuid(usernameOrEmail);
+            final Optional<UserSecret> maybeUserSecret = co$User.assignPasswordResetUuid(usernameOrEmail);
             
-            if (opUser.isPresent()) {
-                final User user = opUser.get(); 
+            if (maybeUserSecret.isPresent()) {
+                final UserSecret secret = maybeUserSecret.get();
+                final User user = secret.getKey(); 
                 if (StringUtils.isEmpty(user.getEmail())) {
                     getResponse().setEntity(new JsonRepresentation(format("{\"msg\": \"%s\"}", missingEmailError)));
                     getResponse().setStatus(Status.CLIENT_ERROR_BAD_REQUEST);
                 } else {
-                    final String emailBody = makePasswordRestEmail(constants.appName(), appUri, user);
+                    final String emailBody = makePasswordRestEmail(constants.appName(), appUri, secret.getResetUuid());
                     final SmtpEmailSender sender = new SmtpEmailSender(constants.smtpServer());
                     sender.sendPlainMessage(constants.fromEmailAddress(), 
                                             user.getEmail(), 
@@ -124,13 +127,13 @@ public class LoginInitiateResetResource extends ServerResource {
         }
     }
 
-    private String makePasswordRestEmail(final String appName, final String appUri, final User user) {
+    private String makePasswordRestEmail(final String appName, final String appUri, final String resetUuid) {
         final StringBuilder builder = new StringBuilder();
         builder.append(format("We heard that you lost your %s password. Sorry about that!", appName));
         builder.append("\n\n");
         builder.append("But don't worry! You can use the following link within the next day to reset your password:");
         builder.append("\n\n");
-        builder.append(format("%sreset_password/%s", appUri, user.getResetUuid()));
+        builder.append(format("%sreset_password/%s", appUri, resetUuid));
         builder.append("\n\n");
         builder.append(format("If you don't use this link within 24 hours, it will expire. To get a new password reset link, visit %sforgotten", appUri));
         builder.append("\n\n");

@@ -142,7 +142,7 @@ public class CriteriaResource extends AbstractWebResource {
      */
     @Get
     @Override
-    public Representation get() throws ResourceException {
+    public Representation get() {
         return handleUndesiredExceptions(getResponse(), () -> {
             final Class<? extends MiWithConfigurationSupport<?>> miType = centre.getMenuItemType();
             final IGlobalDomainTreeManager gdtm = getUserSpecificGlobalManager(serverGdtm, userProvider);
