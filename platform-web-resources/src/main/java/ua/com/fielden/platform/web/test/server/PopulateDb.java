@@ -130,9 +130,9 @@ public class PopulateDb extends DomainDrivenDataPopulation {
         up.setUser(u);
 
         final User _su = coUser.save(new_(User.class, User.system_users.SU.name()).setBase(true).setEmail("SU@demoapp.com").setActive(true));
-        final User su = coUser.resetPasswd(_su, _su.getKey());
+        final User su = coUser.resetPasswd(_su, _su.getKey()).getKey();
         final User _demo = co$(User.class).save(new_(User.class, "DEMO").setBasedOnUser(su).setEmail("DEMO@demoapp.com").setActive(true));
-        final User demo = coUser.resetPasswd(_demo, _demo.getKey());
+        final User demo = coUser.resetPasswd(_demo, _demo.getKey()).getKey();
 
         final ITgPerson aoPerson = (ITgPerson) co$(TgPerson.class);
         aoPerson.populateNew("Super", "User", "Super User", User.system_users.SU.name());

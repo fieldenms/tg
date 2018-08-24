@@ -83,7 +83,7 @@ public interface IDomainDrivenData {
 
             final User _su = co$(User.class).findByKeyOptional(defaultUser.name())
                     .orElseGet(() -> save(new_(User.class, defaultUser.name()).setBase(true).setEmail(defaultUser + "@" + emailDomain).setActive(true)));
-            final User su = co$User.resetPasswd(_su, SUPER_SECRET_PASSWORD);
+            final User su = co$User.resetPasswd(_su, SUPER_SECRET_PASSWORD).getKey();
 
             final UserRole admin = co$(UserRole.class).findByKeyOptional(ADMIN)
                     .orElseGet(() -> save(new_(UserRole.class, ADMIN, "A role, which has a full access to the the system and should be used only for users who need administrative previligies.").setActive(true)));

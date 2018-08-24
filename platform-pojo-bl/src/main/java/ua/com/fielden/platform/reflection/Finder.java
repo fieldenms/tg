@@ -6,6 +6,7 @@ import static ua.com.fielden.platform.entity.AbstractEntity.DESC;
 import static ua.com.fielden.platform.entity.AbstractEntity.ID;
 import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
 import static ua.com.fielden.platform.entity.annotation.IsProperty.DEFAULT_LINK_PROPERTY;
+import static ua.com.fielden.platform.reflection.Reflector.MAXIMUM_CACHE_SIZE;
 import static ua.com.fielden.platform.types.try_wrapper.TryWrapper.Try;
 
 import java.lang.annotation.Annotation;
@@ -25,7 +26,6 @@ import java.util.SortedMap;
 import java.util.SortedSet;
 import java.util.TreeMap;
 import java.util.TreeSet;
-import java.util.concurrent.TimeUnit;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -61,7 +61,12 @@ import ua.com.fielden.platform.utils.Pair;
  *
  */
 public class Finder {
-    private static final Cache<Class<?>, List<Field>> entityKeyMembers = CacheBuilder.newBuilder().expireAfterAccess(10, TimeUnit.SECONDS).concurrencyLevel(50).build();
+    private static final Cache<Class<?>, List<Field>> ENTITY_KEY_MEMBERS = CacheBuilder.newBuilder().weakKeys().initialCapacity(1000).maximumSize(MAXIMUM_CACHE_SIZE).concurrencyLevel(50).build();
+
+    public static long cleanUp() {
+        ENTITY_KEY_MEMBERS.cleanUp();
+        return ENTITY_KEY_MEMBERS.size();
+    }
 
     /**
      * Let's hide default constructor, which is not needed for a static class.
@@ -341,7 +346,7 @@ public class Finder {
         //
         // final Class<?> referenceTypeFromWhichKeyMembersCanBeDetermined = DynamicEntityClassLoader.getOriginalType(type); ?
 
-        final List<Field> cachedKeyMembers = entityKeyMembers.getIfPresent(type);
+        final List<Field> cachedKeyMembers = ENTITY_KEY_MEMBERS.getIfPresent(type);
         return new ArrayList<>(cachedKeyMembers == null ? loadAndCacheKeyMembers(type) : cachedKeyMembers); // new list should be returned, not the same reference
     }
 
@@ -353,7 +358,7 @@ public class Finder {
      */
     private static final List<Field> loadAndCacheKeyMembers(final Class<?> type) {
         final List<Field> loadedKeyMembers = Collections.unmodifiableList(loadKeyMembers(type)); // should be immutable
-        entityKeyMembers.put(type, loadedKeyMembers);
+        ENTITY_KEY_MEMBERS.put(type, loadedKeyMembers);
         return loadedKeyMembers;
     }
 

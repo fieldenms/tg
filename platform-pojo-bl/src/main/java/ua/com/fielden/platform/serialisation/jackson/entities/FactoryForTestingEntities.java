@@ -54,8 +54,7 @@ public class FactoryForTestingEntities {
     }
 
     public EmptyEntity createNullEmptyEntity() {
-        final EmptyEntity entity = null;
-        return entity;
+        return null;
     }
 
     /**

@@ -51,7 +51,7 @@ import ua.com.fielden.platform.web.resources.RestServerUtil;
  *
  */
 public class CentreResource<CRITERIA_TYPE extends AbstractEntity<?>> extends AbstractWebResource {
-    private final static Logger logger = Logger.getLogger(CentreResource.class);
+    private static final Logger LOGGER = Logger.getLogger(CentreResource.class);
     
     private final RestServerUtil restUtil;
     
