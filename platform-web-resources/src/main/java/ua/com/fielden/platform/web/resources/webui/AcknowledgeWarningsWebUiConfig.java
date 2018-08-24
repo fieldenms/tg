@@ -56,6 +56,6 @@ public class AcknowledgeWarningsWebUiConfig {
                 .withDimensions(mkDim("'30%'", "'50%'"))
                 .done();
 
-        return new EntityMaster<AcknowledgeWarnings>(AcknowledgeWarnings.class, AcknowledgeWarningsProducer.class, masterConfig, injector);
+        return new EntityMaster<>(AcknowledgeWarnings.class, AcknowledgeWarningsProducer.class, masterConfig, injector);
     }
 }
