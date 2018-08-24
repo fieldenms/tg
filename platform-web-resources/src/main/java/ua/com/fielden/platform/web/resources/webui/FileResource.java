@@ -1,5 +1,7 @@
 package ua.com.fielden.platform.web.resources.webui;
 
+import static java.lang.String.format;
+
 import java.io.ByteArrayInputStream;
 import java.io.FileNotFoundException;
 import java.io.InputStream;
@@ -12,6 +14,7 @@ import org.restlet.Request;
 import org.restlet.Response;
 import org.restlet.data.MediaType;
 import org.restlet.representation.Representation;
+import org.restlet.resource.Get;
 
 import com.google.common.base.Charsets;
 
@@ -27,7 +30,8 @@ import ua.com.fielden.platform.web.resources.RestServerUtil;
  *
  */
 public class FileResource extends AbstractWebResource {
-    private final Logger logger = Logger.getLogger(getClass());
+    private static final Logger LOGGER = Logger.getLogger(FileResource.class);
+
     private final List<String> resourcePaths;
     private final ISourceController sourceController;
     
@@ -48,15 +52,15 @@ public class FileResource extends AbstractWebResource {
     /**
      * Invoked on GET request from client.
      */
-    @Override
-    protected Representation get() {
+    @Get
+    public Representation load() {
         final String originalPath = getReference().getRemainingPart();
         final String extension = getReference().getExtensions();
         final MediaType mediaType = determineMediaType(extension);
 
         final String filePath = generateFileName(resourcePaths, originalPath);
         if (StringUtils.isEmpty(filePath)) {
-            new FileNotFoundException("The requested resource (" + originalPath + " + " + extension + ") wasn't found.").printStackTrace();
+            LOGGER.warn(format("The requested file resource ([%s] + [%s]) wasn't found.", originalPath, extension));
             return null;
         } else {
             if (MediaType.TEXT_HTML.equals(mediaType)) {
@@ -70,7 +74,7 @@ public class FileResource extends AbstractWebResource {
                 final InputStream stream = sourceController.loadStreamWithFilePath(filePath);
                 if (stream != null) {
                     final Representation encodedRepresentation = RestServerUtil.encodedRepresentation(stream, mediaType);
-                    logger.debug(String.format("File resource [%s] generated.", originalPath));
+                    LOGGER.debug(format("File resource [%s] generated.", originalPath));
                     return encodedRepresentation;
                 } else {
                     return null;
@@ -125,16 +129,4 @@ public class FileResource extends AbstractWebResource {
             return MediaType.ALL;
         }
     }
-
-    //	private static String compress(final String str) throws IOException {
-    //		if (str == null || str.length() == 0) {
-    //			return str;
-    //		}
-    //		ByteArrayOutputStream out = new ByteArrayOutputStream();
-    //		GZIPOutputStream gzip = new GZIPOutputStream(out);
-    //		gzip.write(str.getBytes());
-    //		gzip.close();
-    //		String outStr = out.toString("UTF-8");
-    //		return outStr;
-    //	}
 }

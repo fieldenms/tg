@@ -13,14 +13,15 @@ import org.restlet.Request;
 import org.restlet.Response;
 import org.restlet.data.Encoding;
 import org.restlet.data.Form;
+import org.restlet.data.MediaType;
 import org.restlet.data.Status;
 import org.restlet.engine.application.EncodeRepresentation;
 import org.restlet.ext.json.JsonRepresentation;
 import org.restlet.representation.EmptyRepresentation;
 import org.restlet.representation.InputRepresentation;
 import org.restlet.representation.Representation;
+import org.restlet.resource.Get;
 import org.restlet.resource.Post;
-import org.restlet.resource.ResourceException;
 import org.restlet.resource.ServerResource;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -86,8 +87,8 @@ public class LoginResource extends ServerResource {
 
     }
 
-    @Override
-    protected Representation get() {
+    @Get
+    public Representation login() {
         try {
             // check if there is a valid authenticator
             // if there is then should respond with redirection to root /.
@@ -118,7 +119,7 @@ public class LoginResource extends ServerResource {
     public Representation loginPage() {
         try {
             final byte[] body = ResourceLoader.getText("ua/com/fielden/platform/web/login.html").replaceAll("@title", "Login").getBytes("UTF-8");
-            return new EncodeRepresentation(Encoding.GZIP, new InputRepresentation(new ByteArrayInputStream(body)));
+            return new EncodeRepresentation(Encoding.GZIP, new InputRepresentation(new ByteArrayInputStream(body), MediaType.TEXT_HTML));
         } catch (final Exception ex) {
             LOGGER.fatal(ex);
             throw new IllegalStateException(ex);
@@ -126,7 +127,7 @@ public class LoginResource extends ServerResource {
     }
 
     @Post
-    public void login(final Representation entity) {
+    public void tryLogin(final Representation entity) {
         try {
             final Form form = new Form(entity);
             final Credentials credo = new Credentials();

@@ -12,6 +12,7 @@ import org.restlet.Request;
 import org.restlet.Response;
 import org.restlet.data.Encoding;
 import org.restlet.data.Form;
+import org.restlet.data.MediaType;
 import org.restlet.data.Status;
 import org.restlet.engine.application.EncodeRepresentation;
 import org.restlet.ext.json.JsonRepresentation;
@@ -80,7 +81,7 @@ public class LoginInitiateResetResource extends ServerResource {
                     .replace("@unidentifiedUser", unidentifiedUserError)
                     .replace("@missingEmail", missingEmailError)
                     .getBytes("UTF-8");
-            return new EncodeRepresentation(Encoding.GZIP, new InputRepresentation(new ByteArrayInputStream(body)));
+            return new EncodeRepresentation(Encoding.GZIP, new InputRepresentation(new ByteArrayInputStream(body), MediaType.TEXT_HTML));
         } catch (final Exception ex) {
             logger.fatal(ex);
             throw new IllegalStateException(ex);
