@@ -136,7 +136,6 @@ public class PopulateDb extends DomainDrivenDataPopulation {
 
         final ITgPerson aoPerson = (ITgPerson) co$(TgPerson.class);
         aoPerson.populateNew("Super", "User", "Super User", User.system_users.SU.name());
-        aoPerson.populateNew("Demo", "User", "Demo User", "DEMO");
 
         final UserRole admin = save(new_(UserRole.class, "ADMINISTRATION", "A role, which has a full access to the the system and should be used only for users who need administrative previligies.").setActive(true));
         save(new_composite(UserAndRoleAssociation.class, su, admin));
