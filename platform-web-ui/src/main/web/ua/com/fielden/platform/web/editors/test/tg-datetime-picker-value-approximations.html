@@ -295,6 +295,13 @@
             test('[9/9/7 9:5:34.567  ] to [09/09/2007 9:05:34.567 AM]', function(done) {
                 correctlyApproximates(done, '9/9/7 9:5:34.567  ', '09/09/2007 9:05:34.567 AM');
             });
+            
+            test('[t] to todays date with time set to start of the day', function(done) {
+                const todayDate = moment().startOf("day");
+                const expectedDate = todayDate.format('DD/MM/YYYY h:mm:ss.SSS A');
+                correctlyApproximates(done, 't', expectedDate);
+            });
+            
         });
     </script>
 </body>

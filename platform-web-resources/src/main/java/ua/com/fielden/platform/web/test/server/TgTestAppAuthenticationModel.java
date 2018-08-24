@@ -1,6 +1,5 @@
 package ua.com.fielden.platform.web.test.server;
 
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchIdOnly;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 import static ua.com.fielden.platform.error.Result.failure;
@@ -44,7 +43,7 @@ public class TgTestAppAuthenticationModel implements IAuthenticationModel {
             }
 
             final EntityResultQueryModel<UserSecret> query = select(UserSecret.class).where().prop("key.key").eq().val(username).and().prop("key.active").eq().val(true).model();
-            final fetch<UserSecret> fetch = fetchIdOnly(UserSecret.class).with("salt").with("password").with("key", fetchIdOnly(User.class));
+            final fetch<UserSecret> fetch = coUserSecret.getFetchProvider().fetchModel();
             final QueryExecutionModel<UserSecret, EntityResultQueryModel<UserSecret>> qem = from(query).with(fetch).model();
             
             return coUserSecret.getEntityOptional(qem)
