@@ -459,7 +459,7 @@
                     const todayMoment = moment().startOf("day");
                     return this.timePortionToBecomeEndOfDay === true ? todayMoment.add(1, 'days').subtract(1, 'milliseconds') : todayMoment;
                 } else if ('N' === upperCasedValue) {
-                    return moment();
+                    return moment().startOf('minute');
                 }
                 return null;
             },
