@@ -208,11 +208,28 @@
                             'h:ma',
                             'H:m',
                             'ha',
-                            'H'
+                            'H',
+                            'T', //Means today,
+                            't', //Means today
+                            'N',  //Means now
+                            'n' //Means now
                         ];
                     }
                 },
-
+                
+                /**
+                 * The date picker literals for date approximaton.
+                 */
+                _literals: {
+                    type: Array,
+                    value: function () {
+                        return [
+                            'T',
+                            'N'
+                        ];
+                    }
+                },
+                
                 /**
                  * The property that holds valid approximated 'moment' value in case if approximation has been successful or 'null' otherwise.
                  */
@@ -303,8 +320,8 @@
                 dialog.noCancelOnEscKey = false;
 
            	    datePicker.selectedDate = null;
-                datePicker.selectedHour = self.timePortionToBecomeEndOfDay ? 23 : null;
-                datePicker.selectedMinute = self.timePortionToBecomeEndOfDay ? 59 : null;
+                datePicker.selectedHour = self.timePortionToBecomeEndOfDay ? 23 : 00;
+                datePicker.selectedMinute = self.timePortionToBecomeEndOfDay ? 59 : 00;
                 datePicker.seconds = self.timePortionToBecomeEndOfDay ? 59 : 0;
                 datePicker.milis = self.timePortionToBecomeEndOfDay ? 999 : 0;
 
@@ -408,13 +425,18 @@
                         if (aproximated !== undefined) {
                             return aproximated;
                         }
+                    } else if (this._isLiteral(dateEditingValue)) {
+                        this._validMoment = this._tryLiterals(dateEditingValue);
+                        if (this._validMoment !== null) {
+                            return _millisDateRepresentation(this._validMoment.valueOf(), this.timeZone, this.datePortion);
+                        }
                     } else if (this.timeZone === 'UTC') { //As the last resort try utc formatting
                         this._validMoment = this._tryUTCFormats(dateEditingValue);
                         if (this._validMoment !== null) {
                             return _millisDateRepresentation(this._validMoment.valueOf(), this.timeZone, this.datePortion);
                         }
                     } else {
-                        var value = dateEditingValue.replace(new RegExp(' ', 'g'), '').trim();
+                        const value = dateEditingValue.replace(new RegExp(' ', 'g'), '').trim();
                         if (value) {
                             this._validMoment = this._tryTimePortionFormats(value, this._timePortionFormats.slice() /* the copy is made  */);
                             if (this._validMoment !== null) {
@@ -424,6 +446,22 @@
                     }
                 }
                 return dateEditingValue;
+            },
+            
+            _isLiteral: function (value) {
+                const upperCasedValue = value[0].toUpperCase();
+                return this._literals.indexOf(upperCasedValue) >= 0;
+            },
+            
+            _tryLiterals: function (editingValue) {
+                const upperCasedValue = editingValue[0].toUpperCase();
+                if ('T' === upperCasedValue) {
+                    const todayMoment = moment().startOf("day");
+                    return this.timePortionToBecomeEndOfDay === true ? todayMoment.add(1, 'days').subtract(1, 'milliseconds') : todayMoment;
+                } else if ('N' === upperCasedValue) {
+                    return moment().startOf('minute');
+                }
+                return null;
             },
 
             _approximateWithNumberOfDigits: function (dateEditingValue, numberOfDigits) {
@@ -462,8 +500,7 @@
                     if (tryingMoment.isValid()) {
                         if (['D/M/Y H:m:ss.SSS', 'D/M/Y h:m:ss.SSSa', 'D/M/Y hmma', 'D/M/Y Hmm', 'D/M/Y h:ma', 'D/M/Y H:m', 'D/M/Y ha', 'D/M/Y H', 'D/M/Y'].indexOf(firstFormat) !== -1) {
                             tryingMoment = _momentTz(this._convertToDoubleDigitYear(stringValue), firstFormat.replace('D/M/Y', 'D/M/YY'), true, this.timeZone);
-                        }
-
+                        } 
                         if (['D/M/YYYY', 'D/M/YY', 'D/M/Y'].indexOf(firstFormat) !== -1 && this.timePortionToBecomeEndOfDay === true) {
                             tryingMoment.add(1, 'days').subtract(1, 'milliseconds');
                         }

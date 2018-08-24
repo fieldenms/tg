@@ -53,7 +53,7 @@ public class UserSecretDao extends CommonEntityDao<UserSecret> implements IUserS
     
     @Override
     protected IFetchProvider<UserSecret> createFetchProvider() {
-        return super.createFetchProvider().with("key.email", "salt", "password", "resetUuid");
+        return super.createFetchProvider().with("key.email", "key.base", "salt", "password", "resetUuid");
     }
 
     @SessionRequired
