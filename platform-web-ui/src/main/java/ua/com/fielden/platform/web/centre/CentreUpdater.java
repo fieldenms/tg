@@ -552,7 +552,7 @@ public class CentreUpdater {
         final DateTime start = new DateTime();
         
         // standard init (from Centre DSL config)
-        final ICentreDomainTreeManagerAndEnhancer centre = gdtm.initEntityCentreManager(miType, null).asLeft().value;
+        final ICentreDomainTreeManagerAndEnhancer centre = CentreUpdaterUtils.createDefaultCentre(miType, webUiConfig); // TODO gdtm.initEntityCentreManager(miType, null).asLeft().value
         
         // Web UI default values application
         final ICentreDomainTreeManagerAndEnhancer defaultedCentre = applyWebUIDefaultValues(centre, getEntityType(miType));

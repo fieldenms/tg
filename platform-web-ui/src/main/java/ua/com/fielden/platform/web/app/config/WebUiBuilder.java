@@ -49,7 +49,7 @@ public class WebUiBuilder implements IWebUiBuilder {
     /**
      * Holds the map between entity centre's menu item type and entity centre.
      */
-    private final Map<Class<? extends MiWithConfigurationSupport<?>>, EntityCentre<?>> centreMap = new LinkedHashMap<>();
+    private final Map<Class<? extends MiWithConfigurationSupport<?>>, EntityCentre<?>> centreMap = new ConcurrentHashMap<>(); // TODO this must be concurrent map; investigate whether iteration order (LinkedHashMap) is relevant
     
     private final Map<Class<? extends AbstractEntity<?>>, EntityActionConfig> openMasterActions = new ConcurrentHashMap<>();
 

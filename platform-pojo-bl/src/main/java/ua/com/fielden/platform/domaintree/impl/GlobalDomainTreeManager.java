@@ -24,7 +24,6 @@ import ua.com.fielden.platform.domaintree.exceptions.DomainTreeException;
 import ua.com.fielden.platform.entity.AbstractBatchAction;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.EntityType;
-import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader;
@@ -58,23 +57,20 @@ public class GlobalDomainTreeManager extends AbstractDomainTree implements IGlob
      */
     public static final String LINK_CONFIG_TITLE = "_______________________link";
     
-    private final EntityFactory factory;
     private final IUserProvider userProvider;
+    
     private final IMainMenuItem mainMenuItemController;
     private final IEntityCentreConfig coEntityCentreConfig;
-    
     private final IUser coUser;
     
     @Inject
     public GlobalDomainTreeManager(
             final ISerialiser serialiser,
-            final EntityFactory factory,
             final IUserProvider userProvider,
             final IMainMenuItem mainMenuItemController,
             final IEntityCentreConfig coEntityCentreConfig,
             final IUser coUser) {
         super(serialiser);
-        this.factory = factory;
         this.userProvider = userProvider;
         this.mainMenuItemController = mainMenuItemController;
         this.coEntityCentreConfig = coEntityCentreConfig;
@@ -104,7 +100,7 @@ public class GlobalDomainTreeManager extends AbstractDomainTree implements IGlob
         }
     }
     
-    public static Class<?> validateMenuItemTypeRootType(final Class<?> menuItemType) {
+    private static Class<?> validateMenuItemTypeRootType(final Class<?> menuItemType) {
         final EntityType etAnnotation = menuItemType.getAnnotation(EntityType.class);
         if (etAnnotation == null || etAnnotation.value() == null) {
             error("The menu item type " + menuItemType.getSimpleName() + " has no 'EntityType' annotation, which is necessary to specify the root type of the centre.");
@@ -241,7 +237,7 @@ public class GlobalDomainTreeManager extends AbstractDomainTree implements IGlob
     private static void errorf(final String message, final Object... args) {
         error(format(message, args));
     }
-
+    
     /**
      * Retrieves a instance of manager.
      *
@@ -283,20 +279,6 @@ public class GlobalDomainTreeManager extends AbstractDomainTree implements IGlob
     
     protected ICentreDomainTreeManagerAndEnhancer createDefaultCentre(final Class<?> root, final Class<?> menuItemType) {
         return createEmptyCentre(root, getSerialiser());
-    }
-    
-    public static ICentreDomainTreeManagerAndEnhancer createEmptyCentre(final Class<?> root, final ISerialiser serialiser) {
-        // TODO next line of code must take in to account that the menu item is for association centre.
-        final CentreDomainTreeManagerAndEnhancer c = new CentreDomainTreeManagerAndEnhancer(serialiser, new HashSet<Class<?>>() {
-            {
-                add(root);
-            }
-        });
-        // initialise checkedProperties tree to make it more predictable in getting meta-info from "checkedProperties"
-        c.getFirstTick().checkedProperties(root);
-        c.getSecondTick().checkedProperties(root);
-        
-        return c;
     }
     
     /**
@@ -392,9 +374,14 @@ public class GlobalDomainTreeManager extends AbstractDomainTree implements IGlob
                 if (menuItem != null) {
                     menuItemToUse = menuItem;
                 } else {
-                    menuItemToUse = mainMenuItemController.save(factory.newByKey(MainMenuItem.class, menuItemTypeName));
+                    final MainMenuItem newMainMenuItem = mainMenuItemController.new_();
+                    newMainMenuItem.setKey(menuItemTypeName);
+                    menuItemToUse = mainMenuItemController.save(newMainMenuItem);
                 }
-                final EntityCentreConfig ecc = factory.newByKey(EntityCentreConfig.class, user, newTitle, menuItemToUse);
+                final EntityCentreConfig ecc = coEntityCentreConfig.new_();
+                ecc.setOwner(user);
+                ecc.setTitle(newTitle);
+                ecc.setMenuItem(menuItemToUse);
                 ecc.setDesc(newDesc);
                 ecc.setConfigBody(getSerialiser().serialise(copyMgr));
                 saveCentre(copyMgr, ecc);
