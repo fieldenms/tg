@@ -50,7 +50,7 @@ public class TgPersonDao extends CommonEntityDao<TgPerson> implements ITgPerson 
         user.setDesc(format("User for person [%s].", person.getDesc()));
         final User su = coUser.findByKeyAndFetch(fetchAll(User.class), User.system_users.SU.name());
         user.setBasedOnUser(su);
-        final User savedUser = coUser.resetPasswd(user, user.getKey());
+        final User savedUser = coUser.resetPasswd(user, user.getKey()).getKey();
         
         final TgPerson latestPerson = findById(person.getId(), fetchAll(TgPerson.class));
         latestPerson.setUser(savedUser);

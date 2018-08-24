@@ -3,30 +3,12 @@
  */
 package ua.com.fielden.platform.security.user;
 
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.cond;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.expr;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetch;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchAggregates;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchAll;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchAllInclCalc;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchKeyAndDescOnly;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchOnly;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.orderBy;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
-
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
 import ua.com.fielden.platform.dao.IEntityDao;
-import ua.com.fielden.platform.dao.QueryExecutionModel;
-import ua.com.fielden.platform.entity.query.EntityAggregates;
-import ua.com.fielden.platform.entity.query.fluent.fetch;
-import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
-import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
-import ua.com.fielden.platform.entity.query.model.OrderingModel;
 import ua.com.fielden.platform.pagination.IPage;
 
 /**
@@ -73,7 +55,7 @@ public interface IUser extends IEntityDao<User> {
      * @param user
      * @param passwd
      */
-    User resetPasswd(final User user, final String passwd);
+    UserSecret resetPasswd(final User user, final String passwd);
     
     /**
      * Tries to find a user by its password reset UUID.
@@ -92,7 +74,7 @@ public interface IUser extends IEntityDao<User> {
      * @param usernameOrEmail
      * @return
      */
-    Optional<User> assignPasswordResetUuid(final String usernameOrEmail);
+    Optional<UserSecret> assignPasswordResetUuid(final String usernameOrEmail);
     
     /**
      * Returns <code>true</code> if the provided <code>uuid</code> is associated with a user and has not yet expired.
@@ -109,17 +91,6 @@ public interface IUser extends IEntityDao<User> {
      * @return
      */
     boolean isPasswordStrong(final String passwd);
-    
-    /**
-     * A method for hashing the user password before storing it into the database.
-     * 
-     * @param passwd
-     * @param salt
-     * @return
-     */
-    default String hashPasswd(final String passwd, final String salt) throws Exception {
-        throw new UnsupportedOperationException();
-    }
     
     /**
      * Returns all available user roles
