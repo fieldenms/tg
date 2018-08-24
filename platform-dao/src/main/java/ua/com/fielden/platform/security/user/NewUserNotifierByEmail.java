@@ -61,7 +61,7 @@ public class NewUserNotifierByEmail implements INewUserNotifier {
     private String makePasswordRestEmail(final String appName, final String appUri, final String resetUuid) {
         final StringBuilder builder = new StringBuilder();
         builder.append(format("You have been registered as a new user in %s.%n%n", appName));
-        builder.append("In order to log into the system you need to use the following link within the next day to setup your password:%n%n");
+        builder.append("In order to log into the system you need to use the following link within the next day to setup your password:\n\n");
         builder.append(format("%sreset_password/%s%n%n", appUri, resetUuid));
         builder.append(format("If you don’t use this link within 24 hours, it will expire. To get a new password setup link, visit %sforgotten%n%n", appUri));
         builder.append("Thanks,\n");
