@@ -45,7 +45,7 @@ public class CustomViewResource extends AbstractWebResource {
             final IDeviceProvider deviceProvider,
             final Context context,
             final Request request,
-            final Response response //s
+            final Response response //
     ) {
         super(context, request, response, deviceProvider);
         this.viewName = (String) request.getAttributes().get("viewName");
