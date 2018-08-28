@@ -53,7 +53,6 @@ import ua.com.fielden.platform.serialisation.api.ISerialiser;
 import ua.com.fielden.platform.serialisation.api.SerialiserEngines;
 import ua.com.fielden.platform.serialisation.kryo.serialisers.TgSimpleSerializer;
 import ua.com.fielden.platform.types.tuples.T2;
-import ua.com.fielden.platform.ui.config.EntityCentreConfig;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
 import ua.com.fielden.snappy.DateRangePrefixEnum;
@@ -73,16 +72,6 @@ public class CentreDomainTreeManagerAndEnhancer extends AbstractDomainTreeManage
     private final transient LinkedHashMap<String, IAbstractAnalysisDomainTreeManager> freezedAnalyses;
 
     private final transient List<IAnalysisListener> analysisListeners;
-    /**
-     * ID of the {@link EntityCentreConfig} entity, that was saved with this centre manager's byte array into the database. This is needed to check the staleness of the centre manager
-     * in a lightweight manner to be able to use most recent version of the centre manager on different server nodes.
-     */
-    private transient Long savedEntityId;
-    /**
-     * Version of the {@link EntityCentreConfig} entity, that was saved with this centre manager's byte array into the database. This is needed to check the staleness of the centre manager
-     * in a lightweight manner to be able to use most recent version of the centre manager on different server nodes.
-     */
-    private transient Long savedEntityVersion;
 
     /**
      * A <i>manager with enhancer</i> constructor for the first time instantiation.
@@ -1178,43 +1167,4 @@ public class CentreDomainTreeManagerAndEnhancer extends AbstractDomainTreeManage
         return true;
     }
 
-    /**
-     * ID of the {@link EntityCentreConfig} entity, that was saved with this centre manager's byte array into the database. This is needed to check the staleness of the centre manager
-     * in a lightweight manner to be able to use most recent version of the centre manager on different server nodes.
-     *
-     * @return
-     */
-    public Long getSavedEntityId() {
-        return savedEntityId;
-    }
-
-    /**
-     * Sets ID of the {@link EntityCentreConfig} entity, that was saved with this centre manager's byte array into the database. This is needed to check the staleness of the centre manager
-     * in a lightweight manner to be able to use most recent version of the centre manager on different server nodes.
-     *
-     * @param savedEntityId
-     */
-    public void setSavedEntityId(final Long savedEntityId) {
-        this.savedEntityId = savedEntityId;
-    }
-
-    /**
-     * Version of the {@link EntityCentreConfig} entity, that was saved with this centre manager's byte array into the database. This is needed to check the staleness of the centre manager
-     * in a lightweight manner to be able to use most recent version of the centre manager on different server nodes.
-     *
-     * @return
-     */
-    public Long getSavedEntityVersion() {
-        return savedEntityVersion;
-    }
-
-    /**
-     * Sets version of the {@link EntityCentreConfig} entity, that was saved with this centre manager's byte array into the database. This is needed to check the staleness of the centre manager
-     * in a lightweight manner to be able to use most recent version of the centre manager on different server nodes.
-     *
-     * @param savedEntityVersion
-     */
-    public void setSavedEntityVersion(final Long savedEntityVersion) {
-        this.savedEntityVersion = savedEntityVersion;
-    }
 }
