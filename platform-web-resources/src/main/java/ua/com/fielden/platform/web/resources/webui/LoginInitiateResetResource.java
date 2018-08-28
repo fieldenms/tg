@@ -41,9 +41,6 @@ public class LoginInitiateResetResource extends ServerResource {
     
     public static final String BINDING_PATH = "/forgotten";
 
-    private static final String unidentifiedUserError = "Could not identify an application user.";
-    private static final String missingEmailError = "User is missing email address.";
-
     private final Logger logger = Logger.getLogger(LoginInitiateResetResource.class);
 
     private final String appUri;
@@ -78,8 +75,6 @@ public class LoginInitiateResetResource extends ServerResource {
         try {
             final byte[] body = ResourceLoader.getText("ua/com/fielden/platform/web/login-initiate-reset.html")
                     .replace("@title", title)
-                    .replace("@unidentifiedUser", unidentifiedUserError)
-                    .replace("@missingEmail", missingEmailError)
                     .getBytes("UTF-8");
             return new EncodeRepresentation(Encoding.GZIP, new InputRepresentation(new ByteArrayInputStream(body), MediaType.TEXT_HTML));
         } catch (final Exception ex) {
@@ -91,6 +86,7 @@ public class LoginInitiateResetResource extends ServerResource {
     @Post
     public void initiateLoginReset(final Representation entity) {
         try {
+            final JsonRepresentation response = new JsonRepresentation("{\"msg\": \"Reset password email is probably sent.\"}");
             final Form form = new Form(entity);
             final String usernameOrEmail = form.getValues("username_or_email");
             
@@ -103,26 +99,20 @@ public class LoginInitiateResetResource extends ServerResource {
             if (maybeUserSecret.isPresent()) {
                 final UserSecret secret = maybeUserSecret.get();
                 final User user = secret.getKey(); 
-                if (StringUtils.isEmpty(user.getEmail())) {
-                    getResponse().setEntity(new JsonRepresentation(format("{\"msg\": \"%s\"}", missingEmailError)));
-                    getResponse().setStatus(Status.CLIENT_ERROR_BAD_REQUEST);
-                } else {
+                if (!StringUtils.isEmpty(user.getEmail())) {
                     final String emailBody = makePasswordRestEmail(constants.appName(), appUri, secret.getResetUuid());
                     final SmtpEmailSender sender = new SmtpEmailSender(constants.smtpServer());
                     sender.sendPlainMessage(constants.fromEmailAddress(), 
                                             user.getEmail(), 
                                             format("[%s] Please reset your password", constants.appName()), 
                                             emailBody);
-                    getResponse().setEntity(new JsonRepresentation("{\"msg\": \"Reset password email is sent.\"}"));
                 }
-            } else {
-                getResponse().setEntity(new JsonRepresentation(format("{\"msg\": \"%s\"}", unidentifiedUserError)));
-                getResponse().setStatus(Status.CLIENT_ERROR_BAD_REQUEST);
             }
             
+            getResponse().setEntity(response);
         } catch (final Exception ex) {
             logger.fatal(ex);
-            getResponse().setEntity(new JsonRepresentation(format("{\"msg\": \"%s.\"}", ex.getMessage())));
+            getResponse().setEntity(new JsonRepresentation(format("{\"msg\": \"%s.\"}", "There was an error when attempting to request a password reset.")));
             getResponse().setStatus(Status.SERVER_ERROR_INTERNAL);
         }
     }
