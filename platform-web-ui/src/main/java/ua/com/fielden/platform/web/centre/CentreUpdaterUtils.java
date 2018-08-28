@@ -17,7 +17,6 @@ import org.apache.log4j.Logger;
 import org.joda.time.DateTime;
 import org.joda.time.Period;
 
-import ua.com.fielden.platform.domaintree.IGlobalDomainTreeManager;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.domaintree.centre.impl.CentreDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.domaintree.exceptions.DomainTreeException;
@@ -212,26 +211,35 @@ public class CentreUpdaterUtils extends CentreUpdater {
         return copyMgr;
     }
     
-    public static ICentreDomainTreeManagerAndEnhancer saveEntityCentreManager(final Class<?> menuItemType, final User user,final String name, final ICentreDomainTreeManagerAndEnhancer centre, final String newDesc) {
+    public static ICentreDomainTreeManagerAndEnhancer saveEntityCentreManager(
+            final ICentreDomainTreeManagerAndEnhancer centre,
+            final Class<?> menuItemType,
+            final User user,
+            final String name,
+            final String newDesc,
+            final ISerialiser serialiser,
+            final IEntityCentreConfig eccCompanion) {
+        final String loggingSuffix = format("for type [%s] with name [%s] for user [%s]", menuItemType.getSimpleName(), name, user);
         validateMenuItemType(menuItemType);
         validateMenuItemTypeRootType(menuItemType);
         
         // save an instance of EntityCentreConfig with overridden body, which should exist in DB
         final EntityResultQueryModel<EntityCentreConfig> model = modelFor(user, menuItemType.getName(), name);
-        final int count = coEntityCentreConfig.count(model);
-        if (count == 1) { // for current user => 1 entity-centre
-            final EntityCentreConfig ecc = coEntityCentreConfig.getEntity(from(model).model());
-            ecc.setConfigBody(getSerialiser().serialise(currentMgr));
+        
+        final List<EntityCentreConfig> firstTwoConfigs = eccCompanion.getFirstEntities(from(model).model(), 2);
+        if (firstTwoConfigs.size() > 1) { 
+            throw errorf("There are more than one entity-centre instance %s.", loggingSuffix); // TODO return warning? collect unfortunate garbage?
+        } else if (firstTwoConfigs.size() < 1) { 
+            throw errorf("Unable to save non-existent entity-centre instance %s.", loggingSuffix); // TODO return warning? provide some self-healing logic?
+        } else {
+            final EntityCentreConfig ecc = firstTwoConfigs.get(0);
+            ecc.setConfigBody(serialiser.serialise(centre));
             if (newDesc != null) {
                 ecc.setDesc(newDesc);
             }
-            saveCentre(currentMgr, ecc);
-        } else if (count < 1) { // there is no saved entity-centre
-            error("Unable to save non-existent entity-centre instance for type [" + menuItemType.getSimpleName() + "] with title [" + title + "] for current user [" + currentUser() + "].");
-        } else { // > 1
-            error("There are more than one entity-centre instance for type [" + menuItemType.getSimpleName() + "] with title [" + title + "] for current user [" + currentUser() + "].");
+            eccCompanion.quickSave(ecc); // TODO check quickSave usage!
+            return centre;
         }
-        return this;
     }
     
     /**

@@ -13,7 +13,6 @@ import com.google.inject.Injector;
 
 import ua.com.fielden.platform.basic.config.Workflows;
 import ua.com.fielden.platform.dom.DomElement;
-import ua.com.fielden.platform.domaintree.IGlobalDomainTreeManager;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.EntityDeleteAction;
 import ua.com.fielden.platform.entity.EntityDeleteActionProducer;
@@ -224,7 +223,7 @@ public abstract class AbstractWebUiConfig implements IWebUiConfig {
     }
     
     @Override
-    public final void clearConfiguration(final IGlobalDomainTreeManager gdtm) {
+    public final void clearConfiguration() {
         logger.error("Clearing configurations...");
         this.webUiBuilder = new WebUiBuilder(this);
         this.desktopMainMenuConfig = new MainMenuBuilder(this);

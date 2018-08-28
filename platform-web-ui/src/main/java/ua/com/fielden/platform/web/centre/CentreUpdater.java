@@ -22,7 +22,6 @@ import static ua.com.fielden.platform.domaintree.impl.AbstractDomainTree.isDoubl
 import static ua.com.fielden.platform.domaintree.impl.AbstractDomainTree.isDummyMarker;
 import static ua.com.fielden.platform.domaintree.impl.AbstractDomainTree.isPlaceholder;
 import static ua.com.fielden.platform.domaintree.impl.AbstractDomainTree.reflectionProperty;
-import static ua.com.fielden.platform.domaintree.impl.GlobalDomainTreeManager.LINK_CONFIG_TITLE;
 import static ua.com.fielden.platform.entity.AbstractPersistentEntity.LAST_UPDATED_BY;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetch;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
@@ -39,6 +38,7 @@ import static ua.com.fielden.platform.web.centre.CentreUpdaterUtils.createDefaul
 import static ua.com.fielden.platform.web.centre.CentreUpdaterUtils.findConfig;
 import static ua.com.fielden.platform.web.centre.CentreUpdaterUtils.initEntityCentreManager;
 import static ua.com.fielden.platform.web.centre.CentreUpdaterUtils.saveAsEntityCentreManager;
+import static ua.com.fielden.platform.web.centre.CentreUpdaterUtils.saveEntityCentreManager;
 import static ua.com.fielden.platform.web.centre.WebApiUtils.checkedPropertiesWithoutSummaries;
 import static ua.com.fielden.platform.web.interfaces.DeviceProfile.DESKTOP;
 import static ua.com.fielden.platform.web.interfaces.DeviceProfile.MOBILE;
@@ -55,10 +55,8 @@ import org.apache.log4j.Logger;
 import org.joda.time.DateTime;
 import org.joda.time.Period;
 
-import ua.com.fielden.platform.domaintree.IGlobalDomainTreeManager;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.domaintree.centre.IOrderingRepresentation.Ordering;
-import ua.com.fielden.platform.domaintree.impl.GlobalDomainTreeManager;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ICompoundCondition0;
@@ -78,12 +76,11 @@ import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
 import ua.com.fielden.platform.web.app.IWebUiConfig;
 import ua.com.fielden.platform.web.interfaces.DeviceProfile;
-import ua.com.fielden.platform.web.utils.EntityResourceUtils;
 
 /**
  * Represents a set of utility methods for updating / committing of surrogate centres, for e.g. 'fresh', 'previouslyRun' etc.
  * <p>
- * Every surrogate centre has its own diff centre that, saves into the database during {@link #commitCentre(IGlobalDomainTreeManager, Class, String)} process.
+ * Every surrogate centre has its own diff centre that, saves into the database during {@link #commitCentre(User, IUserProvider, Class, String, Optional, DeviceProfile, ICentreDomainTreeManagerAndEnhancer, IWebUiConfig, ISerialiser, IEntityCentreConfig, IMainMenuItem, IUser)} process.
  *
  * @author TG Team
  *
@@ -289,15 +286,22 @@ public class CentreUpdater {
      */
     public static ICentreDomainTreeManagerAndEnhancer commitCentre(
             final User user,
+            final IUserProvider userProvider,
             final Class<? extends MiWithConfigurationSupport<?>> miType,
             final String name,
             final Optional<String> saveAsName,
             final DeviceProfile device,
-            final ICentreDomainTreeManagerAndEnhancer centre) {
-        return commitCentre0(gdtm, miType, deviceSpecific(saveAsSpecific(name, saveAsName), device), saveAsName, device, null, centre);
+            final ICentreDomainTreeManagerAndEnhancer centre,
+            final IWebUiConfig webUiConfig,
+            final ISerialiser serialiser,
+            final IEntityCentreConfig eccCompanion,
+            final IMainMenuItem mmiCompanion,
+            final IUser userCompanion) {
+        return commitCentre0(user, userProvider, miType, deviceSpecific(saveAsSpecific(name, saveAsName), device), saveAsName, device, null, centre, webUiConfig, serialiser, eccCompanion, mmiCompanion, userCompanion);
     }
     private static ICentreDomainTreeManagerAndEnhancer commitCentre0(
             final User user,
+            final IUserProvider userProvider,
             final Class<? extends MiWithConfigurationSupport<?>> miType,
             final String deviceSpecificName,
             final Optional<String> saveAsName,
@@ -305,7 +309,10 @@ public class CentreUpdater {
             final String newDesc,
             final ICentreDomainTreeManagerAndEnhancer centre,
             final IWebUiConfig webUiConfig,
-            final ISerialiser serialiser) {
+            final ISerialiser serialiser,
+            final IEntityCentreConfig eccCompanion,
+            final IMainMenuItem mmiCompanion,
+            final IUser userCompanion) {
         logger.debug(format("%s '%s' centre for miType [%s] for user %s...", "Committing", deviceSpecificName, miType.getSimpleName(), user));
         final DateTime start = new DateTime();
         
@@ -314,11 +321,11 @@ public class CentreUpdater {
         final ICentreDomainTreeManagerAndEnhancer differencesCentre = createDifferencesCentre(centre, defaultCentre, getEntityType(miType), serialiser);
         
         // override old 'diff centre' with recently created one and save it
-        overrideAndSaveDifferencesCentreIfChanged(gdtm, miType, deviceSpecificName, saveAsName, device, differencesCentre, newDesc);
+        overrideAndSaveDifferencesCentreIfChanged(user, userProvider, miType, deviceSpecificName, saveAsName, device, differencesCentre, newDesc, serialiser, webUiConfig, eccCompanion, mmiCompanion, userCompanion);
         
         final DateTime end = new DateTime();
         final Period pd = new Period(start, end);
-        logger.debug(format("%s the '%s' centre for miType [%s] for user %s... done in [%s].", "Committed", deviceSpecificName, miType.getSimpleName(), gdtm.getUserProvider().getUser(), pd.getSeconds() + " s " + pd.getMillis() + " ms"));
+        logger.debug(format("%s the '%s' centre for miType [%s] for user %s... done in [%s].", "Committed", deviceSpecificName, miType.getSimpleName(), user, pd.getSeconds() + " s " + pd.getMillis() + " ms"));
         return centre;
     }
     
@@ -335,25 +342,49 @@ public class CentreUpdater {
      * @param centreToBeInitialisedAndCommitted
      * @param newDesc -- new description to be saved into persistent storage
      */
-    public static ICentreDomainTreeManagerAndEnhancer initAndCommit(final IGlobalDomainTreeManager gdtm, final Class<? extends MiWithConfigurationSupport<?>> miType, final String name, final Optional<String> saveAsName, final DeviceProfile device, final ICentreDomainTreeManagerAndEnhancer centreToBeInitialisedAndCommitted, final String newDesc) {
-        return initAndCommit0(gdtm, miType, deviceSpecific(saveAsSpecific(name, saveAsName), device), saveAsName, device, centreToBeInitialisedAndCommitted, newDesc);
+    public static ICentreDomainTreeManagerAndEnhancer initAndCommit(
+            final User user,
+            final IUserProvider userProvider,
+            final Class<? extends MiWithConfigurationSupport<?>> miType,
+            final String name,
+            final Optional<String> saveAsName,
+            final DeviceProfile device,
+            final ICentreDomainTreeManagerAndEnhancer centreToBeInitialisedAndCommitted,
+            final String newDesc,
+            final IWebUiConfig webUiConfig,
+            final ISerialiser serialiser,
+            final IEntityCentreConfig eccCompanion,
+            final IMainMenuItem mmiCompanion,
+            final IUser userCompanion) {
+        return initAndCommit0(user, userProvider, miType, deviceSpecific(saveAsSpecific(name, saveAsName), device), saveAsName, device, centreToBeInitialisedAndCommitted, newDesc, webUiConfig, serialiser, eccCompanion, mmiCompanion, userCompanion);
     }
-    private static ICentreDomainTreeManagerAndEnhancer initAndCommit0(final IGlobalDomainTreeManager gdtm, final Class<? extends MiWithConfigurationSupport<?>> miType, final String deviceSpecificName, final Optional<String> saveAsName, final DeviceProfile device, final ICentreDomainTreeManagerAndEnhancer centreToBeInitialisedAndCommitted, final String newDesc) {
-        synchronized (gdtm) {
-            logger.debug(format("%s '%s' centre for miType [%s] for user %s...", "Initialising & committing", deviceSpecificName, miType.getSimpleName(), gdtm.getUserProvider().getUser()));
-            final DateTime start = new DateTime();
-            
-            // there is a need to copy passed instance not to have shared state between surrogate centres (for e.g.
-            //  same 'fresh' centre instance should not be used for 'previouslyRun' centre, it will cause unpredictable results after changing 'fresh' centre's criteria)
-            final ICentreDomainTreeManagerAndEnhancer copiedInstance = copyCentre(centreToBeInitialisedAndCommitted, gdtm);
-            // and then commit it to the database (save its diff)
-            commitCentre0(gdtm, miType, deviceSpecificName, saveAsName, device, newDesc, copiedInstance);
-            
-            final DateTime end = new DateTime();
-            final Period pd = new Period(start, end);
-            logger.debug(format("%s the '%s' centre for miType [%s] for user %s... done in [%s].", "Initialised & committed", deviceSpecificName, miType.getSimpleName(), gdtm.getUserProvider().getUser(), pd.getSeconds() + " s " + pd.getMillis() + " ms"));
-            return copiedInstance;
-        }
+    private static ICentreDomainTreeManagerAndEnhancer initAndCommit0(
+            final User user,
+            final IUserProvider userProvider,
+            final Class<? extends MiWithConfigurationSupport<?>> miType,
+            final String deviceSpecificName,
+            final Optional<String> saveAsName,
+            final DeviceProfile device,
+            final ICentreDomainTreeManagerAndEnhancer centreToBeInitialisedAndCommitted,
+            final String newDesc,
+            final IWebUiConfig webUiConfig,
+            final ISerialiser serialiser,
+            final IEntityCentreConfig eccCompanion,
+            final IMainMenuItem mmiCompanion,
+            final IUser userCompanion) {
+        logger.debug(format("%s '%s' centre for miType [%s] for user %s...", "Initialising & committing", deviceSpecificName, miType.getSimpleName(), user));
+        final DateTime start = new DateTime();
+        
+        // there is a need to copy passed instance not to have shared state between surrogate centres (for e.g.
+        //  same 'fresh' centre instance should not be used for 'previouslyRun' centre, it will cause unpredictable results after changing 'fresh' centre's criteria)
+        final ICentreDomainTreeManagerAndEnhancer copiedInstance = copyCentre(centreToBeInitialisedAndCommitted, serialiser);
+        // and then commit it to the database (save its diff)
+        commitCentre0(user, userProvider, miType, deviceSpecificName, saveAsName, device, newDesc, copiedInstance, webUiConfig, serialiser, eccCompanion, mmiCompanion, userCompanion);
+        
+        final DateTime end = new DateTime();
+        final Period pd = new Period(start, end);
+        logger.debug(format("%s the '%s' centre for miType [%s] for user %s... done in [%s].", "Initialised & committed", deviceSpecificName, miType.getSimpleName(), user, pd.getSeconds() + " s " + pd.getMillis() + " ms"));
+        return copiedInstance;
     }
     
     /**
@@ -363,31 +394,33 @@ public class CentreUpdater {
      * <p>
      * Please note that inheritance is purely defined by 'saveAsName' -- if both configuration for user and its base user have the same 'saveAsName' then they are in inheritance relationship.
      * 
-     * @param gdtm
+     * @param user
      * @param miType
      * @param device -- device profile (mobile or desktop) for which loadable centres
      * @param companionFinder
      * @return
      */
-    public static List<LoadableCentreConfig> loadableConfigurations(final IGlobalDomainTreeManager gdtm, final Class<? extends MiWithConfigurationSupport<?>> miType, final DeviceProfile device, final ICompanionObjectFinder companionFinder) {
+    public static List<LoadableCentreConfig> loadableConfigurations(
+            final User user,
+            final Class<? extends MiWithConfigurationSupport<?>> miType,
+            final DeviceProfile device,
+            final ICompanionObjectFinder companionFinder) {
         final List<LoadableCentreConfig> loadableConfigurations = new ArrayList<>();
         
         final IEntityCentreConfig eccCompanion = companionFinder.find(EntityCentreConfig.class);
         final ILoadableCentreConfig lccCompanion = companionFinder.find(LoadableCentreConfig.class);
         
-        final User currentUser = gdtm.getUserProvider().getUser();
         final String surrogateNamePrefix = deviceSpecific(FRESH_CENTRE_NAME, device);
-        final EntityResultQueryModel<EntityCentreConfig> queryForCurrentUser = centreConfigQueryFor(currentUser, miType, device).model();
+        final EntityResultQueryModel<EntityCentreConfig> queryForCurrentUser = centreConfigQueryFor(user, miType, device).model();
         final fetch<EntityCentreConfig> fetch = EntityUtils.fetchWithKeyAndDesc(EntityCentreConfig.class).fetchModel();
-        if (currentUser.isBase()) {
+        if (user.isBase()) {
             try (final Stream<EntityCentreConfig> stream = eccCompanion.stream(from(queryForCurrentUser).with(fetch).model()) ) {
                 stream.forEach(ecc -> {
                     loadableConfigurations.add(createLoadableCentreConfig(ecc, false, surrogateNamePrefix, lccCompanion));
                 });
             }
         } else {
-            final User baseOfTheCurrentUser = currentUser.isBase() ? currentUser : currentUser.getBasedOnUser();
-            final EntityResultQueryModel<EntityCentreConfig> queryForBaseUser = centreConfigQueryFor(baseOfTheCurrentUser, miType, device).model();
+            final EntityResultQueryModel<EntityCentreConfig> queryForBaseUser = centreConfigQueryFor(user.getBasedOnUser(), miType, device).model();
             try (final Stream<EntityCentreConfig> streamForCurrentUser = eccCompanion.stream(from(queryForCurrentUser).with(fetch).model());
                  final Stream<EntityCentreConfig> streamForBaseUser = eccCompanion.stream(from(queryForBaseUser).with(fetch).model())) {
                 streamForCurrentUser.forEach(ecc -> {
@@ -404,26 +437,25 @@ public class CentreUpdater {
                 });
             }
         }
-        loadableConfigurations.remove(new LoadableCentreConfig().setKey(LINK_CONFIG_TITLE)); // exclude 'link' configuration from load dialog if it is present (aka centre 'link' with criteria parameters was loaded at least once)
+        loadableConfigurations.remove(new LoadableCentreConfig().setKey(WebApiUtils.LINK_CONFIG_TITLE)); // exclude 'link' configuration from load dialog if it is present (aka centre 'link' with criteria parameters was loaded at least once)
         Collections.sort(loadableConfigurations);
         return loadableConfigurations;
     }
     
     /**
-     * Returns {@link Stream} of preferred {@link EntityCentreConfig} configurations for the current user (defined by <code>gdtm.getUserProvider().getUser()</code>), the specified <code>device</code> and concrete 
+     * Returns {@link Stream} of preferred {@link EntityCentreConfig} configurations for specified <code>user</code>, <code>device</code> and concrete 
      * <code>miType</code>'ed menu item.
      * <p>
      * Please note that by design this stream should return single or none instance.
      * 
-     * @param gdtm
+     * @param user
      * @param miType
      * @param device
      * @return
      */
-    private static Stream<EntityCentreConfig> streamPreferredConfigs(final IGlobalDomainTreeManager gdtm, final Class<? extends MiWithConfigurationSupport<?>> miType, final DeviceProfile device, final ICompanionObjectFinder companionFinder) {
+    private static Stream<EntityCentreConfig> streamPreferredConfigs(final User user, final Class<? extends MiWithConfigurationSupport<?>> miType, final DeviceProfile device, final ICompanionObjectFinder companionFinder) {
         final IEntityCentreConfig eccCompanion = companionFinder.find(EntityCentreConfig.class);
-        final User currentUser = gdtm.getUserProvider().getUser();
-        final EntityResultQueryModel<EntityCentreConfig> queryForCurrentUser = centreConfigQueryFor(currentUser, miType, device)
+        final EntityResultQueryModel<EntityCentreConfig> queryForCurrentUser = centreConfigQueryFor(user, miType, device)
             .and().prop("preferred").eq().val(true).model();
         final fetch<EntityCentreConfig> fetch = fetchWithKeyAndDesc(EntityCentreConfig.class).with("preferred").fetchModel();
         return eccCompanion.stream(from(queryForCurrentUser).with(fetch).model());
@@ -433,14 +465,14 @@ public class CentreUpdater {
      * Determines the preferred configuration <code>saveAsName</code> for the current user (defined by <code>gdtm.getUserProvider().getUser()</code>), the specified <code>device</code> and concrete 
      * <code>miType</code>'ed menu item.
      * 
-     * @param gdtm
+     * @param user
      * @param miType
      * @param device
      * @return
      */
-    public static Optional<String> retrievePreferredConfigName(final IGlobalDomainTreeManager gdtm, final Class<? extends MiWithConfigurationSupport<?>> miType, final DeviceProfile device, final ICompanionObjectFinder companionFinder) {
+    public static Optional<String> retrievePreferredConfigName(final User user, final Class<? extends MiWithConfigurationSupport<?>> miType, final DeviceProfile device, final ICompanionObjectFinder companionFinder) {
         final String surrogateNamePrefix = deviceSpecific(FRESH_CENTRE_NAME, device);
-        try (final Stream<EntityCentreConfig> stream = streamPreferredConfigs(gdtm, miType, device, companionFinder) ) {
+        try (final Stream<EntityCentreConfig> stream = streamPreferredConfigs(user, miType, device, companionFinder) ) {
             return stream.findAny().map(ecc -> obtainTitleFrom(ecc.getTitle(), surrogateNamePrefix));
         }
     }
@@ -449,19 +481,19 @@ public class CentreUpdater {
      * Makes <code>saveAsName</code> configuration preferred for the current user (defined by <code>gdtm.getUserProvider().getUser()</code>), the specified <code>device</code> and concrete 
      * <code>miType</code>'ed menu item.
      * 
-     * @param gdtm
+     * @param user
      * @param miType
      * @param device
      * @return
      */
-    public static void makePreferred(final IGlobalDomainTreeManager gdtm, final Class<? extends MiWithConfigurationSupport<?>> miType, final Optional<String> saveAsName, final DeviceProfile device, final ICompanionObjectFinder companionFinder) {
-        try (final Stream<EntityCentreConfig> stream = streamPreferredConfigs(gdtm, miType, device, companionFinder) ) {
-            stream.forEach(ecc -> gdtm.saveConfig(ecc.setPreferred(false)));
+    public static void makePreferred(final User user, final Class<? extends MiWithConfigurationSupport<?>> miType, final Optional<String> saveAsName, final DeviceProfile device, final ICompanionObjectFinder companionFinder) {
+        final IEntityCentreConfig eccCompanion = companionFinder.find(EntityCentreConfig.class);
+        try (final Stream<EntityCentreConfig> stream = streamPreferredConfigs(user, miType, device, companionFinder) ) {
+            stream.forEach(ecc -> eccCompanion.quickSave(ecc.setPreferred(false)));
         }
         if (saveAsName.isPresent()) {
-            gdtm.saveConfig(
-                gdtm
-                .findConfig(miType, deviceSpecific(saveAsSpecific(FRESH_CENTRE_NAME, saveAsName), device) + DIFFERENCES_SUFFIX)
+            eccCompanion.quickSave(
+                findConfig(miType, user, deviceSpecific(saveAsSpecific(FRESH_CENTRE_NAME, saveAsName), device) + DIFFERENCES_SUFFIX, eccCompanion)
                 .setPreferred(true)
             );
         }
@@ -552,7 +584,7 @@ public class CentreUpdater {
         // For all generated types on freshCentre (and on its derivatives like 'unchanged freshCentre', 'previouslyRun centre', 'unchanged previouslyRun centre' etc.) there is a need to
         //  provide miType information inside its generated type to be sent to the client application. This is done through the use of
         //  annotation miType and other custom annotations, for example @SaveAsName.
-        // Please note that copyCentre method in GlobalDomainTreeManager performs copying of all defined annotations to provide freshCentre's derivatives
+        // Please note that copyCentre method performs copying of all defined annotations to provide freshCentre's derivatives
         //  with such additional information too.
         for (final Class<?> root: loadedCentre.getRepresentation().rootTypes()) {
             if (isGenerated(loadedCentre.getEnhancer().getManagedType(root))) {
@@ -639,7 +671,7 @@ public class CentreUpdater {
         } else {
             // Default centre is used as a 'base' for all centres; all diffs are created comparing to default centre.
             // Default centre is now needed for both cases: base or non-base user.
-            if (user.isBase() || of(LINK_CONFIG_TITLE).equals(saveAsName) || empty().equals(saveAsName)) { // for non-base user 'link' and 'default' configurations need to be derived from default user-specific configuration instead of base configuration
+            if (user.isBase() || of(WebApiUtils.LINK_CONFIG_TITLE).equals(saveAsName) || empty().equals(saveAsName)) { // for non-base user 'link' and 'default' configurations need to be derived from default user-specific configuration instead of base configuration
                 final ICentreDomainTreeManagerAndEnhancer defaultCentre = getDefaultCentre(miType, user, webUiConfig);
                 // diff centre does not exist in persistent storage yet -- initialise EMPTY diff (there potentially can be some values from 'default centre',
                 //   but diff centre will be empty disregarding that fact -- no properties were marked as changed; but initialisation from 'default centre' is important --
@@ -653,7 +685,7 @@ public class CentreUpdater {
                 final String upstreamDesc = updateCentreDesc(baseUser, miType, saveAsName, device, eccCompanion);
                 // creates differences centre from the differences between base user's 'default centre' (which can be user specific, see IValueAssigner for properties dependent on User) and 'baseCentre'
                 final ICentreDomainTreeManagerAndEnhancer differencesCentre = createDifferencesCentre(baseCentre, getDefaultCentre(miType, baseUser, webUiConfig), getEntityType(miType), serialiser);
-                endBaseManagerOperations(user, userProvider);
+                endBaseUserOperations(user, userProvider);
                 
                 // promotes diff to local cache and saves it into persistent storage
                 centreManager = saveAsEntityCentreManager(differencesCentre, miType, user, deviceSpecificDiffName, upstreamDesc, serialiser, eccCompanion, mmiCompanion);
@@ -668,7 +700,7 @@ public class CentreUpdater {
     /**
      * Prepares environment for executing operations against base user. {@link IUserProvider} receives corresponding base user into it.
      * <p>
-     * This method's call must be followed by {@link #endBaseManagerOperations(IGlobalDomainTreeManager, User)} call.
+     * This method's call must be followed by {@link #endBaseUserOperations(User, IUserProvider)} call.
      * 
      * @param userProvider
      * @param user
@@ -686,7 +718,7 @@ public class CentreUpdater {
     /**
      * Retrieves current version of base centre for <code>baseUser</code>.
      * <p>
-     * This method's call must be enclosed into {@link #beginBaseUserOperations(IUserProvider, User, IUser)} and {@link #endBaseManagerOperations(IGlobalDomainTreeManager, User)} calls.
+     * This method's call must be enclosed into {@link #beginBaseUserOperations(IUserProvider, User, IUser)} and {@link #endBaseUserOperations(User, IUserProvider)} calls.
      * 
      * @param baseUser
      * @param miType
@@ -715,7 +747,7 @@ public class CentreUpdater {
      * @param userProvider
      * @return
      */
-    private static void endBaseManagerOperations(final User user, final IUserProvider userProvider) {
+    private static void endBaseUserOperations(final User user, final IUserProvider userProvider) {
         // return 'user' into user provider
         userProvider.setUser(user);
     }
@@ -727,24 +759,30 @@ public class CentreUpdater {
      * For non-base user the base centre is identified as SAVED_CENTRE_NAME version of <code>gdtm.basedOnManager()</code>'s centre of the same <code>saveAsName</code>. 
      * For base user the base centre is identified as <code>gdtm.basedOnManager()</code>'s <code>getDefaultCentre()</code>. 
      *
-     * @param gdtm
+     * @param user
      * @param miType
      * @param saveAsName -- user-defined title of 'saveAs' centre configuration or empty {@link Optional} for unnamed centre
      * @param device -- device profile (mobile or desktop) for which the centre is accessed / maintained
      * @return
      */
-    public static ICentreDomainTreeManagerAndEnhancer baseCentre(final IGlobalDomainTreeManager gdtm, final Class<? extends MiWithConfigurationSupport<?>> miType, final Optional<String> saveAsName, final DeviceProfile device) {
-        synchronized (gdtm) {
-            final User currentUser = gdtm.getUserProvider().getUser();
-            final ICentreDomainTreeManagerAndEnhancer defaultCentre = getDefaultCentre(gdtm, miType); // it is safer to init current user's default centre (user-specific) for both cases: base and non-base
-            if (currentUser.isBase()) {
-                return defaultCentre;
-            } else { // non-base user
-                final IGlobalDomainTreeManager basedOnManager = beginBaseManagerOperations(gdtm, currentUser);
-                final ICentreDomainTreeManagerAndEnhancer basedOnCentre = getBasedOnCentre(basedOnManager, miType, saveAsName, device);
-                endBaseManagerOperations(basedOnManager, currentUser);
-                return basedOnCentre;
-            }
+    public static ICentreDomainTreeManagerAndEnhancer baseCentre(
+            final User user,
+            final IUserProvider userProvider,
+            final Class<? extends MiWithConfigurationSupport<?>> miType,
+            final Optional<String> saveAsName,
+            final DeviceProfile device,
+            final ISerialiser serialiser,
+            final IWebUiConfig webUiConfig,
+            final IEntityCentreConfig eccCompanion,
+            final IMainMenuItem mmiCompanion,
+            final IUser userCompanion) {
+        if (user.isBase()) {
+            return getDefaultCentre(miType, user, webUiConfig);
+        } else {
+            final User baseUser = beginBaseUserOperations(userProvider, user, userCompanion);
+            final ICentreDomainTreeManagerAndEnhancer baseCentre = getBaseCentre(baseUser, userProvider, miType, saveAsName, device, serialiser, webUiConfig, eccCompanion, mmiCompanion, userCompanion);
+            endBaseUserOperations(user, userProvider);
+            return baseCentre;
         }
     }
     
@@ -1059,26 +1097,12 @@ public class CentreUpdater {
         final boolean diffChanged = !equalsEx(staleDiffCentre, newDiffCentre);
         
         if (diffChanged || newDesc != null) {
-            overrideAndSaveDifferencesCentre(gdtm, miType, newDiffCentre, deviceSpecificDiffName, newDesc);
+            saveEntityCentreManager(newDiffCentre, miType, user, deviceSpecificDiffName, newDesc, serialiser, eccCompanion);
         }
         
         final DateTime end = new DateTime();
         final Period pd = new Period(start, end);
-        logger.debug(format("\t%s the '%s' centre for miType [%s] for user %s... done in [%s].", "overrideAndSaveDifferencesCentre" + (diffChanged ? "" : " (nothing has changed)"), deviceSpecificName, miType.getSimpleName(), gdtm.getUserProvider().getUser(), pd.getSeconds() + " s " + pd.getMillis() + " ms"));
-    }
-    
-    /**
-     * Overrides old 'differences centre' with new one and saves it.
-     *
-     * @param gdtm
-     * @param miType
-     * @param deviceSpecificDiffName -- surrogate name of the centre's diff (fresh, previouslyRun etc.); can be {@link CentreUpdater#deviceSpecific(String, DeviceProfile)}.
-     * @param newDiffCentre
-     *
-     * @return
-     */
-    private static void overrideAndSaveDifferencesCentre(final IGlobalDomainTreeManager gdtm, final Class<? extends MiWithConfigurationSupport<?>> miType, final ICentreDomainTreeManagerAndEnhancer newDiffCentre, final String deviceSpecificDiffName, final String newDesc) {
-        gdtm.saveEntityCentreManager(miType, deviceSpecificDiffName, newDiffCentre, newDesc);
+        logger.debug(format("\t%s the '%s' centre for miType [%s] for user %s... done in [%s].", "overrideAndSaveDifferencesCentre" + (diffChanged ? "" : " (nothing has changed)"), deviceSpecificName, miType.getSimpleName(), user, pd.getSeconds() + " s " + pd.getMillis() + " ms"));
     }
     
 }

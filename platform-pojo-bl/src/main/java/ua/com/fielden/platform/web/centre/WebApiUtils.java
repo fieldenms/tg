@@ -14,6 +14,15 @@ import java.util.stream.Collectors;
  */
 public class WebApiUtils {
     
+    /**
+     * The surrogate title of not yet known configuration. This is used during first time centre loading.
+     */
+    public static final String UNDEFINED_CONFIG_TITLE = "_______________________undefined";
+    /**
+     * The surrogate title of centre 'link' configuration. This is used when link with centre parameters opens.
+     */
+    public static final String LINK_CONFIG_TITLE = "_______________________link";
+
     /** Private default constructor to prevent instantiation. */
     private WebApiUtils() {
     }

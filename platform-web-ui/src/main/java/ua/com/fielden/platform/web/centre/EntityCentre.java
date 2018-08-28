@@ -51,8 +51,6 @@ import ua.com.fielden.platform.dom.DomContainer;
 import ua.com.fielden.platform.dom.DomElement;
 import ua.com.fielden.platform.dom.InnerTextElement;
 import ua.com.fielden.platform.domaintree.ICalculatedProperty.CalculatedPropertyAttribute;
-import ua.com.fielden.platform.domaintree.IGlobalDomainTreeManager;
-import ua.com.fielden.platform.domaintree.IServerGlobalDomainTreeManager;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.domaintree.impl.AbstractDomainTree;
@@ -63,15 +61,20 @@ import ua.com.fielden.platform.entity.fetch.IFetchProvider;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader;
+import ua.com.fielden.platform.security.user.IUser;
 import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
 import ua.com.fielden.platform.serialisation.jackson.DefaultValueContract;
 import ua.com.fielden.platform.types.Money;
+import ua.com.fielden.platform.ui.config.MainMenuItem;
+import ua.com.fielden.platform.ui.config.api.IEntityCentreConfig;
+import ua.com.fielden.platform.ui.config.api.IMainMenuItem;
 import ua.com.fielden.platform.ui.menu.MiWithConfigurationSupport;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
 import ua.com.fielden.platform.utils.ResourceLoader;
+import ua.com.fielden.platform.web.app.IWebUiConfig;
 import ua.com.fielden.platform.web.centre.api.EntityCentreConfig;
 import ua.com.fielden.platform.web.centre.api.EntityCentreConfig.OrderDirection;
 import ua.com.fielden.platform.web.centre.api.EntityCentreConfig.ResultSetProp;
@@ -184,7 +187,6 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
 
 
     private final Logger logger = Logger.getLogger(getClass());
-    private final Class<? extends MiWithConfigurationSupport<?>> menuItemType;
     private final String name;
     private final EntityCentreConfig<T> dslDefaultConfig;
     private final Injector injector;
@@ -194,7 +196,14 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
     private final UnaryOperator<ICentreDomainTreeManagerAndEnhancer> postCentreCreated;
     private Optional<JsCode> customCode = Optional.empty();
     private Optional<JsCode> customCodeOnAttach = Optional.empty();
-
+    
+    private final IUserProvider userProvider;
+    private final ISerialiser serialiser;
+    private final IWebUiConfig webUiConfig;
+    private final IEntityCentreConfig eccCompanion;
+    private final IMainMenuItem mmiCompanion;
+    private final IUser userCompanion;
+    
     /**
      * Creates new {@link EntityCentre} instance for the menu item type and with specified name.
      *
@@ -206,15 +215,21 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
      *            -- default configuration taken from Centre DSL
      */
     public EntityCentre(final Class<? extends MiWithConfigurationSupport<?>> miType, final String name, final EntityCentreConfig<T> dslDefaultConfig, final Injector injector, final UnaryOperator<ICentreDomainTreeManagerAndEnhancer> postCentreCreated) {
-        this.menuItemType = miType;
         this.name = name;
         this.dslDefaultConfig = dslDefaultConfig;
-
+        
         this.injector = injector;
         this.miType = miType;
         this.entityType = EntityResourceUtils.getEntityType(miType);
         this.coFinder = this.injector.getInstance(ICompanionObjectFinder.class);
         this.postCentreCreated = postCentreCreated;
+        
+        userProvider = injector.getInstance(IUserProvider.class);
+        serialiser = injector.getInstance(ISerialiser.class);
+        webUiConfig = injector.getInstance(IWebUiConfig.class);
+        eccCompanion = coFinder.find(ua.com.fielden.platform.ui.config.EntityCentreConfig.class);
+        mmiCompanion = coFinder.find(MainMenuItem.class);
+        userCompanion = coFinder.find(User.class);
     }
 
     /**
@@ -663,7 +678,7 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
      * @return
      */
     public Class<? extends MiWithConfigurationSupport<?>> getMenuItemType() {
-        return this.menuItemType;
+        return miType;
     }
 
     /**
@@ -742,11 +757,11 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
     }
 
     private final ICentreDomainTreeManagerAndEnhancer getAssociatedEntityCentreManager(final DeviceProfile device) {
-        final IGlobalDomainTreeManager userSpecificGlobalManager = getUserSpecificGlobalManager();
-        if (userSpecificGlobalManager == null) {
+        final User user = getUser();
+        if (user == null) {
             return createUserUnspecificDefaultCentre(dslDefaultConfig, injector.getInstance(ISerialiser.class), postCentreCreated);
         } else {
-            return updateCentre(userSpecificGlobalManager, menuItemType, FRESH_CENTRE_NAME, empty(), device);
+            return updateCentre(user, userProvider, miType, FRESH_CENTRE_NAME, empty(), device, serialiser, webUiConfig, eccCompanion, mmiCompanion, userCompanion);
         }
     }
 
@@ -1137,17 +1152,12 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
     }
 
     /**
-     * Returns the global manager for the user for this concrete thread (the user has been populated through the Web UI authentication mechanism -- see DefaultWebResourceGuard).
+     * Returns user for this concrete thread (the user has been populated through the Web UI authentication mechanism -- see DefaultWebResourceGuard).
      *
      * @return
      */
-    private IGlobalDomainTreeManager getUserSpecificGlobalManager() {
-        final IServerGlobalDomainTreeManager serverGdtm = injector.getInstance(IServerGlobalDomainTreeManager.class);
-        final User user = injector.getInstance(IUserProvider.class).getUser();
-        if (user == null) { // the user is unknown at this stage!
-            return null; // no user-specific global exists for unknown user!
-        }
-        return serverGdtm.get(user.getId());
+    private User getUser() {
+        return injector.getInstance(IUserProvider.class).getUser();
     }
 
     private String queryEnhancerContextConfigString() {
