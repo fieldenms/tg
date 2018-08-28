@@ -4,6 +4,8 @@ import static java.lang.String.format;
 
 import java.io.ByteArrayInputStream;
 import java.util.Optional;
+import java.util.Random;
+import java.util.concurrent.TimeUnit;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
@@ -86,6 +88,7 @@ public class LoginInitiateResetResource extends ServerResource {
     @Post
     public void initiateLoginReset(final Representation entity) {
         try {
+            
             final JsonRepresentation response = new JsonRepresentation("{\"msg\": \"Reset password email is probably sent.\"}");
             final Form form = new Form(entity);
             final String usernameOrEmail = form.getValues("username_or_email");
@@ -96,6 +99,7 @@ public class LoginInitiateResetResource extends ServerResource {
             final IUser co$User = coFinder.find(User.class, false);
             final Optional<UserSecret> maybeUserSecret = co$User.assignPasswordResetUuid(usernameOrEmail);
             
+            final long computationStart = System.currentTimeMillis();
             if (maybeUserSecret.isPresent()) {
                 final UserSecret secret = maybeUserSecret.get();
                 final User user = secret.getKey(); 
@@ -109,11 +113,33 @@ public class LoginInitiateResetResource extends ServerResource {
                 }
             }
             
+            delayResponse(computationStart, System.currentTimeMillis());
+
             getResponse().setEntity(response);
+
         } catch (final Exception ex) {
             logger.fatal(ex);
             getResponse().setEntity(new JsonRepresentation(format("{\"msg\": \"%s.\"}", "There was an error when attempting to request a password reset.")));
             getResponse().setStatus(Status.SERVER_ERROR_INTERNAL);
+        }
+    }
+
+    /**
+     * A function to randomly delay the response to reduce the risk of a timing-based attack.
+     *
+     * @param computationStart
+     * @param computationEnd
+     */
+    private void delayResponse(final long computationStart, final long computationEnd) {
+        try {
+            final int computationTime = (int) (computationEnd - computationStart);
+            if (computationTime < 1000) {
+                final Random rnd = new Random();
+                final int sleepTime = 300 + rnd.nextInt(1000 - computationTime);
+                Thread.sleep(sleepTime);
+            }
+        } catch (final Exception e) {
+            logger.debug("Interrupted sleep during login.", e);
         }
     }
 
