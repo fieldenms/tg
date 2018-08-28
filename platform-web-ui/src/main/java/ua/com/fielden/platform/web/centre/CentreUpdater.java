@@ -173,7 +173,7 @@ public class CentreUpdater {
         final DateTime start = new DateTime();
         
         final ICentreDomainTreeManagerAndEnhancer updatedDiffCentre = updateDifferencesCentre(miType, user, userProvider, deviceSpecificName, saveAsName, device, serialiser, webUiConfig, eccCompanion, mmiCompanion, userCompanion);
-        final ICentreDomainTreeManagerAndEnhancer loadedCentre = loadCentreFromDefaultAndDiff(user, miType, deviceSpecificName, saveAsName, updatedDiffCentre, webUiConfig, serialiser);
+        final ICentreDomainTreeManagerAndEnhancer loadedCentre = loadCentreFromDefaultAndDiff(user, miType, deviceSpecificName, saveAsName, updatedDiffCentre, serialiser, webUiConfig);
         
         final DateTime end = new DateTime();
         final Period pd = new Period(start, end);
@@ -292,12 +292,12 @@ public class CentreUpdater {
             final Optional<String> saveAsName,
             final DeviceProfile device,
             final ICentreDomainTreeManagerAndEnhancer centre,
-            final IWebUiConfig webUiConfig,
             final ISerialiser serialiser,
+            final IWebUiConfig webUiConfig,
             final IEntityCentreConfig eccCompanion,
             final IMainMenuItem mmiCompanion,
             final IUser userCompanion) {
-        return commitCentre0(user, userProvider, miType, deviceSpecific(saveAsSpecific(name, saveAsName), device), saveAsName, device, null, centre, webUiConfig, serialiser, eccCompanion, mmiCompanion, userCompanion);
+        return commitCentre0(user, userProvider, miType, deviceSpecific(saveAsSpecific(name, saveAsName), device), saveAsName, device, null, centre, serialiser, webUiConfig, eccCompanion, mmiCompanion, userCompanion);
     }
     private static ICentreDomainTreeManagerAndEnhancer commitCentre0(
             final User user,
@@ -308,8 +308,8 @@ public class CentreUpdater {
             final DeviceProfile device,
             final String newDesc,
             final ICentreDomainTreeManagerAndEnhancer centre,
-            final IWebUiConfig webUiConfig,
             final ISerialiser serialiser,
+            final IWebUiConfig webUiConfig,
             final IEntityCentreConfig eccCompanion,
             final IMainMenuItem mmiCompanion,
             final IUser userCompanion) {
@@ -351,12 +351,12 @@ public class CentreUpdater {
             final DeviceProfile device,
             final ICentreDomainTreeManagerAndEnhancer centreToBeInitialisedAndCommitted,
             final String newDesc,
-            final IWebUiConfig webUiConfig,
             final ISerialiser serialiser,
+            final IWebUiConfig webUiConfig,
             final IEntityCentreConfig eccCompanion,
             final IMainMenuItem mmiCompanion,
             final IUser userCompanion) {
-        return initAndCommit0(user, userProvider, miType, deviceSpecific(saveAsSpecific(name, saveAsName), device), saveAsName, device, centreToBeInitialisedAndCommitted, newDesc, webUiConfig, serialiser, eccCompanion, mmiCompanion, userCompanion);
+        return initAndCommit0(user, userProvider, miType, deviceSpecific(saveAsSpecific(name, saveAsName), device), saveAsName, device, centreToBeInitialisedAndCommitted, newDesc, serialiser, webUiConfig, eccCompanion, mmiCompanion, userCompanion);
     }
     private static ICentreDomainTreeManagerAndEnhancer initAndCommit0(
             final User user,
@@ -367,8 +367,8 @@ public class CentreUpdater {
             final DeviceProfile device,
             final ICentreDomainTreeManagerAndEnhancer centreToBeInitialisedAndCommitted,
             final String newDesc,
-            final IWebUiConfig webUiConfig,
             final ISerialiser serialiser,
+            final IWebUiConfig webUiConfig,
             final IEntityCentreConfig eccCompanion,
             final IMainMenuItem mmiCompanion,
             final IUser userCompanion) {
@@ -379,7 +379,7 @@ public class CentreUpdater {
         //  same 'fresh' centre instance should not be used for 'previouslyRun' centre, it will cause unpredictable results after changing 'fresh' centre's criteria)
         final ICentreDomainTreeManagerAndEnhancer copiedInstance = copyCentre(centreToBeInitialisedAndCommitted, serialiser);
         // and then commit it to the database (save its diff)
-        commitCentre0(user, userProvider, miType, deviceSpecificName, saveAsName, device, newDesc, copiedInstance, webUiConfig, serialiser, eccCompanion, mmiCompanion, userCompanion);
+        commitCentre0(user, userProvider, miType, deviceSpecificName, saveAsName, device, newDesc, copiedInstance, serialiser, webUiConfig, eccCompanion, mmiCompanion, userCompanion);
         
         final DateTime end = new DateTime();
         final Period pd = new Period(start, end);
@@ -572,8 +572,8 @@ public class CentreUpdater {
             final String deviceSpecificName,
             final Optional<String> saveAsName,
             final ICentreDomainTreeManagerAndEnhancer updatedDiffCentre,
-            final IWebUiConfig webUiConfig,
-            final ISerialiser serialiser) {
+            final ISerialiser serialiser,
+            final IWebUiConfig webUiConfig) {
         logger.debug(format("\t%s '%s' centre for miType [%s] for user %s...", "loadCentreFromDefaultAndDiff", deviceSpecificName, miType.getSimpleName(), user));
         final DateTime start = new DateTime();
         
