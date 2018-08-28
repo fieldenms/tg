@@ -940,6 +940,8 @@
                     if (typeof this.heightBeforeResizing !== 'undefined' && typeof this.widthBeforeResizing !== 'undefined') { // restore original height / width after closing the dialog
                         this.style.height = this.heightBeforeResizing;
                         this.style.width = this.widthBeforeResizing;
+                        delete this.heightBeforeResizing;
+                        delete this.widthBeforeResizing;
                     }
                     this._minimised = false;
                     this._maximised = false;
