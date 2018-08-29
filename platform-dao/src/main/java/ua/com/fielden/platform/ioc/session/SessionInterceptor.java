@@ -93,7 +93,7 @@ public class SessionInterceptor implements MethodInterceptor {
                     commitTransactionAndCloseSession(session, tr);
                     LOGGER.debug("Committed DB transaction");
                 }
-            } else if (session.isOpen()) { 
+            } else if (session.isOpen()) {
                 // this is the case of a nested transaction
                 // should flush only if the current session is still open
                 // this check was not needed before migrating off Hibernate 3.2.6 GA

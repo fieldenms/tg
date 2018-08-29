@@ -30,6 +30,7 @@ import ua.com.fielden.platform.entity.annotation.Unique;
 public class UserSecret extends AbstractPersistentEntity<User> {
 
     public static final String SECRET_RESET_UUID_SEPERATOR = "-";
+    public static final int RESER_UUID_EXPIRATION_IN_MUNUTES = 15;
 
     @IsProperty
     @MapTo
