@@ -31,9 +31,11 @@ import ua.com.fielden.platform.entity.IEntityNewAction;
 import ua.com.fielden.platform.entity.ISecurityMatrixInsertionPoint;
 import ua.com.fielden.platform.entity.ISecurityMatrixSaveAction;
 import ua.com.fielden.platform.entity.ISecurityTokenTreeNodeEntity;
+import ua.com.fielden.platform.entity.ISequentialEntityEditAction;
 import ua.com.fielden.platform.entity.SecurityMatrixInsertionPointDao;
 import ua.com.fielden.platform.entity.SecurityMatrixSaveActionDao;
 import ua.com.fielden.platform.entity.SecurityTokenTreeNodeEntityDao;
+import ua.com.fielden.platform.entity.SequentialEntityEditActionDao;
 import ua.com.fielden.platform.entity.functional.master.AcknowledgeWarningsDao;
 import ua.com.fielden.platform.entity.functional.master.IAcknowledgeWarnings;
 import ua.com.fielden.platform.entity.functional.master.IPropertyWarning;
@@ -222,6 +224,7 @@ public class BasicWebServerModule extends CommonFactoryModule {
         // bind entity manipulation controller
         bind(IEntityNewAction.class).to(EntityNewActionDao.class);
         bind(IEntityEditAction.class).to(EntityEditActionDao.class);
+        bind(ISequentialEntityEditAction.class).to(SequentialEntityEditActionDao.class);
         bind(IEntityDeleteAction.class).to(EntityDeleteActionDao.class);
 
         // user security related bindings
