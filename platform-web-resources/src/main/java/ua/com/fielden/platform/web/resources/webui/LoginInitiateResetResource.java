@@ -1,13 +1,14 @@
 package ua.com.fielden.platform.web.resources.webui;
 
 import static java.lang.String.format;
+import static org.apache.commons.lang.StringUtils.isEmpty;
+import static ua.com.fielden.platform.security.user.UserSecret.RESER_UUID_EXPIRATION_IN_MUNUTES;
 
 import java.io.ByteArrayInputStream;
 import java.util.Optional;
 import java.util.Random;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 
-import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 import org.restlet.Context;
 import org.restlet.Request;
@@ -22,6 +23,8 @@ import org.restlet.representation.InputRepresentation;
 import org.restlet.representation.Representation;
 import org.restlet.resource.Post;
 import org.restlet.resource.ServerResource;
+
+import com.google.common.util.concurrent.AtomicDouble;
 
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.mail.SmtpEmailSender;
@@ -95,25 +98,11 @@ public class LoginInitiateResetResource extends ServerResource {
             
             // the user initiating a password reset is not logged in, therefore SU is used as the current user for auditing purposes
             up.setUsername(User.system_users.SU.name(), coFinder.find(User.class, true));
-            
+
             final IUser co$User = coFinder.find(User.class, false);
             final Optional<UserSecret> maybeUserSecret = co$User.assignPasswordResetUuid(usernameOrEmail);
-            
-            final long computationStart = System.currentTimeMillis();
-            if (maybeUserSecret.isPresent()) {
-                final UserSecret secret = maybeUserSecret.get();
-                final User user = secret.getKey(); 
-                if (!StringUtils.isEmpty(user.getEmail())) {
-                    final String emailBody = makePasswordRestEmail(constants.appName(), appUri, secret.getResetUuid());
-                    final SmtpEmailSender sender = new SmtpEmailSender(constants.smtpServer());
-                    sender.sendPlainMessage(constants.fromEmailAddress(), 
-                                            user.getEmail(), 
-                                            format("[%s] Please reset your password", constants.appName()), 
-                                            emailBody);
-                }
-            }
-            
-            delayResponse(computationStart, System.currentTimeMillis());
+
+            adjustResponseTime(maybeUserSecret.filter(secret -> !isEmpty(secret.getKey().getEmail())).map(this::reset));
 
             getResponse().setEntity(response);
 
@@ -125,21 +114,71 @@ public class LoginInitiateResetResource extends ServerResource {
     }
 
     /**
+     * An action to initiate password reset to a valid user, returning the number of milliseconds it took to perform the work.
+     * The result is used to randomise the response time for reducing the risk of timing-based attacks.
+     *
+     * @param secret
+     * @return
+     */
+    private int reset(final UserSecret secret) {
+        final long computationStart = System.currentTimeMillis();
+        final String emailAddr = secret.getKey().getEmail();
+        final String emailBody = makePasswordRestEmail(constants.appName(), appUri, secret.getResetUuid());
+        final SmtpEmailSender sender = new SmtpEmailSender(constants.smtpServer());
+        sender.sendPlainMessage(constants.fromEmailAddress(),
+                                emailAddr,
+                                format("[%s] Please reset your password", constants.appName()),
+                                emailBody);
+        return (int) (System.currentTimeMillis() - computationStart);
+    }
+
+
+    private static final Object lockForStats = new Object();
+    private static final AtomicInteger numberOfComputations = new AtomicInteger(1);
+    private static final AtomicDouble avgComputeTime = new AtomicDouble(300.00);
+    private static final AtomicDouble var2ComputeTime = new AtomicDouble(0);
+
+    /**
+     * Computes the mean and the variance based on the online algorithm outlined in <pre>https://en.wikipedia.org/wiki/Algorithms_for_calculating_variance</pre>.
+     *
+     * @param newReading
+     * @return
+     */
+    private static void computeStats(final int newReading) {
+        synchronized (lockForStats) {
+            if (newReading > 0) {
+                final int n = numberOfComputations.incrementAndGet();
+                final double delta = newReading - avgComputeTime.get();
+
+                final double avg = avgComputeTime.get() + delta / n;
+                final double delta2 = newReading - avg;
+                final double var2 = var2ComputeTime.get() + delta * delta2;
+
+                avgComputeTime.set(avg);
+                var2ComputeTime.set(var2);
+            }
+        }
+    }
+
+    /**
      * A function to randomly delay the response to reduce the risk of a timing-based attack.
      *
      * @param computationStart
      * @param computationEnd
      */
-    private void delayResponse(final long computationStart, final long computationEnd) {
-        try {
-            final int computationTime = (int) (computationEnd - computationStart);
-            if (computationTime < 1000) {
+    private void adjustResponseTime(final Optional<Integer> computeTime) {
+        computeStats(computeTime.orElse(0));
+
+        if (!computeTime.isPresent()) {
+            try {
+                final int avg = (int) avgComputeTime.get();
+                final int var = (int) Math.sqrt(var2ComputeTime.get() / numberOfComputations.get()) + 1;
                 final Random rnd = new Random();
-                final int sleepTime = 300 + rnd.nextInt(1000 - computationTime);
+                final int sleepTime = avg + (rnd.nextBoolean() ? 1 : -1) * rnd.nextInt(var);
                 Thread.sleep(sleepTime);
+            } catch (final Exception e) {
+                logger.debug("Interrupted sleep during login.", e);
             }
-        } catch (final Exception e) {
-            logger.debug("Interrupted sleep during login.", e);
         }
     }
 
@@ -151,7 +190,7 @@ public class LoginInitiateResetResource extends ServerResource {
         builder.append("\n\n");
         builder.append(format("%sreset_password/%s", appUri, resetUuid));
         builder.append("\n\n");
-        builder.append(format("If you don't use this link within 24 hours, it will expire. To get a new password reset link, visit %sforgotten", appUri));
+        builder.append(format("If you don't use this link within %s minutes, it will expire. To get a new password reset link, visit %sforgotten", RESER_UUID_EXPIRATION_IN_MUNUTES, appUri));
         builder.append("\n\n");
         builder.append("Thanks,\n");
         builder.append("Your support team");

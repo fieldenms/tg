@@ -84,7 +84,6 @@ public class LoginResource extends ServerResource {
         this.coUser = coUser;
         this.coUserSession = coUserSession;
         this.restUtil = restUtil;
-
     }
 
     @Get
