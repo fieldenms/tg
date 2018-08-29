@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.domaintree.impl;
 
+import static java.lang.String.format;
 import static ua.com.fielden.platform.domaintree.ICalculatedProperty.CalculatedPropertyAttribute.ALL;
 import static ua.com.fielden.platform.domaintree.ICalculatedProperty.CalculatedPropertyAttribute.ANY;
 import static ua.com.fielden.platform.domaintree.ICalculatedProperty.CalculatedPropertyAttribute.NO_ATTR;
@@ -16,6 +17,8 @@ import java.util.Map;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.WordUtils;
+import org.joda.time.DateTime;
+import org.joda.time.Period;
 
 import ua.com.fielden.platform.domaintree.ICalculatedProperty;
 import ua.com.fielden.platform.domaintree.IDomainTreeEnhancer;
@@ -139,7 +142,27 @@ public/* final */class CalculatedProperty extends AbstractEntity<DynamicEntityKe
         key.addKeyMemberComparator(1, new ClassComparator());
         setKey(key);
     }
-
+    
+    private CalculatedProperty(final CalculatedProperty calculatedProperty, final IDomainTreeEnhancer enhancer) {
+        this();
+        calculatedProperty.copyTo(this);
+        
+        this.contextType = calculatedProperty.contextType;
+        this.category = calculatedProperty.category;
+        this.name = calculatedProperty.name;
+        this.path = calculatedProperty.path;
+        this.parentType = calculatedProperty.parentType;
+        this.resultType = calculatedProperty.resultType;
+        this.ast = calculatedProperty.ast;
+        this.enhancer = enhancer;
+        this.validateTitleContextOfExtractedProperties = calculatedProperty.validateTitleContextOfExtractedProperties;
+        this.customPropertyName = calculatedProperty.customPropertyName;
+    }
+    
+    public CalculatedProperty copy(final IDomainTreeEnhancer enhancer) {
+        return new CalculatedProperty(this, enhancer);
+    }
+    
     private Class<?> determineType(final String path) {
         return StringUtils.isEmpty(path) ? this.root : PropertyTypeDeterminator.determinePropertyType(this.root, path);
     }
@@ -573,7 +596,15 @@ public/* final */class CalculatedProperty extends AbstractEntity<DynamicEntityKe
     }
 
     protected AstNode createAst(final String newContextualExpression) throws RecognitionException, SemanticException {
-        return new ExpressionText2ModelConverter((Class<? extends AbstractEntity<?>>) getEnhancer().getManagedType(getRoot()), getContextPath(), newContextualExpression).convert();
+        //System.err.println(format("Creating AST for calculated property with [%s] expression...", newContextualExpression));
+        logger.error(format("\t\t\t\t\tCreating AST for calculated property with [%s] expression...", newContextualExpression));
+        final DateTime start = new DateTime();
+        
+        final AstNode result = new ExpressionText2ModelConverter((Class<? extends AbstractEntity<?>>) getEnhancer().getManagedType(getRoot()), getContextPath(), newContextualExpression).convert();
+        final DateTime end = new DateTime();
+        final Period pd = new Period(start, end);
+        logger.error(format("\t\t\t\t\tCreating AST for calculated property with [%s] expression...done in [%s]", newContextualExpression, pd.getSeconds() + " s " + pd.getMillis() + " ms"));
+        return result;
     }
 
     protected CalculatedProperty copy() {

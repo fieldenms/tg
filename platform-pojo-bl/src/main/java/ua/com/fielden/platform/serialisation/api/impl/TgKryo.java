@@ -20,6 +20,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 import java.util.zip.Deflater;
 import java.util.zip.InflaterInputStream;
 
@@ -80,6 +82,8 @@ import ua.com.fielden.platform.domaintree.centre.impl.LocatorDomainTreeManagerAn
 import ua.com.fielden.platform.domaintree.centre.impl.LocatorDomainTreeManagerAndEnhancer.LocatorDomainTreeManagerAndEnhancerWithTransientAnalysesSerialiser;
 import ua.com.fielden.platform.domaintree.centre.impl.LocatorDomainTreeRepresentation;
 import ua.com.fielden.platform.domaintree.centre.impl.LocatorDomainTreeRepresentation.LocatorDomainTreeRepresentationSerialiser;
+import ua.com.fielden.platform.domaintree.impl.CalculatedPropertyInfo;
+import ua.com.fielden.platform.domaintree.impl.CustomProperty;
 import ua.com.fielden.platform.domaintree.impl.DomainTreeEnhancer;
 import ua.com.fielden.platform.domaintree.impl.DomainTreeEnhancer.DomainTreeEnhancerSerialiser;
 import ua.com.fielden.platform.domaintree.impl.LocatorManager;
@@ -138,6 +142,7 @@ import ua.com.fielden.platform.serialisation.kryo.serialisers.ResultSerialiser;
 import ua.com.fielden.platform.serialisation.kryo.serialisers.SortKeySerialiser;
 import ua.com.fielden.platform.types.ICategorizer;
 import ua.com.fielden.platform.types.Money;
+import ua.com.fielden.platform.types.tuples.T3;
 import ua.com.fielden.platform.ui.config.EntityCentreConfig;
 import ua.com.fielden.platform.ui.config.EntityLocatorConfig;
 import ua.com.fielden.platform.ui.config.EntityMasterConfig;
@@ -155,7 +160,7 @@ import ua.com.fielden.platform.utils.StreamCouldNotBeResolvedException;
  * @author TG Team
  *
  */
-class TgKryo extends Kryo implements ISerialiserEngine {
+public class TgKryo extends Kryo implements ISerialiserEngine {
     /** Default buffer sizes for */
     private enum BUFFER_SIZE {
         QUERY(1024), // 1Kb
@@ -213,7 +218,18 @@ class TgKryo extends Kryo implements ISerialiserEngine {
     private final Serializer centreDomainTreeManagerAndEnhancerWithTransientAnalysesSerialiser;
     //private final Serializer dynamicallyTypedQueryContainerSerialiser;
     private final Serializer lifecycleQueryContainerSerialiser;
-
+    
+    private final ConcurrentMap<T3<Set<Class<?>>, Map<Class<?>, Set<CalculatedPropertyInfo>>, Map<Class<?>, List<CustomProperty>>>, DomainTreeEnhancer> domainTreeEnhancers = new ConcurrentHashMap<>();
+    
+    public DomainTreeEnhancer getDomainTreeEnhancerFor(final Set<Class<?>> rootTypes, final Map<Class<?>, Set<CalculatedPropertyInfo>> calculatedPropertiesInfo, final Map<Class<?>, List<CustomProperty>> customProperties) {
+        return domainTreeEnhancers.get(T3.t3(rootTypes, calculatedPropertiesInfo, customProperties));
+    }
+    
+    public DomainTreeEnhancer putDomainTreeEnhancerFor(final Set<Class<?>> rootTypes, final Map<Class<?>, Set<CalculatedPropertyInfo>> calculatedPropertiesInfo, final Map<Class<?>, List<CustomProperty>> customProperties, final DomainTreeEnhancer domainTreeEnhancer) {
+        domainTreeEnhancers.put(T3.t3(rootTypes, calculatedPropertiesInfo, customProperties), domainTreeEnhancer);
+        return domainTreeEnhancer;
+    }
+    
     public TgKryo(final EntityFactory factory, final ISerialisationClassProvider provider, final Serialiser serialiser) {
         setRegistrationOptional(true);
         setClassLoader(ClassLoader.getSystemClassLoader());

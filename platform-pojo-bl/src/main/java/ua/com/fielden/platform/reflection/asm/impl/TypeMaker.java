@@ -12,6 +12,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 import org.apache.commons.lang.StringUtils;
+import org.apache.log4j.Logger;
 import org.kohsuke.asm5.ClassReader;
 import org.kohsuke.asm5.ClassWriter;
 
@@ -25,7 +26,7 @@ import ua.com.fielden.platform.utils.Pair;
  *
  */
 public class TypeMaker {
-
+    private final Logger logger = Logger.getLogger(getClass());
     private static final String NEW_SUPERTYPE_NAME_IS_NULL_OR_EMPTY = "New supertype name is 'null' or empty.";
     private static final String CURRENT_TYPE_OR_NAME_ARE_NOT_SPECIFIED = "Current type or name are not specified.";
     private final DynamicEntityClassLoader cl;
@@ -236,6 +237,7 @@ public class TypeMaker {
 
    public Class<?> endModification() {
        final Class<?> klass = cl.defineType(currentName, currentType, 0, currentType.length);
+       logger.error(String.format("\t\t\t\tNew type [%s] registered.", klass.getSimpleName()));
        cl.registerClass(new Pair<Class<?>, byte[]>(klass, currentType));
 
        currentType = null;

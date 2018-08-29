@@ -135,7 +135,9 @@ public class CentreUpdaterUtils extends CentreUpdater {
             final IWebUiConfig webUiConfig,
             final IEntityCentreConfig eccCompanion) {
         final String loggingSuffix = format("for type [%s] with name [%s] for user [%s]", menuItemType.getSimpleName(), name, user);
-        logger.info(format("Initialising entity-centre instance %s...", loggingSuffix));
+        logger.info(format("\t\tInitialising entity-centre instance %s...", loggingSuffix));
+        final DateTime start = new DateTime();
+        
         validateMenuItemType(menuItemType);
         validateMenuItemTypeRootType(menuItemType);
         
@@ -148,7 +150,9 @@ public class CentreUpdaterUtils extends CentreUpdater {
         } else {
             centre = firstTwoConfigs.stream().findAny().map(ecc -> restoreCentreManagerFrom(ecc, serialiser, menuItemType, webUiConfig, eccCompanion, loggingSuffix));
         }
-        logger.info(format("Initialising entity-centre instance %s...done", loggingSuffix));
+        final DateTime end = new DateTime();
+        final Period pd = new Period(start, end);
+        logger.info(format("\t\tInitialising entity-centre instance %s...done in [%s]", loggingSuffix, pd.getSeconds() + " s " + pd.getMillis() + " ms"));
         return centre;
     }
     
@@ -163,7 +167,13 @@ public class CentreUpdaterUtils extends CentreUpdater {
             // params for: deserialisation failed -- logging
             final String loggingSuffix) {
         try {
-            return serialiser.deserialise(ecc.getConfigBody(), CentreDomainTreeManagerAndEnhancer.class);
+            logger.info(format("\t\t\trestoreCentreManagerFrom entity-centre instance  %s...", loggingSuffix));
+            final DateTime start = new DateTime();
+            final CentreDomainTreeManagerAndEnhancer result = serialiser.deserialise(ecc.getConfigBody(), CentreDomainTreeManagerAndEnhancer.class);
+            final DateTime end = new DateTime();
+            final Period pd = new Period(start, end);
+            logger.info(format("\t\t\trestoreCentreManagerFrom entity-centre instance %s...done in [%s]", loggingSuffix, pd.getSeconds() + " s " + pd.getMillis() + " ms"));
+            return result;
         } catch (final Exception deserialisationException) {
             logger.error("============================================ CENTRE DESERIALISATION HAS FAILED ============================================");
             logger.error(format("Unable to deserialise a entity-centre instance %s. The exception is the following: ", loggingSuffix), deserialisationException);
@@ -187,6 +197,10 @@ public class CentreUpdaterUtils extends CentreUpdater {
             final ISerialiser serialiser,
             final IEntityCentreConfig eccCompanion,
             final IMainMenuItem mmiCompanion) {
+        final String loggingSuffix = format("for type [%s] with name [%s] for user [%s]", menuItemType.getSimpleName(), newName, user);
+        logger.info(format("\t\tsaveAsEntityCentreManager entity-centre instance %s...", loggingSuffix));
+        final DateTime start = new DateTime();
+        
         validateMenuItemType(menuItemType);
         validateMenuItemTypeRootType(menuItemType);
         
@@ -208,6 +222,10 @@ public class CentreUpdaterUtils extends CentreUpdater {
         ecc.setDesc(newDesc);
         ecc.setConfigBody(serialiser.serialise(copyMgr));
         eccCompanion.quickSave(ecc); // please note that CommonEntityDao exception will be thrown in case where such ecc instance already exists // TODO check quickSave usage!
+        
+        final DateTime end = new DateTime();
+        final Period pd = new Period(start, end);
+        logger.info(format("\t\tsaveAsEntityCentreManager entity-centre instance %s...done in [%s]", loggingSuffix, pd.getSeconds() + " s " + pd.getMillis() + " ms"));
         return copyMgr;
     }
     
@@ -220,6 +238,9 @@ public class CentreUpdaterUtils extends CentreUpdater {
             final ISerialiser serialiser,
             final IEntityCentreConfig eccCompanion) {
         final String loggingSuffix = format("for type [%s] with name [%s] for user [%s]", menuItemType.getSimpleName(), name, user);
+        logger.info(format("\t\tsaveEntityCentreManager entity-centre instance %s...", loggingSuffix));
+        final DateTime start = new DateTime();
+        
         validateMenuItemType(menuItemType);
         validateMenuItemTypeRootType(menuItemType);
         
@@ -238,6 +259,9 @@ public class CentreUpdaterUtils extends CentreUpdater {
                 ecc.setDesc(newDesc);
             }
             eccCompanion.quickSave(ecc); // TODO check quickSave usage!
+            final DateTime end = new DateTime();
+            final Period pd = new Period(start, end);
+            logger.info(format("\t\tsaveEntityCentreManager entity-centre instance %s...done in [%s]", loggingSuffix, pd.getSeconds() + " s " + pd.getMillis() + " ms"));
             return centre;
         }
     }
@@ -251,9 +275,11 @@ public class CentreUpdaterUtils extends CentreUpdater {
      */
     protected static ICentreDomainTreeManagerAndEnhancer copyCentre(final ICentreDomainTreeManagerAndEnhancer centre, final ISerialiser serialiser) {
         logger.debug(format("\t\t\tCopying centre..."));
+        logger.debug(format("\t\t\t\tDeep copy..."));
         final DateTime start = new DateTime();
         final ICentreDomainTreeManagerAndEnhancer copy = deepCopy(centre, serialiser);
         
+        logger.debug(format("\t\t\t\tadjustManagedTypeAnnotations..."));
         // TODO investigate the way to avoid generating of new types here:
         // Performs copying of all defined custom annotations on generated types to provide the copy with the same annotations as original centre have.
         for (final Class<?> root: centre.getRepresentation().rootTypes()) {

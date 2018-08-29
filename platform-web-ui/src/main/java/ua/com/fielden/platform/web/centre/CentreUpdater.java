@@ -169,7 +169,8 @@ public class CentreUpdater {
             final IEntityCentreConfig eccCompanion,
             final IMainMenuItem mmiCompanion,
             final IUser userCompanion) {
-        logger.debug(format("%s '%s' centre for miType [%s] %sfor user %s...", "Initialising", deviceSpecificName, miType.getSimpleName(), "for the first time ", user));
+        System.out.println();
+        logger.debug(format("%s '%s' centre for miType [%s] for user %s...", "Retrieving", deviceSpecificName, miType.getSimpleName(), user));
         final DateTime start = new DateTime();
         
         final ICentreDomainTreeManagerAndEnhancer updatedDiffCentre = updateDifferencesCentre(miType, user, userProvider, deviceSpecificName, saveAsName, device, serialiser, webUiConfig, eccCompanion, mmiCompanion, userCompanion);
@@ -177,7 +178,7 @@ public class CentreUpdater {
         
         final DateTime end = new DateTime();
         final Period pd = new Period(start, end);
-        logger.debug(format("%s the '%s' centre for miType [%s] %sfor user %s... done in [%s].", "Initialised", deviceSpecificName, miType.getSimpleName(), "for the first time ", user, pd.getSeconds() + " s " + pd.getMillis() + " ms"));
+        logger.debug(format("%s the '%s' centre for miType [%s] for user %s... done in [%s].", "Retrieved", deviceSpecificName, miType.getSimpleName(), user, pd.getSeconds() + " s " + pd.getMillis() + " ms"));
         return loadedCentre;
     }
     
@@ -195,10 +196,19 @@ public class CentreUpdater {
         return updateCentreDesc0(user, miType, deviceSpecific(saveAsSpecific(FRESH_CENTRE_NAME, saveAsName), device), eccCompanion);
     }
     private static String updateCentreDesc0(final User user, final Class<? extends MiWithConfigurationSupport<?>> miType, final String deviceSpecificName, final IEntityCentreConfig eccCompanion) {
+        System.out.println();
+        logger.debug(format("%s '%s' centre for miType [%s] for user %s...", "updateCentreDesc", deviceSpecificName, miType.getSimpleName(), user));
+        final DateTime start = new DateTime();
+        
         // find description of the centre configuration to be copied from
         final String freshDeviceSpecificDiffName = deviceSpecificName + DIFFERENCES_SUFFIX;
         final EntityCentreConfig eccWithDesc = CentreUpdaterUtils.findConfig(miType, user, freshDeviceSpecificDiffName, eccCompanion);
-        return eccWithDesc == null ? null : eccWithDesc.getDesc();
+        final String result = eccWithDesc == null ? null : eccWithDesc.getDesc();
+        
+        final DateTime end = new DateTime();
+        final Period pd = new Period(start, end);
+        logger.debug(format("%s the '%s' centre for miType [%s] for user %s... done in [%s].", "updateCentreDesc", deviceSpecificName, miType.getSimpleName(), user, pd.getSeconds() + " s " + pd.getMillis() + " ms"));
+        return result;
     }
     
     /**
@@ -219,6 +229,10 @@ public class CentreUpdater {
             final String newTitle,
             final String newDesc,
             final IEntityCentreConfig eccCompanion) {
+        System.out.println();
+        logger.debug(format("%s '%s' centre for miType [%s] for user %s...", "editCentreTitleAndDesc", saveAsName, miType.getSimpleName(), user));
+        final DateTime start = new DateTime();
+        
         final Function<Optional<String>, Function<String, String>> nameOf = (saveAs) -> (surrogateName) -> deviceSpecific(saveAsSpecific(surrogateName, saveAs), device) + DIFFERENCES_SUFFIX;
         final Function<String, String> currentNameOf = nameOf.apply(saveAsName);
         final String currentNameFresh = currentNameOf.apply(FRESH_CENTRE_NAME);
@@ -253,6 +267,10 @@ public class CentreUpdater {
         if (previouslyRunConfig != null) { // previouslyRun centre may not exist
             eccCompanion.quickSave(previouslyRunConfig);
         }
+        
+        final DateTime end = new DateTime();
+        final Period pd = new Period(start, end);
+        logger.debug(format("%s the '%s' centre for miType [%s] for user %s... done in [%s].", "editCentreTitleAndDesc", saveAsName, miType.getSimpleName(), user, pd.getSeconds() + " s " + pd.getMillis() + " ms"));
     }
     
     /**
@@ -270,9 +288,17 @@ public class CentreUpdater {
         removeCentres0(user, miType, eccCompanion, stream(names).map(name -> deviceSpecific(saveAsSpecific(name, saveAsName), device)).toArray(String[]::new));
     }
     private static void removeCentres0(final User user, final Class<? extends MiWithConfigurationSupport<?>> miType, final IEntityCentreConfig eccCompanion, final String ... deviceSpecificNames) {
+        System.out.println();
+        logger.debug(format("%s '%s' centres for miType [%s] for user %s...", "removeCentres0", deviceSpecificNames, miType.getSimpleName(), user));
+        final DateTime start = new DateTime();
+        
         // remove corresponding diff centre instances from persistent storage
         final String [] deviceSpecificDiffNames = stream(deviceSpecificNames).map(name -> name + DIFFERENCES_SUFFIX).toArray(String[]::new);
         CentreUpdaterUtils.removeCentres(user, miType, eccCompanion, deviceSpecificDiffNames);
+        
+        final DateTime end = new DateTime();
+        final Period pd = new Period(start, end);
+        logger.debug(format("%s the '%s' centres for miType [%s] for user %s... done in [%s].", "removeCentres0", deviceSpecificNames, miType.getSimpleName(), user, pd.getSeconds() + " s " + pd.getMillis() + " ms"));
     }
     
     /**
@@ -313,6 +339,7 @@ public class CentreUpdater {
             final IEntityCentreConfig eccCompanion,
             final IMainMenuItem mmiCompanion,
             final IUser userCompanion) {
+        System.out.println();
         logger.debug(format("%s '%s' centre for miType [%s] for user %s...", "Committing", deviceSpecificName, miType.getSimpleName(), user));
         final DateTime start = new DateTime();
         
@@ -372,6 +399,7 @@ public class CentreUpdater {
             final IEntityCentreConfig eccCompanion,
             final IMainMenuItem mmiCompanion,
             final IUser userCompanion) {
+        System.out.println();
         logger.debug(format("%s '%s' centre for miType [%s] for user %s...", "Initialising & committing", deviceSpecificName, miType.getSimpleName(), user));
         final DateTime start = new DateTime();
         
@@ -795,6 +823,9 @@ public class CentreUpdater {
      * @return
      */
     private static ICentreDomainTreeManagerAndEnhancer applyDifferences(final ICentreDomainTreeManagerAndEnhancer targetCentre, final ICentreDomainTreeManagerAndEnhancer differencesCentre, final Class<AbstractEntity<?>> root) {
+        logger.debug(format("\t%s centre...", "applyDifferences"));
+        final DateTime start = new DateTime();
+        
         final Class<?> diffManagedType = managedType(root, differencesCentre);
         for (final String property : differencesCentre.getFirstTick().checkedProperties(root)) {
             if (!isPlaceholder(property) && !propertyRemovedFromDomainType(diffManagedType, property)) {
@@ -896,7 +927,10 @@ public class CentreUpdater {
                 }
             }
         }
-
+        
+        final DateTime end = new DateTime();
+        final Period pd = new Period(start, end);
+        logger.debug(format("\t%s centre... done in [%s].", "applyDifferences", pd.getSeconds() + " s " + pd.getMillis() + " ms"));
         return targetCentre;
     }
 
