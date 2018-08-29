@@ -12,6 +12,7 @@ import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.orderBy;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 import static ua.com.fielden.platform.security.user.User.EMAIL;
+import static ua.com.fielden.platform.security.user.UserSecret.RESER_UUID_EXPIRATION_IN_MUNUTES;
 import static ua.com.fielden.platform.security.user.UserSecret.SECRET_RESET_UUID_SEPERATOR;
 
 import java.util.Collection;
@@ -304,7 +305,7 @@ public class UserDao extends CommonEntityDao<User> implements IUser {
             final IUserSecret co$UserSecret = co$(UserSecret.class);
             final UserSecret secret = findOrCreateNewSecret(user, co$UserSecret);
             
-            final String uuid = format("%s%s%s%s%s", user.getKey(), SECRET_RESET_UUID_SEPERATOR, crypto.nextSessionId(), SECRET_RESET_UUID_SEPERATOR, getUniversalConstants().now().plusHours(24).getMillis());
+            final String uuid = format("%s%s%s%s%s", user.getKey(), SECRET_RESET_UUID_SEPERATOR, crypto.nextSessionId(), SECRET_RESET_UUID_SEPERATOR, getUniversalConstants().now().plusMinutes(RESER_UUID_EXPIRATION_IN_MUNUTES).getMillis());
             return Optional.of(co$UserSecret.save(secret.setResetUuid(uuid)));
         }
 
