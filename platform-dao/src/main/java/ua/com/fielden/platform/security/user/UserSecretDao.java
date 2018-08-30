@@ -70,4 +70,9 @@ public class UserSecretDao extends CommonEntityDao<UserSecret> implements IUserS
         return defaultBatchDelete(entitiesIds);
     }
 
+    @Override
+    public String newSalt() {
+        return crypto.genSalt();
+    }
+
 }

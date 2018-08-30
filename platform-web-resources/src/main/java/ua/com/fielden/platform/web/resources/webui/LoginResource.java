@@ -6,6 +6,7 @@ import static ua.com.fielden.platform.web.security.AbstractWebResourceGuard.extr
 
 import java.io.ByteArrayInputStream;
 import java.util.Optional;
+import java.util.concurrent.TimeUnit;
 
 import org.apache.log4j.Logger;
 import org.restlet.Context;
@@ -127,6 +128,7 @@ public class LoginResource extends ServerResource {
 
     @Post
     public void tryLogin(final Representation entity) {
+        final long nanoStart = System.nanoTime();
         try {
             final Form form = new Form(entity);
             final Credentials credo = new Credentials();
@@ -152,6 +154,8 @@ public class LoginResource extends ServerResource {
             LOGGER.fatal(ex);
             getResponse().setEntity(restUtil.errorJSONRepresentation(ex.getMessage()));
             getResponse().setStatus(Status.SERVER_ERROR_INTERNAL);
+        } finally {
+            LOGGER.debug(format("LOGIN ATTEMPT RESPONSE TIME: %s%n", TimeUnit.MILLISECONDS.convert(System.nanoTime() - nanoStart, TimeUnit.NANOSECONDS)));
         }
     }
 
