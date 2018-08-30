@@ -14,11 +14,14 @@ import ua.com.fielden.platform.entity.EntityDeleteAction;
 import ua.com.fielden.platform.entity.EntityEditAction;
 import ua.com.fielden.platform.entity.EntityExportAction;
 import ua.com.fielden.platform.entity.EntityNewAction;
+import ua.com.fielden.platform.entity.SequentialEntityEditAction;
 import ua.com.fielden.platform.reflection.TitlesDescsGetter;
 import ua.com.fielden.platform.web.PrefDim;
 import ua.com.fielden.platform.web.action.exceptions.ActionConfigurationException;
 import ua.com.fielden.platform.web.action.post.FileSaverPostAction;
 import ua.com.fielden.platform.web.action.pre.SequentialEditPreAction;
+import ua.com.fielden.platform.web.action.pre.SequentialOpenPostAction;
+import ua.com.fielden.platform.web.action.pre.SequentialOpenPreAction;
 import ua.com.fielden.platform.web.centre.CentreContext;
 import ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig;
 import ua.com.fielden.platform.web.centre.api.context.IEntityCentreContextSelectorDone;
@@ -142,6 +145,46 @@ public enum StandardActions {
                     icon("editor:mode-edit").
                     shortDesc(format("Edit %s", entityTitle)).
                     longDesc(format("Opens master for editing %s", entityTitle)).
+                    prefDimForView(prefDim).
+                    withNoParentCentreRefresh().
+                    build();
+        }
+    },
+
+    SEQUENTIAL_OPEN_ACTION {
+
+        @Override
+        public EntityActionConfig mkAction(final Class<? extends AbstractEntity<?>> entityType) {
+            return mkAction(entityType, null, null);
+        }
+
+        @Override
+        public EntityActionConfig mkAction(final Class<? extends AbstractEntity<?>> entityType, final PrefDim prefDim) {
+            return mkAction(entityType, null, prefDim);
+        }
+
+        @Override
+        public EntityActionConfig mkAction(final Class<? extends AbstractEntity<?>> entityType, final BiFunction<AbstractFunctionalEntityWithCentreContext<?>, CentreContext<AbstractEntity<?>, AbstractEntity<?>>, Object> computation) {
+            return mkAction(entityType, computation, null);
+        }
+
+        @Override
+        public EntityActionConfig mkAction(final Class<? extends AbstractEntity<?>> entityType, final BiFunction<AbstractFunctionalEntityWithCentreContext<?>, CentreContext<AbstractEntity<?>, AbstractEntity<?>>, Object> computation, final PrefDim prefDim) {
+            final String entityTitle = TitlesDescsGetter.getEntityTitleAndDesc(entityType).getKey();
+
+            final IEntityCentreContextSelectorDone<AbstractEntity<?>> contextConfig;
+            if (computation != null) {
+                contextConfig = context().withCurrentEntity().withComputation(computation);
+            } else {
+                contextConfig = context().withCurrentEntity().withComputation((entity, context) -> entityType);
+            }
+
+            return action(SequentialEntityEditAction.class).withContext(contextConfig.build()).
+                    preAction(new SequentialOpenPreAction()).
+                    postActionSuccess(new SequentialOpenPostAction()).
+                    icon("icons:done-all").
+                    shortDesc(format("Open %s", entityTitle)).
+                    longDesc(format("Open %s", entityTitle)).
                     prefDimForView(prefDim).
                     withNoParentCentreRefresh().
                     build();

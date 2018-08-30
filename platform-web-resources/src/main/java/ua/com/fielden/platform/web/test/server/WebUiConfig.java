@@ -1326,8 +1326,8 @@ public class WebUiConfig extends AbstractWebUiConfig {
                         shortcut("alt+n").
                         build())
                 .also()
-                .addTopAction(StandardActions.SEQUENTIAL_EDIT_ACTION.mkAction(TgPersistentEntityWithProperties.class))
-                .also()
+                .addTopAction(StandardActions.SEQUENTIAL_EDIT_ACTION.mkAction(TgPersistentEntityWithProperties.class)).also()
+                .addTopAction(StandardActions.SEQUENTIAL_OPEN_ACTION.mkAction(TgPersistentEntityWithProperties.class)).also()
                 .addTopAction(action(EntityDeleteAction.class).
                         withContext(context().withSelectedEntities().build()).
                         postActionSuccess(new IPostAction() {

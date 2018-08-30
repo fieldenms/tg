@@ -9,7 +9,7 @@ import ua.com.fielden.platform.web.centre.CentreContext;
 
 /**
  * Producer for {@link EntityEditAction}.
- * 
+ *
  * @author TG Team
  *
  */
@@ -27,7 +27,7 @@ public class EntityEditActionProducer extends EntityManipulationActionProducer<E
             final AbstractEntity<?> currEntity = currentEntity();
             // in a polymorphic UI case, IDs may come from a computational context
             // it is by convention that a computational context may return a value of type T2 representing a tuple of Type (Class) and ID (Long)
-            final Long id = 
+            final Long id =
                     computation()
                     .map(computation -> computation.apply(entity, (CentreContext<AbstractEntity<?>, AbstractEntity<?>>) getContext()))
                     .filter(computed -> computed instanceof T2)
@@ -37,10 +37,10 @@ public class EntityEditActionProducer extends EntityManipulationActionProducer<E
                             return currEntity.getId();
                         } else {
                             throw new IllegalStateException("There is nothing to edit.");
-                        } 
+                        }
                     });
             editedEntity.setEntityId(id.toString());
-            
+
         }
         return editedEntity;
     }

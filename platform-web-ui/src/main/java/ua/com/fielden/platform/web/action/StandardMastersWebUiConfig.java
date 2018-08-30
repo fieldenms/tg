@@ -24,6 +24,7 @@ import ua.com.fielden.platform.entity.EntityExportActionProducer;
 import ua.com.fielden.platform.entity.EntityNewAction;
 import ua.com.fielden.platform.entity.EntityNewActionProducer;
 import ua.com.fielden.platform.entity.SequentialEntityEditAction;
+import ua.com.fielden.platform.entity.SequentialEntityEditActionProducer;
 import ua.com.fielden.platform.web.PrefDim;
 import ua.com.fielden.platform.web.interfaces.ILayout.Device;
 import ua.com.fielden.platform.web.layout.api.impl.FlexLayoutConfig;
@@ -69,7 +70,8 @@ public class StandardMastersWebUiConfig {
     }
 
     public static EntityMaster<SequentialEntityEditAction> createSequentialEntityMaster(final Injector injector) {
-        return new EntityMaster<>(SequentialEntityEditAction.class, null,
+        return new EntityMaster<>(SequentialEntityEditAction.class,
+                SequentialEntityEditActionProducer.class,
                 new SequentialEntityEditMaster(SequentialEntityEditAction.class, true),
                 injector);
     }
