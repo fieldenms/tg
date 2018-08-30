@@ -2,6 +2,7 @@ package ua.com.fielden.platform.companion;
 
 import static java.lang.String.format;
 import static java.util.stream.Collectors.toList;
+import static java.util.stream.Collectors.toSet;
 import static org.hibernate.LockOptions.UPGRADE;
 import static ua.com.fielden.platform.companion.helper.KeyConditionBuilder.createQueryByKey;
 import static ua.com.fielden.platform.dao.HibernateMappingsGenerator.ID_SEQUENCE_NAME;
@@ -17,6 +18,7 @@ import static ua.com.fielden.platform.reflection.Reflector.isMethodOverriddenOrD
 import static ua.com.fielden.platform.utils.DbUtils.nextIdValue;
 import static ua.com.fielden.platform.utils.Validators.findActiveDeactivatableDependencies;
 
+import java.lang.reflect.Field;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.HashSet;
@@ -336,7 +338,7 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
         // was activatable entity just activated?
         if (activeProp.isDirty()) {
             // let's collect activatable not dirty properties from entity to check them for activity and also to increment their refCount
-            final Set<String> keyMembers = Finder.getKeyMembers(entity.getType()).stream().map(f -> f.getName()).collect(Collectors.toSet());
+            final Set<String> keyMembers = Finder.getKeyMembers(entity.getType()).stream().map(Field::getName).collect(Collectors.toSet());
             for (final T2<String, Class<ActivatableAbstractEntity<?>>> propNameAndType : collectActivatableNotDirtyProperties(entity, keyMembers)) {
                 // get value from a persisted version of entity, which is loaded by Hibernate
                 // if a corresponding property is proxied due to insufficient fetch model, its value is retrieved lazily by Hibernate
@@ -449,7 +451,7 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
             assignCreationInfo((AbstractPersistentEntity<?>) entity);
         }
         assignPropertiesBeforeSave(entity);
-        
+
         // reconstruct entity fetch model for future retrieval at the end of the method call
         final Optional<fetch<T>> entityFetchOption = skipRefetching.get() ? Optional.empty() : Optional.of(FetchModelReconstructor.reconstruct(entity));
 
@@ -464,7 +466,7 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
         }
 
         if (shouldProcessActivatableProperties) {
-            final Set<String> keyMembers = Finder.getKeyMembers(entity.getType()).stream().map(f -> f.getName()).collect(Collectors.toSet());
+            final Set<String> keyMembers = Finder.getKeyMembers(entity.getType()).stream().map(Field::getName).collect(toSet());
             final Set<MetaProperty<? extends ActivatableAbstractEntity<?>>> activatableDirtyProperties = collectActivatableDirtyProperties(entity, keyMembers);
 
             for (final MetaProperty<? extends ActivatableAbstractEntity<?>> prop : activatableDirtyProperties) {
@@ -518,14 +520,14 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
         // unit tests utilise a permissive VIRTUAL_USER to persist a "current" user for the testing purposes
         // VIRTUAL_USER is transient and cannot be set as a value for properties of persistent entities
         // thus, a check for VIRTUAL_USER as a current user 
-        if (!User.system_users.VIRTUAL_USER.name().equals(user.get().getKey())) {
-            entity.set(AbstractPersistentEntity.CREATED_BY, user.get());
+        if (!User.system_users.VIRTUAL_USER.name().equals(currUserOrException().getKey())) {
+            entity.set(AbstractPersistentEntity.CREATED_BY, currUserOrException());
         }
         
         entity.set(AbstractPersistentEntity.CREATED_DATE, now.get().toDate());
         entity.set(AbstractPersistentEntity.CREATED_TRANSACTION_GUID, transactionGuid.get());
     }
-    
+
     private void assignLastModificationInfo(final AbstractPersistentEntity<?> entity, final AbstractPersistentEntity<?> persistentEntity) {
         // if the entity is activatable and the only dirty property is refCount than there is no need to update the last-updated-by info
         if (entity instanceof ActivatableAbstractEntity) {
@@ -537,13 +539,26 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
         // unit tests utilise a permissive VIRTUAL_USER to persist a "current" user for the testing purposes
         // VIRTUAL_USER is transient and cannot be set as a value for properties of persistent entities
         // thus, a check for VIRTUAL_USER as a current user 
-        if (!User.system_users.VIRTUAL_USER.name().equals(user.get().getKey())) {
-            persistentEntity.set(AbstractPersistentEntity.LAST_UPDATED_BY, user.get());
+        if (!User.system_users.VIRTUAL_USER.name().equals(currUserOrException().getKey())) {
+            persistentEntity.set(AbstractPersistentEntity.LAST_UPDATED_BY, currUserOrException());
             persistentEntity.set(AbstractPersistentEntity.LAST_UPDATED_DATE, now.get().toDate());
             persistentEntity.set(AbstractPersistentEntity.LAST_UPDATED_TRANSACTION_GUID, transactionGuid.get());
         }
     }
-    
+
+    /**
+     * Returns the current user if defined. Otherwise, throws an exception.
+     * @return
+     */
+    private User currUserOrException() {
+        final User currUser = user.get();
+        if (currUser == null) {
+            final String msg = "The current user is not defined.";
+            logger.error(msg);
+            throw new EntityCompanionException(msg);
+        }
+        return currUser;
+    }
     /**
      * Assigns values to all properties marked for assignment before save. This method should be used only during saving of new entities.
      *
@@ -551,7 +566,7 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
      */
     private void assignPropertiesBeforeSave(final T entity) {
         final List<MetaProperty<?>> props = entity.getProperties().values().stream().
-                filter(p -> p.shouldAssignBeforeSave()).collect(Collectors.toList());
+                filter(MetaProperty::shouldAssignBeforeSave).collect(Collectors.toList());
         if (!props.isEmpty()) {
             final DateTime rightNow = now.get();
             if (rightNow == null) {
@@ -562,11 +577,7 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
                 final Object value = prop.getValue();
                 if (value == null) {
                     if (User.class.isAssignableFrom(prop.getType())) {
-                        final User usr = user.get();
-                        if (usr == null) {
-                            throw new EntityCompanionException("The user could not be determined!");
-                        }
-                        prop.setValue(usr);
+                        prop.setValue(currUserOrException());
                     } else if (Date.class.isAssignableFrom(prop.getType())) {
                         prop.setValue(rightNow.toDate());
                     } else if (DateTime.class.isAssignableFrom(prop.getType())) {
