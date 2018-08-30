@@ -11,7 +11,9 @@ import static ua.com.fielden.platform.utils.EntityUtils.fetchWithKeyAndDesc;
 
 import java.lang.annotation.Annotation;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 
 import org.apache.log4j.Logger;
 import org.joda.time.DateTime;
@@ -20,6 +22,8 @@ import org.joda.time.Period;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.domaintree.centre.impl.CentreDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.domaintree.exceptions.DomainTreeException;
+import ua.com.fielden.platform.domaintree.impl.CalculatedPropertyInfo;
+import ua.com.fielden.platform.domaintree.impl.CustomProperty;
 import ua.com.fielden.platform.entity.AbstractBatchAction;
 import ua.com.fielden.platform.entity.annotation.EntityType;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ICompoundCondition0;
@@ -27,6 +31,7 @@ import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
+import ua.com.fielden.platform.types.tuples.T2;
 import ua.com.fielden.platform.ui.config.EntityCentreConfig;
 import ua.com.fielden.platform.ui.config.MainMenuItem;
 import ua.com.fielden.platform.ui.config.api.IEntityCentreConfig;
@@ -58,12 +63,13 @@ public class CentreUpdaterUtils extends CentreUpdater {
         }
     }
     
-    public static ICentreDomainTreeManagerAndEnhancer createEmptyCentre(final Class<?> root, final ISerialiser serialiser) {
+    public static ICentreDomainTreeManagerAndEnhancer createEmptyCentre(final Class<?> root, final ISerialiser serialiser, final T2<Map<Class<?>, Set<CalculatedPropertyInfo>>, Map<Class<?>, List<CustomProperty>>> calculatedAndCustomProperties) {
         // TODO next line of code must take in to account that the menu item is for association centre.
-        final CentreDomainTreeManagerAndEnhancer centre = new CentreDomainTreeManagerAndEnhancer(serialiser, setOf(root));
+        final CentreDomainTreeManagerAndEnhancer centre = new CentreDomainTreeManagerAndEnhancer(serialiser, setOf(root), calculatedAndCustomProperties);
         // initialise checkedProperties tree to make it more predictable in getting meta-info from "checkedProperties"
         centre.getFirstTick().checkedProperties(root);
         centre.getSecondTick().checkedProperties(root);
+        
         return centre;
     }
     
@@ -278,8 +284,10 @@ public class CentreUpdaterUtils extends CentreUpdater {
         logger.debug(format("\t\t\t\tDeep copy..."));
         final DateTime start = new DateTime();
         final ICentreDomainTreeManagerAndEnhancer copy = deepCopy(centre, serialiser);
+        logger.debug(format("\t\t\t\tDeep copy...done in [%s]", new Period(start, new DateTime()).getMillis() + " ms"));
         
         logger.debug(format("\t\t\t\tadjustManagedTypeAnnotations..."));
+        final DateTime adjustAnnotationsStart = new DateTime();
         // TODO investigate the way to avoid generating of new types here:
         // Performs copying of all defined custom annotations on generated types to provide the copy with the same annotations as original centre have.
         for (final Class<?> root: centre.getRepresentation().rootTypes()) {
@@ -289,6 +297,7 @@ public class CentreUpdaterUtils extends CentreUpdater {
                 copy.getEnhancer().adjustManagedTypeAnnotations(root, annotationsToCopy);
             }
         }
+        logger.debug(format("\t\t\t\tadjustManagedTypeAnnotations...done in [%s]", new Period(adjustAnnotationsStart, new DateTime()).getMillis() + " ms"));
         
         final DateTime end = new DateTime();
         final Period pd = new Period(start, end);

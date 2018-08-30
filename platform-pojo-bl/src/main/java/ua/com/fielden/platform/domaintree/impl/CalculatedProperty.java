@@ -597,13 +597,13 @@ public/* final */class CalculatedProperty extends AbstractEntity<DynamicEntityKe
 
     protected AstNode createAst(final String newContextualExpression) throws RecognitionException, SemanticException {
         //System.err.println(format("Creating AST for calculated property with [%s] expression...", newContextualExpression));
-        logger.error(format("\t\t\t\t\tCreating AST for calculated property with [%s] expression...", newContextualExpression));
+        logger.error(format("\t\t\t\t\t\tCreating AST for calculated property with [%s] expression...", newContextualExpression));
         final DateTime start = new DateTime();
         
         final AstNode result = new ExpressionText2ModelConverter((Class<? extends AbstractEntity<?>>) getEnhancer().getManagedType(getRoot()), getContextPath(), newContextualExpression).convert();
         final DateTime end = new DateTime();
         final Period pd = new Period(start, end);
-        logger.error(format("\t\t\t\t\tCreating AST for calculated property with [%s] expression...done in [%s]", newContextualExpression, pd.getSeconds() + " s " + pd.getMillis() + " ms"));
+        logger.error(format("\t\t\t\t\t\tCreating AST for calculated property with [%s] expression...done in [%s]", newContextualExpression, pd.getSeconds() + " s " + pd.getMillis() + " ms"));
         return result;
     }
 

@@ -1,5 +1,7 @@
 package ua.com.fielden.platform.reflection.asm.impl;
 
+import static java.lang.String.format;
+
 import java.io.InputStream;
 import java.lang.annotation.Annotation;
 import java.lang.annotation.ElementType;
@@ -46,6 +48,7 @@ public class TypeMaker {
      * @throws ClassNotFoundException
      */
     public TypeMaker startModification(final String typeName) throws ClassNotFoundException {
+        logger.error(format("\t\t\t\t\tstartModification [%s]...", typeName));
         if (skipAdaptation(typeName)) {
             throw new IllegalArgumentException("Java system classes should not be enhanced.");
         }
@@ -237,11 +240,11 @@ public class TypeMaker {
 
    public Class<?> endModification() {
        final Class<?> klass = cl.defineType(currentName, currentType, 0, currentType.length);
-       logger.error(String.format("\t\t\t\tNew type [%s] registered.", klass.getSimpleName()));
        cl.registerClass(new Pair<Class<?>, byte[]>(klass, currentType));
 
        currentType = null;
        currentName = null;
+       logger.error(format("\t\t\t\t\tendModification: new type [%s] registered.", klass.getSimpleName()));
        return klass;
    }
    
