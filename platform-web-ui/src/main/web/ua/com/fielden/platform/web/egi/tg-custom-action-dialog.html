@@ -93,6 +93,12 @@
                     color: var(--paper-grey-300);
                 };
             }
+            #navigationBar {
+                position: absolute;
+                bottom: 0;
+                left: 0;
+                background-color: rgba(255, 255, 255, 0.5);
+            }
             #resizer {
                 position: absolute;
                 bottom: 0;
@@ -105,6 +111,11 @@
             .reverse {
                 flex-direction: row-reverse;
             }
+            paper-icon-button.button-reverse {
+                --paper-icon-button: {
+                    transform: scale(-1, 1);
+                };
+            }
         </style>
         <div id="titleBar" class="title-bar layout horizontal justified center" on-track="_moveDialog">
             <paper-icon-button id="menuToggler" hidden icon="menu" tooltip-text="Menu" on-tap="_toggleMenu"></paper-icon-button>
@@ -115,7 +126,7 @@
             </div>
             <div class="layout horizontal center" style="margin-left:10px">
                 <!-- collapse/expand buttons -->
-                <paper-icon-button hidden="[[!_minimised]]" class="minimise-button" icon="tg-icons:expandMin"     on-tap="_invertMinimiseState" tooltip-text="Restore, Alt+c"></paper-icon-button>
+                <paper-icon-button hidden="[[!_minimised]]" class="minimise-button" icon="tg-icons:expandMin" on-tap="_invertMinimiseState" tooltip-text="Restore, Alt+c"></paper-icon-button>
                 <paper-icon-button hidden="[[_collapserHidden(_minimised, mobile)]]" class="minimise-button" icon="tg-icons:collapseMin"   on-tap="_invertMinimiseState" tooltip-text="Collapse, Alt+c" disabled=[[_dialogInteractionsDisabled(_minimised,_maximised)]]></paper-icon-button>
 
                 <!-- maximize/restore buttons -->
@@ -130,8 +141,14 @@
         <div id="dialogBody" class="relative flex">
             <tg-element-loader id="elementLoader"></tg-element-loader>
         </div>
-        <tg-toast id="toaster"></tg-toast>
+        <div id="navigationBar" hidden="[[!_lastAction.supportsNavigation]]" class="layout horizontal">
+            <paper-icon-button class="button-reverse" icon="hardware:keyboard-tab" on-tap="_firstEntry" disabled$="[[_hasPrevious()]]" tooltip-text$="[[_getFirstEntryActionTooltip(_lastAction._navigationType)]]"></paper-icon-button>
+            <paper-icon-button icon="hardware:keyboard-backspace" on-tap="_previousEntry" disabled$="[[_hasPrevious()]]" tooltip-text$="[[_getPreviousEntryActionTooltip(_lastAction._navigationType)]]"></paper-icon-button>
+            <paper-icon-button class="button-reverse" icon="hardware:keyboard-backspace" on-tap="_nextEntry" disabled$="[[_hasNext()]]" tooltip-text$="[[_getNextEntryActionTooltip(_lastAction._navigationType)]]"></paper-icon-button>
+            <paper-icon-button icon="hardware:keyboard-tab" on-tap="_lastEntry" disabled$="[[_hasNext()]]" tooltip-text$="[[_getLastEntryActionTooltip(_lastAction._navigationType)]]"></paper-icon-button>
+        </div>
         <iron-icon id="resizer" hidden=[[_dialogInteractionsDisabled(_minimised,_maximised)]] icon="tg-icons:resize-bottom-right" on-track="resizeDialog" tooltip-text="Drag to resize"></iron-icon>
+        <tg-toast id="toaster"></tg-toast>
         <tg-app-config id="appConfig" mobile="{{mobile}}"></tg-app-config>
     </template>
 </dom-module>
@@ -420,6 +437,48 @@
                     }
                 }
             },
+            
+            //////////////////////////////////entity master navigation related//////////////////////////////
+            _firstEntry: function () {
+                this._lastAction.firstEntry();
+            },
+            
+            _previousEntry: function () {
+                this._lastAction.previousEntry();
+            },
+            
+            _nextEntry: function () {
+                this._lastAction.nextEntry();
+            },
+            
+            _lastEntry: function () {
+                this._lastAction.lastEntry();
+            },
+            
+            _hasPrevious: function () {
+                return this._lastAction.hasPreviousEntry();
+            },
+            
+            _hasNext: function () {
+                return this._lastAction.hasNextEntry();
+            },
+            
+            _getFirstEntryActionTooltip: function (_navigationType) {
+                return "Get first " + _navigationType;
+            },
+            
+            _getPreviousEntryActionTooltip: function (_navigationType) {
+                return "Get previous " + _navigationType;
+            },
+            
+            _getNextEntryActionTooltip: function (_navigationType) {
+                return "Get next " + _navigationType;
+            },
+            
+            _getLastEntryActionTooltip: function (_navigationType) {
+                return "Get last " + _navigationType;
+            },
+            ////////////////////////////////////////////////////////////////////////////////////////////////
 
             _invertDialogState: function(stateName) {
                 if (!this[stateName]) {
