@@ -1,6 +1,10 @@
 package ua.com.fielden.platform.web.resources.webui;
 
 import static java.lang.String.format;
+import static java.util.Optional.empty;
+import static java.util.Optional.of;
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
+import static java.util.concurrent.TimeUnit.SECONDS;
 import static ua.com.fielden.platform.web.security.AbstractWebResourceGuard.assignAuthenticatingCookie;
 import static ua.com.fielden.platform.web.security.AbstractWebResourceGuard.extractAuthenticator;
 
@@ -9,6 +13,7 @@ import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.log4j.Logger;
+import org.joda.time.DateTime;
 import org.restlet.Context;
 import org.restlet.Request;
 import org.restlet.Response;
@@ -27,6 +32,8 @@ import org.restlet.resource.ServerResource;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.cache.Cache;
+import com.google.common.cache.CacheBuilder;
 
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.security.session.Authenticator;
@@ -49,7 +56,8 @@ import ua.com.fielden.platform.web.resources.RestServerUtil;
 public class LoginResource extends ServerResource {
     
     public static final String BINDING_PATH = "/login";
-    
+    public static final int BLOCK_TIME_SECONDS = 15;
+    private static final Cache<String, LoginAttempts> LOGIN_ATTEMPTS = CacheBuilder.newBuilder().initialCapacity(100).maximumSize(1000).concurrencyLevel(50).build();
     private static final Logger LOGGER = Logger.getLogger(LoginResource.class);
 
     private final String domainName;
@@ -64,17 +72,17 @@ public class LoginResource extends ServerResource {
     /**
      * Creates {@link LoginResource}.
      */
-    public LoginResource(//
+    public LoginResource(
             final String domainName,
             final String path,
             final IUniversalConstants constants,
             final IAuthenticationModel authenticationModel,
             final IUserProvider userProvider,
             final IUser coUser,
-            final IUserSession coUserSession,//
-            final RestServerUtil restUtil,//
-            final Context context, //
-            final Request request, //
+            final IUserSession coUserSession,
+            final RestServerUtil restUtil,
+            final Context context,
+            final Request request,
             final Response response) {
         init(context, request, response);
         this.domainName = domainName;
@@ -136,19 +144,37 @@ public class LoginResource extends ServerResource {
             credo.setPasswd(form.getValues("passwd"));
             credo.setTrustedDevice(Boolean.parseBoolean(form.getValues("trustedDevice")));
 
-            final Result authResult = authenticationModel.authenticate(credo.getUsername(), credo.getPasswd());
-            if (!authResult.isSuccessful()) {
-                LOGGER.warn(format("Unsuccessful login request for user [%s].", credo.getUsername()));
-                getResponse().setEntity(new JsonRepresentation("{\"msg\": \"Invalid credentials.\"}"));
-                getResponse().setStatus(Status.CLIENT_ERROR_BAD_REQUEST);
-            } else {
-                // create a new session for an authenticated user...
-                final User user = (User) authResult.getInstance();
-                final UserSession session = coUserSession.newSession(user, credo.isTrustedDevice());
-
-                // ...and provide the response with an authenticating cookie
-                assignAuthenticatingCookie(constants.now(), session.getAuthenticator().get(), domainName, path, getRequest(), getResponse());
-                getResponse().setEntity(new JsonRepresentation("{\"msg\": \"Credentials are valid.\"}"));
+            final DateTime now = constants.now();
+            final LoginAttempts la = LOGIN_ATTEMPTS.get(credo.username, () -> new LoginAttempts(0, empty(), now));
+            synchronized (la) {
+                final long lastAttemptTimeMillis = la.lastAttemptTime.getMillis();
+                la.incAttemptCount();
+                la.lastAttemptTime = now;
+                // check if use is still blocked or need to be blocked...
+                if ((la.blockedUntil.filter(now::isBefore).isPresent() || la.attemptCount > 3) && (SECONDS.convert(now.getMillis() - lastAttemptTimeMillis, MILLISECONDS) < BLOCK_TIME_SECONDS)) {
+                    // if blocking time is not present then this is the first time the user is blocked and we need to assign the block time
+                    la.blockedUntil = of(now.plusSeconds(BLOCK_TIME_SECONDS));
+                    final long delaySeconds = SECONDS.convert(la.blockedUntil.get().getMillis() - now.getMillis(), MILLISECONDS);
+                    LOGGER.warn(format("Repeated login attempt [%s] for user [%s], blocked for [%s] seconds.", la.incAttemptCount(), credo.username, delaySeconds));
+                    getResponse().setEntity(new JsonRepresentation(format("{\"msg\": \"Blocked for [%s] seconds.\"}", delaySeconds)));
+                    getResponse().setStatus(Status.CLIENT_ERROR_PRECONDITION_FAILED);
+                } else {
+                    final Result authResult = authenticationModel.authenticate(credo.username, credo.passwd);
+                    if (!authResult.isSuccessful()) {
+                        LOGGER.warn(format("Unsuccessful login request for user [%s].", credo.username));
+                        getResponse().setEntity(new JsonRepresentation("{\"msg\": \"Invalid credentials.\"}"));
+                        getResponse().setStatus(Status.CLIENT_ERROR_BAD_REQUEST);
+                    } else {
+                        LOGIN_ATTEMPTS.invalidate(credo.username);
+                        // create a new session for an authenticated user...
+                        final User user = (User) authResult.getInstance();
+                        final UserSession session = coUserSession.newSession(user, credo.trustedDevice);
+        
+                        // ...and provide the response with an authenticating cookie
+                        assignAuthenticatingCookie(constants.now(), session.getAuthenticator().get(), domainName, path, getRequest(), getResponse());
+                        getResponse().setEntity(new JsonRepresentation("{\"msg\": \"Credentials are valid.\"}"));
+                    }
+                }
             }
         } catch (final Exception ex) {
             LOGGER.fatal(ex);
@@ -163,29 +189,17 @@ public class LoginResource extends ServerResource {
      * This is just a convenient wrapper for JSON login package.
      *
      */
-    static class Credentials {
+    private static class Credentials {
         private String username;
         private String passwd;
         private boolean trustedDevice;
-
-        public String getUsername() {
-            return username;
-        }
 
         public void setUsername(final String username) {
             this.username = username;
         }
 
-        public String getPasswd() {
-            return passwd;
-        }
-
         public void setPasswd(final String passwd) {
             this.passwd = passwd;
-        }
-
-        public boolean isTrustedDevice() {
-            return trustedDevice;
         }
 
         public void setTrustedDevice(final boolean trustedDevice) {
@@ -203,4 +217,24 @@ public class LoginResource extends ServerResource {
         }
     }
 
+    /**
+     * A structure to track login attempts.
+     * Its instances are mutable and need to be synchronised on before any changes.
+     */
+    private static class LoginAttempts {
+        private int attemptCount;
+        private Optional<DateTime> blockedUntil;
+        private DateTime lastAttemptTime;
+
+        public int incAttemptCount() {
+            attemptCount = attemptCount + 1;
+            return attemptCount;
+        }
+
+        public LoginAttempts(final int attemptCount, final Optional<DateTime> blockedUntil, final DateTime lastAttemptTime) {
+            this.attemptCount = attemptCount;
+            this.blockedUntil = blockedUntil;
+            this.lastAttemptTime = lastAttemptTime;
+        }
+    }
 }

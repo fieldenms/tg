@@ -211,6 +211,33 @@
                         submit.classList.add("submit-error");
                         submitLabel.innerHTML = "Access Denied"
                         submit.disabled = false;
+                    } else if (event.detail.request.status === 412) {
+                        inUserNameContainer.invalid = true;
+                        inPasswdContainer.invalid = true;
+                        inUserName.disabled = true;
+                        inPasswd.disabled = true;
+                        submit.classList.add("submit-error");
+                        submitLabel.innerHTML = "Blocked for 15 seconds"
+                        submit.disabled = true;
+
+                        var timer = 15;
+                        const interval = setInterval(function () {
+                            let seconds = parseInt(timer % 60, 10);
+                            seconds = seconds < 10 ? "0" + seconds : seconds;
+
+                            submitLabel.innerHTML = "Blocked for " + seconds + " seconds";
+
+                            if (--timer < 0) {
+                                console.log("INTERVAL ", interval);
+                                clearInterval(interval);
+                                submit.disabled = false;
+                                inUserName.disabled = false;
+                                inPasswd.disabled = false;
+                                inUserName.focus();
+                                submit.classList.remove("submit-error");
+                                submitLabel.innerHTML = "Try Again";
+                            }
+                        }, 1000);
                     } else {
                      	// event.detail.request.xhr.response is a JSON object
                         submit.classList.add("submit-error");
