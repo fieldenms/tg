@@ -263,7 +263,9 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
     
     private static T2<Map<Class<?>, Set<CalculatedPropertyInfo>>, Map<Class<?>, List<CustomProperty>>> createCalculatedAndCustomProperties(final Class<?> entityType, final Optional<List<ResultSetProp>> resultSetProps, final Optional<ListMultimap<String, SummaryPropDef>> summaryExpressions) {
         final Map<Class<?>, Set<CalculatedPropertyInfo>> calculatedPropertiesInfo = new LinkedHashMap<>();
+        calculatedPropertiesInfo.put(entityType, new LinkedHashSet<>());
         final Map<Class<?>, List<CustomProperty>> customProperties = new LinkedHashMap<>();
+        customProperties.put(entityType, new ArrayList<CustomProperty>());
         
         if (resultSetProps.isPresent()) {
             for (final ResultSetProp property : resultSetProps.get()) {
@@ -284,9 +286,6 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
                 final String originationProperty = treeName(entry.getKey());
                 for (final SummaryPropDef summaryProp : entry.getValue()) {
                     final CalculatedPropertyInfo calculatedPropertyInfo = new CalculatedPropertyInfo(entityType, "", summaryProp.alias, summaryProp.expression, summaryProp.title, CalculatedPropertyAttribute.NO_ATTR, "".equals(originationProperty) ? "SELF" : originationProperty, summaryProp.desc);
-                    if (!calculatedPropertiesInfo.containsKey(entityType)) {
-                        calculatedPropertiesInfo.put(entityType, new LinkedHashSet<>());
-                    }
                     calculatedPropertiesInfo.get(entityType).add(calculatedPropertyInfo);
                 }
             }
@@ -299,7 +298,7 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
         final Optional<List<ResultSetProp>> resultSetProps = dslDefaultConfig.getResultSetProperties();
         final Optional<ListMultimap<String, SummaryPropDef>> summaryExpressions = dslDefaultConfig.getSummaryExpressions();
         
-        final ICentreDomainTreeManagerAndEnhancer cdtmae = createEmptyCentre(entityType, serialiser, createCalculatedAndCustomProperties(entityType, resultSetProps, summaryExpressions));
+        final ICentreDomainTreeManagerAndEnhancer cdtmae = createEmptyCentre(entityType, serialiser, createCalculatedAndCustomProperties(entityType, resultSetProps, summaryExpressions), miType);
         
         final Optional<List<String>> selectionCriteria = dslDefaultConfig.getSelectionCriteria();
         if (selectionCriteria.isPresent()) {

@@ -91,7 +91,16 @@ public interface IDomainTreeEnhancer extends IRootTyped {
      * @return
      */
     Class<?> adjustManagedTypeAnnotations(final Class<?> root, final Annotation... additionalAnnotations);
-
+    
+    /**
+     *Replaces existing managed type by new one.
+     * 
+     * @param root
+     * @param newManagedType -- managed type to replace existing one
+     * @return
+     */
+    Class<?> replaceManagedTypeBy(final Class<?> root, final Class<?> newManagedType);
+    
     /**
      * Adds the <code>calculatedProperty</code> to root type's {@link ICalculatedProperty#getRoot()} hierarchy. Throws {@link IncorrectCalcPropertyException} when the calculated
      * property is incorrect.<br>

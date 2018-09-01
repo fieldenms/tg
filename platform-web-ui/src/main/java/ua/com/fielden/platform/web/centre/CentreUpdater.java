@@ -29,6 +29,7 @@ import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.selec
 import static ua.com.fielden.platform.error.Result.failuref;
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.determinePropertyType;
 import static ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader.isGenerated;
+import static ua.com.fielden.platform.serialisation.api.SerialiserEngines.KRYO;
 import static ua.com.fielden.platform.utils.EntityUtils.equalsEx;
 import static ua.com.fielden.platform.utils.EntityUtils.fetchWithKeyAndDesc;
 import static ua.com.fielden.platform.utils.EntityUtils.isDate;
@@ -67,6 +68,7 @@ import ua.com.fielden.platform.security.user.IUser;
 import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
+import ua.com.fielden.platform.serialisation.api.impl.TgKryo;
 import ua.com.fielden.platform.ui.config.EntityCentreConfig;
 import ua.com.fielden.platform.ui.config.api.IEntityCentreConfig;
 import ua.com.fielden.platform.ui.config.api.IMainMenuItem;
@@ -403,16 +405,13 @@ public class CentreUpdater {
         logger.debug(format("%s '%s' centre for miType [%s] for user %s...", "Initialising & committing", deviceSpecificName, miType.getSimpleName(), user));
         final DateTime start = new DateTime();
         
-        // there is a need to copy passed instance not to have shared state between surrogate centres (for e.g.
-        //  same 'fresh' centre instance should not be used for 'previouslyRun' centre, it will cause unpredictable results after changing 'fresh' centre's criteria)
-        final ICentreDomainTreeManagerAndEnhancer copiedInstance = copyCentre(centreToBeInitialisedAndCommitted, serialiser);
         // and then commit it to the database (save its diff)
-        commitCentre0(user, userProvider, miType, deviceSpecificName, saveAsName, device, newDesc, copiedInstance, serialiser, webUiConfig, eccCompanion, mmiCompanion, userCompanion);
+        commitCentre0(user, userProvider, miType, deviceSpecificName, saveAsName, device, newDesc, centreToBeInitialisedAndCommitted, serialiser, webUiConfig, eccCompanion, mmiCompanion, userCompanion);
         
         final DateTime end = new DateTime();
         final Period pd = new Period(start, end);
         logger.debug(format("%s the '%s' centre for miType [%s] for user %s... done in [%s].", "Initialised & committed", deviceSpecificName, miType.getSimpleName(), user, pd.getSeconds() + " s " + pd.getMillis() + " ms"));
-        return copiedInstance;
+        return centreToBeInitialisedAndCommitted;
     }
     
     /**
@@ -605,20 +604,48 @@ public class CentreUpdater {
         logger.debug(format("\t%s '%s' centre for miType [%s] for user %s...", "loadCentreFromDefaultAndDiff", deviceSpecificName, miType.getSimpleName(), user));
         final DateTime start = new DateTime();
         
-        // TODO consider not copying of default centre for performance reasons:
-        final ICentreDomainTreeManagerAndEnhancer defaultCentreCopy = copyCentre(getDefaultCentre(miType, user, webUiConfig), serialiser);
+        final ICentreDomainTreeManagerAndEnhancer defaultCentre = getDefaultCentre(miType, user, webUiConfig);
         // applies diffCentre on top of defaultCentreCopy to produce loadedCentre:
-        final ICentreDomainTreeManagerAndEnhancer loadedCentre = applyDifferences(defaultCentreCopy, updatedDiffCentre, getEntityType(miType));
+        final ICentreDomainTreeManagerAndEnhancer loadedCentre = applyDifferences(defaultCentre, updatedDiffCentre, getEntityType(miType));
         // For all generated types on freshCentre (and on its derivatives like 'unchanged freshCentre', 'previouslyRun centre', 'unchanged previouslyRun centre' etc.) there is a need to
         //  provide miType information inside its generated type to be sent to the client application. This is done through the use of
         //  annotation miType and other custom annotations, for example @SaveAsName.
         // Please note that copyCentre method performs copying of all defined annotations to provide freshCentre's derivatives
         //  with such additional information too.
-        for (final Class<?> root: loadedCentre.getRepresentation().rootTypes()) {
-            if (isGenerated(loadedCentre.getEnhancer().getManagedType(root))) {
-                loadedCentre.getEnhancer().adjustManagedTypeAnnotations(root, new MiTypeAnnotation().newInstance(miType, saveAsName));
+        logger.debug(format("\t\tadjustManagedTypeAnnotations: add @MiType(%s, %s)...", miType.getSimpleName(), saveAsName));
+        final DateTime adjustAnnotationsStart = new DateTime();
+        if (saveAsName.isPresent()) { // this is saveAs user-specific configuration
+            logger.debug(format("\t\t\tadjustManagedTypeAnnotations: saveAsName [%s] is present...", saveAsName));
+            // We need to provide a new MiType annotation with saveAsName there.
+            // However, it should be done in a smart way, i.e. look for cached (by means of (user, miType, saveAsName)) DomainTreeEnhancer instance first.
+            // If there is such an instance, just take generated type information and replace it inside loadedCentre.getEnhancer().
+            // Otherwise, perform adjustManagedTypeAnnotations and cache adjusted DTE instance for future reference.
+            final TgKryo tgKryo = (TgKryo) serialiser.getEngine(KRYO);
+            final Class<?> cachedGeneratedType = tgKryo.getGeneratedTypeFor(miType, saveAsName.get(), user.getId());
+            if (cachedGeneratedType != null) {
+                logger.debug(format("\t\t\t\tadjustManagedTypeAnnotations: cachedGeneratedType present..."));
+                for (final Class<?> root: loadedCentre.getRepresentation().rootTypes()) {
+                    if (isGenerated(loadedCentre.getEnhancer().getManagedType(root))) {
+                        loadedCentre.getEnhancer().replaceManagedTypeBy(root, cachedGeneratedType);
+                    }
+                }
+                logger.debug(format("\t\t\t\tadjustManagedTypeAnnotations: cachedGeneratedType present...done"));
+            } else {
+                logger.debug(format("\t\t\t\tadjustManagedTypeAnnotations: cachedGeneratedType not present..."));
+                for (final Class<?> root: loadedCentre.getRepresentation().rootTypes()) {
+                    if (isGenerated(loadedCentre.getEnhancer().getManagedType(root))) {
+                        final Class<?> newGeneratedType = loadedCentre.getEnhancer().adjustManagedTypeAnnotations(root, new MiTypeAnnotation().newInstance(miType, saveAsName));
+                        tgKryo.putGeneratedTypeFor(miType, saveAsName.get(), user.getId(), newGeneratedType);
+                    }
+                }
+                logger.debug(format("\t\t\t\tadjustManagedTypeAnnotations: cachedGeneratedType not present...done"));
             }
+            logger.debug(format("\t\tadjustManagedTypeAnnotations: saveAsName [%s] is present...done", saveAsName));
+        } else {
+            // otherwise, annotation @MiType(MiType.class, "") must be present already -- no action is needed
         }
+        logger.debug(format("\t\tadjustManagedTypeAnnotations: add @MiType(%s, %s)...done in [%s]", miType.getSimpleName(), saveAsName, new Period(adjustAnnotationsStart, new DateTime()).getMillis() + " ms"));
+        
         final DateTime end = new DateTime();
         final Period pd = new Period(start, end);
         logger.debug(format("\t%s the '%s' centre for miType [%s] for user %s... done in [%s].", "loadCentreFromDefaultAndDiff", deviceSpecificName, miType.getSimpleName(), user, pd.getSeconds() + " s " + pd.getMillis() + " ms"));
@@ -689,13 +716,13 @@ public class CentreUpdater {
         // the name consists of 'deviceSpecificName' and 'DIFFERENCES_SUFFIX'
         final String deviceSpecificDiffName = deviceSpecificName + DIFFERENCES_SUFFIX;
         
-        final ICentreDomainTreeManagerAndEnhancer centreManager;
+        final ICentreDomainTreeManagerAndEnhancer resultantDiffCentre;
         // WILL BE UPDATED IN EVERY CALL OF updateDifferencesCentre!
         
         // init (or update) diff centre from persistent storage if exists
         final Optional<ICentreDomainTreeManagerAndEnhancer> centre = initEntityCentreManager(miType, user, deviceSpecificDiffName, serialiser, webUiConfig, eccCompanion);
         if (centre.isPresent()) {
-            centreManager = centre.get();
+            resultantDiffCentre = centre.get();
         } else {
             // Default centre is used as a 'base' for all centres; all diffs are created comparing to default centre.
             // Default centre is now needed for both cases: base or non-base user.
@@ -704,7 +731,7 @@ public class CentreUpdater {
                 // diff centre does not exist in persistent storage yet -- initialise EMPTY diff (there potentially can be some values from 'default centre',
                 //   but diff centre will be empty disregarding that fact -- no properties were marked as changed; but initialisation from 'default centre' is important --
                 //   this makes diff centre nicely synchronised with Web UI default values)
-                centreManager = saveAsEntityCentreManager(defaultCentre, miType, user, deviceSpecificDiffName, null, serialiser, eccCompanion, mmiCompanion);
+                resultantDiffCentre = saveAsEntityCentreManager(defaultCentre, miType, user, deviceSpecificDiffName, null, serialiser, eccCompanion, mmiCompanion);
             } else { // non-base user
                 // diff centre does not exist in persistent storage yet -- create a diff by comparing basedOnCentre (configuration created by base user) and default centre
                 final User baseUser = beginBaseUserOperations(userProvider, user, userCompanion);
@@ -716,13 +743,13 @@ public class CentreUpdater {
                 endBaseUserOperations(user, userProvider);
                 
                 // promotes diff to local cache and saves it into persistent storage
-                centreManager = saveAsEntityCentreManager(differencesCentre, miType, user, deviceSpecificDiffName, upstreamDesc, serialiser, eccCompanion, mmiCompanion);
+                resultantDiffCentre = saveAsEntityCentreManager(differencesCentre, miType, user, deviceSpecificDiffName, upstreamDesc, serialiser, eccCompanion, mmiCompanion);
             }
         }
         final DateTime end = new DateTime();
         final Period pd = new Period(start, end);
         logger.debug(format("\t%s the '%s' centre for miType [%s] for user %s... done in [%s].", "updateDifferencesCentre", deviceSpecificName, miType.getSimpleName(), user, pd.getSeconds() + " s " + pd.getMillis() + " ms"));
-        return centreManager;
+        return resultantDiffCentre;
     }
     
     /**
@@ -823,7 +850,7 @@ public class CentreUpdater {
      * @return
      */
     private static ICentreDomainTreeManagerAndEnhancer applyDifferences(final ICentreDomainTreeManagerAndEnhancer targetCentre, final ICentreDomainTreeManagerAndEnhancer differencesCentre, final Class<AbstractEntity<?>> root) {
-        logger.debug(format("\t%s centre...", "applyDifferences"));
+        logger.debug(format("\t\t%s centre...", "applyDifferences"));
         final DateTime start = new DateTime();
         
         final Class<?> diffManagedType = managedType(root, differencesCentre);
@@ -930,7 +957,7 @@ public class CentreUpdater {
         
         final DateTime end = new DateTime();
         final Period pd = new Period(start, end);
-        logger.debug(format("\t%s centre... done in [%s].", "applyDifferences", pd.getSeconds() + " s " + pd.getMillis() + " ms"));
+        logger.debug(format("\t\t%s centre... done in [%s].", "applyDifferences", pd.getSeconds() + " s " + pd.getMillis() + " ms"));
         return targetCentre;
     }
 

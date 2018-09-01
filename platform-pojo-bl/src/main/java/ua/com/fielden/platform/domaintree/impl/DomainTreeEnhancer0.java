@@ -299,7 +299,13 @@ public final class DomainTreeEnhancer0 extends AbstractDomainTree implements IDo
         // logger.debug(String.format("Ended to adjustManagedTypeAnnotations for root [%s].", root.getSimpleName()));
         return adjustedType;
     }
-
+    
+    @Override
+    public Class<?> replaceManagedTypeBy(final Class<?> root, final Class<?> newManagedType) {
+        // TODO Auto-generated method stub
+        return null;
+    }
+    
     /**
      * Groups calc props into the map by its domain paths.
      *

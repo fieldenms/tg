@@ -43,6 +43,8 @@ import com.esotericsoftware.kryo.serialize.IntSerializer;
 import com.esotericsoftware.kryo.serialize.LongSerializer;
 import com.esotericsoftware.kryo.serialize.ReferenceFieldSerializer;
 import com.esotericsoftware.kryo.serialize.StringSerializer;
+import com.google.common.cache.Cache;
+import com.google.common.cache.CacheBuilder;
 
 import ua.com.fielden.platform.attachment.Attachment;
 import ua.com.fielden.platform.dao.QueryExecutionModel;
@@ -220,6 +222,16 @@ public class TgKryo extends Kryo implements ISerialiserEngine {
     private final Serializer lifecycleQueryContainerSerialiser;
     
     private final ConcurrentMap<T3<Set<Class<?>>, Map<Class<?>, Set<CalculatedPropertyInfo>>, Map<Class<?>, List<CustomProperty>>>, DomainTreeEnhancer> domainTreeEnhancers = new ConcurrentHashMap<>();
+    private final Cache<T3<Class<?>, String, Long>, Class<?>> saveAsGenTypes = CacheBuilder.newBuilder().maximumSize(1000).build();
+    
+    public Class<?> getGeneratedTypeFor(final Class<?> miType, final String saveAsName, final Long userId) {
+        return saveAsGenTypes.getIfPresent(T3.t3(miType, saveAsName, userId));
+    }
+    
+    public Class<?> putGeneratedTypeFor(final Class<?> miType, final String saveAsName, final Long userId, final Class<?> generatedType) {
+        saveAsGenTypes.put(T3.t3(miType, saveAsName, userId), generatedType);
+        return generatedType;
+    }
     
     public DomainTreeEnhancer getDomainTreeEnhancerFor(final Set<Class<?>> rootTypes, final Map<Class<?>, Set<CalculatedPropertyInfo>> calculatedPropertiesInfo, final Map<Class<?>, List<CustomProperty>> customProperties) {
         return domainTreeEnhancers.get(T3.t3(rootTypes, calculatedPropertiesInfo, customProperties));

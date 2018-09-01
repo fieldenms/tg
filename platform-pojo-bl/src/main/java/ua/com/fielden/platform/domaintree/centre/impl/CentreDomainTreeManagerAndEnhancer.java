@@ -57,6 +57,7 @@ import ua.com.fielden.platform.serialisation.api.ISerialiser;
 import ua.com.fielden.platform.serialisation.api.SerialiserEngines;
 import ua.com.fielden.platform.serialisation.kryo.serialisers.TgSimpleSerializer;
 import ua.com.fielden.platform.types.tuples.T2;
+import ua.com.fielden.platform.ui.menu.MiWithConfigurationSupport;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
 import ua.com.fielden.snappy.DateRangePrefixEnum;
@@ -84,8 +85,8 @@ public class CentreDomainTreeManagerAndEnhancer extends AbstractDomainTreeManage
         this(serialiser, new CentreDomainTreeManager(serialiser, validateRootTypes(rootTypes)), new DomainTreeEnhancer(serialiser, validateRootTypes(rootTypes)), new HashMap<>(), new HashMap<>(), new HashMap<>());
     }
     
-    public CentreDomainTreeManagerAndEnhancer(final ISerialiser serialiser, final Set<Class<?>> rootTypes, final T2<Map<Class<?>, Set<CalculatedPropertyInfo>>, Map<Class<?>, List<CustomProperty>>> calculatedAndCustomProperties) {
-        this(serialiser, new CentreDomainTreeManager(serialiser, validateRootTypes(rootTypes)), createFrom(serialiser, validateRootTypes(rootTypes), calculatedAndCustomProperties._1, calculatedAndCustomProperties._2), new HashMap<>(), new HashMap<>(), new HashMap<>());
+    public CentreDomainTreeManagerAndEnhancer(final ISerialiser serialiser, final Set<Class<?>> rootTypes, final T2<Map<Class<?>, Set<CalculatedPropertyInfo>>, Map<Class<?>, List<CustomProperty>>> calculatedAndCustomProperties, final Class<? extends MiWithConfigurationSupport<?>> miType) {
+        this(serialiser, new CentreDomainTreeManager(serialiser, validateRootTypes(rootTypes)), createFrom(serialiser, validateRootTypes(rootTypes), calculatedAndCustomProperties._1, calculatedAndCustomProperties._2, miType, true), new HashMap<>(), new HashMap<>(), new HashMap<>());
     }
     
     /**

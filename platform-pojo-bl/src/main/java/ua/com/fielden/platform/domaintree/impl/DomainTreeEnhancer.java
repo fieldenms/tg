@@ -1,8 +1,10 @@
 package ua.com.fielden.platform.domaintree.impl;
 
 import static java.lang.String.format;
+import static java.util.Optional.empty;
 import static java.util.stream.Collectors.toCollection;
 import static java.util.stream.Collectors.toList;
+import static ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader.isGenerated;
 import static ua.com.fielden.platform.serialisation.api.SerialiserEngines.KRYO;
 import static ua.com.fielden.platform.types.tuples.T2.t2;
 import static ua.com.fielden.platform.utils.CollectionUtil.linkedMapOf;
@@ -47,6 +49,8 @@ import ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader;
 import ua.com.fielden.platform.reflection.asm.impl.DynamicTypeNamingService;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
 import ua.com.fielden.platform.serialisation.api.impl.TgKryo;
+import ua.com.fielden.platform.ui.menu.MiTypeAnnotation;
+import ua.com.fielden.platform.ui.menu.MiWithConfigurationSupport;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
 
@@ -247,15 +251,29 @@ public final class DomainTreeEnhancer extends AbstractDomainTree implements IDom
      * @param rootTypes
      * @param calculatedPropertiesInfo
      * @param customProperties
+     * @param miType
      * @return
      */
-    public static DomainTreeEnhancer createFrom(final ISerialiser serialiser, final Set<Class<?>> rootTypes, final Map<Class<?>, Set<CalculatedPropertyInfo>> calculatedPropertiesInfo, final Map<Class<?>, List<CustomProperty>> customProperties) {
+    public static DomainTreeEnhancer createFrom(final ISerialiser serialiser, final Set<Class<?>> rootTypes, final Map<Class<?>, Set<CalculatedPropertyInfo>> calculatedPropertiesInfo, final Map<Class<?>, List<CustomProperty>> customProperties, final Class<? extends MiWithConfigurationSupport<?>> miType, final boolean putIntoCache) {
         final TgKryo tgKryo = (TgKryo) serialiser.getEngine(KRYO);
         final DomainTreeEnhancer cachedInstance = tgKryo.getDomainTreeEnhancerFor(rootTypes, calculatedPropertiesInfo, customProperties);
         if (cachedInstance != null) {
             return new DomainTreeEnhancer(cachedInstance);
         } else {
-            return tgKryo.putDomainTreeEnhancerFor(rootTypes, calculatedPropertiesInfo, customProperties, new DomainTreeEnhancer(serialiser, rootTypes, calculatedPropertiesInfo, customProperties));
+            final DomainTreeEnhancer newInstance = new DomainTreeEnhancer(serialiser, rootTypes, calculatedPropertiesInfo, customProperties);
+            
+            if (putIntoCache) {
+                logger.debug(format("\t\t\t\tadjustManagedTypeAnnotations: cachedGeneratedType is initialising..."));
+                for (final Class<?> root: rootTypes) {
+                    if (isGenerated(newInstance.getManagedType(root))) {
+                        newInstance.adjustManagedTypeAnnotations(root, new MiTypeAnnotation().newInstance(miType, empty()));
+                    }
+                }
+                logger.debug(format("\t\t\t\tadjustManagedTypeAnnotations: cachedGeneratedType is initialising...done"));
+                
+                tgKryo.putDomainTreeEnhancerFor(rootTypes, calculatedPropertiesInfo, customProperties, newInstance);
+            }
+            return newInstance;
         }
     }
     
@@ -511,34 +529,47 @@ public final class DomainTreeEnhancer extends AbstractDomainTree implements IDom
     @Override
     public Class<?> adjustManagedTypeAnnotations(final Class<?> root, final Annotation... additionalAnnotations) {
         final Class<?> managedType = getManagedType(root);
-        if (!DynamicEntityClassLoader.isGenerated(managedType)) {
-            throw new DomainTreeException(format("The type for root [%s] is not generated. It is prohibited to generate additional annotations inside that type.", root.getSimpleName()));
-        }
-        // logger.debug(String.format("\t\t\t\tStarted to adjustManagedTypeAnnotations for root [%s] and its generated type [%s].", root.getSimpleName(), managedType.getSimpleName()));
+        validateManagedType(root);
         if (additionalAnnotations.length == 0) {
             logger.warn(format("\t\t\t\tEnded to adjustManagedTypeAnnotations for root [%s]. No annotations have been specified, root's managed type was not changed.", root.getSimpleName()));
             return managedType;
         }
         final DynamicEntityClassLoader classLoader = DynamicEntityClassLoader.getInstance(ClassLoader.getSystemClassLoader());
-
         try {
             final Class<?> managedTypeWithAnnotations = classLoader.startModification(managedType.getName()).addClassAnnotations(additionalAnnotations).endModification();
-            
-            final Map<String, ByteArray> byteArraysWithRenamedRoot = new LinkedHashMap<>();
-            final Pair<Class<?>, Map<String, ByteArray>> currentByteArrays = originalAndEnhancedRootTypesAndArrays.get(root);
-            byteArraysWithRenamedRoot.putAll(currentByteArrays.getValue());
-            byteArraysWithRenamedRoot.put("", new ByteArray(classLoader.getCachedByteArray(managedTypeWithAnnotations.getName())));
-            originalAndEnhancedRootTypesAndArrays.put(root, new Pair<>(managedTypeWithAnnotations, byteArraysWithRenamedRoot));
+            return adjustManagedType(root, managedTypeWithAnnotations);
         } catch (final ClassNotFoundException e) {
             logger.error(e.getMessage(), e);
             throw new IllegalStateException(e);
         }
+    }
+    
+    private Class<?> adjustManagedType(final Class<?> root, final Class<?> newManagedType) {
+        final DynamicEntityClassLoader classLoader = DynamicEntityClassLoader.getInstance(ClassLoader.getSystemClassLoader());
+        
+        final Map<String, ByteArray> byteArraysWithRenamedRoot = new LinkedHashMap<>();
+        final Pair<Class<?>, Map<String, ByteArray>> currentByteArrays = originalAndEnhancedRootTypesAndArrays.get(root);
+        byteArraysWithRenamedRoot.putAll(currentByteArrays.getValue());
+        byteArraysWithRenamedRoot.put("", new ByteArray(classLoader.getCachedByteArray(newManagedType.getName())));
+        originalAndEnhancedRootTypesAndArrays.put(root, new Pair<>(newManagedType, byteArraysWithRenamedRoot));
         
         final Class<?> adjustedType = getManagedType(root);
-        // logger.debug(String.format("\t\t\t\tEnded to adjustManagedTypeAnnotations for root [%s].", root.getSimpleName()));
         return adjustedType;
     }
-
+    
+    @Override
+    public Class<?> replaceManagedTypeBy(final Class<?> root, final Class<?> newManagedType) {
+        validateManagedType(root);
+        return adjustManagedType(root, newManagedType);
+    }
+    
+    private void validateManagedType(final Class<?> root) {
+        final Class<?> managedType = getManagedType(root);
+        if (!DynamicEntityClassLoader.isGenerated(managedType)) {
+            throw new DomainTreeException(format("The type for root [%s] is not generated. It is prohibited to generate additional annotations inside that type.", root.getSimpleName()));
+        }
+    }
+    
     /**
      * Propagates recursively the <code>enhancedType</code> from place [root; path] to place [root; ""].
      *
@@ -836,6 +867,9 @@ public final class DomainTreeEnhancer extends AbstractDomainTree implements IDom
      */
     protected Map<Class<?>, Set<CalculatedPropertyInfo>> calculatedPropertiesInfo() {
         final Map<Class<?>, Set<CalculatedPropertyInfo>> map = new LinkedHashMap<>();
+        for (final Class<?> root: rootTypes()) {
+            map.put(root, new LinkedHashSet<>());
+        }
         for (final Entry<Class<?>, List<CalculatedProperty>> entry : calculatedProperties.entrySet()) {
             final Set<CalculatedPropertyInfo> set = new HashSet<>();
             for (final CalculatedProperty cp : entry.getValue()) {
@@ -885,7 +919,7 @@ public final class DomainTreeEnhancer extends AbstractDomainTree implements IDom
             final Set<Class<?>> rootTypes = readValue(buffer, LinkedHashSet.class);
             final Map<Class<?>, Set<CalculatedPropertyInfo>> calculatedPropertiesInfo = readValue(buffer, LinkedHashMap.class);
             final Map<Class<?>, List<CustomProperty>> customProperties = readValue(buffer, LinkedHashMap.class);
-            return createFrom(serialiser(), rootTypes, calculatedPropertiesInfo, customProperties);
+            return createFrom(serialiser(), rootTypes, calculatedPropertiesInfo, customProperties, null, false);
         }
         
         @Override

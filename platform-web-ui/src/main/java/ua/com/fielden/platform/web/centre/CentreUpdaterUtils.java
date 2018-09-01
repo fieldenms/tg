@@ -9,7 +9,6 @@ import static ua.com.fielden.platform.utils.CollectionUtil.setOf;
 import static ua.com.fielden.platform.utils.EntityUtils.deepCopy;
 import static ua.com.fielden.platform.utils.EntityUtils.fetchWithKeyAndDesc;
 
-import java.lang.annotation.Annotation;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -28,7 +27,6 @@ import ua.com.fielden.platform.entity.AbstractBatchAction;
 import ua.com.fielden.platform.entity.annotation.EntityType;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ICompoundCondition0;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
-import ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
 import ua.com.fielden.platform.types.tuples.T2;
@@ -36,6 +34,7 @@ import ua.com.fielden.platform.ui.config.EntityCentreConfig;
 import ua.com.fielden.platform.ui.config.MainMenuItem;
 import ua.com.fielden.platform.ui.config.api.IEntityCentreConfig;
 import ua.com.fielden.platform.ui.config.api.IMainMenuItem;
+import ua.com.fielden.platform.ui.menu.MiWithConfigurationSupport;
 import ua.com.fielden.platform.web.app.IWebUiConfig;
 
 /**
@@ -63,9 +62,9 @@ public class CentreUpdaterUtils extends CentreUpdater {
         }
     }
     
-    public static ICentreDomainTreeManagerAndEnhancer createEmptyCentre(final Class<?> root, final ISerialiser serialiser, final T2<Map<Class<?>, Set<CalculatedPropertyInfo>>, Map<Class<?>, List<CustomProperty>>> calculatedAndCustomProperties) {
+    public static ICentreDomainTreeManagerAndEnhancer createEmptyCentre(final Class<?> root, final ISerialiser serialiser, final T2<Map<Class<?>, Set<CalculatedPropertyInfo>>, Map<Class<?>, List<CustomProperty>>> calculatedAndCustomProperties, final Class<? extends MiWithConfigurationSupport<?>> miType) {
         // TODO next line of code must take in to account that the menu item is for association centre.
-        final CentreDomainTreeManagerAndEnhancer centre = new CentreDomainTreeManagerAndEnhancer(serialiser, setOf(root), calculatedAndCustomProperties);
+        final CentreDomainTreeManagerAndEnhancer centre = new CentreDomainTreeManagerAndEnhancer(serialiser, setOf(root), calculatedAndCustomProperties, miType);
         // initialise checkedProperties tree to make it more predictable in getting meta-info from "checkedProperties"
         centre.getFirstTick().checkedProperties(root);
         centre.getSecondTick().checkedProperties(root);
@@ -210,9 +209,6 @@ public class CentreUpdaterUtils extends CentreUpdater {
         validateMenuItemType(menuItemType);
         validateMenuItemTypeRootType(menuItemType);
         
-        // create a copy of current instance of entity centre
-        final ICentreDomainTreeManagerAndEnhancer copyMgr = copyCentre(centre, serialiser); // TODO why should we perform heavy copying here?? Isn't original instance sufficient enough?
-        
         // save an instance of EntityCentreConfig with overridden body, which should exist in DB
         final String menuItemTypeName = menuItemType.getName();
         
@@ -226,13 +222,13 @@ public class CentreUpdaterUtils extends CentreUpdater {
         ecc.setTitle(newName);
         ecc.setMenuItem(menuItem);
         ecc.setDesc(newDesc);
-        ecc.setConfigBody(serialiser.serialise(copyMgr));
+        ecc.setConfigBody(serialiser.serialise(centre));
         eccCompanion.quickSave(ecc); // please note that CommonEntityDao exception will be thrown in case where such ecc instance already exists // TODO check quickSave usage!
         
         final DateTime end = new DateTime();
         final Period pd = new Period(start, end);
         logger.info(format("\t\tsaveAsEntityCentreManager entity-centre instance %s...done in [%s]", loggingSuffix, pd.getSeconds() + " s " + pd.getMillis() + " ms"));
-        return copyMgr;
+        return centre;
     }
     
     public static ICentreDomainTreeManagerAndEnhancer saveEntityCentreManager(
@@ -280,28 +276,15 @@ public class CentreUpdaterUtils extends CentreUpdater {
      * @return
      */
     protected static ICentreDomainTreeManagerAndEnhancer copyCentre(final ICentreDomainTreeManagerAndEnhancer centre, final ISerialiser serialiser) {
-        logger.debug(format("\t\t\tCopying centre..."));
-        logger.debug(format("\t\t\t\tDeep copy..."));
+        logger.debug(format("\t\tCopying centre..."));
+        logger.debug(format("\t\t\tDeep copy..."));
         final DateTime start = new DateTime();
         final ICentreDomainTreeManagerAndEnhancer copy = deepCopy(centre, serialiser);
-        logger.debug(format("\t\t\t\tDeep copy...done in [%s]", new Period(start, new DateTime()).getMillis() + " ms"));
-        
-        logger.debug(format("\t\t\t\tadjustManagedTypeAnnotations..."));
-        final DateTime adjustAnnotationsStart = new DateTime();
-        // TODO investigate the way to avoid generating of new types here:
-        // Performs copying of all defined custom annotations on generated types to provide the copy with the same annotations as original centre have.
-        for (final Class<?> root: centre.getRepresentation().rootTypes()) {
-            final Class<?> managedType = centre.getEnhancer().getManagedType(root);
-            if (DynamicEntityClassLoader.isGenerated(managedType)) {
-                final Annotation[] annotationsToCopy = managedType.getAnnotations();
-                copy.getEnhancer().adjustManagedTypeAnnotations(root, annotationsToCopy);
-            }
-        }
-        logger.debug(format("\t\t\t\tadjustManagedTypeAnnotations...done in [%s]", new Period(adjustAnnotationsStart, new DateTime()).getMillis() + " ms"));
+        logger.debug(format("\t\t\tDeep copy...done in [%s]", new Period(start, new DateTime()).getMillis() + " ms"));
         
         final DateTime end = new DateTime();
         final Period pd = new Period(start, end);
-        logger.debug(format("\t\t\tCopying centre... done in [%s].", pd.getSeconds() + " s " + pd.getMillis() + " ms"));
+        logger.debug(format("\t\tCopying centre... done in [%s].", pd.getSeconds() + " s " + pd.getMillis() + " ms"));
         return copy;
     }
     
