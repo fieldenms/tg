@@ -48,6 +48,7 @@ public class TypeMaker {
      * @throws ClassNotFoundException
      */
     public TypeMaker startModification(final String typeName) throws ClassNotFoundException {
+        System.err.println(format("\t\t\t\t\tstartModification [%s]...", typeName));
         logger.error(format("\t\t\t\t\tstartModification [%s]...", typeName));
         if (skipAdaptation(typeName)) {
             throw new IllegalArgumentException("Java system classes should not be enhanced.");
@@ -245,6 +246,7 @@ public class TypeMaker {
        currentType = null;
        currentName = null;
        logger.error(format("\t\t\t\t\tendModification: new type [%s] registered.", klass.getSimpleName()));
+       System.err.println(format("\t\t\t\t\tendModification: new type [%s] registered.", klass.getSimpleName()));
        return klass;
    }
    

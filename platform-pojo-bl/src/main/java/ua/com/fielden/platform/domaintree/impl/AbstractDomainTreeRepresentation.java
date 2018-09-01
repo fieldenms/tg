@@ -771,9 +771,9 @@ public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTre
      */
     protected static void illegalExcludedProperties(final IDomainTreeRepresentation dtr, final Class<?> root, final String property, final String message) {
         /* TODO HUGE PERFORMACE BOTTLENECK!! */
-        if (dtr.isExcludedImmutably(root, property)) {
-            throw new DomainTreeException(message);
-        }
+//        if (dtr.isExcludedImmutably(root, property)) {
+//            throw new DomainTreeException(message);
+//        }
     }
 
     private static class WeakPropertyDisablementListener implements IPropertyDisablementListener {
