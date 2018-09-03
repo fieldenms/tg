@@ -142,10 +142,10 @@
             <tg-element-loader id="elementLoader"></tg-element-loader>
         </div>
         <div id="navigationBar" hidden="[[!_lastAction.supportsNavigation]]" class="layout horizontal">
-            <paper-icon-button class="button-reverse" icon="hardware:keyboard-tab" on-tap="_firstEntry" disabled$="[[_hasPrevious()]]" tooltip-text$="[[_getFirstEntryActionTooltip(_lastAction._navigationType)]]"></paper-icon-button>
-            <paper-icon-button icon="hardware:keyboard-backspace" on-tap="_previousEntry" disabled$="[[_hasPrevious()]]" tooltip-text$="[[_getPreviousEntryActionTooltip(_lastAction._navigationType)]]"></paper-icon-button>
-            <paper-icon-button class="button-reverse" icon="hardware:keyboard-backspace" on-tap="_nextEntry" disabled$="[[_hasNext()]]" tooltip-text$="[[_getNextEntryActionTooltip(_lastAction._navigationType)]]"></paper-icon-button>
-            <paper-icon-button icon="hardware:keyboard-tab" on-tap="_lastEntry" disabled$="[[_hasNext()]]" tooltip-text$="[[_getLastEntryActionTooltip(_lastAction._navigationType)]]"></paper-icon-button>
+            <paper-icon-button class="button-reverse" icon="hardware:keyboard-tab" on-tap="_firstEntry" disabled$="[[action._hasPrev]]" tooltip-text$="[[_getFirstEntryActionTooltip(_lastAction._navigationType)]]"></paper-icon-button>
+            <paper-icon-button icon="hardware:keyboard-backspace" on-tap="_previousEntry" disabled$="[[action._hasPrev]]" tooltip-text$="[[_getPreviousEntryActionTooltip(_lastAction._navigationType)]]"></paper-icon-button>
+            <paper-icon-button class="button-reverse" icon="hardware:keyboard-backspace" on-tap="_nextEntry" disabled$="[[[action._hasNext]]" tooltip-text$="[[_getNextEntryActionTooltip(_lastAction._navigationType)]]"></paper-icon-button>
+            <paper-icon-button icon="hardware:keyboard-tab" on-tap="_lastEntry" disabled$="[[action._hasNext]]" tooltip-text$="[[_getLastEntryActionTooltip(_lastAction._navigationType)]]"></paper-icon-button>
         </div>
         <iron-icon id="resizer" hidden=[[_dialogInteractionsDisabled(_minimised,_maximised)]] icon="tg-icons:resize-bottom-right" on-track="resizeDialog" tooltip-text="Drag to resize"></iron-icon>
         <tg-toast id="toaster"></tg-toast>

@@ -11,16 +11,12 @@ public class SequentialEntityEditMaster extends EntityManipulationMaster<Sequent
     public SequentialEntityEditMaster(final Class<SequentialEntityEditAction> entityType, final boolean shouldRefreshParentCentreAfterSave) {
         super(entityType, shouldRefreshParentCentreAfterSave);
         final String masterTemplate = super.render().render().toString().replace("//@master-is-ready-custom-code",
-                "             //Provide custom after load listener\n"
-                + "           self._seqEditAfterLoadListener = function (e) {\n"
-                + "               this._assignPostSavedHandlersForEmbeddedMaster(e);\n"
-                + "               const saveButton = e.detail.querySelector(\"tg-action[role='save']\");\n"
-                + "               saveButton.closeAfterExecution = false;\n"
-                + "           }.bind(self);\n"+
-                "             // Overridden to support hidden properties conversion on the client-side (entitiesToEdit). \n"
-              + "             self._isNecessaryForConversion = function (propertyName) { \n"
-              + "                 return ['entitiesToEdit'].indexOf(propertyName) !== -1 || Polymer.TgBehaviors.TgEntityBinderBehavior._isNecessaryForConversion.call(self, propertyName); \n"
-              + "             }; \n");
+                "             //Provide custom after load listener\n" +
+                "             self._seqEditAfterLoadListener = function (e) {\n" +
+                "                 this._assignPostSavedHandlersForEmbeddedMaster(e);\n" +
+                "                 const saveButton = e.detail.querySelector(\"tg-action[role='save']\");\n" +
+                "                 saveButton.closeAfterExecution = false;\n" +
+                "             }.bind(self);\n");
       this.renderable = () -> new InnerTextElement(masterTemplate);
     }
 

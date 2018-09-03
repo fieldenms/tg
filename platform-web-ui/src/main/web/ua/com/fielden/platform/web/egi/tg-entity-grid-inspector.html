@@ -1002,6 +1002,10 @@
                     this.notifyPath(path, entity.get(propPath));
                 }
             },
+            
+            findEntityIndex: function (entity) {
+                return _findEntity(entity, this.filteredEntities);
+            },
 
             setRenderingHints: function (entity, property, renderingHints) {
                 const entityIndex = _findEntity(entity, this.filteredEntities);
@@ -1458,7 +1462,7 @@
                 }
                 return "";
             },
-
+            
             _generateEntityTooltip: function (entity, column) {
                 var key = this._getValue(entity, column.property, column.type);
                 var desc;

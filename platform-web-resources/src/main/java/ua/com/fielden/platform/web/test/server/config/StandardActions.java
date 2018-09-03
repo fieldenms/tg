@@ -20,7 +20,6 @@ import ua.com.fielden.platform.web.PrefDim;
 import ua.com.fielden.platform.web.action.exceptions.ActionConfigurationException;
 import ua.com.fielden.platform.web.action.post.FileSaverPostAction;
 import ua.com.fielden.platform.web.action.pre.SequentialEditPreAction;
-import ua.com.fielden.platform.web.action.pre.SequentialOpenPostAction;
 import ua.com.fielden.platform.web.action.pre.SequentialOpenPreAction;
 import ua.com.fielden.platform.web.centre.CentreContext;
 import ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig;
@@ -180,8 +179,7 @@ public enum StandardActions {
             }
 
             return action(SequentialEntityEditAction.class).withContext(contextConfig.build()).
-                    preAction(new SequentialOpenPreAction()).
-                    postActionSuccess(new SequentialOpenPostAction()).
+                    preAction(new SequentialOpenPreAction(entityTitle)).
                     icon("icons:done-all").
                     shortDesc(format("Open %s", entityTitle)).
                     longDesc(format("Open %s", entityTitle)).
