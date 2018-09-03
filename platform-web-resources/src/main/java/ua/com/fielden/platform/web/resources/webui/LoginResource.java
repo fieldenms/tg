@@ -57,13 +57,14 @@ public class LoginResource extends ServerResource {
     
     public static final String BINDING_PATH = "/login";
     public static final int BLOCK_TIME_SECONDS = 15;
+    public static final int LOCKOUT_THRESHOLD = 6;
     private static final Cache<String, LoginAttempts> LOGIN_ATTEMPTS = CacheBuilder.newBuilder().initialCapacity(100).maximumSize(1000).concurrencyLevel(50).build();
     private static final Logger LOGGER = Logger.getLogger(LoginResource.class);
 
     private final String domainName;
     private final String path;
     private final IAuthenticationModel authenticationModel;
-    private final IUserProvider userProvider;
+    private final IUserProvider up;
     private final IUser coUser;
     private final IUserSession coUserSession;
     private final RestServerUtil restUtil;
@@ -89,7 +90,7 @@ public class LoginResource extends ServerResource {
         this.path = path;
         this.constants = constants;
         this.authenticationModel = authenticationModel;
-        this.userProvider = userProvider;
+        this.up = userProvider;
         this.coUser = coUser;
         this.coUserSession = coUserSession;
         this.restUtil = restUtil;
@@ -104,8 +105,8 @@ public class LoginResource extends ServerResource {
             final Optional<Authenticator> oAuth = extractAuthenticator(getRequest());
             if (oAuth.isPresent()) {
                 final Authenticator auth = oAuth.get();
-                userProvider.setUsername(auth.username, coUser);
-                final Optional<UserSession> session = coUserSession.currentSession(userProvider.getUser(), auth.toString(), false);
+                up.setUsername(auth.username, coUser);
+                final Optional<UserSession> session = coUserSession.currentSession(up.getUser(), auth.toString(), false);
                 if (session.isPresent()) {
                     // response needs to be provided with an authenticating cookie
                     assignAuthenticatingCookie(constants.now(), session.get().getAuthenticator().get(), domainName, path, getRequest(), getResponse());
@@ -147,33 +148,10 @@ public class LoginResource extends ServerResource {
             final DateTime now = constants.now();
             final LoginAttempts la = LOGIN_ATTEMPTS.get(credo.username, () -> new LoginAttempts(0, empty(), now));
             synchronized (la) {
-                final long lastAttemptTimeMillis = la.lastAttemptTime.getMillis();
-                la.incAttemptCount();
-                la.lastAttemptTime = now;
-                // check if use is still blocked or need to be blocked...
-                if ((la.blockedUntil.filter(now::isBefore).isPresent() || la.attemptCount > 3) && (SECONDS.convert(now.getMillis() - lastAttemptTimeMillis, MILLISECONDS) < BLOCK_TIME_SECONDS)) {
-                    // if blocking time is not present then this is the first time the user is blocked and we need to assign the block time
-                    la.blockedUntil = of(now.plusSeconds(BLOCK_TIME_SECONDS));
-                    final long delaySeconds = SECONDS.convert(la.blockedUntil.get().getMillis() - now.getMillis(), MILLISECONDS);
-                    LOGGER.warn(format("Repeated login attempt [%s] for user [%s], blocked for [%s] seconds.", la.incAttemptCount(), credo.username, delaySeconds));
-                    getResponse().setEntity(new JsonRepresentation(format("{\"msg\": \"Blocked for [%s] seconds.\"}", delaySeconds)));
-                    getResponse().setStatus(Status.CLIENT_ERROR_PRECONDITION_FAILED);
-                } else {
-                    final Result authResult = authenticationModel.authenticate(credo.username, credo.passwd);
-                    if (!authResult.isSuccessful()) {
-                        LOGGER.warn(format("Unsuccessful login request for user [%s].", credo.username));
-                        getResponse().setEntity(new JsonRepresentation("{\"msg\": \"Invalid credentials.\"}"));
-                        getResponse().setStatus(Status.CLIENT_ERROR_BAD_REQUEST);
-                    } else {
-                        LOGIN_ATTEMPTS.invalidate(credo.username);
-                        // create a new session for an authenticated user...
-                        final User user = (User) authResult.getInstance();
-                        final UserSession session = coUserSession.newSession(user, credo.trustedDevice);
-        
-                        // ...and provide the response with an authenticating cookie
-                        assignAuthenticatingCookie(constants.now(), session.getAuthenticator().get(), domainName, path, getRequest(), getResponse());
-                        getResponse().setEntity(new JsonRepresentation("{\"msg\": \"Credentials are valid.\"}"));
-                    }
+                if (la.attemptCount >= LOCKOUT_THRESHOLD) {
+                    lockUserAccount(credo, now, la);
+                } else { 
+                    processLoginAttempt(credo, now, la);
                 }
             }
         } catch (final Exception ex) {
@@ -183,6 +161,60 @@ public class LoginResource extends ServerResource {
         } finally {
             LOGGER.debug(format("LOGIN ATTEMPT RESPONSE TIME: %s%n", TimeUnit.MILLISECONDS.convert(System.nanoTime() - nanoStart, TimeUnit.NANOSECONDS)));
         }
+    }
+
+    private void lockUserAccount(final Credentials credo, final DateTime now, final LoginAttempts la) {
+        LOGGER.warn(format("Account for user [%s] is locked after [%s] login attempts.", credo.username, la.attemptCount));
+        coUser.lockoutUser(credo.username);
+        LOGIN_ATTEMPTS.invalidate(credo.username); // locked out, invalidate user login attempts from cache
+        respondAccessDenied();        
+    }
+
+    private void processLoginAttempt(final Credentials credo, final DateTime now, final LoginAttempts la) {
+        final long timeSinceLastLoginAttempt = SECONDS.convert(now.getMillis() - la.lastAttemptTime.getMillis(), MILLISECONDS);
+        final boolean isRapidFireLogin = timeSinceLastLoginAttempt < BLOCK_TIME_SECONDS;
+        la.lastAttemptTime = now;
+        // check if use is still blocked or need to be blocked...
+        if (isRapidFireLogin && (la.blockedUntil.filter(now::isBefore).isPresent() || la.attemptCount >= 3)) {
+            // if blocking time is not present then this is the first time the user is blocked and we need to assign the block time
+            la.blockedUntil = of(now.plusSeconds(BLOCK_TIME_SECONDS));
+            LOGGER.warn(format("Repeated login attempt [%s] for user [%s], blocked for [%s] seconds.", la.attemptCount, credo.username, BLOCK_TIME_SECONDS));
+            respondUserIsBlocked(BLOCK_TIME_SECONDS);
+        } else {
+            la.incAttemptCount(); // only non-blocked login attempts count towards login attempts
+            final Result authResult = authenticationModel.authenticate(credo.username, credo.passwd);
+            if (!authResult.isSuccessful()) {
+                LOGGER.warn(format("Unsuccessful login request for user [%s].", credo.username));
+                if (la.attemptCount < 3) {
+                    respondAccessDenied();
+                } else if (la.attemptCount < LOCKOUT_THRESHOLD){
+                    la.blockedUntil = of(now.plusSeconds(BLOCK_TIME_SECONDS));
+                    LOGGER.warn(format("Repeated unsuccessful login attempt [%s] for user [%s], blocked for [%s] seconds.", la.attemptCount, credo.username, BLOCK_TIME_SECONDS));
+                    respondUserIsBlocked(BLOCK_TIME_SECONDS);
+                } else {
+                    lockUserAccount(credo, now, la);
+                }
+            } else {
+                LOGIN_ATTEMPTS.invalidate(credo.username); // logged in successful, invalidate user login attempts from cache
+                // create a new session for an authenticated user...
+                final User user = (User) authResult.getInstance();
+                final UserSession session = coUserSession.newSession(user, credo.trustedDevice);
+         
+                // ...and provide the response with an authenticating cookie
+                assignAuthenticatingCookie(constants.now(), session.getAuthenticator().get(), domainName, path, getRequest(), getResponse());
+                getResponse().setEntity(new JsonRepresentation("{\"msg\": \"Credentials are valid.\"}"));
+            }
+        }
+    }
+
+    private void respondUserIsBlocked(final long delaySeconds) {
+        getResponse().setEntity(new JsonRepresentation(format("{\"msg\": \"Blocked for [%s] seconds.\"}", delaySeconds)));
+        getResponse().setStatus(Status.CLIENT_ERROR_PRECONDITION_FAILED);
+    }
+
+    private void respondAccessDenied() {
+        getResponse().setEntity(new JsonRepresentation("{\"msg\": \"Invalid credentials.\"}"));
+        getResponse().setStatus(Status.CLIENT_ERROR_BAD_REQUEST);
     }
 
     /**
