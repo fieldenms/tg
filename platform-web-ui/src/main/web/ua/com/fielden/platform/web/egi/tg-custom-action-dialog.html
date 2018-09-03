@@ -142,10 +142,10 @@
             <tg-element-loader id="elementLoader"></tg-element-loader>
         </div>
         <div id="navigationBar" hidden="[[!_lastAction.supportsNavigation]]" class="layout horizontal">
-            <paper-icon-button class="button-reverse" icon="hardware:keyboard-tab" on-tap="_firstEntry" disabled$="[[action._hasPrev]]" tooltip-text$="[[_getFirstEntryActionTooltip(_lastAction._navigationType)]]"></paper-icon-button>
-            <paper-icon-button icon="hardware:keyboard-backspace" on-tap="_previousEntry" disabled$="[[action._hasPrev]]" tooltip-text$="[[_getPreviousEntryActionTooltip(_lastAction._navigationType)]]"></paper-icon-button>
-            <paper-icon-button class="button-reverse" icon="hardware:keyboard-backspace" on-tap="_nextEntry" disabled$="[[[action._hasNext]]" tooltip-text$="[[_getNextEntryActionTooltip(_lastAction._navigationType)]]"></paper-icon-button>
-            <paper-icon-button icon="hardware:keyboard-tab" on-tap="_lastEntry" disabled$="[[action._hasNext]]" tooltip-text$="[[_getLastEntryActionTooltip(_lastAction._navigationType)]]"></paper-icon-button>
+            <paper-icon-button class="button-reverse" icon="hardware:keyboard-tab" on-tap="_firstEntry" disabled$="[[!_lastAction._hasPrev]]" tooltip-text$="[[_getFirstEntryActionTooltip(_lastAction._navigationType)]]"></paper-icon-button>
+            <paper-icon-button icon="hardware:keyboard-backspace" on-tap="_previousEntry" disabled$="[[!_lastAction._hasPrev]]" tooltip-text$="[[_getPreviousEntryActionTooltip(_lastAction._navigationType)]]"></paper-icon-button>
+            <paper-icon-button class="button-reverse" icon="hardware:keyboard-backspace" on-tap="_nextEntry" disabled$="[[!_lastAction._hasNext]]" tooltip-text$="[[_getNextEntryActionTooltip(_lastAction._navigationType)]]"></paper-icon-button>
+            <paper-icon-button icon="hardware:keyboard-tab" on-tap="_lastEntry" disabled$="[[!_lastAction._hasNext]]" tooltip-text$="[[_getLastEntryActionTooltip(_lastAction._navigationType)]]"></paper-icon-button>
         </div>
         <iron-icon id="resizer" hidden=[[_dialogInteractionsDisabled(_minimised,_maximised)]] icon="tg-icons:resize-bottom-right" on-track="resizeDialog" tooltip-text="Drag to resize"></iron-icon>
         <tg-toast id="toaster"></tg-toast>
@@ -440,27 +440,27 @@
             
             //////////////////////////////////entity master navigation related//////////////////////////////
             _firstEntry: function () {
-                this._lastAction.firstEntry();
+                if (this.canClose()) {
+                    this._lastAction.firstEntry();
+                }
             },
             
             _previousEntry: function () {
-                this._lastAction.previousEntry();
+                if (this.canClose()) {
+                    this._lastAction.previousEntry();
+                }
             },
             
             _nextEntry: function () {
-                this._lastAction.nextEntry();
+                if (this.canClose()) {
+                    this._lastAction.nextEntry();
+                }
             },
             
             _lastEntry: function () {
-                this._lastAction.lastEntry();
-            },
-            
-            _hasPrevious: function () {
-                return this._lastAction.hasPreviousEntry();
-            },
-            
-            _hasNext: function () {
-                return this._lastAction.hasNextEntry();
+                if (this.canClose()) {
+                    this._lastAction.lastEntry();
+                }
             },
             
             _getFirstEntryActionTooltip: function (_navigationType) {
@@ -578,33 +578,37 @@
                     this._closeDialogAndIndicateActionCompletion();
                 } else {
                     //Try to close children first.
-                    let canClose = this._closeChildren();
-                    if (canClose && this._lastElement.classList.contains('canLeave')) {
-                        const reason = this._lastElement.canLeave();
-                        if (reason) {
-                            canClose = false;
-                            // the reason from .canLeave is not used as it is not always appropriate in the context of dialog closing
-                            // for example, when closing a master for a functional entity, the reason states the need to save changes,
-                            // while it is also possible and safe to simple cancel them
-                            // so, the message below is a good compromise
-                            // however, the reason can still insist by providing an imperative hint
-                            if (reason.imperative === true) {
-                                this.$.toaster.text = reason.msg;
-                            } else {
-                                this.$.toaster.text = "Please save or cancel changes.";
-                            }
-                            this.$.toaster.hasMore = false;
-                            this.$.toaster.msgText = "";
-                            this.$.toaster.showProgress = false;
-                            this.$.toaster.isCritical = false;
-                            this.$.toaster.show();
-                        }
-                    }
-
+                    let canClose = this.canClose();
                     if (canClose === true) {
                         this._closeDialogAndIndicateActionCompletion();
                     }
                 }
+            },
+            
+            canClose: function () {
+                let canClose = this._closeChildren();
+                if (canClose && this._lastElement.classList.contains('canLeave')) {
+                    const reason = this._lastElement.canLeave();
+                    if (reason) {
+                        canClose = false;
+                        // the reason from .canLeave is not used as it is not always appropriate in the context of dialog closing
+                        // for example, when closing a master for a functional entity, the reason states the need to save changes,
+                        // while it is also possible and safe to simple cancel them
+                        // so, the message below is a good compromise
+                        // however, the reason can still insist by providing an imperative hint
+                        if (reason.imperative === true) {
+                            this.$.toaster.text = reason.msg;
+                        } else {
+                            this.$.toaster.text = "Please save or cancel changes.";
+                        }
+                        this.$.toaster.hasMore = false;
+                        this.$.toaster.msgText = "";
+                        this.$.toaster.showProgress = false;
+                        this.$.toaster.isCritical = false;
+                        this.$.toaster.show();
+                    }
+                }
+                return canClose;
             },
 
             _closeChildren: function(forceClosing) {
