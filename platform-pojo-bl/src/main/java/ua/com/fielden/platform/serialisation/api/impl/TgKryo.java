@@ -120,6 +120,7 @@ import ua.com.fielden.platform.security.user.SecurityRoleAssociation;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.security.user.UserAndRoleAssociation;
 import ua.com.fielden.platform.security.user.UserRole;
+import ua.com.fielden.platform.security.user.UserSecret;
 import ua.com.fielden.platform.serialisation.api.ISerialisationClassProvider;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
 import ua.com.fielden.platform.serialisation.api.ISerialiserEngine;
@@ -327,7 +328,9 @@ class TgKryo extends Kryo implements ISerialiserEngine {
         // register classes provided by the provider
         for (final Class<?> type : provider.classes()) {
             try {
-                register(type);
+                if (!UserSecret.class.isAssignableFrom(type)) {
+                    register(type);
+                }
             } catch (final IllegalArgumentException e) {
                 throw new IllegalArgumentException("The type [" + type + "] can not be registered. Cause = [" + e.getMessage() + "]");
             }
