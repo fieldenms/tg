@@ -50,11 +50,11 @@ public class EntityRetrievalModel<T extends AbstractEntity<?>> extends AbstractR
         isSyntheticEntity = isSyntheticEntityType(getEntityType());
 
         switch (originalFetch.getFetchCategory()) {
-        case ALL:
-            includeAllFirstLevelProps();
-            break;
         case ALL_INCL_CALC:
             includeAllFirstLevelPropsInclCalc();
+            break;
+        case ALL:
+            includeAllFirstLevelProps();
             break;
         case DEFAULT:
             includeAllFirstLevelPrimPropsAndKey();
@@ -62,18 +62,14 @@ public class EntityRetrievalModel<T extends AbstractEntity<?>> extends AbstractR
         case KEY_AND_DESC:
             includeKeyAndDescOnly();
             break;
-        case NONE:
-        	break;
+        case ID_AND_VERSTION:
+            includeIdAndVersionOnly();
+            break;
         case ID_ONLY:
             includeIdOly();
             break;
-        case ID_AND_VERSTION:
-            if (isPersistedEntityType(getEntityType())) {
-                includeIdAndVersionOnly();
-            } else if (isEntityType(getKeyType(getEntityType()))) {
-                with(ID, true);
-            }
-            break;
+        case NONE:
+        	break;
         default:
             throw new IllegalStateException("Unknown fetch category [" + originalFetch.getFetchCategory() + "]");
         }
@@ -148,7 +144,7 @@ public class EntityRetrievalModel<T extends AbstractEntity<?>> extends AbstractR
         includeLastUpdatedByGroupOfProperties();        
     }
 
-    void includeLastUpdatedByGroupOfProperties() {
+    private void includeLastUpdatedByGroupOfProperties() {
         if (AbstractPersistentEntity.class.isAssignableFrom(getEntityType())) {
             with(LAST_UPDATED_BY, true);
             with(LAST_UPDATED_DATE, true);
@@ -197,13 +193,17 @@ public class EntityRetrievalModel<T extends AbstractEntity<?>> extends AbstractR
     }
 
     private void includeIdAndVersionOnly() {
-        with(ID, true);
-        with(VERSION, true);
-        if (isActivatableEntityType(getEntityType())) {
-            with(ACTIVE, true);
-            with(REF_COUNT, true);
+        if (isEntityType(getKeyType(getEntityType()))) {
+            with(ID, true);
+        } else if (isPersistedEntityType(getEntityType())) {
+            with(ID, true);
+            with(VERSION, true);
+            if (isActivatableEntityType(getEntityType())) {
+                with(ACTIVE, true);
+                with(REF_COUNT, true);
+            }
+            includeLastUpdatedByGroupOfProperties();
         }
-        includeLastUpdatedByGroupOfProperties();
     }
 
     private void with(final String propName, final boolean skipEntities) {
