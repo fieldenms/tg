@@ -345,7 +345,7 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
                 final AbstractEntity<?> value = persistedEntity.get(propNameAndType._1);
                 if (value != null) { // if there is actually some value
                     // load activatable value
-                    final ActivatableAbstractEntity<?> persistedValue = (ActivatableAbstractEntity<?>) session.get().load(propNameAndType._2, value.getId(), UPGRADE);
+                    final ActivatableAbstractEntity<?> persistedValue = session.get().load(propNameAndType._2, value.getId(), UPGRADE);
                     persistedValue.setIgnoreEditableState(true);
                     // if activatable property value is not a self-reference
                     // then need to check if it is active and if so increment its refCount
