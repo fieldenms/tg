@@ -91,7 +91,15 @@ public interface IUser extends IEntityDao<User> {
      * @return
      */
     boolean isPasswordStrong(final String passwd);
-    
+
+    /**
+     * Locks out the account of {@code username}, which means making a corresponding {@link User} inactive and removing the user's {@code password} and {@code resetUuid}.
+     * The {@code username} value may belong to a non-existing user, and this function should still perform gracefully.
+     *
+     * @param username
+     */
+    void lockoutUser(final String username);
+
     /**
      * Returns all available user roles
      *

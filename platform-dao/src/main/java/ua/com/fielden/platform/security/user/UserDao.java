@@ -110,13 +110,17 @@ public class UserDao extends CommonEntityDao<User> implements IUser {
         // this is possible only if an email address is associated with the user, which is required for active users
         // there could also be a situation where an inactive existing user, which did not have their password set in the first place, is being activated... this also warrants an activation email
         if ((!user.isPersisted() && user.isActive()) ||
-            (user.isPersisted() && user.isActive() && user.getProperty(ACTIVE).isDirty() && co(UserSecret.class).findByIdOptional(user.getId()).map(us -> isEmpty(us.getPassword())).orElse(true))) {
+            (user.isPersisted() && user.isActive() && user.getProperty(ACTIVE).isDirty() && passwordNotAssigned(user))) {
             final User savedUser = super.save(user);
             newUserNotifier.notify(assignPasswordResetUuid(savedUser.getKey()).orElseThrow(() -> new SecurityException("Could not initiate password reset.")));
             return savedUser;
         } else {
             return super.save(user);
         }
+    }
+
+    private Boolean passwordNotAssigned(final User user) {
+        return co(UserSecret.class).findByIdOptional(user.getId()).map(us -> isEmpty(us.getPassword())).orElse(true);
     }
 
     @Override
@@ -216,7 +220,22 @@ public class UserDao extends CommonEntityDao<User> implements IUser {
         return coUserSecret.findByIdOptional(user.getId(), coUserSecret.getFetchProvider().fetchModel()).orElseGet(() -> coUserSecret.new_().setKey(user));
     }
 
-    
+    @Override
+    @SessionRequired(allowNestedScope = false)
+    @Authorise(AlwaysAccessibleToken.class)
+    public void lockoutUser(final String username) {
+        // deactivate user if found
+        final User user = co$(User.class).findByKeyAndFetch(getFetchProvider().fetchModel(), username);
+        if (user != null) {
+            save(user.setActive(false));
+        }
+        
+        // attempt to delete user secret regardless of whether user exists or not
+        // this is to reduce the difference in the computation time that is required for processing existing and non-existing accounts 
+        final IUserSecret coUserSecret = co(UserSecret.class);
+        coUserSecret.batchDelete(select(UserSecret.class).where().prop("key.key").eq().val(username).model());
+    }
+
     @Override
     @SessionRequired
     @Authorise(AlwaysAccessibleToken.class)
@@ -369,4 +388,5 @@ public class UserDao extends CommonEntityDao<User> implements IUser {
         // and only now can we delete users
         return defaultBatchDelete(userIds);
     }
+
 }
