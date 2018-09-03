@@ -420,6 +420,34 @@ public class UserTestCase extends AbstractDaoTestCase {
         assertFalse(user3.isBase());
     }
 
+    @Test
+    public void lockout_of_existing_account_deactivates_user_and_removes_their_secret() {
+        coUser.lockoutUser("USER3");
+        final User inactiveUser = coUser.findUser("USER3");
+        assertFalse(inactiveUser.isActive());
+        assertFalse(coUserSecret.findByIdOptional(inactiveUser.getId(), coUserSecret.getFetchProvider().fetchModel()).isPresent());
+    }
+
+    @Test
+    public void activating_lockout_user_kicks_in_password_rest_procedure() {
+        coUser.lockoutUser("USER3");
+        final User inactiveUser = coUser.findUser("USER3");
+        assertFalse(inactiveUser.isActive());
+        
+        save(inactiveUser.setActive(true));
+        
+        final Optional<UserSecret> maybeSecret = coUserSecret.findByIdOptional(inactiveUser.getId(), coUserSecret.getFetchProvider().fetchModel());
+        assertTrue(maybeSecret.isPresent());
+        assertNotNull(maybeSecret.get().getResetUuid());
+    }
+
+    @Test
+    public void lockout_of_non_existing_account_does_not_throw_exceptions() {
+        final String username = "NON-EXISTING-USER-TO-LOCKOUT";
+        assertNull(coUser.findUser(username));
+        coUser.lockoutUser(username);
+    }
+
     @Override
     protected void populateDomain() {
         super.populateDomain();
