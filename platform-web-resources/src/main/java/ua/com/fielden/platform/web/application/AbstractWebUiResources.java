@@ -16,7 +16,6 @@ import ua.com.fielden.platform.web.app.ISourceController;
 import ua.com.fielden.platform.web.app.IWebUiConfig;
 import ua.com.fielden.platform.web.factories.webui.AppIndexResourceFactory;
 import ua.com.fielden.platform.web.factories.webui.CentreComponentResourceFactory;
-import ua.com.fielden.platform.web.factories.webui.CentreEgiResourceFactory;
 import ua.com.fielden.platform.web.factories.webui.CentreResourceFactory;
 import ua.com.fielden.platform.web.factories.webui.CriteriaResourceFactory;
 import ua.com.fielden.platform.web.factories.webui.CustomViewResourceFactory;
@@ -159,7 +158,7 @@ public abstract class AbstractWebUiResources extends Application {
         final Router mainRouter = new Router(getContext());
         // standard Polymer components and other resources should not be guarded
         // Register resources those are in resource paths.
-        attachResources(mainRouter, restUtil);
+        attachResources(mainRouter);
 
         mainRouter.attach(guard);
 
@@ -206,7 +205,6 @@ public abstract class AbstractWebUiResources extends Application {
         router.attach("/criteria/{mitype}/{saveAsName}", new CriteriaResourceFactory(webUiConfig, injector));
         router.attach("/centre/{mitype}/{saveAsName}", new CentreResourceFactory(webUiConfig, injector));
         router.attach("/centre_ui/{mitype}", new CentreComponentResourceFactory(sourceController, restUtil, deviceProvider));
-        router.attach("/centre_ui/egi/{mitype}", new CentreEgiResourceFactory(sourceController, restUtil, deviceProvider));
     }
 
     /**
@@ -214,7 +212,7 @@ public abstract class AbstractWebUiResources extends Application {
      *
      * @param router
      */
-    private void attachResources(final Router router, final RestServerUtil restUtil) {
+    private void attachResources(final Router router) {
         logger.info("\t\tResources attaching for following resource paths:" + "\n\t\t|" + StringUtils.join(webApp.resourcePaths(), "|\n\t\t|") + "|\n");
         router.attach("/resources/", new FileResourceFactory(sourceController, webApp.resourcePaths(), deviceProvider), Template.MODE_STARTS_WITH);
     }

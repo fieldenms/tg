@@ -85,6 +85,7 @@ class MasterWithMenu<T extends AbstractEntity<?>, F extends AbstractFunctionalEn
                     new DomElement("paper-item")
                             .attr("class", "menu-item").attr("data-route", el.getDataRoute())
                             .attr("tooltip-text", el.conf().longDesc.orElse("NOT SPECIFIED"))
+                            .attr("item-title", el.getShortDesc())
                     .add(new DomElement("iron-icon").attr("icon", el.getIcon()).attr("style", "margin-right: 10px"))
                     .add(new DomElement("span").add(new InnerTextElement(el.getShortDesc())))
                     );
@@ -104,7 +105,8 @@ class MasterWithMenu<T extends AbstractEntity<?>, F extends AbstractFunctionalEn
                         + "    centre-uuid='[[centreUuid]]'\n"
                         + "    get-master-entity='[[_createContextHolderForEmbeddedViews]]'\n"
                         + "    refresh-compound-master='[[save]]'\n"
-                        + "    augment-compound-master-opener-with='[[augmentCompoundMasterOpenerWith]]'>\n"
+                        + "    augment-compound-master-opener-with='[[augmentCompoundMasterOpenerWith]]'\n"
+                        + "    entity='[[_currBindingEntity]]'>\n"
                         + menuItemActionsDom + "\n"
                         + menuItemsDom + "\n"
                         + menuItemViewsDom + "\n"
@@ -116,7 +118,7 @@ class MasterWithMenu<T extends AbstractEntity<?>, F extends AbstractFunctionalEn
                              + "            self.canLeave = self.$.menu.canLeave.bind(self.$.menu);\n"
                              + "            // Overridden to support hidden properties conversion on the client-side ('key' and 'sectionTitle'). \n"
                              + "            self._isNecessaryForConversion = function (propertyName) { \n"
-                             + "                return ['key', 'sectionTitle', 'menuToOpen'].indexOf(propertyName) !== -1; \n"
+                             + "                return ['key', 'sectionTitle', 'menuToOpen', 'calculated'].indexOf(propertyName) !== -1; \n"
                              + "            }; \n"
                              + "            self._focusEmbededView = function () {\n"
                              + "                this.$.menu.focusView();\n"
@@ -130,7 +132,7 @@ class MasterWithMenu<T extends AbstractEntity<?>, F extends AbstractFunctionalEn
                              + "            self._hasEmbededView = function () {\n"
                              + "                return true;\n"
                              + "            }.bind(self);\n",
-                                jsMenuItemActionObjects)) //
+                             jsMenuItemActionObjects)) //
                 .replace("@prefDim", "null")
                 .replace("@noUiValue", "false")
                 .replace("@saveOnActivationValue", "true");

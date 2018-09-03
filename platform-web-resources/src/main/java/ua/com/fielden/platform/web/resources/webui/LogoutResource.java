@@ -10,11 +10,12 @@ import org.restlet.Context;
 import org.restlet.Request;
 import org.restlet.Response;
 import org.restlet.data.Encoding;
+import org.restlet.data.MediaType;
 import org.restlet.engine.application.EncodeRepresentation;
 import org.restlet.representation.EmptyRepresentation;
 import org.restlet.representation.InputRepresentation;
 import org.restlet.representation.Representation;
-import org.restlet.resource.ResourceException;
+import org.restlet.resource.Get;
 import org.restlet.resource.ServerResource;
 
 import ua.com.fielden.platform.security.session.Authenticator;
@@ -56,8 +57,8 @@ public class LogoutResource extends ServerResource {
         this.coUserSession = coUserSession;
     }
 
-    @Override
-    protected Representation get() {
+    @Get
+    public Representation logout() {
         try {
             // check if there is a valid authenticator
             // if there is then the logout request is authentic and should be honored
@@ -85,7 +86,7 @@ public class LogoutResource extends ServerResource {
     public Representation loggedOutPage() {
         try {
             final byte[] body = ResourceLoader.getText("ua/com/fielden/platform/web/logout.html").replaceAll("@title", "Logout").getBytes("UTF-8");
-            return new EncodeRepresentation(Encoding.GZIP, new InputRepresentation(new ByteArrayInputStream(body)));
+            return new EncodeRepresentation(Encoding.GZIP, new InputRepresentation(new ByteArrayInputStream(body), MediaType.TEXT_HTML));
         } catch (final Exception ex) {
             logger.fatal(ex);
             throw new IllegalStateException(ex);

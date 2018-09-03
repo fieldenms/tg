@@ -21,7 +21,12 @@ import ua.com.fielden.platform.utils.Pair;
  */
 public class TgSystemClassLoader extends URLClassLoader {
 
-    private final Cache<Class<?>, byte[]> cache = CacheBuilder.newBuilder().weakKeys().initialCapacity(1000).build();
+    private final Cache<Class<?>, byte[]> cache = CacheBuilder.newBuilder().weakKeys().initialCapacity(1000).concurrencyLevel(50).build();
+    
+    public long cleanUp() {
+        cache.cleanUp();
+        return cache.size();
+    }
 
     public TgSystemClassLoader(final ClassLoader parent) {
         super(((URLClassLoader) parent).getURLs(), parent);

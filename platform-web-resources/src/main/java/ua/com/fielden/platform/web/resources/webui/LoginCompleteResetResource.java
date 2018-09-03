@@ -12,6 +12,7 @@ import org.restlet.Request;
 import org.restlet.Response;
 import org.restlet.data.Encoding;
 import org.restlet.data.Form;
+import org.restlet.data.MediaType;
 import org.restlet.data.Status;
 import org.restlet.engine.application.EncodeRepresentation;
 import org.restlet.ext.json.JsonRepresentation;
@@ -70,6 +71,7 @@ public class LoginCompleteResetResource extends ServerResource {
             final String uuid = (String) getRequest().getAttributes().get("uuid");
 
             final IUser coUser = coFinder.find(User.class, true);
+            up.setUsername(User.system_users.SU.name(), coFinder.find(User.class, true));
 
             // if the UUID is invalid then redirect the user to the password reset resource
             if (StringUtils.isEmpty(uuid) || !coUser.isPasswordResetUuidValid(uuid)) {
@@ -94,7 +96,7 @@ public class LoginCompleteResetResource extends ServerResource {
     private static Representation pageToReportResetSessionExpiration(final Logger logger) {
         try {
             final byte[] body = ResourceLoader.getText("ua/com/fielden/platform/web/login-expired-reset.html").getBytes("UTF-8");
-            return new EncodeRepresentation(Encoding.GZIP, new InputRepresentation(new ByteArrayInputStream(body)));
+            return new EncodeRepresentation(Encoding.GZIP, new InputRepresentation(new ByteArrayInputStream(body), MediaType.TEXT_HTML));
         } catch (final Exception ex) {
             logger.fatal(ex);
             throw new IllegalStateException(ex);
@@ -112,7 +114,7 @@ public class LoginCompleteResetResource extends ServerResource {
                     .replace("@passwordMismatch", SECRET_MISMATCH_ERROR)
                     .replace("@uuid", uuid)
                     .getBytes("UTF-8");
-            return new EncodeRepresentation(Encoding.GZIP, new InputRepresentation(new ByteArrayInputStream(body)));
+            return new EncodeRepresentation(Encoding.GZIP, new InputRepresentation(new ByteArrayInputStream(body), MediaType.TEXT_HTML));
         } catch (final Exception ex) {
             logger.fatal(ex);
             throw new IllegalStateException(ex);
