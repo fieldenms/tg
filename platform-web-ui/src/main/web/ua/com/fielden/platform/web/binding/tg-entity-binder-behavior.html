@@ -377,7 +377,7 @@
                         win.focus();
                     } else {
                         const self = this;
-                        const url = '/download-attachment/' + attachment.id;
+                        const url = '/download-attachment/' + attachment.id + '/' + attachment.sha1;
                         // AJAX approach to the file download
                         const xhr = new XMLHttpRequest();
                         xhr.open("GET", url, true);
