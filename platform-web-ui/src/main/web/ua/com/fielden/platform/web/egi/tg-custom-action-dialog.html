@@ -273,12 +273,12 @@
                 /** Navigation related properties*/
                 _hasPrev: {
                     type: Boolean,
-                    value:false
+                    value:true
                 },
                 
                 _hasNext: {
                     type: Boolean,
-                    value:false
+                    value:true
                 },
                 
                 _sequentialEditText: {
@@ -316,7 +316,11 @@
             keyBindings: {
                 'alt+c': '_invertMinimiseState',
                 'alt+m': '_invertMaximiseState',
-                'alt+x': 'closeDialog'
+                'alt+x': 'closeDialog',
+                'ctrl+up': '_firstEntry',
+                'ctrl+left': '_previousEntry',
+                'ctrl+right': '_nextEntry',
+                'ctrl+down': '_lastEntry'
             },
 
             ready: function() {
@@ -348,7 +352,8 @@
                 //Add listener for custom event that was thrown when dialogs view is about to lost focus, then this focus should go to title-bar.
                 this.addEventListener("tg-last-item-focused", this._viewFocusLostEventListener.bind(this));
                 //Retrieve title's bar element to focus.
-                this._componentsToFocus = Array.from(this.$.titleBar.querySelectorAll(FOCUSABLE_ELEMENTS_SELECTOR));
+                this._componentsToFocus = Array.from(this.$.titleBar.querySelectorAll(FOCUSABLE_ELEMENTS_SELECTOR))
+                                                .concat(Array.from(this.$.navigationBar.querySelectorAll(FOCUSABLE_ELEMENTS_SELECTOR)));
             },
 
             attached: function() {
@@ -382,7 +387,7 @@
                 const lastIndex = forward ? focusables.length - 1 : 0;
                 const firstIndex = forward ? 0 : focusables.length - 1;
                 const callback = this._lastElement ? (forward ? this._lastElement.focusNextView.bind(this._lastElement) : this._lastElement.focusPreviousView.bind(this._lastElement)) : null;
-                if (document.activeElement === this || isInHierarchy(this.$.titleBar, document.activeElement)) {
+                if (document.activeElement === this || isInHierarchy(this, document.activeElement)) {
                     if (document.activeElement === focusables[lastIndex]) {
                         if (callback) {
                             callback(e);
@@ -459,25 +464,25 @@
             
             //////////////////////////////////entity master navigation related//////////////////////////////
             _firstEntry: function () {
-                if (this.canClose()) {
+                if (this.canClose() && this._hasPrev) {
                     this._lastAction.firstEntry();
                 }
             },
             
             _previousEntry: function () {
-                if (this.canClose()) {
+                if (this.canClose() && this._hasPrev) {
                     this._lastAction.previousEntry();
                 }
             },
             
             _nextEntry: function () {
-                if (this.canClose()) {
+                if (this.canClose() && this._hasNext) {
                     this._lastAction.nextEntry();
                 }
             },
             
             _lastEntry: function () {
-                if (this.canClose()) {
+                if (this.canClose() && this._hasNext) {
                     this._lastAction.lastEntry();
                 }
             },
