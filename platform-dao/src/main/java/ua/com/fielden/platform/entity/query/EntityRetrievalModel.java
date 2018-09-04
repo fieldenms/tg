@@ -209,7 +209,7 @@ public class EntityRetrievalModel<T extends AbstractEntity<?>> extends AbstractR
     private void with(final String propName, final boolean skipEntities) {
         final PropertyMetadata ppi = getPropMetadata(propName);
         final Class propType = ppi.getJavaType();
-        if (propName.equals(KEY) && ppi.isVirtual()) {
+        if (propName.equals(KEY) && ppi.isCompositeKeyExpression()) {
             includeAllCompositeKeyMembers();
         } else if (propName.equals(KEY) && isUnionEntityType(getEntityType())) {
             getPrimProps().add(KEY);

@@ -140,7 +140,7 @@ public class PropertyMetadata implements Comparable<PropertyMetadata> {
         return type.equals(PRIMITIVE_MEMBER_OF_COMPOSITE_KEY);
     }
 
-    public boolean isVirtual() {
+    public boolean isCompositeKeyExpression() {
         return type.equals(VIRTUAL_OVERRIDE);
     }
 

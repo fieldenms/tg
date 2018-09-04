@@ -178,7 +178,7 @@ public class EntQuery implements ISingleOperand {
                     //                        throw new IllegalStateException(ppi.toString());
                     //                    }
                     final boolean skipProperty = ppi.isSynthetic() ||
-                            ppi.isVirtual() ||
+                            ppi.isCompositeKeyExpression() ||
                             ppi.isCollection() ||
                             (ppi.isAggregatedExpression() && !isResultQuery())
                     //|| (ppi.isCommonCalculated() && (fetchModel == null || !fetchModel.containsProp(ppi.getName())))
@@ -201,7 +201,7 @@ public class EntQuery implements ISingleOperand {
                 
                 if (mainSourceType != EntityAggregates.class) {
                     for (final PropertyMetadata ppi : domainMetadataAnalyser.getPropertyMetadatasForEntity(mainSourceType)) {
-                        final boolean skipProperty = ppi.isSynthetic() || ppi.isVirtual() || ppi.isCollection() || (ppi.isAggregatedExpression() && !isResultQuery());
+                        final boolean skipProperty = ppi.isSynthetic() || ppi.isCompositeKeyExpression() || ppi.isCollection() || (ppi.isAggregatedExpression() && !isResultQuery());
                         if ((ppi.isCalculated()) && yields.getYieldByAlias(ppi.getName()) == null && !skipProperty) {
                             yields.addYield(new Yield(new EntProp(yieldPropAliasPrefix + ppi.getName()), ppi.getName()));
                         }
