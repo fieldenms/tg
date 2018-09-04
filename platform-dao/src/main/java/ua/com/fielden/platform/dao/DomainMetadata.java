@@ -323,12 +323,12 @@ public class DomainMetadata {
                 }
                 return idProperty;
             } else if (isEntityType(getKeyType(entityType))) {
-                return new PropertyMetadata.Builder(ID, Long.class, false).hibType(H_LONG).expression(expr().prop("key").model()).type(EXPRESSION).build();
+                return new PropertyMetadata.Builder(ID, Long.class, false).hibType(H_LONG).expression(expr().prop(KEY).model()).type(EXPRESSION).build();
             } else {
                 return null;
             }
         case UNION:
-            return new PropertyMetadata.Builder(ID, Long.class, false).hibType(H_LONG).expression(dmeg.generateUnionEntityPropertyExpression((Class<? extends AbstractUnionEntity>) entityType, "id")).type(EXPRESSION).build();
+            return new PropertyMetadata.Builder(ID, Long.class, false).hibType(H_LONG).expression(dmeg.generateUnionEntityPropertyExpression((Class<? extends AbstractUnionEntity>) entityType, ID)).type(EXPRESSION).build();
         default:
             return null;
         }
@@ -361,7 +361,7 @@ public class DomainMetadata {
                 }
                 return null; //FIXME
             case UNION:
-                return new PropertyMetadata.Builder(KEY, String.class, false).hibType(H_STRING).expression(dmeg.generateUnionEntityPropertyExpression((Class<? extends AbstractUnionEntity>) entityType, "key")).type(EXPRESSION).build();
+                return new PropertyMetadata.Builder(KEY, String.class, false).hibType(H_STRING).expression(dmeg.generateUnionEntityPropertyExpression((Class<? extends AbstractUnionEntity>) entityType, KEY)).type(EXPRESSION).build();
             default:
                 return null;
             }
@@ -531,7 +531,7 @@ public class DomainMetadata {
             keyMembersWithOptionality.add(new Pair<>(field, getCompositeKeyMemberOptionalityInfo(entityType, field.getName())));
         }
         
-        return new PropertyMetadata.Builder("key", String.class, true).expression(dmeg.getVirtualKeyPropForEntityWithCompositeKey(entityType, keyMembersWithOptionality)).hibType(H_STRING).type(VIRTUAL_OVERRIDE).build();
+        return new PropertyMetadata.Builder(KEY, String.class, true).expression(dmeg.getVirtualKeyPropForEntityWithCompositeKey(entityType, keyMembersWithOptionality)).hibType(H_STRING).type(VIRTUAL_OVERRIDE).build();
     }
 
 //    private PropertyMetadata getVirtualPropInfoForReferenceCount(final Class<? extends AbstractEntity<?>> entityType) throws Exception {
@@ -572,7 +572,7 @@ public class DomainMetadata {
         final Object hibernateType = getHibernateType(javaType, persistedType, true);
 
         //final ExpressionModel expressionModel = expr().prop("id").model(); // 1-2-1 is not required to exist -- that's why need longer formula -- that's why 1-2-1 is in fact implicitly calculated nullable prop
-        final ExpressionModel expressionModel = expr().model(select((Class<? extends AbstractEntity<?>>) calculatedPropfield.getType()).where().prop("key").eq().extProp("id").model()).model();
+        final ExpressionModel expressionModel = expr().model(select((Class<? extends AbstractEntity<?>>) calculatedPropfield.getType()).where().prop(KEY).eq().extProp(ID).model()).model();
         return new PropertyMetadata.Builder(calculatedPropfield.getName(), calculatedPropfield.getType(), true).expression(expressionModel).hibType(hibernateType).type(PropertyCategory.EXPRESSION).build();
     }
 
