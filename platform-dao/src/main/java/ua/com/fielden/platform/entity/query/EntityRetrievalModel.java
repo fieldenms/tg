@@ -221,8 +221,6 @@ public class EntityRetrievalModel<T extends AbstractEntity<?>> extends AbstractR
                 } else if (ppi.affectsMapping()) {
                     addEntityPropsModel(propName, fetchIdOnly(propType));
                 }
-            } else if (ppi.isUnionEntity()) {
-                System.out.println("                   " + ppi.getName());
             } else {
                 final String singleSubpropertyOfCompositeUserTypeProperty = ppi.getSinglePropertyOfCompositeUserType();
                 if (singleSubpropertyOfCompositeUserTypeProperty != null) {
