@@ -141,11 +141,12 @@
         <div id="dialogBody" class="relative flex">
             <tg-element-loader id="elementLoader"></tg-element-loader>
         </div>
-        <div id="navigationBar" hidden="[[!_lastAction.supportsNavigation]]" class="layout horizontal">
-            <paper-icon-button class="button-reverse" icon="hardware:keyboard-tab" on-tap="_firstEntry" disabled$="[[!_lastAction._hasPrev]]" tooltip-text$="[[_getFirstEntryActionTooltip(_lastAction._navigationType)]]"></paper-icon-button>
-            <paper-icon-button icon="hardware:keyboard-backspace" on-tap="_previousEntry" disabled$="[[!_lastAction._hasPrev]]" tooltip-text$="[[_getPreviousEntryActionTooltip(_lastAction._navigationType)]]"></paper-icon-button>
-            <paper-icon-button class="button-reverse" icon="hardware:keyboard-backspace" on-tap="_nextEntry" disabled$="[[!_lastAction._hasNext]]" tooltip-text$="[[_getNextEntryActionTooltip(_lastAction._navigationType)]]"></paper-icon-button>
-            <paper-icon-button icon="hardware:keyboard-tab" on-tap="_lastEntry" disabled$="[[!_lastAction._hasNext]]" tooltip-text$="[[_getLastEntryActionTooltip(_lastAction._navigationType)]]"></paper-icon-button>
+        <div id="navigationBar" hidden="[[!_lastAction.supportsNavigation]]" class="layout horizontal center">
+            <paper-icon-button class="button-reverse" icon="hardware:keyboard-tab" on-tap="_firstEntry" disabled$="[[!_hasPrev]]" tooltip-text$="[[_getFirstEntryActionTooltip(_lastAction.navigationType)]]"></paper-icon-button>
+            <paper-icon-button icon="hardware:keyboard-backspace" on-tap="_previousEntry" disabled$="[[!_hasPrev]]" tooltip-text$="[[_getPreviousEntryActionTooltip(_lastAction.navigationType)]]"></paper-icon-button>
+            <span>[[_sequentialEditText]]</span>
+            <paper-icon-button class="button-reverse" icon="hardware:keyboard-backspace" on-tap="_nextEntry" disabled$="[[!_hasNext]]" tooltip-text$="[[_getNextEntryActionTooltip(_lastAction.navigationType)]]"></paper-icon-button>
+            <paper-icon-button icon="hardware:keyboard-tab" on-tap="_lastEntry" disabled$="[[!_hasNext]]" tooltip-text$="[[_getLastEntryActionTooltip(_lastAction.navigationType)]]"></paper-icon-button>
         </div>
         <iron-icon id="resizer" hidden=[[_dialogInteractionsDisabled(_minimised,_maximised)]] icon="tg-icons:resize-bottom-right" on-track="resizeDialog" tooltip-text="Drag to resize"></iron-icon>
         <tg-toast id="toaster"></tg-toast>
@@ -268,6 +269,23 @@
                 _lastElement: {
                     type: Object
                 },
+                
+                /** Navigation related properties*/
+                _hasPrev: {
+                    type: Boolean,
+                    value:false
+                },
+                
+                _hasNext: {
+                    type: Boolean,
+                    value:false
+                },
+                
+                _sequentialEditText: {
+                    type: String,
+                    value: ''
+                },
+                //////////////////////////////////
 
                 /**The parent dialog tow wchich this dialog is a child.*/
                 _parentDialog: {
@@ -318,6 +336,7 @@
                 this._focusDialogWithInput = this._focusDialogWithInput.bind(this);
                 this._fitWhenFirstTimeOpened = this._fitWhenFirstTimeOpened.bind(this);
                 this._finishErroneousOpening = this._finishErroneousOpening.bind(this);
+                this._handleActionNavigationChange = this._handleActionNavigationChange.bind(this);
 
                 this._setIsRunning(false);
 
@@ -786,7 +805,7 @@
                 } else {
                     var self = this;
                     if (self.isRunning === false) {
-                        self._lastAction = customAction;
+                        self._lastAction = this._customiseAction(customAction);
                         self._setIsRunning(true);
                         self.staticTitle = customAction.shortDesc;
                         self.dynamicTitle = null;
@@ -837,6 +856,30 @@
                             });
                     }
                 }
+            },
+            
+            _customiseAction: function (newAction) {
+                if (this._lastAction && this._lastAction.supportsNavigation) {
+                    this._lastAction.removeEventListener("tg-action-navigation-changed", this._handleActionNavigationChange);
+                }
+                if (newAction) {
+                    this.staticTitle = newAction.shortDesc;
+                    if (newAction.supportsNavigation) {
+                        newAction.addEventListener("tg-action-navigation-changed", this._handleActionNavigationChange);
+                        this._setNavigationDetails(newAction);
+                    }
+                }
+                return newAction;
+            },
+            
+            _handleActionNavigationChange: function (e) {
+                this._setNavigationDetails(e.detail);
+            },
+            
+            _setNavigationDetails: function (obj) {
+                this._hasPrev = obj.hasPrev;
+                this._hasNext = obj.hasNext;
+                this._sequentialEditText = "" + (obj.count > 0 ? obj.entInd + 1 : 0) + " / " + obj.count;
             },
 
             _showMaster: function(action, element, closeEventChannel, closeEventTopics) {
