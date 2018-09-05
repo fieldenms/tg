@@ -1,7 +1,6 @@
 package ua.com.fielden.platform.entity;
 
 import static java.lang.String.format;
-import static java.util.Collections.unmodifiableSet;
 import static java.util.Optional.empty;
 import static java.util.Optional.of;
 import static java.util.stream.Collectors.toList;
@@ -27,7 +26,6 @@ import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.EnumMap;
@@ -91,7 +89,6 @@ import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.reflection.Reflector;
-import ua.com.fielden.platform.utils.CollectionUtil;
 import ua.com.fielden.platform.utils.EntityUtils;
 
 /**
@@ -591,7 +588,7 @@ public abstract class AbstractEntity<K extends Comparable> implements Comparable
         for (final Field field : fields) { // for each property field
             final String propName = field.getName();
 
-            Reflector.obtainPropertyAccessor(getType(), propName);
+            //Reflector.obtainPropertyAccessor(getType(), propName);
             // determine property type and adjacent virtues
             final Class<?> type = determineType(field);
             //logger.debug("TYPE (" + field.getName() + ") : " + type);
@@ -935,17 +932,17 @@ public abstract class AbstractEntity<K extends Comparable> implements Comparable
      * @return
      */
     private Set<Annotation> extractCollectionalPropDecrementorAnnotations(final Field field, final Class<?> type) {
-        try {
-            final Method decrementor = Reflector.getMethod(this, "removeFrom" + field.getName().toUpperCase().charAt(0) + field.getName().substring(1), type);
-            final Set<Annotation> annotations = AnnotationReflector.getValidationAnnotations(decrementor);
-            if (annotations.size() > 0 && AnnotationReflector.getAnnotation(decrementor, Observable.class) == null) {
-                throw new EntityDefinitionException(format("Collectional property [%s] in entity [%s] requires validation, but its decrementor [%s] is not observable (missing @Observable).",
-                        field.getName(), getType().getName(), decrementor.getName()));
-            }
-            return annotations;
-        } catch (final NoSuchMethodException e) {
-            // do nothing if decrementor does not exist
-        }
+//        try {
+//            final Method decrementor = Reflector.getMethod(this, "removeFrom" + field.getName().toUpperCase().charAt(0) + field.getName().substring(1), type);
+//            final Set<Annotation> annotations = AnnotationReflector.getValidationAnnotations(decrementor);
+//            if (annotations.size() > 0 && AnnotationReflector.getAnnotation(decrementor, Observable.class) == null) {
+//                throw new EntityDefinitionException(format("Collectional property [%s] in entity [%s] requires validation, but its decrementor [%s] is not observable (missing @Observable).",
+//                        field.getName(), getType().getName(), decrementor.getName()));
+//            }
+//            return annotations;
+//        } catch (final NoSuchMethodException e) {
+//            // do nothing if decrementor does not exist
+//        }
         return new HashSet<>();
     }
 
@@ -958,17 +955,17 @@ public abstract class AbstractEntity<K extends Comparable> implements Comparable
      * @return
      */
     private Set<Annotation> extractCollectionalPropIncrementorAnnotations(final Field field, final Class<?> type) {
-        try {
-            final Method incremetor = Reflector.getMethod(/* getType() */this, "addTo" + field.getName().toUpperCase().charAt(0) + field.getName().substring(1), type);
-            final Set<Annotation> annotations = AnnotationReflector.getValidationAnnotations(incremetor);
-            if (annotations.size() > 0 && AnnotationReflector.getAnnotation(incremetor, Observable.class) == null) {
-                throw new EntityDefinitionException(format("Collectional property [%s] in entity [%s] requires validation, but its incremetor [%s] is not observable (missing @Observable).",
-                        field.getName(), getType().getName(), incremetor.getName()));
-            }
-            return annotations;
-        } catch (final NoSuchMethodException e1) {
-            // do nothing if incrementor does not exist
-        }
+//        try {
+//            final Method incremetor = Reflector.getMethod(/* getType() */this, "addTo" + field.getName().toUpperCase().charAt(0) + field.getName().substring(1), type);
+//            final Set<Annotation> annotations = AnnotationReflector.getValidationAnnotations(incremetor);
+//            if (annotations.size() > 0 && AnnotationReflector.getAnnotation(incremetor, Observable.class) == null) {
+//                throw new EntityDefinitionException(format("Collectional property [%s] in entity [%s] requires validation, but its incremetor [%s] is not observable (missing @Observable).",
+//                        field.getName(), getType().getName(), incremetor.getName()));
+//            }
+//            return annotations;
+//        } catch (final NoSuchMethodException e1) {
+//            // do nothing if incrementor does not exist
+//        }
         return new HashSet<>();
     }
 
