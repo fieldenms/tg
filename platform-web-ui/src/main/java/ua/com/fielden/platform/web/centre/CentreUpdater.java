@@ -1152,18 +1152,11 @@ public class CentreUpdater {
         // the name consists of 'deviceSpecificName' and 'DIFFERENCES_SUFFIX'
         final String deviceSpecificDiffName = deviceSpecificName + DIFFERENCES_SUFFIX;
         
-        // In case where diff centre was not ever initialised from persistent storage -- it should be initialised for the first time.
-        // It guarantees that at the point of diff centre saving, the empty diff was already saved. See method 'updateDifferencesCentre' for more details.
-        final ICentreDomainTreeManagerAndEnhancer staleDiffCentre = updateDifferencesCentre(miType, user, userProvider, deviceSpecificName, saveAsName, device, serialiser, webUiConfig, eccCompanion, mmiCompanion, userCompanion);
-        final boolean diffChanged = !equalsEx(staleDiffCentre, newDiffCentre);
-        
-        if (diffChanged || newDesc != null) {
-            saveEntityCentreManager(newDiffCentre, miType, user, deviceSpecificDiffName, newDesc, serialiser, eccCompanion);
-        }
+        saveEntityCentreManager(newDiffCentre, miType, user, deviceSpecificDiffName, newDesc, serialiser, eccCompanion);
         
         final DateTime end = new DateTime();
         final Period pd = new Period(start, end);
-        logger.debug(format("\t%s the '%s' centre for miType [%s] for user %s... done in [%s].", "overrideAndSaveDifferencesCentre" + (diffChanged ? "" : " (nothing has changed)"), deviceSpecificName, miType.getSimpleName(), user, pd.getSeconds() + " s " + pd.getMillis() + " ms"));
+        logger.debug(format("\t%s the '%s' centre for miType [%s] for user %s... done in [%s].", "overrideAndSaveDifferencesCentre", deviceSpecificName, miType.getSimpleName(), user, pd.getSeconds() + " s " + pd.getMillis() + " ms"));
     }
     
 }
