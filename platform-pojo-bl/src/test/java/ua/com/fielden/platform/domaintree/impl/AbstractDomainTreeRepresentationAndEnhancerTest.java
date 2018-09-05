@@ -17,9 +17,6 @@ import org.junit.Test;
 import ua.com.fielden.platform.domaintree.Function;
 import ua.com.fielden.platform.domaintree.ICalculatedProperty.CalculatedPropertyAttribute;
 import ua.com.fielden.platform.domaintree.IDomainTreeManager.IDomainTreeManagerAndEnhancer;
-import ua.com.fielden.platform.domaintree.IDomainTreeRepresentation.IPropertyListener;
-import ua.com.fielden.platform.domaintree.IDomainTreeRepresentation.ITickRepresentation.IPropertyDisablementListener;
-import ua.com.fielden.platform.domaintree.exceptions.DomainTreeException;
 import ua.com.fielden.platform.domaintree.testing.DomainTreeManagerAndEnhancer1;
 import ua.com.fielden.platform.domaintree.testing.MasterEntity;
 import ua.com.fielden.platform.domaintree.testing.MasterEntityForIncludedPropertiesLogic;
@@ -161,6 +158,7 @@ public class AbstractDomainTreeRepresentationAndEnhancerTest extends AbstractDom
     }
 
     @Test
+    @Ignore("Ignored due to the removal of support for listeners. Need to revisit.")
     public void test_that_domain_changes_for_calc_property_modifications_are_correctly_reflected_in_Included_properties() {
         assertEquals("Incorrect included properties.", Arrays.asList("", "desc", "integerProp", "entityPropOfSelfType", "entityPropOfSelfType.dummy-property", "entityProp", "entityProp.dummy-property", "entityPropCollection", "entityPropCollection.dummy-property"), dtm().getRepresentation().includedProperties(MasterEntityForIncludedPropertiesLogic.class));
         dtm().getEnhancer().addCalculatedProperty(MasterEntityForIncludedPropertiesLogic.class, "", "2 * integerProp", "Prop1", "desc", CalculatedPropertyAttribute.NO_ATTR, "integerProp");
@@ -358,29 +356,10 @@ public class AbstractDomainTreeRepresentationAndEnhancerTest extends AbstractDom
     }
 
     @Test
+    @Ignore("Ignored due to the removal of support for listeners. Need to revisit.")
     public void test_that_PropertyListeners_work() {
         i = 0;
         j = 0;
-        final IPropertyListener listener = new IPropertyListener() {
-            @Override
-            public void propertyStateChanged(final Class<?> root, final String property, final Boolean wasAddedOrRemoved, final Boolean oldState) {
-                if (wasAddedOrRemoved == null) {
-                    throw new DomainTreeException("'wasAddedOrRemoved' cannot be null.");
-                }
-                if (wasAddedOrRemoved) {
-                    i++;
-                } else {
-                    j++;
-                }
-            }
-
-            @Override
-            public boolean isInternal() {
-                return false;
-            }
-        };
-        dtm().getRepresentation().addPropertyListener(listener);
-
         assertEquals("Incorrect value 'i'.", 0, i);
         assertEquals("Incorrect value 'j'.", 0, j);
 
@@ -404,28 +383,10 @@ public class AbstractDomainTreeRepresentationAndEnhancerTest extends AbstractDom
     }
 
     @Test
+    @Ignore("Ignored due to the removal of support for listeners. Need to revisit.")
     public void test_that_WeakPropertyListeners_work() {
         i = 0;
         j = 0;
-        IPropertyListener listener = new IPropertyListener() {
-            @Override
-            public void propertyStateChanged(final Class<?> root, final String property, final Boolean wasAddedOrRemoved, final Boolean oldState) {
-                if (wasAddedOrRemoved == null) {
-                    throw new DomainTreeException("'wasAddedOrRemoved' cannot be null.");
-                }
-                if (wasAddedOrRemoved) {
-                    i++;
-                } else {
-                    j++;
-                }
-            }
-
-            @Override
-            public boolean isInternal() {
-                return false;
-            }
-        };
-        dtm().getRepresentation().addWeakPropertyListener(listener);
 
         assertEquals("Incorrect value 'i'.", 0, i);
         assertEquals("Incorrect value 'j'.", 0, j);
@@ -434,9 +395,6 @@ public class AbstractDomainTreeRepresentationAndEnhancerTest extends AbstractDom
         assertEquals("Incorrect value 'i'.", 0, i);
         assertEquals("Incorrect value 'j'.", 1, j);
 
-        listener = null;
-        System.gc();
-
         dtm().getEnhancer().addCalculatedProperty(MasterEntity.class, "", "1 * 2 * integerProp", "Calc prop1", "Desc", CalculatedPropertyAttribute.NO_ATTR, "bigDecimalProp");
         dtm().getEnhancer().apply();
         assertEquals("Incorrect value 'i'.", 0, i);
@@ -444,23 +402,10 @@ public class AbstractDomainTreeRepresentationAndEnhancerTest extends AbstractDom
     }
 
     @Test
+    @Ignore("Ignored due to the removal of support for listeners. Need to revisit.")
     public void test_that_PropertyDisablementListeners_work() {
         i = 0;
         j = 0;
-        final IPropertyDisablementListener listener = new IPropertyDisablementListener() {
-            @Override
-            public void propertyStateChanged(final Class<?> root, final String property, final Boolean hasBeenDisabled, final Boolean oldState) {
-                if (hasBeenDisabled == null) {
-                    throw new DomainTreeException("'hasBeenDisabled' cannot be null.");
-                }
-                if (hasBeenDisabled) {
-                    i++;
-                } else {
-                    j++;
-                }
-            }
-        };
-        dtm().getRepresentation().getFirstTick().addPropertyDisablementListener(listener);
 
         assertEquals("Incorrect value 'i'.", 0, i);
         assertEquals("Incorrect value 'j'.", 0, j);
@@ -480,23 +425,10 @@ public class AbstractDomainTreeRepresentationAndEnhancerTest extends AbstractDom
     }
 
     @Test
+    @Ignore("Ignored due to the removal of support for listeners. Need to revisit.")
     public void test_that_WeakPropertyDisablementListeners_work() {
         i = 0;
         j = 0;
-        IPropertyDisablementListener listener = new IPropertyDisablementListener() {
-            @Override
-            public void propertyStateChanged(final Class<?> root, final String property, final Boolean hasBeenDisabled, final Boolean oldState) {
-                if (hasBeenDisabled == null) {
-                    throw new DomainTreeException("'hasBeenDisabled' cannot be null.");
-                }
-                if (hasBeenDisabled) {
-                    i++;
-                } else {
-                    j++;
-                }
-            }
-        };
-        dtm().getRepresentation().getFirstTick().addWeakPropertyDisablementListener(listener);
 
         assertEquals("Incorrect value 'i'.", 0, i);
         assertEquals("Incorrect value 'j'.", 0, j);
@@ -504,9 +436,6 @@ public class AbstractDomainTreeRepresentationAndEnhancerTest extends AbstractDom
         dtm().getRepresentation().getFirstTick().disableImmutably(MasterEntity.class, "integerProp");
         assertEquals("Incorrect value 'i'.", 1, i);
         assertEquals("Incorrect value 'j'.", 0, j);
-
-        listener = null;
-        System.gc();
 
         dtm().getFirstTick().check(MasterEntity.class, "bigDecimalProp", true);
         dtm().getRepresentation().getFirstTick().disableImmutably(MasterEntity.class, "bigDecimalProp");
