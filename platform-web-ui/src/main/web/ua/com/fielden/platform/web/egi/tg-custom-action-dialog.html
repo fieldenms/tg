@@ -161,7 +161,21 @@
                 parent = parent.parentElement;
             }
             return parent;
-        }
+        };
+        const callOrFocus = function(callback, e, ...elementsToFocus) {
+            if (callback) {
+                callback(e);
+            } else {
+                elementsToFocus.find(elem => !!elem).focus();
+            }
+        };
+        const callbackToFocusable = function(callback, e) {
+            if (callback) {
+                return {
+                    focus: () => {callback(e);}
+                }
+            }
+        };
         Polymer({
 
             is: "tg-custom-action-dialog",
@@ -352,8 +366,8 @@
                 //Add listener for custom event that was thrown when dialogs view is about to lost focus, then this focus should go to title-bar.
                 this.addEventListener("tg-last-item-focused", this._viewFocusLostEventListener.bind(this));
                 //Retrieve title's bar element to focus.
-                this._componentsToFocus = Array.from(this.$.titleBar.querySelectorAll(FOCUSABLE_ELEMENTS_SELECTOR))
-                                                .concat(Array.from(this.$.navigationBar.querySelectorAll(FOCUSABLE_ELEMENTS_SELECTOR)));
+                this._titleBarFocusables = Array.from(this.$.titleBar.querySelectorAll(FOCUSABLE_ELEMENTS_SELECTOR));
+                this._navigationBarFocusables = Array.from(this.$.navigationBar.querySelectorAll(FOCUSABLE_ELEMENTS_SELECTOR));
             },
 
             attached: function() {
@@ -370,8 +384,8 @@
                 this.removeEventListener('keydown', this._onCaptureKeyDown, true);
             },
 
-            _getCurrentFocusableElements: function() {
-                return this._componentsToFocus.filter(element => !element.disabled && element.offsetParent !== null);
+            _getCurrentFocusableElements: function(_componentsToFocus) {
+                return _componentsToFocus.filter(element => !element.disabled && element.offsetParent !== null);
             },
 
             _onTabDown: function(e) {
@@ -383,18 +397,27 @@
             },
 
             _focusChange: function(e, forward) {
-                const focusables = this._getCurrentFocusableElements();
-                const lastIndex = forward ? focusables.length - 1 : 0;
-                const firstIndex = forward ? 0 : focusables.length - 1;
+                //Get current focusable elements from both bars: title and navigation
+                const titleFocusables = this._getCurrentFocusableElements(this._titleBarFocusables);
+                const navigationFocusables = this._getCurrentFocusableElements(this._navigationBarFocusables);
+                //Get the callback for loaded component to focus it's component if the current focus should got out the title bar or navigation bar.
                 const callback = this._lastElement ? (forward ? this._lastElement.focusNextView.bind(this._lastElement) : this._lastElement.focusPreviousView.bind(this._lastElement)) : null;
-                if (document.activeElement === this || isInHierarchy(this, document.activeElement)) {
-                    if (document.activeElement === focusables[lastIndex]) {
-                        if (callback) {
-                            callback(e);
-                        } else {
-                            focusables[firstIndex].focus();
-                            tearDownEvent(e);
-                        }
+                //Implement each edgecase when focus shoud cycle around dialog components; 
+                if (document.activeElement == this || isInHierarchy(this.$.titleBar, document.activeElement)) {
+                    if (document.activeElement === titleFocusables[titleFocusables.length - 1] && forward) {
+                        callOrFocus(callback, e, navigationFocusables[0], titleFocusables[0]);
+                        tearDownEvent(e);
+                    } else if (document.activeElement === titleFocusables[0] && !forward) {
+                        callOrFocus(null, e, navigationFocusables[navigationFocusables.length - 1], callbackToFocusable(callback, e), titleFocusables[titleFocusables.length - 1]);
+                        tearDownEvent(e);
+                    }
+                } else if (isInHierarchy(this.$.navigationBar, document.activeElement)) {
+                    if (document.activeElement === navigationFocusables[navigationFocusables.length - 1] && forward) {
+                        callOrFocus(null, e, titleFocusables[0], callbackToFocusable(callback, e), navigationFocusables[0]);
+                        tearDownEvent(e);
+                    } else if (document.activeElement === navigationFocusables[0] && !forward) {
+                        callOrFocus(callback, e, titleFocusables[titleFocusables.length - 1], navigationFocusables[navigationFocusables.length - 1]);
+                        tearDownEvent(e);
                     }
                 } else if (callback) {
                     callback(e);
@@ -402,19 +425,19 @@
             },
 
             _viewFocusLostEventListener: function(e) {
-                const focusables = this._getCurrentFocusableElements();
+                //Get current focusable elements from both bars: title and navigation
+                const titleFocusables = this._getCurrentFocusableElements(this._titleBarFocusables);
+                const navigationFocusables = this._getCurrentFocusableElements(this._navigationBarFocusables);
+                //Get the callback for loaded component to focus it's component if the current focus should got out the title bar or navigation bar.
                 const callback = this._lastElement ? (e.detail.forward ? this._lastElement.focusNextView : this._lastElement.focusPreviousView) : null;
-                if (focusables.length > 0) {
-                    if (e.detail.forward) {
-                        focusables[0].focus();
-                    } else {
-                        focusables[focusables.length - 1].focus();
-                    }
-                    tearDownEvent(e.detail.event);
-                } else if (callback) {
-                    callback(e.detail.event);
+                if (e.detail.forward) {
+                    callOrFocus(null, null, navigationFocusables[0], titleFocusables[0], callbackToFocusable(callback, e.detail.event));
+                } else {
+                    callOrFocus(null, null, titleFocusables[titleFocusables.length - 1], navigationFocusables[navigationFocusables.length - 1], callbackToFocusable(callback, e.detail.event));
                 }
+                tearDownEvent(e.detail.event);
                 tearDownEvent(e);
+
             },
 
             _onCaptureClick: function(event) {
