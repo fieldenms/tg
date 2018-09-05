@@ -75,8 +75,6 @@ public class CentreDomainTreeManagerAndEnhancer0 extends AbstractDomainTreeManag
     private final transient LinkedHashMap<String, IAbstractAnalysisDomainTreeManager> currentAnalyses;
     private final transient LinkedHashMap<String, IAbstractAnalysisDomainTreeManager> freezedAnalyses;
 
-    private final transient List<IAnalysisListener> analysisListeners;
-
     /**
      * A <i>manager with enhancer</i> constructor for the first time instantiation.
      */
@@ -99,8 +97,6 @@ public class CentreDomainTreeManagerAndEnhancer0 extends AbstractDomainTreeManag
         this.currentAnalyses.putAll(currentAnalyses);
         this.freezedAnalyses = new LinkedHashMap<String, IAbstractAnalysisDomainTreeManager>();
         this.freezedAnalyses.putAll(freezedAnalyses);
-
-        this.analysisListeners = new ArrayList<IAnalysisListener>();
 
         for (final IAbstractAnalysisDomainTreeManager analysisManager : this.persistentAnalyses.values()) {
             initAnalysisManagerReferencesOn(analysisManager, this);
@@ -248,16 +244,6 @@ public class CentreDomainTreeManagerAndEnhancer0 extends AbstractDomainTreeManag
     }
 
     @Override
-    public boolean addAnalysisListener(final IAnalysisListener listener) {
-        return analysisListeners.add(listener);
-    }
-
-    @Override
-    public boolean removeAnalysisListener(final IAnalysisListener listener) {
-        return analysisListeners.remove(listener);
-    }
-
-    @Override
     public ICentreDomainTreeManagerAndEnhancer initAnalysisManagerByDefault(final String name, final AnalysisType analysisType) {
         if (isFreezedAnalysisManager(name)) {
             error("Unable to Init analysis instance if it is freezed for title [" + name + "].");
@@ -286,12 +272,6 @@ public class CentreDomainTreeManagerAndEnhancer0 extends AbstractDomainTreeManag
         }
         if (AnalysisType.MULTIPLEDEC.equals(analysisType)) {
             currentAnalyses.put(name, initAnalysisManagerReferencesOn(new MultipleDecDomainTreeManager(getSerialiser(), getRepresentation().rootTypes()), this));
-        }
-        // fire "initialised" event
-        if (getAnalysisManager(name) != null) {
-            for (final IAnalysisListener listener : analysisListeners) {
-                listener.propertyStateChanged(null, name, true, null);
-            }
         }
         return this;
     }
@@ -356,12 +336,6 @@ public class CentreDomainTreeManagerAndEnhancer0 extends AbstractDomainTreeManag
         if (isFreezedAnalysisManager(name)) {
             unfreeze(name);
         }
-        // fire "removed" event
-        if (wasInitialised && (getAnalysisManager(name) == null)) {
-            for (final IAnalysisListener listener : analysisListeners) {
-                listener.propertyStateChanged(null, name, false, null);
-            }
-        }
         return this;
     }
 
@@ -398,13 +372,6 @@ public class CentreDomainTreeManagerAndEnhancer0 extends AbstractDomainTreeManag
         }
         currentAnalyses.remove(name);
         acceptAnalysisManager(name);
-
-        // fire "removed" event
-        if (getAnalysisManager(name) == null) {
-            for (final IAnalysisListener listener : analysisListeners) {
-                listener.propertyStateChanged(null, name, false, null);
-            }
-        }
         return this;
     }
 
@@ -680,26 +647,6 @@ public class CentreDomainTreeManagerAndEnhancer0 extends AbstractDomainTreeManag
         }
 
         @Override
-        public void addPropertyValueListener(final IPropertyValueListener listener) {
-            base().addPropertyValueListener(listener);
-        }
-
-        @Override
-        public void removePropertyValueListener(final IPropertyValueListener listener) {
-            base().removePropertyValueListener(listener);
-        }
-
-        @Override
-        public void addPropertyValue2Listener(final IPropertyValueListener listener) {
-            base().addPropertyValue2Listener(listener);
-        }
-
-        @Override
-        public void removePropertyValue2Listener(final IPropertyValueListener listener) {
-            base().removePropertyValue2Listener(listener);
-        }
-
-        @Override
         public Boolean getExclusive(final Class<?> root, final String property) {
             // inject an enhanced type into method implementation
             return base().getExclusive(enhancer().getManagedType(root), property);
@@ -806,16 +753,6 @@ public class CentreDomainTreeManagerAndEnhancer0 extends AbstractDomainTreeManag
             // inject an enhanced type into method implementation
             base().removeCheckedProperty(enhancer().getManagedType(root), property);
         }
-
-        @Override
-        public void addWeakPropertyValueListener(final IPropertyValueListener listener) {
-            base().addWeakPropertyValueListener(listener);
-        }
-
-        @Override
-        public void addWeakPropertyValue2Listener(final IPropertyValueListener listener) {
-            base().addPropertyValue2Listener(listener);
-        }
     }
 
     /**
@@ -845,18 +782,6 @@ public class CentreDomainTreeManagerAndEnhancer0 extends AbstractDomainTreeManag
             // inject an enhanced type into method implementation
             base().toggleOrdering(enhancer().getManagedType(root), property);
             return this;
-        }
-
-        @Override
-        public void addPropertyOrderingListener(final IPropertyOrderingListener listener) {
-            // TODO Auto-generated method stub
-            throw new UnsupportedOperationException("IPropertyOrderingListener is currently unsupported for CentreDomainTreeManager's second tick.");
-        }
-
-        @Override
-        public void removePropertyOrderingListener(final IPropertyOrderingListener listener) {
-            // TODO Auto-generated method stub
-            throw new UnsupportedOperationException("IPropertyOrderingListener is currently unsupported for CentreDomainTreeManager's second tick.");
         }
 
         @Override
@@ -895,11 +820,6 @@ public class CentreDomainTreeManagerAndEnhancer0 extends AbstractDomainTreeManag
             base().setWidthsAndGrowFactors(widthsAndGrowFactors);
         }
 
-        @Override
-        public void addWeakPropertyOrderingListener(final IPropertyOrderingListener listener) {
-            throw new UnsupportedOperationException("Weak IPropertyOrderingListener is currently unsupported for CentreDomainTreeManager's second tick.");
-
-        }
     }
 
     @Override
