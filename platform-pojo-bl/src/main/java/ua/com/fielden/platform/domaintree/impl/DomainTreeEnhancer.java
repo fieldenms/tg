@@ -1,7 +1,6 @@
 package ua.com.fielden.platform.domaintree.impl;
 
 import static java.lang.String.format;
-import static java.util.Optional.empty;
 import static java.util.stream.Collectors.toCollection;
 import static java.util.stream.Collectors.toList;
 import static ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader.isGenerated;
@@ -48,8 +47,6 @@ import ua.com.fielden.platform.reflection.asm.api.NewProperty;
 import ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader;
 import ua.com.fielden.platform.reflection.asm.impl.DynamicTypeNamingService;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
-import ua.com.fielden.platform.types.tuples.T2;
-import ua.com.fielden.platform.utils.CollectionUtil;
 import ua.com.fielden.platform.serialisation.api.impl.TgKryo;
 import ua.com.fielden.platform.ui.menu.MiTypeAnnotation;
 import ua.com.fielden.platform.ui.menu.MiWithConfigurationSupport;
@@ -268,7 +265,7 @@ public final class DomainTreeEnhancer extends AbstractDomainTree implements IDom
                 logger.debug(format("\t\t\t\tadjustManagedTypeAnnotations: cachedGeneratedType is initialising..."));
                 for (final Class<?> root: rootTypes) {
                     if (isGenerated(newInstance.getManagedType(root))) {
-                        newInstance.adjustManagedTypeAnnotations(root, new MiTypeAnnotation().newInstance(miType, empty()));
+                        newInstance.adjustManagedTypeAnnotations(root, new MiTypeAnnotation().newInstance(miType));
                     }
                 }
                 logger.debug(format("\t\t\t\tadjustManagedTypeAnnotations: cachedGeneratedType is initialising...done"));

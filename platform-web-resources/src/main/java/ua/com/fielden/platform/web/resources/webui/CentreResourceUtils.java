@@ -21,6 +21,7 @@ import static ua.com.fielden.platform.web.utils.EntityResourceUtils.getEntityTyp
 import static ua.com.fielden.platform.web.utils.EntityResourceUtils.getOriginalManagedType;
 import static ua.com.fielden.platform.web.utils.EntityResourceUtils.getVersion;
 
+import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -64,8 +65,10 @@ import ua.com.fielden.platform.serialisation.api.ISerialiser;
 import ua.com.fielden.platform.serialisation.jackson.DefaultValueContract;
 import ua.com.fielden.platform.ui.config.api.IEntityCentreConfig;
 import ua.com.fielden.platform.ui.config.api.IMainMenuItem;
+import ua.com.fielden.platform.ui.menu.MiType;
 import ua.com.fielden.platform.ui.menu.MiTypeAnnotation;
 import ua.com.fielden.platform.ui.menu.MiWithConfigurationSupport;
+import ua.com.fielden.platform.ui.menu.SaveAsNameAnnotation;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
 import ua.com.fielden.platform.web.app.IWebUiConfig;
@@ -436,7 +439,9 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
             final IMainMenuItem mmiCompanion,
             final IUser userCompanion) {
         // generates validation prototype
-        final M validationPrototype = (M) critGenerator.generateCentreQueryCriteria((Class<T>) getEntityType(miType), cdtmae, miType, new MiTypeAnnotation().newInstance(miType, saveAsName));
+        final MiType miTypeAnnotation = new MiTypeAnnotation().newInstance(miType);
+        final Annotation [] annotations = saveAsName.isPresent() ? new Annotation[] {miTypeAnnotation, new SaveAsNameAnnotation().newInstance(saveAsName.get())} : new Annotation[] {miTypeAnnotation};
+        final M validationPrototype = (M) critGenerator.generateCentreQueryCriteria((Class<T>) getEntityType(miType), cdtmae, miType, annotations);
         
         // Functions for companion implementations:
         

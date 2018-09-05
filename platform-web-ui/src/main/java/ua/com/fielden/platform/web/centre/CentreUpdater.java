@@ -72,8 +72,8 @@ import ua.com.fielden.platform.serialisation.api.impl.TgKryo;
 import ua.com.fielden.platform.ui.config.EntityCentreConfig;
 import ua.com.fielden.platform.ui.config.api.IEntityCentreConfig;
 import ua.com.fielden.platform.ui.config.api.IMainMenuItem;
-import ua.com.fielden.platform.ui.menu.MiTypeAnnotation;
 import ua.com.fielden.platform.ui.menu.MiWithConfigurationSupport;
+import ua.com.fielden.platform.ui.menu.SaveAsNameAnnotation;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
 import ua.com.fielden.platform.web.app.IWebUiConfig;
@@ -634,7 +634,7 @@ public class CentreUpdater {
                 logger.debug(format("\t\t\t\tadjustManagedTypeAnnotations: cachedGeneratedType not present..."));
                 for (final Class<?> root: loadedCentre.getRepresentation().rootTypes()) {
                     if (isGenerated(loadedCentre.getEnhancer().getManagedType(root))) {
-                        final Class<?> newGeneratedType = loadedCentre.getEnhancer().adjustManagedTypeAnnotations(root, new MiTypeAnnotation().newInstance(miType, saveAsName));
+                        final Class<?> newGeneratedType = loadedCentre.getEnhancer().adjustManagedTypeAnnotations(root, new SaveAsNameAnnotation().newInstance(saveAsName.get()));
                         tgKryo.putGeneratedTypeFor(miType, saveAsName.get(), user.getId(), newGeneratedType);
                     }
                 }
