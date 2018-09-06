@@ -1,13 +1,18 @@
 package ua.com.fielden.platform.domaintree.impl;
 
+import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.isDotNotation;
+import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.penultAndLast;
+
 import java.lang.reflect.Field;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 
 import ua.com.fielden.platform.domaintree.IDomainTreeManager;
 import ua.com.fielden.platform.domaintree.IDomainTreeRepresentation;
@@ -15,7 +20,6 @@ import ua.com.fielden.platform.domaintree.IDomainTreeRepresentation.ITickReprese
 import ua.com.fielden.platform.domaintree.IUsageManager;
 import ua.com.fielden.platform.domaintree.exceptions.DomainTreeException;
 import ua.com.fielden.platform.reflection.Finder;
-import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
 
@@ -146,10 +150,11 @@ public abstract class AbstractDomainTreeManager extends AbstractDomainTree imple
     public static class TickManager implements ITickManagerWithMutability {
         private final EnhancementRootsMap<List<String>> checkedProperties;
         private final EnhancementRootsMap<List<String>> rootsListsOfUsedProperties;
-
+        
         private final transient AbstractDomainTreeRepresentation dtr;
         private final transient ITickRepresentation tr;
-
+        private transient Set<String> warmedProps = new HashSet<>();
+        
         /**
          * Used for the first time instantiation. IMPORTANT : To use this tick it should be passed into manager constructor, which will initialise "dtr" and "tr" fields.
          */
@@ -215,7 +220,7 @@ public abstract class AbstractDomainTreeManager extends AbstractDomainTree imple
                 return checkedPropertiesMutable(root).contains(property);
             }
         }
-
+        
         /**
          * Loads parent property to ensure that working with this property is safe.
          *
@@ -223,7 +228,11 @@ public abstract class AbstractDomainTreeManager extends AbstractDomainTree imple
          * @param property
          */
         private void loadParent(final Class<?> root, final String property) {
-            dtr.warmUp(root, PropertyTypeDeterminator.isDotNotation(property) ? PropertyTypeDeterminator.penultAndLast(property).getKey() : "");
+            final String propToWarm = isDotNotation(property) ? penultAndLast(property).getKey() : "";
+            if (!warmedProps.contains(propToWarm)) {
+                dtr.warmUp(root, propToWarm);
+                warmedProps.add(propToWarm);
+            }
         }
 
         @Override

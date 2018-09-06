@@ -173,9 +173,9 @@ public abstract class AbstractDomainTree {
      * @param message
      */
     protected static void illegalUncheckedProperties(final ITickManager tm, final Class<?> root, final String property, final String message) {
-        if (!tm.isChecked(root, property)) {
-            throw new DomainTreeException(message);
-        }
+//        if (!tm.isChecked(root, property)) {
+//            throw new DomainTreeException(message);
+//        }
     }
 
     /**

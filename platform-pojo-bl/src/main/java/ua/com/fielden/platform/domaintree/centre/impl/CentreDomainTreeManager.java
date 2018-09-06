@@ -575,7 +575,7 @@ public class CentreDomainTreeManager extends AbstractDomainTreeManager implement
             }
             cropEmptyRows(root, index - getColumnsNumber());
         }
-
+        
         @Override
         protected void insertCheckedProperty(final Class<?> root, final String property, final int index) {
             final int firstPlaceholderIndex = findFirstPlaceholder(root);
@@ -602,8 +602,9 @@ public class CentreDomainTreeManager extends AbstractDomainTreeManager implement
 
         private String generatePlaceholderName(final Class<?> root, final int newPlaceholderIndex) {
             int max = -1;
-            for (int i = 0; i < checkedPropertiesMutable(root).size(); i++) {
-                final String name = checkedPropertiesMutable(root).get(i);
+            final List<String> checkedProperties = checkedPropertiesMutable(root);
+            for (int i = 0; i < checkedProperties.size(); i++) {
+                final String name = checkedProperties.get(i);
                 if (isPlaceholder(name)) {
                     final int placeholderNumber = Integer.valueOf(name.substring(0, name.indexOf(PLACEHOLDER)));
                     if (placeholderNumber > max) {
@@ -615,12 +616,13 @@ public class CentreDomainTreeManager extends AbstractDomainTreeManager implement
         }
 
         private int findFirstPlaceholder(final Class<?> root) {
-            for (int i = 0; i < checkedPropertiesMutable(root).size(); i++) {
-                if (isPlaceholder(checkedPropertiesMutable(root).get(i))) {
+            final List<String> checkedProperties = checkedPropertiesMutable(root);
+            for (int i = 0; i < checkedProperties.size(); i++) {
+                if (isPlaceholder(checkedProperties.get(i))) {
                     return i;
                 }
             }
-            return checkedPropertiesMutable(root).size();
+            return checkedProperties.size();
         }
 
         /////////////////// Checked properties with placeholders (END) ///////////////////
