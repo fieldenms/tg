@@ -122,16 +122,16 @@ public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTre
                     final boolean propertyTypeWasInHierarchyBefore = typesInHierarchy(managedType, reflectionProperty, true).contains(DynamicEntityClassLoader.getOriginalType(propertyType));
 
                     // final boolean isKeyPart = Finder.getKeyMembers(parentType).contains(field); // indicates if field is the part of the key.
-                    final boolean isEntityItself = "".equals(property); // empty property means "entity itself"
-                    final Pair<Class<?>, String> transformed = PropertyTypeDeterminator.transform(managedType, property);
-                    final String penultPropertyName = PropertyTypeDeterminator.isDotNotation(property) ? PropertyTypeDeterminator.penultAndLast(property).getKey() : null;
-                    final String lastPropertyName = transformed.getValue();
-                    final boolean isLinkProperty = !isEntityItself && PropertyTypeDeterminator.isDotNotation(property)
-                            && Finder.isOne2Many_or_One2One_association(managedType, penultPropertyName)
-                            && lastPropertyName.equals(Finder.findLinkProperty((Class<? extends AbstractEntity<?>>) managedType, penultPropertyName)); // exclude link properties in one2many and one2one associations
+//                    final boolean isEntityItself = "".equals(property); // empty property means "entity itself"
+//                    final Pair<Class<?>, String> transformed = PropertyTypeDeterminator.transform(managedType, property);
+//                    final String penultPropertyName = PropertyTypeDeterminator.isDotNotation(property) ? PropertyTypeDeterminator.penultAndLast(property).getKey() : null;
+//                    final String lastPropertyName = transformed.getValue();
+//                    final boolean isLinkProperty = !isEntityItself && PropertyTypeDeterminator.isDotNotation(property)
+//                            && Finder.isOne2Many_or_One2One_association(managedType, penultPropertyName)
+//                            && lastPropertyName.equals(Finder.findLinkProperty((Class<? extends AbstractEntity<?>>) managedType, penultPropertyName)); // exclude link properties in one2many and one2one associations
 
                     if (level(property) >= LOADING_LEVEL && !EntityUtils.isUnionEntityType(propertyType) //
-                            || propertyTypeWasInHierarchyBefore && !isLinkProperty /*!isKeyPart*/) {
+                            || propertyTypeWasInHierarchyBefore /*&& !isLinkProperty */ /*!isKeyPart*/) {
                         newIncludedProps.add(createDummyMarker(property));
                     }
                     // TODO Need to review the following commet during removal of the "common properties" concept for union entities.
@@ -331,7 +331,7 @@ public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTre
         // logger().info("\t\t\tdetermineClass.");
         final Class<?> propertyType = isEntityItself ? root : PropertyTypeDeterminator.determineClass(penultType, lastPropertyName, true, true);
         // logger().info("\t\t\tgetOriginalType.");
-        final Class<?> notEnhancedRoot = DynamicEntityClassLoader.getOriginalType(root);
+        //final Class<?> notEnhancedRoot = DynamicEntityClassLoader.getOriginalType(root);
         // final Field field = isEntityItself ? null : Finder.getFieldByName(penultType, lastPropertyName);
         // logger().info("\t\t\tstarted conditions...");
         final boolean excl = manuallyExcludedProperties.contains(key(root, property)) || // exclude manually excluded properties
@@ -348,7 +348,7 @@ public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTre
                 !isEntityItself && AnnotationReflector.isPropertyAnnotationPresent(Invisible.class, penultType, lastPropertyName) || // exclude invisible properties
                 !isEntityItself && AnnotationReflector.isPropertyAnnotationPresent(Ignore.class, penultType, lastPropertyName) || // exclude invisible properties
                 // !isEntityItself && Finder.getKeyMembers(penultType).contains(field) && typesInHierarchy(root, property, true).contains(DynamicEntityClassLoader.getOriginalType(propertyType)) || // exclude key parts which type was in hierarchy
-                !isEntityItself && PropertyTypeDeterminator.isDotNotation(property) && Finder.isOne2Many_or_One2One_association(notEnhancedRoot, penultPropertyName) && lastPropertyName.equals(Finder.findLinkProperty((Class<? extends AbstractEntity<?>>) notEnhancedRoot, penultPropertyName)) || // exclude link properties in one2many and one2one associations
+                //TODO !isEntityItself && PropertyTypeDeterminator.isDotNotation(property) && Finder.isOne2Many_or_One2One_association(notEnhancedRoot, penultPropertyName) && lastPropertyName.equals(Finder.findLinkProperty((Class<? extends AbstractEntity<?>>) notEnhancedRoot, penultPropertyName)) || // exclude link properties in one2many and one2one associations
                 !isEntityItself && isExcludedImmutably(root, PropertyTypeDeterminator.isDotNotation(property) ? penultPropertyName : ""); // exclude property if it is an ascender (any level) of already excluded property
         // logger().info("\t\tEnded isExcludedImmutably for property [" + property + "].");
         return excl;
