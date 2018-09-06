@@ -485,18 +485,18 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
         validationPrototype.setCentreAdjuster(centreConsumer -> {
             final ICentreDomainTreeManagerAndEnhancer freshCentre = updateCentre(user, userProvider, miType, FRESH_CENTRE_NAME, saveAsName, device, serialiser, webUiConfig, eccCompanion, mmiCompanion, userCompanion);
             centreConsumer.accept(freshCentre);
-            commitCentre(user, userProvider, miType, FRESH_CENTRE_NAME, saveAsName, device, freshCentre, serialiser, webUiConfig, eccCompanion, mmiCompanion, userCompanion);
+            commitCentre(user, userProvider, miType, FRESH_CENTRE_NAME, saveAsName, device, freshCentre, null /* newDesc */, serialiser, webUiConfig, eccCompanion, mmiCompanion, userCompanion);
             
             final ICentreDomainTreeManagerAndEnhancer previouslyRunCentre = updateCentre(user, userProvider, miType, PREVIOUSLY_RUN_CENTRE_NAME, saveAsName, device, serialiser, webUiConfig, eccCompanion, mmiCompanion, userCompanion);
             centreConsumer.accept(previouslyRunCentre);
-            commitCentre(user, userProvider, miType, PREVIOUSLY_RUN_CENTRE_NAME, saveAsName, device, previouslyRunCentre, serialiser, webUiConfig, eccCompanion, mmiCompanion, userCompanion);
+            commitCentre(user, userProvider, miType, PREVIOUSLY_RUN_CENTRE_NAME, saveAsName, device, previouslyRunCentre, null /* newDesc */, serialiser, webUiConfig, eccCompanion, mmiCompanion, userCompanion);
         });
         // performs mutation function centreConsumer (column widths adjustments) against PREVIOUSLY_RUN centre and copies column widths / grow factors directly to FRESH centre; saves them both into persistent storage
         validationPrototype.setCentreColumnWidthsAdjuster(centreConsumer -> {
             // we have diffs that need to be applied against 'previouslyRun' centre
             final ICentreDomainTreeManagerAndEnhancer centre = updateCentre(user, userProvider, miType, PREVIOUSLY_RUN_CENTRE_NAME, saveAsName, device, serialiser, webUiConfig, eccCompanion, mmiCompanion, userCompanion);
             centreConsumer.accept(centre);
-            commitCentre(user, userProvider, miType, PREVIOUSLY_RUN_CENTRE_NAME, saveAsName, device, centre, serialiser, webUiConfig, eccCompanion, mmiCompanion, userCompanion);
+            commitCentre(user, userProvider, miType, PREVIOUSLY_RUN_CENTRE_NAME, saveAsName, device, centre, null /* newDesc */, serialiser, webUiConfig, eccCompanion, mmiCompanion, userCompanion);
             
             // however those diffs are not applicable to 'fresh' centre due to ability of 'fresh' centre to differ from 'previouslyRun' centre
             // the only way to get such mismatch is to press Discard on selection criteria
@@ -505,7 +505,7 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
             final ICentreDomainTreeManagerAndEnhancer previouslyRunCentre = updateCentre(user, userProvider, miType, PREVIOUSLY_RUN_CENTRE_NAME, saveAsName, device, serialiser, webUiConfig, eccCompanion, mmiCompanion, userCompanion);
             final ICentreDomainTreeManagerAndEnhancer freshCentre = updateCentre(user, userProvider, miType, FRESH_CENTRE_NAME, saveAsName, device, serialiser, webUiConfig, eccCompanion, mmiCompanion, userCompanion);
             freshCentre.getSecondTick().setWidthsAndGrowFactors(previouslyRunCentre. getSecondTick().getWidthsAndGrowFactors());
-            commitCentre(user, userProvider, miType, FRESH_CENTRE_NAME, saveAsName, device, freshCentre, serialiser, webUiConfig, eccCompanion, mmiCompanion, userCompanion);
+            commitCentre(user, userProvider, miType, FRESH_CENTRE_NAME, saveAsName, device, freshCentre, null /* newDesc */, serialiser, webUiConfig, eccCompanion, mmiCompanion, userCompanion);
         });
         // performs deletion of current owned configuration
         validationPrototype.setCentreDeleter(() -> 
@@ -515,12 +515,12 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
         // overrides SAVED centre configuration by FRESH one -- 'saves' centre
         validationPrototype.setFreshCentreSaver(() -> {
             final ICentreDomainTreeManagerAndEnhancer freshCentre = updateCentre(user, userProvider, miType, FRESH_CENTRE_NAME, saveAsName, device, serialiser, webUiConfig, eccCompanion, mmiCompanion, userCompanion);
-            initAndCommit(user, userProvider, miType, SAVED_CENTRE_NAME, saveAsName, device, freshCentre, null, serialiser, webUiConfig, eccCompanion, mmiCompanion, userCompanion);
+            commitCentre(user, userProvider, miType, SAVED_CENTRE_NAME, saveAsName, device, freshCentre, null, serialiser, webUiConfig, eccCompanion, mmiCompanion, userCompanion);
         });
         // overrides FRESH default centre configuration by FRESH current centre configuration; makes default config as preferred -- 'duplicates' centre
         validationPrototype.setConfigDuplicateAction(() -> {
             final ICentreDomainTreeManagerAndEnhancer freshCentre = updateCentre(user, userProvider, miType, FRESH_CENTRE_NAME, saveAsName, device, serialiser, webUiConfig, eccCompanion, mmiCompanion, userCompanion);
-            initAndCommit(user, userProvider, miType, FRESH_CENTRE_NAME, empty(), device, freshCentre, null, serialiser, webUiConfig, eccCompanion, mmiCompanion, userCompanion);
+            commitCentre(user, userProvider, miType, FRESH_CENTRE_NAME, empty(), device, freshCentre, null, serialiser, webUiConfig, eccCompanion, mmiCompanion, userCompanion);
             // when switching to default configuration we need to make it preferred
             validationPrototype.makePreferredConfig(empty());
         }); 
@@ -573,8 +573,8 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
             final Optional<String> newSaveAsName = of(newName);
             final ICentreDomainTreeManagerAndEnhancer freshCentre = updateCentre(user, userProvider, miType, FRESH_CENTRE_NAME, saveAsName, device, serialiser, webUiConfig, eccCompanion, mmiCompanion, userCompanion);
             // save the 'fresh' centre with a new name -- buttons SAVE / DISCARD will be disabled
-            initAndCommit(user, userProvider, miType, FRESH_CENTRE_NAME, newSaveAsName, device, freshCentre, newDesc, serialiser, webUiConfig, eccCompanion, mmiCompanion, userCompanion);
-            initAndCommit(user, userProvider, miType, SAVED_CENTRE_NAME, newSaveAsName, device, freshCentre, null, serialiser, webUiConfig, eccCompanion, mmiCompanion, userCompanion);
+            commitCentre(user, userProvider, miType, FRESH_CENTRE_NAME, newSaveAsName, device, freshCentre, newDesc, serialiser, webUiConfig, eccCompanion, mmiCompanion, userCompanion);
+            commitCentre(user, userProvider, miType, SAVED_CENTRE_NAME, newSaveAsName, device, freshCentre, null, serialiser, webUiConfig, eccCompanion, mmiCompanion, userCompanion);
             // when switching to new configuration we need to make it preferred
             validationPrototype.makePreferredConfig(newSaveAsName);
             return validationPrototype.centreCustomObject(
@@ -955,7 +955,7 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
         ).getKey();
         
         // need to commit changed fresh centre after modifiedPropertiesHolder has been applied!
-        commitCentre(user, userProvider, miType, FRESH_CENTRE_NAME, saveAsName, device, originalCdtmae, serialiser, webUiConfig, eccCompanion, mmiCompanion, userCompanion);
+        commitCentre(user, userProvider, miType, FRESH_CENTRE_NAME, saveAsName, device, originalCdtmae, null /* newDesc */, serialiser, webUiConfig, eccCompanion, mmiCompanion, userCompanion);
         return appliedCriteriaEntity;
     }
 
