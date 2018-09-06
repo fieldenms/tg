@@ -70,4 +70,15 @@ public class UserSecretDao extends CommonEntityDao<UserSecret> implements IUserS
         return defaultBatchDelete(entitiesIds);
     }
 
+    @Override
+    @SessionRequired
+    public int batchDelete(EntityResultQueryModel<UserSecret> model) {
+        return defaultBatchDelete(model);
+    }
+    
+    @Override
+    public String newSalt() {
+        return crypto.genSalt();
+    }
+
 }

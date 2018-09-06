@@ -48,26 +48,24 @@
     .toast-dialog paper-button:hover {
         background: var(--paper-light-blue-50);
     }
+    #toast paper-spinner {
+        width: 1.5em;
+        height: 1.5em;
+        min-width: 1em;
+        min-height: 1em;
+        max-width: 2em;
+        max-height: 2em;
+        padding: 2px;
+        margin-left: 1em;
+        --paper-spinner-layer-1-color: var(--paper-blue-500);
+        --paper-spinner-layer-2-color: var(--paper-blue-500);
+        --paper-spinner-layer-3-color: var(--paper-blue-500);
+        --paper-spinner-layer-4-color: var(--paper-blue-500);
+    }
 </style>
 
 <dom-module id="tg-toast">
     <template>
-        <style>
-            paper-spinner {
-                width: 1.5em;
-                height: 1.5em;
-                min-width: 1em;
-                min-height: 1em;
-                max-width: 2em;
-                max-height: 2em;
-                padding: 2px;
-                margin-left: 1em;
-                --paper-spinner-layer-1-color: var(--paper-blue-500);
-                --paper-spinner-layer-2-color: var(--paper-blue-500);
-                --paper-spinner-layer-3-color: var(--paper-blue-500);
-                --paper-spinner-layer-4-color: var(--paper-blue-500);
-            }
-        </style>
         <paper-toast id="toast" class="paper-toast" text="[[_text]]" on-tap="_showMoreIfPossible" always-on-top>
             <!-- TODO responsive-width="250px" -->
             <paper-spinner id="spinner" hidden$="[[_skipShowProgress]]" active alt="in progress..." tabIndex="-1"></paper-spinner>
@@ -164,10 +162,10 @@
                 this.$.toast.skipHistoryAction = true;
             },
 
-            _hasMoreChanged: function(newValue, oldValue) {
-              // let's set a cursor for the whole toast if it can be "clicked"
-              const cursor = newValue === true ? 'pointer' : 'inherit';
-              this.$.toast.style.cursor = cursor;
+            _hasMoreChanged: function (newValue, oldValue) {
+                // let's set a cursor for the whole toast if it can be "clicked"
+                const cursor = newValue === true ? 'pointer' : 'inherit';
+                this.$.toast.style.cursor = cursor;
             },
 
             _showMoreIfPossible: function (e) {
@@ -306,7 +304,7 @@
                     this.$.toast.duration = CRITICAL_DURATION;
                 } else if (this._hasMore === true) {
                     this.$.toast.duration = MORE_DURATION;
-                }else {
+                } else {
                     this.$.toast.duration = STANDARD_DURATION;
                 }
                 // due to the fact, that current version of paper-toast does not react to 'duration' changes (reaction is performed only on _openedChanged), there is a need to react manually:

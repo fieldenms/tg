@@ -71,6 +71,7 @@ public class LoginCompleteResetResource extends ServerResource {
             final String uuid = (String) getRequest().getAttributes().get("uuid");
 
             final IUser coUser = coFinder.find(User.class, true);
+            up.setUsername(User.system_users.SU.name(), coFinder.find(User.class, true));
 
             // if the UUID is invalid then redirect the user to the password reset resource
             if (StringUtils.isEmpty(uuid) || !coUser.isPasswordResetUuidValid(uuid)) {

@@ -3,7 +3,9 @@ package ua.com.fielden.platform.attachment;
 import static java.lang.String.format;
 import static java.util.UUID.randomUUID;
 import static ua.com.fielden.platform.error.Result.failure;
+import static ua.com.fielden.platform.error.Result.successful;
 
+import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -13,8 +15,13 @@ import java.nio.file.Paths;
 import java.security.DigestInputStream;
 import java.security.MessageDigest;
 import java.util.Random;
+import java.util.stream.Stream;
 
 import org.apache.log4j.Logger;
+import org.apache.tika.detect.Detector;
+import org.apache.tika.metadata.Metadata;
+import org.apache.tika.mime.MediaType;
+import org.apache.tika.parser.AutoDetectParser;
 
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
@@ -27,16 +34,17 @@ import ua.com.fielden.platform.entity.annotation.EntityType;
 import ua.com.fielden.platform.entity.query.IFilter;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.rx.AbstractSubjectKind;
+import ua.com.fielden.platform.security.user.User;
 
-/** 
+/**
  * DAO implementation for companion object {@link IAttachmentUploader}.
  * <p>
  * It has two responsibilities:
  * <ul>
  * <li> Save the input stream as a file into the attachment location, but only if another file with the same content does not yet exist.
- * <li> Create and persist an attachment {@link Attachment} associated with the uploaded file resource.  
+ * <li> Create and persist an attachment {@link Attachment} associated with the uploaded file resource.
  * </ul>
- * 
+ *
  * @author TG Team
  *
  */
@@ -45,17 +53,17 @@ public class AttachmentUploaderDao extends CommonEntityDao<AttachmentUploader> i
 
     private static final int DEBUG_DELAY_PROCESSING_TIME_MILLIS = 0;
     private static final Random RND = new Random(100);
-    
+
     private static final Logger LOGGER = Logger.getLogger(AttachmentUploaderDao.class);
-    
+
     public final String attachmentsLocation;
-    
+
     @Inject
     public AttachmentUploaderDao(final @Named("attachments.location") String attachmentsLocation, final IFilter filter) {
         super(filter);
         this.attachmentsLocation = attachmentsLocation;
     }
-    
+
     @Override
     @SessionRequired
     public AttachmentUploader save(final AttachmentUploader uploader) {
@@ -64,7 +72,7 @@ public class AttachmentUploaderDao extends CommonEntityDao<AttachmentUploader> i
             LOGGER.fatal(format("Input stream is missing when attempting to upload [%s].", uploader.getOrigFileName()));
             throw failure("Input stream was not provided.");
         }
-        
+
         final Path tmpPath = Paths.get(new File(tmpFileName()).toURI());
         final String sha1;
         try {
@@ -85,12 +93,15 @@ public class AttachmentUploaderDao extends CommonEntityDao<AttachmentUploader> i
                     throw new RuntimeException("This is a purposeful DEBUG exception to model file uploading/processing errors.");
                 }
             }
-            
+
             // convert digest to string for target file creation
             final byte[] digest = md.digest();
             sha1 = HexString.bufferToHex(digest, 0, digest.length);
             uploader.getEventSourceSubject().ifPresent(ess -> publishWithDelay(ess, 65));
-            
+
+            // let's validate the file nature by analysing it's magic number
+            canAcceptFile(uploader, tmpPath, getUser()).ifFailure(Result::throwRuntime);
+
             // if the target file already exist then need to create it by copying tmp file
             final File targetFile = new File(targetFileName(sha1));
             if (!targetFile.exists()) {
@@ -98,7 +109,7 @@ public class AttachmentUploaderDao extends CommonEntityDao<AttachmentUploader> i
                 Files.copy(tmpPath, targetPath);
                 uploader.getEventSourceSubject().ifPresent(ess -> publishWithDelay(ess, 80));
             }
-            
+
         } catch (final Exception ex) {
             LOGGER.fatal(format("Failed to upload [%s].", uploader.getOrigFileName()), ex);
             throw Result.failure(ex);
@@ -116,7 +127,7 @@ public class AttachmentUploaderDao extends CommonEntityDao<AttachmentUploader> i
         LOGGER.debug(format("Creating an attachment for uploaded [%s].", uploader.getOrigFileName()));
         final Attachment attachment = co$(Attachment.class).new_()
                 .setSha1(sha1)
-                .setOrigFileName(uploader.getOrigFileName())
+                .setOrigFileName(uploader.getOrigFileName().replace(" ", "_"))
                 .setLastModified(uploader.getLastModified())
                 .setMime(uploader.getMime());
         try {
@@ -139,13 +150,35 @@ public class AttachmentUploaderDao extends CommonEntityDao<AttachmentUploader> i
         // make sure we report 100% completion
         LOGGER.debug(format("Completed attachment uploading of [%s] successfully.", uploader.getOrigFileName()));
         uploader.getEventSourceSubject().ifPresent(ess -> publishWithDelay(ess, 100));
-        
+
         return uploader;
+    }
+
+    private static String[] restrictedFileTypes = new String[] {"application/x-msdownload", "application/octet-stream", "application/vnd.microsoft.portable-executable"};
+    private static Result canAcceptFile(final AttachmentUploader uploader, final Path tmpPath, final User user) throws IOException {
+        try (final InputStream is = Files.newInputStream(tmpPath);
+             final BufferedInputStream bis = new BufferedInputStream(is)) {
+            final AutoDetectParser parser = new AutoDetectParser();
+            final Detector detector = parser.getDetector();
+            final Metadata meta = new Metadata();
+            final MediaType mediaType = detector.detect(bis, meta);
+            // application/x-tika-ooxml     application/vnd.openxmlformats-officedocument.wordprocessingml.document
+            // application/x-tika-ooxml     application/vnd.openxmlformats-officedocument.spreadsheetml.sheet
+            // application/x-tika-msoffice  application/vnd.ms-excel
+            // application/x-tika-msoffice  application/msword
+
+            LOGGER.debug(format("Mime type for uploaded file [%s] identified as [%s], the provided is [%s].", uploader.getOrigFileName(), mediaType, uploader.getMime()));
+            if (Stream.of(restrictedFileTypes).anyMatch(rft -> mediaType.toString().contains(rft))) {
+                LOGGER.warn(format("An attempt to load file [%s] with a restricted mime type identified as [%s] (provided a [%s]) by user [%s].", uploader.getOrigFileName(), mediaType, uploader.getMime(), user));
+                return Result.failuref("Files of type [%s] are not supported.", mediaType);
+            }
+        }
+        return successful("OK");
     }
 
     /**
      * A convenient method for DEBUG purposes to mimic long running file uploads/processing.
-     *  
+     *
      * @param ess
      * @param prc
      */
@@ -163,7 +196,7 @@ public class AttachmentUploaderDao extends CommonEntityDao<AttachmentUploader> i
     private String tmpFileName() {
         return attachmentsLocation + File.separator  + getUsername() + "_" + randomUUID().toString() + ".tmp";
     }
-    
+
     private String targetFileName(final String sha1) {
         return attachmentsLocation + File.separator  + sha1;
     }
