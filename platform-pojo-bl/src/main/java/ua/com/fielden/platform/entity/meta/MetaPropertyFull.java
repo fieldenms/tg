@@ -10,7 +10,6 @@ import static ua.com.fielden.platform.types.tuples.T2.t2;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
-import java.lang.reflect.Method;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -36,7 +35,6 @@ import ua.com.fielden.platform.entity.validation.annotation.Final;
 import ua.com.fielden.platform.entity.validation.annotation.ValidationAnnotation;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.error.Warning;
-import ua.com.fielden.platform.reflection.Reflector;
 import ua.com.fielden.platform.types.tuples.T2;
 import ua.com.fielden.platform.utils.EntityUtils;
 
@@ -681,9 +679,7 @@ public final class MetaPropertyFull<T> extends MetaProperty<T> {
      */
     private final boolean isChangedFrom(final T value) {
         try {
-            final Method getter = Reflector.obtainPropertyAccessor(entity.getClass(), getName());
-            final Object currValue = getter.invoke(entity);
-            return !EntityUtils.equalsEx(currValue, value);
+            return !EntityUtils.equalsEx(getValue(), value);
         } catch (final Exception e) {
             logger.debug(e.getMessage(), e);
         }
