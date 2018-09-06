@@ -2,7 +2,6 @@ package ua.com.fielden.platform.domaintree.impl;
 
 import static java.lang.String.format;
 import static java.util.stream.Collectors.toCollection;
-import static java.util.stream.Collectors.toList;
 import static ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader.isGenerated;
 import static ua.com.fielden.platform.serialisation.api.SerialiserEngines.KRYO;
 import static ua.com.fielden.platform.types.tuples.T2.t2;
@@ -25,9 +24,6 @@ import java.util.Set;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
-import org.joda.time.DateTime;
-import org.joda.time.Period;
-
 import ua.com.fielden.platform.domaintree.ICalculatedProperty;
 import ua.com.fielden.platform.domaintree.ICalculatedProperty.CalculatedPropertyAttribute;
 import ua.com.fielden.platform.domaintree.IDomainTreeEnhancer;
@@ -144,10 +140,6 @@ public final class DomainTreeEnhancer extends AbstractDomainTree implements IDom
     private DomainTreeEnhancer(final ISerialiser serialiser, final Set<Class<?>> rootTypes, final Map<Class<?>, Set<CalculatedPropertyInfo>> calculatedPropertiesInfo, final Map<Class<?>, List<CustomProperty>> customProperties) {
         super(serialiser);
         
-        final List<String> rootTypeNames = rootTypes.stream().map(Class::getSimpleName).collect(toList());
-        logger.error(format("\t\t\t\t\tDomainTreeEnhancer (%s): fully-fledged creation...", rootTypeNames));
-        final DateTime start = new DateTime();
-        
         this.originalAndEnhancedRootTypesAndArrays = new LinkedHashMap<>();
         // init a map with NOT enhanced types and empty byte arrays.
         this.originalAndEnhancedRootTypesAndArrays.putAll(createOriginalAndEnhancedRootTypesAndArraysFromRootTypes(rootTypes));
@@ -176,18 +168,10 @@ public final class DomainTreeEnhancer extends AbstractDomainTree implements IDom
                 throw new IllegalStateException(String.format("The type [%s] should be NOT enhanced -- it has no additional properties.", rootType.getSimpleName()));
             }
         }
-        
-        final DateTime end = new DateTime();
-        final Period pd = new Period(start, end);
-        logger.error(format("\t\t\t\t\tDomainTreeEnhancer (%s): fully-fledged creation...done in [%s]", rootTypeNames, pd.getSeconds() + " s " + pd.getMillis() + " ms"));
     }
     
     private DomainTreeEnhancer(final DomainTreeEnhancer enhancer) {
         super(enhancer.getSerialiser());
-        
-        final List<String> rootTypeNames = enhancer.rootTypes().stream().map(Class::getSimpleName).collect(toList());
-        logger.error(format("\t\t\t\t\tDomainTreeEnhancer (%s): copying from cached instance...", rootTypeNames));
-        final DateTime start = new DateTime();
         
         // Perform copying of originalAndEnhancedRootTypesAndArrays. ByteArray class is immutable so it is safe to use the same instances.
         this.originalAndEnhancedRootTypesAndArrays = new LinkedHashMap<>();
@@ -215,10 +199,6 @@ public final class DomainTreeEnhancer extends AbstractDomainTree implements IDom
                 throw new IllegalStateException(String.format("The type [%s] should be NOT enhanced -- it has no additional properties.", rootType.getSimpleName()));
             }
         }
-        
-        final DateTime end = new DateTime();
-        final Period pd = new Period(start, end);
-        logger.error(format("\t\t\t\t\tDomainTreeEnhancer (%s): copying from cached instance...done in [%s]", rootTypeNames, pd.getSeconds() + " s " + pd.getMillis() + " ms"));
     }
     
     /**
@@ -262,14 +242,11 @@ public final class DomainTreeEnhancer extends AbstractDomainTree implements IDom
             final DomainTreeEnhancer newInstance = new DomainTreeEnhancer(serialiser, rootTypes, calculatedPropertiesInfo, customProperties);
             
             if (putIntoCache) {
-                logger.debug(format("\t\t\t\tadjustManagedTypeAnnotations: cachedGeneratedType is initialising..."));
                 for (final Class<?> root: rootTypes) {
                     if (isGenerated(newInstance.getManagedType(root))) {
                         newInstance.adjustManagedTypeAnnotations(root, new MiTypeAnnotation().newInstance(miType));
                     }
                 }
-                logger.debug(format("\t\t\t\tadjustManagedTypeAnnotations: cachedGeneratedType is initialising...done"));
-                
                 tgKryo.putDomainTreeEnhancerFor(rootTypes, calculatedPropertiesInfo, customProperties, newInstance);
             }
             return newInstance;
@@ -503,7 +480,6 @@ public final class DomainTreeEnhancer extends AbstractDomainTree implements IDom
         if (!DynamicEntityClassLoader.isGenerated(managedType)) {
             throw new DomainTreeException(format("The type for root [%s] is not generated. But it should be, because the same type on client application is generated and its suffix is [%s].", root.getSimpleName(), clientGeneratedTypeNameSuffix));
         }
-        // logger.debug(String.format("\t\t\t\tStarted to adjustManagedTypeName for root [%s] and its generated type [%s].", root.getSimpleName(), managedType.getSimpleName()));
         final DynamicEntityClassLoader classLoader = DynamicEntityClassLoader.getInstance(ClassLoader.getSystemClassLoader());
 
         try {
@@ -521,7 +497,6 @@ public final class DomainTreeEnhancer extends AbstractDomainTree implements IDom
         }
         
         final Class<?> adjustedType = getManagedType(root);
-        // logger.debug(String.format("\t\t\t\tEnded to adjustManagedTypeName for root [%s]. Adjusted to [%s].", root.getSimpleName(), adjustedType.getSimpleName()));
         return adjustedType;
     }
     

@@ -15,9 +15,6 @@ import java.util.Optional;
 import java.util.Set;
 
 import org.apache.log4j.Logger;
-import org.joda.time.DateTime;
-import org.joda.time.Period;
-
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.domaintree.centre.impl.CentreDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.domaintree.exceptions.DomainTreeException;
@@ -129,8 +126,6 @@ public class CentreUpdaterUtils extends CentreUpdater {
         return value;
     }
     
-    
-    
     ///////////////////////////// CENTRE MAINTENANCE /////////////////////////////
     public static Optional<ICentreDomainTreeManagerAndEnhancer> initEntityCentreManager(
             final Class<?> menuItemType,
@@ -140,8 +135,6 @@ public class CentreUpdaterUtils extends CentreUpdater {
             final IWebUiConfig webUiConfig,
             final IEntityCentreConfig eccCompanion) {
         final String loggingSuffix = format("for type [%s] with name [%s] for user [%s]", menuItemType.getSimpleName(), name, user);
-        logger.info(format("\t\tInitialising entity-centre instance %s...", loggingSuffix));
-        final DateTime start = new DateTime();
         
         validateMenuItemType(menuItemType);
         validateMenuItemTypeRootType(menuItemType);
@@ -155,9 +148,6 @@ public class CentreUpdaterUtils extends CentreUpdater {
         } else {
             centre = firstTwoConfigs.stream().findAny().map(ecc -> restoreCentreManagerFrom(ecc, serialiser, menuItemType, webUiConfig, eccCompanion, loggingSuffix));
         }
-        final DateTime end = new DateTime();
-        final Period pd = new Period(start, end);
-        logger.info(format("\t\tInitialising entity-centre instance %s...done in [%s]", loggingSuffix, pd.getSeconds() + " s " + pd.getMillis() + " ms"));
         return centre;
     }
     
@@ -172,12 +162,7 @@ public class CentreUpdaterUtils extends CentreUpdater {
             // params for: deserialisation failed -- logging
             final String loggingSuffix) {
         try {
-            logger.info(format("\t\t\trestoreCentreManagerFrom entity-centre instance  %s...", loggingSuffix));
-            final DateTime start = new DateTime();
             final CentreDomainTreeManagerAndEnhancer result = serialiser.deserialise(ecc.getConfigBody(), CentreDomainTreeManagerAndEnhancer.class);
-            final DateTime end = new DateTime();
-            final Period pd = new Period(start, end);
-            logger.info(format("\t\t\trestoreCentreManagerFrom entity-centre instance %s...done in [%s]", loggingSuffix, pd.getSeconds() + " s " + pd.getMillis() + " ms"));
             return result;
         } catch (final Exception deserialisationException) {
             logger.error("============================================ CENTRE DESERIALISATION HAS FAILED ============================================");
@@ -202,10 +187,6 @@ public class CentreUpdaterUtils extends CentreUpdater {
             final ISerialiser serialiser,
             final IEntityCentreConfig eccCompanion,
             final IMainMenuItem mmiCompanion) {
-        final String loggingSuffix = format("for type [%s] with name [%s] for user [%s]", menuItemType.getSimpleName(), newName, user);
-        logger.info(format("\t\tsaveAsEntityCentreManager entity-centre instance %s...", loggingSuffix));
-        final DateTime start = new DateTime();
-        
         validateMenuItemType(menuItemType);
         validateMenuItemTypeRootType(menuItemType);
         
@@ -222,10 +203,6 @@ public class CentreUpdaterUtils extends CentreUpdater {
         ecc.setDesc(newDesc);
         ecc.setConfigBody(serialiser.serialise(centre));
         eccCompanion.quickSave(ecc); // please note that CommonEntityDao exception will be thrown in case where such ecc instance already exists // TODO check quickSave usage!
-        
-        final DateTime end = new DateTime();
-        final Period pd = new Period(start, end);
-        logger.info(format("\t\tsaveAsEntityCentreManager entity-centre instance %s...done in [%s]", loggingSuffix, pd.getSeconds() + " s " + pd.getMillis() + " ms"));
         return centre;
     }
     
@@ -239,9 +216,6 @@ public class CentreUpdaterUtils extends CentreUpdater {
             final IEntityCentreConfig eccCompanion,
             final IMainMenuItem mmiCompanion) {
         final String loggingSuffix = format("for type [%s] with name [%s] for user [%s]", menuItemType.getSimpleName(), name, user);
-        logger.info(format("\t\tsaveEntityCentreManager entity-centre instance %s...", loggingSuffix));
-        final DateTime start = new DateTime();
-        
         validateMenuItemType(menuItemType);
         validateMenuItemTypeRootType(menuItemType);
         
@@ -273,9 +247,6 @@ public class CentreUpdaterUtils extends CentreUpdater {
             ecc.setConfigBody(serialiser.serialise(centre));
             eccCompanion.quickSave(ecc); // TODO check quickSave usage!
         }
-        final DateTime end = new DateTime();
-        final Period pd = new Period(start, end);
-        logger.info(format("\t\tsaveEntityCentreManager entity-centre instance %s...done in [%s]", loggingSuffix, pd.getSeconds() + " s " + pd.getMillis() + " ms"));
         return centre;
     }
     
@@ -287,15 +258,7 @@ public class CentreUpdaterUtils extends CentreUpdater {
      * @return
      */
     protected static ICentreDomainTreeManagerAndEnhancer copyCentre(final ICentreDomainTreeManagerAndEnhancer centre, final ISerialiser serialiser) {
-        logger.debug(format("\t\tCopying centre..."));
-        logger.debug(format("\t\t\tDeep copy..."));
-        final DateTime start = new DateTime();
         final ICentreDomainTreeManagerAndEnhancer copy = deepCopy(centre, serialiser);
-        logger.debug(format("\t\t\tDeep copy...done in [%s]", new Period(start, new DateTime()).getMillis() + " ms"));
-        
-        final DateTime end = new DateTime();
-        final Period pd = new Period(start, end);
-        logger.debug(format("\t\tCopying centre... done in [%s].", pd.getSeconds() + " s " + pd.getMillis() + " ms"));
         return copy;
     }
     
