@@ -65,24 +65,7 @@
             #menuToggler,#backButton {
                 color: white;
             }
-            .close-button {
-                width: 22px;
-                height: 22px;
-                padding: 0px;
-                stroke: var(--paper-grey-100);
-                fill: var(--paper-grey-100);
-                color: var(--paper-grey-100);
-            }
-            .close-button:hover {
-                stroke: var(--paper-grey-300);
-                fill: var(--paper-grey-300);
-                color: var(--paper-grey-300);
-            }
-            .minimise-button,.maximise-button {
-                width: 19px;
-                height: 19px;
-                padding: 0px;
-                margin-bottom: 2px;
+            .title-bar-button {
                 --paper-icon-button: {
                     color: var(--paper-grey-100);
                 };
@@ -93,11 +76,24 @@
                     color: var(--paper-grey-300);
                 };
             }
+            .close-button, .navigation-button{
+                width: 22px;
+                height: 22px;
+                padding: 0px;
+            }
+            .navigation-button{
+                margin: 0 4px;
+            }
+            .minimise-button,.maximise-button {
+                width: 19px;
+                height: 19px;
+                padding: 0px;
+                margin-bottom: 2px;
+               
+            }
             #navigationBar {
-                position: absolute;
-                bottom: 0;
-                left: 0;
-                background-color: rgba(255, 255, 255, 0.5);
+                margin-right: 20px;
+                color: white;
             }
             #resizer {
                 position: absolute;
@@ -124,29 +120,29 @@
                 <span class="vertical-splitter self-stretch" hidden$="[[_isTitleSplitterHidden(staticTitle, dynamicTitle)]]"></span>
                 <span class="dynamic-title truncate" hidden$="[[!dynamicTitle]]">[[dynamicTitle]]</span>
             </div>
+            <div id="navigationBar" hidden="[[!_lastAction.supportsNavigation]]" class="layout horizontal center">
+                <paper-icon-button class="button-reverse title-bar-button navigation-button" icon="hardware:keyboard-tab" on-tap="_firstEntry" disabled$="[[!_hasPrev]]" tooltip-text$="[[_getFirstEntryActionTooltip(_lastAction.navigationType)]]"></paper-icon-button>
+                <paper-icon-button class="title-bar-button navigation-button" icon="hardware:keyboard-backspace" on-tap="_previousEntry" disabled$="[[!_hasPrev]]" tooltip-text$="[[_getPreviousEntryActionTooltip(_lastAction.navigationType)]]"></paper-icon-button>
+                <span>[[_sequentialEditText]]</span>
+                <paper-icon-button class="button-reverse title-bar-button navigation-button" icon="hardware:keyboard-backspace" on-tap="_nextEntry" disabled$="[[!_hasNext]]" tooltip-text$="[[_getNextEntryActionTooltip(_lastAction.navigationType)]]"></paper-icon-button>
+                <paper-icon-button class="title-bar-button navigation-button" icon="hardware:keyboard-tab" on-tap="_lastEntry" disabled$="[[!_hasNext]]" tooltip-text$="[[_getLastEntryActionTooltip(_lastAction.navigationType)]]"></paper-icon-button>
+            </div>
             <div class="layout horizontal center" style="margin-left:10px">
                 <!-- collapse/expand buttons -->
-                <paper-icon-button hidden="[[!_minimised]]" class="minimise-button" icon="tg-icons:expandMin" on-tap="_invertMinimiseState" tooltip-text="Restore, Alt+c"></paper-icon-button>
-                <paper-icon-button hidden="[[_collapserHidden(_minimised, mobile)]]" class="minimise-button" icon="tg-icons:collapseMin"   on-tap="_invertMinimiseState" tooltip-text="Collapse, Alt+c" disabled=[[_dialogInteractionsDisabled(_minimised,_maximised)]]></paper-icon-button>
+                <paper-icon-button hidden="[[!_minimised]]" class="minimise-button title-bar-button" icon="tg-icons:expandMin" on-tap="_invertMinimiseState" tooltip-text="Restore, Alt+c"></paper-icon-button>
+                <paper-icon-button hidden="[[_collapserHidden(_minimised, mobile)]]" class="title-bar-button minimise-button" icon="tg-icons:collapseMin"   on-tap="_invertMinimiseState" tooltip-text="Collapse, Alt+c" disabled=[[_dialogInteractionsDisabled(_minimised,_maximised)]]></paper-icon-button>
 
                 <!-- maximize/restore buttons -->
-                <paper-icon-button hidden="[[_maximised]]" class="maximise-button" icon="icons:fullscreen"       on-tap="_invertMaximiseState" tooltip-text="Maximise, Alt+m" disabled=[[_dialogInteractionsDisabled(_minimised,_maximised)]]></paper-icon-button>
-                <paper-icon-button hidden="[[_maximiseRestorerHidden(_maximised, mobile)]]" class="maximise-button" icon="icons:fullscreen-exit"  on-tap="_invertMaximiseState" tooltip-text="Restore, Alt+m"></paper-icon-button>
+                <paper-icon-button hidden="[[_maximised]]" class="maximise-button title-bar-button" icon="icons:fullscreen"       on-tap="_invertMaximiseState" tooltip-text="Maximise, Alt+m" disabled=[[_dialogInteractionsDisabled(_minimised,_maximised)]]></paper-icon-button>
+                <paper-icon-button hidden="[[_maximiseRestorerHidden(_maximised, mobile)]]" class="maximise-button title-bar-button" icon="icons:fullscreen-exit"  on-tap="_invertMaximiseState" tooltip-text="Restore, Alt+m"></paper-icon-button>
 
                 <!-- close/next buttons -->
-                <paper-icon-button hidden="[[_closerHidden(_lastAction, mobile)]]" class="close-button" icon="icons:cancel"  on-tap="closeDialog" tooltip-text="Close, Alt+x"></paper-icon-button>
-                <paper-icon-button hidden="[[!_lastAction.continuous]]" class="close-button" icon="av:skip-next" on-tap="_skipNext" tooltip-text="Skip to next without saving"></paper-icon-button>
+                <paper-icon-button hidden="[[_closerHidden(_lastAction, mobile)]]" class="close-button title-bar-button" icon="icons:cancel"  on-tap="closeDialog" tooltip-text="Close, Alt+x"></paper-icon-button>
+                <paper-icon-button hidden="[[!_lastAction.continuous]]" class="close-button title-bar-button" icon="av:skip-next" on-tap="_skipNext" tooltip-text="Skip to next without saving"></paper-icon-button>
             </div>
         </div>
         <div id="dialogBody" class="relative flex">
             <tg-element-loader id="elementLoader"></tg-element-loader>
-        </div>
-        <div id="navigationBar" hidden="[[!_lastAction.supportsNavigation]]" class="layout horizontal center">
-            <paper-icon-button class="button-reverse" icon="hardware:keyboard-tab" on-tap="_firstEntry" disabled$="[[!_hasPrev]]" tooltip-text$="[[_getFirstEntryActionTooltip(_lastAction.navigationType)]]"></paper-icon-button>
-            <paper-icon-button icon="hardware:keyboard-backspace" on-tap="_previousEntry" disabled$="[[!_hasPrev]]" tooltip-text$="[[_getPreviousEntryActionTooltip(_lastAction.navigationType)]]"></paper-icon-button>
-            <span>[[_sequentialEditText]]</span>
-            <paper-icon-button class="button-reverse" icon="hardware:keyboard-backspace" on-tap="_nextEntry" disabled$="[[!_hasNext]]" tooltip-text$="[[_getNextEntryActionTooltip(_lastAction.navigationType)]]"></paper-icon-button>
-            <paper-icon-button icon="hardware:keyboard-tab" on-tap="_lastEntry" disabled$="[[!_hasNext]]" tooltip-text$="[[_getLastEntryActionTooltip(_lastAction.navigationType)]]"></paper-icon-button>
         </div>
         <iron-icon id="resizer" hidden=[[_dialogInteractionsDisabled(_minimised,_maximised)]] icon="tg-icons:resize-bottom-right" on-track="resizeDialog" tooltip-text="Drag to resize"></iron-icon>
         <tg-toast id="toaster"></tg-toast>
@@ -161,21 +157,7 @@
                 parent = parent.parentElement;
             }
             return parent;
-        };
-        const callOrFocus = function(callback, e, ...elementsToFocus) {
-            if (callback) {
-                callback(e);
-            } else {
-                elementsToFocus.find(elem => !!elem).focus();
-            }
-        };
-        const callbackToFocusable = function(callback, e) {
-            if (callback) {
-                return {
-                    focus: () => {callback(e);}
-                }
-            }
-        };
+        }
         Polymer({
 
             is: "tg-custom-action-dialog",
@@ -366,8 +348,7 @@
                 //Add listener for custom event that was thrown when dialogs view is about to lost focus, then this focus should go to title-bar.
                 this.addEventListener("tg-last-item-focused", this._viewFocusLostEventListener.bind(this));
                 //Retrieve title's bar element to focus.
-                this._titleBarFocusables = Array.from(this.$.titleBar.querySelectorAll(FOCUSABLE_ELEMENTS_SELECTOR));
-                this._navigationBarFocusables = Array.from(this.$.navigationBar.querySelectorAll(FOCUSABLE_ELEMENTS_SELECTOR));
+                this._componentsToFocus = Array.from(this.$.titleBar.querySelectorAll(FOCUSABLE_ELEMENTS_SELECTOR));
             },
 
             attached: function() {
@@ -384,8 +365,8 @@
                 this.removeEventListener('keydown', this._onCaptureKeyDown, true);
             },
 
-            _getCurrentFocusableElements: function(_componentsToFocus) {
-                return _componentsToFocus.filter(element => !element.disabled && element.offsetParent !== null);
+            _getCurrentFocusableElements: function() {
+                return this._componentsToFocus.filter(element => !element.disabled && element.offsetParent !== null);
             },
 
             _onTabDown: function(e) {
@@ -397,27 +378,18 @@
             },
 
             _focusChange: function(e, forward) {
-                //Get current focusable elements from both bars: title and navigation
-                const titleFocusables = this._getCurrentFocusableElements(this._titleBarFocusables);
-                const navigationFocusables = this._getCurrentFocusableElements(this._navigationBarFocusables);
-                //Get the callback for loaded component to focus it's component if the current focus should got out the title bar or navigation bar.
+                const focusables = this._getCurrentFocusableElements();
+                const lastIndex = forward ? focusables.length - 1 : 0;
+                const firstIndex = forward ? 0 : focusables.length - 1;
                 const callback = this._lastElement ? (forward ? this._lastElement.focusNextView.bind(this._lastElement) : this._lastElement.focusPreviousView.bind(this._lastElement)) : null;
-                //Implement each edgecase when focus shoud cycle around dialog components; 
-                if (document.activeElement == this || isInHierarchy(this.$.titleBar, document.activeElement)) {
-                    if (document.activeElement === titleFocusables[titleFocusables.length - 1] && forward) {
-                        callOrFocus(callback, e, navigationFocusables[0], titleFocusables[0]);
-                        tearDownEvent(e);
-                    } else if (document.activeElement === titleFocusables[0] && !forward) {
-                        callOrFocus(null, e, navigationFocusables[navigationFocusables.length - 1], callbackToFocusable(callback, e), titleFocusables[titleFocusables.length - 1]);
-                        tearDownEvent(e);
-                    }
-                } else if (isInHierarchy(this.$.navigationBar, document.activeElement)) {
-                    if (document.activeElement === navigationFocusables[navigationFocusables.length - 1] && forward) {
-                        callOrFocus(null, e, titleFocusables[0], callbackToFocusable(callback, e), navigationFocusables[0]);
-                        tearDownEvent(e);
-                    } else if (document.activeElement === navigationFocusables[0] && !forward) {
-                        callOrFocus(callback, e, titleFocusables[titleFocusables.length - 1], navigationFocusables[navigationFocusables.length - 1]);
-                        tearDownEvent(e);
+                if (document.activeElement === this || isInHierarchy(this.$.titleBar, document.activeElement)) {
+                    if (document.activeElement === focusables[lastIndex]) {
+                        if (callback) {
+                            callback(e);
+                        } else {
+                            focusables[firstIndex].focus();
+                            tearDownEvent(e);
+                        }
                     }
                 } else if (callback) {
                     callback(e);
@@ -425,17 +397,18 @@
             },
 
             _viewFocusLostEventListener: function(e) {
-                //Get current focusable elements from both bars: title and navigation
-                const titleFocusables = this._getCurrentFocusableElements(this._titleBarFocusables);
-                const navigationFocusables = this._getCurrentFocusableElements(this._navigationBarFocusables);
-                //Get the callback for loaded component to focus it's component if the current focus should got out the title bar or navigation bar.
+                const focusables = this._getCurrentFocusableElements();
                 const callback = this._lastElement ? (e.detail.forward ? this._lastElement.focusNextView : this._lastElement.focusPreviousView) : null;
-                if (e.detail.forward) {
-                    callOrFocus(null, null, navigationFocusables[0], titleFocusables[0], callbackToFocusable(callback, e.detail.event));
-                } else {
-                    callOrFocus(null, null, titleFocusables[titleFocusables.length - 1], navigationFocusables[navigationFocusables.length - 1], callbackToFocusable(callback, e.detail.event));
+                if (focusables.length > 0) {
+                    if (e.detail.forward) {
+                        focusables[0].focus();
+                    } else {
+                        focusables[focusables.length - 1].focus();
+                    }
+                    tearDownEvent(e.detail.event);
+                } else if (callback) {
+                    callback(e.detail.event);
                 }
-                tearDownEvent(e.detail.event);
                 tearDownEvent(e);
 
             },
