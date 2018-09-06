@@ -1152,7 +1152,7 @@ public class CentreUpdater {
         // the name consists of 'deviceSpecificName' and 'DIFFERENCES_SUFFIX'
         final String deviceSpecificDiffName = deviceSpecificName + DIFFERENCES_SUFFIX;
         
-        saveEntityCentreManager(newDiffCentre, miType, user, deviceSpecificDiffName, newDesc, serialiser, eccCompanion);
+        saveEntityCentreManager(newDiffCentre, miType, user, deviceSpecificDiffName, newDesc, serialiser, eccCompanion, mmiCompanion);
         
         final DateTime end = new DateTime();
         final Period pd = new Period(start, end);

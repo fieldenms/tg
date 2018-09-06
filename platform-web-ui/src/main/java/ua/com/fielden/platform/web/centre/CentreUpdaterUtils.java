@@ -209,9 +209,7 @@ public class CentreUpdaterUtils extends CentreUpdater {
         validateMenuItemType(menuItemType);
         validateMenuItemTypeRootType(menuItemType);
         
-        // save an instance of EntityCentreConfig with overridden body, which should exist in DB
         final String menuItemTypeName = menuItemType.getName();
-        
         final MainMenuItem menuItem = mmiCompanion.findByKeyOptional(menuItemTypeName).orElseGet(() -> {
             final MainMenuItem newMainMenuItem = mmiCompanion.new_();
             newMainMenuItem.setKey(menuItemTypeName);
@@ -238,7 +236,8 @@ public class CentreUpdaterUtils extends CentreUpdater {
             final String name,
             final String newDesc,
             final ISerialiser serialiser,
-            final IEntityCentreConfig eccCompanion) {
+            final IEntityCentreConfig eccCompanion,
+            final IMainMenuItem mmiCompanion) {
         final String loggingSuffix = format("for type [%s] with name [%s] for user [%s]", menuItemType.getSimpleName(), name, user);
         logger.info(format("\t\tsaveEntityCentreManager entity-centre instance %s...", loggingSuffix));
         final DateTime start = new DateTime();
@@ -253,19 +252,31 @@ public class CentreUpdaterUtils extends CentreUpdater {
         if (firstTwoConfigs.size() > 1) { 
             throw errorf("There are more than one entity-centre instance %s.", loggingSuffix); // TODO return warning? collect unfortunate garbage?
         } else if (firstTwoConfigs.size() < 1) { 
-            throw errorf("Unable to save non-existent entity-centre instance %s.", loggingSuffix); // TODO return warning? provide some self-healing logic?
+            final String menuItemTypeName = menuItemType.getName();
+            final MainMenuItem menuItem = mmiCompanion.findByKeyOptional(menuItemTypeName).orElseGet(() -> {
+                final MainMenuItem newMainMenuItem = mmiCompanion.new_();
+                newMainMenuItem.setKey(menuItemTypeName);
+                return mmiCompanion.save(newMainMenuItem);
+            });
+            final EntityCentreConfig ecc = eccCompanion.new_();
+            ecc.setOwner(user);
+            ecc.setTitle(name);
+            ecc.setMenuItem(menuItem);
+            ecc.setDesc(newDesc);
+            ecc.setConfigBody(serialiser.serialise(centre));
+            eccCompanion.quickSave(ecc); // please note that CommonEntityDao exception will be thrown in case where such ecc instance already exists // TODO check quickSave usage!
         } else {
             final EntityCentreConfig ecc = firstTwoConfigs.get(0);
-            ecc.setConfigBody(serialiser.serialise(centre));
             if (newDesc != null) {
                 ecc.setDesc(newDesc);
             }
+            ecc.setConfigBody(serialiser.serialise(centre));
             eccCompanion.quickSave(ecc); // TODO check quickSave usage!
-            final DateTime end = new DateTime();
-            final Period pd = new Period(start, end);
-            logger.info(format("\t\tsaveEntityCentreManager entity-centre instance %s...done in [%s]", loggingSuffix, pd.getSeconds() + " s " + pd.getMillis() + " ms"));
-            return centre;
         }
+        final DateTime end = new DateTime();
+        final Period pd = new Period(start, end);
+        logger.info(format("\t\tsaveEntityCentreManager entity-centre instance %s...done in [%s]", loggingSuffix, pd.getSeconds() + " s " + pd.getMillis() + " ms"));
+        return centre;
     }
     
     /**
