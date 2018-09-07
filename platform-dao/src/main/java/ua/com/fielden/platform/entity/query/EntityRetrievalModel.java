@@ -170,9 +170,7 @@ public class EntityRetrievalModel<T extends AbstractEntity<?>> extends AbstractR
 
     private void includeAllFirstLevelProps() {
         for (final PropertyMetadata ppi : propsMetadata) {
-            if (ppi.isUnionEntity()) {
-                with(ppi.getName(), fetchAll(ppi.getJavaType()));
-            } else if (!ppi.isCalculated() && !ppi.isCollection()) {
+            if (!ppi.isCalculated() && !ppi.isCollection()) {
                 with(ppi.getName(), false);
             }
         }
@@ -180,9 +178,7 @@ public class EntityRetrievalModel<T extends AbstractEntity<?>> extends AbstractR
 
     private void includeAllFirstLevelPropsInclCalc() {
         for (final PropertyMetadata ppi : propsMetadata) {
-            if (ppi.isUnionEntity()) {
-                with(ppi.getName(), fetchAll(ppi.getJavaType()));
-            } else if (!ppi.isCollection()) {
+            if (!ppi.isCollection()) {
                 with(ppi.getName(), false);
             }
         }
@@ -218,7 +214,11 @@ public class EntityRetrievalModel<T extends AbstractEntity<?>> extends AbstractR
         } else {
             if (isEntityType(propType)/* && !ppi.isId()*/) {
                 if (!skipEntities) {
-                    addEntityPropsModel(propName, fetch(propType));
+                    if (ppi.isUnionEntity()) {
+                        addEntityPropsModel(propName, fetchAll(propType));
+                    } else {
+                        addEntityPropsModel(propName, fetch(propType));
+                    }
                 } else if (ppi.affectsMapping()) {
                     addEntityPropsModel(propName, fetchIdOnly(propType));
                 }
