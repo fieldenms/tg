@@ -69,7 +69,7 @@ public class EntityRetrievalModel<T extends AbstractEntity<?>> extends AbstractR
             includeIdOly();
             break;
         case NONE:
-        	break;
+            break;
         default:
             throw new IllegalStateException("Unknown fetch category [" + originalFetch.getFetchCategory() + "]");
         }
@@ -102,11 +102,11 @@ public class EntityRetrievalModel<T extends AbstractEntity<?>> extends AbstractR
             // FIXME the following condition needs to be revisited as part of EQL 3 implementation
             final String name = ppi.getName();
             if (!ID.equals(name) &&
-                !(KEY.equals(name) && !ppi.affectsMapping()) &&
-                !ppi.isCollection() &&
-                !name.contains(".") &&
-                !containsProp(name) &&
-                (isSyntheticEntity || !ppi.isSynthetic())) {
+                    !(KEY.equals(name) && !ppi.affectsMapping()) &&
+                    !ppi.isCollection() &&
+                    !name.contains(".") &&
+                    !containsProp(name) &&
+                    (isSyntheticEntity || !ppi.isSynthetic())) {
                 getProxiedProps().add(name);
             }
         }
@@ -141,7 +141,7 @@ public class EntityRetrievalModel<T extends AbstractEntity<?>> extends AbstractR
                 with(ppi.getName(), skipEntities);
             }
         }
-        includeLastUpdatedByGroupOfProperties();        
+        includeLastUpdatedByGroupOfProperties();
     }
 
     private void includeLastUpdatedByGroupOfProperties() {
@@ -241,7 +241,7 @@ public class EntityRetrievalModel<T extends AbstractEntity<?>> extends AbstractR
         final Class<?> propType = getPropMetadata(propName).getJavaType();
 
         if (propType != fetchModel.getEntityType()) {
-            throw new EqlException(format(MSG_MISMATCH_BETWEEN_PROPERTY_AND_FETCH_MODEL_TYPES, propType, propName, getEntityType(), fetchModel.getEntityType())); 
+            throw new EqlException(format(MSG_MISMATCH_BETWEEN_PROPERTY_AND_FETCH_MODEL_TYPES, propType, propName, getEntityType(), fetchModel.getEntityType()));
         }
 
         addEntityPropsModel(propName, fetchModel);
