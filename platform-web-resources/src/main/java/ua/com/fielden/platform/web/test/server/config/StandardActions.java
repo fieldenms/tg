@@ -13,14 +13,14 @@ import ua.com.fielden.platform.entity.AbstractFunctionalEntityWithCentreContext;
 import ua.com.fielden.platform.entity.EntityDeleteAction;
 import ua.com.fielden.platform.entity.EntityEditAction;
 import ua.com.fielden.platform.entity.EntityExportAction;
+import ua.com.fielden.platform.entity.EntityNavigationAction;
 import ua.com.fielden.platform.entity.EntityNewAction;
-import ua.com.fielden.platform.entity.SequentialEntityEditAction;
 import ua.com.fielden.platform.reflection.TitlesDescsGetter;
 import ua.com.fielden.platform.web.PrefDim;
 import ua.com.fielden.platform.web.action.exceptions.ActionConfigurationException;
 import ua.com.fielden.platform.web.action.post.FileSaverPostAction;
+import ua.com.fielden.platform.web.action.pre.EntityNavigationPreAction;
 import ua.com.fielden.platform.web.action.pre.SequentialEditPreAction;
-import ua.com.fielden.platform.web.action.pre.SequentialOpenPreAction;
 import ua.com.fielden.platform.web.centre.CentreContext;
 import ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig;
 import ua.com.fielden.platform.web.centre.api.context.IEntityCentreContextSelectorDone;
@@ -150,7 +150,7 @@ public enum StandardActions {
         }
     },
 
-    SEQUENTIAL_OPEN_ACTION {
+    ENTITY_NAVIGATION_ACTION {
 
         @Override
         public EntityActionConfig mkAction(final Class<? extends AbstractEntity<?>> entityType) {
@@ -178,8 +178,8 @@ public enum StandardActions {
                 contextConfig = context().withCurrentEntity().withComputation((entity, context) -> entityType);
             }
 
-            return action(SequentialEntityEditAction.class).withContext(contextConfig.build()).
-                    preAction(new SequentialOpenPreAction(entityTitle)).
+            return action(EntityNavigationAction.class).withContext(contextConfig.build()).
+                    preAction(new EntityNavigationPreAction(entityTitle)).
                     icon("icons:done-all").
                     shortDesc(format("Open %s", entityTitle)).
                     longDesc(format("Open %s", entityTitle)).

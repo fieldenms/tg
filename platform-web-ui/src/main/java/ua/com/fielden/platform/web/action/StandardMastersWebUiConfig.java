@@ -21,10 +21,10 @@ import ua.com.fielden.platform.entity.EntityEditAction;
 import ua.com.fielden.platform.entity.EntityEditActionProducer;
 import ua.com.fielden.platform.entity.EntityExportAction;
 import ua.com.fielden.platform.entity.EntityExportActionProducer;
+import ua.com.fielden.platform.entity.EntityNavigationAction;
+import ua.com.fielden.platform.entity.EntityNavigationActionProducer;
 import ua.com.fielden.platform.entity.EntityNewAction;
 import ua.com.fielden.platform.entity.EntityNewActionProducer;
-import ua.com.fielden.platform.entity.SequentialEntityEditAction;
-import ua.com.fielden.platform.entity.SequentialEntityEditActionProducer;
 import ua.com.fielden.platform.web.PrefDim;
 import ua.com.fielden.platform.web.interfaces.ILayout.Device;
 import ua.com.fielden.platform.web.layout.api.impl.FlexLayoutConfig;
@@ -33,7 +33,7 @@ import ua.com.fielden.platform.web.view.master.api.IMaster;
 import ua.com.fielden.platform.web.view.master.api.actions.MasterActions;
 import ua.com.fielden.platform.web.view.master.api.impl.SimpleMasterBuilder;
 import ua.com.fielden.platform.web.view.master.api.with_master.impl.EntityManipulationMasterBuilder;
-import ua.com.fielden.platform.web.view.master.api.with_master.impl.SequentialEntityEditMaster;
+import ua.com.fielden.platform.web.view.master.api.with_master.impl.EntityNavigationMaster;
 import ua.com.fielden.platform.web.view.master.attachments.AttachmentsUploadActionMaster;
 
 /**
@@ -69,10 +69,10 @@ public class StandardMastersWebUiConfig {
                 injector);
     }
 
-    public static EntityMaster<SequentialEntityEditAction> createSequentialEntityMaster(final Injector injector) {
-        return new EntityMaster<>(SequentialEntityEditAction.class,
-                SequentialEntityEditActionProducer.class,
-                new SequentialEntityEditMaster(SequentialEntityEditAction.class, true),
+    public static EntityMaster<EntityNavigationAction> createEntityNavigationMaster(final Injector injector) {
+        return new EntityMaster<>(EntityNavigationAction.class,
+                EntityNavigationActionProducer.class,
+                new EntityNavigationMaster(EntityNavigationAction.class, true),
                 injector);
     }
 

@@ -9,11 +9,11 @@ import ua.com.fielden.platform.web.view.master.api.actions.pre.IPreAction;
  * @author TG Team
  *
  */
-public class SequentialOpenPreAction implements IPreAction {
+public class EntityNavigationPreAction implements IPreAction {
 
     private final String navigationType;
 
-    public SequentialOpenPreAction(final String navigationType) {
+    public EntityNavigationPreAction(final String navigationType) {
         this.navigationType = navigationType;
     }
 

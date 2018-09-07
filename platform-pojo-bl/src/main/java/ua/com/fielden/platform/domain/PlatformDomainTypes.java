@@ -14,7 +14,7 @@ import ua.com.fielden.platform.entity.EntityNewAction;
 import ua.com.fielden.platform.entity.SecurityMatrixInsertionPoint;
 import ua.com.fielden.platform.entity.SecurityMatrixSaveAction;
 import ua.com.fielden.platform.entity.SecurityTokenTreeNodeEntity;
-import ua.com.fielden.platform.entity.SequentialEntityEditAction;
+import ua.com.fielden.platform.entity.EntityNavigationAction;
 import ua.com.fielden.platform.entity.functional.centre.CentreContextHolder;
 import ua.com.fielden.platform.entity.functional.centre.SavingInfoHolder;
 import ua.com.fielden.platform.entity.functional.master.AcknowledgeWarnings;
@@ -116,7 +116,7 @@ public class PlatformDomainTypes {
         types.add(SecurityMatrixInsertionPoint.class);
         types.add(SecurityTokenTreeNodeEntity.class);
         types.add(SecurityMatrixSaveAction.class);
-        types.add(SequentialEntityEditAction.class);
+        types.add(EntityNavigationAction.class);
 
     }
 }

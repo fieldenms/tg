@@ -1,14 +1,14 @@
 package ua.com.fielden.platform.web.view.master.api.with_master.impl;
 
 import ua.com.fielden.platform.dom.InnerTextElement;
-import ua.com.fielden.platform.entity.SequentialEntityEditAction;
+import ua.com.fielden.platform.entity.EntityNavigationAction;
 import ua.com.fielden.platform.web.interfaces.IRenderable;
 
-public class SequentialEntityEditMaster extends EntityManipulationMaster<SequentialEntityEditAction> {
+public class EntityNavigationMaster extends EntityManipulationMaster<EntityNavigationAction> {
 
     private final IRenderable renderable;
 
-    public SequentialEntityEditMaster(final Class<SequentialEntityEditAction> entityType, final boolean shouldRefreshParentCentreAfterSave) {
+    public EntityNavigationMaster(final Class<EntityNavigationAction> entityType, final boolean shouldRefreshParentCentreAfterSave) {
         super(entityType, shouldRefreshParentCentreAfterSave);
         final String masterTemplate = super.render().render().toString().replace("//@master-is-ready-custom-code",
                 "             //Provide custom after load listener\n" +
