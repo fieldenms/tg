@@ -142,7 +142,7 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
                 this::processAfterSaveEvent,
                 this::assignBeforeSave,
                 this::findById,
-                this::count,
+                this::exists,
                 logger);
                 
     }
