@@ -91,6 +91,11 @@ public abstract class AbstractOpenCompoundMasterDao<T extends AbstractFunctional
 
     @Override
     public T save(final T entity) {
+        // if entity is a brand new not yet persisted instance then there can be no related one-2-many associations with it
+        if (!entity.getKey().isPersisted()) {
+            return entity;
+        }
+        // otherwise let's construct an EQL statement to check existence of one-2-many associations with entity 
         ISubsequentCompletedAndYielded<AbstractEntity<?>> queryPart = select().yield().val(1).as("#common_one#");
         for(final T3<String, Class<? extends AbstractEntity<?>>, BiFunction<IWhere0<? extends AbstractEntity<?>>, Object, ICompleted<? extends AbstractEntity<?>>>> pair: compoundMasterConfig) {
             queryPart = queryPart.yield().caseWhen().exists(pair._3.apply(select(pair._2).where(), entity.getKey()).model())
@@ -111,7 +116,7 @@ public abstract class AbstractOpenCompoundMasterDao<T extends AbstractFunctional
         parameters.stream().forEach(pair -> newPresence.put(pair._1, existEntity.get(pair._1)));
         entity.setEntityPresence(newPresence);
         entity.setCalculated(true);
-        return super.save(entity);
+        return entity;
     }
     
     @SafeVarargs
