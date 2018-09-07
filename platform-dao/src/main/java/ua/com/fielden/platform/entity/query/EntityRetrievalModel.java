@@ -193,9 +193,7 @@ public class EntityRetrievalModel<T extends AbstractEntity<?>> extends AbstractR
     }
 
     private void includeIdAndVersionOnly() {
-        if (isEntityType(getKeyType(getEntityType()))) {
-            with(ID, true);
-        } else if (isPersistedEntityType(getEntityType())) {
+        if (isPersistedEntityType(getEntityType())) {
             with(ID, true);
             with(VERSION, true);
             if (isActivatableEntityType(getEntityType())) {
@@ -203,6 +201,8 @@ public class EntityRetrievalModel<T extends AbstractEntity<?>> extends AbstractR
                 with(REF_COUNT, true);
             }
             includeLastUpdatedByGroupOfProperties();
+        } else if (isEntityType(getKeyType(getEntityType()))) {
+            with(ID, true);
         }
     }
 
