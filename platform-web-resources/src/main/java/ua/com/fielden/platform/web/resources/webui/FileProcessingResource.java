@@ -1,6 +1,8 @@
 package ua.com.fielden.platform.web.resources.webui;
 
 import static java.lang.String.format;
+import static org.apache.commons.lang.StringUtils.isEmpty;
+import static ua.com.fielden.platform.utils.EntityUtils.equalsEx;
 import static ua.com.fielden.platform.web.utils.WebUiResourceUtils.handleUndesiredExceptions;
 
 import java.io.IOException;
@@ -23,6 +25,7 @@ import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.entity.AbstractEntityWithInputStream;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.rx.observables.ProcessingProgressSubject;
+import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.web.interfaces.IDeviceProvider;
 import ua.com.fielden.platform.web.resources.RestServerUtil;
 import ua.com.fielden.platform.web.rx.eventsources.ProcessingProgressEventSource;
@@ -77,12 +80,12 @@ public class FileProcessingResource<T extends AbstractEntityWithInputStream<?>> 
         }
         
         this.origFileName = request.getHeaders().getFirstValue("origFileName");
-        if (StringUtils.isEmpty(origFileName)) {
+        if (isEmpty(origFileName)) {
             throw new IllegalArgumentException("origFileName is required");
         }
         
         this.mimeAsProvided = request.getHeaders().getFirstValue("mime");
-        if (StringUtils.isEmpty(this.mimeAsProvided)) {
+        if (isEmpty(this.mimeAsProvided)) {
             throw new IllegalArgumentException("File MIME type is missing.");
         }
         
@@ -125,9 +128,16 @@ public class FileProcessingResource<T extends AbstractEntityWithInputStream<?>> 
     private boolean isMediaTypeSupported(final MediaType mediaType) {
         // simply checking types.contains(mediaType) may not be sufficient as there could be something like IMAGE/*
         final String mime = getMime(mediaType);
-        return types.stream().anyMatch(mt -> mime.equals(mt.getName()));
+        return types.stream().anyMatch(mt -> matchMimeType(mt.getName(), mime));
     }
 
+    private boolean matchMimeType(final String mime1, final String mime2) {
+        final String[] mime1Parts = mime1.split("/");
+        final String[] mime2Parts = mime2.split("/");
+        final boolean anySubtype = "*".equals(mime1Parts[1]);
+        return equalsEx(mime1Parts[0], mime2Parts[0]) && (equalsEx(mime1Parts[1], mime2Parts[1]) || anySubtype); 
+    }
+    
     /**
      * Registers an event sourcing resource that sends file processing progress back to the client.
      * Instantiates an entity that is responsible for file processing and executes it (call method <code>save</code>).

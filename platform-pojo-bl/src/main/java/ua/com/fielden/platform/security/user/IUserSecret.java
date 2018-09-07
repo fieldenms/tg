@@ -24,5 +24,12 @@ public interface IUserSecret extends IEntityDao<UserSecret> {
     default String hashPasswd(final String passwd, final String salt) {
         throw new UnsupportedOperationException();
     }
+    
+    /**
+     * A convenient method for generation of new salt for cryptographic hashing.
+     *
+     * @return
+     */
+    String newSalt();
 
 }

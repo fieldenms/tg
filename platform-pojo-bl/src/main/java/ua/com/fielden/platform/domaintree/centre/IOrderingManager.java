@@ -2,8 +2,8 @@ package ua.com.fielden.platform.domaintree.centre;
 
 import java.util.List;
 
-import ua.com.fielden.platform.domaintree.IDomainTreeRepresentation.IPropertyStateListener;
 import ua.com.fielden.platform.domaintree.centre.IOrderingRepresentation.Ordering;
+import ua.com.fielden.platform.domaintree.exceptions.DomainTreeException;
 import ua.com.fielden.platform.utils.Pair;
 
 /**
@@ -43,42 +43,4 @@ public interface IOrderingManager {
      * @return -- a result tick representation
      */
     IOrderingManager toggleOrdering(final Class<?> root, final String property);
-
-    /**
-     * A post-successful listener for property ordering.
-     * 
-     * @author TG Team
-     * 
-     */
-    public interface IPropertyOrderingListener extends IPropertyStateListener<List<Pair<String, Ordering>>> {
-        /**
-         * @param newOrderedProperties
-         *            -- a full new list of ordered properties after the change of the ordering at property [root, property].
-         */
-        @Override
-        void propertyStateChanged(final Class<?> root, final String property, final List<Pair<String, Ordering>> newOrderedProperties, final List<Pair<String, Ordering>> oldState);
-    }
-
-    /**
-     * Adds a {@link IPropertyOrderingListener} listener.
-     * 
-     * @param listener
-     * @return
-     */
-    void addPropertyOrderingListener(final IPropertyOrderingListener listener);
-
-    /**
-     * Adds a weak {@link IPropertyOrderingListener} listener.
-     * 
-     * @param listener
-     */
-    void addWeakPropertyOrderingListener(final IPropertyOrderingListener listener);
-
-    /**
-     * Removes a {@link IPropertyOrderingListener} listener.
-     * 
-     * @param listener
-     * @return
-     */
-    void removePropertyOrderingListener(final IPropertyOrderingListener listener);
 }

@@ -138,7 +138,7 @@ public final class Reflector {
     }
 
 
-    private static synchronized Method getDeclaredMethod(final Class<?> klass, final String methodName, final Class<?>... arguments) {
+    private static Method getDeclaredMethod(final Class<?> klass, final String methodName, final Class<?>... arguments) {
         final String methodKey = format("%s(%s)", methodName, Stream.of(arguments).map(Class::getName).collect(joining(", ")));
         final Cache<String, Method> methodOrException;
         try {
