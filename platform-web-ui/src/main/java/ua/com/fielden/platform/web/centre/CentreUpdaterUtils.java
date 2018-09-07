@@ -1,12 +1,10 @@
 package ua.com.fielden.platform.web.centre;
 
 import static java.lang.String.format;
-import static ua.com.fielden.platform.domaintree.impl.AbstractDomainTree.validateRootType;
+import static java.util.Optional.ofNullable;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
-import static ua.com.fielden.platform.reflection.AnnotationReflector.getKeyType;
 import static ua.com.fielden.platform.utils.CollectionUtil.setOf;
-import static ua.com.fielden.platform.utils.EntityUtils.deepCopy;
 import static ua.com.fielden.platform.utils.EntityUtils.fetchWithKeyAndDesc;
 
 import java.util.List;
@@ -17,11 +15,8 @@ import java.util.Set;
 import org.apache.log4j.Logger;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.domaintree.centre.impl.CentreDomainTreeManagerAndEnhancer;
-import ua.com.fielden.platform.domaintree.exceptions.DomainTreeException;
 import ua.com.fielden.platform.domaintree.impl.CalculatedPropertyInfo;
 import ua.com.fielden.platform.domaintree.impl.CustomProperty;
-import ua.com.fielden.platform.entity.AbstractBatchAction;
-import ua.com.fielden.platform.entity.annotation.EntityType;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ICompoundCondition0;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.security.user.User;
@@ -48,109 +43,75 @@ public class CentreUpdaterUtils extends CentreUpdater {
     }
     
     ///////////////////////////// CENTRE CREATION /////////////////////////////
-    protected static ICentreDomainTreeManagerAndEnhancer createDefaultCentre(
-            final Class<?> menuItemType,
-            final IWebUiConfig webUiConfig) {
-        final EntityCentre entityCentre = webUiConfig.getCentres().get(menuItemType);
+    /**
+     * Creates default centre for concrete menu item type. Looks for Centre DSL config in {@link IWebUiConfig}.
+     * 
+     * @param menuItemType
+     * @param webUiConfig
+     * @return
+     */
+    protected static ICentreDomainTreeManagerAndEnhancer createDefaultCentre(final Class<?> menuItemType, final IWebUiConfig webUiConfig) {
+        final EntityCentre<?> entityCentre = webUiConfig.getCentres().get(menuItemType);
         if (entityCentre != null) {
             return entityCentre.createDefaultCentre();
         } else {
-            throw errorf("EntityCentre instance could not be found for [%s] menu item type.", menuItemType.getSimpleName());
+            throw new CentreUpdaterException(format("EntityCentre instance could not be found for [%s] menu item type.", menuItemType.getSimpleName()));
         }
     }
     
+    /**
+     * Creates empty centre manager with calculated and custom properties.
+     * 
+     * @param root
+     * @param serialiser
+     * @param calculatedAndCustomProperties
+     * @param miType
+     * @return
+     */
     public static ICentreDomainTreeManagerAndEnhancer createEmptyCentre(final Class<?> root, final ISerialiser serialiser, final T2<Map<Class<?>, Set<CalculatedPropertyInfo>>, Map<Class<?>, List<CustomProperty>>> calculatedAndCustomProperties, final Class<? extends MiWithConfigurationSupport<?>> miType) {
-        // TODO next line of code must take in to account that the menu item is for association centre.
         final CentreDomainTreeManagerAndEnhancer centre = new CentreDomainTreeManagerAndEnhancer(serialiser, setOf(root), calculatedAndCustomProperties, miType);
         // initialise checkedProperties tree to make it more predictable in getting meta-info from "checkedProperties"
         centre.getFirstTick().checkedProperties(root);
         centre.getSecondTick().checkedProperties(root);
-        
         return centre;
     }
     
-    ///////////////////////////// ERROR REPORTING /////////////////////////////
+    ///////////////////////////// CENTRE MAINTENANCE /////////////////////////////
     /**
-     * Logs and returns an {@link DomainTreeException} error with specified message.
-     *
-     * @param message
-     */
-    private static DomainTreeException error(final String message) {
-        logger.error(message);
-        return new DomainTreeException(message); // TODO migrate to CentreUpdaterException? don't forget to adjust the usage of DomainTreeException.
-    }
-    
-    private static DomainTreeException errorf(final String message, final Object... args) {
-        return error(format(message, args));
-    }
-    
-    ///////////////////////////// VALIDATION /////////////////////////////
-    /**
-     * Validates the type of menu item (a part of centre key) to be actually "menu item type".
-     *
+     * Retrieves entity centre manager instance from database if there is any.
+     * Restores it from binary representation.
+     * 
      * @param menuItemType
-     */
-    private static void validateMenuItemType(final Class<?> menuItemType) {
-        try {
-            final Class<?> parentClassForMenuItems = ClassLoader.getSystemClassLoader().loadClass("ua.com.fielden.platform.ui.menu.MiWithConfigurationSupport");
-            if (!parentClassForMenuItems.isAssignableFrom(menuItemType)) {
-                throw errorf("The menu item type %s is not 'MiWithConfigurationSupport' descendant, which should be a parent type for menu items for all entity centres.", menuItemType.getSimpleName());
-            }
-        } catch (final ClassNotFoundException e) {
-            throw errorf("There are no loaded class 'MiWithConfigurationSupport', which should be a parent type for menu items for entity centres. [%s]", e.getMessage());
-        }
-    }
-    
-    private static Class<?> validateMenuItemTypeRootType(final Class<?> menuItemType) {
-        final EntityType etAnnotation = menuItemType.getAnnotation(EntityType.class);
-        if (etAnnotation == null || etAnnotation.value() == null) {
-            throw errorf("The menu item type %s has no 'EntityType' annotation, which is necessary to specify the root type of the centre.", menuItemType.getSimpleName());
-        }
-        final Class<?> root = etAnnotation.value();
-        validateRootType(root);
-        return getValidatedRootIfAssociation(root);
-    }
-    
-    /**
-     * Returns the key type of the entity if it is a association batch action entity.
-     *
-     * @param value
+     * @param user
+     * @param name
+     * @param serialiser
+     * @param webUiConfig
+     * @param eccCompanion
      * @return
      */
-    private static Class<?> getValidatedRootIfAssociation(final Class<?> value) {
-        if (AbstractBatchAction.class.isAssignableFrom(value)) {
-            final Class<?> root = getKeyType(value);
-            validateRootType(root);
-            return root;
-        }
-        return value;
-    }
-    
-    ///////////////////////////// CENTRE MAINTENANCE /////////////////////////////
-    public static Optional<ICentreDomainTreeManagerAndEnhancer> initEntityCentreManager(
+    public static Optional<ICentreDomainTreeManagerAndEnhancer> retrieveEntityCentreManager(
             final Class<?> menuItemType,
             final User user,
             final String name,
             final ISerialiser serialiser,
             final IWebUiConfig webUiConfig,
             final IEntityCentreConfig eccCompanion) {
-        final String loggingSuffix = format("for type [%s] with name [%s] for user [%s]", menuItemType.getSimpleName(), name, user);
-        
-        validateMenuItemType(menuItemType);
-        validateMenuItemTypeRootType(menuItemType);
-        
-        final EntityResultQueryModel<EntityCentreConfig> model = modelFor(user, menuItemType.getName(), name);
-        
-        final List<EntityCentreConfig> firstTwoConfigs = eccCompanion.getFirstEntities(from(model).model(), 2);
-        final Optional<ICentreDomainTreeManagerAndEnhancer> centre;
-        if (firstTwoConfigs.size() > 1) { 
-            throw errorf("There are more than one entity-centre instance %s.", loggingSuffix); // TODO return warning? collect unfortunate garbage?
-        } else {
-            centre = firstTwoConfigs.stream().findAny().map(ecc -> restoreCentreManagerFrom(ecc, serialiser, menuItemType, webUiConfig, eccCompanion, loggingSuffix));
-        }
-        return centre;
+        return ofNullable(eccCompanion.getEntity(from(modelFor(user, menuItemType.getName(), name)).model()))
+                .map(ecc -> restoreCentreManagerFrom(ecc, serialiser, menuItemType, webUiConfig, eccCompanion, format("for type [%s] with name [%s] for user [%s]", menuItemType.getSimpleName(), name, user)));
     }
     
+    /**
+     * Restores centre manager from {@link EntityCentreConfig} instance's binary data.
+     * In case of failure, initialises new empty instance, saves it and returns as a result.
+     * 
+     * @param ecc
+     * @param serialiser
+     * @param menuItemType
+     * @param webUiConfig
+     * @param eccCompanion
+     * @param loggingSuffix
+     * @return
+     */
     private static ICentreDomainTreeManagerAndEnhancer restoreCentreManagerFrom(
             // params for actual deserialisation
             final EntityCentreConfig ecc,
@@ -162,8 +123,7 @@ public class CentreUpdaterUtils extends CentreUpdater {
             // params for: deserialisation failed -- logging
             final String loggingSuffix) {
         try {
-            final CentreDomainTreeManagerAndEnhancer result = serialiser.deserialise(ecc.getConfigBody(), CentreDomainTreeManagerAndEnhancer.class);
-            return result;
+            return serialiser.deserialise(ecc.getConfigBody(), CentreDomainTreeManagerAndEnhancer.class);
         } catch (final Exception deserialisationException) {
             logger.error("============================================ CENTRE DESERIALISATION HAS FAILED ============================================");
             logger.error(format("Unable to deserialise a entity-centre instance %s. The exception is the following: ", loggingSuffix), deserialisationException);
@@ -171,14 +131,17 @@ public class CentreUpdaterUtils extends CentreUpdater {
             final ICentreDomainTreeManagerAndEnhancer newCentreManager = createDefaultCentre(menuItemType, webUiConfig);
             logger.error(format("Started saving of default entity-centre configuration %s.", loggingSuffix));
             ecc.setConfigBody(serialiser.serialise(newCentreManager));
-            eccCompanion.save(ecc);
+            eccCompanion.quickSave(ecc);
             logger.error(format("Ended creation and saving of default entity-centre configuration %s. For now it can be used.", loggingSuffix));
             logger.error("============================================ CENTRE DESERIALISATION HAS FAILED [END] ============================================");
             return newCentreManager;
         }
     }
     
-    public static ICentreDomainTreeManagerAndEnhancer saveAsEntityCentreManager(
+    /**
+     * Saves new {@link EntityCentreConfig} instance with serialised centre manager inside.
+     */
+    public static ICentreDomainTreeManagerAndEnhancer saveNewEntityCentreManager(
             final ICentreDomainTreeManagerAndEnhancer centre,
             final Class<?> menuItemType,
             final User user,
@@ -187,13 +150,9 @@ public class CentreUpdaterUtils extends CentreUpdater {
             final ISerialiser serialiser,
             final IEntityCentreConfig eccCompanion,
             final IMainMenuItem mmiCompanion) {
-        validateMenuItemType(menuItemType);
-        validateMenuItemTypeRootType(menuItemType);
-        
-        final String menuItemTypeName = menuItemType.getName();
-        final MainMenuItem menuItem = mmiCompanion.findByKeyOptional(menuItemTypeName).orElseGet(() -> {
+        final MainMenuItem menuItem = mmiCompanion.findByKeyOptional(menuItemType.getName()).orElseGet(() -> {
             final MainMenuItem newMainMenuItem = mmiCompanion.new_();
-            newMainMenuItem.setKey(menuItemTypeName);
+            newMainMenuItem.setKey(menuItemType.getName());
             return mmiCompanion.save(newMainMenuItem);
         });
         final EntityCentreConfig ecc = eccCompanion.new_();
@@ -202,10 +161,14 @@ public class CentreUpdaterUtils extends CentreUpdater {
         ecc.setMenuItem(menuItem);
         ecc.setDesc(newDesc);
         ecc.setConfigBody(serialiser.serialise(centre));
-        eccCompanion.quickSave(ecc); // please note that CommonEntityDao exception will be thrown in case where such ecc instance already exists // TODO check quickSave usage!
+        eccCompanion.quickSave(ecc);
         return centre;
     }
     
+    /**
+     * Overrides existing {@link EntityCentreConfig} instance with new serialised centre manager.
+     * Otherwise, in case where there is no such instance in database, creates and saves new {@link EntityCentreConfig} instance with serialised centre manager inside.
+     */
     public static ICentreDomainTreeManagerAndEnhancer saveEntityCentreManager(
             final ICentreDomainTreeManagerAndEnhancer centre,
             final Class<?> menuItemType,
@@ -215,53 +178,28 @@ public class CentreUpdaterUtils extends CentreUpdater {
             final ISerialiser serialiser,
             final IEntityCentreConfig eccCompanion,
             final IMainMenuItem mmiCompanion) {
-        final String loggingSuffix = format("for type [%s] with name [%s] for user [%s]", menuItemType.getSimpleName(), name, user);
-        validateMenuItemType(menuItemType);
-        validateMenuItemTypeRootType(menuItemType);
-        
-        // save an instance of EntityCentreConfig with overridden body, which should exist in DB
-        final EntityResultQueryModel<EntityCentreConfig> model = modelFor(user, menuItemType.getName(), name);
-        
-        final List<EntityCentreConfig> firstTwoConfigs = eccCompanion.getFirstEntities(from(model).model(), 2);
-        if (firstTwoConfigs.size() > 1) { 
-            throw errorf("There are more than one entity-centre instance %s.", loggingSuffix); // TODO return warning? collect unfortunate garbage?
-        } else if (firstTwoConfigs.size() < 1) { 
-            final String menuItemTypeName = menuItemType.getName();
-            final MainMenuItem menuItem = mmiCompanion.findByKeyOptional(menuItemTypeName).orElseGet(() -> {
-                final MainMenuItem newMainMenuItem = mmiCompanion.new_();
-                newMainMenuItem.setKey(menuItemTypeName);
-                return mmiCompanion.save(newMainMenuItem);
-            });
-            final EntityCentreConfig ecc = eccCompanion.new_();
-            ecc.setOwner(user);
-            ecc.setTitle(name);
-            ecc.setMenuItem(menuItem);
-            ecc.setDesc(newDesc);
-            ecc.setConfigBody(serialiser.serialise(centre));
-            eccCompanion.quickSave(ecc); // please note that CommonEntityDao exception will be thrown in case where such ecc instance already exists // TODO check quickSave usage!
+        final EntityCentreConfig config = eccCompanion.getEntity(from(modelFor(user, menuItemType.getName(), name)).model());
+        if (config == null) {
+            saveNewEntityCentreManager(centre, menuItemType, user, name, newDesc, serialiser, eccCompanion, mmiCompanion);
         } else {
-            final EntityCentreConfig ecc = firstTwoConfigs.get(0);
             if (newDesc != null) {
-                ecc.setDesc(newDesc);
+                config.setDesc(newDesc);
             }
-            ecc.setConfigBody(serialiser.serialise(centre));
-            eccCompanion.quickSave(ecc); // TODO check quickSave usage!
+            config.setConfigBody(serialiser.serialise(centre));
+            eccCompanion.quickSave(config);
         }
         return centre;
     }
     
     /**
-     * A copy method for entity centre that copies also "transient" stuff like currentAnalyses and freezedAnalyses. It has been done to take care about copying entity centre with
-     * some changed / freezed analyses (all that changes will be promoted to copies).
-     *
-     * @param centre
+     * Finds {@link EntityCentreConfig} instance to be sufficient for changing 'preferred' property and 'title' / 'desc'.
+     * 
+     * @param menuItemType
+     * @param user
+     * @param name
+     * @param eccCompanion
      * @return
      */
-    protected static ICentreDomainTreeManagerAndEnhancer copyCentre(final ICentreDomainTreeManagerAndEnhancer centre, final ISerialiser serialiser) {
-        final ICentreDomainTreeManagerAndEnhancer copy = deepCopy(centre, serialiser);
-        return copy;
-    }
-    
     protected static EntityCentreConfig findConfig(final Class<?> menuItemType, final User user, final String name, final IEntityCentreConfig eccCompanion) {
         return eccCompanion.getEntity(
             from(modelFor(user, menuItemType.getName(), name)).with(fetchWithKeyAndDesc(EntityCentreConfig.class, true).with("preferred").fetchModel()).model()

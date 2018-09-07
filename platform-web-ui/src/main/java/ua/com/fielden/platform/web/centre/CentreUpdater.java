@@ -30,15 +30,15 @@ import static ua.com.fielden.platform.error.Result.failuref;
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.determinePropertyType;
 import static ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader.isGenerated;
 import static ua.com.fielden.platform.serialisation.api.SerialiserEngines.KRYO;
+import static ua.com.fielden.platform.utils.EntityUtils.deepCopy;
 import static ua.com.fielden.platform.utils.EntityUtils.equalsEx;
 import static ua.com.fielden.platform.utils.EntityUtils.fetchWithKeyAndDesc;
 import static ua.com.fielden.platform.utils.EntityUtils.isDate;
 import static ua.com.fielden.platform.utils.EntityUtils.isString;
-import static ua.com.fielden.platform.web.centre.CentreUpdaterUtils.copyCentre;
 import static ua.com.fielden.platform.web.centre.CentreUpdaterUtils.createDefaultCentre;
 import static ua.com.fielden.platform.web.centre.CentreUpdaterUtils.findConfig;
-import static ua.com.fielden.platform.web.centre.CentreUpdaterUtils.initEntityCentreManager;
-import static ua.com.fielden.platform.web.centre.CentreUpdaterUtils.saveAsEntityCentreManager;
+import static ua.com.fielden.platform.web.centre.CentreUpdaterUtils.retrieveEntityCentreManager;
+import static ua.com.fielden.platform.web.centre.CentreUpdaterUtils.saveNewEntityCentreManager;
 import static ua.com.fielden.platform.web.centre.CentreUpdaterUtils.saveEntityCentreManager;
 import static ua.com.fielden.platform.web.centre.WebApiUtils.checkedPropertiesWithoutSummaries;
 import static ua.com.fielden.platform.web.interfaces.DeviceProfile.DESKTOP;
@@ -135,7 +135,7 @@ public class CentreUpdater {
      * <p>
      * Centre on its own is never saved, but it is used to create 'differences centre' (when committing is performed).
      *
-     * @param gdtm
+     * @param user
      * @param miType
      * @param name -- surrogate name of the centre (fresh, previouslyRun etc.);
      * @param saveAsName -- user-defined title of 'saveAs' centre configuration or empty {@link Optional} for unnamed centre
@@ -177,7 +177,7 @@ public class CentreUpdater {
     /**
      * Changes configuration title to <code>newTitle</code> and description to <code>newDesc</code> and saves these changes to persistent storage.
      * 
-     * @param gdtm
+     * @param user
      * @param miType
      * @param saveAsName -- user-defined title of 'saveAs' centre configuration or empty {@link Optional} for unnamed centre
      * @param device -- device profile (mobile or desktop) for which the centre is accessed / maintained
@@ -250,12 +250,12 @@ public class CentreUpdater {
      * <p>
      * Please note that this operation is immutable in regard to the surrogate centre instance being copied.
      *
-     * @param gdtm
+     * @param user
      * @param miType
      * @param name -- surrogate name of the centre (fresh, previouslyRun etc.); can be {@link CentreUpdater#deviceSpecific(String, DeviceProfile)}.
      * @param saveAsName -- user-defined title of 'saveAs' centre configuration or empty {@link Optional} for unnamed centre
      * @param device -- device profile (mobile or desktop) for which the centre is accessed / maintained
-     * @param centre
+     * @param centre -- the centre manager to commit
      * @param newDesc -- new description to be saved into persistent storage
      */
     public static ICentreDomainTreeManagerAndEnhancer commitCentre(
@@ -377,6 +377,7 @@ public class CentreUpdater {
      * 
      * @param user
      * @param miType
+     * @param saveAsName
      * @param device
      * @return
      */
@@ -519,8 +520,10 @@ public class CentreUpdater {
      * <p>
      * If no 'differences centre' exists -- the following steps are performed:
      * <p>
-     * 1. make sure that 'default centre' exists in gdtm (with already applied Web UI default values!);<br>
-     * 2. make saveAs from 'default centre' which will be 'diff centre' (this promotes the empty diff to the storage!)<br>
+     * 1. creates user-specific 'default centre';<br>
+     * 2. saves 'default centre' as 'empty diff centre'<br>
+     * <p>
+     * In case of non-base user the diff is initialised from base user's corresponding SAVED_CENTRE_NAMEd diff centre.
      *
      * @param miType
      * @param deviceSpecificName -- surrogate name of the centre (fresh, previouslyRun etc.); can be {@link CentreUpdater#deviceSpecific(String, DeviceProfile)}.
@@ -548,7 +551,7 @@ public class CentreUpdater {
         // WILL BE UPDATED IN EVERY CALL OF updateDifferencesCentre!
         
         // init (or update) diff centre from persistent storage if exists
-        final Optional<ICentreDomainTreeManagerAndEnhancer> centre = initEntityCentreManager(miType, user, deviceSpecificDiffName, serialiser, webUiConfig, eccCompanion);
+        final Optional<ICentreDomainTreeManagerAndEnhancer> centre = retrieveEntityCentreManager(miType, user, deviceSpecificDiffName, serialiser, webUiConfig, eccCompanion);
         if (centre.isPresent()) {
             resultantDiffCentre = centre.get();
         } else {
@@ -559,7 +562,7 @@ public class CentreUpdater {
                 // diff centre does not exist in persistent storage yet -- initialise EMPTY diff (there potentially can be some values from 'default centre',
                 //   but diff centre will be empty disregarding that fact -- no properties were marked as changed; but initialisation from 'default centre' is important --
                 //   this makes diff centre nicely synchronised with Web UI default values)
-                resultantDiffCentre = saveAsEntityCentreManager(defaultCentre, miType, user, deviceSpecificDiffName, null, serialiser, eccCompanion, mmiCompanion);
+                resultantDiffCentre = saveNewEntityCentreManager(defaultCentre, miType, user, deviceSpecificDiffName, null, serialiser, eccCompanion, mmiCompanion);
             } else { // non-base user
                 // diff centre does not exist in persistent storage yet -- create a diff by comparing basedOnCentre (configuration created by base user) and default centre
                 final User baseUser = beginBaseUserOperations(userProvider, user, userCompanion);
@@ -571,7 +574,7 @@ public class CentreUpdater {
                 endBaseUserOperations(user, userProvider);
                 
                 // promotes diff to local cache and saves it into persistent storage
-                resultantDiffCentre = saveAsEntityCentreManager(differencesCentre, miType, user, deviceSpecificDiffName, upstreamDesc, serialiser, eccCompanion, mmiCompanion);
+                resultantDiffCentre = saveNewEntityCentreManager(differencesCentre, miType, user, deviceSpecificDiffName, upstreamDesc, serialiser, eccCompanion, mmiCompanion);
             }
         }
         return resultantDiffCentre;
@@ -636,8 +639,8 @@ public class CentreUpdater {
      * Returns the centre from which the specified centre is derived from. Parameters <code>saveAsName</code>, <code>device</code> and current user (<code>gdtm.getUserProvider().getUser()</code>) identify the centre for which
      * base centre is looking for.
      * <p>
-     * For non-base user the base centre is identified as SAVED_CENTRE_NAME version of <code>gdtm.basedOnManager()</code>'s centre of the same <code>saveAsName</code>. 
-     * For base user the base centre is identified as <code>gdtm.basedOnManager()</code>'s <code>getDefaultCentre()</code>. 
+     * For non-base user the base centre is identified as SAVED_CENTRE_NAME version of the centre of the same <code>saveAsName</code> configured by <code>user</code>'s base user. 
+     * For base user the base centre is identified as <code>getDefaultCentre()</code>. 
      *
      * @param user
      * @param miType
@@ -835,7 +838,7 @@ public class CentreUpdater {
      * @return
      */
     private static ICentreDomainTreeManagerAndEnhancer createDifferencesCentre(final ICentreDomainTreeManagerAndEnhancer centre, final ICentreDomainTreeManagerAndEnhancer originalCentre, final Class<AbstractEntity<?>> root, final ISerialiser serialiser) {
-        final ICentreDomainTreeManagerAndEnhancer differencesCentre = copyCentre(centre, serialiser);
+        final ICentreDomainTreeManagerAndEnhancer differencesCentre = deepCopy(centre, serialiser);
         
         for (final String property : differencesCentre.getFirstTick().checkedProperties(root)) {
             if (!isPlaceholder(property)) {

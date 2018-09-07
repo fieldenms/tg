@@ -3,6 +3,7 @@ package ua.com.fielden.platform.web.centre;
 import static java.lang.String.format;
 import static java.util.Optional.empty;
 import static java.util.stream.Collectors.toSet;
+import static ua.com.fielden.platform.domaintree.impl.AbstractDomainTree.validateRootType;
 import static ua.com.fielden.platform.domaintree.impl.CalculatedProperty.generateNameFrom;
 import static ua.com.fielden.platform.domaintree.impl.DomainTreeEnhancer.addCustomProperty;
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.determinePropertyType;
@@ -62,6 +63,7 @@ import ua.com.fielden.platform.domaintree.impl.CalculatedProperty;
 import ua.com.fielden.platform.domaintree.impl.CalculatedPropertyInfo;
 import ua.com.fielden.platform.domaintree.impl.CustomProperty;
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.annotation.EntityType;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.entity.fetch.IFetchProvider;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
@@ -82,6 +84,7 @@ import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
 import ua.com.fielden.platform.utils.ResourceLoader;
 import ua.com.fielden.platform.web.app.IWebUiConfig;
+import ua.com.fielden.platform.web.app.exceptions.WebUiBuilderException;
 import ua.com.fielden.platform.web.centre.api.EntityCentreConfig;
 import ua.com.fielden.platform.web.centre.api.EntityCentreConfig.OrderDirection;
 import ua.com.fielden.platform.web.centre.api.EntityCentreConfig.ResultSetProp;
@@ -226,6 +229,8 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
         this.dslDefaultConfig = dslDefaultConfig;
         
         this.injector = injector;
+        
+        validateMenuItemTypeRootType(miType);
         this.miType = miType;
         this.entityType = EntityResourceUtils.getEntityType(miType);
         this.coFinder = this.injector.getInstance(ICompanionObjectFinder.class);
@@ -238,7 +243,21 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
         mmiCompanion = coFinder.find(MainMenuItem.class);
         userCompanion = coFinder.find(User.class);
     }
-
+    
+    /**
+     * Validates root type corresponding to <code>menuItemType</code>.
+     *
+     * @param menuItemType
+     */
+    private static void validateMenuItemTypeRootType(final Class<? extends MiWithConfigurationSupport<?>> miType) {
+        final EntityType etAnnotation = miType.getAnnotation(EntityType.class);
+        if (etAnnotation == null || etAnnotation.value() == null) {
+            throw new WebUiBuilderException(format("The menu item type %s has no 'EntityType' annotation, which is necessary to specify the root type of the centre.", miType.getSimpleName()));
+        }
+        final Class<?> root = etAnnotation.value();
+        validateRootType(root);
+    }
+    
     /**
      * Generates default centre from DSL config and postCentreCreated callback (user unspecific).
      *
