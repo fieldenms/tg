@@ -31,7 +31,7 @@ public class UserAndRoleAssociationDao extends CommonEntityDao<UserAndRoleAssoci
     @Override
     @SessionRequired
     public void removeAssociation(final Set<UserAndRoleAssociation> associations) {
-        createQueryByKeyFor(getEntityType(), getKeyType(), associations).map(query -> batchDelete(query));
+        createQueryByKeyFor(getDbVersion(), getEntityType(), getKeyType(), associations).map(this::batchDelete);
     }
     
     @Override
