@@ -49,6 +49,7 @@ import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.entity.fetch.FetchModelReconstructor;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
 import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
+import ua.com.fielden.platform.entity.query.DbVersion;
 import ua.com.fielden.platform.entity.query.EntityAggregates;
 import ua.com.fielden.platform.entity.query.EntityFetcher;
 import ua.com.fielden.platform.entity.query.QueryExecutionContext;
@@ -74,6 +75,7 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
 
     private final Supplier<Session> session;
     private final Supplier<String> transactionGuid;
+    private final Supplier<DbVersion> dbVersion;
     
     private final Class<T> entityType;
     private final Class<? extends Comparable<?>> keyType;
@@ -88,7 +90,7 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
     private final Consumer<MetaProperty<?>> assignBeforeSave;
 
     private final BiFunction<Long, fetch<T>, T> findById;
-    private final Function<EntityResultQueryModel<T>, Integer> kount;
+    private final Function<EntityResultQueryModel<T>, Boolean> entityExists;
 
     private Boolean targetEntityTypeHasValidateOverridden;
     
@@ -97,6 +99,7 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
     public PersistentEntitySaver(
             final Supplier<Session> session,
             final Supplier<String> transactionGuid,
+            final Supplier<DbVersion> dbVersion,
             final Class<T> entityType,
             final Class<? extends Comparable<?>> keyType,
             final Supplier<User> user,
@@ -108,11 +111,11 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
             final BiConsumer<T, List<String>> processAfterSaveEvent,
             final Consumer<MetaProperty<?>> assignBeforeSave,
             final BiFunction<Long, fetch<T>, T> findById,
-            final Function<EntityResultQueryModel<T>, Integer> count,
-            final Logger logger
-            ) {
+            final Function<EntityResultQueryModel<T>, Boolean> entityExists,
+            final Logger logger) {
         this.session = session;
         this.transactionGuid = transactionGuid;
+        this.dbVersion = dbVersion;
         this.entityType = entityType;
         this.keyType = keyType;
         this.user = user;
@@ -126,7 +129,7 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
         this.assignBeforeSave = assignBeforeSave;
         
         this.findById = findById;
-        this.kount = count;
+        this.entityExists = entityExists;
         this.logger = logger;
     }
     
@@ -144,10 +147,10 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
         } else if (!entity.isInstrumented()) {
             throw new EntityCompanionException(format("Uninstrumented entity of type [%s] cannot be saved.", entityType.getName()));
         } else if (!entity.isDirty() && validateEntity(entity).isSuccessful()) {
-            logger.debug(format("Entity [%s] is not dirty (ID = %s). Saving is skipped. Entity refetched.", entity, entity.getId()));
+            //logger.debug(format("Entity [%s] is not dirty (ID = %s). Saving is skipped. Entity refetched.", entity, entity.getId()));
             return skipRefetching.get() ? entity : findById.apply(entity.getId(), FetchModelReconstructor.reconstruct(entity));
         }
-        logger.debug(format("Start saving entity %s (ID = %s)", entity, entity.getId()));
+        // logger.debug(format("Start saving entity %s (ID = %s)", entity, entity.getId())); is taking too much time for many saves
 
         // need to capture names of dirty properties before the actual saving takes place and makes all properties not dirty
         // this is needed for executing after save event handler
@@ -169,7 +172,7 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
                 resultantEntity = saveModifiedEntity(entity);
             }
         } finally {
-            logger.debug("Finished saving entity " + entity + " (ID = " + entity.getId() + ")");
+            //logger.debug("Finished saving entity " + entity + " (ID = " + entity.getId() + ")");
         }
 
         // this call never throws any exceptions
@@ -220,7 +223,7 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
         // which pertain to required and marked as assign before save properties that must have values
         checkDirtyMarkedForAssignmentBeforeSaveProperties(entity);
         // let's make sure that entity is not a duplicate
-        final AggregatedResultQueryModel model = select(createQueryByKey(entityType, keyType, isFilterable.get(), entity.getKey())).yield().prop(AbstractEntity.ID).as(AbstractEntity.ID).modelAsAggregate();
+        final AggregatedResultQueryModel model = select(createQueryByKey(dbVersion.get(), entityType, keyType, isFilterable.get(), entity.getKey())).yield().prop(AbstractEntity.ID).as(AbstractEntity.ID).modelAsAggregate();
         final QueryExecutionContext queryExecutionContext = newQueryExecutionContext.get();
         final List<EntityAggregates> ids = new EntityFetcher(queryExecutionContext).getEntities(from(model).lightweight().model());
         final int count = ids.size();
@@ -441,8 +444,7 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
     private T saveNewEntity(final T entity) {
         // let's make sure that entity is not a duplicate
         
-        final Integer count = kount.apply(createQueryByKey(entityType, keyType, isFilterable.get(), entity.getKey()));
-        if (count > 0) {
+        if (entityExists.apply(createQueryByKey(dbVersion.get(), entityType, keyType, isFilterable.get(), entity.getKey()))) {
             throw new EntityAlreadyExists(format("%s [%s] already exists.", TitlesDescsGetter.getEntityTitleAndDesc(entity.getType()).getKey(), entity));
         }
 

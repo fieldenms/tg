@@ -1,6 +1,5 @@
 package ua.com.fielden.platform.domaintree.impl;
 
-import java.lang.ref.WeakReference;
 import java.lang.reflect.Field;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
@@ -10,12 +9,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
-import javax.swing.event.EventListenerList;
-
 import ua.com.fielden.platform.domaintree.IDomainTreeManager;
-import ua.com.fielden.platform.domaintree.IDomainTreeManager.ITickManager.IPropertyCheckingListener;
 import ua.com.fielden.platform.domaintree.IDomainTreeRepresentation;
-import ua.com.fielden.platform.domaintree.IDomainTreeRepresentation.IPropertyListener;
 import ua.com.fielden.platform.domaintree.IDomainTreeRepresentation.ITickRepresentation;
 import ua.com.fielden.platform.domaintree.IUsageManager;
 import ua.com.fielden.platform.domaintree.exceptions.DomainTreeException;
@@ -40,7 +35,6 @@ public abstract class AbstractDomainTreeManager extends AbstractDomainTree imple
     private final AbstractDomainTreeRepresentation dtr;
     private final TickManager firstTick;
     private final TickManager secondTick;
-    private final transient IPropertyListener includedPropertiesSynchronisationListener;
 
     /**
      * A <i>manager</i> constructor.
@@ -73,28 +67,8 @@ public abstract class AbstractDomainTreeManager extends AbstractDomainTree imple
             trField.set(this.secondTick, this.dtr.getSecondTick());
             trField.setAccessible(isAccessible);
         } catch (final Exception e) {
-            e.printStackTrace();
             throw new IllegalStateException(e);
         }
-
-        // TODO
-        //	for (final Entry<Class<?>, ListenedArrayList> entry : this.dtr.includedProperties().entrySet()) {
-        //	    // initialise the references on this instance in "included properties" lists
-        //	    try {
-        //		final Field parentDtrField = Finder.findFieldByName(ListenedArrayList.class, "parentDtr");
-        //		final boolean isAccessible = parentDtrField.isAccessible();
-        //		parentDtrField.setAccessible(true);
-        //		parentDtrField.set(entry.getValue(), this.getRepresentation());
-        //		parentDtrField.setAccessible(isAccessible);
-        //	    } catch (final Exception e) {
-        //		e.printStackTrace();
-        //		throw new IllegalStateException(e);
-        //	    }
-        //	}
-
-        // the below listener is intended to update checked properties for both ticks when the skeleton of included properties has been changed
-        includedPropertiesSynchronisationListener = new IncludedAndCheckedPropertiesSynchronisationListener(this.firstTick, this.secondTick, (ITickRepresentationWithMutability) this.getRepresentation().getFirstTick(), (ITickRepresentationWithMutability) this.getRepresentation().getSecondTick(), dtr);
-        this.getRepresentation().addPropertyListener(includedPropertiesSynchronisationListener);
     }
 
     /**
@@ -158,130 +132,6 @@ public abstract class AbstractDomainTreeManager extends AbstractDomainTree imple
     }
 
     /**
-     * The "structure changed" listener that takes care about synchronisation of "included properties" with "checked / disabled properties" for both ticks.
-     *
-     * @author TG Team
-     *
-     */
-    protected static class IncludedAndCheckedPropertiesSynchronisationListener implements IPropertyListener {
-        private final TickManager firstTickManager, secondTickManager;
-        private final ITickRepresentationWithMutability firstTickRepresentation, secondTickRepresentation;
-        private final IDomainTreeRepresentationWithMutability domainTreeRepresentation;
-
-        @Override
-        public boolean isInternal() {
-            return true;
-        }
-
-        /**
-         * A constructor that requires two ticks and two tick representations for synchronisation.
-         *
-         * @param firstTick
-         * @param secondTick
-         */
-        protected IncludedAndCheckedPropertiesSynchronisationListener(final TickManager firstTick, final TickManager secondTick, final ITickRepresentationWithMutability firstTickRepresentation, final ITickRepresentationWithMutability secondTickRepresentation, final IDomainTreeRepresentationWithMutability domainTreeRepresentation) {
-            this.firstTickManager = firstTick;
-            this.secondTickManager = secondTick;
-            this.firstTickRepresentation = firstTickRepresentation;
-            this.secondTickRepresentation = secondTickRepresentation;
-            this.domainTreeRepresentation = domainTreeRepresentation;
-        }
-
-        @Override
-        public void propertyStateChanged(final Class<?> root, final String property, final Boolean hasBeenAdded, final Boolean oldState) {
-            if (hasBeenAdded == null) {
-                throw new DomainTreeException("'hasBeenAdded' cannot be 'null'.");
-            }
-            if (hasBeenAdded) { // property has been ADDED
-                if (!isDummyMarker(property)) {
-                    final String reflectionProperty = reflectionProperty(property);
-                    // update checked properties
-                    // logger().info("Started isCheckedNaturallyFirst for property [" + reflectionProperty + "].");
-                    final boolean isCheckedNaturallyFirst = firstTickManager.isCheckedNaturally(root, reflectionProperty);
-                    // logger().info("Ended isCheckedNaturallyFirst for property [" + reflectionProperty + "].");
-
-                    if (isCheckedNaturallyFirst && !firstTickManager.checkedPropertiesMutable(root).contains(reflectionProperty)) {
-                        firstTickManager.insertCheckedProperty(root, reflectionProperty, firstTickManager.checkedPropertiesMutable(root).size()); // add it to the end of list
-                    }
-
-                    // logger().info("Started isCheckedNaturallySecond for property [" + reflectionProperty + "].");
-                    final boolean isCheckedNaturallySecond = secondTickManager.isCheckedNaturally(root, reflectionProperty);
-                    // logger().info("Ended isCheckedNaturallySecond for property [" + reflectionProperty + "].");
-
-                    if (isCheckedNaturallySecond && !secondTickManager.checkedPropertiesMutable(root).contains(reflectionProperty)) {
-                        secondTickManager.checkedPropertiesMutable(root).add(reflectionProperty); // add it to the end of list
-                    }
-                }
-            } else { // property has been REMOVED
-                if (!isDummyMarker(property)) {
-                    final String reflectionProperty = reflectionProperty(property);
-                    // update checked properties
-                    if (firstTickManager.checkedPropertiesMutable(root).contains(reflectionProperty)) {
-                        firstTickManager.removeCheckedProperty(root, reflectionProperty);
-                    }
-                    if (secondTickManager.checkedPropertiesMutable(root).contains(reflectionProperty)) {
-                        secondTickManager.checkedPropertiesMutable(root).remove(reflectionProperty);
-                    }
-
-                    // update manually disabled properties
-                    if (firstTickRepresentation.disabledManuallyPropertiesMutable().contains(key(root, reflectionProperty))) {
-                        firstTickRepresentation.disabledManuallyPropertiesMutable().remove(key(root, reflectionProperty));
-                    }
-                    if (secondTickRepresentation.disabledManuallyPropertiesMutable().contains(key(root, reflectionProperty))) {
-                        secondTickRepresentation.disabledManuallyPropertiesMutable().remove(key(root, reflectionProperty));
-                    }
-                }
-            }
-        }
-    }
-
-    protected IPropertyListener listener() {
-        return includedPropertiesSynchronisationListener;
-    }
-
-    /**
-     * The weak wrapper for {@link IPropertyCheckingListener} instance.
-     *
-     * @author TG Team
-     *
-     */
-    private static class WeakPropertyCheckingListener implements IPropertyCheckingListener {
-
-        private final WeakReference<IPropertyCheckingListener> ref;
-        private final ITickManager tickManager;
-
-        /**
-         * Creates weak wrapper for {@link IPropertyCheckingListener} instance and tick manager. (Please note that tickManager doesn't registers specified listener. It must be done
-         * manually!).
-         *
-         * @param listener
-         * @param tickManager
-         */
-        public WeakPropertyCheckingListener(final IPropertyCheckingListener listener, final ITickManager tickManager) {
-            this.ref = new WeakReference<IDomainTreeManager.ITickManager.IPropertyCheckingListener>(listener);
-            this.tickManager = tickManager;
-        }
-
-        @Override
-        public void propertyStateChanged(final Class<?> root, final String property, final Boolean hasBeenChecked, final Boolean oldState, final int index) {
-            if (ref.get() != null) {
-                ref.get().propertyStateChanged(root, property, hasBeenChecked, oldState, index);
-            } else {
-                tickManager.removePropertyCheckingListener(this);
-            }
-        }
-
-        /**
-         * Returns the weak reference of {@link IPropertyCheckingListener} on which this instance is referenced to.
-         *
-         * @return
-         */
-        public IPropertyCheckingListener getRef() {
-            return ref.get();
-        }
-    }
-
-    /**
      * A tick manager with all sufficient logic. <br>
      * <br>
      *
@@ -300,8 +150,6 @@ public abstract class AbstractDomainTreeManager extends AbstractDomainTree imple
         private final transient AbstractDomainTreeRepresentation dtr;
         private final transient ITickRepresentation tr;
 
-        private final transient EventListenerList propertyCheckingListeners;
-
         /**
          * Used for the first time instantiation. IMPORTANT : To use this tick it should be passed into manager constructor, which will initialise "dtr" and "tr" fields.
          */
@@ -317,8 +165,6 @@ public abstract class AbstractDomainTreeManager extends AbstractDomainTree imple
             this.checkedProperties.putAll(checkedProperties);
 
             rootsListsOfUsedProperties = createRootsMap();
-
-            this.propertyCheckingListeners = new EventListenerList();
 
             this.dtr = null;
             this.tr = null;
@@ -410,59 +256,11 @@ public abstract class AbstractDomainTreeManager extends AbstractDomainTree imple
         }
 
         protected void removeCheckedProperty(final Class<?> root, final String property) {
-            final int index = checkedPropertiesMutable(root).indexOf(property);
             checkedPropertiesMutable(root).remove(property);
-
-            // fire UNCHECKED event after successful "unchecked" action
-            for (final IPropertyCheckingListener listener : propertyCheckingListeners.getListeners(IPropertyCheckingListener.class)) {
-                listener.propertyStateChanged(root, property, false, null, index);
-            }
         }
 
         protected void insertCheckedProperty(final Class<?> root, final String property, final int index) {
             checkedPropertiesMutable(root).add(index, property);
-
-            // fire CHECKED event after successful "checked" action
-            for (final IPropertyCheckingListener listener : propertyCheckingListeners.getListeners(IPropertyCheckingListener.class)) {
-                listener.propertyStateChanged(root, property, true, null, index);
-            }
-        }
-
-        @Override
-        public void addPropertyCheckingListener(final IPropertyCheckingListener listener) {
-            removeEmptyWeakPropertyCheckingListener();
-            propertyCheckingListeners.add(IPropertyCheckingListener.class, listener);
-        }
-
-        @Override
-        public void addWeakPropertyCheckingListener(final IPropertyCheckingListener listener) {
-            removeEmptyWeakPropertyCheckingListener();
-            propertyCheckingListeners.add(IPropertyCheckingListener.class, new WeakPropertyCheckingListener(listener, this));
-        }
-
-        @Override
-        public void removePropertyCheckingListener(final IPropertyCheckingListener listener) {
-            for (final IPropertyCheckingListener obj : propertyCheckingListeners.getListeners(IPropertyCheckingListener.class)) {
-                if (listener == obj) {
-                    propertyCheckingListeners.remove(IPropertyCheckingListener.class, listener);
-                } else if (obj instanceof WeakPropertyCheckingListener) {
-                    final IPropertyCheckingListener weakRef = ((WeakPropertyCheckingListener) obj).getRef();
-                    if (weakRef == listener || weakRef == null) {
-                        propertyCheckingListeners.remove(IPropertyCheckingListener.class, obj);
-                    }
-                }
-            }
-        }
-
-        /**
-         * Removes the {@link WeakPropertyCheckingListener} which has empty weak reference to the {@link IPropertyCheckingListener} instance.
-         */
-        private void removeEmptyWeakPropertyCheckingListener() {
-            for (final IPropertyCheckingListener obj : propertyCheckingListeners.getListeners(IPropertyCheckingListener.class)) {
-                if (obj instanceof WeakPropertyCheckingListener && ((WeakPropertyCheckingListener) obj).getRef() == null) {
-                    propertyCheckingListeners.remove(IPropertyCheckingListener.class, obj);
-                }
-            }
         }
 
         @Override
