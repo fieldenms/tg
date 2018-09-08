@@ -21,6 +21,8 @@ import ua.com.fielden.platform.entity.meta.MetaProperty;
  *
  */
 public class AttachmentsUploadActionProducer extends DefaultEntityProducerWithContext<AttachmentsUploadAction> {
+    public static final String PROPERTY_ACTION = "PROPERTY_ACTION";
+    public static final String TOP_LEVEL_ACTION = "TOP_LEVEL_ACTION";
 
     @Inject
     public AttachmentsUploadActionProducer(final EntityFactory factory, final ICompanionObjectFinder companionFinder) {
@@ -32,9 +34,15 @@ public class AttachmentsUploadActionProducer extends DefaultEntityProducerWithCo
         if (masterEntityNotEmpty() && masterEntityInstanceOf(AbstractEntity.class) &&
             // Entities that represent menu items should not be considered -- their key will be considered on the next branch
             !masterEntityInstanceOf(AbstractFunctionalEntityForCompoundMenuItem.class)) {
-            // first assign the master entity
+            // first assign the master entity 
+            final Object computationResult = computation().map(f -> f.apply(null, null)).orElse(null);
             final AbstractEntity<?> masterEntity = masterEntity();
-            entity.setMasterEntity(masterEntity);
+            if(PROPERTY_ACTION.equals(computationResult)) {
+                final AbstractEntity<?> attachedTo = (AbstractEntity<?>) masterEntity.getProperty("attachedTo").getValue();
+                entity.setMasterEntity(attachedTo);
+            }else {
+                entity.setMasterEntity(masterEntity);
+            }
 
             // now let's analyse the chosen property
             // if chosen property is specified and it is of type Attachment then it is assumed that this property is to be modified as the result of the attachment uploading
