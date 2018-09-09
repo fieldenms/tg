@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.domaintree.centre.impl;
 
+import static java.util.Optional.of;
 import static ua.com.fielden.platform.domaintree.impl.AbstractDomainTree.validateRootTypes;
 import static ua.com.fielden.platform.domaintree.impl.DomainTreeEnhancer.createFrom;
 
@@ -50,6 +51,7 @@ import ua.com.fielden.platform.domaintree.impl.CalculatedProperty;
 import ua.com.fielden.platform.domaintree.impl.CalculatedPropertyInfo;
 import ua.com.fielden.platform.domaintree.impl.CustomProperty;
 import ua.com.fielden.platform.domaintree.impl.DomainTreeEnhancer;
+import ua.com.fielden.platform.domaintree.impl.DomainTreeEnhancerCache;
 import ua.com.fielden.platform.domaintree.impl.EnhancementPropertiesMap;
 import ua.com.fielden.platform.equery.lifecycle.LifecycleModel.GroupingPeriods;
 import ua.com.fielden.platform.reflection.Finder;
@@ -84,8 +86,37 @@ public class CentreDomainTreeManagerAndEnhancer extends AbstractDomainTreeManage
         this(serialiser, new CentreDomainTreeManager(serialiser, validateRootTypes(rootTypes)), new DomainTreeEnhancer(serialiser, validateRootTypes(rootTypes)), new HashMap<>(), new HashMap<>(), new HashMap<>());
     }
     
-    public CentreDomainTreeManagerAndEnhancer(final ISerialiser serialiser, final Set<Class<?>> rootTypes, final T2<Map<Class<?>, Set<CalculatedPropertyInfo>>, Map<Class<?>, List<CustomProperty>>> calculatedAndCustomProperties, final Class<? extends MiWithConfigurationSupport<?>> miType) {
-        this(serialiser, new CentreDomainTreeManager(serialiser, validateRootTypes(rootTypes)), createFrom(serialiser, validateRootTypes(rootTypes), calculatedAndCustomProperties._1, calculatedAndCustomProperties._2, miType, true), new HashMap<>(), new HashMap<>(), new HashMap<>());
+    /**
+     * A <i>manager with enhancer</i> constructor for instantiating with calculated / custom properties inside.
+     * 
+     * @param serialiser
+     * @param rootTypes
+     * @param calculatedAndCustomProperties
+     * @param miType
+     */
+    public CentreDomainTreeManagerAndEnhancer(
+            final ISerialiser serialiser,
+            final Set<Class<?>> rootTypes,
+            final T2<Map<Class<?>, Set<CalculatedPropertyInfo>>, Map<Class<?>, List<CustomProperty>>> calculatedAndCustomProperties,
+            final Class<? extends MiWithConfigurationSupport<?>> miType) {
+        this(
+            serialiser,
+            new CentreDomainTreeManager(
+                serialiser,
+                validateRootTypes(rootTypes)
+            ),
+            createFrom(
+                serialiser,
+                new DomainTreeEnhancerCache(),
+                validateRootTypes(rootTypes),
+                calculatedAndCustomProperties._1,
+                calculatedAndCustomProperties._2,
+                of(miType)
+            ),
+            new HashMap<>(),
+            new HashMap<>(),
+            new HashMap<>()
+        );
     }
     
     /**

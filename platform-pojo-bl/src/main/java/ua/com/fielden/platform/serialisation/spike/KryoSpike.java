@@ -8,6 +8,7 @@ import java.util.List;
 import org.joda.time.DateTime;
 import org.joda.time.Period;
 
+import ua.com.fielden.platform.domaintree.impl.DomainTreeEnhancerCache;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
 import ua.com.fielden.platform.serialisation.api.ISerialiserEngine;
@@ -29,8 +30,8 @@ public class KryoSpike {
         final EntityFactory factory = injector.getInstance(EntityFactory.class);
 
         final ProvidedSerialisationClassProvider provider = new ProvidedSerialisationClassProvider(DomainType1.class);
-        final ISerialiserEngine kryoWriter = new Serialiser(factory, provider).getEngine(SerialiserEngines.KRYO);
-        final ISerialiserEngine kryoReader = new Serialiser(factory, provider).getEngine(SerialiserEngines.KRYO);
+        final ISerialiserEngine kryoWriter = new Serialiser(factory, provider, new DomainTreeEnhancerCache()).getEngine(SerialiserEngines.KRYO);
+        final ISerialiserEngine kryoReader = new Serialiser(factory, provider, new DomainTreeEnhancerCache()).getEngine(SerialiserEngines.KRYO);
 
         System.out.print("Creating objects...");
         final List<DomainType1> list = new ArrayList<DomainType1>(1000);

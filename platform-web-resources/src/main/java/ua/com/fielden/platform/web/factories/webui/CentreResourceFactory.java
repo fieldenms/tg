@@ -11,6 +11,7 @@ import org.restlet.data.Method;
 import com.google.inject.Injector;
 
 import ua.com.fielden.platform.criteria.generator.ICriteriaGenerator;
+import ua.com.fielden.platform.domaintree.IDomainTreeEnhancerCache;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.security.user.IUserProvider;
@@ -36,6 +37,7 @@ public class CentreResourceFactory extends Restlet {
     private final IUserProvider userProvider;
     private final IDeviceProvider deviceProvider;
     private final ISerialiser serialiser;
+    private final IDomainTreeEnhancerCache domainTreeEnhancerCache;
     
     /**
      * Instantiates a factory for centre resources.
@@ -43,6 +45,7 @@ public class CentreResourceFactory extends Restlet {
      */
     public CentreResourceFactory(final IWebUiConfig webUiConfig, final Injector injector) {
         this.serialiser = injector.getInstance(ISerialiser.class);
+        this.domainTreeEnhancerCache = injector.getInstance(IDomainTreeEnhancerCache.class);
         this.webUiConfig = webUiConfig;
         this.restUtil = injector.getInstance(RestServerUtil.class);
         this.critGenerator = injector.getInstance(ICriteriaGenerator.class);
@@ -65,6 +68,7 @@ public class CentreResourceFactory extends Restlet {
                     companionFinder,
                     critGenerator,
                     serialiser,
+                    domainTreeEnhancerCache,
                     webUiConfig,
                     getContext(),
                     request,

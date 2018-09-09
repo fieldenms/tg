@@ -575,7 +575,7 @@ public class CentreDomainTreeManager extends AbstractDomainTreeManager implement
             }
             cropEmptyRows(root, index - getColumnsNumber());
         }
-        
+
         @Override
         protected void insertCheckedProperty(final Class<?> root, final String property, final int index) {
             final int firstPlaceholderIndex = findFirstPlaceholder(root);

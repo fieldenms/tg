@@ -139,24 +139,30 @@ public/* final */class CalculatedProperty extends AbstractEntity<DynamicEntityKe
         setKey(key);
     }
     
-    private CalculatedProperty(final CalculatedProperty calculatedProperty, final IDomainTreeEnhancer enhancer) {
-        this();
-        calculatedProperty.copyTo(this);
-        
-        this.contextType = calculatedProperty.contextType;
-        this.category = calculatedProperty.category;
-        this.name = calculatedProperty.name;
-        this.path = calculatedProperty.path;
-        this.parentType = calculatedProperty.parentType;
-        this.resultType = calculatedProperty.resultType;
-        this.ast = calculatedProperty.ast;
-        this.enhancer = enhancer;
-        this.validateTitleContextOfExtractedProperties = calculatedProperty.validateTitleContextOfExtractedProperties;
-        this.customPropertyName = calculatedProperty.customPropertyName;
-    }
-    
+    /**
+     * Copy function for {@link CalculatedProperty} taking benefit from shared 'ast' instance and other derived information.
+     * <p>
+     * This is to be used for performance-friendly copying of {@link DomainTreeEnhancer} without unnecessary parsing of {@link CalculatedProperty#getContextualExpression()},
+     * which is costly operation.
+     * 
+     * @param calculatedProperty
+     * @param enhancer -- {@link DomainTreeEnhancer} instance to be associated with copied instance
+     */
     public CalculatedProperty copy(final IDomainTreeEnhancer enhancer) {
-        return new CalculatedProperty(this, enhancer);
+        final CalculatedProperty copy = new CalculatedProperty();
+        // copy all properties and fields from 'this' instance into 'copy' instance
+        copyTo(copy);
+        copy.contextType = contextType;
+        copy.category = category;
+        copy.name = name;
+        copy.path = path;
+        copy.parentType = parentType;
+        copy.resultType = resultType;
+        copy.ast = ast;
+        copy.enhancer = enhancer;
+        copy.validateTitleContextOfExtractedProperties = validateTitleContextOfExtractedProperties;
+        copy.customPropertyName = customPropertyName;
+        return copy;
     }
     
     private Class<?> determineType(final String path) {
@@ -592,8 +598,7 @@ public/* final */class CalculatedProperty extends AbstractEntity<DynamicEntityKe
     }
 
     protected AstNode createAst(final String newContextualExpression) throws RecognitionException, SemanticException {
-        final AstNode result = new ExpressionText2ModelConverter((Class<? extends AbstractEntity<?>>) getEnhancer().getManagedType(getRoot()), getContextPath(), newContextualExpression).convert();
-        return result;
+        return new ExpressionText2ModelConverter((Class<? extends AbstractEntity<?>>) getEnhancer().getManagedType(getRoot()), getContextPath(), newContextualExpression).convert();
     }
 
     protected CalculatedProperty copy() {

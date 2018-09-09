@@ -3,6 +3,7 @@ package ua.com.fielden.platform.web.utils;
 import com.google.inject.Inject;
 
 import ua.com.fielden.platform.criteria.generator.ICriteriaGenerator;
+import ua.com.fielden.platform.domaintree.IDomainTreeEnhancerCache;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.entity.functional.centre.CentreContextHolder;
@@ -31,6 +32,7 @@ public class CriteriaEntityRestorer implements ICriteriaEntityRestorer {
     private final IDeviceProvider deviceProvider;
     private final ICriteriaGenerator critGenerator;
     private final ISerialiser serialiser;
+    private final IDomainTreeEnhancerCache domainTreeEnhancerCache;
     private final IWebUiConfig webUiConfig;
     private final EntityFactory entityFactory;
     
@@ -41,6 +43,7 @@ public class CriteriaEntityRestorer implements ICriteriaEntityRestorer {
             final IDeviceProvider deviceProvider,
             final ICriteriaGenerator critGenerator,
             final ISerialiser serialiser,
+            final IDomainTreeEnhancerCache domainTreeEnhancerCache,
             final IWebUiConfig webUiConfig,
             final EntityFactory entityFactory) {
         this.companionFinder = companionFinder;
@@ -48,6 +51,7 @@ public class CriteriaEntityRestorer implements ICriteriaEntityRestorer {
         this.deviceProvider = deviceProvider;
         this.critGenerator = critGenerator;
         this.serialiser = serialiser;
+        this.domainTreeEnhancerCache = domainTreeEnhancerCache;
         this.webUiConfig = webUiConfig;
         this.entityFactory = entityFactory;
     }
@@ -59,6 +63,6 @@ public class CriteriaEntityRestorer implements ICriteriaEntityRestorer {
         final IMainMenuItem mmiCompanion = companionFinder.find(MainMenuItem.class);
         final IUser userCompanion = companionFinder.find(User.class);
         
-        return CentreResourceUtils.createCriteriaEntityForContext(centreContextHolder, companionFinder, user, critGenerator, userProvider, webUiConfig, entityFactory, deviceProvider.getDeviceProfile(), serialiser, eccCompanion, mmiCompanion, userCompanion);
+        return CentreResourceUtils.createCriteriaEntityForContext(centreContextHolder, companionFinder, user, critGenerator, userProvider, webUiConfig, entityFactory, deviceProvider.getDeviceProfile(), serialiser, domainTreeEnhancerCache, eccCompanion, mmiCompanion, userCompanion);
     }
 }

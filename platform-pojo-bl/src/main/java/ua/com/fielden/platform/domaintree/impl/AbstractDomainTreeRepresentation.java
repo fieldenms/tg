@@ -120,18 +120,25 @@ public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTre
                 // add the children for "property" based on its nature
                 if (EntityUtils.isEntityType(propertyType)) {
                     final boolean propertyTypeWasInHierarchyBefore = typesInHierarchy(managedType, reflectionProperty, true).contains(DynamicEntityClassLoader.getOriginalType(propertyType));
-
-                    // final boolean isKeyPart = Finder.getKeyMembers(parentType).contains(field); // indicates if field is the part of the key.
-//                    final boolean isEntityItself = "".equals(property); // empty property means "entity itself"
-//                    final Pair<Class<?>, String> transformed = PropertyTypeDeterminator.transform(managedType, property);
-//                    final String penultPropertyName = PropertyTypeDeterminator.isDotNotation(property) ? PropertyTypeDeterminator.penultAndLast(property).getKey() : null;
-//                    final String lastPropertyName = transformed.getValue();
-//                    final boolean isLinkProperty = !isEntityItself && PropertyTypeDeterminator.isDotNotation(property)
-//                            && Finder.isOne2Many_or_One2One_association(managedType, penultPropertyName)
-//                            && lastPropertyName.equals(Finder.findLinkProperty((Class<? extends AbstractEntity<?>>) managedType, penultPropertyName)); // exclude link properties in one2many and one2one associations
-
+                    
+                    // The logic below (determining whether property represents link property) is important to maintain the integrity of domain trees.
+                    // However, it also causes performance bottlenecks when invoking multiple times.
+                    // In current Web UI logic, that uses centre domain trees, the following logic does not add any significant value.
+                    // Reintroducing may be significant when management of domain trees from UI will be implemented.
+                    // Please note number 1. indicates "old" simplified version and number 2. indicates newer version with link property handling.
+                    // Perhaps some "hybrid" of both can be used to achieve acceptable performance.
+                    
+                    // 1. final boolean isKeyPart = Finder.getKeyMembers(parentType).contains(field); // indicates if field is the part of the key.
+                    // 2. final boolean isEntityItself = "".equals(property); // empty property means "entity itself"
+                    // 2. final Pair<Class<?>, String> transformed = PropertyTypeDeterminator.transform(managedType, property);
+                    // 2. final String penultPropertyName = PropertyTypeDeterminator.isDotNotation(property) ? PropertyTypeDeterminator.penultAndLast(property).getKey() : null;
+                    // 2. final String lastPropertyName = transformed.getValue();
+                    // 2. final boolean isLinkProperty = !isEntityItself && PropertyTypeDeterminator.isDotNotation(property)
+                    // 2.         && Finder.isOne2Many_or_One2One_association(managedType, penultPropertyName)
+                    // 2.         && lastPropertyName.equals(Finder.findLinkProperty((Class<? extends AbstractEntity<?>>) managedType, penultPropertyName)); // exclude link properties in one2many and one2one associations
+                    
                     if (level(property) >= LOADING_LEVEL && !EntityUtils.isUnionEntityType(propertyType) //
-                            || propertyTypeWasInHierarchyBefore /*&& !isLinkProperty */ /*!isKeyPart*/) {
+                            || propertyTypeWasInHierarchyBefore /* && 2. !isLinkProperty */ /* && 1. !isKeyPart */) {
                         newIncludedProps.add(createDummyMarker(property));
                     }
                     // TODO Need to review the following commet during removal of the "common properties" concept for union entities.
@@ -330,8 +337,6 @@ public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTre
         final String lastPropertyName = transformed.getValue();
         // logger().info("\t\t\tdetermineClass.");
         final Class<?> propertyType = isEntityItself ? root : PropertyTypeDeterminator.determineClass(penultType, lastPropertyName, true, true);
-        // logger().info("\t\t\tgetOriginalType.");
-        //final Class<?> notEnhancedRoot = DynamicEntityClassLoader.getOriginalType(root);
         // final Field field = isEntityItself ? null : Finder.getFieldByName(penultType, lastPropertyName);
         // logger().info("\t\t\tstarted conditions...");
         final boolean excl = manuallyExcludedProperties.contains(key(root, property)) || // exclude manually excluded properties
@@ -347,8 +352,14 @@ public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTre
                 EntityUtils.isEntityType(propertyType) && !AnnotationReflector.isAnnotationPresentForClass(KeyType.class, propertyType) || // exclude properties / entities of entity type without KeyType annotation
                 !isEntityItself && AnnotationReflector.isPropertyAnnotationPresent(Invisible.class, penultType, lastPropertyName) || // exclude invisible properties
                 !isEntityItself && AnnotationReflector.isPropertyAnnotationPresent(Ignore.class, penultType, lastPropertyName) || // exclude invisible properties
-                // !isEntityItself && Finder.getKeyMembers(penultType).contains(field) && typesInHierarchy(root, property, true).contains(DynamicEntityClassLoader.getOriginalType(propertyType)) || // exclude key parts which type was in hierarchy
-                //TODO !isEntityItself && PropertyTypeDeterminator.isDotNotation(property) && Finder.isOne2Many_or_One2One_association(notEnhancedRoot, penultPropertyName) && lastPropertyName.equals(Finder.findLinkProperty((Class<? extends AbstractEntity<?>>) notEnhancedRoot, penultPropertyName)) || // exclude link properties in one2many and one2one associations
+                // The logic below (determining whether property represents link property) is important to maintain the integrity of domain trees.
+                // However, it also causes performance bottlenecks when invoking multiple times (findLinkProperty, getOriginalValue, etc.).
+                // In current Web UI logic, that uses centre domain trees, the following logic does not add any significant value.
+                // Reintroducing may be significant when management of domain trees from UI will be implemented.
+                // Please note number 1. indicates "old" simplified version and number 2. indicates newer version with link property handling.
+                // Perhaps some "hybrid" of both can be used to achieve acceptable performance.
+                // 1. !isEntityItself && Finder.getKeyMembers(penultType).contains(field) && typesInHierarchy(root, property, true).contains(DynamicEntityClassLoader.getOriginalType(propertyType)) || // exclude key parts which type was in hierarchy
+                // 2. !isEntityItself && PropertyTypeDeterminator.isDotNotation(property) && Finder.isOne2Many_or_One2One_association(DynamicEntityClassLoader.getOriginalType(root), penultPropertyName) && lastPropertyName.equals(Finder.findLinkProperty((Class<? extends AbstractEntity<?>>) DynamicEntityClassLoader.getOriginalType(root), penultPropertyName)) || // exclude link properties in one2many and one2one associations
                 !isEntityItself && isExcludedImmutably(root, PropertyTypeDeterminator.isDotNotation(property) ? penultPropertyName : ""); // exclude property if it is an ascender (any level) of already excluded property
         // logger().info("\t\tEnded isExcludedImmutably for property [" + property + "].");
         return excl;
@@ -602,10 +613,13 @@ public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTre
      * @param message
      */
     protected static void illegalExcludedProperties(final IDomainTreeRepresentation dtr, final Class<?> root, final String property, final String message) {
-        /* TODO HUGE PERFORMACE BOTTLENECK!! */
-//        if (dtr.isExcludedImmutably(root, property)) {
-//            throw new DomainTreeException(message);
-//        }
+        // The check below is important to maintain the integrity of domain trees.
+        // However, it also causes performance bottlenecks when invoking multiple times.
+        // In current Web UI logic, that uses centre domain trees, this check does not add any significant value due to other checks implemented as part of Centre DSL.
+        // Reintroducing of this check may be significant when management of domain trees from UI will be implemented.
+        // if (dtr.isExcludedImmutably(root, property)) {
+        //     throw new DomainTreeException(message);
+        // }
     }
 
     /**

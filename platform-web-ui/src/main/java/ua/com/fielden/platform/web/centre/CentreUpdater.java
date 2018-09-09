@@ -29,7 +29,6 @@ import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.selec
 import static ua.com.fielden.platform.error.Result.failuref;
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.determinePropertyType;
 import static ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader.isGenerated;
-import static ua.com.fielden.platform.serialisation.api.SerialiserEngines.KRYO;
 import static ua.com.fielden.platform.utils.EntityUtils.deepCopy;
 import static ua.com.fielden.platform.utils.EntityUtils.equalsEx;
 import static ua.com.fielden.platform.utils.EntityUtils.fetchWithKeyAndDesc;
@@ -38,8 +37,8 @@ import static ua.com.fielden.platform.utils.EntityUtils.isString;
 import static ua.com.fielden.platform.web.centre.CentreUpdaterUtils.createDefaultCentre;
 import static ua.com.fielden.platform.web.centre.CentreUpdaterUtils.findConfig;
 import static ua.com.fielden.platform.web.centre.CentreUpdaterUtils.retrieveEntityCentreManager;
-import static ua.com.fielden.platform.web.centre.CentreUpdaterUtils.saveNewEntityCentreManager;
 import static ua.com.fielden.platform.web.centre.CentreUpdaterUtils.saveEntityCentreManager;
+import static ua.com.fielden.platform.web.centre.CentreUpdaterUtils.saveNewEntityCentreManager;
 import static ua.com.fielden.platform.web.centre.WebApiUtils.checkedPropertiesWithoutSummaries;
 import static ua.com.fielden.platform.web.interfaces.DeviceProfile.DESKTOP;
 import static ua.com.fielden.platform.web.interfaces.DeviceProfile.MOBILE;
@@ -53,6 +52,8 @@ import java.util.function.Function;
 import java.util.stream.Stream;
 
 import org.apache.log4j.Logger;
+
+import ua.com.fielden.platform.domaintree.IDomainTreeEnhancerCache;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.domaintree.centre.IOrderingRepresentation.Ordering;
 import ua.com.fielden.platform.entity.AbstractEntity;
@@ -65,7 +66,6 @@ import ua.com.fielden.platform.security.user.IUser;
 import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
-import ua.com.fielden.platform.serialisation.api.impl.TgKryo;
 import ua.com.fielden.platform.ui.config.EntityCentreConfig;
 import ua.com.fielden.platform.ui.config.api.IEntityCentreConfig;
 import ua.com.fielden.platform.ui.config.api.IMainMenuItem;
@@ -150,13 +150,14 @@ public class CentreUpdater {
             final Optional<String> saveAsName,
             final DeviceProfile device,
             final ISerialiser serialiser,
+            final IDomainTreeEnhancerCache domainTreeEnhancerCache,
             final IWebUiConfig webUiConfig,
             final IEntityCentreConfig eccCompanion,
             final IMainMenuItem mmiCompanion,
             final IUser userCompanion) {
         final String deviceSpecificName = deviceSpecific(saveAsSpecific(name, saveAsName), device);
-        final ICentreDomainTreeManagerAndEnhancer updatedDiffCentre = updateDifferencesCentre(miType, user, userProvider, deviceSpecificName, saveAsName, device, serialiser, webUiConfig, eccCompanion, mmiCompanion, userCompanion);
-        return loadCentreFromDefaultAndDiff(user, miType, saveAsName, updatedDiffCentre, serialiser, webUiConfig);
+        final ICentreDomainTreeManagerAndEnhancer updatedDiffCentre = updateDifferencesCentre(miType, user, userProvider, deviceSpecificName, saveAsName, device, serialiser, domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion);
+        return loadCentreFromDefaultAndDiff(user, miType, saveAsName, updatedDiffCentre, serialiser, webUiConfig, domainTreeEnhancerCache);
     }
     
     /**
@@ -466,7 +467,8 @@ public class CentreUpdater {
             final Optional<String> saveAsName,
             final ICentreDomainTreeManagerAndEnhancer updatedDiffCentre,
             final ISerialiser serialiser,
-            final IWebUiConfig webUiConfig) {
+            final IWebUiConfig webUiConfig,
+            final IDomainTreeEnhancerCache domainTreeEnhancerCache) {
         final ICentreDomainTreeManagerAndEnhancer defaultCentre = getDefaultCentre(miType, webUiConfig);
         // applies diffCentre on top of defaultCentre to produce loadedCentre:
         final ICentreDomainTreeManagerAndEnhancer loadedCentre = applyDifferences(defaultCentre, updatedDiffCentre, getEntityType(miType));
@@ -478,8 +480,7 @@ public class CentreUpdater {
             // However, it should be done in a smart way, i.e. look for cached (by means of (user, miType, saveAsName)) generated type.
             // If there is such a type, just replace generated type information inside loadedCentre.getEnhancer().
             // Otherwise, perform adjustManagedTypeAnnotations and cache adjusted generated type for future reference.
-            final TgKryo tgKryo = (TgKryo) serialiser.getEngine(KRYO);
-            final Class<?> cachedGeneratedType = tgKryo.getGeneratedTypeFor(miType, saveAsName.get(), user.getId());
+            final Class<?> cachedGeneratedType = domainTreeEnhancerCache.getGeneratedTypeFor(miType, saveAsName.get(), user.getId());
             if (cachedGeneratedType != null) {
                 for (final Class<?> root: loadedCentre.getRepresentation().rootTypes()) {
                     if (isGenerated(loadedCentre.getEnhancer().getManagedType(root))) {
@@ -490,7 +491,7 @@ public class CentreUpdater {
                 for (final Class<?> root: loadedCentre.getRepresentation().rootTypes()) {
                     if (isGenerated(loadedCentre.getEnhancer().getManagedType(root))) {
                         final Class<?> newGeneratedType = loadedCentre.getEnhancer().adjustManagedTypeAnnotations(root, new SaveAsNameAnnotation().newInstance(saveAsName.get()));
-                        tgKryo.putGeneratedTypeFor(miType, saveAsName.get(), user.getId(), newGeneratedType);
+                        domainTreeEnhancerCache.putGeneratedTypeFor(miType, saveAsName.get(), user.getId(), newGeneratedType);
                     }
                 }
             }
@@ -540,6 +541,7 @@ public class CentreUpdater {
             final Optional<String> saveAsName,
             final DeviceProfile device,
             final ISerialiser serialiser,
+            final IDomainTreeEnhancerCache domainTreeEnhancerCache,
             final IWebUiConfig webUiConfig,
             final IEntityCentreConfig eccCompanion,
             final IMainMenuItem mmiCompanion,
@@ -566,7 +568,7 @@ public class CentreUpdater {
             } else { // non-base user
                 // diff centre does not exist in persistent storage yet -- create a diff by comparing basedOnCentre (configuration created by base user) and default centre
                 final User baseUser = beginBaseUserOperations(userProvider, user, userCompanion);
-                final ICentreDomainTreeManagerAndEnhancer baseCentre = getBaseCentre(baseUser, userProvider, miType, saveAsName, device, serialiser, webUiConfig, eccCompanion, mmiCompanion, userCompanion);
+                final ICentreDomainTreeManagerAndEnhancer baseCentre = getBaseCentre(baseUser, userProvider, miType, saveAsName, device, serialiser, domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion);
                 // find description of the centre configuration to be copied from
                 final String upstreamDesc = updateCentreDesc(baseUser, miType, saveAsName, device, eccCompanion);
                 // creates differences centre from the differences between base user's 'default centre' (which can be user specific, see IValueAssigner for properties dependent on User) and 'baseCentre'
@@ -616,11 +618,12 @@ public class CentreUpdater {
             final Optional<String> saveAsName,
             final DeviceProfile device,
             final ISerialiser serialiser,
+            final IDomainTreeEnhancerCache domainTreeEnhancerCache,
             final IWebUiConfig webUiConfig,
             final IEntityCentreConfig eccCompanion,
             final IMainMenuItem mmiCompanion,
             final IUser userCompanion) {
-        return updateCentre(baseUser, userProvider, miType, SAVED_CENTRE_NAME, saveAsName, device, serialiser, webUiConfig, eccCompanion, mmiCompanion, userCompanion);
+        return updateCentre(baseUser, userProvider, miType, SAVED_CENTRE_NAME, saveAsName, device, serialiser, domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion);
     }
     
     /**
@@ -655,6 +658,7 @@ public class CentreUpdater {
             final Optional<String> saveAsName,
             final DeviceProfile device,
             final ISerialiser serialiser,
+            final IDomainTreeEnhancerCache domainTreeEnhancerCache,
             final IWebUiConfig webUiConfig,
             final IEntityCentreConfig eccCompanion,
             final IMainMenuItem mmiCompanion,
@@ -663,7 +667,7 @@ public class CentreUpdater {
             return getDefaultCentre(miType, webUiConfig);
         } else {
             final User baseUser = beginBaseUserOperations(userProvider, user, userCompanion);
-            final ICentreDomainTreeManagerAndEnhancer baseCentre = getBaseCentre(baseUser, userProvider, miType, saveAsName, device, serialiser, webUiConfig, eccCompanion, mmiCompanion, userCompanion);
+            final ICentreDomainTreeManagerAndEnhancer baseCentre = getBaseCentre(baseUser, userProvider, miType, saveAsName, device, serialiser, domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion);
             endBaseUserOperations(user, userProvider);
             return baseCentre;
         }

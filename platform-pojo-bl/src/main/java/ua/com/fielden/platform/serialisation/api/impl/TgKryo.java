@@ -20,8 +20,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
 import java.util.zip.Deflater;
 import java.util.zip.InflaterInputStream;
 
@@ -43,11 +41,9 @@ import com.esotericsoftware.kryo.serialize.IntSerializer;
 import com.esotericsoftware.kryo.serialize.LongSerializer;
 import com.esotericsoftware.kryo.serialize.ReferenceFieldSerializer;
 import com.esotericsoftware.kryo.serialize.StringSerializer;
-import com.google.common.cache.Cache;
-import com.google.common.cache.CacheBuilder;
-
 import ua.com.fielden.platform.attachment.Attachment;
 import ua.com.fielden.platform.dao.QueryExecutionModel;
+import ua.com.fielden.platform.domaintree.IDomainTreeEnhancerCache;
 import ua.com.fielden.platform.domaintree.centre.analyses.impl.AnalysisDomainTreeManager;
 import ua.com.fielden.platform.domaintree.centre.analyses.impl.AnalysisDomainTreeManager.AnalysisDomainTreeManagerSerialiser;
 import ua.com.fielden.platform.domaintree.centre.analyses.impl.AnalysisDomainTreeRepresentation;
@@ -84,8 +80,6 @@ import ua.com.fielden.platform.domaintree.centre.impl.LocatorDomainTreeManagerAn
 import ua.com.fielden.platform.domaintree.centre.impl.LocatorDomainTreeManagerAndEnhancer.LocatorDomainTreeManagerAndEnhancerWithTransientAnalysesSerialiser;
 import ua.com.fielden.platform.domaintree.centre.impl.LocatorDomainTreeRepresentation;
 import ua.com.fielden.platform.domaintree.centre.impl.LocatorDomainTreeRepresentation.LocatorDomainTreeRepresentationSerialiser;
-import ua.com.fielden.platform.domaintree.impl.CalculatedPropertyInfo;
-import ua.com.fielden.platform.domaintree.impl.CustomProperty;
 import ua.com.fielden.platform.domaintree.impl.DomainTreeEnhancer;
 import ua.com.fielden.platform.domaintree.impl.DomainTreeEnhancer.DomainTreeEnhancerSerialiser;
 import ua.com.fielden.platform.domaintree.impl.LocatorManager;
@@ -145,7 +139,6 @@ import ua.com.fielden.platform.serialisation.kryo.serialisers.ResultSerialiser;
 import ua.com.fielden.platform.serialisation.kryo.serialisers.SortKeySerialiser;
 import ua.com.fielden.platform.types.ICategorizer;
 import ua.com.fielden.platform.types.Money;
-import ua.com.fielden.platform.types.tuples.T3;
 import ua.com.fielden.platform.ui.config.EntityCentreConfig;
 import ua.com.fielden.platform.ui.config.EntityLocatorConfig;
 import ua.com.fielden.platform.ui.config.EntityMasterConfig;
@@ -163,7 +156,7 @@ import ua.com.fielden.platform.utils.StreamCouldNotBeResolvedException;
  * @author TG Team
  *
  */
-public class TgKryo extends Kryo implements ISerialiserEngine {
+class TgKryo extends Kryo implements ISerialiserEngine {
     /** Default buffer sizes for */
     private enum BUFFER_SIZE {
         QUERY(1024), // 1Kb
@@ -222,28 +215,7 @@ public class TgKryo extends Kryo implements ISerialiserEngine {
     //private final Serializer dynamicallyTypedQueryContainerSerialiser;
     private final Serializer lifecycleQueryContainerSerialiser;
     
-    private final ConcurrentMap<T3<Set<Class<?>>, Map<Class<?>, Set<CalculatedPropertyInfo>>, Map<Class<?>, List<CustomProperty>>>, DomainTreeEnhancer> domainTreeEnhancers = new ConcurrentHashMap<>();
-    private final Cache<T3<Class<?>, String, Long>, Class<?>> saveAsGenTypes = CacheBuilder.newBuilder().maximumSize(1000).build();
-    
-    public Class<?> getGeneratedTypeFor(final Class<?> miType, final String saveAsName, final Long userId) {
-        return saveAsGenTypes.getIfPresent(T3.t3(miType, saveAsName, userId));
-    }
-    
-    public Class<?> putGeneratedTypeFor(final Class<?> miType, final String saveAsName, final Long userId, final Class<?> generatedType) {
-        saveAsGenTypes.put(T3.t3(miType, saveAsName, userId), generatedType);
-        return generatedType;
-    }
-    
-    public DomainTreeEnhancer getDomainTreeEnhancerFor(final Set<Class<?>> rootTypes, final Map<Class<?>, Set<CalculatedPropertyInfo>> calculatedPropertiesInfo, final Map<Class<?>, List<CustomProperty>> customProperties) {
-        return domainTreeEnhancers.get(T3.t3(rootTypes, calculatedPropertiesInfo, customProperties));
-    }
-    
-    public DomainTreeEnhancer putDomainTreeEnhancerFor(final Set<Class<?>> rootTypes, final Map<Class<?>, Set<CalculatedPropertyInfo>> calculatedPropertiesInfo, final Map<Class<?>, List<CustomProperty>> customProperties, final DomainTreeEnhancer domainTreeEnhancer) {
-        domainTreeEnhancers.put(T3.t3(rootTypes, calculatedPropertiesInfo, customProperties), domainTreeEnhancer);
-        return domainTreeEnhancer;
-    }
-    
-    public TgKryo(final EntityFactory factory, final ISerialisationClassProvider provider, final Serialiser serialiser) {
+    public TgKryo(final EntityFactory factory, final ISerialisationClassProvider provider, final IDomainTreeEnhancerCache domainTreeEnhancerCache, final Serialiser serialiser) {
         setRegistrationOptional(true);
         setClassLoader(ClassLoader.getSystemClassLoader());
 
@@ -269,7 +241,7 @@ public class TgKryo extends Kryo implements ISerialiserEngine {
         sortKeySerialiser = new SortKeySerialiser(this);
         // "domain trees" serialisers
         locatorManagerSerialiser = new LocatorManagerSerialiser(serialiser);
-        domainTreeEnhancerSerialiser = new DomainTreeEnhancerSerialiser(serialiser);
+        domainTreeEnhancerSerialiser = new DomainTreeEnhancerSerialiser(serialiser, domainTreeEnhancerCache);
         centreDomainTreeRepresentationSerialiser = new CentreDomainTreeRepresentationSerialiser(serialiser);
         pivotDomainTreeRepresentationSerialiser = new PivotDomainTreeRepresentationSerialiser(serialiser);
         analysisDomainTreeRepresentationSerialiser = new AnalysisDomainTreeRepresentationSerialiser(serialiser);

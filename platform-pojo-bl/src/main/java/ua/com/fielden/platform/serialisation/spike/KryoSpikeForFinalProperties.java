@@ -2,6 +2,7 @@ package ua.com.fielden.platform.serialisation.spike;
 
 import java.nio.ByteBuffer;
 
+import ua.com.fielden.platform.domaintree.impl.DomainTreeEnhancerCache;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
 import ua.com.fielden.platform.serialisation.api.SerialiserEngines;
@@ -21,8 +22,8 @@ public class KryoSpikeForFinalProperties {
         final EntityFactory factory = injector.getInstance(EntityFactory.class);
 
         final ProvidedSerialisationClassProvider provider = new ProvidedSerialisationClassProvider(DomainType1.class, TypeWithFinalProperty.class);
-        final Kryo kryoWriter = (Kryo) new Serialiser(factory, provider).getEngine(SerialiserEngines.KRYO);
-        final Kryo kryoReader = (Kryo) new Serialiser(factory, provider).getEngine(SerialiserEngines.KRYO);
+        final Kryo kryoWriter = (Kryo) new Serialiser(factory, provider, new DomainTreeEnhancerCache()).getEngine(SerialiserEngines.KRYO);
+        final Kryo kryoReader = (Kryo) new Serialiser(factory, provider, new DomainTreeEnhancerCache()).getEngine(SerialiserEngines.KRYO);
 
         final TypeWithFinalProperty finalInstance = new TypeWithFinalProperty(25);
 

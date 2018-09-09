@@ -150,9 +150,10 @@ public abstract class AbstractDomainTreeManager extends AbstractDomainTree imple
     public static class TickManager implements ITickManagerWithMutability {
         private final EnhancementRootsMap<List<String>> checkedProperties;
         private final EnhancementRootsMap<List<String>> rootsListsOfUsedProperties;
-        
+
         private final transient AbstractDomainTreeRepresentation dtr;
         private final transient ITickRepresentation tr;
+        /** A cache of warmed properties to avoid warming multiple times. This cache improves overall performance when managing domain tree. Usually consists of "" and a couple of other props (parents) originating from dot-notated ones. */
         private transient Set<String> warmedProps = new HashSet<>();
         
         /**
@@ -220,7 +221,7 @@ public abstract class AbstractDomainTreeManager extends AbstractDomainTree imple
                 return checkedPropertiesMutable(root).contains(property);
             }
         }
-        
+
         /**
          * Loads parent property to ensure that working with this property is safe.
          *

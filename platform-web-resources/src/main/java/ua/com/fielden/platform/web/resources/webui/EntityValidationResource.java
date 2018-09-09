@@ -11,6 +11,7 @@ import org.restlet.representation.Representation;
 import org.restlet.resource.Post;
 
 import ua.com.fielden.platform.criteria.generator.ICriteriaGenerator;
+import ua.com.fielden.platform.domaintree.IDomainTreeEnhancerCache;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
@@ -42,6 +43,7 @@ public class EntityValidationResource<T extends AbstractEntity<?>> extends Abstr
     private final ICriteriaGenerator critGenerator;
     private final ICompanionObjectFinder companionFinder;
     private final ISerialiser serialiser;
+    private final IDomainTreeEnhancerCache domainTreeEnhancerCache;
     private final IWebUiConfig webUiConfig;
     private final IUserProvider userProvider;
     private final Logger logger = Logger.getLogger(getClass());
@@ -53,6 +55,7 @@ public class EntityValidationResource<T extends AbstractEntity<?>> extends Abstr
             final ICriteriaGenerator critGenerator,
             final ICompanionObjectFinder companionFinder,
             final ISerialiser serialiser,
+            final IDomainTreeEnhancerCache domainTreeEnhancerCache,
             final IWebUiConfig webUiConfig,
             final IUserProvider userProvider,
             final IDeviceProvider deviceProvider,
@@ -67,6 +70,7 @@ public class EntityValidationResource<T extends AbstractEntity<?>> extends Abstr
         this.critGenerator = critGenerator;
         this.companionFinder = companionFinder;
         this.serialiser = serialiser;
+        this.domainTreeEnhancerCache = domainTreeEnhancerCache;
         this.webUiConfig = webUiConfig;
         this.userProvider = userProvider;
     }
@@ -87,7 +91,7 @@ public class EntityValidationResource<T extends AbstractEntity<?>> extends Abstr
             final IMainMenuItem mmiCompanion = companionFinder.find(MainMenuItem.class);
             final IUser userCompanion = companionFinder.find(User.class);
             
-            final T applied = EntityResource.restoreEntityFrom(false, savingInfoHolder, entityType, entityFactory, webUiConfig, companionFinder, user, userProvider, critGenerator, 0, device(), serialiser, eccCompanion, mmiCompanion, userCompanion);
+            final T applied = EntityResource.restoreEntityFrom(false, savingInfoHolder, entityType, entityFactory, webUiConfig, companionFinder, user, userProvider, critGenerator, 0, device(), serialiser, domainTreeEnhancerCache, eccCompanion, mmiCompanion, userCompanion);
             
             logger.debug("ENTITY_VALIDATION_RESOURCE: validate finished.");
             return restUtil.rawListJSONRepresentation(applied);

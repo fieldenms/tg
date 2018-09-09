@@ -8,6 +8,7 @@ import org.restlet.data.Method;
 import com.google.inject.Injector;
 
 import ua.com.fielden.platform.criteria.generator.ICriteriaGenerator;
+import ua.com.fielden.platform.domaintree.IDomainTreeEnhancerCache;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.IEntityProducer;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
@@ -30,6 +31,7 @@ import ua.com.fielden.platform.web.view.master.EntityMaster;
  */
 public class EntityResourceFactory extends Restlet {
     private final ISerialiser serialiser;
+    private final IDomainTreeEnhancerCache domainTreeEnhancerCache;
     private final IWebUiConfig webUiConfig;
     private final RestServerUtil restUtil;
     private final EntityFactory factory;
@@ -47,6 +49,7 @@ public class EntityResourceFactory extends Restlet {
      */
     public EntityResourceFactory(final IWebUiConfig webUiConfig, final Injector injector) {
         this.serialiser = injector.getInstance(ISerialiser.class);
+        this.domainTreeEnhancerCache = injector.getInstance(IDomainTreeEnhancerCache.class);
         this.webUiConfig = webUiConfig;
         this.restUtil = injector.getInstance(RestServerUtil.class);
         this.factory = injector.getInstance(EntityFactory.class);
@@ -71,6 +74,7 @@ public class EntityResourceFactory extends Restlet {
                     critGenerator,
                     coFinder,
                     serialiser,
+                    domainTreeEnhancerCache,
                     webUiConfig,
                     userProvider,
                     deviceProvider,

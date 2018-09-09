@@ -13,6 +13,7 @@ import java.util.List;
 import org.junit.Test;
 
 import ua.com.fielden.platform.dao.QueryExecutionModel;
+import ua.com.fielden.platform.domaintree.impl.DomainTreeEnhancerCache;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
@@ -51,8 +52,8 @@ public class SerialisationTest {
         types.add(TgOrgUnit5.class);
     }
 
-    private final Serialiser kryoWriter = new Serialiser(factory, new ProvidedSerialisationClassProvider(types.toArray(new Class[] {})));
-    private final Serialiser kryoReader = new Serialiser(factory, new ProvidedSerialisationClassProvider(types.toArray(new Class[] {})));
+    private final Serialiser kryoWriter = new Serialiser(factory, new ProvidedSerialisationClassProvider(types.toArray(new Class[] {})), new DomainTreeEnhancerCache());
+    private final Serialiser kryoReader = new Serialiser(factory, new ProvidedSerialisationClassProvider(types.toArray(new Class[] {})), new DomainTreeEnhancerCache());
 
     @Test
     public void seralisation_of_simple_query_should_not_have_failed() {
