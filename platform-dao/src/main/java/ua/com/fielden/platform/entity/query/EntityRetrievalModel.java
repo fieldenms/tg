@@ -215,12 +215,12 @@ public class EntityRetrievalModel<T extends AbstractEntity<?>> extends AbstractR
             if (isEntityType(propType)/* && !ppi.isId()*/) {
                 if (!skipEntities) {
                     if (ppi.isUnionEntity()) {
-                        addEntityPropsModel(propName, fetchAll(propType));
+                        with(propName, fetchAll(propType));
                     } else {
-                        addEntityPropsModel(propName, fetch(propType));
+                        with(propName, fetch(propType));
                     }
                 } else if (ppi.affectsMapping()) {
-                    addEntityPropsModel(propName, fetchIdOnly(propType));
+                    with(propName, fetchIdOnly(propType));
                 }
             } else {
                 final String singleSubpropertyOfCompositeUserTypeProperty = ppi.getSinglePropertyOfCompositeUserType();
@@ -232,11 +232,6 @@ public class EntityRetrievalModel<T extends AbstractEntity<?>> extends AbstractR
         }
     }
 
-    private void addEntityPropsModel(final String propName, final fetch<?> model) {
-        final fetch<?> existingFetch = getEntityProps().get(propName);
-        getEntityProps().put(propName, existingFetch != null ? existingFetch.unionWith(model) : model);
-    }
-
     private void with(final String propName, final fetch<? extends AbstractEntity<?>> fetchModel) {
         final Class<?> propType = getPropMetadata(propName).getJavaType();
 
@@ -244,6 +239,7 @@ public class EntityRetrievalModel<T extends AbstractEntity<?>> extends AbstractR
             throw new EqlException(format(MSG_MISMATCH_BETWEEN_PROPERTY_AND_FETCH_MODEL_TYPES, propType, propName, getEntityType(), fetchModel.getEntityType()));
         }
 
-        addEntityPropsModel(propName, fetchModel);
+        final fetch<?> existingFetch = getEntityProps().get(propName);
+        getEntityProps().put(propName, existingFetch != null ? existingFetch.unionWith(fetchModel) : fetchModel);
     }
 }
