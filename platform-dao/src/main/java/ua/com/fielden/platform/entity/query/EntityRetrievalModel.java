@@ -83,14 +83,6 @@ public class EntityRetrievalModel<T extends AbstractEntity<?>> extends AbstractR
         }
 
         for (final Entry<String, fetch<? extends AbstractEntity<?>>> entry : originalFetch.getIncludedPropsWithModels().entrySet()) {
-            final PropertyMetadata ppi = domainMetadataAnalyser.getInfoForDotNotatedProp(getEntityType(), entry.getKey());
-
-            if (ppi.isUnionEntity()) {
-                for (final PropertyMetadata pmd : ppi.getComponentTypeSubprops()) {
-                    with(pmd.getName(), false);
-                }
-            }
-
             with(entry.getKey(), entry.getValue());
         }
 
@@ -233,12 +225,18 @@ public class EntityRetrievalModel<T extends AbstractEntity<?>> extends AbstractR
     }
 
     private void with(final String propName, final fetch<? extends AbstractEntity<?>> fetchModel) {
-        final Class<?> propType = getPropMetadata(propName).getJavaType();
+        final PropertyMetadata ppi = getDomainMetadataAnalyser().getInfoForDotNotatedProp(getEntityType(), propName);
 
-        if (propType != fetchModel.getEntityType()) {
-            throw new EqlException(format(MSG_MISMATCH_BETWEEN_PROPERTY_AND_FETCH_MODEL_TYPES, propType, propName, getEntityType(), fetchModel.getEntityType()));
+        if (ppi.getJavaType() != fetchModel.getEntityType()) {
+            throw new EqlException(format(MSG_MISMATCH_BETWEEN_PROPERTY_AND_FETCH_MODEL_TYPES, ppi.getJavaType(), propName, getEntityType(), fetchModel.getEntityType()));
         }
-
+        
+        if (ppi.isUnionEntity()) {
+            for (final PropertyMetadata pmd : ppi.getComponentTypeSubprops()) {
+                with(pmd.getName(), false);
+            }
+        }
+        
         final fetch<?> existingFetch = getEntityProps().get(propName);
         getEntityProps().put(propName, existingFetch != null ? existingFetch.unionWith(fetchModel) : fetchModel);
     }
