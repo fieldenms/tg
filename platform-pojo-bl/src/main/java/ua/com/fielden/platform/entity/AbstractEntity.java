@@ -588,7 +588,7 @@ public abstract class AbstractEntity<K extends Comparable> implements Comparable
         for (final Field field : fields) { // for each property field
             final String propName = field.getName();
 
-            //Reflector.obtainPropertyAccessor(getType(), propName);
+            // Reflector.obtainPropertyAccessor(getType(), propName); -- commented out due to heavy nature of this computation; perhaps this check to be performed only in development mode of the server
             // determine property type and adjacent virtues
             final Class<?> type = determineType(field);
             //logger.debug("TYPE (" + field.getName() + ") : " + type);
@@ -912,61 +912,7 @@ public abstract class AbstractEntity<K extends Comparable> implements Comparable
         propertyValidationAnotations.addAll(extractFieldBeforeChangeAnnotations(field));
         propertyValidationAnotations.addAll(extractFieldUniqueAnnotation(field));
         propertyValidationAnotations.addAll(extractFieldFinalAnnotation(field));
-
-        // if field represents a collectional property then it may have other mutators
-        if (isCollectional) {
-            // try to obtain incrementor
-            propertyValidationAnotations.addAll(extractCollectionalPropIncrementorAnnotations(field, type));
-            // try to obtain decrementor
-            propertyValidationAnotations.addAll(extractCollectionalPropDecrementorAnnotations(field, type));
-        }
         return propertyValidationAnotations;
-    }
-
-    /**
-     * Attempts to obtain collectional field decrementor and extract its annotations for further processing. If there is no decrementor defined then an empty set of annotations is
-     * returned.
-     *
-     * @param field
-     * @param type
-     * @return
-     */
-    private Set<Annotation> extractCollectionalPropDecrementorAnnotations(final Field field, final Class<?> type) {
-//        try {
-//            final Method decrementor = Reflector.getMethod(this, "removeFrom" + field.getName().toUpperCase().charAt(0) + field.getName().substring(1), type);
-//            final Set<Annotation> annotations = AnnotationReflector.getValidationAnnotations(decrementor);
-//            if (annotations.size() > 0 && AnnotationReflector.getAnnotation(decrementor, Observable.class) == null) {
-//                throw new EntityDefinitionException(format("Collectional property [%s] in entity [%s] requires validation, but its decrementor [%s] is not observable (missing @Observable).",
-//                        field.getName(), getType().getName(), decrementor.getName()));
-//            }
-//            return annotations;
-//        } catch (final NoSuchMethodException e) {
-//            // do nothing if decrementor does not exist
-//        }
-        return new HashSet<>();
-    }
-
-    /**
-     * Attempts to obtain collectional field incrementor and extract its annotations for further processing. If there is no incrementor defined then an empty set of annotations is
-     * returned.
-     *
-     * @param field
-     * @param type
-     * @return
-     */
-    private Set<Annotation> extractCollectionalPropIncrementorAnnotations(final Field field, final Class<?> type) {
-//        try {
-//            final Method incremetor = Reflector.getMethod(/* getType() */this, "addTo" + field.getName().toUpperCase().charAt(0) + field.getName().substring(1), type);
-//            final Set<Annotation> annotations = AnnotationReflector.getValidationAnnotations(incremetor);
-//            if (annotations.size() > 0 && AnnotationReflector.getAnnotation(incremetor, Observable.class) == null) {
-//                throw new EntityDefinitionException(format("Collectional property [%s] in entity [%s] requires validation, but its incremetor [%s] is not observable (missing @Observable).",
-//                        field.getName(), getType().getName(), incremetor.getName()));
-//            }
-//            return annotations;
-//        } catch (final NoSuchMethodException e1) {
-//            // do nothing if incrementor does not exist
-//        }
-        return new HashSet<>();
     }
 
     /**
