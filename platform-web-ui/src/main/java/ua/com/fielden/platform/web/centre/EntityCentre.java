@@ -299,14 +299,10 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
         
         if (resultSetProps.isPresent()) {
             for (final ResultSetProp property : resultSetProps.get()) {
-                if (property.propName.isPresent()) {
-                } else {
+                if (!property.propName.isPresent()) {
                     if (property.propDef.isPresent()) { // represents the 'custom' property
                         final PropDef<?> propDef = property.propDef.get();
                         final Class<?> managedType = entityType; // getManagedType(entityType); -- please note that mutual custom props validation is not be performed -- apply method invokes at the end after adding all custom / calculated properties
-                        if (!customProperties.containsKey(entityType)) {
-                            customProperties.put(entityType, new ArrayList<>());
-                        }
                         customProperties.get(entityType).add(new CustomProperty(entityType, managedType, "" /* this is the contextPath */, generateNameFrom(propDef.title), propDef.title, propDef.desc, propDef.type));
                     } else {
                         throw new IllegalStateException(format("The state of result-set property [%s] definition is not correct, need to exist either a 'propName' for the property or 'propDef'.", property));
@@ -318,8 +314,7 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
             for (final Entry<String, Collection<SummaryPropDef>> entry : summaryExpressions.get().asMap().entrySet()) {
                 final String originationProperty = treeName(entry.getKey());
                 for (final SummaryPropDef summaryProp : entry.getValue()) {
-                    final CalculatedPropertyInfo calculatedPropertyInfo = new CalculatedPropertyInfo(entityType, "", summaryProp.alias, summaryProp.expression, summaryProp.title, CalculatedPropertyAttribute.NO_ATTR, "".equals(originationProperty) ? "SELF" : originationProperty, summaryProp.desc);
-                    calculatedPropertiesInfo.get(entityType).add(calculatedPropertyInfo);
+                    calculatedPropertiesInfo.get(entityType).add(new CalculatedPropertyInfo(entityType, "", summaryProp.alias, summaryProp.expression, summaryProp.title, CalculatedPropertyAttribute.NO_ATTR, "".equals(originationProperty) ? "SELF" : originationProperty, summaryProp.desc));
                 }
             }
         }

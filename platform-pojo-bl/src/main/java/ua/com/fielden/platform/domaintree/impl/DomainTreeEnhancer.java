@@ -614,8 +614,8 @@ public final class DomainTreeEnhancer extends AbstractDomainTree implements IDom
         //////////// Performs migration [originalAndEnhancedRootTypes => calculatedProperties] ////////////
         calculatedProperties.clear();
         calculatedProperties.putAll(extractAll(this, true));
-
-        customProperties.clear();
+        
+        customProperties.clear(); // FIXME this piece of logic is not properly workable -- this must be considered when discard action will be used anywhere. Low priority for now.
     }
 
     /**
