@@ -1,5 +1,7 @@
 package ua.com.fielden.platform.web.utils;
 
+import static ua.com.fielden.platform.web.resources.webui.CentreResourceUtils.createCriteriaEntityForContext;
+
 import com.google.inject.Inject;
 
 import ua.com.fielden.platform.criteria.generator.ICriteriaGenerator;
@@ -18,7 +20,6 @@ import ua.com.fielden.platform.ui.config.api.IEntityCentreConfig;
 import ua.com.fielden.platform.ui.config.api.IMainMenuItem;
 import ua.com.fielden.platform.web.app.IWebUiConfig;
 import ua.com.fielden.platform.web.interfaces.IDeviceProvider;
-import ua.com.fielden.platform.web.resources.webui.CentreResourceUtils;
 
 /**
  * An implementation of pojo-bl's interface that is dependent on Web UI infrastructure (centre configuration etc.).
@@ -63,6 +64,6 @@ public class CriteriaEntityRestorer implements ICriteriaEntityRestorer {
         final IMainMenuItem mmiCompanion = companionFinder.find(MainMenuItem.class);
         final IUser userCompanion = companionFinder.find(User.class);
         
-        return CentreResourceUtils.createCriteriaEntityForContext(centreContextHolder, companionFinder, user, critGenerator, userProvider, webUiConfig, entityFactory, deviceProvider.getDeviceProfile(), serialiser, domainTreeEnhancerCache, eccCompanion, mmiCompanion, userCompanion);
+        return createCriteriaEntityForContext(centreContextHolder, companionFinder, user, critGenerator, userProvider, webUiConfig, entityFactory, deviceProvider.getDeviceProfile(), serialiser, domainTreeEnhancerCache, eccCompanion, mmiCompanion, userCompanion);
     }
 }

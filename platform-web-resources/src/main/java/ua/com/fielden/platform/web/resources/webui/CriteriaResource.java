@@ -16,6 +16,8 @@ import static ua.com.fielden.platform.web.centre.CentreUpdater.retrievePreferred
 import static ua.com.fielden.platform.web.centre.CentreUpdater.updateCentre;
 import static ua.com.fielden.platform.web.centre.CentreUpdater.updateCentreDesc;
 import static ua.com.fielden.platform.web.centre.CentreUtils.isFreshCentreChanged;
+import static ua.com.fielden.platform.web.centre.WebApiUtils.LINK_CONFIG_TITLE;
+import static ua.com.fielden.platform.web.centre.WebApiUtils.UNDEFINED_CONFIG_TITLE;
 import static ua.com.fielden.platform.web.resources.webui.CentreResourceUtils.createCriteriaEntity;
 import static ua.com.fielden.platform.web.resources.webui.CentreResourceUtils.createCriteriaMetaValues;
 import static ua.com.fielden.platform.web.resources.webui.CentreResourceUtils.createCriteriaMetaValuesCustomObject;
@@ -73,7 +75,6 @@ import ua.com.fielden.platform.web.app.IWebUiConfig;
 import ua.com.fielden.platform.web.centre.CentreContext;
 import ua.com.fielden.platform.web.centre.EntityCentre;
 import ua.com.fielden.platform.web.centre.IQueryEnhancer;
-import ua.com.fielden.platform.web.centre.WebApiUtils;
 import ua.com.fielden.platform.web.centre.api.EntityCentreConfig.ResultSetProp;
 import ua.com.fielden.platform.web.centre.api.context.CentreContextConfig;
 import ua.com.fielden.platform.web.centre.api.resultset.ICustomPropsAssignmentHandler;
@@ -158,13 +159,13 @@ public class CriteriaResource extends AbstractWebResource {
             
             final Optional<String> actualSaveAsName = 
                 saveAsName.flatMap(
-                    name -> WebApiUtils.UNDEFINED_CONFIG_TITLE.equals(name) // client-driven first time loading of centre's selection criteria
+                    name -> UNDEFINED_CONFIG_TITLE.equals(name) // client-driven first time loading of centre's selection criteria
                     ? (getQuery().isEmpty()
                         ? retrievePreferredConfigName(user, miType, device(), companionFinder) // preferred configuration should be loaded
-                        : of(WebApiUtils.LINK_CONFIG_TITLE)) // 'link' configuration should be loaded
+                        : of(LINK_CONFIG_TITLE)) // 'link' configuration should be loaded
                     : of(name) // in case where first time loading has been occurred earlier then 'saveAsName' has non-empty actual configuration that needs to be loaded
                 ); // in case where 'saveAsName' has empty value then first time loading has been occurred earlier and default configuration needs to be loaded
-            if (saveAsName.isPresent() && WebApiUtils.UNDEFINED_CONFIG_TITLE.equals(saveAsName.get()) && !getQuery().isEmpty()) { // if first time loading with centre criteria parameters occurs then
+            if (saveAsName.isPresent() && UNDEFINED_CONFIG_TITLE.equals(saveAsName.get()) && !getQuery().isEmpty()) { // if first time loading with centre criteria parameters occurs then
                 // clear current 'link' surrogate centres -- this is to make them empty before applying new selection criteria parameters (client-side action after this request's response will be delivered)
                 removeCentres(user, miType, device(), actualSaveAsName, eccCompanion, FRESH_CENTRE_NAME, SAVED_CENTRE_NAME, PREVIOUSLY_RUN_CENTRE_NAME);
             }

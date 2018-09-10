@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.serialisation.jackson.serialisers;
 
 import static java.lang.String.format;
+import static ua.com.fielden.platform.reflection.Reflector.extractValidationLimits;
 import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.getValidationResult;
 import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.isChangedFromOriginalDefault;
 import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.isEditableDefault;
@@ -199,8 +200,12 @@ public class EntityJsonSerialiser<T extends AbstractEntity<?>> extends StdSerial
                             }
                             final Integer min;
                             final Integer max;
-                            if (prop.getPropertyType() != null && (isInteger(prop.getPropertyType()) || isDecimal(prop.getPropertyType()) || isString(prop.getPropertyType()))) {
-                                final Pair<Integer, Integer> minMax = Reflector.extractValidationLimits(entity, name);
+                            if (prop.getPropertyType() != null && (
+                                isInteger(prop.getPropertyType())
+                                || isDecimal(prop.getPropertyType())
+                                || isString(prop.getPropertyType())
+                            )) { // check annotations @GreaterOrEqual and @Max only for integer / decimal / money and string properties to reduce performance hit (method retrieval through reflection is heavy operation here)
+                                final Pair<Integer, Integer> minMax = extractValidationLimits(entity, name);
                                 min = minMax.getKey();
                                 max = minMax.getValue();
                             } else {

@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.web.resources.webui;
 
+import static ua.com.fielden.platform.web.resources.webui.EntityResource.restoreEntityFrom;
 import static ua.com.fielden.platform.web.utils.WebUiResourceUtils.handleUndesiredExceptions;
 import static ua.com.fielden.platform.web.utils.WebUiResourceUtils.restoreSavingInfoHolder;
 
@@ -91,7 +92,7 @@ public class EntityValidationResource<T extends AbstractEntity<?>> extends Abstr
             final IMainMenuItem mmiCompanion = companionFinder.find(MainMenuItem.class);
             final IUser userCompanion = companionFinder.find(User.class);
             
-            final T applied = EntityResource.restoreEntityFrom(false, savingInfoHolder, entityType, entityFactory, webUiConfig, companionFinder, user, userProvider, critGenerator, 0, device(), serialiser, domainTreeEnhancerCache, eccCompanion, mmiCompanion, userCompanion);
+            final T applied = restoreEntityFrom(false, savingInfoHolder, entityType, entityFactory, webUiConfig, companionFinder, user, userProvider, critGenerator, 0, device(), serialiser, domainTreeEnhancerCache, eccCompanion, mmiCompanion, userCompanion);
             
             logger.debug("ENTITY_VALIDATION_RESOURCE: validate finished.");
             return restUtil.rawListJSONRepresentation(applied);

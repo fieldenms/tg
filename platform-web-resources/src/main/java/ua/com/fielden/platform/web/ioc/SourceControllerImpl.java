@@ -1,8 +1,11 @@
 package ua.com.fielden.platform.web.ioc;
 
 import static java.lang.String.format;
+import static java.util.Collections.sort;
 
 import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.EnumMap;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
@@ -393,18 +396,32 @@ public class SourceControllerImpl implements ISourceController {
     private static String appendMastersAndCentresImportURIs(final String source, final IWebUiConfig webUiConfig) {
         final StringBuilder sb = new StringBuilder();
         sb.append(source);
+        
+        final Comparator<Class<?>> classComparator = new Comparator<Class<?>>() {
+            @Override
+            public int compare(final Class<?> class1, final Class<?> class2) {
+                return class1.getName().compareTo(class2.getName());
+            }
+        };
+        
         sb.append("\n\n<!-- GENERATED MASTERS FROM IWebUiConfig-->\n");
-        for (final Class<? extends AbstractEntity<?>> masterEntityType : webUiConfig.getMasters().keySet()) {
+        final List<Class<? extends AbstractEntity<?>>> sortedMasterTypes = new ArrayList<>(webUiConfig.getMasters().keySet());
+        sort(sortedMasterTypes, classComparator); // sort types by name to provide predictable order inside vulcanized resources
+        for (final Class<? extends AbstractEntity<?>> masterEntityType : sortedMasterTypes) {
             if (!alreadyIncluded(masterEntityType.getName(), source)) {
                 sb.append(String.format("<link rel=\"import\" href=\"/master_ui/%s\">\n", masterEntityType.getName()));
             }
         }
+        
         sb.append("\n<!-- GENERATED CENTRES FROM IWebUiConfig-->\n");
-        for (final Class<? extends MiWithConfigurationSupport<?>> centreMiType : webUiConfig.getCentres().keySet()) {
+        final List<Class<? extends MiWithConfigurationSupport<?>>> sortedCentreTypes = new ArrayList<>(webUiConfig.getCentres().keySet());
+        sort(sortedCentreTypes, classComparator); // sort types by name to provide predictable order inside vulcanized resources
+        for (final Class<? extends MiWithConfigurationSupport<?>> centreMiType : sortedCentreTypes) {
             if (!alreadyIncluded(centreMiType.getName(), source)) {
                 sb.append(String.format("<link rel=\"import\" href=\"/centre_ui/%s\">\n", centreMiType.getName()));
             }
         }
+        
         return sb.toString();
     }
 
