@@ -120,7 +120,7 @@
                 <span class="vertical-splitter self-stretch" hidden$="[[_isTitleSplitterHidden(staticTitle, dynamicTitle)]]"></span>
                 <span class="dynamic-title truncate" hidden$="[[!dynamicTitle]]">[[dynamicTitle]]</span>
             </div>
-            <div id="navigationBar" hidden="[[!_lastAction.supportsNavigation]]" class="layout horizontal center">
+            <div id="navigationBar" hidden="[[!_isNavigationBarVisible(_lastAction, _minimised)]]" class="layout horizontal center">
                 <paper-icon-button class="button-reverse title-bar-button navigation-button" icon="hardware:keyboard-tab" on-tap="_firstEntry" disabled$="[[!_hasPrev]]" tooltip-text$="[[_getFirstEntryActionTooltip(_lastAction.navigationType)]]"></paper-icon-button>
                 <paper-icon-button class="title-bar-button navigation-button" icon="hardware:keyboard-backspace" on-tap="_previousEntry" disabled$="[[!_hasPrev]]" tooltip-text$="[[_getPreviousEntryActionTooltip(_lastAction.navigationType)]]"></paper-icon-button>
                 <span>[[_sequentialEditText]]</span>
@@ -174,7 +174,8 @@
                 'iron-overlay-opened': '_dialogOpened',
                 'iron-overlay-closed': '_dialogClosed',
                 'tg-dynamic-title-changed': '_updateDynamicTitle',
-                'tg-menu-appeared': '_updateMenuButton'
+                'tg-menu-appeared': '_updateMenuButton',
+                'tg-master-type-changed': '_handleMasterChanged'
             },
 
             hostAttributes: {
@@ -459,6 +460,11 @@
             },
             
             //////////////////////////////////entity master navigation related//////////////////////////////
+            _isNavigationBarVisible: function (lastAction, minimised) {
+                return lastAction && lastAction.supportsNavigation && !minimised;
+            },
+            
+            
             _firstEntry: function () {
                 if (this.canClose() && this._hasPrev) {
                     this._lastAction.firstEntry();
@@ -844,6 +850,7 @@
                                 }
                             })
                             .catch(function(error) {
+                                console.error(error);
                                 self.$.toaster.text = 'There was an error displaying the dialog.';
                                 self.$.toaster.hasMore = true;
                                 self.$.toaster.msgText = 'There was an error displaying the dialog.<br><br> \
@@ -881,6 +888,14 @@
                 this._hasPrev = obj.hasPrev;
                 this._hasNext = obj.hasNext;
                 this._sequentialEditText = "" + (obj.count > 0 ? obj.entInd + 1 : 0) + " / " + obj.count;
+            },
+            
+            _handleMasterChanged: function (e) {
+                if (!this._wasMoved && !this._wasResized && !this._maximised && !this._minimised) {
+                    this.async(function() {
+                        this.refit();
+                    }.bind(this), 50);
+                }
             },
 
             _showMaster: function(action, element, closeEventChannel, closeEventTopics) {

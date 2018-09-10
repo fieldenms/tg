@@ -21,6 +21,8 @@ import static ua.com.fielden.platform.web.layout.api.impl.LayoutCellBuilder.layo
 import static ua.com.fielden.platform.web.layout.api.impl.LayoutComposer.CELL_LAYOUT;
 import static ua.com.fielden.platform.web.layout.api.impl.LayoutComposer.MARGIN;
 import static ua.com.fielden.platform.web.layout.api.impl.LayoutComposer.MARGIN_PIX;
+import static ua.com.fielden.platform.web.test.server.config.StandardActions.ENTITY_NAVIGATION_ACTION;
+import static ua.com.fielden.platform.web.test.server.config.StandardActions.SEQUENTIAL_EDIT_ACTION;
 
 import java.math.BigDecimal;
 import java.util.Date;
@@ -1326,8 +1328,8 @@ public class WebUiConfig extends AbstractWebUiConfig {
                         shortcut("alt+n").
                         build())
                 .also()
-                .addTopAction(StandardActions.SEQUENTIAL_EDIT_ACTION.mkAction(TgPersistentEntityWithProperties.class)).also()
-                .addTopAction(StandardActions.ENTITY_NAVIGATION_ACTION.mkAction(TgPersistentEntityWithProperties.class)).also()
+                .addTopAction(SEQUENTIAL_EDIT_ACTION.mkAction(TgPersistentEntityWithProperties.class)).also()
+                .addTopAction(ENTITY_NAVIGATION_ACTION.mkAction(TgPersistentEntityWithProperties.class)).also()
                 .addTopAction(action(EntityDeleteAction.class).
                         withContext(context().withSelectedEntities().build()).
                         postActionSuccess(new IPostAction() {
@@ -1687,12 +1689,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
         }
 
         IResultSetBuilder2Properties<TgPersistentEntityWithProperties> beforeAddProp = afterSummary.
-                withAction(action(EntityEditAction.class).
-                        withContext(context().withCurrentEntity().withSelectionCrit().build()).
-                        icon("editor:mode-edit").
-                        shortDesc("Edit entity").
-                        longDesc("Opens master for editing this entity").
-                        build())
+                withAction(ENTITY_NAVIGATION_ACTION.mkAction(TgPersistentEntityWithProperties.class))
                 .also()
                 .addProp("desc").
                         order(1).asc().

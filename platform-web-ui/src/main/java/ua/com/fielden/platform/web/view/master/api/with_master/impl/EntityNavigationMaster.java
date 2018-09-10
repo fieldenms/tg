@@ -16,7 +16,17 @@ public class EntityNavigationMaster extends EntityManipulationMaster<EntityNavig
                 "                 this._assignPostSavedHandlersForEmbeddedMaster(e);\n" +
                 "                 const saveButton = e.detail.querySelector(\"tg-action[role='save']\");\n" +
                 "                 saveButton.closeAfterExecution = false;\n" +
-                "             }.bind(self);\n");
+                "             }.bind(self);\n" +
+                "             self._handleBindingEntityAppeared = function (e) {\n" +
+                "                 if (this._previousMaster && this._previousMaster.entityType !== this.$.loader.loadedElement.entityType) {\n" +
+                "                     this.fire('tg-master-type-changed',{\n" +
+                "                         prevType: this._previousMaster.entityType,\n" +
+                "                         currType: this.$.loader.loadedElement.entityType\n" +
+                "                     });\n" +
+                "                 }\n" +
+                "                 this._previousMaster = this.$.loader.loadedElement;\n" +
+                "             }.bind(self);\n" +
+                "             self.addEventListener('binding-entity-appeared', self._handleBindingEntityAppeared);\n");
       this.renderable = () -> new InnerTextElement(masterTemplate);
     }
 
