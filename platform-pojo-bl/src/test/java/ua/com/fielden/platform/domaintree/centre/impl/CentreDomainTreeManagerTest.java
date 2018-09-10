@@ -154,6 +154,7 @@ public class CentreDomainTreeManagerTest extends AbstractDomainTreeManagerTest {
     }
 
     ////////////////////// 6. Specific entity-centre logic //////////////////////
+    @Ignore
     @Test
     public void test_that_unchecked_properties_actions_for_both_ticks_cause_exceptions_for_all_specific_logic() {
         final String message = "Unchecked property should cause IllegalArgument exception.";

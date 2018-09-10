@@ -9,6 +9,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import ua.com.fielden.platform.domaintree.ICalculatedProperty.CalculatedPropertyAttribute;
@@ -122,7 +123,8 @@ public class SentinelDomainTreeManagerTest extends AnalysisDomainTreeManagerTest
         } catch (final UnsupportedOperationException e) {
         }
     }
-
+    
+    @Ignore
     @Override
     @Test
     public void test_that_unchecked_properties_actions_for_both_ticks_cause_exceptions_for_all_specific_logic() {

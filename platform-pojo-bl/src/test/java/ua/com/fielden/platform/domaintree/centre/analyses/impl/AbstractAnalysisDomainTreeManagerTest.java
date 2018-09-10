@@ -175,6 +175,7 @@ public class AbstractAnalysisDomainTreeManagerTest extends AbstractDomainTreeMan
         assertFalse("Analysis manager should be invisible", dtm().isVisible());
     }
 
+    @Ignore
     @Test
     public void test_that_unchecked_properties_actions_for_both_ticks_cause_exceptions_for_all_specific_logic() {
         final String message = "Unchecked property should cause IllegalArgument exception.";
