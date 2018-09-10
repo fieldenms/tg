@@ -718,7 +718,7 @@
                 downloadAttachment: {
                     type: Function
                 },
-                
+
                 entities: {
                     type: Array,
                     observer: "_entitiesChanged"
@@ -916,10 +916,10 @@
              */
             ready: function () {
                 var primaryActions = Polymer.dom(this.$.primary_action_selector).getDistributedNodes();
-                
+
                 //Configure device profile
                 this.mobile = this.$.appConfig.mobile;
-                
+
                 this._totalsRowCount = 0;
                 this._showProgress = false;
 
@@ -1034,7 +1034,7 @@
                 });
                 this.filteredEntities = tempFilteredEntities;
             },
-            
+
             isVisible: function (entity) {
                 return true;
             },
@@ -1539,7 +1539,7 @@
                     return "padding: 8px;";
                 }
             },
-            
+
             _entitiesChanged: function (newValue, oldValue) {
                 this.filter();
             },
@@ -1852,7 +1852,7 @@
              */
             _calcBackgroundRenderingHintsStyle: function (change, entityIndex, property) {
                 const renderingHints = change.base;
-                let style = "opacity: 0.3;";
+                let style = "opacity: 0.5;";
                 let rendHints = (renderingHints && renderingHints[property]) || {};
                 rendHints = rendHints.backgroundStyles || rendHints;
                 for (let property in rendHints) {
@@ -2271,7 +2271,7 @@
                     hasAnyFlex: this.columns.find((column, index) => index >= this.numOfFixedCols && index !== e.model.index && column.growFactor !== 0)
                 };
             },
-            
+
             _trackColumnSize: function (e) {
                 if (this._columnResizingObject) {
                     const columnWidth = e.currentTarget.firstElementChild.offsetWidth;

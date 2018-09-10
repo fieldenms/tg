@@ -388,6 +388,9 @@
                             }
                         }
                     }
+                    if (!e.returnValue) {
+                        e.returnValue = "Do you really want to close the application?";
+                    }
                 },
                 
                 _animationFinished: function (e, detail, source) {

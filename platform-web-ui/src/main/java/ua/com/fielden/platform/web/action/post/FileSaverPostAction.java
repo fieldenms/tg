@@ -28,7 +28,8 @@ public class FileSaverPostAction implements IPostAction {
               + "     byteNumbers[index] = byteCharacters.charCodeAt(index);\n"
               + "}\n"
               + "var data = new Blob([byteNumbers], {type: functionalEntity.mime});\n"
-              + "saveAs(data, functionalEntity.fileName);\n");
+              + "saveAs(data, functionalEntity.fileName);\n"
+              + "self.$.egi.clearPageSelection(); \n");
         return jsCode;
     }
 

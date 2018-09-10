@@ -39,6 +39,7 @@ import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.entity.fetch.IFetchProvider;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
+import ua.com.fielden.platform.entity.query.DbVersion;
 import ua.com.fielden.platform.entity.query.EntityBatchDeleteByIdsOperation;
 import ua.com.fielden.platform.entity.query.IFilter;
 import ua.com.fielden.platform.entity.query.IdOnlyProxiedEntityTypeCache;
@@ -81,7 +82,7 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
     private ICompanionObjectFinder coFinder;
     @Inject
     private Injector injector;
-
+    
     private final IFilter filter;
     private final DeleteOperations<T> deleteOps;
 
@@ -131,6 +132,7 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
         entitySaver = new PersistentEntitySaver<>(
                 this::getSession,
                 this::getTransactionGuid,
+                this::getDbVersion,
                 entityType,
                 keyType,
                 this::getUser,
@@ -142,7 +144,7 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
                 this::processAfterSaveEvent,
                 this::assignBeforeSave,
                 this::findById,
-                this::count,
+                this::exists,
                 logger);
                 
     }
@@ -179,6 +181,10 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
         this.domainMetadata = domainMetadata;
     }
 
+    @Override
+    public DbVersion getDbVersion() {
+        return domainMetadata.getDbVersion();
+    }
 
     @Inject
     protected void setIdOnlyProxiedEntityTypeCache(final IdOnlyProxiedEntityTypeCache idOnlyProxiedEntityTypeCache) {
