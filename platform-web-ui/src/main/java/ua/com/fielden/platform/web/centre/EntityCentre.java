@@ -337,7 +337,7 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
         final Optional<List<ResultSetProp>> resultSetProps = dslDefaultConfig.getResultSetProperties();
         final Optional<ListMultimap<String, SummaryPropDef>> summaryExpressions = dslDefaultConfig.getSummaryExpressions();
         
-        final ICentreDomainTreeManagerAndEnhancer cdtmae = createEmptyCentre(entityType, serialiser, createCalculatedAndCustomProperties(entityType, resultSetProps, summaryExpressions), miType);
+        final ICentreDomainTreeManagerAndEnhancer cdtmae = createEmptyCentre(entityType, serialiser, domainTreeEnhancerCache, createCalculatedAndCustomProperties(entityType, resultSetProps, summaryExpressions), miType);
         
         final Optional<List<String>> selectionCriteria = dslDefaultConfig.getSelectionCriteria();
         if (selectionCriteria.isPresent()) {

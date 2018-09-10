@@ -13,6 +13,8 @@ import java.util.Optional;
 import java.util.Set;
 
 import org.apache.log4j.Logger;
+
+import ua.com.fielden.platform.domaintree.IDomainTreeEnhancerCache;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.domaintree.centre.impl.CentreDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.domaintree.impl.CalculatedPropertyInfo;
@@ -64,12 +66,13 @@ public class CentreUpdaterUtils extends CentreUpdater {
      * 
      * @param root
      * @param serialiser
+     * @param domainTreeEnhancerCache
      * @param calculatedAndCustomProperties
      * @param miType
      * @return
      */
-    public static ICentreDomainTreeManagerAndEnhancer createEmptyCentre(final Class<?> root, final ISerialiser serialiser, final T2<Map<Class<?>, Set<CalculatedPropertyInfo>>, Map<Class<?>, List<CustomProperty>>> calculatedAndCustomProperties, final Class<? extends MiWithConfigurationSupport<?>> miType) {
-        final CentreDomainTreeManagerAndEnhancer centre = new CentreDomainTreeManagerAndEnhancer(serialiser, setOf(root), calculatedAndCustomProperties, miType);
+    public static ICentreDomainTreeManagerAndEnhancer createEmptyCentre(final Class<?> root, final ISerialiser serialiser, final IDomainTreeEnhancerCache domainTreeEnhancerCache, final T2<Map<Class<?>, Set<CalculatedPropertyInfo>>, Map<Class<?>, List<CustomProperty>>> calculatedAndCustomProperties, final Class<? extends MiWithConfigurationSupport<?>> miType) {
+        final CentreDomainTreeManagerAndEnhancer centre = new CentreDomainTreeManagerAndEnhancer(serialiser, domainTreeEnhancerCache, setOf(root), calculatedAndCustomProperties, miType);
         // initialise checkedProperties tree to make it more predictable in getting meta-info from "checkedProperties"
         centre.getFirstTick().checkedProperties(root);
         centre.getSecondTick().checkedProperties(root);

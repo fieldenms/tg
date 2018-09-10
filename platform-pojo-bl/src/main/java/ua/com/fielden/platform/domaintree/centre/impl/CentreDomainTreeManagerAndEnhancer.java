@@ -20,6 +20,7 @@ import com.esotericsoftware.kryo.Kryo;
 import ua.com.fielden.platform.domaintree.ICalculatedProperty.CalculatedPropertyAttribute;
 import ua.com.fielden.platform.domaintree.IDomainTreeEnhancer;
 import ua.com.fielden.platform.domaintree.IDomainTreeEnhancer.IncorrectCalcPropertyException;
+import ua.com.fielden.platform.domaintree.IDomainTreeEnhancerCache;
 import ua.com.fielden.platform.domaintree.ILocatorManager;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
@@ -51,7 +52,6 @@ import ua.com.fielden.platform.domaintree.impl.CalculatedProperty;
 import ua.com.fielden.platform.domaintree.impl.CalculatedPropertyInfo;
 import ua.com.fielden.platform.domaintree.impl.CustomProperty;
 import ua.com.fielden.platform.domaintree.impl.DomainTreeEnhancer;
-import ua.com.fielden.platform.domaintree.impl.DomainTreeEnhancerCache;
 import ua.com.fielden.platform.domaintree.impl.EnhancementPropertiesMap;
 import ua.com.fielden.platform.equery.lifecycle.LifecycleModel.GroupingPeriods;
 import ua.com.fielden.platform.reflection.Finder;
@@ -96,6 +96,7 @@ public class CentreDomainTreeManagerAndEnhancer extends AbstractDomainTreeManage
      */
     public CentreDomainTreeManagerAndEnhancer(
             final ISerialiser serialiser,
+            final IDomainTreeEnhancerCache domainTreeEnhancerCache,
             final Set<Class<?>> rootTypes,
             final T2<Map<Class<?>, Set<CalculatedPropertyInfo>>, Map<Class<?>, List<CustomProperty>>> calculatedAndCustomProperties,
             final Class<? extends MiWithConfigurationSupport<?>> miType) {
@@ -107,7 +108,7 @@ public class CentreDomainTreeManagerAndEnhancer extends AbstractDomainTreeManage
             ),
             createFrom(
                 serialiser,
-                new DomainTreeEnhancerCache(),
+                domainTreeEnhancerCache,
                 validateRootTypes(rootTypes),
                 calculatedAndCustomProperties._1,
                 calculatedAndCustomProperties._2,
