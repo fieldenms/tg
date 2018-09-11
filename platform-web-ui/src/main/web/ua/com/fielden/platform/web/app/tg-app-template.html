@@ -360,7 +360,7 @@
                 },
                 
                 _checkWhetherCanLeave: function (e) {
-                    const modules = this.querySelectorAll("tg-app-view");
+                   /* const modules = this.querySelectorAll("tg-app-view");
                     const customDialogs = document.body.querySelectorAll("tg-custom-action-dialog");
                     const changedViews = [];
                     let master, itemIndex, viewToCheck;
@@ -388,9 +388,10 @@
                             }
                         }
                     }
-                    if (!e.returnValue) {
-                        e.returnValue = "Do you really want to close the application?";
-                    }
+                    if (!e.returnValue) {*/
+                    e.returnValue = "Do you really want to close the application?";
+                    return e.returnValue;
+                    /*}*/
                 },
                 
                 _animationFinished: function (e, detail, source) {
