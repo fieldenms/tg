@@ -1,7 +1,6 @@
 package ua.com.fielden.platform.dao;
 
 import static java.lang.String.format;
-import static java.util.stream.Collectors.toList;
 import static ua.com.fielden.platform.reflection.Reflector.isMethodOverriddenOrDeclared;
 
 import java.io.IOException;
@@ -12,7 +11,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
@@ -223,12 +221,8 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
 
     @Override
     @SessionRequired
-    @Deprecated
     public List<T> getAllEntities(final QueryExecutionModel<T, ?> query) {
-        final QueryExecutionModel<T, ?> qem = !instrumented() ? query.lightweight() : query;
-        try (final Stream<T> stream = stream(qem)) {
-            return stream.collect(toList());
-        }
+        return getEntitiesOnPage(query, null, null);
     }
 
     /**
