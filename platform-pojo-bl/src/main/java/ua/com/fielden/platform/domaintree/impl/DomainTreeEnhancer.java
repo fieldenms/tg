@@ -1,9 +1,12 @@
 package ua.com.fielden.platform.domaintree.impl;
 
 import static java.lang.String.format;
+import static java.util.Arrays.asList;
 import static java.util.Optional.empty;
+import static java.util.Optional.of;
 import static java.util.stream.Collectors.toCollection;
 import static ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader.isGenerated;
+import static ua.com.fielden.platform.reflection.asm.impl.DynamicTypeNamingService.APPENDIX;
 import static ua.com.fielden.platform.types.tuples.T2.t2;
 import static ua.com.fielden.platform.utils.CollectionUtil.linkedMapOf;
 import static ua.com.fielden.platform.utils.Pair.pair;
@@ -25,6 +28,7 @@ import java.util.Set;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
+
 import ua.com.fielden.platform.domaintree.ICalculatedProperty;
 import ua.com.fielden.platform.domaintree.ICalculatedProperty.CalculatedPropertyAttribute;
 import ua.com.fielden.platform.domaintree.IDomainTreeEnhancer;
@@ -78,7 +82,10 @@ public final class DomainTreeEnhancer extends AbstractDomainTree implements IDom
 
     /** Holds current domain differences from "standard" domain (all custom properties for all root types). */
     private final Map<Class<?>, List<CustomProperty>> customProperties;
-
+    
+    private final transient List<Annotation> rootAnnotations = new ArrayList<>();
+    private transient Optional<String> rootNameSuffix = empty();
+    
     public static class ByteArray {
         private final byte[] array;
 
@@ -173,6 +180,9 @@ public final class DomainTreeEnhancer extends AbstractDomainTree implements IDom
      */
     private DomainTreeEnhancer(final DomainTreeEnhancer enhancer) {
         super(enhancer.getSerialiser());
+        
+        this.rootAnnotations.addAll(enhancer.rootAnnotations);
+        this.rootNameSuffix = enhancer.rootNameSuffix;
         
         // Perform copying of originalAndEnhancedRootTypesAndArrays. ByteArray class is immutable so it is safe to use the same shared instances.
         this.originalAndEnhancedRootTypesAndArrays = new LinkedHashMap<>();
@@ -397,7 +407,7 @@ public final class DomainTreeEnhancer extends AbstractDomainTree implements IDom
     @Override
     public void apply() {
         //////////// Performs migration [calculatedProperties => originalAndEnhancedRootTypes] ////////////
-        final Map<Class<?>, Pair<Class<?>, Map<String, ByteArray>>> freshOriginalAndEnhancedRootTypesAndArrays = generateHierarchy(originalAndEnhancedRootTypesAndArrays.keySet(), calculatedProperties, customProperties);
+        final Map<Class<?>, Pair<Class<?>, Map<String, ByteArray>>> freshOriginalAndEnhancedRootTypesAndArrays = generateHierarchy(originalAndEnhancedRootTypesAndArrays.keySet(), calculatedProperties, customProperties, rootAnnotations, rootNameSuffix);
         originalAndEnhancedRootTypesAndArrays.clear();
         originalAndEnhancedRootTypesAndArrays.putAll(freshOriginalAndEnhancedRootTypesAndArrays);
     }
@@ -412,7 +422,7 @@ public final class DomainTreeEnhancer extends AbstractDomainTree implements IDom
      * @param customProperties
      * @return
      */
-    protected static Map<Class<?>, Pair<Class<?>, Map<String, ByteArray>>> generateHierarchy(final Set<Class<?>> rootTypes, final Map<Class<?>, List<CalculatedProperty>> calculatedProperties, final Map<Class<?>, List<CustomProperty>> customProperties) {
+    protected static Map<Class<?>, Pair<Class<?>, Map<String, ByteArray>>> generateHierarchy(final Set<Class<?>> rootTypes, final Map<Class<?>, List<CalculatedProperty>> calculatedProperties, final Map<Class<?>, List<CustomProperty>> customProperties, final List<Annotation> rootAnnotations, final Optional<String> rootNameSuffix) {
         // single classLoader instance is needed for single "apply" transaction
         final DynamicEntityClassLoader classLoader = DynamicEntityClassLoader.getInstance(ClassLoader.getSystemClassLoader());
         final Map<Class<?>, Pair<Class<?>, Map<String, ByteArray>>> originalAndEnhancedRootTypes = createOriginalAndEnhancedRootTypesAndArraysFromRootTypes(rootTypes);
@@ -422,7 +432,7 @@ public final class DomainTreeEnhancer extends AbstractDomainTree implements IDom
         for (final Entry<Class<?>, Map<String, Map<String, IProperty>>> entry : groupedCalculatedProperties.entrySet()) {
             final Class<?> originalRoot = entry.getKey();
             // generate predefined root type name for all calculated properties
-            final String predefinedRootTypeName = new DynamicTypeNamingService().nextTypeName(originalRoot.getName());
+            final String predefinedRootTypeName = rootNameSuffix.isPresent() ? originalRoot.getName() + APPENDIX + "_" + rootNameSuffix.get() : new DynamicTypeNamingService().nextTypeName(originalRoot.getName());
             if (entry.getValue() == null) {
                 final ByteArray newByteArray = new ByteArray(classLoader.getCachedByteArray(originalRoot.getName()));
                 originalAndEnhancedRootTypes.put(originalRoot, new Pair<Class<?>, Map<String, ByteArray>>(originalRoot,  linkedMapOf(t2("", newByteArray))));
@@ -474,7 +484,7 @@ public final class DomainTreeEnhancer extends AbstractDomainTree implements IDom
                 final Pair<Class<?>, Map<String, ByteArray>> current = originalAndEnhancedRootTypes.get(originalRoot);
                 final Class<?> enhancedRoot = current.getKey();
                 if (originalRoot != enhancedRoot) { // calculated properties exist -- root type should be enhanced
-                    final Class<?> rootWithPredefinedName = classLoader.startModification(enhancedRoot.getName()).modifyTypeName(predefinedRootTypeName)./* TODO modifySupertypeName(originalRoot.getName()).*/endModification();
+                    final Class<?> rootWithPredefinedName = classLoader.startModification(enhancedRoot.getName()).addClassAnnotations(rootAnnotations.toArray(new Annotation[rootAnnotations.size()])).modifyTypeName(predefinedRootTypeName)./* TODO modifySupertypeName(originalRoot.getName()).*/endModification();
                     final Map<String, ByteArray> byteArraysWithRenamedRoot = new LinkedHashMap<>();
 
                     byteArraysWithRenamedRoot.putAll(current.getValue());
@@ -496,24 +506,9 @@ public final class DomainTreeEnhancer extends AbstractDomainTree implements IDom
         if (!DynamicEntityClassLoader.isGenerated(managedType)) {
             throw new DomainTreeException(format("The type for root [%s] is not generated. But it should be, because the same type on client application is generated and its suffix is [%s].", root.getSimpleName(), clientGeneratedTypeNameSuffix));
         }
-        final DynamicEntityClassLoader classLoader = DynamicEntityClassLoader.getInstance(ClassLoader.getSystemClassLoader());
-
-        try {
-            final String predefinedRootTypeName = root.getName() + DynamicTypeNamingService.APPENDIX + "_" + clientGeneratedTypeNameSuffix;
-            final Class<?> rootWithPredefinedName = classLoader.startModification(managedType.getName()).modifyTypeName(predefinedRootTypeName).endModification();
-            
-            final Map<String, ByteArray> byteArraysWithRenamedRoot = new LinkedHashMap<>();
-            final Pair<Class<?>, Map<String, ByteArray>> currentByteArrays = originalAndEnhancedRootTypesAndArrays.get(root);
-            byteArraysWithRenamedRoot.putAll(currentByteArrays.getValue());
-            byteArraysWithRenamedRoot.put("", new ByteArray(classLoader.getCachedByteArray(rootWithPredefinedName.getName())));
-            originalAndEnhancedRootTypesAndArrays.put(root, new Pair<>(rootWithPredefinedName, byteArraysWithRenamedRoot));
-        } catch (final ClassNotFoundException e) {
-            logger.error(e.getMessage(), e);
-            throw new IllegalStateException(e);
-        }
-        
-        final Class<?> adjustedType = getManagedType(root);
-        return adjustedType;
+        rootNameSuffix = of(clientGeneratedTypeNameSuffix);
+        apply();
+        return getManagedType(root);
     }
     
     @Override
@@ -524,14 +519,9 @@ public final class DomainTreeEnhancer extends AbstractDomainTree implements IDom
             logger.warn(format("\t\t\t\tEnded to adjustManagedTypeAnnotations for root [%s]. No annotations have been specified, root's managed type was not changed.", root.getSimpleName()));
             return managedType;
         }
-        final DynamicEntityClassLoader classLoader = DynamicEntityClassLoader.getInstance(ClassLoader.getSystemClassLoader());
-        try {
-            final Class<?> managedTypeWithAnnotations = classLoader.startModification(managedType.getName()).addClassAnnotations(additionalAnnotations).endModification();
-            return adjustManagedType(root, managedTypeWithAnnotations);
-        } catch (final ClassNotFoundException e) {
-            logger.error(e.getMessage(), e);
-            throw new IllegalStateException(e);
-        }
+        rootAnnotations.addAll(asList(additionalAnnotations));
+        apply();
+        return getManagedType(root);
     }
     
     /**
