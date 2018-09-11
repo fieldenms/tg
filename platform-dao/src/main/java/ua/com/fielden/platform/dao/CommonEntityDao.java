@@ -1,7 +1,6 @@
 package ua.com.fielden.platform.dao;
 
 import static java.lang.String.format;
-import static java.util.stream.Collectors.toList;
 import static ua.com.fielden.platform.reflection.Reflector.isMethodOverriddenOrDeclared;
 
 import java.io.IOException;
@@ -12,7 +11,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
@@ -39,6 +37,7 @@ import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.entity.fetch.IFetchProvider;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
+import ua.com.fielden.platform.entity.query.DbVersion;
 import ua.com.fielden.platform.entity.query.EntityBatchDeleteByIdsOperation;
 import ua.com.fielden.platform.entity.query.IFilter;
 import ua.com.fielden.platform.entity.query.IdOnlyProxiedEntityTypeCache;
@@ -81,7 +80,7 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
     private ICompanionObjectFinder coFinder;
     @Inject
     private Injector injector;
-
+    
     private final IFilter filter;
     private final DeleteOperations<T> deleteOps;
 
@@ -131,6 +130,7 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
         entitySaver = new PersistentEntitySaver<>(
                 this::getSession,
                 this::getTransactionGuid,
+                this::getDbVersion,
                 entityType,
                 keyType,
                 this::getUser,
@@ -142,7 +142,7 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
                 this::processAfterSaveEvent,
                 this::assignBeforeSave,
                 this::findById,
-                this::count,
+                this::exists,
                 logger);
                 
     }
@@ -179,6 +179,10 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
         this.domainMetadata = domainMetadata;
     }
 
+    @Override
+    public DbVersion getDbVersion() {
+        return domainMetadata.getDbVersion();
+    }
 
     @Inject
     protected void setIdOnlyProxiedEntityTypeCache(final IdOnlyProxiedEntityTypeCache idOnlyProxiedEntityTypeCache) {
@@ -217,12 +221,8 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
 
     @Override
     @SessionRequired
-    @Deprecated
     public List<T> getAllEntities(final QueryExecutionModel<T, ?> query) {
-        final QueryExecutionModel<T, ?> qem = !instrumented() ? query.lightweight() : query;
-        try (final Stream<T> stream = stream(qem)) {
-            return stream.collect(toList());
-        }
+        return getEntitiesOnPage(query, null, null);
     }
 
     /**

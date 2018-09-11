@@ -211,7 +211,7 @@ public interface IEntityReader<T extends AbstractEntity<?>> extends IEntityInsta
     /**
      * Returns all entities produced by the provided query.
      * <p> 
-     * Getting all entities matching the query could be a very expensive operation.
+     * Getting all entities matching the query may result in an excessive use of memory.
      * It should only be used if there is a certainty that the resultant list won't be too large.
      * <p>
      * In all other cases consider using Stream API. 

@@ -25,6 +25,7 @@ import ua.com.fielden.platform.dao.annotations.SessionRequired;
 import ua.com.fielden.platform.dao.exceptions.EntityCompanionException;
 import ua.com.fielden.platform.dao.exceptions.UnexpectedNumberOfReturnedEntities;
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.query.DbVersion;
 import ua.com.fielden.platform.entity.query.EntityAggregates;
 import ua.com.fielden.platform.entity.query.EntityFetcher;
 import ua.com.fielden.platform.entity.query.QueryExecutionContext;
@@ -56,6 +57,8 @@ public abstract class AbstractEntityReader<T extends AbstractEntity<?>> implemen
     ///////////////////////////////////////////////////////////
     
     protected abstract Session getSession();
+    
+    protected abstract DbVersion getDbVersion();
     
     protected abstract boolean instrumented();
     
@@ -102,7 +105,7 @@ public abstract class AbstractEntityReader<T extends AbstractEntity<?>> implemen
     @SessionRequired
     public T findByKeyAndFetch(final fetch<T> fetchModel, final Object... keyValues) {
         try {
-            final EntityResultQueryModel<T> queryModel = createQueryByKey(getEntityType(), getKeyType(), isFilterable(), keyValues);
+            final EntityResultQueryModel<T> queryModel = createQueryByKey(getDbVersion(), getEntityType(), getKeyType(), isFilterable(), keyValues);
             final Builder<T, EntityResultQueryModel<T>> qemBuilder = from(queryModel).with(fetchModel);
             return getEntity(instrumented() ? qemBuilder.model() : qemBuilder.lightweight().model());
         } catch (final EntityCompanionException e) {
