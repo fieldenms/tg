@@ -228,7 +228,7 @@ public final class EntityActionConfig {
                             this.context.get().computation.orElse(null)) :
                     new CentreContextConfig(true, false, false, false, null);
             return new EntityActionConfig(
-                    this.functionalEntity.isPresent() ? this.functionalEntity.get() : null,
+                    newFunctionalType,
                     newCentreContext,
                     this.icon.isPresent() ? this.icon.get() : null,
                     this.iconStyle.orElse(null),

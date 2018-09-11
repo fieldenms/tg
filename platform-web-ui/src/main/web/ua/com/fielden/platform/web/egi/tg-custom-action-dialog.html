@@ -82,17 +82,15 @@
                 padding: 0px;
             }
             .navigation-button{
-                margin: 0 4px;
+                margin: 0 8px;
             }
             .minimise-button,.maximise-button {
                 width: 19px;
                 height: 19px;
                 padding: 0px;
                 margin-bottom: 2px;
-               
             }
             #navigationBar {
-                margin-right: 20px;
                 color: white;
             }
             #resizer {
@@ -120,14 +118,14 @@
                 <span class="vertical-splitter self-stretch" hidden$="[[_isTitleSplitterHidden(staticTitle, dynamicTitle)]]"></span>
                 <span class="dynamic-title truncate" hidden$="[[!dynamicTitle]]">[[dynamicTitle]]</span>
             </div>
-            <div id="navigationBar" hidden="[[!_isNavigationBarVisible(_lastAction, _minimised)]]" class="layout horizontal center">
+            <div id="navigationBar" hidden="[[!_isNavigationBarVisible(_lastAction, _minimised)]]" style$="[[_calcNavigationBarStyle(mobile)]]" class="layout horizontal center">
                 <paper-icon-button class="button-reverse title-bar-button navigation-button" icon="hardware:keyboard-tab" on-tap="_firstEntry" disabled$="[[!_hasPrev]]" tooltip-text$="[[_getFirstEntryActionTooltip(_lastAction.navigationType)]]"></paper-icon-button>
                 <paper-icon-button class="title-bar-button navigation-button" icon="hardware:keyboard-backspace" on-tap="_previousEntry" disabled$="[[!_hasPrev]]" tooltip-text$="[[_getPreviousEntryActionTooltip(_lastAction.navigationType)]]"></paper-icon-button>
                 <span>[[_sequentialEditText]]</span>
                 <paper-icon-button class="button-reverse title-bar-button navigation-button" icon="hardware:keyboard-backspace" on-tap="_nextEntry" disabled$="[[!_hasNext]]" tooltip-text$="[[_getNextEntryActionTooltip(_lastAction.navigationType)]]"></paper-icon-button>
                 <paper-icon-button class="title-bar-button navigation-button" icon="hardware:keyboard-tab" on-tap="_lastEntry" disabled$="[[!_hasNext]]" tooltip-text$="[[_getLastEntryActionTooltip(_lastAction.navigationType)]]"></paper-icon-button>
             </div>
-            <div class="layout horizontal center" style="margin-left:10px">
+            <div class="layout horizontal center">
                 <!-- collapse/expand buttons -->
                 <paper-icon-button hidden="[[!_minimised]]" class="minimise-button title-bar-button" icon="tg-icons:expandMin" on-tap="_invertMinimiseState" tooltip-text="Restore, Alt+c"></paper-icon-button>
                 <paper-icon-button hidden="[[_collapserHidden(_minimised, mobile)]]" class="title-bar-button minimise-button" icon="tg-icons:collapseMin"   on-tap="_invertMinimiseState" tooltip-text="Collapse, Alt+c" disabled=[[_dialogInteractionsDisabled(_minimised,_maximised)]]></paper-icon-button>
@@ -464,6 +462,16 @@
                 return lastAction && lastAction.supportsNavigation && !minimised;
             },
             
+            _calcNavigationBarStyle: function (mobile) {
+                if (mobile) {
+                    if (this.$.appConfig.iPhoneOs()) {
+                        return "margin-right: 10px;"
+                    }
+                    return "margin-left:10px;"
+                } else {
+                    return "margin:0 20px;" 
+                }
+            },
             
             _firstEntry: function () {
                 if (this.canClose() && this._hasPrev) {
