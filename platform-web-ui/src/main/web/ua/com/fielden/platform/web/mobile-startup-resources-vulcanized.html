@@ -34141,6 +34141,9 @@ if (!window.Promise) {
                             }
                         }
                     }
+                    if (!e.returnValue) {
+                        e.returnValue = "Do you really want to close the application?";
+                    }
                 },
                 
                 _animationFinished: function (e, detail, source) {
@@ -46353,7 +46356,7 @@ postActionError: function (functionalEntity, action) {
                 downloadAttachment: {
                     type: Function
                 },
-                
+
                 entities: {
                     type: Array,
                     observer: "_entitiesChanged"
@@ -46551,10 +46554,10 @@ postActionError: function (functionalEntity, action) {
              */
             ready: function () {
                 var primaryActions = Polymer.dom(this.$.primary_action_selector).getDistributedNodes();
-                
+
                 //Configure device profile
                 this.mobile = this.$.appConfig.mobile;
-                
+
                 this._totalsRowCount = 0;
                 this._showProgress = false;
 
@@ -46669,7 +46672,7 @@ postActionError: function (functionalEntity, action) {
                 });
                 this.filteredEntities = tempFilteredEntities;
             },
-            
+
             isVisible: function (entity) {
                 return true;
             },
@@ -47174,7 +47177,7 @@ postActionError: function (functionalEntity, action) {
                     return "padding: 8px;";
                 }
             },
-            
+
             _entitiesChanged: function (newValue, oldValue) {
                 this.filter();
             },
@@ -47487,7 +47490,7 @@ postActionError: function (functionalEntity, action) {
              */
             _calcBackgroundRenderingHintsStyle: function (change, entityIndex, property) {
                 const renderingHints = change.base;
-                let style = "opacity: 0.3;";
+                let style = "opacity: 0.5;";
                 let rendHints = (renderingHints && renderingHints[property]) || {};
                 rendHints = rendHints.backgroundStyles || rendHints;
                 for (let property in rendHints) {
@@ -47906,7 +47909,7 @@ postActionError: function (functionalEntity, action) {
                     hasAnyFlex: this.columns.find((column, index) => index >= this.numOfFixedCols && index !== e.model.index && column.growFactor !== 0)
                 };
             },
-            
+
             _trackColumnSize: function (e) {
                 if (this._columnResizingObject) {
                     const columnWidth = e.currentTarget.firstElementChild.offsetWidth;
@@ -47998,7 +48001,8 @@ postActionError: function (functionalEntity, action) {
             }
         })
     })()
-</script><dom-module id="tg-criteria-validator" assetpath="/resources/centre/"> 
+</script>
+<dom-module id="tg-criteria-validator" assetpath="/resources/centre/"> 
     <template>
         <tg-serialiser id="serialiser"></tg-serialiser>
         <iron-ajax id="ajaxSender" url="[[_url]]" method="POST" handle-as="json" on-response="_processValidatorResponse" on-error="_processValidatorError"></iron-ajax>
@@ -52862,6 +52866,7 @@ for (var index = 0; index < byteCharacters.length; index++) {
 }
 var data = new Blob([byteNumbers], {type: functionalEntity.mime});
 saveAs(data, functionalEntity.fileName);
+self.$.egi.clearPageSelection(); 
 },
 attrs: {
     entityType:'ua.com.fielden.platform.sample.domain.ExportAction', currentState:'EDIT', centreUuid: self.uuid,
@@ -52884,6 +52889,7 @@ for (var index = 0; index < byteCharacters.length; index++) {
 }
 var data = new Blob([byteNumbers], {type: functionalEntity.mime});
 saveAs(data, functionalEntity.fileName);
+self.$.egi.clearPageSelection(); 
 },
 attrs: {
     entityType:'ua.com.fielden.platform.entity.EntityExportAction', currentState:'EDIT', centreUuid: self.uuid,
