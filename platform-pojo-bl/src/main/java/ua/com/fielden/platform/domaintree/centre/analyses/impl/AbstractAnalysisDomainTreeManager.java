@@ -156,7 +156,7 @@ public abstract class AbstractAnalysisDomainTreeManager extends AbstractDomainTr
         }
 
         @Override
-        public synchronized List<String> checkedPropertiesMutable(final Class<?> rootPossiblyEnhanced) {
+        public List<String> checkedPropertiesMutable(final Class<?> rootPossiblyEnhanced) {
             // inject an enhanced type into method implementation
             return super.checkedPropertiesMutable(managedType(rootPossiblyEnhanced));
         }
@@ -249,7 +249,7 @@ public abstract class AbstractAnalysisDomainTreeManager extends AbstractDomainTr
         }
 
         @Override
-        public synchronized List<String> checkedPropertiesMutable(final Class<?> rootPossiblyEnhanced) {
+        public List<String> checkedPropertiesMutable(final Class<?> rootPossiblyEnhanced) {
             // inject an enhanced type into method implementation
             return super.checkedPropertiesMutable(managedType(rootPossiblyEnhanced));
         }

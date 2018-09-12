@@ -279,7 +279,7 @@ public abstract class AbstractDomainTreeManager extends AbstractDomainTree imple
         }
 
         @Override
-        public synchronized List<String> checkedPropertiesMutable(final Class<?> rootPossiblyEnhanced) {
+        public List<String> checkedPropertiesMutable(final Class<?> rootPossiblyEnhanced) {
             final Class<?> root = DynamicEntityClassLoader.getOriginalType(rootPossiblyEnhanced);
             if (checkedProperties.get(root) == null) { // not yet loaded
                 final Date st = new Date();
