@@ -366,7 +366,7 @@ public final class DomainTreeEnhancer extends AbstractDomainTree implements IDom
             final Class<?> root = entry.getKey();
             final List<CustomProperty> props = entry.getValue();
             if (props != null && !props.isEmpty()) {
-                if (!grouped.containsKey(root)) {
+                if (grouped.get(root) == null) {
                     grouped.put(root, new LinkedHashMap<String, Map<String, IProperty>>());
                 }
                 for (final CustomProperty prop : props) {
