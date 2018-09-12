@@ -56,10 +56,6 @@ public class PropertyMetadata implements Comparable<PropertyMetadata> {
         nullable = builder.nullable;
         expressionModel = builder.expressionModel;
         aggregatedExpression = builder.aggregatedExpression;
-        if (!isCollection() && expressionModel == null && (columns == null || columns.size() == 0)) {
-            //System.out.println(" ----------------" + type + " ------------- " +  name + " == " + javaType + " -------------------------------------------------------");
-            //throw new RuntimeException(" ----------------" + type + " ------------- " +  name + " == " + javaType + " -------------------------------------------------------");
-        }
     }
 
     public YieldDetailsType getYieldDetailType() {
@@ -115,10 +111,6 @@ public class PropertyMetadata implements Comparable<PropertyMetadata> {
     public boolean isCollection() {
         return type.equals(COLLECTIONAL);
     }
-
-//    public boolean isCommonCalculated() {
-//        return type.equals(EXPRESSION_COMMON);
-//    }
 
     public boolean isOne2OneId() {
         return type.equals(ONE2ONE_ID);
@@ -334,7 +326,7 @@ public class PropertyMetadata implements Comparable<PropertyMetadata> {
 
         private Object hibType;
         private List<PropertyColumn> columns = new ArrayList<PropertyColumn>();
-        private PropertyCategory type;// = PropertyCategory.PROP;
+        private PropertyCategory type;
         private ExpressionModel expressionModel;
         private boolean aggregatedExpression = false;
 
