@@ -11,7 +11,6 @@ import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Currency;
 import java.util.Date;
 import java.util.HashMap;
@@ -20,6 +19,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.zip.Deflater;
 import java.util.zip.InflaterInputStream;
 
@@ -41,6 +41,7 @@ import com.esotericsoftware.kryo.serialize.IntSerializer;
 import com.esotericsoftware.kryo.serialize.LongSerializer;
 import com.esotericsoftware.kryo.serialize.ReferenceFieldSerializer;
 import com.esotericsoftware.kryo.serialize.StringSerializer;
+
 import ua.com.fielden.platform.attachment.Attachment;
 import ua.com.fielden.platform.dao.QueryExecutionModel;
 import ua.com.fielden.platform.domaintree.IDomainTreeEnhancerCache;
@@ -183,7 +184,7 @@ class TgKryo extends Kryo implements ISerialiserEngine {
     private final Serializer booleanSerialiser;
     private final Serializer dateSerialiser;
     private final Serializer pdSerialiser;
-    private final Map<Class<AbstractEntity>, Serializer> entitySerialisers = Collections.synchronizedMap(new HashMap<Class<AbstractEntity>, Serializer>(600));
+    private final Map<Class<AbstractEntity>, Serializer> entitySerialisers = new ConcurrentHashMap<Class<AbstractEntity>, Serializer>(600);
     private final Serializer classSerialiser;
     private final Serializer dateTimeSerialiser;
     private final Serializer bigIntegerSerialiser;
