@@ -180,7 +180,7 @@ public enum StandardActions {
 
             return action(EntityNavigationAction.class).withContext(contextConfig.build()).
                     preAction(new EntityNavigationPreAction(entityTitle)).
-                    icon("icons:done-all").
+                    icon("editor:mode-edit").
                     shortDesc(format("Open %s", entityTitle)).
                     longDesc(format("Open %s", entityTitle)).
                     prefDimForView(prefDim).
