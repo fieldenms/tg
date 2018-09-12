@@ -174,15 +174,10 @@ public class EntQuery implements ISingleOperand {
             if (mainSourceIsTypeBased()) {
                 final Class<? extends AbstractEntity<?>> mainSourceType = getSources().getMain().sourceType();
                 for (final PropertyMetadata ppi : domainMetadataAnalyser.getPropertyMetadatasForEntity(mainSourceType)) {
-                    //                    if (ppi.isSynthetic()) {
-                    //                        throw new IllegalStateException(ppi.toString());
-                    //                    }
                     final boolean skipProperty = ppi.isSynthetic() ||
                             ppi.isCompositeKeyExpression() ||
                             ppi.isCollection() ||
-                            (ppi.isAggregatedExpression() && !isResultQuery())
-                    //|| (ppi.isCommonCalculated() && (fetchModel == null || !fetchModel.containsProp(ppi.getName())))
-                    ;
+                            (ppi.isAggregatedExpression() && !isResultQuery());
                     if (!skipProperty) {
                         LOGGER.debug(" add yield: " + ppi);
                         yields.addYield(new Yield(new EntProp(yieldPropAliasPrefix + ppi.getName()), ppi.getName()));
@@ -478,7 +473,6 @@ public class EntQuery implements ISingleOperand {
         enhanceToFinalState(generator, fetchModel);
 
         assignPropertyPersistenceInfoToYields();
-        //sources.reorderSources();
     }
     
     private boolean isResulTypePersisted() {
