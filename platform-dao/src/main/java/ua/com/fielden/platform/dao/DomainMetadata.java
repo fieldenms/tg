@@ -221,24 +221,6 @@ public class DomainMetadata {
         return ddl;
     }
     
-    private String printEntitiesMetadataSummary(final String header, final Map<Class<? extends AbstractEntity<?>>, ? extends AbstractEntityMetadata> map) {
-        final StringBuilder sb = new StringBuilder();
-        sb.append(header);
-        sb.append("\n");
-        int pecalcpc = 0;
-        int pecollpc = 0;
-        int peunionpc = 0;
-        sb.append(format(" %50s%10s%10s%10s%n", "Entity class name \\ Props count", "calc.", "collect.", "union"));
-        for (final Entry<Class<? extends AbstractEntity<?>>, ? extends AbstractEntityMetadata> entry : map.entrySet()) {
-            pecalcpc = pecalcpc + entry.getValue().countCalculatedProps();
-            pecollpc = pecollpc + entry.getValue().countCollectionalProps();
-            peunionpc = peunionpc + entry.getValue().countUnionEntityProps();
-            sb.append(format(" %50s%10s%10s%10s%n", entry.getKey().getSimpleName(), entry.getValue().countCalculatedProps(), entry.getValue().countCollectionalProps(), entry.getValue().countUnionEntityProps()));
-        }
-        sb.append(format(" %45s%5s%10s%10s%10s", "totals:", map.size(), pecalcpc, pecollpc, peunionpc));
-        return sb.toString();
-    }
-
     public <ET extends AbstractEntity<?>> PersistedEntityMetadata<ET> generatePersistedEntityMetadata(final Class<ET> entityType, final BaseInfoForDomainMetadata baseInfoForDomainMetadata)
             throws Exception {
         return new PersistedEntityMetadata(baseInfoForDomainMetadata.getTableClause(entityType), entityType, generatePropertyMetadatasForEntity(entityType, PERSISTED));
@@ -532,26 +514,6 @@ public class DomainMetadata {
         }
         
         return new PropertyMetadata.Builder(KEY, String.class, true).expression(dmeg.getVirtualKeyPropForEntityWithCompositeKey(entityType, keyMembersWithOptionality)).hibType(H_STRING).type(VIRTUAL_OVERRIDE).build();
-    }
-
-//    private PropertyMetadata getVirtualPropInfoForReferenceCount(final Class<? extends AbstractEntity<?>> entityType) throws Exception {
-//        return new PropertyMetadata.Builder("referencesCount", Long.class, true).expression(dmeg.getReferencesCountPropForEntity(getReferences(entityType))).hibType(H_LONG).type(EXPRESSION_COMMON).build();
-//    }
-
-    public Set<Pair<Class<? extends AbstractEntity<?>>, String>> getReferences(final Class<? extends AbstractEntity<?>> entityType) {
-        final Set<Pair<Class<? extends AbstractEntity<?>>, String>> result = new HashSet<>();
-        // TODO take into account only PERSISTED props of PERSISTED entities
-        //	System.out.println("      getting references for entity: " + entityType.getSimpleName());
-        for (final PersistedEntityMetadata<? extends AbstractEntity<?>> entityMetadata : persistedEntityMetadataMap.values()) {
-            //		System.out.println("                  inspecting props of entity: " + entityMetadata.getType().getSimpleName());
-            for (final PropertyMetadata pmd : entityMetadata.getProps().values()) {
-                if (pmd.isEntityOfPersistedType() && pmd.affectsMapping() && pmd.getJavaType().equals(entityType)) {
-                    //			System.out.println("                            [" + pmd.getName() + "]");
-                    result.add(new Pair(entityMetadata.getType(), pmd.getName()));
-                }
-            }
-        }
-        return result;
     }
 
     private PropertyMetadata getCalculatedPropInfo(final Class<? extends AbstractEntity<?>> entityType, final Field calculatedPropfield) throws Exception {

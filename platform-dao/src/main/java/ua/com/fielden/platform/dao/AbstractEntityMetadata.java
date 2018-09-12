@@ -81,34 +81,4 @@ public abstract class AbstractEntityMetadata<ET extends AbstractEntity<?>> {
         }
         return true;
     }
-
-    public int countCalculatedProps() {
-        int result = 0;
-        for (final PropertyMetadata propMetadata : props.values()) {
-            if (propMetadata.isCalculated()) {
-                result = result + 1;
-            }
-        }
-        return result;
-    }
-
-    public int countCollectionalProps() {
-        int result = 0;
-        for (final PropertyMetadata propMetadata : props.values()) {
-            if (propMetadata.isCollection()) {
-                result = result + 1;
-            }
-        }
-        return result;
-    }
-    
-    public int countUnionEntityProps() {
-        int result = 0;
-        for (final PropertyMetadata propMetadata : props.values()) {
-            if (propMetadata.isUnionEntity()) {
-                result = result + 1;
-            }
-        }
-        return result;
-    }
 }
