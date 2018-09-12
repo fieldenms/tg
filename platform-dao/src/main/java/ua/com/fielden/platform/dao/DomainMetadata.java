@@ -186,10 +186,6 @@ public class DomainMetadata {
                 throw new IllegalStateException("Couldn't generate persistence metadata for entity [" + entityType + "] due to: " + e);
             }
         });
-        
-        //System.out.println(printEntitiesMetadataSummary("Persistent entities metadata summary:", persistedEntityMetadataMap));
-        //System.out.println(printEntitiesMetadataSummary("Synthetic entities metadata summary:", modelledEntityMetadataMap));
-        //enhanceWithCalcProps(entityMetadataMap.values());
     }
     
     
@@ -239,41 +235,6 @@ public class DomainMetadata {
     public <ET extends AbstractEntity<?>> PureEntityMetadata<ET> generatePureEntityMetadata(final Class<ET> entityType, final BaseInfoForDomainMetadata baseInfoForDomainMetadata) {
         return new PureEntityMetadata<>(baseInfoForDomainMetadata.getTableClause(entityType), entityType);
     }
-
-    //    public void enhanceWithCalcProps(final Collection<EntityMetadata> entityMetadatas) {
-    //        for (final EntityMetadata emd : entityMetadatas) {
-    //            if (emd.isPersisted()) {
-    //                try {
-    //                    final PropertyMetadata pmd = getVirtualPropInfoForReferenceCount(DynamicEntityClassLoader.getOriginalType(emd.getType()));
-    //                    safeMapAdd(emd.getProps(), pmd);
-    //                } catch (final Exception e) {
-    //                    // TODO Auto-generated catch block
-    //                    e.printStackTrace();
-    //                }
-    //            }
-    //        }
-    //    }
-
-    //    public <ET extends AbstractEntity<?>> EntityMetadata<ET> generateEntityMetadata(final Class<ET> entityType) throws Exception {
-    //
-    //        final String tableClause = getTableClause(entityType);
-    //        if (tableClause != null) {
-    //            return new EntityMetadata<ET>(tableClause, entityType, generatePropertyMetadatasForEntity(entityType, PERSISTED));
-    //        }
-    //
-    //        final List<EntityResultQueryModel<ET>> entityModels = getEntityModelsOfQueryBasedEntityType(entityType);
-    //        if (entityModels.size() > 0) {
-    //            return new EntityMetadata<ET>(entityModels, entityType, generatePropertyMetadatasForEntity(entityType, QUERY_BASED));
-    //        }
-    //
-    //        if (isUnionEntityType(entityType)) {
-    //            return new EntityMetadata<ET>(getUnionEntityModels(entityType), entityType, generatePropertyMetadatasForEntity(entityType, UNION));
-    //        } else {
-    //            //System.out.println(" -------------------+++++++++++----------------   " + entityType.getSimpleName());
-    //
-    //            return new EntityMetadata<ET>(entityType, generatePropertyMetadatasForEntity(entityType, PURE));
-    //        }
-    //    }
 
     public Object getBooleanValue(final boolean value) {
         final Object booleanHibClass = hibTypesDefaults.get(boolean.class);
