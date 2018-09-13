@@ -7,8 +7,8 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
 
 /**
- * This annotation on generated entity type (and on criteria entity type) contains information about the entity centre on which the entity 
- * type appears: 'saveAs' centre configuration name in case of 'named' configurations. This annotation should not exist on types for 'unnamed' centres.
+ * This annotation is used as part of generated entity types (and on criteria entity types) to reify the information about the entity centre on which the entity 
+ * type appears: 'saveAs' centre configuration name in case of 'named' configurations. This annotation should not exist for types representing 'unnamed' centres.
  * 
  * @author TG Team
  *
@@ -17,7 +17,7 @@ import java.lang.annotation.Target;
 @Target(TYPE)
 public @interface SaveAsName {
     
-    /** Contains non-empty 'saveAs' name for 'named' centre configuration. */
+    /** Contains non-empty 'saveAs' name for 'named' centre configurations. */
     String value();
     
 }
