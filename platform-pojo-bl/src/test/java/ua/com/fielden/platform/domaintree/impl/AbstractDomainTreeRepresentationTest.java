@@ -232,7 +232,8 @@ public class AbstractDomainTreeRepresentationTest extends AbstractDomainTreeTest
             }
         }, "entityPropWithoutKeyType");
     }
-
+    
+    @Ignore
     @Test
     public void test_that_link_properties_are_excluded() {
         assertTrue("Link property should be excluded.", dtm().isExcludedImmutably(MasterEntity.class, "entityProp.masterEntityProp"));
@@ -352,7 +353,8 @@ public class AbstractDomainTreeRepresentationTest extends AbstractDomainTreeTest
     public void test_that_included_properties_for_union_entities_hierarchy_are_correct_and_manage_Common_and_Union_properties() {
         assertEquals("Incorrect included properties.", Arrays.asList("", "desc", "unionEntityProp", "unionEntityProp.common-properties", "unionEntityProp.common-properties.desc", "unionEntityProp.common-properties.commonProp", "unionEntityProp.unionProp1", "unionEntityProp.unionProp1.dummy-property", "unionEntityProp.unionProp2", "unionEntityProp.unionProp2.dummy-property").toString(), dtm().includedProperties(MasterEntityWithUnionForIncludedPropertiesLogic.class).toString());
     }
-
+    
+    @Ignore
     @Test
     public void test_that_manual_exclusion_is_correctly_reflected_in_Included_properties() {
         assertEquals("Incorrect included properties.", Arrays.asList("", "desc", "integerProp", "entityPropOfSelfType", "entityPropOfSelfType.dummy-property", "entityProp", "entityProp.dummy-property", "entityPropCollection", "entityPropCollection.dummy-property").toString(), dtm().includedProperties(MasterEntityForIncludedPropertiesLogic.class).toString());
@@ -376,7 +378,8 @@ public class AbstractDomainTreeRepresentationTest extends AbstractDomainTreeTest
         assertFalse("An entity itself (represented by empty 'property') should NOT be disabled.", dtm().getFirstTick().isDisabledImmutably(MasterEntity.class, ""));
         assertTrue("Manually disabled entity itself (represented by empty 'property') should be disabled.", dtm().getFirstTick().isDisabledImmutably(EntityWithNormalNature.class, ""));
     }
-
+    
+    @Ignore
     @Test
     public void test_that_non_existent_properties_first_tick_disabling_cause_exception() {
         allLevels(new IAction() {
@@ -390,7 +393,8 @@ public class AbstractDomainTreeRepresentationTest extends AbstractDomainTreeTest
             }
         }, "moneyPropBeliberda");
     }
-
+    
+    @Ignore
     @Test
     public void test_that_any_excluded_properties_first_tick_disabling_and_isDisabled_checking_cause_IllegalArgument_exception() {
         // excluded manually stuff and excluded stuff manual disabling
@@ -447,7 +451,8 @@ public class AbstractDomainTreeRepresentationTest extends AbstractDomainTreeTest
         assertFalse("An entity itself (represented by empty 'property') should NOT be disabled.", dtm().getSecondTick().isDisabledImmutably(MasterEntity.class, ""));
         assertTrue("Manually disabled entity itself (represented by empty 'property') should be disabled.", dtm().getSecondTick().isDisabledImmutably(EntityWithNormalNature.class, ""));
     }
-
+    
+    @Ignore
     @Test
     public void test_that_non_existent_properties_second_tick_disabling_cause_exception() {
         allLevels(new IAction() {
@@ -461,7 +466,8 @@ public class AbstractDomainTreeRepresentationTest extends AbstractDomainTreeTest
             }
         }, "moneyPropBeliberda");
     }
-
+    
+    @Ignore
     @Test
     public void test_that_any_excluded_properties_second_tick_disabling_and_isDisabled_checking_cause_IllegalArgument_exception() {
         // excluded manually stuff and excluded stuff manual disabling
@@ -527,7 +533,8 @@ public class AbstractDomainTreeRepresentationTest extends AbstractDomainTreeTest
         assertFalse("By contract should be checked.", dtm().getFirstTick().isCheckedImmutably(EntityWithStringKeyType.class, ""));
         assertFalse("By contract should be disabled.", dtm().getFirstTick().isDisabledImmutably(EntityWithStringKeyType.class, ""));
     }
-
+    
+    @Ignore
     @Test
     public void test_that_non_existent_properties_first_tick_checking_and_isChecked_cause_exception() {
         allLevels(new IAction() {
@@ -541,7 +548,8 @@ public class AbstractDomainTreeRepresentationTest extends AbstractDomainTreeTest
             }
         }, "moneyPropBeliberda");
     }
-
+    
+    @Ignore
     @Test
     public void test_that_any_excluded_properties_first_tick_checking_and_isChecked_cause_IllegalArgument_exception() {
         // excluded manually stuff and excluded stuff manual disabling
@@ -605,7 +613,8 @@ public class AbstractDomainTreeRepresentationTest extends AbstractDomainTreeTest
         assertFalse("By contract should be unchecked.", dtm().getSecondTick().isCheckedImmutably(EntityWithStringKeyType.class, ""));
         assertFalse("By contract should NOT be disabled.", dtm().getSecondTick().isDisabledImmutably(EntityWithStringKeyType.class, ""));
     }
-
+    
+    @Ignore
     @Test
     public void test_that_non_existent_properties_second_tick_checking_and_isChecked_cause_exception() {
         allLevels(new IAction() {
@@ -619,7 +628,8 @@ public class AbstractDomainTreeRepresentationTest extends AbstractDomainTreeTest
             }
         }, "moneyPropBeliberda");
     }
-
+    
+    @Ignore
     @Test
     public void test_that_any_excluded_properties_second_tick_checking_and_isChecked_cause_IllegalArgument_exception() {
         // excluded manually stuff and excluded stuff manual disabling
@@ -736,7 +746,8 @@ public class AbstractDomainTreeRepresentationTest extends AbstractDomainTreeTest
         assertEquals(m, enhanceFunctionsWithCollectionalAttributes(functions), new ArrayList<Function>(dtm().availableFunctions(MasterEntity.class, "entityProp.collection.dateProp")));
         assertEquals(m, enhanceFunctionsWithCollectionalAttributes(functions), new ArrayList<Function>(dtm().availableFunctions(MasterEntity.class, "entityProp.collection.slaveEntityProp.dateProp")));
     }
-
+    
+    @Ignore
     @Test
     public void test_that_any_excluded_properties_available_functions_cause_IllegalArgument_exception() {
         allLevels(new IAction() {

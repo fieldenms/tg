@@ -16,6 +16,7 @@ import ua.com.fielden.platform.criteria.generator.ICriteriaGenerator;
 import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.domaintree.centre.impl.CentreDomainTreeManagerAndEnhancer;
+import ua.com.fielden.platform.domaintree.impl.DomainTreeEnhancerCache;
 import ua.com.fielden.platform.domaintree.testing.ClassProviderForTestingPurposes;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity_centre.review.criteria.EntityQueryCriteria;
@@ -33,7 +34,7 @@ public class EntityExistValidationTest extends AbstractDaoTestCase {
     private final Injector injector = new ApplicationInjectorFactory().add(module).getInjector();
     private final ClassProviderForTestingPurposes provider = new ClassProviderForTestingPurposes(TgSystem.class, TgCategory.class);
     private final EntityFactory entityFactory = injector.getInstance(EntityFactory.class);
-    private final ISerialiser serialiser = new SerialiserForDomainTreesTestingPurposes(entityFactory, provider);
+    private final ISerialiser serialiser = new SerialiserForDomainTreesTestingPurposes(entityFactory, provider, DomainTreeEnhancerCache.CACHE);
     private final CentreDomainTreeManagerAndEnhancer cdtm = new CentreDomainTreeManagerAndEnhancer(serialiser, new HashSet<>(asList(TgSystem.class)));
     
     @Test

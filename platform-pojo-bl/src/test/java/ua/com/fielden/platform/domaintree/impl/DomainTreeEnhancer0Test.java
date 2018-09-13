@@ -52,7 +52,7 @@ public class DomainTreeEnhancer0Test extends AbstractDomainTreeTest {
     }
 
     protected static ISerialiser createSerialiser_for_DomainTreeEnhancer0Test(final EntityFactory factory) {
-        return new Serialiser0ForDomainTreesTestingPurposes(factory, new ClassProviderForTestingPurposes());
+        return new Serialiser0ForDomainTreesTestingPurposes(factory, new ClassProviderForTestingPurposes(), DomainTreeEnhancerCache.CACHE);
     }
 
     @BeforeClass

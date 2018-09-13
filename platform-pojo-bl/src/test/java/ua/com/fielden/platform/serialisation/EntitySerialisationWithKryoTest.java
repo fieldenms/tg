@@ -8,8 +8,6 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 
-import java.beans.PropertyChangeEvent;
-import java.beans.PropertyChangeListener;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -23,6 +21,7 @@ import org.joda.time.Interval;
 import org.junit.Before;
 import org.junit.Test;
 
+import ua.com.fielden.platform.domaintree.impl.DomainTreeEnhancerCache;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.ClassWithMap;
 import ua.com.fielden.platform.entity.Entity;
@@ -59,8 +58,8 @@ public class EntitySerialisationWithKryoTest {
     private final Module module = new CommonTestEntityModuleWithPropertyFactory();
     private final Injector injector = new ApplicationInjectorFactory().add(module).getInjector();
     private final EntityFactory factory = injector.getInstance(EntityFactory.class);
-    private final ISerialiserEngine kryoWriter = new Serialiser(factory, new ProvidedSerialisationClassProvider(Entity.class, ClassWithMap.class, EntityWithPolymorphicProperty.class, BaseEntity.class, SubBaseEntity1.class, SubBaseEntity2.class, EntityWithByteArray.class, EntityWithQueryProperty.class)).getEngine(SerialiserEngines.KRYO);
-    private final ISerialiserEngine kryoReader = new Serialiser(factory, new ProvidedSerialisationClassProvider(Entity.class, ClassWithMap.class, EntityWithPolymorphicProperty.class, BaseEntity.class, SubBaseEntity1.class, SubBaseEntity2.class, EntityWithByteArray.class, EntityWithQueryProperty.class)).getEngine(SerialiserEngines.KRYO);
+    private final ISerialiserEngine kryoWriter = new Serialiser(factory, new ProvidedSerialisationClassProvider(Entity.class, ClassWithMap.class, EntityWithPolymorphicProperty.class, BaseEntity.class, SubBaseEntity1.class, SubBaseEntity2.class, EntityWithByteArray.class, EntityWithQueryProperty.class), DomainTreeEnhancerCache.CACHE).getEngine(SerialiserEngines.KRYO);
+    private final ISerialiserEngine kryoReader = new Serialiser(factory, new ProvidedSerialisationClassProvider(Entity.class, ClassWithMap.class, EntityWithPolymorphicProperty.class, BaseEntity.class, SubBaseEntity1.class, SubBaseEntity2.class, EntityWithByteArray.class, EntityWithQueryProperty.class), DomainTreeEnhancerCache.CACHE).getEngine(SerialiserEngines.KRYO);
     private Entity entity;
     private Entity entityForResult;
     private Entity entForProp;

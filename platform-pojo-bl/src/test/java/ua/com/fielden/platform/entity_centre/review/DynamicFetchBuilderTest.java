@@ -15,6 +15,7 @@ import com.google.inject.Injector;
 import ua.com.fielden.platform.domaintree.ICalculatedProperty.CalculatedPropertyAttribute;
 import ua.com.fielden.platform.domaintree.IDomainTreeEnhancer;
 import ua.com.fielden.platform.domaintree.impl.DomainTreeEnhancer;
+import ua.com.fielden.platform.domaintree.impl.DomainTreeEnhancerCache;
 import ua.com.fielden.platform.domaintree.testing.ClassProviderForTestingPurposes;
 import ua.com.fielden.platform.domaintree.testing.EntityWithKeyTitleAndWithAEKeyType;
 import ua.com.fielden.platform.domaintree.testing.EntityWithNormalNature;
@@ -41,7 +42,7 @@ public class DynamicFetchBuilderTest {
     }
 
     private static ISerialiser createSerialiser(final EntityFactory factory) {
-        return new SerialiserForDomainTreesTestingPurposes(factory, new ClassProviderForTestingPurposes());
+        return new SerialiserForDomainTreesTestingPurposes(factory, new ClassProviderForTestingPurposes(), DomainTreeEnhancerCache.CACHE);
     }
 
     private static final Class<? extends AbstractEntity<?>> masterKlass, slaveKlass, evenSlaveKlass, stringKeyKlass, mutableKeyType;

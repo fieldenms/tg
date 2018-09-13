@@ -1106,6 +1106,9 @@ public class WebUiConfig extends AbstractWebUiConfig {
 
         @Override
         public Optional<SingleCritOtherValueMnemonic<User>> getValue(final CentreContext<TgPersistentEntityWithProperties, ?> entity, final String name) {
+            if (userProvider.getUser() == null) {
+                return empty();
+            }
             final SingleCritOtherValueMnemonic<User> mnemonic = single().entity(User.class)./* TODO not applicable on query generation level not().*/setValue(userProvider.getUser())./* TODO not applicable on query generation level canHaveNoValue(). */value();
             return Optional.of(mnemonic);
         }
