@@ -787,17 +787,17 @@
                 var self = this;
                 var key = customAction.elementAlias ? customAction.elementAlias : customAction.elementName;
                 // disabled chache (temprarily?) to support polymorphic masters
-                /* if (self._cachedElements.hasOwnProperty(key)) {
+                 if (self._cachedElements.hasOwnProperty(key)) {
                     console.log("Reusing cached element:", key);
                     var element = self._cachedElements[key];
                     self.$.elementLoader.insert(element);
                     return Promise.resolve(element);
-                } else { */
-                self.$.elementLoader.import = customAction.componentUri;
-                self.$.elementLoader.elementName = customAction.elementName;
-                self.$.elementLoader.attrs = customAction.attrs;
-                return self.$.elementLoader.reload();
-                //}
+                } else { 
+                    self.$.elementLoader.import = customAction.componentUri;
+                    self.$.elementLoader.elementName = customAction.elementName;
+                    self.$.elementLoader.attrs = customAction.attrs;
+                    return self.$.elementLoader.reload();
+                }
             },
 
             /*
@@ -831,13 +831,13 @@
                                 if (promise) {
                                     return promise
                                         .then(function(ironRequest) {
-                                            /*var key = customAction.elementAlias ? customAction.elementAlias : customAction.elementName;
+                                            var key = customAction.elementAlias ? customAction.elementAlias : customAction.elementName;
                                             if (!self._cachedElements.hasOwnProperty(key)) {
                                                 if (typeof element['canBeCached'] === 'undefined' || element.canBeCached() === true) {
                                                     console.log("caching:", key);
                                                     self._cachedElements[key] = element;
                                                 }
-                                            }*/
+                                            }
                                             if (ironRequest && typeof ironRequest.successful !== 'undefined' && ironRequest.successful === true) {
                                                 return Promise.resolve(self._showMaster(customAction, element, closeEventChannel, closeEventTopics));
                                             } else {
