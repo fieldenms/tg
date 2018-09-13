@@ -75,7 +75,7 @@ public class DynamicQueryBuilderSqlTest {
     }
 
     private static ISerialiser createSerialiser(final EntityFactory factory) {
-        return new SerialiserForDomainTreesTestingPurposes(factory, new ClassProviderForTestingPurposes(), new DomainTreeEnhancerCache());
+        return new SerialiserForDomainTreesTestingPurposes(factory, new ClassProviderForTestingPurposes(), DomainTreeEnhancerCache.CACHE);
     }
 
     private final String alias;

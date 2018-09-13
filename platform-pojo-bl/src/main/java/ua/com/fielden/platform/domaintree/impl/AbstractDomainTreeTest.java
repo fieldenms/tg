@@ -112,7 +112,7 @@ public abstract class AbstractDomainTreeTest {
 
     private static ISerialiser createSerialiser(final EntityFactory factory) {
         final ClassProviderForTestingPurposes provider = new ClassProviderForTestingPurposes();
-        return new SerialiserForDomainTreesTestingPurposes(factory, provider, new DomainTreeEnhancerCache());
+        return new SerialiserForDomainTreesTestingPurposes(factory, provider, DomainTreeEnhancerCache.CACHE);
     }
 
     /**

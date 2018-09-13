@@ -39,7 +39,7 @@ public class FindLinkPropertyInGeneratedTypeTest {
     private final EntityFactory factory = injector.getInstance(EntityFactory.class);
 
     private final ISerialiser serialiser = new Serialiser(factory, new ProvidedSerialisationClassProvider(new Class[] { MasterEntityWithOneToOneAssociation.class,
-            MasterEntityWithOneToManyAssociation.class }), new DomainTreeEnhancerCache());
+            MasterEntityWithOneToManyAssociation.class }), DomainTreeEnhancerCache.CACHE);
     private final Set<Class<?>> rootTypes = new HashSet<Class<?>>() {
         {
             add(MasterEntityWithOneToOneAssociation.class);

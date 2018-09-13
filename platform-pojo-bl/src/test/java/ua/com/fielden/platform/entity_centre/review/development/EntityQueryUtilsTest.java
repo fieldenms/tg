@@ -41,7 +41,7 @@ public class EntityQueryUtilsTest {
     }
 
     private static ISerialiser createSerialiser(final EntityFactory factory) {
-        return new SerialiserForDomainTreesTestingPurposes(factory, new ClassProviderForTestingPurposes(), new DomainTreeEnhancerCache());
+        return new SerialiserForDomainTreesTestingPurposes(factory, new ClassProviderForTestingPurposes(), DomainTreeEnhancerCache.CACHE);
     }
 
     static {

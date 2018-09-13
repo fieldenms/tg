@@ -34,7 +34,7 @@ public class EntityExistValidationTest extends AbstractDaoTestCase {
     private final Injector injector = new ApplicationInjectorFactory().add(module).getInjector();
     private final ClassProviderForTestingPurposes provider = new ClassProviderForTestingPurposes(TgSystem.class, TgCategory.class);
     private final EntityFactory entityFactory = injector.getInstance(EntityFactory.class);
-    private final ISerialiser serialiser = new SerialiserForDomainTreesTestingPurposes(entityFactory, provider, new DomainTreeEnhancerCache());
+    private final ISerialiser serialiser = new SerialiserForDomainTreesTestingPurposes(entityFactory, provider, DomainTreeEnhancerCache.CACHE);
     private final CentreDomainTreeManagerAndEnhancer cdtm = new CentreDomainTreeManagerAndEnhancer(serialiser, new HashSet<>(asList(TgSystem.class)));
     
     @Test

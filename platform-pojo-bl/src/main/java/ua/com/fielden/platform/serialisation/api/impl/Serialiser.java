@@ -34,7 +34,7 @@ public class Serialiser implements ISerialiser {
     }
     
     public static Serialiser createSerialiserWithKryoAndJackson(final EntityFactory factory, final ISerialisationClassProvider provider, final ISerialisationTypeEncoder serialisationTypeEncoder, final IIdOnlyProxiedEntityTypeCache idOnlyProxiedEntityTypeCache) {
-        final Serialiser serialiser = new Serialiser(factory, provider, new DomainTreeEnhancerCache());
+        final Serialiser serialiser = new Serialiser(factory, provider, DomainTreeEnhancerCache.CACHE);
         serialiser.initJacksonEngine(serialisationTypeEncoder, idOnlyProxiedEntityTypeCache);
         return serialiser;
     }

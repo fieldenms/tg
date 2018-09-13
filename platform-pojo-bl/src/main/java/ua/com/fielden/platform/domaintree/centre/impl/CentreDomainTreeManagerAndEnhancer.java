@@ -127,13 +127,13 @@ public class CentreDomainTreeManagerAndEnhancer extends AbstractDomainTreeManage
         super(base, enhancer);
 
         this.serialiser = serialiser;
-        this.persistentAnalyses = new LinkedHashMap<String, IAbstractAnalysisDomainTreeManager>();
+        this.persistentAnalyses = new LinkedHashMap<>();
         this.persistentAnalyses.putAll(persistentAnalyses);
         // VERY IMPORTANT : Please note that deepCopy operation is not applicable here, because deserialisation process cannot be mixed with serialisation.
         // This constructor is explicitly used in deserialisation.
-        this.currentAnalyses = new LinkedHashMap<String, IAbstractAnalysisDomainTreeManager>();
+        this.currentAnalyses = new LinkedHashMap<>();
         this.currentAnalyses.putAll(currentAnalyses);
-        this.freezedAnalyses = new LinkedHashMap<String, IAbstractAnalysisDomainTreeManager>();
+        this.freezedAnalyses = new LinkedHashMap<>();
         this.freezedAnalyses.putAll(freezedAnalyses);
 
         for (final IAbstractAnalysisDomainTreeManager analysisManager : this.persistentAnalyses.values()) {

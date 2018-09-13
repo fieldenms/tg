@@ -61,7 +61,7 @@ public class CriteriaGeneratorTest {
     private final ICriteriaGenerator cg = injector.getInstance(ICriteriaGenerator.class);
 
     private final ClassProviderForTestingPurposes provider = new ClassProviderForTestingPurposes(TopLevelEntity.class, LastLevelEntity.class, SecondLevelEntity.class, ThirdLevelEntity.class);
-    private final ISerialiser serialiser = new SerialiserForDomainTreesTestingPurposes(entityFactory, provider, new DomainTreeEnhancerCache());
+    private final ISerialiser serialiser = new SerialiserForDomainTreesTestingPurposes(entityFactory, provider, DomainTreeEnhancerCache.CACHE);
 
     @SuppressWarnings("serial")
     private final CentreDomainTreeManagerAndEnhancer cdtm = new CentreDomainTreeManagerAndEnhancer(serialiser, new HashSet<Class<?>>() {

@@ -21,9 +21,15 @@ import ua.com.fielden.platform.types.tuples.T3;
  *
  */
 public class DomainTreeEnhancerCache implements IDomainTreeEnhancerCache {
-    private final ConcurrentMap<T3<Set<Class<?>>, Map<Class<?>, Set<CalculatedPropertyInfo>>, Map<Class<?>, List<CustomProperty>>>, DomainTreeEnhancer> domainTreeEnhancers = new ConcurrentHashMap<>();
-    private final Cache<T3<Class<?>, String, Long>, Class<?>> saveAsGenTypes = CacheBuilder.newBuilder().maximumSize(1000).build();
+    private static final ConcurrentMap<T3<Set<Class<?>>, Map<Class<?>, Set<CalculatedPropertyInfo>>, Map<Class<?>, List<CustomProperty>>>, DomainTreeEnhancer> domainTreeEnhancers = new ConcurrentHashMap<>();
+    private static final Cache<T3<Class<?>, String, Long>, Class<?>> saveAsGenTypes = CacheBuilder.newBuilder().maximumSize(1000).concurrencyLevel(50).build();
     
+    public static final DomainTreeEnhancerCache CACHE = new DomainTreeEnhancerCache();
+    
+    private DomainTreeEnhancerCache() {
+        
+    }
+
     @Override
     public DomainTreeEnhancer getDomainTreeEnhancerFor(final Set<Class<?>> rootTypes, final Map<Class<?>, Set<CalculatedPropertyInfo>> calculatedProperties, final Map<Class<?>, List<CustomProperty>> customProperties) {
         return domainTreeEnhancers.get(t3(rootTypes, calculatedProperties, customProperties));

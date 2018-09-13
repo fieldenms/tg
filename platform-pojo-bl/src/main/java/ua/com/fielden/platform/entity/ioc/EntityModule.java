@@ -10,7 +10,6 @@ import org.aopalliance.intercept.MethodInterceptor;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Injector;
-import com.google.inject.Scopes;
 import com.google.inject.matcher.AbstractMatcher;
 import com.google.inject.matcher.Matcher;
 
@@ -54,7 +53,7 @@ public abstract class EntityModule extends AbstractModule implements IModuleWith
                 annotatedWith(Authorise.class), // having annotated methods
                 ai); // the intercepter
         
-        bind(IDomainTreeEnhancerCache.class).to(DomainTreeEnhancerCache.class).in(Scopes.SINGLETON);
+        bind(IDomainTreeEnhancerCache.class).toInstance(DomainTreeEnhancerCache.CACHE);
     }
 
     @Override

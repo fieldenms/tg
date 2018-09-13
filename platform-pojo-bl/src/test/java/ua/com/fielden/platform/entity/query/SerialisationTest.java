@@ -52,8 +52,8 @@ public class SerialisationTest {
         types.add(TgOrgUnit5.class);
     }
 
-    private final Serialiser kryoWriter = new Serialiser(factory, new ProvidedSerialisationClassProvider(types.toArray(new Class[] {})), new DomainTreeEnhancerCache());
-    private final Serialiser kryoReader = new Serialiser(factory, new ProvidedSerialisationClassProvider(types.toArray(new Class[] {})), new DomainTreeEnhancerCache());
+    private final Serialiser kryoWriter = new Serialiser(factory, new ProvidedSerialisationClassProvider(types.toArray(new Class[] {})), DomainTreeEnhancerCache.CACHE);
+    private final Serialiser kryoReader = new Serialiser(factory, new ProvidedSerialisationClassProvider(types.toArray(new Class[] {})), DomainTreeEnhancerCache.CACHE);
 
     @Test
     public void seralisation_of_simple_query_should_not_have_failed() {

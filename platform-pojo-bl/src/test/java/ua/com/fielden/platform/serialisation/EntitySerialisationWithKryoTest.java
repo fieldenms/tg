@@ -58,8 +58,8 @@ public class EntitySerialisationWithKryoTest {
     private final Module module = new CommonTestEntityModuleWithPropertyFactory();
     private final Injector injector = new ApplicationInjectorFactory().add(module).getInjector();
     private final EntityFactory factory = injector.getInstance(EntityFactory.class);
-    private final ISerialiserEngine kryoWriter = new Serialiser(factory, new ProvidedSerialisationClassProvider(Entity.class, ClassWithMap.class, EntityWithPolymorphicProperty.class, BaseEntity.class, SubBaseEntity1.class, SubBaseEntity2.class, EntityWithByteArray.class, EntityWithQueryProperty.class), new DomainTreeEnhancerCache()).getEngine(SerialiserEngines.KRYO);
-    private final ISerialiserEngine kryoReader = new Serialiser(factory, new ProvidedSerialisationClassProvider(Entity.class, ClassWithMap.class, EntityWithPolymorphicProperty.class, BaseEntity.class, SubBaseEntity1.class, SubBaseEntity2.class, EntityWithByteArray.class, EntityWithQueryProperty.class), new DomainTreeEnhancerCache()).getEngine(SerialiserEngines.KRYO);
+    private final ISerialiserEngine kryoWriter = new Serialiser(factory, new ProvidedSerialisationClassProvider(Entity.class, ClassWithMap.class, EntityWithPolymorphicProperty.class, BaseEntity.class, SubBaseEntity1.class, SubBaseEntity2.class, EntityWithByteArray.class, EntityWithQueryProperty.class), DomainTreeEnhancerCache.CACHE).getEngine(SerialiserEngines.KRYO);
+    private final ISerialiserEngine kryoReader = new Serialiser(factory, new ProvidedSerialisationClassProvider(Entity.class, ClassWithMap.class, EntityWithPolymorphicProperty.class, BaseEntity.class, SubBaseEntity1.class, SubBaseEntity2.class, EntityWithByteArray.class, EntityWithQueryProperty.class), DomainTreeEnhancerCache.CACHE).getEngine(SerialiserEngines.KRYO);
     private Entity entity;
     private Entity entityForResult;
     private Entity entForProp;

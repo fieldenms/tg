@@ -236,13 +236,13 @@ public final class DomainTreeEnhancer extends AbstractDomainTree implements IDom
     }
     
     /**
-     * Creates {@link DomainTreeEnhancer} instance from <code>rootTypes</code> set with calculated / custom properties mapped to each root type.
+     * Creates {@link DomainTreeEnhancer} instance from <code>rootTypes</code> that are used for calculated/custom properties mapped to each root type.
      * <p>
-     * Please note that this method works against {@link DomainTreeEnhancer} cache. At this stage, where we have mutable {@link DomainTreeEnhancer}s 
-     * but on practice we do not use their mutability, we could safely cache every instance of {@link DomainTreeEnhancer}.
+     * Please note that this method works with {@link DomainTreeEnhancer} cache. At this stage, instances of {@link DomainTreeEnhancer} are mutable, 
+     * but in practice we do not use their mutability and we can safely cache every instance of {@link DomainTreeEnhancer}.
      * <p>
-     * This is not a problem due to the following:<br>
-     * 1. EntityCentre.createDefaultCentre method applies calculated / custom properties and after that {@link DomainTreeEnhancer} remains at the same state.<br>
+     * Mutability is not an issue due to the following:<br>
+     * 1. EntityCentre.createDefaultCentre method applies calculated/custom properties and after that {@link DomainTreeEnhancer} remains in the same state.<br>
      * 2. Instances, that were deserialised after retrieval from database or during copying, are not mutated afterwards.<br>
      * We need to consider {@link DomainTreeEnhancer} cache management when implementing ability to add calculated properties from UI.
      * 
