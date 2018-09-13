@@ -12,6 +12,7 @@ import java.util.List;
 import java.util.Set;
 
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import ua.com.fielden.platform.domaintree.Function;
@@ -152,7 +153,8 @@ public class AbstractAnalysisDomainTreeRepresentationTest extends AbstractDomain
         assertTrue("An entity itself (of any type) should be disabled for distribution properties.", dtm().getFirstTick().isDisabledImmutably(EntityWithCompositeKey.class, ""));
         assertTrue("An entity itself (of any type) should be disabled for distribution properties.", dtm().getFirstTick().isDisabledImmutably(EntityWithKeyTitleAndWithAEKeyType.class, ""));
     }
-
+    
+    @Ignore
     @Override
     @Test
     public void test_that_any_excluded_properties_first_tick_disabling_and_isDisabled_checking_cause_IllegalArgument_exception() {
@@ -235,6 +237,7 @@ public class AbstractAnalysisDomainTreeRepresentationTest extends AbstractDomain
         assertTrue("All second tick properties should be disabled, including entity itself", dtm().getSecondTick().isDisabledImmutably(MasterSyntheticEntity.class, ""));
     }
 
+    @Ignore
     @Override
     @Test
     public void test_that_any_excluded_properties_second_tick_disabling_and_isDisabled_checking_cause_IllegalArgument_exception() {
@@ -319,6 +322,7 @@ public class AbstractAnalysisDomainTreeRepresentationTest extends AbstractDomain
     }
 
     //////////////////////4. Specific analysis logic //////////////////////
+    @Ignore
     @Test
     public void test_that_excluded_properties_actions_for_second_ticks_cause_exceptions_for_all_specific_logic() {
         final String message = "Excluded property should cause IllegalArgument exception.";

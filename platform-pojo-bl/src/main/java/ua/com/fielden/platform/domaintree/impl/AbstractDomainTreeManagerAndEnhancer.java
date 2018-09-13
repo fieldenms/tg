@@ -242,7 +242,12 @@ public abstract class AbstractDomainTreeManagerAndEnhancer implements IDomainTre
         public Class<?> adjustManagedTypeAnnotations(final Class<?> root, final Annotation... additionalAnnotations) {
             return baseEnhancer().adjustManagedTypeAnnotations(root, additionalAnnotations);
         }
-
+        
+        @Override
+        public Class<?> replaceManagedTypeBy(final Class<?> root, final Class<?> newManagedType) {
+            return baseEnhancer().replaceManagedTypeBy(root, newManagedType);
+        }
+        
         @Override
         public void discard() {
             baseEnhancer().discard();

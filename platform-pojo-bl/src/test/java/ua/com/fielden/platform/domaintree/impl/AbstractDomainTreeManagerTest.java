@@ -172,6 +172,7 @@ public class AbstractDomainTreeManagerTest extends AbstractDomainTreeTest {
     ////////////////////////////////////////////////////////////////
     ////////////////////// 1. Manage state legitimacy (CHECK) //////
     ////////////////////////////////////////////////////////////////
+    @Ignore
     @Test
     public void test_that_CHECK_state_managing_for_excluded_properties_is_not_permitted() {
         final String message = "Excluded property should cause illegal argument exception while changing its state.";
@@ -182,7 +183,8 @@ public class AbstractDomainTreeManagerTest extends AbstractDomainTreeTest {
             }
         }, "excludedManuallyProp");
     }
-
+    
+    @Ignore
     @Test
     public void test_that_CHECK_state_managing_for_disabled_properties_is_not_permitted() { // (disabled == immutably checked or unchecked)
         final String message1 = "Immutably unchecked property (disabled) should cause illegal argument exception while changing its state.";
@@ -210,6 +212,7 @@ public class AbstractDomainTreeManagerTest extends AbstractDomainTreeTest {
     ///////////////////////////////////////////////////////////////////////
     ////////////////////// 2. Ask state checking / legitimacy (CHECK) /////
     ///////////////////////////////////////////////////////////////////////
+    @Ignore
     @Test
     public void test_that_CHECK_state_asking_for_excluded_properties_is_not_permitted() {
         final String message = "Excluded property should cause illegal argument exception while asking its state.";

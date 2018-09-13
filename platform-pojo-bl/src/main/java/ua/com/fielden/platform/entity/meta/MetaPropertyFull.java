@@ -10,7 +10,6 @@ import static ua.com.fielden.platform.types.tuples.T2.t2;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
-import java.lang.reflect.Method;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -36,7 +35,6 @@ import ua.com.fielden.platform.entity.validation.annotation.Final;
 import ua.com.fielden.platform.entity.validation.annotation.ValidationAnnotation;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.error.Warning;
-import ua.com.fielden.platform.reflection.Reflector;
 import ua.com.fielden.platform.types.tuples.T2;
 import ua.com.fielden.platform.utils.EntityUtils;
 
@@ -191,7 +189,7 @@ public final class MetaPropertyFull<T> extends MetaProperty<T> {
      * @return
      */
     @Override
-    public synchronized final Result validate(final T newValue, final Set<Annotation> applicableValidationAnnotations, final boolean ignoreRequiredness) {
+    public final Result validate(final T newValue, final Set<Annotation> applicableValidationAnnotations, final boolean ignoreRequiredness) {
         setLastInvalidValue(null);
         if (!ignoreRequiredness && isRequired() && isNull(newValue, getValue())) {
             final Map<IBeforeChangeEventHandler<T>, Result> requiredHandler = getValidators().get(ValidationAnnotation.REQUIRED);
@@ -257,7 +255,7 @@ public final class MetaPropertyFull<T> extends MetaProperty<T> {
      * @return revalidation result
      */
     @Override
-    public final synchronized Result revalidate(final boolean ignoreRequiredness) {
+    public final Result revalidate(final boolean ignoreRequiredness) {
         // revalidation is required only is there is an assigned value
         if (assigned) {
             return validate(getLastAttemptedValue(), validationAnnotations, ignoreRequiredness);
@@ -275,19 +273,19 @@ public final class MetaPropertyFull<T> extends MetaProperty<T> {
      */
     private Result processValidators(final T newValue, final Set<Annotation> applicableValidationAnnotations) {
         // iterate over registered validations
-        for (final ValidationAnnotation va : validators.keySet()) {
+        for (final Entry<ValidationAnnotation, Map<IBeforeChangeEventHandler<T>, Result>> vs : validators.entrySet()) {
             // requiredness falls outside of processing logic for other validators, so simply ignore it
-            if (va == ValidationAnnotation.REQUIRED) {
+            if (vs.getKey() == ValidationAnnotation.REQUIRED) {
                 continue;
             }
 
-            final Set<Entry<IBeforeChangeEventHandler<T>, Result>> pairs = validators.get(va).entrySet();
+            final Set<Entry<IBeforeChangeEventHandler<T>, Result>> pairs = vs.getValue().entrySet();
             for (final Entry<IBeforeChangeEventHandler<T>, Result> pair : pairs) {
                 // if validator exists ...and it should... then validated and set validation result
                 final IBeforeChangeEventHandler<T> handler = pair.getKey();
-                if (handler != null && isValidatorApplicable(applicableValidationAnnotations, va.getType())) {
+                if (handler != null && isValidatorApplicable(applicableValidationAnnotations, vs.getKey().getType())) {
                     final Result result = pair.getKey().handle(this, newValue, applicableValidationAnnotations);
-                    setValidationResultNoSynch(va, handler, result); // important to call setValidationResult as it fires property change event listeners
+                    setValidationResultNoSynch(vs.getKey(), handler, result); // important to call setValidationResult as it fires property change event listeners
                     if (!result.isSuccessful()) {
                         // 1. isCollectional() && newValue instance of Collection : previously the size of "newValue" collection was set as LastInvalidValue, but now,
                         //    if we need to update bounded component by the lastInvalidValue then we set it as a collectional value
@@ -352,7 +350,7 @@ public final class MetaPropertyFull<T> extends MetaProperty<T> {
      * @param validationResult
      */
     @Override
-    public synchronized final void setValidationResult(final ValidationAnnotation key, final IBeforeChangeEventHandler<T> handler, final Result validationResult) {
+    public final void setValidationResult(final ValidationAnnotation key, final IBeforeChangeEventHandler<T> handler, final Result validationResult) {
         setValidationResultNoSynch(key, handler, validationResult);
     }
 
@@ -362,7 +360,7 @@ public final class MetaPropertyFull<T> extends MetaProperty<T> {
      * @param validationResult
      */
     @Override
-    public synchronized final void setRequiredValidationResult(final Result validationResult) {
+    public final void setRequiredValidationResult(final Result validationResult) {
         setValidationResultForFirtsValidator(validationResult, ValidationAnnotation.REQUIRED);
     }
 
@@ -372,7 +370,7 @@ public final class MetaPropertyFull<T> extends MetaProperty<T> {
      * @param validationResult
      */
     @Override
-    public synchronized final void setEntityExistsValidationResult(final Result validationResult) {
+    public final void setEntityExistsValidationResult(final Result validationResult) {
         setValidationResultForFirtsValidator(validationResult, ValidationAnnotation.ENTITY_EXISTS);
     }
 
@@ -382,7 +380,7 @@ public final class MetaPropertyFull<T> extends MetaProperty<T> {
      * @param validationResult
      */
     @Override
-    public final synchronized void setDomainValidationResult(final Result validationResult) {
+    public final void setDomainValidationResult(final Result validationResult) {
         setValidationResultForFirtsValidator(validationResult, ValidationAnnotation.DOMAIN);
     }
 
@@ -413,7 +411,7 @@ public final class MetaPropertyFull<T> extends MetaProperty<T> {
      * @return
      */
     @Override
-    public synchronized final Result getValidationResult(final ValidationAnnotation va) {
+    public final Result getValidationResult(final ValidationAnnotation va) {
         final Result failure = getFirstFailureFor(va);
         return failure != null ? failure : validators.get(va).values().iterator().next();
     }
@@ -424,13 +422,13 @@ public final class MetaPropertyFull<T> extends MetaProperty<T> {
      * @return
      */
     @Override
-    public synchronized final boolean isValid() {
+    public final boolean isValid() {
         final Result failure = getFirstFailure();
         return failure == null;
     }
 
     @Override
-    public synchronized final boolean hasWarnings() {
+    public final boolean hasWarnings() {
         final Result failure = getFirstWarning();
         return failure != null;
     }
@@ -439,9 +437,9 @@ public final class MetaPropertyFull<T> extends MetaProperty<T> {
      * Removes all validation warnings (not errors) from the property.
      */
     @Override
-    public final synchronized void clearWarnings() {
-        for (final ValidationAnnotation va : validators.keySet()) {
-            final Map<IBeforeChangeEventHandler<T>, Result> annotationHandlers = validators.get(va);
+    public final void clearWarnings() {
+        for (final Entry<ValidationAnnotation, Map<IBeforeChangeEventHandler<T>, Result>> vs : validators.entrySet()) {
+            final Map<IBeforeChangeEventHandler<T>, Result> annotationHandlers = vs.getValue();
             for (final Entry<IBeforeChangeEventHandler<T>, Result> handlerAndResult : annotationHandlers.entrySet()) {
                 if (handlerAndResult.getValue() != null && handlerAndResult.getValue().isWarning()) {
                     annotationHandlers.put(handlerAndResult.getKey(), null);
@@ -456,7 +454,7 @@ public final class MetaPropertyFull<T> extends MetaProperty<T> {
      * @return
      */
     @Override
-    public final synchronized boolean isValidWithRequiredCheck(final boolean ignoreRequirednessForCritOnly) {
+    public final boolean isValidWithRequiredCheck(final boolean ignoreRequirednessForCritOnly) {
         final boolean result = isValid();
         if (result && (!ignoreRequirednessForCritOnly || !isCritOnly())) {
             // if valid check whether it's requiredness sound
@@ -498,9 +496,9 @@ public final class MetaPropertyFull<T> extends MetaProperty<T> {
      * @return
      */
     @Override
-    public final synchronized Result getFirstFailure() {
-        for (final ValidationAnnotation va : validators.keySet()) {
-            final Map<IBeforeChangeEventHandler<T>, Result> annotationHandlers = validators.get(va);
+    public final Result getFirstFailure() {
+        for (final Entry<ValidationAnnotation, Map<IBeforeChangeEventHandler<T>, Result>> vs : validators.entrySet()) {
+            final Map<IBeforeChangeEventHandler<T>, Result> annotationHandlers = vs.getValue();
             for (final Result result : annotationHandlers.values()) {
                 if (result != null && !result.isSuccessful()) {
                     return result;
@@ -516,9 +514,9 @@ public final class MetaPropertyFull<T> extends MetaProperty<T> {
      * @return
      */
     @Override
-    public synchronized final Warning getFirstWarning() {
-        for (final ValidationAnnotation va : validators.keySet()) {
-            final Map<IBeforeChangeEventHandler<T>, Result> annotationHandlers = validators.get(va);
+    public final Warning getFirstWarning() {
+        for (final Entry<ValidationAnnotation, Map<IBeforeChangeEventHandler<T>, Result>> vs : validators.entrySet()) {
+            final Map<IBeforeChangeEventHandler<T>, Result> annotationHandlers = vs.getValue();
             for (final Result result : annotationHandlers.values()) {
                 if (result != null && result.isWarning()) {
                     return (Warning) result;
@@ -681,9 +679,7 @@ public final class MetaPropertyFull<T> extends MetaProperty<T> {
      */
     private final boolean isChangedFrom(final T value) {
         try {
-            final Method getter = Reflector.obtainPropertyAccessor(entity.getClass(), getName());
-            final Object currValue = getter.invoke(entity);
-            return !EntityUtils.equalsEx(currValue, value);
+            return !EntityUtils.equalsEx(getValue(), value);
         } catch (final Exception e) {
             logger.debug(e.getMessage(), e);
         }
@@ -975,9 +971,9 @@ public final class MetaPropertyFull<T> extends MetaProperty<T> {
      * Resets validation results for all validators by setting their value to <code>null</code>.
      */
     @Override
-    public synchronized final void resetValidationResult() {
-        for (final ValidationAnnotation va : validators.keySet()) {
-            final Map<IBeforeChangeEventHandler<T>, Result> annotationHandlers = validators.get(va);
+    public final void resetValidationResult() {
+        for (final Entry<ValidationAnnotation, Map<IBeforeChangeEventHandler<T>, Result>> vs : validators.entrySet()) {
+            final Map<IBeforeChangeEventHandler<T>, Result> annotationHandlers = vs.getValue();
             for (final IBeforeChangeEventHandler<T> handler : annotationHandlers.keySet()) {
                 annotationHandlers.put(handler, null);
             }

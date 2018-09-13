@@ -2,6 +2,8 @@ package ua.com.fielden.platform.serialisation.api.impl;
 
 import java.io.InputStream;
 
+import ua.com.fielden.platform.domaintree.IDomainTreeEnhancerCache;
+import ua.com.fielden.platform.domaintree.impl.DomainTreeEnhancerCache;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.proxy.IIdOnlyProxiedEntityTypeCache;
 import ua.com.fielden.platform.serialisation.api.ISerialisationClassProvider;
@@ -25,20 +27,20 @@ public class Serialiser implements ISerialiser {
     private final ISerialisationClassProvider provider;
 
     @Inject
-    public Serialiser(final EntityFactory factory, final ISerialisationClassProvider provider) {
+    public Serialiser(final EntityFactory factory, final ISerialisationClassProvider provider, final IDomainTreeEnhancerCache domainTreeEnhancerCache) {
         this.factory = factory;
         this.provider = provider;
-        createTgKryo(factory, provider); // the serialiser engine will be set automatically
+        createTgKryo(factory, provider, domainTreeEnhancerCache); // the serialiser engine will be set automatically
     }
     
     public static Serialiser createSerialiserWithKryoAndJackson(final EntityFactory factory, final ISerialisationClassProvider provider, final ISerialisationTypeEncoder serialisationTypeEncoder, final IIdOnlyProxiedEntityTypeCache idOnlyProxiedEntityTypeCache) {
-        final Serialiser serialiser = new Serialiser(factory, provider);
+        final Serialiser serialiser = new Serialiser(factory, provider, DomainTreeEnhancerCache.CACHE);
         serialiser.initJacksonEngine(serialisationTypeEncoder, idOnlyProxiedEntityTypeCache);
         return serialiser;
     }
 
-    protected ISerialiserEngine createTgKryo(final EntityFactory factory, final ISerialisationClassProvider provider) {
-        return new TgKryo(factory, provider, this);
+    protected ISerialiserEngine createTgKryo(final EntityFactory factory, final ISerialisationClassProvider provider, final IDomainTreeEnhancerCache domainTreeEnhancerCache) {
+        return new TgKryo(factory, provider, domainTreeEnhancerCache, this);
     }
 
     @Override

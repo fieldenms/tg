@@ -5,9 +5,6 @@ import com.google.inject.Injector;
 import com.google.inject.Scopes;
 import com.google.inject.binder.AnnotatedBindingBuilder;
 
-import ua.com.fielden.platform.domaintree.IGlobalDomainTreeManager;
-import ua.com.fielden.platform.domaintree.IServerGlobalDomainTreeManager;
-import ua.com.fielden.platform.domaintree.impl.ServerGlobalDomainTreeManager;
 import ua.com.fielden.platform.entity.EntityExportActionDao;
 import ua.com.fielden.platform.entity.IEntityExportAction;
 import ua.com.fielden.platform.entity.proxy.IIdOnlyProxiedEntityTypeCache;
@@ -31,7 +28,6 @@ import ua.com.fielden.platform.web.centre.ICentreConfigUpdater;
 import ua.com.fielden.platform.web.interfaces.IDeviceProvider;
 import ua.com.fielden.platform.web.resources.webui.AbstractWebUiConfig;
 import ua.com.fielden.platform.web.test.server.TgTestWebApplicationServerModule;
-import ua.com.fielden.platform.web.test.server.WebGlobalDomainTreeManager;
 import ua.com.fielden.platform.web.utils.CriteriaEntityRestorer;
 import ua.com.fielden.platform.web.utils.ICriteriaEntityRestorer;
 
@@ -59,9 +55,6 @@ public interface IBasicWebApplicationServerModule {
         bindType(IDeviceProvider.class).to(ThreadLocalDeviceProvider.class).in(Scopes.SINGLETON);
         
         /////////////////////////////// application specific ////////////////////////////
-        bindType(IServerGlobalDomainTreeManager.class).to(ServerGlobalDomainTreeManager.class).in(Scopes.SINGLETON);
-        bindType(IGlobalDomainTreeManager.class).to(WebGlobalDomainTreeManager.class);
-
         // bind IWebApp instance with defined masters / centres and other DSL-defined configuration
         bindType(IWebUiConfig.class).toInstance(webApp);
         bindType(IMenuRetriever.class).toInstance(webApp);

@@ -8,15 +8,17 @@ import java.lang.reflect.Method;
 
 import org.aopalliance.intercept.MethodInterceptor;
 
-import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.annotation.Observable;
-import ua.com.fielden.platform.security.AuthorisationInterceptor;
-import ua.com.fielden.platform.security.Authorise;
-
 import com.google.inject.AbstractModule;
 import com.google.inject.Injector;
 import com.google.inject.matcher.AbstractMatcher;
 import com.google.inject.matcher.Matcher;
+
+import ua.com.fielden.platform.domaintree.IDomainTreeEnhancerCache;
+import ua.com.fielden.platform.domaintree.impl.DomainTreeEnhancerCache;
+import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.annotation.Observable;
+import ua.com.fielden.platform.security.AuthorisationInterceptor;
+import ua.com.fielden.platform.security.Authorise;
 
 /**
  * This Guice module ensures that properties for all {@link AbstractEntity} descendants are provided with an intercepter handling validation and observation.
@@ -50,6 +52,8 @@ public abstract class EntityModule extends AbstractModule implements IModuleWith
         bindInterceptor(any(), // match any class
                 annotatedWith(Authorise.class), // having annotated methods
                 ai); // the intercepter
+        
+        bind(IDomainTreeEnhancerCache.class).toInstance(DomainTreeEnhancerCache.CACHE);
     }
 
     @Override

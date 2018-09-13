@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.serialisation.jackson.serialisers;
 
 import static java.lang.String.format;
+import static ua.com.fielden.platform.reflection.Reflector.extractValidationLimits;
 import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.getValidationResult;
 import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.isChangedFromOriginalDefault;
 import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.isEditableDefault;
@@ -13,6 +14,9 @@ import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract
 import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.isValueChangeCountDefault;
 import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.isVisibleDefault;
 import static ua.com.fielden.platform.serialisation.jackson.EntitySerialiser.ID_ONLY_PROXY_PREFIX;
+import static ua.com.fielden.platform.utils.EntityUtils.isDecimal;
+import static ua.com.fielden.platform.utils.EntityUtils.isInteger;
+import static ua.com.fielden.platform.utils.EntityUtils.isString;
 
 import java.io.IOException;
 import java.util.LinkedHashMap;
@@ -194,9 +198,20 @@ public class EntityJsonSerialiser<T extends AbstractEntity<?>> extends StdSerial
                             if (!isValidationResultDefault(metaProperty)) {
                                 existingMetaProps.put("_validationResult", getValidationResult(metaProperty));
                             }
-                            final Pair<Integer, Integer> minMax = Reflector.extractValidationLimits(entity, name);
-                            final Integer min = minMax.getKey();
-                            final Integer max = minMax.getValue();
+                            final Integer min;
+                            final Integer max;
+                            if (prop.getPropertyType() != null && (
+                                isInteger(prop.getPropertyType())
+                                || isDecimal(prop.getPropertyType())
+                                || isString(prop.getPropertyType())
+                            )) { // check annotations @GreaterOrEqual and @Max only for integer / decimal / money and string properties to reduce performance hit (method retrieval through reflection is heavy operation here)
+                                final Pair<Integer, Integer> minMax = extractValidationLimits(entity, name);
+                                min = minMax.getKey();
+                                max = minMax.getValue();
+                            } else {
+                                min = null;
+                                max = null;
+                            }
                             if (!isMinDefault(min)) {
                                 existingMetaProps.put("_min", min);
                             }
