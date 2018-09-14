@@ -314,6 +314,17 @@ public abstract class AbstractEntity<K extends Comparable> implements Comparable
     }
 
     /**
+     * Enforces the strict verification of the domain model, which is the default approach.
+     */
+    public static void useStrictModelVerification() {
+        try {
+            Reflector.assignStatic(AbstractEntity.class.getDeclaredField("STRICT_MODEL_VERIFICATION"), true);
+        } catch (final Exception ex) {
+            throw asRuntime(ex);
+        }
+    }
+
+    /**
      * Holds meta-properties for entity properties.
      */
     private final Map<String, MetaProperty<?>> properties = new LinkedHashMap<>();
