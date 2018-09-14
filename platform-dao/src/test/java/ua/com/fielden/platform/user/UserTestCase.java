@@ -13,12 +13,13 @@ import static ua.com.fielden.platform.security.user.UserSecret.RESER_UUID_EXPIRA
 import static ua.com.fielden.platform.security.user.UserSecret.SECRET_RESET_UUID_SEPERATOR;
 
 import java.util.Optional;
+import java.util.stream.Stream;
 
 import org.junit.Test;
 
-import ua.com.fielden.platform.entity.annotation.Unique;
+import ua.com.fielden.platform.entity.annotation.mutator.BeforeChange;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
-import ua.com.fielden.platform.entity.validation.UniqueValidator;
+import ua.com.fielden.platform.entity.validation.UserAlmostUniqueEmailValidator;
 import ua.com.fielden.platform.property.validator.EmailValidator;
 import ua.com.fielden.platform.property.validator.StringValidator;
 import ua.com.fielden.platform.reflection.TitlesDescsGetter;
@@ -54,23 +55,110 @@ public class UserTestCase extends AbstractDaoTestCase {
     }
 
     @Test
-    public void propety_email_in_user_defined_as_unique() {
+    public void propety_email_in_user_is_defined_with_almost_unique_validator() {
         final User user1 = coUser.findByKey("USER1");
         final MetaProperty<String> emailProp = user1.getProperty("email");
-        assertTrue(emailProp.getValidationAnnotations().stream().filter(a -> a instanceof Unique).count() > 0);
+        assertTrue(emailProp.getValidationAnnotations().stream().filter(a -> a instanceof BeforeChange).flatMap(a -> Stream.of(((BeforeChange) a).value())).anyMatch(handler -> handler.value().isAssignableFrom(UserAlmostUniqueEmailValidator.class)));
     }
     
     @Test
-    public void users_have_unique_email_addresses() {
+    public void non_base_users_must_have_unique_email_addresses() {
+        final User user5 = coUser.findByKey("USER5");
+        user5.setEmail("user5@company.com");
+        assertFalse(user5.isBase());
+        assertNotNull(coUser.save(user5).getEmail());
+        
+        final User user6 = coUser.findByKey("USER6");
+        user6.setEmail("user5@company.com");
+        assertFalse(user6.isBase());
+        assertFalse(user6.isValid().isSuccessful());
+        assertFalse(user6.getProperty("email").isValid());
+        assertEquals(format(UserAlmostUniqueEmailValidator.validationErrorTemplate, "user5@company.com", "email", User.class.getName()), user6.getProperty("email").getFirstFailure().getMessage());
+    }
+
+    @Test
+    public void base_users_may_the_same_email_address() {
         final User user1 = coUser.findByKey("USER1");
         user1.setEmail("user1@company.com");
+        assertTrue(user1.isBase());
         assertNotNull(coUser.save(user1).getEmail());
         
         final User user2 = coUser.findByKey("USER2");
         user2.setEmail("user1@company.com");
+        assertTrue(user2.isBase());
+        assertTrue(user2.isValid().isSuccessful());
+        assertTrue(user2.getProperty("email").isValid());
+        assertEquals("user1@company.com", user2.getEmail());
+    }
+
+    @Test
+    public void base_user_becoming_non_base_cannot_have_the_same_email_address_as_other_base_users() {
+        final User user1 = coUser.findByKey("USER1");
+        user1.setEmail("user1@company.com");
+        assertTrue(user1.isBase());
+        assertNotNull(coUser.save(user1).getEmail());
+        
+        final User user2 = coUser.findByKey("USER2");
+        user2.setEmail("user1@company.com");
+        assertTrue(user2.isBase());
+        
+        assertTrue(user2.isValid().isSuccessful());
+        assertTrue(user2.getProperty("email").isValid());
+        assertEquals("user1@company.com", user2.getEmail());
+        
+        user2.setBase(false);
         assertFalse(user2.isValid().isSuccessful());
         assertFalse(user2.getProperty("email").isValid());
-        assertEquals(format(UniqueValidator.validationErrorTemplate, "user1@company.com", "email", User.class.getName()), user2.getProperty("email").getFirstFailure().getMessage());
+        assertEquals(format(UserAlmostUniqueEmailValidator.validationErrorTemplate, "user1@company.com", "email", User.class.getName()), user2.getProperty("email").getFirstFailure().getMessage());
+    }
+
+    @Test
+    public void base_users_may_not_have_the_same_email_address_as_non_base_user() {
+        final User user5 = coUser.findByKey("USER5");
+        user5.setEmail("user5@company.com");
+        assertFalse(user5.isBase());
+        assertNotNull(coUser.save(user5).getEmail());
+        
+        final User user1 = coUser.findByKey("USER1");
+        user1.setEmail("user5@company.com");
+        assertTrue(user1.isBase());
+        assertFalse(user1.isValid().isSuccessful());
+        assertFalse(user1.getProperty("email").isValid());
+        assertEquals(format(UserAlmostUniqueEmailValidator.validationErrorTemplate, "user5@company.com", "email", User.class.getName()), user1.getProperty("email").getFirstFailure().getMessage());
+    }
+
+    @Test
+    public void non_base_users_may_not_have_the_same_email_address_as_base_user() {
+        final User user1 = coUser.findByKey("USER1");
+        user1.setEmail("user1@company.com");
+        assertTrue(user1.isBase());
+        assertNotNull(coUser.save(user1).getEmail());
+        
+        final User user5 = coUser.findByKey("USER5");
+        user5.setEmail("user1@company.com");
+        assertFalse(user5.isBase());
+        assertFalse(user5.isValid().isSuccessful());
+        assertFalse(user5.getProperty("email").isValid());
+        assertEquals(format(UserAlmostUniqueEmailValidator.validationErrorTemplate, "user1@company.com", "email", User.class.getName()), user5.getProperty("email").getFirstFailure().getMessage());
+    }
+
+    @Test
+    public void non_base_user_becoming_base_may_have_the_same_email_address_as_other_base_users() {
+        final User user1 = coUser.findByKey("USER1");
+        user1.setEmail("user1@company.com");
+        assertTrue(user1.isBase());
+        assertNotNull(coUser.save(user1).getEmail());
+        
+        final User user5 = coUser.findByKey("USER5");
+        user5.setEmail("user1@company.com");
+        assertFalse(user5.isBase());
+        assertFalse(user5.isValid().isSuccessful());
+        assertFalse(user5.getProperty("email").isValid());
+        assertEquals(format(UserAlmostUniqueEmailValidator.validationErrorTemplate, "user1@company.com", "email", User.class.getName()), user5.getProperty("email").getFirstFailure().getMessage());
+        
+        user5.setBase(true);
+        assertTrue(user5.isBase());
+        assertTrue(user5.isValid().isSuccessful());
     }
 
     @Test
@@ -370,10 +458,12 @@ public class UserTestCase extends AbstractDaoTestCase {
     }
 
     @Test
-    public void the_use_of_self_as_basedOnUser_is_not_permitted() {
-        final User user1 = coUser.findByKeyAndFetch(co$(User.class).getFetchProvider().fetchModel(), "USER1");
+    public void baseUser_cannot_be_assigned_to_itself() {
+        final User user1 = coUser.findByKeyAndFetch(IUser.FETCH_PROVIDER.fetchModel(), "USER1");
+        assertTrue(user1.isBase());
         assertTrue(user1.getProperty("basedOnUser").isValid());
-        user1.setBasedOnUser(user1);
+        user1.setBasedOnUser(coUser.findByKeyAndFetch(IUser.FETCH_PROVIDER.fetchModel(), "USER1"));
+        
         assertFalse(user1.getProperty("basedOnUser").isValid());
         assertEquals(UserBaseOnUserValidator.SELF_REFERENCE_IS_NOT_PERMITTED, user1.getProperty("basedOnUser").getFirstFailure().getMessage());
     }

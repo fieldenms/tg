@@ -2,10 +2,10 @@ package ua.com.fielden.platform.test.runners;
 
 import static java.lang.String.format;
 import static org.apache.commons.lang.StringUtils.isEmpty;
+import static ua.com.fielden.platform.reflection.Reflector.assignStatic;
 import static ua.com.fielden.platform.test.DbCreator.ddlScriptFileName;
 
 import java.lang.reflect.Constructor;
-import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -205,16 +205,4 @@ public abstract class AbstractDomainDrivenTestCaseRunner extends BlockJUnit4Clas
         }
     }
 
-    /**
-     * A helper function to assign value to a field.
-     *  
-     * @param field
-     * @param newValue
-     * @throws Exception
-     */
-    private static void assignStatic(final Field field, final Object newValue) throws Exception {
-        field.setAccessible(true);
-        field.set(null, newValue);
-     }
-    
 }
