@@ -144,14 +144,12 @@ public class MiscUtilities {
      *
      * @param fileName
      * @return
+     * @throws IOException 
      * @throws Exception
      */
-    public static Properties propertyExtractor(final String fileName) throws Exception {
-        InputStream st = null;
-        Properties props = null;
-        try {
-            st = new FileInputStream(fileName);
-            props = new Properties();
+    public static Properties propertyExtractor(final String fileName) throws IOException {
+        try (final InputStream st = new FileInputStream(fileName)) {
+            final Properties props = new Properties();
             props.load(st);
 
             // clean loaded properties off loading and trailing whitespace characters
@@ -163,12 +161,6 @@ public class MiscUtilities {
             }
 
             return props;
-        } finally {
-            try {
-                st.close();
-            } catch (final Exception e) {
-                e.printStackTrace(); // can be ignored
-            }
         }
     }
 
