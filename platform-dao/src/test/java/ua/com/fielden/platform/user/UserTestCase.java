@@ -17,10 +17,8 @@ import java.util.stream.Stream;
 
 import org.junit.Test;
 
-import ua.com.fielden.platform.entity.annotation.Unique;
 import ua.com.fielden.platform.entity.annotation.mutator.BeforeChange;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
-import ua.com.fielden.platform.entity.validation.UniqueValidator;
 import ua.com.fielden.platform.entity.validation.UserAlmostUniqueEmailValidator;
 import ua.com.fielden.platform.property.validator.EmailValidator;
 import ua.com.fielden.platform.property.validator.StringValidator;
@@ -460,10 +458,12 @@ public class UserTestCase extends AbstractDaoTestCase {
     }
 
     @Test
-    public void the_use_of_self_as_basedOnUser_is_not_permitted() {
-        final User user1 = coUser.findByKeyAndFetch(co$(User.class).getFetchProvider().fetchModel(), "USER1");
+    public void baseUser_cannot_be_assigned_to_itself() {
+        final User user1 = coUser.findByKeyAndFetch(IUser.FETCH_PROVIDER.fetchModel(), "USER1");
+        assertTrue(user1.isBase());
         assertTrue(user1.getProperty("basedOnUser").isValid());
-        user1.setBasedOnUser(user1);
+        user1.setBasedOnUser(coUser.findByKeyAndFetch(IUser.FETCH_PROVIDER.fetchModel(), "USER1"));
+        
         assertFalse(user1.getProperty("basedOnUser").isValid());
         assertEquals(UserBaseOnUserValidator.SELF_REFERENCE_IS_NOT_PERMITTED, user1.getProperty("basedOnUser").getFirstFailure().getMessage());
     }

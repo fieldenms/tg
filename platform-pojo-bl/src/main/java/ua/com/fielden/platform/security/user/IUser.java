@@ -3,13 +3,18 @@
  */
 package ua.com.fielden.platform.security.user;
 
+import static ua.com.fielden.platform.entity.ActivatableAbstractEntity.ACTIVE;
+import static ua.com.fielden.platform.security.user.User.EMAIL;
+
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
 import ua.com.fielden.platform.dao.IEntityDao;
+import ua.com.fielden.platform.entity.fetch.IFetchProvider;
 import ua.com.fielden.platform.pagination.IPage;
+import ua.com.fielden.platform.utils.EntityUtils;
 
 /**
  * Contract for DAO handling user instances.
@@ -131,5 +136,9 @@ public interface IUser extends IEntityDao<User> {
      * @return
      */
     User findUser(String username);
+
+    static final IFetchProvider<User> FETCH_PROVIDER = EntityUtils.fetch(User.class)
+            .with("key", EMAIL, ACTIVE)
+            .with("base", "basedOnUser.base");
 
 }

@@ -203,9 +203,7 @@ public class UserDao extends CommonEntityDao<User> implements IUser {
 
     @Override
     public IFetchProvider<User> createFetchProvider() {
-        return super.createFetchProvider()
-                .with("key", EMAIL, ACTIVE) // this property is "required" (necessary during saving) -- should be declared as fetching property
-                .with("base", "basedOnUser.base"); //
+        return IUser.FETCH_PROVIDER;
     }
 
     /**
