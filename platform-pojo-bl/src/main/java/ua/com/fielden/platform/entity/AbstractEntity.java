@@ -16,6 +16,7 @@ import static ua.com.fielden.platform.entity.exceptions.EntityDefinitionExceptio
 import static ua.com.fielden.platform.entity.exceptions.EntityDefinitionException.INVALID_USE_OF_PARAM_LENGTH_MSG;
 import static ua.com.fielden.platform.entity.exceptions.EntityDefinitionException.INVALID_VALUES_FOR_PRECITION_AND_SCALE_MSG;
 import static ua.com.fielden.platform.entity.validation.custom.DefaultEntityValidator.validateWithCritOnly;
+import static ua.com.fielden.platform.error.Result.asRuntime;
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.isNumeric;
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.stripIfNeeded;
 import static ua.com.fielden.platform.utils.CollectionUtil.unmodifiableSetOf;
@@ -290,6 +291,27 @@ public abstract class AbstractEntity<K extends Comparable> implements Comparable
     public static final String DESC = "desc";
     public static final String KEY_NOT_ASSIGNED = "[key is not assigned]";
     public static final Set<String> COMMON_PROPS = unmodifiableSetOf(KEY, DESC, "referencesCount", "referenced");
+    
+    /**
+     * A flag that provides a way to enforce more strict model verification, which is the default approach.
+     */
+    public static final boolean STRICT_MODEL_VERIFICATION;
+    static { // static initialisation block is required instead of direct value assignment to enable reassignment of the value at runtime
+        STRICT_MODEL_VERIFICATION = true;
+    }
+
+    /**
+     * Enforces the non-strict verification of the domain model.
+     * This mode improves performance, but does not verify the domain model for self-consistency.
+     * It is strongly recommended not to use this mode during application development.
+     */
+    public static void useNonStrictModelVerification() {
+        try {
+            Reflector.assignStatic(AbstractEntity.class.getDeclaredField("STRICT_MODEL_VERIFICATION"), false);
+        } catch (final Exception ex) {
+            throw asRuntime(ex);
+        }
+    }
 
     /**
      * Holds meta-properties for entity properties.
@@ -572,7 +594,6 @@ public abstract class AbstractEntity<K extends Comparable> implements Comparable
     protected void setMetaPropertyFactory(final IMetaPropertyFactory metaPropertyFactory) {
         // mark the start of the initialisation phase as part of entity creation
         beginInitialising();
-        ///logger.debug("Starting meta construction with factory " + metaPropertyFactory + " for type " + getType());
         // if meta-property factory has already been assigned it should not change
         if (this.metaPropertyFactory.isPresent()) {
             logger.error("Property factory can be assigned only once.");
@@ -584,47 +605,42 @@ public abstract class AbstractEntity<K extends Comparable> implements Comparable
 
         // obtain field annotated as properties
         final List<Field> fields = Finder.findRealProperties(getClass());
-        //logger.debug("Iterating through " + fields.size() + " properties for building corresponding meta-properties.");
         for (final Field field : fields) { // for each property field
             final String propName = field.getName();
 
             // Reflector.obtainPropertyAccessor(getType(), propName); -- commented out due to heavy nature of this computation; perhaps this check to be performed only in development mode of the server
             // determine property type and adjacent virtues
             final Class<?> type = determineType(field);
-            //logger.debug("TYPE (" + field.getName() + ") : " + type);
             final boolean isKey = keyMembers.contains(field);
-            //logger.debug("IS_KEY (" + field.getName() + ") : " + isKey);
 
             if (Reflector.isPropertyProxied(this, propName)) {
                 properties.put(propName, new MetaProperty(this, field, type, isKey, true, extractDependentProperties(field, fields)));
             } else {
-                //logger.debug("Property " + field.getName());
                 try {
                     // ensure that there is an accessor -- with out it field is not a property
                     // throws exception if method does not exists
-                    Reflector.obtainPropertyAccessor(getType(), propName);
+                    if (STRICT_MODEL_VERIFICATION) {
+                        Reflector.obtainPropertyAccessor(getType(), propName);
+                    }
 
                     final boolean isCollectional = Collection.class.isAssignableFrom(type);
-                    //logger.debug("IS_COLLECTIONAL (" + field.getName() + ") : " + isCollectional);
 
                     final IsProperty isPropertyAnnotation = AnnotationReflector.getAnnotation(field, IsProperty.class);
                     final Class<?> propertyAnnotationType = isPropertyAnnotation.value();
 
                     // perform some early runtime validation whether property was defined correctly
-                    // TODO this kind of validation should really be implemented as part of the compilation process
-                    earlyRuntimePropertyDefinitionValidation(propName, type, isCollectional, isPropertyAnnotation, propertyAnnotationType);
+                    if (STRICT_MODEL_VERIFICATION) {
+                        // TODO this kind of validation should really be implemented as part of the compilation process
+                        earlyRuntimePropertyDefinitionValidation(propName, type, isCollectional, isPropertyAnnotation, propertyAnnotationType);
+                    }
 
                     // if setter is annotated then try to instantiate specified validator
-                    //logger.debug("Collecting validators for " + field.getName());
                     final Set<Annotation> declatedValidationAnnotations = new HashSet<>();
                     final Map<ValidationAnnotation, Map<IBeforeChangeEventHandler<?>, Result>> validators = collectValidators(metaPropertyFactory, field, type, isCollectional, declatedValidationAnnotations);
                     // create ACE handler
-                    //logger.debug("Initiating meta-property ACE handler for " + field.getName());
                     final IAfterChangeEventHandler<?> definer = metaPropertyFactory.create(this, field);
                     // create meta-property
-                    //logger.debug("Creating meta-property for " + field.getName());
                     final boolean isUpperCase = AnnotationReflector.isAnnotationPresent(field, UpperCase.class);
-                    //logger.debug("IS_UPPERCASE (" + field.getName() + ") : " + isUpperCase);
                     final MetaProperty<?> metaProperty = new MetaPropertyFull(
                             this,
                             field,
@@ -641,7 +657,6 @@ public abstract class AbstractEntity<K extends Comparable> implements Comparable
                             definer,
                             extractDependentProperties(field, fields));
                     // define meta-property properties used most commonly for UI construction: required, editable, title and desc //
-                    //logger.debug("Initialising meta-property for " + field.getName());
                     initProperty(keyMembers, field, metaProperty);
                     // put meta-property in the map associating it with a corresponding property name
                     properties.put(propName, metaProperty);
@@ -652,7 +667,6 @@ public abstract class AbstractEntity<K extends Comparable> implements Comparable
             }
         }
         endInitialising();
-        //logger.debug("Finished meta construction for type " + getType());
     }
 
     /**
@@ -760,7 +774,6 @@ public abstract class AbstractEntity<K extends Comparable> implements Comparable
             final boolean isCollectional,
             final Set<Annotation> validationAnnotations)
             throws Exception {
-        //logger.debug("Start collecting validators for property " + field.getName() + "...");
         try {
             final Map<ValidationAnnotation, Map<IBeforeChangeEventHandler<?>, Result>> validators = new EnumMap<>(ValidationAnnotation.class);
             // Get corresponding mutators to pick all specified validators in case of a collectional property there can be up to three mutators --
@@ -768,7 +781,7 @@ public abstract class AbstractEntity<K extends Comparable> implements Comparable
             final Set<Annotation> propertyValidationAnotations = extractValidationAnnotationForProperty(field, properyType, isCollectional);
             for (final Annotation annotation : propertyValidationAnotations) {
                 final ValidationAnnotation validationAnnotation = ValidationAnnotation.getValueByType(annotation);
-                // if property factory cannot instantiate a validator for the specified annotation then null is returned;
+                // if property factory cannot instantiate a validator for the specified annotation then null is returned
                 final IBeforeChangeEventHandler<?>[] annotationValidators = metaPropertyFactory.create(annotation, this, field.getName(), properyType);
                 if (annotationValidators.length > 0) {
                     final Map<IBeforeChangeEventHandler<?>, Result> handlersAndResults = new LinkedHashMap<>();
@@ -780,7 +793,7 @@ public abstract class AbstractEntity<K extends Comparable> implements Comparable
             }
 
             // now let's see if we need to add EntityExists validation
-            if (!validators.containsKey(ValidationAnnotation.ENTITY_EXISTS) && isEntityExistsValidationApplicable(getType(), field, properyType)) {
+            if (!validators.containsKey(ValidationAnnotation.ENTITY_EXISTS) && isEntityExistsValidationApplicable(field, properyType)) {
                 final EntityExists eeAnnotation = new EntityExistsAnnotation((Class<? extends AbstractEntity<?>>) properyType).newInstance();
                 final IBeforeChangeEventHandler<?>[] annotationValidators = metaPropertyFactory.create(eeAnnotation, this, field.getName(), properyType);
 
@@ -796,7 +809,6 @@ public abstract class AbstractEntity<K extends Comparable> implements Comparable
                 validators.put(ValidationAnnotation.ENTITY_EXISTS, handlersAndResults);
             }
 
-            // logger.debug("Finished collecting validators for property " + field.getName() + ".");
             validationAnnotations.addAll(propertyValidationAnotations);
 
             return validators;
@@ -813,7 +825,7 @@ public abstract class AbstractEntity<K extends Comparable> implements Comparable
      * @param propType
      * @return
      */
-    private boolean isEntityExistsValidationApplicable(final Class<?> entityType, final Field field, final Class<?> propType) {
+    private boolean isEntityExistsValidationApplicable(final Field field, final Class<?> propType) {
         final SkipEntityExistsValidation seevAnnotation =  AnnotationReflector.getAnnotation(field, SkipEntityExistsValidation.class);
         final boolean skipEntityExistsValidation = seevAnnotation != null ? !seevAnnotation.skipActiveOnly() : false;
         return !skipEntityExistsValidation &&
@@ -879,7 +891,7 @@ public abstract class AbstractEntity<K extends Comparable> implements Comparable
      */
     private String[] extractDependentProperties(final Field field, final List<Field> allFields) {
         if (AnnotationReflector.isAnnotationPresent(field, Dependent.class)) {
-            final List<String> allFieldsNames = new ArrayList<String>();
+            final List<String> allFieldsNames = new ArrayList<>();
             for (final Field f : allFields) {
                 allFieldsNames.add(f.getName());
             }

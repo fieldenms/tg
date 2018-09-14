@@ -313,7 +313,23 @@ public class ReflectorTest {
     public void reflector_correctly_identifies_declared_methods_as_such() {
         assertTrue(isMethodOverriddenOrDeclared(AbstractEntity.class, EntityWithValidationLimits.class, "setMonth", Integer.class));
     }
-    
+
+    @Test
+    public void assigning_static_final_fields_is_supported() throws NoSuchFieldException, SecurityException {
+        assertTrue(AbstractEntity.STRICT_MODEL_VERIFICATION);
+        assertTrue(ComplexKeyEntity.STRICT_MODEL_VERIFICATION);
+
+        try {
+            Reflector.assignStatic(AbstractEntity.class.getDeclaredField("STRICT_MODEL_VERIFICATION"), false);
+            assertFalse(AbstractEntity.STRICT_MODEL_VERIFICATION);
+            assertFalse(ComplexKeyEntity.STRICT_MODEL_VERIFICATION);
+        } finally {
+            Reflector.assignStatic(AbstractEntity.class.getDeclaredField("STRICT_MODEL_VERIFICATION"), true);
+            assertTrue(AbstractEntity.STRICT_MODEL_VERIFICATION);
+            assertTrue(ComplexKeyEntity.STRICT_MODEL_VERIFICATION);
+        }
+    }
+
     @KeyType(String.class)
     protected static class EntityWithValidationLimits extends AbstractEntity<String> {
 

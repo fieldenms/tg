@@ -8,6 +8,7 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -561,5 +562,24 @@ public final class Reflector {
      */
     public static boolean isPropertyRetrievable(final AbstractEntity<?> entity, final String propName) {
         return isPropertyRetrievable(entity, Finder.findFieldByName(entity.getClass(), propName)); 
+    }
+    
+    /**
+     * A helper function to assign value to a static final field.
+     *  
+     * @param field
+     * @param value
+     */
+    public static void assignStatic(final Field field, final Object value) {
+        try {
+            field.setAccessible(true);
+            final Field modifiersField = Field.class.getDeclaredField("modifiers");
+            modifiersField.setAccessible(true);
+            modifiersField.setInt(field, field.getModifiers() & ~Modifier.FINAL);
+
+            field.set(null, value);
+        } catch (final Exception ex) {
+            throw new ReflectionException("Could not assign value to a static field.", ex);
+        }
     }
 }
