@@ -139,50 +139,12 @@ public enum StandardActions {
                 contextConfig = context().withCurrentEntity().withSelectionCrit().withComputation((entity, context) -> entityType);
             }
 
-            return action(EntityEditAction.class).
+            return action(EntityNavigationAction.class).
                     withContext(contextConfig.build()).
+                    preAction(new EntityNavigationPreAction(entityTitle)).
                     icon("editor:mode-edit").
                     shortDesc(format("Edit %s", entityTitle)).
                     longDesc(format("Opens master for editing %s", entityTitle)).
-                    prefDimForView(prefDim).
-                    withNoParentCentreRefresh().
-                    build();
-        }
-    },
-
-    ENTITY_NAVIGATION_ACTION {
-
-        @Override
-        public EntityActionConfig mkAction(final Class<? extends AbstractEntity<?>> entityType) {
-            return mkAction(entityType, null, null);
-        }
-
-        @Override
-        public EntityActionConfig mkAction(final Class<? extends AbstractEntity<?>> entityType, final PrefDim prefDim) {
-            return mkAction(entityType, null, prefDim);
-        }
-
-        @Override
-        public EntityActionConfig mkAction(final Class<? extends AbstractEntity<?>> entityType, final BiFunction<AbstractFunctionalEntityWithCentreContext<?>, CentreContext<AbstractEntity<?>, AbstractEntity<?>>, Object> computation) {
-            return mkAction(entityType, computation, null);
-        }
-
-        @Override
-        public EntityActionConfig mkAction(final Class<? extends AbstractEntity<?>> entityType, final BiFunction<AbstractFunctionalEntityWithCentreContext<?>, CentreContext<AbstractEntity<?>, AbstractEntity<?>>, Object> computation, final PrefDim prefDim) {
-            final String entityTitle = TitlesDescsGetter.getEntityTitleAndDesc(entityType).getKey();
-
-            final IEntityCentreContextSelectorDone<AbstractEntity<?>> contextConfig;
-            if (computation != null) {
-                contextConfig = context().withCurrentEntity().withComputation(computation);
-            } else {
-                contextConfig = context().withCurrentEntity().withComputation((entity, context) -> entityType);
-            }
-
-            return action(EntityNavigationAction.class).withContext(contextConfig.build()).
-                    preAction(new EntityNavigationPreAction(entityTitle)).
-                    icon("editor:mode-edit").
-                    shortDesc(format("Open %s", entityTitle)).
-                    longDesc(format("Open %s", entityTitle)).
                     prefDimForView(prefDim).
                     withNoParentCentreRefresh().
                     build();

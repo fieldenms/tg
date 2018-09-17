@@ -151,14 +151,4 @@ public interface IWebUiBuilder {
      * @return
      */
     <T extends AbstractEntity<?>> Supplier<Optional<EntityActionConfig>> getOpenMasterAction(final Class<T> entityType);
-
-    /**
-     * Returns a supplier to lazily obtain an open entity master action configuration for the specified entity type.
-     * The returned supplier is never <code>null</code>, but its result is optional and could be empty.
-     *
-     * @param entityType
-     * @return
-     */
-    <T extends AbstractEntity<?>> Supplier<Optional<EntityActionConfig>> getSequentialOpenMasterAction(final Class<T> entityType);
-
 }

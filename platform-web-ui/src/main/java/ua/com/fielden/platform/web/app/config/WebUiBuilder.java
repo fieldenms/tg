@@ -40,19 +40,19 @@ public class WebUiBuilder implements IWebUiBuilder {
     private String dateFormat = "DD/MM/YYYY";
     private String timeFormat = "h:mm A";
     private String timeWithMillisFormat = "h:mm:ss.SSS A";
-    
+
     /**
      * Holds the map between master's entity type and its master component.
      */
     private final Map<Class<? extends AbstractEntity<?>>, EntityMaster<? extends AbstractEntity<?>>> mastersMap = new ConcurrentHashMap<>();
-    
+
     /**
      * Holds the map between entity centre's menu item type and entity centre.
      */
     private final Map<Class<? extends MiWithConfigurationSupport<?>>, EntityCentre<?>> centreMap = new ConcurrentHashMap<>();
 
     private final Map<Class<? extends AbstractEntity<?>>, EntityActionConfig> openMasterActions = new ConcurrentHashMap<>();
-    
+
     /**
      * Holds the map between custom view name and custom view instance.
      */
@@ -153,18 +153,9 @@ public class WebUiBuilder implements IWebUiBuilder {
 
     @Override
     public <T extends AbstractEntity<?>> Supplier<Optional<EntityActionConfig>> getOpenMasterAction(final Class<T> entityType) {
-        return getOpenMasterAction(entityType, false);
-    }
-
-    @Override
-    public <T extends AbstractEntity<?>> Supplier<Optional<EntityActionConfig>> getSequentialOpenMasterAction(final Class<T> entityType) {
-        return getOpenMasterAction(entityType, true);
-    }
-
-    private <T extends AbstractEntity<?>> Supplier<Optional<EntityActionConfig>> getOpenMasterAction(final Class<T> entityType, final boolean isSequential) {
         return () -> {
             if (openMasterActions.containsKey(entityType)) {
-                return Optional.of(isSequential ? openMasterActions.get(entityType).makeSequential() : openMasterActions.get(entityType));
+                return Optional.of(openMasterActions.get(entityType));
             }
             throw new WebUiBuilderException(format("An attempt is made to obtain open-master action configuration for entity [%s], but none is found. Please register a corresonding action configuration by using WebUiBuilder.registerOpenMasterAction.", entityType.getName()));
         };

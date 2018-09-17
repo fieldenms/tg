@@ -2,13 +2,9 @@ package ua.com.fielden.platform.web.centre.api.actions;
 
 import java.util.Optional;
 
-import ua.com.fielden.platform.entity.AbstractFunctionalEntityToOpenCompoundMaster;
 import ua.com.fielden.platform.entity.AbstractFunctionalEntityWithCentreContext;
-import ua.com.fielden.platform.entity.EntityEditAction;
-import ua.com.fielden.platform.entity.EntityNavigationAction;
 import ua.com.fielden.platform.reflection.TitlesDescsGetter;
 import ua.com.fielden.platform.web.PrefDim;
-import ua.com.fielden.platform.web.action.pre.EntityNavigationPreAction;
 import ua.com.fielden.platform.web.centre.api.context.CentreContextConfig;
 import ua.com.fielden.platform.web.centre.api.insertion_points.InsertionPoints;
 import ua.com.fielden.platform.web.view.master.api.actions.post.IPostAction;
@@ -205,46 +201,6 @@ public final class EntityActionConfig {
                 prefDimForView,
                 false,
                 shouldRefreshParentCentreAfterSave);
-    }
-
-    /**
-     * Makes this action configuration sequential if the functional type is edit action or open compound master action, otherwise returns this action.
-     *
-     * @return
-     */
-    public EntityActionConfig makeSequential() {
-        final Class<? extends AbstractFunctionalEntityWithCentreContext<?>> newFunctionalType =
-                this.functionalEntity.flatMap(type -> Optional.of(EntityEditAction.class.isAssignableFrom(type) ? EntityNavigationAction.class: type))
-                .orElse(null);
-        if (newFunctionalType != null && (EntityNavigationAction.class.equals(newFunctionalType) || AbstractFunctionalEntityToOpenCompoundMaster.class.isAssignableFrom(newFunctionalType))) {
-            final String navigationType = this.shortDesc.orElse("");
-            final IPreAction navigationPreAction = new EntityNavigationPreAction(navigationType);
-            final CentreContextConfig newCentreContext = this.context.isPresent() ?
-                    new CentreContextConfig(
-                            this.context.get().withAllSelectedEntities ? false : true,
-                            this.context.get().withAllSelectedEntities,
-                            this.context.get().withSelectionCrit,
-                            this.context.get().withMasterEntity,
-                            this.context.get().computation.orElse(null)) :
-                    new CentreContextConfig(true, false, false, false, null);
-            return new EntityActionConfig(
-                    newFunctionalType,
-                    newCentreContext,
-                    this.icon.isPresent() ? this.icon.get() : null,
-                    this.iconStyle.orElse(null),
-                    this.shortDesc.isPresent() ? this.shortDesc.get() : null,
-                    this.longDesc.isPresent() ? this.longDesc.get() : null,
-                    this.shortcut.isPresent() ? this.shortcut.get() : null,
-                    navigationPreAction,
-                    this.successPostAction.isPresent() ? this.successPostAction.get() : null,
-                    this.errorPostAction.isPresent() ? this.errorPostAction.get() : null,
-                    this.prefDimForView.isPresent() ? this.prefDimForView.get() : null,
-                    this.noAction,
-                    this.shouldRefreshParentCentreAfterSave,
-                    this.whereToInsertView.isPresent() ? this.whereToInsertView.get() : null,
-                    role);
-        }
-        return this;
     }
 
     /**
