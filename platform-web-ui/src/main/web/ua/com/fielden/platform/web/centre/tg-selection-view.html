@@ -105,7 +105,7 @@
                     self._createActionObject('ua.com.fielden.platform.web.centre.CentreConfigDuplicateAction'),
                     self._createActionObject('ua.com.fielden.platform.web.centre.CentreConfigLoadAction'),
                     self._createActionObject('ua.com.fielden.platform.web.centre.CentreConfigEditAction'),
-                    self._createActionObject('ua.com.fielden.platform.web.centre.CentreConfigDeleteAction', () => self._confirm('Should this configuration be deleted?', [{name:'YES', confirm:true, autofocus:true}, {name:'NO'}])),
+                    self._createActionObject('ua.com.fielden.platform.web.centre.CentreConfigDeleteAction', () => self._confirm('Should this configuration be deleted?', [{name:'NO'}, {name:'YES', confirm:true, autofocus:true}])),
                     self._createActionObject('ua.com.fielden.platform.web.centre.CentreConfigSettingsAction')
                 ];
             },
