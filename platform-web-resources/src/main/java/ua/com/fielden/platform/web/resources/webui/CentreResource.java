@@ -20,7 +20,6 @@ import static ua.com.fielden.platform.web.utils.WebUiResourceUtils.restoreModifi
 import java.util.Map;
 import java.util.Optional;
 
-import org.apache.log4j.Logger;
 import org.restlet.Context;
 import org.restlet.Request;
 import org.restlet.Response;
@@ -56,11 +55,10 @@ import ua.com.fielden.platform.web.resources.RestServerUtil;
  *
  */
 public class CentreResource<CRITERIA_TYPE extends AbstractEntity<?>> extends AbstractWebResource {
-    private static final Logger LOGGER = Logger.getLogger(CentreResource.class);
-    
     private final RestServerUtil restUtil;
     
     private final Class<? extends MiWithConfigurationSupport<?>> miType;
+    private final EntityCentre<AbstractEntity<?>> centre;
     private final Optional<String> saveAsName;
     
     private final IUserProvider userProvider;
@@ -74,7 +72,7 @@ public class CentreResource<CRITERIA_TYPE extends AbstractEntity<?>> extends Abs
     public CentreResource(
             final RestServerUtil restUtil,
             
-            final EntityCentre centre,
+            final EntityCentre<AbstractEntity<?>> centre,
             final Optional<String> saveAsName,
             
             final IUserProvider userProvider,
@@ -93,6 +91,7 @@ public class CentreResource<CRITERIA_TYPE extends AbstractEntity<?>> extends Abs
         this.restUtil = restUtil;
         
         miType = centre.getMenuItemType();
+        this.centre = centre;
         this.saveAsName = saveAsName;
         this.userProvider = userProvider;
         this.companionFinder = companionFinder;
@@ -126,8 +125,10 @@ public class CentreResource<CRITERIA_TYPE extends AbstractEntity<?>> extends Abs
                 removeCentres(user, miType, device(), saveAsName, eccCompanion, FRESH_CENTRE_NAME, SAVED_CENTRE_NAME);
                 // it is necessary to use "fresh" instance of cdtme (after the discarding process)
                 newFreshCentre = updateCentre(user, userProvider, miType, FRESH_CENTRE_NAME, saveAsName, device(), serialiser, domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion);
-                // must leave current configuration preferred after deletion
-                makePreferred(user, miType, saveAsName, device(), companionFinder);
+                // must leave current configuration preferred after deletion (only for named configs -- always true for inherited ones, and for non autoRun centres)
+                if (!centre.isRunAutomatically()) {
+                    makePreferred(user, miType, saveAsName, device(), companionFinder);
+                }
             } else {
                 final ICentreDomainTreeManagerAndEnhancer updatedSavedCentre = updateCentre(user, userProvider, miType, SAVED_CENTRE_NAME, saveAsName, device(), serialiser, domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion);
                 // discards fresh centre's changes (fresh centre could have no changes)

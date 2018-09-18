@@ -120,7 +120,7 @@
                                 }
                                 detail._setQueryParams();
                                 if (detail.autoRun || detail.queryPart) {
-                                    detail.run(!detail.queryPart);
+                                    detail.run(!detail.queryPart); // identify autoRunning situation only in case where centre has autoRun as true but does not represent 'link' centre (has no URI criteria values)
                                     delete detail.queryPart;
                                 }
                                 self.fire("menu-item-view-loaded", self.menuItem);

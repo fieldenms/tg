@@ -418,14 +418,14 @@
                     self.retrieve().then(function () {
                         self._setQueryParams();
                         if (self.autoRun || self.queryPart) {
-                            self.run(!self.queryPart);
+                            self.run(!self.queryPart); // identify autoRunning situation only in case where centre has autoRun as true but does not represent 'link' centre (has no URI criteria values)
                             delete self.queryPart;
                         }
                     });
                 } else {
                     self._setQueryParams();
                     if (self.autoRun || self.queryPart) {
-                        self.run(!self.queryPart);
+                        self.run(!self.queryPart); // identify autoRunning situation only in case where centre has autoRun as true but does not represent 'link' centre (has no URI criteria values)
                         delete self.queryPart;
                     }
                 }

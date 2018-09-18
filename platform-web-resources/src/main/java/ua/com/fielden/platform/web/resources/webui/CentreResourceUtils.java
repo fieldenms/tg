@@ -600,7 +600,7 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
         validationPrototype.setSaveAsNameSupplier(() -> saveAsName);
         // makes 'saveAsNameToBecomePreferred' configuration preferred in case where it differs from currently loaded configuration; does nothing otherwise
         validationPrototype.setPreferredConfigMaker(saveAsNameToBecomePreferred -> {
-            if (!equalsEx(saveAsNameToBecomePreferred, saveAsName)) { // please note that currently loaded configuration must be preferred at this stage
+            if (!equalsEx(saveAsNameToBecomePreferred, saveAsName) && !webUiConfig.getCentres().get(miType).isRunAutomatically()) { // please note that currently loaded configuration must be preferred at this stage (except autoRun centres for which only default configuration can be preferred, but still named configurations may exist)
                 makePreferred(user, miType, saveAsNameToBecomePreferred, device, companionFinder);
             }
         });
