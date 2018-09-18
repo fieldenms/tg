@@ -134,19 +134,19 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
      *
      * @param criteriaMetaValues
      * @param isCentreChanged
-     * @param saveAsName
-     * @param saveAsDesc
+     * @param saveAsName -- represents a configuration title to be updated in UI after returning to client application (if present; otherwise nothing will be updated)
+     * @param saveAsDesc -- represents a configuration title's tooltip to be updated in UI after returning to client application (if present; otherwise nothing will be updated)
      * @param staleCriteriaMessage
      *  
      * @return
      */
-    static Map<String, Object> createCriteriaMetaValuesCustomObjectWithSaveAsInfo(final Map<String, Map<String, Object>> criteriaMetaValues, final boolean isCentreChanged, final Optional<Optional<String>> saveAsName, final Optional<String> saveAsDesc, final Optional<Optional<String>> staleCriteriaMessage) {
+    static Map<String, Object> createCriteriaMetaValuesCustomObjectWithSaveAsInfo(final Map<String, Map<String, Object>> criteriaMetaValues, final boolean isCentreChanged, final Optional<Optional<String>> saveAsName, final Optional<Optional<String>> saveAsDesc, final Optional<Optional<String>> staleCriteriaMessage) {
         final Map<String, Object> customObject = createCriteriaMetaValuesCustomObject(criteriaMetaValues, isCentreChanged);
         saveAsName.ifPresent(name -> {
             customObject.put("saveAsName", name.orElse(""));
         });
         saveAsDesc.ifPresent(desc -> {
-            customObject.put("saveAsDesc", desc);
+            customObject.put("saveAsDesc", desc.orElse(""));
         });
         staleCriteriaMessage.ifPresent(message -> {
             customObject.put("staleCriteriaMessage", message.orElse(null));
@@ -474,7 +474,7 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
                 createCriteriaMetaValues(freshCentre, getEntityType(miType)),
                 isFreshCentreChanged(freshCentre, updateCentre(user, userProvider, miType, SAVED_CENTRE_NAME, customObjectSaveAsName, device, serialiser, domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion)),
                 of(customObjectSaveAsName),
-                validationPrototype.centreTitleAndDesc(customObjectSaveAsName).map(titleDesc -> titleDesc._2),
+                of(validationPrototype.centreTitleAndDesc(customObjectSaveAsName).map(titleDesc -> titleDesc._2)),
                 empty()
             );
             customObject.put(WAS_RUN_NAME, null); // make VIEW button disabled by default; this behaviour can be overridden by removing 'wasRun' customObject's entry

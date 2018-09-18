@@ -224,7 +224,7 @@ public class CriteriaResource extends AbstractWebResource {
                         createCriteriaMetaValues(updatedFreshCentre, getEntityType(miType)),
                         isFreshCentreChanged(updatedFreshCentre, updateCentre(user, userProvider, miType, SAVED_CENTRE_NAME, saveAsName, device, serialiser, domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion)),
                         of(saveAsName),
-                        ofNullable(saveAsDesc),
+                        of(ofNullable(saveAsDesc)),
                         empty()
                 )//
         );
@@ -241,7 +241,7 @@ public class CriteriaResource extends AbstractWebResource {
             final ICriteriaGenerator critGenerator,
             final String staleCriteriaMessage,
             final DeviceProfile device,
-            final Optional<String> saveAsDesc,
+            final Optional<Optional<String>> saveAsDesc,
             final ISerialiser serialiser,
             final IDomainTreeEnhancerCache domainTreeEnhancerCache,
             final IWebUiConfig webUiConfig,
