@@ -120,7 +120,7 @@
                                 }
                                 detail._setQueryParams();
                                 if (detail.autoRun || detail.queryPart) {
-                                    detail.run();
+                                    detail.run(!detail.queryPart);
                                     delete detail.queryPart;
                                 }
                                 self.fire("menu-item-view-loaded", self.menuItem);

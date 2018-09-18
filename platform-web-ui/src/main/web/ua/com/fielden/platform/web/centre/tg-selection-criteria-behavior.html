@@ -532,40 +532,41 @@
             /**
              * Starts the process of centre run.
              *
+             * isAutoRunning -- returns true if this running action represents autoRun event action invocation rather than simple running, undefined or false otherwise; not to be confused with 'link' centre auto-running capability
              * isSortingAction -- returns true if this running action represents re-sorting action invocation rather than simple running, undefined otherwise
              * forceRegeneration -- returns true if this running action represents special 're-generation of modified data' action invocation rather than simple running, undefined otherwise
              */
-            run: function (isSortingAction, forceRegeneration) {
-                var self = this;
+            run: function (isAutoRunning, isSortingAction, forceRegeneration) {
                 this._openToast(null, "Loading data", false, "", true);
-                return this._execute(RunActions.run, isSortingAction, forceRegeneration);
+                return this._execute(RunActions.run, isAutoRunning, isSortingAction, forceRegeneration);
             },
 
             /**
              * Starts the process of centre execution. It does not alter
              *
+             * isAutoRunning -- returns true if this running action represents autoRun event action invocation rather than simple running, undefined or false otherwise; not to be confused with 'link' centre auto-running capability
              * isSortingAction -- returns true if this running action represents re-sorting action invocation rather than simple running, undefined otherwise
              * forceRegeneration -- returns true if this running action represents special 're-generation of modified data' action invocation rather than simple running, undefined otherwise
              */
-            _execute: function (action, isSortingAction, forceRegeneration) {
+            _execute: function (action, isAutoRunning, isSortingAction, forceRegeneration) {
                 var self = this;
 
                 if (self.isRunning) {
                     console.warn("Refresh is already in progress...");
                     self._refreshPromiseInProgress = self._refreshPromiseInProgress
                         .then(function () {
-                            return self._createPromise(action, isSortingAction, forceRegeneration);
+                            return self._createPromise(action, isAutoRunning, isSortingAction, forceRegeneration);
                         });
                     return self._refreshPromiseInProgress;
                 }
 
                 // let's capture the promise being created at the instance level so that it could be referenced later...
-                self._refreshPromiseInProgress = self._createPromise(action, isSortingAction, forceRegeneration);
+                self._refreshPromiseInProgress = self._createPromise(action, isAutoRunning, isSortingAction, forceRegeneration);
                 // ... and return it
                 return self._refreshPromiseInProgress;
             },
 
-            _createPromise: function (action, isSortingAction, forceRegeneration) {
+            _createPromise: function (action, isAutoRunning, isSortingAction, forceRegeneration) {
                 var self = this;
 
                 return new Promise(function (resolve, reject) {
@@ -584,6 +585,7 @@
                                     return action === RunActions.run ? self._reset(_persistedModifiedPropertiesHolder) : null;
                                 },
                                 action,
+                                isAutoRunning,
                                 isSortingAction,
                                 forceRegeneration,
                                 self.requireSelectedEntities,
@@ -700,10 +702,13 @@
              * In this method selection criteria modifHolder should be sent every time -- it is required to actually 'run' the query.
              * However, if the query enhancing process requires the selectionCrit entity too -- it will be used without any problem.
              */
-            _createContextHolderForRunning: function (modifHolderGetter, action, isSortingAction, forceRegeneration, requireSelectedEntities, requireMasterEntity) {
+            _createContextHolderForRunning: function (modifHolderGetter, action, isAutoRunning, isSortingAction, forceRegeneration, requireSelectedEntities, requireMasterEntity) {
                 var self = this;
                 var contextHolder = self._createContextHolder(modifHolderGetter, "true", requireSelectedEntities, requireMasterEntity);
 
+                if (isAutoRunning) {
+                    self._reflector().setCustomProperty(contextHolder, "@@autoRunning", true);
+                }
                 if (isSortingAction) {
                     self._reflector().setCustomProperty(contextHolder, "@@sortingAction", true);
                 }

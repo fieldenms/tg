@@ -192,6 +192,16 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
     }
 
     /**
+     * Returns <code>true</code> if 'autoRunning' action is performed, otherwise <code>false</code>.
+     *
+     * @param customObject
+     * @return
+     */
+    public static boolean isAutoRunning(final Map<String, Object> customObject) {
+        return customObject.containsKey("@@autoRunning");
+    }
+
+    /**
      * Creates the pair of 'custom object' (that contain 'resultEntities' and 'pageCount') and 'resultEntities' (query run is performed
      * inside).
      *
