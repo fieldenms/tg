@@ -753,6 +753,7 @@
                         if (editors[editorIndex]._error && !editors[editorIndex].isInWarning()) {
                             if (selectedElement) {
                                 selectedElement.focus();
+                                this.fire('binding-entity-loaded-and-focused', this._currBindingEntity);
                                 return;
                             }
                         }
@@ -761,6 +762,7 @@
                 // if the input has been identified then focus it, otherwise do nothing
                 if (firstInput) {
                     firstInput.focus();
+                    this.fire('binding-entity-loaded-and-focused', this._currBindingEntity);
                 }
             },
 

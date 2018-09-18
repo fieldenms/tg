@@ -7,6 +7,7 @@
 <link rel="import" href="/resources/polymer/iron-icons/iron-icons.html">
 <link rel="import" href="/resources/polymer/iron-icons/av-icons.html">
 <link rel="import" href="/resources/polymer/paper-styles/color.html">
+<link rel="import" href="/resources/polymer/paper-spinner/paper-spinner.html">
 <link rel="import" href="/resources/polymer/paper-icon-button/paper-icon-button.html">
 <link rel="import" href="/resources/components/postal-lib.html">
 <link rel="import" href="/resources/components/tg-toast.html">
@@ -91,6 +92,7 @@
                 margin-bottom: 2px;
             }
             #navigationBar {
+                position: relative;
                 color: white;
             }
             #resizer {
@@ -110,6 +112,21 @@
                     transform: scale(-1, 1);
                 };
             }
+            paper-spinner {
+	        	position: absolute;
+	            width: 20px;
+	            height: 20px; 
+	            min-width: 20px; 
+	            min-height: 20px; 
+	            max-width: 20px; 
+	            max-height: 20px; 
+	            padding: 0;
+	            margin-left: 0;
+	            --paper-spinner-layer-1-color: white;
+	            --paper-spinner-layer-2-color: white;
+	            --paper-spinner-layer-3-color: white;
+	            --paper-spinner-layer-4-color: white;
+	        }
         </style>
         <div id="titleBar" class="title-bar layout horizontal justified center" on-track="_moveDialog">
             <paper-icon-button id="menuToggler" hidden icon="menu" tooltip-text="Menu" on-tap="_toggleMenu"></paper-icon-button>
@@ -119,11 +136,12 @@
                 <span class="dynamic-title truncate" hidden$="[[!dynamicTitle]]">[[dynamicTitle]]</span>
             </div>
             <div id="navigationBar" hidden="[[!_isNavigationBarVisible(_lastAction, _minimised)]]" style$="[[_calcNavigationBarStyle(mobile)]]" class="layout horizontal center">
-                <paper-icon-button class="button-reverse title-bar-button navigation-button" icon="hardware:keyboard-tab" on-tap="_firstEntry" disabled$="[[!_hasPrev]]" tooltip-text$="[[_getFirstEntryActionTooltip(_lastAction.navigationType)]]"></paper-icon-button>
-                <paper-icon-button class="title-bar-button navigation-button" icon="hardware:keyboard-backspace" on-tap="_previousEntry" disabled$="[[!_hasPrev]]" tooltip-text$="[[_getPreviousEntryActionTooltip(_lastAction.navigationType)]]"></paper-icon-button>
+                <paper-icon-button id="firstEntity" class="button-reverse title-bar-button navigation-button" icon="hardware:keyboard-tab" on-tap="_firstEntry" disabled$="[[!_isNavigatonButtonEnable(_hasPrev, isNavigationActionInProgress)]]" tooltip-text$="[[_getFirstEntryActionTooltip(_lastAction.navigationType)]]"></paper-icon-button>
+                <paper-icon-button id="prevEntity" class="title-bar-button navigation-button" icon="hardware:keyboard-backspace" on-tap="_previousEntry" disabled$="[[!_isNavigatonButtonEnable(_hasPrev, isNavigationActionInProgress)]]" tooltip-text$="[[_getPreviousEntryActionTooltip(_lastAction.navigationType)]]"></paper-icon-button>
                 <span>[[_sequentialEditText]]</span>
-                <paper-icon-button class="button-reverse title-bar-button navigation-button" icon="hardware:keyboard-backspace" on-tap="_nextEntry" disabled$="[[!_hasNext]]" tooltip-text$="[[_getNextEntryActionTooltip(_lastAction.navigationType)]]"></paper-icon-button>
-                <paper-icon-button class="title-bar-button navigation-button" icon="hardware:keyboard-tab" on-tap="_lastEntry" disabled$="[[!_hasNext]]" tooltip-text$="[[_getLastEntryActionTooltip(_lastAction.navigationType)]]"></paper-icon-button>
+                <paper-icon-button id="nextEntity" class="button-reverse title-bar-button navigation-button" icon="hardware:keyboard-backspace" on-tap="_nextEntry" disabled$="[[!_isNavigatonButtonEnable(_hasNext, isNavigationActionInProgress)]]" tooltip-text$="[[_getNextEntryActionTooltip(_lastAction.navigationType)]]"></paper-icon-button>
+                <paper-icon-button id="lastEntity" class="title-bar-button navigation-button" icon="hardware:keyboard-tab" on-tap="_lastEntry" disabled$="[[!_isNavigatonButtonEnable(_hasNext, isNavigationActionInProgress)]]" tooltip-text$="[[_getLastEntryActionTooltip(_lastAction.navigationType)]]"></paper-icon-button>
+                <paper-spinner id="spinner" active="[[isNavigationActionInProgress]]" style="display: none;" alt="in progress"></paper-spinner>
             </div>
             <div class="layout horizontal center">
                 <!-- collapse/expand buttons -->
@@ -473,28 +491,43 @@
                 }
             },
             
+            _isNavigatonButtonEnable: function (hasNextEntry, isNavigationActionInProgress) {
+                return hasNextEntry && !isNavigationActionInProgress;
+            },
+            
             _firstEntry: function () {
+                this._displaySpinnerOn(this.$.firstEntity);
                 if (this.canClose() && this._hasPrev) {
                     this._lastAction.firstEntry();
                 }
             },
             
             _previousEntry: function () {
+                this._displaySpinnerOn(this.$.prevEntity);
                 if (this.canClose() && this._hasPrev) {
                     this._lastAction.previousEntry();
                 }
             },
             
             _nextEntry: function () {
+                this._displaySpinnerOn(this.$.nextEntity);
                 if (this.canClose() && this._hasNext) {
                     this._lastAction.nextEntry();
                 }
             },
             
             _lastEntry: function () {
+                this._displaySpinnerOn(this.$.lastEntity);
                 if (this.canClose() && this._hasNext) {
                     this._lastAction.lastEntry();
                 }
+            },
+            
+            _displaySpinnerOn: function (element) {
+                this.$.spinner.style.removeProperty("display");
+                this.$.spinner.style.left = element.offsetLeft + (element.offsetWidth / 2 - this.$.spinner.offsetWidth / 2) + 'px';
+                this.$.spinner.style.top = element.offsetTop + (element.offsetHeight / 2 - this.$.spinner.offsetHeight / 2) + 'px';
+                this.isNavigationActionInProgress = true;
             },
             
             _getFirstEntryActionTooltip: function (_navigationType) {
@@ -890,6 +923,10 @@
             
             _handleActionNavigationChange: function (e) {
                 this._setNavigationDetails(e.detail);
+                if (this.isNavigationActionInProgress) {
+                    this.isNavigationActionInProgress = false;
+                    this.$.spinner.style.display = 'none';
+                }
             },
             
             _setNavigationDetails: function (obj) {
