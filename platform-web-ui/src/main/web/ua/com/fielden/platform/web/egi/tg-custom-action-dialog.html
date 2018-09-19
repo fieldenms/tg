@@ -191,7 +191,8 @@
                 'iron-overlay-closed': '_dialogClosed',
                 'tg-dynamic-title-changed': '_updateDynamicTitle',
                 'tg-menu-appeared': '_updateMenuButton',
-                'tg-master-type-changed': '_handleMasterChanged'
+                'tg-master-type-changed': '_handleMasterChanged',
+                'tg-master-type-before-change': '_handleMasterBeforeChange'
             },
 
             hostAttributes: {
@@ -366,6 +367,8 @@
                 this.addEventListener("tg-last-item-focused", this._viewFocusLostEventListener.bind(this));
                 //Retrieve title's bar element to focus.
                 this._componentsToFocus = Array.from(this.$.titleBar.querySelectorAll(FOCUSABLE_ELEMENTS_SELECTOR));
+                //Add event listener that listens when dialog transition ended after master was changed
+                this.addEventListener("transitionend", this._handleTransitionEnd.bind(this));
             },
 
             attached: function() {
@@ -935,12 +938,35 @@
                 this._sequentialEditText = "" + (obj.count > 0 ? obj.entInd + 1 : 0) + " / " + obj.count;
             },
             
+            _handleMasterBeforeChange: function () {
+                this.style.transition = "top, left, width, height";
+                this.style.transitionDuration = "2s";
+                this.style.transitionTimingFunction = "linear";
+            },
+            
             _handleMasterChanged: function (e) {
                 if (!this._wasMoved && !this._wasResized && !this._maximised && !this._minimised) {
-                    this.async(function() {
-                        this.refit();
-                    }.bind(this), 50);
+                    const width = (typeof this.prefDim.width === 'function' ? this.prefDim.width() : this.prefDim.width) + this.prefDim.widthUnit;
+                    const widthNum = parseFloat(width);
+                    const windowWidth = this._fitWidth;
+                    if (!isNaN(widthNum) && windowWidth < widthNum) {
+                        this.style.left = "0px";
+                    } else {
+                        this.style.left = "calc(" + windowWidth + "px / 2  - " + width + " / 2)";
+                    }
+                    const height = (typeof this.prefDim.height === 'function' ? this.prefDim.height() : this.prefDim.height) + this.prefDim.heightUnit;
+                    const heightNum = parseFloat(height);
+                    const windowHeight = this._fitHeight;
+                    if (!isNaN(heightNum) && windowHeight < heightNum) {
+                        this.style.top = "0px";
+                    } else {
+                        this.style.top = "calc(" + windowHeight + "px / 2  - " + height + " / 2" + (this.prefDim.heightUnit === "%" ? ")" : " - 44px / 2)");
+                    }
                 }
+            },
+            
+            _handleTransitionEnd: function (e) {
+                console.log(e);
             },
 
             _showMaster: function(action, element, closeEventChannel, closeEventTopics) {
