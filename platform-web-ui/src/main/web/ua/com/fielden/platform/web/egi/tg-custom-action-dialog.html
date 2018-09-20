@@ -43,6 +43,15 @@
                 user-select: none;
                 background-color: var(--paper-light-blue-600);
             }
+            #dialogLoader {
+                transition: opacity 500ms;
+            }
+            #loadingPanel {
+                visibility: hidden;
+                background-color: white;
+                font-size: 18px;
+                color: var(--paper-grey-400);
+            }
             .truncate {
                 white-space: nowrap;
                 overflow: hidden;
@@ -157,8 +166,11 @@
                 <paper-icon-button hidden="[[!_lastAction.continuous]]" class="close-button title-bar-button" icon="av:skip-next" on-tap="_skipNext" tooltip-text="Skip to next without saving"></paper-icon-button>
             </div>
         </div>
-        <div id="dialogBody" class="relative flex">
-            <tg-element-loader id="elementLoader"></tg-element-loader>
+        <div id="dialogBody" class="relative flex layout vertical">
+            <div id="loadingPanel" class=" fit layout horizontal center-center">Loading master...</div>
+            <div id="dialogLoader" class="flex layout horizontal">
+                <tg-element-loader id="elementLoader"></tg-element-loader>
+            </div>
         </div>
         <iron-icon id="resizer" hidden=[[_dialogInteractionsDisabled(_minimised,_maximised)]] icon="tg-icons:resize-bottom-right" on-track="resizeDialog" tooltip-text="Drag to resize"></iron-icon>
         <tg-toast id="toaster"></tg-toast>
@@ -219,6 +231,16 @@
                 prefDim: {
                     type: Object
                 },
+                
+                ///////The properties needed for synchronising animation steps during master changes.///
+                _masterVisibilityChanges: {
+                    type: Boolean
+                },
+                
+                _masterLayoutChanges: {
+                    type: Boolean
+                },
+                /////////////////////////////////////////////////////////////////////////////////////////
 
                 /**
                  * Indicates whether dialog was moved using title bar dragging. This will be reset after dialog closes.
@@ -325,7 +347,7 @@
                 }
             },
 
-            observers: ["_updateDialogDimensions(prefDim, _minimised, _maximised)"],
+            observers: ["_updateDialogDimensions(prefDim, _minimised, _maximised)", "_updateDialogAnimation(_masterVisibilityChanges, _masterLayoutChanges)"],
 
             keyBindings: {
                 'alt+c': '_invertMinimiseState',
@@ -367,8 +389,8 @@
                 this.addEventListener("tg-last-item-focused", this._viewFocusLostEventListener.bind(this));
                 //Retrieve title's bar element to focus.
                 this._componentsToFocus = Array.from(this.$.titleBar.querySelectorAll(FOCUSABLE_ELEMENTS_SELECTOR));
-                //Add event listener that listens when dialog transition ended after master was changed
-                this.addEventListener("transitionend", this._handleTransitionEnd.bind(this));
+                //Add event listener that listens when dialog body chang it's opacity
+                this.$.dialogLoader.addEventListener("transitionend", this._handleBodyTransitionEnd.bind(this));
             },
 
             attached: function() {
@@ -701,30 +723,32 @@
                 });
                 return canClose;
             },
-
+            
             /**
              * Updates dimensions and position of the dialog based on minimised / maximised state and prefDim appearance.
              */
             _updateDialogDimensions: function(prefDim, minimised, maximised) {
-                if (!minimised && !maximised && prefDim) {
-                    const width = (typeof prefDim.width === 'function' ? prefDim.width() : prefDim.width) + prefDim.widthUnit;
-                    const height = (typeof prefDim.height === 'function' ? prefDim.height() : prefDim.height) + prefDim.heightUnit;
-                    this.style.width = width;
-                    this.style.height = prefDim.heightUnit === '%' ? height : ('calc(' + height + ' + 44px)'); // +44px - height of the title bar please see styles for .title-bar selector; applicable only for non-relative units of measure
-                    this.style.overflow = 'auto';
-                } else if (!minimised && maximised) {
-                    this.style.top = this.mobile === true ? '0%' : '2%';
-                    this.style.left = this.mobile === true ? '0%' : '2%';
-                    this.style.width = this.mobile === true ? '100%' : '96%';
-                    this.style.height = this.mobile === true ? '100%' : '96%';
-                    this.style.overflow = 'auto';
-                } else if (minimised && !maximised) {
-                    this.style.height = '44px';
-                    this.style.overflow = 'hidden';
-                } else {
-                    this.style.width = '';
-                    this.style.height = '';
-                    this.style.overflow = 'auto';
+                if (!this._masterVisibilityChanges && !this._masterLayoutChanges) {
+                    if (!minimised && !maximised && prefDim) {
+                        const width = (typeof prefDim.width === 'function' ? prefDim.width() : prefDim.width) + prefDim.widthUnit;
+                        const height = (typeof prefDim.height === 'function' ? prefDim.height() : prefDim.height) + prefDim.heightUnit;
+                        this.style.width = width;
+                        this.style.height = prefDim.heightUnit === '%' ? height : ('calc(' + height + ' + 44px)'); // +44px - height of the title bar please see styles for .title-bar selector; applicable only for non-relative units of measure
+                        this.style.overflow = 'auto';
+                    } else if (!minimised && maximised) {
+                        this.style.top = this.mobile === true ? '0%' : '2%';
+                        this.style.left = this.mobile === true ? '0%' : '2%';
+                        this.style.width = this.mobile === true ? '100%' : '96%';
+                        this.style.height = this.mobile === true ? '100%' : '96%';
+                        this.style.overflow = 'auto';
+                    } else if (minimised && !maximised) {
+                        this.style.height = '44px';
+                        this.style.overflow = 'hidden';
+                    } else {
+                        this.style.width = '';
+                        this.style.height = '';
+                        this.style.overflow = 'auto';
+                    }
                 }
             },
 
@@ -926,6 +950,10 @@
             
             _handleActionNavigationChange: function (e) {
                 this._setNavigationDetails(e.detail);
+                this._resetSpinner();
+            },
+            
+            _resetSpinner: function () {
                 if (this.isNavigationActionInProgress) {
                     this.isNavigationActionInProgress = false;
                     this.$.spinner.style.display = 'none';
@@ -938,15 +966,25 @@
                 this._sequentialEditText = "" + (obj.count > 0 ? obj.entInd + 1 : 0) + " / " + obj.count;
             },
             
-            _handleMasterBeforeChange: function () {
-                this.style.transition = "top, left, width, height";
-                this.style.transitionDuration = "2s";
-                this.style.transitionTimingFunction = "linear";
+            _updateDialogAnimation: function (_masterVisibilityChanges, _masterLayoutChanges) {
+                if (!_masterVisibilityChanges && !_masterLayoutChanges) {
+                    this._updateDialogDimensions(this.prefDim, this._minimised, this._maximised);
+                    this._updateDialogPosition(this.prefDim, this._wasMoved, this._wasResized, this._minimised, this._maximised);
+                    this.async(this._dialogResized, 500);
+                }
             },
             
-            _handleMasterChanged: function (e) {
-                if (!this._wasMoved && !this._wasResized && !this._maximised && !this._minimised) {
-                    const width = (typeof this.prefDim.width === 'function' ? this.prefDim.width() : this.prefDim.width) + this.prefDim.widthUnit;
+            _dialogResized: function () {
+                this.style.removeProperty("transition-property");
+                this.style.removeProperty("transition-duration");
+                this._masterVisibilityChanges = true;
+                this.$.dialogLoader.style.opacity = "1";
+                
+            },
+            
+            _updateDialogPosition: function (prefDim, _wasMoved, _wasResized, _minimised, _maximised) {
+                if (!_wasMoved && !_wasResized && !_maximised && !_minimised) {
+                    const width = (typeof prefDim.width === 'function' ? prefDim.width() : prefDim.width) + prefDim.widthUnit;
                     const widthNum = parseFloat(width);
                     const windowWidth = this._fitWidth;
                     if (!isNaN(widthNum) && windowWidth < widthNum) {
@@ -954,21 +992,53 @@
                     } else {
                         this.style.left = "calc(" + windowWidth + "px / 2  - " + width + " / 2)";
                     }
-                    const height = (typeof this.prefDim.height === 'function' ? this.prefDim.height() : this.prefDim.height) + this.prefDim.heightUnit;
+                    const height = (typeof prefDim.height === 'function' ? prefDim.height() : prefDim.height) + prefDim.heightUnit;
                     const heightNum = parseFloat(height);
                     const windowHeight = this._fitHeight;
                     if (!isNaN(heightNum) && windowHeight < heightNum) {
                         this.style.top = "0px";
                     } else {
-                        this.style.top = "calc(" + windowHeight + "px / 2  - " + height + " / 2" + (this.prefDim.heightUnit === "%" ? ")" : " - 44px / 2)");
+                        this.style.top = "calc(" + windowHeight + "px / 2  - " + height + " / 2" + (prefDim.heightUnit === "%" ? ")" : " - 44px / 2)");
                     }
                 }
             },
             
-            _handleTransitionEnd: function (e) {
-                console.log(e);
+            _handleMasterBeforeChange: function () {
+                if (this.opened) {
+                    //First animate master body hiding
+                    this._masterVisibilityChanges = true;
+                    this._masterLayoutChanges = true;
+                    this.$.loadingPanel.style.visibility = "visible";
+                    this.$.dialogLoader.style.opacity = "0";
+                    //Then set dimension properties as transitional for dialog for futher animation.
+                    this.style.transitionProperty = "top, left, width, height";
+                    this.style.transitionDuration = "500ms";
+                }
             },
-
+            
+            _handleMasterChanged: function (e) {
+                if (this.opened) {
+                    this._masterLayoutChanges = false;
+                }
+            },
+            
+            _handleBodyTransitionEnd: function (e) {
+                if (e.target === this.$.dialogLoader) {
+                    if (this.$.dialogLoader.style.opacity === "0") {
+                        this.$.elementLoader.style.display = "none";
+                        this._masterVisibilityChanges = false;
+                    } else {
+                        this.$.elementLoader.style.removeProperty("display");
+                        this._masterVisibilityChanges = undefined;
+                        this._masterLayoutChanges = undefined;
+                        this.$.loadingPanel.style.visibility = "hidden";
+                        this.notifyResize();
+                        this._focusDialogWithInput();
+                    }
+                    
+                }
+            },
+            
             _showMaster: function(action, element, closeEventChannel, closeEventTopics) {
                 this._lastElement = element;
                 const self = this;
@@ -1127,6 +1197,7 @@
                     for (var index = 0; index < this._subscriptions.length; index++) {
                         postal.unsubscribe(this._subscriptions[index]);
                     }
+                    this._resetAnimation();
                     this._subscriptions.length = 0;
                     this._wasMoved = false;
                     this._wasResized = false;
@@ -1144,6 +1215,15 @@
                         this._lastAction.restoreActiveElement();
                     }
                 }
+            },
+            
+            _resetAnimation: function () {
+                this._masterVisibilityChanges = undefined;
+                this._masterLayoutChanges = undefined;
+                this.$.elementLoader.style.removeProperty("display");
+                this.$.loadingPanel.style.visibility = "hidden";
+                this.$.dialogLoader.style.opacity = "1";
+                this._resetSpinner();
             },
 
             _onIronResize: function() {
