@@ -978,6 +978,7 @@
                 this.style.removeProperty("transition-property");
                 this.style.removeProperty("transition-duration");
                 this._masterVisibilityChanges = true;
+                this.$.elementLoader.style.removeProperty("display");
                 this.$.dialogLoader.style.opacity = "1";
                 
             },
@@ -1030,7 +1031,6 @@
                         this.$.elementLoader.style.display = "none";
                         this._masterVisibilityChanges = false;
                     } else {
-                        this.$.elementLoader.style.removeProperty("display");
                         this._masterVisibilityChanges = undefined;
                         this._masterLayoutChanges = undefined;
                         this.$.loadingPanel.style.visibility = "hidden";
