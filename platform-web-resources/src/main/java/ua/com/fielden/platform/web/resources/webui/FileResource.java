@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.web.resources.webui;
 
 import static java.lang.String.format;
+import static org.apache.commons.lang.StringUtils.isEmpty;
 
 import java.io.ByteArrayInputStream;
 import java.io.FileNotFoundException;
@@ -56,13 +57,18 @@ public class FileResource extends AbstractWebResource {
     public Representation load() {
         final String originalPath = getReference().getRemainingPart();
         final String extension = getReference().getExtensions();
-        final MediaType mediaType = determineMediaType(extension);
+
+        if (isEmpty(extension)) {
+            LOGGER.warn(format("The request tried to obtain a file resource with empty extension ([%s] + [%s]), which is not supported.", originalPath, extension));
+            return null;
+        }
 
         final String filePath = generateFileName(resourcePaths, originalPath);
-        if (StringUtils.isEmpty(filePath)) {
+        if (isEmpty(filePath)) {
             LOGGER.warn(format("The requested file resource ([%s] + [%s]) wasn't found.", originalPath, extension));
             return null;
         } else {
+            final MediaType mediaType = determineMediaType(extension);
             if (MediaType.TEXT_HTML.equals(mediaType)) {
                 final String source = sourceController.loadSourceWithFilePath(filePath, device());
                 if (source != null) {
