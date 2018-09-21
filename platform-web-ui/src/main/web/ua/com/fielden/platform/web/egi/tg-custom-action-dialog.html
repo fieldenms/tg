@@ -985,20 +985,22 @@
             _updateDialogPosition: function (prefDim, _wasMoved, _wasResized, _minimised, _maximised) {
                 if (!_wasMoved && !_wasResized && !_maximised && !_minimised) {
                     const width = (typeof prefDim.width === 'function' ? prefDim.width() : prefDim.width) + prefDim.widthUnit;
+                    const isWidthPercentage = width.endsWith('%');
                     const widthNum = parseFloat(width);
                     const windowWidth = this._fitWidth;
-                    if (!isNaN(widthNum) && windowWidth < widthNum) {
+                    if (!isNaN(widthNum) && !isWidthPercentage && windowWidth < widthNum) {
                         this.style.left = "0px";
                     } else {
                         this.style.left = "calc(" + windowWidth + "px / 2  - " + width + " / 2)";
                     }
                     const height = (typeof prefDim.height === 'function' ? prefDim.height() : prefDim.height) + prefDim.heightUnit;
+                    const isHeightPercentage = height.endsWith('%');
                     const heightNum = parseFloat(height);
                     const windowHeight = this._fitHeight;
-                    if (!isNaN(heightNum) && windowHeight < heightNum) {
+                    if (!isNaN(heightNum) && !isHeightPercentage && windowHeight < heightNum + 44) {
                         this.style.top = "0px";
                     } else {
-                        this.style.top = "calc(" + windowHeight + "px / 2  - " + height + " / 2" + (prefDim.heightUnit === "%" ? ")" : " - 44px / 2)");
+                        this.style.top = "calc(" + windowHeight + "px / 2  - " + height + " / 2" + (isHeightPercentage ? ")" : " - 44px / 2)");
                     }
                 }
             },
