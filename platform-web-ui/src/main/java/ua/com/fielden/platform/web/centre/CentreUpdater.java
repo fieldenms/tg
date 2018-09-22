@@ -29,14 +29,13 @@ import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.selec
 import static ua.com.fielden.platform.error.Result.failuref;
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.determinePropertyType;
 import static ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader.isGenerated;
-import static ua.com.fielden.platform.utils.EntityUtils.deepCopy;
 import static ua.com.fielden.platform.utils.EntityUtils.equalsEx;
 import static ua.com.fielden.platform.utils.EntityUtils.fetchWithKeyAndDesc;
 import static ua.com.fielden.platform.utils.EntityUtils.isDate;
 import static ua.com.fielden.platform.utils.EntityUtils.isString;
 import static ua.com.fielden.platform.web.centre.CentreUpdaterUtils.createDefaultCentre;
 import static ua.com.fielden.platform.web.centre.CentreUpdaterUtils.findConfig;
-import static ua.com.fielden.platform.web.centre.CentreUpdaterUtils.retrieveEntityCentreManager;
+import static ua.com.fielden.platform.web.centre.CentreUpdaterUtils.retrieveDiff;
 import static ua.com.fielden.platform.web.centre.CentreUpdaterUtils.saveEntityCentreManager;
 import static ua.com.fielden.platform.web.centre.CentreUpdaterUtils.saveNewEntityCentreManager;
 import static ua.com.fielden.platform.web.centre.WebApiUtils.LINK_CONFIG_TITLE;
@@ -47,8 +46,12 @@ import static ua.com.fielden.platform.web.utils.EntityResourceUtils.getEntityTyp
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Optional;
+import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Stream;
 
@@ -76,6 +79,8 @@ import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
 import ua.com.fielden.platform.web.app.IWebUiConfig;
 import ua.com.fielden.platform.web.interfaces.DeviceProfile;
+import ua.com.fielden.snappy.DateRangePrefixEnum;
+import ua.com.fielden.snappy.MnemonicEnum;
 
 /**
  * Represents a set of utility methods for updating / committing of surrogate centres, for e.g. 'fresh', 'previouslyRun' etc.
@@ -134,7 +139,7 @@ public class CentreUpdater {
      * <p>
      * Initialisation / updating goes through the following chain: 'default centre' + 'differences centre' := 'centre'.
      * <p>
-     * Centre on its own is never saved, but it is used to create 'differences centre' (when committing is performed).
+     * Centre on its own is never saved, but it is used to create 'differences' (when committing is performed).
      *
      * @param user
      * @param miType
@@ -157,8 +162,8 @@ public class CentreUpdater {
             final IMainMenuItem mmiCompanion,
             final IUser userCompanion) {
         final String deviceSpecificName = deviceSpecific(saveAsSpecific(name, saveAsName), device);
-        final ICentreDomainTreeManagerAndEnhancer updatedDiffCentre = updateDifferencesCentre(miType, user, userProvider, deviceSpecificName, saveAsName, device, serialiser, domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion);
-        return loadCentreFromDefaultAndDiff(user, miType, saveAsName, updatedDiffCentre, serialiser, webUiConfig, domainTreeEnhancerCache);
+        final Map<String, Object> updatedDiff = updateDifferences(miType, user, userProvider, deviceSpecificName, saveAsName, device, serialiser, domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion);
+        return loadCentreFromDefaultAndDiff(user, miType, saveAsName, updatedDiff, serialiser, webUiConfig, domainTreeEnhancerCache);
     }
     
     /**
@@ -276,10 +281,8 @@ public class CentreUpdater {
             final IUser userCompanion) {
         final String deviceSpecificName = deviceSpecific(saveAsSpecific(name, saveAsName), device);
         final ICentreDomainTreeManagerAndEnhancer defaultCentre = getDefaultCentre(miType, webUiConfig);
-        // creates differences centre from the differences between 'default centre' and 'centre'
-        final ICentreDomainTreeManagerAndEnhancer differencesCentre = createDifferencesCentre(centre, defaultCentre, getEntityType(miType), serialiser);
-        // override old 'diff centre' with recently created one and save it
-        saveEntityCentreManager(differencesCentre, miType, user, deviceSpecificName + DIFFERENCES_SUFFIX, newDesc, serialiser, eccCompanion, mmiCompanion);
+        // override old 'diff' with recently created one and save it
+        saveEntityCentreManager(createDifferences(centre, defaultCentre, getEntityType(miType)), miType, user, deviceSpecificName + DIFFERENCES_SUFFIX, newDesc, serialiser, eccCompanion, mmiCompanion);
         return centre;
     }
     
@@ -453,12 +456,12 @@ public class CentreUpdater {
     }
     
     /**
-     * Loads centre through the following chain: 'default centre' + 'differences centre' := 'centre'.
+     * Loads centre through the following chain: 'default centre' + 'differences' := 'centre'.
      *
      * @param user
      * @param miType
      * @param saveAsName -- user-defined title of 'saveAs' centre configuration or empty {@link Optional} for unnamed centre
-     * @param updatedDiffCentre -- updated differences centre
+     * @param updatedDiff -- updated differences
      *
      * @return
      */
@@ -466,13 +469,13 @@ public class CentreUpdater {
             final User user,
             final Class<? extends MiWithConfigurationSupport<?>> miType,
             final Optional<String> saveAsName,
-            final ICentreDomainTreeManagerAndEnhancer updatedDiffCentre,
+            final Map<String, Object> updatedDiff,
             final ISerialiser serialiser,
             final IWebUiConfig webUiConfig,
             final IDomainTreeEnhancerCache domainTreeEnhancerCache) {
         final ICentreDomainTreeManagerAndEnhancer defaultCentre = getDefaultCentre(miType, webUiConfig);
         // applies diffCentre on top of defaultCentre to produce loadedCentre:
-        final ICentreDomainTreeManagerAndEnhancer loadedCentre = applyDifferences(defaultCentre, updatedDiffCentre, getEntityType(miType));
+        final ICentreDomainTreeManagerAndEnhancer loadedCentre = applyDifferences(defaultCentre, updatedDiff, getEntityType(miType));
         // For all generated types on freshCentre (and on its derivatives like 'unchanged freshCentre', 'previouslyRun centre', 'unchanged previouslyRun centre' etc.) there is a need to
         //  provide miType information inside its generated type to be sent to the client application. This is done through the use of
         //  annotation miType and other custom annotations, for example @SaveAsName.
@@ -534,7 +537,7 @@ public class CentreUpdater {
      *
      * @return
      */
-    private static ICentreDomainTreeManagerAndEnhancer updateDifferencesCentre(
+    private static Map<String, Object> updateDifferences(
             final Class<? extends MiWithConfigurationSupport<?>> miType,
             final User user,
             final IUserProvider userProvider,
@@ -550,22 +553,19 @@ public class CentreUpdater {
         // the name consists of 'deviceSpecificName' and 'DIFFERENCES_SUFFIX'
         final String deviceSpecificDiffName = deviceSpecificName + DIFFERENCES_SUFFIX;
         
-        final ICentreDomainTreeManagerAndEnhancer resultantDiffCentre;
+        final Map<String, Object> resultantDiff;
         // WILL BE UPDATED IN EVERY CALL OF updateDifferencesCentre!
         
         // init (or update) diff centre from persistent storage if exists
-        final Optional<ICentreDomainTreeManagerAndEnhancer> centre = retrieveEntityCentreManager(miType, user, deviceSpecificDiffName, serialiser, webUiConfig, eccCompanion);
-        if (centre.isPresent()) {
-            resultantDiffCentre = centre.get();
+        final Optional<Map<String, Object>> retrievedDiff = retrieveDiff(miType, user, deviceSpecificDiffName, serialiser, eccCompanion);
+        if (retrievedDiff.isPresent()) {
+            resultantDiff = retrievedDiff.get();
         } else {
             // Default centre is used as a 'base' for all centres; all diffs are created comparing to default centre.
             // Default centre is now needed for both cases: base or non-base user.
             if (user.isBase() || of(WebApiUtils.LINK_CONFIG_TITLE).equals(saveAsName) || empty().equals(saveAsName)) { // for non-base user 'link' and 'default' configurations need to be derived from default user-specific configuration instead of base configuration
-                final ICentreDomainTreeManagerAndEnhancer defaultCentre = getDefaultCentre(miType, webUiConfig);
-                // diff centre does not exist in persistent storage yet -- initialise EMPTY diff (there potentially can be some values from 'default centre',
-                //   but diff centre will be empty disregarding that fact -- no properties were marked as changed; but initialisation from 'default centre' is important --
-                //   this makes diff centre nicely synchronised with Web UI default values)
-                resultantDiffCentre = saveNewEntityCentreManager(defaultCentre, miType, user, deviceSpecificDiffName, null, serialiser, eccCompanion, mmiCompanion);
+                // diff centre does not exist in persistent storage yet -- initialise EMPTY diff
+                resultantDiff = saveNewEntityCentreManager(createEmptyDifferences(), miType, user, deviceSpecificDiffName, null, serialiser, eccCompanion, mmiCompanion);
             } else { // non-base user
                 // diff centre does not exist in persistent storage yet -- create a diff by comparing basedOnCentre (configuration created by base user) and default centre
                 final User baseUser = beginBaseUserOperations(userProvider, user, userCompanion);
@@ -573,14 +573,14 @@ public class CentreUpdater {
                 // find description of the centre configuration to be copied from
                 final String upstreamDesc = updateCentreDesc(baseUser, miType, saveAsName, device, eccCompanion);
                 // creates differences centre from the differences between base user's 'default centre' (which can be user specific, see IValueAssigner for properties dependent on User) and 'baseCentre'
-                final ICentreDomainTreeManagerAndEnhancer differencesCentre = createDifferencesCentre(baseCentre, getDefaultCentre(miType, webUiConfig), getEntityType(miType), serialiser);
+                final Map<String, Object> differences = createDifferences(baseCentre, getDefaultCentre(miType, webUiConfig), getEntityType(miType));
                 endBaseUserOperations(user, userProvider);
                 
                 // promotes diff to local cache and saves it into persistent storage
-                resultantDiffCentre = saveNewEntityCentreManager(differencesCentre, miType, user, deviceSpecificDiffName, upstreamDesc, serialiser, eccCompanion, mmiCompanion);
+                resultantDiff = saveNewEntityCentreManager(differences, miType, user, deviceSpecificDiffName, upstreamDesc, serialiser, eccCompanion, mmiCompanion);
             }
         }
-        return resultantDiffCentre;
+        return resultantDiff;
     }
     
     /**
@@ -674,6 +674,20 @@ public class CentreUpdater {
         }
     }
     
+    private static void warnPropRemovalFrom(final String from, final String valueKind, final Map<String, Object> diff) {
+        logger.warn(format("Property [%s] diff value [%s] ignored. Property does not exist in %s (removed from Centre DSL config or even from domain type).", valueKind, diff.get(valueKind), from));
+    }
+    
+    private static void processValue(final Map<String, Object> diff, final String valueKind, final boolean propertyPresent, final String removedFrom, final Consumer<Object> valueApplier) {
+        if (diff.containsKey(valueKind)) {
+            if (propertyPresent) {
+                valueApplier.accept(diff.get(valueKind));
+            } else {
+                warnPropRemovalFrom(removedFrom, valueKind, diff);
+            }
+        }
+    }
+    
     /**
      * Applies the differences from 'differences centre' on top of 'target centre'.
      *
@@ -682,7 +696,32 @@ public class CentreUpdater {
      * @param root
      * @return
      */
-    private static ICentreDomainTreeManagerAndEnhancer applyDifferences(final ICentreDomainTreeManagerAndEnhancer targetCentre, final ICentreDomainTreeManagerAndEnhancer differencesCentre, final Class<AbstractEntity<?>> root) {
+    private static ICentreDomainTreeManagerAndEnhancer applyDifferences(final ICentreDomainTreeManagerAndEnhancer targetCentre, final Map<String, Object> differences, final Class<AbstractEntity<?>> root) {
+        final Map<String, Map<String, Object>> propertiesDiff = (Map<String, Map<String, Object>>) differences.get(PROPERTIES);
+        final Map<String, Object> resultSetDiff =  (Map<String, Object>) differences.get(RESULT_SET);
+        
+        for (final Entry<String, Map<String, Object>> propertyDiff: propertiesDiff.entrySet()) {
+            final String property = propertyDiff.getKey();
+            final Map<String, Object> diff = propertyDiff.getValue();
+            
+            final boolean selectionCriteriaContains = targetCentre.getFirstTick().checkedProperties(root).contains(property);
+            
+            processValue(diff, EXCLUSIVE.name(), selectionCriteriaContains, "selection criteria", (value) -> targetCentre.getFirstTick().setExclusive(root, property, (Boolean) value));
+            processValue(diff, EXCLUSIVE2.name(), selectionCriteriaContains, "selection criteria", (value) -> targetCentre.getFirstTick().setExclusive2(root, property, (Boolean) value));
+            processValue(diff, DATE_PREFIX.name(), selectionCriteriaContains, "selection criteria", (value) -> targetCentre.getFirstTick().setDatePrefix(root, property, (DateRangePrefixEnum) value));
+            processValue(diff, DATE_MNEMONIC.name(), selectionCriteriaContains, "selection criteria", (value) -> targetCentre.getFirstTick().setDateMnemonic(root, property, (MnemonicEnum) value));
+            processValue(diff, AND_BEFORE.name(), selectionCriteriaContains, "selection criteria", (value) -> targetCentre.getFirstTick().setAndBefore(root, property, (Boolean) value));
+            processValue(diff, OR_NULL.name(), selectionCriteriaContains, "selection criteria", (value) -> targetCentre.getFirstTick().setOrNull(root, property, (Boolean) value));
+            processValue(diff, NOT.name(), selectionCriteriaContains, "selection criteria", (value) -> targetCentre.getFirstTick().setNot(root, property, (Boolean) value));
+            processValue(diff, VALUE.name(), selectionCriteriaContains, "selection criteria", (value) -> targetCentre.getFirstTick().setValue(root, property, value));
+            processValue(diff, VALUE2.name(), selectionCriteriaContains, "selection criteria", (value) -> targetCentre.getFirstTick().setValue2(root, property, value));
+            
+            final boolean resultSetContains = targetCentre.getSecondTick().checkedProperties(root).contains(property);
+            
+            processValue(diff, WIDTH.name(), resultSetContains, "result-set", (value) -> targetCentre.getSecondTick().setWidth(root, property, (int) value));
+            processValue(diff, GROW_FACTOR.name(), resultSetContains, "result-set", (value) -> targetCentre.getSecondTick().setGrowFactor(root, property, (int) value));
+        }
+        
         final Class<?> diffManagedType = managedType(root, differencesCentre);
         for (final String property : differencesCentre.getFirstTick().checkedProperties(root)) {
             if (!isPlaceholder(property) && !propertyRemovedFromDomainType(diffManagedType, property)) {
@@ -697,7 +736,7 @@ public class CentreUpdater {
                 final Class<?> propertyType = isEmpty(property) ? diffManagedType : determinePropertyType(diffManagedType, property);
                 if (isDate(propertyType)) {
                     if (differencesCentre.getFirstTick().isMetaValuePresent(DATE_PREFIX, root, property)) {
-                        targetCentre.getFirstTick().setDatePrefix(root, property, differencesCentre.getFirstTick().getDatePrefix(root, property));
+                        targetCentre.getFirstTick().setDatePrefix(root, property, targetCentre.getFirstTick().getDatePrefix(root, property));
                     }
                     if (differencesCentre.getFirstTick().isMetaValuePresent(DATE_MNEMONIC, root, property)) {
                         targetCentre.getFirstTick().setDateMnemonic(root, property, differencesCentre.getFirstTick().getDateMnemonic(root, property));
@@ -833,74 +872,121 @@ public class CentreUpdater {
         }
         return result;
     }
-
+    
+    private static final String PROPERTIES = "PROPERTIES";
+    private static final String RESULT_SET = "RESULT_SET";
+    
+    private static Map<String, Object> diff(final String property, final Map<String, Map<String, Object>> propertiesDiff) {
+        final Map<String, Object> propertyDiff = propertiesDiff.get(property);
+        if (propertyDiff == null) {
+            final Map<String, Object> newPropertyDiff = new LinkedHashMap<>();
+            propertiesDiff.put(property, newPropertyDiff);
+            return newPropertyDiff;
+        }
+        return propertyDiff;
+    }
+    
     /**
-     * Creates 'diff centre' from 'centre' and 'originalCentre' with marked meta-values (only those that are different).
-     *
-     * @param centre
-     * @param originalCentre
-     * @param root
+     * Creates empty diff.
+     * 
      * @return
      */
-    private static ICentreDomainTreeManagerAndEnhancer createDifferencesCentre(final ICentreDomainTreeManagerAndEnhancer centre, final ICentreDomainTreeManagerAndEnhancer originalCentre, final Class<AbstractEntity<?>> root, final ISerialiser serialiser) {
-        final ICentreDomainTreeManagerAndEnhancer differencesCentre = deepCopy(centre, serialiser);
+    public static Map<String, Object> createEmptyDifferences() {
+        final Map<String, Object> diff = new LinkedHashMap<>();
+        final Map<String, Map<String, Object>> propertiesDiff = new LinkedHashMap<>();
+        diff.put(PROPERTIES, propertiesDiff);
+        final Map<String, Object> resultSetDiff = new LinkedHashMap<>();
+        diff.put(RESULT_SET, resultSetDiff);
+        return diff;
+    }
+    
+    /**
+     * Creates 'diff' from 'centre' and 'defaultCentre' with meta-values (only those that are different) and other information.
+     *
+     * @param centre
+     * @param defaultCentre
+     * @param root
+     * 
+     * @return
+     */
+    private static Map<String, Object> createDifferences(final ICentreDomainTreeManagerAndEnhancer centre, final ICentreDomainTreeManagerAndEnhancer defaultCentre, final Class<AbstractEntity<?>> root) {
+        final Map<String, Object> diff = createEmptyDifferences();
+        final Map<String, Map<String, Object>> propertiesDiff = (Map<String, Map<String, Object>>) diff.get(PROPERTIES);
+        final Map<String, Object> resultSetDiff =  (Map<String, Object>) diff.get(RESULT_SET);
         
-        for (final String property : differencesCentre.getFirstTick().checkedProperties(root)) {
-            if (!isPlaceholder(property)) {
-                if (isDoubleCriterion(managedType(root, differencesCentre), property) && !isBooleanCriterion(managedType(root, differencesCentre), property)) {
-                    if (!equalsEx(differencesCentre.getFirstTick().getExclusive(root, property), originalCentre.getFirstTick().getExclusive(root, property))) {
-                        differencesCentre.getFirstTick().markMetaValuePresent(EXCLUSIVE, root, property);
+        final Class<?> managedType = managedType(root, centre);
+        for (final String property : centre.getFirstTick().checkedProperties(root)) { // lets go through centre's checked properties for the first tick (criteria) -- these will be fully synced to originalCentre's checked properties (due to the way centre is created: centre := defaultCentre + diff)
+            if (!isPlaceholder(property)) { // placeholders were used in Swing UI to indicate empty places on selection criteria; need to be filtered out
+                // when checking property type, we need to look for property in 'managedType' rather than in original 'root' type; this is due to ability to add adhoc calculated properties into selection criteria (like totalCost = quantity * price)
+                if (isDoubleCriterion(managedType, property) && !isBooleanCriterion(managedType, property)) {
+                    final Boolean exclusiveVal = centre.getFirstTick().getExclusive(root, property);
+                    if (!equalsEx(exclusiveVal, defaultCentre.getFirstTick().getExclusive(root, property))) {
+                        diff(property, propertiesDiff).put(EXCLUSIVE.name(), exclusiveVal);
                     }
-                    if (!equalsEx(differencesCentre.getFirstTick().getExclusive2(root, property), originalCentre.getFirstTick().getExclusive2(root, property))) {
-                        differencesCentre.getFirstTick().markMetaValuePresent(EXCLUSIVE2, root, property);
+                    final Boolean exclusive2Val = centre.getFirstTick().getExclusive2(root, property);
+                    if (!equalsEx(exclusive2Val, defaultCentre.getFirstTick().getExclusive2(root, property))) {
+                        diff(property, propertiesDiff).put(EXCLUSIVE2.name(), exclusive2Val);
                     }
                 }
-                final Class<?> propertyType = isEmpty(property) ? managedType(root, differencesCentre) : determinePropertyType(managedType(root, differencesCentre), property);
+                final Class<?> propertyType = isEmpty(property) ? managedType : determinePropertyType(managedType, property);
                 if (isDate(propertyType)) {
-                    if (!equalsEx(differencesCentre.getFirstTick().getDatePrefix(root, property), originalCentre.getFirstTick().getDatePrefix(root, property))) {
-                        differencesCentre.getFirstTick().markMetaValuePresent(DATE_PREFIX, root, property);
+                    final DateRangePrefixEnum datePrefixVal = centre.getFirstTick().getDatePrefix(root, property);
+                    if (!equalsEx(datePrefixVal, defaultCentre.getFirstTick().getDatePrefix(root, property))) {
+                        diff(property, propertiesDiff).put(DATE_PREFIX.name(), datePrefixVal);
                     }
-                    if (!equalsEx(differencesCentre.getFirstTick().getDateMnemonic(root, property), originalCentre.getFirstTick().getDateMnemonic(root, property))) {
-                        differencesCentre.getFirstTick().markMetaValuePresent(DATE_MNEMONIC, root, property);
+                    final MnemonicEnum dateMnemonicVal = centre.getFirstTick().getDateMnemonic(root, property);
+                    if (!equalsEx(dateMnemonicVal, defaultCentre.getFirstTick().getDateMnemonic(root, property))) {
+                        diff(property, propertiesDiff).put(DATE_MNEMONIC.name(), dateMnemonicVal);
                     }
-                    if (!equalsEx(differencesCentre.getFirstTick().getAndBefore(root, property), originalCentre.getFirstTick().getAndBefore(root, property))) {
-                        differencesCentre.getFirstTick().markMetaValuePresent(AND_BEFORE, root, property);
+                    final Boolean andBeforeVal = centre.getFirstTick().getAndBefore(root, property);
+                    if (!equalsEx(andBeforeVal, defaultCentre.getFirstTick().getAndBefore(root, property))) {
+                        diff(property, propertiesDiff).put(AND_BEFORE.name(), andBeforeVal);
                     }
                 }
                 
-                if (!equalsEx(differencesCentre.getFirstTick().getOrNull(root, property), originalCentre.getFirstTick().getOrNull(root, property))) {
-                    differencesCentre.getFirstTick().markMetaValuePresent(OR_NULL, root, property);
+                final Boolean orNullVal = centre.getFirstTick().getOrNull(root, property);
+                if (!equalsEx(orNullVal, defaultCentre.getFirstTick().getOrNull(root, property))) {
+                    diff(property, propertiesDiff).put(OR_NULL.name(), orNullVal);
                 }
-                if (!equalsEx(differencesCentre.getFirstTick().getNot(root, property), originalCentre.getFirstTick().getNot(root, property))) {
-                    differencesCentre.getFirstTick().markMetaValuePresent(NOT, root, property);
+                final Boolean notVal = centre.getFirstTick().getNot(root, property);
+                if (!equalsEx(notVal, defaultCentre.getFirstTick().getNot(root, property))) {
+                    diff(property, propertiesDiff).put(NOT.name(), notVal);
                 }
                 
-                if (!equalsEx(differencesCentre.getFirstTick().getValue(root, property), originalCentre.getFirstTick().getValue(root, property))) {
-                    differencesCentre.getFirstTick().markMetaValuePresent(VALUE, root, property);
+                final Object valueVal = centre.getFirstTick().getValue(root, property);
+                if (!equalsEx(valueVal, defaultCentre.getFirstTick().getValue(root, property))) {
+                    diff(property, propertiesDiff).put(VALUE.name(), valueVal);
                 }
-                if (isDoubleCriterion(managedType(root, differencesCentre), property)) {
-                    if (!equalsEx(differencesCentre.getFirstTick().getValue2(root, property), originalCentre.getFirstTick().getValue2(root, property))) {
-                        differencesCentre.getFirstTick().markMetaValuePresent(VALUE2, root, property);
+                if (isDoubleCriterion(managedType, property)) {
+                    final Object value2Val = centre.getFirstTick().getValue2(root, property);
+                    if (!equalsEx(value2Val, defaultCentre.getFirstTick().getValue2(root, property))) {
+                        diff(property, propertiesDiff).put(VALUE2.name(), value2Val);
                     }
                 }
             }
         }
         
-        // extract widths that are changed and mark them
-        for (final String property : differencesCentre.getSecondTick().checkedProperties(root)) {
-            if (!equalsEx(differencesCentre.getSecondTick().getWidth(root, property), originalCentre.getSecondTick().getWidth(root, property))) {
-                differencesCentre.getFirstTick().markMetaValuePresent(WIDTH, root, property);
+        // extract widths that are changed and add them to the diff
+        for (final String property : centre.getSecondTick().checkedProperties(root)) {
+            final int widthVal = centre.getSecondTick().getWidth(root, property);
+            if (!equalsEx(widthVal, defaultCentre.getSecondTick().getWidth(root, property))) {
+                diff(property, propertiesDiff).put(WIDTH.name(), widthVal);
             }
-            if (!equalsEx(differencesCentre.getSecondTick().getGrowFactor(root, property), originalCentre.getSecondTick().getGrowFactor(root, property))) {
-                differencesCentre.getFirstTick().markMetaValuePresent(GROW_FACTOR, root, property);
+            final int growFactorVal = centre.getSecondTick().getGrowFactor(root, property);
+            if (!equalsEx(growFactorVal, defaultCentre.getSecondTick().getGrowFactor(root, property))) {
+                diff(property, propertiesDiff).put(GROW_FACTOR.name(), growFactorVal);
             }
         }
         
-        // need to determine whether orderedProperties have been changed (as a whole) and mark diff centre if true:
-        if (!equalsEx(differencesCentre.getSecondTick().orderedProperties(root), originalCentre.getSecondTick().orderedProperties(root))) {
-            differencesCentre.getFirstTick().markMetaValuePresent(ALL_ORDERING, root, "");
+        // determine whether orderedProperties have been changed (as a whole) and add them to the diff if true
+        final List<Pair<String, Ordering>> orderedPropertiesVal = centre.getSecondTick().orderedProperties(root);
+        if (!equalsEx(orderedPropertiesVal, defaultCentre.getSecondTick().orderedProperties(root))) {
+            resultSetDiff.put(ALL_ORDERING.name(), orderedPropertiesVal);
         }
-        return differencesCentre;
+        
+        // TODO most likely: firstTick.checkedProperties, secondTick.checkedProperties, secondTick.usedProperties are needed
+        
+        return diff;
     }
 
     /**

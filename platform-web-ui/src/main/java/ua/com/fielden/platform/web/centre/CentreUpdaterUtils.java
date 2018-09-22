@@ -4,9 +4,11 @@ import static java.lang.String.format;
 import static java.util.Optional.ofNullable;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
+import static ua.com.fielden.platform.serialisation.api.SerialiserEngines.JACKSON;
 import static ua.com.fielden.platform.utils.CollectionUtil.setOf;
 import static ua.com.fielden.platform.utils.EntityUtils.fetchWithKeyAndDesc;
 
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -81,71 +83,64 @@ public class CentreUpdaterUtils extends CentreUpdater {
     
     ///////////////////////////// CENTRE MAINTENANCE /////////////////////////////
     /**
-     * Retrieves entity centre manager instance from database if there is any.
+     * Retrieves diff instance from database if there is any.
      * Restores it from binary representation.
      * 
      * @param menuItemType
      * @param user
      * @param name
      * @param serialiser
-     * @param webUiConfig
      * @param eccCompanion
      * @return
      */
-    public static Optional<ICentreDomainTreeManagerAndEnhancer> retrieveEntityCentreManager(
+    public static Optional<Map<String, Object>> retrieveDiff(
             final Class<?> menuItemType,
             final User user,
             final String name,
             final ISerialiser serialiser,
-            final IWebUiConfig webUiConfig,
             final IEntityCentreConfig eccCompanion) {
         return ofNullable(eccCompanion.getEntity(from(modelFor(user, menuItemType.getName(), name)).model()))
-                .map(ecc -> restoreCentreManagerFrom(ecc, serialiser, menuItemType, webUiConfig, eccCompanion, format("for type [%s] with name [%s] for user [%s]", menuItemType.getSimpleName(), name, user)));
+                .map(ecc -> restoreDiffFrom(ecc, serialiser, eccCompanion, format("for type [%s] with name [%s] for user [%s]", menuItemType.getSimpleName(), name, user)));
     }
     
     /**
-     * Restores centre manager from {@link EntityCentreConfig} instance's binary data.
+     * Restores diff instance from {@link EntityCentreConfig} instance's binary data.
      * In case of failure, initialises new empty instance, saves it and returns as a result.
      * 
      * @param ecc
      * @param serialiser
-     * @param menuItemType
-     * @param webUiConfig
      * @param eccCompanion
      * @param loggingSuffix
      * @return
      */
-    private static ICentreDomainTreeManagerAndEnhancer restoreCentreManagerFrom(
+    private static Map<String, Object> restoreDiffFrom(
             // params for actual deserialisation
             final EntityCentreConfig ecc,
             final ISerialiser serialiser,
             // params for: deserialisation failed -- create empty and save
-            final Class<?> menuItemType,
-            final IWebUiConfig webUiConfig,
             final IEntityCentreConfig eccCompanion,
             // params for: deserialisation failed -- logging
             final String loggingSuffix) {
         try {
-            return serialiser.deserialise(ecc.getConfigBody(), CentreDomainTreeManagerAndEnhancer.class);
+            return serialiser.deserialise(ecc.getConfigBody(), LinkedHashMap.class, JACKSON);
         } catch (final Exception deserialisationException) {
             logger.error("============================================ CENTRE DESERIALISATION HAS FAILED ============================================");
-            logger.error(format("Unable to deserialise a entity-centre instance %s. The exception is the following: ", loggingSuffix), deserialisationException);
-            logger.error(format("Started creation of default entity-centre configuration %s.", loggingSuffix));
-            final ICentreDomainTreeManagerAndEnhancer newCentreManager = createDefaultCentre(menuItemType, webUiConfig);
-            logger.error(format("Started saving of default entity-centre configuration %s.", loggingSuffix));
-            ecc.setConfigBody(serialiser.serialise(newCentreManager));
+            logger.error(format("Unable to deserialise entity centre instance %s. Exception:", loggingSuffix), deserialisationException);
+            logger.error(format("Creating and saving of empty diff %s...", loggingSuffix));
+            final Map<String, Object> emptyDiff = createEmptyDifferences();
+            ecc.setConfigBody(serialiser.serialise(emptyDiff, JACKSON));
             eccCompanion.quickSave(ecc);
-            logger.error(format("Ended creation and saving of default entity-centre configuration %s. For now it can be used.", loggingSuffix));
+            logger.error(format("Creating and saving of empty diff %s...done", loggingSuffix));
             logger.error("============================================ CENTRE DESERIALISATION HAS FAILED [END] ============================================");
-            return newCentreManager;
+            return emptyDiff;
         }
     }
     
     /**
-     * Saves new {@link EntityCentreConfig} instance with serialised centre manager inside.
+     * Saves new {@link EntityCentreConfig} instance with serialised diff inside.
      */
-    public static ICentreDomainTreeManagerAndEnhancer saveNewEntityCentreManager(
-            final ICentreDomainTreeManagerAndEnhancer centre,
+    public static Map<String, Object> saveNewEntityCentreManager(
+            final Map<String, Object> differences,
             final Class<?> menuItemType,
             final User user,
             final String newName,
@@ -163,17 +158,17 @@ public class CentreUpdaterUtils extends CentreUpdater {
         ecc.setTitle(newName);
         ecc.setMenuItem(menuItem);
         ecc.setDesc(newDesc);
-        ecc.setConfigBody(serialiser.serialise(centre));
+        ecc.setConfigBody(serialiser.serialise(differences, JACKSON));
         eccCompanion.quickSave(ecc);
-        return centre;
+        return differences;
     }
     
     /**
-     * Overrides existing {@link EntityCentreConfig} instance with new serialised centre manager.
-     * Otherwise, in case where there is no such instance in database, creates and saves new {@link EntityCentreConfig} instance with serialised centre manager inside.
+     * Overrides existing {@link EntityCentreConfig} instance with new serialised diff.
+     * Otherwise, in case where there is no such instance in database, creates and saves new {@link EntityCentreConfig} instance with serialised diff inside.
      */
-    public static ICentreDomainTreeManagerAndEnhancer saveEntityCentreManager(
-            final ICentreDomainTreeManagerAndEnhancer centre,
+    public static Map<String, Object> saveEntityCentreManager(
+            final Map<String, Object> differences,
             final Class<?> menuItemType,
             final User user,
             final String name,
@@ -183,15 +178,15 @@ public class CentreUpdaterUtils extends CentreUpdater {
             final IMainMenuItem mmiCompanion) {
         final EntityCentreConfig config = eccCompanion.getEntity(from(modelFor(user, menuItemType.getName(), name)).model());
         if (config == null) {
-            saveNewEntityCentreManager(centre, menuItemType, user, name, newDesc, serialiser, eccCompanion, mmiCompanion);
+            saveNewEntityCentreManager(differences, menuItemType, user, name, newDesc, serialiser, eccCompanion, mmiCompanion);
         } else {
             if (newDesc != null) {
                 config.setDesc(newDesc);
             }
-            config.setConfigBody(serialiser.serialise(centre));
+            config.setConfigBody(serialiser.serialise(differences, JACKSON));
             eccCompanion.quickSave(config);
         }
-        return centre;
+        return differences;
     }
     
     /**
