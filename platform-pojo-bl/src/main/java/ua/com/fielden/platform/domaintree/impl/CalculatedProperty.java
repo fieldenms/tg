@@ -16,7 +16,6 @@ import java.util.Map;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.WordUtils;
-
 import ua.com.fielden.platform.domaintree.ICalculatedProperty;
 import ua.com.fielden.platform.domaintree.IDomainTreeEnhancer;
 import ua.com.fielden.platform.domaintree.IDomainTreeEnhancer.CalcPropertyWarning;
@@ -139,7 +138,33 @@ public/* final */class CalculatedProperty extends AbstractEntity<DynamicEntityKe
         key.addKeyMemberComparator(1, new ClassComparator());
         setKey(key);
     }
-
+    
+    /**
+     * Copy function for {@link CalculatedProperty} taking benefit from shared 'ast' instance and other derived information.
+     * <p>
+     * This is to be used for performance-friendly copying of {@link DomainTreeEnhancer} without unnecessary parsing of {@link CalculatedProperty#getContextualExpression()},
+     * which is costly operation.
+     * 
+     * @param calculatedProperty
+     * @param enhancer -- {@link DomainTreeEnhancer} instance to be associated with copied instance
+     */
+    public CalculatedProperty copy(final IDomainTreeEnhancer enhancer) {
+        final CalculatedProperty copy = new CalculatedProperty();
+        // copy all properties and fields from 'this' instance into 'copy' instance
+        copyTo(copy);
+        copy.contextType = contextType;
+        copy.category = category;
+        copy.name = name;
+        copy.path = path;
+        copy.parentType = parentType;
+        copy.resultType = resultType;
+        copy.ast = ast;
+        copy.enhancer = enhancer;
+        copy.validateTitleContextOfExtractedProperties = validateTitleContextOfExtractedProperties;
+        copy.customPropertyName = customPropertyName;
+        return copy;
+    }
+    
     private Class<?> determineType(final String path) {
         return StringUtils.isEmpty(path) ? this.root : PropertyTypeDeterminator.determinePropertyType(this.root, path);
     }

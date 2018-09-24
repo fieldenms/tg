@@ -41,6 +41,7 @@ import ua.com.fielden.platform.security.user.UserAndRoleAssociation;
 import ua.com.fielden.platform.security.user.UserRole;
 import ua.com.fielden.platform.security.user.UserRoleTokensUpdater;
 import ua.com.fielden.platform.security.user.UserRolesUpdater;
+import ua.com.fielden.platform.security.user.UserSecret;
 import ua.com.fielden.platform.serialisation.api.ISerialisationClassProvider;
 import ua.com.fielden.platform.serialisation.api.impl.ProvidedSerialisationClassProvider;
 import ua.com.fielden.platform.test.DbDrivenTestCase;
@@ -91,6 +92,7 @@ public class PlatformWebDbDrivenTestCaseConfiguration implements IDbDrivenTestCa
             final Configuration cfg = new Configuration();
             final List<Class<? extends AbstractEntity<?>>> domainTypes = new ArrayList<Class<? extends AbstractEntity<?>>>();
             domainTypes.add(User.class);
+            domainTypes.add(UserSecret.class);
             domainTypes.add(UserRolesUpdater.class);
             domainTypes.add(UserRole.class);
             domainTypes.add(UserRoleTokensUpdater.class);

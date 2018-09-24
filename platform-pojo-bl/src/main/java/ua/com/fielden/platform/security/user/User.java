@@ -1,16 +1,16 @@
 package ua.com.fielden.platform.security.user;
 
 import static java.lang.String.format;
+import static java.util.stream.Collectors.toSet;
 import static ua.com.fielden.platform.property.validator.StringValidator.regexProp;
 
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 import ua.com.fielden.platform.entity.ActivatableAbstractEntity;
 import ua.com.fielden.platform.entity.annotation.CompanionObject;
-import ua.com.fielden.platform.entity.annotation.Invisible;
+import ua.com.fielden.platform.entity.annotation.Dependent;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.KeyTitle;
 import ua.com.fielden.platform.entity.annotation.KeyType;
@@ -18,12 +18,12 @@ import ua.com.fielden.platform.entity.annotation.MapEntityTo;
 import ua.com.fielden.platform.entity.annotation.MapTo;
 import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.entity.annotation.Title;
-import ua.com.fielden.platform.entity.annotation.Unique;
 import ua.com.fielden.platform.entity.annotation.mutator.AfterChange;
 import ua.com.fielden.platform.entity.annotation.mutator.BeforeChange;
 import ua.com.fielden.platform.entity.annotation.mutator.Handler;
 import ua.com.fielden.platform.entity.annotation.mutator.StrParam;
 import ua.com.fielden.platform.entity.validation.ActivePropertyValidator;
+import ua.com.fielden.platform.entity.validation.UserAlmostUniqueEmailValidator;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.property.validator.EmailValidator;
 import ua.com.fielden.platform.property.validator.StringValidator;
@@ -46,7 +46,8 @@ import ua.com.fielden.platform.security.user.validators.UserBaseValidator;
 public class User extends ActivatableAbstractEntity<String> {
 
     public static final String EMAIL = "email";
-    
+    public static final String USER_NAME_REGEX = "^\\w+$"; // permits only letters and digits, must not permit SECRET_RESET_UUID_SEPERATOR
+
     /**
      * This is an enumeration for listing all system in-built accounts.
      */
@@ -76,20 +77,11 @@ public class User extends ActivatableAbstractEntity<String> {
         }
     }
     
-    public static final String SECRET_RESET_UUID_SEPERATOR = "-";
-    public static final String USER_NAME_REGEX = "^\\w+$"; // permits only letters and digits, must not permit SECRET_RESET_UUID_SEPERATOR
-    
     @IsProperty
     @MapTo
     @BeforeChange(@Handler(value = StringValidator.class, str = {@StrParam(name = regexProp, value = USER_NAME_REGEX)}))
     private String key;
     
-    @IsProperty(length = 255)
-    @Invisible
-    @MapTo
-    @Title(desc = "A hash code of the actual password that only the user should know")
-    private String password;
-
     @IsProperty(value = UserAndRoleAssociation.class, linkProperty = "user")
     @Title(value = "Roles", desc = "The associated with this user roles.")
     private final Set<UserAndRoleAssociation> roles = new HashSet<>();
@@ -99,6 +91,7 @@ public class User extends ActivatableAbstractEntity<String> {
     @MapTo
     @BeforeChange(@Handler(UserBaseValidator.class))
     @AfterChange(UserBaseDefiner.class)
+    @Dependent("email")
     private boolean base = false;
 
     @IsProperty
@@ -111,23 +104,9 @@ public class User extends ActivatableAbstractEntity<String> {
     @IsProperty
     @MapTo
     @Title(value = "Email", desc = "User email, which is used for password resets")
-    @Unique
-    @BeforeChange(@Handler(EmailValidator.class))
+    @BeforeChange({@Handler(EmailValidator.class), @Handler(UserAlmostUniqueEmailValidator.class)})
+    @Dependent("base")
     private String email;
-
-    @IsProperty
-    @MapTo
-    @Invisible
-    @Unique // UUID gets generated and hashed, thus should be algorithmically unique, but just in case let's enforce it at the model level
-    @Title(value = "Reset UUID", desc = "The hash of the password reset request UUID")
-    private String resetUuid;
-
-    @IsProperty
-    @MapTo
-    @Invisible
-    @Unique // salt gets generated randomly for every user and needs to be unique
-    @Title(value = "Salt", desc = "Random password hashing salt to protect agains the rainbow table attack.")
-    private String salt;
 
     @IsProperty
     @MapTo
@@ -146,26 +125,6 @@ public class User extends ActivatableAbstractEntity<String> {
     @Override
     public boolean isActive() {
         return active;
-    }
-    
-    @Observable
-    public User setSalt(final String salt) {
-        this.salt = salt;
-        return this;
-    }
-
-    public String getSalt() {
-        return salt;
-    }
-    
-    @Observable
-    public User setResetUuid(final String resetUuid) {
-        this.resetUuid = resetUuid;
-        return this;
-    }
-
-    public String getResetUuid() {
-        return resetUuid;
     }
     
     @Observable
@@ -199,16 +158,6 @@ public class User extends ActivatableAbstractEntity<String> {
         return this;
     }
 
-    public String getPassword() {
-        return password;
-    }
-
-    @Observable
-    public User setPassword(final String password) {
-        this.password = password;
-        return this;
-    }
-
     public Set<UserAndRoleAssociation> getRoles() {
         return Collections.unmodifiableSet(roles);
     }
@@ -226,10 +175,9 @@ public class User extends ActivatableAbstractEntity<String> {
      * @return
      */
     public Set<UserRole> roles() {
-        return this.roles.stream().map(item -> item.getUserRole()).collect(Collectors.toSet());
+        return this.roles.stream().map(UserAndRoleAssociation::getUserRole).collect(toSet());
     }
 
-    
     public boolean isBase() {
         return base;
     }

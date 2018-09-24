@@ -25,7 +25,6 @@ import ua.com.fielden.platform.dao.CommonEntityDao;
 import ua.com.fielden.platform.dao.QueryExecutionModel;
 import ua.com.fielden.platform.dao.annotations.SessionRequired;
 import ua.com.fielden.platform.entity.annotation.EntityType;
-import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.query.IFilter;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.security.annotations.SessionCache;
@@ -38,7 +37,7 @@ import ua.com.fielden.platform.utils.IUniversalConstants;
 /**
  * DAO implementation for companion object {@link IUserSession}.
  *
- * @author Developers
+ * @author TG Team
  *
  */
 @EntityType(UserSession.class)

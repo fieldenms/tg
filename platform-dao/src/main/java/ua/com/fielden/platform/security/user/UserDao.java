@@ -1,15 +1,19 @@
 package ua.com.fielden.platform.security.user;
 
 import static java.lang.String.format;
+import static org.apache.commons.lang.StringUtils.isEmpty;
 import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
-import static ua.com.fielden.platform.entity.AbstractPersistentEntity.LAST_UPDATED_BY;
 import static ua.com.fielden.platform.entity.ActivatableAbstractEntity.ACTIVE;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetch;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchAll;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchIdOnly;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchOnly;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.orderBy;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 import static ua.com.fielden.platform.security.user.User.EMAIL;
+import static ua.com.fielden.platform.security.user.UserSecret.RESER_UUID_EXPIRATION_IN_MUNUTES;
+import static ua.com.fielden.platform.security.user.UserSecret.SECRET_RESET_UUID_SEPERATOR;
 
 import java.util.Collection;
 import java.util.HashSet;
@@ -52,7 +56,7 @@ import ua.com.fielden.platform.ui.config.EntityLocatorConfig;
 import ua.com.fielden.platform.ui.config.EntityMasterConfig;
 
 /**
- * Implementation of the user controller, which should be used managing system user information.
+ * DAO implementation of {@link IUser}.
  *
  * @author TG Team
  *
@@ -75,7 +79,6 @@ public class UserDao extends CommonEntityDao<User> implements IUser {
         super(filter);
 
         this.newUserNotifier = newUserNotifier;
-
         this.crypto = crypto;
     }
 
@@ -106,15 +109,18 @@ public class UserDao extends CommonEntityDao<User> implements IUser {
         // if a new active user is being created then need to send an activation email
         // this is possible only if an email address is associated with the user, which is required for active users
         // there could also be a situation where an inactive existing user, which did not have their password set in the first place, is being activated... this also warrants an activation email
-        if (!user.isPersisted() && user.isActive() ||
-             user.isPersisted() && user.isActive() && user.getProperty(ACTIVE).isDirty() && StringUtils.isEmpty(findById(user.getId(), fetchAll(User.class)).getPassword())) {
+        if ((!user.isPersisted() && user.isActive()) ||
+            (user.isPersisted() && user.isActive() && user.getProperty(ACTIVE).isDirty() && passwordNotAssigned(user))) {
             final User savedUser = super.save(user);
-            final Optional<User> opUser = assignPasswordResetUuid(savedUser.getKey());
-            newUserNotifier.notify(opUser.get());
-            return opUser.get();
+            newUserNotifier.notify(assignPasswordResetUuid(savedUser.getKey()).orElseThrow(() -> new SecurityException("Could not initiate password reset.")));
+            return savedUser;
         } else {
             return super.save(user);
         }
+    }
+
+    private Boolean passwordNotAssigned(final User user) {
+        return co(UserSecret.class).findByIdOptional(user.getId()).map(us -> isEmpty(us.getPassword())).orElse(true);
     }
 
     @Override
@@ -190,53 +196,79 @@ public class UserDao extends CommonEntityDao<User> implements IUser {
 
     @Override
     public User findUser(final String username) {
-        return findByKeyAndFetch(fetch(User.class).with(LAST_UPDATED_BY), username);
+        // it is critical that the fetch is as tight here as possible in order not to leak any sensitive info to the client
+        final fetch<User> fetch = fetchOnly(User.class).with(KEY).with(ACTIVE).with("base").with("basedOnUser", fetchIdOnly(User.class));                
+        return findByKeyAndFetch(fetch, username);
     }
 
     @Override
     public IFetchProvider<User> createFetchProvider() {
-        return super.createFetchProvider()
-                .with("key", EMAIL, ACTIVE) // this property is "required" (necessary during saving) -- should be declared as fetching property
-                .with("base", "basedOnUser.base"); //
+        return IUser.FETCH_PROVIDER;
+    }
+
+    /**
+     * A convenient method that either returns an instance of {@link UserSecret} that is already associated with {@code user}, 
+     * or a new instance of {@link UserSecret}.
+     *
+     * @param user
+     * @param coUserSecret
+     * @return
+     */
+    private UserSecret findOrCreateNewSecret(final User user, final IUserSecret coUserSecret) {
+        return coUserSecret.findByIdOptional(user.getId(), coUserSecret.getFetchProvider().fetchModel()).orElseGet(() -> coUserSecret.new_().setKey(user));
     }
 
     @Override
-    public final String hashPasswd(final String passwd, final String salt) throws Exception {
-        return crypto.calculatePBKDF2WithHmacSHA1(passwd, salt);
+    @SessionRequired(allowNestedScope = false)
+    @Authorise(AlwaysAccessibleToken.class)
+    public void lockoutUser(final String username) {
+        // deactivate user if found
+        final User user = co$(User.class).findByKeyAndFetch(getFetchProvider().fetchModel(), username);
+        if (user != null) {
+            save(user.setActive(false));
+        }
+        
+        // attempt to delete user secret regardless of whether user exists or not
+        // this is to reduce the difference in the computation time that is required for processing existing and non-existing accounts 
+        final IUserSecret coUserSecret = co(UserSecret.class);
+        coUserSecret.batchDelete(select(UserSecret.class).where().prop("key.key").eq().val(username).model());
     }
 
     @Override
     @SessionRequired
     @Authorise(AlwaysAccessibleToken.class)
-    public User resetPasswd(final User user, final String passwd) {
+    public UserSecret resetPasswd(final User user, final String passwd) {
         try {
+            if (user.isInstrumented() && user.isDirty()) {
+                save(user);
+            }
+            final IUserSecret co$UserSecret = co$(UserSecret.class);
+            final UserSecret secret = findOrCreateNewSecret(user, co$UserSecret);
             // salt needs to be unique... at least amongst the users
             // it should be unique algorithmically, but let's be defensive and regenerate the salt if it conflicts with existing values
-            user.setSalt(crypto.genSalt());
-            final MetaProperty<Object> saltProp = user.getProperty("salt");
+            secret.setSalt(crypto.genSalt());
+            final MetaProperty<String> saltProp = secret.getProperty("salt");
             final int maxTries = 1000;
             int tries = 1;
             while (!saltProp.isValid() && tries < maxTries) {
-                user.setSalt(crypto.genSalt());
+                secret.setSalt(crypto.genSalt());
                 tries++;
             }
             // we've tried hard, so if the salt is still not unique than bad luck...
             if (!saltProp.isValid()) {
                 throw saltProp.getFirstFailure();
             }
-            user.setPassword(hashPasswd(passwd, user.getSalt()));
-            user.setResetUuid(null);
+            secret.setPassword(co$UserSecret.hashPasswd(passwd, secret.getSalt()));
+            secret.setResetUuid(null);
+            final UserSecret savedSecret = co$UserSecret.save(secret);
+            
+            // clear all the current user sessions
+            this.<IUserSession, UserSession>co$(UserSession.class).clearAll(savedSecret.getKey());
+            return savedSecret;
         } catch (final Exception ex) {
             logger.warn("Could not reset password for user [%s].", ex);
             throw new SecurityException("Could not reset user password.", ex);
         }
-
-        final User savedUser = save(user);
-
-        // clear all the current user sessions
-        this.<IUserSession, UserSession>co$(UserSession.class).clearAll(savedUser);
-        return savedUser;
-
     }
 
     @Override
@@ -254,29 +286,32 @@ public class UserDao extends CommonEntityDao<User> implements IUser {
             throw new SecurityException("User password resetting UUID cannot be empty.");
         }
 
-        final String[] uuidParts = uuid.split(User.SECRET_RESET_UUID_SEPERATOR);
+        final String[] uuidParts = uuid.split(SECRET_RESET_UUID_SEPERATOR);
         if (uuidParts.length != 3) {
             return Optional.empty();
         }
         final String userName = uuidParts[0];
-        final EntityResultQueryModel<User> query = select(User.class)
-                .where().prop("key").eq().val(userName)
-                .and().prop("resetUuid").eq().val(uuid)
-                .model();
+        
+        final EntityResultQueryModel<User> query = select(UserSecret.class)
+                .where()
+                    .prop("key.key").eq().val(userName).and()
+                    .prop("resetUuid").eq().val(uuid)
+                .yield().prop("key").modelAsEntity(User.class);
+        
         final User user = getEntity(from(query).with(fetchAll(User.class)).model());
         return Optional.ofNullable(user);
     }
 
     @Override
-    public Optional<User> assignPasswordResetUuid(final String usernameOrEmail) {
+    public Optional<UserSecret> assignPasswordResetUuid(final String usernameOrEmail) {
         // let's try to find a user by username or email
         final EntityResultQueryModel<User> query = select(User.class)
                 .where()
                 .prop(ACTIVE).eq().val(true)
                 .and()
                 .begin()
-                    .lowerCase().prop(KEY).eq().lowerCase().val(usernameOrEmail)
-                    .or().lowerCase().prop(EMAIL).eq().lowerCase().val(usernameOrEmail)
+                    .lowerCase().prop(KEY).eq().lowerCase().val(usernameOrEmail).or()
+                    .lowerCase().prop(EMAIL).eq().lowerCase().val(usernameOrEmail)
                 .end().model();
 
         final User user = getEntity(from(query).with(fetchAll(User.class)).model());
@@ -284,14 +319,18 @@ public class UserDao extends CommonEntityDao<User> implements IUser {
         // if the user was found then a password reset request UUID needs to be generated
         // and associated wit the identified user
         if (user != null) {
-            final String uuid = format("%s%s%s%s%s", user.getKey(), User.SECRET_RESET_UUID_SEPERATOR, crypto.nextSessionId(), User.SECRET_RESET_UUID_SEPERATOR, getUniversalConstants().now().plusHours(24).getMillis());
-            return Optional.of(save(user.setResetUuid(uuid)));
+            final IUserSecret co$UserSecret = co$(UserSecret.class);
+            final UserSecret secret = findOrCreateNewSecret(user, co$UserSecret);
+            
+            final String uuid = format("%s%s%s%s%s", user.getKey(), SECRET_RESET_UUID_SEPERATOR, crypto.nextSessionId(), SECRET_RESET_UUID_SEPERATOR, getUniversalConstants().now().plusMinutes(RESER_UUID_EXPIRATION_IN_MUNUTES).getMillis());
+            return Optional.of(co$UserSecret.save(secret.setResetUuid(uuid)));
         }
 
         return Optional.empty();
     }
 
     @Override
+    @SessionRequired
     public boolean isPasswordResetUuidValid(final String uuid) {
         final Optional<User> user = findUserByResetUuid(uuid);
         // if there is no user associated with UUID then it cannot be valid
@@ -299,12 +338,14 @@ public class UserDao extends CommonEntityDao<User> implements IUser {
             return false;
         } else {
             // if a corresponding user was found then UUID is valid if it is not expired
-            final String[] uuidParts = uuid.split(User.SECRET_RESET_UUID_SEPERATOR);
-            final long expirationTime = Long.valueOf(uuidParts[2]);
+            final String[] uuidParts = uuid.split(SECRET_RESET_UUID_SEPERATOR);
+            final long expirationTime = Long.parseLong(uuidParts[2]);
             final boolean expired = getUniversalConstants().now().getMillis() >= expirationTime;
-            // dissociation UUID form user if has expired
+            // dissociation UUID form user if it has expired
             if (expired) {
-                save(user.get().setResetUuid(null));
+                final IUserSecret co$UserSecret = co$(UserSecret.class);
+                final UserSecret secret = findOrCreateNewSecret(user.get(), co$UserSecret);
+                co$UserSecret.save(secret.setResetUuid(null));
             }
 
             return !expired;
@@ -339,7 +380,11 @@ public class UserDao extends CommonEntityDao<User> implements IUser {
         final EntityResultQueryModel<EntityCentreConfig> qEntityCentreConfig = select(EntityCentreConfig.class).where().prop("owner.id").in().values(ids).model();
         this.co$(EntityCentreConfig.class).batchDelete(qEntityCentreConfig);
 
+        // let's remove secrets for all users
+        co$(UserSecret.class).batchDelete(userIds);
+
         // and only now can we delete users
         return defaultBatchDelete(userIds);
     }
+
 }

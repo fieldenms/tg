@@ -5,7 +5,6 @@ import static ua.com.fielden.platform.utils.EntityUtils.isSyntheticBasedOnPersis
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
-import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -14,6 +13,8 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import org.joda.time.DateTime;
 
+import com.google.common.cache.Cache;
+import com.google.common.cache.CacheBuilder;
 import com.google.inject.Injector;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
@@ -49,7 +50,6 @@ import ua.com.fielden.platform.entity.validation.annotation.ValidationAnnotation
 import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.types.Money;
-import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.StringConverter;
 
 /**
@@ -67,7 +67,7 @@ public abstract class AbstractMetaPropertyFactory implements IMetaPropertyFactor
 
     protected final FinalValidator[] persistedOnlyFinalValidator = new FinalValidator[]{new FinalValidator(true)};
     protected final FinalValidator[] notPersistedOnlyFinalValidator = new FinalValidator[]{new FinalValidator(false)};
-    protected final Map<Class<? extends AbstractEntity<?>>, EntityExistsValidator<?>> entityExistsValidators = new ConcurrentHashMap<>();
+    protected final Cache<Class<? extends AbstractEntity<?>>, EntityExistsValidator<?>> entityExistsValidators = CacheBuilder.newBuilder().weakKeys().initialCapacity(300).concurrencyLevel(50).build();
     protected final Map<Integer, GreaterOrEqualValidator> greaterOrEqualsValidators = new ConcurrentHashMap<>();
     protected final Map<Integer, MaxLengthValidator> maxLengthValidators = new ConcurrentHashMap<>();
     protected final Map<Integer, MaxValueValidator> maxValueValidators = new ConcurrentHashMap<>();
@@ -394,46 +394,28 @@ public abstract class AbstractMetaPropertyFactory implements IMetaPropertyFactor
 
 
     private IBeforeChangeEventHandler<?> createGePropertyValidator(final AbstractEntity<?> entity, final String[] lowerBoundaryProperties, final String upperBoundaryProperty) {
-        if (geRangeValidators.get(entity.getType()) == null) {
-            geRangeValidators.put(entity.getType(), Collections.synchronizedMap(new HashMap<String, RangePropertyValidator>()));
-        }
-        final Map<String, RangePropertyValidator> propertyValidators = geRangeValidators.get(entity.getType());
-        if (propertyValidators.get(upperBoundaryProperty) == null) {
-            propertyValidators.put(upperBoundaryProperty, new RangePropertyValidator(lowerBoundaryProperties, true));
-        }
-        return propertyValidators.get(upperBoundaryProperty);
+        return geRangeValidators
+                .computeIfAbsent(entity.getType(), key -> new ConcurrentHashMap<String, RangePropertyValidator>())
+                .computeIfAbsent(upperBoundaryProperty, key -> new RangePropertyValidator(lowerBoundaryProperties, true));
     }
 
     private IBeforeChangeEventHandler<?> createLePropertyValidator(final AbstractEntity<?> entity, final String lowerBoundaryProperty, final String[] upperBoundaryProperties) {
-        if (leRangeValidators.get(entity.getType()) == null) {
-            leRangeValidators.put(entity.getType(), Collections.synchronizedMap(new HashMap<String, RangePropertyValidator>()));
-        }
-        final Map<String, RangePropertyValidator> propertyValidators = leRangeValidators.get(entity.getType());
-        if (propertyValidators.get(lowerBoundaryProperty) == null) {
-            propertyValidators.put(lowerBoundaryProperty, new RangePropertyValidator(upperBoundaryProperties, false));
-        }
-        return propertyValidators.get(lowerBoundaryProperty);
+        return leRangeValidators
+                .computeIfAbsent(entity.getType(), key -> new ConcurrentHashMap<String, RangePropertyValidator>())
+                .computeIfAbsent(lowerBoundaryProperty, key -> new RangePropertyValidator(upperBoundaryProperties, false));
+
     }
 
     private IBeforeChangeEventHandler<?> createGreaterOrEqualValidator(final Integer key) {
-        if (!greaterOrEqualsValidators.containsKey(key)) {
-            greaterOrEqualsValidators.put(key, new GreaterOrEqualValidator(key));
-        }
-        return greaterOrEqualsValidators.get(key);
+        return greaterOrEqualsValidators.computeIfAbsent(key, GreaterOrEqualValidator::new);
     }
 
     private IBeforeChangeEventHandler<?> createMaxLengthValidator(final Integer key) {
-        if (!maxLengthValidators.containsKey(key)) {
-            maxLengthValidators.put(key, new MaxLengthValidator(key));
-        }
-        return maxLengthValidators.get(key);
+        return maxLengthValidators.computeIfAbsent(key, MaxLengthValidator::new);
     }
 
     private IBeforeChangeEventHandler<?> createMaxValueValidator(final Integer key) {
-        if (!maxValueValidators.containsKey(key)) {
-            maxValueValidators.put(key, new MaxValueValidator(key));
-        }
-        return maxValueValidators.get(key);
+        return maxValueValidators.computeIfAbsent(key, MaxValueValidator::new);
     }
 
     protected abstract IBeforeChangeEventHandler<?> createEntityExists(final EntityExists anotation);

@@ -2,7 +2,6 @@ package ua.com.fielden.platform.domaintree.centre.impl;
 
 import static ua.com.fielden.platform.types.tuples.T2.t2;
 
-import java.lang.ref.WeakReference;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Date;
@@ -12,13 +11,10 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 
-import javax.swing.event.EventListenerList;
-
 import com.esotericsoftware.kryo.Kryo;
 
 import ua.com.fielden.platform.domaintree.ILocatorManager;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager;
-import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.IAddToCriteriaTickManager.IPropertyValueListener;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeRepresentation;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeRepresentation.IAddToCriteriaTickRepresentation;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeRepresentation.IAddToResultTickRepresentation;
@@ -99,37 +95,6 @@ public class CentreDomainTreeManager extends AbstractDomainTreeManager implement
         return super.getSerialiser();
     }
 
-    private static class WeakPropertyValueListener implements IPropertyValueListener {
-
-        private final IAddToCriteriaTickManager tickManager;
-        private final WeakReference<IPropertyValueListener> ref;
-        private final boolean isFirst;
-
-        public WeakPropertyValueListener(final IAddToCriteriaTickManager tickManager, final IPropertyValueListener listener, final boolean isFirst) {
-            this.tickManager = tickManager;
-            this.ref = new WeakReference<IPropertyValueListener>(listener);
-            this.isFirst = isFirst;
-        }
-
-        @Override
-        public void propertyStateChanged(final Class<?> root, final String property, final Object newValue, final Object oldState) {
-            if (ref.get() != null) {
-                ref.get().propertyStateChanged(root, property, newValue, oldState);
-            } else {
-                if (isFirst) {
-                    tickManager.removePropertyValueListener(this);
-                } else {
-                    tickManager.removePropertyValue2Listener(this);
-                }
-            }
-        }
-
-        public IPropertyValueListener getRef() {
-            return ref.get();
-        }
-
-    }
-
     /**
      * A first tick manager for entity centres specific. <br>
      * <br>
@@ -156,8 +121,6 @@ public class CentreDomainTreeManager extends AbstractDomainTreeManager implement
         private Integer columnsNumber;
 
         private final LocatorManager locatorManager;
-
-        private final transient EventListenerList propertyValueListeners, propertyValue2Listeners;
 
         private final EnhancementPropertiesMap<Set<MetaValueType>> propertiesMetaValuePresences;
 
@@ -200,9 +163,6 @@ public class CentreDomainTreeManager extends AbstractDomainTreeManager implement
             this.columnsNumber = columnsNumber;
 
             this.locatorManager = locatorManager;
-
-            this.propertyValueListeners = new EventListenerList();
-            this.propertyValue2Listeners = new EventListenerList();
 
             this.propertiesMetaValuePresences = createPropertiesMap();
             this.propertiesMetaValuePresences.putAll(propertiesMetaValuePresences);
@@ -374,9 +334,6 @@ public class CentreDomainTreeManager extends AbstractDomainTreeManager implement
             } else {
                 propertiesValues1.put(key(root, propertyName), value);
             }
-            for (final IPropertyValueListener listener : propertyValueListeners.getListeners(IPropertyValueListener.class)) {
-                listener.propertyStateChanged(root, propertyName, value, oldValue);
-            }
             return this;
         }
 
@@ -413,71 +370,7 @@ public class CentreDomainTreeManager extends AbstractDomainTreeManager implement
             } else {
                 propertiesValues2.put(key(root, propertyName), value2);
             }
-
-            for (final IPropertyValueListener listener : propertyValue2Listeners.getListeners(IPropertyValueListener.class)) {
-                listener.propertyStateChanged(root, propertyName, value2, oldValue2);
-            }
             return this;
-        }
-
-        @Override
-        public void addPropertyValueListener(final IPropertyValueListener listener) {
-            removeEmptyPropertyValueListenersFrom(propertyValueListeners);
-            propertyValueListeners.add(IPropertyValueListener.class, listener);
-        }
-
-        @Override
-        public void addWeakPropertyValueListener(final IPropertyValueListener listener) {
-            removeEmptyPropertyValueListenersFrom(propertyValueListeners);
-            propertyValueListeners.add(IPropertyValueListener.class, new WeakPropertyValueListener(this, listener, true));
-        }
-
-        @Override
-        public void removePropertyValueListener(final IPropertyValueListener listener) {
-            for (final IPropertyValueListener obj : propertyValueListeners.getListeners(IPropertyValueListener.class)) {
-                if (listener == obj) {
-                    propertyValueListeners.remove(IPropertyValueListener.class, listener);
-                } else if (obj instanceof WeakPropertyValueListener) {
-                    final IPropertyValueListener weakRef = ((WeakPropertyValueListener) obj).getRef();
-                    if (weakRef == listener || weakRef == null) {
-                        propertyValueListeners.remove(IPropertyValueListener.class, obj);
-                    }
-                }
-            }
-        }
-
-        @Override
-        public void addPropertyValue2Listener(final IPropertyValueListener listener) {
-            removeEmptyPropertyValueListenersFrom(propertyValue2Listeners);
-            propertyValue2Listeners.add(IPropertyValueListener.class, listener);
-        }
-
-        @Override
-        public void addWeakPropertyValue2Listener(final IPropertyValueListener listener) {
-            removeEmptyPropertyValueListenersFrom(propertyValue2Listeners);
-            propertyValue2Listeners.add(IPropertyValueListener.class, new WeakPropertyValueListener(this, listener, false));
-        }
-
-        @Override
-        public void removePropertyValue2Listener(final IPropertyValueListener listener) {
-            for (final IPropertyValueListener obj : propertyValue2Listeners.getListeners(IPropertyValueListener.class)) {
-                if (listener == obj) {
-                    propertyValue2Listeners.remove(IPropertyValueListener.class, listener);
-                } else if (obj instanceof WeakPropertyValueListener) {
-                    final IPropertyValueListener weakRef = ((WeakPropertyValueListener) obj).getRef();
-                    if (weakRef == listener || weakRef == null) {
-                        propertyValue2Listeners.remove(IPropertyValueListener.class, obj);
-                    }
-                }
-            }
-        }
-
-        private void removeEmptyPropertyValueListenersFrom(final EventListenerList listeners) {
-            for (final IPropertyValueListener obj : listeners.getListeners(IPropertyValueListener.class)) {
-                if (obj instanceof WeakPropertyValueListener && ((WeakPropertyValueListener) obj).getRef() == null) {
-                    listeners.remove(IPropertyValueListener.class, obj);
-                }
-            }
         }
 
         @Override
@@ -709,8 +602,9 @@ public class CentreDomainTreeManager extends AbstractDomainTreeManager implement
 
         private String generatePlaceholderName(final Class<?> root, final int newPlaceholderIndex) {
             int max = -1;
-            for (int i = 0; i < checkedPropertiesMutable(root).size(); i++) {
-                final String name = checkedPropertiesMutable(root).get(i);
+            final List<String> checkedProperties = checkedPropertiesMutable(root);
+            for (int i = 0; i < checkedProperties.size(); i++) {
+                final String name = checkedProperties.get(i);
                 if (isPlaceholder(name)) {
                     final int placeholderNumber = Integer.valueOf(name.substring(0, name.indexOf(PLACEHOLDER)));
                     if (placeholderNumber > max) {
@@ -722,12 +616,13 @@ public class CentreDomainTreeManager extends AbstractDomainTreeManager implement
         }
 
         private int findFirstPlaceholder(final Class<?> root) {
-            for (int i = 0; i < checkedPropertiesMutable(root).size(); i++) {
-                if (isPlaceholder(checkedPropertiesMutable(root).get(i))) {
+            final List<String> checkedProperties = checkedPropertiesMutable(root);
+            for (int i = 0; i < checkedProperties.size(); i++) {
+                if (isPlaceholder(checkedProperties.get(i))) {
                     return i;
                 }
             }
-            return checkedPropertiesMutable(root).size();
+            return checkedProperties.size();
         }
 
         /////////////////// Checked properties with placeholders (END) ///////////////////
@@ -994,21 +889,6 @@ public class CentreDomainTreeManager extends AbstractDomainTreeManager implement
                     }
                 }
             }
-        }
-
-        @Override
-        public void addPropertyOrderingListener(final IPropertyOrderingListener listener) {
-            throw new UnsupportedOperationException("IPropertyOrderingListener is currently unsupported for CentreDomainTreeManager's second tick.");
-        }
-
-        @Override
-        public void addWeakPropertyOrderingListener(final IPropertyOrderingListener listener) {
-            throw new UnsupportedOperationException("Weak IPropertyOrderingListener is currently unsupported for CentreDomainTreeManager's second tick.");
-        }
-
-        @Override
-        public void removePropertyOrderingListener(final IPropertyOrderingListener listener) {
-            throw new UnsupportedOperationException("IPropertyOrderingListener is currently unsupported for CentreDomainTreeManager's second tick.");
         }
 
         @Override

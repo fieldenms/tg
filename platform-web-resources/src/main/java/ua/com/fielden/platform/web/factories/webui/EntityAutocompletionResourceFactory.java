@@ -13,13 +13,14 @@ import com.google.inject.Injector;
 
 import ua.com.fielden.platform.basic.IValueMatcherWithContext;
 import ua.com.fielden.platform.criteria.generator.ICriteriaGenerator;
-import ua.com.fielden.platform.domaintree.IServerGlobalDomainTreeManager;
+import ua.com.fielden.platform.domaintree.IDomainTreeEnhancerCache;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.IEntityProducer;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.reflection.ClassesRetriever;
 import ua.com.fielden.platform.security.user.IUserProvider;
+import ua.com.fielden.platform.serialisation.api.ISerialiser;
 import ua.com.fielden.platform.ui.menu.MiWithConfigurationSupport;
 import ua.com.fielden.platform.web.app.IWebUiConfig;
 import ua.com.fielden.platform.web.centre.EntityCentre;
@@ -40,10 +41,11 @@ import ua.com.fielden.platform.web.view.master.EntityMaster;
 public class EntityAutocompletionResourceFactory extends Restlet {
     private final RestServerUtil restUtil;
     private final EntityFactory factory;
-    private final IWebUiConfig webApp;
+    private final ISerialiser serialiser;
+    private final IDomainTreeEnhancerCache domainTreeEnhancerCache;
+    private final IWebUiConfig webUiConfig;
     private final ICriteriaGenerator critGenerator;
-    private final ICompanionObjectFinder coFinder;
-    private final IServerGlobalDomainTreeManager serverGdtm;
+    private final ICompanionObjectFinder companionFinder;
     private final IUserProvider userProvider;
     private final IDeviceProvider deviceProvider;
     
@@ -54,12 +56,13 @@ public class EntityAutocompletionResourceFactory extends Restlet {
      * @param injector
      */
     public EntityAutocompletionResourceFactory(final IWebUiConfig webUiConfig, final Injector injector) {
-        this.webApp = webUiConfig;
+        this.serialiser = injector.getInstance(ISerialiser.class);
+        this.domainTreeEnhancerCache = injector.getInstance(IDomainTreeEnhancerCache.class);
+        this.webUiConfig = webUiConfig;
         this.restUtil = injector.getInstance(RestServerUtil.class);
         this.factory = injector.getInstance(EntityFactory.class);
         this.critGenerator = injector.getInstance(ICriteriaGenerator.class);
-        this.coFinder = injector.getInstance(ICompanionObjectFinder.class);
-        this.serverGdtm = injector.getInstance(IServerGlobalDomainTreeManager.class);
+        this.companionFinder = injector.getInstance(ICompanionObjectFinder.class);
         this.userProvider = injector.getInstance(IUserProvider.class);
         this.deviceProvider = injector.getInstance(IDeviceProvider.class);
     }
@@ -80,12 +83,11 @@ public class EntityAutocompletionResourceFactory extends Restlet {
                 final String criterionPropertyName = propertyName;
                 
                 final Class<? extends MiWithConfigurationSupport<?>> miType = (Class<? extends MiWithConfigurationSupport<?>>) type;
-                final EntityCentre<? extends AbstractEntity<?>> centre = this.webApp.getCentres().get(miType);
+                final EntityCentre<? extends AbstractEntity<?>> centre = this.webUiConfig.getCentres().get(miType);
                 
                 new CriteriaEntityAutocompletionResource(
-                        webApp, 
-                        coFinder, 
-                        serverGdtm, 
+                        webUiConfig, 
+                        companionFinder,
                         userProvider,
                         deviceProvider,
                         critGenerator, 
@@ -95,6 +97,8 @@ public class EntityAutocompletionResourceFactory extends Restlet {
                         criterionPropertyName,
                         centre,
                         restUtil,
+                        serialiser,
+                        domainTreeEnhancerCache,
                         getContext(),
                         request,
                         response //
@@ -104,20 +108,20 @@ public class EntityAutocompletionResourceFactory extends Restlet {
                 final IEntityProducer<? extends AbstractEntity<?>> entityProducer;
                 final IValueMatcherWithContext<?, ?> valueMatcher;
 
-                final EntityMaster<? extends AbstractEntity<?>> master = this.webApp.getMasters().get(entityType);
+                final EntityMaster<? extends AbstractEntity<?>> master = this.webUiConfig.getMasters().get(entityType);
                 if (master != null) {
                     valueMatcher = master.createValueMatcher(propertyName);
                     entityProducer = master.createEntityProducer();
                 } else { // in case where no master is registered for the type -- use default producer and value matcher
-                    valueMatcher = EntityMaster.createDefaultValueMatcher(propertyName, entityType, coFinder);
-                    entityProducer = EntityMaster.createDefaultEntityProducer(factory, entityType, coFinder);
+                    valueMatcher = EntityMaster.createDefaultValueMatcher(propertyName, entityType, companionFinder);
+                    entityProducer = EntityMaster.createDefaultEntityProducer(factory, entityType, companionFinder);
                 }
                 new EntityAutocompletionResource(
                         entityType,
                         propertyName,
                         entityProducer,
                         valueMatcher,
-                        coFinder,
+                        companionFinder,
                         restUtil,
                         deviceProvider,
                         getContext(),

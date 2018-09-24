@@ -82,7 +82,7 @@ public class WebUiResources extends AbstractWebUiResources {
         router.attach("/upload-attachment", factoryForAttachmentUploader);
 
         // register attachment download resource
-        router.attach("/download-attachment/{attachment-id}", new AttachmentDownloadResourceFactory(injector));
+        router.attach("/download-attachment/{attachment-id}/{attachment-sha1}", new AttachmentDownloadResourceFactory(injector));
 
         // register some server-side eventing
         // router.attach("/events",  new _EventSourcingResourceFactory()); -- some experimental stuff, which should be kept here for the moment

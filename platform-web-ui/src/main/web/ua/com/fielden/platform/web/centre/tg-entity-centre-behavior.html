@@ -514,6 +514,7 @@
                             this.$.selection_criteria._wasRun = 'yes';
                             console.debug('_wasRun has been changed to: ', this.$.selection_criteria._wasRun);
                         }
+                        self.fire("tg-entity-centre-refreshed", {entities: resultEntities, pageCount: pageCount});
                     }
                 }).bind(self);
 

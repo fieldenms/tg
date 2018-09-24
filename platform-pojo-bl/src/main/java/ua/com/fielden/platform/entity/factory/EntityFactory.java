@@ -1,21 +1,20 @@
 package ua.com.fielden.platform.entity.factory;
 
+import static ua.com.fielden.platform.entity.AbstractEntity.ID;
+
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.util.ArrayList;
 import java.util.List;
+
+import com.google.inject.Injector;
+import com.google.inject.Provider;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.DynamicEntityKey;
 import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.reflection.Reflector;
-
-import com.google.inject.Guice;
-import com.google.inject.Injector;
-import com.google.inject.Module;
-import com.google.inject.Provider;
 
 /**
  *
@@ -41,39 +40,6 @@ public class EntityFactory {
     }
 
     protected EntityFactory() {
-    }
-
-    /**
-     * Constructor that allow passing one or more modules.
-     *
-     * @param module
-     * @param modules
-     */
-    public EntityFactory(final Module module, final Module... modules) {
-        this(aggregate(module, modules));
-    }
-
-    /**
-     * Constructs factory instance using provided modules and internal modules for instantiation of the Guice injector.
-     *
-     * There can be zero or more provided modules.
-     *
-     * @param modules
-     */
-    private EntityFactory(final List<Module> modules) {
-        if (modules == null || modules.isEmpty()) {
-            throw new IllegalArgumentException("One or more modules are expected.");
-        }
-        injector = Guice.createInjector(modules);
-    }
-
-    /**
-     * Sometimes it is more convenient to provide factory with already created injector rather than modules.
-     *
-     * @param injector
-     */
-    public EntityFactory(final Injector injector) {
-        this.injector = injector;
     }
 
     /**
@@ -109,10 +75,10 @@ public class EntityFactory {
      * @return
      * @throws RuntimeException
      */
-    public synchronized <T extends AbstractEntity<?>> T newEntity(final Class<T> entityClass, final Long id) {
+    public <T extends AbstractEntity<?>> T newEntity(final Class<T> entityClass, final Long id) {
         try {
             final T entity = injector.getInstance(entityClass);
-            setReferenceToThis(entity);
+            setReferenceToThis(entity, this);
             setId(entityClass, id, entity);
             return entity;
         } catch (final RuntimeException ex) {
@@ -129,7 +95,7 @@ public class EntityFactory {
      * @param entityClass
      * @return
      */
-    public synchronized <T extends AbstractEntity<?>> T newEntity(final Class<T> entityClass) {
+    public <T extends AbstractEntity<?>> T newEntity(final Class<T> entityClass) {
         return newEntity(entityClass, null);
     }
 
@@ -139,11 +105,11 @@ public class EntityFactory {
      * @param entity
      * @throws RuntimeException
      */
-    private void setReferenceToThis(final AbstractEntity<?> entity) {
+    private static void setReferenceToThis(final AbstractEntity<?> entity, final EntityFactory factory) {
         try {
             final Method method = Reflector.getMethod(entity.getType(), "setEntityFactory", EntityFactory.class);
             method.setAccessible(true);
-            method.invoke(entity, this);
+            method.invoke(entity, factory);
             method.setAccessible(false);
         } catch (final Exception e) {
             throw new IllegalStateException(e);
@@ -168,10 +134,10 @@ public class EntityFactory {
      * @return
      * @throws Exception
      */
-    public synchronized <T extends AbstractEntity<K>, K extends Comparable> T newEntity(final Class<T> entityClass, final Long id, final K key, final String desc) {
+    public <T extends AbstractEntity<K>, K extends Comparable> T newEntity(final Class<T> entityClass, final Long id, final K key, final String desc) {
         try {
             final T entity = injector.getInstance(entityClass);
-            setReferenceToThis(entity);
+            setReferenceToThis(entity, this);
             setId(entityClass, id, entity);
             setKey(entityClass, key, entity);
             entity.setDesc(desc);
@@ -207,10 +173,10 @@ public class EntityFactory {
      *             - if number of keys instances is not equal to number of composite key member in entity.<br>
      *             And in other cases.
      */
-    public synchronized <T extends AbstractEntity<DynamicEntityKey>> T newByKey(final Class<T> entityClass, final Object... keys) throws RuntimeException {
+    public <T extends AbstractEntity<DynamicEntityKey>> T newByKey(final Class<T> entityClass, final Object... keys) {
         try {
             final T entity = injector.getInstance(entityClass); // DynamicEntityKey should be set in default constructor of entity
-            setReferenceToThis(entity);
+            setReferenceToThis(entity, this);
             // setting composite key fields
             final List<Field> fieldList = Finder.getKeyMembers(entityClass);
             if (fieldList.size() != keys.length) {
@@ -232,15 +198,17 @@ public class EntityFactory {
     /**
      * Convenient constructor for instantiation of an entity without description.
      */
-    public <T extends AbstractEntity<K>, K extends Comparable> T newEntity(final Class<T> entityClass, final Long id, final K key) throws RuntimeException {
+    public <T extends AbstractEntity<K>, K extends Comparable> T newEntity(final Class<T> entityClass, final Long id, final K key) {
         return newEntity(entityClass, id, key, null);
     }
 
     /**
      * Convenience method for setting entity id value.
+     *
+     * @throws IllegalAccessException 
      */
-    private static <T> void setId(final Class<T> entityClass, final Long id, final T entity) throws Exception {
-        final Field idField = Finder.getFieldByName(entityClass, AbstractEntity.ID);
+    private static <T> void setId(final Class<T> entityClass, final Long id, final T entity) throws IllegalAccessException {
+        final Field idField = Finder.getFieldByName(entityClass, ID);
         final boolean accessible = idField.isAccessible();
         idField.setAccessible(true);
         idField.set(entity, id);
@@ -256,19 +224,4 @@ public class EntityFactory {
         setKey.invoke(entity, key);
     }
 
-    /**
-     * Puts the passed values into one list.
-     *
-     * @param module
-     * @param modules
-     * @return
-     */
-    private static List<Module> aggregate(final Module module, final Module... modules) {
-        final List<Module> list = new ArrayList<Module>();
-        list.add(module);
-        for (final Module module2 : modules) {
-            list.add(module2);
-        }
-        return list;
-    }
 }

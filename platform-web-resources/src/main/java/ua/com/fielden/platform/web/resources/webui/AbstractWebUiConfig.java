@@ -1,7 +1,5 @@
 package ua.com.fielden.platform.web.resources.webui;
 
-import static ua.com.fielden.platform.web.centre.CentreUpdater.clearAllCentres;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -15,7 +13,6 @@ import com.google.inject.Injector;
 
 import ua.com.fielden.platform.basic.config.Workflows;
 import ua.com.fielden.platform.dom.DomElement;
-import ua.com.fielden.platform.domaintree.IGlobalDomainTreeManager;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.EntityDeleteAction;
 import ua.com.fielden.platform.entity.EntityDeleteActionProducer;
@@ -226,16 +223,12 @@ public abstract class AbstractWebUiConfig implements IWebUiConfig {
     }
     
     @Override
-    public final void clearConfiguration(final IGlobalDomainTreeManager gdtm) {
+    public final void clearConfiguration() {
         logger.error("Clearing configurations...");
         this.webUiBuilder = new WebUiBuilder(this);
         this.desktopMainMenuConfig = new MainMenuBuilder(this);
         this.mobileMainMenuConfig = new MainMenuBuilder(this);
         logger.error("Clearing configurations...done");
-        
-        logger.error(String.format("Clearing centres for user [%s] and both devices (DESKTOP and MOBILE)...", gdtm.getUserProvider().getUser()));
-        clearAllCentres(gdtm);
-        logger.error(String.format("Clearing centres for user [%s] and both devices (DESKTOP and MOBILE)...done", gdtm.getUserProvider().getUser()));
     }
     
     @Override

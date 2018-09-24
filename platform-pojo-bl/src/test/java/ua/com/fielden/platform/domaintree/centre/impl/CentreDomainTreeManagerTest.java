@@ -14,13 +14,11 @@ import java.util.List;
 import java.util.Set;
 
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import ua.com.fielden.platform.domaintree.IDomainTreeManager;
-import ua.com.fielden.platform.domaintree.IGlobalDomainTreeManager;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager;
-import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.IAddToCriteriaTickManager.IPropertyValueListener;
-import ua.com.fielden.platform.domaintree.centre.ILocatorDomainTreeManager.ILocatorDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.domaintree.centre.IOrderingRepresentation.Ordering;
 import ua.com.fielden.platform.domaintree.exceptions.DomainTreeException;
 import ua.com.fielden.platform.domaintree.impl.AbstractDomainTree;
@@ -28,7 +26,6 @@ import ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeManagerTest;
 import ua.com.fielden.platform.domaintree.testing.EntityForCentreCheckedProperties;
 import ua.com.fielden.platform.domaintree.testing.EntityWithCompositeKey;
 import ua.com.fielden.platform.domaintree.testing.EntityWithKeyTitleAndWithAEKeyType;
-import ua.com.fielden.platform.domaintree.testing.EntityWithStringKeyType;
 import ua.com.fielden.platform.domaintree.testing.MasterEntity;
 import ua.com.fielden.platform.domaintree.testing.MasterEntityForCentreDomainTree;
 import ua.com.fielden.platform.domaintree.testing.MasterEntityForIncludedPropertiesLogic;
@@ -157,6 +154,7 @@ public class CentreDomainTreeManagerTest extends AbstractDomainTreeManagerTest {
     }
 
     ////////////////////// 6. Specific entity-centre logic //////////////////////
+    @Ignore
     @Test
     public void test_that_unchecked_properties_actions_for_both_ticks_cause_exceptions_for_all_specific_logic() {
         final String message = "Unchecked property should cause IllegalArgument exception.";
@@ -719,20 +717,6 @@ public class CentreDomainTreeManagerTest extends AbstractDomainTreeManagerTest {
         assertEquals("The number of columns should be 3", dtm().getFirstTick().getColumnsNumber(), 3);
     }
 
-    private ILocatorDomainTreeManagerAndEnhancer initDefaultLocatorForSomeTestType(final IGlobalDomainTreeManager managerForNonBaseUser) {
-        // initialise a default locator for type EntityWithStringKeyType which will affect initialisation of [MasterEntity.entityProp.simpleEntityProp] property.
-        final ILocatorDomainTreeManagerAndEnhancer ldtmae = new LocatorDomainTreeManagerAndEnhancer(serialiser(), new HashSet<Class<?>>() {
-            {
-                add(EntityWithStringKeyType.class);
-            }
-        });
-        ldtmae.getFirstTick().check(EntityWithStringKeyType.class, "integerProp", true);
-        managerForNonBaseUser.getGlobalRepresentation().setLocatorManagerByDefault(EntityWithStringKeyType.class, ldtmae);
-        assertFalse("Should not be the same instance, it should be retrived every time.", ldtmae == managerForNonBaseUser.getGlobalRepresentation().getLocatorManagerByDefault(EntityWithStringKeyType.class));
-        assertTrue("Should be equal instance, because no one has been changed default locator.", ldtmae.equals(managerForNonBaseUser.getGlobalRepresentation().getLocatorManagerByDefault(EntityWithStringKeyType.class)));
-        return ldtmae;
-    }
-
     @Test
     public void test_that_runAutomatically_can_be_set_and_altered() {
         // THE FIRST TIME -- returns DEFAULT VALUE //
@@ -753,23 +737,10 @@ public class CentreDomainTreeManagerTest extends AbstractDomainTreeManagerTest {
     }
 
     @Test
+    @Ignore("Ignored due to the removal of support for listeners. Need to revisit.")
     public void test_that_PropertyValue1And2Listeners_work() {
         i = 0;
         j = 0;
-        final IPropertyValueListener listener1 = new IPropertyValueListener() {
-            @Override
-            public void propertyStateChanged(final Class<?> root, final String property, final Object newValue, final Object oldState) {
-                i++;
-            }
-        };
-        dtm().getFirstTick().addPropertyValueListener(listener1);
-        final IPropertyValueListener listener2 = new IPropertyValueListener() {
-            @Override
-            public void propertyStateChanged(final Class<?> root, final String property, final Object newValue, final Object oldState) {
-                j++;
-            }
-        };
-        dtm().getFirstTick().addPropertyValue2Listener(listener2);
 
         final String prop = "booleanProp";
         dtm().getFirstTick().check(MasterEntity.class, prop, true);
@@ -794,23 +765,10 @@ public class CentreDomainTreeManagerTest extends AbstractDomainTreeManagerTest {
     }
 
     @Test
+    @Ignore("Ignored due to the removal of support for listeners. Need to revisit.")
     public void test_that_WeakPropertyValue1And2Listeners_work() {
         i = 0;
         j = 0;
-        IPropertyValueListener listener1 = new IPropertyValueListener() {
-            @Override
-            public void propertyStateChanged(final Class<?> root, final String property, final Object newValue, final Object oldState) {
-                i++;
-            }
-        };
-        dtm().getFirstTick().addWeakPropertyValueListener(listener1);
-        IPropertyValueListener listener2 = new IPropertyValueListener() {
-            @Override
-            public void propertyStateChanged(final Class<?> root, final String property, final Object newValue, final Object oldState) {
-                j++;
-            }
-        };
-        dtm().getFirstTick().addWeakPropertyValue2Listener(listener2);
 
         final String prop = "booleanProp";
         dtm().getFirstTick().check(MasterEntity.class, prop, true);
@@ -824,10 +782,6 @@ public class CentreDomainTreeManagerTest extends AbstractDomainTreeManagerTest {
         dtm().getFirstTick().setValue2(MasterEntity.class, prop, true);
         assertEquals("Incorrect value 'i'.", 1, i);
         assertEquals("Incorrect value 'j'.", 1, j);
-
-        listener1 = null;
-        listener2 = null;
-        System.gc();
 
         dtm().getFirstTick().setValue(MasterEntity.class, prop, false);
         assertEquals("Incorrect value 'i'.", 1, i);

@@ -1,19 +1,20 @@
 package ua.com.fielden.platform.reflection;
 
 import static java.lang.String.format;
+import static java.util.stream.Collectors.joining;
 import static ua.com.fielden.platform.utils.Pair.pair;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.ExecutionException;
+import java.util.stream.Stream;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
@@ -43,16 +44,17 @@ import ua.com.fielden.platform.utils.Pair;
  */
 public final class Reflector {
     /**
+     * A maximum cache size for caching reflection related information.
+     */
+    public static final int MAXIMUM_CACHE_SIZE = 32000;
+    /**
      * A cache for {@link Method} instances.
      */
-    private static final Cache<MethodKey, Pair<Method, NoSuchMethodException>> METHOD_CACHE = CacheBuilder.newBuilder().expireAfterWrite(10, TimeUnit.SECONDS).concurrencyLevel(50).build();
-    
-    /**
-     * A convenient way to access a cache of methods as an immutable map. Could be used for inspection.
-     * @return
-     */
-    public static Map<MethodKey, Pair<Method, NoSuchMethodException>> methodCache() {
-        return Collections.unmodifiableMap(METHOD_CACHE.asMap());
+    private static final Cache<Class<?>, Cache<String, Method>> METHOD_CACHE = CacheBuilder.newBuilder().weakKeys().initialCapacity(1000).maximumSize(MAXIMUM_CACHE_SIZE).concurrencyLevel(50).build();
+
+    public static long cleanUp() {
+        METHOD_CACHE.cleanUp();
+        return METHOD_CACHE.size();
     }
 
     /** A symbol that represents a separator between properties in property path expressions. */
@@ -129,90 +131,31 @@ public final class Reflector {
             // the current instance
             try {
                 return getDeclaredMethod(klass, methodName, arguments);
-            } catch (final NoSuchMethodException e) {
+            } catch (final ReflectionException e) {
                 klass = klass.getSuperclass();
             }
         }
         throw new NoSuchMethodException(methodName);
     }
 
-    private static class MethodKey {
-        private final String klassName;
-        private final String methodName;
-        private final List<String> argumentsTypeNames;
 
-        public MethodKey(final Class<?> klass, final String methodName, final Class<?>... arguments) {
-            this.klassName = klass.getName();
-            this.methodName = methodName;
-            argumentsTypeNames = new ArrayList<>();
-            for (final Class<?> argument : arguments) {
-                argumentsTypeNames.add(argument.getName());
-            }
+    private static Method getDeclaredMethod(final Class<?> klass, final String methodName, final Class<?>... arguments) {
+        final String methodKey = format("%s(%s)", methodName, Stream.of(arguments).map(Class::getName).collect(joining(", ")));
+        final Cache<String, Method> methodOrException;
+        try {
+            methodOrException = METHOD_CACHE.get(klass, () -> { 
+                final Cache<String, Method> newTypeCache = CacheBuilder.newBuilder().weakValues().build();
+                METHOD_CACHE.put(klass, newTypeCache);
+                return newTypeCache;
+            });
+        } catch (final ExecutionException ex) {
+            throw new ReflectionException(format("Could not find method [%s] for type [%s].", methodKey, klass), ex);
         }
-
-        @Override
-        public int hashCode() {
-            final int prime = 31;
-            int result = 1;
-            result = prime * result + ((argumentsTypeNames == null) ? 0 : argumentsTypeNames.hashCode());
-            result = prime * result + ((klassName == null) ? 0 : klassName.hashCode());
-            result = prime * result + ((methodName == null) ? 0 : methodName.hashCode());
-            return result;
-        }
-
-        @Override
-        public boolean equals(final Object obj) {
-            if (this == obj) {
-                return true;
-            }
-            if (obj == null) {
-                return false;
-            }
-            if (getClass() != obj.getClass()) {
-                return false;
-            }
-            final MethodKey other = (MethodKey) obj;
-            if (argumentsTypeNames == null) {
-                if (other.argumentsTypeNames != null) {
-                    return false;
-                }
-            } else if (!argumentsTypeNames.equals(other.argumentsTypeNames)) {
-                return false;
-            }
-            if (klassName == null) {
-                if (other.klassName != null) {
-                    return false;
-                }
-            } else if (!klassName.equals(other.klassName)) {
-                return false;
-            }
-            if (methodName == null) {
-                if (other.methodName != null) {
-                    return false;
-                }
-            } else if (!methodName.equals(other.methodName)) {
-                return false;
-            }
-            return true;
-        }
-    }
-
-    private static synchronized Method getDeclaredMethod(final Class<?> klass, final String methodName, final Class<?>... arguments) throws NoSuchMethodException {
-        final MethodKey methodKey = new MethodKey(klass, methodName, arguments);
-        final Pair<Method, NoSuchMethodException> methodOrException = METHOD_CACHE.getIfPresent(methodKey);
-        if (methodOrException == null) {
-            try {
-                final Method method = klass.getDeclaredMethod(methodName, arguments);
-                METHOD_CACHE.put(methodKey, pair(method, null));
-                return method;
-            } catch (final NoSuchMethodException ex) {
-                METHOD_CACHE.put(methodKey, pair(null, ex));
-                throw ex;
-            }
-        } else if (methodOrException.getKey() != null) {
-            return methodOrException.getKey();
-        } else {
-            throw methodOrException.getValue();
+        
+        try {
+            return methodOrException.get(methodKey, () -> klass.getDeclaredMethod(methodName, arguments));
+        } catch (final ExecutionException ex) {
+            throw new ReflectionException(format("Could not find method [%s] for type [%s].", methodKey, klass), ex);
         }
     }
 
@@ -619,5 +562,24 @@ public final class Reflector {
      */
     public static boolean isPropertyRetrievable(final AbstractEntity<?> entity, final String propName) {
         return isPropertyRetrievable(entity, Finder.findFieldByName(entity.getClass(), propName)); 
+    }
+    
+    /**
+     * A helper function to assign value to a static final field.
+     *  
+     * @param field
+     * @param value
+     */
+    public static void assignStatic(final Field field, final Object value) {
+        try {
+            field.setAccessible(true);
+            final Field modifiersField = Field.class.getDeclaredField("modifiers");
+            modifiersField.setAccessible(true);
+            modifiersField.setInt(field, field.getModifiers() & ~Modifier.FINAL);
+
+            field.set(null, value);
+        } catch (final Exception ex) {
+            throw new ReflectionException("Could not assign value to a static field.", ex);
+        }
     }
 }

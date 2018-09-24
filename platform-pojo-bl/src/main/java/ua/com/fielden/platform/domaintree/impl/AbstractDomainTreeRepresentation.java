@@ -3,7 +3,6 @@ package ua.com.fielden.platform.domaintree.impl;
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.stripIfNeeded;
 import static ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader.getOriginalType;
 
-import java.lang.ref.WeakReference;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.nio.ByteBuffer;
@@ -16,8 +15,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
-import javax.swing.event.EventListenerList;
-
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 
@@ -25,7 +22,6 @@ import ua.com.fielden.platform.domaintree.Function;
 import ua.com.fielden.platform.domaintree.FunctionUtils;
 import ua.com.fielden.platform.domaintree.ICalculatedProperty.CalculatedPropertyCategory;
 import ua.com.fielden.platform.domaintree.IDomainTreeRepresentation;
-import ua.com.fielden.platform.domaintree.IDomainTreeRepresentation.ITickRepresentation.IPropertyDisablementListener;
 import ua.com.fielden.platform.domaintree.exceptions.DomainTreeException;
 import ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeManager.ITickRepresentationWithMutability;
 import ua.com.fielden.platform.entity.AbstractEntity;
@@ -67,8 +63,6 @@ public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTre
     /** Please do not use this field directly, use {@link #includedPropertiesMutable(Class)} lazy getter instead. */
     private final transient EnhancementRootsMap<ListenedArrayList> includedProperties;
 
-    private final transient EventListenerList propertyListeners, disabledPropertyListeners;
-
     /**
      * A <i>representation</i> constructor. Initialises also children references on itself.
      */
@@ -80,9 +74,6 @@ public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTre
         this.manuallyExcludedProperties.addAll(excludedProperties);
         this.firstTick = firstTick;
         this.secondTick = secondTick;
-
-        propertyListeners = new EventListenerList();
-        disabledPropertyListeners = new EventListenerList();
 
         // initialise the references on this instance in its children
         try {
@@ -129,18 +120,25 @@ public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTre
                 // add the children for "property" based on its nature
                 if (EntityUtils.isEntityType(propertyType)) {
                     final boolean propertyTypeWasInHierarchyBefore = typesInHierarchy(managedType, reflectionProperty, true).contains(DynamicEntityClassLoader.getOriginalType(propertyType));
-
-                    // final boolean isKeyPart = Finder.getKeyMembers(parentType).contains(field); // indicates if field is the part of the key.
-                    final boolean isEntityItself = "".equals(property); // empty property means "entity itself"
-                    final Pair<Class<?>, String> transformed = PropertyTypeDeterminator.transform(managedType, property);
-                    final String penultPropertyName = PropertyTypeDeterminator.isDotNotation(property) ? PropertyTypeDeterminator.penultAndLast(property).getKey() : null;
-                    final String lastPropertyName = transformed.getValue();
-                    final boolean isLinkProperty = !isEntityItself && PropertyTypeDeterminator.isDotNotation(property)
-                            && Finder.isOne2Many_or_One2One_association(managedType, penultPropertyName)
-                            && lastPropertyName.equals(Finder.findLinkProperty((Class<? extends AbstractEntity<?>>) managedType, penultPropertyName)); // exclude link properties in one2many and one2one associations
-
+                    
+                    // The logic below (determining whether property represents link property) is important to maintain the integrity of domain trees.
+                    // However, it also causes performance bottlenecks when invoking multiple times.
+                    // In current Web UI logic, that uses centre domain trees, the following logic does not add any significant value.
+                    // Reintroducing may be significant when management of domain trees from UI will be implemented.
+                    // Please note number 1. indicates "old" simplified version and number 2. indicates newer version with link property handling.
+                    // Perhaps some "hybrid" of both can be used to achieve acceptable performance.
+                    
+                    // 1. final boolean isKeyPart = Finder.getKeyMembers(parentType).contains(field); // indicates if field is the part of the key.
+                    // 2. final boolean isEntityItself = "".equals(property); // empty property means "entity itself"
+                    // 2. final Pair<Class<?>, String> transformed = PropertyTypeDeterminator.transform(managedType, property);
+                    // 2. final String penultPropertyName = PropertyTypeDeterminator.isDotNotation(property) ? PropertyTypeDeterminator.penultAndLast(property).getKey() : null;
+                    // 2. final String lastPropertyName = transformed.getValue();
+                    // 2. final boolean isLinkProperty = !isEntityItself && PropertyTypeDeterminator.isDotNotation(property)
+                    // 2.         && Finder.isOne2Many_or_One2One_association(managedType, penultPropertyName)
+                    // 2.         && lastPropertyName.equals(Finder.findLinkProperty((Class<? extends AbstractEntity<?>>) managedType, penultPropertyName)); // exclude link properties in one2many and one2one associations
+                    
                     if (level(property) >= LOADING_LEVEL && !EntityUtils.isUnionEntityType(propertyType) //
-                            || propertyTypeWasInHierarchyBefore && !isLinkProperty /*!isKeyPart*/) {
+                            || propertyTypeWasInHierarchyBefore /* && 2. !isLinkProperty */ /* && 1. !isKeyPart */) {
                         newIncludedProps.add(createDummyMarker(property));
                     }
                     // TODO Need to review the following commet during removal of the "common properties" concept for union entities.
@@ -339,8 +337,6 @@ public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTre
         final String lastPropertyName = transformed.getValue();
         // logger().info("\t\t\tdetermineClass.");
         final Class<?> propertyType = isEntityItself ? root : PropertyTypeDeterminator.determineClass(penultType, lastPropertyName, true, true);
-        // logger().info("\t\t\tgetOriginalType.");
-        final Class<?> notEnhancedRoot = DynamicEntityClassLoader.getOriginalType(root);
         // final Field field = isEntityItself ? null : Finder.getFieldByName(penultType, lastPropertyName);
         // logger().info("\t\t\tstarted conditions...");
         final boolean excl = manuallyExcludedProperties.contains(key(root, property)) || // exclude manually excluded properties
@@ -356,8 +352,14 @@ public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTre
                 EntityUtils.isEntityType(propertyType) && !AnnotationReflector.isAnnotationPresentForClass(KeyType.class, propertyType) || // exclude properties / entities of entity type without KeyType annotation
                 !isEntityItself && AnnotationReflector.isPropertyAnnotationPresent(Invisible.class, penultType, lastPropertyName) || // exclude invisible properties
                 !isEntityItself && AnnotationReflector.isPropertyAnnotationPresent(Ignore.class, penultType, lastPropertyName) || // exclude invisible properties
-                // !isEntityItself && Finder.getKeyMembers(penultType).contains(field) && typesInHierarchy(root, property, true).contains(DynamicEntityClassLoader.getOriginalType(propertyType)) || // exclude key parts which type was in hierarchy
-                !isEntityItself && PropertyTypeDeterminator.isDotNotation(property) && Finder.isOne2Many_or_One2One_association(notEnhancedRoot, penultPropertyName) && lastPropertyName.equals(Finder.findLinkProperty((Class<? extends AbstractEntity<?>>) notEnhancedRoot, penultPropertyName)) || // exclude link properties in one2many and one2one associations
+                // The logic below (determining whether property represents link property) is important to maintain the integrity of domain trees.
+                // However, it also causes performance bottlenecks when invoking multiple times (findLinkProperty, getOriginalValue, etc.).
+                // In current Web UI logic, that uses centre domain trees, the following logic does not add any significant value.
+                // Reintroducing may be significant when management of domain trees from UI will be implemented.
+                // Please note number 1. indicates "old" simplified version and number 2. indicates newer version with link property handling.
+                // Perhaps some "hybrid" of both can be used to achieve acceptable performance.
+                // 1. !isEntityItself && Finder.getKeyMembers(penultType).contains(field) && typesInHierarchy(root, property, true).contains(DynamicEntityClassLoader.getOriginalType(propertyType)) || // exclude key parts which type was in hierarchy
+                // 2. !isEntityItself && PropertyTypeDeterminator.isDotNotation(property) && Finder.isOne2Many_or_One2One_association(DynamicEntityClassLoader.getOriginalType(root), penultPropertyName) && lastPropertyName.equals(Finder.findLinkProperty((Class<? extends AbstractEntity<?>>) DynamicEntityClassLoader.getOriginalType(root), penultPropertyName)) || // exclude link properties in one2many and one2one associations
                 !isEntityItself && isExcludedImmutably(root, PropertyTypeDeterminator.isDotNotation(property) ? penultPropertyName : ""); // exclude property if it is an ascender (any level) of already excluded property
         // logger().info("\t\tEnded isExcludedImmutably for property [" + property + "].");
         return excl;
@@ -418,47 +420,6 @@ public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTre
     }
 
     /**
-     * Weak implementation of the {@link IPropertyListener} interface.
-     *
-     * @author TG Team
-     *
-     */
-    private static class WeakPropertyListener implements IPropertyListener {
-
-        private final WeakReference<IPropertyListener> ref;
-        private final IDomainTreeRepresentation dtr;
-
-        public WeakPropertyListener(final IDomainTreeRepresentation dtr, final IPropertyListener listener) {
-            this.dtr = dtr;
-            this.ref = new WeakReference<IPropertyListener>(listener);
-        }
-
-        @Override
-        public void propertyStateChanged(final Class<?> root, final String property, final Boolean wasAddedOrRemoved, final Boolean oldState) {
-            if (ref.get() != null) {
-                ref.get().propertyStateChanged(root, property, wasAddedOrRemoved, oldState);
-            } else {
-                dtr.removePropertyListener(this);
-            }
-        }
-
-        @Override
-        public boolean isInternal() {
-            if (ref.get() != null) {
-                return ref.get().isInternal();
-            } else {
-                dtr.removePropertyListener(this);
-                return false;
-            }
-        }
-
-        public IPropertyListener getRef() {
-            return ref.get();
-        }
-
-    }
-
-    /**
      * An {@link ArrayList} specific implementation which listens to structure modifications (add / remove elements) and fires appropriate events.
      *
      * @author TG Team
@@ -479,62 +440,6 @@ public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTre
             this.parentDtr = parentDtr;
         }
 
-        private void fireProperty(final Class<?> root, final String property, final boolean added) {
-            if (parentDtr != null) {
-                for (final IPropertyListener listener : parentDtr.propertyListeners.getListeners(IPropertyListener.class)) {
-                    if (!listener.isInternal()) {
-                        // logger().info("Started external listener [" + listener + "] for property [" + property + "].");
-                        listener.propertyStateChanged(root, property, added, null);
-                        // logger().info("Ended external listener [" + listener + "] for property [" + property + "].");
-                    }
-                }
-                for (final IPropertyListener listener : parentDtr.propertyListeners.getListeners(IPropertyListener.class)) {
-                    if (listener.isInternal()) {
-                        // logger().info("Started internal listener [" + listener + "] for property [" + property + "].");
-                        listener.propertyStateChanged(root, property, added, null);
-                        // logger().info("Ended internal listener [" + listener + "] for property [" + property + "].");
-                    }
-                }
-            }
-        }
-
-        //	@Override
-        //	public boolean add(final String property) {
-        //	    final boolean added = super.add(property);
-        //	    if (added) {
-        //		fireProperty(root, property, true);
-        //	    }
-        //	    return added;
-        //	}
-        //
-        //	@Override
-        //	public void add(final int index, final String property) {
-        //	    super.add(index, property);
-        //	    fireProperty(root, property, true);
-        //	}
-        //
-        //	@Override
-        //	public boolean addAll(final Collection<? extends String> properties) {
-        //	    final boolean added = super.addAll(properties);
-        //	    if (added) {
-        //		for (final String property : properties) {
-        //		    fireProperty(root, property, true);
-        //		}
-        //	    }
-        //	    return added;
-        //	}
-        //
-        //	@Override
-        //	public boolean addAll(final int index, final Collection<? extends String> properties) {
-        //	    final boolean added = super.addAll(index, properties);
-        //	    if (added) {
-        //		for (final String property : properties) {
-        //		    fireProperty(root, property, true);
-        //		}
-        //	    }
-        //	    return added;
-        //	}
-
         private String getElem(final int index) {
             try {
                 return get(index);
@@ -549,9 +454,6 @@ public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTre
                 throw new DomainTreeException("'null' properties can not be added into properties set (implemented as natural ordered list).");
             } else if (!EntityUtils.equalsEx(getElem(size() - 1), property)) { // when last property is equal to attempted (addition) property -- ignore addition
                 final boolean added = super.add(property);
-                if (added) {
-                    fireProperty(root, property, true);
-                }
                 return added;
             }
             return false;
@@ -563,7 +465,6 @@ public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTre
                 throw new DomainTreeException("'null' properties can not be added into properties set (implemented as natural ordered list).");
             } else if (!EntityUtils.equalsEx(getElem(index - 1), property)) { // when last property is equal to attempted (addition) property -- ignore addition
                 super.add(index, property);
-                fireProperty(root, property, true);
             }
         }
 
@@ -591,8 +492,6 @@ public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTre
         @Override
         public boolean remove(final Object obj) {
             final String property = (String) obj;
-            fireProperty(root, property, false);
-
             final boolean removed = super.remove(obj);
             if (!removed) {
                 throw new IllegalStateException("DANGEROUS: the property [" + property + "] can not be removed, because it does not exist in the list. "
@@ -616,7 +515,6 @@ public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTre
         final Class<?> root = DynamicEntityClassLoader.getOriginalType(managedType);
         if (includedProperties.get(root) == null) { // not yet loaded
             final Date st = new Date();
-            enableListening(false);
             // initialise included properties using isExcluded contract and manually excluded properties
             final ListenedArrayList includedProps = new ListenedArrayList(root, this);
             if (!isExcludedImmutably(root, "")) { // the entity itself is included -- add it to "included properties" list
@@ -635,66 +533,11 @@ public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTre
 
                 includedProps.addAll(props);
             }
-            enableListening(true);
             includedProperties.put(root, includedProps);
             logger().debug("Root [" + root.getSimpleName() + "] has been processed within " + (new Date().getTime() - st.getTime()) + "ms with " + includedProps.size()
                     + " included properties."); // => [" + includedProps + "]
         }
         return includedProperties.get(root);
-    }
-
-    /**
-     * Enables or disables listening for each {@link ListenedArrayList} structures.
-     *
-     * @param enable
-     */
-    private void enableListening(final boolean enable) {
-        if (enable) {
-            movePropertyListners(disabledPropertyListeners, propertyListeners);
-        } else {
-            movePropertyListners(propertyListeners, disabledPropertyListeners);
-        }
-    }
-
-    private void movePropertyListners(final EventListenerList from, final EventListenerList to) {
-        for (final IPropertyListener listener : from.getListeners(IPropertyListener.class)) {
-            to.add(IPropertyListener.class, listener);
-            from.remove(IPropertyListener.class, listener);
-        }
-    }
-
-    @Override
-    public void addPropertyListener(final IPropertyListener listener) {
-        removeEmptyWeakPropertyListeners();
-        propertyListeners.add(IPropertyListener.class, listener);
-    }
-
-    @Override
-    public void addWeakPropertyListener(final IPropertyListener listener) {
-        removeEmptyWeakPropertyListeners();
-        propertyListeners.add(IPropertyListener.class, new WeakPropertyListener(this, listener));
-    }
-
-    @Override
-    public void removePropertyListener(final IPropertyListener listener) {
-        for (final IPropertyListener obj : propertyListeners.getListeners(IPropertyListener.class)) {
-            if (listener == obj) {
-                propertyListeners.remove(IPropertyListener.class, listener);
-            } else if (obj instanceof WeakPropertyListener) {
-                final IPropertyListener weakRef = ((WeakPropertyListener) obj).getRef();
-                if (weakRef == listener || weakRef == null) {
-                    propertyListeners.remove(IPropertyListener.class, obj);
-                }
-            }
-        }
-    }
-
-    private void removeEmptyWeakPropertyListeners() {
-        for (final IPropertyListener obj : propertyListeners.getListeners(IPropertyListener.class)) {
-            if (obj instanceof WeakPropertyListener && ((WeakPropertyListener) obj).getRef() == null) {
-                propertyListeners.remove(IPropertyListener.class, obj);
-            }
-        }
     }
 
     @Override
@@ -770,35 +613,13 @@ public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTre
      * @param message
      */
     protected static void illegalExcludedProperties(final IDomainTreeRepresentation dtr, final Class<?> root, final String property, final String message) {
-        /* TODO HUGE PERFORMACE BOTTLENECK!! */
-        if (dtr.isExcludedImmutably(root, property)) {
-            throw new DomainTreeException(message);
-        }
-    }
-
-    private static class WeakPropertyDisablementListener implements IPropertyDisablementListener {
-
-        private final AbstractTickRepresentation tr;
-        private final WeakReference<IPropertyDisablementListener> ref;
-
-        public WeakPropertyDisablementListener(final AbstractTickRepresentation tr, final IPropertyDisablementListener listener) {
-            this.tr = tr;
-            this.ref = new WeakReference<IPropertyDisablementListener>(listener);
-        }
-
-        @Override
-        public void propertyStateChanged(final Class<?> root, final String property, final Boolean hasBeenDisabled, final Boolean oldState) {
-            if (ref.get() != null) {
-                ref.get().propertyStateChanged(root, property, hasBeenDisabled, oldState);
-            } else {
-                tr.removePropertyDisablementListener(this);
-            }
-        }
-
-        public IPropertyDisablementListener getRef() {
-            return ref.get();
-        }
-
+        // The check below is important to maintain the integrity of domain trees.
+        // However, it also causes performance bottlenecks when invoking multiple times.
+        // In current Web UI logic, that uses centre domain trees, this check does not add any significant value due to other checks implemented as part of Centre DSL.
+        // Reintroducing of this check may be significant when management of domain trees from UI will be implemented.
+        // if (dtr.isExcludedImmutably(root, property)) {
+        //     throw new DomainTreeException(message);
+        // }
     }
 
     /**
@@ -817,16 +638,12 @@ public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTre
         private final EnhancementSet disabledManuallyProperties;
         private final transient AbstractDomainTreeRepresentation dtr;
 
-        private final transient EventListenerList propertyDisablementListeners;
-
         /**
          * Used for serialisation and for normal initialisation. IMPORTANT : To use this tick it should be passed into representation constructor and then into manager constructor,
          * which should initialise "dtr" and "tickManager" fields.
          */
         protected AbstractTickRepresentation() {
             this.disabledManuallyProperties = createSet();
-
-            this.propertyDisablementListeners = new EventListenerList();
 
             this.dtr = null; // IMPORTANT : to use this tick it should be passed into representation constructor, which should initialise "dtr" field.
         }
@@ -850,61 +667,12 @@ public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTre
             illegalExcludedProperties(dtr, root, property, "Could not disable already 'excluded' property [" + property + "] in type [" + root.getSimpleName() + "].");
             disabledManuallyProperties.add(key(root, property));
 
-            fireDisablingEvent(root, property);
             return this;
         }
 
         protected boolean isDisabledImmutablyPropertiesOfEntityType(final Class<?> propertyType, final KeyType keyTypeAnnotation) {
             // (EntityUtils.isEntityType(propertyType) && DynamicEntityKey.class.isAssignableFrom(keyTypeAnnotation.value())); // properties of "entity with composite key" type has been enabled
             return EntityUtils.isEntityType(propertyType) && EntityUtils.isEntityType(keyTypeAnnotation.value()); // disable properties of "entity with AE key" type
-        }
-
-        @Override
-        public void addPropertyDisablementListener(final IPropertyDisablementListener listener) {
-            removeEmptyPropertyDisablementListeners();
-            propertyDisablementListeners.add(IPropertyDisablementListener.class, listener);
-        }
-
-        @Override
-        public void addWeakPropertyDisablementListener(final IPropertyDisablementListener listener) {
-            removeEmptyPropertyDisablementListeners();
-            propertyDisablementListeners.add(IPropertyDisablementListener.class, new WeakPropertyDisablementListener(this, listener));
-
-        }
-
-        @Override
-        public void removePropertyDisablementListener(final IPropertyDisablementListener listener) {
-            for (final IPropertyDisablementListener obj : propertyDisablementListeners.getListeners(IPropertyDisablementListener.class)) {
-                if (listener == obj) {
-                    propertyDisablementListeners.remove(IPropertyDisablementListener.class, listener);
-                } else if (obj instanceof WeakPropertyDisablementListener) {
-                    final IPropertyDisablementListener weakRef = ((WeakPropertyDisablementListener) obj).getRef();
-                    if (weakRef == listener || weakRef == null) {
-                        propertyDisablementListeners.remove(IPropertyDisablementListener.class, obj);
-                    }
-                }
-            }
-        }
-
-        private void removeEmptyPropertyDisablementListeners() {
-            for (final IPropertyDisablementListener obj : propertyDisablementListeners.getListeners(IPropertyDisablementListener.class)) {
-                if (obj instanceof WeakPropertyDisablementListener && ((WeakPropertyDisablementListener) obj).getRef() == null) {
-                    propertyDisablementListeners.remove(IPropertyDisablementListener.class, obj);
-                }
-            }
-        }
-
-        /**
-         * Fires disablement event for specified property (the property has been disabled successfully).
-         *
-         * @param root
-         * @param property
-         */
-        private void fireDisablingEvent(final Class<?> root, final String property) {
-            // fire DISABLED event after successful "disabled" action
-            for (final IPropertyDisablementListener listener : propertyDisablementListeners.getListeners(IPropertyDisablementListener.class)) {
-                listener.propertyStateChanged(root, property, true, null);
-            }
         }
 
         @Override

@@ -14,6 +14,7 @@ import ua.com.fielden.platform.associations.one2many.MasterEntityWithOneToManyAs
 import ua.com.fielden.platform.associations.one2one.MasterEntityWithOneToOneAssociation;
 import ua.com.fielden.platform.domaintree.IDomainTreeEnhancer;
 import ua.com.fielden.platform.domaintree.impl.DomainTreeEnhancer;
+import ua.com.fielden.platform.domaintree.impl.DomainTreeEnhancerCache;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
@@ -38,7 +39,7 @@ public class FindLinkPropertyInGeneratedTypeTest {
     private final EntityFactory factory = injector.getInstance(EntityFactory.class);
 
     private final ISerialiser serialiser = new Serialiser(factory, new ProvidedSerialisationClassProvider(new Class[] { MasterEntityWithOneToOneAssociation.class,
-            MasterEntityWithOneToManyAssociation.class }));
+            MasterEntityWithOneToManyAssociation.class }), DomainTreeEnhancerCache.CACHE);
     private final Set<Class<?>> rootTypes = new HashSet<Class<?>>() {
         {
             add(MasterEntityWithOneToOneAssociation.class);

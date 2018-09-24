@@ -17,7 +17,7 @@ import ua.com.fielden.platform.roa.HttpHeaders;
 public class OldVersionResource extends Restlet {
 
     private final RestServerUtil util;
-    private final String msg = "New application version is avilable.\nPlease restart the application to download the update.";
+    private static final String MSG = "New application version is avilable.\nPlease restart the application to download the update.";
 
     public OldVersionResource(final RestServerUtil serverRestUtil) {
         this.util = serverRestUtil;
@@ -28,9 +28,9 @@ public class OldVersionResource extends Restlet {
         super.handle(request, response);
 
         if (Method.HEAD.equals(request.getMethod()) || Method.DELETE.equals(request.getMethod())) {
-            util.setHeaderEntry(response, HttpHeaders.ERROR, msg);
+            util.setHeaderEntry(response, HttpHeaders.ERROR, MSG);
         } else {
-            response.setEntity(util.resultRepresentation(new Result(null, new Exception(msg))));
+            response.setEntity(util.resultRepresentation(new Result(null, new Exception(MSG))));
         }
     }
 

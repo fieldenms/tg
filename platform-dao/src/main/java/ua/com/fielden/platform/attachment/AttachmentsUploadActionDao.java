@@ -1,11 +1,8 @@
 package ua.com.fielden.platform.attachment;
 
-import static java.lang.String.format;
 import static ua.com.fielden.platform.entity.AbstractEntity.ID;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
-import static ua.com.fielden.platform.error.Result.failure;
-import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getEntityTitleAndDesc;
 
 import java.util.stream.Stream;
 
@@ -44,17 +41,16 @@ public class AttachmentsUploadActionDao extends CommonEntityDao<AttachmentsUploa
         if (action.getMasterEntity() != null && !action.getAttachmentIds().isEmpty()) {
             final fetch<Attachment> attachmentFetchModel = co(Attachment.class).getFetchProvider().fetchModel();
             final Class<? extends AbstractEntity<?>> entityType = action.getMasterEntity().getType();
-            if (co$(action.getMasterEntity().getType()) instanceof ICanAttach) {
-                action.setSingleAttachment(null);
-                final ICanAttach co = (ICanAttach) co$(entityType);
-                final EntityResultQueryModel<Attachment> query = select(Attachment.class).where().prop(ID).in().values(action.getAttachmentIds().toArray(new Long[] {})).model();
-                try (final Stream<Attachment> attachments = co(Attachment.class).stream(from(query).with(attachmentFetchModel).model())) {
-                    attachments.forEach(att -> {
-                        action.setSingleAttachment(att);
-                        co.attach(att, action.getMasterEntity());});
-                }
-            } else {
-                throw failure(format("Companion for %s cannot attach attachments.", getEntityTitleAndDesc(entityType).getKey()));
+            action.setSingleAttachment(null);
+            final EntityResultQueryModel<Attachment> query = select(Attachment.class).where().prop(ID).in().values(action.getAttachmentIds().toArray(new Long[] {})).model();
+            try (final Stream<Attachment> attachments = co(Attachment.class).stream(from(query).with(attachmentFetchModel).model())) {
+                attachments.forEach(att -> {
+                    action.setSingleAttachment(att);
+                    if (co$(entityType) instanceof ICanAttach) {
+                        final ICanAttach co = (ICanAttach) co$(entityType);
+                        co.attach(att, action.getMasterEntity());
+                    }
+                });
             }
         } else { // otherwise do nothing...
             LOGGER.debug("Either master entity or attachments are missing.");
