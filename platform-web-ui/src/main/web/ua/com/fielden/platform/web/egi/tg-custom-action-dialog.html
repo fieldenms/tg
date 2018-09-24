@@ -521,29 +521,29 @@
             },
             
             _firstEntry: function () {
-                this._displaySpinnerOn(this.$.firstEntity);
                 if (this.canClose() && this._hasPrev) {
+                    this._displaySpinnerOn(this.$.firstEntity);
                     this._lastAction.firstEntry();
                 }
             },
             
             _previousEntry: function () {
-                this._displaySpinnerOn(this.$.prevEntity);
                 if (this.canClose() && this._hasPrev) {
+                    this._displaySpinnerOn(this.$.prevEntity);
                     this._lastAction.previousEntry();
                 }
             },
             
             _nextEntry: function () {
-                this._displaySpinnerOn(this.$.nextEntity);
                 if (this.canClose() && this._hasNext) {
+                    this._displaySpinnerOn(this.$.nextEntity);
                     this._lastAction.nextEntry();
                 }
             },
             
             _lastEntry: function () {
-                this._displaySpinnerOn(this.$.lastEntity);
                 if (this.canClose() && this._hasNext) {
+                    this._displaySpinnerOn(this.$.lastEntity);
                     this._lastAction.lastEntry();
                 }
             },
