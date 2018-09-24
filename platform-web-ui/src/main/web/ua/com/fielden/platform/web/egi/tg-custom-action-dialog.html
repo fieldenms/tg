@@ -968,8 +968,12 @@
             
             _updateDialogAnimation: function (_masterVisibilityChanges, _masterLayoutChanges) {
                 if (!_masterVisibilityChanges && !_masterLayoutChanges) {
-                    this._updateDialogDimensions(this.prefDim, this._minimised, this._maximised);
-                    this._updateDialogPosition(this.prefDim, this._wasMoved, this._wasResized, this._minimised, this._maximised);
+                    if (!this._wasResized) {
+                        this._updateDialogDimensions(this.prefDim, this._minimised, this._maximised);
+                    }
+                    if (!this._wasMoved) {
+                        this._updateDialogPosition(this.prefDim, this._minimised, this._maximised);
+                    }
                     this.async(this._dialogResized, 500);
                 }
             },
@@ -983,8 +987,8 @@
                 
             },
             
-            _updateDialogPosition: function (prefDim, _wasMoved, _wasResized, _minimised, _maximised) {
-                if (!_wasMoved && !_wasResized && !_maximised && !_minimised) {
+            _updateDialogPosition: function (prefDim, _minimised, _maximised) {
+                if (!_minimised && !_maximised ) {
                     const width = (typeof prefDim.width === 'function' ? prefDim.width() : prefDim.width) + prefDim.widthUnit;
                     const isWidthPercentage = width.endsWith('%');
                     const widthNum = parseFloat(width);
