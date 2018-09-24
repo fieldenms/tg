@@ -5,7 +5,6 @@ import static java.util.Arrays.stream;
 import static java.util.Optional.empty;
 import static java.util.Optional.of;
 import static org.apache.commons.lang.StringUtils.isEmpty;
-import static ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.IAddToCriteriaTickManager.MetaValueType.ALL_ORDERING;
 import static ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.IAddToCriteriaTickManager.MetaValueType.AND_BEFORE;
 import static ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.IAddToCriteriaTickManager.MetaValueType.DATE_MNEMONIC;
 import static ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.IAddToCriteriaTickManager.MetaValueType.DATE_PREFIX;
@@ -17,6 +16,8 @@ import static ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager
 import static ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.IAddToCriteriaTickManager.MetaValueType.VALUE;
 import static ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.IAddToCriteriaTickManager.MetaValueType.VALUE2;
 import static ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.IAddToCriteriaTickManager.MetaValueType.WIDTH;
+import static ua.com.fielden.platform.domaintree.centre.IOrderingRepresentation.Ordering.ASCENDING;
+import static ua.com.fielden.platform.domaintree.centre.IOrderingRepresentation.Ordering.DESCENDING;
 import static ua.com.fielden.platform.domaintree.impl.AbstractDomainTree.isBooleanCriterion;
 import static ua.com.fielden.platform.domaintree.impl.AbstractDomainTree.isDoubleCriterion;
 import static ua.com.fielden.platform.domaintree.impl.AbstractDomainTree.isDummyMarker;
@@ -39,7 +40,6 @@ import static ua.com.fielden.platform.web.centre.CentreUpdaterUtils.retrieveDiff
 import static ua.com.fielden.platform.web.centre.CentreUpdaterUtils.saveEntityCentreManager;
 import static ua.com.fielden.platform.web.centre.CentreUpdaterUtils.saveNewEntityCentreManager;
 import static ua.com.fielden.platform.web.centre.WebApiUtils.LINK_CONFIG_TITLE;
-import static ua.com.fielden.platform.web.centre.WebApiUtils.checkedPropertiesWithoutSummaries;
 import static ua.com.fielden.platform.web.interfaces.DeviceProfile.DESKTOP;
 import static ua.com.fielden.platform.web.interfaces.DeviceProfile.MOBILE;
 import static ua.com.fielden.platform.web.utils.EntityResourceUtils.getEntityType;
@@ -97,6 +97,19 @@ public class CentreUpdater {
     public static final String FRESH_CENTRE_NAME = "__________FRESH";
     public static final String PREVIOUSLY_RUN_CENTRE_NAME = "__________PREVIOUSLY_RUN";
     public static final String SAVED_CENTRE_NAME = "__________SAVED";
+    
+    /**
+     * Granular property-based key of diff values those include values pertaining to both selection-criteria (value and value2, exclusive, date mnemonics etc.) and result-set (column widths, grow-factors etc.). This key always exists.
+     */
+    private static final String PROPERTIES = "PROPERTIES";
+    /**
+     * Key of diff pertaining to result-set column visibility and order. Contains all snapshot and exists only if visibility / order is changed.
+     */
+    private static final String VISIBILITY_AND_ORDER = "VISIBILITY_AND_ORDER";
+    /**
+     * Key of diff pertaining to result-set sorting. Result-set can be sorted by 'invisible' columns. Contains all snapshot and exists only if sorting is changed.
+     */
+    private static final String SORTING = "SORTING";
     
     /** Protected default constructor to prevent instantiation. */
     protected CentreUpdater() {
@@ -674,16 +687,20 @@ public class CentreUpdater {
         }
     }
     
-    private static void warnPropRemovalFrom(final String from, final String valueKind, final Map<String, Object> diff) {
-        logger.warn(format("Property [%s] diff value [%s] ignored. Property does not exist in %s (removed from Centre DSL config or even from domain type).", valueKind, diff.get(valueKind), from));
+    private static void warnSubValueRemovalFrom(final String from, final String valueKind, final String property) {
+        logger.warn(format("[%s] diff sub-value ignored. Property [%s] does not exist in %s (removed from Centre DSL config or even from domain type).", valueKind, property, from));
     }
     
-    private static void processValue(final Map<String, Object> diff, final String valueKind, final boolean propertyPresent, final String removedFrom, final Consumer<Object> valueApplier) {
+    private static void warnPropRemovalFrom(final String from, final String valueKind, final Map<String, Object> diff, final String property) {
+        logger.warn(format("Property [%s] diff value [%s] ignored. Property [%s] does not exist in %s (removed from Centre DSL config or even from domain type).", valueKind, diff.get(valueKind), property, from));
+    }
+    
+    private static void processValue(final Map<String, Object> diff, final String valueKind, final boolean propertyPresent, final String removedFrom, final Consumer<Object> valueApplier, final String property) {
         if (diff.containsKey(valueKind)) {
             if (propertyPresent) {
                 valueApplier.accept(diff.get(valueKind));
             } else {
-                warnPropRemovalFrom(removedFrom, valueKind, diff);
+                warnPropRemovalFrom(removedFrom, valueKind, diff, property);
             }
         }
     }
@@ -698,7 +715,6 @@ public class CentreUpdater {
      */
     private static ICentreDomainTreeManagerAndEnhancer applyDifferences(final ICentreDomainTreeManagerAndEnhancer targetCentre, final Map<String, Object> differences, final Class<AbstractEntity<?>> root) {
         final Map<String, Map<String, Object>> propertiesDiff = (Map<String, Map<String, Object>>) differences.get(PROPERTIES);
-        final Map<String, Object> resultSetDiff =  (Map<String, Object>) differences.get(RESULT_SET);
         
         for (final Entry<String, Map<String, Object>> propertyDiff: propertiesDiff.entrySet()) {
             final String property = propertyDiff.getKey();
@@ -706,175 +722,65 @@ public class CentreUpdater {
             
             final boolean selectionCriteriaContains = targetCentre.getFirstTick().checkedProperties(root).contains(property);
             
-            processValue(diff, EXCLUSIVE.name(), selectionCriteriaContains, "selection criteria", (value) -> targetCentre.getFirstTick().setExclusive(root, property, (Boolean) value));
-            processValue(diff, EXCLUSIVE2.name(), selectionCriteriaContains, "selection criteria", (value) -> targetCentre.getFirstTick().setExclusive2(root, property, (Boolean) value));
-            processValue(diff, DATE_PREFIX.name(), selectionCriteriaContains, "selection criteria", (value) -> targetCentre.getFirstTick().setDatePrefix(root, property, (DateRangePrefixEnum) value));
-            processValue(diff, DATE_MNEMONIC.name(), selectionCriteriaContains, "selection criteria", (value) -> targetCentre.getFirstTick().setDateMnemonic(root, property, (MnemonicEnum) value));
-            processValue(diff, AND_BEFORE.name(), selectionCriteriaContains, "selection criteria", (value) -> targetCentre.getFirstTick().setAndBefore(root, property, (Boolean) value));
-            processValue(diff, OR_NULL.name(), selectionCriteriaContains, "selection criteria", (value) -> targetCentre.getFirstTick().setOrNull(root, property, (Boolean) value));
-            processValue(diff, NOT.name(), selectionCriteriaContains, "selection criteria", (value) -> targetCentre.getFirstTick().setNot(root, property, (Boolean) value));
-            processValue(diff, VALUE.name(), selectionCriteriaContains, "selection criteria", (value) -> targetCentre.getFirstTick().setValue(root, property, value));
-            processValue(diff, VALUE2.name(), selectionCriteriaContains, "selection criteria", (value) -> targetCentre.getFirstTick().setValue2(root, property, value));
+            processValue(diff, EXCLUSIVE.name(), selectionCriteriaContains, "selection criteria", (value) -> targetCentre.getFirstTick().setExclusive(root, property, (Boolean) value), property);
+            processValue(diff, EXCLUSIVE2.name(), selectionCriteriaContains, "selection criteria", (value) -> targetCentre.getFirstTick().setExclusive2(root, property, (Boolean) value), property);
+            processValue(diff, DATE_PREFIX.name(), selectionCriteriaContains, "selection criteria", (value) -> targetCentre.getFirstTick().setDatePrefix(root, property, (DateRangePrefixEnum) value), property);
+            processValue(diff, DATE_MNEMONIC.name(), selectionCriteriaContains, "selection criteria", (value) -> targetCentre.getFirstTick().setDateMnemonic(root, property, (MnemonicEnum) value), property);
+            processValue(diff, AND_BEFORE.name(), selectionCriteriaContains, "selection criteria", (value) -> targetCentre.getFirstTick().setAndBefore(root, property, (Boolean) value), property);
+            processValue(diff, OR_NULL.name(), selectionCriteriaContains, "selection criteria", (value) -> targetCentre.getFirstTick().setOrNull(root, property, (Boolean) value), property);
+            processValue(diff, NOT.name(), selectionCriteriaContains, "selection criteria", (value) -> targetCentre.getFirstTick().setNot(root, property, (Boolean) value), property);
+            processValue(diff, VALUE.name(), selectionCriteriaContains, "selection criteria", (value) -> targetCentre.getFirstTick().setValue(root, property, value), property);
+            processValue(diff, VALUE2.name(), selectionCriteriaContains, "selection criteria", (value) -> targetCentre.getFirstTick().setValue2(root, property, value), property);
             
             final boolean resultSetContains = targetCentre.getSecondTick().checkedProperties(root).contains(property);
             
-            processValue(diff, WIDTH.name(), resultSetContains, "result-set", (value) -> targetCentre.getSecondTick().setWidth(root, property, (int) value));
-            processValue(diff, GROW_FACTOR.name(), resultSetContains, "result-set", (value) -> targetCentre.getSecondTick().setGrowFactor(root, property, (int) value));
+            processValue(diff, WIDTH.name(), resultSetContains, "result-set", (value) -> targetCentre.getSecondTick().setWidth(root, property, (int) value), property);
+            processValue(diff, GROW_FACTOR.name(), resultSetContains, "result-set", (value) -> targetCentre.getSecondTick().setGrowFactor(root, property, (int) value), property);
         }
         
-        final Class<?> diffManagedType = managedType(root, differencesCentre);
-        for (final String property : differencesCentre.getFirstTick().checkedProperties(root)) {
-            if (!isPlaceholder(property) && !propertyRemovedFromDomainType(diffManagedType, property)) {
-                if (isDoubleCriterion(diffManagedType, property) && !isBooleanCriterion(diffManagedType, property)) {
-                    if (differencesCentre.getFirstTick().isMetaValuePresent(EXCLUSIVE, root, property)) {
-                        targetCentre.getFirstTick().setExclusive(root, property, differencesCentre.getFirstTick().getExclusive(root, property));
-                    }
-                    if (differencesCentre.getFirstTick().isMetaValuePresent(EXCLUSIVE2, root, property)) {
-                        targetCentre.getFirstTick().setExclusive2(root, property, differencesCentre.getFirstTick().getExclusive2(root, property));
-                    }
-                }
-                final Class<?> propertyType = isEmpty(property) ? diffManagedType : determinePropertyType(diffManagedType, property);
-                if (isDate(propertyType)) {
-                    if (differencesCentre.getFirstTick().isMetaValuePresent(DATE_PREFIX, root, property)) {
-                        targetCentre.getFirstTick().setDatePrefix(root, property, targetCentre.getFirstTick().getDatePrefix(root, property));
-                    }
-                    if (differencesCentre.getFirstTick().isMetaValuePresent(DATE_MNEMONIC, root, property)) {
-                        targetCentre.getFirstTick().setDateMnemonic(root, property, differencesCentre.getFirstTick().getDateMnemonic(root, property));
-                    }
-                    if (differencesCentre.getFirstTick().isMetaValuePresent(AND_BEFORE, root, property)) {
-                        targetCentre.getFirstTick().setAndBefore(root, property, differencesCentre.getFirstTick().getAndBefore(root, property));
-                    }
-                }
-
-                if (differencesCentre.getFirstTick().isMetaValuePresent(OR_NULL, root, property)) {
-                    targetCentre.getFirstTick().setOrNull(root, property, differencesCentre.getFirstTick().getOrNull(root, property));
-                }
-                if (differencesCentre.getFirstTick().isMetaValuePresent(NOT, root, property)) {
-                    targetCentre.getFirstTick().setNot(root, property, differencesCentre.getFirstTick().getNot(root, property));
-                }
-
-                if (differencesCentre.getFirstTick().isMetaValuePresent(VALUE, root, property)) {
-                    targetCentre.getFirstTick().setValue(root, property, differencesCentre.getFirstTick().getValue(root, property));
-                }
-                if (isDoubleCriterion(diffManagedType, property)
-                        && differencesCentre.getFirstTick().isMetaValuePresent(VALUE2, root, property)) {
-                    targetCentre.getFirstTick().setValue2(root, property, differencesCentre.getFirstTick().getValue2(root, property));
-                }
-            }
-        }
-
-        // Diff centre contains full information of checkedProperties and usedProperties.
-        // Such information should be carefully merged with potentially updated targetCentre.
-        final List<String> diffCheckedPropertiesWithoutSummaries = checkedPropertiesWithoutSummaries(differencesCentre.getSecondTick().checkedProperties(root), differencesCentre.getEnhancer().getManagedType(root));
-        final List<String> diffUsedProperties = differencesCentre.getSecondTick().usedProperties(root);
-
-        final List<String> targetCheckedPropertiesWithoutSummaries = checkedPropertiesWithoutSummaries(targetCentre.getSecondTick().checkedProperties(root), targetCentre.getEnhancer().getManagedType(root));
-
-        // determine properties that were added into targetCentre (default config) comparing to differencesCentre (currently saved config)
-        // final List<String> addedIntoTarget = minus(targetCheckedPropertiesWithoutSummaries, diffCheckedPropertiesWithoutSummaries);
-
-        // determine properties that were removed from targetCentre (default config) comparing to differencesCentre (currently saved config)
-        final List<String> removedFromTarget = minus(diffCheckedPropertiesWithoutSummaries, targetCheckedPropertiesWithoutSummaries);
-
-        if (!equalsEx(diffCheckedPropertiesWithoutSummaries, diffUsedProperties)) {
-            // remove removedFromTarget properties custom configuration (custom column order / visibility); this custom configuration was explicitly changed by the user, because it's different from diffCheckedProperties
-            final List<String> diffUsedPropertiesWithoutRemovedProps = minus(diffUsedProperties, removedFromTarget);
+        // process EGI column visibility / order
+        final List<String> visibilityAndOrder = (List<String>) differences.get(VISIBILITY_AND_ORDER);
+        if (visibilityAndOrder != null) { // if it exists then it was explicitly changed by user; whole snapshot will be applied against target centre
             // apply resultant properties on top of targetCentre (default config)
             final List<String> targetUsedProperties = targetCentre.getSecondTick().usedProperties(root);
             for (final String targetUsedProperty: targetUsedProperties) { // remove (un-use) all previous props
                 targetCentre.getSecondTick().use(root, targetUsedProperty, false);
             }
-            for (final String newUsedProperty : diffUsedPropertiesWithoutRemovedProps) { // apply (use) all new props
-                targetCentre.getSecondTick().use(root, newUsedProperty, true);
-            }
-        }
-
-        // apply widths and grow factor that were marked as changed
-        final List<String> diffCheckedPropertiesWithoutRemovedProps = minus(diffCheckedPropertiesWithoutSummaries, removedFromTarget);
-        for (final String property : diffCheckedPropertiesWithoutRemovedProps) {
-            if (!propertyRemovedFromDomainType(diffManagedType, property)) {
-                if (differencesCentre.getFirstTick().isMetaValuePresent(WIDTH, root, property)) {
-                    targetCentre.getSecondTick().setWidth(root, property, differencesCentre.getSecondTick().getWidth(root, property));
-                }
-                if (differencesCentre.getFirstTick().isMetaValuePresent(GROW_FACTOR, root, property)) {
-                    targetCentre.getSecondTick().setGrowFactor(root, property, differencesCentre.getSecondTick().getGrowFactor(root, property));
+            for (final String newUsedProperty : visibilityAndOrder) { // apply (use) all new props
+                if (targetCentre.getSecondTick().checkedProperties(root).contains(newUsedProperty)) {
+                    targetCentre.getSecondTick().use(root, newUsedProperty, true);
+                } else {
+                    warnSubValueRemovalFrom("result-set", VISIBILITY_AND_ORDER, newUsedProperty);
                 }
             }
         }
-
-        if (differencesCentre.getFirstTick().isMetaValuePresent(ALL_ORDERING, root, "")) {
+        
+        // process EGI data sorting
+        final List<Pair<String, Ordering>> sorting = (List<Pair<String, Ordering>>) differences.get(SORTING);
+        if (sorting != null) { // if it exists then it was explicitly changed by user; whole snapshot will be applied against target centre
             // need to clear all previous orderings:
-            final List<Pair<String, Ordering>> orderedProperties = new ArrayList<>(targetCentre.getSecondTick().orderedProperties(root));
-            for (final Pair<String, Ordering> orderedProperty: orderedProperties) {
-                if (Ordering.ASCENDING == orderedProperty.getValue()) {
-                    targetCentre.getSecondTick().toggleOrdering(root, orderedProperty.getKey());
+            final List<Pair<String, Ordering>> sortingProperties = new ArrayList<>(targetCentre.getSecondTick().orderedProperties(root));
+            for (final Pair<String, Ordering> sortingProperty: sortingProperties) {
+                if (ASCENDING == sortingProperty.getValue()) {
+                    targetCentre.getSecondTick().toggleOrdering(root, sortingProperty.getKey());
                 }
-                targetCentre.getSecondTick().toggleOrdering(root, orderedProperty.getKey());
+                targetCentre.getSecondTick().toggleOrdering(root, sortingProperty.getKey());
             }
-            // and apply new ones from diff centre:
-            final List<Pair<String, Ordering>> diffSortedPropertiesWithoutRemovedProps = minus(differencesCentre.getSecondTick().orderedProperties(root), removedFromTarget, propAndSorting -> propAndSorting.getKey());
-            for (final Pair<String, Ordering> newOrderedProperty: diffSortedPropertiesWithoutRemovedProps) {
-                final String property = newOrderedProperty.getKey();
-                if (!propertyRemovedFromDomainType(diffManagedType, property)) {
+            // and apply new ones from diff:
+            for (final Pair<String, Ordering> propertyAndDirection: sorting) {
+                final String property = propertyAndDirection.getKey();
+                if (targetCentre.getSecondTick().checkedProperties(root).contains(property)) {
                     targetCentre.getSecondTick().toggleOrdering(root, property);
-                    if (Ordering.DESCENDING == newOrderedProperty.getValue()) {
+                    if (DESCENDING == propertyAndDirection.getValue()) {
                         targetCentre.getSecondTick().toggleOrdering(root, property);
                     }
+                } else {
+                    warnSubValueRemovalFrom("result-set", SORTING, property);
                 }
             }
         }
         return targetCentre;
     }
-
-    private static boolean propertyRemovedFromDomainType(final Class<?> diffManagedType, final String property) {
-        // Check whether the 'property' has not been disappeared from domain type since last server restart.
-        // In such case 'orderedProperties' will contain that property but 'managedType(root, differencesCentre)' will not contain corresponding field.
-        // Such properties need to be silently ignored. During next diffCentre creation such properties will disappear from diffCentre fully.
-        final boolean isEntityItself = "".equals(property); // empty property means "entity itself"
-        if (!isEntityItself) {
-            try {
-                determinePropertyType(diffManagedType, property);
-                return false;
-            } catch (final Exception ex) {
-                logger.warn(format("Property [%s] could not be found in type [%s] in diffCentre. It will be skipped. Most likely this property was deleted from domain type definition.", property, diffManagedType.getSimpleName()), ex);
-                return true;
-            }
-        } else {
-            return false;
-        }
-    }
-
-    /**
-     * Computes a list of items that contain in <code>from</code> list and do not contain in <code>to</code> list, preserving the order of <code>from</code> list inside resultant list.
-     *
-     * @param from
-     * @param to
-     * @return
-     */
-    private static List<String> minus(final List<String> from, final List<String> to) {
-        return minus(from, to, Function.identity());
-    }
-
-    /**
-     * Computes a list of items that contain in <code>from</code> list and their keys do not contain in <code>to</code> list, preserving the order of <code>from</code> list inside resultant list.
-     *
-     * @param from
-     * @param to
-     * @param keyRetriever -- mapping function to retrieve the key of the item
-     * @return
-     */
-    private static <T> List<T> minus(final List<T> from, final List<String> to, final Function<T, String> keyRetriever) {
-        final List<T> result = new ArrayList<>();
-        for (final T fromItem: from) {
-            if (!to.contains(keyRetriever.apply(fromItem))) {
-                result.add(fromItem);
-            }
-        }
-        return result;
-    }
-    
-    private static final String PROPERTIES = "PROPERTIES";
-    private static final String RESULT_SET = "RESULT_SET";
     
     private static Map<String, Object> diff(final String property, final Map<String, Map<String, Object>> propertiesDiff) {
         final Map<String, Object> propertyDiff = propertiesDiff.get(property);
@@ -895,8 +801,6 @@ public class CentreUpdater {
         final Map<String, Object> diff = new LinkedHashMap<>();
         final Map<String, Map<String, Object>> propertiesDiff = new LinkedHashMap<>();
         diff.put(PROPERTIES, propertiesDiff);
-        final Map<String, Object> resultSetDiff = new LinkedHashMap<>();
-        diff.put(RESULT_SET, resultSetDiff);
         return diff;
     }
     
@@ -912,7 +816,6 @@ public class CentreUpdater {
     private static Map<String, Object> createDifferences(final ICentreDomainTreeManagerAndEnhancer centre, final ICentreDomainTreeManagerAndEnhancer defaultCentre, final Class<AbstractEntity<?>> root) {
         final Map<String, Object> diff = createEmptyDifferences();
         final Map<String, Map<String, Object>> propertiesDiff = (Map<String, Map<String, Object>>) diff.get(PROPERTIES);
-        final Map<String, Object> resultSetDiff =  (Map<String, Object>) diff.get(RESULT_SET);
         
         final Class<?> managedType = managedType(root, centre);
         for (final String property : centre.getFirstTick().checkedProperties(root)) { // lets go through centre's checked properties for the first tick (criteria) -- these will be fully synced to originalCentre's checked properties (due to the way centre is created: centre := defaultCentre + diff)
@@ -978,13 +881,17 @@ public class CentreUpdater {
             }
         }
         
-        // determine whether orderedProperties have been changed (as a whole) and add them to the diff if true
-        final List<Pair<String, Ordering>> orderedPropertiesVal = centre.getSecondTick().orderedProperties(root);
-        if (!equalsEx(orderedPropertiesVal, defaultCentre.getSecondTick().orderedProperties(root))) {
-            resultSetDiff.put(ALL_ORDERING.name(), orderedPropertiesVal);
+        // determine whether usedProperties have been changed (as a whole) and add them to the diff if true
+        final List<String> visibilityAndOrderPropertiesVal = centre.getSecondTick().usedProperties(root);
+        if (!equalsEx(visibilityAndOrderPropertiesVal, defaultCentre.getSecondTick().usedProperties(root))) {
+            diff.put(VISIBILITY_AND_ORDER, visibilityAndOrderPropertiesVal);
         }
         
-        // TODO most likely: firstTick.checkedProperties, secondTick.checkedProperties, secondTick.usedProperties are needed
+        // determine whether orderedProperties have been changed (as a whole) and add them to the diff if true
+        final List<Pair<String, Ordering>> sortingPropertiesVal = centre.getSecondTick().orderedProperties(root);
+        if (!equalsEx(sortingPropertiesVal, defaultCentre.getSecondTick().orderedProperties(root))) {
+            diff.put(SORTING, sortingPropertiesVal);
+        }
         
         return diff;
     }

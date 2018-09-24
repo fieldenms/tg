@@ -283,16 +283,18 @@ public interface ICentreDomainTreeManager extends IDomainTreeManager {
     public interface IAddToCriteriaTickManager extends ITickManager, ILocatorManager {
         /**
          * A type of meta values.
+         * TODO please remove this functionality. Migrate categories to CentreUpdater.
          *
          * @author TG Team
          *
          */
         public enum MetaValueType {
-            VALUE, VALUE2, EXCLUSIVE, EXCLUSIVE2, OR_NULL, NOT, DATE_PREFIX, DATE_MNEMONIC, AND_BEFORE, ALL_ORDERING, WIDTH, GROW_FACTOR
+            VALUE, VALUE2, EXCLUSIVE, EXCLUSIVE2, OR_NULL, NOT, DATE_PREFIX, DATE_MNEMONIC, AND_BEFORE, ALL_ORDERING /* TODO Rename to SORTING */, WIDTH, GROW_FACTOR
         }
 
         /**
          * Returns <code>true</code> whether the meta value is present (when it was explicitly marked as 'present'), <code>false</code> otherwise.
+         * TODO please remove this functionality.
          *
          * @param metaValueType
          * @param root
@@ -303,6 +305,7 @@ public interface ICentreDomainTreeManager extends IDomainTreeManager {
 
         /**
          * Marks the meta value as 'present'.
+         * TODO please remove this functionality.
          *
          * @param metaValueType
          * @param root
