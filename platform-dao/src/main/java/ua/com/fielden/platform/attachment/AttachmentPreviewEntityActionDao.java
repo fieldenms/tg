@@ -1,4 +1,4 @@
-package ua.com.fielden.platform.entity;
+package ua.com.fielden.platform.attachment;
 
 import com.google.inject.Inject;
 
@@ -12,12 +12,11 @@ import ua.com.fielden.platform.entity.query.IFilter;
  * @author TG Team
  *
  */
-@EntityType(EntityEditAction.class)
+@EntityType(AttachmentPreviewEntityAction.class)
 public class AttachmentPreviewEntityActionDao extends CommonEntityDao<AttachmentPreviewEntityAction> implements IAttachmentPreviewEntityAction {
 
     @Inject
     protected AttachmentPreviewEntityActionDao(final IFilter filter) {
         super(filter);
     }
-
 }
