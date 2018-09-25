@@ -18,6 +18,7 @@ import static ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager
 import static ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.IAddToCriteriaTickManager.MetaValueType.WIDTH;
 import static ua.com.fielden.platform.domaintree.centre.IOrderingRepresentation.Ordering.ASCENDING;
 import static ua.com.fielden.platform.domaintree.centre.IOrderingRepresentation.Ordering.DESCENDING;
+import static ua.com.fielden.platform.domaintree.centre.IOrderingRepresentation.Ordering.valueOf;
 import static ua.com.fielden.platform.domaintree.impl.AbstractDomainTree.isBooleanCriterion;
 import static ua.com.fielden.platform.domaintree.impl.AbstractDomainTree.isDoubleCriterion;
 import static ua.com.fielden.platform.domaintree.impl.AbstractDomainTree.isDummyMarker;
@@ -756,7 +757,7 @@ public class CentreUpdater {
         }
         
         // process EGI data sorting
-        final List<Pair<String, Ordering>> sorting = (List<Pair<String, Ordering>>) differences.get(SORTING);
+        final ArrayList<LinkedHashMap<String, String>> sorting = (ArrayList<LinkedHashMap<String, String>>) differences.get(SORTING);
         if (sorting != null) { // if it exists then it was explicitly changed by user; whole snapshot will be applied against target centre
             // need to clear all previous orderings:
             final List<Pair<String, Ordering>> sortingProperties = new ArrayList<>(targetCentre.getSecondTick().orderedProperties(root));
@@ -767,11 +768,13 @@ public class CentreUpdater {
                 targetCentre.getSecondTick().toggleOrdering(root, sortingProperty.getKey());
             }
             // and apply new ones from diff:
-            for (final Pair<String, Ordering> propertyAndDirection: sorting) {
+            for (final LinkedHashMap<String, String> propertyAndDirectionMapped: sorting) {
+                final Entry<String, String> propertyAndDirection = propertyAndDirectionMapped.entrySet().iterator().next();
                 final String property = propertyAndDirection.getKey();
+                final Ordering direction = valueOf(propertyAndDirection.getValue());
                 if (targetCentre.getSecondTick().checkedProperties(root).contains(property)) {
                     targetCentre.getSecondTick().toggleOrdering(root, property);
-                    if (DESCENDING == propertyAndDirection.getValue()) {
+                    if (DESCENDING == direction) {
                         targetCentre.getSecondTick().toggleOrdering(root, property);
                     }
                 } else {
