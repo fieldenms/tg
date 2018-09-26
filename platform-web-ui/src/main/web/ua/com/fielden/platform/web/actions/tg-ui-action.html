@@ -425,7 +425,7 @@
                     promise.then(function(value) {
                         self.showDialog(self);
                     }, function (error) {
-                        self.restoreActiveElement();
+                        self.restoreActionState();
                         console.log("The action was rejected with error: " + error);
                     });
                 } else {
@@ -507,7 +507,7 @@
                     self.isActionInProgress = false;
                     
                     if (this.noUI === true) {
-                        self.restoreActiveElement();
+                        self.restoreActionState();
                     }
                 };
                 
@@ -517,7 +517,7 @@
                     if (this.noUI === true) {
                         // action execution completed, althoug in error from saving
                         self.isActionInProgress = false;
-                        self.restoreActiveElement();
+                        self.restoreActionState();
                     }
                 };
                 
@@ -546,6 +546,13 @@
                     console.error(error);
                 });
             }).bind(self);
+        },
+        
+        /**
+         * Override this to restre action's state that might have been stored by preAcion or any other routine.
+         */
+        restoreActionState: function () {
+            this.restoreActiveElement();
         },
         
         /**
