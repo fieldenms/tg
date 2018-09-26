@@ -47,8 +47,8 @@ public class AttachmentPreviewEntityMaster implements IMaster<AttachmentPreviewE
                 + "    return ['attachment'].indexOf(propertyName) >= 0; \n"
                 + "}; \n"
                 + "self._getImageUri = function (entity) {\n"
-                + "    const newEntity = entity ? entity['@@origin'] : null;"
-                + "    if (newEntity) {\n"
+                + "    const newEntity = entity ? entity['@@origin'] : null;\n"
+                + "    if (newEntity && newEntity.attachment && newEntity.attachment.mime.includes('image')) {\n"
                 + "        return '/download-attachment/' + newEntity.attachment.id + '/' + newEntity.attachment.sha1;\n"
                 + "    }\n"
                 + "}.bind(self);\n";
