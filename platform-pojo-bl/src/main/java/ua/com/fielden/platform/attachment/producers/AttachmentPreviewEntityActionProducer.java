@@ -25,9 +25,17 @@ public class AttachmentPreviewEntityActionProducer extends DefaultEntityProducer
         final Long attachmentId = getAttachmentId();
         if (attachmentId != null) {
             final IAttachment attachmentCo = co(Attachment.class);
-            findByIdWithMasterFetch(attachmentCo, attachmentId).ifPresent(attachment -> entity.setAttachment(attachment));
+            findByIdWithMasterFetch(attachmentCo, attachmentId)
+                .ifPresent(attachment -> entity.setAttachmentUri(generateUri(attachment)));
         }
         return entity;
+    }
+
+    private String generateUri(final Attachment attachment) {
+        if (attachment.getMime() != null && attachment.getMime().contains("image")) {
+            return "/download-attachment/" + attachment.getId() + "/" + attachment.getSha1();
+        }
+        return null;
     }
 
     private Long getAttachmentId() {
@@ -37,7 +45,7 @@ public class AttachmentPreviewEntityActionProducer extends DefaultEntityProducer
             if (Attachment.class.isAssignableFrom(currentEntity().get(chosenProperty()).getClass())) {
                 return ((Attachment)currentEntity().get(chosenProperty())).getId();
             } else if (Attachment.class.isAssignableFrom(transform(currentEntity().getType(), chosenProperty()).getKey())) {
-                return currentEntity().get(penultAndLast(chosenProperty()).getKey());
+                return ((Attachment)currentEntity().get(penultAndLast(chosenProperty()).getKey())).getId();
             }
         }
         return null;

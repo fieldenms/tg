@@ -21,17 +21,17 @@ import ua.com.fielden.platform.entity.annotation.Title;
 public class AttachmentPreviewEntityAction extends AbstractFunctionalEntityWithCentreContext<NoKey> {
 
     @IsProperty
-    @Title("Attachment")
-    private Attachment attachment;
+    @Title(value = "Attachment URI", desc = "Desc")
+    private String attachmentUri;
 
     @Observable
-    public AttachmentPreviewEntityAction setAttachment(final Attachment attachment) {
-        this.attachment = attachment;
+    public AttachmentPreviewEntityAction setAttachmentUri(final String attachmentUri) {
+        this.attachmentUri = attachmentUri;
         return this;
     }
 
-    public Attachment getAttachment() {
-        return attachment;
+    public String getAttachmentUri() {
+        return attachmentUri;
     }
 
     protected AttachmentPreviewEntityAction() {

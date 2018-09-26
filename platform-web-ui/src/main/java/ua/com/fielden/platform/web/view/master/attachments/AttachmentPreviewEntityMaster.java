@@ -19,16 +19,24 @@ public class AttachmentPreviewEntityMaster implements IMaster<AttachmentPreviewE
     public AttachmentPreviewEntityMaster() {
 
         //Generating image element
+
         final DomElement img = new DomElement("img")
                 .attr("src$", "[[_getImageUri(_currBindingEntity)]]")
-                .attr("alt", "Unsupported image type")
+                .attr("hidden$", "[[!_isImageVisisble(_currBindingEntity)]]")
                 .style("width:100%", "height:100%", "object-fit:contain");
-        final DomElement div = new DomElement("div").clazz("property-editors").style("width:100%", "height:100%","padding:8px","box-sizing:border-box").add(img);
+        final DomElement altImage = new DomElement("div")
+                .clazz("fit", "layout horizontal center-center")
+                .style("font-size: 18px", "color: #bdbdbd")
+                .add(new InnerTextElement("[[_getAltImageText(_currBindingEntity)]]"));
+        final DomElement container = new DomElement("div")
+                .clazz("property-editors", "relative")
+                .style("width:100%", "height:100%","padding:8px","box-sizing:border-box")
+                .add(altImage, img);
 
         final String entityMasterStr = ResourceLoader.getText("ua/com/fielden/platform/web/master/tg-entity-master-template.html")
                 .replace("<!--@imports-->", "")
                 .replace("@entity_type", AttachmentPreviewEntityAction.class.getSimpleName())
-                .replace("<!--@tg-entity-master-content-->", div.toString())
+                .replace("<!--@tg-entity-master-content-->", container.toString())
                 .replace("//@ready-callback", generateReadyCallback())
                 .replace("@prefDim", "null")
                 .replace("@noUiValue", "false")
@@ -48,9 +56,23 @@ public class AttachmentPreviewEntityMaster implements IMaster<AttachmentPreviewE
                 + "}; \n"
                 + "self._getImageUri = function (entity) {\n"
                 + "    const newEntity = entity ? entity['@@origin'] : null;\n"
-                + "    if (newEntity && newEntity.attachment && newEntity.attachment.mime && newEntity.attachment.mime.includes('image')) {\n"
-                + "        return '/download-attachment/' + newEntity.attachment.id + '/' + newEntity.attachment.sha1;\n"
+                + "    if (newEntity && newEntity.attachmentUri) {\n"
+                + "        return newEntity.attachmentUri;\n"
                 + "    }\n"
+                + "}.bind(self);\n"
+                + "self._isImageVisisble = function (entity) {\n"
+                + "    const newEntity = entity ? entity['@@origin'] : null;\n"
+                + "    if (newEntity && !newEntity.attachmentUri) {\n"
+                + "        return false;\n"
+                + "    }\n"
+                + "    return true;\n"
+                + "}.bind(self);\n"
+                + "self._getAltImageText = function (entity) {\n"
+                + "    const newEntity = entity ? entity['@@origin'] : null;\n"
+                + "    if (newEntity && !newEntity.attachmentUri) {\n"
+                + "        return 'Unsupported image type';\n"
+                + "    }\n"
+                + "    return '';\n"
                 + "}.bind(self);\n";
     }
 
