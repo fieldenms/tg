@@ -875,7 +875,7 @@
                     this.$.toaster.show();
                     console.log("The dialog is already opened and should be closed be being used again.");
                     if (customAction) {
-                        customAction.restoreActiveElement();
+                        customAction.restoreActionState();
                     }
                 } else {
                     var self = this;
@@ -927,7 +927,7 @@
                                 self.$.toaster.isCritical = true;
                                 self.$.toaster.show();
                                 if (self._lastAction) {
-                                    self._lastAction.restoreActiveElement();
+                                    self._lastAction.restoreActionState();
                                 }
                             });
                     }
@@ -950,7 +950,9 @@
             
             _handleActionNavigationChange: function (e) {
                 this._setNavigationDetails(e.detail);
-                this._resetSpinner();
+                if (e.detail.shouldResetSpinner) {
+                    this._resetSpinner();
+                }
             },
             
             _resetSpinner: function () {
@@ -1132,7 +1134,7 @@
             _finishErroneousOpening: function() {
                 this._setIsRunning(false);
                 if (this._lastAction) {
-                    this._lastAction.restoreActiveElement();
+                    this._lastAction.restoreActionState();
                 }
             },
 
@@ -1218,7 +1220,7 @@
                     this.$.menuToggler.hidden = true; // allows to use the same custom action dialog instance for the masters without menu after compound master was open previously
 
                     if (this._lastAction) {
-                        this._lastAction.restoreActiveElement();
+                        this._lastAction.restoreActionState();
                     }
                 }
             },
