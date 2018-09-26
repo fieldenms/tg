@@ -735,6 +735,8 @@
                                 this.fire("tg-last-item-focused", {forward: forward, event: e});
                             }
                         }
+                    } else {
+                        this.fire("tg-last-item-focused", {forward: forward, event: e});
                     }
 
                 }
@@ -753,7 +755,6 @@
                         if (editors[editorIndex]._error && !editors[editorIndex].isInWarning()) {
                             if (selectedElement) {
                                 selectedElement.focus();
-                                this.fire('binding-entity-loaded-and-focused', this._currBindingEntity);
                                 return;
                             }
                         }
@@ -762,8 +763,10 @@
                 // if the input has been identified then focus it, otherwise do nothing
                 if (firstInput) {
                     firstInput.focus();
-                    this.fire('binding-entity-loaded-and-focused', this._currBindingEntity);
+                } else if (this.offsetParent !== null){
+                    this.focusNextView();
                 }
+                this.fire('binding-entity-loaded-and-focused', this._currBindingEntity);
             },
 
             /**

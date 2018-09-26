@@ -440,7 +440,7 @@
 
             _viewFocusLostEventListener: function(e) {
                 const focusables = this._getCurrentFocusableElements();
-                const callback = this._lastElement ? (e.detail.forward ? this._lastElement.focusNextView : this._lastElement.focusPreviousView) : null;
+                const callback = this._lastElement ? (e.detail.forward ? this._lastElement.focusNextView.bind(this._lastElement) : this._lastElement.focusPreviousView.bind(this._lastElement)) : null;
                 if (focusables.length > 0) {
                     if (e.detail.forward) {
                         focusables[0].focus();
