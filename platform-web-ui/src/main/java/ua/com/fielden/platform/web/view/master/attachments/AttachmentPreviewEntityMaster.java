@@ -70,7 +70,7 @@ public class AttachmentPreviewEntityMaster implements IMaster<AttachmentPreviewE
                 + "self._getAltImageText = function (entity) {\n"
                 + "    const newEntity = entity ? entity['@@origin'] : null;\n"
                 + "    if (newEntity && !newEntity.attachmentUri) {\n"
-                + "        return 'Unsupported image type';\n"
+                + "        return 'Unsupported file format';\n"
                 + "    }\n"
                 + "    return '';\n"
                 + "}.bind(self);\n";
