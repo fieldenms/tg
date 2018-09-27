@@ -6,6 +6,7 @@ import static ua.com.fielden.platform.utils.EntityUtils.findByIdWithMasterFetch;
 
 import com.google.inject.Inject;
 
+import ua.com.fielden.platform.attachment.AbstractAttachment;
 import ua.com.fielden.platform.attachment.Attachment;
 import ua.com.fielden.platform.attachment.AttachmentPreviewEntityAction;
 import ua.com.fielden.platform.attachment.IAttachment;
@@ -41,6 +42,8 @@ public class AttachmentPreviewEntityActionProducer extends DefaultEntityProducer
     private Long getAttachmentId() {
         if (currentEntityInstanceOf(Attachment.class)) {
             return currentEntity().getId();
+        } else if (currentEntityInstanceOf(AbstractAttachment.class)) {
+            return ((AbstractAttachment<?,?>)currentEntity()).getAttachment().getId();
         } else if (chosenPropertyNotEmpty()) {
             if (Attachment.class.isAssignableFrom(currentEntity().get(chosenProperty()).getClass())) {
                 return ((Attachment)currentEntity().get(chosenProperty())).getId();
