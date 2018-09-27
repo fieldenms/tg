@@ -24,20 +24,12 @@ import ua.com.fielden.platform.entity.annotation.UpperCase;
 @MapEntityTo
 @CompanionObject(ITgVehicleFinDetails.class)
 public class TgVehicleFinDetails extends AbstractEntity<TgVehicle> {
-    private static final long serialVersionUID = 1L;
-
+    
     @IsProperty
     @MapTo
     @UpperCase
     @Title(value = "Cap. Works No", desc = "Capital Works No")
     private String capitalWorksNo;
-
-    /**
-     * Needed for TG entity factory.
-     */
-    protected TgVehicleFinDetails() {
-
-    }
 
     public String getCapitalWorksNo() {
         return capitalWorksNo;
