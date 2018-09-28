@@ -1,4 +1,4 @@
-package ua.com.fielden.platform.dao;
+package ua.com.fielden.platform.entity.validation.custom;
 
 import static ua.com.fielden.platform.entity.ActivatableAbstractEntity.ACTIVE;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.cond;
@@ -18,11 +18,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import ua.com.fielden.platform.dao.DomainEntityDependencies.DomainEntityDependency;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.MapTo;
 import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.ConditionModel;
+import ua.com.fielden.platform.entity.validation.custom.DomainEntityDependencies.DomainEntityDependency;
 
 public class DomainEntitiesDependenciesUtils {
     public static String PARAM = "ENTITY_VALUE";
@@ -36,15 +36,15 @@ public class DomainEntitiesDependenciesUtils {
         final List<AggregatedResultQueryModel> models = new ArrayList<>();
         
         for (final DomainEntityDependency dependency : dependencies) { //
-            final ConditionModel firstCondition = cond().prop(dependency.getPropName()).eq().param(PARAM).model();
+            final ConditionModel firstCondition = cond().prop(dependency.propName).eq().param(PARAM).model();
             final ConditionModel finalCondition =  deactivationOnly ? cond().condition(firstCondition).and().prop(ACTIVE).eq().val(true).model() : firstCondition;
 
-            models.add(select(dependency.getEntityType()). //
+            models.add(select(dependency.entityType). //
                     where().condition(finalCondition). //
-                    yield().val(dependency.getEntityType().getName()).as(ENTITY_TYPE_NAME). //
-                    yield().val(dependency.getEntityTitle()).as(ENTITY_TYPE_TITLE). //
-                    yield().val(dependency.getPropName()).as(DEPENDENT_PROP_NAME). //
-                    yield().val(dependency.getPropTitle()).as(DEPENDENT_PROP_TITLE). //
+                    yield().val(dependency.entityType.getName()).as(ENTITY_TYPE_NAME). //
+                    yield().val(dependency.entityTitle).as(ENTITY_TYPE_TITLE). //
+                    yield().val(dependency.propName).as(DEPENDENT_PROP_NAME). //
+                    yield().val(dependency.propTitle).as(DEPENDENT_PROP_TITLE). //
                     modelAsAggregate());
         }
 
@@ -76,7 +76,6 @@ public class DomainEntitiesDependenciesUtils {
                 if (isOneToOne(entType)) {
                     final Class<? extends Comparable<?>> keyType = getKeyType(entType);
                     if (!map.containsKey(keyType)) {
-
                         map.put(((Class<? extends AbstractEntity<?>>) keyType), new DomainEntityDependencies(((Class<? extends AbstractEntity<?>>) keyType)));
                     }
                     map.get(keyType).addDependency(new DomainEntityDependency(entType, getKeyMembers(entType).get(0)));

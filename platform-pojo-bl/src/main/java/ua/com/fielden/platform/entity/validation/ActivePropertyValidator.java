@@ -2,24 +2,35 @@ package ua.com.fielden.platform.entity.validation;
 
 import static java.lang.String.format;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchOnly;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
+import static ua.com.fielden.platform.entity.validation.custom.DomainEntitiesDependenciesUtils.DEPENDENT_PROP_TITLE;
+import static ua.com.fielden.platform.entity.validation.custom.DomainEntitiesDependenciesUtils.ENTITY_TYPE_TITLE;
+import static ua.com.fielden.platform.entity.validation.custom.DomainEntitiesDependenciesUtils.PARAM;
 import static ua.com.fielden.platform.reflection.ActivatableEntityRetrospectionHelper.isNotSpecialActivatableToBeSkipped;
 
 import java.lang.annotation.Annotation;
-import java.util.HashSet;
+import java.util.HashMap;
 import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
 import com.google.inject.Inject;
 
+import ua.com.fielden.platform.basic.config.IApplicationDomainProvider;
+import ua.com.fielden.platform.dao.IEntityAggregatesOperations;
 import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.ActivatableAbstractEntity;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
+import ua.com.fielden.platform.entity.query.EntityAggregates;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
+import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
+import ua.com.fielden.platform.entity.validation.custom.DomainEntitiesDependenciesUtils;
+import ua.com.fielden.platform.entity.validation.custom.DomainEntityDependencies;
 import ua.com.fielden.platform.error.Result;
-import ua.com.fielden.platform.reflection.ActivatableEntityRetrospectionHelper;
 import ua.com.fielden.platform.reflection.TitlesDescsGetter;
 
 
@@ -32,10 +43,14 @@ import ua.com.fielden.platform.reflection.TitlesDescsGetter;
 
 public class ActivePropertyValidator implements IBeforeChangeEventHandler<Boolean> {
     private final ICompanionObjectFinder coFinder;
+    private final IEntityAggregatesOperations aggregatesOperations;
+    private final IApplicationDomainProvider applicationDomainProvider;
 
     @Inject
-    public ActivePropertyValidator(final ICompanionObjectFinder coFinder) {
+    public ActivePropertyValidator(final ICompanionObjectFinder coFinder, final IEntityAggregatesOperations aggregatesOperations, final IApplicationDomainProvider applicationDomainProvider) {
         this.coFinder = coFinder;
+        this.aggregatesOperations = aggregatesOperations;
+        this.applicationDomainProvider = applicationDomainProvider;
     }
 
     @Override
@@ -61,6 +76,15 @@ public class ActivePropertyValidator implements IBeforeChangeEventHandler<Boolea
                 return Result.successful(newValue);
             } else {
                 final String entityTitle = TitlesDescsGetter.getEntityTitleAndDesc(entity.getType()).getKey();
+
+                final Map<Class<? extends AbstractEntity<?>>, DomainEntityDependencies> a = DomainEntitiesDependenciesUtils.getEntityDependantsMap(applicationDomainProvider.entityTypes());
+                final AggregatedResultQueryModel query = DomainEntitiesDependenciesUtils.generateQuery(a.get(entity.getType()).getActivatableDependencies(), true);
+                final Map<String, Object> savingsParams1 = new HashMap<>();
+                savingsParams1.put(PARAM, entity);
+                final List<EntityAggregates> deps = aggregatesOperations.getAllEntities(from(query).with(savingsParams1).model());
+                for (final EntityAggregates dep : deps) {
+                    System.out.println(String.format("%25s%25s%25s", dep.get(ENTITY_TYPE_TITLE), dep.get(DEPENDENT_PROP_TITLE), dep.get("KOUNT")));
+                }
                 return Result.failure(count, format("%s [%s] has active dependencies (%s).", entityTitle, entity, count));
             }
         } else { 
