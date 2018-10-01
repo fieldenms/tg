@@ -7,9 +7,11 @@ import com.google.inject.Scopes;
 import com.google.inject.name.Names;
 
 import ua.com.fielden.platform.attachment.AttachmentDao;
+import ua.com.fielden.platform.attachment.AttachmentPreviewEntityActionDao;
 import ua.com.fielden.platform.attachment.AttachmentUploaderDao;
 import ua.com.fielden.platform.attachment.AttachmentsUploadActionDao;
 import ua.com.fielden.platform.attachment.IAttachment;
+import ua.com.fielden.platform.attachment.IAttachmentPreviewEntityAction;
 import ua.com.fielden.platform.attachment.IAttachmentUploader;
 import ua.com.fielden.platform.attachment.IAttachmentsUploadAction;
 import ua.com.fielden.platform.basic.config.ApplicationSettings;
@@ -24,18 +26,18 @@ import ua.com.fielden.platform.dao.IUserAndRoleAssociation;
 import ua.com.fielden.platform.dao.IUserRole;
 import ua.com.fielden.platform.entity.EntityDeleteActionDao;
 import ua.com.fielden.platform.entity.EntityEditActionDao;
+import ua.com.fielden.platform.entity.EntityNavigationActionDao;
 import ua.com.fielden.platform.entity.EntityNewActionDao;
 import ua.com.fielden.platform.entity.IEntityDeleteAction;
 import ua.com.fielden.platform.entity.IEntityEditAction;
+import ua.com.fielden.platform.entity.IEntityNavigationAction;
 import ua.com.fielden.platform.entity.IEntityNewAction;
 import ua.com.fielden.platform.entity.ISecurityMatrixInsertionPoint;
 import ua.com.fielden.platform.entity.ISecurityMatrixSaveAction;
 import ua.com.fielden.platform.entity.ISecurityTokenTreeNodeEntity;
-import ua.com.fielden.platform.entity.IEntityNavigationAction;
 import ua.com.fielden.platform.entity.SecurityMatrixInsertionPointDao;
 import ua.com.fielden.platform.entity.SecurityMatrixSaveActionDao;
 import ua.com.fielden.platform.entity.SecurityTokenTreeNodeEntityDao;
-import ua.com.fielden.platform.entity.EntityNavigationActionDao;
 import ua.com.fielden.platform.entity.functional.master.AcknowledgeWarningsDao;
 import ua.com.fielden.platform.entity.functional.master.IAcknowledgeWarnings;
 import ua.com.fielden.platform.entity.functional.master.IPropertyWarning;
@@ -200,6 +202,7 @@ public class BasicWebServerModule extends CommonFactoryModule {
         bind(IAttachment.class).to(AttachmentDao.class);
         bind(IAttachmentUploader.class).to(AttachmentUploaderDao.class);
         bind(IAttachmentsUploadAction.class).to(AttachmentsUploadActionDao.class);
+        bind(IAttachmentPreviewEntityAction.class).to(AttachmentPreviewEntityActionDao.class);
 
         // configuration menu related binding
         bind(IModuleMenuItem.class).to(ModuleMenuItemDao.class);
