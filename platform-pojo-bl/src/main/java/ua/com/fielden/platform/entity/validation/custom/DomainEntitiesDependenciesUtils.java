@@ -25,11 +25,12 @@ import ua.com.fielden.platform.entity.query.model.ConditionModel;
 import ua.com.fielden.platform.entity.validation.custom.DomainEntityDependencies.DomainEntityDependency;
 
 public class DomainEntitiesDependenciesUtils {
-    public static String PARAM = "ENTITY_VALUE";
-    public static String ENTITY_TYPE_NAME = "entity_type_name";
-    public static String ENTITY_TYPE_TITLE = "entity_type_title";
-    public static String DEPENDENT_PROP_NAME = "dependent_prop_name";
-    public static String DEPENDENT_PROP_TITLE = "dependent_prop_title";
+    public static final String PARAM = "ENTITY_VALUE";
+    public static final String ENTITY_TYPE_NAME = "entity_type_name";
+    public static final String ENTITY_TYPE_TITLE = "entity_type_title";
+    public static final String DEPENDENT_PROP_NAME = "dependent_prop_name";
+    public static final String DEPENDENT_PROP_TITLE = "dependent_prop_title";
+    public static final String COUNT = "KOUNT";
     
     public static AggregatedResultQueryModel generateQuery(final Set<DomainEntityDependency> dependencies, final boolean deactivationOnly) {
         
@@ -55,7 +56,7 @@ public class DomainEntitiesDependenciesUtils {
                 groupBy().prop(DEPENDENT_PROP_TITLE). //
                 yield().prop(ENTITY_TYPE_TITLE).as(ENTITY_TYPE_TITLE). //
                 yield().prop(DEPENDENT_PROP_TITLE).as(DEPENDENT_PROP_TITLE). //
-                yield().countAll().as("KOUNT"). //
+                yield().countAll().as(COUNT). //
                 modelAsAggregate();
     }
 
