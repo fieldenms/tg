@@ -63,27 +63,25 @@ public class DomainEntitiesDependenciesUtils {
 
     public static Map<Class<? extends AbstractEntity<?>>, DomainEntityDependencies> getEntityDependantsMap(final Collection<Class<? extends AbstractEntity<?>>> domainEntityTypes) {
         final Map<Class<? extends AbstractEntity<?>>, DomainEntityDependencies> map = new HashMap<>();
-
-        for (final Class<? extends AbstractEntity<?>> entType : domainEntityTypes) {
-            if (isPersistedEntityType(entType)) {
-                for (final Field field : getRealProperties(entType)) {
-                    if (isAnnotationPresent(field, MapTo.class) && isPersistedEntityType(field.getType())) {
-                        if (!map.containsKey(field.getType())) {
-                            map.put(((Class<? extends AbstractEntity<?>>) field.getType()), new DomainEntityDependencies(((Class<? extends AbstractEntity<?>>) field.getType())));
-                        }
-                        map.get(field.getType()).addDependency(new DomainEntityDependency(entType, field));
+        domainEntityTypes.stream().filter(entType -> isPersistedEntityType(entType))
+        .forEach(entType -> {
+            for (final Field field : getRealProperties(entType)) {
+                if (isAnnotationPresent(field, MapTo.class) && isPersistedEntityType(field.getType())) {
+                    if (!map.containsKey(field.getType())) {
+                        map.put(((Class<? extends AbstractEntity<?>>) field.getType()), new DomainEntityDependencies(((Class<? extends AbstractEntity<?>>) field.getType())));
                     }
-                }
-
-                if (isOneToOne(entType)) {
-                    final Class<? extends Comparable<?>> keyType = getKeyType(entType);
-                    if (!map.containsKey(keyType)) {
-                        map.put(((Class<? extends AbstractEntity<?>>) keyType), new DomainEntityDependencies(((Class<? extends AbstractEntity<?>>) keyType)));
-                    }
-                    map.get(keyType).addDependency(new DomainEntityDependency(entType, getKeyMembers(entType).get(0)));
+                    map.get(field.getType()).addDependency(new DomainEntityDependency(entType, field));
                 }
             }
-        }
+
+            if (isOneToOne(entType)) {
+                final Class<? extends Comparable<?>> keyType = getKeyType(entType);
+                if (!map.containsKey(keyType)) {
+                    map.put(((Class<? extends AbstractEntity<?>>) keyType), new DomainEntityDependencies(((Class<? extends AbstractEntity<?>>) keyType)));
+                }
+                map.get(keyType).addDependency(new DomainEntityDependency(entType, getKeyMembers(entType).get(0)));
+            }
+        });
 
         return map;
     }
