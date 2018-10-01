@@ -14,6 +14,12 @@ import ua.com.fielden.platform.entity.DefaultEntityProducerWithContext;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 
+/**
+ * Producer for {@link AttachmentPreviewEntityAction}.
+ *
+ * @author TG Team
+ *
+ */
 public class AttachmentPreviewEntityActionProducer extends DefaultEntityProducerWithContext<AttachmentPreviewEntityAction> {
 
     @Inject

@@ -52,7 +52,7 @@ public class AttachmentPreviewEntityMaster implements IMaster<AttachmentPreviewE
 
     private String generateReadyCallback() {
         return  "self._isNecessaryForConversion = function (propertyName) { \n"
-                + "    return ['attachment'].indexOf(propertyName) >= 0; \n"
+                + "    return ['attachmentUri'].indexOf(propertyName) >= 0; \n"
                 + "}; \n"
                 + "self._getImageUri = function (entity) {\n"
                 + "    const newEntity = entity ? entity['@@origin'] : null;\n"

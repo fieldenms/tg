@@ -21,7 +21,7 @@ import ua.com.fielden.platform.entity.annotation.Title;
 public class AttachmentPreviewEntityAction extends AbstractFunctionalEntityWithCentreContext<NoKey> {
 
     @IsProperty
-    @Title(value = "Attachment URI", desc = "Desc")
+    @Title("Attachment URI")
     private String attachmentUri;
 
     @Observable
