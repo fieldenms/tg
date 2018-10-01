@@ -827,11 +827,11 @@
                     }
                     if (firstEditor) {
                         firstEditor._editingValue = queryParam.firstEditorValue;
-                        firstEditor.commit();
+                        firstEditor.commitWithoutValidation();
                     }
                     if (secondEditor) {
                         secondEditor._editingValue = queryParam.secondEditorValue;
-                        secondEditor.commit();
+                        secondEditor.commitWithoutValidation();
                     }
                 });
             },
