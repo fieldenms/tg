@@ -42,10 +42,11 @@ public class DomainEntitiesDependenciesUtils {
 
             models.add(select(dependency.entityType). //
                     where().condition(finalCondition). //
-                    yield().val(dependency.entityType.getName()).as(ENTITY_TYPE_NAME). //
-                    yield().val(dependency.entityTitle).as(ENTITY_TYPE_TITLE). //
-                    yield().val(dependency.propName).as(DEPENDENT_PROP_NAME). //
-                    yield().val(dependency.propTitle).as(DEPENDENT_PROP_TITLE). //
+                    // wrapped into CASE-WHEN just to make H2 happy.
+                    yield().caseWhen().val(1).eq().val(1).then().val(dependency.entityType.getName()).endAsStr(255).as(ENTITY_TYPE_NAME). //
+                    yield().caseWhen().val(1).eq().val(1).then().val(dependency.entityTitle).endAsStr(255).as(ENTITY_TYPE_TITLE). //
+                    yield().caseWhen().val(1).eq().val(1).then().val(dependency.propName).endAsStr(255).as(DEPENDENT_PROP_NAME). //
+                    yield().caseWhen().val(1).eq().val(1).then().val(dependency.propTitle).endAsStr(255).as(DEPENDENT_PROP_TITLE). //
                     modelAsAggregate());
         }
 

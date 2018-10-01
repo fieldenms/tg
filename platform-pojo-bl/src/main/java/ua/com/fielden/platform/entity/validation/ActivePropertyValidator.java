@@ -31,12 +31,12 @@ import java.util.stream.Collectors;
 import com.google.inject.Inject;
 
 import ua.com.fielden.platform.basic.config.IApplicationDomainProvider;
-import ua.com.fielden.platform.dao.IEntityAggregatesOperations;
 import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.ActivatableAbstractEntity;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
+import ua.com.fielden.platform.entity.meta.impl.AbstractBeforeChangeEventHandler;
 import ua.com.fielden.platform.entity.query.EntityAggregates;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
@@ -54,15 +54,14 @@ import ua.com.fielden.platform.types.tuples.T3;
  *
  */
 
-public class ActivePropertyValidator implements IBeforeChangeEventHandler<Boolean> {
+public class ActivePropertyValidator extends AbstractBeforeChangeEventHandler<Boolean> {
     private final ICompanionObjectFinder coFinder;
-    private final IEntityAggregatesOperations aggregatesOperations;
+    
     private final IApplicationDomainProvider applicationDomainProvider;
 
     @Inject
-    public ActivePropertyValidator(final ICompanionObjectFinder coFinder, final IEntityAggregatesOperations aggregatesOperations, final IApplicationDomainProvider applicationDomainProvider) {
+    public ActivePropertyValidator(final ICompanionObjectFinder coFinder, final IApplicationDomainProvider applicationDomainProvider) {
         this.coFinder = coFinder;
-        this.aggregatesOperations = aggregatesOperations;
         this.applicationDomainProvider = applicationDomainProvider;
     }
 
@@ -91,7 +90,7 @@ public class ActivePropertyValidator implements IBeforeChangeEventHandler<Boolea
                 final Map<Class<? extends AbstractEntity<?>>, DomainEntityDependencies> domainDependency = getEntityDependantsMap(applicationDomainProvider.entityTypes());
                 final AggregatedResultQueryModel query = generateQuery(domainDependency.get(entity.getType()).getActivatableDependencies(), true);
                 final OrderingModel orderBy = orderBy().yield(COUNT).desc().yield(ENTITY_TYPE_TITLE).asc().yield(DEPENDENT_PROP_TITLE).asc().model();
-                return failure(count, mkErrorMsg(entity, count, aggregatesOperations.getAllEntities(from(query).with(orderBy).with(mapOf(t2(PARAM, entity))).model())));
+                return failure(count, mkErrorMsg(entity, count, co(EntityAggregates.class).getAllEntities(from(query).with(orderBy).with(mapOf(t2(PARAM, entity))).model())));
             }
         } else { 
             // entity is being activated, but could be referencing inactive activatables

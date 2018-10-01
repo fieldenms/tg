@@ -3,6 +3,7 @@ package ua.com.fielden.platform.entity.validation.custom;
 import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toSet;
 import static ua.com.fielden.platform.reflection.ActivatableEntityRetrospectionHelper.isNotSpecialActivatableToBeSkipped;
+import static ua.com.fielden.platform.reflection.Finder.getKeyMembers;
 import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getEntityTitleAndDesc;
 import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getTitleAndDesc;
 import static ua.com.fielden.platform.utils.EntityUtils.isActivatableEntityType;
@@ -37,7 +38,7 @@ public class DomainEntityDependencies {
     }
 
     public Set<DomainEntityDependency> getActivatableDependencies() {
-        return dependencies.stream().filter(d -> d.shouldBeCheckedDuringDeactivation && !automaticallyDeactivatedDependencies.contains(d.entityType)).collect(toSet());
+        return dependencies.stream().filter(d -> d.shouldBeCheckedDuringDeactivation && !(automaticallyDeactivatedDependencies.contains(d.entityType) && d.belongsToEntityKey)).collect(toSet());
     }
 
     public void addDependency(final DomainEntityDependency dependency) {
@@ -50,12 +51,14 @@ public class DomainEntityDependencies {
         public final String propName;
         public final String propTitle;
         public final boolean shouldBeCheckedDuringDeactivation;
+        public final boolean belongsToEntityKey;
 
         public DomainEntityDependency(final Class<? extends AbstractEntity<?>> entityType, final Field propField) {
             this.entityType = entityType;
             this.entityTitle = getEntityTitleAndDesc(entityType).getKey();
             this.propName = propField.getName();
             this.propTitle = getTitleAndDesc(propName, entityType).getKey();
+            this.belongsToEntityKey = getKeyMembers(entityType).contains(propField);
             
             final SkipEntityExistsValidation seevAnnotation = propField.getAnnotation(SkipEntityExistsValidation.class);
             final boolean skipActiveOnly = seevAnnotation != null ? seevAnnotation.skipActiveOnly() : false;        
