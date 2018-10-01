@@ -115,10 +115,10 @@ public class CentreConfigurationWebUiConfig {
             public EntityActionConfig mkAction() {
                 return action(CentreConfigUpdater.class)
                         .withContext(context().withSelectionCrit().build())
-                        .postActionSuccess(() ->// self.run should be invoked with isSortingAction=true parameter. See tg-entity-centre-behavior 'run' property for more details.
+                        .postActionSuccess(() ->// self.run should be invoked with isSortingAction=true parameter (and isAutoRunning=undefined). See tg-entity-centre-behavior 'run' property for more details.
                                 new JsCode(""
                                     + "    if (functionalEntity.get('sortingChanged') === true) {\n"
-                                    + "        return self.retrieve().then(function () { self.run(true); });\n"
+                                    + "        return self.retrieve().then(function () { self.run(undefined, true); });\n"
                                     + "    } else {\n"
                                     + "        self.$.egi._adjustColumns(functionalEntity.get('chosenIds').map(column => column === 'this' ? '' : column));\n"
                                     + "        self._centreChanged = functionalEntity.get('centreChanged');\n"

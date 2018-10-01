@@ -639,9 +639,14 @@
 
                 //Should focus master when it receives binding entity.
                 self.addEventListener('binding-entity-appeared', function (e) {
-                    const target = event.target || event.srcElement;
+                    const target = e.target || e.srcElement;
                     if (target === this) {
                         this.focusView();
+                        if (!this._hasEmbededView()) {
+                            this.async(function () {
+                                this.fire('binding-entity-loaded-and-focused', this._currBindingEntity);
+                            }, 100);
+                        }
                     }
                 }.bind(self));
 
@@ -766,7 +771,6 @@
                 } else if (this.offsetParent !== null){
                     this.focusNextView();
                 }
-                this.fire('binding-entity-loaded-and-focused', this._currBindingEntity);
             },
 
             /**

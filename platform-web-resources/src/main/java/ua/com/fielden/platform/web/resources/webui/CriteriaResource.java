@@ -24,6 +24,7 @@ import static ua.com.fielden.platform.web.resources.webui.CentreResourceUtils.cr
 import static ua.com.fielden.platform.web.resources.webui.CentreResourceUtils.createCriteriaMetaValuesCustomObjectWithResult;
 import static ua.com.fielden.platform.web.resources.webui.CentreResourceUtils.createCriteriaMetaValuesCustomObjectWithSaveAsInfo;
 import static ua.com.fielden.platform.web.resources.webui.CentreResourceUtils.createCriteriaValidationPrototype;
+import static ua.com.fielden.platform.web.resources.webui.CentreResourceUtils.isAutoRunning;
 import static ua.com.fielden.platform.web.resources.webui.CentreResourceUtils.isRunning;
 import static ua.com.fielden.platform.web.resources.webui.CentreResourceUtils.isSorting;
 import static ua.com.fielden.platform.web.utils.EntityResourceUtils.getEntityType;
@@ -344,8 +345,15 @@ public class CriteriaResource extends AbstractWebResource {
             final EnhancedCentreEntityQueryCriteria<?, ?> freshCentreAppliedCriteriaEntity;
             
             if (isRunning) {
-                freshCentreAppliedCriteriaEntity = createCriteriaEntity(centreContextHolder.getModifHolder(), companionFinder, critGenerator, miType, saveAsName, user, userProvider, device(), serialiser, domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion);
-                updatedFreshCentre = freshCentreAppliedCriteriaEntity.getCentreDomainTreeMangerAndEnhancer();
+                if (isAutoRunning(customObject) && !saveAsName.isPresent()) {
+                    // clear current 'default' surrogate centres -- this is to make them empty before auto-running; saved configurations will not be touched --they should not appear when first time loading occur; this is because in autoRun centres named configurations never become preferred
+                    removeCentres(user, miType, device(), saveAsName, eccCompanion, FRESH_CENTRE_NAME, SAVED_CENTRE_NAME, PREVIOUSLY_RUN_CENTRE_NAME);
+                    updatedFreshCentre = updateCentre(user, userProvider, miType, FRESH_CENTRE_NAME, saveAsName, device(), serialiser, domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion);
+                    freshCentreAppliedCriteriaEntity = createCriteriaValidationPrototype(miType, saveAsName, updatedFreshCentre, companionFinder, critGenerator, -1L, user, userProvider, device(), serialiser, domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion);
+                } else {
+                    freshCentreAppliedCriteriaEntity = createCriteriaEntity(centreContextHolder.getModifHolder(), companionFinder, critGenerator, miType, saveAsName, user, userProvider, device(), serialiser, domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion);
+                    updatedFreshCentre = freshCentreAppliedCriteriaEntity.getCentreDomainTreeMangerAndEnhancer();
+                }
                 
                 // There is a need to validate criteria entity with the check for 'required' properties. If it is not successful -- immediately return result without query running, fresh centre persistence, data generation etc.
                 final Result validationResult = freshCentreAppliedCriteriaEntity.isValid();

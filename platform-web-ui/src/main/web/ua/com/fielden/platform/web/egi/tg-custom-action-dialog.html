@@ -675,7 +675,7 @@
                     this._closeDialogAndIndicateActionCompletion();
                 } else {
                     //Try to close children first.
-                    let canClose = this.canClose();
+                    const canClose = this.canClose();
                     if (canClose === true) {
                         this._closeDialogAndIndicateActionCompletion();
                     }
@@ -709,7 +709,7 @@
             },
 
             _closeChildren: function(forceClosing) {
-                var canClose = true;
+                let canClose = true;
 
                 this._childDialogs.slice().forEach(function(dialog) {
                     dialog.closeDialog(forceClosing);
