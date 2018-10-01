@@ -2,6 +2,7 @@ package ua.com.fielden.platform.sample.domain.crit_gen;
 
 import com.google.inject.Scopes;
 
+import ua.com.fielden.platform.basic.config.IApplicationDomainProvider;
 import ua.com.fielden.platform.criteria.generator.ICriteriaGenerator;
 import ua.com.fielden.platform.criteria.generator.impl.CriteriaGenerator;
 import ua.com.fielden.platform.dao.IGeneratedEntityController;
@@ -13,12 +14,14 @@ import ua.com.fielden.platform.sample.domain.ITgSystem;
 import ua.com.fielden.platform.serialisation.api.ISerialisationClassProvider;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
 import ua.com.fielden.platform.test.EntityModuleWithPropertyFactory;
+import ua.com.fielden.platform.web.test.config.ApplicationDomain;
 
 public class CriteriaGeneratorTestModule extends EntityModuleWithPropertyFactory {
 
     @Override
     protected void configure() {
         super.configure();
+        bind(IApplicationDomainProvider.class).to(ApplicationDomain.class);
         bind(ITopLevelEntity.class).to(TopLevelEntityDaoStub.class);
         bind(ILastLevelEntity.class).to(LastLevelEntityDaoStub.class);
         bind(ISecondLevelEntity.class).to(SecondLevelEntityDaoStub.class);
