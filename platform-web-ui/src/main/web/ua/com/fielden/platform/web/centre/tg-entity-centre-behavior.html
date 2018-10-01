@@ -361,6 +361,7 @@
                 /**
                  * Starts the process of centre run.
                  *
+                 * isAutoRunning -- returns true if this running action represents autoRun event action invocation rather than simple running, undefined or false otherwise; not to be confused with 'link' centre auto-running capability
                  * isSortingAction -- returns true if this running action represents re-sorting action invocation rather than simple running, undefined otherwise
                  * forceRegeneration -- returns true if this running action represents special 're-generation of modified data' action invocation rather than simple running, undefined otherwise
                  */
@@ -417,14 +418,14 @@
                     self.retrieve().then(function () {
                         self._setQueryParams();
                         if (self.autoRun || self.queryPart) {
-                            self.run();
+                            self.run(!self.queryPart); // identify autoRunning situation only in case where centre has autoRun as true but does not represent 'link' centre (has no URI criteria values)
                             delete self.queryPart;
                         }
                     });
                 } else {
                     self._setQueryParams();
                     if (self.autoRun || self.queryPart) {
-                        self.run();
+                        self.run(!self.queryPart); // identify autoRunning situation only in case where centre has autoRun as true but does not represent 'link' centre (has no URI criteria values)
                         delete self.queryPart;
                     }
                 }
@@ -615,7 +616,7 @@
                     });
                 }).bind(self);
 
-                self.run = (function (isSortingAction, forceRegeneration) {
+                self.run = (function (isAutoRunning, isSortingAction, forceRegeneration) {
                     if (this._criteriaLoaded === false) {
                         throw "Cannot run centre (not initialised criteria).";
                     }
@@ -641,7 +642,7 @@
                         }
                     }, 2000);
 
-                    return self.$.selection_criteria.run(isSortingAction, forceRegeneration).then(
+                    return self.$.selection_criteria.run(isAutoRunning, isSortingAction, forceRegeneration).then(
                         function (detail) {
                             const sc = self.$.selection_criteria;
                             const deserialisedResult = sc._serialiser().deserialise(detail.response);

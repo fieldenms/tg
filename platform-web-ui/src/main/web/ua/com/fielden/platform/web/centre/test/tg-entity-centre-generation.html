@@ -110,7 +110,7 @@
                 }
                 
                 _changeCentreCriteriaWithAction(centre, '', '', 'DEMO', '', function () {
-                    centre.run(true); // isSortingAction = true
+                    centre.run(undefined, true); // isSortingAction = true, isAutoRunning = undefined
                 });
             };
             
