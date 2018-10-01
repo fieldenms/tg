@@ -8,7 +8,7 @@
     	<style include="tg-entity-master-styles"></style>
     	<tg-entity-master
     		id="masterDom"
-    		entity-type="[[entityType]]" 
+    		entity-type="[[entityType]]"
     		entity-id="[[entityId]]"
     		_post-validated-default="[[_postValidatedDefault]]"
     		_post-validated-default-error="[[_postValidatedDefaultError]]"
@@ -30,9 +30,9 @@
     (function () {
         Polymer({
         	is: 'tg-@entity_type-master',
-        	
+
         	behaviors: [Polymer.TgBehaviors.TgEntityMasterTemplateBehavior],
-            
+
             /**
              * Initialisation block. It has all children web components already initialised.
              */
@@ -41,23 +41,23 @@
                 self.prefDim = @prefDim;
                 self.noUI = @noUiValue;
                 self.saveOnActivation = @saveOnActivationValue;
-                
+
                 //START OF GENERATED JS LOGIC
                 //@ready-callback
                 //END OF GENERATED JS LOGIC
-                
+
                 //@master-is-ready-custom-code
-                
+
             },// end of ready
-            
+
             attached: function () {
-                var self = this;
+                const self = this;
                 self.async(function() {
                     self.keyEventTarget = self._getKeyEventTarget();
                     if (self._shouldOverridePrefDim()) {
                         self.keyEventTarget.prefDim = self.prefDim;
                     }
-                    
+
                     self.primaryAction = [
                         //generatedPrimaryActions
                     ];
@@ -66,20 +66,20 @@
                         //generatedPropActions
                     ];
                 }, 1);
-                
+
                 //@attached-callback
-                
+
                 //@master-has-been-attached-custom-code
-                
+
             },
-            
+
             /**
              * Generated shortcut bindings to single function _shortcutPressed, which locates appropriate tg-action / tg-ui-action and invokes its function 'shortcutPressed'.
              */
             _ownKeyBindings: {
                 '@SHORTCUTS': '_shortcutPressed'
             },
-            
+
         });
     })();
 </script>
