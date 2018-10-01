@@ -639,7 +639,7 @@
 
                 //Should focus master when it receives binding entity.
                 self.addEventListener('binding-entity-appeared', function (e) {
-                    const target = event.target || event.srcElement;
+                    const target = e.target || e.srcElement;
                     if (target === this) {
                         this.focusView();
                         if (!this._hasEmbededView()) {

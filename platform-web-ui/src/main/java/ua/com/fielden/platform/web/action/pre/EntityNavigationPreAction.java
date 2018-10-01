@@ -5,7 +5,7 @@ import ua.com.fielden.platform.web.minijs.JsCode;
 import ua.com.fielden.platform.web.view.master.api.actions.pre.IPreAction;
 
 /**
- * This pre-action implementation should be used only with sequential edit action.
+ * This pre-action implementation should be used only with navigation or edit.
  *
  * @author TG Team
  *
@@ -118,14 +118,16 @@ public class EntityNavigationPreAction implements IPreAction {
                 + "    action.hasPreviousEntry = function() {%n"
                 + "        const thisPageInd = this.$.egi.findEntityIndex(action.currentlyLoadedEntity);%n"
                 + "        if (thisPageInd >= 0) {%n"
-                + "            return action._findFirstEntity().get('id') !== action.currentlyLoadedEntity.get('id');%n"
+                + "            const firstEntity = action._findFirstEntity();%n"
+                + "            return firstEntity && firstEntity.get('id') !== action.currentlyLoadedEntity.get('id');%n"
                 + "        }%n"
                 + "        return action._countActualEntities() > 0;%n"
                 + "    }.bind(self);%n"
                 + "    action.hasNextEntry = function(entitiesCount, entityIndex) {%n"
                 + "        const thisPageInd = this.$.egi.findEntityIndex(action.currentlyLoadedEntity);%n"
                 + "        if (thisPageInd >= 0) {%n"
-                + "            return action._findLastEntity().get('id') !== action.currentlyLoadedEntity.get('id');%n"
+                + "            const lastEntity = action._findLastEntity();%n"
+                + "            return lastEntity && lastEntity.get('id') !== action.currentlyLoadedEntity.get('id');%n"
                 + "        }%n"
                 + "        return action._countActualEntities() > 0;%n"
                 + "    }.bind(self);%n"
