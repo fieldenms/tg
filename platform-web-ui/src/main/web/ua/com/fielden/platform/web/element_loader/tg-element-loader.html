@@ -262,8 +262,12 @@
          	        	throw new Error("Loader for element " + this.elementName + " had context provided, but contextProperty is missing.");
          	    	}
            	    } else if (oldValue !== undefined) {
-           	        // simply reasign the modified context and let the actually loaded element to handle such change
-           	     	this.loadedElement[this.contextProperty] = newValue;
+                    //if context changes from existing one then reasign context if the loaded element exists and his tag name is the same as elementName property for this element loader. Otherwise reload element.
+                    if (this.loadedElement && this.loadedElement.tagName === this.elementName.toUpperCase()) {
+                        this.loadedElement[this.contextProperty] = newValue;
+                    } else {
+                        this.reload();
+                    }
            	    }
            	}
         });

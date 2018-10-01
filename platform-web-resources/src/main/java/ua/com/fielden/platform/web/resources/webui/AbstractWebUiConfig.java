@@ -18,6 +18,7 @@ import ua.com.fielden.platform.entity.EntityDeleteAction;
 import ua.com.fielden.platform.entity.EntityDeleteActionProducer;
 import ua.com.fielden.platform.entity.EntityEditAction;
 import ua.com.fielden.platform.entity.EntityExportAction;
+import ua.com.fielden.platform.entity.EntityNavigationAction;
 import ua.com.fielden.platform.entity.EntityNewAction;
 import ua.com.fielden.platform.menu.Menu;
 import ua.com.fielden.platform.menu.MenuSaveAction;
@@ -87,6 +88,7 @@ public abstract class AbstractWebUiConfig implements IWebUiConfig {
     public void initConfiguration() {
         final EntityMaster<EntityNewAction> genericEntityNewActionMaster = StandardMastersWebUiConfig.createEntityNewMaster(injector());
         final EntityMaster<EntityEditAction> genericEntityEditActionMaster = StandardMastersWebUiConfig.createEntityEditMaster(injector());
+        final EntityMaster<EntityNavigationAction> genericEntityNavigationActionMaster = StandardMastersWebUiConfig.createEntityNavigationMaster(injector());
         final EntityMaster<EntityExportAction> genericEntityExportActionMaster = StandardMastersWebUiConfig.createExportMaster(injector());
         final EntityMaster<EntityDeleteAction> genericEntityDeleteActionMaster = EntityMaster.noUiFunctionalMaster(EntityDeleteAction.class, EntityDeleteActionProducer.class, injector());
         final EntityMaster<MenuSaveAction> genericMenuSaveMaster = EntityMaster.noUiFunctionalMaster(MenuSaveAction.class, injector());
@@ -98,6 +100,7 @@ public abstract class AbstractWebUiConfig implements IWebUiConfig {
         // register generic actions
         .addMaster(genericEntityNewActionMaster)
         .addMaster(genericEntityEditActionMaster)
+        .addMaster(genericEntityNavigationActionMaster)
         .addMaster(genericEntityDeleteActionMaster)
         .addMaster(genericEntityExportActionMaster)
         .addMaster(genericMenuSaveMaster)
@@ -221,7 +224,7 @@ public abstract class AbstractWebUiConfig implements IWebUiConfig {
     public Workflows workflow() {
         return workflow;
     }
-    
+
     @Override
     public final void clearConfiguration() {
         logger.error("Clearing configurations...");
@@ -230,10 +233,10 @@ public abstract class AbstractWebUiConfig implements IWebUiConfig {
         this.mobileMainMenuConfig = new MainMenuBuilder(this);
         logger.error("Clearing configurations...done");
     }
-    
+
     @Override
     public Menu getMenuEntity(final DeviceProfile deviceProfile) {
         return DeviceProfile.DESKTOP.equals(deviceProfile) ? desktopMainMenuConfig.getMenu() : mobileMainMenuConfig.getMenu();
     }
-    
+
 }

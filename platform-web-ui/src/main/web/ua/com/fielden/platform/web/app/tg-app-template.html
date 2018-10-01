@@ -360,37 +360,8 @@
                 },
                 
                 _checkWhetherCanLeave: function (e) {
-                    const modules = this.querySelectorAll("tg-app-view");
-                    const customDialogs = document.body.querySelectorAll("tg-custom-action-dialog");
-                    const changedViews = [];
-                    let master, itemIndex, viewToCheck;
-                    for (itemIndex = 0; itemIndex < modules.length; itemIndex++) {
-                        viewToCheck = typeof modules[itemIndex].canLeave === 'function' && modules[itemIndex].canLeave();
-                        if (Array.isArray(viewToCheck)) {
-                            viewToCheck.forEach(function (element) {
-                                changedViews.push(element);
-                            });
-                        } else if (viewToCheck) {
-                            changedViews.push(viewToCheck);
-                        }
-                    }
-                    if (changedViews.length > 0) {
-                        e.returnValue = "The following menu items were changed:\n";
-                        changedViews.forEach(function (element) {
-                            e.returnValue += "\t * " + element + "\n";
-                        });
-                    }
-                    for (itemIndex = 0; itemIndex < customDialogs.length; itemIndex++) {
-                        if (customDialogs[itemIndex].style.display !== 'none') {
-                            master = customDialogs[itemIndex].querySelector(".canLeave");
-                            if (master && typeof master.canLeave === 'function' && master.canLeave()) {
-                                e.returnValue = "There are some unsaved entity masters.";
-                            }
-                        }
-                    }
-                    if (!e.returnValue) {
-                        e.returnValue = "Do you really want to close the application?";
-                    }
+                    e.returnValue = "Do you really want to close the application?";
+                    return e.returnValue;
                 },
                 
                 _animationFinished: function (e, detail, source) {
