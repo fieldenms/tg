@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.attachment;
 
+import static java.util.Collections.emptySet;
 import static ua.com.fielden.platform.entity.AbstractEntity.ID;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
@@ -56,7 +57,7 @@ public class AttachmentsUploadActionDao extends CommonEntityDao<AttachmentsUploa
             LOGGER.debug("Either master entity or attachments are missing.");
         }
         
-        return action;
+        return action.setAttachmentIds(emptySet());
     }
     
 }
