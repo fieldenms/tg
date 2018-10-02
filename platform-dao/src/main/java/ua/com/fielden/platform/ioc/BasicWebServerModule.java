@@ -7,9 +7,11 @@ import com.google.inject.Scopes;
 import com.google.inject.name.Names;
 
 import ua.com.fielden.platform.attachment.AttachmentDao;
+import ua.com.fielden.platform.attachment.AttachmentPreviewEntityActionDao;
 import ua.com.fielden.platform.attachment.AttachmentUploaderDao;
 import ua.com.fielden.platform.attachment.AttachmentsUploadActionDao;
 import ua.com.fielden.platform.attachment.IAttachment;
+import ua.com.fielden.platform.attachment.IAttachmentPreviewEntityAction;
 import ua.com.fielden.platform.attachment.IAttachmentUploader;
 import ua.com.fielden.platform.attachment.IAttachmentsUploadAction;
 import ua.com.fielden.platform.basic.config.ApplicationSettings;
@@ -24,9 +26,11 @@ import ua.com.fielden.platform.dao.IUserAndRoleAssociation;
 import ua.com.fielden.platform.dao.IUserRole;
 import ua.com.fielden.platform.entity.EntityDeleteActionDao;
 import ua.com.fielden.platform.entity.EntityEditActionDao;
+import ua.com.fielden.platform.entity.EntityNavigationActionDao;
 import ua.com.fielden.platform.entity.EntityNewActionDao;
 import ua.com.fielden.platform.entity.IEntityDeleteAction;
 import ua.com.fielden.platform.entity.IEntityEditAction;
+import ua.com.fielden.platform.entity.IEntityNavigationAction;
 import ua.com.fielden.platform.entity.IEntityNewAction;
 import ua.com.fielden.platform.entity.ISecurityMatrixInsertionPoint;
 import ua.com.fielden.platform.entity.ISecurityMatrixSaveAction;
@@ -82,7 +86,9 @@ import ua.com.fielden.platform.security.user.ISecurityTokenInfo;
 import ua.com.fielden.platform.security.user.IUser;
 import ua.com.fielden.platform.security.user.IUserRoleTokensUpdater;
 import ua.com.fielden.platform.security.user.IUserRolesUpdater;
+import ua.com.fielden.platform.security.user.IUserSecret;
 import ua.com.fielden.platform.security.user.UserDao;
+import ua.com.fielden.platform.security.user.UserSecretDao;
 import ua.com.fielden.platform.serialisation.api.ISerialisationClassProvider;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
 import ua.com.fielden.platform.serialisation.api.ISerialiser0;
@@ -196,6 +202,7 @@ public class BasicWebServerModule extends CommonFactoryModule {
         bind(IAttachment.class).to(AttachmentDao.class);
         bind(IAttachmentUploader.class).to(AttachmentUploaderDao.class);
         bind(IAttachmentsUploadAction.class).to(AttachmentsUploadActionDao.class);
+        bind(IAttachmentPreviewEntityAction.class).to(AttachmentPreviewEntityActionDao.class);
 
         // configuration menu related binding
         bind(IModuleMenuItem.class).to(ModuleMenuItemDao.class);
@@ -220,10 +227,12 @@ public class BasicWebServerModule extends CommonFactoryModule {
         // bind entity manipulation controller
         bind(IEntityNewAction.class).to(EntityNewActionDao.class);
         bind(IEntityEditAction.class).to(EntityEditActionDao.class);
+        bind(IEntityNavigationAction.class).to(EntityNavigationActionDao.class);
         bind(IEntityDeleteAction.class).to(EntityDeleteActionDao.class);
 
         // user security related bindings
         bind(IUser.class).to(UserDao.class);
+        bind(IUserSecret.class).to(UserSecretDao.class);
         bind(IUserRolesUpdater.class).to(UserRolesUpdaterDao.class);
 
         bind(IUserRole.class).to(UserRoleDao.class);

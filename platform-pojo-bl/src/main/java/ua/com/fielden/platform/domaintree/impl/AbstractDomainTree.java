@@ -173,9 +173,13 @@ public abstract class AbstractDomainTree {
      * @param message
      */
     protected static void illegalUncheckedProperties(final ITickManager tm, final Class<?> root, final String property, final String message) {
-        if (!tm.isChecked(root, property)) {
-            throw new DomainTreeException(message);
-        }
+        // The check below is important to maintain the integrity of domain trees.
+        // However, it also causes performance bottlenecks when invoking multiple times.
+        // In current Web UI logic, that uses centre domain trees, this check does not add any significant value due to other checks implemented as part of Centre DSL.
+        // Reintroducing of this check may be significant when management of domain trees from UI will be implemented.
+        // if (!tm.isChecked(root, property)) {
+        //     throw new DomainTreeException(message);
+        // }
     }
 
     /**

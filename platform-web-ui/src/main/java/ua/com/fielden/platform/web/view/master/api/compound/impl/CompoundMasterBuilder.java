@@ -53,7 +53,7 @@ public class CompoundMasterBuilder<T extends AbstractEntity<?>, F extends Abstra
     @Override
     public EntityMaster<F> done() {
         final EntityMaster<F> master = new EntityMaster<>(
-                type, 
+                type,
                 producerType,
                 new MasterWithMenu<>(type, menuItems, defaultMenuItemNumber),
                 injector);

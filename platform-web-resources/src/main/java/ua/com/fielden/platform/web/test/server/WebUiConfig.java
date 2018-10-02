@@ -21,6 +21,8 @@ import static ua.com.fielden.platform.web.layout.api.impl.LayoutCellBuilder.layo
 import static ua.com.fielden.platform.web.layout.api.impl.LayoutComposer.CELL_LAYOUT;
 import static ua.com.fielden.platform.web.layout.api.impl.LayoutComposer.MARGIN;
 import static ua.com.fielden.platform.web.layout.api.impl.LayoutComposer.MARGIN_PIX;
+import static ua.com.fielden.platform.web.test.server.config.StandardActions.EDIT_ACTION;
+import static ua.com.fielden.platform.web.test.server.config.StandardActions.SEQUENTIAL_EDIT_ACTION;
 
 import java.math.BigDecimal;
 import java.util.Date;
@@ -667,7 +669,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 .addAction(MasterActions.VIEW)
 
                 .setActionBarLayoutFor(Device.DESKTOP, Optional.empty(),
-                        format("['horizontal', 'padding: 20px', 'wrap', [%s],[%s],[%s],[%s],[%s],[%s]]", actionMr, actionMr, actionMr, actionMr, actionMr, actionMr))
+                        format("['horizontal', 'center-justified', 'padding: 20px', 'wrap', [%s],[%s],[%s],[%s],[%s],[%s]]", actionMr, actionMr, actionMr, actionMr, actionMr, actionMr))
                 .setLayoutFor(Device.DESKTOP, Optional.empty(), desktopLayout)
                 .setLayoutFor(Device.TABLET, Optional.empty(), tabletLayout)
                 .setLayoutFor(Device.MOBILE, Optional.empty(), mobileLayout)
@@ -741,7 +743,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
             .addAction(MasterActions.VIEW)
 
             .setActionBarLayoutFor(Device.DESKTOP, Optional.empty(),
-                format("['horizontal', 'padding: 20px 20px 0 20px', 'wrap', [%s],[%s],[%s],[%s],[%s]]", actionMr, actionMr, actionMr, actionMr, actionMr))
+                format("['horizontal', 'center-justified', 'padding: 20px 20px 0 20px', 'wrap', [%s],[%s],[%s],[%s],[%s]]", actionMr, actionMr, actionMr, actionMr, actionMr))
             .setLayoutFor(Device.DESKTOP, Optional.empty(), (
                     "['padding:20px', "
                     + format("[[%s], [%s], [%s], ['flex']], ", fmr, fmr, fmr)
@@ -790,7 +792,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 .addAction(MasterActions.VIEW)
 
                 .setActionBarLayoutFor(Device.DESKTOP, Optional.empty(),
-                        "['horizontal', 'padding: 20px 20px 0 20px', 'wrap', [actionMr],[actionMr],[actionMr],[actionMr],[actionMr]]".replace("actionMr", actionMr))
+                        "['horizontal', 'center-justified', 'padding: 20px 20px 0 20px', 'wrap', [actionMr],[actionMr],[actionMr],[actionMr],[actionMr]]".replace("actionMr", actionMr))
                 .setLayoutFor(Device.DESKTOP, Optional.empty(), ("['vertical', 'justified', 'margin:20px', "
                         + "[[mr], [mr]]]").replace("mr", mr))
                 .setLayoutFor(Device.TABLET, Optional.empty(), ("['vertical', 'margin:20px',"
@@ -1104,6 +1106,9 @@ public class WebUiConfig extends AbstractWebUiConfig {
 
         @Override
         public Optional<SingleCritOtherValueMnemonic<User>> getValue(final CentreContext<TgPersistentEntityWithProperties, ?> entity, final String name) {
+            if (userProvider.getUser() == null) {
+                return empty();
+            }
             final SingleCritOtherValueMnemonic<User> mnemonic = single().entity(User.class)./* TODO not applicable on query generation level not().*/setValue(userProvider.getUser())./* TODO not applicable on query generation level canHaveNoValue(). */value();
             return Optional.of(mnemonic);
         }
@@ -1326,8 +1331,8 @@ public class WebUiConfig extends AbstractWebUiConfig {
                         shortcut("alt+n").
                         build())
                 .also()
-                .addTopAction(StandardActions.SEQUENTIAL_EDIT_ACTION.mkAction(TgPersistentEntityWithProperties.class))
-                .also()
+                .addTopAction(SEQUENTIAL_EDIT_ACTION.mkAction(TgPersistentEntityWithProperties.class)).also()
+                .addTopAction(EDIT_ACTION.mkAction(TgPersistentEntityWithProperties.class)).also()
                 .addTopAction(action(EntityDeleteAction.class).
                         withContext(context().withSelectedEntities().build()).
                         postActionSuccess(new IPostAction() {
@@ -1687,12 +1692,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
         }
 
         IResultSetBuilder2Properties<TgPersistentEntityWithProperties> beforeAddProp = afterSummary.
-                withAction(action(EntityEditAction.class).
-                        withContext(context().withCurrentEntity().withSelectionCrit().build()).
-                        icon("editor:mode-edit").
-                        shortDesc("Edit entity").
-                        longDesc("Opens master for editing this entity").
-                        build())
+                withAction(EDIT_ACTION.mkAction(TgPersistentEntityWithProperties.class))
                 .also()
                 .addProp("desc").
                         order(1).asc().

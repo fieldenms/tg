@@ -1,20 +1,21 @@
 package ua.com.fielden.platform.web.test.server;
 
-import static java.lang.String.format;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.*;
-
-import org.apache.log4j.Logger;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
+import static ua.com.fielden.platform.error.Result.failure;
+import static ua.com.fielden.platform.error.Result.successful;
+import static ua.com.fielden.platform.utils.EntityUtils.equalsEx;
 
 import com.google.inject.Inject;
 
 import ua.com.fielden.platform.dao.QueryExecutionModel;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
-import ua.com.fielden.platform.entity.query.model.OrderingModel;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.security.user.IAuthenticationModel;
-import ua.com.fielden.platform.security.user.IUser;
+import ua.com.fielden.platform.security.user.IUserSecret;
 import ua.com.fielden.platform.security.user.User;
+import ua.com.fielden.platform.security.user.UserSecret;
 
 /**
  * This is an authentication model for the TG test application.
@@ -25,35 +26,32 @@ import ua.com.fielden.platform.security.user.User;
  */
 public class TgTestAppAuthenticationModel implements IAuthenticationModel {
 
-    private final IUser coUser;
+    private final IUserSecret coUserSecret;
 
     @Inject
-    public TgTestAppAuthenticationModel(final IUser coUser) {
-        this.coUser = coUser;
+    public TgTestAppAuthenticationModel(final IUserSecret coUserSecret) {
+        this.coUserSecret = coUserSecret;
     }
 
     @Override
     public Result authenticate(final String username, final String password) {
         try {
-            final Result result = Result.failure("The presented login credentials are not recognized.");
+            final Result result = failure("The presented login credentials are not recognized.");
             // check attempts to login in with UNIT_TEST_USER and fail those
             if (User.system_users.UNIT_TEST_USER.matches(username)) {
                 return result;
             }
+
+            final EntityResultQueryModel<UserSecret> query = select(UserSecret.class).where().prop("key.key").eq().val(username).and().prop("key.active").eq().val(true).model();
+            final fetch<UserSecret> fetch = coUserSecret.getFetchProvider().fetchModel();
+            final QueryExecutionModel<UserSecret, EntityResultQueryModel<UserSecret>> qem = from(query).with(fetch).model();
             
-            final User user = coUser.findByKeyAndFetch(fetchAll(User.class), username);
-            if (user != null && user.isActive()) {
-                final String hashPasswd = coUser.hashPasswd(password, user.getSalt());
-                if (!hashPasswd.equals(user.getPassword())) {
-                    return result;
-                }
+            return coUserSecret.getEntityOptional(qem)
+                    .map(secret -> equalsEx(secret.getPassword(), coUserSecret.hashPasswd(password, secret.getSalt())) ? successful(secret.getKey()) : result)
+                    .orElse(result);
             
-            } else {
-                return result;
-            }
-            return Result.successful(user);
         } catch (final Exception ex) {
-            return Result.failure(ex);
+            return failure(ex);
         }
     }
 

@@ -46,11 +46,15 @@
         :host {
             display: inline-block;
             --paper-menu-selected-item: {
-                background-color: var(--paper-blue-50) /*var(--paper-blue-grey-50)*/; 
-            };
+                background-color: var(--paper-blue-50)
+                /*var(--paper-blue-grey-50)*/
+                ;
+            }
+            ;
             --paper-menu-focused-item: {
                 background-color: inherit;
-            };
+            }
+            ;
         }
         paper-scroll-header-panel {
             height: 100%;
@@ -123,7 +127,12 @@
                 parent = parent.parentElement;
             }
             return parent || startFrom;
-        }
+        };
+
+        const findMenuItemSection = function (path) {
+            return path.find(element => element.tagName === "TG-MASTER-MENU-ITEM-SECTION");
+        };
+
         Polymer({
             is: 'tg-master-menu',
 
@@ -187,6 +196,14 @@
                  */
                 centreUuid: {
                     type: String
+                },
+
+                /**
+                 * The open compound master entity.
+                 */
+                entity: {
+                    type: Object,
+                    observer: "_entityChanged"
                 },
 
                 /**
@@ -277,6 +294,8 @@
                 };
                 this.$.menu.addEventListener("keydown", this._menuKeyDown.bind(this));
                 this.$.menu.addEventListener("keyup", this._menuKeyUp.bind(this));
+                //Add event listener that will update menu items according centre refresh.
+                this.$.mainPages.addEventListener("tg-entity-centre-refreshed", this._handleCentreRefresh.bind(this))
                 // change drawer panel to narrow layout automatically when moving from tablet|mobile to desktop application layout
                 this.$.paperDrawerPanel.responsiveWidth = this.$.appConfig.minDesktopWidth + 'px';
                 //Configure the profile mobile or desktop
@@ -376,6 +395,17 @@
                 }, 1);
             },
 
+            _entityChanged: function (newBindingEntity, oldOne) {
+                const newEntity = newBindingEntity ? newBindingEntity['@@origin'] : null;
+                if (newEntity) {
+                    if (newEntity.get("calculated")) {
+                        Object.keys(newEntity.get("entityPresence")).forEach(prop => {
+                            this._setHighlightMenuItem(prop, newEntity.get("entityPresence")[prop]);
+                        });
+                    }
+                }
+            },
+
             /**
              * Toggles menu: hiding / showing it through animation.
              *
@@ -417,6 +447,22 @@
                 }
             },
 
+            _handleCentreRefresh: function (e) {
+                const menuItemSection = findMenuItemSection(e.path);
+                if (menuItemSection) {
+                    this._setHighlightMenuItem(menuItemSection.sectionTitle, e.detail.entities && e.detail.entities.length > 0 && e.detail.pageCount > 0);
+                }
+            },
+
+            _setHighlightMenuItem: function (menuItemTitle, highlight) {
+                const menuItem = Polymer.dom(this).querySelector('paper-item[item-title="' + menuItemTitle + '"]');
+                if (highlight) {
+                    menuItem.children[0].style.color = "#039BE5";
+                } else {
+                    menuItem.children[0].style.color = null;
+                }
+            },
+            
             _activateIfPossible: function (paperMenuItem) {
                 if (paperMenuItem.getAttribute("data-route") === this.sectionRoute) {
                     if (this.$.paperDrawerPanel.narrow) {

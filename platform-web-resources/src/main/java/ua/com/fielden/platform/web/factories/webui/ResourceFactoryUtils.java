@@ -6,13 +6,8 @@ import java.util.Optional;
 
 import org.restlet.Request;
 
-import com.google.inject.Injector;
-
-import ua.com.fielden.platform.domaintree.IGlobalDomainTreeManager;
-import ua.com.fielden.platform.domaintree.IServerGlobalDomainTreeManager;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.reflection.ClassesRetriever;
-import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.ui.menu.MiWithConfigurationSupport;
 import ua.com.fielden.platform.web.app.IWebUiConfig;
 import ua.com.fielden.platform.web.centre.EntityCentre;
@@ -26,33 +21,6 @@ import ua.com.fielden.platform.web.view.master.EntityMaster;
  *
  */
 public class ResourceFactoryUtils {
-
-    /**
-     * Returns the user's id for this concrete thread (the user has been populated through the Web UI authentication mechanism -- see DefaultWebResourceGuard).
-     *
-     * @return
-     */
-    static Long getUserId(final Injector injector) {
-        return injector.getInstance(IUserProvider.class).getUser().getId();
-    }
-
-    /**
-     * Returns the global manager for the user for this concrete thread (the user has been populated through the Web UI authentication mechanism -- see DefaultWebResourceGuard).
-     *
-     * @return
-     */
-    static IGlobalDomainTreeManager getUserSpecificGlobalManager(final Injector injector) {
-        return injector.getInstance(IServerGlobalDomainTreeManager.class).get(getUserId(injector));
-    }
-
-    /**
-     * Returns the global manager for the user for this concrete thread (the user has been populated through the Web UI authentication mechanism -- see DefaultWebResourceGuard).
-     *
-     * @return
-     */
-    public static IGlobalDomainTreeManager getUserSpecificGlobalManager(final IServerGlobalDomainTreeManager serverGdtm, final IUserProvider userProvider) {
-        return serverGdtm.get(userProvider.getUser().getId());
-    }
 
     /**
      * Finds the entity master using 'entityType' request attribute inside 'webUiConfig'.

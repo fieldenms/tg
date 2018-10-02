@@ -7,6 +7,7 @@
 <link rel="import" href="/resources/polymer/iron-icons/iron-icons.html">
 <link rel="import" href="/resources/polymer/iron-icons/av-icons.html">
 <link rel="import" href="/resources/polymer/paper-styles/color.html">
+<link rel="import" href="/resources/polymer/paper-spinner/paper-spinner.html">
 <link rel="import" href="/resources/polymer/paper-icon-button/paper-icon-button.html">
 <link rel="import" href="/resources/components/postal-lib.html">
 <link rel="import" href="/resources/components/tg-toast.html">
@@ -42,6 +43,15 @@
                 user-select: none;
                 background-color: var(--paper-light-blue-600);
             }
+            #dialogLoader {
+                transition: opacity 500ms;
+            }
+            #loadingPanel {
+                visibility: hidden;
+                background-color: white;
+                font-size: 18px;
+                color: var(--paper-grey-400);
+            }
             .truncate {
                 white-space: nowrap;
                 overflow: hidden;
@@ -65,24 +75,7 @@
             #menuToggler,#backButton {
                 color: white;
             }
-            .close-button {
-                width: 22px;
-                height: 22px;
-                padding: 0px;
-                stroke: var(--paper-grey-100);
-                fill: var(--paper-grey-100);
-                color: var(--paper-grey-100);
-            }
-            .close-button:hover {
-                stroke: var(--paper-grey-300);
-                fill: var(--paper-grey-300);
-                color: var(--paper-grey-300);
-            }
-            .minimise-button,.maximise-button {
-                width: 19px;
-                height: 19px;
-                padding: 0px;
-                margin-bottom: 2px;
+            .title-bar-button {
                 --paper-icon-button: {
                     color: var(--paper-grey-100);
                 };
@@ -92,6 +85,24 @@
                 --paper-icon-button-hover: {
                     color: var(--paper-grey-300);
                 };
+            }
+            .close-button, .navigation-button{
+                width: 22px;
+                height: 22px;
+                padding: 0px;
+            }
+            .navigation-button{
+                margin: 0 8px;
+            }
+            .minimise-button,.maximise-button {
+                width: 19px;
+                height: 19px;
+                padding: 0px;
+                margin-bottom: 2px;
+            }
+            #navigationBar {
+                position: relative;
+                color: white;
             }
             #resizer {
                 position: absolute;
@@ -105,6 +116,26 @@
             .reverse {
                 flex-direction: row-reverse;
             }
+            paper-icon-button.button-reverse {
+                --paper-icon-button: {
+                    transform: scale(-1, 1);
+                };
+            }
+            paper-spinner {
+	        	position: absolute;
+	            width: 20px;
+	            height: 20px; 
+	            min-width: 20px; 
+	            min-height: 20px; 
+	            max-width: 20px; 
+	            max-height: 20px; 
+	            padding: 0;
+	            margin-left: 0;
+	            --paper-spinner-layer-1-color: white;
+	            --paper-spinner-layer-2-color: white;
+	            --paper-spinner-layer-3-color: white;
+	            --paper-spinner-layer-4-color: white;
+	        }
         </style>
         <div id="titleBar" class="title-bar layout horizontal justified center" on-track="_moveDialog">
             <paper-icon-button id="menuToggler" hidden icon="menu" tooltip-text="Menu" on-tap="_toggleMenu"></paper-icon-button>
@@ -113,25 +144,36 @@
                 <span class="vertical-splitter self-stretch" hidden$="[[_isTitleSplitterHidden(staticTitle, dynamicTitle)]]"></span>
                 <span class="dynamic-title truncate" hidden$="[[!dynamicTitle]]">[[dynamicTitle]]</span>
             </div>
-            <div class="layout horizontal center" style="margin-left:10px">
+            <div id="navigationBar" hidden="[[!_isNavigationBarVisible(_lastAction, _minimised)]]" style$="[[_calcNavigationBarStyle(mobile)]]" class="layout horizontal center">
+                <paper-icon-button id="firstEntity" class="button-reverse title-bar-button navigation-button" icon="hardware:keyboard-tab" on-tap="_firstEntry" disabled$="[[!_isNavigatonButtonEnable(_hasPrev, isNavigationActionInProgress)]]" tooltip-text$="[[_getFirstEntryActionTooltip(_lastAction.navigationType)]]"></paper-icon-button>
+                <paper-icon-button id="prevEntity" class="title-bar-button navigation-button" icon="hardware:keyboard-backspace" on-tap="_previousEntry" disabled$="[[!_isNavigatonButtonEnable(_hasPrev, isNavigationActionInProgress)]]" tooltip-text$="[[_getPreviousEntryActionTooltip(_lastAction.navigationType)]]"></paper-icon-button>
+                <span>[[_sequentialEditText]]</span>
+                <paper-icon-button id="nextEntity" class="button-reverse title-bar-button navigation-button" icon="hardware:keyboard-backspace" on-tap="_nextEntry" disabled$="[[!_isNavigatonButtonEnable(_hasNext, isNavigationActionInProgress)]]" tooltip-text$="[[_getNextEntryActionTooltip(_lastAction.navigationType)]]"></paper-icon-button>
+                <paper-icon-button id="lastEntity" class="title-bar-button navigation-button" icon="hardware:keyboard-tab" on-tap="_lastEntry" disabled$="[[!_isNavigatonButtonEnable(_hasNext, isNavigationActionInProgress)]]" tooltip-text$="[[_getLastEntryActionTooltip(_lastAction.navigationType)]]"></paper-icon-button>
+                <paper-spinner id="spinner" active="[[isNavigationActionInProgress]]" style="display: none;" alt="in progress"></paper-spinner>
+            </div>
+            <div class="layout horizontal center">
                 <!-- collapse/expand buttons -->
-                <paper-icon-button hidden="[[!_minimised]]" class="minimise-button" icon="tg-icons:expandMin"     on-tap="_invertMinimiseState" tooltip-text="Restore, Alt+c"></paper-icon-button>
-                <paper-icon-button hidden="[[_collapserHidden(_minimised, mobile)]]" class="minimise-button" icon="tg-icons:collapseMin"   on-tap="_invertMinimiseState" tooltip-text="Collapse, Alt+c" disabled=[[_dialogInteractionsDisabled(_minimised,_maximised)]]></paper-icon-button>
+                <paper-icon-button hidden="[[!_minimised]]" class="minimise-button title-bar-button" icon="tg-icons:expandMin" on-tap="_invertMinimiseState" tooltip-text="Restore, Alt+c"></paper-icon-button>
+                <paper-icon-button hidden="[[_collapserHidden(_minimised, mobile)]]" class="title-bar-button minimise-button" icon="tg-icons:collapseMin"   on-tap="_invertMinimiseState" tooltip-text="Collapse, Alt+c" disabled=[[_dialogInteractionsDisabled(_minimised,_maximised)]]></paper-icon-button>
 
                 <!-- maximize/restore buttons -->
-                <paper-icon-button hidden="[[_maximised]]" class="maximise-button" icon="icons:fullscreen"       on-tap="_invertMaximiseState" tooltip-text="Maximise, Alt+m" disabled=[[_dialogInteractionsDisabled(_minimised,_maximised)]]></paper-icon-button>
-                <paper-icon-button hidden="[[_maximiseRestorerHidden(_maximised, mobile)]]" class="maximise-button" icon="icons:fullscreen-exit"  on-tap="_invertMaximiseState" tooltip-text="Restore, Alt+m"></paper-icon-button>
+                <paper-icon-button hidden="[[_maximised]]" class="maximise-button title-bar-button" icon="icons:fullscreen"       on-tap="_invertMaximiseState" tooltip-text="Maximise, Alt+m" disabled=[[_dialogInteractionsDisabled(_minimised,_maximised)]]></paper-icon-button>
+                <paper-icon-button hidden="[[_maximiseRestorerHidden(_maximised, mobile)]]" class="maximise-button title-bar-button" icon="icons:fullscreen-exit"  on-tap="_invertMaximiseState" tooltip-text="Restore, Alt+m"></paper-icon-button>
 
                 <!-- close/next buttons -->
-                <paper-icon-button hidden="[[_closerHidden(_lastAction, mobile)]]" class="close-button" icon="icons:cancel"  on-tap="closeDialog" tooltip-text="Close, Alt+x"></paper-icon-button>
-                <paper-icon-button hidden="[[!_lastAction.continuous]]" class="close-button" icon="av:skip-next" on-tap="_skipNext" tooltip-text="Skip to next without saving"></paper-icon-button>
+                <paper-icon-button hidden="[[_closerHidden(_lastAction, mobile)]]" class="close-button title-bar-button" icon="icons:cancel"  on-tap="closeDialog" tooltip-text="Close, Alt+x"></paper-icon-button>
+                <paper-icon-button hidden="[[!_lastAction.continuous]]" class="close-button title-bar-button" icon="av:skip-next" on-tap="_skipNext" tooltip-text="Skip to next without saving"></paper-icon-button>
             </div>
         </div>
-        <div id="dialogBody" class="relative flex">
-            <tg-element-loader id="elementLoader"></tg-element-loader>
+        <div id="dialogBody" class="relative flex layout vertical">
+            <div id="loadingPanel" class=" fit layout horizontal center-center">Loading data...</div>
+            <div id="dialogLoader" class="flex layout horizontal">
+                <tg-element-loader id="elementLoader"></tg-element-loader>
+            </div>
         </div>
-        <tg-toast id="toaster"></tg-toast>
         <iron-icon id="resizer" hidden=[[_dialogInteractionsDisabled(_minimised,_maximised)]] icon="tg-icons:resize-bottom-right" on-track="resizeDialog" tooltip-text="Drag to resize"></iron-icon>
+        <tg-toast id="toaster"></tg-toast>
         <tg-app-config id="appConfig" mobile="{{mobile}}"></tg-app-config>
     </template>
 </dom-module>
@@ -160,7 +202,9 @@
                 'iron-overlay-opened': '_dialogOpened',
                 'iron-overlay-closed': '_dialogClosed',
                 'tg-dynamic-title-changed': '_updateDynamicTitle',
-                'tg-menu-appeared': '_updateMenuButton'
+                'tg-menu-appeared': '_updateMenuButton',
+                'tg-master-type-changed': '_handleMasterChanged',
+                'tg-master-type-before-change': '_handleMasterBeforeChange'
             },
 
             hostAttributes: {
@@ -187,6 +231,16 @@
                 prefDim: {
                     type: Object
                 },
+                
+                ///////The properties needed for synchronising animation steps during master changes.///
+                _masterVisibilityChanges: {
+                    type: Boolean
+                },
+                
+                _masterLayoutChanges: {
+                    type: Boolean
+                },
+                /////////////////////////////////////////////////////////////////////////////////////////
 
                 /**
                  * Indicates whether dialog was moved using title bar dragging. This will be reset after dialog closes.
@@ -251,6 +305,28 @@
                 _lastElement: {
                     type: Object
                 },
+                
+                /** Navigation related properties*/
+                _hasPrev: {
+                    type: Boolean,
+                    value:true
+                },
+                
+                _hasNext: {
+                    type: Boolean,
+                    value:true
+                },
+                
+                isNavigationActionInProgress: {
+                    type: Boolean,
+                    value: false
+                },
+                
+                _sequentialEditText: {
+                    type: String,
+                    value: ''
+                },
+                //////////////////////////////////
 
                 /**The parent dialog tow wchich this dialog is a child.*/
                 _parentDialog: {
@@ -276,12 +352,16 @@
                 }
             },
 
-            observers: ["_updateDialogDimensions(prefDim, _minimised, _maximised)"],
+            observers: ["_updateDialogDimensions(prefDim, _minimised, _maximised)", "_updateDialogAnimation(_masterVisibilityChanges, _masterLayoutChanges)"],
 
             keyBindings: {
                 'alt+c': '_invertMinimiseState',
                 'alt+m': '_invertMaximiseState',
-                'alt+x': 'closeDialog'
+                'alt+x': 'closeDialog',
+                'ctrl+up': '_firstEntry',
+                'ctrl+left': '_previousEntry',
+                'ctrl+right': '_nextEntry',
+                'ctrl+down': '_lastEntry'
             },
 
             ready: function() {
@@ -301,6 +381,7 @@
                 this._focusDialogWithInput = this._focusDialogWithInput.bind(this);
                 this._fitWhenFirstTimeOpened = this._fitWhenFirstTimeOpened.bind(this);
                 this._finishErroneousOpening = this._finishErroneousOpening.bind(this);
+                this._handleActionNavigationChange = this._handleActionNavigationChange.bind(this);
 
                 this._setIsRunning(false);
 
@@ -313,6 +394,8 @@
                 this.addEventListener("tg-last-item-focused", this._viewFocusLostEventListener.bind(this));
                 //Retrieve title's bar element to focus.
                 this._componentsToFocus = Array.from(this.$.titleBar.querySelectorAll(FOCUSABLE_ELEMENTS_SELECTOR));
+                //Add event listener that listens when dialog body chang it's opacity
+                this.$.dialogLoader.addEventListener("transitionend", this._handleBodyTransitionEnd.bind(this));
             },
 
             attached: function() {
@@ -362,7 +445,7 @@
 
             _viewFocusLostEventListener: function(e) {
                 const focusables = this._getCurrentFocusableElements();
-                const callback = this._lastElement ? (e.detail.forward ? this._lastElement.focusNextView : this._lastElement.focusPreviousView) : null;
+                const callback = this._lastElement ? (e.detail.forward ? this._lastElement.focusNextView.bind(this._lastElement) : this._lastElement.focusPreviousView.bind(this._lastElement)) : null;
                 if (focusables.length > 0) {
                     if (e.detail.forward) {
                         focusables[0].focus();
@@ -374,6 +457,7 @@
                     callback(e.detail.event);
                 }
                 tearDownEvent(e);
+
             },
 
             _onCaptureClick: function(event) {
@@ -420,6 +504,78 @@
                     }
                 }
             },
+            
+            //////////////////////////////////entity master navigation related//////////////////////////////
+            _isNavigationBarVisible: function (lastAction, minimised) {
+                return lastAction && lastAction.supportsNavigation && !minimised;
+            },
+            
+            _calcNavigationBarStyle: function (mobile) {
+                if (mobile) {
+                    if (this.$.appConfig.iPhoneOs()) {
+                        return "margin-right: 10px;"
+                    }
+                    return "margin-left:10px;"
+                } else {
+                    return "margin:0 20px;" 
+                }
+            },
+            
+            _isNavigatonButtonEnable: function (hasNextEntry, isNavigationActionInProgress) {
+                return hasNextEntry && !isNavigationActionInProgress;
+            },
+            
+            _firstEntry: function () {
+                if (this.canClose() && this._hasPrev) {
+                    this._displaySpinnerOn(this.$.firstEntity);
+                    this._lastAction.firstEntry();
+                }
+            },
+            
+            _previousEntry: function () {
+                if (this.canClose() && this._hasPrev) {
+                    this._displaySpinnerOn(this.$.prevEntity);
+                    this._lastAction.previousEntry();
+                }
+            },
+            
+            _nextEntry: function () {
+                if (this.canClose() && this._hasNext) {
+                    this._displaySpinnerOn(this.$.nextEntity);
+                    this._lastAction.nextEntry();
+                }
+            },
+            
+            _lastEntry: function () {
+                if (this.canClose() && this._hasNext) {
+                    this._displaySpinnerOn(this.$.lastEntity);
+                    this._lastAction.lastEntry();
+                }
+            },
+            
+            _displaySpinnerOn: function (element) {
+                this.$.spinner.style.removeProperty("display");
+                this.$.spinner.style.left = element.offsetLeft + (element.offsetWidth / 2 - this.$.spinner.offsetWidth / 2) + 'px';
+                this.$.spinner.style.top = element.offsetTop + (element.offsetHeight / 2 - this.$.spinner.offsetHeight / 2) + 'px';
+                this.isNavigationActionInProgress = true;
+            },
+            
+            _getFirstEntryActionTooltip: function (_navigationType) {
+                return "Get first " + _navigationType + ", Ctrl+<span style='font-size:18px;font-weight:bold'>&#8593</span>";
+            },
+            
+            _getPreviousEntryActionTooltip: function (_navigationType) {
+                return "Get previous " + _navigationType + ", Ctrl+<span style='font-size:18px;font-weight:bold'>&#8592</span>";
+            },
+            
+            _getNextEntryActionTooltip: function (_navigationType) {
+                return "Get next " + _navigationType + ", Ctrl+<span style='font-size:18px;font-weight:bold'>&#8594</span>";
+            },
+            
+            _getLastEntryActionTooltip: function (_navigationType) {
+                return "Get last " + _navigationType + ", Ctrl+<span style='font-size:18px;font-weight:bold'>&#8595</span>";
+            },
+            ////////////////////////////////////////////////////////////////////////////////////////////////
 
             _invertDialogState: function(stateName) {
                 if (!this[stateName]) {
@@ -519,37 +675,41 @@
                     this._closeDialogAndIndicateActionCompletion();
                 } else {
                     //Try to close children first.
-                    let canClose = this._closeChildren();
-                    if (canClose && this._lastElement.classList.contains('canLeave')) {
-                        const reason = this._lastElement.canLeave();
-                        if (reason) {
-                            canClose = false;
-                            // the reason from .canLeave is not used as it is not always appropriate in the context of dialog closing
-                            // for example, when closing a master for a functional entity, the reason states the need to save changes,
-                            // while it is also possible and safe to simple cancel them
-                            // so, the message below is a good compromise
-                            // however, the reason can still insist by providing an imperative hint
-                            if (reason.imperative === true) {
-                                this.$.toaster.text = reason.msg;
-                            } else {
-                                this.$.toaster.text = "Please save or cancel changes.";
-                            }
-                            this.$.toaster.hasMore = false;
-                            this.$.toaster.msgText = "";
-                            this.$.toaster.showProgress = false;
-                            this.$.toaster.isCritical = false;
-                            this.$.toaster.show();
-                        }
-                    }
-
+                    const canClose = this.canClose();
                     if (canClose === true) {
                         this._closeDialogAndIndicateActionCompletion();
                     }
                 }
             },
+            
+            canClose: function () {
+                let canClose = this._closeChildren();
+                if (canClose && this._lastElement.classList.contains('canLeave')) {
+                    const reason = this._lastElement.canLeave();
+                    if (reason) {
+                        canClose = false;
+                        // the reason from .canLeave is not used as it is not always appropriate in the context of dialog closing
+                        // for example, when closing a master for a functional entity, the reason states the need to save changes,
+                        // while it is also possible and safe to simple cancel them
+                        // so, the message below is a good compromise
+                        // however, the reason can still insist by providing an imperative hint
+                        if (reason.imperative === true) {
+                            this.$.toaster.text = reason.msg;
+                        } else {
+                            this.$.toaster.text = "Please save or cancel changes.";
+                        }
+                        this.$.toaster.hasMore = false;
+                        this.$.toaster.msgText = "";
+                        this.$.toaster.showProgress = false;
+                        this.$.toaster.isCritical = false;
+                        this.$.toaster.show();
+                    }
+                }
+                return canClose;
+            },
 
             _closeChildren: function(forceClosing) {
-                var canClose = true;
+                let canClose = true;
 
                 this._childDialogs.slice().forEach(function(dialog) {
                     dialog.closeDialog(forceClosing);
@@ -568,30 +728,32 @@
                 });
                 return canClose;
             },
-
+            
             /**
              * Updates dimensions and position of the dialog based on minimised / maximised state and prefDim appearance.
              */
             _updateDialogDimensions: function(prefDim, minimised, maximised) {
-                if (!minimised && !maximised && prefDim) {
-                    const width = (typeof prefDim.width === 'function' ? prefDim.width() : prefDim.width) + prefDim.widthUnit;
-                    const height = (typeof prefDim.height === 'function' ? prefDim.height() : prefDim.height) + prefDim.heightUnit;
-                    this.style.width = width;
-                    this.style.height = prefDim.heightUnit === '%' ? height : ('calc(' + height + ' + 44px)'); // +44px - height of the title bar please see styles for .title-bar selector; applicable only for non-relative units of measure
-                    this.style.overflow = 'auto';
-                } else if (!minimised && maximised) {
-                    this.style.top = this.mobile === true ? '0%' : '2%';
-                    this.style.left = this.mobile === true ? '0%' : '2%';
-                    this.style.width = this.mobile === true ? '100%' : '96%';
-                    this.style.height = this.mobile === true ? '100%' : '96%';
-                    this.style.overflow = 'auto';
-                } else if (minimised && !maximised) {
-                    this.style.height = '44px';
-                    this.style.overflow = 'hidden';
-                } else {
-                    this.style.width = '';
-                    this.style.height = '';
-                    this.style.overflow = 'auto';
+                if (!this._masterVisibilityChanges && !this._masterLayoutChanges) {
+                    if (!minimised && !maximised && prefDim) {
+                        const width = (typeof prefDim.width === 'function' ? prefDim.width() : prefDim.width) + prefDim.widthUnit;
+                        const height = (typeof prefDim.height === 'function' ? prefDim.height() : prefDim.height) + prefDim.heightUnit;
+                        this.style.width = width;
+                        this.style.height = prefDim.heightUnit === '%' ? height : ('calc(' + height + ' + 44px)'); // +44px - height of the title bar please see styles for .title-bar selector; applicable only for non-relative units of measure
+                        this.style.overflow = 'auto';
+                    } else if (!minimised && maximised) {
+                        this.style.top = this.mobile === true ? '0%' : '2%';
+                        this.style.left = this.mobile === true ? '0%' : '2%';
+                        this.style.width = this.mobile === true ? '100%' : '96%';
+                        this.style.height = this.mobile === true ? '100%' : '96%';
+                        this.style.overflow = 'auto';
+                    } else if (minimised && !maximised) {
+                        this.style.height = '44px';
+                        this.style.overflow = 'hidden';
+                    } else {
+                        this.style.width = '';
+                        this.style.height = '';
+                        this.style.overflow = 'auto';
+                    }
                 }
             },
 
@@ -690,17 +852,17 @@
                 var self = this;
                 var key = customAction.elementAlias ? customAction.elementAlias : customAction.elementName;
                 // disabled chache (temprarily?) to support polymorphic masters
-                /* if (self._cachedElements.hasOwnProperty(key)) {
+                 if (self._cachedElements.hasOwnProperty(key)) {
                     console.log("Reusing cached element:", key);
                     var element = self._cachedElements[key];
                     self.$.elementLoader.insert(element);
                     return Promise.resolve(element);
-                } else { */
-                self.$.elementLoader.import = customAction.componentUri;
-                self.$.elementLoader.elementName = customAction.elementName;
-                self.$.elementLoader.attrs = customAction.attrs;
-                return self.$.elementLoader.reload();
-                //}
+                } else { 
+                    self.$.elementLoader.import = customAction.componentUri;
+                    self.$.elementLoader.elementName = customAction.elementName;
+                    self.$.elementLoader.attrs = customAction.attrs;
+                    return self.$.elementLoader.reload();
+                }
             },
 
             /*
@@ -718,12 +880,12 @@
                     this.$.toaster.show();
                     console.log("The dialog is already opened and should be closed be being used again.");
                     if (customAction) {
-                        customAction.restoreActiveElement();
+                        customAction.restoreActionState();
                     }
                 } else {
                     var self = this;
                     if (self.isRunning === false) {
-                        self._lastAction = customAction;
+                        self._lastAction = this._customiseAction(customAction);
                         self._setIsRunning(true);
                         self.staticTitle = customAction.shortDesc;
                         self.dynamicTitle = null;
@@ -734,13 +896,13 @@
                                 if (promise) {
                                     return promise
                                         .then(function(ironRequest) {
-                                            /*var key = customAction.elementAlias ? customAction.elementAlias : customAction.elementName;
+                                            var key = customAction.elementAlias ? customAction.elementAlias : customAction.elementName;
                                             if (!self._cachedElements.hasOwnProperty(key)) {
                                                 if (typeof element['canBeCached'] === 'undefined' || element.canBeCached() === true) {
                                                     console.log("caching:", key);
                                                     self._cachedElements[key] = element;
                                                 }
-                                            }*/
+                                            }
                                             if (ironRequest && typeof ironRequest.successful !== 'undefined' && ironRequest.successful === true) {
                                                 return Promise.resolve(self._showMaster(customAction, element, closeEventChannel, closeEventTopics));
                                             } else {
@@ -761,6 +923,7 @@
                                 }
                             })
                             .catch(function(error) {
+                                console.error(error);
                                 self.$.toaster.text = 'There was an error displaying the dialog.';
                                 self.$.toaster.hasMore = true;
                                 self.$.toaster.msgText = 'There was an error displaying the dialog.<br><br> \
@@ -769,13 +932,126 @@
                                 self.$.toaster.isCritical = true;
                                 self.$.toaster.show();
                                 if (self._lastAction) {
-                                    self._lastAction.restoreActiveElement();
+                                    self._lastAction.restoreActionState();
                                 }
                             });
                     }
                 }
             },
-
+            
+            _customiseAction: function (newAction) {
+                if (this._lastAction && this._lastAction.supportsNavigation) {
+                    this._lastAction.removeEventListener("tg-action-navigation-changed", this._handleActionNavigationChange);
+                }
+                if (newAction) {
+                    this.staticTitle = newAction.shortDesc;
+                    if (newAction.supportsNavigation) {
+                        newAction.addEventListener("tg-action-navigation-changed", this._handleActionNavigationChange);
+                        this._setNavigationDetails(newAction);
+                    }
+                }
+                return newAction;
+            },
+            
+            _handleActionNavigationChange: function (e) {
+                this._setNavigationDetails(e.detail);
+                if (e.detail.shouldResetSpinner) {
+                    this._resetSpinner();
+                }
+            },
+            
+            _resetSpinner: function () {
+                if (this.isNavigationActionInProgress) {
+                    this.isNavigationActionInProgress = false;
+                    this.$.spinner.style.display = 'none';
+                }
+            },
+            
+            _setNavigationDetails: function (obj) {
+                this._hasPrev = obj.hasPrev;
+                this._hasNext = obj.hasNext;
+                this._sequentialEditText = "" + (obj.count > 0 ? obj.entInd + 1 : 0) + " / " + obj.count;
+            },
+            
+            _updateDialogAnimation: function (_masterVisibilityChanges, _masterLayoutChanges) {
+                if (!_masterVisibilityChanges && !_masterLayoutChanges) {
+                    if (!this._wasResized) {
+                        this._updateDialogDimensions(this.prefDim, this._minimised, this._maximised);
+                    }
+                    if (!this._wasMoved) {
+                        this._updateDialogPosition(this.prefDim, this._minimised, this._maximised);
+                    }
+                    this.async(this._dialogResized, 500);
+                }
+            },
+            
+            _dialogResized: function () {
+                this.style.removeProperty("transition-property");
+                this.style.removeProperty("transition-duration");
+                this._masterVisibilityChanges = true;
+                this.$.elementLoader.style.removeProperty("display");
+                this.$.dialogLoader.style.opacity = "1";
+                
+            },
+            
+            _updateDialogPosition: function (prefDim, _minimised, _maximised) {
+                if (!_minimised && !_maximised ) {
+                    const width = (typeof prefDim.width === 'function' ? prefDim.width() : prefDim.width) + prefDim.widthUnit;
+                    const isWidthPercentage = width.endsWith('%');
+                    const widthNum = parseFloat(width);
+                    const windowWidth = this._fitWidth;
+                    if (!isNaN(widthNum) && !isWidthPercentage && windowWidth < widthNum) {
+                        this.style.left = "0px";
+                    } else {
+                        this.style.left = "calc(" + windowWidth + "px / 2  - " + width + " / 2)";
+                    }
+                    const height = (typeof prefDim.height === 'function' ? prefDim.height() : prefDim.height) + prefDim.heightUnit;
+                    const isHeightPercentage = height.endsWith('%');
+                    const heightNum = parseFloat(height);
+                    const windowHeight = this._fitHeight;
+                    if (!isNaN(heightNum) && !isHeightPercentage && windowHeight < heightNum + 44) {
+                        this.style.top = "0px";
+                    } else {
+                        this.style.top = "calc(" + windowHeight + "px / 2  - " + height + " / 2" + (isHeightPercentage ? ")" : " - 44px / 2)");
+                    }
+                }
+            },
+            
+            _handleMasterBeforeChange: function () {
+                if (this.opened) {
+                    //First animate master body hiding
+                    this._masterVisibilityChanges = true;
+                    this._masterLayoutChanges = true;
+                    this.$.loadingPanel.style.visibility = "visible";
+                    this.$.dialogLoader.style.opacity = "0";
+                    //Then set dimension properties as transitional for dialog for futher animation.
+                    this.style.transitionProperty = "top, left, width, height";
+                    this.style.transitionDuration = "500ms";
+                }
+            },
+            
+            _handleMasterChanged: function (e) {
+                if (this.opened) {
+                    this._masterLayoutChanges = false;
+                }
+            },
+            
+            _handleBodyTransitionEnd: function (e) {
+                if (e.target === this.$.dialogLoader) {
+                    if (this.$.dialogLoader.style.opacity === "0") {
+                        this.$.elementLoader.style.display = "none";
+                        this._masterVisibilityChanges = false;
+                    } else {
+                        this._masterVisibilityChanges = undefined;
+                        this._masterLayoutChanges = undefined;
+                        this.$.loadingPanel.style.visibility = "hidden";
+                        this.notifyResize();
+                        this._focusDialogWithInput();
+                    }
+                    
+                }
+            },
+            
             _showMaster: function(action, element, closeEventChannel, closeEventTopics) {
                 this._lastElement = element;
                 const self = this;
@@ -806,8 +1082,8 @@
 
                 // There is a need to reset max-width and max-height styles after every refit call.
                 // This is necessary to make dialog being able to 'maximise' to large dimensions.
-                this.style.maxWidth = 'none';
-                this.style.maxHeight = 'none';
+                this.style.maxHeight = '100%';
+                this.style.maxWidth = '100%';
             },
 
             /**
@@ -863,7 +1139,7 @@
             _finishErroneousOpening: function() {
                 this._setIsRunning(false);
                 if (this._lastAction) {
-                    this._lastAction.restoreActiveElement();
+                    this._lastAction.restoreActionState();
                 }
             },
 
@@ -934,21 +1210,33 @@
                     for (var index = 0; index < this._subscriptions.length; index++) {
                         postal.unsubscribe(this._subscriptions[index]);
                     }
+                    this._resetAnimation();
                     this._subscriptions.length = 0;
                     this._wasMoved = false;
                     this._wasResized = false;
                     if (typeof this.heightBeforeResizing !== 'undefined' && typeof this.widthBeforeResizing !== 'undefined') { // restore original height / width after closing the dialog
                         this.style.height = this.heightBeforeResizing;
                         this.style.width = this.widthBeforeResizing;
+                        delete this.heightBeforeResizing;
+                        delete this.widthBeforeResizing;
                     }
                     this._minimised = false;
                     this._maximised = false;
                     this.$.menuToggler.hidden = true; // allows to use the same custom action dialog instance for the masters without menu after compound master was open previously
 
                     if (this._lastAction) {
-                        this._lastAction.restoreActiveElement();
+                        this._lastAction.restoreActionState();
                     }
                 }
+            },
+            
+            _resetAnimation: function () {
+                this._masterVisibilityChanges = undefined;
+                this._masterLayoutChanges = undefined;
+                this.$.elementLoader.style.removeProperty("display");
+                this.$.loadingPanel.style.visibility = "hidden";
+                this.$.dialogLoader.style.opacity = "1";
+                this._resetSpinner();
             },
 
             _onIronResize: function() {

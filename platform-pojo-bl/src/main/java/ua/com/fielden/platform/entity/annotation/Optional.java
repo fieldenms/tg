@@ -7,9 +7,9 @@ import java.lang.annotation.Target;
 
 /**
  * An annotation to designated composite key member as optional.
- * 
+ *
  * @author TG Team
- * 
+ *
  */
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ ElementType.FIELD })

@@ -47,8 +47,9 @@ import ua.com.fielden.platform.security.user.IUser;
 import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.security.user.IUserRoleTokensUpdater;
 import ua.com.fielden.platform.security.user.IUserRolesUpdater;
-import ua.com.fielden.platform.security.user.User;
+import ua.com.fielden.platform.security.user.IUserSecret;
 import ua.com.fielden.platform.security.user.UserDao;
+import ua.com.fielden.platform.security.user.UserSecretDao;
 import ua.com.fielden.platform.serialisation.api.ISerialisationClassProvider;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
 import ua.com.fielden.platform.serialisation.api.ISerialiser0;
@@ -113,11 +114,7 @@ public class WebHibernateModule extends CommonFactoryModule {
     protected void configure() {
         super.configure();
         bind(IUserProvider.class).to(UserProviderForTesting.class).in(Scopes.SINGLETON);
-        bind(INewUserNotifier.class).toInstance(new INewUserNotifier() {
-            @Override
-            public void notify(final User user) {
-            }
-        });
+        bind(INewUserNotifier.class).toInstance(s -> {});
         bind(ISerialisationClassProvider.class).toInstance(serialisationClassProvider);
         bind(ISerialiser0.class).to(Serialiser0.class);
         bind(ISerialiser.class).to(Serialiser.class);
@@ -136,6 +133,7 @@ public class WebHibernateModule extends CommonFactoryModule {
         bind(IUserAndRoleAssociation.class).to(UserAndRoleAssociationDao.class);
         bind(ISecurityRoleAssociation.class).to(SecurityRoleAssociationDao.class);
         bind(IUser.class).to(UserDao.class);
+        bind(IUserSecret.class).to(UserSecretDao.class);
         bind(IUserRolesUpdater.class).to(UserRolesUpdaterDao.class);
         bind(ISecurityTokenController.class).to(SecurityTokenController.class);
         bind(IAcknowledgeWarnings.class).to(AcknowledgeWarningsDao.class);

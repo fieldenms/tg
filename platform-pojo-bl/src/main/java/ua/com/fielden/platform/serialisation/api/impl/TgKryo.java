@@ -11,7 +11,6 @@ import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Currency;
 import java.util.Date;
 import java.util.HashMap;
@@ -20,6 +19,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.zip.Deflater;
 import java.util.zip.InflaterInputStream;
 
@@ -44,6 +44,7 @@ import com.esotericsoftware.kryo.serialize.StringSerializer;
 
 import ua.com.fielden.platform.attachment.Attachment;
 import ua.com.fielden.platform.dao.QueryExecutionModel;
+import ua.com.fielden.platform.domaintree.IDomainTreeEnhancerCache;
 import ua.com.fielden.platform.domaintree.centre.analyses.impl.AnalysisDomainTreeManager;
 import ua.com.fielden.platform.domaintree.centre.analyses.impl.AnalysisDomainTreeManager.AnalysisDomainTreeManagerSerialiser;
 import ua.com.fielden.platform.domaintree.centre.analyses.impl.AnalysisDomainTreeRepresentation;
@@ -120,6 +121,7 @@ import ua.com.fielden.platform.security.user.SecurityRoleAssociation;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.security.user.UserAndRoleAssociation;
 import ua.com.fielden.platform.security.user.UserRole;
+import ua.com.fielden.platform.security.user.UserSecret;
 import ua.com.fielden.platform.serialisation.api.ISerialisationClassProvider;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
 import ua.com.fielden.platform.serialisation.api.ISerialiserEngine;
@@ -182,7 +184,7 @@ class TgKryo extends Kryo implements ISerialiserEngine {
     private final Serializer booleanSerialiser;
     private final Serializer dateSerialiser;
     private final Serializer pdSerialiser;
-    private final Map<Class<AbstractEntity>, Serializer> entitySerialisers = Collections.synchronizedMap(new HashMap<Class<AbstractEntity>, Serializer>(600));
+    private final Map<Class<AbstractEntity>, Serializer> entitySerialisers = new ConcurrentHashMap<Class<AbstractEntity>, Serializer>(600);
     private final Serializer classSerialiser;
     private final Serializer dateTimeSerialiser;
     private final Serializer bigIntegerSerialiser;
@@ -213,8 +215,8 @@ class TgKryo extends Kryo implements ISerialiserEngine {
     private final Serializer centreDomainTreeManagerAndEnhancerWithTransientAnalysesSerialiser;
     //private final Serializer dynamicallyTypedQueryContainerSerialiser;
     private final Serializer lifecycleQueryContainerSerialiser;
-
-    public TgKryo(final EntityFactory factory, final ISerialisationClassProvider provider, final Serialiser serialiser) {
+    
+    public TgKryo(final EntityFactory factory, final ISerialisationClassProvider provider, final IDomainTreeEnhancerCache domainTreeEnhancerCache, final Serialiser serialiser) {
         setRegistrationOptional(true);
         setClassLoader(ClassLoader.getSystemClassLoader());
 
@@ -240,7 +242,7 @@ class TgKryo extends Kryo implements ISerialiserEngine {
         sortKeySerialiser = new SortKeySerialiser(this);
         // "domain trees" serialisers
         locatorManagerSerialiser = new LocatorManagerSerialiser(serialiser);
-        domainTreeEnhancerSerialiser = new DomainTreeEnhancerSerialiser(serialiser);
+        domainTreeEnhancerSerialiser = new DomainTreeEnhancerSerialiser(serialiser, domainTreeEnhancerCache);
         centreDomainTreeRepresentationSerialiser = new CentreDomainTreeRepresentationSerialiser(serialiser);
         pivotDomainTreeRepresentationSerialiser = new PivotDomainTreeRepresentationSerialiser(serialiser);
         analysisDomainTreeRepresentationSerialiser = new AnalysisDomainTreeRepresentationSerialiser(serialiser);
@@ -327,7 +329,9 @@ class TgKryo extends Kryo implements ISerialiserEngine {
         // register classes provided by the provider
         for (final Class<?> type : provider.classes()) {
             try {
-                register(type);
+                if (!UserSecret.class.isAssignableFrom(type)) {
+                    register(type);
+                }
             } catch (final IllegalArgumentException e) {
                 throw new IllegalArgumentException("The type [" + type + "] can not be registered. Cause = [" + e.getMessage() + "]");
             }

@@ -3,8 +3,6 @@ package ua.com.fielden.platform.web.centre;
 import static java.lang.String.format;
 import static java.util.regex.Pattern.quote;
 import static java.util.stream.Collectors.partitioningBy;
-import static ua.com.fielden.platform.domaintree.impl.GlobalDomainTreeManager.LINK_CONFIG_TITLE;
-import static ua.com.fielden.platform.domaintree.impl.GlobalDomainTreeManager.UNDEFINED_CONFIG_TITLE;
 import static ua.com.fielden.platform.error.Result.failure;
 import static ua.com.fielden.platform.error.Result.failuref;
 import static ua.com.fielden.platform.error.Result.successful;
@@ -24,6 +22,8 @@ import ua.com.fielden.platform.entity.meta.MetaProperty;
 import ua.com.fielden.platform.entity.validation.IBeforeChangeEventHandler;
 import ua.com.fielden.platform.entity_centre.review.criteria.EnhancedCentreEntityQueryCriteria;
 import ua.com.fielden.platform.error.Result;
+import static ua.com.fielden.platform.web.centre.WebApiUtils.LINK_CONFIG_TITLE;
+import static ua.com.fielden.platform.web.centre.WebApiUtils.UNDEFINED_CONFIG_TITLE;
 import ua.com.fielden.platform.web.utils.ICriteriaEntityRestorer;
 
 /**

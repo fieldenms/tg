@@ -93,7 +93,7 @@ public class SecurityRoleAssociationDao extends CommonEntityDao<SecurityRoleAsso
     @SessionRequired
     public void removeAssociations(final Set<SecurityRoleAssociation> associations) {
         SequentialGroupingStream.stream(associations.stream(), (assoc, group) -> group.size() < 1000)
-        .forEach(group -> createQueryByKeyFor(getEntityType(), getKeyType(), group).map(query -> batchDelete(query)));
+        .forEach(group -> createQueryByKeyFor(getDbVersion(), getEntityType(), getKeyType(), group).map(query -> batchDelete(query)));
     }
     
     @Override

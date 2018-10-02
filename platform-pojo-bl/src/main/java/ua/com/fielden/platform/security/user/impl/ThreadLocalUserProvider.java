@@ -23,17 +23,19 @@ public class ThreadLocalUserProvider implements IUserProvider {
     }
 
     @Override
-    public void setUsername(final String username, final IUser coUser) {
+    public IUserProvider setUsername(final String username, final IUser coUser) {
         final User user = coUser.findUser(username);
         if (user == null) {
             throw new SecurityException(format("Could not find user [%s].", username));
         }
         this.users.set(user);
+        return this;
     }
 
     @Override
-    public void setUser(final User user) {
+    public IUserProvider setUser(final User user) {
         this.users.set(user);
+        return this;
     }
 
 }

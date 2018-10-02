@@ -44,13 +44,13 @@ public class WebUiBuilder implements IWebUiBuilder {
     /**
      * Holds the map between master's entity type and its master component.
      */
-    private final Map<Class<? extends AbstractEntity<?>>, EntityMaster<? extends AbstractEntity<?>>> mastersMap = new LinkedHashMap<>();
+    private final Map<Class<? extends AbstractEntity<?>>, EntityMaster<? extends AbstractEntity<?>>> mastersMap = new ConcurrentHashMap<>();
 
     /**
      * Holds the map between entity centre's menu item type and entity centre.
      */
-    private final Map<Class<? extends MiWithConfigurationSupport<?>>, EntityCentre<?>> centreMap = new LinkedHashMap<>();
-    
+    private final Map<Class<? extends MiWithConfigurationSupport<?>>, EntityCentre<?>> centreMap = new ConcurrentHashMap<>();
+
     private final Map<Class<? extends AbstractEntity<?>>, EntityActionConfig> openMasterActions = new ConcurrentHashMap<>();
 
     /**
@@ -141,15 +141,15 @@ public class WebUiBuilder implements IWebUiBuilder {
         if (entityType == null || openMasterActionConfig == null) {
             throw new WebUiBuilderException("None of the arguments to register open master actions can be null.");
         }
-        
+
         if (openMasterActions.containsKey(entityType)) {
             throw new WebUiBuilderException(format("An open-master action config is already present for entity [%s].", entityType.getName()));
         }
-        
+
         openMasterActions.putIfAbsent(entityType, openMasterActionConfig);
         return this;
     }
-    
+
 
     @Override
     public <T extends AbstractEntity<?>> Supplier<Optional<EntityActionConfig>> getOpenMasterAction(final Class<T> entityType) {

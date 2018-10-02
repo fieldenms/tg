@@ -3,11 +3,15 @@ package ua.com.fielden.platform.web.centre;
 import static java.lang.String.format;
 import static java.util.Optional.empty;
 import static java.util.stream.Collectors.toSet;
+import static ua.com.fielden.platform.domaintree.impl.AbstractDomainTree.validateRootType;
+import static ua.com.fielden.platform.domaintree.impl.CalculatedProperty.generateNameFrom;
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.determinePropertyType;
+import static ua.com.fielden.platform.types.tuples.T2.t2;
 import static ua.com.fielden.platform.utils.EntityUtils.fetchWithKeyAndDesc;
 import static ua.com.fielden.platform.utils.Pair.pair;
 import static ua.com.fielden.platform.web.centre.CentreUpdater.FRESH_CENTRE_NAME;
 import static ua.com.fielden.platform.web.centre.CentreUpdater.updateCentre;
+import static ua.com.fielden.platform.web.centre.CentreUpdaterUtils.createEmptyCentre;
 import static ua.com.fielden.platform.web.centre.EgiConfigurations.CHECKBOX_FIXED;
 import static ua.com.fielden.platform.web.centre.EgiConfigurations.CHECKBOX_VISIBLE;
 import static ua.com.fielden.platform.web.centre.EgiConfigurations.CHECKBOX_WITH_PRIMARY_ACTION_FIXED;
@@ -27,6 +31,7 @@ import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -50,28 +55,37 @@ import ua.com.fielden.platform.dom.DomContainer;
 import ua.com.fielden.platform.dom.DomElement;
 import ua.com.fielden.platform.dom.InnerTextElement;
 import ua.com.fielden.platform.domaintree.ICalculatedProperty.CalculatedPropertyAttribute;
-import ua.com.fielden.platform.domaintree.IGlobalDomainTreeManager;
-import ua.com.fielden.platform.domaintree.IServerGlobalDomainTreeManager;
+import ua.com.fielden.platform.domaintree.IDomainTreeEnhancerCache;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
+import ua.com.fielden.platform.domaintree.centre.impl.CentreDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.domaintree.impl.AbstractDomainTree;
 import ua.com.fielden.platform.domaintree.impl.CalculatedProperty;
-import ua.com.fielden.platform.domaintree.impl.GlobalDomainTreeManager;
+import ua.com.fielden.platform.domaintree.impl.CalculatedPropertyInfo;
+import ua.com.fielden.platform.domaintree.impl.CustomProperty;
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.annotation.EntityType;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.entity.fetch.IFetchProvider;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader;
+import ua.com.fielden.platform.security.user.IUser;
 import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
 import ua.com.fielden.platform.serialisation.jackson.DefaultValueContract;
 import ua.com.fielden.platform.types.Money;
+import ua.com.fielden.platform.types.tuples.T2;
+import ua.com.fielden.platform.ui.config.MainMenuItem;
+import ua.com.fielden.platform.ui.config.api.IEntityCentreConfig;
+import ua.com.fielden.platform.ui.config.api.IMainMenuItem;
 import ua.com.fielden.platform.ui.menu.MiWithConfigurationSupport;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
 import ua.com.fielden.platform.utils.ResourceLoader;
+import ua.com.fielden.platform.web.app.IWebUiConfig;
+import ua.com.fielden.platform.web.app.exceptions.WebUiBuilderException;
 import ua.com.fielden.platform.web.centre.api.EntityCentreConfig;
 import ua.com.fielden.platform.web.centre.api.EntityCentreConfig.OrderDirection;
 import ua.com.fielden.platform.web.centre.api.EntityCentreConfig.ResultSetProp;
@@ -184,7 +198,6 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
 
 
     private final Logger logger = Logger.getLogger(getClass());
-    private final Class<? extends MiWithConfigurationSupport<?>> menuItemType;
     private final String name;
     private final EntityCentreConfig<T> dslDefaultConfig;
     private final Injector injector;
@@ -194,7 +207,15 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
     private final UnaryOperator<ICentreDomainTreeManagerAndEnhancer> postCentreCreated;
     private Optional<JsCode> customCode = Optional.empty();
     private Optional<JsCode> customCodeOnAttach = Optional.empty();
-
+    
+    private final IUserProvider userProvider;
+    private final ISerialiser serialiser;
+    private final IDomainTreeEnhancerCache domainTreeEnhancerCache;
+    private final IWebUiConfig webUiConfig;
+    private final IEntityCentreConfig eccCompanion;
+    private final IMainMenuItem mmiCompanion;
+    private final IUser userCompanion;
+    
     /**
      * Creates new {@link EntityCentre} instance for the menu item type and with specified name.
      *
@@ -206,17 +227,42 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
      *            -- default configuration taken from Centre DSL
      */
     public EntityCentre(final Class<? extends MiWithConfigurationSupport<?>> miType, final String name, final EntityCentreConfig<T> dslDefaultConfig, final Injector injector, final UnaryOperator<ICentreDomainTreeManagerAndEnhancer> postCentreCreated) {
-        this.menuItemType = miType;
         this.name = name;
         this.dslDefaultConfig = dslDefaultConfig;
-
+        
         this.injector = injector;
+        
+        validateMenuItemTypeRootType(miType);
         this.miType = miType;
         this.entityType = EntityResourceUtils.getEntityType(miType);
         this.coFinder = this.injector.getInstance(ICompanionObjectFinder.class);
         this.postCentreCreated = postCentreCreated;
+        
+        userProvider = injector.getInstance(IUserProvider.class);
+        serialiser = injector.getInstance(ISerialiser.class);
+        domainTreeEnhancerCache = injector.getInstance(IDomainTreeEnhancerCache.class);
+        webUiConfig = injector.getInstance(IWebUiConfig.class);
+        eccCompanion = coFinder.find(ua.com.fielden.platform.ui.config.EntityCentreConfig.class);
+        mmiCompanion = coFinder.find(MainMenuItem.class);
+        userCompanion = coFinder.find(User.class);
+        // this is to trigger caching of DomainTreeEnhancers to avoid heavy computations later
+        createDefaultCentre();
     }
-
+    
+    /**
+     * Validates root type corresponding to <code>menuItemType</code>.
+     *
+     * @param menuItemType
+     */
+    private static void validateMenuItemTypeRootType(final Class<? extends MiWithConfigurationSupport<?>> miType) {
+        final EntityType etAnnotation = miType.getAnnotation(EntityType.class);
+        if (etAnnotation == null || etAnnotation.value() == null) {
+            throw new WebUiBuilderException(format("The menu item type %s has no 'EntityType' annotation, which is necessary to specify the root type of the centre.", miType.getSimpleName()));
+        }
+        final Class<?> root = etAnnotation.value();
+        validateRootType(root);
+    }
+    
     /**
      * Generates default centre from DSL config and postCentreCreated callback (user unspecific).
      *
@@ -238,31 +284,28 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
     private ICentreDomainTreeManagerAndEnhancer createDefaultCentre(final EntityCentreConfig<T> dslDefaultConfig, final ISerialiser serialiser, final UnaryOperator<ICentreDomainTreeManagerAndEnhancer> postCentreCreated) {
         return createDefaultCentre0(dslDefaultConfig, serialiser, postCentreCreated, true);
     }
-
-    private ICentreDomainTreeManagerAndEnhancer createDefaultCentre0(final EntityCentreConfig<T> dslDefaultConfig, final ISerialiser serialiser, final UnaryOperator<ICentreDomainTreeManagerAndEnhancer> postCentreCreated, final boolean userSpecific) {
-        final ICentreDomainTreeManagerAndEnhancer cdtmae = GlobalDomainTreeManager.createEmptyCentre(entityType, serialiser);
-
-        final Optional<List<String>> selectionCriteria = dslDefaultConfig.getSelectionCriteria();
-        if (selectionCriteria.isPresent()) {
-            for (final String property : selectionCriteria.get()) {
-                cdtmae.getFirstTick().check(entityType, treeName(property), true);
-
-                if (userSpecific) {
-                    provideDefaultsFor(property, cdtmae, dslDefaultConfig);
-                }
-            }
-        }
-
-        final Optional<List<ResultSetProp>> resultSetProps = dslDefaultConfig.getResultSetProperties();
-        final Optional<ListMultimap<String, SummaryPropDef>> summaryExpressions = dslDefaultConfig.getSummaryExpressions();
-
+    
+    /**
+     * Creates calculated / custom property containers from Centre DSL definition. This is to be used when constructing {@link CentreDomainTreeManagerAndEnhancer} instances.
+     * 
+     * @param entityType
+     * @param resultSetProps
+     * @param summaryExpressions
+     * @return
+     */
+    private static T2<Map<Class<?>, Set<CalculatedPropertyInfo>>, Map<Class<?>, List<CustomProperty>>> createCalculatedAndCustomProperties(final Class<?> entityType, final Optional<List<ResultSetProp>> resultSetProps, final Optional<ListMultimap<String, SummaryPropDef>> summaryExpressions) {
+        final Map<Class<?>, Set<CalculatedPropertyInfo>> calculatedPropertiesInfo = new LinkedHashMap<>();
+        calculatedPropertiesInfo.put(entityType, new LinkedHashSet<>());
+        final Map<Class<?>, List<CustomProperty>> customProperties = new LinkedHashMap<>();
+        customProperties.put(entityType, new ArrayList<CustomProperty>());
+        
         if (resultSetProps.isPresent()) {
             for (final ResultSetProp property : resultSetProps.get()) {
-                if (property.propName.isPresent()) {
-                } else {
+                if (!property.propName.isPresent()) {
                     if (property.propDef.isPresent()) { // represents the 'custom' property
-                        final String customPropName = CalculatedProperty.generateNameFrom(property.propDef.get().title);
-                        enhanceCentreManagerWithCustomProperty(cdtmae, entityType, customPropName, property.propDef.get(), dslDefaultConfig.getResultSetCustomPropAssignmentHandlerType());
+                        final PropDef<?> propDef = property.propDef.get();
+                        final Class<?> managedType = entityType; // getManagedType(entityType); -- please note that mutual custom props validation is not be performed -- apply method invokes at the end after adding all custom / calculated properties
+                        customProperties.get(entityType).add(new CustomProperty(entityType, managedType, "" /* this is the contextPath */, generateNameFrom(propDef.title), propDef.title, propDef.desc, propDef.type));
                     } else {
                         throw new IllegalStateException(format("The state of result-set property [%s] definition is not correct, need to exist either a 'propName' for the property or 'propDef'.", property));
                     }
@@ -273,12 +316,40 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
             for (final Entry<String, Collection<SummaryPropDef>> entry : summaryExpressions.get().asMap().entrySet()) {
                 final String originationProperty = treeName(entry.getKey());
                 for (final SummaryPropDef summaryProp : entry.getValue()) {
-                    cdtmae.getEnhancer().addCalculatedProperty(entityType, "", summaryProp.alias, summaryProp.expression, summaryProp.title, summaryProp.desc, CalculatedPropertyAttribute.NO_ATTR, "".equals(originationProperty) ? "SELF"
-                            : originationProperty);
+                    calculatedPropertiesInfo.get(entityType).add(new CalculatedPropertyInfo(entityType, "", summaryProp.alias, summaryProp.expression, summaryProp.title, CalculatedPropertyAttribute.NO_ATTR, "".equals(originationProperty) ? "SELF" : originationProperty, summaryProp.desc));
                 }
             }
         }
-        cdtmae.getEnhancer().apply();
+        
+        return t2(calculatedPropertiesInfo, customProperties);
+    }
+    
+    /**
+     * Creates default centre from Centre DSL configuration by adding calculated / custom props, applying selection crit defaults, EGI column widths / ordering etc.
+     * 
+     * @param dslDefaultConfig
+     * @param serialiser
+     * @param postCentreCreated
+     * @param userSpecific
+     * @return
+     */
+    private ICentreDomainTreeManagerAndEnhancer createDefaultCentre0(final EntityCentreConfig<T> dslDefaultConfig, final ISerialiser serialiser, final UnaryOperator<ICentreDomainTreeManagerAndEnhancer> postCentreCreated, final boolean userSpecific) {
+        final Optional<List<ResultSetProp>> resultSetProps = dslDefaultConfig.getResultSetProperties();
+        final Optional<ListMultimap<String, SummaryPropDef>> summaryExpressions = dslDefaultConfig.getSummaryExpressions();
+        
+        final ICentreDomainTreeManagerAndEnhancer cdtmae = createEmptyCentre(entityType, serialiser, domainTreeEnhancerCache, createCalculatedAndCustomProperties(entityType, resultSetProps, summaryExpressions), miType);
+        
+        final Optional<List<String>> selectionCriteria = dslDefaultConfig.getSelectionCriteria();
+        if (selectionCriteria.isPresent()) {
+            for (final String property : selectionCriteria.get()) {
+                cdtmae.getFirstTick().check(entityType, treeName(property), true);
+
+                if (userSpecific) {
+                    provideDefaultsFor(property, cdtmae, dslDefaultConfig);
+                }
+            }
+        }
+        
         if (resultSetProps.isPresent()) {
             final Map<String, Integer> growFactors = calculateGrowFactors(resultSetProps.get());
             for (final ResultSetProp property : resultSetProps.get()) {
@@ -663,7 +734,7 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
      * @return
      */
     public Class<? extends MiWithConfigurationSupport<?>> getMenuItemType() {
-        return this.menuItemType;
+        return miType;
     }
 
     /**
@@ -742,11 +813,11 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
     }
 
     private final ICentreDomainTreeManagerAndEnhancer getAssociatedEntityCentreManager(final DeviceProfile device) {
-        final IGlobalDomainTreeManager userSpecificGlobalManager = getUserSpecificGlobalManager();
-        if (userSpecificGlobalManager == null) {
+        final User user = getUser();
+        if (user == null) {
             return createUserUnspecificDefaultCentre(dslDefaultConfig, injector.getInstance(ISerialiser.class), postCentreCreated);
         } else {
-            return updateCentre(userSpecificGlobalManager, menuItemType, FRESH_CENTRE_NAME, empty(), device);
+            return updateCentre(user, userProvider, miType, FRESH_CENTRE_NAME, empty(), device, serialiser, domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion);
         }
     }
 
@@ -765,7 +836,7 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
      *
      * @return
      */
-    public ICentreDomainTreeManagerAndEnhancer getDefaultCentre() {
+    public ICentreDomainTreeManagerAndEnhancer createDefaultCentre() {
         return createDefaultCentre(dslDefaultConfig, injector.getInstance(ISerialiser.class), postCentreCreated);
     }
 
@@ -1137,17 +1208,12 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
     }
 
     /**
-     * Returns the global manager for the user for this concrete thread (the user has been populated through the Web UI authentication mechanism -- see DefaultWebResourceGuard).
+     * Returns user for this concrete thread (the user has been populated through the Web UI authentication mechanism -- see DefaultWebResourceGuard).
      *
      * @return
      */
-    private IGlobalDomainTreeManager getUserSpecificGlobalManager() {
-        final IServerGlobalDomainTreeManager serverGdtm = injector.getInstance(IServerGlobalDomainTreeManager.class);
-        final User user = injector.getInstance(IUserProvider.class).getUser();
-        if (user == null) { // the user is unknown at this stage!
-            return null; // no user-specific global exists for unknown user!
-        }
-        return serverGdtm.get(user.getId());
+    private User getUser() {
+        return injector.getInstance(IUserProvider.class).getUser();
     }
 
     private String queryEnhancerContextConfigString() {
@@ -1166,18 +1232,6 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
         }
 
         return sb.toString();
-    }
-
-    /**
-     * Enhances the type of centre entity with custom property definition.
-     *
-     * @param centre
-     * @param root
-     * @param propDef
-     * @param resultSetCustomPropAssignmentHandlerType
-     */
-    private void enhanceCentreManagerWithCustomProperty(final ICentreDomainTreeManagerAndEnhancer centre, final Class<?> root, final String propName, final PropDef<?> propDef, final Optional<Class<? extends ICustomPropsAssignmentHandler>> resultSetCustomPropAssignmentHandlerType) {
-        centre.getEnhancer().addCustomProperty(root, "" /* this is the contextPath */, propName, propDef.title, propDef.desc, propDef.type);
     }
 
     /**

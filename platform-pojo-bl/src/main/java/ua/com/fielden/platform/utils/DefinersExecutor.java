@@ -104,7 +104,7 @@ public class DefinersExecutor {
 
         final AbstractEntity<?> entity = frontier.pop();
         final String identity = getEntityIdentity(entity);
-        if (explored.contains(identity)) {
+        if (explored.contains(identity) || !entity.isInstrumented()) {
             return;
         }
 
@@ -115,8 +115,7 @@ public class DefinersExecutor {
         explored.add(identity);
 
         final boolean unionEntity = entity instanceof AbstractUnionEntity;
-        final boolean isInstrumented = PropertyTypeDeterminator.isInstrumented(entity.getClass());
-        final boolean isEntityPersisted = isInstrumented ? entity.isPersisted() : false;
+        final boolean isEntityPersisted = entity.isPersisted();
 
         // FIXME please, consider applicability of the following logic (legacy code from EntityUtils.handleMetaProperties method):
         //------------------------------------------------------------------
@@ -135,7 +134,7 @@ public class DefinersExecutor {
                 .collect(partitioningBy(field -> isValueProxied(entity, field)));
 
         // process original values of properties that have id-only-proxy value if the entity is instrumented and persisted
-        if (isInstrumented && isEntityPersisted) {
+        if (isEntityPersisted) {
             final List<Field> idOnlyProxyPropFields = propFieldsToProcess.get(true);
             for (final Field propField : idOnlyProxyPropFields) {
                 final String propName = propField.getName();
@@ -176,9 +175,7 @@ public class DefinersExecutor {
                 }
                 
                 // original values and execution of ACE handlers is relevant only for instrumented entities
-                if (isInstrumented) {
-                    handleOriginalValueAndACE(entity.getProperty(propName), propertyValue, isEntityPersisted);
-                }
+                handleOriginalValueAndACE(entity.getProperty(propName), propertyValue, isEntityPersisted);
             }
         }
 

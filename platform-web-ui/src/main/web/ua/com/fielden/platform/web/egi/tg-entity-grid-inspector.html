@@ -718,7 +718,7 @@
                 downloadAttachment: {
                     type: Function
                 },
-                
+
                 entities: {
                     type: Array,
                     observer: "_entitiesChanged"
@@ -726,6 +726,11 @@
                 filteredEntities: {
                     type: Array,
                     observer: "_filteredEntitiesChanged"
+                },
+                /** The currently editing entity*/
+                editingEntity: {
+                    type: Object,
+                    value: null
                 },
                 totals: Object,
                 columns: {
@@ -916,10 +921,10 @@
              */
             ready: function () {
                 var primaryActions = Polymer.dom(this.$.primary_action_selector).getDistributedNodes();
-                
+
                 //Configure device profile
                 this.mobile = this.$.appConfig.mobile;
-                
+
                 this._totalsRowCount = 0;
                 this._showProgress = false;
 
@@ -1002,6 +1007,10 @@
                     this.notifyPath(path, entity.get(propPath));
                 }
             },
+            
+            findEntityIndex: function (entity) {
+                return _findEntity(entity, this.entities);
+            },
 
             setRenderingHints: function (entity, property, renderingHints) {
                 const entityIndex = _findEntity(entity, this.filteredEntities);
@@ -1033,6 +1042,21 @@
                     }
                 });
                 this.filteredEntities = tempFilteredEntities;
+            },
+
+            editEntity: function (entity) {
+                if (this.editingEntity) {
+                    const oldEntIndex = _findEntity(this.editingEntity, this.filteredEntities);
+                    if (oldEntIndex >= 0) {
+                        this.editingEntity = null;
+                        this.set("egiModel." + oldEntIndex + ".over", false);
+                    }
+                }
+                const entIndex = _findEntity(entity, this.filteredEntities);
+                if (entIndex >= 0) {
+                    this.editingEntity = entity;
+                    this.set("egiModel." + entIndex + ".over", true);
+                }
             },
             
             isVisible: function (entity) {
@@ -1093,7 +1117,9 @@
 
             _mouseRowLeave: function (event, detail) {
                 var index = event.model.entityIndex;
-                this.set("egiModel." + index + ".over", false);
+                if (!this.editingEntity  || !_areEqual(this.editingEntity, this.filteredEntities[index])) {
+                    this.set("egiModel." + index + ".over", false);
+                }
             },
 
             _handleWheel: function (e, detail) {
@@ -1458,7 +1484,7 @@
                 }
                 return "";
             },
-
+            
             _generateEntityTooltip: function (entity, column) {
                 var key = this._getValue(entity, column.property, column.type);
                 var desc;
@@ -1539,7 +1565,7 @@
                     return "padding: 8px;";
                 }
             },
-            
+
             _entitiesChanged: function (newValue, oldValue) {
                 this.filter();
             },
@@ -1555,13 +1581,16 @@
                     if (selectEntInd >= 0) {
                         self.selectedEntities[selectEntInd] = newEntity;
                     }
+                    if (this.editingEntity && _areEqual(this.editingEntity, newEntity)) {
+                        this.editingEntity = newEntity;
+                    }
                 });
                 newValue.forEach(function (newEntity) {
                     const isSelected = self.selectedEntities.indexOf(newEntity) > -1;
                     const oldIndex = _findEntity(newEntity, oldValue);
                     const newRendHints = oldIndex < 0 ? {} : (self.renderingHints && self.renderingHints[oldIndex]) || {};
                     const egiEntity = {
-                        over: false,
+                        over: _areEqual(this.editingEntity, newEntity),
                         selected: isSelected,
                         entity: newEntity,
                         renderingHints: newRendHints
@@ -1852,7 +1881,7 @@
              */
             _calcBackgroundRenderingHintsStyle: function (change, entityIndex, property) {
                 const renderingHints = change.base;
-                let style = "opacity: 0.3;";
+                let style = "opacity: 0.5;";
                 let rendHints = (renderingHints && renderingHints[property]) || {};
                 rendHints = rendHints.backgroundStyles || rendHints;
                 for (let property in rendHints) {
@@ -2271,7 +2300,7 @@
                     hasAnyFlex: this.columns.find((column, index) => index >= this.numOfFixedCols && index !== e.model.index && column.growFactor !== 0)
                 };
             },
-            
+
             _trackColumnSize: function (e) {
                 if (this._columnResizingObject) {
                     const columnWidth = e.currentTarget.firstElementChild.offsetWidth;

@@ -1,16 +1,12 @@
 package ua.com.fielden.platform.domaintree.centre.analyses.impl;
 
-import java.lang.ref.WeakReference;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.swing.event.EventListenerList;
-
 import ua.com.fielden.platform.domaintree.IUsageManager;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.domaintree.centre.IOrderingManager;
-import ua.com.fielden.platform.domaintree.centre.IOrderingManager.IPropertyOrderingListener;
 import ua.com.fielden.platform.domaintree.centre.IOrderingRepresentation.Ordering;
 import ua.com.fielden.platform.domaintree.centre.analyses.IAbstractAnalysisDomainTreeManager;
 import ua.com.fielden.platform.domaintree.centre.analyses.IAbstractAnalysisDomainTreeRepresentation;
@@ -160,7 +156,7 @@ public abstract class AbstractAnalysisDomainTreeManager extends AbstractDomainTr
         }
 
         @Override
-        public synchronized List<String> checkedPropertiesMutable(final Class<?> rootPossiblyEnhanced) {
+        public List<String> checkedPropertiesMutable(final Class<?> rootPossiblyEnhanced) {
             // inject an enhanced type into method implementation
             return super.checkedPropertiesMutable(managedType(rootPossiblyEnhanced));
         }
@@ -205,36 +201,8 @@ public abstract class AbstractAnalysisDomainTreeManager extends AbstractDomainTr
         }
     }
 
-    private static class WeakPropertyOrderingListener implements IPropertyOrderingListener {
-
-        private final IOrderingManager oManager;
-        private final WeakReference<IPropertyOrderingListener> ref;
-
-        public WeakPropertyOrderingListener(final IOrderingManager oManager, final IPropertyOrderingListener listener) {
-            this.oManager = oManager;
-            this.ref = new WeakReference<IPropertyOrderingListener>(listener);
-        }
-
-        @Override
-        public void propertyStateChanged(final Class<?> root, final String property, final List<Pair<String, Ordering>> newOrderedProperties, final List<Pair<String, Ordering>> oldState) {
-            if (ref.get() != null) {
-                ref.get().propertyStateChanged(root, property, newOrderedProperties, oldState);
-            } else {
-                oManager.removePropertyOrderingListener(this);
-
-            }
-        }
-
-        public IPropertyOrderingListener getRef() {
-            return ref.get();
-        }
-
-    }
-
     protected abstract static class AbstractAnalysisAddToAggregationTickManager extends TickManager implements IAbstractAnalysisAddToAggregationTickManager {
         private final EnhancementRootsMap<List<Pair<String, Ordering>>> rootsListsOfOrderings;
-        private final transient EventListenerList propertyOrderingListeners;
-
         private final transient ICentreDomainTreeManagerAndEnhancer parentCentreDomainTreeManager;
 
         @Override
@@ -249,7 +217,6 @@ public abstract class AbstractAnalysisDomainTreeManager extends AbstractDomainTr
         public AbstractAnalysisAddToAggregationTickManager() {
             super();
             rootsListsOfOrderings = createRootsMap();
-            propertyOrderingListeners = new EventListenerList();
 
             parentCentreDomainTreeManager = null; // as soon as this analysis wiil be added into centre manager -- this field should be initialised
         }
@@ -282,7 +249,7 @@ public abstract class AbstractAnalysisDomainTreeManager extends AbstractDomainTr
         }
 
         @Override
-        public synchronized List<String> checkedPropertiesMutable(final Class<?> rootPossiblyEnhanced) {
+        public List<String> checkedPropertiesMutable(final Class<?> rootPossiblyEnhanced) {
             // inject an enhanced type into method implementation
             return super.checkedPropertiesMutable(managedType(rootPossiblyEnhanced));
         }
@@ -379,52 +346,12 @@ public abstract class AbstractAnalysisDomainTreeManager extends AbstractDomainTr
                     } else { // Ordering.DESCENDING
                         rootsListsOfOrderings.get(managedType).remove(index);
                     }
-                    for (final IPropertyOrderingListener listener : propertyOrderingListeners.getListeners(IPropertyOrderingListener.class)) {
-                        listener.propertyStateChanged(managedType, property, new ArrayList<Pair<String, Ordering>>(orderedProperties(managedType)), null);
-                    }
                     return this;
                 }
             } // if the property does not have an Ordering assigned -- put a ASC ordering to it (into the end of the list)
             rootsListsOfOrderings.get(managedType).add(new Pair<String, Ordering>(property, Ordering.ASCENDING));
 
-            for (final IPropertyOrderingListener listener : propertyOrderingListeners.getListeners(IPropertyOrderingListener.class)) {
-                listener.propertyStateChanged(managedType, property, new ArrayList<Pair<String, Ordering>>(orderedProperties(managedType)), null);
-            }
             return this;
-        }
-
-        @Override
-        public void addPropertyOrderingListener(final IPropertyOrderingListener listener) {
-            removeEmptyPropertyOrderingListener();
-            propertyOrderingListeners.add(IPropertyOrderingListener.class, listener);
-        }
-
-        @Override
-        public void addWeakPropertyOrderingListener(final IPropertyOrderingListener listener) {
-            removeEmptyPropertyOrderingListener();
-            propertyOrderingListeners.add(IPropertyOrderingListener.class, new WeakPropertyOrderingListener(this, listener));
-        }
-
-        @Override
-        public void removePropertyOrderingListener(final IPropertyOrderingListener listener) {
-            for (final IPropertyOrderingListener obj : propertyOrderingListeners.getListeners(IPropertyOrderingListener.class)) {
-                if (listener == obj) {
-                    propertyOrderingListeners.remove(IPropertyOrderingListener.class, listener);
-                } else if (obj instanceof WeakPropertyOrderingListener) {
-                    final IPropertyOrderingListener weakRef = ((WeakPropertyOrderingListener) obj).getRef();
-                    if (weakRef == listener || weakRef == null) {
-                        propertyOrderingListeners.remove(IPropertyOrderingListener.class, obj);
-                    }
-                }
-            }
-        }
-
-        private void removeEmptyPropertyOrderingListener() {
-            for (final IPropertyOrderingListener obj : propertyOrderingListeners.getListeners(IPropertyOrderingListener.class)) {
-                if (obj instanceof WeakPropertyOrderingListener && ((WeakPropertyOrderingListener) obj).getRef() == null) {
-                    propertyOrderingListeners.remove(IPropertyOrderingListener.class, obj);
-                }
-            }
         }
 
         @Override

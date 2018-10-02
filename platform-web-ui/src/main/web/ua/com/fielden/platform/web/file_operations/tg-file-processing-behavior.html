@@ -144,7 +144,7 @@
 					if (this.fpAbortEventHandler) {
 						this.fpAbortEventHandler();
 					}
-					return 'ok'; 
+					return 'ok';
 				}
 				// remove previously selected files
 				// the file input onchange is not invoked when assigning the value
@@ -189,17 +189,23 @@
 				const file = oFiles[0];
 				const fileNames = file.name;
 				const nBytes = file.size;
-				
+
 				// under some circumstance file type can be empty
 				// need it identify the type from the file extension in those rare cases
-				// the map between file exentions and mime types needs to be expanded as required 
+				// the map between file exentions and mime types needs to be expanded as required
 				let mimeTypes = file.type;
-			    if (!mimeTypes) { // the mime type is missing
-			        if (file.name.endsWith('.xls')) {
-			            mimeTypes = 'application/vnd.ms-excel';
-			        }
-			    }
-				
+				if (mimeTypes === "") {  // the mime type could not be determined by the browser
+					if (file.name.endsWith(".vsd")) {
+						mimeTypes = "application/vnd.visio";
+					} else if (file.name.endsWith(".vsdx")) {
+						mimeTypes = "application/vnd.ms-visio.drawing";
+					} else if (file.name.endsWith('.xls')) {
+						mimeTypes = 'application/vnd.ms-excel';
+					} else if (file.name.endsWith('.msg')) {
+						mimeTypes = 'application/vnd.ms-outlook';
+					}
+				}
+
 				let sOutput = nBytes + " bytes";
 				// optional code for multiples approximation
 				const aMultiples = ["KiB", "MiB", "GiB", "TiB", "PiB", "EiB", "ZiB", "YiB"];
@@ -214,18 +220,11 @@
 				this._debug_fileSize = sOutput + ' our of allowed ' + this.uploadSizeLimitKb + ' KiB ' + '(' + (maxAllowedBytes) + ' bytes)';
 				this._debug_mimeTypes = mimeTypes + ' (acceptable are ' + this.mimeTypesAccepted + ')';
 
-				// it has been observed that some browsers (namely Chrome) incorrectly allow selection of files
-				// that have different than the specified in the file input accept argument.
-				// for example, .js files are triated by the file open dialog as text/plain.
-				// however, the mime types identified by the File API is correct.
-				// thus, in order to be more defensive need to perform mime type validation
-				// (other browsers such as Safary identify mime types more reliable)
-				// So, let's check if the file mime type is acceptable
-				// if not then any further processing should be stopped
-				if (!mimeTypes || _.contains(this.mimeTypesAccepted, mimeTypes) === false) {
-					this._cleanup();
-					throw new Error('Unsupported file type');
-				}
+				// Moved mime type validation to the server side for better reliability
+				// if (!mimeTypes || _.contains(this.mimeTypesAccepted, mimeTypes) === false) {
+				// 	this._cleanup();
+				// 	throw new Error('Unsupported file type');
+				// }
 
 				// if the total number of bytes to be uploaded is greater than the limit
 				// then stop further processing by throwing an error
@@ -233,14 +232,14 @@
 					this._cleanup();
 					throw new Error('The maximum upload size is exceeded.');
 				}
-				
+
 				if (nBytes === 0) {
 					this._cleanup();
 					throw new Error('Uploading of empty files is prohibited.');
 				}
 
 				// end of size and mime type validation
-				
+
 				// we can only have at most 1 file for upload
 				if (nFiles === 1) {
 					const file = oFiles[0];
@@ -298,12 +297,12 @@
 					xhr.onerror = function(e) {
 						this.closeEventSource();
 						this._cleanup();
-						
+
 						if (this.fpErrorHandler) {
 							this.fpErrorHandler(e);
 						}
 					}.bind(this);
-					
+
 					// let's clean up if the call was aborted
 					xhr.onabort = function(e) {
 						this.closeEventSource();

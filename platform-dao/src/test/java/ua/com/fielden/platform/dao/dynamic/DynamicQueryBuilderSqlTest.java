@@ -31,6 +31,7 @@ import ua.com.fielden.platform.dao.HibernateMappingsGenerator;
 import ua.com.fielden.platform.domaintree.ICalculatedProperty.CalculatedPropertyAttribute;
 import ua.com.fielden.platform.domaintree.IDomainTreeEnhancer;
 import ua.com.fielden.platform.domaintree.impl.DomainTreeEnhancer;
+import ua.com.fielden.platform.domaintree.impl.DomainTreeEnhancerCache;
 import ua.com.fielden.platform.domaintree.testing.ClassProviderForTestingPurposes;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
@@ -74,7 +75,7 @@ public class DynamicQueryBuilderSqlTest {
     }
 
     private static ISerialiser createSerialiser(final EntityFactory factory) {
-        return new SerialiserForDomainTreesTestingPurposes(factory, new ClassProviderForTestingPurposes());
+        return new SerialiserForDomainTreesTestingPurposes(factory, new ClassProviderForTestingPurposes(), DomainTreeEnhancerCache.CACHE);
     }
 
     private final String alias;

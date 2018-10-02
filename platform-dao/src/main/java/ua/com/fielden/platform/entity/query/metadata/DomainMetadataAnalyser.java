@@ -1,19 +1,25 @@
 package ua.com.fielden.platform.entity.query.metadata;
 
+import static java.lang.String.format;
+
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.log4j.Logger;
+
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.DbVersion;
 import ua.com.fielden.platform.entity.query.EntityAggregates;
+import ua.com.fielden.platform.entity.query.exceptions.EqlException;
 import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
 
 public class DomainMetadataAnalyser {
+    private final Logger logger = Logger.getLogger(DomainMetadataAnalyser.class);
     private final Map<Class<? extends AbstractEntity<?>>, AbstractEntityMetadata> entityMetadataMap = new HashMap<>();
     private final DomainMetadata domainMetadata;
     private final BaseInfoForDomainMetadata baseInfoForDomainMetadata;
@@ -59,8 +65,10 @@ public class DomainMetadataAnalyser {
                 entityMetadataMap.put(entityType, newOne);
 
                 return newOne;
-            } catch (final Exception e) {
-                throw new RuntimeException(e.getMessage() + "entityType = " + entityType);
+            } catch (final Exception ex) {
+                final String msg = format("Error while building metadata for type [%s].", entityType.getName());
+                logger.error(msg, ex);
+                throw new EqlException(msg, ex);
             }
         }
     }

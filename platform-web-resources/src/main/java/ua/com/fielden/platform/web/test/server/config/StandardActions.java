@@ -13,11 +13,13 @@ import ua.com.fielden.platform.entity.AbstractFunctionalEntityWithCentreContext;
 import ua.com.fielden.platform.entity.EntityDeleteAction;
 import ua.com.fielden.platform.entity.EntityEditAction;
 import ua.com.fielden.platform.entity.EntityExportAction;
+import ua.com.fielden.platform.entity.EntityNavigationAction;
 import ua.com.fielden.platform.entity.EntityNewAction;
 import ua.com.fielden.platform.reflection.TitlesDescsGetter;
 import ua.com.fielden.platform.web.PrefDim;
 import ua.com.fielden.platform.web.action.exceptions.ActionConfigurationException;
 import ua.com.fielden.platform.web.action.post.FileSaverPostAction;
+import ua.com.fielden.platform.web.action.pre.EntityNavigationPreAction;
 import ua.com.fielden.platform.web.action.pre.SequentialEditPreAction;
 import ua.com.fielden.platform.web.centre.CentreContext;
 import ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig;
@@ -137,8 +139,9 @@ public enum StandardActions {
                 contextConfig = context().withCurrentEntity().withSelectionCrit().withComputation((entity, context) -> entityType);
             }
 
-            return action(EntityEditAction.class).
+            return action(EntityNavigationAction.class).
                     withContext(contextConfig.build()).
+                    preAction(new EntityNavigationPreAction(entityTitle)).
                     icon("editor:mode-edit").
                     shortDesc(format("Edit %s", entityTitle)).
                     longDesc(format("Opens master for editing %s", entityTitle)).

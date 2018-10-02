@@ -45,11 +45,10 @@
 		<dependency>
 			<groupId>com.microsoft.sqlserver</groupId>
 			<artifactId>mssql-jdbc</artifactId>
-			<version>6.2.2.jre8</version>
+			<version>7.0.0.jre8</version>
 			<scope>test</scope>
 		</dependency>
-	
-		
+
 		<!-- https://mvnrepository.com/artifact/org.hibernate/hibernate-core -->
 		<dependency>
 			<groupId>org.hibernate</groupId>
@@ -61,6 +60,14 @@
 			<artifactId>hibernate-c3p0</artifactId>
 			<version>5.2.12.Final</version>
 		</dependency>
+
+		<!-- https://mvnrepository.com/artifact/org.apache.tika/tika-core -->
+		<dependency>
+			<groupId>org.apache.tika</groupId>
+			<artifactId>tika-core</artifactId>
+			<version>1.18</version>
+		</dependency>
+
 	</dependencies>
 	<build>
 		<resources>
@@ -97,7 +104,8 @@
 				<configuration>
 					<forkCount>2</forkCount>
 					<reuseForks>true</reuseForks>
-					<argLine>-server -Xms256m -Xmx1024m -Djava.system.class.loader=ua.com.fielden.platform.classloader.TgSystemClassLoader</argLine>
+					<argLine>-server -Xms256m -Xmx1024m
+						-Djava.system.class.loader=ua.com.fielden.platform.classloader.TgSystemClassLoader</argLine>
 					<systemPropertyVariables>
 						<databaseUri>./src/test/resources/db/TEST_DB_${surefire.forkNumber}</databaseUri>
 						<loadDdlScriptFromFile>false</loadDdlScriptFromFile>

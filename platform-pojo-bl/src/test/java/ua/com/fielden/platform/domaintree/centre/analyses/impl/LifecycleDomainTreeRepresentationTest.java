@@ -188,7 +188,8 @@ public class LifecycleDomainTreeRepresentationTest extends AbstractAnalysisDomai
     public void test_that_included_properties_for_union_entities_hierarchy_are_correct_and_manage_Common_and_Union_properties() {
         assertEquals("Incorrect included properties.", Arrays.asList("", "desc", "unionEntityProp", "unionEntityProp.common-properties", "unionEntityProp.common-properties.desc", "unionEntityProp.common-properties.commonProp", "unionEntityProp.unionProp1", "unionEntityProp.unionProp1.dummy-property", "unionEntityProp.unionProp2", "unionEntityProp.unionProp2.dummy-property", "__YEAR", "__MONTH", "__FORTNIGHT", "__WEEK", "__DAY"), dtm().includedProperties(MasterEntityWithUnionForIncludedPropertiesLogic.class));
     }
-
+    
+    @Ignore
     @Override
     @Test
     public void test_that_manual_exclusion_is_correctly_reflected_in_Included_properties() {

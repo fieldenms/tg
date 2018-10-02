@@ -4,7 +4,6 @@ import java.util.List;
 import java.util.Map;
 
 import ua.com.fielden.platform.basic.config.Workflows;
-import ua.com.fielden.platform.domaintree.IGlobalDomainTreeManager;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.menu.IMenuRetriever;
 import ua.com.fielden.platform.ui.menu.MiWithConfigurationSupport;
@@ -128,9 +127,9 @@ public interface IWebUiConfig extends IMenuRetriever {
     void initConfiguration();
 
     /**
-     * Clears all centre, master and menu configurations that were initialised before. After that, clears all centre configurations for the application user represented by <code>gdtm</code> instance.
+     * Clears all centre, master and menu configurations that were initialised before.
      */
-    void clearConfiguration(final IGlobalDomainTreeManager gdtm);
+    void clearConfiguration();
 
     /**
      * The paths for any kind of file resources those are needed for browser client. These are mapped to the '/resources/' router path. Also these resource paths might be augmented

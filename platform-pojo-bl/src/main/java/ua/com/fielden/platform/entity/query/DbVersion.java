@@ -21,7 +21,7 @@ public enum DbVersion {
         }
     };
 
-    private final CaseSensitivity caseSensitivity;
+    public final CaseSensitivity caseSensitivity;
     private static final String LIKE = "LIKE";
     private static final String NOT = "NOT ";
 
@@ -67,7 +67,7 @@ public enum DbVersion {
         this.caseSensitivity = caseSensitivity;
     }
 
-    private enum CaseSensitivity {
+    public enum CaseSensitivity {
         INSENSITIVE, SENSITIVE;
     }
 }

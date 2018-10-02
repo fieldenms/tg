@@ -592,7 +592,22 @@
                 	}
                 }
             },
-
+            
+            /**
+             * Commits recently edited value (_editingValue) skipping validation cycle.
+             *
+             * This method performs all editor-driven approximations, commits value to _commValue, _acceptedValue and into binding entity that is bound into this editor.
+             */
+            commitWithoutValidation: function () {
+                // turn validation off
+                const _shouldInvokeValidation = this._shouldInvokeValidation;
+                this._shouldInvokeValidation = function () { return false; };
+                // perform regular 'commit' with all (custom to concrete editor implementation) approximations, property touching logic etc.
+                this.commit();
+                // turn validation on again
+                this._shouldInvokeValidation = _shouldInvokeValidation;
+            },
+            
             /**
              * Please override this method in case when no validation should occur after _acceptedValueChanged.
              */

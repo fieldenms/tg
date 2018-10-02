@@ -1,7 +1,5 @@
 package ua.com.fielden.platform.ui.menu;
 
-import java.util.Optional;
-
 /**
  * A factory for convenient instantiation of {@link MiType} annotations.
  *
@@ -10,7 +8,7 @@ import java.util.Optional;
  */
 public class MiTypeAnnotation {
     
-    public MiType newInstance(final Class<? extends MiWithConfigurationSupport<?>> miType, final Optional<String> saveAsName) {
+    public MiType newInstance(final Class<? extends MiWithConfigurationSupport<?>> miType) {
         return new MiType() {
             
             @Override
@@ -21,11 +19,6 @@ public class MiTypeAnnotation {
             @Override
             public Class<? extends MiWithConfigurationSupport<?>> value() {
                 return miType;
-            }
-            
-            @Override
-            public String saveAsName() {
-                return saveAsName.orElse("");
             }
             
         };

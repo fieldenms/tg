@@ -1,7 +1,5 @@
 package ua.com.fielden.platform.web.security;
 
-import static ua.com.fielden.platform.utils.EntityUtils.equalsEx;
-
 import org.restlet.Context;
 
 import com.google.inject.Injector;
@@ -34,11 +32,8 @@ public class DefaultWebResourceGuard extends AbstractWebResourceGuard {
 
     @Override
     protected User getUser(final String username) {
-        if (up.getUser() == null || !equalsEx(up.getUser().getKey(), username)) {
-            final IUser coUser = coFinder.find(User.class, true);
-            up.setUsername(username, coUser);
-        }
-        return up.getUser();
+        final IUser coUser = coFinder.find(User.class, true);
+        return up.setUsername(username, coUser).getUser();
     }
 
 }

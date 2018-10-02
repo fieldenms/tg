@@ -7,15 +7,15 @@ import org.restlet.Context;
 import org.restlet.Request;
 import org.restlet.Response;
 import org.restlet.data.Encoding;
+import org.restlet.data.MediaType;
 import org.restlet.engine.application.EncodeRepresentation;
 import org.restlet.representation.InputRepresentation;
 import org.restlet.representation.Representation;
-import org.restlet.resource.ResourceException;
+import org.restlet.resource.Get;
 
 import com.google.common.base.Charsets;
 
 import ua.com.fielden.platform.basic.config.Workflows;
-import ua.com.fielden.platform.domaintree.IServerGlobalDomainTreeManager;
 import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.web.app.ISourceController;
@@ -31,7 +31,6 @@ import ua.com.fielden.platform.web.interfaces.IDeviceProvider;
  *
  */
 public class AppIndexResource extends AbstractWebResource {
-    private final IServerGlobalDomainTreeManager serverGdtm;
     private final IWebUiConfig webUiConfig;
     private final IUserProvider userProvider;
     private final ISourceController sourceController;
@@ -45,7 +44,6 @@ public class AppIndexResource extends AbstractWebResource {
      */
     public AppIndexResource(
             final ISourceController sourceController,
-            final IServerGlobalDomainTreeManager serverGdtm,
             final IWebUiConfig webUiConfig,
             final IUserProvider userProvider,
             final IDeviceProvider deviceProvider,
@@ -53,24 +51,24 @@ public class AppIndexResource extends AbstractWebResource {
             final Request request, 
             final Response response) {
         super(context, request, response, deviceProvider);
-        this.serverGdtm = serverGdtm;
         this.webUiConfig = webUiConfig;
         this.userProvider = userProvider;
         this.sourceController = sourceController;
     }
 
+    @Get
     @Override
-    protected Representation get() throws ResourceException {
+    public Representation get() {
         final User currentUser = userProvider.getUser();
         if (!Workflows.deployment.equals(webUiConfig.workflow()) && !Workflows.vulcanizing.equals(webUiConfig.workflow()) && isDebugMode() && currentUser != null) {
-            // if application user hits refresh -- all configurations will be cleared (including cahced instances of centres). This is useful when using with JRebel -- no need to restart server after 
+            // if application user hits refresh -- all configurations will be cleared. This is useful when using with JRebel / Eclipse Debug -- no need to restart server after 
             //  changing Web UI configurations (all configurations should exist in scope of IWebUiConfig.initConfiguration() method).
-            webUiConfig.clearConfiguration(serverGdtm.get(currentUser.getId()));
+            webUiConfig.clearConfiguration();
             webUiConfig.initConfiguration();
         }
         
         final String source = sourceController.loadSource("/app/tg-app-index.html", device());
-        return new EncodeRepresentation(Encoding.GZIP, new InputRepresentation(new ByteArrayInputStream(source.getBytes(Charsets.UTF_8))));
+        return new EncodeRepresentation(Encoding.GZIP, new InputRepresentation(new ByteArrayInputStream(source.getBytes(Charsets.UTF_8)), MediaType.TEXT_HTML));
     }
 
     /**

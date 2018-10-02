@@ -4,6 +4,7 @@ import java.util.Arrays;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
+import org.junit.Ignore;
 import org.junit.Test;
 
 import com.google.inject.Injector;
@@ -88,28 +89,6 @@ public class DefinersExecutorTest {
                         pair("member1.keyMember1", "member2[grand1 parent1 2]"),
                         pair("keyMember1", "collectionWithHandler"),
                         pair("keyMember1", "propWithHandler")
-                    ),
-                    grandParent.getHandledProperties()
-                );
-    }
-    
-    @Test
-    public void definers_execute_firstly_for_key_member_entity_of_root_and_then_no_definers_execute_if_root_is_not_instrumented() {
-        final TgDefinersExecutorCompositeKeyMember grandParent = factory.newEntity(TgDefinersExecutorCompositeKeyMember.class, 1L);
-        grandParent.beginInitialising();
-        grandParent.setKey("grand1");
-        grandParent.setPropWithHandler("PropWithHandler value");
-        
-        final TgDefinersExecutorParent parent = EntityFactory.newPlainEntity(TgDefinersExecutorParent.class, 1L);
-        parent.beginInitialising();
-        parent.setKeyMember1(grandParent);
-        parent.setKeyMember2("parent1");
-        
-        DefinersExecutor.execute(parent);
-        
-        assertEquals(
-                    Arrays.asList(
-                        pair("", "propWithHandler")
                     ),
                     grandParent.getHandledProperties()
                 );

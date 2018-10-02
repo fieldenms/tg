@@ -38,7 +38,7 @@ public class SettingAndSavingActivatableEntitiesTest extends AbstractDaoTestCase
 
         assertFalse(activeProperty.isValid());
         final String entityTitle = TitlesDescsGetter.getEntityTitleAndDesc(cat1.getType()).getKey();
-        assertEquals(format("%s [%s] has active dependencies (%s).", entityTitle, cat1, 2), activeProperty.getFirstFailure().getMessage());
+        assertTrue(activeProperty.getFirstFailure().getMessage().startsWith(format("%s [%s] has %s active dependencies", entityTitle, cat1, 2)));
     }
 
     @Test

@@ -53,6 +53,9 @@ public class AttachmentsUploadActionProducer extends DefaultEntityProducerWithCo
         } else if (selectedEntitiesOnlyOne()) {
             final AbstractEntity<?> selected = selectedEntities().get(0);
             entity.setMasterEntity(selected);
+        } else if (computation().isPresent()) {
+            final AbstractEntity<?> computedEntity = (AbstractEntity<?>) computation().get().apply(null, null);
+            entity.setMasterEntity(computedEntity);
         }
         return entity;
     }

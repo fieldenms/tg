@@ -108,7 +108,8 @@ public class AttachmentsUploadActionMaster implements IMaster<AttachmentsUploadA
                 .replace("@SHORTCUTS", shortcuts)
                 .replace("@prefDim", prefDimBuilder.toString())
                 .replace("@noUiValue", "false")
-                .replace("@saveOnActivationValue", "false"); // true would save action upon retrieval, which is not what we need... I think...
+                .replace("@saveOnActivationValue", "false") // true would save action upon retrieval, which is not what we need... I think...
+                .replace("//@master-has-been-attached-custom-code", "self.$.attachmentUploader.clearListOfFilesToUpload();\n"); // the same master is reused, hence the need to clear the list of previously uploaded files 
 
         renderable = () -> new InnerTextElement(entityMasterStr);
     }
@@ -117,8 +118,8 @@ public class AttachmentsUploadActionMaster implements IMaster<AttachmentsUploadA
         return  "// Overridden to support hidden property conversion on the client-side ('attachmentIds').\n"
                 + "self._isNecessaryForConversion = function (propertyName) {\n"
                 + "    return ['attachmentIds'].indexOf(propertyName) !== -1;\n" 
-                + "};\n"
-                + "// register listeners for attachment uploading\n"
+                + "};\n\n"
+                + "//register listeners for attachment uploading\n"
                 + "const uploaderList = self.$.attachmentUploader;\n"
                 + "self.addEventListener('binding-entity-appeared', () => {\n"
                 + "    if (self._currEntity['chosenPropName']) {\n"

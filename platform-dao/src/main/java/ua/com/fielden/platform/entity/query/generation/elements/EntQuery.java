@@ -113,12 +113,12 @@ public class EntQuery implements ISingleOperand {
             sb.append("\nFROM ");
             sb.append(sourcesSql);
         }
-        
+
         if (!conditions.ignore()) {
             sb.append("\nWHERE ");
             sb.append(conditions.sql());
         }
-        
+
         sb.append(groups.sql());
         sb.append(isSubQuery() ? ")" : "");
         sb.append(orderings.sql());
@@ -151,6 +151,10 @@ public class EntQuery implements ISingleOperand {
         return yields.size() == 0 && !yieldAll && isResulTypePersisted()/*resultTypeIsPersistedType*/ && isSubQuery();
     }
 
+    private boolean constYieldEnhancementRequired() {
+        return yields.size() == 0 && !yieldAll && isSubQuery();
+    }
+
     private boolean mainSourceIsTypeBased() {
         return getSources().getMain() instanceof TypeBasedSource;
     }
@@ -168,6 +172,8 @@ public class EntQuery implements ISingleOperand {
         } else if (idPropYieldEnhancementRequired()) {
             final String yieldPropAliasPrefix = getSources().getMain().getAlias() == null ? "" : getSources().getMain().getAlias() + DOT;
             yields.addYield(new Yield(new EntProp(yieldPropAliasPrefix + ID), ID));
+        } else if (constYieldEnhancementRequired()) {
+            yields.addYield(new Yield(new EntValue(0), ""));
         } else if (allPropsYieldEnhancementRequired()) {
             final String yieldPropAliasPrefix = getSources().getMain().getAlias() == null ? "" : getSources().getMain().getAlias() + DOT;
             LOGGER.debug("enhanceYieldsModel.allPropsYieldEnhancementRequired");
@@ -191,9 +197,9 @@ public class EntQuery implements ISingleOperand {
                         yields.addYield(new Yield(new EntProp(yieldPropAliasPrefix + ppi.getName()), ppi.getName()));
                     }
                 }
-                
+
                 final Class<? extends AbstractEntity<?>> mainSourceType = getSources().getMain().sourceType();
-                
+
                 if (mainSourceType != EntityAggregates.class) {
                     for (final PropertyMetadata ppi : domainMetadataAnalyser.getPropertyMetadatasForEntity(mainSourceType)) {
                         final boolean skipProperty = ppi.isSynthetic() || ppi.isCompositeKeyExpression() || ppi.isCollection() || (ppi.isAggregatedExpression() && !isResultQuery());
@@ -474,7 +480,7 @@ public class EntQuery implements ISingleOperand {
 
         assignPropertyPersistenceInfoToYields();
     }
-    
+
     private boolean isResulTypePersisted() {
         return (resultType == null || resultType == EntityAggregates.class) ? false : (isPersistedEntityType(this.resultType) || isSyntheticBasedOnPersistentEntityType(this.resultType));
     }
@@ -622,7 +628,7 @@ public class EntQuery implements ISingleOperand {
 
     /**
      * If property is found within holder query sources then establish link between them (inlc. prop type setting) and return null, else return pair (holder, prop).
-     * 
+     *
      * @param holder
      * @param prop
      * @return
@@ -668,7 +674,7 @@ public class EntQuery implements ISingleOperand {
 
     /**
      * By immediate props here are meant props used within this query and not within it's (nested) subqueries.
-     * 
+     *
      * @return
      */
     public List<EntProp> getImmediateProps() {
