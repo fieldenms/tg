@@ -6,10 +6,10 @@ import ua.com.fielden.platform.entity.query.generation.BaseEntQueryTCase;
 import ua.com.fielden.platform.entity.query.model.ExpressionModel;
 import ua.com.fielden.platform.sample.domain.TgBogieLocation;
 import static org.junit.Assert.assertEquals;
-import static ua.com.fielden.platform.dao.DomainMetadataExpressionsGenerator.generateUnionEntityPropertyExpression;
+import static ua.com.fielden.platform.dao.DomainMetadataUtils.generateUnionEntityPropertyExpression;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.expr;
 
-public class DomainMetadataExpressionsGeneratorTest extends BaseEntQueryTCase {
+public class DomainMetadataUtilityTest extends BaseEntQueryTCase {
 
     @Test
     public void test_union_entity_key_prop_model_generation() throws Exception {

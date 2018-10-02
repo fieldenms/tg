@@ -26,10 +26,10 @@ import ua.com.fielden.platform.entity.query.model.ExpressionModel;
 import ua.com.fielden.platform.expression.ExpressionText2ModelConverter;
 import ua.com.fielden.platform.utils.Pair;
 
-public class DomainMetadataExpressionsGenerator {
+public class DomainMetadataUtils {
 
     /** Private default constructor to prevent instantiation. */
-    private DomainMetadataExpressionsGenerator() {
+    private DomainMetadataUtils() {
     }
     
     public static ExpressionModel generateUnionEntityPropertyExpression(final Class<? extends AbstractUnionEntity> entityType, final String commonPropName) {
