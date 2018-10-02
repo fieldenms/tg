@@ -41,7 +41,7 @@ public class ModelledEntityMetadata<ET extends AbstractEntity<?>> extends Abstra
             return false;
         if (!(obj instanceof ModelledEntityMetadata))
             return false;
-        ModelledEntityMetadata other = (ModelledEntityMetadata) obj;
+        ModelledEntityMetadata<?> other = (ModelledEntityMetadata<?>) obj;
         if (models == null) {
             if (other.models != null)
                 return false;

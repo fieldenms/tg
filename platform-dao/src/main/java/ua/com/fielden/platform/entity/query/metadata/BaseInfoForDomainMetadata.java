@@ -1,9 +1,7 @@
 package ua.com.fielden.platform.entity.query.metadata;
 
 import static org.apache.commons.lang.StringUtils.isEmpty;
-import static ua.com.fielden.platform.entity.AbstractEntity.ID;
-import static ua.com.fielden.platform.entity.AbstractUnionEntity.unionProperties;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
+import static ua.com.fielden.platform.entity.query.metadata.DomainMetadataUtils.produceUnionEntityModels;
 import static ua.com.fielden.platform.entity.query.metadata.EntityCategory.PERSISTED;
 import static ua.com.fielden.platform.entity.query.metadata.EntityCategory.PURE;
 import static ua.com.fielden.platform.entity.query.metadata.EntityCategory.QUERY_BASED;
@@ -15,17 +13,12 @@ import static ua.com.fielden.platform.utils.EntityUtils.isPersistedEntityType;
 import static ua.com.fielden.platform.utils.EntityUtils.isSyntheticEntityType;
 import static ua.com.fielden.platform.utils.EntityUtils.isUnionEntityType;
 
-import java.lang.reflect.Field;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.AbstractUnionEntity;
 import ua.com.fielden.platform.entity.annotation.MapEntityTo;
-import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IFromAlias;
-import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ISubsequentCompletedAndYielded;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 
 public class BaseInfoForDomainMetadata {
@@ -91,33 +84,5 @@ public class BaseInfoForDomainMetadata {
             ";\n UnionModels.size: " + unionEntityModels.size());
             }
         }
-        
-        private <ET extends AbstractEntity<?>> List<EntityResultQueryModel<ET>> produceUnionEntityModels(final Class<ET> entityType) {
-            final List<EntityResultQueryModel<ET>> result = new ArrayList<>();
-            if (!isUnionEntityType(entityType)) {
-                return result;
-            }
-
-            final List<Field> unionProps = unionProperties((Class<? extends AbstractUnionEntity>) entityType);
-            for (final Field currProp : unionProps) {
-                result.add(generateModelForUnionEntityProperty(unionProps, currProp).modelAsEntity(entityType));
-            }
-            return result;
-        }
-        
-        private <PT extends AbstractEntity<?>> ISubsequentCompletedAndYielded<PT> generateModelForUnionEntityProperty(final List<Field> unionProps, final Field currProp) {
-            final IFromAlias<PT> modelStart = select((Class<PT>) currProp.getType());
-            ISubsequentCompletedAndYielded<PT> modelInProgress = null;
-            for (final Field field : unionProps) {
-                if (modelInProgress == null) {
-                    modelInProgress = field.equals(currProp) ? modelStart.yield().prop(ID).as(field.getName()) : modelStart.yield().val(null).as(field.getName());
-                } else {
-                    modelInProgress = field.equals(currProp) ? modelInProgress.yield().prop(ID).as(field.getName()) : modelInProgress.yield().val(null).as(field.getName());
-                }
-            }
-
-            return modelInProgress;
-        }
-
     }
 }

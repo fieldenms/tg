@@ -1,18 +1,25 @@
 package ua.com.fielden.platform.entity.query.metadata;
 
 import static java.lang.String.format;
+import static org.apache.commons.lang.StringUtils.isNotEmpty;
+import static ua.com.fielden.platform.entity.AbstractEntity.ID;
 import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
 import static ua.com.fielden.platform.entity.AbstractUnionEntity.unionProperties;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.expr;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 import static ua.com.fielden.platform.reflection.AnnotationReflector.getAnnotation;
 import static ua.com.fielden.platform.reflection.AnnotationReflector.isContextual;
 import static ua.com.fielden.platform.reflection.Finder.getFieldByName;
 import static ua.com.fielden.platform.reflection.Reflector.getKeyMemberSeparator;
 import static ua.com.fielden.platform.utils.EntityUtils.isEntityType;
+import static ua.com.fielden.platform.utils.EntityUtils.isUnionEntityType;
 
 import java.lang.reflect.Field;
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+
+import org.apache.commons.lang.StringUtils;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.AbstractUnionEntity;
@@ -21,7 +28,10 @@ import ua.com.fielden.platform.entity.annotation.Calculated;
 import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
 import ua.com.fielden.platform.entity.query.exceptions.EqlException;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ICaseWhenFunctionWhen;
+import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IFromAlias;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IStandAloneExprOperationAndClose;
+import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ISubsequentCompletedAndYielded;
+import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.ExpressionModel;
 import ua.com.fielden.platform.expression.ExpressionText2ModelConverter;
 import ua.com.fielden.platform.utils.Pair;
@@ -108,7 +118,7 @@ public class DomainMetadataUtils {
 
     public static ExpressionModel extractExpressionModelFromCalculatedProperty(final Class<? extends AbstractEntity<?>> entityType, final Field calculatedPropfield) throws Exception {
         final Calculated calcAnnotation = getAnnotation(calculatedPropfield, Calculated.class);
-        if (!"".equals(calcAnnotation.value())) {
+        if (isNotEmpty(calcAnnotation.value())) {
             return createExpressionText2ModelConverter(entityType, calcAnnotation).convert().getModel();
         } else {
             try {
@@ -132,5 +142,32 @@ public class DomainMetadataUtils {
 
     private static Class<? extends AbstractEntity<?>> getRootType(final Calculated calcAnnotation) throws ClassNotFoundException {
         return (Class<? extends AbstractEntity<?>>) ClassLoader.getSystemClassLoader().loadClass(calcAnnotation.rootTypeName());
+    }
+    
+    public static <ET extends AbstractEntity<?>> List<EntityResultQueryModel<ET>> produceUnionEntityModels(final Class<ET> entityType) {
+        final List<EntityResultQueryModel<ET>> result = new ArrayList<>();
+        if (!isUnionEntityType(entityType)) {
+            return result;
+        }
+
+        final List<Field> unionProps = unionProperties((Class<? extends AbstractUnionEntity>) entityType);
+        for (final Field currProp : unionProps) {
+            result.add(generateModelForUnionEntityProperty(unionProps, currProp).modelAsEntity(entityType));
+        }
+        return result;
+    }
+    
+    private static <PT extends AbstractEntity<?>> ISubsequentCompletedAndYielded<PT> generateModelForUnionEntityProperty(final List<Field> unionProps, final Field currProp) {
+        final IFromAlias<PT> modelStart = select((Class<PT>) currProp.getType());
+        ISubsequentCompletedAndYielded<PT> modelInProgress = null;
+        for (final Field field : unionProps) {
+            if (modelInProgress == null) {
+                modelInProgress = field.equals(currProp) ? modelStart.yield().prop(ID).as(field.getName()) : modelStart.yield().val(null).as(field.getName());
+            } else {
+                modelInProgress = field.equals(currProp) ? modelInProgress.yield().prop(ID).as(field.getName()) : modelInProgress.yield().val(null).as(field.getName());
+            }
+        }
+
+        return modelInProgress;
     }
 }
