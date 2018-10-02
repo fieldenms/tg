@@ -32,6 +32,7 @@
                 @apply(--layout-vertical);
             }
             .title-bar {
+                position: relative;
                 padding: 0 16px 0 8px;
                 height: 44px;
                 min-height: 44px;
@@ -101,7 +102,6 @@
                 margin-bottom: 2px;
             }
             #navigationBar {
-                position: relative;
                 color: white;
             }
             #resizer {
@@ -150,7 +150,6 @@
                 <span>[[_sequentialEditText]]</span>
                 <paper-icon-button id="nextEntity" class="button-reverse title-bar-button navigation-button" icon="hardware:keyboard-backspace" on-tap="_nextEntry" disabled$="[[!_isNavigatonButtonEnable(_hasNext, isNavigationActionInProgress)]]" tooltip-text$="[[_getNextEntryActionTooltip(_lastAction.navigationType)]]"></paper-icon-button>
                 <paper-icon-button id="lastEntity" class="title-bar-button navigation-button" icon="hardware:keyboard-tab" on-tap="_lastEntry" disabled$="[[!_isNavigatonButtonEnable(_hasNext, isNavigationActionInProgress)]]" tooltip-text$="[[_getLastEntryActionTooltip(_lastAction.navigationType)]]"></paper-icon-button>
-                <paper-spinner id="spinner" active="[[isNavigationActionInProgress]]" style="display: none;" alt="in progress"></paper-spinner>
             </div>
             <div class="layout horizontal center">
                 <!-- collapse/expand buttons -->
@@ -163,8 +162,9 @@
 
                 <!-- close/next buttons -->
                 <paper-icon-button hidden="[[_closerHidden(_lastAction, mobile)]]" class="close-button title-bar-button" icon="icons:cancel"  on-tap="closeDialog" tooltip-text="Close, Alt+x"></paper-icon-button>
-                <paper-icon-button hidden="[[!_lastAction.continuous]]" class="close-button title-bar-button" icon="av:skip-next" on-tap="_skipNext" tooltip-text="Skip to next without saving"></paper-icon-button>
+                <paper-icon-button id="skipNext" hidden="[[!_lastAction.continuous]]" disabled$="[[isNavigationActionInProgress]]" class="close-button title-bar-button" icon="av:skip-next" on-tap="_skipNext" tooltip-text="Skip to next without saving"></paper-icon-button>
             </div>
+            <paper-spinner id="spinner" active="[[isNavigationActionInProgress]]" style="display: none;" alt="in progress"></paper-spinner>
         </div>
         <div id="dialogBody" class="relative flex layout vertical">
             <div id="loadingPanel" class=" fit layout horizontal center-center">Loading data...</div>
@@ -498,10 +498,11 @@
             _skipNext: function() {
                 if (this._lastAction && this._lastAction.continuous && typeof this._lastAction.skipNext === 'function') {
                     // skipping to next is an explicit action that disregards any unsaved changes
-                    this.closeDialog(true);
-                    if (!this.opened) {
-                        this._lastAction.skipNext();
-                    }
+                    // this.closeDialog(true);
+                    //if (!this.opened) {
+                    this._displaySpinnerOn(this.$.skipNext);
+                    this._lastAction.skipNext();
+                    //}
                 }
             },
             
@@ -945,10 +946,8 @@
                 }
                 if (newAction) {
                     this.staticTitle = newAction.shortDesc;
-                    if (newAction.supportsNavigation) {
-                        newAction.addEventListener("tg-action-navigation-changed", this._handleActionNavigationChange);
-                        this._setNavigationDetails(newAction);
-                    }
+                    newAction.addEventListener("tg-action-navigation-changed", this._handleActionNavigationChange);
+                    this._setNavigationDetails(newAction);
                 }
                 return newAction;
             },
@@ -968,9 +967,11 @@
             },
             
             _setNavigationDetails: function (obj) {
-                this._hasPrev = obj.hasPrev;
-                this._hasNext = obj.hasNext;
-                this._sequentialEditText = "" + (obj.count > 0 ? obj.entInd + 1 : 0) + " / " + obj.count;
+                if (obj.supportsNavigation) {
+                    this._hasPrev = obj.hasPrev;
+                    this._hasNext = obj.hasNext;
+                    this._sequentialEditText = "" + (obj.count > 0 ? obj.entInd + 1 : 0) + " / " + obj.count;
+                }
             },
             
             _updateDialogAnimation: function (_masterVisibilityChanges, _masterLayoutChanges) {
