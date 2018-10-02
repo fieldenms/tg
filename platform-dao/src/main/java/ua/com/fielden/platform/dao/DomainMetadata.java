@@ -3,6 +3,9 @@ package ua.com.fielden.platform.dao;
 import static java.lang.String.format;
 import static org.apache.commons.lang.StringUtils.isEmpty;
 import static org.apache.commons.lang.StringUtils.isNotEmpty;
+import static ua.com.fielden.platform.dao.DomainMetadataExpressionsGenerator.extractExpressionModelFromCalculatedProperty;
+import static ua.com.fielden.platform.dao.DomainMetadataExpressionsGenerator.generateUnionEntityPropertyExpression;
+import static ua.com.fielden.platform.dao.DomainMetadataExpressionsGenerator.getVirtualKeyPropForEntityWithCompositeKey;
 import static ua.com.fielden.platform.dao.EntityCategory.PERSISTED;
 import static ua.com.fielden.platform.dao.EntityCategory.QUERY_BASED;
 import static ua.com.fielden.platform.dao.EntityCategory.UNION;
@@ -117,7 +120,6 @@ public class DomainMetadata {
     private final List<Class<? extends AbstractEntity<?>>> entityTypes;
     
     private Injector hibTypesInjector;
-    private final DomainMetadataExpressionsGenerator dmeg = new DomainMetadataExpressionsGenerator();
 
     public DomainMetadata(//
             final Map<Class, Class> hibTypesDefaults, //
@@ -271,7 +273,7 @@ public class DomainMetadata {
                 return null;
             }
         case UNION:
-            return new PropertyMetadata.Builder(ID, Long.class, false).hibType(H_LONG).expression(dmeg.generateUnionEntityPropertyExpression((Class<? extends AbstractUnionEntity>) entityType, ID)).type(EXPRESSION).build();
+            return new PropertyMetadata.Builder(ID, Long.class, false).hibType(H_LONG).expression(generateUnionEntityPropertyExpression((Class<? extends AbstractUnionEntity>) entityType, ID)).type(EXPRESSION).build();
         default:
             return null;
         }
@@ -304,7 +306,7 @@ public class DomainMetadata {
                 }
                 return null; //FIXME
             case UNION:
-                return new PropertyMetadata.Builder(KEY, String.class, false).hibType(H_STRING).expression(dmeg.generateUnionEntityPropertyExpression((Class<? extends AbstractUnionEntity>) entityType, KEY)).type(EXPRESSION).build();
+                return new PropertyMetadata.Builder(KEY, String.class, false).hibType(H_STRING).expression(generateUnionEntityPropertyExpression((Class<? extends AbstractUnionEntity>) entityType, KEY)).type(EXPRESSION).build();
             default:
                 return null;
             }
@@ -474,7 +476,7 @@ public class DomainMetadata {
             keyMembersWithOptionality.add(new Pair<>(field, getCompositeKeyMemberOptionalityInfo(entityType, field.getName())));
         }
         
-        return new PropertyMetadata.Builder(KEY, String.class, true).expression(dmeg.getVirtualKeyPropForEntityWithCompositeKey(entityType, keyMembersWithOptionality)).hibType(H_STRING).type(VIRTUAL_OVERRIDE).build();
+        return new PropertyMetadata.Builder(KEY, String.class, true).expression(getVirtualKeyPropForEntityWithCompositeKey(entityType, keyMembersWithOptionality)).hibType(H_STRING).type(VIRTUAL_OVERRIDE).build();
     }
 
     private PropertyMetadata getCalculatedPropInfo(final Class<? extends AbstractEntity<?>> entityType, final Field calculatedPropfield) throws Exception {
@@ -484,7 +486,7 @@ public class DomainMetadata {
         final PersistentType persistedType = getPersistedType(entityType, calculatedPropfield.getName());
         final Object hibernateType = getHibernateType(javaType, persistedType, false);
 
-        final ExpressionModel expressionModel = dmeg.extractExpressionModelFromCalculatedProperty(entityType, calculatedPropfield);
+        final ExpressionModel expressionModel = extractExpressionModelFromCalculatedProperty(entityType, calculatedPropfield);
         final PropertyCategory propCat = hibernateType instanceof ICompositeUserTypeInstantiate ? COMPONENT_HEADER : EXPRESSION;
         return new PropertyMetadata.Builder(calculatedPropfield.getName(), calculatedPropfield.getType(), true).expression(expressionModel).hibType(hibernateType).type(propCat).aggregatedExpression(aggregatedExpression).build();
     }
