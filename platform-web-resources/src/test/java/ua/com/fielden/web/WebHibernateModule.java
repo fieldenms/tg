@@ -10,7 +10,6 @@ import com.google.inject.name.Names;
 
 import ua.com.fielden.platform.attachment.AttachmentDao;
 import ua.com.fielden.platform.attachment.IAttachment;
-import ua.com.fielden.platform.dao.DomainMetadata;
 import ua.com.fielden.platform.dao.ISecurityRoleAssociation;
 import ua.com.fielden.platform.dao.IUserAndRoleAssociation;
 import ua.com.fielden.platform.dao.IUserRole;
@@ -21,6 +20,7 @@ import ua.com.fielden.platform.entity.functional.master.IAcknowledgeWarnings;
 import ua.com.fielden.platform.entity.functional.master.IPropertyWarning;
 import ua.com.fielden.platform.entity.functional.master.PropertyWarningDao;
 import ua.com.fielden.platform.entity.query.IdOnlyProxiedEntityTypeCache;
+import ua.com.fielden.platform.entity.query.metadata.DomainMetadata;
 import ua.com.fielden.platform.ioc.CommonFactoryModule;
 import ua.com.fielden.platform.security.ISecurityRoleAssociationBatchAction;
 import ua.com.fielden.platform.security.IUserAndRoleAssociationBatchAction;

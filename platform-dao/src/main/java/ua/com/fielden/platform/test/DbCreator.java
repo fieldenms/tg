@@ -23,8 +23,8 @@ import org.hibernate.dialect.Dialect;
 import com.google.common.collect.Iterators;
 import com.google.common.io.Files;
 
-import ua.com.fielden.platform.dao.DomainMetadata;
-import ua.com.fielden.platform.dao.PersistedEntityMetadata;
+import ua.com.fielden.platform.entity.query.metadata.DomainMetadata;
+import ua.com.fielden.platform.entity.query.metadata.PersistedEntityMetadata;
 import ua.com.fielden.platform.test.exceptions.DomainDriventTestException;
 
 /**

@@ -2,10 +2,10 @@ package ua.com.fielden.platform.entity.query;
 
 import java.util.Map.Entry;
 
-import ua.com.fielden.platform.dao.DomainMetadataAnalyser;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.entity.query.fluent.fetch.FetchCategory;
+import ua.com.fielden.platform.entity.query.metadata.DomainMetadataAnalyser;
 
 public class EntityAggregatesRetrievalModel<T extends AbstractEntity<?>> extends AbstractRetrievalModel<T> implements IRetrievalModel<T> {
 

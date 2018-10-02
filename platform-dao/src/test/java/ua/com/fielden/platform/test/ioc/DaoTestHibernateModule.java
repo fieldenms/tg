@@ -10,7 +10,6 @@ import com.google.common.cache.Cache;
 import com.google.inject.Scopes;
 import com.google.inject.TypeLiteral;
 
-import ua.com.fielden.platform.dao.DomainMetadata;
 import ua.com.fielden.platform.dao.EntityWithMoneyDao;
 import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.dao.ISecurityRoleAssociation;
@@ -19,6 +18,7 @@ import ua.com.fielden.platform.dao.IUserRole;
 import ua.com.fielden.platform.entity.matcher.IValueMatcherFactory;
 import ua.com.fielden.platform.entity.matcher.ValueMatcherFactory;
 import ua.com.fielden.platform.entity.query.IdOnlyProxiedEntityTypeCache;
+import ua.com.fielden.platform.entity.query.metadata.DomainMetadata;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.ioc.CommonFactoryModule;
 import ua.com.fielden.platform.keygen.IKeyNumber;

@@ -1,17 +1,17 @@
-package ua.com.fielden.platform.dao;
+package ua.com.fielden.platform.entity.query.metadata;
 
-import static ua.com.fielden.platform.dao.PropertyCategory.COLLECTIONAL;
-import static ua.com.fielden.platform.dao.PropertyCategory.COMPONENT_DETAILS;
-import static ua.com.fielden.platform.dao.PropertyCategory.COMPONENT_HEADER;
-import static ua.com.fielden.platform.dao.PropertyCategory.ENTITY_MEMBER_OF_COMPOSITE_KEY;
-import static ua.com.fielden.platform.dao.PropertyCategory.ONE2ONE_ID;
-import static ua.com.fielden.platform.dao.PropertyCategory.PRIMITIVE_MEMBER_OF_COMPOSITE_KEY;
-import static ua.com.fielden.platform.dao.PropertyCategory.SYNTHETIC;
-import static ua.com.fielden.platform.dao.PropertyCategory.SYNTHETIC_COMPONENT_DETAILS;
-import static ua.com.fielden.platform.dao.PropertyCategory.SYNTHETIC_COMPONENT_HEADER;
-import static ua.com.fielden.platform.dao.PropertyCategory.UNION_ENTITY_DETAILS;
-import static ua.com.fielden.platform.dao.PropertyCategory.UNION_ENTITY_HEADER;
-import static ua.com.fielden.platform.dao.PropertyCategory.VIRTUAL_OVERRIDE;
+import static ua.com.fielden.platform.entity.query.metadata.PropertyCategory.COLLECTIONAL;
+import static ua.com.fielden.platform.entity.query.metadata.PropertyCategory.COMPONENT_DETAILS;
+import static ua.com.fielden.platform.entity.query.metadata.PropertyCategory.COMPONENT_HEADER;
+import static ua.com.fielden.platform.entity.query.metadata.PropertyCategory.ENTITY_MEMBER_OF_COMPOSITE_KEY;
+import static ua.com.fielden.platform.entity.query.metadata.PropertyCategory.ONE2ONE_ID;
+import static ua.com.fielden.platform.entity.query.metadata.PropertyCategory.PRIMITIVE_MEMBER_OF_COMPOSITE_KEY;
+import static ua.com.fielden.platform.entity.query.metadata.PropertyCategory.SYNTHETIC;
+import static ua.com.fielden.platform.entity.query.metadata.PropertyCategory.SYNTHETIC_COMPONENT_DETAILS;
+import static ua.com.fielden.platform.entity.query.metadata.PropertyCategory.SYNTHETIC_COMPONENT_HEADER;
+import static ua.com.fielden.platform.entity.query.metadata.PropertyCategory.UNION_ENTITY_DETAILS;
+import static ua.com.fielden.platform.entity.query.metadata.PropertyCategory.UNION_ENTITY_HEADER;
+import static ua.com.fielden.platform.entity.query.metadata.PropertyCategory.VIRTUAL_OVERRIDE;
 
 import java.lang.reflect.Field;
 import java.util.ArrayList;

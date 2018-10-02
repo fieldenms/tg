@@ -1,4 +1,4 @@
-package ua.com.fielden.platform.dao;
+package ua.com.fielden.platform.entity.query.metadata;
 
 import static java.lang.String.format;
 import static ua.com.fielden.platform.entity.AbstractEntity.KEY;

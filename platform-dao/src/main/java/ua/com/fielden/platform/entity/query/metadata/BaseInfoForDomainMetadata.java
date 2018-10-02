@@ -1,13 +1,13 @@
-package ua.com.fielden.platform.dao;
+package ua.com.fielden.platform.entity.query.metadata;
 
 import static org.apache.commons.lang.StringUtils.isEmpty;
-import static ua.com.fielden.platform.dao.EntityCategory.PERSISTED;
-import static ua.com.fielden.platform.dao.EntityCategory.PURE;
-import static ua.com.fielden.platform.dao.EntityCategory.QUERY_BASED;
-import static ua.com.fielden.platform.dao.EntityCategory.UNION;
 import static ua.com.fielden.platform.entity.AbstractEntity.ID;
 import static ua.com.fielden.platform.entity.AbstractUnionEntity.unionProperties;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
+import static ua.com.fielden.platform.entity.query.metadata.EntityCategory.PERSISTED;
+import static ua.com.fielden.platform.entity.query.metadata.EntityCategory.PURE;
+import static ua.com.fielden.platform.entity.query.metadata.EntityCategory.QUERY_BASED;
+import static ua.com.fielden.platform.entity.query.metadata.EntityCategory.UNION;
 import static ua.com.fielden.platform.reflection.AnnotationReflector.getAnnotation;
 import static ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader.getOriginalType;
 import static ua.com.fielden.platform.utils.EntityUtils.getEntityModelsOfQueryBasedEntityType;

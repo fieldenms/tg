@@ -10,6 +10,11 @@ import org.hibernate.type.StringType;
 import org.junit.Test;
 
 import ua.com.fielden.platform.entity.query.generation.BaseEntQueryTCase;
+import ua.com.fielden.platform.entity.query.metadata.BaseInfoForDomainMetadata;
+import ua.com.fielden.platform.entity.query.metadata.ModelledEntityMetadata;
+import ua.com.fielden.platform.entity.query.metadata.PersistedEntityMetadata;
+import ua.com.fielden.platform.entity.query.metadata.PropertyCategory;
+import ua.com.fielden.platform.entity.query.metadata.PropertyMetadata;
 import ua.com.fielden.platform.sample.domain.TgAverageFuelUsage;
 import ua.com.fielden.platform.sample.domain.TgBogie;
 import ua.com.fielden.platform.sample.domain.TgBogieLocation;
