@@ -46,10 +46,12 @@
      * This method prevents event from further bubbling.
      */
     const tearDownEvent = function (e) {
-        if (e.stopPropagation) e.stopPropagation();
-        if (e.preventDefault) e.preventDefault();
-        e.cancelBubble = true;
-        e.returnValue = false;
+        if (e) {
+            if (e.stopPropagation) e.stopPropagation();
+            if (e.preventDefault) e.preventDefault();
+            e.cancelBubble = true;
+            e.returnValue = false;
+        }
     };
     
     /**

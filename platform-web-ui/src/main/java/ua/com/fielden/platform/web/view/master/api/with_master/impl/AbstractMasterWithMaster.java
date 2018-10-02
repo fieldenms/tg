@@ -60,7 +60,7 @@ public abstract class AbstractMasterWithMaster<T extends AbstractEntity<?>> impl
                         + "    }\n"
                         + "    return undefined;\n"
                         + "}.bind(this);\n"
-                        + "this.addEventListener('after-load', this._assignPostSavedHandlersForEmbeddedMaster.bind(this));\n")
+                        + "this.addEventListener('after-load', " + getAfterLoadListener() + ");\n")
                 .replace("@prefDim", "null")
                 .replace("@noUiValue", "false")
                 .replace("@saveOnActivationValue", "true");
@@ -71,6 +71,15 @@ public abstract class AbstractMasterWithMaster<T extends AbstractEntity<?>> impl
                 return new InnerTextElement(entityMasterStr);
             }
         };
+    }
+
+    /**
+     * Returns the implementation for the after load listener of embedded master.
+     *
+     * @return
+     */
+    protected String getAfterLoadListener() {
+        return "this._assignPostSavedHandlersForEmbeddedMaster.bind(this)";
     }
 
     protected abstract String getAttributes(final Class<? extends AbstractEntity<?>> entityType, String bindingEntityName, final boolean shouldRefreshParentCentreAfterSave);

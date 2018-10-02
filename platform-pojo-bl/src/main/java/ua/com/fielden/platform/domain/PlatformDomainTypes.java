@@ -4,12 +4,14 @@ import java.util.ArrayList;
 import java.util.List;
 
 import ua.com.fielden.platform.attachment.Attachment;
+import ua.com.fielden.platform.attachment.AttachmentPreviewEntityAction;
 import ua.com.fielden.platform.attachment.AttachmentUploader;
 import ua.com.fielden.platform.attachment.AttachmentsUploadAction;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.EntityDeleteAction;
 import ua.com.fielden.platform.entity.EntityEditAction;
 import ua.com.fielden.platform.entity.EntityExportAction;
+import ua.com.fielden.platform.entity.EntityNavigationAction;
 import ua.com.fielden.platform.entity.EntityNewAction;
 import ua.com.fielden.platform.entity.SecurityMatrixInsertionPoint;
 import ua.com.fielden.platform.entity.SecurityMatrixSaveAction;
@@ -72,7 +74,7 @@ public class PlatformDomainTypes {
         types.add(CentreConfigUpdater.class);
         types.add(CustomisableColumn.class);
         types.add(CentreColumnWidthConfigUpdater.class);
-        
+
         types.add(CentreConfigNewAction.class);
         types.add(CentreConfigDuplicateAction.class);
         types.add(CentreConfigLoadAction.class);
@@ -81,7 +83,7 @@ public class PlatformDomainTypes {
         types.add(CentreConfigSaveAction.class);
         types.add(LoadableCentreConfig.class);
         types.add(OverrideCentreConfig.class);
-        
+
         types.add(UserAndRoleAssociation.class);
         types.add(SecurityRoleAssociation.class);
         types.add(EntityCentreConfig.class);
@@ -115,6 +117,8 @@ public class PlatformDomainTypes {
         types.add(SecurityMatrixInsertionPoint.class);
         types.add(SecurityTokenTreeNodeEntity.class);
         types.add(SecurityMatrixSaveAction.class);
+        types.add(EntityNavigationAction.class);
+        types.add(AttachmentPreviewEntityAction.class);
 
     }
 }

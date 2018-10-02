@@ -58,7 +58,7 @@ public interface IWebUiBuilder {
      * @return
      */
     IWebUiBuilder setTimeFormat(String timeFormat);
-    
+
     /**
      * Set the time with millis format for the web application.
      *
@@ -74,7 +74,7 @@ public interface IWebUiBuilder {
      * @return
      */
     <T extends AbstractEntity<?>> IWebUiBuilder addMaster(final EntityMaster<T> master);
-    
+
     /**
      * Registers entity master in web application and returns it.
      *
@@ -82,11 +82,11 @@ public interface IWebUiBuilder {
      * @return
      */
     <ENTITY_TYPE extends AbstractEntity<?>> EntityMaster<ENTITY_TYPE> register(final EntityMaster<ENTITY_TYPE> master);
-    
+
     /**
-     * Returns an optional value with a master instance for the specified type. 
-     * An empty optional value is returned if there is no master registered for the specified type. 
-     * 
+     * Returns an optional value with a master instance for the specified type.
+     * An empty optional value is returned if there is no master registered for the specified type.
+     *
      * @param entityType
      * @return
      */
@@ -109,9 +109,9 @@ public interface IWebUiBuilder {
     <M extends MiWithConfigurationSupport<?>> IWebUiBuilder addCentre(final EntityCentre<?> centre);
 
     /**
-     * Returns an optional value with a centre instance for the specified menu item type. 
-     * An empty optional value is returned if there is no centre registered for the specified type. 
-     * 
+     * Returns an optional value with a centre instance for the specified menu item type.
+     * An empty optional value is returned if there is no centre registered for the specified type.
+     *
      * @param menuType
      * @return
      */
@@ -132,11 +132,11 @@ public interface IWebUiBuilder {
      */
     IWebUiConfig done();
 
-    
+
     /**
      * Registers (associates and caches) an entity action configuration with an entity type. Entity action configuration must represent an action to open an Entity Master corresponding to the specified entity type.
-     * Repeated attempts to register an entity action configuration with the same entity type result in a runtime exception. 
-     * 
+     * Repeated attempts to register an entity action configuration with the same entity type result in a runtime exception.
+     *
      * @param entityType
      * @param openMasterActionConfig
      * @return
@@ -146,10 +146,9 @@ public interface IWebUiBuilder {
     /**
      * Returns a supplier to lazily obtain an open entity master action configuration for the specified entity type.
      * The returned supplier is never <code>null</code>, but its result is optional and could be empty.
-     * 
+     *
      * @param entityType
      * @return
      */
     <T extends AbstractEntity<?>> Supplier<Optional<EntityActionConfig>> getOpenMasterAction(final Class<T> entityType);
-
 }
