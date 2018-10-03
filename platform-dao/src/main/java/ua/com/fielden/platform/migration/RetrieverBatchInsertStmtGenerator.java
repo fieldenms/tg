@@ -1,5 +1,9 @@
 package ua.com.fielden.platform.migration;
 
+import static ua.com.fielden.platform.entity.AbstractEntity.ID;
+import static ua.com.fielden.platform.entity.AbstractEntity.VERSION;
+import static ua.com.fielden.platform.utils.EntityUtils.isOneToOne;
+
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -31,9 +35,9 @@ public class RetrieverBatchInsertStmtGenerator extends AbstractRetrieverBatchStm
     private List<PropertyMetadata> extractSystemFields(final PersistedEntityMetadata<? extends AbstractEntity<?>> emd) {
         final List<PropertyMetadata> result = new ArrayList<>();
         final SortedMap<String, PropertyMetadata> props = emd.getProps();
-        result.add(props.get("version"));
-        if (!emd.isOneToOne()) {
-            result.add(props.get("id"));
+        result.add(props.get(VERSION));
+        if (!isOneToOne(emd.getType())) {
+            result.add(props.get(ID));
         }
         return result;
     }
@@ -74,7 +78,7 @@ public class RetrieverBatchInsertStmtGenerator extends AbstractRetrieverBatchStm
         }
 
         for (final PropertyMetadata propMetadata : extraFields) {
-            result.add(propMetadata.getName().equals(AbstractEntity.ID) ? id : 0);
+            result.add(propMetadata.getName().equals(ID) ? id : 0);
         }
 
         return result;

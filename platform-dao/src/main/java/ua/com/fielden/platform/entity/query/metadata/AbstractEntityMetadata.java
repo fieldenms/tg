@@ -1,8 +1,5 @@
 package ua.com.fielden.platform.entity.query.metadata;
 
-import static ua.com.fielden.platform.reflection.AnnotationReflector.getKeyType;
-import static ua.com.fielden.platform.utils.EntityUtils.isPersistedEntityType;
-
 import java.util.HashSet;
 import java.util.Map.Entry;
 import java.util.Set;
@@ -20,10 +17,6 @@ public abstract class AbstractEntityMetadata<ET extends AbstractEntity<?>> {
             throw new IllegalArgumentException("Missing entity type!");
         }
         this.props = props;
-    }
-
-    public boolean isOneToOne() {
-        return isPersistedEntityType(getKeyType(type));
     }
 
     public Class<? extends AbstractEntity<?>> getType() {
