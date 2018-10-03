@@ -1,7 +1,10 @@
 package ua.com.fielden.platform.utils;
 
+import static java.util.Arrays.asList;
+import static ua.com.fielden.platform.entity.ActivatableAbstractEntity.ACTIVE;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.expr;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetch;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchOnly;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.orderBy;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
@@ -208,7 +211,7 @@ public final class Validators {
             return result;
         }
         final Class<? extends AbstractEntity<?>> entityType = entity.getType();
-        final List<Class<? extends ActivatableAbstractEntity<?>>> relevantTypes = Arrays.asList(annotation.value());
+        final List<Class<? extends ActivatableAbstractEntity<?>>> relevantTypes = asList(annotation.value());
 
         for (final Class<? extends ActivatableAbstractEntity<?>> dependentType : relevantTypes) {
             // only those properties that are key members are of interest
@@ -220,19 +223,16 @@ public final class Validators {
                 }
             }
             if (!props.isEmpty()) { // most likely this means an invalid dependency
-                fetch fetch = fetch(dependentType);
                 IWhere1<? extends ActivatableAbstractEntity<?>> inProgress = select(dependentType).where().prop(ActivatableAbstractEntity.ACTIVE).eq().val(true).and().begin();
                 for (int index  = 0; index < props.size() - 1; index++) {
                     final String propName = props.get(index).getName();
-                    fetch = fetch.with(propName);
                     inProgress = inProgress.prop(propName).eq().val(entity).or();
                 }
                 final String propName = props.get(props.size() - 1).getName();
-                fetch = fetch.with(propName);
                 final EntityResultQueryModel<? extends ActivatableAbstractEntity<?>> query = inProgress.prop(propName).eq().val(entity).end().model();
-                final QueryExecutionModel<? extends ActivatableAbstractEntity<?>, ?> qem = from(query).with(fetch).model();
-                final IEntityDao co = coFinder.find(dependentType);
-                result.addAll(co.getAllEntities(qem));
+
+                final IEntityDao co = coFinder.find(dependentType, false);
+                result.addAll(co.getAllEntities(from(query).with(co.getFetchProvider().fetchModel()).model()));
             }
         }
         return result;
