@@ -126,10 +126,10 @@ public class EntityRetrievalModel<T extends AbstractEntity<?>> extends AbstractR
         for (final PropertyMetadata ppi : propsMetadata) {
             if (!ppi.isCalculated()/* && !ppi.isSynthetic()*/) {
                 logger.debug("adding not calculated prop to fetch model: " + ppi.getName());
-                final boolean skipEntities = !(ppi.getType() == ENTITY_MEMBER_OF_COMPOSITE_KEY ||
-                        ppi.getType() == ENTITY_AS_KEY ||
-                        ppi.getType() == UNION_ENTITY_DETAILS ||
-                        ppi.getType() == UNION_ENTITY_HEADER);
+                final boolean skipEntities = !(ppi.getCategory() == ENTITY_MEMBER_OF_COMPOSITE_KEY ||
+                        ppi.getCategory() == ENTITY_AS_KEY ||
+                        ppi.getCategory() == UNION_ENTITY_DETAILS ||
+                        ppi.getCategory() == UNION_ENTITY_HEADER);
                 with(ppi.getName(), skipEntities);
             }
         }

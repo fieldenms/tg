@@ -168,7 +168,7 @@ public class HibernateMappingsGenerator {
      * @throws Exception
      */
     private String generatePropertyMappingFromPropertyMetadata(final PropertyMetadata propMetadata, final DbVersion dbVersion) throws Exception {
-        switch (propMetadata.getType()) {
+        switch (propMetadata.getCategory()) {
         case UNION_ENTITY_HEADER:
             return generateUnionEntityPropertyMapping(propMetadata);
         case ENTITY_AS_KEY:
