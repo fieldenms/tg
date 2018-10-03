@@ -15,11 +15,13 @@ import static ua.com.fielden.platform.entity.validation.custom.DomainEntitiesDep
 import static ua.com.fielden.platform.entity.validation.custom.DomainEntitiesDependenciesUtils.generateQuery;
 import static ua.com.fielden.platform.entity.validation.custom.DomainEntitiesDependenciesUtils.getEntityDependantsMap;
 import static ua.com.fielden.platform.error.Result.failure;
+import static ua.com.fielden.platform.error.Result.successful;
 import static ua.com.fielden.platform.reflection.ActivatableEntityRetrospectionHelper.isNotSpecialActivatableToBeSkipped;
 import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getEntityTitleAndDesc;
 import static ua.com.fielden.platform.types.tuples.T2.t2;
 import static ua.com.fielden.platform.types.tuples.T3.t3;
 import static ua.com.fielden.platform.utils.CollectionUtil.mapOf;
+import static ua.com.fielden.platform.utils.MessageUtils.singleOrPlural;
 
 import java.lang.annotation.Annotation;
 import java.util.LinkedHashSet;
@@ -68,24 +70,24 @@ public class ActivePropertyValidator extends AbstractBeforeChangeEventHandler<Bo
     @Override
     @SuppressWarnings({ "rawtypes", "unchecked" })
     public Result handle(final MetaProperty<Boolean> property, final Boolean newValue, final Set<Annotation> mutatorAnnotations) {
-        final ActivatableAbstractEntity<?> entity = (ActivatableAbstractEntity<?>) property.getEntity();
+        final ActivatableAbstractEntity<?> entity = property.getEntity();
         if (!entity.isPersisted()) { // a brand new entity is being created
-            return Result.successful(newValue);
+            return successful(newValue);
         } else if (!newValue) { // entity is being deactivated, but could still be referenced
             // let's check refCount... it could potentially be stale...
             final IEntityDao<?> co = coFinder.find(entity.getType());
-            final long count;
+            final int count;
             if (!co.isStale(entity.getId(), entity.getVersion())) {
                 count = entity.getRefCount();
             } else {
-                // need to retireve the latest refCount
+                // need to retrieve the latest refCount
                 final fetch fetch = fetchOnly(entity.getType()).with("refCount");
                 final ActivatableAbstractEntity<?> updatedEntity = (ActivatableAbstractEntity<?>) co.findById(entity.getId(), fetch);
                 count = updatedEntity.getRefCount();
             }
 
             if (count == 0) {
-                return Result.successful(newValue);
+                return successful(newValue);
             } else {
                 final Map<Class<? extends AbstractEntity<?>>, DomainEntityDependencies> domainDependency = getEntityDependantsMap(applicationDomainProvider.entityTypes());
                 final AggregatedResultQueryModel query = generateQuery(domainDependency.get(entity.getType()).getActivatableDependencies(), true);
@@ -111,11 +113,11 @@ public class ActivePropertyValidator extends AbstractBeforeChangeEventHandler<Bo
                 }
             }
 
-            return Result.successful(null);
+            return successful(null);
         }
     }
 
-    private String mkErrorMsg(final ActivatableAbstractEntity<?> entity, final long count, final List<EntityAggregates> dependencies) {
+    private String mkErrorMsg(final ActivatableAbstractEntity<?> entity, final int count, final List<EntityAggregates> dependencies) {
         final T3<Integer, Integer, Integer> lengths = dependencies.stream()
                 .map(dep -> t3(dep.get(ENTITY_TYPE_TITLE).toString().length(), dep.get(DEPENDENT_PROP_TITLE).toString().length(), dep.get(COUNT).toString().length()))
                 .reduce(t3(0, 0, 0), (accum, val) -> t3(max(accum._1, val._1), max(accum._2, val._2), max(accum._3, val._3)), (v1, v2) -> {throw failure("Should not happen");}); 
@@ -124,8 +126,7 @@ public class ActivePropertyValidator extends AbstractBeforeChangeEventHandler<Bo
                 .collect(joining("\n<br>"));
         final String columns = depMsg("Entity", "Property", "Qty", lengths);
         final String entityTitle = getEntityTitleAndDesc(entity.getType()).getKey();
-        final String msg = format("%s [%s] has %s active dependencies:\n\n<br><br>%s<hr>\n<br>%s", entityTitle, entity, count, columns, deps);
-        return msg;
+        return format("%s [%s] has %s active %s:%n%n<br><br>%s<hr>%n<br>%s", entityTitle, entity, count, singleOrPlural(count, "dependency", "dependencies"), columns, deps);
     }
 
     private static String depMsg(final String val1, final String val2, final String val3, final T3<Integer, Integer, Integer> lengths) {
