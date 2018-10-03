@@ -265,14 +265,14 @@ public class BaseEntQueryTCase {
     }
 
     public static PropertyMetadata ppi(final String name, final Class javaType, final boolean nullable, final Object hibType, final String column, final Integer length, final Integer precision, final Integer scale, final PropertyCategory type) {
-        return new PropertyMetadata.Builder(name, javaType, nullable).column(new PropertyColumn(column, length, precision, scale)).hibType(hibType).type(type).build();
+        return new PropertyMetadata.Builder(name, javaType, nullable).column(new PropertyColumn(column, length, precision, scale)).hibType(hibType).category(type).build();
     }
     
     public static PropertyMetadata ppi(final String name, final Class javaType, final boolean nullable, final Object hibType, final List<PropertyColumn> columns, final PropertyCategory type) {
-        return new PropertyMetadata.Builder(name, javaType, nullable).columns(columns).hibType(hibType).type(type).build();
+        return new PropertyMetadata.Builder(name, javaType, nullable).columns(columns).hibType(hibType).category(type).build();
     }
     
     public static PropertyMetadata ppi(final String name, final Class javaType, final ExpressionModel expressionModel, final Object hibType, final PropertyCategory type, final boolean aggregatedExpression) {
-        return new PropertyMetadata.Builder(name, javaType, true).expression(expressionModel).hibType(hibType).type(type).aggregatedExpression(aggregatedExpression).build();
+        return new PropertyMetadata.Builder(name, javaType, true).expression(expressionModel).hibType(hibType).category(type).aggregatedExpression(aggregatedExpression).build();
     }
 }
