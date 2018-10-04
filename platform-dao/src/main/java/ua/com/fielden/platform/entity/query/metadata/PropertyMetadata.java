@@ -73,9 +73,9 @@ public class PropertyMetadata implements Comparable<PropertyMetadata> {
         return category.affectsMappings();
     }
 
-    public Type getHibTypeAsType() {
-        return hibType instanceof Type ? (Type) hibType : null;
-    }
+//    public Type getHibTypeAsType() {
+//        return hibType instanceof Type ? (Type) hibType : null;
+//    }
 
     public IUserTypeInstantiate getHibTypeAsUserType() {
         return hibType instanceof IUserTypeInstantiate ? (IUserTypeInstantiate) hibType : null;
