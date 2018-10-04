@@ -33,6 +33,7 @@ import ua.com.fielden.platform.entity.query.generation.elements.OperandsBasedSet
 import ua.com.fielden.platform.entity.query.generation.ioc.HelperIocModule;
 import ua.com.fielden.platform.entity.query.metadata.DomainMetadata;
 import ua.com.fielden.platform.entity.query.metadata.DomainMetadataAnalyser;
+import ua.com.fielden.platform.entity.query.metadata.EntityCategory;
 import ua.com.fielden.platform.entity.query.metadata.PropertyCategory;
 import ua.com.fielden.platform.entity.query.metadata.PropertyColumn;
 import ua.com.fielden.platform.entity.query.metadata.PropertyMetadata;
@@ -260,19 +261,19 @@ public class BaseEntQueryTCase {
         return typeResolver.basic(name);
     }
 
-    public static PropertyMetadata ppi(final String name, final Class javaType, final boolean nullable, final Object hibType, final String column, final PropertyCategory type) {
-        return ppi(name, javaType, nullable, hibType, column, null, null, null, type);
+    public static PropertyMetadata ppi(final String name, final Class javaType, final boolean nullable, final Object hibType, final String column, final PropertyCategory category, final EntityCategory entityCategory) {
+        return ppi(name, javaType, nullable, hibType, column, null, null, null, category, entityCategory);
     }
 
-    public static PropertyMetadata ppi(final String name, final Class javaType, final boolean nullable, final Object hibType, final String column, final Integer length, final Integer precision, final Integer scale, final PropertyCategory type) {
-        return new PropertyMetadata.Builder(name, javaType, nullable).column(new PropertyColumn(column, length, precision, scale)).hibType(hibType).category(type).build();
+    public static PropertyMetadata ppi(final String name, final Class javaType, final boolean nullable, final Object hibType, final String column, final Integer length, final Integer precision, final Integer scale, final PropertyCategory category, final EntityCategory entityCategory) {
+        return new PropertyMetadata.Builder(name, javaType, nullable, entityCategory).column(new PropertyColumn(column, length, precision, scale)).hibType(hibType).category(category).build();
     }
     
-    public static PropertyMetadata ppi(final String name, final Class javaType, final boolean nullable, final Object hibType, final List<PropertyColumn> columns, final PropertyCategory type) {
-        return new PropertyMetadata.Builder(name, javaType, nullable).columns(columns).hibType(hibType).category(type).build();
+    public static PropertyMetadata ppi(final String name, final Class javaType, final boolean nullable, final Object hibType, final List<PropertyColumn> columns, final PropertyCategory category, final EntityCategory entityCategory) {
+        return new PropertyMetadata.Builder(name, javaType, nullable, entityCategory).columns(columns).hibType(hibType).category(category).build();
     }
     
-    public static PropertyMetadata ppi(final String name, final Class javaType, final ExpressionModel expressionModel, final Object hibType, final PropertyCategory type, final boolean aggregatedExpression) {
-        return new PropertyMetadata.Builder(name, javaType, true).expression(expressionModel).hibType(hibType).category(type).aggregatedExpression(aggregatedExpression).build();
+    public static PropertyMetadata ppi(final String name, final Class javaType, final ExpressionModel expressionModel, final Object hibType, final PropertyCategory category, final EntityCategory entityCategory, final boolean aggregatedExpression) {
+        return new PropertyMetadata.Builder(name, javaType, true, entityCategory).expression(expressionModel).hibType(hibType).category(category).aggregatedExpression(aggregatedExpression).build();
     }
 }

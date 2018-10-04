@@ -4,6 +4,9 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.expr;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
+import static ua.com.fielden.platform.entity.query.metadata.EntityCategory.PERSISTED;
+import static ua.com.fielden.platform.entity.query.metadata.EntityCategory.QUERY_BASED;
+import static ua.com.fielden.platform.entity.query.metadata.EntityCategory.UNION;
 
 import org.hibernate.type.LongType;
 import org.hibernate.type.StringType;
@@ -11,6 +14,7 @@ import org.junit.Test;
 
 import ua.com.fielden.platform.entity.query.generation.BaseEntQueryTCase;
 import ua.com.fielden.platform.entity.query.metadata.BaseInfoForDomainMetadata;
+import ua.com.fielden.platform.entity.query.metadata.EntityCategory;
 import ua.com.fielden.platform.entity.query.metadata.ModelledEntityMetadata;
 import ua.com.fielden.platform.entity.query.metadata.PersistedEntityMetadata;
 import ua.com.fielden.platform.entity.query.metadata.PropertyCategory;
@@ -29,7 +33,7 @@ public class DomainMetadataTest extends BaseEntQueryTCase {
         final PersistedEntityMetadata<TgVehicle> entityMetadata = DOMAIN_METADATA.generatePersistedEntityMetadata(TgVehicle.class, baseInfoForDomainMetadata);
         final PropertyMetadata actPropertyMetadata = entityMetadata.getProps().get("finDetails");
 
-        final PropertyMetadata expPropertyMetadata = new PropertyMetadata.Builder("finDetails", TgVehicleFinDetails.class, true). //
+        final PropertyMetadata expPropertyMetadata = new PropertyMetadata.Builder("finDetails", TgVehicleFinDetails.class, true, PERSISTED). //
         hibType(LongType.INSTANCE). //
         category(PropertyCategory.EXPRESSION). //
         //expression(expr().prop("id").model()). //
@@ -49,7 +53,7 @@ public class DomainMetadataTest extends BaseEntQueryTCase {
     public void test_one_to_one_property_metadata_for_synthetic_entity() throws Exception {
         final ModelledEntityMetadata<TgAverageFuelUsage> entityMetadata = DOMAIN_METADATA.generateModelledEntityMetadata(TgAverageFuelUsage.class, baseInfoForDomainMetadata);
         final PropertyMetadata actPropertyMetadata = entityMetadata.getProps().get("key");
-        final PropertyMetadata expPropertyMetadata = new PropertyMetadata.Builder("key", TgVehicle.class, false). //
+        final PropertyMetadata expPropertyMetadata = new PropertyMetadata.Builder("key", TgVehicle.class, false, QUERY_BASED). //
         hibType(LongType.INSTANCE). //
         category(PropertyCategory.SYNTHETIC). //
         build();
@@ -60,7 +64,7 @@ public class DomainMetadataTest extends BaseEntQueryTCase {
     public void test_deduced_id_for_synthetic_entity() throws Exception {
         final ModelledEntityMetadata<TgAverageFuelUsage> entityMetadata = DOMAIN_METADATA.generateModelledEntityMetadata(TgAverageFuelUsage.class, baseInfoForDomainMetadata);
         final PropertyMetadata actPropertyMetadata = entityMetadata.getProps().get("id");
-        final PropertyMetadata expPropertyMetadata = new PropertyMetadata.Builder("id", Long.class, false). //
+        final PropertyMetadata expPropertyMetadata = new PropertyMetadata.Builder("id", Long.class, false, QUERY_BASED). //
         hibType(LongType.INSTANCE). //
         category(PropertyCategory.EXPRESSION). //
         expression(expr().prop("key").model()). //
@@ -73,7 +77,7 @@ public class DomainMetadataTest extends BaseEntQueryTCase {
         final ModelledEntityMetadata<TgBogieLocation> entityMetadata = DOMAIN_METADATA.generateUnionedEntityMetadata(TgBogieLocation.class, baseInfoForDomainMetadata);
         final PropertyMetadata actPropertyMetadata = entityMetadata.getProps().get("id");
 
-        final PropertyMetadata expPropertyMetadata = new PropertyMetadata.Builder("id", Long.class, false). //
+        final PropertyMetadata expPropertyMetadata = new PropertyMetadata.Builder("id", Long.class, false, UNION). //
         hibType(LongType.INSTANCE). //
         category(PropertyCategory.EXPRESSION). //
         expression(expr().caseWhen().prop("wagonSlot").isNotNull().then().prop("wagonSlot.id").when().prop("workshop").isNotNull().then().prop("workshop.id").otherwise().val(null).end().model()). //
@@ -86,7 +90,7 @@ public class DomainMetadataTest extends BaseEntQueryTCase {
         final ModelledEntityMetadata<TgBogieLocation> entityMetadata = DOMAIN_METADATA.generateUnionedEntityMetadata(TgBogieLocation.class, baseInfoForDomainMetadata);
         final PropertyMetadata actPropertyMetadata = entityMetadata.getProps().get("key");
 
-        final PropertyMetadata expPropertyMetadata = new PropertyMetadata.Builder("key", String.class, false). //
+        final PropertyMetadata expPropertyMetadata = new PropertyMetadata.Builder("key", String.class, false, UNION). //
         hibType(StringType.INSTANCE). //
         category(PropertyCategory.EXPRESSION). //
         expression(expr().caseWhen().prop("wagonSlot").isNotNull().then().prop("wagonSlot.key").when().prop("workshop").isNotNull().then().prop("workshop.key").otherwise().val(null).end().model()). //

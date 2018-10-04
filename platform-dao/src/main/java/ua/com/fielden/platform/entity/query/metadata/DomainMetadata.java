@@ -104,9 +104,7 @@ public class DomainMetadata {
     private final PropertyColumn version;
     private final PropertyColumn key = new PropertyColumn("KEY_");
     //    private final static PropertyMetadata idProperty(final Class<? extends AbstractEntity<?>> entityType) { return new PropertyMetadata.Builder(AbstractEntity.ID, entityType, /*Long.class,*/ false).column(id).hibType(TypeFactory.basic("long")).type(ID).build();}
-    private final PropertyMetadata idProperty;
-    private final PropertyMetadata idPropertyInOne2One;
-    private final PropertyMetadata versionProperty;
+
     public final DbVersion dbVersion;
     /**
      * Map between java type and hibernate persistence type (implementers of Type, IUserTypeInstantiate, ICompositeUserTypeInstantiate).
@@ -142,10 +140,6 @@ public class DomainMetadata {
             id = new PropertyColumn("TG_ID");
             version = new PropertyColumn("TG_VERSION");
         }
-
-        idProperty = new PropertyMetadata.Builder(ID, Long.class, false).column(id).hibType(H_LONG).category(PRIMITIVE).build();
-        idPropertyInOne2One = new PropertyMetadata.Builder(ID, Long.class, false).column(id).hibType(H_LONG).category(ONE2ONE_ID).build();
-        versionProperty = new PropertyMetadata.Builder(VERSION, Long.class, false).column(version).hibType(H_LONG).category(PRIMITIVE).build();
 
         final BaseInfoForDomainMetadata baseInfoForDomainMetadata = new BaseInfoForDomainMetadata();
 
@@ -253,6 +247,8 @@ public class DomainMetadata {
     }
 
     private PropertyMetadata generateIdPropertyMetadata(final Class<? extends AbstractEntity<?>> entityType, final EntityCategory entityCategory) {
+        final PropertyMetadata idProperty = new PropertyMetadata.Builder(ID, Long.class, false, entityCategory).column(id).hibType(H_LONG).category(PRIMITIVE).build();
+        final PropertyMetadata idPropertyInOne2One = new PropertyMetadata.Builder(ID, Long.class, false, entityCategory).column(id).hibType(H_LONG).category(ONE2ONE_ID).build();
         switch (entityCategory) {
         case PERSISTED:
             return isOneToOne(entityType) ? idPropertyInOne2One : idProperty/*(entityType)*/;
@@ -263,45 +259,45 @@ public class DomainMetadata {
                 }
                 return idProperty;
             } else if (isEntityType(getKeyType(entityType))) {
-                return new PropertyMetadata.Builder(ID, Long.class, false).hibType(H_LONG).expression(expr().prop(KEY).model()).category(EXPRESSION).build();
+                return new PropertyMetadata.Builder(ID, Long.class, false, entityCategory).hibType(H_LONG).expression(expr().prop(KEY).model()).category(EXPRESSION).build();
             } else {
                 return null;
             }
         case UNION:
-            return new PropertyMetadata.Builder(ID, Long.class, false).hibType(H_LONG).expression(generateUnionEntityPropertyExpression((Class<? extends AbstractUnionEntity>) entityType, ID)).category(EXPRESSION).build();
+            return new PropertyMetadata.Builder(ID, Long.class, false, entityCategory).hibType(H_LONG).expression(generateUnionEntityPropertyExpression((Class<? extends AbstractUnionEntity>) entityType, ID)).category(EXPRESSION).build();
         default:
             return null;
         }
     }
 
     private PropertyMetadata generateVersionPropertyMetadata(final Class<? extends AbstractEntity<?>> entityType, final EntityCategory entityCategory) {
-        return PERSISTED == entityCategory ? versionProperty : null;
+        return PERSISTED == entityCategory ? new PropertyMetadata.Builder(VERSION, Long.class, false, entityCategory).column(version).hibType(H_LONG).category(PRIMITIVE).build() : null;
     }
-
+    
     private PropertyMetadata generateKeyPropertyMetadata(final Class<? extends AbstractEntity<?>> entityType, final EntityCategory entityCategory) throws Exception {
         final Class<? extends Comparable> keyType = getKeyType(entityType);
         if (isOneToOne(entityType)) {
             switch (entityCategory) {
             case PERSISTED:
-                return new PropertyMetadata.Builder(KEY, keyType, false).column(id).hibType(H_LONG).category(ENTITY_AS_KEY).build();
+                return new PropertyMetadata.Builder(KEY, keyType, false, entityCategory).column(id).hibType(H_LONG).category(ENTITY_AS_KEY).build();
             case QUERY_BASED:
-                return new PropertyMetadata.Builder(KEY, keyType, false).hibType(H_LONG).category(SYNTHETIC).build();
+                return new PropertyMetadata.Builder(KEY, keyType, false, entityCategory).hibType(H_LONG).category(SYNTHETIC).build();
             default:
                 return null;
             }
         } else if (DynamicEntityKey.class.equals(keyType)) {
-            return getVirtualPropInfoForDynamicEntityKey((Class<? extends AbstractEntity<DynamicEntityKey>>) entityType);
+            return getVirtualPropInfoForDynamicEntityKey((Class<? extends AbstractEntity<DynamicEntityKey>>) entityType, entityCategory);
         } else {
             switch (entityCategory) {
             case PERSISTED:
-                return new PropertyMetadata.Builder(KEY, keyType, false).column(key).hibType(typeResolver.basic(keyType.getName())).category(PRIMITIVE).build();
+                return new PropertyMetadata.Builder(KEY, keyType, false, entityCategory).column(key).hibType(typeResolver.basic(keyType.getName())).category(PRIMITIVE).build();
             case QUERY_BASED:
                 if (isSyntheticBasedOnPersistentEntityType(entityType)) {
-                    return new PropertyMetadata.Builder(KEY, keyType, false).column(key).hibType(typeResolver.basic(keyType.getName())).category(PRIMITIVE).build();
+                    return new PropertyMetadata.Builder(KEY, keyType, false, entityCategory).column(key).hibType(typeResolver.basic(keyType.getName())).category(PRIMITIVE).build();
                 }
                 return null; //FIXME
             case UNION:
-                return new PropertyMetadata.Builder(KEY, String.class, false).hibType(H_STRING).expression(generateUnionEntityPropertyExpression((Class<? extends AbstractUnionEntity>) entityType, KEY)).category(EXPRESSION).build();
+                return new PropertyMetadata.Builder(KEY, String.class, false, entityCategory).hibType(H_STRING).expression(generateUnionEntityPropertyExpression((Class<? extends AbstractUnionEntity>) entityType, KEY)).category(EXPRESSION).build();
             default:
                 return null;
             }
@@ -326,15 +322,15 @@ public class DomainMetadata {
         for (final Field field : getRealProperties(entityType)) {
             if (!result.containsKey(field.getName())) {
                 if (Collection.class.isAssignableFrom(field.getType()) && hasLinkProperty(entityType, field.getName())) {
-                    safeMapAdd(result, getCollectionalPropInfo(entityType, field));
+                    safeMapAdd(result, getCollectionalPropInfo(entityType, field, entityCategory));
                 } else if (isAnnotationPresent(field, Calculated.class)) {
-                    safeMapAdd(result, getCalculatedPropInfo(entityType, field));
+                    safeMapAdd(result, getCalculatedPropInfo(entityType, field, entityCategory));
                 } else if (isAnnotationPresent(field, MapTo.class)) {
-                    safeMapAdd(result, getCommonPropHibInfo(entityType, field));
+                    safeMapAdd(result, getCommonPropHibInfo(entityType, field, entityCategory));
                 } else if (isOne2One_association(entityType, field.getName())) {
-                    safeMapAdd(result, getOneToOnePropInfo(entityType, field));
+                    safeMapAdd(result, getOneToOnePropInfo(entityType, field, entityCategory));
                 } else if (!isAnnotationPresent(field, CritOnly.class)) {
-                    safeMapAdd(result, getSyntheticPropInfo(entityType, field));
+                    safeMapAdd(result, getSyntheticPropInfo(entityType, field, entityCategory));
                 } else {
                     //System.out.println(" --------------------------------------------------------- " + entityType.getSimpleName() + ": " + field.getName());
                 }
@@ -434,7 +430,7 @@ public class DomainMetadata {
         return result;
     }
 
-    private PropertyMetadata getCommonPropHibInfo(final Class<? extends AbstractEntity<?>> entityType, final Field field) throws Exception {
+    private PropertyMetadata getCommonPropHibInfo(final Class<? extends AbstractEntity<?>> entityType, final Field field, final EntityCategory entityCategory) throws Exception {
         final String propName = field.getName();
         final Class<?> javaType = determinePropertyType(entityType, propName); // redetermines prop type in platform understanding (e.g. type of Set<MeterReading> readings property will be MeterReading;
         final boolean isEntity = isPersistedEntityType(javaType);
@@ -461,20 +457,20 @@ public class DomainMetadata {
         
         final MapTo mapTo = getPropertyAnnotation(MapTo.class, entityType, propName);
         final IsProperty isProperty = getPropertyAnnotation(IsProperty.class, entityType, propName);
-        return new PropertyMetadata.Builder(propName, javaType, nullable).category(propertyCategory).hibType(hibernateType).columns(getPropColumns(field, isProperty, mapTo, hibernateType)).build();
+        return new PropertyMetadata.Builder(propName, javaType, nullable, entityCategory).category(propertyCategory).hibType(hibernateType).columns(getPropColumns(field, isProperty, mapTo, hibernateType)).build();
     }
 
-    private PropertyMetadata getVirtualPropInfoForDynamicEntityKey(final Class<? extends AbstractEntity<DynamicEntityKey>> entityType) throws Exception {
+    private PropertyMetadata getVirtualPropInfoForDynamicEntityKey(final Class<? extends AbstractEntity<DynamicEntityKey>> entityType, final EntityCategory entityCategory) throws Exception {
         final List<Field> keyMembers = getKeyMembers(entityType);
         final List<Pair<Field, Boolean>> keyMembersWithOptionality = new ArrayList<>();
         for (final Field field : keyMembers) {
             keyMembersWithOptionality.add(new Pair<>(field, getCompositeKeyMemberOptionalityInfo(entityType, field.getName())));
         }
         
-        return new PropertyMetadata.Builder(KEY, String.class, true).expression(getVirtualKeyPropForEntityWithCompositeKey(entityType, keyMembersWithOptionality)).hibType(H_STRING).category(VIRTUAL_OVERRIDE).build();
+        return new PropertyMetadata.Builder(KEY, String.class, true, entityCategory).expression(getVirtualKeyPropForEntityWithCompositeKey(entityType, keyMembersWithOptionality)).hibType(H_STRING).category(VIRTUAL_OVERRIDE).build();
     }
 
-    private PropertyMetadata getCalculatedPropInfo(final Class<? extends AbstractEntity<?>> entityType, final Field calculatedPropfield) throws Exception {
+    private PropertyMetadata getCalculatedPropInfo(final Class<? extends AbstractEntity<?>> entityType, final Field calculatedPropfield, final EntityCategory entityCategory) throws Exception {
         final boolean aggregatedExpression = CalculatedPropertyCategory.AGGREGATED_EXPRESSION.equals(getAnnotation(calculatedPropfield, Calculated.class).category());
 
         final Class<?> javaType = determinePropertyType(entityType, calculatedPropfield.getName()); // redetermines prop type in platform understanding (e.g. type of Set<MeterReading> readings property will be MeterReading;
@@ -483,29 +479,29 @@ public class DomainMetadata {
 
         final ExpressionModel expressionModel = extractExpressionModelFromCalculatedProperty(entityType, calculatedPropfield);
         final PropertyCategory propCat = hibernateType instanceof ICompositeUserTypeInstantiate ? COMPONENT_HEADER : EXPRESSION;
-        return new PropertyMetadata.Builder(calculatedPropfield.getName(), calculatedPropfield.getType(), true).expression(expressionModel).hibType(hibernateType).category(propCat).aggregatedExpression(aggregatedExpression).build();
+        return new PropertyMetadata.Builder(calculatedPropfield.getName(), calculatedPropfield.getType(), true, entityCategory).expression(expressionModel).hibType(hibernateType).category(propCat).aggregatedExpression(aggregatedExpression).build();
     }
 
-    private PropertyMetadata getOneToOnePropInfo(final Class<? extends AbstractEntity<?>> entityType, final Field calculatedPropfield) throws Exception {
+    private PropertyMetadata getOneToOnePropInfo(final Class<? extends AbstractEntity<?>> entityType, final Field calculatedPropfield, final EntityCategory entityCategory) throws Exception {
         final Class<?> javaType = determinePropertyType(entityType, calculatedPropfield.getName()); // redetermines prop type in platform understanding (e.g. type of Set<MeterReading> readings property will be MeterReading;
         final PersistentType persistedType = getPersistedType(entityType, calculatedPropfield.getName());
         final Object hibernateType = getHibernateType(javaType, persistedType, true);
 
         //final ExpressionModel expressionModel = expr().prop("id").model(); // 1-2-1 is not required to exist -- that's why need longer formula -- that's why 1-2-1 is in fact implicitly calculated nullable prop
         final ExpressionModel expressionModel = expr().model(select((Class<? extends AbstractEntity<?>>) calculatedPropfield.getType()).where().prop(KEY).eq().extProp(ID).model()).model();
-        return new PropertyMetadata.Builder(calculatedPropfield.getName(), calculatedPropfield.getType(), true).expression(expressionModel).hibType(hibernateType).category(PropertyCategory.EXPRESSION).build();
+        return new PropertyMetadata.Builder(calculatedPropfield.getName(), calculatedPropfield.getType(), true, entityCategory).expression(expressionModel).hibType(hibernateType).category(PropertyCategory.EXPRESSION).build();
     }
 
-    private PropertyMetadata getSyntheticPropInfo(final Class<? extends AbstractEntity<?>> entityType, final Field calculatedPropfield) throws Exception {
+    private PropertyMetadata getSyntheticPropInfo(final Class<? extends AbstractEntity<?>> entityType, final Field calculatedPropfield, final EntityCategory entityCategory) throws Exception {
         final Class<?> javaType = determinePropertyType(entityType, calculatedPropfield.getName()); // redetermines prop type in platform understanding (e.g. type of Set<MeterReading> readings property will be MeterReading;
         final PersistentType persistedType = getPersistedType(entityType, calculatedPropfield.getName());
         final Object hibernateType = getHibernateType(javaType, persistedType, false);
         final PropertyCategory propCat = hibernateType instanceof ICompositeUserTypeInstantiate ? SYNTHETIC_COMPONENT_HEADER : SYNTHETIC;
-        return new PropertyMetadata.Builder(calculatedPropfield.getName(), calculatedPropfield.getType(), true).hibType(hibernateType).category(propCat).build();
+        return new PropertyMetadata.Builder(calculatedPropfield.getName(), calculatedPropfield.getType(), true, entityCategory).hibType(hibernateType).category(propCat).build();
     }
 
-    private PropertyMetadata getCollectionalPropInfo(final Class<? extends AbstractEntity<?>> entityType, final Field field) throws Exception {
-        return new PropertyMetadata.Builder(field.getName(), determinePropertyType(entityType, field.getName()), true).category(COLLECTIONAL).build();
+    private PropertyMetadata getCollectionalPropInfo(final Class<? extends AbstractEntity<?>> entityType, final Field field, final EntityCategory entityCategory) throws Exception {
+        return new PropertyMetadata.Builder(field.getName(), determinePropertyType(entityType, field.getName()), true, entityCategory).category(COLLECTIONAL).build();
     }
 
     private Boolean getCompositeKeyMemberOptionalityInfo(final Class entityType, final String propName) {
