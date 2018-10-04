@@ -1058,22 +1058,13 @@
                 if (element.noUI === true) { // is this is the end of action execution?
                     self._setIsRunning(false);
                 } else { // otherwise show master in dialog
-                    if (element.masterWithMaster || element.masterWithCentre) { // defer opening of master-with-master's / master-with-centre's dialog until binding-entity / egi-entities of embedded master / centre appear
-                        const resultsName = element.masterWithMaster ? 'binding-entity' : 'egi-entities';
-                        const resultsAppearedEvent = resultsName + '-appeared';
-                        const resultsDidNotAppearEvent = resultsName + '-did-not-appear';
-
-                        this.addEventListener(resultsAppearedEvent, this._fitWhenFirstTimeOpened);
-
-                        this._openOnceConcrete = this._openOnce.bind(this, closeEventChannel, closeEventTopics, action, resultsAppearedEvent, resultsDidNotAppearEvent);
-                        this.addEventListener(resultsAppearedEvent, this._openOnceConcrete);
-                        this._doNotOpenConcrete = this._doNotOpen.bind(this, resultsAppearedEvent, resultsDidNotAppearEvent);
-                        this.addEventListener(resultsDidNotAppearEvent, this._doNotOpenConcrete);
+                    if (element.masterWithCentre) { // defer opening of master-with-master's / master-with-centre's dialog until binding-entity / egi-entities of embedded master / centre appear
+                        this.addEventListener('egi-entities-appeared', this._fitWhenFirstTimeOpened);
+                        
                     } else {
                         this.addEventListener('binding-entity-appeared', this._fitWhenFirstTimeOpened);
-
-                        this._openOnce(closeEventChannel, closeEventTopics, action, null, null);
                     }
+                    this._openOnce(closeEventChannel, closeEventTopics, action, null, null);
                 }
             },
 
