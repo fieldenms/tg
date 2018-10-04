@@ -124,12 +124,12 @@
                     }
                     orderedElements = this.componentsToLayout.slice();
                     splitElements.bind(this)(selectedElements, orderedElements, layout);
+                    this._mutationObserver.observe(this, this._mutationConfig);
                     layout.forEach((function (layoutElem) {
                         subheader = createFlexCell.bind(this)(this, layoutElem, selectedElements, orderedElements, subheader, true);
                     }).bind(this));
                     Polymer.dom.flush();
                     this._setCurrentLayout(layout);
-                    this.fire('layout-finished', layout);
                 }
             },
             resetSubheaderComponents = function () {
@@ -353,8 +353,18 @@
             observers: ["_contextChanged(context.*)"],
             ready: function () {
                 this._subheaders = [];
+                
                 this._editorErrorHandler = this._editorErrorHandler.bind(this);
                 this.addEventListener('editor-error-appeared', this._editorErrorHandler);
+            
+                this._mutationConfig = {childList: true, subtree: true};
+                const observer = mutationList => {
+                    this.async(function () {
+                        this.fire('layout-finished', this);
+                    }, 1);
+                    this._mutationObserver.disconnect();
+                };
+                this._mutationObserver = new MutationObserver(observer);
             },
             attached: function () {
                 var self = this;

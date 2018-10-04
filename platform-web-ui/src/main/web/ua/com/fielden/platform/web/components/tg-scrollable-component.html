@@ -41,7 +41,9 @@
             this.addEventListener("iron-resize", this._resizeEventListener.bind(this));
             this._mutationConfig = {childList: true, subtree: true};
             const observer = mutationList => {
-                this._resizeEventListener();
+                this.async(function () {
+                    this._resizeEventListener();
+                }, 1);
             };
             this._mutationObserver = new MutationObserver(observer);
            
