@@ -1,11 +1,13 @@
 package ua.com.fielden.platform.entity;
 
+import static java.util.stream.Collectors.toSet;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.junit.Test;
 
@@ -52,11 +54,11 @@ public class HandlingOfDeactivatableDependenciesTest extends AbstractDaoTestCase
         final List<? extends ActivatableAbstractEntity<?>> deps = Validators.findActiveDeactivatableDependencies(p1, getInstance(ICompanionObjectFinder.class));
 
         assertEquals(2, deps.size());
-        assertTrue(deps.contains(co$(TgAuthoriser.class).findByKey(p1)));
-        assertTrue(deps.contains(co$(TgOriginator.class).findByKey(p1)));
+        assertTrue(deps.stream().map(AbstractEntity::getId).collect(toSet()).contains(co$(TgAuthoriser.class).findByKey(p1).getId()));
+        assertTrue(deps.stream().map(AbstractEntity::getId).collect(toSet()).contains(co$(TgOriginator.class).findByKey(p1).getId()));
 
         final TgPerson p3 = co$(TgPerson.class).findByKey("P3");
-        assertFalse(deps.contains(co$(TgOriginator.class).findByKey(p3)));
+        assertFalse(deps.stream().map(AbstractEntity::getId).collect(toSet()).contains(co$(TgOriginator.class).findByKey(p3).getId()));
     }
 
     @Test
@@ -66,7 +68,7 @@ public class HandlingOfDeactivatableDependenciesTest extends AbstractDaoTestCase
         final List<? extends ActivatableAbstractEntity<?>> deps = Validators.findActiveDeactivatableDependencies(person, getInstance(ICompanionObjectFinder.class));
 
         assertEquals(1, deps.size());
-        assertTrue(deps.contains(co$(TgAuthoriser.class).findByKey(person)));
+        assertTrue(deps.stream().map(AbstractEntity::getId).collect(toSet()).contains(co$(TgAuthoriser.class).findByKey(person).getId()));
     }
 
     @Test

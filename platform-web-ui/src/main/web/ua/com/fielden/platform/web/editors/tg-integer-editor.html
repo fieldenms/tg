@@ -98,7 +98,7 @@
          * Overridden to provide value corrections.
          */
         _commitForDescendants: function () {
-            const correctedValue = truncateLeadingZeros(this._editingValue);
+            const correctedValue = truncateInsignificantZeros(this._editingValue);
             if (!this.reflector().equalsEx(correctedValue, this._editingValue)) {
                 this._editingValue = correctedValue;
             }

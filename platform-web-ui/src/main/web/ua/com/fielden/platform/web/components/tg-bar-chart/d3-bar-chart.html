@@ -530,7 +530,7 @@
 
             _selectBar(bar, marker, entity, select) {
                 const indexOfBar = this._selectedBars.indexOf(bar);
-                d3.select(bar).style("fill", select ? this._options.selectedColour(this._options.barColour(d)) : this._options.barColour(d))
+                d3.select(bar).style("fill", d => select ? this._options.selectedColour(this._options.barColour(d)) : this._options.barColour(d))
                     .attr("selected", select ? "" : null);
                 d3.select(marker).attr("selected", select ? "" : null);
 
