@@ -154,15 +154,15 @@
             </div>
             <div class="layout horizontal center">
                 <!-- collapse/expand buttons -->
-                <paper-icon-button hidden="[[!_minimised]]" class="minimise-button title-bar-button" icon="tg-icons:expandMin" on-tap="_invertMinimiseState" tooltip-text="Restore, Alt+c"></paper-icon-button>
-                <paper-icon-button hidden="[[_collapserHidden(_minimised, mobile)]]" class="title-bar-button minimise-button" icon="tg-icons:collapseMin"   on-tap="_invertMinimiseState" tooltip-text="Collapse, Alt+c" disabled=[[_dialogInteractionsDisabled(_minimised,_maximised)]]></paper-icon-button>
+                <paper-icon-button hidden="[[!_minimised]]" class="minimise-button title-bar-button" icon="tg-icons:expandMin" on-tap="_invertMinimiseState" tooltip-text="Restore, Alt&nbsp+&nbspc"></paper-icon-button>
+                <paper-icon-button hidden="[[_collapserHidden(_minimised, mobile)]]" class="title-bar-button minimise-button" icon="tg-icons:collapseMin"   on-tap="_invertMinimiseState" tooltip-text="Collapse, Alt&nbsp+&nbspc" disabled=[[_dialogInteractionsDisabled(_minimised,_maximised)]]></paper-icon-button>
 
                 <!-- maximize/restore buttons -->
-                <paper-icon-button hidden="[[_maximised]]" class="maximise-button title-bar-button" icon="icons:fullscreen"       on-tap="_invertMaximiseState" tooltip-text="Maximise, Alt+m" disabled=[[_dialogInteractionsDisabled(_minimised,_maximised)]]></paper-icon-button>
-                <paper-icon-button hidden="[[_maximiseRestorerHidden(_maximised, mobile)]]" class="maximise-button title-bar-button" icon="icons:fullscreen-exit"  on-tap="_invertMaximiseState" tooltip-text="Restore, Alt+m"></paper-icon-button>
+                <paper-icon-button hidden="[[_maximised]]" class="maximise-button title-bar-button" icon="icons:fullscreen"       on-tap="_invertMaximiseState" tooltip-text="Maximise, Alt&nbsp+&nbspm" disabled=[[_dialogInteractionsDisabled(_minimised,_maximised)]]></paper-icon-button>
+                <paper-icon-button hidden="[[_maximiseRestorerHidden(_maximised, mobile)]]" class="maximise-button title-bar-button" icon="icons:fullscreen-exit"  on-tap="_invertMaximiseState" tooltip-text="Restore, Alt&nbsp+&nbspm"></paper-icon-button>
 
                 <!-- close/next buttons -->
-                <paper-icon-button hidden="[[_closerHidden(_lastAction, mobile)]]" class="close-button title-bar-button" icon="icons:cancel"  on-tap="closeDialog" tooltip-text="Close, Alt+x"></paper-icon-button>
+                <paper-icon-button hidden="[[_closerHidden(_lastAction, mobile)]]" class="close-button title-bar-button" icon="icons:cancel"  on-tap="closeDialog" tooltip-text="Close, Alt&nbsp+&nbspx"></paper-icon-button>
                 <paper-icon-button hidden="[[!_lastAction.continuous]]" class="close-button title-bar-button" icon="av:skip-next" on-tap="_skipNext" tooltip-text="Skip to next without saving"></paper-icon-button>
             </div>
         </div>
