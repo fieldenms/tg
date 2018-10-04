@@ -1,4 +1,4 @@
-package ua.com.fielden.platform.dao;
+package ua.com.fielden.platform.entity.query.metadata;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
@@ -14,7 +14,6 @@ import org.junit.Test;
 
 import ua.com.fielden.platform.entity.query.generation.BaseEntQueryTCase;
 import ua.com.fielden.platform.entity.query.metadata.BaseInfoForDomainMetadata;
-import ua.com.fielden.platform.entity.query.metadata.EntityCategory;
 import ua.com.fielden.platform.entity.query.metadata.ModelledEntityMetadata;
 import ua.com.fielden.platform.entity.query.metadata.PersistedEntityMetadata;
 import ua.com.fielden.platform.entity.query.metadata.PropertyCategory;

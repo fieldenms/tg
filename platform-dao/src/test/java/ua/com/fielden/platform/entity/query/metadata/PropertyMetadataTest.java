@@ -1,4 +1,4 @@
-package ua.com.fielden.platform.dao;
+package ua.com.fielden.platform.entity.query.metadata;
 
 import static org.junit.Assert.assertEquals;
 import static ua.com.fielden.platform.entity.query.metadata.EntityCategory.PERSISTED;
@@ -15,7 +15,7 @@ import ua.com.fielden.platform.entity.query.metadata.PropertyColumn;
 import ua.com.fielden.platform.entity.query.metadata.PropertyMetadata;
 import ua.com.fielden.platform.sample.domain.TgBogieLocation;
 
-public class PropertyPersistenceInfoTest extends BaseEntQueryTCase {
+public class PropertyMetadataTest extends BaseEntQueryTCase {
 
     @Test
     public void test() {
