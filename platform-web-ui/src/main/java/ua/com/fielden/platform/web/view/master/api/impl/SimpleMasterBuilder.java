@@ -274,8 +274,9 @@ public class SimpleMasterBuilder<T extends AbstractEntity<?>> implements ISimple
                         layout.code().toString() + "\n"
                       + actionBarLayout.code().toString() + "\n"
                       + entityActionsStr.toString() + "\n"
-                      + propertyActionsStr.toString())
-                .replace("//@attached-callback", "self.registerCentreRefreshRedirector();\n")
+                      + propertyActionsStr.toString() + "\n"
+                      + genReadyCallback())
+                .replace("//@attached-callback", genAttachedCallback())
                 .replace("//generatedPrimaryActions", primaryActionObjectsString.length() > prefixLength ? primaryActionObjectsString.substring(prefixLength)
                         : primaryActionObjectsString)
                 .replace("//@master-is-ready-custom-code", customCode.map(code -> code.toString()).orElse(""))
@@ -287,6 +288,24 @@ public class SimpleMasterBuilder<T extends AbstractEntity<?>> implements ISimple
 
         final IRenderable representation = () -> new InnerTextElement(entityMasterStr);
         return new SimpleMaster(representation, valueMatcherForProps);
+    }
+
+    private String genReadyCallback() {
+        return "self.wasLoaded = function () {\n"
+                + "    return !!this._viewLoaded;\n"
+                + "}.bind(self);\n";
+    }
+
+    private String genAttachedCallback() {
+        return "self.registerCentreRefreshRedirector();\n"
+                + "//Init event listener that indicates whether content was loaded\n"
+                + "if (!this._hasEmbededView()) {\n"
+                + "    self._entityMasterContentLoaded = function (e) {\n"
+                + "        this._viewLoaded = true;\n"
+                + "        this.fire('tg-view-loaded', this);\n"
+                + "    }.bind(self);\n"
+                + "    self.addEventListener('tg-entity-master-content-loaded', self._entityMasterContentLoaded);\n"
+                + "}";
     }
 
     /**

@@ -287,7 +287,7 @@
                     type: Object,
                     value: null
                 },
-
+                
                 /**
                  * Publishes data with 'canClose=true' to channel 'self.centreUuid', topic 'refresh.post.success' to close the master regardless of the state of the bound entity.
                  * This request may or may not succeed, which depends on who is subscribed to the pulished event.
@@ -345,7 +345,7 @@
 
                     return contextHolder;
                 }).bind(self);
-
+                
                 // calbacks, that will potentially be augmented by tg-action child elements:
                 self._postSavedDefault = (function (potentiallySavedOrNewEntity) {
                     // 'potentiallySavedOrNewEntity' can have two natures:
@@ -620,7 +620,7 @@
 
                     console.debug(':MASTER: augmentCompoundMasterOpenerWith |savedEntityId = ', savedEntityId, '|master.is = ', this.is);
                 }).bind(self);
-
+                
                 self._postSaverLoadingFinished = (function () {
                     console.log("_postSaverLoadingFinished");
                 }).bind(self);
@@ -673,7 +673,6 @@
                         Polymer.dom.flush();
                     }
                 }
-
             },
 
             _modificationsChanged: function (_bindingEntityNotPersistentOrNotPersistedOrModified, _editedPropsExist) {
@@ -698,6 +697,10 @@
 
              _getCurrentFocusableElements: function() {
                 return this._componentsToFocus.filter(element => !element.disabled && element.offsetParent !== null);
+            },
+            
+            wasLoaded: function () {
+                return true;
             },
 
             _hasEmbededView: function () {

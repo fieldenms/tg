@@ -131,6 +131,9 @@ class MasterWithMenu<T extends AbstractEntity<?>, F extends AbstractFunctionalEn
                              + "            }.bind(self);\n"
                              + "            self._hasEmbededView = function () {\n"
                              + "                return true;\n"
+                             + "            }.bind(self);\n"
+                             + "            self.wasLoaded = function () {\n"
+                             + "                return true;\n"
                              + "            }.bind(self);\n",
                              jsMenuItemActionObjects)) //
                 .replace("@prefDim", "null")

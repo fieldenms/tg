@@ -204,7 +204,8 @@
                 'tg-dynamic-title-changed': '_updateDynamicTitle',
                 'tg-menu-appeared': '_updateMenuButton',
                 'tg-master-type-changed': '_handleMasterChanged',
-                'tg-master-type-before-change': '_handleMasterBeforeChange'
+                'tg-master-type-before-change': '_handleMasterBeforeChange',
+                'binding-entity-loaded-and-focused': '_handleDataLoaded'
             },
 
             hostAttributes: {
@@ -239,6 +240,13 @@
                 
                 _masterLayoutChanges: {
                     type: Boolean
+                },
+                
+                /**
+                 * Indicates when the dialogs data was loaded
+                 */
+                _dataLoaded: {
+                    type:Boolean
                 },
                 /////////////////////////////////////////////////////////////////////////////////////////
 
@@ -327,7 +335,7 @@
                     value: ''
                 },
                 //////////////////////////////////
-
+                
                 /**The parent dialog tow wchich this dialog is a child.*/
                 _parentDialog: {
                     type: Object
@@ -343,6 +351,13 @@
                  */
                 _windowWidth: Number,
                 _windowHeight: Number,
+                
+                /**
+                 * How many times the blocking panel was locked.
+                 */
+                _blockingPaneCounter: {
+                    type: Number
+                },
 
                 /**
                  * Binds to the property 'appConfig.mobile'.
@@ -371,6 +386,9 @@
 
                 this._parentDialog = null;
                 this._childDialogs = [];
+                
+                //Set the blocking pane counter equal to 0 so taht no one can't block it twice or event more time
+                this._blockingPaneCounter = 0;
 
                 // Listen to mousedown or touchstart to be sure to be the first to capture
                 // clicks outside the overlay.
@@ -379,9 +397,9 @@
                 this._onCaptureKeyDown = this._onCaptureKeyDown.bind(this);
 
                 this._focusDialogWithInput = this._focusDialogWithInput.bind(this);
-                this._fitWhenFirstTimeOpened = this._fitWhenFirstTimeOpened.bind(this);
                 this._finishErroneousOpening = this._finishErroneousOpening.bind(this);
                 this._handleActionNavigationChange = this._handleActionNavigationChange.bind(this);
+                this._handleViewLoaded = this._handleViewLoaded.bind(this);
 
                 this._setIsRunning(false);
 
@@ -396,6 +414,7 @@
                 this._componentsToFocus = Array.from(this.$.titleBar.querySelectorAll(FOCUSABLE_ELEMENTS_SELECTOR));
                 //Add event listener that listens when dialog body chang it's opacity
                 this.$.dialogLoader.addEventListener("transitionend", this._handleBodyTransitionEnd.bind(this));
+               
             },
 
             attached: function() {
@@ -411,7 +430,7 @@
                 this.removeEventListener('focus', this._onCaptureFocus, true);
                 this.removeEventListener('keydown', this._onCaptureKeyDown, true);
             },
-
+            
             _getCurrentFocusableElements: function() {
                 return this._componentsToFocus.filter(element => !element.disabled && element.offsetParent !== null);
             },
@@ -527,6 +546,7 @@
             
             _firstEntry: function () {
                 if (this.canClose() && this._hasPrev) {
+                    this._showBlockingPane();
                     this._displaySpinnerOn(this.$.firstEntity);
                     this._lastAction.firstEntry();
                 }
@@ -534,6 +554,7 @@
             
             _previousEntry: function () {
                 if (this.canClose() && this._hasPrev) {
+                    this._showBlockingPane();
                     this._displaySpinnerOn(this.$.prevEntity);
                     this._lastAction.previousEntry();
                 }
@@ -541,6 +562,7 @@
             
             _nextEntry: function () {
                 if (this.canClose() && this._hasNext) {
+                    this._showBlockingPane();
                     this._displaySpinnerOn(this.$.nextEntity);
                     this._lastAction.nextEntry();
                 }
@@ -548,6 +570,7 @@
             
             _lastEntry: function () {
                 if (this.canClose() && this._hasNext) {
+                    this._showBlockingPane();
                     this._displaySpinnerOn(this.$.lastEntity);
                     this._lastAction.lastEntry();
                 }
@@ -953,11 +976,13 @@
                 return newAction;
             },
             
+            _handleDataLoaded: function () {
+                this._resetSpinner();
+                this._hideBlockingPane();
+            },
+            
             _handleActionNavigationChange: function (e) {
                 this._setNavigationDetails(e.detail);
-                if (e.detail.shouldResetSpinner) {
-                    this._resetSpinner();
-                }
             },
             
             _resetSpinner: function () {
@@ -988,10 +1013,7 @@
             _dialogResized: function () {
                 this.style.removeProperty("transition-property");
                 this.style.removeProperty("transition-duration");
-                this._masterVisibilityChanges = true;
-                this.$.elementLoader.style.removeProperty("display");
-                this.$.dialogLoader.style.opacity = "1";
-                
+                this._hideBlockingPane();
             },
             
             _updateDialogPosition: function (prefDim, _minimised, _maximised) {
@@ -1019,12 +1041,13 @@
             
             _handleMasterBeforeChange: function () {
                 if (this.opened) {
-                    //First animate master body hiding
-                    this._masterVisibilityChanges = true;
-                    this._masterLayoutChanges = true;
-                    this.$.loadingPanel.style.visibility = "visible";
-                    this.$.dialogLoader.style.opacity = "0";
+                    //First animate the blocking pane.
+                    this._showBlockingPane();
                     //Then set dimension properties as transitional for dialog for futher animation.
+                    this._masterLayoutChanges = true;
+                    if (!this._masterVisibilityChanges) {
+                        this.$.elementLoader.style.display = "none";
+                    }
                     this.style.transitionProperty = "top, left, width, height";
                     this.style.transitionDuration = "500ms";
                 }
@@ -1039,7 +1062,9 @@
             _handleBodyTransitionEnd: function (e) {
                 if (e.target === this.$.dialogLoader) {
                     if (this.$.dialogLoader.style.opacity === "0") {
-                        this.$.elementLoader.style.display = "none";
+                        if (this._masterLayoutChanges) {
+                            this.$.elementLoader.style.display = "none";
+                        }
                         this._masterVisibilityChanges = false;
                     } else {
                         this._masterVisibilityChanges = undefined;
@@ -1058,16 +1083,10 @@
                 if (element.noUI === true) { // is this is the end of action execution?
                     self._setIsRunning(false);
                 } else { // otherwise show master in dialog
-                    if (element.masterWithCentre) { // defer opening of master-with-master's / master-with-centre's dialog until binding-entity / egi-entities of embedded master / centre appear
-                        this.addEventListener('egi-entities-appeared', this._fitWhenFirstTimeOpened);
-                        
-                    } else {
-                        this.addEventListener('binding-entity-appeared', this._fitWhenFirstTimeOpened);
-                    }
-                    this._openOnce(closeEventChannel, closeEventTopics, action, null, null);
+                    this._openOnce(closeEventChannel, closeEventTopics, action, null, null);    
                 }
             },
-
+            
             refit: function() {
                 Polymer.IronFitBehavior.refit.call(this);
 
@@ -1097,23 +1116,53 @@
                 }
                 this.updateStyles();
                 this.refit();
-                // let's open the dialog with magical async...
-                // this ensures that the dialog is opened after its relocation to body and after all layouting is done
-                this.async(function() {
-                    //Configuring the dialog hierarchy.
-                    var actionsDialog = findParentDialog(action);
-                    if (actionsDialog) {
-                        actionsDialog._childDialogs.push(this);
-                        this._parentDialog = actionsDialog;
-                    }
-                    this._focusAndRefit(); // this is a legacy support
+                
+                var actionsDialog = findParentDialog(action);
+                if (actionsDialog) {
+                    actionsDialog._childDialogs.push(this);
+                    this._parentDialog = actionsDialog;
+                }
+                
+                if (this._lastElement.wasLoaded()) {
+                    this._openAndRefit();
+                } else {
+                    this.addEventListener("tg-view-loaded", this._handleViewLoaded);
+                }
+            },
+            
+            _handleViewLoaded: function (e) {
+                this._openAndRefit();
+                this.removeEventListener("tg-view-loaded", this._handleViewLoaded);
+            },
+            
+            _openAndRefit: function () {
+                this._focusAndRefit(); // this is a legacy support
 
-                    if (this.$.appConfig.mobile === true) { // mobile app specific: open all custom action dialogs in maximised state
-                        this._invertMaximiseState();
-                    }
-
-                    this.open();
-                }.bind(this), 200);
+                if (this.$.appConfig.mobile === true) { // mobile app specific: open all custom action dialogs in maximised state
+                    this._invertMaximiseState();
+                }
+                
+                this.open();
+                this._showBlockingPane();
+               
+            },
+            
+            _showBlockingPane: function () {
+                if (this._blockingPaneCounter === 0) {
+                    this._masterVisibilityChanges = true;
+                    this.$.loadingPanel.style.visibility = "visible";
+                    this.$.dialogLoader.style.opacity = "0";
+                }
+                this._blockingPaneCounter++;
+            },
+            
+            _hideBlockingPane: function () {
+                this._blockingPaneCounter--;
+                if (this._blockingPaneCounter === 0) {
+                    this._masterVisibilityChanges = true;
+                    this.$.elementLoader.style.removeProperty("display");
+                    this.$.dialogLoader.style.opacity = "1";
+                }
             },
 
             /**
@@ -1158,17 +1207,6 @@
                 if (this.$.appConfig.mobile === false && this._lastElement.focusView) {
                     this._lastElement.focusView();
                 }
-            },
-
-            /**
-             * Listener that listens binding entity appeared event and refits loaded master.
-             */
-            _fitWhenFirstTimeOpened: function(e) {
-                this.async(function() {
-                    this.refit();
-                }.bind(this), 50);
-                this.removeEventListener('binding-entity-appeared', this._fitWhenFirstTimeOpened);
-                this.removeEventListener('egi-entities-appeared', this._fitWhenFirstTimeOpened);
             },
 
             /**
