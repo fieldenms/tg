@@ -70,14 +70,14 @@ public class CentreToolbar implements IToolbarConfig {
                         .attr("icon", "hardware:keyboard-tab")
                         .attr("on-tap", "firstPage")
                         .attr("disabled$", "[[canNotFirst(pageNumber, pageCount, isRunning)]]")
-                        .attr("tooltip-text", "First page, Ctrl+<span style=\"font-size:18px;font-weight:bold\">&#8593</span>"))
+                        .attr("tooltip-text", "First page, Ctrl&nbsp+&nbsp<span style=\"font-size:18px;font-weight:bold\">&#8593</span>"))
                 .add(new DomElement("paper-icon-button")
                         .clazz("standart-action")
                         .attr("shortcut", "ctrl+left")
                         .attr("icon", "hardware:keyboard-backspace")
                         .attr("on-tap", "prevPage")
                         .attr("disabled$", "[[canNotPrev(pageNumber, isRunning)]]")
-                        .attr("tooltip-text", "Previous page, Ctrl+<span style=\"font-size:18px;font-weight:bold\">&#8592</span>"))
+                        .attr("tooltip-text", "Previous page, Ctrl&nbsp+&nbsp<span style=\"font-size:18px;font-weight:bold\">&#8592</span>"))
                 .add(new DomElement("span")
                         .clazz("standart-action")
                         .add(new InnerTextElement("[[currPageFeedback(pageNumberUpdated, pageCountUpdated)]]")))
@@ -87,14 +87,14 @@ public class CentreToolbar implements IToolbarConfig {
                         .attr("icon", "hardware:keyboard-backspace")
                         .attr("on-tap", "nextPage")
                         .attr("disabled$", "[[canNotNext(pageNumber, pageCount, isRunning)]]")
-                        .attr("tooltip-text", "Next page, Ctrl+<span style=\"font-size:18px;font-weight:bold\">&#8594</span>"))
+                        .attr("tooltip-text", "Next page, Ctrl&nbsp+&nbsp<span style=\"font-size:18px;font-weight:bold\">&#8594</span>"))
                 .add(new DomElement("paper-icon-button")
                         .clazz("standart-action")
                         .attr("shortcut", "ctrl+down")
                         .attr("icon", "hardware:keyboard-tab")
                         .attr("on-tap", "lastPage")
                         .attr("disabled$", "[[canNotLast(pageNumber, pageCount, isRunning)]]")
-                        .attr("tooltip-text", "Last page, Ctrl+<span style=\"font-size:18px;font-weight:bold\">&#8595</span>"));
+                        .attr("tooltip-text", "Last page, Ctrl&nbsp+&nbsp<span style=\"font-size:18px;font-weight:bold\">&#8595</span>"));
     }
 
     public static List<String> paginationShortcut() {

@@ -415,14 +415,14 @@
                     selEntities.push(foundEntity);
                 }
             }
-
+            
+            this._disableSelectionListeners = true; // _disableSelectionListeners even before _entities initialisation; this is needed due to clearSelection() call inside iron-list when '_entities' change
             this._entities = this._isCentreConfigEntity(entity)
                 ? this._placeSelectedOnTop(arrivedEntities, selEntities, chosenIds) // checked items should be ordered as in chosenIds (only for CentreConfigUpdater)
                 : this._placeSelectedOnTopPreservingOriginalOrder(arrivedEntities, chosenIds);
-
-            this._disableSelectionListeners = true;
+            
             this.$.input.clearSelection();
-
+            
             for (let index = 0; index < selEntities.length; index++) {
                 this.$.input.selectItem(selEntities[index]);
             }
