@@ -117,7 +117,6 @@
              */
             activate: function (customAction) {
                 const self = this;
-                this._showBlockingPane();
                 if (this.activated === true) {
                     if (self._element && typeof self._element.addOwnKeyBindings === 'function') {
                             self._element.addOwnKeyBindings();
@@ -129,6 +128,7 @@
                             });
                         });
                 } else { // else need to first load and create the element to be inserted
+                    self._showBlockingPane();
                     self._getElement(customAction)
                         .then(function (element) {
                             self.activated = true;

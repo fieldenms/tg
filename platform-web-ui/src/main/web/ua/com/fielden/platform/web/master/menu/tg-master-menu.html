@@ -568,7 +568,7 @@
                 var section = Polymer.dom(this).querySelector('tg-master-menu-item-section[data-route=' + action.getAttribute('data-route') + ']');
                 section.activate(action);
             },
-
+            
             /**
              * Focuses currently slected view
              */
@@ -650,6 +650,9 @@
                             this.parent._openToastForError('Cannot leave "' + currentSection.sectionTitle + '".', cannotLeaveMessage);
                         } else {
                             this.sectionRoute = newRoute;
+                            if (currentSection.activated) {
+                                currentSection._showBlockingPane();
+                            }
                         }
                     } else {
                         this.sectionRoute = newRoute;
