@@ -299,7 +299,7 @@ public class SimpleMasterBuilder<T extends AbstractEntity<?>> implements ISimple
     private String genAttachedCallback() {
         return "self.registerCentreRefreshRedirector();\n"
                 + "//Init event listener that indicates whether content was loaded\n"
-                + "if (!this._hasEmbededView()) {\n"
+                + "if (!self._hasEmbededView()) {\n"
                 + "    self._entityMasterContentLoaded = function (e) {\n"
                 + "        this._viewLoaded = true;\n"
                 + "        this.fire('tg-view-loaded', this);\n"

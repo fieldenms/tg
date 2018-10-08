@@ -242,12 +242,6 @@
                     type: Boolean
                 },
                 
-                /**
-                 * Indicates when the dialogs data was loaded
-                 */
-                _dataLoaded: {
-                    type:Boolean
-                },
                 /////////////////////////////////////////////////////////////////////////////////////////
 
                 /**
@@ -1105,7 +1099,7 @@
                 // if there would be a master UI then need to subscribe for this dialog closing messages
                 if (closeEventChannel && closeEventTopics && closeEventTopics.length > 0) {
                     self._subscriptions = [];
-                    for (var index = 0; index < closeEventTopics.length; index++) {
+                    for (let index = 0; index < closeEventTopics.length; index++) {
                         self._subscriptions.push(
                             postal.subscribe({
                                 channel: closeEventChannel,
@@ -1117,7 +1111,7 @@
                 this.updateStyles();
                 this.refit();
                 
-                var actionsDialog = findParentDialog(action);
+                const actionsDialog = findParentDialog(action);
                 if (actionsDialog) {
                     actionsDialog._childDialogs.push(this);
                     this._parentDialog = actionsDialog;
@@ -1144,7 +1138,6 @@
                 
                 this.open();
                 this._showBlockingPane();
-               
             },
             
             _showBlockingPane: function () {
