@@ -644,7 +644,7 @@
                         this.focusView();
                         if (!this._hasEmbededView()) {
                             this.async(function () {
-                                this.fire('binding-entity-loaded-and-focused', this._currBindingEntity);
+                                this.fire('data-loaded-and-focused', this._currBindingEntity);
                             }, 100);
                         }
                     }

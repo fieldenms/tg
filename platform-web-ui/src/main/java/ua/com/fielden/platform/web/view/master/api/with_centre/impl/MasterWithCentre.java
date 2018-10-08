@@ -75,7 +75,7 @@ class MasterWithCentre<T extends AbstractEntity<?>> implements IMaster<T> {
                         "}.bind(self);\n"+
                         "self.wasLoaded = function () {\n" +
                         "    if (this.$.loader.loadedElement) {\n" +
-                        "        return true;\n" +
+                        "        return this.$.loader.loadedElement.wasLoaded();\n" +
                         "    }\n" +
                         "    return false;\n" +
                         "}.bind(self);\n" +

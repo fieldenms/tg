@@ -108,11 +108,9 @@
                 </paper-menu>
             </paper-scroll-header-panel>
             <paper-scroll-header-panel main fixed class="relative">
-                <div>
-                    <iron-pages id="mainPages" attr-for-selected="data-route" selected="[[sectionRoute]]">
-                        <content select=".menu-item-section"></content>
-                    </iron-pages>
-                </div>
+                <iron-pages id="mainPages" class="fit" attr-for-selected="data-route" selected="[[sectionRoute]]">
+                    <content select=".menu-item-section"></content>
+                </iron-pages>
             </paper-scroll-header-panel>
         </paper-drawer-panel>
 

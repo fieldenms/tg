@@ -370,6 +370,9 @@
                 var self = this;
                 this.async(function () {
                     this._setContentLoaded(true);
+                    if (!this.whenDesktop && !this.whenTablet && !this.whenMobile) {
+                        this.fire('layout-finished', this);
+                    }
                 }, 1);
             },
             _editorErrorHandler: function (e) {
