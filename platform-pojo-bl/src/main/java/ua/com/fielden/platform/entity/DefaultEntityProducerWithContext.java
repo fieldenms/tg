@@ -80,12 +80,6 @@ public class DefaultEntityProducerWithContext<T extends AbstractEntity<?>> imple
             final Long editedEntityId = Long.valueOf(entityEditAction.getEntityId());
 
             // let's try the default behaviour... which may return a null either due to a programming error (most likely) or a case of chosen property being clicked, but ID is from a corresponding master entity
-//            try {
-//                Thread.sleep(4000);
-//            } catch (final InterruptedException e) {
-//                // TODO Auto-generated catch block
-//                e.printStackTrace();
-//            }
             producedEntity = provideDefaultValuesForStandardEdit(editedEntityId, entityEditAction);
 
             // let's be a more bit protective and try to provide a meaningful exception in cases where entity could not be found instead of the inevitable NPE downstream
