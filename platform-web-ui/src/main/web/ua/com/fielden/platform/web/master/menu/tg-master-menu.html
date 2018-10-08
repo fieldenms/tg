@@ -108,11 +108,9 @@
                 </paper-menu>
             </paper-scroll-header-panel>
             <paper-scroll-header-panel main fixed class="relative">
-                <div>
-                    <iron-pages id="mainPages" attr-for-selected="data-route" selected="[[sectionRoute]]">
-                        <content select=".menu-item-section"></content>
-                    </iron-pages>
-                </div>
+                <iron-pages id="mainPages" class="fit" attr-for-selected="data-route" selected="[[sectionRoute]]">
+                    <content select=".menu-item-section"></content>
+                </iron-pages>
             </paper-scroll-header-panel>
         </paper-drawer-panel>
 
@@ -570,7 +568,7 @@
                 var section = Polymer.dom(this).querySelector('tg-master-menu-item-section[data-route=' + action.getAttribute('data-route') + ']');
                 section.activate(action);
             },
-
+            
             /**
              * Focuses currently slected view
              */
@@ -652,6 +650,9 @@
                             this.parent._openToastForError('Cannot leave "' + currentSection.sectionTitle + '".', cannotLeaveMessage);
                         } else {
                             this.sectionRoute = newRoute;
+                            if (currentSection.activated) {
+                                currentSection._showBlockingPane();
+                            }
                         }
                     } else {
                         this.sectionRoute = newRoute;

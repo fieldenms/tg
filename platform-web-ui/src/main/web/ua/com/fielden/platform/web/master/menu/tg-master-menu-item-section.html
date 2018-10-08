@@ -5,15 +5,29 @@
 <dom-module id="tg-master-menu-item-section">
     <template>
         <style>
-            /*tg-element-loader::shadow tg-entity-master::shadow #masterContainer{
+            :host {
+                @apply(--layout-vertical);
+                @apply(--layout-flex);
                 position: absolute;
                 top: 0;
                 bottom: 0;
-                right: 0;
                 left: 0;
-            }*/
+                right: 0;
+            }
+            #dialogLoader {
+                transition: opacity 500ms;
+            }
+            #loadingPanel {
+                visibility: hidden;
+                background-color: white;
+                font-size: 18px;
+                color: var(--paper-grey-400);
+            }
         </style>
-        <tg-element-loader id="elementLoader"></tg-element-loader>
+        <div id="loadingPanel" class=" fit layout horizontal center-center">Loading data...</div>
+        <div id="dialogLoader" class="flex layout horizontal">
+            <tg-element-loader id="elementLoader" class="flex"></tg-element-loader>
+        </div>
         <!-- >tg-toast id="toaster"></tg-toast -->
     </template>
 </dom-module>
@@ -41,7 +55,23 @@
 
                 sectionTitle: {
                     type: String
-                }
+                },
+                
+                /**
+                 * How many times the blocking panel was locked.
+                 */
+                _blockingPaneCounter: {
+                    type: Number
+                },
+            },
+            
+            listeners: {
+                'data-loaded-and-focused': '_handleDataLoaded'
+            },
+            
+            ready: function () {
+                //Set the blocking pane counter equal to 0 so taht no one can't block it twice or event more time
+                this._blockingPaneCounter = 0;
             },
 
             canLeave: function () {
@@ -86,7 +116,7 @@
              * customAction -- an action that was actioned by user and may require showing a diglog (e.g. with master)
              */
             activate: function (customAction) {
-                var self = this;
+                const self = this;
                 if (this.activated === true) {
                     if (self._element && typeof self._element.addOwnKeyBindings === 'function') {
                             self._element.addOwnKeyBindings();
@@ -98,6 +128,7 @@
                             });
                         });
                 } else { // else need to first load and create the element to be inserted
+                    self._showBlockingPane();
                     self._getElement(customAction)
                         .then(function (element) {
                             self.activated = true;
@@ -132,8 +163,29 @@
                            });
  */
                 }
+            },
+            
+            _handleDataLoaded: function () {
+                this._hideBlockingPane();
+            },
+            
+            _showBlockingPane: function () {
+                if (this._blockingPaneCounter === 0) {
+                    this.$.loadingPanel.style.visibility = "visible";
+                    this.$.dialogLoader.style.opacity = "0";
+                }
+                this._blockingPaneCounter++;
+            },
+            
+            _hideBlockingPane: function () {
+                if (this._blockingPaneCounter > 0) {
+                    this._blockingPaneCounter--;
+                }
+                if (this._blockingPaneCounter === 0) {
+                    this.$.loadingPanel.style.visibility = "hidden";
+                    this.$.dialogLoader.style.opacity = "1";
+                }
             }
-
         });
     })();
 </script>

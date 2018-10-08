@@ -706,10 +706,25 @@
                 self.addEventListener("tg-entity-selected", function (e) {
                     this.centreSelection = e.detail;
                 }.bind(self));
+                
+                //Add event listener that indicates whne the layout has finished
+                self.addEventListener("layout-finished",  e => {
+                    self._viewLoaded = true;
+                    self.fire('tg-view-loaded', self);
+                });
+                
+                //Add event listener that listens when egi entities appeared and fires the data was loaded and focused event for the dialog
+                self.addEventListener("egi-entities-appeared",  e => {
+                    self.fire('data-loaded-and-focused', self);
+                });
 
-                this._columnAction = createColumnAction(self);
+                self._columnAction = createColumnAction(self);
 
             }, // end of ready callback
+            
+            wasLoaded: function () {
+                return !!this._viewLoaded;
+            },
 
             attached: function () {
                 var self = this;
