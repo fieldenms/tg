@@ -134,7 +134,7 @@ public class CentreUpdaterUtils extends CentreUpdater {
             final ICentreDomainTreeManagerAndEnhancer newCentreManager = createDefaultCentre(menuItemType, webUiConfig);
             logger.error(format("Started saving of default entity-centre configuration %s.", loggingSuffix));
             ecc.setConfigBody(serialiser.serialise(newCentreManager));
-            eccCompanion.quickSave(ecc);
+            eccCompanion.save(ecc);
             logger.error(format("Ended creation and saving of default entity-centre configuration %s. For now it can be used.", loggingSuffix));
             logger.error("============================================ CENTRE DESERIALISATION HAS FAILED [END] ============================================");
             return newCentreManager;
@@ -164,7 +164,7 @@ public class CentreUpdaterUtils extends CentreUpdater {
         ecc.setMenuItem(menuItem);
         ecc.setDesc(newDesc);
         ecc.setConfigBody(serialiser.serialise(centre));
-        eccCompanion.quickSave(ecc);
+        eccCompanion.save(ecc);
         return centre;
     }
     
@@ -189,7 +189,7 @@ public class CentreUpdaterUtils extends CentreUpdater {
                 config.setDesc(newDesc);
             }
             config.setConfigBody(serialiser.serialise(centre));
-            eccCompanion.quickSave(config);
+            eccCompanion.save(config);
         }
         return centre;
     }

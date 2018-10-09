@@ -1,7 +1,9 @@
 package ua.com.fielden.platform.entity;
 
+import static java.lang.String.format;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
+import static ua.com.fielden.platform.companion.PersistentEntitySaver.ERR_COULD_NOT_RESOLVE_CONFLICTING_CHANGES;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchAll;
 
 import org.junit.Test;
@@ -47,7 +49,7 @@ public class AutomaticConflictResolutionTest extends AbstractDaoTestCase {
             save(cat1_v2.setDesc("other desc"));
             fail("Saving should have failed");
         } catch (final EntityCompanionException ex) {
-            assertEquals("Could not resolve conflicting changes. Tg Category [Cat1] could not be saved.", ex.getMessage());
+            assertEquals(format("%s Tg Category [Cat1] could not be saved.", ERR_COULD_NOT_RESOLVE_CONFLICTING_CHANGES), ex.getMessage());
         }
 
     }
