@@ -21,12 +21,13 @@ public class AttachmentPreviewEntityMaster implements IMaster<AttachmentPreviewE
         //Generating image element
 
         final DomElement img = new DomElement("img")
+                .clazz("relative")
                 .attr("src$", "[[_getImageUri(_currBindingEntity)]]")
                 .attr("hidden$", "[[!_isImageVisisble(_currBindingEntity)]]")
                 .style("width:100%", "height:100%", "object-fit:contain");
         final DomElement altImage = new DomElement("div")
                 .clazz("fit", "layout horizontal center-center")
-                .style("font-size: 18px", "color: #bdbdbd")
+                .style("font-size: 18px", "color: #bdbdbd", "background-color: white")
                 .add(new InnerTextElement("[[_getAltImageText(_currBindingEntity)]]"));
         final DomElement container = new DomElement("div")
                 .clazz("property-editors", "relative")

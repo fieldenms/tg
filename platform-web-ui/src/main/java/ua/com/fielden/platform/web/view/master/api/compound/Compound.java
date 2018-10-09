@@ -233,7 +233,7 @@ public class Compound {
         } else {
             actionWithIcon = actionWithPreAction.shortDesc(shortDesc);
         }
-        if (longDesc.isPresent() && StringUtils.isEmpty(longDesc.get())) {
+        if (longDesc.isPresent() && !StringUtils.isEmpty(longDesc.get())) {
             return actionWithIcon.longDesc(longDesc.get())
                     .shortcut("alt+n")
                     .prefDimForView(prefDim)

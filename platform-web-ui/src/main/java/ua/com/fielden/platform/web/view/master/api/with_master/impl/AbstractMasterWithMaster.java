@@ -37,6 +37,12 @@ public abstract class AbstractMasterWithMaster<T extends AbstractEntity<?>> impl
                         "this._hasEmbededView = function () {\n" +
                         "    return true;\n" +
                         "}.bind(this);\n" +
+                        "self.wasLoaded = function () {\n" +
+                        "    if (this.$.loader.loadedElement && this.$.loader.loadedElement.wasLoaded) {\n" +
+                        "        return this.$.loader.loadedElement.wasLoaded();\n" +
+                        "    }\n" +
+                        "    return false;\n" +
+                        "}.bind(self);\n" +
                         "this._focusNextEmbededView = function (e) {\n" +
                         "    if (this.$.loader.loadedElement && this.$.loader.loadedElement.focusNextView) {\n" +
                         "        this.$.loader.loadedElement.focusNextView(e);\n" +

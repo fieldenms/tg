@@ -129,7 +129,7 @@ public class CentreUpdaterUtils extends CentreUpdater {
             logger.error(format("Creating and saving of empty diff %s...", loggingSuffix));
             final Map<String, Object> emptyDiff = createEmptyDifferences();
             ecc.setConfigBody(serialiser.serialise(emptyDiff, JACKSON));
-            eccCompanion.quickSave(ecc);
+            eccCompanion.save(ecc);
             logger.error(format("Creating and saving of empty diff %s...done", loggingSuffix));
             logger.error("============================================ CENTRE DESERIALISATION HAS FAILED [END] ============================================");
             return emptyDiff;
@@ -159,7 +159,7 @@ public class CentreUpdaterUtils extends CentreUpdater {
         ecc.setMenuItem(menuItem);
         ecc.setDesc(newDesc);
         ecc.setConfigBody(serialiser.serialise(differences, JACKSON));
-        eccCompanion.quickSave(ecc);
+        eccCompanion.save(ecc);
         return differences;
     }
     
@@ -184,7 +184,7 @@ public class CentreUpdaterUtils extends CentreUpdater {
                 config.setDesc(newDesc);
             }
             config.setConfigBody(serialiser.serialise(differences, JACKSON));
-            eccCompanion.quickSave(config);
+            eccCompanion.save(config);
         }
         return differences;
     }

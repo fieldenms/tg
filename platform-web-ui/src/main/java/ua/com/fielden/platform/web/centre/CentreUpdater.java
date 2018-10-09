@@ -242,10 +242,10 @@ public class CentreUpdater {
         }
         
         // save
-        eccCompanion.quickSave(freshConfig);
-        eccCompanion.quickSave(savedConfig);
+        eccCompanion.save(freshConfig);
+        eccCompanion.save(savedConfig);
         if (previouslyRunConfig != null) { // previouslyRun centre may not exist
-            eccCompanion.quickSave(previouslyRunConfig);
+            eccCompanion.save(previouslyRunConfig);
         }
     }
     
@@ -403,10 +403,10 @@ public class CentreUpdater {
     public static void makePreferred(final User user, final Class<? extends MiWithConfigurationSupport<?>> miType, final Optional<String> saveAsName, final DeviceProfile device, final ICompanionObjectFinder companionFinder) {
         final IEntityCentreConfig eccCompanion = companionFinder.find(EntityCentreConfig.class);
         try (final Stream<EntityCentreConfig> stream = streamPreferredConfigs(user, miType, device, companionFinder) ) {
-            stream.forEach(ecc -> eccCompanion.quickSave(ecc.setPreferred(false)));
+            stream.forEach(ecc -> eccCompanion.save(ecc.setPreferred(false)));
         }
         if (saveAsName.isPresent()) {
-            eccCompanion.quickSave(
+            eccCompanion.save(
                 findConfig(miType, user, deviceSpecific(saveAsSpecific(FRESH_CENTRE_NAME, saveAsName), device) + DIFFERENCES_SUFFIX, eccCompanion)
                 .setPreferred(true)
             );
