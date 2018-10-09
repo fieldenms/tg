@@ -107,7 +107,7 @@ public abstract class AbstractWebUiConfig implements IWebUiConfig {
         .addMaster(genericEntityDeleteActionMaster)
         .addMaster(genericEntityExportActionMaster)
         .addMaster(genericMenuSaveMaster)
-        .addMaster(new MenuWebUiConfig(injector(), desktopMainMenuConfig).master)
+        .addMaster(new MenuWebUiConfig(injector(), desktopMainMenuConfig, mobileMainMenuConfig).master)
         // centre configuration management
         .addMaster(centreConfigurationWebUiConfig.centreConfigUpdater)
         .addMaster(centreConfigurationWebUiConfig.centreColumnWidthConfigUpdater)

@@ -15,6 +15,7 @@ import java.util.stream.Collectors;
 import ua.com.fielden.platform.companion.IEntityReader;
 import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.error.Result;
+import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.types.tuples.T2;
 import ua.com.fielden.platform.web.centre.CentreContext;
 
@@ -99,12 +100,23 @@ public class CollectionModificationUtils {
                 throw failure("Another user has changed the chosen items. " + TRY_AGAIN_MSG);
             }
             entityToSave = freshEntity;
-            staleAction.copyTo(entityToSave); // the main purpose of this copying is to promote addedIds, removedIds, chosenIds and 'availableEntities' property values further to entityToSave
+        } else {
+            entityToSave = companion.new_();
+        }
+        
+        staleAction.copyTo(entityToSave); // the main purpose of this copying is to promote addedIds, removedIds, chosenIds and 'availableEntities' property values further to entityToSave
+        
+        // Copy original values for all relevant properties
+        Finder.streamRealProperties(staleAction.getType()).map(field -> field.getName())
+            .filter(propName -> !staleAction.proxiedPropertyNames().contains(propName))
+            .forEach(propName -> {
+                entityToSave.getProperty(propName).setOriginalValue(staleAction.getProperty(propName).getOriginalValue());
+            });
+        
+        if (freshEntity != null) {
             // mark entityToSave as 'dirty' to be properly saved and to increase its db-related version. New entity (persistedEntity == null) is always dirty - no need to do anything.
             entityToSave.setSurrogateVersion(freshEntity.getVersion() + 1L); // surrogate version will be equal to actual action version after saving
         } else {
-            entityToSave = companion.new_();
-            staleAction.copyTo(entityToSave); // the main purpose of this copying is to promote addedIds, removedIds, chosenIds and 'availableEntities' property values further to entityToSave
             if (!staleAction.getProperty(KEY).isRequired()) {
                 // Key property, which represents id of master entity, will be null in case where master entity is new.
                 // There is a need to relax key requiredness to be able to continue with action saving.

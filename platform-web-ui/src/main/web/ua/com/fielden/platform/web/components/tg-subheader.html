@@ -2,6 +2,7 @@
 
 <link rel="import" href="/resources/polymer/iron-icons/iron-icons.html">
 <link rel="import" href="/resources/polymer/iron-icons/av-icons.html">
+<link rel="import" href="/resources/polymer/iron-resizable-behavior/iron-resizable-behavior.html">
 
 <link rel="import" href="/resources/polymer/paper-styles/paper-styles-classes.html">
 
@@ -70,6 +71,8 @@
                     type: Array
                 }
             },
+            
+            behaviors: [Polymer.IronResizableBehavior],
 
             ready: function () {
                 this.relativeElements = [];
@@ -97,6 +100,7 @@
                 if (this.collapsible) {
                     this.closed = !this.closed;
                     this._syncRelativeElements();
+                    this.notifyResize();
                 }
             },
 

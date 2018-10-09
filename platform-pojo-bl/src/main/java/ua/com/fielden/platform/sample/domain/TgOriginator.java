@@ -17,7 +17,6 @@ import ua.com.fielden.platform.entity.annotation.Title;
 @CompanionObject(ITgOriginator.class)
 @MapEntityTo
 public class TgOriginator extends ActivatableAbstractEntity<DynamicEntityKey> {
-    private static final long serialVersionUID = 1L;
 
     @IsProperty
     @MapTo
