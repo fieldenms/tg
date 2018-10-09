@@ -473,9 +473,10 @@
                             actionModel.postActionSuccess = function (functionalEntity) {
                                 action.success = true;
                                 console.log('postActionSuccess: ' + actionDesc, functionalEntity);
+                                const saveButton = self.querySelector("tg-action[role='save']");
                                 self.save(functionalEntity, continuationProperty)
                                     .then(
-                                        Polymer.TgBehaviors.TgEntityMasterClosingBehavior.createEntityActionThenCallback(self.centreUuid, 'save', postal, null, true),
+                                        Polymer.TgBehaviors.TgEntityMasterClosingBehavior.createEntityActionThenCallback(self.centreUuid, 'save', postal, null, saveButton.closeAfterExecution),
                                         function (value) { console.log('AJAX PROMISE CATCH', value); }
                                     );
                             };
