@@ -205,7 +205,8 @@
                 'tg-menu-appeared': '_updateMenuButton',
                 'tg-master-type-changed': '_handleMasterChanged',
                 'tg-master-type-before-change': '_handleMasterBeforeChange',
-                'data-loaded-and-focused': '_handleDataLoaded'
+                'data-loaded-and-focused': '_handleDataLoaded',
+                'binding-entity-did-not-appear': '_handleError'
             },
 
             hostAttributes: {
@@ -973,6 +974,12 @@
             _handleDataLoaded: function () {
                 this._resetSpinner();
                 this._hideBlockingPane();
+            },
+            
+            _handleError: function () {
+                if (this.opened) {
+                    this._closeDialogAndIndicateActionCompletion();
+                }
             },
             
             _handleActionNavigationChange: function (e) {
