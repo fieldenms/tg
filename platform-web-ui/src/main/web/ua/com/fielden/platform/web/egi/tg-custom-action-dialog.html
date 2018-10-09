@@ -514,11 +514,7 @@
 
             _skipNext: function() {
                 if (this._lastAction && this._lastAction.continuous && typeof this._lastAction.skipNext === 'function') {
-                    // skipping to next is an explicit action that disregards any unsaved changes
-                    // this.closeDialog(true);
-                    //if (!this.opened) {
                     this._lastAction.skipNext();
-                    //}
                 }
             },
             
