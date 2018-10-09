@@ -507,30 +507,35 @@
                 }).bind(self);
 
                 self._processError = (function(e, name, customErrorHandlerFor) {
-                    console.log("PROCESS ERROR", e.error);
-                    var xhr = e.detail.request.xhr;
+                    console.log('PROCESS ERROR', e.error);
+                    const xhr = e.detail.request.xhr;
+                    let msg = '';
                     if (xhr.status === 500) { // internal server error, which could either be due to business rules or have some other cause due to a bug or db connectivity issue
-                        var deserialisedResult = this._serialiser().deserialise(xhr.response);
+                        const deserialisedResult = this._serialiser().deserialise(xhr.response);
 
                         if (this._reflector().isError(deserialisedResult)) {
                             // throw the toast message about the server-side error
-                            var msg = this._toastMsgForError(deserialisedResult);
+                            msg = this._toastMsgForError(deserialisedResult);
                             this._openToastForError(this._reflector().exceptionMessage(deserialisedResult.ex), msg, true);
                             // continue with custom error handling of the error result
                             customErrorHandlerFor(deserialisedResult);
                         } else {
                             //throw new Error('Responses with status code 500 suppose to carry an error cause!');
-                            customErrorHandlerFor('Responses with status code 500 suppose to carry an error cause!');
+                            msg = 'Responses with status code 500 suppose to carry an error cause!'
+                            customErrorHandlerFor(msg);
                         }
                     } else if (xhr.status === 403) { // forbidden!
                         // TODO should prompt for login in place...
-                        this._openToastForError("Access denied.", "The current session has expired. Please login and try again.", true);
+                        msg = 'The current session has expired. Please login and try again.';
+                        this._openToastForError('Access denied.', msg, true);
                         customErrorHandlerFor('Access denied');
                     } else { // other codes
                         // from what it could be observed, this siuation was occuring only in case of request cancellation...
                         // let's simply produce a console warning at this stage
-                        console.warn('Response with status ' + xhr.status + ' is unexpected and will be ignored.');
+                        msg = 'Response with status ' + xhr.status + ' is unexpected and will be ignored.'
+                        console.warn(msg);
                     }
+                    this.fire('tg-error-happened', msg);
                 }).bind(self);
 
                 // calbacks, that will be bound by editor child elements:

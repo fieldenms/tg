@@ -45,12 +45,21 @@
             }
             #dialogLoader {
                 transition: opacity 500ms;
+                opacity: 1;
+            }
+            #dialogLoader.hidden {
+                opacity: 0;
+                pointer-events: none;
             }
             #loadingPanel {
                 visibility: hidden;
                 background-color: white;
                 font-size: 18px;
+                overflow: auto;
                 color: var(--paper-grey-400);
+            }
+            #loadingPanel.visible {
+                visibility: visible;
             }
             .truncate {
                 white-space: nowrap;
@@ -168,7 +177,9 @@
             </div>
         </div>
         <div id="dialogBody" class="relative flex layout vertical">
-            <div id="loadingPanel" class="fit layout horizontal center-center">Loading data...</div>
+            <div id="loadingPanel" class="fit layout horizontal">
+                <div style="margin: auto;" inner-h-t-m-l="[[_getLoadingError(_errorMsg)]]"></div>
+            </div>
             <div id="dialogLoader" class="flex layout horizontal">
                 <tg-element-loader id="elementLoader" class="flex"></tg-element-loader>
             </div>
@@ -209,7 +220,7 @@
                 'tg-action-navigation-changed': '_handleActionNavigationChange',
                 'tg-action-navigation-invoked': '_handleActionNavigationInvoked',
                 'data-loaded-and-focused': '_handleDataLoaded',
-                'binding-entity-did-not-appear': '_handleError'
+                'tg-error-happened': '_handleError'
             },
 
             hostAttributes: {
@@ -331,6 +342,11 @@
                 _sequentialEditText: {
                     type: String,
                     value: ''
+                },
+                
+                _errorMsg: {
+                    type: String,
+                    value: null
                 },
                 //////////////////////////////////
                 
@@ -962,10 +978,13 @@
                 this._hideBlockingPane();
             },
             
-            _handleError: function () {
-                if (this.opened) {
-                    this._closeDialogAndIndicateActionCompletion();
-                }
+            _handleError: function (e) {
+                this._errorMsg = e.detail;
+                this._resetSpinner();
+            },
+                
+            _getLoadingError: function(_errorMsg) {
+                return _errorMsg || "Loading data...";
             },
             
             _handleActionNavigationChange: function (e) {
@@ -976,6 +995,9 @@
             },
             
             _handleActionNavigationInvoked: function (e) {
+                if (this._errorMsg) {
+                    this._resetState();
+                }
                 if (e.detail && e.detail.spinner) {
                     this._displaySpinnerOn(this.$[e.detail.spinner]);
                 }
@@ -1060,7 +1082,7 @@
             
             _handleBodyTransitionEnd: function (e) {
                 if (e.target === this.$.dialogLoader) {
-                    if (this.$.dialogLoader.style.opacity === "0") {
+                    if (Polymer.dom(this.$.dialogLoader).classList.contains("hidden")) {
                         if (this._masterLayoutChanges) {
                             this.$.elementLoader.style.display = "none";
                         }
@@ -1068,7 +1090,6 @@
                     } else {
                         this._masterVisibilityChanges = undefined;
                         this._masterLayoutChanges = undefined;
-                        this.$.loadingPanel.style.visibility = "hidden";
                         this.notifyResize();
                         this._focusDialogWithInput();
                     }
@@ -1148,8 +1169,8 @@
             _showBlockingPane: function () {
                 if (this._blockingPaneCounter === 0) {
                     this._masterVisibilityChanges = true;
-                    this.$.loadingPanel.style.visibility = "visible";
-                    this.$.dialogLoader.style.opacity = "0";
+                    Polymer.dom(this.$.loadingPanel).classList.add("visible");
+                    Polymer.dom(this.$.dialogLoader).classList.add("hidden");
                 }
                 this._blockingPaneCounter++;
             },
@@ -1160,8 +1181,9 @@
                 }
                 if (this._blockingPaneCounter === 0) {
                     this._masterVisibilityChanges = true;
+                    Polymer.dom(this.$.loadingPanel).classList.remove("visible");
+                    Polymer.dom(this.$.dialogLoader).classList.remove("hidden");
                     this.$.elementLoader.style.removeProperty("display");
-                    this.$.dialogLoader.style.opacity = "1";
                 }
             },
 
@@ -1260,12 +1282,13 @@
             },
             
             _resetState: function () {
+                this._errorMsg = null;
                 this._blockingPaneCounter = 0;
                 this._masterVisibilityChanges = undefined;
                 this._masterLayoutChanges = undefined;
                 this.$.elementLoader.style.removeProperty("display");
-                this.$.loadingPanel.style.visibility = "hidden";
-                this.$.dialogLoader.style.opacity = "1";
+                Polymer.dom(this.$.loadingPanel).classList.remove("visible");
+                Polymer.dom(this.$.dialogLoader).classList.remove("hdden");
                 this._resetSpinner();
             },
 
