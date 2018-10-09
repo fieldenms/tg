@@ -101,7 +101,6 @@
                 margin-bottom: 2px;
             }
             #navigationBar {
-                position: relative;
                 color: white;
             }
             #resizer {
@@ -144,30 +143,32 @@
                 <span class="vertical-splitter self-stretch" hidden$="[[_isTitleSplitterHidden(staticTitle, dynamicTitle)]]"></span>
                 <span class="dynamic-title truncate" hidden$="[[!dynamicTitle]]">[[dynamicTitle]]</span>
             </div>
-            <div id="navigationBar" hidden="[[!_isNavigationBarVisible(_lastAction, _minimised)]]" style$="[[_calcNavigationBarStyle(mobile)]]" class="layout horizontal center">
-                <paper-icon-button id="firstEntity" class="button-reverse title-bar-button navigation-button" icon="hardware:keyboard-tab" on-tap="_firstEntry" disabled$="[[!_isNavigatonButtonEnable(_hasPrev, isNavigationActionInProgress)]]" tooltip-text$="[[_getFirstEntryActionTooltip(_lastAction.navigationType)]]"></paper-icon-button>
-                <paper-icon-button id="prevEntity" class="title-bar-button navigation-button" icon="hardware:keyboard-backspace" on-tap="_previousEntry" disabled$="[[!_isNavigatonButtonEnable(_hasPrev, isNavigationActionInProgress)]]" tooltip-text$="[[_getPreviousEntryActionTooltip(_lastAction.navigationType)]]"></paper-icon-button>
-                <span>[[_sequentialEditText]]</span>
-                <paper-icon-button id="nextEntity" class="button-reverse title-bar-button navigation-button" icon="hardware:keyboard-backspace" on-tap="_nextEntry" disabled$="[[!_isNavigatonButtonEnable(_hasNext, isNavigationActionInProgress)]]" tooltip-text$="[[_getNextEntryActionTooltip(_lastAction.navigationType)]]"></paper-icon-button>
-                <paper-icon-button id="lastEntity" class="title-bar-button navigation-button" icon="hardware:keyboard-tab" on-tap="_lastEntry" disabled$="[[!_isNavigatonButtonEnable(_hasNext, isNavigationActionInProgress)]]" tooltip-text$="[[_getLastEntryActionTooltip(_lastAction.navigationType)]]"></paper-icon-button>
+            <div class="relative layout horizontal justified center">
+                <div id="navigationBar" hidden="[[!_isNavigationBarVisible(_lastAction, _minimised)]]" style$="[[_calcNavigationBarStyle(mobile)]]" class="layout horizontal center">
+                    <paper-icon-button id="firstEntity" class="button-reverse title-bar-button navigation-button" icon="hardware:keyboard-tab" on-tap="_firstEntry" disabled$="[[!_isNavigatonButtonEnable(_hasPrev, isNavigationActionInProgress)]]" tooltip-text$="[[_getFirstEntryActionTooltip(_lastAction.navigationType)]]"></paper-icon-button>
+                    <paper-icon-button id="prevEntity" class="title-bar-button navigation-button" icon="hardware:keyboard-backspace" on-tap="_previousEntry" disabled$="[[!_isNavigatonButtonEnable(_hasPrev, isNavigationActionInProgress)]]" tooltip-text$="[[_getPreviousEntryActionTooltip(_lastAction.navigationType)]]"></paper-icon-button>
+                    <span>[[_sequentialEditText]]</span>
+                    <paper-icon-button id="nextEntity" class="button-reverse title-bar-button navigation-button" icon="hardware:keyboard-backspace" on-tap="_nextEntry" disabled$="[[!_isNavigatonButtonEnable(_hasNext, isNavigationActionInProgress)]]" tooltip-text$="[[_getNextEntryActionTooltip(_lastAction.navigationType)]]"></paper-icon-button>
+                    <paper-icon-button id="lastEntity" class="title-bar-button navigation-button" icon="hardware:keyboard-tab" on-tap="_lastEntry" disabled$="[[!_isNavigatonButtonEnable(_hasNext, isNavigationActionInProgress)]]" tooltip-text$="[[_getLastEntryActionTooltip(_lastAction.navigationType)]]"></paper-icon-button>
+                </div>
+                <div class="layout horizontal center">
+                    <!-- collapse/expand buttons -->
+                    <paper-icon-button hidden="[[!_minimised]]" class="minimise-button title-bar-button" icon="tg-icons:expandMin" on-tap="_invertMinimiseState" tooltip-text="Restore, Alt&nbsp+&nbspc"></paper-icon-button>
+                    <paper-icon-button hidden="[[_collapserHidden(_minimised, mobile)]]" class="title-bar-button minimise-button" icon="tg-icons:collapseMin"   on-tap="_invertMinimiseState" tooltip-text="Collapse, Alt&nbsp+&nbspc" disabled=[[_dialogInteractionsDisabled(_minimised,_maximised)]]></paper-icon-button>
+
+                    <!-- maximize/restore buttons -->
+                    <paper-icon-button hidden="[[_maximised]]" class="maximise-button title-bar-button" icon="icons:fullscreen"       on-tap="_invertMaximiseState" tooltip-text="Maximise, Alt&nbsp+&nbspm" disabled=[[_dialogInteractionsDisabled(_minimised,_maximised)]]></paper-icon-button>
+                    <paper-icon-button hidden="[[_maximiseRestorerHidden(_maximised, mobile)]]" class="maximise-button title-bar-button" icon="icons:fullscreen-exit"  on-tap="_invertMaximiseState" tooltip-text="Restore, Alt&nbsp+&nbspm"></paper-icon-button>
+
+                    <!-- close/next buttons -->
+                    <paper-icon-button hidden="[[_closerHidden(_lastAction, mobile)]]" class="close-button title-bar-button" icon="icons:cancel"  on-tap="closeDialog" tooltip-text="Close, Alt&nbsp+&nbspx"></paper-icon-button>
+                    <paper-icon-button id="skipNext" hidden="[[!_lastAction.continuous]]" disabled$="[[isNavigationActionInProgress]]" class="close-button title-bar-button" icon="av:skip-next" on-tap="_skipNext" tooltip-text="Skip to next without saving"></paper-icon-button>
+                </div>
                 <paper-spinner id="spinner" active="[[isNavigationActionInProgress]]" style="display: none;" alt="in progress"></paper-spinner>
-            </div>
-            <div class="layout horizontal center">
-                <!-- collapse/expand buttons -->
-                <paper-icon-button hidden="[[!_minimised]]" class="minimise-button title-bar-button" icon="tg-icons:expandMin" on-tap="_invertMinimiseState" tooltip-text="Restore, Alt&nbsp+&nbspc"></paper-icon-button>
-                <paper-icon-button hidden="[[_collapserHidden(_minimised, mobile)]]" class="title-bar-button minimise-button" icon="tg-icons:collapseMin"   on-tap="_invertMinimiseState" tooltip-text="Collapse, Alt&nbsp+&nbspc" disabled=[[_dialogInteractionsDisabled(_minimised,_maximised)]]></paper-icon-button>
-
-                <!-- maximize/restore buttons -->
-                <paper-icon-button hidden="[[_maximised]]" class="maximise-button title-bar-button" icon="icons:fullscreen"       on-tap="_invertMaximiseState" tooltip-text="Maximise, Alt&nbsp+&nbspm" disabled=[[_dialogInteractionsDisabled(_minimised,_maximised)]]></paper-icon-button>
-                <paper-icon-button hidden="[[_maximiseRestorerHidden(_maximised, mobile)]]" class="maximise-button title-bar-button" icon="icons:fullscreen-exit"  on-tap="_invertMaximiseState" tooltip-text="Restore, Alt&nbsp+&nbspm"></paper-icon-button>
-
-                <!-- close/next buttons -->
-                <paper-icon-button hidden="[[_closerHidden(_lastAction, mobile)]]" class="close-button title-bar-button" icon="icons:cancel"  on-tap="closeDialog" tooltip-text="Close, Alt&nbsp+&nbspx"></paper-icon-button>
-                <paper-icon-button hidden="[[!_lastAction.continuous]]" class="close-button title-bar-button" icon="av:skip-next" on-tap="_skipNext" tooltip-text="Skip to next without saving"></paper-icon-button>
             </div>
         </div>
         <div id="dialogBody" class="relative flex layout vertical">
-            <div id="loadingPanel" class=" fit layout horizontal center-center">Loading data...</div>
+            <div id="loadingPanel" class="fit layout horizontal center-center">Loading data...</div>
             <div id="dialogLoader" class="flex layout horizontal">
                 <tg-element-loader id="elementLoader" class="flex"></tg-element-loader>
             </div>
@@ -205,6 +206,8 @@
                 'tg-menu-appeared': '_updateMenuButton',
                 'tg-master-type-changed': '_handleMasterChanged',
                 'tg-master-type-before-change': '_handleMasterBeforeChange',
+                'tg-action-navigation-changed': '_handleActionNavigationChange',
+                'tg-action-navigation-invoked': '_handleActionNavigationInvoked',
                 'data-loaded-and-focused': '_handleDataLoaded',
                 'binding-entity-did-not-appear': '_handleError'
             },
@@ -394,6 +397,7 @@
                 this._focusDialogWithInput = this._focusDialogWithInput.bind(this);
                 this._finishErroneousOpening = this._finishErroneousOpening.bind(this);
                 this._handleActionNavigationChange = this._handleActionNavigationChange.bind(this);
+                this._handleActionNavigationInvoked = this._handleActionNavigationInvoked.bind(this);
                 this._handleViewLoaded = this._handleViewLoaded.bind(this);
 
                 this._setIsRunning(false);
@@ -511,11 +515,7 @@
 
             _skipNext: function() {
                 if (this._lastAction && this._lastAction.continuous && typeof this._lastAction.skipNext === 'function') {
-                    // skipping to next is an explicit action that disregards any unsaved changes
-                    this.closeDialog(true);
-                    if (!this.opened) {
-                        this._lastAction.skipNext();
-                    }
+                    this._lastAction.skipNext();
                 }
             },
             
@@ -541,32 +541,24 @@
             
             _firstEntry: function () {
                 if (this.canClose() && this._hasPrev) {
-                    this._showBlockingPane();
-                    this._displaySpinnerOn(this.$.firstEntity);
                     this._lastAction.firstEntry();
                 }
             },
             
             _previousEntry: function () {
                 if (this.canClose() && this._hasPrev) {
-                    this._showBlockingPane();
-                    this._displaySpinnerOn(this.$.prevEntity);
                     this._lastAction.previousEntry();
                 }
             },
             
             _nextEntry: function () {
                 if (this.canClose() && this._hasNext) {
-                    this._showBlockingPane();
-                    this._displaySpinnerOn(this.$.nextEntity);
                     this._lastAction.nextEntry();
                 }
             },
             
             _lastEntry: function () {
                 if (this.canClose() && this._hasNext) {
-                    this._showBlockingPane();
-                    this._displaySpinnerOn(this.$.lastEntity);
                     this._lastAction.lastEntry();
                 }
             },
@@ -860,7 +852,7 @@
             },
 
             _handleCloseEvent: function(data, envelope) {
-                if (data.canClose === true || this._lastAction.continuous) {
+                if (data.canClose === true) {
                     this._closeDialogAndIndicateActionCompletion();
                 }
             },
@@ -958,15 +950,9 @@
             },
             
             _customiseAction: function (newAction) {
-                if (this._lastAction && this._lastAction.supportsNavigation) {
-                    this._lastAction.removeEventListener("tg-action-navigation-changed", this._handleActionNavigationChange);
-                }
                 if (newAction) {
                     this.staticTitle = newAction.shortDesc;
-                    if (newAction.supportsNavigation) {
-                        newAction.addEventListener("tg-action-navigation-changed", this._handleActionNavigationChange);
-                        this._setNavigationDetails(newAction);
-                    }
+                    this._setNavigationDetails(newAction);
                 }
                 return newAction;
             },
@@ -984,6 +970,16 @@
             
             _handleActionNavigationChange: function (e) {
                 this._setNavigationDetails(e.detail);
+                if (e.detail.shouldResetSpinner) {
+                    this._resetSpinner();
+                }
+            },
+            
+            _handleActionNavigationInvoked: function (e) {
+                if (e.detail && e.detail.spinner) {
+                    this._displaySpinnerOn(this.$[e.detail.spinner]);
+                }
+                this._showBlockingPane();
             },
             
             _resetSpinner: function () {
@@ -994,9 +990,11 @@
             },
             
             _setNavigationDetails: function (obj) {
-                this._hasPrev = obj.hasPrev;
-                this._hasNext = obj.hasNext;
-                this._sequentialEditText = "" + (obj.count > 0 ? obj.entInd + 1 : 0) + " / " + obj.count;
+                if (obj.supportsNavigation) {
+                    this._hasPrev = obj.hasPrev;
+                    this._hasNext = obj.hasNext;
+                    this._sequentialEditText = "" + (obj.count > 0 ? obj.entInd + 1 : 0) + " / " + obj.count;
+                }
             },
             
             _updateDialogAnimation: function (_masterVisibilityChanges, _masterLayoutChanges) {
@@ -1241,7 +1239,7 @@
                     for (var index = 0; index < this._subscriptions.length; index++) {
                         postal.unsubscribe(this._subscriptions[index]);
                     }
-                    this._resetAnimation();
+                    this._resetState();
                     this._subscriptions.length = 0;
                     this._wasMoved = false;
                     this._wasResized = false;
@@ -1261,7 +1259,8 @@
                 }
             },
             
-            _resetAnimation: function () {
+            _resetState: function () {
+                this._blockingPaneCounter = 0;
                 this._masterVisibilityChanges = undefined;
                 this._masterLayoutChanges = undefined;
                 this.$.elementLoader.style.removeProperty("display");

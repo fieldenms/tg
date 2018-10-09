@@ -72,7 +72,7 @@ import ua.com.fielden.platform.utils.EntityUtils;
  * @param <T>
  */
 public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements IEntityActuator<T> {
-
+    public static final String ERR_COULD_NOT_RESOLVE_CONFLICTING_CHANGES = "Could not resolve conflicting changes.";
     private final Supplier<Session> session;
     private final Supplier<String> transactionGuid;
     private final Supplier<DbVersion> dbVersion;
@@ -236,7 +236,7 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
         persistedEntity.setIgnoreEditableState(true);
         // check for data staleness and try to resolve the conflict is possible (refer #83)
         if (persistedEntity.getVersion() != null && persistedEntity.getVersion() > entity.getVersion() && !canResolveConflict(entity, persistedEntity)) {
-            throw new EntityCompanionException(format("Could not resolve conflicting changes. %s [%s] could not be saved.", TitlesDescsGetter.getEntityTitleAndDesc(entityType).getKey(), entity));
+            throw new EntityCompanionException(format("%s %s [%s] could not be saved.", ERR_COULD_NOT_RESOLVE_CONFLICTING_CHANGES, TitlesDescsGetter.getEntityTitleAndDesc(entityType).getKey(), entity));
         }
 
         // reconstruct entity fetch model for future retrieval at the end of the method call

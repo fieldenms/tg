@@ -11,7 +11,6 @@ import java.util.function.BiFunction;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.AbstractFunctionalEntityWithCentreContext;
 import ua.com.fielden.platform.entity.EntityDeleteAction;
-import ua.com.fielden.platform.entity.EntityEditAction;
 import ua.com.fielden.platform.entity.EntityExportAction;
 import ua.com.fielden.platform.entity.EntityNavigationAction;
 import ua.com.fielden.platform.entity.EntityNewAction;
@@ -179,7 +178,7 @@ public enum StandardActions {
                 contextConfig = context().withCurrentEntity().withSelectionCrit().withComputation((entity, context) -> entityType);
             }
 
-            return action(EntityEditAction.class).withContext(contextConfig.build()).
+            return action(EntityNavigationAction.class).withContext(contextConfig.build()).
                     preAction(new SequentialEditPreAction()).
                     icon("editor:mode-edit").
                     shortDesc(format("Edit %s", entityTitle)).
