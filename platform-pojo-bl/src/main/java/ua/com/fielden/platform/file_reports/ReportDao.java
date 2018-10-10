@@ -5,13 +5,13 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.zip.Deflater;
 
-import ua.com.fielden.platform.dao.IEntityAggregatesDao;
+import ua.com.fielden.platform.dao.IEntityAggregatesOperations;
 import ua.com.fielden.platform.dao.QueryExecutionModel;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.EntityAggregates;
 import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
 import ua.com.fielden.platform.security.user.IUserProvider;
-import ua.com.fielden.platform.serialisation.GZipOutputStreamEx;
+import ua.com.fielden.platform.serialisation.xstream.GZipOutputStreamEx;
 
 import com.google.inject.Inject;
 
@@ -28,10 +28,10 @@ public class ReportDao implements IReport {
 
     private final Map<String, IReportFactory> reportFactories = new HashMap<String, IReportFactory>();
 
-    private final IEntityAggregatesDao aggregatesDao;
+    private final IEntityAggregatesOperations aggregatesDao;
 
     @Inject
-    public ReportDao(final IEntityAggregatesDao aggregatesDao) {
+    public ReportDao(final IEntityAggregatesOperations aggregatesDao) {
         this.aggregatesDao = aggregatesDao;
     }
 

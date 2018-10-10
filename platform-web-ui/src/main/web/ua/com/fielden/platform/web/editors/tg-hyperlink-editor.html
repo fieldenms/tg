@@ -1,0 +1,80 @@
+<link rel="import" href="/resources/polymer/polymer/polymer.html">
+<link rel="import" href="/resources/polymer/iron-input/iron-input.html">
+<link rel="import" href="/resources/polymer/iron-icons/iron-icons.html">
+<link rel="import" href="/resources/polymer/paper-icon-button/paper-icon-button.html">
+
+<link rel="import" href="/resources/editors/tg-editor-behavior.html">
+<link rel="import" href="/resources/editors/tg-editor.html">
+
+
+<dom-module id="tg-hyperlink-editor">
+    <style>
+		.open-button {
+            --iron-icon-height: 1.3rem;
+            --iron-icon-width: 1.3rem;
+            width: 1.3rem;
+            height: 1.3rem;
+            padding: 0;
+        }
+    </style>
+    <template>
+    	<tg-editor
+    		id="editorDom"
+    		prop-title="[[propTitle]]"
+    		_disabled="[[_disabled]]"
+    		_editing-value="{{_editingValue}}"
+    		action="[[action]]"
+    		_error="[[_error]]"
+    		_comm-value="[[_commValue]]"
+    		_accepted-value="[[_acceptedValue]]"
+    		debug="[[debug]]">
+    		<input id="input" class="custom-input hyperlink-input" is="iron-input" bind-value="{{_editingValue}}" on-change="_onChange"	on-input="_onInput" on-tap="_onTap" on-mousedown="_onTap" on-keydown="_onKeydown"	disabled$="[[_disabled]]" tooltip-text$="[[_getTooltip(_editingValue)]]"/>
+    		<paper-icon-button on-tap="_openLink" icon="open-in-browser" class="open-button custom-icon-buttons" tabIndex="-1" tooltip-text="Open link"></paper-icon-button>
+        	<content class=".property-action"></content>
+    	</tg-editor>
+    </template>
+</dom-module>
+
+<script>
+    Polymer({
+        is: 'tg-hyperlink-editor',
+        behaviors: [ Polymer.TgBehaviors.TgEditorBehavior ],
+
+        /**
+         * Converts a JSON object represneting a value of Java type Hyperlink into a string.
+         */
+        convertToString: function (link) {
+            return link === null ? "" : link.value;
+        },
+
+        /**
+         * Converts the value from string representation into a JSON object that is used for representing value of Java type Hyperlink.
+         */
+        convertFromString: function (value) {
+            var strValue = value.trim();
+            if (strValue === '') {
+                return null;
+            } else {
+                if ((strValue.startsWith('https://') || strValue.startsWith('http://') ||
+                     strValue.startsWith('ftp://') || strValue.startsWith('ftps://') ||
+                     strValue.startsWith('mailto:')) === false) {
+                	throw "One of http, https, ftp, ftps or mailto hyperlink protocols is expected.";
+                }
+
+                return {
+                    value: strValue
+                };
+            }
+        },
+
+        /**
+         * A handler to open a linked resource in browser
+         */
+        _openLink: function () {
+            if (this.$.editorDom._acceptedValue) {
+            	var win = window.open(this.$.editorDom._acceptedValue.value, '_blank');
+            	win.focus();
+            }
+        }
+    });
+</script>

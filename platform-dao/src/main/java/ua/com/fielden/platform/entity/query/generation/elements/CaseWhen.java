@@ -1,5 +1,7 @@
 package ua.com.fielden.platform.entity.query.generation.elements;
 
+import static ua.com.fielden.platform.entity.query.DbVersion.H2;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -9,17 +11,16 @@ import ua.com.fielden.platform.utils.Pair;
 
 public class CaseWhen implements ISingleOperand {
 
-    private List<Pair<ICondition, ISingleOperand>> whenThenPairs = new ArrayList<Pair<ICondition, ISingleOperand>>();
+    private List<Pair<ICondition, ISingleOperand>> whenThenPairs = new ArrayList<>();
     private final ISingleOperand elseOperand;
     private final ITypeCast typeCast;
     private final DbVersion dbVersion;
 
     public CaseWhen(final List<Pair<ICondition, ISingleOperand>> whenThenPairs, final ISingleOperand elseOperand) {
-        this(whenThenPairs, elseOperand, null, DbVersion.H2);
+        this(whenThenPairs, elseOperand, null, H2);
     }
 
     public CaseWhen(final List<Pair<ICondition, ISingleOperand>> whenThenPairs, final ISingleOperand elseOperand, final ITypeCast typeCast, final DbVersion dbVersion) {
-        super();
         this.whenThenPairs.addAll(whenThenPairs);
         this.elseOperand = elseOperand;
         this.typeCast = typeCast;
@@ -28,7 +29,7 @@ public class CaseWhen implements ISingleOperand {
 
     @Override
     public List<EntQuery> getLocalSubQueries() {
-        final List<EntQuery> result = new ArrayList<EntQuery>();
+        final List<EntQuery> result = new ArrayList<>();
         for (final Pair<ICondition, ISingleOperand> whenThen : whenThenPairs) {
             result.addAll(whenThen.getKey().getLocalSubQueries());
             result.addAll(whenThen.getValue().getLocalSubQueries());
@@ -41,7 +42,7 @@ public class CaseWhen implements ISingleOperand {
 
     @Override
     public List<EntProp> getLocalProps() {
-        final List<EntProp> result = new ArrayList<EntProp>();
+        final List<EntProp> result = new ArrayList<>();
         for (final Pair<ICondition, ISingleOperand> whenThen : whenThenPairs) {
             result.addAll(whenThen.getKey().getLocalProps());
             result.addAll(whenThen.getValue().getLocalProps());
@@ -54,7 +55,7 @@ public class CaseWhen implements ISingleOperand {
 
     @Override
     public List<EntValue> getAllValues() {
-        final List<EntValue> result = new ArrayList<EntValue>();
+        final List<EntValue> result = new ArrayList<>();
         for (final Pair<ICondition, ISingleOperand> whenThen : whenThenPairs) {
             result.addAll(whenThen.getKey().getAllValues());
             result.addAll(whenThen.getValue().getAllValues());
@@ -104,6 +105,7 @@ public class CaseWhen implements ISingleOperand {
         final int prime = 31;
         int result = 1;
         result = prime * result + ((elseOperand == null) ? 0 : elseOperand.hashCode());
+        result = prime * result + ((typeCast == null) ? 0 : typeCast.hashCode());
         result = prime * result + ((whenThenPairs == null) ? 0 : whenThenPairs.hashCode());
         return result;
     }
@@ -125,6 +127,13 @@ public class CaseWhen implements ISingleOperand {
                 return false;
             }
         } else if (!elseOperand.equals(other.elseOperand)) {
+            return false;
+        }
+        if (typeCast == null) {
+            if (other.typeCast != null) {
+                return false;
+            }
+        } else if (!typeCast.equals(other.typeCast)) {
             return false;
         }
         if (whenThenPairs == null) {

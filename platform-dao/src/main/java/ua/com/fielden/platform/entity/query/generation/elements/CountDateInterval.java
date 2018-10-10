@@ -1,7 +1,7 @@
 package ua.com.fielden.platform.entity.query.generation.elements;
 
 import ua.com.fielden.platform.entity.query.DbVersion;
-import ua.com.fielden.platform.entity.query.fluent.DateIntervalUnit;
+import ua.com.fielden.platform.entity.query.fluent.enums.DateIntervalUnit;
 
 public class CountDateInterval extends TwoOperandsFunction {
 
@@ -65,17 +65,17 @@ public class CountDateInterval extends TwoOperandsFunction {
     private String sqlForH2() {
         switch (intervalUnit) {
         case SECOND:
-            return "DATEDIFF('SECOND', " + getOperand1().sql() + ", " + getOperand2().sql() + ")";
+            return "DATEDIFF('SECOND', " + getOperand2().sql() + ", " + getOperand1().sql() + ")";
         case MINUTE:
-            return "DATEDIFF('MINUTE', " + getOperand1().sql() + ", " + getOperand2().sql() + ")";
+            return "DATEDIFF('MINUTE', " + getOperand2().sql() + ", " + getOperand1().sql() + ")";
         case HOUR:
-            return "DATEDIFF('HOUR', " + getOperand1().sql() + ", " + getOperand2().sql() + ")";
+            return "DATEDIFF('HOUR', " + getOperand2().sql() + ", " + getOperand1().sql() + ")";
         case DAY:
-            return "DATEDIFF('DAY', " + getOperand1().sql() + ", " + getOperand2().sql() + ")";
+            return "DATEDIFF('DAY', " + getOperand2().sql() + ", " + getOperand1().sql() + ")";
         case MONTH:
-            return "DATEDIFF('MONTH', " + getOperand1().sql() + ", " + getOperand2().sql() + ")";
+            return "DATEDIFF('MONTH', " + getOperand2().sql() + ", " + getOperand1().sql() + ")";
         case YEAR:
-            return "DATEDIFF('YEAR', " + getOperand1().sql() + ", " + getOperand2().sql() + ")";
+            return "DATEDIFF('YEAR', " + getOperand2().sql() + ", " + getOperand1().sql() + ")";
         default:
             throw new IllegalStateException("Unexpected interval unit: " + intervalUnit);
         }

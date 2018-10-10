@@ -10,16 +10,16 @@ import ua.com.fielden.platform.test.domain.entities.Advice;
 
 /**
  * Domain validator for property <code>road</code> ({@link Advice#setRoad(boolean)}).
- * 
+ *
  * @author 01es
- * 
+ *
  */
 public class AdviceRoadValidator implements IBeforeChangeEventHandler<Boolean> {
 
     @Override
-    public Result handle(final MetaProperty property, final Boolean newValue, final Boolean oldValue, final Set<Annotation> mutatorAnnotations) {
+    public Result handle(final MetaProperty<Boolean> property, final Boolean newValue, final Set<Annotation> mutatorAnnotations) {
         final Advice advice = (Advice) property.getEntity();
-        if (advice.isDispatched() && (newValue != oldValue)) {
+        if (advice.isDispatched() && (newValue != property.getValue())) {
             return new Result(advice, new IllegalStateException("Road property cannot be changed once advice is dispatched."));
         }
         if (newValue) {

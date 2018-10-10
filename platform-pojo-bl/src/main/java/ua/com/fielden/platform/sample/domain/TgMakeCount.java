@@ -3,13 +3,13 @@ package ua.com.fielden.platform.sample.domain;
 import java.math.BigInteger;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.annotation.CompanionObject;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.KeyType;
 import ua.com.fielden.platform.entity.annotation.Observable;
-import ua.com.fielden.platform.entity.annotation.PersistedType;
+import ua.com.fielden.platform.entity.annotation.PersistentType;
 import ua.com.fielden.platform.entity.annotation.Title;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
-import ua.com.fielden.platform.entity.validation.annotation.CompanionObject;
 import ua.com.fielden.platform.types.Money;
 import ua.com.fielden.platform.types.markers.ISimpleMoneyType;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
@@ -17,21 +17,22 @@ import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.selec
 @KeyType(TgVehicleMake.class)
 @CompanionObject(ITgMakeCount.class)
 public class TgMakeCount extends AbstractEntity<TgVehicleMake> {
-    // TODO support make property being entity key (KeyType(TgVehicleMake))
-    private static final long serialVersionUID = 1L;
-    private static final EntityResultQueryModel<TgMakeCount> model_ = select(TgVehicleModel.class).groupBy().prop("make"). //
-    yield().prop("make").as("key"). //
-    yield().countAll().as("count"). //
-    yield().countAll().as("cost.amount"). //
-    yield().countAll().as("cost"). //
-    modelAsEntity(TgMakeCount.class);
+
+    private static final EntityResultQueryModel<TgMakeCount> model_ = select(TgVehicleModel.class).
+            groupBy().prop("make").
+            yield().prop("make").as("key").
+            yield().countAll().as("count").
+            yield().countAll().as("cost.amount").
+            yield().countAll().as("cost").
+            modelAsEntity(TgMakeCount.class);
+
     @IsProperty
     @Title(value = "Count", desc = "Vehicle Model Count per Make")
     private BigInteger count;
 
     @IsProperty
     @Title("Value")
-    @PersistedType(userType = ISimpleMoneyType.class)
+    @PersistentType(userType = ISimpleMoneyType.class)
     private Money cost;
 
     @Observable
@@ -52,11 +53,5 @@ public class TgMakeCount extends AbstractEntity<TgVehicleMake> {
 
     public BigInteger getCount() {
         return count;
-    }
-
-    /**
-     * Constructor for (@link EntityFactory}.
-     */
-    protected TgMakeCount() {
     }
 }

@@ -1,5 +1,9 @@
 package ua.com.fielden.platform.entity.query.generation.elements;
 
+import static java.lang.String.format;
+import static java.lang.String.join;
+import static ua.com.fielden.platform.utils.Pair.pair;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -16,24 +20,20 @@ import ua.com.fielden.platform.utils.Pair;
 
 public class QueryBasedSource extends AbstractSource {
     private final List<EntQuery> models;
-    private final Map<String, List<Yield>> yieldsMatrix = new HashMap<String, List<Yield>>();
+    private final Map<String, List<Yield>> yieldsMatrix = new HashMap<>();
 
     private EntQuery firstModel() {
         return models.get(0);
     }
 
     public QueryBasedSource(final String alias, final DomainMetadataAnalyser domainMetadataAnalyser, final EntQuery... models) {
-        super(alias, domainMetadataAnalyser, checkWhetherResultTypeIsPersisted(models));
-        this.models = Arrays.asList(models);
-        populateYieldMatrixFromQueryModels(models);
-        validateYieldsMatrix();
-    }
-
-    private static boolean checkWhetherResultTypeIsPersisted(final EntQuery... models) {
+        super(alias, domainMetadataAnalyser);
         if (models == null || models.length == 0) {
             throw new IllegalArgumentException("Couldn't produce instance of QueryBasedSource due to zero models passed to constructor!");
         }
-        return models[0].isPersistedType();
+        this.models = Arrays.asList(models);
+        populateYieldMatrixFromQueryModels(models);
+        validateYieldsMatrix();
     }
 
     private void populateYieldMatrixFromQueryModels(final EntQuery... models) {
@@ -43,14 +43,33 @@ public class QueryBasedSource extends AbstractSource {
                 if (foundYields != null) {
                     foundYields.add(yield);
                 } else {
-                    final List<Yield> newList = new ArrayList<Yield>();
+                    final List<Yield> newList = new ArrayList<>();
                     newList.add(yield);
                     yieldsMatrix.put(yield.getAlias(), newList);
                 }
             }
         }
     }
-
+    
+    private Yield getYield(final String yieldAlias) {
+        final List<Yield> yields = yieldsMatrix.get(yieldAlias);
+        
+        if (yields != null) {
+            if (yields.size() == 1) {
+                return yields.get(0);
+            }
+            
+            for (final Yield yield : yieldsMatrix.get(yieldAlias)) {
+                if (yield.getInfo().getJavaType() != null) {
+                    return yield;
+                }
+            }
+            
+            return yields.get(0);
+        }
+        return null;
+    }
+    
     private boolean getYieldNullability(final String yieldAlias) {
         final boolean result = false;
         for (final Yield yield : yieldsMatrix.get(yieldAlias)) {
@@ -72,8 +91,9 @@ public class QueryBasedSource extends AbstractSource {
     @Override
     public void populateSourceItems(final boolean parentLeftJoinLegacy) {
         for (final Yield yield : firstModel().getYields().getYields()) {
-            sourceItems.put(yield.getAlias(), new ResultQueryYieldDetails(yield.getInfo().getName(), yield.getInfo().getJavaType(), yield.getInfo().getHibType(), yield.getInfo().getColumn(), //
-            getYieldNullability(yield.getInfo().getName())/*yield.getInfo().isNullable()*/|| parentLeftJoinLegacy, yield.getInfo().getYieldDetailsType()));
+            final Yield properYield = getYield(yield.getAlias());
+            sourceItems.put(yield.getAlias(), new ResultQueryYieldDetails(yield.getInfo().getName(), properYield.getInfo().getJavaType(), properYield.getInfo().getHibType(), yield.getInfo().getColumn(), //
+            getYieldNullability(yield.getInfo().getName()) || parentLeftJoinLegacy, yield.getInfo().getYieldDetailsType()));
         }
     }
 
@@ -100,7 +120,7 @@ public class QueryBasedSource extends AbstractSource {
     }
 
     private Pair<PurePropInfo, PurePropInfo> validateCandidate(final String dotNotatedPropName, final String first, final String rest) {
-        final Yield firstLevelPropYield = firstModel().getYields().getYieldByAlias(first);
+        final Yield firstLevelPropYield = getYield(first);
 
         if (firstLevelPropYield == null || firstLevelPropYield.isCompositePropertyHeader()) { // there are no such first level prop at all within source query yields
             final PropertyMetadata explicitPropMetadata = getDomainMetadataAnalyser().getInfoForDotNotatedProp(sourceType(), first);
@@ -110,7 +130,7 @@ public class QueryBasedSource extends AbstractSource {
             } else {
                 if (explicitPropMetadata.isCalculated()) {
                     if (explicitPropMetadata.getJavaType() == null) {
-                        return StringUtils.isEmpty(rest) ? new Pair<PurePropInfo, PurePropInfo>(new PurePropInfo(first, null, null, true), new PurePropInfo(first, null, null, true))
+                        return StringUtils.isEmpty(rest) ? pair(new PurePropInfo(first, null, null, true), new PurePropInfo(first, null, null, true))
                                 : null;
                     } else if (!StringUtils.isEmpty(rest)) {
                         final PropertyMetadata propInfo = getDomainMetadataAnalyser().getInfoForDotNotatedProp(explicitPropMetadata.getJavaType(), rest);
@@ -119,22 +139,21 @@ public class QueryBasedSource extends AbstractSource {
                         } else {
                             final boolean propNullability = getDomainMetadataAnalyser().isNullable(explicitPropMetadata.getJavaType(), rest);
                             final boolean explicitPartNullability = explicitPropMetadata.isNullable() || isNullable();
-                            return new Pair<PurePropInfo, PurePropInfo>(new PurePropInfo(first, explicitPropMetadata.getJavaType(), explicitPropMetadata.getHibType(), explicitPartNullability), new PurePropInfo(dotNotatedPropName, propInfo.getJavaType(), propInfo.getHibType(), propNullability
-                                    || explicitPartNullability));
+                            return pair(new PurePropInfo(first, explicitPropMetadata.getJavaType(), explicitPropMetadata.getHibType(), explicitPartNullability), 
+                                        new PurePropInfo(dotNotatedPropName, propInfo.getJavaType(), propInfo.getHibType(), propNullability || explicitPartNullability));
                         }
                     } else {
 
                         final PurePropInfo ppi = new PurePropInfo(first, explicitPropMetadata.getJavaType(), explicitPropMetadata.getHibType(), explicitPropMetadata.isNullable()
                                 || isNullable());
                         ppi.setExpressionModel(explicitPropMetadata.getExpressionModel());
-                        return new Pair<PurePropInfo, PurePropInfo>(ppi, ppi);
+                        return pair(ppi, ppi);
                     }
                     //		    throw new RuntimeException("Implementation pending! Additional info: " + dotNotatedPropName + " " + explicitPropMetadata);
                 } else if (explicitPropMetadata.isCompositeProperty()) {
                     final String singleSubProp = explicitPropMetadata.getSinglePropertyOfCompositeUserType();
                     if (singleSubProp != null) {
-                        final Pair<PurePropInfo, PurePropInfo> result = validateCandidate(dotNotatedPropName, first + "." + singleSubProp, rest);
-                        return result;
+                        return validateCandidate(dotNotatedPropName, first + "." + singleSubProp, rest);
                     }
                     return null;
                 } else {
@@ -142,7 +161,7 @@ public class QueryBasedSource extends AbstractSource {
                 }
             }
         } else if (firstLevelPropYield.getInfo().getJavaType() == null) { //such property is present, but its type is definitely not entity, that's why it can't have subproperties
-            return StringUtils.isEmpty(rest) ? new Pair<PurePropInfo, PurePropInfo>(new PurePropInfo(first, null, null, true), new PurePropInfo(first, null, null, true)) : null;
+            return StringUtils.isEmpty(rest) ? pair(new PurePropInfo(first, null, null, true), new PurePropInfo(first, null, null, true)) : null;
         } else if (!StringUtils.isEmpty(rest)) {
             final PropertyMetadata propInfo = getDomainMetadataAnalyser().getInfoForDotNotatedProp(firstLevelPropYield.getInfo().getJavaType(), rest);
             if (propInfo == null) {
@@ -150,39 +169,22 @@ public class QueryBasedSource extends AbstractSource {
             } else {
                 final boolean propNullability = getDomainMetadataAnalyser().isNullable(firstLevelPropYield.getInfo().getJavaType(), rest);
                 final boolean explicitPartNullability = getYieldNullability(firstLevelPropYield.getAlias())/*firstLevelPropYield.getInfo().isNullable()*/|| isNullable();
-                return new Pair<PurePropInfo, PurePropInfo>(new PurePropInfo(first, firstLevelPropYield.getInfo().getJavaType(), firstLevelPropYield.getInfo().getHibType(), explicitPartNullability), new PurePropInfo(dotNotatedPropName, propInfo.getJavaType(), propInfo.getHibType(), propNullability
-                        || explicitPartNullability));
+                return pair(new PurePropInfo(first, firstLevelPropYield.getInfo().getJavaType(), firstLevelPropYield.getInfo().getHibType(), explicitPartNullability),
+                            new PurePropInfo(dotNotatedPropName, propInfo.getJavaType(), propInfo.getHibType(), propNullability || explicitPartNullability));
             }
         } else {
             final PurePropInfo ppi = new PurePropInfo(first, firstLevelPropYield.getInfo().getJavaType(), firstLevelPropYield.getInfo().getHibType(), getYieldNullability(firstLevelPropYield.getAlias())/*firstLevelPropYield.getInfo().isNullable()*/
                     || isNullable());
-            return new Pair<PurePropInfo, PurePropInfo>(ppi, ppi);
+            return pair(ppi, ppi);
         }
-    }
-
-    /**
-     * Generates one dot.notated string from list of strings (subproperties).
-     *
-     * @param parts
-     * @return
-     */
-    private static String joinWithDot(final List<String> parts) {
-        final StringBuffer sb = new StringBuffer();
-        for (final Iterator<String> iterator = parts.iterator(); iterator.hasNext();) {
-            sb.append(iterator.next());
-            if (iterator.hasNext()) {
-                sb.append(".");
-            }
-        }
-        return sb.toString();
     }
 
     private static List<Pair<String, String>> prepareCandidates(final String dotNotatedPropName) {
-        final List<Pair<String, String>> result = new ArrayList<Pair<String, String>>();
+        final List<Pair<String, String>> result = new ArrayList<>();
         final List<String> parts = Arrays.asList(dotNotatedPropName.split("\\."));
 
         for (int i = parts.size(); i >= 1; i--) {
-            result.add(new Pair<String, String>(joinWithDot(parts.subList(0, i)), joinWithDot(parts.subList(i, parts.size()))));
+            result.add(pair(join(".", parts.subList(0, i)), join(".", parts.subList(i, parts.size()))));
         }
 
         return result;
@@ -190,7 +192,7 @@ public class QueryBasedSource extends AbstractSource {
 
     @Override
     public List<EntValue> getValues() {
-        final List<EntValue> result = new ArrayList<EntValue>();
+        final List<EntValue> result = new ArrayList<>();
         for (final EntQuery entQry : models) {
             result.addAll(entQry.getAllValues());
         }
@@ -199,19 +201,13 @@ public class QueryBasedSource extends AbstractSource {
 
     @Override
     public String sql() {
-        final StringBuffer sb = new StringBuffer();
-        sb.append("(");
+        final StringBuilder sb = new StringBuilder().append("(");
         for (final Iterator<EntQuery> iterator = models.iterator(); iterator.hasNext();) {
             sb.append(iterator.next().sql());
             sb.append(iterator.hasNext() ? "\nUNION ALL\n" : "");
         }
-
-        if (dbVersion == DbVersion.ORACLE) {
-            sb.append(") " + sqlAlias + "/*" + alias + "*/");
-        } else {
-            sb.append(") AS " + sqlAlias + "/*" + alias + "*/");
-        }
-
+        // AS alias is not applicable for Oracle
+        sb.append(format(")%s %s/*%s*/", dbVersion == DbVersion.ORACLE ? "" : " AS", sqlAlias, alias));
         return sb.toString();
     }
 

@@ -4,6 +4,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
+import static ua.com.fielden.platform.reflection.asm.impl.DynamicTypeNamingService.APPENDIX;
 
 import java.lang.reflect.Field;
 
@@ -13,17 +14,12 @@ import org.junit.Test;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.Calculated;
 import ua.com.fielden.platform.entity.annotation.factory.CalculatedAnnotation;
-import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
 import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.reflection.asm.api.NewProperty;
 import ua.com.fielden.platform.reflection.asm.impl.entities.EntityBeingEnhanced;
 import ua.com.fielden.platform.reflection.asm.impl.entities.EntityBeingModified;
 import ua.com.fielden.platform.reflection.asm.impl.entities.TopLevelEntity;
-import ua.com.fielden.platform.test.CommonTestEntityModuleWithPropertyFactory;
-import ua.com.fielden.platform.test.EntityModuleWithPropertyFactory;
 import ua.com.fielden.platform.types.Money;
-
-import com.google.inject.Injector;
 
 /**
  * A test case to ensure correct dynamic property modification for existing entity types with the modification and enhancement applied multiple times.
@@ -36,8 +32,6 @@ public class DynamicEntityTypeMixedAndRepetitiveModificationTest {
     private static final String NEW_PROPERTY_TITLE = "New money property";
     private static final String NEW_PROPERTY_EXPRESSION = "2 * 3 - [integerProp]";
     private static final String NEW_PROPERTY = "newProperty";
-    private final EntityModuleWithPropertyFactory module = new CommonTestEntityModuleWithPropertyFactory();
-    private final Injector injector = new ApplicationInjectorFactory().add(module).getInjector();
     private DynamicEntityClassLoader cl;
 
     private final Calculated calculated = new CalculatedAnnotation().contextualExpression(NEW_PROPERTY_EXPRESSION).newInstance();
@@ -47,7 +41,7 @@ public class DynamicEntityTypeMixedAndRepetitiveModificationTest {
 
     @Before
     public void setUp() {
-        cl = new DynamicEntityClassLoader(ClassLoader.getSystemClassLoader());
+        cl = DynamicEntityClassLoader.getInstance(ClassLoader.getSystemClassLoader());
     }
 
     @Test
@@ -59,10 +53,10 @@ public class DynamicEntityTypeMixedAndRepetitiveModificationTest {
         // get the enhanced EntityBeingEnhanced type
         final Class<?> twoTimesEnhancedType = cl.startModification(oneTimeEnhancedType.getName()).addProperties(pd2).endModification();
 
-        assertTrue("Incorrect name.", oneTimeEnhancedType.getName().startsWith(EntityBeingEnhanced.class.getName() + DynamicTypeNamingService.APPENDIX + "_"));
+        assertTrue("Incorrect name.", oneTimeEnhancedType.getName().startsWith(EntityBeingEnhanced.class.getName() + APPENDIX + "_"));
         assertEquals("Incorrect parent.", AbstractEntity.class, oneTimeEnhancedType.getSuperclass());
 
-        assertTrue("Incorrect name.", twoTimesEnhancedType.getName().startsWith(EntityBeingEnhanced.class.getName() + "$$TgEntity" + "_"));
+        assertTrue("Incorrect name.", twoTimesEnhancedType.getName().startsWith(EntityBeingEnhanced.class.getName() + APPENDIX + "_"));
         assertEquals("Incorrect parent.", AbstractEntity.class, twoTimesEnhancedType.getSuperclass());
 
         final Field field1 = Finder.findFieldByName(twoTimesEnhancedType, NEW_PROPERTY);

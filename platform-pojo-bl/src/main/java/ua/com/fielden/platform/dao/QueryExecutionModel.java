@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.dao;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -19,9 +20,9 @@ public final class QueryExecutionModel<T extends AbstractEntity<?>, Q extends Qu
     private final OrderingModel orderModel;
     private final fetch<T> fetchModel;
     private final Map<String, Object> paramValues;
-    private boolean lightweight;
-    transient private final ValuePreprocessor valuePreprocessor = new ValuePreprocessor();
-    transient private final Logger logger = Logger.getLogger(this.getClass());
+    private final boolean lightweight;
+    private final ValuePreprocessor valuePreprocessor = new ValuePreprocessor();
+    private static final Logger logger = Logger.getLogger(QueryExecutionModel.class);
 
     protected QueryExecutionModel() {
         queryModel = null;
@@ -30,31 +31,49 @@ public final class QueryExecutionModel<T extends AbstractEntity<?>, Q extends Qu
         paramValues = null;
         lightweight = false;
     }
+    
+    protected QueryExecutionModel(final Q queryModel, final OrderingModel orderModel, final fetch<T> fetchModel, final Map<String, Object> paramValues, final boolean lightweight) {
+        this.queryModel = queryModel;
+        this.orderModel = orderModel;
+        this.fetchModel = fetchModel;
+        this.paramValues = new HashMap<>();
+        this.paramValues.putAll(paramValues);
+        this.lightweight = lightweight;
+    }
 
     private QueryExecutionModel(final Builder<T, Q> builder) {
         queryModel = builder.queryModel;
         orderModel = builder.orderModel;
-        fetchModel = builder.fetchModel;// != null ? builder.fetchModel : (fetch<T>) fetch(queryModel.getResultType());
+        fetchModel = builder.fetchModel;
         paramValues = preprocessParamValues(builder.paramValues);
         lightweight = builder.lightweight;
         logger.debug(this);
     }
 
+    /**
+     * A convenient copy method.
+     * 
+     * @return
+     */
+    public QueryExecutionModel<T, Q> copy() {
+        return new QueryExecutionModel<>(this.queryModel, this.orderModel, this.fetchModel, this.paramValues, this.lightweight);
+    }
+
     @Override
     public String toString() {
-        final StringBuffer sb = new StringBuffer();
-        sb.append("\nQEM");
-        sb.append("\n  fetch:" + (fetchModel != null ? fetchModel : ""));
-        sb.append("\n  query:" + queryModel);
-        sb.append("\n  order:" + (orderModel != null ? orderModel : ""));
-        sb.append("\n  param:" + (paramValues.size() > 0 ? paramValues : ""));
-        sb.append("\n  light: " + lightweight);
-        sb.append("\n");
-        return sb.toString();
+        return new StringBuilder()
+        .append("\nQEM")
+        .append("\n  fetch:").append(fetchModel != null ? fetchModel : "")
+        .append("\n  query:").append(queryModel)
+        .append("\n  order:").append(orderModel != null ? orderModel : "")
+        .append("\n  param:").append(paramValues.size() > 0 ? paramValues : "")
+        .append("\n  light: ").append(lightweight)
+        .append("\n")
+        .toString();
     }
 
     private Map<String, Object> preprocessParamValues(final Map<String, Object> paramValues) {
-        final Map<String, Object> result = new HashMap<String, Object>();
+        final Map<String, Object> result = new HashMap<>();
         for (final Map.Entry<String, Object> entry : paramValues.entrySet()) {
             result.put(entry.getKey(), valuePreprocessor.apply(entry.getValue()));
         }
@@ -74,7 +93,7 @@ public final class QueryExecutionModel<T extends AbstractEntity<?>, Q extends Qu
     }
 
     public Map<String, Object> getParamValues() {
-        return paramValues;
+        return Collections.unmodifiableMap(paramValues);
     }
 
     public boolean isLightweight() {
@@ -82,23 +101,23 @@ public final class QueryExecutionModel<T extends AbstractEntity<?>, Q extends Qu
     }
 
     public static <E extends AbstractEntity<?>> Builder<E, EntityResultQueryModel<E>> from(final EntityResultQueryModel<E> queryModel) {
-        return new Builder<E, EntityResultQueryModel<E>>(queryModel);
+        return new Builder<>(queryModel);
     }
 
     public static Builder<EntityAggregates, AggregatedResultQueryModel> from(final AggregatedResultQueryModel queryModel) {
-        return new Builder<EntityAggregates, AggregatedResultQueryModel>(queryModel);
+        return new Builder<>(queryModel);
     }
 
+    public QueryExecutionModel<T, Q> lightweight() {
+        return new QueryExecutionModel<>(this.queryModel, this.orderModel, this.fetchModel, this.paramValues, true);
+    }
+    
     public static class Builder<T extends AbstractEntity<?>, Q extends QueryModel<T>> {
         private Q queryModel;
         private OrderingModel orderModel;
         private fetch<T> fetchModel;
-        private Map<String, Object> paramValues = new HashMap<String, Object>();
+        private Map<String, Object> paramValues = new HashMap<>();
         private boolean lightweight = false;
-
-        public QueryExecutionModel<T, Q> model() {
-            return new QueryExecutionModel<T, Q>(this);
-        }
 
         private Builder(final EntityResultQueryModel<T> queryModel) {
             this.queryModel = (Q) queryModel;
@@ -106,6 +125,10 @@ public final class QueryExecutionModel<T extends AbstractEntity<?>, Q extends Qu
 
         private Builder(final AggregatedResultQueryModel queryModel) {
             this.queryModel = (Q) queryModel;
+        }
+
+        public QueryExecutionModel<T, Q> model() {
+            return new QueryExecutionModel<>(this);
         }
 
         public Builder<T, Q> with(final OrderingModel val) {
@@ -128,8 +151,8 @@ public final class QueryExecutionModel<T extends AbstractEntity<?>, Q extends Qu
             return this;
         }
 
-        public Builder<T, Q> lightweight(final boolean val) {
-            lightweight = val;
+        public Builder<T, Q> lightweight() {
+            lightweight = true;
             return this;
         }
     }
@@ -188,9 +211,5 @@ public final class QueryExecutionModel<T extends AbstractEntity<?>, Q extends Qu
             return false;
         }
         return true;
-    }
-
-    public void setLightweight(final boolean lightweight) {
-        this.lightweight = lightweight;
     }
 }

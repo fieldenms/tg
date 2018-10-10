@@ -1,5 +1,13 @@
 package ua.com.fielden.platform.error;
 
+import static java.lang.String.format;
+
+import java.util.Optional;
+import java.util.function.Consumer;
+import java.util.function.Supplier;
+
+import com.google.common.base.Objects;
+
 /**
  * Represents a result (an error or success) of some custom logic. That could been the result of some validation or application of some other business rules.
  * <p>
@@ -23,6 +31,12 @@ public class Result extends RuntimeException {
         ex = null;
         message = null;
         instance = null;
+    }
+    
+    private Result(final Object instance, final String message, final Exception exception) {
+        this.instance = instance;
+        this.message = message;
+        this.ex = exception;
     }
 
     /**
@@ -91,36 +105,49 @@ public class Result extends RuntimeException {
         return new Result(null, new Exception(reason));
     }
 
-    public Result(final Object instance, final String message, final Exception ex) {
+    /**
+     * The same as {@link #failure(String)} with with the semantics of {@link String#format(String, Object...)} for interpolating of the {@code reason} string.
+     *
+     * @param reason
+     * @param args
+     * @return
+     */
+    public static Result failuref(final String reason, final Object...args) {
+        return new Result(null, new Exception(format(reason, args)));
+    }
+
+    ///////////////////////////////////////////////
+    ////////////////// constructors ///////////////
+    ///////////////////////////////////////////////
+    /** Creates successful result. */
+    public Result(final Object instance, final String message) {
         this.instance = instance;
         this.message = message;
-        this.ex = ex;
+        this.ex = null;
     }
 
-    public Result(final Object instance, final String message) {
-        this(instance, message, null);
-    }
-
-    public Result(final Object instance, final Exception ex) {
-        this(instance, null, ex);
-    }
-
-    /**
-     * Creates unsuccessful result with provided exception.
-     *
-     * @param ex
-     */
-    public Result(final Exception ex) {
-        this(null, null, ex);
-    }
-
-    /**
-     * Creates successful result with provided message.
-     *
-     * @param msg
-     */
+    /** Creates successful result. */
     public Result(final String msg) {
-        this(null, msg, null);
+        this.instance = null;
+        this.message = msg;
+        this.ex = null;
+    }
+
+    /** Creates failed result. */
+    public Result(final Object instance, final Exception ex) {
+        super(ex);
+        this.instance = instance;
+        this.message = ex.getMessage();
+        this.ex = ex;
+
+    }
+
+    /** Creates failed result. */
+    public Result(final Exception ex) {
+        super(ex);
+        this.instance = null;
+        this.message = ex.getMessage();
+        this.ex = ex;
     }
 
     @Override
@@ -139,11 +166,64 @@ public class Result extends RuntimeException {
     public <T> T getInstance(final Class<T> expectedType) {
         return expectedType.cast(instance);
     }
+    
+    /**
+     * A convenient method to get an instance associated with a successful result or throw an exception otherwise.
+     * This method is analogous to {@link Optional#orElseThrow(Supplier)}.
+     *
+     * @param expectedType
+     * @return
+     */
+    public <T> T getInstanceOrElseThrow() {
+        ifFailure(Result::throwRuntime);
+        return (T) getInstance();
+    }
+
+    /**
+     * Copies this result with overridden instance.
+     * 
+     * @param anotherInstance
+     * @return
+     */
+    public Result copyWith(final Object anotherInstance) {
+        return new Result(anotherInstance, message, ex);
+    }
 
     public boolean isSuccessful() {
         return ex == null;
     }
+    
+    /**
+     * A convenient construct to perform some action for a result that represents a failure.
+     * For example, it could be used to throw an exception as it often happens in case of unsuccessful validations.
+     * 
+     * @param consumer
+     */
+    public void ifFailure(final Consumer<? super Exception> consumer) {
+        if (!isSuccessful()) {
+            consumer.accept(ex);
+        }
+    }
 
+    /**
+     * A convenient method that returns the passed in <code>ex</code> if it is of type {@link Result}, or wraps it into a <code>failure</code> of type {@link Result}.
+     * 
+     * @param ex
+     * @return
+     */
+    public static RuntimeException asRuntime(final Exception ex) {
+        return ex instanceof RuntimeException ? (RuntimeException) ex : failure(ex); 
+    }
+    
+    /**
+     * A convenient method to throw a runtime exception that is obtained by passing <code>ex</code> into {@link asRuntime}.
+     * 
+     * @param ex
+     */
+    public static void throwRuntime(final Exception ex) {
+        throw asRuntime(ex);
+    }
+    
     /**
      * Returns true if this {@link Result} is not {@link Warning} instance and is successful.
      *

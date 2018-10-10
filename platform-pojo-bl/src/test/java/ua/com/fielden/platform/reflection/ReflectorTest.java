@@ -1,11 +1,13 @@
 package ua.com.fielden.platform.reflection;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNotSame;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
+import static ua.com.fielden.platform.reflection.Reflector.isMethodOverriddenOrDeclared;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
@@ -13,14 +15,19 @@ import java.util.List;
 
 import org.junit.Test;
 
+import com.google.inject.Injector;
+
 import ua.com.fielden.platform.associations.one2many.MasterEntityWithOneToManyAssociation;
 import ua.com.fielden.platform.associations.one2one.DetailEntityForOneToOneAssociationWithOneToManyAssociation;
 import ua.com.fielden.platform.associations.one2one.MasterEntityWithOneToOneAssociation;
 import ua.com.fielden.platform.associations.test_entities.EntityWithManyToOneAssociations;
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.Entity;
+import ua.com.fielden.platform.entity.annotation.Calculated;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.KeyType;
 import ua.com.fielden.platform.entity.annotation.Observable;
+import ua.com.fielden.platform.entity.annotation.factory.CalculatedAnnotation;
 import ua.com.fielden.platform.entity.annotation.factory.HandlerAnnotation;
 import ua.com.fielden.platform.entity.annotation.factory.ParamAnnotation;
 import ua.com.fielden.platform.entity.annotation.mutator.DateParam;
@@ -29,22 +36,24 @@ import ua.com.fielden.platform.entity.before_change_event_handling.BeforeChangeE
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.validation.annotation.GreaterOrEqual;
 import ua.com.fielden.platform.entity.validation.annotation.Max;
+import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
+import ua.com.fielden.platform.reflection.asm.api.NewProperty;
+import ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader;
 import ua.com.fielden.platform.reflection.test_entities.ComplexKeyEntity;
 import ua.com.fielden.platform.reflection.test_entities.SecondLevelEntity;
 import ua.com.fielden.platform.reflection.test_entities.SimplePartEntity;
 import ua.com.fielden.platform.reflection.test_entities.UnionEntityForReflector;
 import ua.com.fielden.platform.reflection.test_entities.UnionEntityHolder;
 import ua.com.fielden.platform.test.CommonTestEntityModuleWithPropertyFactory;
+import ua.com.fielden.platform.types.Money;
 import ua.com.fielden.platform.utils.Pair;
-
-import com.google.inject.Injector;
 
 /**
  * Test case for {@link Reflector}.
- * 
+ *
  * @author TG Team
- * 
+ *
  */
 public class ReflectorTest {
     final Injector injector = new ApplicationInjectorFactory().add(new CommonTestEntityModuleWithPropertyFactory()).getInjector();
@@ -194,15 +203,16 @@ public class ReflectorTest {
 
     @Test
     public void test_validation_limits_extraction() {
-        final C c = factory.newEntity(C.class, 1L, "KEY");
-        assertEquals("Should be equal.", new Pair<Comparable, Comparable>(1, 12), Reflector.extractValidationLimits(c, "month"));
-        assertEquals("Should be equal.", new Pair<Comparable, Comparable>(1950, Integer.MAX_VALUE), Reflector.extractValidationLimits(c, "year"));
+        final EntityWithValidationLimits entity = factory.newEntity(EntityWithValidationLimits.class, 1L, "KEY");
+        assertEquals("Should be equal.", new Pair<Integer, Integer>(1, 12), Reflector.extractValidationLimits(entity, "month"));
+        assertEquals("Should be equal.", new Pair<Integer, Integer>(1950, null), Reflector.extractValidationLimits(entity, "year"));
+        assertEquals("Should be equal.", new Pair<Integer, Integer>(null, 255), Reflector.extractValidationLimits(entity, "prop"));
     }
 
     @Test
     public void test_annotataion_params() {
         final List<String> params = Reflector.annotataionParams(Handler.class);
-        assertEquals("Unexpected number of annotation parameters.", 9, params.size());
+        assertEquals("Unexpected number of annotation parameters.", 10, params.size());
         assertTrue(params.contains("value"));
         assertTrue(params.contains("non_ordinary"));
         assertTrue(params.contains("clazz"));
@@ -212,6 +222,7 @@ public class ReflectorTest {
         assertTrue(params.contains("date"));
         assertTrue(params.contains("date_time"));
         assertTrue(params.contains("money"));
+        assertTrue(params.contains("enumeration"));
     }
 
     @Test
@@ -291,16 +302,55 @@ public class ReflectorTest {
             assertEquals("Non-collectional property many2oneProp in type ua.com.fielden.platform.associations.test_entities.EntityWithManyToOneAssociations represents a Many-to-One association.", ex.getMessage());
         }
     }
+    
+    @Test
+    public void reflector_correctly_identifies_overridden_method_as_such() {
+        assertTrue(isMethodOverriddenOrDeclared(AbstractEntity.class, EntityWithValidationLimits.class, "validate"));
+        assertFalse(isMethodOverriddenOrDeclared(AbstractEntity.class, EntityWithValidationLimits.class, "toString"));
+    }
+
+    @Test
+    public void reflector_correctly_identifies_declared_methods_as_such() {
+        assertTrue(isMethodOverriddenOrDeclared(AbstractEntity.class, EntityWithValidationLimits.class, "setMonth", Integer.class));
+    }
+
+    @Test
+    public void assigning_static_final_fields_is_supported() throws NoSuchFieldException, SecurityException {
+        assertTrue(AbstractEntity.STRICT_MODEL_VERIFICATION);
+        assertTrue(ComplexKeyEntity.STRICT_MODEL_VERIFICATION);
+
+        try {
+            Reflector.assignStatic(AbstractEntity.class.getDeclaredField("STRICT_MODEL_VERIFICATION"), false);
+            assertFalse(AbstractEntity.STRICT_MODEL_VERIFICATION);
+            assertFalse(ComplexKeyEntity.STRICT_MODEL_VERIFICATION);
+        } finally {
+            Reflector.assignStatic(AbstractEntity.class.getDeclaredField("STRICT_MODEL_VERIFICATION"), true);
+            assertTrue(AbstractEntity.STRICT_MODEL_VERIFICATION);
+            assertTrue(ComplexKeyEntity.STRICT_MODEL_VERIFICATION);
+        }
+    }
 
     @KeyType(String.class)
-    private static class C extends AbstractEntity<String> {
-        public C() {
-        }
+    protected static class EntityWithValidationLimits extends AbstractEntity<String> {
 
         @IsProperty
         private Integer month;
         @IsProperty
         private Integer year;
+
+        @IsProperty
+        private String prop;
+
+        @Observable
+        @Max(255)
+        public ReflectorTest.EntityWithValidationLimits setProp(final String prop) {
+            this.prop = prop;
+            return this;
+        }
+
+        public String getProp() {
+            return prop;
+        }
 
         public Integer getMonth() {
             return month;
@@ -321,6 +371,11 @@ public class ReflectorTest {
         @GreaterOrEqual(1950)
         public void setYear(final Integer year) {
             this.year = year;
+        }
+        
+        @Override
+        protected Result validate() {
+            return super.validate();
         }
     }
 

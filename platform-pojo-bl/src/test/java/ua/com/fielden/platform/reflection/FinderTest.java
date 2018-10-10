@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.reflection;
 
+import static java.lang.String.format;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
@@ -9,18 +10,25 @@ import static org.junit.Assert.fail;
 
 import java.lang.reflect.Field;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 import java.util.SortedSet;
+import java.util.stream.Collectors;
 
 import org.junit.Test;
+
+import com.google.inject.Injector;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.CompositeKeyMember;
 import ua.com.fielden.platform.entity.annotation.Title;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
+import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
 import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
 import ua.com.fielden.platform.reflection.Finder.IPropertyPathFilteringCondition;
+import ua.com.fielden.platform.reflection.exceptions.ReflectionException;
 import ua.com.fielden.platform.reflection.test_entities.CollectionalEntity;
 import ua.com.fielden.platform.reflection.test_entities.ComplexEntity;
 import ua.com.fielden.platform.reflection.test_entities.ComplexKeyEntity;
@@ -39,13 +47,11 @@ import ua.com.fielden.platform.reflection.test_entities.UnionEntityHolder;
 import ua.com.fielden.platform.reflection.test_entities.UnionEntityWithoutDesc;
 import ua.com.fielden.platform.test.CommonTestEntityModuleWithPropertyFactory;
 
-import com.google.inject.Injector;
-
 /**
  * Test case for {@link Finder}.
- * 
+ *
  * @author TG Team
- * 
+ *
  */
 public class FinderTest {
     private final Injector injector = new ApplicationInjectorFactory().add(new CommonTestEntityModuleWithPropertyFactory()).getInjector();
@@ -73,7 +79,7 @@ public class FinderTest {
         entity2.setPropertyOfSelfType(entity3);
         entity3.setPropertyOfSelfType(entity);
 
-        List<MetaProperty> metaProperties = Finder.findMetaProperties(entity, "propertyOfSelfType.propertyOfSelfType.propertyOfSelfType.propertyOfSelfType");
+        List<MetaProperty<?>> metaProperties = Finder.findMetaProperties(entity, "propertyOfSelfType.propertyOfSelfType.propertyOfSelfType.propertyOfSelfType");
         assertEquals(4, metaProperties.size());
         assertEquals(entity, metaProperties.get(0).getEntity());
         assertEquals(entity2, metaProperties.get(1).getEntity());
@@ -94,15 +100,35 @@ public class FinderTest {
     }
 
     @Test
-    public void test_that_can_get_property_descriptors() {
+    public void non_filtered_property_descriptor_creation_includes_all_properties_in_entity_hierarchy() {
         assertEquals("Incorrect number of properties.", 4, Finder.getPropertyDescriptors(SimpleEntity.class).size());
         assertEquals("Incorrect number of properties.", 5, Finder.getPropertyDescriptors(FirstLevelEntity.class).size());
         assertEquals("Incorrect number of properties.", 8, Finder.getPropertyDescriptors(SecondLevelEntity.class).size());
     }
 
     @Test
+    public void filtered_out_by_name_properties_are_skipped_from_property_descriptor_creation() {
+        assertEquals("Incorrect number of properties.", 3, Finder.getPropertyDescriptors(FirstLevelEntity.class, f -> "key".equals(f.getName()) || "desc".equals(f.getName())).size());
+    }
+    
+    @Test
+    public void properties_lower_than_top_level_type_are_skiped_from_property_descriptor_creation() {
+        final List<PropertyDescriptor<SecondLevelEntity>> propertyDescriptors = Finder.getPropertyDescriptors(SecondLevelEntity.class, f -> f.getDeclaringClass() != SecondLevelEntity.class);
+        assertEquals("Incorrect number of properties.", 3, propertyDescriptors.size());
+        assertEquals("Result should have properties ordered in accordance with their declaration.", new ArrayList<String>(Arrays.asList(new String[]{"Another", "Self Type", "Dummy Reference"})), propertyDescriptors.stream().map(p -> p.getKey()).collect(Collectors.toList()));
+    }
+
+    @Test
+    public void properties_other_than_from_the_middle_of_type_hierarchy_are_skiped_from_property_descriptor_creation() {
+        final List<PropertyDescriptor<SecondLevelEntity>> propertyDescriptors = Finder.getPropertyDescriptors(SecondLevelEntity.class, f -> f.getDeclaringClass() != FirstLevelEntity.class);
+        assertEquals("Incorrect number of properties.", 3, propertyDescriptors.size());
+        assertEquals("Result should have properties ordered in accordance with their declaration.", new ArrayList<String>(Arrays.asList(new String[]{"Two", "Property", "Simple Entity"})), propertyDescriptors.stream().map(p -> p.getKey()).collect(Collectors.toList()));
+    }
+
+    
+    @Test
     public void testFindCommonProperties() {
-        final List<Class<? extends AbstractEntity>> types = new ArrayList<Class<? extends AbstractEntity>>();
+        final List<Class<? extends AbstractEntity<?>>> types = new ArrayList<>();
         types.add(SimpleEntityWithCommonProperties.class);
         types.add(ComplexEntity.class);
         types.add(DynamicKeyEntity.class);
@@ -116,7 +142,7 @@ public class FinderTest {
 
     @Test
     public void testFindCommonPropertiesWithoutDesc() {
-        final List<Class<? extends AbstractEntity>> types = new ArrayList<Class<? extends AbstractEntity>>();
+        final List<Class<? extends AbstractEntity<?>>> types = new ArrayList<>();
         types.add(SimpleEntityWithCommonProperties.class);
         types.add(ComplexEntity.class);
         types.add(DynamicKeyEntity.class);
@@ -134,7 +160,7 @@ public class FinderTest {
     public void testThatFindMetaPropertyWorks() {
         // /////////////////////// simple case -- first level property ////////////////////
         final FirstLevelEntity firstLevelEntity = factory.newByKey(FirstLevelEntity.class, "key-1-1", "key-1-2");
-        MetaProperty metaProperty = Finder.findMetaProperty(firstLevelEntity, "property");
+        MetaProperty<?> metaProperty = Finder.findMetaProperty(firstLevelEntity, "property");
         assertNotNull("Should have found meta-property.", metaProperty);
         assertEquals("Incorrect property name as present in the meta-property.", "property", metaProperty.getName());
         // /////////////////////// complex case -- multilevel property ///////////////////
@@ -162,7 +188,7 @@ public class FinderTest {
     public void testGetMetaProperties() {
         // /////////////////////// simple case -- first level property ////////////////////
         final SecondLevelEntity entity = factory.newByKey(SecondLevelEntity.class, "key-1-1", "key-1-2", 1L);
-        final SortedSet<MetaProperty> metaProperties = Finder.getMetaProperties(entity);
+        final SortedSet<MetaProperty<?>> metaProperties = Finder.getMetaProperties(entity);
         // expected 6 -- 2 inherited from AbstractEntity, 2 -- from FirstLevelEntity and 2 are declared within SecondLevelEntity
         assertEquals("Incorrect number of properties.", 8, metaProperties.size());
     }
@@ -213,12 +239,12 @@ public class FinderTest {
     public void testThatFieldsAnnotatedWithWorksForFirstLevelOfInheritance() {
         List<Field> properties = Finder.findProperties(FirstLevelEntity.class);
         assertEquals("Incorrect number of properties in class FirstLevelEntity.", 5, properties.size()); // key is annotated
-        assertEquals("Incorrect property name.", "property", properties.get(0).getName());
+        assertEquals("Incorrect property name.", "propertyTwo", properties.get(0).getName());
         assertEquals("Incorrect property type.", String.class, properties.get(0).getType());
 
         properties = Finder.findProperties(FirstLevelEntity.class, Title.class, CompositeKeyMember.class);
-        assertEquals("Incorrect number of properties with title in class FirstLevelEntity.", 1, properties.size()); // key is annotated
-        assertEquals("Incorrect property name.", "property", properties.get(0).getName());
+        assertEquals("Incorrect number of properties with title in class FirstLevelEntity.", 2, properties.size()); // key is annotated
+        assertEquals("Incorrect property name.", "propertyTwo", properties.get(0).getName());
         assertEquals("Incorrect property type.", String.class, properties.get(0).getType());
 
         properties = Finder.findProperties(UnionEntityForReflector.class);
@@ -231,12 +257,12 @@ public class FinderTest {
     public void test_that_getSimpleFieldsAnnotatedWith() {
         List<Field> properties = Finder.findRealProperties(FirstLevelEntity.class);
         assertEquals("Incorrect number of properties in class FirstLevelEntity.", 5, properties.size()); // key is annotated
-        assertEquals("Incorrect property name.", "property", properties.get(0).getName());
+        assertEquals("Incorrect property name.", "propertyTwo", properties.get(0).getName());
         assertEquals("Incorrect property type.", String.class, properties.get(0).getType());
 
         properties = Finder.findRealProperties(FirstLevelEntity.class, Title.class, CompositeKeyMember.class);
-        assertEquals("Incorrect number of properties with title in class FirstLevelEntity.", 1, properties.size()); // key is annotated
-        assertEquals("Incorrect property name.", "property", properties.get(0).getName());
+        assertEquals("Incorrect number of properties with title in class FirstLevelEntity.", 2, properties.size()); // key is annotated
+        assertEquals("Incorrect property name.", "propertyTwo", properties.get(0).getName());
         assertEquals("Incorrect property type.", String.class, properties.get(0).getType());
 
         properties = Finder.findRealProperties(UnionEntityForReflector.class);
@@ -267,19 +293,25 @@ public class FinderTest {
     }
 
     @Test
-    public void testThatGetCompositeKeyMembersWorksForFirstLevelOfInheritance() {
+    public void composite_key_members_are_identified_for_first_level_of_inheritance_with_correct_order() {
         List<Field> members = Finder.getKeyMembers(FirstLevelEntity.class);
         assertEquals("Incorrect number of composite key members in FirstLevelEntity.", 2, members.size());
-
+        assertEquals("property", members.get(0).getName());
+        assertEquals("propertyTwo", members.get(1).getName());
+        
         members = Finder.getKeyMembers(UnionEntityWithoutDesc.class);
         assertEquals("IncorrectNumber of key members in the UnionEntityWithoutDesc", 1, members.size());
     }
 
     @Test
-    public void testThatGetCompositeKeyMembersWorksForSecondLevelOfInheritance() {
+    public void composite_key_members_are_identified_for_second_level_of_inheritance_with_correct_order() {
         final List<Field> members = Finder.getKeyMembers(SecondLevelEntity.class);
         // two properties annotated as composite keys are inherited from ForstLevelEntity and one declared within SecondLevelEntity
         assertEquals("Incorrect number of composite key members in SecondLevelEntity.", 3, members.size());
+        assertEquals("property", members.get(0).getName());
+        assertEquals("propertyTwo", members.get(1).getName());
+        assertEquals("anotherProperty", members.get(2).getName());
+
     }
 
     @Test
@@ -294,20 +326,43 @@ public class FinderTest {
     }
 
     @Test
-    public void testThatGetFieldByNameWorks() throws Exception {
+    public void existing_properties_can_be_found_with_getFieldByName() throws Exception {
         final Field field = Finder.getFieldByName(SecondLevelEntity.class, "property");
         assertNotNull("Failed to located a filed.", field);
         assertEquals("Incorrect type.", String.class, field.getType());
+    }
+
+    @Test
+    public void common_properties_for_uniton_entity_can_be_found_with_getFieldByName() throws Exception {
         final Field unionEntityField = Finder.getFieldByName(UnionEntityForReflector.class, "commonProperty");
         assertNotNull("Failed to locate field in the UnionEntity class", unionEntityField);
         assertEquals("Incorrect commonProperty type.", String.class, unionEntityField.getType());
+    }
 
+    @Test
+    public void trying_to_locate_non_existing_properties_with_getFieldByName_throws_exception() throws Exception {
+        final String name = "nonExistingProperty";
+        final Class<SecondLevelEntity> type = SecondLevelEntity.class;
         try {
-            Finder.getFieldByName(SecondLevelEntity.class, "nonExistingProperty");
+            Finder.getFieldByName(type, name);
             fail("Should have thrown an exception.");
-        } catch (final Exception ex) {
-            System.out.println(ex.getMessage());
+        } catch (final ReflectionException ex) {
+            assertEquals(format("Failed to locate field [%s] in type [%s]", name, type.getName()), ex.getMessage());
         }
+    }
+
+    @Test
+    public void existing_properties_can_be_found_with_getFieldByNameOptionally() throws Exception {
+        final Optional<Field> field = Finder.getFieldByNameOptionally(SecondLevelEntity.class, "property");
+        assertTrue("Failed to located a filed.", field.isPresent());
+        assertTrue("Incorrect type.", field.filter(f -> f.getType() == String.class).isPresent());
+    }
+
+    @Test
+    public void common_properties_for_union_entity_can_be_found_with_getFieldByNameOptionally() throws Exception {
+        final Optional<Field> unionEntityField = Finder.getFieldByNameOptionally(UnionEntityForReflector.class, "commonProperty");
+        assertTrue("Failed to locate field in the UnionEntity class", unionEntityField.isPresent());
+        assertTrue("Incorrect commonProperty type.", unionEntityField.filter(f -> f.getType() == String.class).isPresent());
     }
 
     @Test
@@ -341,7 +396,7 @@ public class FinderTest {
             fail("Field should not be found for method [" + methodName + "] definition.");
         } catch (final Finder.MethodFoundException e) {
             System.out.println("All is ok: " + e.getMessage());
-        } catch (final IllegalArgumentException e) {
+        } catch (final Exception e) {
             fail("Method [" + methodName + "] should be found.");
         }
 
@@ -351,7 +406,7 @@ public class FinderTest {
             fail("Field should not be found for inherited method [" + methodName + "] definition.");
         } catch (final Finder.MethodFoundException e) {
             System.out.println("All is ok: " + e.getMessage());
-        } catch (final IllegalArgumentException e) {
+        } catch (final Exception e) {
             fail("Inherited method [" + methodName + "] should be found.");
         }
 
@@ -438,13 +493,11 @@ public class FinderTest {
             Finder.findFieldValueByName(unionEntity, "uncommonProperty");
             fail("There shouldn't be any uncommonProperty");
         } catch (final Exception ex) {
-            System.out.println(ex.getMessage());
         }
         try {
             Finder.findFieldValueByName(unionEntity, "getUncommonProperty()");
             fail("There shouldn't be any getUncommonProperty()");
         } catch (final Exception ex) {
-            System.out.println(ex.getMessage());
         }
         unionEntity = factory.newEntity(UnionEntityForReflector.class);
         unionEntity.setComplexPartEntity(complexEntity);
@@ -462,13 +515,11 @@ public class FinderTest {
             Finder.findFieldValueByName(unionEntity, "anotherUncommonProperty");
             fail("There shouldn't be any uncommonProperty");
         } catch (final Exception ex) {
-            System.out.println(ex.getMessage());
         }
         try {
             Finder.findFieldValueByName(unionEntity, "getAnotherUncommonProperty()");
             fail("There shouldn't be any getAnotherUncommonProperty()");
         } catch (final Exception ex) {
-            System.out.println(ex.getMessage());
         }
         unionEntity = factory.newEntity(UnionEntityForReflector.class);
         unionEntity.setDynamicKeyPartEntity(dynamicEntity);
@@ -486,13 +537,11 @@ public class FinderTest {
             Finder.findFieldValueByName(unionEntity, "uncommonProperty");
             fail("There shouldn't be any uncommonProperty");
         } catch (final Exception ex) {
-            System.out.println(ex.getMessage());
         }
         try {
             Finder.findFieldValueByName(unionEntity, "getUncommonProperty()");
             fail("There shouldn't be any getUncommonProperty()");
         } catch (final Exception ex) {
-            System.out.println(ex.getMessage());
         }
         // Testing AbstractUnionEntity when it's instance is within another AbstractEntity instance.
         unionEntity = factory.newEntity(UnionEntityForReflector.class);
@@ -506,7 +555,7 @@ public class FinderTest {
 
     @Test
     public void test_field_of_type_search_routine() {
-        assertEquals("Incorrect number of string fields.", 10, Finder.getFieldsOfSpecifiedType(DynamicKeyEntity.class, String.class).size());
+        assertEquals("Incorrect number of string fields.", 11, Finder.getFieldsOfSpecifiedType(DynamicKeyEntity.class, String.class).size());
         assertEquals("Incorrect number of SimpleEntity fields.", 1, Finder.getFieldsOfSpecifiedType(DynamicKeyEntity.class, SimpleEntity.class).size());
     }
 

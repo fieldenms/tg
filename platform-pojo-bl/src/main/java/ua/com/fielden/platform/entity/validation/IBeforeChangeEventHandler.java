@@ -3,7 +3,8 @@ package ua.com.fielden.platform.entity.validation;
 import java.lang.annotation.Annotation;
 import java.util.Set;
 
-import ua.com.fielden.platform.entity.ioc.ObservableMutatorInterceptor;
+import ua.com.fielden.platform.companion.IEntityReader;
+import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
 import ua.com.fielden.platform.error.Result;
 
@@ -13,11 +14,12 @@ import ua.com.fielden.platform.error.Result;
  * <i><b>IMPORTANT:</b> Class implementing this interface must be thread-safe.</i><br/>
  * <i><b>IMPORTANT:</b> Class implementing this interface must not have any side-effects on the state of the entity being modified and property value being set.</i><br/>
  * <i><b>IMPORTANT:</b> If method {@link #handle(MetaProperty, Object, Object, Set)} returns unsuccessful result then the new value is not set.</i>
- * 
+ *
  * @author TG Team
- * 
+ *
  */
 public interface IBeforeChangeEventHandler<T> {
+
     /**
      * Processed Before Change Event (BCE) for a <code>property</code>.
      * <p>
@@ -27,18 +29,27 @@ public interface IBeforeChangeEventHandler<T> {
      * <p>
      * This approach nicely fits into the concept of property value validation, where unsuccessful result is returned indicating the cause of the <code>newValue</code> not being
      * set.
-     * 
+     *
      * @param property
      *            -- meta-property for the entity property being set.
      * @param newValue
-     *            -- a new value, which is a BCE handling subject and the one that will be set as an entity property value if handling succeeds.
-     * @param oldValue
-     *            -- an old or other words current property values, which might be needed for BCE handling; in case of {@link ObservableMutatorInterceptor} old value means current
-     *            value; in case of re validation (re-handling without mutator invocation) old value means previous value.
+     *            -- a new value, which is a BCE handling subject; it gets assigned to an entity property if its validation succeeds.
      * @param mutatorAnnotations
      *            -- a set of annotations defined for a method representing a mutator changing property's value
-     * 
+     *
      * @return
      */
-    Result handle(final MetaProperty property, final T newValue, final T oldValue, final Set<Annotation> mutatorAnnotations);
+    Result handle(final MetaProperty<T> property, final T newValue, final Set<Annotation> mutatorAnnotations);
+
+    /**
+     * Returns a narrowed down to the reader contract companion object for the given entity type.
+     * By default this method throws {@link UnsupportedOperationException} exception. 
+     * 
+     * @param type
+     * @return
+     */
+    default <R extends IEntityReader<E>, E extends AbstractEntity<?>> R co(final Class<E> type) {
+        throw new UnsupportedOperationException("This method is not implemented by default. Use [AbstractBeforeChangeEventHandler] as the base type to inherit the implementation.");
+    }
+
 }

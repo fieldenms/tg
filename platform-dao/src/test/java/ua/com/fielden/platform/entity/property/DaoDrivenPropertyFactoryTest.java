@@ -1,5 +1,11 @@
 package ua.com.fielden.platform.entity.property;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+
 import java.util.List;
 
 import org.joda.time.DateTime;
@@ -11,35 +17,30 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.KeyType;
 import ua.com.fielden.platform.entity.annotation.Observable;
+import ua.com.fielden.platform.entity.annotation.Required;
 import ua.com.fielden.platform.entity.factory.IMetaPropertyFactory;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
-import ua.com.fielden.platform.entity.validation.annotation.EntityExists;
-import ua.com.fielden.platform.entity.validation.annotation.NotNull;
+import ua.com.fielden.platform.entity.validation.annotation.ValidationAnnotation;
 import ua.com.fielden.platform.persistence.composite.EntityWithDynamicCompositeKey;
 import ua.com.fielden.platform.persistence.types.EntityWithMoney;
-import ua.com.fielden.platform.test.AbstractDomainDrivenTestCase;
 import ua.com.fielden.platform.test.PlatformTestDomainTypes;
+import ua.com.fielden.platform.test_config.AbstractDaoTestCase;
 import ua.com.fielden.platform.types.Money;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
 
 /**
  * A test case for validating DAO driven {@link IMetaPropertyFactory} implementation.
- * 
+ *
  * @author 01es
- * 
+ *
  */
-public class DaoDrivenPropertyFactoryTest extends AbstractDomainDrivenTestCase {
+public class DaoDrivenPropertyFactoryTest extends AbstractDaoTestCase {
     private final EntityWithMoneyDao dao = getInstance(EntityWithMoneyDao.class);
     private final EntityWithDynamicCompositeKeyDao daoComposite = getInstance(EntityWithDynamicCompositeKeyDao.class);
 
     @Test
     public void testThatNullCannotBeAssigned() throws Exception {
         final Entity entity = new_(Entity.class, "entity-key");
-        final MetaProperty property = entity.getProperty("property");
+        final MetaProperty<EntityWithMoney> property = entity.getProperty("property");
         assertNotNull("Property instance should have been setup.", property);
         final EntityWithMoney entityFromDb = dao.findByKey("key1");
         entity.setProperty(entityFromDb);
@@ -59,25 +60,19 @@ public class DaoDrivenPropertyFactoryTest extends AbstractDomainDrivenTestCase {
     @Test
     public void testThatNonExistingEntityCannotBeAssigned() throws Exception {
         final Entity entity = new_(Entity.class, "entity-key");
+        assertNotNull(entity.getProperty("property").getValidators().get(ValidationAnnotation.ENTITY_EXISTS));
         entity.setProperty(new EntityWithMoney("some key", "some desc", new Money("20.00")));
-        assertFalse("Should not be possible to set valid entity.", entity.getProperty("property").isValid());
+        assertFalse("Should not be possible to set non-existing entity.", entity.getProperty("property").isValid());
         assertNull("Property value should not have been set.", entity.getProperty());
     }
 
     @Test
-    public void testThatExistingEntityKeyCanBeAssigned() throws Exception {
+    public void there_should_be_no_entity_exists_validator_associated_with_ordinar_property() throws Exception {
         final Entity entity = new_(Entity.class, "entity-key");
+        assertNull(entity.getProperty("propertyThree").getValidators().get(ValidationAnnotation.ENTITY_EXISTS));
         entity.setPropertyThree("key1");
         assertTrue("Should be possible to set valid entity.", entity.getProperty("propertyThree").isValid());
         assertEquals("Values should match.", "key1", entity.getPropertyThree());
-    }
-
-    @Test
-    public void testThatNonExistingEntityKeyCannotBeAssigned() throws Exception {
-        final Entity entity = new_(Entity.class, "entity-key");
-        entity.setPropertyThree("some key");
-        assertFalse("Should not be possible to set valid entity.", entity.getProperty("propertyThree").isValid());
-        assertNull("Property value should not have been set.", entity.getPropertyThree());
     }
 
     @Test
@@ -122,31 +117,27 @@ public class DaoDrivenPropertyFactoryTest extends AbstractDomainDrivenTestCase {
     }
 
     /**
-     * This is a test entity class that two properties, which are entities -- one with an ordinary key, another with a composite key.
-     * 
+     * This is a test entity class that has two properties, which are entities -- one with an ordinary key, another with a composite key.
+     *
      * @author 01es
-     * 
+     *
      */
     @KeyType(String.class)
     public static class Entity extends AbstractEntity<String> {
         private static final long serialVersionUID = 1L;
 
         @IsProperty
+        @Required
         private EntityWithMoney property;
         @IsProperty
         private EntityWithDynamicCompositeKey propertyTwo;
         @IsProperty
         private String propertyThree;
 
-        public Entity() {
-        }
-
         public EntityWithMoney getProperty() {
             return property;
         }
 
-        @NotNull
-        @EntityExists(EntityWithMoney.class)
         @Observable
         public void setProperty(final EntityWithMoney property) {
             this.property = property;
@@ -156,8 +147,6 @@ public class DaoDrivenPropertyFactoryTest extends AbstractDomainDrivenTestCase {
             return propertyTwo;
         }
 
-        @NotNull
-        @EntityExists(EntityWithDynamicCompositeKey.class)
         @Observable
         public void setPropertyTwo(final EntityWithDynamicCompositeKey property) {
             this.propertyTwo = property;
@@ -167,8 +156,6 @@ public class DaoDrivenPropertyFactoryTest extends AbstractDomainDrivenTestCase {
             return propertyThree;
         }
 
-        @NotNull
-        @EntityExists(EntityWithMoney.class)
         @Observable
         public void setPropertyThree(final String entityWithMoneyKey) {
             this.propertyThree = entityWithMoneyKey;

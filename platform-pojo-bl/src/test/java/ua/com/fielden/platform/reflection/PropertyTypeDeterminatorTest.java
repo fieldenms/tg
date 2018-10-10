@@ -2,8 +2,13 @@ package ua.com.fielden.platform.reflection;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
+import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.determinePropertyType;
+import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.isMap;
+import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.isMappedOrCalculated;
+import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.isNumeric;
 
 import java.lang.ref.Reference;
 import java.lang.reflect.ParameterizedType;
@@ -13,11 +18,16 @@ import java.util.List;
 
 import org.junit.Test;
 
+import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.AbstractPersistentEntity;
 import ua.com.fielden.platform.entity.DynamicEntityKey;
 import ua.com.fielden.platform.entity.Entity;
 import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
+import ua.com.fielden.platform.reflection.exceptions.ReflectionException;
 import ua.com.fielden.platform.reflection.test_entities.ComplexKeyEntity;
 import ua.com.fielden.platform.reflection.test_entities.EntityWithCollection;
+import ua.com.fielden.platform.reflection.test_entities.EntityWithMap;
+import ua.com.fielden.platform.reflection.test_entities.EntityWithNumericProps;
 import ua.com.fielden.platform.reflection.test_entities.FirstLevelEntity;
 import ua.com.fielden.platform.reflection.test_entities.KeyEntity;
 import ua.com.fielden.platform.reflection.test_entities.SecondLevelEntity;
@@ -28,9 +38,9 @@ import ua.com.fielden.platform.utils.Pair;
 
 /**
  * Test case for {@link PropertyTypeDeterminator}.
- * 
+ *
  * @author TG Team
- * 
+ *
  */
 public class PropertyTypeDeterminatorTest {
 
@@ -58,8 +68,7 @@ public class PropertyTypeDeterminatorTest {
             fail("There is no propertyOfSelfType property in the FirstLevelEntity class");
             PropertyTypeDeterminator.determinePropertyType(SecondLevelEntity.class, "propertyOfSelfType.nonExistingProperty.anotherProperty");
             fail("There is no propertyOfSelfType.nonExistingProperty.anotherProperty property in the SecondLevelEntity class");
-        } catch (final IllegalArgumentException e) {
-            System.out.println(e.getMessage());
+        } catch (final ReflectionException e) {
         } catch (final Exception e) {
             fail("There shouldn't be any other exception but IllegalArgumentException.");
         }
@@ -131,6 +140,11 @@ public class PropertyTypeDeterminatorTest {
         assertEquals(String.class, PropertyTypeDeterminator.determinePropertyType(ComplexKeyEntity.class, "getKey().getKey()"));
         assertEquals(SimpleEntity.class, PropertyTypeDeterminator.determinePropertyType(ComplexKeyEntity.class, "getKey().getSimpleEntity()"));
         assertEquals(String.class, PropertyTypeDeterminator.determinePropertyType(ComplexKeyEntity.class, "getKey().getSimpleEntity().getKey()"));
+    }
+
+    @Test
+    public void should_be_able_to_determine_type_for_property_specified_as_this_keyword() {
+        assertEquals(SecondLevelEntity.class, PropertyTypeDeterminator.determinePropertyType(SecondLevelEntity.class, "this"));
     }
 
     @Test
@@ -263,4 +277,87 @@ public class PropertyTypeDeterminatorTest {
         assertEquals(PropertyDescriptor.class, PropertyTypeDeterminator.determinePropertyType(Entity.class, "propertyDescriptor"));
         assertEquals(PropertyDescriptor.class, PropertyTypeDeterminator.determinePropertyType(Entity.class, "getPropertyDescriptor()"));
     }
+
+    @Test
+    public void properties_of_type_Long_recognized_as_numeric() {
+        assertTrue(isNumeric(EntityWithNumericProps.class, "numericLong"));
+    }
+
+    @Test
+    public void properties_of_type_Integer_recognized_as_numeric() {
+        assertTrue(isNumeric(EntityWithNumericProps.class, "numericInteger"));
+    }
+
+    @Test
+    public void properties_of_type_BigDecimal_recognized_as_numeric() {
+        assertTrue(isNumeric(EntityWithNumericProps.class, "numericBigDecimal"));
+    }
+
+    @Test
+    public void properties_of_type_Money_recognized_as_numeric() {
+        assertTrue(isNumeric(EntityWithNumericProps.class, "numericMoney"));
+    }
+
+    @Test
+    public void properties_of_non_numeric_typs_are_not_recognized_as_numeric() {
+        assertFalse(isNumeric(Entity.class, "propertyDescriptor"));
+        assertFalse(isNumeric(Entity.class, "monitoring"));
+        assertFalse(isNumeric(Entity.class, "doubles"));
+    }
+
+    @Test
+    public void map_properties_should_be_recognized_well() {
+        assertTrue(isMap(EntityWithMap.class, "mapProperty"));
+    }
+    
+    @Test
+    public void isMappedOrCalculated_returns_true_for_mapped_or_calculated_properties() {
+        assertTrue(isMappedOrCalculated(Entity.class, "observablePropertyInitialisedAsNull"));
+        assertTrue(isMappedOrCalculated(Entity.class, "firstProperty"));
+    }
+    
+    @Test
+    public void isMappedOrCalculated_returns_false_for_invalid_propety_names() {
+        assertFalse(isMappedOrCalculated(Entity.class, "invalid property name"));
+        assertFalse(isMappedOrCalculated(Entity.class, ""));
+    }
+    
+    @Test
+    public void isMappedOrCalculated_returns_false_for_not_mappped_or_calculated_properties() {
+        assertFalse(isMappedOrCalculated(Entity.class, "monitoring"));
+        assertFalse(isMappedOrCalculated(Entity.class, "observableProperty"));
+    }
+    
+    @Test
+    public void determinePropertyType_returns_null_if_the_type_could_not_be_determined() {
+        assertNull(determinePropertyType(AbstractPersistentEntity.class, AbstractEntity.KEY));
+    }
+    
+    @Test
+    public void determinePropertyType_requires_both_type_and_propety_to_be_specified() {
+        try {
+            determinePropertyType(null, AbstractEntity.KEY);
+        } catch (final ReflectionException ex) {
+            assertEquals(PropertyTypeDeterminator.ERR_TYPE_AND_PROP_REQUIRED, ex.getMessage());
+        }
+
+        try {
+            determinePropertyType(AbstractPersistentEntity.class, null);
+        } catch (final ReflectionException ex) {
+            assertEquals(PropertyTypeDeterminator.ERR_TYPE_AND_PROP_REQUIRED, ex.getMessage());
+        }
+        
+        try {
+            determinePropertyType(AbstractPersistentEntity.class, "");
+        } catch (final ReflectionException ex) {
+            assertEquals(PropertyTypeDeterminator.ERR_TYPE_AND_PROP_REQUIRED, ex.getMessage());
+        }
+        
+        try {
+            determinePropertyType(null, null);
+        } catch (final ReflectionException ex) {
+            assertEquals(PropertyTypeDeterminator.ERR_TYPE_AND_PROP_REQUIRED, ex.getMessage());
+        }
+    }
+
 }

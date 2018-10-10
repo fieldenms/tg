@@ -78,12 +78,12 @@ public interface IDomainTreeManager {
      * @author TG Team
      * 
      */
-    public interface ITickManager {
+    public interface ITickManager extends IUsageManager {
         /**
          * Defines a contract which ticks for which properties should be <b>mutably</b> checked in domain tree representation. <br>
          * <br>
          * 
-         * This contract should not conflict with "excluded / disabled properties" contract. The conflict will produce an {@link IllegalArgumentException}.<br>
+         * This contract should not conflict with "excluded / disabled properties" contract. The conflict will produce an {@link DomainTreeException}.<br>
          * <br>
          * 
          * The method should be mainly concentrated on the "classes" of property's ticks that should be checked (based on i.e. types, nature, parents, annotations assigned). If you
@@ -103,7 +103,7 @@ public interface IDomainTreeManager {
          * Marks a concrete property's tick to be <b>mutably</b> checked in domain tree representation. <br>
          * <br>
          * 
-         * The action should not conflict with a contract of disabled / checked property's ticks. The conflict will produce an {@link IllegalArgumentException}.
+         * The action should not conflict with a contract of disabled / checked property's ticks. The conflict will produce an {@link DomainTreeException}.
          * 
          * @param root
          *            -- a root type that contains property.
@@ -128,45 +128,6 @@ public interface IDomainTreeManager {
          * @return
          */
         List<String> checkedProperties(final Class<?> root);
-
-        /**
-         * A post-successful listener for property checking.
-         * 
-         * @author TG Team
-         * 
-         */
-        public interface IPropertyCheckingListener extends EventListener {
-            /**
-             * @param hasBeenChecked
-             *            -- <code>true</code> to indicate that property was successfully checked, <code>false</code> to indicate that it was successfully unchecked.
-             * @param index
-             *            -- the <code>index</code> of the property being checked / unchecked inside "checking properties" list.
-             */
-            void propertyStateChanged(final Class<?> root, final String property, final Boolean hasBeenChecked, final Boolean oldState, final int index);
-        }
-
-        /**
-         * Adds a {@link IPropertyCheckingListener} listener.
-         * 
-         * @param listener
-         * @return
-         */
-        void addPropertyCheckingListener(final IPropertyCheckingListener listener);
-
-        /**
-         * Adds a weak reference on the specified {@link IPropertyCheckingListener} listener.
-         * 
-         * @param listener
-         */
-        void addWeakPropertyCheckingListener(final IPropertyCheckingListener listener);
-
-        /**
-         * Removes a {@link IPropertyCheckingListener} listener.
-         * 
-         * @param listener
-         * @return
-         */
-        void removePropertyCheckingListener(final IPropertyCheckingListener listener);
 
         /**
          * Swaps two properties (<code>property1</code> and <code>property2</code>) in an ordered list of checked properties for concrete <code>root</code> type.

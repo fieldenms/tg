@@ -2,8 +2,10 @@ package ua.com.fielden.platform.domaintree.centre.analyses.impl;
 
 import java.nio.ByteBuffer;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 
+import ua.com.fielden.platform.domaintree.IUsageManager;
 import ua.com.fielden.platform.domaintree.centre.analyses.IAnalysisDomainTreeManager;
 import ua.com.fielden.platform.domaintree.centre.analyses.IAnalysisDomainTreeRepresentation;
 import ua.com.fielden.platform.domaintree.centre.analyses.impl.AnalysisDomainTreeRepresentation.AnalysisAddToAggregationTickRepresentation;
@@ -12,16 +14,16 @@ import ua.com.fielden.platform.serialisation.api.ISerialiser;
 
 /**
  * A domain tree manager for analyses.
- * 
+ *
  * @author TG Team
- * 
+ *
  */
 public class AnalysisDomainTreeManager extends AbstractAnalysisDomainTreeManager implements IAnalysisDomainTreeManager {
     private Integer visibleDistributedValuesNumber;
 
     /**
      * A <i>manager</i> constructor for the first time instantiation.
-     * 
+     *
      * @param serialiser
      * @param rootTypes
      */
@@ -31,7 +33,7 @@ public class AnalysisDomainTreeManager extends AbstractAnalysisDomainTreeManager
 
     /**
      * A <i>manager</i> constructor.
-     * 
+     *
      * @param serialiser
      * @param dtr
      * @param firstTick
@@ -100,13 +102,13 @@ public class AnalysisDomainTreeManager extends AbstractAnalysisDomainTreeManager
 
     /**
      * A specific Kryo serialiser for {@link AnalysisDomainTreeManager}.
-     * 
+     *
      * @author TG Team
-     * 
+     *
      */
     public static class AnalysisDomainTreeManagerSerialiser extends AbstractAnalysisDomainTreeManagerSerialiser<AnalysisDomainTreeManager> {
-        public AnalysisDomainTreeManagerSerialiser(final ISerialiser kryo) {
-            super(kryo);
+        public AnalysisDomainTreeManagerSerialiser(final ISerialiser serialiser) {
+            super(serialiser);
         }
 
         @Override
@@ -116,7 +118,7 @@ public class AnalysisDomainTreeManager extends AbstractAnalysisDomainTreeManager
             final AnalysisAddToAggregationTickManager secondTick = readValue(buffer, AnalysisAddToAggregationTickManager.class);
             final Boolean visible = readValue(buffer, Boolean.class);
             final Integer visibleDistributedValuesNumber = readValue(buffer, Integer.class);
-            return new AnalysisDomainTreeManager(kryo(), dtr, visible, firstTick, secondTick, visibleDistributedValuesNumber);
+            return new AnalysisDomainTreeManager(serialiser(), dtr, visible, firstTick, secondTick, visibleDistributedValuesNumber);
         }
 
         @Override
@@ -151,18 +153,13 @@ public class AnalysisDomainTreeManager extends AbstractAnalysisDomainTreeManager
 
     @Override
     public boolean equals(final Object obj) {
-        if (this == obj)
-            return true;
-        if (!super.equals(obj))
+        if (this != obj) {
+            if (super.equals(obj) && getClass() == obj.getClass()) {
+                final AnalysisDomainTreeManager other = (AnalysisDomainTreeManager) obj;
+                return Objects.equals(visibleDistributedValuesNumber, other.visibleDistributedValuesNumber);
+            }
             return false;
-        if (getClass() != obj.getClass())
-            return false;
-        final AnalysisDomainTreeManager other = (AnalysisDomainTreeManager) obj;
-        if (visibleDistributedValuesNumber == null) {
-            if (other.visibleDistributedValuesNumber != null)
-                return false;
-        } else if (!visibleDistributedValuesNumber.equals(other.visibleDistributedValuesNumber))
-            return false;
+        }
         return true;
     }
 }

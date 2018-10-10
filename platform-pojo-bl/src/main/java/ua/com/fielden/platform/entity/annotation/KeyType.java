@@ -23,8 +23,7 @@ public @interface KeyType {
      * 
      * @return
      */
-    @SuppressWarnings("rawtypes")
-    Class<? extends Comparable> value();
+    Class<? extends Comparable<?>> value();
 
     /**
      * Used for concatenation of composite key members. Ignored for non-composite keys.
@@ -32,4 +31,11 @@ public @interface KeyType {
      * @return
      */
     String keyMemberSeparator() default " ";
+    
+    /**
+     * Used to indicate whether entity values should be enlisted in descending (key) order.
+     * 
+     * @return
+     */
+    boolean descendingOrder() default false;
 }

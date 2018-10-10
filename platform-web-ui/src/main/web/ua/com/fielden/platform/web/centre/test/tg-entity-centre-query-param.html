@@ -1,0 +1,285 @@
+<!doctype html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <title>entity-centre basic tests</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+
+    <script src="/resources/polymer/webcomponentsjs/webcomponents-lite.js"></script>
+    <script src="/resources/polymer/web-component-tester/browser.js"></script>
+    <script src="/resources/polymer/test-fixture/test-fixture-mocha.js"></script>
+    <script src="/resources/polymer/iron-test-helpers/mock-interactions.js"></script>
+
+    <link rel="import" href="/resources/polymer/test-fixture/test-fixture.html">
+
+    <link rel="import" href="/app/tg-reflector.html">
+    <link rel="import" href="/centre_ui/ua.com.fielden.platform.ui.menu.sample.MiTgPersistentEntityWithProperties">
+    <link rel="import" href="/master_ui/ua.com.fielden.platform.sample.domain.TgPersistentEntityWithProperties">
+</head>
+
+<body>
+    <test-fixture id="CentreFixture">
+        <template>
+            <tg-MiTgPersistentEntityWithProperties-centre id="centre"></tg-MiTgPersistentEntityWithProperties-centre>
+        </template>
+    </test-fixture>
+
+    <script>
+        suite('entity centre', function () {
+            var centre;
+
+            setup(function () {
+                centre = fixture('CentreFixture');
+            });
+
+            test('setting "!=" mnemonic works', function (done) {
+                centre.postRetrieved = function (entity, bindingEntity, customObject) {
+                    var editor = centre.$.selection_criteria.$.editor_4_tgPersistentEntityWithProperties_;
+                    var criterion = centre.$.selection_criteria.$.criterion_4_tgPersistentEntityWithProperties_;
+                    var oldValue = editor._editingValue;
+                    var oldNot = criterion._not;
+                    //setting query params
+                    centre.queryPart = "this!=DEMO00,DEMO01";
+                    centre._setQueryParams();
+                    //Check equality
+                    assert.strictEqual(editor._commValue, "DEMO00,DEMO01", "The THIS prop value should be: DEMO00,DEMO01");
+                    assert.strictEqual(criterion.not, true, "The not mnemonic for THIS prop should be: true");
+                    //Restoring
+                    editor._editingValue = oldValue;
+                    editor.commit();
+                    criterion._not = oldNot;
+                    criterion._acceptMetaValues(true);
+                
+                    done();
+                };
+                
+                centre.retrieve();
+            });
+            
+            test('setting "{}" mnemonic works', function (done) {
+
+                centre.postRetrieved = function (entity, bindingEntity, customObject) {
+                    var editor = centre.$.selection_criteria.$.editor_4_tgPersistentEntityWithProperties_compositeProp;
+                    var criterion = centre.$.selection_criteria.$.criterion_4_tgPersistentEntityWithProperties_compositeProp;
+                    var oldValue = editor._editingValue;
+                    var oldOrNull = criterion._orNull;
+                    var oldNot = criterion._not;
+                    //setting query params
+                    centre.queryPart = "compositeProp={DEFAULT_KEY 10}";
+                    centre._setQueryParams();
+                    //Check equality
+                    assert.strictEqual(editor._commValue, "DEFAULT_KEY 10", "The composite prop value should be: DEMO00,DEMO01");
+                    assert.strictEqual(criterion.orNull, true, "The orNull mnemonic for composite prop should be: true");
+                    assert.strictEqual(criterion.not, false, "The not mnemonic for composite prop should be: false");
+                    //Restoring
+                    editor._editingValue = oldValue;
+                    editor.commit();
+                    criterion._orNull = oldOrNull;
+                    criterion._not = oldNot;
+                    criterion._acceptMetaValues(true);
+                
+                    done();
+                };
+                
+                centre.retrieve();
+            });
+            
+            test('exclusion uri works', function (done) {
+
+                centre.postRetrieved = function (entity, bindingEntity, customObject) {
+                    var editor1 = centre.$.selection_criteria.$.editor_4_tgPersistentEntityWithProperties_integerProp_from;
+                    var editor2 = centre.$.selection_criteria.$.editor_4_tgPersistentEntityWithProperties_integerProp_to;
+                    var criterion = centre.$.selection_criteria.$.criterion_4_tgPersistentEntityWithProperties_integerProp;
+                    var old1Value = editor1._editingValue;
+                    var old2Value = editor2._editingValue;
+                    var oldOrNull = criterion._orNull;
+                    var oldNot = criterion._not;
+                    var old1Exclusion = criterion._exclusive;
+                    var old2Exclusion = criterion._exclusive2;
+                    //Setting query params
+                    centre.queryPart = "integerProp=[18,24]";
+                    centre._setQueryParams();
+                    //Check equality
+                    assert.strictEqual(editor1._commValue, "18", "The intger prop first value should be: 18");
+                    assert.strictEqual(editor2._commValue, "24", "The intger prop second value should be: 24");
+                    assert.strictEqual(criterion.orNull, false, "The orNull mnemonic for integer prop should be: false");
+                    assert.strictEqual(criterion.not, false, "The not mnemonic for integer prop should be: false");
+                    assert.strictEqual(criterion.exclusive, false, "The exclusive mnemonic for integer prop should be: false");
+                    assert.strictEqual(criterion.exclusive2, false, "The exclusive2 mnemonic for integer prop should be: false");
+                    // set eclusion for two parameters.
+                    centre.queryPart = "integerProp=(18,24)";
+                    centre._setQueryParams();
+                    assert.strictEqual(editor1._commValue, "18", "The intger prop first value should be: 18");
+                    assert.strictEqual(editor2._commValue, "24", "The intger prop second value should be: 24");
+                    assert.strictEqual(criterion.orNull, false, "The orNull mnemonic for integer prop should be: false");
+                    assert.strictEqual(criterion.not, false, "The not mnemonic for integer prop should be: false");
+                    assert.strictEqual(criterion.exclusive, true, "The exclusive mnemonic for integer prop should be: true");
+                    assert.strictEqual(criterion.exclusive2, true, "The exclusive2 mnemonic for integer prop should be: true");
+                    // set eclusion for first parameter.
+                    centre.queryPart = "integerProp=(18,24]";
+                    centre._setQueryParams();
+                    assert.strictEqual(editor1._commValue, "18", "The intger prop first value should be: 18");
+                    assert.strictEqual(editor2._commValue, "24", "The intger prop second value should be: 24");
+                    assert.strictEqual(criterion.orNull, false, "The orNull mnemonic for integer prop should be: false");
+                    assert.strictEqual(criterion.not, false, "The not mnemonic for integer prop should be: false");
+                    assert.strictEqual(criterion.exclusive, true, "The exclusive mnemonic for integer prop should be: true");
+                    assert.strictEqual(criterion.exclusive2, false, "The exclusive2 mnemonic for integer prop should be: false");
+                    // set eclusion for second parameter.
+                    centre.queryPart = "integerProp=[18,24)";
+                    centre._setQueryParams();
+                    assert.strictEqual(editor1._commValue, "18", "The intger prop first value should be: 18");
+                    assert.strictEqual(editor2._commValue, "24", "The intger prop second value should be: 24");
+                    assert.strictEqual(criterion.orNull, false, "The orNull mnemonic for integer prop should be: false");
+                    assert.strictEqual(criterion.not, false, "The not mnemonic for integer prop should be: false");
+                    assert.strictEqual(criterion.exclusive, false, "The exclusive mnemonic for integer prop should be: false");
+                    assert.strictEqual(criterion.exclusive2, true, "The exclusive2 mnemonic for integer prop should be: true");
+                    //Restoring
+                    editor1._editingValue = old1Value;
+                    editor1.commit();
+                    editor2._editingValue = old2Value;
+                    editor2.commit();
+                    criterion._orNull = oldOrNull;
+                    criterion._not = oldNot;
+                    criterion._exclusive = old1Exclusion;
+                    criterion._exclusive2 = old2Exclusion;
+                    criterion._acceptMetaValues(true);
+                
+                    done();
+                };
+
+                centre.retrieve();
+            });
+            
+            test('setting uri boolean values works', function (done) {
+                centre.postRetrieved = function (entity, bindingEntity, customObject) {
+                    var editor1 = centre.$.selection_criteria.$.editor_4_tgPersistentEntityWithProperties_booleanProp_is;
+                    var editor2 = centre.$.selection_criteria.$.editor_4_tgPersistentEntityWithProperties_booleanProp_not;
+                    var criterion = centre.$.selection_criteria.$.criterion_4_tgPersistentEntityWithProperties_booleanProp;
+                    var old1Value = editor1._editingValue;
+                    var old2Value = editor2._editingValue;
+                    var oldOrNull = criterion._orNull;
+                    var oldNot = criterion._not;
+                    var old1Exclusion = criterion._exclusive;
+                    var old2Exclusion = criterion._exclusive2;
+                    //setting query params
+                    centre.queryPart = "booleanProp=(true,false)";
+                    centre._setQueryParams();
+                    //Check equality
+                    assert.strictEqual(editor1._commValue, "true", "The boolean prop first value should be: true");
+                    assert.strictEqual(editor2._commValue, "false", "The boolean prop second value should be: false");
+                    assert.strictEqual(criterion.orNull, false, "The orNull mnemonic for integer prop should be: false");
+                    assert.strictEqual(criterion.not, false, "The not mnemonic for integer prop should be: false");
+                    assert.strictEqual(criterion.exclusive, undefined, "The exclusive mnemonic for integer prop should be: undefined");
+                    assert.strictEqual(criterion.exclusive2, undefined, "The exclusive2 mnemonic for integer prop should be: undefined");
+                    //Setting square brackets for boolean values
+                    centre.queryPart = "booleanProp=[true,false]";
+                    centre._setQueryParams();
+                    assert.strictEqual(editor1._commValue, "true", "The boolean prop first value should be: true");
+                    assert.strictEqual(editor2._commValue, "false", "The boolean prop second value should be: false");
+                    assert.strictEqual(criterion.orNull, false, "The orNull mnemonic for integer prop should be: false");
+                    assert.strictEqual(criterion.not, false, "The not mnemonic for integer prop should be: false");
+                    assert.strictEqual(criterion.exclusive, undefined, "The exclusive mnemonic for integer prop should be: undefined");
+                    assert.strictEqual(criterion.exclusive2, undefined, "The exclusive2 mnemonic for integer prop should be: undefined");
+                    //Restoring
+                    editor1._editingValue = old1Value;
+                    editor1.commit();
+                    editor2._editingValue = old2Value;
+                    editor2.commit();
+                    criterion._orNull = oldOrNull;
+                    criterion._not = oldNot;
+                    criterion._exclusive = old1Exclusion;
+                    criterion._exclusive2 = old2Exclusion;
+                    criterion._acceptMetaValues(true);
+                
+                    done();
+                };
+                
+                centre.retrieve();
+            });
+            
+            test('"&" in uri works', function (done) {
+                centre.postRetrieved = function (entity, bindingEntity, customObject) {
+                    var editor = centre.$.selection_criteria.$.editor_4_tgPersistentEntityWithProperties_;
+                    var criterion = centre.$.selection_criteria.$.criterion_4_tgPersistentEntityWithProperties_;
+                    var oldValue = editor._editingValue;
+                    var oldNot = criterion._not;
+                    var oldOrNull = criterion._orNull;
+                    
+                    var intEditor1 = centre.$.selection_criteria.$.editor_4_tgPersistentEntityWithProperties_integerProp_from;
+                    var intEditor2 = centre.$.selection_criteria.$.editor_4_tgPersistentEntityWithProperties_integerProp_to;
+                    var intCriterion = centre.$.selection_criteria.$.criterion_4_tgPersistentEntityWithProperties_integerProp;
+                    var oldInt1Value = intEditor1._editingValue;
+                    var oldInt2Value = intEditor2._editingValue;
+                    var oldIntOrNull = intCriterion._orNull;
+                    var oldIntNot = intCriterion._not;
+                    var oldInt1Exclusion = intCriterion._exclusive;
+                    var oldInt2Exclusion = intCriterion._exclusive2;
+                    
+                    //setting query params
+                    centre.queryPart = "this!={DEMO00,DEMO01}&integerProp=(18,24]";
+                    centre._setQueryParams();
+                    //Check equality
+                    assert.strictEqual(editor._commValue, "DEMO00,DEMO01", "The THIS prop value should be: DEMO00,DEMO01");
+                    assert.strictEqual(criterion.not, true, "The not mnemonic for THIS prop should be: true");
+                    assert.strictEqual(criterion.orNull, true, "The orNull mnemonic for THIS prop should be: true");
+                    assert.strictEqual(intEditor1._commValue, "18", "The intger prop first value should be: 18");
+                    assert.strictEqual(intEditor2._commValue, "24", "The intger prop second value should be: 24");
+                    assert.strictEqual(intCriterion.orNull, false, "The orNull mnemonic for integer prop should be: false");
+                    assert.strictEqual(intCriterion.not, false, "The not mnemonic for integer prop should be: false");
+                    assert.strictEqual(intCriterion.exclusive, true, "The exclusive mnemonic for integer prop should be: true");
+                    assert.strictEqual(intCriterion.exclusive2, false, "The exclusive2 mnemonic for integer prop should be: false");
+                    
+                    //Restoring
+                    editor._editingValue = oldValue;
+                    editor.commit();
+                    criterion._not = oldNot;
+                    criterion._orNull = oldOrNull;
+                    criterion._acceptMetaValues(true);
+                    intEditor1._editingValue = oldInt1Value;
+                    intEditor1.commit();
+                    intEditor2._editingValue = oldInt2Value;
+                    intEditor2.commit();
+                    intCriterion._orNull = oldIntOrNull;
+                    intCriterion._not = oldIntNot;
+                    intCriterion._exclusive = oldInt1Exclusion;
+                    intCriterion._exclusive2 = oldInt2Exclusion;
+                    intCriterion._acceptMetaValues(true);
+                    done();
+                };
+                
+                centre.retrieve();
+            });
+            
+             test("crit only properties don't set mnemonics", function (done) {
+                centre.postRetrieved = function (entity, bindingEntity, customObject) {
+                    var editor = centre.$.selection_criteria.$.editor_4_tgPersistentEntityWithProperties_critOnlyBooleanProp;
+                    var criterion = centre.$.selection_criteria.$.criterion_4_tgPersistentEntityWithProperties_critOnlyBooleanProp;
+                    var oldValue = editor._editingValue;
+                    var oldNot = criterion._not;
+                    var oldOrNull = criterion._orNull;
+                    //setting query params
+                    centre.queryPart = "critOnlyBooleanProp!={true}";
+                    centre._setQueryParams();
+                    //Check equality
+                    assert.strictEqual(editor._commValue, "true", "The critonly boolean prop value should be: true");
+                    assert.strictEqual(criterion.not, undefined, "The not mnemonic for critonly boolean prop should be: undefined");
+                    assert.strictEqual(criterion.orNull, undefined, "The orNull mnemonic for critonly boolean prop should be: undefined");
+                    //Restoring
+                    editor._editingValue = oldValue;
+                    editor.commit();
+                    criterion._not = oldNot;
+                    criterion._orNull = oldOrNull;
+                    criterion._acceptMetaValues(true);
+                
+                    done();
+                };
+                
+                centre.retrieve();
+            });
+        });
+    </script>
+
+</body>
+
+</html>

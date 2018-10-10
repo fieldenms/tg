@@ -4,19 +4,16 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Timestamp;
-import java.sql.Types;
-import java.text.DateFormat;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.util.Date;
 
-import org.hibernate.EntityMode;
-import org.hibernate.HibernateException;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.type.AbstractStandardBasicType;
 import org.hibernate.type.IdentifierType;
 import org.hibernate.type.LiteralType;
-import org.hibernate.type.MutableType;
-import org.joda.time.DateTime;
+import org.hibernate.type.descriptor.sql.TimestampTypeDescriptor;
+
+import ua.com.fielden.platform.persistence.types.descriptor.DateTimeJavaTypeDescriptor;
 
 /**
  * Custom Hibernate type for persisting {@link Date} instances with time portion excluding nanos.
@@ -26,85 +23,55 @@ import org.joda.time.DateTime;
  * <p>
  * For example, if a property is bound to a date picker component then nanos are lost, which is recognised as change.
  * 
- * @author 01es
+ * @author TG Team
  * 
  */
-public class DateTimeType extends MutableType implements IdentifierType, LiteralType {
+public class DateTimeType extends AbstractStandardBasicType<Date> implements IdentifierType<Date>, LiteralType<Date> {
     private static final long serialVersionUID = 1L;
 
-    private static final String DATE_FORMAT = "yyyy-MM-dd HH:mm:ss";
+    public DateTimeType() {
+        // SqlTypeDescriptor, JavaTypeDescriptor
+        super(TimestampTypeDescriptor.INSTANCE, DateTimeJavaTypeDescriptor.INSTANCE);
+    }
 
+    
     @Override
-    public Object get(final ResultSet rs, final String name) throws SQLException {
+    public Object get(final ResultSet rs, final String name, final SharedSessionContractImplementor session) throws SQLException {
         final Timestamp value = rs.getTimestamp(name);
         return value != null ? new Date(value.getTime()) : null;
     }
 
-    public Class<?> getReturnedClass() {
-        return Date.class;
+    @Override
+    public void set(final PreparedStatement st, final Date value, final int index, final SharedSessionContractImplementor session) throws SQLException {
+        final long millis = value.getTime();
+        st.setTimestamp(index, new Timestamp(millis));
     }
 
     @Override
-    public void set(final PreparedStatement st, final Object value, final int index) throws SQLException {
-        final DateTime xdate = value instanceof Timestamp ? new DateTime(((Timestamp) value).getTime()) : new DateTime(((java.util.Date) value).getTime());
-        st.setTimestamp(index, new Timestamp(xdate.getMillis()));
-    }
-
-    @Override
-    public int sqlType() {
-        return Types.TIMESTAMP;
-    }
-
-    @Override
-    public boolean isEqual(final Object x, final Object y) {
-
-        if (x == y) {
-            return true;
-        }
-        if (x == null || y == null) {
-            return false;
-        }
-
-        final DateTime xdate = new DateTime(x);
-        final DateTime ydate = new DateTime(y);
-
-        return xdate.equals(ydate);
-    }
-
-    @Override
-    public int getHashCode(final Object x, final EntityMode entityMode) {
-        return new Long(((java.util.Date) x).getTime()).hashCode();
-    }
-
     public String getName() {
         return "date";
     }
 
+    
     @Override
-    public String toString(final Object val) {
-        return new SimpleDateFormat(DATE_FORMAT).format((java.util.Date) val);
-    }
-
-    @Override
-    public Object deepCopyNotNull(final Object value) {
-        return new Timestamp(((java.util.Date) value).getTime());
-    }
-
-    public Object stringToObject(final String xml) throws Exception {
-        return DateFormat.getDateInstance().parse(xml);
-    }
-
-    public String objectToSQLString(final Object value, final Dialect dialect) throws Exception {
-        return '\'' + new Timestamp(((java.util.Date) value).getTime()).toString() + '\'';
+    public Date stringToObject(final String xml) throws Exception {
+        return getJavaTypeDescriptor().fromString(xml); //  DateFormat.getDateInstance().parse(xml)
     }
 
     @Override
-    public Object fromStringValue(final String xml) throws HibernateException {
-        try {
-            return new SimpleDateFormat(DATE_FORMAT).parse(xml);
-        } catch (final ParseException pe) {
-            throw new HibernateException("could not parse XML", pe);
+    public String objectToSQLString(final Date value, final Dialect dialect) throws Exception {
+        return '\'' + new Timestamp(value.getTime()).toString() + '\'';
+    }
+
+
+    @Override
+    public void nullSafeSet(final PreparedStatement preparedStatement, final Object value, final int index, final boolean[] settable, final SharedSessionContractImplementor session) throws SQLException {
+        if (null == value) {
+            preparedStatement.setNull(index, getSqlTypeDescriptor().getSqlType());
+        } else {
+            set(preparedStatement, (Date) value, index, session);
         }
+        
     }
 
 }

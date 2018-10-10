@@ -2,45 +2,46 @@ package ua.com.fielden.platform.dao;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.stream.Stream;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.pagination.IPage;
 
 /**
- * Defines a contract that declares support for running queries for dynamically generated enitity types (i.e. the ones with calcualted properties added by users from UI).
- * 
+ * Defines a contract that declares support for running queries for dynamically generated entity types (i.e. the ones with calculated properties added by users from UI).
+ *
  * Each generated type should have its own instance of this contract.
- * 
+ *
  * @author TG Team
- * 
+ *
  */
 public interface IGeneratedEntityController<T extends AbstractEntity<?>> extends IComputationMonitor {
 
     /**
      * Should return an entity type the DAO instance is managing.
-     * 
+     *
      * @return
      */
     Class<T> getEntityType();
 
     /**
      * Provides a way to set the generated entity type for which an instance of this controller should be used.
-     * 
+     *
      * @param type
      */
     void setEntityType(final Class<T> type);
 
     /**
      * Should return entity's key type.
-     * 
+     *
      * @return
      */
     Class<? extends Comparable> getKeyType();
 
     /**
      * Finds entity by its surrogate id.
-     * 
+     *
      * @param id
      *            -- ID of the entity to be loaded.
      * @param models
@@ -51,7 +52,7 @@ public interface IGeneratedEntityController<T extends AbstractEntity<?>> extends
 
     /**
      * Finds entity by its surrogate id.
-     * 
+     *
      * @param id
      *            -- ID of the entity to be loaded.
      * @param models
@@ -63,7 +64,7 @@ public interface IGeneratedEntityController<T extends AbstractEntity<?>> extends
     /**
      * A convenient method for retrieving exactly one entity instance determined by the model. If more than one instance was found an exception is thrown. If there is no entity
      * found then a null value is returned.
-     * 
+     *
      * @param model
      * @return
      */
@@ -71,7 +72,7 @@ public interface IGeneratedEntityController<T extends AbstractEntity<?>> extends
 
     /**
      * Should return a reference to the first page of the specified size containing entity instances retrieved using the provided query execution model.
-     * 
+     *
      * @param qem
      * @param pageCapacity
      * @param binaryTypes
@@ -86,7 +87,7 @@ public interface IGeneratedEntityController<T extends AbstractEntity<?>> extends
     /**
      * Should return a reference to the first page of the specified size containing entity instances retrieved using the provided query execution model and the summary information
      * based on <code>summaryModel</code>.
-     * 
+     *
      * @param qem
      * @param summaryModel
      * @param pageCapacity
@@ -102,7 +103,7 @@ public interface IGeneratedEntityController<T extends AbstractEntity<?>> extends
 
     /**
      * Returns a reference to a page with requested number and capacity holding entity instances matching the provided query execution model.
-     * 
+     *
      * @param qem
      * @param pageCapacity
      * @param pageNo
@@ -118,7 +119,7 @@ public interface IGeneratedEntityController<T extends AbstractEntity<?>> extends
 
     /**
      * Returns a reference to a page with requested number and capacity holding entity instances matching the provided query execution model.
-     * 
+     *
      * @param model
      * @param pageNo
      * @param pageCount
@@ -135,7 +136,7 @@ public interface IGeneratedEntityController<T extends AbstractEntity<?>> extends
 
     /**
      * Returns all entities produced by the provided query.
-     * 
+     *
      * @param qem
      * @param binaryTypes
      *            -- a list of binary representation of generated types.
@@ -146,8 +147,14 @@ public interface IGeneratedEntityController<T extends AbstractEntity<?>> extends
             final List<byte[]> binaryTypes);
 
     /**
+     * Returns a stream of entities that match the provided query.
+     * The returned stream must always be wrapped into <code>try with resources</code> clause to ensure that the underlying resultset is closed.
+     */
+    Stream<T> stream(final QueryExecutionModel<T, ?> queryModel, final int fetchSize);
+    
+    /**
      * Returns first entities produced by the provided query.
-     * 
+     *
      * @param qem
      * @param binaryTypes
      *            -- a list of binary representation of generated types.
@@ -162,7 +169,7 @@ public interface IGeneratedEntityController<T extends AbstractEntity<?>> extends
      * Should return a byte array representation the exported data in a format envisaged by the specific implementation.
      * <p>
      * For example it could be a byte array of GZipped Excel data.
-     * 
+     *
      * @param query
      *            -- query result of which should be exported.
      * @param propertyNames

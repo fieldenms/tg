@@ -54,8 +54,8 @@ public class DomainTreeManager1 extends AbstractDomainTreeManager {
      * 
      */
     public static class DomainTreeManagerForTestSerialiser extends AbstractDomainTreeManagerSerialiser<DomainTreeManager1> {
-        public DomainTreeManagerForTestSerialiser(final ISerialiser kryo) {
-            super(kryo);
+        public DomainTreeManagerForTestSerialiser(final ISerialiser serialiser) {
+            super(serialiser);
         }
 
         @Override
@@ -63,7 +63,7 @@ public class DomainTreeManager1 extends AbstractDomainTreeManager {
             final DomainTreeRepresentation1 dtr = readValue(buffer, DomainTreeRepresentation1.class);
             final TickManager1ForTest firstTick = readValue(buffer, TickManager1ForTest.class);
             final TickManager secondTick = readValue(buffer, TickManager.class);
-            return new DomainTreeManager1(kryo(), dtr, firstTick, secondTick);
+            return new DomainTreeManager1(serialiser(), dtr, firstTick, secondTick);
         }
     }
 }

@@ -1,16 +1,17 @@
 package ua.com.fielden.platform.security.user;
 
-import ua.com.fielden.platform.dao.ISecurityRoleAssociationDao;
-import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.dao.ISecurityRoleAssociation;
+import ua.com.fielden.platform.entity.AbstractPersistentEntity;
 import ua.com.fielden.platform.entity.DynamicEntityKey;
+import ua.com.fielden.platform.entity.annotation.CompanionObject;
 import ua.com.fielden.platform.entity.annotation.CompositeKeyMember;
-import ua.com.fielden.platform.entity.annotation.PersistedType;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.KeyType;
 import ua.com.fielden.platform.entity.annotation.MapEntityTo;
 import ua.com.fielden.platform.entity.annotation.MapTo;
 import ua.com.fielden.platform.entity.annotation.Observable;
-import ua.com.fielden.platform.entity.validation.annotation.CompanionObject;
+import ua.com.fielden.platform.entity.annotation.PersistentType;
+import ua.com.fielden.platform.entity.annotation.SkipEntityExistsValidation;
 import ua.com.fielden.platform.security.ISecurityToken;
 import ua.com.fielden.platform.types.markers.ISecurityTokenType;
 import ua.com.fielden.platform.utils.ClassComparator;
@@ -22,21 +23,20 @@ import ua.com.fielden.platform.utils.ClassComparator;
  * 
  */
 @KeyType(DynamicEntityKey.class)
-@MapEntityTo("SECURITY_ROLE_ASSOCIATION")
-@CompanionObject(ISecurityRoleAssociationDao.class)
-public class SecurityRoleAssociation extends AbstractEntity<DynamicEntityKey> {
-
-    private static final long serialVersionUID = -4411308363510017782L;
+@MapEntityTo
+@CompanionObject(ISecurityRoleAssociation.class)
+public class SecurityRoleAssociation extends AbstractPersistentEntity<DynamicEntityKey> {
 
     @IsProperty
     @CompositeKeyMember(1)
-    @MapTo("TOKEN")
-    @PersistedType(userType = ISecurityTokenType.class)
+    @MapTo
+    @PersistentType(userType = ISecurityTokenType.class)
     private Class<? extends ISecurityToken> securityToken;
 
     @IsProperty
     @CompositeKeyMember(2)
-    @MapTo("ID_USER_ROLE")
+    @MapTo
+    @SkipEntityExistsValidation
     private UserRole role;
 
     /**

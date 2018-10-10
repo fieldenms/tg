@@ -62,25 +62,14 @@ public class ClassesRetrieverTest {
 
     @Test
     public void testGetAllClassesInPackageDerivedFrom() {
-        try {
-            List<Class<?>> classesInPackage = ClassesRetriever.getAllClassesInPackageDerivedFrom("target/test-classes", "ua.com.fielden.platform.reflection.testclasses", BaseClass.class);
-            assertEquals("incorrect number of classes in ua.com.fielden.platform.reflection.testclasses package derived from BaseClass", 4, classesInPackage.size());
-            classesInPackage = ClassesRetriever.getAllClassesInPackageDerivedFrom("target/test-classes", "ua.com.fielden.platform.reflection.testclasses", DerivedClass.class);
-            assertEquals("incorrect number of classes in ua.com.fielden.platform.reflection.testclasses package derived from DerivedClass", 2, classesInPackage.size());
+            assertEquals("incorrect number of classes in ua.com.fielden.platform.reflection.testclasses package derived from BaseClass", 4, ClassesRetriever.getAllClassesInPackageDerivedFrom("target/test-classes", "ua.com.fielden.platform.reflection.testclasses", BaseClass.class).size());
+            assertEquals("incorrect number of classes in ua.com.fielden.platform.reflection.testclasses package derived from DerivedClass", 2, ClassesRetriever.getAllClassesInPackageDerivedFrom("target/test-classes", "ua.com.fielden.platform.reflection.testclasses", DerivedClass.class).size());
             // let's test interface inheritance
-            classesInPackage = ClassesRetriever.getAllClassesInPackageDerivedFrom("target/test-classes", "ua.com.fielden.platform.reflection", ISomeInterface.class);
-            assertEquals("Incorrect number of classes in ua.com.fielden.platform.reflection package derived from ISomeInterface", 3, classesInPackage.size());
-            classesInPackage = ClassesRetriever.getAllClassesInPackageDerivedFrom("src/test/resources/testjar.jar", "jartest", BaseClass.class);
-            assertEquals("incorrect number of classes in jartest package derived from BaseClass", 3, classesInPackage.size());
-            classesInPackage = ClassesRetriever.getAllClassesInPackageDerivedFrom("src/test/resources/testjar.jar", "jartest", DerivedClass.class);
-            assertEquals("incorrect number of classes in jartest package derived from DerivedClass", 2, classesInPackage.size());
-            classesInPackage = ClassesRetriever.getAllClassesInPackageDerivedFrom("src/test/resources", "ua.com.fielden.platform.reflection.testclasses", BaseClass.class);
-            assertEquals("incorrect number of classes in ua.com.fielden.platform.reflection.testclasses package derived from BaseClass", 3, classesInPackage.size());
-            classesInPackage = ClassesRetriever.getAllClassesInPackageDerivedFrom("src/test/resources", "ua.com.fielden.platform.reflection.testclasses", DerivedClass.class);
-            assertEquals("incorrect number of classes in ua.com.fielden.platform.reflection.testclasses package derived from DerivedClass", 2, classesInPackage.size());
-        } catch (final Exception e) {
-            fail("There suppose to be no exception.");
-        }
+            assertEquals("Incorrect number of classes in ua.com.fielden.platform.reflection package derived from ISomeInterface", 4, ClassesRetriever.getAllClassesInPackageDerivedFrom("target/test-classes", "ua.com.fielden.platform.reflection", ISomeInterface.class).size());
+            assertEquals("incorrect number of classes in jartest package derived from BaseClass", 3, ClassesRetriever.getAllClassesInPackageDerivedFrom("src/test/resources/testjar.jar", "jartest", BaseClass.class).size());
+            assertEquals("incorrect number of classes in jartest package derived from DerivedClass", 2, ClassesRetriever.getAllClassesInPackageDerivedFrom("src/test/resources/testjar.jar", "jartest", DerivedClass.class).size());
+            assertEquals("incorrect number of classes in ua.com.fielden.platform.reflection.testclasses package derived from BaseClass", 3, ClassesRetriever.getAllClassesInPackageDerivedFrom("src/test/resources", "ua.com.fielden.platform.reflection.testclasses", BaseClass.class).size());
+            assertEquals("incorrect number of classes in ua.com.fielden.platform.reflection.testclasses package derived from DerivedClass", 2, ClassesRetriever.getAllClassesInPackageDerivedFrom("src/test/resources", "ua.com.fielden.platform.reflection.testclasses", DerivedClass.class).size());
     }
 
     @Test

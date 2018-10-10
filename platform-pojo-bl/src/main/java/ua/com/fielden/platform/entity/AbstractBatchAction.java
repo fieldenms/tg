@@ -1,12 +1,15 @@
 package ua.com.fielden.platform.entity;
 
-import java.util.Collections;
+import static java.util.Collections.unmodifiableSet;
+import static ua.com.fielden.platform.error.Result.successful;
+
 import java.util.HashSet;
 import java.util.Set;
 
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.entity.annotation.Title;
+import ua.com.fielden.platform.error.Result;
 
 /**
  * The entity that collects data for batch save.
@@ -17,19 +20,17 @@ import ua.com.fielden.platform.entity.annotation.Title;
  */
 public abstract class AbstractBatchAction<T extends AbstractEntity<?>> extends AbstractEntity<T> {
 
-    private static final long serialVersionUID = 909995682564099704L;
-
     @IsProperty(AbstractEntity.class)
     @Title(value = "Save entities", desc = "Entities to save")
-    private Set<T> saveEntities = new HashSet<T>();
+    private Set<T> saveEntities = new HashSet<>();
 
     @IsProperty(AbstractEntity.class)
     @Title(value = "Remove entities", desc = "Entities to remove")
-    private Set<T> removeEntities = new HashSet<T>();
+    private Set<T> removeEntities = new HashSet<>();
 
     @IsProperty(AbstractEntity.class)
     @Title(value = "Update entities", desc = "Entities to update")
-    private Set<T> updateEntities = new HashSet<T>();
+    private Set<T> updateEntities = new HashSet<>();
 
     /**
      * Set the dirty persistent entities to update.
@@ -50,7 +51,7 @@ public abstract class AbstractBatchAction<T extends AbstractEntity<?>> extends A
      * @return
      */
     public Set<T> getUpdateEntities() {
-        return Collections.unmodifiableSet(updateEntities);
+        return unmodifiableSet(updateEntities);
     }
 
     /**
@@ -96,7 +97,7 @@ public abstract class AbstractBatchAction<T extends AbstractEntity<?>> extends A
      * @return
      */
     public Set<T> getRemoveEntities() {
-        return Collections.unmodifiableSet(removeEntities);
+        return unmodifiableSet(removeEntities);
     }
 
     /**
@@ -142,6 +143,12 @@ public abstract class AbstractBatchAction<T extends AbstractEntity<?>> extends A
      * @return
      */
     public Set<T> getSaveEntities() {
-        return Collections.unmodifiableSet(saveEntities);
+        return unmodifiableSet(saveEntities);
+    }
+    
+    @Override
+    protected Result validate() {
+        // no validation is required
+        return successful(this);
     }
 }

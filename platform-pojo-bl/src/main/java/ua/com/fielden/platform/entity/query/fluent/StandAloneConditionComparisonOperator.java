@@ -4,15 +4,17 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IStandAloneConditionComparisonOperator;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IStandAloneConditionCompoundCondition;
 
-public class StandAloneConditionComparisonOperator<ET extends AbstractEntity<?>> extends AbstractComparisonOperator<IStandAloneConditionCompoundCondition<ET>, ET> implements IStandAloneConditionComparisonOperator<ET> {
+public final class StandAloneConditionComparisonOperator<ET extends AbstractEntity<?>> //
+		extends ComparisonOperator<IStandAloneConditionCompoundCondition<ET>, ET> //
+		implements IStandAloneConditionComparisonOperator<ET> {
 
-    protected StandAloneConditionComparisonOperator(final Tokens queryTokens) {
-        super(queryTokens);
+    public StandAloneConditionComparisonOperator(final Tokens tokens) {
+        super(tokens);
     }
-
-    @Override
-    IStandAloneConditionCompoundCondition<ET> getParent1() {
-        return new StandAloneConditionCompoundCondition<ET>(getTokens());
-    }
+    
+	@Override
+	protected IStandAloneConditionCompoundCondition<ET> nextForComparisonOperator(final Tokens tokens) {
+		return new StandAloneConditionCompoundCondition<ET>(tokens);
+	}
 
 }

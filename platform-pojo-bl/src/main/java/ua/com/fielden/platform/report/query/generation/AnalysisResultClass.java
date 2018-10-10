@@ -13,6 +13,7 @@ import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.reflection.asm.api.NewProperty;
 import ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader;
 import ua.com.fielden.platform.reflection.development.EntityDescriptor;
+import ua.com.fielden.platform.utils.CollectionUtil;
 
 /**
  * Class for generating other classes those holds the analysis query result.
@@ -23,14 +24,12 @@ import ua.com.fielden.platform.reflection.development.EntityDescriptor;
 @KeyType(String.class)
 public class AnalysisResultClass extends AbstractEntity<String> {
 
-    private static final long serialVersionUID = -5634158449611172336L;
-
     /**
      * Overridden in order to support generic api for retrieving values from this analysis result class.
      * 
      */
     @Override
-    public Object get(final String propertyName) {
+    public <T> T get(final String propertyName) {
         return super.get(getAnalysisPropertyName(propertyName));
     }
 
@@ -53,7 +52,7 @@ public class AnalysisResultClass extends AbstractEntity<String> {
         final List<NewProperty> newProperties = createNewProperties(enhancedType, usedDistributions, distributionED);
         newProperties.addAll(createNewProperties(enhancedType, usedAggregations, aggregationED));
 
-        final DynamicEntityClassLoader cl = new DynamicEntityClassLoader(ClassLoader.getSystemClassLoader());
+        final DynamicEntityClassLoader cl = DynamicEntityClassLoader.getInstance(ClassLoader.getSystemClassLoader());
 
         try {
             final Class<?> generatedClass = cl.startModification(AnalysisResultClass.class.getName()).addProperties(newProperties.toArray(new NewProperty[0])).endModification();
@@ -83,7 +82,6 @@ public class AnalysisResultClass extends AbstractEntity<String> {
      * @param group
      * @return
      */
-    @SuppressWarnings("serial")
     private static List<NewProperty> createNewProperties(final Class<? extends AbstractEntity<?>> type, final List<String> propertyNames, final EntityDescriptor ed) {
 
         final List<NewProperty> newProperties = new ArrayList<>();
@@ -91,11 +89,7 @@ public class AnalysisResultClass extends AbstractEntity<String> {
         for (final String propertyName : propertyNames) {
             final String newPropertyName = getAnalysisPropertyName(propertyName);
             final Class<?> newPropertyType = StringUtils.isEmpty(propertyName) ? type : PropertyTypeDeterminator.determinePropertyType(type, propertyName);
-            final List<Annotation> annotations = new ArrayList<Annotation>() {
-                {
-                    add(new IsPropertyAnnotation().newInstance());
-                }
-            };
+            final List<Annotation> annotations = CollectionUtil.listOf(new IsPropertyAnnotation().newInstance());
             newProperties.add(new NewProperty(newPropertyName, newPropertyType, false, ed.getTitle(propertyName), ed.getDesc(propertyName), annotations.toArray(new Annotation[0])));
         }
 

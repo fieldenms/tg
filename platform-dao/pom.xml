@@ -4,13 +4,17 @@
 	<parent>
 		<groupId>fielden</groupId>
 		<artifactId>platform-parent</artifactId>
-		<version>1.2-SNAPSHOT</version>
+		<version>1.4-SNAPSHOT</version>
 	</parent>
 
 	<artifactId>platform-dao</artifactId>
 	<packaging>jar</packaging>
 
 	<name>Trident Genesis Platform DAO</name>
+	<description>
+           The platform module that provide database communication logic fully compatible with the Fractal Objects design pattern."
+           This includes base DAO implementation logic for data-aware companion object.
+        </description>
 	<dependencies>
 		<!-- inner module dependencies -->
 		<dependency>
@@ -32,23 +36,36 @@
 		<dependency>
 			<groupId>com.h2database</groupId>
 			<artifactId>h2</artifactId>
-			<version>1.3.159</version>
+			<version>1.4.187</version>
 			<scope>test</scope>
 		</dependency>
+
+		<!-- SQL Server JDBC drivers for convenience -->
+		<!-- https://mvnrepository.com/artifact/com.microsoft.sqlserver/mssql-jdbc -->
+		<dependency>
+			<groupId>com.microsoft.sqlserver</groupId>
+			<artifactId>mssql-jdbc</artifactId>
+			<version>7.0.0.jre8</version>
+			<scope>test</scope>
+		</dependency>
+
+		<!-- https://mvnrepository.com/artifact/org.hibernate/hibernate-core -->
 		<dependency>
 			<groupId>org.hibernate</groupId>
 			<artifactId>hibernate-core</artifactId>
-			<version>3.6.10.Final</version>
+			<version>5.2.12.Final</version>
 		</dependency>
 		<dependency>
 			<groupId>org.hibernate</groupId>
 			<artifactId>hibernate-c3p0</artifactId>
-			<version>3.6.10.Final</version>
+			<version>5.2.12.Final</version>
 		</dependency>
+
+		<!-- https://mvnrepository.com/artifact/org.apache.tika/tika-core -->
 		<dependency>
-			<groupId>javassist</groupId>
-			<artifactId>javassist</artifactId>
-			<version>3.12.0.GA</version>
+			<groupId>org.apache.tika</groupId>
+			<artifactId>tika-core</artifactId>
+			<version>1.18</version>
 		</dependency>
 
 	</dependencies>
@@ -67,5 +84,36 @@
 				</excludes>
 			</resource>
 		</resources>
+		<plugins>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-jar-plugin</artifactId>
+				<version>2.6</version>
+				<executions>
+					<execution>
+						<goals>
+							<goal>test-jar</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-surefire-plugin</artifactId>
+				<version>2.19.1</version>
+				<configuration>
+					<forkCount>2</forkCount>
+					<reuseForks>true</reuseForks>
+					<argLine>-server -Xms256m -Xmx1024m
+						-Djava.system.class.loader=ua.com.fielden.platform.classloader.TgSystemClassLoader</argLine>
+					<systemPropertyVariables>
+						<databaseUri>./src/test/resources/db/TEST_DB_${surefire.forkNumber}</databaseUri>
+						<loadDdlScriptFromFile>false</loadDdlScriptFromFile>
+						<saveDdlScriptToFile>false</saveDdlScriptToFile>
+						<legacyTests.databaseUri>./src/test/resources/db/TEST_DB_LEGACY_${surefire.forkNumber}</legacyTests.databaseUri>
+					</systemPropertyVariables>
+				</configuration>
+			</plugin>
+		</plugins>
 	</build>
 </project>

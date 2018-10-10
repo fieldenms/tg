@@ -7,15 +7,15 @@ import java.util.Properties;
 import org.hibernate.SessionFactory;
 
 import ua.com.fielden.platform.dao.DomainMetadata;
-import ua.com.fielden.platform.dao.factory.DaoFactory;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
+import ua.com.fielden.platform.entity.query.IdOnlyProxiedEntityTypeCache;
 
 /**
  * Hibernate driven module required for correct instantiation of entities.
- * 
+ *
  * @author TG Team
- * 
+ *
  */
 public class CommonFactoryModule extends PropertyFactoryModule {
 
@@ -24,15 +24,12 @@ public class CommonFactoryModule extends PropertyFactoryModule {
         super(props, defaultHibernateTypes, applicationEntityTypes);
     }
 
-    public CommonFactoryModule(final SessionFactory sessionFactory, final DomainMetadata domainMetadata) {
-        super(sessionFactory, domainMetadata);
+    public CommonFactoryModule(final SessionFactory sessionFactory, final DomainMetadata domainMetadata, final IdOnlyProxiedEntityTypeCache idOnlyProxiedEntityTypeCache) {
+        super(sessionFactory, domainMetadata, idOnlyProxiedEntityTypeCache);
     }
 
     protected EntityFactory getEntityFactory() {
         return entityFactory;
     }
 
-    protected DaoFactory getDaoFactory() {
-        return daoFactory;
-    }
 }

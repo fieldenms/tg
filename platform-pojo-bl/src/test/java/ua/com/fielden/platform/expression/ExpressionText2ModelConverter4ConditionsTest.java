@@ -80,37 +80,6 @@ public class ExpressionText2ModelConverter4ConditionsTest {
         assertEquals("Incorrect model.", model, root.getModel());
     }
 
-    @Test
-    public void model_generation_for_dashboard_case_when_failed() throws RecognitionException, SemanticException {
-        final ExpressionText2ModelConverter ev = new ExpressionText2ModelConverter(EntityLevel1.class, //
-        "CASE\n" + "WHEN MONTHS(dateProperty, NOW) > 2m THEN \"Green\"\n" + "WHEN MONTHS(dateProperty, NOW) <= 2m && MONTHS(dateProperty, NOW) > 1m THEN \"Yellow\"\n"
-                + "ELSE \"Red\" END");
-        final AstNode root = ev.convert();
-        assertEquals("Incorrect expression type", String.class, root.getType());
-
-        final ExpressionModel months1 = expr().count().months().between().prop("dateProperty").and().expr(expr().now().model()).model();
-        final ConditionModel cond1 = cond().expr(months1).gt().val(2).model();
-        final ExpressionModel months2 = expr().count().months().between().prop("dateProperty").and().expr(expr().now().model()).model();
-        final ExpressionModel months3 = expr().count().months().between().prop("dateProperty").and().expr(expr().now().model()).model();
-        final ConditionModel cond2 = cond().expr(months2).le().val(2).model();
-        final ConditionModel cond3 = cond().expr(months3).gt().val(1).model();
-        final ConditionModel andCond = cond().condition(cond2).and().condition(cond3).model();
-        final ExpressionModel model = expr().caseWhen().condition(cond1).then().val("Green").when().condition(andCond).then().val("Yellow").otherwise().val("Red").end().model();
-        assertEquals("Incorrect model.", model, root.getModel());
-    }
-
-    @Test
-    public void model_generation_for_simple_dashboard_case_when_ans_now_failed() throws RecognitionException, SemanticException {
-        final ExpressionText2ModelConverter ev = new ExpressionText2ModelConverter(EntityLevel1.class, //
-        "CASE\n" + "WHEN dateProperty > NOW THEN \"Green\"\n" + "ELSE \"Red\" END");
-        final AstNode root = ev.convert();
-        assertEquals("Incorrect expression type", String.class, root.getType());
-
-        final ExpressionModel prop = expr().prop("dateProperty").model();
-        final ConditionModel cond = cond().expr(prop).gt().expr(expr().now().model()).model();
-        final ExpressionModel model = expr().caseWhen().condition(cond).then().val("Green").otherwise().val("Red").end().model();
-        assertEquals("Incorrect model.", model, root.getModel());
-    }
 
     @Test
     public void model_generation_for_simple_is_NULL() throws RecognitionException, SemanticException {

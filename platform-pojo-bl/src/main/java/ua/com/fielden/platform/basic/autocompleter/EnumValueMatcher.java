@@ -8,14 +8,13 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import ua.com.fielden.platform.basic.IValueMatcher;
-import ua.com.fielden.platform.entity.AbstractEntity;
 
 /**
  * Provides a enumeration driven implementation of the {@link IValueMatcher} with wild card support. This implementation should be convenient in cases where there is a property of
  * some enumeration type that needs to be populated via an autocompleter.
- * 
+ *
  * @author TG Team
- * 
+ *
  */
 public class EnumValueMatcher<T extends Enum<T>> implements IValueMatcher<T> {
     private EnumSet<T> values;
@@ -26,7 +25,7 @@ public class EnumValueMatcher<T extends Enum<T>> implements IValueMatcher<T> {
 
     /**
      * Set the values to search items those match some pattern.
-     * 
+     *
      * @param values
      */
     public void setValuesToSearchFor(final Collection<T> values) {
@@ -39,7 +38,7 @@ public class EnumValueMatcher<T extends Enum<T>> implements IValueMatcher<T> {
 
     /**
      * Returns the size of all values set.
-     * 
+     *
      * @return
      */
     public int getValuesSize() {
@@ -76,7 +75,7 @@ public class EnumValueMatcher<T extends Enum<T>> implements IValueMatcher<T> {
 
     /**
      * Returns true if value matches valuePattern, false otherwise. This method behaves like autocompleter's value matcher
-     * 
+     *
      * @param value
      * @param valuePattern
      * @return
@@ -93,7 +92,7 @@ public class EnumValueMatcher<T extends Enum<T>> implements IValueMatcher<T> {
 
     /**
      * Converts auto-completer-like regular expression to normal regular expression (simply replaces all '*' with '%' characters)
-     * 
+     *
      * @param autocompleterExp
      * @return
      */
@@ -104,24 +103,9 @@ public class EnumValueMatcher<T extends Enum<T>> implements IValueMatcher<T> {
         return autocompleterExp.replaceAll("\\*", "%").trim();
     }
 
-    @Override
-    public List<T> findMatchesWithModel(final String value) {
-        return findMatches(value);
-    }
-
-    @Override
+     @Override
     public Integer getPageSize() {
         return null;
     }
 
-    @Override
-    public <FT extends AbstractEntity<?>> ua.com.fielden.platform.entity.query.fluent.fetch<FT> getFetchModel() {
-        throw new UnsupportedOperationException("Entity query model is not supported by POJO value matcher.");
-    }
-
-    @Override
-    public <FT extends AbstractEntity<?>> void setFetchModel(final ua.com.fielden.platform.entity.query.fluent.fetch<FT> fetchModel) {
-        throw new UnsupportedOperationException("Entity query model is not supported by POJO value matcher.");
-    }
-
-}
+ }

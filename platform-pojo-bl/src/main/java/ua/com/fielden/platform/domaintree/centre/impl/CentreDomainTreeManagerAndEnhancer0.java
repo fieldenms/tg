@@ -11,6 +11,8 @@ import java.util.Set;
 
 import org.apache.log4j.Logger;
 
+import com.esotericsoftware.kryo.Kryo;
+
 import ua.com.fielden.platform.domaintree.ICalculatedProperty.CalculatedPropertyAttribute;
 import ua.com.fielden.platform.domaintree.IDomainTreeEnhancer;
 import ua.com.fielden.platform.domaintree.IDomainTreeEnhancer.IncorrectCalcPropertyException;
@@ -36,6 +38,7 @@ import ua.com.fielden.platform.domaintree.centre.analyses.impl.SentinelDomainTre
 import ua.com.fielden.platform.domaintree.centre.analyses.impl.SentinelDomainTreeRepresentation;
 import ua.com.fielden.platform.domaintree.centre.impl.CentreDomainTreeManager.AddToResultTickManager;
 import ua.com.fielden.platform.domaintree.centre.impl.CentreDomainTreeManager0.AddToCriteriaTickManager0;
+import ua.com.fielden.platform.domaintree.exceptions.DomainTreeException;
 import ua.com.fielden.platform.domaintree.impl.AbstractDomainTree;
 import ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeManager.TickManager;
 import ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeManagerAndEnhancer.DomainTreeEnhancerWithPropertiesPopulation;
@@ -45,22 +48,24 @@ import ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeRepresentation.
 import ua.com.fielden.platform.domaintree.impl.CalculatedProperty;
 import ua.com.fielden.platform.domaintree.impl.DomainTreeEnhancer;
 import ua.com.fielden.platform.domaintree.impl.DomainTreeEnhancer0;
+import ua.com.fielden.platform.domaintree.impl.EnhancementPropertiesMap;
 import ua.com.fielden.platform.equery.lifecycle.LifecycleModel.GroupingPeriods;
 import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
-import ua.com.fielden.platform.serialisation.impl.serialisers.TgSimpleSerializer;
+import ua.com.fielden.platform.serialisation.api.ISerialiser0;
+import ua.com.fielden.platform.serialisation.api.SerialiserEngines;
+import ua.com.fielden.platform.serialisation.kryo.serialisers.TgSimpleSerializer;
+import ua.com.fielden.platform.types.tuples.T2;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
 import ua.com.fielden.snappy.DateRangePrefixEnum;
 import ua.com.fielden.snappy.MnemonicEnum;
 
-import com.esotericsoftware.kryo.Kryo;
-
 /**
  * WARNING: this is an OLD version!
- * 
+ *
  * @author TG Team
- * 
+ *
  */
 @Deprecated
 public class CentreDomainTreeManagerAndEnhancer0 extends AbstractDomainTreeManagerAndEnhancer0 implements ICentreDomainTreeManagerAndEnhancer {
@@ -70,12 +75,10 @@ public class CentreDomainTreeManagerAndEnhancer0 extends AbstractDomainTreeManag
     private final transient LinkedHashMap<String, IAbstractAnalysisDomainTreeManager> currentAnalyses;
     private final transient LinkedHashMap<String, IAbstractAnalysisDomainTreeManager> freezedAnalyses;
 
-    private final transient List<IAnalysisListener> analysisListeners;
-
     /**
      * A <i>manager with enhancer</i> constructor for the first time instantiation.
      */
-    public CentreDomainTreeManagerAndEnhancer0(final ISerialiser serialiser, final Set<Class<?>> rootTypes) {
+    public CentreDomainTreeManagerAndEnhancer0(final ISerialiser0 serialiser, final Set<Class<?>> rootTypes) {
         this(serialiser, new CentreDomainTreeManager0(serialiser, AbstractDomainTree.validateRootTypes(rootTypes)), new DomainTreeEnhancer0(serialiser, AbstractDomainTree.validateRootTypes(rootTypes)), new HashMap<String, IAbstractAnalysisDomainTreeManager>(), new HashMap<String, IAbstractAnalysisDomainTreeManager>(), new HashMap<String, IAbstractAnalysisDomainTreeManager>());
     }
 
@@ -94,8 +97,6 @@ public class CentreDomainTreeManagerAndEnhancer0 extends AbstractDomainTreeManag
         this.currentAnalyses.putAll(currentAnalyses);
         this.freezedAnalyses = new LinkedHashMap<String, IAbstractAnalysisDomainTreeManager>();
         this.freezedAnalyses.putAll(freezedAnalyses);
-
-        this.analysisListeners = new ArrayList<IAnalysisListener>();
 
         for (final IAbstractAnalysisDomainTreeManager analysisManager : this.persistentAnalyses.values()) {
             initAnalysisManagerReferencesOn(analysisManager, this);
@@ -116,7 +117,7 @@ public class CentreDomainTreeManagerAndEnhancer0 extends AbstractDomainTreeManag
     /**
      * Creates a domain tree enhancer wrapper that takes care about population of domain tree changes (calc props) in representation "included properties" (which triggers other
      * population like manager's "checked properties" automatically).
-     * 
+     *
      * @return
      */
     @Override
@@ -126,9 +127,9 @@ public class CentreDomainTreeManagerAndEnhancer0 extends AbstractDomainTreeManag
 
     /**
      * The {@link DomainTreeEnhancer} wrapper that reflects the changes in manager and also in children analyses.
-     * 
+     *
      * @author TG Team
-     * 
+     *
      */
     protected static class CentreDomainTreeEnhancerWithPropertiesPopulation0 extends DomainTreeEnhancerWithPropertiesPopulation {
         private final CentreDomainTreeManagerAndEnhancer0 mgrAndEnhancer;
@@ -136,7 +137,7 @@ public class CentreDomainTreeManagerAndEnhancer0 extends AbstractDomainTreeManag
         /**
          * A {@link DomainTreeEnhancerWithPropertiesPopulation} constructor which requires a base implementations of {@link DomainTreeEnhancer} and
          * {@link AbstractDomainTreeRepresentation}.
-         * 
+         *
          * @param baseEnhancer
          * @param dtr
          */
@@ -243,22 +244,12 @@ public class CentreDomainTreeManagerAndEnhancer0 extends AbstractDomainTreeManag
     }
 
     @Override
-    public boolean addAnalysisListener(final IAnalysisListener listener) {
-        return analysisListeners.add(listener);
-    }
-
-    @Override
-    public boolean removeAnalysisListener(final IAnalysisListener listener) {
-        return analysisListeners.remove(listener);
-    }
-
-    @Override
     public ICentreDomainTreeManagerAndEnhancer initAnalysisManagerByDefault(final String name, final AnalysisType analysisType) {
         if (isFreezedAnalysisManager(name)) {
             error("Unable to Init analysis instance if it is freezed for title [" + name + "].");
         }
         if (getAnalysisManager(name) != null) {
-            throw new IllegalArgumentException("The analysis with name [" + name + "] already exists.");
+            throw new DomainTreeException("The analysis with name [" + name + "] already exists.");
         }
         // create a new instance and put to "current" map
         if (AnalysisType.PIVOT.equals(analysisType)) {
@@ -282,18 +273,12 @@ public class CentreDomainTreeManagerAndEnhancer0 extends AbstractDomainTreeManag
         if (AnalysisType.MULTIPLEDEC.equals(analysisType)) {
             currentAnalyses.put(name, initAnalysisManagerReferencesOn(new MultipleDecDomainTreeManager(getSerialiser(), getRepresentation().rootTypes()), this));
         }
-        // fire "initialised" event
-        if (getAnalysisManager(name) != null) {
-            for (final IAnalysisListener listener : analysisListeners) {
-                listener.propertyStateChanged(null, name, true, null);
-            }
-        }
         return this;
     }
 
     /**
      * Enhances centre manager domain to include COUNT_OF_SELF_DASHBOARD property, which will be used for sentinel analyses.
-     * 
+     *
      * @param rootType
      */
     public void provideSentinelAnalysesAggregationProperty(final Set<Class<?>> rootTypes) {
@@ -310,7 +295,7 @@ public class CentreDomainTreeManagerAndEnhancer0 extends AbstractDomainTreeManag
 
     /**
      * Enhances centre manager domain to include "Date Period" distribution properties, which will be used for lifecycle analyses.
-     * 
+     *
      * @param rootType
      */
     public void provideLifecycleAnalysesDatePeriodProperties(final Set<Class<?>> rootTypes) {
@@ -351,12 +336,6 @@ public class CentreDomainTreeManagerAndEnhancer0 extends AbstractDomainTreeManag
         if (isFreezedAnalysisManager(name)) {
             unfreeze(name);
         }
-        // fire "removed" event
-        if (wasInitialised && (getAnalysisManager(name) == null)) {
-            for (final IAnalysisListener listener : analysisListeners) {
-                listener.propertyStateChanged(null, name, false, null);
-            }
-        }
         return this;
     }
 
@@ -389,17 +368,10 @@ public class CentreDomainTreeManagerAndEnhancer0 extends AbstractDomainTreeManag
         }
         final IAbstractAnalysisDomainTreeManager mgr = getAnalysisManager(name);
         if (mgr == null) {
-            throw new IllegalArgumentException("The unknown analysis with name [" + name + "] can not be removed.");
+            throw new DomainTreeException("The unknown analysis with name [" + name + "] can not be removed.");
         }
         currentAnalyses.remove(name);
         acceptAnalysisManager(name);
-
-        // fire "removed" event
-        if (getAnalysisManager(name) == null) {
-            for (final IAnalysisListener listener : analysisListeners) {
-                listener.propertyStateChanged(null, name, false, null);
-            }
-        }
         return this;
     }
 
@@ -424,7 +396,7 @@ public class CentreDomainTreeManagerAndEnhancer0 extends AbstractDomainTreeManag
 
     /**
      * Returns <code>true</code> if the analysis instance is in 'freezed' state, <code>false</code> otherwise.
-     * 
+     *
      * @param name
      * @return
      */
@@ -435,7 +407,7 @@ public class CentreDomainTreeManagerAndEnhancer0 extends AbstractDomainTreeManag
 
     /**
      * Unfreezes the centre instance that is currently freezed.
-     * 
+     *
      * @param root
      * @param name
      */
@@ -448,7 +420,7 @@ public class CentreDomainTreeManagerAndEnhancer0 extends AbstractDomainTreeManag
 
     /**
      * Throws an error when the instance is <code>null</code> (not initialised).
-     * 
+     *
      * @param mgr
      * @param root
      * @param name
@@ -460,13 +432,13 @@ public class CentreDomainTreeManagerAndEnhancer0 extends AbstractDomainTreeManag
     }
 
     /**
-     * Logs and throws an {@link IllegalArgumentException} error with specified message.
-     * 
+     * Logs and throws an {@link DomainTreeException} error with specified message.
+     *
      * @param message
      */
     private void error(final String message) {
         logger.error(message);
-        throw new IllegalArgumentException(message);
+        throw new DomainTreeException(message);
     }
 
     @Override
@@ -506,9 +478,9 @@ public class CentreDomainTreeManagerAndEnhancer0 extends AbstractDomainTreeManag
 
     /**
      * Overridden to take into account calculated properties.
-     * 
+     *
      * @author TG Team
-     * 
+     *
      */
     /* TODO reduce visibility */
     public class AddToCriteriaTickManagerAndEnhancer0 extends TickManagerAndEnhancer0 implements IAddToCriteriaTickManager, ILocatorManager {
@@ -520,6 +492,19 @@ public class CentreDomainTreeManagerAndEnhancer0 extends AbstractDomainTreeManag
         @Override
         public/* TODO reduce visibility */AddToCriteriaTickManager0 base() {
             return (AddToCriteriaTickManager0) super.base();
+        }
+
+        @Override
+        public boolean isMetaValuePresent(final MetaValueType metaValueType, final Class<?> root, final String property) {
+            // inject an enhanced type into method implementation
+            return base().isMetaValuePresent(metaValueType, enhancer().getManagedType(root), property);
+        }
+
+        @Override
+        public IAddToCriteriaTickManager markMetaValuePresent(final MetaValueType metaValueType, final Class<?> root, final String property) {
+            // inject an enhanced type into method implementation
+            base().markMetaValuePresent(metaValueType, enhancer().getManagedType(root), property);
+            return this;
         }
 
         @Override
@@ -662,26 +647,6 @@ public class CentreDomainTreeManagerAndEnhancer0 extends AbstractDomainTreeManag
         }
 
         @Override
-        public void addPropertyValueListener(final IPropertyValueListener listener) {
-            base().addPropertyValueListener(listener);
-        }
-
-        @Override
-        public void removePropertyValueListener(final IPropertyValueListener listener) {
-            base().removePropertyValueListener(listener);
-        }
-
-        @Override
-        public void addPropertyValue2Listener(final IPropertyValueListener listener) {
-            base().addPropertyValue2Listener(listener);
-        }
-
-        @Override
-        public void removePropertyValue2Listener(final IPropertyValueListener listener) {
-            base().removePropertyValue2Listener(listener);
-        }
-
-        @Override
         public Boolean getExclusive(final Class<?> root, final String property) {
             // inject an enhanced type into method implementation
             return base().getExclusive(enhancer().getManagedType(root), property);
@@ -788,23 +753,13 @@ public class CentreDomainTreeManagerAndEnhancer0 extends AbstractDomainTreeManag
             // inject an enhanced type into method implementation
             base().removeCheckedProperty(enhancer().getManagedType(root), property);
         }
-
-        @Override
-        public void addWeakPropertyValueListener(final IPropertyValueListener listener) {
-            base().addWeakPropertyValueListener(listener);
-        }
-
-        @Override
-        public void addWeakPropertyValue2Listener(final IPropertyValueListener listener) {
-            base().addPropertyValue2Listener(listener);
-        }
     }
 
     /**
      * Overridden to take into account calculated properties.
-     * 
+     *
      * @author TG Team
-     * 
+     *
      */
     protected class AddToResultTickManagerAndEnhancer0 extends TickManagerAndEnhancer0 implements IAddToResultTickManager {
         private AddToResultTickManagerAndEnhancer0(final TickManager base) {
@@ -830,18 +785,6 @@ public class CentreDomainTreeManagerAndEnhancer0 extends AbstractDomainTreeManag
         }
 
         @Override
-        public void addPropertyOrderingListener(final IPropertyOrderingListener listener) {
-            // TODO Auto-generated method stub
-            throw new UnsupportedOperationException("IPropertyOrderingListener is currently unsupported for CentreDomainTreeManager's second tick.");
-        }
-
-        @Override
-        public void removePropertyOrderingListener(final IPropertyOrderingListener listener) {
-            // TODO Auto-generated method stub
-            throw new UnsupportedOperationException("IPropertyOrderingListener is currently unsupported for CentreDomainTreeManager's second tick.");
-        }
-
-        @Override
         public int getWidth(final Class<?> root, final String property) {
             // inject an enhanced type into method implementation
             return base().getWidth(enhancer().getManagedType(root), property);
@@ -855,10 +798,28 @@ public class CentreDomainTreeManagerAndEnhancer0 extends AbstractDomainTreeManag
         }
 
         @Override
-        public void addWeakPropertyOrderingListener(final IPropertyOrderingListener listener) {
-            throw new UnsupportedOperationException("Weak IPropertyOrderingListener is currently unsupported for CentreDomainTreeManager's second tick.");
-
+        public int getGrowFactor(final Class<?> root, final String property) {
+            // inject an enhanced type into method implementation
+            return base().getGrowFactor(enhancer().getManagedType(root), property);
         }
+
+        @Override
+        public IAddToResultTickManager setGrowFactor(final Class<?> root, final String property, final int growFactor) {
+            // inject an enhanced type into method implementation
+            base().setGrowFactor(enhancer().getManagedType(root), property, growFactor);
+            return this;
+        }
+
+        @Override
+        public T2<EnhancementPropertiesMap<Integer>, EnhancementPropertiesMap<Integer>> getWidthsAndGrowFactors() {
+            return base().getWidthsAndGrowFactors();
+        }
+
+        @Override
+        public void setWidthsAndGrowFactors(final T2<EnhancementPropertiesMap<Integer>, EnhancementPropertiesMap<Integer>> widthsAndGrowFactors) {
+            base().setWidthsAndGrowFactors(widthsAndGrowFactors);
+        }
+
     }
 
     @Override
@@ -868,9 +829,9 @@ public class CentreDomainTreeManagerAndEnhancer0 extends AbstractDomainTreeManag
 
     /**
      * Overridden to take into account calculated properties.
-     * 
+     *
      * @author TG Team
-     * 
+     *
      */
     protected class CentreDomainTreeRepresentationAndEnhancer0 extends DomainTreeRepresentationAndEnhancer0 implements ICentreDomainTreeRepresentation {
         protected CentreDomainTreeRepresentationAndEnhancer0(final AbstractDomainTreeRepresentation base) {
@@ -889,9 +850,9 @@ public class CentreDomainTreeManagerAndEnhancer0 extends AbstractDomainTreeManag
 
         /**
          * Overridden to take into account calculated properties.
-         * 
+         *
          * @author TG Team
-         * 
+         *
          */
         protected class AddToCriteriaTickRepresentationAndEnhancer0 extends TickRepresentationAndEnhancer0 implements IAddToCriteriaTickRepresentation {
 
@@ -966,9 +927,9 @@ public class CentreDomainTreeManagerAndEnhancer0 extends AbstractDomainTreeManag
 
         /**
          * Overridden to take into account calculated properties.
-         * 
+         *
          * @author TG Team
-         * 
+         *
          */
         protected class AddToResultTickRepresentationAndEnhancer0 extends TickRepresentationAndEnhancer0 implements IAddToResultTickRepresentation {
             protected AddToResultTickRepresentationAndEnhancer0(final AbstractTickRepresentation base) {
@@ -1056,21 +1017,24 @@ public class CentreDomainTreeManagerAndEnhancer0 extends AbstractDomainTreeManag
 
     /**
      * WARNING: this is an OLD version!
-     * 
+     *
      * @author TG Team
-     * 
+     *
      */
     @Deprecated
     public static class CentreDomainTreeManagerAndEnhancer0WithTransientAnalysesSerialiser extends TgSimpleSerializer<CentreDomainTreeManagerAndEnhancer0> {
+        private final ISerialiser0 serialiser;
+
         /**
          * WARNING: this is an OLD version!
-         * 
+         *
          * @author TG Team
-         * 
+         *
          */
         @Deprecated
-        public CentreDomainTreeManagerAndEnhancer0WithTransientAnalysesSerialiser(final ISerialiser kryo) {
-            super((Kryo) kryo);
+        public CentreDomainTreeManagerAndEnhancer0WithTransientAnalysesSerialiser(final ISerialiser0 serialiser) {
+            super((Kryo) serialiser.getEngine(SerialiserEngines.KRYO));
+            this.serialiser = serialiser;
         }
 
         @Override
@@ -1084,7 +1048,7 @@ public class CentreDomainTreeManagerAndEnhancer0 extends AbstractDomainTreeManag
             //	    }
             final Map<String, IAbstractAnalysisDomainTreeManager> currentAnalyses = readValue(buffer, LinkedHashMap.class);
             final Map<String, IAbstractAnalysisDomainTreeManager> freezedAnalyses = readValue(buffer, LinkedHashMap.class);
-            return new CentreDomainTreeManagerAndEnhancer0((ISerialiser) kryo, base, enhancer, persistentAnalyses, currentAnalyses, freezedAnalyses);
+            return new CentreDomainTreeManagerAndEnhancer0(serialiser(), base, enhancer, persistentAnalyses, currentAnalyses, freezedAnalyses);
         }
 
         @Override
@@ -1094,6 +1058,10 @@ public class CentreDomainTreeManagerAndEnhancer0 extends AbstractDomainTreeManag
             writeValue(buffer, manager.persistentAnalyses);
             writeValue(buffer, manager.currentAnalyses);
             writeValue(buffer, manager.freezedAnalyses);
+        }
+
+        protected ISerialiser0 serialiser() {
+            return serialiser;
         }
     }
 

@@ -1,32 +1,65 @@
 package ua.com.fielden.platform.entity.validation;
 
+import static java.lang.String.format;
+import static ua.com.fielden.platform.entity.validation.annotation.Final.ERR_REASSIGNMENT;
+import static ua.com.fielden.platform.error.Result.failure;
+import static ua.com.fielden.platform.error.Result.successful;
+import static ua.com.fielden.platform.utils.EntityUtils.equalsEx;
+
 import java.lang.annotation.Annotation;
 import java.util.Set;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
+import ua.com.fielden.platform.entity.validation.annotation.Final;
 import ua.com.fielden.platform.error.Result;
+import ua.com.fielden.platform.reflection.TitlesDescsGetter;
 
 /**
- * This validator ensures that new value can be set to a field (via setter) only when an old value is null.
- * 
+ * BCE implementation to enforce {@link Final} semantics.
+ *
  * @author TG Team
- * 
+ *
  */
 public class FinalValidator implements IBeforeChangeEventHandler<Object> {
-    @Override
-    public Result handle(final MetaProperty property, final Object newValue, final Object oldValue, final Set<Annotation> mutatorAnnotations) {
-        final AbstractEntity<?> entity = property.getEntity();
-        if ((entity instanceof AbstractEntity) && !(entity).isPersisted()) {
-            // everything is allowed for transient instance of AbstractEntity
-            return new Result(entity, "Final validator : Value assignment is permitted.");
-        } else {
-            // otherwise standard validation rules for final are applied
-            if (oldValue != null) {
-                return new Result(entity, "Final validator : Reassigning the value is not permitted.", new Exception("Final validator : Reassigning the value is not permitted."));
-            } else {
-                return new Result(entity, "Final validator : Value assignment is permitted.");
-            }
-        }
+    private final boolean persistentOnly;
+    
+    public FinalValidator(final boolean persistentOnly) {
+        this.persistentOnly = persistentOnly;
     }
+    
+    @Override
+    public Result handle(final MetaProperty<Object> property, final Object newValue, final Set<Annotation> mutatorAnnotations) {
+        final AbstractEntity<?> entity = property.getEntity();
+
+        if (!isPropertyFinalised(property, persistentOnly) ||
+            equalsEx(property.getValue(), newValue)) { // i.e. there is no actual change
+            return successful("Value is being assigned for the first time.");
+        }
+
+        final String entityTitle = TitlesDescsGetter.getEntityTitleAndDesc(entity.getType()).getKey();
+        return failure(entity, format(ERR_REASSIGNMENT, property.getTitle(), entityTitle));
+    }
+    
+    /**
+     * This method capture the meaning of a property being <code>finalised</code>.
+     * 
+     * @param property
+     * @param persistentOnly
+     * @return
+     */
+    public static boolean isPropertyFinalised(final MetaProperty<?> property, final boolean persistentOnly) {
+        final AbstractEntity<?> entity = property.getEntity();
+        
+        if (persistentOnly) {
+            if (entity.isPersisted() && property.getOriginalValue() != null) {
+                return true;
+            }
+        } else if (property.getValue() != null) {
+            return true;
+        }
+        
+        return false;
+    }
+   
 }

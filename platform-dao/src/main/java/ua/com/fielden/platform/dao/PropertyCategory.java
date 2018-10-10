@@ -49,7 +49,19 @@ public enum PropertyCategory {
             return true;
         }
     }, //
+    SYNTHETIC_COMPONENT_HEADER {
+        @Override
+        boolean affectsMappings() {
+            return false;
+        }
+    }, //
     COMPONENT_DETAILS {
+        @Override
+        boolean affectsMappings() {
+            return false;
+        }
+    }, //
+    SYNTHETIC_COMPONENT_DETAILS {
         @Override
         boolean affectsMappings() {
             return false;
@@ -79,12 +91,12 @@ public enum PropertyCategory {
             return false;
         }
     }, //
-    EXPRESSION_COMMON {
-        @Override
-        boolean affectsMappings() {
-            return false;
-        }
-    }, //
+//    EXPRESSION_COMMON {
+//        @Override
+//        boolean affectsMappings() {
+//            return false;
+//        }
+//    }, //
     VIRTUAL_OVERRIDE {
         @Override
         boolean affectsMappings() {

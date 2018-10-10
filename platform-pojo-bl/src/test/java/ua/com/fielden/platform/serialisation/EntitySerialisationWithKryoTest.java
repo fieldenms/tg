@@ -1,7 +1,13 @@
 package ua.com.fielden.platform.serialisation;
 
-import java.beans.PropertyChangeEvent;
-import java.beans.PropertyChangeListener;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
+
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -15,6 +21,7 @@ import org.joda.time.Interval;
 import org.junit.Before;
 import org.junit.Test;
 
+import ua.com.fielden.platform.domaintree.impl.DomainTreeEnhancerCache;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.ClassWithMap;
 import ua.com.fielden.platform.entity.Entity;
@@ -25,48 +32,40 @@ import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.error.Warning;
 import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
+import ua.com.fielden.platform.serialisation.api.ISerialiserEngine;
+import ua.com.fielden.platform.serialisation.api.SerialiserEngines;
+import ua.com.fielden.platform.serialisation.api.impl.ProvidedSerialisationClassProvider;
+import ua.com.fielden.platform.serialisation.api.impl.Serialiser;
 import ua.com.fielden.platform.serialisation.entity.BaseEntity;
 import ua.com.fielden.platform.serialisation.entity.EntityWithPolymorphicProperty;
 import ua.com.fielden.platform.serialisation.entity.EntityWithQueryProperty;
 import ua.com.fielden.platform.serialisation.entity.SubBaseEntity1;
 import ua.com.fielden.platform.serialisation.entity.SubBaseEntity2;
-import ua.com.fielden.platform.serialisation.impl.ProvidedSerialisationClassProvider;
-import ua.com.fielden.platform.serialisation.impl.TgKryo;
 import ua.com.fielden.platform.test.CommonTestEntityModuleWithPropertyFactory;
 import ua.com.fielden.platform.types.Money;
 
+import com.esotericsoftware.kryo.Kryo;
 import com.google.inject.Injector;
 import com.google.inject.Module;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
-
 /**
  * Unit tests to ensure correct serialised/deserialised of {@link AbstractEntity} descendants.
- * 
+ *
  * @author TG Team
- * 
+ *
  */
 public class EntitySerialisationWithKryoTest {
-    private boolean observed = false; // used
     private final Module module = new CommonTestEntityModuleWithPropertyFactory();
     private final Injector injector = new ApplicationInjectorFactory().add(module).getInjector();
     private final EntityFactory factory = injector.getInstance(EntityFactory.class);
-    private final TgKryo kryoWriter = new TgKryo(factory, new ProvidedSerialisationClassProvider(Entity.class, ClassWithMap.class, EntityWithPolymorphicProperty.class, BaseEntity.class, SubBaseEntity1.class, SubBaseEntity2.class, EntityWithByteArray.class, EntityWithQueryProperty.class));
-    private final TgKryo kryoReader = new TgKryo(factory, new ProvidedSerialisationClassProvider(Entity.class, ClassWithMap.class, EntityWithPolymorphicProperty.class, BaseEntity.class, SubBaseEntity1.class, SubBaseEntity2.class, EntityWithByteArray.class, EntityWithQueryProperty.class));
+    private final ISerialiserEngine kryoWriter = new Serialiser(factory, new ProvidedSerialisationClassProvider(Entity.class, ClassWithMap.class, EntityWithPolymorphicProperty.class, BaseEntity.class, SubBaseEntity1.class, SubBaseEntity2.class, EntityWithByteArray.class, EntityWithQueryProperty.class), DomainTreeEnhancerCache.CACHE).getEngine(SerialiserEngines.KRYO);
+    private final ISerialiserEngine kryoReader = new Serialiser(factory, new ProvidedSerialisationClassProvider(Entity.class, ClassWithMap.class, EntityWithPolymorphicProperty.class, BaseEntity.class, SubBaseEntity1.class, SubBaseEntity2.class, EntityWithByteArray.class, EntityWithQueryProperty.class), DomainTreeEnhancerCache.CACHE).getEngine(SerialiserEngines.KRYO);
     private Entity entity;
     private Entity entityForResult;
     private Entity entForProp;
 
     @Before
     public void setUp() {
-        observed = false;
-
         entityForResult = factory.newEntity(Entity.class, 1L, "key", "description");
         assertFalse("Property should not be dirty.", entityForResult.getProperty("dependent").isDirty()); // has default value
         entityForResult.setDirty(false);
@@ -123,7 +122,7 @@ public class EntitySerialisationWithKryoTest {
         /////////////////////////////////// serialise entity /////////////////////////////////////
         //////////////////////////////////////////////////////////////////////////////////////////
         final ByteBuffer writeBuffer = ByteBuffer.allocate(10485760);
-        kryoWriter.writeObject(writeBuffer, entity);
+        ((Kryo) kryoWriter).writeObject(writeBuffer, entity);
         writeBuffer.flip();
         final byte[] data = new byte[writeBuffer.limit()];
         writeBuffer.get(data);
@@ -133,25 +132,17 @@ public class EntitySerialisationWithKryoTest {
         /////////////// deserialise entity from the byte array and test it ///////////////////////
         //////////////////////////////////////////////////////////////////////////////////////////
         final ByteBuffer readBuffer = ByteBuffer.wrap(data);
-        final Entity restoredEntity = kryoReader.readObject(readBuffer, Entity.class);
-        restoredEntity.addPropertyChangeListener("observableProperty", new PropertyChangeListener() {
-            @Override
-            public void propertyChange(final PropertyChangeEvent event) {
-                observed = true;
-            }
-        });
+        final Entity restoredEntity = ((Kryo) kryoReader).readObject(readBuffer, Entity.class);
 
         assertEquals("'key' should be equal.", entity.getKey(), restoredEntity.getKey());
-
         assertEquals("'observableProperty' has incorrect value", new Double(0.0), restoredEntity.getObservableProperty());
         restoredEntity.setObservableProperty(22.0);
-        assertTrue("Property 'observableProperty' should have been observed.", observed);
 
         // test property of entity type
         assertEquals("'entity' has incorrect value", entity.getEntity(), restoredEntity.getEntity());
         assertFalse("'entity' has incorrect value", entity.getEntity() == restoredEntity.getEntity());
         assertEquals("'entity' has incorrect type", "ua.com.fielden.platform.entity.Entity", restoredEntity.getEntity().getType().getName());
-        assertFalse("'entity' has incorrect type", "ua.com.fielden.platform.entity.Entity".equals(restoredEntity.getEntity().getClass().getName()));
+        assertTrue("'entity' has incorrect type", "ua.com.fielden.platform.entity.Entity".equals(restoredEntity.getEntity().getClass().getName()));
         // test sub-property of entity type
         assertEquals("'entity' has incorrect value", entity.getEntity().getEntity(), restoredEntity.getEntity().getEntity());
         assertFalse("'entity' has incorrect value", entity.getEntity().getEntity() == restoredEntity.getEntity().getEntity());
@@ -191,14 +182,14 @@ public class EntitySerialisationWithKryoTest {
         entity.setQuery(model);
 
         final ByteBuffer writeBuffer = ByteBuffer.allocate(10485760);
-        kryoWriter.writeObject(writeBuffer, entity);
+        ((Kryo) kryoWriter).writeObject(writeBuffer, entity);
         writeBuffer.flip();
         final byte[] data = new byte[writeBuffer.limit()];
         writeBuffer.get(data);
         writeBuffer.clear();
 
         final ByteBuffer readBuffer = ByteBuffer.wrap(data);
-        final EntityWithQueryProperty restoredEntity = kryoReader.readObject(readBuffer, EntityWithQueryProperty.class);
+        final EntityWithQueryProperty restoredEntity = ((Kryo) kryoReader).readObject(readBuffer, EntityWithQueryProperty.class);
         assertNotNull(restoredEntity.getQuery());
     }
 
@@ -210,7 +201,7 @@ public class EntitySerialisationWithKryoTest {
         /////////////////////////////////// serialise result /////////////////////////////////////
         //////////////////////////////////////////////////////////////////////////////////////////
         final ByteBuffer writeBuffer = ByteBuffer.allocate(10485760);
-        kryoWriter.writeObject(writeBuffer, result);
+        ((Kryo) kryoWriter).writeObject(writeBuffer, result);
         writeBuffer.flip();
         final byte[] data = new byte[writeBuffer.limit()];
         writeBuffer.get(data);
@@ -220,17 +211,13 @@ public class EntitySerialisationWithKryoTest {
         /////////////// deserialise result from the byte array and test it ///////////////////////
         //////////////////////////////////////////////////////////////////////////////////////////
         final ByteBuffer readBuffer = ByteBuffer.wrap(data);
-        final Result restoredResult = kryoReader.readObject(readBuffer, Result.class);
+        final Result restoredResult = ((Kryo) kryoReader).readObject(readBuffer, Result.class);
         // testing successful result serialisation
         assertNotNull("Restored result could not be null", restoredResult);
         assertNull("Restored result should not have exception", restoredResult.getEx());
         assertNotNull("Restored result should have message", restoredResult.getMessage());
         assertNotNull("Restored result should have instance", restoredResult.getInstance());
-        assertTrue("Entity should stay dirty after marshaling.", ((Entity) restoredResult.getInstance()).isDirty());
-        assertFalse("Property should not be dirty.", ((Entity) restoredResult.getInstance()).getProperty("dependent").isDirty()); // has default value
-        assertTrue("Property should be dirty.", ((Entity) restoredResult.getInstance()).getProperty("date").isDirty());
         assertEquals("Incorrect value for property entity.", entForProp, ((Entity) restoredResult.getInstance()).getEntity());
-        assertEquals("Incorrect original value for property entity.", entForProp, ((Entity) restoredResult.getInstance()).getProperty("entity").getOriginalValue());
     }
 
     @Test
@@ -251,11 +238,7 @@ public class EntitySerialisationWithKryoTest {
         assertNotNull("Restored warning could not be null", restoredWarning);
         assertNotNull("Restored warning should have message", restoredWarning.getMessage());
         assertNotNull("Restored warning should have instance", restoredWarning.getInstance());
-        assertTrue("Entity should stay dirty after marshaling.", ((Entity) restoredWarning.getInstance()).isDirty());
-        assertFalse("Property should not be dirty.", ((Entity) restoredWarning.getInstance()).getProperty("dependent").isDirty()); // has default value
-        assertTrue("Property should be dirty.", ((Entity) restoredWarning.getInstance()).getProperty("date").isDirty());
         assertEquals("Incorrect value for property entity.", entForProp, ((Entity) restoredWarning.getInstance()).getEntity());
-        assertEquals("Incorrect original value for property entity.", entForProp, ((Entity) restoredWarning.getInstance()).getProperty("entity").getOriginalValue());
     }
 
     @Test

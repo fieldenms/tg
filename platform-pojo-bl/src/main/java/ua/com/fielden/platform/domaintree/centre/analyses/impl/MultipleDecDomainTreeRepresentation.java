@@ -55,8 +55,8 @@ public class MultipleDecDomainTreeRepresentation extends AbstractAnalysisDomainT
      * 
      */
     public static class MultipleDecDomainTreeRepresentationSerialiser extends AbstractDomainTreeRepresentationSerialiser<MultipleDecDomainTreeRepresentation> {
-        public MultipleDecDomainTreeRepresentationSerialiser(final ISerialiser kryo) {
-            super(kryo);
+        public MultipleDecDomainTreeRepresentationSerialiser(final ISerialiser serialiser) {
+            super(serialiser);
         }
 
         @Override
@@ -65,7 +65,7 @@ public class MultipleDecDomainTreeRepresentation extends AbstractAnalysisDomainT
             final EnhancementSet excludedProperties = readValue(buffer, EnhancementSet.class);
             final AnalysisAddToDistributionTickRepresentation firstTick = readValue(buffer, AnalysisAddToDistributionTickRepresentation.class);
             final AnalysisAddToAggregationTickRepresentation secondTick = readValue(buffer, AnalysisAddToAggregationTickRepresentation.class);
-            return new MultipleDecDomainTreeRepresentation(kryo(), rootTypes, excludedProperties, firstTick, secondTick);
+            return new MultipleDecDomainTreeRepresentation(serialiser(), rootTypes, excludedProperties, firstTick, secondTick);
         }
     }
 }

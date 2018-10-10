@@ -9,19 +9,23 @@ import ua.com.fielden.platform.error.Result;
 /**
  * Stub validator, which should be used strictly for association of validation results in cases where there is no real validator. For example, property requiredness does not use
  * any validator and validation login in setter does not use any validator.
- * 
+ *
  * @author TG Team
- * 
+ *
  */
-public class StubValidator implements IBeforeChangeEventHandler<Object> {
+public class StubValidator<T> implements IBeforeChangeEventHandler<T> {
 
-    public static final StubValidator singleton = new StubValidator();
-
+    private static final StubValidator singleton = new StubValidator<>();
+    
     private StubValidator() {
     }
 
+    public static <T> StubValidator<T> singleton() {
+        return singleton;
+    }
+
     @Override
-    public Result handle(final MetaProperty property, final Object newValue, final Object oldValue, final Set<Annotation> mutatorAnnotations) {
+    public Result handle(final MetaProperty<T> property, final T newValue, final Set<Annotation> mutatorAnnotations) {
         throw new IllegalStateException("Handling BCE with stub validator is illegal. It should only be used for referencing purposes.");
     }
 

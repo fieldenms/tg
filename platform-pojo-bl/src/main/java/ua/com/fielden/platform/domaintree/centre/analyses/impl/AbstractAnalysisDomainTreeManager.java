@@ -1,18 +1,14 @@
 package ua.com.fielden.platform.domaintree.centre.analyses.impl;
 
-import java.lang.ref.WeakReference;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.swing.event.EventListenerList;
-
+import ua.com.fielden.platform.domaintree.IUsageManager;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.domaintree.centre.IOrderingManager;
-import ua.com.fielden.platform.domaintree.centre.IOrderingManager.IPropertyOrderingListener;
 import ua.com.fielden.platform.domaintree.centre.IOrderingRepresentation.Ordering;
 import ua.com.fielden.platform.domaintree.centre.analyses.IAbstractAnalysisDomainTreeManager;
-import ua.com.fielden.platform.domaintree.centre.analyses.IAbstractAnalysisDomainTreeManager.IUsageManager.IPropertyUsageListener;
 import ua.com.fielden.platform.domaintree.centre.analyses.IAbstractAnalysisDomainTreeRepresentation;
 import ua.com.fielden.platform.domaintree.centre.analyses.IAbstractAnalysisDomainTreeRepresentation.IAbstractAnalysisAddToAggregationTickRepresentation;
 import ua.com.fielden.platform.domaintree.impl.AbstractDomainTree;
@@ -119,35 +115,7 @@ public abstract class AbstractAnalysisDomainTreeManager extends AbstractDomainTr
         return true;
     }
 
-    protected static class WeakPropertyUsageListener implements IPropertyUsageListener {
-
-        private final IUsageManager uManager;
-        private final WeakReference<IPropertyUsageListener> ref;
-
-        public WeakPropertyUsageListener(final IUsageManager uManager, final IPropertyUsageListener listener) {
-            this.uManager = uManager;
-            this.ref = new WeakReference<IPropertyUsageListener>(listener);
-        }
-
-        @Override
-        public void propertyStateChanged(final Class<?> root, final String property, final Boolean hasBeenUsed, final Boolean oldState) {
-            if (ref.get() != null) {
-                ref.get().propertyStateChanged(root, property, hasBeenUsed, oldState);
-            } else {
-                uManager.removePropertyUsageListener(this);
-            }
-        }
-
-        public IPropertyUsageListener getRef() {
-            return ref.get();
-        }
-
-    }
-
     protected abstract static class AbstractAnalysisAddToDistributionTickManager extends TickManager implements IAbstractAnalysisAddToDistributionTickManager {
-        private final EnhancementRootsMap<List<String>> rootsListsOfUsedProperties;
-        private final transient EventListenerList propertyUsageListeners;
-
         private final transient ICentreDomainTreeManagerAndEnhancer parentCentreDomainTreeManager;
 
         /**
@@ -156,8 +124,6 @@ public abstract class AbstractAnalysisDomainTreeManager extends AbstractDomainTr
          */
         public AbstractAnalysisAddToDistributionTickManager() {
             super();
-            rootsListsOfUsedProperties = createRootsMap();
-            propertyUsageListeners = new EventListenerList();
 
             parentCentreDomainTreeManager = null; // as soon as this analysis will be added into centre manager -- this field should be initialised
         }
@@ -168,13 +134,6 @@ public abstract class AbstractAnalysisDomainTreeManager extends AbstractDomainTr
 
         protected Class<?> managedType(final Class<?> root) {
             return parentCentreDomainTreeManager().getEnhancer().getManagedType(DynamicEntityClassLoader.getOriginalType(root));
-        }
-
-        protected void usedPropertiesChanged(final Class<?> root, final String property, final boolean check) {
-            final Class<?> managedType = managedType(root);
-            for (final IPropertyUsageListener listener : propertyUsageListeners.getListeners(IPropertyUsageListener.class)) {
-                listener.propertyStateChanged(managedType, property, check, null);
-            }
         }
 
         @Override
@@ -197,7 +156,7 @@ public abstract class AbstractAnalysisDomainTreeManager extends AbstractDomainTr
         }
 
         @Override
-        public synchronized List<String> checkedPropertiesMutable(final Class<?> rootPossiblyEnhanced) {
+        public List<String> checkedPropertiesMutable(final Class<?> rootPossiblyEnhanced) {
             // inject an enhanced type into method implementation
             return super.checkedPropertiesMutable(managedType(rootPossiblyEnhanced));
         }
@@ -222,168 +181,33 @@ public abstract class AbstractAnalysisDomainTreeManager extends AbstractDomainTr
             super.moveToTheEnd(managedType(root), what);
             return this;
         }
-
+        
         @Override
         public final boolean isUsed(final Class<?> root, final String property) {
             // inject an enhanced type into method implementation
-            final Class<?> managedType = managedType(root);
-
-            illegalUncheckedProperties(this, managedType, property, "It's illegal to ask whether the specified property [" + property
-                    + "] is 'used' if it is not 'checked' in type [" + managedType.getSimpleName() + "].");
-            return rootsListsOfUsedProperties.containsKey(managedType) && rootsListsOfUsedProperties.get(managedType).contains(property);
+            return super.isUsed(managedType(root), property);
         }
-
+        
         @Override
         public IUsageManager use(final Class<?> root, final String property, final boolean check) {
             // inject an enhanced type into method implementation
-            final Class<?> managedType = managedType(root);
-
-            final List<String> listOfUsedProperties = getAndInitUsedProperties(managedType, property);
-            if (check && !listOfUsedProperties.contains(property)) {
-                listOfUsedProperties.add(property);
-            } else if (!check) {
-                listOfUsedProperties.remove(property);
-            }
-            usedPropertiesChanged(root, property, check);
-            return this;
+            return super.use(managedType(root), property, check);
         }
-
-        @Override
-        public IUsageManager addPropertyUsageListener(final IPropertyUsageListener listener) {
-            removeEmptyPropertyUsageListeners();
-            propertyUsageListeners.add(IPropertyUsageListener.class, listener);
-            return this;
-        }
-
-        @Override
-        public IUsageManager addWeakPropertyUsageListener(final IPropertyUsageListener listener) {
-            removeEmptyPropertyUsageListeners();
-            propertyUsageListeners.add(IPropertyUsageListener.class, new WeakPropertyUsageListener(this, listener));
-            return this;
-        }
-
-        @Override
-        public IUsageManager removePropertyUsageListener(final IPropertyUsageListener listener) {
-            for (final IPropertyUsageListener obj : propertyUsageListeners.getListeners(IPropertyUsageListener.class)) {
-                if (listener == obj) {
-                    propertyUsageListeners.remove(IPropertyUsageListener.class, listener);
-                } else if (obj instanceof WeakPropertyUsageListener) {
-                    final IPropertyUsageListener weakRef = ((WeakPropertyUsageListener) obj).getRef();
-                    if (weakRef == listener || weakRef == null) {
-                        propertyUsageListeners.remove(IPropertyUsageListener.class, obj);
-                    }
-                }
-            }
-            return this;
-        }
-
-        private void removeEmptyPropertyUsageListeners() {
-            for (final IPropertyUsageListener obj : propertyUsageListeners.getListeners(IPropertyUsageListener.class)) {
-                if (obj instanceof WeakPropertyUsageListener && ((WeakPropertyUsageListener) obj).getRef() == null) {
-                    propertyUsageListeners.remove(IPropertyUsageListener.class, obj);
-                }
-            }
-        }
-
-        protected List<String> getAndInitUsedProperties(final Class<?> root, final String property) {
-            illegalUncheckedProperties(this, root, property, "It's illegal to use/unuse the specified property [" + property + "] if it is not 'checked' in type ["
-                    + root.getSimpleName() + "].");
-            if (!rootsListsOfUsedProperties.containsKey(root)) {
-                rootsListsOfUsedProperties.put(root, new ArrayList<String>());
-            }
-            return rootsListsOfUsedProperties.get(root);
-        }
-
+        
         @Override
         public final List<String> usedProperties(final Class<?> root) {
             // inject an enhanced type into method implementation
-            final Class<?> managedType = managedType(root);
-
-            final List<String> checkedProperties = checkedProperties(managedType);
-            final List<String> usedProperties = new ArrayList<String>();
-            for (final String property : checkedProperties) {
-                if (isUsed(managedType, property)) {
-                    usedProperties.add(property);
-                }
-            }
-            return usedProperties;
+            return super.usedProperties(managedType(root));
         }
-
-        @Override
-        public int hashCode() {
-            final int prime = 31;
-            int result = super.hashCode();
-            result = prime * result + (rootsListsOfUsedProperties == null ? 0 : rootsListsOfUsedProperties.hashCode());
-            return result;
-        }
-
-        @Override
-        public boolean equals(final Object obj) {
-            if (this == obj) {
-                return true;
-            }
-            if (!super.equals(obj)) {
-                return false;
-            }
-            if (getClass() != obj.getClass()) {
-                return false;
-            }
-            final AbstractAnalysisAddToDistributionTickManager other = (AbstractAnalysisAddToDistributionTickManager) obj;
-            if (rootsListsOfUsedProperties == null) {
-                if (other.rootsListsOfUsedProperties != null) {
-                    return false;
-                }
-            } else if (!rootsListsOfUsedProperties.equals(other.rootsListsOfUsedProperties)) {
-                return false;
-            }
-            return true;
-        }
-    }
-
-    private static class WeakPropertyOrderingListener implements IPropertyOrderingListener {
-
-        private final IOrderingManager oManager;
-        private final WeakReference<IPropertyOrderingListener> ref;
-
-        public WeakPropertyOrderingListener(final IOrderingManager oManager, final IPropertyOrderingListener listener) {
-            this.oManager = oManager;
-            this.ref = new WeakReference<IPropertyOrderingListener>(listener);
-        }
-
-        @Override
-        public void propertyStateChanged(final Class<?> root, final String property, final List<Pair<String, Ordering>> newOrderedProperties, final List<Pair<String, Ordering>> oldState) {
-            if (ref.get() != null) {
-                ref.get().propertyStateChanged(root, property, newOrderedProperties, oldState);
-            } else {
-                oManager.removePropertyOrderingListener(this);
-
-            }
-        }
-
-        public IPropertyOrderingListener getRef() {
-            return ref.get();
-        }
-
     }
 
     protected abstract static class AbstractAnalysisAddToAggregationTickManager extends TickManager implements IAbstractAnalysisAddToAggregationTickManager {
         private final EnhancementRootsMap<List<Pair<String, Ordering>>> rootsListsOfOrderings;
-        private final EnhancementRootsMap<List<String>> rootsListsOfUsedProperties;
-        private final transient EventListenerList propertyUsageListeners;
-        private final transient EventListenerList propertyOrderingListeners;
-
         private final transient ICentreDomainTreeManagerAndEnhancer parentCentreDomainTreeManager;
 
         @Override
         protected IAbstractAnalysisAddToAggregationTickRepresentation tr() {
             return (IAbstractAnalysisAddToAggregationTickRepresentation) super.tr();
-        }
-
-        protected void usedPropertiesChanged(final Class<?> root, final String property, final boolean check) {
-            final Class<?> managedType = managedType(root);
-            for (final IPropertyUsageListener listener : propertyUsageListeners.getListeners(IPropertyUsageListener.class)) {
-                listener.propertyStateChanged(managedType, property, check, null);
-            }
         }
 
         /**
@@ -393,9 +217,6 @@ public abstract class AbstractAnalysisDomainTreeManager extends AbstractDomainTr
         public AbstractAnalysisAddToAggregationTickManager() {
             super();
             rootsListsOfOrderings = createRootsMap();
-            rootsListsOfUsedProperties = createRootsMap();
-            propertyUsageListeners = new EventListenerList();
-            propertyOrderingListeners = new EventListenerList();
 
             parentCentreDomainTreeManager = null; // as soon as this analysis wiil be added into centre manager -- this field should be initialised
         }
@@ -428,7 +249,7 @@ public abstract class AbstractAnalysisDomainTreeManager extends AbstractDomainTr
         }
 
         @Override
-        public synchronized List<String> checkedPropertiesMutable(final Class<?> rootPossiblyEnhanced) {
+        public List<String> checkedPropertiesMutable(final Class<?> rootPossiblyEnhanced) {
             // inject an enhanced type into method implementation
             return super.checkedPropertiesMutable(managedType(rootPossiblyEnhanced));
         }
@@ -457,18 +278,14 @@ public abstract class AbstractAnalysisDomainTreeManager extends AbstractDomainTr
         @Override
         public final boolean isUsed(final Class<?> root, final String property) {
             // inject an enhanced type into method implementation
-            final Class<?> managedType = managedType(root);
-
-            illegalUncheckedProperties(this, managedType, property, "It's illegal to ask whether the specified property [" + property
-                    + "] is 'used' if it is not 'checked' in type [" + managedType.getSimpleName() + "].");
-            return rootsListsOfUsedProperties.containsKey(managedType) && rootsListsOfUsedProperties.get(managedType).contains(property);
+            return super.isUsed(managedType(root), property);
         }
-
+        
         @Override
         public IUsageManager use(final Class<?> root, final String property, final boolean check) {
             // inject an enhanced type into method implementation
             final Class<?> managedType = managedType(root);
-
+            
             final List<String> listOfUsedProperties = getAndInitUsedProperties(managedType, property);
             if (check && !listOfUsedProperties.contains(property)) {
                 listOfUsedProperties.add(property);
@@ -480,25 +297,15 @@ public abstract class AbstractAnalysisDomainTreeManager extends AbstractDomainTr
                 // perform actual removal
                 listOfUsedProperties.remove(property);
             }
-            usedPropertiesChanged(root, property, check);
             return this;
         }
-
+        
         @Override
         public final List<String> usedProperties(final Class<?> root) {
             // inject an enhanced type into method implementation
-            final Class<?> managedType = managedType(root);
-
-            final List<String> checkedProperties = checkedProperties(managedType);
-            final List<String> usedProperties = new ArrayList<String>();
-            for (final String property : checkedProperties) {
-                if (isUsed(managedType, property)) {
-                    usedProperties.add(property);
-                }
-            }
-            return usedProperties;
+            return super.usedProperties(managedType(root));
         }
-
+        
         protected static boolean isOrdered(final String property, final List<Pair<String, Ordering>> orderedProperties) {
             for (final Pair<String, Ordering> pair : orderedProperties) {
                 if (property.equals(pair.getKey())) {
@@ -506,52 +313,6 @@ public abstract class AbstractAnalysisDomainTreeManager extends AbstractDomainTr
                 }
             }
             return false;
-        }
-
-        @Override
-        public IUsageManager addPropertyUsageListener(final IPropertyUsageListener listener) {
-            removeEmptyPropertyUsageListeners();
-            propertyUsageListeners.add(IPropertyUsageListener.class, listener);
-            return this;
-        }
-
-        @Override
-        public IUsageManager addWeakPropertyUsageListener(final IPropertyUsageListener listener) {
-            removeEmptyPropertyUsageListeners();
-            propertyUsageListeners.add(IPropertyUsageListener.class, new WeakPropertyUsageListener(this, listener));
-            return this;
-        }
-
-        @Override
-        public IUsageManager removePropertyUsageListener(final IPropertyUsageListener listener) {
-            for (final IPropertyUsageListener obj : propertyUsageListeners.getListeners(IPropertyUsageListener.class)) {
-                if (listener == obj) {
-                    propertyUsageListeners.remove(IPropertyUsageListener.class, listener);
-                } else if (obj instanceof WeakPropertyUsageListener) {
-                    final IPropertyUsageListener weakRef = ((WeakPropertyUsageListener) obj).getRef();
-                    if (weakRef == listener || weakRef == null) {
-                        propertyUsageListeners.remove(IPropertyUsageListener.class, obj);
-                    }
-                }
-            }
-            return this;
-        }
-
-        private void removeEmptyPropertyUsageListeners() {
-            for (final IPropertyUsageListener obj : propertyUsageListeners.getListeners(IPropertyUsageListener.class)) {
-                if (obj instanceof WeakPropertyUsageListener && ((WeakPropertyUsageListener) obj).getRef() == null) {
-                    propertyUsageListeners.remove(IPropertyUsageListener.class, obj);
-                }
-            }
-        }
-
-        protected List<String> getAndInitUsedProperties(final Class<?> root, final String property) {
-            illegalUncheckedProperties(this, root, property, "It's illegal to use/unuse the specified property [" + property + "] if it is not 'checked' in type ["
-                    + root.getSimpleName() + "].");
-            if (!rootsListsOfUsedProperties.containsKey(root)) {
-                rootsListsOfUsedProperties.put(root, new ArrayList<String>());
-            }
-            return rootsListsOfUsedProperties.get(root);
         }
 
         @Override
@@ -585,52 +346,12 @@ public abstract class AbstractAnalysisDomainTreeManager extends AbstractDomainTr
                     } else { // Ordering.DESCENDING
                         rootsListsOfOrderings.get(managedType).remove(index);
                     }
-                    for (final IPropertyOrderingListener listener : propertyOrderingListeners.getListeners(IPropertyOrderingListener.class)) {
-                        listener.propertyStateChanged(managedType, property, new ArrayList<Pair<String, Ordering>>(orderedProperties(managedType)), null);
-                    }
                     return this;
                 }
             } // if the property does not have an Ordering assigned -- put a ASC ordering to it (into the end of the list)
             rootsListsOfOrderings.get(managedType).add(new Pair<String, Ordering>(property, Ordering.ASCENDING));
 
-            for (final IPropertyOrderingListener listener : propertyOrderingListeners.getListeners(IPropertyOrderingListener.class)) {
-                listener.propertyStateChanged(managedType, property, new ArrayList<Pair<String, Ordering>>(orderedProperties(managedType)), null);
-            }
             return this;
-        }
-
-        @Override
-        public void addPropertyOrderingListener(final IPropertyOrderingListener listener) {
-            removeEmptyPropertyOrderingListener();
-            propertyOrderingListeners.add(IPropertyOrderingListener.class, listener);
-        }
-
-        @Override
-        public void addWeakPropertyOrderingListener(final IPropertyOrderingListener listener) {
-            removeEmptyPropertyOrderingListener();
-            propertyOrderingListeners.add(IPropertyOrderingListener.class, new WeakPropertyOrderingListener(this, listener));
-        }
-
-        @Override
-        public void removePropertyOrderingListener(final IPropertyOrderingListener listener) {
-            for (final IPropertyOrderingListener obj : propertyOrderingListeners.getListeners(IPropertyOrderingListener.class)) {
-                if (listener == obj) {
-                    propertyOrderingListeners.remove(IPropertyOrderingListener.class, listener);
-                } else if (obj instanceof WeakPropertyOrderingListener) {
-                    final IPropertyOrderingListener weakRef = ((WeakPropertyOrderingListener) obj).getRef();
-                    if (weakRef == listener || weakRef == null) {
-                        propertyOrderingListeners.remove(IPropertyOrderingListener.class, obj);
-                    }
-                }
-            }
-        }
-
-        private void removeEmptyPropertyOrderingListener() {
-            for (final IPropertyOrderingListener obj : propertyOrderingListeners.getListeners(IPropertyOrderingListener.class)) {
-                if (obj instanceof WeakPropertyOrderingListener && ((WeakPropertyOrderingListener) obj).getRef() == null) {
-                    propertyOrderingListeners.remove(IPropertyOrderingListener.class, obj);
-                }
-            }
         }
 
         @Override
@@ -638,7 +359,6 @@ public abstract class AbstractAnalysisDomainTreeManager extends AbstractDomainTr
             final int prime = 31;
             int result = super.hashCode();
             result = prime * result + (rootsListsOfOrderings == null ? 0 : rootsListsOfOrderings.hashCode());
-            result = prime * result + (rootsListsOfUsedProperties == null ? 0 : rootsListsOfUsedProperties.hashCode());
             return result;
         }
 
@@ -661,13 +381,6 @@ public abstract class AbstractAnalysisDomainTreeManager extends AbstractDomainTr
             } else if (!rootsListsOfOrderings.equals(other.rootsListsOfOrderings)) {
                 return false;
             }
-            if (rootsListsOfUsedProperties == null) {
-                if (other.rootsListsOfUsedProperties != null) {
-                    return false;
-                }
-            } else if (!rootsListsOfUsedProperties.equals(other.rootsListsOfUsedProperties)) {
-                return false;
-            }
             return true;
         }
     }
@@ -679,8 +392,8 @@ public abstract class AbstractAnalysisDomainTreeManager extends AbstractDomainTr
      * 
      */
     protected abstract static class AbstractAnalysisDomainTreeManagerSerialiser<T extends AbstractAnalysisDomainTreeManager> extends AbstractDomainTreeManagerSerialiser<T> {
-        public AbstractAnalysisDomainTreeManagerSerialiser(final ISerialiser kryo) {
-            super(kryo);
+        public AbstractAnalysisDomainTreeManagerSerialiser(final ISerialiser serialiser) {
+            super(serialiser);
         }
 
         @Override

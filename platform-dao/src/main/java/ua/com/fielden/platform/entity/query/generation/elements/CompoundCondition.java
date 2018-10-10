@@ -1,14 +1,10 @@
 package ua.com.fielden.platform.entity.query.generation.elements;
 
-import ua.com.fielden.platform.entity.query.fluent.LogicalOperator;
+import ua.com.fielden.platform.entity.query.fluent.enums.LogicalOperator;
 
 public class CompoundCondition {
     private final LogicalOperator logicalOperator;
     private final ICondition condition;
-
-    //    public String sql() {
-    //	return " " + logicalOperator + " " + condition.sql();
-    //    }
 
     public CompoundCondition(final LogicalOperator logicalOperator, final ICondition condition) {
         this.logicalOperator = logicalOperator;

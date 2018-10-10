@@ -1,22 +1,29 @@
 package ua.com.fielden.platform.persistence.composite;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+
 import org.hibernate.Session;
+import org.junit.Test;
 
 import ua.com.fielden.platform.entity.DynamicEntityKey;
 import ua.com.fielden.platform.persistence.types.EntityWithMoney;
-import ua.com.fielden.platform.test.DbDrivenTestCase;
+import ua.com.fielden.platform.test_config.AbstractDaoTestCase;
 import ua.com.fielden.platform.types.Money;
 
 /**
- * Implements test cases for using entity with composite key, which includes testing of basic functionality such as method equals, as well as Hibernate interaction.
+ * Implements test cases for using entity with composite key, which includes testing of basic functionality such as method equals, as well as DB interaction.
  *
- * @author 01es
+ * @author TG Team
  *
  */
-public class DynamicCompositeKeyPersistenceTestCase extends DbDrivenTestCase {
-    /**
-     * Tests correctness of methods equals, hashCode and compareTo
-     */
+public class DynamicCompositeKeyPersistenceTestCase extends AbstractDaoTestCase {
+
+    private static final String keyPartOne = "key-1-1";
+
+    @Test
     public void testThatCommonMethodsAreCorrectlyImplemented() {
         final String keyPartOne = "key-part-one";
         final EntityWithMoney keyPartTwo = new EntityWithMoney("key", "desc", new Money("200.00"));
@@ -32,29 +39,22 @@ public class DynamicCompositeKeyPersistenceTestCase extends DbDrivenTestCase {
         assertTrue("Incorrect comparison result", entity.compareTo(entity3) < 0);
     }
 
-    /**
-     * Tests Hibernate interaction.
-     */
-    public void testThatEntityIsCorrectlyRetrievedFromDb() {
-        final String keyPartOne = "key-1-1";
-        final EntityWithMoney keyPartTwo = new EntityWithMoney("key1", "desc", new Money("20.00"));
-
-        final Session session = hibernateUtil.getSessionFactory().getCurrentSession();
-        final EntityWithDynamicCompositeKey result = (EntityWithDynamicCompositeKey) session.load(EntityWithDynamicCompositeKey.class, 1L);
-
-        System.out.println(keyPartOne.getClass() + "\t'" + keyPartOne + "'");
-        System.out.println(result.getKeyPartOne().getClass() + "\t'" + result.getKeyPartOne() + "'");
-
-        if (!keyPartOne.equals(result.getKeyPartOne())) {
-            fail("Incorrect part one of the key.");
-        }
-        if (!keyPartOne.equals(result.getKeyPartOne())) {
-            fail("Incorrect part two of the key.");
-        }
+    @Test
+    public void key_members_are_corectly_populated_upon_retrieval_of_entities_with_a_composite_key() {
+        final EntityWithMoney ewm = co(EntityWithMoney.class).findByKey("key1");
+        assertNotNull(ewm);
+        final EntityWithDynamicCompositeKey result = co(EntityWithDynamicCompositeKey.class).findByKey(keyPartOne, ewm);
+        assertNotNull(result);
+        
+        assertEquals(keyPartOne, result.getKeyPartOne());
+        assertEquals(ewm, result.getKeyPartTwo());
     }
 
     @Override
-    protected String[] getDataSetPathsForInsert() {
-        return new String[] { "src/test/resources/data-files/entity-with-dynamic-composite-key-test-case.flat.xml" };
+    protected void populateDomain() {
+        super.populateDomain();
+        
+        final EntityWithMoney ewm = save(new_(EntityWithMoney.class, "key1", "desc").setMoney(Money.of("20.00")));
+        save(new_composite(EntityWithDynamicCompositeKey.class, keyPartOne, ewm));
     }
 }

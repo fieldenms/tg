@@ -1,0 +1,11 @@
+<script>if (typeof module === 'object') {window.module = module; module = undefined;}</script>
+<script src="/resources/d3/d3.min.js"></script>
+
+<script>
+    (function () {
+        SVGElement.prototype.getTransformToElement = SVGElement.prototype.getTransformToElement || function (elem) {
+            return elem.getScreenCTM().inverse().multiply(this.getScreenCTM());
+        };
+    })()
+</script>
+<script>if (window.module) module = window.module;</script>

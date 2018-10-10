@@ -86,7 +86,7 @@ public class TypeEnforcementForMinusOperationTest {
         try {
             new AstWalker(ast, visitor).walk();
         } catch (final UnsupportedTypeException ex) {
-            assertEquals("Incorrect error message.", "Operands of string type are not applicable to operation " + EgTokenCategory.MINUS, ex.getMessage());
+            assertEquals("Incorrect error message.", "Operands of String type are not applicable to operation " + EgTokenCategory.MINUS, ex.getMessage());
         }
     }
 
@@ -284,7 +284,7 @@ public class TypeEnforcementForMinusOperationTest {
         try {
             new AstWalker(ast, visitor).walk();
         } catch (final UnsupportedTypeException ex) {
-            assertEquals("Incorrect error message.", "Operands of string type are not applicable to operation " + EgTokenCategory.MINUS, ex.getMessage());
+            assertEquals("Incorrect error message.", "Operands of String type are not applicable to operation " + EgTokenCategory.MINUS, ex.getMessage());
         }
     }
 
@@ -297,7 +297,7 @@ public class TypeEnforcementForMinusOperationTest {
         try {
             new AstWalker(ast, visitor).walk();
         } catch (final UnsupportedTypeException ex) {
-            assertEquals("Incorrect error message.", "Operands of string type are not applicable to operation " + EgTokenCategory.MINUS, ex.getMessage());
+            assertEquals("Incorrect error message.", "Operands of String type are not applicable to operation " + EgTokenCategory.MINUS, ex.getMessage());
         }
     }
 

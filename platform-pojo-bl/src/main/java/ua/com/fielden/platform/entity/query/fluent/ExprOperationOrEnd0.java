@@ -4,21 +4,30 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IExprOperand0;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IExprOperationOrEnd0;
 
-class ExprOperationOrEnd0<T, ET extends AbstractEntity<?>> extends AbstractExprOperationOrEnd<IExprOperand0<T, ET>, T, ET> implements IExprOperationOrEnd0<T, ET> {
-    T parent;
+abstract class ExprOperationOrEnd0<T, ET extends AbstractEntity<?>> //
+		extends ExprOperationOrEnd<IExprOperand0<T, ET>, T, ET> //
+		implements IExprOperationOrEnd0<T, ET> {
 
-    ExprOperationOrEnd0(final Tokens queryTokens, final T parent) {
-        super(queryTokens);
-        this.parent = parent;
+    protected ExprOperationOrEnd0(final Tokens tokens) {
+        super(tokens);
     }
+    
+	protected abstract T nextForExprOperationOrEnd0(final Tokens tokens);
 
-    @Override
-    IExprOperand0<T, ET> getParent() {
-        return new ExprOperand0<T, ET>(getTokens(), parent);
-    }
+	@Override
+	protected IExprOperand0<T, ET> nextForArithmeticalOperator(final Tokens tokens) {
+		return new ExprOperand0<T, ET>(tokens) {
 
-    @Override
-    T getParent2() {
-        return parent;
-    }
+			@Override
+			protected T nextForExprOperand0(final Tokens tokens) {
+				return ExprOperationOrEnd0.this.nextForExprOperationOrEnd0(tokens);
+			}
+
+		};
+	}
+
+	@Override
+	protected T nextForExprOperationOrEnd(final Tokens tokens) {
+		return nextForExprOperationOrEnd0(tokens);
+	}
 }

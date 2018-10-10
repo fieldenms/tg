@@ -51,7 +51,7 @@ public interface ICentreDomainTreeRepresentation extends IDomainTreeRepresentati
          * Gets a <b>default</b> <i>main</i> value of a criteria property. <br>
          * <br>
          * 
-         * This contract should not conflict with "excluded properties" contract. The conflict will produce an {@link IllegalArgumentException}.<br>
+         * This contract should not conflict with "excluded properties" contract. The conflict will produce an {@link DomainTreeException}.<br>
          * <br>
          * 
          * @param root
@@ -66,7 +66,7 @@ public interface ICentreDomainTreeRepresentation extends IDomainTreeRepresentati
          * Gets an <b>empty</b> <i>main</i> value of a criteria property. <br>
          * <br>
          * 
-         * This contract should not conflict with "excluded properties" contract. The conflict will produce an {@link IllegalArgumentException}.<br>
+         * This contract should not conflict with "excluded properties" contract. The conflict will produce an {@link DomainTreeException}.<br>
          * <br>
          * 
          * @param root
@@ -81,7 +81,7 @@ public interface ICentreDomainTreeRepresentation extends IDomainTreeRepresentati
          * Sets a <b>default</b> <i>main</i> value of a criteria property. <br>
          * <br>
          * 
-         * This action should not conflict with "excluded properties" contract. The conflict will produce an {@link IllegalArgumentException}.<br>
+         * This action should not conflict with "excluded properties" contract. The conflict will produce an {@link DomainTreeException}.<br>
          * <br>
          * 
          * @param root
@@ -98,9 +98,9 @@ public interface ICentreDomainTreeRepresentation extends IDomainTreeRepresentati
          * Gets a <b>default</b> <i>secondary</i> value of a criteria property. <br>
          * <br>
          * 
-         * This contract should not conflict with "excluded properties" contract. The conflict will produce an {@link IllegalArgumentException}.<br>
+         * This contract should not conflict with "excluded properties" contract. The conflict will produce an {@link DomainTreeException}.<br>
          * This contract is applicable only to <i>double editor (or boolean)</i> properties. These include date type, money type, number type etc. The conflict will produce an
-         * {@link IllegalArgumentException}.
+         * {@link DomainTreeException}.
          * 
          * @param root
          *            -- a root type that contains property.
@@ -114,9 +114,9 @@ public interface ICentreDomainTreeRepresentation extends IDomainTreeRepresentati
          * Gets an <b>empty</b> <i>secondary</i> value of a criteria property. <br>
          * <br>
          * 
-         * This contract should not conflict with "excluded properties" contract. The conflict will produce an {@link IllegalArgumentException}.<br>
+         * This contract should not conflict with "excluded properties" contract. The conflict will produce an {@link DomainTreeException}.<br>
          * This contract is applicable only to <i>double editor (or boolean)</i> properties. These include date type, money type, number type etc. The conflict will produce an
-         * {@link IllegalArgumentException}.
+         * {@link DomainTreeException}.
          * 
          * @param root
          *            -- a root type that contains property.
@@ -130,9 +130,9 @@ public interface ICentreDomainTreeRepresentation extends IDomainTreeRepresentati
          * Sets a <b>default</b> <i>secondary</i> value of a criteria property. <br>
          * <br>
          * 
-         * This action should not conflict with "excluded properties" contract. The conflict will produce an {@link IllegalArgumentException}.<br>
+         * This action should not conflict with "excluded properties" contract. The conflict will produce an {@link DomainTreeException}.<br>
          * This action is applicable only to <i>double editor (or boolean)</i> properties. These include date type, money type, number type etc. The conflict will produce an
-         * {@link IllegalArgumentException}.
+         * {@link DomainTreeException}.
          * 
          * @param root
          *            -- a root type that contains property.

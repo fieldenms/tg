@@ -1,39 +1,41 @@
 package ua.com.fielden.platform.security.dao;
 
+import static ua.com.fielden.platform.companion.helper.KeyConditionBuilder.createQueryByKeyFor;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchAll;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.orderBy;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import com.google.inject.Inject;
+
 import ua.com.fielden.platform.dao.CommonEntityDao;
-import ua.com.fielden.platform.dao.ISecurityRoleAssociationDao;
+import ua.com.fielden.platform.dao.ISecurityRoleAssociation;
 import ua.com.fielden.platform.dao.annotations.SessionRequired;
+import ua.com.fielden.platform.entity.annotation.EntityType;
 import ua.com.fielden.platform.entity.query.IFilter;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.OrderingModel;
 import ua.com.fielden.platform.security.ISecurityToken;
 import ua.com.fielden.platform.security.user.SecurityRoleAssociation;
+import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.security.user.UserAndRoleAssociation;
 import ua.com.fielden.platform.security.user.UserRole;
-import ua.com.fielden.platform.swing.review.annotations.EntityType;
-
-import com.google.inject.Inject;
+import ua.com.fielden.platform.streaming.SequentialGroupingStream;
 
 /**
- * DbDriven implementation of the {@link ISecurityRoleAssociationDao}
+ * DbDriven implementation of the {@link ISecurityRoleAssociation}
  * 
  * @author TG Team
  * 
  */
 @EntityType(SecurityRoleAssociation.class)
-public class SecurityRoleAssociationDao extends CommonEntityDao<SecurityRoleAssociation> implements ISecurityRoleAssociationDao {
+public class SecurityRoleAssociationDao extends CommonEntityDao<SecurityRoleAssociation> implements ISecurityRoleAssociation {
 
     /**
      * Instantiates the {@link SecurityRoleAssociationDao}
@@ -74,15 +76,29 @@ public class SecurityRoleAssociationDao extends CommonEntityDao<SecurityRoleAsso
 
     @Override
     @SessionRequired
-    public void removeAssociationsFor(final Class<? extends ISecurityToken> securityToken) {
-        getSession().createQuery("delete from " + SecurityRoleAssociation.class.getName() + " where securityToken = '" + securityToken.getName() + "'").executeUpdate();
+    public int countActiveAssociations(final User user, final Class<? extends ISecurityToken> token) {
+        final EntityResultQueryModel<UserAndRoleAssociation> slaveModel = select(UserAndRoleAssociation.class)
+                .where()
+                .prop("user").eq().val(user)
+                .and().prop("userRole.active").eq().val(true) // filter out association with inactive roles
+                .and().prop("userRole.id").eq().prop("sra.role.id").model();
+        final EntityResultQueryModel<SecurityRoleAssociation> model = select(SecurityRoleAssociation.class).as("sra")
+                .where()
+                .prop("sra.securityToken").eq().val(token.getName())
+                .and().exists(slaveModel).model();
+        return count(model);
     }
-
+    
     @Override
     @SessionRequired
-    public int countAssociations(final String username, final Class<? extends ISecurityToken> token) {
-        final EntityResultQueryModel<UserAndRoleAssociation> slaveModel = select(UserAndRoleAssociation.class).where().prop("user.key").eq().val(username).and().prop("userRole.id").eq().prop("sra.role.id").model();
-        final EntityResultQueryModel<SecurityRoleAssociation> model = select(SecurityRoleAssociation.class).as("sra").where().prop("sra.securityToken").eq().val(token.getName()).and().exists(slaveModel).model();
-        return count(model, Collections.<String, Object> emptyMap());
+    public void removeAssociations(final Set<SecurityRoleAssociation> associations) {
+        SequentialGroupingStream.stream(associations.stream(), (assoc, group) -> group.size() < 1000)
+        .forEach(group -> createQueryByKeyFor(getDbVersion(), getEntityType(), getKeyType(), group).map(query -> batchDelete(query)));
+    }
+    
+    @Override
+    @SessionRequired
+    public int batchDelete(final EntityResultQueryModel<SecurityRoleAssociation> model) {
+        return defaultBatchDelete(model);
     }
 }

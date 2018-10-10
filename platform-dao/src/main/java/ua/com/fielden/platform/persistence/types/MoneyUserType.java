@@ -7,8 +7,9 @@ import java.sql.SQLException;
 import java.util.Currency;
 import java.util.Map;
 
-import org.hibernate.Hibernate;
-import org.hibernate.engine.SessionImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.type.BigDecimalType;
+import org.hibernate.type.CurrencyType;
 import org.hibernate.type.Type;
 
 import ua.com.fielden.platform.types.Money;
@@ -23,11 +24,13 @@ import ua.com.fielden.platform.types.markers.IMoneyUserType;
  */
 public class MoneyUserType extends AbstractCompositeUserType implements IMoneyUserType {
 
+    @Override
     public Class<Money> returnedClass() {
         return Money.class;
     }
 
-    public Object nullSafeGet(final ResultSet resultSet, final String[] names, final SessionImplementor session, final Object owner) throws SQLException {
+    @Override
+    public Object nullSafeGet(final ResultSet resultSet, final String[] names, final SharedSessionContractImplementor session, final Object owner) throws SQLException {
         /*
          *  It is very important to call resultSet.getXXX before checking resultSet.wasNull(). Please refer {@link ResultSet#wasNull()} for more details.
          */
@@ -47,10 +50,12 @@ public class MoneyUserType extends AbstractCompositeUserType implements IMoneyUs
         return new Money((BigDecimal) arguments.get("amount"), (Currency) arguments.get("currency"));
     }
 
-    public void nullSafeSet(final PreparedStatement statement, final Object value, final int index, final SessionImplementor session) throws SQLException {
+    @Override
+    public void nullSafeSet(final PreparedStatement statement, final Object value, final int index, final SharedSessionContractImplementor session) throws SQLException {
         if (value == null) {
-            statement.setNull(index, Hibernate.BIG_DECIMAL.sqlType());
-            statement.setNull(index + 1, Hibernate.CURRENCY.sqlType());
+            
+            statement.setNull(index, BigDecimalType.INSTANCE.sqlType());
+            statement.setNull(index + 1, CurrencyType.INSTANCE.sqlType());
         } else {
             final Money amount = (Money) value;
             final String currencyCode = amount.getCurrency().getCurrencyCode();
@@ -59,14 +64,17 @@ public class MoneyUserType extends AbstractCompositeUserType implements IMoneyUs
         }
     }
 
+    @Override
     public String[] getPropertyNames() {
         return new String[] { "amount", "currency" };
     }
 
+    @Override
     public Type[] getPropertyTypes() {
-        return new Type[] { Hibernate.BIG_DECIMAL, Hibernate.CURRENCY };
+        return new Type[] { BigDecimalType.INSTANCE, CurrencyType.INSTANCE };
     }
 
+    @Override
     public Object getPropertyValue(final Object component, final int property) {
         final Money monetaryAmount = (Money) component;
         if (property == 0) {

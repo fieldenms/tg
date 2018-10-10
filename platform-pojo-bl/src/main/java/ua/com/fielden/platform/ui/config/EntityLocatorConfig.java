@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.ui.config;
 
 import ua.com.fielden.platform.entity.DynamicEntityKey;
+import ua.com.fielden.platform.entity.annotation.CompanionObject;
 import ua.com.fielden.platform.entity.annotation.CompositeKeyMember;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.KeyTitle;
@@ -9,26 +10,25 @@ import ua.com.fielden.platform.entity.annotation.MapEntityTo;
 import ua.com.fielden.platform.entity.annotation.MapTo;
 import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.entity.annotation.Title;
-import ua.com.fielden.platform.entity.validation.annotation.CompanionObject;
-import ua.com.fielden.platform.entity.validation.annotation.EntityExists;
-import ua.com.fielden.platform.entity.validation.annotation.NotNull;
-import ua.com.fielden.platform.error.Result;
+import ua.com.fielden.platform.entity.annotation.mutator.BeforeChange;
+import ua.com.fielden.platform.entity.annotation.mutator.Handler;
+import ua.com.fielden.platform.menu.validators.UserAsConfigurationOwnerValidator;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.security.user.User;
-import ua.com.fielden.platform.ui.config.api.IEntityLocatorConfigController;
+import ua.com.fielden.platform.ui.config.api.IEntityLocatorConfig;
 
 /**
  * This is a class to persist configuration of an individual entity locator.
  * <p>
  * Property <code>key</code> should contain a string representation of a corresponding locator configuration class. The Class type could not be used as a key type because it is not
  * Comparable.
- * 
+ *
  * @author TG Team
- * 
+ *
  */
 @KeyType(DynamicEntityKey.class)
 @KeyTitle("Entity locator configuration")
-@CompanionObject(IEntityLocatorConfigController.class)
+@CompanionObject(IEntityLocatorConfig.class)
 @MapEntityTo("ENTITY_LOCATOR_CONFIG")
 public class EntityLocatorConfig extends AbstractConfiguration<DynamicEntityKey> {
     private static final long serialVersionUID = 1L;
@@ -37,6 +37,7 @@ public class EntityLocatorConfig extends AbstractConfiguration<DynamicEntityKey>
     @CompositeKeyMember(1)
     @Title(value = "User", desc = "Application user owning this configuration.")
     @MapTo("ID_CRAFT")
+    @BeforeChange(@Handler(UserAsConfigurationOwnerValidator.class))
     private User owner;
 
     @IsProperty
@@ -45,13 +46,9 @@ public class EntityLocatorConfig extends AbstractConfiguration<DynamicEntityKey>
     @MapTo("LOCATOR_TYPE")
     private String locatorType;
 
-    protected EntityLocatorConfig() {
-        setKey(new DynamicEntityKey(this));
-    }
-
     /**
      * A helper setter to convert entity locator to the string value.
-     * 
+     *
      * @param masterModelType
      */
     public void setLocatorModelType(final Class<?> masterModelType) {
@@ -60,7 +57,7 @@ public class EntityLocatorConfig extends AbstractConfiguration<DynamicEntityKey>
 
     /**
      * A helper getter to obtain entity locator type from string value.
-     * 
+     *
      * @return
      */
     public Class<?> getLocatorModelType() {
@@ -76,12 +73,7 @@ public class EntityLocatorConfig extends AbstractConfiguration<DynamicEntityKey>
     }
 
     @Observable
-    @NotNull
-    @EntityExists(User.class)
     public void setOwner(final User owner) {
-        if (owner != null && !owner.isBase()) {
-            throw new Result(this, new IllegalArgumentException("Only base users are allowed to be used for a base configuration."));
-        }
         this.owner = owner;
     }
 
@@ -90,7 +82,6 @@ public class EntityLocatorConfig extends AbstractConfiguration<DynamicEntityKey>
     }
 
     @Observable
-    @NotNull
     public void setLocatorType(final String locatorType) {
         this.locatorType = locatorType;
     }

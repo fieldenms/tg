@@ -1,15 +1,17 @@
 package ua.com.fielden.platform.persistence;
 
+import static java.lang.String.format;
+
 import java.io.Serializable;
 
 import org.apache.log4j.Logger;
 import org.hibernate.EmptyInterceptor;
 import org.hibernate.EntityMode;
-import org.hibernate.type.Type;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.error.Result;
+import ua.com.fielden.platform.keygen.KeyNumber;
 
 /**
  * This is a thread-safe implementation of the global Hibernate intercepter for correct handling of entities enhanced with Guice(CGLIB) method intercepter.
@@ -19,13 +21,9 @@ import ua.com.fielden.platform.error.Result;
 public class ProxyInterceptor extends EmptyInterceptor {
     private static final long serialVersionUID = 1L;
 
-    private Logger logger = Logger.getLogger(this.getClass());
+    private static final Logger LOGGER = Logger.getLogger(ProxyInterceptor.class);
 
-    private EntityFactory factory;
-
-    public ProxyInterceptor() {
-
-    }
+    private transient EntityFactory factory;
 
     public void setFactory(final EntityFactory factory) {
         this.factory = factory;
@@ -47,12 +45,17 @@ public class ProxyInterceptor extends EmptyInterceptor {
      */
     @Override
     public Object instantiate(final String entityName, final EntityMode entityMode, final Serializable id) {
-        logger.info("instantiating: " + entityName + " for id = " + id);
-        logger.info("instantiating using factory.newEntity(...)");
+        LOGGER.debug(format("instantiating: %s for id = %s", entityName, id));
         try {
-            return factory.newEntity((Class<AbstractEntity<?>>) Class.forName(entityName), (Long) id);
+            final Class<AbstractEntity<?>> entityType = (Class<AbstractEntity<?>>) Class.forName(entityName);
+            // KeyNumber relies on being loaded via a Hibernate session with a lock option (refer KeyNumberDao for more details)
+            if (KeyNumber.class.isAssignableFrom(entityType)) {
+                return factory.newEntity(entityType, (Long) id);
+            } else {
+                return EntityFactory.newPlainEntity(entityType, (Long) id);
+            }
         } catch (final ClassNotFoundException ex) {
-            ex.printStackTrace();
+            LOGGER.fatal(ex);
             throw Result.failure(ex);
         }
     }

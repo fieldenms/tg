@@ -3,6 +3,8 @@ package ua.com.fielden.platform.algorithm.bfs;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.commons.lang.StringUtils;
+
 import ua.com.fielden.platform.algorithm.search.ITreeNode;
 
 /**
@@ -20,6 +22,9 @@ public class TreeNode implements ITreeNode<String> {
     private int visits = 0;
 
     public TreeNode(final String content) {
+        if (content == null) {
+            throw new IllegalArgumentException("The content argument cannot be null");
+        }
         this.state = content;
     }
 
@@ -49,7 +54,15 @@ public class TreeNode implements ITreeNode<String> {
 
     @Override
     public boolean equals(final Object obj) {
-        return state.equals(obj);
+        if (this == obj) {
+            return true;
+        }
+        if (!(obj instanceof TreeNode)) {
+            return false;
+        }
+        
+        final TreeNode that = (TreeNode) obj;
+        return state.equals(that.state);
     }
 
     public int visits() {

@@ -15,16 +15,15 @@ import ua.com.fielden.platform.dao.DomainMetadata;
 import ua.com.fielden.platform.dao.ISessionEnabled;
 import ua.com.fielden.platform.dao.annotations.SessionRequired;
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.annotation.MapEntityTo;
-import ua.com.fielden.platform.entity.annotation.Proxy;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.ioc.EntityModule;
 import ua.com.fielden.platform.entity.meta.DomainMetaPropertyConfig;
+import ua.com.fielden.platform.entity.proxy.IIdOnlyProxiedEntityTypeCache;
+import ua.com.fielden.platform.entity.query.IdOnlyProxiedEntityTypeCache;
 import ua.com.fielden.platform.entity.validation.DomainValidationConfig;
+import ua.com.fielden.platform.ioc.session.SessionInterceptor;
 import ua.com.fielden.platform.persistence.HibernateUtil;
 import ua.com.fielden.platform.persistence.ProxyInterceptor;
-import ua.com.fielden.platform.reflection.AnnotationReflector;
-import ua.com.fielden.platform.security.user.User;
 
 /**
  * Guice injector module for platform-wide Hibernate related injections such as transaction support and domain level validation configurations.
@@ -37,6 +36,7 @@ public abstract class TransactionalModule extends EntityModule {
     private final DomainValidationConfig domainValidationConfig = new DomainValidationConfig();
     private final DomainMetaPropertyConfig domainMetaPropertyConfig = new DomainMetaPropertyConfig();
     private final DomainMetadata domainMetadata;
+    private final IdOnlyProxiedEntityTypeCache idOnlyProxiedEntityTypeCache;
     private final ProxyInterceptor interceptor;
     private final HibernateUtil hibernateUtil;
     private final List<Class<? extends AbstractEntity<?>>> applicationEntityTypes;
@@ -49,40 +49,40 @@ public abstract class TransactionalModule extends EntityModule {
      * @param mappingExtractor
      * @throws Exception
      */
-    public TransactionalModule(final Properties props, final Map<Class, Class> defaultHibernateTypes, final List<Class<? extends AbstractEntity<?>>> applicationEntityTypes)
-            throws Exception {
+    public TransactionalModule(
+            final Properties props, 
+            final Map<Class, Class> defaultHibernateTypes, 
+            final List<Class<? extends AbstractEntity<?>>> applicationEntityTypes) {
+
         final HibernateConfigurationFactory hcf = new HibernateConfigurationFactory(//
                 props, //
                 defaultHibernateTypes, //
-                applicationEntityTypes,//
-                getUserMapTo());
+                applicationEntityTypes);
+        
         final Configuration cfg = hcf.build();
+
         interceptor = new ProxyInterceptor();
         hibernateUtil = new HibernateUtil(interceptor, cfg);
 
         this.sessionFactory = hibernateUtil.getSessionFactory();
         this.domainMetadata = hcf.getDomainMetadata();
+        this.idOnlyProxiedEntityTypeCache = hcf.getIdOnlyProxiedEntityTypeCache();
         this.applicationEntityTypes = applicationEntityTypes;
+        
     }
 
     protected void initHibernateConfig(final EntityFactory factory) {
         interceptor.setFactory(factory);
     }
 
-    /**
-     * Method that can be overridden in order to provide an alternative to the default table mapping for type {@link User}.
-     */
-    protected MapEntityTo getUserMapTo() {
-        return AnnotationReflector.getAnnotation(User.class, MapEntityTo.class);
-    }
-
-    public TransactionalModule(final SessionFactory sessionFactory, final DomainMetadata domainMetadata) {
+    public TransactionalModule(final SessionFactory sessionFactory, final DomainMetadata domainMetadata, final IdOnlyProxiedEntityTypeCache idOnlyProxiedEntityTypeCache) {
         interceptor = null;
         hibernateUtil = null;
         applicationEntityTypes = null;
 
         this.sessionFactory = sessionFactory;
         this.domainMetadata = domainMetadata;
+        this.idOnlyProxiedEntityTypeCache = idOnlyProxiedEntityTypeCache;
     }
 
     @Override
@@ -92,6 +92,12 @@ public abstract class TransactionalModule extends EntityModule {
         if (domainMetadata != null) {
             bind(DomainMetadata.class).toInstance(domainMetadata);
         }
+
+        if (idOnlyProxiedEntityTypeCache != null) {
+            bind(IdOnlyProxiedEntityTypeCache.class).toInstance(idOnlyProxiedEntityTypeCache);
+            bind(IIdOnlyProxiedEntityTypeCache.class).toInstance(idOnlyProxiedEntityTypeCache);
+        }
+        
         // hibernate util
         if (hibernateUtil != null) {
             bind(HibernateUtil.class).toInstance(hibernateUtil);
@@ -101,12 +107,6 @@ public abstract class TransactionalModule extends EntityModule {
         bindInterceptor(subclassesOf(ISessionEnabled.class), // match only DAO derived from  CommonEntityDao
                 annotatedWith(SessionRequired.class), // having annotated methods
                 new SessionInterceptor(sessionFactory) // the intercepter
-        );
-        // TODO This an experimental support for proxied properties with lazy loading. It can also be used with proxied methods.
-        // bind PropertyProxyInterseptor
-        bindInterceptor(subclassesOf(AbstractEntity.class), // match only entity classes
-                annotatedWith(Proxy.class), // having annotated methods
-                new PropertyProxyInterceptor(sessionFactory) // the intercepter
         );
         // bind DomainValidationConfig
         bind(DomainValidationConfig.class).toInstance(domainValidationConfig);
@@ -124,6 +124,10 @@ public abstract class TransactionalModule extends EntityModule {
 
     public DomainMetadata getDomainMetadata() {
         return domainMetadata;
+    }
+    
+    public IdOnlyProxiedEntityTypeCache getIdOnlyProxiedEntityTypeCache() {
+        return idOnlyProxiedEntityTypeCache;
     }
 
     protected List<Class<? extends AbstractEntity<?>>> getApplicationEntityTypes() {

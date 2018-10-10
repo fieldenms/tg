@@ -1,0 +1,143 @@
+<!doctype html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <title>entity-centre basic tests</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+
+    <script src="/resources/polymer/webcomponentsjs/webcomponents-lite.js"></script>
+    <script src="/resources/polymer/web-component-tester/browser.js"></script>
+    <script src="/resources/polymer/test-fixture/test-fixture-mocha.js"></script>
+    <script src="/resources/polymer/iron-test-helpers/mock-interactions.js"></script>
+
+    <link rel="import" href="/resources/polymer/test-fixture/test-fixture.html">
+
+    <link rel="import" href="/app/tg-reflector.html">
+    <link rel="import" href="/centre_ui/ua.com.fielden.platform.ui.menu.sample.MiTgPersistentEntityWithProperties">
+    <link rel="import" href="/master_ui/ua.com.fielden.platform.sample.domain.TgPersistentEntityWithProperties">
+</head>
+
+<body>
+    <tg-reflector id="reflector"></tg-reflector>
+    <test-fixture id="CentreFixture">
+        <template>
+            <tg-MiTgPersistentEntityWithProperties-centre id="centre" uuid="some_centre_uuid_to_enable_closing_of_child_masters"></tg-MiTgPersistentEntityWithProperties-centre>
+        </template>
+    </test-fixture>
+
+    <script>
+        suite('entity centre', function () {
+            let centre, reflector;
+            
+            setup(function () {
+                centre = fixture('CentreFixture');
+                reflector = document.querySelector('#reflector');
+            });
+            
+            /**
+             * Returns promise instance that resolves after successful mutation of 'entity' (changes 'propName' property to 'propValue') and refreshing of its parent centre after mutation.
+             */
+            const _changeEntityAndRefreshParentCentre = function (propValue, entity, centre, propName) {
+                return new Promise(function (resolve, reject) {
+                    // retrieve primary action
+                    const editAction = Polymer.dom(centre.$.egi.$.primary_action_selector).getDistributedNodes()[0];
+                    // and provide it with appropriate context
+                    editAction.currentEntity = entity;
+                    
+                    const old_postRun = centre._postRun;
+                    
+                    centre._postRun = function (criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, summary, columnWidths, visibleColumnsWithOrder) {
+                        old_postRun(criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, summary, columnWidths, visibleColumnsWithOrder);
+                        
+                        centre._postRun = old_postRun;
+                        resolve('ok'); // resolve promise only if _postRun gracefully acomplishes
+                    };
+                    
+                    const replaceEmbeddedMasterFunctions = function (event) {
+                        const embeddedMaster = event.detail;
+                        embeddedMaster.postValidated = function () {};
+                        
+                        embeddedMaster.postRetrieved = function (embeddedEntity, bindingEntity, customObject) {
+                            const masterEditor = embeddedMaster.$['editor_4_' + propName];
+                            masterEditor._editingValue = '' + propValue; // change the value and commit
+                            masterEditor.commit();
+                            
+                            const saveButton = embeddedMaster.querySelector("tg-action[role='save']");
+                            saveButton._asyncRun(); // save changed entity
+                        };
+                    };
+                    
+                    if (editAction._masterReferenceForTesting) {
+                        const embeddedMaster = editAction._masterReferenceForTesting.$.loader.loadedElement;
+                        replaceEmbeddedMasterFunctions({ // if embedded master has been already loaded, there is a need to replace its custom functions
+                            detail: embeddedMaster
+                        });
+                        embeddedMaster.retrieve(); // and explicitly start retrieval again
+                    } else {
+                        const old_postActionSuccess = editAction.postActionSuccess;
+                        editAction.postActionSuccess = function (potentiallySavedOrNewEntity) {
+                            editAction._masterReferenceForTesting.addEventListener('after-load', replaceEmbeddedMasterFunctions); // if embedded master loading is performing now, there is a need to assign callbacks; retrieval will be actioned automatically
+                            editAction.postActionSuccess = old_postActionSuccess;
+                        }
+                    }
+                    
+                    editAction._run();
+                });
+            };
+            
+            /**
+             * Retrieves two-page result set of entities: first page contains 20 entities and second page contains one (key = 'DEMO20').
+             */
+            const _retrieveTwentyEntitiesPlusOne = function (centre) {
+                return centre.retrieve().then(function () {
+                    const keyEditor = centre.$.selection_criteria.$.editor_4_tgPersistentEntityWithProperties_;
+                    keyEditor._editingValue = 'DEMO0*, DEMO1*, DEMO20*';
+                    keyEditor.commit();
+                    return centre.run();
+                });
+            };
+            
+            test('updates totals after editing through EntityEditAction master', function (done) {
+                let entityForMutation, decimalMax;
+                
+                _retrieveTwentyEntitiesPlusOne(centre).then(function () {
+                    decimalMax = centre.$.egi.totals.get('max_of_dec');
+                    return _changeEntityAndRefreshParentCentre(decimalMax + 1, entityForMutation = centre.$.egi.entities[0], centre, 'bigDecimalProp'); // increase bigDecimalProp maximum by one
+                }).then(function () {
+                    assert.strictEqual(centre.$.egi.totals.get('max_of_dec'), decimalMax + 1); // assert refreshed EGI summary (aka totals)
+                }).then(function () {
+                    return _changeEntityAndRefreshParentCentre(decimalMax, entityForMutation, centre, 'bigDecimalProp'); // change value of entity to previously recorded maximum
+                }).then(function () {
+                    assert.strictEqual(centre.$.egi.totals.get('max_of_dec'), decimalMax); // assert EGI summary (aka totals) again after changing value of entity to previously recorded maximum
+                    done();
+                });
+            });
+            
+            test('gracefully turns back to first page if single entity from second page dissapeared after editing through EntityEditAction; then second page appears again after editing of the same entity back to its previous state', function (done) {
+                let entityForMutation;
+                
+                _retrieveTwentyEntitiesPlusOne(centre).then(function () {
+                    return centre.nextPage(); // go to the second page with single 'DEMO20' entity instance
+                }).then(function () {
+                    return _changeEntityAndRefreshParentCentre('DEMOXX', entityForMutation = centre.$.egi.entities[0], centre, 'key'); // change the key of the entity to be excluded from selection after centre refresh
+                }).then(function () {
+                    assert.strictEqual(centre.$.selection_criteria.pageCountUpdated, 1); // assert 1) the number of pages which should be one instead of two
+                    assert.strictEqual(centre.$.selection_criteria.pageNumberUpdated, 0); // and 2) presence on the first page after centre refresh has been actioned.
+                    assert.strictEqual(centre.$.egi.entities.length, 20);
+                }).then(function () {
+                    centre.enforcePostSaveRefresh = true; // this switch tells EGI to refresh centre even if 'entity being changed' is not present on current page, which is the case here
+                    return _changeEntityAndRefreshParentCentre('DEMO20', entityForMutation, centre, 'key'); // change key of the entity to previous value
+                }).then(function () {
+                    assert.strictEqual(centre.$.selection_criteria.pageCountUpdated, 2); // assert the number of pages which should be two for now
+                    assert.strictEqual(centre.$.selection_criteria.pageNumberUpdated, 0);
+                    assert.strictEqual(centre.$.egi.entities.length, 20);
+                    done();
+                });
+            });
+        });
+    </script>
+
+</body>
+
+</html>

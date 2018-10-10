@@ -1,14 +1,58 @@
 package ua.com.fielden.platform.entity.query.generation;
 
+import static ua.com.fielden.platform.utils.CollectionUtil.listOf;
+import static ua.com.fielden.platform.entity.query.fluent.enums.LogicalOperator.AND;
+import static ua.com.fielden.platform.entity.query.fluent.enums.LogicalOperator.OR;
+import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.ALL_OF_EQUERY_TOKENS;
+import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.ALL_OF_EXPR_TOKENS;
+import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.ALL_OF_IPARAMS;
+import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.ALL_OF_PARAMS;
+import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.ALL_OF_PROPS;
+import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.ALL_OF_VALUES;
+import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.ALL_OPERATOR;
+import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.ANY_OF_EQUERY_TOKENS;
+import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.ANY_OF_EXPR_TOKENS;
+import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.ANY_OF_IPARAMS;
+import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.ANY_OF_PARAMS;
+import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.ANY_OF_PROPS;
+import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.ANY_OF_VALUES;
+import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.ANY_OPERATOR;
+import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.COMPARISON_OPERATOR;
+import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.CONDITION;
+import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.EQUERY_TOKENS;
+import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.EXISTS_OPERATOR;
+import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.EXPR;
+import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.EXPR_TOKENS;
+import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.EXT_PROP;
+import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.FUNCTION_MODEL;
+import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.GROUPED_CONDITIONS;
+import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.ILIKE_OPERATOR;
+import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.IN_OPERATOR;
+import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.IPARAM;
+import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.IVAL;
+import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.LIKE_OPERATOR;
+import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.NULL_OPERATOR;
+import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.PARAM;
+import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.PROP;
+import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.SET_OF_EXPR_TOKENS;
+import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.SET_OF_IPARAMS;
+import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.SET_OF_PARAMS;
+import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.SET_OF_PROPS;
+import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.SET_OF_VALUES;
+import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.VAL;
+import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.ZERO_ARG_FUNCTION;
+import static ua.com.fielden.platform.entity.query.generation.elements.Quantifier.ALL;
+import static ua.com.fielden.platform.entity.query.generation.elements.Quantifier.ANY;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
-import ua.com.fielden.platform.entity.query.fluent.ComparisonOperator;
-import ua.com.fielden.platform.entity.query.fluent.LogicalOperator;
-import ua.com.fielden.platform.entity.query.fluent.TokenCategory;
+import ua.com.fielden.platform.entity.query.fluent.enums.ComparisonOperator;
+import ua.com.fielden.platform.entity.query.fluent.enums.LogicalOperator;
+import ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory;
 import ua.com.fielden.platform.entity.query.generation.elements.ComparisonTest;
 import ua.com.fielden.platform.entity.query.generation.elements.CompoundCondition;
 import ua.com.fielden.platform.entity.query.generation.elements.EntQuery;
@@ -25,65 +69,16 @@ import ua.com.fielden.platform.entity.query.generation.elements.Quantifier;
 import ua.com.fielden.platform.entity.query.generation.elements.SetTest;
 import ua.com.fielden.platform.entity.query.model.QueryModel;
 import ua.com.fielden.platform.utils.Pair;
-import static ua.com.fielden.platform.entity.query.fluent.LogicalOperator.AND;
-import static ua.com.fielden.platform.entity.query.fluent.LogicalOperator.OR;
-import static ua.com.fielden.platform.entity.query.fluent.TokenCategory.ALL_OF_EQUERY_TOKENS;
-import static ua.com.fielden.platform.entity.query.fluent.TokenCategory.ALL_OF_EXPR_TOKENS;
-import static ua.com.fielden.platform.entity.query.fluent.TokenCategory.ALL_OF_IPARAMS;
-import static ua.com.fielden.platform.entity.query.fluent.TokenCategory.ALL_OF_PARAMS;
-import static ua.com.fielden.platform.entity.query.fluent.TokenCategory.ALL_OF_PROPS;
-import static ua.com.fielden.platform.entity.query.fluent.TokenCategory.ALL_OF_VALUES;
-import static ua.com.fielden.platform.entity.query.fluent.TokenCategory.ALL_OPERATOR;
-import static ua.com.fielden.platform.entity.query.fluent.TokenCategory.ANY_OF_EQUERY_TOKENS;
-import static ua.com.fielden.platform.entity.query.fluent.TokenCategory.ANY_OF_EXPR_TOKENS;
-import static ua.com.fielden.platform.entity.query.fluent.TokenCategory.ANY_OF_IPARAMS;
-import static ua.com.fielden.platform.entity.query.fluent.TokenCategory.ANY_OF_PARAMS;
-import static ua.com.fielden.platform.entity.query.fluent.TokenCategory.ANY_OF_PROPS;
-import static ua.com.fielden.platform.entity.query.fluent.TokenCategory.ANY_OF_VALUES;
-import static ua.com.fielden.platform.entity.query.fluent.TokenCategory.ANY_OPERATOR;
-import static ua.com.fielden.platform.entity.query.fluent.TokenCategory.COMPARISON_OPERATOR;
-import static ua.com.fielden.platform.entity.query.fluent.TokenCategory.CONDITION;
-import static ua.com.fielden.platform.entity.query.fluent.TokenCategory.EQUERY_TOKENS;
-import static ua.com.fielden.platform.entity.query.fluent.TokenCategory.EXISTS_OPERATOR;
-import static ua.com.fielden.platform.entity.query.fluent.TokenCategory.EXPR;
-import static ua.com.fielden.platform.entity.query.fluent.TokenCategory.EXPR_TOKENS;
-import static ua.com.fielden.platform.entity.query.fluent.TokenCategory.EXT_PROP;
-import static ua.com.fielden.platform.entity.query.fluent.TokenCategory.FUNCTION_MODEL;
-import static ua.com.fielden.platform.entity.query.fluent.TokenCategory.GROUPED_CONDITIONS;
-import static ua.com.fielden.platform.entity.query.fluent.TokenCategory.ILIKE_OPERATOR;
-import static ua.com.fielden.platform.entity.query.fluent.TokenCategory.IN_OPERATOR;
-import static ua.com.fielden.platform.entity.query.fluent.TokenCategory.IPARAM;
-import static ua.com.fielden.platform.entity.query.fluent.TokenCategory.IVAL;
-import static ua.com.fielden.platform.entity.query.fluent.TokenCategory.LIKE_OPERATOR;
-import static ua.com.fielden.platform.entity.query.fluent.TokenCategory.NULL_OPERATOR;
-import static ua.com.fielden.platform.entity.query.fluent.TokenCategory.PARAM;
-import static ua.com.fielden.platform.entity.query.fluent.TokenCategory.PROP;
-import static ua.com.fielden.platform.entity.query.fluent.TokenCategory.SET_OF_EXPR_TOKENS;
-import static ua.com.fielden.platform.entity.query.fluent.TokenCategory.SET_OF_IPARAMS;
-import static ua.com.fielden.platform.entity.query.fluent.TokenCategory.SET_OF_PARAMS;
-import static ua.com.fielden.platform.entity.query.fluent.TokenCategory.SET_OF_PROPS;
-import static ua.com.fielden.platform.entity.query.fluent.TokenCategory.SET_OF_VALUES;
-import static ua.com.fielden.platform.entity.query.fluent.TokenCategory.VAL;
-import static ua.com.fielden.platform.entity.query.generation.elements.Quantifier.ALL;
-import static ua.com.fielden.platform.entity.query.generation.elements.Quantifier.ANY;
 
 public class ConditionBuilder extends AbstractTokensBuilder {
 
-    private final static List<TokenCategory> singleOperands = Arrays.asList(new TokenCategory[] { //
-    PROP, EXT_PROP, PARAM, IPARAM, //
-            VAL, IVAL, EXPR, FUNCTION_MODEL, EQUERY_TOKENS, EXPR_TOKENS });
-    private final static List<TokenCategory> mutlipleAnyOperands = Arrays.asList(new TokenCategory[] { //
-    ANY_OF_PROPS, ANY_OF_PARAMS, ANY_OF_IPARAMS, //
-            ANY_OF_VALUES, ANY_OF_EQUERY_TOKENS, ANY_OF_EXPR_TOKENS });
-    private final static List<TokenCategory> mutlipleAllOperands = Arrays.asList(new TokenCategory[] { //
-    ALL_OF_PROPS, ALL_OF_PARAMS, ALL_OF_IPARAMS, //
-            ALL_OF_VALUES, ALL_OF_EQUERY_TOKENS, ALL_OF_EXPR_TOKENS });
-    private final static List<TokenCategory> setOperands = Arrays.asList(new TokenCategory[] { //
-    SET_OF_PROPS, SET_OF_PARAMS, SET_OF_IPARAMS, //
-            SET_OF_VALUES, EQUERY_TOKENS, SET_OF_EXPR_TOKENS });
-    private final static List<TokenCategory> quantifiers = Arrays.asList(new TokenCategory[] { //
-    ANY_OPERATOR, ALL_OPERATOR });
-    private final static List<TokenCategory> mutlipleOperands = new ArrayList<TokenCategory>();
+    private final static List<TokenCategory> singleOperands = listOf(PROP, EXT_PROP, PARAM, IPARAM, VAL, IVAL, EXPR, FUNCTION_MODEL, ZERO_ARG_FUNCTION, EQUERY_TOKENS, EXPR_TOKENS);
+    private final static List<TokenCategory> mutlipleAnyOperands = listOf(ANY_OF_PROPS, ANY_OF_PARAMS, ANY_OF_IPARAMS, ANY_OF_VALUES, ANY_OF_EQUERY_TOKENS, ANY_OF_EXPR_TOKENS);
+    private final static List<TokenCategory> mutlipleAllOperands = listOf(ALL_OF_PROPS, ALL_OF_PARAMS, ALL_OF_IPARAMS, ALL_OF_VALUES, ALL_OF_EQUERY_TOKENS, ALL_OF_EXPR_TOKENS);
+    private final static List<TokenCategory> setOperands = listOf(SET_OF_PROPS, SET_OF_PARAMS, SET_OF_IPARAMS, SET_OF_VALUES, EQUERY_TOKENS, SET_OF_EXPR_TOKENS);
+    private final static List<TokenCategory> quantifiers = listOf(ANY_OPERATOR, ALL_OPERATOR);
+    private final static List<TokenCategory> mutlipleOperands = new ArrayList<>();
+    
     static {
         mutlipleOperands.addAll(mutlipleAllOperands);
         mutlipleOperands.addAll(mutlipleAnyOperands);
@@ -256,7 +251,7 @@ public class ConditionBuilder extends AbstractTokensBuilder {
         final List<ISingleOperand> operands = getModelForMultipleOperands(firstCat(), firstValue());
         final EntQuery secondOperand = (EntQuery) getModelForSingleOperand(thirdCat(), thirdValue());
         final Quantifier quantifier = ANY_OPERATOR == thirdCat() ? ANY : ALL;
-        final List<ICondition> conditions = new ArrayList<ICondition>();
+        final List<ICondition> conditions = new ArrayList<>();
         for (final ISingleOperand operand : operands) {
             conditions.add(new QuantifiedTest(operand, (ComparisonOperator) secondValue(), quantifier, secondOperand));
         }
@@ -270,7 +265,7 @@ public class ConditionBuilder extends AbstractTokensBuilder {
             return new GroupedConditions(false, null);
         } else {
             final ICondition firstCondition = iterator.next();
-            final List<CompoundCondition> otherConditions = new ArrayList<CompoundCondition>();
+            final List<CompoundCondition> otherConditions = new ArrayList<>();
             for (; iterator.hasNext();) {
                 final CompoundCondition subsequentCompoundCondition = new CompoundCondition(logicalOperator, iterator.next());
                 otherConditions.add(subsequentCompoundCondition);
@@ -286,7 +281,7 @@ public class ConditionBuilder extends AbstractTokensBuilder {
 
     private GroupedConditions getMultipleNullTest() {
         final List<ISingleOperand> operands = getModelForMultipleOperands(firstCat(), firstValue());
-        final List<ICondition> conditions = new ArrayList<ICondition>();
+        final List<ICondition> conditions = new ArrayList<>();
         for (final ISingleOperand operand : operands) {
             conditions.add(new NullTest(operand, (Boolean) secondValue(), getQueryBuilder().getDomainMetadataAnalyser()));
         }
@@ -303,9 +298,9 @@ public class ConditionBuilder extends AbstractTokensBuilder {
 
         final ComparisonOperator operator = (ComparisonOperator) secondValue();
 
-        final List<ICondition> outerConditions = new ArrayList<ICondition>();
+        final List<ICondition> outerConditions = new ArrayList<>();
         for (final ISingleOperand leftOperand : leftOperands) {
-            final List<ICondition> innerConditions = new ArrayList<ICondition>();
+            final List<ICondition> innerConditions = new ArrayList<>();
             for (final ISingleOperand rightOperand : rightOperands) {
                 innerConditions.add(new ComparisonTest(leftOperand, operator, rightOperand));
             }
@@ -320,7 +315,7 @@ public class ConditionBuilder extends AbstractTokensBuilder {
         final ISingleOperand singleOperand = getModelForSingleOperand(thirdCat(), thirdValue());
         final ComparisonOperator operator = (ComparisonOperator) secondValue();
 
-        final List<ICondition> conditions = new ArrayList<ICondition>();
+        final List<ICondition> conditions = new ArrayList<>();
         for (final ISingleOperand operand : operands) {
             conditions.add(new ComparisonTest(operand, operator, singleOperand));
         }
@@ -333,7 +328,7 @@ public class ConditionBuilder extends AbstractTokensBuilder {
         final ISingleOperand singleOperand = getModelForSingleOperand(firstCat(), firstValue());
         final ComparisonOperator operator = (ComparisonOperator) secondValue();
 
-        final List<ICondition> conditions = new ArrayList<ICondition>();
+        final List<ICondition> conditions = new ArrayList<>();
         for (final ISingleOperand operand : operands) {
             conditions.add(new ComparisonTest(singleOperand, operator, operand));
         }
@@ -350,13 +345,13 @@ public class ConditionBuilder extends AbstractTokensBuilder {
     private LikeTest getPlainLikeTest() {
         final ISingleOperand firstOperand = getModelForSingleOperand(firstCat(), firstValue());
         final ISingleOperand secondOperand = getModelForSingleOperand(thirdCat(), thirdValue());
-        return new LikeTest(firstOperand, secondOperand, (Boolean) secondValue(), false);
+        return new LikeTest(firstOperand, secondOperand, (Boolean) secondValue(), false, getDbVersion());
     }
 
     private LikeTest getPlainILikeTest() {
-        final ISingleOperand firstOperand = new LowerCaseOf(getModelForSingleOperand(firstCat(), firstValue()), getDbVersion());
-        final ISingleOperand secondOperand = new LowerCaseOf(getModelForSingleOperand(thirdCat(), thirdValue()), getDbVersion());
-        return new LikeTest(firstOperand, secondOperand, (Boolean) secondValue(), false);
+        final ISingleOperand firstOperand = getModelForSingleOperand(firstCat(), firstValue());
+        final ISingleOperand secondOperand = getModelForSingleOperand(thirdCat(), thirdValue());
+        return new LikeTest(firstOperand, secondOperand, (Boolean) secondValue(), true, getDbVersion());
     }
 
     private GroupedConditions getMultipleVsMultipleLikeTest() {
@@ -366,11 +361,11 @@ public class ConditionBuilder extends AbstractTokensBuilder {
         final LogicalOperator leftLogicalOperator = mutlipleAnyOperands.contains(firstCat()) ? OR : AND;
         final LogicalOperator rightLogicalOperator = mutlipleAnyOperands.contains(thirdCat()) ? OR : AND;
 
-        final List<ICondition> outerConditions = new ArrayList<ICondition>();
+        final List<ICondition> outerConditions = new ArrayList<>();
         for (final ISingleOperand leftOperand : leftOperands) {
-            final List<ICondition> innerConditions = new ArrayList<ICondition>();
+            final List<ICondition> innerConditions = new ArrayList<>();
             for (final ISingleOperand rightOperand : rightOperands) {
-                innerConditions.add(new LikeTest(leftOperand, rightOperand, (Boolean) secondValue(), false));
+                innerConditions.add(new LikeTest(leftOperand, rightOperand, (Boolean) secondValue(), false, getDbVersion()));
             }
             final GroupedConditions group = getGroup(innerConditions, rightLogicalOperator);
             outerConditions.add(group);
@@ -385,11 +380,11 @@ public class ConditionBuilder extends AbstractTokensBuilder {
         final LogicalOperator leftLogicalOperator = mutlipleAnyOperands.contains(firstCat()) ? OR : AND;
         final LogicalOperator rightLogicalOperator = mutlipleAnyOperands.contains(thirdCat()) ? OR : AND;
 
-        final List<ICondition> outerConditions = new ArrayList<ICondition>();
+        final List<ICondition> outerConditions = new ArrayList<>();
         for (final ISingleOperand leftOperand : leftOperands) {
-            final List<ICondition> innerConditions = new ArrayList<ICondition>();
+            final List<ICondition> innerConditions = new ArrayList<>();
             for (final ISingleOperand rightOperand : rightOperands) {
-                innerConditions.add(new LikeTest(new LowerCaseOf(leftOperand, getDbVersion()), new LowerCaseOf(rightOperand, getDbVersion()), (Boolean) secondValue(), false));
+                innerConditions.add(new LikeTest(leftOperand, rightOperand, (Boolean) secondValue(), true, getDbVersion()));
             }
             final GroupedConditions group = getGroup(innerConditions, rightLogicalOperator);
             outerConditions.add(group);
@@ -400,9 +395,9 @@ public class ConditionBuilder extends AbstractTokensBuilder {
     private GroupedConditions getMultipleVsSingleLikeTest() {
         final List<ISingleOperand> operands = getModelForMultipleOperands(firstCat(), firstValue());
         final ISingleOperand singleOperand = getModelForSingleOperand(thirdCat(), thirdValue());
-        final List<ICondition> conditions = new ArrayList<ICondition>();
+        final List<ICondition> conditions = new ArrayList<>();
         for (final ISingleOperand operand : operands) {
-            conditions.add(new LikeTest(operand, singleOperand, (Boolean) secondValue(), false));
+            conditions.add(new LikeTest(operand, singleOperand, (Boolean) secondValue(), false, getDbVersion()));
         }
         final LogicalOperator logicalOperator = mutlipleAnyOperands.contains(firstCat()) ? OR : AND;
         return getGroup(conditions, logicalOperator);
@@ -410,10 +405,10 @@ public class ConditionBuilder extends AbstractTokensBuilder {
 
     private GroupedConditions getMultipleVsSingleILikeTest() {
         final List<ISingleOperand> operands = getModelForMultipleOperands(firstCat(), firstValue());
-        final ISingleOperand singleOperand = new LowerCaseOf(getModelForSingleOperand(thirdCat(), thirdValue()), getDbVersion());
-        final List<ICondition> conditions = new ArrayList<ICondition>();
+        final ISingleOperand singleOperand = getModelForSingleOperand(thirdCat(), thirdValue());
+        final List<ICondition> conditions = new ArrayList<>();
         for (final ISingleOperand operand : operands) {
-            conditions.add(new LikeTest(new LowerCaseOf(operand, getDbVersion()), singleOperand, (Boolean) secondValue(), false));
+            conditions.add(new LikeTest(operand, singleOperand, (Boolean) secondValue(), true, getDbVersion()));
         }
         final LogicalOperator logicalOperator = mutlipleAnyOperands.contains(firstCat()) ? OR : AND;
         return getGroup(conditions, logicalOperator);
@@ -422,9 +417,9 @@ public class ConditionBuilder extends AbstractTokensBuilder {
     private GroupedConditions getSingleVsMultipleLikeTest() {
         final List<ISingleOperand> operands = getModelForMultipleOperands(thirdCat(), thirdValue());
         final ISingleOperand singleOperand = getModelForSingleOperand(firstCat(), firstValue());
-        final List<ICondition> conditions = new ArrayList<ICondition>();
+        final List<ICondition> conditions = new ArrayList<>();
         for (final ISingleOperand operand : operands) {
-            conditions.add(new LikeTest(singleOperand, operand, (Boolean) secondValue(), false));
+            conditions.add(new LikeTest(singleOperand, operand, (Boolean) secondValue(), false, getDbVersion()));
         }
         final LogicalOperator logicalOperator = mutlipleAnyOperands.contains(thirdCat()) ? OR : AND;
         return getGroup(conditions, logicalOperator);
@@ -432,10 +427,10 @@ public class ConditionBuilder extends AbstractTokensBuilder {
 
     private GroupedConditions getSingleVsMultipleILikeTest() {
         final List<ISingleOperand> operands = getModelForMultipleOperands(thirdCat(), thirdValue());
-        final ISingleOperand singleOperand = new LowerCaseOf(getModelForSingleOperand(firstCat(), firstValue()), getDbVersion());
-        final List<ICondition> conditions = new ArrayList<ICondition>();
+        final ISingleOperand singleOperand = getModelForSingleOperand(firstCat(), firstValue());
+        final List<ICondition> conditions = new ArrayList<>();
         for (final ISingleOperand operand : operands) {
-            conditions.add(new LikeTest(singleOperand, new LowerCaseOf(operand, getDbVersion()), (Boolean) secondValue(), false));
+            conditions.add(new LikeTest(singleOperand, operand, (Boolean) secondValue(), true, getDbVersion()));
         }
         final LogicalOperator logicalOperator = mutlipleAnyOperands.contains(thirdCat()) ? OR : AND;
         return getGroup(conditions, logicalOperator);
@@ -455,7 +450,7 @@ public class ConditionBuilder extends AbstractTokensBuilder {
         final List<ISingleOperand> operands = getModelForMultipleOperands(firstCat(), firstValue());
         final ISetOperand setOperand = getModelForSetOperand(thirdCat(), thirdValue());
 
-        final List<ICondition> conditions = new ArrayList<ICondition>();
+        final List<ICondition> conditions = new ArrayList<>();
         for (final ISingleOperand operand : operands) {
             conditions.add(new SetTest(operand, (Boolean) secondValue(), setOperand));
         }
@@ -465,7 +460,7 @@ public class ConditionBuilder extends AbstractTokensBuilder {
 
     private GroupedConditions getMultipleExistenceTest() {
         final List<ISingleOperand> operands = getModelForMultipleOperands(secondCat(), secondValue());
-        final List<ICondition> conditions = new ArrayList<ICondition>();
+        final List<ICondition> conditions = new ArrayList<>();
         for (final ISingleOperand operand : operands) {
             conditions.add(new ExistenceTest((Boolean) firstValue(), (EntQuery) operand));
         }

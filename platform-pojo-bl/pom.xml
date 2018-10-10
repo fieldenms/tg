@@ -4,14 +4,36 @@
 	<parent>
 		<groupId>fielden</groupId>
 		<artifactId>platform-parent</artifactId>
-		<version>1.2-SNAPSHOT</version>
+		<version>1.4-SNAPSHOT</version>
 	</parent>
 
 	<artifactId>platform-pojo-bl</artifactId>
 	<packaging>jar</packaging>
 
 	<name>Trident Genesis Platform POJOs and Business Logic</name>
+	<description>
+              The platform module that provides all the essentials for supporting the Fractal Objects design pattern.
+              This includes all necessary annotation for domain definition and validation.
+        </description>
+
 	<dependencies>
+		<!-- https://mvnrepository.com/artifact/com.google.guava/guava -->
+		<dependency>
+		    <groupId>com.google.guava</groupId>
+		    <artifactId>guava</artifactId>
+		    <version>25.1-jre</version>
+		</dependency>
+		<dependency>
+			<groupId>com.google.inject</groupId>
+  			<artifactId>guice</artifactId>
+  			<version>4.2.0</version>
+		</dependency>
+
+		<dependency>
+			<groupId>joda-time</groupId>
+			<artifactId>joda-time</artifactId>
+			<version>2.10</version>
+		</dependency>
 
 		<!-- start of Kryo specific libs -->
 		<dependency>
@@ -36,32 +58,64 @@
 		<dependency>
 			<groupId>com.fasterxml.jackson.core</groupId>
 			<artifactId>jackson-annotations</artifactId>
-			<version>2.2.2</version>
+			<version>2.9.6</version>
 		</dependency>
 
 		<dependency>
 			<groupId>com.fasterxml.jackson.core</groupId>
 			<artifactId>jackson-core</artifactId>
-			<version>2.2.2</version>
+			<version>2.9.6</version>
 		</dependency>
 
 		<dependency>
 			<groupId>com.fasterxml.jackson.core</groupId>
 			<artifactId>jackson-databind</artifactId>
-			<version>2.2.2</version>
+			<version>2.9.6</version>
 		</dependency>
 
 		<!-- End of jackson dependencies -->
 
-		<!-- Hibernate 3.2.6.ga conflicts with ASM 3.3.1, thus Guice packaged version
-			of ASM is used. -->
-		<!-- kryo depends on asm only for managing public fields -->
-		<!-- dependency> <groupId>asm</groupId> <artifactId>asm-all</artifactId>
-			<version>3.3.1</version> </dependency -->
+		<!-- Reactive X dependency to provide observable sequences -->
 		<dependency>
-		    <groupId>org.kohsuke</groupId>
-		    <artifactId>asm5</artifactId>
-		    <version>5.0.1</version>
+			<groupId>io.reactivex</groupId>
+			<artifactId>rxjava</artifactId>
+			<version>1.1.0</version>
+		</dependency>
+
+		<!-- kryo depends on asm only for managing public fields -->
+		<!-- ASM is used for generating new entity types with ad-hoc calculated properties -->
+		<dependency>
+			<groupId>org.kohsuke</groupId>
+			<artifactId>asm5</artifactId>
+			<version>5.0.1</version>
+		</dependency>
+		<!-- ByteBuddy is high level Java API that has a potential to replace the direct use of ASM in TG.
+		     But its current role to replace Javassist for creation of proxied entity instances. -->
+		<dependency>
+			<groupId>net.bytebuddy</groupId>
+			<artifactId>byte-buddy</artifactId>
+			<version>1.2.3</version>
+		</dependency>
+
+		<!-- Password strength estimation -->
+		<dependency>
+			<groupId>com.nulab-inc</groupId>
+			<artifactId>zxcvbn</artifactId>
+			<version>1.1.1</version>
+		</dependency>
+		
+		<!-- Java Mail libraries -->
+		<dependency>
+			<groupId>javax.mail</groupId>
+			<artifactId>mail</artifactId>
+			<version>1.5.0-b01</version>
+		</dependency>
+
+		<!-- This is the same dependency as for Hibernate 5.2.12.Final -->
+		<dependency>
+			<groupId>org.javassist</groupId>
+			<artifactId>javassist</artifactId>
+			<version>3.20.0-GA</version>
 		</dependency>
 
 		<dependency>
@@ -90,6 +144,21 @@
 			<version>3.1.1</version>
 		</dependency>
 		<dependency>
+			<groupId>antlr</groupId>
+			<artifactId>antlr3-runtime</artifactId>
+			<version>3.1.1</version>
+		</dependency>
+		<dependency>
+			<groupId>antlr</groupId>
+			<artifactId>stringtemplate</artifactId>
+			<version>3.2</version>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.poi</groupId>
+			<artifactId>poi</artifactId>
+			<version>3.16</version>
+		</dependency>
+		<dependency>
 			<groupId>net.sf.jasperreports</groupId>
 			<artifactId>jasperreports</artifactId>
 			<version>4.7.1</version>
@@ -105,25 +174,21 @@
 				</exclusion>
 			</exclusions>
 		</dependency>
+		<!-- groovy dependency is only needed for runtime compilation of Jasper files (.jrxml) -->
 		<dependency>
-			<groupId>antlr</groupId>
-			<artifactId>antlr3-runtime</artifactId>
-			<version>3.1.1</version>
+			<groupId>org.codehaus.groovy</groupId>
+			<artifactId>groovy-all</artifactId>
+			<version>1.5.5</version>
 		</dependency>
 		<dependency>
-			<groupId>antlr</groupId>
-			<artifactId>stringtemplate</artifactId>
-			<version>3.2</version>
-		</dependency>
-		<dependency>
-			<groupId>org.apache.poi</groupId>
-			<artifactId>poi</artifactId>
-			<version>3.9</version>
+			<groupId>com.lowagie</groupId>
+			<artifactId>itext</artifactId>
+			<version>2.1.7</version>
 		</dependency>
 		<dependency>
 			<groupId>log4j</groupId>
 			<artifactId>log4j</artifactId>
-			<version>1.2.15</version>
+			<version>1.2.17</version>
 			<exclusions>
 				<exclusion>
 					<groupId>javax.mail</groupId>
@@ -153,6 +218,16 @@
 			<artifactId>ant</artifactId>
 			<version>1.7.0</version>
 		</dependency>
+		<dependency>
+		    <groupId>commons-validator</groupId>
+		    <artifactId>commons-validator</artifactId>
+		    <version>1.5.1</version>
+		</dependency>
+		<dependency>
+			<groupId>commons-jexl</groupId>
+			<artifactId>commons-jexl</artifactId>
+			<version>1.1</version>
+		</dependency>
 	</dependencies>
 	<build>
 		<resources>
@@ -181,6 +256,16 @@
 						<!-- J>-Xss10M</J -->
 						<!-- processor>br.com.sonner.infra.seguranca.SegurancaAnnotationProcessor</processor -->
 					</compilerArguments>
+				</configuration>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-surefire-plugin</artifactId>
+				<version>2.19.1</version>
+				<configuration>
+					<forkCount>4</forkCount>
+					<reuseForks>true</reuseForks>
+					<argLine>-server -Xms256m -Xmx1024m -Djava.system.class.loader=ua.com.fielden.platform.classloader.TgSystemClassLoader</argLine>
 				</configuration>
 			</plugin>
 		</plugins>

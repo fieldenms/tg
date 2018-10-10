@@ -1,34 +1,61 @@
 package ua.com.fielden.platform.reflection;
 
+import static java.lang.String.format;
+import static java.util.stream.Collectors.joining;
+import static ua.com.fielden.platform.utils.Pair.pair;
+
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.ExecutionException;
+import java.util.stream.Stream;
 
 import org.apache.commons.lang.StringUtils;
+import org.apache.log4j.Logger;
+
+import com.google.common.cache.Cache;
+import com.google.common.cache.CacheBuilder;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.AbstractUnionEntity;
+import ua.com.fielden.platform.entity.Accessor;
 import ua.com.fielden.platform.entity.DynamicEntityKey;
+import ua.com.fielden.platform.entity.annotation.Calculated;
+import ua.com.fielden.platform.entity.annotation.DescTitle;
 import ua.com.fielden.platform.entity.annotation.KeyType;
+import ua.com.fielden.platform.entity.annotation.MapTo;
 import ua.com.fielden.platform.entity.validation.annotation.GreaterOrEqual;
 import ua.com.fielden.platform.entity.validation.annotation.Max;
-import ua.com.fielden.platform.utils.EntityUtils;
+import ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader;
+import ua.com.fielden.platform.reflection.exceptions.ReflectionException;
 import ua.com.fielden.platform.utils.Pair;
 
 /**
  * This is a helper class to provide some commonly used method for retrieval of RTTI not provided directly by the Java reflection package.
- * 
+ *
  * @author TG Team
- * 
+ *
  */
 public final class Reflector {
-    private final static Map<MethodKey, Pair<Method, NoSuchMethodException>> methods = new HashMap<>();
+    /**
+     * A maximum cache size for caching reflection related information.
+     */
+    public static final int MAXIMUM_CACHE_SIZE = 32000;
+    /**
+     * A cache for {@link Method} instances.
+     */
+    private static final Cache<Class<?>, Cache<String, Method>> METHOD_CACHE = CacheBuilder.newBuilder().weakKeys().initialCapacity(1000).maximumSize(MAXIMUM_CACHE_SIZE).concurrencyLevel(50).build();
+
+    public static long cleanUp() {
+        METHOD_CACHE.cleanUp();
+        return METHOD_CACHE.size();
+    }
 
     /** A symbol that represents a separator between properties in property path expressions. */
     public static final String DOT_SPLITTER = "\\.";
@@ -38,6 +65,8 @@ public final class Reflector {
      */
     public static final String UP_LEVEL = "←";
 
+    private static final Logger LOGGER = Logger.getLogger(Reflector.class);
+    
     /**
      * Let's hide default constructor, which is not needed for a static class.
      */
@@ -49,7 +78,7 @@ public final class Reflector {
 
     /**
      * This is a helper method used to walk along class hierarchy in search of the specified method.
-     * 
+     *
      * @param startWithClass
      * @param method
      * @param arguments
@@ -61,7 +90,7 @@ public final class Reflector {
         try {
             // setKey is a special case, because property "key" has a parametrised type that extends comparable.
             // this means that there are two cases:
-            // 1. setter is overridden and a final key type is specified there -- need to use the assigned type as input parameter to setter in order to find it;
+            // 1. setter is overridden and a final key type is specified there -- need to use the assigned type as input parameter to setter in order to find it
             // 2. setter is not overridden -- need to use the lowest common denominator (Comparable) as input parameter to setter in order to find it.
             if ("setKey".equals(methodName)) {
                 try {
@@ -83,12 +112,12 @@ public final class Reflector {
 
     /** Clear cached methods. */
     public static void clearMethodsCache() {
-        methods.clear();
+        METHOD_CACHE.cleanUp();
     }
 
     /**
      * Returns method specified with methodName from {@code startWithClass} class.
-     * 
+     *
      * @param startWithClass
      * @param methodName
      * @param arguments
@@ -102,100 +131,37 @@ public final class Reflector {
             // the current instance
             try {
                 return getDeclaredMethod(klass, methodName, arguments);
-            } catch (final NoSuchMethodException e) {
+            } catch (final ReflectionException e) {
                 klass = klass.getSuperclass();
             }
         }
         throw new NoSuchMethodException(methodName);
     }
 
-    private static class MethodKey {
-        private final String klassName;
-        private final String methodName;
-        private final List<String> argumentsTypeNames;
 
-        public MethodKey(final Class<?> klass, final String methodName, final Class<?>... arguments) {
-            this.klassName = klass.getName();
-            this.methodName = methodName;
-            argumentsTypeNames = new ArrayList<>();
-            for (final Class<?> argument : arguments) {
-                argumentsTypeNames.add(argument.getName());
-            }
+    private static Method getDeclaredMethod(final Class<?> klass, final String methodName, final Class<?>... arguments) {
+        final String methodKey = format("%s(%s)", methodName, Stream.of(arguments).map(Class::getName).collect(joining(", ")));
+        final Cache<String, Method> methodOrException;
+        try {
+            methodOrException = METHOD_CACHE.get(klass, () -> { 
+                final Cache<String, Method> newTypeCache = CacheBuilder.newBuilder().weakValues().build();
+                METHOD_CACHE.put(klass, newTypeCache);
+                return newTypeCache;
+            });
+        } catch (final ExecutionException ex) {
+            throw new ReflectionException(format("Could not find method [%s] for type [%s].", methodKey, klass), ex);
         }
-
-        @Override
-        public int hashCode() {
-            final int prime = 31;
-            int result = 1;
-            result = prime * result + ((argumentsTypeNames == null) ? 0 : argumentsTypeNames.hashCode());
-            result = prime * result + ((klassName == null) ? 0 : klassName.hashCode());
-            result = prime * result + ((methodName == null) ? 0 : methodName.hashCode());
-            return result;
-        }
-
-        @Override
-        public boolean equals(final Object obj) {
-            if (this == obj) {
-                return true;
-            }
-            if (obj == null) {
-                return false;
-            }
-            if (getClass() != obj.getClass()) {
-                return false;
-            }
-            final MethodKey other = (MethodKey) obj;
-            if (argumentsTypeNames == null) {
-                if (other.argumentsTypeNames != null) {
-                    return false;
-                }
-            } else if (!argumentsTypeNames.equals(other.argumentsTypeNames)) {
-                return false;
-            }
-            if (klassName == null) {
-                if (other.klassName != null) {
-                    return false;
-                }
-            } else if (!klassName.equals(other.klassName)) {
-                return false;
-            }
-            if (methodName == null) {
-                if (other.methodName != null) {
-                    return false;
-                }
-            } else if (!methodName.equals(other.methodName)) {
-                return false;
-            }
-            return true;
-        }
-    }
-
-    private static synchronized Method getDeclaredMethod(final Class<?> klass, final String methodName, final Class<?>... arguments) throws NoSuchMethodException,
-            SecurityException {
-        // return klass.getDeclaredMethod(methodName, arguments);
-        final MethodKey methodKey = new MethodKey(klass, methodName, arguments);
-        final Pair<Method, NoSuchMethodException> methodOrException = methods.get(methodKey);
-        if (methodOrException == null) {
-            try {
-                final Method method = klass.getDeclaredMethod(methodName, arguments);
-                methods.put(methodKey, new Pair<Method, NoSuchMethodException>(method, null));
-                return method;
-            } catch (final NoSuchMethodException e1) {
-                methods.put(methodKey, new Pair<Method, NoSuchMethodException>(null, e1));
-                throw e1;
-            } catch (final SecurityException e2) {
-                throw e2;
-            }
-        } else if (methodOrException.getKey() != null) {
-            return methodOrException.getKey();
-        } else {
-            throw methodOrException.getValue();
+        
+        try {
+            return methodOrException.get(methodKey, () -> klass.getDeclaredMethod(methodName, arguments));
+        } catch (final ExecutionException ex) {
+            throw new ReflectionException(format("Could not find method [%s] for type [%s].", methodKey, klass), ex);
         }
     }
 
     /**
      * Returns constructor specified from {@code startWithClass} class.
-     * 
+     *
      * @param startWithClass
      * @param methodName
      * @param arguments
@@ -218,7 +184,7 @@ public final class Reflector {
 
     /**
      * Returns the method specified with methodName and the array of it's arguments. In order to determine correct method it uses instances instead of classes.
-     * 
+     *
      * @param instance
      * @param methodName
      * @param arguments
@@ -240,39 +206,84 @@ public final class Reflector {
         throw new NoSuchMethodException(methodName);
     }
 
+    
+    /**
+     * Returns <code>true</code> if the specified method <code>methodName</code> is overridden in <code>type</code> or its super types that extend <code>baseType</code> where this method is inherited from.
+     * Or the method is declared in <code>type</code> (i.e. it is not ingerited).
+     * <p>
+     * Basically, <code>true</code> is returned if <code>methodName</code> appears anywhere in the type hierarchy but the base type. 
+     * 
+     * @param baseType
+     * @param type
+     * @param methodName
+     * @param arguments
+     * @return
+     */
+    public static <BASE> boolean isMethodOverriddenOrDeclared(final Class<BASE> baseType, final Class<? extends BASE> type, final String methodName, final Class<?>... arguments) {
+        try {
+            
+            final Method method = Reflector.getMethod(type, methodName, arguments);
+            if (method.getDeclaringClass() != baseType) {
+                return true;
+            }
+        } catch (NoSuchMethodException | SecurityException ex) {
+            LOGGER.debug(format("Checking the oberriding of method [%s] for type [%s] with base type [%s] failed.", methodName, type.getName(), baseType.getName()), ex);
+        }
+        
+        return false;
+    }
+
     /**
      * Depending on the type of the field, the getter may start not with ''get'' but with ''is''. This method tries to determine a correct getter.
-     * 
+     *
      * @param propertyName
      * @param entity
      * @return
      * @throws Exception
      */
-    public static Method obtainPropertyAccessor(final Class<?> entityClass, final String propertyName) throws NoSuchMethodException {
-        final String propertyNameInGetter = propertyName.toUpperCase().charAt(0) + propertyName.substring(1);
+    public static Method obtainPropertyAccessor(final Class<?> entityClass, final String propertyName) {
         try {
-            return Reflector.getMethod(entityClass, "get" + propertyNameInGetter);
-        } catch (final Exception e) {
-            return Reflector.getMethod(entityClass, "is" + propertyNameInGetter);
+            return Reflector.getMethod(entityClass, Accessor.GET.getName(propertyName));
+        } catch (final Exception e1) {
+            try {
+                return Reflector.getMethod(entityClass, Accessor.IS.getName(propertyName));
+            } catch (NoSuchMethodException e2) {
+                throw new ReflectionException(format("Could not obtain accessor for property [%s] in type [%s].", propertyName, entityClass.getName()), e1);
+            }
         }
     }
 
     /**
      * Tries to obtain property setter for property, specified using dot-notation. Heavily uses
      * {@link PropertyTypeDeterminator#determinePropertyTypeWithoutKeyTypeDetermination(Class, String)} to obtain penult property in dot-notation
-     * 
+     *
      * @param entityClass
      * @param dotNotationExp
      * @return
      * @throws NoSuchMethodException
      * @throws Exception
      */
-    public static Method obtainPropertySetter(final Class<?> entityClass, final String dotNotationExp) throws NoSuchMethodException {
+    public static Method obtainPropertySetter(final Class<?> entityClass, final String dotNotationExp) {
         if (StringUtils.isEmpty(dotNotationExp) || dotNotationExp.contains("()")) {
             throw new IllegalArgumentException("DotNotationExp could not be empty or could not define construction with methods.");
         }
         final Pair<Class<?>, String> transformed = PropertyTypeDeterminator.transform(entityClass, dotNotationExp);
-        return Reflector.getMethod(transformed.getKey(), "set" + transformed.getValue().substring(0, 1).toUpperCase() + transformed.getValue().substring(1), PropertyTypeDeterminator.determineClass(transformed.getKey(), transformed.getValue(), AbstractEntity.KEY.equalsIgnoreCase(transformed.getValue()), false));
+        try {
+            final String methodName = "set" + transformed.getValue().substring(0, 1).toUpperCase() + transformed.getValue().substring(1);
+            final Class<?> argumentType = PropertyTypeDeterminator.determineClass(transformed.getKey(), transformed.getValue(), AbstractEntity.KEY.equalsIgnoreCase(transformed.getValue()), false);
+            
+            if (DynamicEntityClassLoader.isGenerated(entityClass) && DynamicEntityClassLoader.getOriginalType(entityClass) == argumentType) {
+                return Reflector.getMethod(transformed.getKey(), 
+                        methodName, 
+                        entityClass);
+            } else {
+                return Reflector.getMethod(transformed.getKey(), 
+                        methodName, 
+                        argumentType);
+            }
+        } catch (final Exception ex) {
+            throw new ReflectionException(format("Could not obtain setter for property [%s] in type [%s].", dotNotationExp, entityClass.getName()), ex);
+        }
     }
 
     // ========================================================================================================
@@ -281,7 +292,7 @@ public final class Reflector {
     /**
      * A contract for determining if the property of specified type <code>propertyType</code> could be sortable or not. For now - only property of AE type with composite key could
      * not be sortable.
-     * 
+     *
      * @param propertyType
      * @return
      */
@@ -292,53 +303,33 @@ public final class Reflector {
 
     /**
      * Returns min and max possible values for property.
-     * 
+     *
      * @param entity
      * @param propertyName
      * @return
      */
-    public static Pair<Comparable, Comparable> extractValidationLimits(final AbstractEntity<?> entity, final String propertyName) {
-        final List<Field> fields = Finder.findProperties(entity.getType());
-        Comparable<?> min = null, max = null;
-        for (final Field field : fields) { // for each property field
-            if (field.getName().equals(propertyName)) { //
-                final List<Annotation> propertyValidationAnotations = entity.extractValidationAnnotationForProperty(field, PropertyTypeDeterminator.determinePropertyType(entity.getType(), propertyName), false);
-                for (final Annotation annotation : propertyValidationAnotations) {
-                    if (annotation instanceof GreaterOrEqual) {
-                        min = ((GreaterOrEqual) annotation).value();
-                    } else if (annotation instanceof Max) {
-                        max = ((Max) annotation).value();
-                    }
-                }
+    public static Pair<Integer, Integer> extractValidationLimits(final AbstractEntity<?> entity, final String propertyName) {
+        final Field field = Finder.findFieldByName(entity.getType(), propertyName);
+        Integer min = null, max = null;
+        final Set<Annotation> propertyValidationAnotations = entity.extractValidationAnnotationForProperty(field, PropertyTypeDeterminator.determinePropertyType(entity.getType(), propertyName), false);
+        for (final Annotation annotation : propertyValidationAnotations) {
+            if (annotation instanceof GreaterOrEqual) {
+                min = ((GreaterOrEqual) annotation).value();
+            } else if (annotation instanceof Max) {
+                max = ((Max) annotation).value();
             }
         }
-        if (min == null) {
-            min = Integer.MIN_VALUE;
-        }
-        if (max == null) {
-            max = Integer.MAX_VALUE;
-        }
-        return new Pair<Comparable, Comparable>(min, max);
-    }
-
-    /**
-     * Indicates whether specified class is synthetic entity or not.
-     * 
-     * @param clazz
-     * @return
-     */
-    public static boolean isSynthetic(final Class<?> clazz) {
-        return EntityUtils.isQueryBasedEntityType((Class<? extends AbstractEntity<?>>) clazz);
+        return new Pair<>(min, max);
     }
 
     /**
      * Returns a list of parameters declared for the specified annotation type. An empty list is returned in case where there are no parameter declarations.
-     * 
+     *
      * @param annotationType
      * @return
      */
     public static List<String> annotataionParams(final Class<? extends Annotation> annotationType) {
-        final List<String> names = new ArrayList<String>();
+        final List<String> names = new ArrayList<>();
         for (final Method param : annotationType.getDeclaredMethods()) {
             names.add(param.getName());
         }
@@ -347,7 +338,7 @@ public final class Reflector {
 
     /**
      * Obtains and returns a pair of parameter type and its value for the specified annotation parameter.
-     * 
+     *
      * @param annotation
      * @param paramName
      * @return parameter value
@@ -356,16 +347,15 @@ public final class Reflector {
         try {
             final Method method = annotation.getClass().getDeclaredMethod(paramName);
             method.setAccessible(true);
-            final Pair<Class<?>, Object> result = new Pair<Class<?>, Object>(method.getReturnType(), method.invoke(annotation));
-            return result;
+            return pair(method.getReturnType(), method.invoke(annotation));
         } catch (final Exception e) {
-            throw new IllegalStateException(e);
+            throw new ReflectionException("Could not get annotation param value.", e);
         }
     }
 
     /**
      * Converts a relative property path to an absolute path with respect to the provided context.
-     * 
+     *
      * @param context
      *            -- the dot notated property path from the root, which indicated the relative position in the type tree against which all other paths should be calculated.
      * @param relativePropertyPath
@@ -398,7 +388,7 @@ public final class Reflector {
 
     /**
      * A helper function, which recursively determines the depth of the context path in comparison to the relative property path provide.
-     * 
+     *
      * @return
      */
     private static String pathFromRoot(final String context, final int relativePathLength) {
@@ -421,7 +411,7 @@ public final class Reflector {
 
     /**
      * Converts an absolute property path to a relative one in respect to the provided context.
-     * 
+     *
      * @param context
      *            the dot notated property path from the root, which indicated the relative position in the type tree against which all other paths should be calculated.
      * @param absolutePropertyPath
@@ -466,7 +456,7 @@ public final class Reflector {
 
     /**
      * Calculate the property depth in the type tree based on the number of "." separators.
-     * 
+     *
      * @param propertyPath
      * @return
      */
@@ -480,7 +470,7 @@ public final class Reflector {
     /**
      * Converts a relative property path to an absolute path with respect to the provided context. Unlike relative2Absolute this method inverts the path making the context property
      * to be the first node in the path.
-     * 
+     *
      * @param type
      * @param contextProperty
      * @param dotNotaionalExp
@@ -524,11 +514,72 @@ public final class Reflector {
 
     /**
      * A convenient method returning a separator that is used to represent a composite entity as a single string value.
-     * 
+     *
      * @param type
      * @return
      */
     public static String getKeyMemberSeparator(final Class<? extends AbstractEntity<DynamicEntityKey>> type) {
         return AnnotationReflector.getAnnotation(type, KeyType.class).keyMemberSeparator();
+    }
+    
+    /**
+     * Returns <code>true</code> if the specified property is proxied for a given entity instance.
+     *  
+     * @param entity
+     * @param propName
+     * @return
+     */
+    public static boolean isPropertyProxied(final AbstractEntity<?> entity, final String propName) {
+        return entity.proxiedPropertyNames().contains(propName);
+    }
+    
+    /**
+     * Identifies whether the specified field represents a retrievable property.
+     * The notion retrievable is different to persistent as it also includes calculated properties, which do get retrieved from a database. 
+     * 
+     * @param entity
+     * @param propName
+     * @return
+     */
+    public static boolean isPropertyRetrievable(final AbstractEntity<?> entity, final Field field) {
+        final String name = field.getName();
+        return entity.isPersistent()
+               && (
+                      field.isAnnotationPresent(Calculated.class) ||
+                      (!name.equals(AbstractEntity.KEY) && !name.equals(AbstractEntity.DESC) && field.isAnnotationPresent(MapTo.class)) ||
+                      (name.equals(AbstractEntity.KEY) && !entity.isComposite()) ||
+                      (name.equals(AbstractEntity.DESC) && AnnotationReflector.isAnnotationPresent(entity.getType(), DescTitle.class)) ||
+                      (Finder.isOne2One_association(entity.getType(), name))
+                  );
+    }
+    
+    /**
+     * A convenient equivalent to method {@link #isPropertyRetrievable(AbstractEntity, Field)} that accepts property name instead of the Field instance. 
+     * 
+     * @param entity
+     * @param propName
+     * @return
+     */
+    public static boolean isPropertyRetrievable(final AbstractEntity<?> entity, final String propName) {
+        return isPropertyRetrievable(entity, Finder.findFieldByName(entity.getClass(), propName)); 
+    }
+    
+    /**
+     * A helper function to assign value to a static final field.
+     *  
+     * @param field
+     * @param value
+     */
+    public static void assignStatic(final Field field, final Object value) {
+        try {
+            field.setAccessible(true);
+            final Field modifiersField = Field.class.getDeclaredField("modifiers");
+            modifiersField.setAccessible(true);
+            modifiersField.setInt(field, field.getModifiers() & ~Modifier.FINAL);
+
+            field.set(null, value);
+        } catch (final Exception ex) {
+            throw new ReflectionException("Could not assign value to a static field.", ex);
+        }
     }
 }

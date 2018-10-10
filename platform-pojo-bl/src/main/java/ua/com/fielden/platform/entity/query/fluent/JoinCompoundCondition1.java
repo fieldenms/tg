@@ -5,19 +5,21 @@ import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfa
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IJoinCompoundCondition1;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IJoinWhere1;
 
-final class JoinCompoundCondition1<ET extends AbstractEntity<?>> extends AbstractCompoundCondition<IJoinWhere1<ET>, IJoinCompoundCondition0<ET>> implements IJoinCompoundCondition1<ET> {
+final class JoinCompoundCondition1<ET extends AbstractEntity<?>> //
+		extends CompoundCondition<IJoinWhere1<ET>, IJoinCompoundCondition0<ET>> //
+		implements IJoinCompoundCondition1<ET> {
 
-    JoinCompoundCondition1(final Tokens queryTokens) {
-        super(queryTokens);
+    public JoinCompoundCondition1(final Tokens tokens) {
+        super(tokens);
     }
+    
+	@Override
+	protected IJoinWhere1<ET> nextForLogicalCondition(final Tokens tokens) {
+		return new JoinWhere1<ET>(tokens);
+	}
 
-    @Override
-    IJoinWhere1<ET> getParent() {
-        return new JoinWhere1<ET>(getTokens());
-    }
-
-    @Override
-    IJoinCompoundCondition0<ET> getParent2() {
-        return new JoinCompoundCondition0<ET>(getTokens());
-    }
+	@Override
+	protected IJoinCompoundCondition0<ET> nextForCompoundCondition(final Tokens tokens) {
+		return new JoinCompoundCondition0<ET>(tokens);
+	}
 }

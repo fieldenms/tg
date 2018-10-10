@@ -7,12 +7,13 @@ import ua.com.fielden.platform.entity.annotation.Observable;
 
 /**
  * A test entity representing a top level type with two properties of the same type, which gets modified.
- * 
+ *
  * @author TG Team
- * 
+ *
  */
 @KeyType(String.class)
 public class TopLevelEntity extends AbstractEntity<String> {
+    private static final long serialVersionUID = 1L;
 
     @IsProperty
     private EntityBeingModified prop1;

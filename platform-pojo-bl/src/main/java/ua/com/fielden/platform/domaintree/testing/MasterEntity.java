@@ -2,6 +2,7 @@ package ua.com.fielden.platform.domaintree.testing;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 
@@ -20,17 +21,13 @@ import ua.com.fielden.platform.types.Money;
 
 /**
  * Entity for "domain tree representation" testing.
- * 
+ *
  * @author TG Team
- * 
+ *
  */
 @KeyTitle(value = "Key title", desc = "Key desc")
 @KeyType(String.class)
 public class MasterEntity extends AbstractEntity<String> {
-    private static final long serialVersionUID = 1L;
-
-    protected MasterEntity() {
-    }
 
     public enum EnumType {
         ONE, TWO
@@ -84,7 +81,10 @@ public class MasterEntity extends AbstractEntity<String> {
 
     ///////// Collections /////////
     @IsProperty(value = SlaveEntity.class, linkProperty = "masterEntityProp")
-    private List<SlaveEntity> collection = new ArrayList<SlaveEntity>();
+    private List<SlaveEntity> collection = new ArrayList<>();
+
+    @IsProperty(ShortSlaveEntity.class)
+    private List<ShortSlaveEntity> shortCollection = new ArrayList<>();
 
     ////////// Any property to be specifically excluded //////////
     @IsProperty(linkProperty = "masterEntityProp")
@@ -238,6 +238,17 @@ public class MasterEntity extends AbstractEntity<String> {
     @Observable
     public void setEntityProp(final SlaveEntity entityProp) {
         this.entityProp = entityProp;
+    }
+
+    public List<ShortSlaveEntity> getShortCollection() {
+        return Collections.unmodifiableList(shortCollection);
+    }
+
+    @Observable
+    public MasterEntity setShortCollection(final List<ShortSlaveEntity> shortCollection) {
+        this.shortCollection.clear();
+        this.shortCollection.addAll(shortCollection);
+        return this;
     }
 
     public List<SlaveEntity> getCollection() {

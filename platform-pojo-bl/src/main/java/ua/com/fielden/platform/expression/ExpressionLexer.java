@@ -69,7 +69,7 @@ public class ExpressionLexer {
     protected char currChar; // current character
 
     private final BaseNonDeterministicAutomata[] tokenLexers = {//
-    new LparenTokenAutomata(), new RparenTokenAutomata(), new CommaTokenAutomata(), //
+            new LparenTokenAutomata(), new RparenTokenAutomata(), new CommaTokenAutomata(), //
             new PlusTokenAutomata(), new MinusTokenAutomata(), new MultTokenAutomata(), new DivTokenAutomata(), //
             ///////////////////// functions ////////////////////
             new AvgTokenAutomata(), new SumTokenAutomata(), new MinTokenAutomata(), new MaxTokenAutomata(),//
@@ -79,7 +79,7 @@ public class ExpressionLexer {
             new HourTokenAutomata(), new MinuteTokenAutomata(), new SecondTokenAutomata(), //
             new UpperTokenAutomata(), new LowerTokenAutomata(), new DayDiffTokenAutomata(), //
             ////////////////////////////////////////////////////
-            new CaseTokenAutomata(), // this block of lexers should go begore the name lexer
+            new CaseTokenAutomata(), // this block of lexers should go before the name lexer
             new WhenTokenAutomata(), new ThenTokenAutomata(), new ElseTokenAutomata(), new EndTokenAutomata(),
             ////////////////////////////////////////////////////
             new NullTokenAutomata(), // should go before the name token

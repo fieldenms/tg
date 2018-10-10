@@ -38,8 +38,8 @@ public class LocatorDomainTreeRepresentation extends CentreDomainTreeRepresentat
      * 
      */
     public static class LocatorDomainTreeRepresentationSerialiser extends AbstractDomainTreeRepresentationSerialiser<LocatorDomainTreeRepresentation> {
-        public LocatorDomainTreeRepresentationSerialiser(final ISerialiser kryo) {
-            super(kryo);
+        public LocatorDomainTreeRepresentationSerialiser(final ISerialiser serialiser) {
+            super(serialiser);
         }
 
         @Override
@@ -48,7 +48,7 @@ public class LocatorDomainTreeRepresentation extends CentreDomainTreeRepresentat
             final EnhancementSet excludedProperties = readValue(buffer, EnhancementSet.class);
             final AddToCriteriaTick firstTick = readValue(buffer, AddToCriteriaTick.class);
             final AddToResultSetTick secondTick = readValue(buffer, AddToResultSetTick.class);
-            return new LocatorDomainTreeRepresentation(kryo(), rootTypes, excludedProperties, firstTick, secondTick);
+            return new LocatorDomainTreeRepresentation(serialiser(), rootTypes, excludedProperties, firstTick, secondTick);
         }
     }
 }

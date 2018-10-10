@@ -7,6 +7,7 @@ import java.util.List;
 
 import ua.com.fielden.platform.algorithm.search.ITreeNode;
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.annotation.CompanionObject;
 import ua.com.fielden.platform.entity.annotation.DescTitle;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.KeyTitle;
@@ -14,11 +15,9 @@ import ua.com.fielden.platform.entity.annotation.KeyType;
 import ua.com.fielden.platform.entity.annotation.MapEntityTo;
 import ua.com.fielden.platform.entity.annotation.MapTo;
 import ua.com.fielden.platform.entity.annotation.Observable;
-import ua.com.fielden.platform.entity.validation.annotation.CompanionObject;
-import ua.com.fielden.platform.entity.validation.annotation.EntityExists;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
-import ua.com.fielden.platform.ui.config.api.IMainMenuItemController;
+import ua.com.fielden.platform.ui.config.api.IMainMenuItem;
 
 /**
  * A type for persisting an individual main menu item. Existence of an instance of this type simply indicates the existence of a corresponding main menu item.
@@ -28,17 +27,16 @@ import ua.com.fielden.platform.ui.config.api.IMainMenuItemController;
  * Property <code>parent</code> should be used for specifying parent/child relationships between menu items in order to build menu hierarchy.
  * <p>
  * Menu items cannot be deleted as the result of a user action. Menu items are defined by the system integrators most likely as part of the deployment.
- * 
+ *
  * @author TG Team
- * 
+ *
  */
 @KeyType(String.class)
 @KeyTitle("Menu item type")
 @DescTitle("Description")
-@CompanionObject(IMainMenuItemController.class)
+@CompanionObject(IMainMenuItem.class)
 @MapEntityTo("MAIN_MENU")
 public class MainMenuItem extends AbstractEntity<String> implements ITreeNode<MainMenuItem> {
-    private static final long serialVersionUID = 1L;
 
     @IsProperty
     @MapTo("ID_PARENT")
@@ -60,7 +58,7 @@ public class MainMenuItem extends AbstractEntity<String> implements ITreeNode<Ma
 
     /**
      * A helper setter to convert menu item type to the string key value.
-     * 
+     *
      * @param menuItemType
      */
     public MainMenuItem setMenuItemType(final Class<?> menuItemType) {
@@ -70,7 +68,7 @@ public class MainMenuItem extends AbstractEntity<String> implements ITreeNode<Ma
 
     /**
      * A helper getter to obtain menu item type from key's string value.
-     * 
+     *
      * @return
      */
     public Class<?> getMenuItemType() {
@@ -86,7 +84,6 @@ public class MainMenuItem extends AbstractEntity<String> implements ITreeNode<Ma
     }
 
     @Observable
-    @EntityExists(MainMenuItem.class)
     public MainMenuItem setParent(final MainMenuItem parent) {
         this.parent = parent;
         return this;
@@ -103,9 +100,9 @@ public class MainMenuItem extends AbstractEntity<String> implements ITreeNode<Ma
         if (!containsChild(child)) {
             children.add(child);
             // need to enforce resetting of the parent even in case of the same value (i.e. equals) to have the correct reference
-            child.setInitialising(true);
+            child.beginInitialising();
             child.setParent(this);
-            child.setInitialising(false);
+            child.endInitialising();
         }
         return this;
     }

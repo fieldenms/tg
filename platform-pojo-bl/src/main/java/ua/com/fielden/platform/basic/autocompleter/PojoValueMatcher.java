@@ -13,14 +13,14 @@ import ua.com.fielden.platform.utils.ExpExec;
 /**
  * Provides a collection-based implementation of the {@link IValueMatcher} with wild card support. This implementation should be convenient in cases where there is a list of
  * instances of type T that needs to be used for autocomplition.
- * 
- * @author 01es
- * 
+ *
+ * @author TG Team
+ *
  * @param <T>
  */
 public class PojoValueMatcher<T extends AbstractEntity<?>> implements IValueMatcher<T> {
     private final Collection<T> instances;
-    private final ExpExec<T> exec = new ExpExec<T>("pojo");
+    private final ExpExec<T> exec = new ExpExec<>("pojo");
     private final boolean isCaseSensitive;
     /**
      * Controls the number of values that can be returned as the result of matching.
@@ -49,9 +49,11 @@ public class PojoValueMatcher<T extends AbstractEntity<?>> implements IValueMatc
         return exec;
     }
 
+    public static final Pattern SPECIAL_REGEX_CHARS = Pattern.compile("[{}()\\[\\].+*?^$\\\\|]");
+    
     @Override
     public List<T> findMatches(final String v) {
-        final String value = isCaseSensitive ? v : v.toUpperCase();
+        final String value = SPECIAL_REGEX_CHARS.matcher(isCaseSensitive ? v : v.toUpperCase()).replaceAll("\\\\$0");
         final List<T> possibleEntities = new ArrayList<T>();
         final int substringLen = value.length();
         if (substringLen == 0) {
@@ -85,55 +87,12 @@ public class PojoValueMatcher<T extends AbstractEntity<?>> implements IValueMatc
     /**
      * Returns the maximum number of values that could be returned by the matcher instance. For example, of there are 100 matching values, but the limit is 10 then only 10 values
      * will be returned from method findMatches().
-     * 
+     *
      * @return
      */
+    @Override
     public Integer getPageSize() {
         return limit;
     }
 
-    /**
-     * Returns true if value matches valuePattern, false otherwise. This method behaves like autocompleter's value matcher
-     * 
-     * @param value
-     * @param valuePattern
-     * @return
-     */
-    public static boolean valueMatchesPattern(final String value, String valuePattern) {
-        valuePattern = valuePattern.contains("*") ? valuePattern.replaceAll("\\*", "%") : valuePattern + "%";
-
-        final String prefex = valuePattern.startsWith("%") ? "" : "^";
-        final String postfix = valuePattern.endsWith("%") ? "" : "$";
-        final String strPattern = prefex + valuePattern.replaceAll("\\%", ".*") + postfix;
-
-        return Pattern.compile(strPattern).matcher(value).find();
-    }
-
-    /**
-     * Converts auto-completer-like regular expression to normal regular expression (simply replaces all '*' with '%' characters)
-     * 
-     * @param autocompleterExp
-     * @return
-     */
-    public static String prepare(final String autocompleterExp) {
-        if ("*".equals(autocompleterExp.trim())) {
-            return null;
-        }
-        return autocompleterExp.replaceAll("\\*", "%").trim();
-    }
-
-    @Override
-    public List<T> findMatchesWithModel(final String value) {
-        return findMatches(value);
-    }
-
-    @Override
-    public <FT extends AbstractEntity<?>> ua.com.fielden.platform.entity.query.fluent.fetch<FT> getFetchModel() {
-        throw new UnsupportedOperationException("Entity query model is not supported by POJO value matcher.");
-    }
-
-    @Override
-    public <FT extends AbstractEntity<?>> void setFetchModel(final ua.com.fielden.platform.entity.query.fluent.fetch<FT> fetchModel) {
-        throw new UnsupportedOperationException("Entity query model is not supported by POJO value matcher.");
-    }
 }

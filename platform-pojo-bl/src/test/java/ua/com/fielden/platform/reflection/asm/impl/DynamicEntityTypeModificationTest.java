@@ -49,9 +49,9 @@ import com.google.inject.Injector;
 
 /**
  * A test case to ensure correct dynamic modification of entity types by means of changing existing properties.
- * 
+ *
  * @author TG Team
- * 
+ *
  */
 @SuppressWarnings({ "rawtypes", "unchecked" })
 public class DynamicEntityTypeModificationTest {
@@ -72,7 +72,7 @@ public class DynamicEntityTypeModificationTest {
     @Before
     public void setUp() {
         observed = false;
-        cl = new DynamicEntityClassLoader(ClassLoader.getSystemClassLoader());
+        cl = DynamicEntityClassLoader.getInstance(ClassLoader.getSystemClassLoader());
     }
 
     @Test
@@ -81,7 +81,8 @@ public class DynamicEntityTypeModificationTest {
         // specify what property of what owning type should be replaced with the enhanced entity type
         final NewProperty mp = NewProperty.changeType("prop1", entityBeingEnhancedEnhancedType);
         try {
-            cl.modifyProperties(mp).endModification();
+            final TypeMaker tp = new TypeMaker(cl);
+            tp.modifyProperties(mp).endModification();
             fail("An exception should have been thrown due to omitted startModification call.");
         } catch (final Exception e) {
         }
@@ -173,8 +174,8 @@ public class DynamicEntityTypeModificationTest {
         assertTrue("Incorrect type name.", entityBeingModifiedModifiedType.getName().startsWith(EntityBeingModified.class.getName() + DynamicTypeNamingService.APPENDIX + "_"));
         assertTrue("Incorrect type name.", topLevelEntityModifiedType1.getName().startsWith(TopLevelEntity.class.getName() + DynamicTypeNamingService.APPENDIX + "_"));
         assertTrue("Incorrect type name.", topLevelEntityModifiedType2.getName().startsWith(TopLevelEntity.class.getName() + DynamicTypeNamingService.APPENDIX + "_"));
-        assertNotSame(entityBeingEnhancedEnhancedType.getName(), equals(entityBeingModifiedModifiedType.getName()));
-        assertNotSame(topLevelEntityModifiedType1.getName(), equals(topLevelEntityModifiedType2.getName()));
+        assertNotSame(entityBeingEnhancedEnhancedType.getName(), entityBeingModifiedModifiedType.getName());
+        assertNotSame(topLevelEntityModifiedType1.getName(), topLevelEntityModifiedType2.getName());
     }
 
     @Test
@@ -249,9 +250,9 @@ public class DynamicEntityTypeModificationTest {
     public void test_observation_of_setter_for_new_property_in_instance_of_generated_entity_type_used_for_property_in_higher_order_type() throws Exception {
         // get the enhanced EntityBeingEnhanced type
         final Class<? extends AbstractEntity> entityBeingEnhancedEnhancedType = (Class<? extends AbstractEntity>) cl.startModification(EntityBeingEnhanced.class.getName()).addProperties(pd).endModification();
-        module.getDomainMetaPropertyConfig().setDefiner(entityBeingEnhancedEnhancedType, NEW_PROPERTY, new IAfterChangeEventHandler() {
+        module.getDomainMetaPropertyConfig().setDefiner(entityBeingEnhancedEnhancedType, NEW_PROPERTY, new IAfterChangeEventHandler<Object>() {
             @Override
-            public void handle(final MetaProperty property, final Object entityPropertyValue) {
+            public void handle(final MetaProperty<Object> property, final Object entityPropertyValue) {
                 observed = true;
             }
         });
@@ -315,9 +316,9 @@ public class DynamicEntityTypeModificationTest {
         final NewProperty collectionalPropModification = NewProperty.changeTypeSignature("prop1", entityBeingEnhancedEnhancedType);
         final Class<? extends AbstractEntity> modifiedType = (Class<? extends AbstractEntity>) cl.startModification(EntityWithCollectionalPropety.class.getName()).modifyProperties(collectionalPropModification).endModification();
         // get the enhanced EntityBeingEnhanced type
-        module.getDomainMetaPropertyConfig().setDefiner(modifiedType, "prop1", new IAfterChangeEventHandler() {
+        module.getDomainMetaPropertyConfig().setDefiner(modifiedType, "prop1", new IAfterChangeEventHandler<Object>() {
             @Override
-            public void handle(final MetaProperty property, final Object entityPropertyValue) {
+            public void handle(final MetaProperty<Object> property, final Object entityPropertyValue) {
                 observed = true;
             }
         });

@@ -1,10 +1,22 @@
 package ua.com.fielden.platform.test.transactional;
 
+import static java.lang.String.format;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.fail;
+import static ua.com.fielden.platform.dao.annotations.SessionRequired.ERR_NESTED_SCOPE_INVOCATION_IS_DISALLOWED;
+
+import org.junit.Before;
 import org.junit.Test;
 
 import ua.com.fielden.platform.dao.EntityWithMoneyDao;
+import ua.com.fielden.platform.dao.annotations.SessionRequired;
+import ua.com.fielden.platform.ioc.session.exceptions.SessionScopingException;
+import ua.com.fielden.platform.ioc.session.exceptions.TransactionRollbackDueToThrowable;
 import ua.com.fielden.platform.persistence.types.EntityWithMoney;
-import ua.com.fielden.platform.test.DbDrivenTestCase;
+import ua.com.fielden.platform.test_config.AbstractDaoTestCase;
 import ua.com.fielden.platform.types.Money;
 
 /**
@@ -13,104 +25,137 @@ import ua.com.fielden.platform.types.Money;
  * @author TG Team
  * 
  */
-public class TransactionalTest extends DbDrivenTestCase {
+public class TransactionalTest extends AbstractDaoTestCase {
     private LogicThatNeedsTransaction logic;
     private EntityWithMoneyDao dao;
-
-    @Override
-    public void setUp() throws Exception {
-        super.setUp();
-        dao = injector.getInstance(EntityWithMoneyDao.class);
-        logic = injector.getInstance(LogicThatNeedsTransaction.class);
-        // commit transaction opened in the parent setUp in order not to mess the transactional testing...
-        hibernateUtil.getSessionFactory().getCurrentSession().close();
+    
+    @Before
+    public void setUp()  {
+        dao = co$(EntityWithMoney.class);
+        logic = getInstance(LogicThatNeedsTransaction.class);
     }
 
     @Test
-    public void testSingleTransactionInvocaion() {
+    public void single_transacation_is_committed_resulting_in_data_saving() {
         logic.singleTransactionInvocaion("20.00", "30.00");
-        assertFalse("Transaction should have been inactive at this stage (committed).", hibernateUtil.getSessionFactory().getCurrentSession().getTransaction().isActive());
-        assertNotNull("It is expected that transaction was committed.", dao.findByKey("one"));
-        assertNotNull("It is expected that transaction was committed.", dao.findByKey("two"));
+        assertFalse("Current session is expected to be closed.", logic.getSession().isOpen());
+
+        final EntityWithMoney one = dao.findByKey("one");
+        assertNotNull("It is expected that transaction was committed, saving a new entity.", one);
+        assertEquals(new Money("20.00"), one.getMoney());
+        
+        final EntityWithMoney two = dao.findByKey("two");
+        assertNotNull("It is expected that transaction was committed, saving a new entity.", two);
+        assertEquals(new Money("30.00"), two.getMoney());
     }
 
     @Test
-    public void testNestedTransactionInvocaion() {
+    public void netsted_transactions_are_supported_and_all_data_is_saved_upon_commit() {
         logic.nestedTransactionInvocaion("20.00", "30.00");
-        assertFalse("Transaction should have been inactive at this stage (committed).", hibernateUtil.getSessionFactory().getCurrentSession().getTransaction().isActive());
-        assertNotNull("It is expected that transaction was committed.", dao.findByKey("one"));
-        assertNotNull("It is expected that transaction was committed.", dao.findByKey("two"));
+        assertFalse("Current session is expected to be closed.", logic.getSession().isOpen());
+        
+        final EntityWithMoney one = dao.findByKey("one");
+        assertNotNull("It is expected that transaction was committed, saving a new entity.", one);
+        assertEquals(new Money("20.00"), one.getMoney());
+        
+        final EntityWithMoney two = dao.findByKey("two");
+        assertNotNull("It is expected that transaction was committed, saving a new entity.", two);
+        assertEquals(new Money("30.00"), two.getMoney());
     }
 
     @Test
-    public void testTransactionalInvocaionWithException() {
+    public void nested_transactions_with_exception_rollback_all_changes() {
+        assertNull(dao.findByKey("one"));
+        assertNull(dao.findByKey("two"));
+        assertNull(dao.findByKey("three"));
+        
         try {
             logic.transactionalInvocaionWithException("20.00", "30.00");
             fail("should have thrown an exception");
-        } catch (final RuntimeException e) {
+        } catch (final Exception e) {
         }
-        assertFalse("Transaction should have been inactive at this stage (rollbacked).", hibernateUtil.getSessionFactory().getCurrentSession().getTransaction().isActive());
+        
+        assertFalse("Current session is expected to be closed.", logic.getSession().isOpen());
         assertNull("It is expected that transaction was rollbacked, and thus no data was committed.", dao.findByKey("one"));
         assertNull("It is expected that transaction was rollbacked, and thus no data was committed.", dao.findByKey("two"));
         assertNull("It is expected that transaction was rollbacked, and thus no data was committed.", dao.findByKey("three"));
     }
 
     @Test
-    public void testNestedTransactionalInvocaionWithException() {
+    public void nested_transactions_with_error_rollbacks_all_changes() {
+        assertNull(dao.findByKey("one"));
+        assertNull(dao.findByKey("two"));
+        assertNull(dao.findByKey("three"));
+        
+        try {
+            logic.transactionalInvocaionWithError("20.00", "30.00");
+            fail("should have thrown an exception");
+        } catch (final TransactionRollbackDueToThrowable e) {
+        }
+        
+        assertFalse("Current session is expected to be closed.", logic.getSession().isOpen());
+        assertNull("It is expected that transaction was rollbacked, and thus no data was committed.", dao.findByKey("one"));
+        assertNull("It is expected that transaction was rollbacked, and thus no data was committed.", dao.findByKey("two"));
+        assertNull("It is expected that transaction was rollbacked, and thus no data was committed.", dao.findByKey("three"));
+    }
+
+    @Test
+    public void deep_nested_transactional_invocaion_with_exception_rollbacks_all_changes() {
         try {
             logic.nestedTransactionalInvocaionWithException("20.00", "30.00");
             fail("should have thrown an exception");
-        } catch (final RuntimeException e) {
+        } catch (final Exception e) {
         }
-        assertFalse("Transaction should have been inactive at this stage (rollbacked).", hibernateUtil.getSessionFactory().getCurrentSession().getTransaction().isActive());
+        assertFalse("Transaction should have been inactive at this stage (rollbacked).", logic.getSession().isOpen());
         assertNull("It is expected that transaction was rollbacked, and thus no data was committed.", dao.findByKey("one"));
         assertNull("It is expected that transaction was rollbacked, and thus no data was committed.", dao.findByKey("two"));
         assertNull("It is expected that transaction was rollbacked, and thus no data was committed.", dao.findByKey("three"));
     }
 
     @Test
-    public void test_single_transaction_invocaion_with_exception() {
+    public void single_transaction_invocaion_with_exception_rollbacks_all_changes() {
         try {
             logic.singleTransactionInvocaionWithExceptionInDao("20.00");
             fail("should have thrown an exception");
-        } catch (final RuntimeException e) {
+        } catch (final Exception e) {
         }
-        assertFalse("Transaction should have been inactive at this stage (committed).", hibernateUtil.getSessionFactory().getCurrentSession().getTransaction().isActive());
-        assertNull("It is expected that transaction was committed.", dao.findByKey("one"));
+        assertFalse("Transaction should have been inactive at this stage (committed).", logic.getSession().isOpen());
+        assertNull("It is expected that transaction was rollbacked, and thus no data was committed.", dao.findByKey("one"));
     }
 
     @Test
-    public void test_single_transaction_invocaion_with_exception_for_two_entities_in_save() {
+    public void single_transaction_invocaion_with_exception_for_two_entities_to_be_saved_rollbacks_all_changes() {
         try {
             logic.singleTransactionInvocaionWithExceptionInDao2();
             fail("should have thrown an exception");
-        } catch (final RuntimeException e) {
+        } catch (final Exception e) {
         }
-        assertFalse("Transaction should have been inactive at this stage (committed).", hibernateUtil.getSessionFactory().getCurrentSession().getTransaction().isActive());
-        assertNull("It is expected that transaction was committed.", dao.findByKey("one"));
-        assertNull("It is expected that transaction was committed.", dao.findByKey("two"));
+        assertFalse("Transaction should have been inactive at this stage (committed).", logic.getSession().isOpen());
+        assertNull("It is expected that transaction was rollbacked, and thus no data was committed.", dao.findByKey("one"));
+        assertNull("It is expected that transaction was rollbacked, and thus no data was committed.", dao.findByKey("two"));
     }
 
     @Test
-    public void test_session_required_atomic_behaviour() {
-        hibernateUtil.getSessionFactory().getCurrentSession().close();
-        try {
-            final EntityWithMoney one = new EntityWithMoney("one", "first", new Money("0.00"));
-            final EntityWithMoney two = new EntityWithMoney("one", "first", new Money("0.00"));
+    public void methods_with_disallowed_nested_scope_transactions_can_be_invoked_in_their_own_scope() {
+        logic.cannotBeInvokeWithinExistingTransaction();
 
-            final EntityWithMoneyDao dao = injector.getInstance(EntityWithMoneyDao.class);
-            dao.saveTwoWithException(one, two);
-            fail("should have thrown an exception");
-        } catch (final RuntimeException e) {
-        }
-        assertFalse("Transaction should have been inactive at this stage (committed).", hibernateUtil.getSessionFactory().getCurrentSession().getTransaction().isActive());
-        assertNull("It is expected that transaction was committed.", dao.findByKey("one"));
-        assertNull("It is expected that transaction was committed.", dao.findByKey("two"));
+        final EntityWithMoney one = dao.findByKey("one");
+        assertNotNull("It is expected that transaction was committed, saving a new entity.", one);
+        assertEquals(new Money("20.00"), one.getMoney());
+        
+        final EntityWithMoney two = dao.findByKey("two");
+        assertNotNull("It is expected that transaction was committed, saving a new entity.", two);
+        assertEquals(new Money("30.00"), two.getMoney());
     }
 
-    @Override
-    protected String[] getDataSetPathsForInsert() {
-        return new String[] { "src/test/resources/data-files/transactional-test-case.flat.xml" };
+    @Test
+    @SessionRequired
+    public void methods_with_disallowed_nested_scope_transactions_throw_exception_for_nested_calls() {
+        try {
+            logic.cannotBeInvokeWithinExistingTransaction();
+        } catch (final SessionScopingException ex) {
+            assertEquals(format(ERR_NESTED_SCOPE_INVOCATION_IS_DISALLOWED, LogicThatNeedsTransaction.class.getName(), "cannotBeInvokeWithinExistingTransaction"), ex.getMessage());
+        }
     }
 
 }

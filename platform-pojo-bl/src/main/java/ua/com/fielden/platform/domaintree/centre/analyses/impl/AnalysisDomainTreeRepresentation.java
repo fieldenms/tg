@@ -68,8 +68,8 @@ public class AnalysisDomainTreeRepresentation extends AbstractAnalysisDomainTree
      * 
      */
     public static class AnalysisDomainTreeRepresentationSerialiser extends AbstractDomainTreeRepresentationSerialiser<AnalysisDomainTreeRepresentation> {
-        public AnalysisDomainTreeRepresentationSerialiser(final ISerialiser kryo) {
-            super(kryo);
+        public AnalysisDomainTreeRepresentationSerialiser(final ISerialiser serialiser) {
+            super(serialiser);
         }
 
         @Override
@@ -78,7 +78,7 @@ public class AnalysisDomainTreeRepresentation extends AbstractAnalysisDomainTree
             final EnhancementSet excludedProperties = readValue(buffer, EnhancementSet.class);
             final AnalysisAddToDistributionTickRepresentation firstTick = readValue(buffer, AnalysisAddToDistributionTickRepresentation.class);
             final AnalysisAddToAggregationTickRepresentation secondTick = readValue(buffer, AnalysisAddToAggregationTickRepresentation.class);
-            return new AnalysisDomainTreeRepresentation(kryo(), rootTypes, excludedProperties, firstTick, secondTick);
+            return new AnalysisDomainTreeRepresentation(serialiser(), rootTypes, excludedProperties, firstTick, secondTick);
         }
     }
 }

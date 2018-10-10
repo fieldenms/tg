@@ -2,9 +2,12 @@ package ua.com.fielden.platform.reflection;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
+import static ua.com.fielden.platform.reflection.AnnotationReflector.getPropertyAnnotation;
 
 import java.lang.reflect.Method;
+import java.util.Optional;
 
 import org.junit.Test;
 
@@ -15,28 +18,18 @@ import ua.com.fielden.platform.entity.annotation.KeyTitle;
 import ua.com.fielden.platform.entity.annotation.KeyType;
 import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.entity.annotation.Title;
-import ua.com.fielden.platform.entity.union.UnionEntity;
 import ua.com.fielden.platform.reflection.test_entities.FirstLevelEntity;
 import ua.com.fielden.platform.reflection.test_entities.SecondLevelEntity;
 import ua.com.fielden.platform.reflection.test_entities.SimpleEntity;
+import ua.com.fielden.platform.sample.domain.UnionEntity;
 
 /**
  * Test case for {@link AnnotationReflector}.
- * 
+ *
  * @author TG Team
- * 
+ *
  */
 public class AnnotationReflectorTest {
-    @Test
-    public void testGetValidationAnnotations() throws Exception {
-        final Method mutatorForProperty = Reflector.getMethod(SimpleEntity.class, "setProperty", String.class);
-        assertNotNull("Could not find mutator for property 'property'", mutatorForProperty);
-        assertEquals("Incorrect number for validation annotations.", 2, AnnotationReflector.getValidationAnnotations(mutatorForProperty).size());
-
-        final Method mutatorForPropertyTwo = Reflector.getMethod(SimpleEntity.class, "setPropertyTwo", String.class);
-        assertNotNull("Could not find mutator for property 'propertyTwo'", mutatorForProperty);
-        assertEquals("Incorrect number for validation annotations.", 0, AnnotationReflector.getValidationAnnotations(mutatorForPropertyTwo).size());
-    }
 
     @Test
     public void testGetKeyType() throws Exception {
@@ -83,14 +76,21 @@ public class AnnotationReflectorTest {
         assertNotNull("Property annotation should have been determined", AnnotationReflector.getPropertyAnnotation(Title.class, SecondLevelEntity.class, "propertyOfSelfType.property"));
         assertEquals("Incorrect property annotation value", "Property", AnnotationReflector.getPropertyAnnotation(Title.class, SecondLevelEntity.class, "propertyOfSelfType.property").value());
     }
+    
+    @Test
+    public void retrieval_of_annotations_for_non_existing_properties_succeeds_with_null_result() {
+        assertNull(getPropertyAnnotation(Title.class, FirstLevelEntity.class, "property_that_does_not_exist"));
+        assertNull(getPropertyAnnotation(Title.class, SecondLevelEntity.class, "propertyOfSelfType.sub_property_that_does_not_exist"));
+        assertNull(getPropertyAnnotation(Title.class, SecondLevelEntity.class, "property_that_does_not_exist.sub_property_that_does_not_exist"));
+    }
 
     @Test
     public void test_isClassHasMethodAnnotatedWith() {
         assertTrue("", AnnotationReflector.isClassHasMethodAnnotatedWith(UnionEntity.class, Observable.class));
         // 3 -- for common properties, 2 -- for union entity, 2 -- AbstractUnionEntity, 2 -- AbstractEntity
-        assertEquals("", 8, AnnotationReflector.getMethodsAnnotatedWith(UnionEntity.class, Observable.class).size());
+        assertEquals("", 8, AnnotationReflector.getMethodsAnnotatedWith(UnionEntity.class, Optional.of(Observable.class)).size());
         assertTrue("", AnnotationReflector.isClassHasMethodAnnotatedWith(SecondLevelEntity.class, Observable.class));
         // 4 -- for SecondLevelEntity, 2 -- for FirstLevelEntity 2 - for AbstractEntity
-        assertEquals("", 9, AnnotationReflector.getMethodsAnnotatedWith(SecondLevelEntity.class, Observable.class).size());
+        assertEquals("", 9, AnnotationReflector.getMethodsAnnotatedWith(SecondLevelEntity.class, Optional.of(Observable.class)).size());
     }
 }

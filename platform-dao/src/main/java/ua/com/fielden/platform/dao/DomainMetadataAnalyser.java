@@ -1,29 +1,35 @@
 package ua.com.fielden.platform.dao;
 
+import static java.lang.String.format;
+
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.log4j.Logger;
+
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.DbVersion;
 import ua.com.fielden.platform.entity.query.EntityAggregates;
+import ua.com.fielden.platform.entity.query.exceptions.EqlException;
 import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
 
 public class DomainMetadataAnalyser {
+    private final Logger logger = Logger.getLogger(DomainMetadataAnalyser.class);
     private final Map<Class<? extends AbstractEntity<?>>, AbstractEntityMetadata> entityMetadataMap = new HashMap<>();
     private final DomainMetadata domainMetadata;
     private final BaseInfoForDomainMetadata baseInfoForDomainMetadata;
 
     public DomainMetadataAnalyser(final DomainMetadata domainMetadata) {
-        super();
         this.domainMetadata = domainMetadata;
-        baseInfoForDomainMetadata = new BaseInfoForDomainMetadata(domainMetadata.getUserMapTo());
+        baseInfoForDomainMetadata = new BaseInfoForDomainMetadata();
         entityMetadataMap.putAll(domainMetadata.getPersistedEntityMetadataMap());
         entityMetadataMap.putAll(domainMetadata.getModelledEntityMetadataMap());
+        entityMetadataMap.putAll(domainMetadata.getPureEntityMetadataMap());
     }
 
     public <ET extends AbstractEntity<?>> PersistedEntityMetadata<ET> getPersistedEntityMetadata(final Class<ET> entityType) {
@@ -53,21 +59,23 @@ public class DomainMetadataAnalyser {
                     newOne = domainMetadata.generateUnionedEntityMetadata(entityType, baseInfoForDomainMetadata);
                     break;
                 default:
-                    throw new IllegalStateException("Can't generate EntityMetadata for entity type: " + entityType);
+                    newOne = domainMetadata.generatePureEntityMetadata(entityType, baseInfoForDomainMetadata);
                 }
 
                 entityMetadataMap.put(entityType, newOne);
+
                 return newOne;
-            } catch (final Exception e) {
-                e.printStackTrace();
-                throw new RuntimeException(e.getMessage() + "entityType = " + entityType);
+            } catch (final Exception ex) {
+                final String msg = format("Error while building metadata for type [%s].", entityType.getName());
+                logger.error(msg, ex);
+                throw new EqlException(msg, ex);
             }
         }
     }
 
     /**
      * Retrieves persistence info for entity property, which is explicitly persisted within this entity type.
-     * 
+     *
      * @param entityType
      * @param propName
      * @return
@@ -79,7 +87,7 @@ public class DomainMetadataAnalyser {
 
     /**
      * Retrieves persistence info for entity property or its nested subproperty.
-     * 
+     *
      * @param entityType
      * @param propName
      * @return
@@ -129,19 +137,19 @@ public class DomainMetadataAnalyser {
     public Map<Class<?>, Object> getHibTypesDefaults() {
         return domainMetadata.getHibTypesDefaults();
     }
-    
+
     public Object getBooleanValue(final boolean value) {
         return domainMetadata.getBooleanValue(value);
     }
-    
+
     public Set<String> getLeafPropsFromFirstLevelProps(final String parentProp, final Class<? extends AbstractEntity<?>> entityType, final Set<String> firstLevelProps) {
-        final Set<String> result = new HashSet<String>();
+        final Set<String> result = new HashSet<>();
 
         for (final String prop : firstLevelProps) {
             final PropertyMetadata propMetadata = getPropPersistenceInfoExplicitly(entityType, prop);
             if (propMetadata.isEntityOfPersistedType()) {
-                final Set<String> keyProps = new HashSet<String>(Finder.getFieldNames(Finder.getKeyMembers(propMetadata.getJavaType())));
-                if (keyProps.size() > 1) {
+                final Set<String> keyProps = new HashSet<>(Finder.getFieldNames(Finder.getKeyMembers(propMetadata.getJavaType())));
+                if (EntityUtils.isCompositeEntity(propMetadata.getJavaType())) {
                     result.addAll(getLeafPropsFromFirstLevelProps(prop, propMetadata.getJavaType(), keyProps));
                 } else {
                     result.add((parentProp != null ? (parentProp + ".") : "") + prop);

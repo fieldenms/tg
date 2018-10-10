@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.entity.query;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -9,7 +10,7 @@ import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.query.generation.elements.ResultQueryYieldDetails;
 
 public class EntityRawResultConverter<E extends AbstractEntity<?>> {
-    private EntityFactory entityFactory;
+    private final EntityFactory entityFactory;
 
     protected EntityRawResultConverter(final EntityFactory entityFactory) {
         this.entityFactory = entityFactory;
@@ -22,12 +23,12 @@ public class EntityRawResultConverter<E extends AbstractEntity<?>> {
      * @param nativeResult
      * @return
      */
-    protected List<EntityContainer<E>> transformFromNativeResult(final EntityTree<E> resultTree, final List<Object> nativeResult) {
-        final List<EntityContainer<E>> result = new ArrayList<EntityContainer<E>>();
+    protected List<EntityContainer<E>> transformFromNativeResult(final EntityTree<E> resultTree, final List<?> nativeResult) {
+        final List<EntityContainer<E>> result = new ArrayList<>();
 
         for (final Object nativeEntry : nativeResult) {
             final Object[] nativeEntries = nativeEntry instanceof Object[] ? (Object[]) nativeEntry : new Object[] { nativeEntry };
-            result.add(transformTuple(nativeEntries, resultTree));
+            result.add(transformTupleIntoEntityContainer(nativeEntries, resultTree));
         }
 
         return result;
@@ -41,9 +42,9 @@ public class EntityRawResultConverter<E extends AbstractEntity<?>> {
      * @param shouldBeFetched
      * @return
      */
-    private <ET extends AbstractEntity<?>> EntityContainer<ET> transformTuple(final Object[] data, final EntityTree<ET> resultTree) {
+    private <ET extends AbstractEntity<?>> EntityContainer<ET> transformTupleIntoEntityContainer(final Object[] data, final EntityTree<ET> resultTree) {
 
-        final EntityContainer<ET> entCont = new EntityContainer<ET>(resultTree.getResultType());
+        final EntityContainer<ET> entCont = new EntityContainer<>(resultTree.getResultType());
 
         for (final Map.Entry<ResultQueryYieldDetails, Integer> primEntry : resultTree.getSingles().entrySet()) {
             entCont.getPrimitives().put(primEntry.getKey().getName(), convertValue(data[(primEntry.getValue())], primEntry.getKey().getHibTypeAsUserType()));
@@ -54,24 +55,23 @@ public class EntityRawResultConverter<E extends AbstractEntity<?>> {
         }
 
         for (final Map.Entry<String, EntityTree<? extends AbstractEntity<?>>> entityEntry : resultTree.getComposites().entrySet()) {
-            final EntityContainer<? extends AbstractEntity<?>> entContainer = transformTuple(data, entityEntry.getValue());
-            if (entContainer != null || (entContainer == null && EntityAggregates.class.equals(resultTree.getResultType()))) {
-                entCont.getEntities().put(entityEntry.getKey(), entContainer);
-            }
-        }
-
-        return !entCont.isEmpty() ? entCont : null;
-    }
-
-    private ValueContainer transformTuple(final Object[] data, final ValueTree resultTree) {
-
-        final ValueContainer entCont = new ValueContainer(resultTree.getHibType());
-
-        for (final Map.Entry<ResultQueryYieldDetails, Integer> primEntry : resultTree.getSingles().entrySet()) {
-            entCont.primitives.put(primEntry.getKey().getName(), convertValue(data[(primEntry.getValue())], primEntry.getKey().getHibTypeAsUserType()));
+            final EntityContainer<? extends AbstractEntity<?>> entContainer = transformTupleIntoEntityContainer(data, entityEntry.getValue());
+            entCont.getEntities().put(entityEntry.getKey(), entContainer);
         }
 
         return entCont;
+    }
+
+    private Map<String, Object> convertValuesForPrimitives (final Object[] data, final ValueTree resultTree) {
+        final Map<String, Object> primitives = new HashMap<String, Object>();
+        for (final Map.Entry<ResultQueryYieldDetails, Integer> primEntry : resultTree.getSingles().entrySet()) {
+            primitives.put(primEntry.getKey().getName(), convertValue(data[(primEntry.getValue())], primEntry.getKey().getHibTypeAsUserType()));
+        }
+        return primitives;
+    }
+    
+    private ValueContainer transformTuple(final Object[] data, final ValueTree resultTree) {
+        return new ValueContainer(resultTree.getHibType(), convertValuesForPrimitives(data, resultTree));
     }
 
     private Object convertValue(final Object rawValue, final IUserTypeInstantiate userType) {

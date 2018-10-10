@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.migration;
 
 import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -40,7 +41,7 @@ public class RetrieverBatchUpdateStmtGenerator extends AbstractRetrieverBatchStm
         return sb.toString();
     }
 
-    List<Object> transformValues(final ResultSet rs, final IdCache cache, final int id) throws Exception {
+    List<Object> transformValues(final ResultSet rs, final IdCache cache, final long id) throws SQLException {
         final List<Object> result = new ArrayList<>();
         for (final Container container : getContainers()) {
             final List<Object> values = new ArrayList<>();

@@ -1,5 +1,12 @@
 package ua.com.fielden.platform.entity.query;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
+import static ua.com.fielden.platform.entity.query.DbVersion.H2;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.expr;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.orderBy;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -9,10 +16,10 @@ import org.junit.Ignore;
 import org.junit.Test;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.query.fluent.ArithmeticalOperator;
-import ua.com.fielden.platform.entity.query.fluent.ComparisonOperator;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IWhere0;
-import ua.com.fielden.platform.entity.query.fluent.JoinType;
+import ua.com.fielden.platform.entity.query.fluent.enums.ArithmeticalOperator;
+import ua.com.fielden.platform.entity.query.fluent.enums.ComparisonOperator;
+import ua.com.fielden.platform.entity.query.fluent.enums.JoinType;
 import ua.com.fielden.platform.entity.query.generation.BaseEntQueryCompositionTCase;
 import ua.com.fielden.platform.entity.query.generation.elements.CaseWhen;
 import ua.com.fielden.platform.entity.query.generation.elements.ComparisonTest;
@@ -32,7 +39,6 @@ import ua.com.fielden.platform.entity.query.generation.elements.ICondition;
 import ua.com.fielden.platform.entity.query.generation.elements.ISingleOperand;
 import ua.com.fielden.platform.entity.query.generation.elements.LikeTest;
 import ua.com.fielden.platform.entity.query.generation.elements.MonthOf;
-import ua.com.fielden.platform.entity.query.generation.elements.Now;
 import ua.com.fielden.platform.entity.query.generation.elements.NullTest;
 import ua.com.fielden.platform.entity.query.generation.elements.OrderBy;
 import ua.com.fielden.platform.entity.query.generation.elements.OrderBys;
@@ -50,16 +56,12 @@ import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.OrderingModel;
 import ua.com.fielden.platform.entity.query.model.PrimitiveResultQueryModel;
+import ua.com.fielden.platform.sample.domain.TgAverageFuelUsage;
 import ua.com.fielden.platform.sample.domain.TgFuelUsage;
 import ua.com.fielden.platform.sample.domain.TgVehicle;
 import ua.com.fielden.platform.sample.domain.TgVehicleModel;
 import ua.com.fielden.platform.sample.domain.TgWorkOrder;
 import ua.com.fielden.platform.utils.Pair;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.expr;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.orderBy;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 
 public class QueryModelCompositionTest extends BaseEntQueryCompositionTCase {
     protected final IWhere0<TgVehicle> where_veh = select(VEHICLE).where();
@@ -69,14 +71,14 @@ public class QueryModelCompositionTest extends BaseEntQueryCompositionTCase {
     @Test
     public void test_like() {
         assertModelsEquals( //
-        conditions(new LikeTest(prop("model.desc"), val(mercLike), false, false)), //
+        conditions(new LikeTest(prop("model.desc"), val(mercLike), false, false, H2)), //
                 conditions(where_veh.prop("model.desc").like().val(mercLike)));
     }
 
     @Test
     public void test_notLike() {
         assertModelsEquals( //
-        conditions(new LikeTest(prop("model.desc"), val(mercLike), true, false)), //
+        conditions(new LikeTest(prop("model.desc"), val(mercLike), true, false, H2)), //
                 conditions(where_veh.prop("model.desc").notLike().val(mercLike)));
     }
 
@@ -222,14 +224,14 @@ public class QueryModelCompositionTest extends BaseEntQueryCompositionTCase {
     @Test
     public void test_ignore_of_null_value_in_condition1() {
         assertModelsEquals(//
-        conditions(new LikeTest(prop("model.desc"), val(mercLike), false, false)), //
+        conditions(new LikeTest(prop("model.desc"), val(mercLike), false, false, H2)), //
                 conditions(where_veh.prop("model.desc").like().iVal(mercLike)));
     }
 
     @Test
     public void test_ignore_of_null_value_in_condition2() {
         assertModelsEquals(//
-        conditions(new LikeTest(prop("model.desc"), iVal(null), false, false)), //
+        conditions(new LikeTest(prop("model.desc"), iVal(null), false, false, H2)), //
                 conditions(where_veh.prop("model.desc").like().iVal(null)));
     }
 
@@ -238,7 +240,7 @@ public class QueryModelCompositionTest extends BaseEntQueryCompositionTCase {
         final Map<String, Object> paramValues = new HashMap<String, Object>();
         paramValues.put("param", "MERC%");
         assertModelsEquals(//
-        conditions(new LikeTest(prop("model.desc"), val("MERC%"), false, false)), //
+        conditions(new LikeTest(prop("model.desc"), val("MERC%"), false, false, H2)), //
                 conditions(where_veh.prop("model.desc").like().param("param"), paramValues));
     }
 
@@ -247,7 +249,7 @@ public class QueryModelCompositionTest extends BaseEntQueryCompositionTCase {
         final Map<String, Object> paramValues = new HashMap<String, Object>();
         paramValues.put("param", null);
         assertModelsEquals(//
-        conditions(new LikeTest(prop("model.desc"), iVal(null), false, false)), //
+        conditions(new LikeTest(prop("model.desc"), iVal(null), false, false, H2)), //
                 conditions(where_veh.prop("model.desc").like().iParam("param"), paramValues));
     }
 
@@ -338,12 +340,41 @@ public class QueryModelCompositionTest extends BaseEntQueryCompositionTCase {
     @Test
     public void test_query_ordering() {
         final EntityResultQueryModel<TgVehicleModel> qry = select(VEHICLE).groupBy().prop("model").yield().prop("model").modelAsEntity(MODEL);
-        final OrderingModel orderModel = orderBy().beginExpr().prop("model").add().now().endExpr().asc().prop("key").desc().model();
+        final OrderingModel orderModel = orderBy().beginExpr().prop("model").add().val(1).endExpr().asc().prop("key").desc().model();
         final EntQuery act = entResultQry(qry, orderModel);
-        System.out.println(act.sql());
 
         final List<OrderBy> orderings = new ArrayList<OrderBy>();
-        orderings.add(new OrderBy(expression(prop("model"), compound(_add, new Now(DbVersion.H2))), false));
+        orderings.add(new OrderBy(expression(prop("model"), compound(_add, val(1))), false));
+        orderings.add(new OrderBy(prop("key"), true));
+        final OrderBys exp2 = new OrderBys(orderings);
+        assertEquals("models are different", exp2, act.getOrderings());
+    }
+    
+    @Test
+    public void test_query_ordering_with_standalone_order_model_combined_with_usual_order_by() {
+        final EntityResultQueryModel<TgVehicleModel> qry = select(VEHICLE).groupBy().prop("model").yield().prop("model").modelAsEntity(MODEL);
+        final OrderingModel orderSubModel = orderBy().beginExpr().prop("model").add().val(1).endExpr().asc().model();
+
+        final OrderingModel orderModel = orderBy().order(orderSubModel).prop("key").desc().model();
+        final EntQuery act = entResultQry(qry, orderModel);
+
+        final List<OrderBy> orderings = new ArrayList<OrderBy>();
+        orderings.add(new OrderBy(expression(prop("model"), compound(_add, val(1))), false));
+        orderings.add(new OrderBy(prop("key"), true));
+        final OrderBys exp2 = new OrderBys(orderings);
+        assertEquals("models are different", exp2, act.getOrderings());
+    }
+    
+    @Test
+    public void test_query_ordering_with_standalone_order_model_only() {
+        final EntityResultQueryModel<TgVehicleModel> qry = select(VEHICLE).groupBy().prop("model").yield().prop("model").modelAsEntity(MODEL);
+        final OrderingModel orderSubModel = orderBy().beginExpr().prop("model").add().val(1).endExpr().asc().prop("key").desc().model();
+
+        final OrderingModel orderModel = orderBy().order(orderSubModel).model();
+        final EntQuery act = entResultQry(qry, orderModel);
+
+        final List<OrderBy> orderings = new ArrayList<OrderBy>();
+        orderings.add(new OrderBy(expression(prop("model"), compound(_add, val(1))), false));
         orderings.add(new OrderBy(prop("key"), true));
         final OrderBys exp2 = new OrderBys(orderings);
         assertEquals("models are different", exp2, act.getOrderings());
@@ -397,6 +428,89 @@ public class QueryModelCompositionTest extends BaseEntQueryCompositionTCase {
         assertEquals("models are different", exp, entSubQry(qry).getYields());
     }
 
+
+    //////////////////////////////////////////////////////// Yielding All ////////////////////////////////////////////////////////////////
+
+    @Test
+    public void yield_all_works_for_persisted_entity_type_based_source_without_alias() {
+        final EntityResultQueryModel<TgVehicleModel> qry = select(MODEL).yieldAll().modelAsEntity(MODEL);
+        final Yields exp = new Yields();
+        exp.addYield(new Yield(new EntProp("make"), "make"));
+        exp.addYield(new Yield(new EntProp("id"), "id"));
+        exp.addYield(new Yield(new EntProp("key"), "key"));
+        exp.addYield(new Yield(new EntProp("desc"), "desc"));
+        exp.addYield(new Yield(new EntProp("version"), "version"));
+        assertEquals("models are different", exp, entResultQry(qry).getYields());
+    }
+
+    @Test
+    public void yield_all_works_for_synthetic_entity_type_based_source_without_alias() {
+        final EntityResultQueryModel<TgAverageFuelUsage> qry = select(AVERAGE_FUEL_USAGE).yieldAll().modelAsEntity(AVERAGE_FUEL_USAGE);
+        final Yields exp = new Yields();
+        exp.addYield(new Yield(new EntProp("key"), "key"));
+        exp.addYield(new Yield(new EntProp("qty"), "qty"));
+        exp.addYield(new Yield(new EntProp("id"), "id"));
+        assertEquals("models are different", exp, entResultQry(qry).getYields());
+    }
+
+    @Test
+    public void yield_all_works_for_persisted_entity_type_based_source_with_alias() {
+        final EntityResultQueryModel<TgVehicleModel> qry = select(MODEL).as("m").yieldAll().modelAsEntity(MODEL);
+        final Yields exp = new Yields();
+        exp.addYield(new Yield(new EntProp("m.make"), "make"));
+        exp.addYield(new Yield(new EntProp("m.id"), "id"));
+        exp.addYield(new Yield(new EntProp("m.key"), "key"));
+        exp.addYield(new Yield(new EntProp("m.desc"), "desc"));
+        exp.addYield(new Yield(new EntProp("m.version"), "version"));
+        assertEquals("models are different", exp, entResultQry(qry).getYields());
+    }
+    
+    @Test
+    public void yield_all_works_for_synthetic_entity_type_based_source_with_alias() {
+        final EntityResultQueryModel<TgAverageFuelUsage> qry = select(AVERAGE_FUEL_USAGE).as("afu").yieldAll().modelAsEntity(AVERAGE_FUEL_USAGE);
+        final Yields exp = new Yields();
+        exp.addYield(new Yield(new EntProp("afu.key"), "key"));
+        exp.addYield(new Yield(new EntProp("afu.qty"), "qty"));
+        exp.addYield(new Yield(new EntProp("afu.id"), "id"));
+        assertEquals("models are different", exp, entResultQry(qry).getYields());
+    }
+    
+    @Test
+    public void yield_all_works_for_persisted_entity_type_based_source_with_subsequent_yields() {
+        final AggregatedResultQueryModel qry = select(MODEL).as("m").yieldAll().yield().val(100).as("hundred").modelAsAggregate();
+        final Yields exp = new Yields();
+        exp.addYield(new Yield(new EntProp("m.make"), "make"));
+        exp.addYield(new Yield(new EntProp("m.id"), "id"));
+        exp.addYield(new Yield(new EntProp("m.key"), "key"));
+        exp.addYield(new Yield(new EntProp("m.desc"), "desc"));
+        exp.addYield(new Yield(new EntProp("m.version"), "version"));
+        exp.addYield(new Yield(new EntValue(100), "hundred"));
+        assertEquals("models are different", exp, entResultQry(qry).getYields());
+    }
+    
+    @Test
+    public void yield_all_works_for_persisted_entity_type_based_source_without_subsequent_yields_and_aggregate_result() {
+        final AggregatedResultQueryModel qry = select(MODEL).as("m").yieldAll().modelAsAggregate();
+        final Yields exp = new Yields();
+        exp.addYield(new Yield(new EntProp("m.make"), "make"));
+        exp.addYield(new Yield(new EntProp("m.id"), "id"));
+        exp.addYield(new Yield(new EntProp("m.key"), "key"));
+        exp.addYield(new Yield(new EntProp("m.desc"), "desc"));
+        exp.addYield(new Yield(new EntProp("m.version"), "version"));
+        assertEquals("models are different", exp, entResultQry(qry).getYields());
+    }
+    
+    @Test
+    public void yield_all_works_for_synthetic_entity_type_based_source_with_subsequent_yields() {
+        final AggregatedResultQueryModel qry = select(AVERAGE_FUEL_USAGE).yieldAll().yield().val(100).as("hundred").modelAsAggregate();
+        final Yields exp = new Yields();
+        exp.addYield(new Yield(new EntProp("key"), "key"));
+        exp.addYield(new Yield(new EntProp("qty"), "qty"));
+        exp.addYield(new Yield(new EntProp("id"), "id"));
+        exp.addYield(new Yield(new EntValue(100), "hundred"));
+        assertEquals("models are different", exp, entResultQry(qry).getYields());
+    }
+    
     @Test
     @Ignore
     public void test_validation_of_yielded_tree_with_broken_hierarchy() {

@@ -1,5 +1,8 @@
 package ua.com.fielden.platform.report.query.generation;
 
+import static ua.com.fielden.platform.domaintree.impl.AbstractDomainTree.isBooleanCriterion;
+import static ua.com.fielden.platform.domaintree.impl.AbstractDomainTree.isDoubleCriterion;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -9,9 +12,9 @@ import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.IAddTo
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.domaintree.impl.AbstractDomainTree;
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity_centre.review.DynamicQueryBuilder.QueryProperty;
+import ua.com.fielden.platform.entity_centre.review.criteria.EntityQueryCriteriaUtils;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
-import ua.com.fielden.platform.swing.review.DynamicQueryBuilder.QueryProperty;
-import ua.com.fielden.platform.swing.review.development.EntityQueryCriteriaUtils;
 import ua.com.fielden.platform.utils.EntityUtils;
 
 public class ReportQueryGenerationUtils {
@@ -47,10 +50,10 @@ public class ReportQueryGenerationUtils {
         final QueryProperty queryProperty = EntityQueryCriteriaUtils.createNotInitialisedQueryProperty(managedType, actualProperty);
 
         queryProperty.setValue(tickManager.getValue(root, actualProperty));
-        if (AbstractDomainTree.isDoubleCriterionOrBoolean(managedType, actualProperty)) {
+        if (isDoubleCriterion(managedType, actualProperty)) {
             queryProperty.setValue2(tickManager.getValue2(root, actualProperty));
         }
-        if (AbstractDomainTree.isDoubleCriterion(managedType, actualProperty)) {
+        if (isDoubleCriterion(managedType, actualProperty) && !isBooleanCriterion(managedType, actualProperty)) {
             queryProperty.setExclusive(tickManager.getExclusive(root, actualProperty));
             queryProperty.setExclusive2(tickManager.getExclusive2(root, actualProperty));
         }

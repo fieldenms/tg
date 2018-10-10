@@ -1,7 +1,10 @@
 package ua.com.fielden.platform.entity.query;
 
+import java.util.Map;
 import java.util.SortedMap;
+import java.util.SortedSet;
 import java.util.TreeMap;
+import java.util.TreeSet;
 
 import ua.com.fielden.platform.entity.query.generation.elements.ResultQueryYieldDetails;
 
@@ -30,6 +33,16 @@ public class ValueTree {
 
     public ICompositeUserTypeInstantiate getHibType() {
         return hibType;
+    }
+    
+    public SortedSet<HibernateScalar> getScalarFromValueTree() {
+        final SortedSet<HibernateScalar> result = new TreeSet<HibernateScalar>();
+
+        for (final Map.Entry<ResultQueryYieldDetails, Integer> single : singles.entrySet()) {
+            result.add(new HibernateScalar(single.getKey().getColumn(), single.getKey().getHibTypeAsType(), single.getValue()));
+        }
+
+        return result;
     }
 
     @Override

@@ -78,11 +78,19 @@ public class ExpressionParser {
      * @throws RecognitionException
      */
     private AstNode sentence() throws RecognitionException {
-        if (speculate_case_expression()) {
-            return match_case_expression();
-        } else if (speculate_logical_expression()) {
+        if (speculate_logical_expression()) {
             return match_logical_expression();
+        } else if (speculate_arithmetic_expression()) {
+            return match_arithmetic_expression();
+        } else if (speculate_case_expression()) {
+            return match_case_expression();
         } else {
+            // well... if we're here that means the expression cannot really be parsed
+            // however, it would be good it we could at least try to provide some meaningful error
+            // for now lets assume that arithmetic expressions are most common and try to parse the expression as if
+            // it is an arithmetic one....
+            // TODO at some stage the speculation algorithm needs to become more advanced in order to 
+            //      more accurately identify expression kind for invalid expressions 
             return match_arithmetic_expression();
         }
     }
@@ -116,13 +124,28 @@ public class ExpressionParser {
             caseNode.addChild(whenThenNode);
         } while (lookahead() == EgTokenCategory.WHEN);
 
-        // there should be exactly one ELSE clause
-        final AstNode elseNode = else_keyword();
-        caseNode.addChild(elseNode);
+        // there could be an optional ELSE
+        if (lookahead() == EgTokenCategory.ELSE) {
+            // there can only be exactly one ELSE clause
+            final AstNode elseNode = else_keyword();
+            caseNode.addChild(elseNode);
+        }
 
         // the expression must end with keyword END, which does not have to be represented in AST tree
         match(EgTokenCategory.END);
         return caseNode;
+    }
+
+    private boolean speculate_arithmetic_expression() {
+        mark();
+        try {
+            match_arithmetic_expression();
+            return true;
+        } catch (final Exception ex) {
+            return false;
+        } finally {
+            release();
+        }
     }
 
     private boolean speculate_logical_expression() {
@@ -355,13 +378,16 @@ public class ExpressionParser {
     /** Matches keyword THEN. Returns an AST node with a string literal that suppose to follow THEN. */
     private AstNode then_keyword() throws RecognitionException {
         match(EgTokenCategory.THEN);
-        return match_literal(EgTokenCategory.STRING);
+        
+        // just matching the THEN operand as an arithmetic expression should recognizing most (if not all) required cases
+        return match_arithmetic_expression();
     }
 
     /** Matches keyword ELSE. Returns an AST node with a string literal that suppose to follow ELSE. */
     private AstNode else_keyword() throws RecognitionException {
         match(EgTokenCategory.ELSE);
-        return match_literal(EgTokenCategory.STRING);
+        // just matching the THEN operand as an arithmetic expression should recognizing most (if not all) required cases
+        return match_arithmetic_expression();
     }
 
     /**
@@ -463,6 +489,8 @@ public class ExpressionParser {
         case MINUTES:
         case SECONDS:
             return match_function_with_two_arguments(cat);
+        case CASE:
+            return match_case_expression();
         default:
             throw new NoViableAltException("Unexpected token " + tokens[position], tokens[position]);
         }

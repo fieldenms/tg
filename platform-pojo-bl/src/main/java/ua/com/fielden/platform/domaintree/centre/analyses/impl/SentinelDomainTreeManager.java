@@ -3,8 +3,10 @@ package ua.com.fielden.platform.domaintree.centre.analyses.impl;
 import java.nio.ByteBuffer;
 import java.util.Set;
 
+import ua.com.fielden.platform.domaintree.IUsageManager;
 import ua.com.fielden.platform.domaintree.centre.analyses.ISentinelDomainTreeManager;
 import ua.com.fielden.platform.domaintree.centre.analyses.ISentinelDomainTreeRepresentation;
+import ua.com.fielden.platform.domaintree.exceptions.DomainTreeException;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
 
 /**
@@ -114,11 +116,11 @@ public class SentinelDomainTreeManager extends AnalysisDomainTreeManager impleme
         @Override
         public ITickManager check(final Class<?> root, final String property, final boolean check) {
             if (!SentinelDomainTreeRepresentation.COUNT_OF_SELF_DASHBOARD.equals(property)) {
-                throw new IllegalArgumentException("It was tried to 'check' property [" + property + "] in type [" + root.getSimpleName() + "]. But only ["
+                throw new DomainTreeException("It was tried to 'check' property [" + property + "] in type [" + root.getSimpleName() + "]. But only ["
                         + SentinelDomainTreeRepresentation.COUNT_OF_SELF_DASHBOARD + "] is permitted for checking.");
             }
             if (!check) {
-                throw new IllegalArgumentException("It was tried to 'UNcheck' property [" + SentinelDomainTreeRepresentation.COUNT_OF_SELF_DASHBOARD + "] property in type ["
+                throw new DomainTreeException("It was tried to 'UNcheck' property [" + SentinelDomainTreeRepresentation.COUNT_OF_SELF_DASHBOARD + "] property in type ["
                         + root.getSimpleName() + "]. But it should remain immutable checked forever.");
             }
             super.check(root, property, check);
@@ -144,8 +146,8 @@ public class SentinelDomainTreeManager extends AnalysisDomainTreeManager impleme
      * 
      */
     public static class SentinelDomainTreeManagerSerialiser extends AbstractAnalysisDomainTreeManagerSerialiser<SentinelDomainTreeManager> {
-        public SentinelDomainTreeManagerSerialiser(final ISerialiser kryo) {
-            super(kryo);
+        public SentinelDomainTreeManagerSerialiser(final ISerialiser serialiser) {
+            super(serialiser);
         }
 
         @Override
@@ -155,7 +157,7 @@ public class SentinelDomainTreeManager extends AnalysisDomainTreeManager impleme
             final SentinelAddToAggregationTickManager secondTick = readValue(buffer, SentinelAddToAggregationTickManager.class);
             final Boolean visible = readValue(buffer, Boolean.class);
             final Integer visibleDistributedValuesNumber = readValue(buffer, Integer.class);
-            return new SentinelDomainTreeManager(kryo(), dtr, visible, firstTick, secondTick, visibleDistributedValuesNumber);
+            return new SentinelDomainTreeManager(serialiser(), dtr, visible, firstTick, secondTick, visibleDistributedValuesNumber);
         }
 
         @Override

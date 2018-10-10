@@ -25,7 +25,7 @@ public class AdvancedChangeSupertypeAdapter extends ClassVisitor implements Opco
      * Additionally, sets supertype to the specified one.
      */
     @Override
-    public synchronized void visit(final int version, final int access, final String name, final String signature, final String superName, final String[] interfaces) {
+    public void visit(final int version, final int access, final String name, final String signature, final String superName, final String[] interfaces) {
         super.visit(version, ACC_PUBLIC + ACC_SUPER, name, null, supertype, null);
     }
 
@@ -46,7 +46,7 @@ public class AdvancedChangeSupertypeAdapter extends ClassVisitor implements Opco
             mv = cv.visitMethod(ACC_PUBLIC, "<init>", "()V", null, null);
             mv.visitCode();
             mv.visitVarInsn(ALOAD, 0);
-            mv.visitMethodInsn(INVOKESPECIAL, supertype, "<init>", "()V");
+            mv.visitMethodInsn(INVOKESPECIAL, supertype, "<init>", "()V", false);
             mv.visitInsn(RETURN);
             mv.visitMaxs(1, 1);
             mv.visitEnd();

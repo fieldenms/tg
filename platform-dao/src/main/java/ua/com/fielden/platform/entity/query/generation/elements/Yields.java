@@ -10,10 +10,7 @@ import java.util.SortedMap;
 import java.util.TreeMap;
 
 public class Yields implements IPropertyCollector {
-    private final SortedMap<String, Yield> yields = new TreeMap<String, Yield>();
-
-    public Yields() {
-    }
+    private final SortedMap<String, Yield> yields = new TreeMap<>();
 
     public void addYield(final Yield yield) {
         if (yields.containsKey(yield.getAlias())) {
@@ -35,12 +32,20 @@ public class Yields implements IPropertyCollector {
         }
     }
 
+    public boolean isHeaderOfSimpleMoneyTypeProperty(String propName) {
+    	return yields.containsKey(propName + ".amount");
+    }
+    
     public Yield getFirstYield() {
         return !yields.isEmpty() ? yields.values().iterator().next() : null;
     }
 
     public int size() {
         return yields.size();
+    }
+    
+    public boolean isEmpty() {
+        return yields.isEmpty();
     }
 
     public Collection<Yield> getYields() {
@@ -99,8 +104,8 @@ public class Yields implements IPropertyCollector {
     }
 
     public String sql() {
-        final StringBuffer sb = new StringBuffer();
-        final List<Yield> yieldsToBeIncludedIntoSql = new ArrayList<Yield>();
+        final StringBuilder sb = new StringBuilder();
+        final List<Yield> yieldsToBeIncludedIntoSql = new ArrayList<>();
 
         for (final Yield yield : yields.values()) {
             if (!yield.getInfo().isCompositeProperty() && !yield.getInfo().isUnionEntity()) {
@@ -108,7 +113,7 @@ public class Yields implements IPropertyCollector {
             }
         }
 
-        if (yieldsToBeIncludedIntoSql.size() == 0) {
+        if (yieldsToBeIncludedIntoSql.isEmpty()) {
             throw new IllegalStateException("It appears to be yieldless query!");
         }
 

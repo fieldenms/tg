@@ -15,8 +15,6 @@ import ua.com.fielden.platform.entity.annotation.Title;
 @DescTitle(value = "description", desc = "desc description")
 public class DynamicKeyPartEntity extends AbstractEntity<DynamicEntityKey> {
 
-    private static final long serialVersionUID = -7980727819321782977L;
-
     @IsProperty
     @Title(value = "Name", desc = "Name description")
     @CompositeKeyMember(1)
@@ -38,10 +36,6 @@ public class DynamicKeyPartEntity extends AbstractEntity<DynamicEntityKey> {
     @IsProperty
     @Title(value = "Uncommon property", desc = "Uncommon property description")
     private String uncommonProperty;
-
-    protected DynamicKeyPartEntity() {
-        setKey(new DynamicEntityKey(this));
-    }
 
     public String getName() {
         return name;

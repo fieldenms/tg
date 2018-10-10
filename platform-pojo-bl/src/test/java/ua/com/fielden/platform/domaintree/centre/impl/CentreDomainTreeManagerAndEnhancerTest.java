@@ -13,14 +13,15 @@ import java.util.HashSet;
 import java.util.Set;
 
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import ua.com.fielden.platform.domaintree.ICalculatedProperty.CalculatedPropertyAttribute;
 import ua.com.fielden.platform.domaintree.IDomainTreeEnhancer.IncorrectCalcPropertyException;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer.AnalysisType;
-import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer.IAnalysisListener;
 import ua.com.fielden.platform.domaintree.centre.analyses.IAbstractAnalysisDomainTreeManager;
+import ua.com.fielden.platform.domaintree.exceptions.DomainTreeException;
 import ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeManagerAndEnhancerTest;
 import ua.com.fielden.platform.domaintree.testing.EntityForCentreCheckedProperties;
 import ua.com.fielden.platform.domaintree.testing.EntityWithCompositeKey;
@@ -40,6 +41,8 @@ public class CentreDomainTreeManagerAndEnhancerTest extends AbstractDomainTreeMa
     ///////////////////////////////////////////////////////////////////////////////////////////////////
     /////////////////////////////////////// Test initialisation ///////////////////////////////////////
     ///////////////////////////////////////////////////////////////////////////////////////////////////
+    private int i, j;
+    
     @Override
     protected ICentreDomainTreeManagerAndEnhancer dtm() {
         return (ICentreDomainTreeManagerAndEnhancer) just_a_dtm();
@@ -131,6 +134,7 @@ public class CentreDomainTreeManagerAndEnhancerTest extends AbstractDomainTreeMa
 
     @Override
     @Test
+    @Ignore("Ignored due to the removal of support for listeners. Need to revisit.")
     public void test_that_domain_changes_are_correctly_reflected_in_CHECKed_properties() {
         dtm().getFirstTick().setColumnsNumber(3);
 
@@ -161,7 +165,7 @@ public class CentreDomainTreeManagerAndEnhancerTest extends AbstractDomainTreeMa
         try {
             dtm().removeAnalysisManager(name);
             fail("The removal of non-existent analysis should fail.");
-        } catch (final IllegalArgumentException e) {
+        } catch (final DomainTreeException e) {
         }
 
         // initialise a brand new instance of analysis (e.g. pivot)
@@ -169,7 +173,7 @@ public class CentreDomainTreeManagerAndEnhancerTest extends AbstractDomainTreeMa
         try {
             dtm().initAnalysisManagerByDefault(name, AnalysisType.SIMPLE);
             fail("The creation of analysis with same name should fail.");
-        } catch (final IllegalArgumentException e) {
+        } catch (final DomainTreeException e) {
         }
         assertTrue("The instance should be 'changed' after initialisation.", dtm().isChangedAnalysisManager(name));
 
@@ -230,26 +234,11 @@ public class CentreDomainTreeManagerAndEnhancerTest extends AbstractDomainTreeMa
         test_initialisation_discarding_and_saving_of_Analyses(AnalysisType.LIFECYCLE, "A brand new LIFECYCLE analysis");
     }
 
-    private static int i, j;
-
     @Test
+    @Ignore("Ignored due to the removal of support for listeners. Need to revisit.")
     public void test_that_AnalysisListeners_work() {
         i = 0;
         j = 0;
-        final IAnalysisListener listener = new IAnalysisListener() {
-            @Override
-            public void propertyStateChanged(final Class<?> root, final String property, final Boolean hasBeenInitialised, final Boolean oldState) {
-                if (hasBeenInitialised == null) {
-                    throw new IllegalArgumentException("'hasBeenInitialised' cannot be null.");
-                }
-                if (hasBeenInitialised) {
-                    i++;
-                } else {
-                    j++;
-                }
-            }
-        };
-        dtm().addAnalysisListener(listener);
 
         assertEquals("Incorrect value 'i'.", 0, i);
         assertEquals("Incorrect value 'j'.", 0, j);
@@ -332,17 +321,17 @@ public class CentreDomainTreeManagerAndEnhancerTest extends AbstractDomainTreeMa
         try {
             dtm().freezeAnalysisManager(name2);
             fail("Double freezing is not permitted. Please do you job -- save/discard and freeze again if you need!");
-        } catch (final IllegalArgumentException e) {
+        } catch (final DomainTreeException e) {
         }
         try {
             dtm().initAnalysisManagerByDefault(name2, analysisType);
             fail("Init action is not permitted while report is freezed. Please do you job -- save/discard and Init it if you need!");
-        } catch (final IllegalArgumentException e) {
+        } catch (final DomainTreeException e) {
         }
         try {
             dtm().removeAnalysisManager(name2);
             fail("Removing is not permitted while report is freezed. Please do you job -- save/discard and remove it if you need!");
-        } catch (final IllegalArgumentException e) {
+        } catch (final DomainTreeException e) {
         }
 
         // change smth.

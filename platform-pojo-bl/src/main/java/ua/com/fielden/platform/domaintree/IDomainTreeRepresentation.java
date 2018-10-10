@@ -1,8 +1,9 @@
 package ua.com.fielden.platform.domaintree;
 
-import java.util.EventListener;
 import java.util.List;
 import java.util.Set;
+
+import ua.com.fielden.platform.domaintree.exceptions.DomainTreeException;
 
 /**
  * This interface defines how domain tree can be represented. <br>
@@ -91,46 +92,6 @@ public interface IDomainTreeRepresentation extends IRootTyped {
     List<String> includedProperties(final Class<?> root);
 
     /**
-     * A post-successful listener for property addition / removal.
-     * 
-     * @author TG Team
-     * 
-     */
-    public interface IPropertyListener extends IPropertyStateListener<Boolean> {
-        /**
-         * @param wasAddedOrRemoved
-         *            -- <code>true</code> to indicate that property was successfully added, <code>false</code> to indicate that it was successfully removed.
-         */
-        @Override
-        void propertyStateChanged(final Class<?> root, final String property, final Boolean wasAddedOrRemoved, final Boolean oldState);
-
-        boolean isInternal();
-    }
-
-    /**
-     * Adds a {@link IPropertyListener} listener.
-     * 
-     * @param listener
-     * @return
-     */
-    void addPropertyListener(final IPropertyListener listener);
-
-    /**
-     * Adds the weak {@link IPropertyListener} listener.
-     * 
-     * @param listener
-     */
-    void addWeakPropertyListener(final IPropertyListener listener);
-
-    /**
-     * Removes a {@link IPropertyListener} listener.
-     * 
-     * @param listener
-     * @return
-     */
-    void removePropertyListener(final IPropertyListener listener);
-
-    /**
      * The structure of properties in case of circular references can be "not loaded" to some level of properties. The method tries to load missing tree branch of
      * "included properties" ({@link #includedProperties(Class)} contract).
      * 
@@ -154,7 +115,7 @@ public interface IDomainTreeRepresentation extends IRootTyped {
      * Defines a contract for what properties have which functions available. If no functions are available -- the calculated properties could not be created.<br>
      * <br>
      * 
-     * Throws {@link IllegalArgumentException} if this contract conflicts with excluded properties contract.
+     * Throws {@link DomainTreeException} if this contract conflicts with excluded properties contract.
      * 
      * @param root
      *            -- a root type that contains property.
@@ -188,7 +149,7 @@ public interface IDomainTreeRepresentation extends IRootTyped {
          * Defines a contract which ticks for which properties should be <b>immutably</b> disabled in domain tree representation. <br>
          * <br>
          * 
-         * This contract should not conflict with "excluded properties" contract. The conflict will produce an {@link IllegalArgumentException}.<br>
+         * This contract should not conflict with "excluded properties" contract. The conflict will produce an {@link DomainTreeException}.<br>
          * <br>
          * 
          * The method should be mainly concentrated on the "classes" of property's ticks that should be disabled (based on i.e. types, nature, parents, annotations assigned). If
@@ -210,7 +171,7 @@ public interface IDomainTreeRepresentation extends IRootTyped {
          * Marks a concrete property's tick to be <b>immutably</b> disabled in domain tree representation. <br>
          * <br>
          * 
-         * This action should not conflict with "excluded properties" contract. The conflict will produce an {@link IllegalArgumentException}.<br>
+         * This action should not conflict with "excluded properties" contract. The conflict will produce an {@link DomainTreeException}.<br>
          * <br>
          * 
          * The method should be mainly concentrated on "concrete" property's ticks that should be disabled. If you want to define which "classes" of property's ticks should be
@@ -228,48 +189,10 @@ public interface IDomainTreeRepresentation extends IRootTyped {
         ITickRepresentation disableImmutably(final Class<?> root, final String property);
 
         /**
-         * A post-successful listener for property disablement.
-         * 
-         * @author TG Team
-         * 
-         */
-        public interface IPropertyDisablementListener extends IPropertyStateListener<Boolean> {
-            /**
-             * @param hasBeenDisabled
-             *            -- <code>true</code> to indicate that property was successfully disabled, <code>false</code> to indicate that it was successfully enabled.
-             */
-            @Override
-            void propertyStateChanged(final Class<?> root, final String property, final Boolean hasBeenDisabled, final Boolean oldState);
-        }
-
-        /**
-         * Adds a {@link IPropertyDisablementListener} listener.
-         * 
-         * @param listener
-         * @return
-         */
-        void addPropertyDisablementListener(final IPropertyDisablementListener listener);
-
-        /**
-         * Adds the weak {@link IPropertyDisablementListener} instance.
-         * 
-         * @param listener
-         */
-        void addWeakPropertyDisablementListener(final IPropertyDisablementListener listener);
-
-        /**
-         * Removes a {@link IPropertyDisablementListener} listener.
-         * 
-         * @param listener
-         * @return
-         */
-        void removePropertyDisablementListener(final IPropertyDisablementListener listener);
-
-        /**
          * Defines a contract which ticks for which properties should be <b>immutably</b> checked (and automatically disabled!) in domain tree representation. <br>
          * <br>
          * 
-         * This contract should not conflict with "excluded properties" contract. The conflict will produce an {@link IllegalArgumentException}.<br>
+         * This contract should not conflict with "excluded properties" contract. The conflict will produce an {@link DomainTreeException}.<br>
          * <br>
          * 
          * The method should be mainly concentrated on the "classes" of property's ticks that should be checked (based on i.e. types, nature, parents, annotations assigned). If you
@@ -299,23 +222,4 @@ public interface IDomainTreeRepresentation extends IRootTyped {
 
     @Override
     public int hashCode();
-
-    /**
-     * A base listener interface for state "changes" of the property (e.g. property added / removed / checked / disabled / etc.).
-     * 
-     * @author TG Team
-     * 
-     * @param <T>
-     */
-    public interface IPropertyStateListener<T> extends EventListener {
-        /**
-         * Invokes after successful "change" of property state (e.g. added / removed / checked / disabled / etc.).
-         * 
-         * @param root
-         * @param property
-         * @param newState
-         * @param oldState
-         */
-        void propertyStateChanged(final Class<?> root, final String property, final T newState, final T oldState);
-    }
 }

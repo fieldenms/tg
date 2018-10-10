@@ -1,34 +1,35 @@
 package ua.com.fielden.platform.entity.query.generation;
 
+import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.EQUERY_TOKENS;
+import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.EXPR_TOKENS;
+import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.GROUPED_CONDITIONS;
+import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.IPARAM;
+import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.IVAL;
+import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.PARAM;
+import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.PROP;
+import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.VAL;
+
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
 import ua.com.fielden.platform.entity.query.DbVersion;
-import ua.com.fielden.platform.entity.query.fluent.Functions;
-import ua.com.fielden.platform.entity.query.fluent.TokenCategory;
+import ua.com.fielden.platform.entity.query.fluent.enums.Functions;
+import ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory;
 import ua.com.fielden.platform.entity.query.generation.elements.CountAll;
 import ua.com.fielden.platform.entity.query.generation.elements.EntProp;
 import ua.com.fielden.platform.entity.query.generation.elements.EntQuery;
 import ua.com.fielden.platform.entity.query.generation.elements.EntValue;
 import ua.com.fielden.platform.entity.query.generation.elements.ISetOperand;
 import ua.com.fielden.platform.entity.query.generation.elements.ISingleOperand;
-import ua.com.fielden.platform.entity.query.generation.elements.Now;
 import ua.com.fielden.platform.entity.query.generation.elements.OperandsBasedSet;
 import ua.com.fielden.platform.entity.query.generation.elements.QueryBasedSet;
 import ua.com.fielden.platform.entity.query.model.ConditionModel;
 import ua.com.fielden.platform.entity.query.model.ExpressionModel;
 import ua.com.fielden.platform.entity.query.model.QueryModel;
 import ua.com.fielden.platform.utils.Pair;
-import static ua.com.fielden.platform.entity.query.fluent.TokenCategory.EQUERY_TOKENS;
-import static ua.com.fielden.platform.entity.query.fluent.TokenCategory.EXPR_TOKENS;
-import static ua.com.fielden.platform.entity.query.fluent.TokenCategory.GROUPED_CONDITIONS;
-import static ua.com.fielden.platform.entity.query.fluent.TokenCategory.IPARAM;
-import static ua.com.fielden.platform.entity.query.fluent.TokenCategory.IVAL;
-import static ua.com.fielden.platform.entity.query.fluent.TokenCategory.PARAM;
-import static ua.com.fielden.platform.entity.query.fluent.TokenCategory.PROP;
-import static ua.com.fielden.platform.entity.query.fluent.TokenCategory.VAL;
 
 /**
  * Abstract builder to accumulate tokens until ready for respective model creation.
@@ -84,6 +85,9 @@ public abstract class AbstractTokensBuilder implements ITokensBuilder {
         case YEAR:
             setChild(new YearOfBuilder(this, queryBuilder, getParamValues()));
             break;
+        case DAY_OF_WEEK:
+            setChild(new DayOfWeekOfBuilder(this, queryBuilder, getParamValues()));
+            break;
         case DATE:
             setChild(new DateOfBuilder(this, queryBuilder, getParamValues()));
             break;
@@ -108,6 +112,9 @@ public abstract class AbstractTokensBuilder implements ITokensBuilder {
         case IF_NULL:
             setChild(new IfNullBuilder(this, queryBuilder, getParamValues()));
             break;
+        case ADD_DATE_INTERVAL:
+            setChild(new AddDateIntervalBuilder(this, queryBuilder, getParamValues()));
+            break;
         case COUNT_DATE_INTERVAL:
             setChild(new CountDateIntervalBuilder(this, queryBuilder, getParamValues()));
             break;
@@ -125,6 +132,7 @@ public abstract class AbstractTokensBuilder implements ITokensBuilder {
         }
     }
 
+    @Override
     public void add(final TokenCategory cat, final Object value) {
         if (child != null) {
             child.add(cat, value);
@@ -160,10 +168,12 @@ public abstract class AbstractTokensBuilder implements ITokensBuilder {
         }
     }
 
+    @Override
     public boolean canBeClosed() {
         return isClosing();
     }
 
+    @Override
     public void finaliseChild() {
         if (child != null) {
             final ITokensBuilder last = child;
@@ -230,7 +240,7 @@ public abstract class AbstractTokensBuilder implements ITokensBuilder {
         case COUNT_ALL:
             return new CountAll();
         case NOW:
-            return new Now(getDbVersion());
+            return new EntValue(getParamValue(EntQueryGenerator.NOW)); //return new Now(getDbVersion());
 
         default:
             throw new RuntimeException("Unrecognised zero agrument function: " + function);
@@ -292,8 +302,9 @@ public abstract class AbstractTokensBuilder implements ITokensBuilder {
 
     private Object preprocessValue(final Object value) {
         if (value != null && (value.getClass().isArray() || value instanceof Collection<?>)) {
-            final List<Object> values = new ArrayList<Object>();
-            for (final Object object : (Iterable) value) {
+            final Iterable<?> iterable = value.getClass().isArray() ? Arrays.asList((Object[]) value) : (Collection<?>) value;
+            final List<Object> values = new ArrayList<>();
+            for (final Object object : iterable) {
                 final Object furtherPreprocessed = preprocessValue(object);
                 if (furtherPreprocessed instanceof List) {
                     values.addAll((List) furtherPreprocessed);
@@ -409,4 +420,5 @@ public abstract class AbstractTokensBuilder implements ITokensBuilder {
     public DbVersion getDbVersion() {
         return getQueryBuilder().getDbVersion();
     }
+    
 }

@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.migration;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -20,14 +21,16 @@ public abstract class AbstractRetrieverBatchStmtGenerator {
     private final String insertStmt;
     private final List<Container> containers;
     private final PersistedEntityMetadata<? extends AbstractEntity<?>> emd;
+    public final List<PropertyMetadata> insertFields;
 
     public AbstractRetrieverBatchStmtGenerator(final DomainMetadataAnalyser dma, final IRetriever<? extends AbstractEntity<?>> retriever) {
         this.dma = dma;
         this.retriever = retriever;
-        this.emd = dma.getPersistedEntityMetadata(retriever.type());
+        emd = dma.getPersistedEntityMetadata(retriever.type());
         final List<PropertyMetadata> fields = extractFields();
-        this.insertStmt = generateInsertStmt(getInsertFields(fields), emd.getTable());
-        this.containers = produceContainers(fields);
+        insertFields = Collections.unmodifiableList(getInsertFields(fields));
+        insertStmt = generateInsertStmt(insertFields, emd.getTable());
+        containers = produceContainers(fields);
     }
 
     protected abstract List<PropertyMetadata> getInsertFields(final List<PropertyMetadata> fields);
@@ -83,13 +86,13 @@ public abstract class AbstractRetrieverBatchStmtGenerator {
         return result;
     }
 
-    protected Object transformValue(final Class type, final List<Object> values, final IdCache cache) throws Exception {
+    protected Object transformValue(final Class type, final List<Object> values, final IdCache cache) {
         if (EntityUtils.isPersistedEntityType(type)) {
-            final Map<Object, Integer> cacheForType = cache.getCacheForType(type);
+            final Map<Object, Long> cacheForType = cache.getCacheForType(type);
             final Object entityKeyObject = values.size() == 1 ? values.get(0) : values;
-            final Object result = cacheForType.get(entityKeyObject);
+            final Long result = cacheForType.get(entityKeyObject);
             if (values.size() == 1 && values.get(0) != null && result == null) {
-                System.out.println("           !!! can't find id for " + type.getSimpleName() + " with key: " + values.get(0));
+                System.out.println("           !!! can't find id for " + type.getSimpleName() + " with key: [" + values.get(0) + "]");
             }
             if (values.size() > 1 && !containsOnlyNull(values) && result == null) {
                 System.out.println("           !!! can't find id for " + type.getSimpleName() + " with key: " + values);

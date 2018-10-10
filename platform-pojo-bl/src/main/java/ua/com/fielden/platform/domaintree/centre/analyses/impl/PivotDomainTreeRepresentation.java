@@ -7,6 +7,7 @@ import java.util.Set;
 import ua.com.fielden.platform.domaintree.IDomainTreeRepresentation;
 import ua.com.fielden.platform.domaintree.centre.IWidthRepresentation;
 import ua.com.fielden.platform.domaintree.centre.analyses.IPivotDomainTreeRepresentation;
+import ua.com.fielden.platform.domaintree.exceptions.DomainTreeException;
 import ua.com.fielden.platform.domaintree.impl.EnhancementLinkedRootsSet;
 import ua.com.fielden.platform.domaintree.impl.EnhancementPropertiesMap;
 import ua.com.fielden.platform.domaintree.impl.EnhancementSet;
@@ -83,18 +84,23 @@ public class PivotDomainTreeRepresentation extends AbstractAnalysisDomainTreeRep
 
         @Override
         public boolean equals(final Object obj) {
-            if (this == obj)
+            if (this == obj) {
                 return true;
-            if (!super.equals(obj))
+            }
+            if (!super.equals(obj)) {
                 return false;
-            if (getClass() != obj.getClass())
+            }
+            if (getClass() != obj.getClass()) {
                 return false;
+            }
             final PivotAddToDistributionTickRepresentation other = (PivotAddToDistributionTickRepresentation) obj;
             if (propertiesWidthsByDefault == null) {
-                if (other.propertiesWidthsByDefault != null)
+                if (other.propertiesWidthsByDefault != null) {
                     return false;
-            } else if (!propertiesWidthsByDefault.equals(other.propertiesWidthsByDefault))
+                }
+            } else if (!propertiesWidthsByDefault.equals(other.propertiesWidthsByDefault)) {
                 return false;
+            }
             return true;
         }
     }
@@ -131,18 +137,23 @@ public class PivotDomainTreeRepresentation extends AbstractAnalysisDomainTreeRep
 
         @Override
         public boolean equals(final Object obj) {
-            if (this == obj)
+            if (this == obj) {
                 return true;
-            if (!super.equals(obj))
+            }
+            if (!super.equals(obj)) {
                 return false;
-            if (getClass() != obj.getClass())
+            }
+            if (getClass() != obj.getClass()) {
                 return false;
+            }
             final PivotAddToAggregationTickRepresentation other = (PivotAddToAggregationTickRepresentation) obj;
             if (propertiesWidthsByDefault == null) {
-                if (other.propertiesWidthsByDefault != null)
+                if (other.propertiesWidthsByDefault != null) {
                     return false;
-            } else if (!propertiesWidthsByDefault.equals(other.propertiesWidthsByDefault))
+                }
+            } else if (!propertiesWidthsByDefault.equals(other.propertiesWidthsByDefault)) {
                 return false;
+            }
             return true;
         }
     }
@@ -151,7 +162,7 @@ public class PivotDomainTreeRepresentation extends AbstractAnalysisDomainTreeRep
      * Returns property's (column's) <i>width</i>. <br>
      * <br>
      * 
-     * Throws {@link IllegalArgumentException}. if the specified property is excluded.<br>
+     * Throws {@link DomainTreeException}. if the specified property is excluded.<br>
      * <br>
      * 
      * @param dtr
@@ -175,7 +186,7 @@ public class PivotDomainTreeRepresentation extends AbstractAnalysisDomainTreeRep
      * Sets the <i>width</i> for specified property (column). <br>
      * <br>
      * 
-     * Throws {@link IllegalArgumentException}. if the specified property is excluded.<br>
+     * Throws {@link DomainTreeException}. if the specified property is excluded.<br>
      * <br>
      * 
      * @param dtr
@@ -202,8 +213,8 @@ public class PivotDomainTreeRepresentation extends AbstractAnalysisDomainTreeRep
      * 
      */
     public static class PivotDomainTreeRepresentationSerialiser extends AbstractDomainTreeRepresentationSerialiser<PivotDomainTreeRepresentation> {
-        public PivotDomainTreeRepresentationSerialiser(final ISerialiser kryo) {
-            super(kryo);
+        public PivotDomainTreeRepresentationSerialiser(final ISerialiser serialiser) {
+            super(serialiser);
         }
 
         @Override
@@ -212,7 +223,7 @@ public class PivotDomainTreeRepresentation extends AbstractAnalysisDomainTreeRep
             final EnhancementSet excludedProperties = readValue(buffer, EnhancementSet.class);
             final PivotAddToDistributionTickRepresentation firstTick = readValue(buffer, PivotAddToDistributionTickRepresentation.class);
             final PivotAddToAggregationTickRepresentation secondTick = readValue(buffer, PivotAddToAggregationTickRepresentation.class);
-            return new PivotDomainTreeRepresentation(kryo(), rootTypes, excludedProperties, firstTick, secondTick);
+            return new PivotDomainTreeRepresentation(serialiser(), rootTypes, excludedProperties, firstTick, secondTick);
         }
     }
 }

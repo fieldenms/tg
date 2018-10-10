@@ -1,7 +1,13 @@
 package ua.com.fielden.platform.test;
 
+import com.google.inject.Scopes;
+
+import ua.com.fielden.platform.basic.config.IApplicationDomainProvider;
+import ua.com.fielden.platform.entity.factory.DefaultCompanionObjectFinderImpl;
+import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.entity.factory.IMetaPropertyFactory;
 import ua.com.fielden.platform.entity.ioc.EntityModule;
+import ua.com.fielden.platform.web.test.config.ApplicationDomain;
 
 /**
  * This Guice module ensures that all observable and validatable properties are handled correctly. In addition to {@link EntityModule}, this module binds
@@ -11,14 +17,14 @@ import ua.com.fielden.platform.entity.ioc.EntityModule;
  * 
  * @author TG Team
  */
-public class CommonTestEntityModuleWithPropertyFactory extends EntityModuleWithPropertyFactory {
-
-    public CommonTestEntityModuleWithPropertyFactory() {
-    }
+public final class CommonTestEntityModuleWithPropertyFactory extends EntityModuleWithPropertyFactory {
 
     @Override
     protected void configure() {
         super.configure();
-
+        
+        bind(IApplicationDomainProvider.class).to(ApplicationDomain.class);
+        bind(ICompanionObjectFinder.class).to(DefaultCompanionObjectFinderImpl.class).in(Scopes.SINGLETON);
     }
+    
 }

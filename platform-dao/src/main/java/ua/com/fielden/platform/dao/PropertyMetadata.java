@@ -4,23 +4,25 @@ import static ua.com.fielden.platform.dao.PropertyCategory.COLLECTIONAL;
 import static ua.com.fielden.platform.dao.PropertyCategory.COMPONENT_DETAILS;
 import static ua.com.fielden.platform.dao.PropertyCategory.COMPONENT_HEADER;
 import static ua.com.fielden.platform.dao.PropertyCategory.ENTITY_MEMBER_OF_COMPOSITE_KEY;
-import static ua.com.fielden.platform.dao.PropertyCategory.EXPRESSION_COMMON;
 import static ua.com.fielden.platform.dao.PropertyCategory.ONE2ONE_ID;
 import static ua.com.fielden.platform.dao.PropertyCategory.PRIMITIVE_MEMBER_OF_COMPOSITE_KEY;
 import static ua.com.fielden.platform.dao.PropertyCategory.SYNTHETIC;
+import static ua.com.fielden.platform.dao.PropertyCategory.SYNTHETIC_COMPONENT_DETAILS;
+import static ua.com.fielden.platform.dao.PropertyCategory.SYNTHETIC_COMPONENT_HEADER;
 import static ua.com.fielden.platform.dao.PropertyCategory.UNION_ENTITY_DETAILS;
 import static ua.com.fielden.platform.dao.PropertyCategory.UNION_ENTITY_HEADER;
 import static ua.com.fielden.platform.dao.PropertyCategory.VIRTUAL_OVERRIDE;
+
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
 import org.apache.commons.lang.StringUtils;
-import org.hibernate.Hibernate;
+import org.apache.log4j.Logger;
+import org.hibernate.type.LongType;
 import org.hibernate.type.Type;
 
 import ua.com.fielden.platform.entity.AbstractUnionEntity;
@@ -43,6 +45,8 @@ public class PropertyMetadata implements Comparable<PropertyMetadata> {
     private final ExpressionModel expressionModel;
     private final boolean aggregatedExpression; // contains aggregation function on the root level (i.e. Totals in entity centre tree)
 
+    transient private final Logger logger = Logger.getLogger(this.getClass());
+    
     private PropertyMetadata(final Builder builder) {
         type = builder.type;
         name = builder.name;
@@ -58,18 +62,10 @@ public class PropertyMetadata implements Comparable<PropertyMetadata> {
         }
     }
 
-    public String ddl() {
-        final StringBuffer sb = new StringBuffer();
-        for (final Iterator<PropertyColumn> iterator = columns.iterator(); iterator.hasNext();) {
-            final PropertyColumn column = iterator.next();
-            sb.append(column.ddl());
-            sb.append(nullable ? " NULL" : " NOT NULL");
-            sb.append((iterator.hasNext() ? ",\n" : ""));
-        }
-        return sb.toString();
-    }
-
     public YieldDetailsType getYieldDetailType() {
+        if (aggregatedExpression) {
+            return YieldDetailsType.AGGREGATED_EXPRESSION;
+        }
         return isCompositeProperty() ? YieldDetailsType.COMPOSITE_TYPE_HEADER : (isUnionEntity() ? YieldDetailsType.UNION_ENTITY_HEADER : YieldDetailsType.USUAL_PROP);
     }
 
@@ -104,6 +100,10 @@ public class PropertyMetadata implements Comparable<PropertyMetadata> {
         return expressionModel != null && type != COMPONENT_HEADER;
     }
 
+    public boolean isCalculatedCompositeUserTypeHeader() {
+        return expressionModel != null && type == COMPONENT_HEADER;
+    }
+
     public boolean isCompositeProperty() {
         return getHibTypeAsCompositeUserType() != null;
     }
@@ -116,9 +116,9 @@ public class PropertyMetadata implements Comparable<PropertyMetadata> {
         return type.equals(COLLECTIONAL);
     }
 
-    public boolean isCommonCalculated() {
-        return type.equals(EXPRESSION_COMMON);
-    }
+//    public boolean isCommonCalculated() {
+//        return type.equals(EXPRESSION_COMMON);
+//    }
 
     public boolean isOne2OneId() {
         return type.equals(ONE2ONE_ID);
@@ -145,7 +145,7 @@ public class PropertyMetadata implements Comparable<PropertyMetadata> {
     }
 
     public boolean isSynthetic() {
-        return type.equals(SYNTHETIC);
+        return type.equals(SYNTHETIC) || type.equals(SYNTHETIC_COMPONENT_HEADER) || type.equals(SYNTHETIC_COMPONENT_DETAILS);
     }
 
     public String getTypeString() {
@@ -158,24 +158,26 @@ public class PropertyMetadata implements Comparable<PropertyMetadata> {
 
     public Set<PropertyMetadata> getCompositeTypeSubprops() {
         final Set<PropertyMetadata> result = new HashSet<PropertyMetadata>();
-        if (COMPONENT_HEADER.equals(type) || getHibTypeAsCompositeUserType() != null) {
+        if (COMPONENT_HEADER.equals(type) || SYNTHETIC_COMPONENT_HEADER.equals(type) || getHibTypeAsCompositeUserType() != null) {
+            logger.debug("=== (COMPONENT_HEADER.equals(type)) = " + COMPONENT_HEADER.equals(type) + "=== (SYNTHETIC_COMPONENT_HEADER.equals(type)) = " + SYNTHETIC_COMPONENT_HEADER.equals(type) + " ---- (getHibTypeAsCompositeUserType() != null) = " + (getHibTypeAsCompositeUserType() != null));
             final List<String> subprops = Arrays.asList(((ICompositeUserTypeInstantiate) hibType).getPropertyNames());
             final List<Object> subpropsTypes = Arrays.asList(((ICompositeUserTypeInstantiate) hibType).getPropertyTypes());
+            final PropertyCategory detailsPropCategory = COMPONENT_HEADER.equals(type) ?  COMPONENT_DETAILS : SYNTHETIC_COMPONENT_DETAILS;
             if (subprops.size() == 1) {
                 final Object hibType = subpropsTypes.get(0);
                 if (expressionModel != null) {
-                    result.add(new PropertyMetadata.Builder(name + "." + subprops.get(0), ((Type) hibType).getReturnedClass(), nullable).expression(getExpressionModel()).aggregatedExpression(aggregatedExpression).type(COMPONENT_DETAILS).hibType(hibType).build());
+                    result.add(new PropertyMetadata.Builder(name + "." + subprops.get(0), ((Type) hibType).getReturnedClass(), nullable).expression(getExpressionModel()).aggregatedExpression(aggregatedExpression).type(detailsPropCategory).hibType(hibType).build());
                 } else if (columns.size() == 0) {
-                    result.add(new PropertyMetadata.Builder(name + "." + subprops.get(0), ((Type) hibType).getReturnedClass(), nullable).aggregatedExpression(aggregatedExpression).type(COMPONENT_DETAILS).hibType(hibType).build());
+                    result.add(new PropertyMetadata.Builder(name + "." + subprops.get(0), ((Type) hibType).getReturnedClass(), nullable).aggregatedExpression(aggregatedExpression).type(detailsPropCategory).hibType(hibType).build());
                 } else {
-                    result.add(new PropertyMetadata.Builder(name + "." + subprops.get(0), ((Type) subpropsTypes.get(0)).getReturnedClass(), nullable).column(columns.get(0)).type(COMPONENT_DETAILS).hibType(subpropsTypes.get(0)).build());
+                    result.add(new PropertyMetadata.Builder(name + "." + subprops.get(0), ((Type) subpropsTypes.get(0)).getReturnedClass(), nullable).column(columns.get(0)).type(detailsPropCategory).hibType(subpropsTypes.get(0)).build());
                 }
             } else {
                 int index = 0;
                 for (final String subpropName : subprops) {
                     final PropertyColumn column = columns.get(index);
                     final Object hibType = subpropsTypes.get(index);
-                    result.add(new PropertyMetadata.Builder(name + "." + subpropName, ((Type) hibType).getReturnedClass(), nullable).column(column).type(COMPONENT_DETAILS).hibType(hibType).build());
+                    result.add(new PropertyMetadata.Builder(name + "." + subpropName, ((Type) hibType).getReturnedClass(), nullable).column(column).type(detailsPropCategory).hibType(hibType).build());
                     index = index + 1;
                 }
             }
@@ -194,7 +196,7 @@ public class PropertyMetadata implements Comparable<PropertyMetadata> {
                     throw new IllegalStateException("Property [" + subpropField.getName() + "] in union entity type [" + javaType + "] is not annotated  no MapTo ");
                 }
                 final PropertyColumn column = new PropertyColumn(getColumn() + "_" + (StringUtils.isEmpty(mapTo.value()) ? subpropField.getName() : mapTo.value()));
-                result.add(new PropertyMetadata.Builder(name + "." + subpropField.getName(), subpropField.getType(), true).column(column).type(PropertyCategory.UNION_ENTITY_DETAILS).hibType(Hibernate.LONG).build());
+                result.add(new PropertyMetadata.Builder(name + "." + subpropField.getName(), subpropField.getType(), true).column(column).type(PropertyCategory.UNION_ENTITY_DETAILS).hibType(LongType.INSTANCE).build());
             }
         }
         return result;
@@ -240,8 +242,8 @@ public class PropertyMetadata implements Comparable<PropertyMetadata> {
     @Override
     public String toString() {
         return "\nname = " + name + " javaType = " + (javaType != null ? javaType.getSimpleName() : javaType) + " hibType = "
-                + (hibType != null ? hibType/*.getClass().getSimpleName()*/: hibType) + " type = " + type + "\ncolumn(s) = " + columns + " nullable = " + nullable
-                + " calculated = " + isCalculated();
+                + (hibType != null ? hibType/*.getClass().getSimpleName()*/: hibType) + " type = " + type + " aggregatedExpression = " + isAggregatedExpression() + "\ncolumn(s) = " + columns + " nullable = " + nullable
+                + " calculated = " + isCalculated() + (isCalculated() ? " exprModel = " + expressionModel : "");
     }
 
     @Override

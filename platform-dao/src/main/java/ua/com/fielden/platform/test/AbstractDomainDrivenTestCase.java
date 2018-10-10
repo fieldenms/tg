@@ -1,32 +1,37 @@
 package ua.com.fielden.platform.test;
 
 import static java.lang.String.format;
+import static ua.com.fielden.platform.dao.HibernateMappingsGenerator.ID_SEQUENCE_NAME;
 
-import java.io.FileInputStream;
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
-import java.util.ArrayList;
-import java.util.Collection;
+import java.lang.reflect.Field;
+import java.text.DateFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
-import java.util.Properties;
+import java.util.Map;
+import java.util.function.Function;
 
+import org.apache.commons.lang.StringUtils;
+import org.hibernate.Session;
 import org.joda.time.DateTime;
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
 import org.junit.After;
-import org.junit.AfterClass;
 import org.junit.Before;
 
 import ua.com.fielden.platform.dao.IEntityDao;
-import ua.com.fielden.platform.dao.PersistedEntityMetadata;
+import ua.com.fielden.platform.dao.ISessionEnabled;
+import ua.com.fielden.platform.dao.annotations.SessionRequired;
+import ua.com.fielden.platform.dao.exceptions.EntityCompanionException;
+import ua.com.fielden.platform.data.IDomainDrivenData;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.DynamicEntityKey;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
+import ua.com.fielden.platform.reflection.Finder;
+import ua.com.fielden.platform.utils.DbUtils;
 
 /**
  * This is a base class for all test cases in TG based applications. Each application module should provide file <b>src/test/resources/test.properties</b> with property
@@ -35,52 +40,19 @@ import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
  * @author TG Team
  *
  */
-public abstract class AbstractDomainDrivenTestCase {
+public abstract class AbstractDomainDrivenTestCase implements IDomainDrivenData, ISessionEnabled {
 
-    private static final List<String> dataScript = new ArrayList<String>();
-    private static final List<String> truncateScript = new ArrayList<String>();
+    private DbCreator dbCreator;
+    private static ICompanionObjectFinder coFinder;
+    private static EntityFactory factory;
+    private static Function<Class<?>, Object> instantiator;
+    
+    private static final DateTimeFormatter jodaFormatter = DateTimeFormat.forPattern("yyyy-MM-dd HH:mm:ss");
+    private static final DateFormat formatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 
-    public final static IDomainDrivenTestCaseConfiguration config = createConfig();
-
-    private final ICompanionObjectFinder provider = config.getInstance(ICompanionObjectFinder.class);
-    private final EntityFactory factory = config.getEntityFactory();
-    private final DateTimeFormatter formatter = DateTimeFormat.forPattern("yyyy-MM-dd HH:mm:ss");
-
-    private final Collection<PersistedEntityMetadata> entityMetadatas = config.getDomainMetadata().getEntityMetadatas();
-
-    private static boolean domainPopulated = false;
-
-    private static IDomainDrivenTestCaseConfiguration createConfig() {
-        try {
-            final Properties testProps = new Properties();
-            final FileInputStream in = new FileInputStream("src/test/resources/test.properties");
-            testProps.load(in);
-            in.close();
-
-            // TODO Due to incorrect generation of constraints by Hibernate, at this stage simply disable REFERENTIAL_INTEGRITY by rewriting URL
-            //      This should be modified once correct db schema generation is implemented
-            IDomainDrivenTestCaseConfiguration.hbc.setProperty("hibernate.connection.url", "jdbc:h2:src/test/resources/db/test_domain_db;INIT=SET REFERENTIAL_INTEGRITY FALSE");
-            IDomainDrivenTestCaseConfiguration.hbc.setProperty("hibernate.connection.driver_class", "org.h2.Driver");
-            IDomainDrivenTestCaseConfiguration.hbc.setProperty("hibernate.dialect", "org.hibernate.dialect.H2Dialect");
-            IDomainDrivenTestCaseConfiguration.hbc.setProperty("hibernate.connection.username", "sa");
-            IDomainDrivenTestCaseConfiguration.hbc.setProperty("hibernate.connection.password", "");
-            IDomainDrivenTestCaseConfiguration.hbc.setProperty("hibernate.show_sql", "false");
-            IDomainDrivenTestCaseConfiguration.hbc.setProperty("hibernate.format_sql", "true");
-            IDomainDrivenTestCaseConfiguration.hbc.setProperty("hibernate.hbm2ddl.auto", "create");
-
-            final Connection conn = createConnection();
-            final Statement st = conn.createStatement();
-            st.execute("DROP ALL OBJECTS");
-            st.close();
-            conn.close();
-
-            final String configClassName = testProps.getProperty("config-domain");
-            final Class<IDomainDrivenTestCaseConfiguration> type = (Class<IDomainDrivenTestCaseConfiguration>) Class.forName(configClassName);
-            return type.newInstance();
-        } catch (final Exception e) {
-            throw new IllegalStateException(e);
-        }
-    }
+    
+    private Session session;
+    private String transactionGuid;
 
     /**
      * Should be implemented in order to provide domain driven data population.
@@ -94,100 +66,76 @@ public abstract class AbstractDomainDrivenTestCase {
      */
     protected abstract List<Class<? extends AbstractEntity<?>>> domainEntityTypes();
 
-    @AfterClass
-    public final static void removeDbSchema() {
-        domainPopulated = false;
-        dataScript.clear();
-        truncateScript.clear();
-    }
-
     @Before
     public final void beforeTest() throws Exception {
-        final Connection conn = createConnection();
-
-        if (domainPopulated) {
-            // apply data population script
-            exec(dataScript, conn);
-        } else {
-            populateDomain();
-
-            // record data population statements
-            final Statement st = conn.createStatement();
-            final ResultSet set = st.executeQuery("SCRIPT");
-            while (set.next()) {
-                final String result = set.getString(1).trim();
-                final String upperCasedResult = result.toUpperCase();
-                if (!upperCasedResult.startsWith("INSERT INTO PUBLIC.UNIQUE_ID")
-                        && (upperCasedResult.startsWith("INSERT") || upperCasedResult.startsWith("UPDATE") || upperCasedResult.startsWith("DELETE"))) {
-                    // resultant script should NOT be UPPERCASED in order not to upperCase for e.g. values,
-                    // that was perhaps lover cased while populateDomain() invocation was performed
-                    dataScript.add(result);
-                }
-            }
-            set.close();
-            st.close();
-
-            // create truncate statements
-            for (final PersistedEntityMetadata<?> entry : entityMetadatas) {
-                truncateScript.add(format("TRUNCATE TABLE %s;", entry.getTable()));
-            }
-
-            domainPopulated = true;
-        }
-
-        conn.close();
+        dbCreator.populateOrRestoreData(this);
     }
-
-    private void exec(final List<String> statements, final Connection conn) throws SQLException {
-        final Statement st = conn.createStatement();
-        for (final String stmt : statements) {
-            st.execute(stmt);
-        }
-        st.close();
+    
+    @SessionRequired
+    protected void resetIdGenerator() {
+        DbUtils.resetSequenceGenerator(ID_SEQUENCE_NAME, 1000000, this.getSession());
     }
-
+   
     @After
-    public final void afterTest() throws Exception {
-        final Connection conn = createConnection();
-
-        System.out.println("TRUNCATE TABLES");
-        // TODO need to switch off referential integrity
-        exec(truncateScript, conn);
+    public final void afterTest() {
+        dbCreator.clearData();
     }
-
-    private static Connection createConnection() {
-        final String url = IDomainDrivenTestCaseConfiguration.hbc.getProperty("hibernate.connection.url");
-        final String jdbcDriver = IDomainDrivenTestCaseConfiguration.hbc.getProperty("hibernate.connection.driver_class");
-        final String user = IDomainDrivenTestCaseConfiguration.hbc.getProperty("hibernate.connection.username");
-        final String passwd = IDomainDrivenTestCaseConfiguration.hbc.getProperty("hibernate.connection.password");
-
-        try {
-            Class.forName(jdbcDriver);
-            return DriverManager.getConnection(url, user, passwd);
-        } catch (final Exception e) {
-            throw new IllegalStateException(e);
-        }
+   
+    public AbstractDomainDrivenTestCase setDbCreator(final DbCreator dbCreator) {
+        this.dbCreator = dbCreator;
+        return this;
     }
-
+    
+    public DbCreator getDbCreator() {
+        return dbCreator;
+    }
+    
+    @Override
     public final <T> T getInstance(final Class<T> type) {
-        return config.getInstance(type);
+        return (T) instantiator.apply(type);
     }
-
-    protected <T extends AbstractEntity<?>> T save(final T instance) {
-        final IEntityDao<T> pp = provider.find((Class<T>) instance.getType());
+    
+    @Override
+    public <T extends AbstractEntity<?>> T save(final T instance) {
+        @SuppressWarnings("unchecked")
+        final IEntityDao<T> pp = coFinder.find((Class<T>) instance.getType());
         return pp.save(instance);
     }
 
-    protected <T extends IEntityDao<E>, E extends AbstractEntity<?>> T ao(final Class<E> type) {
-        return (T) provider.find(type);
+    
+    private final Map<Class<? extends AbstractEntity<?>>, IEntityDao<?>> co$Cache = new HashMap<>();
+    private final Map<Class<? extends AbstractEntity<?>>, IEntityDao<?>> coCache = new HashMap<>();    
+
+    @Override
+    @SuppressWarnings("unchecked")
+    public <C extends IEntityDao<E>, E extends AbstractEntity<?>> C co$(final Class<E> type) {
+        IEntityDao<?> co = co$Cache.get(type);
+        if (co == null) {
+            co = coFinder.find(type, false);
+            co$Cache.put(type, co);
+        }
+        return (C) co;
     }
 
+    @Override
+    @SuppressWarnings("unchecked")
+    public <C extends IEntityDao<E>, E extends AbstractEntity<?>> C co(final Class<E> type) {
+        return (C) coCache.computeIfAbsent(type, k -> coFinder.find(k, true));
+
+    }
+
+    @Override
     public final Date date(final String dateTime) {
-        return formatter.parseDateTime(dateTime).toDate();
+        try {
+            return formatter.parse(dateTime);
+        } catch (ParseException e) {
+            throw new IllegalArgumentException(format("Could not parse value [%s].", dateTime));
+        }
     }
 
+    @Override
     public final DateTime dateTime(final String dateTime) {
-        return formatter.parseDateTime(dateTime);
+        return jodaFormatter.parseDateTime(dateTime);
     }
 
     /**
@@ -198,8 +146,12 @@ public abstract class AbstractDomainDrivenTestCase {
      * @param desc
      * @return
      */
-    protected <T extends AbstractEntity<K>, K extends Comparable> T new_(final Class<T> entityClass, final K key, final String desc) {
-        return factory.newEntity(entityClass, key, desc);
+    @Override
+    public <T extends AbstractEntity<K>, K extends Comparable<?>> T new_(final Class<T> entityClass, final K key, final String desc) {
+        final T entity = new_(entityClass);
+        entity.setKey(key);
+        entity.setDesc(desc);
+        return entity;
     }
 
     /**
@@ -209,8 +161,11 @@ public abstract class AbstractDomainDrivenTestCase {
      * @param key
      * @return
      */
-    protected <T extends AbstractEntity<K>, K extends Comparable> T new_(final Class<T> entityClass, final K key) {
-        return factory.newByKey(entityClass, key);
+    @Override
+    public <T extends AbstractEntity<K>, K extends Comparable<?>> T new_(final Class<T> entityClass, final K key) {
+        final T entity = new_(entityClass);
+        entity.setKey(key);
+        return entity;
     }
 
     /**
@@ -221,8 +176,22 @@ public abstract class AbstractDomainDrivenTestCase {
      * @param keys
      * @return
      */
-    protected <T extends AbstractEntity<DynamicEntityKey>> T new_composite(final Class<T> entityClass, final Object... keys) {
-        return keys.length == 0 ? new_(entityClass) : factory.newByKey(entityClass, keys);
+    @Override
+    public <T extends AbstractEntity<DynamicEntityKey>> T new_composite(final Class<T> entityClass, final Object... keys) {
+        final T entity = new_(entityClass);
+        if (keys.length > 0) {
+            // setting composite key fields
+            final List<Field> fieldList = Finder.getKeyMembers(entityClass);
+            if (fieldList.size() != keys.length) {
+                throw new IllegalArgumentException(format("Number of key values is %s but should be %s", keys.length, fieldList.size()));
+            }
+            for (int index = 0; index < fieldList.size(); index++) {
+                final Field keyField = fieldList.get(index);
+                final Object keyValue = keys[index];
+                entity.set(keyField.getName(), keyValue);
+            }
+        }
+        return entity;
     }
 
     /**
@@ -231,7 +200,37 @@ public abstract class AbstractDomainDrivenTestCase {
      * @param entityClass
      * @return
      */
-    protected <T extends AbstractEntity<K>, K extends Comparable> T new_(final Class<T> entityClass) {
-        return factory.newEntity(entityClass);
+    @Override
+    public <T extends AbstractEntity<K>, K extends Comparable<?>> T new_(final Class<T> entityClass) {
+        final IEntityDao<T> co = co$(entityClass);
+        return co != null ? co.new_() : factory.newEntity(entityClass);
     }
+    
+    /////////////// @SessionRequired support ///////////////
+    @Override
+    public Session getSession() {
+        if (session == null) {
+            throw new EntityCompanionException("Session is missing, most likely, due to missing @SessionRequired annotation.");
+        }
+        return session;
+    }
+
+    @Override
+    public void setSession(final Session session) {
+        this.session = session;
+    }
+    
+    @Override
+    public String getTransactionGuid() {
+        if (StringUtils.isEmpty(transactionGuid)) {
+            throw new EntityCompanionException("Transaction GUID is missing.");
+        }
+        return transactionGuid;
+    }
+    
+    @Override
+    public void setTransactionGuid(final String guid) {
+        this.transactionGuid = guid;
+    }
+
 }

@@ -9,21 +9,25 @@ import static org.junit.Assert.assertTrue;
 import org.junit.Before;
 import org.junit.Test;
 
+import com.google.inject.Injector;
+
+import ua.com.fielden.platform.entity.annotation.Required;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.meta.entities.EntityWithBce;
+import ua.com.fielden.platform.error.Result;
+import ua.com.fielden.platform.error.Warning;
 import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
+import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.test.CommonTestEntityModuleWithPropertyFactory;
 import ua.com.fielden.platform.test.EntityModuleWithPropertyFactory;
 
-import com.google.inject.Injector;
-
 /**
- * 
+ *
  * This test case is complementary to AbstractEntityTest covering mainly meta-property functionality. A large number of test in AbstractEntityTest also pertain to meta-property
  * functionality.
- * 
+ *
  * @author TG Team
- * 
+ *
  */
 public class MetaPropertyTest {
     private final EntityModuleWithPropertyFactory module = new CommonTestEntityModuleWithPropertyFactory();
@@ -37,13 +41,14 @@ public class MetaPropertyTest {
     }
 
     @Test
-    public void all_properties_in_newly_instantiated_entities_should_be_dirty_and_not_marked_as_assigned() {
+    public void not_assigned_properties_in_newly_instantiated_entities_should_be_dirty_and_not_marked_as_assigned() {
         assertTrue(entity.getProperty("propWithBce").isDirty());
         assertFalse(entity.getProperty("propWithBce").isAssigned());
+        assertTrue("Property key was assigned by entity factory and thus should be recognised as assigned.", entity.getProperty("key").isAssigned());
     }
 
     @Test
-    public void original_value_for_property_with_default_should_be_null_none_the_less() {
+    public void original_value_for_property_with_default_should_be_null_none_the_less_as_this_is_critical_for_persisting_new_entities() {
         assertNotNull(entity.getProperty("propWithBce").getValue());
         assertNull(entity.getProperty("propWithBce").getOriginalValue());
     }
@@ -59,7 +64,7 @@ public class MetaPropertyTest {
     }
 
     @Test
-    public void fact_of_property_assignment_should_be_reflectd_in_meta_property() {
+    public void fact_of_property_assignment_should_be_reflected_in_meta_property() {
         entity.setPropWithBce("some other value");
         assertTrue(entity.getProperty("propWithBce").isAssigned());
     }
@@ -115,6 +120,57 @@ public class MetaPropertyTest {
     public void is_changed_from_original_shoud_be_true_after_prop_changes_in_new_entities2() {
         entity.setProperty2("new value");
         assertTrue(entity.getProperty("property2").isChangedFromOriginal());
+    }
+
+    @Test
+    public void required_property_with_custom_error_msg_uses_it_in_validation_results() {
+        entity.setPropRequired(13);
+        entity.setPropRequired(null);
+        assertFalse(entity.getProperty("propRequired").isValid());
+        assertEquals(Finder.findFieldByName(entity.getType(), "propRequired").getAnnotation(Required.class).value(), entity.getProperty("propRequired").getFirstFailure().getMessage());
+    }
+
+    @Test
+    public void validationResult_returns_validation_error_if_property_validation_failed() {
+        entity.setPropRequired(13);
+        entity.setPropRequired(null);
+        assertFalse(entity.getProperty("propRequired").isValid());
+        
+        final Result result = entity.getProperty("propRequired").validationResult();
+        assertFalse(result.isSuccessful());
+        assertFalse(result instanceof Warning);
+        
+        final String validationErrMsg = Finder.findFieldByName(entity.getType(), "propRequired").getAnnotation(Required.class).value();
+        assertEquals(validationErrMsg, result.getMessage());
+    }
+    
+    @Test
+    public void validationResult_returns_successful_result_if_property_validation_succeeded() {
+        entity.setPropRequired(13);
+        assertTrue(entity.getProperty("propRequired").isValid());
+        
+        final Result result = entity.getProperty("propRequired").validationResult();
+        assertTrue(result.isSuccessful());
+        assertFalse(result instanceof Warning);
+    }
+    
+    @Test
+    public void validationResult_returns_warning_result_if_validation_completed_with_warning() {
+        entity.setPropRequired(113);
+        assertTrue(entity.getProperty("propRequired").isValid());
+        
+        final Result result = entity.getProperty("propRequired").validationResult();
+        assertTrue(result.isSuccessful());
+        assertTrue(result instanceof Warning);
+    }
+
+    @Test
+    public void validationResult_returns_successful_result_if_no_validation_took_place() {
+        assertTrue(entity.getProperty("propRequired").isValid());
+        
+        final Result result = entity.getProperty("propRequired").validationResult();
+        assertTrue(result.isSuccessful());
+        assertFalse(result instanceof Warning);
     }
 
 }

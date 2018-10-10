@@ -1,6 +1,9 @@
+rebel.xml
+*.synctex.gz
 *.orig
 *.aux
 *.db
+*.script
 *.backup
 *.tex~
 *.bib~
@@ -21,13 +24,15 @@
 target
 .classpath
 .project
+.idea
 .settings
 *.class
 *.dtd
 *.nav
 *.snm
 *.vrb
-
+*.old
+*.xwm
 
 # Package Files #
 *.jar
@@ -37,5 +42,12 @@ target
 # artefacts of unit test should be ignored
 platform-web-resources/src/test/resources/data-files/attachments/NEW-ATTACHMENT-FILE.TXT
 
+# any attachments that may get uploaded as part of interactive testing need to be ignored
+platform-web-resources/src/main/resources/attachments/*
+
 # virtual machine crash logs, see http://www.java.com/en/download/help/error_hotspot.xml
 hs_err_pid*
+
+# JRevel project config files
+rebel.xml
+bin/

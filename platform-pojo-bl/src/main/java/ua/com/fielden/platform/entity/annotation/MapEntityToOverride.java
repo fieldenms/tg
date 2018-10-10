@@ -11,11 +11,9 @@ import java.lang.annotation.Annotation;
 public class MapEntityToOverride implements Annotation, MapEntityTo {
 
     private final String value;
-    private final String column;
 
-    public MapEntityToOverride(final String value, final String column) {
+    public MapEntityToOverride(final String value) {
         this.value = value;
-        this.column = column;
     }
 
     @Override
@@ -24,14 +22,8 @@ public class MapEntityToOverride implements Annotation, MapEntityTo {
     }
 
     @Override
-    public String keyColumn() {
-        return column;
-    }
-
-    @Override
     public int hashCode() {
-        return (127 * "value".hashCode() ^ value().hashCode()) +
-                (127 * "keyColumn".hashCode() ^ keyColumn().hashCode());
+        return 127 * "value".hashCode() ^ value().hashCode();
     }
 
     @Override
@@ -41,8 +33,7 @@ public class MapEntityToOverride implements Annotation, MapEntityTo {
         }
 
         final MapEntityTo annotation = (MapEntityTo) obj;
-        return annotation.value().equals(value()) &&
-                annotation.keyColumn().equals(keyColumn());
+        return annotation.value().equals(value());
     }
 
     @Override

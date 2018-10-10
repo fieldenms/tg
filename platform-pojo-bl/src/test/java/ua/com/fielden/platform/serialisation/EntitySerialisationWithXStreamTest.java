@@ -15,8 +15,10 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 
-import org.junit.Before;
 import org.junit.Test;
+
+import com.google.inject.Injector;
+import com.google.inject.Module;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.ClassWithMap;
@@ -26,32 +28,24 @@ import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.error.Warning;
 import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
-import ua.com.fielden.platform.serialisation.api.ISerialiser;
+import ua.com.fielden.platform.serialisation.api.ISerialiserEngine;
+import ua.com.fielden.platform.serialisation.xstream.ClientSerialiser;
 import ua.com.fielden.platform.test.CommonTestEntityModuleWithPropertyFactory;
 import ua.com.fielden.platform.types.Money;
 
-import com.google.inject.Injector;
-import com.google.inject.Module;
-
 /**
  * Unit test for {@link AbstractEntity}'s ability to be correctly serialised/deserialised for the purpose of HTTP data marshaling.
- * 
+ *
  * TODO implement testing for entity with a composite key
- * 
+ *
  * @author TG Team
- * 
+ *
  */
 public class EntitySerialisationWithXStreamTest {
-    private boolean observed = false; // used
     private final Module module = new CommonTestEntityModuleWithPropertyFactory();
     private final Injector injector = new ApplicationInjectorFactory().add(module).getInjector();
     private final EntityFactory factory = injector.getInstance(EntityFactory.class);
     private Entity entity;
-
-    @Before
-    public void setUp() {
-        observed = false;
-    }
 
     @Test
     public void test_marshaling_unmarshalling() throws Exception {
@@ -80,22 +74,15 @@ public class EntitySerialisationWithXStreamTest {
         map.put("two", 2);
         entity.setClassWithMapProp(new ClassWithMap(new HashMap<String, Integer>(map)));
 
-        final ISerialiser ser = new ClientSerialiser(factory);
+        final ISerialiserEngine ser = new ClientSerialiser(factory);
         final byte[] content = ser.serialise(entity);
 
         final Entity restoredEntity = ser.deserialise(content, Entity.class);
-        restoredEntity.addPropertyChangeListener("observableProperty", new PropertyChangeListener() {
-            @Override
-            public void propertyChange(final PropertyChangeEvent event) {
-                observed = true;
-            }
-        });
 
         assertEquals("'key' should be equal.", entity.getKey(), restoredEntity.getKey());
 
         assertEquals("'observableProperty' has incorrect value", new Double(0.0), restoredEntity.getObservableProperty());
         restoredEntity.setObservableProperty(22.0);
-        assertTrue("Property 'observableProperty' should have been observed.", observed);
 
         // test property of entity type
         assertEquals("'entity' has incorrect value", entity.getEntity(), restoredEntity.getEntity());
@@ -165,7 +152,7 @@ public class EntitySerialisationWithXStreamTest {
         entity.setMoney(new Money("23.00", Currency.getInstance("AUD")));
         assertTrue("Entity should become dirty by now.", entity.isDirty());
 
-        final ISerialiser ser = new ClientSerialiser(factory, false);
+        final ISerialiserEngine ser = new ClientSerialiser(factory, false);
         final Result result = new Result(entity, "All cool.");
         byte[] content = ser.serialise(result);
         // testing successful result serialisation
@@ -207,7 +194,7 @@ public class EntitySerialisationWithXStreamTest {
         final PropertyDescriptor<Entity> pd = new PropertyDescriptor<Entity>(Entity.class, "key");
         entity.setPropertyDescriptor(pd);
 
-        final ISerialiser ser = new ClientSerialiser(factory, false);
+        final ISerialiserEngine ser = new ClientSerialiser(factory, false);
         final Result result = new Result(entity, "All cool.");
 
         final byte[] content = ser.serialise(result);

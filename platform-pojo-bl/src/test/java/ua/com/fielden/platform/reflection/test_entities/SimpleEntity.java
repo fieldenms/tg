@@ -8,8 +8,6 @@ import ua.com.fielden.platform.entity.annotation.KeyType;
 import ua.com.fielden.platform.entity.annotation.MapTo;
 import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.entity.annotation.Title;
-import ua.com.fielden.platform.entity.validation.annotation.DomainValidation;
-import ua.com.fielden.platform.entity.validation.annotation.NotNull;
 
 /**
  * Test class, which represent an entity derived directly from AbstractEntity with a simple key.
@@ -21,7 +19,6 @@ import ua.com.fielden.platform.entity.validation.annotation.NotNull;
 @KeyTitle(value = "Key")
 @DescTitle(value = "Description")
 public class SimpleEntity extends AbstractEntity<String> {
-    private static final long serialVersionUID = 1L;
 
     @IsProperty
     @MapTo
@@ -41,8 +38,6 @@ public class SimpleEntity extends AbstractEntity<String> {
     }
 
     @Observable
-    @NotNull
-    @DomainValidation
     public void setProperty(final String property) {
         this.property = property;
     }

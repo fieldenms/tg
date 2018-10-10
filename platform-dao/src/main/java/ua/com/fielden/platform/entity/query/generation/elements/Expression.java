@@ -8,6 +8,11 @@ public class Expression implements ISingleOperand {
     private final ISingleOperand first;
     private final List<CompoundSingleOperand> items;
 
+    public Expression(final ISingleOperand first, final List<CompoundSingleOperand> items) {
+        this.first = first;
+        this.items = items;
+    }
+
     @Override
     public String sql() {
         final StringBuffer sb = new StringBuffer();
@@ -21,15 +26,9 @@ public class Expression implements ISingleOperand {
         return sb.toString();
     }
 
-    public Expression(final ISingleOperand first, final List<CompoundSingleOperand> items) {
-        super();
-        this.first = first;
-        this.items = items;
-    }
-
     @Override
     public List<EntProp> getLocalProps() {
-        final List<EntProp> result = new ArrayList<EntProp>();
+        final List<EntProp> result = new ArrayList<>();
         result.addAll(first.getLocalProps());
         for (final CompoundSingleOperand compSingleOperand : items) {
             result.addAll(compSingleOperand.getOperand().getLocalProps());
@@ -44,7 +43,7 @@ public class Expression implements ISingleOperand {
 
     @Override
     public List<EntQuery> getLocalSubQueries() {
-        final List<EntQuery> result = new ArrayList<EntQuery>();
+        final List<EntQuery> result = new ArrayList<>();
         result.addAll(first.getLocalSubQueries());
         for (final CompoundSingleOperand compSingleOperand : items) {
             result.addAll(compSingleOperand.getOperand().getLocalSubQueries());
@@ -54,7 +53,7 @@ public class Expression implements ISingleOperand {
 
     @Override
     public List<EntValue> getAllValues() {
-        final List<EntValue> result = new ArrayList<EntValue>();
+        final List<EntValue> result = new ArrayList<>();
         result.addAll(first.getAllValues());
         for (final CompoundSingleOperand compSingleOperand : items) {
             result.addAll(compSingleOperand.getOperand().getAllValues());

@@ -1,0 +1,35 @@
+<link rel="import" href="/resources/polymer/polymer/polymer.html">
+<link rel="import" href="tg-flex-layout.html">
+
+<dom-module id="tg-content-layout">
+
+    <template>
+        <tg-flex-layout when-desktop="[[whenDesktop]]" when-tablet="[[whenTablet]]" when-mobile="[[whenMobile]]">
+            <content select=":not(text):not(template)"></content>
+        </tg-flex-layout>
+    </template>
+
+</dom-module>
+
+<script>
+    (function () {
+        'use strict'
+        
+        Polymer({
+
+            is: "tg-content-layout",
+
+            properties: {
+                whenDesktop: Array,
+                whenTablet: Array,
+                whenMobile: Array,
+            },
+
+            ready: function() {
+                this.whenDesktop=[[['flex'],['flex']],[['flex'],['flex']]];
+                this.whenTablet=[[['flex'],['flex']],[['flex'],['flex']]];
+                this.whenMobile=[[['flex'],['flex']],[['flex'],['flex']]];
+            }
+        });
+    })();
+</script>

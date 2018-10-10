@@ -1,37 +1,42 @@
 package ua.com.fielden.platform.entity.query;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.annotation.CompanionObject;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.KeyType;
 import ua.com.fielden.platform.entity.annotation.Observable;
+import ua.com.fielden.platform.entity.proxy.StrictProxyException;
 import ua.com.fielden.platform.reflection.Reflector;
 
 /**
  * An entity class for ad-hoc construction of entities. Useful when the structure (i.e. properties) becomes known at runtime rather than design time.
- * 
+ *
  * @author TG Team
- * 
+ *
  */
 @KeyType(String.class)
+@CompanionObject(IEntityAggregates.class)
 public class EntityAggregates extends AbstractEntity<String> {
-    private static final long serialVersionUID = 1L;
 
-    private transient final Map<String, Object> aggregates = new HashMap<String, Object>();
+    private final Map<String, Object> aggregates = new HashMap<>();
 
     @IsProperty(value = String.class, linkProperty = "--stub-link-property--")
-    private List<String> groupKeys = new ArrayList<String>();
+    private List<String> groupKeys = new ArrayList<>();
+    
     @IsProperty(value = AbstractEntity.class, linkProperty = "--stub-link-property--")
-    private List<AbstractEntity> groupValues = new ArrayList<AbstractEntity>();
+    private List<AbstractEntity<?>> groupValues = new ArrayList<>();
 
     @IsProperty(value = String.class, linkProperty = "--stub-link-property--")
-    private List<String> aggrKeys = new ArrayList<String>();
+    private List<String> aggrKeys = new ArrayList<>();
+    
     @IsProperty(value = Object.class, linkProperty = "--stub-link-property--")
-    private List<Object> aggrValues = new ArrayList<Object>();
+    private List<Object> aggrValues = new ArrayList<>();
 
     private Map<String, Object> getAggregates() {
         if (aggregates.isEmpty()) {
@@ -91,19 +96,19 @@ public class EntityAggregates extends AbstractEntity<String> {
     }
 
     public List<String> getGroupKeys() {
-        return groupKeys;
+        return Collections.unmodifiableList(groupKeys);
     }
 
-    public List<AbstractEntity> getGroupValues() {
-        return groupValues;
+    public List<AbstractEntity<?>> getGroupValues() {
+        return Collections.unmodifiableList(groupValues);
     }
 
     public List<String> getAggrKeys() {
-        return aggrKeys;
+        return Collections.unmodifiableList(aggrKeys);
     }
 
     public List<Object> getAggrValues() {
-        return aggrValues;
+        return Collections.unmodifiableList(aggrValues);
     }
 
     @Observable
@@ -112,7 +117,7 @@ public class EntityAggregates extends AbstractEntity<String> {
     }
 
     @Observable
-    public void setGroupValues(final List<AbstractEntity> groupValues) {
+    public void setGroupValues(final List<AbstractEntity<?>> groupValues) {
         this.groupValues = groupValues;
     }
 
@@ -126,11 +131,11 @@ public class EntityAggregates extends AbstractEntity<String> {
         this.aggrValues = aggrValues;
     }
 
-    private AbstractEntity findRootEntity() {
-        final List<AbstractEntity> entities = new ArrayList<AbstractEntity>();
+    private AbstractEntity<?> findRootEntity() {
+        final List<AbstractEntity<?>> entities = new ArrayList<>();
         for (final Object value : aggregates.values()) {
             if (value instanceof AbstractEntity) {
-                entities.add((AbstractEntity) value);
+                entities.add((AbstractEntity<?>) value);
             }
         }
 
@@ -138,25 +143,28 @@ public class EntityAggregates extends AbstractEntity<String> {
     }
 
     @Override
-    public void set(final String propertyName, final Object value) {
+    public EntityAggregates set(final String propertyName, final Object value) {
         setValueAndKey(propertyName, value);
+        return this;
     }
 
     @Override
-    public Object get(final String propertyName) {
+    public <T> T get(final String propertyName) {
         try {
             final String[] parts = propertyName.split(Reflector.DOT_SPLITTER);
 
             if (!getAggregates().containsKey(parts[0])) {
                 // trying to find in root entity if such discovered
-                final AbstractEntity rootEntity = findRootEntity();
+                final AbstractEntity<?> rootEntity = findRootEntity();
                 if (rootEntity != null) {
                     try {
                         // TODO alias should become useful and ultimately required in case of many root entities discovered.
-                        return rootEntity.get(propertyName);
-                    } catch (final Exception e2) {
+                        return (T) rootEntity.get(propertyName);
+                    }  catch (final StrictProxyException e) {
+                        throw e;
+                    }  catch (final Exception e) {
                         try {
-                            return rootEntity.get(propertyName.substring(propertyName.indexOf(".") + 1));
+                            return (T) rootEntity.get(propertyName.substring(propertyName.indexOf(".") + 1));
                         } catch (final Exception e1) {
                         }
                     }
@@ -166,14 +174,14 @@ public class EntityAggregates extends AbstractEntity<String> {
                 return super.get(propertyName);
             }
 
-            final Object root = getAggregates().get(parts[0]);
+            final T root = (T) getAggregates().get(parts[0]);
 
             // skip going deeper if null is found instead of data
             if (root == null) {
                 return null;
             }
 
-            return parts.length == 1 ? root : ((AbstractEntity) root).get(propertyName.substring(propertyName.indexOf(".") + 1));
+            return parts.length == 1 ? root : ((AbstractEntity<?>) root).get(propertyName.substring(propertyName.indexOf(".") + 1));
         } catch (final Exception e) {
             throw new IllegalArgumentException("Could not get the value for property " + propertyName + " for instance " + this, e);
         }
@@ -181,7 +189,7 @@ public class EntityAggregates extends AbstractEntity<String> {
 
     @Override
     public String toString() {
-        final StringBuffer sb = new StringBuffer();
+        final StringBuilder sb = new StringBuilder();
         sb.append("EntityAggregates:\n");
 
         int i = 0;

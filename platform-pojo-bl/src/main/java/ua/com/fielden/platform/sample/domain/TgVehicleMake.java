@@ -3,13 +3,13 @@ package ua.com.fielden.platform.sample.domain;
 import org.junit.Ignore;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.annotation.CompanionObject;
 import ua.com.fielden.platform.entity.annotation.DescTitle;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.KeyType;
 import ua.com.fielden.platform.entity.annotation.MapEntityTo;
 import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.entity.annotation.Title;
-import ua.com.fielden.platform.entity.validation.annotation.CompanionObject;
 
 @KeyType(String.class)
 @MapEntityTo
@@ -17,14 +17,6 @@ import ua.com.fielden.platform.entity.validation.annotation.CompanionObject;
 @Ignore
 @CompanionObject(ITgVehicleMake.class)
 public class TgVehicleMake extends AbstractEntity<String> {
-    private static final long serialVersionUID = 1L;
-
-    /**
-     * Constructor for (@link EntityFactory}.
-     */
-    protected TgVehicleMake() {
-    }
-
     @IsProperty
     @Title(value = "Non-persisted prop", desc = "Desc")
     private String npProp;

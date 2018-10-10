@@ -1,9 +1,8 @@
 package ua.com.fielden.platform.sample.domain;
 
-import org.junit.Ignore;
-
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.DynamicEntityKey;
+import ua.com.fielden.platform.entity.annotation.CompanionObject;
 import ua.com.fielden.platform.entity.annotation.CompositeKeyMember;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.KeyType;
@@ -12,11 +11,9 @@ import ua.com.fielden.platform.entity.annotation.MapTo;
 import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.entity.annotation.Required;
 import ua.com.fielden.platform.entity.annotation.Title;
-import ua.com.fielden.platform.entity.validation.annotation.CompanionObject;
 
 @KeyType(DynamicEntityKey.class)
 @MapEntityTo
-@Ignore
 @CompanionObject(ITgOrgUnit2.class)
 public class TgOrgUnit2 extends AbstractEntity<DynamicEntityKey> {
     private static final long serialVersionUID = 1L;

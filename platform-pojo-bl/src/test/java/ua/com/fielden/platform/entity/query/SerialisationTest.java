@@ -13,6 +13,7 @@ import java.util.List;
 import org.junit.Test;
 
 import ua.com.fielden.platform.dao.QueryExecutionModel;
+import ua.com.fielden.platform.domaintree.impl.DomainTreeEnhancerCache;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
@@ -24,8 +25,8 @@ import ua.com.fielden.platform.sample.domain.TgOrgUnit5;
 import ua.com.fielden.platform.sample.domain.TgVehicle;
 import ua.com.fielden.platform.sample.domain.TgVehicleMake;
 import ua.com.fielden.platform.sample.domain.TgVehicleModel;
-import ua.com.fielden.platform.serialisation.impl.ProvidedSerialisationClassProvider;
-import ua.com.fielden.platform.serialisation.impl.TgKryo;
+import ua.com.fielden.platform.serialisation.api.impl.ProvidedSerialisationClassProvider;
+import ua.com.fielden.platform.serialisation.api.impl.Serialiser;
 import ua.com.fielden.platform.test.CommonTestEntityModuleWithPropertyFactory;
 
 import com.google.inject.Injector;
@@ -51,8 +52,8 @@ public class SerialisationTest {
         types.add(TgOrgUnit5.class);
     }
 
-    private final TgKryo kryoWriter = new TgKryo(factory, new ProvidedSerialisationClassProvider(types.toArray(new Class[] {})));
-    private final TgKryo kryoReader = new TgKryo(factory, new ProvidedSerialisationClassProvider(types.toArray(new Class[] {})));
+    private final Serialiser kryoWriter = new Serialiser(factory, new ProvidedSerialisationClassProvider(types.toArray(new Class[] {})), DomainTreeEnhancerCache.CACHE);
+    private final Serialiser kryoReader = new Serialiser(factory, new ProvidedSerialisationClassProvider(types.toArray(new Class[] {})), DomainTreeEnhancerCache.CACHE);
 
     @Test
     public void seralisation_of_simple_query_should_not_have_failed() {

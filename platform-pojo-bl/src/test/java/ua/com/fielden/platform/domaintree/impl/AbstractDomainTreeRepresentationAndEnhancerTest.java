@@ -17,8 +17,6 @@ import org.junit.Test;
 import ua.com.fielden.platform.domaintree.Function;
 import ua.com.fielden.platform.domaintree.ICalculatedProperty.CalculatedPropertyAttribute;
 import ua.com.fielden.platform.domaintree.IDomainTreeManager.IDomainTreeManagerAndEnhancer;
-import ua.com.fielden.platform.domaintree.IDomainTreeRepresentation.IPropertyListener;
-import ua.com.fielden.platform.domaintree.IDomainTreeRepresentation.ITickRepresentation.IPropertyDisablementListener;
 import ua.com.fielden.platform.domaintree.testing.DomainTreeManagerAndEnhancer1;
 import ua.com.fielden.platform.domaintree.testing.MasterEntity;
 import ua.com.fielden.platform.domaintree.testing.MasterEntityForIncludedPropertiesLogic;
@@ -26,14 +24,16 @@ import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 
 /**
  * A test for base TG domain tree representation.
- * 
+ *
  * @author TG Team
- * 
+ *
  */
 public class AbstractDomainTreeRepresentationAndEnhancerTest extends AbstractDomainTreeTest {
     ///////////////////////////////////////////////////////////////////////////////////////////////////
     /////////////////////////////////////// Test initialisation ///////////////////////////////////////
     ///////////////////////////////////////////////////////////////////////////////////////////////////
+    private int i, j;
+    
     @Override
     protected IDomainTreeManagerAndEnhancer dtm() {
         return (IDomainTreeManagerAndEnhancer) just_a_dtm();
@@ -63,6 +63,7 @@ public class AbstractDomainTreeRepresentationAndEnhancerTest extends AbstractDom
         manageTestingDTM_for_AbstractDomainTreeTest(dtmae.getRepresentation());
 
         allLevelsWithoutCollections(new IAction() {
+            @Override
             public void action(final String name) {
                 dtmae.getEnhancer().addCalculatedProperty(MasterEntity.class, name, "1 * integerProp", "Calc integer prop", "Desc", CalculatedPropertyAttribute.NO_ATTR, "integerProp");
                 dtmae.getEnhancer().apply();
@@ -98,7 +99,8 @@ public class AbstractDomainTreeRepresentationAndEnhancerTest extends AbstractDom
         dtm().getEnhancer().apply();
         assertEquals("Incorrect included properties.", Arrays.asList("", "desc", "integerProp", "entityPropOfSelfType", "entityPropOfSelfType.dummy-property", "entityProp", "entityProp.dummy-property", "entityPropCollection", "entityPropCollection.dummy-property").toString(), dtm().getRepresentation().includedProperties(MasterEntityForIncludedPropertiesLogic.class).toString());
     }
-
+    
+    @Ignore
     @Test
     public void test_that_domain_changes_for_First_Level_COLLECTIONS_are_correctly_reflected_in_Included_properties() {
         assertEquals("Incorrect included properties.", Arrays.asList("", "desc", "integerProp", "entityPropOfSelfType", "entityPropOfSelfType.dummy-property", "entityProp", "entityProp.dummy-property", "entityPropCollection", "entityPropCollection.dummy-property"), dtm().getRepresentation().includedProperties(MasterEntityForIncludedPropertiesLogic.class));
@@ -112,7 +114,8 @@ public class AbstractDomainTreeRepresentationAndEnhancerTest extends AbstractDom
         dtm().getEnhancer().apply();
         assertEquals("Incorrect included properties.", Arrays.asList("", "desc", "integerProp", "entityPropOfSelfType", "entityPropOfSelfType.dummy-property", "entityProp", "entityProp.dummy-property", "entityPropCollection", "entityPropCollection.integerProp", "entityPropCollection.moneyProp", "entityPropCollection.prop1").toString(), dtm().getRepresentation().includedProperties(MasterEntityForIncludedPropertiesLogic.class).toString());
     }
-
+    
+    @Ignore
     @Test
     public void test_that_domain_changes_for_Second_Level_are_correctly_reflected_in_Included_properties() {
         assertEquals("Incorrect included properties.", Arrays.asList("", "desc", "integerProp", "entityPropOfSelfType", "entityPropOfSelfType.dummy-property", "entityProp", "entityProp.dummy-property", "entityPropCollection", "entityPropCollection.dummy-property"), dtm().getRepresentation().includedProperties(MasterEntityForIncludedPropertiesLogic.class));
@@ -130,7 +133,8 @@ public class AbstractDomainTreeRepresentationAndEnhancerTest extends AbstractDom
         dtm().getEnhancer().apply();
         assertEquals("Incorrect included properties.", Arrays.asList("", "desc", "integerProp", "entityPropOfSelfType", "entityPropOfSelfType.dummy-property", "entityProp", "entityProp.integerProp", "entityProp.moneyProp", "entityPropCollection", "entityPropCollection.dummy-property"), dtm().getRepresentation().includedProperties(MasterEntityForIncludedPropertiesLogic.class));
     }
-
+    
+    @Ignore
     @Test
     public void test_that_domain_changes_for_Second_Level_circular_properties_are_correctly_reflected_in_Included_properties() {
         assertEquals("Incorrect included properties.", Arrays.asList("", "desc", "integerProp", "entityPropOfSelfType", "entityPropOfSelfType.dummy-property", "entityProp", "entityProp.dummy-property", "entityPropCollection", "entityPropCollection.dummy-property"), dtm().getRepresentation().includedProperties(MasterEntityForIncludedPropertiesLogic.class));
@@ -157,6 +161,7 @@ public class AbstractDomainTreeRepresentationAndEnhancerTest extends AbstractDom
     }
 
     @Test
+    @Ignore("Ignored due to the removal of support for listeners. Need to revisit.")
     public void test_that_domain_changes_for_calc_property_modifications_are_correctly_reflected_in_Included_properties() {
         assertEquals("Incorrect included properties.", Arrays.asList("", "desc", "integerProp", "entityPropOfSelfType", "entityPropOfSelfType.dummy-property", "entityProp", "entityProp.dummy-property", "entityPropCollection", "entityPropCollection.dummy-property"), dtm().getRepresentation().includedProperties(MasterEntityForIncludedPropertiesLogic.class));
         dtm().getEnhancer().addCalculatedProperty(MasterEntityForIncludedPropertiesLogic.class, "", "2 * integerProp", "Prop1", "desc", CalculatedPropertyAttribute.NO_ATTR, "integerProp");
@@ -231,6 +236,7 @@ public class AbstractDomainTreeRepresentationAndEnhancerTest extends AbstractDom
         // Check whether count distinct function can be applied to calculated property of CalculatedPropertyCategory.EXPRESSION based on date property.
         final String m = "Available functions are incorrect.";
         allLevelsWithoutCollections(new IAction() {
+            @Override
             public void action(final String name) {
                 dtm().getEnhancer().addCalculatedProperty(MasterEntity.class, name, "YEAR(dateProp)", "Integer Prop Originated From Date", "desc", CalculatedPropertyAttribute.NO_ATTR, "dateProp");
                 dtm().getEnhancer().apply();
@@ -240,6 +246,7 @@ public class AbstractDomainTreeRepresentationAndEnhancerTest extends AbstractDom
 
         // Check whether count distinct function can be applied to calculated property of CalculatedPropertyCategory.COLLECTIONAL_EXPRESSION based on date property.
         allLevelsWithCollections(new IAction() {
+            @Override
             public void action(final String name) {
                 dtm().getEnhancer().addCalculatedProperty(MasterEntity.class, name, "YEAR(dateProp)", "Integer Prop Originated From Date", "desc", CalculatedPropertyAttribute.NO_ATTR, "dateProp");
                 dtm().getEnhancer().apply();
@@ -267,6 +274,7 @@ public class AbstractDomainTreeRepresentationAndEnhancerTest extends AbstractDom
 
         /////////////////////////////////////////////////// There are no count distinct //////////////////////////////////////////////
         allLevelsWithoutCollections(new IAction() {
+            @Override
             public void action(final String name) {
                 dtm().getEnhancer().addCalculatedProperty(MasterEntity.class, name, "2 * integerProp", "Calculated Integer Prop", "desc", CalculatedPropertyAttribute.NO_ATTR, "integerProp");
                 dtm().getEnhancer().apply();
@@ -275,6 +283,7 @@ public class AbstractDomainTreeRepresentationAndEnhancerTest extends AbstractDom
         }, ""); // calculatedIntegerProp
 
         allLevelsWithCollections(new IAction() {
+            @Override
             public void action(final String name) {
                 dtm().getEnhancer().addCalculatedProperty(MasterEntity.class, name, "2 * integerProp", "Calculated Integer Prop", "desc", CalculatedPropertyAttribute.NO_ATTR, "integerProp");
                 dtm().getEnhancer().apply();
@@ -349,32 +358,11 @@ public class AbstractDomainTreeRepresentationAndEnhancerTest extends AbstractDom
         assertEquals(m, Arrays.asList(Function.SELF, Function.SUM, Function.AVG, Function.MIN, Function.MAX), new ArrayList<Function>(dtm().getRepresentation().availableFunctions(MasterEntity.class, "entityProp.aggrCollExprProp2")));
     }
 
-    private static int i, j;
-
     @Test
+    @Ignore("Ignored due to the removal of support for listeners. Need to revisit.")
     public void test_that_PropertyListeners_work() {
         i = 0;
         j = 0;
-        final IPropertyListener listener = new IPropertyListener() {
-            @Override
-            public void propertyStateChanged(final Class<?> root, final String property, final Boolean wasAddedOrRemoved, final Boolean oldState) {
-                if (wasAddedOrRemoved == null) {
-                    throw new IllegalArgumentException("'wasAddedOrRemoved' cannot be null.");
-                }
-                if (wasAddedOrRemoved) {
-                    i++;
-                } else {
-                    j++;
-                }
-            }
-
-            @Override
-            public boolean isInternal() {
-                return false;
-            }
-        };
-        dtm().getRepresentation().addPropertyListener(listener);
-
         assertEquals("Incorrect value 'i'.", 0, i);
         assertEquals("Incorrect value 'j'.", 0, j);
 
@@ -393,33 +381,15 @@ public class AbstractDomainTreeRepresentationAndEnhancerTest extends AbstractDom
         assertEquals("Incorrect value 'j'.", 2, j);
 
         dtm().getRepresentation().warmUp(MasterEntity.class, "entityProp.entityProp.slaveEntityProp");
-        assertEquals("Incorrect value 'i'.", 132, i);
+        assertEquals("Incorrect value 'i'.", 138, i);
         assertEquals("Incorrect value 'j'.", 5, j);
     }
 
     @Test
+    @Ignore("Ignored due to the removal of support for listeners. Need to revisit.")
     public void test_that_WeakPropertyListeners_work() {
         i = 0;
         j = 0;
-        IPropertyListener listener = new IPropertyListener() {
-            @Override
-            public void propertyStateChanged(final Class<?> root, final String property, final Boolean wasAddedOrRemoved, final Boolean oldState) {
-                if (wasAddedOrRemoved == null) {
-                    throw new IllegalArgumentException("'wasAddedOrRemoved' cannot be null.");
-                }
-                if (wasAddedOrRemoved) {
-                    i++;
-                } else {
-                    j++;
-                }
-            }
-
-            @Override
-            public boolean isInternal() {
-                return false;
-            }
-        };
-        dtm().getRepresentation().addWeakPropertyListener(listener);
 
         assertEquals("Incorrect value 'i'.", 0, i);
         assertEquals("Incorrect value 'j'.", 0, j);
@@ -428,9 +398,6 @@ public class AbstractDomainTreeRepresentationAndEnhancerTest extends AbstractDom
         assertEquals("Incorrect value 'i'.", 0, i);
         assertEquals("Incorrect value 'j'.", 1, j);
 
-        listener = null;
-        System.gc();
-
         dtm().getEnhancer().addCalculatedProperty(MasterEntity.class, "", "1 * 2 * integerProp", "Calc prop1", "Desc", CalculatedPropertyAttribute.NO_ATTR, "bigDecimalProp");
         dtm().getEnhancer().apply();
         assertEquals("Incorrect value 'i'.", 0, i);
@@ -438,23 +405,10 @@ public class AbstractDomainTreeRepresentationAndEnhancerTest extends AbstractDom
     }
 
     @Test
+    @Ignore("Ignored due to the removal of support for listeners. Need to revisit.")
     public void test_that_PropertyDisablementListeners_work() {
         i = 0;
         j = 0;
-        final IPropertyDisablementListener listener = new IPropertyDisablementListener() {
-            @Override
-            public void propertyStateChanged(final Class<?> root, final String property, final Boolean hasBeenDisabled, final Boolean oldState) {
-                if (hasBeenDisabled == null) {
-                    throw new IllegalArgumentException("'hasBeenDisabled' cannot be null.");
-                }
-                if (hasBeenDisabled) {
-                    i++;
-                } else {
-                    j++;
-                }
-            }
-        };
-        dtm().getRepresentation().getFirstTick().addPropertyDisablementListener(listener);
 
         assertEquals("Incorrect value 'i'.", 0, i);
         assertEquals("Incorrect value 'j'.", 0, j);
@@ -474,23 +428,10 @@ public class AbstractDomainTreeRepresentationAndEnhancerTest extends AbstractDom
     }
 
     @Test
+    @Ignore("Ignored due to the removal of support for listeners. Need to revisit.")
     public void test_that_WeakPropertyDisablementListeners_work() {
         i = 0;
         j = 0;
-        IPropertyDisablementListener listener = new IPropertyDisablementListener() {
-            @Override
-            public void propertyStateChanged(final Class<?> root, final String property, final Boolean hasBeenDisabled, final Boolean oldState) {
-                if (hasBeenDisabled == null) {
-                    throw new IllegalArgumentException("'hasBeenDisabled' cannot be null.");
-                }
-                if (hasBeenDisabled) {
-                    i++;
-                } else {
-                    j++;
-                }
-            }
-        };
-        dtm().getRepresentation().getFirstTick().addWeakPropertyDisablementListener(listener);
 
         assertEquals("Incorrect value 'i'.", 0, i);
         assertEquals("Incorrect value 'j'.", 0, j);
@@ -498,9 +439,6 @@ public class AbstractDomainTreeRepresentationAndEnhancerTest extends AbstractDom
         dtm().getRepresentation().getFirstTick().disableImmutably(MasterEntity.class, "integerProp");
         assertEquals("Incorrect value 'i'.", 1, i);
         assertEquals("Incorrect value 'j'.", 0, j);
-
-        listener = null;
-        System.gc();
 
         dtm().getFirstTick().check(MasterEntity.class, "bigDecimalProp", true);
         dtm().getRepresentation().getFirstTick().disableImmutably(MasterEntity.class, "bigDecimalProp");

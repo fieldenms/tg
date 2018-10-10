@@ -1,0 +1,82 @@
+<link rel="import" href="/resources/polymer/polymer/polymer.html">
+
+<script>
+    (function () {
+        /**
+         * It is used to restore focus after action execution. This is global variable that holds previously active element that is relevant for 
+         * focus restoration logic.
+         */
+        var _previousActiveElements = [];
+        var _notRestoredInitiators = [];
+        
+        Polymer.TgBehaviors = Polymer.TgBehaviors || {};
+        Polymer.TgBehaviors.TgFocusRestorationBehavior = {
+            
+            /**
+             * Persists active element to be restored later in method 'restoreActiveElement'.
+             *
+             * @param focusingCallback -- custom function to be used for focus restoration. If null -- no focus restoration will occur. If undefined -- 
+             * focus restoration will occur for document.activeElement
+             */
+            persistActiveElement: function (focusingCallback) {
+                if (focusingCallback === null) {
+                    return;
+                }
+                var self = this;
+                console.debug('persistActiveElement: initiator', self, 'elem', document.activeElement);
+                _previousActiveElements.push({
+                    initiator: self,
+                    elem: focusingCallback ? focusingCallback : document.activeElement
+                });
+            },
+            
+            /**
+             * Tries to restores focus on previously persisted active element.
+             */
+            restoreActiveElement: function () {
+                if (_previousActiveElements.length > 0) {
+                    var last = _previousActiveElements[_previousActiveElements.length - 1];
+                    if (last.initiator === this) {
+                        var _previousActiveElementAndInitiator = _previousActiveElements.pop();
+                        console.debug('restoreActiveElement:', _previousActiveElementAndInitiator);
+                        if (_previousActiveElementAndInitiator.elem && typeof _previousActiveElementAndInitiator.elem === 'function') {
+                            _previousActiveElementAndInitiator.elem();
+                        } else if (_previousActiveElementAndInitiator.elem && typeof _previousActiveElementAndInitiator.elem.focus === 'function') {
+                            _previousActiveElementAndInitiator.elem.focus();
+                        }
+                        
+                        // if there are any 'notRestored' initiators, then we should try to restore the oldest unrestored initiator (however it is possible that it will wait)
+                        if (_notRestoredInitiators.length > 0) {
+                            var copy = _notRestoredInitiators.slice();
+                            for (var index = 0; index < copy.length; index++) {
+                                var initiator = copy[index];
+                                var foundIndex = _notRestoredInitiators.indexOf(initiator);
+                                if (foundIndex >= 0) {
+                                    _notRestoredInitiators.splice(foundIndex, 1);
+                                    initiator.restoreActiveElement();
+                                }
+                            }
+                        }
+                    } else {
+                        // if 'this' exists on the stack then it should wait for restoration
+                        if (this._existsOnStack()) {
+                            console.debug('restoreActiveElement: initiator', this, 'should wait.');
+                            _notRestoredInitiators.push(this);
+                        } else {
+                            console.warn('restoreActiveElement: initiator', this, 'does not exist on the stack of [initiator; activeElem] elements. It will be disregarded.');
+                        }
+                    }
+                }
+            },
+            
+            _existsOnStack: function () {
+                for (var index = 0; index < _previousActiveElements.length; index++) {
+                    if (_previousActiveElements[index].initiator === this) {
+                        return true;
+                    }
+                }
+                return false;
+            }
+        };
+    })();
+</script>

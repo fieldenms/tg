@@ -22,7 +22,13 @@ import ua.com.fielden.platform.entity.annotation.Title;
 @KeyTitle("Leveled Entity No")
 @DescTitle(value = "Description")
 public class FirstLevelEntity extends AbstractEntity<DynamicEntityKey> implements ISomeInterface {
-    private static final long serialVersionUID = 1L;
+
+    @IsProperty
+    @CompositeKeyMember(2)
+    @CritOnly
+    @MapTo
+    @Title("Two")
+    private String propertyTwo;
 
     @IsProperty
     @Title("Property")
@@ -30,23 +36,8 @@ public class FirstLevelEntity extends AbstractEntity<DynamicEntityKey> implement
     private String property;
 
     @IsProperty
-    @CompositeKeyMember(2)
-    @CritOnly
-    @MapTo
-    private String propertyTwo;
-
-    @IsProperty
     @CritOnly
     private SimpleEntity critOnlyAEProperty;
-
-    protected FirstLevelEntity(final Long id, final DynamicEntityKey key, final String desc) {
-        super(null, null, "");
-    }
-
-    protected FirstLevelEntity() {
-        super(null, null, "");
-        setKey(new DynamicEntityKey(this));
-    }
 
     public String getProperty() {
         return property;

@@ -27,8 +27,8 @@ import ua.com.fielden.platform.utils.Pair;
  */
 public class EntityDescriptor {
     private final Class<?> rootType;
-    private final List<String> properties = new ArrayList<String>();
-    private final Map<String, Pair<String, String>> mapByNames = new HashMap<String, Pair<String, String>>(); // [name, (title, desc)]
+    private final List<String> properties = new ArrayList<>();
+    private final Map<String, Pair<String, String>> mapByNames = new HashMap<>(); // [name, (title, desc)]
 
     private String directPropertyName(final String name) {
         return name.isEmpty() ? AbstractEntity.KEY : name; // "key" property should be used for empty "" properties
@@ -37,7 +37,7 @@ public class EntityDescriptor {
     public EntityDescriptor(final Class<?> rootType, final List<String> properties) {
         this.rootType = rootType;
         this.properties.addAll(properties);
-        final Map<String, Pair<String, String>> mapByTitles = new HashMap<String, Pair<String, String>>(); // [title, (name, desc)]
+        final Map<String, Pair<String, String>> mapByTitles = new HashMap<>(); // [title, (name, desc)]
 
         // create map in which entry's key should be "property title":
         for (final String name : properties) {
@@ -52,7 +52,7 @@ public class EntityDescriptor {
                 mapByNames.put(name, null);
             } else {
                 final String shortTitle = TitlesDescsGetter.getTitleAndDesc(directPropertyName(name), rootType).getKey();
-                final Pair<String, String> neww = new Pair<String, String>(name, ftad.getValue());
+                final Pair<String, String> neww = Pair.pair(name, ftad.getValue());
 
                 if (mapByTitles.containsKey(shortTitle)) { // this short titled property already exists!
                     final Pair<String, String> old = mapByTitles.get(shortTitle);

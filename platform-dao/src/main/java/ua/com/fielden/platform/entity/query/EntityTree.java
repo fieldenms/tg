@@ -1,7 +1,10 @@
 package ua.com.fielden.platform.entity.query;
 
+import java.util.Map;
 import java.util.SortedMap;
+import java.util.SortedSet;
 import java.util.TreeMap;
+import java.util.TreeSet;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.generation.elements.ResultQueryYieldDetails;
@@ -42,6 +45,25 @@ public class EntityTree<E extends AbstractEntity<?>> {
     public SortedMap<String, ValueTree> getCompositeValues() {
         return compositeValues;
     }
+    
+    public SortedSet<HibernateScalar> getScalarFromEntityTree() {
+        final SortedSet<HibernateScalar> result = new TreeSet<HibernateScalar>();
+
+        for (final Map.Entry<ResultQueryYieldDetails, Integer> single : singles.entrySet()) {
+            result.add(new HibernateScalar(single.getKey().getColumn(), single.getKey().getHibTypeAsType(), single.getValue()));
+        }
+
+        for (final Map.Entry<String, ValueTree> composite : compositeValues.entrySet()) {
+            result.addAll(composite.getValue().getScalarFromValueTree());
+        }
+
+        for (final Map.Entry<String, EntityTree<? extends AbstractEntity<?>>> composite : composites.entrySet()) {
+            result.addAll(composite.getValue().getScalarFromEntityTree());
+        }
+
+        return result;
+    }
+
 
     @Override
     public int hashCode() {

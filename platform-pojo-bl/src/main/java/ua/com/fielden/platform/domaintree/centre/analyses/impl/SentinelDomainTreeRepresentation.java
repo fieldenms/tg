@@ -117,8 +117,8 @@ public class SentinelDomainTreeRepresentation extends AnalysisDomainTreeRepresen
      * 
      */
     public static class SentinelDomainTreeRepresentationSerialiser extends AbstractDomainTreeRepresentationSerialiser<SentinelDomainTreeRepresentation> {
-        public SentinelDomainTreeRepresentationSerialiser(final ISerialiser kryo) {
-            super(kryo);
+        public SentinelDomainTreeRepresentationSerialiser(final ISerialiser serialiser) {
+            super(serialiser);
         }
 
         @Override
@@ -127,7 +127,7 @@ public class SentinelDomainTreeRepresentation extends AnalysisDomainTreeRepresen
             final EnhancementSet excludedProperties = readValue(buffer, EnhancementSet.class);
             final SentinelAddToDistributionTickRepresentation firstTick = readValue(buffer, SentinelAddToDistributionTickRepresentation.class);
             final SentinelAddToAggregationTickRepresentation secondTick = readValue(buffer, SentinelAddToAggregationTickRepresentation.class);
-            return new SentinelDomainTreeRepresentation(kryo(), rootTypes, excludedProperties, firstTick, secondTick);
+            return new SentinelDomainTreeRepresentation(serialiser(), rootTypes, excludedProperties, firstTick, secondTick);
         }
     }
 }

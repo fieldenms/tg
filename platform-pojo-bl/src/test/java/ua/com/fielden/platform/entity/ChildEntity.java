@@ -18,21 +18,22 @@ import ua.com.fielden.platform.error.Result;
 @DescTitle(value = "Description", desc = "Description Property")
 @DescRequired
 public class ChildEntity extends AbstractEntity<String> {
+    private static final long serialVersionUID = 1L;
 
     protected ChildEntity() {
-	setDesc("lala");
+        setDesc("lala");
     }
 
     @Override
     @Observable
     public ChildEntity setDesc(final String desc) {
-	super.setDesc(desc);
-	return this;
+        super.setDesc(desc);
+        return this;
     }
 
     @Override
     protected Result validate() {
-	return super.validate();
+        return super.validate();
     }
 
 }
