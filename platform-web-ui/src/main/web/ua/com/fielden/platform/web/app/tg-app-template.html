@@ -14,24 +14,29 @@
 <link rel="import" href="/resources/polymer/iron-resizable-behavior/iron-resizable-behavior.html">
 <link rel="import" href="/resources/actions/tg-focus-restoration-behavior.html">
 <link rel="import" href="/resources/reflection/tg-polymer-utils.html">
+<link rel="import" href="/resources/components/tg-message-panel.html">
 
 <dom-module id="tg-app-template">
     <template>
         <style>
             :host {
                 overflow: hidden;
+                @apply(--layout-vertical);
             }
         </style>
         <carbon-location id="location" route="{{_route}}" url-space-regex="^/#/" use-hash-as-path></carbon-location>
         <carbon-route route="{{_route}}" pattern="/:moduleName" data="{{_routeData}}" tail="{{_subroute}}"></carbon-route>
-        <neon-animated-pages id="pages" class="fit" attr-for-selected="name" on-neon-animation-finish="_animationFinished" animate-initial-selection>
-            <tg-app-menu class="fit" name="menu" menu-config="[[menuConfig]]">
-                <!--menu action dom-->
-            </tg-app-menu>
-            <template is="dom-repeat" items="[[menuConfig.menu]]" on-dom-change="_modulesRendered">
-                <tg-app-view class="fit hero-animatable" name$="[[item.key]]" menu="[[menuConfig.menu]]" menu-item="[[item]]" can-edit="[[menuConfig.canEdit]]" menu-save-callback="[[_saveMenuVisibilityChanges]]" selected-module="[[_selectedModule]]" submodule="{{_selectedSubmodule}}"></tg-app-view>
-            </template>
-        </neon-animated-pages>
+        <tg-message-panel></tg-message-panel>
+        <div class="relative flex">
+            <neon-animated-pages id="pages" class="fit" attr-for-selected="name" on-neon-animation-finish="_animationFinished" animate-initial-selection>
+                <tg-app-menu class="fit" name="menu" menu-config="[[menuConfig]]">
+                    <!--menu action dom-->
+                </tg-app-menu>
+                <template is="dom-repeat" items="[[menuConfig.menu]]" on-dom-change="_modulesRendered">
+                    <tg-app-view class="fit hero-animatable" name$="[[item.key]]" menu="[[menuConfig.menu]]" menu-item="[[item]]" can-edit="[[menuConfig.canEdit]]" menu-save-callback="[[_saveMenuVisibilityChanges]]" selected-module="[[_selectedModule]]" submodule="{{_selectedSubmodule}}"></tg-app-view>
+                </template>
+            </neon-animated-pages>
+        </div>
         <tg-entity-master
             id="masterDom"
             entity-type="[[entityType]]"
