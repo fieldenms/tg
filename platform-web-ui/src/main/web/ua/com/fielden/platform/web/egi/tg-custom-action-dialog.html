@@ -1263,7 +1263,7 @@
                     for (var index = 0; index < this._subscriptions.length; index++) {
                         postal.unsubscribe(this._subscriptions[index]);
                     }
-                    this._resetState();
+                    this._resetState(true);
                     this._subscriptions.length = 0;
                     this._wasMoved = false;
                     this._wasResized = false;
@@ -1283,7 +1283,7 @@
                 }
             },
             
-            _resetState: function () {
+            _resetState: function (withClasses) {
                 this._hasNext = false;
                 this._hasPrev = false;
                 this._errorMsg = null;
@@ -1291,8 +1291,10 @@
                 this._masterVisibilityChanges = undefined;
                 this._masterLayoutChanges = undefined;
                 this.$.elementLoader.style.removeProperty("display");
-                Polymer.dom(this.$.loadingPanel).classList.remove("visible");
-                Polymer.dom(this.$.dialogLoader).classList.remove("hdden");
+                if (withClasses) {
+                    Polymer.dom(this.$.loadingPanel).classList.remove("visible");
+                    Polymer.dom(this.$.dialogLoader).classList.remove("hdden");
+                }
                 this._resetSpinner();
             },
 
