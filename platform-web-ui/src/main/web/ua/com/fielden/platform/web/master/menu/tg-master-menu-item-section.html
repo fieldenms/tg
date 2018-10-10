@@ -1,5 +1,6 @@
 <link rel="import" href="/resources/polymer/polymer/polymer.html">
 <link rel="import" href="/app/tg-element-loader.html">
+<link rel="import" href="/resources/reflection/tg-polymer-utils.html">
 <!-- >link rel="import" href="/resources/components/tg-toast.html"-->
 
 <dom-module id="tg-master-menu-item-section">
@@ -16,15 +17,26 @@
             }
             #dialogLoader {
                 transition: opacity 500ms;
+                opacity: 1;
+            }
+            #dialogLoader.hidden {
+                opacity: 0;
+                pointer-events: none;
             }
             #loadingPanel {
                 visibility: hidden;
                 background-color: white;
+                overflow: auto;
                 font-size: 18px;
                 color: var(--paper-grey-400);
             }
+            #loadingPanel.visible {
+                visibility: visible;
+            }
         </style>
-        <div id="loadingPanel" class=" fit layout horizontal center-center">Loading data...</div>
+        <div id="loadingPanel" class=" fit layout horizontal">
+            <div style="margin: auto;" inner-h-t-m-l="[[_getLoadingError(_errorMsg)]]"></div>
+        </div>
         <div id="dialogLoader" class="flex layout horizontal">
             <tg-element-loader id="elementLoader" class="flex"></tg-element-loader>
         </div>
@@ -63,10 +75,19 @@
                 _blockingPaneCounter: {
                     type: Number
                 },
+                
+                /**
+                 * Error message for menu item loading.
+                 */
+                _errorMsg: {
+                    type: String,
+                    value: null
+                },
             },
             
             listeners: {
-                'data-loaded-and-focused': '_handleDataLoaded'
+                'data-loaded-and-focused': '_handleDataLoaded',
+                'tg-error-happened': '_handleError'
             },
             
             ready: function () {
@@ -169,12 +190,31 @@
                 this._hideBlockingPane();
             },
             
+            _handleError: function (e) {
+                if (this._blockingPaneCounter > 0) {
+                    this._errorMsg = e.detail;
+                    tearDownEvent(e);
+                }
+            },
+            
+            _getLoadingError: function(_errorMsg) {
+                return _errorMsg || "Loading data...";
+            },
+            
             _showBlockingPane: function () {
+                if (this._errorMsg) {
+                    this._resetBlockingState();
+                }
                 if (this._blockingPaneCounter === 0) {
-                    this.$.loadingPanel.style.visibility = "visible";
-                    this.$.dialogLoader.style.opacity = "0";
+                    Polymer.dom(this.$.loadingPanel).classList.add("visible");
+                    Polymer.dom(this.$.dialogLoader).classList.add("hidden");
                 }
                 this._blockingPaneCounter++;
+            },
+            
+            _resetBlockingState: function () {
+                this._blockingPaneCounter = 0;
+                this._errorMsg = null;
             },
             
             _hideBlockingPane: function () {
@@ -182,8 +222,8 @@
                     this._blockingPaneCounter--;
                 }
                 if (this._blockingPaneCounter === 0) {
-                    this.$.loadingPanel.style.visibility = "hidden";
-                    this.$.dialogLoader.style.opacity = "1";
+                    Polymer.dom(this.$.loadingPanel).classList.remove("visible");
+                    Polymer.dom(this.$.dialogLoader).classList.remove("hidden");
                 }
             }
         });

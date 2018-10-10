@@ -979,8 +979,10 @@
             },
             
             _handleError: function (e) {
-                this._errorMsg = e.detail;
-                this._resetSpinner();
+                if (this._blockingPaneCounter > 0) {
+                    this._errorMsg = e.detail;
+                    this._resetSpinner();
+                }
             },
                 
             _getLoadingError: function(_errorMsg) {
@@ -1167,7 +1169,7 @@
             },
             
             _showBlockingPane: function () {
-                if (this._blockingPaneCounter === 0) {
+                if (this._blockingPaneCounter === 0 && !Polymer.dom(this.$.loadingPanel).classList.contains("visible")) {
                     this._masterVisibilityChanges = true;
                     Polymer.dom(this.$.loadingPanel).classList.add("visible");
                     Polymer.dom(this.$.dialogLoader).classList.add("hidden");
@@ -1179,7 +1181,7 @@
                 if (this._blockingPaneCounter > 0) {
                     this._blockingPaneCounter--;
                 }
-                if (this._blockingPaneCounter === 0) {
+                if (this._blockingPaneCounter === 0 && Polymer.dom(this.$.loadingPanel).classList.contains("visible")) {
                     this._masterVisibilityChanges = true;
                     Polymer.dom(this.$.loadingPanel).classList.remove("visible");
                     Polymer.dom(this.$.dialogLoader).classList.remove("hidden");
