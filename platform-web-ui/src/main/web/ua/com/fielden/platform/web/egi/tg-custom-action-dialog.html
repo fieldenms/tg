@@ -326,12 +326,12 @@
                 /** Navigation related properties*/
                 _hasPrev: {
                     type: Boolean,
-                    value:true
+                    value:false
                 },
                 
                 _hasNext: {
                     type: Boolean,
-                    value:true
+                    value:false
                 },
                 
                 isNavigationActionInProgress: {
@@ -556,25 +556,25 @@
             },
             
             _firstEntry: function () {
-                if (this.canClose() && this._hasPrev) {
+                if (this._lastAction.supportsNavigation && this.canClose() && this._hasPrev) {
                     this._lastAction.firstEntry();
                 }
             },
             
             _previousEntry: function () {
-                if (this.canClose() && this._hasPrev) {
+                if (this._lastAction.supportsNavigation && this.canClose() && this._hasPrev) {
                     this._lastAction.previousEntry();
                 }
             },
             
             _nextEntry: function () {
-                if (this.canClose() && this._hasNext) {
+                if (this._lastAction.supportsNavigation && this.canClose() && this._hasNext) {
                     this._lastAction.nextEntry();
                 }
             },
             
             _lastEntry: function () {
-                if (this.canClose() && this._hasNext) {
+                if (this._lastAction.supportsNavigation && this.canClose() && this._hasNext) {
                     this._lastAction.lastEntry();
                 }
             },
@@ -1282,6 +1282,8 @@
             },
             
             _resetState: function () {
+                this._hasNext = false;
+                this._hasPrev = false;
                 this._errorMsg = null;
                 this._blockingPaneCounter = 0;
                 this._masterVisibilityChanges = undefined;
