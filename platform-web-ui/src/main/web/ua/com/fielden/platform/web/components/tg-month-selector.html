@@ -24,9 +24,7 @@
             border-radius: 1.1em;
             cursor: pointer;
         }
-        .dead-day {
-            cursor: auto !important;
-            pointer-events: none;
+        .outside-day {
             color: #CDCDCD;
         }
         .day-short-name {
@@ -221,7 +219,7 @@
              * Selects the date.
              */
             _selectDay: function (event, detail, el) {
-                var yearMonthDay = { year: this.year, month: this.month, day: event.model.day.day };
+                var yearMonthDay = { year: this.year, month: this.month + event.model.day.monthIncrementor, day: Math.abs(event.model.day.day) };
                 this.selectedDate = _momentTz(yearMonthDay, this.timeZone).valueOf();
                 if (event.detail.sourceEvent.detail > 1) {
                     this.fire("tg-accept-date");
@@ -249,7 +247,7 @@
             _calcDayClass: function (day, month, year, selectedDay, selectedMonth, selectedYear) {
                 var dayClasses = "day layout vertical center-center";
                 if (day.day < 0) {
-                    dayClasses += " dead-day";
+                    dayClasses += " outside-day";
                 }
                 if (day.day === this.todayDay && month === this.todayMonth && year === this.todayYear) {
                     dayClasses += " today-date";
