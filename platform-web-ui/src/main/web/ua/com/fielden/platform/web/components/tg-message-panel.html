@@ -37,7 +37,7 @@
 </dom-module>
 <script>
     (function () {
-        
+
         const isMobile = {
             Windows: function() {
                 return /IEMobile/i.test(navigator.userAgent);
@@ -55,7 +55,7 @@
                 return (isMobile.Android() || isMobile.BlackBerry() || isMobile.iOS() || isMobile.Windows());
             }
         };
-        
+
         const isDesktop = {
             // Opera 8.0+
             isOpera: function () {
@@ -67,8 +67,8 @@
                 return typeof InstallTrigger !== 'undefined';
             },
 
-            // Safari 3.0+ "[object HTMLElementConstructor]" 
-            isSafari: function () { 
+            // Safari 3.0+ "[object HTMLElementConstructor]"
+            isSafari: function () {
                 return /constructor/i.test(window.HTMLElement) || (function (p) { return p.toString() === "[object SafariRemoteNotification]"; })(!window['safari'] || (typeof safari !== 'undefined' && safari.pushNotification));
             },
 
@@ -91,12 +91,12 @@
             isBlink: function () {
                 return (isChrome || isOpera) && !!window.CSS;
             },
-            
+
             any: function() {
                 return (isDesktop.isOpera() || isDesktop.isFirefox() || isDesktop.isSafari() || isDesktop.isIE() || isDesktop.isEdge() || isDesktop.isChrome() || isDesktop.isBlink());
             }
         }
-       
+
 
         Polymer({
 
@@ -106,16 +106,16 @@
                 isRecomendedClient: {
                     type: Boolean,
                 },
-                
+
                 closed: {
                     type: Boolean,
                 },
-                
+
                 messageText: {
                     type: String
                 }
             },
-            
+
             observers: ["_shoudDisplayMsg(isRecomendedClient, closed)"],
 
             ready: function () {
@@ -125,7 +125,7 @@
                 this.closed = this.isRecomendedClient;
                 if (!this.isRecomendedClient) {
                     if (isDesktop.isIE()) {
-                        this.messageText = "Application can not be opened in Internet Explorer. Chrome or Edge must be used.";
+                        this.messageText = "Application cannot be opened in Internet Explorer. Chrome or Edge must be used.";
                         this.style.backgroundColor = "#FF8A80";
                     } else {
                         this.messageText = "Chrome is recomended for this application.";
@@ -133,11 +133,11 @@
                     }
                 }
             },
-            
+
             _closeMessage: function (e) {
                 this.closed = true;
             },
-            
+
             _shoudDisplayMsg: function (isRecomendedClient, closed) {
                 if (isRecomendedClient || closed) {
                     this.setAttribute("hidden", true);
@@ -145,7 +145,7 @@
                     this.removeAttribute("hidden");
                 }
             }
-            
+
         });
     })();
 </script>
