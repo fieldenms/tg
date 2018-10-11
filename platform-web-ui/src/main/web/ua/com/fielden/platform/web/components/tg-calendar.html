@@ -170,6 +170,9 @@
             _adjustDate: function (newMoment) {
                 this.selectedDayName = newMoment.format("dddd");
                 this.selectedMonthName = newMoment.format("MMM").toUpperCase();
+                this.selectedDay = null;
+                this.selectedMonth = null;
+                this.selectedYear = null;
                 this.selectedDay = newMoment.date();
                 this.selectedMonth = newMoment.month();
                 this.selectedYear = newMoment.year();
@@ -179,12 +182,14 @@
              * Changes selected date according to changed year and month. 
              */
             _selectYearMonthDay: function (newYear, newMonth, newDay) {
-                var yearMonth = { year: newYear, month: newMonth, day: 1 };
-                var lastDayOfTheMonth = _momentTz(yearMonth, this.timeZone).daysInMonth();
-                
-                var computedDay = newDay > lastDayOfTheMonth ? lastDayOfTheMonth : newDay;
-                var yearMonthDay = { year: newYear, month: newMonth, day: computedDay };
-                this.selectedDate = _momentTz(yearMonthDay, this.timeZone).valueOf();
+                if (newYear !== null && newMonth !== null && newDay !== null) {
+                    var yearMonth = { year: newYear, month: newMonth, day: 1 };
+                    var lastDayOfTheMonth = _momentTz(yearMonth, this.timeZone).daysInMonth();
+
+                    var computedDay = newDay > lastDayOfTheMonth ? lastDayOfTheMonth : newDay;
+                    var yearMonthDay = { year: newYear, month: newMonth, day: computedDay };
+                    this.selectedDate = _momentTz(yearMonthDay, this.timeZone).valueOf();
+                }
             },
 
             /**
