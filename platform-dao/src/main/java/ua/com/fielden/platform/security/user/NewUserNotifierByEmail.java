@@ -3,8 +3,6 @@ package ua.com.fielden.platform.security.user;
 import static java.lang.String.format;
 import static org.apache.commons.lang.StringUtils.isEmpty;
 
-import org.apache.commons.lang.StringUtils;
-
 import com.google.inject.Inject;
 
 import ua.com.fielden.platform.mail.SmtpEmailSender;
