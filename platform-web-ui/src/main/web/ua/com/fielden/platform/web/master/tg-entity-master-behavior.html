@@ -476,7 +476,7 @@
                                 const saveButton = self.querySelector("tg-action[role='save']");
                                 self.save(functionalEntity, continuationProperty)
                                     .then(
-                                        Polymer.TgBehaviors.TgEntityMasterClosingBehavior.createEntityActionThenCallback(self.centreUuid, 'save', postal, null, saveButton.closeAfterExecution),
+                                        Polymer.TgBehaviors.TgEntityMasterClosingBehavior.createEntityActionThenCallback(self.centreUuid, 'save', postal, null, saveButton ? saveButton.closeAfterExecution : true),
                                         function (value) { console.log('AJAX PROMISE CATCH', value); }
                                     );
                             };
