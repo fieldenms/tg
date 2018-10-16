@@ -272,7 +272,7 @@
                     Polymer.dom(document.body).appendChild(this.$.toast);
                     Polymer.dom().flush();
                     this._showNewToast();
-                } else if (previousToast.error === true && previousToast.opened) {
+                } else if (previousToast.error === true && previousToast.opened && !this.isCritical) {
                     console.debug('toast show() discarded: [', this.text + ':' + this.msgText, '] hasMore = ', this.hasMore);
                 } else {
                     // 'dataHost' is used to detemine 'tg-toast' instance from 'previousToast' found on body (parent of 'previousToast' is body, that is why there is a need to use other accessing method).
@@ -308,7 +308,7 @@
                     this.$.toast.duration = STANDARD_DURATION;
                 }
                 // due to the fact, that current version of paper-toast does not react to 'duration' changes (reaction is performed only on _openedChanged), there is a need to react manually:
-                if (this.$.toast.duration !== oldDuration) { // if duration changed
+                if (this.$.toast.duration !== oldDuration || this.$.toast.duration === CRITICAL_DURATION) { // if duration changed
                     if (this.$.toast._autoClose !== null) {
                         this.$.toast.cancelAsync(this.$.toast._autoClose);
                         this.$.toast._autoClose = null;

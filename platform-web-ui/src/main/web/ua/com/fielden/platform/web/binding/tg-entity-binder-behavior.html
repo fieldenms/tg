@@ -477,7 +477,7 @@
                             // Current logic of tg-toast will discard all other messages after this message, until this message dissapear.
                             if (this._reflector().isError(deserialisedResult)) {
                                 console.log('deserialisedResult: ', deserialisedResult);
-                                this._openToastForError(deserialisedResult.message, this._toastMsgForError(deserialisedResult), !this._reflector().isContinuationError(deserialisedResult));
+                                this._openToastForError(deserialisedResult.message, this._toastMsgForError(deserialisedResult), true /*!this._reflector().isContinuationError(deserialisedResult)*/);
                             }
                             e.detail.successful = customHandlerFor(deserialisedInstance, this._reflector().isError(deserialisedResult) ? deserialisedResult : null);
                             if (this._reflector().isError(deserialisedResult)) {
@@ -493,6 +493,10 @@
                                     e.detail.entityContinuation = deserialisedInstance.type().isContinuation();
                                 } else if (Array.isArray(deserialisedInstance) && this._reflector().isEntity(deserialisedInstance[0])) {
                                     e.detail.entityId = deserialisedInstance[0].get('id');
+                                    if (deserialisedInstance[0].type() && deserialisedInstance[0].type().isPersistent && deserialisedInstance[0].type().isContinuation) {
+                                        e.detail.entityPersistent = deserialisedInstance[0].type().isPersistent();
+                                        e.detail.entityContinuation = deserialisedInstance[0].type().isContinuation();
+                                    }
                                 }
                             }
                         }
