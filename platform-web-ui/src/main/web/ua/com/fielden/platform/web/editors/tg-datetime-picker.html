@@ -430,7 +430,7 @@
                         if (this._validMoment !== null) {
                             return _millisDateRepresentation(this._validMoment.valueOf(), this.timeZone, this.datePortion);
                         }
-                    } else if (this.timeZone === 'UTC') { //As the last resort try utc formatting
+                    } else if (this.timeZone === 'UTC' && dateEditingValue.indexOf('-') >= 0) { //As the last resort try utc formatting
                         this._validMoment = this._tryUTCFormats(dateEditingValue);
                         if (this._validMoment !== null) {
                             return _millisDateRepresentation(this._validMoment.valueOf(), this.timeZone, this.datePortion);
