@@ -300,10 +300,6 @@
                 correctlyApproximatesFromLocal(done, '06/10/2013 03:30', '06/10/2013 03:30', '2013-10-05 16:30', 1380990600000);
             });
             
-            test('[06/10/2013 03:30] to UTC [05/10/2013 16:30]', function (done) {
-                correctlyApproximatesFromLocal(done, '06/10/2013 03:30', '06/10/2013 03:30', '2013-10-05 16:30', 1380990600000);
-            });
-            
             test('[t] to todays date with time set to start of the day', function(done) {
                 const todayDate = moment().startOf("day");
                 correctlyApproximatesFromLocal(done, 't', todayDate.format('DD/MM/YYYY HH:mm'), todayDate.utc().format('YYYY-MM-DD HH:mm'), todayDate.valueOf());
