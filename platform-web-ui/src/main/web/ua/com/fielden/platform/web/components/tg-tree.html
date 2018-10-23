@@ -1,0 +1,95 @@
+<link rel="import" href="/resources/polymer/polymer/polymer.html">
+
+<link rel="import" href="/resources/polymer/iron-icon/iron-icon.html">
+<link rel="import" href="/resources/polymer/iron-icons/iron-icons.html">
+<link rel="import" href="/resources/polymer/iron-list/iron-list.html">
+
+<dom-module id="tg-tree">
+    <template>
+        <style>
+            /* Container styles*/
+            :host {
+                @apply(--layout-vertical);
+
+            }
+            iron-icon[collapsed] {
+                transform: rotate(-90deg);
+            }
+            iron-icon[invisible] {
+                visibility: hidden;
+            }
+        </style>
+        <iron-list items="[[_entities]]" as="entity">
+            <template>
+                <div class="layout horizontal center" style$="[[_calcItemStyle(entitiy)]]">
+                    <iron-icon icon="icons:arrow-drop-down" style="flex-grow:0;flex-shrink:0;" invisible$="[[!entity.hasChildren]]" collapsed$="[[!entity.opened]]" on-tap="_toggle"></iron-icon>
+                    <span>[[entity.title]]</span>
+                </div>
+            </template>
+        </iron-list>
+    </template>
+    <script>
+        (function () {
+            'use strict'
+            Polymer({
+                is: 'tg-tree',
+
+                properties: {
+
+                    /**
+                     * Represents tree model
+                     */
+                    model: {
+                        type: Array,
+                        observer: "_modelChanged"
+                    },
+
+                    /**
+                     * Represents the linear tree model.
+                     */
+                    _entities: {
+                        type: Array
+                    },
+
+
+
+                },
+
+                ready: function () {
+                    //Add some event listeners and do other logic before attached callback.
+                },
+
+                attached: function () {},
+                
+                _modelChanged: function (newModel, oldModel) {
+                    const tempModel = [];
+                    newModel.forEach(entity => {
+                        tempModel.push({
+                            title: entity.title,
+                            hasChildren: entity.hasChildren,
+                            children: entity.children,
+                            opened: false
+                        });
+                    });
+                    this._entities = tempModel;
+                },
+
+                _toggle: function (e) {
+                    console.log(e.model);
+                    const entity = e.model.entity;
+                    const idx = e.model.index;
+                    if (entity.opened) {
+                        this.splice("_entities", idx + 1, entity.children.length);
+                    } else {
+                        this.splice("_entities", idx + 1, 0, ...entity.children);
+                    }
+                    entity.opened = !entity.opened;
+                },
+                
+                _calcItemStyle: function (entitiy) {
+                }
+
+            });
+        })();
+    </script>
+</dom-module>
