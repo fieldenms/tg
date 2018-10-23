@@ -4,10 +4,13 @@ import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.ui.config.EntityCentreConfig;
 
 /**
- * A DAO/RAO controller contract for {@link EntityCentreConfig}.
+ * Companion object for entity {@link EntityCentreConfig}.
  * 
  * @author TG Team
  * 
  */
 public interface IEntityCentreConfig extends IEntityDao<EntityCentreConfig> {
+    
+    EntityCentreConfig nonConflictingSave(final EntityCentreConfig entity);
+    
 }
