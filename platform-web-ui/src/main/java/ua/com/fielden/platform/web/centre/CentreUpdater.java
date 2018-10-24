@@ -282,7 +282,7 @@ public class CentreUpdater {
      * <p>
      * Please note that this operation is immutable in regard to the surrogate centre instance being copied.
      * <p>
-     * IMPORTANT: avoids self-conflict checks; only to be used NOT IN another SessionRequired transaction scope.
+     * IMPORTANT WARNING: avoids centre config self-conflict checks; ONLY TO BE USED NOT IN ANOTHER SessionRequired TRANSACTION SCOPE.
      * 
      * @param user
      * @param miType

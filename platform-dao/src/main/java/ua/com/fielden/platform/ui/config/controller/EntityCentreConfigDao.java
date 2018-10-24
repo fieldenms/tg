@@ -21,6 +21,10 @@ import ua.com.fielden.platform.ui.config.api.IEntityCentreConfig;
 
 /**
  * DAO implementation of {@link IEntityCentreConfig}.
+ * <p>
+ * Method {@link #save(EntityCentreConfig)} is intentionally not overridden due to the need to use {@link #quickSave(EntityCentreConfig)}.
+ * However, please always use {@link #saveWithConflicts(EntityCentreConfig)} or {@link #saveWithoutConflicts(EntityCentreConfig)} and decide
+ * whether outer transaction scope [xor] graceful conflict resolution is needed.
  * 
  * @author TG Team
  * 
@@ -51,12 +55,6 @@ public class EntityCentreConfigDao extends CommonEntityDao<EntityCentreConfig> i
         return defaultBatchDelete(model);
     }
     
-    @SessionRequired
-    @Override
-    public EntityCentreConfig save(final EntityCentreConfig entity) {
-        throw new EntityCentreConfigDaoException("Please use saveWithoutConflicts or saveWithConflicts instead.");
-    }
-    
     ///////////////////////////////// GRACEFULL CONFLICT RESOLUTION /////////////////////////////////
     /**
      * {@inheritDoc}
@@ -70,7 +68,7 @@ public class EntityCentreConfigDao extends CommonEntityDao<EntityCentreConfig> i
      * Next recursive invocation of {@link #saveWithoutConflicts(EntityCentreConfig)} method will trigger separate independent {@link SessionRequired} scope for nested call {@link #saveNotAllowingNestedScope(EntityCentreConfig)}.
      */
     @Override
-    public EntityCentreConfig saveWithoutConflicts(final EntityCentreConfig entity) {
+    public Long saveWithoutConflicts(final EntityCentreConfig entity) {
         try {
             return saveNotAllowingNestedScope(entity);
             // Need to repeat saving of entity in case of "self conflict": in a concurrent environment the same user on the same entity centre configuration can trigger multiple concurrent validations with different parameters.
@@ -95,8 +93,8 @@ public class EntityCentreConfigDao extends CommonEntityDao<EntityCentreConfig> i
      * @return
      */
     @SessionRequired(allowNestedScope = false)
-    public EntityCentreConfig saveNotAllowingNestedScope(final EntityCentreConfig entity) { // must be 'public' (or perhaps 'protected') for SessionInterceptor to take effect
-        return super.save(entity);
+    public Long saveNotAllowingNestedScope(final EntityCentreConfig entity) { // must be 'public' (or perhaps 'protected') for SessionInterceptor to take effect
+        return super.quickSave(entity);
     }
     
     /**
@@ -105,7 +103,7 @@ public class EntityCentreConfigDao extends CommonEntityDao<EntityCentreConfig> i
      * @param entity
      * @return
      */
-    private EntityCentreConfig refetchReapplyAndSaveWithoutConflicts(final EntityCentreConfig entity) {
+    private Long refetchReapplyAndSaveWithoutConflicts(final EntityCentreConfig entity) {
         final EntityCentreConfig persistedEntity = findByEntityAndFetch(null, entity);
         for (final MetaProperty<?> prop : entity.getDirtyProperties()) { // the only two properties that can be conflicting: 'configBody' (most cases) and 'desc' (rare, but possible); other properties are the parts of key and will not conflict
             final String name = prop.getName();
@@ -122,8 +120,8 @@ public class EntityCentreConfigDao extends CommonEntityDao<EntityCentreConfig> i
      */
     @Override
     @SessionRequired
-    public EntityCentreConfig saveWithConflicts(final EntityCentreConfig entity) {
-        return super.save(entity);
+    public Long saveWithConflicts(final EntityCentreConfig entity) {
+        return super.quickSave(entity);
     }
     
 }
