@@ -21,7 +21,7 @@
         </style>
         <iron-list items="[[_entities]]" as="entity">
             <template>
-                <div class="layout horizontal center" style$="[[_calcItemStyle(entitiy)]]">
+                <div class="layout horizontal center" style$="[[_calcItemStyle(entity)]]">
                     <iron-icon icon="icons:arrow-drop-down" style="flex-grow:0;flex-shrink:0;" invisible$="[[!entity.hasChildren]]" collapsed$="[[!entity.opened]]" on-tap="_toggle"></iron-icon>
                     <span>[[entity.title]]</span>
                 </div>
@@ -31,6 +31,27 @@
     <script>
         (function () {
             'use strict'
+            
+            const calculateNumberOfOpenedItems = function (entity) {
+                let length = 0;
+                if (entity.hasChildren && entity.opened) {
+                    length += entity.children.length;
+                    entity.children.forEach(child => length += calculateNumberOfOpenedItems(child));
+                }
+                return length;
+            };
+            
+            const getChildrenToAdd = function (entity) {
+                const childrenToAdd = [];
+                if (entity.opened && entity.hasChildren) {
+                    entity.children.forEach(child => {
+                        childrenToAdd.push(child);
+                        childrenToAdd.push(...getChildrenToAdd(child));
+                    });
+                }
+                return childrenToAdd;
+            };
+            
             Polymer({
                 is: 'tg-tree',
 
@@ -62,16 +83,21 @@
                 attached: function () {},
                 
                 _modelChanged: function (newModel, oldModel) {
-                    const tempModel = [];
-                    newModel.forEach(entity => {
-                        tempModel.push({
-                            title: entity.title,
-                            hasChildren: entity.hasChildren,
-                            children: entity.children,
-                            opened: false
+                    const generateChildrenModel = function (children, parentEntity) {
+                        return children.map(child => {
+                            const parent = {
+                                title: child.title,
+                                parent: parentEntity,
+                                hasChildren: child.hasChildren,
+                                opened: false
+                            };
+                            if (parent.hasChildren) {
+                                parent.children = generateChildrenModel(child.children, parent);
+                            }
+                            return parent;
                         });
-                    });
-                    this._entities = tempModel;
+                    };
+                    this._entities = generateChildrenModel(newModel);
                 },
 
                 _toggle: function (e) {
@@ -79,14 +105,22 @@
                     const entity = e.model.entity;
                     const idx = e.model.index;
                     if (entity.opened) {
-                        this.splice("_entities", idx + 1, entity.children.length);
+                        this.splice("_entities", idx + 1, calculateNumberOfOpenedItems(entity));
+                        this.set("_entities." + idx + ".opened", false);
                     } else {
-                        this.splice("_entities", idx + 1, 0, ...entity.children);
+                        this.set("_entities." + idx + ".opened", true);
+                        this.splice("_entities", idx + 1, 0, ...getChildrenToAdd(entity));
                     }
-                    entity.opened = !entity.opened;
                 },
                 
-                _calcItemStyle: function (entitiy) {
+                _calcItemStyle: function (entity) {
+                    let paddingLeft = 0;
+                    let parent = entity.parent;
+                    while (parent) {
+                        paddingLeft += 16;
+                        parent = parent.parent;
+                    }
+                    return "padding-left: " + paddingLeft + "px";
                 }
 
             });

@@ -8,12 +8,9 @@
     <script src="/resources/polymer/webcomponentsjs/webcomponents-lite.js"></script>
     <link rel="import" href="tg-tree.html">
     <style>
-        tg-tree {
-            height: 640px;
-            width: 300px;
-        }
     </style>
 </head>
+
 <body unresolved class="fullbleed">
     <template is="dom-bind" id="app">
         <tg-tree model="[[model]]"></tg-tree>
@@ -21,137 +18,34 @@
 </body>
 <script>
     var app = document.querySelector("#app");
-    app.model = [{
-        title: "Menu Item 1",
-        hasChildren: false
-    }, {
-        title: "Menu Item 2",
-        hasChildren: true,
-        children: [{
-            title: "Menu Item 1",
-            hasChildren: false,
-        }, {
-            title: "Menu Item 1",
-            hasChildren: false,
-        }]
-    }, {
-        title: "Menu Item 3",
-        hasChildren: true,
-        children: [{
-            title: "Menu Item 1",
-            hasChildren: false,
-        }, {
-            title: "Menu Item 1",
-            hasChildren: false,
-        }]
-    }, {
-        title: "Menu Item 4",
-        hasChildren: false
-    }, {
-        title: "Menu Item 5",
-        hasChildren: false
-    }, {
-        title: "Menu Item 6",
-        hasChildren: false
-    }, {
-        title: "Menu Item 7",
-        hasChildren: false
-    }, {
-        title: "Menu Item 8",
-        hasChildren: false
-    }, {
-        title: "Menu Item 9",
-        hasChildren: false
-    }, {
-        title: "Menu Item 10",
-        hasChildren: true,
-        children: [{
-            title: "Menu Item 1",
-            hasChildren: false,
-        }, {
-            title: "Menu Item 1",
-            hasChildren: false,
-        }]
-    }, {
-        title: "Menu Item 11",
-        hasChildren: true,
-        children: [{
-            title: "Menu Item 1",
-            hasChildren: false,
-        }, {
-            title: "Menu Item 1",
-            hasChildren: false,
-        }]
-    }, {
-        title: "Menu Item 12",
-        hasChildren: true,
-        children: [{
-            title: "Menu Item 1",
-            hasChildren: false,
-        }, {
-            title: "Menu Item 1",
-            hasChildren: false,
-        }]
-    }, {
-        title: "Menu Item 13",
-        hasChildren: false
-    }, {
-        title: "Menu Item 14",
-        hasChildren: true,
-        children: [{
-            title: "Menu Item 1",
-            hasChildren: false,
-        }, {
-            title: "Menu Item 1",
-            hasChildren: false,
-        }]
-    }, {
-        title: "Menu Item 15",
-        hasChildren: true,
-        children: [{
-            title: "Menu Item 1",
-            hasChildren: false,
-        }, {
-            title: "Menu Item 1",
-            hasChildren: false,
-        }]
-    }, {
-        title: "Menu Item 16",
-        hasChildren: false
-    }, {
-        title: "Menu Item 17",
-        hasChildren: true,
-        children: [{
-            title: "Menu Item 1",
-            hasChildren: false,
-        }, {
-            title: "Menu Item 1",
-            hasChildren: false,
-        }]
-    }, {
-        title: "Menu Item 18",
-        hasChildren: true,
-        children: [{
-            title: "Menu Item 1",
-            hasChildren: false,
-        }, {
-            title: "Menu Item 1",
-            hasChildren: false,
-        }]
-    }, {
-        title: "Menu Item 19",
-        hasChildren: false
-    }, {
-        title: "Menu Item 20",
-        hasChildren: true,
-        children: [{
-            title: "Menu Item 1",
-            hasChildren: false,
-        }, {
-            title: "Menu Item 1",
-            hasChildren: false,
-        }]
-    }];
+    const numberOfItems = 10;
+    const deepth = 4;
+    const generateItems = function (numberOfItems, deepthLevel, parent) {
+        if (deepthLevel === 1) {
+            return Array.apply(null, {
+                length: numberOfItems
+            }).map((item, idx) => {
+                return {
+                    title: (parent ? parent.title : "Menu item") + " " +idx,
+                    hasChildren: false
+                };
+            });
+        } else if (deepthLevel > 1) {
+            return Array.apply(null, {
+                length: numberOfItems
+            }).map((item, idx) => {
+                const child = {
+                    title: (parent ? parent.title : "Menu item") + " " + idx,
+                    hasChildren: true
+                }
+                child.children = generateItems(numberOfItems, deepthLevel - 1, child);
+                return child;
+            });
+        }
+        return [];
+    };
+    app.model = generateItems(numberOfItems, deepth);
+    
 </script>
 
 </html>
