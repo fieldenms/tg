@@ -963,7 +963,7 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
     /**
      * Creates selection criteria entity from <code>modifPropsHolder</code>.
      * <p>
-     * IMPORTANT: avoids self-conflict checks; only to be used NOT IN another SessionRequired transaction scope.
+     * IMPORTANT WARNING: avoids centre config self-conflict checks; ONLY TO BE USED NOT IN ANOTHER SessionRequired TRANSACTION SCOPE.
      *
      * @return
      */

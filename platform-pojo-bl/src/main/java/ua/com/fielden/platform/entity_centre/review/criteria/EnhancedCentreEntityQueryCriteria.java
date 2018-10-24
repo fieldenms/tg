@@ -32,11 +32,14 @@ import ua.com.fielden.platform.web.centre.LoadableCentreConfig;
  */
 public class EnhancedCentreEntityQueryCriteria<T extends AbstractEntity<?>, DAO extends IEntityDao<T>> extends EntityQueryCriteria<ICentreDomainTreeManagerAndEnhancer, T, DAO> {
     private Supplier<ICentreDomainTreeManagerAndEnhancer> previouslyRunCentreSupplier;
+    /** IMPORTANT WARNING: avoids centre config self-conflict checks; ONLY TO BE USED NOT IN ANOTHER SessionRequired TRANSACTION SCOPE. */
     private Function<Map<String, Object>, EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, ? extends IEntityDao<AbstractEntity<?>>>> freshCentreApplier;
     private BiFunction<String, String, Map<String, Object>> centreEditor;
     private BiFunction<String, String, Map<String, Object>> centreSaver;
     private Runnable centreDeleter;
+    /** IMPORTANT WARNING: avoids centre config self-conflict checks; ONLY TO BE USED NOT IN ANOTHER SessionRequired TRANSACTION SCOPE. */
     private Runnable freshCentreSaver;
+    /** IMPORTANT WARNING: avoids centre config self-conflict checks; ONLY TO BE USED NOT IN ANOTHER SessionRequired TRANSACTION SCOPE. */
     private Runnable configDuplicateAction;
     private Consumer<String> inheritedCentreUpdater;
     private Runnable defaultCentreClearer;
@@ -92,11 +95,22 @@ public class EnhancedCentreEntityQueryCriteria<T extends AbstractEntity<?>, DAO 
     public ICentreDomainTreeManagerAndEnhancer previouslyRunCentre() {
         return previouslyRunCentreSupplier.get();
     }
-
+    
+    /**
+     * IMPORTANT WARNING: avoids centre config self-conflict checks; ONLY TO BE USED NOT IN ANOTHER SessionRequired TRANSACTION SCOPE.
+     * 
+     * @param freshCentreApplier
+     */
     public void setFreshCentreApplier(final Function<Map<String, Object>, EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, ? extends IEntityDao<AbstractEntity<?>>>> freshCentreApplier) {
         this.freshCentreApplier = freshCentreApplier;
     }
-
+    
+    /**
+     * IMPORTANT WARNING: avoids centre config self-conflict checks; ONLY TO BE USED NOT IN ANOTHER SessionRequired TRANSACTION SCOPE.
+     * 
+     * @param modifHolder
+     * @return
+     */
     public EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, ? extends IEntityDao<AbstractEntity<?>>> freshCentreApplier(final Map<String, Object> modifHolder) {
         return freshCentreApplier.apply(modifHolder);
     }
@@ -132,19 +146,34 @@ public class EnhancedCentreEntityQueryCriteria<T extends AbstractEntity<?>, DAO 
     public void updateInheritedCentre(final String saveAsNameToLoad) {
         inheritedCentreUpdater.accept(saveAsNameToLoad);
     }
-
+    
+    /**
+     * IMPORTANT WARNING: avoids centre config self-conflict checks; ONLY TO BE USED NOT IN ANOTHER SessionRequired TRANSACTION SCOPE.
+     * 
+     * @param configDuplicateAction
+     */
     public void setConfigDuplicateAction(final Runnable configDuplicateAction) {
         this.configDuplicateAction = configDuplicateAction;
     }
-
+    /**
+     * IMPORTANT WARNING: avoids centre config self-conflict checks; ONLY TO BE USED NOT IN ANOTHER SessionRequired TRANSACTION SCOPE.
+     */
     public void configDuplicateAction() {
         configDuplicateAction.run();
     }
 
+    /**
+     * IMPORTANT WARNING: avoids centre config self-conflict checks; ONLY TO BE USED NOT IN ANOTHER SessionRequired TRANSACTION SCOPE.
+     * 
+     * @param freshCentreSaver
+     */
     public void setFreshCentreSaver(final Runnable freshCentreSaver) {
         this.freshCentreSaver = freshCentreSaver;
     }
-
+    
+    /**
+     * IMPORTANT WARNING: avoids centre config self-conflict checks; ONLY TO BE USED NOT IN ANOTHER SessionRequired TRANSACTION SCOPE.
+     */
     public void saveFreshCentre() {
         freshCentreSaver.run();
     }
