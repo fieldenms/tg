@@ -4,7 +4,7 @@ import static ua.com.fielden.platform.utils.MiscUtilities.prepare;
 import static ua.com.fielden.platform.web.centre.CentreUpdater.FRESH_CENTRE_NAME;
 import static ua.com.fielden.platform.web.centre.CentreUpdater.updateCentre;
 import static ua.com.fielden.platform.web.resources.webui.CentreResourceUtils.createCentreContext;
-import static ua.com.fielden.platform.web.resources.webui.CentreResourceUtils.createCriteriaEntity;
+import static ua.com.fielden.platform.web.resources.webui.CentreResourceUtils.createCriteriaEntityWithoutConflicts;
 import static ua.com.fielden.platform.web.resources.webui.CentreResourceUtils.createCriteriaValidationPrototype;
 import static ua.com.fielden.platform.web.utils.WebUiResourceUtils.handleUndesiredExceptions;
 import static ua.com.fielden.platform.web.utils.WebUiResourceUtils.restoreCentreContextHolder;
@@ -136,7 +136,7 @@ public class CriteriaEntityAutocompletionResource<T extends AbstractEntity<?>, M
                 );
                 criteriaType = (Class<M>) enhancedCentreEntityQueryCriteria.getClass();
             } else {
-                criteriaEntity = (M) createCriteriaEntity(modifHolder, companionFinder, critGenerator, miType, saveAsName, user, userProvider, device(), serialiser, domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion);
+                criteriaEntity = (M) createCriteriaEntityWithoutConflicts(modifHolder, companionFinder, critGenerator, miType, saveAsName, user, userProvider, device(), serialiser, domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion);
                 criteriaType = (Class<M>) criteriaEntity.getClass();
             }
 
