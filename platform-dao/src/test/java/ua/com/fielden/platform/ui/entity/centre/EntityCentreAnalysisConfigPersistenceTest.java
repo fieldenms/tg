@@ -39,7 +39,7 @@ public class EntityCentreAnalysisConfigPersistenceTest extends AbstractDaoTestCa
         final EntityCentreConfig config = new_composite(EntityCentreConfig.class, userDao.findByKey("USER"), "CONFIG 1", menuDao.findByKey("type"));
         config.setConfigBody(new byte[] { 1, 2, 3 });
         config.setDesc("desc");
-        final EntityCentreConfig config2 = daoECC.save(config);
+        final EntityCentreConfig config2 = daoECC.saveWithConflicts(config);
 
         final EntityCentreAnalysisConfig analysis = new_composite(EntityCentreAnalysisConfig.class, config2, "ANALYSIS 1");
         dao.save(analysis);

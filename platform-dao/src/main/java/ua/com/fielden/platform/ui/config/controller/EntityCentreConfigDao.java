@@ -51,17 +51,28 @@ public class EntityCentreConfigDao extends CommonEntityDao<EntityCentreConfig> i
         return defaultBatchDelete(model);
     }
     
-    /**
-     * This method can not have SessionRequired scope.
-     * This is due to recursive invocation of the same 'save' method down inside 'refetchReapplyAndSave'.
-     * The problem lies in OptimisticLockException which, when actioned, makes transaction inactive internally; that makes impossible to invoke 'save' method recursively again.
-     * What we need here is granular SessionRequired scope, so we annotate 'saveRaw' with SessionRequired and when OptimisticLock occurs, only little granular transaction (saveRaw) makes inactive (and further rollbacks in SessionInterceptor).
-     * Next recursive invocation of 'save' method will trigger separate independent SessionRequired scope for nested call 'saveRaw'.
-     */
+    @SessionRequired
     @Override
     public EntityCentreConfig save(final EntityCentreConfig entity) {
+        throw new EntityCentreConfigDaoException("Please use saveWithoutConflicts or saveWithConflicts instead.");
+    }
+    
+    ///////////////////////////////// GRACEFULL CONFLICT RESOLUTION /////////////////////////////////
+    /**
+     * {@inheritDoc}
+     * <p>
+     * Implementation details:
+     * <p>
+     * This method can not have {@link SessionRequired} scope.
+     * This is due to recursive invocation of the same {@link #saveWithoutConflicts(EntityCentreConfig)} method down inside {@link #refetchReapplyAndSave(EntityCentreConfig)}.
+     * The problem lies in {@link OptimisticLockException} which, when actioned, makes transaction inactive internally; that makes impossible to invoke {@link #saveWithoutConflicts(EntityCentreConfig)} method recursively again.
+     * What we need here is granular {@link SessionRequired} scope, so we annotate {@link #saveNotAllowingNestedScope(EntityCentreConfig)} with {@link SessionRequired} and when {@link OptimisticLockException} occurs, only little granular transaction ({@link #saveNotAllowingNestedScope(EntityCentreConfig)}) makes inactive (and further rollbacks in SessionInterceptor).
+     * Next recursive invocation of {@link #saveWithoutConflicts(EntityCentreConfig)} method will trigger separate independent {@link SessionRequired} scope for nested call {@link #saveNotAllowingNestedScope(EntityCentreConfig)}.
+     */
+    @Override
+    public EntityCentreConfig saveWithoutConflicts(final EntityCentreConfig entity) {
         try {
-            return saveRaw(entity);
+            return saveNotAllowingNestedScope(entity);
             // Need to repeat saving of entity in case of "self conflict": in a concurrent environment the same user on the same entity centre configuration can trigger multiple concurrent validations with different parameters.
         } catch (final EntityCompanionException companionException) {
             if (companionException.getMessage() != null && companionException.getMessage().contains(ERR_COULD_NOT_RESOLVE_CONFLICTING_CHANGES)) { // conflict could occur for concrete user, miType and surrogate+saveAs name
@@ -77,8 +88,14 @@ public class EntityCentreConfigDao extends CommonEntityDao<EntityCentreConfig> i
         }
     }
     
+    /**
+     * Regular entity saving process with transaction scope but not allowing to nest that scope inside another scope.
+     * 
+     * @param entity
+     * @return
+     */
     @SessionRequired(allowNestedScope = false)
-    public EntityCentreConfig saveRaw(final EntityCentreConfig entity) {
+    public EntityCentreConfig saveNotAllowingNestedScope(final EntityCentreConfig entity) { // must be 'public' (or perhaps 'protected') for SessionInterceptor to take effect
         return super.save(entity);
     }
     
@@ -96,7 +113,17 @@ public class EntityCentreConfigDao extends CommonEntityDao<EntityCentreConfig> i
                 persistedEntity.set(name, prop.getValue());
             }
         }
-        return save(persistedEntity);
+        return saveWithoutConflicts(persistedEntity);
+    }
+    
+    ///////////////////////////////// CONFLICTS UNRESOLVED /////////////////////////////////
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    @SessionRequired
+    public EntityCentreConfig saveWithConflicts(final EntityCentreConfig entity) {
+        return super.save(entity);
     }
     
 }

@@ -143,7 +143,7 @@ public class DomainTreeVersionMaintainer extends AbstractDomainTree {
         if (cdtmaeAndShouldBePromoted.getValue()) {
             // the converted version should be promoted to the cloud
             downloadedEcc.setConfigBody(getSerialiser().serialise(cdtmaeAndShouldBePromoted.getKey())); // serialise with CURRENT version of serialiser
-            final EntityCentreConfig updatedEcc = eccController.save(downloadedEcc);
+            final EntityCentreConfig updatedEcc = eccController.saveWithConflicts(downloadedEcc);
             logger.warn("\tA centre instance, converted to CURRENT (1) version, for [" + downloadedEcc + "] has been succesfully saved (promoted to the cloud).");
 
             logger.debug("Ended maintaining the version of centre instance for [" + downloadedEcc + "].");
