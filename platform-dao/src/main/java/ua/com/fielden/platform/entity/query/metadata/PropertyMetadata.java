@@ -73,10 +73,6 @@ public class PropertyMetadata implements Comparable<PropertyMetadata> {
         return category.affectsMappings();
     }
 
-//    public Type getHibTypeAsType() {
-//        return hibType instanceof Type ? (Type) hibType : null;
-//    }
-
     public IUserTypeInstantiate getHibTypeAsUserType() {
         return hibType instanceof IUserTypeInstantiate ? (IUserTypeInstantiate) hibType : null;
     }
@@ -122,10 +118,6 @@ public class PropertyMetadata implements Comparable<PropertyMetadata> {
 
     public boolean isUnionEntity() {
         return category == UNION_ENTITY_HEADER;
-    }
-
-    public boolean isUnionEntityDetails() {
-        return category == UNION_ENTITY_DETAILS;
     }
 
     public boolean isEntityMemberOfCompositeKey() {
