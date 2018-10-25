@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.utils;
 
 import static java.lang.String.format;
+import static java.lang.reflect.Modifier.isStatic;
 import static java.util.Arrays.stream;
 import static java.util.Optional.ofNullable;
 import static java.util.stream.Stream.concat;
@@ -677,7 +678,15 @@ public class EntityUtils {
         } else {
             final Boolean value  = syntheticTypes.getIfPresent(type);
             if (value == null) {
-                final boolean result = !isUnionEntityType(type) && !getEntityModelsOfQueryBasedEntityType(type).isEmpty();
+                boolean foundModelField = false;
+                for (final Field field : type.getDeclaredFields()) {
+                    if (isStatic(field.getModifiers()) && //
+                            ("model_".equals(field.getName()) && EntityResultQueryModel.class.equals(field.getType()) || "models_".equals(field.getName()) && List.class.equals(field.getType()))) {
+                        foundModelField = true;
+                    }
+                }
+                
+                final boolean result = !isUnionEntityType(type) && foundModelField;
                 syntheticTypes.put(type, result);
                 return result;
             } else {
