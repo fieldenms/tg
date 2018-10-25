@@ -13,39 +13,61 @@
 
 <body unresolved class="fullbleed">
     <template is="dom-bind" id="app">
-        <tg-tree model="[[model]]"></tg-tree>
+        <tg-tree model="[[model]]" on-tg-load-subtree="_loadSubtree"></tg-tree>
     </template>
 </body>
 <script>
     var app = document.querySelector("#app");
     const numberOfItems = 10;
     const deepth = 4;
-    const generateItems = function (numberOfItems, deepthLevel, parent) {
-        if (deepthLevel === 1) {
-            return Array.apply(null, {
-                length: numberOfItems
-            }).map((item, idx) => {
-                return {
-                    title: (parent ? parent.title : "Menu item") + " " +idx,
-                    hasChildren: false
-                };
-            });
-        } else if (deepthLevel > 1) {
-            return Array.apply(null, {
-                length: numberOfItems
-            }).map((item, idx) => {
-                const child = {
-                    title: (parent ? parent.title : "Menu item") + " " + idx,
-                    hasChildren: true
-                }
-                child.children = generateItems(numberOfItems, deepthLevel - 1, child);
-                return child;
-            });
+    const generateItems = function (numberOfItems, deepth) {
+        const generatedModel = [];
+        let currentLevel = [];
+        for (let i = 1; i <= deepth; i++) {
+            if (currentLevel.length === 0) {
+                currentLevel = generateChildren(numberOfItems, i < deepth);
+                generatedModel.push(...currentLevel);
+            } else {
+                currentLevel = currentLevel.reduce((accum, currentValue, currIdx) => {
+                    currentValue.children = generateChildren(numberOfItems, i < deepth, currentValue);
+                    return accum.concat(currentValue.children);
+                }, []);
+            }
         }
-        return [];
+        return generatedModel;
     };
-    app.model = generateItems(numberOfItems, deepth);
-    
+    const generateChildren = function (numberOfItems, withChildren, parent) {
+        return Array.apply(null, {
+            length: numberOfItems
+        }).map((item, idx) => {
+            return {
+                title: (parent ? parent.title : "Menu item") + " " + idx,
+                hasChildren: withChildren
+            };
+        });
+    }
+    app.model = generateChildren(numberOfItems, true);
+    app._loadSubtree = function (e) {
+        const parentsPath = e.detail;
+        if (parentsPath.length < deepth) {
+            const idxs = [];
+            let modelList = app.model;
+            for (let i = 0; i < parentsPath.length; i++) {
+                const parentIdx = modelList.indexOf(parentsPath[i]);
+                if (parentIdx < 0) {
+                    throw {msg: "The item " + parentsPath[0].title + " couldn't be found at " + i + " level"};
+                } else {
+                    idxs.push(parentIdx);
+                }
+                modelList = parentsPath[i].children;
+            }
+            const pathToChange = idxs.reduce((acc, cur) => acc += "." + cur, "model");
+            const generatedChildren = generateChildren(numberOfItems, idxs.length < deepth, parentsPath[parentsPath.length - 1]);
+            setTimeout(() => {
+                app.set(pathToChange + ".children", generatedChildren);
+            }, 2000);
+        }
+    }
 </script>
 
 </html>
