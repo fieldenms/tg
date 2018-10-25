@@ -1,10 +1,12 @@
 package ua.com.fielden.platform.entity.query;
 
+import static ua.com.fielden.platform.entity.query.fluent.fetch.FetchCategory.NONE;
+
 import java.util.Map.Entry;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.query.exceptions.EqlException;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
-import ua.com.fielden.platform.entity.query.fluent.fetch.FetchCategory;
 import ua.com.fielden.platform.entity.query.metadata.DomainMetadataAnalyser;
 
 public class EntityAggregatesRetrievalModel<T extends AbstractEntity<?>> extends AbstractRetrievalModel<T> {
@@ -24,16 +26,16 @@ public class EntityAggregatesRetrievalModel<T extends AbstractEntity<?>> extends
     }
 
     private void validateModel() {
-        if (!FetchCategory.ID_AND_VERSTION.equals(getOriginalFetch().getFetchCategory())) {
-            throw new IllegalArgumentException("The only acceptable category for EntityAggregates entity type fetch model creation is NONE. Use EntityQueryUtils.fetchOnly(..) method for obtaining correct fetch model.");
+        if (NONE != getOriginalFetch().getFetchCategory()) {
+            throw new EqlException("The only acceptable category for EntityAggregates entity type fetch model creation is NONE. Use EntityQueryUtils.fetchAggregates(..) method for obtaining correct fetch model.");
         }
 
         if (getOriginalFetch().getExcludedProps().size() > 0) {
-            throw new IllegalArgumentException("The possibility to exclude certain properties can't be applied for EntityAggregates entity type fetch model!");
+            throw new EqlException("The possibility to exclude certain properties can't be applied for EntityAggregates entity type fetch model!");
         }
 
         if (getOriginalFetch().getIncludedPropsWithModels().size() + getOriginalFetch().getIncludedProps().size() == 0) {
-            throw new IllegalArgumentException("Can't accept empty fetch model for EntityAggregates entity type fetching!");
+            throw new EqlException("Can't accept empty fetch model for EntityAggregates entity type fetching!");
         }
 
     }
@@ -48,10 +50,6 @@ public class EntityAggregatesRetrievalModel<T extends AbstractEntity<?>> extends
     }
 
     private void with(final String propName, final fetch<? extends AbstractEntity<?>> fetchModel) {
-        if (AbstractEntity.class.isAssignableFrom(fetchModel.getEntityType())) {
-            addEntityPropsModel(propName, fetchModel);
-        } else {
-            throw new IllegalArgumentException(propName + " has fetch model for type " + fetchModel.getEntityType().getName() + ". Fetch model with entity type is required.");
-        }
+        addEntityPropsModel(propName, fetchModel);
     }
 }

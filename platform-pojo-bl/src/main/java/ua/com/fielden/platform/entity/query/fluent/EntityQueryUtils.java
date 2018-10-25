@@ -105,6 +105,6 @@ public class EntityQueryUtils {
 	}
 
 	public static fetch<EntityAggregates> fetchAggregates() {
-		return new fetch<>(EntityAggregates.class, FetchCategory.ID_AND_VERSTION);
+		return new fetch<>(EntityAggregates.class, FetchCategory.NONE);
 	}
 }
