@@ -13,7 +13,7 @@ import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.entity.query.metadata.DomainMetadataAnalyser;
 import ua.com.fielden.platform.entity.query.metadata.PropertyMetadata;
 
-public abstract class AbstractRetrievalModel<T extends AbstractEntity<?>> {
+public abstract class AbstractRetrievalModel<T extends AbstractEntity<?>> implements IRetrievalModel<T> {
 
     private final fetch<T> originalFetch;
     private DomainMetadataAnalyser domainMetadataAnalyser;
@@ -35,6 +35,7 @@ public abstract class AbstractRetrievalModel<T extends AbstractEntity<?>> {
         return entityProps;
     }
 
+    @Override
     public Set<String> getProxiedProps() {
         return proxiedProps;
     }
@@ -43,26 +44,32 @@ public abstract class AbstractRetrievalModel<T extends AbstractEntity<?>> {
         return domainMetadataAnalyser;
     }
 
+    @Override
     public boolean containsProp(final String propName) {
         return primProps.contains(propName) || entityProps.containsKey(propName);
     }
 
+    @Override
     public boolean containsProxy(final String propName) {
         return proxiedProps.contains(propName);
     }
 
+    @Override
     public Class<T> getEntityType() {
         return originalFetch.getEntityType();
     }
 
+    @Override
     public boolean isInstrumented() {
         return originalFetch.isInstrumented();
     }
 
+    @Override
     public Set<String> getPrimProps() {
         return primProps;
     }
 
+    @Override
     public Map<String, fetch<? extends AbstractEntity<?>>> getFetchModels() {
         return entityProps;
     }

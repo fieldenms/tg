@@ -39,7 +39,7 @@ import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.entity.query.metadata.DomainMetadataAnalyser;
 import ua.com.fielden.platform.entity.query.metadata.PropertyMetadata;
 
-public class EntityRetrievalModel<T extends AbstractEntity<?>> extends AbstractRetrievalModel<T> implements IRetrievalModel<T> {
+public class EntityRetrievalModel<T extends AbstractEntity<?>> extends AbstractRetrievalModel<T> {
     private final Logger logger = Logger.getLogger(this.getClass());
     private final Collection<PropertyMetadata> propsMetadata;
     private final boolean isSyntheticEntity;
