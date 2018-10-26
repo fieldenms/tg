@@ -18,11 +18,7 @@
                             // how this data is actually used depends purely on the subscriber
                             const dataValue = {
                                 id: ironRequest.entityId,
-                                canClose: closeAfterExecution,
-                                ironRequestData: {
-                                    entityPersistent: ironRequest.entityPersistent,
-                                    entityContinuation: ironRequest.entityContinuation
-                                }
+                                canClose: closeAfterExecution
                             };
 
                             // action with role 'save' should only encourage closing in cases
