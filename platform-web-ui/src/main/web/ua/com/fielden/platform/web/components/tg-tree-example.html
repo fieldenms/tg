@@ -6,6 +6,7 @@
     <meta name="viewport" content="width=device-width, minimum-scale=1.0, initial-scale=1.0, user-scalable=yes">
     <title>Menu list example</title>
     <script src="/resources/polymer/webcomponentsjs/webcomponents-lite.js"></script>
+    <link rel="import" href="/resources/polymer/paper-input/paper-input.html">
     <link rel="import" href="tg-tree.html">
     <style>
     </style>
@@ -13,7 +14,8 @@
 
 <body unresolved class="fullbleed">
     <template is="dom-bind" id="app">
-        <tg-tree model="[[model]]" on-tg-load-subtree="_loadSubtree"></tg-tree>
+        <paper-input on-bind-value-changed="_filterTree"></paper-input>
+        <tg-tree id="tree" model="[[model]]" on-tg-load-subtree="_loadSubtree"></tg-tree>
     </template>
 </body>
 <script>
@@ -67,6 +69,9 @@
                 app.set(pathToChange, generatedChildren);
             }, 2000);
         }
+    }
+    app._filterTree = function (e) {
+        app.$.tree.filter(e.detail);
     }
 </script>
 
