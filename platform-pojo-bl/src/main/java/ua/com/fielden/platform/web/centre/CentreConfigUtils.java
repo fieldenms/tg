@@ -24,6 +24,8 @@ public class CentreConfigUtils {
     /**
      * Applies modifHolder from <code>selectionCrit</code> against fresh centre.
      * 
+     * IMPORTANT WARNING: avoids centre config self-conflict checks; ONLY TO BE USED NOT IN ANOTHER SessionRequired TRANSACTION SCOPE.
+     * 
      * @param selectionCrit
      * @return
      */
