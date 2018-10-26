@@ -31,7 +31,7 @@
     <script>
         (function () {
             'use strict'
-            
+
             const calculateNumberOfOpenedItems = function (entity) {
                 let length = 0;
                 if (entity.entity.hasChildren && entity.opened) {
@@ -40,8 +40,8 @@
                 }
                 return length;
             };
-            
-            const getParentsPath= function (entity) {
+
+            const getParentsPath = function (entity) {
                 const path = [];
                 let parent = entity;
                 while (parent) {
@@ -50,31 +50,21 @@
                 }
                 return path.reverse();
             }
-            
+
             const getChildrenToAdd = function (entity) {
                 const childrenToAdd = [];
                 if (entity.opened && entity.entity.hasChildren) {
-                    if (!entity.children || entity.children.length === 0) {
-                        childrenToAdd.push({
-                            entity: {
-                                title: "Loading data...",
-                                hasChildren: false,
-                            },
-                            opened: false,
-                            parent: entity,
-                            loaderIndicator: true
-                        });
+                    if (entity.children.length === 1 && entity.children[0].loaderIndicator) {
                         this.fire("tg-load-subtree", getParentsPath(entity));
-                    } else {
-                        entity.children.forEach(child => {
-                            childrenToAdd.push(child);
-                            childrenToAdd.push(...getChildrenToAdd.bind(this)(child));
-                        });
                     }
+                    entity.children.forEach(child => {
+                        childrenToAdd.push(child);
+                        childrenToAdd.push(...getChildrenToAdd.bind(this)(child));
+                    });
                 }
                 return childrenToAdd;
             };
-            
+
             const generateChildrenModel = function (children, parentEntity) {
                 return children.map(child => {
                     const parent = {
@@ -82,13 +72,32 @@
                         parent: parentEntity,
                         opened: false
                     };
-                    if (child.hasChildren && child.children && && child.children.length > 0) {
+                    if (child.hasChildren) {
+                        if (child.children && child.children.length > 0) {
+                            parent.children = generateChildrenModel(child.children, parent);
+                        } else {
+                            parent.children = [generateLoadingIndicator(parent)];
+                        }
+                    }
+                    if (child.hasChildren && child.children && child.children.length > 0) {
                         parent.children = generateChildrenModel(child.children, parent);
                     }
                     return parent;
                 });
             };
-            
+
+            const generateLoadingIndicator = function (parent) {
+                return {
+                    entity: {
+                        title: "Loading data...",
+                        hasChildren: false,
+                    },
+                    opened: false,
+                    parent: parent,
+                    loaderIndicator: true
+                };
+            };
+
             Polymer({
                 is: 'tg-tree',
 
@@ -109,7 +118,7 @@
                         type: Array
                     },
                 },
-                
+
                 observers: ["_modelChanged(model.*)"],
 
                 ready: function () {
@@ -117,17 +126,26 @@
                 },
 
                 attached: function () {},
-                
+
                 _regenerateModel: function () {
-                    
                     this._entities = generateChildrenModel(this.model);
                 },
-                
+
                 _modelChanged: function (change) {
                     if (change.path === "model") {
                         this._regenerateModel();
-                    } else if (change.path === 'model.splices') {
-                        console.log(change.value.indexSplices);
+                    } else if (change.path && change.path.endsWith("children")) {
+                        const path = change.path.substring(0, change.path.lastIndexOf(".")).replace("model", "_entities");
+                        const parentItem = this.get(path);
+                        const modelIdx = this.$.treeList._getPhysicalIndex(parentItem);
+                        if (parentItem) {
+                            const numOfItemsToDelete = calculateNumberOfOpenedItems(parentItem);
+                            parentItem.children = generateChildrenModel(change.value, parentItem);
+                            if (typeof modelIdx !== 'undefined') {
+                                this.splice("_entities", modelIdx + 1, numOfItemsToDelete, ...getChildrenToAdd.bind(this)(parentItem));
+                            }
+                        }
+                        //console.log(change.value.indexSplices);
                     }
                 },
 
@@ -143,7 +161,7 @@
                         this.splice("_entities", idx + 1, 0, ...getChildrenToAdd.bind(this)(entity));
                     }
                 },
-                
+
                 _calcItemStyle: function (entity) {
                     let paddingLeft = 0;
                     let parent = entity.parent;

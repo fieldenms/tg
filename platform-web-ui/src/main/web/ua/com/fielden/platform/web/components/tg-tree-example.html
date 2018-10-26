@@ -61,10 +61,10 @@
                 }
                 modelList = parentsPath[i].children;
             }
-            const pathToChange = idxs.reduce((acc, cur) => acc += "." + cur, "model");
-            const generatedChildren = generateChildren(numberOfItems, idxs.length < deepth, parentsPath[parentsPath.length - 1]);
+            const pathToChange = idxs.reduce((acc, cur) => acc += "." + cur + ".children", "model");
+            const generatedChildren = generateChildren(numberOfItems, idxs.length < deepth - 1, parentsPath[parentsPath.length - 1]);
             setTimeout(() => {
-                app.set(pathToChange + ".children", generatedChildren);
+                app.set(pathToChange, generatedChildren);
             }, 2000);
         }
     }
