@@ -7,6 +7,7 @@
     <title>Menu list example</title>
     <script src="/resources/polymer/webcomponentsjs/webcomponents-lite.js"></script>
     <link rel="import" href="/resources/polymer/paper-input/paper-input.html">
+    <link rel="import" href="/resources/polymer/paper-styles/paper-styles-classes.html">
     <link rel="import" href="tg-tree.html">
     <style>
     </style>
@@ -14,8 +15,10 @@
 
 <body unresolved class="fullbleed">
     <template is="dom-bind" id="app">
-        <paper-input on-bind-value-changed="_filterTree"></paper-input>
-        <tg-tree id="tree" model="[[model]]" on-tg-load-subtree="_loadSubtree"></tg-tree>
+        <div class="fit layout vertical">
+            <paper-input on-bind-value-changed="_filterTree"></paper-input>
+            <tg-tree class="flex" id="tree" model="[[model]]" on-tg-load-subtree="_loadSubtree"></tg-tree>
+        </div>
     </template>
 </body>
 <script>
@@ -48,7 +51,7 @@
             };
         });
     }
-    app.model = generateItems(numberOfItems, 4);
+    app.model = generateChildren(numberOfItems, true);
     app._loadSubtree = function (e) {
         const parentsPath = e.detail;
         if (parentsPath.length < deepth) {
@@ -67,7 +70,7 @@
             const generatedChildren = generateChildren(numberOfItems, idxs.length < deepth - 1, parentsPath[parentsPath.length - 1]);
             setTimeout(() => {
                 app.set(pathToChange, generatedChildren);
-            }, 200);
+            }, 2000);
         }
     }
     app._filterTree = function (e) {
