@@ -121,15 +121,6 @@
                 };
             };
             
-            const resetTree = function () {
-                const props = ["opened", "highlight"];
-                this._entities.forEach((entity, idx) => {
-                    if (typeof this.$.treeList._collection.getKey(entity) !== undefined && typeof this.$.treeList._getPhysicalIndex(entity) !== 'undefined') {
-                        props.forEach(prop => this.set("_entities." + idx + "." + prop, false)); 
-                    }
-                });
-            };
-            
             const refreshTree = function () {
                 const props = ["opened", "highlight"];
                 this._entities.forEach((entity, idx) => {
@@ -182,10 +173,9 @@
                 
                 filter: function (text) {
                     this._lastFilterText = text;
-                    resetTree.bind(this)();
                     this._filterSubTree(text, this._treeModel, true);
                     this.splice("_entities", 0, this._entities.length, ...composeChildren.bind(this)(this._treeModel));
-                    refreshTree.bind(this)();
+                    this.debounce("refreshTree", refreshTree.bind(this))
                 },
                 
                 _filterSubTree: function (text, subtree, expand) {
