@@ -48,7 +48,7 @@
             };
         });
     }
-    app.model = generateChildren(numberOfItems, true);
+    app.model = generateItems(numberOfItems, 4);
     app._loadSubtree = function (e) {
         const parentsPath = e.detail;
         if (parentsPath.length < deepth) {
@@ -67,11 +67,11 @@
             const generatedChildren = generateChildren(numberOfItems, idxs.length < deepth - 1, parentsPath[parentsPath.length - 1]);
             setTimeout(() => {
                 app.set(pathToChange, generatedChildren);
-            }, 2000);
+            }, 200);
         }
     }
     app._filterTree = function (e) {
-        app.$.tree.filter(e.detail);
+        app.$.tree.filter(e.detail.value);
     }
 </script>
 

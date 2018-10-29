@@ -18,15 +18,12 @@
             iron-icon[invisible] {
                 visibility: hidden;
             }
-            [highlighted] {
-                font-weight: bold;
-            }
         </style>
         <iron-list id="treeList" items="[[_entities]]" as="entity">
             <template>
                 <div class="layout horizontal center" style$="[[_calcItemStyle(entity)]]">
                     <iron-icon icon="icons:arrow-drop-down" style="flex-grow:0;flex-shrink:0;" invisible$="[[!entity.entity.hasChildren]]" collapsed$="[[!entity.opened]]" on-tap="_toggle"></iron-icon>
-                    <span highlighted$="[[entity.highlight]]">[[entity.entity.title]]</span>
+                    <span>[[entity.entity.title]]</span>
                 </div>
             </template>
         </iron-list>
@@ -52,7 +49,7 @@
                     parent = parent.parent;
                 }
                 return path.reverse();
-            };
+            }
 
             const getChildrenToAdd = function (entity) {
                 const childrenToAdd = [];
@@ -60,18 +57,12 @@
                     if (entity.children.length === 1 && entity.children[0].loaderIndicator) {
                         this.fire("tg-load-subtree", getParentsPath(entity));
                     }
-                    childrenToAdd.push(...composeChildren.bind(this)(entity.children));
+                    entity.children.forEach(child => {
+                        childrenToAdd.push(child);
+                        childrenToAdd.push(...getChildrenToAdd.bind(this)(child));
+                    });
                 }
                 return childrenToAdd;
-            };
-            
-            const composeChildren = function (entities) {
-                const list = [];
-                entities.filter(entity => entity.visible).forEach(entity => {
-                    list.push(entity);
-                    list.push(...getChildrenToAdd.bind(this)(entity));
-                });
-                return list;
             };
 
             const generateChildrenModel = function (children, parentEntity) {
@@ -79,9 +70,7 @@
                     const parent = {
                         entity: child,
                         parent: parentEntity,
-                        opened: false,
-                        visible: true,
-                        highlight: false
+                        opened: false
                     };
                     if (child.hasChildren) {
                         if (child.children && child.children.length > 0) {
@@ -90,23 +79,46 @@
                             parent.children = [generateLoadingIndicator(parent)];
                         }
                     }
+                    if (child.hasChildren && child.children && child.children.length > 0) {
+                        parent.children = generateChildrenModel(child.children, parent);
+                    }
                     return parent;
                 });
             };
             
+            const wasLoaded = function (entity) {
+                return entity.hasChildren && entity.children && entity.children.length > 0 && !(entity.children.length === 1 && entity.children[0].loaderIndicator);
+            };
             
-            const makeParentVisible = function (entity) {
-                let parent = entity.parent;
-                while (parent) {
-                    parent.visible = true;
-                    parent = parent.parent;
+            const updateModel = function (entity, highlight, hidden) {
+                if (entity.hidden) {
+                    entity.
+                }
+                
+                //The entity is in the list of _entites.
+                if (this.$.treeList._collection.getKey(entity)) {
+                    const modelIdx = this._entities.indexOf(entity);
+                    this.set("_entities." + modelIdx + ".highlight", highlight);
+                    this.set("_entities." + modelIdx + ".hidden", hidden);
+                    if (hidden) {
+                        this.splice("_entities", modelIdx, 1);
+                    }
+                } else {
+                    entity.highlight = highlight;
+                    entity.hidden = hidden;
+                    if (!hidden) {
+                        if (!entity.parent) {
+                            const idxToInsert = this._entities.filter(entity => !entity.hidden).indexOf(entity);
+                            this.splice("_entities", idxToInsert, 0 , entity);
+                        } else if (entity.parent.opened && !entity.parent.hidden) {
+                            const parentModelIdx = this._entities.indexOf(entity.parent);
+                            const itemIdx = entity.parent.children.filter(child => !child.hidden).indexOf(entity);
+                            const idxToInsert = parentModelIdx + itemIdx + 1
+                        }
+                    }
                 }
             };
-            
-            const wasLoaded = function (entity) {
-                return entity.entity.hasChildren && entity.children && entity.children.length > 0 && !(entity.children.length === 1 && entity.children[0].loaderIndicator);
-            };
-            
+
             const generateLoadingIndicator = function (parent) {
                 return {
                     entity: {
@@ -114,18 +126,9 @@
                         hasChildren: false,
                     },
                     opened: false,
-                    visible: true,
-                    highlight: false,
                     parent: parent,
                     loaderIndicator: true
                 };
-            };
-            
-            const refreshTree = function () {
-                const props = ["opened", "highlight"];
-                this._entities.forEach((entity, idx) => {
-                    props.forEach(prop => this.notifyPath("_entities." + idx + "." + prop)); 
-                });
             };
 
             Polymer({
@@ -140,13 +143,6 @@
                         type: Array,
                         observer: "_modelChanged"
                     },
-                    
-                    /**
-                     * The tree model that holds some visual specific properties and is created from model.
-                     */
-                    _treeModel: {
-                        type: Array
-                    },
 
                     /**
                      * Represents the linear tree model.
@@ -154,11 +150,6 @@
                     _entities: {
                         type: Array
                     },
-                    
-                    _lastFilterText: {
-                        type: String,
-                        value: ""
-                    }
                 },
 
                 observers: ["_modelChanged(model.*)"],
@@ -170,34 +161,22 @@
                 attached: function () {},
                 
                 filter: function (text) {
-                    this._lastFilterText = text;
-                    this._filterSubTree(text, this._treeModel, true);
-                    this._entities = composeChildren.bind(this)(this._treeModel);
-                },
-                
-                _filterSubTree: function (text, subtree, expand) {
-                    subtree.forEach(treeEntity => {
-                        let visible = undefined;
-                        let highlight = undefined;
-                        let opened = undefined;
-                        if (treeEntity.entity.title.toLowerCase().search(text.toLowerCase()) >= 0) {
-                            treeEntity.visible = true;
-                            treeEntity.highlight = text ? true : false;
-                            makeParentVisible.bind(this)(treeEntity);
-                        } else {
-                            treeEntity.visible = false;
-                            treeEntity.highlight = false;
-                        }
-                        if (treeEntity.entity.hasChildren && wasLoaded(treeEntity)) {
-                            treeEntity.opened = true;
-                            this._filterSubTree(text, treeEntity.children, expand);
-                        }
+                    this._entities.filter(entity => !entity.parent).forEach(entity => {
+                       if (entity.hasChildren && wasLoaded(entity)) {
+                           
+                       } else {
+                           if (entity.entity.title.toLowerCase().search(text.toLowerCase()) >= 0) {
+                               updateModel.bind(this)(entity, true, false);
+                           } else {
+                               updateModel.bind(this)(entity, false, true);
+                           }
+                       }
                     });
+                    
                 },
 
                 _regenerateModel: function () {
-                    this._treeModel = generateChildrenModel(this.model); 
-                    this._entities = this._treeModel.slice();
+                    this._entities = generateChildrenModel(this.model);
                 },
 
                 /**
@@ -207,13 +186,12 @@
                     if (change.path === "model") {
                         this._regenerateModel();
                     } else if (change.path && change.path.endsWith("children")) {
-                        const path = change.path.substring(0, change.path.lastIndexOf(".")).replace("model", "_treeModel").replace(/#/g, "");
+                        const path = change.path.substring(0, change.path.lastIndexOf(".")).replace("model", "_entities");
                         const parentItem = this.get(path);
                         const modelIdx = this._entities.indexOf(parentItem);
                         if (parentItem) {
                             const numOfItemsToDelete = calculateNumberOfOpenedItems(parentItem);
                             parentItem.children = generateChildrenModel(change.value, parentItem);
-                            this._filterSubTree(this._lastFilterText, parentItem.children, false);
                             if (typeof modelIdx !== 'undefined') {
                                 this.splice("_entities", modelIdx + 1, numOfItemsToDelete, ...getChildrenToAdd.bind(this)(parentItem));
                             }
