@@ -315,7 +315,7 @@
             isActionInProgress: {
             	type: Boolean,
             	value: false,
-            	observer: '_actionProgressStatusChanged'
+            	observer: 'isActionInProgressChanged'
             },
             
             /**
@@ -402,6 +402,18 @@
              */
             continuationProperty: {
                 type: String
+            },
+            
+            /**
+             * In case where action completes (aka functional entity master saving succeeds or fails) spinner stops and clicked action restores its focus.
+             * Such behaviour indicates action completion.
+             * 
+             * However there are cases where erroneous saving of functional entity master does not mean action completion -- this is the case where continuation exception arise.
+             * In such cases we need to 'skipAutomaticActionCompletion' and then provide custom logic in postActionSuccess / postActionError.
+             */
+            skipAutomaticActionCompletion: {
+                type: Boolean,
+                value: false
             }
         },
         
@@ -503,11 +515,13 @@
                     	}
                     }
                     
-                    // action execution completes
-                    self.isActionInProgress = false;
-                    
-                    if (this.noUI === true) {
-                        self.restoreActionState();
+                    if (!self.skipAutomaticActionCompletion) {
+                        // action execution completes
+                        self.isActionInProgress = false;
+                        
+                        if (this.noUI === true) {
+                            self.restoreActionState();
+                        }
                     }
                 };
                 
@@ -530,7 +544,7 @@
                         master.noUI = true; // instructs the tg-custom-action-dialog not to be diplayed
                         master.saveOnActivation = true; // and of course the entity needs to be executed immediately
                         self._isSpinnerRequired = true; // instructs this action's UI representation to use the spinner for progress indication 
-                        self._actionProgressStatusChanged(true, self.isActionInProgress); // restart the spinner related logic
+                        self.isActionInProgressChanged(true, self.isActionInProgress); // restart the spinner related logic
                     }
                     
                     if (self.modifyFunctionalEntity) {
@@ -621,15 +635,15 @@
             this._updateSpinnerIfNeeded();
         },
         
-        _actionProgressStatusChanged: function (newValue, oldValue) {
-        	if (this._startSpinnerTimer) {
+        isActionInProgressChanged: function (newValue, oldValue) {
+            if (this._startSpinnerTimer) {
                 clearTimeout(this._startSpinnerTimer);
             }
-
-        	if (newValue === true && this._isSpinnerRequired === true) {
-            	this._startSpinnerTimer = setTimeout(this._startSpinnerCallback.bind(this), 700);
+            
+            if (newValue === true && this._isSpinnerRequired === true) {
+                this._startSpinnerTimer = setTimeout(this._startSpinnerCallback.bind(this), 700);
             } else {
-            	this.$.spinner.style.display = 'none';
+                this.$.spinner.style.display = 'none';
             }
         },
         
