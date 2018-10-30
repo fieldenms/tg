@@ -3,6 +3,8 @@
 <link rel="import" href="/resources/polymer/paper-button/paper-button.html">
 <link rel="import" href="/resources/polymer/paper-dialog/paper-dialog.html">
 
+<link rel="import" href="/resources/actions/tg-focus-restoration-behavior.html">
+
 <style is="custom-style">
     .confirm-dialog paper-button {
         color: var(--paper-light-blue-500);
@@ -50,7 +52,10 @@
             Polymer({
                 is: 'tg-confirmation-dialog',
                 
+                behaviors: [Polymer.TgBehaviors.TgFocusRestorationBehavior],
+                
                 showConfirmationDialog: function (message, buttons) {
+                    this.persistActiveElement();
                     if (this._lastPromise) {
                         this._lastPromise = this._lastPromise.then(
                             value => this._showConfirmationDialog(message, buttons), 
@@ -62,31 +67,40 @@
                 },
 
                 _showConfirmationDialog: function (message, buttons) {
-
+                    const self = this;
+                    const restoreActiveElement = function () {
+                        self.async(function () {
+                            self.restoreActiveElement();
+                        }, 1);
+                    };
                     return new Promise(function (resolve, reject) {
-
+                        
                         dialogModel._onCaptureKeyDown = function (e) {
                             var dialog = dialogModel.$.confirmDialog;
                             if (e.keyCode === 13) {
                                 dialog.close();
                                 resolve("ENTER");
+                                restoreActiveElement();
                             }
                         }
                         
                         dialogModel.dialogCanceled = function (e) {
                             reject("ESC");
+                            restoreActiveElement();
                         };
                         dialogModel.closeDialog = function () {
                             reject("ESC");
+                            restoreActiveElement();
                         };
                         
                         dialogModel._action = function (e) {
-                            var button = e.model.item;
+                            const button = e.model.item;
                             if (button.confirm) {
                                 resolve(button.name);
                             } else {
                                 reject(button.name);
                             }
+                            restoreActiveElement();
                         };
                         
                         dialogModel.message = message;

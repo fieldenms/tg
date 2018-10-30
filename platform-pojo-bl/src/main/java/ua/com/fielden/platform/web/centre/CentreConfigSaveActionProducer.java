@@ -28,6 +28,9 @@ public class CentreConfigSaveActionProducer extends AbstractCentreConfigCommitAc
         super(factory, companionFinder, CentreConfigSaveAction.class);
     }
     
+    /**
+     * IMPORTANT WARNING: avoids centre config self-conflict checks; ONLY TO BE USED NOT IN ANOTHER SessionRequired TRANSACTION SCOPE.
+     */
     @Override
     protected Map<String, Object> performProduce(final CentreConfigSaveAction entity, final EnhancedCentreEntityQueryCriteria<?, ?> selectionCrit, final EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, ? extends IEntityDao<AbstractEntity<?>>> appliedCriteriaEntity, final boolean isDefaultOrInherited) {
         if (isDefaultOrInherited) {

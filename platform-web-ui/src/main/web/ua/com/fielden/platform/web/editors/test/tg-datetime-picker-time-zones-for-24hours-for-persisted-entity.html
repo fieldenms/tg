@@ -199,6 +199,11 @@
                 correctlyApproximates(done, '9/9/7 9:5 : 34  .  567  ', '2007-09-09 09:05:34.567', '09/09/2007 19:05:34.567');
             });
             
+            test('[05:15] to local [16:15] previous day', function(done) {
+                const todayDate = moment().startOf("day").hour(16).minute(15);
+                correctlyApproximates(done, todayDate.utc().format('HH:mm'), todayDate.utc().format('YYYY-MM-DD HH:mm'), todayDate.local().format('DD/MM/YYYY HH:mm'), todayDate.valueOf());
+            });
+            
             test('[t] to todays date with time set to start of the day', function(done) {
                 const todayDate = moment().startOf("day");
                 correctlyApproximates(done, 't', todayDate.utc().format('YYYY-MM-DD HH:mm'), todayDate.local().format('DD/MM/YYYY HH:mm'), todayDate.valueOf());

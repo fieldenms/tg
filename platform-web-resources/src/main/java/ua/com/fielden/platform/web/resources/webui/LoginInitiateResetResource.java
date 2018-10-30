@@ -186,7 +186,7 @@ public class LoginInitiateResetResource extends ServerResource {
         final StringBuilder builder = new StringBuilder();
         builder.append(format("We heard that you lost your %s password. Sorry about that!", appName));
         builder.append("\n\n");
-        builder.append("But don't worry! You can use the following link within the next day to reset your password:");
+        builder.append(format("But don't worry! You can use the following link within %s minutes to reset your password:", RESER_UUID_EXPIRATION_IN_MUNUTES));
         builder.append("\n\n");
         builder.append(format("%sreset_password/%s", appUri, resetUuid));
         builder.append("\n\n");
