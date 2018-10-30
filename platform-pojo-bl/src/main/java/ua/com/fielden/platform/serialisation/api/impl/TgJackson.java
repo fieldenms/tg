@@ -186,7 +186,9 @@ public final class TgJackson extends ObjectMapper implements ISerialiserEngine {
         
         try {
             final String contentString = IOUtils.toString(content, "UTF-8");
-            logger.debug("JSON before deserialisation = |" + contentString + "|.");
+            if (contentString.contains("{\"PROPERTIES\":{")) {
+                logger.error("JSON before deserialisation = |" + contentString + "|.");
+            }
 
             final JavaType concreteType;
             if (EntityUtils.isEntityType(type)) {
@@ -243,7 +245,10 @@ public final class TgJackson extends ObjectMapper implements ISerialiserEngine {
         }
 
         try {
-            // logger.debug("Serialised pretty JSON = |" + new String(writerWithDefaultPrettyPrinter().writeValueAsBytes(obj), Charsets.UTF_8) + "|.");
+            final String prettyJson = new String(writerWithDefaultPrettyPrinter().writeValueAsBytes(obj), Charsets.UTF_8);
+            if (prettyJson.contains("\"PROPERTIES\" : {")) {
+                logger.error("Serialised pretty JSON = |" + prettyJson + "|.");
+            }
             EntitySerialiser.getContext().reset();
             final byte[] bytes = writeValueAsBytes(obj); // default encoding is Charsets.UTF_8
             logger.debug("Serialised JSON = |" + new String(bytes, Charsets.UTF_8) + "|.");
