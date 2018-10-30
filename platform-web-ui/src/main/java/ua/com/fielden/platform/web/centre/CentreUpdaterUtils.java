@@ -148,17 +148,17 @@ public class CentreUpdaterUtils extends CentreUpdater {
             final ISerialiser serialiser,
             final IEntityCentreConfig eccCompanion,
             final IMainMenuItem mmiCompanion) {
-        return saveNewEntityCentreManager(false, centre, menuItemType, user, newName, newDesc, serialiser, eccCompanion, mmiCompanion);
+        return saveNewEntityCentreManager(false, differences, menuItemType, user, newName, newDesc, serialiser, eccCompanion, mmiCompanion);
     }
     
     /**
-     * Saves new {@link EntityCentreConfig} instance with serialised centre manager inside.
+     * Saves new {@link EntityCentreConfig} instance with serialised <code>differences</code> inside.
      * 
      * @param withoutConflicts -- <code>true</code> to avoid self-conflict checks, <code>false</code> otherwise; <code>true</code> only to be used NOT IN another SessionRequired transaction scope
      */
-    private static ICentreDomainTreeManagerAndEnhancer saveNewEntityCentreManager(
+    private static Map<String, Object> saveNewEntityCentreManager(
             final boolean withoutConflicts,
-            final ICentreDomainTreeManagerAndEnhancer centre,
+            final Map<String, Object> differences,
             final Class<?> menuItemType,
             final User user,
             final String newName,
