@@ -46,7 +46,7 @@
             length: numberOfItems
         }).map((item, idx) => {
             return {
-                title: (parent ? parent.title : "Menu item") + " " + idx,
+                key: (parent ? parent.key : "Menu item") + " " + idx,
                 hasChildren: withChildren
             };
         });
@@ -60,7 +60,7 @@
             for (let i = 0; i < parentsPath.length; i++) {
                 const parentIdx = modelList.indexOf(parentsPath[i]);
                 if (parentIdx < 0) {
-                    throw {msg: "The item " + parentsPath[0].title + " couldn't be found at " + i + " level"};
+                    throw {msg: "The item " + parentsPath[0].key + " couldn't be found at " + i + " level"};
                 } else {
                     idxs.push(parentIdx);
                 }

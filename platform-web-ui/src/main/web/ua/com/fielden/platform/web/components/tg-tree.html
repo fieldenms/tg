@@ -12,6 +12,9 @@
                 @apply(--layout-vertical);
 
             }
+            iron-list {
+                @apply(--layout-flex);
+            }
             iron-icon[collapsed] {
                 transform: rotate(-90deg);
             }
@@ -26,7 +29,7 @@
             <template>
                 <div class="layout horizontal center" style$="[[_calcItemStyle(entity)]]">
                     <iron-icon icon="icons:arrow-drop-down" style="flex-grow:0;flex-shrink:0;" invisible$="[[!entity.entity.hasChildren]]" collapsed$="[[!entity.opened]]" on-tap="_toggle"></iron-icon>
-                    <span highlighted$="[[entity.highlight]]">[[entity.entity.title]]</span>
+                    <span highlighted$="[[entity.highlight]]">[[entity.entity.key]]</span>
                 </div>
             </template>
         </iron-list>
@@ -110,7 +113,7 @@
             const generateLoadingIndicator = function (parent) {
                 return {
                     entity: {
-                        title: "Loading data...",
+                        key: "Loading data...",
                         hasChildren: false,
                     },
                     opened: false,
@@ -183,7 +186,7 @@
                         let visible = undefined;
                         let highlight = undefined;
                         let opened = undefined;
-                        if (treeEntity.entity.title.toLowerCase().search(text.toLowerCase()) >= 0) {
+                        if (treeEntity.entity.key.toLowerCase().search(text.toLowerCase()) >= 0) {
                             treeEntity.visible = true;
                             treeEntity.highlight = text ? true : false;
                             makeParentVisible.bind(this)(treeEntity);
