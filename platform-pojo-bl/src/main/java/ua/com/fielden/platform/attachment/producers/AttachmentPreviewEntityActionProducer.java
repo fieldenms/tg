@@ -13,6 +13,7 @@ import ua.com.fielden.platform.attachment.IAttachment;
 import ua.com.fielden.platform.entity.DefaultEntityProducerWithContext;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
+import ua.com.fielden.platform.types.Hyperlink;
 
 /**
  * Producer for {@link AttachmentPreviewEntityAction}.
@@ -39,6 +40,9 @@ public class AttachmentPreviewEntityActionProducer extends DefaultEntityProducer
     }
 
     private String generateUri(final Attachment attachment) {
+        if(Hyperlink.validate(attachment.getTitle()).isSuccessful()) {
+            return attachment.getTitle();
+        }
         if (attachment.getMime() != null && attachment.getMime().contains("image")) {
             return "/download-attachment/" + attachment.getId() + "/" + attachment.getSha1();
         }

@@ -34,7 +34,7 @@ public class FileProcessingResourceFactory<T extends AbstractEntityWithInputStre
     private final ICompanionObjectFinder companionFinder;
     private final Router router;
     
-    private final long fileSizeLimitKb;
+    private final long fileSizeLimitBytes;
     private final Set<MediaType> types = new HashSet<>();
     private final IDeviceProvider deviceProvider;
 
@@ -52,7 +52,7 @@ public class FileProcessingResourceFactory<T extends AbstractEntityWithInputStre
         this.entityType = entityType;
         this.entityCreator = entityCreator;
         this.companionFinder = injector.getInstance(ICompanionObjectFinder.class);
-        this.fileSizeLimitKb = fileSizeLimitKb;
+        this.fileSizeLimitBytes = fileSizeLimitKb * 1024;
         this.types.add(type);
         Arrays.stream(types).forEach(this.types::add);
         this.deviceProvider = deviceProvider;
@@ -69,7 +69,7 @@ public class FileProcessingResourceFactory<T extends AbstractEntityWithInputStre
                     injector.getInstance(EntityFactory.class), 
                     entityCreator, 
                     injector.getInstance(RestServerUtil.class), 
-                    fileSizeLimitKb, 
+                    fileSizeLimitBytes, 
                     types, 
                     deviceProvider,
                     getContext(), request, response).handle();

@@ -26,6 +26,9 @@ public abstract class AbstractCentreConfigCommitActionProducer<T extends Abstrac
         super(factory, entityType, companionFinder);
     }
     
+    /**
+     * IMPORTANT WARNING: avoids centre config self-conflict checks; ONLY TO BE USED NOT IN ANOTHER SessionRequired TRANSACTION SCOPE.
+     */
     @Override
     protected final T provideDefaultValues(final T entity) {
         if (contextNotEmpty()) {

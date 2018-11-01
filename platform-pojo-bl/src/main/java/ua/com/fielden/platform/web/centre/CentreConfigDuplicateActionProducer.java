@@ -27,6 +27,9 @@ public class CentreConfigDuplicateActionProducer extends DefaultEntityProducerWi
         super(factory, CentreConfigDuplicateAction.class, companionFinder);
     }
     
+    /**
+     * IMPORTANT WARNING: avoids centre config self-conflict checks; ONLY TO BE USED NOT IN ANOTHER SessionRequired TRANSACTION SCOPE.
+     */
     @Override
     protected CentreConfigDuplicateAction provideDefaultValues(final CentreConfigDuplicateAction entity) {
         if (contextNotEmpty()) {
