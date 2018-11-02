@@ -22,11 +22,9 @@ public class DomainMetadataAnalyser {
     private final Logger logger = Logger.getLogger(DomainMetadataAnalyser.class);
     private final Map<Class<? extends AbstractEntity<?>>, AbstractEntityMetadata> entityMetadataMap = new HashMap<>();
     private final DomainMetadata domainMetadata;
-    private final BaseInfoForDomainMetadata baseInfoForDomainMetadata;
 
     public DomainMetadataAnalyser(final DomainMetadata domainMetadata) {
         this.domainMetadata = domainMetadata;
-        baseInfoForDomainMetadata = new BaseInfoForDomainMetadata();
         entityMetadataMap.putAll(domainMetadata.getPersistedEntityMetadataMap());
         entityMetadataMap.putAll(domainMetadata.getModelledEntityMetadataMap());
         entityMetadataMap.putAll(domainMetadata.getPureEntityMetadataMap());
@@ -48,7 +46,7 @@ public class DomainMetadataAnalyser {
         } else {
             try {
                 final AbstractEntityMetadata<ET> newOne;
-                EntityTypeInfo<ET> parentInfo = baseInfoForDomainMetadata.getEntityTypeInfo(entityType);
+                EntityTypeInfo<ET> parentInfo = new EntityTypeInfo<>(entityType);
                 switch (parentInfo.category) {
                 case PERSISTED:
                     newOne = domainMetadata.generatePersistedEntityMetadata(parentInfo);

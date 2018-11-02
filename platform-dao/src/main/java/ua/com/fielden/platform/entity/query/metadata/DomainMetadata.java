@@ -139,8 +139,6 @@ public class DomainMetadata {
             version = new PropertyColumn("TG_VERSION");
         }
 
-        final BaseInfoForDomainMetadata baseInfoForDomainMetadata = new BaseInfoForDomainMetadata();
-
         // carry on with other stuff
         if (hibTypesDefaults != null) {
             for (final Entry<Class, Class> entry : hibTypesDefaults.entrySet()) {
@@ -159,7 +157,7 @@ public class DomainMetadata {
         // the following operations are a bit heave and benefit from parallel processing
         entityTypes.parallelStream().forEach(entityType -> {
             try {
-                EntityTypeInfo<? extends AbstractEntity<?>> parentInfo = baseInfoForDomainMetadata.getEntityTypeInfo(entityType);
+                EntityTypeInfo<? extends AbstractEntity<?>> parentInfo = new EntityTypeInfo<>(entityType);
                 switch (parentInfo.category) {
                 case PERSISTED:
                     persistedEntityMetadataMap.put(entityType, generatePersistedEntityMetadata(parentInfo));
