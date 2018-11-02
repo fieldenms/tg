@@ -48,18 +48,19 @@ public class DomainMetadataAnalyser {
         } else {
             try {
                 final AbstractEntityMetadata<ET> newOne;
-                switch (baseInfoForDomainMetadata.getCategory(entityType)) {
+                EntityTypeInfo<ET> parentInfo = baseInfoForDomainMetadata.getEntityTypeInfo(entityType);
+                switch (parentInfo.category) {
                 case PERSISTED:
-                    newOne = domainMetadata.generatePersistedEntityMetadata(entityType, baseInfoForDomainMetadata);
+                    newOne = domainMetadata.generatePersistedEntityMetadata(parentInfo);
                     break;
                 case QUERY_BASED:
-                    newOne = domainMetadata.generateModelledEntityMetadata(entityType, baseInfoForDomainMetadata);
+                    newOne = domainMetadata.generateModelledEntityMetadata(parentInfo);
                     break;
                 case UNION:
-                    newOne = domainMetadata.generateUnionedEntityMetadata(entityType, baseInfoForDomainMetadata);
+                    newOne = domainMetadata.generateUnionedEntityMetadata(parentInfo);
                     break;
                 default:
-                    newOne = domainMetadata.generatePureEntityMetadata(entityType, baseInfoForDomainMetadata);
+                    newOne = domainMetadata.generatePureEntityMetadata(parentInfo);
                 }
 
                 entityMetadataMap.put(entityType, newOne);
