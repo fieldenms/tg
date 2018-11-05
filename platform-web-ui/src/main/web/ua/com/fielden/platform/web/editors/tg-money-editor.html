@@ -21,6 +21,7 @@
             -moz-appearance: textfield;
         }
         .input-layer {
+            cursor: text;
             text-align: right;
             text-overflow: ellipsis;
             overflow: hidden;
@@ -56,7 +57,7 @@
     			on-blur="_outFocus"
     			disabled$="[[_disabled}}"
                 tooltip-text$="[[_getTooltip(_editingValue)]]"/>
-            <div class="input-layer">[[_formatText(_editingValue)]]</div>
+            <div class="input-layer" on-down="_layerDown" tooltip-text$="[[_getTooltip(_editingValue)]]">[[_formatText(_editingValue)]]</div>
     		<content class=".property-action"></content>
     	</tg-editor>
     </template>
@@ -110,6 +111,13 @@
                 if (!this.reflector().equalsEx(correctedValue, this._editingValue)) {
                     this._editingValue = correctedValue;
                 }
+            },
+            
+            _layerDown: function (e) {
+                this.async(() => {
+                    this.$.input.focus();
+                }, 1);
+                this.decoratedInput().select();
             }
         });
     })()
