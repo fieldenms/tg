@@ -24,6 +24,10 @@
             @apply(--layout-flex);
             @apply(--tg-editor-input-container-mixin);
         }
+        
+        #input-container[disabled] {
+            @apply(--tg-editor-input-container-disabled-mixin);
+        }
 
         #input-container::content .input-layer {
             font-size: 16px;
