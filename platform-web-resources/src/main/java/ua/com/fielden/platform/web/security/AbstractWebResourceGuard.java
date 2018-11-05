@@ -184,6 +184,12 @@ public abstract class AbstractWebResourceGuard extends ChallengeAuthenticator {
         // finally associate the refreshed authenticator with the response
         response.getCookieSettings().clear();
         response.getCookieSettings().add(newCookie);
+        
+        // let's record the current username as the Restlet security User that forms part of the HTTP request information.
+        // This information can then be easily reused whenever the current username is required, but there is no access to the application user provider (e.g. in HTTP request filters).
+        final org.restlet.security.User restletUser = new org.restlet.security.User();
+        restletUser.setIdentifier(authenticator.username);
+        request.getClientInfo().setUser(restletUser);
     }
 
     /**
