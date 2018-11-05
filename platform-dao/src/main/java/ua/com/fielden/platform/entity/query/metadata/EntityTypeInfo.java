@@ -30,7 +30,7 @@ public class EntityTypeInfo <ET extends AbstractEntity<?>> {
 
     public EntityTypeInfo(final Class<ET> entityType) {
         this.entityType = entityType;
-        tableName = getTableClause(getAnnotation(entityType, MapEntityTo.class));
+        tableName = getTableClause(entityType);
         if (isPersistedEntityType(entityType)) {
             category = PERSISTED;
         } else if (isSyntheticEntityType(entityType)) {
@@ -52,7 +52,8 @@ public class EntityTypeInfo <ET extends AbstractEntity<?>> {
         return unmodifiableList(unionEntityModels);
     }
 
-    private String getTableClause(final MapEntityTo mapEntityToAnnotation) {
+    private String getTableClause(final Class<ET> entityType) {
+        final MapEntityTo mapEntityToAnnotation = getAnnotation(entityType, MapEntityTo.class);
         if (mapEntityToAnnotation == null) {
             return null;
         }

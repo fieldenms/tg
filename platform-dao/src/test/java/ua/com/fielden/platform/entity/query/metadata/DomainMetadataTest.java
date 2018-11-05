@@ -4,6 +4,8 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.expr;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
+import static ua.com.fielden.platform.entity.query.metadata.PropertyCategory.EXPRESSION;
+import static ua.com.fielden.platform.entity.query.metadata.PropertyCategory.SYNTHETIC;
 import static ua.com.fielden.platform.entity.query.metadata.PropertyCategory.UNION_ENTITY_DETAILS;
 import static ua.com.fielden.platform.entity.query.metadata.PropertyCategory.UNION_ENTITY_HEADER;
 
@@ -48,7 +50,7 @@ public class DomainMetadataTest extends BaseEntQueryTCase {
 
         final PropertyMetadata expPropertyMetadata = new PropertyMetadata.Builder("lastFuelUsage", TgFuelUsage.class, true, eti(VEHICLE)). //
         hibType(LongType.INSTANCE). //
-        category(PropertyCategory.EXPRESSION). //
+        category(EXPRESSION). //
         expression(expr().model(select(TgFuelUsage.class).where().prop("vehicle").eq().extProp("id").and().notExists(select(TgFuelUsage.class).where().prop("vehicle").eq().extProp("vehicle").and().prop("date").gt().extProp("date").model()).model()).model()). //
         build();
 
@@ -63,7 +65,7 @@ public class DomainMetadataTest extends BaseEntQueryTCase {
 
         final PropertyMetadata expPropertyMetadata = new PropertyMetadata.Builder("finDetails", TgVehicleFinDetails.class, true, eti(VEHICLE)). //
         hibType(LongType.INSTANCE). //
-        category(PropertyCategory.EXPRESSION). //
+        category(EXPRESSION). //
         //expression(expr().prop("id").model()). //
         expression(expr().model(select(TgVehicleFinDetails.class).where().prop("key").eq().extProp("id").model()).model()). //
         build();
@@ -83,7 +85,7 @@ public class DomainMetadataTest extends BaseEntQueryTCase {
         final PropertyMetadata actPropertyMetadata = entityMetadata.getProps().get("key");
         final PropertyMetadata expPropertyMetadata = new PropertyMetadata.Builder("key", TgVehicle.class, false, eti(AVERAGE_FUEL_USAGE)). //
         hibType(LongType.INSTANCE). //
-        category(PropertyCategory.SYNTHETIC). //
+        category(SYNTHETIC). //
         build();
         assertEquals("Should be equal", expPropertyMetadata, actPropertyMetadata);
     }
@@ -94,7 +96,7 @@ public class DomainMetadataTest extends BaseEntQueryTCase {
         final PropertyMetadata actPropertyMetadata = entityMetadata.getProps().get("id");
         final PropertyMetadata expPropertyMetadata = new PropertyMetadata.Builder("id", Long.class, false, eti(AVERAGE_FUEL_USAGE)). //
         hibType(LongType.INSTANCE). //
-        category(PropertyCategory.EXPRESSION). //
+        category(EXPRESSION). //
         expression(expr().prop("key").model()). //
         build();
         assertEquals("Should be equal", expPropertyMetadata, actPropertyMetadata);
@@ -107,7 +109,7 @@ public class DomainMetadataTest extends BaseEntQueryTCase {
 
         final PropertyMetadata expPropertyMetadata = new PropertyMetadata.Builder("id", Long.class, false, eti(TgBogieLocation.class)). //
         hibType(LongType.INSTANCE). //
-        category(PropertyCategory.EXPRESSION). //
+        category(EXPRESSION). //
         expression(expr().caseWhen().prop("wagonSlot").isNotNull().then().prop("wagonSlot.id").when().prop("workshop").isNotNull().then().prop("workshop.id").otherwise().val(null).end().model()). //
         build();
         assertEquals("Should be equal", expPropertyMetadata, actPropertyMetadata);
@@ -120,7 +122,7 @@ public class DomainMetadataTest extends BaseEntQueryTCase {
 
         final PropertyMetadata expPropertyMetadata = new PropertyMetadata.Builder("key", String.class, false, eti(TgBogieLocation.class)). //
         hibType(StringType.INSTANCE). //
-        category(PropertyCategory.EXPRESSION). //
+        category(EXPRESSION). //
         expression(expr().caseWhen().prop("wagonSlot").isNotNull().then().prop("wagonSlot.key").when().prop("workshop").isNotNull().then().prop("workshop.key").otherwise().val(null).end().model()). //
         build();
         assertEquals("Should be equal", expPropertyMetadata, actPropertyMetadata);
