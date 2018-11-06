@@ -36,10 +36,14 @@
             display: none;
             position: absolute;
             background-color: inherit;
+            pointer-events: none;
             top: 0;
             bottom: 0;
             left: 0;
             right: 0;
+        }
+        #input-container[disabled]::content .input-layer {
+            pointer-events: auto;
         }
         #input-container[has-layer][disabled]::content .input-layer,
         #input-container[has-layer]:not([focused])::content .input-layer {
