@@ -1,15 +1,23 @@
 package ua.com.fielden.platform.sample.domain;
 
+import static ua.com.fielden.platform.entity.annotation.CritOnly.Type.SINGLE;
+
 import java.util.Date;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.CompanionObject;
+import ua.com.fielden.platform.entity.annotation.CritOnly;
+import ua.com.fielden.platform.entity.annotation.DateOnly;
 import ua.com.fielden.platform.entity.annotation.DescTitle;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.KeyTitle;
 import ua.com.fielden.platform.entity.annotation.KeyType;
+import ua.com.fielden.platform.entity.annotation.MapTo;
 import ua.com.fielden.platform.entity.annotation.Observable;
+import ua.com.fielden.platform.entity.annotation.PersistentType;
+import ua.com.fielden.platform.entity.annotation.TimeOnly;
 import ua.com.fielden.platform.entity.annotation.Title;
+import ua.com.fielden.platform.types.markers.IUtcDateTimeType;
 
 /**
  * Entity that is used in CentreUpdaterTest for testing centre diff serialisation.
@@ -38,6 +46,82 @@ public class TgCentreDiffSerialisation extends AbstractEntity<String> {
     @IsProperty
     @Title("Date Prop Default Mnemonics")
     private Date datePropDefaultMnemonics;
+    
+    @IsProperty
+    @Title("Date Prop Crit")
+    @CritOnly//(RANGE)
+    private Date datePropCrit;
+    
+    @IsProperty
+    @Title("Date Prop Crit Single")
+    @CritOnly(SINGLE)
+    private Date datePropCritSingle;
+    
+    @IsProperty
+    @Title("Date Prop Utc")
+    @PersistentType(userType = IUtcDateTimeType.class)
+    @MapTo
+    private Date datePropUtc;
+    
+    @IsProperty
+    @Title("Date Prop Date Only")
+    @DateOnly
+    private Date datePropDateOnly;
+    
+    @IsProperty
+    @Title("Date Prop Time Only")
+    @TimeOnly
+    private Date datePropTimeOnly;
+    
+    @Observable
+    public TgCentreDiffSerialisation setDatePropTimeOnly(final Date datePropTimeOnly) {
+        this.datePropTimeOnly = datePropTimeOnly;
+        return this;
+    }
+    
+    public Date getDatePropTimeOnly() {
+        return datePropTimeOnly;
+    }
+    
+    @Observable
+    public TgCentreDiffSerialisation setDatePropDateOnly(final Date datePropDateOnly) {
+        this.datePropDateOnly = datePropDateOnly;
+        return this;
+    }
+    
+    public Date getDatePropDateOnly() {
+        return datePropDateOnly;
+    }
+    
+    @Observable
+    public TgCentreDiffSerialisation setDatePropUtc(final Date datePropUtc) {
+        this.datePropUtc = datePropUtc;
+        return this;
+    }
+    
+    public Date getDatePropUtc() {
+        return datePropUtc;
+    }
+    
+    @Observable
+    public TgCentreDiffSerialisation setDatePropCritSingle(final Date datePropCritSingle) {
+        this.datePropCritSingle = datePropCritSingle;
+        return this;
+    }
+    
+    public Date getDatePropCritSingle() {
+        return datePropCritSingle;
+    }
+    
+    @Observable
+    public TgCentreDiffSerialisation setDatePropCrit(final Date datePropCrit) {
+        this.datePropCrit = datePropCrit;
+        return this;
+    }
+    
+    public Date getDatePropCrit() {
+        return datePropCrit;
+    }
     
     @Observable
     public TgCentreDiffSerialisation setDatePropDefaultMnemonics(final Date datePropDefaultMnemonics) {

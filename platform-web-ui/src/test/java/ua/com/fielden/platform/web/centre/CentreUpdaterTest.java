@@ -5,6 +5,7 @@ import static org.junit.Assert.assertEquals;
 import static ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.IAddToCriteriaTickManager.MetaValueType.NOT;
 import static ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.IAddToCriteriaTickManager.MetaValueType.OR_NULL;
 import static ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.IAddToCriteriaTickManager.MetaValueType.VALUE;
+import static ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.IAddToCriteriaTickManager.MetaValueType.VALUE2;
 import static ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.IAddToCriteriaTickManager.MetaValueType.DATE_MNEMONIC;
 import static ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.IAddToCriteriaTickManager.MetaValueType.DATE_PREFIX;
 import static ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.IAddToCriteriaTickManager.MetaValueType.EXCLUSIVE;
@@ -24,6 +25,7 @@ import static ua.com.fielden.platform.web.centre.api.impl.EntityCentreBuilder.ce
 import static ua.com.fielden.platform.web.interfaces.ILayout.Device.DESKTOP;
 import static ua.com.fielden.platform.web.layout.api.impl.LayoutComposer.mkGridForCentre;
 import static ua.com.fielden.snappy.DateRangePrefixEnum.PREV;
+import static ua.com.fielden.snappy.DateRangePrefixEnum.NEXT;
 import static ua.com.fielden.snappy.MnemonicEnum.MONTH;
 
 import java.util.Date;
@@ -76,13 +78,21 @@ public class CentreUpdaterTest {
     private static final ISerialisationTypeEncoder serialisationTypeEncoder = new SerialisationTypeEncoder();
     private static final IIdOnlyProxiedEntityTypeCache idOnlyProxiedEntityTypeCache = new IdOnlyProxiedEntityTypeCacheForTests();
     private static final Date d2018 = new DateTime(2018, 1, 1, 0, 0).toDate();
+    private static final Date d2018_time = new DateTime(2018, 1, 1, 5, 6).toDate();
     private static final Date d2019 = new DateTime(2019, 1, 1, 0, 0).toDate();
+    private static final Date d2019_time = new DateTime(2019, 1, 1, 5, 6).toDate();
+    private static final Date d2020 = new DateTime(2020, 1, 1, 0, 0).toDate();
     private static final EntityCentreConfig<TgCentreDiffSerialisation> DSL_CONFIG = 
         centreFor(TgCentreDiffSerialisation.class)
         .addCrit("stringProp").asMulti().text().setDefaultValue(multi().string().not().setValues("A*", "B*").canHaveNoValue().value()).also()
         .addCrit("dateProp").asRange().dateTime().also()
         .addCrit("datePropDefault").asRange().dateTime().setDefaultValue(range().date().not().setFromValueExclusive(d2018).setToValueExclusive(d2019).canHaveNoValue().value()).also()
-        .addCrit("datePropDefaultMnemonics").asRange().dateTime().setDefaultValue(range().date().next().monthAndBefore().value())
+        .addCrit("datePropDefaultMnemonics").asRange().dateTime().setDefaultValue(range().date().next().monthAndBefore().value()).also()
+        .addCrit("datePropCrit").asRange().dateTime().also()
+        .addCrit("datePropCritSingle").asSingle().dateTime().also()
+        .addCrit("datePropUtc").asRange().dateTime().also()
+        .addCrit("datePropDateOnly").asRange().date().also()
+        .addCrit("datePropTimeOnly").asRange().time()
         .setLayoutFor(DESKTOP, empty(), mkGridForCentre(7, 2))
         .addProp("stringProp")
         .build();
@@ -193,6 +203,20 @@ public class CentreUpdaterTest {
     @Test
     public void no_mutations() {
         testDiffCreationAndApplication(CentreUpdaterTest::create, centre -> {}, createEmptyDifferences());
+    }
+    
+    @Test
+    public void mutate_2_the_same_values() {
+        testDiffCreationAndApplication(CentreUpdaterTest::create, centre -> {
+            centre.getFirstTick().setOrNull(ROOT, "datePropDefault", true);
+            centre.getFirstTick().setNot(ROOT, "datePropDefault", true);
+            centre.getFirstTick().setExclusive(ROOT, "datePropDefault", true);
+            centre.getFirstTick().setExclusive2(ROOT, "datePropDefault", true);
+            centre.getFirstTick().setDatePrefix(ROOT, "datePropDefaultMnemonics", NEXT);
+            centre.getFirstTick().setDateMnemonic(ROOT, "datePropDefaultMnemonics", MONTH);
+            centre.getFirstTick().setAndBefore(ROOT, "datePropDefaultMnemonics", true);
+            centre.getFirstTick().setValue(ROOT, "datePropDefault", d2018);
+        }, createEmptyDifferences());
     }
     
     // missing value
@@ -311,5 +335,72 @@ public class CentreUpdaterTest {
     public void default_left_date_value_2_empty() {
         testDiffCreationAndApplication(CentreUpdaterTest::create, centre -> centre.getFirstTick().setValue(ROOT, "datePropDefault", null), expectedDiffWithValue("datePropDefault", VALUE.name(), null));
     }
+    
+    @Test
+    public void default_left_date_value_2_non_empty() {
+        testDiffCreationAndApplication(CentreUpdaterTest::create, centre -> centre.getFirstTick().setValue(ROOT, "datePropDefault", d2019), expectedDiffWithValue("datePropDefault", VALUE.name(), d2019.getTime()));
+    }
+    
+    @Test
+    public void left_critOnly_date_value() {
+        testDiffCreationAndApplication(CentreUpdaterTest::create, centre -> centre.getFirstTick().setValue(ROOT, "datePropCrit", d2018), expectedDiffWithValue("datePropCrit", VALUE.name(), d2018.getTime()));
+    }
+    
+    @Test
+    public void left_critOnlySingle_date_value() {
+        testDiffCreationAndApplication(CentreUpdaterTest::create, centre -> centre.getFirstTick().setValue(ROOT, "datePropCritSingle", d2018), expectedDiffWithValue("datePropCritSingle", VALUE.name(), d2018.getTime()));
+    }
+    
+    @Test
+    public void left_UTC_date_value() {
+        testDiffCreationAndApplication(CentreUpdaterTest::create, centre -> centre.getFirstTick().setValue(ROOT, "datePropUtc", d2018), expectedDiffWithValue("datePropUtc", VALUE.name(), d2018.getTime()));
+    }
+    
+    @Test
+    public void left_dateOnly_date_value() {
+        testDiffCreationAndApplication(CentreUpdaterTest::create, centre -> centre.getFirstTick().setValue(ROOT, "datePropDateOnly", d2018), expectedDiffWithValue("datePropDateOnly", VALUE.name(), d2018.getTime()));
+    }
+    
+    @Test
+    public void left_timeOnly_date_value() {
+        testDiffCreationAndApplication(CentreUpdaterTest::create, centre -> centre.getFirstTick().setValue(ROOT, "datePropTimeOnly", d2018_time), expectedDiffWithValue("datePropTimeOnly", VALUE.name(), d2018_time.getTime()));
+    }
+    
+    @Test
+    public void right_date_value() {
+        testDiffCreationAndApplication(CentreUpdaterTest::create, centre -> centre.getFirstTick().setValue2(ROOT, "dateProp", d2018), expectedDiffWithValue("dateProp", VALUE2.name(), d2018.getTime()));
+    }
+    
+    @Test
+    public void default_right_date_value_2_empty() {
+        testDiffCreationAndApplication(CentreUpdaterTest::create, centre -> centre.getFirstTick().setValue2(ROOT, "datePropDefault", null), expectedDiffWithValue("datePropDefault", VALUE2.name(), null));
+    }
+    
+    @Test
+    public void default_right_date_value_2_non_empty() {
+        testDiffCreationAndApplication(CentreUpdaterTest::create, centre -> centre.getFirstTick().setValue2(ROOT, "datePropDefault", d2020), expectedDiffWithValue("datePropDefault", VALUE2.name(), d2020.getTime()));
+    }
+    
+    @Test
+    public void right_critOnly_date_value() {
+        testDiffCreationAndApplication(CentreUpdaterTest::create, centre -> centre.getFirstTick().setValue2(ROOT, "datePropCrit", d2019), expectedDiffWithValue("datePropCrit", VALUE2.name(), d2019.getTime()));
+    }
+    
+    @Test
+    public void right_UTC_date_value() {
+        testDiffCreationAndApplication(CentreUpdaterTest::create, centre -> centre.getFirstTick().setValue2(ROOT, "datePropUtc", d2019), expectedDiffWithValue("datePropUtc", VALUE2.name(), d2019.getTime()));
+    }
+    
+    @Test
+    public void right_dateOnly_date_value() {
+        testDiffCreationAndApplication(CentreUpdaterTest::create, centre -> centre.getFirstTick().setValue2(ROOT, "datePropDateOnly", d2019), expectedDiffWithValue("datePropDateOnly", VALUE2.name(), d2019.getTime()));
+    }
+    
+    @Test
+    public void right_timeOnly_date_value() {
+        testDiffCreationAndApplication(CentreUpdaterTest::create, centre -> centre.getFirstTick().setValue2(ROOT, "datePropTimeOnly", d2019_time), expectedDiffWithValue("datePropTimeOnly", VALUE2.name(), d2019_time.getTime()));
+    }
+    
+    // please note that DateTime-typed properties is not used in practice and thus will not be tested and supported (however, see EntityWithDateTimeProp / WorkbookExporterTest and EntityWithRangeProperties for [perhaps] artificial examples of such properties)
     
 }
