@@ -19,6 +19,7 @@ import static ua.com.fielden.platform.entity.query.metadata.PropertyCategory.UNI
 import static ua.com.fielden.platform.entity.query.metadata.PropertyCategory.UNION_ENTITY_HEADER;
 import static ua.com.fielden.platform.entity.query.metadata.PropertyCategory.VIRTUAL_OVERRIDE;
 import static ua.com.fielden.platform.reflection.AnnotationReflector.getAnnotation;
+import static ua.com.fielden.platform.utils.EntityUtils.isEntityType;
 import static ua.com.fielden.platform.utils.EntityUtils.isPersistedEntityType;
 
 import java.lang.reflect.Field;
@@ -39,6 +40,7 @@ import ua.com.fielden.platform.entity.query.IUserTypeInstantiate;
 import ua.com.fielden.platform.entity.query.exceptions.EqlException;
 import ua.com.fielden.platform.entity.query.generation.elements.ResultQueryYieldDetails.YieldDetailsType;
 import ua.com.fielden.platform.entity.query.model.ExpressionModel;
+import ua.com.fielden.platform.utils.EntityUtils;
 
 public class PropertyMetadata implements Comparable<PropertyMetadata> {
     private final String name;
@@ -122,14 +124,6 @@ public class PropertyMetadata implements Comparable<PropertyMetadata> {
 
     public boolean isUnionEntity() {
         return category == UNION_ENTITY_HEADER;
-    }
-
-    public boolean isEntityMemberOfCompositeKey() {
-        return category == ENTITY_MEMBER_OF_COMPOSITE_KEY;
-    }
-
-    public boolean isPrimitiveMemberOfCompositeKey() {
-        return category == PRIMITIVE_MEMBER_OF_COMPOSITE_KEY;
     }
 
     public boolean isCompositeKeyExpression() {

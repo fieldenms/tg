@@ -37,17 +37,22 @@ import ua.com.fielden.platform.entity.AbstractPersistentEntity;
 import ua.com.fielden.platform.entity.query.exceptions.EqlException;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.entity.query.metadata.DomainMetadataAnalyser;
+import ua.com.fielden.platform.entity.query.metadata.EntityTypeInfo;
 import ua.com.fielden.platform.entity.query.metadata.PropertyMetadata;
+import ua.com.fielden.platform.types.tuples.T2;
+import ua.com.fielden.platform.utils.EntityUtils;
 
 public class EntityRetrievalModel<T extends AbstractEntity<?>> extends AbstractRetrievalModel<T> {
     private final Logger logger = Logger.getLogger(this.getClass());
     private final Collection<PropertyMetadata> propsMetadata;
     private final boolean isSyntheticEntity;
+    private final EntityTypeInfo<T> entityTypeInfo;
 
     public EntityRetrievalModel(final fetch<T> originalFetch, final DomainMetadataAnalyser domainMetadataAnalyser) {
         super(originalFetch, domainMetadataAnalyser);
         this.propsMetadata = domainMetadataAnalyser.getPropertyMetadatasForEntity(getEntityType());
         isSyntheticEntity = isSyntheticEntityType(getEntityType());
+        entityTypeInfo = new EntityTypeInfo<>(getEntityType());
 
         switch (originalFetch.getFetchCategory()) {
         case ALL_INCL_CALC:
@@ -105,12 +110,8 @@ public class EntityRetrievalModel<T extends AbstractEntity<?>> extends AbstractR
     }
 
     private void includeAllCompositeKeyMembers() {
-        for (final PropertyMetadata ppi : propsMetadata) {
-            if (ppi.isEntityMemberOfCompositeKey()) {
-                with(ppi.getName(), false);
-            } else if (ppi.isPrimitiveMemberOfCompositeKey()) {
-                with(ppi.getName(), true);
-            }
+        for (final T2<String, Class<?>> compositeKeyMember : entityTypeInfo.compositeKeyMembers) {
+            with(compositeKeyMember._1, !isEntityType(compositeKeyMember._2));
         }
     }
 
