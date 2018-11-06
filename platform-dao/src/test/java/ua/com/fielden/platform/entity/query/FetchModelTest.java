@@ -273,8 +273,7 @@ public class FetchModelTest extends BaseEntQueryTCase {
     }
     
     @Test
-    @Ignore
-    public void ff() {
+    public void fetch_composite_key_of_synthetic_entity() {
         final IRetrievalModel<TgPublishedYearly> fetchModel = produceRetrievalModel(TgPublishedYearly.class, KEY_AND_DESC);
         assertFalse(fetchModel.containsProp("id"));
         assertFalse(fetchModel.containsProp("version"));
