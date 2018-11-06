@@ -69,7 +69,6 @@ import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfa
 import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.entity_centre.review.DynamicQueryBuilder;
-import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.security.user.IUser;
 import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.security.user.User;
@@ -773,14 +772,132 @@ public class CentreUpdater {
         }
     }
     
+//    private static Date toDate(final Long millis) {
+//        return new Date(millis);
+//    }
+    
+    private static Function<Long, Date> longToDate = Date::new;
+    
     private static Object extractFrom(final Object value, final Supplier<Class<?>> managedTypeSupplier, final String property) {
         final boolean isEntityItself = "".equals(property); // empty property means "entity itself"
-        final Class<?> propertyType = isEntityItself ? managedTypeSupplier.get() : PropertyTypeDeterminator.determinePropertyType(managedTypeSupplier.get(), property);
-        if (EntityUtils.isDate(propertyType)) {
-            return new Date((long) value);
+        final Class<?> propertyType = isEntityItself ? managedTypeSupplier.get() : determinePropertyType(managedTypeSupplier.get(), property);
+        if (isDate(propertyType)) {
+            return valOrNull(value, longToDate);
         } else {
             return value;
         }
+    }
+    
+    private static Object convert(final Object value, final Supplier<Class<?>> managedTypeSupplier, final String property) {
+        final boolean isEntityItself = "".equals(property); // empty property means "entity itself"
+        final Class<?> propertyType = isEntityItself ? managedTypeSupplier.get() : determinePropertyType(managedTypeSupplier.get(), property);
+        if (isDate(propertyType)) {
+            return valOrNull(value, Date::getTime);
+        } else {
+            return value;
+        }
+    }
+    
+    private static String stringOrNull(final Object obj) {
+        return obj == null ? null : obj.toString();
+    }
+    
+    private static <T, M> M valOrNull(final Object obj, final Function<T, M> convertionFunc) {
+        return obj == null ? null : convertionFunc.apply((T) obj);
+    }
+    
+    /**
+     * Creates 'diff' from 'centre' and 'defaultCentre' with meta-values (only those that are different) and other information.
+     *
+     * @param centre
+     * @param defaultCentre
+     * @param root
+     * 
+     * @return
+     */
+    static Map<String, Object> createDifferences(final ICentreDomainTreeManagerAndEnhancer centre, final ICentreDomainTreeManagerAndEnhancer defaultCentre, final Class<AbstractEntity<?>> root) {
+        final Supplier<Class<?>> managedTypeSupplier = () -> centre.getEnhancer().getManagedType(root);
+        
+        final Map<String, Object> diff = createEmptyDifferences();
+        final Map<String, Map<String, Object>> propertiesDiff = (Map<String, Map<String, Object>>) diff.get(PROPERTIES);
+        
+        final Class<?> managedType = managedType(root, centre);
+        for (final String property : centre.getFirstTick().checkedProperties(root)) { // lets go through centre's checked properties for the first tick (criteria) -- these will be fully synced to originalCentre's checked properties (due to the way centre is created: centre := defaultCentre + diff)
+            if (!isPlaceholder(property)) { // placeholders were used in Swing UI to indicate empty places on selection criteria; need to be filtered out
+                // when checking property type, we need to look for property in 'managedType' rather than in original 'root' type; this is due to ability to add adhoc calculated properties into selection criteria (like totalCost = quantity * price)
+                if (isDoubleCriterion(managedType, property) && !isBooleanCriterion(managedType, property)) {
+                    final Boolean exclusiveVal = centre.getFirstTick().getExclusive(root, property);
+                    if (!equalsEx(exclusiveVal, defaultCentre.getFirstTick().getExclusive(root, property))) {
+                        diff(property, propertiesDiff).put(EXCLUSIVE.name(), exclusiveVal);
+                    }
+                    final Boolean exclusive2Val = centre.getFirstTick().getExclusive2(root, property);
+                    if (!equalsEx(exclusive2Val, defaultCentre.getFirstTick().getExclusive2(root, property))) {
+                        diff(property, propertiesDiff).put(EXCLUSIVE2.name(), exclusive2Val);
+                    }
+                }
+                final Class<?> propertyType = isEmpty(property) ? managedType : determinePropertyType(managedType, property);
+                if (isDate(propertyType)) {
+                    final DateRangePrefixEnum datePrefixVal = centre.getFirstTick().getDatePrefix(root, property);
+                    if (!equalsEx(datePrefixVal, defaultCentre.getFirstTick().getDatePrefix(root, property))) {
+                        diff(property, propertiesDiff).put(DATE_PREFIX.name(), stringOrNull(datePrefixVal));
+                    }
+                    final MnemonicEnum dateMnemonicVal = centre.getFirstTick().getDateMnemonic(root, property);
+                    if (!equalsEx(dateMnemonicVal, defaultCentre.getFirstTick().getDateMnemonic(root, property))) {
+                        diff(property, propertiesDiff).put(DATE_MNEMONIC.name(), stringOrNull(dateMnemonicVal));
+                    }
+                    final Boolean andBeforeVal = centre.getFirstTick().getAndBefore(root, property);
+                    if (!equalsEx(andBeforeVal, defaultCentre.getFirstTick().getAndBefore(root, property))) {
+                        diff(property, propertiesDiff).put(AND_BEFORE.name(), andBeforeVal);
+                    }
+                }
+                
+                final Boolean orNullVal = centre.getFirstTick().getOrNull(root, property);
+                if (!equalsEx(orNullVal, defaultCentre.getFirstTick().getOrNull(root, property))) {
+                    diff(property, propertiesDiff).put(OR_NULL.name(), orNullVal);
+                }
+                final Boolean notVal = centre.getFirstTick().getNot(root, property);
+                if (!equalsEx(notVal, defaultCentre.getFirstTick().getNot(root, property))) {
+                    diff(property, propertiesDiff).put(NOT.name(), notVal);
+                }
+                
+                final Object valueVal = centre.getFirstTick().getValue(root, property);
+                if (!equalsEx(valueVal, defaultCentre.getFirstTick().getValue(root, property))) {
+                    diff(property, propertiesDiff).put(VALUE.name(), convert(valueVal, managedTypeSupplier, property));
+                }
+                if (isDoubleCriterion(managedType, property)) {
+                    final Object value2Val = centre.getFirstTick().getValue2(root, property);
+                    if (!equalsEx(value2Val, defaultCentre.getFirstTick().getValue2(root, property))) {
+                        diff(property, propertiesDiff).put(VALUE2.name(), convert(value2Val, managedTypeSupplier, property));
+                    }
+                }
+            }
+        }
+        
+        // extract widths that are changed and add them to the diff
+        for (final String property : centre.getSecondTick().checkedProperties(root)) {
+            final int widthVal = centre.getSecondTick().getWidth(root, property);
+            if (!equalsEx(widthVal, defaultCentre.getSecondTick().getWidth(root, property))) {
+                diff(property, propertiesDiff).put(WIDTH.name(), widthVal);
+            }
+            final int growFactorVal = centre.getSecondTick().getGrowFactor(root, property);
+            if (!equalsEx(growFactorVal, defaultCentre.getSecondTick().getGrowFactor(root, property))) {
+                diff(property, propertiesDiff).put(GROW_FACTOR.name(), growFactorVal);
+            }
+        }
+        
+        // determine whether usedProperties have been changed (as a whole) and add them to the diff if true
+        final List<String> visibilityAndOrderPropertiesVal = centre.getSecondTick().usedProperties(root);
+        if (!equalsEx(visibilityAndOrderPropertiesVal, defaultCentre.getSecondTick().usedProperties(root))) {
+            diff.put(VISIBILITY_AND_ORDER, visibilityAndOrderPropertiesVal);
+        }
+        
+        // determine whether orderedProperties have been changed (as a whole) and add them to the diff if true
+        final List<Pair<String, Ordering>> sortingPropertiesVal = centre.getSecondTick().orderedProperties(root);
+        if (!equalsEx(sortingPropertiesVal, defaultCentre.getSecondTick().orderedProperties(root))) {
+            diff.put(SORTING, sortingPropertiesVal);
+        }
+        
+        return diff;
     }
     
     /**
@@ -791,8 +908,7 @@ public class CentreUpdater {
      * @param root
      * @return
      */
-
-    private static ICentreDomainTreeManagerAndEnhancer applyDifferences(final ICentreDomainTreeManagerAndEnhancer targetCentre, final Map<String, Object> differences, final Class<AbstractEntity<?>> root) {
+    static ICentreDomainTreeManagerAndEnhancer applyDifferences(final ICentreDomainTreeManagerAndEnhancer targetCentre, final Map<String, Object> differences, final Class<AbstractEntity<?>> root) {
         final Supplier<Class<?>> managedTypeSupplier = () -> targetCentre.getEnhancer().getManagedType(root);
         final Map<String, Map<String, Object>> propertiesDiff = (Map<String, Map<String, Object>>) differences.get(PROPERTIES);
         
@@ -804,8 +920,8 @@ public class CentreUpdater {
             
             processValue(diff, EXCLUSIVE.name(), selectionCriteriaContains, "selection criteria", (value) -> targetCentre.getFirstTick().setExclusive(root, property, (Boolean) value), property);
             processValue(diff, EXCLUSIVE2.name(), selectionCriteriaContains, "selection criteria", (value) -> targetCentre.getFirstTick().setExclusive2(root, property, (Boolean) value), property);
-            processValue(diff, DATE_PREFIX.name(), selectionCriteriaContains, "selection criteria", (value) -> targetCentre.getFirstTick().setDatePrefix(root, property, DateRangePrefixEnum.valueOf((String) value)), property);
-            processValue(diff, DATE_MNEMONIC.name(), selectionCriteriaContains, "selection criteria", (value) -> targetCentre.getFirstTick().setDateMnemonic(root, property, MnemonicEnum.valueOf((String) value)), property);
+            processValue(diff, DATE_PREFIX.name(), selectionCriteriaContains, "selection criteria", (value) -> targetCentre.getFirstTick().setDatePrefix(root, property, value == null ? null : DateRangePrefixEnum.valueOf((String) value)), property);
+            processValue(diff, DATE_MNEMONIC.name(), selectionCriteriaContains, "selection criteria", (value) -> targetCentre.getFirstTick().setDateMnemonic(root, property, value == null ? null : MnemonicEnum.valueOf((String) value)), property);
             processValue(diff, AND_BEFORE.name(), selectionCriteriaContains, "selection criteria", (value) -> targetCentre.getFirstTick().setAndBefore(root, property, (Boolean) value), property);
             processValue(diff, OR_NULL.name(), selectionCriteriaContains, "selection criteria", (value) -> targetCentre.getFirstTick().setOrNull(root, property, (Boolean) value), property);
             processValue(diff, NOT.name(), selectionCriteriaContains, "selection criteria", (value) -> targetCentre.getFirstTick().setNot(root, property, (Boolean) value), property);
@@ -864,6 +980,11 @@ public class CentreUpdater {
         return targetCentre;
     }
     
+    public static Map<String, Object> propDiff(final String property, final Map<String, Object> diff) {
+        final Map<String, Map<String, Object>> propertiesDiff = (Map<String, Map<String, Object>>) diff.get(PROPERTIES);
+        return diff(property, propertiesDiff);
+    }
+    
     private static Map<String, Object> diff(final String property, final Map<String, Map<String, Object>> propertiesDiff) {
         final Map<String, Object> propertyDiff = propertiesDiff.get(property);
         if (propertyDiff == null) {
@@ -886,98 +1007,6 @@ public class CentreUpdater {
         return diff;
     }
     
-    /**
-     * Creates 'diff' from 'centre' and 'defaultCentre' with meta-values (only those that are different) and other information.
-     *
-     * @param centre
-     * @param defaultCentre
-     * @param root
-     * 
-     * @return
-     */
-    private static Map<String, Object> createDifferences(final ICentreDomainTreeManagerAndEnhancer centre, final ICentreDomainTreeManagerAndEnhancer defaultCentre, final Class<AbstractEntity<?>> root) {
-        final Map<String, Object> diff = createEmptyDifferences();
-        final Map<String, Map<String, Object>> propertiesDiff = (Map<String, Map<String, Object>>) diff.get(PROPERTIES);
-        
-        final Class<?> managedType = managedType(root, centre);
-        for (final String property : centre.getFirstTick().checkedProperties(root)) { // lets go through centre's checked properties for the first tick (criteria) -- these will be fully synced to originalCentre's checked properties (due to the way centre is created: centre := defaultCentre + diff)
-            if (!isPlaceholder(property)) { // placeholders were used in Swing UI to indicate empty places on selection criteria; need to be filtered out
-                // when checking property type, we need to look for property in 'managedType' rather than in original 'root' type; this is due to ability to add adhoc calculated properties into selection criteria (like totalCost = quantity * price)
-                if (isDoubleCriterion(managedType, property) && !isBooleanCriterion(managedType, property)) {
-                    final Boolean exclusiveVal = centre.getFirstTick().getExclusive(root, property);
-                    if (!equalsEx(exclusiveVal, defaultCentre.getFirstTick().getExclusive(root, property))) {
-                        diff(property, propertiesDiff).put(EXCLUSIVE.name(), exclusiveVal);
-                    }
-                    final Boolean exclusive2Val = centre.getFirstTick().getExclusive2(root, property);
-                    if (!equalsEx(exclusive2Val, defaultCentre.getFirstTick().getExclusive2(root, property))) {
-                        diff(property, propertiesDiff).put(EXCLUSIVE2.name(), exclusive2Val);
-                    }
-                }
-                final Class<?> propertyType = isEmpty(property) ? managedType : determinePropertyType(managedType, property);
-                if (isDate(propertyType)) {
-                    final DateRangePrefixEnum datePrefixVal = centre.getFirstTick().getDatePrefix(root, property);
-                    if (!equalsEx(datePrefixVal, defaultCentre.getFirstTick().getDatePrefix(root, property))) {
-                        diff(property, propertiesDiff).put(DATE_PREFIX.name(), datePrefixVal);
-                    }
-                    final MnemonicEnum dateMnemonicVal = centre.getFirstTick().getDateMnemonic(root, property);
-                    if (!equalsEx(dateMnemonicVal, defaultCentre.getFirstTick().getDateMnemonic(root, property))) {
-                        diff(property, propertiesDiff).put(DATE_MNEMONIC.name(), dateMnemonicVal);
-                    }
-                    final Boolean andBeforeVal = centre.getFirstTick().getAndBefore(root, property);
-                    if (!equalsEx(andBeforeVal, defaultCentre.getFirstTick().getAndBefore(root, property))) {
-                        diff(property, propertiesDiff).put(AND_BEFORE.name(), andBeforeVal);
-                    }
-                }
-                
-                final Boolean orNullVal = centre.getFirstTick().getOrNull(root, property);
-                if (!equalsEx(orNullVal, defaultCentre.getFirstTick().getOrNull(root, property))) {
-                    diff(property, propertiesDiff).put(OR_NULL.name(), orNullVal);
-                }
-                final Boolean notVal = centre.getFirstTick().getNot(root, property);
-                if (!equalsEx(notVal, defaultCentre.getFirstTick().getNot(root, property))) {
-                    diff(property, propertiesDiff).put(NOT.name(), notVal);
-                }
-                
-                final Object valueVal = centre.getFirstTick().getValue(root, property);
-                if (!equalsEx(valueVal, defaultCentre.getFirstTick().getValue(root, property))) {
-                    diff(property, propertiesDiff).put(VALUE.name(), valueVal);
-                }
-                if (isDoubleCriterion(managedType, property)) {
-                    final Object value2Val = centre.getFirstTick().getValue2(root, property);
-                    if (!equalsEx(value2Val, defaultCentre.getFirstTick().getValue2(root, property))) {
-                        diff(property, propertiesDiff).put(VALUE2.name(), value2Val);
-                    }
-                }
-            }
-        }
-        
-        // extract widths that are changed and add them to the diff
-        for (final String property : centre.getSecondTick().checkedProperties(root)) {
-            final int widthVal = centre.getSecondTick().getWidth(root, property);
-            if (!equalsEx(widthVal, defaultCentre.getSecondTick().getWidth(root, property))) {
-                diff(property, propertiesDiff).put(WIDTH.name(), widthVal);
-            }
-            final int growFactorVal = centre.getSecondTick().getGrowFactor(root, property);
-            if (!equalsEx(growFactorVal, defaultCentre.getSecondTick().getGrowFactor(root, property))) {
-                diff(property, propertiesDiff).put(GROW_FACTOR.name(), growFactorVal);
-            }
-        }
-        
-        // determine whether usedProperties have been changed (as a whole) and add them to the diff if true
-        final List<String> visibilityAndOrderPropertiesVal = centre.getSecondTick().usedProperties(root);
-        if (!equalsEx(visibilityAndOrderPropertiesVal, defaultCentre.getSecondTick().usedProperties(root))) {
-            diff.put(VISIBILITY_AND_ORDER, visibilityAndOrderPropertiesVal);
-        }
-        
-        // determine whether orderedProperties have been changed (as a whole) and add them to the diff if true
-        final List<Pair<String, Ordering>> sortingPropertiesVal = centre.getSecondTick().orderedProperties(root);
-        if (!equalsEx(sortingPropertiesVal, defaultCentre.getSecondTick().orderedProperties(root))) {
-            diff.put(SORTING, sortingPropertiesVal);
-        }
-        
-        return diff;
-    }
-
     /**
      * Applies correct default values to be in sync with Web UI ones on top of 'centre'.
      * <p>
