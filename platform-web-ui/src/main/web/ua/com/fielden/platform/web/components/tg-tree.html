@@ -24,12 +24,20 @@
             [highlighted] {
                 font-weight: bold;
             }
+            .truncate {
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+            }
         </style>
         <iron-list id="treeList" items="[[_entities]]" as="entity">
             <template>
                 <div class="layout horizontal center" style$="[[_calcItemStyle(entity)]]">
                     <iron-icon icon="icons:arrow-drop-down" style="flex-grow:0;flex-shrink:0;" invisible$="[[!entity.entity.hasChildren]]" collapsed$="[[!entity.opened]]" on-tap="_toggle"></iron-icon>
-                    <span highlighted$="[[entity.highlight]]">[[entity.entity.key]]</span>
+                    <span class="truncate" highlighted$="[[entity.highlight]]">
+                        <span>[[entity.entity.key]]</span>:&nbsp; 
+                        <span>[[entity.entity.desc]]</span>
+                    </span>
                 </div>
             </template>
         </iron-list>
