@@ -71,7 +71,7 @@ public class EntityRetrievalModel<T extends AbstractEntity<?>> extends AbstractR
             includeIdAndVersionOnly();
             break;
         case ID_ONLY:
-            includeIdOly();
+            includeIdOnly();
             break;
         case NONE:
             break;
@@ -177,7 +177,7 @@ public class EntityRetrievalModel<T extends AbstractEntity<?>> extends AbstractR
         }
     }
 
-    private void includeIdOly() {
+    private void includeIdOnly() {
         getPrimProps().add(ID);
     }
 
