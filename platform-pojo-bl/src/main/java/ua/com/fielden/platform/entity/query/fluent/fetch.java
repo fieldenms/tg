@@ -27,7 +27,13 @@ public class fetch<T extends AbstractEntity<?>> {
     public static final String MSG_MISMATCH_BETWEEN_PROPERTY_AND_FETCH_MODEL_TYPES = "Mismatch between actual type [%s] of property [%s] in entity type [%s] and its fetch model type [%s]!";
 
     public enum FetchCategory {
-        ALL, ALL_INCL_CALC, DEFAULT, KEY_AND_DESC, ID_ONLY, ID_AND_VERSION, NONE
+        ALL_INCL_CALC,
+        ALL, 
+        DEFAULT, 
+        KEY_AND_DESC, 
+        ID_AND_VERSION, 
+        ID_ONLY, 
+        NONE
     }
 
     private final Class<T> entityType;
