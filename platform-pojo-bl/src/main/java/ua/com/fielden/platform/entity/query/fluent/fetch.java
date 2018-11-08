@@ -7,7 +7,7 @@ import static ua.com.fielden.platform.entity.AbstractEntity.ID;
 import static ua.com.fielden.platform.entity.AbstractEntity.VERSION;
 import static ua.com.fielden.platform.entity.query.fluent.fetch.FetchCategory.ALL;
 import static ua.com.fielden.platform.entity.query.fluent.fetch.FetchCategory.DEFAULT;
-import static ua.com.fielden.platform.entity.query.fluent.fetch.FetchCategory.ID_AND_VERSTION;
+import static ua.com.fielden.platform.entity.query.fluent.fetch.FetchCategory.ID_AND_VERSION;
 import static ua.com.fielden.platform.entity.query.fluent.fetch.FetchCategory.ID_ONLY;
 import static ua.com.fielden.platform.entity.query.fluent.fetch.FetchCategory.KEY_AND_DESC;
 import static ua.com.fielden.platform.reflection.Finder.isPropertyPresent;
@@ -27,7 +27,7 @@ public class fetch<T extends AbstractEntity<?>> {
     public static final String MSG_MISMATCH_BETWEEN_PROPERTY_AND_FETCH_MODEL_TYPES = "Mismatch between actual type [%s] of property [%s] in entity type [%s] and its fetch model type [%s]!";
 
     public enum FetchCategory {
-        ALL, ALL_INCL_CALC, DEFAULT, KEY_AND_DESC, ID_ONLY, ID_AND_VERSTION, NONE
+        ALL, ALL_INCL_CALC, DEFAULT, KEY_AND_DESC, ID_ONLY, ID_AND_VERSION, NONE
     }
 
     private final Class<T> entityType;
@@ -41,7 +41,7 @@ public class fetch<T extends AbstractEntity<?>> {
      * Used mainly for serialisation.
      */
     protected fetch() {
-        this(null, ID_AND_VERSTION);
+        this(null, ID_AND_VERSION);
     }
 
     public fetch(final Class<T> entityType, final FetchCategory fetchCategory, final boolean instrumented) {
@@ -258,8 +258,8 @@ public class fetch<T extends AbstractEntity<?>> {
             return KEY_AND_DESC;
         }
 
-        if (fetchCategory == ID_AND_VERSTION || second.fetchCategory == ID_AND_VERSTION) {
-            return ID_AND_VERSTION;
+        if (fetchCategory == ID_AND_VERSION || second.fetchCategory == ID_AND_VERSION) {
+            return ID_AND_VERSION;
         }
 
         return ID_ONLY;
