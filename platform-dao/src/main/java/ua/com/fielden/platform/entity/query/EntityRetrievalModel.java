@@ -37,6 +37,7 @@ import ua.com.fielden.platform.entity.AbstractPersistentEntity;
 import ua.com.fielden.platform.entity.query.exceptions.EqlException;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.entity.query.metadata.DomainMetadataAnalyser;
+import ua.com.fielden.platform.entity.query.metadata.EntityCategory;
 import ua.com.fielden.platform.entity.query.metadata.EntityTypeInfo;
 import ua.com.fielden.platform.entity.query.metadata.PropertyMetadata;
 import ua.com.fielden.platform.types.tuples.T2;
@@ -140,8 +141,8 @@ public class EntityRetrievalModel<T extends AbstractEntity<?>> extends AbstractR
     private void includeLastUpdatedByGroupOfProperties() {
         if (AbstractPersistentEntity.class.isAssignableFrom(getEntityType())) {
             with(LAST_UPDATED_BY, true);
-            with(LAST_UPDATED_DATE, true);
-            with(LAST_UPDATED_TRANSACTION_GUID, true);
+            addPrimProp(LAST_UPDATED_DATE);
+            addPrimProp(LAST_UPDATED_TRANSACTION_GUID);
         }
     }
 
@@ -149,7 +150,7 @@ public class EntityRetrievalModel<T extends AbstractEntity<?>> extends AbstractR
         if (isPersistedEntityType(getEntityType())) {
             includeIdAndVersionOnly();
         } else if (isSyntheticBasedOnPersistentEntityType(getEntityType())) {
-            with(ID, true);
+            addPrimProp(ID);
         } else if (isUnionEntityType(getEntityType())) {
             includeAllFirstLevelProps();
         }
@@ -157,7 +158,7 @@ public class EntityRetrievalModel<T extends AbstractEntity<?>> extends AbstractR
         with(KEY, true);
 
         if (hasDescProperty(getEntityType())) {
-            with(DESC, true);
+            addPrimProp(DESC);
         }
     }
 
@@ -178,20 +179,20 @@ public class EntityRetrievalModel<T extends AbstractEntity<?>> extends AbstractR
     }
 
     private void includeIdOnly() {
-        getPrimProps().add(ID);
+        addPrimProp(ID);
     }
 
     private void includeIdAndVersionOnly() {
         if (isPersistedEntityType(getEntityType())) {
-            with(ID, true);
-            with(VERSION, true);
+            addPrimProp(ID);
+            addPrimProp(VERSION);
             if (isActivatableEntityType(getEntityType())) {
-                with(ACTIVE, true);
-                with(REF_COUNT, true);
+                addPrimProp(ACTIVE);
+                addPrimProp(REF_COUNT);
             }
             includeLastUpdatedByGroupOfProperties();
         } else if (isEntityType(getKeyType(getEntityType()))) {
-            with(ID, true);
+            addPrimProp(ID);
         }
     }
 
@@ -202,7 +203,7 @@ public class EntityRetrievalModel<T extends AbstractEntity<?>> extends AbstractR
         if (ppi.isCompositeKeyExpression()) {
             includeAllCompositeKeyMembers();
         } else if (propName.equals(KEY) && isUnionEntityType(getEntityType())) {
-            getPrimProps().add(KEY);
+            addPrimProp(KEY);
             includeAllUnionEntityKeyMembers();
         } else {
             if (isEntityType(propType)/* && !ppi.isId()*/) {
@@ -215,12 +216,13 @@ public class EntityRetrievalModel<T extends AbstractEntity<?>> extends AbstractR
                 } else if (ppi.affectsMapping()) {
                     with(propName, fetchIdOnly(propType));
                 }
+               
             } else {
                 final String singleSubpropertyOfCompositeUserTypeProperty = ppi.getSinglePropertyOfCompositeUserType();
                 if (singleSubpropertyOfCompositeUserTypeProperty != null) {
-                    getPrimProps().add(propName + "." + singleSubpropertyOfCompositeUserTypeProperty);
+                    addPrimProp(propName + "." + singleSubpropertyOfCompositeUserTypeProperty);
                 }
-                getPrimProps().add(propName);
+                addPrimProp(propName);
             }
         }
     }

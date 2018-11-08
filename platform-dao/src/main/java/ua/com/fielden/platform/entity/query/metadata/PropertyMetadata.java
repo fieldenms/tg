@@ -47,7 +47,7 @@ public class PropertyMetadata implements Comparable<PropertyMetadata> {
     private final Class javaType;
     private final Object hibType;
     private final PropertyCategory category;
-    private final EntityTypeInfo <? extends AbstractEntity<?>> parentInfo;
+    public final EntityTypeInfo <? extends AbstractEntity<?>> parentInfo;
     private final boolean nullable;
 
     private final List<PropertyColumn> columns;

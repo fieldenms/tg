@@ -17,7 +17,7 @@ public class EntityAggregatesRetrievalModel<T extends AbstractEntity<?>> extends
         validateModel();
 
         for (final String propName : originalFetch.getIncludedProps()) {
-            with(propName, false);
+            addPrimProp(propName);
         }
 
         for (final Entry<String, fetch<? extends AbstractEntity<?>>> entry : originalFetch.getIncludedPropsWithModels().entrySet()) {
@@ -38,10 +38,6 @@ public class EntityAggregatesRetrievalModel<T extends AbstractEntity<?>> extends
             throw new EqlException("Can't accept empty fetch model for EntityAggregates entity type fetching!");
         }
 
-    }
-
-    private void with(final String propName, final boolean skipEntities) {
-        getPrimProps().add(propName);
     }
 
     private void addEntityPropsModel(final String propName, final fetch<?> model) {

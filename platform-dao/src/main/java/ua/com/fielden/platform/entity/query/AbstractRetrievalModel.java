@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.entity.query;
 
+import static java.util.Collections.unmodifiableSet;
 import static ua.com.fielden.platform.utils.EntityUtils.isEntityType;
 
 import java.util.HashMap;
@@ -66,12 +67,16 @@ public abstract class AbstractRetrievalModel<T extends AbstractEntity<?>> implem
 
     @Override
     public Set<String> getPrimProps() {
-        return primProps;
+        return unmodifiableSet(primProps);
     }
 
     @Override
     public Map<String, fetch<? extends AbstractEntity<?>>> getFetchModels() {
         return entityProps;
+    }
+    
+    protected void addPrimProp(final String name) {
+        primProps.add(name);
     }
 
     @Override
@@ -113,7 +118,7 @@ public abstract class AbstractRetrievalModel<T extends AbstractEntity<?>> implem
                 throw new IllegalStateException("Couldn't find property [" + propName + "] to be excluded from fetched entity properties of entity type " + getEntityType());
             }
         } else {
-            final boolean removalResult = getPrimProps().remove(propName);
+            final boolean removalResult = primProps.remove(propName);
             if (!removalResult) {
                 throw new IllegalStateException("Couldn't find property [" + propName + "] to be excluded from fetched primitive properties of entity type " + getEntityType());
             }
