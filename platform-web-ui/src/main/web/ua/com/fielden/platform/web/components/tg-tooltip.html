@@ -28,7 +28,6 @@
     </style>
     <template>
         <div id="tooltip" class="hidden">
-            <content></content>
         </div>
     </template>
     <script>
@@ -59,6 +58,13 @@
                         }
                     }
                 },
+                
+                /**
+                 * The handle for tooltip timer can be used to cancel tooltip timer. (Tooltip timer - the timer for tooltip to be shown).
+                 */
+                _tooltipTimer: {
+                    type: Number
+                },
 
                 _showing: {
                     type: Boolean,
@@ -69,27 +75,40 @@
             listeners: {
                 'neon-animation-finish': '_onAnimationFinish'
             },
-
-            showFor: function (element) {
-                if (!element) {
-                    return;
-                }
-
-                var parentRect = this.offsetParent.getBoundingClientRect();
-                var targetRect = element.getBoundingClientRect();
-                var thisRect = this.getBoundingClientRect();
-
-                var centerOffset = (targetRect.width - thisRect.width) / 2;
-
-                this.showAt(targetRect.left - parentRect.left + centerOffset, targetRect.top - parentRect.top + targetRect.height + this.marginTop);
+            
+            ready: function () {
+                this._onCaptureKeyDown = this._onCaptureKeyDown.bind(this);
+            },
+            
+            attached: function () {
+                this._hideTooltipOnKeyDown = [];
+                document.addEventListener('keydown', this._onCaptureKeyDown, true);
+            },
+            
+            detached: function () {
+                document.removeEventListener('keydown', this._onCaptureKeyDown, true);
+            },
+            
+            _onCaptureKeyDown: function () {
+                this.hide();
             },
 
-            showAt: function (x, y) {
-                if (this._showing)
-                    return;
-                var top, left, bottom, top;
-                var w = this._getWindowWidth();
-                var h = this._getWindowHeight();
+            show: function (text, x, y) {
+                if (!this._showing) {
+                    if (this._tooltipTimer) {
+                        this.cancelAsync(this._tooltipTimer);
+                        this._tooltipTimer = null;
+                    }
+                    this._tooltipTimer = this.async(function () {
+                        Polymer.dom(this.$.tooltip).innerHTML = text;
+                        this._showAt(x, y);
+                    }.bind(this), 1000);
+                }
+            },
+            
+            _showAt: function (x, y) {
+                const w = this._getWindowWidth();
+                const h = this._getWindowHeight();
 
                 this.cancelAnimation();
                 this.toggleClass('hidden', false, this.$.tooltip);
@@ -110,11 +129,14 @@
             },
 
             hide: function () {
-                if (!this._showing)
-                    return;
-
-                this._showing = false;
-                this.playAnimation('exit');
+                if (this._tooltipTimer) {
+                    this.cancelAsync(this._tooltipTimer);
+                    this._tooltipTimer = null;
+                }
+                if (this._showing) {
+                    this._showing = false;
+                    this.playAnimation('exit');
+                }
             },
 
             _onAnimationFinish: function () {

@@ -43,7 +43,7 @@ public class FileProcessingResource<T extends AbstractEntityWithInputStream<?>> 
     private final EntityFactory factory;
     private final Function<EntityFactory, T> entityCreator;
     private final RestServerUtil restUtil;
-    private final long sizeLimit;
+    private final long sizeLimitBytes;
     private final Set<MediaType> types;
     private final Router router;
     private final String jobUid;
@@ -58,7 +58,7 @@ public class FileProcessingResource<T extends AbstractEntityWithInputStream<?>> 
             final EntityFactory factory, 
             final Function<EntityFactory, T> entityCreator, 
             final RestServerUtil restUtil, 
-            final long fileSizeLimit, 
+            final long fileSizeLimitBytes, 
             final Set<MediaType> types, 
             final IDeviceProvider deviceProvider,
             final Context context, 
@@ -70,7 +70,7 @@ public class FileProcessingResource<T extends AbstractEntityWithInputStream<?>> 
         this.factory = factory;
         this.entityCreator = entityCreator;
         this.restUtil = restUtil;
-        this.sizeLimit = fileSizeLimit;
+        this.sizeLimitBytes = fileSizeLimitBytes;
         this.deviceProvider = deviceProvider;
         this.types = types;
         
@@ -110,7 +110,7 @@ public class FileProcessingResource<T extends AbstractEntityWithInputStream<?>> 
         } else if (entity.getSize() == -1) {
             getResponse().setStatus(Status.CLIENT_ERROR_LENGTH_REQUIRED);
             return restUtil.errorJSONRepresentation("File size is required.");
-        } else if (entity.getSize() > sizeLimit) {
+        } else if (entity.getSize() > sizeLimitBytes) {
             getResponse().setStatus(Status.CLIENT_ERROR_REQUEST_ENTITY_TOO_LARGE);
             return restUtil.errorJSONRepresentation("File is too large.");
         } else {

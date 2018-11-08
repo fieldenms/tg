@@ -56,7 +56,7 @@ public class WebUiResources extends AbstractWebUiResources {
                 DumpCsvTxtProcessor.class,
                 f -> f.newByKey(DumpCsvTxtProcessor.class, "DUMMY"), // this entity construction could be more sophisticated in practice
                 deviceProvider,
-                20 * 1024 * 1024, // Kilobytes
+                20 * 1024, // Kilobytes
                 MediaType.TEXT_CSV,
                 MediaType.TEXT_PLAIN);
         router.attach("/csv-txt-file-processing", factory);

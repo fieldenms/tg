@@ -48,6 +48,7 @@ public class HibernateConfigurationFactory {
     private static final String FORMAT_SQL = "hibernate.format_sql";
     private static final String JDBC_USE_GET_GENERATED_KEYS = "hibernate.jdbc.use_get_generated_keys";
     private static final String CONNECTION_PROVIDER_CLASS = "hibernate.connection.provider_class";
+    private static final String C3P0_NUM_HELPER_THREADS = "hibernate.c3p0.numHelperThreads";
     private static final String C3P0_MIN_SIZE = "hibernate.c3p0.min_size";
     private static final String C3P0_MAX_SIZE = "hibernate.c3p0.max_size";
     private static final String C3P0_TIMEOUT = "hibernate.c3p0.timeout";
@@ -122,6 +123,7 @@ public class HibernateConfigurationFactory {
         setSafely(cfg, JDBC_USE_GET_GENERATED_KEYS, "true");
 
         setSafely(cfg, CONNECTION_PROVIDER_CLASS);
+        setSafely(cfg, C3P0_NUM_HELPER_THREADS);
         setSafely(cfg, C3P0_MIN_SIZE);
         setSafely(cfg, C3P0_MAX_SIZE);
         setSafely(cfg, C3P0_TIMEOUT);

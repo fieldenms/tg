@@ -24,6 +24,10 @@
             @apply(--layout-flex);
             @apply(--tg-editor-input-container-mixin);
         }
+        
+        #input-container[disabled] {
+            @apply(--tg-editor-input-container-disabled-mixin);
+        }
 
         #input-container::content .input-layer {
             font-size: 16px;
@@ -31,12 +35,15 @@
             font-weight: 500;
             display: none;
             position: absolute;
-            pointer-events: none;
             background-color: inherit;
+            pointer-events: none;
             top: 0;
             bottom: 0;
             left: 0;
             right: 0;
+        }
+        #input-container[disabled]::content .input-layer {
+            pointer-events: auto;
         }
         #input-container[has-layer][disabled]::content .input-layer,
         #input-container[has-layer]:not([focused])::content .input-layer {
