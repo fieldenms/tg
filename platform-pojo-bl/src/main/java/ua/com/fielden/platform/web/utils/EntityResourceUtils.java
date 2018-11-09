@@ -31,7 +31,6 @@ import java.util.stream.Stream;
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 
-import ua.com.fielden.platform.attachment.Attachment;
 import ua.com.fielden.platform.basic.autocompleter.PojoValueMatcher;
 import ua.com.fielden.platform.companion.IEntityReader;
 import ua.com.fielden.platform.criteria.generator.impl.CriteriaReflector;
@@ -631,7 +630,7 @@ public class EntityResourceUtils {
      * @param compositeKeyAsString
      * @return
      */
-    private static Object orElseFindByKey(Object converted, final IEntityDao<AbstractEntity<?>> propertyCompanion, fetch<AbstractEntity<?>> fetchModel, String compositeKeyAsString) {
+    private static Object orElseFindByKey(final Object converted, final IEntityDao<AbstractEntity<?>> propertyCompanion, final fetch<AbstractEntity<?>> fetchModel, final String compositeKeyAsString) {
         if (converted == null) {
             try {
                 return propertyCompanion.findByKeyAndFetch(fetchModel, compositeKeyAsString);
@@ -648,7 +647,7 @@ public class EntityResourceUtils {
      * @param reflectedValue
      * @return
      */
-    private static Long extractLongValueFrom(final Object reflectedValue) {
+    public static Long extractLongValueFrom(final Object reflectedValue) {
         if (reflectedValue instanceof Integer) {
             return ((Integer) reflectedValue).longValue();
         } else if (reflectedValue instanceof Long) {

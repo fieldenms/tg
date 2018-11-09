@@ -22,6 +22,7 @@ import ua.com.fielden.platform.criteria.generator.ICriteriaGenerator;
 import ua.com.fielden.platform.domaintree.IDomainTreeEnhancerCache;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.entity_centre.review.criteria.EntityQueryCriteria;
 import ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader;
 import ua.com.fielden.platform.reflection.asm.impl.DynamicTypeNamingService;
@@ -56,6 +57,7 @@ public class SerialisationTypeEncoder implements ISerialisationTypeEncoder {
     private final IEntityCentreConfig eccCompanion;
     private final IMainMenuItem mmiCompanion;
     private final IUser userCompanion;
+    private final ICompanionObjectFinder companionFinder;
     
     @Inject
     public SerialisationTypeEncoder(
@@ -67,7 +69,8 @@ public class SerialisationTypeEncoder implements ISerialisationTypeEncoder {
             final IWebUiConfig webUiConfig,
             final IEntityCentreConfig eccCompanion,
             final IMainMenuItem mmiCompanion,
-            final IUser userCompanion) {
+            final IUser userCompanion,
+            final ICompanionObjectFinder companionFinder) {
         this.deviceProvider = deviceProvider;
         this.criteriaGenerator = criteriaGenerator;
         this.userProvider = userProvider;
@@ -77,6 +80,7 @@ public class SerialisationTypeEncoder implements ISerialisationTypeEncoder {
         this.eccCompanion = eccCompanion;
         this.mmiCompanion = mmiCompanion;
         this.userCompanion = userCompanion;
+        this.companionFinder = companionFinder;
     }
     
     @Override
@@ -121,7 +125,7 @@ public class SerialisationTypeEncoder implements ISerialisationTypeEncoder {
                 }
                 final String[] originalAndSuffix = entityTypeName.split(Pattern.quote(DynamicTypeNamingService.APPENDIX + "_"));
                 
-                final ICentreDomainTreeManagerAndEnhancer previouslyRunCentre = updateCentre(user, userProvider, miType, PREVIOUSLY_RUN_CENTRE_NAME, saveAsName, deviceProvider.getDeviceProfile(), serialiser, domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion);
+                final ICentreDomainTreeManagerAndEnhancer previouslyRunCentre = updateCentre(user, userProvider, miType, PREVIOUSLY_RUN_CENTRE_NAME, saveAsName, deviceProvider.getDeviceProfile(), serialiser, domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion, companionFinder);
                 final Class<?> root = findClass(originalAndSuffix[0]);
                 if (EntityQueryCriteria.class.isAssignableFrom(root)) {
                     // In the case where fully fledged criteria entity type does not exist on this server node, and thus could not yet be deserialised, we need to generate criteria type with exact correspondence to 'previouslyRunCentre'.

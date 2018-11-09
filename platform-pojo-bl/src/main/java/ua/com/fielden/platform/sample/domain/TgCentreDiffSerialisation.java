@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.sample.domain;
 
+import static ua.com.fielden.platform.entity.annotation.CritOnly.Type.MULTI;
 import static ua.com.fielden.platform.entity.annotation.CritOnly.Type.SINGLE;
 
 import java.util.Date;
@@ -72,6 +73,64 @@ public class TgCentreDiffSerialisation extends AbstractEntity<String> {
     @Title("Date Prop Time Only")
     @TimeOnly
     private Date datePropTimeOnly;
+    
+    @IsProperty
+    @Title("Entity Prop")
+    private TgCentreDiffSerialisationPersistentChild entityProp;
+    
+    @IsProperty
+    @Title("Entity Prop Default")
+    private TgCentreDiffSerialisationPersistentChild entityPropDefault;
+    
+    @IsProperty
+    @Title("Entity Prop Crit")
+    @CritOnly(MULTI)
+    private TgCentreDiffSerialisationPersistentChild entityPropCrit;
+    
+    @IsProperty
+    @Title("Entity Prop Crit Single")
+    @CritOnly(SINGLE)
+    private TgCentreDiffSerialisationPersistentChild entityPropCritSingle;
+    
+    @Observable
+    public TgCentreDiffSerialisation setEntityPropCritSingle(final TgCentreDiffSerialisationPersistentChild entityPropCritSingle) {
+        this.entityPropCritSingle = entityPropCritSingle;
+        return this;
+    }
+    
+    public TgCentreDiffSerialisationPersistentChild getEntityPropCritSingle() {
+        return entityPropCritSingle;
+    }
+    
+    @Observable
+    public TgCentreDiffSerialisation setEntityPropCrit(final TgCentreDiffSerialisationPersistentChild entityPropCrit) {
+        this.entityPropCrit = entityPropCrit;
+        return this;
+    }
+    
+    public TgCentreDiffSerialisationPersistentChild getEntityPropCrit() {
+        return entityPropCrit;
+    }
+    
+    @Observable
+    public TgCentreDiffSerialisation setEntityPropDefault(final TgCentreDiffSerialisationPersistentChild entityPropDefault) {
+        this.entityPropDefault = entityPropDefault;
+        return this;
+    }
+    
+    public TgCentreDiffSerialisationPersistentChild getEntityPropDefault() {
+        return entityPropDefault;
+    }
+    
+    @Observable
+    public TgCentreDiffSerialisation setEntityProp(final TgCentreDiffSerialisationPersistentChild entityProp) {
+        this.entityProp = entityProp;
+        return this;
+    }
+    
+    public TgCentreDiffSerialisationPersistentChild getEntityProp() {
+        return entityProp;
+    }
     
     @Observable
     public TgCentreDiffSerialisation setDatePropTimeOnly(final Date datePropTimeOnly) {

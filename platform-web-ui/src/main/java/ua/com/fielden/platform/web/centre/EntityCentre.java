@@ -210,7 +210,7 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
     private final Injector injector;
     private final Class<T> entityType;
     private final Class<? extends MiWithConfigurationSupport<?>> miType;
-    private final ICompanionObjectFinder coFinder;
+    private final ICompanionObjectFinder companionFinder;
     private final UnaryOperator<ICentreDomainTreeManagerAndEnhancer> postCentreCreated;
     private Optional<JsCode> customCode = Optional.empty();
     private Optional<JsCode> customCodeOnAttach = Optional.empty();
@@ -242,16 +242,16 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
         validateMenuItemTypeRootType(miType);
         this.miType = miType;
         this.entityType = EntityResourceUtils.getEntityType(miType);
-        this.coFinder = this.injector.getInstance(ICompanionObjectFinder.class);
+        this.companionFinder = this.injector.getInstance(ICompanionObjectFinder.class);
         this.postCentreCreated = postCentreCreated;
         
         userProvider = injector.getInstance(IUserProvider.class);
         serialiser = injector.getInstance(ISerialiser.class);
         domainTreeEnhancerCache = injector.getInstance(IDomainTreeEnhancerCache.class);
         webUiConfig = injector.getInstance(IWebUiConfig.class);
-        eccCompanion = coFinder.find(ua.com.fielden.platform.ui.config.EntityCentreConfig.class);
-        mmiCompanion = coFinder.find(MainMenuItem.class);
-        userCompanion = coFinder.find(User.class);
+        eccCompanion = companionFinder.find(ua.com.fielden.platform.ui.config.EntityCentreConfig.class);
+        mmiCompanion = companionFinder.find(MainMenuItem.class);
+        userCompanion = companionFinder.find(User.class);
         // this is to trigger caching of DomainTreeEnhancers to avoid heavy computations later
         createDefaultCentre();
     }
@@ -836,7 +836,7 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
         if (user == null) {
             return createUserUnspecificDefaultCentre(dslDefaultConfig, injector.getInstance(ISerialiser.class), postCentreCreated);
         } else {
-            return updateCentre(user, userProvider, miType, FRESH_CENTRE_NAME, empty(), device, serialiser, domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion);
+            return updateCentre(user, userProvider, miType, FRESH_CENTRE_NAME, empty(), device, serialiser, domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion, companionFinder);
         }
     }
 
@@ -1352,7 +1352,7 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
             dslDefaultConfig.getValueMatchersForSelectionCriteria() // take all matchers
             .map(matchers -> matchers.get(dslName(originalPropertyName))) // choose single matcher with concrete property name
             .map(customMatcherAndConfig -> pair((IValueMatcherWithCentreContext<V>) injector.getInstance(customMatcherAndConfig.getKey()), customMatcherAndConfig.getValue())) // instantiate the matcher: [matcherType; config] => [matcherInstance; config]
-            .orElseGet(() -> pair(new FallbackValueMatcherWithCentreContext<>(coFinder.find(propType)), empty())); // if no custom matcher was created then create default matcher
+            .orElseGet(() -> pair(new FallbackValueMatcherWithCentreContext<>(companionFinder.find(propType)), empty())); // if no custom matcher was created then create default matcher
         
         // provide fetch model for created matcher
         matcherAndConfig.getKey().setFetch(createFetchModelForAutocompleter(originalPropertyName, propType));

@@ -124,13 +124,13 @@ public class CentreResource<CRITERIA_TYPE extends AbstractEntity<?>> extends Abs
                 // remove cached instances of surrogate centres before updating from base user
                 removeCentres(user, miType, device(), saveAsName, eccCompanion, FRESH_CENTRE_NAME, SAVED_CENTRE_NAME);
                 // it is necessary to use "fresh" instance of cdtme (after the discarding process)
-                newFreshCentre = updateCentre(user, userProvider, miType, FRESH_CENTRE_NAME, saveAsName, device(), serialiser, domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion);
+                newFreshCentre = updateCentre(user, userProvider, miType, FRESH_CENTRE_NAME, saveAsName, device(), serialiser, domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion, companionFinder);
                 // must leave current configuration preferred after deletion (only for named configs -- always true for inherited ones, and for non autoRun centres)
                 if (!centre.isRunAutomatically()) {
                     makePreferred(user, miType, saveAsName, device(), companionFinder);
                 }
             } else {
-                final ICentreDomainTreeManagerAndEnhancer updatedSavedCentre = updateCentre(user, userProvider, miType, SAVED_CENTRE_NAME, saveAsName, device(), serialiser, domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion);
+                final ICentreDomainTreeManagerAndEnhancer updatedSavedCentre = updateCentre(user, userProvider, miType, SAVED_CENTRE_NAME, saveAsName, device(), serialiser, domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion, companionFinder);
                 // discards fresh centre's changes (fresh centre could have no changes)
                 newFreshCentre = commitCentreWithoutConflicts(user, userProvider, miType, FRESH_CENTRE_NAME, saveAsName, device(), updatedSavedCentre, null, serialiser, webUiConfig, eccCompanion, mmiCompanion, userCompanion);
             }

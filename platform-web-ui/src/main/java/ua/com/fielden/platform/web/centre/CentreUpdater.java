@@ -20,6 +20,7 @@ import static ua.com.fielden.platform.domaintree.centre.IOrderingRepresentation.
 import static ua.com.fielden.platform.domaintree.centre.IOrderingRepresentation.Ordering.DESCENDING;
 import static ua.com.fielden.platform.domaintree.centre.IOrderingRepresentation.Ordering.valueOf;
 import static ua.com.fielden.platform.domaintree.impl.AbstractDomainTree.isBooleanCriterion;
+import static ua.com.fielden.platform.domaintree.impl.AbstractDomainTree.isCritOnlySingle;
 import static ua.com.fielden.platform.domaintree.impl.AbstractDomainTree.isDoubleCriterion;
 import static ua.com.fielden.platform.domaintree.impl.AbstractDomainTree.isDummyMarker;
 import static ua.com.fielden.platform.domaintree.impl.AbstractDomainTree.isPlaceholder;
@@ -34,6 +35,7 @@ import static ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoad
 import static ua.com.fielden.platform.utils.EntityUtils.equalsEx;
 import static ua.com.fielden.platform.utils.EntityUtils.fetchWithKeyAndDesc;
 import static ua.com.fielden.platform.utils.EntityUtils.isDate;
+import static ua.com.fielden.platform.utils.EntityUtils.isEntityType;
 import static ua.com.fielden.platform.utils.EntityUtils.isString;
 import static ua.com.fielden.platform.web.centre.CentreUpdaterUtils.createDefaultCentre;
 import static ua.com.fielden.platform.web.centre.CentreUpdaterUtils.findConfig;
@@ -47,8 +49,8 @@ import static ua.com.fielden.platform.web.utils.EntityResourceUtils.getEntityTyp
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.LinkedHashMap;
 import java.util.Date;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -60,6 +62,7 @@ import java.util.stream.Stream;
 
 import org.apache.log4j.Logger;
 
+import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.domaintree.IDomainTreeEnhancerCache;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.domaintree.centre.IOrderingRepresentation.Ordering;
@@ -82,6 +85,7 @@ import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
 import ua.com.fielden.platform.web.app.IWebUiConfig;
 import ua.com.fielden.platform.web.interfaces.DeviceProfile;
+import ua.com.fielden.platform.web.utils.EntityResourceUtils;
 import ua.com.fielden.snappy.DateRangePrefixEnum;
 import ua.com.fielden.snappy.MnemonicEnum;
 
@@ -162,6 +166,7 @@ public class CentreUpdater {
      * @param name -- surrogate name of the centre (fresh, previouslyRun etc.);
      * @param saveAsName -- user-defined title of 'saveAs' centre configuration or empty {@link Optional} for unnamed centre
      * @param device -- device profile (mobile or desktop) for which the centre is accessed / maintained
+     * @param companionFinder
      * @return
      */
     public static ICentreDomainTreeManagerAndEnhancer updateCentre(
@@ -176,10 +181,11 @@ public class CentreUpdater {
             final IWebUiConfig webUiConfig,
             final IEntityCentreConfig eccCompanion,
             final IMainMenuItem mmiCompanion,
-            final IUser userCompanion) {
+            final IUser userCompanion,
+            final ICompanionObjectFinder companionFinder) {
         final String deviceSpecificName = deviceSpecific(saveAsSpecific(name, saveAsName), device);
-        final Map<String, Object> updatedDiff = updateDifferences(miType, user, userProvider, deviceSpecificName, saveAsName, device, serialiser, domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion);
-        return loadCentreFromDefaultAndDiff(user, miType, saveAsName, updatedDiff, serialiser, webUiConfig, domainTreeEnhancerCache);
+        final Map<String, Object> updatedDiff = updateDifferences(miType, user, userProvider, deviceSpecificName, saveAsName, device, serialiser, domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion, companionFinder);
+        return loadCentreFromDefaultAndDiff(user, miType, saveAsName, updatedDiff, serialiser, webUiConfig, domainTreeEnhancerCache, companionFinder);
     }
     
     /**
@@ -542,6 +548,7 @@ public class CentreUpdater {
      * @param miType
      * @param saveAsName -- user-defined title of 'saveAs' centre configuration or empty {@link Optional} for unnamed centre
      * @param updatedDiff -- updated differences
+     * @param companionFinder
      *
      * @return
      */
@@ -552,10 +559,11 @@ public class CentreUpdater {
             final Map<String, Object> updatedDiff,
             final ISerialiser serialiser,
             final IWebUiConfig webUiConfig,
-            final IDomainTreeEnhancerCache domainTreeEnhancerCache) {
+            final IDomainTreeEnhancerCache domainTreeEnhancerCache,
+            final ICompanionObjectFinder companionFinder) {
         final ICentreDomainTreeManagerAndEnhancer defaultCentre = getDefaultCentre(miType, webUiConfig);
         // applies diffCentre on top of defaultCentre to produce loadedCentre:
-        final ICentreDomainTreeManagerAndEnhancer loadedCentre = applyDifferences(defaultCentre, updatedDiff, getEntityType(miType));
+        final ICentreDomainTreeManagerAndEnhancer loadedCentre = applyDifferences(defaultCentre, updatedDiff, getEntityType(miType), companionFinder);
         // For all generated types on freshCentre (and on its derivatives like 'unchanged freshCentre', 'previouslyRun centre', 'unchanged previouslyRun centre' etc.) there is a need to
         //  provide miType information inside its generated type to be sent to the client application. This is done through the use of
         //  annotation miType and other custom annotations, for example @SaveAsName.
@@ -629,7 +637,8 @@ public class CentreUpdater {
             final IWebUiConfig webUiConfig,
             final IEntityCentreConfig eccCompanion,
             final IMainMenuItem mmiCompanion,
-            final IUser userCompanion) {
+            final IUser userCompanion,
+            final ICompanionObjectFinder companionFinder) {
         // the name consists of 'deviceSpecificName' and 'DIFFERENCES_SUFFIX'
         final String deviceSpecificDiffName = deviceSpecificName + DIFFERENCES_SUFFIX;
         
@@ -649,7 +658,7 @@ public class CentreUpdater {
             } else { // non-base user
                 // diff centre does not exist in persistent storage yet -- create a diff by comparing basedOnCentre (configuration created by base user) and default centre
                 final User baseUser = beginBaseUserOperations(userProvider, user, userCompanion);
-                final ICentreDomainTreeManagerAndEnhancer baseCentre = getBaseCentre(baseUser, userProvider, miType, saveAsName, device, serialiser, domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion);
+                final ICentreDomainTreeManagerAndEnhancer baseCentre = getBaseCentre(baseUser, userProvider, miType, saveAsName, device, serialiser, domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion, companionFinder);
                 // find description of the centre configuration to be copied from
                 final String upstreamDesc = updateCentreDesc(baseUser, miType, saveAsName, device, eccCompanion);
                 // creates differences centre from the differences between base user's 'default centre' (which can be user specific, see IValueAssigner for properties dependent on User) and 'baseCentre'
@@ -703,8 +712,9 @@ public class CentreUpdater {
             final IWebUiConfig webUiConfig,
             final IEntityCentreConfig eccCompanion,
             final IMainMenuItem mmiCompanion,
-            final IUser userCompanion) {
-        return updateCentre(baseUser, userProvider, miType, SAVED_CENTRE_NAME, saveAsName, device, serialiser, domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion);
+            final IUser userCompanion,
+            final ICompanionObjectFinder companionFinder) {
+        return updateCentre(baseUser, userProvider, miType, SAVED_CENTRE_NAME, saveAsName, device, serialiser, domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion, companionFinder);
     }
     
     /**
@@ -743,12 +753,13 @@ public class CentreUpdater {
             final IWebUiConfig webUiConfig,
             final IEntityCentreConfig eccCompanion,
             final IMainMenuItem mmiCompanion,
-            final IUser userCompanion) {
+            final IUser userCompanion,
+            final ICompanionObjectFinder companionFinder) {
         if (user.isBase()) {
             return getDefaultCentre(miType, webUiConfig);
         } else {
             final User baseUser = beginBaseUserOperations(userProvider, user, userCompanion);
-            final ICentreDomainTreeManagerAndEnhancer baseCentre = getBaseCentre(baseUser, userProvider, miType, saveAsName, device, serialiser, domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion);
+            final ICentreDomainTreeManagerAndEnhancer baseCentre = getBaseCentre(baseUser, userProvider, miType, saveAsName, device, serialiser, domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion, companionFinder);
             endBaseUserOperations(user, userProvider);
             return baseCentre;
         }
@@ -776,13 +787,27 @@ public class CentreUpdater {
 //        return new Date(millis);
 //    }
     
-    private static Function<Long, Date> longToDate = Date::new;
+    private static final Function<Long, Date> longToDate = Date::new;
+    private static final Function<AbstractEntity<?>, Long> entityToLong = AbstractEntity::getId;
+    private static final Function<Object, Long> numberToLong = EntityResourceUtils::extractLongValueFrom;
     
-    private static Object extractFrom(final Object value, final Supplier<Class<?>> managedTypeSupplier, final String property) {
+    private static Object extractFrom(final Object value, final Supplier<Class<?>> managedTypeSupplier, final String property, final ICompanionObjectFinder companionFinder) {
         final boolean isEntityItself = "".equals(property); // empty property means "entity itself"
-        final Class<?> propertyType = isEntityItself ? managedTypeSupplier.get() : determinePropertyType(managedTypeSupplier.get(), property);
+        final Class<?> managedType = managedTypeSupplier.get();
+        final Class<?> propertyType = isEntityItself ? managedType : determinePropertyType(managedType, property);
         if (isDate(propertyType)) {
             return valOrNull(value, longToDate);
+        } else if (isEntityType(propertyType) && isCritOnlySingle(managedType, property)) {
+            return valOrNull(value, (final Long id) -> {
+                final Class<AbstractEntity<?>> entityPropertyType = (Class<AbstractEntity<?>>) propertyType;
+                logger.error(format("CentreUpdater: ID-based restoration of value: type [%s] property [%s] propertyType [%s] id [%s].", managedType.getSimpleName(), property, entityPropertyType.getSimpleName(), id));
+                // regardless of whether entityPropertyType is composite or not, the entity should be retrieved by non-empty id that has been arrived from centre diff
+                final IEntityDao<AbstractEntity<?>> propertyCompanion = companionFinder.find(entityPropertyType, true);
+                if (propertyCompanion == null) {
+                    System.out.println("NPE!");
+                }
+                return propertyCompanion.findById(id, propertyCompanion.getFetchProvider().fetchFor(property).fetchModel());
+            }, numberToLong);
         } else {
             return value;
         }
@@ -790,9 +815,12 @@ public class CentreUpdater {
     
     private static Object convert(final Object value, final Supplier<Class<?>> managedTypeSupplier, final String property) {
         final boolean isEntityItself = "".equals(property); // empty property means "entity itself"
-        final Class<?> propertyType = isEntityItself ? managedTypeSupplier.get() : determinePropertyType(managedTypeSupplier.get(), property);
+        final Class<?> managedType = managedTypeSupplier.get();
+        final Class<?> propertyType = isEntityItself ? managedType : determinePropertyType(managedType, property);
         if (isDate(propertyType)) {
             return valOrNull(value, Date::getTime);
+        } else if (isEntityType(propertyType) && isCritOnlySingle(managedType, property)) {
+            return valOrNull(value, entityToLong);
         } else {
             return value;
         }
@@ -803,7 +831,11 @@ public class CentreUpdater {
     }
     
     private static <T, M> M valOrNull(final Object obj, final Function<T, M> convertionFunc) {
-        return obj == null ? null : convertionFunc.apply((T) obj);
+        return valOrNull(obj, convertionFunc, obj1 -> (T) obj1);
+    }
+    
+    private static <T, M> M valOrNull(final Object obj, final Function<T, M> convertionFunc, final Function<Object, T> castingFunc) {
+        return obj == null ? null : convertionFunc.apply(castingFunc.apply(obj));
     }
     
     /**
@@ -906,9 +938,10 @@ public class CentreUpdater {
      * @param targetCentre
      * @param differencesCentre
      * @param root
+     * @param companionFinder -- to process crit-only single entity-typed values
      * @return
      */
-    static ICentreDomainTreeManagerAndEnhancer applyDifferences(final ICentreDomainTreeManagerAndEnhancer targetCentre, final Map<String, Object> differences, final Class<AbstractEntity<?>> root) {
+    static ICentreDomainTreeManagerAndEnhancer applyDifferences(final ICentreDomainTreeManagerAndEnhancer targetCentre, final Map<String, Object> differences, final Class<AbstractEntity<?>> root, final ICompanionObjectFinder companionFinder) {
         final Supplier<Class<?>> managedTypeSupplier = () -> targetCentre.getEnhancer().getManagedType(root);
         final Map<String, Map<String, Object>> propertiesDiff = (Map<String, Map<String, Object>>) differences.get(PROPERTIES);
         
@@ -925,8 +958,8 @@ public class CentreUpdater {
             processValue(diff, AND_BEFORE.name(), selectionCriteriaContains, "selection criteria", (value) -> targetCentre.getFirstTick().setAndBefore(root, property, (Boolean) value), property);
             processValue(diff, OR_NULL.name(), selectionCriteriaContains, "selection criteria", (value) -> targetCentre.getFirstTick().setOrNull(root, property, (Boolean) value), property);
             processValue(diff, NOT.name(), selectionCriteriaContains, "selection criteria", (value) -> targetCentre.getFirstTick().setNot(root, property, (Boolean) value), property);
-            processValue(diff, VALUE.name(), selectionCriteriaContains, "selection criteria", (value) -> targetCentre.getFirstTick().setValue(root, property, extractFrom(value, managedTypeSupplier, property)), property);
-            processValue(diff, VALUE2.name(), selectionCriteriaContains, "selection criteria", (value) -> targetCentre.getFirstTick().setValue2(root, property, extractFrom(value, managedTypeSupplier, property)), property);
+            processValue(diff, VALUE.name(), selectionCriteriaContains, "selection criteria", (value) -> targetCentre.getFirstTick().setValue(root, property, extractFrom(value, managedTypeSupplier, property, companionFinder)), property);
+            processValue(diff, VALUE2.name(), selectionCriteriaContains, "selection criteria", (value) -> targetCentre.getFirstTick().setValue2(root, property, extractFrom(value, managedTypeSupplier, property, companionFinder)), property);
             
             final boolean resultSetContains = targetCentre.getSecondTick().checkedProperties(root).contains(property);
             

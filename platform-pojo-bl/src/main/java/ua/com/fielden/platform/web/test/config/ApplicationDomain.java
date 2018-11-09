@@ -21,6 +21,8 @@ import ua.com.fielden.platform.sample.domain.EntityTwo;
 import ua.com.fielden.platform.sample.domain.ExportAction;
 import ua.com.fielden.platform.sample.domain.TgBogie;
 import ua.com.fielden.platform.sample.domain.TgBogieLocation;
+import ua.com.fielden.platform.sample.domain.TgCentreDiffSerialisation;
+import ua.com.fielden.platform.sample.domain.TgCentreDiffSerialisationPersistentChild;
 import ua.com.fielden.platform.sample.domain.TgCentreInvokerWithCentreContext;
 import ua.com.fielden.platform.sample.domain.TgCollectionalSerialisationChild;
 import ua.com.fielden.platform.sample.domain.TgCollectionalSerialisationParent;
@@ -149,6 +151,9 @@ public class ApplicationDomain implements IApplicationDomainProvider {
         add(TgCloseLeaveExampleDetail.class);
         add(TgCloseLeaveExampleDetailUnpersisted.class);
         add(TgCloseLeaveExampleMaster_OpenDetailUnpersisted_MenuItem.class);
+        
+        add(TgCentreDiffSerialisation.class);
+        add(TgCentreDiffSerialisationPersistentChild.class);
     }
 
     @Override
