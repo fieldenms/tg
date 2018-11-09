@@ -12,22 +12,22 @@ public class TypeCastAsDecimal implements ITypeCast {
 
     private static final Map<Pair<Integer, Integer>, TypeCastAsDecimal> instances = new HashMap<>();
 
-    private final int scale;
     private final int precision;
+    private final int scale;
 
-    private TypeCastAsDecimal(final int scale, final int precision) {
-        this.scale = scale;
+    private TypeCastAsDecimal(final int precision, final int scale) {
         this.precision = precision;
+        this.scale = scale;
     }
 
-    public static TypeCastAsDecimal getInstance(final int scale, final int precision) {
-        final Pair<Integer, Integer> params = new Pair<>(scale, precision);
+    public static TypeCastAsDecimal getInstance(final int precision, final int scale) {
+        final Pair<Integer, Integer> params = new Pair<>(precision, scale);
         final TypeCastAsDecimal existing = instances.get(params);
         final TypeCastAsDecimal result;
         if (existing != null) {
             result = existing;
         } else {
-            result = new TypeCastAsDecimal(scale, precision);
+            result = new TypeCastAsDecimal(precision, scale);
             instances.put(params, result);
         }
         return result;
