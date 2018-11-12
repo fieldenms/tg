@@ -2,6 +2,7 @@
 
 <link rel="import" href="/resources/polymer/iron-icon/iron-icon.html">
 <link rel="import" href="/resources/polymer/iron-icons/iron-icons.html">
+<link rel="import" href="/resources/polymer/iron-icons/av-icons.html">
 <link rel="import" href="/resources/polymer/iron-list/iron-list.html">
 
 <dom-module id="tg-tree">
@@ -15,14 +16,30 @@
             iron-list {
                 @apply(--layout-flex);
             }
-            iron-icon[collapsed] {
-                transform: rotate(-90deg);
+            iron-icon {
+                width: 16px;
+                height: 16px;
+            }
+            iron-icon:not([collapsed]) {
+                transform: rotate(90deg);
             }
             iron-icon[invisible] {
                 visibility: hidden;
             }
             [highlighted] {
                 font-weight: bold;
+            }
+            .tree-item {
+                padding-left: 4px;
+                @apply(--layout-vertical);
+            }
+            .title {
+                font-size: 10pt;
+                padding-bottom: 3px;
+            }
+            .description {
+                font-size: 8pt;
+                color: gray;
             }
             .truncate {
                 white-space: nowrap;
@@ -32,11 +49,11 @@
         </style>
         <iron-list id="treeList" items="[[_entities]]" as="entity">
             <template>
-                <div class="layout horizontal center" style$="[[_calcItemStyle(entity)]]">
-                    <iron-icon icon="icons:arrow-drop-down" style="flex-grow:0;flex-shrink:0;" invisible$="[[!entity.entity.hasChildren]]" collapsed$="[[!entity.opened]]" on-tap="_toggle"></iron-icon>
-                    <span class="truncate" highlighted$="[[entity.highlight]]">
-                        <span>[[entity.entity.key]]</span>:&nbsp; 
-                        <span>[[entity.entity.desc]]</span>
+                <div class="layout horizontal" style$="[[_calcItemStyle(entity)]]">
+                    <iron-icon icon="av:play-arrow" style="flex-grow:0;flex-shrink:0;" invisible$="[[!entity.entity.hasChildren]]" collapsed$="[[!entity.opened]]" on-tap="_toggle"></iron-icon>
+                    <span class="tree-item truncate" highlighted$="[[entity.highlight]]">
+                        <span class="title">[[entity.entity.key]]</span> 
+                        <span class="description">[[entity.entity.desc]]</span>
                     </span>
                 </div>
             </template>
