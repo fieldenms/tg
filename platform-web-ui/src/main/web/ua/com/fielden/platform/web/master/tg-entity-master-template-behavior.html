@@ -83,7 +83,7 @@
 
             _shouldOverridePrefDim: function () {
                 var parent = this.parentElement;
-                while (parent && parent.tagName !== 'TG-CUSTOM-ACTION-DIALOG') {
+                while (parent && (parent.tagName !== 'TG-CUSTOM-ACTION-DIALOG' && parent.tagName !== 'TG-MENU-ITEM-VIEW')) {
                     if (parent.isMasterTemplate && parent.prefDim) {
                         return false;
                     }
