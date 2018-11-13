@@ -21,7 +21,7 @@ public class EntityAggregatesRetrievalModel<T extends AbstractEntity<?>> extends
         }
 
         for (final Entry<String, fetch<? extends AbstractEntity<?>>> entry : originalFetch.getIncludedPropsWithModels().entrySet()) {
-            with(entry.getKey(), entry.getValue());
+            addEntityPropsModel(entry.getKey(), entry.getValue());
         }
     }
 
@@ -37,15 +37,10 @@ public class EntityAggregatesRetrievalModel<T extends AbstractEntity<?>> extends
         if (getOriginalFetch().getIncludedPropsWithModels().size() + getOriginalFetch().getIncludedProps().size() == 0) {
             throw new EqlException("Can't accept empty fetch model for EntityAggregates entity type fetching!");
         }
-
     }
 
-    private void addEntityPropsModel(final String propName, final fetch<?> model) {
-        final fetch<?> existingFetch = getEntityProps().get(propName);
-        getEntityProps().put(propName, existingFetch != null ? existingFetch.unionWith(model) : model);
-    }
-
-    private void with(final String propName, final fetch<? extends AbstractEntity<?>> fetchModel) {
-        addEntityPropsModel(propName, fetchModel);
+    private void addEntityPropsModel(final String propName, final fetch<? extends AbstractEntity<?>> model) {
+        final fetch<?> existingFetch = getFetchModels().get(propName);
+        addEntityPropFetchModel(propName, existingFetch != null ? existingFetch.unionWith(model) : model);
     }
 }

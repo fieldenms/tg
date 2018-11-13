@@ -240,7 +240,7 @@ public class EntityRetrievalModel<T extends AbstractEntity<?>> extends AbstractR
             }
         }
         
-        final fetch<?> existingFetch = getEntityProps().get(propName);
-        getEntityProps().put(propName, existingFetch != null ? existingFetch.unionWith(fetchModel) : fetchModel);
+        final fetch<?> existingFetch = getFetchModels().get(propName);
+        addEntityPropFetchModel(propName, existingFetch != null ? existingFetch.unionWith(fetchModel) : fetchModel);
     }
 }
