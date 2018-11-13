@@ -31,7 +31,6 @@
             }
             .tree-item {
                 padding-left: 4px;
-                @apply(--layout-vertical);
             }
             .title {
                 font-size: 10pt;
@@ -51,10 +50,7 @@
             <template>
                 <div class="layout horizontal" style$="[[_calcItemStyle(entity)]]">
                     <iron-icon icon="av:play-arrow" style="flex-grow:0;flex-shrink:0;" invisible$="[[!entity.entity.hasChildren]]" collapsed$="[[!entity.opened]]" on-tap="_toggle"></iron-icon>
-                    <span class="tree-item truncate" highlighted$="[[entity.highlight]]">
-                        <span class="title">[[entity.entity.key]]</span> 
-                        <span class="description">[[entity.entity.desc]]</span>
-                    </span>
+                    <span class="tree-item truncate" highlighted$="[[entity.highlight]]" inner-h-t-m-l="[[contentBuilder(entity)]]"></span>
                 </div>
             </template>
         </iron-list>
@@ -174,6 +170,8 @@
                         observer: "_modelChanged"
                     },
                     
+                    contentBuilder: Function,
+                    
                     /**
                      * The tree model that holds some visual specific properties and is created from model.
                      */
@@ -196,9 +194,7 @@
 
                 observers: ["_modelChanged(model.*)"],
 
-                ready: function () {
-                    //Add some event listeners and do other logic before attached callback.
-                },
+                ready: function () {},
 
                 attached: function () {},
                 

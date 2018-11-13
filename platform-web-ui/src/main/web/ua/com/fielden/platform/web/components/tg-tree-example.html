@@ -17,7 +17,7 @@
     <template is="dom-bind" id="app">
         <div class="fit layout vertical">
             <paper-input on-bind-value-changed="_filterTree"></paper-input>
-            <tg-tree class="flex" id="tree" model="[[model]]" on-tg-load-subtree="_loadSubtree"></tg-tree>
+            <tg-tree class="flex" id="tree" model="[[model]]" on-tg-load-subtree="_loadSubtree" content-builder="[[_buildContent]]"></tg-tree>
         </div>
     </template>
 </body>
@@ -52,6 +52,9 @@
         });
     }
     app.model = generateChildren(numberOfItems, true);
+    app._buildContent = function (entity) {
+        return "<span>" + entity.entity.key + "</span>&nbsp;&ndash;&nbsp;<span style='color:#737373'><i>" + entity.entity.desc + "</i></span>";
+    }
     app._loadSubtree = function (e) {
         const parentsPath = e.detail;
         if (parentsPath.length < deepth) {
