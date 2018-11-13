@@ -50,7 +50,7 @@
             <template>
                 <div class="layout horizontal" style$="[[_calcItemStyle(entity)]]">
                     <iron-icon icon="av:play-arrow" style="flex-grow:0;flex-shrink:0;" invisible$="[[!entity.entity.hasChildren]]" collapsed$="[[!entity.opened]]" on-tap="_toggle"></iron-icon>
-                    <span class="tree-item truncate" highlighted$="[[entity.highlight]]" inner-h-t-m-l="[[contentBuilder(entity)]]"></span>
+                    <span class="tree-item truncate" highlighted$="[[entity.highlight]]" inner-h-t-m-l="[[contentBuilder(entity, entity.opened)]]"></span>
                 </div>
             </template>
         </iron-list>
