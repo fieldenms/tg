@@ -29,7 +29,7 @@
     <template>
         <template is="dom-if" if="[[menuItem.view]]" restamp>
             <template is="dom-if" if="[[!_isCentre(menuItem)]]" on-dom-change="_viewWasDefined" restamp>
-                <paper-material>
+                <paper-material id="customViewContainer">
                     <div class="master-insertion-point">
                         <tg-element-loader id="elementToLoad" class="layout vertical" auto="[[autoLoad]]" import="[[menuItem.view.htmlImport]]" element-name="[[menuItem.view.elementName]]" attrs="[[menuItem.view.attrs]]" on-after-load="_afterLoadListener"></tg-element-loader>
                     </div>
@@ -73,7 +73,11 @@
                         reflectToAttribute: true
                     },
                     moduleId: String,
-                    submoduleId: String
+                    submoduleId: String,
+                    prefDim: {
+                        type: Object,
+                        observer: "_prefDimChanged"
+                    }
                 },
 
                 behaviors: [Polymer.IronResizableBehavior],
@@ -166,9 +170,19 @@
                         this.menuItem.view.attrs.queryPart = queryPart;
                     }
                 },
+                    
+                _prefDimChanged: function (prefDim, oldPrefDim) {
+                    if (prefDim && !this._isCentre(this.menuItem)) {
+                        const width = (typeof prefDim.width === 'function' ? prefDim.width() : prefDim.width) + prefDim.widthUnit;
+                        const height = (typeof prefDim.height === 'function' ? prefDim.height() : prefDim.height) + prefDim.heightUnit;
+                        const viewContainer = this.$$("#customViewContainer");
+                        viewContainer.style.width = width;
+                        viewContainer.style.height = height;
+                    }
+                },
 
                 load: function (queryPart) {
-                    var elementToLoad = this.$$("#elementToLoad");
+                    const elementToLoad = this.$$("#elementToLoad");
                     if (elementToLoad && !elementToLoad.wasLoaded) {
                         this._setQueryIfPossible(queryPart);
                         elementToLoad.load();
@@ -176,7 +190,7 @@
                 },
 
                 wasLoaded: function () {
-                    var elementToLoad = this.$$("#elementToLoad");
+                    const elementToLoad = this.$$("#elementToLoad");
                     if (elementToLoad) {
                         return elementToLoad.wasLoaded;
                     }
