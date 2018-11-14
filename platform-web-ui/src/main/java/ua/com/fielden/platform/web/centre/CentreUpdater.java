@@ -46,6 +46,7 @@ import static ua.com.fielden.platform.web.centre.CentreUpdaterUtils.saveNewEntit
 import static ua.com.fielden.platform.web.centre.WebApiUtils.LINK_CONFIG_TITLE;
 import static ua.com.fielden.platform.web.interfaces.DeviceProfile.DESKTOP;
 import static ua.com.fielden.platform.web.interfaces.DeviceProfile.MOBILE;
+import static ua.com.fielden.platform.web.utils.EntityResourceUtils.createMockNotFoundEntity;
 import static ua.com.fielden.platform.web.utils.EntityResourceUtils.getEntityType;
 
 import java.util.ArrayList;
@@ -101,6 +102,7 @@ import ua.com.fielden.snappy.MnemonicEnum;
 public class CentreUpdater {
     private static final Logger logger = Logger.getLogger(CentreUpdater.class);
     private static final String DIFFERENCES_SUFFIX = "__________DIFFERENCES";
+    public static final String NOT_FOUND_MOCK = "not found";
     
     public static final String FRESH_CENTRE_NAME = "__________FRESH";
     public static final String PREVIOUSLY_RUN_CENTRE_NAME = "__________PREVIOUSLY_RUN";
@@ -797,7 +799,9 @@ public class CentreUpdater {
     private static final Function<AbstractEntity<?>, Long> entityToLong = AbstractEntity::getId;
     // private static final Function<Object, Long> numberToLong = EntityResourceUtils::extractLongValueFrom;
     private static final Function<String, Long> stringToLong = Long::valueOf;
+    private static final Function<String, Long> idStringToLong = idString -> NOT_FOUND_MOCK.equals(idString) ? null : Long.valueOf(idString);
     private static final Function<Object, String> toString = Object::toString;
+    private static final Function<Long, String> idToString = id -> id == null ? NOT_FOUND_MOCK : id.toString();
     private static final Function<String, PropertyDescriptor<?>> stringToPropertyDescriptor = PropertyDescriptor::fromString;
     private static final Function<PropertyDescriptor<?>, String> propertyDescriptorToString = PropertyDescriptor::toString;
     
@@ -812,11 +816,14 @@ public class CentreUpdater {
                 return valOrNull(value, stringToPropertyDescriptor);
             } else {
                 return valOrNull(value, (final Long id) -> {
+                    if (id == null) {
+                        return createMockNotFoundEntity(propertyType);
+                    }
                     logger.error(format("CentreUpdater: ID-based restoration of value: type [%s] property [%s] propertyType [%s] id [%s].", managedType.getSimpleName(), property, propertyType.getSimpleName(), id));
                     final IEntityDao<AbstractEntity<?>> propertyCompanion = companionFinder.find((Class<AbstractEntity<?>>) propertyType, true);
                     final IEntityDao<AbstractEntity<?>> companion = companionFinder.find(root, true);
                     return propertyCompanion.findById(id, companion.getFetchProvider().fetchFor(property).fetchModel());
-                }, toString.andThen(stringToLong));
+                }, toString.andThen(idStringToLong));
             }
         } else {
             return value;
@@ -833,7 +840,7 @@ public class CentreUpdater {
             if (isPropertyDescriptor(propertyType)) {
                 return valOrNull(value, propertyDescriptorToString);
             } else {
-                return valOrNull(value, entityToLong.andThen(toString));
+                return valOrNull(value, entityToLong.andThen(idToString));
             }
         } else {
             return value;

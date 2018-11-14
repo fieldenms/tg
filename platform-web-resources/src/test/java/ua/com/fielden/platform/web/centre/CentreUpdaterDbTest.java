@@ -1,9 +1,11 @@
 package ua.com.fielden.platform.web.centre;
 
 import static ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.IAddToCriteriaTickManager.MetaValueType.VALUE;
+import static ua.com.fielden.platform.web.centre.CentreUpdater.NOT_FOUND_MOCK;
 import static ua.com.fielden.platform.web.centre.CentreUpdaterTest.ROOT;
 import static ua.com.fielden.platform.web.centre.CentreUpdaterTest.expectedDiffWithValue;
 import static ua.com.fielden.platform.web.centre.CentreUpdaterTest.testDiffCreationAndApplication;
+import static ua.com.fielden.platform.web.utils.EntityResourceUtils.createMockNotFoundEntity;
 
 import java.lang.reflect.Field;
 
@@ -40,9 +42,15 @@ public class CentreUpdaterDbTest extends AbstractDaoTestCase {
     }
     
     @Test
-    public void critOnlySingle_entity_value() throws IllegalArgumentException, IllegalAccessException, NoSuchFieldException, SecurityException {
+    public void critOnlySingle_entity_value() {
         final TgCentreDiffSerialisationPersistentChild propertyVal = save(new_(TgCentreDiffSerialisationPersistentChild.class, "Ent1"));
         testDiffCreationAndApplication(CentreUpdaterTest::create, centre -> centre.getFirstTick().setValue(ROOT, "entityPropCritSingle", propertyVal), expectedDiffWithValue("entityPropCritSingle", VALUE.name(), Long.toString(propertyVal.getId())), companionFinder());
+    }
+    
+    @Test
+    public void critOnlySingle_entity_value_notFound() {
+        final TgCentreDiffSerialisationPersistentChild propertyVal = (TgCentreDiffSerialisationPersistentChild) createMockNotFoundEntity(TgCentreDiffSerialisationPersistentChild.class);
+        testDiffCreationAndApplication(CentreUpdaterTest::create, centre -> centre.getFirstTick().setValue(ROOT, "entityPropCritSingle", propertyVal), expectedDiffWithValue("entityPropCritSingle", VALUE.name(), NOT_FOUND_MOCK), companionFinder());
     }
     
 }

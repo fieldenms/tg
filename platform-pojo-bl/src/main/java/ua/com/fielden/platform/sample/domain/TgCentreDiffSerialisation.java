@@ -97,8 +97,13 @@ public class TgCentreDiffSerialisation extends AbstractEntity<String> {
     @Title("Property Descriptor Prop")
     private PropertyDescriptor<TgCentreDiffSerialisation> propertyDescriptorProp;
     
+    @IsProperty(TgCentreDiffSerialisation.class)
+    @Title("Property Descriptor Prop Crit")
+    @CritOnly(MULTI)
+    private PropertyDescriptor<TgCentreDiffSerialisation> propertyDescriptorPropCrit;
+    
     @IsProperty(TgCentreDiffSerialisationPersistentChild.class)
-    @Title("Property Descriptor Prop")
+    @Title("Property Descriptor Prop Crit Single")
     @CritOnly(SINGLE)
     private PropertyDescriptor<TgCentreDiffSerialisationPersistentChild> propertyDescriptorPropCritSingle;
     
@@ -110,6 +115,16 @@ public class TgCentreDiffSerialisation extends AbstractEntity<String> {
     
     public PropertyDescriptor<TgCentreDiffSerialisationPersistentChild> getPropertyDescriptorPropCritSingle() {
         return propertyDescriptorPropCritSingle;
+    }
+    
+    @Observable
+    public TgCentreDiffSerialisation setPropertyDescriptorPropCrit(final PropertyDescriptor<TgCentreDiffSerialisation> propertyDescriptorPropCrit) {
+        this.propertyDescriptorPropCrit = propertyDescriptorPropCrit;
+        return this;
+    }
+    
+    public PropertyDescriptor<TgCentreDiffSerialisation> getPropertyDescriptorPropCrit() {
+        return propertyDescriptorPropCrit;
     }
     
     @Observable

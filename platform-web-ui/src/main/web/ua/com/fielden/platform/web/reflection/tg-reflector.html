@@ -1342,7 +1342,7 @@
             if (this.isError(entity.prop(propertyName).validationResult())) {
                 if (previousModifiedPropertiesHolder === null) { // is a brand new instance just received from server?
                     // bind the received from server property value
-                    this._convertFullPropertyValue(bindingView, propertyName, entity.get(propertyName));
+                    this._convertFullPropertyValue(bindingView, propertyName, entity.get('@' + propertyName)._lastInvalidValue);
                 } else { // otherwise, this entity instance has already been received before and should be handled accordingly
                     if (typeof previousModifiedPropertiesHolder[propertyName].val === 'undefined') {
                         // EDGE-CASE: if the value becomes invalid not because the action done upon this property -- 

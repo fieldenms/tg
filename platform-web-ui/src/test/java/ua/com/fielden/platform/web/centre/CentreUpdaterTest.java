@@ -102,6 +102,7 @@ public class CentreUpdaterTest {
         .addCrit("entityPropCrit").asMulti().autocompleter(TgCentreDiffSerialisationPersistentChild.class).also()
         .addCrit("entityPropCritSingle").asSingle().autocompleter(TgCentreDiffSerialisationPersistentChild.class).also()
         .addCrit("propertyDescriptorProp").asMulti().autocompleter(PropertyDescriptor.class).also()
+        .addCrit("propertyDescriptorPropCrit").asMulti().autocompleter(PropertyDescriptor.class).also()
         .addCrit("propertyDescriptorPropCritSingle").asSingle().autocompleter(PropertyDescriptor.class)
         .setLayoutFor(DESKTOP, empty(), mkGridForCentre(7, 2))
         .addProp("stringProp")
@@ -141,9 +142,11 @@ public class CentreUpdaterTest {
         final Map<String, Object> deserialisedDiff = SERIALISER.deserialise(serialisedDiff, LinkedHashMap.class, JACKSON);
         
         // check expected diff against original diff
+        assertEquals(expectedDiff.toString(), diff.toString());
         assertEquals(expectedDiff, diff); // TODO check whether assertEquals is sufficient or whether some "deep equals" should be envisaged
         
         // check expected diff against deserialised diff
+        assertEquals(expectedDiff.toString(), deserialisedDiff.toString());
         assertEquals(expectedDiff, deserialisedDiff); // TODO check whether assertEquals is sufficient or whether some "deep equals" should be envisaged
         
         return t2(centre, deserialisedDiff);
@@ -462,6 +465,11 @@ public class CentreUpdaterTest {
     @Test
     public void propertyDescriptor_value() {
         testDiffCreationAndApplication(CentreUpdaterTest::create, centre -> centre.getFirstTick().setValue(ROOT, "propertyDescriptorProp", listOf("A*", "*B")), expectedDiffWithValue("propertyDescriptorProp", VALUE.name(), listOf("A*", "*B")));
+    }
+    
+    @Test
+    public void critOnly_propertyDescriptor_value() {
+        testDiffCreationAndApplication(CentreUpdaterTest::create, centre -> centre.getFirstTick().setValue(ROOT, "propertyDescriptorPropCrit", listOf("A*", "*B")), expectedDiffWithValue("propertyDescriptorPropCrit", VALUE.name(), listOf("A*", "*B")));
     }
     
     @Test

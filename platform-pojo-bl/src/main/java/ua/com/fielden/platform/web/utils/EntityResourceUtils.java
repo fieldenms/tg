@@ -296,7 +296,7 @@ public class EntityResourceUtils {
      * @param type
      * @return
      */
-    private static AbstractEntity<?> createMockNotFoundEntity(final Class<?> type) {
+    public static AbstractEntity<?> createMockNotFoundEntity(final Class<?> type) {
         return newPlainEntity((Class<AbstractEntity<?>>) type, null);
     }
     
