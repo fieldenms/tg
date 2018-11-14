@@ -141,7 +141,7 @@ public class CentreUpdaterTest {
         assertEquals(expectedDiff, diff); // TODO check whether assertEquals is sufficient or whether some "deep equals" should be envisaged
         
         // check expected diff against deserialised diff
-        // TODO !!!!!! assertEquals(expectedDiff, deserialisedDiff); // TODO check whether assertEquals is sufficient or whether some "deep equals" should be envisaged
+        assertEquals(expectedDiff, deserialisedDiff); // TODO check whether assertEquals is sufficient or whether some "deep equals" should be envisaged
         
         return t2(centre, deserialisedDiff);
     }
@@ -303,7 +303,7 @@ public class CentreUpdaterTest {
         testDiffCreationAndApplication(CentreUpdaterTest::create, centre -> {
             centre.getFirstTick().setDatePrefix(ROOT, "dateProp", PREV);
             centre.getFirstTick().setDateMnemonic(ROOT, "dateProp", MONTH);
-        }, expectedDiffWithValues("dateProp", t2(DATE_PREFIX.name(), PREV.toString()), t2(DATE_MNEMONIC.name(), MONTH.toString())));
+        }, expectedDiffWithValues("dateProp", t2(DATE_PREFIX.name(), PREV.name()), t2(DATE_MNEMONIC.name(), MONTH.name())));
     }
     
     @Test
@@ -318,7 +318,7 @@ public class CentreUpdaterTest {
     public void default_date_prefix_and_mnemonic_2_non_empty() {
         testDiffCreationAndApplication(CentreUpdaterTest::create, centre -> {
             centre.getFirstTick().setDatePrefix(ROOT, "datePropDefaultMnemonics", PREV); // previous value: NEXT MONTH AND BEFORE 
-        }, expectedDiffWithValue("datePropDefaultMnemonics", DATE_PREFIX.name(), PREV.toString())); // new value: PREV MONTH AND BEFORE 
+        }, expectedDiffWithValue("datePropDefaultMnemonics", DATE_PREFIX.name(), PREV.name())); // new value: PREV MONTH AND BEFORE 
     }
     
     // date "and before"
@@ -329,7 +329,7 @@ public class CentreUpdaterTest {
             centre.getFirstTick().setDatePrefix(ROOT, "dateProp", PREV);
             centre.getFirstTick().setDateMnemonic(ROOT, "dateProp", MONTH);
             centre.getFirstTick().setAndBefore(ROOT, "dateProp", true);
-        }, expectedDiffWithValues("dateProp", t2(DATE_PREFIX.name(), PREV.toString()), t2(DATE_MNEMONIC.name(), MONTH.toString()), t2(AND_BEFORE.name(), true)));
+        }, expectedDiffWithValues("dateProp", t2(DATE_PREFIX.name(), PREV.name()), t2(DATE_MNEMONIC.name(), MONTH.name()), t2(AND_BEFORE.name(), true)));
     }
     
     @Test
@@ -338,7 +338,7 @@ public class CentreUpdaterTest {
             centre.getFirstTick().setDatePrefix(ROOT, "dateProp", PREV);
             centre.getFirstTick().setDateMnemonic(ROOT, "dateProp", MONTH);
             centre.getFirstTick().setAndBefore(ROOT, "dateProp", false);
-        }, expectedDiffWithValues("dateProp", t2(DATE_PREFIX.name(), PREV.toString()), t2(DATE_MNEMONIC.name(), MONTH.toString()), t2(AND_BEFORE.name(), false)));
+        }, expectedDiffWithValues("dateProp", t2(DATE_PREFIX.name(), PREV.name()), t2(DATE_MNEMONIC.name(), MONTH.name()), t2(AND_BEFORE.name(), false)));
     }
     
     @Test
@@ -359,7 +359,7 @@ public class CentreUpdaterTest {
     
     @Test
     public void left_date_value() {
-        testDiffCreationAndApplication(CentreUpdaterTest::create, centre -> centre.getFirstTick().setValue(ROOT, "dateProp", d2018), expectedDiffWithValue("dateProp", VALUE.name(), d2018.getTime()));
+        testDiffCreationAndApplication(CentreUpdaterTest::create, centre -> centre.getFirstTick().setValue(ROOT, "dateProp", d2018), expectedDiffWithValue("dateProp", VALUE.name(), Long.toString(d2018.getTime())));
     }
     
     @Test
@@ -369,37 +369,37 @@ public class CentreUpdaterTest {
     
     @Test
     public void default_left_date_value_2_non_empty() {
-        testDiffCreationAndApplication(CentreUpdaterTest::create, centre -> centre.getFirstTick().setValue(ROOT, "datePropDefault", d2019), expectedDiffWithValue("datePropDefault", VALUE.name(), d2019.getTime()));
+        testDiffCreationAndApplication(CentreUpdaterTest::create, centre -> centre.getFirstTick().setValue(ROOT, "datePropDefault", d2019), expectedDiffWithValue("datePropDefault", VALUE.name(), Long.toString(d2019.getTime())));
     }
     
     @Test
     public void left_critOnly_date_value() {
-        testDiffCreationAndApplication(CentreUpdaterTest::create, centre -> centre.getFirstTick().setValue(ROOT, "datePropCrit", d2018), expectedDiffWithValue("datePropCrit", VALUE.name(), d2018.getTime()));
+        testDiffCreationAndApplication(CentreUpdaterTest::create, centre -> centre.getFirstTick().setValue(ROOT, "datePropCrit", d2018), expectedDiffWithValue("datePropCrit", VALUE.name(), Long.toString(d2018.getTime())));
     }
     
     @Test
     public void left_critOnlySingle_date_value() {
-        testDiffCreationAndApplication(CentreUpdaterTest::create, centre -> centre.getFirstTick().setValue(ROOT, "datePropCritSingle", d2018), expectedDiffWithValue("datePropCritSingle", VALUE.name(), d2018.getTime()));
+        testDiffCreationAndApplication(CentreUpdaterTest::create, centre -> centre.getFirstTick().setValue(ROOT, "datePropCritSingle", d2018), expectedDiffWithValue("datePropCritSingle", VALUE.name(), Long.toString(d2018.getTime())));
     }
     
     @Test
     public void left_UTC_date_value() {
-        testDiffCreationAndApplication(CentreUpdaterTest::create, centre -> centre.getFirstTick().setValue(ROOT, "datePropUtc", d2018), expectedDiffWithValue("datePropUtc", VALUE.name(), d2018.getTime()));
+        testDiffCreationAndApplication(CentreUpdaterTest::create, centre -> centre.getFirstTick().setValue(ROOT, "datePropUtc", d2018), expectedDiffWithValue("datePropUtc", VALUE.name(), Long.toString(d2018.getTime())));
     }
     
     @Test
     public void left_dateOnly_date_value() {
-        testDiffCreationAndApplication(CentreUpdaterTest::create, centre -> centre.getFirstTick().setValue(ROOT, "datePropDateOnly", d2018), expectedDiffWithValue("datePropDateOnly", VALUE.name(), d2018.getTime()));
+        testDiffCreationAndApplication(CentreUpdaterTest::create, centre -> centre.getFirstTick().setValue(ROOT, "datePropDateOnly", d2018), expectedDiffWithValue("datePropDateOnly", VALUE.name(), Long.toString(d2018.getTime())));
     }
     
     @Test
     public void left_timeOnly_date_value() {
-        testDiffCreationAndApplication(CentreUpdaterTest::create, centre -> centre.getFirstTick().setValue(ROOT, "datePropTimeOnly", d2018_time), expectedDiffWithValue("datePropTimeOnly", VALUE.name(), d2018_time.getTime()));
+        testDiffCreationAndApplication(CentreUpdaterTest::create, centre -> centre.getFirstTick().setValue(ROOT, "datePropTimeOnly", d2018_time), expectedDiffWithValue("datePropTimeOnly", VALUE.name(), Long.toString(d2018_time.getTime())));
     }
     
     @Test
     public void right_date_value() {
-        testDiffCreationAndApplication(CentreUpdaterTest::create, centre -> centre.getFirstTick().setValue2(ROOT, "dateProp", d2018), expectedDiffWithValue("dateProp", VALUE2.name(), d2018.getTime()));
+        testDiffCreationAndApplication(CentreUpdaterTest::create, centre -> centre.getFirstTick().setValue2(ROOT, "dateProp", d2018), expectedDiffWithValue("dateProp", VALUE2.name(), Long.toString(d2018.getTime())));
     }
     
     @Test
@@ -409,27 +409,27 @@ public class CentreUpdaterTest {
     
     @Test
     public void default_right_date_value_2_non_empty() {
-        testDiffCreationAndApplication(CentreUpdaterTest::create, centre -> centre.getFirstTick().setValue2(ROOT, "datePropDefault", d2020), expectedDiffWithValue("datePropDefault", VALUE2.name(), d2020.getTime()));
+        testDiffCreationAndApplication(CentreUpdaterTest::create, centre -> centre.getFirstTick().setValue2(ROOT, "datePropDefault", d2020), expectedDiffWithValue("datePropDefault", VALUE2.name(), Long.toString(d2020.getTime())));
     }
     
     @Test
     public void right_critOnly_date_value() {
-        testDiffCreationAndApplication(CentreUpdaterTest::create, centre -> centre.getFirstTick().setValue2(ROOT, "datePropCrit", d2019), expectedDiffWithValue("datePropCrit", VALUE2.name(), d2019.getTime()));
+        testDiffCreationAndApplication(CentreUpdaterTest::create, centre -> centre.getFirstTick().setValue2(ROOT, "datePropCrit", d2019), expectedDiffWithValue("datePropCrit", VALUE2.name(), Long.toString(d2019.getTime())));
     }
     
     @Test
     public void right_UTC_date_value() {
-        testDiffCreationAndApplication(CentreUpdaterTest::create, centre -> centre.getFirstTick().setValue2(ROOT, "datePropUtc", d2019), expectedDiffWithValue("datePropUtc", VALUE2.name(), d2019.getTime()));
+        testDiffCreationAndApplication(CentreUpdaterTest::create, centre -> centre.getFirstTick().setValue2(ROOT, "datePropUtc", d2019), expectedDiffWithValue("datePropUtc", VALUE2.name(), Long.toString(d2019.getTime())));
     }
     
     @Test
     public void right_dateOnly_date_value() {
-        testDiffCreationAndApplication(CentreUpdaterTest::create, centre -> centre.getFirstTick().setValue2(ROOT, "datePropDateOnly", d2019), expectedDiffWithValue("datePropDateOnly", VALUE2.name(), d2019.getTime()));
+        testDiffCreationAndApplication(CentreUpdaterTest::create, centre -> centre.getFirstTick().setValue2(ROOT, "datePropDateOnly", d2019), expectedDiffWithValue("datePropDateOnly", VALUE2.name(), Long.toString(d2019.getTime())));
     }
     
     @Test
     public void right_timeOnly_date_value() {
-        testDiffCreationAndApplication(CentreUpdaterTest::create, centre -> centre.getFirstTick().setValue2(ROOT, "datePropTimeOnly", d2019_time), expectedDiffWithValue("datePropTimeOnly", VALUE2.name(), d2019_time.getTime()));
+        testDiffCreationAndApplication(CentreUpdaterTest::create, centre -> centre.getFirstTick().setValue2(ROOT, "datePropTimeOnly", d2019_time), expectedDiffWithValue("datePropTimeOnly", VALUE2.name(), Long.toString(d2019_time.getTime())));
     }
     
     // please note that DateTime-typed properties is not used in practice and thus will not be tested and supported (however, see EntityWithDateTimeProp / WorkbookExporterTest and EntityWithRangeProperties for [perhaps] artificial examples of such properties)

@@ -647,7 +647,7 @@ public class EntityResourceUtils {
      * @param reflectedValue
      * @return
      */
-    public static Long extractLongValueFrom(final Object reflectedValue) {
+    private static Long extractLongValueFrom(final Object reflectedValue) {
         if (reflectedValue instanceof Integer) {
             return ((Integer) reflectedValue).longValue();
         } else if (reflectedValue instanceof Long) {

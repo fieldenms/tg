@@ -1,7 +1,6 @@
 package ua.com.fielden.platform.web.centre;
 
 import static ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.IAddToCriteriaTickManager.MetaValueType.VALUE;
-import static ua.com.fielden.platform.entity.factory.EntityFactory.newPlainEntity;
 import static ua.com.fielden.platform.web.centre.CentreUpdaterTest.ROOT;
 import static ua.com.fielden.platform.web.centre.CentreUpdaterTest.expectedDiffWithValue;
 import static ua.com.fielden.platform.web.centre.CentreUpdaterTest.testDiffCreationAndApplication;
@@ -40,13 +39,10 @@ public class CentreUpdaterDbTest extends AbstractDaoTestCase {
         }
     }
     
-    private static TgCentreDiffSerialisationPersistentChild createEntityValue(final Long id) {
-        return newPlainEntity(TgCentreDiffSerialisationPersistentChild.class, id);
-    }
-    
     @Test
     public void critOnlySingle_entity_value() throws IllegalArgumentException, IllegalAccessException, NoSuchFieldException, SecurityException {
-        testDiffCreationAndApplication(CentreUpdaterTest::create, centre -> centre.getFirstTick().setValue(ROOT, "entityPropCritSingle", createEntityValue(123L)), expectedDiffWithValue("entityPropCritSingle", VALUE.name(), 123L), companionFinder());
+        final TgCentreDiffSerialisationPersistentChild propertyVal = save(new_(TgCentreDiffSerialisationPersistentChild.class, "Ent1"));
+        testDiffCreationAndApplication(CentreUpdaterTest::create, centre -> centre.getFirstTick().setValue(ROOT, "entityPropCritSingle", propertyVal), expectedDiffWithValue("entityPropCritSingle", VALUE.name(), Long.toString(propertyVal.getId())), companionFinder());
     }
     
 }

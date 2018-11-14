@@ -4,6 +4,7 @@ import com.google.inject.Inject;
 
 import ua.com.fielden.platform.dao.CommonEntityDao;
 import ua.com.fielden.platform.entity.annotation.EntityType;
+import ua.com.fielden.platform.entity.fetch.IFetchProvider;
 import ua.com.fielden.platform.entity.query.IFilter;
 
 /**
@@ -18,6 +19,12 @@ public class TgCentreDiffSerialisationDao extends CommonEntityDao<TgCentreDiffSe
     @Inject
     public TgCentreDiffSerialisationDao(final IFilter filter) {
         super(filter);
+    }
+    
+    @Override
+    protected IFetchProvider<TgCentreDiffSerialisation> createFetchProvider() {
+        return super.createFetchProvider()
+            .with("entityPropCritSingle");
     }
     
 }

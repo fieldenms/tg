@@ -85,7 +85,6 @@ import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
 import ua.com.fielden.platform.web.app.IWebUiConfig;
 import ua.com.fielden.platform.web.interfaces.DeviceProfile;
-import ua.com.fielden.platform.web.utils.EntityResourceUtils;
 import ua.com.fielden.snappy.DateRangePrefixEnum;
 import ua.com.fielden.snappy.MnemonicEnum;
 
@@ -787,27 +786,30 @@ public class CentreUpdater {
 //        return new Date(millis);
 //    }
     
+    private static final Function<DateRangePrefixEnum, String> prefixToString = DateRangePrefixEnum::name;
+    private static final Function<MnemonicEnum, String> mnemonicToString = MnemonicEnum::name;
+    private static final Function<String, DateRangePrefixEnum> stringToPrefix = DateRangePrefixEnum::valueOf;
+    private static final Function<String, MnemonicEnum> stringToMnemonic = MnemonicEnum::valueOf;
     private static final Function<Long, Date> longToDate = Date::new;
+    private static final Function<Date, Long> dateToLong = Date::getTime;
     private static final Function<AbstractEntity<?>, Long> entityToLong = AbstractEntity::getId;
-    private static final Function<Object, Long> numberToLong = EntityResourceUtils::extractLongValueFrom;
+    // private static final Function<Object, Long> numberToLong = EntityResourceUtils::extractLongValueFrom;
+    private static final Function<String, Long> stringToLong = Long::valueOf;
+    private static final Function<Object, String> toString = Object::toString;
     
-    private static Object extractFrom(final Object value, final Supplier<Class<?>> managedTypeSupplier, final String property, final ICompanionObjectFinder companionFinder) {
+    private static Object extractFrom(final Object value, final Class<AbstractEntity<?>> root, final Supplier<Class<?>> managedTypeSupplier, final String property, final ICompanionObjectFinder companionFinder) {
         final boolean isEntityItself = "".equals(property); // empty property means "entity itself"
         final Class<?> managedType = managedTypeSupplier.get();
         final Class<?> propertyType = isEntityItself ? managedType : determinePropertyType(managedType, property);
         if (isDate(propertyType)) {
-            return valOrNull(value, longToDate);
+            return valOrNull(value, longToDate, toString.andThen(stringToLong));
         } else if (isEntityType(propertyType) && isCritOnlySingle(managedType, property)) {
             return valOrNull(value, (final Long id) -> {
-                final Class<AbstractEntity<?>> entityPropertyType = (Class<AbstractEntity<?>>) propertyType;
-                logger.error(format("CentreUpdater: ID-based restoration of value: type [%s] property [%s] propertyType [%s] id [%s].", managedType.getSimpleName(), property, entityPropertyType.getSimpleName(), id));
-                // regardless of whether entityPropertyType is composite or not, the entity should be retrieved by non-empty id that has been arrived from centre diff
-                final IEntityDao<AbstractEntity<?>> propertyCompanion = companionFinder.find(entityPropertyType, true);
-                if (propertyCompanion == null) {
-                    System.out.println("NPE!");
-                }
-                return propertyCompanion.findById(id, propertyCompanion.getFetchProvider().fetchFor(property).fetchModel());
-            }, numberToLong);
+                logger.error(format("CentreUpdater: ID-based restoration of value: type [%s] property [%s] propertyType [%s] id [%s].", managedType.getSimpleName(), property, propertyType.getSimpleName(), id));
+                final IEntityDao<AbstractEntity<?>> propertyCompanion = companionFinder.find((Class<AbstractEntity<?>>) propertyType, true);
+                final IEntityDao<AbstractEntity<?>> companion = companionFinder.find(root, true);
+                return propertyCompanion.findById(id, companion.getFetchProvider().fetchFor(property).fetchModel());
+            }, toString.andThen(stringToLong));
         } else {
             return value;
         }
@@ -818,17 +820,17 @@ public class CentreUpdater {
         final Class<?> managedType = managedTypeSupplier.get();
         final Class<?> propertyType = isEntityItself ? managedType : determinePropertyType(managedType, property);
         if (isDate(propertyType)) {
-            return valOrNull(value, Date::getTime);
+            return valOrNull(value, dateToLong.andThen(toString));
         } else if (isEntityType(propertyType) && isCritOnlySingle(managedType, property)) {
-            return valOrNull(value, entityToLong);
+            return valOrNull(value, entityToLong.andThen(toString));
         } else {
             return value;
         }
     }
     
-    private static String stringOrNull(final Object obj) {
-        return obj == null ? null : obj.toString();
-    }
+//    private static String stringOrNull(final Object obj) {
+//        return obj == null ? null : obj.toString();
+//    }
     
     private static <T, M> M valOrNull(final Object obj, final Function<T, M> convertionFunc) {
         return valOrNull(obj, convertionFunc, obj1 -> (T) obj1);
@@ -871,11 +873,11 @@ public class CentreUpdater {
                 if (isDate(propertyType)) {
                     final DateRangePrefixEnum datePrefixVal = centre.getFirstTick().getDatePrefix(root, property);
                     if (!equalsEx(datePrefixVal, defaultCentre.getFirstTick().getDatePrefix(root, property))) {
-                        diff(property, propertiesDiff).put(DATE_PREFIX.name(), stringOrNull(datePrefixVal));
+                        diff(property, propertiesDiff).put(DATE_PREFIX.name(), valOrNull(datePrefixVal, prefixToString));
                     }
                     final MnemonicEnum dateMnemonicVal = centre.getFirstTick().getDateMnemonic(root, property);
                     if (!equalsEx(dateMnemonicVal, defaultCentre.getFirstTick().getDateMnemonic(root, property))) {
-                        diff(property, propertiesDiff).put(DATE_MNEMONIC.name(), stringOrNull(dateMnemonicVal));
+                        diff(property, propertiesDiff).put(DATE_MNEMONIC.name(), valOrNull(dateMnemonicVal, mnemonicToString));
                     }
                     final Boolean andBeforeVal = centre.getFirstTick().getAndBefore(root, property);
                     if (!equalsEx(andBeforeVal, defaultCentre.getFirstTick().getAndBefore(root, property))) {
@@ -953,13 +955,13 @@ public class CentreUpdater {
             
             processValue(diff, EXCLUSIVE.name(), selectionCriteriaContains, "selection criteria", (value) -> targetCentre.getFirstTick().setExclusive(root, property, (Boolean) value), property);
             processValue(diff, EXCLUSIVE2.name(), selectionCriteriaContains, "selection criteria", (value) -> targetCentre.getFirstTick().setExclusive2(root, property, (Boolean) value), property);
-            processValue(diff, DATE_PREFIX.name(), selectionCriteriaContains, "selection criteria", (value) -> targetCentre.getFirstTick().setDatePrefix(root, property, value == null ? null : DateRangePrefixEnum.valueOf((String) value)), property);
-            processValue(diff, DATE_MNEMONIC.name(), selectionCriteriaContains, "selection criteria", (value) -> targetCentre.getFirstTick().setDateMnemonic(root, property, value == null ? null : MnemonicEnum.valueOf((String) value)), property);
+            processValue(diff, DATE_PREFIX.name(), selectionCriteriaContains, "selection criteria", (value) -> targetCentre.getFirstTick().setDatePrefix(root, property, valOrNull(value, stringToPrefix)), property);
+            processValue(diff, DATE_MNEMONIC.name(), selectionCriteriaContains, "selection criteria", (value) -> targetCentre.getFirstTick().setDateMnemonic(root, property, valOrNull(value, stringToMnemonic)), property);
             processValue(diff, AND_BEFORE.name(), selectionCriteriaContains, "selection criteria", (value) -> targetCentre.getFirstTick().setAndBefore(root, property, (Boolean) value), property);
             processValue(diff, OR_NULL.name(), selectionCriteriaContains, "selection criteria", (value) -> targetCentre.getFirstTick().setOrNull(root, property, (Boolean) value), property);
             processValue(diff, NOT.name(), selectionCriteriaContains, "selection criteria", (value) -> targetCentre.getFirstTick().setNot(root, property, (Boolean) value), property);
-            processValue(diff, VALUE.name(), selectionCriteriaContains, "selection criteria", (value) -> targetCentre.getFirstTick().setValue(root, property, extractFrom(value, managedTypeSupplier, property, companionFinder)), property);
-            processValue(diff, VALUE2.name(), selectionCriteriaContains, "selection criteria", (value) -> targetCentre.getFirstTick().setValue2(root, property, extractFrom(value, managedTypeSupplier, property, companionFinder)), property);
+            processValue(diff, VALUE.name(), selectionCriteriaContains, "selection criteria", (value) -> targetCentre.getFirstTick().setValue(root, property, extractFrom(value, root, managedTypeSupplier, property, companionFinder)), property);
+            processValue(diff, VALUE2.name(), selectionCriteriaContains, "selection criteria", (value) -> targetCentre.getFirstTick().setValue2(root, property, extractFrom(value, root, managedTypeSupplier, property, companionFinder)), property);
             
             final boolean resultSetContains = targetCentre.getSecondTick().checkedProperties(root).contains(property);
             
