@@ -195,7 +195,7 @@ public class DefaultEntityProducerWithContext<T extends AbstractEntity<?>> imple
      */
     protected T provideDefaultValuesForStandardNew(final T entity, final EntityNewAction masterEntity) {
         return entity;
-    };
+    }
 
     /**
      * Override this method to provide domain-driven <code>entity</code>'s default values for the properties.
