@@ -18,6 +18,7 @@ import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.entity.annotation.PersistentType;
 import ua.com.fielden.platform.entity.annotation.TimeOnly;
 import ua.com.fielden.platform.entity.annotation.Title;
+import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
 import ua.com.fielden.platform.types.markers.IUtcDateTimeType;
 
 /**
@@ -91,6 +92,35 @@ public class TgCentreDiffSerialisation extends AbstractEntity<String> {
     @Title("Entity Prop Crit Single")
     @CritOnly(SINGLE)
     private TgCentreDiffSerialisationPersistentChild entityPropCritSingle;
+    
+    @IsProperty(TgCentreDiffSerialisation.class)
+    @Title("Property Descriptor Prop")
+    private PropertyDescriptor<TgCentreDiffSerialisation> propertyDescriptorProp;
+    
+    @IsProperty(TgCentreDiffSerialisationPersistentChild.class)
+    @Title("Property Descriptor Prop")
+    @CritOnly(SINGLE)
+    private PropertyDescriptor<TgCentreDiffSerialisationPersistentChild> propertyDescriptorPropCritSingle;
+    
+    @Observable
+    public TgCentreDiffSerialisation setPropertyDescriptorPropCritSingle(final PropertyDescriptor<TgCentreDiffSerialisationPersistentChild> propertyDescriptorPropCritSingle) {
+        this.propertyDescriptorPropCritSingle = propertyDescriptorPropCritSingle;
+        return this;
+    }
+    
+    public PropertyDescriptor<TgCentreDiffSerialisationPersistentChild> getPropertyDescriptorPropCritSingle() {
+        return propertyDescriptorPropCritSingle;
+    }
+    
+    @Observable
+    public TgCentreDiffSerialisation setPropertyDescriptorProp(final PropertyDescriptor<TgCentreDiffSerialisation> propertyDescriptorProp) {
+        this.propertyDescriptorProp = propertyDescriptorProp;
+        return this;
+    }
+    
+    public PropertyDescriptor<TgCentreDiffSerialisation> getPropertyDescriptorProp() {
+        return propertyDescriptorProp;
+    }
     
     @Observable
     public TgCentreDiffSerialisation setEntityPropCritSingle(final TgCentreDiffSerialisationPersistentChild entityPropCritSingle) {

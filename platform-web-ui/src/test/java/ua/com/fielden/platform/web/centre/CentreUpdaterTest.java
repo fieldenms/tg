@@ -45,6 +45,7 @@ import ua.com.fielden.platform.domaintree.testing.ClassProviderForTestingPurpose
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
+import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
 import ua.com.fielden.platform.entity.proxy.IIdOnlyProxiedEntityTypeCache;
 import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
 import ua.com.fielden.platform.sample.domain.TgCentreDiffSerialisation;
@@ -99,7 +100,9 @@ public class CentreUpdaterTest {
         .addCrit("entityProp").asMulti().autocompleter(TgCentreDiffSerialisationPersistentChild.class).also()
         .addCrit("entityPropDefault").asMulti().autocompleter(TgCentreDiffSerialisationPersistentChild.class).setDefaultValue(multi().string().setValues("0*", "*1").value()).also()
         .addCrit("entityPropCrit").asMulti().autocompleter(TgCentreDiffSerialisationPersistentChild.class).also()
-        .addCrit("entityPropCritSingle").asSingle().autocompleter(TgCentreDiffSerialisationPersistentChild.class)
+        .addCrit("entityPropCritSingle").asSingle().autocompleter(TgCentreDiffSerialisationPersistentChild.class).also()
+        .addCrit("propertyDescriptorProp").asMulti().autocompleter(PropertyDescriptor.class).also()
+        .addCrit("propertyDescriptorPropCritSingle").asSingle().autocompleter(PropertyDescriptor.class)
         .setLayoutFor(DESKTOP, empty(), mkGridForCentre(7, 2))
         .addProp("stringProp")
         .build();
@@ -454,6 +457,17 @@ public class CentreUpdaterTest {
     @Test
     public void critOnly_entity_value() {
         testDiffCreationAndApplication(CentreUpdaterTest::create, centre -> centre.getFirstTick().setValue(ROOT, "entityPropCrit", listOf("A*", "*B")), expectedDiffWithValue("entityPropCrit", VALUE.name(), listOf("A*", "*B")));
+    }
+    
+    @Test
+    public void propertyDescriptor_value() {
+        testDiffCreationAndApplication(CentreUpdaterTest::create, centre -> centre.getFirstTick().setValue(ROOT, "propertyDescriptorProp", listOf("A*", "*B")), expectedDiffWithValue("propertyDescriptorProp", VALUE.name(), listOf("A*", "*B")));
+    }
+    
+    @Test
+    public void critOnlySingle_propertyDescriptor_value() {
+        final PropertyDescriptor<TgCentreDiffSerialisationPersistentChild> propertyVal = new PropertyDescriptor<TgCentreDiffSerialisationPersistentChild>(TgCentreDiffSerialisationPersistentChild.class, "stringProp");
+        testDiffCreationAndApplication(CentreUpdaterTest::create, centre -> centre.getFirstTick().setValue(ROOT, "propertyDescriptorPropCritSingle", propertyVal), expectedDiffWithValue("propertyDescriptorPropCritSingle", VALUE.name(), propertyVal.toString()));
     }
     
 //    @Test

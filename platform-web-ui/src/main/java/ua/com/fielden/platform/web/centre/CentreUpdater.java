@@ -36,6 +36,7 @@ import static ua.com.fielden.platform.utils.EntityUtils.equalsEx;
 import static ua.com.fielden.platform.utils.EntityUtils.fetchWithKeyAndDesc;
 import static ua.com.fielden.platform.utils.EntityUtils.isDate;
 import static ua.com.fielden.platform.utils.EntityUtils.isEntityType;
+import static ua.com.fielden.platform.utils.EntityUtils.isPropertyDescriptor;
 import static ua.com.fielden.platform.utils.EntityUtils.isString;
 import static ua.com.fielden.platform.web.centre.CentreUpdaterUtils.createDefaultCentre;
 import static ua.com.fielden.platform.web.centre.CentreUpdaterUtils.findConfig;
@@ -68,6 +69,7 @@ import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentr
 import ua.com.fielden.platform.domaintree.centre.IOrderingRepresentation.Ordering;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
+import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ICompoundCondition0;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
@@ -796,6 +798,8 @@ public class CentreUpdater {
     // private static final Function<Object, Long> numberToLong = EntityResourceUtils::extractLongValueFrom;
     private static final Function<String, Long> stringToLong = Long::valueOf;
     private static final Function<Object, String> toString = Object::toString;
+    private static final Function<String, PropertyDescriptor<?>> stringToPropertyDescriptor = PropertyDescriptor::fromString;
+    private static final Function<PropertyDescriptor<?>, String> propertyDescriptorToString = PropertyDescriptor::toString;
     
     private static Object extractFrom(final Object value, final Class<AbstractEntity<?>> root, final Supplier<Class<?>> managedTypeSupplier, final String property, final ICompanionObjectFinder companionFinder) {
         final boolean isEntityItself = "".equals(property); // empty property means "entity itself"
@@ -804,12 +808,16 @@ public class CentreUpdater {
         if (isDate(propertyType)) {
             return valOrNull(value, longToDate, toString.andThen(stringToLong));
         } else if (isEntityType(propertyType) && isCritOnlySingle(managedType, property)) {
-            return valOrNull(value, (final Long id) -> {
-                logger.error(format("CentreUpdater: ID-based restoration of value: type [%s] property [%s] propertyType [%s] id [%s].", managedType.getSimpleName(), property, propertyType.getSimpleName(), id));
-                final IEntityDao<AbstractEntity<?>> propertyCompanion = companionFinder.find((Class<AbstractEntity<?>>) propertyType, true);
-                final IEntityDao<AbstractEntity<?>> companion = companionFinder.find(root, true);
-                return propertyCompanion.findById(id, companion.getFetchProvider().fetchFor(property).fetchModel());
-            }, toString.andThen(stringToLong));
+            if (isPropertyDescriptor(propertyType)) {
+                return valOrNull(value, stringToPropertyDescriptor);
+            } else {
+                return valOrNull(value, (final Long id) -> {
+                    logger.error(format("CentreUpdater: ID-based restoration of value: type [%s] property [%s] propertyType [%s] id [%s].", managedType.getSimpleName(), property, propertyType.getSimpleName(), id));
+                    final IEntityDao<AbstractEntity<?>> propertyCompanion = companionFinder.find((Class<AbstractEntity<?>>) propertyType, true);
+                    final IEntityDao<AbstractEntity<?>> companion = companionFinder.find(root, true);
+                    return propertyCompanion.findById(id, companion.getFetchProvider().fetchFor(property).fetchModel());
+                }, toString.andThen(stringToLong));
+            }
         } else {
             return value;
         }
@@ -822,7 +830,11 @@ public class CentreUpdater {
         if (isDate(propertyType)) {
             return valOrNull(value, dateToLong.andThen(toString));
         } else if (isEntityType(propertyType) && isCritOnlySingle(managedType, property)) {
-            return valOrNull(value, entityToLong.andThen(toString));
+            if (isPropertyDescriptor(propertyType)) {
+                return valOrNull(value, propertyDescriptorToString);
+            } else {
+                return valOrNull(value, entityToLong.andThen(toString));
+            }
         } else {
             return value;
         }
