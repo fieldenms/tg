@@ -1,0 +1,282 @@
+<link rel="import" href="/resources/polymer/polymer/polymer.html">
+
+<link rel="import" href="/resources/polymer/iron-icon/iron-icon.html">
+<link rel="import" href="/resources/polymer/iron-icons/iron-icons.html">
+<link rel="import" href="/resources/polymer/iron-icons/av-icons.html">
+<link rel="import" href="/resources/polymer/iron-list/iron-list.html">
+
+<dom-module id="tg-tree">
+    <template>
+        <style>
+            /* Container styles*/
+            :host {
+                @apply(--layout-vertical);
+
+            }
+            iron-list {
+                @apply(--layout-flex);
+            }
+            iron-icon {
+                width: 16px;
+                height: 16px;
+            }
+            iron-icon:not([collapsed]) {
+                transform: rotate(90deg);
+            }
+            iron-icon[invisible] {
+                visibility: hidden;
+            }
+            [highlighted] {
+                font-weight: bold;
+            }
+            .tree-item {
+                padding-left: 4px;
+            }
+            .title {
+                font-size: 10pt;
+                padding-bottom: 3px;
+            }
+            .description {
+                font-size: 8pt;
+                color: gray;
+            }
+            .truncate {
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+            }
+        </style>
+        <iron-list id="treeList" items="[[_entities]]" as="entity">
+            <template>
+                <div class="layout horizontal" style$="[[_calcItemStyle(entity)]]">
+                    <iron-icon icon="av:play-arrow" style="flex-grow:0;flex-shrink:0;" invisible$="[[!entity.entity.hasChildren]]" collapsed$="[[!entity.opened]]" on-tap="_toggle"></iron-icon>
+                    <span class="tree-item truncate" highlighted$="[[entity.highlight]]" inner-h-t-m-l="[[contentBuilder(entity, entity.opened)]]"></span>
+                </div>
+            </template>
+        </iron-list>
+    </template>
+    <script>
+        (function () {
+            'use strict'
+
+            const calculateNumberOfOpenedItems = function (entity) {
+                let length = 0;
+                if (entity.entity.hasChildren && entity.opened) {
+                    const filteredChildren = entity.children.forEach(child => {
+                        if (child.visible) {
+                            length += calculateNumberOfOpenedItems(child) + 1;
+                        }
+                    });
+                }
+                return length;
+            };
+
+            const getParentsPath = function (entity) {
+                const path = [];
+                let parent = entity;
+                while (parent) {
+                    path.push(parent.entity);
+                    parent = parent.parent;
+                }
+                return path.reverse();
+            };
+
+            const getChildrenToAdd = function (entity) {
+                const childrenToAdd = [];
+                if (entity.opened && entity.entity.hasChildren) {
+                    if (entity.children.length === 1 && entity.children[0].loaderIndicator) {
+                        this.fire("tg-load-subtree", getParentsPath(entity));
+                    }
+                    childrenToAdd.push(...composeChildren.bind(this)(entity.children));
+                }
+                return childrenToAdd;
+            };
+            
+            const composeChildren = function (entities) {
+                const list = [];
+                entities.filter(entity => entity.visible).forEach(entity => {
+                    list.push(entity);
+                    list.push(...getChildrenToAdd.bind(this)(entity));
+                });
+                return list;
+            };
+
+            const generateChildrenModel = function (children, parentEntity) {
+                return children.map(child => {
+                    const parent = {
+                        entity: child,
+                        parent: parentEntity,
+                        opened: false,
+                        visible: true,
+                        highlight: false
+                    };
+                    if (child.hasChildren) {
+                        if (child.children && child.children.length > 0) {
+                            parent.children = generateChildrenModel(child.children, parent);
+                        } else {
+                            parent.children = [generateLoadingIndicator(parent)];
+                        }
+                    }
+                    return parent;
+                });
+            };
+            
+            
+            const makeParentVisible = function (entity) {
+                let parent = entity.parent;
+                while (parent) {
+                    parent.visible = true;
+                    parent = parent.parent;
+                }
+            };
+            
+            const wasLoaded = function (entity) {
+                return entity.entity.hasChildren && entity.children && entity.children.length > 0 && !(entity.children.length === 1 && entity.children[0].loaderIndicator);
+            };
+            
+            const generateLoadingIndicator = function (parent) {
+                return {
+                    entity: {
+                        key: "Loading data...",
+                        hasChildren: false,
+                    },
+                    opened: false,
+                    visible: true,
+                    highlight: false,
+                    parent: parent,
+                    loaderIndicator: true
+                };
+            };
+            
+            const refreshTree = function () {
+                const props = ["opened", "highlight"];
+                this._entities.forEach((entity, idx) => {
+                    if (typeof this.$.treeList._collection.getKey(entity) !== undefined && typeof this.$.treeList._getPhysicalIndex(entity) !== 'undefined') {
+                        props.forEach(prop => this.notifyPath("_entities." + idx + "." + prop)); 
+                    }
+                });
+            };
+
+            Polymer({
+                is: 'tg-tree',
+
+                properties: {
+
+                    /**
+                     * Represents tree model
+                     */
+                    model: {
+                        type: Array,
+                        observer: "_modelChanged"
+                    },
+                    
+                    contentBuilder: Function,
+                    
+                    /**
+                     * The tree model that holds some visual specific properties and is created from model.
+                     */
+                    _treeModel: {
+                        type: Array
+                    },
+
+                    /**
+                     * Represents the linear tree model.
+                     */
+                    _entities: {
+                        type: Array
+                    },
+                    
+                    _lastFilterText: {
+                        type: String,
+                        value: ""
+                    }
+                },
+
+                observers: ["_modelChanged(model.*)"],
+
+                ready: function () {},
+
+                attached: function () {},
+                
+                filter: function (text) {
+                    this._lastFilterText = text;
+                    this._filterSubTree(text, this._treeModel, true);
+                    this.splice("_entities", 0, this._entities.length, ...composeChildren.bind(this)(this._treeModel));
+                    this.debounce("refreshTree", refreshTree.bind(this))
+                },
+                
+                _filterSubTree: function (text, subtree, expand) {
+                    subtree.forEach(treeEntity => {
+                        let visible = undefined;
+                        let highlight = undefined;
+                        let opened = undefined;
+                        if (treeEntity.entity.key.toLowerCase().search(text.toLowerCase()) >= 0) {
+                            treeEntity.visible = true;
+                            treeEntity.highlight = text ? true : false;
+                            makeParentVisible.bind(this)(treeEntity);
+                        } else {
+                            treeEntity.visible = false;
+                            treeEntity.highlight = false;
+                        }
+                        if (treeEntity.entity.hasChildren && wasLoaded(treeEntity)) {
+                            treeEntity.opened = true;
+                            this._filterSubTree(text, treeEntity.children, expand);
+                        }
+                    });
+                },
+
+                _regenerateModel: function () {
+                    this._treeModel = generateChildrenModel(this.model); 
+                    this._entities = this._treeModel.slice();
+                },
+
+                /**
+                 * Reacts on changes of tree model and updates list model.
+                 */
+                _modelChanged: function (change) {
+                    if (change.path === "model") {
+                        this._regenerateModel();
+                        if (this._lastFilterText) {
+                            this.filter(this._lastFilterText);
+                        }
+                    } else if (change.path && change.path.endsWith("children")) {
+                        const path = change.path.substring(0, change.path.lastIndexOf(".")).replace("model", "_treeModel").replace(/#/g, "");
+                        const parentItem = this.get(path);
+                        const modelIdx = this._entities.indexOf(parentItem);
+                        if (parentItem) {
+                            const numOfItemsToDelete = calculateNumberOfOpenedItems(parentItem);
+                            parentItem.children = generateChildrenModel(change.value, parentItem);
+                            this._filterSubTree(this._lastFilterText, parentItem.children, false);
+                            if (typeof modelIdx !== 'undefined') {
+                                this.splice("_entities", modelIdx + 1, numOfItemsToDelete, ...getChildrenToAdd.bind(this)(parentItem));
+                            }
+                        }
+                    }
+                },
+
+                _toggle: function (e) {
+                    const entity = e.model.entity;
+                    const idx = e.model.index;
+                    if (entity.opened) {
+                        this.splice("_entities", idx + 1, calculateNumberOfOpenedItems(entity));
+                        this.set("_entities." + idx + ".opened", false);
+                    } else {
+                        this.set("_entities." + idx + ".opened", true);
+                        this.splice("_entities", idx + 1, 0, ...getChildrenToAdd.bind(this)(entity));
+                    }
+                },
+
+                _calcItemStyle: function (entity) {
+                    let paddingLeft = 0;
+                    let parent = entity.parent;
+                    while (parent) {
+                        paddingLeft += 16;
+                        parent = parent.parent;
+                    }
+                    return "padding-left: " + paddingLeft + "px";
+                }
+
+            });
+        })();
+    </script>
+</dom-module>
