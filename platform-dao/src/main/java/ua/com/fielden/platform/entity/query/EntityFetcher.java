@@ -14,6 +14,7 @@ import org.joda.time.Period;
 import ua.com.fielden.platform.dao.QueryExecutionModel;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.exceptions.EntityFetcherException;
+import ua.com.fielden.platform.entity.query.metadata.DomainMetadataAnalyser;
 import ua.com.fielden.platform.utils.DefinersExecutor;
 
 public class EntityFetcher {
@@ -33,7 +34,10 @@ public class EntityFetcher {
         try {
             final DateTime st = new DateTime();
             final EntityContainerFetcher entityContainerFetcher = new EntityContainerFetcher(executionContext);
-            final List<EntityContainer<E>> containers = entityContainerFetcher.listAndEnhanceContainers(queryModel, pageNumber, pageCapacity);
+            final DomainMetadataAnalyser domainMetadataAnalyser = new DomainMetadataAnalyser(executionContext.getDomainMetadata());
+            final IRetrievalModel<E> fm = new EntityRetrievalModel<>(queryModel.getFetchModel(), domainMetadataAnalyser);
+            final QueryProcessingModel<E, ?> qpm = new QueryProcessingModel<>(queryModel.getQueryModel(), queryModel.getOrderModel(), queryModel.getFetchModel(), queryModel.getParamValues(), queryModel.isLightweight());
+            final List<EntityContainer<E>> containers = entityContainerFetcher.listAndEnhanceContainers(qpm, pageNumber, pageCapacity);
 
             if (!queryModel.isLightweight()) {
                 setContainersToBeInstrumented(containers);
@@ -54,8 +58,9 @@ public class EntityFetcher {
     
     public <E extends AbstractEntity<?>> Stream<E> streamEntities(final QueryExecutionModel<E, ?> queryModel, final Optional<Integer> fetchSize) {
         try {
+            final QueryProcessingModel<E, ?> qpm = new QueryProcessingModel<>(queryModel.getQueryModel(), queryModel.getOrderModel(), queryModel.getFetchModel(), queryModel.getParamValues(), queryModel.isLightweight());
             return new EntityContainerFetcher(executionContext)
-                    .streamAndEnhanceContainers(queryModel, fetchSize)
+                    .streamAndEnhanceContainers(qpm, fetchSize)
                     .map(c -> !queryModel.isLightweight() ? setContainersToBeInstrumented(c) : c)
                     .map(this::instantiateFromContainers)
                     .flatMap(List::stream);

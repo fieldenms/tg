@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.entity.query;
 
 import static java.lang.String.format;
+import static java.util.Collections.emptyMap;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 import static ua.com.fielden.platform.entity.query.fluent.fetch.FetchCategory.ID_ONLY;
@@ -8,6 +9,7 @@ import static ua.com.fielden.platform.entity.query.fluent.fetch.FetchCategory.ID
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -250,7 +252,8 @@ public class EntityContainerEnhancer<E extends AbstractEntity<?>> {
             }
             final Long[] batch = Arrays.copyOfRange(allParentIds, from, to);
             final EntityResultQueryModel<T> currTypePropertyModel = select(fetchModel.getEntityType()).where().prop(AbstractEntity.ID).in().values(batch).model();
-            final List<EntityContainer<T>> properties = fetcher.listAndEnhanceContainers(from(currTypePropertyModel).with(fetchModel).model(), null, null);
+            final QueryProcessingModel<T, ?> qpm = new QueryProcessingModel<>(currTypePropertyModel, null, fetchModel, emptyMap(), false);
+            final List<EntityContainer<T>> properties = fetcher.listAndEnhanceContainers(qpm, null, null);
             result.addAll(properties);
             from = to;
             to = to + batchSize;
@@ -309,7 +312,8 @@ public class EntityContainerEnhancer<E extends AbstractEntity<?>> {
             }
             final Long[] batch = Arrays.copyOfRange(allParentIds, from, to);
             final EntityResultQueryModel<T> currTypePropertyModel = select(fetchModel.getEntityType()).where().prop(idProp).in().values(batch).model();
-            final List<EntityContainer<T>> properties = fetcher.listAndEnhanceContainers(from(currTypePropertyModel).with(fetchModel).model(), null, null);
+            final QueryProcessingModel<T, ?> qpm = new QueryProcessingModel<>(currTypePropertyModel, null, fetchModel, emptyMap(), false);
+            final List<EntityContainer<T>> properties = fetcher.listAndEnhanceContainers(qpm, null, null);
             result.addAll(properties);
             // TODO need to optimise -- WagonClass in WagonClassCompatibility is re-retrieved, while already available
             from = to;
