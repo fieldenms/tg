@@ -62,6 +62,7 @@ import org.hibernate.type.TrueFalseType;
 import org.hibernate.type.Type;
 import org.hibernate.type.TypeResolver;
 import org.hibernate.type.YesNoType;
+import org.hibernate.type.spi.TypeConfiguration;
 
 import com.google.inject.Injector;
 
@@ -89,7 +90,7 @@ public class DomainMetadata {
     private static final Logger LOGGER = Logger.getLogger(DomainMetadata.class);
 
     
-    private static final TypeResolver typeResolver = new TypeResolver();
+    private static final TypeResolver typeResolver = new TypeConfiguration().getTypeResolver();
     private static final Type H_LONG = typeResolver.basic("long");
     private static final Type H_STRING = typeResolver.basic("string");
     private static final Type H_BOOLEAN = typeResolver.basic("yes_no");

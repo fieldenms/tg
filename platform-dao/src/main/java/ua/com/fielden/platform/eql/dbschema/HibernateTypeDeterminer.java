@@ -8,6 +8,7 @@ import java.util.Map;
 
 import org.hibernate.type.Type;
 import org.hibernate.type.TypeResolver;
+import org.hibernate.type.spi.TypeConfiguration;
 import org.hibernate.usertype.CompositeUserType;
 import org.hibernate.usertype.UserType;
 
@@ -25,7 +26,7 @@ public class HibernateTypeDeterminer {
     
     private final Injector hibTypesInjector;
     private final Map<Class<?>, Object> hibTypesDefaults;
-    private static final TypeResolver typeResolver = new TypeResolver();
+    private static final TypeResolver typeResolver = new TypeConfiguration().getTypeResolver();
     private static final Type H_LONG = typeResolver.basic("long");
     
     public HibernateTypeDeterminer(final Injector hibTypesInjector, final Map<Class<?>, Object> hibTypesDefaults) {

@@ -55,6 +55,7 @@ import org.hibernate.type.StringType;
 import org.hibernate.type.TrueFalseType;
 import org.hibernate.type.TypeResolver;
 import org.hibernate.type.YesNoType;
+import org.hibernate.type.spi.TypeConfiguration;
 
 import com.google.inject.Injector;
 
@@ -94,7 +95,7 @@ public class DomainMetadata {
     private final static PropertyColumn version = new PropertyColumn("_VERSION");
     private final static PropertyColumn key = new PropertyColumn("KEY_");
     //    private final static PropertyMetadata idProperty(final Class<? extends AbstractEntity<?>> entityType) { return new PropertyMetadata.Builder(AbstractEntity.ID, entityType, /*Long.class,*/ false).column(id).hibType(TypeFactory.basic("long")).type(ID).build();}
-    private final static TypeResolver typeResolver = new TypeResolver();
+    private final static TypeResolver typeResolver = new TypeConfiguration().getTypeResolver();
     private final static PropertyMetadata idProperty = new PropertyMetadata.Builder(AbstractEntity.ID, Long.class, false).column(id).hibType(typeResolver.basic("long")).type(ID).build();
     private final static PropertyMetadata idPropertyInOne2One = new PropertyMetadata.Builder(AbstractEntity.ID, Long.class, false).column(id).hibType(typeResolver.basic("long")).type(ONE2ONE_ID).build();
     private final static PropertyMetadata versionProperty = new PropertyMetadata.Builder(AbstractEntity.VERSION, Long.class, false).column(version).hibType(typeResolver.basic("long")).type(VERSION).build();

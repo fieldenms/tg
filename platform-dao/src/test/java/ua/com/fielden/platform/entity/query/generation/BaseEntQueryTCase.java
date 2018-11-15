@@ -17,6 +17,7 @@ import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.Type;
 import org.hibernate.type.TypeResolver;
 import org.hibernate.type.YesNoType;
+import org.hibernate.type.spi.TypeConfiguration;
 
 import com.google.inject.Guice;
 
@@ -100,7 +101,7 @@ public class BaseEntQueryTCase {
     protected static final Type H_BOOLEAN = StandardBasicTypes.YES_NO;
     protected static final Type H_BIG_DECIMAL = StandardBasicTypes.BIG_DECIMAL;
     protected static final Type H_BIG_INTEGER = StandardBasicTypes.BIG_INTEGER;
-    protected static final TypeResolver typeResolver = new TypeResolver();
+    protected static final TypeResolver typeResolver = new TypeConfiguration().getTypeResolver();
 
     static {
         hibTypeDefaults.put(boolean.class, YesNoType.class);
