@@ -130,6 +130,17 @@
                 }
             };
             
+            const hasMatchedAncestor = function (entity) {
+                let parent = entity.parent;
+                while (parent) {
+                    if (parent.visible && parent.highlight) {
+                        return true;
+                    }
+                    parent = parent.parent;
+                }
+                return false;
+            }
+            
             const wasLoaded = function (entity) {
                 return entity.entity.hasChildren && entity.children && entity.children.length > 0 && !(entity.children.length === 1 && entity.children[0].loaderIndicator);
             };
@@ -213,7 +224,10 @@
                         if (treeEntity.entity.key.toLowerCase().search(text.toLowerCase()) >= 0) {
                             treeEntity.visible = true;
                             treeEntity.highlight = text ? true : false;
-                            makeParentVisible.bind(this)(treeEntity);
+                            makeParentVisible(treeEntity);
+                        } else if (hasMatchedAncestor(treeEntity)) {
+                            treeEntity.visible = true;
+                            treeEntity.highlight = false;
                         } else {
                             treeEntity.visible = false;
                             treeEntity.highlight = false;
