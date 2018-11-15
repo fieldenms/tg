@@ -48,6 +48,8 @@ public class HibernateConfigurationFactory {
     private static final String FORMAT_SQL = "hibernate.format_sql";
     private static final String JDBC_USE_GET_GENERATED_KEYS = "hibernate.jdbc.use_get_generated_keys";
     private static final String CONNECTION_PROVIDER_CLASS = "hibernate.connection.provider_class";
+
+    // C2P0 connection pool settings
     private static final String C3P0_NUM_HELPER_THREADS = "hibernate.c3p0.numHelperThreads";
     private static final String C3P0_MIN_SIZE = "hibernate.c3p0.min_size";
     private static final String C3P0_MAX_SIZE = "hibernate.c3p0.max_size";
@@ -55,6 +57,13 @@ public class HibernateConfigurationFactory {
     private static final String C3P0_MAX_STATEMENTS = "hibernate.c3p0.max_statements";
     private static final String C3P0_ACQUIRE_INCREMENT = "hibernate.c3p0.acquire_increment";
     private static final String C3P0_IDLE_TEST_PERIOD = "hibernate.c3p0.idle_test_period";
+
+    // Hikari connection pool settings
+    private static final String HIKARI_CONNECTION_TIMEOUT = "hibernate.hikari.connectionTimeout";
+    private static final String HIKARI_MIN_SIZE = "hibernate.hikari.minimumIdle";
+    private static final String HIKARI_MAX_SIZE = "hibernate.hikari.maximumPoolSize";
+    private static final String HIKARI_IDLE_TIMEOUT = "hibernate.hikari.idleTimeout";
+
     private static final String HBM2DDL_AUTO = "hibernate.hbm2ddl.auto";
     private static final String CONNECTION_URL = "hibernate.connection.url";
     private static final String CONNECTION_DRIVER_CLASS = "hibernate.connection.driver_class";
@@ -123,6 +132,7 @@ public class HibernateConfigurationFactory {
         setSafely(cfg, JDBC_USE_GET_GENERATED_KEYS, "true");
 
         setSafely(cfg, CONNECTION_PROVIDER_CLASS);
+
         setSafely(cfg, C3P0_NUM_HELPER_THREADS);
         setSafely(cfg, C3P0_MIN_SIZE);
         setSafely(cfg, C3P0_MAX_SIZE);
@@ -130,6 +140,12 @@ public class HibernateConfigurationFactory {
         setSafely(cfg, C3P0_MAX_STATEMENTS);
         setSafely(cfg, C3P0_ACQUIRE_INCREMENT);
         setSafely(cfg, C3P0_IDLE_TEST_PERIOD);
+
+        setSafely(cfg, HIKARI_CONNECTION_TIMEOUT);
+        setSafely(cfg, HIKARI_MIN_SIZE);
+        setSafely(cfg, HIKARI_MAX_SIZE);
+        setSafely(cfg, HIKARI_IDLE_TIMEOUT);
+
         setSafely(cfg, HBM2DDL_AUTO);
 
         setSafely(cfg, CONNECTION_URL);
