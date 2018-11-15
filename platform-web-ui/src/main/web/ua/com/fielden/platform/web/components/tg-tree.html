@@ -17,6 +17,7 @@
                 @apply(--layout-flex);
             }
             iron-icon {
+                padding: 2px 0;
                 width: 16px;
                 height: 16px;
             }
@@ -32,18 +33,27 @@
             .tree-item {
                 padding: 2px 4px;
             }
-            .tree-item[selected] {
+            .tree-node[selected] > .tree-item {
                 background-color: #F5F5F5
             }
-            .tree-item:hover {
+            .tree-node:hover > .tree-item{
                 background-color: #EEEEEE
+            }
+            .tree-item-actions {
+                display: none;
+                flex-direction: row;
+            }
+            .tree-node[selected] > .tree-item-actions, 
+            .tree-node:hover > .tree-item-actions {
+                display: flex;
             }
         </style>
         <iron-list id="treeList" items="[[_entities]]" as="entity" selection-enabled>
             <template>
-                <div class="layout horizontal tree-node" style$="[[_calcItemStyle(entity)]]">
+                <div class="layout horizontal tree-node" selected$="[[selected]]" style$="[[_calcItemStyle(entity)]]">
                     <iron-icon icon="av:play-arrow" style="flex-grow:0;flex-shrink:0;" invisible$="[[!entity.entity.hasChildren]]" collapsed$="[[!entity.opened]]" on-tap="_toggle"></iron-icon>
-                    <span class="tree-item" selected$="[[selected]]" highlighted$="[[entity.highlight]]" inner-h-t-m-l="[[contentBuilder(entity, entity.opened)]]"></span>
+                    <span class="tree-item"  highlighted$="[[entity.highlight]]" inner-h-t-m-l="[[contentBuilder(entity, entity.opened)]]"></span>
+                    <span class="tree-item-actions" on-tap="actionRunner" inner-h-t-m-l="[[actionBuilder(entity)]]"></span>
                 </div>
             </template>
         </iron-list>
@@ -74,22 +84,22 @@
                 return path.reverse();
             };
 
-            const getChildrenToAdd = function (entity) {
+            const getChildrenToAdd = function (entity, loadAll) {
                 const childrenToAdd = [];
                 if (entity.opened && entity.entity.hasChildren) {
                     if (entity.children.length === 1 && entity.children[0].loaderIndicator) {
-                        this.fire("tg-load-subtree", getParentsPath(entity));
+                        this.fire("tg-load-subtree", {parentPath: getParentsPath(entity), loadAll: loadAll});
                     }
                     childrenToAdd.push(...composeChildren.bind(this)(entity.children));
                 }
                 return childrenToAdd;
             };
             
-            const composeChildren = function (entities) {
+            const composeChildren = function (entities, loadAll) {
                 const list = [];
                 entities.filter(entity => entity.visible).forEach(entity => {
                     list.push(entity);
-                    list.push(...getChildrenToAdd.bind(this)(entity));
+                    list.push(...getChildrenToAdd.bind(this)(entity, loadAll));
                 });
                 return list;
             };
@@ -175,6 +185,8 @@
                     },
                     
                     contentBuilder: Function,
+                    actionBuilder: Function,
+                    actionRunner: Function,
                     
                     /**
                      * The tree model that holds some visual specific properties and is created from model.
@@ -205,8 +217,29 @@
                 filter: function (text) {
                     this._lastFilterText = text;
                     this._filterSubTree(text, this._treeModel, true);
-                    this.splice("_entities", 0, this._entities.length, ...composeChildren.bind(this)(this._treeModel));
-                    this.debounce("refreshTree", refreshTree.bind(this))
+                    this.splice("_entities", 0, this._entities.length, ...composeChildren.bind(this)(this._treeModel, false));
+                    this.debounce("refreshTree", refreshTree.bind(this));
+                },
+                
+                expandSubtreeFull: function (entity) {
+                    this._openSubTree(entity);
+                    this.debounce("refreshTree", refreshTree.bind(this));
+                },
+                
+                _openSubTree: function (entity) {
+                    if (entity.entity.hasChildren) {
+                        const wasOpened = entity.opened;
+                        entity.opened = true;
+                        const childrenToAdd = getChildrenToAdd.bind(this)(entity, true);
+                        if (!wasOpened) {
+                            this.splice("_entities", this._entities.indexOf(entity) + 1, 0, ...childrenToAdd);
+                        }
+                        childrenToAdd.forEach(child =>  {
+                            if (!child.loaderIndicator) {
+                                this._openSubTree(child);
+                            }
+                        });
+                    }
                 },
                 
                 _filterSubTree: function (text, subtree, expand) {
@@ -255,13 +288,14 @@
                             parentItem.children = generateChildrenModel(change.value, parentItem);
                             this._filterSubTree(this._lastFilterText, parentItem.children, false);
                             if (typeof modelIdx !== 'undefined') {
-                                this.splice("_entities", modelIdx + 1, numOfItemsToDelete, ...getChildrenToAdd.bind(this)(parentItem));
+                                this.splice("_entities", modelIdx + 1, numOfItemsToDelete, ...getChildrenToAdd.bind(this)(parentItem, false));
                             }
                         }
                     }
                 },
 
                 _toggle: function (e) {
+                    e.stopPropagation();
                     const entity = e.model.entity;
                     const idx = e.model.index;
                     if (entity.opened) {
@@ -269,7 +303,7 @@
                         this.set("_entities." + idx + ".opened", false);
                     } else {
                         this.set("_entities." + idx + ".opened", true);
-                        this.splice("_entities", idx + 1, 0, ...getChildrenToAdd.bind(this)(entity));
+                        this.splice("_entities", idx + 1, 0, ...getChildrenToAdd.bind(this)(entity, false));
                     }
                 },
 
