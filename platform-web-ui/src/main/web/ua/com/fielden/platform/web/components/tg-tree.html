@@ -30,27 +30,20 @@
                 font-weight: bold;
             }
             .tree-item {
-                padding-left: 4px;
+                padding: 2px 4px;
             }
-            .title {
-                font-size: 10pt;
-                padding-bottom: 3px;
+            .tree-item[selected] {
+                background-color: #F5F5F5
             }
-            .description {
-                font-size: 8pt;
-                color: gray;
-            }
-            .truncate {
-                white-space: nowrap;
-                overflow: hidden;
-                text-overflow: ellipsis;
+            .tree-item:hover {
+                background-color: #EEEEEE
             }
         </style>
-        <iron-list id="treeList" items="[[_entities]]" as="entity">
+        <iron-list id="treeList" items="[[_entities]]" as="entity" selection-enabled>
             <template>
-                <div class="layout horizontal" style$="[[_calcItemStyle(entity)]]">
+                <div class="layout horizontal tree-node" style$="[[_calcItemStyle(entity)]]">
                     <iron-icon icon="av:play-arrow" style="flex-grow:0;flex-shrink:0;" invisible$="[[!entity.entity.hasChildren]]" collapsed$="[[!entity.opened]]" on-tap="_toggle"></iron-icon>
-                    <span class="tree-item truncate" highlighted$="[[entity.highlight]]" inner-h-t-m-l="[[contentBuilder(entity, entity.opened)]]"></span>
+                    <span class="tree-item" selected$="[[selected]]" highlighted$="[[entity.highlight]]" inner-h-t-m-l="[[contentBuilder(entity, entity.opened)]]"></span>
                 </div>
             </template>
         </iron-list>
