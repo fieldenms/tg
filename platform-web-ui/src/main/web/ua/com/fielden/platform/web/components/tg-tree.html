@@ -27,7 +27,7 @@
             iron-icon[invisible] {
                 visibility: hidden;
             }
-            [highlighted] {
+            [highlighted] .part-to-highlight {
                 font-weight: bold;
             }
             .tree-item {
@@ -210,7 +210,9 @@
 
                 observers: ["_modelChanged(model.*)"],
 
-                ready: function () {},
+                ready: function () {
+                    this.scopeSubtree(this.$.treeList, true);
+                },
 
                 attached: function () {},
                 
