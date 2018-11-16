@@ -48,7 +48,11 @@ public class H2TgDomainDrivenTestCaseRunner extends AbstractDomainDrivenTestCase
         props.setProperty("hibernate.connection.password", "");
         props.setProperty("hibernate.show_sql", "false");
         props.setProperty("hibernate.format_sql", "true");
-
+        props.setProperty("hibernate.connection.provider_class", "com.zaxxer.hikari.hibernate.HikariConnectionProvider");
+        props.setProperty("hibernate.hikari.connectionTimeout", "5000"); // 5 seconds, maximum waiting time for a connection from the pool
+        props.setProperty("hibernate.hikari.minimumIdle", "2"); // minimum number of ideal connections in the pool
+        props.setProperty("hibernate.hikari.maximumPoolSize", "8"); // maximum number of actual connection in the pool
+        props.setProperty("hibernate.hikari.idleTimeout", "240000"); // 4 minutes, maximum time that a connection is allowed to sit idle in the pool
         return props;
     }
 
