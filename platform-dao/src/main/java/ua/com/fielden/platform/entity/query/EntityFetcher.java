@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.entity.query;
 
 import static java.lang.String.format;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetch;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -14,6 +15,7 @@ import org.joda.time.Period;
 import ua.com.fielden.platform.dao.QueryExecutionModel;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.exceptions.EntityFetcherException;
+import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.entity.query.metadata.DomainMetadataAnalyser;
 import ua.com.fielden.platform.utils.DefinersExecutor;
 
@@ -35,8 +37,8 @@ public class EntityFetcher {
             final DateTime st = new DateTime();
             final EntityContainerFetcher entityContainerFetcher = new EntityContainerFetcher(executionContext);
             final DomainMetadataAnalyser domainMetadataAnalyser = new DomainMetadataAnalyser(executionContext.getDomainMetadata());
-            final IRetrievalModel<E> fm = new EntityRetrievalModel<>(queryModel.getFetchModel(), domainMetadataAnalyser);
-            final QueryProcessingModel<E, ?> qpm = new QueryProcessingModel<>(queryModel.getQueryModel(), queryModel.getOrderModel(), queryModel.getFetchModel(), queryModel.getParamValues(), queryModel.isLightweight());
+            final IRetrievalModel<E> fm = produceRetrievalModel(queryModel.getFetchModel(), queryModel.getQueryModel().getResultType(), domainMetadataAnalyser);
+            final QueryProcessingModel<E, ?> qpm = new QueryProcessingModel<>(queryModel.getQueryModel(), queryModel.getOrderModel(), fm, queryModel.getParamValues(), queryModel.isLightweight());
             final List<EntityContainer<E>> containers = entityContainerFetcher.listAndEnhanceContainers(qpm, pageNumber, pageCapacity);
 
             if (!queryModel.isLightweight()) {
@@ -56,9 +58,26 @@ public class EntityFetcher {
         }
     }
     
+    private <E extends AbstractEntity<?>> IRetrievalModel<E> produceRetrievalModel(final fetch<E> fetchModel, final Class<E> resultType, final DomainMetadataAnalyser domainMetadataAnalyser) {
+        return fetchModel == null ? //
+        (resultType.equals(EntityAggregates.class) ? null
+                : new EntityRetrievalModel<E>(fetch(resultType), domainMetadataAnalyser))
+                : // 
+                (resultType.equals(EntityAggregates.class) ? new EntityAggregatesRetrievalModel<E>(fetchModel, domainMetadataAnalyser)
+                        : new EntityRetrievalModel<E>(fetchModel, domainMetadataAnalyser));
+
+        
+        
+        
+//        return fetchModel == null ? null : (EntityAggregates.class.equals(fetchModel.getEntityType()) ? new EntityAggregatesRetrievalModel<>(fetchModel, domainMetadataAnalyser) : //
+//                new EntityRetrievalModel<>(fetchModel, domainMetadataAnalyser));
+    }
+    
     public <E extends AbstractEntity<?>> Stream<E> streamEntities(final QueryExecutionModel<E, ?> queryModel, final Optional<Integer> fetchSize) {
         try {
-            final QueryProcessingModel<E, ?> qpm = new QueryProcessingModel<>(queryModel.getQueryModel(), queryModel.getOrderModel(), queryModel.getFetchModel(), queryModel.getParamValues(), queryModel.isLightweight());
+            final DomainMetadataAnalyser domainMetadataAnalyser = new DomainMetadataAnalyser(executionContext.getDomainMetadata());
+            final IRetrievalModel<E> fm = produceRetrievalModel(queryModel.getFetchModel(), queryModel.getQueryModel().getResultType(), domainMetadataAnalyser);
+            final QueryProcessingModel<E, ?> qpm = new QueryProcessingModel<>(queryModel.getQueryModel(), queryModel.getOrderModel(), fm, queryModel.getParamValues(), queryModel.isLightweight());
             return new EntityContainerFetcher(executionContext)
                     .streamAndEnhanceContainers(qpm, fetchSize)
                     .map(c -> !queryModel.isLightweight() ? setContainersToBeInstrumented(c) : c)

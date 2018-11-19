@@ -19,10 +19,10 @@ import ua.com.fielden.platform.entity.query.metadata.PropertyMetadata;
 
 public abstract class AbstractRetrievalModel<T extends AbstractEntity<?>> implements IRetrievalModel<T> {
 
-    private final fetch<T> originalFetch;
+    protected final fetch<T> originalFetch;
     private DomainMetadataAnalyser domainMetadataAnalyser;
 
-    private final Map<String, fetch<? extends AbstractEntity<?>>> entityProps = new HashMap<String, fetch<? extends AbstractEntity<?>>>();
+    private final Map<String, EntityRetrievalModel<? extends AbstractEntity<?>>> entityProps = new HashMap<>();
     private final Set<String> primProps = new HashSet<String>();
     private final Set<String> proxiedProps = new HashSet<String>();
 
@@ -70,7 +70,7 @@ public abstract class AbstractRetrievalModel<T extends AbstractEntity<?>> implem
     }
 
     @Override
-    public Map<String, fetch<? extends AbstractEntity<?>>> getFetchModels() {
+    public Map<String, EntityRetrievalModel<? extends AbstractEntity<?>>> getFetchModels() {
         return unmodifiableMap(entityProps);
     }
     
@@ -78,7 +78,7 @@ public abstract class AbstractRetrievalModel<T extends AbstractEntity<?>> implem
         primProps.add(name);
     }
 
-    protected void addEntityPropFetchModel(final String propName, final fetch<? extends AbstractEntity<?>> fetchModel) {
+    protected void addEntityPropFetchModel(final String propName, final EntityRetrievalModel<? extends AbstractEntity<?>> fetchModel) {
         entityProps.put(propName, fetchModel);
     }
 
@@ -90,7 +90,7 @@ public abstract class AbstractRetrievalModel<T extends AbstractEntity<?>> implem
         sb.append(primProps);
         if (entityProps.size() > 0) {
             sb.append("\n------------------------------------------------");
-            for (final Entry<String, fetch<? extends AbstractEntity<?>>> fetchEntry : entityProps.entrySet()) {
+            for (final Entry<String, EntityRetrievalModel<? extends AbstractEntity<?>>> fetchEntry : entityProps.entrySet()) {
                 sb.append("\n" + fetchEntry.getKey() + " <<< " + fetchEntry.getValue());
                 sb.append("\n------------------------------------------------");
             }

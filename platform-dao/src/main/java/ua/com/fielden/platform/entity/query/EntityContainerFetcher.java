@@ -120,16 +120,10 @@ public class EntityContainerFetcher {
 
     private <E extends AbstractEntity<?>> QueryModelResult<E> getModelResult(final QueryProcessingModel<E, ?> qem, final DomainMetadataAnalyser domainMetadataAnalyser, final IFilter filter, final String username) {
         final EntQueryGenerator gen = new EntQueryGenerator(domainMetadataAnalyser, filter, username, executionContext.getUniversalConstants());
-        final IRetrievalModel<E> fm = qem.fetchModel == null ? //
-        (qem.queryModel.getResultType().equals(EntityAggregates.class) ? null
-                : new EntityRetrievalModel<E>(fetch(qem.queryModel.getResultType()), domainMetadataAnalyser))
-                : // 
-                (qem.queryModel.getResultType().equals(EntityAggregates.class) ? new EntityAggregatesRetrievalModel<E>(qem.fetchModel, domainMetadataAnalyser)
-                        : new EntityRetrievalModel<E>(qem.fetchModel, domainMetadataAnalyser));
 
-        final EntQuery entQuery = gen.generateEntQueryAsResultQuery(qem.queryModel, qem.orderModel, qem.queryModel.getResultType(), fm, qem.paramValues);
+        final EntQuery entQuery = gen.generateEntQueryAsResultQuery(qem.queryModel, qem.orderModel, qem.queryModel.getResultType(), qem.fetchModel, qem.paramValues);
         final String sql = entQuery.sql();
-        return new QueryModelResult<>(entQuery.type(), sql, getResultPropsInfos(entQuery.getYields()), entQuery.getValuesForSqlParams(), fm);
+        return new QueryModelResult<>(entQuery.type(), sql, getResultPropsInfos(entQuery.getYields()), entQuery.getValuesForSqlParams(), qem.fetchModel);
     }
 
     private SortedSet<ResultQueryYieldDetails> getResultPropsInfos(final Yields model) {

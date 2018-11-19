@@ -14,6 +14,7 @@ import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetch
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchAll;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchIdOnly;
 import static ua.com.fielden.platform.entity.query.fluent.fetch.MSG_MISMATCH_BETWEEN_PROPERTY_AND_FETCH_MODEL_TYPES;
+import static ua.com.fielden.platform.entity.query.metadata.EntityCategory.QUERY_BASED;
 import static ua.com.fielden.platform.entity.query.metadata.PropertyCategory.ENTITY_AS_KEY;
 import static ua.com.fielden.platform.entity.query.metadata.PropertyCategory.ENTITY_MEMBER_OF_COMPOSITE_KEY;
 import static ua.com.fielden.platform.entity.query.metadata.PropertyCategory.UNION_ENTITY_DETAILS;
@@ -34,6 +35,7 @@ import org.apache.log4j.Logger;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.AbstractPersistentEntity;
+import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
 import ua.com.fielden.platform.entity.query.exceptions.EqlException;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.entity.query.metadata.DomainMetadataAnalyser;
@@ -41,7 +43,6 @@ import ua.com.fielden.platform.entity.query.metadata.EntityCategory;
 import ua.com.fielden.platform.entity.query.metadata.EntityTypeInfo;
 import ua.com.fielden.platform.entity.query.metadata.PropertyMetadata;
 import ua.com.fielden.platform.types.tuples.T2;
-import ua.com.fielden.platform.utils.EntityUtils;
 
 public class EntityRetrievalModel<T extends AbstractEntity<?>> extends AbstractRetrievalModel<T> {
     private final Logger logger = Logger.getLogger(this.getClass());
@@ -52,8 +53,8 @@ public class EntityRetrievalModel<T extends AbstractEntity<?>> extends AbstractR
     public EntityRetrievalModel(final fetch<T> originalFetch, final DomainMetadataAnalyser domainMetadataAnalyser) {
         super(originalFetch, domainMetadataAnalyser);
         this.propsMetadata = domainMetadataAnalyser.getPropertyMetadatasForEntity(getEntityType());
-        isSyntheticEntity = isSyntheticEntityType(getEntityType());
         entityTypeInfo = new EntityTypeInfo<>(getEntityType());
+        isSyntheticEntity = entityTypeInfo.category == QUERY_BASED;
 
         switch (originalFetch.getFetchCategory()) {
         case ALL_INCL_CALC:
@@ -206,7 +207,7 @@ public class EntityRetrievalModel<T extends AbstractEntity<?>> extends AbstractR
             addPrimProp(KEY);
             includeAllUnionEntityKeyMembers();
         } else {
-            if (isEntityType(propType)/* && !ppi.isId()*/) {
+            if (isEntityType(propType) && !PropertyDescriptor.class.equals(propType)/* && !ppi.isId()*/) {
                 if (!skipEntities) {
                     if (ppi.isUnionEntity()) {
                         with(propName, fetchAll(propType));
@@ -240,7 +241,12 @@ public class EntityRetrievalModel<T extends AbstractEntity<?>> extends AbstractR
             }
         }
         
-        final fetch<?> existingFetch = getFetchModels().get(propName);
-        addEntityPropFetchModel(propName, existingFetch != null ? existingFetch.unionWith(fetchModel) : fetchModel);
+        final EntityRetrievalModel<?> existingFetch = getFetchModels().get(propName);
+        fetch<?> finalFetch = existingFetch != null ? existingFetch.originalFetch.unionWith(fetchModel) : fetchModel;
+        addEntityPropFetchModel(propName, new EntityRetrievalModel<>(finalFetch, getDomainMetadataAnalyser()));
+    }
+    
+    public boolean isFetchIdOnly() {
+        return getPrimProps().size() == 1 && getFetchModels().size() == 0 && containsProp(ID);
     }
 }

@@ -39,8 +39,9 @@ public class EntityAggregatesRetrievalModel<T extends AbstractEntity<?>> extends
         }
     }
 
-    private void addEntityPropsModel(final String propName, final fetch<? extends AbstractEntity<?>> model) {
-        final fetch<?> existingFetch = getFetchModels().get(propName);
-        addEntityPropFetchModel(propName, existingFetch != null ? existingFetch.unionWith(model) : model);
+    private void addEntityPropsModel(final String propName, final fetch<? extends AbstractEntity<?>> fetchModel) {
+        final EntityRetrievalModel<?> existingFetch = getFetchModels().get(propName);
+        fetch<?> finalFetch = existingFetch != null ? existingFetch.originalFetch.unionWith(fetchModel) : fetchModel;
+        addEntityPropFetchModel(propName, new EntityRetrievalModel<>(finalFetch, getDomainMetadataAnalyser()));
     }
 }
