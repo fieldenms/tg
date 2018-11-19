@@ -47,7 +47,7 @@ public class fetch<T extends AbstractEntity<?>> {
      * Used mainly for serialisation.
      */
     protected fetch() {
-        this(null, ID_AND_VERSION);
+        this(null, null);
     }
 
     public fetch(final Class<T> entityType, final FetchCategory fetchCategory, final boolean instrumented) {
