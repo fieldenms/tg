@@ -10,7 +10,7 @@ public interface IRetrievalModel<T extends AbstractEntity<?>> {
 
     boolean isInstrumented();
     
-    Map<String, EntityRetrievalModel<? extends AbstractEntity<?>>> getFetchModels();
+    Map<String, EntityRetrievalModel<? extends AbstractEntity<?>>> getRetrievalModels();
     
     Set<String> getPrimProps();
     

@@ -70,7 +70,7 @@ public abstract class AbstractRetrievalModel<T extends AbstractEntity<?>> implem
     }
 
     @Override
-    public Map<String, EntityRetrievalModel<? extends AbstractEntity<?>>> getFetchModels() {
+    public Map<String, EntityRetrievalModel<? extends AbstractEntity<?>>> getRetrievalModels() {
         return unmodifiableMap(entityProps);
     }
     

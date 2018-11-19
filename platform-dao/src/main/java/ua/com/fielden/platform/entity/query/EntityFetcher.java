@@ -65,12 +65,6 @@ public class EntityFetcher {
                 : // 
                 (resultType.equals(EntityAggregates.class) ? new EntityAggregatesRetrievalModel<E>(fetchModel, domainMetadataAnalyser)
                         : new EntityRetrievalModel<E>(fetchModel, domainMetadataAnalyser));
-
-        
-        
-        
-//        return fetchModel == null ? null : (EntityAggregates.class.equals(fetchModel.getEntityType()) ? new EntityAggregatesRetrievalModel<>(fetchModel, domainMetadataAnalyser) : //
-//                new EntityRetrievalModel<>(fetchModel, domainMetadataAnalyser));
     }
     
     public <E extends AbstractEntity<?>> Stream<E> streamEntities(final QueryExecutionModel<E, ?> queryModel, final Optional<Integer> fetchSize) {

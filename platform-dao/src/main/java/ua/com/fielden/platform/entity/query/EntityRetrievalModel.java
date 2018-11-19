@@ -47,14 +47,12 @@ import ua.com.fielden.platform.types.tuples.T2;
 public class EntityRetrievalModel<T extends AbstractEntity<?>> extends AbstractRetrievalModel<T> {
     private final Logger logger = Logger.getLogger(this.getClass());
     private final Collection<PropertyMetadata> propsMetadata;
-    private final boolean isSyntheticEntity;
     private final EntityTypeInfo<T> entityTypeInfo;
 
     public EntityRetrievalModel(final fetch<T> originalFetch, final DomainMetadataAnalyser domainMetadataAnalyser) {
         super(originalFetch, domainMetadataAnalyser);
         this.propsMetadata = domainMetadataAnalyser.getPropertyMetadatasForEntity(getEntityType());
         entityTypeInfo = new EntityTypeInfo<>(getEntityType());
-        isSyntheticEntity = entityTypeInfo.category == QUERY_BASED;
 
         switch (originalFetch.getFetchCategory()) {
         case ALL_INCL_CALC:
@@ -105,7 +103,7 @@ public class EntityRetrievalModel<T extends AbstractEntity<?>> extends AbstractR
                     !ppi.isCollection() &&
                     !name.contains(".") &&
                     !containsProp(name) &&
-                    (isSyntheticEntity || !ppi.isSynthetic())) {
+                    (entityTypeInfo.category == QUERY_BASED || !ppi.isSynthetic())) {
                 getProxiedProps().add(name);
             }
         }
@@ -241,12 +239,12 @@ public class EntityRetrievalModel<T extends AbstractEntity<?>> extends AbstractR
             }
         }
         
-        final EntityRetrievalModel<?> existingFetch = getFetchModels().get(propName);
+        final EntityRetrievalModel<?> existingFetch = getRetrievalModels().get(propName);
         fetch<?> finalFetch = existingFetch != null ? existingFetch.originalFetch.unionWith(fetchModel) : fetchModel;
         addEntityPropFetchModel(propName, new EntityRetrievalModel<>(finalFetch, getDomainMetadataAnalyser()));
     }
     
     public boolean isFetchIdOnly() {
-        return getPrimProps().size() == 1 && getFetchModels().size() == 0 && containsProp(ID);
+        return getPrimProps().size() == 1 && getRetrievalModels().size() == 0 && containsProp(ID);
     }
 }

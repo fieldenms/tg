@@ -52,7 +52,7 @@ public class EntityContainerEnhancer<E extends AbstractEntity<?>> {
             return entities;
         }
 
-        final Map<String, EntityRetrievalModel<? extends AbstractEntity<?>>> propertiesFetchModels = fetchModel.getFetchModels();
+        final Map<String, EntityRetrievalModel<? extends AbstractEntity<?>>> propertiesFetchModels = fetchModel.getRetrievalModels();
 
         for (final Map.Entry<String, EntityRetrievalModel<?>> entry : propertiesFetchModels.entrySet()) {
             final String propName = entry.getKey();
@@ -103,10 +103,6 @@ public class EntityContainerEnhancer<E extends AbstractEntity<?>> {
 
         return entities;
     }
-
-//    private boolean isFetchIdOnly(final EntityRetrievalModel<? extends AbstractEntity<?>> fetchModel) {
-//        return fetchModel.getFetchCategory() == ID_ONLY;
-//    }
 
     private void assignInstrumentationSetting(final List<EntityContainer<E>> entities, final IRetrievalModel<E> fetchModel) {
         if (fetchModel.isInstrumented()) {
