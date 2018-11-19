@@ -99,7 +99,7 @@ public class EntityRetrievalModel<T extends AbstractEntity<?>> extends AbstractR
             // FIXME the following condition needs to be revisited as part of EQL 3 implementation
             final String name = ppi.getName();
             if (!ID.equals(name) &&
-                    !(KEY.equals(name) && !ppi.affectsMapping()) &&
+                    !ppi.isCompositeKeyExpression() &&
                     !ppi.isCollection() &&
                     !name.contains(".") &&
                     !containsProp(name) &&

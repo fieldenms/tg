@@ -47,26 +47,55 @@ public class FetchModelTest extends BaseEntQueryTCase {
         return produceRetrievalModel(new fetch<T>(entityType, fetchCategory));
     }
     
-    private static <T extends AbstractEntity<?>> void assertFetchContainsProps(final IRetrievalModel<T> fetchModel, final Set<String> props) {
+    private static <T extends AbstractEntity<?>> void assertPropsAreFetched(final IRetrievalModel<T> fetchModel, final Set<String> props) {
         for (final String propName : props) {
             assertTrue(format("Property [%s] should be contained within fetch model:\n%s", propName, fetchModel), fetchModel.containsProp(propName));
         }
     }
     
+    private static <T extends AbstractEntity<?>> void assertPropsAreProxied(final IRetrievalModel<T> fetchModel, final Set<String> proxiedProps) {
+        for (final String propName : proxiedProps) {
+            assertTrue(format("Property [%s] should be proxied within fetch model:\n%s", propName, fetchModel), fetchModel.containsProxy(propName));
+        }
+    }
+
     @Test
     public void test_nested_fetching_of_composite_key() {
         final IRetrievalModel<TgAuthorship> fetchModel = produceRetrievalModel(TgAuthorship.class, DEFAULT);
-        assertFetchContainsProps(fetchModel, setOf("title", "author", "id", "version"));
-
+        assertPropsAreFetched(fetchModel, setOf("title", "author", "id", "version", "year"));
+        
         assertNotNull(fetchModel.getRetrievalModels().get("author"));
         final EntityRetrievalModel<?> fetchModelForAuthor = fetchModel.getRetrievalModels().get("author");
-        assertFetchContainsProps(fetchModelForAuthor, setOf("name", "surname", "patronymic", "id", "version", "dob"));
+        assertPropsAreFetched(fetchModelForAuthor, setOf("name", "surname", "patronymic", "id", "version", "dob"));
         assertFalse(fetchModelForAuthor.containsProp("pseudonym"));
         //assertTrue(fetchModelForAuthor.containsProxy("pseudonym"));
 
         assertNotNull(fetchModelForAuthor.getRetrievalModels().get("name"));
         final EntityRetrievalModel<?> fetchModelForAuthorName = fetchModelForAuthor.getRetrievalModels().get("name");
-        assertFetchContainsProps(fetchModelForAuthorName, setOf("key", "desc", "id", "version"));
+        assertPropsAreFetched(fetchModelForAuthorName, setOf("key", "desc", "id", "version"));
+
+        
+        //assertFalse(fetchModelForAuthor.containsProp("honorarium"));
+        //assertFalse(fetchModelForAuthor.containsProp("honorarium.amount"));
+        
+
+    }
+    
+    @Test
+    public void test_nested_fetching_of_composite_key2() {
+        final IRetrievalModel<TgAuthorship> fetchModel = produceRetrievalModel(TgAuthorship.class, KEY_AND_DESC);
+        assertPropsAreFetched(fetchModel, setOf("title", "author", "id", "version"));
+        assertPropsAreProxied(fetchModel, setOf("year"));
+
+        assertNotNull(fetchModel.getRetrievalModels().get("author"));
+        final EntityRetrievalModel<?> fetchModelForAuthor = fetchModel.getRetrievalModels().get("author");
+        assertPropsAreFetched(fetchModelForAuthor, setOf("name", "surname", "patronymic", "id", "version", "dob"));
+        assertFalse(fetchModelForAuthor.containsProp("pseudonym"));
+        //assertTrue(fetchModelForAuthor.containsProxy("pseudonym"));
+
+        assertNotNull(fetchModelForAuthor.getRetrievalModels().get("name"));
+        final EntityRetrievalModel<?> fetchModelForAuthorName = fetchModelForAuthor.getRetrievalModels().get("name");
+        assertPropsAreFetched(fetchModelForAuthorName, setOf("key", "desc", "id", "version"));
 
         
         //assertFalse(fetchModelForAuthor.containsProp("honorarium"));
@@ -78,13 +107,13 @@ public class FetchModelTest extends BaseEntQueryTCase {
     @Test
     public void test_all_fetching_of_make() {
         final IRetrievalModel<TgVehicleMake> fetchModel = produceRetrievalModel(TgVehicleMake.class, ALL);
-        assertFetchContainsProps(fetchModel, setOf("key", "desc", "id", "version"));
+        assertPropsAreFetched(fetchModel, setOf("key", "desc", "id", "version"));
     }
 
     @Test
     public void test_minimal_fetching_of_make() {
         final IRetrievalModel<TgVehicleMake> fetchModel = produceRetrievalModel(TgVehicleMake.class, DEFAULT);
-        assertFetchContainsProps(fetchModel, setOf("key", "desc", "id", "version"));
+        assertPropsAreFetched(fetchModel, setOf("key", "desc", "id", "version"));
     }
 
     @Test
@@ -99,13 +128,13 @@ public class FetchModelTest extends BaseEntQueryTCase {
     @Test
     public void test_all_fetching_of_model() {
         final IRetrievalModel<TgVehicleModel> fetchModel = produceRetrievalModel(TgVehicleModel.class, ALL);
-        assertFetchContainsProps(fetchModel, setOf("key", "desc", "id", "version", "make"));
+        assertPropsAreFetched(fetchModel, setOf("key", "desc", "id", "version", "make"));
     }
 
     @Test
     public void test_minimal_fetching_of_model() {
         final IRetrievalModel<TgVehicleModel> fetchModel = produceRetrievalModel(TgVehicleModel.class, DEFAULT);
-        assertFetchContainsProps(fetchModel, setOf("key", "desc", "id", "version", "make"));
+        assertPropsAreFetched(fetchModel, setOf("key", "desc", "id", "version", "make"));
     }
 
     @Test
@@ -122,23 +151,28 @@ public class FetchModelTest extends BaseEntQueryTCase {
     @Test
     public void test_all_fetching_of_fuel_usage() {
         final IRetrievalModel<TgFuelUsage> fetchModel = produceRetrievalModel(TgFuelUsage.class, ALL);
-        assertFetchContainsProps(fetchModel, setOf("id", "version", "vehicle", "date", "qty"));
+        assertPropsAreFetched(fetchModel, setOf("id", "version", "vehicle", "date", "qty"));
     }
 
     @Test
     public void test_minimal_fetching_of_fuel_usage() {
         final IRetrievalModel<TgFuelUsage> fetchModel = produceRetrievalModel(TgFuelUsage.class, DEFAULT);
-        assertFetchContainsProps(fetchModel, setOf("id", "version", "vehicle", "date", "qty"));
+        assertPropsAreFetched(fetchModel, setOf("id", "version", "vehicle", "date", "qty"));
+        //assertPropsAreProxied(fetchModel, setOf("fuelType"));
+    }
+
+    @Test
+    public void test_key_and_desc_fetching_of_fuel_usage() {
+        final IRetrievalModel<TgFuelUsage> fetchModel = produceRetrievalModel(TgFuelUsage.class, KEY_AND_DESC);
+        assertPropsAreFetched(fetchModel, setOf("id", "version", "vehicle", "date"));
+        assertPropsAreProxied(fetchModel, setOf("qty", "fuelType"));
     }
 
     @Test
     public void test_id_and_version_fetching_of_fuel_usage() {
         final IRetrievalModel<TgFuelUsage> fetchModel = produceRetrievalModel(TgFuelUsage.class, ID_AND_VERSION);
-        assertFalse(fetchModel.containsProp("vehicle"));
-        assertFalse(fetchModel.containsProp("date"));
-        assertFalse(fetchModel.containsProp("qty"));
-        assertTrue(fetchModel.containsProp("id"));
-        assertTrue(fetchModel.containsProp("version"));
+        assertPropsAreFetched(fetchModel, setOf("id", "version"));
+        assertPropsAreProxied(fetchModel, setOf("vehicle", "date", "fuelType", "qty"));
     }
 
     @Test
@@ -150,6 +184,7 @@ public class FetchModelTest extends BaseEntQueryTCase {
         assertTrue(fetchModel.containsProp("qty"));
         assertTrue(fetchModel.containsProp("id"));
         assertTrue(fetchModel.containsProp("version"));
+        assertTrue(fetchModel.containsProxy("vehicle"));
     }
 
     @Test
