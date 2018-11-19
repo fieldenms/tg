@@ -5,6 +5,8 @@
 <link rel="import" href="/resources/polymer/iron-icons/av-icons.html">
 <link rel="import" href="/resources/polymer/iron-list/iron-list.html">
 
+<link rel="import" href="/resources/components/tg-tooltip-behavior.html">
+
 <dom-module id="tg-tree">
     <template>
         <style>
@@ -16,12 +18,12 @@
             iron-list {
                 @apply(--layout-flex);
             }
-            iron-icon {
+            .expand-button {
                 padding: 2px 0;
                 width: 16px;
                 height: 16px;
             }
-            iron-icon:not([collapsed]) {
+            .expand-button:not([collapsed]) {
                 transform: rotate(90deg);
             }
             iron-icon[invisible] {
@@ -39,6 +41,10 @@
             .tree-node:hover {
                 background-color: #EEEEEE
             }
+            .tree-item-actions > iron-icon {
+                padding: 0 2px;
+                cursor: pointer;
+            }
             .tree-item-actions {
                 display: none;
                 flex-direction: row;
@@ -51,7 +57,7 @@
         <iron-list id="treeList" items="[[_entities]]" as="entity" selection-enabled>
             <template>
                 <div class="layout horizontal tree-node" selected$="[[selected]]" style$="[[_calcItemStyle(entity)]]">
-                    <iron-icon icon="av:play-arrow" style="flex-grow:0;flex-shrink:0;" invisible$="[[!entity.entity.hasChildren]]" collapsed$="[[!entity.opened]]" on-tap="_toggle"></iron-icon>
+                    <iron-icon class="expand-button" icon="av:play-arrow" style="flex-grow:0;flex-shrink:0;" invisible$="[[!entity.entity.hasChildren]]" collapsed$="[[!entity.opened]]" on-tap="_toggle"></iron-icon>
                     <span class="tree-item"  highlighted$="[[entity.highlight]]" inner-h-t-m-l="[[contentBuilder(entity, entity.opened)]]"></span>
                     <span class="tree-item-actions" on-tap="actionRunner" inner-h-t-m-l="[[actionBuilder(entity)]]"></span>
                 </div>
@@ -207,6 +213,8 @@
                         value: ""
                     }
                 },
+                
+                behaviors: [Polymer.TgBehaviors.TgTooltipBehavior],
 
                 observers: ["_modelChanged(model.*)"],
 
