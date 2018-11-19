@@ -84,22 +84,22 @@
                 return path.reverse();
             };
 
-            const getChildrenToAdd = function (entity, loadAll) {
+            const getChildrenToAdd = function (entity, shouldFireLoad) {
                 const childrenToAdd = [];
                 if (entity.opened && entity.entity.hasChildren) {
-                    if (entity.children.length === 1 && entity.children[0].loaderIndicator) {
-                        this.fire("tg-load-subtree", {parentPath: getParentsPath(entity), loadAll: loadAll});
+                    if (entity.children.length === 1 && entity.children[0].loaderIndicator && shouldFireLoad) {
+                        this.fire("tg-load-subtree", {parentPath: getParentsPath(entity), loadAll: false});
                     }
-                    childrenToAdd.push(...composeChildren.bind(this)(entity.children));
+                    childrenToAdd.push(...composeChildren.bind(this)(entity.children, shouldFireLoad));
                 }
                 return childrenToAdd;
             };
             
-            const composeChildren = function (entities, loadAll) {
+            const composeChildren = function (entities, shouldFireLoad) {
                 const list = [];
                 entities.filter(entity => entity.visible).forEach(entity => {
                     list.push(entity);
-                    list.push(...getChildrenToAdd.bind(this)(entity, loadAll));
+                    list.push(...getChildrenToAdd.bind(this)(entity, shouldFireLoad));
                 });
                 return list;
             };
@@ -219,29 +219,16 @@
                 filter: function (text) {
                     this._lastFilterText = text;
                     this._filterSubTree(text, this._treeModel, true);
-                    this.splice("_entities", 0, this._entities.length, ...composeChildren.bind(this)(this._treeModel, false));
+                    this.splice("_entities", 0, this._entities.length, ...composeChildren.bind(this)(this._treeModel, true));
                     this.debounce("refreshTree", refreshTree.bind(this));
                 },
                 
-                expandSubtreeFull: function (entity) {
-                    this._openSubTree(entity);
-                    this.debounce("refreshTree", refreshTree.bind(this));
-                },
-                
-                _openSubTree: function (entity) {
-                    if (entity.entity.hasChildren) {
-                        const wasOpened = entity.opened;
-                        entity.opened = true;
-                        const childrenToAdd = getChildrenToAdd.bind(this)(entity, true);
-                        if (!wasOpened) {
-                            this.splice("_entities", this._entities.indexOf(entity) + 1, 0, ...childrenToAdd);
-                        }
-                        childrenToAdd.forEach(child =>  {
-                            if (!child.loaderIndicator) {
-                                this._openSubTree(child);
-                            }
-                        });
+                expandSubtreeFull: function (idx, entity) {
+                    if (!entity.opened) {
+                        this.set("_entities." + idx + ".opened", true);
+                        this.splice("_entities", idx + 1, 0, ...getChildrenToAdd.bind(this)(entity, false));
                     }
+                    this.fire("tg-load-subtree", {parentPath: getParentsPath(entity), loadAll: true});
                 },
                 
                 _filterSubTree: function (text, subtree, expand) {
@@ -290,7 +277,7 @@
                             parentItem.children = generateChildrenModel(change.value, parentItem);
                             this._filterSubTree(this._lastFilterText, parentItem.children, false);
                             if (typeof modelIdx !== 'undefined') {
-                                this.splice("_entities", modelIdx + 1, numOfItemsToDelete, ...getChildrenToAdd.bind(this)(parentItem, false));
+                                this.splice("_entities", modelIdx + 1, numOfItemsToDelete, ...getChildrenToAdd.bind(this)(parentItem, true));
                             }
                         }
                     }
@@ -305,7 +292,7 @@
                         this.set("_entities." + idx + ".opened", false);
                     } else {
                         this.set("_entities." + idx + ".opened", true);
-                        this.splice("_entities", idx + 1, 0, ...getChildrenToAdd.bind(this)(entity, false));
+                        this.splice("_entities", idx + 1, 0, ...getChildrenToAdd.bind(this)(entity, true));
                     }
                 },
 
