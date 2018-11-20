@@ -99,7 +99,7 @@ public class EntityRetrievalModel<T extends AbstractEntity<?>> extends AbstractR
             // FIXME the following condition needs to be revisited as part of EQL 3 implementation
             final String name = ppi.getName();
             if (!ID.equals(name) &&
-                    !ppi.isCompositeKeyExpression() &&
+                    !(KEY.equals(name) && !ppi.affectsMapping()) &&
                     !ppi.isCollection() &&
                     !name.contains(".") &&
                     !containsProp(name) &&
@@ -125,7 +125,7 @@ public class EntityRetrievalModel<T extends AbstractEntity<?>> extends AbstractR
 
     private void includeAllFirstLevelPrimPropsAndKey() {
         for (final PropertyMetadata ppi : propsMetadata) {
-            if (!ppi.isCalculated()/* && !ppi.isSynthetic()*/) {
+            if (!ppi.isCalculated()/* && !ppi.isSynthetic()*/ && !ppi.isCollection() && !ppi.isPure()) {
                 logger.debug("adding not calculated prop to fetch model: " + ppi.getName());
                 final boolean skipEntities = !(ppi.getCategory() == ENTITY_MEMBER_OF_COMPOSITE_KEY ||
                         ppi.getCategory() == ENTITY_AS_KEY ||
@@ -163,7 +163,7 @@ public class EntityRetrievalModel<T extends AbstractEntity<?>> extends AbstractR
 
     private void includeAllFirstLevelProps() {
         for (final PropertyMetadata ppi : propsMetadata) {
-            if (!ppi.isCalculated() && !ppi.isCollection()) {
+            if (!ppi.isCalculated() && !ppi.isCollection() && !ppi.isPure()) {
                 with(ppi.getName(), false);
             }
         }
@@ -171,7 +171,7 @@ public class EntityRetrievalModel<T extends AbstractEntity<?>> extends AbstractR
 
     private void includeAllFirstLevelPropsInclCalc() {
         for (final PropertyMetadata ppi : propsMetadata) {
-            if (!ppi.isCollection()) {
+            if (!ppi.isCollection() && !ppi.isPure()) {
                 with(ppi.getName(), false);
             }
         }
@@ -215,7 +215,6 @@ public class EntityRetrievalModel<T extends AbstractEntity<?>> extends AbstractR
                 } else if (ppi.affectsMapping()) {
                     with(propName, fetchIdOnly(propType));
                 }
-               
             } else {
                 final String singleSubpropertyOfCompositeUserTypeProperty = ppi.getSinglePropertyOfCompositeUserType();
                 if (singleSubpropertyOfCompositeUserTypeProperty != null) {

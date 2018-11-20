@@ -133,6 +133,10 @@ public class PropertyMetadata implements Comparable<PropertyMetadata> {
     public boolean isSynthetic() {
         return category == SYNTHETIC || category == SYNTHETIC_COMPONENT_HEADER || category == SYNTHETIC_COMPONENT_DETAILS;
     }
+    
+    public boolean isPure() {
+        return parentInfo.category == EntityCategory.PERSISTED && (category == SYNTHETIC || category == SYNTHETIC_COMPONENT_HEADER || category == SYNTHETIC_COMPONENT_DETAILS);
+    }
 
     public String getTypeString() {
         if (hibType != null) {
