@@ -15,6 +15,7 @@ import static ua.com.fielden.platform.domaintree.impl.DomainTreeEnhancerCache.CA
 import static ua.com.fielden.platform.serialisation.api.SerialiserEngines.JACKSON;
 import static ua.com.fielden.platform.types.tuples.T2.t2;
 import static ua.com.fielden.platform.utils.CollectionUtil.listOf;
+import static ua.com.fielden.platform.web.centre.CentreUpdater.NOT_FOUND_MOCK_PREFIX;
 import static ua.com.fielden.platform.web.centre.CentreUpdater.applyDifferences;
 import static ua.com.fielden.platform.web.centre.CentreUpdater.createDifferences;
 import static ua.com.fielden.platform.web.centre.CentreUpdater.createEmptyDifferences;
@@ -25,6 +26,7 @@ import static ua.com.fielden.platform.web.centre.api.crit.defaults.mnemonics.con
 import static ua.com.fielden.platform.web.centre.api.impl.EntityCentreBuilder.centreFor;
 import static ua.com.fielden.platform.web.interfaces.ILayout.Device.DESKTOP;
 import static ua.com.fielden.platform.web.layout.api.impl.LayoutComposer.mkGridForCentre;
+import static ua.com.fielden.platform.web.utils.EntityResourceUtils.createMockNotFoundEntity;
 import static ua.com.fielden.snappy.DateRangePrefixEnum.NEXT;
 import static ua.com.fielden.snappy.DateRangePrefixEnum.PREV;
 import static ua.com.fielden.snappy.MnemonicEnum.MONTH;
@@ -478,19 +480,10 @@ public class CentreUpdaterTest {
         testDiffCreationAndApplication(CentreUpdaterTest::create, centre -> centre.getFirstTick().setValue(ROOT, "propertyDescriptorPropCritSingle", propertyVal), expectedDiffWithValue("propertyDescriptorPropCritSingle", VALUE.name(), propertyVal.toString()));
     }
     
-//    @Test
-//    public void left_UTC_date_value() {
-//        testDiffCreationAndApplication(CentreUpdaterTest::create, centre -> centre.getFirstTick().setValue(ROOT, "datePropUtc", d2018), expectedDiffWithValue("datePropUtc", VALUE.name(), d2018.getTime()));
-//    }
-//    
-//    @Test
-//    public void left_dateOnly_date_value() {
-//        testDiffCreationAndApplication(CentreUpdaterTest::create, centre -> centre.getFirstTick().setValue(ROOT, "datePropDateOnly", d2018), expectedDiffWithValue("datePropDateOnly", VALUE.name(), d2018.getTime()));
-//    }
-//    
-//    @Test
-//    public void left_timeOnly_date_value() {
-//        testDiffCreationAndApplication(CentreUpdaterTest::create, centre -> centre.getFirstTick().setValue(ROOT, "datePropTimeOnly", d2018_time), expectedDiffWithValue("datePropTimeOnly", VALUE.name(), d2018_time.getTime()));
-//    }
+    @Test
+    public void critOnlySingle_propertyDescriptor_value_notFound() {
+        final PropertyDescriptor<TgCentreDiffSerialisationPersistentChild> propertyVal = (PropertyDescriptor<TgCentreDiffSerialisationPersistentChild>) createMockNotFoundEntity(PropertyDescriptor.class, "UNKNOWN");
+        testDiffCreationAndApplication(CentreUpdaterTest::create, centre -> centre.getFirstTick().setValue(ROOT, "propertyDescriptorPropCritSingle", propertyVal), expectedDiffWithValue("propertyDescriptorPropCritSingle", VALUE.name(), NOT_FOUND_MOCK_PREFIX + "UNKNOWN"));
+    }
     
 }

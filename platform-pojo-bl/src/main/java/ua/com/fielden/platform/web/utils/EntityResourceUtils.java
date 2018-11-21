@@ -321,7 +321,7 @@ public class EntityResourceUtils {
     public static boolean isMockNotFoundEntity(final Object obj) {
         return obj instanceof AbstractEntity /* obj can be null and will return false as a result */
                 && ((AbstractEntity) obj).getId() == null
-                && KEY_NOT_ASSIGNED.equals(obj.toString())
+                && (obj instanceof PropertyDescriptor && ((PropertyDescriptor) obj).getKey() == null || KEY_NOT_ASSIGNED.equals(obj.toString()) )
                 && !isEmpty(((AbstractEntity) obj).getDesc());
     }
     

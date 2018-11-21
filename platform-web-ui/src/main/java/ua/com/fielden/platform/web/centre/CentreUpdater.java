@@ -800,16 +800,24 @@ public class CentreUpdater {
     private static final Function<Date, Long> dateToLong = Date::getTime;
     private static final Function<String, Long> stringToLong = Long::valueOf;
     private static final Function<Object, String> toString = Object::toString;
-    private static final Function<String, PropertyDescriptor<?>> stringToPropertyDescriptor = PropertyDescriptor::fromString;
-    private static final Function<PropertyDescriptor<?>, String> propertyDescriptorToString = PropertyDescriptor::toString;
     
-    private static final Function<AbstractEntity<?>, String> entityToString = entity -> {
+    private static <T extends AbstractEntity<?>> String entityWithMocksToString(final Function<T, String> specificConverter, final T entity) {
         if (isMockNotFoundEntity(entity)) {
             return NOT_FOUND_MOCK_PREFIX + entity.get(DESC);
         } else {
-            return entity.getId().toString();
+            return specificConverter.apply(entity);
         }
     };
+    
+    private static <T extends AbstractEntity<?>> T entityWithMocksFromString(final Function<String, T> specificConverter, final String str, final Class<?> propertyType) {
+        if (str.startsWith(NOT_FOUND_MOCK_PREFIX)) {
+            return (T) createMockNotFoundEntity(propertyType, str.replaceFirst(NOT_FOUND_MOCK_PREFIX, ""));
+        }
+        return specificConverter.apply(str);
+    };
+    
+    private static final Function<PropertyDescriptor<?>, String> propertyDescriptorToString = entity -> entityWithMocksToString(pd -> pd.toString(), entity);
+    private static final Function<AbstractEntity<?>, String> entityToString = entity -> entityWithMocksToString(ent -> ent.getId().toString(), entity);
     
     private static Object extractFrom(final Object value, final Class<AbstractEntity<?>> root, final Supplier<Class<?>> managedTypeSupplier, final String property, final ICompanionObjectFinder companionFinder) {
         final boolean isEntityItself = "".equals(property); // empty property means "entity itself"
@@ -819,18 +827,15 @@ public class CentreUpdater {
             return valOrNull(value, longToDate, toString.andThen(stringToLong));
         } else if (isEntityType(propertyType) && isCritOnlySingle(managedType, property)) {
             if (isPropertyDescriptor(propertyType)) {
-                return valOrNull(value, stringToPropertyDescriptor);
+                return valOrNull(value, str -> entityWithMocksFromString(PropertyDescriptor::fromString, str, propertyType), toString);
             } else {
-                return valOrNull(value, (final String str) -> {
-                    if (str.startsWith(NOT_FOUND_MOCK_PREFIX)) {
-                        return createMockNotFoundEntity(propertyType, str.replaceFirst(NOT_FOUND_MOCK_PREFIX, ""));
-                    }
-                    final Long id = Long.valueOf(str);
+                return valOrNull(value, str -> entityWithMocksFromString(idString -> {
+                    final Long id = Long.valueOf(idString);
                     logger.error(format("CentreUpdater: ID-based restoration of value: type [%s] property [%s] propertyType [%s] id [%s].", managedType.getSimpleName(), property, propertyType.getSimpleName(), id));
                     final IEntityDao<AbstractEntity<?>> propertyCompanion = companionFinder.find((Class<AbstractEntity<?>>) propertyType, true);
                     final IEntityDao<AbstractEntity<?>> companion = companionFinder.find(root, true);
                     return propertyCompanion.findById(id, companion.getFetchProvider().fetchFor(property).fetchModel());
-                }, toString);
+                }, str, propertyType), toString);
             }
         } else {
             return value;
