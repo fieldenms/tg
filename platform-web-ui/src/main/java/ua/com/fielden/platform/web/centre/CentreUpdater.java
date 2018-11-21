@@ -25,6 +25,7 @@ import static ua.com.fielden.platform.domaintree.impl.AbstractDomainTree.isDoubl
 import static ua.com.fielden.platform.domaintree.impl.AbstractDomainTree.isDummyMarker;
 import static ua.com.fielden.platform.domaintree.impl.AbstractDomainTree.isPlaceholder;
 import static ua.com.fielden.platform.domaintree.impl.AbstractDomainTree.reflectionProperty;
+import static ua.com.fielden.platform.entity.AbstractEntity.DESC;
 import static ua.com.fielden.platform.entity.AbstractPersistentEntity.LAST_UPDATED_BY;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetch;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
@@ -48,6 +49,7 @@ import static ua.com.fielden.platform.web.interfaces.DeviceProfile.DESKTOP;
 import static ua.com.fielden.platform.web.interfaces.DeviceProfile.MOBILE;
 import static ua.com.fielden.platform.web.utils.EntityResourceUtils.createMockNotFoundEntity;
 import static ua.com.fielden.platform.web.utils.EntityResourceUtils.getEntityType;
+import static ua.com.fielden.platform.web.utils.EntityResourceUtils.isMockNotFoundEntity;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -102,7 +104,7 @@ import ua.com.fielden.snappy.MnemonicEnum;
 public class CentreUpdater {
     private static final Logger logger = Logger.getLogger(CentreUpdater.class);
     private static final String DIFFERENCES_SUFFIX = "__________DIFFERENCES";
-    public static final String NOT_FOUND_MOCK = "not found";
+    public static final String NOT_FOUND_MOCK_PREFIX = "__________NOT_FOUND__________";
     
     public static final String FRESH_CENTRE_NAME = "__________FRESH";
     public static final String PREVIOUSLY_RUN_CENTRE_NAME = "__________PREVIOUSLY_RUN";
@@ -796,14 +798,18 @@ public class CentreUpdater {
     private static final Function<String, MnemonicEnum> stringToMnemonic = MnemonicEnum::valueOf;
     private static final Function<Long, Date> longToDate = Date::new;
     private static final Function<Date, Long> dateToLong = Date::getTime;
-    private static final Function<AbstractEntity<?>, Long> entityToLong = AbstractEntity::getId;
-    // private static final Function<Object, Long> numberToLong = EntityResourceUtils::extractLongValueFrom;
     private static final Function<String, Long> stringToLong = Long::valueOf;
-    private static final Function<String, Long> idStringToLong = idString -> NOT_FOUND_MOCK.equals(idString) ? null : Long.valueOf(idString);
     private static final Function<Object, String> toString = Object::toString;
-    private static final Function<Long, String> idToString = id -> id == null ? NOT_FOUND_MOCK : id.toString();
     private static final Function<String, PropertyDescriptor<?>> stringToPropertyDescriptor = PropertyDescriptor::fromString;
     private static final Function<PropertyDescriptor<?>, String> propertyDescriptorToString = PropertyDescriptor::toString;
+    
+    private static final Function<AbstractEntity<?>, String> entityToString = entity -> {
+        if (isMockNotFoundEntity(entity)) {
+            return NOT_FOUND_MOCK_PREFIX + entity.get(DESC);
+        } else {
+            return entity.getId().toString();
+        }
+    };
     
     private static Object extractFrom(final Object value, final Class<AbstractEntity<?>> root, final Supplier<Class<?>> managedTypeSupplier, final String property, final ICompanionObjectFinder companionFinder) {
         final boolean isEntityItself = "".equals(property); // empty property means "entity itself"
@@ -815,15 +821,16 @@ public class CentreUpdater {
             if (isPropertyDescriptor(propertyType)) {
                 return valOrNull(value, stringToPropertyDescriptor);
             } else {
-                return valOrNull(value, (final Long id) -> {
-                    if (id == null) {
-                        return createMockNotFoundEntity(propertyType);
+                return valOrNull(value, (final String str) -> {
+                    if (str.startsWith(NOT_FOUND_MOCK_PREFIX)) {
+                        return createMockNotFoundEntity(propertyType, str.replaceFirst(NOT_FOUND_MOCK_PREFIX, ""));
                     }
+                    final Long id = Long.valueOf(str);
                     logger.error(format("CentreUpdater: ID-based restoration of value: type [%s] property [%s] propertyType [%s] id [%s].", managedType.getSimpleName(), property, propertyType.getSimpleName(), id));
                     final IEntityDao<AbstractEntity<?>> propertyCompanion = companionFinder.find((Class<AbstractEntity<?>>) propertyType, true);
                     final IEntityDao<AbstractEntity<?>> companion = companionFinder.find(root, true);
                     return propertyCompanion.findById(id, companion.getFetchProvider().fetchFor(property).fetchModel());
-                }, toString.andThen(idStringToLong));
+                }, toString);
             }
         } else {
             return value;
@@ -840,16 +847,12 @@ public class CentreUpdater {
             if (isPropertyDescriptor(propertyType)) {
                 return valOrNull(value, propertyDescriptorToString);
             } else {
-                return valOrNull(value, entityToLong.andThen(idToString));
+                return valOrNull(value, entityToString);
             }
         } else {
             return value;
         }
     }
-    
-//    private static String stringOrNull(final Object obj) {
-//        return obj == null ? null : obj.toString();
-//    }
     
     private static <T, M> M valOrNull(final Object obj, final Function<T, M> convertionFunc) {
         return valOrNull(obj, convertionFunc, obj1 -> (T) obj1);

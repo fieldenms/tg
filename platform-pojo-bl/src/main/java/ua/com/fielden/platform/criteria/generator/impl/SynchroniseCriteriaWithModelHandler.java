@@ -5,6 +5,7 @@ import static ua.com.fielden.platform.criteria.generator.impl.CriteriaReflector.
 import static ua.com.fielden.platform.criteria.generator.impl.CriteriaReflector.isSecondParam;
 import static ua.com.fielden.platform.domaintree.impl.AbstractDomainTree.isCritOnlySingle;
 import static ua.com.fielden.platform.utils.EntityUtils.equalsEx;
+import static ua.com.fielden.platform.web.utils.EntityResourceUtils.isMockNotFoundEntity;
 
 import java.util.stream.Stream;
 
@@ -82,7 +83,7 @@ public class SynchroniseCriteriaWithModelHandler<CDTME extends ICentreDomainTree
         } else {
             LOGGER.error(format("\t\t\t\tupdateTreeManagerProperty: propName = [%s] current value unchanged [%s]...", propName, currValue));
         }*/
-        final IAddToCriteriaTickManager v = equalsEx(currValue, newValue) ? criteriaTick : 
+        final IAddToCriteriaTickManager v = !areDifferent(currValue, newValue) ? criteriaTick : 
                isSecond                      ? criteriaTick.setValue2(entityType, propName, newValue) 
                                              : criteriaTick.setValue(entityType, propName, newValue);
         /*if (!equalsEx(currValue, newValue)) {
@@ -91,6 +92,17 @@ public class SynchroniseCriteriaWithModelHandler<CDTME extends ICentreDomainTree
             LOGGER.error(format("\t\t\t\tupdateTreeManagerProperty: propName = [%s] current value unchanged [%s]...done", propName, currValue));
         }*/
         return v;
+    }
+    
+    /**
+     * Indicates whether two values are different including the case of 'mock not found entity' values.
+     * 
+     * @param value1
+     * @param value2
+     * @return
+     */
+    private static boolean areDifferent(final Object value1, final Object value2) {
+        return !equalsEx(value1, value2) || isMockNotFoundEntity(value1) && isMockNotFoundEntity(value2) && !equalsEx(((AbstractEntity) value1).getDesc(), ((AbstractEntity) value2).getDesc());
     }
     
     /**

@@ -2,8 +2,11 @@ package ua.com.fielden.platform.web.utils;
 
 import static java.lang.String.format;
 import static java.util.Locale.getDefault;
+import static org.apache.commons.lang.StringUtils.isEmpty;
 import static org.apache.commons.lang.StringUtils.uncapitalize;
+import static ua.com.fielden.platform.entity.AbstractEntity.DESC;
 import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
+import static ua.com.fielden.platform.entity.AbstractEntity.KEY_NOT_ASSIGNED;
 import static ua.com.fielden.platform.entity.factory.EntityFactory.newPlainEntity;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
@@ -255,7 +258,7 @@ public class EntityResourceUtils {
             if (valToBeApplied != null && convertedValue == null) {
                 final Class<?> propType = determinePropertyType(type, name);
                 if (isEntityType(propType)) {
-                    valueToBeApplied = createMockNotFoundEntity(propType);
+                    valueToBeApplied = createMockNotFoundEntity(propType, (String) valToBeApplied); // here valToBeApplied must be string; look at 'convert' method with 'reflectedValue' parameter always string for entity-typed 'propertyType'
                 } else {
                     valueToBeApplied = convertedValue;
                 }
@@ -292,12 +295,34 @@ public class EntityResourceUtils {
     /**
      * Creates lightweight mock entity instance which will be invalid against {@link EntityExistsValidator} due to empty ID.
      * ToString conversion will give us {@link AbstractEntity#KEY_NOT_ASSIGNED}.
+     * <p>
+     * This mock instance contains the string query by which the entity was not found.
      * 
      * @param type
+     * @param stringQuery -- string query by which the entity was not found
+     * 
      * @return
      */
-    public static AbstractEntity<?> createMockNotFoundEntity(final Class<?> type) {
-        return newPlainEntity((Class<AbstractEntity<?>>) type, null);
+    public static AbstractEntity<?> createMockNotFoundEntity(final Class<?> type, final String stringQuery) {
+        if (isEmpty(stringQuery)) {
+            throw new EntityResourceUtilsException(format("Mock 'not found' entity could not be created due to empty 'stringQuery' [%s].", stringQuery));
+        }
+        final AbstractEntity<?> mockEntity = newPlainEntity((Class<AbstractEntity<?>>) type, null);
+        mockEntity.set(DESC, stringQuery);
+        return mockEntity;
+    }
+    
+    /**
+     * Returns indication whether <code>obj</code> represents 'mock not found entity'.
+     * 
+     * @param obj
+     * @return
+     */
+    public static boolean isMockNotFoundEntity(final Object obj) {
+        return obj instanceof AbstractEntity /* obj can be null and will return false as a result */
+                && ((AbstractEntity) obj).getId() == null
+                && KEY_NOT_ASSIGNED.equals(obj.toString())
+                && !isEmpty(((AbstractEntity) obj).getDesc());
     }
     
     /**
