@@ -134,7 +134,6 @@ public class EntityRetrievalModel<T extends AbstractEntity<?>> extends AbstractR
                 with(ppi.getName(), skipEntities);
             }
         }
-        includeLastUpdatedByGroupOfProperties();
     }
 
     private void includeLastUpdatedByGroupOfProperties() {
