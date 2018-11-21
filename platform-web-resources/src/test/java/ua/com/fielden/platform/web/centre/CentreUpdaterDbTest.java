@@ -1,10 +1,10 @@
 package ua.com.fielden.platform.web.centre;
 
 import static ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.IAddToCriteriaTickManager.MetaValueType.VALUE;
-import static ua.com.fielden.platform.web.centre.CentreUpdater.NOT_FOUND_MOCK_PREFIX;
 import static ua.com.fielden.platform.web.centre.CentreUpdaterTest.ROOT;
 import static ua.com.fielden.platform.web.centre.CentreUpdaterTest.expectedDiffWithValue;
 import static ua.com.fielden.platform.web.centre.CentreUpdaterTest.testDiffCreationAndApplication;
+import static ua.com.fielden.platform.web.utils.EntityResourceUtils.NOT_FOUND_MOCK_PREFIX;
 import static ua.com.fielden.platform.web.utils.EntityResourceUtils.createMockNotFoundEntity;
 
 import java.lang.reflect.Field;

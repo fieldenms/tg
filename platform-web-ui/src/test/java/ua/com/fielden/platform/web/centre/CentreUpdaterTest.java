@@ -15,7 +15,7 @@ import static ua.com.fielden.platform.domaintree.impl.DomainTreeEnhancerCache.CA
 import static ua.com.fielden.platform.serialisation.api.SerialiserEngines.JACKSON;
 import static ua.com.fielden.platform.types.tuples.T2.t2;
 import static ua.com.fielden.platform.utils.CollectionUtil.listOf;
-import static ua.com.fielden.platform.web.centre.CentreUpdater.NOT_FOUND_MOCK_PREFIX;
+import static ua.com.fielden.platform.web.utils.EntityResourceUtils.NOT_FOUND_MOCK_PREFIX;
 import static ua.com.fielden.platform.web.centre.CentreUpdater.applyDifferences;
 import static ua.com.fielden.platform.web.centre.CentreUpdater.createDifferences;
 import static ua.com.fielden.platform.web.centre.CentreUpdater.createEmptyDifferences;

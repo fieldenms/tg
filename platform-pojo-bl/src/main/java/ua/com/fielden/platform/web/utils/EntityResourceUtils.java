@@ -79,6 +79,7 @@ public class EntityResourceUtils {
     public static final String CENTRE_CONFIG_CONFLICT_WARNING = "Configuration with this title already exists.";
     public static final String CENTRE_CONFIG_CONFLICT_ERROR = "Base " + uncapitalize(CENTRE_CONFIG_CONFLICT_WARNING);
     private static final String RESOLVE_CONFLICT_INSTRUCTION = "Please either edit the value back to [%s] to resolve the conflict or cancel all of your changes.";
+    public static final String NOT_FOUND_MOCK_PREFIX = "__________NOT_FOUND__________";
     private static final Logger logger = Logger.getLogger(EntityResourceUtils.class);
     
     private EntityResourceUtils() {}

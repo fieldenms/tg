@@ -5,6 +5,8 @@ import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract
 import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.getValueChangeCountDefault;
 import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.getVisibleDefault;
 import static ua.com.fielden.platform.serialisation.jackson.EntitySerialiser.ID_ONLY_PROXY_PREFIX;
+import static ua.com.fielden.platform.web.utils.EntityResourceUtils.NOT_FOUND_MOCK_PREFIX;
+import static ua.com.fielden.platform.web.utils.EntityResourceUtils.createMockNotFoundEntity;
 
 import java.io.IOException;
 import java.lang.reflect.Field;
@@ -121,13 +123,23 @@ public class EntityJsonDeserialiser<T extends AbstractEntity<?>> extends StdDese
             // Property Descriptor: key and desc properties of propDescriptor are set through setters, not through fields; avoid validators on these properties or otherwise isInitialising:=true would be needed here
             if (uninstrumented) {
                 if (propertyDescriptorType) {
-                    entity = (T) PropertyDescriptor.fromString(node.get("@pdString").asText());
+                    final String pdString = node.get("@pdString").asText();
+                    if (pdString.startsWith(NOT_FOUND_MOCK_PREFIX)) {
+                        entity = (T) createMockNotFoundEntity(PropertyDescriptor.class, pdString.replaceFirst(NOT_FOUND_MOCK_PREFIX, ""));
+                    } else {
+                        entity = (T) PropertyDescriptor.fromString(pdString);
+                    }
                 } else {
                     entity = EntityFactory.newPlainEntity(EntityProxyContainer.proxy(type, proxiedProps), id);
                 }
             } else {
                 if (propertyDescriptorType) {
-                    entity = (T) PropertyDescriptor.fromString(node.get("@pdString").asText(), Optional.of(factory));
+                    final String pdString = node.get("@pdString").asText();
+                    if (pdString.startsWith(NOT_FOUND_MOCK_PREFIX)) {
+                        entity = (T) createMockNotFoundEntity(PropertyDescriptor.class, pdString.replaceFirst(NOT_FOUND_MOCK_PREFIX, ""));
+                    } else {
+                        entity = (T) PropertyDescriptor.fromString(pdString, Optional.of(factory));
+                    }
                 } else {
                     entity = factory.newEntity(EntityProxyContainer.proxy(type, proxiedProps), id);
                 }
