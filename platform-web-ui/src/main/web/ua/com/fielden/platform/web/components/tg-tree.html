@@ -36,18 +36,18 @@
             .tree-item {
                 padding: 1px 4px;
             }
-            .tree-node[selected] {
-                background-color: #F5F5F5
+            .tree-node[selected],
+            .tree-node[selected] > .tree-item-actions {
+                background-color: #F5F5F5;
             }
-            .tree-node:hover {
+            .tree-node:hover,
+            .tree-node:hover > .tree-item-actions {
                 background-color: #EEEEEE
             }
-            .tree-item-actions[mobile] {
-                position: absolute;
-                top: 0;
+            .tree-item-actions {
+                position: sticky;
                 right: 0;
                 opacity: 0.7;
-                background-color: white;
             }
             .tree-item-actions > iron-icon {
                 padding: 0 8px;
@@ -61,18 +61,17 @@
             .tree-node:hover > .tree-item-actions {
                 display: flex;
             }
-            .truncate {
+            .no-wrap {
+                min-width: min-content;
                 white-space: nowrap;
-                overflow: hidden;
-                text-overflow: ellipsis;
             }
         </style>
         <tg-app-config id="appConfig" mobile="{{mobile}}"></tg-app-config>
         <iron-list id="treeList" items="[[_entities]]" as="entity" selection-enabled>
             <template>
-                <div class="layout horizontal tree-node" selected$="[[selected]]" style$="[[_calcItemStyle(entity)]]">
+                <div class="layout horizontal tree-node no-wrap" selected$="[[selected]]" style$="[[_calcItemStyle(entity)]]">
                     <iron-icon class="expand-button" icon="av:play-arrow" style="flex-grow:0;flex-shrink:0;" invisible$="[[!entity.entity.hasChildren]]" collapsed$="[[!entity.opened]]" on-tap="_toggle"></iron-icon>
-                    <span class="tree-item truncate"  highlighted$="[[entity.highlight]]" inner-h-t-m-l="[[contentBuilder(entity, entity.opened)]]"></span>
+                    <span class="tree-item"  highlighted$="[[entity.highlight]]" inner-h-t-m-l="[[contentBuilder(entity, entity.opened)]]"></span>
                     <span class="tree-item-actions" on-tap="actionRunner" mobile$="[[mobile]]" inner-h-t-m-l="[[actionBuilder(entity)]]"></span>
                 </div>
             </template>
