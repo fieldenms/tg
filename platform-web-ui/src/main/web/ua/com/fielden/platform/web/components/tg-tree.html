@@ -5,6 +5,7 @@
 <link rel="import" href="/resources/polymer/iron-icons/av-icons.html">
 <link rel="import" href="/resources/polymer/iron-list/iron-list.html">
 
+<link rel="import" href="/app/tg-app-config.html">
 <link rel="import" href="/resources/components/tg-tooltip-behavior.html">
 
 <dom-module id="tg-tree">
@@ -33,7 +34,7 @@
                 font-weight: bold;
             }
             .tree-item {
-                padding: 2px 4px;
+                padding: 1px 4px;
             }
             .tree-node[selected] {
                 background-color: #F5F5F5
@@ -41,8 +42,15 @@
             .tree-node:hover {
                 background-color: #EEEEEE
             }
+            .tree-item-actions[mobile] {
+                position: absolute;
+                top: 0;
+                right: 0;
+                opacity: 0.7;
+                background-color: white;
+            }
             .tree-item-actions > iron-icon {
-                padding: 1px 2px;
+                padding: 0 8px;
                 cursor: pointer;
             }
             .tree-item-actions {
@@ -53,13 +61,19 @@
             .tree-node:hover > .tree-item-actions {
                 display: flex;
             }
+            .truncate {
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+            }
         </style>
+        <tg-app-config id="appConfig" mobile="{{mobile}}"></tg-app-config>
         <iron-list id="treeList" items="[[_entities]]" as="entity" selection-enabled>
             <template>
                 <div class="layout horizontal tree-node" selected$="[[selected]]" style$="[[_calcItemStyle(entity)]]">
                     <iron-icon class="expand-button" icon="av:play-arrow" style="flex-grow:0;flex-shrink:0;" invisible$="[[!entity.entity.hasChildren]]" collapsed$="[[!entity.opened]]" on-tap="_toggle"></iron-icon>
-                    <span class="tree-item"  highlighted$="[[entity.highlight]]" inner-h-t-m-l="[[contentBuilder(entity, entity.opened)]]"></span>
-                    <span class="tree-item-actions" on-tap="actionRunner" inner-h-t-m-l="[[actionBuilder(entity)]]"></span>
+                    <span class="tree-item truncate"  highlighted$="[[entity.highlight]]" inner-h-t-m-l="[[contentBuilder(entity, entity.opened)]]"></span>
+                    <span class="tree-item-actions" on-tap="actionRunner" mobile$="[[mobile]]" inner-h-t-m-l="[[actionBuilder(entity)]]"></span>
                 </div>
             </template>
         </iron-list>
@@ -189,6 +203,11 @@
                         type: Array,
                         observer: "_modelChanged"
                     },
+                    
+                    /**
+                     * Indicates whether component is opened in mobile mode
+                     */
+                    mobile: Boolean,
                     
                     contentBuilder: Function,
                     actionBuilder: Function,
