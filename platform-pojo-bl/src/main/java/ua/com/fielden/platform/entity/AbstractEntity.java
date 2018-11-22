@@ -20,6 +20,8 @@ import static ua.com.fielden.platform.error.Result.asRuntime;
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.isNumeric;
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.stripIfNeeded;
 import static ua.com.fielden.platform.utils.CollectionUtil.unmodifiableSetOf;
+import static ua.com.fielden.platform.utils.EntityUtils.isPersistedEntityType;
+import static ua.com.fielden.platform.utils.EntityUtils.isPropertyDescriptor;
 import static ua.com.fielden.platform.utils.EntityUtils.isString;
 
 import java.lang.annotation.Annotation;
@@ -839,8 +841,7 @@ public abstract class AbstractEntity<K extends Comparable> implements Comparable
     private boolean isEntityExistsValidationApplicable(final Field field, final Class<?> propType) {
         final SkipEntityExistsValidation seevAnnotation =  AnnotationReflector.getAnnotation(field, SkipEntityExistsValidation.class);
         final boolean skipEntityExistsValidation = seevAnnotation != null ? !seevAnnotation.skipActiveOnly() : false;
-        return !skipEntityExistsValidation &&
-                EntityUtils.isPersistedEntityType(propType);
+        return !skipEntityExistsValidation && (isPersistedEntityType(propType) || isPropertyDescriptor(propType));
     }
 
     /**

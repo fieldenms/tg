@@ -1,6 +1,8 @@
 package ua.com.fielden.platform.entity.validation;
 
 import static java.lang.String.format;
+import static java.util.Optional.empty;
+import static java.util.Optional.of;
 import static ua.com.fielden.platform.entity.AbstractEntity.KEY_NOT_ASSIGNED;
 import static ua.com.fielden.platform.entity.ActivatableAbstractEntity.ACTIVE;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchOnly;
@@ -8,8 +10,11 @@ import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 import static ua.com.fielden.platform.error.Result.failure;
 import static ua.com.fielden.platform.error.Result.successful;
+import static ua.com.fielden.platform.utils.EntityUtils.isPropertyDescriptor;
+import static ua.com.fielden.platform.web.utils.EntityResourceUtils.isMockNotFoundEntity;
 
 import java.lang.annotation.Annotation;
+import java.util.Optional;
 import java.util.Set;
 
 import ua.com.fielden.platform.dao.IEntityDao;
@@ -54,8 +59,13 @@ public class EntityExistsValidator<T extends AbstractEntity<?>> implements IBefo
     @Override
     public Result handle(final MetaProperty<T> property, final T newValue, final Set<Annotation> mutatorAnnotations) {
         final IEntityDao<T> co = coFinder.find(type);
+        Optional<Boolean> isPropertyDescriptorOpt = empty();
         if (co == null) {
-            throw new IllegalStateException("EntityExistsValidator is not fully initialised: companion object is missing");
+            final boolean isPropertyDescriptor = isPropertyDescriptor(type);
+            isPropertyDescriptorOpt = of(isPropertyDescriptor);
+            if (!isPropertyDescriptor) {
+                throw new IllegalStateException("EntityExistsValidator is not fully initialised: companion object is missing");
+            }
         }
 
         final AbstractEntity<?> entity = property.getEntity();
@@ -75,7 +85,7 @@ public class EntityExistsValidator<T extends AbstractEntity<?>> implements IBefo
             final boolean exists;
             final boolean activeEnough; // Does not have to 100% active - see below
             if (!property.isActivatable()) { // is property value represents non-activatable?
-                exists = co.entityExists(newValue);
+                exists = isPropertyDescriptorOpt.orElse(false) ? !isMockNotFoundEntity(newValue) : co.entityExists(newValue);
                 activeEnough = true;
             } else { // otherwise, property value is activatable
                 final Class<T> entityType = co.getEntityType();
@@ -96,11 +106,10 @@ public class EntityExistsValidator<T extends AbstractEntity<?>> implements IBefo
 
             if (!exists || !activeEnough) {
                 final String entityTitle = TitlesDescsGetter.getEntityTitleAndDesc(newValue.getType()).getKey();
-                final String newValueStr = newValue.toString();
                 if (!exists) {
-                    return failure(entity, KEY_NOT_ASSIGNED.equals(newValueStr) ? format(WAS_NOT_FOUND_ERR, entityTitle) : format(WAS_NOT_FOUND_CONCRETE_ERR, entityTitle, newValueStr));
+                    return failure(entity, isPropertyDescriptorOpt.orElse(false) && isMockNotFoundEntity(newValue) || KEY_NOT_ASSIGNED.equals(newValue.toString()) ? format(WAS_NOT_FOUND_ERR, entityTitle) : format(WAS_NOT_FOUND_CONCRETE_ERR, entityTitle, newValue.toString()));
                 } else {
-                    return failure(entity, format(EXISTS_BUT_NOT_ACTIVE_ERR, entityTitle, newValueStr));
+                    return failure(entity, format(EXISTS_BUT_NOT_ACTIVE_ERR, entityTitle, newValue.toString()));
                 }
             } else {
                 return successful(entity);

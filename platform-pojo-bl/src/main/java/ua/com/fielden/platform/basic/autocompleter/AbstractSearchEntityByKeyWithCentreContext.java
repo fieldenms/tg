@@ -27,7 +27,6 @@ import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.entity.query.model.ConditionModel;
 import ua.com.fielden.platform.entity.query.model.OrderingModel;
 import ua.com.fielden.platform.entity_centre.exceptions.EntityCentreExecutionException;
-import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.web.centre.CentreContext;
 
 /**
@@ -37,7 +36,7 @@ import ua.com.fielden.platform.web.centre.CentreContext;
  */
 public abstract class AbstractSearchEntityByKeyWithCentreContext<T extends AbstractEntity<?>> implements IValueMatcherWithCentreContext<T>, IValueMatcherWithFetch<T> {
 
-    private static final Supplier<? extends EntityCentreExecutionException> CO_MISSING_EXCEPTION_SUPPLIER = () -> new EntityCentreExecutionException("A companion is massing to perform this operation.");
+    private static final Supplier<? extends EntityCentreExecutionException> CO_MISSING_EXCEPTION_SUPPLIER = () -> new EntityCentreExecutionException("A companion is missing to perform this operation.");
 
     private final Optional<IEntityDao<T>> maybeCompanion;
     private final fetch<T> defaultFetchModel;
