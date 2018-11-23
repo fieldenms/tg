@@ -1,7 +1,6 @@
 package ua.com.fielden.platform.serialisation.jackson.serialisers;
 
 import static java.lang.String.format;
-import static ua.com.fielden.platform.entity.AbstractEntity.DESC;
 import static ua.com.fielden.platform.reflection.Reflector.extractValidationLimits;
 import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.getValidationResult;
 import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.isChangedFromOriginalDefault;
@@ -18,8 +17,7 @@ import static ua.com.fielden.platform.serialisation.jackson.EntitySerialiser.ID_
 import static ua.com.fielden.platform.utils.EntityUtils.isDecimal;
 import static ua.com.fielden.platform.utils.EntityUtils.isInteger;
 import static ua.com.fielden.platform.utils.EntityUtils.isString;
-import static ua.com.fielden.platform.web.utils.EntityResourceUtils.NOT_FOUND_MOCK_PREFIX;
-import static ua.com.fielden.platform.web.utils.EntityResourceUtils.isMockNotFoundEntity;
+import static ua.com.fielden.platform.web.utils.EntityResourceUtils.propertyDescriptorToString;
 
 import java.io.IOException;
 import java.util.LinkedHashMap;
@@ -128,11 +126,7 @@ public class EntityJsonSerialiser<T extends AbstractEntity<?>> extends StdSerial
                 final PropertyDescriptor<?> pd = (PropertyDescriptor<?>) entity;
                 // write property descriptor toString() value to special '@pdString' field
                 generator.writeFieldName("@pdString");
-                if (isMockNotFoundEntity(entity)) {
-                    generator.writeObject(NOT_FOUND_MOCK_PREFIX + entity.get(DESC));
-                } else {
-                    generator.writeObject(pd.toString());
-                }
+                generator.writeObject(propertyDescriptorToString.apply(pd));
             }
             
             final boolean uninstrumented = !PropertyTypeDeterminator.isInstrumented(entity.getClass());

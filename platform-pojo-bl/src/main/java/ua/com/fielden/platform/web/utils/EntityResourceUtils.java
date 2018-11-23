@@ -2,6 +2,7 @@ package ua.com.fielden.platform.web.utils;
 
 import static java.lang.String.format;
 import static java.util.Locale.getDefault;
+import static java.util.regex.Pattern.quote;
 import static org.apache.commons.lang.StringUtils.isEmpty;
 import static org.apache.commons.lang.StringUtils.uncapitalize;
 import static ua.com.fielden.platform.entity.AbstractEntity.DESC;
@@ -12,7 +13,6 @@ import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 import static ua.com.fielden.platform.reflection.AnnotationReflector.getPropertyAnnotation;
 import static ua.com.fielden.platform.utils.EntityUtils.isEntityType;
-
 import java.lang.reflect.Field;
 import java.lang.reflect.ParameterizedType;
 import java.math.BigDecimal;
@@ -27,6 +27,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -81,6 +82,8 @@ public class EntityResourceUtils {
     private static final String RESOLVE_CONFLICT_INSTRUCTION = "Please either edit the value back to [%s] to resolve the conflict or cancel all of your changes.";
     public static final String NOT_FOUND_MOCK_PREFIX = "__________NOT_FOUND__________";
     private static final Logger logger = Logger.getLogger(EntityResourceUtils.class);
+    public static final Function<PropertyDescriptor<?>, String> propertyDescriptorToString = entity -> entityWithMocksToString(pd -> pd.toString(), entity);
+    public static final Function<String, PropertyDescriptor<?>> propertyDescriptorFromString = str -> entityWithMocksFromString(PropertyDescriptor::fromString, str, PropertyDescriptor.class);
     
     private EntityResourceUtils() {}
     
@@ -324,6 +327,21 @@ public class EntityResourceUtils {
                 && ((AbstractEntity) obj).getId() == null
                 && (obj instanceof PropertyDescriptor && ((PropertyDescriptor) obj).getKey() == null || KEY_NOT_ASSIGNED.equals(obj.toString()) )
                 && !isEmpty(((AbstractEntity) obj).getDesc());
+    }
+    
+    public static <T extends AbstractEntity<?>> String entityWithMocksToString(final Function<T, String> specificConverter, final T entity) {
+        if (isMockNotFoundEntity(entity)) {
+            return NOT_FOUND_MOCK_PREFIX + entity.get(DESC);
+        } else {
+            return specificConverter.apply(entity);
+        }
+    }
+    
+    public static <T extends AbstractEntity<?>> T entityWithMocksFromString(final Function<String, T> specificConverter, final String str, final Class<?> type) {
+        if (str.startsWith(NOT_FOUND_MOCK_PREFIX)) {
+            return (T) createMockNotFoundEntity(type, str.replaceFirst(quote(NOT_FOUND_MOCK_PREFIX), ""));
+        }
+        return specificConverter.apply(str);
     }
     
     /**

@@ -25,7 +25,6 @@ import static ua.com.fielden.platform.domaintree.impl.AbstractDomainTree.isDoubl
 import static ua.com.fielden.platform.domaintree.impl.AbstractDomainTree.isDummyMarker;
 import static ua.com.fielden.platform.domaintree.impl.AbstractDomainTree.isPlaceholder;
 import static ua.com.fielden.platform.domaintree.impl.AbstractDomainTree.reflectionProperty;
-import static ua.com.fielden.platform.entity.AbstractEntity.DESC;
 import static ua.com.fielden.platform.entity.AbstractPersistentEntity.LAST_UPDATED_BY;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetch;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
@@ -47,10 +46,11 @@ import static ua.com.fielden.platform.web.centre.CentreUpdaterUtils.saveNewEntit
 import static ua.com.fielden.platform.web.centre.WebApiUtils.LINK_CONFIG_TITLE;
 import static ua.com.fielden.platform.web.interfaces.DeviceProfile.DESKTOP;
 import static ua.com.fielden.platform.web.interfaces.DeviceProfile.MOBILE;
-import static ua.com.fielden.platform.web.utils.EntityResourceUtils.NOT_FOUND_MOCK_PREFIX;
-import static ua.com.fielden.platform.web.utils.EntityResourceUtils.createMockNotFoundEntity;
+import static ua.com.fielden.platform.web.utils.EntityResourceUtils.entityWithMocksFromString;
+import static ua.com.fielden.platform.web.utils.EntityResourceUtils.entityWithMocksToString;
 import static ua.com.fielden.platform.web.utils.EntityResourceUtils.getEntityType;
-import static ua.com.fielden.platform.web.utils.EntityResourceUtils.isMockNotFoundEntity;
+import static ua.com.fielden.platform.web.utils.EntityResourceUtils.propertyDescriptorFromString;
+import static ua.com.fielden.platform.web.utils.EntityResourceUtils.propertyDescriptorToString;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -73,7 +73,6 @@ import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentr
 import ua.com.fielden.platform.domaintree.centre.IOrderingRepresentation.Ordering;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
-import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ICompoundCondition0;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
@@ -800,23 +799,6 @@ public class CentreUpdater {
     private static final Function<Date, Long> dateToLong = Date::getTime;
     private static final Function<String, Long> stringToLong = Long::valueOf;
     private static final Function<Object, String> toString = Object::toString;
-    
-    private static <T extends AbstractEntity<?>> String entityWithMocksToString(final Function<T, String> specificConverter, final T entity) {
-        if (isMockNotFoundEntity(entity)) {
-            return NOT_FOUND_MOCK_PREFIX + entity.get(DESC);
-        } else {
-            return specificConverter.apply(entity);
-        }
-    };
-    
-    private static <T extends AbstractEntity<?>> T entityWithMocksFromString(final Function<String, T> specificConverter, final String str, final Class<?> propertyType) {
-        if (str.startsWith(NOT_FOUND_MOCK_PREFIX)) {
-            return (T) createMockNotFoundEntity(propertyType, str.replaceFirst(NOT_FOUND_MOCK_PREFIX, ""));
-        }
-        return specificConverter.apply(str);
-    };
-    
-    private static final Function<PropertyDescriptor<?>, String> propertyDescriptorToString = entity -> entityWithMocksToString(pd -> pd.toString(), entity);
     private static final Function<AbstractEntity<?>, String> entityToString = entity -> entityWithMocksToString(ent -> ent.getId().toString(), entity);
     
     private static Object extractFrom(final Object value, final Class<AbstractEntity<?>> root, final Supplier<Class<?>> managedTypeSupplier, final String property, final ICompanionObjectFinder companionFinder) {
@@ -827,7 +809,7 @@ public class CentreUpdater {
             return valOrNull(value, longToDate, toString.andThen(stringToLong));
         } else if (isEntityType(propertyType) && isCritOnlySingle(managedType, property)) {
             if (isPropertyDescriptor(propertyType)) {
-                return valOrNull(value, str -> entityWithMocksFromString(PropertyDescriptor::fromString, str, propertyType), toString);
+                return valOrNull(value, propertyDescriptorFromString, toString);
             } else {
                 return valOrNull(value, str -> entityWithMocksFromString(idString -> {
                     final Long id = Long.valueOf(idString);
