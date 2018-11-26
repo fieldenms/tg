@@ -24,54 +24,62 @@
     <template is="dom-bind" id="app">
         <tg-app-config id="appConfig"></tg-app-config>
         <tg-reflector id="reflector"></tg-reflector>
-        <tg-bar-chart id="chart" class="fit" data="[[data]]" options="[[options]]"></tg-bar-chart>
+        <tg-bar-chart id="chart" class="fit"></tg-bar-chart>
     </template>
     <script>
         (function () {
             var app = document.querySelector('#app');
-            app.options = {
-                label: "Bar chart example",
-                xAxis: {label: "Letters"},
-                yAxis: {label: "Frequency"},
-                margin: {
-                    left: 60,
-                    top: 40,
-                    bottom: 50
-                },
-                markerGenerator: function (d) {
-                    return d.value;
-                },
-                tooltipCallback: function (d) {
-                    return d.name + "<br><b>value:</b> " + d.value;
-                }
-            };
-            app.data = [{name: 'A',	value: 0.08167, color: "aquamarine"},
-                        {name: 'B', value: 0.01492, color: "brown"},
-                        {name: 'C',	value: 0.02782, color: "cornflowerblue"},
-                        {name: 'D',	value: 0.04253, color: "darkorange"},
-                        {name: 'E',	value: 0.12702, color: "Indianred"},
-                        {name: 'F',	value: 0.02288, color: "gold"},
-                        {name: 'G',	value: 0.02015, color: "fiebrick"},
-                        {name: 'H',	value: 0.06094, color: "mediumorchid"},
-                        {name: 'I',	value: 0.06966, color: "palevioletred"},
-                        {name: 'J',	value: 0.00153, color: "royalblue"},
-                        {name: 'K',	value: 0.00772, color: "palegreen"},
-                        {name: 'L',	value: 0.04025, color: "mistyrose"},
-                        {name: 'M',	value: 0.02406, color: "lightcoral"},
-                        {name: 'N',	value: 0.06749, color: "lightskyblue"},
-                        {name: 'O',	value: 0.07507, color: "mediumspringgreen"},
-                        {name: 'P',	value: 0.01929, color: "orangered"},
-                        {name: 'Q',	value: 0.00095, color: "orchid"},
-                        {name: 'R',	value: 0.05987, color: "palegoldenrod"},
-                        {name: 'S',	value: 0.06327, color: "peachpuff"},
-                        {name: 'T',	value: 0.09056, color: "powderblue"},
-                        {name: 'U',	value: 0.02758, color: "plum"},
-                        {name: 'V',	value: 0.00978, color: "salmon"},
-                        {name: 'W',	value: 0.02360, color: "seagreen"},
-                        {name: 'X',	value: 0.00150, color: "slateblue"},
-                        {name: 'Y',	value: 0.01974, color: "yellowgreen"},
-                        {name: 'Z', value: 0.00074, color: "yellow"}];
+            app.addEventListener('dom-change', function() {
+                app.$.chart.options = {
+                    dataPropertyNames: {
+                        id: d => d.id,
+                        groupKeyProp: d => d.name,
+                        groupDescProp: d => d.name,
+                        valueProps: [d => d.value],
+                    },
+                    label: "Bar chart example",
+                    xAxis: {label: "Letters"},
+                    yAxis: {label: "Frequency"},
+                    margin: {
+                        left: 60,
+                        top: 40,
+                        bottom: 50
+                    },
+                    barColour: d => d.color,
+                    barLabel: d => d.value,
+                    selectedColour: colour => "white",
+                    tooltip: d => "<b>" + d.name + "</b>(<i>" + d.value + "</i>)",
+                    click: d => {},
+                };
+                app.$.chart.data = [{id:0, name: 'A', value: 0.08167, color: "aquamarine"},
+                            {id:1, name: 'B', value: 0.01492, color: "brown"},
+                            {id:2, name: 'C', value: 0.02782, color: "cornflowerblue"},
+                            {id:3, name: 'D', value: 0.04253, color: "darkorange"},
+                            {id:4, name: 'E', value: 0.12702, color: "Indianred"},
+                            {id:5, name: 'F', value: 0.02288, color: "gold"},
+                            {id:6, name: 'G', value: 0.02015, color: "fiebrick"},
+                            {id:7, name: 'H', value: 0.06094, color: "mediumorchid"},
+                            {id:8, name: 'I', value: 0.06966, color: "palevioletred"},
+                            {id:9, name: 'J', value: 0.00153, color: "royalblue"},
+                            {id:10, name: 'K', value: 0.00772, color: "palegreen"},
+                            {id:11, name: 'L', value: 0.04025, color: "mistyrose"},
+                            {id:12, name: 'M', value: 0.02406, color: "lightcoral"},
+                            {id:13, name: 'N', value: 0.06749, color: "lightskyblue"},
+                            {id:14, name: 'O', value: 0.07507, color: "mediumspringgreen"},
+                            {id:15, name: 'P', value: 0.01929, color: "orangered"},
+                            {id:16, name: 'Q', value: 0.00095, color: "orchid"},
+                            {id:17, name: 'R', value: 0.05987, color: "palegoldenrod"},
+                            {id:18, name: 'S', value: 0.06327, color: "peachpuff"},
+                            {id:19, name: 'T', value: 0.09056, color: "powderblue"},
+                            {id:20, name: 'U', value: 0.02758, color: "plum"},
+                            {id:21, name: 'V', value: 0.00978, color: "salmon"},
+                            {id:22, name: 'W', value: 0.02360, color: "seagreen"},
+                            {id:23, name: 'X', value: 0.00150, color: "slateblue"},
+                            {id:24, name: 'Y', value: 0.01974, color: "yellowgreen"},
+                            {id:25, name: 'Z', value: 0.00074, color: "yellow"}];
+            });
         })();
+      
     </script>
 </body>
 

@@ -61,6 +61,11 @@
             });
             chartArea.dispatchEvent(event);
         }
+        
+        const BarMode = {
+            STACKED: "stacked",
+            GROUPED = "grouped"
+        };
 
         class BarChart {
 
@@ -68,6 +73,7 @@
                 //////////////////////Private variables can be configured through the api//////////////////////////
                 //Most common configuration properties.
                 this._options = {
+                    mode: BarMode.GROUPED,
                     width: 35,
                     height: 85,
                     margin: {
@@ -88,13 +94,13 @@
                         id: "id",
                         groupKeyProp: "groupKeyProp",
                         groupDescProp: "groupDescProp",
-                        valueProp: "valueProp",
+                        valueProps: ["valueProp"],
                     },
-                    barColour: d => "#0288D1",
-                    barLabel: d => value("valueProp", d),
-                    selectedColour: colour => shadeColor(colour, 0.3),
-                    tooltip: d => "<b>" + value("groupKeyProp", d) + "</b>(<i>" + value("groupDescProp", d) + "</i>)",
-                    click: d => {},
+                    barColour: (d, valueProp) => "#0288D1",
+                    barLabel: (d, valueProp) => value(valueProp, d),
+                    selectedColour: (d, valueProp) => shadeColor(this.barColour(d, valueProp), 0.3),
+                    tooltip: (d, valueProp) => "<b>" + value("groupKeyProp", d) + "</b>(<i>" + value("groupDescProp", d) + "</i>)",
+                    click: (d, valueProp) => {},
                 };
                 this._options = options ? merge2LevelData(this._options, options) : this._options;
                 this._data = [];
@@ -182,6 +188,7 @@
                 }
                 // Create new scales acoording to new width and height.
                 this._xs = this._xScale();
+                this._xs1 = this._xScaleSecondary();
                 this._ys = this._yScale();
                 // Update clip path according to new width and height.
                 this._clipPath.attr("width", this._actualWidth).attr("height", this._actualHeight);
@@ -247,12 +254,14 @@
                 let minRange = 0;
                 let maxRange = 0;
                 this.data.forEach(d => {
-                    const newValue = value(this._options.dataPropertyNames.valueProp, d);
-                    if (maxRange < newValue) {
-                        maxRange = newValue;
+                    const valuePropArray = this._options.dataPropertyNames.valueProps.map(valueProp => value(valueProp, d));
+                    const newMaxValue = this._options.mode === BarMode.GROUPED ? Math.max(...valuePropArray) : valuePropArray.filter(value => value > 0).reduce((a, b) => a + b, 0);
+                    const newMinValue = this._options.mode === BarMode.GROUPED ? Math.min(...valuePropArray) : valuePropArray.filter(value => value < 0).reduce((a, b) => a + b, 0);
+                    if (maxRange < newMaxValue) {
+                        maxRange = newMaxValue;
                     }
-                    if (minRange > newValue) {
-                        minRange = newValue;
+                    if (minRange > newMinValue) {
+                        minRange = newMinValue;
                     }
                 })
                 const factor = (Math.abs(maxRange - minRange) / (this._actualHeight > 30 ? this._actualHeight - 30 : 1)) * 30;
@@ -264,6 +273,13 @@
                     .rangeRound([0, this._actualWidth])
                     .padding(0.1) // could be configurable 
                     .domain(this._xDomain());
+            }
+            
+            _xScaleSecondary() {
+                return d3.scaleBand()
+                    .rangeRound([0, this._xs.bandwidth()])
+                    .padding(0.1) // could be configurable 
+                    .domain(this._options.dataPropertyNames.valueProps.map((val, idx) => idx));
             }
 
             _yScale() {
@@ -285,7 +301,7 @@
             }
 
             _createClipPath(container) {
-                return d3.select(container).append('defs').append("clipPath").attr("id", "bar-" + this._options.dataPropertyNames.valueProp + "-clip")
+                return d3.select(container).append('defs').append("clipPath").attr("id", "bar-" + generateUUID() + "-clip")
                     .append("rect").attr("width", this._actualWidth).attr("height", this._actualHeight);
             }
 
@@ -300,12 +316,11 @@
             }
 
             _drawYGrid() {
-                console.log(this._yGrid.scale().domain);
                 return this._chartArea.append("g").attr("class", "grid y-grid").call(this._yGrid);
             }
 
             _createBarContainer() {
-                return this._chartArea.append("g").attr("clip-path", "url(#bar-" + this._options.dataPropertyNames.valueProp + "-clip)").append("g").attr("class", "bar-container");
+                return this._chartArea.append("g").attr("clip-path", "url(#bar-" + this._clipPath.attr("id") + "-clip)").append("g").attr("class", "bar-container");
             }
 
             _drawXAxes() {
@@ -389,20 +404,43 @@
                     .attr("transform", "rotate(-90)");
             }
 
+            
+            
+            //NEED TO REFACTOR CODE BELOW
             _drawBars() {
                 const self = this;
-                const updateSelection = self._barContainer.selectAll(".bar").data(this._data);
+                const updateSelection = self._barContainer.selectAll(".bar-group").data(this._data);
                 const insertSelection = updateSelection.enter();
                 const removeSelection = updateSelection.exit();
 
+                //update bar groups
+                updateSelection.call(self._updateBarGroup.bind(self));
+                //insert new bar groups
+                insertSelection.call(self._insertNewBarGroup.bind(self));
+                //removed unnedded bar groups
+                removeSelection.remove();
+            }
+
+            _insertNewBarGroup(selection) {
+                const self = this;
+                const newBars = selection.append("g").attr("class", "bar-group").call(self._updateBarGroup.bind(self));
+            }
+            
+            _updateBarGroup(selection) {
+                const self = this;
+                selection.attr("transform", d => "translate(" + this._xs(value(this._options.dataPropertyNames.groupKeyProp, d)) + ",0)");
+                const updateBarSelection = selection.selectAll(".bar").data(d => this._options.dataPropertyNames.valueProps.map((val, idx) => {d: d, idx: idx}));
+                const insertBarSelection = updateBarSelection.enter();
+                const removeBarSelection = updateBarSelection.exit();
+                
                 //update bars
                 updateSelection.call(self._updateBar.bind(self));
                 //insert bars
                 insertSelection.call(self._insertNewBar.bind(self));
-                //removed unnedded tasks
+                //removed unnedded bars
                 removeSelection.remove();
             }
-
+            
             _insertNewBar(selection) {
                 const self = this;
                 const newBars = selection.append("rect").attr("class", "bar").on("click", function (d) {
@@ -583,6 +621,12 @@
                 }
             }
         }
+        //REFACTORE UNTIL HERE
+        
+        
+        
+        
+        
 
         d3.barChart = (container, options, data) => {
             const barChart = new BarChart(container, options, data);
@@ -613,5 +657,7 @@
             };
             return chart;
         };
+        
+        d3.barChart.BarMode = BarMode;
     })();
 </script>
