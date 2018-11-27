@@ -53,7 +53,7 @@ public class EntityRetrievalModel<T extends AbstractEntity<?>> extends AbstractR
         super(originalFetch, domainMetadataAnalyser);
         this.propsMetadata = domainMetadataAnalyser.getPropertyMetadatasForEntity(getEntityType());
         entityTypeInfo = new EntityTypeInfo<>(getEntityType());
-
+        
         switch (originalFetch.getFetchCategory()) {
         case ALL_INCL_CALC:
             includeAllFirstLevelPropsInclCalc();
@@ -126,11 +126,7 @@ public class EntityRetrievalModel<T extends AbstractEntity<?>> extends AbstractR
     private void includeAllFirstLevelPrimPropsAndKey() {
         for (final PropertyMetadata ppi : propsMetadata) {
             if (!ppi.isCalculated()/* && !ppi.isSynthetic()*/ && !ppi.isCollection() && !ppi.isPure()) {
-                logger.debug("adding not calculated prop to fetch model: " + ppi.getName());
-                final boolean skipEntities = !(ppi.getCategory() == ENTITY_MEMBER_OF_COMPOSITE_KEY ||
-                        ppi.getCategory() == ENTITY_AS_KEY ||
-                        ppi.getCategory() == UNION_ENTITY_DETAILS ||
-                        ppi.getCategory() == UNION_ENTITY_HEADER);
+                final boolean skipEntities = !(ppi.getCategory() == ENTITY_MEMBER_OF_COMPOSITE_KEY || ppi.getCategory() == ENTITY_AS_KEY); 
                 with(ppi.getName(), skipEntities);
             }
         }
@@ -149,8 +145,6 @@ public class EntityRetrievalModel<T extends AbstractEntity<?>> extends AbstractR
             includeIdAndVersionOnly();
         } else if (isSyntheticBasedOnPersistentEntityType(getEntityType())) {
             addPrimProp(ID);
-        } else if (isUnionEntityType(getEntityType())) {
-            includeAllFirstLevelProps();
         }
 
         with(KEY, true);
@@ -233,7 +227,7 @@ public class EntityRetrievalModel<T extends AbstractEntity<?>> extends AbstractR
         
         if (ppi.isUnionEntity()) {
             for (final PropertyMetadata pmd : ppi.getComponentTypeSubprops()) {
-                with(pmd.getName(), false);
+                addPrimProp(pmd.getName()); // is added here as primitive prop only to avoid its removal in EntQuery.adjustAccordingToFetchModel
             }
         }
         
