@@ -250,11 +250,15 @@
                 },
                 
                 expandSubtreeFull: function (idx, entity) {
-                    if (!entity.opened) {
-                        this.set("_entities." + idx + ".opened", true);
-                        this.splice("_entities", idx + 1, 0, ...getChildrenToAdd.bind(this)(entity, false));
+                    if (entity.entity.hasChildren) {
+                        const numOfItemsToDelete = calculateNumberOfOpenedItems(entity);
+                        entity.children = [generateLoadingIndicator(entity)];
+                        if (!entity.opened) {
+                            this.set("_entities." + idx + ".opened", true);
+                        }
+                        this.splice("_entities", idx + 1, numOfItemsToDelete, ...getChildrenToAdd.bind(this)(entity, false));
+                        this.fire("tg-load-subtree", {parentPath: getParentsPath(entity), loadAll: true});
                     }
-                    this.fire("tg-load-subtree", {parentPath: getParentsPath(entity), loadAll: true});
                 },
                 
                 _filterSubTree: function (text, subtree, expand) {
