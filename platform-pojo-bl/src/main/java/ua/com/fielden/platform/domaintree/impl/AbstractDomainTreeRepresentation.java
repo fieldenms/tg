@@ -271,7 +271,7 @@ public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTre
                 EntityUtils.isCompositeEntity((Class<AbstractEntity<?>>) elementType) &&
                 Finder.getKeyMembers(elementType).size() == 2 &&
                 Finder.getKeyMembers(elementType).stream().allMatch(field -> EntityUtils.isEntityType(field.getType())) &&
-                Finder.getKeyMembers(elementType).stream().anyMatch(field -> stripIfNeeded(getOriginalType(field.getType())).equals(stripIfNeeded(getOriginalType(penultAndLast.getKey()))));
+                Finder.getKeyMembers(elementType).stream().anyMatch(field -> stripIfNeeded(getOriginalType(field.getType())).isAssignableFrom(stripIfNeeded(getOriginalType(penultAndLast.getKey()))));
     }
 
     /**
