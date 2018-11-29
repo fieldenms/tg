@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.web.centre;
 
+import static java.math.RoundingMode.HALF_UP;
 import static java.util.Optional.empty;
 import static org.junit.Assert.assertEquals;
 import static ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.IAddToCriteriaTickManager.MetaValueType.AND_BEFORE;
@@ -15,7 +16,7 @@ import static ua.com.fielden.platform.domaintree.impl.DomainTreeEnhancerCache.CA
 import static ua.com.fielden.platform.serialisation.api.SerialiserEngines.JACKSON;
 import static ua.com.fielden.platform.types.tuples.T2.t2;
 import static ua.com.fielden.platform.utils.CollectionUtil.listOf;
-import static ua.com.fielden.platform.web.utils.EntityResourceUtils.NOT_FOUND_MOCK_PREFIX;
+import static ua.com.fielden.platform.utils.CollectionUtil.mapOf;
 import static ua.com.fielden.platform.web.centre.CentreUpdater.applyDifferences;
 import static ua.com.fielden.platform.web.centre.CentreUpdater.createDifferences;
 import static ua.com.fielden.platform.web.centre.CentreUpdater.createEmptyDifferences;
@@ -26,11 +27,14 @@ import static ua.com.fielden.platform.web.centre.api.crit.defaults.mnemonics.con
 import static ua.com.fielden.platform.web.centre.api.impl.EntityCentreBuilder.centreFor;
 import static ua.com.fielden.platform.web.interfaces.ILayout.Device.DESKTOP;
 import static ua.com.fielden.platform.web.layout.api.impl.LayoutComposer.mkGridForCentre;
+import static ua.com.fielden.platform.web.utils.EntityResourceUtils.NOT_FOUND_MOCK_PREFIX;
 import static ua.com.fielden.platform.web.utils.EntityResourceUtils.createMockNotFoundEntity;
 import static ua.com.fielden.snappy.DateRangePrefixEnum.NEXT;
 import static ua.com.fielden.snappy.DateRangePrefixEnum.PREV;
 import static ua.com.fielden.snappy.MnemonicEnum.MONTH;
 
+import java.math.BigDecimal;
+import java.util.Currency;
 import java.util.Date;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -59,6 +63,7 @@ import ua.com.fielden.platform.serialisation.api.impl.SerialisationTypeEncoder;
 import ua.com.fielden.platform.serialisation.api.impl.SerialiserForDomainTreesTestingPurposes;
 import ua.com.fielden.platform.test.CommonTestEntityModuleWithPropertyFactory;
 import ua.com.fielden.platform.test.EntityModuleWithPropertyFactory;
+import ua.com.fielden.platform.types.Money;
 import ua.com.fielden.platform.types.tuples.T2;
 import ua.com.fielden.platform.ui.menu.MiWithConfigurationSupport;
 import ua.com.fielden.platform.ui.menu.sample.MiTgCentreDiffSerialisation;
@@ -74,6 +79,8 @@ import ua.com.fielden.platform.web.centre.api.EntityCentreConfig;
  *
  */
 public class CentreUpdaterTest {
+    private static final BigDecimal ONE_AND_LITTLE = new BigDecimal(1.01).setScale(3, HALF_UP);
+    private static final Money ONE_AND_LITTLE_MONEY = new Money(ONE_AND_LITTLE, Currency.getInstance("UAH"));
     private static final Class<?> ROOT_GENERIC = TgCentreDiffSerialisation.class;
     static final Class<AbstractEntity<?>> ROOT = (Class<AbstractEntity<?>>) ROOT_GENERIC;
     private static final Class<? extends MiWithConfigurationSupport<?>> MI_TYPE = MiTgCentreDiffSerialisation.class;
@@ -90,7 +97,6 @@ public class CentreUpdaterTest {
     private static final Date d2020 = new DateTime(2020, 1, 1, 0, 0).toDate();
     private static final EntityCentreConfig<TgCentreDiffSerialisation> DSL_CONFIG = 
         centreFor(TgCentreDiffSerialisation.class)
-        .addCrit("stringProp").asMulti().text().setDefaultValue(multi().string().not().setValues("A*", "B*").canHaveNoValue().value()).also()
         .addCrit("dateProp").asRange().dateTime().also()
         .addCrit("datePropDefault").asRange().dateTime().setDefaultValue(range().date().not().setFromValueExclusive(d2018).setToValueExclusive(d2019).canHaveNoValue().value()).also()
         .addCrit("datePropDefaultMnemonics").asRange().dateTime().setDefaultValue(range().date().next().monthAndBefore().value()).also()
@@ -105,8 +111,32 @@ public class CentreUpdaterTest {
         .addCrit("entityPropCritSingle").asSingle().autocompleter(TgCentreDiffSerialisationPersistentChild.class).also()
         .addCrit("propertyDescriptorProp").asMulti().autocompleter(PropertyDescriptor.class).also()
         .addCrit("propertyDescriptorPropCrit").asMulti().autocompleter(PropertyDescriptor.class).also()
-        .addCrit("propertyDescriptorPropCritSingle").asSingle().autocompleter(PropertyDescriptor.class)
-        .setLayoutFor(DESKTOP, empty(), mkGridForCentre(7, 2))
+        .addCrit("propertyDescriptorPropCritSingle").asSingle().autocompleter(PropertyDescriptor.class).also()
+        .addCrit("stringProp").asMulti().text().also()
+        .addCrit("stringPropDefault").asMulti().text().setDefaultValue(multi().string().setValues("0*", "*1").value()).also()
+        .addCrit("stringPropCrit").asMulti().text().also()
+        .addCrit("stringPropCritSingle").asSingle().text().also()
+        .addCrit("booleanProp").asMulti().bool().also()
+        .addCrit("booleanPropDefault").asMulti().bool().setDefaultValue(multi().bool().setIsValue(false).setIsNotValue(false).value()).also()
+        .addCrit("booleanPropCrit").asMulti().bool().also()
+        .addCrit("booleanPropCritSingle").asSingle().bool().also()
+        .addCrit("integerProp").asRange().integer().also()
+        .addCrit("integerPropDefault").asRange().integer().setDefaultValue(range().integer().setFromValue(0).setToValue(0).value()).also()
+        .addCrit("integerPropCrit").asRange().integer().also()
+        .addCrit("integerPropCritSingle").asSingle().integer().also()
+        .addCrit("longProp").asRange().integer().also()
+        .addCrit("longPropDefault").asRange().integer().setDefaultValue(range().integer().setFromValue(0).setToValue(0).value()).also()
+        .addCrit("longPropCrit").asRange().integer().also()
+        .addCrit("longPropCritSingle").asSingle().integer().also()
+        .addCrit("bigDecimalProp").asRange().decimal().also()
+        .addCrit("bigDecimalPropDefault").asRange().decimal().setDefaultValue(range().decimal().setFromValue(new BigDecimal(0).setScale(3)).setToValue(new BigDecimal(0).setScale(3)).value()).also()
+        .addCrit("bigDecimalPropCrit").asRange().decimal().also()
+        .addCrit("bigDecimalPropCritSingle").asSingle().decimal().also()
+        .addCrit("moneyProp").asRange().decimal().also()
+        .addCrit("moneyPropDefault").asRange().decimal().setDefaultValue(range().decimal().setFromValue(new BigDecimal(0).setScale(3)).setToValue(new BigDecimal(0).setScale(3)).value()).also()
+        .addCrit("moneyPropCrit").asRange().decimal().also()
+        .addCrit("moneyPropCritSingle").asSingle().decimal()
+        .setLayoutFor(DESKTOP, empty(), mkGridForCentre(39, 1))
         .addProp("stringProp")
         .build();
     static {
@@ -381,12 +411,12 @@ public class CentreUpdaterTest {
     }
     
     @Test
-    public void left_critOnly_date_value() {
+    public void left_crit_date_value() {
         testDiffCreationAndApplication(CentreUpdaterTest::create, centre -> centre.getFirstTick().setValue(ROOT, "datePropCrit", d2018), expectedDiffWithValue("datePropCrit", VALUE.name(), Long.toString(d2018.getTime())));
     }
     
     @Test
-    public void left_critOnlySingle_date_value() {
+    public void crit_single_date_value() {
         testDiffCreationAndApplication(CentreUpdaterTest::create, centre -> centre.getFirstTick().setValue(ROOT, "datePropCritSingle", d2018), expectedDiffWithValue("datePropCritSingle", VALUE.name(), Long.toString(d2018.getTime())));
     }
     
@@ -421,7 +451,7 @@ public class CentreUpdaterTest {
     }
     
     @Test
-    public void right_critOnly_date_value() {
+    public void right_crit_date_value() {
         testDiffCreationAndApplication(CentreUpdaterTest::create, centre -> centre.getFirstTick().setValue2(ROOT, "datePropCrit", d2019), expectedDiffWithValue("datePropCrit", VALUE2.name(), Long.toString(d2019.getTime())));
     }
     
@@ -460,7 +490,7 @@ public class CentreUpdaterTest {
     }
     
     @Test
-    public void critOnly_entity_value() {
+    public void crit_entity_value() {
         testDiffCreationAndApplication(CentreUpdaterTest::create, centre -> centre.getFirstTick().setValue(ROOT, "entityPropCrit", listOf("A*", "*B")), expectedDiffWithValue("entityPropCrit", VALUE.name(), listOf("A*", "*B")));
     }
     
@@ -470,20 +500,457 @@ public class CentreUpdaterTest {
     }
     
     @Test
-    public void critOnly_propertyDescriptor_value() {
+    public void crit_propertyDescriptor_value() {
         testDiffCreationAndApplication(CentreUpdaterTest::create, centre -> centre.getFirstTick().setValue(ROOT, "propertyDescriptorPropCrit", listOf("A*", "*B")), expectedDiffWithValue("propertyDescriptorPropCrit", VALUE.name(), listOf("A*", "*B")));
     }
     
     @Test
-    public void critOnlySingle_propertyDescriptor_value() {
+    public void crit_single_propertyDescriptor_value() {
         final PropertyDescriptor<TgCentreDiffSerialisationPersistentChild> propertyVal = new PropertyDescriptor<TgCentreDiffSerialisationPersistentChild>(TgCentreDiffSerialisationPersistentChild.class, "stringProp");
         testDiffCreationAndApplication(CentreUpdaterTest::create, centre -> centre.getFirstTick().setValue(ROOT, "propertyDescriptorPropCritSingle", propertyVal), expectedDiffWithValue("propertyDescriptorPropCritSingle", VALUE.name(), propertyVal.toString()));
     }
     
     @Test
-    public void critOnlySingle_propertyDescriptor_value_notFound() {
+    public void crit_single_propertyDescriptor_value_notFound() {
         final PropertyDescriptor<TgCentreDiffSerialisationPersistentChild> propertyVal = (PropertyDescriptor<TgCentreDiffSerialisationPersistentChild>) createMockNotFoundEntity(PropertyDescriptor.class, "UNKNOWN");
         testDiffCreationAndApplication(CentreUpdaterTest::create, centre -> centre.getFirstTick().setValue(ROOT, "propertyDescriptorPropCritSingle", propertyVal), expectedDiffWithValue("propertyDescriptorPropCritSingle", VALUE.name(), NOT_FOUND_MOCK_PREFIX + "UNKNOWN"));
+    }
+    
+    // string values
+    
+    @Test
+    public void string_value() {
+        testDiffCreationAndApplication(CentreUpdaterTest::create, centre -> centre.getFirstTick().setValue(ROOT, "stringProp", "A*,*B"), expectedDiffWithValue("stringProp", VALUE.name(), "A*,*B"));
+    }
+    
+    @Test
+    public void default_string_value_2_empty() {
+        testDiffCreationAndApplication(CentreUpdaterTest::create, centre -> centre.getFirstTick().setValue(ROOT, "stringPropDefault", null), expectedDiffWithValue("stringPropDefault", VALUE.name(), null));
+    }
+    
+    @Test
+    public void default_string_value_2_non_empty() {
+        testDiffCreationAndApplication(CentreUpdaterTest::create, centre -> centre.getFirstTick().setValue(ROOT, "stringPropDefault", "A*,*B"), expectedDiffWithValue("stringPropDefault", VALUE.name(), "A*,*B"));
+    }
+    
+    @Test
+    public void crit_string_value() {
+        testDiffCreationAndApplication(CentreUpdaterTest::create, centre -> centre.getFirstTick().setValue(ROOT, "stringPropCrit", "A*,*B"), expectedDiffWithValue("stringPropCrit", VALUE.name(), "A*,*B"));
+    }
+    
+    @Test
+    public void crit_single_string_value() {
+        testDiffCreationAndApplication(CentreUpdaterTest::create, centre -> centre.getFirstTick().setValue(ROOT, "stringPropCritSingle", "VAL"), expectedDiffWithValue("stringPropCritSingle", VALUE.name(), "VAL"));
+    }
+    
+    // boolean values
+    
+    @Test
+    public void left_boolean_value() {
+        testDiffCreationAndApplication(CentreUpdaterTest::create, centre -> centre.getFirstTick().setValue(ROOT, "booleanProp", false), expectedDiffWithValue("booleanProp", VALUE.name(), false));
+    }
+    
+    @Test
+    public void default_left_boolean_value_2_empty() {
+        testDiffCreationAndApplication(CentreUpdaterTest::create, centre -> centre.getFirstTick().setValue(ROOT, "booleanPropDefault", true), expectedDiffWithValue("booleanPropDefault", VALUE.name(), true));
+    }
+    
+    @Test
+    public void crit_left_boolean_value() {
+        testDiffCreationAndApplication(CentreUpdaterTest::create, centre -> centre.getFirstTick().setValue(ROOT, "booleanPropCrit", false), expectedDiffWithValue("booleanPropCrit", VALUE.name(), false));
+    }
+    
+    @Test
+    public void crit_single_boolean_value() {
+        testDiffCreationAndApplication(CentreUpdaterTest::create, centre -> centre.getFirstTick().setValue(ROOT, "booleanPropCritSingle", false), expectedDiffWithValue("booleanPropCritSingle", VALUE.name(), false));
+    }
+    
+    @Test
+    public void right_boolean_value() {
+        testDiffCreationAndApplication(CentreUpdaterTest::create, centre -> centre.getFirstTick().setValue2(ROOT, "booleanProp", false), expectedDiffWithValue("booleanProp", VALUE2.name(), false));
+    }
+    
+    @Test
+    public void default_right_boolean_value_2_empty() {
+        testDiffCreationAndApplication(CentreUpdaterTest::create, centre -> centre.getFirstTick().setValue2(ROOT, "booleanPropDefault", true), expectedDiffWithValue("booleanPropDefault", VALUE2.name(), true));
+    }
+    
+    @Test
+    public void crit_right_boolean_value() {
+        testDiffCreationAndApplication(CentreUpdaterTest::create, centre -> centre.getFirstTick().setValue2(ROOT, "booleanPropCrit", false), expectedDiffWithValue("booleanPropCrit", VALUE2.name(), false));
+    }
+    
+    // integer values
+    
+    @Test
+    public void left_integer_value() {
+        testDiffCreationAndApplication(CentreUpdaterTest::create, centre -> centre.getFirstTick().setValue(ROOT, "integerProp", new Integer(0)), expectedDiffWithValue("integerProp", VALUE.name(), "0"));
+    }
+    
+    @Test
+    public void default_left_integer_value_2_empty() {
+        testDiffCreationAndApplication(CentreUpdaterTest::create, centre -> centre.getFirstTick().setValue(ROOT, "integerPropDefault", null), expectedDiffWithValue("integerPropDefault", VALUE.name(), null));
+    }
+    
+    @Test
+    public void default_left_integer_value_2_non_empty() {
+        testDiffCreationAndApplication(CentreUpdaterTest::create, centre -> centre.getFirstTick().setValue(ROOT, "integerPropDefault", new Integer(1)), expectedDiffWithValue("integerPropDefault", VALUE.name(), "1"));
+    }
+    
+    @Test
+    public void left_crit_integer_value() {
+        testDiffCreationAndApplication(CentreUpdaterTest::create, centre -> centre.getFirstTick().setValue(ROOT, "integerPropCrit", new Integer(0)), expectedDiffWithValue("integerPropCrit", VALUE.name(), "0"));
+    }
+    
+    @Test
+    public void crit_single_integer_value() {
+        testDiffCreationAndApplication(CentreUpdaterTest::create, centre -> centre.getFirstTick().setValue(ROOT, "integerPropCritSingle", new Integer(0)), expectedDiffWithValue("integerPropCritSingle", VALUE.name(), "0"));
+    }
+    
+    @Test
+    public void right_integer_value() {
+        testDiffCreationAndApplication(CentreUpdaterTest::create, centre -> centre.getFirstTick().setValue2(ROOT, "integerProp", new Integer(0)), expectedDiffWithValue("integerProp", VALUE2.name(), "0"));
+    }
+    
+    @Test
+    public void default_right_integer_value_2_empty() {
+        testDiffCreationAndApplication(CentreUpdaterTest::create, centre -> centre.getFirstTick().setValue2(ROOT, "integerPropDefault", null), expectedDiffWithValue("integerPropDefault", VALUE2.name(), null));
+    }
+    
+    @Test
+    public void default_right_integer_value_2_non_empty() {
+        testDiffCreationAndApplication(CentreUpdaterTest::create, centre -> centre.getFirstTick().setValue2(ROOT, "integerPropDefault", new Integer(1)), expectedDiffWithValue("integerPropDefault", VALUE2.name(), "1"));
+    }
+    
+    @Test
+    public void right_crit_integer_value() {
+        testDiffCreationAndApplication(CentreUpdaterTest::create, centre -> centre.getFirstTick().setValue2(ROOT, "integerPropCrit", new Integer(0)), expectedDiffWithValue("integerPropCrit", VALUE2.name(), "0"));
+    }
+    
+    @Test
+    public void left_integer_value_byte() {
+        testDiffCreationAndApplication(CentreUpdaterTest::create, centre -> centre.getFirstTick().setValue(ROOT, "integerProp", new Integer(127)), expectedDiffWithValue("integerProp", VALUE.name(), "127"));
+    }
+    
+    @Test
+    public void left_integer_value_byte_negative() {
+        testDiffCreationAndApplication(CentreUpdaterTest::create, centre -> centre.getFirstTick().setValue(ROOT, "integerProp", new Integer(-127)), expectedDiffWithValue("integerProp", VALUE.name(), "-127"));
+    }
+    
+    @Test
+    public void left_integer_value_short() {
+        testDiffCreationAndApplication(CentreUpdaterTest::create, centre -> centre.getFirstTick().setValue(ROOT, "integerProp", new Integer(32767)), expectedDiffWithValue("integerProp", VALUE.name(), "32767"));
+    }
+    
+    @Test
+    public void left_integer_value_short_negative() {
+        testDiffCreationAndApplication(CentreUpdaterTest::create, centre -> centre.getFirstTick().setValue(ROOT, "integerProp", new Integer(-32768)), expectedDiffWithValue("integerProp", VALUE.name(), "-32768"));
+    }
+    
+    @Test
+    public void left_integer_value_int() {
+        testDiffCreationAndApplication(CentreUpdaterTest::create, centre -> centre.getFirstTick().setValue(ROOT, "integerProp", new Integer(2147483647)), expectedDiffWithValue("integerProp", VALUE.name(), "2147483647"));
+    }
+    
+    @Test
+    public void left_integer_value_int_negative() {
+        testDiffCreationAndApplication(CentreUpdaterTest::create, centre -> centre.getFirstTick().setValue(ROOT, "integerProp", new Integer(-2147483648)), expectedDiffWithValue("integerProp", VALUE.name(), "-2147483648"));
+    }
+    
+    @Test
+    public void left_integer_value_primitive() {
+        testDiffCreationAndApplication(CentreUpdaterTest::create, centre -> centre.getFirstTick().setValue(ROOT, "integerProp", 32767), expectedDiffWithValue("integerProp", VALUE.name(), "32767"));
+    }
+    
+    // long values
+    
+    @Test
+    public void left_long_value() {
+        testDiffCreationAndApplication(CentreUpdaterTest::create, centre -> centre.getFirstTick().setValue(ROOT, "longProp", new Long(0L)), expectedDiffWithValue("longProp", VALUE.name(), "0"));
+    }
+    
+    @Test
+    public void default_left_long_value_2_empty() {
+        testDiffCreationAndApplication(CentreUpdaterTest::create, centre -> centre.getFirstTick().setValue(ROOT, "longPropDefault", null), expectedDiffWithValue("longPropDefault", VALUE.name(), null));
+    }
+    
+    @Test
+    public void default_left_long_value_2_non_empty() {
+        testDiffCreationAndApplication(CentreUpdaterTest::create, centre -> centre.getFirstTick().setValue(ROOT, "longPropDefault", new Long(1L)), expectedDiffWithValue("longPropDefault", VALUE.name(), "1"));
+    }
+    
+    @Test
+    public void left_crit_long_value() {
+        testDiffCreationAndApplication(CentreUpdaterTest::create, centre -> centre.getFirstTick().setValue(ROOT, "longPropCrit", new Long(0L)), expectedDiffWithValue("longPropCrit", VALUE.name(), "0"));
+    }
+    
+    @Test
+    public void crit_single_long_value() {
+        testDiffCreationAndApplication(CentreUpdaterTest::create, centre -> centre.getFirstTick().setValue(ROOT, "longPropCritSingle", new Long(0L)), expectedDiffWithValue("longPropCritSingle", VALUE.name(), "0"));
+    }
+    
+    @Test
+    public void right_long_value() {
+        testDiffCreationAndApplication(CentreUpdaterTest::create, centre -> centre.getFirstTick().setValue2(ROOT, "longProp", new Long(0L)), expectedDiffWithValue("longProp", VALUE2.name(), "0"));
+    }
+    
+    @Test
+    public void default_right_long_value_2_empty() {
+        testDiffCreationAndApplication(CentreUpdaterTest::create, centre -> centre.getFirstTick().setValue2(ROOT, "longPropDefault", null), expectedDiffWithValue("longPropDefault", VALUE2.name(), null));
+    }
+    
+    @Test
+    public void default_right_long_value_2_non_empty() {
+        testDiffCreationAndApplication(CentreUpdaterTest::create, centre -> centre.getFirstTick().setValue2(ROOT, "longPropDefault", new Long(1L)), expectedDiffWithValue("longPropDefault", VALUE2.name(), "1"));
+    }
+    
+    @Test
+    public void right_crit_long_value() {
+        testDiffCreationAndApplication(CentreUpdaterTest::create, centre -> centre.getFirstTick().setValue2(ROOT, "longPropCrit", new Long(0L)), expectedDiffWithValue("longPropCrit", VALUE2.name(), "0"));
+    }
+    
+    @Test
+    public void left_long_value_byte() {
+        testDiffCreationAndApplication(CentreUpdaterTest::create, centre -> centre.getFirstTick().setValue(ROOT, "longProp", new Long(127L)), expectedDiffWithValue("longProp", VALUE.name(), "127"));
+    }
+    
+    @Test
+    public void left_long_value_byte_negative() {
+        testDiffCreationAndApplication(CentreUpdaterTest::create, centre -> centre.getFirstTick().setValue(ROOT, "longProp", new Long(-127L)), expectedDiffWithValue("longProp", VALUE.name(), "-127"));
+    }
+    
+    @Test
+    public void left_long_value_short() {
+        testDiffCreationAndApplication(CentreUpdaterTest::create, centre -> centre.getFirstTick().setValue(ROOT, "longProp", new Long(32767L)), expectedDiffWithValue("longProp", VALUE.name(), "32767"));
+    }
+    
+    @Test
+    public void left_long_value_short_negative() {
+        testDiffCreationAndApplication(CentreUpdaterTest::create, centre -> centre.getFirstTick().setValue(ROOT, "longProp", new Long(-32768L)), expectedDiffWithValue("longProp", VALUE.name(), "-32768"));
+    }
+    
+    @Test
+    public void left_long_value_int() {
+        testDiffCreationAndApplication(CentreUpdaterTest::create, centre -> centre.getFirstTick().setValue(ROOT, "longProp", new Long(2147483647L)), expectedDiffWithValue("longProp", VALUE.name(), "2147483647"));
+    }
+    
+    @Test
+    public void left_long_value_int_negative() {
+        testDiffCreationAndApplication(CentreUpdaterTest::create, centre -> centre.getFirstTick().setValue(ROOT, "longProp", new Long(-2147483648L)), expectedDiffWithValue("longProp", VALUE.name(), "-2147483648"));
+    }
+    
+    @Test
+    public void left_long_value_long() {
+        testDiffCreationAndApplication(CentreUpdaterTest::create, centre -> centre.getFirstTick().setValue(ROOT, "longProp", new Long(9223372036854775807L)), expectedDiffWithValue("longProp", VALUE.name(), "9223372036854775807"));
+    }
+    
+    @Test
+    public void left_long_value_long_negative() {
+        testDiffCreationAndApplication(CentreUpdaterTest::create, centre -> centre.getFirstTick().setValue(ROOT, "longProp", new Long(-9223372036854775808L)), expectedDiffWithValue("longProp", VALUE.name(), "-9223372036854775808"));
+    }
+    
+    @Test
+    public void left_long_value_primitive() {
+        testDiffCreationAndApplication(CentreUpdaterTest::create, centre -> centre.getFirstTick().setValue(ROOT, "longProp", 32767L), expectedDiffWithValue("longProp", VALUE.name(), "32767"));
+    }
+    
+    // big decimal values
+    
+    @Test
+    public void left_bigDecimal_value() {
+        testDiffCreationAndApplication(CentreUpdaterTest::create, centre -> centre.getFirstTick().setValue(ROOT, "bigDecimalProp", ONE_AND_LITTLE), expectedDiffWithValue("bigDecimalProp", VALUE.name(), "1.010"));
+    }
+    
+    @Test
+    public void default_left_bigDecimal_value_2_empty() {
+        testDiffCreationAndApplication(CentreUpdaterTest::create, centre -> centre.getFirstTick().setValue(ROOT, "bigDecimalPropDefault", null), expectedDiffWithValue("bigDecimalPropDefault", VALUE.name(), null));
+    }
+    
+    @Test
+    public void default_left_bigDecimal_value_2_non_empty() {
+        testDiffCreationAndApplication(CentreUpdaterTest::create, centre -> centre.getFirstTick().setValue(ROOT, "bigDecimalPropDefault", ONE_AND_LITTLE), expectedDiffWithValue("bigDecimalPropDefault", VALUE.name(), "1.010"));
+    }
+    
+    @Test
+    public void left_crit_bigDecimal_value() {
+        testDiffCreationAndApplication(CentreUpdaterTest::create, centre -> centre.getFirstTick().setValue(ROOT, "bigDecimalPropCrit", ONE_AND_LITTLE), expectedDiffWithValue("bigDecimalPropCrit", VALUE.name(), "1.010"));
+    }
+    
+    @Test
+    public void crit_single_bigDecimal_value() {
+        testDiffCreationAndApplication(CentreUpdaterTest::create, centre -> centre.getFirstTick().setValue(ROOT, "bigDecimalPropCritSingle", ONE_AND_LITTLE), expectedDiffWithValue("bigDecimalPropCritSingle", VALUE.name(), "1.010"));
+    }
+    
+    @Test
+    public void right_bigDecimal_value() {
+        testDiffCreationAndApplication(CentreUpdaterTest::create, centre -> centre.getFirstTick().setValue2(ROOT, "bigDecimalProp", ONE_AND_LITTLE), expectedDiffWithValue("bigDecimalProp", VALUE2.name(), "1.010"));
+    }
+    
+    @Test
+    public void default_right_bigDecimal_value_2_empty() {
+        testDiffCreationAndApplication(CentreUpdaterTest::create, centre -> centre.getFirstTick().setValue2(ROOT, "bigDecimalPropDefault", null), expectedDiffWithValue("bigDecimalPropDefault", VALUE2.name(), null));
+    }
+    
+    @Test
+    public void default_right_bigDecimal_value_2_non_empty() {
+        testDiffCreationAndApplication(CentreUpdaterTest::create, centre -> centre.getFirstTick().setValue2(ROOT, "bigDecimalPropDefault", ONE_AND_LITTLE), expectedDiffWithValue("bigDecimalPropDefault", VALUE2.name(), "1.010"));
+    }
+    
+    @Test
+    public void right_crit_bigDecimal_value() {
+        testDiffCreationAndApplication(CentreUpdaterTest::create, centre -> centre.getFirstTick().setValue2(ROOT, "bigDecimalPropCrit", ONE_AND_LITTLE), expectedDiffWithValue("bigDecimalPropCrit", VALUE2.name(), "1.010"));
+    }
+    
+    @Test
+    public void left_bigDecimal_value_byte() {
+        testDiffCreationAndApplication(CentreUpdaterTest::create, centre -> centre.getFirstTick().setValue(ROOT, "bigDecimalProp", new BigDecimal(127)), expectedDiffWithValue("bigDecimalProp", VALUE.name(), "127"));
+    }
+    
+    @Test
+    public void left_bigDecimal_value_byte_negative() {
+        testDiffCreationAndApplication(CentreUpdaterTest::create, centre -> centre.getFirstTick().setValue(ROOT, "bigDecimalProp", new BigDecimal(-127)), expectedDiffWithValue("bigDecimalProp", VALUE.name(), "-127"));
+    }
+    
+    @Test
+    public void left_bigDecimal_value_short() {
+        testDiffCreationAndApplication(CentreUpdaterTest::create, centre -> centre.getFirstTick().setValue(ROOT, "bigDecimalProp", new BigDecimal(32767)), expectedDiffWithValue("bigDecimalProp", VALUE.name(), "32767"));
+    }
+    
+    @Test
+    public void left_bigDecimal_value_short_negative() {
+        testDiffCreationAndApplication(CentreUpdaterTest::create, centre -> centre.getFirstTick().setValue(ROOT, "bigDecimalProp", new BigDecimal(-32768)), expectedDiffWithValue("bigDecimalProp", VALUE.name(), "-32768"));
+    }
+    
+    @Test
+    public void left_bigDecimal_value_int() {
+        testDiffCreationAndApplication(CentreUpdaterTest::create, centre -> centre.getFirstTick().setValue(ROOT, "bigDecimalProp", new BigDecimal(2147483647)), expectedDiffWithValue("bigDecimalProp", VALUE.name(), "2147483647"));
+    }
+    
+    @Test
+    public void left_bigDecimal_value_int_negative() {
+        testDiffCreationAndApplication(CentreUpdaterTest::create, centre -> centre.getFirstTick().setValue(ROOT, "bigDecimalProp", new BigDecimal(-2147483648)), expectedDiffWithValue("bigDecimalProp", VALUE.name(), "-2147483648"));
+    }
+    
+    @Test
+    public void left_bigDecimal_value_long() {
+        testDiffCreationAndApplication(CentreUpdaterTest::create, centre -> centre.getFirstTick().setValue(ROOT, "bigDecimalProp", new BigDecimal(9223372036854775807L)), expectedDiffWithValue("bigDecimalProp", VALUE.name(), "9223372036854775807"));
+    }
+    
+    @Test
+    public void left_bigDecimal_value_long_negative() {
+        testDiffCreationAndApplication(CentreUpdaterTest::create, centre -> centre.getFirstTick().setValue(ROOT, "bigDecimalProp", new BigDecimal(-9223372036854775808L)), expectedDiffWithValue("bigDecimalProp", VALUE.name(), "-9223372036854775808"));
+    }
+    
+    @Test
+    public void left_bigDecimal_value_bigDecimal() {
+        testDiffCreationAndApplication(CentreUpdaterTest::create, centre -> centre.getFirstTick().setValue(ROOT, "bigDecimalProp", new BigDecimal("2222222222222222222222222.100200")), expectedDiffWithValue("bigDecimalProp", VALUE.name(), "2222222222222222222222222.100200"));
+    }
+    
+    @Test
+    public void left_bigDecimal_value_bigDecimal_negative() {
+        testDiffCreationAndApplication(CentreUpdaterTest::create, centre -> centre.getFirstTick().setValue(ROOT, "bigDecimalProp", new BigDecimal("-2222222222222222222222222.100200")), expectedDiffWithValue("bigDecimalProp", VALUE.name(), "-2222222222222222222222222.100200"));
+    }
+    
+    // money values (please remember that inner representation of Money.amount is 4-scaled BigDecimal)
+    
+    @Test
+    public void left_money_value() {
+        testDiffCreationAndApplication(CentreUpdaterTest::create, centre -> centre.getFirstTick().setValue(ROOT, "moneyProp", ONE_AND_LITTLE_MONEY), expectedDiffWithValue("moneyProp", VALUE.name(), mapOf(t2("amount", "1.0100"), t2("currency", "UAH"))));
+    }
+    
+    @Test
+    public void default_left_money_value_2_empty() {
+        testDiffCreationAndApplication(CentreUpdaterTest::create, centre -> centre.getFirstTick().setValue(ROOT, "moneyPropDefault", null), expectedDiffWithValue("moneyPropDefault", VALUE.name(), null));
+    }
+    
+    @Test
+    public void default_left_money_value_2_non_empty() {
+        testDiffCreationAndApplication(CentreUpdaterTest::create, centre -> centre.getFirstTick().setValue(ROOT, "moneyPropDefault", ONE_AND_LITTLE_MONEY), expectedDiffWithValue("moneyPropDefault", VALUE.name(), mapOf(t2("amount", "1.0100"), t2("currency", "UAH"))));
+    }
+    
+    @Test
+    public void left_crit_money_value() {
+        testDiffCreationAndApplication(CentreUpdaterTest::create, centre -> centre.getFirstTick().setValue(ROOT, "moneyPropCrit", ONE_AND_LITTLE_MONEY), expectedDiffWithValue("moneyPropCrit", VALUE.name(), mapOf(t2("amount", "1.0100"), t2("currency", "UAH"))));
+    }
+    
+    @Test
+    public void crit_single_money_value() {
+        testDiffCreationAndApplication(CentreUpdaterTest::create, centre -> centre.getFirstTick().setValue(ROOT, "moneyPropCritSingle", ONE_AND_LITTLE_MONEY), expectedDiffWithValue("moneyPropCritSingle", VALUE.name(), mapOf(t2("amount", "1.0100"), t2("currency", "UAH"))));
+    }
+    
+    @Test
+    public void right_money_value() {
+        testDiffCreationAndApplication(CentreUpdaterTest::create, centre -> centre.getFirstTick().setValue2(ROOT, "moneyProp", ONE_AND_LITTLE_MONEY), expectedDiffWithValue("moneyProp", VALUE2.name(), mapOf(t2("amount", "1.0100"), t2("currency", "UAH"))));
+    }
+    
+    @Test
+    public void default_right_money_value_2_empty() {
+        testDiffCreationAndApplication(CentreUpdaterTest::create, centre -> centre.getFirstTick().setValue2(ROOT, "moneyPropDefault", null), expectedDiffWithValue("moneyPropDefault", VALUE2.name(), null));
+    }
+    
+    @Test
+    public void default_right_money_value_2_non_empty() {
+        testDiffCreationAndApplication(CentreUpdaterTest::create, centre -> centre.getFirstTick().setValue2(ROOT, "moneyPropDefault", ONE_AND_LITTLE_MONEY), expectedDiffWithValue("moneyPropDefault", VALUE2.name(), mapOf(t2("amount", "1.0100"), t2("currency", "UAH"))));
+    }
+    
+    @Test
+    public void right_crit_money_value() {
+        testDiffCreationAndApplication(CentreUpdaterTest::create, centre -> centre.getFirstTick().setValue2(ROOT, "moneyPropCrit", ONE_AND_LITTLE_MONEY), expectedDiffWithValue("moneyPropCrit", VALUE2.name(), mapOf(t2("amount", "1.0100"), t2("currency", "UAH"))));
+    }
+    
+    @Test
+    public void left_money_value_byte() {
+        testDiffCreationAndApplication(CentreUpdaterTest::create, centre -> centre.getFirstTick().setValue(ROOT, "moneyProp", new Money(new BigDecimal(127), Currency.getInstance("UAH"))), expectedDiffWithValue("moneyProp", VALUE.name(), mapOf(t2("amount", "127.0000"), t2("currency", "UAH"))));
+    }
+    
+    @Test
+    public void left_money_value_byte_negative() {
+        testDiffCreationAndApplication(CentreUpdaterTest::create, centre -> centre.getFirstTick().setValue(ROOT, "moneyProp", new Money(new BigDecimal(-127), Currency.getInstance("UAH"))), expectedDiffWithValue("moneyProp", VALUE.name(), mapOf(t2("amount", "-127.0000"), t2("currency", "UAH"))));
+    }
+    
+    @Test
+    public void left_money_value_short() {
+        testDiffCreationAndApplication(CentreUpdaterTest::create, centre -> centre.getFirstTick().setValue(ROOT, "moneyProp", new Money(new BigDecimal(32767), Currency.getInstance("UAH"))), expectedDiffWithValue("moneyProp", VALUE.name(), mapOf(t2("amount", "32767.0000"), t2("currency", "UAH"))));
+    }
+    
+    @Test
+    public void left_money_value_short_negative() {
+        testDiffCreationAndApplication(CentreUpdaterTest::create, centre -> centre.getFirstTick().setValue(ROOT, "moneyProp", new Money(new BigDecimal(-32768), Currency.getInstance("UAH"))), expectedDiffWithValue("moneyProp", VALUE.name(), mapOf(t2("amount", "-32768.0000"), t2("currency", "UAH"))));
+    }
+    
+    @Test
+    public void left_money_value_int() {
+        testDiffCreationAndApplication(CentreUpdaterTest::create, centre -> centre.getFirstTick().setValue(ROOT, "moneyProp", new Money(new BigDecimal(2147483647), Currency.getInstance("UAH"))), expectedDiffWithValue("moneyProp", VALUE.name(), mapOf(t2("amount", "2147483647.0000"), t2("currency", "UAH"))));
+    }
+    
+    @Test
+    public void left_money_value_int_negative() {
+        testDiffCreationAndApplication(CentreUpdaterTest::create, centre -> centre.getFirstTick().setValue(ROOT, "moneyProp", new Money(new BigDecimal(-2147483648), Currency.getInstance("UAH"))), expectedDiffWithValue("moneyProp", VALUE.name(), mapOf(t2("amount", "-2147483648.0000"), t2("currency", "UAH"))));
+    }
+    
+    @Test
+    public void left_money_value_long() {
+        testDiffCreationAndApplication(CentreUpdaterTest::create, centre -> centre.getFirstTick().setValue(ROOT, "moneyProp", new Money(new BigDecimal(9223372036854775807L), Currency.getInstance("UAH"))), expectedDiffWithValue("moneyProp", VALUE.name(), mapOf(t2("amount", "9223372036854775807.0000"), t2("currency", "UAH"))));
+    }
+    
+    @Test
+    public void left_money_value_long_negative() {
+        testDiffCreationAndApplication(CentreUpdaterTest::create, centre -> centre.getFirstTick().setValue(ROOT, "moneyProp", new Money(new BigDecimal(-9223372036854775808L), Currency.getInstance("UAH"))), expectedDiffWithValue("moneyProp", VALUE.name(), mapOf(t2("amount", "-9223372036854775808.0000"), t2("currency", "UAH"))));
+    }
+    
+    @Test
+    public void left_money_value_bigDecimal() {
+        testDiffCreationAndApplication(CentreUpdaterTest::create, centre -> centre.getFirstTick().setValue(ROOT, "moneyProp", new Money(new BigDecimal("2222222222222222222222222.100200"), Currency.getInstance("UAH"))), expectedDiffWithValue("moneyProp", VALUE.name(), mapOf(t2("amount", "2222222222222222222222222.1002"), t2("currency", "UAH"))));
+    }
+    
+    @Test
+    public void left_money_value_bigDecimal_negative() {
+        testDiffCreationAndApplication(CentreUpdaterTest::create, centre -> centre.getFirstTick().setValue(ROOT, "moneyProp", new Money(new BigDecimal("-2222222222222222222222222.100200"), Currency.getInstance("UAH"))), expectedDiffWithValue("moneyProp", VALUE.name(), mapOf(t2("amount", "-2222222222222222222222222.1002"), t2("currency", "UAH"))));
+    }
+    
+    @Test
+    public void left_money_value_with_taxPercent() {
+        testDiffCreationAndApplication(CentreUpdaterTest::create, centre -> centre.getFirstTick().setValue(ROOT, "moneyProp", new Money(new BigDecimal("3.1002"), 20, Currency.getInstance("UAH"))), expectedDiffWithValue("moneyProp", VALUE.name(), mapOf(t2("amount", "3.1002"), t2("taxPercent", "20"), t2("currency", "UAH"))));
     }
     
 }

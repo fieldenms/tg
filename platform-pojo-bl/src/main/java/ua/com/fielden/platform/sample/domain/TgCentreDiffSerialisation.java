@@ -3,6 +3,7 @@ package ua.com.fielden.platform.sample.domain;
 import static ua.com.fielden.platform.entity.annotation.CritOnly.Type.MULTI;
 import static ua.com.fielden.platform.entity.annotation.CritOnly.Type.SINGLE;
 
+import java.math.BigDecimal;
 import java.util.Date;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
@@ -19,6 +20,7 @@ import ua.com.fielden.platform.entity.annotation.PersistentType;
 import ua.com.fielden.platform.entity.annotation.TimeOnly;
 import ua.com.fielden.platform.entity.annotation.Title;
 import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
+import ua.com.fielden.platform.types.Money;
 import ua.com.fielden.platform.types.markers.IUtcDateTimeType;
 
 /**
@@ -32,10 +34,6 @@ import ua.com.fielden.platform.types.markers.IUtcDateTimeType;
 @CompanionObject(ITgCentreDiffSerialisation.class)
 @DescTitle("Desc")
 public class TgCentreDiffSerialisation extends AbstractEntity<String> {
-    
-    @IsProperty
-    @Title("String Prop")
-    private String stringProp;
     
     @IsProperty
     @Title("Date Prop")
@@ -106,6 +104,354 @@ public class TgCentreDiffSerialisation extends AbstractEntity<String> {
     @Title("Property Descriptor Prop Crit Single")
     @CritOnly(SINGLE)
     private PropertyDescriptor<TgCentreDiffSerialisationPersistentChild> propertyDescriptorPropCritSingle;
+    
+    @IsProperty
+    @Title("String Prop")
+    private String stringProp;
+    
+    @IsProperty
+    @Title("String Prop Default")
+    private String stringPropDefault;
+    
+    @IsProperty
+    @Title("String Prop Crit")
+    @CritOnly(MULTI)
+    private String stringPropCrit;
+    
+    @IsProperty
+    @Title("String Prop Crit Single")
+    @CritOnly(SINGLE)
+    private String stringPropCritSingle;
+    
+    @IsProperty
+    @Title("Boolean Prop")
+    private boolean booleanProp;
+    
+    @IsProperty
+    @Title("Boolean Prop Default")
+    private boolean booleanPropDefault;
+    
+    @IsProperty
+    @Title("Boolean Prop Crit")
+    @CritOnly(MULTI)
+    private boolean booleanPropCrit;
+    
+    @IsProperty
+    @Title("Boolean Prop Crit Single")
+    @CritOnly(SINGLE)
+    private boolean booleanPropCritSingle;
+    
+    @IsProperty
+    @Title("Integer Prop")
+    private Integer integerProp;
+    
+    @IsProperty
+    @Title("Integer Prop Default")
+    private Integer integerPropDefault;
+    
+    @IsProperty
+    @Title("Integer Prop Crit")
+    @CritOnly(MULTI)
+    private Integer integerPropCrit;
+    
+    @IsProperty
+    @Title("Integer Prop Crit Single")
+    @CritOnly(SINGLE)
+    private Integer integerPropCritSingle;
+    
+    @IsProperty
+    @Title("Long Prop")
+    private Long longProp;
+    
+    @IsProperty
+    @Title("Long Prop Default")
+    private Long longPropDefault;
+    
+    @IsProperty
+    @Title("Long Prop Crit")
+    @CritOnly(MULTI)
+    private Long longPropCrit;
+    
+    @IsProperty
+    @Title("Long Prop Crit Single")
+    @CritOnly(SINGLE)
+    private Long longPropCritSingle;
+    
+    @IsProperty
+    @Title("BigDecimal Prop")
+    private BigDecimal bigDecimalProp;
+    
+    @IsProperty
+    @Title("BigDecimal Prop Default")
+    private BigDecimal bigDecimalPropDefault;
+    
+    @IsProperty
+    @Title("BigDecimal Prop Crit")
+    @CritOnly(MULTI)
+    private BigDecimal bigDecimalPropCrit;
+    
+    @IsProperty
+    @Title("BigDecimal Prop Crit Single")
+    @CritOnly(SINGLE)
+    private BigDecimal bigDecimalPropCritSingle;
+    
+    @IsProperty
+    @Title("Money Prop")
+    private Money moneyProp;
+    
+    @IsProperty
+    @Title("Money Prop Default")
+    private Money moneyPropDefault;
+    
+    @IsProperty
+    @Title("Money Prop Crit")
+    @CritOnly(MULTI)
+    private Money moneyPropCrit;
+    
+    @IsProperty
+    @Title("Money Prop Crit Single")
+    @CritOnly(SINGLE)
+    private Money moneyPropCritSingle;
+    
+    @Observable
+    public TgCentreDiffSerialisation setMoneyPropCritSingle(final Money moneyPropCritSingle) {
+        this.moneyPropCritSingle = moneyPropCritSingle;
+        return this;
+    }
+    
+    public Money getMoneyPropCritSingle() {
+        return moneyPropCritSingle;
+    }
+    
+    @Observable
+    public TgCentreDiffSerialisation setMoneyPropCrit(final Money moneyPropCrit) {
+        this.moneyPropCrit = moneyPropCrit;
+        return this;
+    }
+    
+    public Money getMoneyPropCrit() {
+        return moneyPropCrit;
+    }
+    
+    @Observable
+    public TgCentreDiffSerialisation setMoneyPropDefault(final Money moneyPropDefault) {
+        this.moneyPropDefault = moneyPropDefault;
+        return this;
+    }
+    
+    public Money getMoneyPropDefault() {
+        return moneyPropDefault;
+    }
+    
+    @Observable
+    public TgCentreDiffSerialisation setMoneyProp(final Money moneyProp) {
+        this.moneyProp = moneyProp;
+        return this;
+    }
+    
+    public Money getMoneyProp() {
+        return moneyProp;
+    }
+    
+    @Observable
+    public TgCentreDiffSerialisation setBigDecimalPropCritSingle(final BigDecimal bigDecimalPropCritSingle) {
+        this.bigDecimalPropCritSingle = bigDecimalPropCritSingle;
+        return this;
+    }
+    
+    public BigDecimal getBigDecimalPropCritSingle() {
+        return bigDecimalPropCritSingle;
+    }
+    
+    @Observable
+    public TgCentreDiffSerialisation setBigDecimalPropCrit(final BigDecimal bigDecimalPropCrit) {
+        this.bigDecimalPropCrit = bigDecimalPropCrit;
+        return this;
+    }
+    
+    public BigDecimal getBigDecimalPropCrit() {
+        return bigDecimalPropCrit;
+    }
+    
+    @Observable
+    public TgCentreDiffSerialisation setBigDecimalPropDefault(final BigDecimal bigDecimalPropDefault) {
+        this.bigDecimalPropDefault = bigDecimalPropDefault;
+        return this;
+    }
+    
+    public BigDecimal getBigDecimalPropDefault() {
+        return bigDecimalPropDefault;
+    }
+    
+    @Observable
+    public TgCentreDiffSerialisation setBigDecimalProp(final BigDecimal bigDecimalProp) {
+        this.bigDecimalProp = bigDecimalProp;
+        return this;
+    }
+    
+    public BigDecimal getBigDecimalProp() {
+        return bigDecimalProp;
+    }
+    
+    @Observable
+    public TgCentreDiffSerialisation setLongPropCritSingle(final Long longPropCritSingle) {
+        this.longPropCritSingle = longPropCritSingle;
+        return this;
+    }
+    
+    public Long getLongPropCritSingle() {
+        return longPropCritSingle;
+    }
+    
+    @Observable
+    public TgCentreDiffSerialisation setLongPropCrit(final Long longPropCrit) {
+        this.longPropCrit = longPropCrit;
+        return this;
+    }
+    
+    public Long getLongPropCrit() {
+        return longPropCrit;
+    }
+    
+    @Observable
+    public TgCentreDiffSerialisation setLongPropDefault(final Long longPropDefault) {
+        this.longPropDefault = longPropDefault;
+        return this;
+    }
+    
+    public Long getLongPropDefault() {
+        return longPropDefault;
+    }
+    
+    @Observable
+    public TgCentreDiffSerialisation setLongProp(final Long longProp) {
+        this.longProp = longProp;
+        return this;
+    }
+    
+    public Long getLongProp() {
+        return longProp;
+    }
+    
+    @Observable
+    public TgCentreDiffSerialisation setIntegerPropCritSingle(final Integer integerPropCritSingle) {
+        this.integerPropCritSingle = integerPropCritSingle;
+        return this;
+    }
+    
+    public Integer getIntegerPropCritSingle() {
+        return integerPropCritSingle;
+    }
+    
+    @Observable
+    public TgCentreDiffSerialisation setIntegerPropCrit(final Integer integerPropCrit) {
+        this.integerPropCrit = integerPropCrit;
+        return this;
+    }
+    
+    public Integer getIntegerPropCrit() {
+        return integerPropCrit;
+    }
+    
+    @Observable
+    public TgCentreDiffSerialisation setIntegerPropDefault(final Integer integerPropDefault) {
+        this.integerPropDefault = integerPropDefault;
+        return this;
+    }
+    
+    public Integer getIntegerPropDefault() {
+        return integerPropDefault;
+    }
+    
+    @Observable
+    public TgCentreDiffSerialisation setIntegerProp(final Integer integerProp) {
+        this.integerProp = integerProp;
+        return this;
+    }
+    
+    public Integer getIntegerProp() {
+        return integerProp;
+    }
+    
+    @Observable
+    public TgCentreDiffSerialisation setBooleanPropCritSingle(final boolean booleanPropCritSingle) {
+        this.booleanPropCritSingle = booleanPropCritSingle;
+        return this;
+    }
+    
+    public boolean getBooleanPropCritSingle() {
+        return booleanPropCritSingle;
+    }
+    
+    @Observable
+    public TgCentreDiffSerialisation setBooleanPropCrit(final boolean booleanPropCrit) {
+        this.booleanPropCrit = booleanPropCrit;
+        return this;
+    }
+    
+    public boolean getBooleanPropCrit() {
+        return booleanPropCrit;
+    }
+    
+    @Observable
+    public TgCentreDiffSerialisation setBooleanPropDefault(final boolean booleanPropDefault) {
+        this.booleanPropDefault = booleanPropDefault;
+        return this;
+    }
+    
+    public boolean getBooleanPropDefault() {
+        return booleanPropDefault;
+    }
+    
+    @Observable
+    public TgCentreDiffSerialisation setBooleanProp(final boolean booleanProp) {
+        this.booleanProp = booleanProp;
+        return this;
+    }
+    
+    public boolean getBooleanProp() {
+        return booleanProp;
+    }
+    
+    @Observable
+    public TgCentreDiffSerialisation setStringPropCritSingle(final String stringPropCritSingle) {
+        this.stringPropCritSingle = stringPropCritSingle;
+        return this;
+    }
+    
+    public String getStringPropCritSingle() {
+        return stringPropCritSingle;
+    }
+    
+    @Observable
+    public TgCentreDiffSerialisation setStringPropCrit(final String stringPropCrit) {
+        this.stringPropCrit = stringPropCrit;
+        return this;
+    }
+    
+    public String getStringPropCrit() {
+        return stringPropCrit;
+    }
+    
+    @Observable
+    public TgCentreDiffSerialisation setStringPropDefault(final String stringPropDefault) {
+        this.stringPropDefault = stringPropDefault;
+        return this;
+    }
+    
+    public String getStringPropDefault() {
+        return stringPropDefault;
+    }
+    
+    @Observable
+    public TgCentreDiffSerialisation setStringProp(final String stringProp) {
+        this.stringProp = stringProp;
+        return this;
+    }
+    
+    public String getStringProp() {
+        return stringProp;
+    }
     
     @Observable
     public TgCentreDiffSerialisation setPropertyDescriptorPropCritSingle(final PropertyDescriptor<TgCentreDiffSerialisationPersistentChild> propertyDescriptorPropCritSingle) {
@@ -255,16 +601,6 @@ public class TgCentreDiffSerialisation extends AbstractEntity<String> {
     
     public Date getDateProp() {
         return dateProp;
-    }
-    
-    @Observable
-    public TgCentreDiffSerialisation setStringProp(final String stringProp) {
-        this.stringProp = stringProp;
-        return this;
-    }
-    
-    public String getStringProp() {
-        return stringProp;
     }
     
 }

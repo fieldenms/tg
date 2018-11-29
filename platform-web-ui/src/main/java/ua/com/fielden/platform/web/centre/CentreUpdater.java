@@ -32,6 +32,8 @@ import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.selec
 import static ua.com.fielden.platform.error.Result.failuref;
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.determinePropertyType;
 import static ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader.isGenerated;
+import static ua.com.fielden.platform.types.tuples.T2.t2;
+import static ua.com.fielden.platform.utils.CollectionUtil.mapOf;
 import static ua.com.fielden.platform.utils.EntityUtils.equalsEx;
 import static ua.com.fielden.platform.utils.EntityUtils.fetchWithKeyAndDesc;
 import static ua.com.fielden.platform.utils.EntityUtils.isDate;
@@ -52,8 +54,10 @@ import static ua.com.fielden.platform.web.utils.EntityResourceUtils.getEntityTyp
 import static ua.com.fielden.platform.web.utils.EntityResourceUtils.propertyDescriptorFromString;
 import static ua.com.fielden.platform.web.utils.EntityResourceUtils.propertyDescriptorToString;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Currency;
 import java.util.Date;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -81,6 +85,7 @@ import ua.com.fielden.platform.security.user.IUser;
 import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
+import ua.com.fielden.platform.types.Money;
 import ua.com.fielden.platform.ui.config.EntityCentreConfig;
 import ua.com.fielden.platform.ui.config.api.IEntityCentreConfig;
 import ua.com.fielden.platform.ui.config.api.IMainMenuItem;
@@ -787,17 +792,23 @@ public class CentreUpdater {
         }
     }
     
-//    private static Date toDate(final Long millis) {
-//        return new Date(millis);
-//    }
-    
     private static final Function<DateRangePrefixEnum, String> prefixToString = DateRangePrefixEnum::name;
     private static final Function<MnemonicEnum, String> mnemonicToString = MnemonicEnum::name;
     private static final Function<String, DateRangePrefixEnum> stringToPrefix = DateRangePrefixEnum::valueOf;
     private static final Function<String, MnemonicEnum> stringToMnemonic = MnemonicEnum::valueOf;
     private static final Function<Long, Date> longToDate = Date::new;
     private static final Function<Date, Long> dateToLong = Date::getTime;
+    private static final Function<String, Integer> stringToInteger = Integer::valueOf;
     private static final Function<String, Long> stringToLong = Long::valueOf;
+    private static final Function<String, BigDecimal> stringToBigDecimal = BigDecimal::new;
+    private static final Function<Map<String, Object>, Money> mapToMoney = map -> 
+        map.containsKey("taxPercent") 
+            ? new Money(stringToBigDecimal.apply((String) map.get("amount")), stringToInteger.apply((String) map.get("taxPercent")), Currency.getInstance((String) map.get("currency")))
+            : new Money(stringToBigDecimal.apply((String) map.get("amount")), Currency.getInstance((String) map.get("currency")));
+    private static final Function<Money, Map<String, Object>> moneyToMap = money ->
+        money.getTaxPercent() != null
+            ? mapOf(t2("amount", money.getAmount().toString()), t2("taxPercent", money.getTaxPercent().toString()), t2("currency", money.getCurrency().toString()))
+            : mapOf(t2("amount", money.getAmount().toString()), t2("currency", money.getCurrency().toString()));
     private static final Function<Object, String> toString = Object::toString;
     private static final Function<AbstractEntity<?>, String> entityToString = entity -> entityWithMocksToString(ent -> ent.getId().toString(), entity);
     
@@ -805,7 +816,15 @@ public class CentreUpdater {
         final boolean isEntityItself = "".equals(property); // empty property means "entity itself"
         final Class<?> managedType = managedTypeSupplier.get();
         final Class<?> propertyType = isEntityItself ? managedType : determinePropertyType(managedType, property);
-        if (isDate(propertyType)) {
+        if (Integer.class.isAssignableFrom(propertyType)) {
+            return valOrNull(value, toString.andThen(stringToInteger));
+        } else if (Long.class.isAssignableFrom(propertyType)) {
+            return valOrNull(value, toString.andThen(stringToLong));
+        } else if (BigDecimal.class.isAssignableFrom(propertyType)) {
+            return valOrNull(value, toString.andThen(stringToBigDecimal));
+        } else if (Money.class.isAssignableFrom(propertyType)) {
+            return valOrNull(value, mapToMoney);
+        } else if (isDate(propertyType)) {
             return valOrNull(value, longToDate, toString.andThen(stringToLong));
         } else if (isEntityType(propertyType) && isCritOnlySingle(managedType, property)) {
             if (isPropertyDescriptor(propertyType)) {
@@ -828,7 +847,15 @@ public class CentreUpdater {
         final boolean isEntityItself = "".equals(property); // empty property means "entity itself"
         final Class<?> managedType = managedTypeSupplier.get();
         final Class<?> propertyType = isEntityItself ? managedType : determinePropertyType(managedType, property);
-        if (isDate(propertyType)) {
+        if (Integer.class.isAssignableFrom(propertyType)) {
+            return valOrNull(value, toString);
+        } else if (Long.class.isAssignableFrom(propertyType)) {
+            return valOrNull(value, toString);
+        } else if (BigDecimal.class.isAssignableFrom(propertyType)) {
+            return valOrNull(value, toString);
+        } else if (Money.class.isAssignableFrom(propertyType)) {
+            return valOrNull(value, moneyToMap);
+        } else if (isDate(propertyType)) {
             return valOrNull(value, dateToLong.andThen(toString));
         } else if (isEntityType(propertyType) && isCritOnlySingle(managedType, property)) {
             if (isPropertyDescriptor(propertyType)) {
