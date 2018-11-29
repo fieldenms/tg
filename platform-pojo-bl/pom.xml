@@ -94,7 +94,13 @@
 		<dependency>
 			<groupId>net.bytebuddy</groupId>
 			<artifactId>byte-buddy</artifactId>
-			<version>1.2.3</version>
+			<version>1.9.4</version>
+		</dependency>
+		<!-- This is the same dependency as for Hibernate 5.2.17.Final -->
+		<dependency>
+			<groupId>org.javassist</groupId>
+			<artifactId>javassist</artifactId>
+			<version>3.24.0-GA</version>
 		</dependency>
 
 		<!-- Password strength estimation -->
@@ -103,19 +109,12 @@
 			<artifactId>zxcvbn</artifactId>
 			<version>1.1.1</version>
 		</dependency>
-		
+
 		<!-- Java Mail libraries -->
 		<dependency>
 			<groupId>javax.mail</groupId>
 			<artifactId>mail</artifactId>
 			<version>1.5.0-b01</version>
-		</dependency>
-
-		<!-- This is the same dependency as for Hibernate 5.2.12.Final -->
-		<dependency>
-			<groupId>org.javassist</groupId>
-			<artifactId>javassist</artifactId>
-			<version>3.20.0-GA</version>
 		</dependency>
 
 		<dependency>

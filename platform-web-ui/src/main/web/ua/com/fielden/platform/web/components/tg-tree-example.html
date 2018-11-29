@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, minimum-scale=1.0, initial-scale=1.0, user-scalable=yes">
+    <title>Menu list example</title>
+    <script src="/resources/polymer/webcomponentsjs/webcomponents-lite.js"></script>
+    <link rel="import" href="/resources/polymer/paper-input/paper-input.html">
+    <link rel="import" href="/resources/polymer/paper-styles/paper-styles-classes.html">
+    <link rel="import" href="tg-tree.html">
+    <style>
+    </style>
+</head>
+
+<body unresolved class="fullbleed">
+    <template is="dom-bind" id="app">
+        <div class="fit layout vertical">
+            <paper-input on-bind-value-changed="_filterTree"></paper-input>
+            <tg-tree class="flex" id="tree" model="[[model]]" on-tg-load-subtree="_loadSubtree" content-builder="[[_buildContent]]"></tg-tree>
+        </div>
+    </template>
+</body>
+<script>
+    var app = document.querySelector("#app");
+    const numberOfItems = 10;
+    const deepth = 4;
+    const generateItems = function (numberOfItems, deepth) {
+        const generatedModel = [];
+        let currentLevel = [];
+        for (let i = 1; i <= deepth; i++) {
+            if (currentLevel.length === 0) {
+                currentLevel = generateChildren(numberOfItems, i < deepth);
+                generatedModel.push(...currentLevel);
+            } else {
+                currentLevel = currentLevel.reduce((accum, currentValue, currIdx) => {
+                    currentValue.children = generateChildren(numberOfItems, i < deepth, currentValue);
+                    return accum.concat(currentValue.children);
+                }, []);
+            }
+        }
+        return generatedModel;
+    };
+    const generateChildren = function (numberOfItems, withChildren, parent) {
+        return Array.apply(null, {
+            length: numberOfItems
+        }).map((item, idx) => {
+            return {
+                key: (parent ? parent.key : "Menu item") + " " + idx,
+                hasChildren: withChildren
+            };
+        });
+    }
+    app.model = generateChildren(numberOfItems, true);
+    app._buildContent = function (entity) {
+        return "<span>" + entity.entity.key + "</span>&nbsp;&ndash;&nbsp;<span style='color:#737373'><i>" + entity.entity.desc + "</i></span>";
+    }
+    app._loadSubtree = function (e) {
+        const parentsPath = e.detail;
+        if (parentsPath.length < deepth) {
+            const idxs = [];
+            let modelList = app.model;
+            for (let i = 0; i < parentsPath.length; i++) {
+                const parentIdx = modelList.indexOf(parentsPath[i]);
+                if (parentIdx < 0) {
+                    throw {msg: "The item " + parentsPath[0].key + " couldn't be found at " + i + " level"};
+                } else {
+                    idxs.push(parentIdx);
+                }
+                modelList = parentsPath[i].children;
+            }
+            const pathToChange = idxs.reduce((acc, cur) => acc += "." + cur + ".children", "model");
+            const generatedChildren = generateChildren(numberOfItems, idxs.length < deepth - 1, parentsPath[parentsPath.length - 1]);
+            setTimeout(() => {
+                app.set(pathToChange, generatedChildren);
+            }, 2000);
+        }
+    }
+    app._filterTree = function (e) {
+        app.$.tree.filter(e.detail.value);
+    }
+</script>
+
+</html>

@@ -24,9 +24,7 @@
             border-radius: 1.1em;
             cursor: pointer;
         }
-        .dead-day {
-            cursor: auto !important;
-            pointer-events: none;
+        .outside-day {
             color: #CDCDCD;
         }
         .day-short-name {
@@ -106,7 +104,7 @@
                 while (day > 0) {
                     week = createWeek(year, month, day);
                     weeks.push(week);
-                    day = week[week.length - 1] > 0 && week[week.length - 1] < days ? week[week.length - 1] + 1 : 0;
+                    day = week[week.length - 1].day > 0 && week[week.length - 1].day < days ? week[week.length - 1].day + 1 : 0;
                 }
                 return weeks;
             },
@@ -120,16 +118,16 @@
                     _i = 0;
                 // In case when the first day of the month is not a sanday then add 0 to the first days of the week.
                 for (; _i < firstDay; _i++) {
-                    week.push(-1 * (previousMonthDays - (firstDay - (_i + 1))));
+                    week.push({monthIncrementor: -1, day: -1 * (previousMonthDays - (firstDay - (_i + 1)))});
                 }
                 // Add day numbers to the week.
                 for (; _i < 7 && day <= days; _i++) {
-                    week.push(day);
+                    week.push({monthIncrementor: 0, day: day});
                     day += 1;
                 }
                 // In case when the last day of the month is not saturday then add 0 to the last days of the week. 
                 for (; _i < 7; _i++) {
-                    week.push(nextMonthDay);
+                    week.push({monthIncrementor: 1, day: nextMonthDay});
                     nextMonthDay -= 1;
                 }
                 return week;
@@ -221,7 +219,7 @@
              * Selects the date.
              */
             _selectDay: function (event, detail, el) {
-                var yearMonthDay = { year: this.year, month: this.month, day: event.model.day };
+                var yearMonthDay = { year: this.year, month: this.month + event.model.day.monthIncrementor, day: Math.abs(event.model.day.day) };
                 this.selectedDate = _momentTz(yearMonthDay, this.timeZone).valueOf();
                 if (event.detail.sourceEvent.detail > 1) {
                     this.fire("tg-accept-date");
@@ -248,13 +246,13 @@
              */
             _calcDayClass: function (day, month, year, selectedDay, selectedMonth, selectedYear) {
                 var dayClasses = "day layout vertical center-center";
-                if (day < 0) {
-                    dayClasses += " dead-day";
+                if (day.day < 0) {
+                    dayClasses += " outside-day";
                 }
-                if (day === this.todayDay && month === this.todayMonth && year === this.todayYear) {
+                if (day.day === this.todayDay && month === this.todayMonth && year === this.todayYear) {
                     dayClasses += " today-date";
                 }
-                if (day === selectedDay && month === selectedMonth && year === selectedYear) {
+                if (day.day === selectedDay && month === selectedMonth && year === selectedYear) {
                     dayClasses += " selected-date";
                 }
                 return dayClasses;
@@ -264,7 +262,7 @@
              * Returns the absolute value of the day
              */
             _absolute: function (day) {
-                return Math.abs(day);
+                return Math.abs(day.day);
             }
         });
     })();

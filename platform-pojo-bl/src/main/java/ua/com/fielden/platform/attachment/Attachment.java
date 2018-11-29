@@ -100,7 +100,7 @@ public class Attachment extends AbstractPersistentEntity<DynamicEntityKey> {
 
     @IsProperty
     @MapTo
-    @Title(value = "Last Modified", desc = "The date/time of last file modification.")
+    @Title(value = "Last Modified", desc = "The date/time of the last file modification.")
     @Readonly
     @Final(persistentOnly = false)
     private Date lastModified;

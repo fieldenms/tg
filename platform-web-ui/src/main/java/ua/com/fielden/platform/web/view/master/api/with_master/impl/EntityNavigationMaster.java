@@ -27,7 +27,7 @@ public class EntityNavigationMaster extends EntityManipulationMaster<EntityNavig
               + "                 this._previousMaster = this.$.loader.loadedElement;\n"
               + "             }.bind(self);\n"
               + "             self._handleBindingEntityChanged = function (e) {\n"
-              + "                 if (e.detail.value) {\n"
+              + "                 if (e.detail.value && e.detail.value.entityType) {\n"
               + "                     if (this._prevCurrBindingEntity && e.detail.value.entityType !== this._prevCurrBindingEntity.entityType) {\n"
               + "                         this.fire('tg-master-type-before-change',{\n"
               + "                             prevType: this._prevCurrBindingEntity.entityType,\n"

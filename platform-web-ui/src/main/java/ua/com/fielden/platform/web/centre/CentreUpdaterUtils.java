@@ -134,7 +134,7 @@ public class CentreUpdaterUtils extends CentreUpdater {
             final ICentreDomainTreeManagerAndEnhancer newCentreManager = createDefaultCentre(menuItemType, webUiConfig);
             logger.error(format("Started saving of default entity-centre configuration %s.", loggingSuffix));
             ecc.setConfigBody(serialiser.serialise(newCentreManager));
-            eccCompanion.quickSave(ecc);
+            eccCompanion.saveWithConflicts(ecc); // this rare saving case should never be conflicted -- it is safe to use saveWithConflicts here (also nesting inside bigger transaction scopes is required)
             logger.error(format("Ended creation and saving of default entity-centre configuration %s. For now it can be used.", loggingSuffix));
             logger.error("============================================ CENTRE DESERIALISATION HAS FAILED [END] ============================================");
             return newCentreManager;
@@ -145,6 +145,24 @@ public class CentreUpdaterUtils extends CentreUpdater {
      * Saves new {@link EntityCentreConfig} instance with serialised centre manager inside.
      */
     public static ICentreDomainTreeManagerAndEnhancer saveNewEntityCentreManager(
+            final ICentreDomainTreeManagerAndEnhancer centre,
+            final Class<?> menuItemType,
+            final User user,
+            final String newName,
+            final String newDesc,
+            final ISerialiser serialiser,
+            final IEntityCentreConfig eccCompanion,
+            final IMainMenuItem mmiCompanion) {
+        return saveNewEntityCentreManager(false, centre, menuItemType, user, newName, newDesc, serialiser, eccCompanion, mmiCompanion);
+    }
+    
+    /**
+     * Saves new {@link EntityCentreConfig} instance with serialised centre manager inside.
+     * 
+     * @param withoutConflicts -- <code>true</code> to avoid self-conflict checks, <code>false</code> otherwise; <code>true</code> only to be used NOT IN another SessionRequired transaction scope
+     */
+    private static ICentreDomainTreeManagerAndEnhancer saveNewEntityCentreManager(
+            final boolean withoutConflicts,
             final ICentreDomainTreeManagerAndEnhancer centre,
             final Class<?> menuItemType,
             final User user,
@@ -164,15 +182,22 @@ public class CentreUpdaterUtils extends CentreUpdater {
         ecc.setMenuItem(menuItem);
         ecc.setDesc(newDesc);
         ecc.setConfigBody(serialiser.serialise(centre));
-        eccCompanion.quickSave(ecc);
+        if (withoutConflicts) {
+            eccCompanion.saveWithoutConflicts(ecc);
+        } else {
+            eccCompanion.saveWithConflicts(ecc);
+        }
         return centre;
     }
     
     /**
      * Overrides existing {@link EntityCentreConfig} instance with new serialised centre manager.
      * Otherwise, in case where there is no such instance in database, creates and saves new {@link EntityCentreConfig} instance with serialised centre manager inside.
+     * 
+     * @param withoutConflicts -- <code>true</code> to avoid self-conflict checks, <code>false</code> otherwise; <code>true</code> only to be used NOT IN another SessionRequired transaction scope
      */
     public static ICentreDomainTreeManagerAndEnhancer saveEntityCentreManager(
+            final boolean withoutConflicts,
             final ICentreDomainTreeManagerAndEnhancer centre,
             final Class<?> menuItemType,
             final User user,
@@ -183,13 +208,17 @@ public class CentreUpdaterUtils extends CentreUpdater {
             final IMainMenuItem mmiCompanion) {
         final EntityCentreConfig config = eccCompanion.getEntity(from(modelFor(user, menuItemType.getName(), name)).model());
         if (config == null) {
-            saveNewEntityCentreManager(centre, menuItemType, user, name, newDesc, serialiser, eccCompanion, mmiCompanion);
+            saveNewEntityCentreManager(withoutConflicts, centre, menuItemType, user, name, newDesc, serialiser, eccCompanion, mmiCompanion);
         } else {
             if (newDesc != null) {
                 config.setDesc(newDesc);
             }
             config.setConfigBody(serialiser.serialise(centre));
-            eccCompanion.quickSave(config);
+            if (withoutConflicts) {
+                eccCompanion.saveWithoutConflicts(config);
+            } else {
+                eccCompanion.saveWithConflicts(config);
+            }
         }
         return centre;
     }

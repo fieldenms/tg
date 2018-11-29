@@ -14,13 +14,14 @@ import java.util.Optional;
 import com.google.inject.Injector;
 
 import ua.com.fielden.platform.entity.EntityDeleteAction;
-import ua.com.fielden.platform.entity.EntityEditAction;
+import ua.com.fielden.platform.entity.EntityNavigationAction;
 import ua.com.fielden.platform.entity.EntityNewAction;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.security.user.UserProducer;
 import ua.com.fielden.platform.security.user.UserRolesUpdater;
 import ua.com.fielden.platform.security.user.UserRolesUpdaterProducer;
 import ua.com.fielden.platform.ui.menu.sample.MiUser;
+import ua.com.fielden.platform.web.action.pre.EntityNavigationPreAction;
 import ua.com.fielden.platform.web.centre.EntityCentre;
 import ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig;
 import ua.com.fielden.platform.web.centre.api.impl.EntityCentreBuilder;
@@ -170,11 +171,13 @@ public class UserWebUiConfig {
         EDIT_ACTION {
             @Override
             public EntityActionConfig mkAction() {
-                return action(EntityEditAction.class)
+                return action(EntityNavigationAction.class)
                         .withContext(context().withCurrentEntity().withSelectionCrit().build())
+                        .preAction(new EntityNavigationPreAction("User"))
                         .icon("editor:mode-edit")
                         .shortDesc("Edit User")
                         .longDesc("Opens master for User editing.")
+                        .withNoParentCentreRefresh()
                         .build();
             }
 

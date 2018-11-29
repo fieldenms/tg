@@ -43,6 +43,7 @@ import com.esotericsoftware.kryo.serialize.ReferenceFieldSerializer;
 import com.esotericsoftware.kryo.serialize.StringSerializer;
 
 import ua.com.fielden.platform.attachment.Attachment;
+import ua.com.fielden.platform.attachment.AttachmentPreviewEntityAction;
 import ua.com.fielden.platform.dao.QueryExecutionModel;
 import ua.com.fielden.platform.domaintree.IDomainTreeEnhancerCache;
 import ua.com.fielden.platform.domaintree.centre.analyses.impl.AnalysisDomainTreeManager;
@@ -88,6 +89,7 @@ import ua.com.fielden.platform.domaintree.impl.LocatorManager.LocatorManagerSeri
 import ua.com.fielden.platform.domaintree.master.impl.MasterDomainTreeManager;
 import ua.com.fielden.platform.domaintree.master.impl.MasterDomainTreeManager.MasterDomainTreeManagerSerialiser;
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.EntityNavigationAction;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
 import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
@@ -329,7 +331,7 @@ class TgKryo extends Kryo implements ISerialiserEngine {
         // register classes provided by the provider
         for (final Class<?> type : provider.classes()) {
             try {
-                if (!UserSecret.class.isAssignableFrom(type)) {
+                if (!UserSecret.class.isAssignableFrom(type) && !EntityNavigationAction.class.isAssignableFrom(type) && !AttachmentPreviewEntityAction.class.isAssignableFrom(type)) {
                     register(type);
                 }
             } catch (final IllegalArgumentException e) {

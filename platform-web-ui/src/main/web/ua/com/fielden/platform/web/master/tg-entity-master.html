@@ -86,6 +86,27 @@
         },
 
         behaviors: [Polymer.IronResizableBehavior],
+        
+        observers: ["_masterLoaded(_bodyLoaded, _actionBarLoaded)"],
+        
+        ready: function () {
+            this._bodyLayoutFinished = this._bodyLayoutFinished.bind(this);
+            this.$.scrollableContainer.addEventListener("layout-finished", this._bodyLayoutFinished);
+            this._actionBarLayoutFinished = this._actionBarLayoutFinished.bind(this);
+            this.$.actionContainer.addEventListener("layout-finished", this._actionBarLayoutFinished);
+        },
+        
+        _bodyLayoutFinished: function (e) {
+            this._bodyLoaded = true;
+        },
+        
+        _actionBarLayoutFinished: function (e) {
+            this._actionBarLoaded = true;
+        },
+        
+        _masterLoaded: function (_bodyLoaded, _actionBarLoaded) {
+            this.fire("tg-entity-master-content-loaded", this);
+        },
 
         /**
          * Computes URLs for 'ajaxRetriever' and 'ajaxSaver'.

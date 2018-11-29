@@ -17,7 +17,7 @@
                 self.isMasterTemplate = true;
                 self._registrationListener = self._registrationListener.bind(self);
                 self.classList.add("canLeave");
-
+                
                 // the value for property uuid needs to be assign only if this has not been done yet
                 if (self.uuid === undefined) {
                     self.uuid = self.is + '/' + self._reflector().generateUUID();
@@ -83,7 +83,7 @@
 
             _shouldOverridePrefDim: function () {
                 var parent = this.parentElement;
-                while (parent && parent.tagName !== 'TG-CUSTOM-ACTION-DIALOG') {
+                while (parent && (parent.tagName !== 'TG-CUSTOM-ACTION-DIALOG' && parent.tagName !== 'TG-MENU-ITEM-VIEW')) {
                     if (parent.isMasterTemplate && parent.prefDim) {
                         return false;
                     }
@@ -91,7 +91,7 @@
                 }
                 return true;
             },
-
+            
             _registrationListener: function (e) {
                 var target = e.target || e.srcElement;
 

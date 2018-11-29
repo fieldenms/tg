@@ -527,12 +527,12 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
         // overrides SAVED centre configuration by FRESH one -- 'saves' centre
         validationPrototype.setFreshCentreSaver(() -> {
             final ICentreDomainTreeManagerAndEnhancer freshCentre = updateCentre(user, userProvider, miType, FRESH_CENTRE_NAME, saveAsName, device, serialiser, domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion);
-            commitCentre(user, userProvider, miType, SAVED_CENTRE_NAME, saveAsName, device, freshCentre, null, serialiser, webUiConfig, eccCompanion, mmiCompanion, userCompanion);
+            commitCentreWithoutConflicts(user, userProvider, miType, SAVED_CENTRE_NAME, saveAsName, device, freshCentre, null, serialiser, webUiConfig, eccCompanion, mmiCompanion, userCompanion);
         });
         // overrides FRESH default centre configuration by FRESH current centre configuration; makes default config as preferred -- 'duplicates' centre
         validationPrototype.setConfigDuplicateAction(() -> {
             final ICentreDomainTreeManagerAndEnhancer freshCentre = updateCentre(user, userProvider, miType, FRESH_CENTRE_NAME, saveAsName, device, serialiser, domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion);
-            commitCentre(user, userProvider, miType, FRESH_CENTRE_NAME, empty(), device, freshCentre, null, serialiser, webUiConfig, eccCompanion, mmiCompanion, userCompanion);
+            commitCentreWithoutConflicts(user, userProvider, miType, FRESH_CENTRE_NAME, empty(), device, freshCentre, null, serialiser, webUiConfig, eccCompanion, mmiCompanion, userCompanion);
             // when switching to default configuration we need to make it preferred
             validationPrototype.makePreferredConfig(empty());
         }); 
@@ -565,7 +565,7 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
         });
         // applies new criteria from client application against FRESH centre and returns respective criteria entity
         validationPrototype.setFreshCentreApplier((modifHolder) -> {
-            return createCriteriaEntity(modifHolder, companionFinder, critGenerator, miType, saveAsName, user, userProvider, device, serialiser, domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion);
+            return createCriteriaEntityWithoutConflicts(modifHolder, companionFinder, critGenerator, miType, saveAsName, user, userProvider, device, serialiser, domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion);
         });
         // returns title / desc for named (inherited or owned) configuration and empty optional for unnamed (default) configuration
         validationPrototype.setCentreTitleAndDescGetter((saveAsNameForTitleAndDesc) -> {
@@ -936,13 +936,63 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
         final ICentreDomainTreeManagerAndEnhancer updatedPreviouslyRunCentre = updateCentre(user, userProvider, miType, PREVIOUSLY_RUN_CENTRE_NAME, saveAsName, device, serialiser, domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion);
         return createCriteriaValidationPrototype(miType, saveAsName, updatedPreviouslyRunCentre, companionFinder, critGenerator, 0L, user, userProvider, device, serialiser, domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion);
     }
-
+    
     /**
      * Creates selection criteria entity from <code>modifPropsHolder</code>.
      *
      * @return
      */
     protected static <T extends AbstractEntity<?>, M extends EnhancedCentreEntityQueryCriteria<T, ? extends IEntityDao<T>>> M createCriteriaEntity(
+        final Map<String, Object> modifiedPropertiesHolder,
+        final ICompanionObjectFinder companionFinder,
+        final ICriteriaGenerator critGenerator,
+        final Class<? extends MiWithConfigurationSupport<?>> miType,
+        final Optional<String> saveAsName,
+        final User user,
+        final IUserProvider userProvider,
+        final DeviceProfile device,
+        final ISerialiser serialiser,
+        final IDomainTreeEnhancerCache domainTreeEnhancerCache,
+        final IWebUiConfig webUiConfig,
+        final IEntityCentreConfig eccCompanion,
+        final IMainMenuItem mmiCompanion,
+        final IUser userCompanion) {
+        return createCriteriaEntity(false, modifiedPropertiesHolder, companionFinder, critGenerator, miType, saveAsName, user, userProvider, device, serialiser, domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion);
+    }
+    
+    /**
+     * Creates selection criteria entity from <code>modifPropsHolder</code>.
+     * <p>
+     * IMPORTANT WARNING: avoids centre config self-conflict checks; ONLY TO BE USED NOT IN ANOTHER SessionRequired TRANSACTION SCOPE.
+     *
+     * @return
+     */
+    protected static <T extends AbstractEntity<?>, M extends EnhancedCentreEntityQueryCriteria<T, ? extends IEntityDao<T>>> M createCriteriaEntityWithoutConflicts(
+        final Map<String, Object> modifiedPropertiesHolder,
+        final ICompanionObjectFinder companionFinder,
+        final ICriteriaGenerator critGenerator,
+        final Class<? extends MiWithConfigurationSupport<?>> miType,
+        final Optional<String> saveAsName,
+        final User user,
+        final IUserProvider userProvider,
+        final DeviceProfile device,
+        final ISerialiser serialiser,
+        final IDomainTreeEnhancerCache domainTreeEnhancerCache,
+        final IWebUiConfig webUiConfig,
+        final IEntityCentreConfig eccCompanion,
+        final IMainMenuItem mmiCompanion,
+        final IUser userCompanion) {
+        return createCriteriaEntity(true, modifiedPropertiesHolder, companionFinder, critGenerator, miType, saveAsName, user, userProvider, device, serialiser, domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion);
+    }
+    
+    /**
+     * Creates selection criteria entity from <code>modifPropsHolder</code>.
+     *
+     * @param withoutConflicts -- <code>true</code> to avoid self-conflict checks, <code>false</code> otherwise; <code>true</code> only to be used NOT IN another SessionRequired transaction scope
+     * @return
+     */
+    private static <T extends AbstractEntity<?>, M extends EnhancedCentreEntityQueryCriteria<T, ? extends IEntityDao<T>>> M createCriteriaEntity(
+            final boolean withoutConflicts,
             final Map<String, Object> modifiedPropertiesHolder,
             final ICompanionObjectFinder companionFinder,
             final ICriteriaGenerator critGenerator,
@@ -973,7 +1023,7 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
         ).getKey();
         
         // need to commit changed fresh centre after modifiedPropertiesHolder has been applied!
-        commitCentre(user, userProvider, miType, FRESH_CENTRE_NAME, saveAsName, device, originalCdtmae, null /* newDesc */, serialiser, webUiConfig, eccCompanion, mmiCompanion, userCompanion);
+        commitCentre(withoutConflicts, user, userProvider, miType, FRESH_CENTRE_NAME, saveAsName, device, originalCdtmae, null /* newDesc */, serialiser, webUiConfig, eccCompanion, mmiCompanion, userCompanion);
         return appliedCriteriaEntity;
     }
 

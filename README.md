@@ -27,4 +27,4 @@ Looking into the future
 -----------------------
 We're at a very early stage of open-sourcing the TG platform and there was a lot of deliberation if this is even necessary. However, we feel that our needs are not unique and that our effort can be helpful to others out there. We owe it to the vibrant open-source community who worked hard on their projects and libraries that we use in our day-to-day work in developing the TG platform.
 
-There are very exciting plans regarding the future TG development directions, which include, but are not limited to advanced static typing of the domain models, asynchronous EQL execution engine and self-tuning, real-time messaging and on and on. And we look forward to close collaboration with some you in the future!
+There are very exciting plans regarding the future TG development directions, which include, but are not limited to advanced static typing of the domain models, asynchronous EQL execution engine and self-tuning, real-time messaging and on and on. And we look forward to close collaboration with some of you in the future!

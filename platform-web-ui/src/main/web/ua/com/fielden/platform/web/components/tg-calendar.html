@@ -100,13 +100,13 @@
 
             properties: {
                 /**
-                 * If empty then default timezone should be used for toString and fromString conversions in 'moment()' and 'moment(...)' methods. 
+                 * If empty then default timezone should be used for toString and fromString conversions in 'moment()' and 'moment(...)' methods.
                  * Otherwise -- the specified timezone should be used in 'moment.tz(timeZone)' and 'moment.tz(..., timeZone)' methods.
                  */
                 timeZone: {
                     type: String
                 },
-                
+
                 selectedDate: {
                     type: Number,
                     notify: true,
@@ -144,7 +144,7 @@
                 milis: Number,
                 _months: Array
             },
-            
+
             observers: ["_selectYearMonthDay(selectedYear, selectedMonth, selectedDay)"],
 
             ready: function () {
@@ -170,21 +170,26 @@
             _adjustDate: function (newMoment) {
                 this.selectedDayName = newMoment.format("dddd");
                 this.selectedMonthName = newMoment.format("MMM").toUpperCase();
+                this.selectedDay = null;
+                this.selectedMonth = null;
+                this.selectedYear = null;
                 this.selectedDay = newMoment.date();
                 this.selectedMonth = newMoment.month();
                 this.selectedYear = newMoment.year();
             },
-            
+
             /**
-             * Changes selected date according to changed year and month. 
+             * Changes selected date according to changed year and month.
              */
             _selectYearMonthDay: function (newYear, newMonth, newDay) {
-                var yearMonth = { year: newYear, month: newMonth, day: 1 };
-                var lastDayOfTheMonth = _momentTz(yearMonth, this.timeZone).daysInMonth();
-                
-                var computedDay = newDay > lastDayOfTheMonth ? lastDayOfTheMonth : newDay;
-                var yearMonthDay = { year: newYear, month: newMonth, day: computedDay };
-                this.selectedDate = _momentTz(yearMonthDay, this.timeZone).valueOf();
+                if (newYear !== null && newMonth !== null && newDay !== null) {
+                    const yearMonth = { year: newYear, month: newMonth, day: 1 };
+                    const lastDayOfTheMonth = _momentTz(yearMonth, this.timeZone).daysInMonth();
+
+                    const computedDay = newDay > lastDayOfTheMonth ? lastDayOfTheMonth : newDay;
+                    const yearMonthDay = { year: newYear, month: newMonth, day: computedDay };
+                    this.selectedDate = _momentTz(yearMonthDay, this.timeZone).valueOf();
+                }
             },
 
             /**
@@ -200,7 +205,7 @@
             _showYearSelector: function () {
                 this._selectedPage = "yearSelector";
             },
-            
+
             _showMonthSelector: function () {
                 this._selectedPage = "monthSelector";
             },
@@ -208,7 +213,7 @@
             _showDefaultPage: function () {
                 this._selectedPage = "defaultPage";
             },
-            
+
             _timeSelected: function() {
                 this._showDefaultPage();
                 this.seconds = 0;

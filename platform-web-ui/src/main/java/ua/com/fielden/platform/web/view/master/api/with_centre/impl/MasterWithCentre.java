@@ -73,6 +73,12 @@ class MasterWithCentre<T extends AbstractEntity<?>> implements IMaster<T> {
                         "self._hasEmbededView = function () {\n" +
                         "    return true;\n" +
                         "}.bind(self);\n"+
+                        "self.wasLoaded = function () {\n" +
+                        "    if (this.$.loader.loadedElement) {\n" +
+                        "        return this.$.loader.loadedElement.wasLoaded();\n" +
+                        "    }\n" +
+                        "    return false;\n" +
+                        "}.bind(self);\n" +
                         "self._focusNextEmbededView = function (e) {\n" +
                         "    if (this.$.loader.loadedElement && this.$.loader.loadedElement.focusNextView) {\n" +
                         "        this.$.loader.loadedElement.focusNextView(e);\n" +

@@ -21,6 +21,7 @@
             -moz-appearance: textfield;
         }
         .input-layer {
+            cursor: text;
             text-align: right;
             text-overflow: ellipsis;
             white-space: nowrap;
@@ -57,7 +58,7 @@
     			on-blur="_outFocus"
     			tooltip-text$="[[_getTooltip(_editingValue)]]"
     			disabled$="[[_disabled]]"/>
-            <div class="input-layer">[[_formatText(_editingValue)]]</div>
+            <div class="input-layer" tooltip-text$="[[_getTooltip(_editingValue)]]">[[_formatText(_editingValue)]]</div>
     		<content class=".property-action"></content>
     	</tg-editor>
     </template>
@@ -98,7 +99,7 @@
          * Overridden to provide value corrections.
          */
         _commitForDescendants: function () {
-            const correctedValue = truncateLeadingZeros(this._editingValue);
+            const correctedValue = truncateInsignificantZeros(this._editingValue);
             if (!this.reflector().equalsEx(correctedValue, this._editingValue)) {
                 this._editingValue = correctedValue;
             }
