@@ -250,7 +250,7 @@
                     this.debounce("refreshTree", refreshTree.bind(this));
                 },
                 
-                expandSubtreeFull: function (idx, entity) {
+                reloadSubtreeFull: function (idx, entity) {
                     if (entity.entity.hasChildren) {
                         const numOfItemsToDelete = calculateNumberOfOpenedItems(entity);
                         entity.children = [generateLoadingIndicator(entity)];
@@ -259,6 +259,16 @@
                         }
                         this.splice("_entities", idx + 1, numOfItemsToDelete, ...getChildrenToAdd.bind(this)(entity, false));
                         this.fire("tg-load-subtree", {parentPath: getParentsPath(entity), loadAll: true});
+                    }
+                },
+                
+                removeSubtreeFull: function (idx, entity) {
+                    if (entity.entity.hasChildren) {
+                        if (entity.opened) {
+                            this.splice("_entities", idx + 1, calculateNumberOfOpenedItems(entity));
+                            this.set("_entities." + idx + ".opened", false);
+                        }
+                        entity.children = [generateLoadingIndicator(entity)];
                     }
                 },
                 
