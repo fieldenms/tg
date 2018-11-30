@@ -62,7 +62,6 @@ public class CriteriaEntityAutocompletionResource<T extends AbstractEntity<?>, M
     private final ICriteriaGenerator critGenerator;
     private final EntityCentre<T> centre;
     
-    private final ISerialiser serialiser;
     private final IDomainTreeEnhancerCache domainTreeEnhancerCache;
     private final IWebUiConfig webUiConfig;
     private final IUserProvider userProvider;
@@ -82,7 +81,6 @@ public class CriteriaEntityAutocompletionResource<T extends AbstractEntity<?>, M
             final String criterionPropertyName,
             final EntityCentre<T> centre,
             final RestServerUtil restUtil,
-            final ISerialiser serialiser,
             final IDomainTreeEnhancerCache domainTreeEnhancerCache,
             final Context context,
             final Request request,
@@ -100,7 +98,6 @@ public class CriteriaEntityAutocompletionResource<T extends AbstractEntity<?>, M
         this.webUiConfig = webUiConfig;
         this.userProvider = userProvider;
         this.entityFactory = entityFactory;
-        this.serialiser = serialiser;
         this.domainTreeEnhancerCache = domainTreeEnhancerCache;
     }
 
@@ -128,15 +125,15 @@ public class CriteriaEntityAutocompletionResource<T extends AbstractEntity<?>, M
                 criteriaEntity = null;
                 final M enhancedCentreEntityQueryCriteria = createCriteriaValidationPrototype(
                     miType, saveAsName,
-                    updateCentre(user, userProvider, miType, FRESH_CENTRE_NAME, saveAsName, device(), serialiser, domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion, companionFinder),
+                    updateCentre(user, userProvider, miType, FRESH_CENTRE_NAME, saveAsName, device(), domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion, companionFinder),
                     companionFinder, critGenerator, 0L, 
                     user, userProvider,
                     device(),
-                    serialiser, domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion
+                    domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion
                 );
                 criteriaType = (Class<M>) enhancedCentreEntityQueryCriteria.getClass();
             } else {
-                criteriaEntity = (M) createCriteriaEntityWithoutConflicts(modifHolder, companionFinder, critGenerator, miType, saveAsName, user, userProvider, device(), serialiser, domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion);
+                criteriaEntity = (M) createCriteriaEntityWithoutConflicts(modifHolder, companionFinder, critGenerator, miType, saveAsName, user, userProvider, device(), domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion);
                 criteriaType = (Class<M>) criteriaEntity.getClass();
             }
 

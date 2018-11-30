@@ -4,11 +4,10 @@ import static java.lang.String.format;
 import static java.util.Optional.ofNullable;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
-import static ua.com.fielden.platform.serialisation.api.SerialiserEngines.JACKSON;
 import static ua.com.fielden.platform.utils.CollectionUtil.setOf;
 import static ua.com.fielden.platform.utils.EntityUtils.fetchWithKeyAndDesc;
+import static ua.com.fielden.platform.web.centre.CentreDiffSerialiser.CENTRE_DIFF_SERIALISER;
 
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -89,7 +88,6 @@ public class CentreUpdaterUtils extends CentreUpdater {
      * @param menuItemType
      * @param user
      * @param name
-     * @param serialiser
      * @param eccCompanion
      * @return
      */
@@ -97,10 +95,9 @@ public class CentreUpdaterUtils extends CentreUpdater {
             final Class<?> menuItemType,
             final User user,
             final String name,
-            final ISerialiser serialiser,
             final IEntityCentreConfig eccCompanion) {
         return ofNullable(eccCompanion.getEntity(from(modelFor(user, menuItemType.getName(), name)).model()))
-                .map(ecc -> restoreDiffFrom(ecc, serialiser, eccCompanion, format("for type [%s] with name [%s] for user [%s]", menuItemType.getSimpleName(), name, user)));
+                .map(ecc -> restoreDiffFrom(ecc, eccCompanion, format("for type [%s] with name [%s] for user [%s]", menuItemType.getSimpleName(), name, user)));
     }
     
     /**
@@ -108,7 +105,6 @@ public class CentreUpdaterUtils extends CentreUpdater {
      * In case of failure, initialises new empty instance, saves it and returns as a result.
      * 
      * @param ecc
-     * @param serialiser
      * @param eccCompanion
      * @param loggingSuffix
      * @return
@@ -116,19 +112,18 @@ public class CentreUpdaterUtils extends CentreUpdater {
     private static Map<String, Object> restoreDiffFrom(
             // params for actual deserialisation
             final EntityCentreConfig ecc,
-            final ISerialiser serialiser,
             // params for: deserialisation failed -- create empty and save
             final IEntityCentreConfig eccCompanion,
             // params for: deserialisation failed -- logging
             final String loggingSuffix) {
         try {
-            return serialiser.deserialise(ecc.getConfigBody(), LinkedHashMap.class, JACKSON);
+            return CENTRE_DIFF_SERIALISER.deserialise(ecc.getConfigBody());
         } catch (final Exception deserialisationException) {
             logger.error("============================================ CENTRE DESERIALISATION HAS FAILED ============================================");
             logger.error(format("Unable to deserialise entity centre instance %s. Exception:", loggingSuffix), deserialisationException);
             logger.error(format("Creating and saving of empty diff %s...", loggingSuffix));
             final Map<String, Object> emptyDiff = createEmptyDifferences();
-            ecc.setConfigBody(serialiser.serialise(emptyDiff, JACKSON));
+            ecc.setConfigBody(CENTRE_DIFF_SERIALISER.serialise(emptyDiff));
             eccCompanion.saveWithConflicts(ecc); // this rare saving case should never be conflicted -- it is safe to use saveWithConflicts here (also nesting inside bigger transaction scopes is required)
             logger.error(format("Creating and saving of empty diff %s...done", loggingSuffix));
             logger.error("============================================ CENTRE DESERIALISATION HAS FAILED [END] ============================================");
@@ -145,10 +140,9 @@ public class CentreUpdaterUtils extends CentreUpdater {
             final User user,
             final String newName,
             final String newDesc,
-            final ISerialiser serialiser,
             final IEntityCentreConfig eccCompanion,
             final IMainMenuItem mmiCompanion) {
-        return saveNewEntityCentreManager(false, differences, menuItemType, user, newName, newDesc, serialiser, eccCompanion, mmiCompanion);
+        return saveNewEntityCentreManager(false, differences, menuItemType, user, newName, newDesc, eccCompanion, mmiCompanion);
     }
     
     /**
@@ -163,7 +157,6 @@ public class CentreUpdaterUtils extends CentreUpdater {
             final User user,
             final String newName,
             final String newDesc,
-            final ISerialiser serialiser,
             final IEntityCentreConfig eccCompanion,
             final IMainMenuItem mmiCompanion) {
         final MainMenuItem menuItem = mmiCompanion.findByKeyOptional(menuItemType.getName()).orElseGet(() -> {
@@ -176,7 +169,7 @@ public class CentreUpdaterUtils extends CentreUpdater {
         ecc.setTitle(newName);
         ecc.setMenuItem(menuItem);
         ecc.setDesc(newDesc);
-        ecc.setConfigBody(serialiser.serialise(differences, JACKSON));
+        ecc.setConfigBody(CENTRE_DIFF_SERIALISER.serialise(differences));
         if (withoutConflicts) {
             eccCompanion.saveWithoutConflicts(ecc);
         } else {
@@ -198,17 +191,16 @@ public class CentreUpdaterUtils extends CentreUpdater {
             final User user,
             final String name,
             final String newDesc,
-            final ISerialiser serialiser,
             final IEntityCentreConfig eccCompanion,
             final IMainMenuItem mmiCompanion) {
         final EntityCentreConfig config = eccCompanion.getEntity(from(modelFor(user, menuItemType.getName(), name)).model());
         if (config == null) {
-            saveNewEntityCentreManager(withoutConflicts, differences, menuItemType, user, name, newDesc, serialiser, eccCompanion, mmiCompanion);
+            saveNewEntityCentreManager(withoutConflicts, differences, menuItemType, user, name, newDesc, eccCompanion, mmiCompanion);
         } else {
             if (newDesc != null) {
                 config.setDesc(newDesc);
             }
-            config.setConfigBody(serialiser.serialise(differences, JACKSON));
+            config.setConfigBody(CENTRE_DIFF_SERIALISER.serialise(differences));
             if (withoutConflicts) {
                 eccCompanion.saveWithoutConflicts(config);
             } else {

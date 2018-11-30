@@ -13,10 +13,10 @@ import static ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager
 import static ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.IAddToCriteriaTickManager.MetaValueType.VALUE;
 import static ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.IAddToCriteriaTickManager.MetaValueType.VALUE2;
 import static ua.com.fielden.platform.domaintree.impl.DomainTreeEnhancerCache.CACHE;
-import static ua.com.fielden.platform.serialisation.api.SerialiserEngines.JACKSON;
 import static ua.com.fielden.platform.types.tuples.T2.t2;
 import static ua.com.fielden.platform.utils.CollectionUtil.listOf;
 import static ua.com.fielden.platform.utils.CollectionUtil.mapOf;
+import static ua.com.fielden.platform.web.centre.CentreDiffSerialiser.CENTRE_DIFF_SERIALISER;
 import static ua.com.fielden.platform.web.centre.CentreUpdater.applyDifferences;
 import static ua.com.fielden.platform.web.centre.CentreUpdater.createDifferences;
 import static ua.com.fielden.platform.web.centre.CentreUpdater.createEmptyDifferences;
@@ -36,7 +36,6 @@ import static ua.com.fielden.snappy.MnemonicEnum.MONTH;
 import java.math.BigDecimal;
 import java.util.Currency;
 import java.util.Date;
-import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
@@ -170,8 +169,8 @@ public class CentreUpdaterTest {
         final Map<String, Object> diff = createDifferences(centre, defaultCentre, ROOT);
         
         // serialise and deserialise
-        final byte[] serialisedDiff = SERIALISER.serialise(diff, JACKSON);
-        final Map<String, Object> deserialisedDiff = SERIALISER.deserialise(serialisedDiff, LinkedHashMap.class, JACKSON);
+        final byte[] serialisedDiff = CENTRE_DIFF_SERIALISER.serialise(diff);
+        final Map<String, Object> deserialisedDiff = CENTRE_DIFF_SERIALISER.deserialise(serialisedDiff);
         
         // check expected diff against original diff
         assertEquals(expectedDiff.toString(), diff.toString());

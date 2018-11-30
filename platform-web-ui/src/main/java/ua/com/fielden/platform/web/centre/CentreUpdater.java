@@ -185,7 +185,6 @@ public class CentreUpdater {
             final String name,
             final Optional<String> saveAsName,
             final DeviceProfile device,
-            final ISerialiser serialiser,
             final IDomainTreeEnhancerCache domainTreeEnhancerCache,
             final IWebUiConfig webUiConfig,
             final IEntityCentreConfig eccCompanion,
@@ -193,8 +192,8 @@ public class CentreUpdater {
             final IUser userCompanion,
             final ICompanionObjectFinder companionFinder) {
         final String deviceSpecificName = deviceSpecific(saveAsSpecific(name, saveAsName), device);
-        final Map<String, Object> updatedDiff = updateDifferences(miType, user, userProvider, deviceSpecificName, saveAsName, device, serialiser, domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion, companionFinder);
-        return loadCentreFromDefaultAndDiff(user, miType, saveAsName, updatedDiff, serialiser, webUiConfig, domainTreeEnhancerCache, companionFinder);
+        final Map<String, Object> updatedDiff = updateDifferences(miType, user, userProvider, deviceSpecificName, saveAsName, device, domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion, companionFinder);
+        return loadCentreFromDefaultAndDiff(user, miType, saveAsName, updatedDiff, webUiConfig, domainTreeEnhancerCache, companionFinder);
     }
     
     /**
@@ -305,12 +304,11 @@ public class CentreUpdater {
             final DeviceProfile device,
             final ICentreDomainTreeManagerAndEnhancer centre,
             final String newDesc,
-            final ISerialiser serialiser,
             final IWebUiConfig webUiConfig,
             final IEntityCentreConfig eccCompanion,
             final IMainMenuItem mmiCompanion,
             final IUser userCompanion) {
-        return commitCentre(false, user, userProvider, miType, name, saveAsName, device, centre, newDesc, serialiser, webUiConfig, eccCompanion, mmiCompanion, userCompanion);
+        return commitCentre(false, user, userProvider, miType, name, saveAsName, device, centre, newDesc, webUiConfig, eccCompanion, mmiCompanion, userCompanion);
     }
     
     /**
@@ -337,12 +335,11 @@ public class CentreUpdater {
             final DeviceProfile device,
             final ICentreDomainTreeManagerAndEnhancer centre,
             final String newDesc,
-            final ISerialiser serialiser,
             final IWebUiConfig webUiConfig,
             final IEntityCentreConfig eccCompanion,
             final IMainMenuItem mmiCompanion,
             final IUser userCompanion) {
-        return commitCentre(true, user, userProvider, miType, name, saveAsName, device, centre, newDesc, serialiser, webUiConfig, eccCompanion, mmiCompanion, userCompanion);
+        return commitCentre(true, user, userProvider, miType, name, saveAsName, device, centre, newDesc, webUiConfig, eccCompanion, mmiCompanion, userCompanion);
     }
     
     /**
@@ -369,7 +366,6 @@ public class CentreUpdater {
             final DeviceProfile device,
             final ICentreDomainTreeManagerAndEnhancer centre,
             final String newDesc,
-            final ISerialiser serialiser,
             final IWebUiConfig webUiConfig,
             final IEntityCentreConfig eccCompanion,
             final IMainMenuItem mmiCompanion,
@@ -377,7 +373,7 @@ public class CentreUpdater {
         final String deviceSpecificName = deviceSpecific(saveAsSpecific(name, saveAsName), device);
         final ICentreDomainTreeManagerAndEnhancer defaultCentre = getDefaultCentre(miType, webUiConfig);
         // override old 'diff' with recently created one and save it
-        saveEntityCentreManager(withoutConflicts, createDifferences(centre, defaultCentre, getEntityType(miType)), miType, user, deviceSpecificName + DIFFERENCES_SUFFIX, newDesc, serialiser, eccCompanion, mmiCompanion);
+        saveEntityCentreManager(withoutConflicts, createDifferences(centre, defaultCentre, getEntityType(miType)), miType, user, deviceSpecificName + DIFFERENCES_SUFFIX, newDesc, eccCompanion, mmiCompanion);
         return centre;
     }
     
@@ -566,7 +562,6 @@ public class CentreUpdater {
             final Class<? extends MiWithConfigurationSupport<?>> miType,
             final Optional<String> saveAsName,
             final Map<String, Object> updatedDiff,
-            final ISerialiser serialiser,
             final IWebUiConfig webUiConfig,
             final IDomainTreeEnhancerCache domainTreeEnhancerCache,
             final ICompanionObjectFinder companionFinder) {
@@ -641,7 +636,6 @@ public class CentreUpdater {
             final String deviceSpecificName,
             final Optional<String> saveAsName,
             final DeviceProfile device,
-            final ISerialiser serialiser,
             final IDomainTreeEnhancerCache domainTreeEnhancerCache,
             final IWebUiConfig webUiConfig,
             final IEntityCentreConfig eccCompanion,
@@ -655,7 +649,7 @@ public class CentreUpdater {
         // WILL BE UPDATED IN EVERY CALL OF updateDifferencesCentre!
         
         // init (or update) diff centre from persistent storage if exists
-        final Optional<Map<String, Object>> retrievedDiff = retrieveDiff(miType, user, deviceSpecificDiffName, serialiser, eccCompanion);
+        final Optional<Map<String, Object>> retrievedDiff = retrieveDiff(miType, user, deviceSpecificDiffName, eccCompanion);
         if (retrievedDiff.isPresent()) {
             resultantDiff = retrievedDiff.get();
         } else {
@@ -663,11 +657,11 @@ public class CentreUpdater {
             // Default centre is now needed for both cases: base or non-base user.
             if (user.isBase() || of(WebApiUtils.LINK_CONFIG_TITLE).equals(saveAsName) || empty().equals(saveAsName)) { // for non-base user 'link' and 'default' configurations need to be derived from default user-specific configuration instead of base configuration
                 // diff centre does not exist in persistent storage yet -- initialise EMPTY diff
-                resultantDiff = saveNewEntityCentreManager(createEmptyDifferences(), miType, user, deviceSpecificDiffName, null, serialiser, eccCompanion, mmiCompanion);
+                resultantDiff = saveNewEntityCentreManager(createEmptyDifferences(), miType, user, deviceSpecificDiffName, null, eccCompanion, mmiCompanion);
             } else { // non-base user
                 // diff centre does not exist in persistent storage yet -- create a diff by comparing basedOnCentre (configuration created by base user) and default centre
                 final User baseUser = beginBaseUserOperations(userProvider, user, userCompanion);
-                final ICentreDomainTreeManagerAndEnhancer baseCentre = getBaseCentre(baseUser, userProvider, miType, saveAsName, device, serialiser, domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion, companionFinder);
+                final ICentreDomainTreeManagerAndEnhancer baseCentre = getBaseCentre(baseUser, userProvider, miType, saveAsName, device, domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion, companionFinder);
                 // find description of the centre configuration to be copied from
                 final String upstreamDesc = updateCentreDesc(baseUser, miType, saveAsName, device, eccCompanion);
                 // creates differences centre from the differences between base user's 'default centre' (which can be user specific, see IValueAssigner for properties dependent on User) and 'baseCentre'
@@ -675,7 +669,7 @@ public class CentreUpdater {
                 endBaseUserOperations(user, userProvider);
                 
                 // promotes diff to local cache and saves it into persistent storage
-                resultantDiff = saveNewEntityCentreManager(differences, miType, user, deviceSpecificDiffName, upstreamDesc, serialiser, eccCompanion, mmiCompanion);
+                resultantDiff = saveNewEntityCentreManager(differences, miType, user, deviceSpecificDiffName, upstreamDesc, eccCompanion, mmiCompanion);
             }
         }
         return resultantDiff;
@@ -716,14 +710,13 @@ public class CentreUpdater {
             final Class<? extends MiWithConfigurationSupport<?>> miType,
             final Optional<String> saveAsName,
             final DeviceProfile device,
-            final ISerialiser serialiser,
             final IDomainTreeEnhancerCache domainTreeEnhancerCache,
             final IWebUiConfig webUiConfig,
             final IEntityCentreConfig eccCompanion,
             final IMainMenuItem mmiCompanion,
             final IUser userCompanion,
             final ICompanionObjectFinder companionFinder) {
-        return updateCentre(baseUser, userProvider, miType, SAVED_CENTRE_NAME, saveAsName, device, serialiser, domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion, companionFinder);
+        return updateCentre(baseUser, userProvider, miType, SAVED_CENTRE_NAME, saveAsName, device, domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion, companionFinder);
     }
     
     /**
@@ -757,7 +750,6 @@ public class CentreUpdater {
             final Class<? extends MiWithConfigurationSupport<?>> miType,
             final Optional<String> saveAsName,
             final DeviceProfile device,
-            final ISerialiser serialiser,
             final IDomainTreeEnhancerCache domainTreeEnhancerCache,
             final IWebUiConfig webUiConfig,
             final IEntityCentreConfig eccCompanion,
@@ -768,7 +760,7 @@ public class CentreUpdater {
             return getDefaultCentre(miType, webUiConfig);
         } else {
             final User baseUser = beginBaseUserOperations(userProvider, user, userCompanion);
-            final ICentreDomainTreeManagerAndEnhancer baseCentre = getBaseCentre(baseUser, userProvider, miType, saveAsName, device, serialiser, domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion, companionFinder);
+            final ICentreDomainTreeManagerAndEnhancer baseCentre = getBaseCentre(baseUser, userProvider, miType, saveAsName, device, domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion, companionFinder);
             endBaseUserOperations(user, userProvider);
             return baseCentre;
         }
