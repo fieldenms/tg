@@ -88,32 +88,37 @@ public class ChartDeckerMaster<T extends AbstractEntity<?>> implements IMaster<T
         final List<String> chartOptions = new ArrayList<>();
         for (int deckIndex = 0; deckIndex < deckerConfig.getDecs().size(); deckIndex++) {
             final ChartDeck<T> deck = deckerConfig.getDecs().get(deckIndex);
-//            chartOptions.add("{\n"
-//                    + "    label: '" + deck.getTitle() + "',\n"
-//                    + "    xAxis: {\n"
-//                    + "        label: '" + deck.getXAxisTitle() + "'\n"
-//                    + "    },\n"
-//                    + "    yAxis: {\n"
-//                    + "        label: '" + deck.getYAxisTitle() + "'\n"
-//                    + "    },\n"
-//                    + "    dataPropertyNames: {\n"
-//                    + "        groupKeyProp: '" + deck.getGroupKeyProp() + "',\n"
-//                    + "        groupDescProp: '" + deck.getGroupDescProperty() + "',\n"
-//                    + "        valueProp: " + generateValueAccessor(deck.getPropertyType(), deck.getAggregationProperty()) + "\n"
-//                    + "    },\n"
-//                    + "    barColour: d => '" + deck.getBarColour() + "',\n"
-//                    + "    barLabel: this._labelFormatter('" + deck.getPropertyType().getSimpleName() + "', '" + deck.getAggregationProperty() + "'),\n"
-//                    + "    tooltip: " + generateTooltipRetriever(deck, deckIndex) + (deck.getAction() != null ? ",\n" : "\n")
-//                    + (deck.getAction() != null ? "    click: this._click(" + deckIndex + ")\n" : "")
-//                    + "}");
+            chartOptions.add("{\n"
+                    + "    mode: d3.barChart.BarMode." + deck.getMode().name()
+                    + "    label: '" + deck.getTitle() + "',\n"
+                    + "    xAxis: {\n"
+                    + "        label: '" + deck.getXAxisTitle() + "'\n"
+                    + "    },\n"
+                    + "    yAxis: {\n"
+                    + "        label: '" + deck.getYAxisTitle() + "'\n"
+                    + "    },\n"
+                    + "    dataPropertyNames: {\n"
+                    + "        groupKeyProp: '" + deck.getGroupKeyProp() + "',\n"
+                    + "        groupDescProp: '" + deck.getGroupDescProperty() + "',\n"
+                    + "        valueProps: " + generateValuesAccessor(deck.getEntityType(), deck.getSeries()) + "\n"
+                    + "    },\n"
+                    + "    barColour: d => '" + deck.getBarColour() + "',\n"
+                    + "    barLabel: this._labelFormatter('" + deck.getPropertyType().getSimpleName() + "', '" + deck.getAggregationProperty() + "'),\n"
+                    + "    tooltip: " + generateTooltipRetriever(deck, deckIndex) + (deck.getAction() != null ? ",\n" : "\n")
+                    + (deck.getAction() != null ? "    click: this._click(" + deckIndex + ")\n" : "")
+                    + "}");
         }
         return "self.barOptions = [" + StringUtils.join(chartOptions, ",\n") + "];\n";
     }
 
-    private String generateTooltipRetriever(final ChartDeck<T> deck, final int deckIndex) {
-        return null;
-//        return "this._tooltip('" + deck.getGroupDescProperty() + "', '" + deck.getAggregationProperty() + "', '"
-//                + deck.getPropertyType().getSimpleName() + "', this.actions[" + deckIndex + "])";
+    private String generateValuesAccessor(final Class<? extends AbstractEntity<?>> entityType, final List<ChartSeries<T>> series) {
+        final StringBuilder propValues = new StringBuilder("[");
+        for(int idx = 0; idx < series.size(); idx++)
+        series.stream().forEach(nextSeries -> {
+            propValues.append(generateValueAccessor(nextSeries.getPropertyType(), nextSeries.getPropertyName()) + ",");
+        });
+        propValues.setCharAt(propValues.length() - 1, ']');
+        return propValues.toString();
     }
 
     private String generateValueAccessor(final Class<?> propertyType, final String aggregationProperty) {
@@ -121,6 +126,11 @@ public class ChartDeckerMaster<T extends AbstractEntity<?>> implements IMaster<T
             return "this._moneyPropAccessor('" + aggregationProperty + "')";
         }
         return "'" + aggregationProperty + "'";
+    }
+
+    private String generateTooltipRetriever(final ChartDeck<T> deck, final int deckIndex) {
+        return "this._tooltip('" + deck.getGroupDescProperty() + "', '" + deck.getAggregationProperty() + "', '"
+                + deck.getPropertyType().getSimpleName() + "', this.actions[" + deckIndex + "])";
     }
 
     @Override

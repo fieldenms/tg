@@ -1,24 +1,29 @@
 package ua.com.fielden.platform.web.view.master.chart.decker.api.impl;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig;
 import ua.com.fielden.platform.web.view.master.api.IMaster;
+import ua.com.fielden.platform.web.view.master.chart.decker.api.BarMode;
 import ua.com.fielden.platform.web.view.master.chart.decker.api.IChartDeckerAddDeck;
 import ua.com.fielden.platform.web.view.master.chart.decker.api.IChartDeckerAlso;
+import ua.com.fielden.platform.web.view.master.chart.decker.api.IChartDeckerMode;
+import ua.com.fielden.platform.web.view.master.chart.decker.api.IChartDeckerWithSeriesAlso;
+import ua.com.fielden.platform.web.view.master.chart.decker.api.IChartDeckerWithSeriesTitle;
 import ua.com.fielden.platform.web.view.master.chart.decker.api.IChartDeckerWithTitle;
 import ua.com.fielden.platform.web.view.master.chart.decker.api.IChartDeckerXAxisTitle;
 import ua.com.fielden.platform.web.view.master.chart.decker.api.IChartDeckerYAxisTitle;
 
-public class ChartDeck<T extends AbstractEntity<?>> implements IChartDeckerWithTitle<T> {
+public class ChartDeck<T extends AbstractEntity<?>> implements IChartDeckerMode<T>, IChartDeckerWithSeriesAlso<T>{
 
     private final List<ChartSeries<T>> series = new ArrayList<>();
     private final Class<? extends AbstractEntity<?>> entityType;
     private final ChartDeckerMasterBuilder<T> deckerBuilder;
 
-
+    private BarMode mode = BarMode.GROUPED;
     private String title = "";
     private String xAxisTitle = "";
     private String yAxisTitle = "";
@@ -78,7 +83,32 @@ public class ChartDeck<T extends AbstractEntity<?>> implements IChartDeckerWithT
 
     @Override
     public IChartDeckerAlso<T> withYAxisTitle(final String title) {
-        // TODO Auto-generated method stub
-        return null;
+        this.xAxisTitle = title;
+        return this;
+    }
+
+    @Override
+    public IChartDeckerWithTitle<T> mode(final BarMode mode) {
+        this.mode = mode;
+        return this;
+    }
+
+    @Override
+    public IChartDeckerWithSeriesTitle<T> withSeries(final String propertyName) {
+        final ChartSeries<T> series = new ChartSeries<>(this, propertyName);
+        this.series.add(series);
+        return series;
+    }
+
+    public BarMode getMode() {
+        return mode;
+    }
+
+    public Class<? extends AbstractEntity<?>> getEntityType() {
+        return entityType;
+    }
+
+    public List<ChartSeries<T>> getSeries() {
+        return Collections.unmodifiableList(series);
     }
 }
