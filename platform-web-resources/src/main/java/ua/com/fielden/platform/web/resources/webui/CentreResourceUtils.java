@@ -62,7 +62,6 @@ import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.security.user.IUser;
 import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.security.user.User;
-import ua.com.fielden.platform.serialisation.api.ISerialiser;
 import ua.com.fielden.platform.serialisation.jackson.DefaultValueContract;
 import ua.com.fielden.platform.ui.config.api.IEntityCentreConfig;
 import ua.com.fielden.platform.ui.config.api.IMainMenuItem;
@@ -731,7 +730,6 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
             final Optional<CentreContextConfig> contextConfig,
             final String chosenProperty,
             final DeviceProfile device,
-            final ISerialiser serialiser,
             final IDomainTreeEnhancerCache domainTreeEnhancerCache,
             final IEntityCentreConfig eccCompanion,
             final IMainMenuItem mmiCompanion,
@@ -746,7 +744,7 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
                 context.setSelectedEntities(!centreContextHolder.proxiedPropertyNames().contains("selectedEntities") ? (List<T>) centreContextHolder.getSelectedEntities() : new ArrayList<>());
             }
             if (config.withMasterEntity) {
-                context.setMasterEntity(restoreMasterFunctionalEntity(disregardOriginallyProducedEntities, webUiConfig, companionFinder, user, userProvider, critGenerator, entityFactory, centreContextHolder, 0, device, serialiser, domainTreeEnhancerCache, eccCompanion, mmiCompanion, userCompanion));
+                context.setMasterEntity(restoreMasterFunctionalEntity(disregardOriginallyProducedEntities, webUiConfig, companionFinder, user, userProvider, critGenerator, entityFactory, centreContextHolder, 0, device, domainTreeEnhancerCache, eccCompanion, mmiCompanion, userCompanion));
             }
             if (config.withComputation()) {
                 context.setComputation(config.computation.get());
@@ -889,7 +887,6 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
                                 centre.getQueryEnhancerConfig(),
                                 appliedCriteriaEntity,
                                 device,
-                                serialiser,
                                 domainTreeEnhancerCache,
                                 eccCompanion,
                                 mmiCompanion,

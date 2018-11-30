@@ -33,7 +33,6 @@ import ua.com.fielden.platform.entity_centre.review.criteria.EnhancedCentreEntit
 import ua.com.fielden.platform.security.user.IUser;
 import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.security.user.User;
-import ua.com.fielden.platform.serialisation.api.ISerialiser;
 import ua.com.fielden.platform.ui.config.EntityCentreConfig;
 import ua.com.fielden.platform.ui.config.MainMenuItem;
 import ua.com.fielden.platform.ui.config.api.IEntityCentreConfig;
@@ -166,7 +165,6 @@ public class CriteriaEntityAutocompletionResource<T extends AbstractEntity<?>, M
                 contextConfig,
                 criterionPropertyName,
                 device(),
-                serialiser,
                 domainTreeEnhancerCache,
                 eccCompanion,
                 mmiCompanion,

@@ -65,7 +65,6 @@ import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.security.user.IUser;
 import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.security.user.User;
-import ua.com.fielden.platform.serialisation.api.ISerialiser;
 import ua.com.fielden.platform.ui.config.EntityCentreConfig;
 import ua.com.fielden.platform.ui.config.MainMenuItem;
 import ua.com.fielden.platform.ui.config.api.IEntityCentreConfig;
@@ -280,7 +279,6 @@ public class CriteriaResource extends AbstractWebResource {
             // Please be careful when adding some new contracts to 'firstTick' not to violate this premise.
             final boolean isCriteriaStale = !equalsEx(updateCentre(user, userProvider, miType, PREVIOUSLY_RUN_CENTRE_NAME, saveAsName, device, domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion, companionFinder).getFirstTick(), freshCentre.getFirstTick());
             if (isCriteriaStale) {
-                logger.info(staleCriteriaMessage);
                 return staleCriteriaMessage;
             }
         }
@@ -381,7 +379,6 @@ public class CriteriaResource extends AbstractWebResource {
                     centre.getQueryEnhancerConfig(),
                     previouslyRunCriteriaEntity,
                     device(),
-                    serialiser,
                     domainTreeEnhancerCache,
                     eccCompanion,
                     mmiCompanion,
@@ -486,9 +483,8 @@ public class CriteriaResource extends AbstractWebResource {
             final EntityFactory entityFactory,
             final CentreContextHolder centreContextHolder,
             final Optional<Pair<IQueryEnhancer<AbstractEntity<?>>, Optional<CentreContextConfig>>> queryEnhancerConfig,
-            final  EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, ?> criteriaEntity,
+            final EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, ?> criteriaEntity,
             final DeviceProfile device,
-            final ISerialiser serialiser,
             final IDomainTreeEnhancerCache domainTreeEnhancerCache,
             final IEntityCentreConfig eccCompanion,
             final IMainMenuItem mmiCompanion,
@@ -509,7 +505,6 @@ public class CriteriaResource extends AbstractWebResource {
                     queryEnhancerConfig.get().getValue(),
                     null, /* chosenProperty is not applicable in queryEnhancer context */
                     device,
-                    serialiser,
                     domainTreeEnhancerCache,
                     eccCompanion,
                     mmiCompanion,
