@@ -265,10 +265,10 @@
                 removeSubtreeFull: function (idx, entity) {
                     if (entity.entity.hasChildren) {
                         if (entity.opened) {
-                            this.splice("_entities", idx + 1, calculateNumberOfOpenedItems(entity));
-                            this.set("_entities." + idx + ".opened", false);
+                            const numOfItemsToDelete = calculateNumberOfOpenedItems(entity);
+                            entity.children = [generateLoadingIndicator(entity)];
+                            this.splice("_entities", idx + 1, numOfItemsToDelete, ...getChildrenToAdd.bind(this)(entity, true));
                         }
-                        entity.children = [generateLoadingIndicator(entity)];
                     }
                 },
                 
