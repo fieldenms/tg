@@ -1,5 +1,7 @@
 package ua.com.fielden.platform.web.view.master.chart.decker.api.impl;
 
+import static java.lang.String.format;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -96,6 +98,11 @@ public class ChartDeck<T extends AbstractEntity<?>> implements IChartDeckerMode<
     @Override
     public IChartDeckerWithSeriesTitle<T> withSeries(final String propertyName) {
         final ChartSeries<T> series = new ChartSeries<>(this, propertyName);
+        if (!this.series.stream().allMatch(s -> s.getPropertyType().equals(series.getPropertyType()))) {
+            throw new ChartConfigurationError(format("The chart series should have the same type: %. But there was attempt to add series with different type: %",
+                    this.series.get(0).getPropertyType().getSimpleName(),
+                    series.getPropertyType().getSimpleName()));
+        }
         this.series.add(series);
         return series;
     }
