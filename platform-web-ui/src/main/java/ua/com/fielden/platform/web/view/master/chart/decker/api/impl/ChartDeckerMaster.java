@@ -60,13 +60,16 @@ public class ChartDeckerMaster<T extends AbstractEntity<?>> implements IMaster<T
         final DomElement container = new DomContainer();
         final List<String> primaryActionObjects = new ArrayList<>();
         for (int deckIndex = 0; deckIndex < deckerConfig.getDecs().size(); deckIndex++) {
-            final EntityActionConfig config = deckerConfig.getDecs().get(deckIndex).getAction();
-            this.actions.add(config);
-            if (config != null && !config.isNoAction()) {
-                final FunctionalActionElement el = FunctionalActionElement.newEntityActionForMaster(config, deckIndex);
-                importPaths.add(el.importPath());
-                container.add(el.render().clazz("chart-action").attr("hidden", true));
-                primaryActionObjects.add(el.createActionObject());
+            final List<EntityActionConfig> configs = deckerConfig.getDecs().get(deckIndex).getActions();
+            this.actions.addAll(configs);
+            for (int actionIndex = 0; actionIndex < configs.size(); actionIndex++) {
+                final EntityActionConfig config = configs.get(actionIndex);
+                if (config != null && !config.isNoAction()) {
+                    final FunctionalActionElement el = FunctionalActionElement.newEntityActionForMaster(config, deckIndex);
+                    importPaths.add(el.importPath());
+                    container.add(el.render().clazz("chart-action").attr("hidden", true).attr("action-index", actionIndex).attr("deck-index", deckIndex));
+                    primaryActionObjects.add(el.createActionObject());
+                }
             }
         }
         return new Pair<>(StringUtils.join(primaryActionObjects, ",\n"), container);
@@ -89,7 +92,7 @@ public class ChartDeckerMaster<T extends AbstractEntity<?>> implements IMaster<T
         for (int deckIndex = 0; deckIndex < deckerConfig.getDecs().size(); deckIndex++) {
             final ChartDeck<T> deck = deckerConfig.getDecs().get(deckIndex);
             chartOptions.add("{\n"
-                    + "    mode: d3.barChart.BarMode." + deck.getMode().name()
+                    + "    mode: d3.barChart.BarMode." + deck.getMode().name() + ",\n"
                     + "    label: '" + deck.getTitle() + "',\n"
                     + "    xAxis: {\n"
                     + "        label: '" + deck.getXAxisTitle() + "'\n"
@@ -106,9 +109,9 @@ public class ChartDeckerMaster<T extends AbstractEntity<?>> implements IMaster<T
                     + "    barColour: (d, i) => self.barOptions[" + deckIndex + "].colours[i],\n"
                     + "    propertyNames: " + generatePropertyNames(deck.getSeries()) + ",\n"
                     + "    propertyTypes: " + generatePropertyTypes(deck.getSeries()) + ",\n"
-                    + "    barLabel: (d, i) => this._labelFormatter(self.barOptions[" + deckIndex + "].propertyNames, self.barOptions[" + deckIndex + "].propertyTypes, self.barOptions[" + deckIndex + "].mode),\n"
-                    + "    tooltip: " + generateTooltipRetriever(deck, deckIndex) + (deck.getAction() != null ? ",\n" : "\n")
-                    + (deck.getAction() != null ? "    click: this._click(" + deckIndex + ")\n" : "")
+                    + "    barLabel: (d, i) => this._labelFormatter(d, i, self.barOptions[" + deckIndex + "].propertyNames, self.barOptions[" + deckIndex + "].propertyTypes, self.barOptions[" + deckIndex + "].mode),\n"
+                    + "    tooltip: (d, i) => this._tooltip(d, '" + deck.getGroupDescProperty() + "', self.barOptions[" + deckIndex + "].propertyNames[i], self.barOptions[" + deckIndex + "].propertyTypes[i], " + deckIndex + ", i),\n"
+                    + "    click: this._click(" + deckIndex + ")\n"
                     + "}");
         }
         return "self.barOptions = [" + StringUtils.join(chartOptions, ",\n") + "];\n";
@@ -158,8 +161,7 @@ public class ChartDeckerMaster<T extends AbstractEntity<?>> implements IMaster<T
     }
 
     private String generateTooltipRetriever(final ChartDeck<T> deck, final int deckIndex) {
-        return "this._tooltip('" + deck.getGroupDescProperty() + "', '" + deck.getAggregationProperty() + "', '"
-                + deck.getPropertyType().getSimpleName() + "', this.actions[" + deckIndex + "])";
+        return "this._tooltip('" + deck.getGroupDescProperty() + "', " + deckIndex + ")";
     }
 
     @Override

@@ -97,9 +97,9 @@
                         valueProps: ["valueProp"],
                     },
                     barColour: (d, idx) => "#0288D1",
-                    barLabel: (d, idx) => value(this.dataPropertyNames.valueProps[idx], d),
-                    selectedColour: (d, idx) => shadeColor(this.barColour(d, idx), 0.3),
-                    tooltip: (d, idx) => "<b>" + value("groupKeyProp", d) + "</b>(<i>" + value("groupDescProp", d) + "</i>)",
+                    barLabel: (d, idx) => value(this._options.dataPropertyNames.valueProps[idx], d),
+                    selectedColour: (d, idx) => shadeColor(this._options.barColour(d, idx), 0.3),
+                    tooltip: (d, idx) => "<b>" + value(this._options.dataPropertyNames.groupKeyProp, d) + "</b>(<i>" + value(this._options.dataPropertyNames.groupDescProp, d) + "</i>)",
                     click: (d, idx) => {},
                 };
                 this._options = options ? merge2LevelData(this._options, options) : this._options;
@@ -552,7 +552,7 @@
                             return "hanging";
                         }
                         return "auto";
-                    }).text(self._options.barLabel(d.data, d.idx));
+                    }).text(d => self._options.barLabel(d.data, d.idx));
                     d3.select(this).style("display", !!text.text() ? "auto" : "none");
                     self._updateMarkerPosition(rect, text);
                 });

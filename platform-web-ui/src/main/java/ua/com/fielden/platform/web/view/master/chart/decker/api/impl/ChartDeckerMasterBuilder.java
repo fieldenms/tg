@@ -44,7 +44,7 @@ public class ChartDeckerMasterBuilder<T extends AbstractEntity<?>> implements IC
     public IChartDeckerWithSeries<T> addDeckFor(final Class<? extends AbstractEntity<?>> entityType) {
         final ChartDeck<T> newDeck = new ChartDeck<>(entityType, this);
         decks.add(newDeck);
-        return null;
+        return newDeck;
     }
 
     @Override

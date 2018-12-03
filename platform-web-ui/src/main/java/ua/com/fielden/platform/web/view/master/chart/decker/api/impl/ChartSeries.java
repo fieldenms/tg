@@ -87,4 +87,8 @@ public class ChartSeries<T extends AbstractEntity<?>> implements IChartDeckerWit
     public Colour getColour() {
         return colour;
     }
+
+    public EntityActionConfig getAction() {
+        return action;
+    }
 }

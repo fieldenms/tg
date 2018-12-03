@@ -79,13 +79,19 @@ public class ChartDeck<T extends AbstractEntity<?>> implements IChartDeckerMode<
         return deckerBuilder.getGroupDescProperty();
     }
 
-    public EntityActionConfig getAction() {
-        return actionConfig;
+    public List<EntityActionConfig> getActions() {
+        final List<EntityActionConfig> actions = new ArrayList<>();
+        this.series.stream().forEach(s -> {
+            if (s.getAction() != null) {
+                actions.add(s.getAction());
+            }
+        });
+        return actions;
     }
 
     @Override
     public IChartDeckerAlso<T> withYAxisTitle(final String title) {
-        this.xAxisTitle = title;
+        this.yAxisTitle = title;
         return this;
     }
 
