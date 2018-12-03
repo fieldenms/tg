@@ -1,10 +1,12 @@
 package ua.com.fielden.platform.web.centre;
 
+import static ua.com.fielden.platform.web.centre.WebApiUtils.checkedPropertiesWithoutSummaries;
 import static java.lang.String.format;
 import static java.util.Arrays.stream;
 import static java.util.Optional.empty;
 import static java.util.Optional.of;
 import static org.apache.commons.lang.StringUtils.isEmpty;
+import static ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.IAddToCriteriaTickManager.MetaValueType.ALL_ORDERING;
 import static ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.IAddToCriteriaTickManager.MetaValueType.AND_BEFORE;
 import static ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.IAddToCriteriaTickManager.MetaValueType.DATE_MNEMONIC;
 import static ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.IAddToCriteriaTickManager.MetaValueType.DATE_PREFIX;
@@ -883,7 +885,7 @@ public class CentreUpdater {
         final Map<String, Object> diff = createEmptyDifferences();
         final Map<String, Map<String, Object>> propertiesDiff = (Map<String, Map<String, Object>>) diff.get(PROPERTIES);
         
-        final Class<?> managedType = managedType(root, centre);
+        final Class<?> managedType = managedTypeSupplier.get();
         for (final String property : centre.getFirstTick().checkedProperties(root)) { // lets go through centre's checked properties for the first tick (criteria) -- these will be fully synced to originalCentre's checked properties (due to the way centre is created: centre := defaultCentre + diff)
             if (!isPlaceholder(property)) { // placeholders were used in Swing UI to indicate empty places on selection criteria; need to be filtered out
                 // when checking property type, we need to look for property in 'managedType' rather than in original 'root' type; this is due to ability to add adhoc calculated properties into selection criteria (like totalCost = quantity * price)
@@ -1043,6 +1045,24 @@ public class CentreUpdater {
         return targetCentre;
     }
     
+    private static boolean propertyRemovedFromDomainType(final Class<?> diffManagedType, final String property) {
+        // Check whether the 'property' has not been disappeared from domain type since last server restart.
+        // In such case 'orderedProperties' will contain that property but 'managedType(root, differencesCentre)' will not contain corresponding field.
+        // Such properties need to be silently ignored. During next diffCentre creation such properties will disappear from diffCentre fully.
+        final boolean isEntityItself = "".equals(property); // empty property means "entity itself"
+        if (!isEntityItself) {
+            try {
+                determinePropertyType(diffManagedType, property);
+                return false;
+            } catch (final Exception ex) {
+                logger.warn(format("Property [%s] could not be found in type [%s] in diffCentre. It will be skipped. Most likely this property was deleted from domain type definition.", property, diffManagedType.getSimpleName()));
+                return true;
+            }
+        } else {
+            return false;
+        }
+    }
+    
     public static Map<String, Object> propDiff(final String property, final Map<String, Object> diff) {
         final Map<String, Map<String, Object>> propertiesDiff = (Map<String, Map<String, Object>>) diff.get(PROPERTIES);
         return diff(property, propertiesDiff);
@@ -1067,6 +1087,95 @@ public class CentreUpdater {
         final Map<String, Object> diff = new LinkedHashMap<>();
         final Map<String, Map<String, Object>> propertiesDiff = new LinkedHashMap<>();
         diff.put(PROPERTIES, propertiesDiff);
+        return diff;
+    }
+    
+    /**
+     * Converts old <code>diffCentre</code> version of diff object to new Map-like diff.
+     * 
+     * @param differencesCentre
+     * @return
+     */
+    public static Map<String, Object> createDiffFrom(final ICentreDomainTreeManagerAndEnhancer differencesCentre) {
+        final Class<?> root = differencesCentre.getRepresentation().rootTypes().iterator().next();
+        final Supplier<Class<?>> managedTypeSupplier = () -> differencesCentre.getEnhancer().getManagedType(root);
+        
+        final Map<String, Object> diff = createEmptyDifferences();
+        final Map<String, Map<String, Object>> propertiesDiff = (Map<String, Map<String, Object>>) diff.get(PROPERTIES);
+        
+        final Class<?> managedType = managedTypeSupplier.get();
+        
+        for (final String property : differencesCentre.getFirstTick().checkedProperties(root)) {
+            if (!isPlaceholder(property) && !propertyRemovedFromDomainType(managedType, property)) {
+                if (isDoubleCriterion(managedType, property) && !isBooleanCriterion(managedType, property)) {
+                    if (differencesCentre.getFirstTick().isMetaValuePresent(EXCLUSIVE, root, property)) {
+                        final Boolean exclusiveVal = differencesCentre.getFirstTick().getExclusive(root, property);
+                        diff(property, propertiesDiff).put(EXCLUSIVE.name(), exclusiveVal);
+                    }
+                    if (differencesCentre.getFirstTick().isMetaValuePresent(EXCLUSIVE2, root, property)) {
+                        final Boolean exclusive2Val = differencesCentre.getFirstTick().getExclusive2(root, property);
+                        diff(property, propertiesDiff).put(EXCLUSIVE2.name(), exclusive2Val);
+                    }
+                }
+                final Class<?> propertyType = isEmpty(property) ? managedType : determinePropertyType(managedType, property);
+                if (isDate(propertyType)) {
+                    if (differencesCentre.getFirstTick().isMetaValuePresent(DATE_PREFIX, root, property)) {
+                        final DateRangePrefixEnum datePrefixVal = differencesCentre.getFirstTick().getDatePrefix(root, property);
+                        diff(property, propertiesDiff).put(DATE_PREFIX.name(), valOrNull(datePrefixVal, prefixToString));
+                    }
+                    if (differencesCentre.getFirstTick().isMetaValuePresent(DATE_MNEMONIC, root, property)) {
+                        final MnemonicEnum dateMnemonicVal = differencesCentre.getFirstTick().getDateMnemonic(root, property);
+                        diff(property, propertiesDiff).put(DATE_MNEMONIC.name(), valOrNull(dateMnemonicVal, mnemonicToString));
+                    }
+                    if (differencesCentre.getFirstTick().isMetaValuePresent(AND_BEFORE, root, property)) {
+                        final Boolean andBeforeVal = differencesCentre.getFirstTick().getAndBefore(root, property);
+                        diff(property, propertiesDiff).put(AND_BEFORE.name(), andBeforeVal);
+                    }
+                }
+                
+                if (differencesCentre.getFirstTick().isMetaValuePresent(OR_NULL, root, property)) {
+                    final Boolean orNullVal = differencesCentre.getFirstTick().getOrNull(root, property);
+                    diff(property, propertiesDiff).put(OR_NULL.name(), orNullVal);
+                }
+                if (differencesCentre.getFirstTick().isMetaValuePresent(NOT, root, property)) {
+                    final Boolean notVal = differencesCentre.getFirstTick().getNot(root, property);
+                    diff(property, propertiesDiff).put(NOT.name(), notVal);
+                }
+
+                if (differencesCentre.getFirstTick().isMetaValuePresent(VALUE, root, property)) {
+                    final Object valueVal = differencesCentre.getFirstTick().getValue(root, property);
+                    diff(property, propertiesDiff).put(VALUE.name(), convert(valueVal, managedTypeSupplier, property));
+                }
+                if (isDoubleCriterion(managedType, property) && differencesCentre.getFirstTick().isMetaValuePresent(VALUE2, root, property)) {
+                    final Object value2Val = differencesCentre.getFirstTick().getValue2(root, property);
+                    diff(property, propertiesDiff).put(VALUE2.name(), convert(value2Val, managedTypeSupplier, property));
+                }
+            }
+        }
+        
+        final List<String> diffCheckedPropertiesWithoutSummaries = checkedPropertiesWithoutSummaries(differencesCentre.getSecondTick().checkedProperties(root), differencesCentre.getEnhancer().getManagedType(root));
+        final List<String> visibilityAndOrderPropertiesVal = differencesCentre.getSecondTick().usedProperties(root);
+        if (!equalsEx(diffCheckedPropertiesWithoutSummaries, visibilityAndOrderPropertiesVal)) {
+            diff.put(VISIBILITY_AND_ORDER, visibilityAndOrderPropertiesVal);
+        }
+        
+        for (final String property : diffCheckedPropertiesWithoutSummaries) {
+            if (!propertyRemovedFromDomainType(managedType, property)) {
+                if (differencesCentre.getFirstTick().isMetaValuePresent(WIDTH, root, property)) {
+                    final int widthVal = differencesCentre.getSecondTick().getWidth(root, property);
+                    diff(property, propertiesDiff).put(WIDTH.name(), widthVal);
+                }
+                if (differencesCentre.getFirstTick().isMetaValuePresent(GROW_FACTOR, root, property)) {
+                    final int growFactorVal = differencesCentre.getSecondTick().getGrowFactor(root, property);
+                    diff(property, propertiesDiff).put(GROW_FACTOR.name(), growFactorVal);
+                }
+            }
+        }
+        
+        if (differencesCentre.getFirstTick().isMetaValuePresent(ALL_ORDERING, root, "")) {
+            final List<Pair<String, Ordering>> sortingPropertiesVal = differencesCentre.getSecondTick().orderedProperties(root);
+            diff.put(SORTING, sortingPropertiesVal);
+        }
         return diff;
     }
     

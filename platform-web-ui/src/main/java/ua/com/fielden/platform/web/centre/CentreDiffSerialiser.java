@@ -19,7 +19,7 @@ import ua.com.fielden.platform.serialisation.exceptions.SerialisationException;
  * @author TG Team
  *
  */
-class CentreDiffSerialiser extends ObjectMapper {
+public class CentreDiffSerialiser extends ObjectMapper {
     private static final long serialVersionUID = 1L;
     public static final CentreDiffSerialiser CENTRE_DIFF_SERIALISER = new CentreDiffSerialiser();
     
