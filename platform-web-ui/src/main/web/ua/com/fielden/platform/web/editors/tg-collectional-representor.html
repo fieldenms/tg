@@ -7,6 +7,11 @@
 <link rel="import" href="/resources/polymer/iron-input/iron-input.html">
 
 <dom-module id="tg-collectional-representor">
+    <style>
+        #input[disabled] {
+            cursor: text;
+        }
+    </style>
     <template>
     	<tg-editor 
     		id="editorDom" 
@@ -28,7 +33,8 @@
     			on-keydown="_onKeydown"
     			on-tap="_onTap"
     			on-mousedown="_onTap"
-    			disabled$="[[_disabled]]"/>
+                disabled$="[[_disabled]]"
+                tooltip-text$="[[_getTooltip(_editingValue)]]"/>
         	<content class=".property-action"></content>
     	</tg-editor>
     </template>
