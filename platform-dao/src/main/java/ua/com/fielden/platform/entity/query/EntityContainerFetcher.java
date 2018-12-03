@@ -17,7 +17,6 @@ import org.hibernate.ScrollMode;
 import org.joda.time.DateTime;
 import org.joda.time.Period;
 
-import ua.com.fielden.platform.dao.DomainMetadataAnalyser;
 import ua.com.fielden.platform.dao.QueryExecutionModel;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.generation.EntQueryGenerator;
@@ -25,6 +24,7 @@ import ua.com.fielden.platform.entity.query.generation.elements.EntQuery;
 import ua.com.fielden.platform.entity.query.generation.elements.ResultQueryYieldDetails;
 import ua.com.fielden.platform.entity.query.generation.elements.Yield;
 import ua.com.fielden.platform.entity.query.generation.elements.Yields;
+import ua.com.fielden.platform.entity.query.metadata.DomainMetadataAnalyser;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.SingleResultQueryModel;
 import ua.com.fielden.platform.entity.query.stream.ScrollableResultStream;
@@ -38,7 +38,7 @@ public class EntityContainerFetcher {
         this.executionContext = executionContext;
     }
     
-    public <E extends AbstractEntity<?>> List<EntityContainer<E>> listAndEnhanceContainers(final QueryExecutionModel<E, ?> queryModel, final Integer pageNumber, final Integer pageCapacity) {
+    public <E extends AbstractEntity<?>> List<EntityContainer<E>> listAndEnhanceContainers(final QueryProcessingModel<E, ?> queryModel, final Integer pageNumber, final Integer pageCapacity) {
         final DomainMetadataAnalyser domainMetadataAnalyser = new DomainMetadataAnalyser(executionContext.getDomainMetadata());
         final QueryModelResult<E> modelResult = getModelResult(queryModel, domainMetadataAnalyser, executionContext.getFilter(), executionContext.getUsername());
 
@@ -51,7 +51,7 @@ public class EntityContainerFetcher {
         return new EntityContainerEnhancer<E>(this, domainMetadataAnalyser, executionContext.getIdOnlyProxiedEntityTypeCache()).enhance(result, modelResult.getFetchModel());
     }
     
-    public <E extends AbstractEntity<?>> Stream<List<EntityContainer<E>>> streamAndEnhanceContainers(final QueryExecutionModel<E, ?> queryModel, final Optional<Integer> fetchSize) {
+    public <E extends AbstractEntity<?>> Stream<List<EntityContainer<E>>> streamAndEnhanceContainers(final QueryProcessingModel<E, ?> queryModel, final Optional<Integer> fetchSize) {
         final DomainMetadataAnalyser domainMetadataAnalyser = new DomainMetadataAnalyser(executionContext.getDomainMetadata());
         final QueryModelResult<E> modelResult = getModelResult(queryModel, domainMetadataAnalyser, executionContext.getFilter(), executionContext.getUsername());
 
@@ -68,16 +68,12 @@ public class EntityContainerFetcher {
     }
 
     
-    private <E extends AbstractEntity<?>> List<EntityContainer<E>> listContainersForIdOnlyQuery(final QueryExecutionModel<E, ?> queryModel, final Class<E> resultType, final Integer pageNumber, final Integer pageCapacity) {
-        final EntityResultQueryModel<E> idOnlyModel = select(resultType).where().prop("id").in().model((SingleResultQueryModel<?>) queryModel.getQueryModel()).model();
+    private <E extends AbstractEntity<?>> List<EntityContainer<E>> listContainersForIdOnlyQuery(final QueryProcessingModel<E, ?> queryModel, final Class<E> resultType, final Integer pageNumber, final Integer pageCapacity) {
+        final EntityResultQueryModel<E> idOnlyModel = select(resultType).where().prop("id").in().model((SingleResultQueryModel<?>) queryModel.queryModel).model();
         
-        final QueryExecutionModel<E,EntityResultQueryModel<E>> idOnlyQem = from(idOnlyModel)
-        .with(queryModel.getOrderModel())
-        .with(queryModel.getFetchModel())
-        .with(queryModel.getParamValues())
-        .lightweight().model();
+        final QueryProcessingModel<E,EntityResultQueryModel<E>> idOnlyQpm = new QueryProcessingModel<>(idOnlyModel, queryModel.orderModel, queryModel.fetchModel, queryModel.paramValues, queryModel.lightweight);
         
-        return listAndEnhanceContainers(idOnlyQem, pageNumber, pageCapacity);
+        return listAndEnhanceContainers(idOnlyQpm, pageNumber, pageCapacity);
     }
 
     private <E extends AbstractEntity<?>> List<EntityContainer<E>> listContainersAsIs(final QueryModelResult<E> modelResult, final Integer pageNumber, final Integer pageCapacity) {
@@ -97,16 +93,12 @@ public class EntityContainerFetcher {
         return entityRawResultConverter.transformFromNativeResult(resultTree, res);
     }
 
-    private <E extends AbstractEntity<?>> Stream<List<EntityContainer<E>>> streamContainersForIdOnlyQuery(final QueryExecutionModel<E, ?> queryModel, final Class<E> resultType, final Optional<Integer> fetchSize) {
-        final EntityResultQueryModel<E> idOnlyModel = select(resultType).where().prop("id").in().model((SingleResultQueryModel<?>) queryModel.getQueryModel()).model();
+    private <E extends AbstractEntity<?>> Stream<List<EntityContainer<E>>> streamContainersForIdOnlyQuery(final QueryProcessingModel<E, ?> queryModel, final Class<E> resultType, final Optional<Integer> fetchSize) {
+        final EntityResultQueryModel<E> idOnlyModel = select(resultType).where().prop("id").in().model((SingleResultQueryModel<?>) queryModel.queryModel).model();
         
-        final QueryExecutionModel<E,EntityResultQueryModel<E>> idOnlyQem = from(idOnlyModel)
-        .with(queryModel.getOrderModel())
-        .with(queryModel.getFetchModel())
-        .with(queryModel.getParamValues())
-        .lightweight().model();
+        final QueryProcessingModel<E,EntityResultQueryModel<E>> idOnlyQpm = new QueryProcessingModel<>(idOnlyModel, queryModel.orderModel, queryModel.fetchModel, queryModel.paramValues, queryModel.lightweight);
         
-        return streamAndEnhanceContainers(idOnlyQem, fetchSize);
+        return streamAndEnhanceContainers(idOnlyQpm, fetchSize);
     }
 
     
@@ -126,18 +118,12 @@ public class EntityContainerFetcher {
                 .map(group -> entityRawResultConverter.transformFromNativeResult(resultTree, group));
     }
 
-    private <E extends AbstractEntity<?>> QueryModelResult<E> getModelResult(final QueryExecutionModel<E, ?> qem, final DomainMetadataAnalyser domainMetadataAnalyser, final IFilter filter, final String username) {
+    private <E extends AbstractEntity<?>> QueryModelResult<E> getModelResult(final QueryProcessingModel<E, ?> qem, final DomainMetadataAnalyser domainMetadataAnalyser, final IFilter filter, final String username) {
         final EntQueryGenerator gen = new EntQueryGenerator(domainMetadataAnalyser, filter, username, executionContext.getUniversalConstants());
-        final IRetrievalModel<E> fm = qem.getFetchModel() == null ? //
-        (qem.getQueryModel().getResultType().equals(EntityAggregates.class) ? null
-                : new EntityRetrievalModel<E>(fetch(qem.getQueryModel().getResultType()), domainMetadataAnalyser))
-                : // 
-                (qem.getQueryModel().getResultType().equals(EntityAggregates.class) ? new EntityAggregatesRetrievalModel<E>(qem.getFetchModel(), domainMetadataAnalyser)
-                        : new EntityRetrievalModel<E>(qem.getFetchModel(), domainMetadataAnalyser));
 
-        final EntQuery entQuery = gen.generateEntQueryAsResultQuery(qem.getQueryModel(), qem.getOrderModel(), qem.getQueryModel().getResultType(), fm, qem.getParamValues());
+        final EntQuery entQuery = gen.generateEntQueryAsResultQuery(qem.queryModel, qem.orderModel, qem.queryModel.getResultType(), qem.fetchModel, qem.paramValues);
         final String sql = entQuery.sql();
-        return new QueryModelResult<>(entQuery.type(), sql, getResultPropsInfos(entQuery.getYields()), entQuery.getValuesForSqlParams(), fm);
+        return new QueryModelResult<>(entQuery.type(), sql, getResultPropsInfos(entQuery.getYields()), entQuery.getValuesForSqlParams(), qem.fetchModel);
     }
 
     private SortedSet<ResultQueryYieldDetails> getResultPropsInfos(final Yields model) {

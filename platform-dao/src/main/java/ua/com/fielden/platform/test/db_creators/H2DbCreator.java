@@ -14,8 +14,8 @@ import java.util.Properties;
 
 import org.hibernate.dialect.Dialect;
 
-import ua.com.fielden.platform.dao.DomainMetadata;
-import ua.com.fielden.platform.dao.PersistedEntityMetadata;
+import ua.com.fielden.platform.entity.query.metadata.DomainMetadata;
+import ua.com.fielden.platform.entity.query.metadata.PersistedEntityMetadata;
 import ua.com.fielden.platform.entity.query.DbVersion;
 import ua.com.fielden.platform.test.AbstractDomainDrivenTestCase;
 import ua.com.fielden.platform.test.DbCreator;

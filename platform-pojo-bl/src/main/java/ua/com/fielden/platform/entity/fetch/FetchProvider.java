@@ -14,6 +14,7 @@ import org.apache.log4j.Logger;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.CritOnly;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
+import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
@@ -300,7 +301,7 @@ class FetchProvider<T extends AbstractEntity<?>> implements IFetchProvider<T> {
                     propertyProviders.put(dotNotationProperty, merged);
                 } // else -- regular property or entity-typed
             } else {
-                if (EntityUtils.isEntityType(propertyType)) { // entity-typed
+                if (EntityUtils.isEntityType(propertyType) && !PropertyDescriptor.class.equals(propertyType)) { // entity-typed
                     propertyProviders.put(dotNotationProperty, propertyProvider == null ? createDefaultFetchProviderForEntityTypedProperty((Class<AbstractEntity<?>>) propertyType) : propertyProvider.copy());
                 } else { // regular
                     propertyProviders.put(dotNotationProperty, null);

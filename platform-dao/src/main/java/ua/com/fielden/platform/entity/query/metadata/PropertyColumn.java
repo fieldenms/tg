@@ -1,4 +1,4 @@
-package ua.com.fielden.platform.dao;
+package ua.com.fielden.platform.entity.query.metadata;
 
 public class PropertyColumn {
     private final String name;

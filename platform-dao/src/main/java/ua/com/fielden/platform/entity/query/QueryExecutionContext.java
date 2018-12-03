@@ -2,9 +2,9 @@ package ua.com.fielden.platform.entity.query;
 
 import org.hibernate.Session;
 
-import ua.com.fielden.platform.dao.DomainMetadata;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
+import ua.com.fielden.platform.entity.query.metadata.DomainMetadata;
 import ua.com.fielden.platform.utils.IUniversalConstants;
 
 public class QueryExecutionContext {

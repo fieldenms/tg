@@ -6,10 +6,10 @@ import java.util.Properties;
 
 import org.hibernate.SessionFactory;
 
-import ua.com.fielden.platform.dao.DomainMetadata;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.query.IdOnlyProxiedEntityTypeCache;
+import ua.com.fielden.platform.entity.query.metadata.DomainMetadata;
 
 /**
  * Hibernate driven module required for correct instantiation of entities.

@@ -13,9 +13,9 @@ import java.util.Map;
 
 import org.apache.commons.lang.StringUtils;
 
-import ua.com.fielden.platform.dao.DomainMetadataAnalyser;
-import ua.com.fielden.platform.dao.PropertyMetadata;
 import ua.com.fielden.platform.entity.query.DbVersion;
+import ua.com.fielden.platform.entity.query.metadata.DomainMetadataAnalyser;
+import ua.com.fielden.platform.entity.query.metadata.PropertyMetadata;
 import ua.com.fielden.platform.utils.Pair;
 
 public class QueryBasedSource extends AbstractSource {
