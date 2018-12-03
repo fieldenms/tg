@@ -216,12 +216,12 @@ public class DomainMetadata {
 
     public <ET extends AbstractEntity<?>> ModelledEntityMetadata<ET> generateModelledEntityMetadata(final EntityTypeInfo <ET> parentInfo)
             throws Exception {
-        return new ModelledEntityMetadata(parentInfo.getEntityModels(), parentInfo.entityType, generatePropertyMetadatasForEntity(parentInfo));
+        return new ModelledEntityMetadata(parentInfo.entityModels, parentInfo.entityType, generatePropertyMetadatasForEntity(parentInfo));
     }
 
     public <ET extends AbstractEntity<?>> ModelledEntityMetadata<ET> generateUnionedEntityMetadata(final EntityTypeInfo <ET> parentInfo)
             throws Exception {
-        return new ModelledEntityMetadata(parentInfo.getUnionEntityModels(), parentInfo.entityType, generatePropertyMetadatasForEntity(parentInfo));
+        return new ModelledEntityMetadata(parentInfo.unionEntityModels, parentInfo.entityType, generatePropertyMetadatasForEntity(parentInfo));
     }
 
     public <ET extends AbstractEntity<?>> PureEntityMetadata<ET> generatePureEntityMetadata(final EntityTypeInfo <ET> parentInfo) {

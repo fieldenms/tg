@@ -1,6 +1,5 @@
 package ua.com.fielden.platform.entity.query.metadata;
 
-import static java.util.Collections.unmodifiableList;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang.StringUtils.isEmpty;
 import static ua.com.fielden.platform.entity.query.metadata.DomainMetadataUtils.produceUnionEntityModels;
@@ -17,7 +16,6 @@ import static ua.com.fielden.platform.utils.EntityUtils.isPersistedEntityType;
 import static ua.com.fielden.platform.utils.EntityUtils.isSyntheticEntityType;
 import static ua.com.fielden.platform.utils.EntityUtils.isUnionEntityType;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import com.google.common.collect.ImmutableList;
@@ -32,34 +30,31 @@ public class EntityTypeInfo <ET extends AbstractEntity<?>> {
     public final EntityCategory category;
     public final String tableName;
     public final List<T2<String, Class<?>>> compositeKeyMembers;
-    private final List<EntityResultQueryModel<ET>> entityModels = new ArrayList<>();
-    private final List<EntityResultQueryModel<ET>> unionEntityModels = new ArrayList<>();
-    
+    public final List<EntityResultQueryModel<ET>> entityModels;
+    public final List<EntityResultQueryModel<ET>> unionEntityModels;
 
     public EntityTypeInfo(final Class<ET> entityType) {
         this.entityType = entityType;
         tableName = getTableClause(entityType);
         if (isPersistedEntityType(entityType)) {
             category = PERSISTED;
+            entityModels = ImmutableList.of();
+            unionEntityModels = ImmutableList.of();
         } else if (isSyntheticEntityType(entityType)) {
             category = QUERY_BASED;
-            entityModels.addAll(getEntityModelsOfQueryBasedEntityType(entityType));
+            entityModels = ImmutableList.copyOf(getEntityModelsOfQueryBasedEntityType(entityType));
+            unionEntityModels = ImmutableList.of();
         } else if (isUnionEntityType(entityType)) {
             category = UNION;
-            unionEntityModels.addAll(produceUnionEntityModels(entityType));
+            entityModels = ImmutableList.of();
+            unionEntityModels = ImmutableList.copyOf(produceUnionEntityModels(entityType));
         } else {
             category = PURE;
+            entityModels = ImmutableList.of();
+            unionEntityModels = ImmutableList.of();
         }
         
         compositeKeyMembers = isCompositeEntity(entityType) ? ImmutableList.copyOf(getCompositeKeyMembers(entityType)) : ImmutableList.of();
-    }
-    
-    public List<EntityResultQueryModel<ET>> getEntityModels() {
-        return unmodifiableList(entityModels);
-    }
-
-    public List<EntityResultQueryModel<ET>> getUnionEntityModels() {
-        return unmodifiableList(unionEntityModels);
     }
 
     private String getTableClause(final Class<ET> entityType) {
