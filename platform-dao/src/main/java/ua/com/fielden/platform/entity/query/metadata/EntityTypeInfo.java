@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.entity.query.metadata;
 
 import static java.util.Collections.unmodifiableList;
+import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang.StringUtils.isEmpty;
 import static ua.com.fielden.platform.entity.query.metadata.DomainMetadataUtils.produceUnionEntityModels;
 import static ua.com.fielden.platform.entity.query.metadata.EntityCategory.PERSISTED;
@@ -10,16 +11,16 @@ import static ua.com.fielden.platform.entity.query.metadata.EntityCategory.UNION
 import static ua.com.fielden.platform.reflection.AnnotationReflector.getAnnotation;
 import static ua.com.fielden.platform.reflection.Finder.getKeyMembers;
 import static ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader.getOriginalType;
-import static ua.com.fielden.platform.types.tuples.T2.t2;
 import static ua.com.fielden.platform.utils.EntityUtils.getEntityModelsOfQueryBasedEntityType;
 import static ua.com.fielden.platform.utils.EntityUtils.isCompositeEntity;
 import static ua.com.fielden.platform.utils.EntityUtils.isPersistedEntityType;
 import static ua.com.fielden.platform.utils.EntityUtils.isSyntheticEntityType;
 import static ua.com.fielden.platform.utils.EntityUtils.isUnionEntityType;
 
-import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.List;
+
+import com.google.common.collect.ImmutableList;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.MapEntityTo;
@@ -30,7 +31,7 @@ public class EntityTypeInfo <ET extends AbstractEntity<?>> {
     public final Class<ET> entityType;
     public final EntityCategory category;
     public final String tableName;
-    public final List<T2<String, Class<?>>> compositeKeyMembers = new ArrayList<>();
+    public final List<T2<String, Class<?>>> compositeKeyMembers;
     private final List<EntityResultQueryModel<ET>> entityModels = new ArrayList<>();
     private final List<EntityResultQueryModel<ET>> unionEntityModels = new ArrayList<>();
     
@@ -50,9 +51,7 @@ public class EntityTypeInfo <ET extends AbstractEntity<?>> {
             category = PURE;
         }
         
-        if (isCompositeEntity(entityType)) {
-            compositeKeyMembers.addAll(getCompositeKeyMembers(entityType));
-        }
+        compositeKeyMembers = isCompositeEntity(entityType) ? ImmutableList.copyOf(getCompositeKeyMembers(entityType)) : ImmutableList.of();
     }
     
     public List<EntityResultQueryModel<ET>> getEntityModels() {
@@ -73,11 +72,7 @@ public class EntityTypeInfo <ET extends AbstractEntity<?>> {
         return !isEmpty(providedTableName) ? providedTableName : getOriginalType(entityType).getSimpleName().toUpperCase() + "_";
     }
     
-    private List<T2<String, Class<?>>> getCompositeKeyMembers (final Class<ET> entityType) {
-        final List<T2<String, Class<?>>> result = new ArrayList<>();
-        for (Field field : getKeyMembers(entityType)) {
-            result.add(t2(field.getName(), field.getType()));
-        }
-        return result;
+    private List<T2<String, Class<?>>> getCompositeKeyMembers(final Class<ET> entityType) {
+        return getKeyMembers(entityType).stream().map(f -> T2.<String, Class<?>>t2(f.getName(), f.getType())).collect(toList());
     }
 }
