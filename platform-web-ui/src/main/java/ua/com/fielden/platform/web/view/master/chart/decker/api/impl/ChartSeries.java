@@ -83,4 +83,8 @@ public class ChartSeries<T extends AbstractEntity<?>> implements IChartDeckerWit
     public Class<?> getPropertyType() {
         return PropertyTypeDeterminator.determinePropertyType(chartDeck.getEntityType(), propertyName);
     }
+
+    public Colour getColour() {
+        return colour;
+    }
 }

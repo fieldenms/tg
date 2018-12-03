@@ -102,8 +102,11 @@ public class ChartDeckerMaster<T extends AbstractEntity<?>> implements IMaster<T
                     + "        groupDescProp: '" + deck.getGroupDescProperty() + "',\n"
                     + "        valueProps: " + generateValuesAccessor(deck.getEntityType(), deck.getSeries()) + "\n"
                     + "    },\n"
-                    + "    barColour: d => '" + deck.getBarColour() + "',\n"
-                    + "    barLabel: this._labelFormatter('" + deck.getPropertyType().getSimpleName() + "', '" + deck.getAggregationProperty() + "'),\n"
+                    + "    colours: " + generateColours(deck.getSeries()) + ",\n"
+                    + "    barColour: (d, i) => self.barOptions[" + deckIndex + "].colours[i],\n"
+                    + "    propertyNames: " + generatePropertyNames(deck.getSeries()) + ",\n"
+                    + "    propertyTypes: " + generatePropertyTypes(deck.getSeries()) + ",\n"
+                    + "    barLabel: (d, i) => this._labelFormatter('" + deck.getPropertyType().getSimpleName() + "', '" + deck.getAggregationProperty() + "'),\n"
                     + "    tooltip: " + generateTooltipRetriever(deck, deckIndex) + (deck.getAction() != null ? ",\n" : "\n")
                     + (deck.getAction() != null ? "    click: this._click(" + deckIndex + ")\n" : "")
                     + "}");
@@ -111,9 +114,35 @@ public class ChartDeckerMaster<T extends AbstractEntity<?>> implements IMaster<T
         return "self.barOptions = [" + StringUtils.join(chartOptions, ",\n") + "];\n";
     }
 
+    private String generatePropertyTypes(final List<ChartSeries<T>> series) {
+        final StringBuilder propValues = new StringBuilder("[");
+        series.stream().forEach(nextSeries -> {
+            propValues.append("'"  + nextSeries.getPropertyType().getSimpleName() + "',");
+        });
+        propValues.setCharAt(propValues.length() - 1, ']');
+        return propValues.toString();
+    }
+
+    private String generatePropertyNames(final List<ChartSeries<T>> series) {
+        final StringBuilder propValues = new StringBuilder("[");
+        series.stream().forEach(nextSeries -> {
+            propValues.append("'"  + nextSeries.getPropertyName() + "',");
+        });
+        propValues.setCharAt(propValues.length() - 1, ']');
+        return propValues.toString();
+    }
+
+    private String generateColours(final List<ChartSeries<T>> series) {
+        final StringBuilder propValues = new StringBuilder("[");
+        series.stream().forEach(nextSeries -> {
+            propValues.append("'"  + nextSeries.getColour().toString() + "',");
+        });
+        propValues.setCharAt(propValues.length() - 1, ']');
+        return propValues.toString();
+    }
+
     private String generateValuesAccessor(final Class<? extends AbstractEntity<?>> entityType, final List<ChartSeries<T>> series) {
         final StringBuilder propValues = new StringBuilder("[");
-        for(int idx = 0; idx < series.size(); idx++)
         series.stream().forEach(nextSeries -> {
             propValues.append(generateValueAccessor(nextSeries.getPropertyType(), nextSeries.getPropertyName()) + ",");
         });
