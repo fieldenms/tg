@@ -1,7 +1,7 @@
 <script>
-    
+
     /**
-     * 
+     *
      */
     const FOCUSABLE_ELEMENTS_SELECTOR = 'a[href], area[href], input, select, textarea, button, iframe, object, embed, [tabindex="0"], [contenteditable]';
     /**
@@ -53,7 +53,7 @@
             e.returnValue = false;
         }
     };
-    
+
     /**
      * Makes color lighter or darker depending on whether lum parameter is greater or less then 0.
      */
@@ -86,16 +86,16 @@
         }
         return current !== null;
     };
-    
+
     /**
      * Converts short collectional property with string value
      */
     const generateShortCollection = function (entity, property, typeObject) {
-            var collectionValue = entity.get(property);
-            var containerPropertyValue = property.lastIndexOf('.') >= 0 ? entity.get(property.substr(0, property.lastIndexOf('.'))) : entity;
-            var keys = typeObject.compositeKeyNames();
+            const collectionValue = entity.get(property);
+            const containerPropertyValue = property.lastIndexOf('.') >= 0 ? entity.get(property.substr(0, property.lastIndexOf('.'))) : entity;
+            const keys = typeObject.compositeKeyNames();
             return collectionValue.map(function (subEntity) {
-                var key = keys.find(function (key) {
+                const key = keys.find(function (key) {
                     if (subEntity.get(key) !== containerPropertyValue) {
                         return key;
                     }
