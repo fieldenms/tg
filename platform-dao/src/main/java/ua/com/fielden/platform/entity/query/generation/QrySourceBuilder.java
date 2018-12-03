@@ -11,9 +11,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-import ua.com.fielden.platform.dao.AbstractEntityMetadata;
-import ua.com.fielden.platform.dao.ModelledEntityMetadata;
-import ua.com.fielden.platform.dao.PersistedEntityMetadata;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.exceptions.EqlException;
 import ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory;
@@ -21,6 +18,9 @@ import ua.com.fielden.platform.entity.query.generation.elements.EntQuery;
 import ua.com.fielden.platform.entity.query.generation.elements.NothingBasedSource;
 import ua.com.fielden.platform.entity.query.generation.elements.QueryBasedSource;
 import ua.com.fielden.platform.entity.query.generation.elements.TypeBasedSource;
+import ua.com.fielden.platform.entity.query.metadata.AbstractEntityMetadata;
+import ua.com.fielden.platform.entity.query.metadata.ModelledEntityMetadata;
+import ua.com.fielden.platform.entity.query.metadata.PersistedEntityMetadata;
 import ua.com.fielden.platform.entity.query.model.QueryModel;
 import ua.com.fielden.platform.utils.Pair;
 
