@@ -156,16 +156,9 @@ public class DomainMetadataUtils {
     }
     
     private static <PT extends AbstractEntity<?>> ISubsequentCompletedAndYielded<PT> generateModelForUnionEntityProperty(final List<Field> unionProps, final Field currProp) {
-        final IFromAlias<PT> modelStart = select((Class<PT>) currProp.getType());
-        ISubsequentCompletedAndYielded<PT> modelInProgress = null;
-        for (final Field field : unionProps) {
-            if (modelInProgress == null) {
-                modelInProgress = field.equals(currProp) ? modelStart.yield().prop(ID).as(field.getName()) : modelStart.yield().val(null).as(field.getName());
-            } else {
-                modelInProgress = field.equals(currProp) ? modelInProgress.yield().prop(ID).as(field.getName()) : modelInProgress.yield().val(null).as(field.getName());
-            }
-        }
-
-        return modelInProgress;
+        final IFromAlias<PT> startWith = select((Class<PT>) currProp.getType());
+        final Field firstUnionProp = unionProps.get(0);
+        final ISubsequentCompletedAndYielded<PT> initialModel = firstUnionProp.equals(currProp) ? startWith.yield().prop(ID).as(firstUnionProp.getName()) : startWith.yield().val(null).as(firstUnionProp.getName()); 
+        return unionProps.stream().skip(1).reduce(initialModel, (m, f) -> f.equals(currProp) ? m.yield().prop(ID).as(f.getName()) : m.yield().val(null).as(f.getName()), (m1, m2) -> {throw new UnsupportedOperationException("Combining is not applicable here.");});
     }
 }
