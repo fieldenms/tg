@@ -86,6 +86,23 @@
         }
         return current !== null;
     };
+    
+    /**
+     * Converts short collectional property with string value
+     */
+    const generateShortCollection = function (entity, property, typeObject) {
+            var collectionValue = entity.get(property);
+            var containerPropertyValue = property.lastIndexOf('.') >= 0 ? entity.get(property.substr(0, property.lastIndexOf('.'))) : entity;
+            var keys = typeObject.compositeKeyNames();
+            return collectionValue.map(function (subEntity) {
+                var key = keys.find(function (key) {
+                    if (subEntity.get(key) !== containerPropertyValue) {
+                        return key;
+                    }
+                });
+                return subEntity.get(key);
+            });
+        };
 
     /**
      * The class that can be used like an entity for entity grid inspector or any other place.
