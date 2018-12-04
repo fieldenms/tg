@@ -2,7 +2,7 @@ package ua.com.fielden.platform.web.view.master.chart.decker.api;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 
-public interface IChartDeckerYAxisTitle<T extends AbstractEntity<?>> extends  IChartDeckerAlso<T>{
+public interface IChartDeckerYAxisTitle<T extends AbstractEntity<?>> extends  IChartDeckerWithSeries<T>{
 
-    IChartDeckerAlso<T> withYAxisTitle(String title);
+    IChartDeckerWithSeries<T> withYAxisTitle(String title);
 }

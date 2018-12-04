@@ -12,9 +12,8 @@
         <style>
             :host {
                 @apply(--layout-vertical);
-
             }
-            svg {
+            #chartContainer, svg {
                 @apply(--layout-flex);
 
             }
@@ -69,6 +68,10 @@
                 pointer-events: none;
             }
             /*Legend related style*/
+            .legend-panel {
+                margin-top: 8px;
+                margin-bottom: 25px;
+            }
             .legend-rect {
                 min-width: 18px;
                 min-height: 18px;
@@ -82,9 +85,11 @@
         </style>
 
         <!-- local DOM for your element -->
-        <svg id="chart" class="bar-chart"></svg>
+        <div id="chartContainer" class="layout horizontal">
+            <svg id="chart" class="bar-chart"></svg>
+        </div>
         <!-- data bindings in local DOM -->
-        <div id="legend" class="legend-panel layout horizontal center-justified wrap" style$="[[_calcLegendStyle(_chartStyles)]]" hidden$="[[showLegend]]">
+        <div id="legend" class="legend-panel layout horizontal center-justified wrap" style$="[[_calcLegendStyle(_chartStyles)]]" hidden$="[[!showLegend]]">
             <template id="legendItemTemplate" is="dom-repeat" items="[[legendItems]]" on-dom-change="_legendItemsChanged">
                 <div class="legend-item layout horizontal center">
                     <div class="legend-rect" style$="[[_calcLegendItemStyle(item)]]"></div>
@@ -165,10 +170,12 @@
                 _waitForDimensions: function (time) {
                     var self = this;
                     this.async(function () {
-                        if (self.$.chart.offsetWidth && self.$.chart.offsetHeight && this._chart) {
+                        const width = self.$.chartContainer.offsetWidth
+                        const height = self.$.chartContainer.offsetHeight
+                        if (width && height && this._chart) {
                             this._chart.options({
-                                width: self.$.chart.offsetWidth,
-                                height: self.$.chart.offsetHeight
+                                width: width,
+                                height: height
                             });
                         } else {
                             this._waitForDimensions(100);
@@ -185,8 +192,8 @@
                 _chartOptionsChanged: function (newOptions, oldOptions) {
                     if (this._chart) {
                         this._chart.options(newOptions);
-                        const updatedOptions: this._chart.options();
-                        this._chartStyle = {
+                        const updatedOptions = this._chart.options();
+                        this._chartStyles = {
                             left: updatedOptions.margin.left,
                             right: updatedOptions.margin.right
                         };
@@ -198,7 +205,7 @@
                 },
 
                 _calcLegendItemStyle: function (item) {
-                    return "background-color: " + item.colour + ";";
+                    return "background-color: #" + item.colour + ";";
                 },
 
                 _legendItemsChanged: function () {
@@ -206,11 +213,13 @@
                 },
 
                 _resizeEventListener: function (event, details) {
-                    var self = this;
-                    if (this._chart) {
+                    const self = this;
+                    const width = self.$.chartContainer.offsetWidth
+                    const height = self.$.chartContainer.offsetHeight
+                    if (this._chart && width && height) {
                         this._chart.options({
-                            width: self.$.chart.offsetWidth,
-                            height: self.$.chart.offsetHeight
+                            width: width,
+                            height: height
                         });
                     }
                 }

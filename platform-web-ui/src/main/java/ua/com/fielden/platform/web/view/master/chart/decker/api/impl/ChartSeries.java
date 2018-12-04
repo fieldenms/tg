@@ -5,19 +5,14 @@ import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.types.Colour;
 import ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig;
 import ua.com.fielden.platform.web.view.master.api.IMaster;
-import ua.com.fielden.platform.web.view.master.chart.decker.api.BarMode;
 import ua.com.fielden.platform.web.view.master.chart.decker.api.IChartDeckerAddDeck;
-import ua.com.fielden.platform.web.view.master.chart.decker.api.IChartDeckerAlso;
-import ua.com.fielden.platform.web.view.master.chart.decker.api.IChartDeckerShowLegend;
+import ua.com.fielden.platform.web.view.master.chart.decker.api.IChartDeckerLineColour;
 import ua.com.fielden.platform.web.view.master.chart.decker.api.IChartDeckerWithSeriesAction;
 import ua.com.fielden.platform.web.view.master.chart.decker.api.IChartDeckerWithSeriesAlso;
 import ua.com.fielden.platform.web.view.master.chart.decker.api.IChartDeckerWithSeriesColour;
 import ua.com.fielden.platform.web.view.master.chart.decker.api.IChartDeckerWithSeriesTitle;
-import ua.com.fielden.platform.web.view.master.chart.decker.api.IChartDeckerWithTitle;
-import ua.com.fielden.platform.web.view.master.chart.decker.api.IChartDeckerXAxisTitle;
-import ua.com.fielden.platform.web.view.master.chart.decker.api.IChartDeckerYAxisTitle;
 
-public class ChartSeries<T extends AbstractEntity<?>> implements IChartDeckerWithSeriesTitle<T>, IChartDeckerWithSeriesAction<T>{
+public class ChartSeries<T extends AbstractEntity<?>> implements IChartDeckerWithSeriesColour<T>, IChartDeckerWithSeriesTitle<T>{
 
     private final ChartDeck<T> chartDeck;
     private final String propertyName;
@@ -32,13 +27,13 @@ public class ChartSeries<T extends AbstractEntity<?>> implements IChartDeckerWit
     }
 
     @Override
-    public IChartDeckerWithSeriesAction<T> colour(final Colour colour) {
+    public IChartDeckerWithSeriesTitle<T> colour(final Colour colour) {
         this.colour = colour;
         return this;
     }
 
     @Override
-    public IChartDeckerWithSeriesColour<T> title(final String title) {
+    public IChartDeckerWithSeriesAction<T> title(final String title) {
         this.title = title;
         return this;
     }
@@ -50,33 +45,8 @@ public class ChartSeries<T extends AbstractEntity<?>> implements IChartDeckerWit
     }
 
     @Override
-    public IChartDeckerWithSeriesTitle<T> withSeries(final String propertyName) {
+    public IChartDeckerWithSeriesColour<T> withSeries(final String propertyName) {
         return chartDeck.withSeries(propertyName);
-    }
-
-    @Override
-    public IChartDeckerXAxisTitle<T> withTitle(final String title) {
-        return chartDeck.withTitle(title);
-    }
-
-    @Override
-    public IChartDeckerYAxisTitle<T> withXAxisTitle(final String title) {
-        return chartDeck.withXAxisTitle(title);
-    }
-
-    @Override
-    public IChartDeckerAlso<T> withYAxisTitle(final String title) {
-        return chartDeck.withYAxisTitle(title);
-    }
-
-    @Override
-    public IChartDeckerAddDeck<T> also() {
-        return chartDeck.also();
-    }
-
-    @Override
-    public IMaster<T> done() {
-        return chartDeck.done();
     }
 
     public String getPropertyName() {
@@ -95,17 +65,22 @@ public class ChartSeries<T extends AbstractEntity<?>> implements IChartDeckerWit
         return action;
     }
 
-    @Override
-    public IChartDeckerShowLegend<T> mode(final BarMode mode) {
-        return this.chartDeck.mode(mode);
-    }
-
-    @Override
-    public IChartDeckerWithTitle<T> showLegend() {
-        return this.chartDeck.showLegend();
-    }
-
     public String getTitle() {
         return title;
+    }
+
+    @Override
+    public IChartDeckerLineColour<T> withLine(final String propertyName) {
+        return chartDeck.withLine(propertyName);
+    }
+
+    @Override
+    public IChartDeckerAddDeck<T> also() {
+        return chartDeck.deckerBuilder;
+    }
+
+    @Override
+    public IMaster<T> done() {
+        return chartDeck.deckerBuilder.done();
     }
 }

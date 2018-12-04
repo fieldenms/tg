@@ -8,23 +8,23 @@ import java.util.List;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig;
-import ua.com.fielden.platform.web.view.master.api.IMaster;
 import ua.com.fielden.platform.web.view.master.chart.decker.api.BarMode;
-import ua.com.fielden.platform.web.view.master.chart.decker.api.IChartDeckerAddDeck;
-import ua.com.fielden.platform.web.view.master.chart.decker.api.IChartDeckerAlso;
+import ua.com.fielden.platform.web.view.master.chart.decker.api.IChartDeckerLineColour;
 import ua.com.fielden.platform.web.view.master.chart.decker.api.IChartDeckerMode;
 import ua.com.fielden.platform.web.view.master.chart.decker.api.IChartDeckerShowLegend;
-import ua.com.fielden.platform.web.view.master.chart.decker.api.IChartDeckerWithSeriesAlso;
-import ua.com.fielden.platform.web.view.master.chart.decker.api.IChartDeckerWithSeriesTitle;
+import ua.com.fielden.platform.web.view.master.chart.decker.api.IChartDeckerWithLine;
+import ua.com.fielden.platform.web.view.master.chart.decker.api.IChartDeckerWithSeries;
+import ua.com.fielden.platform.web.view.master.chart.decker.api.IChartDeckerWithSeriesColour;
 import ua.com.fielden.platform.web.view.master.chart.decker.api.IChartDeckerWithTitle;
 import ua.com.fielden.platform.web.view.master.chart.decker.api.IChartDeckerXAxisTitle;
 import ua.com.fielden.platform.web.view.master.chart.decker.api.IChartDeckerYAxisTitle;
 
-public class ChartDeck<T extends AbstractEntity<?>> implements IChartDeckerMode<T>, IChartDeckerWithSeriesAlso<T>{
+public class ChartDeck<T extends AbstractEntity<?>> implements IChartDeckerMode<T>, IChartDeckerWithSeries<T>, IChartDeckerWithLine<T>{
+
+    public final ChartDeckerMasterBuilder<T> deckerBuilder;
 
     private final List<ChartSeries<T>> series = new ArrayList<>();
     private final Class<? extends AbstractEntity<?>> entityType;
-    private final ChartDeckerMasterBuilder<T> deckerBuilder;
 
     private BarMode mode = BarMode.GROUPED;
     private boolean showLegend= false;
@@ -41,16 +41,6 @@ public class ChartDeck<T extends AbstractEntity<?>> implements IChartDeckerMode<
     public IChartDeckerYAxisTitle<T> withXAxisTitle(final String title) {
         this.xAxisTitle = title;
         return this;
-    }
-
-    @Override
-    public IChartDeckerAddDeck<T> also() {
-        return deckerBuilder;
-    }
-
-    @Override
-    public IMaster<T> done() {
-        return deckerBuilder.done();
     }
 
     @Override
@@ -90,12 +80,6 @@ public class ChartDeck<T extends AbstractEntity<?>> implements IChartDeckerMode<
     }
 
     @Override
-    public IChartDeckerAlso<T> withYAxisTitle(final String title) {
-        this.yAxisTitle = title;
-        return this;
-    }
-
-    @Override
     public IChartDeckerShowLegend<T> mode(final BarMode mode) {
         this.mode = mode;
         return this;
@@ -108,7 +92,7 @@ public class ChartDeck<T extends AbstractEntity<?>> implements IChartDeckerMode<
     }
 
     @Override
-    public IChartDeckerWithSeriesTitle<T> withSeries(final String propertyName) {
+    public IChartDeckerWithSeriesColour<T> withSeries(final String propertyName) {
         final ChartSeries<T> series = new ChartSeries<>(this, propertyName);
         if (!this.series.stream().allMatch(s -> s.getPropertyType().equals(series.getPropertyType()))) {
             throw new ChartConfigurationError(format("The chart series should have the same type: %. But there was attempt to add series with different type: %",
@@ -133,5 +117,17 @@ public class ChartDeck<T extends AbstractEntity<?>> implements IChartDeckerMode<
 
     public boolean isShowLegend() {
         return showLegend;
+    }
+
+    @Override
+    public IChartDeckerLineColour<T> withLine(final String propertyName) {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public IChartDeckerWithSeries<T> withYAxisTitle(final String title) {
+        this.yAxisTitle = title;
+        return this;
     }
 }

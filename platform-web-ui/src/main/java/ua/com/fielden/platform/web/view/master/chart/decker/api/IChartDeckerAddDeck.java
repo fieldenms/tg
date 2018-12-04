@@ -4,5 +4,5 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 
 public interface IChartDeckerAddDeck<T extends AbstractEntity<?>> {
 
-    IChartDeckerWithSeries<T> addDeckFor(Class<? extends AbstractEntity<?>> entityType);
+    IChartDeckerMode<T> addDeckFor(Class<? extends AbstractEntity<?>> entityType);
 }

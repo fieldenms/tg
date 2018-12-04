@@ -11,7 +11,7 @@ import ua.com.fielden.platform.web.view.master.chart.decker.api.IChartDeckerDesc
 import ua.com.fielden.platform.web.view.master.chart.decker.api.IChartDeckerGroup;
 import ua.com.fielden.platform.web.view.master.chart.decker.api.IChartDeckerMasterBuilder;
 import ua.com.fielden.platform.web.view.master.chart.decker.api.IChartDeckerMasterDone;
-import ua.com.fielden.platform.web.view.master.chart.decker.api.IChartDeckerWithSeries;
+import ua.com.fielden.platform.web.view.master.chart.decker.api.IChartDeckerMode;
 
 public class ChartDeckerMasterBuilder<T extends AbstractEntity<?>> implements IChartDeckerConfig<T>, IChartDeckerMasterBuilder<T>, IChartDeckerMasterDone<T>, IChartDeckerGroup<T>, IChartDeckerDesc<T>{
 
@@ -41,7 +41,7 @@ public class ChartDeckerMasterBuilder<T extends AbstractEntity<?>> implements IC
     }
 
     @Override
-    public IChartDeckerWithSeries<T> addDeckFor(final Class<? extends AbstractEntity<?>> entityType) {
+    public IChartDeckerMode<T> addDeckFor(final Class<? extends AbstractEntity<?>> entityType) {
         final ChartDeck<T> newDeck = new ChartDeck<>(entityType, this);
         decks.add(newDeck);
         return newDeck;

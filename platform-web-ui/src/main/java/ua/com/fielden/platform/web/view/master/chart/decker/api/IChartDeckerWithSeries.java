@@ -4,5 +4,5 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 
 public interface IChartDeckerWithSeries<T extends AbstractEntity<?>>{
 
-    IChartDeckerWithSeriesTitle<T> withSeries(String propertyName);
+    IChartDeckerWithSeriesColour<T> withSeries(String propertyName);
 }
