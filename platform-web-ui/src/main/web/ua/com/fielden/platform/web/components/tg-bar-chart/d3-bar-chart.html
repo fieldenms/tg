@@ -243,9 +243,17 @@
 
             //////////NEED TO OVERVIEW THIS SELECTION LOGIC//////////////
             selectEntity(entity, select) {
-                this._selectEntity(this._barContainer.select("#bar_" + value(this._options.dataPropertyNames.id, entity)).node(),
-                    this._barContainer.select("#marker_" + value(this._options.dataPropertyNames.id, entity)).node(),
-                    entity, select);
+                this._options.dataPropertyNames.valueProps.forEach((prop, i) => {
+                    let markerIdEnding;
+                    if (this._options.mode === BarMode.STACKED) {
+                        markerIdEnding = value(prop, entity) >= 0 ? 1 : -1; 
+                    } else {
+                        markerIdEnding = i;
+                    }
+                    this._selectEntity(this._barContainer.select("#bar_" + value(this._options.dataPropertyNames.id, entity) + "_" + i).node(), 
+                                       this._barContainer.select("#marker_" + value(this._options.dataPropertyNames.id, entity) + "_" + markerIdEnding).node(),
+                                       {data: entity, idx: i}, select);
+                });
             }
             ///////////////////////////////////////////////////////////////
 
@@ -600,6 +608,10 @@
                     return value(this._options.dataPropertyNames.id, selectedEntity.data) === value(this._options.dataPropertyNames.id, entity.data) && selectedEntity.idx === entity.idx
                 });
             }
+            
+            _isAnyEntitySelected (entity) {
+                return this._options.dataPropertyNames.valueProps.some((prop, i) => this._isEntitySelected({data: entity, idx: i}));
+            }
 
             _selectEntity(bar, marker, entity, select, fireEvent) {
                 if (entity) {
@@ -610,17 +622,18 @@
                     if (select) {
                         // add entity to selected if it is not there yet
                         if (entityIndex < 0) {
+                            const wasPreviousSelection = this._isAnyEntitySelected(entity.data)
                             this._selectedEntities.push(entity);
-                            if (fireEvent) {
-                                fireSelectEvent(entity, select, this._chartArea.node());
+                            if (fireEvent && !wasPreviousSelection) {
+                                fireSelectEvent(entity.data, select, this._chartArea.node());
                             }
                         }
                     } else {
                         // remove entity from selected if it is there
                         if (entityIndex >= 0) {
                             this._selectedEntities.splice(entityIndex, 1);
-                            if (fireEvent) {
-                                fireSelectEvent(entity, select, this._chartArea.node());
+                            if (fireEvent && !this._isAnyEntitySelected(entity.data)) {
+                                fireSelectEvent(entity.data, select, this._chartArea.node());
                             }
                         }
                     }
