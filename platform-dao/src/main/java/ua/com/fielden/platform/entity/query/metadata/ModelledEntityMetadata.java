@@ -1,4 +1,4 @@
-package ua.com.fielden.platform.dao;
+package ua.com.fielden.platform.entity.query.metadata;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -41,7 +41,7 @@ public class ModelledEntityMetadata<ET extends AbstractEntity<?>> extends Abstra
             return false;
         if (!(obj instanceof ModelledEntityMetadata))
             return false;
-        ModelledEntityMetadata other = (ModelledEntityMetadata) obj;
+        ModelledEntityMetadata<?> other = (ModelledEntityMetadata<?>) obj;
         if (models == null) {
             if (other.models != null)
                 return false;

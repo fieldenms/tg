@@ -654,19 +654,6 @@
                 }
             }
         };
-        const generateShortCollection = function (entity, property, typeObject) {
-            var collectionValue = entity.get(property);
-            var containerPropertyValue = entity.get(property.substr(0, property.lastIndexOf('.')));
-            var keys = typeObject.compositeKeyNames();
-            return collectionValue.map(function (subEntity) {
-                var key = keys.find(function (key) {
-                    if (subEntity.get(key) !== containerPropertyValue) {
-                        return key;
-                    }
-                });
-                return subEntity.get(key);
-            });
-        };
         const calculateFixedColumnWidth = function (columns, numOfFixedColumns) {
             return columns.reduce((accum, curr, index) => accum += (index < numOfFixedColumns ? curr.width : 0), 0);
         };

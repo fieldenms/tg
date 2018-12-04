@@ -1,4 +1,4 @@
-package ua.com.fielden.platform.dao;
+package ua.com.fielden.platform.entity.query.metadata;
 
 public enum PropertyCategory {
     PRIMITIVE {
@@ -91,12 +91,6 @@ public enum PropertyCategory {
             return false;
         }
     }, //
-//    EXPRESSION_COMMON {
-//        @Override
-//        boolean affectsMappings() {
-//            return false;
-//        }
-//    }, //
     VIRTUAL_OVERRIDE {
         @Override
         boolean affectsMappings() {

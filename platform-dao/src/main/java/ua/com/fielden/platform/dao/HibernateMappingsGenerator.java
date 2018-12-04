@@ -1,9 +1,9 @@
 package ua.com.fielden.platform.dao;
 
-import static ua.com.fielden.platform.dao.DomainMetadata.specialProps;
 import static ua.com.fielden.platform.entity.AbstractEntity.ID;
 import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
 import static ua.com.fielden.platform.entity.AbstractEntity.VERSION;
+import static ua.com.fielden.platform.entity.query.metadata.DomainMetadata.specialProps;
 
 import java.lang.reflect.Field;
 import java.util.Collection;
@@ -16,6 +16,10 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.AbstractUnionEntity;
 import ua.com.fielden.platform.entity.annotation.MapTo;
 import ua.com.fielden.platform.entity.query.DbVersion;
+import ua.com.fielden.platform.entity.query.metadata.DomainMetadata;
+import ua.com.fielden.platform.entity.query.metadata.PersistedEntityMetadata;
+import ua.com.fielden.platform.entity.query.metadata.PropertyColumn;
+import ua.com.fielden.platform.entity.query.metadata.PropertyMetadata;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
 
 /**
@@ -164,7 +168,7 @@ public class HibernateMappingsGenerator {
      * @throws Exception
      */
     private String generatePropertyMappingFromPropertyMetadata(final PropertyMetadata propMetadata, final DbVersion dbVersion) throws Exception {
-        switch (propMetadata.getType()) {
+        switch (propMetadata.getCategory()) {
         case UNION_ENTITY_HEADER:
             return generateUnionEntityPropertyMapping(propMetadata);
         case ENTITY_AS_KEY:
