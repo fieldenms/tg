@@ -241,7 +241,6 @@
                 return this._data;
             }
 
-            //////////NEED TO OVERVIEW THIS SELECTION LOGIC//////////////
             selectEntity(entity, select) {
                 this._options.dataPropertyNames.valueProps.forEach((prop, i) => {
                     let markerIdEnding;
@@ -255,7 +254,6 @@
                                        {data: entity, idx: i}, select);
                 });
             }
-            ///////////////////////////////////////////////////////////////
 
             _xDomain() {
                 return this._data.map(d => value(this._options.dataPropertyNames.groupKeyProp, d));
@@ -699,10 +697,6 @@
             }
         }
         
-        ////TODO CONTINUE REFACTORE FROM HERE
-        //REFACTORE UNTIL HERE
-        
-
         d3.barChart = (container, options, data) => {
             const barChart = new BarChart(container, options, data);
 

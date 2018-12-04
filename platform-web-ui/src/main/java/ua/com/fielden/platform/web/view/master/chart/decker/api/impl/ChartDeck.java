@@ -13,6 +13,7 @@ import ua.com.fielden.platform.web.view.master.chart.decker.api.BarMode;
 import ua.com.fielden.platform.web.view.master.chart.decker.api.IChartDeckerAddDeck;
 import ua.com.fielden.platform.web.view.master.chart.decker.api.IChartDeckerAlso;
 import ua.com.fielden.platform.web.view.master.chart.decker.api.IChartDeckerMode;
+import ua.com.fielden.platform.web.view.master.chart.decker.api.IChartDeckerShowLegend;
 import ua.com.fielden.platform.web.view.master.chart.decker.api.IChartDeckerWithSeriesAlso;
 import ua.com.fielden.platform.web.view.master.chart.decker.api.IChartDeckerWithSeriesTitle;
 import ua.com.fielden.platform.web.view.master.chart.decker.api.IChartDeckerWithTitle;
@@ -26,11 +27,10 @@ public class ChartDeck<T extends AbstractEntity<?>> implements IChartDeckerMode<
     private final ChartDeckerMasterBuilder<T> deckerBuilder;
 
     private BarMode mode = BarMode.GROUPED;
+    private boolean showLegend= false;
     private String title = "";
     private String xAxisTitle = "";
     private String yAxisTitle = "";
-
-    private EntityActionConfig actionConfig;
 
     public ChartDeck(final Class<? extends AbstractEntity<?>> entityType, final ChartDeckerMasterBuilder<T> chartDeckerMasterBuilder) {
         this.entityType = entityType;
@@ -96,8 +96,14 @@ public class ChartDeck<T extends AbstractEntity<?>> implements IChartDeckerMode<
     }
 
     @Override
-    public IChartDeckerWithTitle<T> mode(final BarMode mode) {
+    public IChartDeckerShowLegend<T> mode(final BarMode mode) {
         this.mode = mode;
+        return this;
+    }
+
+    @Override
+    public IChartDeckerWithTitle<T> showLegend() {
+        this.showLegend = true;
         return this;
     }
 
@@ -123,5 +129,9 @@ public class ChartDeck<T extends AbstractEntity<?>> implements IChartDeckerMode<
 
     public List<ChartSeries<T>> getSeries() {
         return Collections.unmodifiableList(series);
+    }
+
+    public boolean isShowLegend() {
+        return showLegend;
     }
 }

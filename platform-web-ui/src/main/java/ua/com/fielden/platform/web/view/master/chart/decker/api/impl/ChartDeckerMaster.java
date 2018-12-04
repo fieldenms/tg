@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.web.view.master.chart.decker.api.impl;
 
+import static org.apache.commons.lang.StringUtils.join;
 import static ua.com.fielden.platform.web.centre.api.resultset.impl.FunctionalActionKind.PRIMARY_RESULT_SET;
 
 import java.util.ArrayList;
@@ -81,6 +82,8 @@ public class ChartDeckerMaster<T extends AbstractEntity<?>> implements IMaster<T
         for (int chartIndex = 0; chartIndex < charts.size(); chartIndex++) {
             container.add(new DomElement("tg-bar-chart")
                     .clazz("flex", "chart-deck")
+                    .attr("show-legend", charts.get(chartIndex).isShowLegend())
+                    .attr("legend-items", "[[legendItems." + chartIndex + "]]")
                     .attr("data", "[[retrievedEntities]]")
                     .attr("options", "[[barOptions." + chartIndex + "]]"));
         }
@@ -89,8 +92,10 @@ public class ChartDeckerMaster<T extends AbstractEntity<?>> implements IMaster<T
 
     private String readyCallback(final IChartDeckerConfig<T> deckerConfig) {
         final List<String> chartOptions = new ArrayList<>();
+        final List<String> legendItems = new ArrayList<>();
         for (int deckIndex = 0; deckIndex < deckerConfig.getDecs().size(); deckIndex++) {
             final ChartDeck<T> deck = deckerConfig.getDecs().get(deckIndex);
+            legendItems.add(generateLegendItems(deck.getSeries()));
             chartOptions.add("{\n"
                     + "    mode: d3.barChart.BarMode." + deck.getMode().name() + ",\n"
                     + "    label: '" + deck.getTitle() + "',\n"
@@ -103,7 +108,7 @@ public class ChartDeckerMaster<T extends AbstractEntity<?>> implements IMaster<T
                     + "    dataPropertyNames: {\n"
                     + "        groupKeyProp: '" + deck.getGroupKeyProp() + "',\n"
                     + "        groupDescProp: '" + deck.getGroupDescProperty() + "',\n"
-                    + "        valueProps: " + generateValuesAccessor(deck.getEntityType(), deck.getSeries()) + "\n"
+                    + "        valueProps: " + generateValuesAccessor(deck.getSeries()) + "\n"
                     + "    },\n"
                     + "    colours: " + generateColours(deck.getSeries()) + ",\n"
                     + "    barColour: (d, i) => self.barOptions[" + deckIndex + "].colours[i],\n"
@@ -114,7 +119,17 @@ public class ChartDeckerMaster<T extends AbstractEntity<?>> implements IMaster<T
                     + "    click: this._click(" + deckIndex + ")\n"
                     + "}");
         }
-        return "self.barOptions = [" + StringUtils.join(chartOptions, ",\n") + "];\n";
+        return "self.barOptions = [" + join(chartOptions, ",\n") + "];\n"
+                + "self.legendItems =[" + join(legendItems, ",\n") + "];\n";
+    }
+
+    private String generateLegendItems(final List<ChartSeries<T>> series) {
+        final StringBuilder legendItems = new StringBuilder("[");
+        series.stream().forEach(nextSeries -> {
+            legendItems.append("{title: '"  + nextSeries.getTitle() + "',colour: '" + nextSeries.getColour().toString() + "'},");
+        });
+        legendItems.setCharAt(legendItems.length() - 1, ']');
+        return legendItems.toString();
     }
 
     private String generatePropertyTypes(final List<ChartSeries<T>> series) {
@@ -144,7 +159,7 @@ public class ChartDeckerMaster<T extends AbstractEntity<?>> implements IMaster<T
         return propValues.toString();
     }
 
-    private String generateValuesAccessor(final Class<? extends AbstractEntity<?>> entityType, final List<ChartSeries<T>> series) {
+    private String generateValuesAccessor(final List<ChartSeries<T>> series) {
         final StringBuilder propValues = new StringBuilder("[");
         series.stream().forEach(nextSeries -> {
             propValues.append(generateValueAccessor(nextSeries.getPropertyType(), nextSeries.getPropertyName()) + ",");
@@ -158,10 +173,6 @@ public class ChartDeckerMaster<T extends AbstractEntity<?>> implements IMaster<T
             return "this._moneyPropAccessor('" + aggregationProperty + "')";
         }
         return "'" + aggregationProperty + "'";
-    }
-
-    private String generateTooltipRetriever(final ChartDeck<T> deck, final int deckIndex) {
-        return "this._tooltip('" + deck.getGroupDescProperty() + "', " + deckIndex + ")";
     }
 
     @Override

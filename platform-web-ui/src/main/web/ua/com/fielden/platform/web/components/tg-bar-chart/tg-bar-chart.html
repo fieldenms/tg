@@ -11,7 +11,7 @@
     <template>
         <style>
             :host {
-                @apply(--layout-horizontal);
+                @apply(--layout-vertical);
 
             }
             svg {
@@ -68,11 +68,30 @@
                 vector-effect: non-scaling-stroke;
                 pointer-events: none;
             }
+            /*Legend related style*/
+            .legend-rect {
+                min-width: 18px;
+                min-height: 18px;
+                border: 1px solid black;
+                margin-right: 8px;
+            }
+            .legend-item {
+                font-size: smaller;
+                margin-right: 16px;
+            }
         </style>
 
         <!-- local DOM for your element -->
         <svg id="chart" class="bar-chart"></svg>
         <!-- data bindings in local DOM -->
+        <div id="legend" class="legend-panel layout horizontal center-justified wrap" style$="[[_calcLegendStyle(_chartStyles)]]" hidden$="[[showLegend]]">
+            <template id="legendItemTemplate" is="dom-repeat" items="[[legendItems]]" on-dom-change="_legendItemsChanged">
+                <div class="legend-item layout horizontal center">
+                    <div class="legend-rect" style$="[[_calcLegendItemStyle(item)]]"></div>
+                    <div>[[item.title]]</div>
+                </div>
+            </template>
+        </div>
     </template>
 
     <script>
@@ -94,7 +113,22 @@
                         type: Object,
                         observer: "_chartOptionsChanged"
                     },
+                    
+                    //Determines whether legend should be visible or not
+                    showLegend: {
+                        type: Boolean,
+                        value: false
+                    },
+                    
+                    //The legend items whish represents title and colour
+                    legendItems: {
+                        type: Array,
+                        value: function () {
+                            return [];
+                        }
+                    },
 
+                    _chartStyle: Object,
                     _chart: Object
                 },
 
@@ -131,10 +165,10 @@
                 _waitForDimensions: function (time) {
                     var self = this;
                     this.async(function () {
-                        if (this.offsetWidth && this.offsetHeight && this._chart) {
+                        if (self.$.chart.offsetWidth && self.$.chart.offsetHeight && this._chart) {
                             this._chart.options({
-                                width: self.offsetWidth,
-                                height: self.offsetHeight
+                                width: self.$.chart.offsetWidth,
+                                height: self.$.chart.offsetHeight
                             });
                         } else {
                             this._waitForDimensions(100);
@@ -151,15 +185,32 @@
                 _chartOptionsChanged: function (newOptions, oldOptions) {
                     if (this._chart) {
                         this._chart.options(newOptions);
+                        const updatedOptions: this._chart.options();
+                        this._chartStyle = {
+                            left: updatedOptions.margin.left,
+                            right: updatedOptions.margin.right
+                        };
                     }
+                },
+                
+                _calcLegendStyle: function (_chartStyles) {
+                    return "margin-left: " + _chartStyles.left + "px; margin-right: " + _chartStyles.right + "px;";
+                },
+
+                _calcLegendItemStyle: function (item) {
+                    return "background-color: " + item.colour + ";";
+                },
+
+                _legendItemsChanged: function () {
+                    this.notifyResize();
                 },
 
                 _resizeEventListener: function (event, details) {
                     var self = this;
                     if (this._chart) {
                         this._chart.options({
-                            width: self.offsetWidth,
-                            height: self.offsetHeight
+                            width: self.$.chart.offsetWidth,
+                            height: self.$.chart.offsetHeight
                         });
                     }
                 }

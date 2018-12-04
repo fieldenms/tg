@@ -5,12 +5,15 @@ import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.types.Colour;
 import ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig;
 import ua.com.fielden.platform.web.view.master.api.IMaster;
+import ua.com.fielden.platform.web.view.master.chart.decker.api.BarMode;
 import ua.com.fielden.platform.web.view.master.chart.decker.api.IChartDeckerAddDeck;
 import ua.com.fielden.platform.web.view.master.chart.decker.api.IChartDeckerAlso;
+import ua.com.fielden.platform.web.view.master.chart.decker.api.IChartDeckerShowLegend;
 import ua.com.fielden.platform.web.view.master.chart.decker.api.IChartDeckerWithSeriesAction;
 import ua.com.fielden.platform.web.view.master.chart.decker.api.IChartDeckerWithSeriesAlso;
 import ua.com.fielden.platform.web.view.master.chart.decker.api.IChartDeckerWithSeriesColour;
 import ua.com.fielden.platform.web.view.master.chart.decker.api.IChartDeckerWithSeriesTitle;
+import ua.com.fielden.platform.web.view.master.chart.decker.api.IChartDeckerWithTitle;
 import ua.com.fielden.platform.web.view.master.chart.decker.api.IChartDeckerXAxisTitle;
 import ua.com.fielden.platform.web.view.master.chart.decker.api.IChartDeckerYAxisTitle;
 
@@ -90,5 +93,19 @@ public class ChartSeries<T extends AbstractEntity<?>> implements IChartDeckerWit
 
     public EntityActionConfig getAction() {
         return action;
+    }
+
+    @Override
+    public IChartDeckerShowLegend<T> mode(final BarMode mode) {
+        return this.chartDeck.mode(mode);
+    }
+
+    @Override
+    public IChartDeckerWithTitle<T> showLegend() {
+        return this.chartDeck.showLegend();
+    }
+
+    public String getTitle() {
+        return title;
     }
 }

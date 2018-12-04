@@ -2,7 +2,7 @@ package ua.com.fielden.platform.web.view.master.chart.decker.api;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 
-public interface IChartDeckerMode<T extends AbstractEntity<?>> extends IChartDeckerWithTitle<T> {
+public interface IChartDeckerMode<T extends AbstractEntity<?>> extends IChartDeckerShowLegend<T> {
 
-    IChartDeckerWithTitle<T> mode(BarMode mode);
+    IChartDeckerShowLegend<T> mode(BarMode mode);
 }
