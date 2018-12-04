@@ -1,6 +1,5 @@
 package ua.com.fielden.platform.web.centre;
 
-import static ua.com.fielden.platform.web.centre.WebApiUtils.checkedPropertiesWithoutSummaries;
 import static java.lang.String.format;
 import static java.util.Arrays.stream;
 import static java.util.Optional.empty;
@@ -48,6 +47,7 @@ import static ua.com.fielden.platform.web.centre.CentreUpdaterUtils.retrieveDiff
 import static ua.com.fielden.platform.web.centre.CentreUpdaterUtils.saveEntityCentreManager;
 import static ua.com.fielden.platform.web.centre.CentreUpdaterUtils.saveNewEntityCentreManager;
 import static ua.com.fielden.platform.web.centre.WebApiUtils.LINK_CONFIG_TITLE;
+import static ua.com.fielden.platform.web.centre.WebApiUtils.checkedPropertiesWithoutSummaries;
 import static ua.com.fielden.platform.web.interfaces.DeviceProfile.DESKTOP;
 import static ua.com.fielden.platform.web.interfaces.DeviceProfile.MOBILE;
 import static ua.com.fielden.platform.web.utils.EntityResourceUtils.entityWithMocksFromString;
@@ -804,7 +804,12 @@ public class CentreUpdater {
             ? mapOf(t2("amount", money.getAmount().toString()), t2("taxPercent", money.getTaxPercent().toString()), t2("currency", money.getCurrency().toString()))
             : mapOf(t2("amount", money.getAmount().toString()), t2("currency", money.getCurrency().toString()));
     private static final Function<Object, String> toString = Object::toString;
-    private static final Function<AbstractEntity<?>, String> entityToString = entity -> entityWithMocksToString(ent -> ent.getId().toString(), entity);
+    private static final Function<AbstractEntity<?>, String> entityToString = entity -> entityWithMocksToString((ent) -> {
+        if (ent.getId() == null) {
+            throw new CentreUpdaterException(format("Crit-only single entity value [%s] of type [%s] is not persisted.", ent, ent.getClass().getSimpleName()));
+        }
+        return ent.getId().toString();
+    }, entity);
     
     private static Object extractFrom(final Object value, final Class<AbstractEntity<?>> root, final Supplier<Class<?>> managedTypeSupplier, final String property, final ICompanionObjectFinder companionFinder) {
         final boolean isEntityItself = "".equals(property); // empty property means "entity itself"
@@ -1055,7 +1060,8 @@ public class CentreUpdater {
                 determinePropertyType(diffManagedType, property);
                 return false;
             } catch (final Exception ex) {
-                logger.warn(format("Property [%s] could not be found in type [%s] in diffCentre. It will be skipped. Most likely this property was deleted from domain type definition.", property, diffManagedType.getSimpleName()));
+                // System.out.println();
+                // logger.warn(format("Property [%s] could not be found in type [%s] in diffCentre. It will be skipped. Most likely this property was deleted from domain type definition.", property, diffManagedType.getSimpleName()));
                 return true;
             }
         } else {
