@@ -788,6 +788,7 @@ public class CentreUpdater {
         }
     }
     
+    public static final String ID_PREFIX = "__________ID__________";
     private static final Function<DateRangePrefixEnum, String> prefixToString = DateRangePrefixEnum::name;
     private static final Function<MnemonicEnum, String> mnemonicToString = MnemonicEnum::name;
     private static final Function<String, DateRangePrefixEnum> stringToPrefix = DateRangePrefixEnum::valueOf;
@@ -807,10 +808,10 @@ public class CentreUpdater {
             : mapOf(t2("amount", money.getAmount().toString()), t2("currency", money.getCurrency().toString()));
     private static final Function<Object, String> toString = Object::toString;
     private static final Function<AbstractEntity<?>, String> entityToString = entity -> entityWithMocksToString((ent) -> {
-        if (isPersistedEntityType(entity.getType())) {
-            return "id:" + ent.getId().toString();
+        if (isPersistedEntityType(ent.getType())) {
+            return ID_PREFIX + ent.getId().toString();
         } else {
-            return entity.getKey().toString();
+            return ent.getKey().toString();
         }
     }, entity);
     
@@ -835,11 +836,11 @@ public class CentreUpdater {
                 return valOrNull(value, str -> entityWithMocksFromString(idOrKey -> {
                     final IEntityDao<AbstractEntity<?>> propertyCompanion = companionFinder.find((Class<AbstractEntity<?>>) propertyType, true);
                     final IEntityDao<AbstractEntity<?>> companion = companionFinder.find(root, true);
-                    if (idOrKey.startsWith("id:")) {
-                        final Long id = Long.valueOf(idOrKey.replaceFirst(quote("id:"), ""));
-                        return propertyCompanion.findById(id, companion.getFetchProvider().fetchFor(property).fetchModel());
+                    final fetch<AbstractEntity<?>> fetch = companion.getFetchProvider().fetchFor(property).fetchModel();
+                    if (idOrKey.startsWith(ID_PREFIX)) {
+                        return propertyCompanion.findById(Long.valueOf(idOrKey.replaceFirst(quote(ID_PREFIX), "")), fetch);
                     } else {
-                        return propertyCompanion.findByKeyAndFetch(companion.getFetchProvider().fetchFor(property).fetchModel(), idOrKey);
+                        return propertyCompanion.findByKeyAndFetch(fetch, idOrKey);
                     }
                 }, str, propertyType), toString);
             }

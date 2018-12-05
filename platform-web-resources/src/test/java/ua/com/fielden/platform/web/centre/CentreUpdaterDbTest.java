@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.web.centre;
 
 import static ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.IAddToCriteriaTickManager.MetaValueType.VALUE;
+import static ua.com.fielden.platform.web.centre.CentreUpdater.ID_PREFIX;
 import static ua.com.fielden.platform.web.centre.CentreUpdaterTest.ROOT;
 import static ua.com.fielden.platform.web.centre.CentreUpdaterTest.expectedDiffWithValue;
 import static ua.com.fielden.platform.web.centre.CentreUpdaterTest.testDiffCreationAndApplication;
@@ -45,7 +46,7 @@ public class CentreUpdaterDbTest extends AbstractDaoTestCase {
     @Test
     public void critOnlySingle_entity_value() {
         final TgCentreDiffSerialisationPersistentChild propertyVal = save(new_(TgCentreDiffSerialisationPersistentChild.class, "Ent1"));
-        testDiffCreationAndApplication(CentreUpdaterTest::create, centre -> centre.getFirstTick().setValue(ROOT, "entityPropCritSingle", propertyVal), expectedDiffWithValue("entityPropCritSingle", VALUE.name(), "id:" + Long.toString(propertyVal.getId())), companionFinder());
+        testDiffCreationAndApplication(CentreUpdaterTest::create, centre -> centre.getFirstTick().setValue(ROOT, "entityPropCritSingle", propertyVal), expectedDiffWithValue("entityPropCritSingle", VALUE.name(), ID_PREFIX + Long.toString(propertyVal.getId())), companionFinder());
     }
     
     @Test
