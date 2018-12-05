@@ -21,6 +21,7 @@
     
     const _UNDEFINED_CONFIG_TITLE = '_______________________undefined';
     const _LINK_CONFIG_TITLE = '_______________________link';
+    const KEY_NOT_ASSIGNED = "[key is not assigned]"; // closely resembles AbstractEntity.KEY_NOT_ASSIGNED
     
     /**
      * Determines whether the result represents the error.
@@ -579,8 +580,22 @@
         Entity.prototype.isPersisted = function () {
             return this.get('id') !== null;
         }
+        
+        /**
+         * Returns string representation of entity.
+         *
+         * Note: this method closely resembles AbstractEntity.toString method.
+         */
+        Entity.prototype.toString = function () {
+            if (this.get('key') === null) {
+                return KEY_NOT_ASSIGNED;
+            }
+            const convertedKey = _convert(this.get('key'));
+            return convertedKey === null || convertedKey === '' ? KEY_NOT_ASSIGNED : ('' + convertedKey);
+        }
+        
         return Entity;
-	};
+    };
     
     /**
      * 'DynamicEntityKey' creator.
@@ -1338,7 +1353,7 @@
         isMockNotFoundEntity: function (obj) {
             return this.isEntity(obj) /* obj can be empty and will return false as a result */
                 && obj.get('id') === null
-                // && KEY_NOT_ASSIGNED.equals(obj.toString()) -- key condition is now skipped but existing conditions are really sufficient; isMockNotFoundEntity is used only in context of meta-prop 'lastInvalidValue'
+                && KEY_NOT_ASSIGNED === obj.toString()
                 && obj.get('desc'); // 'desc' is not empty and contains string representaion of 'not found' entity
         },
         
