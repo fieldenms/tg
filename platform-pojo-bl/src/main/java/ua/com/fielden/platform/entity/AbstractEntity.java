@@ -80,6 +80,7 @@ import ua.com.fielden.platform.entity.meta.MetaPropertyFull;
 import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
 import ua.com.fielden.platform.entity.proxy.StrictProxyException;
 import ua.com.fielden.platform.entity.validation.DomainValidationConfig;
+import ua.com.fielden.platform.entity.validation.EntityExistsValidator;
 import ua.com.fielden.platform.entity.validation.IBeforeChangeEventHandler;
 import ua.com.fielden.platform.entity.validation.ICustomValidator;
 import ua.com.fielden.platform.entity.validation.annotation.DomainValidation;
@@ -747,6 +748,16 @@ public abstract class AbstractEntity<K extends Comparable> implements Comparable
     }
 
     /**
+     * A predicate method to identify whether {@link EntityExistsValidator} is required, even for non-persistent property values.
+     *
+     * @param propertyName
+     * @return
+     */
+    protected boolean isEntityExistsValidationRequired(final String propertyName) {
+        return false;
+    }
+
+    /**
      * A predicate method to identify whether a collectional property requires, but is missing a corresponding <code>link property</code> information.
      *
      * @param propertyName
@@ -806,7 +817,7 @@ public abstract class AbstractEntity<K extends Comparable> implements Comparable
             }
 
             // now let's see if we need to add EntityExists validation
-            if (!validators.containsKey(ValidationAnnotation.ENTITY_EXISTS) && isEntityExistsValidationApplicable(field, properyType)) {
+            if (!validators.containsKey(ValidationAnnotation.ENTITY_EXISTS) && (isEntityExistsValidationApplicable(field, properyType) || isEntityExistsValidationRequired(field.getName()))) {
                 final EntityExists eeAnnotation = new EntityExistsAnnotation((Class<? extends AbstractEntity<?>>) properyType).newInstance();
                 final IBeforeChangeEventHandler<?>[] annotationValidators = metaPropertyFactory.create(eeAnnotation, this, field.getName(), properyType);
 
