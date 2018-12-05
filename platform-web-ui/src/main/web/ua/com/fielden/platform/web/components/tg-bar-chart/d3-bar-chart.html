@@ -66,6 +66,11 @@
             STACKED: "stacked",
             GROUPED: "grouped"
         };
+        
+        const LabelOrientation = {
+            HORIZONTAL: "horizontal",
+            VERTICAL: "vertical"
+        };
 
         class BarChart {
 
@@ -84,7 +89,8 @@
                     },
                     label: "",
                     xAxis: {
-                        label: ""
+                        label: "",
+                        orientation: LabelOrientation.HORIZONTAL 
                     },
                     yAxis: {
                         label: "",
@@ -140,6 +146,12 @@
 
                 //Creating bar container.
                 this._barContainer = this._createBarContainer(clipPathId);
+                //Create only Bar Container
+                this._onlyBarContainer = this._createOnlyBarContainer(clipPathId);
+                //Create Line container so that it will always after bars
+                this._lineContainer = this._createLineContainer();
+                //Create marker container
+                this._markerContainer = this._createMarkerContainer();
 
                 //Draw axes
                 this._xAxisGroup = this._drawXAxes();
@@ -202,6 +214,9 @@
                 this._background.attr("width", this._actualWidth).attr("height", this._actualHeight);
                 this._yGridGroup.call(this._yGrid.tickSize(-this._actualWidth).scale(this._ys)).call(this._yGrid.scale(this._currentTransform.rescaleY(this._ys)));
                 this._xAxisGroup.attr("transform", "translate(0," + this._actualHeight + ")").call(this._xAxis.scale(this._xs));
+                if (this._options.xAxis.orientation === LabelOrientation.VERTICAL) {
+                    this._xAxisGroup.selectAll(".tick text").call(this._rotateTickText.bind(this));
+                }
                 this._yAxisGroup.call(this._yAxis.scale(this._ys)).call(this._yAxis.scale(this._currentTransform.rescaleY(this._ys)));
                 // Update chart and axis captioins
                 this._chartLabel.call(this._setChartLabelData.bind(this));
@@ -248,15 +263,18 @@
 
             selectEntity(entity, select) {
                 this._options.dataPropertyNames.valueProps.forEach((prop, i) => {
-                    let markerIdEnding;
-                    if (this._options.mode === BarMode.STACKED) {
-                        markerIdEnding = value(prop, entity) >= 0 ? 1 : -1; 
-                    } else {
-                        markerIdEnding = i;
+                    const currVal = value(prop, entity);
+                    if (currVal) {
+                        let markerIdEnding;
+                        if (this._options.mode === BarMode.STACKED) {
+                            markerIdEnding = value(prop, entity) > 0 ? 1 : -1; 
+                        } else {
+                            markerIdEnding = i;
+                        }
+                        this._selectEntity(this._onlyBarContainer.select("#bar_" + value(this._options.dataPropertyNames.id, entity) + "_" + i).node(), 
+                                           this._markerContainer.select("#marker_" + value(this._options.dataPropertyNames.id, entity) + "_" + markerIdEnding).node(),
+                                           {data: entity, idx: i}, select);
                     }
-                    this._selectEntity(this._barContainer.select("#bar_" + value(this._options.dataPropertyNames.id, entity) + "_" + i).node(), 
-                                       this._barContainer.select("#marker_" + value(this._options.dataPropertyNames.id, entity) + "_" + markerIdEnding).node(),
-                                       {data: entity, idx: i}, select);
                 });
             }
 
@@ -269,14 +287,20 @@
                 let maxRange = 0;
                 this.data.forEach(d => {
                     const valuePropArray = this._options.dataPropertyNames.valueProps.map(valueProp => value(valueProp, d));
-                    const newMaxValue = this._options.mode === BarMode.GROUPED ? Math.max(...valuePropArray) : valuePropArray.filter(value => value > 0).reduce((a, b) => a + b, 0);
-                    const newMinValue = this._options.mode === BarMode.GROUPED ? Math.min(...valuePropArray) : valuePropArray.filter(value => value < 0).reduce((a, b) => a + b, 0);
+                    const linePropArray = this._options.lines.map(line => value(line.property, d));
+                    const newMaxValue = Math.max(
+                        Math.max(...linePropArray), 
+                        this._options.mode === BarMode.GROUPED ? Math.max(...valuePropArray) : valuePropArray.filter(value => value > 0).reduce((a, b) => a + b, 0));
+                    const newMinValue = Math.min(
+                        Math.min(...linePropArray), 
+                        this._options.mode === BarMode.GROUPED ? Math.min(...valuePropArray) : valuePropArray.filter(value => value < 0).reduce((a, b) => a + b, 0));
                     if (maxRange < newMaxValue) {
                         maxRange = newMaxValue;
                     }
                     if (minRange > newMinValue) {
                         minRange = newMinValue;
                     }
+                    
                 })
                 const factor = (Math.abs(maxRange - minRange) / (this._actualHeight > 30 ? this._actualHeight - 30 : 1)) * 30;
                 return [minRange ? minRange - factor : minRange, maxRange + factor];
@@ -336,10 +360,34 @@
             _createBarContainer(clipPathId) {
                 return this._chartArea.append("g").attr("clip-path", "url(#" + clipPathId +")").append("g").attr("class", "bar-container");
             }
+            
+            _createOnlyBarContainer() {
+                return this._barContainer.append("g").attr("class", "only-bar-container");
+            }
+            
+            _createLineContainer () {
+                return this._barContainer.append("g").attr("class", "line-container");
+            }
+            
+            _createMarkerContainer() {
+                return this._barContainer.append("g").attr("class", "marker-container");
+            }
 
             _drawXAxes() {
-                return this._chartArea.append("g").attr("class", "axis x-axis")
+                const axis = this._chartArea.append("g").attr("class", "axis x-axis")
                     .attr("transform", "translate(0," + this._actualHeight + ")").call(this._xAxis);
+                if (this._options.xAxis.orientation === LabelOrientation.VERTICAL) {
+                    axis.selectAll(".tick text").call(this._rotateTickText.bind(this));
+                }
+                return axis;
+            }
+            
+            _rotateTickText(selection) {
+                selection
+                    .style("text-anchor", "end")
+                    .attr("dx", "-0.8em")
+                    .attr("dy", "-0.5em")
+                    .attr("transform", "rotate(-90)");
             }
 
             _drawYAxes() {
@@ -367,10 +415,18 @@
                     xAxisLabel
                         .attr("x", this._options.margin.left + this._actualWidth / 2)
                         .attr("y", this._actualHeight + this._options.margin.top + axisBox.height + 10);
+                    this._adjustBottomMargin(xAxisLabel, axisBox);
                 } else if (this._actualWidth !== 0 && this._actualHeight !== 0) {
                     setTimeout(() => this._setXAxisLabelPosition(xAxisLabel), 100);
                 }
             }
+            
+            _adjustBottomMargin(label, xAxisBox) {
+                 const labelBox = label.node().getBBox();
+                 if ((!label.text() || (labelBox.width !== 0 && labelBox.height !== 0)) && this._options.margin.bottom !== xAxisBox.height + labelBox.height + 20) {
+                     this.options = {margin: {bottom: xAxisBox.height + labelBox.height + 20}};
+                 }
+             }
 
             _setXAxisLabelData(xAxisLabel) {
                 xAxisLabel.text(this._options.xAxis.label).call(this._setXAxisLabelPosition.bind(this));
@@ -395,15 +451,15 @@
                     yAxisLabel
                         .attr("x", -this._options.margin.top - this._actualHeight / 2)
                         .attr("y", this._options.margin.left - axisBox.width - 10);
-                    this._fireYAxisLabelWidthChanged(yAxisLabel.node(), axisBox);
+                    this._fireYAxisLabelWidthChanged(yAxisLabel, axisBox);
                 } else if (this._actualWidth !== 0 && this._actualHeight !== 0) {
                     setTimeout(() => this._setYAxisLabelPosition(yAxisLabel), 100);
                 }
             }
 
              _fireYAxisLabelWidthChanged(label, yAxisBox) {
-                 const labelBox = label.getBBox();
-                 if (labelBox.width !== 0 && labelBox.height !== 0) {
+                 const labelBox = label.node().getBBox();
+                 if (!label.text() || (labelBox.width !== 0 && labelBox.height !== 0)) {
                      fireLabelPlacedEvent("y-axis-label-positioned", yAxisBox.width + labelBox.height + 20, this._chartArea.node());
                  }
              }
@@ -420,7 +476,7 @@
 
             _drawBars() {
                 const self = this;
-                const updateSelection = self._barContainer.selectAll(".bar-group").data(this._data);
+                const updateSelection = self._onlyBarContainer.selectAll(".bar-group").data(this._data);
                 const insertSelection = updateSelection.enter();
                 const removeSelection = updateSelection.exit();
 
@@ -459,7 +515,7 @@
                             const val = value(self._options.dataPropertyNames.valueProps[d.idx], d.data);
                             const markerIdEnding = self._options.mode === BarMode.GROUPED ?  d.idx : (val >= 0 ? 1 : -1);
                             const markerId = "#marker_" + value(self._options.dataPropertyNames.id, d.data) + "_" + markerIdEnding;
-                            self._selectEntity(this, self._barContainer.select(markerId).node(), d, !self._isEntitySelected(d), true);
+                            self._selectEntity(this, self._markerContainer.select(markerId).node(), d, !self._isEntitySelected(d), true);
                         } else {
                             self._options.click(d.data, d.idx);
                         }
@@ -500,7 +556,7 @@
             
             _drawLines() {
                 const self = this;
-                const updateSelection = self._barContainer.selectAll(".line").data(this._options.lines);
+                const updateSelection = self._lineContainer.selectAll(".line").data(this._options.lines);
                 const insertSelection = updateSelection.enter();
                 const removeSelection = updateSelection.exit();
 
@@ -559,7 +615,7 @@
                     }
                 });
                 
-                const updateSelection = self._barContainer.selectAll(".marker").data(newData);
+                const updateSelection = self._markerContainer.selectAll(".marker").data(newData);
                 const insertSelection = updateSelection.enter();
                 const removeSelection = updateSelection.exit();
 
@@ -780,5 +836,6 @@
         };
         
         d3.barChart.BarMode = BarMode;
+        d3.barChart.LabelOrientation = LabelOrientation;
     })();
 </script>

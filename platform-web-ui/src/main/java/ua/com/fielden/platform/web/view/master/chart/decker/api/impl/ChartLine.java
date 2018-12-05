@@ -63,4 +63,8 @@ public class ChartLine<T extends AbstractEntity<?>> implements IChartDeckerLineC
     public Class<?> getPropertyType() {
         return PropertyTypeDeterminator.determinePropertyType(chartDeck.getEntityType(), this.property);
     }
+
+    public Class<? extends AbstractEntity<?>> getEntityType() {
+        return chartDeck.getEntityType();
+    }
 }

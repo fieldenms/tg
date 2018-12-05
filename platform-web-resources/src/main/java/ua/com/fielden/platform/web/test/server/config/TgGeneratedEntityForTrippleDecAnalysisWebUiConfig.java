@@ -7,6 +7,7 @@ import static ua.com.fielden.platform.web.centre.api.context.impl.EntityCentreCo
 import static ua.com.fielden.platform.web.layout.api.impl.LayoutBuilder.cell;
 import static ua.com.fielden.platform.web.layout.api.impl.LayoutComposer.CELL_LAYOUT;
 import static ua.com.fielden.platform.web.layout.api.impl.LayoutComposer.MARGIN;
+import static ua.com.fielden.platform.web.view.master.chart.decker.api.LabelOrientation.VERTICAL;
 
 import java.util.Optional;
 
@@ -138,6 +139,7 @@ public class TgGeneratedEntityForTrippleDecAnalysisWebUiConfig {
                         .showLegend()
                         .withTitle("Count")
                         .withXAxisTitle("Groups")
+                        .withXAxisLabelOrientation(VERTICAL)
                         .withYAxisTitle("Number of Items")
                         .withSeries("count").colour(new Colour("82B1FF")).title("Number of items").action(customAction)
                         .withLine("count").colour(new Colour("82B1FF")).title("Number of items")

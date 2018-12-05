@@ -1,6 +1,9 @@
 package ua.com.fielden.platform.web.view.master.chart.decker.api.impl;
 
+import static java.util.Optional.ofNullable;
 import static org.apache.commons.lang.StringUtils.join;
+import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.getTimePortionToDisplay;
+import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.getTimeZone;
 import static ua.com.fielden.platform.web.centre.api.resultset.impl.FunctionalActionKind.PRIMARY_RESULT_SET;
 
 import java.util.ArrayList;
@@ -17,6 +20,7 @@ import ua.com.fielden.platform.dom.DomElement;
 import ua.com.fielden.platform.dom.InnerTextElement;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.types.Money;
+import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
 import ua.com.fielden.platform.utils.ResourceLoader;
 import ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig;
@@ -104,18 +108,19 @@ public class ChartDeckerMaster<T extends AbstractEntity<?>> implements IMaster<T
                     + "    mode: d3.barChart.BarMode." + deck.getMode().name() + ",\n"
                     + "    label: '" + deck.getTitle() + "',\n"
                     + "    xAxis: {\n"
-                    + "        label: '" + deck.getXAxisTitle() + "'\n"
+                    + "        label: '" + deck.getXAxisTitle() + "',\n"
+                    + "        orientation: d3.barChart.LabelOrientation." + deck.getxAxisLabelOrientation().name() + "\n"
                     + "    },\n"
                     + "    yAxis: {\n"
                     + "        label: '" + deck.getYAxisTitle() + "'\n"
                     + "    },\n"
                     + "    lines: " + generateListOfValues(deck.getLines(), l -> generateLine(l)) + ",\n"
                     + "    dataPropertyNames: {\n"
-                    + "        groupKeyProp: '" + deck.getGroupKeyProp() + "',\n"
+                    + "        groupKeyProp: " + generateValueAccessor(deck.getEntityType(), deck.getPropertyType(), deck.getGroupKeyProp()) + ",\n"
                     + "        groupDescProp: '" + deck.getGroupDescProperty() + "',\n"
-                    + "        valueProps: " + generateListOfValues(deck.getSeries(), s -> generateValueAccessor(s.getPropertyType(), s.getPropertyName())) + "\n"
+                    + "        valueProps: " + generateListOfValues(deck.getSeries(), s -> generateValueAccessor(s.getEntityType(), s.getPropertyType(), s.getPropertyName())) + "\n"
                     + "    },\n"
-                    + "    colours: " + generateListOfValues(deck.getSeries(), s -> "'" + s.getColour().toString() + "'") + ",\n"
+                    + "    colours: " + generateListOfValues(deck.getSeries(), s -> "'" + s.getColour().getColourValue() + "'") + ",\n"
                     + "    barColour: (d, i) => self.barOptions[" + deckIndex + "].colours[i],\n"
                     + "    propertyNames: " + generateListOfValues(deck.getSeries(), s -> "'" + s.getPropertyName() + "'") + ",\n"
                     + "    propertyTypes: " + generateListOfValues(deck.getSeries(), s -> "'" + s.getPropertyType().getSimpleName() + "'") + ",\n"
@@ -130,11 +135,11 @@ public class ChartDeckerMaster<T extends AbstractEntity<?>> implements IMaster<T
     }
 
     private String generateLineLegendItem(final ChartLine<T> line) {
-        return "{title: '"  + line.getTitle() + "', colour: '" + line.getColour().toString() + "'}";
+        return "{title: '"  + line.getTitle() + "', colour: '" + line.getColour().getColourValue() + "'}";
     }
 
     private String generateLine(final ChartLine<T> line) {
-        return "{property: " + generateValueAccessor(line.getPropertyType(), line.getProperty()) + ", title: '"  + line.getTitle() + "', colour: '" + line.getColour().toString() + "'}";
+        return "{property: " + generateValueAccessor(line.getEntityType(), line.getPropertyType(), line.getProperty()) + ", title: '"  + line.getTitle() + "', colour: '" + line.getColour().getColourValue() + "'}";
     }
 
     private <C> String generateListOfValues(final List<C> series, final Function<C, String> func) {
@@ -144,17 +149,24 @@ public class ChartDeckerMaster<T extends AbstractEntity<?>> implements IMaster<T
         });
         if (items.length() > 1) {
             items.setCharAt(items.length() - 1, ']');
+        } else {
+            items.append(']');
         }
         return items.toString();
     }
 
     private String generateLegendItem(final ChartSeries<T> series) {
-        return "{title: '"  + series.getTitle() + "', colour: '" + series.getColour().toString() + "'}";
+        return "{title: '"  + series.getTitle() + "', colour: '" + series.getColour().getColourValue() + "'}";
     }
 
-    private String generateValueAccessor(final Class<?> propertyType, final String aggregationProperty) {
+    private String generateValueAccessor(final Class<?> deckType, final Class<?> propertyType, final String aggregationProperty) {
         if (Money.class.isAssignableFrom(propertyType)) {
             return "this._moneyPropAccessor('" + aggregationProperty + "')";
+        } else if (EntityUtils.isDate(propertyType)) {
+            final Optional<String> timeZone = ofNullable(getTimeZone(deckType, aggregationProperty));
+            final Optional<String> timePortion = ofNullable(getTimePortionToDisplay(deckType, aggregationProperty));
+            final String typeSpec = "Date:" + timeZone.orElse(":") + timePortion.orElse("");
+            return "this._datePropAccessor('" + aggregationProperty + "', '" + typeSpec + "')";
         }
         return "'" + aggregationProperty + "'";
     }

@@ -4,6 +4,7 @@
 
 <link rel="import" href="/resources/master/tg-entity-master-template-behavior.html">
 <link rel="import" href="/resources/reflection/tg-polymer-utils.html">
+<link rel="import" href="/resources/reflection/tg-date-utils.html">
 
 <script>
     (function () {
@@ -77,6 +78,15 @@
                 const target = this.customEventTarget || this;
                 target.fire("tg-entity-selected", event.detail);
                 tearDownEvent(event);
+            },
+            
+            _datePropAccessor: function (propertyName, dateType) {
+                return function (entity, value) {
+                    if (!value) {
+                        const splitedType = dateType.split(':');
+                        return _millisDateRepresentation(entity.get(propertyName), splitedType[1] || null, splitedType[2] || null);
+                    }
+                }
             },
 
             _moneyPropAccessor: function (propertyName) {

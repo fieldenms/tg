@@ -83,4 +83,8 @@ public class ChartSeries<T extends AbstractEntity<?>> implements IChartDeckerWit
     public IMaster<T> done() {
         return chartDeck.deckerBuilder.done();
     }
+
+    public Class<? extends AbstractEntity<?>> getEntityType() {
+        return chartDeck.getEntityType();
+    }
 }

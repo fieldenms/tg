@@ -7,6 +7,7 @@ import java.util.Collections;
 import java.util.List;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig;
 import ua.com.fielden.platform.web.view.master.chart.decker.api.BarMode;
 import ua.com.fielden.platform.web.view.master.chart.decker.api.IChartDeckerLineColour;
@@ -16,8 +17,10 @@ import ua.com.fielden.platform.web.view.master.chart.decker.api.IChartDeckerWith
 import ua.com.fielden.platform.web.view.master.chart.decker.api.IChartDeckerWithSeries;
 import ua.com.fielden.platform.web.view.master.chart.decker.api.IChartDeckerWithSeriesColour;
 import ua.com.fielden.platform.web.view.master.chart.decker.api.IChartDeckerWithTitle;
+import ua.com.fielden.platform.web.view.master.chart.decker.api.IChartDeckerXAxisLabelOrientation;
 import ua.com.fielden.platform.web.view.master.chart.decker.api.IChartDeckerXAxisTitle;
 import ua.com.fielden.platform.web.view.master.chart.decker.api.IChartDeckerYAxisTitle;
+import ua.com.fielden.platform.web.view.master.chart.decker.api.LabelOrientation;
 
 public class ChartDeck<T extends AbstractEntity<?>> implements IChartDeckerMode<T>, IChartDeckerWithSeries<T>, IChartDeckerWithLine<T>{
 
@@ -28,6 +31,7 @@ public class ChartDeck<T extends AbstractEntity<?>> implements IChartDeckerMode<
     private final Class<? extends AbstractEntity<?>> entityType;
 
     private BarMode mode = BarMode.GROUPED;
+    private LabelOrientation xAxisLabelOrientation = LabelOrientation.HORIZONTAL;
     private boolean showLegend= false;
     private String title = "";
     private String xAxisTitle = "";
@@ -39,7 +43,7 @@ public class ChartDeck<T extends AbstractEntity<?>> implements IChartDeckerMode<
     }
 
     @Override
-    public IChartDeckerYAxisTitle<T> withXAxisTitle(final String title) {
+    public IChartDeckerXAxisLabelOrientation<T> withXAxisTitle(final String title) {
         this.xAxisTitle = title;
         return this;
     }
@@ -135,5 +139,19 @@ public class ChartDeck<T extends AbstractEntity<?>> implements IChartDeckerMode<
     public IChartDeckerWithSeries<T> withYAxisTitle(final String title) {
         this.yAxisTitle = title;
         return this;
+    }
+
+    @Override
+    public IChartDeckerYAxisTitle<T> withXAxisLabelOrientation(final LabelOrientation orientation) {
+        this.xAxisLabelOrientation = orientation;
+        return this;
+    }
+
+    public LabelOrientation getxAxisLabelOrientation() {
+        return xAxisLabelOrientation;
+    }
+
+    public Class<?> getPropertyType() {
+        return PropertyTypeDeterminator.determinePropertyType(entityType, getGroupKeyProp());
     }
 }
