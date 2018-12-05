@@ -13,6 +13,7 @@ import org.junit.Test;
 
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.reflection.exceptions.ReflectionException;
+import ua.com.fielden.platform.sample.domain.TgCentreDiffSerialisationNonPersistentChild;
 import ua.com.fielden.platform.sample.domain.TgCentreDiffSerialisationPersistentChild;
 import ua.com.fielden.platform.test.AbstractDomainDrivenTestCase;
 import ua.com.fielden.platform.test_config.AbstractDaoTestCase;
@@ -44,13 +45,25 @@ public class CentreUpdaterDbTest extends AbstractDaoTestCase {
     @Test
     public void critOnlySingle_entity_value() {
         final TgCentreDiffSerialisationPersistentChild propertyVal = save(new_(TgCentreDiffSerialisationPersistentChild.class, "Ent1"));
-        testDiffCreationAndApplication(CentreUpdaterTest::create, centre -> centre.getFirstTick().setValue(ROOT, "entityPropCritSingle", propertyVal), expectedDiffWithValue("entityPropCritSingle", VALUE.name(), Long.toString(propertyVal.getId())), companionFinder());
+        testDiffCreationAndApplication(CentreUpdaterTest::create, centre -> centre.getFirstTick().setValue(ROOT, "entityPropCritSingle", propertyVal), expectedDiffWithValue("entityPropCritSingle", VALUE.name(), "id:" + Long.toString(propertyVal.getId())), companionFinder());
     }
     
     @Test
     public void critOnlySingle_entity_value_notFound() {
         final TgCentreDiffSerialisationPersistentChild propertyVal = (TgCentreDiffSerialisationPersistentChild) createMockNotFoundEntity(TgCentreDiffSerialisationPersistentChild.class, "UNKNOWN");
         testDiffCreationAndApplication(CentreUpdaterTest::create, centre -> centre.getFirstTick().setValue(ROOT, "entityPropCritSingle", propertyVal), expectedDiffWithValue("entityPropCritSingle", VALUE.name(), NOT_FOUND_MOCK_PREFIX + "UNKNOWN"), companionFinder());
+    }
+    
+    @Test
+    public void critOnlySingle_non_persistent_entity_value() {
+        final TgCentreDiffSerialisationNonPersistentChild propertyVal = new_(TgCentreDiffSerialisationNonPersistentChild.class, "Team");
+        testDiffCreationAndApplication(CentreUpdaterTest::create, centre -> centre.getFirstTick().setValue(ROOT, "nonPersistentEntityPropCritSingle", propertyVal), expectedDiffWithValue("nonPersistentEntityPropCritSingle", VALUE.name(), propertyVal.getKey().toString()), companionFinder());
+    }
+    
+    @Test
+    public void critOnlySingle_non_persistent_entity_value_notFound() {
+        final TgCentreDiffSerialisationNonPersistentChild propertyVal = (TgCentreDiffSerialisationNonPersistentChild) createMockNotFoundEntity(TgCentreDiffSerialisationNonPersistentChild.class, "UNKNOWN");
+        testDiffCreationAndApplication(CentreUpdaterTest::create, centre -> centre.getFirstTick().setValue(ROOT, "nonPersistentEntityPropCritSingle", propertyVal), expectedDiffWithValue("nonPersistentEntityPropCritSingle", VALUE.name(), NOT_FOUND_MOCK_PREFIX + "UNKNOWN"), companionFinder());
     }
     
 }

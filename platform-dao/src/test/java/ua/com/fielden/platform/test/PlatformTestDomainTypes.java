@@ -25,6 +25,7 @@ import ua.com.fielden.platform.sample.domain.TgBogie;
 import ua.com.fielden.platform.sample.domain.TgBogieClass;
 import ua.com.fielden.platform.sample.domain.TgCategory;
 import ua.com.fielden.platform.sample.domain.TgCentreDiffSerialisation;
+import ua.com.fielden.platform.sample.domain.TgCentreDiffSerialisationNonPersistentChild;
 import ua.com.fielden.platform.sample.domain.TgCentreDiffSerialisationPersistentChild;
 import ua.com.fielden.platform.sample.domain.TgCollectionalSerialisationChild;
 import ua.com.fielden.platform.sample.domain.TgCollectionalSerialisationParent;
@@ -141,6 +142,7 @@ public class PlatformTestDomainTypes implements IApplicationDomainProvider {
         add(TgCollectionalSerialisationChild.class);
         add(TgCentreDiffSerialisation.class);
         add(TgCentreDiffSerialisationPersistentChild.class);
+        add(TgCentreDiffSerialisationNonPersistentChild.class);
     }
 
     @Override

@@ -4,6 +4,7 @@ import static java.lang.String.format;
 import static java.util.Arrays.stream;
 import static java.util.Optional.empty;
 import static java.util.Optional.of;
+import static java.util.regex.Pattern.quote;
 import static org.apache.commons.lang.StringUtils.isEmpty;
 import static ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.IAddToCriteriaTickManager.MetaValueType.ALL_ORDERING;
 import static ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.IAddToCriteriaTickManager.MetaValueType.AND_BEFORE;
@@ -39,6 +40,7 @@ import static ua.com.fielden.platform.utils.EntityUtils.equalsEx;
 import static ua.com.fielden.platform.utils.EntityUtils.fetchWithKeyAndDesc;
 import static ua.com.fielden.platform.utils.EntityUtils.isDate;
 import static ua.com.fielden.platform.utils.EntityUtils.isEntityType;
+import static ua.com.fielden.platform.utils.EntityUtils.isPersistedEntityType;
 import static ua.com.fielden.platform.utils.EntityUtils.isPropertyDescriptor;
 import static ua.com.fielden.platform.utils.EntityUtils.isString;
 import static ua.com.fielden.platform.web.centre.CentreUpdaterUtils.createDefaultCentre;
@@ -805,10 +807,11 @@ public class CentreUpdater {
             : mapOf(t2("amount", money.getAmount().toString()), t2("currency", money.getCurrency().toString()));
     private static final Function<Object, String> toString = Object::toString;
     private static final Function<AbstractEntity<?>, String> entityToString = entity -> entityWithMocksToString((ent) -> {
-        if (ent.getId() == null) {
-            throw new CentreUpdaterException(format("Crit-only single entity value [%s] of type [%s] is not persisted.", ent, ent.getClass().getSimpleName()));
+        if (isPersistedEntityType(entity.getType())) {
+            return "id:" + ent.getId().toString();
+        } else {
+            return entity.getKey().toString();
         }
-        return ent.getId().toString();
     }, entity);
     
     private static Object extractFrom(final Object value, final Class<AbstractEntity<?>> root, final Supplier<Class<?>> managedTypeSupplier, final String property, final ICompanionObjectFinder companionFinder) {
@@ -829,12 +832,15 @@ public class CentreUpdater {
             if (isPropertyDescriptor(propertyType)) {
                 return valOrNull(value, propertyDescriptorFromString, toString);
             } else {
-                return valOrNull(value, str -> entityWithMocksFromString(idString -> {
-                    final Long id = Long.valueOf(idString);
-                    logger.error(format("CentreUpdater: ID-based restoration of value: type [%s] property [%s] propertyType [%s] id [%s].", managedType.getSimpleName(), property, propertyType.getSimpleName(), id));
+                return valOrNull(value, str -> entityWithMocksFromString(idOrKey -> {
                     final IEntityDao<AbstractEntity<?>> propertyCompanion = companionFinder.find((Class<AbstractEntity<?>>) propertyType, true);
                     final IEntityDao<AbstractEntity<?>> companion = companionFinder.find(root, true);
-                    return propertyCompanion.findById(id, companion.getFetchProvider().fetchFor(property).fetchModel());
+                    if (idOrKey.startsWith("id:")) {
+                        final Long id = Long.valueOf(idOrKey.replaceFirst(quote("id:"), ""));
+                        return propertyCompanion.findById(id, companion.getFetchProvider().fetchFor(property).fetchModel());
+                    } else {
+                        return propertyCompanion.findByKeyAndFetch(companion.getFetchProvider().fetchFor(property).fetchModel(), idOrKey);
+                    }
                 }, str, propertyType), toString);
             }
         } else {

@@ -54,6 +54,7 @@ import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
 import ua.com.fielden.platform.entity.proxy.IIdOnlyProxiedEntityTypeCache;
 import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
 import ua.com.fielden.platform.sample.domain.TgCentreDiffSerialisation;
+import ua.com.fielden.platform.sample.domain.TgCentreDiffSerialisationNonPersistentChild;
 import ua.com.fielden.platform.sample.domain.TgCentreDiffSerialisationPersistentChild;
 import ua.com.fielden.platform.serialisation.api.ISerialisationTypeEncoder;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
@@ -108,6 +109,7 @@ public class CentreUpdaterTest {
         .addCrit("entityPropDefault").asMulti().autocompleter(TgCentreDiffSerialisationPersistentChild.class).setDefaultValue(multi().string().setValues("0*", "*1").value()).also()
         .addCrit("entityPropCrit").asMulti().autocompleter(TgCentreDiffSerialisationPersistentChild.class).also()
         .addCrit("entityPropCritSingle").asSingle().autocompleter(TgCentreDiffSerialisationPersistentChild.class).also()
+        .addCrit("nonPersistentEntityPropCritSingle").asSingle().autocompleter(TgCentreDiffSerialisationNonPersistentChild.class).also()
         .addCrit("propertyDescriptorProp").asMulti().autocompleter(PropertyDescriptor.class).also()
         .addCrit("propertyDescriptorPropCrit").asMulti().autocompleter(PropertyDescriptor.class).also()
         .addCrit("propertyDescriptorPropCritSingle").asSingle().autocompleter(PropertyDescriptor.class).also()
@@ -135,7 +137,7 @@ public class CentreUpdaterTest {
         .addCrit("moneyPropDefault").asRange().decimal().setDefaultValue(range().decimal().setFromValue(new BigDecimal(0).setScale(3)).setToValue(new BigDecimal(0).setScale(3)).value()).also()
         .addCrit("moneyPropCrit").asRange().decimal().also()
         .addCrit("moneyPropCritSingle").asSingle().decimal()
-        .setLayoutFor(DESKTOP, empty(), mkGridForCentre(39, 1))
+        .setLayoutFor(DESKTOP, empty(), mkGridForCentre(40, 1))
         .addProp("stringProp")
         .build();
     static {
