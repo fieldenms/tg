@@ -4,51 +4,51 @@
     (function () {
     	Polymer.TgBehaviors = Polymer.TgBehaviors || {};
     	Polymer.TgBehaviors.TgSseBehavior = {
-    			
+
     		properties: {
     		    /* A URI that should be connected to for listening to push events. */
     		    uri: {
     		        type: String,
     		        observer: '_registerEventSource'
     		    },
-    		    
+
     		    /** Let's be defensive and try to prevent repeated initialisations of EventSource by
     		     * assigning this property value true upon the very first initialisation and then validating against it. */
     		    _initialised: {
     		    	type: Boolean,
     		    	value: false
     		    },
-    		    
+
     		    /* A function that takes a single String arugment representing the push event data. */
     		    dataHandler: {
     		        type: Function
     		    },
-    		    
+
     		    /* An optional function to react to SSE errors. Accepts error event as an argument. */
     		    errorHandler: {
     		        type: Function
     		    },
-    		    
+
     		    /* A reference to an established EventSource object. */
     		    _source: {
     		        type: Object,
-    		        value: null    		        
+    		        value: null
     		    }
     		},
-            
+
     		/* Closes an existing event source connection. */
     		closeEventSource: function () {
     		    if (this._source) {
     		        this._initialised = false;
-    		        var src = this._source; 
+    		        const src = this._source;
     		        this._source = null;
     		        src.close();
     		    }
     		},
-    		
+
     		/** EventSource registration happens as the result of assiging the value to property uri. */
     		_registerEventSource: function (newUri, oldUri) {
-                var self = this;
+                const self = this;
                 if (self._initialised === true) {
                 	throw new Error('EventSource for URI [' + oldUri + '] should not be initialised to [' + newUri + '] without closing an existing event source connection.');
                 }
@@ -58,7 +58,7 @@
 	                console.log('Determine if EventSrouce needs polyfilling: ', window.EventSource)
 	                if(window.EventSource == undefined) {
 	                    console.warn('EventSrouce polyfilling is in progress.');
-	                    var esPoly = document.createElement('script');
+	                    const esPoly = document.createElement('script');
 	                    esPoly.src = '/resources/polyfills/eventsource.min.js';
 	                    esPoly.onload = self._registerEventSourceHandlers.bind(self);
 	                    document.head.appendChild(esPoly);
@@ -67,14 +67,14 @@
 	                }
                 }
             },
-            
+
             _registerEventSourceHandlers: function () {
                 const self = this;
                 console.log("Registering EventSrouce handlers for URI ", self.uri);
-                
+
                 self._source = new EventSource(self.uri);
                 const source = self._source;
-                
+
                 source.addEventListener('message', function (e) {
                     self.dataHandler(e.data);
                 }, false);
@@ -103,9 +103,9 @@
                     if (self.errorHandler) {
                         self.errorHandler(e);
                     }
-                    
+
                 }, false);
-            } 
+            }
         }; // end of behaviour declaration
     })();
 </script>
