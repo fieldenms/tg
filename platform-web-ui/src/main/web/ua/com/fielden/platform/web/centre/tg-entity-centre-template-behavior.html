@@ -21,9 +21,8 @@
             created: function () {
                 // bind SSE event handling method regardless of the fact whether this particulare
                 // centre is bound to some SSE url or not.
-                this.dataHandler = function (data) {
+                this.dataHandler = function (msg) {
                     const self = this;
-                    const msg = JSON.parse(data);
                     let needsFullRefresh = true;
                     if (msg.id) {
                         // let's search for an item to update...
@@ -32,12 +31,11 @@
                         const entry = this.$.egi.egiModel.find(entry => entry.entity.get('id') === msg.id);
                         if (entry) {
                             needsFullRefresh = false;
-                            // let's give the browser a breathing chance...
-                            this.async(() => self.refreshEntities([entry.entity]), 1);
+                            self.refreshEntities([entry.entity]);
                         }
                     }
                     if (needsFullRefresh === true) {
-                        this.async(() => self.refreshEntities([]), 1);
+                        self.refreshEntities([]);
                     }
                 }.bind(this);
             },
