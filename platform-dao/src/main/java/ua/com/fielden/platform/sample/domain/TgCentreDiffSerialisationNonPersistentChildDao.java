@@ -26,4 +26,9 @@ public class TgCentreDiffSerialisationNonPersistentChildDao extends CommonEntity
         return TgCentreDiffSerialisationNonPersistentChild.GroupingProperty.findByKey((String) keyValues[0]).map(v -> v.value).orElse(null);
     }
     
+    @Override
+    public boolean entityExists(final TgCentreDiffSerialisationNonPersistentChild entity) {
+        return TgCentreDiffSerialisationNonPersistentChild.GroupingProperty.findByKey(entity.getKey()).isPresent();
+    }
+    
 }

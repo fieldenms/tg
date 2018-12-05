@@ -6,8 +6,10 @@ import static java.util.Optional.of;
 import static java.util.stream.Stream.of;
 
 import java.util.Optional;
+
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.CompanionObject;
+import ua.com.fielden.platform.entity.annotation.EntityTitle;
 import ua.com.fielden.platform.entity.annotation.KeyTitle;
 import ua.com.fielden.platform.entity.annotation.KeyType;
 
@@ -20,6 +22,7 @@ import ua.com.fielden.platform.entity.annotation.KeyType;
 @KeyType(String.class)
 @KeyTitle("Key")
 @CompanionObject(ITgCentreDiffSerialisationNonPersistentChild.class)
+@EntityTitle("Grouping Property")
 public class TgCentreDiffSerialisationNonPersistentChild extends AbstractEntity<String> {
     
     public enum GroupingProperty {
@@ -58,7 +61,6 @@ public class TgCentreDiffSerialisationNonPersistentChild extends AbstractEntity<
             }
             return empty();
         }
-        
     }
     
 }

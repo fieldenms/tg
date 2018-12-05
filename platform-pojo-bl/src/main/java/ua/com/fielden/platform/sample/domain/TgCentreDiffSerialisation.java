@@ -618,4 +618,9 @@ public class TgCentreDiffSerialisation extends AbstractEntity<String> {
         return dateProp;
     }
     
+    @Override
+    protected boolean isEntityExistsValidationRequired(final String propertyName) {
+        return "nonPersistentEntityPropCritSingle".equals(propertyName);
+    }
+    
 }
