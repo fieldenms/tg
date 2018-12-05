@@ -6,7 +6,7 @@
         //Merges two objects up to two 
         const merge2LevelData = function (oldOptions, newOptions) {
             const newObj = mergeData(oldOptions, newOptions);
-            Object.keys(newObj).filter(key => typeof newObj[key] === 'object').forEach(key => {
+            Object.keys(newObj).filter(key => typeof newObj[key] === 'object' && !Array.isArray(newObj[key])).forEach(key => {
                 newObj[key] = mergeData(oldOptions[key], newOptions[key]);
             });
             return newObj;
@@ -96,6 +96,7 @@
                         groupDescProp: "groupDescProp",
                         valueProps: ["valueProp"],
                     },
+                    lines: [],
                     barColour: (d, idx) => "#0288D1",
                     barLabel: (d, idx) => value(this._options.dataPropertyNames.valueProps[idx], d),
                     selectedColour: (d, idx) => shadeColor(this._options.barColour(d, idx), 0.3),
@@ -151,6 +152,8 @@
 
                 //Now draw job bars
                 this._drawBars();
+                //Also draw lines if they are present
+                this._drawLines();
                 //Draw markers after bars
                 this._drawBarLabels();
                 //Creating zoom&pan behaviour.
@@ -206,6 +209,8 @@
                 this._yAxisLabel.call(this._setYAxisLabelData.bind(this));
                 // Update bars.
                 this._drawBars();
+                //update lines
+                this._drawLines();
                 //update markers after bars
                 this._drawBarLabels();
                 //Update zoom behavior 
@@ -429,7 +434,7 @@
 
             _insertNewBarGroup(selection) {
                 const self = this;
-                const newBars = selection.append("g").attr("class", "bar-group").call(self._updateBarGroup.bind(self));
+                selection.append("g").attr("class", "bar-group").call(self._updateBarGroup.bind(self));
             }
             
             _updateBarGroup(selection) {
@@ -491,6 +496,53 @@
                     })
                     .attr("width", d => this._xs1.bandwidth())
                     .attr("tooltip-text", d => this._options.tooltip(d.data, d.idx));
+            }
+            
+            _drawLines() {
+                const self = this;
+                const updateSelection = self._barContainer.selectAll(".line").data(this._options.lines);
+                const insertSelection = updateSelection.enter();
+                const removeSelection = updateSelection.exit();
+
+                //update line paths
+                updateSelection.call(self._updateLines.bind(self));
+                //insert new line paths
+                insertSelection.call(self._insertNewLine.bind(self));
+                //removed unnedded line paths
+                removeSelection.remove();
+            }
+            
+            _insertNewLine(selection) {
+                selection.append("path").attr("class", "line").call(this._updateLines.bind(this));
+            }
+            
+            _updateLines(selection) {
+                const line = d3.line().x(d => d.x).y(d => d.y);
+                selection.style("stroke", d => d.colour).attr("d", d => line(this._generateLineData(d)));
+            }
+            
+            _generateLineData(line) {
+                const lineData = this._data.map(e => {
+                    const x = this._xs(value(this._options.dataPropertyNames.groupKeyProp, e)) + this._xs.bandwidth() / 2;
+                    const y = this._ys(value(line.property, e));
+                    return {x: x, y: y};
+                });
+                if (lineData.length < 2) {
+                    const yVal = lineData[0] ? lineData[0].y : 0;
+                    lineData.unshift({x: 0, y: yVal});
+                    lineData.push({x: this._actualWidth, y: yVal});
+                } else {
+                    const deltaX1 = lineData[1].x - lineData[0].x;
+                    const k1 = deltaX1 ? (lineData[1].y - lineData[0].y) / deltaX1 : 0;
+                    const lastIdx = lineData.length - 1;
+                    const deltaX2 = lineData[lastIdx].x - lineData[lastIdx - 1].x
+                    const k2 = deltaX2 ? (lineData[lastIdx].y - lineData[lastIdx - 1].y) / deltaX2 : 0;
+                    const b1 = lineData[0].y - k1 * lineData[0].x;
+                    const b2 = lineData[lastIdx].y - k2 * lineData[lastIdx].x
+                    lineData.unshift({x: 0, y: b1});
+                    lineData.push({x: this._actualWidth, y: k2 * this._actualWidth + b2});
+                }
+                return lineData;
             }
             
             _drawBarLabels() {

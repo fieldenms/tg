@@ -24,6 +24,7 @@ public class ChartDeck<T extends AbstractEntity<?>> implements IChartDeckerMode<
     public final ChartDeckerMasterBuilder<T> deckerBuilder;
 
     private final List<ChartSeries<T>> series = new ArrayList<>();
+    private final List<ChartLine<T>> lines = new ArrayList<>();
     private final Class<? extends AbstractEntity<?>> entityType;
 
     private BarMode mode = BarMode.GROUPED;
@@ -121,8 +122,13 @@ public class ChartDeck<T extends AbstractEntity<?>> implements IChartDeckerMode<
 
     @Override
     public IChartDeckerLineColour<T> withLine(final String propertyName) {
-        // TODO Auto-generated method stub
-        return null;
+        final ChartLine<T> line = new ChartLine<>(this, propertyName);
+        this.lines.add(line);
+        return line;
+    }
+
+    public List<ChartLine<T>> getLines() {
+        return Collections.unmodifiableList(lines);
     }
 
     @Override

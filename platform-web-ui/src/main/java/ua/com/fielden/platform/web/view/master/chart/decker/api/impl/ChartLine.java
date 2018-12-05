@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.web.view.master.chart.decker.api.impl;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.types.Colour;
 import ua.com.fielden.platform.web.view.master.api.IMaster;
 import ua.com.fielden.platform.web.view.master.chart.decker.api.IChartDeckerAddDeck;
@@ -38,7 +39,7 @@ public class ChartLine<T extends AbstractEntity<?>> implements IChartDeckerLineC
     @Override
     public IChartDeckerLineAlso<T> title(final String title) {
         this.title = title;
-        return null;
+        return this;
     }
 
     @Override
@@ -57,5 +58,9 @@ public class ChartLine<T extends AbstractEntity<?>> implements IChartDeckerLineC
 
     public String getProperty() {
         return property;
+    }
+
+    public Class<?> getPropertyType() {
+        return PropertyTypeDeterminator.determinePropertyType(chartDeck.getEntityType(), this.property);
     }
 }

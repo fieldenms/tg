@@ -82,6 +82,15 @@
                 font-size: smaller;
                 margin-right: 16px;
             }
+            .legend-item-line {
+                border: none;
+                margin: 0 2px;
+            }
+            .line {
+                stroke-width: 1;
+				fill: none;
+                vector-effect: non-scaling-stroke;
+            }
         </style>
 
         <!-- local DOM for your element -->
@@ -90,9 +99,17 @@
         </div>
         <!-- data bindings in local DOM -->
         <div id="legend" class="legend-panel layout horizontal center-justified wrap" style$="[[_calcLegendStyle(_chartStyles)]]" hidden$="[[!showLegend]]">
-            <template id="legendItemTemplate" is="dom-repeat" items="[[legendItems]]" on-dom-change="_legendItemsChanged">
+            <template is="dom-repeat" items="[[legendItems]]" on-dom-change="_legendItemsChanged">
                 <div class="legend-item layout horizontal center">
                     <div class="legend-rect" style$="[[_calcLegendItemStyle(item)]]"></div>
+                    <div>[[item.title]]</div>
+                </div>
+            </template>
+            <template is="dom-repeat" items="[[lineLegendItems]]" on-dom-change="_legendItemsChanged">
+                <div class="legend-item layout horizontal center">
+                    <div class="legend-rect layout horizontal center-center">
+                        <hr class="legend-item-line flex" style="[[_calculateLineLegendStyle(item)]]">
+                    </div>
                     <div>[[item.title]]</div>
                 </div>
             </template>
@@ -127,6 +144,13 @@
                     
                     //The legend items whish represents title and colour
                     legendItems: {
+                        type: Array,
+                        value: function () {
+                            return [];
+                        }
+                    },
+                    
+                    lineLegendItems: {
                         type: Array,
                         value: function () {
                             return [];
@@ -206,6 +230,10 @@
 
                 _calcLegendItemStyle: function (item) {
                     return "background-color: #" + item.colour + ";";
+                },
+                
+                _calculateLineLegendStyle: function (item) {
+                    return "border-top: 2px solid " + "#" + item.colour + ";";
                 },
 
                 _legendItemsChanged: function () {

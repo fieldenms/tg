@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.function.Function;
 
 import org.apache.commons.lang.StringUtils;
 
@@ -84,6 +85,7 @@ public class ChartDeckerMaster<T extends AbstractEntity<?>> implements IMaster<T
                     .clazz("flex", "chart-deck")
                     .attr("show-legend", charts.get(chartIndex).isShowLegend())
                     .attr("legend-items", "[[legendItems." + chartIndex + "]]")
+                    .attr("line-legend-items", "[[lineLegendItems." + chartIndex + "]]")
                     .attr("data", "[[retrievedEntities]]")
                     .attr("options", "[[barOptions." + chartIndex + "]]"));
         }
@@ -93,9 +95,11 @@ public class ChartDeckerMaster<T extends AbstractEntity<?>> implements IMaster<T
     private String readyCallback(final IChartDeckerConfig<T> deckerConfig) {
         final List<String> chartOptions = new ArrayList<>();
         final List<String> legendItems = new ArrayList<>();
+        final List<String> lineLegendItems = new ArrayList<>();
         for (int deckIndex = 0; deckIndex < deckerConfig.getDecs().size(); deckIndex++) {
             final ChartDeck<T> deck = deckerConfig.getDecs().get(deckIndex);
-            legendItems.add(generateLegendItems(deck.getSeries()));
+            legendItems.add(generateListOfValues(deck.getSeries(), s -> generateLegendItem(s)));
+            lineLegendItems.add(generateListOfValues(deck.getLines(), l -> generateLineLegendItem(l)));
             chartOptions.add("{\n"
                     + "    mode: d3.barChart.BarMode." + deck.getMode().name() + ",\n"
                     + "    label: '" + deck.getTitle() + "',\n"
@@ -105,67 +109,47 @@ public class ChartDeckerMaster<T extends AbstractEntity<?>> implements IMaster<T
                     + "    yAxis: {\n"
                     + "        label: '" + deck.getYAxisTitle() + "'\n"
                     + "    },\n"
+                    + "    lines: " + generateListOfValues(deck.getLines(), l -> generateLine(l)) + ",\n"
                     + "    dataPropertyNames: {\n"
                     + "        groupKeyProp: '" + deck.getGroupKeyProp() + "',\n"
                     + "        groupDescProp: '" + deck.getGroupDescProperty() + "',\n"
-                    + "        valueProps: " + generateValuesAccessor(deck.getSeries()) + "\n"
+                    + "        valueProps: " + generateListOfValues(deck.getSeries(), s -> generateValueAccessor(s.getPropertyType(), s.getPropertyName())) + "\n"
                     + "    },\n"
-                    + "    colours: " + generateColours(deck.getSeries()) + ",\n"
+                    + "    colours: " + generateListOfValues(deck.getSeries(), s -> "'" + s.getColour().toString() + "'") + ",\n"
                     + "    barColour: (d, i) => self.barOptions[" + deckIndex + "].colours[i],\n"
-                    + "    propertyNames: " + generatePropertyNames(deck.getSeries()) + ",\n"
-                    + "    propertyTypes: " + generatePropertyTypes(deck.getSeries()) + ",\n"
+                    + "    propertyNames: " + generateListOfValues(deck.getSeries(), s -> "'" + s.getPropertyName() + "'") + ",\n"
+                    + "    propertyTypes: " + generateListOfValues(deck.getSeries(), s -> "'" + s.getPropertyType().getSimpleName() + "'") + ",\n"
                     + "    barLabel: (d, i) => this._labelFormatter(d, i, self.barOptions[" + deckIndex + "].propertyNames, self.barOptions[" + deckIndex + "].propertyTypes, self.barOptions[" + deckIndex + "].mode),\n"
                     + "    tooltip: (d, i) => this._tooltip(d, '" + deck.getGroupDescProperty() + "', self.barOptions[" + deckIndex + "].propertyNames[i], self.barOptions[" + deckIndex + "].propertyTypes[i], " + deckIndex + ", i),\n"
                     + "    click: this._click(" + deckIndex + ")\n"
                     + "}");
         }
         return "self.barOptions = [" + join(chartOptions, ",\n") + "];\n"
-                + "self.legendItems =[" + join(legendItems, ",\n") + "];\n";
+                + "self.legendItems =[" + join(legendItems, ",\n") + "];\n"
+                + "self.lineLegendItems =[" + join(lineLegendItems, ",\n") + "];\n";
     }
 
-    private String generateLegendItems(final List<ChartSeries<T>> series) {
-        final StringBuilder legendItems = new StringBuilder("[");
-        series.stream().forEach(nextSeries -> {
-            legendItems.append("{title: '"  + nextSeries.getTitle() + "',colour: '" + nextSeries.getColour().toString() + "'},");
-        });
-        legendItems.setCharAt(legendItems.length() - 1, ']');
-        return legendItems.toString();
+    private String generateLineLegendItem(final ChartLine<T> line) {
+        return "{title: '"  + line.getTitle() + "', colour: '" + line.getColour().toString() + "'}";
     }
 
-    private String generatePropertyTypes(final List<ChartSeries<T>> series) {
-        final StringBuilder propValues = new StringBuilder("[");
-        series.stream().forEach(nextSeries -> {
-            propValues.append("'"  + nextSeries.getPropertyType().getSimpleName() + "',");
-        });
-        propValues.setCharAt(propValues.length() - 1, ']');
-        return propValues.toString();
+    private String generateLine(final ChartLine<T> line) {
+        return "{property: " + generateValueAccessor(line.getPropertyType(), line.getProperty()) + ", title: '"  + line.getTitle() + "', colour: '" + line.getColour().toString() + "'}";
     }
 
-    private String generatePropertyNames(final List<ChartSeries<T>> series) {
-        final StringBuilder propValues = new StringBuilder("[");
+    private <C> String generateListOfValues(final List<C> series, final Function<C, String> func) {
+        final StringBuilder items = new StringBuilder("[");
         series.stream().forEach(nextSeries -> {
-            propValues.append("'"  + nextSeries.getPropertyName() + "',");
+            items.append(func.apply(nextSeries) + ",");
         });
-        propValues.setCharAt(propValues.length() - 1, ']');
-        return propValues.toString();
+        if (items.length() > 1) {
+            items.setCharAt(items.length() - 1, ']');
+        }
+        return items.toString();
     }
 
-    private String generateColours(final List<ChartSeries<T>> series) {
-        final StringBuilder propValues = new StringBuilder("[");
-        series.stream().forEach(nextSeries -> {
-            propValues.append("'"  + nextSeries.getColour().toString() + "',");
-        });
-        propValues.setCharAt(propValues.length() - 1, ']');
-        return propValues.toString();
-    }
-
-    private String generateValuesAccessor(final List<ChartSeries<T>> series) {
-        final StringBuilder propValues = new StringBuilder("[");
-        series.stream().forEach(nextSeries -> {
-            propValues.append(generateValueAccessor(nextSeries.getPropertyType(), nextSeries.getPropertyName()) + ",");
-        });
-        propValues.setCharAt(propValues.length() - 1, ']');
-        return propValues.toString();
+    private String generateLegendItem(final ChartSeries<T> series) {
+        return "{title: '"  + series.getTitle() + "', colour: '" + series.getColour().toString() + "'}";
     }
 
     private String generateValueAccessor(final Class<?> propertyType, final String aggregationProperty) {

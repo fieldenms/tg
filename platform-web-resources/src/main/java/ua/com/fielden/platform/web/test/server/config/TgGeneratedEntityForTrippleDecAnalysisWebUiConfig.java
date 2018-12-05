@@ -140,6 +140,7 @@ public class TgGeneratedEntityForTrippleDecAnalysisWebUiConfig {
                         .withXAxisTitle("Groups")
                         .withYAxisTitle("Number of Items")
                         .withSeries("count").colour(new Colour("82B1FF")).title("Number of items").action(customAction)
+                        .withLine("count").colour(new Colour("82B1FF")).title("Number of items")
                         .also()
                     .addDeckFor(TgGeneratedEntityForTrippleDecAnalysis.class)
                         .showLegend()
@@ -147,6 +148,7 @@ public class TgGeneratedEntityForTrippleDecAnalysisWebUiConfig {
                         .withXAxisTitle("Groups")
                         .withYAxisTitle("Cost $")
                         .withSeries("cost").colour(new Colour("A7FFEB")).title("Cost").action(customAction)
+                        .withLine("cost").colour(new Colour("A7FFEB")).title("Cost")
                         .also()
                     .addDeckFor(TgGeneratedEntityForTrippleDecAnalysis.class)
                         .showLegend()
@@ -154,6 +156,7 @@ public class TgGeneratedEntityForTrippleDecAnalysisWebUiConfig {
                         .withXAxisTitle("Groups")
                         .withYAxisTitle("Hours")
                         .withSeries("hours").colour(new Colour("B388FF")).title("Hours").action(customAction)
+                        .withLine("hours").colour(new Colour("B388FF")).title("Hours")
                 .done();
         return new EntityMaster<>(TgGeneratedEntityForTrippleDecAnalysisInsertionPoint.class, TgGeneratedEntityForTrippleDecAnalysisInsertionPointProducer.class, config, injector);
     }
