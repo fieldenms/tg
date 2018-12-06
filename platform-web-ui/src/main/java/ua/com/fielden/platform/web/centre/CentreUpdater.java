@@ -43,6 +43,7 @@ import static ua.com.fielden.platform.utils.EntityUtils.isEntityType;
 import static ua.com.fielden.platform.utils.EntityUtils.isPersistedEntityType;
 import static ua.com.fielden.platform.utils.EntityUtils.isPropertyDescriptor;
 import static ua.com.fielden.platform.utils.EntityUtils.isString;
+import static ua.com.fielden.platform.utils.EntityUtils.isSyntheticBasedOnPersistentEntityType;
 import static ua.com.fielden.platform.web.centre.CentreUpdaterUtils.createDefaultCentre;
 import static ua.com.fielden.platform.web.centre.CentreUpdaterUtils.findConfig;
 import static ua.com.fielden.platform.web.centre.CentreUpdaterUtils.retrieveDiff;
@@ -809,7 +810,7 @@ public class CentreUpdater {
             : mapOf(t2("amount", money.getAmount().toString()), t2("currency", money.getCurrency().toString()));
     private static final Function<Object, String> toString = Object::toString;
     private static final Function<AbstractEntity<?>, String> entityToString = entity -> entityWithMocksToString((ent) -> {
-        if (isPersistedEntityType(ent.getType())) {
+        if (isPersistedEntityType(ent.getType()) || isSyntheticBasedOnPersistentEntityType(ent.getType())) {
             // FIXME remove this code when centre configuration migration will be completed [BEGIN]
             if (ent.getId() == null) {
                 return NOT_FOUND_MOCK_PREFIX + "UNKNOWN";
