@@ -619,7 +619,7 @@ public class TgCentreDiffSerialisation extends AbstractEntity<String> {
     }
     
     @Override
-    protected boolean isEntityExistsValidationRequired(final String propertyName) {
+    protected boolean isEntityExistsValidationEnforced(final String propertyName) {
         return "nonPersistentEntityPropCritSingle".equals(propertyName);
     }
     

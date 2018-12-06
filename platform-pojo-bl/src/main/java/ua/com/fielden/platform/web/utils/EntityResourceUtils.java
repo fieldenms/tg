@@ -61,6 +61,7 @@ import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.reflection.Reflector;
+import ua.com.fielden.platform.serialisation.jackson.deserialisers.EntityJsonDeserialiser;
 import ua.com.fielden.platform.types.Colour;
 import ua.com.fielden.platform.types.Hyperlink;
 import ua.com.fielden.platform.types.Money;
@@ -80,10 +81,22 @@ public class EntityResourceUtils {
     public static final String CENTRE_CONFIG_CONFLICT_WARNING = "Configuration with this title already exists.";
     public static final String CENTRE_CONFIG_CONFLICT_ERROR = "Base " + uncapitalize(CENTRE_CONFIG_CONFLICT_WARNING);
     private static final String RESOLVE_CONFLICT_INSTRUCTION = "Please either edit the value back to [%s] to resolve the conflict or cancel all of your changes.";
+    /**
+     * Used to indicate the start of 'not found mock' serialisation sequence.
+     */
     public static final String NOT_FOUND_MOCK_PREFIX = "__________NOT_FOUND__________";
     private static final Logger logger = Logger.getLogger(EntityResourceUtils.class);
-    public static final Function<PropertyDescriptor<?>, String> propertyDescriptorToString = entity -> entityWithMocksToString(pd -> pd.toString(), entity);
-    public static final Function<String, PropertyDescriptor<?>> propertyDescriptorFromString = str -> entityWithMocksFromString(PropertyDescriptor::fromString, str, PropertyDescriptor.class);
+    /**
+     * Standard {@link PropertyDescriptor}'s convertor to string. Includes handling for 'not found mock' instances.
+     */
+    public static final Function<PropertyDescriptor<?>, String> PROPERTY_DESCRIPTOR_TO_STRING = entity -> entityWithMocksToString(pd -> pd.toString(), entity);
+    /**
+     * Standard {@link PropertyDescriptor}'s convertor from string. Includes handling for 'not found mock' instances.
+     * <p>
+     * Note that this is applicable only to restore uninstrumented {@link PropertyDescriptor}s. This is common case of {@link PropertyDescriptor} usage -- as a property value of some other entity.
+     * However, we also have similar logic in {@link EntityJsonDeserialiser}, which also deserialises instrumented instances.
+     */
+    public static final Function<String, PropertyDescriptor<?>> PROPERTY_DESCRIPTOR_FROM_STRING = str -> entityWithMocksFromString(PropertyDescriptor::fromString, str, PropertyDescriptor.class);
     
     private EntityResourceUtils() {}
     
@@ -329,6 +342,13 @@ public class EntityResourceUtils {
                 && !isEmpty(((AbstractEntity) obj).getDesc());
     }
     
+    /**
+     * Converts <code>entity</code> to serialisation string.
+     * 
+     * @param specificConverter -- used to convert entity if it is not 'not found mock', otherwise the standard scheme for 'not found mocks' is used
+     * @param entity
+     * @return
+     */
     public static <T extends AbstractEntity<?>> String entityWithMocksToString(final Function<T, String> specificConverter, final T entity) {
         if (isMockNotFoundEntity(entity)) {
             return NOT_FOUND_MOCK_PREFIX + entity.get(DESC);
@@ -337,6 +357,14 @@ public class EntityResourceUtils {
         }
     }
     
+    /**
+     * Converts serialisation <code>str</code> to entity.
+     * 
+     * @param specificConverter -- used to convert string if it does not represent 'not found mock', otherwise the standard scheme for 'not found mocks' is used
+     * @param str
+     * @param type
+     * @return
+     */
     public static <T extends AbstractEntity<?>> T entityWithMocksFromString(final Function<String, T> specificConverter, final String str, final Class<?> type) {
         if (str.startsWith(NOT_FOUND_MOCK_PREFIX)) {
             return (T) createMockNotFoundEntity(type, str.replaceFirst(quote(NOT_FOUND_MOCK_PREFIX), ""));

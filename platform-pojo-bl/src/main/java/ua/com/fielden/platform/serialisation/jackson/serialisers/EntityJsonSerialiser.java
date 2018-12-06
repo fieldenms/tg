@@ -17,7 +17,7 @@ import static ua.com.fielden.platform.serialisation.jackson.EntitySerialiser.ID_
 import static ua.com.fielden.platform.utils.EntityUtils.isDecimal;
 import static ua.com.fielden.platform.utils.EntityUtils.isInteger;
 import static ua.com.fielden.platform.utils.EntityUtils.isString;
-import static ua.com.fielden.platform.web.utils.EntityResourceUtils.propertyDescriptorToString;
+import static ua.com.fielden.platform.web.utils.EntityResourceUtils.PROPERTY_DESCRIPTOR_TO_STRING;
 
 import java.io.IOException;
 import java.util.LinkedHashMap;
@@ -126,7 +126,7 @@ public class EntityJsonSerialiser<T extends AbstractEntity<?>> extends StdSerial
                 final PropertyDescriptor<?> pd = (PropertyDescriptor<?>) entity;
                 // write property descriptor toString() value to special '@pdString' field
                 generator.writeFieldName("@pdString");
-                generator.writeObject(propertyDescriptorToString.apply(pd));
+                generator.writeObject(PROPERTY_DESCRIPTOR_TO_STRING.apply(pd));
             }
             
             final boolean uninstrumented = !PropertyTypeDeterminator.isInstrumented(entity.getClass());

@@ -748,12 +748,17 @@ public abstract class AbstractEntity<K extends Comparable> implements Comparable
     }
 
     /**
-     * A predicate method to identify whether {@link EntityExistsValidator} is required, even for non-persistent property values.
+     * Standard logic whether to create or to skip {@link EntityExistsValidator} creation is defined in method {@link #isEntityExistsValidationApplicable(Field, Class)}.
+     * Basically it is defined by persistence of property type. If the type represents persistent entity type then it should have {@link EntityExistsValidator}.
+     * One exception from this rule is {@link PropertyDescriptor}-typed properties that can also be checked for existence.
+     * <p>
+     * But there are some examples of non-persistent (or synthetic-persistent) properties that would benefit by 'entity existence' logic being used.
+     * This method can be used to enforce creation of {@link EntityExistsValidator} for such properties even if they are not applicable by standard definition.
      *
      * @param propertyName
      * @return
      */
-    protected boolean isEntityExistsValidationRequired(final String propertyName) {
+    protected boolean isEntityExistsValidationEnforced(final String propertyName) {
         return false;
     }
 
@@ -817,7 +822,7 @@ public abstract class AbstractEntity<K extends Comparable> implements Comparable
             }
 
             // now let's see if we need to add EntityExists validation
-            if (!validators.containsKey(ValidationAnnotation.ENTITY_EXISTS) && (isEntityExistsValidationApplicable(field, properyType) || isEntityExistsValidationRequired(field.getName()))) {
+            if (!validators.containsKey(ValidationAnnotation.ENTITY_EXISTS) && (isEntityExistsValidationApplicable(field, properyType) || isEntityExistsValidationEnforced(field.getName()))) {
                 final EntityExists eeAnnotation = new EntityExistsAnnotation((Class<? extends AbstractEntity<?>>) properyType).newInstance();
                 final IBeforeChangeEventHandler<?>[] annotationValidators = metaPropertyFactory.create(eeAnnotation, this, field.getName(), properyType);
 

@@ -57,8 +57,8 @@ import static ua.com.fielden.platform.web.utils.EntityResourceUtils.NOT_FOUND_MO
 import static ua.com.fielden.platform.web.utils.EntityResourceUtils.entityWithMocksFromString;
 import static ua.com.fielden.platform.web.utils.EntityResourceUtils.entityWithMocksToString;
 import static ua.com.fielden.platform.web.utils.EntityResourceUtils.getEntityType;
-import static ua.com.fielden.platform.web.utils.EntityResourceUtils.propertyDescriptorFromString;
-import static ua.com.fielden.platform.web.utils.EntityResourceUtils.propertyDescriptorToString;
+import static ua.com.fielden.platform.web.utils.EntityResourceUtils.PROPERTY_DESCRIPTOR_FROM_STRING;
+import static ua.com.fielden.platform.web.utils.EntityResourceUtils.PROPERTY_DESCRIPTOR_TO_STRING;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
@@ -838,7 +838,7 @@ public class CentreUpdater {
             return valOrNull(value, longToDate, toString.andThen(stringToLong));
         } else if (isEntityType(propertyType) && isCritOnlySingle(managedType, property)) {
             if (isPropertyDescriptor(propertyType)) {
-                return valOrNull(value, propertyDescriptorFromString, toString);
+                return valOrNull(value, PROPERTY_DESCRIPTOR_FROM_STRING, toString);
             } else {
                 return valOrNull(value, str -> entityWithMocksFromString(idOrKey -> {
                     final IEntityDao<AbstractEntity<?>> propertyCompanion = companionFinder.find((Class<AbstractEntity<?>>) propertyType, true);
@@ -872,7 +872,7 @@ public class CentreUpdater {
             return valOrNull(value, dateToLong.andThen(toString));
         } else if (isEntityType(propertyType) && isCritOnlySingle(managedType, property)) {
             if (isPropertyDescriptor(propertyType)) {
-                return valOrNull(value, propertyDescriptorToString);
+                return valOrNull(value, PROPERTY_DESCRIPTOR_TO_STRING);
             } else {
                 return valOrNull(value, entityToString);
             }
