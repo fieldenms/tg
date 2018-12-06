@@ -52,6 +52,7 @@ import static ua.com.fielden.platform.web.centre.WebApiUtils.LINK_CONFIG_TITLE;
 import static ua.com.fielden.platform.web.centre.WebApiUtils.checkedPropertiesWithoutSummaries;
 import static ua.com.fielden.platform.web.interfaces.DeviceProfile.DESKTOP;
 import static ua.com.fielden.platform.web.interfaces.DeviceProfile.MOBILE;
+import static ua.com.fielden.platform.web.utils.EntityResourceUtils.NOT_FOUND_MOCK_PREFIX;
 import static ua.com.fielden.platform.web.utils.EntityResourceUtils.entityWithMocksFromString;
 import static ua.com.fielden.platform.web.utils.EntityResourceUtils.entityWithMocksToString;
 import static ua.com.fielden.platform.web.utils.EntityResourceUtils.getEntityType;
@@ -809,6 +810,11 @@ public class CentreUpdater {
     private static final Function<Object, String> toString = Object::toString;
     private static final Function<AbstractEntity<?>, String> entityToString = entity -> entityWithMocksToString((ent) -> {
         if (isPersistedEntityType(ent.getType())) {
+            // FIXME remove this code when centre configuration migration will be completed [BEGIN]
+            if (ent.getId() == null) {
+                return NOT_FOUND_MOCK_PREFIX + "UNKNOWN";
+            }
+            // FIXME remove this code when centre configuration migration will be completed [END]
             return ID_PREFIX + ent.getId().toString();
         } else {
             return ent.getKey().toString();
