@@ -125,7 +125,11 @@ public class ChartDeckerMaster<T extends AbstractEntity<?>> implements IMaster<T
                     + "    propertyNames: " + generateListOfValues(deck.getSeries(), s -> "'" + s.getPropertyName() + "'") + ",\n"
                     + "    propertyTypes: " + generateListOfValues(deck.getSeries(), s -> "'" + s.getPropertyType().getSimpleName() + "'") + ",\n"
                     + "    barLabel: (d, i) => this._labelFormatter(d, i, self.barOptions[" + deckIndex + "].propertyNames, self.barOptions[" + deckIndex + "].propertyTypes, self.barOptions[" + deckIndex + "].mode),\n"
-                    + "    tooltip: (d, i) => this._tooltip(d, '" + deck.getGroupDescProperty() + "', self.barOptions[" + deckIndex + "].propertyNames[i], self.barOptions[" + deckIndex + "].propertyTypes[i], " + deckIndex + ", i),\n"
+                    + "    tooltip: (d, i) => this._tooltip(d, "
+                                + generateValueAccessor(deck.getEntityType(), deck.getPropertyType(), deck.getGroupKeyProp()) + ", "
+                                + "self.barOptions[" + deckIndex + "].propertyNames[i], "
+                                + "self.barOptions[" + deckIndex + "].propertyTypes[i], "
+                                + "self.legendItems[" + deckIndex + "][i].title, " + deckIndex + ", i),\n"
                     + "    click: this._click(" + deckIndex + ")\n"
                     + "}");
         }
