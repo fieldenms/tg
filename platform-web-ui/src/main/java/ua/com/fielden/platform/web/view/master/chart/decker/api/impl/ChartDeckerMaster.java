@@ -65,15 +65,17 @@ public class ChartDeckerMaster<T extends AbstractEntity<?>> implements IMaster<T
     private Pair<String, DomElement> generateActions(final IChartDeckerConfig<T> deckerConfig, final LinkedHashSet<String> importPaths) {
         final DomElement container = new DomContainer();
         final List<String> primaryActionObjects = new ArrayList<>();
-        for (int deckIndex = 0; deckIndex < deckerConfig.getDecs().size(); deckIndex++) {
-            final List<EntityActionConfig> configs = deckerConfig.getDecs().get(deckIndex).getActions();
-            this.actions.addAll(configs);
-            for (int actionIndex = 0; actionIndex < configs.size(); actionIndex++) {
-                final EntityActionConfig config = configs.get(actionIndex);
+        final List<ChartDeck<T>> decs = deckerConfig.getDecs();
+        for (int deckIndex = 0; deckIndex < decs.size(); deckIndex++) {
+            final List<ChartSeries<T>> series = decs.get(deckIndex).getSeries();
+            for (int seriesIndex = 0; seriesIndex < series.size(); seriesIndex++) {
+                final ChartSeries<T> s = series.get(seriesIndex);
+                final EntityActionConfig config = s.getAction();
+                this.actions.add(config);
                 if (config != null && !config.isNoAction()) {
-                    final FunctionalActionElement el = FunctionalActionElement.newEntityActionForMaster(config, deckIndex);
+                    final FunctionalActionElement el = FunctionalActionElement.newPropertyActionForMaster(config, deckIndex, s.getPropertyName());
                     importPaths.add(el.importPath());
-                    container.add(el.render().clazz("chart-action").attr("hidden", true).attr("action-index", actionIndex).attr("deck-index", deckIndex));
+                    container.add(el.render().clazz("chart-action").attr("hidden", true).attr("action-index", seriesIndex).attr("deck-index", deckIndex));
                     primaryActionObjects.add(el.createActionObject());
                 }
             }
