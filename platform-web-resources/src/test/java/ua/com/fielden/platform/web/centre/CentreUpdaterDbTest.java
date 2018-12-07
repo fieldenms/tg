@@ -5,8 +5,8 @@ import static ua.com.fielden.platform.web.centre.CentreUpdater.ID_PREFIX;
 import static ua.com.fielden.platform.web.centre.CentreUpdaterTest.ROOT;
 import static ua.com.fielden.platform.web.centre.CentreUpdaterTest.expectedDiffWithValue;
 import static ua.com.fielden.platform.web.centre.CentreUpdaterTest.testDiffCreationAndApplication;
-import static ua.com.fielden.platform.web.utils.EntityResourceUtils.NOT_FOUND_MOCK_PREFIX;
 import static ua.com.fielden.platform.web.utils.EntityResourceUtils.createMockNotFoundEntity;
+import static ua.com.fielden.platform.web.utils.EntityResourceUtils.createNotFoundMockString;
 
 import java.lang.reflect.Field;
 
@@ -52,7 +52,7 @@ public class CentreUpdaterDbTest extends AbstractDaoTestCase {
     @Test
     public void critOnlySingle_entity_value_notFound() {
         final TgCentreDiffSerialisationPersistentChild propertyVal = (TgCentreDiffSerialisationPersistentChild) createMockNotFoundEntity(TgCentreDiffSerialisationPersistentChild.class, "UNKNOWN");
-        testDiffCreationAndApplication(CentreUpdaterTest::create, centre -> centre.getFirstTick().setValue(ROOT, "entityPropCritSingle", propertyVal), expectedDiffWithValue("entityPropCritSingle", VALUE.name(), NOT_FOUND_MOCK_PREFIX + "UNKNOWN"), companionFinder());
+        testDiffCreationAndApplication(CentreUpdaterTest::create, centre -> centre.getFirstTick().setValue(ROOT, "entityPropCritSingle", propertyVal), expectedDiffWithValue("entityPropCritSingle", VALUE.name(), createNotFoundMockString("UNKNOWN")), companionFinder());
     }
     
     @Test
@@ -64,7 +64,7 @@ public class CentreUpdaterDbTest extends AbstractDaoTestCase {
     @Test
     public void critOnlySingle_non_persistent_entity_value_notFound() {
         final TgCentreDiffSerialisationNonPersistentChild propertyVal = (TgCentreDiffSerialisationNonPersistentChild) createMockNotFoundEntity(TgCentreDiffSerialisationNonPersistentChild.class, "UNKNOWN");
-        testDiffCreationAndApplication(CentreUpdaterTest::create, centre -> centre.getFirstTick().setValue(ROOT, "nonPersistentEntityPropCritSingle", propertyVal), expectedDiffWithValue("nonPersistentEntityPropCritSingle", VALUE.name(), NOT_FOUND_MOCK_PREFIX + "UNKNOWN"), companionFinder());
+        testDiffCreationAndApplication(CentreUpdaterTest::create, centre -> centre.getFirstTick().setValue(ROOT, "nonPersistentEntityPropCritSingle", propertyVal), expectedDiffWithValue("nonPersistentEntityPropCritSingle", VALUE.name(), createNotFoundMockString("UNKNOWN")), companionFinder());
     }
     
 }

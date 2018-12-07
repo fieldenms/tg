@@ -53,12 +53,12 @@ import static ua.com.fielden.platform.web.centre.WebApiUtils.LINK_CONFIG_TITLE;
 import static ua.com.fielden.platform.web.centre.WebApiUtils.checkedPropertiesWithoutSummaries;
 import static ua.com.fielden.platform.web.interfaces.DeviceProfile.DESKTOP;
 import static ua.com.fielden.platform.web.interfaces.DeviceProfile.MOBILE;
-import static ua.com.fielden.platform.web.utils.EntityResourceUtils.NOT_FOUND_MOCK_PREFIX;
+import static ua.com.fielden.platform.web.utils.EntityResourceUtils.PROPERTY_DESCRIPTOR_FROM_STRING;
+import static ua.com.fielden.platform.web.utils.EntityResourceUtils.PROPERTY_DESCRIPTOR_TO_STRING;
+import static ua.com.fielden.platform.web.utils.EntityResourceUtils.createNotFoundMockString;
 import static ua.com.fielden.platform.web.utils.EntityResourceUtils.entityWithMocksFromString;
 import static ua.com.fielden.platform.web.utils.EntityResourceUtils.entityWithMocksToString;
 import static ua.com.fielden.platform.web.utils.EntityResourceUtils.getEntityType;
-import static ua.com.fielden.platform.web.utils.EntityResourceUtils.PROPERTY_DESCRIPTOR_FROM_STRING;
-import static ua.com.fielden.platform.web.utils.EntityResourceUtils.PROPERTY_DESCRIPTOR_TO_STRING;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
@@ -70,6 +70,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
+import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
@@ -132,6 +133,38 @@ public class CentreUpdater {
      * Key of diff pertaining to result-set sorting. Result-set can be sorted by 'invisible' columns. Contains all snapshot and exists only if sorting is changed.
      */
     private static final String SORTING = "SORTING";
+    
+    /* Following functions are used for conversion of criteria values to / from strings. Some implementations could have been used directly but left here for clarity and consistency. */
+    static final String ID_PREFIX = "__________ID__________";
+    private static final Function<DateRangePrefixEnum, String> DATE_PREFIX_TO_STRING = DateRangePrefixEnum::name;
+    private static final Function<String, DateRangePrefixEnum> STRING_TO_DATE_PREFIX = DateRangePrefixEnum::valueOf;
+    private static final Function<MnemonicEnum, String> DATE_MNEMONIC_TO_STRING = MnemonicEnum::name;
+    private static final Function<String, MnemonicEnum> STRING_TO_DATE_MNEMONIC = MnemonicEnum::valueOf;
+    private static final Function<Long, Date> LONG_TO_DATE = Date::new;
+    private static final Function<Date, Long> DATE_TO_LONG = Date::getTime;
+    private static final Function<Object, String> TO_STRING = Object::toString;
+    private static final Function<String, Integer> STRING_TO_INTEGER = Integer::valueOf;
+    private static final Function<String, Long> STRING_TO_LONG = Long::valueOf;
+    private static final Function<String, BigDecimal> STRING_TO_BIG_DECIMAL = BigDecimal::new;
+    private static final Function<String, Currency> STRING_TO_CURRENCY = Currency::getInstance;
+    private static final Function<Money, Map<String, Object>> MONEY_TO_MAP = money ->
+        money.getTaxPercent() != null
+            ? mapOf(t2("amount", TO_STRING.apply(money.getAmount())), t2("taxPercent", TO_STRING.apply(money.getTaxPercent())), t2("currency", TO_STRING.apply(money.getCurrency())))
+            : mapOf(t2("amount", TO_STRING.apply(money.getAmount())), t2("currency", TO_STRING.apply(money.getCurrency())));
+    private static final Function<Map<String, Object>, Money> MAP_TO_MONEY = map -> 
+        map.containsKey("taxPercent") 
+            ? new Money(STRING_TO_BIG_DECIMAL.apply((String) map.get("amount")), STRING_TO_INTEGER.apply((String) map.get("taxPercent")), STRING_TO_CURRENCY.apply((String) map.get("currency")))
+            : new Money(STRING_TO_BIG_DECIMAL.apply((String) map.get("amount")), STRING_TO_CURRENCY.apply((String) map.get("currency")));
+    private static final Function<AbstractEntity<?>, String> ENTITY_TO_STRING = entity -> entityWithMocksToString((ent) -> {
+        if (isPersistedEntityType(ent.getType()) || isSyntheticBasedOnPersistentEntityType(ent.getType())) {
+            if (ent.getId() == null) {
+                return createNotFoundMockString("UNKNOWN");
+            }
+            return ID_PREFIX + ent.getId().toString();
+        } else {
+            return ent.getKey().toString();
+        }
+    }, entity);
     
     /** Protected default constructor to prevent instantiation. */
     protected CentreUpdater() {
@@ -772,75 +805,35 @@ public class CentreUpdater {
         }
     }
     
-    private static void warnSubValueRemovalFrom(final String from, final String valueKind, final String property) {
-        logger.warn(format("[%s] diff sub-value ignored. Property [%s] does not exist in %s (removed from Centre DSL config or even from domain type).", valueKind, property, from));
-    }
-    
-    private static void warnPropRemovalFrom(final String from, final String valueKind, final Map<String, Object> diff, final String property) {
-        logger.warn(format("Property [%s] diff value [%s] ignored. Property [%s] does not exist in %s (removed from Centre DSL config or even from domain type).", valueKind, diff.get(valueKind), property, from));
-    }
-    
-    private static void processValue(final Map<String, Object> diff, final String valueKind, final boolean propertyPresent, final String removedFrom, final Consumer<Object> valueApplier, final String property) {
-        if (diff.containsKey(valueKind)) {
-            if (propertyPresent) {
-                valueApplier.accept(diff.get(valueKind));
-            } else {
-                warnPropRemovalFrom(removedFrom, valueKind, diff, property);
-            }
-        }
-    }
-    
-    public static final String ID_PREFIX = "__________ID__________";
-    private static final Function<DateRangePrefixEnum, String> prefixToString = DateRangePrefixEnum::name;
-    private static final Function<MnemonicEnum, String> mnemonicToString = MnemonicEnum::name;
-    private static final Function<String, DateRangePrefixEnum> stringToPrefix = DateRangePrefixEnum::valueOf;
-    private static final Function<String, MnemonicEnum> stringToMnemonic = MnemonicEnum::valueOf;
-    private static final Function<Long, Date> longToDate = Date::new;
-    private static final Function<Date, Long> dateToLong = Date::getTime;
-    private static final Function<String, Integer> stringToInteger = Integer::valueOf;
-    private static final Function<String, Long> stringToLong = Long::valueOf;
-    private static final Function<String, BigDecimal> stringToBigDecimal = BigDecimal::new;
-    private static final Function<Map<String, Object>, Money> mapToMoney = map -> 
-        map.containsKey("taxPercent") 
-            ? new Money(stringToBigDecimal.apply((String) map.get("amount")), stringToInteger.apply((String) map.get("taxPercent")), Currency.getInstance((String) map.get("currency")))
-            : new Money(stringToBigDecimal.apply((String) map.get("amount")), Currency.getInstance((String) map.get("currency")));
-    private static final Function<Money, Map<String, Object>> moneyToMap = money ->
-        money.getTaxPercent() != null
-            ? mapOf(t2("amount", money.getAmount().toString()), t2("taxPercent", money.getTaxPercent().toString()), t2("currency", money.getCurrency().toString()))
-            : mapOf(t2("amount", money.getAmount().toString()), t2("currency", money.getCurrency().toString()));
-    private static final Function<Object, String> toString = Object::toString;
-    private static final Function<AbstractEntity<?>, String> entityToString = entity -> entityWithMocksToString((ent) -> {
-        if (isPersistedEntityType(ent.getType()) || isSyntheticBasedOnPersistentEntityType(ent.getType())) {
-            // FIXME remove this code when centre configuration migration will be completed [BEGIN]
-            if (ent.getId() == null) {
-                return NOT_FOUND_MOCK_PREFIX + "UNKNOWN";
-            }
-            // FIXME remove this code when centre configuration migration will be completed [END]
-            return ID_PREFIX + ent.getId().toString();
-        } else {
-            return ent.getKey().toString();
-        }
-    }, entity);
-    
-    private static Object extractFrom(final Object value, final Class<AbstractEntity<?>> root, final Supplier<Class<?>> managedTypeSupplier, final String property, final ICompanionObjectFinder companionFinder) {
+    /**
+     * Converts serialisable <code>value</code> representation to actual value, mostly from {@link String}. Two exceptions are {@link boolean} (from {@link boolean}) and {@link Money} (from {@link Map}).
+     *  
+     * @param value
+     * @param root
+     * @param managedTypeSupplier
+     * @param property
+     * @param companionFinder
+     * @return
+     */
+    private static Object convertFrom(final Object value, final Class<AbstractEntity<?>> root, final Supplier<Class<?>> managedTypeSupplier, final String property, final ICompanionObjectFinder companionFinder) {
         final boolean isEntityItself = "".equals(property); // empty property means "entity itself"
         final Class<?> managedType = managedTypeSupplier.get();
         final Class<?> propertyType = isEntityItself ? managedType : determinePropertyType(managedType, property);
         if (Integer.class.isAssignableFrom(propertyType)) {
-            return valOrNull(value, toString.andThen(stringToInteger));
+            return nullOrConvert(value, STRING_TO_INTEGER);
         } else if (Long.class.isAssignableFrom(propertyType)) {
-            return valOrNull(value, toString.andThen(stringToLong));
+            return nullOrConvert(value, STRING_TO_LONG);
         } else if (BigDecimal.class.isAssignableFrom(propertyType)) {
-            return valOrNull(value, toString.andThen(stringToBigDecimal));
+            return nullOrConvert(value, STRING_TO_BIG_DECIMAL);
         } else if (Money.class.isAssignableFrom(propertyType)) {
-            return valOrNull(value, mapToMoney);
+            return nullOrConvert(value, MAP_TO_MONEY);
         } else if (isDate(propertyType)) {
-            return valOrNull(value, longToDate, toString.andThen(stringToLong));
+            return nullOrConvert(value, STRING_TO_LONG.andThen(LONG_TO_DATE));
         } else if (isEntityType(propertyType) && isCritOnlySingle(managedType, property)) {
             if (isPropertyDescriptor(propertyType)) {
-                return valOrNull(value, PROPERTY_DESCRIPTOR_FROM_STRING, toString);
+                return nullOrConvert(value, PROPERTY_DESCRIPTOR_FROM_STRING);
             } else {
-                return valOrNull(value, str -> entityWithMocksFromString(idOrKey -> {
+                return nullOrConvert(value, (final String str) -> entityWithMocksFromString(idOrKey -> {
                     final IEntityDao<AbstractEntity<?>> propertyCompanion = companionFinder.find((Class<AbstractEntity<?>>) propertyType, true);
                     final IEntityDao<AbstractEntity<?>> companion = companionFinder.find(root, true);
                     final fetch<AbstractEntity<?>> fetch = companion.getFetchProvider().fetchFor(property).fetchModel();
@@ -849,44 +842,51 @@ public class CentreUpdater {
                     } else {
                         return propertyCompanion.findByKeyAndFetch(fetch, idOrKey);
                     }
-                }, str, propertyType), toString);
+                }, str, propertyType));
             }
         } else {
-            return value;
+            return value; // boolean and String values here
         }
     }
     
-    private static Object convert(final Object value, final Supplier<Class<?>> managedTypeSupplier, final String property) {
+    /**
+     * Converts <code>value</code> to serialisable representation, mostly into {@link String} format. Two exceptions are {@link boolean} (to {@link boolean}) and {@link Money} (to {@link Map}).
+     * 
+     * @param value
+     * @param managedTypeSupplier
+     * @param property
+     * @return
+     */
+    private static Object convertTo(final Object value, final Supplier<Class<?>> managedTypeSupplier, final String property) {
         final boolean isEntityItself = "".equals(property); // empty property means "entity itself"
         final Class<?> managedType = managedTypeSupplier.get();
         final Class<?> propertyType = isEntityItself ? managedType : determinePropertyType(managedType, property);
-        if (Integer.class.isAssignableFrom(propertyType)) {
-            return valOrNull(value, toString);
-        } else if (Long.class.isAssignableFrom(propertyType)) {
-            return valOrNull(value, toString);
-        } else if (BigDecimal.class.isAssignableFrom(propertyType)) {
-            return valOrNull(value, toString);
+        if (Integer.class.isAssignableFrom(propertyType) || Long.class.isAssignableFrom(propertyType) || BigDecimal.class.isAssignableFrom(propertyType)) {
+            return nullOrConvert(value, TO_STRING);
         } else if (Money.class.isAssignableFrom(propertyType)) {
-            return valOrNull(value, moneyToMap);
+            return nullOrConvert(value, MONEY_TO_MAP);
         } else if (isDate(propertyType)) {
-            return valOrNull(value, dateToLong.andThen(toString));
+            return nullOrConvert(value, DATE_TO_LONG.andThen(TO_STRING));
         } else if (isEntityType(propertyType) && isCritOnlySingle(managedType, property)) {
             if (isPropertyDescriptor(propertyType)) {
-                return valOrNull(value, PROPERTY_DESCRIPTOR_TO_STRING);
+                return nullOrConvert(value, PROPERTY_DESCRIPTOR_TO_STRING);
             } else {
-                return valOrNull(value, entityToString);
+                return nullOrConvert(value, ENTITY_TO_STRING);
             }
         } else {
-            return value;
+            return value; // boolean and String values here
         }
     }
     
-    private static <T, M> M valOrNull(final Object obj, final Function<T, M> convertionFunc) {
-        return valOrNull(obj, convertionFunc, obj1 -> (T) obj1);
-    }
-    
-    private static <T, M> M valOrNull(final Object obj, final Function<T, M> convertionFunc, final Function<Object, T> castingFunc) {
-        return obj == null ? null : convertionFunc.apply(castingFunc.apply(obj));
+    /**
+     * If <code>value</code> is <code>null</code> then returns <code>null</code>, otherwise treats the value as being of type <code>T</code> and converts using <code>conversionFunc</code> to value of type <code>M</code>.
+     * 
+     * @param value
+     * @param conversionFunc
+     * @return
+     */
+    private static <T, M> M nullOrConvert(final Object value, final Function<T, M> conversionFunc) {
+        return value == null ? null : conversionFunc.apply((T) value);
     }
     
     /**
@@ -922,11 +922,11 @@ public class CentreUpdater {
                 if (isDate(propertyType)) {
                     final DateRangePrefixEnum datePrefixVal = centre.getFirstTick().getDatePrefix(root, property);
                     if (!equalsEx(datePrefixVal, defaultCentre.getFirstTick().getDatePrefix(root, property))) {
-                        diff(property, propertiesDiff).put(DATE_PREFIX.name(), valOrNull(datePrefixVal, prefixToString));
+                        diff(property, propertiesDiff).put(DATE_PREFIX.name(), nullOrConvert(datePrefixVal, DATE_PREFIX_TO_STRING));
                     }
                     final MnemonicEnum dateMnemonicVal = centre.getFirstTick().getDateMnemonic(root, property);
                     if (!equalsEx(dateMnemonicVal, defaultCentre.getFirstTick().getDateMnemonic(root, property))) {
-                        diff(property, propertiesDiff).put(DATE_MNEMONIC.name(), valOrNull(dateMnemonicVal, mnemonicToString));
+                        diff(property, propertiesDiff).put(DATE_MNEMONIC.name(), nullOrConvert(dateMnemonicVal, DATE_MNEMONIC_TO_STRING));
                     }
                     final Boolean andBeforeVal = centre.getFirstTick().getAndBefore(root, property);
                     if (!equalsEx(andBeforeVal, defaultCentre.getFirstTick().getAndBefore(root, property))) {
@@ -945,12 +945,12 @@ public class CentreUpdater {
                 
                 final Object valueVal = centre.getFirstTick().getValue(root, property);
                 if (!equalsEx(valueVal, defaultCentre.getFirstTick().getValue(root, property))) {
-                    diff(property, propertiesDiff).put(VALUE.name(), convert(valueVal, managedTypeSupplier, property));
+                    diff(property, propertiesDiff).put(VALUE.name(), convertTo(valueVal, managedTypeSupplier, property));
                 }
                 if (isDoubleCriterion(managedType, property)) {
                     final Object value2Val = centre.getFirstTick().getValue2(root, property);
                     if (!equalsEx(value2Val, defaultCentre.getFirstTick().getValue2(root, property))) {
-                        diff(property, propertiesDiff).put(VALUE2.name(), convert(value2Val, managedTypeSupplier, property));
+                        diff(property, propertiesDiff).put(VALUE2.name(), convertTo(value2Val, managedTypeSupplier, property));
                     }
                 }
             }
@@ -984,6 +984,50 @@ public class CentreUpdater {
     }
     
     /**
+     * Provides a kind warning about <code>property</code> disappearance from <code>from</code> and <code>valueKind</code> that was affected.
+     * 
+     * @param from
+     * @param valueKind
+     * @param property
+     */
+    private static void warnSubValueRemovalFrom(final String from, final String valueKind, final String property) {
+        logger.warn(format("[%s] diff sub-value ignored. Property [%s] does not exist in %s (removed from Centre DSL config or even from domain type).", valueKind, property, from));
+    }
+    
+    /**
+     * Provides a kind warning about <code>property</code> disappearance from <code>from</code> and <code>valueKind</code> that was affected.
+     * 
+     * @param from
+     * @param valueKind
+     * @param diff
+     * @param property
+     */
+    private static void warnPropRemovalFrom(final String from, final String valueKind, final Map<String, Object> diff, final String property) {
+        logger.warn(format("Property [%s] diff value [%s] ignored. Property [%s] does not exist in %s (removed from Centre DSL config or even from domain type).", valueKind, diff.get(valueKind), property, from));
+    }
+    
+    /**
+     * Processes property value of <code>valueKind</code> taking it from <code>diff</code> and applying <code>valueApplier</code>.
+     * If property was removed (<code>propertyPresent = false</code>) then warns about it. 
+     * 
+     * @param diff
+     * @param valueKind
+     * @param propertyPresent
+     * @param removedFrom
+     * @param valueApplier
+     * @param property
+     */
+    private static void processValue(final Map<String, Object> diff, final String valueKind, final boolean propertyPresent, final String removedFrom, final Consumer<Object> valueApplier, final String property) {
+        if (diff.containsKey(valueKind)) {
+            if (propertyPresent) {
+                valueApplier.accept(diff.get(valueKind));
+            } else {
+                warnPropRemovalFrom(removedFrom, valueKind, diff, property);
+            }
+        }
+    }
+    
+    /**
      * Applies the differences from 'differences centre' on top of 'target centre'.
      *
      * @param targetCentre
@@ -1004,13 +1048,13 @@ public class CentreUpdater {
             
             processValue(diff, EXCLUSIVE.name(), selectionCriteriaContains, "selection criteria", (value) -> targetCentre.getFirstTick().setExclusive(root, property, (Boolean) value), property);
             processValue(diff, EXCLUSIVE2.name(), selectionCriteriaContains, "selection criteria", (value) -> targetCentre.getFirstTick().setExclusive2(root, property, (Boolean) value), property);
-            processValue(diff, DATE_PREFIX.name(), selectionCriteriaContains, "selection criteria", (value) -> targetCentre.getFirstTick().setDatePrefix(root, property, valOrNull(value, stringToPrefix)), property);
-            processValue(diff, DATE_MNEMONIC.name(), selectionCriteriaContains, "selection criteria", (value) -> targetCentre.getFirstTick().setDateMnemonic(root, property, valOrNull(value, stringToMnemonic)), property);
+            processValue(diff, DATE_PREFIX.name(), selectionCriteriaContains, "selection criteria", (value) -> targetCentre.getFirstTick().setDatePrefix(root, property, nullOrConvert(value, STRING_TO_DATE_PREFIX)), property);
+            processValue(diff, DATE_MNEMONIC.name(), selectionCriteriaContains, "selection criteria", (value) -> targetCentre.getFirstTick().setDateMnemonic(root, property, nullOrConvert(value, STRING_TO_DATE_MNEMONIC)), property);
             processValue(diff, AND_BEFORE.name(), selectionCriteriaContains, "selection criteria", (value) -> targetCentre.getFirstTick().setAndBefore(root, property, (Boolean) value), property);
             processValue(diff, OR_NULL.name(), selectionCriteriaContains, "selection criteria", (value) -> targetCentre.getFirstTick().setOrNull(root, property, (Boolean) value), property);
             processValue(diff, NOT.name(), selectionCriteriaContains, "selection criteria", (value) -> targetCentre.getFirstTick().setNot(root, property, (Boolean) value), property);
-            processValue(diff, VALUE.name(), selectionCriteriaContains, "selection criteria", (value) -> targetCentre.getFirstTick().setValue(root, property, extractFrom(value, root, managedTypeSupplier, property, companionFinder)), property);
-            processValue(diff, VALUE2.name(), selectionCriteriaContains, "selection criteria", (value) -> targetCentre.getFirstTick().setValue2(root, property, extractFrom(value, root, managedTypeSupplier, property, companionFinder)), property);
+            processValue(diff, VALUE.name(), selectionCriteriaContains, "selection criteria", (value) -> targetCentre.getFirstTick().setValue(root, property, convertFrom(value, root, managedTypeSupplier, property, companionFinder)), property);
+            processValue(diff, VALUE2.name(), selectionCriteriaContains, "selection criteria", (value) -> targetCentre.getFirstTick().setValue2(root, property, convertFrom(value, root, managedTypeSupplier, property, companionFinder)), property);
             
             final boolean resultSetContains = targetCentre.getSecondTick().checkedProperties(root).contains(property);
             
@@ -1064,30 +1108,25 @@ public class CentreUpdater {
         return targetCentre;
     }
     
-    private static boolean propertyRemovedFromDomainType(final Class<?> diffManagedType, final String property) {
-        // Check whether the 'property' has not been disappeared from domain type since last server restart.
-        // In such case 'orderedProperties' will contain that property but 'managedType(root, differencesCentre)' will not contain corresponding field.
-        // Such properties need to be silently ignored. During next diffCentre creation such properties will disappear from diffCentre fully.
-        final boolean isEntityItself = "".equals(property); // empty property means "entity itself"
-        if (!isEntityItself) {
-            try {
-                determinePropertyType(diffManagedType, property);
-                return false;
-            } catch (final Exception ex) {
-                // System.out.println();
-                // logger.warn(format("Property [%s] could not be found in type [%s] in diffCentre. It will be skipped. Most likely this property was deleted from domain type definition.", property, diffManagedType.getSimpleName()));
-                return true;
-            }
-        } else {
-            return false;
-        }
-    }
-    
-    public static Map<String, Object> propDiff(final String property, final Map<String, Object> diff) {
+    /**
+     * Takes property differences from <code>diff</code>. Creates empty property differences inside <code>diff</code> if they are empty. 
+     * 
+     * @param property
+     * @param diff
+     * @return
+     */
+    static Map<String, Object> propDiff(final String property, final Map<String, Object> diff) {
         final Map<String, Map<String, Object>> propertiesDiff = (Map<String, Map<String, Object>>) diff.get(PROPERTIES);
         return diff(property, propertiesDiff);
     }
     
+    /**
+     * Takes property differences from <code>propertiesDiff</code> part of overall diff. Creates empty property differences inside <code>propertiesDiff</code> if they are empty.
+     * 
+     * @param property
+     * @param propertiesDiff
+     * @return
+     */
     private static Map<String, Object> diff(final String property, final Map<String, Map<String, Object>> propertiesDiff) {
         final Map<String, Object> propertyDiff = propertiesDiff.get(property);
         if (propertyDiff == null) {
@@ -1117,6 +1156,25 @@ public class CentreUpdater {
      * @return
      */
     public static Map<String, Object> createDiffFrom(final ICentreDomainTreeManagerAndEnhancer differencesCentre) {
+        final BiFunction<Class<?>, String, Boolean> propertyRemovedFromDomainType = (final Class<?> diffManagedType, final String property) -> {
+            // Check whether the 'property' has not been disappeared from domain type since last server restart.
+            // In such case 'orderedProperties' will contain that property but 'managedType(root, differencesCentre)' will not contain corresponding field.
+            // Such properties need to be silently ignored. During next diffCentre creation such properties will disappear from diffCentre fully.
+            final boolean isEntityItself = "".equals(property); // empty property means "entity itself"
+            if (!isEntityItself) {
+                try {
+                    determinePropertyType(diffManagedType, property);
+                    return false;
+                } catch (final Exception ex) {
+                    // System.out.println();
+                    // logger.warn(format("Property [%s] could not be found in type [%s] in diffCentre. It will be skipped. Most likely this property was deleted from domain type definition.", property, diffManagedType.getSimpleName()));
+                    return true;
+                }
+            } else {
+                return false;
+            }
+        };
+        
         final Class<?> root = differencesCentre.getRepresentation().rootTypes().iterator().next();
         final Supplier<Class<?>> managedTypeSupplier = () -> differencesCentre.getEnhancer().getManagedType(root);
         
@@ -1126,7 +1184,7 @@ public class CentreUpdater {
         final Class<?> managedType = managedTypeSupplier.get();
         
         for (final String property : differencesCentre.getFirstTick().checkedProperties(root)) {
-            if (!isPlaceholder(property) && !propertyRemovedFromDomainType(managedType, property)) {
+            if (!isPlaceholder(property) && !propertyRemovedFromDomainType.apply(managedType, property)) {
                 if (isDoubleCriterion(managedType, property) && !isBooleanCriterion(managedType, property)) {
                     if (differencesCentre.getFirstTick().isMetaValuePresent(EXCLUSIVE, root, property)) {
                         final Boolean exclusiveVal = differencesCentre.getFirstTick().getExclusive(root, property);
@@ -1141,11 +1199,11 @@ public class CentreUpdater {
                 if (isDate(propertyType)) {
                     if (differencesCentre.getFirstTick().isMetaValuePresent(DATE_PREFIX, root, property)) {
                         final DateRangePrefixEnum datePrefixVal = differencesCentre.getFirstTick().getDatePrefix(root, property);
-                        diff(property, propertiesDiff).put(DATE_PREFIX.name(), valOrNull(datePrefixVal, prefixToString));
+                        diff(property, propertiesDiff).put(DATE_PREFIX.name(), nullOrConvert(datePrefixVal, DATE_PREFIX_TO_STRING));
                     }
                     if (differencesCentre.getFirstTick().isMetaValuePresent(DATE_MNEMONIC, root, property)) {
                         final MnemonicEnum dateMnemonicVal = differencesCentre.getFirstTick().getDateMnemonic(root, property);
-                        diff(property, propertiesDiff).put(DATE_MNEMONIC.name(), valOrNull(dateMnemonicVal, mnemonicToString));
+                        diff(property, propertiesDiff).put(DATE_MNEMONIC.name(), nullOrConvert(dateMnemonicVal, DATE_MNEMONIC_TO_STRING));
                     }
                     if (differencesCentre.getFirstTick().isMetaValuePresent(AND_BEFORE, root, property)) {
                         final Boolean andBeforeVal = differencesCentre.getFirstTick().getAndBefore(root, property);
@@ -1161,14 +1219,14 @@ public class CentreUpdater {
                     final Boolean notVal = differencesCentre.getFirstTick().getNot(root, property);
                     diff(property, propertiesDiff).put(NOT.name(), notVal);
                 }
-
+                
                 if (differencesCentre.getFirstTick().isMetaValuePresent(VALUE, root, property)) {
                     final Object valueVal = differencesCentre.getFirstTick().getValue(root, property);
-                    diff(property, propertiesDiff).put(VALUE.name(), convert(valueVal, managedTypeSupplier, property));
+                    diff(property, propertiesDiff).put(VALUE.name(), convertTo(valueVal, managedTypeSupplier, property));
                 }
                 if (isDoubleCriterion(managedType, property) && differencesCentre.getFirstTick().isMetaValuePresent(VALUE2, root, property)) {
                     final Object value2Val = differencesCentre.getFirstTick().getValue2(root, property);
-                    diff(property, propertiesDiff).put(VALUE2.name(), convert(value2Val, managedTypeSupplier, property));
+                    diff(property, propertiesDiff).put(VALUE2.name(), convertTo(value2Val, managedTypeSupplier, property));
                 }
             }
         }
@@ -1180,7 +1238,7 @@ public class CentreUpdater {
         }
         
         for (final String property : diffCheckedPropertiesWithoutSummaries) {
-            if (!propertyRemovedFromDomainType(managedType, property)) {
+            if (!propertyRemovedFromDomainType.apply(managedType, property)) {
                 if (differencesCentre.getFirstTick().isMetaValuePresent(WIDTH, root, property)) {
                     final int widthVal = differencesCentre.getSecondTick().getWidth(root, property);
                     diff(property, propertiesDiff).put(WIDTH.name(), widthVal);

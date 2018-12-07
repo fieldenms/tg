@@ -84,7 +84,7 @@ public class EntityResourceUtils {
     /**
      * Used to indicate the start of 'not found mock' serialisation sequence.
      */
-    public static final String NOT_FOUND_MOCK_PREFIX = "__________NOT_FOUND__________";
+    private static final String NOT_FOUND_MOCK_PREFIX = "__________NOT_FOUND__________";
     private static final Logger logger = Logger.getLogger(EntityResourceUtils.class);
     /**
      * Standard {@link PropertyDescriptor}'s convertor to string. Includes handling for 'not found mock' instances.
@@ -330,6 +330,16 @@ public class EntityResourceUtils {
     }
     
     /**
+     * Creates a string that can be used for 'not found mock' entity serialisation.
+     * 
+     * @param stringQuery
+     * @return
+     */
+    public static String createNotFoundMockString(final String stringQuery) {
+        return NOT_FOUND_MOCK_PREFIX + stringQuery;
+    }
+    
+    /**
      * Returns indication whether <code>obj</code> represents 'mock not found entity'.
      * 
      * @param obj
@@ -351,7 +361,7 @@ public class EntityResourceUtils {
      */
     public static <T extends AbstractEntity<?>> String entityWithMocksToString(final Function<T, String> specificConverter, final T entity) {
         if (isMockNotFoundEntity(entity)) {
-            return NOT_FOUND_MOCK_PREFIX + entity.get(DESC);
+            return createNotFoundMockString(entity.get(DESC));
         } else {
             return specificConverter.apply(entity);
         }

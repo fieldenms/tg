@@ -27,8 +27,8 @@ import static ua.com.fielden.platform.web.centre.api.crit.defaults.mnemonics.con
 import static ua.com.fielden.platform.web.centre.api.impl.EntityCentreBuilder.centreFor;
 import static ua.com.fielden.platform.web.interfaces.ILayout.Device.DESKTOP;
 import static ua.com.fielden.platform.web.layout.api.impl.LayoutComposer.mkGridForCentre;
-import static ua.com.fielden.platform.web.utils.EntityResourceUtils.NOT_FOUND_MOCK_PREFIX;
 import static ua.com.fielden.platform.web.utils.EntityResourceUtils.createMockNotFoundEntity;
+import static ua.com.fielden.platform.web.utils.EntityResourceUtils.createNotFoundMockString;
 import static ua.com.fielden.snappy.DateRangePrefixEnum.NEXT;
 import static ua.com.fielden.snappy.DateRangePrefixEnum.PREV;
 import static ua.com.fielden.snappy.MnemonicEnum.MONTH;
@@ -514,7 +514,7 @@ public class CentreUpdaterTest {
     @Test
     public void crit_single_propertyDescriptor_value_notFound() {
         final PropertyDescriptor<TgCentreDiffSerialisationPersistentChild> propertyVal = (PropertyDescriptor<TgCentreDiffSerialisationPersistentChild>) createMockNotFoundEntity(PropertyDescriptor.class, "UNKNOWN");
-        testDiffCreationAndApplication(CentreUpdaterTest::create, centre -> centre.getFirstTick().setValue(ROOT, "propertyDescriptorPropCritSingle", propertyVal), expectedDiffWithValue("propertyDescriptorPropCritSingle", VALUE.name(), NOT_FOUND_MOCK_PREFIX + "UNKNOWN"));
+        testDiffCreationAndApplication(CentreUpdaterTest::create, centre -> centre.getFirstTick().setValue(ROOT, "propertyDescriptorPropCritSingle", propertyVal), expectedDiffWithValue("propertyDescriptorPropCritSingle", VALUE.name(), createNotFoundMockString("UNKNOWN")));
     }
     
     // string values
