@@ -254,6 +254,15 @@
             return typeof this._validationResult === 'undefined' ? null : this._validationResult;
         }
 
+         /**
+          * Returns last invalid value for the instance property.
+          *
+          * IMPORTANT: do not use '_lastInvalidValue' field directly!
+          */
+         EntityInstanceProp.prototype.lastInvalidValue = function () {
+             return typeof this._lastInvalidValue === 'undefined' ? null : this._lastInvalidValue;
+         }
+
         /**
          * Returns the max possible length in case of string property, 'undefined' otherwise.
          *
@@ -1367,7 +1376,7 @@
             if (this.isError(entity.prop(propertyName).validationResult())) {
                 if (previousModifiedPropertiesHolder === null) { // is a brand new instance just received from server?
                     // bind the received from server property value
-                    const lastInvalidValue = entity.get('@' + propertyName)._lastInvalidValue;
+                    const lastInvalidValue = entity.prop(propertyName).lastInvalidValue();
                     if (this.isMockNotFoundEntity(lastInvalidValue)) {
                         this._convertFullPropertyValue(bindingView, propertyName, lastInvalidValue.get('desc'));
                     } else {
@@ -1401,10 +1410,6 @@
                     touchedProps.counts.splice(touchedPropIndex, 1);
                     touchedProps.values.splice(touchedPropIndex, 1);
                 }
-                
-                if (this.isEntity(fullValue)) {
-                    bindingView["@" + propertyName + "_desc"] = this.convert(fullValue.get("desc"));
-                }
             }
             if (typeof bindingView[propertyName] === 'undefined' || bindingView[propertyName] === undefined) {
                 throw "Illegal value exception: the property [" + propertyName + "] can not be assigned as [" + bindingView[propertyName] + "].";
@@ -1419,12 +1424,20 @@
         },
         
         /**
-         * Converts property's 'fullValue' into binding entity value representation. Takes care of id-based value conversion for entity-typed properties. 
+         * Converts property's 'fullValue' into binding entity value representation. Takes care of id-based value conversion for entity-typed properties. Also takes care about entity's description.
          */
         _convertFullPropertyValue: function (bindingView, propertyName, fullValue) {
             bindingView[propertyName] = this.convert(fullValue);
-            if (this.isEntity(fullValue) && fullValue.get('id') !== null) {
-                bindingView['@' + propertyName + '_id'] = fullValue.get('id');
+            if (this.isEntity(fullValue)) {
+                if (fullValue.get('id') !== null) {
+                    bindingView['@' + propertyName + '_id'] = fullValue.get('id');
+                }
+                try {
+                    const desc = fullValue.get('desc');
+                    bindingView['@' + propertyName + '_desc'] = this.convert(desc);
+                } catch (strictProxyError) {
+                    console.warn('Extend fetch provider to see description in tooltip of entity-typed value. Original error: [' + strictProxyError + '].');
+                }
             }
         },
         
