@@ -537,8 +537,8 @@
                         this._openToastForError('Service Unavailable.', 'Server responsed with error 503 (Service Unavailable).', true);
                         customErrorHandlerFor('Service Unavailable');
                     } else { // other codes
-                        this._openToastForError('Service Error (' + xhr.status ').', 'Server responded with error code ' + xhr.status, true);
-                        customErrorHandlerFor('Service Error (' + xhr.status ').');
+                        this._openToastForError('Service Error (' + xhr.status + ').', 'Server responded with error code ' + xhr.status, true);
+                        customErrorHandlerFor('Service Error (' + xhr.status + ').');
                     }
                 }).bind(self);
 
