@@ -10,6 +10,8 @@ import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 import static ua.com.fielden.platform.error.Result.failure;
 import static ua.com.fielden.platform.error.Result.successful;
+import static ua.com.fielden.platform.reflection.AnnotationReflector.getAnnotation;
+import static ua.com.fielden.platform.reflection.Finder.findFieldByName;
 import static ua.com.fielden.platform.utils.EntityUtils.isPropertyDescriptor;
 import static ua.com.fielden.platform.web.utils.EntityResourceUtils.isMockNotFoundEntity;
 
@@ -21,6 +23,7 @@ import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.dao.QueryExecutionModel;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.ActivatableAbstractEntity;
+import ua.com.fielden.platform.entity.annotation.SkipEntityExistsValidation;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
@@ -73,10 +76,14 @@ public class EntityExistsValidator<T extends AbstractEntity<?>> implements IBefo
             if (newValue == null) {
                 return successful(entity);
             } else if (newValue.isInstrumented() && newValue.isDirty()) { // if entity uninstrumented its dirty state is irrelevant and cannot be checked
+                final SkipEntityExistsValidation seevAnnotation =  getAnnotation(findFieldByName(entity.getType(), property.getName()), SkipEntityExistsValidation.class);
+                if (seevAnnotation != null && seevAnnotation.skipDirtyOnly()) {
+                    return successful(entity);
+                }
                 final String entityTitle = TitlesDescsGetter.getEntityTitleAndDesc(newValue.getType()).getKey();
                 return failure(entity, format("EntityExists validator: dirty entity %s (%s) is not acceptable.", newValue, entityTitle));
             }
-
+            
             if (EntityQueryCriteria.class.isAssignableFrom(entity.getType())) {
                 return successful(entity);
             }
