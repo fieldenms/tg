@@ -67,13 +67,18 @@ public abstract class AbstractFunctionalEntityToOpenCompoundMaster<K extends Abs
     }
 
     @Observable
-    public AbstractFunctionalEntityToOpenCompoundMaster<K> setMenuToOpen(final String menuToOpen) {
+    protected AbstractFunctionalEntityToOpenCompoundMaster<K> setMenuToOpen(final String menuToOpen) {
         this.menuToOpen = menuToOpen;
         return this;
     }
 
-    public String getMenuToOpen() {
+    protected String getMenuToOpen() {
        return menuToOpen;
+    }
+
+    public AbstractFunctionalEntityToOpenCompoundMaster<K> setMenuToOpen(final Class<? extends AbstractFunctionalEntityForCompoundMenuItem<K>> menuToOpen) {
+        this.menuToOpen = menuToOpen.getSimpleName();
+        return this;
     }
 
     @Observable
