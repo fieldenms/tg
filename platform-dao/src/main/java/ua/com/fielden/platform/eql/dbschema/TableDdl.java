@@ -96,11 +96,11 @@ public class TableDdl {
      * @param dialect
      * @return
      */
-    public String createTableSchema(final Dialect dialect) {
+    public String createTableSchema(final Dialect dialect, final String colDelimeter) {
         final StringBuilder sb = new StringBuilder();
         sb.append(format("CREATE TABLE %s (", tableName(entityType)));
-        sb.append(" ");
-        sb.append(columns.stream().map(col -> "    " + col.schemaString(dialect)).collect(Collectors.joining(", ")));
+        sb.append("    " + colDelimeter);
+        sb.append(columns.stream().map(col -> "    " + col.schemaString(dialect)).collect(Collectors.joining(", " + colDelimeter)));
         sb.append(" );");
         return sb.toString();
     }
