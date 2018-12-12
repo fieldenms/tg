@@ -35,7 +35,7 @@ public abstract class AbstractFunctionalEntityToOpenCompoundMaster<K extends Abs
 
     @IsProperty
     @Title("Menu To Open")
-    private String menuToOpen;
+    private Class<? extends AbstractFunctionalEntityForCompoundMenuItem<K>> menuToOpen;
 
     @IsProperty(Object.class)
     @Title("Entity Presence")
@@ -67,18 +67,13 @@ public abstract class AbstractFunctionalEntityToOpenCompoundMaster<K extends Abs
     }
 
     @Observable
-    protected AbstractFunctionalEntityToOpenCompoundMaster<K> setMenuToOpen(final String menuToOpen) {
+    public AbstractFunctionalEntityToOpenCompoundMaster<K> setMenuToOpen(final Class<? extends AbstractFunctionalEntityForCompoundMenuItem<K>> menuToOpen) {
         this.menuToOpen = menuToOpen;
         return this;
     }
 
-    protected String getMenuToOpen() {
-       return menuToOpen;
-    }
-
-    public AbstractFunctionalEntityToOpenCompoundMaster<K> setMenuToOpen(final Class<? extends AbstractFunctionalEntityForCompoundMenuItem<K>> menuToOpen) {
-        this.menuToOpen = menuToOpen.getSimpleName();
-        return this;
+    public Class<? extends AbstractFunctionalEntityForCompoundMenuItem<K>> getMenuToOpen() {
+        return menuToOpen;
     }
 
     @Observable
