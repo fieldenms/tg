@@ -11,10 +11,9 @@
     <template>
         <style>
             :host {
-                @apply(--layout-horizontal);
-
+                @apply(--layout-vertical);
             }
-            svg {
+            #chartContainer, svg {
                 @apply(--layout-flex);
 
             }
@@ -68,11 +67,53 @@
                 vector-effect: non-scaling-stroke;
                 pointer-events: none;
             }
+            /*Legend related style*/
+            .legend-panel {
+                margin-top: 8px;
+                margin-bottom: 25px;
+            }
+            .legend-rect {
+                min-width: 18px;
+                min-height: 18px;
+                border: 1px solid black;
+                margin-right: 8px;
+            }
+            .legend-item {
+                font-size: smaller;
+                margin-right: 16px;
+            }
+            .legend-item-line {
+                border: none;
+                margin: 0 2px;
+            }
+            .line {
+                stroke-width: 1;
+                fill: none;
+                vector-effect: non-scaling-stroke;
+            }
         </style>
 
         <!-- local DOM for your element -->
-        <svg id="chart" class="bar-chart"></svg>
+        <div id="chartContainer" class="layout horizontal">
+            <svg id="chart" class="bar-chart"></svg>
+        </div>
         <!-- data bindings in local DOM -->
+        <div id="legend" class="legend-panel layout horizontal center-justified wrap" style$="[[_calcLegendStyle(_chartStyles)]]" hidden$="[[!showLegend]]">
+            <template is="dom-repeat" items="[[legendItems]]" on-dom-change="_legendItemsChanged">
+                <div class="legend-item layout horizontal center">
+                    <div class="legend-rect" style$="[[_calcLegendItemStyle(item)]]"></div>
+                    <div>[[item.title]]</div>
+                </div>
+            </template>
+            <template is="dom-repeat" items="[[lineLegendItems]]" on-dom-change="_legendItemsChanged">
+                <div class="legend-item layout horizontal center">
+                    <div class="legend-rect layout horizontal center-center">
+                        <hr class="legend-item-line flex" style="[[_calculateLineLegendStyle(item)]]">
+                    </div>
+                    <div>[[item.title]]</div>
+                </div>
+            </template>
+        </div>
     </template>
 
     <script>
@@ -94,7 +135,29 @@
                         type: Object,
                         observer: "_chartOptionsChanged"
                     },
+                    
+                    //Determines whether legend should be visible or not
+                    showLegend: {
+                        type: Boolean,
+                        value: false
+                    },
+                    
+                    //The legend items whish represents title and colour
+                    legendItems: {
+                        type: Array,
+                        value: function () {
+                            return [];
+                        }
+                    },
+                    
+                    lineLegendItems: {
+                        type: Array,
+                        value: function () {
+                            return [];
+                        }
+                    },
 
+                    _chartStyle: Object,
                     _chart: Object
                 },
 
@@ -131,10 +194,12 @@
                 _waitForDimensions: function (time) {
                     var self = this;
                     this.async(function () {
-                        if (this.offsetWidth && this.offsetHeight && this._chart) {
+                        const width = self.$.chartContainer.offsetWidth
+                        const height = self.$.chartContainer.offsetHeight
+                        if (width && height && this._chart) {
                             this._chart.options({
-                                width: self.offsetWidth,
-                                height: self.offsetHeight
+                                width: width,
+                                height: height
                             });
                         } else {
                             this._waitForDimensions(100);
@@ -151,15 +216,38 @@
                 _chartOptionsChanged: function (newOptions, oldOptions) {
                     if (this._chart) {
                         this._chart.options(newOptions);
+                        const updatedOptions = this._chart.options();
+                        this._chartStyles = {
+                            left: updatedOptions.margin.left,
+                            right: updatedOptions.margin.right
+                        };
                     }
+                },
+                
+                _calcLegendStyle: function (_chartStyles) {
+                    return "margin-left: " + _chartStyles.left + "px; margin-right: " + _chartStyles.right + "px;";
+                },
+
+                _calcLegendItemStyle: function (item) {
+                    return "background-color: " + item.colour + ";";
+                },
+                
+                _calculateLineLegendStyle: function (item) {
+                    return "border-top: 2px solid " + item.colour + ";";
+                },
+
+                _legendItemsChanged: function () {
+                    this.notifyResize();
                 },
 
                 _resizeEventListener: function (event, details) {
-                    var self = this;
-                    if (this._chart) {
+                    const self = this;
+                    const width = self.$.chartContainer.offsetWidth
+                    const height = self.$.chartContainer.offsetHeight
+                    if (this._chart && width && height) {
                         this._chart.options({
-                            width: self.offsetWidth,
-                            height: self.offsetHeight
+                            width: width,
+                            height: height
                         });
                     }
                 }
