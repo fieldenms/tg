@@ -522,11 +522,11 @@
             },
             
             canManageCentreConfig: function (centreChanged, _bindingEntityNotPersistentOrNotPersistedOrModified, _editedPropsExist, _currEntity) {
-                return _editedPropsExist ? true
-                    : (((this._reflector().isEntity(_currEntity) && _currEntity.isValid()) || (!this._reflector().isEntity(_currEntity)))
+                return _editedPropsExist ? true : (centreChanged === true);
+                    /*: (((this._reflector().isEntity(_currEntity) && _currEntity.isValid()) || (!this._reflector().isEntity(_currEntity)))
                         ? (centreChanged === true)
                         : _bindingEntityNotPersistentOrNotPersistedOrModified
-                    );
+                    );*/
             },
             
             /**
