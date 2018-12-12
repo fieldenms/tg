@@ -112,9 +112,7 @@
 			/* A create callback to perform initialisation. */
 			created: function() {
 				// need to assign SSE data handler to reflect the server side file processing progress
-				this.dataHandler = function(data) {
-					const msg = JSON.parse(data);
-
+				this.dataHandler = function(msg) {
 					if (this.fpFileProcessingProgressEventHandler) {
 						this.fpFileProcessingProgressEventHandler(msg.prc);
 					}
