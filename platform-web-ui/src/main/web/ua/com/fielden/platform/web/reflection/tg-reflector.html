@@ -1363,12 +1363,7 @@
             if (this.isError(entity.prop(propertyName).validationResult())) {
                 if (previousModifiedPropertiesHolder === null) { // is a brand new instance just received from server?
                     // bind the received from server property value
-                    const lastInvalidValue = entity.prop(propertyName).lastInvalidValue();
-                    if (this.isMockNotFoundEntity(lastInvalidValue)) {
-                        this._convertFullPropertyValue(bindingView, propertyName, lastInvalidValue.get('desc'));
-                    } else {
-                        this._convertFullPropertyValue(bindingView, propertyName, lastInvalidValue);
-                    }
+                    this._convertFullPropertyValue(bindingView, propertyName, this._getErroneousFullPropertyValue(entity, propertyName));
                 } else { // otherwise, this entity instance has already been received before and should be handled accordingly
                     if (typeof previousModifiedPropertiesHolder[propertyName].val === 'undefined') {
                         // EDGE-CASE: if the value becomes invalid not because the action done upon this property -- 
@@ -1408,6 +1403,14 @@
          */
         convertOriginalPropertyValue: function (originalBindingView, propertyName, entity) {
             this._convertFullPropertyValue(originalBindingView, propertyName, entity.getOriginal(propertyName));
+        },
+        
+        /**
+         * Returns property's value knowing that it is erroneous. This is to be used for futher conversion into binding value representaion by 'convert' method and its derivatives.
+         */
+        _getErroneousFullPropertyValue: function (entity, propertyName) {
+            const lastInvalidValue = entity.prop(propertyName).lastInvalidValue();
+            return this.isMockNotFoundEntity(lastInvalidValue) ? lastInvalidValue.get('desc') : lastInvalidValue;
         },
         
         /**

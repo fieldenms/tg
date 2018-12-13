@@ -385,9 +385,7 @@
             _identifyModification: function (_editingValue, originalEntity) {
                 if (this.reflector().isEntity(this.entity)) {
                     const _originalEditingValue = originalEntity ? this._extractOriginalEditingValue(originalEntity, this.propertyName) : _editingValue;
-                    //if (this.propertyName === 'invoiceEntry_purchaseOrderCrit') {
-                    console.error('_bindingEntity (_identifyModification) self = ', this.is, '_editingValue', _editingValue, '_originalEditingValue', _originalEditingValue);
-                    //}
+                    // console.debug('_bindingEntity (_identifyModification) self = ', this.is, '_editingValue', _editingValue, '_originalEditingValue', _originalEditingValue);
                     var prevEditedProps = this.entity['@editedProps'];
                     var newEditedProps = {};
                     for (var prop in prevEditedProps) {
@@ -401,27 +399,25 @@
                         delete newEditedProps[this.propertyName];
                     }
                     this.set('entity.@editedProps', newEditedProps);
-                    //if (this.propertyName === 'invoiceEntry_purchaseOrderCrit') {
-                    console.error('_bindingEntity (_identifyModification) newEditedProps = ', newEditedProps);
-                    //}
                 }
             },
             
+            /**
+             * Extracts 'original' version of editing value taking into account the erroneous properties.
+             */
             _extractOriginalEditingValue: function (originalEntity, propertyName) {
-                const origin = originalEntity['@@origin'];
+                const origin = this.reflector()._getValueFor(originalEntity, ""); // fully-fledged entity instance aka @@origin
+                // The following logic introduced in 1145 issue (centre diff serialisation migration to Jackson) with the feature to save erroneous centres.
+                // SAVE / DISCARD buttons enablement suffered from incorrect _originalEditingValue calculation for erroneous centres.
+                // The idea is that when originalEntity has invalid property then previous editingValue was derived from lastInvalidValue.
                 if (this.reflector().isError(origin.prop(propertyName).validationResult())) {
-                    const lastInvalidValue = origin.prop(propertyName).lastInvalidValue();
-                    if (this.reflector().isMockNotFoundEntity(lastInvalidValue)) {
-                        return this.convertToString(this.reflector().convert(lastInvalidValue.get('desc')));
-                    } else {
-                        return this.convertToString(this.reflector().convert(lastInvalidValue));
-                    }
+                    return this.convertToString(this.reflector().convert(this.reflector()._getErroneousFullPropertyValue(origin, propertyName)));
                 }
                 return this.convertToString(this.reflector().getBindingValue.bind(this.reflector())(originalEntity, propertyName));
             },
             
-    		_editedPropsChanged: function (editedProps) {
-    		},
+            _editedPropsChanged: function (editedProps) {
+            },
             
             /**
              * This function returns the tooltip for this editor.
