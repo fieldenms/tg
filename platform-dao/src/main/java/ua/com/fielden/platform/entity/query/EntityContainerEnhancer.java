@@ -86,8 +86,7 @@ public class EntityContainerEnhancer<E extends AbstractEntity<?>> {
                                 if (ppi.isEntityOfPersistedType() || ppi.isOne2OneId()) {
                                     enhanceProperty(entities, propName, propFetchModel);
                                 } else {
-                                    System.out.println(String.format("Property [%s] of type [%s] can't be fetched with model: %s.", propName, fetchModel.getEntityType(), entry.getValue()));
-                                    //throw new EqlException(String.format("Property [%s] of type [%s] can't be fetched with model: %s.", propName, fetchModel.getEntityType(), entry.getValue()));
+                                    logger.debug(format("Property [%s] of type [%s] can't be fetched with model: %s.", propName, fetchModel.getEntityType(), entry.getValue()));
                                 }
                             }
                         }

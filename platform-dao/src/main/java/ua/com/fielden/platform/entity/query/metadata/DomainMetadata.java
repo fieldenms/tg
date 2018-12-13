@@ -84,6 +84,7 @@ import ua.com.fielden.platform.entity.query.model.ExpressionModel;
 import ua.com.fielden.platform.eql.dbschema.ColumnDefinitionExtractor;
 import ua.com.fielden.platform.eql.dbschema.TableDdl;
 import ua.com.fielden.platform.utils.Pair;
+import ua.com.fielden.platform.utils.StreamUtils;
 
 public class DomainMetadata {
     private static final Logger LOGGER = Logger.getLogger(DomainMetadata.class);
@@ -198,7 +199,7 @@ public class DomainMetadata {
         
         for (final Class<? extends AbstractEntity<?>> entityType : persystentTypes) {
             final TableDdl tableDefinition = new TableDdl(columnDefinitionExtractor, entityType);
-            ddlTables.add(tableDefinition.createTableSchema(dialect));
+            ddlTables.add(tableDefinition.createTableSchema(dialect, ""));
             ddlTables.add(tableDefinition.createPkSchema(dialect));
             ddlTables.addAll(tableDefinition.createIndicesSchema(dialect));
             ddlFKs.addAll(tableDefinition.createFkSchema(dialect));
@@ -208,7 +209,28 @@ public class DomainMetadata {
         ddl.addAll(ddlFKs);
         return ddl;
     }
-    
+
+    public List<String> generateDatabaseDdl(final Dialect dialect, final Class<? extends AbstractEntity<?>> type, final Class<? extends AbstractEntity<?>>... types) {
+        final ColumnDefinitionExtractor columnDefinitionExtractor = new ColumnDefinitionExtractor(hibTypesInjector, this.hibTypesDefaults);
+        
+        final List<Class<? extends AbstractEntity<?>>> persystentTypes = StreamUtils.of(type, types).filter(et -> isPersistedEntityType(et)).collect(Collectors.toList());
+        
+        final List<String> ddlTables = new LinkedList<>();
+        final List<String> ddlFKs = new LinkedList<>();
+        
+        for (final Class<? extends AbstractEntity<?>> entityType : persystentTypes) {
+            final TableDdl tableDefinition = new TableDdl(columnDefinitionExtractor, entityType);
+            ddlTables.add(tableDefinition.createTableSchema(dialect, "\n"));
+            ddlTables.add(tableDefinition.createPkSchema(dialect));
+            ddlTables.addAll(tableDefinition.createIndicesSchema(dialect));
+            ddlFKs.addAll(tableDefinition.createFkSchema(dialect));
+        }
+        final List<String> ddl = new LinkedList<>();
+        ddl.addAll(ddlTables);
+        ddl.addAll(ddlFKs);
+        return ddl;
+    }
+
     public <ET extends AbstractEntity<?>> PersistedEntityMetadata<ET> generatePersistedEntityMetadata(final EntityTypeInfo <ET> parentInfo)
             throws Exception {
         return new PersistedEntityMetadata(parentInfo.tableName, parentInfo.entityType, generatePropertyMetadatasForEntity(parentInfo));

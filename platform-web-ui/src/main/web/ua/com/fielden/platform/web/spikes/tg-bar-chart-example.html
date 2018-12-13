@@ -24,54 +24,82 @@
     <template is="dom-bind" id="app">
         <tg-app-config id="appConfig"></tg-app-config>
         <tg-reflector id="reflector"></tg-reflector>
-        <tg-bar-chart id="chart" class="fit" data="[[data]]" options="[[options]]"></tg-bar-chart>
+        <tg-bar-chart id="chart" class="fit"></tg-bar-chart>
     </template>
     <script>
         (function () {
             var app = document.querySelector('#app');
-            app.options = {
-                label: "Bar chart example",
-                xAxis: {label: "Letters"},
-                yAxis: {label: "Frequency"},
-                margin: {
-                    left: 60,
-                    top: 40,
-                    bottom: 50
-                },
-                markerGenerator: function (d) {
-                    return d.value;
-                },
-                tooltipCallback: function (d) {
-                    return d.name + "<br><b>value:</b> " + d.value;
-                }
-            };
-            app.data = [{name: 'A',	value: 0.08167, color: "aquamarine"},
-                        {name: 'B', value: 0.01492, color: "brown"},
-                        {name: 'C',	value: 0.02782, color: "cornflowerblue"},
-                        {name: 'D',	value: 0.04253, color: "darkorange"},
-                        {name: 'E',	value: 0.12702, color: "Indianred"},
-                        {name: 'F',	value: 0.02288, color: "gold"},
-                        {name: 'G',	value: 0.02015, color: "fiebrick"},
-                        {name: 'H',	value: 0.06094, color: "mediumorchid"},
-                        {name: 'I',	value: 0.06966, color: "palevioletred"},
-                        {name: 'J',	value: 0.00153, color: "royalblue"},
-                        {name: 'K',	value: 0.00772, color: "palegreen"},
-                        {name: 'L',	value: 0.04025, color: "mistyrose"},
-                        {name: 'M',	value: 0.02406, color: "lightcoral"},
-                        {name: 'N',	value: 0.06749, color: "lightskyblue"},
-                        {name: 'O',	value: 0.07507, color: "mediumspringgreen"},
-                        {name: 'P',	value: 0.01929, color: "orangered"},
-                        {name: 'Q',	value: 0.00095, color: "orchid"},
-                        {name: 'R',	value: 0.05987, color: "palegoldenrod"},
-                        {name: 'S',	value: 0.06327, color: "peachpuff"},
-                        {name: 'T',	value: 0.09056, color: "powderblue"},
-                        {name: 'U',	value: 0.02758, color: "plum"},
-                        {name: 'V',	value: 0.00978, color: "salmon"},
-                        {name: 'W',	value: 0.02360, color: "seagreen"},
-                        {name: 'X',	value: 0.00150, color: "slateblue"},
-                        {name: 'Y',	value: 0.01974, color: "yellowgreen"},
-                        {name: 'Z', value: 0.00074, color: "yellow"}];
+            const colors = ["#375e97", "#fb6542", "#ffbb00", "#3f681c"];
+            app.addEventListener('dom-change', function() {
+                const mode = d3.barChart.BarMode.STACKED;
+                app.$.chart.options = {
+                    mode: mode,
+                    dataPropertyNames: {
+                        id: d => d.id,
+                        groupKeyProp: d => d.name,
+                        groupDescProp: d => d.name,
+                        valueProps: [d => d.value, d => d.value1, d => d.value2, d => d.value3],
+                    },
+                    label: "Bar chart example",
+                    xAxis: {label: "Letters"},
+                    yAxis: {label: "Frequency"},
+                    margin: {
+                        left: 60,
+                        top: 40,
+                        bottom: 50
+                    },
+                    barColour: (d, i) => colors[i],
+                    barLabel: (d, i) => {
+                        if (mode == d3.barChart.BarMode.STACKED) {
+                            const res = [d.value, d.value1, d.value2, d.value3];
+                            const resPos = res.filter(val => val > 0).reduce((a,b) => a + b, 0);
+                            const resNeg = res.filter(val => val < 0).reduce((a,b) => a + b, 0);
+                            if (i > 0) {
+                                if (!resPos) {
+                                    return resNeg ? "" : 0;
+                                }
+                                return resPos.toFixed(2);
+                            } else {
+                                return resNeg ? resNeg.toFixed(2) : "";
+                            }
+                        }
+                        return d["value" + (i ? i : "")];
+                    },
+                    //selectedColour: (d, i) => shadeColor(colors[i], 0.3),
+                    tooltip: (d, i) => "<b>" + d.name + "</b><br><b>" + "value" + (i ? i : "") + "</b><br><i>" + d["value" + (i ? i : "")] + "</i>",
+                    click: d => {},
+                    
+                };
+                app.$.chart.data = [
+                            {id:0, name: 'A', value: 1, value1: 0.2, value2: 0.1, value3: 0.7},
+                            {id:1, name: 'B', value: 1.4, value1: 1, value2: 2, value3: -0.5},
+                            {id:2, name: 'C', value: 1.2, value1: 0.1, value2: 1, value3: 1.1},
+                            {id:3, name: 'D', value: 1, value1: 2, value2: 3, value3: 1.5},
+                            {id:4, name: 'E', value: 0.5, value1: 0, value2: 0, value3: -0.4},
+                            {id:5, name: 'F', value: 2, value1: 1, value2: 1.1, value3: 1.3},
+                            {id:6, name: 'G', value: 1.1, value1: 1.2, value2: 1.1, value3: 1},
+                            {id:7, name: 'H', value: 0.7, value1: 0.4, value2: 0.7, value3: 1},
+                            {id:8, name: 'I', value: 0.1, value1: -1, value2: 2, value3: -1.4},
+                            {id:9, name: 'J', value: -0.5, value1: 1.1, value2: 1.2, value3: 1.4},
+                            {id:10, name: 'K', value: 0.2, value1: 2, value2: 1.4, value3: -1},
+                            {id:11, name: 'L', value: 0.6, value1: 0.8, value2: -1, value3: 0},
+                            {id:12, name: 'M', value: -1, value1: 1, value2: -1, value3: 1},
+                            {id:13, name: 'N', value: -0.4, value1: 1.2, value2: 2, value3: 1},
+                            {id:14, name: 'O', value: 2, value1: 1.2, value2: 1.5, value3: 2},
+                            {id:15, name: 'P', value: 3, value1: -1, value2: 1.5, value3: 0.3},
+                            {id:16, name: 'Q', value: 2.3, value1: 2.1, value2: 1.1, value3: 0.5},
+                            {id:17, name: 'R', value: 2.1, value1: 1, value2: -1, value3: 0.4},
+                            {id:18, name: 'S', value: 2.7, value1: 0.3, value2: 0.4, value3: -1.2},
+                            {id:19, name: 'T', value: 2, value1: 0.6, value2: 0.1, value3: 0.2},
+                            {id:20, name: 'U', value: 1.2, value1: 0.4, value2: 0.2, value3: -1},
+                            {id:21, name: 'V', value: -0.1, value1: 1.1, value2: 1.5, value3: 2},
+                            {id:22, name: 'W', value: 0, value1: 0, value2: 1.1, value3: 1.6},
+                            {id:23, name: 'X', value: 1, value1: 1.5, value2: 1.3, value3: 2.5},
+                            {id:24, name: 'Y', value: 1.2, value1: 1, value2: -1, value3: 1.2},
+                            {id:25, name: 'Z', value: 1.4, value1: 2.1, value2: -1.3, value3: 0}];
+            });
         })();
+      
     </script>
 </body>
 
