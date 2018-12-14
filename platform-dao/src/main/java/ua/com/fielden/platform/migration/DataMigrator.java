@@ -29,11 +29,11 @@ import org.joda.time.Period;
 
 import com.google.inject.Injector;
 
-import ua.com.fielden.platform.dao.DomainMetadata;
-import ua.com.fielden.platform.dao.DomainMetadataAnalyser;
-import ua.com.fielden.platform.dao.PropertyMetadata;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
+import ua.com.fielden.platform.entity.query.metadata.DomainMetadata;
+import ua.com.fielden.platform.entity.query.metadata.DomainMetadataAnalyser;
+import ua.com.fielden.platform.entity.query.metadata.PropertyMetadata;
 import ua.com.fielden.platform.migration.RetrieverPropsValidator.RetrievedPropValidationError;
 import ua.com.fielden.platform.persistence.HibernateUtil;
 import ua.com.fielden.platform.types.markers.IUtcDateTimeType;

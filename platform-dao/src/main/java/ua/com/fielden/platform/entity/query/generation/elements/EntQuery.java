@@ -35,9 +35,6 @@ import java.util.TreeSet;
 
 import org.apache.log4j.Logger;
 
-import ua.com.fielden.platform.dao.DomainMetadataAnalyser;
-import ua.com.fielden.platform.dao.PersistedEntityMetadata;
-import ua.com.fielden.platform.dao.PropertyMetadata;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.DynamicEntityKey;
 import ua.com.fielden.platform.entity.query.EntityAggregates;
@@ -50,6 +47,9 @@ import ua.com.fielden.platform.entity.query.generation.StandAloneConditionBuilde
 import ua.com.fielden.platform.entity.query.generation.StandAloneExpressionBuilder;
 import ua.com.fielden.platform.entity.query.generation.elements.AbstractSource.PropResolutionInfo;
 import ua.com.fielden.platform.entity.query.generation.elements.ResultQueryYieldDetails.YieldDetailsType;
+import ua.com.fielden.platform.entity.query.metadata.DomainMetadataAnalyser;
+import ua.com.fielden.platform.entity.query.metadata.PersistedEntityMetadata;
+import ua.com.fielden.platform.entity.query.metadata.PropertyMetadata;
 import ua.com.fielden.platform.entity.query.model.ConditionModel;
 import ua.com.fielden.platform.types.Money;
 import ua.com.fielden.platform.utils.Pair;
@@ -180,15 +180,10 @@ public class EntQuery implements ISingleOperand {
             if (mainSourceIsTypeBased()) {
                 final Class<? extends AbstractEntity<?>> mainSourceType = getSources().getMain().sourceType();
                 for (final PropertyMetadata ppi : domainMetadataAnalyser.getPropertyMetadatasForEntity(mainSourceType)) {
-                    //                    if (ppi.isSynthetic()) {
-                    //                        throw new IllegalStateException(ppi.toString());
-                    //                    }
                     final boolean skipProperty = ppi.isSynthetic() ||
-                            ppi.isVirtual() ||
+                            ppi.isCompositeKeyExpression() ||
                             ppi.isCollection() ||
-                            (ppi.isAggregatedExpression() && !isResultQuery())
-                    //|| (ppi.isCommonCalculated() && (fetchModel == null || !fetchModel.containsProp(ppi.getName())))
-                    ;
+                            (ppi.isAggregatedExpression() && !isResultQuery());
                     if (!skipProperty) {
                         LOGGER.debug(" add yield: " + ppi);
                         yields.addYield(new Yield(new EntProp(yieldPropAliasPrefix + ppi.getName()), ppi.getName()));
@@ -207,7 +202,7 @@ public class EntQuery implements ISingleOperand {
 
                 if (mainSourceType != EntityAggregates.class) {
                     for (final PropertyMetadata ppi : domainMetadataAnalyser.getPropertyMetadatasForEntity(mainSourceType)) {
-                        final boolean skipProperty = ppi.isSynthetic() || ppi.isVirtual() || ppi.isCollection() || (ppi.isAggregatedExpression() && !isResultQuery());
+                        final boolean skipProperty = ppi.isSynthetic() || ppi.isCompositeKeyExpression() || ppi.isCollection() || (ppi.isAggregatedExpression() && !isResultQuery());
                         if ((ppi.isCalculated()) && yields.getYieldByAlias(ppi.getName()) == null && !skipProperty) {
                             yields.addYield(new Yield(new EntProp(yieldPropAliasPrefix + ppi.getName()), ppi.getName()));
                         }
@@ -484,7 +479,6 @@ public class EntQuery implements ISingleOperand {
         enhanceToFinalState(generator, fetchModel);
 
         assignPropertyPersistenceInfoToYields();
-        //sources.reorderSources();
     }
 
     private boolean isResulTypePersisted() {

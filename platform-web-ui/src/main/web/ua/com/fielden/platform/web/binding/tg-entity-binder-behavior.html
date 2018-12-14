@@ -341,7 +341,7 @@
                     type: Boolean,
                     value: false
                 },
-                
+
                 /**
                  * Indicates whether continuation master appearance should be complemented with error toast (true) or with informational toast (false).
                  */
@@ -533,10 +533,14 @@
                         // TODO should prompt for login in place...
                         this._openToastForError('Access denied.', 'The current session has expired. Please login and try again.', true);
                         customErrorHandlerFor('Access denied');
-                    } else { // other codes
-                        // from what it could be observed, this siuation was occuring only in case of request cancellation...
-                        // let's simply produce a console warning at this stage
-                        console.warn('Response with status ' + xhr.status + ' is unexpected and will be ignored.');
+                    } else if (xhr.status === 503) { // service unavailable
+                        this._openToastForError('Service Unavailable.', 'Server responded with error 503 (Service Unavailable).', true);
+                        customErrorHandlerFor('Service Unavailable');
+                    } else if (xhr.status >= 400) { // other client or server error codes
+                        this._openToastForError('Service Error (' + xhr.status + ').', 'Server responded with error code ' + xhr.status, true);
+                        customErrorHandlerFor('Service Error (' + xhr.status + ').');
+                    } else { // for other codes just log the code
+                        console.warn('Server responded with error code ', xhr.status);
                     }
                 }).bind(self);
 

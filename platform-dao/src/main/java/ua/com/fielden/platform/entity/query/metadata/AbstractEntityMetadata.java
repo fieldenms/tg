@@ -1,7 +1,4 @@
-package ua.com.fielden.platform.dao;
-
-import static ua.com.fielden.platform.reflection.AnnotationReflector.getKeyType;
-import static ua.com.fielden.platform.utils.EntityUtils.isPersistedEntityType;
+package ua.com.fielden.platform.entity.query.metadata;
 
 import java.util.HashSet;
 import java.util.Map.Entry;
@@ -20,10 +17,6 @@ public abstract class AbstractEntityMetadata<ET extends AbstractEntity<?>> {
             throw new IllegalArgumentException("Missing entity type!");
         }
         this.props = props;
-    }
-
-    public boolean isOneToOne() {
-        return isPersistedEntityType(getKeyType(type));
     }
 
     public Class<? extends AbstractEntity<?>> getType() {
@@ -80,35 +73,5 @@ public abstract class AbstractEntityMetadata<ET extends AbstractEntity<?>> {
             return false;
         }
         return true;
-    }
-
-    public int countCalculatedProps() {
-        int result = 0;
-        for (final PropertyMetadata propMetadata : props.values()) {
-            if (propMetadata.isCalculated()) {
-                result = result + 1;
-            }
-        }
-        return result;
-    }
-
-    public int countCollectionalProps() {
-        int result = 0;
-        for (final PropertyMetadata propMetadata : props.values()) {
-            if (propMetadata.isCollection()) {
-                result = result + 1;
-            }
-        }
-        return result;
-    }
-    
-    public int countUnionEntityProps() {
-        int result = 0;
-        for (final PropertyMetadata propMetadata : props.values()) {
-            if (propMetadata.isUnionEntity()) {
-                result = result + 1;
-            }
-        }
-        return result;
     }
 }

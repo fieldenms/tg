@@ -1,4 +1,4 @@
-package ua.com.fielden.platform.dao;
+package ua.com.fielden.platform.entity.query.metadata;
 
 import static java.lang.String.format;
 
@@ -22,11 +22,9 @@ public class DomainMetadataAnalyser {
     private final Logger logger = Logger.getLogger(DomainMetadataAnalyser.class);
     private final Map<Class<? extends AbstractEntity<?>>, AbstractEntityMetadata> entityMetadataMap = new HashMap<>();
     private final DomainMetadata domainMetadata;
-    private final BaseInfoForDomainMetadata baseInfoForDomainMetadata;
 
     public DomainMetadataAnalyser(final DomainMetadata domainMetadata) {
         this.domainMetadata = domainMetadata;
-        baseInfoForDomainMetadata = new BaseInfoForDomainMetadata();
         entityMetadataMap.putAll(domainMetadata.getPersistedEntityMetadataMap());
         entityMetadataMap.putAll(domainMetadata.getModelledEntityMetadataMap());
         entityMetadataMap.putAll(domainMetadata.getPureEntityMetadataMap());
@@ -48,18 +46,19 @@ public class DomainMetadataAnalyser {
         } else {
             try {
                 final AbstractEntityMetadata<ET> newOne;
-                switch (baseInfoForDomainMetadata.getCategory(entityType)) {
+                final EntityTypeInfo<ET> parentInfo = new EntityTypeInfo<>(entityType);
+                switch (parentInfo.category) {
                 case PERSISTED:
-                    newOne = domainMetadata.generatePersistedEntityMetadata(entityType, baseInfoForDomainMetadata);
+                    newOne = domainMetadata.generatePersistedEntityMetadata(parentInfo);
                     break;
                 case QUERY_BASED:
-                    newOne = domainMetadata.generateModelledEntityMetadata(entityType, baseInfoForDomainMetadata);
+                    newOne = domainMetadata.generateModelledEntityMetadata(parentInfo);
                     break;
                 case UNION:
-                    newOne = domainMetadata.generateUnionedEntityMetadata(entityType, baseInfoForDomainMetadata);
+                    newOne = domainMetadata.generateUnionedEntityMetadata(parentInfo);
                     break;
                 default:
-                    newOne = domainMetadata.generatePureEntityMetadata(entityType, baseInfoForDomainMetadata);
+                    newOne = domainMetadata.generatePureEntityMetadata(parentInfo);
                 }
 
                 entityMetadataMap.put(entityType, newOne);

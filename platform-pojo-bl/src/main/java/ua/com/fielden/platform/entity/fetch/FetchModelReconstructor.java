@@ -18,11 +18,11 @@ import java.util.stream.Collectors;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.AbstractUnionEntity;
+import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.reflection.Reflector;
-import ua.com.fielden.platform.utils.EntityUtils;
 
 /**
  *
@@ -96,7 +96,7 @@ public class FetchModelReconstructor {
         
         for (final Field propField : retrievableNotProxiedPropFields) {
             final String propName = propField.getName();
-            final boolean isEntity = AbstractEntity.class.isAssignableFrom(propField.getType());
+            final boolean isEntity = AbstractEntity.class.isAssignableFrom(propField.getType()) && !PropertyDescriptor.class.equals(propField.getType());
             
             if (isEntity) { // handle entity type properties
                 final AbstractEntity<?> value = (AbstractEntity<?>) entity.get(propName);

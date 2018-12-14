@@ -709,8 +709,13 @@
                 
                 //Add event listener that indicates whne the layout has finished
                 self.addEventListener("layout-finished",  e => {
-                    self._viewLoaded = true;
-                    self.fire('tg-view-loaded', self);
+                    const target = e.target || e.srcElement;
+                    if (target === e.detail) {
+                        tearDownEvent(e);
+                        self.isSelectionCriteriaEmpty = !e.detail.componentsToLayout || e.detail.componentsToLayout.length === 0;
+                        self._viewLoaded = true;
+                        self.fire('tg-view-loaded', self);
+                    }
                 });
                 
                 //Add event listener that listens when egi entities appeared and fires the data was loaded and focused event for the dialog
