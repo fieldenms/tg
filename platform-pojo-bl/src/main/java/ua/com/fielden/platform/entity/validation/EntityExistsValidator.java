@@ -62,15 +62,17 @@ public class EntityExistsValidator<T extends AbstractEntity<?>> implements IBefo
     @Override
     public Result handle(final MetaProperty<T> property, final T newValue, final Set<Annotation> mutatorAnnotations) {
         final IEntityDao<T> co = coFinder.find(type);
-        Optional<Boolean> isPropertyDescriptorOpt = empty();
+        final Optional<Boolean> isPropertyDescriptorOpt;
         if (co == null) {
-            final boolean isPropertyDescriptor = isPropertyDescriptor(type);
-            isPropertyDescriptorOpt = of(isPropertyDescriptor);
-            if (!isPropertyDescriptor) {
+            isPropertyDescriptorOpt = of(isPropertyDescriptor(type));
+            if (!isPropertyDescriptorOpt.get()) {
                 throw new IllegalStateException("EntityExistsValidator is not fully initialised: companion object is missing");
             }
+        } else {
+            isPropertyDescriptorOpt = empty();
         }
-
+        final boolean isPropertyDescriptor = isPropertyDescriptorOpt.orElse(false);
+        
         final AbstractEntity<?> entity = property.getEntity();
         try {
             if (newValue == null) {
@@ -92,7 +94,7 @@ public class EntityExistsValidator<T extends AbstractEntity<?>> implements IBefo
             final boolean exists;
             final boolean activeEnough; // Does not have to 100% active - see below
             if (!property.isActivatable()) { // is property value represents non-activatable?
-                exists = isPropertyDescriptorOpt.orElse(false) ? !isMockNotFoundEntity(newValue) : co.entityExists(newValue);
+                exists = isPropertyDescriptor && !isMockNotFoundEntity(newValue) || co.entityExists(newValue);
                 activeEnough = true;
             } else { // otherwise, property value is activatable
                 final Class<T> entityType = co.getEntityType();
@@ -114,7 +116,7 @@ public class EntityExistsValidator<T extends AbstractEntity<?>> implements IBefo
             if (!exists || !activeEnough) {
                 final String entityTitle = TitlesDescsGetter.getEntityTitleAndDesc(newValue.getType()).getKey();
                 if (!exists) {
-                    return failure(entity, isPropertyDescriptorOpt.orElse(false) && isMockNotFoundEntity(newValue) || KEY_NOT_ASSIGNED.equals(newValue.toString()) ? format(WAS_NOT_FOUND_ERR, entityTitle) : format(WAS_NOT_FOUND_CONCRETE_ERR, entityTitle, newValue.toString()));
+                    return failure(entity, isPropertyDescriptor || KEY_NOT_ASSIGNED.equals(newValue.toString()) ? format(WAS_NOT_FOUND_ERR, entityTitle) : format(WAS_NOT_FOUND_CONCRETE_ERR, entityTitle, newValue.toString()));
                 } else {
                     return failure(entity, format(EXISTS_BUT_NOT_ACTIVE_ERR, entityTitle, newValue.toString()));
                 }

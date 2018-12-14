@@ -26,6 +26,7 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.AbstractFunctionalEntityForCollectionModification;
 import ua.com.fielden.platform.entity.DynamicEntityKey;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
+import ua.com.fielden.platform.entity.annotation.Required;
 import ua.com.fielden.platform.entity.exceptions.EntityDefinitionException;
 import ua.com.fielden.platform.entity.proxy.StrictProxyException;
 import ua.com.fielden.platform.entity.validation.FinalValidator;
@@ -33,7 +34,6 @@ import ua.com.fielden.platform.entity.validation.IBeforeChangeEventHandler;
 import ua.com.fielden.platform.entity.validation.StubValidator;
 import ua.com.fielden.platform.entity.validation.annotation.Final;
 import ua.com.fielden.platform.entity.validation.annotation.ValidationAnnotation;
-import ua.com.fielden.platform.entity_centre.review.criteria.EntityQueryCriteria;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.error.Warning;
 import ua.com.fielden.platform.types.tuples.T2;
@@ -121,6 +121,12 @@ public final class MetaPropertyFull<T> extends MetaProperty<T> {
     public final boolean isRequiredByDefinition;
     private final boolean calculated;
     private final boolean upperCase;
+    /**
+     * Validation for requiredness needs to be skipped for criteria entities.
+     * According to #979 issue requiredness needs to be processed as part of 'crit-only-single prototype' validation logic similar to all other validators.
+     * This property indicates whether meta-property parent represents 'criteria entity' and is used in {@link #validate(Object, Set, boolean)} method to skip {@link Required} validation.
+     */
+    private final boolean criteriaParent;
     ////////////////////////////////////////////////////////////////////////////////////////////////////////
     
     // if the value is present then a corresponding property has annotation {@link Final}
@@ -137,6 +143,7 @@ public final class MetaPropertyFull<T> extends MetaProperty<T> {
      * might be desirable to specify type more accurately.
      *
      * @param entity
+     * @param criteriaParent
      * @param field
      * @param type
      * @param isKey
@@ -151,6 +158,7 @@ public final class MetaPropertyFull<T> extends MetaProperty<T> {
      */
     public MetaPropertyFull(
             final AbstractEntity<?> entity,
+            final boolean criteriaParent,
             final Field field,
             final Class<?> type,
             final boolean isProxy,
@@ -166,6 +174,7 @@ public final class MetaPropertyFull<T> extends MetaProperty<T> {
             final String[] dependentPropertyNames) {
         super(entity, field, type, isKey, isProxy, dependentPropertyNames);
         
+        this.criteriaParent = criteriaParent;
         this.validationAnnotations.addAll(validationAnnotations);
         this.validators = validators;
         this.aceHandler = aceHandler;
@@ -192,7 +201,7 @@ public final class MetaPropertyFull<T> extends MetaProperty<T> {
     @Override
     public final Result validate(final T newValue, final Set<Annotation> applicableValidationAnnotations, final boolean ignoreRequiredness) {
         setLastInvalidValue(null);
-        if (!ignoreRequiredness && isRequired() && isNull(newValue, getValue()) && !EntityQueryCriteria.class.isAssignableFrom(entity.getType())) {
+        if (!ignoreRequiredness && isRequired() && isNull(newValue, getValue()) && !criteriaParent) {
             final Map<IBeforeChangeEventHandler<T>, Result> requiredHandler = getValidators().get(ValidationAnnotation.REQUIRED);
             if (requiredHandler == null || requiredHandler.size() > 1) {
                 throw new IllegalArgumentException("There are no or there is more than one REQUIRED validation handler for required property!");

@@ -87,6 +87,7 @@ import ua.com.fielden.platform.entity.validation.annotation.DomainValidation;
 import ua.com.fielden.platform.entity.validation.annotation.EntityExists;
 import ua.com.fielden.platform.entity.validation.annotation.Final;
 import ua.com.fielden.platform.entity.validation.annotation.ValidationAnnotation;
+import ua.com.fielden.platform.entity_centre.review.criteria.EntityQueryCriteria;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.error.Warning;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
@@ -617,6 +618,8 @@ public abstract class AbstractEntity<K extends Comparable> implements Comparable
         this.metaPropertyFactory = of(metaPropertyFactory);
         final List<Field> keyMembers = Finder.getKeyMembers(getType());
 
+        final boolean isCriteriaEntity = EntityQueryCriteria.class.isAssignableFrom(getType());
+
         // obtain field annotated as properties
         final List<Field> fields = Finder.findRealProperties(getClass());
         for (final Field field : fields) { // for each property field
@@ -657,6 +660,7 @@ public abstract class AbstractEntity<K extends Comparable> implements Comparable
                     final boolean isUpperCase = AnnotationReflector.isAnnotationPresent(field, UpperCase.class);
                     final MetaProperty<?> metaProperty = new MetaPropertyFull(
                             this,
+                            isCriteriaEntity,
                             field,
                             type,
                             false,
