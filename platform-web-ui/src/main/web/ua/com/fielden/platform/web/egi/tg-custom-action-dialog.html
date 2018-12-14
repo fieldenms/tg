@@ -267,6 +267,14 @@
                     type: Boolean,
                     value: false
                 },
+                
+                /**
+                 * Indicates whether data was loaded or not.
+                 */
+                _dataLoaded: {
+                    type: Boolean,
+                    value: false
+                },
 
                 /**
                  * Indicates whether dialog was resized using bottom right corner's resizer. This will be reset after dialog closes.
@@ -975,6 +983,7 @@
             },
             
             _handleDataLoaded: function () {
+                this._dataLoaded = true;
                 this._resetSpinner();
                 this._hideBlockingPane();
             },
@@ -998,6 +1007,7 @@
             },
             
             _handleActionNavigationInvoked: function (e) {
+                this._dataLoaded = false;
                 if (this._errorMsg) {
                     this._resetState();
                 }
@@ -1166,7 +1176,9 @@
                 }
                 
                 this.open();
-                this._showBlockingPane();
+                if (!this._dataLoaded) {
+                    this._showBlockingPane();
+                }
             },
             
             _showBlockingPane: function () {
@@ -1285,6 +1297,7 @@
             },
             
             _resetState: function (withClasses) {
+                this._dataLoaded = false;
                 this._hasNext = false;
                 this._hasPrev = false;
                 this._errorMsg = null;
