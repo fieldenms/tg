@@ -121,12 +121,6 @@ public final class MetaPropertyFull<T> extends MetaProperty<T> {
     public final boolean isRequiredByDefinition;
     private final boolean calculated;
     private final boolean upperCase;
-    /**
-     * Validation for requiredness needs to be skipped for criteria entities.
-     * According to #979 issue requiredness needs to be processed as part of 'crit-only-single prototype' validation logic similar to all other validators.
-     * This property indicates whether meta-property parent represents 'criteria entity' and is used in {@link #validate(Object, Set, boolean)} method to skip {@link Required} validation.
-     */
-    private final boolean criteriaParent;
     ////////////////////////////////////////////////////////////////////////////////////////////////////////
     
     // if the value is present then a corresponding property has annotation {@link Final}
@@ -172,9 +166,8 @@ public final class MetaPropertyFull<T> extends MetaProperty<T> {
             final Map<ValidationAnnotation, Map<IBeforeChangeEventHandler<T>, Result>> validators,
             final IAfterChangeEventHandler<T> aceHandler,
             final String[] dependentPropertyNames) {
-        super(entity, field, type, isKey, isProxy, dependentPropertyNames);
+        super(entity, criteriaParent, field, type, isKey, isProxy, dependentPropertyNames);
         
-        this.criteriaParent = criteriaParent;
         this.validationAnnotations.addAll(validationAnnotations);
         this.validators = validators;
         this.aceHandler = aceHandler;

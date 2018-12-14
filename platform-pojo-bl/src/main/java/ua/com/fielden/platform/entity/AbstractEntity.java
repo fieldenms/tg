@@ -631,7 +631,7 @@ public abstract class AbstractEntity<K extends Comparable> implements Comparable
             final boolean isKey = keyMembers.contains(field);
 
             if (Reflector.isPropertyProxied(this, propName)) {
-                properties.put(propName, new MetaProperty(this, field, type, isKey, true, extractDependentProperties(field, fields)));
+                properties.put(propName, new MetaProperty(this, isCriteriaEntity, field, type, isKey, true, extractDependentProperties(field, fields)));
             } else {
                 try {
                     // ensure that there is an accessor -- with out it field is not a property

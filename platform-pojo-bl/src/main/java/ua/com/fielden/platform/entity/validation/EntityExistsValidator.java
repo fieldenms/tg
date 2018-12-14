@@ -86,7 +86,7 @@ public class EntityExistsValidator<T extends AbstractEntity<?>> implements IBefo
                 return failure(entity, format("EntityExists validator: dirty entity %s (%s) is not acceptable.", newValue, entityTitle));
             }
             
-            if (EntityQueryCriteria.class.isAssignableFrom(entity.getType())) {
+            if (property.criteriaParent) {
                 return successful(entity);
             }
             // the notion of existence is different for activatable and non-activatable entities,
