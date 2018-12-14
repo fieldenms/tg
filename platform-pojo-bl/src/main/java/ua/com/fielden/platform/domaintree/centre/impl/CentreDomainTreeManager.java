@@ -1,13 +1,16 @@
 package ua.com.fielden.platform.domaintree.centre.impl;
 
+import static ua.com.fielden.platform.criteria.generator.impl.SynchroniseCriteriaWithModelHandler.areDifferent;
 import static ua.com.fielden.platform.types.tuples.T2.t2;
 
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Set;
 
@@ -790,7 +793,7 @@ public class CentreDomainTreeManager extends AbstractDomainTreeManager implement
                 if (other.propertiesValues1 != null) {
                     return false;
                 }
-            } else if (!propertiesValues1.equals(other.propertiesValues1)) {
+            } else if (propertyValuesDifferent(propertiesValues1, other.propertiesValues1)) {
                 return false;
             }
             if (propertiesValues2 == null) {
@@ -807,7 +810,34 @@ public class CentreDomainTreeManager extends AbstractDomainTreeManager implement
             return locatorManager;
         }
     }
-
+    
+    /**
+     * Compares <code>propertiesValues1</code> with <code>propertiesValues2</code>.
+     * If they are equal using standard logic then we need to compare their values one by one with the check on 'not found mock' entities.
+     * <p>
+     * This logic is condensed to only {@link AddToCriteriaTickManager#propertiesValues1} due to the fact that this is the only place where 'not found mocks' can reside.
+     * We don't need to override 'hashCode' because we do not place {@link AddToCriteriaTickManager} and its wrappers into hash-sets or maps as a keys.
+     * 
+     * @param propertiesValues1
+     * @param propertiesValues2
+     * @return
+     */
+    private static boolean propertyValuesDifferent(final EnhancementPropertiesMap<Object> propertiesValues1, final EnhancementPropertiesMap<Object> propertiesValues2) {
+        final boolean different = !propertiesValues1.equals(propertiesValues2);
+        if (!different) { // there is a chance that inside some entity-typed crit-only single property we will have two mocks; in that case we should compare their 'desc'
+            final Iterator<Entry<Pair<Class<?>, String>, Object>> iter = propertiesValues1.entrySet().iterator();
+            while (iter.hasNext()) {
+                final Entry<Pair<Class<?>, String>, Object> entry = iter.next();
+                final Object value1 = entry.getValue();
+                final Object value2 = propertiesValues2.get(entry.getKey());
+                if (areDifferent(value1, value2)) {
+                    return true;
+                }
+            }
+        }
+        return different;
+    }
+    
     /**
      * A second tick manager for entity centres specific. <br>
      * <br>

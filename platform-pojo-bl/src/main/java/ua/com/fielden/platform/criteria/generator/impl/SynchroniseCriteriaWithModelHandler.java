@@ -101,7 +101,7 @@ public class SynchroniseCriteriaWithModelHandler<CDTME extends ICentreDomainTree
      * @param value2
      * @return
      */
-    private static boolean areDifferent(final Object value1, final Object value2) {
+    public static boolean areDifferent(final Object value1, final Object value2) {
         return !equalsEx(value1, value2) || isMockNotFoundEntity(value1) && isMockNotFoundEntity(value2) && !equalsEx(((AbstractEntity) value1).getDesc(), ((AbstractEntity) value2).getDesc());
     }
     
