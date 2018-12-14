@@ -352,17 +352,17 @@
             behaviors: [Polymer.TgBehaviors.TgTooltipBehavior],
             
             observers: [
-            	'_recordDefinition(entity, propertyName, _editorValidationMsg)',
-            	'_identifyModification(_editingValue, originalEntity)',
-    		    '_editedPropsChanged(entity.@editedProps)'
-			],
-
+                '_recordDefinition(entity, propertyName, _editorValidationMsg)',
+                '_identifyModification(_editingValue, entity)',
+                '_editedPropsChanged(entity.@editedProps)'
+            ],
+            
             ready: function () {
                 var self = this;
                 this.decorator().labelVisible = false;
                 
                 //////////// INNER PROPERTIES, THAT GOVERN CHILDREN: default values population ////////////
-				this._editingValue = this._defaultEditingValue();
+                this._editingValue = this._defaultEditingValue();
                 // The following 'commit' call synchronises '_commValue' with '_editingValue' after default editing value population.
                 //  Please, also note that this call also triggers '_acceptedValue' population, as per '_commValueChanged' method.
                 this.commit();
@@ -382,12 +382,12 @@
                 }
             },
             
-            _identifyModification: function (_editingValue, originalEntity) {
-                if (this.reflector().isEntity(this.entity)) {
-                    const _originalEditingValue = originalEntity ? this._extractOriginalEditingValue(originalEntity, this.propertyName) : _editingValue;
+            _identifyModification: function (_editingValue, entity) {
+                if (this.reflector().isEntity(entity)) {
+                    const _originalEditingValue = entity ? this._extractOriginalEditingValue(entity, this.propertyName) : _editingValue;
                     // console.debug('_bindingEntity (_identifyModification) self = ', this.is, '_editingValue', _editingValue, '_originalEditingValue', _originalEditingValue);
-                    var prevEditedProps = this.entity['@editedProps'];
-                    var newEditedProps = {};
+                    const prevEditedProps = entity['@editedProps'];
+                    const newEditedProps = {};
                     for (var prop in prevEditedProps) {
                         if (prevEditedProps.hasOwnProperty(prop)) {
                             newEditedProps[prop] = prevEditedProps[prop];
@@ -399,21 +399,21 @@
                         delete newEditedProps[this.propertyName];
                     }
                     this.set('entity.@editedProps', newEditedProps);
+                    // if ('some_name' === this.propertyName) { console.error('_identifyModification: prop [', this.propertyName, '] originalEditingValue = [', _originalEditingValue, '] editingValue = [', _editingValue, '] newEditedProps [', newEditedProps, ']'); }
                 }
             },
             
             /**
              * Extracts 'original' version of editing value taking into account the erroneous properties.
+             *
+             * Please note that 'original' notion has nothing to do with 'entity.getOriginal() values' or 'originalBindingEntity'.
+             * We just care about 'original' editing value that we started with immediately after validation request has bee completed 
+             * and before next consequent validation request; aka during editing without value committing.
+             *
+             * Erroneous values are considered here too. Binding entities creation contains such logic.
              */
-            _extractOriginalEditingValue: function (originalEntity, propertyName) {
-                const origin = this.reflector()._getValueFor(originalEntity, ""); // fully-fledged entity instance aka @@origin
-                // The following logic introduced in 1145 issue (centre diff serialisation migration to Jackson) with the feature to save erroneous centres.
-                // SAVE / DISCARD buttons enablement suffered from incorrect _originalEditingValue calculation for erroneous centres.
-                // The idea is that when originalEntity has invalid property then previous editingValue was derived from lastInvalidValue.
-                if (this.reflector().isError(origin.prop(propertyName).validationResult())) {
-                    return this.convertToString(this.reflector().convert(this.reflector()._getErroneousFullPropertyValue(origin, propertyName)));
-                }
-                return this.convertToString(this.reflector().getBindingValue.bind(this.reflector())(originalEntity, propertyName));
+            _extractOriginalEditingValue: function (bindingEntity, propertyName) {
+                return this.convertToString(this.reflector().getBindingValue.bind(this.reflector())(bindingEntity, propertyName));
             },
             
             _editedPropsChanged: function (editedProps) {
