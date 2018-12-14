@@ -253,7 +253,7 @@ public class CriteriaGenerator implements ICriteriaGenerator {
      * @param entity
      */
     private static <T extends AbstractEntity<?>, CDTME extends ICentreDomainTreeManagerAndEnhancer> void synchroniseWithModel(final EntityQueryCriteria<CDTME, T, IEntityDao<T>> entity) {
-        // LOGGER.debug(format("synchroniseWithModel started..."));
+        // LOGGER.error(format("synchroniseWithModel started..."));
         final Class<T> root = entity.getEntityClass();
         final IAddToCriteriaTickManager ftm = entity.getCentreDomainTreeMangerAndEnhancer().getFirstTick();
         CriteriaReflector.getCriteriaProperties(entity.getType()).stream().map(propertyField -> {
@@ -262,17 +262,17 @@ public class CriteriaGenerator implements ICriteriaGenerator {
         }).collect(toList()).forEach(fieldAndVal -> { // there is a need to collect all results BEFORE forEach processing due to mutable nature of 'getValue*' methods
             final Field field = fieldAndVal._1;
             try {
-                // LOGGER.debug(format("\tsynchroniseWithModel prop [%s] setting... val = [%s]", field.getName(), fieldAndVal._2));
+                // LOGGER.error(format("\tsynchroniseWithModel prop [%s] setting... val = [%s]", field.getName(), fieldAndVal._2));
                 // need to enforce the setting to ensure invocation of SynchroniseCriteriaWithModelHandler; this will ensure application of editable / required (and other) attributes and integrity of property dependencies
                 entity.getProperty(field.getName()).setValue(fieldAndVal._2, true);
-                // LOGGER.debug("\tsynchroniseWithModel. valResult = " + entity.getProperty(field.getName()).getFirstFailure());
+                // LOGGER.error("\tsynchroniseWithModel. valResult = " + entity.getProperty(field.getName()).getFirstFailure());
             } catch (final Exception ex) {
                 LOGGER.warn(format("\tCould not assign crit value to [%s] in root [%s].", field.getName(), root.getName()));
             } 
-            // finally { LOGGER.debug(format("\tsynchroniseWithModel prop [%s] setting...done", field.getName())); }
+            // finally { LOGGER.error(format("\tsynchroniseWithModel prop [%s] setting...done", field.getName())); }
         });
         
-        // LOGGER.debug(format("\tsynchroniseWithModel: clearing requiredness..."));
+        // LOGGER.error(format("\tsynchroniseWithModel: clearing requiredness..."));
         entity.critOnlySinglePrototypeOptional().map(cosPrototype -> {
             final Class<AbstractEntity<?>> entityType = (Class<AbstractEntity<?>>) entity.getEntityClass();
             
@@ -283,8 +283,8 @@ public class CriteriaGenerator implements ICriteriaGenerator {
             applySnapshot(entity, snapshot);
             return cosPrototype;
         });
-        // LOGGER.debug(format("\tsynchroniseWithModel: clearing requiredness...done"));
+        // LOGGER.error(format("\tsynchroniseWithModel: clearing requiredness...done"));
         
-        // LOGGER.debug(format("synchroniseWithModel started...done"));
+        // LOGGER.error(format("synchroniseWithModel started...done"));
     }
 }

@@ -6,10 +6,12 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 import org.apache.commons.io.IOUtils;
+import org.apache.log4j.Logger;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JavaType;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.base.Charsets;
 
 import ua.com.fielden.platform.serialisation.exceptions.SerialisationException;
 
@@ -21,6 +23,7 @@ import ua.com.fielden.platform.serialisation.exceptions.SerialisationException;
  */
 public class CentreDiffSerialiser extends ObjectMapper {
     private static final long serialVersionUID = 1L;
+    // private final Logger logger = Logger.getLogger(getClass());
     public static final CentreDiffSerialiser CENTRE_DIFF_SERIALISER = new CentreDiffSerialiser();
     
     private CentreDiffSerialiser() {
@@ -34,6 +37,7 @@ public class CentreDiffSerialiser extends ObjectMapper {
      */
     public byte[] serialise(final Map<String, Object> diff) {
         try {
+            // logger.error("Serialised pretty JSON = |" + new String(writerWithDefaultPrettyPrinter().writeValueAsBytes(diff), Charsets.UTF_8) + "|.");
             final byte[] bytes = writeValueAsBytes(diff); // default encoding is Charsets.UTF_8
             return bytes;
         } catch (final JsonProcessingException ex) {
@@ -51,6 +55,7 @@ public class CentreDiffSerialiser extends ObjectMapper {
         try {
             final ByteArrayInputStream bis = new ByteArrayInputStream(diffBytes);
             final String contentString = IOUtils.toString(bis, "UTF-8");
+            // logger.error("JSON before deserialisation = |" + contentString + "|.");
             final JavaType concreteType = getTypeFactory().constructType(LinkedHashMap.class);
             final Map<String, Object> deserialised = readValue(contentString, concreteType);
             return deserialised;

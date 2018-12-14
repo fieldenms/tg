@@ -33,6 +33,7 @@ import ua.com.fielden.platform.entity.validation.IBeforeChangeEventHandler;
 import ua.com.fielden.platform.entity.validation.StubValidator;
 import ua.com.fielden.platform.entity.validation.annotation.Final;
 import ua.com.fielden.platform.entity.validation.annotation.ValidationAnnotation;
+import ua.com.fielden.platform.entity_centre.review.criteria.EntityQueryCriteria;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.error.Warning;
 import ua.com.fielden.platform.types.tuples.T2;
@@ -191,7 +192,7 @@ public final class MetaPropertyFull<T> extends MetaProperty<T> {
     @Override
     public final Result validate(final T newValue, final Set<Annotation> applicableValidationAnnotations, final boolean ignoreRequiredness) {
         setLastInvalidValue(null);
-        if (!ignoreRequiredness && isRequired() && isNull(newValue, getValue())) {
+        if (!ignoreRequiredness && isRequired() && isNull(newValue, getValue()) && !EntityQueryCriteria.class.isAssignableFrom(entity.getType())) {
             final Map<IBeforeChangeEventHandler<T>, Result> requiredHandler = getValidators().get(ValidationAnnotation.REQUIRED);
             if (requiredHandler == null || requiredHandler.size() > 1) {
                 throw new IllegalArgumentException("There are no or there is more than one REQUIRED validation handler for required property!");
