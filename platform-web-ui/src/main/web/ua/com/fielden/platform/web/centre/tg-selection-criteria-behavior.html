@@ -319,7 +319,7 @@
                         this._openToast(potentiallySavedEntity, msg, !potentiallySavedEntity.isValid() || potentiallySavedEntity.isValidWithWarning(), msg, false);
                     }
                     
-                    const newBindingEntity = this._postEntityReceived(potentiallySavedEntity, false);
+                    const newBindingEntity = this._postEntityReceived(potentiallySavedEntity, true);
                     
                     if (potentiallySavedEntity.isValidWithoutException()) {
                         // in case where successful save occured we need to reset @@touchedProps that are transported with bindingEntity
