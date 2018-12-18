@@ -1,5 +1,7 @@
 package ua.com.fielden.platform.entity.query.generation.elements;
 
+import static ua.com.fielden.platform.entity.query.DbVersion.aliasComment;
+
 public class Yield {
     private final ISingleOperand operand;
     private final String alias;
@@ -22,7 +24,7 @@ public class Yield {
     }
 
     public String sql() {
-        return operand.sql() + " AS " + info.getColumn() + " "; //+ "/*" + alias + "*/";
+        return operand.sql() + " AS " + info.getColumn() + aliasComment(alias);
     }
 
     public ISingleOperand getOperand() {

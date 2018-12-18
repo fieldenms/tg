@@ -1,6 +1,9 @@
 package ua.com.fielden.platform.entity.query;
 
 import static java.lang.String.format;
+import static ua.com.fielden.platform.error.Result.asRuntime;
+
+import ua.com.fielden.platform.reflection.Reflector;
 
 public enum DbVersion {
     MSSQL(CaseSensitivity.INSENSITIVE, " AS "), 
@@ -25,6 +28,31 @@ public enum DbVersion {
     private static final String LIKE = "LIKE";
     private static final String NOT = "NOT ";
     public final String AS;
+
+    /**
+     * A flag that provides a way to support generation of aliases as part of SQL statements, which may lead for performance degradation due to slow parsing.
+     * Refer to issue https://github.com/fieldenms/tg/issues/1215 for more details.
+     */
+    public static final boolean GEN_ALIAS_COMMENTS;
+    static { // static initialisation block is required instead of direct value assignment to enable reassignment of the value at runtime
+        GEN_ALIAS_COMMENTS = false;
+    }
+
+    public static String aliasComment(final String alias) {
+        return GEN_ALIAS_COMMENTS ? "/*" + alias + "*/" : " ";
+    }
+    
+    /**
+     * Turns on generation of alias comments in SQL expression. This may slow down the application performance.
+     * It is strongly recommended not to use this mode for application deployment.
+     */
+    public static void genAliasComments() {
+        try {
+            Reflector.assignStatic(DbVersion.class.getDeclaredField("GEN_ALIAS_COMMENTS"), true);
+        } catch (final Exception ex) {
+            throw asRuntime(ex);
+        }
+    }
 
     /**
      * Returns a {@code LIKE} term with its left and right operands, all processed with case sensitivity in mind.

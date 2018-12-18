@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.entity.query.generation.elements;
 
+import static ua.com.fielden.platform.entity.query.DbVersion.aliasComment;
 import static ua.com.fielden.platform.utils.EntityUtils.splitPropByFirstDot;
 
 import java.util.Collections;
@@ -90,7 +91,7 @@ public class TypeBasedSource extends AbstractSource {
 
     @Override
     public String sql() {
-        return entityMetadata.getTable() + dbVersion.AS + sqlAlias  + " ";//+ "/*" + (alias == null ? " " : alias) + "*/";
+        return entityMetadata.getTable() + dbVersion.AS + sqlAlias + aliasComment(alias);
     }
 
     @Override
