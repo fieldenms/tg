@@ -28,7 +28,6 @@ import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
-import ua.com.fielden.platform.entity_centre.review.criteria.EntityQueryCriteria;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.reflection.TitlesDescsGetter;
 
@@ -94,7 +93,7 @@ public class EntityExistsValidator<T extends AbstractEntity<?>> implements IBefo
             final boolean exists;
             final boolean activeEnough; // Does not have to 100% active - see below
             if (!property.isActivatable()) { // is property value represents non-activatable?
-                exists = isPropertyDescriptor && !isMockNotFoundEntity(newValue) || co.entityExists(newValue);
+                exists = isPropertyDescriptor ? !isMockNotFoundEntity(newValue) : co.entityExists(newValue);
                 activeEnough = true;
             } else { // otherwise, property value is activatable
                 final Class<T> entityType = co.getEntityType();
