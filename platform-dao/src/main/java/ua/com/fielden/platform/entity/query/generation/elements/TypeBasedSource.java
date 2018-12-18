@@ -90,11 +90,7 @@ public class TypeBasedSource extends AbstractSource {
 
     @Override
     public String sql() {
-        if (dbVersion == DbVersion.ORACLE) {
-            return entityMetadata.getTable() + " " + sqlAlias  + " ";//+ "/*" + (alias == null ? " " : alias) + "*/";
-        } else {
-            return entityMetadata.getTable() + " AS " + sqlAlias  + " "; // "/*" + (alias == null ? " " : alias) + "*/"
-        }
+        return entityMetadata.getTable() + dbVersion.AS + sqlAlias  + " ";//+ "/*" + (alias == null ? " " : alias) + "*/";
     }
 
     @Override
@@ -104,11 +100,7 @@ public class TypeBasedSource extends AbstractSource {
 
     @Override
     public String toString() {
-        if (dbVersion == DbVersion.ORACLE) {
-            return sourceType().getSimpleName() + "-table " + getAlias() + " /*" + (generated ? " GEN " : "") + "*/";
-        } else {
-            return sourceType().getSimpleName() + "-table AS " + getAlias() + " /*" + (generated ? " GEN " : "") + "*/";
-        }
+        return sourceType().getSimpleName() + "-table" + dbVersion.AS + getAlias() + " /*" + (generated ? " GEN " : "") + "*/";
     }
 
     @Override

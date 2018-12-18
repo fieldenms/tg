@@ -18,7 +18,7 @@ public class Yield {
 
     @Override
     public String toString() {
-        return alias;//sql();
+        return alias;
     }
 
     public String sql() {

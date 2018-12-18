@@ -3,11 +3,11 @@ package ua.com.fielden.platform.entity.query;
 import static java.lang.String.format;
 
 public enum DbVersion {
-    MSSQL(CaseSensitivity.INSENSITIVE), 
-    ORACLE(CaseSensitivity.SENSITIVE), 
-    MYSQL(CaseSensitivity.INSENSITIVE), 
-    H2(CaseSensitivity.SENSITIVE),
-    POSTGRESQL(CaseSensitivity.SENSITIVE) {
+    MSSQL(CaseSensitivity.INSENSITIVE, " AS "), 
+    ORACLE(CaseSensitivity.SENSITIVE, " "), 
+    MYSQL(CaseSensitivity.INSENSITIVE, " AS "), 
+    H2(CaseSensitivity.SENSITIVE, " AS "),
+    POSTGRESQL(CaseSensitivity.SENSITIVE, " AS ") {
         private static final String ILIKE = "ILIKE";
 
         @Override
@@ -24,6 +24,7 @@ public enum DbVersion {
     public final CaseSensitivity caseSensitivity;
     private static final String LIKE = "LIKE";
     private static final String NOT = "NOT ";
+    public final String AS;
 
     /**
      * Returns a {@code LIKE} term with its left and right operands, all processed with case sensitivity in mind.
@@ -63,8 +64,9 @@ public enum DbVersion {
         return LIKE;
     }
 
-    DbVersion(final CaseSensitivity caseSensitivity) {
+    DbVersion(final CaseSensitivity caseSensitivity, final String AS) {
         this.caseSensitivity = caseSensitivity;
+        this.AS = AS;
     }
 
     public enum CaseSensitivity {

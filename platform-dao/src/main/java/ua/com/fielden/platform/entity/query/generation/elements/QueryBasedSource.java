@@ -207,7 +207,7 @@ public class QueryBasedSource extends AbstractSource {
             sb.append(iterator.hasNext() ? "\nUNION ALL\n" : "");
         }
         // AS alias is not applicable for Oracle
-        sb.append(format(")%s %s ", dbVersion == DbVersion.ORACLE ? "" : " AS", sqlAlias)); // /*%s*/  , alias        
+        sb.append(format(")%s%s ", dbVersion.AS, sqlAlias)); // /*%s*/  , alias        
         return sb.toString();
     }
 
