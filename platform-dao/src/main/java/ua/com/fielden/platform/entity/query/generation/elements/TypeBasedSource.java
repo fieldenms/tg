@@ -7,6 +7,7 @@ import java.util.List;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.DbVersion;
+import ua.com.fielden.platform.entity.query.EntityBatchDeleteByQueryModelOperation;
 import ua.com.fielden.platform.entity.query.metadata.DomainMetadataAnalyser;
 import ua.com.fielden.platform.entity.query.metadata.PersistedEntityMetadata;
 import ua.com.fielden.platform.entity.query.metadata.PropertyMetadata;
@@ -90,9 +91,9 @@ public class TypeBasedSource extends AbstractSource {
     @Override
     public String sql() {
         if (dbVersion == DbVersion.ORACLE) {
-            return entityMetadata.getTable() + " " + sqlAlias + "/*" + (alias == null ? " " : alias) + "*/";
+            return entityMetadata.getTable() + " " + sqlAlias  + " ";//+ "/*" + (alias == null ? " " : alias) + "*/";
         } else {
-            return entityMetadata.getTable() + " AS " + sqlAlias + "/*" + (alias == null ? " " : alias) + "*/";
+            return entityMetadata.getTable() + " AS " + sqlAlias  + " "; // "/*" + (alias == null ? " " : alias) + "*/"
         }
     }
 

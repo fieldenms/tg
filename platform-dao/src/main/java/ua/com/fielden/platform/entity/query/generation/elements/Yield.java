@@ -22,7 +22,7 @@ public class Yield {
     }
 
     public String sql() {
-        return operand.sql() + " AS " + info.getColumn() + "/*" + alias + "*/";
+        return operand.sql() + " AS " + info.getColumn() + " "; //+ "/*" + alias + "*/";
     }
 
     public ISingleOperand getOperand() {

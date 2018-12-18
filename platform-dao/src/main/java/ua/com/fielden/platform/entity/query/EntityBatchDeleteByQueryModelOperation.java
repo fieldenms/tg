@@ -18,7 +18,6 @@ import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 
 public class EntityBatchDeleteByQueryModelOperation {
     private final QueryExecutionContext executionContext;
-    private static final String TABLE_ALIAS = "TABLE-FOR-DELETION";
 
     public EntityBatchDeleteByQueryModelOperation(final QueryExecutionContext executionContext) {
         this.executionContext = executionContext;
@@ -33,7 +32,7 @@ public class EntityBatchDeleteByQueryModelOperation {
     }
 
     private <T extends AbstractEntity<?>> DeletionModel getModelSql(final EntityResultQueryModel<T> model, final Map<String, Object> paramValues, final DomainMetadataAnalyser domainMetadataAnalyser) {
-        final AggregatedResultQueryModel finalModel = select(model.getResultType()).as(TABLE_ALIAS).where().prop(ID).in().model(model).yield().prop(ID).as(ID).modelAsAggregate();
+        final AggregatedResultQueryModel finalModel = select(model.getResultType()).where().prop(ID).in().model(model).yield().prop(ID).as(ID).modelAsAggregate();
         final EntQueryGenerator gen = new EntQueryGenerator(domainMetadataAnalyser, null, null, executionContext.getUniversalConstants());
         final EntQuery entQuery = gen.generateEntQueryAsResultQuery(finalModel, null, finalModel.getResultType(), null, paramValues);
         final String tableName = ((PersistedEntityMetadata<AbstractEntity<?>>) domainMetadataAnalyser.getEntityMetadata(model.getResultType())).getTable();
@@ -42,10 +41,10 @@ public class EntityBatchDeleteByQueryModelOperation {
         final Map<String, Object> sqlParamValues = entQuery.getValuesForSqlParams();
         return new DeletionModel(deletionSql, sqlParamValues);
     }
-    
+
     private String produceDeletionSql(final String selectionSql, final String tableName) {
-        final int markerStart = selectionSql.indexOf(TABLE_ALIAS);
-        return "DELETE FROM " + tableName + " WHERE " + selectionSql.substring(markerStart + TABLE_ALIAS.length() + 2 + 10);
+        final int markerStart = selectionSql.indexOf("\nWHERE ");
+        return "DELETE FROM " + tableName + " WHERE " + selectionSql.substring(markerStart + 10);
     }
 
     private static class DeletionModel {
