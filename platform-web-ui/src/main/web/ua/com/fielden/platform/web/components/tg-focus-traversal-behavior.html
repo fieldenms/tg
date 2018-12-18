@@ -1,0 +1,78 @@
+<link rel="import" href="/resources/polymer/polymer/polymer.html">
+<link rel="import" href="/resources/reflection/tg-polymer-utils.html">
+
+<script>
+    (function() {
+        const _onCaptureKeyDown = function(event) {
+            if (event.ctrlKey || event.metaKey) {
+                if (event.keyCode === 190) { //. or >
+                    _moveToNextRequiredEditor(event, this, true);
+                } else if (event.keyCode === 188) { //, or <
+                    _moveToNextRequiredEditor(event, this, false);
+                }
+            }
+        };
+
+        const _moveToNextRequiredEditor = function(event, container, isNext) {
+            const requiredFocusables = _getCurrentRequiredFocusableElements(container);
+            if (requiredFocusables.length > 0) {
+                const focusables = _getCurrentFocusableElements(container);
+                const elementIdx = focusables.findIndex(element => element === document.activeElement);
+                if (elementIdx >= 0) {
+                    const focusableIndex = requiredFocusables.findIndex(element => element === document.activeElement);
+                    if (focusableIndex >= 0) {
+                        _focusNextElement(requiredFocusables, isNext, focusableIndex);
+                    } else {
+                        const arrayToSearch = isNext ? focusables.slice(elementIdx) : focusables.slice(0, elementIdx + 1).reverse();
+                        const idxOfNextRequired = arrayToSearch.findIndex(element => !!requiredFocusables.find(required => required === element));
+                        if (idxOfNextRequired >= 0) {
+                            arrayToSearch[idxOfNextRequired].focus();
+                        } else {
+                            _focusFirstElement(requiredFocusables, isNext);
+                        }
+                    }
+                } else {
+                    _focusFirstElement(requiredFocusables, isNext);
+                }
+            }
+            tearDownEvent(event);
+        };
+
+        const _focusNextElement = function (focusables, isNext, idx) {
+            if (isNext) {
+                focusables[idx === focusables.length - 1 ? 0 : idx + 1].focus();
+            } else {
+                focusables[idx === 0 ? focusables.length - 1 : idx - 1].focus();
+            }
+        };
+        
+        const _focusFirstElement = function (focusables, isNext) {
+            if (isNext) {
+                focusables[0].focus();
+            } else {
+                focusables[focusables.length - 1].focus();
+            }
+        };
+
+        const _getCurrentFocusableElements = function(container) {
+            return Array.from(container.querySelectorAll(FOCUSABLE_ELEMENTS_SELECTOR))
+                .filter(element => !element.disabled && element.offsetParent !== null);
+        };
+
+        const _getCurrentRequiredFocusableElements = function(container) {
+            return Array.from(container.querySelectorAll("[required]"))
+                .map(editor => editor.querySelector(FOCUSABLE_ELEMENTS_SELECTOR))
+                .filter(element => !element.disabled && element.offsetParent !== null);
+        };
+
+        Polymer.TgBehaviors = Polymer.TgBehaviors || {};
+        Polymer.TgBehaviors.TgFocusTraversalBehavior = {
+
+            ready: function() {
+                //Add event listener that will traverse focus for required properties
+                this.addEventListener('keydown', _onCaptureKeyDown.bind(this));
+            }
+        }
+    })();
+
+</script>
