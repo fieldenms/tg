@@ -8,6 +8,7 @@
 <link rel="import" href="/resources/polymer/paper-button/paper-button.html">
 <link rel="import" href="/resources/polymer/paper-styles/color.html">
 <link rel="import" href="/resources/polymer/paper-item/paper-item.html">
+<link rel="import" href="/resources/components/tg-scrollable-component.html">
 <link rel="import" href="/resources/components/lodash-lib.html">
 
 <link rel="import" href="/resources/editors/tg-highlighting-behavior.html">
@@ -24,7 +25,8 @@
 	            overflow: auto; /* this is to make host scorable when needed */
 	            -webkit-overflow-scrolling: touch;
 	            box-shadow: rgba(0, 0, 0, 0.24) -2.3408942051048403px 5.524510324047423px 12.090680100755666px 0px, rgba(0, 0, 0, 0.12) 0px 0px 12px 0px;
-	        }
+                @apply(--layout-vertical);
+            }
 
 	        .tg-item {
 	        	@apply(--layout-vertical);
@@ -107,19 +109,20 @@
               margin-top: 8px;
           }
 	    </style>
+        <tg-scrollable-component class="flex relative">
+            <iron-selector id="selector" class="tg-snatchback" multi$="[[multi]]" attr-for-selected="value" on-iron-deselect="_itemDeselected" on-iron-select="_itemSelected">
+                <!-- begin of dom-repeat -->
+                <template is="dom-repeat" items="[[_values]]" as="v">
+                    <paper-item id$="[[_makeId(index)]]" value$="[[v.key]]" tabindex="-1" noink class="tg-item vertical-layout"> <!-- please note that union entities are not supported in autocompletion results and, most likely, will never be. Otherwise consider finding .key places here and adjust accordingly using property getter. -->
+                    </paper-item>
+                </template>
+            <!-- end of dom-repeat -->
+            </iron-selector>
+        </tg-scrollable-component>
 
-        <iron-selector id="selector" class="tg-snatchback" multi$="[[multi]]" attr-for-selected="value" on-iron-deselect="_itemDeselected" on-iron-select="_itemSelected">
-            <!-- begin of dom-repeat -->
-            <template is="dom-repeat" items="[[_values]]" as="v">
-                <paper-item id$="[[_makeId(index)]]" value$="[[v.key]]" tabindex="-1" noink class="tg-item vertical-layout"> <!-- please note that union entities are not supported in autocompletion results and, most likely, will never be. Otherwise consider finding .key places here and adjust accordingly using property getter. -->
-                </paper-item>
-            </template>
-    <!-- end of dom-repeat -->
-    </iron-selector>
-
-    <div hidden$="[[_foundSome]]" class="no-result">
-        <span>Found no matching values.</span>
-    </div>
+        <div hidden$="[[_foundSome]]" class="no-result">
+            <span>Found no matching values.</span>
+        </div>
         <div class="toolbar layout horizontal wrap">
           <div class="toolbar-content layout horizontal center">
           </div>
