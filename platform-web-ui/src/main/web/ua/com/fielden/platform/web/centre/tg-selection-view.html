@@ -6,6 +6,7 @@
 
 <link rel="import" href="/app/tg-reflector.html">
 <link rel="import" href="/resources/components/tg-scrollable-component.html">
+<link rel="import" href="/resources/components/tg-focus-traversal-behavior.html">
 <link rel="import" href="/resources/actions/tg-shortcut-processing-behavior.html">
 <link rel="import" href="/resources/actions/tg-ui-action.html">
 <link rel="import" href="/resources/images/tg-document-related-icons.html">
@@ -60,6 +61,7 @@
 
             behaviors: [
                 Polymer.IronA11yKeysBehavior,
+                Polymer.TgBehaviors.TgFocusTraversalBehavior,
                 Polymer.TgBehaviors.TgShortcutProcessingBehavior
             ],
 

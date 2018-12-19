@@ -752,8 +752,10 @@
             _bindRequired: function (required) {
                 this._resetMessages();
                 if (required) {
+                    this.setAttribute("required", "");
                     this.decorator().classList.add("required");
                 } else {
+                    this.removeAttribute("required");
                     this.decorator().classList.remove("required");
                 }
                 this.updateStyles();
