@@ -505,14 +505,12 @@
 
             _onCaptureClick: function(event) {
                 if (this._manager.currentOverlay() !== this) {
-                    console.log("select overlay");
                     this._bringToFront();
                 }
             },
 
             _onCaptureFocus: function(event) {
                 if (this._manager.currentOverlay() !== this) {
-                    console.log("select overlay");
                     this._bringToFront();
                 }
             },
@@ -1176,18 +1174,18 @@
                 }
                 
                 this.open();
-                if (!this._dataLoaded) {
-                    this._showBlockingPane();
-                }
+                this._showBlockingPane();
             },
             
             _showBlockingPane: function () {
-                if (this._blockingPaneCounter === 0 && !Polymer.dom(this.$.loadingPanel).classList.contains("visible")) {
-                    this._masterVisibilityChanges = true;
-                    Polymer.dom(this.$.loadingPanel).classList.add("visible");
-                    Polymer.dom(this.$.dialogLoader).classList.add("hidden");
+                if (!this._dataLoaded) {
+                    if (this._blockingPaneCounter === 0 && !Polymer.dom(this.$.loadingPanel).classList.contains("visible")) {
+                        this._masterVisibilityChanges = true;
+                        Polymer.dom(this.$.loadingPanel).classList.add("visible");
+                        Polymer.dom(this.$.dialogLoader).classList.add("hidden");
+                    }
+                    this._blockingPaneCounter++;
                 }
-                this._blockingPaneCounter++;
             },
             
             _hideBlockingPane: function () {
