@@ -267,6 +267,14 @@
                     type: Boolean,
                     value: false
                 },
+                
+                /**
+                 * Indicates whether data was loaded or not.
+                 */
+                _dataLoaded: {
+                    type: Boolean,
+                    value: false
+                },
 
                 /**
                  * Indicates whether dialog was resized using bottom right corner's resizer. This will be reset after dialog closes.
@@ -497,14 +505,12 @@
 
             _onCaptureClick: function(event) {
                 if (this._manager.currentOverlay() !== this) {
-                    console.log("select overlay");
                     this._bringToFront();
                 }
             },
 
             _onCaptureFocus: function(event) {
                 if (this._manager.currentOverlay() !== this) {
-                    console.log("select overlay");
                     this._bringToFront();
                 }
             },
@@ -975,6 +981,7 @@
             },
             
             _handleDataLoaded: function () {
+                this._dataLoaded = true;
                 this._resetSpinner();
                 this._hideBlockingPane();
             },
@@ -998,6 +1005,7 @@
             },
             
             _handleActionNavigationInvoked: function (e) {
+                this._dataLoaded = false;
                 if (this._errorMsg) {
                     this._resetState();
                 }
@@ -1170,12 +1178,14 @@
             },
             
             _showBlockingPane: function () {
-                if (this._blockingPaneCounter === 0 && !Polymer.dom(this.$.loadingPanel).classList.contains("visible")) {
-                    this._masterVisibilityChanges = true;
-                    Polymer.dom(this.$.loadingPanel).classList.add("visible");
-                    Polymer.dom(this.$.dialogLoader).classList.add("hidden");
+                if (!this._dataLoaded) {
+                    if (this._blockingPaneCounter === 0 && !Polymer.dom(this.$.loadingPanel).classList.contains("visible")) {
+                        this._masterVisibilityChanges = true;
+                        Polymer.dom(this.$.loadingPanel).classList.add("visible");
+                        Polymer.dom(this.$.dialogLoader).classList.add("hidden");
+                    }
+                    this._blockingPaneCounter++;
                 }
-                this._blockingPaneCounter++;
             },
             
             _hideBlockingPane: function () {
@@ -1285,6 +1295,7 @@
             },
             
             _resetState: function (withClasses) {
+                this._dataLoaded = false;
                 this._hasNext = false;
                 this._hasPrev = false;
                 this._errorMsg = null;
