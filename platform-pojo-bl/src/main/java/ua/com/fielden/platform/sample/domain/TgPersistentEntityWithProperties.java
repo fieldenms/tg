@@ -28,6 +28,7 @@ import ua.com.fielden.platform.entity.annotation.UpperCase;
 import ua.com.fielden.platform.entity.annotation.mutator.AfterChange;
 import ua.com.fielden.platform.entity.annotation.mutator.BeforeChange;
 import ua.com.fielden.platform.entity.annotation.mutator.Handler;
+import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
 import ua.com.fielden.platform.entity.query.model.ExpressionModel;
 import ua.com.fielden.platform.entity.validation.annotation.Max;
 import ua.com.fielden.platform.sample.domain.definers.CosWithACEDefiner;
@@ -324,6 +325,20 @@ public class TgPersistentEntityWithProperties extends AbstractPersistentEntity<S
     @Title("cosWithACE2WithDefaultValueChild2")
     @CritOnly(SINGLE)
     private TgPersistentEntityWithProperties cosWithACE2WithDefaultValueChild2;
+    
+    @IsProperty(TgPersistentEntityWithProperties.class)
+    @MapTo
+    private PropertyDescriptor<TgPersistentEntityWithProperties> propertyDescriptorProp;
+    
+    @Observable
+    public TgPersistentEntityWithProperties setPropertyDescriptorProp(final PropertyDescriptor<TgPersistentEntityWithProperties> propertyDescriptorProp) {
+        this.propertyDescriptorProp = propertyDescriptorProp;
+        return this;
+    }
+    
+    public PropertyDescriptor<TgPersistentEntityWithProperties> getPropertyDescriptorProp() {
+        return propertyDescriptorProp;
+    }
     
     @Observable
     public TgPersistentEntityWithProperties setCosWithACE2WithDefaultValueChild2(final TgPersistentEntityWithProperties cosWithACE2WithDefaultValueChild2) {
