@@ -1,5 +1,11 @@
 package ua.com.fielden.platform.entity.fetch;
 
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchKeyAndDescOnly;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchKeyAndDescOnlyAndInstrument;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchOnly;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchOnlyAndInstrument;
+import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.determinePropertyType;
+
 import java.lang.reflect.Field;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
@@ -15,7 +21,6 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.CritOnly;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
-import ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.reflection.Finder;
@@ -301,7 +306,7 @@ class FetchProvider<T extends AbstractEntity<?>> implements IFetchProvider<T> {
                     propertyProviders.put(dotNotationProperty, merged);
                 } // else -- regular property or entity-typed
             } else {
-                if (EntityUtils.isEntityType(propertyType) && !PropertyDescriptor.class.equals(propertyType)) { // entity-typed
+                if (EntityUtils.isEntityType(propertyType)) { // entity-typed
                     propertyProviders.put(dotNotationProperty, propertyProvider == null ? createDefaultFetchProviderForEntityTypedProperty((Class<AbstractEntity<?>>) propertyType) : propertyProvider.copy());
                 } else { // regular
                     propertyProviders.put(dotNotationProperty, null);
@@ -364,12 +369,13 @@ class FetchProvider<T extends AbstractEntity<?>> implements IFetchProvider<T> {
     private fetch<T> createFetchModel() {
         // need to exclude all crit-only properties from fetch model!
         final FetchProvider<T> providerWithoutCritOnlyProps = excludeCritOnlyProps(this);
+        final Class<T> entityType = providerWithoutCritOnlyProps.entityType;
         fetch<T> fetchModel = instrumented ?
-                (withKeyAndDesc ? EntityQueryUtils.fetchKeyAndDescOnlyAndInstrument(providerWithoutCritOnlyProps.entityType) : EntityQueryUtils.fetchOnlyAndInstrument(providerWithoutCritOnlyProps.entityType)) :
-                (withKeyAndDesc ? EntityQueryUtils.fetchKeyAndDescOnly(providerWithoutCritOnlyProps.entityType) : EntityQueryUtils.fetchOnly(providerWithoutCritOnlyProps.entityType));
+                (withKeyAndDesc ? fetchKeyAndDescOnlyAndInstrument(entityType) : fetchOnlyAndInstrument(entityType)) :
+                (withKeyAndDesc ? fetchKeyAndDescOnly(entityType) : fetchOnly(entityType));
         for (final Map.Entry<String, FetchProvider<AbstractEntity<?>>> entry : providerWithoutCritOnlyProps.propertyProviders.entrySet()) {
             final FetchProvider<AbstractEntity<?>> propModel = entry.getValue();
-            if (propModel == null) {
+            if (propModel == null || PropertyDescriptor.class.isAssignableFrom(determinePropertyType(entityType, entry.getKey()))) {
                 fetchModel = fetchModel.with(entry.getKey());
             } else {
                 fetchModel = fetchModel.with(entry.getKey(), propModel.fetchModel());
