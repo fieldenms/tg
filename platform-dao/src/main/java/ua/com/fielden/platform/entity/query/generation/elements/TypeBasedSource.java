@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.entity.query.generation.elements;
 
+import static ua.com.fielden.platform.entity.query.DbVersion.aliasComment;
 import static ua.com.fielden.platform.utils.EntityUtils.splitPropByFirstDot;
 
 import java.util.Collections;
@@ -7,6 +8,7 @@ import java.util.List;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.DbVersion;
+import ua.com.fielden.platform.entity.query.EntityBatchDeleteByQueryModelOperation;
 import ua.com.fielden.platform.entity.query.metadata.DomainMetadataAnalyser;
 import ua.com.fielden.platform.entity.query.metadata.PersistedEntityMetadata;
 import ua.com.fielden.platform.entity.query.metadata.PropertyMetadata;
@@ -89,11 +91,7 @@ public class TypeBasedSource extends AbstractSource {
 
     @Override
     public String sql() {
-        if (dbVersion == DbVersion.ORACLE) {
-            return entityMetadata.getTable() + " " + sqlAlias + "/*" + (alias == null ? " " : alias) + "*/";
-        } else {
-            return entityMetadata.getTable() + " AS " + sqlAlias + "/*" + (alias == null ? " " : alias) + "*/";
-        }
+        return entityMetadata.getTable() + dbVersion.AS + sqlAlias + aliasComment(alias);
     }
 
     @Override
@@ -103,11 +101,7 @@ public class TypeBasedSource extends AbstractSource {
 
     @Override
     public String toString() {
-        if (dbVersion == DbVersion.ORACLE) {
-            return sourceType().getSimpleName() + "-table " + getAlias() + " /*" + (generated ? " GEN " : "") + "*/";
-        } else {
-            return sourceType().getSimpleName() + "-table AS " + getAlias() + " /*" + (generated ? " GEN " : "") + "*/";
-        }
+        return sourceType().getSimpleName() + "-table" + dbVersion.AS + getAlias() + " /*" + (generated ? " GEN " : "") + "*/";
     }
 
     @Override

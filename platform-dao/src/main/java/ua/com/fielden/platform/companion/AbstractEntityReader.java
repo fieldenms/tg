@@ -146,8 +146,8 @@ public abstract class AbstractEntityReader<T extends AbstractEntity<?>> implemen
         if (id == null) {
             return false;
         }
-        return getSession().createQuery("select id from " + getEntityType().getName() + " where id = ?")
-               .setParameter(0, id, LongType.INSTANCE)
+        return getSession().createQuery("select id from " + getEntityType().getName() + " where id = :id")
+               .setParameter("id", id, LongType.INSTANCE)
                .uniqueResult() != null;
     }
 
