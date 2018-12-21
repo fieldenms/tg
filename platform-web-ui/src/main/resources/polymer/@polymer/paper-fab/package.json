@@ -1,0 +1,70 @@
+{
+  "_from": "@polymer/paper-fab@^3.0.1",
+  "_id": "@polymer/paper-fab@3.0.1",
+  "_inBundle": false,
+  "_integrity": "sha512-LO8ckgd72MnAtC1WiPd5CFR27WC/dEuY/lOIQuHYdEjwI62+iiV7Bmr7uoQ9wvvV71qMFdMIOyq/03KklsuAzw==",
+  "_location": "/@polymer/paper-fab",
+  "_phantomChildren": {},
+  "_requested": {
+    "type": "range",
+    "registry": true,
+    "raw": "@polymer/paper-fab@^3.0.1",
+    "name": "@polymer/paper-fab",
+    "escapedName": "@polymer%2fpaper-fab",
+    "scope": "@polymer",
+    "rawSpec": "^3.0.1",
+    "saveSpec": null,
+    "fetchSpec": "^3.0.1"
+  },
+  "_requiredBy": [
+    "/"
+  ],
+  "_resolved": "https://registry.npmjs.org/@polymer/paper-fab/-/paper-fab-3.0.1.tgz",
+  "_shasum": "2636359e7fb70dd5a549ed92ba9b3bdb9ff86bf8",
+  "_spec": "@polymer/paper-fab@^3.0.1",
+  "_where": "/home/oleh/web-workspace/polymer-app",
+  "author": {
+    "name": "The Polymer Authors"
+  },
+  "bugs": {
+    "url": "https://github.com/PolymerElements/paper-fab/issues"
+  },
+  "bundleDependencies": false,
+  "dependencies": {
+    "@polymer/iron-flex-layout": "^3.0.0-pre.26",
+    "@polymer/iron-icon": "^3.0.0-pre.26",
+    "@polymer/paper-behaviors": "^3.0.0-pre.27",
+    "@polymer/paper-styles": "^3.0.0-pre.26",
+    "@polymer/polymer": "^3.0.0"
+  },
+  "deprecated": false,
+  "description": "A material design floating action button",
+  "devDependencies": {
+    "@polymer/gen-typescript-declarations": "^1.5.1",
+    "@polymer/iron-demo-helpers": "^3.0.1",
+    "@polymer/iron-icons": "^3.0.0-pre.26",
+    "@polymer/paper-styles": "^3.0.0-pre.26",
+    "@webcomponents/webcomponentsjs": "^2.0.0",
+    "wct-browser-legacy": "^1.0.1",
+    "webmat": "^0.2.0"
+  },
+  "homepage": "https://github.com/PolymerElements/paper-fab",
+  "keywords": [
+    "web-components",
+    "polymer",
+    "button"
+  ],
+  "license": "BSD-3-Clause",
+  "main": "paper-fab.js",
+  "name": "@polymer/paper-fab",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/PolymerElements/paper-fab.git"
+  },
+  "scripts": {
+    "format": "webmat",
+    "generate-types": "gen-typescript-declarations --deleteExisting --outDir . --verify",
+    "prepare": "npm run generate-types"
+  },
+  "version": "3.0.1"
+}

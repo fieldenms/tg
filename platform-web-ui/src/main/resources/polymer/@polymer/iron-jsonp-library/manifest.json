@@ -1,0 +1,26 @@
+{
+  "files": {
+    "iron-jsonp-library.html": {
+      "convertedUrl": "iron-jsonp-library.js",
+      "exports": {
+        "Polymer.IronJsonpLibraryBehavior": "IronJsonpLibraryBehavior"
+      }
+    },
+    "index.html": {
+      "convertedUrl": "index.html",
+      "exports": {}
+    },
+    "demo/index.html": {
+      "convertedUrl": "demo/index.html",
+      "exports": {}
+    },
+    "test/basic-test.html": {
+      "convertedUrl": "test/basic-test.html",
+      "exports": {}
+    },
+    "test/index.html": {
+      "convertedUrl": "test/index.html",
+      "exports": {}
+    }
+  }
+}

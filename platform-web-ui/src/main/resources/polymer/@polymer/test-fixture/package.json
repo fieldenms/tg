@@ -1,0 +1,62 @@
+{
+  "_from": "@polymer/test-fixture@^4.0.2",
+  "_id": "@polymer/test-fixture@4.0.2",
+  "_inBundle": false,
+  "_integrity": "sha512-tLX8tFE4mkc4p84YG5239G0hbgTVv2irZYrSyO0OblUqIRbRoCPmbydm3HRFQkJeAB3rPCtyeZ2roJULsmTG3A==",
+  "_location": "/@polymer/test-fixture",
+  "_phantomChildren": {},
+  "_requested": {
+    "type": "range",
+    "registry": true,
+    "raw": "@polymer/test-fixture@^4.0.2",
+    "name": "@polymer/test-fixture",
+    "escapedName": "@polymer%2ftest-fixture",
+    "scope": "@polymer",
+    "rawSpec": "^4.0.2",
+    "saveSpec": null,
+    "fetchSpec": "^4.0.2"
+  },
+  "_requiredBy": [
+    "/"
+  ],
+  "_resolved": "https://registry.npmjs.org/@polymer/test-fixture/-/test-fixture-4.0.2.tgz",
+  "_shasum": "2f4777ecdcfb22ee000db35a05e0edf27c722c19",
+  "_spec": "@polymer/test-fixture@^4.0.2",
+  "_where": "/home/oleh/web-workspace/polymer-app",
+  "author": {
+    "name": "The Polymer Authors"
+  },
+  "bugs": {
+    "url": "https://github.com/polymerelements/test-fixture/issues"
+  },
+  "bundleDependencies": false,
+  "dependencies": {},
+  "deprecated": false,
+  "description": "A simple element to fixture DOM for tests",
+  "devDependencies": {
+    "@polymer/gen-typescript-declarations": "^1.5.1",
+    "@webcomponents/webcomponentsjs": "^2.0.0",
+    "wct-browser-legacy": "^1.0.1",
+    "web-component-tester": "^6.0.0-prerelease.5",
+    "webmat": "^0.2.2"
+  },
+  "homepage": "https://github.com/polymerelements/test-fixture#readme",
+  "keywords": [
+    "web-components",
+    "polymer",
+    "testing"
+  ],
+  "license": "BSD-3-Clause",
+  "main": "test-fixture.js",
+  "name": "@polymer/test-fixture",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/polymerelements/test-fixture.git"
+  },
+  "scripts": {
+    "format": "webmat",
+    "generate-types": "gen-typescript-declarations --deleteExisting --outDir . --verify",
+    "prepare": "npm run generate-types"
+  },
+  "version": "4.0.2"
+}
