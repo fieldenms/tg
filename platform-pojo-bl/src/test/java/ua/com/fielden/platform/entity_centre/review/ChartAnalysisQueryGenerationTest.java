@@ -122,7 +122,7 @@ public class ChartAnalysisQueryGenerationTest {
         final AnalysisResultClassBundle<MasterDomainEntity> resultBundle = queryGenerator.generateQueryModel();
 
         final Class<AbstractEntity<?>> managedType = (Class<AbstractEntity<?>>) cdtme.getEnhancer().getManagedType(MasterDomainEntity.class);
-        final EntityResultQueryModel<AbstractEntity<?>> subQueryModel = select(managedType).as(ALIAS).model();
+        final EntityResultQueryModel<AbstractEntity<?>> subQueryModel = select(select(managedType).model()).as(ALIAS).model();
 
         final EntityResultQueryModel<MasterDomainEntity> queryModel = select(subQueryModel).as(ALIAS)//
         .groupBy().prop(ALIAS + ".firstGroup")//
@@ -165,7 +165,7 @@ public class ChartAnalysisQueryGenerationTest {
         final AnalysisResultClassBundle<MasterDomainEntity> resultBundle = queryGenerator.generateQueryModel();
 
         final Class<AbstractEntity<?>> managedType = (Class<AbstractEntity<?>>) cdtme.getEnhancer().getManagedType(MasterDomainEntity.class);
-        final EntityResultQueryModel<AbstractEntity<?>> subQueryModel = select(managedType).as(ALIAS).model();
+        final EntityResultQueryModel<AbstractEntity<?>> subQueryModel = select(select(managedType).model()).as(ALIAS).model();
 
         final EntityResultQueryModel<MasterDomainEntity> queryModel = select(subQueryModel).as(ALIAS)//
         .groupBy().prop(ALIAS + ".entityProp.entityProp.secondGroup")//
@@ -207,7 +207,7 @@ public class ChartAnalysisQueryGenerationTest {
         final AnalysisResultClassBundle<MasterDomainEntity> resultBundle = queryGenerator.generateQueryModel();
 
         final Class<AbstractEntity<?>> managedType = (Class<AbstractEntity<?>>) cdtme.getEnhancer().getManagedType(MasterDomainEntity.class);
-        final EntityResultQueryModel<AbstractEntity<?>> subQueryModel = select(managedType).as(ALIAS).model();
+        final EntityResultQueryModel<AbstractEntity<?>> subQueryModel = select(select(managedType).model()).as(ALIAS).model();
 
         final EntityResultQueryModel<MasterDomainEntity> queryModel = select(subQueryModel).as(ALIAS)//
         .groupBy().prop(ALIAS + ".entityProp.entityProp.simpleEntityProp")//
