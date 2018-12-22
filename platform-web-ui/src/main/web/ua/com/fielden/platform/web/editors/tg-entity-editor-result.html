@@ -462,6 +462,7 @@
                     } else {
                         this._selectedIndex = (this._selectedIndex + 1) < length ? (this._selectedIndex + 1) : 0;
                         this.$.selector.select(this.$.selector._indexToValue(this._selectedIndex));
+                        this.focusItemWithIndex(this._selectedIndex);
                     }
                 }
                 this._scrollToSelected();
@@ -483,6 +484,7 @@
                     } else {
                         this._selectedIndex = (this._selectedIndex - 1) >= 0 ? (this._selectedIndex - 1) : length - 1;
                         this.$.selector.select(this.$.selector._indexToValue(this._selectedIndex));
+                        this.focusItemWithIndex(this._selectedIndex);
                     }
                 }
                 this._scrollToSelected();
