@@ -441,6 +441,7 @@
                 this._search('');
             },
 
+            /** Loads more matching values. */
             _loadMore: function () {
                 this._dataPage = this._dataPage + 1;
                 this._search(this._searchQuery, this._dataPage);
@@ -514,13 +515,18 @@
                 // make sure to assign reflector to the result object
                 result.reflector = this.reflector();
 
+                let wasNewValueObserved = false;
                 for (let index = 0; index < entities.length; index++) {
                     // Entity is converted to a string representation of its key.
                     // This includes correct conversion of simple, composite and union entities
                     const key = this.reflector().convert(entities[index]);
                     entities[index].key = key;
-                    result.pushValue(entities[index]);
+                    wasNewValueObserved = result.pushValue(entities[index]) || wasNewValueObserved;
                 }
+
+                // if no new values were observed then there is no more to load
+                // let's disable the load more action in this case
+                result.enableLoadMore = wasNewValueObserved;
 
                 // There is a need to check whether element already exists before appending it to document.body.
                 // Under Microsoft Edge appending the same element more than once blows up with exception HierarchyRequestError.
@@ -581,7 +587,7 @@
                 if (this.$.searcherButton === activeElement || /* if autocompleter's button is in focus (this occurs in iOs when tapping on that button) */
                     this.$.input === activeElement          || /* if autocompleter's input is in focus */
                     document.body === activeElement         ||   /* or no other input or button in focus then show found values */
-                    "load-more-button" === activeElement.id) {
+                    "loadMoreButton" === activeElement.id) {   /* was the loadMoreButton tapped?Â */
                     this.opened = true;
                     this.$.result.highlightMatchedParts();
                 } else {

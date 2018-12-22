@@ -98,7 +98,7 @@
 	        }
 
           .toolbar {
-              padding: 0 12px;
+              padding: 0 10px 10px;
               height: auto;
               position: relative;
               overflow: hidden;
@@ -125,7 +125,7 @@
         </div>
         <div class="toolbar layout horizontal wrap">
           <div class="toolbar-content layout horizontal center">
-            <paper-button tooltip-text="Load more matching value, if any" on-tap="loadMore" id="load-more-button">More</paper-button>
+            <paper-button tooltip-text="Load more matching value, if any" on-tap="loadMore" id="loadMoreButton" disabled$="[[!enableLoadMore]]">More</paper-button>
           </div>
           <div class="toolbar-content layout horizontal center" style="margin-left:auto">
             <paper-button tooltip-text="Discard and close" on-tap="close">Cancel</paper-button>
@@ -225,6 +225,14 @@
                  */
                 loadMore: {
                     type: Function
+                },
+
+                /**
+                 * Controls if buton MORE is enabled.
+                 */
+                enableLoadMore: {
+                    type: Boolean,
+                    value: true
                 }
 
             },
@@ -249,7 +257,8 @@
                 }
             },
 
-            /* Pushes the specified value into the tail of array _values if that value is not yet present */
+            /* Pushes the specified value into the tail of array _values if that value is not yet present.
+             * Returns true if the value was new, false otherwise. */
             pushValue: function(value) {
                 const existingValue = _.find(this._values, function(obj) {
                     return obj.key === value.key;
@@ -258,6 +267,8 @@
                 if (!existingValue) {
                     this.push('_values', value);
                 }
+
+                return !existingValue;
             },
 
             /*
