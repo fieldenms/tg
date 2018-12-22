@@ -271,6 +271,12 @@
                     value: 0
                 },
 
+                /** A state to maintain information about the page number of the matching values to be retrieved. */
+                _dataPage: {
+                    type: Number,
+                    value: 1
+                },
+
                 separator: {
                     type: String,
                     value: ","
@@ -366,6 +372,7 @@
             ready: function () {
                 const result = this.$.result;
                 result.acceptValues = this._done.bind(this);
+                result.loadMore = this._loadMore.bind(this);
                 result.multi = this.multi;
                 if (this.additionalProperties) {
                     result.additionalProperties = JSON.parse(this.additionalProperties);
@@ -387,7 +394,7 @@
                 }).bind(this);
 
                 this._retrieveContainerSizes = function () {
-                    var container = this.decorator();
+                    const container = this.decorator();
                     return [container.getBoundingClientRect(), container.offsetHeight];
                 }.bind(this);
             },
@@ -434,7 +441,12 @@
                 this._search('');
             },
 
-            _search: function (defaultSearchQuery) {
+            _loadMore: function () {
+                this._dataPage = this._dataPage + 1;
+                this._search(this._searchQuery, this._dataPage);
+            },
+
+            _search: function (defaultSearchQuery, dataPage) {
                 // What is the query string?
                 var inputText = ''; // default value
                 if (this.multi === false) {
@@ -479,18 +491,16 @@
                 result.searchQuery = self._searchQuery;
                 const container = self.$.container;
 
-                if (this._searchQuery /*&& this.hasFocus === true*/ ) {
-
-                    self.async((function () {
-                        // clear previous search result
+                if (self._searchQuery /*&& this.hasFocus === true*/ ) {
+                    // if this is not a request to load more data then let's clear the current result, if any
+                    if (!dataPage) {
                         result.clearSelection();
-                    }).bind(self), 1);
-
+                    }
                     // prepare the AJAX request based on the raw search string
-                    const serialisedSearchQuery = this.$.serialiser.serialise(this.createContextHolder(inputText));
-                    this.$.ajaxSearcher.body = JSON.stringify(serialisedSearchQuery);
-                    this.$.ajaxSearcher.generateRequest();
-                } else if (result.opened) { // make sure overlay is closed is no search is performed
+                    const serialisedSearchQuery = self.$.serialiser.serialise(self.createContextHolder(self._searchQuery, dataPage));
+                    self.$.ajaxSearcher.body = JSON.stringify(serialisedSearchQuery);
+                    self.$.ajaxSearcher.generateRequest();
+                } else if (result.opened) { // make sure overlay is closed if no search is performed
                     result.close();
                     this._focusInput();
                 }
@@ -499,12 +509,10 @@
             /*
              * Displays the search result.
              */
-            _onFound: function (entities) {
+            _onFound: function (entities, dataPage) {
                 const result = this.$.result;
                 // make sure to assign reflector to the result object
                 result.reflector = this.reflector();
-
-                result.clearSelection();
 
                 for (let index = 0; index < entities.length; index++) {
                     // Entity is converted to a string representation of its key.
@@ -542,7 +550,8 @@
             /**
              * Create context holder with custom '@@searchString' property ('tg-entity-editor' and 'tg-entity-search-criteria' only).
              */
-            createContextHolder: function (inputText) {
+            createContextHolder: function (inputText, dataPage) {
+                let contextHolder = null;
                 if (this.multi === false) {
                     if (this.asPartOfEntityMaster) {
                         const modifHolder = this.createModifiedPropertiesHolder();
@@ -550,19 +559,21 @@
                         console.debug(':MASTER:AUTOCOMPLETE1', '|type', this.autocompletionType, '|id', modifHolder.id);
                         console.debug(':MASTER:AUTOCOMPLETE2', '|mph', modifHolder);
                         console.debug(':MASTER:AUTOCOMPLETE3', '|ope', originallyProducedEntity);
-                        const contextHolder = this.reflector().createContextHolder(
+                        const ctx = this.reflector().createContextHolder(
                             "true", null, null,
                             function () { return modifHolder; }, null, null,
                             originallyProducedEntity
                         );
-                        this.reflector().setCustomProperty(contextHolder, "@@searchString", inputText);
-                        return contextHolder;
+                        contextHolder = this.reflector().setCustomProperty(ctx, "@@searchString", inputText);
                     } else {
-                        return Polymer.TgBehaviors.TgEditorBehavior.createContextHolder.call(this, inputText);
+                        contextHolder = Polymer.TgBehaviors.TgEditorBehavior.createContextHolder.call(this, inputText);
                     }
                 } else {
-                    return Polymer.TgBehaviors.TgEditorBehavior.createContextHolder.call(this, inputText);
+                    contextHolder = Polymer.TgBehaviors.TgEditorBehavior.createContextHolder.call(this, inputText);
                 }
+
+                this.reflector().setCustomProperty(contextHolder, "@@dataPage", dataPage);
+                return contextHolder;
             },
 
             _cancelSearch: function () {
@@ -575,8 +586,9 @@
             _resultOpened: function (e) {
                 const activeElement = document.activeElement;
                 if (this.$.searcherButton === activeElement || /* if autocompleter's button is in focus (this occurs in iOs when tapping on that button) */
-                    this.$.input === activeElement || /* if autocompleter's input is in focus */
-                    document.body === activeElement   /* or no other input or button in focus then show found values */) {
+                    this.$.input === activeElement          || /* if autocompleter's input is in focus */
+                    document.body === activeElement         ||   /* or no other input or button in focus then show found values */
+                    "load-more-button" === activeElement.id) {
                     this.opened = true;
                     this.$.result.highlightMatchedParts();
                 } else {
@@ -588,11 +600,12 @@
             _resultClosed: function (e) {
                 // property this.opened controls whether overlay on-close event should
                 // perfrom on-change event handler that does all the validation megic
+                this._dataPage = 1;
                 if (this.opened === true) {
                     this.opened = false;
                     this._onChange();
                 }
-                var elementExists = Polymer.dom(document.body).querySelector("#result");
+                const elementExists = Polymer.dom(document.body).querySelector("#result");
                 if (elementExists) {
                 	Polymer.dom(document.body).removeChild(this.$.result);
                 	Polymer.dom.flush();
@@ -600,6 +613,7 @@
             },
 
             _resultCanceled : function (event, detail) {
+                this._dataPage = 1;
                 if (detail.keyCode && detail.keyCode === 27) {
                     this._focusInput();
                 }
@@ -715,16 +729,17 @@
             },
 
             _processSearcherResponse: function (e) {
-                var self = this;
+                const self = this;
                 self.processResponse(e, "search", function (foundEntities) {
-                    self._onFound(foundEntities);
+                    self._onFound(foundEntities, self._dataPage);
                 });
             },
 
             _processSearcherError: function (e) {
-                this.opened = true;
-                this.$.result.close();
-                this.processError(e, "search", function (errorResult) {
+                const self = this;
+                self.opened = true;
+                self.$.result.close();
+                self.processError(e, "search", function (errorResult) {
                    	if (self.postSearchedDefaultError) {
                     	self.postSearchedDefaultError(errorResult);
                    	}

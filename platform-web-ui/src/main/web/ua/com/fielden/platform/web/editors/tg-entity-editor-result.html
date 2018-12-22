@@ -116,7 +116,7 @@
                     <paper-item id$="[[_makeId(index)]]" value$="[[v.key]]" tabindex="-1" noink class="tg-item vertical-layout"> <!-- please note that union entities are not supported in autocompletion results and, most likely, will never be. Otherwise consider finding .key places here and adjust accordingly using property getter. -->
                     </paper-item>
                 </template>
-            <!-- end of dom-repeat -->
+                <!-- end of dom-repeat -->
             </iron-selector>
         </tg-scrollable-component>
 
@@ -125,6 +125,7 @@
         </div>
         <div class="toolbar layout horizontal wrap">
           <div class="toolbar-content layout horizontal center">
+            <paper-button tooltip-text="Load more matching value, if any" on-tap="loadMore" id="load-more-button">More</paper-button>
           </div>
           <div class="toolbar-content layout horizontal center" style="margin-left:auto">
             <paper-button tooltip-text="Discard and close" on-tap="close">Cancel</paper-button>
@@ -206,13 +207,23 @@
                 },
 
                 /**
-                 * The function that retrives boundClientRect and offsetHeight from wrapping decorator (paper-input-container) from parent tg-entity-editor.
+                 * A function that retrives boundClientRect and offsetHeight from wrapping decorator (paper-input-container) from parent tg-entity-editor.
                  */
                 retrieveContainerSizes: {
                     type: Function
                 },
 
+                /**
+                 * A function that perorms acceptance of selected values. It is assigned in tg-entity-editor. 
+                 */
                 acceptValues: {
+                    type: Function
+                },
+
+                /**
+                 * A function to load more matching values, if any. It is assigned in tg-entity-editor.
+                 */
+                loadMore: {
                     type: Function
                 }
 
@@ -238,9 +249,15 @@
                 }
             },
 
-            /* Pushes the specified value into the tail of attay _values */
+            /* Pushes the specified value into the tail of array _values if that value is not yet present */
             pushValue: function(value) {
-                this.push('_values', value);
+                const existingValue = _.find(this._values, function(obj) {
+                    return obj.key === value.key;
+                });
+
+                if (!existingValue) {
+                    this.push('_values', value);
+                }
             },
 
             /*
