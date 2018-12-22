@@ -552,22 +552,15 @@
              */
             createContextHolder: function (inputText, dataPage) {
                 let contextHolder = null;
-                if (this.multi === false) {
-                    if (this.asPartOfEntityMaster) {
-                        const modifHolder = this.createModifiedPropertiesHolder();
-                        const originallyProducedEntity = this.reflector()._validateOriginallyProducedEntity(this.originallyProducedEntity, modifHolder.id);
-                        console.debug(':MASTER:AUTOCOMPLETE1', '|type', this.autocompletionType, '|id', modifHolder.id);
-                        console.debug(':MASTER:AUTOCOMPLETE2', '|mph', modifHolder);
-                        console.debug(':MASTER:AUTOCOMPLETE3', '|ope', originallyProducedEntity);
-                        const ctx = this.reflector().createContextHolder(
-                            "true", null, null,
-                            function () { return modifHolder; }, null, null,
-                            originallyProducedEntity
-                        );
-                        contextHolder = this.reflector().setCustomProperty(ctx, "@@searchString", inputText);
-                    } else {
-                        contextHolder = Polymer.TgBehaviors.TgEditorBehavior.createContextHolder.call(this, inputText);
-                    }
+                if (this.multi === false && this.asPartOfEntityMaster) {
+                    const modifHolder = this.createModifiedPropertiesHolder();
+                    const originallyProducedEntity = this.reflector()._validateOriginallyProducedEntity(this.originallyProducedEntity, modifHolder.id);
+                    contextHolder = this.reflector().createContextHolder(
+                        "true", null, null,
+                        function () { return modifHolder; }, null, null,
+                        originallyProducedEntity
+                    );
+                    this.reflector().setCustomProperty(contextHolder, "@@searchString", inputText);
                 } else {
                     contextHolder = Polymer.TgBehaviors.TgEditorBehavior.createContextHolder.call(this, inputText);
                 }
@@ -620,7 +613,8 @@
             },
 
             _entitySelected: function () {
-                if (!this.multi) {
+                // if this this is non-multi mode and the tap happened on a result item then it should be selected
+                if (!this.multi && document.activeElement.classList.contains("tg-item")) {
                     this._done();
                 }
             },
