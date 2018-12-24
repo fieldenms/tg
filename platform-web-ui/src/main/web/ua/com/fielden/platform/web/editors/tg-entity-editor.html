@@ -516,12 +516,19 @@
                 result.reflector = this.reflector();
 
                 let wasNewValueObserved = false;
+                let indexOfFirstNewValue = -1;
                 for (let index = 0; index < entities.length; index++) {
                     // Entity is converted to a string representation of its key.
                     // This includes correct conversion of simple, composite and union entities
                     const key = this.reflector().convert(entities[index]);
                     entities[index].key = key;
-                    wasNewValueObserved = result.pushValue(entities[index]) || wasNewValueObserved;
+                    const isNew = result.pushValue(entities[index]);
+                    // if a new value was observed for the first time then capture its index
+                    // so that later this new item could be focused
+                    if (!wasNewValueObserved && isNew) {
+                        indexOfFirstNewValue = index;
+                    }
+                    wasNewValueObserved = isNew || wasNewValueObserved;
                 }
 
                 // if no new values were observed then there is no more to load
@@ -550,6 +557,12 @@
                         }
                     }
                     result.notifyResize();
+
+                    // focus a new item, if any
+                    // this is happens only if new values were loaded after pressing MORE
+                    if (indexOfFirstNewValue >= 0) {
+                        result.focusItemWithIndex(indexOfFirstNewValue);
+                    }
                 }.bind(this), 100);
             },
 
