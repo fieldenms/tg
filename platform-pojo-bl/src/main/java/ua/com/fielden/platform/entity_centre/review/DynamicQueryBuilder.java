@@ -904,7 +904,7 @@ public class DynamicQueryBuilder {
      * @return
      */
     private static <E extends AbstractEntity<?>> IJoin<E> createJoinCondition(final Class<E> managedType) {
-        return select(managedType).as(ALIAS);
+        return select(select(managedType).model()).as(ALIAS);
     }
 
     private static final String ALIAS = "alias_for_main_criteria_type";
