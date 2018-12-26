@@ -133,12 +133,23 @@ public class EntityResourceUtils {
      */
     private static <V extends AbstractEntity<?>> IFetchProvider<V> fetchForPropertyOrDefault(final ICompanionObjectFinder coFinder, final Class<? extends AbstractEntity<?>> entityType, final String propertyName) {
         final IFetchProvider<? extends AbstractEntity<?>> fetchProvider = coFinder.find(entityType).getFetchProvider();
-        //        return fetchProvider.fetchFor(propertyName);
-        return fetchProvider.shouldFetch(propertyName)
-                ? fetchProvider.fetchFor(propertyName)
-                : fetchProvider.with(propertyName).fetchFor(propertyName);
+        return fetchForPropertyOrDefault(fetchProvider, propertyName);
     }
-
+    
+    /**
+     * Returns fetch provider for property or, if the property should not be fetched according to default strategy, returns the 'default' property fetch provider with 'keys'
+     * (simple an composite) and 'desc' (if 'desc' exists in domain entity).
+     *
+     * @param fetchProvider
+     * @param propertyName
+     * @return
+     */
+    public static <V extends AbstractEntity<?>> IFetchProvider<V> fetchForPropertyOrDefault(final IFetchProvider<? extends AbstractEntity<?>> fetchProvider, final String propertyName) {
+        return fetchProvider.shouldFetch(propertyName)
+            ? fetchProvider.fetchFor(propertyName)
+            : fetchProvider.with(propertyName).fetchFor(propertyName);
+    }
+    
     /**
      * Determines the version that is shipped with 'modifiedPropertiesHolder'.
      *

@@ -58,6 +58,7 @@ import static ua.com.fielden.platform.web.utils.EntityResourceUtils.PROPERTY_DES
 import static ua.com.fielden.platform.web.utils.EntityResourceUtils.createNotFoundMockString;
 import static ua.com.fielden.platform.web.utils.EntityResourceUtils.entityWithMocksFromString;
 import static ua.com.fielden.platform.web.utils.EntityResourceUtils.entityWithMocksToString;
+import static ua.com.fielden.platform.web.utils.EntityResourceUtils.fetchForPropertyOrDefault;
 import static ua.com.fielden.platform.web.utils.EntityResourceUtils.getEntityType;
 
 import java.math.BigDecimal;
@@ -836,7 +837,7 @@ public class CentreUpdater {
                 return nullOrConvert(value, (final String str) -> entityWithMocksFromString(idOrKey -> {
                     final IEntityDao<AbstractEntity<?>> propertyCompanion = companionFinder.find((Class<AbstractEntity<?>>) propertyType, true);
                     final IEntityDao<AbstractEntity<?>> companion = companionFinder.find(root, true);
-                    final fetch<AbstractEntity<?>> fetch = companion.getFetchProvider().fetchFor(property).fetchModel();
+                    final fetch<AbstractEntity<?>> fetch = fetchForPropertyOrDefault(companion.getFetchProvider(), property).fetchModel();
                     if (idOrKey.startsWith(ID_PREFIX)) {
                         return propertyCompanion.findById(Long.valueOf(idOrKey.replaceFirst(quote(ID_PREFIX), "")), fetch);
                     } else {
