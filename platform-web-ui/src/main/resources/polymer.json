@@ -1,0 +1,11 @@
+{
+  "entrypoint": "build.html",
+  "shell": "build-polymer.js",
+  "extraDependencies": [
+    "node_modules/@webcomponents/webcomponentsjs/**",
+    "node_modules/web-component-tester/browser.js"
+  ],
+  "lint": {
+    "rules": ["polymer-3"]
+  }
+}
