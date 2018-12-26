@@ -1,7 +1,5 @@
 package ua.com.fielden.platform.sample.domain;
 
-import static ua.com.fielden.platform.entity.annotation.CritOnly.Type.SINGLE;
-
 import java.math.BigDecimal;
 import java.util.Date;
 
@@ -66,7 +64,7 @@ public class TgWorkOrder extends AbstractEntity<String> {
     private TgOrgUnit1 orgunitCritOnly;
 
     @IsProperty
-    @CritOnly(SINGLE)
+    @CritOnly(Type.SINGLE)
     @Title(value = "OrgUnit1 Single", desc = "A single crit only property")
     private TgOrgUnit1 orgunitCritOnlySingle;
 

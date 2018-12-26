@@ -1,7 +1,5 @@
 package ua.com.fielden.platform.sample.domain;
 
-import static ua.com.fielden.platform.entity.annotation.CritOnly.Type.SINGLE;
-
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.CompanionObject;
 import ua.com.fielden.platform.entity.annotation.CritOnly;
@@ -13,6 +11,7 @@ import ua.com.fielden.platform.entity.annotation.MapEntityTo;
 import ua.com.fielden.platform.entity.annotation.MapTo;
 import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.entity.annotation.Title;
+import ua.com.fielden.platform.entity.annotation.CritOnly.Type;
 import ua.com.fielden.platform.security.user.User;
 
 /**
@@ -40,7 +39,7 @@ public class TgFetchProviderTestEntity extends AbstractEntity<String> {
     private User additionalProperty;
     
     @IsProperty
-    @CritOnly(SINGLE)
+    @CritOnly(Type.SINGLE)
     @Title(value = "Prop For Validation", desc = "Crit-only single prop for centre validation test")
     private TgPersistentEntityWithProperties propForValidation;
     
