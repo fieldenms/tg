@@ -443,13 +443,15 @@
 
             /** Loads more matching values. */
             _loadMore: function () {
-                this._dataPage = this._dataPage + 1;
-                this._search(this._searchQuery, this._dataPage);
+                if (!this.searching) {
+                    this._dataPage = this._dataPage + 1;
+                    this._search(this._searchQuery, this._dataPage);
+                }
             },
 
             _search: function (defaultSearchQuery, dataPage) {
                 // What is the query string?
-                var inputText = ''; // default value
+                let inputText = ''; // default value
                 if (this.multi === false) {
                     // assign the actual search string
                     inputText = this._prepInput(this.decoratedInput().value) || defaultSearchQuery;
@@ -458,19 +460,11 @@
                     // in order to detremine what part of the input text should be used for search and
                     // also for later insertion of selected values (this._replaceFromIndex and this._replaceToIndex govern this).
 
-                    var text = this.decoratedInput().value;
-                    var caretPos = this.decoratedInput().selectionStart;
-                    var toIndex = text.indexOf(this.separator, caretPos);
-
-                    if (toIndex < 0) {
-                        toIndex = text.length;
-                    }
-                    var startOfText = text.substring(0, caretPos);
-                    var fromIndex = startOfText.lastIndexOf(this.separator);
-
-                    if (fromIndex < 0) {
-                        fromIndex = -1; // just to make sure that it is -1
-                    }
+                    const text = this.decoratedInput().value;
+                    const caretPos = this.decoratedInput().selectionStart;
+                    const toIndex = text.indexOf(this.separator, caretPos) < 0 ? text.length : text.indexOf(this.separator, caretPos);
+                    const startOfText = text.substring(0, caretPos);
+                    const fromIndex = startOfText.lastIndexOf(this.separator) < 0? -1 : startOfText.lastIndexOf(this.separator); // just to make sure that it is -1
 
                     this._replaceFromIndex = fromIndex;
                     this._replaceToIndex = toIndex;
@@ -510,7 +504,7 @@
             /*
              * Displays the search result.
              */
-            _onFound: function (entities, dataPage) {
+            _onFound: function (entities) {
                 const result = this.$.result;
                 // make sure to assign reflector to the result object
                 result.reflector = this.reflector();
@@ -597,10 +591,11 @@
 
             _resultOpened: function (e) {
                 const activeElement = document.activeElement;
-                if (this.$.searcherButton === activeElement || /* if autocompleter's button is in focus (this occurs in iOs when tapping on that button) */
-                    this.$.input === activeElement          || /* if autocompleter's input is in focus */
-                    document.body === activeElement         ||   /* or no other input or button in focus then show found values */
-                    "loadMoreButton" === activeElement.id) {   /* was the loadMoreButton tapped?Â */
+                if (this.$.searcherButton === activeElement ||     /* if autocompleter's button is in focus (this occurs in iOs when tapping on that button) */
+                    this.$.input === activeElement          ||     /* or if autocompleter's input is in focus */
+                    document.body === activeElement         ||     /* or no other input or button in focus then show found values */
+                    "loadMoreButton" === activeElement.id   ||     /* or was the loadMoreButton tapped or */
+                    activeElement.classList.contains("tg-item")) { /* or if a list item is an active element */  
                     this.opened = true;
                     this.$.result.highlightMatchedParts();
                 } else {
@@ -744,7 +739,7 @@
             _processSearcherResponse: function (e) {
                 const self = this;
                 self.processResponse(e, "search", function (foundEntities) {
-                    self._onFound(foundEntities, self._dataPage);
+                    self._onFound(foundEntities);
                 });
             },
 

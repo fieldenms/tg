@@ -467,13 +467,16 @@
                     }
                 } else {
                     const length = this._values.length;
-                    if (this.multi === true) {
-                        const index = (this._selectedIndex + 1) < length ? (this._selectedIndex + 1) : 0;
+                    const index = (this._selectedIndex + 1) < length ? (this._selectedIndex + 1) : 0;
+                    // if "next" is beyond the currently loaded values and loading more is an option then load more...
+                    if ((this._selectedIndex + 1) >= length && this.enableLoadMore === true) {
+                        this.loadMore();
+                    } else { // otherwise focus the item with index
                         this.focusItemWithIndex(index);
-                    } else {
-                        this._selectedIndex = (this._selectedIndex + 1) < length ? (this._selectedIndex + 1) : 0;
-                        this.$.selector.select(this.$.selector._indexToValue(this._selectedIndex));
-                        this.focusItemWithIndex(this._selectedIndex);
+                        if (!this.multi) { // for singular mode need also to select the item
+                            this._selectedIndex = index;
+                            this.$.selector.select(this.$.selector._indexToValue(this._selectedIndex));
+                        } 
                     }
                 }
                 this._scrollToSelected();
