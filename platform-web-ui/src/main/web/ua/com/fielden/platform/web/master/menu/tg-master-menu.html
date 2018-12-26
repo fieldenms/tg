@@ -165,6 +165,12 @@
                 defaultRoute: {
                     type: String
                 },
+                
+                /* Indicates whether master menu should maintain previously opened menu item after the master was opened again.*/
+                maintainPreviouslyOpenedMenuItem: {
+                    type: Boolean,
+                    value: false
+                },
 
                 /**
                  * A context holder creator that is used for tg-ui-action instances serving as menu items for compound masters.
@@ -551,10 +557,14 @@
                 }
 
                 if (this._isRefreshCycle === false) {
-                    if (this.route !== this.defaultRoute) {
-                        this.route = this.defaultRoute;
+                    if (this.maintainPreviouslyOpenedMenuItem) {
+                        this._sectionRouteChanged(this.route, this.route);
                     } else {
-                        this._sectionRouteChanged(this.defaultRoute, this.route);
+                        if (this.route !== this.defaultRoute) {
+                            this.route = this.defaultRoute;
+                        } else {
+                            this._sectionRouteChanged(this.defaultRoute, this.route);
+                        }
                     }
                 }
 
