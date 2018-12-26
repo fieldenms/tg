@@ -109,7 +109,7 @@
               margin-top: 8px;
           }
 	    </style>
-        <tg-scrollable-component class="flex relative">
+        <tg-scrollable-component class="flex relative" end-of-scroll="[[_tryToLoadMore]]">
             <iron-selector id="selector" class="tg-snatchback" multi$="[[multi]]" attr-for-selected="value" on-iron-deselect="_itemDeselected" on-iron-select="_itemSelected">
                 <!-- begin of dom-repeat -->
                 <template is="dom-repeat" items="[[_values]]" as="v">
@@ -118,6 +118,7 @@
                 </template>
                 <!-- end of dom-repeat -->
             </iron-selector>
+
         </tg-scrollable-component>
 
         <div hidden$="[[_foundSome]]" class="no-result">
@@ -141,7 +142,11 @@
         Polymer({
             is: 'tg-entity-editor-result',
 
-            behaviors: [Polymer.IronOverlayBehavior, Polymer.TgBehaviors.TgHighlightingBehavior, Polymer.TgBehaviors.TgTooltipBehavior],
+            behaviors: [
+                Polymer.IronOverlayBehavior,
+                Polymer.TgBehaviors.TgHighlightingBehavior,
+                Polymer.TgBehaviors.TgTooltipBehavior
+            ],
 
             properties: {
                 /* Indicates whether multiple (true) or a single (false, default) value is acceptable. */
@@ -233,8 +238,18 @@
                 enableLoadMore: {
                     type: Boolean,
                     value: true
-                }
+                },
 
+                _tryToLoadMore: {
+                    type: Function,
+                    value: function () {
+                        return function (e) {
+                            if (this.enableLoadMore === true) {
+                                this.loadMore();
+                            }                            
+                        }.bind(this);
+                    }
+                }
             },
 
             ready: function() {
