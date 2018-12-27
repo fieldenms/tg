@@ -4,6 +4,7 @@
 <link rel="import" href="/resources/polymer/iron-resizable-behavior/iron-resizable-behavior.html">
 
 <link rel="import" href="/resources/components/tg-scrollable-component.html">
+<link rel="import" href="/resources/components/tg-confirmation-dialog.html">
 <link rel="import" href="/resources/validation/tg-entity-validator.html">
 <link rel="import" href="/resources/binding/tg-entity-binder.html">
 
@@ -25,6 +26,8 @@
     <template>
         <tg-entity-binder id="binderDom">
         </tg-entity-binder>
+        
+        <tg-confirmation-dialog id="confirmationDialog"></tg-confirmation-dialog>
 
         <tg-entity-validator id="validator" entity-type="[[entityType]]" post-validated-default="[[_postValidatedDefault]]" post-validated-default-error="[[_postValidatedDefaultError]]" process-response="[[_processResponse]]" process-error="[[_processError]]"></tg-entity-validator>
 
@@ -94,6 +97,10 @@
             this.$.scrollableContainer.addEventListener("layout-finished", this._bodyLayoutFinished);
             this._actionBarLayoutFinished = this._actionBarLayoutFinished.bind(this);
             this.$.actionContainer.addEventListener("layout-finished", this._actionBarLayoutFinished);
+        },
+        
+        confirm: function (message, buttons) {
+            return this.$.confirmationDialog.showConfirmationDialog(message, buttons);
         },
         
         _bodyLayoutFinished: function (e) {
