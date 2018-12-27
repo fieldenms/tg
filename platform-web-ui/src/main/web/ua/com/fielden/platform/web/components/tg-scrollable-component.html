@@ -9,11 +9,11 @@
     <template>
         <style>
             :host {
-                @apply(--layout-vertical);
+                @apply --layout-vertical;
             }
             #scrollablePanel {
                 overflow: auto;
-                @apply(--tg-scrollable-layout);
+                @apply --tg-scrollable-layout;
             }
             .webkit-scroll-inertia {
                 -webkit-overflow-scrolling: touch;
@@ -23,7 +23,7 @@
             }
         </style>
         <div id="scrollablePanel" on-scroll="_contentScrolled" class="webkit-scroll-inertia">
-            <content></content>
+            <slot></slot>
         </div>
         <div id="shadowContainer" class="fit"></div>
         <tg-app-config id="appConfig"></tg-app-config>
