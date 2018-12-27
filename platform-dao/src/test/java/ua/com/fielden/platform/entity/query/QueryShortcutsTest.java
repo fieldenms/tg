@@ -716,4 +716,16 @@ public class QueryShortcutsTest extends BaseEntQueryTCase {
         join(MAKE).as("model.make").on().prop("model.make").eq().prop("model.make.id"). //
         where().begin().prop("key").notLike().val("A%").end().and().begin().prop("model.make.key").eq().val("MERC").end().model());
     }
+    
+    @Test
+    public void user_data_filter_condition_is_correctly_attached_to_query_with_main_source_being_query_returning_filtered_entity_type() {
+        assertModelsEqualsAccordingUserDataFiltering(//
+        select(select(VEHICLE).model()). //
+        where().prop("model.make.key").eq().val("MERC").model(),
+
+        select(select(VEHICLE).model()). //
+        join(MODEL).as("model").on().prop("model").eq().prop("model.id"). //
+        join(MAKE).as("model.make").on().prop("model.make").eq().prop("model.make.id"). //
+        where().begin().prop("key").notLike().val("A%").end().and().begin().prop("model.make.key").eq().val("MERC").end().model());
+    }
 }

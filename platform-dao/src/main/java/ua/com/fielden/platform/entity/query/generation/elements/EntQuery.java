@@ -439,7 +439,7 @@ public class EntQuery implements ISingleOperand {
     }
 
     private Conditions enhanceConditions(final Conditions originalConditions, final boolean filterable, final IFilter filter, final String username, final ISource mainSource, final EntQueryGenerator generator, final Map<String, Object> paramValues) {
-        if (mainSource instanceof TypeBasedSource && filterable && filter != null) {
+        if (filterable && filter != null) {
             final ConditionModel filteringCondition = filter.enhance(mainSource.sourceType(), mainSource.getAlias(), username);
             if (filteringCondition != null) {
                 LOGGER.debug("\nApplied user-driven-filter to query main source type [" + mainSource.sourceType().getSimpleName() + "]");
