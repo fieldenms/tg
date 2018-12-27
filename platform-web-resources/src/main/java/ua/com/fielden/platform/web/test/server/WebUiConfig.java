@@ -1149,7 +1149,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
         }
 
         @Override
-        public List<PropertyDescriptor<TgPersistentEntityWithProperties>> findMatchesWithModel(final String searchString) {
+        public List<PropertyDescriptor<TgPersistentEntityWithProperties>> findMatchesWithModel(final String searchString, final int dataPage) {
             return findMatches(searchString);
         }
 

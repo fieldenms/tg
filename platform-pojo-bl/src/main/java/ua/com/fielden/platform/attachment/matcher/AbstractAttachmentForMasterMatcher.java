@@ -29,12 +29,12 @@ public abstract class AbstractAttachmentForMasterMatcher<C extends AbstractEntit
 
     @Override
     public List<Attachment> findMatches(final String searchString) {
-        return findMatchesWithModel(searchString);
+        return findMatchesWithModel(searchString, 1);
     }
     
     @Override
-    public List<Attachment> findMatchesWithModel(final String searchString) {
-        final List<Attachment> matched = super.findMatchesWithModel(searchString);
+    public List<Attachment> findMatchesWithModel(final String searchString, final int dataPage) {
+        final List<Attachment> matched = super.findMatchesWithModel(searchString, dataPage);
         // if no matches found then let's check if an ad-hoc hyperlink-as-attachment needs to be created
         if (matched.isEmpty()) {
             final String potentialUri = searchString.replaceAll("%$", ""); // remove the last % if present
