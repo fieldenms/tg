@@ -5,11 +5,14 @@
 <link rel="import" href="/resources/polymer/iron-selector/iron-selector.html">
 <link rel="import" href="/resources/polymer/iron-fit-behavior/iron-fit-behavior.html">
 
+<link rel="import" href="/resources/polymer/paper-button/paper-button.html">
 <link rel="import" href="/resources/polymer/paper-styles/color.html">
 <link rel="import" href="/resources/polymer/paper-item/paper-item.html">
+<link rel="import" href="/resources/components/tg-scrollable-component.html">
 <link rel="import" href="/resources/components/lodash-lib.html">
 
 <link rel="import" href="/resources/editors/tg-highlighting-behavior.html">
+<link rel="import" href="/resources/components/tg-tooltip-behavior.html">
 
 <dom-module id="tg-entity-editor-result">
     <template>
@@ -22,7 +25,8 @@
 	            overflow: auto; /* this is to make host scorable when needed */
 	            -webkit-overflow-scrolling: touch;
 	            box-shadow: rgba(0, 0, 0, 0.24) -2.3408942051048403px 5.524510324047423px 12.090680100755666px 0px, rgba(0, 0, 0, 0.12) 0px 0px 12px 0px;
-	        }
+                @apply(--layout-vertical);
+            }
 
 	        .tg-item {
 	        	@apply(--layout-vertical);
@@ -92,20 +96,43 @@
 	            align-items: center;
 	            line-height: 50px;
 	        }
+
+          .toolbar {
+              padding: 0 10px 10px;
+              height: auto;
+              position: relative;
+              overflow: hidden;
+              flex-grow: 0;
+              flex-shrink: 0;
+          }
+          .toolbar-content > * {
+              margin-top: 8px;
+          }
 	    </style>
+        <tg-scrollable-component class="flex relative" end-of-scroll="[[_tryToLoadMore]]">
+            <iron-selector id="selector" class="tg-snatchback" multi$="[[multi]]" attr-for-selected="value" on-iron-deselect="_itemDeselected" on-iron-select="_itemSelected">
+                <!-- begin of dom-repeat -->
+                <template is="dom-repeat" items="[[_values]]" as="v">
+                    <paper-item id$="[[_makeId(index)]]" value$="[[v.key]]" tabindex="-1" noink class="tg-item vertical-layout"> <!-- please note that union entities are not supported in autocompletion results and, most likely, will never be. Otherwise consider finding .key places here and adjust accordingly using property getter. -->
+                    </paper-item>
+                </template>
+                <!-- end of dom-repeat -->
+            </iron-selector>
 
-        <iron-selector id="selector" class="tg-snatchback" multi$="[[multi]]" attr-for-selected="value" on-iron-deselect="_itemDeselected" on-iron-select="_itemSelected">
-            <!-- begin of dom-repeat -->
-            <template is="dom-repeat" items="[[_values]]" as="v">
-                <paper-item id$="[[_makeId(index)]]" value$="[[v.key]]" tabindex="-1" noink class="tg-item vertical-layout"> <!-- please note that union entities are not supported in autocompletion results and, most likely, will never be. Otherwise consider finding .key places here and adjust accordingly using property getter. -->
-                </paper-item>
-            </template>
-    <!-- end of dom-repeat -->
-    </iron-selector>
+        </tg-scrollable-component>
 
-    <div hidden$="[[_foundSome]]" class="no-result">
-        <span>Found no matching values.</span>
-    </div>
+        <div hidden$="[[_foundSome]]" class="no-result">
+            <span>Found no matching values.</span>
+        </div>
+        <div class="toolbar layout horizontal wrap">
+          <div class="toolbar-content layout horizontal center">
+            <paper-button tooltip-text="Load more matching values, if any" on-tap="loadMore" id="loadMoreButton" disabled$="[[!enableLoadMore]]">More</paper-button>
+          </div>
+          <div class="toolbar-content layout horizontal center" style="margin-left:auto">
+            <paper-button tooltip-text="Discard and close" on-tap="close">Cancel</paper-button>
+            <paper-button tooltip-text="Accept selected" on-tap="acceptValues">Ok</paper-button>
+          </div>
+        </div>
     </template>
 
 </dom-module>
@@ -115,7 +142,11 @@
         Polymer({
             is: 'tg-entity-editor-result',
 
-            behaviors: [Polymer.IronOverlayBehavior, Polymer.TgBehaviors.TgHighlightingBehavior],
+            behaviors: [
+                Polymer.IronOverlayBehavior,
+                Polymer.TgBehaviors.TgHighlightingBehavior,
+                Polymer.TgBehaviors.TgTooltipBehavior
+            ],
 
             properties: {
                 /* Indicates whether multiple (true) or a single (false, default) value is acceptable. */
@@ -181,10 +212,43 @@
                 },
 
                 /**
-                 * The function that retrives boundClientRect and offsetHeight from wrapping decorator (paper-input-container) from parent tg-entity-editor.
+                 * A function that retrives boundClientRect and offsetHeight from wrapping decorator (paper-input-container) from parent tg-entity-editor.
                  */
                 retrieveContainerSizes: {
                     type: Function
+                },
+
+                /**
+                 * A function that perorms acceptance of selected values. It is assigned in tg-entity-editor. 
+                 */
+                acceptValues: {
+                    type: Function
+                },
+
+                /**
+                 * A function to load more matching values, if any. It is assigned in tg-entity-editor.
+                 */
+                loadMore: {
+                    type: Function
+                },
+
+                /**
+                 * Controls if buton MORE is enabled.
+                 */
+                enableLoadMore: {
+                    type: Boolean,
+                    value: true
+                },
+
+                _tryToLoadMore: {
+                    type: Function,
+                    value: function () {
+                        return function (e) {
+                            if (this.enableLoadMore === true) {
+                                this.loadMore();
+                            }                            
+                        }.bind(this);
+                    }
                 }
             },
 
@@ -208,9 +272,18 @@
                 }
             },
 
-            /* Pushes the specified value into the tail of attay _values */
+            /* Pushes the specified value into the tail of array _values if that value is not yet present.
+             * Returns true if the value was new, false otherwise. */
             pushValue: function(value) {
-                this.push('_values', value);
+                const existingValue = _.find(this._values, function(obj) {
+                    return obj.key === value.key;
+                });
+
+                if (!existingValue) {
+                    this.push('_values', value);
+                }
+
+                return !existingValue;
             },
 
             /*
@@ -409,12 +482,16 @@
                     }
                 } else {
                     const length = this._values.length;
-                    if (this.multi === true) {
-                        const index = (this._selectedIndex + 1) < length ? (this._selectedIndex + 1) : 0;
+                    const index = (this._selectedIndex + 1) < length ? (this._selectedIndex + 1) : 0;
+                    // if "next" is beyond the currently loaded values and loading more is an option then load more...
+                    if ((this._selectedIndex + 1) >= length && this.enableLoadMore === true) {
+                        this.loadMore();
+                    } else { // otherwise focus the item with index
                         this.focusItemWithIndex(index);
-                    } else {
-                        this._selectedIndex = (this._selectedIndex + 1) < length ? (this._selectedIndex + 1) : 0;
-                        this.$.selector.select(this.$.selector._indexToValue(this._selectedIndex));
+                        if (!this.multi) { // for singular mode need also to select the item
+                            this._selectedIndex = index;
+                            this.$.selector.select(this.$.selector._indexToValue(this._selectedIndex));
+                        } 
                     }
                 }
                 this._scrollToSelected();
@@ -436,6 +513,7 @@
                     } else {
                         this._selectedIndex = (this._selectedIndex - 1) >= 0 ? (this._selectedIndex - 1) : length - 1;
                         this.$.selector.select(this.$.selector._indexToValue(this._selectedIndex));
+                        this.focusItemWithIndex(this._selectedIndex);
                     }
                 }
                 this._scrollToSelected();

@@ -95,20 +95,20 @@ public abstract class AbstractSearchEntityByKeyWithCentreContext<T extends Abstr
     @Override
     public List<T> findMatches(final String searchString) {
         final IEntityDao<T> companion = maybeCompanion.orElseThrow(CO_MISSING_EXCEPTION_SUPPLIER);
-        return findMatches(searchString, companion, defaultFetchModel);
+        return findMatches(searchString, companion, defaultFetchModel, 1);
     }
 
     @Override
-    public List<T> findMatchesWithModel(final String searchString) {
+    public List<T> findMatchesWithModel(final String searchString, final int dataPage) {
         final IEntityDao<T> companion = maybeCompanion.orElseThrow(CO_MISSING_EXCEPTION_SUPPLIER);
-        return findMatches(searchString, companion, getFetch());
+        return findMatches(searchString, companion, getFetch(), dataPage);
     }
 
-    private List<T> findMatches(final String searchString, final IEntityDao<T> companion, final fetch<T> fetch) {
+    private List<T> findMatches(final String searchString, final IEntityDao<T> companion, final fetch<T> fetch, final int dataPage) {
         final ConditionModel searchCriteria = makeSearchCriteriaModel(getContext(), searchString);
         final OrderingModel ordering = composeOrderingModelForQuery(searchString, companion.getEntityType());
         final Map<String, Object> queryParams = fillParamsBasedOnContext(getContext());
-        return companion.getFirstEntities(createCommonQueryBuilderForFindMatches(companion.getEntityType(), searchCriteria, ordering, queryParams).with(fetch).model(), getPageSize());
+        return companion.getFirstEntities(createCommonQueryBuilderForFindMatches(companion.getEntityType(), searchCriteria, ordering, queryParams).with(fetch).model(), getPageSize() * dataPage);
     }
 
     @Override
