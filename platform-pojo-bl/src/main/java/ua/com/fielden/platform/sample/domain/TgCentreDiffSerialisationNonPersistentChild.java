@@ -2,7 +2,6 @@ package ua.com.fielden.platform.sample.domain;
 
 import static java.lang.String.format;
 import static java.util.Optional.empty;
-import static java.util.Optional.of;
 import static java.util.stream.Stream.of;
 
 import java.util.Optional;
@@ -56,7 +55,7 @@ public class TgCentreDiffSerialisationNonPersistentChild extends AbstractEntity<
             final GroupingProperty[] allValues = values();
             for (final GroupingProperty value : allValues) {
                 if (value.key.equals(key)) {
-                    return of(value);
+                    return Optional.of(value);
                 }
             }
             return empty();

@@ -839,9 +839,9 @@ public class CentreUpdater {
                     final IEntityDao<AbstractEntity<?>> companion = companionFinder.find(root, true);
                     final fetch<AbstractEntity<?>> fetch = fetchForPropertyOrDefault(companion.getFetchProvider(), property).fetchModel();
                     if (idOrKey.startsWith(ID_PREFIX)) {
-                        return propertyCompanion.findById(Long.valueOf(idOrKey.replaceFirst(quote(ID_PREFIX), "")), fetch);
+                        return (AbstractEntity) propertyCompanion.findById(Long.valueOf(idOrKey.replaceFirst(quote(ID_PREFIX), "")), fetch);
                     } else {
-                        return propertyCompanion.findByKeyAndFetch(fetch, idOrKey);
+                        return (AbstractEntity) propertyCompanion.findByKeyAndFetch(fetch, idOrKey);
                     }
                 }, str, propertyType));
             }
