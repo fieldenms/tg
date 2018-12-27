@@ -438,20 +438,19 @@ public class EntQuery implements ISingleOperand {
         return result;
     }
 
-    private Conditions enhanceConditions(final Conditions originalConditions, final IFilter filter, final String username, final ISource mainSource, final EntQueryGenerator generator, final Map<String, Object> paramValues) {
-        if (mainSource instanceof TypeBasedSource && filter != null) {
+    private Conditions enhanceConditions(final Conditions originalConditions, final boolean filterable, final IFilter filter, final String username, final ISource mainSource, final EntQueryGenerator generator, final Map<String, Object> paramValues) {
+        if (mainSource instanceof TypeBasedSource && filterable && filter != null) {
             final ConditionModel filteringCondition = filter.enhance(mainSource.sourceType(), mainSource.getAlias(), username);
-            if (filteringCondition == null) {
-                return originalConditions;
+            if (filteringCondition != null) {
+                LOGGER.debug("\nApplied user-driven-filter to query main source type [" + mainSource.sourceType().getSimpleName() + "]");
+                final List<CompoundCondition> others = new ArrayList<>();
+                others.add(new CompoundCondition(AND, new GroupedConditions(false, originalConditions.getFirstCondition(), originalConditions.getOtherConditions())));
+                final GroupedConditions userDateFilteringCondition = new StandAloneConditionBuilder(generator, paramValues, filteringCondition, false).getModel();
+                return originalConditions.ignore() ? new Conditions(userDateFilteringCondition) : new Conditions(userDateFilteringCondition, others);
             }
-            LOGGER.debug("\nApplied user-driven-filter to query main source type [" + mainSource.sourceType().getSimpleName() + "]");
-            final List<CompoundCondition> others = new ArrayList<>();
-            others.add(new CompoundCondition(AND, new GroupedConditions(false, originalConditions)));
-            return originalConditions.ignore() ? new Conditions(new StandAloneConditionBuilder(generator, paramValues, filteringCondition, false).getModel())
-                    : new Conditions(new StandAloneConditionBuilder(generator, paramValues, filteringCondition, false).getModel(), others);
-        } else {
-            return originalConditions;
-        }
+        } 
+
+        return originalConditions;
     }
 
     public EntQuery(final boolean filterable, final EntQueryBlocks queryBlocks, final Class resultType, final QueryCategory category,
@@ -460,7 +459,7 @@ public class EntQuery implements ISingleOperand {
         this.category = category;
         this.domainMetadataAnalyser = domainMetadataAnalyser;
         this.sources = queryBlocks.getSources();
-        this.conditions = filterable ? enhanceConditions(queryBlocks.getConditions(), filter, username, sources.getMain(), generator, paramValues) : queryBlocks.getConditions();
+        this.conditions = enhanceConditions(queryBlocks.getConditions(), filterable, filter, username, sources.getMain(), generator, paramValues);
         this.yields = queryBlocks.getYields();
         this.yieldAll = queryBlocks.isYieldAll();
         this.groups = queryBlocks.getGroups();
