@@ -677,11 +677,14 @@
                 }
             },
             
-            executeOnOpeningCentre: function (callback) {
+            /**
+             * Publishes a closure to be executed by an Entity Centre identified by centreUuid (opening centre).
+             */
+            publishExecute: function (closure) {
                 postal.publish({
                     channel: "centre_" + this.centreUuid, 
-                    topic: 'execute', 
-                    data: callback.bind(this)
+                    topic: "execute",
+                    data: closure.bind(this)
                 });
             },
 
