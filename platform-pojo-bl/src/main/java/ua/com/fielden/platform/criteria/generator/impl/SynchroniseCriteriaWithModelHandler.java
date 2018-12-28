@@ -50,6 +50,21 @@ public class SynchroniseCriteriaWithModelHandler<CDTME extends ICentreDomainTree
             // LOGGER.error(format("\t\t\toriginal property [%s] is crit-only single...", propName));
             // set corresponding critOnlySinglePrototype's property which will trigger all necessary validations / definers and dependent properties processing
             criteriaEntity.critOnlySinglePrototypeInit(entityType, CRITERIA_ENTITY_ID).set(propName, newValue);
+            
+            // LOGGER.error(format("\tclearing requiredness..."));
+            // Need to clear requiredness errors on each application of criteria entity property (crit-only single), not just on initial creation of critOnlySinglePrototype.
+            // This is required to mimic 'new entity' application which permits empty required values.
+            // The following code is inspired by EntityResourceUtils.disregardCritOnlyRequiredProperties method and its siblings.
+            criteriaEntity.critOnlySinglePrototype().nonProxiedProperties().filter(mp -> mp.isRequired() && isCritOnlySingle(entityType, mp.getName())).forEach(mp -> {
+                // It is not sufficient enough just to clear requiredness validation result by setRequiredValidationResult(successful("ok")).
+                // We need to perform re-validation by making the property non-required first. This makes empty attempted value to become 'actual' one.
+                // LOGGER.error(format("\t\tclearing requiredness... property [%s]", mp.getName()));
+                mp.setRequired(false);
+                // And then we need to return the property to required state.
+                mp.setRequired(true);
+            });
+            // LOGGER.error(format("\tclearing requiredness...done"));
+            
             // take a snapshot of all needed crit-only single prop information to be applied back against criteriaEntity
             final Stream<MetaProperty<?>> snapshot = criteriaEntity.critOnlySinglePrototype().nonProxiedProperties().filter(metaProp -> isCritOnlySingle(entityType, metaProp.getName()));
             // apply the snapshot against criteriaEntity

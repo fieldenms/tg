@@ -11,6 +11,7 @@ import static ua.com.fielden.platform.entity.AbstractEntity.KEY_NOT_ASSIGNED;
 import static ua.com.fielden.platform.entity.factory.EntityFactory.newPlainEntity;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
+import static ua.com.fielden.platform.error.Result.successful;
 import static ua.com.fielden.platform.reflection.AnnotationReflector.getPropertyAnnotation;
 import static ua.com.fielden.platform.utils.EntityUtils.isEntityType;
 import java.lang.reflect.Field;
@@ -220,7 +221,7 @@ public class EntityResourceUtils {
 
         disregardCritOnlyRequiredProperties(entity);
         disregardUntouchedRequiredProperties(entity, touchedProps);
-        disregardTouchedRequiredPropertiesWithEmptyValueForNotPersistedEntity(entity, touchedProps);
+        disregardTouchedRequiredPropertiesWithEmptyValue(entity, touchedProps);
 
         return entity;
     }
@@ -490,7 +491,7 @@ public class EntityResourceUtils {
     private static <M extends AbstractEntity<?>> void validateUnmodifiedPropertyValue(final Class<M> type, final String name, final Map<String, Object> valAndOrigVal, final M entity, final ICompanionObjectFinder companionFinder, final boolean isEntityStale, final boolean isCriteriaEntity) {
         processPropertyValue(false, true, type, name, valAndOrigVal, entity, companionFinder, isEntityStale, isCriteriaEntity);
     }
-
+    
     /**
      * Disregards the 'required' errors for those properties, that were not 'touched' directly by the user (for both criteria and simple entities).
      *
@@ -499,13 +500,13 @@ public class EntityResourceUtils {
      * @return
      */
     public static <M extends AbstractEntity<?>> M disregardUntouchedRequiredProperties(final M entity, final Set<String> touchedProps) {
+        // both criteria and simple entities will be affected
         entity.nonProxiedProperties().filter(mp -> mp.isRequired() && !touchedProps.contains(mp.getName())).forEach(mp -> {
-            mp.setRequiredValidationResult(Result.successful(entity));
+            mp.setRequiredValidationResult(successful(entity));
         });
-
         return entity;
     }
-
+    
     /**
      * Disregards the 'required' errors for those properties, that were provided with some value and then cleared back to empty value during editing of new entity.
      *
@@ -513,16 +514,16 @@ public class EntityResourceUtils {
      * @param touchedProps -- list of 'touched' properties, i.e. those for which editing has occurred during validation lifecycle (maybe returning to original value thus making them unmodified)
      * @return
      */
-    private static <M extends AbstractEntity<?>> M disregardTouchedRequiredPropertiesWithEmptyValueForNotPersistedEntity(final M entity, final Set<String> touchedProps) {
-        if (!entity.isPersisted()) {
+    private static <M extends AbstractEntity<?>> M disregardTouchedRequiredPropertiesWithEmptyValue(final M entity, final Set<String> touchedProps) {
+        // both criteria and simple non-persisted (new) entities will be affected
+        if (!entity.isPersisted() || EntityQueryCriteria.class.isAssignableFrom(entity.getType())) {
             entity.nonProxiedProperties().filter(mp -> mp.isRequired() && touchedProps.contains(mp.getName()) && mp.getValue() == null).forEach(mp -> {
-                mp.setRequiredValidationResult(Result.successful(entity));
+                mp.setRequiredValidationResult(successful(entity));
             });
         }
-
         return entity;
     }
-
+    
     /**
      * Disregards the 'required' errors for crit-only properties on masters for non-criteria entity types.
      *
@@ -533,14 +534,14 @@ public class EntityResourceUtils {
         if (!EntityQueryCriteria.class.isAssignableFrom(managedType)) {
             entity.nonProxiedProperties().filter(mp -> mp.isRequired()).forEach(mp -> {
                 final String prop = mp.getName();
-                final CritOnly critOnlyAnnotation = AnnotationReflector.getPropertyAnnotation(CritOnly.class, managedType, prop);
+                final CritOnly critOnlyAnnotation = getPropertyAnnotation(CritOnly.class, managedType, prop);
                 if (critOnlyAnnotation != null) {
-                    mp.setRequiredValidationResult(Result.successful(entity));
+                    mp.setRequiredValidationResult(successful(entity));
                 }
             });
         }
     }
-
+    
     /**
      * Determines property type.
      * <p>

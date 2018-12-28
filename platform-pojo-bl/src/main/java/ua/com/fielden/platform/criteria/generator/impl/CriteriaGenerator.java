@@ -6,12 +6,9 @@ import static ua.com.fielden.platform.criteria.generator.impl.CriteriaReflector.
 import static ua.com.fielden.platform.criteria.generator.impl.CriteriaReflector.is;
 import static ua.com.fielden.platform.criteria.generator.impl.CriteriaReflector.not;
 import static ua.com.fielden.platform.criteria.generator.impl.CriteriaReflector.to;
-import static ua.com.fielden.platform.criteria.generator.impl.SynchroniseCriteriaWithModelHandler.applySnapshot;
-import static ua.com.fielden.platform.domaintree.impl.AbstractDomainTree.isCritOnlySingle;
 import static ua.com.fielden.platform.domaintree.impl.AbstractDomainTree.isDoubleCriterion;
 import static ua.com.fielden.platform.reflection.AnnotationReflector.getAnnotation;
 import static ua.com.fielden.platform.types.tuples.T2.t2;
-import static ua.com.fielden.platform.web.utils.EntityResourceUtils.disregardCritOnlyRequiredProperties;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
@@ -19,7 +16,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.WeakHashMap;
-import java.util.stream.Stream;
 
 import org.apache.log4j.Logger;
 
@@ -49,7 +45,6 @@ import ua.com.fielden.platform.entity.annotation.factory.IsPropertyAnnotation;
 import ua.com.fielden.platform.entity.annotation.factory.SecondParamAnnotation;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
-import ua.com.fielden.platform.entity.meta.MetaProperty;
 import ua.com.fielden.platform.entity_centre.review.criteria.EnhancedCentreEntityQueryCriteria;
 import ua.com.fielden.platform.entity_centre.review.criteria.EnhancedLocatorEntityQueryCriteria;
 import ua.com.fielden.platform.entity_centre.review.criteria.EntityQueryCriteria;
@@ -271,20 +266,6 @@ public class CriteriaGenerator implements ICriteriaGenerator {
             } 
             // finally { LOGGER.error(format("\tsynchroniseWithModel prop [%s] setting...done", field.getName())); }
         });
-        
-        // LOGGER.error(format("\tsynchroniseWithModel: clearing requiredness..."));
-        entity.critOnlySinglePrototypeOptional().map(cosPrototype -> {
-            final Class<AbstractEntity<?>> entityType = (Class<AbstractEntity<?>>) entity.getEntityClass();
-            
-            disregardCritOnlyRequiredProperties(cosPrototype);
-            // take a snapshot of all needed crit-only single prop information to be applied back against criteriaEntity
-            final Stream<MetaProperty<?>> snapshot = entity.critOnlySinglePrototype().nonProxiedProperties().filter(metaProp -> isCritOnlySingle(entityType, metaProp.getName()));
-            // apply the snapshot against criteriaEntity
-            applySnapshot(entity, snapshot);
-            return cosPrototype;
-        });
-        // LOGGER.error(format("\tsynchroniseWithModel: clearing requiredness...done"));
-        
         // LOGGER.error(format("synchroniseWithModel started...done"));
     }
 }
