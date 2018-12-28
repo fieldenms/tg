@@ -676,6 +676,14 @@
                     }
                 }
             },
+            
+            executeOnOpeningCentre: function (callback) {
+                postal.publish({
+                    channel: "centre_" + this.centreUuid, 
+                    topic: 'execute', 
+                    data: callback.bind(this)
+                });
+            },
 
             _modificationsChanged: function (_bindingEntityNotPersistentOrNotPersistedOrModified, _editedPropsExist) {
                 const self = this;
