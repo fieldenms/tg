@@ -1,5 +1,4 @@
 <link rel="import" href="/resources/polymer/polymer/polymer.html">
-<link rel="import" href="/resources/components/lodash-lib.html">
 <link rel="import" href="/resources/sse/tg-sse-behavior.html">
 <link rel="import" href="/resources/reflection/tg-polymer-utils.html">
 
@@ -206,12 +205,6 @@
 				this._debug_fileNum = nFiles;
 				this._debug_fileSize = sOutput + ' our of allowed ' + this.uploadSizeLimitKb + ' KiB ' + '(' + (maxAllowedBytes) + ' bytes)';
 				this._debug_mimeTypes = mimeTypes + ' (acceptable are ' + this.mimeTypesAccepted + ')';
-
-				// Moved mime type validation to the server side for better reliability
-				// if (!mimeTypes || _.contains(this.mimeTypesAccepted, mimeTypes) === false) {
-				// 	this._cleanup();
-				// 	throw new Error('Unsupported file type');
-				// }
 
 				// if the total number of bytes to be uploaded is greater than the limit
 				// then stop further processing by throwing an error

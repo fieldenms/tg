@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.web.resources.webui;
 
+import static java.lang.String.format;
 import static ua.com.fielden.platform.utils.MiscUtilities.prepare;
 import static ua.com.fielden.platform.web.utils.WebUiResourceUtils.handleUndesiredExceptions;
 import static ua.com.fielden.platform.web.utils.WebUiResourceUtils.restoreCentreContextHolder;
@@ -81,15 +82,14 @@ public class EntityAutocompletionResource<CONTEXT extends AbstractEntity<?>, T e
             logger.debug("context = " + context);
 
             final String searchStringVal = (String) centreContextHolder.getCustomObject().get("@@searchString"); // custom property inside paramsHolder
-            logger.debug(String.format("SEARCH STRING %s", searchStringVal));
-
             final String searchString = prepare(searchStringVal.contains("*") ? searchStringVal : searchStringVal + "*");
-            logger.debug(String.format("SEARCH STRING %s", searchString));
-
+            final int dataPage = centreContextHolder.getCustomObject().containsKey("@@dataPage") ? (Integer) centreContextHolder.getCustomObject().get("@@dataPage") : 1;
+            logger.debug(format("SEARCH STRING %s, PAGE %s", searchString, dataPage));
+           
             valueMatcher.setContext(context);
             final fetch<T> fetch = EntityResourceUtils.<CONTEXT, T> fetchForProperty(coFinder, entityType, propertyName).fetchModel();
             valueMatcher.setFetch(fetch);
-            final List<? extends AbstractEntity<?>> entities = valueMatcher.findMatchesWithModel(searchString != null ? searchString : "%");
+            final List<? extends AbstractEntity<?>> entities = valueMatcher.findMatchesWithModel(searchString != null ? searchString : "%", dataPage);
 
             logger.debug("ENTITY_AUTOCOMPLETION_RESOURCE: search finished.");
             return restUtil.listJSONRepresentation(entities);

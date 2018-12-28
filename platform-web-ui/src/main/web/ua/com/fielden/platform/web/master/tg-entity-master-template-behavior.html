@@ -81,6 +81,10 @@
                 }
                 Polymer.IronA11yKeysBehavior.removeOwnKeyBindings.call(this);
             },
+            
+            confirm: function (message, buttons) {
+                return this._masterDom().confirm(message, buttons);
+            },
 
             _shouldOverridePrefDim: function () {
                 var parent = this.parentElement;

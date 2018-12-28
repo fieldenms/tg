@@ -676,6 +676,17 @@
                     }
                 }
             },
+            
+            /**
+             * Publishes a closure to be executed by an Entity Centre identified by centreUuid (opening centre).
+             */
+            publishExecute: function (closure) {
+                postal.publish({
+                    channel: "centre_" + this.centreUuid, 
+                    topic: "execute",
+                    data: closure.bind(this)
+                });
+            },
 
             _modificationsChanged: function (_bindingEntityNotPersistentOrNotPersistedOrModified, _editedPropsExist) {
                 const self = this;
