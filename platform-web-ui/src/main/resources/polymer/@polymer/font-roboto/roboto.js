@@ -8,16 +8,14 @@ found at http://polymer.github.io/CONTRIBUTORS.txt Code distributed by Google as
 part of the polymer project is also subject to an additional IP rights grant
 found at http://polymer.github.io/PATENTS.txt
 */
-
 export {}; // ensure this file can only be parsed as a module.
-
 // Give the user the choice to opt out of font loading.
+
 if (!window.polymerSkipLoadingFontRoboto) {
   const link = document.createElement('link');
   link.rel = 'stylesheet';
   link.type = 'text/css';
   link.crossOrigin = 'anonymous';
-  link.href =
-      'https://fonts.googleapis.com/css?family=Roboto+Mono:400,700|Roboto:400,300,300italic,400italic,500,500italic,700,700italic';
+  link.href = 'https://fonts.googleapis.com/css?family=Roboto+Mono:400,700|Roboto:400,300,300italic,400italic,500,500italic,700,700italic';
   document.head.appendChild(link);
 }

@@ -8,11 +8,9 @@ Code distributed by Google as part of the polymer project is also
 subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
 */
 import { PolymerElement } from '../../polymer-element.js';
-
 import { dedupingMixin } from '../utils/mixin.js';
 import { calculateSplices } from '../utils/array-splice.js';
 import { ElementMixin } from '../mixins/element-mixin.js';
-
 /**
  * Element mixin for recording dynamic associations between item paths in a
  * master `items` array and a `selected` array such that path changes to the
@@ -33,8 +31,8 @@ import { ElementMixin } from '../mixins/element-mixin.js';
  * @summary Element mixin for recording dynamic associations between item paths in a
  * master `items` array and a `selected` array
  */
-let ArraySelectorMixin = dedupingMixin(superClass => {
 
+let ArraySelectorMixin = dedupingMixin(superClass => {
   /**
    * @constructor
    * @extends {superClass}
@@ -42,24 +40,21 @@ let ArraySelectorMixin = dedupingMixin(superClass => {
    * @private
    */
   let elementBase = ElementMixin(superClass);
-
   /**
    * @polymer
    * @mixinClass
    * @implements {Polymer_ArraySelectorMixin}
    * @unrestricted
    */
+
   class ArraySelectorMixin extends elementBase {
-
     static get properties() {
-
       return {
-
         /**
          * An array containing items from which selection will be made.
          */
         items: {
-          type: Array,
+          type: Array
         },
 
         /**
@@ -69,7 +64,7 @@ let ArraySelectorMixin = dedupingMixin(superClass => {
          */
         multi: {
           type: Boolean,
-          value: false,
+          value: false
         },
 
         /**
@@ -101,7 +96,6 @@ let ArraySelectorMixin = dedupingMixin(superClass => {
           type: Boolean,
           value: false
         }
-
       };
     }
 
@@ -118,19 +112,24 @@ let ArraySelectorMixin = dedupingMixin(superClass => {
 
     __updateSelection(multi, itemsInfo) {
       let path = itemsInfo.path;
+
       if (path == 'items') {
         // Case 1 - items array changed, so diff against previous array and
         // deselect any removed items and adjust selected indices
         let newItems = itemsInfo.base || [];
         let lastItems = this.__lastItems;
         let lastMulti = this.__lastMulti;
+
         if (multi !== lastMulti) {
           this.clearSelection();
         }
+
         if (lastItems) {
           let splices = calculateSplices(newItems, lastItems);
+
           this.__applySplices(splices);
         }
+
         this.__lastItems = newItems;
         this.__lastMulti = multi;
       } else if (itemsInfo.path == 'items.splices') {
@@ -142,20 +141,20 @@ let ArraySelectorMixin = dedupingMixin(superClass => {
         // item for that index if it was previously selected
         let part = path.slice('items.'.length);
         let idx = parseInt(part, 10);
-        if ((part.indexOf('.') < 0) && part == idx) {
+
+        if (part.indexOf('.') < 0 && part == idx) {
           this.__deselectChangedIdx(idx);
         }
       }
     }
 
     __applySplices(splices) {
-      let selected = this.__selectedMap;
-      // Adjust selected indices and mark removals
-      for (let i=0; i<splices.length; i++) {
+      let selected = this.__selectedMap; // Adjust selected indices and mark removals
+
+      for (let i = 0; i < splices.length; i++) {
         let s = splices[i];
         selected.forEach((idx, item) => {
-          if (idx < s.index) {
-            // no change
+          if (idx < s.index) {// no change
           } else if (idx >= s.index + s.removed.length) {
             // adjust index
             selected.set(item, idx + s.addedCount - s.removed.length);
@@ -164,16 +163,20 @@ let ArraySelectorMixin = dedupingMixin(superClass => {
             selected.set(item, -1);
           }
         });
-        for (let j=0; j<s.addedCount; j++) {
+
+        for (let j = 0; j < s.addedCount; j++) {
           let idx = s.index + j;
+
           if (selected.has(this.items[idx])) {
             selected.set(this.items[idx], idx);
           }
         }
-      }
-      // Update linked paths
-      this.__updateLinks();
-      // Remove selected items that were removed from the items array
+      } // Update linked paths
+
+
+      this.__updateLinks(); // Remove selected items that were removed from the items array
+
+
       let sidx = 0;
       selected.forEach((idx, item) => {
         if (idx < 0) {
@@ -182,6 +185,7 @@ let ArraySelectorMixin = dedupingMixin(superClass => {
           } else {
             this.selected = this.selectedItem = null;
           }
+
           selected.delete(item);
         } else {
           sidx++;
@@ -191,8 +195,10 @@ let ArraySelectorMixin = dedupingMixin(superClass => {
 
     __updateLinks() {
       this.__dataLinkedPaths = {};
+
       if (this.multi) {
         let sidx = 0;
+
         this.__selectedMap.forEach(idx => {
           if (idx >= 0) {
             this.linkPaths('items.' + idx, 'selected.' + sidx++);
@@ -205,48 +211,53 @@ let ArraySelectorMixin = dedupingMixin(superClass => {
         });
       }
     }
-
     /**
      * Clears the selection state.
      * @return {void}
      */
+
+
     clearSelection() {
       // Unbind previous selection
-      this.__dataLinkedPaths = {};
-      // The selected map stores 3 pieces of information:
+      this.__dataLinkedPaths = {}; // The selected map stores 3 pieces of information:
       // key: items array object
       // value: items array index
       // order: selected array index
-      this.__selectedMap = new Map();
-      // Initialize selection
+
+      this.__selectedMap = new Map(); // Initialize selection
+
       this.selected = this.multi ? [] : null;
       this.selectedItem = null;
     }
-
     /**
      * Returns whether the item is currently selected.
      *
      * @param {*} item Item from `items` array to test
      * @return {boolean} Whether the item is selected
      */
+
+
     isSelected(item) {
       return this.__selectedMap.has(item);
     }
-
     /**
      * Returns whether the item is currently selected.
      *
      * @param {number} idx Index from `items` array to test
      * @return {boolean} Whether the item is selected
      */
+
+
     isIndexSelected(idx) {
       return this.isSelected(this.items[idx]);
     }
 
     __deselectChangedIdx(idx) {
       let sidx = this.__selectedIndexForItemIndex(idx);
+
       if (sidx >= 0) {
         let i = 0;
+
         this.__selectedMap.forEach((idx, item) => {
           if (sidx == i++) {
             this.deselect(item);
@@ -257,26 +268,33 @@ let ArraySelectorMixin = dedupingMixin(superClass => {
 
     __selectedIndexForItemIndex(idx) {
       let selected = this.__dataLinkedPaths['items.' + idx];
+
       if (selected) {
         return parseInt(selected.slice('selected.'.length), 10);
       }
     }
-
     /**
      * Deselects the given item if it is already selected.
      *
      * @param {*} item Item from `items` array to deselect
      * @return {void}
      */
+
+
     deselect(item) {
       let idx = this.__selectedMap.get(item);
+
       if (idx >= 0) {
         this.__selectedMap.delete(item);
+
         let sidx;
+
         if (this.multi) {
           sidx = this.__selectedIndexForItemIndex(idx);
         }
+
         this.__updateLinks();
+
         if (this.multi) {
           this.splice('selected', sidx, 1);
         } else {
@@ -284,17 +302,17 @@ let ArraySelectorMixin = dedupingMixin(superClass => {
         }
       }
     }
-
     /**
      * Deselects the given index if it is already selected.
      *
      * @param {number} idx Index from `items` array to deselect
      * @return {void}
      */
+
+
     deselectIndex(idx) {
       this.deselect(this.items[idx]);
     }
-
     /**
      * Selects the given item.  When `toggle` is true, this will automatically
      * deselect the item if already selected.
@@ -302,10 +320,11 @@ let ArraySelectorMixin = dedupingMixin(superClass => {
      * @param {*} item Item from `items` array to select
      * @return {void}
      */
+
+
     select(item) {
       this.selectIndex(this.items.indexOf(item));
     }
-
     /**
      * Selects the given index.  When `toggle` is true, this will automatically
      * deselect the item if already selected.
@@ -313,14 +332,20 @@ let ArraySelectorMixin = dedupingMixin(superClass => {
      * @param {number} idx Index from `items` array to select
      * @return {void}
      */
+
+
     selectIndex(idx) {
       let item = this.items[idx];
+
       if (!this.isSelected(item)) {
         if (!this.multi) {
           this.__selectedMap.clear();
         }
+
         this.__selectedMap.set(item, idx);
+
         this.__updateLinks();
+
         if (this.multi) {
           this.push('selected', item);
         } else {
@@ -334,20 +359,17 @@ let ArraySelectorMixin = dedupingMixin(superClass => {
   }
 
   return ArraySelectorMixin;
+}); // export mixin
 
-});
-
-// export mixin
 export { ArraySelectorMixin };
-
 /**
  * @constructor
  * @extends {PolymerElement}
  * @implements {Polymer_ArraySelectorMixin}
  * @private
  */
-let baseArraySelector = ArraySelectorMixin(PolymerElement);
 
+let baseArraySelector = ArraySelectorMixin(PolymerElement);
 /**
  * Element implementing the `ArraySelector` mixin, which records
  * dynamic associations between item paths in a master `items` array and a
@@ -422,10 +444,15 @@ let baseArraySelector = ArraySelectorMixin(PolymerElement);
  * @summary Custom element that links paths between an input `items` array and
  *   an output `selected` item or array based on calls to its selection API.
  */
+
 class ArraySelector extends baseArraySelector {
   // Not needed to find template; can be removed once the analyzer
   // can find the tag name from customElements.define call
-  static get is() { return 'array-selector'; }
+  static get is() {
+    return 'array-selector';
+  }
+
 }
+
 customElements.define(ArraySelector.is, ArraySelector);
 export { ArraySelector };

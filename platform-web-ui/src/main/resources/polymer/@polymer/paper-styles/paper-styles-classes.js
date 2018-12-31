@@ -8,6 +8,7 @@ found at http://polymer.github.io/CONTRIBUTORS.txt Code distributed by Google as
 part of the polymer project is also subject to an additional IP rights grant
 found at http://polymer.github.io/PATENTS.txt
 */
+
 /*
 Note that these files probably don't do what you expect them to do. None have
 a `<style is=custom-style include="..."` type of style include, which mean
@@ -17,6 +18,5 @@ you import this file.
 For a set of styles that can be applied to an element,
 check paper-styles.js.
 */
-
 import './classes/typography.js';
 import './classes/shadow.js';

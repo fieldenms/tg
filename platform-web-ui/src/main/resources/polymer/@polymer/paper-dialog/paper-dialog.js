@@ -8,14 +8,12 @@ found at http://polymer.github.io/CONTRIBUTORS.txt Code distributed by Google as
 part of the polymer project is also subject to an additional IP rights grant
 found at http://polymer.github.io/PATENTS.txt
 */
-import '@polymer/polymer/polymer-legacy.js';
-import '@polymer/paper-dialog-behavior/paper-dialog-shared-styles.js';
-
-import {NeonAnimationRunnerBehavior} from '@polymer/neon-animation/neon-animation-runner-behavior.js';
-import {PaperDialogBehavior} from '@polymer/paper-dialog-behavior/paper-dialog-behavior.js';
-import {Polymer} from '@polymer/polymer/lib/legacy/polymer-fn.js';
-import {html} from '@polymer/polymer/lib/utils/html-tag.js';
-
+import "../polymer/polymer-legacy.js";
+import "../paper-dialog-behavior/paper-dialog-shared-styles.js";
+import { NeonAnimationRunnerBehavior } from "../neon-animation/neon-animation-runner-behavior.js";
+import { PaperDialogBehavior } from "../paper-dialog-behavior/paper-dialog-behavior.js";
+import { Polymer } from "../polymer/lib/legacy/polymer-fn.js";
+import { html } from "../polymer/lib/utils/html-tag.js";
 /**
 Material design:
 [Dialogs](https://www.google.com/design/spec/components/dialogs.html)
@@ -78,27 +76,26 @@ implemented by this element.
 @hero hero.svg
 @demo demo/index.html
 */
+
 Polymer({
   _template: html`
     <style include="paper-dialog-shared-styles"></style>
     <slot></slot>
 `,
-
   is: 'paper-dialog',
   behaviors: [PaperDialogBehavior, NeonAnimationRunnerBehavior],
-  listeners: {'neon-animation-finish': '_onNeonAnimationFinish'},
-
-  _renderOpened: function() {
+  listeners: {
+    'neon-animation-finish': '_onNeonAnimationFinish'
+  },
+  _renderOpened: function () {
     this.cancelAnimation();
     this.playAnimation('entry');
   },
-
-  _renderClosed: function() {
+  _renderClosed: function () {
     this.cancelAnimation();
     this.playAnimation('exit');
   },
-
-  _onNeonAnimationFinish: function() {
+  _onNeonAnimationFinish: function () {
     if (this.opened) {
       this._finishRenderOpened();
     } else {

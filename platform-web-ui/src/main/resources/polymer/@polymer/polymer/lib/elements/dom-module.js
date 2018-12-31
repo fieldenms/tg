@@ -8,10 +8,8 @@ Code distributed by Google as part of the polymer project is also
 subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
 */
 import '../utils/boot.js';
-
 import { resolveUrl, pathFromUrl } from '../utils/resolve-url.js';
 import { strictTemplatePolicy } from '../utils/settings.js';
-
 let modules = {};
 let lcModules = {};
 /**
@@ -21,6 +19,7 @@ let lcModules = {};
  * @param {DomModule} module dom-module instance
  * @return {void}
  */
+
 function setModule(id, module) {
   // store id separate from lowercased id so that
   // in all cases mixedCase id will stored distinctly
@@ -33,6 +32,8 @@ function setModule(id, module) {
  * @param {string} id dom-module id
  * @return {DomModule!} dom-module instance
  */
+
+
 function findModule(id) {
   return modules[id] || lcModules[id.toLowerCase()];
 }
@@ -42,7 +43,6 @@ function styleOutsideTemplateCheck(inst) {
     console.warn('dom-module %s has style outside template', inst.id);
   }
 }
-
 /**
  * The `dom-module` element registers the dom it contains to the name given
  * by the module's id attribute. It provides a unified database of dom
@@ -68,10 +68,12 @@ function styleOutsideTemplateCheck(inst) {
  *   by `id` that is agnostic to bundling.
  * @unrestricted
  */
+
+
 export class DomModule extends HTMLElement {
-
-  static get observedAttributes() { return ['id']; }
-
+  static get observedAttributes() {
+    return ['id'];
+  }
   /**
    * Retrieves the element specified by the css `selector` in the module
    * registered by `id`. For example, this.import('foo', 'img');
@@ -83,18 +85,23 @@ export class DomModule extends HTMLElement {
    * @export
    * @nocollapse Referred to indirectly in style-gather.js
    */
+
+
   static import(id, selector) {
     if (id) {
       let m = findModule(id);
+
       if (m && selector) {
         return m.querySelector(selector);
       }
+
       return m;
     }
+
     return null;
   }
-
   /* eslint-disable no-unused-vars */
+
   /**
    * @param {string} name Name of attribute.
    * @param {?string} old Old value of attribute.
@@ -103,6 +110,8 @@ export class DomModule extends HTMLElement {
    * @return {void}
    * @override
    */
+
+
   attributeChangedCallback(name, old, value, namespace) {
     if (old !== value) {
       this.register();
@@ -121,20 +130,20 @@ export class DomModule extends HTMLElement {
    *   the path is relative to the import document's location since
    *   `ownerDocument` is not currently polyfilled
    */
+
+
   get assetpath() {
     // Don't override existing assetpath.
     if (!this.__assetpath) {
       // note: assetpath set via an attribute must be relative to this
       // element's location; accomodate polyfilled HTMLImports
-      const owner = window.HTMLImports && HTMLImports.importForElement ?
-        HTMLImports.importForElement(this) || document : this.ownerDocument;
-      const url = resolveUrl(
-        this.getAttribute('assetpath') || '', owner.baseURI);
+      const owner = window.HTMLImports && HTMLImports.importForElement ? HTMLImports.importForElement(this) || document : this.ownerDocument;
+      const url = resolveUrl(this.getAttribute('assetpath') || '', owner.baseURI);
       this.__assetpath = pathFromUrl(url);
     }
+
     return this.__assetpath;
   }
-
   /**
    * Registers the dom-module at a given id. This method should only be called
    * when a dom-module is imperatively created. For
@@ -142,8 +151,11 @@ export class DomModule extends HTMLElement {
    * @param {string=} id The id at which to register the dom-module.
    * @return {void}
    */
+
+
   register(id) {
     id = id || this.id;
+
     if (id) {
       // Under strictTemplatePolicy, reject and null out any re-registered
       // dom-module since it is ambiguous whether first-in or last-in is trusted
@@ -151,13 +163,13 @@ export class DomModule extends HTMLElement {
         setModule(id, null);
         throw new Error(`strictTemplatePolicy: dom-module ${id} re-registered`);
       }
+
       this.id = id;
       setModule(id, this);
       styleOutsideTemplateCheck(this);
     }
   }
+
 }
-
 DomModule.prototype['modules'] = modules;
-
 customElements.define('dom-module', DomModule);

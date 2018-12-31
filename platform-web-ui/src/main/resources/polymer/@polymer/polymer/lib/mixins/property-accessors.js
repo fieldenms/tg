@@ -8,24 +8,24 @@ Code distributed by Google as part of the polymer project is also
 subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
 */
 import '../utils/boot.js';
-
 import { dedupingMixin } from '../utils/mixin.js';
 import { camelToDashCase, dashToCamelCase } from '../utils/case-map.js';
-import { PropertiesChanged } from './properties-changed.js';
-
-// Save map of native properties; this forms a blacklist or properties
+import { PropertiesChanged } from './properties-changed.js'; // Save map of native properties; this forms a blacklist or properties
 // that won't have their values "saved" by `saveAccessorValue`, since
 // reading from an HTMLElement accessor from the context of a prototype throws
+
 const nativeProperties = {};
 let proto = HTMLElement.prototype;
+
 while (proto) {
   let props = Object.getOwnPropertyNames(proto);
-  for (let i=0; i<props.length; i++) {
+
+  for (let i = 0; i < props.length; i++) {
     nativeProperties[props[i]] = true;
   }
+
   proto = Object.getPrototypeOf(proto);
 }
-
 /**
  * Used to save the value of a property that will be overridden with
  * an accessor. If the `model` is a prototype, the values will be saved
@@ -40,10 +40,13 @@ while (proto) {
  * @return {void}
  * @private
  */
+
+
 function saveAccessorValue(model, property) {
   // Don't read/store value for any native properties since they could throw
   if (!nativeProperties[property]) {
     let value = model[property];
+
     if (value !== undefined) {
       if (model.__data) {
         // Adding accessor to instance; update the property
@@ -56,12 +59,12 @@ function saveAccessorValue(model, property) {
         } else if (!model.hasOwnProperty(JSCompiler_renameProperty('__dataProto', model))) {
           model.__dataProto = Object.create(model.__dataProto);
         }
+
         model.__dataProto[property] = value;
       }
     }
   }
 }
-
 /**
  * Element class mixin that provides basic meta-programming for creating one
  * or more property accessors (getter/setter pair) that enqueue an async
@@ -90,8 +93,9 @@ function saveAccessorValue(model, property) {
  * @summary Element class mixin for reacting to property changes from
  *   generated property accessors.
  */
-export const PropertyAccessors = dedupingMixin(superClass => {
 
+
+export const PropertyAccessors = dedupingMixin(superClass => {
   /**
    * @constructor
    * @extends {superClass}
@@ -99,8 +103,7 @@ export const PropertyAccessors = dedupingMixin(superClass => {
    * @unrestricted
    * @private
    */
-   const base = PropertiesChanged(superClass);
-
+  const base = PropertiesChanged(superClass);
   /**
    * @polymer
    * @mixinClass
@@ -108,8 +111,8 @@ export const PropertyAccessors = dedupingMixin(superClass => {
    * @extends {base}
    * @unrestricted
    */
-  class PropertyAccessors extends base {
 
+  class PropertyAccessors extends base {
     /**
      * Generates property accessors for all attributes in the standard
      * static `observedAttributes` array.
@@ -121,11 +124,11 @@ export const PropertyAccessors = dedupingMixin(superClass => {
      */
     static createPropertiesForAttributes() {
       let a$ = this.observedAttributes;
-      for (let i=0; i < a$.length; i++) {
+
+      for (let i = 0; i < a$.length; i++) {
         this.prototype._createPropertyAccessor(dashToCamelCase(a$[i]));
       }
     }
-
     /**
      * Returns an attribute name that corresponds to the given property.
      * By default, converts camel to dash case, e.g. `fooBar` to `foo-bar`.
@@ -134,10 +137,11 @@ export const PropertyAccessors = dedupingMixin(superClass => {
      *
      * @protected
      */
+
+
     static attributeNameForProperty(property) {
       return camelToDashCase(property);
     }
-
     /**
      * Overrides PropertiesChanged implementation to initialize values for
      * accessors created for values that already existed on the element
@@ -146,14 +150,17 @@ export const PropertyAccessors = dedupingMixin(superClass => {
      * @return {void}
      * @protected
      */
+
+
     _initializeProperties() {
       if (this.__dataProto) {
         this._initializeProtoProperties(this.__dataProto);
+
         this.__dataProto = null;
       }
+
       super._initializeProperties();
     }
-
     /**
      * Called at instance time with bag of properties that were overwritten
      * by accessors on the prototype when accessors were created.
@@ -167,12 +174,13 @@ export const PropertyAccessors = dedupingMixin(superClass => {
      * @return {void}
      * @protected
      */
+
+
     _initializeProtoProperties(props) {
       for (let p in props) {
         this._setProperty(p, props[p]);
       }
     }
-
     /**
      * Ensures the element has the given attribute. If it does not,
      * assigns the given value to the attribute.
@@ -183,19 +191,25 @@ export const PropertyAccessors = dedupingMixin(superClass => {
      * @param {string} value of the attribute.
      * @return {void}
      */
+
+
     _ensureAttribute(attribute, value) {
-      const el = /** @type {!HTMLElement} */(this);
+      const el =
+      /** @type {!HTMLElement} */
+      this;
+
       if (!el.hasAttribute(attribute)) {
         this._valueToNodeAttribute(el, value, attribute);
       }
     }
-
     /**
      * Overrides PropertiesChanged implemention to serialize objects as JSON.
      *
      * @param {*} value Property value to serialize.
      * @return {string | undefined} String serialized from the provided property value.
      */
+
+
     _serializeValue(value) {
       /* eslint-disable no-fallthrough */
       switch (typeof value) {
@@ -205,7 +219,7 @@ export const PropertyAccessors = dedupingMixin(superClass => {
           } else if (value) {
             try {
               return JSON.stringify(value);
-            } catch(x) {
+            } catch (x) {
               return '';
             }
           }
@@ -214,7 +228,6 @@ export const PropertyAccessors = dedupingMixin(superClass => {
           return super._serializeValue(value);
       }
     }
-
     /**
      * Converts a string to a typed JavaScript value.
      *
@@ -230,36 +243,49 @@ export const PropertyAccessors = dedupingMixin(superClass => {
      * @param {*=} type Type to deserialize the string to.
      * @return {*} Typed value deserialized from the provided string.
      */
+
+
     _deserializeValue(value, type) {
       /**
        * @type {*}
        */
       let outValue;
+
       switch (type) {
         case Object:
           try {
-            outValue = JSON.parse(/** @type {string} */(value));
-          } catch(x) {
+            outValue = JSON.parse(
+            /** @type {string} */
+            value);
+          } catch (x) {
             // allow non-JSON literals like Strings and Numbers
             outValue = value;
           }
+
           break;
+
         case Array:
           try {
-            outValue = JSON.parse(/** @type {string} */(value));
-          } catch(x) {
+            outValue = JSON.parse(
+            /** @type {string} */
+            value);
+          } catch (x) {
             outValue = null;
             console.warn(`Polymer::Attributes: couldn't decode Array as JSON: ${value}`);
           }
+
           break;
+
         case Date:
           outValue = isNaN(value) ? String(value) : Number(value);
           outValue = new Date(outValue);
           break;
+
         default:
           outValue = super._deserializeValue(value, type);
           break;
       }
+
       return outValue;
     }
     /* eslint-enable no-fallthrough */
@@ -279,21 +305,24 @@ export const PropertyAccessors = dedupingMixin(superClass => {
      * @protected
      * @return {void}
      */
+
+
     _definePropertyAccessor(property, readOnly) {
       saveAccessorValue(this, property);
+
       super._definePropertyAccessor(property, readOnly);
     }
-
     /**
      * Returns true if this library created an accessor for the given property.
      *
      * @param {string} property Property name
      * @return {boolean} True if an accessor was created
      */
+
+
     _hasAccessor(property) {
       return this.__dataHasAccessor && this.__dataHasAccessor[property];
     }
-
     /**
      * Returns true if the specified property has a pending change.
      *
@@ -301,12 +330,13 @@ export const PropertyAccessors = dedupingMixin(superClass => {
      * @return {boolean} True if property has a pending change
      * @protected
      */
+
+
     _isPropertyPending(prop) {
-      return Boolean(this.__dataPending && (prop in this.__dataPending));
+      return Boolean(this.__dataPending && prop in this.__dataPending);
     }
 
   }
 
   return PropertyAccessors;
-
 });

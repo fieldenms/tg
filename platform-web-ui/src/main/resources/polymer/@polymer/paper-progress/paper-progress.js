@@ -8,14 +8,12 @@ found at http://polymer.github.io/CONTRIBUTORS.txt Code distributed by Google as
 part of the polymer project is also subject to an additional IP rights grant
 found at http://polymer.github.io/PATENTS.txt
 */
-import '@polymer/polymer/polymer-legacy.js';
-import '@polymer/iron-flex-layout/iron-flex-layout.js';
-import '@polymer/paper-styles/color.js';
-
-import {IronRangeBehavior} from '@polymer/iron-range-behavior/iron-range-behavior.js';
-import {Polymer} from '@polymer/polymer/lib/legacy/polymer-fn.js';
-import {html} from '@polymer/polymer/lib/utils/html-tag.js';
-
+import "../polymer/polymer-legacy.js";
+import "../iron-flex-layout/iron-flex-layout.js";
+import "../paper-styles/color.js";
+import { IronRangeBehavior } from "../iron-range-behavior/iron-range-behavior.js";
+import { Polymer } from "../polymer/lib/legacy/polymer-fn.js";
+import { html } from "../polymer/lib/utils/html-tag.js";
 /**
 Material design: [Progress &
 activity](https://www.google.com/design/spec/components/progress-activity.html)
@@ -90,6 +88,7 @@ Custom property | Description | Default
 @element paper-progress
 @demo demo/index.html
 */
+
 Polymer({
   _template: html`
     <style>
@@ -256,26 +255,34 @@ Polymer({
       <div id="primaryProgress"></div>
     </div>
 `,
-
   is: 'paper-progress',
   behaviors: [IronRangeBehavior],
-
   properties: {
     /**
      * The number that represents the current secondary progress.
      */
-    secondaryProgress: {type: Number, value: 0},
+    secondaryProgress: {
+      type: Number,
+      value: 0
+    },
 
     /**
      * The secondary ratio
      */
-    secondaryRatio: {type: Number, value: 0, readOnly: true},
+    secondaryRatio: {
+      type: Number,
+      value: 0,
+      readOnly: true
+    },
 
     /**
      * Use an indeterminate progress indicator.
      */
-    indeterminate:
-        {type: Boolean, value: false, observer: '_toggleIndeterminate'},
+    indeterminate: {
+      type: Boolean,
+      value: false,
+      observer: '_toggleIndeterminate'
+    },
 
     /**
      * True if the progress is disabled.
@@ -287,38 +294,33 @@ Polymer({
       observer: '_disabledChanged'
     }
   },
-
-  observers:
-      ['_progressChanged(secondaryProgress, value, min, max, indeterminate)'],
-
-  hostAttributes: {role: 'progressbar'},
-
-  _toggleIndeterminate: function(indeterminate) {
+  observers: ['_progressChanged(secondaryProgress, value, min, max, indeterminate)'],
+  hostAttributes: {
+    role: 'progressbar'
+  },
+  _toggleIndeterminate: function (indeterminate) {
     // If we use attribute/class binding, the animation sometimes doesn't
     // translate properly on Safari 7.1. So instead, we toggle the class here in
     // the update method.
     this.toggleClass('indeterminate', indeterminate, this.$.primaryProgress);
   },
-
-  _transformProgress: function(progress, ratio) {
-    var transform = 'scaleX(' + (ratio / 100) + ')';
+  _transformProgress: function (progress, ratio) {
+    var transform = 'scaleX(' + ratio / 100 + ')';
     progress.style.transform = progress.style.webkitTransform = transform;
   },
-
-  _mainRatioChanged: function(ratio) {
+  _mainRatioChanged: function (ratio) {
     this._transformProgress(this.$.primaryProgress, ratio);
   },
-
-  _progressChanged: function(
-      secondaryProgress, value, min, max, indeterminate) {
+  _progressChanged: function (secondaryProgress, value, min, max, indeterminate) {
     secondaryProgress = this._clampValue(secondaryProgress);
     value = this._clampValue(value);
-
     var secondaryRatio = this._calcRatio(secondaryProgress) * 100;
     var mainRatio = this._calcRatio(value) * 100;
 
     this._setSecondaryRatio(secondaryRatio);
+
     this._transformProgress(this.$.secondaryProgress, secondaryRatio);
+
     this._transformProgress(this.$.primaryProgress, mainRatio);
 
     this.secondaryProgress = secondaryProgress;
@@ -328,15 +330,14 @@ Polymer({
     } else {
       this.setAttribute('aria-valuenow', value);
     }
+
     this.setAttribute('aria-valuemin', min);
     this.setAttribute('aria-valuemax', max);
   },
-
-  _disabledChanged: function(disabled) {
+  _disabledChanged: function (disabled) {
     this.setAttribute('aria-disabled', disabled ? 'true' : 'false');
   },
-
-  _hideSecondaryProgress: function(secondaryRatio) {
+  _hideSecondaryProgress: function (secondaryRatio) {
     return secondaryRatio === 0;
   }
 });

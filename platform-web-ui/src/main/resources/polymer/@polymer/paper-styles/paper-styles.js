@@ -8,6 +8,7 @@ found at http://polymer.github.io/CONTRIBUTORS.txt Code distributed by Google as
 part of the polymer project is also subject to an additional IP rights grant
 found at http://polymer.github.io/PATENTS.txt
 */
+
 /**
 The `<paper-styles>` component provides simple ways to use Material Design CSS
 styles in your application. The following imports are available:
@@ -45,8 +46,7 @@ a whole.
 @pseudoElement paper-styles
 @demo demo/index.html
 */
-
-import '@polymer/iron-flex-layout/iron-flex-layout.js';
+import "../iron-flex-layout/iron-flex-layout.js";
 import './color.js';
 import './default-theme.js';
 import './shadow.js';

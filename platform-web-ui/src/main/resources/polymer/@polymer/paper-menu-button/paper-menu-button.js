@@ -8,25 +8,22 @@ found at http://polymer.github.io/CONTRIBUTORS.txt Code distributed by Google as
 part of the polymer project is also subject to an additional IP rights grant
 found at http://polymer.github.io/PATENTS.txt
 */
-import '@polymer/polymer/polymer-legacy.js';
-import '@polymer/iron-dropdown/iron-dropdown.js';
-import '@polymer/neon-animation/animations/fade-in-animation.js';
-import '@polymer/neon-animation/animations/fade-out-animation.js';
-import '@polymer/paper-styles/default-theme.js';
-import '@polymer/paper-styles/shadow.js';
+import "../polymer/polymer-legacy.js";
+import "../iron-dropdown/iron-dropdown.js";
+import "../neon-animation/animations/fade-in-animation.js";
+import "../neon-animation/animations/fade-out-animation.js";
+import "../paper-styles/default-theme.js";
+import "../paper-styles/shadow.js";
 import './paper-menu-button-animations.js';
-
-import {IronA11yKeysBehavior} from '@polymer/iron-a11y-keys-behavior/iron-a11y-keys-behavior.js';
-import {IronControlState} from '@polymer/iron-behaviors/iron-control-state.js';
-import {Polymer} from '@polymer/polymer/lib/legacy/polymer-fn.js';
-import {dom} from '@polymer/polymer/lib/legacy/polymer.dom.js';
-import {html} from '@polymer/polymer/lib/utils/html-tag.js';
-
+import { IronA11yKeysBehavior } from "../iron-a11y-keys-behavior/iron-a11y-keys-behavior.js";
+import { IronControlState } from "../iron-behaviors/iron-control-state.js";
+import { Polymer } from "../polymer/lib/legacy/polymer-fn.js";
+import { dom } from "../polymer/lib/legacy/polymer.dom.js";
+import { html } from "../polymer/lib/utils/html-tag.js";
 var config = {
   ANIMATION_CUBIC_BEZIER: 'cubic-bezier(.3,.95,.5,1)',
   MAX_ANIMATION_TIME_MS: 400
 };
-
 /**
 Material design: [Dropdown
 buttons](https://www.google.com/design/spec/components/buttons.html#buttons-dropdown-buttons)
@@ -69,6 +66,7 @@ Custom property | Description | Default
 @hero hero.svg
 @demo demo/index.html
 */
+
 export const PaperMenuButton = Polymer({
   _template: html`
     <style>
@@ -129,7 +127,6 @@ export const PaperMenuButton = Polymer({
       </div>
     </iron-dropdown>
 `,
-
   is: 'paper-menu-button',
 
   /**
@@ -143,27 +140,37 @@ export const PaperMenuButton = Polymer({
    *
    * @event paper-dropdown-close
    */
-
   behaviors: [IronA11yKeysBehavior, IronControlState],
-
   properties: {
     /**
      * True if the content is currently displayed.
      */
-    opened:
-        {type: Boolean, value: false, notify: true, observer: '_openedChanged'},
+    opened: {
+      type: Boolean,
+      value: false,
+      notify: true,
+      observer: '_openedChanged'
+    },
 
     /**
      * The orientation against which to align the menu dropdown
      * horizontally relative to the dropdown trigger.
      */
-    horizontalAlign: {type: String, value: 'left', reflectToAttribute: true},
+    horizontalAlign: {
+      type: String,
+      value: 'left',
+      reflectToAttribute: true
+    },
 
     /**
      * The orientation against which to align the menu dropdown
      * vertically relative to the dropdown trigger.
      */
-    verticalAlign: {type: String, value: 'top', reflectToAttribute: true},
+    verticalAlign: {
+      type: String,
+      value: 'top',
+      reflectToAttribute: true
+    },
 
     /**
      * If true, the `horizontalAlign` and `verticalAlign` properties will
@@ -171,45 +178,66 @@ export const PaperMenuButton = Polymer({
      * positioning the dropdown and may be changed if doing so reduces
      * the area of the dropdown falling outside of `fitInto`.
      */
-    dynamicAlign: {type: Boolean},
+    dynamicAlign: {
+      type: Boolean
+    },
 
     /**
      * A pixel value that will be added to the position calculated for the
      * given `horizontalAlign`. Use a negative value to offset to the
      * left, or a positive value to offset to the right.
      */
-    horizontalOffset: {type: Number, value: 0, notify: true},
+    horizontalOffset: {
+      type: Number,
+      value: 0,
+      notify: true
+    },
 
     /**
      * A pixel value that will be added to the position calculated for the
      * given `verticalAlign`. Use a negative value to offset towards the
      * top, or a positive value to offset towards the bottom.
      */
-    verticalOffset: {type: Number, value: 0, notify: true},
+    verticalOffset: {
+      type: Number,
+      value: 0,
+      notify: true
+    },
 
     /**
      * If true, the dropdown will be positioned so that it doesn't overlap
      * the button.
      */
-    noOverlap: {type: Boolean},
+    noOverlap: {
+      type: Boolean
+    },
 
     /**
      * Set to true to disable animations when opening and closing the
      * dropdown.
      */
-    noAnimations: {type: Boolean, value: false},
+    noAnimations: {
+      type: Boolean,
+      value: false
+    },
 
     /**
      * Set to true to disable automatically closing the dropdown after
      * a selection has been made.
      */
-    ignoreSelect: {type: Boolean, value: false},
+    ignoreSelect: {
+      type: Boolean,
+      value: false
+    },
 
     /**
      * Set to true to enable automatically closing the dropdown after an
      * item has been activated, even if the selection did not change.
      */
-    closeOnActivate: {type: Boolean, value: false},
+    closeOnActivate: {
+      type: Boolean,
+      value: false
+    },
 
     /**
      * An animation config. If provided, this will be used to animate the
@@ -217,26 +245,28 @@ export const PaperMenuButton = Polymer({
      */
     openAnimationConfig: {
       type: Object,
-      value: function() {
-        return [
-          {name: 'fade-in-animation', timing: {delay: 100, duration: 200}},
-          {
-            name: 'paper-menu-grow-width-animation',
-            timing: {
-              delay: 100,
-              duration: 150,
-              easing: config.ANIMATION_CUBIC_BEZIER
-            }
-          },
-          {
-            name: 'paper-menu-grow-height-animation',
-            timing: {
-              delay: 100,
-              duration: 275,
-              easing: config.ANIMATION_CUBIC_BEZIER
-            }
+      value: function () {
+        return [{
+          name: 'fade-in-animation',
+          timing: {
+            delay: 100,
+            duration: 200
           }
-        ];
+        }, {
+          name: 'paper-menu-grow-width-animation',
+          timing: {
+            delay: 100,
+            duration: 150,
+            easing: config.ANIMATION_CUBIC_BEZIER
+          }
+        }, {
+          name: 'paper-menu-grow-height-animation',
+          timing: {
+            delay: 100,
+            duration: 275,
+            easing: config.ANIMATION_CUBIC_BEZIER
+          }
+        }];
       }
     },
 
@@ -246,22 +276,26 @@ export const PaperMenuButton = Polymer({
      */
     closeAnimationConfig: {
       type: Object,
-      value: function() {
-        return [
-          {name: 'fade-out-animation', timing: {duration: 150}},
-          {
-            name: 'paper-menu-shrink-width-animation',
-            timing: {
-              delay: 100,
-              duration: 50,
-              easing: config.ANIMATION_CUBIC_BEZIER
-            }
-          },
-          {
-            name: 'paper-menu-shrink-height-animation',
-            timing: {duration: 200, easing: 'ease-in'}
+      value: function () {
+        return [{
+          name: 'fade-out-animation',
+          timing: {
+            duration: 150
           }
-        ];
+        }, {
+          name: 'paper-menu-shrink-width-animation',
+          timing: {
+            delay: 100,
+            duration: 50,
+            easing: config.ANIMATION_CUBIC_BEZIER
+          }
+        }, {
+          name: 'paper-menu-shrink-height-animation',
+          timing: {
+            duration: 200,
+            easing: 'ease-in'
+          }
+        }];
       }
     },
 
@@ -271,24 +305,35 @@ export const PaperMenuButton = Polymer({
      * Set to true in order to prevent scroll from being constrained
      * to the dropdown when it opens.
      */
-    allowOutsideScroll: {type: Boolean, value: false},
+    allowOutsideScroll: {
+      type: Boolean,
+      value: false
+    },
 
     /**
      * Whether focus should be restored to the button when the menu closes.
      */
-    restoreFocusOnClose: {type: Boolean, value: true},
+    restoreFocusOnClose: {
+      type: Boolean,
+      value: true
+    },
 
     /**
      * This is the element intended to be bound as the focus target
      * for the `iron-dropdown` contained by `paper-menu-button`.
      */
-    _dropdownContent: {type: Object}
+    _dropdownContent: {
+      type: Object
+    }
   },
-
-  hostAttributes: {role: 'group', 'aria-haspopup': 'true'},
-
-  listeners:
-      {'iron-activate': '_onIronActivate', 'iron-select': '_onIronSelect'},
+  hostAttributes: {
+    role: 'group',
+    'aria-haspopup': 'true'
+  },
+  listeners: {
+    'iron-activate': '_onIronActivate',
+    'iron-select': '_onIronSelect'
+  },
 
   /**
    * The content element that is contained by the menu button, if any.
@@ -296,6 +341,7 @@ export const PaperMenuButton = Polymer({
   get contentElement() {
     // Polymer 2.x returns slot.assignedNodes which can contain text nodes.
     var nodes = dom(this.$.content).getDistributedNodes();
+
     for (var i = 0, l = nodes.length; i < l; i++) {
       if (nodes[i].nodeType === Node.ELEMENT_NODE) {
         return nodes[i];
@@ -306,7 +352,7 @@ export const PaperMenuButton = Polymer({
   /**
    * Toggles the dropdown content between opened and closed.
    */
-  toggle: function() {
+  toggle: function () {
     if (this.opened) {
       this.close();
     } else {
@@ -318,7 +364,7 @@ export const PaperMenuButton = Polymer({
    * Make the dropdown content appear as an overlay positioned relative
    * to the dropdown trigger.
    */
-  open: function() {
+  open: function () {
     if (this.disabled) {
       return;
     }
@@ -329,7 +375,7 @@ export const PaperMenuButton = Polymer({
   /**
    * Hide the dropdown content.
    */
-  close: function() {
+  close: function () {
     this.$.dropdown.close();
   },
 
@@ -340,7 +386,7 @@ export const PaperMenuButton = Polymer({
    * @param {CustomEvent} event A CustomEvent instance with type
    * set to `"iron-select"`.
    */
-  _onIronSelect: function(event) {
+  _onIronSelect: function (event) {
     if (!this.ignoreSelect) {
       this.close();
     }
@@ -352,7 +398,7 @@ export const PaperMenuButton = Polymer({
    *
    * @param {CustomEvent} event A CustomEvent of type 'iron-activate'.
    */
-  _onIronActivate: function(event) {
+  _onIronActivate: function (event) {
     if (this.closeOnActivate) {
       this.close();
     }
@@ -365,7 +411,7 @@ export const PaperMenuButton = Polymer({
    * @param {boolean} opened True if the dropdown is opened, otherwise false.
    * @param {boolean} oldOpened The previous value of `opened`.
    */
-  _openedChanged: function(opened, oldOpened) {
+  _openedChanged: function (opened, oldOpened) {
     if (opened) {
       // TODO(cdata): Update this when we can measure changes in distributed
       // children in an idiomatic way.
@@ -385,14 +431,14 @@ export const PaperMenuButton = Polymer({
    *
    * @param {boolean} disabled True if disabled, otherwise false.
    */
-  _disabledChanged: function(disabled) {
+  _disabledChanged: function (disabled) {
     IronControlState._disabledChanged.apply(this, arguments);
+
     if (disabled && this.opened) {
       this.close();
     }
   },
-
-  __onIronOverlayCanceled: function(event) {
+  __onIronOverlayCanceled: function (event) {
     var uiEvent = event.detail;
     var trigger = this.$.trigger;
     var path = dom(uiEvent).path;
@@ -402,7 +448,6 @@ export const PaperMenuButton = Polymer({
     }
   }
 });
-
-Object.keys(config).forEach(function(key) {
+Object.keys(config).forEach(function (key) {
   PaperMenuButton[key] = config[key];
 });

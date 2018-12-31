@@ -8,15 +8,14 @@ found at http://polymer.github.io/CONTRIBUTORS.txt Code distributed by Google as
 part of the polymer project is also subject to an additional IP rights grant
 found at http://polymer.github.io/PATENTS.txt
 */
-import '@polymer/iron-icon/iron-icon.js';
-import '@polymer/iron-flex-layout/iron-flex-layout.js';
-import '@polymer/paper-styles/default-theme.js';
-import '@polymer/paper-styles/typography.js';
-
-import {IronResizableBehavior} from '@polymer/iron-resizable-behavior/iron-resizable-behavior.js';
-import {Polymer} from '@polymer/polymer/lib/legacy/polymer-fn.js';
-import {dom} from '@polymer/polymer/lib/legacy/polymer.dom.js';
-import {html} from '@polymer/polymer/lib/utils/html-tag.js';
+import "../iron-icon/iron-icon.js";
+import "../iron-flex-layout/iron-flex-layout.js";
+import "../paper-styles/default-theme.js";
+import "../paper-styles/typography.js";
+import { IronResizableBehavior } from "../iron-resizable-behavior/iron-resizable-behavior.js";
+import { Polymer } from "../polymer/lib/legacy/polymer-fn.js";
+import { dom } from "../polymer/lib/legacy/polymer.dom.js";
+import { html } from "../polymer/lib/utils/html-tag.js";
 /**
 `<paper-badge>` is a circular text badge that is displayed on the top right
 corner of an element, representing a status or a notification. It will badge
@@ -80,6 +79,7 @@ Custom property | Description | Default
 @element paper-badge
 @demo demo/index.html
 */
+
 Polymer({
   _template: html`
     <style>
@@ -123,19 +123,17 @@ Polymer({
       <span id="badge-text" hidden\$="{{_computeIsIconBadge(icon)}}">{{label}}</span>
     </div>
   `,
-
   is: 'paper-badge',
 
   /** @private */
   hostAttributes: {
     role: 'status',
-    tabindex: 0,
+    tabindex: 0
   },
-
   behaviors: [IronResizableBehavior],
-
-  listeners: {'iron-resize': 'updatePosition'},
-
+  listeners: {
+    'iron-resize': 'updatePosition'
+  },
   properties: {
     /**
      * The id of the element that the badge is anchored to. This element
@@ -143,7 +141,7 @@ Polymer({
      */
     for: {
       type: String,
-      observer: '_forChanged',
+      observer: '_forChanged'
     },
 
     /**
@@ -152,7 +150,7 @@ Polymer({
      */
     label: {
       type: String,
-      observer: '_labelChanged',
+      observer: '_labelChanged'
     },
 
     /**
@@ -163,54 +161,47 @@ Polymer({
      */
     icon: {
       type: String,
-      value: '',
+      value: ''
     },
-
     _boundNotifyResize: {
       type: Function,
-      value: function() {
+      value: function () {
         return this.notifyResize.bind(this);
       }
     },
-
     _boundUpdateTarget: {
       type: Function,
-      value: function() {
+      value: function () {
         return this._updateTarget.bind(this);
       }
     }
   },
-
-  attached: function() {
+  attached: function () {
     // Polymer 2.x does not have this.offsetParent defined by attached
     requestAnimationFrame(this._boundUpdateTarget);
   },
-
-  attributeChanged: function(name) {
+  attributeChanged: function (name) {
     if (name === 'hidden') {
       this.updatePosition();
     }
   },
-
-  _forChanged: function() {
+  _forChanged: function () {
     // The first time the property is set is before the badge is attached,
     // which means we're not ready to position it yet.
     if (!this.isAttached) {
       return;
     }
+
     this._updateTarget();
   },
-
-  _labelChanged: function() {
+  _labelChanged: function () {
     this.setAttribute('aria-label', this.label);
   },
-
-  _updateTarget: function() {
+  _updateTarget: function () {
     this._target = this.target;
     requestAnimationFrame(this._boundNotifyResize);
   },
-
-  _computeIsIconBadge: function(icon) {
+  _computeIsIconBadge: function (icon) {
     return icon.length > 0;
   },
 
@@ -220,17 +211,15 @@ Polymer({
    * of the badge.
    */
   get target() {
-    var parentNode = dom(this).parentNode;
-    // If the parentNode is a document fragment, then we need to use the host.
+    var parentNode = dom(this).parentNode; // If the parentNode is a document fragment, then we need to use the host.
+
     var ownerRoot = dom(this).getOwnerRoot();
     var target;
 
     if (this.for) {
       target = dom(ownerRoot).querySelector('#' + this.for);
     } else {
-      target = parentNode.nodeType == Node.DOCUMENT_FRAGMENT_NODE ?
-          ownerRoot.host :
-          parentNode;
+      target = parentNode.nodeType == Node.DOCUMENT_FRAGMENT_NODE ? ownerRoot.host : parentNode;
     }
 
     return target;
@@ -246,18 +235,17 @@ Polymer({
    * might have changed (for example, if it's visibility has changed, or
    * you've manually done a page re-layout).
    */
-  updatePosition: function() {
+  updatePosition: function () {
     if (!this._target || !this.offsetParent) {
       return;
     }
 
     var parentRect = this.offsetParent.getBoundingClientRect();
-    var targetRect = this._target.getBoundingClientRect();
-    var thisRect = this.getBoundingClientRect();
 
-    this.style.left = targetRect.left - parentRect.left +
-        (targetRect.width - thisRect.width / 2) + 'px';
-    this.style.top =
-        targetRect.top - parentRect.top - (thisRect.height / 2) + 'px';
+    var targetRect = this._target.getBoundingClientRect();
+
+    var thisRect = this.getBoundingClientRect();
+    this.style.left = targetRect.left - parentRect.left + (targetRect.width - thisRect.width / 2) + 'px';
+    this.style.top = targetRect.top - parentRect.top - thisRect.height / 2 + 'px';
   }
-})
+});

@@ -22,7 +22,7 @@
   "_resolved": "https://registry.npmjs.org/@polymer/iron-range-behavior/-/iron-range-behavior-3.0.1.tgz",
   "_shasum": "0aba35addb0a390bd3eafc307c35389cddbe8677",
   "_spec": "@polymer/iron-range-behavior@^3.0.0-pre.26",
-  "_where": "/home/oleh/web-workspace/polymer-app/node_modules/@polymer/paper-progress",
+  "_where": "C:\\Users\\oleh\\workspace\\tg\\platform-web-ui\\src\\main\\resources\\node_modules\\@polymer\\paper-progress",
   "bugs": {
     "url": "https://github.com/PolymerElements/iron-range-behavior/issues"
   },

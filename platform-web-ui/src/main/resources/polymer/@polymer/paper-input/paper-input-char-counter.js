@@ -8,14 +8,11 @@ found at http://polymer.github.io/CONTRIBUTORS.txt Code distributed by Google as
 part of the polymer project is also subject to an additional IP rights grant
 found at http://polymer.github.io/PATENTS.txt
 */
-import '@polymer/polymer/polymer-legacy.js';
-import '@polymer/paper-styles/typography.js';
-
-import {Polymer} from '@polymer/polymer/lib/legacy/polymer-fn.js';
-import {html} from '@polymer/polymer/lib/utils/html-tag.js';
-
-import {PaperInputAddonBehavior} from './paper-input-addon-behavior.js';
-
+import "../polymer/polymer-legacy.js";
+import "../paper-styles/typography.js";
+import { Polymer } from "../polymer/lib/legacy/polymer-fn.js";
+import { html } from "../polymer/lib/utils/html-tag.js";
+import { PaperInputAddonBehavior } from './paper-input-addon-behavior.js';
 /*
 `<paper-input-char-counter>` is a character counter for use with
 `<paper-input-container>`. It shows the number of characters entered in the
@@ -34,6 +31,7 @@ Custom property | Description | Default
 ----------------|-------------|----------
 `--paper-input-char-counter` | Mixin applied to the element | `{}`
 */
+
 Polymer({
   _template: html`
     <style>
@@ -56,10 +54,14 @@ Polymer({
 
     <span>[[_charCounterStr]]</span>
 `,
-
   is: 'paper-input-char-counter',
   behaviors: [PaperInputAddonBehavior],
-  properties: {_charCounterStr: {type: String, value: '0'}},
+  properties: {
+    _charCounterStr: {
+      type: String,
+      value: '0'
+    }
+  },
 
   /**
    * This overrides the update function in PaperInputAddonBehavior.
@@ -72,13 +74,12 @@ Polymer({
    *     value: The input value.
    *     invalid: True if the input value is invalid.
    */
-  update: function(state) {
+  update: function (state) {
     if (!state.inputElement) {
       return;
     }
 
     state.value = state.value || '';
-
     var counter = state.value.toString().length.toString();
 
     if (state.inputElement.hasAttribute('maxlength')) {

@@ -8,13 +8,12 @@ Code distributed by Google as part of the polymer project is also
 subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
 */
 import './boot.js';
-
 import './mixin.js';
 import './async.js';
-
 /**
  * @summary Collapse multiple callbacks into one invocation after a timer.
  */
+
 export class Debouncer {
   constructor() {
     this._asyncModule = null;
@@ -30,11 +29,14 @@ export class Debouncer {
    * @param {function()} callback Callback to run.
    * @return {void}
    */
+
+
   setConfig(asyncModule, callback) {
     this._asyncModule = asyncModule;
     this._callback = callback;
     this._timer = this._asyncModule.run(() => {
       this._timer = null;
+
       this._callback();
     });
   }
@@ -43,9 +45,14 @@ export class Debouncer {
    *
    * @return {void}
    */
+
+
   cancel() {
     if (this.isActive()) {
-      this._asyncModule.cancel(/** @type {number} */(this._timer));
+      this._asyncModule.cancel(
+      /** @type {number} */
+      this._timer);
+
       this._timer = null;
     }
   }
@@ -54,9 +61,12 @@ export class Debouncer {
    *
    * @return {void}
    */
+
+
   flush() {
     if (this.isActive()) {
       this.cancel();
+
       this._callback();
     }
   }
@@ -65,6 +75,8 @@ export class Debouncer {
    *
    * @return {boolean} True if active.
    */
+
+
   isActive() {
     return this._timer != null;
   }
@@ -102,13 +114,17 @@ export class Debouncer {
    * @param {function()} callback Callback to run.
    * @return {!Debouncer} Returns a debouncer object.
    */
+
+
   static debounce(debouncer, asyncModule, callback) {
     if (debouncer instanceof Debouncer) {
       debouncer.cancel();
     } else {
       debouncer = new Debouncer();
     }
+
     debouncer.setConfig(asyncModule, callback);
     return debouncer;
   }
+
 }

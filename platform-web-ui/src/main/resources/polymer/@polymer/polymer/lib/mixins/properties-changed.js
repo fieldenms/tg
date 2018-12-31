@@ -8,13 +8,11 @@ Code distributed by Google as part of the polymer project is also
 subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
 */
 import '../utils/boot.js';
-
 import { dedupingMixin } from '../utils/mixin.js';
 import { microTask } from '../utils/async.js';
-
 /** @const {!AsyncInterface} */
-const microtask = microTask;
 
+const microtask = microTask;
 /**
  * Element class mixin that provides basic meta-programming for creating one
  * or more property accessors (getter/setter pair) that enqueue an async
@@ -33,14 +31,14 @@ const microtask = microTask;
  * @summary Element class mixin for reacting to property changes from
  *   generated property accessors.
  */
-export const PropertiesChanged = dedupingMixin(
-    /**
-     * @template T
-     * @param {function(new:T)} superClass Class to apply mixin to.
-     * @return {function(new:T)} superClass with mixin applied.
-     */
-    (superClass) => {
 
+export const PropertiesChanged = dedupingMixin(
+/**
+ * @template T
+ * @param {function(new:T)} superClass Class to apply mixin to.
+ * @return {function(new:T)} superClass with mixin applied.
+ */
+superClass => {
   /**
    * @polymer
    * @mixinClass
@@ -48,7 +46,6 @@ export const PropertiesChanged = dedupingMixin(
    * @unrestricted
    */
   class PropertiesChanged extends superClass {
-
     /**
      * Creates property accessors for the given property names.
      * @param {!Object} props Object whose keys are names of accessors.
@@ -57,6 +54,7 @@ export const PropertiesChanged = dedupingMixin(
      */
     static createProperties(props) {
       const proto = this.prototype;
+
       for (let prop in props) {
         // don't stomp an existing accessor
         if (!(prop in proto)) {
@@ -64,7 +62,6 @@ export const PropertiesChanged = dedupingMixin(
         }
       }
     }
-
     /**
      * Returns an attribute name that corresponds to the given property.
      * The attribute name is the lowercased property name. Override to
@@ -74,10 +71,11 @@ export const PropertiesChanged = dedupingMixin(
      *
      * @protected
      */
+
+
     static attributeNameForProperty(property) {
       return property.toLowerCase();
     }
-
     /**
      * Override point to provide a type to which to deserialize a value to
      * a given property.
@@ -85,7 +83,9 @@ export const PropertiesChanged = dedupingMixin(
      *
      * @protected
      */
-    static typeForProperty(name) { } //eslint-disable-line no-unused-vars
+
+
+    static typeForProperty(name) {} //eslint-disable-line no-unused-vars
 
     /**
      * Creates a setter/getter pair for the named property with its own
@@ -104,17 +104,21 @@ export const PropertiesChanged = dedupingMixin(
      * @protected
      * @override
      */
+
+
     _createPropertyAccessor(property, readOnly) {
       this._addPropertyToAttributeMap(property);
+
       if (!this.hasOwnProperty('__dataHasAccessor')) {
         this.__dataHasAccessor = Object.assign({}, this.__dataHasAccessor);
       }
+
       if (!this.__dataHasAccessor[property]) {
         this.__dataHasAccessor[property] = true;
+
         this._definePropertyAccessor(property, readOnly);
       }
     }
-
     /**
      * Adds the given `property` to a map matching attribute names
      * to property names, using `attributeNameForProperty`. This map is
@@ -123,16 +127,18 @@ export const PropertiesChanged = dedupingMixin(
      * @param {string} property Name of the property
      * @override
      */
+
+
     _addPropertyToAttributeMap(property) {
       if (!this.hasOwnProperty('__dataAttributes')) {
         this.__dataAttributes = Object.assign({}, this.__dataAttributes);
       }
+
       if (!this.__dataAttributes[property]) {
         const attr = this.constructor.attributeNameForProperty(property);
         this.__dataAttributes[attr] = property;
       }
     }
-
     /**
      * Defines a property accessor for the given property.
      * @param {string} property Name of the property
@@ -140,18 +146,23 @@ export const PropertiesChanged = dedupingMixin(
      * @return {void}
      * @override
      */
-     _definePropertyAccessor(property, readOnly) {
+
+
+    _definePropertyAccessor(property, readOnly) {
       Object.defineProperty(this, property, {
         /* eslint-disable valid-jsdoc */
+
         /** @this {PropertiesChanged} */
         get() {
           return this._getProperty(property);
         },
+
         /** @this {PropertiesChanged} */
         set: readOnly ? function () {} : function (value) {
           this._setProperty(property, value);
         }
         /* eslint-enable */
+
       });
     }
 
@@ -165,9 +176,9 @@ export const PropertiesChanged = dedupingMixin(
       this.__dataOld = null;
       this.__dataInstanceProps = null;
       this.__serializing = false;
+
       this._initializeProperties();
     }
-
     /**
      * Lifecycle callback called when properties are enabled via
      * `_enableProperties`.
@@ -183,11 +194,13 @@ export const PropertiesChanged = dedupingMixin(
      * @public
      * @override
      */
+
+
     ready() {
       this.__dataReady = true;
+
       this._flushProperties();
     }
-
     /**
      * Initializes the local storage for property accessors.
      *
@@ -198,6 +211,8 @@ export const PropertiesChanged = dedupingMixin(
      * @protected
      * @override
      */
+
+
     _initializeProperties() {
       // Capture instance properties; these will be set into accessors
       // during first flush. Don't set them here, since we want
@@ -210,7 +225,6 @@ export const PropertiesChanged = dedupingMixin(
         }
       }
     }
-
     /**
      * Called at ready time with bag of instance properties that overwrote
      * accessors when the element upgraded.
@@ -225,10 +239,11 @@ export const PropertiesChanged = dedupingMixin(
      * @protected
      * @override
      */
+
+
     _initializeInstanceProperties(props) {
       Object.assign(this, props);
     }
-
     /**
      * Updates the local storage for a property (via `_setPendingProperty`)
      * and enqueues a `_proeprtiesChanged` callback.
@@ -239,12 +254,13 @@ export const PropertiesChanged = dedupingMixin(
      * @protected
      * @override
      */
+
+
     _setProperty(property, value) {
       if (this._setPendingProperty(property, value)) {
         this._invalidateProperties();
       }
     }
-
     /**
      * Returns the value for the given property.
      * @param {string} property Name of property
@@ -252,11 +268,13 @@ export const PropertiesChanged = dedupingMixin(
      * @protected
      * @override
      */
+
+
     _getProperty(property) {
       return this.__data[property];
     }
-
     /* eslint-disable no-unused-vars */
+
     /**
      * Updates the local storage for a property, records the previous value,
      * and adds it to the set of "pending changes" that will be passed to the
@@ -270,21 +288,28 @@ export const PropertiesChanged = dedupingMixin(
      * @protected
      * @override
      */
+
+
     _setPendingProperty(property, value, ext) {
       let old = this.__data[property];
+
       let changed = this._shouldPropertyChange(property, value, old);
+
       if (changed) {
         if (!this.__dataPending) {
           this.__dataPending = {};
           this.__dataOld = {};
-        }
-        // Ensure old is captured from the last turn
+        } // Ensure old is captured from the last turn
+
+
         if (this.__dataOld && !(property in this.__dataOld)) {
           this.__dataOld[property] = old;
         }
+
         this.__data[property] = value;
         this.__dataPending[property] = value;
       }
+
       return changed;
     }
     /* eslint-enable */
@@ -297,18 +322,20 @@ export const PropertiesChanged = dedupingMixin(
      * @protected
      * @override
      */
+
+
     _invalidateProperties() {
       if (!this.__dataInvalid && this.__dataReady) {
         this.__dataInvalid = true;
         microtask.run(() => {
           if (this.__dataInvalid) {
             this.__dataInvalid = false;
+
             this._flushProperties();
           }
         });
       }
     }
-
     /**
      * Call to enable property accessor processing. Before this method is
      * called accessor values will be set but side effects are
@@ -321,17 +348,21 @@ export const PropertiesChanged = dedupingMixin(
      * @protected
      * @override
      */
+
+
     _enableProperties() {
       if (!this.__dataEnabled) {
         this.__dataEnabled = true;
+
         if (this.__dataInstanceProps) {
           this._initializeInstanceProperties(this.__dataInstanceProps);
+
           this.__dataInstanceProps = null;
         }
+
         this.ready();
       }
     }
-
     /**
      * Calls the `_propertiesChanged` callback with the current set of
      * pending changes (and old values recorded when pending changes were
@@ -342,17 +373,20 @@ export const PropertiesChanged = dedupingMixin(
      * @protected
      * @override
      */
+
+
     _flushProperties() {
       const props = this.__data;
       const changedProps = this.__dataPending;
       const old = this.__dataOld;
+
       if (this._shouldPropertiesChange(props, changedProps, old)) {
         this.__dataPending = null;
         this.__dataOld = null;
+
         this._propertiesChanged(props, changedProps, old);
       }
     }
-
     /**
      * Called in `_flushProperties` to determine if `_propertiesChanged`
      * should be called. The default implementation returns true if
@@ -366,10 +400,12 @@ export const PropertiesChanged = dedupingMixin(
      * @return {boolean} true if changedProps is truthy
      * @override
      */
-    _shouldPropertiesChange(currentProps, changedProps, oldProps) { // eslint-disable-line no-unused-vars
+
+
+    _shouldPropertiesChange(currentProps, changedProps, oldProps) {
+      // eslint-disable-line no-unused-vars
       return Boolean(changedProps);
     }
-
     /**
      * Callback called when any properties with accessors created via
      * `_createPropertyAccessor` have been set.
@@ -383,8 +419,9 @@ export const PropertiesChanged = dedupingMixin(
      * @protected
      * @override
      */
-    _propertiesChanged(currentProps, changedProps, oldProps) { // eslint-disable-line no-unused-vars
-    }
+
+
+    _propertiesChanged(currentProps, changedProps, oldProps) {} // eslint-disable-line no-unused-vars
 
     /**
      * Method called to determine whether a property value should be
@@ -405,15 +442,14 @@ export const PropertiesChanged = dedupingMixin(
      * @protected
      * @override
      */
+
+
     _shouldPropertyChange(property, value, old) {
-      return (
-        // Strict equality check
-        (old !== value &&
-          // This ensures (old==NaN, value==NaN) always returns false
-          (old === old || value === value))
+      return (// Strict equality check
+        old !== value && ( // This ensures (old==NaN, value==NaN) always returns false
+        old === old || value === value)
       );
     }
-
     /**
      * Implements native Custom Elements `attributeChangedCallback` to
      * set an attribute value to a property via `_attributeToProperty`.
@@ -426,15 +462,17 @@ export const PropertiesChanged = dedupingMixin(
      * @suppress {missingProperties} Super may or may not implement the callback
      * @override
      */
+
+
     attributeChangedCallback(name, old, value, namespace) {
       if (old !== value) {
         this._attributeToProperty(name, value);
       }
+
       if (super.attributeChangedCallback) {
         super.attributeChangedCallback(name, old, value, namespace);
       }
     }
-
     /**
      * Deserializes an attribute to its associated property.
      *
@@ -448,15 +486,15 @@ export const PropertiesChanged = dedupingMixin(
      * @return {void}
      * @override
      */
+
+
     _attributeToProperty(attribute, value, type) {
       if (!this.__serializing) {
         const map = this.__dataAttributes;
         const property = map && map[attribute] || attribute;
-        this[property] = this._deserializeValue(value, type ||
-          this.constructor.typeForProperty(property));
+        this[property] = this._deserializeValue(value, type || this.constructor.typeForProperty(property));
       }
     }
-
     /**
      * Serializes a property to its associated attribute.
      *
@@ -468,14 +506,18 @@ export const PropertiesChanged = dedupingMixin(
      * @return {void}
      * @override
      */
+
+
     _propertyToAttribute(property, attribute, value) {
       this.__serializing = true;
-      value = (arguments.length < 3) ? this[property] : value;
-      this._valueToNodeAttribute(/** @type {!HTMLElement} */(this), value,
-        attribute || this.constructor.attributeNameForProperty(property));
+      value = arguments.length < 3 ? this[property] : value;
+
+      this._valueToNodeAttribute(
+      /** @type {!HTMLElement} */
+      this, value, attribute || this.constructor.attributeNameForProperty(property));
+
       this.__serializing = false;
     }
-
     /**
      * Sets a typed value to an HTML attribute on a node.
      *
@@ -490,15 +532,17 @@ export const PropertiesChanged = dedupingMixin(
      * @return {void}
      * @override
      */
+
+
     _valueToNodeAttribute(node, value, attribute) {
       const str = this._serializeValue(value);
+
       if (str === undefined) {
         node.removeAttribute(attribute);
       } else {
         node.setAttribute(attribute, str);
       }
     }
-
     /**
      * Converts a typed JavaScript value to a string.
      *
@@ -511,15 +555,17 @@ export const PropertiesChanged = dedupingMixin(
      * property  value.
      * @override
      */
+
+
     _serializeValue(value) {
       switch (typeof value) {
         case 'boolean':
           return value ? '' : undefined;
+
         default:
           return value != null ? value.toString() : undefined;
       }
     }
-
     /**
      * Converts a string to a typed JavaScript value.
      *
@@ -533,12 +579,16 @@ export const PropertiesChanged = dedupingMixin(
      * @return {*} Typed value deserialized from the provided string.
      * @override
      */
+
+
     _deserializeValue(value, type) {
       switch (type) {
         case Boolean:
-          return (value !== null);
+          return value !== null;
+
         case Number:
           return Number(value);
+
         default:
           return value;
       }

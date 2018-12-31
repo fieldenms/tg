@@ -8,12 +8,10 @@ found at http://polymer.github.io/CONTRIBUTORS.txt Code distributed by Google as
 part of the polymer project is also subject to an additional IP rights grant
 found at http://polymer.github.io/PATENTS.txt
 */
-import '@polymer/paper-styles/default-theme.js';
+import "../paper-styles/default-theme.js";
 const $_documentContainer = document.createElement('template');
 $_documentContainer.setAttribute('style', 'display: none;');
-
-$_documentContainer.innerHTML =
-    `<dom-module id="paper-dropdown-menu-shared-styles">
+$_documentContainer.innerHTML = `<dom-module id="paper-dropdown-menu-shared-styles">
   <template>
     <style>
       :host {
@@ -79,5 +77,4 @@ $_documentContainer.innerHTML =
     </style>
   </template>
 </dom-module>`;
-
 document.head.appendChild($_documentContainer.content);

@@ -8,6 +8,7 @@ found at http://polymer.github.io/CONTRIBUTORS.txt Code distributed by Google as
 part of the polymer project is also subject to an additional IP rights grant
 found at http://polymer.github.io/PATENTS.txt
 */
+
 /**
 Material design:
 [Cards](https://www.google.com/design/spec/components/cards.html)
@@ -28,11 +29,9 @@ Example:
 @group Paper Elements
 @demo demo/index.html
 */
-
-import '@polymer/polymer/polymer-legacy.js';
+import "../../polymer/polymer-legacy.js";
 import '../shadow.js';
-
-import {html} from '@polymer/polymer/lib/utils/html-tag.js';
+import { html } from "../../polymer/lib/utils/html-tag.js";
 const template = html`
 <dom-module id="paper-material-styles">
   <template>

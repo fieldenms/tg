@@ -8,15 +8,13 @@ found at http://polymer.github.io/CONTRIBUTORS.txt Code distributed by Google as
 part of the polymer project is also subject to an additional IP rights grant
 found at http://polymer.github.io/PATENTS.txt
 */
-import '@polymer/polymer/polymer-legacy.js';
-import '@polymer/paper-styles/default-theme.js';
-import '@polymer/paper-styles/typography.js';
-import '@polymer/iron-flex-layout/iron-flex-layout.js';
-
-import {Polymer} from '@polymer/polymer/lib/legacy/polymer-fn.js';
-import {dom, flush} from '@polymer/polymer/lib/legacy/polymer.dom.js';
-import {html} from '@polymer/polymer/lib/utils/html-tag.js';
-
+import "../polymer/polymer-legacy.js";
+import "../paper-styles/default-theme.js";
+import "../paper-styles/typography.js";
+import "../iron-flex-layout/iron-flex-layout.js";
+import { Polymer } from "../polymer/lib/legacy/polymer-fn.js";
+import { dom, flush } from "../polymer/lib/legacy/polymer.dom.js";
+import { html } from "../polymer/lib/utils/html-tag.js";
 /**
 **This element has been deprecated in favor of
 [app-layout](https://github.com/PolymerElements/app-layout).**
@@ -116,6 +114,7 @@ distribuite the content to the top toolbar.
 
 @demo demo/index.html
 */
+
 Polymer({
   _template: html`
     <style>
@@ -293,66 +292,71 @@ Polymer({
       <slot name="bottom"></slot>
     </div>
 `,
-
   is: 'paper-toolbar',
-  hostAttributes: {'role': 'toolbar'},
-
+  hostAttributes: {
+    'role': 'toolbar'
+  },
   properties: {
     /**
      * Controls how the items are aligned horizontally when they are placed
      * at the bottom.
      * Options are `start`, `center`, `end`, `justified` and `around`.
      */
-    bottomJustify: {type: String, value: ''},
+    bottomJustify: {
+      type: String,
+      value: ''
+    },
 
     /**
      * Controls how the items are aligned horizontally.
      * Options are `start`, `center`, `end`, `justified` and `around`.
      */
-    justify: {type: String, value: ''},
+    justify: {
+      type: String,
+      value: ''
+    },
 
     /**
      * Controls how the items are aligned horizontally when they are placed
      * in the middle.
      * Options are `start`, `center`, `end`, `justified` and `around`.
      */
-    middleJustify: {type: String, value: ''}
-
+    middleJustify: {
+      type: String,
+      value: ''
+    }
   },
-
-  ready: function() {
+  ready: function () {
     console.warn(this.is, 'is deprecated. Please use app-layout instead!');
   },
-
-  attached: function() {
+  attached: function () {
     this._observer = this._observe(this);
+
     this._updateAriaLabelledBy();
   },
-
-  detached: function() {
+  detached: function () {
     if (this._observer) {
       this._observer.disconnect();
     }
   },
-
-  _observe: function(node) {
-    var observer = new MutationObserver(function() {
+  _observe: function (node) {
+    var observer = new MutationObserver(function () {
       this._updateAriaLabelledBy();
     }.bind(this));
-    observer.observe(node, {childList: true, subtree: true});
+    observer.observe(node, {
+      childList: true,
+      subtree: true
+    });
     return observer;
   },
-
-  _updateAriaLabelledBy: function() {
+  _updateAriaLabelledBy: function () {
     flush();
     var labelledBy = [];
-    var contents =
-        Array.prototype.slice.call(dom(this.root).querySelectorAll('slot'))
-            .concat(Array.prototype.slice.call(
-                dom(this.root).querySelectorAll('content')));
+    var contents = Array.prototype.slice.call(dom(this.root).querySelectorAll('slot')).concat(Array.prototype.slice.call(dom(this.root).querySelectorAll('content')));
 
     for (var content, index = 0; content = contents[index]; index++) {
       var nodes = dom(content).getDistributedNodes();
+
       for (var node, jndex = 0; node = nodes[jndex]; jndex++) {
         if (node.classList && node.classList.contains('title')) {
           if (node.id) {
@@ -365,14 +369,13 @@ Polymer({
         }
       }
     }
+
     if (labelledBy.length > 0) {
       this.setAttribute('aria-labelledby', labelledBy.join(' '));
     }
   },
-
-  _computeBarExtraClasses: function(barJustify) {
-    if (!barJustify)
-      return '';
+  _computeBarExtraClasses: function (barJustify) {
+    if (!barJustify) return '';
     return barJustify + (barJustify === 'justified' ? '' : '-justified');
   }
 });

@@ -7,14 +7,10 @@ The complete set of contributors may be found at http://polymer.github.io/CONTRI
 Code distributed by Google as part of the polymer project is also
 subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
 */
-import '@webcomponents/shadycss/entrypoints/custom-style-interface.js';
-
+import "../../../../@webcomponents/shadycss/entrypoints/custom-style-interface.js";
 import { cssFromModules } from '../utils/style-gather.js';
-
 const attr = 'include';
-
 const CustomStyleInterface = window.ShadyCSS.CustomStyleInterface;
-
 /**
  * Custom element for defining styles in the main document that can take
  * advantage of [shady DOM](https://github.com/webcomponents/shadycss) shims
@@ -61,6 +57,7 @@ const CustomStyleInterface = window.ShadyCSS.CustomStyleInterface;
  * @summary Custom element for defining styles in the main document that can
  *   take advantage of Polymer's style scoping and custom properties shims.
  */
+
 export class CustomStyle extends HTMLElement {
   constructor() {
     super();
@@ -75,16 +72,24 @@ export class CustomStyle extends HTMLElement {
    * @export
    * @return {HTMLStyleElement} This element's light-DOM `<style>`
    */
+
+
   getStyle() {
     if (this._style) {
       return this._style;
     }
-    const style = /** @type {HTMLStyleElement} */(this.querySelector('style'));
+
+    const style =
+    /** @type {HTMLStyleElement} */
+    this.querySelector('style');
+
     if (!style) {
       return null;
     }
+
     this._style = style;
     const include = style.getAttribute(attr);
+
     if (include) {
       style.removeAttribute(attr);
       style.textContent = cssFromModules(include) + style.textContent;
@@ -92,18 +97,19 @@ export class CustomStyle extends HTMLElement {
     /*
     HTML Imports styling the main document are deprecated in Chrome
     https://crbug.com/523952
-
-    If this element is not in the main document, then it must be in an HTML Import document.
+     If this element is not in the main document, then it must be in an HTML Import document.
     In that case, move the custom style to the main document.
-
-    The ordering of `<custom-style>` should stay the same as when loaded by HTML Imports, but there may be odd
+     The ordering of `<custom-style>` should stay the same as when loaded by HTML Imports, but there may be odd
     cases of ordering w.r.t the main document styles.
     */
+
+
     if (this.ownerDocument !== window.document) {
       window.document.head.appendChild(this);
     }
+
     return this._style;
   }
-}
 
+}
 window.customElements.define('custom-style', CustomStyle);

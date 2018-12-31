@@ -8,13 +8,11 @@ Code distributed by Google as part of the polymer project is also
 subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
 */
 import { PolymerElement } from '../../polymer-element.js';
-
 import { templatize } from '../utils/templatize.js';
 import { Debouncer } from '../utils/debounce.js';
 import { enqueueDebouncer, flush } from '../utils/flush.js';
 import { microTask } from '../utils/async.js';
 import { root } from '../utils/path.js';
-
 /**
  * The `<dom-if>` element will stamp a light-dom `<template>` child when
  * the `if` property becomes truthy, and the template can use Polymer
@@ -36,18 +34,20 @@ import { root } from '../utils/path.js';
  * @summary Custom element that conditionally stamps and hides or removes
  *   template content based on a boolean flag.
  */
-export class DomIf extends PolymerElement {
 
+export class DomIf extends PolymerElement {
   // Not needed to find template; can be removed once the analyzer
   // can find the tag name from customElements.define call
-  static get is() { return 'dom-if'; }
+  static get is() {
+    return 'dom-if';
+  }
 
-  static get template() { return null; }
+  static get template() {
+    return null;
+  }
 
   static get properties() {
-
     return {
-
       /**
        * Fired whenever DOM is added or removed/hidden by this template (by
        * default, rendering occurs lazily).  To force immediate rendering, call
@@ -75,9 +75,7 @@ export class DomIf extends PolymerElement {
         type: Boolean,
         observer: '__debounceRender'
       }
-
     };
-
   }
 
   constructor() {
@@ -107,38 +105,36 @@ export class DomIf extends PolymerElement {
     //    we wanted a sync option in the future, simply having <dom-if> flush
     //    (or clear) its template's pending host properties before creating
     //    the instance would also avoid the problem.
-    this.__renderDebouncer = Debouncer.debounce(
-          this.__renderDebouncer
-        , microTask
-        , () => this.__render());
+    this.__renderDebouncer = Debouncer.debounce(this.__renderDebouncer, microTask, () => this.__render());
     enqueueDebouncer(this.__renderDebouncer);
   }
-
   /**
    * @override
    * @return {void}
    */
+
+
   disconnectedCallback() {
     super.disconnectedCallback();
-    if (!this.parentNode ||
-        (this.parentNode.nodeType == Node.DOCUMENT_FRAGMENT_NODE &&
-         !this.parentNode.host)) {
+
+    if (!this.parentNode || this.parentNode.nodeType == Node.DOCUMENT_FRAGMENT_NODE && !this.parentNode.host) {
       this.__teardownInstance();
     }
   }
-
   /**
    * @override
    * @return {void}
    */
+
+
   connectedCallback() {
     super.connectedCallback();
     this.style.display = 'none';
+
     if (this.if) {
       this.__debounceRender();
     }
   }
-
   /**
    * Forces the element to render its content. Normally rendering is
    * asynchronous to a provoking change. This is done for efficiency so
@@ -147,6 +143,8 @@ export class DomIf extends PolymerElement {
    * validate application state.
    * @return {void}
    */
+
+
   render() {
     flush();
   }
@@ -157,13 +155,16 @@ export class DomIf extends PolymerElement {
         // No template found yet
         return;
       }
+
       this._showHideChildren();
     } else if (this.restamp) {
       this.__teardownInstance();
     }
+
     if (!this.restamp && this.__instance) {
       this._showHideChildren();
     }
+
     if (this.if != this._lastIf) {
       this.dispatchEvent(new CustomEvent('dom-change', {
         bubbles: true,
@@ -174,34 +175,42 @@ export class DomIf extends PolymerElement {
   }
 
   __ensureInstance() {
-    let parentNode = this.parentNode;
-    // Guard against element being detached while render was queued
+    let parentNode = this.parentNode; // Guard against element being detached while render was queued
+
     if (parentNode) {
       if (!this.__ctor) {
-        let template = /** @type {HTMLTemplateElement} */(this.querySelector('template'));
+        let template =
+        /** @type {HTMLTemplateElement} */
+        this.querySelector('template');
+
         if (!template) {
           // Wait until childList changes and template should be there by then
           let observer = new MutationObserver(() => {
             if (this.querySelector('template')) {
               observer.disconnect();
+
               this.__render();
             } else {
               throw new Error('dom-if requires a <template> child');
             }
           });
-          observer.observe(this, {childList: true});
+          observer.observe(this, {
+            childList: true
+          });
           return false;
         }
+
         this.__ctor = templatize(template, this, {
           // dom-if templatizer instances require `mutable: true`, as
           // `__syncHostProperties` relies on that behavior to sync objects
           mutableData: true,
+
           /**
            * @param {string} prop Property to forward
            * @param {*} value Value of property
            * @this {DomIf}
            */
-          forwardHostProp: function(prop, value) {
+          forwardHostProp: function (prop, value) {
             if (this.__instance) {
               if (this.if) {
                 this.__instance.forwardHostProp(prop, value);
@@ -217,33 +226,41 @@ export class DomIf extends PolymerElement {
           }
         });
       }
+
       if (!this.__instance) {
         this.__instance = new this.__ctor();
         parentNode.insertBefore(this.__instance.root, this);
       } else {
         this.__syncHostProperties();
+
         let c$ = this.__instance.children;
+
         if (c$ && c$.length) {
           // Detect case where dom-if was re-attached in new position
           let lastChild = this.previousSibling;
-          if (lastChild !== c$[c$.length-1]) {
-            for (let i=0, n; (i<c$.length) && (n=c$[i]); i++) {
+
+          if (lastChild !== c$[c$.length - 1]) {
+            for (let i = 0, n; i < c$.length && (n = c$[i]); i++) {
               parentNode.insertBefore(n, this);
             }
           }
         }
       }
     }
+
     return true;
   }
 
   __syncHostProperties() {
     let props = this.__invalidProps;
+
     if (props) {
       for (let prop in props) {
         this.__instance._setPendingProperty(prop, this.__dataHost[prop]);
       }
+
       this.__invalidProps = null;
+
       this.__instance._flushProperties();
     }
   }
@@ -251,22 +268,23 @@ export class DomIf extends PolymerElement {
   __teardownInstance() {
     if (this.__instance) {
       let c$ = this.__instance.children;
+
       if (c$ && c$.length) {
         // use first child parent, for case when dom-if may have been detached
-        let parent = c$[0].parentNode;
-          // Instance children may be disconnected from parents when dom-if
-          // detaches if a tree was innerHTML'ed
-          if (parent) {
-          for (let i=0, n; (i<c$.length) && (n=c$[i]); i++) {
+        let parent = c$[0].parentNode; // Instance children may be disconnected from parents when dom-if
+        // detaches if a tree was innerHTML'ed
+
+        if (parent) {
+          for (let i = 0, n; i < c$.length && (n = c$[i]); i++) {
             parent.removeChild(n);
           }
         }
       }
+
       this.__instance = null;
       this.__invalidProps = null;
     }
   }
-
   /**
    * Shows or hides the template instance top level child elements. For
    * text nodes, `textContent` is removed while "hidden" and replaced when
@@ -275,13 +293,15 @@ export class DomIf extends PolymerElement {
    * @protected
    * @suppress {visibility}
    */
+
+
   _showHideChildren() {
     let hidden = this.__hideTemplateChildren__ || !this.if;
+
     if (this.__instance) {
       this.__instance._showHideChildren(hidden);
     }
   }
 
 }
-
 customElements.define(DomIf.is, DomIf);

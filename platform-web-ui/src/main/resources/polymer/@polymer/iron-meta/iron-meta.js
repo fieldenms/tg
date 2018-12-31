@@ -8,10 +8,8 @@ found at http://polymer.github.io/CONTRIBUTORS.txt Code distributed by Google as
 part of the polymer project is also subject to an additional IP rights grant
 found at http://polymer.github.io/PATENTS.txt
 */
-import '@polymer/polymer/polymer-legacy.js';
-
-import {Polymer} from '@polymer/polymer/lib/legacy/polymer-fn.js';
-
+import "../polymer/polymer-legacy.js";
+import { Polymer } from "../polymer/lib/legacy/polymer-fn.js";
 export class IronMeta {
   /**
    * @param {{
@@ -22,18 +20,21 @@ export class IronMeta {
    */
   constructor(options) {
     IronMeta[' '](options);
-
     /** @type {string} */
-    this.type = (options && options.type) || 'default';
+
+    this.type = options && options.type || 'default';
     /** @type {string|null|undefined} */
+
     this.key = options && options.key;
+
     if (options && 'value' in options) {
       /** @type {*} */
       this.value = options.value;
     }
   }
-
   /** @return {*} */
+
+
   get value() {
     var type = this.type;
     var key = this.key;
@@ -42,14 +43,16 @@ export class IronMeta {
       return IronMeta.types[type] && IronMeta.types[type][key];
     }
   }
-
   /** @param {*} value */
+
+
   set value(value) {
     var type = this.type;
     var key = this.key;
 
     if (type && key) {
       type = IronMeta.types[type] = IronMeta.types[type] || {};
+
       if (value == null) {
         delete type[key];
       } else {
@@ -57,42 +60,44 @@ export class IronMeta {
       }
     }
   }
-
   /** @return {!Array<*>} */
+
+
   get list() {
     var type = this.type;
 
     if (type) {
       var items = IronMeta.types[this.type];
+
       if (!items) {
         return [];
       }
 
-      return Object.keys(items).map(function(key) {
+      return Object.keys(items).map(function (key) {
         return metaDatas[this.type][key];
       }, this);
     }
   }
-
   /**
    * @param {string} key
    * @return {*}
    */
+
+
   byKey(key) {
     this.key = key;
     return this.value;
   }
-};
 
-// This function is used to convince Closure not to remove constructor calls
+}
+; // This function is used to convince Closure not to remove constructor calls
 // for instances that are not held anywhere. For example, when
 // `new IronMeta({...})` is used only for the side effect of adding a value.
-IronMeta[' '] = function() {};
+
+IronMeta[' '] = function () {};
 
 IronMeta.types = {};
-
 var metaDatas = IronMeta.types;
-
 /**
 `iron-meta` is a generic element you can use for sharing information across the
 DOM tree. It uses [monostate pattern](http://c2.com/cgi/wiki?MonostatePattern)
@@ -132,12 +137,10 @@ Or, in a Polymer element, you can include a meta in your template:
 @demo demo/index.html
 @element iron-meta
 */
+
 Polymer({
-
   is: 'iron-meta',
-
   properties: {
-
     /**
      * The type of meta-data.  All meta-data of the same type is stored
      * together.
@@ -145,7 +148,7 @@ Polymer({
      */
     type: {
       type: String,
-      value: 'default',
+      value: 'default'
     },
 
     /**
@@ -153,7 +156,7 @@ Polymer({
      * @type {?string}
      */
     key: {
-      type: String,
+      type: String
     },
 
     /**
@@ -162,21 +165,29 @@ Polymer({
      */
     value: {
       type: String,
-      notify: true,
+      notify: true
     },
 
     /**
      * If true, `value` is set to the iron-meta instance itself.
      */
-    self: {type: Boolean, observer: '_selfChanged'},
-
-    __meta: {type: Boolean, computed: '__computeMeta(type, key, value)'}
+    self: {
+      type: Boolean,
+      observer: '_selfChanged'
+    },
+    __meta: {
+      type: Boolean,
+      computed: '__computeMeta(type, key, value)'
+    }
   },
-
-  hostAttributes: {hidden: true},
-
-  __computeMeta: function(type, key, value) {
-    var meta = new IronMeta({type: type, key: key});
+  hostAttributes: {
+    hidden: true
+  },
+  __computeMeta: function (type, key, value) {
+    var meta = new IronMeta({
+      type: type,
+      key: key
+    });
 
     if (value !== undefined && value !== meta.value) {
       meta.value = value;
@@ -191,7 +202,7 @@ Polymer({
     return this.__meta && this.__meta.list;
   },
 
-  _selfChanged: function(self) {
+  _selfChanged: function (self) {
     if (self) {
       this.value = this;
     }
@@ -204,7 +215,10 @@ Polymer({
    * @param {string} key The key of the meta-data to be returned.
    * @return {*}
    */
-  byKey: function(key) {
-    return new IronMeta({type: this.type, key: key}).value;
+  byKey: function (key) {
+    return new IronMeta({
+      type: this.type,
+      key: key
+    }).value;
   }
 });

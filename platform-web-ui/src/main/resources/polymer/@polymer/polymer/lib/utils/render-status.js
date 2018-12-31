@@ -13,21 +13,19 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
  *
  * @summary Module for scheduling flushable pre-render and post-render tasks.
  */
-
 import './boot.js';
-
 let scheduled = false;
 let beforeRenderQueue = [];
 let afterRenderQueue = [];
 
 function schedule() {
-  scheduled = true;
-  // before next render
-  requestAnimationFrame(function() {
+  scheduled = true; // before next render
+
+  requestAnimationFrame(function () {
     scheduled = false;
-    flushQueue(beforeRenderQueue);
-    // after the render
-    setTimeout(function() {
+    flushQueue(beforeRenderQueue); // after the render
+
+    setTimeout(function () {
       runQueue(afterRenderQueue);
     });
   });
@@ -40,7 +38,7 @@ function flushQueue(queue) {
 }
 
 function runQueue(queue) {
-  for (let i=0, l=queue.length; i < l; i++) {
+  for (let i = 0, l = queue.length; i < l; i++) {
     callMethod(queue.shift());
   }
 }
@@ -49,30 +47,31 @@ function callMethod(info) {
   const context = info[0];
   const callback = info[1];
   const args = info[2];
+
   try {
     callback.apply(context, args);
-  } catch(e) {
+  } catch (e) {
     setTimeout(() => {
       throw e;
     });
   }
 }
-
 /**
  * Flushes all `beforeNextRender` tasks, followed by all `afterNextRender`
  * tasks.
  *
  * @return {void}
  */
+
+
 export function flush() {
   while (beforeRenderQueue.length || afterRenderQueue.length) {
     flushQueue(beforeRenderQueue);
     flushQueue(afterRenderQueue);
   }
+
   scheduled = false;
 }
-
-
 /**
  * Enqueues a callback which will be run before the next render, at
  * `requestAnimationFrame` timing.
@@ -88,13 +87,14 @@ export function flush() {
  * @param {!Array=} args An array of arguments to call the callback function with
  * @return {void}
  */
+
 export function beforeNextRender(context, callback, args) {
   if (!scheduled) {
     schedule();
   }
+
   beforeRenderQueue.push([context, callback, args]);
 }
-
 /**
  * Enqueues a callback which will be run after the next render, equivalent
  * to one task (`setTimeout`) after the next `requestAnimationFrame`.
@@ -109,10 +109,11 @@ export function beforeNextRender(context, callback, args) {
  * @param {!Array=} args An array of arguments to call the callback function with
  * @return {void}
  */
+
 export function afterNextRender(context, callback, args) {
   if (!scheduled) {
     schedule();
   }
+
   afterRenderQueue.push([context, callback, args]);
 }
-

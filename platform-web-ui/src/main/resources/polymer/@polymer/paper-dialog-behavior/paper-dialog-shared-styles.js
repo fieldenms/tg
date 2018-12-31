@@ -8,6 +8,7 @@ found at http://polymer.github.io/CONTRIBUTORS.txt Code distributed by Google as
 part of the polymer project is also subject to an additional IP rights grant
 found at http://polymer.github.io/PATENTS.txt
 */
+
 /*
 ### Styling
 
@@ -21,14 +22,13 @@ Custom property | Description | Default
 `--paper-dialog-title` | Mixin applied to the title (`<h2>`) element | `{}`
 `--paper-dialog-button-color` | Button area foreground color | `--default-primary-color`
 */
-import '@polymer/polymer/polymer-legacy.js';
-import '@polymer/iron-flex-layout/iron-flex-layout.js';
-import '@polymer/paper-styles/default-theme.js';
-import '@polymer/paper-styles/typography.js';
-import '@polymer/paper-styles/shadow.js';
+import "../polymer/polymer-legacy.js";
+import "../iron-flex-layout/iron-flex-layout.js";
+import "../paper-styles/default-theme.js";
+import "../paper-styles/typography.js";
+import "../paper-styles/shadow.js";
 const $_documentContainer = document.createElement('template');
 $_documentContainer.setAttribute('style', 'display: none;');
-
 $_documentContainer.innerHTML = `<dom-module id="paper-dialog-shared-styles">
   <template>
     <style>
@@ -99,5 +99,4 @@ $_documentContainer.innerHTML = `<dom-module id="paper-dialog-shared-styles">
     </style>
   </template>
 </dom-module>`;
-
 document.head.appendChild($_documentContainer.content);

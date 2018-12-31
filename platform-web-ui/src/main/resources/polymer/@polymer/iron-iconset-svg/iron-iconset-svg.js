@@ -8,11 +8,10 @@ found at http://polymer.github.io/CONTRIBUTORS.txt Code distributed by Google as
 part of the polymer project is also subject to an additional IP rights grant
 found at http://polymer.github.io/PATENTS.txt
 */
-import '@polymer/polymer/polymer-legacy.js';
-
-import {IronMeta} from '@polymer/iron-meta/iron-meta.js';
-import {Polymer} from '@polymer/polymer/lib/legacy/polymer-fn.js';
-import {dom} from '@polymer/polymer/lib/legacy/polymer.dom.js';
+import "../polymer/polymer-legacy.js";
+import { IronMeta } from "../iron-meta/iron-meta.js";
+import { Polymer } from "../polymer/lib/legacy/polymer-fn.js";
+import { dom } from "../polymer/lib/legacy/polymer.dom.js";
 /**
  * The `iron-iconset-svg` element allows users to define their own icon sets
  * that contain svg icons. The svg icon elements should be children of the
@@ -48,20 +47,25 @@ import {dom} from '@polymer/polymer/lib/legacy/polymer.dom.js';
  * @demo demo/index.html
  * @implements {Polymer.Iconset}
  */
+
 Polymer({
   is: 'iron-iconset-svg',
-
   properties: {
-
     /**
      * The name of the iconset.
      */
-    name: {type: String, observer: '_nameChanged'},
+    name: {
+      type: String,
+      observer: '_nameChanged'
+    },
 
     /**
      * The size of an individual icon. Note that icons must be square.
      */
-    size: {type: Number, value: 24},
+    size: {
+      type: Number,
+      value: 24
+    },
 
     /**
      * Set to true to enable mirroring of icons where specified when they are
@@ -72,21 +76,29 @@ Polymer({
      * document per iconset, so moving icons in and out of RTL subtrees will
      * not cause their mirrored state to change.
      */
-    rtlMirroring: {type: Boolean, value: false},
+    rtlMirroring: {
+      type: Boolean,
+      value: false
+    },
 
     /**
      * Set to true to measure RTL based on the dir attribute on the body or
      * html elements (measured on document.body or document.documentElement as
      * available).
      */
-    useGlobalRtlAttribute: {type: Boolean, value: false}
+    useGlobalRtlAttribute: {
+      type: Boolean,
+      value: false
+    }
   },
-
-  created: function() {
-    this._meta = new IronMeta({type: 'iconset', key: null, value: null});
+  created: function () {
+    this._meta = new IronMeta({
+      type: 'iconset',
+      key: null,
+      value: null
+    });
   },
-
-  attached: function() {
+  attached: function () {
     this.style.display = 'none';
   },
 
@@ -95,9 +107,9 @@ Polymer({
    *
    * @return {!Array} Array of icon names.
    */
-  getIconNames: function() {
+  getIconNames: function () {
     this._icons = this._createIconMap();
-    return Object.keys(this._icons).map(function(n) {
+    return Object.keys(this._icons).map(function (n) {
       return this.name + ':' + n;
     }, this);
   },
@@ -119,18 +131,19 @@ Polymer({
    * @param {string} iconName Name of the icon to apply.
    * @return {?Element} The svg element which renders the icon.
    */
-  applyIcon: function(element, iconName) {
+  applyIcon: function (element, iconName) {
     // Remove old svg element
-    this.removeIcon(element);
-    // install new svg element
-    var svg = this._cloneIcon(
-        iconName, this.rtlMirroring && this._targetIsRTL(element));
+    this.removeIcon(element); // install new svg element
+
+    var svg = this._cloneIcon(iconName, this.rtlMirroring && this._targetIsRTL(element));
+
     if (svg) {
       // insert svg element into shadow root, if it exists
       var pde = dom(element.root || element);
       pde.insertBefore(svg, pde.childNodes[0]);
       return element._svgIcon = svg;
     }
+
     return null;
   },
 
@@ -140,7 +153,7 @@ Polymer({
    *
    * @param {Element} element The element from which the icon is removed.
    */
-  removeIcon: function(element) {
+  removeIcon: function (element) {
     // Remove old svg element
     if (element._svgIcon) {
       dom(element.root || element).removeChild(element._svgIcon);
@@ -153,22 +166,17 @@ Polymer({
    * measurement is only done once and the result is memoized for future
    * invocations.
    */
-  _targetIsRTL: function(target) {
+  _targetIsRTL: function (target) {
     if (this.__targetIsRTL == null) {
       if (this.useGlobalRtlAttribute) {
-        var globalElement =
-            (document.body && document.body.hasAttribute('dir')) ?
-            document.body :
-            document.documentElement;
-
+        var globalElement = document.body && document.body.hasAttribute('dir') ? document.body : document.documentElement;
         this.__targetIsRTL = globalElement.getAttribute('dir') === 'rtl';
       } else {
         if (target && target.nodeType !== Node.ELEMENT_NODE) {
           target = target.host;
         }
 
-        this.__targetIsRTL =
-            target && window.getComputedStyle(target)['direction'] === 'rtl';
+        this.__targetIsRTL = target && window.getComputedStyle(target)['direction'] === 'rtl';
       }
     }
 
@@ -180,13 +188,14 @@ Polymer({
    * When name is changed, register iconset metadata
    *
    */
-  _nameChanged: function() {
+  _nameChanged: function () {
     this._meta.value = null;
     this._meta.key = this.name;
     this._meta.value = this;
-
-    this.async(function() {
-      this.fire('iron-iconset-added', this, {node: window});
+    this.async(function () {
+      this.fire('iron-iconset-added', this, {
+        node: window
+      });
     });
   },
 
@@ -195,12 +204,12 @@ Polymer({
    *
    * @return {!Object} Map of id's to SVG elements.
    */
-  _createIconMap: function() {
+  _createIconMap: function () {
     // Objects chained to Object.prototype (`{}`) have members. Specifically,
     // on FF there is a `watch` method that confuses the icon map, so we
     // need to use a null-based object here.
     var icons = Object.create(null);
-    dom(this).querySelectorAll('[id]').forEach(function(icon) {
+    dom(this).querySelectorAll('[id]').forEach(function (icon) {
       icons[icon.id] = icon;
     });
     return icons;
@@ -213,7 +222,7 @@ Polymer({
    * @return {Element} Returns an installable clone of the SVG element
    * matching `id`.
    */
-  _cloneIcon: function(id, mirrorAllowed) {
+  _cloneIcon: function (id, mirrorAllowed) {
     // create the icon map on-demand, since the iconset itself has no discrete
     // signal to know when it's children are fully parsed
     this._icons = this._icons || this._createIconMap();
@@ -226,32 +235,29 @@ Polymer({
    * @param {Boolean} mirrorAllowed
    * @return {Element}
    */
-  _prepareSvgClone: function(sourceSvg, size, mirrorAllowed) {
+  _prepareSvgClone: function (sourceSvg, size, mirrorAllowed) {
     if (sourceSvg) {
       var content = sourceSvg.cloneNode(true),
           svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg'),
-          viewBox =
-              content.getAttribute('viewBox') || '0 0 ' + size + ' ' + size,
-          cssText =
-              'pointer-events: none; display: block; width: 100%; height: 100%;';
+          viewBox = content.getAttribute('viewBox') || '0 0 ' + size + ' ' + size,
+          cssText = 'pointer-events: none; display: block; width: 100%; height: 100%;';
 
       if (mirrorAllowed && content.hasAttribute('mirror-in-rtl')) {
-        cssText +=
-            '-webkit-transform:scale(-1,1);transform:scale(-1,1);transform-origin:center;';
+        cssText += '-webkit-transform:scale(-1,1);transform:scale(-1,1);transform-origin:center;';
       }
 
       svg.setAttribute('viewBox', viewBox);
       svg.setAttribute('preserveAspectRatio', 'xMidYMid meet');
-      svg.setAttribute('focusable', 'false');
-      // TODO(dfreedm): `pointer-events: none` works around
+      svg.setAttribute('focusable', 'false'); // TODO(dfreedm): `pointer-events: none` works around
       // https://crbug.com/370136
       // TODO(sjmiles): inline style may not be ideal, but avoids requiring a
       // shadow-root
+
       svg.style.cssText = cssText;
       svg.appendChild(content).removeAttribute('id');
       return svg;
     }
+
     return null;
   }
-
 });

@@ -8,14 +8,11 @@ found at http://polymer.github.io/CONTRIBUTORS.txt Code distributed by Google as
 part of the polymer project is also subject to an additional IP rights grant
 found at http://polymer.github.io/PATENTS.txt
 */
-import '@polymer/polymer/polymer-legacy.js';
+import "../polymer/polymer-legacy.js";
+import { dom } from "../polymer/lib/legacy/polymer.dom.js";
+import { useShadow } from "../polymer/lib/utils/settings.js"; // Contains all connected resizables that do not have a parent.
 
-import {dom} from '@polymer/polymer/lib/legacy/polymer.dom.js';
-import {useShadow} from '@polymer/polymer/lib/utils/settings.js';
-
-// Contains all connected resizables that do not have a parent.
 var ORPHANS = new Set();
-
 /**
  * `IronResizableBehavior` is a behavior that can be used in Polymer elements to
  * coordinate the flow of resize events between "resizers" (elements that
@@ -34,6 +31,7 @@ var ORPHANS = new Set();
  * @polymerBehavior
  * @demo demo/index.html
  **/
+
 export const IronResizableBehavior = {
   properties: {
     /**
@@ -41,7 +39,7 @@ export const IronResizableBehavior = {
      */
     _parentResizable: {
       type: Object,
-      observer: '_parentResizableChanged',
+      observer: '_parentResizableChanged'
     },
 
     /**
@@ -50,27 +48,23 @@ export const IronResizableBehavior = {
      */
     _notifyingDescendant: {
       type: Boolean,
-      value: false,
+      value: false
     }
   },
-
   listeners: {
     'iron-request-resize-notifications': '_onIronRequestResizeNotifications'
   },
-
-  created: function() {
+  created: function () {
     // We don't really need property effects on these, and also we want them
     // to be created before the `_parentResizable` observer fires:
     this._interestedResizables = [];
     this._boundNotifyResize = this.notifyResize.bind(this);
     this._boundOnDescendantIronResize = this._onDescendantIronResize.bind(this);
   },
-
-  attached: function() {
+  attached: function () {
     this._requestResizeNotifications();
   },
-
-  detached: function() {
+  detached: function () {
     if (this._parentResizable) {
       this._parentResizable.stopResizeNotificationsFor(this);
     } else {
@@ -85,12 +79,12 @@ export const IronResizableBehavior = {
    * Can be called to manually notify a resizable and its descendant
    * resizables of a resize change.
    */
-  notifyResize: function() {
+  notifyResize: function () {
     if (!this.isAttached) {
       return;
     }
 
-    this._interestedResizables.forEach(function(resizable) {
+    this._interestedResizables.forEach(function (resizable) {
       if (this.resizerShouldNotify(resizable)) {
         this._notifyDescendant(resizable);
       }
@@ -103,16 +97,16 @@ export const IronResizableBehavior = {
    * Used to assign the closest resizable ancestor to this resizable
    * if the ancestor detects a request for notifications.
    */
-  assignParentResizable: function(parentResizable) {
+  assignParentResizable: function (parentResizable) {
     if (this._parentResizable) {
       this._parentResizable.stopResizeNotificationsFor(this);
     }
 
     this._parentResizable = parentResizable;
 
-    if (parentResizable &&
-        parentResizable._interestedResizables.indexOf(this) === -1) {
+    if (parentResizable && parentResizable._interestedResizables.indexOf(this) === -1) {
       parentResizable._interestedResizables.push(this);
+
       parentResizable._subscribeIronResize(this);
     }
   },
@@ -121,11 +115,12 @@ export const IronResizableBehavior = {
    * Used to remove a resizable descendant from the list of descendants
    * that should be notified of a resize change.
    */
-  stopResizeNotificationsFor: function(target) {
+  stopResizeNotificationsFor: function (target) {
     var index = this._interestedResizables.indexOf(target);
 
     if (index > -1) {
       this._interestedResizables.splice(index, 1);
+
       this._unsubscribeIronResize(target);
     }
   },
@@ -138,7 +133,7 @@ export const IronResizableBehavior = {
    *
    * @param {!HTMLElement} target Element to listen to for iron-resize events.
    */
-  _subscribeIronResize: function(target) {
+  _subscribeIronResize: function (target) {
     target.addEventListener('iron-resize', this._boundOnDescendantIronResize);
   },
 
@@ -151,9 +146,8 @@ export const IronResizableBehavior = {
    *
    * @param {!HTMLElement} target Element to listen to for iron-resize events.
    */
-  _unsubscribeIronResize: function(target) {
-    target.removeEventListener(
-        'iron-resize', this._boundOnDescendantIronResize);
+  _unsubscribeIronResize: function (target) {
+    target.removeEventListener('iron-resize', this._boundOnDescendantIronResize);
   },
 
   /**
@@ -165,45 +159,47 @@ export const IronResizableBehavior = {
    * implements `IronResizableBehavior`.
    * @return {boolean} True if the `element` should be notified of resize.
    */
-  resizerShouldNotify: function(element) {
+  resizerShouldNotify: function (element) {
     return true;
   },
-
-  _onDescendantIronResize: function(event) {
+  _onDescendantIronResize: function (event) {
     if (this._notifyingDescendant) {
       event.stopPropagation();
       return;
-    }
+    } // no need to use this during shadow dom because of event retargeting
 
-    // no need to use this during shadow dom because of event retargeting
+
     if (!useShadow) {
       this._fireResize();
     }
   },
-
-  _fireResize: function() {
-    this.fire('iron-resize', null, {node: this, bubbles: false});
+  _fireResize: function () {
+    this.fire('iron-resize', null, {
+      node: this,
+      bubbles: false
+    });
   },
+  _onIronRequestResizeNotifications: function (event) {
+    var target =
+    /** @type {!EventTarget} */
+    dom(event).rootTarget;
 
-  _onIronRequestResizeNotifications: function(event) {
-    var target = /** @type {!EventTarget} */ (dom(event).rootTarget);
     if (target === this) {
       return;
     }
 
     target.assignParentResizable(this);
+
     this._notifyDescendant(target);
 
     event.stopPropagation();
   },
-
-  _parentResizableChanged: function(parentResizable) {
+  _parentResizableChanged: function (parentResizable) {
     if (parentResizable) {
       window.removeEventListener('resize', this._boundNotifyResize);
     }
   },
-
-  _notifyDescendant: function(descendant) {
+  _notifyDescendant: function (descendant) {
     // NOTE(cdata): In IE10, attached is fired on children first, so it's
     // important not to notify them if the parent is not attached yet (or
     // else they will get redundantly notified when the parent attaches).
@@ -215,54 +211,51 @@ export const IronResizableBehavior = {
     descendant.notifyResize();
     this._notifyingDescendant = false;
   },
-
-  _requestResizeNotifications: function() {
+  _requestResizeNotifications: function () {
     if (!this.isAttached) {
       return;
     }
 
     if (document.readyState === 'loading') {
-      var _requestResizeNotifications =
-          this._requestResizeNotifications.bind(this);
-      document.addEventListener(
-          'readystatechange', function readystatechanged() {
-            document.removeEventListener('readystatechange', readystatechanged);
-            _requestResizeNotifications();
-          });
+      var _requestResizeNotifications = this._requestResizeNotifications.bind(this);
+
+      document.addEventListener('readystatechange', function readystatechanged() {
+        document.removeEventListener('readystatechange', readystatechanged);
+
+        _requestResizeNotifications();
+      });
     } else {
       this._findParent();
 
       if (!this._parentResizable) {
         // If this resizable is an orphan, tell other orphans to try to find
         // their parent again, in case it's this resizable.
-        ORPHANS.forEach(function(orphan) {
+        ORPHANS.forEach(function (orphan) {
           if (orphan !== this) {
             orphan._findParent();
           }
         }, this);
-
         window.addEventListener('resize', this._boundNotifyResize);
         this.notifyResize();
       } else {
         // If this resizable has a parent, tell other child resizables of
         // that parent to try finding their parent again, in case it's this
         // resizable.
-        this._parentResizable._interestedResizables
-            .forEach(function(resizable) {
-              if (resizable !== this) {
-                resizable._findParent();
-              }
-            }, this);
+        this._parentResizable._interestedResizables.forEach(function (resizable) {
+          if (resizable !== this) {
+            resizable._findParent();
+          }
+        }, this);
       }
     }
   },
-
-  _findParent: function() {
+  _findParent: function () {
     this.assignParentResizable(null);
-    this.fire(
-        'iron-request-resize-notifications',
-        null,
-        {node: this, bubbles: true, cancelable: true});
+    this.fire('iron-request-resize-notifications', null, {
+      node: this,
+      bubbles: true,
+      cancelable: true
+    });
 
     if (!this._parentResizable) {
       ORPHANS.add(this);

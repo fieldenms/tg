@@ -8,15 +8,12 @@ found at http://polymer.github.io/CONTRIBUTORS.txt Code distributed by Google as
 part of the polymer project is also subject to an additional IP rights grant
 found at http://polymer.github.io/PATENTS.txt
 */
-import '@polymer/polymer/polymer-legacy.js';
-import '@polymer/iron-flex-layout/iron-flex-layout.js';
+import "../polymer/polymer-legacy.js";
+import "../iron-flex-layout/iron-flex-layout.js";
 import './paper-item-shared-styles.js';
-
-import {Polymer} from '@polymer/polymer/lib/legacy/polymer-fn.js';
-import {html} from '@polymer/polymer/lib/utils/html-tag.js';
-
-import {PaperItemBehavior} from './paper-item-behavior.js';
-
+import { Polymer } from "../polymer/lib/legacy/polymer-fn.js";
+import { html } from "../polymer/lib/utils/html-tag.js";
+import { PaperItemBehavior } from './paper-item-behavior.js';
 /**
 Material design:
 [Lists](https://www.google.com/design/spec/components/lists.html)
@@ -90,6 +87,7 @@ more appropriate to set `role="menuitem"`, `role="menuitemcheckbox"` or
 @element paper-item
 @demo demo/index.html
 */
+
 Polymer({
   _template: html`
     <style include="paper-item-shared-styles">
@@ -103,7 +101,6 @@ Polymer({
     </style>
     <slot></slot>
 `,
-
   is: 'paper-item',
   behaviors: [PaperItemBehavior]
 });

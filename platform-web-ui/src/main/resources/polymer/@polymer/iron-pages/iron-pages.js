@@ -8,13 +8,11 @@ found at http://polymer.github.io/CONTRIBUTORS.txt Code distributed by Google as
 part of the polymer project is also subject to an additional IP rights grant
 found at http://polymer.github.io/PATENTS.txt
 */
-import '@polymer/polymer/polymer-legacy.js';
-
-import {IronResizableBehavior} from '@polymer/iron-resizable-behavior/iron-resizable-behavior.js';
-import {IronSelectableBehavior} from '@polymer/iron-selector/iron-selectable.js';
-import {Polymer} from '@polymer/polymer/lib/legacy/polymer-fn.js';
-import {html} from '@polymer/polymer/lib/utils/html-tag.js';
-
+import "../polymer/polymer-legacy.js";
+import { IronResizableBehavior } from "../iron-resizable-behavior/iron-resizable-behavior.js";
+import { IronSelectableBehavior } from "../iron-selector/iron-selectable.js";
+import { Polymer } from "../polymer/lib/legacy/polymer-fn.js";
+import { html } from "../polymer/lib/utils/html-tag.js";
 /**
 `iron-pages` is used to select one of its children to show. One use is to cycle
 through a list of children "pages".
@@ -37,6 +35,7 @@ Example:
 @group Iron Elements
 @demo demo/index.html
 */
+
 Polymer({
   _template: html`
     <style>
@@ -51,23 +50,20 @@ Polymer({
 
     <slot></slot>
 `,
-
   is: 'iron-pages',
   behaviors: [IronResizableBehavior, IronSelectableBehavior],
-
   properties: {
-
     // as the selected page is the only one visible, activateEvent
     // is both non-sensical and problematic; e.g. in cases where a user
     // handler attempts to change the page and the activateEvent
     // handler immediately changes it back
-    activateEvent: {type: String, value: null}
-
+    activateEvent: {
+      type: String,
+      value: null
+    }
   },
-
   observers: ['_selectedPageChanged(selected)'],
-
-  _selectedPageChanged: function(selected, old) {
+  _selectedPageChanged: function (selected, old) {
     this.async(this.notifyResize);
   }
 });

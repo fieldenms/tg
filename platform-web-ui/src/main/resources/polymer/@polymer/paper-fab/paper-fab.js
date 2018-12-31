@@ -8,17 +8,15 @@ found at http://polymer.github.io/CONTRIBUTORS.txt Code distributed by Google as
 part of the polymer project is also subject to an additional IP rights grant
 found at http://polymer.github.io/PATENTS.txt
 */
-import '@polymer/polymer/polymer-legacy.js';
-import '@polymer/iron-flex-layout/iron-flex-layout.js';
-import '@polymer/iron-icon/iron-icon.js';
-import '@polymer/paper-styles/element-styles/paper-material-styles.js';
-import '@polymer/paper-styles/color.js';
-import '@polymer/paper-styles/default-theme.js';
-
-import {PaperButtonBehavior} from '@polymer/paper-behaviors/paper-button-behavior.js';
-import {Polymer} from '@polymer/polymer/lib/legacy/polymer-fn.js';
-import {html} from '@polymer/polymer/lib/utils/html-tag.js';
-
+import "../polymer/polymer-legacy.js";
+import "../iron-flex-layout/iron-flex-layout.js";
+import "../iron-icon/iron-icon.js";
+import "../paper-styles/element-styles/paper-material-styles.js";
+import "../paper-styles/color.js";
+import "../paper-styles/default-theme.js";
+import { PaperButtonBehavior } from "../paper-behaviors/paper-button-behavior.js";
+import { Polymer } from "../polymer/lib/legacy/polymer-fn.js";
+import { html } from "../polymer/lib/utils/html-tag.js";
 const template = html`
   <style include="paper-material-styles">
     :host {
@@ -111,7 +109,6 @@ const template = html`
   <span hidden\$="{{_computeIsIconFab(icon, src)}}">{{label}}</span>
 `;
 template.setAttribute('strip-whitespace', '');
-
 /**
 Material design: [Floating Action
 Button](https://www.google.com/design/spec/components/buttons-floating-action-button.html)
@@ -155,44 +152,53 @@ Custom property | Description | Default
 @group Paper Elements
 @demo demo/index.html
 */
+
 Polymer({
   _template: template,
-
   is: 'paper-fab',
-
   behaviors: [PaperButtonBehavior],
-
   properties: {
     /**
      * The URL of an image for the icon. If the src property is specified,
      * the icon property should not be.
      */
-    src: {type: String, value: ''},
+    src: {
+      type: String,
+      value: ''
+    },
 
     /**
      * Specifies the icon name or index in the set of icons available in
      * the icon's icon set. If the icon property is specified,
      * the src property should not be.
      */
-    icon: {type: String, value: ''},
+    icon: {
+      type: String,
+      value: ''
+    },
 
     /**
      * Set this to true to style this is a "mini" FAB.
      */
-    mini: {type: Boolean, value: false, reflectToAttribute: true},
+    mini: {
+      type: Boolean,
+      value: false,
+      reflectToAttribute: true
+    },
 
     /**
      * The label displayed in the badge. The label is centered, and ideally
      * should have very few characters.
      */
-    label: {type: String, observer: '_labelChanged'}
+    label: {
+      type: String,
+      observer: '_labelChanged'
+    }
   },
-
-  _labelChanged: function() {
+  _labelChanged: function () {
     this.setAttribute('aria-label', this.label);
   },
-
-  _computeIsIconFab: function(icon, src) {
-    return (icon.length > 0) || (src.length > 0);
+  _computeIsIconFab: function (icon, src) {
+    return icon.length > 0 || src.length > 0;
   }
 });

@@ -8,6 +8,7 @@ found at http://polymer.github.io/CONTRIBUTORS.txt Code distributed by Google as
 part of the polymer project is also subject to an additional IP rights grant
 found at http://polymer.github.io/PATENTS.txt
 */
+
 /*
 Note that this file probably doesn't do what you expect it to do. It's not
 a `<style is=custom-style include="..."` type of style include, which mean
@@ -17,7 +18,7 @@ you import this file.
 For a set of styles that can be applied to an element, check
 paper-styles/shadow.js.
 */
-import {html} from '@polymer/polymer/lib/utils/html-tag.js';
+import { html } from "../../polymer/lib/utils/html-tag.js";
 const template = html`
 <style>
 .shadow-transition {

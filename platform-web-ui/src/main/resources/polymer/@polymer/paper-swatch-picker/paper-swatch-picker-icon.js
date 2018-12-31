@@ -8,11 +8,9 @@ found at http://polymer.github.io/CONTRIBUTORS.txt Code distributed by Google as
 part of the polymer project is also subject to an additional IP rights grant
 found at http://polymer.github.io/PATENTS.txt
 */
-
-import '@polymer/iron-icon/iron-icon.js';
-import '@polymer/iron-iconset-svg/iron-iconset-svg.js';
-
-import {html} from '@polymer/polymer/lib/utils/html-tag.js';
+import "../iron-icon/iron-icon.js";
+import "../iron-iconset-svg/iron-iconset-svg.js";
+import { html } from "../polymer/lib/utils/html-tag.js";
 const template = html`
 <iron-iconset-svg size="24" name="swatch">
 <svg><defs>

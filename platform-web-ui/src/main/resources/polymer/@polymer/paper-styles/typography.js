@@ -8,6 +8,7 @@ found at http://polymer.github.io/CONTRIBUTORS.txt Code distributed by Google as
 part of the polymer project is also subject to an additional IP rights grant
 found at http://polymer.github.io/PATENTS.txt
 */
+
 /*
 Typographic styles are provided matching the Material Design standard styles:
 http://www.google.com/design/spec/style/typography.html#typography-standard-styles
@@ -16,11 +17,9 @@ Note that these are English/Latin centric styles. You may need to further adjust
 line heights and weights for CJK typesetting. See the notes in the Material
 Design typography section.
 */
-
-import '@polymer/polymer/polymer-legacy.js';
-import '@polymer/font-roboto/roboto.js';
-
-import {html} from '@polymer/polymer/lib/utils/html-tag.js';
+import "../polymer/polymer-legacy.js";
+import "../font-roboto/roboto.js";
+import { html } from "../polymer/lib/utils/html-tag.js";
 const template = html`<custom-style>
   <style is="custom-style">
     html {

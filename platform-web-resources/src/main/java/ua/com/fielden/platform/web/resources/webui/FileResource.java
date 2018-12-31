@@ -4,11 +4,9 @@ import static java.lang.String.format;
 import static org.apache.commons.lang.StringUtils.isEmpty;
 
 import java.io.ByteArrayInputStream;
-import java.io.FileNotFoundException;
 import java.io.InputStream;
 import java.util.List;
 
-import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 import org.restlet.Context;
 import org.restlet.Request;
@@ -35,7 +33,7 @@ public class FileResource extends AbstractWebResource {
 
     private final List<String> resourcePaths;
     private final ISourceController sourceController;
-    
+
     /**
      * Creates an instance of {@link FileResource} with custom resource paths.
      *
@@ -100,6 +98,9 @@ public class FileResource extends AbstractWebResource {
         // this is a preventive stuff: if the server receives additional link parameters -- JUST IGNORE THEM. Was used to run
         // appropriately Mocha / Chai tests for Polymer web components. See http://localhost:8091/resources/polymer/runner.html for results.
         final String filePath = path.contains("?") ? path.substring(0, path.indexOf('?')) : path;
+//        if (filePath.contains("@")) {
+//            filePath = "polymer/" + filePath.substring(filePath.indexOf("@"));
+//        }
 
         for (int pathIndex = 0; pathIndex < resourcePaths.size(); pathIndex++) {
             final String prepender = resourcePaths.get(pathIndex);
@@ -118,11 +119,11 @@ public class FileResource extends AbstractWebResource {
      * @return
      */
     private static MediaType determineMediaType(final String extension) {
-        switch (extension) {
+        switch (extension.substring(extension.lastIndexOf(".") + 1)) {
         case "png":
             return MediaType.IMAGE_PNG;
         case "js":
-        case "min.js":
+            return MediaType.APPLICATION_JAVASCRIPT;
         case "json":
             return MediaType.TEXT_JAVASCRIPT;
         case "html":

@@ -8,12 +8,10 @@ found at http://polymer.github.io/CONTRIBUTORS.txt Code distributed by Google as
 part of the polymer project is also subject to an additional IP rights grant
 found at http://polymer.github.io/PATENTS.txt
 */
-import '@polymer/polymer/polymer-legacy.js';
-import '@polymer/paper-ripple/paper-ripple.js';
-
-import {IronButtonStateImpl} from '@polymer/iron-behaviors/iron-button-state.js';
-import {dom} from '@polymer/polymer/lib/legacy/polymer.dom.js';
-
+import "../polymer/polymer-legacy.js";
+import "../paper-ripple/paper-ripple.js";
+import { IronButtonStateImpl } from "../iron-behaviors/iron-button-state.js";
+import { dom } from "../polymer/lib/legacy/polymer.dom.js";
 /**
  * `PaperRippleBehavior` dynamically implements a ripple when the element has
  * focus via pointer or keyboard.
@@ -23,19 +21,23 @@ import {dom} from '@polymer/polymer/lib/legacy/polymer.dom.js';
  *
  * @polymerBehavior PaperRippleBehavior
  */
+
 export const PaperRippleBehavior = {
   properties: {
     /**
      * If true, the element will not produce a ripple effect when interacted
      * with via the pointer.
      */
-    noink: {type: Boolean, observer: '_noinkChanged'},
+    noink: {
+      type: Boolean,
+      observer: '_noinkChanged'
+    },
 
     /**
      * @type {Element|undefined}
      */
     _rippleContainer: {
-      type: Object,
+      type: Object
     }
   },
 
@@ -43,7 +45,7 @@ export const PaperRippleBehavior = {
    * Ensures a `<paper-ripple>` element is available when the element is
    * focused.
    */
-  _buttonStateChanged: function() {
+  _buttonStateChanged: function () {
     if (this.focused) {
       this.ensureRipple();
     }
@@ -53,8 +55,9 @@ export const PaperRippleBehavior = {
    * In addition to the functionality provided in `IronButtonState`, ensures
    * a ripple effect is created when the element is in a `pressed` state.
    */
-  _downHandler: function(event) {
+  _downHandler: function (event) {
     IronButtonStateImpl._downHandler.call(this, event);
+
     if (this.pressed) {
       this.ensureRipple(event);
     }
@@ -66,21 +69,26 @@ export const PaperRippleBehavior = {
    * @param {!Event=} optTriggeringEvent (optional) event that triggered the
    * ripple.
    */
-  ensureRipple: function(optTriggeringEvent) {
+  ensureRipple: function (optTriggeringEvent) {
     if (!this.hasRipple()) {
       this._ripple = this._createRipple();
       this._ripple.noink = this.noink;
       var rippleContainer = this._rippleContainer || this.root;
+
       if (rippleContainer) {
         dom(rippleContainer).appendChild(this._ripple);
       }
+
       if (optTriggeringEvent) {
         // Check if the event happened inside of the ripple container
         // Fall back to host instead of the root because distributed text
         // nodes are not valid event targets
         var domContainer = dom(this._rippleContainer || this);
         var target = dom(optTriggeringEvent).rootTarget;
-        if (domContainer.deepContains(/** @type {Node} */ (target))) {
+
+        if (domContainer.deepContains(
+        /** @type {Node} */
+        target)) {
           this._ripple.uiDownAction(optTriggeringEvent);
         }
       }
@@ -93,7 +101,7 @@ export const PaperRippleBehavior = {
    * necessary, and calling this method will force the
    * ripple to be created.
    */
-  getRipple: function() {
+  getRipple: function () {
     this.ensureRipple();
     return this._ripple;
   },
@@ -102,7 +110,7 @@ export const PaperRippleBehavior = {
    * Returns true if this element currently contains a ripple effect.
    * @return {boolean}
    */
-  hasRipple: function() {
+  hasRipple: function () {
     return Boolean(this._ripple);
   },
 
@@ -111,13 +119,13 @@ export const PaperRippleBehavior = {
    * Override this method to customize the ripple element.
    * @return {!PaperRippleElement} Returns a `<paper-ripple>` element.
    */
-  _createRipple: function() {
-    var element = /** @type {!PaperRippleElement} */ (
-        document.createElement('paper-ripple'));
+  _createRipple: function () {
+    var element =
+    /** @type {!PaperRippleElement} */
+    document.createElement('paper-ripple');
     return element;
   },
-
-  _noinkChanged: function(noink) {
+  _noinkChanged: function (noink) {
     if (this.hasRipple()) {
       this._ripple.noink = noink;
     }

@@ -8,44 +8,46 @@ Code distributed by Google as part of the polymer project is also
 subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
 */
 import '../utils/boot.js';
-
-import { dedupingMixin } from '../utils/mixin.js';
-
-// 1.x backwards-compatible auto-wrapper for template type extensions
+import { dedupingMixin } from '../utils/mixin.js'; // 1.x backwards-compatible auto-wrapper for template type extensions
 // This is a clear layering violation and gives favored-nation status to
 // dom-if and dom-repeat templates.  This is a conceit we're choosing to keep
 // a.) to ease 1.x backwards-compatibility due to loss of `is`, and
 // b.) to maintain if/repeat capability in parser-constrained elements
 //     (e.g. table, select) in lieu of native CE type extensions without
 //     massive new invention in this space (e.g. directive system)
+
 const templateExtensions = {
   'dom-if': true,
   'dom-repeat': true
 };
+
 function wrapTemplateExtension(node) {
   let is = node.getAttribute('is');
+
   if (is && templateExtensions[is]) {
     let t = node;
     t.removeAttribute('is');
     node = t.ownerDocument.createElement(is);
     t.parentNode.replaceChild(node, t);
     node.appendChild(t);
-    while(t.attributes.length) {
+
+    while (t.attributes.length) {
       node.setAttribute(t.attributes[0].name, t.attributes[0].value);
       t.removeAttribute(t.attributes[0].name);
     }
   }
+
   return node;
 }
 
 function findTemplateNode(root, nodeInfo) {
   // recursively ascend tree until we hit root
-  let parent = nodeInfo.parentInfo && findTemplateNode(root, nodeInfo.parentInfo);
-  // unwind the stack, returning the indexed node at each level
+  let parent = nodeInfo.parentInfo && findTemplateNode(root, nodeInfo.parentInfo); // unwind the stack, returning the indexed node at each level
+
   if (parent) {
     // note: marginally faster than indexing via childNodes
     // (http://jsperf.com/childnodes-lookup)
-    for (let n=parent.firstChild, i=0; n; n=n.nextSibling) {
+    for (let n = parent.firstChild, i = 0; n; n = n.nextSibling) {
       if (nodeInfo.parentIndex === i++) {
         return n;
       }
@@ -53,25 +55,25 @@ function findTemplateNode(root, nodeInfo) {
   } else {
     return root;
   }
-}
+} // construct `$` map (from id annotations)
 
-// construct `$` map (from id annotations)
+
 function applyIdToMap(inst, map, node, nodeInfo) {
   if (nodeInfo.id) {
     map[nodeInfo.id] = node;
   }
-}
+} // install event listeners (from event annotations)
 
-// install event listeners (from event annotations)
+
 function applyEventListener(inst, node, nodeInfo) {
   if (nodeInfo.events && nodeInfo.events.length) {
-    for (let j=0, e$=nodeInfo.events, e; (j<e$.length) && (e=e$[j]); j++) {
+    for (let j = 0, e$ = nodeInfo.events, e; j < e$.length && (e = e$[j]); j++) {
       inst._addMethodEventListenerToNode(node, e.name, e.value, inst);
     }
   }
-}
+} // push configuration references at configure time
 
-// push configuration references at configure time
+
 function applyTemplateContent(inst, node, nodeInfo) {
   if (nodeInfo.templateInfo) {
     node._templateInfo = nodeInfo.templateInfo;
@@ -82,16 +84,17 @@ function createNodeEventHandler(context, eventName, methodName) {
   // Instances can optionally have a _methodHost which allows redirecting where
   // to find methods. Currently used by `templatize`.
   context = context._methodHost || context;
-  let handler = function(e) {
+
+  let handler = function (e) {
     if (context[methodName]) {
       context[methodName](e, e.detail);
     } else {
       console.warn('listener method `' + methodName + '` not defined');
     }
   };
+
   return handler;
 }
-
 /**
  * Element mixin that provides basic template parsing and stamping, including
  * the following template-related features for stamped templates:
@@ -105,21 +108,21 @@ function createNodeEventHandler(context, eventName, methodName) {
  * @polymer
  * @summary Element class mixin that provides basic template parsing and stamping
  */
-export const TemplateStamp = dedupingMixin(
-    /**
-     * @template T
-     * @param {function(new:T)} superClass Class to apply mixin to.
-     * @return {function(new:T)} superClass with mixin applied.
-     */
-    (superClass) => {
 
+
+export const TemplateStamp = dedupingMixin(
+/**
+ * @template T
+ * @param {function(new:T)} superClass Class to apply mixin to.
+ * @return {function(new:T)} superClass with mixin applied.
+ */
+superClass => {
   /**
    * @polymer
    * @mixinClass
    * @implements {Polymer_TemplateStamp}
    */
   class TemplateStamp extends superClass {
-
     /**
      * Scans a template to produce template metadata.
      *
@@ -200,18 +203,19 @@ export const TemplateStamp = dedupingMixin(
       if (!template._templateInfo) {
         let templateInfo = template._templateInfo = {};
         templateInfo.nodeInfoList = [];
-        templateInfo.stripWhiteSpace =
-          (outerTemplateInfo && outerTemplateInfo.stripWhiteSpace) ||
-          template.hasAttribute('strip-whitespace');
-        this._parseTemplateContent(template, templateInfo, {parent: null});
+        templateInfo.stripWhiteSpace = outerTemplateInfo && outerTemplateInfo.stripWhiteSpace || template.hasAttribute('strip-whitespace');
+
+        this._parseTemplateContent(template, templateInfo, {
+          parent: null
+        });
       }
+
       return template._templateInfo;
     }
 
     static _parseTemplateContent(template, templateInfo, nodeInfo) {
       return this._parseTemplateNode(template.content, templateInfo, nodeInfo);
     }
-
     /**
      * Parses template node and adds template and node metadata based on
      * the current node, and its `childNodes` and `attributes`.
@@ -225,24 +229,31 @@ export const TemplateStamp = dedupingMixin(
      * @return {boolean} `true` if the visited node added node-specific
      *   metadata to `nodeInfo`
      */
+
+
     static _parseTemplateNode(node, templateInfo, nodeInfo) {
       let noted;
-      let element = /** @type {Element} */(node);
+      let element =
+      /** @type {Element} */
+      node;
+
       if (element.localName == 'template' && !element.hasAttribute('preserve-content')) {
         noted = this._parseTemplateNestedTemplate(element, templateInfo, nodeInfo) || noted;
       } else if (element.localName === 'slot') {
         // For ShadyDom optimization, indicating there is an insertion point
         templateInfo.hasInsertionPoint = true;
       }
+
       if (element.firstChild) {
         noted = this._parseTemplateChildNodes(element, templateInfo, nodeInfo) || noted;
       }
+
       if (element.hasAttributes && element.hasAttributes()) {
         noted = this._parseTemplateNodeAttributes(element, templateInfo, nodeInfo) || noted;
       }
+
       return noted;
     }
-
     /**
      * Parses template child nodes for the given root node.
      *
@@ -256,45 +267,61 @@ export const TemplateStamp = dedupingMixin(
      * @param {!NodeInfo} nodeInfo Node metadata for current template.
      * @return {void}
      */
+
+
     static _parseTemplateChildNodes(root, templateInfo, nodeInfo) {
       if (root.localName === 'script' || root.localName === 'style') {
         return;
       }
-      for (let node=root.firstChild, parentIndex=0, next; node; node=next) {
+
+      for (let node = root.firstChild, parentIndex = 0, next; node; node = next) {
         // Wrap templates
         if (node.localName == 'template') {
           node = wrapTemplateExtension(node);
-        }
-        // collapse adjacent textNodes: fixes an IE issue that can cause
+        } // collapse adjacent textNodes: fixes an IE issue that can cause
         // text nodes to be inexplicably split =(
         // note that root.normalize() should work but does not so we do this
         // manually.
+
+
         next = node.nextSibling;
+
         if (node.nodeType === Node.TEXT_NODE) {
-          let /** Node */ n = next;
-          while (n && (n.nodeType === Node.TEXT_NODE)) {
+          let
+          /** Node */
+          n = next;
+
+          while (n && n.nodeType === Node.TEXT_NODE) {
             node.textContent += n.textContent;
             next = n.nextSibling;
             root.removeChild(n);
             n = next;
-          }
-          // optionally strip whitespace
+          } // optionally strip whitespace
+
+
           if (templateInfo.stripWhiteSpace && !node.textContent.trim()) {
             root.removeChild(node);
             continue;
           }
         }
-        let childInfo = { parentIndex, parentInfo: nodeInfo };
+
+        let childInfo = {
+          parentIndex,
+          parentInfo: nodeInfo
+        };
+
         if (this._parseTemplateNode(node, templateInfo, childInfo)) {
-          childInfo.infoIndex = templateInfo.nodeInfoList.push(/** @type {!NodeInfo} */(childInfo)) - 1;
-        }
-        // Increment if not removed
+          childInfo.infoIndex = templateInfo.nodeInfoList.push(
+          /** @type {!NodeInfo} */
+          childInfo) - 1;
+        } // Increment if not removed
+
+
         if (node.parentNode) {
           parentIndex++;
         }
       }
     }
-
     /**
      * Parses template content for the given nested `<template>`.
      *
@@ -312,15 +339,16 @@ export const TemplateStamp = dedupingMixin(
      * @return {boolean} `true` if the visited node added node-specific
      *   metadata to `nodeInfo`
      */
+
+
     static _parseTemplateNestedTemplate(node, outerTemplateInfo, nodeInfo) {
       let templateInfo = this._parseTemplate(node, outerTemplateInfo);
-      let content = templateInfo.content =
-        node.content.ownerDocument.createDocumentFragment();
+
+      let content = templateInfo.content = node.content.ownerDocument.createDocumentFragment();
       content.appendChild(node.content);
       nodeInfo.templateInfo = templateInfo;
       return true;
     }
-
     /**
      * Parses template node attributes and adds node metadata to `nodeInfo`
      * for nodes of interest.
@@ -331,17 +359,20 @@ export const TemplateStamp = dedupingMixin(
      * @return {boolean} `true` if the visited node added node-specific
      *   metadata to `nodeInfo`
      */
+
+
     static _parseTemplateNodeAttributes(node, templateInfo, nodeInfo) {
       // Make copy of original attribute list, since the order may change
       // as attributes are added and removed
       let noted = false;
       let attrs = Array.from(node.attributes);
-      for (let i=attrs.length-1, a; (a=attrs[i]); i--) {
+
+      for (let i = attrs.length - 1, a; a = attrs[i]; i--) {
         noted = this._parseTemplateNodeAttribute(node, templateInfo, nodeInfo, a.name, a.value) || noted;
       }
+
       return noted;
     }
-
     /**
      * Parses a single template node attribute and adds node metadata to
      * `nodeInfo` for attributes of interest.
@@ -357,6 +388,8 @@ export const TemplateStamp = dedupingMixin(
      * @return {boolean} `true` if the visited node added node-specific
      *   metadata to `nodeInfo`
      */
+
+
     static _parseTemplateNodeAttribute(node, templateInfo, nodeInfo, name, value) {
       // events (on-*)
       if (name.slice(0, 3) === 'on-') {
@@ -367,15 +400,14 @@ export const TemplateStamp = dedupingMixin(
           value
         });
         return true;
-      }
-      // static id
+      } // static id
       else if (name === 'id') {
-        nodeInfo.id = value;
-        return true;
-      }
+          nodeInfo.id = value;
+          return true;
+        }
+
       return false;
     }
-
     /**
      * Returns the `content` document fragment for a given template.
      *
@@ -386,11 +418,14 @@ export const TemplateStamp = dedupingMixin(
      * @param {HTMLTemplateElement} template Template to retrieve `content` for
      * @return {DocumentFragment} Content fragment
      */
-    static _contentForTemplate(template) {
-      let templateInfo = /** @type {HTMLTemplateElementWithInfo} */ (template)._templateInfo;
-      return (templateInfo && templateInfo.content) || template.content;
-    }
 
+
+    static _contentForTemplate(template) {
+      let templateInfo =
+      /** @type {HTMLTemplateElementWithInfo} */
+      template._templateInfo;
+      return templateInfo && templateInfo.content || template.content;
+    }
     /**
      * Clones the provided template content and returns a document fragment
      * containing the cloned dom.
@@ -414,30 +449,39 @@ export const TemplateStamp = dedupingMixin(
      * @return {!StampedTemplate} Cloned template content
      * @override
      */
+
+
     _stampTemplate(template) {
       // Polyfill support: bootstrap the template if it has not already been
-      if (template && !template.content &&
-          window.HTMLTemplateElement && HTMLTemplateElement.decorate) {
+      if (template && !template.content && window.HTMLTemplateElement && HTMLTemplateElement.decorate) {
         HTMLTemplateElement.decorate(template);
       }
+
       let templateInfo = this.constructor._parseTemplate(template);
+
       let nodeInfo = templateInfo.nodeInfoList;
       let content = templateInfo.content || template.content;
-      let dom = /** @type {DocumentFragment} */ (document.importNode(content, true));
-      // NOTE: ShadyDom optimization indicating there is an insertion point
+      let dom =
+      /** @type {DocumentFragment} */
+      document.importNode(content, true); // NOTE: ShadyDom optimization indicating there is an insertion point
+
       dom.__noInsertionPoint = !templateInfo.hasInsertionPoint;
       let nodes = dom.nodeList = new Array(nodeInfo.length);
       dom.$ = {};
-      for (let i=0, l=nodeInfo.length, info; (i<l) && (info=nodeInfo[i]); i++) {
+
+      for (let i = 0, l = nodeInfo.length, info; i < l && (info = nodeInfo[i]); i++) {
         let node = nodes[i] = findTemplateNode(dom, info);
         applyIdToMap(this, dom.$, node, info);
         applyTemplateContent(this, node, info);
         applyEventListener(this, node, info);
       }
-      dom = /** @type {!StampedTemplate} */(dom); // eslint-disable-line no-self-assign
+
+      dom =
+      /** @type {!StampedTemplate} */
+      dom; // eslint-disable-line no-self-assign
+
       return dom;
     }
-
     /**
      * Adds an event listener by method name for the event provided.
      *
@@ -452,13 +496,16 @@ export const TemplateStamp = dedupingMixin(
      * @return {Function} Generated handler function
      * @override
      */
+
+
     _addMethodEventListenerToNode(node, eventName, methodName, context) {
       context = context || node;
       let handler = createNodeEventHandler(context, eventName, methodName);
+
       this._addEventListenerToNode(node, eventName, handler);
+
       return handler;
     }
-
     /**
      * Override point for adding custom or simulated event handling.
      *
@@ -468,10 +515,11 @@ export const TemplateStamp = dedupingMixin(
      * @return {void}
      * @override
      */
+
+
     _addEventListenerToNode(node, eventName, handler) {
       node.addEventListener(eventName, handler);
     }
-
     /**
      * Override point for adding custom or simulated event handling.
      *
@@ -481,6 +529,8 @@ export const TemplateStamp = dedupingMixin(
      * @return {void}
      * @override
      */
+
+
     _removeEventListenerFromNode(node, eventName, handler) {
       node.removeEventListener(eventName, handler);
     }
@@ -488,5 +538,4 @@ export const TemplateStamp = dedupingMixin(
   }
 
   return TemplateStamp;
-
 });

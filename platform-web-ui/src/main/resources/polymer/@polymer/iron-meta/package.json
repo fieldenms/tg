@@ -25,7 +25,7 @@
   "_resolved": "https://registry.npmjs.org/@polymer/iron-meta/-/iron-meta-3.0.1.tgz",
   "_shasum": "7f140628d127b0a284f882f1bb323a261bc125f5",
   "_spec": "@polymer/iron-meta@^3.0.0-pre.26",
-  "_where": "/home/oleh/web-workspace/polymer-app/node_modules/@polymer/iron-validatable-behavior",
+  "_where": "C:\\Users\\oleh\\workspace\\tg\\platform-web-ui\\src\\main\\resources\\node_modules\\@polymer\\iron-validatable-behavior",
   "author": {
     "name": "The Polymer Authors"
   },

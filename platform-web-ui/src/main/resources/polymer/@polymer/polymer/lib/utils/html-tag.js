@@ -8,12 +8,12 @@ Code distributed by Google as part of the polymer project is also
 subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
 */
 import './boot.js';
-
 /**
  * Class representing a static string value which can be used to filter
  * strings by asseting that they have been created via this class. The
  * `value` property returns the string passed to the constructor.
  */
+
 class LiteralString {
   constructor(string) {
     /** @type {string} */
@@ -23,40 +23,47 @@ class LiteralString {
    * @return {string} LiteralString string value
    * @override
    */
+
+
   toString() {
     return this.value;
   }
-}
 
+}
 /**
  * @param {*} value Object to stringify into HTML
  * @return {string} HTML stringified form of `obj`
  */
+
+
 function literalValue(value) {
   if (value instanceof LiteralString) {
-    return /** @type {!LiteralString} */(value).value;
-  } else {
-    throw new Error(
-        `non-literal value passed to Polymer's htmlLiteral function: ${value}`
+    return (
+      /** @type {!LiteralString} */
+      value.value
     );
+  } else {
+    throw new Error(`non-literal value passed to Polymer's htmlLiteral function: ${value}`);
   }
 }
-
 /**
  * @param {*} value Object to stringify into HTML
  * @return {string} HTML stringified form of `obj`
  */
+
+
 function htmlValue(value) {
   if (value instanceof HTMLTemplateElement) {
-    return /** @type {!HTMLTemplateElement } */(value).innerHTML;
+    return (
+      /** @type {!HTMLTemplateElement } */
+      value.innerHTML
+    );
   } else if (value instanceof LiteralString) {
     return literalValue(value);
   } else {
-    throw new Error(
-        `non-template value passed to Polymer's html function: ${value}`);
+    throw new Error(`non-template value passed to Polymer's html function: ${value}`);
   }
 }
-
 /**
  * A template literal tag that creates an HTML <template> element from the
  * contents of the string.
@@ -91,13 +98,15 @@ function htmlValue(value) {
  * @param {...*} values Variable parts of tagged template literal
  * @return {!HTMLTemplateElement} Constructed HTMLTemplateElement
  */
+
+
 export const html = function html(strings, ...values) {
-  const template = /** @type {!HTMLTemplateElement} */(document.createElement('template'));
-  template.innerHTML = values.reduce((acc, v, idx) =>
-      acc + htmlValue(v) + strings[idx + 1], strings[0]);
+  const template =
+  /** @type {!HTMLTemplateElement} */
+  document.createElement('template');
+  template.innerHTML = values.reduce((acc, v, idx) => acc + htmlValue(v) + strings[idx + 1], strings[0]);
   return template;
 };
-
 /**
  * An html literal tag that can be used with `html` to compose.
  * a literal string.
@@ -122,7 +131,7 @@ export const html = function html(strings, ...values) {
  * @param {...*} values Variable parts of tagged template literal
  * @return {!LiteralString} Constructed literal string
  */
-export const htmlLiteral = function(strings, ...values) {
-  return new LiteralString(values.reduce((acc, v, idx) =>
-      acc + literalValue(v) + strings[idx + 1], strings[0]));
+
+export const htmlLiteral = function (strings, ...values) {
+  return new LiteralString(values.reduce((acc, v, idx) => acc + literalValue(v) + strings[idx + 1], strings[0]));
 };

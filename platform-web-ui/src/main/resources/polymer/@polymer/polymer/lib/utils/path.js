@@ -8,7 +8,6 @@ Code distributed by Google as part of the polymer project is also
 subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
 */
 import './boot.js';
-
 /**
  * Module with utilities for manipulating structured data path strings.
  *
@@ -28,10 +27,10 @@ import './boot.js';
  * @param {string} path Path string
  * @return {boolean} True if the string contained one or more dots
  */
+
 export function isPath(path) {
   return path.indexOf('.') >= 0;
 }
-
 /**
  * Returns the root property name for the given path.
  *
@@ -45,14 +44,16 @@ export function isPath(path) {
  * @param {string} path Path string
  * @return {string} Root property name
  */
+
 export function root(path) {
   let dotIndex = path.indexOf('.');
+
   if (dotIndex === -1) {
     return path;
   }
+
   return path.slice(0, dotIndex);
 }
-
 /**
  * Given `base` is `foo.bar`, `foo` is an ancestor, `foo.bar` is not
  * Returns true if the given path is an ancestor of the base path.
@@ -69,11 +70,11 @@ export function root(path) {
  * @param {string} path Path string to test.
  * @return {boolean} True if `path` is an ancestor of `base`.
  */
+
 export function isAncestor(base, path) {
   //     base.startsWith(path + '.');
   return base.indexOf(path + '.') === 0;
 }
-
 /**
  * Given `base` is `foo.bar`, `foo.bar.baz` is an descendant
  *
@@ -89,11 +90,11 @@ export function isAncestor(base, path) {
  * @param {string} path Path string to test.
  * @return {boolean} True if `path` is a descendant of `base`.
  */
+
 export function isDescendant(base, path) {
   //     path.startsWith(base + '.');
   return path.indexOf(base + '.') === 0;
 }
-
 /**
  * Replaces a previous base path with a new base path, preserving the
  * remainder of the path.
@@ -111,21 +112,19 @@ export function isDescendant(base, path) {
  * @param {string} path Path to translate
  * @return {string} Translated string
  */
+
 export function translate(base, newBase, path) {
   return newBase + path.slice(base.length);
 }
-
 /**
  * @param {string} base Path string to test against
  * @param {string} path Path string to test
  * @return {boolean} True if `path` is equal to `base`
  */
-export function matches(base, path) {
-  return (base === path) ||
-         isAncestor(base, path) ||
-         isDescendant(base, path);
-}
 
+export function matches(base, path) {
+  return base === path || isAncestor(base, path) || isDescendant(base, path);
+}
 /**
  * Converts array-based paths to flattened path.  String-based paths
  * are returned as-is.
@@ -140,21 +139,24 @@ export function matches(base, path) {
  * @param {string | !Array<string|number>} path Input path
  * @return {string} Flattened path
  */
+
 export function normalize(path) {
   if (Array.isArray(path)) {
     let parts = [];
-    for (let i=0; i<path.length; i++) {
+
+    for (let i = 0; i < path.length; i++) {
       let args = path[i].toString().split('.');
-      for (let j=0; j<args.length; j++) {
+
+      for (let j = 0; j < args.length; j++) {
         parts.push(args[j]);
       }
     }
+
     return parts.join('.');
   } else {
     return path;
   }
 }
-
 /**
  * Splits a path into an array of property names. Accepts either arrays
  * of path parts or strings.
@@ -170,13 +172,14 @@ export function normalize(path) {
  * @return {!Array<string>} Array of path parts
  * @suppress {checkTypes}
  */
+
 export function split(path) {
   if (Array.isArray(path)) {
     return normalize(path).split('.');
   }
+
   return path.toString().split('.');
 }
-
 /**
  * Reads a value from a path.  If any sub-property in the path is `undefined`,
  * this method returns `undefined` (will never throw.
@@ -188,23 +191,26 @@ export function split(path) {
  * @return {*} Value at path, or `undefined` if the path could not be
  *  fully dereferenced.
  */
+
 export function get(root, path, info) {
   let prop = root;
-  let parts = split(path);
-  // Loop over path parts[0..n-1] and dereference
-  for (let i=0; i<parts.length; i++) {
+  let parts = split(path); // Loop over path parts[0..n-1] and dereference
+
+  for (let i = 0; i < parts.length; i++) {
     if (!prop) {
       return;
     }
+
     let part = parts[i];
     prop = prop[part];
   }
+
   if (info) {
     info.path = parts.join('.');
   }
+
   return prop;
 }
-
 /**
  * Sets a value to a path.  If any sub-property in the path is `undefined`,
  * this method will no-op.
@@ -214,28 +220,32 @@ export function get(root, path, info) {
  * @param {*} value Value to set to path
  * @return {string | undefined} The normalized version of the input path
  */
+
 export function set(root, path, value) {
   let prop = root;
   let parts = split(path);
-  let last = parts[parts.length-1];
+  let last = parts[parts.length - 1];
+
   if (parts.length > 1) {
     // Loop over path parts[0..n-2] and dereference
-    for (let i=0; i<parts.length-1; i++) {
+    for (let i = 0; i < parts.length - 1; i++) {
       let part = parts[i];
       prop = prop[part];
+
       if (!prop) {
         return;
       }
-    }
-    // Set value to object at end of path
+    } // Set value to object at end of path
+
+
     prop[last] = value;
   } else {
     // Simple property set
     prop[path] = value;
   }
+
   return parts.join('.');
 }
-
 /**
  * Returns true if the given string is a structured data path (has dots).
  *
@@ -252,4 +262,5 @@ export function set(root, path, value) {
  * @param {string} path Path string
  * @return {boolean} True if the string contained one or more dots
  */
+
 export const isDeep = isPath;

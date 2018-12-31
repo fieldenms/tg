@@ -18,6 +18,7 @@
   },
   "_requiredBy": [
     "/",
+    "/@polymer/app-layout",
     "/@polymer/app-route",
     "/@polymer/iron-a11y-announcer",
     "/@polymer/iron-a11y-keys-behavior",
@@ -79,7 +80,7 @@
   "_resolved": "https://registry.npmjs.org/@polymer/polymer/-/polymer-3.1.0.tgz",
   "_shasum": "3e1b7447a1e350fd654e1823def655d0f0828a70",
   "_spec": "@polymer/polymer@^3.0.0",
-  "_where": "/home/oleh/web-workspace/polymer-app",
+  "_where": "C:\\Users\\oleh\\workspace\\tg\\platform-web-ui\\src\\main\\resources",
   "author": {
     "name": "The Polymer Project Authors"
   },

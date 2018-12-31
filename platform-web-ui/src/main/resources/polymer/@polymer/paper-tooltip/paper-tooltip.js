@@ -8,12 +8,10 @@ found at http://polymer.github.io/CONTRIBUTORS.txt Code distributed by Google as
 part of the polymer project is also subject to an additional IP rights grant
 found at http://polymer.github.io/PATENTS.txt
 */
-import '@polymer/polymer/polymer-legacy.js';
-
-import {Polymer} from '@polymer/polymer/lib/legacy/polymer-fn.js';
-import {dom} from '@polymer/polymer/lib/legacy/polymer.dom.js';
-import {html} from '@polymer/polymer/lib/utils/html-tag.js';
-
+import "../polymer/polymer-legacy.js";
+import { Polymer } from "../polymer/lib/legacy/polymer-fn.js";
+import { dom } from "../polymer/lib/legacy/polymer.dom.js";
+import { html } from "../polymer/lib/utils/html-tag.js";
 /**
 Material design:
 [Tooltips](https://www.google.com/design/spec/components/tooltips.html)
@@ -52,6 +50,7 @@ Custom property | Description | Default
 @element paper-tooltip
 @demo demo/index.html
 */
+
 Polymer({
   _template: html`
     <style>
@@ -229,61 +228,100 @@ Polymer({
       <slot></slot>
     </div>
 `,
-
   is: 'paper-tooltip',
-  hostAttributes: {role: 'tooltip', tabindex: -1},
-
+  hostAttributes: {
+    role: 'tooltip',
+    tabindex: -1
+  },
   properties: {
     /**
      * The id of the element that the tooltip is anchored to. This element
      * must be a sibling of the tooltip. If this property is not set,
      * then the tooltip will be centered to the parent node containing it.
      */
-    for: {type: String, observer: '_findTarget'},
+    for: {
+      type: String,
+      observer: '_findTarget'
+    },
+
     /**
      * Set this to true if you want to manually control when the tooltip
      * is shown or hidden.
      */
-    manualMode: {type: Boolean, value: false, observer: '_manualModeChanged'},
+    manualMode: {
+      type: Boolean,
+      value: false,
+      observer: '_manualModeChanged'
+    },
+
     /**
      * Positions the tooltip to the top, right, bottom, left of its content.
      */
-    position: {type: String, value: 'bottom'},
+    position: {
+      type: String,
+      value: 'bottom'
+    },
+
     /**
      * If true, no parts of the tooltip will ever be shown offscreen.
      */
-    fitToVisibleBounds: {type: Boolean, value: false},
+    fitToVisibleBounds: {
+      type: Boolean,
+      value: false
+    },
+
     /**
      * The spacing between the top of the tooltip and the element it is
      * anchored to.
      */
-    offset: {type: Number, value: 14},
+    offset: {
+      type: Number,
+      value: 14
+    },
+
     /**
      * This property is deprecated, but left over so that it doesn't
      * break exiting code. Please use `offset` instead. If both `offset` and
      * `marginTop` are provided, `marginTop` will be ignored.
      * @deprecated since version 1.0.3
      */
-    marginTop: {type: Number, value: 14},
+    marginTop: {
+      type: Number,
+      value: 14
+    },
+
     /**
      * The delay that will be applied before the `entry` animation is
      * played when showing the tooltip.
      */
-    animationDelay: {type: Number, value: 500, observer: '_delayChange'},
+    animationDelay: {
+      type: Number,
+      value: 500,
+      observer: '_delayChange'
+    },
+
     /**
      * The animation that will be played on entry.  This replaces the
      * deprecated animationConfig.  Entries here will override the
      * animationConfig settings.  You can enter your own animation
      * by setting it to the css class name.
      */
-    animationEntry: {type: String, value: ''},
+    animationEntry: {
+      type: String,
+      value: ''
+    },
+
     /**
      * The animation that will be played on exit.  This replaces the
      * deprecated animationConfig.  Entries here will override the
      * animationConfig settings.  You can enter your own animation
      * by setting it to the css class name.
      */
-    animationExit: {type: String, value: ''},
+    animationExit: {
+      type: String,
+      value: ''
+    },
+
     /**
      * This property is deprecated.  Use --paper-tooltip-animation to change the
      * animation. The entry and exit animations that will be played when showing
@@ -297,19 +335,29 @@ Polymer({
      */
     animationConfig: {
       type: Object,
-      value: function() {
+      value: function () {
         return {
-          'entry':
-              [{name: 'fade-in-animation', node: this, timing: {delay: 0}}],
-              'exit': [{name: 'fade-out-animation', node: this}]
-        }
+          'entry': [{
+            name: 'fade-in-animation',
+            node: this,
+            timing: {
+              delay: 0
+            }
+          }],
+          'exit': [{
+            name: 'fade-out-animation',
+            node: this
+          }]
+        };
       }
     },
-    _showing: {type: Boolean, value: false}
+    _showing: {
+      type: Boolean,
+      value: false
+    }
   },
-
   listeners: {
-    'webkitAnimationEnd': '_onAnimationEnd',
+    'webkitAnimationEnd': '_onAnimationEnd'
   },
 
   /**
@@ -320,33 +368,32 @@ Polymer({
    * @type {Node}
    */
   get target() {
-    var parentNode = dom(this).parentNode;
-    // If the parentNode is a document fragment, then we need to use the host.
+    var parentNode = dom(this).parentNode; // If the parentNode is a document fragment, then we need to use the host.
+
     var ownerRoot = dom(this).getOwnerRoot();
     var target;
+
     if (this.for) {
       target = dom(ownerRoot).querySelector('#' + this.for);
     } else {
-      target = parentNode.nodeType == Node.DOCUMENT_FRAGMENT_NODE ?
-          ownerRoot.host :
-          parentNode;
+      target = parentNode.nodeType == Node.DOCUMENT_FRAGMENT_NODE ? ownerRoot.host : parentNode;
     }
+
     return target;
   },
 
   /**
    * @return {void}
    */
-  attached: function() {
+  attached: function () {
     this._findTarget();
   },
 
   /**
    * @return {void}
    */
-  detached: function() {
-    if (!this.manualMode)
-      this._removeListeners();
+  detached: function () {
+    if (!this.manualMode) this._removeListeners();
   },
 
   /**
@@ -354,7 +401,7 @@ Polymer({
    * @deprecated Use show and hide instead.
    * @param {string} type Either `entry` or `exit`
    */
-  playAnimation: function(type) {
+  playAnimation: function (type) {
     if (type === 'entry') {
       this.show();
     } else if (type === 'exit') {
@@ -365,7 +412,7 @@ Polymer({
   /**
    * Cancels the animation and either fully shows or fully hides tooltip
    */
-  cancelAnimation: function() {
+  cancelAnimation: function () {
     // Short-cut and cancel all animations and hide
     this.$.tooltip.classList.add('cancel-animation');
   },
@@ -374,21 +421,22 @@ Polymer({
    * Shows the tooltip programatically
    * @return {void}
    */
-  show: function() {
+  show: function () {
     // If the tooltip is already showing, there's nothing to do.
-    if (this._showing)
-      return;
+    if (this._showing) return;
 
     if (dom(this).textContent.trim() === '') {
       // Check if effective children are also empty
       var allChildrenEmpty = true;
       var effectiveChildren = dom(this).getEffectiveChildNodes();
+
       for (var i = 0; i < effectiveChildren.length; i++) {
         if (effectiveChildren[i].textContent.trim() !== '') {
           allChildrenEmpty = false;
           break;
         }
       }
+
       if (allChildrenEmpty) {
         return;
       }
@@ -407,17 +455,19 @@ Polymer({
    * Hides the tooltip programatically
    * @return {void}
    */
-  hide: function() {
+  hide: function () {
     // If the tooltip is already hidden, there's nothing to do.
     if (!this._showing) {
       return;
-    }
-
-    // If the entry animation is still playing, don't try to play the exit
+    } // If the entry animation is still playing, don't try to play the exit
     // animation since this will reset the opacity to 1. Just end the animation.
+
+
     if (this._animationPlaying) {
       this._showing = false;
+
       this._cancelAnimation();
+
       return;
     } else {
       // Play Exit Animation
@@ -431,40 +481,45 @@ Polymer({
   /**
    * @return {void}
    */
-  updatePosition: function() {
-    if (!this._target || !this.offsetParent)
-      return;
-    var offset = this.offset;
-    // If a marginTop has been provided by the user (pre 1.0.3), use it.
-    if (this.marginTop != 14 && this.offset == 14)
-      offset = this.marginTop;
+  updatePosition: function () {
+    if (!this._target || !this.offsetParent) return;
+    var offset = this.offset; // If a marginTop has been provided by the user (pre 1.0.3), use it.
+
+    if (this.marginTop != 14 && this.offset == 14) offset = this.marginTop;
     var parentRect = this.offsetParent.getBoundingClientRect();
+
     var targetRect = this._target.getBoundingClientRect();
+
     var thisRect = this.getBoundingClientRect();
     var horizontalCenterOffset = (targetRect.width - thisRect.width) / 2;
     var verticalCenterOffset = (targetRect.height - thisRect.height) / 2;
     var targetLeft = targetRect.left - parentRect.left;
     var targetTop = targetRect.top - parentRect.top;
     var tooltipLeft, tooltipTop;
+
     switch (this.position) {
       case 'top':
         tooltipLeft = targetLeft + horizontalCenterOffset;
         tooltipTop = targetTop - thisRect.height - offset;
         break;
+
       case 'bottom':
         tooltipLeft = targetLeft + horizontalCenterOffset;
         tooltipTop = targetTop + targetRect.height + offset;
         break;
+
       case 'left':
         tooltipLeft = targetLeft - thisRect.width - offset;
         tooltipTop = targetTop + verticalCenterOffset;
         break;
+
       case 'right':
         tooltipLeft = targetLeft + targetRect.width + offset;
         tooltipTop = targetTop + verticalCenterOffset;
         break;
-    }
-    // TODO(noms): This should use IronFitBehavior if possible.
+    } // TODO(noms): This should use IronFitBehavior if possible.
+
+
     if (this.fitToVisibleBounds) {
       // Clip the left/right side
       if (parentRect.left + tooltipLeft + thisRect.width > window.innerWidth) {
@@ -473,10 +528,11 @@ Polymer({
       } else {
         this.style.left = Math.max(0, tooltipLeft) + 'px';
         this.style.right = 'auto';
-      }
-      // Clip the top/bottom side.
+      } // Clip the top/bottom side.
+
+
       if (parentRect.top + tooltipTop + thisRect.height > window.innerHeight) {
-        this.style.bottom = (parentRect.height - targetTop + offset) + 'px';
+        this.style.bottom = parentRect.height - targetTop + offset + 'px';
         this.style.top = 'auto';
       } else {
         this.style.top = Math.max(-parentRect.top, tooltipTop) + 'px';
@@ -487,8 +543,7 @@ Polymer({
       this.style.top = tooltipTop + 'px';
     }
   },
-
-  _addListeners: function() {
+  _addListeners: function () {
     if (this._target) {
       this.listen(this._target, 'mouseenter', 'show');
       this.listen(this._target, 'focus', 'show');
@@ -496,85 +551,80 @@ Polymer({
       this.listen(this._target, 'blur', 'hide');
       this.listen(this._target, 'tap', 'hide');
     }
+
     this.listen(this.$.tooltip, 'animationend', '_onAnimationEnd');
     this.listen(this, 'mouseenter', 'hide');
   },
-
-  _findTarget: function() {
-    if (!this.manualMode)
-      this._removeListeners();
+  _findTarget: function () {
+    if (!this.manualMode) this._removeListeners();
     this._target = this.target;
-    if (!this.manualMode)
-      this._addListeners();
+    if (!this.manualMode) this._addListeners();
   },
-
-  _delayChange: function(newValue) {
+  _delayChange: function (newValue) {
     // Only Update delay if different value set
     if (newValue !== 500) {
-      this.updateStyles({'--paper-tooltip-delay-in': newValue + 'ms'});
+      this.updateStyles({
+        '--paper-tooltip-delay-in': newValue + 'ms'
+      });
     }
   },
-
-  _manualModeChanged: function() {
-    if (this.manualMode)
-      this._removeListeners();
-    else
-      this._addListeners();
+  _manualModeChanged: function () {
+    if (this.manualMode) this._removeListeners();else this._addListeners();
   },
-
-  _cancelAnimation: function() {
+  _cancelAnimation: function () {
     // Short-cut and cancel all animations and hide
     this.$.tooltip.classList.remove(this._getAnimationType('entry'));
     this.$.tooltip.classList.remove(this._getAnimationType('exit'));
     this.$.tooltip.classList.remove('cancel-animation');
     this.$.tooltip.classList.add('hidden');
   },
-
-  _onAnimationFinish: function() {
+  _onAnimationFinish: function () {
     if (this._showing) {
       this.$.tooltip.classList.remove(this._getAnimationType('entry'));
       this.$.tooltip.classList.remove('cancel-animation');
       this.$.tooltip.classList.add(this._getAnimationType('exit'));
     }
   },
-
-  _onAnimationEnd: function() {
+  _onAnimationEnd: function () {
     // If no longer showing add class hidden to completely hide tooltip
     this._animationPlaying = false;
+
     if (!this._showing) {
       this.$.tooltip.classList.remove(this._getAnimationType('exit'));
       this.$.tooltip.classList.add('hidden');
     }
   },
-
-  _getAnimationType: function(type) {
+  _getAnimationType: function (type) {
     // These properties have priority over animationConfig values
-    if ((type === 'entry') && (this.animationEntry !== '')) {
+    if (type === 'entry' && this.animationEntry !== '') {
       return this.animationEntry;
     }
-    if ((type === 'exit') && (this.animationExit !== '')) {
+
+    if (type === 'exit' && this.animationExit !== '') {
       return this.animationExit;
-    }
-    // If no results then return the legacy value from animationConfig
-    if (this.animationConfig[type] &&
-        typeof this.animationConfig[type][0].name === 'string') {
+    } // If no results then return the legacy value from animationConfig
+
+
+    if (this.animationConfig[type] && typeof this.animationConfig[type][0].name === 'string') {
       // Checking Timing and Update if necessary - Legacy for animationConfig
-      if (this.animationConfig[type][0].timing &&
-          this.animationConfig[type][0].timing.delay &&
-          this.animationConfig[type][0].timing.delay !== 0) {
-        var timingDelay = this.animationConfig[type][0].timing.delay;
-        // Has Timing Change - Update CSS
+      if (this.animationConfig[type][0].timing && this.animationConfig[type][0].timing.delay && this.animationConfig[type][0].timing.delay !== 0) {
+        var timingDelay = this.animationConfig[type][0].timing.delay; // Has Timing Change - Update CSS
+
         if (type === 'entry') {
-          this.updateStyles({'--paper-tooltip-delay-in': timingDelay + 'ms'});
+          this.updateStyles({
+            '--paper-tooltip-delay-in': timingDelay + 'ms'
+          });
         } else if (type === 'exit') {
-          this.updateStyles({'--paper-tooltip-delay-out': timingDelay + 'ms'});
+          this.updateStyles({
+            '--paper-tooltip-delay-out': timingDelay + 'ms'
+          });
         }
       }
+
       return this.animationConfig[type][0].name;
     }
   },
-
-  _removeListeners: function() {
+  _removeListeners: function () {
     if (this._target) {
       this.unlisten(this._target, 'mouseenter', 'show');
       this.unlisten(this._target, 'focus', 'show');
@@ -582,6 +632,7 @@ Polymer({
       this.unlisten(this._target, 'blur', 'hide');
       this.unlisten(this._target, 'tap', 'hide');
     }
+
     this.unlisten(this.$.tooltip, 'animationend', '_onAnimationEnd');
     this.unlisten(this, 'mouseenter', 'hide');
   }

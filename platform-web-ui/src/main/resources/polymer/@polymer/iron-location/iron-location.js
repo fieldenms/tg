@@ -8,10 +8,9 @@ found at http://polymer.github.io/CONTRIBUTORS.txt Code distributed by Google as
 part of the polymer project is also subject to an additional IP rights grant
 found at http://polymer.github.io/PATENTS.txt
 */
-import '@polymer/polymer/polymer-legacy.js';
-
-import {Polymer} from '@polymer/polymer/lib/legacy/polymer-fn.js';
-import {dom} from '@polymer/polymer/lib/legacy/polymer.dom.js';
+import "../polymer/polymer-legacy.js";
+import { Polymer } from "../polymer/lib/legacy/polymer-fn.js";
+import { dom } from "../polymer/lib/legacy/polymer.dom.js";
 /**
 
 The `iron-location` element manages binding to and from the current URL.
@@ -51,9 +50,9 @@ milliseconds.
 @demo demo/index.html
 
  */
+
 Polymer({
   is: 'iron-location',
-
   properties: {
     /**
      * The pathname component of the URL.
@@ -61,7 +60,7 @@ Polymer({
     path: {
       type: String,
       notify: true,
-      value: function() {
+      value: function () {
         return window.decodeURIComponent(window.location.pathname);
       }
     },
@@ -72,7 +71,7 @@ Polymer({
     query: {
       type: String,
       notify: true,
-      value: function() {
+      value: function () {
         return window.location.search.slice(1);
       }
     },
@@ -83,7 +82,7 @@ Polymer({
     hash: {
       type: String,
       notify: true,
-      value: function() {
+      value: function () {
         return window.decodeURIComponent(window.location.hash.slice(1));
       }
     },
@@ -96,7 +95,10 @@ Polymer({
      * This is to prevent large numbers of entries from clogging up the user's
      * browser history. Disable by setting to a negative number.
      */
-    dwellTime: {type: Number, value: 2000},
+    dwellTime: {
+      type: Number,
+      value: 2000
+    },
 
     /**
      * A regexp that defines the set of URLs that should be considered part
@@ -111,7 +113,10 @@ Polymer({
      *
      * @type {string|RegExp}
      */
-    urlSpaceRegex: {type: String, value: ''},
+    urlSpaceRegex: {
+      type: String,
+      value: ''
+    },
 
     /**
      * A flag that specifies whether the spaces in query that would normally be
@@ -121,115 +126,113 @@ Polymer({
      * - "hello%20world" without the parameter
      * - "hello+world" with the parameter
      */
-    encodeSpaceAsPlusInQuery: {type: Boolean, value: false},
+    encodeSpaceAsPlusInQuery: {
+      type: Boolean,
+      value: false
+    },
 
     /**
      * urlSpaceRegex, but coerced into a regexp.
      *
      * @type {RegExp}
      */
-    _urlSpaceRegExp: {computed: '_makeRegExp(urlSpaceRegex)'},
-
-    _lastChangedAt: {type: Number},
-
-    _initialized: {type: Boolean, value: false}
+    _urlSpaceRegExp: {
+      computed: '_makeRegExp(urlSpaceRegex)'
+    },
+    _lastChangedAt: {
+      type: Number
+    },
+    _initialized: {
+      type: Boolean,
+      value: false
+    }
   },
-
-  hostAttributes: {hidden: true},
-
+  hostAttributes: {
+    hidden: true
+  },
   observers: ['_updateUrl(path, query, hash)'],
-
-  created: function() {
+  created: function () {
     this.__location = window.location;
   },
-
-  attached: function() {
+  attached: function () {
     this.listen(window, 'hashchange', '_hashChanged');
     this.listen(window, 'location-changed', '_urlChanged');
     this.listen(window, 'popstate', '_urlChanged');
     this.listen(
-        /** @type {!HTMLBodyElement} */ (document.body),
-        'click',
-        '_globalOnClick');
-    // Give a 200ms grace period to make initial redirects without any
+    /** @type {!HTMLBodyElement} */
+    document.body, 'click', '_globalOnClick'); // Give a 200ms grace period to make initial redirects without any
     // additions to the user's history.
+
     this._lastChangedAt = window.performance.now() - (this.dwellTime - 200);
     this._initialized = true;
 
     this._urlChanged();
   },
-
-  detached: function() {
+  detached: function () {
     this.unlisten(window, 'hashchange', '_hashChanged');
     this.unlisten(window, 'location-changed', '_urlChanged');
     this.unlisten(window, 'popstate', '_urlChanged');
     this.unlisten(
-        /** @type {!HTMLBodyElement} */ (document.body),
-        'click',
-        '_globalOnClick');
+    /** @type {!HTMLBodyElement} */
+    document.body, 'click', '_globalOnClick');
     this._initialized = false;
   },
-
-  _hashChanged: function() {
+  _hashChanged: function () {
     this.hash = window.decodeURIComponent(this.__location.hash.substring(1));
   },
-
-  _urlChanged: function() {
+  _urlChanged: function () {
     // We want to extract all info out of the updated URL before we
     // try to write anything back into it.
     //
     // i.e. without _dontUpdateUrl we'd overwrite the new path with the old
     // one when we set this.hash. Likewise for query.
     this._dontUpdateUrl = true;
+
     this._hashChanged();
+
     this.path = window.decodeURIComponent(this.__location.pathname);
     this.query = this.__location.search.substring(1);
     this._dontUpdateUrl = false;
+
     this._updateUrl();
   },
-
-  _getUrl: function() {
-    var partiallyEncodedPath =
-        window.encodeURI(this.path).replace(/\#/g, '%23').replace(/\?/g, '%3F');
+  _getUrl: function () {
+    var partiallyEncodedPath = window.encodeURI(this.path).replace(/\#/g, '%23').replace(/\?/g, '%3F');
     var partiallyEncodedQuery = '';
+
     if (this.query) {
       partiallyEncodedQuery = '?' + this.query.replace(/\#/g, '%23');
+
       if (this.encodeSpaceAsPlusInQuery) {
-        partiallyEncodedQuery = partiallyEncodedQuery.replace(/\+/g, '%2B')
-                                    .replace(/ /g, '+')
-                                    .replace(/%20/g, '+');
+        partiallyEncodedQuery = partiallyEncodedQuery.replace(/\+/g, '%2B').replace(/ /g, '+').replace(/%20/g, '+');
       } else {
         // required for edge
-        partiallyEncodedQuery =
-            partiallyEncodedQuery.replace(/\+/g, '%2B').replace(/ /g, '%20');
+        partiallyEncodedQuery = partiallyEncodedQuery.replace(/\+/g, '%2B').replace(/ /g, '%20');
       }
     }
+
     var partiallyEncodedHash = '';
+
     if (this.hash) {
       partiallyEncodedHash = '#' + window.encodeURI(this.hash);
     }
-    return (
-        partiallyEncodedPath + partiallyEncodedQuery + partiallyEncodedHash);
-  },
 
-  _updateUrl: function() {
+    return partiallyEncodedPath + partiallyEncodedQuery + partiallyEncodedHash;
+  },
+  _updateUrl: function () {
     if (this._dontUpdateUrl || !this._initialized) {
       return;
     }
 
-    if (this.path === window.decodeURIComponent(this.__location.pathname) &&
-        this.query === this.__location.search.substring(1) &&
-        this.hash ===
-            window.decodeURIComponent(this.__location.hash.substring(1))) {
+    if (this.path === window.decodeURIComponent(this.__location.pathname) && this.query === this.__location.search.substring(1) && this.hash === window.decodeURIComponent(this.__location.hash.substring(1))) {
       // Nothing to do, the current URL is a representation of our properties.
       return;
     }
 
-    var newUrl = this._getUrl();
-    // Need to use a full URL in case the containing page has a base URI.
-    var fullNewUrl =
-        new URL(newUrl, this.__location.protocol + '//' + this.__location.host)
-            .href;
+    var newUrl = this._getUrl(); // Need to use a full URL in case the containing page has a base URI.
+
+
+    var fullNewUrl = new URL(newUrl, this.__location.protocol + '//' + this.__location.host).href;
     var now = window.performance.now();
     var shouldReplace = this._lastChangedAt + this.dwellTime > now;
     this._lastChangedAt = now;
@@ -240,7 +243,9 @@ Polymer({
       window.history.pushState({}, '', fullNewUrl);
     }
 
-    this.fire('location-changed', {}, {node: window});
+    this.fire('location-changed', {}, {
+      node: window
+    });
   },
 
   /**
@@ -249,7 +254,7 @@ Polymer({
    *
    * @param {MouseEvent} event .
    */
-  _globalOnClick: function(event) {
+  _globalOnClick: function (event) {
     // If another event handler has stopped this event then there's nothing
     // for us to do. This can happen e.g. when there are multiple
     // iron-location elements in a page.
@@ -263,16 +268,17 @@ Polymer({
       return;
     }
 
-    event.preventDefault();
-
-    // If the navigation is to the current page we shouldn't add a history
+    event.preventDefault(); // If the navigation is to the current page we shouldn't add a history
     // entry or fire a change event.
+
     if (href === this.__location.href) {
       return;
     }
 
     window.history.pushState({}, '', href);
-    this.fire('location-changed', {}, {node: window});
+    this.fire('location-changed', {}, {
+      node: window
+    });
   },
 
   /**
@@ -283,14 +289,14 @@ Polymer({
    * @param {MouseEvent} event .
    * @return {string?} .
    */
-  _getSameOriginLinkHref: function(event) {
+  _getSameOriginLinkHref: function (event) {
     // We only care about left-clicks.
     if (event.button !== 0) {
       return null;
-    }
-
-    // We don't want modified clicks, where the intent is to open the page
+    } // We don't want modified clicks, where the intent is to open the page
     // in a new tab.
+
+
     if (event.metaKey || event.ctrlKey) {
       return null;
     }
@@ -305,44 +311,43 @@ Polymer({
         anchor = element;
         break;
       }
-    }
+    } // If there's no link there's nothing to do.
 
-    // If there's no link there's nothing to do.
+
     if (!anchor) {
       return null;
-    }
+    } // Target blank is a new tab, don't intercept.
 
-    // Target blank is a new tab, don't intercept.
+
     if (anchor.target === '_blank') {
       return null;
-    }
+    } // If the link is for an existing parent frame, don't intercept.
 
-    // If the link is for an existing parent frame, don't intercept.
-    if ((anchor.target === '_top' || anchor.target === '_parent') &&
-        window.top !== window) {
+
+    if ((anchor.target === '_top' || anchor.target === '_parent') && window.top !== window) {
       return null;
-    }
+    } // If the link is a download, don't intercept.
 
-    // If the link is a download, don't intercept.
+
     if (anchor.download) {
       return null;
     }
 
-    var href = anchor.href;
-
-    // It only makes sense for us to intercept same-origin navigations.
+    var href = anchor.href; // It only makes sense for us to intercept same-origin navigations.
     // pushState/replaceState don't work with cross-origin links.
+
     var url;
 
     if (document.baseURI != null) {
-      url = new URL(href, /** @type {string} */ (document.baseURI));
+      url = new URL(href,
+      /** @type {string} */
+      document.baseURI);
     } else {
       url = new URL(href);
     }
 
-    var origin;
+    var origin; // IE Polyfill
 
-    // IE Polyfill
     if (this.__location.origin) {
       origin = this.__location.origin;
     } else {
@@ -365,6 +370,7 @@ Polymer({
       if (isExtraneousHTTPS || isExtraneousHTTP) {
         urlHost = url.hostname;
       }
+
       urlOrigin = urlProtocol + '//' + urlHost;
     }
 
@@ -372,24 +378,22 @@ Polymer({
       return null;
     }
 
-    var normalizedHref = url.pathname + url.search + url.hash;
+    var normalizedHref = url.pathname + url.search + url.hash; // pathname should start with '/', but may not if `new URL` is not supported
 
-    // pathname should start with '/', but may not if `new URL` is not supported
     if (normalizedHref[0] !== '/') {
       normalizedHref = '/' + normalizedHref;
-    }
+    } // If we've been configured not to handle this url... don't handle it!
 
-    // If we've been configured not to handle this url... don't handle it!
+
     if (this._urlSpaceRegExp && !this._urlSpaceRegExp.test(normalizedHref)) {
       return null;
-    }
+    } // Need to use a full URL in case the containing page has a base URI.
 
-    // Need to use a full URL in case the containing page has a base URI.
+
     var fullNormalizedHref = new URL(normalizedHref, this.__location.href).href;
     return fullNormalizedHref;
   },
-
-  _makeRegExp: function(urlSpaceRegex) {
+  _makeRegExp: function (urlSpaceRegex) {
     return RegExp(urlSpaceRegex);
   }
 });

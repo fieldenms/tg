@@ -8,12 +8,10 @@ found at http://polymer.github.io/CONTRIBUTORS.txt Code distributed by Google as
 part of the polymer project is also subject to an additional IP rights grant
 found at http://polymer.github.io/PATENTS.txt
 */
-import '@polymer/polymer/polymer-legacy.js';
-
-import {Polymer} from '@polymer/polymer/lib/legacy/polymer-fn.js';
-import {dom} from '@polymer/polymer/lib/legacy/polymer.dom.js';
-import {html} from '@polymer/polymer/lib/utils/html-tag.js';
-
+import "../polymer/polymer-legacy.js";
+import { Polymer } from "../polymer/lib/legacy/polymer-fn.js";
+import { dom } from "../polymer/lib/legacy/polymer.dom.js";
+import { html } from "../polymer/lib/utils/html-tag.js";
 /*
 `iron-overlay-backdrop` is a backdrop used by `Polymer.IronOverlayBehavior`. It
 should be a singleton.
@@ -29,6 +27,7 @@ Custom property | Description | Default
 `--iron-overlay-backdrop`                  | Mixin applied to `iron-overlay-backdrop`.                      | {}
 `--iron-overlay-backdrop-opened`           | Mixin applied to `iron-overlay-backdrop` when it is displayed | {}
 */
+
 Polymer({
   _template: html`
     <style>
@@ -54,11 +53,8 @@ Polymer({
 
     <slot></slot>
 `,
-
   is: 'iron-overlay-backdrop',
-
   properties: {
-
     /**
      * Returns true if the backdrop is opened.
      */
@@ -66,28 +62,24 @@ Polymer({
       reflectToAttribute: true,
       type: Boolean,
       value: false,
-      observer: '_openedChanged',
+      observer: '_openedChanged'
     }
-
   },
-
   listeners: {
-    'transitionend': '_onTransitionend',
+    'transitionend': '_onTransitionend'
   },
-
-  created: function() {
+  created: function () {
     // Used to cancel previous requestAnimationFrame calls when opened changes.
     this.__openedRaf = null;
   },
-
-  attached: function() {
+  attached: function () {
     this.opened && this._openedChanged(this.opened);
   },
 
   /**
    * Appends the backdrop to document body if needed.
    */
-  prepare: function() {
+  prepare: function () {
     if (this.opened && !this.parentNode) {
       dom(document.body).appendChild(this);
     }
@@ -96,27 +88,26 @@ Polymer({
   /**
    * Shows the backdrop.
    */
-  open: function() {
+  open: function () {
     this.opened = true;
   },
 
   /**
    * Hides the backdrop.
    */
-  close: function() {
+  close: function () {
     this.opened = false;
   },
 
   /**
    * Removes the backdrop from document body if needed.
    */
-  complete: function() {
+  complete: function () {
     if (!this.opened && this.parentNode === document.body) {
       dom(this.parentNode).removeChild(this);
     }
   },
-
-  _onTransitionend: function(event) {
+  _onTransitionend: function (event) {
     if (event && event.target === this) {
       this.complete();
     }
@@ -126,7 +117,7 @@ Polymer({
    * @param {boolean} opened
    * @private
    */
-  _openedChanged: function(opened) {
+  _openedChanged: function (opened) {
     if (opened) {
       // Auto-attach.
       this.prepare();
@@ -134,6 +125,7 @@ Polymer({
       // Animation might be disabled via the mixin or opacity custom property.
       // If it is disabled in other ways, it's up to the user to call complete.
       var cs = window.getComputedStyle(this);
+
       if (cs.transitionDuration === '0s' || cs.opacity == 0) {
         this.complete();
       }
@@ -141,16 +133,17 @@ Polymer({
 
     if (!this.isAttached) {
       return;
-    }
+    } // Always cancel previous requestAnimationFrame.
 
-    // Always cancel previous requestAnimationFrame.
+
     if (this.__openedRaf) {
       window.cancelAnimationFrame(this.__openedRaf);
       this.__openedRaf = null;
-    }
-    // Force relayout to ensure proper transitions.
+    } // Force relayout to ensure proper transitions.
+
+
     this.scrollTop = this.scrollTop;
-    this.__openedRaf = window.requestAnimationFrame(function() {
+    this.__openedRaf = window.requestAnimationFrame(function () {
       this.__openedRaf = null;
       this.toggleClass('opened', this.opened);
     }.bind(this));

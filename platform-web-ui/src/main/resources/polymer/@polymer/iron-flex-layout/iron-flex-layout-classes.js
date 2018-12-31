@@ -8,9 +8,8 @@ found at http://polymer.github.io/CONTRIBUTORS.txt Code distributed by Google as
 part of the polymer project is also subject to an additional IP rights grant
 found at http://polymer.github.io/PATENTS.txt
 */
-import '@polymer/polymer/polymer-legacy.js';
-import {html} from '@polymer/polymer/lib/utils/html-tag.js';
-
+import "../polymer/polymer-legacy.js";
+import { html } from "../polymer/lib/utils/html-tag.js";
 /*
 A set of layout classes that let you specify layout properties directly in
 markup. You must include this file in every element that needs to use them.

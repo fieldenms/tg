@@ -303,7 +303,7 @@ public class SourceControllerImpl implements ISourceController {
             return getDesktopApplicationStartupResourcesSource(webUiConfig, this);
         } else if ("/app/tg-app-index.html".equalsIgnoreCase(resourceURI)) {
             return getTgAppIndexSource(webUiConfig, deviceProfile);
-        } else if ("/app/tg-app-config.html".equalsIgnoreCase(resourceURI)) {
+        } else if ("/app/tg-app-config.js".equalsIgnoreCase(resourceURI)) {
             return getTgAppConfigSource(webUiConfig, deviceProfile);
         } else if ("/app/tg-app.html".equalsIgnoreCase(resourceURI)) {
             return getTgAppSource(webUiConfig, deviceProfile);
@@ -396,14 +396,14 @@ public class SourceControllerImpl implements ISourceController {
     private static String appendMastersAndCentresImportURIs(final String source, final IWebUiConfig webUiConfig) {
         final StringBuilder sb = new StringBuilder();
         sb.append(source);
-        
+
         final Comparator<Class<?>> classComparator = new Comparator<Class<?>>() {
             @Override
             public int compare(final Class<?> class1, final Class<?> class2) {
                 return class1.getName().compareTo(class2.getName());
             }
         };
-        
+
         sb.append("\n\n<!-- GENERATED MASTERS FROM IWebUiConfig-->\n");
         final List<Class<? extends AbstractEntity<?>>> sortedMasterTypes = new ArrayList<>(webUiConfig.getMasters().keySet());
         sort(sortedMasterTypes, classComparator); // sort types by name to provide predictable order inside vulcanized resources
@@ -412,7 +412,7 @@ public class SourceControllerImpl implements ISourceController {
                 sb.append(String.format("<link rel=\"import\" href=\"/master_ui/%s\">\n", masterEntityType.getName()));
             }
         }
-        
+
         sb.append("\n<!-- GENERATED CENTRES FROM IWebUiConfig-->\n");
         final List<Class<? extends MiWithConfigurationSupport<?>>> sortedCentreTypes = new ArrayList<>(webUiConfig.getCentres().keySet());
         sort(sortedCentreTypes, classComparator); // sort types by name to provide predictable order inside vulcanized resources
@@ -421,7 +421,7 @@ public class SourceControllerImpl implements ISourceController {
                 sb.append(String.format("<link rel=\"import\" href=\"/centre_ui/%s\">\n", centreMiType.getName()));
             }
         }
-        
+
         return sb.toString();
     }
 
@@ -481,7 +481,7 @@ public class SourceControllerImpl implements ISourceController {
         // This means that starting the MOBILE or DESKTOP app for the first time will show us the same initial full-blown (aka-desktop)
         // configuration; the user however could change the number of columns, resize their widths etc. for MOBILE and DESKTOP apps separately
         // (see CentreUpdater.deviceSpecific method for more details).
-        
+
         // In future potentially we would need to define distinct initial configurations for MOBILE and DESKTOP apps.
         // Here we would need to take device specific instance.
         final EntityCentre<? extends AbstractEntity<?>> centre = ResourceFactoryUtils.getEntityCentre(mitypeString, webUiConfig);

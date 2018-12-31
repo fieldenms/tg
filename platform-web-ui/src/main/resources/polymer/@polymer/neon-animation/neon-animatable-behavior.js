@@ -8,22 +8,22 @@ found at http://polymer.github.io/CONTRIBUTORS.txt Code distributed by Google as
 part of the polymer project is also subject to an additional IP rights grant
 found at http://polymer.github.io/PATENTS.txt
 */
-import '@polymer/polymer/polymer-legacy.js';
-
+import "../polymer/polymer-legacy.js";
 /**
  * `NeonAnimatableBehavior` is implemented by elements containing
  * animations for use with elements implementing
  * `NeonAnimationRunnerBehavior`.
  * @polymerBehavior
  */
+
 export const NeonAnimatableBehavior = {
-
   properties: {
-
     /**
      * Animation configuration. See README for more info.
      */
-    animationConfig: {type: Object},
+    animationConfig: {
+      type: Object
+    },
 
     /**
      * Convenience property for setting an 'entry' animation. Do not set
@@ -32,7 +32,7 @@ export const NeonAnimatableBehavior = {
      */
     entryAnimation: {
       observer: '_entryAnimationChanged',
-      type: String,
+      type: String
     },
 
     /**
@@ -42,49 +42,52 @@ export const NeonAnimatableBehavior = {
      */
     exitAnimation: {
       observer: '_exitAnimationChanged',
-      type: String,
-    },
-
+      type: String
+    }
   },
-
-  _entryAnimationChanged: function() {
+  _entryAnimationChanged: function () {
     this.animationConfig = this.animationConfig || {};
-    this.animationConfig['entry'] = [{name: this.entryAnimation, node: this}];
+    this.animationConfig['entry'] = [{
+      name: this.entryAnimation,
+      node: this
+    }];
   },
-
-  _exitAnimationChanged: function() {
+  _exitAnimationChanged: function () {
     this.animationConfig = this.animationConfig || {};
-    this.animationConfig['exit'] = [{name: this.exitAnimation, node: this}];
+    this.animationConfig['exit'] = [{
+      name: this.exitAnimation,
+      node: this
+    }];
   },
-
-  _copyProperties: function(config1, config2) {
+  _copyProperties: function (config1, config2) {
     // shallowly copy properties from config2 to config1
     for (var property in config2) {
       config1[property] = config2[property];
     }
   },
+  _cloneConfig: function (config) {
+    var clone = {
+      isClone: true
+    };
 
-  _cloneConfig: function(config) {
-    var clone = {isClone: true};
     this._copyProperties(clone, config);
+
     return clone;
   },
-
-  _getAnimationConfigRecursive: function(type, map, allConfigs) {
+  _getAnimationConfigRecursive: function (type, map, allConfigs) {
     if (!this.animationConfig) {
       return;
     }
 
-    if (this.animationConfig.value &&
-        typeof this.animationConfig.value === 'function') {
-      this._warn(this._logf(
-          'playAnimation',
-          'Please put \'animationConfig\' inside of your components \'properties\' object instead of outside of it.'));
-      return;
-    }
+    if (this.animationConfig.value && typeof this.animationConfig.value === 'function') {
+      this._warn(this._logf('playAnimation', 'Please put \'animationConfig\' inside of your components \'properties\' object instead of outside of it.'));
 
-    // type is optional
+      return;
+    } // type is optional
+
+
     var thisConfig;
+
     if (type) {
       thisConfig = this.animationConfig[type];
     } else {
@@ -93,23 +96,24 @@ export const NeonAnimatableBehavior = {
 
     if (!Array.isArray(thisConfig)) {
       thisConfig = [thisConfig];
-    }
+    } // iterate animations and recurse to process configurations from child nodes
 
-    // iterate animations and recurse to process configurations from child nodes
+
     if (thisConfig) {
       for (var config, index = 0; config = thisConfig[index]; index++) {
         if (config.animatable) {
-          config.animatable._getAnimationConfigRecursive(
-              config.type || type, map, allConfigs);
+          config.animatable._getAnimationConfigRecursive(config.type || type, map, allConfigs);
         } else {
           if (config.id) {
             var cachedConfig = map[config.id];
+
             if (cachedConfig) {
               // merge configurations with the same id, making a clone lazily
               if (!cachedConfig.isClone) {
                 map[config.id] = this._cloneConfig(cachedConfig);
                 cachedConfig = map[config.id];
               }
+
               this._copyProperties(cachedConfig, config);
             } else {
               // put any configs with an id into a map
@@ -130,15 +134,17 @@ export const NeonAnimatableBehavior = {
    * `animationConfig`, which is either a configuration object or a map of
    * animation type to array of configuration objects.
    */
-  getAnimationConfig: function(type) {
+  getAnimationConfig: function (type) {
     var map = {};
     var allConfigs = [];
-    this._getAnimationConfigRecursive(type, map, allConfigs);
-    // append the configurations saved in the map to the array
+
+    this._getAnimationConfigRecursive(type, map, allConfigs); // append the configurations saved in the map to the array
+
+
     for (var key in map) {
       allConfigs.push(map[key]);
     }
+
     return allConfigs;
   }
-
 };

@@ -8,18 +8,16 @@ found at http://polymer.github.io/CONTRIBUTORS.txt Code distributed by Google as
 part of the polymer project is also subject to an additional IP rights grant
 found at http://polymer.github.io/PATENTS.txt
 */
-import '@polymer/polymer/polymer-legacy.js';
-import '@polymer/iron-input/iron-input.js';
+import "../polymer/polymer-legacy.js";
+import "../iron-input/iron-input.js";
 import './paper-input-char-counter.js';
 import './paper-input-container.js';
 import './paper-input-error.js';
-
-import {IronFormElementBehavior} from '@polymer/iron-form-element-behavior/iron-form-element-behavior.js';
-import {DomModule} from '@polymer/polymer/lib/elements/dom-module.js';
-import {Polymer} from '@polymer/polymer/lib/legacy/polymer-fn.js';
-import {html} from '@polymer/polymer/lib/utils/html-tag.js';
-import {PaperInputBehavior} from './paper-input-behavior.js';
-
+import { IronFormElementBehavior } from "../iron-form-element-behavior/iron-form-element-behavior.js";
+import { DomModule } from "../polymer/lib/elements/dom-module.js";
+import { Polymer } from "../polymer/lib/legacy/polymer-fn.js";
+import { html } from "../polymer/lib/utils/html-tag.js";
+import { PaperInputBehavior } from './paper-input-behavior.js';
 /**
 Material design: [Text
 fields](https://www.google.com/design/spec/components/text-fields.html)
@@ -77,9 +75,9 @@ Custom property | Description | Default
 @hero hero.svg
 @demo demo/index.html
 */
+
 Polymer({
   is: 'paper-input',
-
   _template: html`
     <style>
       :host {
@@ -185,9 +183,7 @@ Polymer({
 
     </paper-input-container>
   `,
-
   behaviors: [PaperInputBehavior, IronFormElementBehavior],
-
   properties: {
     value: {
       // Required for the correct TypeScript type-generation
@@ -208,22 +204,23 @@ Polymer({
   // Note: This event is only available in the 1.0 version of this element.
   // In 2.0, the functionality of `_onIronInputReady` is done in
   // PaperInputBehavior::attached.
-  listeners: {'iron-input-ready': '_onIronInputReady'},
-
-  _onIronInputReady: function() {
+  listeners: {
+    'iron-input-ready': '_onIronInputReady'
+  },
+  _onIronInputReady: function () {
     // Even though this is only used in the next line, save this for
     // backwards compatibility, since the native input had this ID until 2.0.5.
     if (!this.$.nativeInput) {
       this.$.nativeInput = this.$$('input');
     }
-    if (this.inputElement &&
-        this._typesThatHaveText.indexOf(this.$.nativeInput.type) !== -1) {
-      this.alwaysFloatLabel = true;
-    }
 
-    // Only validate when attached if the input already has a value.
+    if (this.inputElement && this._typesThatHaveText.indexOf(this.$.nativeInput.type) !== -1) {
+      this.alwaysFloatLabel = true;
+    } // Only validate when attached if the input already has a value.
+
+
     if (!!this.inputElement.bindValue) {
       this.$.container._handleValueAndAutoValidate(this.inputElement);
     }
-  },
+  }
 });

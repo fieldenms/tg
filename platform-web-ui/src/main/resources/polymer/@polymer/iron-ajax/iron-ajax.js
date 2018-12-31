@@ -9,10 +9,8 @@ part of the polymer project is also subject to an additional IP rights grant
 found at http://polymer.github.io/PATENTS.txt
 */
 import './iron-request.js';
-
-import {Polymer} from '@polymer/polymer/lib/legacy/polymer-fn.js';
-import {Base} from '@polymer/polymer/polymer-legacy.js';
-
+import { Polymer } from "../polymer/lib/legacy/polymer-fn.js";
+import { Base } from "../polymer/polymer-legacy.js";
 /**
 The `iron-ajax` element exposes network request functionality.
 
@@ -35,8 +33,8 @@ element.
 
 @demo demo/index.html
 */
-Polymer({
 
+Polymer({
   is: 'iron-ajax',
 
   /**
@@ -80,14 +78,16 @@ Polymer({
    *
    * @event iron-ajax-error
    */
-
-  hostAttributes: {hidden: true},
-
+  hostAttributes: {
+    hidden: true
+  },
   properties: {
     /**
      * The URL target of the request.
      */
-    url: {type: String},
+    url: {
+      type: String
+    },
 
     /**
      * An object that contains query parameters to be appended to the
@@ -97,7 +97,7 @@ Polymer({
      */
     params: {
       type: Object,
-      value: function() {
+      value: function () {
         return {};
       }
     },
@@ -106,7 +106,10 @@ Polymer({
      * The HTTP method to use such as 'GET', 'POST', 'PUT', or 'DELETE'.
      * Default is 'GET'.
      */
-    method: {type: String, value: 'GET'},
+    method: {
+      type: String,
+      value: 'GET'
+    },
 
     /**
      * HTTP request headers to send.
@@ -124,7 +127,7 @@ Polymer({
      */
     headers: {
       type: Object,
-      value: function() {
+      value: function () {
         return {};
       }
     },
@@ -136,7 +139,10 @@ Polymer({
      *
      * Varies the handling of the `body` param.
      */
-    contentType: {type: String, value: null},
+    contentType: {
+      type: String,
+      value: null
+    },
 
     /**
      * Body content to send with the request, typically used with "POST"
@@ -158,13 +164,19 @@ Polymer({
      * @type
      * (ArrayBuffer|ArrayBufferView|Blob|Document|FormData|null|string|undefined|Object)
      */
-    body: {type: Object, value: null},
+    body: {
+      type: Object,
+      value: null
+    },
 
     /**
      * Toggle whether XHR is synchronous or asynchronous. Don't change this
      * to true unless You Know What You Are Doing™.
      */
-    sync: {type: Boolean, value: false},
+    sync: {
+      type: Boolean,
+      value: false
+    },
 
     /**
      * Specifies what data to store in the `response` property, and
@@ -184,47 +196,74 @@ Polymer({
      *
      *    `document`: uses `XHR.response`.
      */
-    handleAs: {type: String, value: 'json'},
+    handleAs: {
+      type: String,
+      value: 'json'
+    },
 
     /**
      * Set the withCredentials flag on the request.
      */
-    withCredentials: {type: Boolean, value: false},
+    withCredentials: {
+      type: Boolean,
+      value: false
+    },
 
     /**
      * Set the timeout flag on the request.
      */
-    timeout: {type: Number, value: 0},
+    timeout: {
+      type: Number,
+      value: 0
+    },
 
     /**
      * If true, automatically performs an Ajax request when either `url` or
      * `params` changes.
      */
-    auto: {type: Boolean, value: false},
+    auto: {
+      type: Boolean,
+      value: false
+    },
 
     /**
      * If true, error messages will automatically be logged to the console.
      */
-    verbose: {type: Boolean, value: false},
+    verbose: {
+      type: Boolean,
+      value: false
+    },
 
     /**
      * The most recent request made by this iron-ajax element.
      *
      * @type {Object|undefined}
      */
-    lastRequest: {type: Object, notify: true, readOnly: true},
+    lastRequest: {
+      type: Object,
+      notify: true,
+      readOnly: true
+    },
 
     /**
      * The `progress` property of this element's `lastRequest`.
      *
      * @type {Object|undefined}
      */
-    lastProgress: {type: Object, notify: true, readOnly: true},
+    lastProgress: {
+      type: Object,
+      notify: true,
+      readOnly: true
+    },
 
     /**
      * True while lastRequest is in flight.
      */
-    loading: {type: Boolean, notify: true, readOnly: true},
+    loading: {
+      type: Boolean,
+      notify: true,
+      readOnly: true
+    },
 
     /**
      * lastRequest's response.
@@ -238,14 +277,22 @@ Polymer({
      *
      * @type {Object}
      */
-    lastResponse: {type: Object, notify: true, readOnly: true},
+    lastResponse: {
+      type: Object,
+      notify: true,
+      readOnly: true
+    },
 
     /**
      * lastRequest's error, if any.
      *
      * @type {Object}
      */
-    lastError: {type: Object, notify: true, readOnly: true},
+    lastError: {
+      type: Object,
+      notify: true,
+      readOnly: true
+    },
 
     /**
      * An Array of all in-flight requests originating from this iron-ajax
@@ -255,7 +302,7 @@ Polymer({
       type: Array,
       notify: true,
       readOnly: true,
-      value: function() {
+      value: function () {
         return [];
       }
     },
@@ -264,7 +311,11 @@ Polymer({
      * Length of time in milliseconds to debounce multiple automatically
      * generated requests.
      */
-    debounceDuration: {type: Number, value: 0, notify: true},
+    debounceDuration: {
+      type: Number,
+      value: 0,
+      notify: true
+    },
 
     /**
      * Prefix to be stripped from a JSON response before parsing it.
@@ -275,7 +326,10 @@ Polymer({
      * with a string that would be nonsensical to a JavaScript parser.
      *
      */
-    jsonPrefix: {type: String, value: ''},
+    jsonPrefix: {
+      type: String,
+      value: ''
+    },
 
     /**
      * By default, iron-ajax's events do not bubble. Setting this attribute will
@@ -288,7 +342,10 @@ Polymer({
      * https://www.w3.org/TR/shadow-dom/#scoped-flag
      * https://www.w3.org/TR/2015/WD-shadow-dom-20151215/#events-that-are-not-leaked-into-ancestor-trees
      */
-    bubbles: {type: Boolean, value: false},
+    bubbles: {
+      type: Boolean,
+      value: false
+    },
 
     /**
      * Changes the [`completes`](iron-request#property-completes) promise chain
@@ -296,21 +353,19 @@ Polymer({
      * containing the original request, as well an error message.
      * If false (default), the promise rejects with an error message only.
      */
-    rejectWithRequest: {type: Boolean, value: false},
-
+    rejectWithRequest: {
+      type: Boolean,
+      value: false
+    },
     _boundHandleResponse: {
       type: Function,
-      value: function() {
+      value: function () {
         return this._handleResponse.bind(this);
       }
     }
   },
-
-  observers:
-      ['_requestOptionsChanged(url, method, params.*, headers, contentType, ' +
-       'body, sync, handleAs, jsonPrefix, withCredentials, timeout, auto)'],
-
-  created: function() {
+  observers: ['_requestOptionsChanged(url, method, params.*, headers, contentType, ' + 'body, sync, handleAs, jsonPrefix, withCredentials, timeout, auto)'],
+  created: function () {
     this._boundOnProgressChanged = this._onProgressChanged.bind(this);
   },
 
@@ -371,12 +426,15 @@ Polymer({
   get requestHeaders() {
     var headers = {};
     var contentType = this.contentType;
-    if (contentType == null && (typeof this.body === 'string')) {
+
+    if (contentType == null && typeof this.body === 'string') {
       contentType = 'application/x-www-form-urlencoded';
     }
+
     if (contentType) {
       headers['content-type'] = contentType;
     }
+
     var header;
 
     if (typeof this.headers === 'object') {
@@ -388,7 +446,7 @@ Polymer({
     return headers;
   },
 
-  _onProgressChanged: function(event) {
+  _onProgressChanged: function (event) {
     this._setLastProgress(event.detail.value);
   },
 
@@ -407,7 +465,7 @@ Polymer({
    *   jsonPrefix: (string|undefined),
    *   withCredentials: (boolean|undefined)}}
    */
-  toRequestOptions: function() {
+  toRequestOptions: function () {
     return {
       url: this.requestUrl || '',
       method: this.method,
@@ -418,7 +476,7 @@ Polymer({
       jsonPrefix: this.jsonPrefix,
       withCredentials: this.withCredentials,
       timeout: this.timeout,
-      rejectWithRequest: this.rejectWithRequest,
+      rejectWithRequest: this.rejectWithRequest
     };
   },
 
@@ -427,21 +485,20 @@ Polymer({
    *
    * @return {!IronRequestElement}
    */
-  generateRequest: function() {
-    var request = /** @type {!IronRequestElement} */ (
-        document.createElement('iron-request'));
+  generateRequest: function () {
+    var request =
+    /** @type {!IronRequestElement} */
+    document.createElement('iron-request');
     var requestOptions = this.toRequestOptions();
-
     this.push('activeRequests', request);
-
-    request.completes.then(this._boundHandleResponse)
-        .catch(this._handleError.bind(this, request))
-        .then(this._discardRequest.bind(this, request));
-
-    var evt = this.fire(
-        'iron-ajax-presend',
-        {request: request, options: requestOptions},
-        {bubbles: this.bubbles, cancelable: true});
+    request.completes.then(this._boundHandleResponse).catch(this._handleError.bind(this, request)).then(this._discardRequest.bind(this, request));
+    var evt = this.fire('iron-ajax-presend', {
+      request: request,
+      options: requestOptions
+    }, {
+      bubbles: this.bubbles,
+      cancelable: true
+    });
 
     if (evt.defaultPrevented) {
       request.abort();
@@ -450,43 +507,53 @@ Polymer({
     }
 
     if (this.lastRequest) {
-      this.lastRequest.removeEventListener(
-          'iron-request-progress-changed', this._boundOnProgressChanged);
+      this.lastRequest.removeEventListener('iron-request-progress-changed', this._boundOnProgressChanged);
     }
 
-    request.addEventListener(
-        'iron-request-progress-changed', this._boundOnProgressChanged);
-
+    request.addEventListener('iron-request-progress-changed', this._boundOnProgressChanged);
     request.send(requestOptions);
+
     this._setLastProgress(null);
+
     this._setLastRequest(request);
+
     this._setLoading(true);
 
-    this.fire(
-        'request',
-        {request: request, options: requestOptions},
-        {bubbles: this.bubbles, composed: true});
-
-    this.fire(
-        'iron-ajax-request',
-        {request: request, options: requestOptions},
-        {bubbles: this.bubbles, composed: true});
-
+    this.fire('request', {
+      request: request,
+      options: requestOptions
+    }, {
+      bubbles: this.bubbles,
+      composed: true
+    });
+    this.fire('iron-ajax-request', {
+      request: request,
+      options: requestOptions
+    }, {
+      bubbles: this.bubbles,
+      composed: true
+    });
     return request;
   },
-
-  _handleResponse: function(request) {
+  _handleResponse: function (request) {
     if (request === this.lastRequest) {
       this._setLastResponse(request.response);
+
       this._setLastError(null);
+
       this._setLoading(false);
     }
-    this.fire('response', request, {bubbles: this.bubbles, composed: true});
-    this.fire(
-        'iron-ajax-response', request, {bubbles: this.bubbles, composed: true});
-  },
 
-  _handleError: function(request, error) {
+    this.fire('response', request, {
+      bubbles: this.bubbles,
+      composed: true
+    });
+    this.fire('iron-ajax-response', request, {
+      bubbles: this.bubbles,
+      composed: true
+    });
+  },
+  _handleError: function (request, error) {
     if (this.verbose) {
       Base._error(error);
     }
@@ -499,32 +566,37 @@ Polymer({
         statusText: request.xhr.statusText,
         response: request.xhr.response
       });
+
       this._setLastResponse(null);
+
       this._setLoading(false);
-    }
+    } // Tests fail if this goes after the normal this.fire('error', ...)
 
-    // Tests fail if this goes after the normal this.fire('error', ...)
-    this.fire(
-        'iron-ajax-error',
-        {request: request, error: error},
-        {bubbles: this.bubbles, composed: true});
 
-    this.fire(
-        'error',
-        {request: request, error: error},
-        {bubbles: this.bubbles, composed: true});
+    this.fire('iron-ajax-error', {
+      request: request,
+      error: error
+    }, {
+      bubbles: this.bubbles,
+      composed: true
+    });
+    this.fire('error', {
+      request: request,
+      error: error
+    }, {
+      bubbles: this.bubbles,
+      composed: true
+    });
   },
-
-  _discardRequest: function(request) {
+  _discardRequest: function (request) {
     var requestIndex = this.activeRequests.indexOf(request);
 
     if (requestIndex > -1) {
       this.splice('activeRequests', requestIndex, 1);
     }
   },
-
-  _requestOptionsChanged: function() {
-    this.debounce('generate-request', function() {
+  _requestOptionsChanged: function () {
+    this.debounce('generate-request', function () {
       if (this.url == null) {
         return;
       }
@@ -533,6 +605,5 @@ Polymer({
         this.generateRequest();
       }
     }, this.debounceDuration);
-  },
-
+  }
 });

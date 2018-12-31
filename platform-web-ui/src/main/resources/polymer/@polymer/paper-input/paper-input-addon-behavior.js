@@ -8,8 +8,7 @@ found at http://polymer.github.io/CONTRIBUTORS.txt Code distributed by Google as
 part of the polymer project is also subject to an additional IP rights grant
 found at http://polymer.github.io/PATENTS.txt
 */
-import '@polymer/polymer/polymer-legacy.js';
-
+import "../polymer/polymer-legacy.js";
 /**
  * Use `Polymer.PaperInputAddonBehavior` to implement an add-on for
  * `<paper-input-container>`. A add-on appears below the input, and may display
@@ -17,8 +16,9 @@ import '@polymer/polymer/polymer-legacy.js';
  * or an error message.
  * @polymerBehavior
  */
+
 export const PaperInputAddonBehavior = {
-  attached: function() {
+  attached: function () {
     this.fire('addon-attached');
   },
 
@@ -34,6 +34,5 @@ export const PaperInputAddonBehavior = {
    *     value: The input value.
    *     invalid: True if the input value is invalid.
    */
-  update: function(state) {}
-
+  update: function (state) {}
 };

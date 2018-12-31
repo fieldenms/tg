@@ -8,12 +8,11 @@ found at http://polymer.github.io/CONTRIBUTORS.txt Code distributed by Google as
 part of the polymer project is also subject to an additional IP rights grant
 found at http://polymer.github.io/PATENTS.txt
 */
-import {IronResizableBehavior} from '@polymer/iron-resizable-behavior/iron-resizable-behavior.js';
-import {Polymer} from '@polymer/polymer/lib/legacy/polymer-fn.js';
-import {dom} from '@polymer/polymer/lib/legacy/polymer.dom.js';
-import {html} from '@polymer/polymer/lib/utils/html-tag.js';
-import {Base} from '@polymer/polymer/polymer-legacy.js';
-
+import { IronResizableBehavior } from "../iron-resizable-behavior/iron-resizable-behavior.js";
+import { Polymer } from "../polymer/lib/legacy/polymer-fn.js";
+import { dom } from "../polymer/lib/legacy/polymer.dom.js";
+import { html } from "../polymer/lib/utils/html-tag.js";
+import { Base } from "../polymer/polymer-legacy.js";
 /**
 `iron-collapse` creates a collapsible block of content.  By default, the content
 will be collapsed.  Use `opened` or `toggle()` to show/hide the content.
@@ -60,6 +59,7 @@ Custom property | Description | Default
 @demo demo/index.html
 @element iron-collapse
 */
+
 Polymer({
   _template: html`
     <style>
@@ -82,26 +82,31 @@ Polymer({
 
     <slot></slot>
 `,
-
   is: 'iron-collapse',
   behaviors: [IronResizableBehavior],
-
   properties: {
-
     /**
      * If true, the orientation is horizontal; otherwise is vertical.
      *
      * @attribute horizontal
      */
-    horizontal: {type: Boolean, value: false, observer: '_horizontalChanged'},
+    horizontal: {
+      type: Boolean,
+      value: false,
+      observer: '_horizontalChanged'
+    },
 
     /**
      * Set opened to true to show the collapse element and to false to hide it.
      *
      * @attribute opened
      */
-    opened:
-        {type: Boolean, value: false, notify: true, observer: '_openedChanged'},
+    opened: {
+      type: Boolean,
+      value: false,
+      notify: true,
+      observer: '_openedChanged'
+    },
 
     /**
      * When true, the element is transitioning its opened state. When false,
@@ -109,20 +114,29 @@ Polymer({
      *
      * @attribute transitioning
      */
-    transitioning: {type: Boolean, notify: true, readOnly: true},
+    transitioning: {
+      type: Boolean,
+      notify: true,
+      readOnly: true
+    },
 
     /**
      * Set noAnimation to true to disable animations.
      *
      * @attribute noAnimation
      */
-    noAnimation: {type: Boolean},
+    noAnimation: {
+      type: Boolean
+    },
 
     /**
      * Stores the desired size of the collapse body.
      * @private
      */
-    _desiredSize: {type: String, value: ''}
+    _desiredSize: {
+      type: String,
+      value: ''
+    }
   },
 
   get dimension() {
@@ -147,25 +161,24 @@ Polymer({
 
   hostAttributes: {
     role: 'group',
-    'aria-hidden': 'true',
+    'aria-hidden': 'true'
   },
-
-  listeners: {transitionend: '_onTransitionEnd'},
+  listeners: {
+    transitionend: '_onTransitionEnd'
+  },
 
   /**
    * Toggle the opened state.
    *
    * @method toggle
    */
-  toggle: function() {
+  toggle: function () {
     this.opened = !this.opened;
   },
-
-  show: function() {
+  show: function () {
     this.opened = true;
   },
-
-  hide: function() {
+  hide: function () {
     this.opened = false;
   },
 
@@ -174,40 +187,42 @@ Polymer({
    * @param {string} size The new value for `maxWidth`/`maxHeight` as css property value, usually `auto` or `0px`.
    * @param {boolean=} animated if `true` updates the size with an animation, otherwise without.
    */
-  updateSize: function(size, animated) {
+  updateSize: function (size, animated) {
     // Consider 'auto' as '', to take full size.
     size = size === 'auto' ? '' : size;
-
-    var willAnimate = animated && !this.noAnimation && this.isAttached &&
-        this._desiredSize !== size;
-
+    var willAnimate = animated && !this.noAnimation && this.isAttached && this._desiredSize !== size;
     this._desiredSize = size;
 
-    this._updateTransition(false);
-    // If we can animate, must do some prep work.
+    this._updateTransition(false); // If we can animate, must do some prep work.
+
+
     if (willAnimate) {
       // Animation will start at the current size.
-      var startSize = this._calcSize();
-      // For `auto` we must calculate what is the final size for the animation.
+      var startSize = this._calcSize(); // For `auto` we must calculate what is the final size for the animation.
       // After the transition is done, _transitionEnd will set the size back to
       // `auto`.
+
+
       if (size === '') {
         this.style[this._dimensionMax] = '';
         size = this._calcSize();
-      }
-      // Go to startSize without animation.
-      this.style[this._dimensionMax] = startSize;
-      // Force layout to ensure transition will go. Set scrollTop to itself
+      } // Go to startSize without animation.
+
+
+      this.style[this._dimensionMax] = startSize; // Force layout to ensure transition will go. Set scrollTop to itself
       // so that compilers won't remove it.
-      this.scrollTop = this.scrollTop;
-      // Enable animation.
-      this._updateTransition(true);
-      // If final size is the same as startSize it will not animate.
-      willAnimate = (size !== startSize);
-    }
-    // Set the final size.
-    this.style[this._dimensionMax] = size;
-    // If it won't animate, call transitionEnd to set correct classes.
+
+      this.scrollTop = this.scrollTop; // Enable animation.
+
+      this._updateTransition(true); // If final size is the same as startSize it will not animate.
+
+
+      willAnimate = size !== startSize;
+    } // Set the final size.
+
+
+    this.style[this._dimensionMax] = size; // If it won't animate, call transitionEnd to set correct classes.
+
     if (!willAnimate) {
       this._transitionEnd();
     }
@@ -220,54 +235,50 @@ Polymer({
    * @method enableTransition
    * @deprecated since version 1.0.4
    */
-  enableTransition: function(enabled) {
-    Base._warn(
-        '`enableTransition()` is deprecated, use `noAnimation` instead.');
+  enableTransition: function (enabled) {
+    Base._warn('`enableTransition()` is deprecated, use `noAnimation` instead.');
+
     this.noAnimation = !enabled;
   },
-
-  _updateTransition: function(enabled) {
-    this.style.transitionDuration = (enabled && !this.noAnimation) ? '' : '0s';
+  _updateTransition: function (enabled) {
+    this.style.transitionDuration = enabled && !this.noAnimation ? '' : '0s';
   },
-
-  _horizontalChanged: function() {
+  _horizontalChanged: function () {
     this.style.transitionProperty = this._dimensionMaxCss;
-    var otherDimension =
-        this._dimensionMax === 'maxWidth' ? 'maxHeight' : 'maxWidth';
+    var otherDimension = this._dimensionMax === 'maxWidth' ? 'maxHeight' : 'maxWidth';
     this.style[otherDimension] = '';
     this.updateSize(this.opened ? 'auto' : '0px', false);
   },
-
-  _openedChanged: function() {
+  _openedChanged: function () {
     this.setAttribute('aria-hidden', !this.opened);
 
     this._setTransitioning(true);
+
     this.toggleClass('iron-collapse-closed', false);
     this.toggleClass('iron-collapse-opened', false);
-    this.updateSize(this.opened ? 'auto' : '0px', true);
+    this.updateSize(this.opened ? 'auto' : '0px', true); // Focus the current collapse.
 
-    // Focus the current collapse.
     if (this.opened) {
       this.focus();
     }
   },
-
-  _transitionEnd: function() {
+  _transitionEnd: function () {
     this.style[this._dimensionMax] = this._desiredSize;
     this.toggleClass('iron-collapse-closed', !this.opened);
     this.toggleClass('iron-collapse-opened', this.opened);
+
     this._updateTransition(false);
+
     this.notifyResize();
+
     this._setTransitioning(false);
   },
-
-  _onTransitionEnd: function(event) {
+  _onTransitionEnd: function (event) {
     if (dom(event).rootTarget === this) {
       this._transitionEnd();
     }
   },
-
-  _calcSize: function() {
+  _calcSize: function () {
     return this.getBoundingClientRect()[this.dimension] + 'px';
   }
 });

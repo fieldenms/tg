@@ -22,7 +22,7 @@
   "_resolved": "https://registry.npmjs.org/@polymer/iron-a11y-announcer/-/iron-a11y-announcer-3.0.2.tgz",
   "_shasum": "730dd36ccb2e042ecd5160ba439c2bf2f8a97412",
   "_spec": "@polymer/iron-a11y-announcer@^3.0.0-pre.26",
-  "_where": "/home/oleh/web-workspace/polymer-app/node_modules/@polymer/iron-input",
+  "_where": "C:\\Users\\oleh\\workspace\\tg\\platform-web-ui\\src\\main\\resources\\node_modules\\@polymer\\iron-input",
   "author": {
     "name": "The Polymer Authors"
   },

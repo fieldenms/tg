@@ -7,12 +7,9 @@ The complete set of contributors may be found at http://polymer.github.io/CONTRI
 Code distributed by Google as part of the polymer project is also
 subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
 */
-
 import { ElementMixin, version } from './lib/mixins/element-mixin.js';
 export { html } from './lib/utils/html-tag.js';
-
 export { version };
-
 /**
  * Base class that provides the core API for Polymer's meta-programming
  * features including template stamping, data-binding, attribute deserialization,
@@ -28,4 +25,5 @@ export { version };
  *   key meta-programming features including template stamping, data-binding,
  *   attribute deserialization, and property change observation
  */
+
 export const PolymerElement = ElementMixin(HTMLElement);

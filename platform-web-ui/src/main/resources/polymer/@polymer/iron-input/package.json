@@ -22,7 +22,7 @@
   "_resolved": "https://registry.npmjs.org/@polymer/iron-input/-/iron-input-3.0.1.tgz",
   "_shasum": "dc866a25107f9b38d9ca4512dd9a3e51b78b4915",
   "_spec": "@polymer/iron-input@^3.0.0-pre.26",
-  "_where": "/home/oleh/web-workspace/polymer-app/node_modules/@polymer/paper-input",
+  "_where": "C:\\Users\\oleh\\workspace\\tg\\platform-web-ui\\src\\main\\resources\\node_modules\\@polymer\\paper-input",
   "author": {
     "name": "The Polymer Authors"
   },

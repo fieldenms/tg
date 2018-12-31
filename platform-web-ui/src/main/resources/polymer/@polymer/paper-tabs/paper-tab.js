@@ -7,16 +7,14 @@ The complete set of contributors may be found at http://polymer.github.io/CONTRI
 Code distributed by Google as part of the polymer project is also
 subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
 */
-import '@polymer/polymer/polymer-legacy.js';
-import '@polymer/iron-flex-layout/iron-flex-layout.js';
-
-import {IronButtonState} from '@polymer/iron-behaviors/iron-button-state.js';
-import {IronControlState} from '@polymer/iron-behaviors/iron-control-state.js';
-import {PaperRippleBehavior} from '@polymer/paper-behaviors/paper-ripple-behavior.js';
-import {Polymer} from '@polymer/polymer/lib/legacy/polymer-fn.js';
-import {dom} from '@polymer/polymer/lib/legacy/polymer.dom.js';
-import {html} from '@polymer/polymer/lib/utils/html-tag.js';
-
+import "../polymer/polymer-legacy.js";
+import "../iron-flex-layout/iron-flex-layout.js";
+import { IronButtonState } from "../iron-behaviors/iron-button-state.js";
+import { IronControlState } from "../iron-behaviors/iron-control-state.js";
+import { PaperRippleBehavior } from "../paper-behaviors/paper-ripple-behavior.js";
+import { Polymer } from "../polymer/lib/legacy/polymer-fn.js";
+import { dom } from "../polymer/lib/legacy/polymer.dom.js";
+import { html } from "../polymer/lib/utils/html-tag.js";
 /*
 `paper-tab` is styled to look like a tab. It should be used in conjunction with
 `paper-tabs`.
@@ -44,6 +42,7 @@ This element applies the mixin `--paper-font-common-base` but does not import
 `paper-styles/typography.html`. In order to apply the `Roboto` font to this
 element, make sure you've imported `paper-styles/typography.html`.
 */
+
 Polymer({
   _template: html`
     <style>
@@ -108,27 +107,29 @@ Polymer({
       <slot></slot>
     </div>
 `,
-
   is: 'paper-tab',
-
   behaviors: [IronControlState, IronButtonState, PaperRippleBehavior],
-
   properties: {
-
     /**
      * If true, the tab will forward keyboard clicks (enter/space) to
      * the first anchor element found in its descendants
      */
-    link: {type: Boolean, value: false, reflectToAttribute: true}
-
+    link: {
+      type: Boolean,
+      value: false,
+      reflectToAttribute: true
+    }
   },
 
   /** @private */
-  hostAttributes: {role: 'tab'},
-
-  listeners: {down: '_updateNoink', tap: '_onTap'},
-
-  attached: function() {
+  hostAttributes: {
+    role: 'tab'
+  },
+  listeners: {
+    down: '_updateNoink',
+    tap: '_onTap'
+  },
+  attached: function () {
     this._updateNoink();
   },
 
@@ -137,20 +138,19 @@ Polymer({
     return !!parent && !!parent.noink;
   },
 
-  _updateNoink: function() {
+  _updateNoink: function () {
     this.noink = !!this.noink || !!this._parentNoink;
   },
-
-  _onTap: function(event) {
+  _onTap: function (event) {
     if (this.link) {
       var anchor = this.queryEffectiveChildren('a');
 
       if (!anchor) {
         return;
-      }
-
-      // Don't get stuck in a loop delegating
+      } // Don't get stuck in a loop delegating
       // the listener from the child anchor
+
+
       if (event.target === anchor) {
         return;
       }

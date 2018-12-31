@@ -8,14 +8,12 @@ found at http://polymer.github.io/CONTRIBUTORS.txt Code distributed by Google as
 part of the polymer project is also subject to an additional IP rights grant
 found at http://polymer.github.io/PATENTS.txt
 */
-import '@polymer/polymer/polymer-legacy.js';
-import '@polymer/iron-icon/iron-icon.js';
-import '@polymer/paper-styles/default-theme.js';
-
-import {PaperInkyFocusBehavior} from '@polymer/paper-behaviors/paper-inky-focus-behavior.js';
-import {Polymer} from '@polymer/polymer/lib/legacy/polymer-fn.js';
-import {html} from '@polymer/polymer/lib/utils/html-tag.js';
-
+import "../polymer/polymer-legacy.js";
+import "../iron-icon/iron-icon.js";
+import "../paper-styles/default-theme.js";
+import { PaperInkyFocusBehavior } from "../paper-behaviors/paper-inky-focus-behavior.js";
+import { Polymer } from "../polymer/lib/legacy/polymer-fn.js";
+import { html } from "../polymer/lib/utils/html-tag.js";
 const template = html`
 <dom-module id="paper-icon-button">
   <template strip-whitespace>
@@ -79,7 +77,6 @@ const template = html`
 `;
 template.setAttribute('style', 'display: none;');
 document.body.appendChild(template.content);
-
 /**
 Material design: [Icon
 toggles](https://www.google.com/design/spec/components/buttons.html#buttons-toggle-buttons)
@@ -140,37 +137,43 @@ Custom property | Description | Default
 @element paper-icon-button
 @demo demo/index.html
 */
+
 Polymer({
   is: 'paper-icon-button',
-
-  hostAttributes: {role: 'button', tabindex: '0'},
-
+  hostAttributes: {
+    role: 'button',
+    tabindex: '0'
+  },
   behaviors: [PaperInkyFocusBehavior],
-
   properties: {
     /**
      * The URL of an image for the icon. If the src property is specified,
      * the icon property should not be.
      */
-    src: {type: String},
+    src: {
+      type: String
+    },
 
     /**
      * Specifies the icon name or index in the set of icons available in
      * the icon's icon set. If the icon property is specified,
      * the src property should not be.
      */
-    icon: {type: String},
+    icon: {
+      type: String
+    },
 
     /**
      * Specifies the alternate text for the button, for accessibility.
      */
-    alt: {type: String, observer: '_altChanged'}
+    alt: {
+      type: String,
+      observer: '_altChanged'
+    }
   },
+  _altChanged: function (newValue, oldValue) {
+    var label = this.getAttribute('aria-label'); // Don't stomp over a user-set aria-label.
 
-  _altChanged: function(newValue, oldValue) {
-    var label = this.getAttribute('aria-label');
-
-    // Don't stomp over a user-set aria-label.
     if (!label || oldValue == label) {
       this.setAttribute('aria-label', newValue);
     }

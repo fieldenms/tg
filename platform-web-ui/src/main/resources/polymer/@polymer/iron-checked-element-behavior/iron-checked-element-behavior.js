@@ -8,11 +8,9 @@ found at http://polymer.github.io/CONTRIBUTORS.txt Code distributed by Google as
 part of the polymer project is also subject to an additional IP rights grant
 found at http://polymer.github.io/PATENTS.txt
 */
-import '@polymer/polymer/polymer-legacy.js';
-
-import {IronFormElementBehavior} from '@polymer/iron-form-element-behavior/iron-form-element-behavior.js';
-import {IronValidatableBehavior} from '@polymer/iron-validatable-behavior/iron-validatable-behavior.js';
-
+import "../polymer/polymer-legacy.js";
+import { IronFormElementBehavior } from "../iron-form-element-behavior/iron-form-element-behavior.js";
+import { IronValidatableBehavior } from "../iron-validatable-behavior/iron-validatable-behavior.js";
 /**
  * Use `IronCheckedElementBehavior` to implement a custom element that has a
  * `checked` property, which can be used for validation if the element is also
@@ -22,8 +20,8 @@ import {IronValidatableBehavior} from '@polymer/iron-validatable-behavior/iron-v
  * @demo demo/index.html
  * @polymerBehavior IronCheckedElementBehavior
  */
-export const IronCheckedElementBehaviorImpl = {
 
+export const IronCheckedElementBehaviorImpl = {
   properties: {
     /**
      * Fired when the checked state changes.
@@ -46,15 +44,21 @@ export const IronCheckedElementBehaviorImpl = {
      * If true, the button toggles the active state with each tap or press
      * of the spacebar.
      */
-    toggles: {type: Boolean, value: true, reflectToAttribute: true},
+    toggles: {
+      type: Boolean,
+      value: true,
+      reflectToAttribute: true
+    },
 
     /* Overriden from IronFormElementBehavior */
-    value: {type: String, value: 'on', observer: '_valueChanged'}
+    value: {
+      type: String,
+      value: 'on',
+      observer: '_valueChanged'
+    }
   },
-
   observers: ['_requiredChanged(required)'],
-
-  created: function() {
+  created: function () {
     // Used by `iron-form` to handle the case that an element with this behavior
     // doesn't have a role of 'checkbox' or 'radio', but should still only be
     // included when the form is serialized if `this.checked === true`.
@@ -67,14 +71,14 @@ export const IronCheckedElementBehaviorImpl = {
    * @param {*=} _value Ignored.
    * @return {boolean} true if `required` is false or if `checked` is true.
    */
-  _getValidity: function(_value) {
+  _getValidity: function (_value) {
     return this.disabled || !this.required || this.checked;
   },
 
   /**
    * Update the aria-required label when `required` is changed.
    */
-  _requiredChanged: function() {
+  _requiredChanged: function () {
     if (this.required) {
       this.setAttribute('aria-required', 'true');
     } else {
@@ -85,7 +89,7 @@ export const IronCheckedElementBehaviorImpl = {
   /**
    * Fire `iron-changed` when the checked state changes.
    */
-  _checkedChanged: function() {
+  _checkedChanged: function () {
     this.active = this.checked;
     this.fire('iron-change');
   },
@@ -93,16 +97,12 @@ export const IronCheckedElementBehaviorImpl = {
   /**
    * Reset value to 'on' if it is set to `undefined`.
    */
-  _valueChanged: function() {
+  _valueChanged: function () {
     if (this.value === undefined || this.value === null) {
       this.value = 'on';
     }
   }
 };
-
 /** @polymerBehavior */
-export const IronCheckedElementBehavior = [
-  IronFormElementBehavior,
-  IronValidatableBehavior,
-  IronCheckedElementBehaviorImpl
-];
+
+export const IronCheckedElementBehavior = [IronFormElementBehavior, IronValidatableBehavior, IronCheckedElementBehaviorImpl];

@@ -8,13 +8,11 @@ found at http://polymer.github.io/CONTRIBUTORS.txt Code distributed by Google as
 part of the polymer project is also subject to an additional IP rights grant
 found at http://polymer.github.io/PATENTS.txt
 */
-import '@polymer/iron-flex-layout/iron-flex-layout.js';
-import '@polymer/paper-styles/element-styles/paper-material-styles.js';
-
-import {PaperButtonBehavior, PaperButtonBehaviorImpl} from '@polymer/paper-behaviors/paper-button-behavior.js';
-import {Polymer} from '@polymer/polymer/lib/legacy/polymer-fn.js';
-import {html} from '@polymer/polymer/polymer-legacy.js';
-
+import "../iron-flex-layout/iron-flex-layout.js";
+import "../paper-styles/element-styles/paper-material-styles.js";
+import { PaperButtonBehavior, PaperButtonBehaviorImpl } from "../paper-behaviors/paper-button-behavior.js";
+import { Polymer } from "../polymer/lib/legacy/polymer-fn.js";
+import { html } from "../polymer/polymer-legacy.js";
 const template = html`
   <style include="paper-material-styles">
     /* Need to specify the same specificity as the styles imported from paper-material. */
@@ -102,9 +100,7 @@ const template = html`
   </style>
 
   <slot></slot>`;
-
 template.setAttribute('strip-whitespace', '');
-
 /**
 Material design:
 [Buttons](https://www.google.com/design/spec/components/buttons.html)
@@ -173,13 +169,11 @@ Custom property | Description | Default
 
 @demo demo/index.html
 */
+
 Polymer({
   _template: template,
-
   is: 'paper-button',
-
   behaviors: [PaperButtonBehavior],
-
   properties: {
     /**
      * If true, the button should be styled with a shadow.
@@ -188,24 +182,22 @@ Polymer({
       type: Boolean,
       reflectToAttribute: true,
       value: false,
-      observer: '_calculateElevation',
+      observer: '_calculateElevation'
     }
   },
-
-  _calculateElevation: function() {
+  _calculateElevation: function () {
     if (!this.raised) {
       this._setElevation(0);
     } else {
       PaperButtonBehaviorImpl._calculateElevation.apply(this);
     }
   }
-
   /**
   Fired when the animation finishes.
   This is useful if you want to wait until
   the ripple animation finishes to perform some action.
-
-  @event transitionend
+   @event transitionend
   Event param: {{node: Object}} detail Contains the animated node.
   */
+
 });

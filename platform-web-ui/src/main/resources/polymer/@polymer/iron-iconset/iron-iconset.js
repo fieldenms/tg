@@ -8,11 +8,10 @@ found at http://polymer.github.io/CONTRIBUTORS.txt Code distributed by Google as
 part of the polymer project is also subject to an additional IP rights grant
 found at http://polymer.github.io/PATENTS.txt
 */
-import '@polymer/polymer/polymer-legacy.js';
-
-import {IronMeta} from '@polymer/iron-meta/iron-meta.js';
-import {Polymer} from '@polymer/polymer/lib/legacy/polymer-fn.js';
-import {dom} from '@polymer/polymer/lib/legacy/polymer.dom.js';
+import "../polymer/polymer-legacy.js";
+import { IronMeta } from "../iron-meta/iron-meta.js";
+import { Polymer } from "../polymer/lib/legacy/polymer-fn.js";
+import { dom } from "../polymer/lib/legacy/polymer.dom.js";
 /**
  * The `iron-iconset` element allows users to define their own icon set using
  * an image file. (To create an iconset using SVG icons, see
@@ -68,21 +67,25 @@ import {dom} from '@polymer/polymer/lib/legacy/polymer.dom.js';
  * @demo demo/index.html
  * @implements {Polymer.Iconset}
  */
+
 Polymer({
-
   is: 'iron-iconset',
-
   properties: {
-
     /**
      * The URL of the iconset image.
      */
-    src: {type: String, observer: '_srcChanged'},
+    src: {
+      type: String,
+      observer: '_srcChanged'
+    },
 
     /**
      * The name of the iconset.
      */
-    name: {type: String, observer: '_nameChanged'},
+    name: {
+      type: String,
+      observer: '_nameChanged'
+    },
 
     /**
      * The width of the iconset image. This must only be specified if the
@@ -92,51 +95,68 @@ Polymer({
      * @type number
      * @default 0
      */
-    width: {type: Number, value: 0},
+    width: {
+      type: Number,
+      value: 0
+    },
 
     /**
      * A space separated list of names corresponding to icons in the iconset
      * image file. This list must be ordered the same as the icon images
      * in the image file.
      */
-    icons: {type: String},
+    icons: {
+      type: String
+    },
 
     /**
      * The size of an individual icon. Note that icons must be square.
      */
-    size: {type: Number, value: 24},
+    size: {
+      type: Number,
+      value: 24
+    },
 
     /**
      * The horizontal offset of the icon images in the inconset src image.
      * This is typically used if the image resource contains additional images
      * beside those intended for the iconset.
      */
-    _offsetX: {type: Number, value: 0},
+    _offsetX: {
+      type: Number,
+      value: 0
+    },
 
     /**
      * The vertical offset of the icon images in the inconset src image.
      * This is typically used if the image resource contains additional images
      * beside those intended for the iconset.
      */
-    _offsetY: {type: Number, value: 0},
+    _offsetY: {
+      type: Number,
+      value: 0
+    },
 
     /**
      * Array of fully-qualified names of icons in this set.
      */
-    iconNames: {type: Array, notify: true}
-
+    iconNames: {
+      type: Array,
+      notify: true
+    }
   },
-
   hostAttributes: {
     // non-visual
     style: 'display: none;'
   },
-
-  created: function() {
-    this._meta = new IronMeta({type: 'iconset', key: null, value: null});
+  created: function () {
+    this._meta = new IronMeta({
+      type: 'iconset',
+      key: null,
+      value: null
+    });
   },
-
-  ready: function() {
+  ready: function () {
     // theme data must exist at ready-time
     this._themes = this._mapThemes();
   },
@@ -151,12 +171,13 @@ Polymer({
    * @param {string=} theme (optional) The name or index of the icon to apply.
    * @param {number=} scale (optional, defaults to 1) Icon scaling factor.
    */
-  applyIcon: function(element, icon, theme, scale) {
+  applyIcon: function (element, icon, theme, scale) {
     this._validateIconMap();
+
     var offset = this._getThemedOffset(icon, theme);
+
     if (element && offset) {
-      this._addIconStyles(
-          element, this._srcUrl, offset, scale || 1, this.size, this.width);
+      this._addIconStyles(element, this._srcUrl, offset, scale || 1, this.size, this.width);
     }
   },
 
@@ -166,13 +187,12 @@ Polymer({
    *
    * @param {Element} element The element from which the icon is removed.
    */
-  removeIcon: function(element) {
+  removeIcon: function (element) {
     this._removeIconStyles(element.style);
   },
-
-  _mapThemes: function() {
+  _mapThemes: function () {
     var themes = Object.create(null);
-    dom(this).querySelectorAll('property[theme]').forEach(function(property) {
+    dom(this).querySelectorAll('property[theme]').forEach(function (property) {
       var offsetX = window.parseInt(property.getAttribute('offset-x'), 10) || 0;
       var offsetY = window.parseInt(property.getAttribute('offset-y'), 10) || 0;
       themes[property.getAttribute('theme')] = {
@@ -182,55 +202,54 @@ Polymer({
     });
     return themes;
   },
-
-  _srcChanged: function(src) {
+  _srcChanged: function (src) {
     // ensure `srcUrl` is always relative to the main document
     this._srcUrl = this.ownerDocument !== document ? this.resolveUrl(src) : src;
+
     this._prepareIconset();
   },
-
-  _nameChanged: function(name) {
+  _nameChanged: function (name) {
     this._prepareIconset();
   },
-
-  _prepareIconset: function() {
+  _prepareIconset: function () {
     this._meta.value = null;
     this._meta.key = this.name;
     this._meta.value = this;
-
-    this.async(function() {
-      this.fire('iron-iconset-added', this, {node: window});
+    this.async(function () {
+      this.fire('iron-iconset-added', this, {
+        node: window
+      });
     });
   },
-
-  _invalidateIconMap: function() {
+  _invalidateIconMap: function () {
     this._iconMapValid = false;
   },
-
-  _validateIconMap: function() {
+  _validateIconMap: function () {
     if (!this._iconMapValid) {
       this._recomputeIconMap();
+
       this._iconMapValid = true;
     }
   },
-
-  _recomputeIconMap: function() {
+  _recomputeIconMap: function () {
     this.iconNames = this._computeIconNames(this.icons);
-    this.iconMap = this._computeIconMap(
-        this._offsetX, this._offsetY, this.size, this.width, this.iconNames);
+    this.iconMap = this._computeIconMap(this._offsetX, this._offsetY, this.size, this.width, this.iconNames);
   },
-
-  _computeIconNames: function(icons) {
+  _computeIconNames: function (icons) {
     return icons.split(/\s+/g);
   },
-
-  _computeIconMap: function(offsetX, offsetY, size, width, iconNames) {
+  _computeIconMap: function (offsetX, offsetY, size, width, iconNames) {
     var iconMap = {};
+
     if (offsetX !== undefined && offsetY !== undefined) {
       var x0 = offsetX;
-      iconNames.forEach(function(iconName) {
-        iconMap[iconName] = {offsetX: offsetX, offsetY: offsetY};
-        if ((offsetX + size) < width) {
+      iconNames.forEach(function (iconName) {
+        iconMap[iconName] = {
+          offsetX: offsetX,
+          offsetY: offsetY
+        };
+
+        if (offsetX + size < width) {
           offsetX += size;
         } else {
           offsetX = x0;
@@ -238,6 +257,7 @@ Polymer({
         }
       }, this);
     }
+
     return iconMap;
   },
 
@@ -256,40 +276,37 @@ Polymer({
    *     the horizontal offset and `offsetY` is the vertical offset. Both
    *     values are in pixel units.
    */
-  _getThemedOffset: function(identifier, theme) {
+  _getThemedOffset: function (identifier, theme) {
     var iconOffset = this._getIconOffset(identifier);
+
     var themeOffset = this._themes[theme];
+
     if (iconOffset && themeOffset) {
       return {
         offsetX: iconOffset.offsetX + themeOffset.offsetX,
         offsetY: iconOffset.offsetY + themeOffset.offsetY
       };
     }
+
     return iconOffset;
   },
-
-  _getIconOffset: function(identifier) {
+  _getIconOffset: function (identifier) {
     // TODO(sjmiles): consider creating offsetArray (indexed by Number)
     // and having iconMap map names to indices, then and index is just
     // iconMap[identifier] || identifier (be careful of zero, store indices
     // as 1-based)
-    return this.iconMap[identifier] ||
-        this.iconMap[this.iconNames[Number(identifier)]];
+    return this.iconMap[identifier] || this.iconMap[this.iconNames[Number(identifier)]];
   },
-
-  _addIconStyles: function(element, url, offset, scale, size, width) {
+  _addIconStyles: function (element, url, offset, scale, size, width) {
     var style = element.style;
     style.backgroundImage = 'url(' + url + ')';
-    style.backgroundPosition = (-offset.offsetX * scale + 'px') + ' ' +
-        (-offset.offsetY * scale + 'px');
-    style.backgroundSize = (scale === 1) ? 'auto' : width * scale + 'px';
+    style.backgroundPosition = -offset.offsetX * scale + 'px' + ' ' + (-offset.offsetY * scale + 'px');
+    style.backgroundSize = scale === 1 ? 'auto' : width * scale + 'px';
     style.width = size + 'px';
     style.height = size + 'px';
     element.setAttribute('role', 'img');
   },
-
-  _removeIconStyles: function(style) {
+  _removeIconStyles: function (style) {
     style.background = '';
   }
-
 });

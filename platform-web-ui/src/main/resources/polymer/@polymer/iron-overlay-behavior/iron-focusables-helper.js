@@ -8,16 +8,11 @@ found at http://polymer.github.io/CONTRIBUTORS.txt Code distributed by Google as
 part of the polymer project is also subject to an additional IP rights grant
 found at http://polymer.github.io/PATENTS.txt
 */
-import '@polymer/polymer/polymer-legacy.js';
-
-import {dom} from '@polymer/polymer/lib/legacy/polymer.dom.js';
-
+import "../polymer/polymer-legacy.js";
+import { dom } from "../polymer/lib/legacy/polymer.dom.js";
 var p = Element.prototype;
-var matches = p.matches || p.matchesSelector || p.mozMatchesSelector ||
-    p.msMatchesSelector || p.oMatchesSelector || p.webkitMatchesSelector;
-
+var matches = p.matches || p.matchesSelector || p.mozMatchesSelector || p.msMatchesSelector || p.oMatchesSelector || p.webkitMatchesSelector;
 export const IronFocusablesHelper = {
-
   /**
    * Returns a sorted array of tabbable nodes, including the root node.
    * It searches the tabbable nodes in the light and shadow dom of the chidren,
@@ -25,14 +20,16 @@ export const IronFocusablesHelper = {
    * @param {!Node} node
    * @return {!Array<!HTMLElement>}
    */
-  getTabbableNodes: function(node) {
-    var result = [];
-    // If there is at least one element with tabindex > 0, we need to sort
+  getTabbableNodes: function (node) {
+    var result = []; // If there is at least one element with tabindex > 0, we need to sort
     // the final array by tabindex.
+
     var needsSortByTabIndex = this._collectTabbableNodes(node, result);
+
     if (needsSortByTabIndex) {
       return this._sortByTabIndex(result);
     }
+
     return result;
   },
 
@@ -41,7 +38,7 @@ export const IronFocusablesHelper = {
    * @param {!HTMLElement} element
    * @return {boolean}
    */
-  isFocusable: function(element) {
+  isFocusable: function (element) {
     // From http://stackoverflow.com/a/1600194/4228703:
     // There isn't a definite list, it's up to the browser. The only
     // standard we have is DOM Level 2 HTML
@@ -51,14 +48,13 @@ export const IronFocusablesHelper = {
     // notably omits HTMLButtonElement and HTMLAreaElement. Referring to these
     // tests with tabbables in different browsers
     // http://allyjs.io/data-tables/focusable.html
-
     // Elements that cannot be focused if they have [disabled] attribute.
     if (matches.call(element, 'input, select, textarea, button, object')) {
       return matches.call(element, ':not([disabled])');
-    }
-    // Elements that can be focused even if they have [disabled] attribute.
-    return matches.call(
-        element, 'a[href], area[href], iframe, [tabindex], [contentEditable]');
+    } // Elements that can be focused even if they have [disabled] attribute.
+
+
+    return matches.call(element, 'a[href], area[href], iframe, [tabindex], [contentEditable]');
   },
 
   /**
@@ -67,10 +63,8 @@ export const IronFocusablesHelper = {
    * @param {!HTMLElement} element
    * @return {boolean}
    */
-  isTabbable: function(element) {
-    return this.isFocusable(element) &&
-        matches.call(element, ':not([tabindex="-1"])') &&
-        this._isVisible(element);
+  isTabbable: function (element) {
+    return this.isFocusable(element) && matches.call(element, ':not([tabindex="-1"])') && this._isVisible(element);
   },
 
   /**
@@ -82,11 +76,12 @@ export const IronFocusablesHelper = {
    * @return {!number}
    * @private
    */
-  _normalizedTabIndex: function(element) {
+  _normalizedTabIndex: function (element) {
     if (this.isFocusable(element)) {
       var tabIndex = element.getAttribute('tabindex') || 0;
       return Number(tabIndex);
     }
+
     return -1;
   },
 
@@ -99,19 +94,23 @@ export const IronFocusablesHelper = {
    * @return {boolean}
    * @private
    */
-  _collectTabbableNodes: function(node, result) {
+  _collectTabbableNodes: function (node, result) {
     // If not an element or not visible, no need to explore children.
     if (node.nodeType !== Node.ELEMENT_NODE || !this._isVisible(node)) {
       return false;
     }
-    var element = /** @type {!HTMLElement} */ (node);
+
+    var element =
+    /** @type {!HTMLElement} */
+    node;
+
     var tabIndex = this._normalizedTabIndex(element);
+
     var needsSort = tabIndex > 0;
+
     if (tabIndex >= 0) {
       result.push(element);
-    }
-
-    // In ShadowDOM v1, tab order is affected by the order of distrubution.
+    } // In ShadowDOM v1, tab order is affected by the order of distrubution.
     // E.g. getTabbableNodes(#root) in ShadowDOM v1 should return [#A, #B];
     // in ShadowDOM v0 tab order is not affected by the distrubution order,
     // in fact getTabbableNodes(#root) returns [#B, #A].
@@ -124,17 +123,22 @@ export const IronFocusablesHelper = {
     //   <input id="B" slot="b" tabindex="1">
     //  </div>
     // TODO(valdrin) support ShadowDOM v1 when upgrading to Polymer v2.0.
+
+
     var children;
+
     if (element.localName === 'content' || element.localName === 'slot') {
       children = dom(element).getDistributedNodes();
     } else {
       // Use shadow root if possible, will check for distributed nodes.
       children = dom(element.root || element).children;
     }
+
     for (var i = 0; i < children.length; i++) {
       // Ensure method is always invoked to collect tabbable children.
       needsSort = this._collectTabbableNodes(children[i], result) || needsSort;
     }
+
     return needsSort;
   },
 
@@ -144,14 +148,16 @@ export const IronFocusablesHelper = {
    * @return {boolean}
    * @private
    */
-  _isVisible: function(element) {
+  _isVisible: function (element) {
     // Check inline style first to save a re-flow. If looks good, check also
     // computed style.
     var style = element.style;
+
     if (style.visibility !== 'hidden' && style.display !== 'none') {
       style = window.getComputedStyle(element);
-      return (style.visibility !== 'hidden' && style.display !== 'none');
+      return style.visibility !== 'hidden' && style.display !== 'none';
     }
+
     return false;
   },
 
@@ -161,16 +167,21 @@ export const IronFocusablesHelper = {
    * @return {!Array<!HTMLElement>}
    * @private
    */
-  _sortByTabIndex: function(tabbables) {
+  _sortByTabIndex: function (tabbables) {
     // Implement a merge sort as Array.prototype.sort does a non-stable sort
     // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/sort
     var len = tabbables.length;
+
     if (len < 2) {
       return tabbables;
     }
+
     var pivot = Math.ceil(len / 2);
+
     var left = this._sortByTabIndex(tabbables.slice(0, pivot));
+
     var right = this._sortByTabIndex(tabbables.slice(pivot));
+
     return this._mergeSortByTabIndex(left, right);
   },
 
@@ -181,9 +192,10 @@ export const IronFocusablesHelper = {
    * @return {!Array<!HTMLElement>}
    * @private
    */
-  _mergeSortByTabIndex: function(left, right) {
+  _mergeSortByTabIndex: function (left, right) {
     var result = [];
-    while ((left.length > 0) && (right.length > 0)) {
+
+    while (left.length > 0 && right.length > 0) {
       if (this._hasLowerTabOrder(left[0], right[0])) {
         result.push(right.shift());
       } else {
@@ -205,11 +217,11 @@ export const IronFocusablesHelper = {
    * @return {boolean}
    * @private
    */
-  _hasLowerTabOrder: function(a, b) {
+  _hasLowerTabOrder: function (a, b) {
     // Normalize tabIndexes
     // e.g. in Firefox `<div contenteditable>` has `tabIndex = -1`
     var ati = Math.max(a.tabIndex, 0);
     var bti = Math.max(b.tabIndex, 0);
-    return (ati === 0 || bti === 0) ? bti > ati : ati > bti;
+    return ati === 0 || bti === 0 ? bti > ati : ati > bti;
   }
 };

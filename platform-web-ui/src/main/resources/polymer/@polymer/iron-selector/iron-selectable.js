@@ -8,18 +8,15 @@ found at http://polymer.github.io/CONTRIBUTORS.txt Code distributed by Google as
 part of the polymer project is also subject to an additional IP rights grant
 found at http://polymer.github.io/PATENTS.txt
 */
-import '@polymer/polymer/polymer-legacy.js';
-
-import {dom} from '@polymer/polymer/lib/legacy/polymer.dom.js';
-import {dashToCamelCase} from '@polymer/polymer/lib/utils/case-map.js';
-
-import {IronSelection} from './iron-selection.js';
-
+import "../polymer/polymer-legacy.js";
+import { dom } from "../polymer/lib/legacy/polymer.dom.js";
+import { dashToCamelCase } from "../polymer/lib/utils/case-map.js";
+import { IronSelection } from './iron-selection.js';
 /**
  * @polymerBehavior
  */
-export const IronSelectableBehavior = {
 
+export const IronSelectableBehavior = {
   /**
    * Fired when iron-selector is activated (selected or deselected).
    * It is fired before the selected items are changed.
@@ -47,9 +44,7 @@ export const IronSelectableBehavior = {
    *
    * @event iron-items-changed
    */
-
   properties: {
-
     /**
      * If you want to use an attribute value or property of an element for
      * `selected` instead of the index, set this to the name of the attribute
@@ -60,29 +55,42 @@ export const IronSelectableBehavior = {
      * selection works in both cases. (Use `attr-or-property-name` instead of
      * `attrOrPropertyName`.)
      */
-    attrForSelected: {type: String, value: null},
+    attrForSelected: {
+      type: String,
+      value: null
+    },
 
     /**
      * Gets or sets the selected element. The default is to use the index of the
      * item.
      * @type {string|number}
      */
-    selected: {type: String, notify: true},
+    selected: {
+      type: String,
+      notify: true
+    },
 
     /**
      * Returns the currently selected item.
      *
      * @type {?Object}
      */
-    selectedItem: {type: Object, readOnly: true, notify: true},
+    selectedItem: {
+      type: Object,
+      readOnly: true,
+      notify: true
+    },
 
     /**
      * The event that fires from items when they are selected. Selectable
      * will listen for this event from items and update the selection state.
      * Set to empty string to listen to no events.
      */
-    activateEvent:
-        {type: String, value: 'tap', observer: '_activateEventChanged'},
+    activateEvent: {
+      type: String,
+      value: 'tap',
+      observer: '_activateEventChanged'
+    },
 
     /**
      * This is a CSS selector string.  If this is set, only items that match the
@@ -93,18 +101,27 @@ export const IronSelectableBehavior = {
     /**
      * The class to set on elements when selected.
      */
-    selectedClass: {type: String, value: 'iron-selected'},
+    selectedClass: {
+      type: String,
+      value: 'iron-selected'
+    },
 
     /**
      * The attribute to set on elements when selected.
      */
-    selectedAttribute: {type: String, value: null},
+    selectedAttribute: {
+      type: String,
+      value: null
+    },
 
     /**
      * Default fallback if the selection based on selected with
      * `attrForSelected` is not found.
      */
-    fallbackSelection: {type: String, value: null},
+    fallbackSelection: {
+      type: String,
+      value: null
+    },
 
     /**
      * The list of items from which a selection can be made.
@@ -113,7 +130,7 @@ export const IronSelectableBehavior = {
       type: Array,
       readOnly: true,
       notify: true,
-      value: function() {
+      value: function () {
         return [];
       }
     },
@@ -126,37 +143,31 @@ export const IronSelectableBehavior = {
      */
     _excludedLocalNames: {
       type: Object,
-      value: function() {
+      value: function () {
         return {
           'template': 1,
           'dom-bind': 1,
           'dom-if': 1,
-          'dom-repeat': 1,
+          'dom-repeat': 1
         };
       }
     }
   },
-
-  observers: [
-    '_updateAttrForSelected(attrForSelected)',
-    '_updateSelected(selected)',
-    '_checkFallback(fallbackSelection)'
-  ],
-
-  created: function() {
+  observers: ['_updateAttrForSelected(attrForSelected)', '_updateSelected(selected)', '_checkFallback(fallbackSelection)'],
+  created: function () {
     this._bindFilterItem = this._filterItem.bind(this);
     this._selection = new IronSelection(this._applySelection.bind(this));
   },
-
-  attached: function() {
+  attached: function () {
     this._observer = this._observeItems(this);
+
     this._addListener(this.activateEvent);
   },
-
-  detached: function() {
+  detached: function () {
     if (this._observer) {
       dom(this).unobserveNodes(this._observer);
     }
+
     this._removeListener(this.activateEvent);
   },
 
@@ -167,7 +178,7 @@ export const IronSelectableBehavior = {
    * @param {Object} item
    * @returns Returns the index of the item
    */
-  indexOf: function(item) {
+  indexOf: function (item) {
     return this.items ? this.items.indexOf(item) : -1;
   },
 
@@ -177,7 +188,7 @@ export const IronSelectableBehavior = {
    * @method select
    * @param {string|number} value the value to select.
    */
-  select: function(value) {
+  select: function (value) {
     this.selected = value;
   },
 
@@ -186,12 +197,14 @@ export const IronSelectableBehavior = {
    *
    * @method selectPrevious
    */
-  selectPrevious: function() {
+  selectPrevious: function () {
     var length = this.items.length;
     var index = length - 1;
+
     if (this.selected !== undefined) {
       index = (Number(this._valueToIndex(this.selected)) - 1 + length) % length;
     }
+
     this.selected = this._indexToValue(index);
   },
 
@@ -200,12 +213,13 @@ export const IronSelectableBehavior = {
    *
    * @method selectNext
    */
-  selectNext: function() {
+  selectNext: function () {
     var index = 0;
+
     if (this.selected !== undefined) {
-      index =
-          (Number(this._valueToIndex(this.selected)) + 1) % this.items.length;
+      index = (Number(this._valueToIndex(this.selected)) + 1) % this.items.length;
     }
+
     this.selected = this._indexToValue(index);
   },
 
@@ -214,7 +228,7 @@ export const IronSelectableBehavior = {
    *
    * @method selectIndex
    */
-  selectIndex: function(index) {
+  selectIndex: function (index) {
     this.select(this._indexToValue(index));
   },
 
@@ -230,7 +244,7 @@ export const IronSelectableBehavior = {
    * slow for many use cases. The `items` property will update asynchronously
    * on its own to reflect selectable items in the DOM.
    */
-  forceSynchronousItemUpdate: function() {
+  forceSynchronousItemUpdate: function () {
     if (this._observer && typeof this._observer.flush === 'function') {
       // NOTE(bicknellr): `dom.flush` above is no longer sufficient to trigger
       // `observeNodes` callbacks. Polymer 2.x returns an object from
@@ -249,67 +263,60 @@ export const IronSelectableBehavior = {
     return this.selected != null;
   },
 
-  _checkFallback: function() {
+  _checkFallback: function () {
     this._updateSelected();
   },
-
-  _addListener: function(eventName) {
+  _addListener: function (eventName) {
     this.listen(this, eventName, '_activateHandler');
   },
-
-  _removeListener: function(eventName) {
+  _removeListener: function (eventName) {
     this.unlisten(this, eventName, '_activateHandler');
   },
-
-  _activateEventChanged: function(eventName, old) {
+  _activateEventChanged: function (eventName, old) {
     this._removeListener(old);
+
     this._addListener(eventName);
   },
-
-  _updateItems: function() {
+  _updateItems: function () {
     var nodes = dom(this).queryDistributedElements(this.selectable || '*');
     nodes = Array.prototype.filter.call(nodes, this._bindFilterItem);
+
     this._setItems(nodes);
   },
-
-  _updateAttrForSelected: function() {
+  _updateAttrForSelected: function () {
     if (this.selectedItem) {
       this.selected = this._valueForItem(this.selectedItem);
     }
   },
-
-  _updateSelected: function() {
+  _updateSelected: function () {
     this._selectSelected(this.selected);
   },
-
-  _selectSelected: function(selected) {
+  _selectSelected: function (selected) {
     if (!this.items) {
       return;
     }
 
     var item = this._valueToItem(this.selected);
+
     if (item) {
       this._selection.select(item);
     } else {
       this._selection.clear();
-    }
-    // Check for items, since this array is populated only when attached
+    } // Check for items, since this array is populated only when attached
     // Since Number(0) is falsy, explicitly check for undefined
-    if (this.fallbackSelection && this.items.length &&
-        (this._selection.get() === undefined)) {
+
+
+    if (this.fallbackSelection && this.items.length && this._selection.get() === undefined) {
       this.selected = this.fallbackSelection;
     }
   },
-
-  _filterItem: function(node) {
+  _filterItem: function (node) {
     return !this._excludedLocalNames[node.localName];
   },
-
-  _valueToItem: function(value) {
-    return (value == null) ? null : this.items[this._valueToIndex(value)];
+  _valueToItem: function (value) {
+    return value == null ? null : this.items[this._valueToIndex(value)];
   },
-
-  _valueToIndex: function(value) {
+  _valueToIndex: function (value) {
     if (this.attrForSelected) {
       for (var i = 0, item; item = this.items[i]; i++) {
         if (this._valueForItem(item) == value) {
@@ -320,10 +327,10 @@ export const IronSelectableBehavior = {
       return Number(value);
     }
   },
-
-  _indexToValue: function(index) {
+  _indexToValue: function (index) {
     if (this.attrForSelected) {
       var item = this.items[index];
+
       if (item) {
         return this._valueForItem(item);
       }
@@ -331,69 +338,78 @@ export const IronSelectableBehavior = {
       return index;
     }
   },
-
-  _valueForItem: function(item) {
+  _valueForItem: function (item) {
     if (!item) {
       return null;
     }
+
     if (!this.attrForSelected) {
       var i = this.indexOf(item);
       return i === -1 ? null : i;
     }
-    var propValue = item[dashToCamelCase(this.attrForSelected)];
-    return propValue != undefined ? propValue :
-                                    item.getAttribute(this.attrForSelected);
-  },
 
-  _applySelection: function(item, isSelected) {
+    var propValue = item[dashToCamelCase(this.attrForSelected)];
+    return propValue != undefined ? propValue : item.getAttribute(this.attrForSelected);
+  },
+  _applySelection: function (item, isSelected) {
     if (this.selectedClass) {
       this.toggleClass(this.selectedClass, isSelected, item);
     }
+
     if (this.selectedAttribute) {
       this.toggleAttribute(this.selectedAttribute, isSelected, item);
     }
+
     this._selectionChange();
-    this.fire('iron-' + (isSelected ? 'select' : 'deselect'), {item: item});
-  },
 
-  _selectionChange: function() {
-    this._setSelectedItem(this._selection.get());
-  },
-
-  // observe items change under the given node.
-  _observeItems: function(node) {
-    return dom(node).observeNodes(function(mutation) {
-      this._updateItems();
-      this._updateSelected();
-
-      // Let other interested parties know about the change so that
-      // we don't have to recreate mutation observers everywhere.
-      this.fire(
-          'iron-items-changed', mutation, {bubbles: false, cancelable: false});
+    this.fire('iron-' + (isSelected ? 'select' : 'deselect'), {
+      item: item
     });
   },
+  _selectionChange: function () {
+    this._setSelectedItem(this._selection.get());
+  },
+  // observe items change under the given node.
+  _observeItems: function (node) {
+    return dom(node).observeNodes(function (mutation) {
+      this._updateItems();
 
-  _activateHandler: function(e) {
+      this._updateSelected(); // Let other interested parties know about the change so that
+      // we don't have to recreate mutation observers everywhere.
+
+
+      this.fire('iron-items-changed', mutation, {
+        bubbles: false,
+        cancelable: false
+      });
+    });
+  },
+  _activateHandler: function (e) {
     var t = e.target;
     var items = this.items;
+
     while (t && t != this) {
       var i = items.indexOf(t);
+
       if (i >= 0) {
         var value = this._indexToValue(i);
+
         this._itemActivate(value, t);
+
         return;
       }
+
       t = t.parentNode;
     }
   },
-
-  _itemActivate: function(value, item) {
-    if (!this.fire('iron-activate', {selected: value, item: item}, {
-               cancelable: true
-             })
-             .defaultPrevented) {
+  _itemActivate: function (value, item) {
+    if (!this.fire('iron-activate', {
+      selected: value,
+      item: item
+    }, {
+      cancelable: true
+    }).defaultPrevented) {
       this.select(value);
     }
   }
-
 };

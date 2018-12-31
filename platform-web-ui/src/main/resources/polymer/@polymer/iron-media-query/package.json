@@ -17,12 +17,13 @@
     "fetchSpec": "^3.0.1"
   },
   "_requiredBy": [
-    "/"
+    "/",
+    "/@polymer/app-layout"
   ],
   "_resolved": "https://registry.npmjs.org/@polymer/iron-media-query/-/iron-media-query-3.0.1.tgz",
   "_shasum": "5cd8a1c1e8c9b8bafd3dd5da14e0f8d2cfa76d83",
   "_spec": "@polymer/iron-media-query@^3.0.1",
-  "_where": "/home/oleh/web-workspace/polymer-app",
+  "_where": "C:\\Users\\oleh\\workspace\\tg\\platform-web-ui\\src\\main\\resources",
   "author": {
     "name": "The Polymer Authors"
   },

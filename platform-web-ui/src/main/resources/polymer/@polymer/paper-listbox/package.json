@@ -22,7 +22,7 @@
   "_resolved": "https://registry.npmjs.org/@polymer/paper-listbox/-/paper-listbox-3.0.1.tgz",
   "_shasum": "fe05094781b359e4afbc5bec89a07758a303a957",
   "_spec": "@polymer/paper-listbox@^3.0.0-pre.26",
-  "_where": "/home/oleh/web-workspace/polymer-app/node_modules/@polymer/paper-swatch-picker",
+  "_where": "C:\\Users\\oleh\\workspace\\tg\\platform-web-ui\\src\\main\\resources\\node_modules\\@polymer\\paper-swatch-picker",
   "author": {
     "name": "The Polymer Authors"
   },

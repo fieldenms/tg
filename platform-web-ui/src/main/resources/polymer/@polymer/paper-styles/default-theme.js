@@ -8,13 +8,13 @@ found at http://polymer.github.io/CONTRIBUTORS.txt Code distributed by Google as
 part of the polymer project is also subject to an additional IP rights grant
 found at http://polymer.github.io/PATENTS.txt
 */
+
 /* Taken from
  * https://www.google.com/design/spec/style/color.html#color-ui-color-application
  */
-import '@polymer/polymer/polymer-legacy.js';
+import "../polymer/polymer-legacy.js";
 import './color.js';
-
-import {html} from '@polymer/polymer/lib/utils/html-tag.js';
+import { html } from "../polymer/lib/utils/html-tag.js";
 const template = html`
 <custom-style>
   <style is="custom-style">

@@ -19,6 +19,7 @@ import { TemplateInstanceBase, templatize, modelForElement } from '../utils/temp
  *   ctor: TemplateInstanceBase
  * }}
  */
+
 let TemplatizerUser; // eslint-disable-line
 
 /**
@@ -82,8 +83,8 @@ let TemplatizerUser; // eslint-disable-line
  *
  * @polymerBehavior
  */
-export const Templatizer = {
 
+export const Templatizer = {
   /**
    * Generates an anonymous `TemplateInstance` class (stored as `this.ctor`)
    * for the provided template.  This method should be called once per
@@ -139,4 +140,5 @@ export const Templatizer = {
   modelForElement(el) {
     return modelForElement(this._templatizerTemplate, el);
   }
+
 };

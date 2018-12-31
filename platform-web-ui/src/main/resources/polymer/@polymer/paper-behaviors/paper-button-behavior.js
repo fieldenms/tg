@@ -8,14 +8,12 @@ found at http://polymer.github.io/CONTRIBUTORS.txt Code distributed by Google as
 part of the polymer project is also subject to an additional IP rights grant
 found at http://polymer.github.io/PATENTS.txt
 */
-import '@polymer/polymer/polymer-legacy.js';
-
-import {IronButtonState, IronButtonStateImpl} from '@polymer/iron-behaviors/iron-button-state.js';
-import {IronControlState} from '@polymer/iron-behaviors/iron-control-state.js';
-
-import {PaperRippleBehavior} from './paper-ripple-behavior.js';
-
+import "../polymer/polymer-legacy.js";
+import { IronButtonState, IronButtonStateImpl } from "../iron-behaviors/iron-button-state.js";
+import { IronControlState } from "../iron-behaviors/iron-control-state.js";
+import { PaperRippleBehavior } from './paper-ripple-behavior.js';
 /** @polymerBehavior PaperButtonBehavior */
+
 export const PaperButtonBehaviorImpl = {
   properties: {
     /**
@@ -27,18 +25,21 @@ export const PaperButtonBehaviorImpl = {
      * @type number
      * @default 1
      */
-    elevation: {type: Number, reflectToAttribute: true, readOnly: true}
+    elevation: {
+      type: Number,
+      reflectToAttribute: true,
+      readOnly: true
+    }
   },
-
-  observers: [
-    '_calculateElevation(focused, disabled, active, pressed, receivedFocusFromKeyboard)',
-    '_computeKeyboardClass(receivedFocusFromKeyboard)'
-  ],
-
-  hostAttributes: {role: 'button', tabindex: '0', animated: true},
-
-  _calculateElevation: function() {
+  observers: ['_calculateElevation(focused, disabled, active, pressed, receivedFocusFromKeyboard)', '_computeKeyboardClass(receivedFocusFromKeyboard)'],
+  hostAttributes: {
+    role: 'button',
+    tabindex: '0',
+    animated: true
+  },
+  _calculateElevation: function () {
     var e = 1;
+
     if (this.disabled) {
       e = 0;
     } else if (this.active || this.pressed) {
@@ -46,10 +47,10 @@ export const PaperButtonBehaviorImpl = {
     } else if (this.receivedFocusFromKeyboard) {
       e = 3;
     }
+
     this._setElevation(e);
   },
-
-  _computeKeyboardClass: function(receivedFocusFromKeyboard) {
+  _computeKeyboardClass: function (receivedFocusFromKeyboard) {
     this.toggleClass('keyboard-focus', receivedFocusFromKeyboard);
   },
 
@@ -59,9 +60,10 @@ export const PaperButtonBehaviorImpl = {
    *
    * @param {!KeyboardEvent} event .
    */
-  _spaceKeyDownHandler: function(event) {
-    IronButtonStateImpl._spaceKeyDownHandler.call(this, event);
-    // Ensure that there is at most one ripple when the space key is held down.
+  _spaceKeyDownHandler: function (event) {
+    IronButtonStateImpl._spaceKeyDownHandler.call(this, event); // Ensure that there is at most one ripple when the space key is held down.
+
+
     if (this.hasRipple() && this.getRipple().ripples.length < 1) {
       this._ripple.uiDownAction();
     }
@@ -73,18 +75,14 @@ export const PaperButtonBehaviorImpl = {
    *
    * @param {!KeyboardEvent} event .
    */
-  _spaceKeyUpHandler: function(event) {
+  _spaceKeyUpHandler: function (event) {
     IronButtonStateImpl._spaceKeyUpHandler.call(this, event);
+
     if (this.hasRipple()) {
       this._ripple.uiUpAction();
     }
   }
 };
-
 /** @polymerBehavior */
-export const PaperButtonBehavior = [
-  IronButtonState,
-  IronControlState,
-  PaperRippleBehavior,
-  PaperButtonBehaviorImpl
-];
+
+export const PaperButtonBehavior = [IronButtonState, IronControlState, PaperRippleBehavior, PaperButtonBehaviorImpl];

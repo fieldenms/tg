@@ -8,15 +8,13 @@ found at http://polymer.github.io/CONTRIBUTORS.txt Code distributed by Google as
 part of the polymer project is also subject to an additional IP rights grant
 found at http://polymer.github.io/PATENTS.txt
 */
-import '@polymer/polymer/polymer-legacy.js';
-
-import '@polymer/iron-flex-layout/iron-flex-layout.js';
-import '@polymer/iron-image/iron-image.js';
-import '@polymer/paper-styles/element-styles/paper-material-styles.js';
-import '@polymer/paper-styles/default-theme.js';
-import {Polymer} from '@polymer/polymer/lib/legacy/polymer-fn.js';
-import {html} from '@polymer/polymer/lib/utils/html-tag.js';
-
+import "../polymer/polymer-legacy.js";
+import "../iron-flex-layout/iron-flex-layout.js";
+import "../iron-image/iron-image.js";
+import "../paper-styles/element-styles/paper-material-styles.js";
+import "../paper-styles/default-theme.js";
+import { Polymer } from "../polymer/lib/legacy/polymer-fn.js";
+import { html } from "../polymer/lib/utils/html-tag.js";
 /**
 Material design:
 [Cards](https://www.google.com/design/spec/components/cards.html)
@@ -63,6 +61,7 @@ Custom property | Description | Default
 @element paper-card
 @demo demo/index.html
 */
+
 Polymer({
   _template: html`
     <style include="paper-material-styles">
@@ -159,54 +158,77 @@ Polymer({
 
     <slot></slot>
 `,
-
   is: 'paper-card',
-
   properties: {
     /**
      * The title of the card.
      */
-    heading: {type: String, value: '', observer: '_headingChanged'},
+    heading: {
+      type: String,
+      value: '',
+      observer: '_headingChanged'
+    },
 
     /**
      * The url of the title image of the card.
      */
-    image: {type: String, value: ''},
+    image: {
+      type: String,
+      value: ''
+    },
 
     /**
      * The text alternative of the card's title image.
      */
-    alt: {type: String},
+    alt: {
+      type: String
+    },
 
     /**
      * When `true`, any change to the image url property will cause the
      * `placeholder` image to be shown until the image is fully rendered.
      */
-    preloadImage: {type: Boolean, value: false},
+    preloadImage: {
+      type: Boolean,
+      value: false
+    },
 
     /**
      * When `preloadImage` is true, setting `fadeImage` to true will cause the
      * image to fade into place.
      */
-    fadeImage: {type: Boolean, value: false},
+    fadeImage: {
+      type: Boolean,
+      value: false
+    },
 
     /**
      * This image will be used as a background/placeholder until the src image
      * has loaded. Use of a data-URI for placeholder is encouraged for instant
      * rendering.
      */
-    placeholderImage: {type: String, value: null},
+    placeholderImage: {
+      type: String,
+      value: null
+    },
 
     /**
      * The z-depth of the card, from 0-5.
      */
-    elevation: {type: Number, value: 1, reflectToAttribute: true},
+    elevation: {
+      type: Number,
+      value: 1,
+      reflectToAttribute: true
+    },
 
     /**
      * Set this to true to animate the card shadow when setting a new
      * `z` value.
      */
-    animatedShadow: {type: Boolean, value: false},
+    animatedShadow: {
+      type: Boolean,
+      value: false
+    },
 
     /**
      * Read-only property used to pass down the `animatedShadow` value to
@@ -224,11 +246,10 @@ Polymer({
    * Format function for aria-hidden. Use the ! operator results in the
    * empty string when given a falsy value.
    */
-  _isHidden: function(image) {
+  _isHidden: function (image) {
     return image ? 'false' : 'true';
   },
-
-  _headingChanged: function(heading) {
+  _headingChanged: function (heading) {
     var currentHeading = this.getAttribute('heading'),
         currentLabel = this.getAttribute('aria-label');
 
@@ -236,12 +257,10 @@ Polymer({
       this.setAttribute('aria-label', heading);
     }
   },
-
-  _computeHeadingClass: function(image) {
+  _computeHeadingClass: function (image) {
     return image ? ' over-image' : '';
   },
-
-  _computeAnimated: function(animatedShadow) {
+  _computeAnimated: function (animatedShadow) {
     return animatedShadow;
   }
 });

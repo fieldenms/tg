@@ -8,9 +8,7 @@ Code distributed by Google as part of the polymer project is also
 subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
 */
 import { Class } from './class.js';
-
 import '../utils/boot.js';
-
 /**
  * Legacy class factory and registration helper for defining Polymer
  * elements.
@@ -30,19 +28,23 @@ import '../utils/boot.js';
  * @return {function(new: HTMLElement)} Generated class
  * @suppress {duplicate, invalidCasts, checkTypes}
  */
-const Polymer = function(info) {
+
+const Polymer = function (info) {
   // if input is a `class` (aka a function with a prototype), use the prototype
   // remember that the `constructor` will never be called
   let klass;
+
   if (typeof info === 'function') {
     klass = info;
   } else {
     klass = Polymer.Class(info);
   }
-  customElements.define(klass.is, /** @type {!HTMLElement} */(klass));
+
+  customElements.define(klass.is,
+  /** @type {!HTMLElement} */
+  klass);
   return klass;
 };
 
 Polymer.Class = Class;
-
 export { Polymer };

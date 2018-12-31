@@ -7,15 +7,13 @@ The complete set of contributors may be found at http://polymer.github.io/CONTRI
 Code distributed by Google as part of the polymer project is also
 subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
 */
-import '@polymer/polymer/polymer-legacy.js';
-import '@polymer/paper-styles/default-theme.js';
-
-import {PaperCheckedElementBehavior} from '@polymer/paper-behaviors/paper-checked-element-behavior.js';
-import {PaperInkyFocusBehaviorImpl} from '@polymer/paper-behaviors/paper-inky-focus-behavior.js';
-import {Polymer} from '@polymer/polymer/lib/legacy/polymer-fn.js';
-import {html} from '@polymer/polymer/lib/utils/html-tag.js';
-import {afterNextRender} from '@polymer/polymer/lib/utils/render-status.js';
-
+import "../polymer/polymer-legacy.js";
+import "../paper-styles/default-theme.js";
+import { PaperCheckedElementBehavior } from "../paper-behaviors/paper-checked-element-behavior.js";
+import { PaperInkyFocusBehaviorImpl } from "../paper-behaviors/paper-inky-focus-behavior.js";
+import { Polymer } from "../polymer/lib/legacy/polymer-fn.js";
+import { html } from "../polymer/lib/utils/html-tag.js";
+import { afterNextRender } from "../polymer/lib/utils/render-status.js";
 const template = html`<style>
   :host {
     display: inline-block;
@@ -198,7 +196,6 @@ const template = html`<style>
 
 <div id="checkboxLabel"><slot></slot></div>`;
 template.setAttribute('strip-whitespace', '');
-
 /**
 Material design:
 [Checkbox](https://www.google.com/design/spec/components/selection-controls.html#selection-controls-checkbox)
@@ -243,16 +240,18 @@ element, make sure you've imported `paper-styles/typography.html`.
 
 @demo demo/index.html
 */
+
 Polymer({
   _template: template,
-
   is: 'paper-checkbox',
-
   behaviors: [PaperCheckedElementBehavior],
 
   /** @private */
-  hostAttributes: {role: 'checkbox', 'aria-checked': false, tabindex: 0},
-
+  hostAttributes: {
+    role: 'checkbox',
+    'aria-checked': false,
+    tabindex: 0
+  },
   properties: {
     /**
      * Fired when the checked state changes due to user interaction.
@@ -265,67 +264,63 @@ Polymer({
      *
      * @event iron-change
      */
-    ariaActiveAttribute: {type: String, value: 'aria-checked'}
+    ariaActiveAttribute: {
+      type: String,
+      value: 'aria-checked'
+    }
   },
-
-  attached: function() {
+  attached: function () {
     // Wait until styles have resolved to check for the default sentinel.
     // See polymer#4009 for more details.
-    afterNextRender(this, function() {
-      var inkSize =
-          this.getComputedStyleValue('--calculated-paper-checkbox-ink-size')
-              .trim();
-      // If unset, compute and set the default `--paper-checkbox-ink-size`.
-      if (inkSize === '-1px') {
-        var checkboxSizeText =
-            this.getComputedStyleValue('--calculated-paper-checkbox-size')
-                .trim();
+    afterNextRender(this, function () {
+      var inkSize = this.getComputedStyleValue('--calculated-paper-checkbox-ink-size').trim(); // If unset, compute and set the default `--paper-checkbox-ink-size`.
 
+      if (inkSize === '-1px') {
+        var checkboxSizeText = this.getComputedStyleValue('--calculated-paper-checkbox-size').trim();
         var units = 'px';
         var unitsMatches = checkboxSizeText.match(/[A-Za-z]+$/);
+
         if (unitsMatches !== null) {
           units = unitsMatches[0];
         }
 
         var checkboxSize = parseFloat(checkboxSizeText);
-        var defaultInkSize = (8 / 3) * checkboxSize;
+        var defaultInkSize = 8 / 3 * checkboxSize;
 
         if (units === 'px') {
-          defaultInkSize = Math.floor(defaultInkSize);
-
-          // The checkbox and ripple need to have the same parity so that their
+          defaultInkSize = Math.floor(defaultInkSize); // The checkbox and ripple need to have the same parity so that their
           // centers align.
+
           if (defaultInkSize % 2 !== checkboxSize % 2) {
             defaultInkSize++;
           }
         }
 
         this.updateStyles({
-          '--paper-checkbox-ink-size': defaultInkSize + units,
+          '--paper-checkbox-ink-size': defaultInkSize + units
         });
       }
     });
   },
-
-  _computeCheckboxClass: function(checked, invalid) {
+  _computeCheckboxClass: function (checked, invalid) {
     var className = '';
+
     if (checked) {
       className += 'checked ';
     }
+
     if (invalid) {
       className += 'invalid';
     }
+
     return className;
   },
-
-  _computeCheckmarkClass: function(checked) {
+  _computeCheckmarkClass: function (checked) {
     return checked ? '' : 'hidden';
   },
-
   // create ripple inside the checkboxContainer
-  _createRipple: function() {
+  _createRipple: function () {
     this._rippleContainer = this.$.checkboxContainer;
     return PaperInkyFocusBehaviorImpl._createRipple.call(this);
   }
-
 });

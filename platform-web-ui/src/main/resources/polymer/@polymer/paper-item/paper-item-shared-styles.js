@@ -8,13 +8,12 @@ found at http://polymer.github.io/CONTRIBUTORS.txt Code distributed by Google as
 part of the polymer project is also subject to an additional IP rights grant
 found at http://polymer.github.io/PATENTS.txt
 */
-import '@polymer/iron-flex-layout/iron-flex-layout.js';
-import '@polymer/paper-styles/color.js';
-import '@polymer/paper-styles/default-theme.js';
-import '@polymer/paper-styles/typography.js';
+import "../iron-flex-layout/iron-flex-layout.js";
+import "../paper-styles/color.js";
+import "../paper-styles/default-theme.js";
+import "../paper-styles/typography.js";
 const $_documentContainer = document.createElement('template');
 $_documentContainer.setAttribute('style', 'display: none;');
-
 $_documentContainer.innerHTML = `<dom-module id="paper-item-shared-styles">
   <template>
     <style>
@@ -70,5 +69,4 @@ $_documentContainer.innerHTML = `<dom-module id="paper-item-shared-styles">
     </style>
   </template>
 </dom-module>`;
-
 document.head.appendChild($_documentContainer.content);

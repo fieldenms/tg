@@ -8,13 +8,12 @@ Code distributed by Google as part of the polymer project is also
 subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
 */
 import { MutableData } from '../mixins/mutable-data.js';
-
 let mutablePropertyChange;
 /** @suppress {missingProperties} */
+
 (() => {
   mutablePropertyChange = MutableData._mutablePropertyChange;
 })();
-
 /**
  * Legacy element behavior to skip strict dirty-checking for objects and arrays,
  * (always consider them to be "dirty") for use on legacy API Polymer elements.
@@ -52,8 +51,9 @@ let mutablePropertyChange;
  * @summary Behavior to skip strict dirty-checking for objects and
  *   arrays
  */
-export const MutableDataBehavior = {
 
+
+export const MutableDataBehavior = {
   /**
    * Overrides `Polymer.PropertyEffects` to provide option for skipping
    * strict equality checking for Objects and Arrays.
@@ -74,8 +74,8 @@ export const MutableDataBehavior = {
   _shouldPropertyChange(property, value, old) {
     return mutablePropertyChange(this, property, value, old, true);
   }
-};
 
+};
 /**
  * Legacy element behavior to add the optional ability to skip strict
  * dirty-checking for objects and arrays (always consider them to be
@@ -115,8 +115,8 @@ export const MutableDataBehavior = {
  * @summary Behavior to optionally skip strict dirty-checking for objects and
  *   arrays
  */
-export const OptionalMutableDataBehavior = {
 
+export const OptionalMutableDataBehavior = {
   properties: {
     /**
      * Instance-level flag for configuring the dirty-checking strategy
@@ -147,4 +147,5 @@ export const OptionalMutableDataBehavior = {
   _shouldPropertyChange(property, value, old) {
     return mutablePropertyChange(this, property, value, old, this.mutableData);
   }
+
 };

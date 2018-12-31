@@ -22,7 +22,7 @@
   "_resolved": "https://registry.npmjs.org/@polymer/font-roboto/-/font-roboto-3.0.2.tgz",
   "_shasum": "80cdaa7225db2359130dfb2c6d9a3be1820020c3",
   "_spec": "@polymer/font-roboto@^3.0.1",
-  "_where": "/home/oleh/web-workspace/polymer-app/node_modules/@polymer/paper-styles",
+  "_where": "C:\\Users\\oleh\\workspace\\tg\\platform-web-ui\\src\\main\\resources\\node_modules\\@polymer\\paper-styles",
   "author": {
     "name": "The Polymer Authors"
   },

@@ -22,7 +22,7 @@
   "_resolved": "https://registry.npmjs.org/@polymer/iron-jsonp-library/-/iron-jsonp-library-3.0.1.tgz",
   "_shasum": "559d997e53a623260f49148aa144ae39c1e1a5fa",
   "_spec": "@polymer/iron-jsonp-library@^3.0.1",
-  "_where": "/home/oleh/web-workspace/polymer-app",
+  "_where": "C:\\Users\\oleh\\workspace\\tg\\platform-web-ui\\src\\main\\resources",
   "bugs": {
     "url": "https://github.com/PolymerElements/iron-jsonp-library/issues"
   },
