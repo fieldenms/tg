@@ -19,13 +19,14 @@ const template = html`
             -webkit-overflow-scrolling: touch;
         }
         #shadowContainer {
+            @apply --layout-fit;
             pointer-events: none;
         }
     </style>
     <div id="scrollablePanel" on-scroll="_contentScrolled" class="webkit-scroll-inertia">
         <slot></slot>
     </div>
-    <div id="shadowContainer" class="fit"></div>
+    <div id="shadowContainer"></div>
     <tg-app-config id="appConfig"></tg-app-config>`;
 
 template.setAttribute('strip-whitespace', '');
@@ -35,7 +36,7 @@ Polymer({
 
     is: 'tg-scrollable-component',
 
-    behaviors: [Polymer.IronResizableBehavior],
+    behaviors: [IronResizableBehavior],
 
     ready: function () {
         this.addEventListener("iron-resize", this._resizeEventListener.bind(this));
