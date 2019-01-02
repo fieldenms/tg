@@ -607,7 +607,7 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
 
     private static <T extends AbstractEntity<?>> void provideAssignerDefaultsEntitySingle(final Class<? extends IValueAssigner<? extends SingleCritOtherValueMnemonic<? extends AbstractEntity<?>>, T>> assignerType, final ICentreDomainTreeManagerAndEnhancer cdtmae, final String property, final Class<T> entityType, final Injector injector) {
         /* TODO at this stage there is no implementation for centre context processing -- master entity for dependent centres is the only applicable context -- will be implemented later */
-        final Optional<? extends SingleCritOtherValueMnemonic<? extends AbstractEntity<?>>> value = injector.getInstance(assignerType).getValue(null, dslName(property));
+        final Optional<SingleCritOtherValueMnemonic<? extends AbstractEntity<?>>> value = (Optional<SingleCritOtherValueMnemonic<? extends AbstractEntity<?>>>) injector.getInstance(assignerType).getValue(null, dslName(property));
         if (value.isPresent()) {
             provideMnemonicDefaultsSingle(value.get(), cdtmae, property, entityType);
         }
