@@ -35,7 +35,7 @@ public class WebUiPreferencesResource extends AbstractWebResource {
     @Override
     public Representation get() {
         final String source = sourceController.loadSource("/app/tg-app-config.js", device());
-        return new EncodeRepresentation(Encoding.GZIP, new InputRepresentation(new ByteArrayInputStream(source.getBytes(Charsets.UTF_8)), MediaType.APPLICATION_JAVASCRIPT));
+        return new EncodeRepresentation(Encoding.GZIP, new InputRepresentation(new ByteArrayInputStream(source.getBytes(Charsets.UTF_8)), MediaType.TEXT_JAVASCRIPT));
     }
 
 }

@@ -37,13 +37,16 @@ Polymer({
     is: 'tg-scrollable-component',
 
     behaviors: [IronResizableBehavior],
+    
+    properties: {
+        endOfScroll: {
+            type: Function
+        }
+    },
 
     ready: function () {
         this.addEventListener("iron-resize", this._resizeEventListener.bind(this));
-        this._mutationConfig = {
-            childList: true,
-            subtree: true
-        };
+        this._mutationConfig = {childList: true, subtree: true};
         const observer = mutationList => {
             this.async(function () {
                 this._resizeEventListener();
@@ -85,8 +88,10 @@ Polymer({
             if (scrollTarget.scrollTop) {
                 shadowStyle += "inset 0 3px 6px -2px rgba(0,0,0,0.7)";
             }
-            if (scrollTarget.scrollTop + scrollTarget.offsetHeight < scrollTarget.scrollHeight) {
+            if (Math.ceil(scrollTarget.scrollTop + scrollTarget.offsetHeight) < scrollTarget.scrollHeight) {
                 shadowStyle += (shadowStyle ? ", " : "") + "inset 0 -3px 6px -2px rgba(0,0,0,0.7)";
+            } else if (e && this.endOfScroll) {
+                this.endOfScroll(e);
             }
             if (shadowStyle) {
                 shadowTarget.style.boxShadow = shadowStyle;

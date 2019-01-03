@@ -123,7 +123,6 @@ public class FileResource extends AbstractWebResource {
         case "png":
             return MediaType.IMAGE_PNG;
         case "js":
-            return MediaType.APPLICATION_JAVASCRIPT;
         case "json":
             return MediaType.TEXT_JAVASCRIPT;
         case "html":
