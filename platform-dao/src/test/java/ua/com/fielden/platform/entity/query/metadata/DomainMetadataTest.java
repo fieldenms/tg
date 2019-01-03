@@ -151,9 +151,8 @@ public class DomainMetadataTest extends BaseEntQueryTCase {
         System.out.println(bogieLocationEm.getProps().get("wagonSlot"));
     }
     
-    // FIXME: @nc please correct the name of this test!
     @Test
-    public void test() {
+    public void metadata_for_union_entity_type_property_is_constructed_correctly() {
         EntityTypeInfo<TgBogie> entityTypeInfo = eti(TgBogie.class);
         final PropertyMetadata bogieLocationProp = new PropertyMetadata.Builder("location", TgBogieLocation.class, true, entityTypeInfo). //
         column(new PropertyColumn("location")). //

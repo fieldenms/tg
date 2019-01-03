@@ -102,7 +102,7 @@
                     } else {
                         const collection = generateShortCollection(this.reflector()._getValueFor(this.entity, ""), this.propertyName, valueToFormat[0].type());
                         const title = this.reflector().convert(collection).join(", ");
-                        const desc = collection.reduce((curr, next) => next.get("desc") ? curr + (curr ? ", " : "") + next.get("desc") : curr, "");
+                        const desc = collection.reduce((curr, next) => this.reflector().isEntity(next) && next.get("desc") ? curr + (curr ? ", " : "") + next.get("desc") : curr, "");
                         return "<b>" + title + "</b>" + (desc ? "<br>" + desc : "");
                     }
                 } else {
