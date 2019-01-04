@@ -1,6 +1,10 @@
 {
   "entrypoint": "build.html",
   "shell": "build-polymer.js",
+  "extraDependencies": [
+    "./node_modules/@polymer/test-fixture/test-fixture.js",
+    "./node_modules/@polymer/sinonjs/sinon.js"
+  ],
   "builds": [
     { 
       "name": "tg-custom-build",

@@ -1,84 +1,45 @@
 <!doctype html>
 <html>
-<head>
-  <meta charset="UTF-8">
-  <title>scrollable component test</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 
-  <script src="/resources/polymer/@webcomponents/webcomponentsjs/webcomponents-bundle.js"></script>
-  <script src="/resources/polymer/wct-browser-legacy/browser.js"></script>
+<head>
+    <meta charset="UTF-8">
+    <title>scrollable component test</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+
+    <script src="/resources/polymer/@webcomponents/webcomponentsjs/webcomponents-bundle.js"></script>
+    <script src="/resources/polymer/wct-browser-legacy/browser.js"></script>
 </head>
+
 <body>
 
-  <test-fixture id="scrollableTest">
-    <template>
-      <paper-button>Button</paper-button>
-    </template>
-  </test-fixture>
+    <test-fixture id="scrollableTest">
+        <template>
+            <tg-scrollable-component>
+                <div>TEST</div>
+                <div>TEST</div>
+                <div>TEST</div>
+                <div>TEST</div>
+                <div>TEST</div>
+                <div>TEST</div>
+                <div>TEST</div>
+                <div>TEST</div>
+                <div>TEST</div>
+            </tg-scrollable-component>
+        </template>
+    </test-fixture>
 
-  <script type="module">
-    import '@polymer/iron-test-helpers/mock-interactions.js';
-    import '../paper-button.js';
-    import {Base} from '@polymer/polymer/polymer-legacy.js';
-    import {a11ySuite} from 'wct-browser-legacy/a11ySuite.js';
-    suite('<paper-button>', function() {
-      var button;
-      setup(function() {
-        button = fixture('TrivialButton');
-      });
-      test('can be raised imperatively', function(done) {
-        button.raised = true;
-        expect(button.hasAttribute('raised')).to.be.eql(true);
-        Base.async(function() {
-          try {
-            expect(button.elevation).to.be.eql(1);
-            done();
-          } catch (e) {
-            done(e);
-          }
-        }, 1);
-      });
-      test('can be unraised after being raised imperatively', function(done) {
-        button.raised = true;
-        expect(button.hasAttribute('raised')).to.be.eql(true);
-        Base.async(function() {
-          expect(button.elevation).to.be.eql(1);
-          button.raised = false;
-          expect(button.hasAttribute('raised')).to.be.eql(false);
-          Base.async(function() {
-            expect(button.elevation).to.be.eql(0);
-            done();
-          }, 1);
-        }, 1);
-      });
-      test('can be disabled imperatively', function() {
-        button.disabled = true;
-        expect(button.getAttribute('aria-disabled')).to.be.eql('true');
-        expect(button.hasAttribute('disabled')).to.be.eql(true);
-      });
-      test('can be triggered with space', function(done) {
-        button.addEventListener('click', function() {
-          done();
+    <script type="module">
+        import '../tg-scrollable-component.js';
+        suite('<tg-scrollable-component>', function () {
+            let scrollableComponent;
+            setup(function () {
+                scrollableComponent = fixture('scrollableTest');
+            });
+            test('can be raised imperatively', function (done) {
+                done();
+            });
         });
-        MockInteractions.pressSpace(button);
-      });
-      test('can be triggered with enter', function(done) {
-        button.addEventListener('click', function() {
-          done();
-        });
-        MockInteractions.pressEnter(button);
-      });
-    });
-    suite('<paper-button>', function() {
-      var button;
-      setup(function() {
-        button = fixture('TrivialButton');
-      });
-      test('has aria role "button"', function() {
-        expect(button.getAttribute('role')).to.be.eql('button');
-      });
-      a11ySuite('TrivialButton');
-    });
-  </script>
+    </script>
 </body>
+
 </html>
