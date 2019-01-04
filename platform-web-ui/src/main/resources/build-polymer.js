@@ -24,6 +24,7 @@ import '@polymer/iron-media-query/iron-media-query.js';
 import '@polymer/iron-overlay-behavior/iron-overlay-behavior.js';
 import '@polymer/iron-pages/iron-pages.js';
 import '@polymer/iron-swipeable-container/iron-swipeable-container.js';
+import '@polymer/iron-test-helpers/iron-test-helpers.js';
 import '@polymer/paper-badge/paper-badge.js';
 import '@polymer/paper-behaviors/paper-button-behavior.js';
 import '@polymer/paper-behaviors/paper-checked-element-behavior.js';

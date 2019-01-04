@@ -1,6 +1,15 @@
 {
   "entrypoint": "build.html",
   "shell": "build-polymer.js",
+  "builds": [
+    { 
+      "name": "tg-custom-build",
+      "js": {"minify": false, "compile": false},
+      "css": {"minify": false},
+      "html": {"minify": false},
+      "bundle": false
+    }
+  ],
   "lint": {
     "rules": ["polymer-3"]
   }

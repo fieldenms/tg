@@ -1,36 +1,39 @@
 {
-  "_from": "wct-mocha@^1.0.0-pre.3",
+  "_args": [
+    [
+      "wct-mocha@1.0.0",
+      "/home/oleh/workspace/tg/platform-web-ui/src/main/resources"
+    ]
+  ],
+  "_from": "wct-mocha@1.0.0",
   "_id": "wct-mocha@1.0.0",
   "_inBundle": false,
   "_integrity": "sha512-rvDjW4kJMV8/lpihKMDHMZwycT5ALtoLni/Q0Ggdg1rPRpIW5pjoslSR/UIl2gWRMYqAs9nFRVYxASwEYG6brA==",
   "_location": "/wct-mocha",
   "_phantomChildren": {},
   "_requested": {
-    "type": "range",
+    "type": "version",
     "registry": true,
-    "raw": "wct-mocha@^1.0.0-pre.3",
+    "raw": "wct-mocha@1.0.0",
     "name": "wct-mocha",
     "escapedName": "wct-mocha",
-    "rawSpec": "^1.0.0-pre.3",
+    "rawSpec": "1.0.0",
     "saveSpec": null,
-    "fetchSpec": "^1.0.0-pre.3"
+    "fetchSpec": "1.0.0"
   },
   "_requiredBy": [
     "/"
   ],
   "_resolved": "https://registry.npmjs.org/wct-mocha/-/wct-mocha-1.0.0.tgz",
-  "_shasum": "2e83938572cb854740773cf1dc21f25358446c62",
-  "_spec": "wct-mocha@^1.0.0-pre.3",
-  "_where": "C:\\Users\\oleh\\workspace\\tg\\platform-web-ui\\src\\main\\resources",
+  "_spec": "1.0.0",
+  "_where": "/home/oleh/workspace/tg/platform-web-ui/src/main/resources",
   "author": {
     "name": "The Polymer Project Authors"
   },
   "bugs": {
     "url": "https://github.com/Polymer/tools/issues"
   },
-  "bundleDependencies": false,
   "dependencies": {},
-  "deprecated": false,
   "description": "Client-side library for testing web-components with Mocha.",
   "devDependencies": {
     "@types/socket.io": "^1.4.36"
