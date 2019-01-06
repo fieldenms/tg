@@ -37,7 +37,7 @@ public class GuardCentreRegenerationPostAction implements IPostAction {
                 + "self._postRun = (function (criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, summary, columnWidths, visibleColumnsWithOrder) {\n"
                 + "    old_postRun(criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, summary, columnWidths, visibleColumnsWithOrder);\n"
                 + "    \n"
-                + "    if (criteriaEntity !== null && !criteriaEntity.isValidWithoutException() && criteriaEntity.exceptionOccured().message === '%s') {\n"
+                + "    if (criteriaEntity !== null && !criteriaEntity.isValidWithoutException() && criteriaEntity.exceptionOccured() && criteriaEntity.exceptionOccured().message === '%s') {\n"
                 + "        self.confirm('%s', [{name:'Yes', confirm:true, autofocus:true}, {name:'No'}]).then(function () {\n"
                 + "            return self.run(undefined, undefined, true);\n" // forceRegeneration is true (isAutoRunning and isSortingAction are undefined)
                 + "        }, function () {});\n" // skip legal rejection of promise (when 'No' button has been pressed)
