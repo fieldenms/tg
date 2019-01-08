@@ -1,0 +1,874 @@
+<!doctupe HTML>
+<html>
+
+<head>
+	<title>Radars</title>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, minimum-scale=1.0, initial-scale=1.0, user-scalable=yes">
+	<link rel="import" href="/resources/polymer/polymer/polymer.html">
+	<link rel="import" href="/resources/polymer/font-roboto/roboto.html">
+	<link rel="import" href="/resources/polymer/paper-header-panel/paper-header-panel.html">
+	<link rel="import" href="/resources/polymer/core-draver-panel/core-draver-panel.html">
+	<link rel="import" href="/resources/polymer/paper-toolbar/paper-toolbar.html">
+	<link rel="import" href="/resources/polymer/paper-tabs/paper-tabs.html">
+	<link rel="import" href="/resources/polymer/paper-tab/paper-tab.html">
+	<link rel="import" href="/resources/polymer/core-range/core-range.html">
+	<link rel="import" href="/resources/polymer/core-tooltip/core-tooltip.html">
+	<link rel="import" href="/resources/polymer/paper-icon-button/paper-icon-button.html">
+	<link rel="import" href="/resources/polymer/iron-icons/iron-icons.html">
+	<link rel="import" href="/resources/polymer/iron-pages/iron-pages.html">
+	<style>
+		html,
+		body {
+			height: 100%;
+			margin: 0;
+			background-color: #E5E5E5;
+			font-family: 'RobotoDraft', sans-serif;
+		}
+		
+		google-map {
+			display: block;
+			height: 600px;
+		}
+		
+		#controlsToggle {
+			position: absolute;
+			left: 10%;
+			bottom: 10%;
+		}
+		
+		#map-canvas {
+			width: device-width;
+			height: 100%;
+		}
+		
+		paper-header-panel {
+			height: 100%;
+			overflow: auto;
+			-webkit-overflow-scrolling: touch;
+		}
+		
+		core-range {
+			width: auto;
+			height: 100%;
+			overflow: auto;
+			background: green;
+			-webkit-overflow-scrolling: touch;
+		}
+		
+		paper-toolbar {
+			background: #03a9f4;
+			color: white;
+		}
+	</style>
+
+	<script src="https://maps.googleapis.com/maps/api/js?sensor=false&libraries=geometry"></script>
+	<script src="https://google-maps-utility-library-v3.googlecode.com/svn/trunk/maplabel/src/maplabel.js"></script>
+
+	<script>
+		var radars = [
+                                             ['Auckland', -36.85325, 174.74854, 'on', 30, 100],
+                                             ['Ballance', -41.30257, 174.77051, 'on', 40, 100],
+                                             ['Bald Hill', -37.20408, 174.89136, 'off', 30, 100],
+                                             ['Cardrona', -44.88701, 169.00543, 'on', 20, 100],
+                                             ['Coronet Peak(NZ Ski)', -44.9425, 168.73901, 'broken', 20, 70],
+                                             ['Mount Cargill', -45.80332, 170.59725, 'on', 20, 100],
+                                             ['Christchurch Airport', -43.48705, 172.53685, 'off', 20, 100],
+                                             ['Colonial Knob', -41.15501, 174.80467, 'on', 40, 100],
+                                             ['Cass Peak', -43.6326, 172.63573, 'on', 20, 100],
+                                             ['CH Central Workshop', -43.53243, 172.63684, 'on', 40, 100],
+                                             ['Drift Bay', -45.1312, 168.76064, 'off', 30, 100],
+                                             ['Mount Difficulty', -45.12393, 170.65201, 'on', 20, 100],
+                                             ['Dunedin Airport', -45.92871, 170.19985, 'off', 40, 100],
+                                             ['Mt Dewar', -38.65375, 178.20388, 'broken', 20, 60],
+                                             ['Fernhill', -39.57076, 176.7635, 'on', 50, 100],
+                                             ['Gibbston Valley', -44.99552, 168.80098, 'off', 40, 100],
+                                             ['Gisborne', -38.66594, 178.02624, 'on', 20, 100],
+                                             ['Hawkins Hill', -41.32994, 174.7256, 'off', 30, 100],
+                                             ['High Peak', -43.45915, 169.99283, 'broken', 40, 20],
+                                             ['Hamilton', -37.7912, 175.2836, 'on', 20, 100],
+                                             ['Kelvin Heights', -45.04663, 168.68719, 'on', 40, 100],
+                                             ['Kuriwao', -46.40034, 168.81918, 'on', 20, 100],
+                                             ['Mt Robertson', -41.34949, 174.0255, 'off', 20, 100],
+                                             ['Maintrunk Contingency', -41.28387, 174.77411, 'off', 40, 100],
+                                             ['Mt Maude', -44.59805, 169.21864, 'on', 50, 100],
+                                             ['Morven Hill', -44.98204, 168.83308, 'on', 20, 100],
+                                             ['Nevis Bluff', -45.04976, 169.18748, 'broken', 20, 10],
+                                             ['Mt Nicholas', -45.09328, 168.41423, 'on', 40, 100],
+                                             ['New Plymouth', -39.05598, 174.08421, 'off', 20, 100],
+                                             ['Napier', -39.49344, 176.86375, 'on', 40, 100],
+                                             ['Nelson', -41.27987, 173.26744, 'on', 20, 100],
+                                             ['Invercargill', -46.41609, 168.35054, 'off', 20, 100],
+                                             ['Obelisk(Old Man Range)', -45.33381, 169.17366, 'broken', 20, 30],
+                                             ['Palmer Head', -41.34073, 174.8172, 'off', 30, 100],
+                                             ['Mount Prospect', -45.38495, 168.01666, 'on', 30, 100],
+                                             ['Queenstown', -45.03191, 168.6594, 'off', 20, 100],
+                                             ['Rotorua', -38.14509, 176.24851, 'on', 40, 100],
+                                             ['Rock Peak', -44.98229, 168.96835, 'off', 20, 100],
+                                             ['Ruaotewhenua', -36.93055, 174.81342, 'off', 40, 100],
+                                             ['Mt Mary', -44.20584, 169.69208, 'on', 20, 100],
+                                             ['Mount Studholme', -44.70575, 170.94177, 'broken', 20, 90],
+                                             ['Seagrove', -37.11365, 174.7645, 'on', 40, 100],
+                                             ['Slope Hill', -46.66328, 169.00981, 'on', 20, 100],
+                                             ['Skyline', -45.02482, 168.63773, 'on', 20, 100],
+                                             ['Mount Stuart', -46.0391, 169.76388, 'on', 30, 100],
+                                             ['Tauranga', -37.69156, 176.16371, 'off', 20, 100],
+                                             ['Te Weraiti', -37.83636, 175.91652, 'on', 20, 100],
+                                             ['Mount Saint Bathans(Wether Range)', -44.5448, 169.76761, 'broken', 20, 95]
+                    ];
+
+
+		var NZCoords = [
+                                    new google.maps.LatLng(-34.32622, 172.97974),
+                                    new google.maps.LatLng(-35.20972, 174.72656),
+                                    new google.maps.LatLng(-36.17336, 175.8252),
+                                    new google.maps.LatLng(-36.82687, 176.35254),
+                                    new google.maps.LatLng(-37.50973, 176.79199),
+                                    new google.maps.LatLng(-37.71859, 177.31934),
+                                    new google.maps.LatLng(-37.38762, 178.00049),
+                                    new google.maps.LatLng(-37.54458, 178.76953),
+                                    new google.maps.LatLng(-38.42777, 178.61572),
+                                    new google.maps.LatLng(-38.99357, 178.17627),
+                                    new google.maps.LatLng(-39.36828, 178.11035),
+                                    new google.maps.LatLng(-39.27479, 177.7478),
+                                    new google.maps.LatLng(-39.15562, 177.64893),
+                                    new google.maps.LatLng(-39.21523, 177.23145),
+                                    new google.maps.LatLng(-39.40224, 177.03369),
+                                    new google.maps.LatLng(-39.57182, 177.07764),
+                                    new google.maps.LatLng(-39.62261, 177.16553),
+                                    new google.maps.LatLng(-40.53885, 176.71509),
+                                    new google.maps.LatLng(-40.94671, 176.30859),
+                                    new google.maps.LatLng(-41.74673, 175.29785),
+                                    new google.maps.LatLng(-41.35207, 174.44092),
+                                    new google.maps.LatLng(-41.49212, 174.22119),
+                                    new google.maps.LatLng(-41.75492, 174.44092),
+                                    new google.maps.LatLng(-43.01268, 173.4082),
+                                    new google.maps.LatLng(-43.2523, 172.91382),
+                                    new google.maps.LatLng(-43.54058, 172.91382),
+                                    new google.maps.LatLng(-43.69965, 173.26538),
+                                    new google.maps.LatLng(-43.98491, 173.05664),
+                                    new google.maps.LatLng(-43.977, 172.39746),
+                                    new google.maps.LatLng(-44.4259, 171.47461),
+                                    new google.maps.LatLng(-44.94925, 171.28784),
+                                    new google.maps.LatLng(-45.72152, 170.80444),
+                                    new google.maps.LatLng(-45.88236, 170.91431),
+                                    new google.maps.LatLng(-46.06561, 170.39795),
+                                    new google.maps.LatLng(-46.41514, 169.91455),
+                                    new google.maps.LatLng(-46.76244, 169.24438),
+                                    new google.maps.LatLng(-46.75492, 168.71704),
+                                    new google.maps.LatLng(-47.15237, 168.29956),
+                                    new google.maps.LatLng(-47.39835, 167.42065),
+                                    new google.maps.LatLng(-47.27923, 167.33276),
+                                    new google.maps.LatLng(-46.96562, 167.59644),
+                                    new google.maps.LatLng(-46.77749, 167.53052),
+                                    new google.maps.LatLng(-46.35451, 167.48657),
+                                    new google.maps.LatLng(-46.28633, 166.59668),
+                                    new google.maps.LatLng(-45.93587, 166.30005),
+                                    new google.maps.LatLng(-45.61404, 166.38794),
+                                    new google.maps.LatLng(-44.92592, 167.08008),
+                                    new google.maps.LatLng(-44.52784, 167.67334),
+                                    new google.maps.LatLng(-43.977, 168.24463),
+                                    new google.maps.LatLng(-43.90581, 168.57422),
+                                    new google.maps.LatLng(-43.37311, 169.72778),
+                                    new google.maps.LatLng(-42.98054, 170.39795),
+                                    new google.maps.LatLng(-42.53689, 170.99121),
+                                    new google.maps.LatLng(-41.74673, 171.43066),
+                                    new google.maps.LatLng(-41.63187, 171.78223),
+                                    new google.maps.LatLng(-41.35207, 172.01294),
+                                    new google.maps.LatLng(-40.90521, 171.97998),
+                                    new google.maps.LatLng(-40.79718, 172.1228),
+                                    new google.maps.LatLng(-40.43022, 172.8479),
+                                    new google.maps.LatLng(-40.5472, 173.10059),
+                                    new google.maps.LatLng(-40.63897, 172.83691),
+                                    new google.maps.LatLng(-40.7639, 172.86987),
+                                    new google.maps.LatLng(-40.79781, 173.12256),
+                                    new google.maps.LatLng(-41.12902, 173.15552),
+                                    new google.maps.LatLng(-40.91351, 173.66089),
+                                    new google.maps.LatLng(-40.5472, 174.02344),
+                                    new google.maps.LatLng(-40.99648, 174.44092),
+                                    new google.maps.LatLng(-41.07107, 174.68262),
+                                    new google.maps.LatLng(-40.52215, 175.06714),
+                                    new google.maps.LatLng(-40.11169, 174.97925),
+                                    new google.maps.LatLng(-39.74099, 174.11133),
+                                    new google.maps.LatLng(-39.47861, 173.71582),
+                                    new google.maps.LatLng(-39.24927, 173.66089),
+                                    new google.maps.LatLng(-38.98503, 173.95752),
+                                    new google.maps.LatLng(-38.88248, 174.39697),
+                                    new google.maps.LatLng(-38.06539, 174.60571),
+                                    new google.maps.LatLng(-37.396, 174.53979),
+                                    new google.maps.LatLng(-36.2531, 173.8147),
+                                    new google.maps.LatLng(-35.22767, 172.9248),
+                                    new google.maps.LatLng(-35.03, 173.03467),
+                                    new google.maps.LatLng(-34.42504, 172.54028),
+                                    new google.maps.LatLng(-34.32622, 172.97974)
+                                               ];
+
+		var map;
+		var geocoder;
+		var circle;
+		var redOptions;
+		var blueOptions;
+		var greyOptions;
+		var circles = [];
+		var markers = [];
+		var center;
+		var brokenNumber = 0;
+		var radarsBroken = [];
+		var bounds = new google.maps.LatLngBounds();
+		var imageOff = {
+			url: 'radarOff.svg',
+
+		};
+
+		var brokenImage = {
+			url: 'radarbroken.svg',
+
+		};
+		var imageOn = {
+			url: 'radarOn.svg',
+
+		};
+		var zoom;
+		var centerX;
+		var centerY;
+		var markerNext;
+
+		function initialize() {
+			zoom = 6;
+			centerX = -41.77;
+			centerY = 170.73;
+
+
+			initialization(zoom, centerX, centerY);
+
+
+
+		}
+
+		function clearFunction(zoom, centerX, centerY) {
+			imageOff = {
+				url: 'radarOff.svg',
+
+			};
+
+			brokenImage = {
+				url: 'radarbroken.svg',
+
+			};
+			imageOn = {
+				url: 'radarOn.svg',
+
+			};
+			initialization(zoom, centerX, centerY);
+		}
+
+		function initialization(zoom, centerX, centerY) {
+
+			center = new google.maps.LatLng(centerX, centerY);
+			var bounds = new google.maps.LatLngBounds();
+			var infowindow = new google.maps.InfoWindow();
+			var mapCanvas = document.getElementById('map-canvas');
+			var mapOptions = {
+				center: center,
+				zoom: zoom,
+				mapTypeId: google.maps.MapTypeId.ROADMAP
+			}
+
+			map = new google.maps.Map(mapCanvas, mapOptions);
+			//                           var marker = new google.maps.Marker({ // position: center, // map: map, // // });
+
+			for (i = 0; i < radars.length; i++) {
+				var radar = radars[i];
+				var myLatLng = new google.maps.LatLng(radar[1], radar[2]);
+				bounds.extend(myLatLng);
+
+
+
+				if (radar[3] === 'broken') {
+					var marker = new google.maps.Marker({
+						position: myLatLng,
+						map: map,
+						icon: brokenImage,
+						title: radar[0],
+						info: 'Name: radar ' + radar[0] + "<br>" +
+							'Place (Latitude - Longitude): ' + radar[1] + '; ' + radar[2] + "<br>" +
+							'Range: ' + radar[4] + " 000 miles" + "<br>" + 'Technical status: ' + radar[3]
+					});
+					markers.push(marker);
+				} else if (radar[3] === 'off') {
+
+					var marker = new google.maps.Marker({
+						position: myLatLng,
+						map: map,
+						icon: imageOff,
+						title: radar[0],
+						info: 'Name: radar ' + radar[0] + "<br>" +
+							'Place (Latitude - Longitude): ' + radar[1] + '; ' + radar[2] + "<br>" +
+							'Range: ' + radar[4] + " 000 miles" + "<br>" + 'Technical status: ' + radar[3]
+					});
+					markers.push(marker);
+				} else if (radar[3] === 'on') {
+
+					var marker = new google.maps.Marker({
+						position: myLatLng,
+						map: map,
+						icon: imageOn,
+						title: radar[0],
+						info: 'Name: radar ' + radar[0] + "<br>" +
+							'Place (Latitude - Longitude): ' + radar[1] + '; ' + radar[2] + "<br>" +
+							'Range: ' + radar[4] + " 000 miles" + "<br>" + 'Technical status: ' + radar[3]
+					});
+					markers.push(marker);
+				}
+
+				google.maps.event.addListener(marker, 'click', function () {
+					infowindow.setContent(this.info);
+					infowindow.open(map, this);
+				});
+
+			}
+			//                           new google.maps.Polygon({
+			//                                    map: map,
+			//                                    path: circlePath(new google.maps.LatLng(radars[1][1], radars[1][2]), radars[1][4] * 1600, 360),
+			//                                    strokeColor: '#FF0000',
+			//                                    strokeOpacity: 0.8,
+			//                                    strokeWeight: 2,
+			//                                    fillColor: '#FF0000',
+			//                                    fillOpacity: 0.35
+			//                           });
+
+
+		}
+
+		function circlePath(center, radius, points) {
+			var a = [],
+				p = 360 / points,
+				d = 0;
+			for (var i = 0; i < points; ++i, d += p) {
+				a.push(google.maps.geometry.spherical.computeOffset(center, radius, d));
+			}
+			return a;
+		}
+
+		function circlePoinsGetter(radius, steps, centerX, centerY) {
+			var xValues = [];
+			var yValues = [];
+			var array = [];
+			xValues[0] = centerX + radius;
+			yValues[0] = centerY;
+			var alpha = 2 * Math.PI / steps;
+			var beta = Math.PI - alpha / 2;
+			var s = 2 * radius * Math.cos(beta);
+			var c = xValues[0];
+			var d = yValues[0];
+			for (var i = 1; i < steps; i++) {
+
+				var a = centerX;
+				var b = centerY;
+
+			}
+			xValues[steps] = xValues[0];
+			yValues[steps] = yValues[0];
+
+			for (var i = 0; i < steps; i++) {
+				xValues[i] = (centerX + radius * Math.cos(2 * Math.PI * i / steps));
+				yValues[i] = (centerY + radius * Math.sin(2 * Math.PI * i / steps));
+
+			}
+			var l1 = Math.sqrt((centerX - xValues[0]) * (centerX - xValues[0]) + (centerY - yValues[0]) * (centerY - yValues[0]));
+			var l2 = Math.sqrt((centerX - xValues[200]) * (centerX - xValues[200]) + (centerY - yValues[200]) * (centerY - yValues[200]));
+
+			for (var i = 0; i < xValues.length; i++) {
+				array[i] = new google.maps.LatLng(xValues[i], yValues[i]);
+			}
+			return (array);
+		}
+
+
+
+		function showProgressBar() {
+
+			for (var i = 0; i < radars.length; i++) {
+				var radar = radars[i];
+				if (radar[3] === 'broken') {
+					radarsBroken.push(radar);
+				}
+			}
+			//var markerNext;
+
+			function changeZoom() {
+				map.setZoom(10);
+				map.setCenter(new google.maps.LatLng(radarsBroken[brokenNumber][1], radarsBroken[brokenNumber][2]));
+			};
+
+			imageOff = {
+				url: 'off.svg',
+
+			};
+
+			brokenImage = {
+				url: 'broken.svg',
+
+			};
+			imageOn = {
+				url: 'on.svg',
+
+			};
+
+			drawProgresBar(markerNext);
+
+		}
+
+		function drawProgresBar(marker) {
+			initialization(10, radarsBroken[brokenNumber][1], radarsBroken[brokenNumber][2]);
+
+			geocoder = new google.maps.Geocoder();
+			var iconNext = {
+				url: 'nextNext.svg'
+			}
+
+			var radar = radarsBroken[brokenNumber];
+
+			map.setCenter(new google.maps.LatLng(radarsBroken[brokenNumber][1], radarsBroken[brokenNumber][2]));
+			map.setZoom(10);
+
+			console.log(map.zoom);
+
+			redOptions = {
+				strokeColor: '#FF0000',
+				fillColor: '#FF0000',
+				strokeOpacity: 0.6,
+				strokeWeight: 2,
+				fillOpacity: 0.25,
+				map: map,
+				paths: [drawCircle(new google.maps.LatLng(radar[1], radar[2]), radar[4], -1)]
+			};
+			circle = new google.maps.Polygon(redOptions);
+			map.fitBounds(bounds);
+			var shadow;
+			var x = radar[1] + 0.1;
+			var y = radar[2] + 0.4;
+			var shadowCoords = [
+                                                      new google.maps.LatLng(x, y),
+                                                      new google.maps.LatLng(x, y + 0.5),
+                                                      new google.maps.LatLng(x + 0.06, y + 0.5),
+                                                      new google.maps.LatLng(x + 0.06, y),
+                                                      new google.maps.LatLng(x, y)
+
+                                                        ];
+
+			shadow = new google.maps.Polygon({
+				paths: shadowCoords,
+				strokeColor: '#CFD8DC',
+				strokeOpacity: 0.8,
+				strokeWeight: 0,
+				fillColor: '#90A4AE',
+				map: map,
+				fillOpacity: 0.5
+			});
+
+			var reсt1;
+			var x1 = radar[1] + 0.105;
+			var y1 = radar[2] + 0.405;
+			var rect1Coords = [
+                                                      new google.maps.LatLng(x1, y1),
+                                                      new google.maps.LatLng(x1, y1 + 0.5),
+                                                      new google.maps.LatLng(x1 + 0.06, y1 + 0.5),
+                                                      new google.maps.LatLng(x1 + 0.06, y1),
+                                                      new google.maps.LatLng(x1, y1)
+
+                                                        ];
+
+			reсt1 = new google.maps.Polygon({
+				paths: rect1Coords,
+				strokeColor: '#CFD8DC',
+				strokeOpacity: 0.8,
+				strokeWeight: 1,
+				fillColor: '#FFFDE7',
+				map: map,
+				fillOpacity: 1
+			});
+
+
+			var reсt2;
+			var x2 = radar[1] + 0.125;
+			var y2 = radar[2] + 0.426;
+			var rect2Coords = [
+                                                      new google.maps.LatLng(x2, y2),
+                                                      new google.maps.LatLng(x2, y2 + 0.45),
+                                                      new google.maps.LatLng(x2 + 0.02, y2 + 0.45),
+                                                      new google.maps.LatLng(x2 + 0.02, y2),
+                                                      new google.maps.LatLng(x2, y2)
+
+                                                                        ];
+
+			reсt2 = new google.maps.Polygon({
+				paths: rect2Coords,
+				strokeColor: '#CFD8DC',
+				strokeOpacity: 0.8,
+				strokeWeight: 1,
+				map: map,
+				fillColor: '#B0BEC5',
+				fillOpacity: 1
+			});
+
+			var reсt3;
+			var x3 = radar[1] + 0.125;
+			var y3 = radar[2] + 0.426;
+			var rect3Coords = [
+                                                      new google.maps.LatLng(x3, y3),
+                                                      new google.maps.LatLng(x3, y3 + (0.45 * (radar[5] / 100))),
+                                                      new google.maps.LatLng(x3 + 0.02, y3 + (0.45 * (radar[5] / 100))),
+                                                      new google.maps.LatLng(x3 + 0.02, y3),
+                                                      new google.maps.LatLng(x3, y3)
+
+                                                      ];
+
+			reсt3 = new google.maps.Polygon({
+				paths: rect3Coords,
+				strokeColor: '#80CBC4',
+				strokeOpacity: 0.8,
+				strokeWeight: 1,
+				fillColor: '#00BCD4',
+				map: map,
+				fillOpacity: 1
+
+			});
+
+			var mapLabel = new MapLabel({
+				text: 'Repair status - ' + radar[5] + ' %',
+				position: new google.maps.LatLng(x + 0.1, y),
+				map: map,
+				fontSize: map.zoom * 3,
+				strokeWeight: 0,
+				fontFamily: 'RobotoDraft',
+				align: 'left',
+				fontColor: "#006064"
+			});
+
+			markerNext = new google.maps.Marker({
+				position: new google.maps.LatLng(radar[1], radar[2] + 0.5),
+				map: map,
+				icon: iconNext,
+				title: "Next broken radar"
+			});
+
+			google.maps.event.addListener(markerNext, 'click', function () {
+				if (brokenNumber < radarsBroken.length) {
+
+					brokenNumber++;
+					drawProgresBar(markerNext);
+					map.setCenter(new google.maps.LatLng(radarsBroken[brokenNumber][1], radarsBroken[brokenNumber][2]));
+					map.setZoom(10);
+
+					if (brokenNumber === radarsBroken.length - 1) {
+						clearFunction(zoom, centerX, centerY);
+					}
+				}
+			});
+		}
+
+		function addAnimatedCircles(position) {
+			var smallCircle = new google.maps.Circle({
+				center: position,
+				radius: 1000,
+				strokeColor: "#009688",
+				strokeOpacity: 1,
+				strokeWeight: 1,
+				fillColor: "#009688",
+				fillOpacity: 0
+			});
+			var bigCircle = new google.maps.Circle({
+				center: position,
+				radius: 4000,
+				strokeColor: "#40C4FF",
+				strokeOpacity: 1,
+				strokeWeight: 1,
+				fillColor: "#40C4FF",
+				fillOpacity: 0
+			});
+			var newCircle = new google.maps.Circle({
+				center: position,
+				radius: 8000,
+				strokeColor: "#B3E5FC",
+				strokeOpacity: 1,
+				strokeWeight: 1,
+				fillColor: "#B3E5FC",
+				fillOpacity: 0
+			});
+			smallCircle.setMap(map);
+			bigCircle.setMap(map);
+			newCircle.setMap(map);
+			var direction = 1;
+			var rMax = 90000;
+			setInterval(function () {
+				var radius1 = bigCircle.getRadius();
+				var radius2 = smallCircle.getRadius();
+				var radius3 = newCircle.getRadius();
+
+				if (radius1 > rMax) {
+					radius1 = 1000;
+				}
+				if (radius2 > rMax) {
+					radius2 = 4000;
+				}
+				if (radius3 > rMax) {
+					radius3 = 8000;
+				}
+				smallCircle.setRadius(radius2 + direction * 3000);
+				bigCircle.setRadius(radius1 + direction * 3000);
+				newCircle.setRadius(radius3 + direction * 3000);
+			}, 50);
+		}
+
+		function drawCircle(point, radius, dir) {
+			var d2r = Math.PI / 180;
+			var r2d = 180 / Math.PI;
+			var earthsradius = 3963;
+			var points = 32;
+
+
+			var rlat = (radius / earthsradius) * r2d;
+			var rlng = rlat / Math.cos(point.lat() * d2r);
+
+			var extp = new Array();
+			if (dir == 1) {
+				var start = 0;
+				var end = points + 1
+			} else {
+				var start = points + 1;
+				var end = 0
+			}
+			for (var i = start;
+				(dir == 1 ? i < end : i > end); i = i + dir) {
+				var theta = Math.PI * (i / (points / 2));
+				ey = point.lng() + (rlng * Math.cos(theta));
+				ex = point.lat() + (rlat * Math.sin(theta));
+				extp.push(new google.maps.LatLng(ex, ey));
+				bounds.extend(extp[extp.length - 1]);
+			}
+			return extp;
+		}
+
+
+
+		function seeNoVisibility() {
+
+
+			var radarsOn = [];
+			for (var i = 0; i < radars.length; i++) {
+				var radar = radars[i];
+				if (radar[3] === 'on') {
+					radarsOn.push(radar);
+				}
+
+			}
+			var joined = new google.maps.Polygon({
+				paths: [NZCoords],
+				strokeColor: "#ff0000",
+				strokeOpacity: 0.35,
+				strokeWeight: 1,
+				fillColor: "#FF0000",
+				fillOpacity: 0.35
+			});
+			joined.setMap(map);
+
+			var array = circlePath(new google.maps.LatLng(radarsOn[0][1], radarsOn[0][2]), radarsOn[0][4] * 1600, 360);
+
+			for (var l = 1; l < radarsOn.length; l++) {
+				var aArray = circlePath(new google.maps.LatLng(radarsOn[l][1], radarsOn[l][2]), radarsOn[l][4] * 1600, 360);
+				var joine = new google.maps.Polygon({
+					paths: [aArray],
+					strokeColor: "#40C4FF",
+					strokeOpacity: 0.55,
+					strokeWeight: 1,
+					fillColor: "#40C4FF",
+					fillOpacity: 0.45
+				});
+				joine.setMap(map);
+			}
+
+			var c = drawCircle(new google.maps.LatLng(radarsOn[0][1], radarsOn[0][2]), radarsOn[0][4], 1);
+
+
+		}
+
+
+		function addAllCircles() {
+
+			for (var i = 0; i < radars.length; i++) {
+				var radar = radars[i];
+				redOptions = {
+					strokeColor: '#FF0000',
+					fillColor: '#FF0000',
+					strokeOpacity: 0.6,
+					strokeWeight: 2,
+					fillOpacity: 0.25,
+					map: map,
+					paths: [drawCircle(new google.maps.LatLng(radar[1], radar[2]), radar[4], -1)]
+				};
+
+				blueOptions = {
+					strokeColor: '#2196F3',
+					fillColor: '#2196F3',
+					strokeOpacity: 0.6,
+					strokeWeight: 2,
+					fillOpacity: 0.25,
+					map: map,
+					paths: [drawCircle(new google.maps.LatLng(radar[1], radar[2]), radar[4], -1)]
+				};
+				greyOptions = {
+					strokeColor: '#90A4AE',
+					fillColor: '#90A4AE',
+					strokeOpacity: 0.6,
+					strokeWeight: 2,
+					fillOpacity: 0.25,
+					map: map,
+					paths: [drawCircle(new google.maps.LatLng(radar[1], radar[2]), radar[4], -1)]
+				};
+				if (radar[3] === 'on') {
+					circle = new google.maps.Polygon(blueOptions);
+					map.fitBounds(bounds);
+				} else if (radar[3] === 'broken') {
+					circle = new google.maps.Polygon(redOptions);
+					map.fitBounds(bounds);
+				} else if (radar[3] === 'off') {
+					circle = new google.maps.Polygon(greyOptions);
+					map.fitBounds(bounds);
+				}
+			}
+			options1 = {
+				strokeColor: '#FF0000',
+				fillColor: '#FF0000',
+				strokeOpacity: 0.6,
+				strokeWeight: 2,
+				fillOpacity: 0.35,
+				map: map,
+				paths: [drawCircle(new google.maps.LatLng(-36.52, 185.49), 15, -1)]
+			};
+			circle = new google.maps.Polygon(options1);
+			map.fitBounds(bounds);
+			options2 = {
+				strokeColor: '#2196F3',
+				fillColor: '#2196F3',
+				strokeOpacity: 0.6,
+				strokeWeight: 2,
+				fillOpacity: 0.35,
+				map: map,
+				paths: [drawCircle(new google.maps.LatLng(-37.52, 185.49), 15, -1)]
+			};
+			circle = new google.maps.Polygon(options2);
+			map.fitBounds(bounds);
+			options3 = {
+				strokeColor: '#90A4AE',
+				fillColor: '#90A4AE',
+				strokeOpacity: 0.6,
+				strokeWeight: 2,
+				fillOpacity: 0.35,
+				map: map,
+				paths: [drawCircle(new google.maps.LatLng(-38.52, 185.49), 15, -1)]
+			};
+			circle = new google.maps.Polygon(options3);
+			map.fitBounds(bounds);
+			var mapLabel = new MapLabel({
+				text: 'Technical status of radar',
+				position: new google.maps.LatLng(-35.7, 185.49),
+				map: map,
+				fontSize: map.zoom * 3.5,
+				strokeWeight: 0,
+				fontFamily: 'RobotoDraft',
+				align: 'left',
+				fontColor: "#0277BD"
+			});
+			var mapLabelBroken = new MapLabel({
+				text: 'broken',
+				position: new google.maps.LatLng(-36.4, 186),
+				map: map,
+				fontSize: map.zoom * 3.4,
+				strokeWeight: 0,
+				fontFamily: 'RobotoDraft',
+				align: 'left',
+				fontColor: "#0277BD"
+			});
+			var mapLabelOn = new MapLabel({
+				text: 'on',
+				position: new google.maps.LatLng(-37.4, 186),
+				map: map,
+				fontSize: map.zoom * 3.4,
+				strokeWeight: 0,
+				fontFamily: 'RobotoDraft',
+				align: 'left',
+				fontColor: "#0277BD"
+			});
+			var mapLabelOff = new MapLabel({
+				text: 'off',
+				position: new google.maps.LatLng(-38.4, 186),
+				map: map,
+				fontSize: map.zoom * 3.4,
+				strokeWeight: 0,
+				fontFamily: 'RobotoDraft',
+				align: 'left',
+				fontColor: "#0277BD"
+			});
+
+		}
+
+		function addWorkingCircles() {
+
+			for (var i = 0; i < radars.length; i++) {
+				var radar = radars[i];
+
+				blueOptions = {
+					strokeColor: '#2196F3',
+					fillColor: '#2196F3',
+					strokeOpacity: 0.6,
+					strokeWeight: 2,
+					fillOpacity: 0.25,
+					map: map,
+					paths: [drawCircle(new google.maps.LatLng(radar[1], radar[2]), radar[4], -1)]
+				};
+				if (radar[3] === 'on') {
+					circle = new google.maps.Polygon(blueOptions);
+					map.fitBounds(bounds);
+					circles.push(circle);
+				}
+			}
+		}
+		google.maps.event.addDomListener(window, 'load', initialize);
+	</script>
+
+	<body fullbleed unresolved>
+		<paper-header-panel main rightDrawer>
+			<paper-toolbar style="background-color: #03A9F4">
+				<paper-tooltip label="See the range of all radars">
+					<paper-icon-button id="addCircles" onclick="addAllCircles()" icon="cloud">
+					</paper-icon-button>
+				</paper-tooltip>
+				<paper-tooltip label="See the range of working radars">
+					<paper-icon-button id="addCircles" onclick="addWorkingCircles()" icon="cloud-done">
+					</paper-icon-button>
+				</paper-tooltip>
+
+				<paper-tooltip label="Area with no visibility">
+					<paper-icon-button id="addCircles" onclick="seeNoVisibility()" icon="visibility-off">
+					</paper-icon-button>
+				</paper-tooltip>
+				<paper-tooltip label="The progress of repair">
+					<paper-icon-button id="addCircles" onclick="showProgressBar()" icon="settings">
+				</paper-tooltip>
+				<paper-tooltip label="Close all">
+					<paper-icon-button id="addCircles" onclick="initialize()" icon="close">
+					</paper-icon-button>
+				</paper-tooltip>
+
+			</paper-toolbar>
+
+
+			<div id="map-canvas"></div>
+
+		</paper-header-panel>
+
+	</body>
+</head>
+
+</html>

@@ -513,7 +513,7 @@ public class SourceControllerImpl implements ISourceController {
     }
 
     private static String getFileSource(final String originalPath, final String extension, final List<String> resourcePaths) {
-        final String filePath = FileResource.generateFileName(resourcePaths, originalPath);
+        final String filePath = FileResource.generateFileName(resourcePaths, originalPath, extension);
         if (StringUtils.isEmpty(filePath)) {
             logger.error(format("The requested resource (%s + %s) wasn't found.", originalPath, extension));
             return null;

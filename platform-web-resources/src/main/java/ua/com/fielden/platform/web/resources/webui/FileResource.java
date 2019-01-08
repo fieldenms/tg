@@ -56,12 +56,12 @@ public class FileResource extends AbstractWebResource {
         final String originalPath = getReference().getRemainingPart();
         final String extension = getReference().getExtensions();
 
-        if (isEmpty(extension)) {
-            LOGGER.warn(format("The request tried to obtain a file resource with empty extension ([%s] + [%s]), which is not supported.", originalPath, extension));
-            return null;
-        }
+//        if (isEmpty(extension)) {
+//            LOGGER.warn(format("The request tried to obtain a file resource with empty extension ([%s] + [%s]), which is not supported.", originalPath, extension));
+//            return null;
+//        }
 
-        final String filePath = generateFileName(resourcePaths, originalPath);
+        final String filePath = generateFileName(resourcePaths, originalPath, extension);
         if (isEmpty(filePath)) {
             LOGGER.warn(format("The requested file resource ([%s] + [%s]) wasn't found.", originalPath, extension));
             return null;
@@ -89,23 +89,23 @@ public class FileResource extends AbstractWebResource {
 
     /**
      * Searches for the file resource among resource paths starting from the last one path and generates full file path by concatenating resource path and relative file path.
+     * @param extension
+     *            - the file resource extension
      *
      * @param filePath
      *            - the relative file path for which full file path must be generated.
      * @return
      */
-    public static String generateFileName(final List<String> resourcePaths, final String path) {
+    public static String generateFileName(final List<String> resourcePaths, final String path, final String extension) {
         // this is a preventive stuff: if the server receives additional link parameters -- JUST IGNORE THEM. Was used to run
         // appropriately Mocha / Chai tests for Polymer web components. See http://localhost:8091/resources/polymer/runner.html for results.
         final String filePath = path.contains("?") ? path.substring(0, path.indexOf('?')) : path;
-//        if (filePath.contains("@")) {
-//            filePath = "polymer/" + filePath.substring(filePath.indexOf("@"));
-//        }
+        final String filePathWithExtension = isEmpty(extension) ? filePath + ".js" : filePath;
 
         for (int pathIndex = 0; pathIndex < resourcePaths.size(); pathIndex++) {
             final String prepender = resourcePaths.get(pathIndex);
-            if (ResourceLoader.exist(prepender + filePath)) {
-                return prepender + filePath;
+            if (ResourceLoader.exist(prepender + filePathWithExtension)) {
+                return prepender + filePathWithExtension;
             }
         }
         return null;
@@ -119,11 +119,12 @@ public class FileResource extends AbstractWebResource {
      * @return
      */
     private static MediaType determineMediaType(final String extension) {
-        switch (extension.substring(extension.lastIndexOf(".") + 1)) {
+        switch (isEmpty(extension) ? "" : extension.substring(extension.lastIndexOf(".") + 1)) {
         case "png":
             return MediaType.IMAGE_PNG;
         case "js":
         case "json":
+        case "":
             return MediaType.TEXT_JAVASCRIPT;
         case "html":
             return MediaType.TEXT_HTML;

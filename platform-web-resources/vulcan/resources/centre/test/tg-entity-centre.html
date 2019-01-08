@@ -1,0 +1,120 @@
+<!doctype html>
+<html>
+
+<head>
+	<meta charset="UTF-8">
+	<title>entity-centre basic tests</title>
+	<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+	
+	<script src="/resources/polymer/webcomponentsjs/webcomponents-lite.js"></script>
+	<script src="/resources/polymer/web-component-tester/browser.js"></script>
+	<script src="/resources/polymer/test-fixture/test-fixture-mocha.js"></script>
+	<script src="/resources/polymer/iron-test-helpers/mock-interactions.js"></script>
+	
+	<link rel="import" href="/resources/polymer/test-fixture/test-fixture.html">
+  
+    <link rel="import" href="/app/tg-reflector.html">
+    <link rel="import" href="/centre_ui/ua.com.fielden.platform.ui.menu.sample.MiTgFetchProviderTestEntity">
+</head>
+
+<body>
+	<tg-reflector id="reflector"></tg-reflector>
+	<test-fixture id="CentreFixture">
+    	<template>
+    	    <tg-MiTgFetchProviderTestEntity-centre id="centre"></tg-MiTgFetchProviderTestEntity-centre>
+    	</template>
+	</test-fixture>
+
+    <script>
+    suite('entity centre', function() {
+        let centre, reflector;
+        
+        setup(function() {
+            centre = fixture('CentreFixture');
+            reflector = document.querySelector('#reflector');
+        });
+        
+        test('running does not occur for invalid criteria', function (done) {
+            var old_postRun = centre._postRun;
+            
+            centre._postRun = function (criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, summary, columnWidths, visibleColumnsWithOrder) {
+                old_postRun(criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, summary, columnWidths, visibleColumnsWithOrder);
+                
+                assert.strictEqual(centre.$.selection_criteria._centreChanged, true, '_centreChanged flag should be defined and should equal true.');
+                assert.ok(criteriaEntity, 'Criteria entity should arrive from the server.');
+                assert.strictEqual(criteriaEntity.isValid(), false, 'Criteria entity should be invalid.');
+                assert.deepEqual(resultEntities, [], 'Results should be empty, run should not be performed.');
+                assert.deepEqual(renderingHints, [], 'Results should be empty (renderingHints), run should not be performed.');
+                
+                centre.async(function () {
+                    assert.strictEqual(centre._selectedView, 0, 'The view should not be switched to EGI result-set.');
+                    centre.discard().then(function () {
+                        done();
+                    });
+                }, 200);
+            };
+            
+            centre.$.selection_criteria.postValidated = function () {
+                centre.run();
+            };
+            
+            const oldPostRetrieved = centre.postRetrieved || function (entity, bindingEntity, customObject) {};
+            centre.postRetrieved = function (entity, bindingEntity, customObject) {
+                oldPostRetrieved(entity, bindingEntity, customObject);
+                centre.postRetrieved = oldPostRetrieved;
+                
+                assert.strictEqual(bindingEntity.get('tgFetchProviderTestEntity_propForValidation'), 'KEY8');
+                assert.strictEqual(centre.$.selection_criteria._centreChanged, false, '_centreChanged flag should be defined and should be equal to false.');
+                assert.ok(entity, 'Criteria entity should arrive from the server.');
+                assert.strictEqual(entity.isValid(), true, 'Criteria entity should be valid.');
+                
+                var editor = centre.$.selection_criteria.$.editor_4_tgFetchProviderTestEntity_propForValidation;
+                editor._editingValue = 'UNEXISTING';
+                editor.commit();
+            };
+            
+            centre.retrieve();
+        });
+        
+        test('run action works for custom fetch provider', function (done) {
+            var old_postRun = centre._postRun;
+            
+            centre._postRun = function (criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, summary, columnWidths, visibleColumnsWithOrder) {
+                old_postRun(criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, summary, columnWidths, visibleColumnsWithOrder);
+                
+                const entity = resultEntities[0];
+                
+                // value ok?
+                assert.ok(entity.get("property"), "Property value should be initialised.");
+                assert.ok(entity.get("additionalProperty"), "Property value should be initialised.");
+                
+                done();
+            };
+            
+            centre.postRetrieved = function (entity, bindingEntity, customObject) {
+                centre.run();
+            };
+            
+            centre.retrieve();
+        });
+        
+        test('autocompletion works for properties that do not exist in fetch provider', function (done) {
+            centre.postRetrieved = function (entity, bindingEntity, customObject) {
+                const autocompleter = centre.$.selection_criteria.$.editor_4_tgFetchProviderTestEntity_property;
+                
+                const oldOnFound = autocompleter._onFound;
+                autocompleter._onFound = function (entities) {
+                    done();
+                }.bind(autocompleter);
+                
+                autocompleter._searchOnTap();
+            };
+            
+            centre.retrieve();
+        });
+    });
+    </script>
+
+</body>
+
+</html>

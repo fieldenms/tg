@@ -1,0 +1,47 @@
+<!doctype html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <title>tg-editor for Polymer 1.0</title>
+
+    <script src="/resources/polymer/webcomponentsjs/webcomponents-lite.js"></script>
+
+    <link rel="import" href="/resources/components/tg-subheader.html">
+
+    <link rel="import" href="/resources/polymer/paper-input/paper-input.html">
+    <link rel="import" href="/resources/polymer/paper-styles/paper-styles-classes.html">
+
+    <style>
+        html {
+            font-size: 10pt;
+        }
+        body {
+            font-family: 'Roboto', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+            font-size: 10pt;
+        }
+    </style>
+
+</head>
+
+<body unresolved>
+    <template is="dom-bind">
+        <div class="layout vertical">
+            <div class="layout horizontal">
+                <paper-input class="flex"></paper-input>
+                <paper-input class="flex"></paper-input>
+            </div>
+            <tg-subheader class="flex" subheader-title="Divider"></tg-subheader>
+            <div class="layout horizontal">
+                <paper-input class="flex"></paper-input>
+                <paper-input class="flex"></paper-input>
+            </div>
+            <div class="layout horizontal">
+                <paper-input class="flex"></paper-input>
+                <paper-input class="flex"></paper-input>
+            </div>
+        </div>
+    </template>
+</body>
+
+</html>

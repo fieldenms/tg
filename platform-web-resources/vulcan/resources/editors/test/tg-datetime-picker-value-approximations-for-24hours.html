@@ -1,0 +1,485 @@
+<!doctype html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <title>tg-datetime-picker tests</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+    
+    <script src="/resources/polymer/webcomponentsjs/webcomponents-lite.js"></script>
+    <script src="/resources/polymer/web-component-tester/browser.js"></script>
+    <script src="/resources/polymer/test-fixture/test-fixture-mocha.js"></script>
+    <script src="/resources/polymer/iron-test-helpers/mock-interactions.js"></script>
+    
+    <link rel="import" href="/resources/polymer/test-fixture/test-fixture.html">
+    
+    <link rel="import" href="/app/tg-reflector.html">
+    <link rel="import" href="/resources/reflection/tg-date-utils.html">
+    <link rel="import" href="/master_ui/ua.com.fielden.platform.sample.domain.TgPersistentEntityWithProperties">
+</head>
+
+<body>
+    <tg-reflector id="reflector"></tg-reflector>
+    <test-fixture id="MasterFixture">
+        <template>
+            <tg-TgPersistentEntityWithProperties-master 
+                id="master" 
+                entity-type="ua.com.fielden.platform.sample.domain.TgPersistentEntityWithProperties" 
+                entity-id="new" 
+                current-state="EDIT">
+            </tg-TgPersistentEntityWithProperties-master>
+        </template>
+    </test-fixture>
+
+    <script>
+        suite('value approximates from', function() {
+            var master, reflector;
+
+            setup(function() {
+                master = fixture('MasterFixture');
+                reflector = document.querySelector('#reflector');
+            });
+            
+            var correctlyApproximates = function (done, targetEditingValue, approximatedEditingValue, concreteAcceptedMillis) {
+                var edProperty = master.$.editor_4_dateProp;
+                if (concreteAcceptedMillis) {
+                    edProperty.timePortionToBecomeEndOfDay = true;
+                }
+
+                master.postValidated = function (validatedEntity, bindingEntity, customObject) {
+                    assert.strictEqual(edProperty._editingValue, approximatedEditingValue, "_editingValue should be correct.");
+                    assert.strictEqual(edProperty._commValue, approximatedEditingValue, "_commValue should be correct.");
+                    var acceptedValue = edProperty._acceptedValue;
+                    assert.isNotNull(acceptedValue, "_acceptedValue should be non-empty.");
+                    if (concreteAcceptedMillis) {
+                        assert.strictEqual(acceptedValue, concreteAcceptedMillis, "_acceptedValue should correspond to 23:59:59.999 millis of the day.");
+                    }
+
+                    assert.strictEqual(validatedEntity.get("dateProp"), acceptedValue, "'dateProp' value should be the same as acceptedValue.");
+                    assert.strictEqual(bindingEntity.get("dateProp"), acceptedValue, "Binding 'dateProp' value should be the same as acceptedValue.");
+
+                    done();
+                };
+
+                master.postRetrieved = function (entity, bindingEntity, customObject) {
+                    assert.strictEqual(edProperty._editingValue, '', "_editingValue should be empty on start (empty string).");
+                    assert.strictEqual(edProperty._commValue, '', "_commValue should be empty on start (empty string).");
+                    assert.strictEqual(edProperty._acceptedValue, null, "_acceptedValue should be empty on start (null).");
+
+                    assert.strictEqual(entity.get("dateProp"), null, "'property' value should be empty on start (null).");
+                    assert.strictEqual(bindingEntity.get("dateProp"), null, "Binding 'property' value should be empty on start (null).");
+
+                    edProperty._editingValue = targetEditingValue;
+                    edProperty.commit();
+                    assert.strictEqual(edProperty._editingValue, approximatedEditingValue, "_editingValue should be already approximated.");
+                    
+                    assert.strictEqual(edProperty._editorValidationMsg, null, 'Editor should not have error.');
+                };
+
+                master.retrieve();
+            };
+            
+            var incorrectlyApproximates = function (done, targetEditingValue) {
+                var edProperty = master.$.editor_4_dateProp;
+
+                master.postValidated = function (validatedEntity, bindingEntity, customObject) {
+                    throw 'Validation should not be invoked in case of incorrect date format.';
+                };
+
+                master.postRetrieved = function (entity, bindingEntity, customObject) {
+                    assert.strictEqual(edProperty._editingValue, '', "_editingValue should be empty on start (empty string).");
+                    assert.strictEqual(edProperty._commValue, '', "_commValue should be empty on start (empty string).");
+                    assert.strictEqual(edProperty._acceptedValue, null, "_acceptedValue should be empty on start (null).");
+
+                    assert.strictEqual(entity.get("dateProp"), null, "'property' value should be empty on start (null).");
+                    assert.strictEqual(bindingEntity.get("dateProp"), null, "Binding 'property' value should be empty on start (null).");
+
+                    edProperty._editingValue = targetEditingValue;
+                    edProperty.commit();
+                    assert.strictEqual(edProperty._editingValue, targetEditingValue, "_editingValue should remain the same -- the date is incorrect.");
+                    
+                    assert.strictEqual(edProperty._editorValidationMsg, 'The entered date is incorrect.', 'Editor should have error.');
+                    
+                    done();
+                };
+
+                master.retrieve();
+            };
+            
+            // ===============================
+            // day+month aproximations into 'current year' date
+            var currYearStr = _momentTz().format('YYYY'); // '2016';
+            
+            test('[9/9] to [09/09/' + currYearStr + ' 00:00]', function(done) {
+                correctlyApproximates(done, '9/9', '09/09/' + currYearStr + ' 00:00');
+            });
+            
+            test('[09/9] to [09/09/' + currYearStr + ' 00:00]', function(done) {
+                correctlyApproximates(done, '09/9', '09/09/' + currYearStr + ' 00:00');
+            });
+            
+            test('[ 9 / 09  ] to [09/09/' + currYearStr + ' 00:00]', function(done) {
+                correctlyApproximates(done, ' 9 / 09  ', '09/09/' + currYearStr + ' 00:00');
+            });
+            
+            test('[ 9 / 09  21:45] to [09/09/' + currYearStr + ' 21:45]', function(done) {
+                correctlyApproximates(done, ' 9 / 09  21:45', '09/09/' + currYearStr + ' 21:45');
+            });
+            
+            test('[ 9 / 09  21 ] to [09/09/' + currYearStr + ' 21:00]', function(done) {
+                correctlyApproximates(done, ' 9 / 09  21 ', '09/09/' + currYearStr + ' 21:00');
+            });
+            
+            test('[9/9 9p] to [09/09/' + currYearStr + ' 21:00]', function(done) {
+                correctlyApproximates(done, '9/9 9p', '09/09/' + currYearStr + ' 21:00');
+            });
+            
+            test('[9/9 9:47:14.567p] to [09/09/' + currYearStr + ' 21:47:14.567]', function(done) {
+                correctlyApproximates(done, '9/9 9:47:14.567p', '09/09/' + currYearStr + ' 21:47:14.567');
+            });
+            
+            // ===============================
+            // time portion aproximations into 'today' date
+            var todayStr = _momentTz().format('L'); // '17/10/2016';
+            
+            test('[11:03:34.567] to [' + todayStr + ' 11:03:34.567]', function(done) {
+                correctlyApproximates(done, '11:03:34.567', todayStr + ' 11:03:34.567');
+            });
+            
+            test('[23:03:34.567] to [' + todayStr + ' 23:03:34.567]', function(done) {
+                correctlyApproximates(done, '23:03:34.567', todayStr + ' 23:03:34.567');
+            });
+            
+            test('[21:5:34.567] to [' + todayStr + ' 21:05:34.567]', function(done) {
+                correctlyApproximates(done, '21:5:34.567', todayStr + ' 21:05:34.567');
+            });
+            
+            test('[9:5:34.567] to [' + todayStr + ' 09:05:34.567]', function(done) {
+                correctlyApproximates(done, '9:5:34.567', todayStr + ' 09:05:34.567');
+            });
+            
+            // h:m:ss.SSSa
+            test('[11:03:34.567a] to [' + todayStr + ' 11:03:34.567]', function(done) {
+                correctlyApproximates(done, '11:03:34.567a', todayStr + ' 11:03:34.567');
+            });
+            
+            test('[11:03:34.567p] to [' + todayStr + ' 23:03:34.567]', function(done) {
+                correctlyApproximates(done, '11:03:34.567p', todayStr + ' 23:03:34.567');
+            });
+            // hmma
+            test('[1103a] to [' + todayStr + ' 11:03]', function(done) {
+                correctlyApproximates(done, '1103a', todayStr + ' 11:03');
+            });
+            
+            test('[103a] to [' + todayStr + ' 01:03]', function(done) {
+                correctlyApproximates(done, '103a', todayStr + ' 01:03');
+            });
+            
+            test('[1103p] to [' + todayStr + ' 23:03]', function(done) {
+                correctlyApproximates(done, '1103p', todayStr + ' 23:03');
+            });
+            
+            test('[103p] to [' + todayStr + ' 13:03]', function(done) {
+                correctlyApproximates(done, '103p', todayStr + ' 13:03');
+            });
+            // Hmm
+            test('[1103] to [' + todayStr + ' 11:03]', function(done) {
+                correctlyApproximates(done, '1103', todayStr + ' 11:03');
+            });
+            
+            test('[103] to [' + todayStr + ' 01:03]', function(done) {
+                correctlyApproximates(done, '103', todayStr + ' 01:03');
+            });
+            
+            test('[2303] to [' + todayStr + ' 11:03]', function(done) {
+                correctlyApproximates(done, '2303', todayStr + ' 23:03');
+            });
+            // h:ma
+            test('[11:03a] to [' + todayStr + ' 11:03]', function(done) {
+                correctlyApproximates(done, '11:03a', todayStr + ' 11:03');
+            });
+            
+            test('[1:03a] to [' + todayStr + ' 01:03]', function(done) {
+                correctlyApproximates(done, '1:03a', todayStr + ' 01:03');
+            });
+            
+            test('[11:03p] to [' + todayStr + ' 23:03]', function(done) {
+                correctlyApproximates(done, '11:03p', todayStr + ' 23:03');
+            });
+            
+            test('[1:03p] to [' + todayStr + ' 13:03]', function(done) {
+                correctlyApproximates(done, '1:03p', todayStr + ' 13:03');
+            });
+            
+            test('[11:3a] to [' + todayStr + ' 11:03]', function(done) {
+                correctlyApproximates(done, '11:3a', todayStr + ' 11:03');
+            });
+            
+            test('[1:3a] to [' + todayStr + ' 01:03]', function(done) {
+                correctlyApproximates(done, '1:3a', todayStr + ' 01:03');
+            });
+            
+            test('[11:3p] to [' + todayStr + ' 23:03]', function(done) {
+                correctlyApproximates(done, '11:3p', todayStr + ' 23:03');
+            });
+            
+            test('[1:3p] to [' + todayStr + ' 13:03]', function(done) {
+                correctlyApproximates(done, '1:3p', todayStr + ' 13:03');
+            });
+            // H:m
+            test('[11:03] to [' + todayStr + ' 11:03]', function(done) {
+                correctlyApproximates(done, '11:03', todayStr + ' 11:03');
+            });
+            
+            test('[1:03] to [' + todayStr + ' 01:03]', function(done) {
+                correctlyApproximates(done, '1:03', todayStr + ' 01:03');
+            });
+            
+            test('[23:03] to [' + todayStr + ' 23:03]', function(done) {
+                correctlyApproximates(done, '23:03', todayStr + ' 23:03');
+            });
+            
+            test('[11:3] to [' + todayStr + ' 11:03]', function(done) {
+                correctlyApproximates(done, '11:3', todayStr + ' 11:03');
+            });
+            
+            test('[1:3] to [' + todayStr + ' 01:03]', function(done) {
+                correctlyApproximates(done, '1:3', todayStr + ' 01:03');
+            });
+            
+            test('[23:3] to [' + todayStr + ' 23:03]', function(done) {
+                correctlyApproximates(done, '23:3', todayStr + ' 23:03');
+            });
+            // ha
+            test('[11a] to [' + todayStr + ' 11:00]', function(done) {
+                correctlyApproximates(done, '11a', todayStr + ' 11:00');
+            });
+            
+            test('[1a] to [' + todayStr + ' 01:00]', function(done) {
+                correctlyApproximates(done, '1a', todayStr + ' 01:00');
+            });
+            
+            test('[11p] to [' + todayStr + ' 23:00]', function(done) {
+                correctlyApproximates(done, '11p', todayStr + ' 23:00');
+            });
+            
+            test('[1p] to [' + todayStr + ' 13:00]', function(done) {
+                correctlyApproximates(done, '1p', todayStr + ' 13:00');
+            });
+            // H
+            test('[11] to [' + todayStr + ' 11:00]', function(done) {
+                correctlyApproximates(done, '11', todayStr + ' 11:00');
+            });
+            
+            test('[1] to [' + todayStr + ' 01:00]', function(done) {
+                correctlyApproximates(done, '1', todayStr + ' 01:00');
+            });
+            
+            test('[23] to [' + todayStr + ' 23:00]', function(done) {
+                correctlyApproximates(done, '23', todayStr + ' 23:00');
+            });
+            // spaces
+            test('[9:5 : 34  .  567  ] to [' + todayStr + ' 09:05:34.567]', function(done) {
+                correctlyApproximates(done, '9:5 : 34  .  567  ', todayStr + ' 09:05:34.567');
+            });
+            
+            test('[9:5:34.567  ] to [' + todayStr + ' 09:05:34.567]', function(done) {
+                correctlyApproximates(done, '9:5:34.567  ', todayStr + ' 09:05:34.567');
+            });
+            // ===============================
+            
+            test('[09/09/2002 11:03] to [09/09/2002 11:03]', function (done) {
+                correctlyApproximates(done, '09/09/2002 11:03', '09/09/2002 11:03');
+            });
+            
+            test('[09/09/2007 21:45] to [09/09/2007 21:45]', function (done) {
+                correctlyApproximates(done, '09/09/2007 21:45', '09/09/2007 21:45');
+            });
+            
+            test('[09/09/2002] to [09/09/2002 00:00]', function (done) {
+                correctlyApproximates(done, '09/09/2002', '09/09/2002 00:00');
+            });
+            
+            test('[09/09/2002] to [09/09/2002 23:59:59.999] in case of editor with timePortionToBecomeEndOfDay as true', function (done) {
+                correctlyApproximates(done, '09/09/2002', '09/09/2002 23:59:59.999', _millis('09/09/2002 23:59:59.999'));
+            });
+            
+            test('[9/09/2002] to [09/09/2002 00:00]', function (done) {
+                correctlyApproximates(done, '9/09/2002', '09/09/2002 00:00');
+            });
+
+            test('[09/9/2002] to [09/09/2002 00:00]', function (done) {
+                correctlyApproximates(done, '09/9/2002', '09/09/2002 00:00');
+            });
+            
+            test('[09/09/02] to [09/09/2002 00:00]', function (done) {
+                correctlyApproximates(done, '09/09/02', '09/09/2002 00:00');
+            });
+            
+            test('[09/09/2] to [09/09/2002 00:00]', function (done) {
+                correctlyApproximates(done, '09/09/2', '09/09/2002 00:00');
+            });
+            
+            test('[09/09/45] to [09/09/2045 00:00]', function (done) {
+                var year = moment().year() - 2000 + 30 - 1;
+                correctlyApproximates(done, '09/09/' + year, '09/09/20' + year + ' 00:00');
+            });
+            
+            test('[09/09/46] to [09/09/1946 00:00]', function (done) {
+                var year = moment().year() - 2000 + 30;
+                correctlyApproximates(done, '09/09/' + year, '09/09/19' + year + ' 00:00');
+            });
+            
+            test('[09/09/2002 9] to [09/09/2002 09:00]', function (done) {
+                correctlyApproximates(done, '09/09/2002 9', '09/09/2002 09:00');
+            });
+            
+            test('[09/09/2002 9p] to [09/09/2002 21:00]', function (done) {
+                correctlyApproximates(done, '09/09/2002 9p', '09/09/2002 21:00');
+            });
+            
+            test('[09/09/2002 9P] to [09/09/2002 21:00]', function (done) {
+                correctlyApproximates(done, '09/09/2002 9P', '09/09/2002 21:00');
+            });
+            
+            test('[09/09/2002 9:37] to [09/09/2002 09:37]', function (done) {
+                correctlyApproximates(done, '09/09/2002 9:37', '09/09/2002 09:37');
+            });
+            
+            test('[09/09/2002 9:7] to [09/09/2002 09:07]', function (done) {
+                correctlyApproximates(done, '09/09/2002 9:7', '09/09/2002 09:07');
+            });
+            
+            test('[09/09/2002 21:37] to [09/09/2002 21:37]', function(done) {
+                correctlyApproximates(done, '09/09/2002 21:37', '09/09/2002 21:37');
+            });
+            
+            test('[09/09/2002 21:7] to [09/09/2002 21:07]', function(done) {
+                correctlyApproximates(done, '09/09/2002 21:7', '09/09/2002 21:07');
+            });
+            
+            test('[09/09/2002 937] to [09/09/2002 09:37]', function(done) {
+                correctlyApproximates(done, '09/09/2002 937', '09/09/2002 09:37');
+            });
+            
+            test('[09/09/2002 2137] to [09/09/2002 21:37]', function(done) {
+                correctlyApproximates(done, '09/09/2002 2137', '09/09/2002 21:37');
+            });
+            
+            test('[9/9/02 2137] to [09/09/2002 21:37]', function(done) {
+                correctlyApproximates(done, '9/9/02 2137', '09/09/2002 21:37');
+            });
+            
+            test('[9/9/2 2137] to [09/09/2002 21:37]', function(done) {
+                correctlyApproximates(done, '9/9/2 2137', '09/09/2002 21:37');
+            });
+            
+            test('[9/9/2 937] to [09/09/2002 09:37]', function(done) {
+                correctlyApproximates(done, '9/9/2 937', '09/09/2002 09:37');
+            });
+            
+            test('[9/9/2 21:7] to [09/09/2002 21:07]', function(done) {
+                correctlyApproximates(done, '9/9/2 21:7', '09/09/2002 21:07');
+            });
+            
+            test('[9/9/2 9:7] to [09/09/2002 09:07]', function(done) {
+                correctlyApproximates(done, '9/9/2 9:7', '09/09/2002 09:07');
+            });
+            
+            test('[9/9/2 21] to [09/09/2002 21:00]', function(done) {
+                correctlyApproximates(done, '9/9/2 21', '09/09/2002 21:00');
+            });
+            
+            test('[9/9/2 21] to [09/09/2002 21:00]', function(done) {
+                correctlyApproximates(done, '9/9/2 21', '09/09/2002 21:00');
+            });
+            
+            test('[9 / 9  /   2002 21:37] to [09/09/2002 21:37]', function(done) {
+                correctlyApproximates(done, '9 / 9  /   2002 21:37', '09/09/2002 21:37');
+            });
+            
+            test('[09/09/2002 21: 37] to [09/09/2002 21:37]', function(done) {
+                correctlyApproximates(done, '09/09/2002 21: 37', '09/09/2002 21:37');
+            });
+            
+            test('[09/09/2002 21:7] to [09/09/2002 21:07]', function(done) {
+                correctlyApproximates(done, '09/09/2002 21:7', '09/09/2002 21:07');
+            });
+            
+            test('[9/9/97 21:45] to [09/09/1997 21:45]', function(done) {
+                correctlyApproximates(done, '9/9/97 21:45', '09/09/1997 21:45');
+            });
+            
+            test('[09/09/7  21:45] to [09/09/2007 21:45]', function(done) {
+                correctlyApproximates(done, '09/09/7  21:45', '09/09/2007 21:45');
+            });
+            
+            test('[ 09/09/7 21:45] to [09/09/2007 21:45]', function(done) {
+                correctlyApproximates(done, ' 09/09/7 21:45', '09/09/2007 21:45');
+            });
+            
+            test('[ 09/09/2007 21:45] to [09/09/2007 21:45]', function(done) {
+                correctlyApproximates(done, ' 09/09/2007 21:45', '09/09/2007 21:45');
+            });
+            
+            test('[09/09/2007 21:45  ] to [09/09/2007 21:45]', function(done) {
+                correctlyApproximates(done, '09/09/2007 21:45  ', '09/09/2007 21:45');
+            });
+            
+            test('[9/9/] to [9/9/]', function(done) {
+                incorrectlyApproximates(done, '9/9/');
+            });
+            
+            test('[9/] to [9/]', function(done) {
+                incorrectlyApproximates(done, '9/');
+            });
+            
+            test('[01/01/201] to [01/01/201]', function(done) {
+                incorrectlyApproximates(done, '01/01/201');
+            });
+            
+            test('[01/01/20111] to [01/01/20111]', function(done) {
+                incorrectlyApproximates(done, '01/01/20111');
+            });
+            
+            test('[01/01/201112 3:15] to [01/01/201112 3:15]', function(done) {
+                incorrectlyApproximates(done, '01/01/201112 3:15');
+            });
+            
+            test('[09/09/2007 23:05:34.567] to [09/09/2007 23:05:34.567]', function(done) {
+                correctlyApproximates(done, '09/09/2007 23:05:34.567', '09/09/2007 23:05:34.567');
+            });
+            
+            test('[09/09/2007 23:05:3.567] to [09/09/2007 23:05:3.567]', function(done) {
+                incorrectlyApproximates(done, '09/09/2007 23:05:3.567');
+            });
+            
+            test('[09/09/2007 23:05:34.56] to [09/09/2007 23:05:34.56]', function(done) {
+                incorrectlyApproximates(done, '09/09/2007 23:05:34.56');
+            });
+            
+            test('[9/9/7 21:5:34.567] to [09/09/2007 21:05:34.567]', function(done) {
+                correctlyApproximates(done, '9/9/7 21:5:34.567', '09/09/2007 21:05:34.567');
+            });
+            
+            test('[9/9/7 9:5:34.567  ] to [09/09/2007 09:05:34.567]', function(done) {
+                correctlyApproximates(done, '9/9/7 9:5:34.567  ', '09/09/2007 09:05:34.567');
+            });
+            
+            test('[9/9/7 9:5 : 34  .  567  ] to [09/09/2007 09:05:34.567]', function(done) {
+                correctlyApproximates(done, '9/9/7 9:5 : 34  .  567  ', '09/09/2007 09:05:34.567');
+            });
+            
+            test('[9/9/7 9:5:34.567  ] to [09/09/2007 09:05:34.567]', function(done) {
+                correctlyApproximates(done, '9/9/7 9:5:34.567  ', '09/09/2007 09:05:34.567');
+            });
+            
+            test('[t] to todays date with time set to start of the day', function(done) {
+                const todayDate = moment().startOf("day");
+                const expectedDate = todayDate.format('DD/MM/YYYY HH:mm');
+                correctlyApproximates(done, 't', expectedDate);
+            });
+        });
+    </script>
+</body>
+</html>
