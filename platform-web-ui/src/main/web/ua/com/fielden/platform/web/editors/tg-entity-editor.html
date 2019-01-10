@@ -553,8 +553,8 @@
                     result.notifyResize();
 
                     // focus a new item, if any
-                    // this is happens only if new values were loaded after pressing MORE
-                    if (indexOfFirstNewValue >= 0) {
+                    // this should happen only if new values were loaded after pressing MORE
+                    if (document.activeElement == result.loadMoreButton() && indexOfFirstNewValue >= 0) {
                         result.focusItemWithIndex(indexOfFirstNewValue);
                     }
                 }.bind(this), 100);
@@ -641,8 +641,8 @@
                 const input = this.decoratedInput();
                 const result = this.$.result;
 
-                // let's make sure that at least one matching value is selected if _don()
-                // this is mainly relecant for the case of multi autocompleter that has been focused, no values selected, but Enter/Accept is pressed
+                // let's make sure that at least one matching value is selected if _done()
+                // this is mainly relevant for the case of multi autocompleter that has been focused, no values selected, but Enter/Accept is pressed
                 result.selectCurrentIfNoneSelected();
                 const hasValuesToProcess = Object.keys(result.selectedValues).length > 0;
 
