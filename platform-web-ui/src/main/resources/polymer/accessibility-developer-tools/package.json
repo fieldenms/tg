@@ -1,38 +1,35 @@
 {
-  "_args": [
-    [
-      "accessibility-developer-tools@2.12.0",
-      "/home/oleh/workspace/tg/platform-web-ui/src/main/resources"
-    ]
-  ],
-  "_from": "accessibility-developer-tools@2.12.0",
+  "_from": "accessibility-developer-tools@^2.12.0",
   "_id": "accessibility-developer-tools@2.12.0",
   "_inBundle": false,
   "_integrity": "sha1-PaDM6dbsY3OWS4TzXbfPw996tRQ=",
   "_location": "/accessibility-developer-tools",
   "_phantomChildren": {},
   "_requested": {
-    "type": "version",
+    "type": "range",
     "registry": true,
-    "raw": "accessibility-developer-tools@2.12.0",
+    "raw": "accessibility-developer-tools@^2.12.0",
     "name": "accessibility-developer-tools",
     "escapedName": "accessibility-developer-tools",
-    "rawSpec": "2.12.0",
+    "rawSpec": "^2.12.0",
     "saveSpec": null,
-    "fetchSpec": "2.12.0"
+    "fetchSpec": "^2.12.0"
   },
   "_requiredBy": [
     "/wct-browser-legacy"
   ],
   "_resolved": "https://registry.npmjs.org/accessibility-developer-tools/-/accessibility-developer-tools-2.12.0.tgz",
-  "_spec": "2.12.0",
-  "_where": "/home/oleh/workspace/tg/platform-web-ui/src/main/resources",
+  "_shasum": "3da0cce9d6ec6373964b84f35db7cfc3df7ab514",
+  "_spec": "accessibility-developer-tools@^2.12.0",
+  "_where": "/home/oleh/workspace/tg/platform-web-ui/src/main/resources/node_modules/wct-browser-legacy",
   "author": {
     "name": "Google"
   },
   "bugs": {
     "url": "https://github.com/GoogleChrome/accessibility-developer-tools/issues"
   },
+  "bundleDependencies": false,
+  "deprecated": false,
   "description": "This is a library of accessibility-related testing and utility code.",
   "devDependencies": {
     "bluebird": "^2.9.27",

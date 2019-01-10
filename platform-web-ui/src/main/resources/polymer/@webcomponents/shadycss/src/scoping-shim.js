@@ -24,6 +24,9 @@ import * as ApplyShimUtils from './apply-shim-utils.js';
 import {updateNativeProperties, detectMixin} from './common-utils.js';
 import {CustomStyleInterfaceInterface} from './custom-style-interface.js'; // eslint-disable-line no-unused-vars
 
+/** @type {!Object<string, string>} */
+const adoptedCssTextMap = {};
+
 /**
  * @const {StyleCache}
  */
@@ -93,7 +96,7 @@ export default class ScopingShim {
       is: elementName,
       extends: typeExtension,
     };
-    let cssText = this._gatherStyles(template);
+    let cssText = this._gatherStyles(template) + (adoptedCssTextMap[elementName] || '');
     // check if the styling has mixin definitions or uses
     this._ensure();
     if (!optimalBuild) {
@@ -116,6 +119,14 @@ export default class ScopingShim {
       template._style = style;
     }
     template._ownPropertyNames = ownPropertyNames;
+  }
+
+  /**
+   * @param {!Array<string>} cssTextArray
+   * @param {string} elementName
+   */
+  prepareAdoptedCssText(cssTextArray, elementName) {
+    adoptedCssTextMap[elementName] = cssTextArray.join(' ');
   }
   /**
    * Prepare template for the given element type
@@ -382,7 +393,8 @@ export default class ScopingShim {
    * @param {Object=} properties
    */
   styleSubtree(host, properties) {
-    let root = host.shadowRoot;
+    const wrappedHost = StyleUtil.wrap(host);
+    let root = wrappedHost.shadowRoot;
     if (root || this._isRootOwner(host)) {
       this.styleElement(host, properties);
     }
@@ -396,7 +408,7 @@ export default class ScopingShim {
       }
     } else {
       // process the lightdom children of `host`
-      let children = host.children || host.childNodes;
+      let children = wrappedHost.children || wrappedHost.childNodes;
       if (children) {
         for (let i = 0; i < children.length; i++) {
           let c = /** @type {!HTMLElement} */(children[i]);
@@ -555,6 +567,7 @@ ScopingShim.prototype['scopeNode'] = ScopingShim.prototype.scopeNode;
 ScopingShim.prototype['unscopeNode'] = ScopingShim.prototype.unscopeNode;
 ScopingShim.prototype['scopeForNode'] = ScopingShim.prototype.scopeForNode;
 ScopingShim.prototype['currentScopeForNode'] = ScopingShim.prototype.currentScopeForNode;
+ScopingShim.prototype['prepareAdoptedCssText'] = ScopingShim.prototype.prepareAdoptedCssText;
 /* eslint-enable no-self-assign */
 Object.defineProperties(ScopingShim.prototype, {
   'nativeShadow': {

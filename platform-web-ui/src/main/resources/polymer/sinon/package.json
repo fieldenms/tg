@@ -1,38 +1,34 @@
 {
-  "_args": [
-    [
-      "sinon@1.17.7",
-      "/home/oleh/workspace/tg/platform-web-ui/src/main/resources"
-    ]
-  ],
-  "_from": "sinon@1.17.7",
+  "_from": "sinon@^1.17.1",
   "_id": "sinon@1.17.7",
   "_inBundle": false,
   "_integrity": "sha1-RUKk9JugxFwF6y6d2dID4rjv4L8=",
   "_location": "/sinon",
   "_phantomChildren": {},
   "_requested": {
-    "type": "version",
+    "type": "range",
     "registry": true,
-    "raw": "sinon@1.17.7",
+    "raw": "sinon@^1.17.1",
     "name": "sinon",
     "escapedName": "sinon",
-    "rawSpec": "1.17.7",
+    "rawSpec": "^1.17.1",
     "saveSpec": null,
-    "fetchSpec": "1.17.7"
+    "fetchSpec": "^1.17.1"
   },
   "_requiredBy": [
     "/wct-browser-legacy"
   ],
-  "_resolved": "http://registry.npmjs.org/sinon/-/sinon-1.17.7.tgz",
-  "_spec": "1.17.7",
-  "_where": "/home/oleh/workspace/tg/platform-web-ui/src/main/resources",
+  "_resolved": "https://registry.npmjs.org/sinon/-/sinon-1.17.7.tgz",
+  "_shasum": "4542a4f49ba0c45c05eb2e9dd9d203e2b8efe0bf",
+  "_spec": "sinon@^1.17.1",
+  "_where": "/home/oleh/workspace/tg/platform-web-ui/src/main/resources/node_modules/wct-browser-legacy",
   "author": {
     "name": "Christian Johansen"
   },
   "bugs": {
     "url": "http://github.com/cjohansen/Sinon.JS/issues"
   },
+  "bundleDependencies": false,
   "contributors": [
     {
       "name": "Christian Johansen",
@@ -681,6 +677,7 @@
     "samsam": "1.1.2",
     "util": ">=0.10.3 <1"
   },
+  "deprecated": false,
   "description": "JavaScript test spies, stubs and mocks.",
   "devDependencies": {
     "buster": "0.7.18",

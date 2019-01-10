@@ -1,32 +1,27 @@
 {
-  "_args": [
-    [
-      "sinon-chai@2.14.0",
-      "/home/oleh/workspace/tg/platform-web-ui/src/main/resources"
-    ]
-  ],
-  "_from": "sinon-chai@2.14.0",
+  "_from": "sinon-chai@^2.10.0",
   "_id": "sinon-chai@2.14.0",
   "_inBundle": false,
   "_integrity": "sha512-9stIF1utB0ywNHNT7RgiXbdmen8QDCRsrTjw+G9TgKt1Yexjiv8TOWZ6WHsTPz57Yky3DIswZvEqX8fpuHNDtQ==",
   "_location": "/sinon-chai",
   "_phantomChildren": {},
   "_requested": {
-    "type": "version",
+    "type": "range",
     "registry": true,
-    "raw": "sinon-chai@2.14.0",
+    "raw": "sinon-chai@^2.10.0",
     "name": "sinon-chai",
     "escapedName": "sinon-chai",
-    "rawSpec": "2.14.0",
+    "rawSpec": "^2.10.0",
     "saveSpec": null,
-    "fetchSpec": "2.14.0"
+    "fetchSpec": "^2.10.0"
   },
   "_requiredBy": [
     "/wct-browser-legacy"
   ],
   "_resolved": "https://registry.npmjs.org/sinon-chai/-/sinon-chai-2.14.0.tgz",
-  "_spec": "2.14.0",
-  "_where": "/home/oleh/workspace/tg/platform-web-ui/src/main/resources",
+  "_shasum": "da7dd4cc83cd6a260b67cca0f7a9fdae26a1205d",
+  "_spec": "sinon-chai@^2.10.0",
+  "_where": "/home/oleh/workspace/tg/platform-web-ui/src/main/resources/node_modules/wct-browser-legacy",
   "author": {
     "name": "Domenic Denicola",
     "email": "d@domenic.me",
@@ -35,6 +30,8 @@
   "bugs": {
     "url": "https://github.com/domenic/sinon-chai/issues"
   },
+  "bundleDependencies": false,
+  "deprecated": false,
   "description": "Extends Chai with assertions for the Sinon.JS mocking framework.",
   "devDependencies": {
     "chai": "^4.1.0",

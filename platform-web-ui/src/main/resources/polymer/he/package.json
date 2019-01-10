@@ -1,10 +1,4 @@
 {
-  "_args": [
-    [
-      "he@1.1.1",
-      "/home/oleh/workspace/tg/platform-web-ui/src/main/resources"
-    ]
-  ],
   "_from": "he@1.1.1",
   "_id": "he@1.1.1",
   "_inBundle": false,
@@ -26,8 +20,9 @@
     "/wct-browser-legacy/mocha"
   ],
   "_resolved": "https://registry.npmjs.org/he/-/he-1.1.1.tgz",
-  "_spec": "1.1.1",
-  "_where": "/home/oleh/workspace/tg/platform-web-ui/src/main/resources",
+  "_shasum": "93410fd21b009735151f8868c2f271f3427e23fd",
+  "_spec": "he@1.1.1",
+  "_where": "/home/oleh/workspace/tg/platform-web-ui/src/main/resources/node_modules/mocha",
   "author": {
     "name": "Mathias Bynens",
     "url": "https://mathiasbynens.be/"
@@ -38,6 +33,8 @@
   "bugs": {
     "url": "https://github.com/mathiasbynens/he/issues"
   },
+  "bundleDependencies": false,
+  "deprecated": false,
   "description": "A robust HTML entities encoder/decoder with full Unicode support.",
   "devDependencies": {
     "codecov.io": "^0.1.6",
