@@ -1,12 +1,11 @@
 npm install
-cd node_modules/@polymer
-git clone https://github.com/PolymerElements/iron-test-helpers
-cd ../..
+git clone https://github.com/PolymerElements/iron-test-helpers node_modules/@polymer/iron-test-helpers
 polymer build
 rm -r -f polymer
 mv node_modules polymer
-cd polymer
-rm -r -f @polymer
-cd ..
-mv build/tg-custom-build/node_modules/@polymer polymer/@polymer
+rm -r -f polymer/@polymer
+rm -r -f polymer/wct-browser-legacy
+mv build/tg-custom-build/node_modules/@polymer polymer/
+mv build/tg-custom-build/node_modules/wct-browser-legacy polymer/
 rm -r -f build
+rm -f package-lock.json
