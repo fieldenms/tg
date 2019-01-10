@@ -3,7 +3,8 @@
   "shell": "build-polymer.js",
   "extraDependencies": [
     "./node_modules/@polymer/test-fixture/test-fixture.js",
-    "./node_modules/@polymer/sinonjs/sinon.js"
+    "./node_modules/@polymer/sinonjs/sinon.js",
+    "./node_modules/wct-browser-legacy/browser.js"
   ],
   "builds": [
     { 
