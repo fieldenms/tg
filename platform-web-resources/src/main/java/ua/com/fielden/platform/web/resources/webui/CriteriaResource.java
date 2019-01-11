@@ -5,11 +5,14 @@ import static java.util.Optional.of;
 import static java.util.Optional.ofNullable;
 import static ua.com.fielden.platform.data.generator.IGenerator.FORCE_REGENERATION_KEY;
 import static ua.com.fielden.platform.data.generator.IGenerator.shouldForceRegeneration;
+import static ua.com.fielden.platform.domaintree.centre.IOrderingRepresentation.Ordering.DESCENDING;
 import static ua.com.fielden.platform.streaming.ValueCollectors.toLinkedHashMap;
 import static ua.com.fielden.platform.utils.EntityUtils.equalsEx;
+import static ua.com.fielden.platform.web.centre.CentreConfigUpdaterUtils.applyNewOrderVisibilityAndSorting;
 import static ua.com.fielden.platform.web.centre.CentreUpdater.FRESH_CENTRE_NAME;
 import static ua.com.fielden.platform.web.centre.CentreUpdater.PREVIOUSLY_RUN_CENTRE_NAME;
 import static ua.com.fielden.platform.web.centre.CentreUpdater.SAVED_CENTRE_NAME;
+import static ua.com.fielden.platform.web.centre.CentreUpdater.commitCentre;
 import static ua.com.fielden.platform.web.centre.CentreUpdater.commitCentreWithoutConflicts;
 import static ua.com.fielden.platform.web.centre.CentreUpdater.removeCentres;
 import static ua.com.fielden.platform.web.centre.CentreUpdater.retrievePreferredConfigName;
@@ -54,7 +57,9 @@ import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.data.generator.IGenerator;
 import ua.com.fielden.platform.domaintree.IDomainTreeEnhancerCache;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
+import ua.com.fielden.platform.domaintree.centre.IOrderingRepresentation.Ordering;
 import ua.com.fielden.platform.domaintree.impl.CalculatedProperty;
+import ua.com.fielden.platform.domaintree.impl.EnhancementPropertiesMap;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
@@ -65,6 +70,7 @@ import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.security.user.IUser;
 import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.security.user.User;
+import ua.com.fielden.platform.types.tuples.T2;
 import ua.com.fielden.platform.ui.config.EntityCentreConfig;
 import ua.com.fielden.platform.ui.config.MainMenuItem;
 import ua.com.fielden.platform.ui.config.api.IEntityCentreConfig;
@@ -302,7 +308,7 @@ public class CriteriaResource extends AbstractWebResource {
             final Class<? extends MiWithConfigurationSupport<?>> miType = centre.getMenuItemType();
             final CentreContextHolder centreContextHolder = restoreCentreContextHolder(envelope, restUtil);
             
-            final Map<String, Object> customObject = new LinkedHashMap<String, Object>(centreContextHolder.getCustomObject());
+            final Map<String, Object> customObject = new LinkedHashMap<>(centreContextHolder.getCustomObject());
             
             final boolean isRunning = isRunning(customObject);
             final boolean isSorting = isSorting(customObject);
@@ -312,9 +318,26 @@ public class CriteriaResource extends AbstractWebResource {
             
             if (isRunning) {
                 if (isAutoRunning(customObject) && !saveAsName.isPresent()) {
-                    // clear current 'default' surrogate centres -- this is to make them empty before auto-running; saved configurations will not be touched --they should not appear when first time loading occur; this is because in autoRun centres named configurations never become preferred
+                    // clear current 'default' surrogate centres -- this is to make them empty before auto-running; saved configurations will not be touched -- they should not appear when first time loading occur; this is because in autoRun centres named configurations never become preferred
+                    final ICentreDomainTreeManagerAndEnhancer previousFreshCentre = updateCentre(user, userProvider, miType, FRESH_CENTRE_NAME, saveAsName, device(), domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion, companionFinder);
+                    final Class<?> root = centre.getEntityType();
+                    
+                    // store current column layout into local variables to be applied after centre clearing
+                    final List<Pair<String, Ordering>> previousSortingProps = previousFreshCentre.getSecondTick().orderedProperties(root);
+                    final List<String> previousUsedProps = previousFreshCentre.getSecondTick().usedProperties(root);
+                    final T2<EnhancementPropertiesMap<Integer>, EnhancementPropertiesMap<Integer>> previousWidthsAndGrowFactors = previousFreshCentre.getSecondTick().getWidthsAndGrowFactors();
+                    
+                    // clear all surrogate centres
                     removeCentres(user, miType, device(), saveAsName, eccCompanion, FRESH_CENTRE_NAME, SAVED_CENTRE_NAME, PREVIOUSLY_RUN_CENTRE_NAME);
-                    updatedFreshCentre = updateCentre(user, userProvider, miType, FRESH_CENTRE_NAME, saveAsName, device(), domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion, companionFinder);
+                    final ICentreDomainTreeManagerAndEnhancer emptyFreshCentre = updateCentre(user, userProvider, miType, FRESH_CENTRE_NAME, saveAsName, device(), domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion, companionFinder);
+                    
+                    // restore previous non-distracting centre changes; at first apply widths and grow factors
+                    emptyFreshCentre.getSecondTick().setWidthsAndGrowFactors(previousWidthsAndGrowFactors);
+                    // then apply order, visibility and sorting
+                    applyNewOrderVisibilityAndSorting(emptyFreshCentre.getSecondTick(), root, previousUsedProps, previousSortingProps);
+                    // save the centre into the database
+                    updatedFreshCentre = commitCentre(user, userProvider, miType, FRESH_CENTRE_NAME, saveAsName, device(), emptyFreshCentre, null /* newDesc */, webUiConfig, eccCompanion, mmiCompanion, userCompanion);
+                    
                     freshCentreAppliedCriteriaEntity = createCriteriaValidationPrototype(miType, saveAsName, updatedFreshCentre, companionFinder, critGenerator, -1L, user, userProvider, device(), domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion);
                 } else {
                     freshCentreAppliedCriteriaEntity = createCriteriaEntityWithoutConflicts(centreContextHolder.getModifHolder(), companionFinder, critGenerator, miType, saveAsName, user, userProvider, device(), domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion);
