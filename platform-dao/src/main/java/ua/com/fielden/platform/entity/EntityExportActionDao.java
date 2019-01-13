@@ -67,7 +67,7 @@ public class EntityExportActionDao extends CommonEntityDao<EntityExportAction> i
             if (entity.getSelectedEntityIds().isEmpty()) {
                 throw failure("Please select at least one entry to export.");
             } else if (entity.getSelectedEntityIds().stream().anyMatch(Objects::isNull)) {
-                throw failure("Export of selected items is not supported due to missing IDs.");
+                throw failure("Export of selected entities is not supported due to missing IDs.");
             }
             adhocParams.put("ids", entity.getSelectedEntityIds().toArray(new Long[0]));
             entities = selectionCrit.export(adhocParams);
