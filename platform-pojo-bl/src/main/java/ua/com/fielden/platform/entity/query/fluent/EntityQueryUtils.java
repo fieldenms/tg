@@ -18,7 +18,8 @@ public class EntityQueryUtils {
 		return new FromAlias<T>(new Tokens().from(entityType));
 	}
 
-	public static <T extends AbstractEntity<?>> IFromAlias<T> select(final EntityResultQueryModel<T>... sourceQueryModels) {
+	@SafeVarargs
+    public static <T extends AbstractEntity<?>> IFromAlias<T> select(final EntityResultQueryModel<T>... sourceQueryModels) {
 		return new FromAlias<T>(new Tokens().from(sourceQueryModels));
 	}
 
