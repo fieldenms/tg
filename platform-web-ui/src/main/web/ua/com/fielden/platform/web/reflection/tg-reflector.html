@@ -1014,7 +1014,7 @@
      * IMPORTANT: this is the mirror of the java methods AbstractEntity.equals() and DynamicEntityKey.compareTo(). So, please be carefull and maintain it
      * in accordance with java counterparts.
      */
-    var _entitiesEqualsEx = function (entity1, entity2) {
+    const _entitiesEqualsEx = function (entity1, entity2) {
         if (entity1 === entity2) {
             return true;
         }
@@ -1022,7 +1022,11 @@
             return false;
         }
         // let's ensure that types match
-        if (entity1.type() !== entity2.type()) {
+        const entity1Type = entity1.constructor.prototype.type.call(entity1);
+        const entity2Type = entity2.constructor.prototype.type.call(entity2);
+        // in most cases, two entities of the same type will be compared -- their types will be equal by reference
+        // however generated types re-register on each centre run / refresh, so need to compare their base types (this will also cover the case where multiple server nodes are used and different nodes generate different types from the same base type)
+        if (entity1Type !== entity2Type && entity1Type.notEnhancedFullClassName() !== entity2Type.notEnhancedFullClassName()) {
             return false;
         }
         // now can compare key values
