@@ -455,6 +455,51 @@
                 done();
             });
             
+            /**
+             * Creates and registers new generated type with base type defined by 'baseTypeName'. It works through deep copying process of base type's EntityType instance and enhancing its full class name and identifier.
+             */
+            const createGenTypeFrom = function (baseTypeName, uuid, identifierSuffix) {
+                const baseType = reflector.getType(baseTypeName); // take EntityType instance
+                const genTypeRaw = JSON.parse(JSON.stringify(baseType)); // deep copy it, loosing EntityType and EntityTypeProp prototypes inside copied structure
+                const genTypeName = baseTypeName + '$$TgEntity_' + uuid; // create new full class name
+                genTypeRaw.key = genTypeName; // and assign it into raw entity type object
+                genTypeRaw._identifier = genTypeName + identifierSuffix; // also assign _identifier for completness
+                const genType = reflector.registerEntityType(genTypeRaw); // then register new type using raw object and mutating it into fully fledged EntityType with EntityTypeProps inside
+                return genType;
+            };
+            
+            test('equalsEx method works for entity values with generated types', function (done) {
+                const baseType = reflector.getType(typeName1);
+                const identifierSuffix = ':ua.com.fielden.platform.ui.menu.sample.MiDetailsCentre:';
+                
+                const entity1 = reflector.newEntity(baseType.fullClassName());
+                entity1.key = 'DEMO00';
+                
+                const genType1 = createGenTypeFrom(baseType.fullClassName(), '75a5512fa9114da6bff0389d4d70f77a', identifierSuffix);
+                
+                const entity2 = reflector.newEntity(genType1.fullClassName());
+                entity2.key = 'DEMO00';
+                const entity2Copy = reflector.newEntity(genType1.fullClassName());
+                entity2Copy.key = 'DEMO00';
+                
+                const genType1Copy = createGenTypeFrom(baseType.fullClassName(), '75a5512fa9114da6bff0389d4d70f77a', identifierSuffix);
+                
+                const entity3 = reflector.newEntity(genType1Copy.fullClassName());
+                entity3.key = 'DEMO00';
+                
+                const genType2 = createGenTypeFrom(baseType.fullClassName(), 'd2ab2cbfa62c478a82405d4241e1cfa8', identifierSuffix);
+                
+                const entity4 = reflector.newEntity(genType2.fullClassName());
+                entity4.key = 'DEMO00';
+                
+                assert.strictEqual(reflector.equalsEx(entity2, entity2Copy), true, 'Entities with exactly the same type reference should be equal.');
+                assert.strictEqual(reflector.equalsEx(entity2, entity3), true, 'Entities with same generated type, but with different references to that type, should be equal.');
+                assert.strictEqual(reflector.equalsEx(entity2, entity4), true, 'Entities with different generated types, that are generated from the same base type, should be equal.');
+                assert.strictEqual(reflector.equalsEx(entity2, entity1), true, 'entity1 with generated type should be equal to entity2 with the type, that represents a base type for entity1\'s type.');
+                
+                done();
+            });
+            
             test('isEntity method works for falsey values', function (done) {
                 assert.strictEqual(reflector.isEntity(null), false, "'null' should not be 'is entity'.");
                 assert.strictEqual(reflector.isEntity(undefined), false, "'undefined' should not be 'is entity'.");
