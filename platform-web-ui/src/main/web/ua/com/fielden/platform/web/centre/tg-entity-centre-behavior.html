@@ -646,7 +646,7 @@
                         function (detail) {
                             const sc = self.$.selection_criteria;
                             const deserialisedResult = sc._serialiser().deserialise(detail.response);
-                            if (!sc._reflector().isError(deserialisedResult)) {
+                            if (!sc._reflector().isError(deserialisedResult) && (!sc._reflector().isEntity(deserialisedResult.instance[0]) || deserialisedResult.instance[0].isValidWithoutException())) {
                                 self.runInsertionPointActions();
                             }
                             self._actionInProgress = false;
