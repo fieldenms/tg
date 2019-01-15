@@ -127,6 +127,10 @@ public class BaseEntQueryTCase1 {
     protected static EntQuery1 entSourceQry(final QueryModel qryModel) {
         return qb.generateEntQueryAsSourceQuery(qryModel, Optional.empty());
     }
+    
+    protected static EntQuery2 entSourceQry(final QueryModel qryModel, final TransformatorToS2 transformator) {
+        return qb.generateEntQueryAsSourceQuery(qryModel, Optional.empty()).transform(transformator);
+    }
 
     //    protected static EntQuery1 entSourceQry(final QueryModel qryModel, final Map<String, Object> paramValues) {
     //	return qb.generateEntQueryAsSourceQuery(qryModel, paramValues, null);

@@ -48,6 +48,7 @@ import ua.com.fielden.platform.sample.domain.TgVehicle;
 import ua.com.fielden.platform.sample.domain.TgVehicleFinDetails;
 import ua.com.fielden.platform.sample.domain.TgVehicleMake;
 import ua.com.fielden.platform.sample.domain.TgVehicleModel;
+import ua.com.fielden.platform.sample.domain.TgVehicleModelWithCalc;
 import ua.com.fielden.platform.sample.domain.TgWagon;
 import ua.com.fielden.platform.sample.domain.TgWagonClass;
 import ua.com.fielden.platform.sample.domain.TgWagonClassCompatibility;
@@ -98,6 +99,7 @@ public class PlatformTestDomainTypes implements IApplicationDomainProvider {
         add(TgVehicle.class);
         add(TgVehicleFinDetails.class);
         add(TgVehicleModel.class);
+        add(TgVehicleModelWithCalc.class);
         add(TgReVehicleModel.class);
         add(TgVehicleMake.class);
         add(TgOrgUnit1.class);

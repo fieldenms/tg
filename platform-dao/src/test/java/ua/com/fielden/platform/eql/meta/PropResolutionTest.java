@@ -7,12 +7,10 @@ import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.selec
 import static ua.com.fielden.platform.entity.query.fluent.enums.ComparisonOperator.EQ;
 import static ua.com.fielden.platform.entity.query.fluent.enums.JoinType.LJ;
 import static ua.com.fielden.platform.eql.meta.QueryCategory.RESULT_QUERY;
-import static ua.com.fielden.platform.eql.meta.QueryCategory.SOURCE_QUERY;
 import static ua.com.fielden.platform.eql.meta.QueryCategory.SUB_QUERY;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -20,7 +18,6 @@ import java.util.Map;
 import org.junit.Ignore;
 import org.junit.Test;
 
-import ua.com.fielden.platform.entity.query.fluent.enums.ComparisonOperator;
 import ua.com.fielden.platform.entity.query.fluent.enums.JoinType;
 import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
@@ -35,15 +32,12 @@ import ua.com.fielden.platform.eql.stage2.elements.Expression2;
 import ua.com.fielden.platform.eql.stage2.elements.GroupBy2;
 import ua.com.fielden.platform.eql.stage2.elements.GroupBys2;
 import ua.com.fielden.platform.eql.stage2.elements.ICondition2;
-import ua.com.fielden.platform.eql.stage2.elements.IQrySource2;
-import ua.com.fielden.platform.eql.stage2.elements.ISingleOperand2;
 import ua.com.fielden.platform.eql.stage2.elements.NullTest2;
+import ua.com.fielden.platform.eql.stage2.elements.OrderBy2;
 import ua.com.fielden.platform.eql.stage2.elements.OrderBys2;
 import ua.com.fielden.platform.eql.stage2.elements.QrySource2BasedOnPersistentType;
 import ua.com.fielden.platform.eql.stage2.elements.QrySource2BasedOnPersistentTypeWithCalcProps;
-import ua.com.fielden.platform.eql.stage2.elements.QrySource2BasedOnSubqueries;
 import ua.com.fielden.platform.eql.stage2.elements.Sources2;
-import ua.com.fielden.platform.eql.stage2.elements.Yield2;
 import ua.com.fielden.platform.eql.stage2.elements.Yields2;
 import ua.com.fielden.platform.sample.domain.TgAuthor;
 import ua.com.fielden.platform.sample.domain.TgAuthorRoyalty;
@@ -57,7 +51,9 @@ import ua.com.fielden.platform.sample.domain.TgOrgUnit4;
 import ua.com.fielden.platform.sample.domain.TgOrgUnit5;
 import ua.com.fielden.platform.sample.domain.TgPersonName;
 import ua.com.fielden.platform.sample.domain.TgVehicle;
+import ua.com.fielden.platform.sample.domain.TgVehicleMake;
 import ua.com.fielden.platform.sample.domain.TgVehicleModel;
+import ua.com.fielden.platform.sample.domain.TgVehicleModelWithCalc;
 import ua.com.fielden.platform.sample.domain.TgWorkshop;
 
 public class PropResolutionTest extends BaseEntQueryTCase1 {
@@ -146,6 +142,132 @@ public class PropResolutionTest extends BaseEntQueryTCase1 {
         final EntQueryBlocks2 parts = new EntQueryBlocks2(sources, conditions, new Yields2(), new GroupBys2(Collections.<GroupBy2> emptyList()), new OrderBys2(null));
         final EntQuery2 exp = new EntQuery2(parts, TgAuthor.class, RESULT_QUERY, null);
 
+        System.out.println(qry2.getConditions().equals(exp.getConditions()));
+        System.out.println(qry2.getGroups().equals(exp.getGroups()));
+        System.out.println(qry2.getYields().equals(exp.getYields()));
+        System.out.println(qry2.getSources().equals(exp.getSources()));
+        System.out.println(qry2.getOrderings().equals(exp.getOrderings()));
+        assertEquals(qry2, exp);
+    }
+
+    @Test
+    public void test_q21() {
+        final EntityResultQueryModel<TgVehicleModel> qry = select(TgVehicleModel.class).where().prop("make").isNotNull().model();
+        final EntQuery2 qry2 = entResultQry2(qry, new TransformatorToS2(metadata, emptyMap(), null, null, qb));
+
+        final QrySource2BasedOnPersistentType source = new QrySource2BasedOnPersistentType(TgVehicleModel.class);
+        final Sources2 sources = new Sources2(source);
+        final List<List<? extends ICondition2>> allConditions = new ArrayList<>();
+        final List<ICondition2> firstAndConditionsGroup = new ArrayList<>();
+        firstAndConditionsGroup.add(new NullTest2(new EntProp2("make", source, TgVehicleMake.class), true));
+        allConditions.add(firstAndConditionsGroup);
+        final Conditions2 conditions = new Conditions2(false, allConditions);
+
+        final EntQueryBlocks2 parts = new EntQueryBlocks2(sources, conditions, new Yields2(), new GroupBys2(Collections.<GroupBy2> emptyList()), new OrderBys2(Collections.<OrderBy2> emptyList()));
+        final EntQuery2 exp = new EntQuery2(parts, TgVehicleModel.class, RESULT_QUERY, null);
+
+        System.out.println(qry2.getConditions().equals(exp.getConditions()));
+        System.out.println(qry2.getGroups().equals(exp.getGroups()));
+        System.out.println(qry2.getYields().equals(exp.getYields()));
+        System.out.println(qry2.getSources().equals(exp.getSources()));
+        System.out.println(qry2.getOrderings().equals(exp.getOrderings()));
+        assertEquals(qry2, exp);
+    }
+
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    @Test
+    public void test_q212() {
+        final EntityResultQueryModel<TgVehicleModelWithCalc> qry = select(TgVehicleModelWithCalc.class).where().prop("make").isNotNull().model();
+        final EntQuery2 qry2 = entResultQry2(qry, new TransformatorToS2(metadata, emptyMap(), null, null, qb));
+
+
+        
+//        final QrySource2BasedOnPersistentType source = new QrySource2BasedOnPersistentType(TgVehicleModel.class);
+//        final Sources2 sources = new Sources2(source);
+//        final List<List<? extends ICondition2>> allConditions = new ArrayList<>();
+//        final List<ICondition2> firstAndConditionsGroup = new ArrayList<>();
+//        final Conditions2 conditions = new Conditions2(false, allConditions);
+
+//        final EntQueryBlocks2 parts = new EntQueryBlocks2(sources, conditions, new Yields2(), new GroupBys2(Collections.<GroupBy2> emptyList()), new OrderBys2(Collections.<OrderBy2> emptyList()));
+//        final EntQuery2 exp = new EntQuery2(parts, TgVehicleModelWithCalc.class, RESULT_QUERY, null);
+
+        final EntQuery2 vehicleModelSourceQry = entSourceQry(MetadataGenerator.createYieldAllQueryModel(TgVehicleModelWithCalc.class), new TransformatorToS2(metadata, emptyMap(), new SimpleUserFilter(), null, qb));
+
+        final QrySource2BasedOnPersistentTypeWithCalcProps source = new QrySource2BasedOnPersistentTypeWithCalcProps(TgVehicleModelWithCalc.class, vehicleModelSourceQry);
+        final Sources2 sources = new Sources2(source);
+        final List<List<? extends ICondition2>> allConditions = new ArrayList<>();
+        final List<ICondition2> firstAndConditionsGroup = new ArrayList<>();
+        firstAndConditionsGroup.add(new NullTest2(new EntProp2("make", source, TgVehicleMake.class), true));
+        allConditions.add(firstAndConditionsGroup);
+        final Conditions2 conditions = new Conditions2(false, allConditions);
+
+        final EntQueryBlocks2 parts = new EntQueryBlocks2(sources, conditions, new Yields2(), new GroupBys2(Collections.<GroupBy2> emptyList()), new OrderBys2(Collections.<OrderBy2> emptyList()));
+        final EntQuery2 exp = new EntQuery2(parts, TgVehicleModelWithCalc.class, RESULT_QUERY, null);
+        System.out.println(qry2.getSources().getMain().sourceType().equals(exp.getSources().getMain().sourceType()));
+        System.out.println(qry2.getConditions().equals(exp.getConditions()));
+        System.out.println(qry2.getGroups().equals(exp.getGroups()));
+        System.out.println(qry2.getYields().equals(exp.getYields()));
+        System.out.println(qry2.getSources().equals(exp.getSources()));
+        System.out.println(qry2.getOrderings().equals(exp.getOrderings()));
+        assertEquals(qry2, exp);
+    }
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+
+    @Test
+    public void test_q212_copy() {
+        final EntityResultQueryModel<TgVehicleModelWithCalc> qry = select(TgVehicleModelWithCalc.class).where().prop("make").isNotNull().model();
+        final EntQuery2 qry2 = entResultQry2(qry, new TransformatorToS2(metadata, emptyMap(), null, null, qb));
+
+        final QrySource2BasedOnPersistentType source = new QrySource2BasedOnPersistentType(TgVehicleModelWithCalc.class);
+        final Sources2 sources = new Sources2(source);
+        final List<List<? extends ICondition2>> allConditions = new ArrayList<>();
+        final List<ICondition2> firstAndConditionsGroup = new ArrayList<>();
+        firstAndConditionsGroup.add(new NullTest2(new EntProp2("make", source, TgVehicleMake.class), true));
+        allConditions.add(firstAndConditionsGroup);
+        final Conditions2 conditions = new Conditions2(false, allConditions);
+
+        final EntQueryBlocks2 parts = new EntQueryBlocks2(sources, conditions, new Yields2(), new GroupBys2(Collections.<GroupBy2> emptyList()), new OrderBys2(Collections.<OrderBy2> emptyList()));
+        final EntQuery2 exp = new EntQuery2(parts, TgVehicleModelWithCalc.class, RESULT_QUERY, null);
+
+        System.out.println(qry2.getConditions().equals(exp.getConditions()));
+        System.out.println(qry2.getGroups().equals(exp.getGroups()));
+        System.out.println(qry2.getYields().equals(exp.getYields()));
+        System.out.println(qry2.getSources().equals(exp.getSources()));
+        System.out.println(qry2.getOrderings().equals(exp.getOrderings()));
         assertEquals(qry2, exp);
     }
 

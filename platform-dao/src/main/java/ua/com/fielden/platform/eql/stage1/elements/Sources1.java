@@ -5,6 +5,7 @@ import java.util.List;
 
 import ua.com.fielden.platform.eql.meta.TransformatorToS2;
 import ua.com.fielden.platform.eql.stage2.elements.CompoundSource2;
+import ua.com.fielden.platform.eql.stage2.elements.Conditions2;
 import ua.com.fielden.platform.eql.stage2.elements.IQrySource2;
 import ua.com.fielden.platform.eql.stage2.elements.Sources2;
 
@@ -19,12 +20,17 @@ public class Sources1 implements ITransformableToS2<Sources2> {
 
     @Override
     public Sources2 transform(final TransformatorToS2 resolver) {
+        final IQrySource2 mainTransformed = main.transform(resolver);    
+                
         final List<CompoundSource2> transformed = new ArrayList<>();
         for (final CompoundSource1 compoundSource : compounds) {
-            transformed.add(new CompoundSource2(compoundSource.getSource().transform(resolver), compoundSource.getJoinType(), //
-            compoundSource.getJoinConditions().transform(resolver)));
+            transformed.add(compoundSource.transform(resolver));
+            //IQrySource2 joinedSourceTransformed = compoundSource.getSource().transform(resolver);
+            //Conditions2 joinConditionsTransformed = compoundSource.getJoinConditions().transform(resolver);
+            //transformed.add(new CompoundSource2(joinedSourceTransformed, compoundSource.getJoinType(), joinConditionsTransformed));
+            
         }
-        return new Sources2(main.transform(resolver), transformed);
+        return new Sources2(mainTransformed, transformed);
     }
 
     @Override

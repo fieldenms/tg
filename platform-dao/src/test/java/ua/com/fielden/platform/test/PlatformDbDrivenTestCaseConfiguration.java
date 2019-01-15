@@ -60,6 +60,7 @@ import ua.com.fielden.platform.sample.domain.TgTimesheet;
 import ua.com.fielden.platform.sample.domain.TgVehicle;
 import ua.com.fielden.platform.sample.domain.TgVehicleMake;
 import ua.com.fielden.platform.sample.domain.TgVehicleModel;
+import ua.com.fielden.platform.sample.domain.TgVehicleModelWithCalc;
 import ua.com.fielden.platform.sample.domain.TgWorkOrder;
 import ua.com.fielden.platform.test.entities.ComplexKeyEntity;
 import ua.com.fielden.platform.test.entities.CompositeEntity;
@@ -106,6 +107,7 @@ public class PlatformDbDrivenTestCaseConfiguration implements IDbDrivenTestCaseC
         testDomain.add(TgTimesheet.class);
         testDomain.add(TgVehicleMake.class);
         testDomain.add(TgVehicleModel.class);
+        testDomain.add(TgVehicleModelWithCalc.class);
         testDomain.add(TgVehicle.class);
         testDomain.add(TgFuelUsage.class);
         testDomain.add(TgFuelType.class);

@@ -16,6 +16,7 @@ public abstract class AbstractQrySource1<S2 extends IQrySource2> implements IQry
 
     @Override
     public S2 transform(final TransformatorToS2 resolver) {
+        //resolver.addSource(this);
         return (S2) resolver.getTransformedSource(this);
     }
     

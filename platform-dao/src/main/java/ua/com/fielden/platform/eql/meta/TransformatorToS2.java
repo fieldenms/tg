@@ -149,10 +149,10 @@ public class TransformatorToS2 {
         return sb.toString();
     }
 
-    public void addSource(final IQrySource1<? extends IQrySource2> source) {
-        final IQrySource2 transformedSource = transformSource(source);
-        getCurrentQueryMap().put(source, new SourceInfo(transformedSource, produceEntityInfoFrom(transformedSource), source.getAlias()));
-    }
+//    public void addSource(final IQrySource1<? extends IQrySource2> source) {
+//        final IQrySource2 transformedSource = transformSource(source);
+//        getCurrentQueryMap().put(source, new SourceInfo(transformedSource, produceEntityInfoFrom(transformedSource), source.getAlias()));
+//    }
 
     private EntityInfo<?> produceEntityInfoFrom(final IQrySource2 transformedSource) {
         if (!EntityAggregates.class.equals(transformedSource.sourceType())) {
@@ -180,7 +180,16 @@ public class TransformatorToS2 {
     }
 
     private IQrySource2 transformSource(final IQrySource1<? extends IQrySource2> qrySourceStage1) {
+//        if (sourcesCache.getIfPresent(qrySourceStage1) != null) {
+//            System.out.println(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> T1: " + qrySourceStage1.sourceType().getSimpleName());
+//        } else {
+//            System.out.println(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> T2: " + qrySourceStage1.sourceType().getSimpleName());
+//        }
+//        
+//        
         return ofNullable(sourcesCache.getIfPresent(qrySourceStage1)).orElseGet(() -> {
+            System.out.println(" ----------------> getting for " + qrySourceStage1);
+            
             final IQrySource2 result;
             if (qrySourceStage1 instanceof QrySource1BasedOnPersistentType) {
                 final QrySource1BasedOnPersistentType qrySource = (QrySource1BasedOnPersistentType) qrySourceStage1;
@@ -197,6 +206,7 @@ public class TransformatorToS2 {
                 result = new QrySource2BasedOnSubqueries(extractQueryModels(qrySource));
             }
             sourcesCache.put(qrySourceStage1, result);
+            System.out.println(" ----------------> from cache for " + qrySourceStage1);
             return result;
         });
     }
@@ -215,7 +225,9 @@ public class TransformatorToS2 {
     }
 
     public IQrySource2 getTransformedSource(final IQrySource1<? extends IQrySource2> originalSource) {
-        return getCurrentQueryMap().get(originalSource).source;
+        final IQrySource2 transformedSource = transformSource(originalSource);
+        getCurrentQueryMap().put(originalSource, new SourceInfo(transformedSource, produceEntityInfoFrom(transformedSource), originalSource.getAlias()));
+        return transformedSource;//getCurrentQueryMap().get(originalSource).source;
     }
 
     public EntProp2 getTransformedProp(final EntProp1 originalProp) {
@@ -251,9 +263,9 @@ public class TransformatorToS2 {
         final TransformatorToS2 localResolver = originalQuery.isSubQuery() ? produceBasedOn() : produceNewOne();
 
         // TODO Need to resolve joinConditions of each CompoundSource as soon as it is added to resolver.  
-        for (final IQrySource1<? extends IQrySource2> source : originalQuery.getSources().getAllSources()) {
-            localResolver.addSource(source);
-        }
+//        for (final IQrySource1<? extends IQrySource2> source : originalQuery.getSources().getAllSources()) {
+//            localResolver.addSource(source);
+//        }
 
         final Conditions1 enhancedConditions = originalQuery.isFilterable() ? enhanceConditions(originalQuery.getConditions(), filter, username, originalQuery.getSources().getMain(), entQueryGenerator1) : originalQuery.getConditions();
         // TODO As part of transforming sources need to retrieve already resolved joinConditions, that happened while invoking addSource method (refer TODO above).

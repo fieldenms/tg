@@ -19,6 +19,7 @@ public class CompoundSource1 implements ITransformableToS2<CompoundSource2> {
 
     @Override
     public CompoundSource2 transform(final TransformatorToS2 resolver) {
+        //resolver.addSource(source);
         return new CompoundSource2(resolver.getTransformedSource(source), joinType, joinConditions.transform(resolver));
     }
 

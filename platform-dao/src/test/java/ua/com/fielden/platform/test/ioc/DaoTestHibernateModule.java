@@ -40,6 +40,7 @@ import ua.com.fielden.platform.sample.domain.ITgTimesheet;
 import ua.com.fielden.platform.sample.domain.ITgVehicle;
 import ua.com.fielden.platform.sample.domain.ITgVehicleMake;
 import ua.com.fielden.platform.sample.domain.ITgVehicleModel;
+import ua.com.fielden.platform.sample.domain.ITgVehicleModelWithCalc;
 import ua.com.fielden.platform.sample.domain.ITgWorkOrder;
 import ua.com.fielden.platform.sample.domain.TgCollectionalSerialisationChildDao;
 import ua.com.fielden.platform.sample.domain.TgCollectionalSerialisationParentDao;
@@ -49,6 +50,7 @@ import ua.com.fielden.platform.sample.domain.TgTimesheetDao;
 import ua.com.fielden.platform.sample.domain.TgVehicleDao;
 import ua.com.fielden.platform.sample.domain.TgVehicleMakeDao;
 import ua.com.fielden.platform.sample.domain.TgVehicleModelDao;
+import ua.com.fielden.platform.sample.domain.TgVehicleModelWithCalcDao;
 import ua.com.fielden.platform.sample.domain.TgWorkOrderDao;
 import ua.com.fielden.platform.security.IAuthorisationModel;
 import ua.com.fielden.platform.security.ISecurityToken;
@@ -143,6 +145,7 @@ public class DaoTestHibernateModule extends CommonFactoryModule {
 
         bind(ITgTimesheet.class).to(TgTimesheetDao.class);
         bind(ITgVehicleModel.class).to(TgVehicleModelDao.class);
+        bind(ITgVehicleModelWithCalc.class).to(TgVehicleModelWithCalcDao.class);
         bind(ITgVehicleMake.class).to(TgVehicleMakeDao.class);
         bind(ITgVehicle.class).to(TgVehicleDao.class);
         bind(ITgMeterReading.class).to(TgMeterReadingDao.class);
