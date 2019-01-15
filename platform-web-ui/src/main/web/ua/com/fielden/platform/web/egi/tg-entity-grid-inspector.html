@@ -960,10 +960,16 @@
                 }, 1)
             },
 
+            _areEqual: function (a, b) {
+                if (a && b && a.get('id') && b.get('id')) {
+                    return a.get('id') === b.get('id');
+                }
+                return this.$.reflector.equalsEx(a, b);
+            },
             
             _findEntity: function (entity, entities) {
                 for (let i = 0; i < entities.length; i += 1) {
-                    if (this.$.reflector.equalsEx(entity, entities[i])) {
+                    if (this._areEqual(entity, entities[i])) {
                         return i;
                     }
                 }
@@ -1107,7 +1113,7 @@
 
             _mouseRowLeave: function (event, detail) {
                 var index = event.model.entityIndex;
-                if (!this.editingEntity  || !this.$.reflector.equalsEx(this.editingEntity, this.filteredEntities[index])) {
+                if (!this.editingEntity  || !this._areEqual(this.editingEntity, this.filteredEntities[index])) {
                     this.set("egiModel." + index + ".over", false);
                 }
             },
@@ -1570,7 +1576,7 @@
                     if (selectEntInd >= 0) {
                         this.selectedEntities[selectEntInd] = newEntity;
                     }
-                    if (this.editingEntity && this.$.reflector.equalsEx(this.editingEntity, newEntity)) {
+                    if (this.editingEntity && this._areEqual(this.editingEntity, newEntity)) {
                         this.editingEntity = newEntity;
                     }
                 });
@@ -1579,7 +1585,7 @@
                     const oldIndex = this._findEntity(newEntity, oldValue);
                     const newRendHints = oldIndex < 0 ? {} : (this.renderingHints && this.renderingHints[oldIndex]) || {};
                     const egiEntity = {
-                        over: this.$.reflector.equalsEx(this.editingEntity, newEntity),
+                        over: this._areEqual(this.editingEntity, newEntity),
                         selected: isSelected,
                         entity: newEntity,
                         renderingHints: newRendHints
