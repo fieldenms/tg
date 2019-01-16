@@ -11,17 +11,17 @@ import ua.com.fielden.platform.web.view.master.api.actions.post.IPostAction;
  * <p>
  * Please note, that corresponding generator should return <code>Result.failure(forceRegenerationExceptionMessage)</code> (to be used with this standard post action)
  * when user tries to regenerate already modified data.
- * 
+ *
  * @author TG Team
  *
  */
 public class GuardCentreRegenerationPostAction implements IPostAction {
     private final String forceRegenerationExceptionMessage;
     private final String confirmationQuestion;
-    
+
     /**
      * Creates standard {@link GuardCentreRegenerationPostAction} with custom <code>confirmationQuestion</code> and <code>forceRegenerationExceptionMessage</code>.
-     * 
+     *
      * @param forceRegenerationExceptionMessage -- exception message while trying to regenerate already modified data (this appears as toast)
      * @param confirmationQuestion -- this appears as dialog's message (to confirm or reject data regeneration) and is provided with 'Yes' and 'No' buttons
      */
@@ -37,7 +37,7 @@ public class GuardCentreRegenerationPostAction implements IPostAction {
                 + "self._postRun = (function (criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, summary, columnWidths, visibleColumnsWithOrder) {\n"
                 + "    old_postRun(criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, summary, columnWidths, visibleColumnsWithOrder);\n"
                 + "    \n"
-                + "    if (criteriaEntity !== null && !criteriaEntity.isValidWithoutException() && criteriaEntity.exceptionOccured() && criteriaEntity.exceptionOccured().message === '%s') {\n"
+                + "    if (criteriaEntity !== null && !criteriaEntity.isValidWithoutException() && criteriaEntity.exceptionOccured() !== null && criteriaEntity.exceptionOccured().message === '%s') {\n"
                 + "        self.confirm('%s', [{name:'Yes', confirm:true, autofocus:true}, {name:'No'}]).then(function () {\n"
                 + "            return self.run(undefined, undefined, true);\n" // forceRegeneration is true (isAutoRunning and isSortingAction are undefined)
                 + "        }, function () {});\n" // skip legal rejection of promise (when 'No' button has been pressed)
