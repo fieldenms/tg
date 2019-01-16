@@ -25,10 +25,6 @@ public class Sources1 implements ITransformableToS2<Sources2> {
         final List<CompoundSource2> transformed = new ArrayList<>();
         for (final CompoundSource1 compoundSource : compounds) {
             transformed.add(compoundSource.transform(resolver));
-            //IQrySource2 joinedSourceTransformed = compoundSource.getSource().transform(resolver);
-            //Conditions2 joinConditionsTransformed = compoundSource.getJoinConditions().transform(resolver);
-            //transformed.add(new CompoundSource2(joinedSourceTransformed, compoundSource.getJoinType(), joinConditionsTransformed));
-            
         }
         return new Sources2(mainTransformed, transformed);
     }

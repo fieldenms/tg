@@ -149,11 +149,6 @@ public class TransformatorToS2 {
         return sb.toString();
     }
 
-//    public void addSource(final IQrySource1<? extends IQrySource2> source) {
-//        final IQrySource2 transformedSource = transformSource(source);
-//        getCurrentQueryMap().put(source, new SourceInfo(transformedSource, produceEntityInfoFrom(transformedSource), source.getAlias()));
-//    }
-
     private EntityInfo<?> produceEntityInfoFrom(final IQrySource2 transformedSource) {
         if (!EntityAggregates.class.equals(transformedSource.sourceType())) {
             return domainInfo.get(transformedSource.sourceType());
@@ -180,17 +175,10 @@ public class TransformatorToS2 {
     }
 
     private IQrySource2 transformSource(final IQrySource1<? extends IQrySource2> qrySourceStage1) {
-//        if (sourcesCache.getIfPresent(qrySourceStage1) != null) {
-//            System.out.println(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> T1: " + qrySourceStage1.sourceType().getSimpleName());
-//        } else {
-//            System.out.println(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> T2: " + qrySourceStage1.sourceType().getSimpleName());
-//        }
-//        
-//        
         return ofNullable(sourcesCache.getIfPresent(qrySourceStage1)).orElseGet(() -> {
-            System.out.println(" ----------------> getting for " + qrySourceStage1);
             
             final IQrySource2 result;
+            
             if (qrySourceStage1 instanceof QrySource1BasedOnPersistentType) {
                 final QrySource1BasedOnPersistentType qrySource = (QrySource1BasedOnPersistentType) qrySourceStage1;
                 result = new QrySource2BasedOnPersistentType(qrySource.sourceType());
@@ -205,8 +193,9 @@ public class TransformatorToS2 {
                 final QrySource1BasedOnSubqueries qrySource = (QrySource1BasedOnSubqueries) qrySourceStage1;
                 result = new QrySource2BasedOnSubqueries(extractQueryModels(qrySource));
             }
+            
             sourcesCache.put(qrySourceStage1, result);
-            System.out.println(" ----------------> from cache for " + qrySourceStage1);
+
             return result;
         });
     }
@@ -227,7 +216,7 @@ public class TransformatorToS2 {
     public IQrySource2 getTransformedSource(final IQrySource1<? extends IQrySource2> originalSource) {
         final IQrySource2 transformedSource = transformSource(originalSource);
         getCurrentQueryMap().put(originalSource, new SourceInfo(transformedSource, produceEntityInfoFrom(transformedSource), originalSource.getAlias()));
-        return transformedSource;//getCurrentQueryMap().get(originalSource).source;
+        return transformedSource;
     }
 
     public EntProp2 getTransformedProp(final EntProp1 originalProp) {
@@ -240,7 +229,7 @@ public class TransformatorToS2 {
             final Map<IQrySource1<? extends IQrySource2>, SourceInfo> item = it.next();
             final PropResolution resolution = resolveProp(item.values(), originalProp);
             if (resolution != null) {
-                return generateTransformedProp(resolution);
+                return new EntProp2(resolution.getAliaslessName(), resolution.getSource(), resolution.getType());
             }
         }
 
@@ -253,10 +242,6 @@ public class TransformatorToS2 {
 
     public EntValue2 getTransformedValue(final EntValue1 originalValue) {
         return new EntValue2(preprocessValue(originalValue.getValue()), originalValue.isIgnoreNull());
-    }
-    
-    private EntProp2 generateTransformedProp(final PropResolution resolution) {
-        return new EntProp2(resolution.getAliaslessName(), resolution.getSource(), resolution.getType());
     }
 
     public EntQuery2 getTransformedQuery(final EntQuery1 originalQuery) {

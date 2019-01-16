@@ -163,34 +163,12 @@ public class PropResolutionTest extends BaseEntQueryTCase1 {
         allConditions.add(firstAndConditionsGroup);
         final Conditions2 conditions = new Conditions2(false, allConditions);
 
-        final EntQueryBlocks2 parts = new EntQueryBlocks2(sources, conditions, new Yields2(), new GroupBys2(Collections.<GroupBy2> emptyList()), new OrderBys2(Collections.<OrderBy2> emptyList()));
+        final EntQueryBlocks2 parts = new EntQueryBlocks2(sources, conditions, new Yields2(), emptyGroupBys2, emptyOrderBys2);
         final EntQuery2 exp = new EntQuery2(parts, TgVehicleModel.class, RESULT_QUERY, null);
 
-        System.out.println(qry2.getConditions().equals(exp.getConditions()));
-        System.out.println(qry2.getGroups().equals(exp.getGroups()));
-        System.out.println(qry2.getYields().equals(exp.getYields()));
-        System.out.println(qry2.getSources().equals(exp.getSources()));
-        System.out.println(qry2.getOrderings().equals(exp.getOrderings()));
         assertEquals(qry2, exp);
     }
 
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
     @Test
     public void test_q212() {
         final EntityResultQueryModel<TgVehicleModelWithCalc> qry = select(TgVehicleModelWithCalc.class).where().prop("make").isNotNull().model();
