@@ -977,7 +977,7 @@
             },
             
             _processEntitySelection: function (entity, select) {
-                var selectedIndex = this._findEntity(entity, this.selectedEntities);
+                const selectedIndex = this._findEntity(entity, this.selectedEntities);
                 if (select) {
                     if (selectedIndex < 0) {
                         this.selectedEntities.push(entity);
@@ -1567,7 +1567,7 @@
             },
 
             /**
-             * Observs the changes to entities property.
+             * Observes changes to an entity property.
              */
             _filteredEntitiesChanged: function (newValue, oldValue) {
                 const tempEgiModel = [];
