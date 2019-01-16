@@ -631,29 +631,6 @@
 </dom-module>
 <script>
     (function () {
-        const _areEqual = function (a, b) {
-            return a && b && a.get('id') === b.get('id');
-        };
-        const _findEntity = function (entity, entities) {
-            for (var i = 0; i < entities.length; i += 1) {
-                if (_areEqual(entity, entities[i])) {
-                    return i;
-                }
-            }
-            return -1;
-        };
-        const _processEntitySelection = function (selectedEntities, entity, select) {
-            var selectedIndex = _findEntity(entity, selectedEntities);
-            if (select) {
-                if (selectedIndex < 0) {
-                    selectedEntities.push(entity);
-                }
-            } else {
-                if (selectedIndex >= 0) {
-                    selectedEntities.splice(selectedIndex, 1);
-                }
-            }
-        };
         const calculateFixedColumnWidth = function (columns, numOfFixedColumns) {
             return columns.reduce((accum, curr, index) => accum += (index < numOfFixedColumns ? curr.width : 0), 0);
         };
@@ -960,7 +937,6 @@
             },
 
             attached: function () {
-                var self = this;
                 this._updateTableSizeAsync();
                 this._ownKeyBindings = {};
                 if (this.customShortcuts) {
@@ -984,11 +960,40 @@
                 }, 1)
             },
 
+            _areEqual: function (a, b) {
+                if (a && b && a.get('id') && b.get('id')) {
+                    return a.get('id') === b.get('id');
+                }
+                return this.$.reflector.equalsEx(a, b);
+            },
+            
+            _findEntity: function (entity, entities) {
+                for (let i = 0; i < entities.length; i += 1) {
+                    if (this._areEqual(entity, entities[i])) {
+                        return i;
+                    }
+                }
+                return -1;
+            },
+            
+            _processEntitySelection: function (entity, select) {
+                const selectedIndex = this._findEntity(entity, this.selectedEntities);
+                if (select) {
+                    if (selectedIndex < 0) {
+                        this.selectedEntities.push(entity);
+                    }
+                } else {
+                    if (selectedIndex >= 0) {
+                        this.selectedEntities.splice(selectedIndex, 1);
+                    }
+                }
+            },
+
             /**
              * Updates entity when some of the properties were changed.
              */
             updateEntity: function (entity, propPath) {
-                const entityIndex = _findEntity(entity, this.filteredEntities);
+                const entityIndex = this._findEntity(entity, this.filteredEntities);
                 if (entityIndex >= 0) {
                     const path = "egiModel." + entityIndex + ".entity" + (propPath.length > 0 ? "." + propPath : "");
                     this.notifyPath(path, entity.get(propPath));
@@ -996,25 +1001,25 @@
             },
             
             findEntityIndex: function (entity) {
-                return _findEntity(entity, this.entities);
+                return this._findEntity(entity, this.entities);
             },
             
             findFilteredEntityIndex: function (entity) {
-                return _findEntity(entity, this.filteredEntities);
+                return this._findEntity(entity, this.filteredEntities);
             },
 
             setRenderingHints: function (entity, property, renderingHints) {
-                const entityIndex = _findEntity(entity, this.filteredEntities);
+                const entityIndex = this._findEntity(entity, this.filteredEntities);
                 if (entityIndex >= 0) {
                     this.set("egiModel." + entityIndex + ".renderingHints." + property, renderingHints);
                 }
             },
 
             selectEntity: function (entity, select) {
-                const entityIndex = _findEntity(entity, this.filteredEntities);
+                const entityIndex = this._findEntity(entity, this.filteredEntities);
                 if (entityIndex >= 0 && this.egiModel[entityIndex].selected !== select) {
                     this.set("egiModel." + entityIndex + ".selected", select);
-                    _processEntitySelection(this.selectedEntities, this.filteredEntities[entityIndex], select, this);
+                    this._processEntitySelection(this.filteredEntities[entityIndex], select);
                     this.fire("tg-entity-selected", {
                         shouldScrollToSelected: false,
                         entities: [{
@@ -1037,13 +1042,13 @@
 
             editEntity: function (entity) {
                 if (this.editingEntity) {
-                    const oldEntIndex = _findEntity(this.editingEntity, this.filteredEntities);
+                    const oldEntIndex = this._findEntity(this.editingEntity, this.filteredEntities);
                     if (oldEntIndex >= 0) {
                         this.editingEntity = null;
                         this.set("egiModel." + oldEntIndex + ".over", false);
                     }
                 }
-                const entIndex = _findEntity(entity, this.filteredEntities);
+                const entIndex = this._findEntity(entity, this.filteredEntities);
                 if (entIndex >= 0) {
                     this.editingEntity = entity;
                     this.set("egiModel." + entIndex + ".over", true);
@@ -1108,7 +1113,7 @@
 
             _mouseRowLeave: function (event, detail) {
                 var index = event.model.entityIndex;
-                if (!this.editingEntity  || !_areEqual(this.editingEntity, this.filteredEntities[index])) {
+                if (!this.editingEntity  || !this._areEqual(this.editingEntity, this.filteredEntities[index])) {
                     this.set("egiModel." + index + ".over", false);
                 }
             },
@@ -1562,26 +1567,25 @@
             },
 
             /**
-             * Observs the changes to entities property.
+             * Observes changes to an entity property.
              */
             _filteredEntitiesChanged: function (newValue, oldValue) {
                 const tempEgiModel = [];
-                const self = this;
-                newValue.forEach(function (newEntity) {
-                    const selectEntInd = _findEntity(newEntity, self.selectedEntities);
+                newValue.forEach(newEntity => {
+                    const selectEntInd = this._findEntity(newEntity, this.selectedEntities);
                     if (selectEntInd >= 0) {
-                        self.selectedEntities[selectEntInd] = newEntity;
+                        this.selectedEntities[selectEntInd] = newEntity;
                     }
-                    if (this.editingEntity && _areEqual(this.editingEntity, newEntity)) {
+                    if (this.editingEntity && this._areEqual(this.editingEntity, newEntity)) {
                         this.editingEntity = newEntity;
                     }
                 });
-                newValue.forEach(function (newEntity) {
-                    const isSelected = self.selectedEntities.indexOf(newEntity) > -1;
-                    const oldIndex = _findEntity(newEntity, oldValue);
-                    const newRendHints = oldIndex < 0 ? {} : (self.renderingHints && self.renderingHints[oldIndex]) || {};
+                newValue.forEach(newEntity => {
+                    const isSelected = this.selectedEntities.indexOf(newEntity) > -1;
+                    const oldIndex = this._findEntity(newEntity, oldValue);
+                    const newRendHints = oldIndex < 0 ? {} : (this.renderingHints && this.renderingHints[oldIndex]) || {};
                     const egiEntity = {
-                        over: _areEqual(this.editingEntity, newEntity),
+                        over: this._areEqual(this.editingEntity, newEntity),
                         selected: isSelected,
                         entity: newEntity,
                         renderingHints: newRendHints
@@ -1589,7 +1593,7 @@
                     tempEgiModel.push(egiEntity);
                 });
                 updateSelectAll(this, tempEgiModel);
-                self.egiModel = tempEgiModel;
+                this.egiModel = tempEgiModel;
                 this._updateTableSizeAsync();
                 this.fire("tg-egi-entities-loaded", newValue);
             },
@@ -1668,14 +1672,14 @@
                 let numOfSelected = 0;
                 let lastSelectedIndex = -1;
                 newSelection.entities.forEach(entitySelection => {
-                    const entityIndex = _findEntity(entitySelection.entity, this.filteredEntities);
+                    const entityIndex = this._findEntity(entitySelection.entity, this.filteredEntities);
                     if (entityIndex >= 0 && this.egiModel[entityIndex].selected !== entitySelection.select) {
                         this.set("egiModel." + entityIndex + ".selected", entitySelection.select);
-                        _processEntitySelection(this.selectedEntities, this.filteredEntities[entityIndex], entitySelection.select, this);
+                        this._processEntitySelection(this.filteredEntities[entityIndex], entitySelection.select);
                     } else {
-                        const hiddenEntityIndex = _findEntity(entitySelection.entity, this.entities);
+                        const hiddenEntityIndex = this._findEntity(entitySelection.entity, this.entities);
                         if (hiddenEntityIndex >= 0) {
-                            _processEntitySelection(this.selectedEntities, this.entities[hiddenEntityIndex], entitySelection.select, this);
+                            this._processEntitySelection(this.entities[hiddenEntityIndex], entitySelection.select);
                         }
                     }
                     if (entitySelection.select) {
@@ -1720,7 +1724,7 @@
                     for (let i = 0; i < this.egiModel.length; i += 1) {
                         if (this.egiModel[i].selected !== checked) {
                             this.set("egiModel." + i + ".selected", checked);
-                            _processEntitySelection(this.selectedEntities, this.filteredEntities[i], checked);
+                            this._processEntitySelection(this.filteredEntities[i], checked);
                             selectionDetails.push({
                                 entity: this.filteredEntities[i],
                                 select: checked
@@ -1749,7 +1753,7 @@
                         this._selectRange(this._lastSelectedIndex, index);
                     } else {
                         this.set("egiModel." + index + ".selected", target.checked);
-                        _processEntitySelection(this.selectedEntities, this.filteredEntities[index], target.checked, this);
+                        this._processEntitySelection(this.filteredEntities[index], target.checked);
                         this.fire("tg-entity-selected", {
                             shouldScrollToSelected: false,
                             entities: [{
@@ -1783,7 +1787,7 @@
                 for (let i = from; i <= to; i++) {
                     if (!this.egiModel[i].selected) {
                         this.set("egiModel." + i + ".selected", true);
-                        _processEntitySelection(this.selectedEntities, this.filteredEntities[i], true);
+                        this._processEntitySelection(this.filteredEntities[i], true);
                         selectionDetails.push({
                             entity: this.filteredEntities[i],
                             select: true
@@ -2045,7 +2049,7 @@
             containsAnyEntity: function (entitiesToSearch) {
                 var entityIndex;
                 for (entityIndex = 0; entityIndex < entitiesToSearch.length; entityIndex++) {
-                    if (_findEntity(entitiesToSearch[entityIndex], this.filteredEntities) !== -1) {
+                    if (this._findEntity(entitiesToSearch[entityIndex], this.filteredEntities) !== -1) {
                         return true;
                     }
                 }
@@ -2280,7 +2284,6 @@
                 if (this._rightLockPanel && this._rightLockPanel.offsetParent !== null) {
                     containerWidth -= this._rightLockPanel.offsetWidth;
                 }
-                const self = this;
                 this._columnResizingObject = {
                     oldColumnWidth: e.model.item.width,
                     oldColumnGrowFactor: e.model.item.growFactor,
