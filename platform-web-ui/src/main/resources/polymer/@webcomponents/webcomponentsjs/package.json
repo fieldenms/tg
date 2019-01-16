@@ -1,28 +1,33 @@
 {
-  "_from": "@webcomponents/webcomponentsjs@^2.0.0",
+  "_args": [
+    [
+      "@webcomponents/webcomponentsjs@2.2.3",
+      "/home/oleh/workspace/tg/platform-web-ui/src/main/resources"
+    ]
+  ],
+  "_from": "@webcomponents/webcomponentsjs@2.2.3",
   "_id": "@webcomponents/webcomponentsjs@2.2.3",
   "_inBundle": false,
   "_integrity": "sha512-8ndihKAmH01M1GifAxIwNMJU6yI2uFnMjm6rPvLxO4IG1nzeyOFJB1B2LQRHnx7ChQCKCLap2B18zIOVY4ROoQ==",
   "_location": "/@webcomponents/webcomponentsjs",
   "_phantomChildren": {},
   "_requested": {
-    "type": "range",
+    "type": "version",
     "registry": true,
-    "raw": "@webcomponents/webcomponentsjs@^2.0.0",
+    "raw": "@webcomponents/webcomponentsjs@2.2.3",
     "name": "@webcomponents/webcomponentsjs",
     "escapedName": "@webcomponents%2fwebcomponentsjs",
     "scope": "@webcomponents",
-    "rawSpec": "^2.0.0",
+    "rawSpec": "2.2.3",
     "saveSpec": null,
-    "fetchSpec": "^2.0.0"
+    "fetchSpec": "2.2.3"
   },
   "_requiredBy": [
     "/",
     "/wct-browser-legacy"
   ],
   "_resolved": "https://registry.npmjs.org/@webcomponents/webcomponentsjs/-/webcomponentsjs-2.2.3.tgz",
-  "_shasum": "1db73557e44df927ee5458c63b56f4a75183ca09",
-  "_spec": "@webcomponents/webcomponentsjs@^2.0.0",
+  "_spec": "2.2.3",
   "_where": "/home/oleh/workspace/tg/platform-web-ui/src/main/resources",
   "author": {
     "name": "The Polymer Authors"
@@ -30,8 +35,6 @@
   "bugs": {
     "url": "https://github.com/webcomponents/webcomponentsjs/issues"
   },
-  "bundleDependencies": false,
-  "deprecated": false,
   "description": "Web Components Polyfills",
   "devDependencies": {
     "@gulp-sourcemaps/sources-content": "^1.0.0",
