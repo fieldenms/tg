@@ -21,11 +21,4 @@ public class TgCentreDiffSerialisationDao extends CommonEntityDao<TgCentreDiffSe
         super(filter);
     }
     
-    @Override
-    protected IFetchProvider<TgCentreDiffSerialisation> createFetchProvider() {
-        return super.createFetchProvider()
-            .with("entityPropCritSingle")
-            .with("nonPersistentEntityPropCritSingle");
-    }
-    
 }
