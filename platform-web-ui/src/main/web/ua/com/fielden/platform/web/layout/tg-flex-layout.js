@@ -21,7 +21,7 @@ const template = html`
     <iron-media-query query="[[_calcMobileQuery()]]" on-query-matches-changed="_mobileChanged"></iron-media-query>
     <iron-media-query query="[[_calcTabletQuery()]]" on-query-matches-changed="_tabletChanged"></iron-media-query>
     <iron-media-query query="[[_calcDesktopQuery()]]" on-query-matches-changed="_desktopChanged"></iron-media-query>
-    <slot select="item" id="elements"></slot>`;
+    <slot id="elements"></slot>`;
 
 template.setAttribute('strip-whitespace', '');
 
