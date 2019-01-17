@@ -1,12 +1,13 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 
 <head>
     <title>scroll shadow example</title>
-    <script src="/resources/polymer/webcomponentsjs/webcomponents-lite.js"></script>
-    <link rel="import" href="/resources/polymer/paper-styles/paper-styles-classes.html">
-    <link rel="import" href="/resources/polymer/iron-flex-layout/iron-flex-layout-classes.html">
-    <link rel="import" href="tg-scrollable-component.html">
+    <script src='/resources/polymer/@webcomponents/webcomponentsjs/custom-elements-es5-adapter.js'></script>
+    <script src='/resources/polymer/@webcomponents/webcomponentsjs/webcomponents-loader.js'></script>
+    <script type="module">
+        import './tg-scrollable-component-example.js';
+    </script>
     <style>
         html {
             overflow: hidden;
@@ -15,52 +16,11 @@
             font-family: 'Roboto', 'Helvetica Neue', Helvetica, Arial, sans-serif;
             font-size: 10pt;
         }
-        .high-region {
-            height: 450px;
-        }
     </style>
 </head>
 
-<body unresolved class="fullbleed">
-    <tg-scrollable-component class="fit">
-        <div class="layout vertical" style="min-height:fit-content">
-            <div>TEST</div>
-            <div>TEST</div>
-            <div>TEST</div>
-            <div>TEST</div>
-            <div>TEST</div>
-            <div>TEST</div>
-            <div>TEST</div>
-            <div>TEST</div>
-            <div>TEST</div>
-            <div>TEST</div>
-            <div>TEST</div>
-            <div>TEST</div>
-            <div>TEST</div>
-            <div>TEST</div>
-            <div>TEST</div>
-            <div class="high-region"></div>
-            <div>TEST</div>
-            <div>TEST</div>
-            <div>TEST</div>
-            <div>TEST</div>
-            <div>TEST</div>
-            <div>TEST</div>
-            <div>TEST</div>
-            <div>TEST</div>
-            <div>TEST</div>
-            <div>TEST</div>
-            <div>TEST</div>
-            <div>TEST</div>
-            <div>TEST</div>
-            <div>TEST</div>
-            <div>TEST</div>
-            <div>TEST</div>
-        </div>
-    </tg-scrollable-component>
+<body>
+    <tg-scrollable-component-example></tg-scrollable-component-example>
 </body>
-<script>
-    var app = document.querySelector("#app");
-</script>
 
 </html>

@@ -209,7 +209,7 @@ public class WebUiBuilder implements IWebUiBuilder {
         if (this.minDesktopWidth <= this.minTabletWidth) {
             throw new IllegalStateException("The desktop width can not be less then or equal tablet width.");
         }
-        return ResourceLoader.getText("ua/com/fielden/platform/web/app/config/tg-app-config.html").
+        return ResourceLoader.getText("ua/com/fielden/platform/web/app/config/tg-app-config.js").
                 replace("@minDesktopWidth", Integer.toString(this.minDesktopWidth)).
                 replace("@minTabletWidth", Integer.toString(this.minTabletWidth)).
                 replace("@locale", "\"" + this.locale + "\"").
