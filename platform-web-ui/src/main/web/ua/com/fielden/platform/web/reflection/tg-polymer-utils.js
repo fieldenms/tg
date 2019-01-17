@@ -30,11 +30,8 @@ export function generateUUID () {
  */
 export function _removeAllLightDOMChildrenFrom (element) {
     const childNodes = element.childNodes;
-    for (let index = 0; index < childNodes.length; index++) {
-        const child = childNodes[index];
-        if (child.parentNode === element) {
-            element.removeChild(child);
-        }
+    while (element.firstChild) {
+        element.removeChild(element.firstChild);
     }
 };
 /**
