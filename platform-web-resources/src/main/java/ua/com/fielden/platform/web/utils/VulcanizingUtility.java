@@ -138,7 +138,7 @@ public class VulcanizingUtility {
 
         copyStaticResources(platformVendorResourcesPath, platformWebUiResourcesPath, appVendorResourcesPath, appWebUiResourcesPath, LOGGER);
         LOGGER.info("\t------------------------------");
-
+        //TODO This code below was temporary commented out in order to implemented simple vulcanization for scrollable example. Later, the code below, should be uncommented and modified to provide full application vulcanization.
 //        LOGGER.info("\tVulcanizing login resources...");
 //        vulcanizeStartupResourcesFor("scrollable-example", DeviceProfile.DESKTOP, sourceController, loginTargetPlatformSpecificPath, commandMaker.apply("scrollable-example"), additionalPaths, LOGGER, dir);
 //        LOGGER.info("\tVulcanized login resources.");
@@ -190,11 +190,13 @@ public class VulcanizingUtility {
 
     private static void downloadSpecificGeneratedResourcesFor(final IWebUiConfig webUiConfig, final DeviceProfile deviceProfile, final ISourceController sourceController, final Logger logger) {
         logger.info("\t\tDownloading " + deviceProfile + " generated resources...");
+      //TODO This code below was temporary commented out in order to implemented simple vulcanization for scrollable example. Later, the code below, should be uncommented and modified to provide full application vulcanization.
 //        for (final Class<? extends MiWithConfigurationSupport<?>> centreMiType : webUiConfig.getCentres().keySet()) {
 //            downloadSource("centre_ui", centreMiType.getName(), sourceController, deviceProfile, logger);
 //            // downloadSource("centre_ui/egi", centreMiType.getName(), sourceController, deviceProfile, logger);
 //        }
         downloadSource("app", "tg-app-config.js", sourceController, deviceProfile, logger);
+      //TODO This code below was temporary commented out in order to implemented simple vulcanization for scrollable example. Later, the code below, should be uncommented and modified to provide full application vulcanization.
 //        downloadSource("app", "tg-app.html", sourceController, deviceProfile, logger);
 //        downloadSource("app", "tg-element-loader.html", sourceController, deviceProfile, logger);
 //        if (DeviceProfile.DESKTOP.equals(deviceProfile)) {
@@ -254,7 +256,7 @@ public class VulcanizingUtility {
             throw new IllegalStateException(e);
         }
         logger.info("\t\tVulcanized [" + prefix + "].");
-
+      //TODO This code below was temporary commented out in order to implemented simple vulcanization for scrollable example. Later, the code below, should be uncommented and modified to provide full application vulcanization.
 //        logger.info("\t\tInlining styles / scripts in [" + prefix + "-startup-resources-origin-vulcanized.html]...");
 //        try {
 //            final FileInputStream fileInputStream = new FileInputStream(prefix + "-startup-resources-origin-vulcanized.html");
