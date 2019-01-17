@@ -104,7 +104,9 @@ template.setAttribute('strip-whitespace', '');
         if (this.currentLayout !== layout) {
             if (!this.componentsToLayout) {
                 this.componentsToLayout = [];
-                this.$.elements.assignedNodes().forEach( item => this.componentsToLayout.push(item));
+                this.$.elements.assignedNodes()
+                    .filter(node => node.nodeType === Node.ELEMENT_NODE)
+                    .forEach( item => this.componentsToLayout.push(item));
             }
             // Removes all Light DOM children, that were distributed through content insertion points or added manually using DOM API
             // This method is defined in tg-polymer-utils.
@@ -196,6 +198,7 @@ template.setAttribute('strip-whitespace', '');
         this.toggleClass("hidden-with-subheader", false, element);
     };
     const createFlexCell = function (container, layoutElem, selectedElements, orderedElements, subheader, horizontal) {
+        let newSubheader = null;
         if (typeof layoutElem === "string") {
             const trimmedLayoutElement = layoutElem.trim();
             if (layoutElem.indexOf(':') >= 0) {
@@ -214,8 +217,8 @@ template.setAttribute('strip-whitespace', '');
                 this.toggleClass(trimmedLayoutElement, true, container);
             }
         } else if (Array.isArray(layoutElem)) {
+            newSubheader = subheader;
             let rowElement;
-            let newSubheader = subheader;
             if (!hasArray(layoutElem)) {
                 rowElement = getNextElement.bind(this)(selectedElements, orderedElements, layoutElem);
                 removeStylesAndClasses.bind(this)(rowElement);
