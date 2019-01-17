@@ -1,23 +1,18 @@
 package ua.com.fielden.platform.web.centre;
 
 import static ua.com.fielden.platform.entity.CollectionModificationUtils.validateAction;
-import static ua.com.fielden.platform.web.centre.WebApiUtils.treeName;
-
-import java.util.ArrayList;
-import java.util.List;
+import static ua.com.fielden.platform.web.centre.CentreConfigUpdaterUtils.applyNewOrderVisibilityAndSorting;
 
 import com.google.inject.Inject;
 
 import ua.com.fielden.platform.dao.CommonEntityDao;
 import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.dao.annotations.SessionRequired;
-import ua.com.fielden.platform.domaintree.centre.IOrderingRepresentation.Ordering;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.EntityType;
 import ua.com.fielden.platform.entity.query.IFilter;
 import ua.com.fielden.platform.entity_centre.review.criteria.EnhancedCentreEntityQueryCriteria;
 import ua.com.fielden.platform.types.tuples.T2;
-import ua.com.fielden.platform.utils.Pair;
 import ua.com.fielden.platform.web.utils.ICriteriaEntityRestorer;
 
 /**
@@ -48,35 +43,7 @@ public class CentreConfigUpdaterDao extends CommonEntityDao<CentreConfigUpdater>
         
         // use centreAdjuster to update all centre managers ('fresh' and 'saved') with columns visibility / order / sorting information; also commit them to the database
         criteriaEntityBeingUpdated.adjustCentre(centreManager -> {
-            // remove sorting information
-            final List<Pair<String, Ordering>> currOrderedProperties = new ArrayList<>(centreManager.getSecondTick().orderedProperties(root));
-            for (final Pair<String, Ordering> orderedProperty: currOrderedProperties) {
-                if (Ordering.ASCENDING == orderedProperty.getValue()) {
-                    centreManager.getSecondTick().toggleOrdering(root, orderedProperty.getKey());
-                }
-                centreManager.getSecondTick().toggleOrdering(root, orderedProperty.getKey());
-            }
-            
-            // remove usage information
-            final List<String> currUsedProperties = centreManager.getSecondTick().usedProperties(root);
-            for (final String currUsedProperty: currUsedProperties) {
-                centreManager.getSecondTick().use(root, currUsedProperty, false);
-            }
-            
-            // apply usage information
-            for (final String chosenId : actionToSave.getChosenIds()) {
-                centreManager.getSecondTick().use(root, treeName(chosenId), true);
-            }
-            
-            // apply sorting information
-            for (final String sortingVal: actionToSave.getSortingVals()) {
-                final String[] splitted = sortingVal.split(":");
-                final String name = treeName(splitted[0]);
-                centreManager.getSecondTick().toggleOrdering(root, name);
-                if ("desc".equals(splitted[1])) {
-                    centreManager.getSecondTick().toggleOrdering(root, name);
-                }
-            }
+            applyNewOrderVisibilityAndSorting(centreManager.getSecondTick(), root, actionToSave.getChosenIds(), actionToSave.getSortingVals());
         });
         
         // in case where sorting has been changed from previous value, we need to trigger running from client-side using 'sortingChanged' parameter

@@ -1,7 +1,10 @@
 package ua.com.fielden.platform.web.centre;
 
+import static ua.com.fielden.platform.domaintree.centre.IOrderingRepresentation.Ordering.ASCENDING;
+import static ua.com.fielden.platform.domaintree.centre.IOrderingRepresentation.Ordering.DESCENDING;
 import static ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeRepresentation.isShortCollection;
 import static ua.com.fielden.platform.web.centre.WebApiUtils.dslName;
+import static ua.com.fielden.platform.web.centre.WebApiUtils.treeName;
 
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
@@ -10,6 +13,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import ua.com.fielden.platform.criteria.generator.impl.CriteriaReflector;
+import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.IAddToResultTickManager;
 import ua.com.fielden.platform.domaintree.centre.IOrderingRepresentation.Ordering;
 import ua.com.fielden.platform.entity.annotation.CustomProp;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
@@ -82,6 +86,84 @@ public class CentreConfigUpdaterUtils {
             .map(customisableColumn -> customisableColumn.getKey() + ':' + (Boolean.TRUE.equals(customisableColumn.getSorting()) ? "asc" : "desc"))
             .collect(Collectors.toCollection(LinkedHashSet::new))
         );
+    }
+    
+    /**
+     * Removes all sorting configuration and column order / visibility from result-set tick <code>secondTick</code>.
+     * 
+     * @param secondTick
+     * @param root
+     */
+    public static void removeOrderVisibilityAndSorting(final IAddToResultTickManager secondTick, final Class<?> root) {
+        // remove sorting information
+        final List<Pair<String, Ordering>> currOrderedProperties = new ArrayList<>(secondTick.orderedProperties(root));
+        for (final Pair<String, Ordering> orderedProperty: currOrderedProperties) {
+            if (ASCENDING == orderedProperty.getValue()) {
+                secondTick.toggleOrdering(root, orderedProperty.getKey());
+            }
+            secondTick.toggleOrdering(root, orderedProperty.getKey());
+        }
+        
+        // remove usage information
+        final List<String> currUsedProperties = secondTick.usedProperties(root);
+        for (final String currUsedProperty: currUsedProperties) {
+            secondTick.use(root, currUsedProperty, false);
+        }
+    }
+    
+    /**
+     * Applies new sorting configuration and column order / visibility against result-set tick <code>secondTick</code>. {@link WebApiUtils#treeName(String)} normalisation of property names is not required,
+     * it is done inside the function.
+     * 
+     * @param secondTick
+     * @param root
+     * @param newUsedProps
+     * @param newSortingVals
+     */
+    public static void applyNewOrderVisibilityAndSorting(final IAddToResultTickManager secondTick, final Class<?> root, final Set<String> newUsedProps, final List<String> newSortingVals) {
+        removeOrderVisibilityAndSorting(secondTick, root);
+        
+        // apply usage information
+        for (final String chosenId: newUsedProps) {
+            secondTick.use(root, treeName(chosenId), true);
+        }
+        
+        // apply sorting information
+        for (final String sortingVal: newSortingVals) {
+            final String[] splitted = sortingVal.split(":");
+            final String name = treeName(splitted[0]);
+            secondTick.toggleOrdering(root, name);
+            if ("desc".equals(splitted[1])) {
+                secondTick.toggleOrdering(root, name);
+            }
+        }
+    }
+    
+    /**
+     * Applies new sorting configuration and column order / visibility against result-set tick <code>secondTick</code>. {@link WebApiUtils#treeName(String)} normalisation of property names is required 
+     * for <code>newUsedProps</code> and <code>newSortingProps</code>.
+     * 
+     * @param secondTick
+     * @param root
+     * @param newUsedProps
+     * @param newSortingProps
+     */
+    public static void applyNewOrderVisibilityAndSorting(final IAddToResultTickManager secondTick, final Class<?> root, final List<String> newUsedProps, final List<Pair<String, Ordering>> newSortingProps) {
+        removeOrderVisibilityAndSorting(secondTick, root);
+        
+        // apply usage information
+        for (final String usedProp : newUsedProps) {
+            secondTick.use(root, usedProp, true);
+        }
+        
+        // apply sorting information
+        for (final Pair<String, Ordering> sortingProp: newSortingProps) {
+            final String name = sortingProp.getKey();
+            secondTick.toggleOrdering(root, name);
+            if (DESCENDING.equals(sortingProp.getValue())) {
+                secondTick.toggleOrdering(root, name);
+            }
+        }
     }
     
 }
