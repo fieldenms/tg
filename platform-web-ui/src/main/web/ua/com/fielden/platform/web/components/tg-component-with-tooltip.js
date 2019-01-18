@@ -1,7 +1,7 @@
 import '/resources/polymer/@polymer/polymer/polymer-legacy.js';
 import '/resources/polymer/@polymer/iron-icon/iron-icon.js';
 import '/resources/polymer/@polymer/iron-icons/iron-icons.js';
-import '/resources/polymer/@polymer/iron-flex-layout/iron-flex-layout.js';
+import '/resources/polymer/@polymer/iron-flex-layout/iron-flex-layout-classes.js';
 
 import '/resources/layout/tg-flex-layout.js'
 
@@ -17,6 +17,9 @@ const template = html`
             border: 1px dashed black;
         }
     </style>
+    <custom-style>
+        <style include="iron-flex iron-flex-reverse iron-flex-alignment iron-flex-factors iron-positioning"></style>
+    </custom-style>
     <tg-flex-layout when-desktop="[[_whenDesktop]]" , when-tablet="[[_whenDesktop]]" , when-mobile="[[_whenDesktop]]">
         <div id="div_text" tooltip-text="Tooltip text for div">
             <span tooltip-text="Tooltip text for embeded span">Embeded component</span>

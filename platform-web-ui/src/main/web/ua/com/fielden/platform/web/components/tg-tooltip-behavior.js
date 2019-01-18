@@ -155,7 +155,7 @@ export const TgTooltipBehavior = {
     },
 
     _startTooltip: function (e) {
-        const currentActiveElement = extractActiveElement(event.target, this.triggerElement);
+        const currentActiveElement = extractActiveElement(event.composedPath()[0], this.triggerElement);
 
         if (currentActiveElement !== this._activeComponent) {
             this._hideTooltip();
