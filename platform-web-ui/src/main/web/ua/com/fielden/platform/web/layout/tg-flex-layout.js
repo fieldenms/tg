@@ -17,6 +17,9 @@ const template = html`
             display: none !important;
         }
     </style>
+    <custom-style>
+        <style include="iron-flex iron-flex-reverse iron-flex-alignment iron-flex-factors iron-positioning"></style>
+    </custom-style>
     <tg-app-config id="appConfig"></tg-app-config>
     <iron-media-query query="[[_calcMobileQuery()]]" on-query-matches-changed="_mobileChanged"></iron-media-query>
     <iron-media-query query="[[_calcTabletQuery()]]" on-query-matches-changed="_tabletChanged"></iron-media-query>
@@ -104,7 +107,7 @@ template.setAttribute('strip-whitespace', '');
         if (this.currentLayout !== layout) {
             if (!this.componentsToLayout) {
                 this.componentsToLayout = [];
-                this.$.elements.assignedNodes()
+                this.$.elements.assignedNodes({flatten: true})
                     .filter(node => node.nodeType === Node.ELEMENT_NODE && node.tagName !== 'SLOT')
                     .forEach( item => this.componentsToLayout.push(item));
             }
