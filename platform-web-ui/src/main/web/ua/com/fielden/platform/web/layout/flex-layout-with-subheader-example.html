@@ -5,8 +5,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, minimum-scale=1.0, initial-scale=1.0, user-scalable=yes">
     <title>Flex layout with subheader example</title>
-    <script src='/resources/polymer/@webcomponents/webcomponentsjs/custom-elements-es5-adapter.js'></script>
-    <script src='/resources/polymer/@webcomponents/webcomponentsjs/webcomponents-loader.js'></script>
+    <script src='/resources/polymer/@webcomponents/webcomponentsjs/webcomponents-bundle.js'></script>
     <script type="module">
         import '/resources/polymer/@polymer/iron-flex-layout/iron-flex-layout-classes.js';
         import '/resources/polymer/@polymer/paper-input/paper-input.js';
@@ -19,13 +18,8 @@
             font-size: 10pt;
         }
         body {
-            transition: opacity ease-in 0.2s;
-            opacity: 1;
             font-family: 'Roboto', 'Helvetica Neue', Helvetica, Arial, sans-serif;
             font-size: 10pt;
-        }
-        body[unresolved] {
-            opacity: 0;
         }
     </style>
     <custom-style>

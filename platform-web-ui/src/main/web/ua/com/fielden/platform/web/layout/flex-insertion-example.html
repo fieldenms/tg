@@ -5,22 +5,12 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, minimum-scale=1.0, initial-scale=1.0, user-scalable=yes">
     <title>Flex insertion example</title>
-    <script src='/resources/polymer/@webcomponents/webcomponentsjs/custom-elements-es5-adapter.js'></script>
-    <script src='/resources/polymer/@webcomponents/webcomponentsjs/webcomponents-loader.js'></script>
+    <script src='/resources/polymer/@webcomponents/webcomponentsjs/webcomponents-bundle.js'></script>
     <script type="module">
         import '/resources/polymer/@polymer/iron-flex-layout/iron-flex-layout-classes.js';
         import '/resources/polymer/@polymer/paper-styles/paper-styles-classes.js';
         import './tg-content-layout.js';
     </script>
-    <style>
-        body {
-            transition: opacity ease-in 0.2s;
-            opacity: 1;
-        }
-        body[unresolved] {
-            opacity: 0;
-        }
-    </style>
     <custom-style>
         <style include="iron-flex iron-flex-reverse iron-flex-alignment iron-flex-factors iron-positioning"></style>
     </custom-style>

@@ -3,8 +3,7 @@
 
 <head>
     <title>Tile spike</title>
-    <script src='/resources/polymer/@webcomponents/webcomponentsjs/custom-elements-es5-adapter.js'></script>
-    <script src='/resources/polymer/@webcomponents/webcomponentsjs/webcomponents-loader.js'></script>
+    <script src='/resources/polymer/@webcomponents/webcomponentsjs/webcomponents-bundle.js'></script>
     <script type="module">
         import '/resources/polymer/@polymer/iron-flex-layout/iron-flex-layout-classes.js';
         import '/resources/polymer/@polymer/paper-styles/paper-styles-classes.js';
@@ -13,11 +12,6 @@
     <style>
         body {
             background-color: black;
-            transition: opacity ease-in 0.2s;
-            opacity: 1;
-        }
-        body[unresolved] {
-            opacity: 0;
         }
         tile-layout {
             margin: 4px;
