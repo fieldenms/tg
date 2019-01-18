@@ -13,6 +13,11 @@
     <style>
         body {
             background-color: black;
+            transition: opacity ease-in 0.2s;
+            opacity: 1;
+        }
+        body[unresolved] {
+            opacity: 0;
         }
         tile-layout {
             margin: 4px;

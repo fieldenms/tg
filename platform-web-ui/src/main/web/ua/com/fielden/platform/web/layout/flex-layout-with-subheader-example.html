@@ -19,8 +19,13 @@
             font-size: 10pt;
         }
         body {
+            transition: opacity ease-in 0.2s;
+            opacity: 1;
             font-family: 'Roboto', 'Helvetica Neue', Helvetica, Arial, sans-serif;
             font-size: 10pt;
+        }
+        body[unresolved] {
+            opacity: 0;
         }
     </style>
     <custom-style>

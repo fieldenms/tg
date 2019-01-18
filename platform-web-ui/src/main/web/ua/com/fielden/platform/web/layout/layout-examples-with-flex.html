@@ -16,6 +16,13 @@
         .test {
             border: 1px solid black;
         }
+        body {
+            transition: opacity ease-in 0.2s;
+            opacity: 1;
+        }
+        body[unresolved] {
+            opacity: 0;
+        }
     </style>
     <custom-style>
         <style include="iron-flex iron-flex-reverse iron-flex-alignment iron-flex-factors iron-positioning"></style>
