@@ -51,6 +51,7 @@
     "chai": "^4.2.0",
     "mocha": "^5.2.0",
     "wct-browser-legacy": "^1.0.2",
-    "wct-mocha": "^1.0.0-pre.3"
+    "wct-mocha": "^1.0.0-pre.3",
+    "web-animations-js": "^2.3.1"
   }
 }
