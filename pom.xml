@@ -215,9 +215,8 @@
 	</reporting>
 
 	<issueManagement>
-		<system>FMS Trac</system>
-		<url>https://www.fielden.com.ua/trac/pnl-tg/report
-		</url>
+		<system>GitHub Issues</system>
+		<url>https://github.com/fieldenms/tg/issues</url>
 	</issueManagement>
 
 	<distributionManagement>
