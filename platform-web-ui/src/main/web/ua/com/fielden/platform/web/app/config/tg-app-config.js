@@ -1,5 +1,3 @@
-import moment from '/resources/moment/src/moment.js';
-
 import {Polymer} from '/resources/polymer/@polymer/polymer/lib/legacy/polymer-fn.js';
 
 (function () {

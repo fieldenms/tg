@@ -7,14 +7,17 @@
     <title>Tooltip example</title>
     <script src='/resources/polymer/@webcomponents/webcomponentsjs/webcomponents-bundle.js'></script>
     <script src='/resources/polymer/web-animations-js/web-animations-next-lite.min.js'></script>
+    <script src='/resources/moment//moment.js'></script>
+    <script src='/resources/moment//moment-with-locales.js'></script>
     <script type="module">
         import '/resources/polymer/@polymer/paper-styles/paper-styles-classes.js';
         import './tg-component-with-tooltip.js';
     </script>
+</head>
 
-    <body unresolved class="fullbleed" tooltip-text="Shouldn't be visible">
-        <tg-component-with-tooltip></tg-component-with-tooltip>
-        <div>No tooltips</div>
-    </body>
+<body unresolved class="fullbleed" tooltip-text="Shouldn't be visible">
+    <tg-component-with-tooltip></tg-component-with-tooltip>
+    <div>No tooltips</div>
+</body>
 
 </html>

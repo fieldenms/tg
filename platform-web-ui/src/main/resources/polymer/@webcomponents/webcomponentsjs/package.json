@@ -23,7 +23,7 @@
   "_resolved": "https://registry.npmjs.org/@webcomponents/webcomponentsjs/-/webcomponentsjs-2.2.4.tgz",
   "_shasum": "b520d586e46517914d9708c2220b263116d5f86a",
   "_spec": "@webcomponents/webcomponentsjs@^2.0.0",
-  "_where": "/home/oleh/workspace/tg/platform-web-ui/src/main/resources",
+  "_where": "C:\\Users\\oleh\\workspace\\tg\\platform-web-ui\\src\\main\\resources",
   "author": {
     "name": "The Polymer Authors"
   },

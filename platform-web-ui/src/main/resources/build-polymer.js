@@ -33,6 +33,7 @@ import '@polymer/iron-location/iron-location.js';
 import '@polymer/iron-media-query/iron-media-query.js';
 import '@polymer/iron-overlay-behavior/iron-overlay-behavior.js';
 import '@polymer/iron-pages/iron-pages.js';
+import '@polymer/iron-scroll-threshold/iron-scroll-threshold.js';
 import '@polymer/iron-swipeable-container/iron-swipeable-container.js';
 import '@polymer/iron-test-helpers/iron-test-helpers.js';
 import '@polymer/neon-animation/neon-animation.js';
