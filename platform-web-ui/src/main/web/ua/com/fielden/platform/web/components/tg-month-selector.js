@@ -56,7 +56,7 @@ const template = html`
         </div>
         <div class="layout vertical center-justified">
             <span>
-                    <span>[[monthName]]</span>  <span>[[year]]</span>
+                    <span>[[monthName]]</span>&nbsp;&nbsp;<span>[[year]]</span>
             </span>
         </div>
         <div>
@@ -90,8 +90,6 @@ const template = html`
         </template>
     </div>
 </div>`;
-
-template.setAttribute('strip-whitespace', '');
 
 (function () {
     const getDaysInMonth = function (year, month) {
