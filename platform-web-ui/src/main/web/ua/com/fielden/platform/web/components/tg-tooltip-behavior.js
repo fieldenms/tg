@@ -9,15 +9,13 @@ const toolTipElement = document.createElement("tg-tooltip");
 /**
  * Returns the element in hierarchy that has tooltip-id attribute set otherwise returns null.
  */
-const extractActiveElement = function (currentElement, thisElement) {
-    if (currentElement && currentElement !== thisElement.parentElement) {
-        if (currentElement.hasAttribute("tooltip-text")) {
-            return currentElement;
-        } else {
-            return extractActiveElement(currentElement.parentElement, thisElement);
-        }
+const extractActiveElement = function (path, thisElement) {
+    const elementPath = path.filter(node => node.nodeType === Node.ELEMENT_NODE);
+    let elemIdx = 0;
+    while (elemIdx < elementPath.length && !elementPath[elemIdx].hasAttribute("tooltip-text") && elementPath[elemIdx] !== thisElement) {
+        elemIdx++;
     }
-    return null;
+    return elementPath[elemIdx].hasAttribute("tooltip-text") ? elementPath[elemIdx] : null;
 };
 //Adds tooltip element to document's body so that it only one for all tooltips.
 document.body.appendChild(toolTipElement);
@@ -155,7 +153,7 @@ export const TgTooltipBehavior = {
     },
 
     _startTooltip: function (e) {
-        const currentActiveElement = extractActiveElement(event.composedPath()[0], this.triggerElement);
+        const currentActiveElement = extractActiveElement(event.composedPath(), this.triggerElement);
 
         if (currentActiveElement !== this._activeComponent) {
             this._hideTooltip();
