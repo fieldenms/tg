@@ -93,7 +93,7 @@ Polymer({
             var target = e.target || e.srcElement;
             this._editingValue = this.convertToString(target.checked);
             
-            var parentFunction = Polymer.TgBehaviors.TgEditorBehavior.properties._onChange.value.call(this);
+            var parentFunction = TgEditorBehavior.properties._onChange.value.call(this);
             parentFunction.call(this, e);
         }).bind(this);
         
