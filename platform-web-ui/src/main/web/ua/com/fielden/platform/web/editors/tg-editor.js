@@ -3,12 +3,11 @@ import '/resources/polymer/@polymer/iron-flex-layout/iron-flex-layout.js';
 import '/resources/polymer/@polymer/iron-flex-layout/iron-flex-layout-classes.js';
 import '/resources/polymer/@polymer/iron-icon/iron-icon.js';
 import '/resources/polymer/@polymer/iron-icons/iron-icons.js';
+import '/resources/polymer/@polymer/paper-input/paper-input-container.js'
+import '/resources/polymer/@polymer/paper-input/paper-input-error.js'
+import '/resources/polymer/@polymer/paper-input/paper-input-char-counter.js'
 
-import '/resources/polymer/@polymer/paper-input/paper-input-container.html'
-import '/resources/polymer/@polymer/paper-input/paper-input-error.html'
-import '/resources/polymer/@polymer/paper-input/paper-input-char-counter.html'
-
-import '/app/tg-reflector.html'
+import '/app/tg-reflector.js'
 
 import {Polymer} from '/resources/polymer/@polymer/polymer/lib/legacy/polymer-fn.js';
 import {html} from '/resources/polymer/@polymer/polymer/lib/utils/html-tag.js';
