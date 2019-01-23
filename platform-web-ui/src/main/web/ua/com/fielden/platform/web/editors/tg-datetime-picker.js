@@ -42,29 +42,29 @@ const template = html`
         <style include="iron-flex iron-flex-reverse iron-flex-alignment iron-flex-factors iron-positioning"></style>
     </custom-style>
     <tg-editor
-        	id="editorDom"
-        	prop-title="[[propTitle]]"
-        	_disabled="[[_disabled]]"
-        	_editing-value="{{_editingValue}}"
-        	action="[[action]]" _error="[[_error]]"
-        	_comm-value="[[_commValue]]"
-        	_accepted-value="[[_acceptedValue]]"
-        	debug="[[debug]]">
-        	<input
-    			id="input"
-    			class="custom-input date-input"
-    			is="iron-input"
-    			bind-value="{{_editingValue}}"
-    			on-change="_onChange"
-    			on-input="_onInput"
-    			on-keydown="_onKeydown"
-    			on-tap="_onTap"
-    			on-mousedown="_onTap"
-    			disabled$="[[_disabled]]"
-                tooltip-text$="[[_getTooltip(_editingValue)]]"/>
-            <slot name="property-action"></slot>
-            <paper-icon-button class="picker-button custom-icon-buttons" on-tap="_showCalendar" icon="today" disabled$="[[_isCalendarDisabled(_disabled, datePortion)]]" tooltip-text="Show date picker dialog"></paper-icon-buton>
-        </tg-editor>`;
+        id="editorDom"
+        prop-title="[[propTitle]]"
+        _disabled="[[_disabled]]"
+        _editing-value="{{_editingValue}}"
+        action="[[action]]" _error="[[_error]]"
+        _comm-value="[[_commValue]]"
+        _accepted-value="[[_acceptedValue]]"
+        debug="[[debug]]">
+        <input
+            id="input"
+            class="custom-input date-input"
+            is="iron-input"
+            bind-value="{{_editingValue}}"
+            on-change="_onChange"
+            on-input="_onInput"
+            on-keydown="_onKeydown"
+            on-tap="_onTap"
+            on-mousedown="_onTap"
+            disabled$="[[_disabled]]"
+            tooltip-text$="[[_getTooltip(_editingValue)]]"/>
+        <slot name="property-action"></slot>
+        <paper-icon-button class="picker-button custom-icon-buttons" on-tap="_showCalendar" icon="today" disabled$="[[_isCalendarDisabled(_disabled, datePortion)]]" tooltip-text="Show date picker dialog"></paper-icon-buton>
+    </tg-editor>`;
 
 template.setAttribute('strip-whitespace', '');
 
@@ -72,7 +72,7 @@ Polymer({
     _template: template,
 
     is: 'tg-datetime-picker',
-    
+
     behaviors: [TgEditorBehavior, IronResizableBehavior, TgTooltipBehavior],
 
     ready: function () {
