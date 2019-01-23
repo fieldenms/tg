@@ -382,11 +382,11 @@ export const TgEditorBehaviorImpl = {
     },
     
     decorator: function () {
-        return this.$.editorDom.$.decorator;
+        return this.$.editorDom.decorator();
     },
     
     reflector: function () {
-        return this.$.editorDom.$.reflector;
+        return this.$.editorDom.reflector();
     },
     
     decoratedInput: function () {

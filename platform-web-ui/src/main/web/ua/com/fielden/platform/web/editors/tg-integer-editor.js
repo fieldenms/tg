@@ -44,7 +44,8 @@ const template = html`
         debug="[[debug]]">
         <input
             id="input"
-            class="custom-input integer-input"
+            slot="custom-input"
+            class="integer-input"
             is="iron-input"
             type="number"
             step="1"
@@ -59,7 +60,7 @@ const template = html`
             on-blur="_outFocus"
             tooltip-text$="[[_getTooltip(_editingValue)]]"
             disabled$="[[_disabled]]"/>
-        <div class="input-layer" tooltip-text$="[[_getTooltip(_editingValue)]]">[[_formatText(_editingValue)]]</div>
+        <div slot="input-layer" tooltip-text$="[[_getTooltip(_editingValue)]]">[[_formatText(_editingValue)]]</div>
         <slot name="property-action"></slot>
     </tg-editor>`;
 
@@ -68,7 +69,7 @@ Polymer({
 
     is: 'tg-integer-editor',
 
-    behaviors: [ TgEditorBehavior ],
+    /* behaviors: [ TgEditorBehavior ], */
     
     /**
      * Converts the value into string representation (which is used in edititing / comm values).

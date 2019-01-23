@@ -287,8 +287,8 @@ Polymer({
             dialog.noCancelOnEscKey = false;
 
             datePicker.selectedDate = null;
-            datePicker.selectedHour = self.timePortionToBecomeEndOfDay ? 23 : 00;
-            datePicker.selectedMinute = self.timePortionToBecomeEndOfDay ? 59 : 00;
+            datePicker.selectedHour = self.timePortionToBecomeEndOfDay ? 23 : 0;
+            datePicker.selectedMinute = self.timePortionToBecomeEndOfDay ? 59 : 0;
             datePicker.seconds = self.timePortionToBecomeEndOfDay ? 59 : 0;
             datePicker.milis = self.timePortionToBecomeEndOfDay ? 999 : 0;
 

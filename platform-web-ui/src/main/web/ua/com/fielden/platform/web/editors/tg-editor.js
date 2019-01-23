@@ -156,8 +156,8 @@ const template = html`
     </custom-style>
     <paper-input-container id="decorator" always-float-label>
         <!-- flex auto  for textarea! -->
-        <label style$="[[_calcLabelStyle(_editorKind, _disabled)]]" disabled$="[[_disabled]]">[[propTitle]]</label>
-        <div class="main-container">
+        <label style$="[[_calcLabelStyle(_editorKind, _disabled)]]" disabled$="[[_disabled]]" slot="label">[[propTitle]]</label>
+        <div class="main-container" slot="input">
             <slot name="prefix-custom-attributes"></slot>
             <div id="input-container" class="relative" style$="[[_calcDecoratorPartStyle(_disabled)]]" has-layer$="[[_hasLayer]]" disabled$="[[_disabled]]" focused$="[[_focused]]">
                 <slot name="custom-input"></slot>
@@ -167,9 +167,9 @@ const template = html`
             <slot name="property-action"></slot>
         </div>
         <!-- 'autoValidate' attribute for paper-input-container is 'false' -- all validation is performed manually and is bound to paper-input-error, which could be hidden in case of empty '_error' property -->
-        <paper-input-error hidden$="[[!_error]]" disabled$="[[_disabled]]" tooltip-text$="[[_error]]">[[_error]]</paper-input-error>
+        <paper-input-error hidden$="[[!_error]]" disabled$="[[_disabled]]" tooltip-text$="[[_error]]" slot="add-on">[[_error]]</paper-input-error>
         <!-- paper-input-char-counter addon is updated whenever 'bindValue' property of child '#input' element is changed -->
-        <paper-input-char-counter id="inputCounter" class="footer" hidden$="[[!_isMultilineText(_editorKind)]]" disabled$="[[_disabled]]"></paper-input-char-counter>
+        <paper-input-char-counter id="inputCounter" class="footer" hidden$="[[!_isMultilineText(_editorKind)]]" disabled$="[[_disabled]]" slot="add-on"></paper-input-char-counter>
     </paper-input-container>
     
     <tg-reflector id="reflector"></tg-reflector>
@@ -215,7 +215,7 @@ Polymer({
         _editorKind: String
     },
     
-    behaviors: [Polymer.TgBehaviors.TgTooltipBehavior],
+    behaviors: [TgTooltipBehavior],
 
     ready: function () {
         this._hasLayer = this.$.layer_selector.assignedNodes().length > 0;
@@ -231,6 +231,14 @@ Polymer({
     
     isInWarning: function () {
         return this.$.decorator.classList.contains("warning");
+    },
+
+    reflector: function () {
+        return this.$.reflector;
+    },
+
+    decorator: function () {
+        return this.$.decorator;
     },
     
     _isMultilineText: function (editorKind) {

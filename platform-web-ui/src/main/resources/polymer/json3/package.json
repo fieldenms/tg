@@ -21,7 +21,7 @@
   "_resolved": "https://registry.npmjs.org/json3/-/json3-3.3.2.tgz",
   "_shasum": "3c0434743df93e2f5c42aee7b19bcb483575f4e1",
   "_spec": "json3@3.3.2",
-  "_where": "C:\\Users\\oleh\\workspace\\tg\\platform-web-ui\\src\\main\\resources\\node_modules\\wct-browser-legacy\\node_modules\\mocha",
+  "_where": "/home/oleh/workspace/tg/platform-web-ui/src/main/resources/node_modules/wct-browser-legacy/node_modules/mocha",
   "author": {
     "name": "Kit Cambridge",
     "email": "github@kitcambridge.be",

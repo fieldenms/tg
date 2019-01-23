@@ -178,7 +178,7 @@ public class VulcanizingUtility {
 
     private static void downloadCommonGeneratedResources(final IWebUiConfig webUiConfig, final ISourceController sourceController, final Logger logger) {
         logger.info("\tDownloading common generated resources...");
-        downloadSource("app", "tg-reflector.html", sourceController, null, logger);
+        downloadSource("app", "tg-reflector.js", sourceController, null, logger);
         for (final Class<? extends AbstractEntity<?>> masterType : webUiConfig.getMasters().keySet()) {
             downloadSource("master_ui", masterType.getName(), sourceController, null, logger);
         }
