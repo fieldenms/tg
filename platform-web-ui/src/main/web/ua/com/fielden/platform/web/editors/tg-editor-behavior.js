@@ -17,6 +17,11 @@ import { tearDownEvent } from '/resources/reflection/tg-polymer-utils.js'
 export function createEditorTemplate (additionalTemplate, customPrefixAttribute, customInput, inputLayer, customIconButtons, propertyAction) {
     return html`
         <style>
+            iron-input > input {
+                @apply --paper-input-container-shared-input-style;
+            }
+            //Further styles should be refactored
+
             .main-container {
                 @apply --layout-horizontal;
                 @apply --layout-center;

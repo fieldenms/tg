@@ -62,33 +62,41 @@ Polymer({
         bindingView["id"] = 333;
         bindingView["version"] = 0;
         
-        bindingView["@@origin"] = null;
+        bindingView["@@touchedProps"] = {
+            names: [],
+            values: [],
+            counts: []
+        };
+        
+        bindingView["@@origin"] = this.$.reflector.newEntity('ua.com.fielden.platform.sample.domain.TgPersistentEntityWithProperties');
+        bindingView["@@origin"]["id"] = 333;
+        bindingView["@@origin"]["version"] = 0;
         
         // integer
-        bindingView['integerProp'] = 23;
+        bindingView["@@origin"]['integerProp'] = 23;
         bindingView['@integerProp_editable'] = true;
         
-        bindingView.prop('integerProp');
-        bindingView.type().prop('integerProp');
+        /* bindingView.prop('integerProp');
+        bindingView.type().prop('integerProp'); */
         
         // decimal
-        bindingView['bigDecimalProp'] = 2.3;
+        bindingView["@@origin"]['bigDecimalProp'] = 2.3;
         bindingView['@bigDecimalProp_editable'] = true;
 
         // string
-        bindingView['stringProp'] = 'OK';
+        bindingView["@@origin"]['stringProp'] = 'OK';
         bindingView['@stringProp_editable'] = true;
         
         // date
-        bindingView['dateProp'] = 2000000000;
+        bindingView["@@origin"]['dateProp'] = 2000000000;
         bindingView['@dateProp_editable'] = true;
 
         // entity
-        bindingView['entityProp'] = null;
+        bindingView["@@origin"]['entityProp'] = null;
         bindingView['@entityProp_editable'] = true;
         
         // boolean
-        bindingView['booleanProp'] = true;
+        bindingView["@@origin"]['booleanProp'] = true;
         bindingView['@booleanProp_editable'] = true;
         
         console.log("this.bindingEntity", bindingView);

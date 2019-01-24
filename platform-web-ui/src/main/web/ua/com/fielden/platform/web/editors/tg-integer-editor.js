@@ -32,23 +32,25 @@ const additionalTemplate = html`
     </style>
     <tg-app-config id="appConfig"></tg-app-config>`;
 const customInputTemplate = html`
-    <input
-        id="input"
-        class="integer-input"
-        is="iron-input"
-        type="number"
-        step="1"
-        prevent-invalid-input
-        bind-value="{{_editingValue}}"
-        on-change="_onChange"
-        on-input="_onInput"
-        on-keydown="_onKeydown"
-        on-tap="_onTap"
-        on-mousedown="_onTap"
-        on-focus="_onFocus"
-        on-blur="_outFocus"
-        tooltip-text$="[[_getTooltip(_editingValue)]]"
-        disabled$="[[_disabled]]"/>`;
+    <iron-input>
+        <input
+            id="input"
+            class="integer-input"
+            type="number"
+            step="1"
+            prevent-invalid-input
+            bind-value="{{_editingValue}}"
+            on-change="_onChange"
+            on-input="_onInput"
+            on-keydown="_onKeydown"
+            on-tap="_onTap"
+            on-mousedown="_onTap"
+            on-focus="_onFocus"
+            on-blur="_outFocus"
+            tooltip-text$="[[_getTooltip(_editingValue)]]"
+            disabled$="[[_disabled]]"
+            autocomplete="off"/>
+    </iron-input>`;
 const inputLayerTemplate = html`<div tooltip-text$="[[_getTooltip(_editingValue)]]">[[_formatText(_editingValue)]]</div>`;
 const propertyActionTemplate = html`<slot name="property-action"></slot>`;
 
