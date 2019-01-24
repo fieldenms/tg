@@ -27,10 +27,6 @@
 <body unresolved class="fullbleed">
     <dom-bind>
         <template is="dom-bind">
-            <iron-ajax auto url='/entity/ua.com.fielden.platform.sample.domain.TgPersistentEntityWithProperties/new'
-                method="POST" handle-as="json" on-response="processResponse" on-error="processError">
-            </iron-ajax>
-
             <tg-editor-example-entity binding-entity="{{entity}}" validation-callback="{{validationCallback}}"
                 process-response="{{processResponse}}" process-error="{{processError}}" or-null="{{orNull}}" not="{{not}}">
             </tg-editor-example-entity>
@@ -75,5 +71,7 @@
         </template>
     </dom-bind>
 </body>
-
+<script>
+    var app = document.querySelector("#app");
+</script>
 </html>
