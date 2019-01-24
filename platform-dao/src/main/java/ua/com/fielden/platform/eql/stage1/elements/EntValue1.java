@@ -23,7 +23,7 @@ public class EntValue1 implements ISingleOperand1<EntValue2> {
 
     @Override
     public EntValue2 transform(final TransformatorToS2 resolver) {
-        return resolver.getTransformedValue(this);
+        return new EntValue2(getValue(), isIgnoreNull());
     }
 
     @Override

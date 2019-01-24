@@ -5,10 +5,6 @@ import static java.lang.String.format;
 import static java.util.Optional.empty;
 import static java.util.Optional.ofNullable;
 import static java.util.stream.Collectors.toList;
-import static ua.com.fielden.platform.dao.DomainMetadata.getBooleanValue;
-import static ua.com.fielden.platform.entity.query.fluent.enums.LogicalOperator.AND;
-import static ua.com.fielden.platform.eql.meta.MetadataGenerator.createYieldAllQueryModel;
-import static ua.com.fielden.platform.utils.EntityUtils.getEntityModelsOfQueryBasedEntityType;
 import static ua.com.fielden.platform.utils.EntityUtils.isEntityType;
 
 import java.util.ArrayList;
@@ -23,15 +19,10 @@ import com.google.common.cache.Cache;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.EntityAggregates;
-import ua.com.fielden.platform.entity.query.IFilter;
+import ua.com.fielden.platform.entity.query.exceptions.EqlException;
 import ua.com.fielden.platform.entity.query.exceptions.EqlStage1ProcessingException;
-import ua.com.fielden.platform.entity.query.model.ConditionModel;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.eql.stage1.builders.EntQueryGenerator;
-import ua.com.fielden.platform.eql.stage1.builders.StandAloneConditionBuilder;
-import ua.com.fielden.platform.eql.stage1.elements.CompoundCondition1;
-import ua.com.fielden.platform.eql.stage1.elements.Conditions1;
-import ua.com.fielden.platform.eql.stage1.elements.EntParam1;
 import ua.com.fielden.platform.eql.stage1.elements.EntProp1;
 import ua.com.fielden.platform.eql.stage1.elements.EntQuery1;
 import ua.com.fielden.platform.eql.stage1.elements.EntValue1;
@@ -46,34 +37,24 @@ import ua.com.fielden.platform.eql.stage2.elements.EntQueryBlocks2;
 import ua.com.fielden.platform.eql.stage2.elements.EntValue2;
 import ua.com.fielden.platform.eql.stage2.elements.IQrySource2;
 import ua.com.fielden.platform.eql.stage2.elements.QrySource2BasedOnPersistentType;
-import ua.com.fielden.platform.eql.stage2.elements.QrySource2BasedOnPersistentTypeWithCalcProps;
 import ua.com.fielden.platform.eql.stage2.elements.QrySource2BasedOnSubqueries;
-import ua.com.fielden.platform.eql.stage2.elements.QrySource2BasedOnSyntheticType;
 import ua.com.fielden.platform.eql.stage2.elements.Yield2;
 
 public class TransformatorToS2 {
     private List<Map<IQrySource1<? extends IQrySource2>, SourceInfo>> sourceMap = new ArrayList<>();
     private final Map<Class<? extends AbstractEntity<?>>, EntityInfo<?>> domainInfo;
     private final Cache<IQrySource1<? extends IQrySource2>, IQrySource2> sourcesCache;
-    private final Map<String, Object> paramValues = new HashMap<>();
-    private final IFilter filter;
-    private final String username;
-    private final EntQueryGenerator entQueryGenerator1;
 
-    public TransformatorToS2(final Map<Class<? extends AbstractEntity<?>>, EntityInfo<?>> domainInfo, final Map<String, Object> paramValues, final IFilter filter, final String username, final EntQueryGenerator entQueryGenerator1) {
-        this(newBuilder().build(), domainInfo, paramValues, filter, username, entQueryGenerator1);
+    public TransformatorToS2(final Map<Class<? extends AbstractEntity<?>>, EntityInfo<?>> domainInfo) {
+        this(newBuilder().build(), domainInfo);
     }
 
-    protected TransformatorToS2(final Cache<IQrySource1<? extends IQrySource2>, IQrySource2> sourcesCache, final Map<Class<? extends AbstractEntity<?>>, EntityInfo<?>> domainInfo, final Map<String, Object> paramValues, final IFilter filter, final String username, final EntQueryGenerator entQueryGenerator1) {
+    protected TransformatorToS2(final Cache<IQrySource1<? extends IQrySource2>, IQrySource2> sourcesCache, final Map<Class<? extends AbstractEntity<?>>, EntityInfo<?>> domainInfo) {
         this.sourcesCache = sourcesCache; //must reference the passed-in argument in order to update the referenced cache if necessary.
         this.domainInfo = new HashMap<>(domainInfo);
         sourceMap.add(new HashMap<IQrySource1<? extends IQrySource2>, SourceInfo>());
-        this.paramValues.putAll(paramValues);
-        this.filter = filter;
-        this.username = username;
-        this.entQueryGenerator1 = entQueryGenerator1;
     }
-
+    
     static class SourceInfo {
         private final IQrySource2 source;
         private final EntityInfo<?> entityInfo;
@@ -84,69 +65,6 @@ public class TransformatorToS2 {
             this.entityInfo = entityInfo;
             this.alias = alias;
         }
-    }
-
-    // TODO EQL
-    //    protected List<ISingleOperand1<? extends ISingleOperand2>> getModelForArrayParam(final TokenCategory cat, final Object value) {
-    //	final List<ISingleOperand1<? extends ISingleOperand2>> result = new ArrayList<>();
-    //	final Object paramValue = getParamValue((String) value);
-    //
-    //	if (!(paramValue instanceof List)) {
-    //	    result.add(getModelForSingleOperand(cat, value));
-    //	} else {
-    //	    for (final Object singleValue : (List<Object>) paramValue) {
-    //		result.add(getModelForSingleOperand((cat == IPARAM ? IVAL : VAL), singleValue));
-    //	    }
-    //	}
-    //	return result;
-    //    }
-
-    protected Object getParamValue(final String paramName) {
-        if (paramValues.containsKey(paramName)) {
-            return preprocessValue(paramValues.get(paramName));
-        } else {
-            return null; //TODO think through
-            //throw new RuntimeException("No value has been provided for parameter with name [" + paramName + "]");
-        }
-    }
-
-    private Object preprocessValue(final Object value) {
-        if (value != null && (value.getClass().isArray() || value instanceof Collection<?>)) {
-            final List<Object> values = new ArrayList<Object>();
-            for (final Object object : (Iterable) value) {
-                final Object furtherPreprocessed = preprocessValue(object);
-                if (furtherPreprocessed instanceof List) {
-                    values.addAll((List) furtherPreprocessed);
-                } else {
-                    values.add(furtherPreprocessed);
-                }
-            }
-            return values;
-        } else {
-            return convertValue(value);
-        }
-    }
-
-    /** Ensures that values of boolean types are converted properly. */
-    private Object convertValue(final Object value) {
-        if (value instanceof Boolean) {
-            return getBooleanValue((Boolean) value);
-        }
-        return value;
-    }
-
-    @Override
-    public String toString() {
-        final StringBuffer sb = new StringBuffer();
-        for (final Map<IQrySource1<? extends IQrySource2>, SourceInfo> item : sourceMap) {
-            sb.append("-----------------------------\n");
-            for (final SourceInfo subitem : item.values()) {
-                sb.append("---");
-                sb.append(subitem.source.sourceType().getSimpleName());
-                sb.append("\n");
-            }
-        }
-        return sb.toString();
     }
 
     private EntityInfo<?> produceEntityInfoFrom(final IQrySource2 transformedSource) {
@@ -165,16 +83,20 @@ public class TransformatorToS2 {
     }
 
     public TransformatorToS2 produceBasedOn() {
-        final TransformatorToS2 result = new TransformatorToS2(sourcesCache, domainInfo, paramValues, filter, username, entQueryGenerator1);
+        final TransformatorToS2 result = new TransformatorToS2(sourcesCache, domainInfo);
         result.sourceMap.addAll(sourceMap);
         return result;
     }
 
     public TransformatorToS2 produceNewOne() {
-        return new TransformatorToS2(sourcesCache, domainInfo, paramValues, filter, username, entQueryGenerator1);
+        return new TransformatorToS2(sourcesCache, domainInfo);
     }
 
     private IQrySource2 transformSource(final IQrySource1<? extends IQrySource2> qrySourceStage1) {
+        if (qrySourceStage1 instanceof QrySource1BasedOnPersistentTypeWithCalcProps || qrySourceStage1 instanceof QrySource1BasedOnSyntheticType) {
+            throw new EqlException("Not supported yet.");
+        }
+        
         return ofNullable(sourcesCache.getIfPresent(qrySourceStage1)).orElseGet(() -> {
             
             final IQrySource2 result;
@@ -182,13 +104,6 @@ public class TransformatorToS2 {
             if (qrySourceStage1 instanceof QrySource1BasedOnPersistentType) {
                 final QrySource1BasedOnPersistentType qrySource = (QrySource1BasedOnPersistentType) qrySourceStage1;
                 result = new QrySource2BasedOnPersistentType(qrySource.sourceType());
-            } else if (qrySourceStage1 instanceof QrySource1BasedOnPersistentTypeWithCalcProps) {
-                final QrySource1BasedOnPersistentTypeWithCalcProps qrySource = (QrySource1BasedOnPersistentTypeWithCalcProps) qrySourceStage1;
-                sourcesCache.put(qrySourceStage1, new QrySource2BasedOnPersistentType(qrySource.sourceType()));
-                result = new QrySource2BasedOnPersistentTypeWithCalcProps(qrySource.sourceType(), extractQueryModels(Stream.of(createYieldAllQueryModel(qrySource.sourceType()))).get(0));
-            } else if (qrySourceStage1 instanceof QrySource1BasedOnSyntheticType) {
-                final QrySource1BasedOnSyntheticType qrySource = (QrySource1BasedOnSyntheticType) qrySourceStage1;
-                result = new QrySource2BasedOnSyntheticType(qrySource.sourceType(), extractQueryModels(getEntityModelsOfQueryBasedEntityType(qrySource.sourceType()).stream()));
             } else {
                 final QrySource1BasedOnSubqueries qrySource = (QrySource1BasedOnSubqueries) qrySourceStage1;
                 result = new QrySource2BasedOnSubqueries(extractQueryModels(qrySource));
@@ -198,11 +113,6 @@ public class TransformatorToS2 {
 
             return result;
         });
-    }
-
-    private <T extends AbstractEntity<?>> List<EntQuery2> extractQueryModels(final Stream<EntityResultQueryModel<T>> stream) {
-        final EntQueryGenerator gen = new EntQueryGenerator();
-        return stream.map(q -> gen.generateEntQueryAsSourceQuery(q, empty())).map(q -> q.transform(produceNewOne())).collect(toList());
     }
 
     private List<EntQuery2> extractQueryModels(final QrySource1BasedOnSubqueries qrySource) {
@@ -236,49 +146,17 @@ public class TransformatorToS2 {
         throw new EqlStage1ProcessingException(format("Can't resolve property [%s].", originalProp.getName()));
     }
 
-    public EntValue2 getTransformedParamToValue(final EntParam1 originalParam) {
-        return new EntValue2(getParamValue(originalParam.getName()), originalParam.isIgnoreNull());
-    }
-
-    public EntValue2 getTransformedValue(final EntValue1 originalValue) {
-        return new EntValue2(preprocessValue(originalValue.getValue()), originalValue.isIgnoreNull());
-    }
-
     public EntQuery2 getTransformedQuery(final EntQuery1 originalQuery) {
         final TransformatorToS2 localResolver = originalQuery.isSubQuery() ? produceBasedOn() : produceNewOne();
 
-        // TODO Need to resolve joinConditions of each CompoundSource as soon as it is added to resolver.  
-//        for (final IQrySource1<? extends IQrySource2> source : originalQuery.getSources().getAllSources()) {
-//            localResolver.addSource(source);
-//        }
-
-        final Conditions1 enhancedConditions = originalQuery.isFilterable() ? enhanceConditions(originalQuery.getConditions(), filter, username, originalQuery.getSources().getMain(), entQueryGenerator1) : originalQuery.getConditions();
-        // TODO As part of transforming sources need to retrieve already resolved joinConditions, that happened while invoking addSource method (refer TODO above).
         final EntQueryBlocks2 entQueryBlocks = new EntQueryBlocks2(
                 originalQuery.getSources().transform(localResolver), 
-                enhancedConditions.transform(localResolver), 
+                originalQuery.getConditions().transform(localResolver), 
                 originalQuery.getYields().transform(localResolver), 
                 originalQuery.getGroups().transform(localResolver), 
                 originalQuery.getOrderings().transform(localResolver));
 
         return new EntQuery2(entQueryBlocks, originalQuery.type(), originalQuery.getCategory(), originalQuery.getFetchModel());
-    }
-    
-    private Conditions1 enhanceConditions(final Conditions1 originalConditions, final IFilter filter, //
-            final String username, final IQrySource1<? extends IQrySource2> mainSource, final EntQueryGenerator generator) {
-        if (mainSource instanceof QrySource1BasedOnPersistentType && filter != null) {
-            final ConditionModel filteringCondition = filter.enhance(mainSource.sourceType(), mainSource.getAlias(), username);
-            if (filteringCondition == null) {
-                return originalConditions;
-            }
-            //logger.debug("\nApplied user-driven-filter to query main source type [" + mainSource.sourceType().getSimpleName() +"]");
-            final List<CompoundCondition1> others = new ArrayList<>();
-            others.add(new CompoundCondition1(AND, originalConditions));
-            final Conditions1 filteringConditions = new StandAloneConditionBuilder(generator, filteringCondition, false).getModel();
-            return originalConditions.isEmpty() ? filteringConditions : new Conditions1(false, filteringConditions, others);
-        } else {
-            return originalConditions;
-        }
     }
     
     private PropResolution resolvePropAgainstSource(final SourceInfo source, final EntProp1 entProp) {
@@ -311,17 +189,5 @@ public class TransformatorToS2 {
         }
 
         return result.size() == 1 ? result.get(0) : null;
-    }
-
-    public IFilter getFilter() {
-        return filter;
-    }
-
-    public String getUsername() {
-        return username;
-    }
-
-    public EntQueryGenerator getEntQueryGenerator1() {
-        return entQueryGenerator1;
     }
 }

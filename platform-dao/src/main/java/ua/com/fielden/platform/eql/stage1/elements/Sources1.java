@@ -5,11 +5,10 @@ import java.util.List;
 
 import ua.com.fielden.platform.eql.meta.TransformatorToS2;
 import ua.com.fielden.platform.eql.stage2.elements.CompoundSource2;
-import ua.com.fielden.platform.eql.stage2.elements.Conditions2;
 import ua.com.fielden.platform.eql.stage2.elements.IQrySource2;
 import ua.com.fielden.platform.eql.stage2.elements.Sources2;
 
-public class Sources1 implements ITransformableToS2<Sources2> {
+public class Sources1  {
     private final IQrySource1<? extends IQrySource2> main;
     private final List<CompoundSource1> compounds;
 
@@ -18,7 +17,6 @@ public class Sources1 implements ITransformableToS2<Sources2> {
         this.compounds = compounds;
     }
 
-    @Override
     public Sources2 transform(final TransformatorToS2 resolver) {
         final IQrySource2 mainTransformed = main.transform(resolver);    
                 

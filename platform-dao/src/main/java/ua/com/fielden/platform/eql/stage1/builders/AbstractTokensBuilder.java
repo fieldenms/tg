@@ -19,7 +19,6 @@ import ua.com.fielden.platform.entity.query.model.ConditionModel;
 import ua.com.fielden.platform.entity.query.model.ExpressionModel;
 import ua.com.fielden.platform.entity.query.model.QueryModel;
 import ua.com.fielden.platform.eql.stage1.elements.CountAll1;
-import ua.com.fielden.platform.eql.stage1.elements.EntParam1;
 import ua.com.fielden.platform.eql.stage1.elements.EntProp1;
 import ua.com.fielden.platform.eql.stage1.elements.EntQuery1;
 import ua.com.fielden.platform.eql.stage1.elements.EntValue1;
@@ -242,10 +241,10 @@ public abstract class AbstractTokensBuilder implements ITokensBuilder {
             return new EntProp1((String) value);
         case EXT_PROP:
             return new EntProp1((String) value, true);
-        case PARAM:
-            return new EntParam1((String) value);
-        case IPARAM:
-            return new EntParam1((String) value, true);
+//        case PARAM:
+//            return new EntParam1((String) value);
+//        case IPARAM:
+//            return new EntParam1((String) value, true);
         case VAL:
             return new EntValue1(value);
         case IVAL:

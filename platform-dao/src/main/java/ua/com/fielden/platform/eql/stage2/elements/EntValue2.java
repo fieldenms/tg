@@ -1,5 +1,11 @@
 package ua.com.fielden.platform.eql.stage2.elements;
 
+import static ua.com.fielden.platform.dao.DomainMetadata.getBooleanValue;
+
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+
 public class EntValue2 implements ISingleOperand2 {
     private final Object value;
     private final boolean ignoreNull;
@@ -10,7 +16,7 @@ public class EntValue2 implements ISingleOperand2 {
 
     public EntValue2(final Object value, final boolean ignoreNull) {
         super();
-        this.value = value;
+        this.value = preprocessValue(value);
         this.ignoreNull = ignoreNull;
         if (!ignoreNull && value == null) {
             // TODO Uncomment when yieldNull() operator is implemented and all occurences of yield().val(null) are corrected.
@@ -18,6 +24,31 @@ public class EntValue2 implements ISingleOperand2 {
         }
     }
 
+    private Object preprocessValue(final Object value) {
+        if (value != null && (value.getClass().isArray() || value instanceof Collection<?>)) {
+            final List<Object> values = new ArrayList<Object>();
+            for (final Object object : (Iterable) value) {
+                final Object furtherPreprocessed = preprocessValue(object);
+                if (furtherPreprocessed instanceof List) {
+                    values.addAll((List) furtherPreprocessed);
+                } else {
+                    values.add(furtherPreprocessed);
+                }
+            }
+            return values;
+        } else {
+            return convertValue(value);
+        }
+    }
+
+    /** Ensures that values of boolean types are converted properly. */
+    private Object convertValue(final Object value) {
+        if (value instanceof Boolean) {
+            return getBooleanValue((Boolean) value);
+        }
+        return value;
+    }
+    
     @Override
     public boolean ignore() {
         return ignoreNull && value == null;
