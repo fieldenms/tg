@@ -1,4 +1,7 @@
-<dom-module id="tg-entity-master-styles">
+import '/resources/polymer/@polymer/polymer/lib/elements/dom-module.js';
+
+const styleElement = document.createElement('dom-module');
+styleElement.innerHTML = `
     <template>
         <style>
              tg-entity-master[with-dimensions]::shadow #masterContainer{
@@ -8,8 +11,8 @@
                 right: 0;
                 left: 0;
             }
-    		.property-action-icon {
-            	--tg-ui-action-width: 1.9rem;
+            .property-action-icon {
+                --tg-ui-action-width: 1.9rem;
                 --tg-ui-action-height: 1.9rem;
                 --tg-ui-action-top: -0.3rem;
                 --tg-ui-action-left: -0.3rem;
@@ -19,14 +22,15 @@
                 --tg-ui-action-icon-button-width: 1.3rem;
                 --tg-ui-action-icon-button-padding: 0;
                 --tg-ui-action-spinner-width: 1.5em; 
-	            --tg-ui-action-spinner-height: 1.5em; 
-	            --tg-ui-action-spinner-min-width: 1em; 
-	            --tg-ui-action-spinner-min-height: 1em; 
-	            --tg-ui-action-spinner-max-width: 2em; 
-	            --tg-ui-action-spinner-max-height: 2em; 
-	            --tg-ui-action-spinner-padding: 2px;
-	            --tg-ui-action-spinner-margin-left: 0;
-    		}
+                --tg-ui-action-spinner-height: 1.5em; 
+                --tg-ui-action-spinner-min-width: 1em; 
+                --tg-ui-action-spinner-min-height: 1em; 
+                --tg-ui-action-spinner-max-width: 2em; 
+                --tg-ui-action-spinner-max-height: 2em; 
+                --tg-ui-action-spinner-padding: 2px;
+                --tg-ui-action-spinner-margin-left: 0;
+            }
         </style>
     </template>
-</dom-module>
+`;
+styleElement.register('tg-entity-master-styles');
