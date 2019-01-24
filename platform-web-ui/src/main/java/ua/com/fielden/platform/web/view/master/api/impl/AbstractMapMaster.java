@@ -1,6 +1,9 @@
 package ua.com.fielden.platform.web.view.master.api.impl;
 
-import java.util.LinkedHashSet;
+import static ua.com.fielden.platform.utils.CollectionUtil.linkedSetOf;
+import static ua.com.fielden.platform.web.centre.EntityCentre.IMPORTS;
+import static ua.com.fielden.platform.web.view.master.api.impl.SimpleMasterBuilder.createImports;
+
 import java.util.Optional;
 
 import ua.com.fielden.platform.basic.IValueMatcherWithContext;
@@ -24,10 +27,6 @@ public abstract class AbstractMapMaster<T extends AbstractFunctionalEntityWithCe
     private final IRenderable renderable;
 
     public AbstractMapMaster(final Class<T> entityType, final String gisComponentImportPath, final String gisComponentName) {
-        final LinkedHashSet<String> importPaths = new LinkedHashSet<>();
-        importPaths.add("gis/tg-map");
-        importPaths.add(gisComponentImportPath);
-
         final int funcActionSeq = 0; // used for both entity and property level functional actions
         final String prefix = ",\n";
         final int prefixLength = prefix.length();
@@ -44,7 +43,7 @@ public abstract class AbstractMapMaster<T extends AbstractFunctionalEntityWithCe
         final String primaryActionObjectsString = primaryActionObjects.toString();
 
         final String entityMasterStr = ResourceLoader.getText("ua/com/fielden/platform/web/master/tg-entity-master-template.html")
-                .replace("<!--@imports-->", SimpleMasterBuilder.createImports(importPaths))
+                .replace(IMPORTS, createImports(linkedSetOf("gis/tg-map", gisComponentImportPath)))
                 .replace("@entity_type", entityType.getSimpleName())
                 .replace("<!--@tg-entity-master-content-->", tgMessageMap.toString())
                 .replace("//generatedPrimaryActions", primaryActionObjectsString.length() > prefixLength ? primaryActionObjectsString.substring(prefixLength)

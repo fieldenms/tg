@@ -1,6 +1,8 @@
 package ua.com.fielden.platform.web.view.master.api.compound.impl;
 
 import static java.lang.String.format;
+import static ua.com.fielden.platform.web.centre.EntityCentre.IMPORTS;
+import static ua.com.fielden.platform.web.view.master.api.impl.SimpleMasterBuilder.createImports;
 
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
@@ -21,7 +23,6 @@ import ua.com.fielden.platform.web.centre.api.resultset.impl.FunctionalActionEle
 import ua.com.fielden.platform.web.centre.api.resultset.impl.FunctionalActionKind;
 import ua.com.fielden.platform.web.interfaces.IRenderable;
 import ua.com.fielden.platform.web.view.master.api.IMaster;
-import ua.com.fielden.platform.web.view.master.api.impl.SimpleMasterBuilder;
 
 /**
  * A compound entity master that has a menu, that extends {@link IMaster} contract.
@@ -93,7 +94,7 @@ class MasterWithMenu<T extends AbstractEntity<?>, F extends AbstractFunctionalEn
 
         // generate the final master with menu
         final String entityMasterStr = ResourceLoader.getText("ua/com/fielden/platform/web/master/tg-entity-master-template.html")
-                .replace("<!--@imports-->", SimpleMasterBuilder.createImports(importPaths))
+                .replace(IMPORTS, createImports(importPaths))
                 .replace("@entity_type", functionalEntityType.getSimpleName())
                 .replace("<!--@tg-entity-master-content-->",
                         format(""

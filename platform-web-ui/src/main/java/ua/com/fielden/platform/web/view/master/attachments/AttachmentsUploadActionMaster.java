@@ -1,11 +1,14 @@
 package ua.com.fielden.platform.web.view.master.attachments;
 
 import static java.lang.String.format;
+import static ua.com.fielden.platform.utils.CollectionUtil.linkedSetOf;
+import static ua.com.fielden.platform.web.centre.EntityCentre.IMPORTS;
 import static ua.com.fielden.platform.web.interfaces.ILayout.Device.DESKTOP;
 import static ua.com.fielden.platform.web.interfaces.ILayout.Device.MOBILE;
 import static ua.com.fielden.platform.web.interfaces.ILayout.Device.TABLET;
 import static ua.com.fielden.platform.web.view.master.api.actions.MasterActions.REFRESH;
 import static ua.com.fielden.platform.web.view.master.api.actions.MasterActions.SAVE;
+import static ua.com.fielden.platform.web.view.master.api.impl.SimpleMasterBuilder.createImports;
 
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
@@ -19,7 +22,6 @@ import ua.com.fielden.platform.basic.IValueMatcherWithContext;
 import ua.com.fielden.platform.dom.DomContainer;
 import ua.com.fielden.platform.dom.DomElement;
 import ua.com.fielden.platform.dom.InnerTextElement;
-import ua.com.fielden.platform.utils.CollectionUtil;
 import ua.com.fielden.platform.utils.ResourceLoader;
 import ua.com.fielden.platform.utils.StreamUtils;
 import ua.com.fielden.platform.web.PrefDim;
@@ -54,7 +56,7 @@ public class AttachmentsUploadActionMaster implements IMaster<AttachmentsUploadA
     
 
     public AttachmentsUploadActionMaster(final PrefDim dims, final int fileSizeLimitKb, final String mimeType, final String... moreMimeTypes) {
-        final LinkedHashSet<String> importPaths = CollectionUtil.linkedSetOf(
+        final LinkedHashSet<String> importPaths = linkedSetOf(
                 "file_operations/tg-attachment-uploader-list",
                 "layout/tg-flex-layout",
                 "master/actions/tg-action");
@@ -97,7 +99,7 @@ public class AttachmentsUploadActionMaster implements IMaster<AttachmentsUploadA
         prefDimBuilder.append(format("{'width': function() {return %s}, 'height': function() {return %s}, 'widthUnit': '%s', 'heightUnit': '%s'}", dims.width, dims.height, dims.widthUnit.value, dims.heightUnit.value));
         
         final String entityMasterStr = ResourceLoader.getText("ua/com/fielden/platform/web/master/tg-entity-master-template.html")
-                .replace("<!--@imports-->", SimpleMasterBuilder.createImports(importPaths))
+                .replace(IMPORTS, createImports(importPaths))
                 .replace("@entity_type", AttachmentsUploadAction.class.getSimpleName())
                 .replace("<!--@tg-entity-master-content-->", elementContainer.toString())
                 .replace("//generatedPrimaryActions", "")

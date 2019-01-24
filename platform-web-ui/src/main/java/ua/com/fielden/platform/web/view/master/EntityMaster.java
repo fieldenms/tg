@@ -1,5 +1,7 @@
 package ua.com.fielden.platform.web.view.master;
 
+import static ua.com.fielden.platform.web.centre.EntityCentre.IMPORTS;
+
 import java.util.Optional;
 
 import com.google.inject.Injector;
@@ -152,7 +154,7 @@ public class EntityMaster<T extends AbstractEntity<?>> implements IRenderable {
         if (AbstractFunctionalEntityForCompoundMenuItem.class.isAssignableFrom(entityType)) {
             return new DefaultEntityProducerForCompoundMenuItem(factory, entityType, coFinder);
         }
-        return new DefaultEntityProducerWithContext<T>(factory, entityType, coFinder);
+        return new DefaultEntityProducerWithContext<>(factory, entityType, coFinder);
     }
 
     /**
@@ -217,7 +219,7 @@ public class EntityMaster<T extends AbstractEntity<?>> implements IRenderable {
 
         public NoUiMaster(final Class<T> entityType, final JsCode customCode, final JsCode customCodeOnAttach) {
             final String entityMasterStr = ResourceLoader.getText("ua/com/fielden/platform/web/master/tg-entity-master-template.html")
-                    .replace("<!--@imports-->", "")
+                    .replace(IMPORTS, "")
                     .replace("@entity_type", entityType.getSimpleName())
                     .replace("<!--@tg-entity-master-content-->", "")
                     .replace("//@ready-callback", "")

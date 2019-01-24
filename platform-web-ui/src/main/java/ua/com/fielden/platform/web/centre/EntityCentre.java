@@ -144,7 +144,7 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
 
     private static final CentreContextConfig defaultCentreContextConfig = new CentreContextConfig(false, false, false, false, null);
 
-    private static final String IMPORTS = "<!--@imports-->";
+    public static final String IMPORTS = "<!--@imports-->";
     private static final String FULL_ENTITY_TYPE = "@full_entity_type";
     private static final String FULL_MI_TYPE = "@full_mi_type";
     private static final String MI_TYPE = "@mi_type";
