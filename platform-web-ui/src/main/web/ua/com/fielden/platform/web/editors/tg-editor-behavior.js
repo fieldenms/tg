@@ -37,7 +37,7 @@ export function createEditorTemplate (additionalTemplate, customPrefixAttribute,
                 @apply --tg-editor-input-container-disabled-mixin;
             }
 
-            #input-container ::slotted(.input-layer) {
+            #input-container .input-layer {
                 font-size: 16px;
                 line-height: 24px;
                 font-weight: 500;
@@ -50,25 +50,26 @@ export function createEditorTemplate (additionalTemplate, customPrefixAttribute,
                 left: 0;
                 right: 0;
             }
-            #input-container[disabled] ::slotted(.input-layer) {
+            #input-container[disabled] .input-layer {
                 pointer-events: auto;
             }
-            #input-container[has-layer][disabled] ::slotted(.input-layer),
-            #input-container[has-layer]:not([focused]) ::slotted(.input-layer) {
+            #input-container[has-layer][disabled] .input-layer,
+            #input-container[has-layer]:not([focused]) .input-layer {
                 display: var(--tg-editor-default-input-layer-display, inherit);
             }
-            #input-container ::slotted(.input-layer) {
+            #input-container .input-layer {
                 color: var(--paper-input-container-input-color, var(--primary-text-color));
             }
-            #input-container[has-layer][disabled] ::slotted(.custom-input),
-            #input-container[has-layer]:not([focused]) ::slotted(.custom-input) {
+            #input-container[has-layer][disabled] .custom-input,
+            #input-container[has-layer]:not([focused]) .custom-input {
                 opacity: 0;
             }
-            .main-container ::slotted(.custom-icon-buttons), 
+            .main-container .custom-icon-buttons, 
             .main-container ::slotted(.property-action) {
                 padding-bottom: 1px;
             }
             paper-input-container::shadow .add-on-content {
+                background-color: red;
                 position: relative;
             }
             
