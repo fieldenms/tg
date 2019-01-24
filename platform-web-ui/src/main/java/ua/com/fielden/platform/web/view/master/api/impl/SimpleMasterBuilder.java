@@ -201,7 +201,7 @@ public class SimpleMasterBuilder<T extends AbstractEntity<?>> implements ISimple
         final StringBuilder primaryActionObjects = new StringBuilder();
 
         final StringBuilder propertyActionsStr = new StringBuilder();
-        final DomElement editorContainer = layout.render().clazz("property-editors").attr("context", "[[_currEntity]]");
+        final DomElement editorContainer = layout.render().attr("slot", "property-editors").attr("context", "[[_currEntity]]");
         importPaths.add(layout.importPath());
         final StringBuilder shortcuts = new StringBuilder();
         for (final WidgetSelector<T> widget : widgets) {
@@ -225,7 +225,7 @@ public class SimpleMasterBuilder<T extends AbstractEntity<?>> implements ISimple
         }
 
         // entity actions should be type matched for rendering due to inclusion of both "standard" actions such as SAVE or CANCLE as well as the functional actions
-        final DomElement actionContainer = actionBarLayout.render().clazz("action-bar");
+        final DomElement actionContainer = actionBarLayout.render().attr("slot", "action-bar");
         final StringBuilder entityActionsStr = new StringBuilder();
         for (final Object action: entityActions) {
             if (action instanceof ua.com.fielden.platform.web.view.master.api.actions.entity.impl.EntityActionConfig) {

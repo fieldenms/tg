@@ -32,7 +32,8 @@ public class AttachmentPreviewEntityMaster implements IMaster<AttachmentPreviewE
                 .style("font-size: 18px", "color: #bdbdbd", "background-color: white")
                 .add(new InnerTextElement("[[_getAltImageText(_currBindingEntity)]]"));
         final DomElement container = new DomElement("div")
-                .clazz("property-editors", "relative")
+                .attr("slot", "property-editors")
+                .clazz("relative")
                 .style("width:100%", "height:100%","padding:8px","box-sizing:border-box")
                 .add(altImage, img);
 

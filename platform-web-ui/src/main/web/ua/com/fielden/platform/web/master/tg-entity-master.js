@@ -13,7 +13,6 @@ import '/resources/components/tg-scrollable-component.js';
 */
 import '/resources/binding/tg-entity-binder.js';
 
-
 const template = html`
     <style>
         :host::slotted(tg-flex-layout) { /* previously :host::content tg-flex-layout */

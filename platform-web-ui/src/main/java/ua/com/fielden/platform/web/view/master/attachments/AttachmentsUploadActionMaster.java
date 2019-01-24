@@ -64,7 +64,7 @@ public class AttachmentsUploadActionMaster implements IMaster<AttachmentsUploadA
         final String mimeTypesAccepted = StreamUtils.of(mimeType, moreMimeTypes).collect(Collectors.joining(","));
         final DomElement attachmentUploaderList = new DomElement("tg-attachment-uploader-list")
                 .attr("id", "attachmentUploader")
-                .attr("class", "property-editors")
+                .attr("slot", "property-editors")
                 .attr("entity", "[[_currBindingEntity]]")
                 .attr("upload-size-limit-kb", fileSizeLimitKb)
                 .attr("mime-types-accepted", mimeTypesAccepted)
@@ -77,7 +77,7 @@ public class AttachmentsUploadActionMaster implements IMaster<AttachmentsUploadA
         setActionBarLayoutFor(TABLET, Optional.empty(), mkActionLayoutForMaster());
         setActionBarLayoutFor(MOBILE, Optional.empty(), mkActionLayoutForMaster());
         
-        final DomElement actionContainer = actionBarLayout.render().clazz("action-bar");
+        final DomElement actionContainer = actionBarLayout.render().attr("slot", "action-bar");
         final StringBuilder shortcuts = new StringBuilder();
         final StringBuilder entityActionsStr = new StringBuilder();
         for (final AttachmentsUploadActionMasterEntityActionConfig config : entityActions) {
