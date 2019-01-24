@@ -8,10 +8,10 @@ import '/app/tg-app-config.js';
 import { Polymer } from '/resources/polymer/@polymer/polymer/lib/legacy/polymer-fn.js';
 import { html } from '/resources/polymer/@polymer/polymer/lib/utils/html-tag.js';
 
-import { TgEditorBehavior } from '/resources/editors/tg-editor-behavior.js';
+import { TgEditorBehavior,  createEditorTemplate} from '/resources/editors/tg-editor-behavior.js';
 import { truncateInsignificantZeros } from '/resources/reflection/tg-numeric-utils.js';
 
-const template = html`
+const additionalTemplate = html`
     <style>
         /* Styles for integer and decimal property editors. */
         input[type=number]::-webkit-outer-spin-button,
@@ -30,46 +30,34 @@ const template = html`
             overflow: hidden;
         }
     </style>
-    <tg-app-config id="appConfig"></tg-app-config>
-    <tg-editor 
-        id="editorDom" 
-        prop-title="[[propTitle]]"
-        _disabled="[[_disabled]]" 
-        _editing-value="{{_editingValue}}" 
-        action="[[action]]" 
-        _error="[[_error]]" 
-        _comm-value="[[_commValue]]" 
-        _accepted-value="[[_acceptedValue]]"
-        _focused="[[focused]]"
-        debug="[[debug]]">
-        <input
-            id="input"
-            slot="custom-input"
-            class="integer-input"
-            is="iron-input"
-            type="number"
-            step="1"
-            prevent-invalid-input
-            bind-value="{{_editingValue}}"
-            on-change="_onChange"
-            on-input="_onInput"
-            on-keydown="_onKeydown"
-            on-tap="_onTap"
-            on-mousedown="_onTap"
-            on-focus="_onFocus"
-            on-blur="_outFocus"
-            tooltip-text$="[[_getTooltip(_editingValue)]]"
-            disabled$="[[_disabled]]"/>
-        <div slot="input-layer" tooltip-text$="[[_getTooltip(_editingValue)]]">[[_formatText(_editingValue)]]</div>
-        <slot name="property-action"></slot>
-    </tg-editor>`;
+    <tg-app-config id="appConfig"></tg-app-config>`;
+const customInputTemplate = html`
+    <input
+        id="input"
+        class="integer-input"
+        is="iron-input"
+        type="number"
+        step="1"
+        prevent-invalid-input
+        bind-value="{{_editingValue}}"
+        on-change="_onChange"
+        on-input="_onInput"
+        on-keydown="_onKeydown"
+        on-tap="_onTap"
+        on-mousedown="_onTap"
+        on-focus="_onFocus"
+        on-blur="_outFocus"
+        tooltip-text$="[[_getTooltip(_editingValue)]]"
+        disabled$="[[_disabled]]"/>`;
+const inputLayerTemplate = html`<div tooltip-text$="[[_getTooltip(_editingValue)]]">[[_formatText(_editingValue)]]</div>`;
+const propertyActionTemplate = html`<slot name="property-action"></slot>`;
 
 Polymer({
-    _template: template,
+    _template: createEditorTemplate(additionalTemplate, html``, customInputTemplate, inputLayerTemplate, html``, propertyActionTemplate),
 
     is: 'tg-integer-editor',
 
-    /* behaviors: [ TgEditorBehavior ], */
+    behaviors: [ TgEditorBehavior ],
     
     /**
      * Converts the value into string representation (which is used in edititing / comm values).
