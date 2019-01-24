@@ -53,7 +53,7 @@ class MasterWithCentre<T extends AbstractEntity<?>> implements IMaster<T> {
         final String attributes = attrs.toString().replace(", }", " }");
 
         final String entityMasterStr = ResourceLoader.getText("ua/com/fielden/platform/web/master/tg-entity-master-template.html")
-                .replace("<!--@imports-->", "<link rel='import' href='/app/tg-element-loader.html'>\n")
+                .replace("<!--@imports-->", "import '/app/tg-element-loader.js';\n")
                 .replace("@entity_type", entityType.getSimpleName())
                 .replace("<!--@tg-entity-master-content-->",
                         format(""

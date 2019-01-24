@@ -192,7 +192,7 @@ public class SimpleMasterBuilder<T extends AbstractEntity<?>> implements ISimple
     @Override
     public IMaster<T> done() {
         final LinkedHashSet<String> importPaths = new LinkedHashSet<>();
-        importPaths.add("polymer/polymer/polymer");
+        // importPaths.add("polymer/polymer/polymer"); // FIXME check and delete if all good -- this is not really needed due to tg-entity-master-template-behavior dependencies
 
         int funcActionSeq = 0; // used for both entity and property level functional actions
         final String prefix = ",\n";
@@ -317,7 +317,7 @@ public class SimpleMasterBuilder<T extends AbstractEntity<?>> implements ISimple
     public static String createImports(final LinkedHashSet<String> importPaths) {
         final StringBuilder sb = new StringBuilder();
         importPaths.forEach(path -> {
-            sb.append("<link rel='import' href='/resources/" + path + ".html'>\n");
+            sb.append("import '/resources/" + path + ".js';\n");
         });
         return sb.toString();
     }
