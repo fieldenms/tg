@@ -3,22 +3,51 @@ import '/resources/polymer/@polymer/iron-flex-layout/iron-flex-layout.js';
 import '/resources/polymer/@polymer/iron-flex-layout/iron-flex-layout-classes.js';
 import '/resources/polymer/@polymer/iron-icon/iron-icon.js';
 import '/resources/polymer/@polymer/iron-icons/iron-icons.js';
-import '/resources/polymer/@polymer/paper-input/paper-input-container.js'
-import '/resources/polymer/@polymer/paper-input/paper-input-error.js'
-import '/resources/polymer/@polymer/paper-input/paper-input-char-counter.js'
+import '/resources/polymer/@polymer/paper-input/paper-input-container.js';
+import '/resources/polymer/@polymer/paper-input/paper-input-error.js';
+import '/resources/polymer/@polymer/paper-input/paper-input-char-counter.js';
 
-import '/app/tg-reflector.js'
+import {TgReflector} from '/app/tg-reflector.js';
 
 import {html} from '/resources/polymer/@polymer/polymer/lib/utils/html-tag.js';
 
-import {TgTooltipBehavior} from '/resources/components/tg-tooltip-behavior.js'
-import { tearDownEvent } from '/resources/reflection/tg-polymer-utils.js'
+import {TgTooltipBehavior} from '/resources/components/tg-tooltip-behavior.js';
+import { tearDownEvent } from '/resources/reflection/tg-polymer-utils.js';
 
 export function createEditorTemplate (additionalTemplate, customPrefixAttribute, customInput, inputLayer, customIconButtons, propertyAction) {
     return html`
         <style>
             iron-input > input {
                 @apply --paper-input-container-shared-input-style;
+            }
+
+            .input-layer {
+                font-size: 16px;
+                line-height: 24px;
+                font-weight: 500;
+                display: none;
+                position: absolute;
+                background-color: inherit;
+                pointer-events: none;
+                top: 0;
+                bottom: 0;
+                left: 0;
+                right: 0;
+            }
+
+            #decorator[disabled] .input-layer {
+                pointer-events: auto;
+            }
+            #decorator[has-layer][disabled] .input-layer,
+            #decorator[has-layer]:not([focused]) .input-layer {
+                display: var(--tg-editor-default-input-layer-display, inherit);
+            }
+            #decorator .input-layer {
+                color: var(--paper-input-container-input-color, var(--primary-text-color));
+            }
+            #decorator[has-layer][disabled] .custom-input,
+            #decorator[has-layer]:not([focused]) .custom-input {
+                opacity: 0;
             }
             //Further styles should be refactored
 
@@ -37,33 +66,9 @@ export function createEditorTemplate (additionalTemplate, customPrefixAttribute,
                 @apply --tg-editor-input-container-disabled-mixin;
             }
 
-            #input-container .input-layer {
-                font-size: 16px;
-                line-height: 24px;
-                font-weight: 500;
-                display: none;
-                position: absolute;
-                background-color: inherit;
-                pointer-events: none;
-                top: 0;
-                bottom: 0;
-                left: 0;
-                right: 0;
-            }
-            #input-container[disabled] .input-layer {
-                pointer-events: auto;
-            }
-            #input-container[has-layer][disabled] .input-layer,
-            #input-container[has-layer]:not([focused]) .input-layer {
-                display: var(--tg-editor-default-input-layer-display, inherit);
-            }
-            #input-container .input-layer {
-                color: var(--paper-input-container-input-color, var(--primary-text-color));
-            }
-            #input-container[has-layer][disabled] .custom-input,
-            #input-container[has-layer]:not([focused]) .custom-input {
-                opacity: 0;
-            }
+            
+            
+            
             .main-container .custom-icon-buttons, 
             .main-container ::slotted(.property-action) {
                 padding-bottom: 1px;
@@ -162,26 +167,20 @@ export function createEditorTemplate (additionalTemplate, customPrefixAttribute,
             <style include="iron-flex iron-flex-reverse iron-flex-alignment iron-flex-factors iron-positioning"></style>
         </custom-style>
         ${additionalTemplate}
-        <paper-input-container id="decorator" always-float-label>
+        <paper-input-container id="decorator" always-float-label has-layer$="[[_hasLayer]]" disabled$="[[_disabled]]" focused$="[[focused]]">
             <!-- flex auto  for textarea! -->
             <label style$="[[_calcLabelStyle(_editorKind, _disabled)]]" disabled$="[[_disabled]]" slot="label">[[propTitle]]</label>
-            <div class="main-container" slot="input">
-                ${customPrefixAttribute}
-                <div id="input-container" class="relative" style$="[[_calcDecoratorPartStyle(_disabled)]]" has-layer$="[[_hasLayer]]" disabled$="[[_disabled]]" focused$="[[focused]]">
-                    ${customInput}
-                    ${inputLayer}
-                </div>
-                ${customIconButtons}
-                ${propertyAction}
-            </div>
+            ${customPrefixAttribute}
+            ${customInput}
+            ${inputLayer}
+            ${customIconButtons}
+            ${propertyAction}
             <!-- 'autoValidate' attribute for paper-input-container is 'false' -- all validation is performed manually and is bound to paper-input-error, which could be hidden in case of empty '_error' property -->
             <paper-input-error hidden$="[[!_error]]" disabled$="[[_disabled]]" tooltip-text$="[[_error]]" slot="add-on">[[_error]]</paper-input-error>
             <!-- paper-input-char-counter addon is updated whenever 'bindValue' property of child '#input' element is changed -->
             <paper-input-char-counter id="inputCounter" class="footer" hidden$="[[!_isMultilineText(_editorKind)]]" disabled$="[[_disabled]]" slot="add-on"></paper-input-char-counter>
         </paper-input-container>
-        
-        <tg-reflector id="reflector"></tg-reflector>
-
+       
         <template is="dom-if" if="[[debug]]">
             <p>_editingValue: <i>[[_editingValue]]</i>
             </p>
@@ -405,7 +404,7 @@ export const TgEditorBehaviorImpl = {
             type: Function,
             value: function () {
                 return (function (event) {
-                    if (document.activeElement !== this.decoratedInput()) {
+                    if (this.shadowRoot.activeElement !== this.decoratedInput()) {
                         this.decoratedInput().select();
                         tearDownEvent(event);
                     }
@@ -513,15 +512,18 @@ export const TgEditorBehaviorImpl = {
         '_editedPropsChanged(entity.@editedProps)'
     ],
 
-    ready: function () {
-        var self = this;
-        this.decorator().labelVisible = false;
-        
+    created: function () {
+        this._reflector = new TgReflector();
         //////////// INNER PROPERTIES, THAT GOVERN CHILDREN: default values population ////////////
         this._editingValue = this._defaultEditingValue();
         // The following 'commit' call synchronises '_commValue' with '_editingValue' after default editing value population.
         //  Please, also note that this call also triggers '_acceptedValue' population, as per '_commValueChanged' method.
         this.commit();
+    },
+
+    ready: function () {
+        var self = this;
+        this.decorator().labelVisible = false;
     },
 
     attached: function (){
@@ -537,7 +539,7 @@ export const TgEditorBehaviorImpl = {
     },
 
     reflector: function () {
-        return this.$.reflector;
+        return this._reflector;
     },
 
     decorator: function () {
@@ -783,7 +785,8 @@ export const TgEditorBehaviorImpl = {
             this._refreshCycleStarted = false;
             // console.log("_acceptedValueChanged should become false. _refreshCycleStarted ==", this._refreshCycleStarted);
         } else {
-            if (this.reflector().isEntity(this.entity)) {
+            //TODO this logic should be reviewed and modified because it won't work if the binding property is not lazy.
+            if (this.reflector().isEntity(this.entity) && typeof this.entity[this.propertyName] !== 'undefined') {
                 this.entity.setAndRegisterPropertyTouch(this.propertyName, newValue);
                 
                 if (this._shouldInvokeValidation()) {
