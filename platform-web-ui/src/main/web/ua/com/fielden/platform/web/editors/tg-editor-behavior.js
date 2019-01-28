@@ -3,24 +3,80 @@ import '/resources/polymer/@polymer/iron-flex-layout/iron-flex-layout.js';
 import '/resources/polymer/@polymer/iron-flex-layout/iron-flex-layout-classes.js';
 import '/resources/polymer/@polymer/iron-icon/iron-icon.js';
 import '/resources/polymer/@polymer/iron-icons/iron-icons.js';
-import '/resources/polymer/@polymer/paper-input/paper-input-container.js'
-import '/resources/polymer/@polymer/paper-input/paper-input-error.js'
-import '/resources/polymer/@polymer/paper-input/paper-input-char-counter.js'
+import '/resources/polymer/@polymer/paper-input/paper-input-container.js';
+import '/resources/polymer/@polymer/paper-input/paper-input-error.js';
+import '/resources/polymer/@polymer/paper-input/paper-input-char-counter.js';
 
-import '/app/tg-reflector.js'
+import {TgReflector} from '/app/tg-reflector.js';
 
 import {html} from '/resources/polymer/@polymer/polymer/lib/utils/html-tag.js';
 
-import {TgTooltipBehavior} from '/resources/components/tg-tooltip-behavior.js'
-import { tearDownEvent } from '/resources/reflection/tg-polymer-utils.js'
+import {TgTooltipBehavior} from '/resources/components/tg-tooltip-behavior.js';
+import { tearDownEvent } from '/resources/reflection/tg-polymer-utils.js';
 
 export function createEditorTemplate (additionalTemplate, customPrefixAttribute, customInput, inputLayer, customIconButtons, propertyAction) {
     return html`
         <style>
-            iron-input > input {
-                @apply --paper-input-container-shared-input-style;
+            :host {
+                --paper-input-container-disabled: {
+                    opacity: 1;
+                }
             }
-            //Further styles should be refactored
+            .custom-input > input {
+                @apply --paper-input-container-shared-input-style;
+                font-weight: 500;
+            }
+
+            .input-layer {
+                font-size: 16px;
+                line-height: 24px;
+                font-weight: 500;
+                display: none;
+                position: absolute;
+                background-color: inherit;
+                pointer-events: none;
+                top: 0;
+                bottom: 0;
+                left: 0;
+                right: 0;
+            }
+            #decorator[disabled] {
+                --paper-input-container-underline-focus: {
+                    visibility:hidden;
+                }
+            }
+            #decorator[disabled] .input-layer {
+                pointer-events: auto;
+            }
+            #decorator[has-layer][disabled] .input-layer,
+            #decorator[has-layer]:not([focused]) .input-layer {
+                display: var(--tg-editor-default-input-layer-display, inherit);
+            }
+            #decorator .input-layer {
+                color: var(--paper-input-container-input-color, var(--primary-text-color));
+            }
+            #decorator[has-layer][disabled] .custom-input,
+            #decorator[has-layer]:not([focused]) .custom-input {
+                opacity: 0;
+            }
+
+            /* style requiredness */
+            #decorator.required {
+                --paper-input-container-color: #03A9F4;
+                --paper-input-container-focus-color: #03A9F4;
+            }
+
+            /* style warning */
+            #decorator[is-invalid].warning {
+                --paper-input-container-color: #FFA000;
+                --paper-input-container-invalid-color: #FFA000;
+            }
+
+            #decorator[is-invalid]:not(.warning) {
+                --paper-input-container-color: var(--google-red-500);
+            }
+
+            /*Further styles should be refactored after collectional editor will be ready*/
 
             .main-container {
                 @apply --layout-horizontal;
@@ -37,40 +93,9 @@ export function createEditorTemplate (additionalTemplate, customPrefixAttribute,
                 @apply --tg-editor-input-container-disabled-mixin;
             }
 
-            #input-container .input-layer {
-                font-size: 16px;
-                line-height: 24px;
-                font-weight: 500;
-                display: none;
-                position: absolute;
-                background-color: inherit;
-                pointer-events: none;
-                top: 0;
-                bottom: 0;
-                left: 0;
-                right: 0;
-            }
-            #input-container[disabled] .input-layer {
-                pointer-events: auto;
-            }
-            #input-container[has-layer][disabled] .input-layer,
-            #input-container[has-layer]:not([focused]) .input-layer {
-                display: var(--tg-editor-default-input-layer-display, inherit);
-            }
-            #input-container .input-layer {
-                color: var(--paper-input-container-input-color, var(--primary-text-color));
-            }
-            #input-container[has-layer][disabled] .custom-input,
-            #input-container[has-layer]:not([focused]) .custom-input {
-                opacity: 0;
-            }
             .main-container .custom-icon-buttons, 
             .main-container ::slotted(.property-action) {
                 padding-bottom: 1px;
-            }
-            paper-input-container::shadow .add-on-content {
-                background-color: red;
-                position: relative;
             }
             
             paper-input-container::shadow .label-and-input-container {
@@ -84,104 +109,27 @@ export function createEditorTemplate (additionalTemplate, customPrefixAttribute,
             
             paper-input-container {
                 
-                --paper-input-container-input: {
-                    font-weight: 500;
-                };
-                
                 @apply --tg-editor-paper-input-container-mixin;
-            }
-                
-            paper-input-error {
-                width: 100%;
-                position: absolute;
-            }
-                
-            paper-char-counter {
-                position: absolute;
-                right: 0;
-                top: 0;
-            }
-            
-            /* style requiredness */
-            paper-input-container.required {
-                --paper-input-container-color: #03A9F4;
-                --paper-input-container-focus-color: #03A9F4;
-            }
-            
-            paper-input-container.decorator-disabled.required::shadow :not(.is-invalid) .unfocused-line {
-                border-bottom: 1px dashed;
-                background: transparent;
-                opacity: 1;
-                border-color: #03A9F4;
-            }
-            
-            /* style warning */
-            paper-input-container.warning {
-                --paper-input-container-invalid-color: #FFA000;
-            }
-            
-            paper-input-container.decorator-disabled.warning::shadow .is-invalid .unfocused-line {
-                border-bottom: 1px dashed;
-                background: transparent;
-                opacity: 1;
-                border-color: #FFA000;
-            }
-            
-            paper-input-container.decorator-disabled.warning::shadow .is-invalid .focused-line {
-                background: transparent !important;
-                border-color: transparent !important;
-            }
-            
-            /* style error */
-            paper-input-container.decorator-disabled:not(.required):not(.warning)::shadow .is-invalid .unfocused-line {
-                border-bottom: 1px dashed;
-                background: transparent;
-                opacity: 1;
-                border-color: var(--google-red-500);
-            }
-            
-            paper-input-container.decorator-disabled:not(.required):not(.warning)::shadow .is-invalid .focused-line {
-                background: transparent !important;
-                border-color: transparent !important;
-            }
-            
-            /* style not required, not warning and not error -- regular one */
-            paper-input-container.decorator-disabled:not(.required):not(.warning)::shadow :not(.is-invalid) .unfocused-line {
-                border-bottom: 1px dashed;
-                background: transparent;
-                opacity: 1;
-                border-color: var(--secondary-text-color);
-            }
-            
-            /* The next style chunk is applied on all 'add-on content', for e.g. char-counter, error message etc. */
-            paper-input-container.decorator-disabled::shadow .add-on-content ::slotted() {
-                opacity: 1;
             }
         </style>
         <custom-style>
             <style include="iron-flex iron-flex-reverse iron-flex-alignment iron-flex-factors iron-positioning"></style>
         </custom-style>
         ${additionalTemplate}
-        <paper-input-container id="decorator" always-float-label>
+        <paper-input-container id="decorator" always-float-label has-layer$="[[_hasLayer]]" invalid="[[_invalid]]" is-invalid$="[[_invalid]]" disabled$="[[_disabled]]" focused$="[[focused]]">
             <!-- flex auto  for textarea! -->
             <label style$="[[_calcLabelStyle(_editorKind, _disabled)]]" disabled$="[[_disabled]]" slot="label">[[propTitle]]</label>
-            <div class="main-container" slot="input">
-                ${customPrefixAttribute}
-                <div id="input-container" class="relative" style$="[[_calcDecoratorPartStyle(_disabled)]]" has-layer$="[[_hasLayer]]" disabled$="[[_disabled]]" focused$="[[focused]]">
-                    ${customInput}
-                    ${inputLayer}
-                </div>
-                ${customIconButtons}
-                ${propertyAction}
-            </div>
+            ${customPrefixAttribute}
+            ${customInput}
+            ${inputLayer}
+            ${customIconButtons}
+            ${propertyAction}
             <!-- 'autoValidate' attribute for paper-input-container is 'false' -- all validation is performed manually and is bound to paper-input-error, which could be hidden in case of empty '_error' property -->
             <paper-input-error hidden$="[[!_error]]" disabled$="[[_disabled]]" tooltip-text$="[[_error]]" slot="add-on">[[_error]]</paper-input-error>
             <!-- paper-input-char-counter addon is updated whenever 'bindValue' property of child '#input' element is changed -->
             <paper-input-char-counter id="inputCounter" class="footer" hidden$="[[!_isMultilineText(_editorKind)]]" disabled$="[[_disabled]]" slot="add-on"></paper-input-char-counter>
         </paper-input-container>
-        
-        <tg-reflector id="reflector"></tg-reflector>
-
+       
         <template is="dom-if" if="[[debug]]">
             <p>_editingValue: <i>[[_editingValue]]</i>
             </p>
@@ -320,6 +268,11 @@ export const TgEditorBehaviorImpl = {
             computed: '_isDisabled(currentState, entity, propertyName)',
             observer: '_disabledChanged'
         },
+
+        _invalid: {
+            type: Boolean,
+            value: false
+        },
         
         /**
          * The message about the editor-specific validation. If 'null' -- the validation was successfull.
@@ -405,7 +358,7 @@ export const TgEditorBehaviorImpl = {
             type: Function,
             value: function () {
                 return (function (event) {
-                    if (document.activeElement !== this.decoratedInput()) {
+                    if (this.shadowRoot.activeElement !== this.decoratedInput()) {
                         this.decoratedInput().select();
                         tearDownEvent(event);
                     }
@@ -513,15 +466,18 @@ export const TgEditorBehaviorImpl = {
         '_editedPropsChanged(entity.@editedProps)'
     ],
 
-    ready: function () {
-        var self = this;
-        this.decorator().labelVisible = false;
-        
+    created: function () {
+        this._reflector = new TgReflector();
         //////////// INNER PROPERTIES, THAT GOVERN CHILDREN: default values population ////////////
         this._editingValue = this._defaultEditingValue();
         // The following 'commit' call synchronises '_commValue' with '_editingValue' after default editing value population.
         //  Please, also note that this call also triggers '_acceptedValue' population, as per '_commValueChanged' method.
         this.commit();
+    },
+
+    ready: function () {
+        var self = this;
+        this.decorator().labelVisible = false;
     },
 
     attached: function (){
@@ -537,7 +493,7 @@ export const TgEditorBehaviorImpl = {
     },
 
     reflector: function () {
-        return this.$.reflector;
+        return this._reflector;
     },
 
     decorator: function () {
@@ -783,7 +739,11 @@ export const TgEditorBehaviorImpl = {
             this._refreshCycleStarted = false;
             // console.log("_acceptedValueChanged should become false. _refreshCycleStarted ==", this._refreshCycleStarted);
         } else {
-            if (this.reflector().isEntity(this.entity)) {
+            // The following logic shouldn't be executed if binding entity is not fully initialised (i.e. this.entity wasn't defined or _entityChanged wasn't executed).
+            // This is due to the problem that property change is not atomic in Polymer 3.
+            // The problem manifests itself on an early stage of element lifecycle, before the element is attached.
+            // All observers and ready callback are postponed until the element will be inserted into DOM (https://github.com/Polymer/polymer/issues/4526).
+            if (this.reflector().isEntity(this.entity) && typeof this.entity[this.propertyName] !== 'undefined') {
                 this.entity.setAndRegisterPropertyTouch(this.propertyName, newValue);
                 
                 if (this._shouldInvokeValidation()) {
@@ -927,7 +887,7 @@ export const TgEditorBehaviorImpl = {
     },
 
     _resetMessages: function () {
-        this.decorator().invalid = false;
+        this._invalid = false;
         this._error = null;
         this.decorator().classList.remove("warning");
         this.updateStyles();
@@ -937,7 +897,7 @@ export const TgEditorBehaviorImpl = {
         this._resetMessages();
         this.decorator().classList.remove("required");
         this.decorator().classList.remove("warning");
-        this.decorator().invalid = true;
+        this._invalid = true;
         this._error = msg;
         this.updateStyles();
     },
@@ -946,7 +906,7 @@ export const TgEditorBehaviorImpl = {
         this._resetMessages();
         this.decorator().classList.remove("required");
         this.decorator().classList.add("warning");
-        this.decorator().invalid = true;
+        this._invalid = true;
         this._error = "" + msg;
         this.updateStyles();
     },

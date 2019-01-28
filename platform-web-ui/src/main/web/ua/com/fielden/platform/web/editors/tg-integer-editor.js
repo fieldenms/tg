@@ -32,14 +32,13 @@ const additionalTemplate = html`
     </style>
     <tg-app-config id="appConfig"></tg-app-config>`;
 const customInputTemplate = html`
-    <iron-input>
+    <iron-input slot="input" bind-value="{{_editingValue}}" class="integer-input custom-input">
         <input
             id="input"
-            class="integer-input"
             type="number"
             step="1"
+            value="{{value::input}}"
             prevent-invalid-input
-            bind-value="{{_editingValue}}"
             on-change="_onChange"
             on-input="_onInput"
             on-keydown="_onKeydown"
@@ -51,8 +50,8 @@ const customInputTemplate = html`
             disabled$="[[_disabled]]"
             autocomplete="off"/>
     </iron-input>`;
-const inputLayerTemplate = html`<div class="input-layer" tooltip-text$="[[_getTooltip(_editingValue)]]">[[_formatText(_editingValue)]]</div>`;
-const propertyActionTemplate = html`<slot name="property-action"></slot>`;
+const inputLayerTemplate = html`<div slot="input" class="input-layer" tooltip-text$="[[_getTooltip(_editingValue)]]">[[_formatText(_editingValue)]]</div>`;
+const propertyActionTemplate = html`<slot slot="suffix" name="property-action"></slot>`;
 
 Polymer({
     _template: createEditorTemplate(additionalTemplate, html``, customInputTemplate, inputLayerTemplate, html``, propertyActionTemplate),
@@ -60,6 +59,10 @@ Polymer({
     is: 'tg-integer-editor',
 
     behaviors: [ TgEditorBehavior ],
+
+    created: function () {
+        this._hasLayer = true;
+    },
     
     /**
      * Converts the value into string representation (which is used in edititing / comm values).

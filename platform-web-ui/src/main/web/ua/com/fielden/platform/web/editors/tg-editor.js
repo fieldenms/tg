@@ -83,17 +83,6 @@ const template = html`
               
             @apply --tg-editor-paper-input-container-mixin;
         }
-            
-        paper-input-error {
-            width: 100%;
-            position: absolute;
-        }
-            
-        paper-char-counter {
-            position: absolute;
-            right: 0;
-            top: 0;
-        }
         
         /* style requiredness */
         paper-input-container.required {
