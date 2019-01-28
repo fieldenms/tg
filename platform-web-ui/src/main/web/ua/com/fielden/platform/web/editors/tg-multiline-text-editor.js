@@ -111,7 +111,7 @@ Polymer({
             type: Function,
             value: function () {
                 return (function (event) {
-                    if (document.activeElement !== this.decoratedInput().textarea) {
+                    if (this.shadowRoot.activeElement !== this.decoratedInput()) {
                         this.decoratedInput().textarea.select();
                         tearDownEvent(event);
                     }
