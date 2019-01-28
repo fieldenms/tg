@@ -98,7 +98,7 @@ public class AttachmentsUploadActionMaster implements IMaster<AttachmentsUploadA
         final StringBuilder prefDimBuilder = new StringBuilder();
         prefDimBuilder.append(format("{'width': function() {return %s}, 'height': function() {return %s}, 'widthUnit': '%s', 'heightUnit': '%s'}", dims.width, dims.height, dims.widthUnit.value, dims.heightUnit.value));
         
-        final String entityMasterStr = ResourceLoader.getText("ua/com/fielden/platform/web/master/tg-entity-master-template.html")
+        final String entityMasterStr = ResourceLoader.getText("ua/com/fielden/platform/web/master/tg-entity-master-template.js")
                 .replace(IMPORTS, createImports(importPaths))
                 .replace("@entity_type", AttachmentsUploadAction.class.getSimpleName())
                 .replace("<!--@tg-entity-master-content-->", elementContainer.toString())

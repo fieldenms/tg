@@ -37,7 +37,7 @@ public class AttachmentPreviewEntityMaster implements IMaster<AttachmentPreviewE
                 .style("width:100%", "height:100%","padding:8px","box-sizing:border-box")
                 .add(altImage, img);
 
-        final String entityMasterStr = ResourceLoader.getText("ua/com/fielden/platform/web/master/tg-entity-master-template.html")
+        final String entityMasterStr = ResourceLoader.getText("ua/com/fielden/platform/web/master/tg-entity-master-template.js")
                 .replace(IMPORTS, "")
                 .replace("@entity_type", AttachmentPreviewEntityAction.class.getSimpleName())
                 .replace("<!--@tg-entity-master-content-->", container.toString())

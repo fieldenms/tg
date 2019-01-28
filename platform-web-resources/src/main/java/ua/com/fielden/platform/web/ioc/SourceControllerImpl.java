@@ -2,6 +2,7 @@ package ua.com.fielden.platform.web.ioc;
 
 import static java.lang.String.format;
 import static java.util.Collections.sort;
+import static java.util.regex.Pattern.quote;
 
 import java.io.InputStream;
 import java.util.ArrayList;
@@ -130,7 +131,7 @@ public class SourceControllerImpl implements ISourceController {
         final String nextCurr = source.substring(startOfURI);
         final int endOfURIIndex = doubleQuote ? nextCurr.indexOf("\"") : nextCurr.indexOf("'");
         final String importURI = nextCurr.substring(0, endOfURIIndex);
-        final LinkedHashSet<String> set = new LinkedHashSet<String>(currentRootDependencies);
+        final LinkedHashSet<String> set = new LinkedHashSet<>(currentRootDependencies);
         set.add(importURI);
         return getRootDependencies(nextCurr.substring(endOfURIIndex), set);
     }
@@ -312,7 +313,7 @@ public class SourceControllerImpl implements ISourceController {
         } else if ("/app/tg-element-loader.html".equalsIgnoreCase(resourceURI)) {
             return getElementLoaderSource(this, webUiConfig, deviceProfile);
         } else if (resourceURI.startsWith("/master_ui")) {
-            return getMasterSource(resourceURI.replaceFirst("/master_ui/", ""), webUiConfig);
+            return getMasterSource(resourceURI.replaceFirst(quote("/master_ui/"), "").replaceFirst(quote(".js"), ""), webUiConfig);
 //        } else if (resourceURI.startsWith("/centre_ui/egi")) {
 //            return getCentreEgiSource(resourceURI.replaceFirst("/centre_ui/egi/", ""), webUiConfig);
         } else if (resourceURI.startsWith("/centre_ui")) {

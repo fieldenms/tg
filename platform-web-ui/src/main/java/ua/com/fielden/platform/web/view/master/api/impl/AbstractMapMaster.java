@@ -42,7 +42,7 @@ public abstract class AbstractMapMaster<T extends AbstractFunctionalEntityWithCe
 
         final String primaryActionObjectsString = primaryActionObjects.toString();
 
-        final String entityMasterStr = ResourceLoader.getText("ua/com/fielden/platform/web/master/tg-entity-master-template.html")
+        final String entityMasterStr = ResourceLoader.getText("ua/com/fielden/platform/web/master/tg-entity-master-template.js")
                 .replace(IMPORTS, createImports(linkedSetOf("gis/tg-map", gisComponentImportPath)))
                 .replace("@entity_type", entityType.getSimpleName())
                 .replace("<!--@tg-entity-master-content-->", tgMessageMap.toString())

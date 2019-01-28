@@ -75,7 +75,7 @@ public class SecurityMatrixInsertionPointMaster implements IMaster<SecurityMatri
                 .attr("lock", "[[lock]]")
                 .add(tokenFilter, roleFilter, reloadAction);
 
-        final String entityMasterStr = ResourceLoader.getText("ua/com/fielden/platform/web/master/tg-entity-master-template.html")
+        final String entityMasterStr = ResourceLoader.getText("ua/com/fielden/platform/web/master/tg-entity-master-template.js")
                 .replace(IMPORTS, createImports(linkedSetOf("components/tg-security-matrix", "editors/tg-singleline-text-editor")))
                 .replace("@entity_type", SecurityMatrixInsertionPoint.class.getSimpleName())
                 .replace("<!--@tg-entity-master-content-->", securityMatrix.toString())
