@@ -6,10 +6,11 @@ import '/resources/editors/tg-editor.js';
 
 import { Polymer } from '/resources/polymer/@polymer/polymer/lib/legacy/polymer-fn.js';
 import { html } from '/resources/polymer/@polymer/polymer/lib/utils/html-tag.js';
+import { tearDownEvent } from '/resources/reflection/tg-polymer-utils.js';
 
-import { TgEditorBehavior } from '/resources/editors/tg-editor-behavior.js';
+import { TgEditorBehavior,  createEditorTemplate} from '/resources/editors/tg-editor-behavior.js';
 
-const template = html`
+const additionalTemplate = html`
     <style>
         iron-autogrow-textarea {
             @apply --layout-flex;
@@ -22,10 +23,6 @@ const template = html`
             };
         }
         :host{
-            /*min-height: fit-content;*/
-            @apply --layout-vertical;
-        }
-        tg-editor {
             @apply --layout-vertical;
             @apply --layout-flex-auto;
             --tg-editor-paper-input-container-mixin: {
@@ -54,20 +51,11 @@ const template = html`
                 overflow: auto;
             };
         }
-    </style>
-    <tg-editor
-        id="editorDom"
-        prop-title="[[propTitle]]"
-        _disabled="[[_disabled]]"
-        _editing-value="{{_editingValue}}"
-        action="[[action]]"
-        _error="[[_error]]"
-        _comm-value="[[_commValue]]"
-        _accepted-value="[[_acceptedValue]]"
-        debug="[[debug]]"
-        tooltip-text$="[[_getTooltip(_editingValue)]]">
-        <iron-autogrow-textarea
+    </style>`;
+const customInputTemplate = html`
+    <iron-autogrow-textarea
             id="input"
+            slot="input"
             class="paper-input-input custom-input multiline-text-input"
             max-rows="[[maxRows]]"
             bind-value="{{_editingValue}}"
@@ -78,20 +66,20 @@ const template = html`
             on-mousedown="_onTap"
             on-keydown="_onKeydown"
             disabled$="[[_disabled]]"
-            tooltip-text$="[[_getTooltip(_editingValue)]]">
-        </iron-autogrow-textarea>
-        <slot name="property-action"></slot>
-    </tg-editor>`;
+            tooltip-text$="[[_getTooltip(_editingValue)]]"
+            autocomplete="off">
+        </iron-autogrow-textarea>`;
+const propertyActionTemplate = html`<slot slot="suffix" name="property-action"></slot>`;
 
 Polymer({
-    _template: template,
+    _template: createEditorTemplate(additionalTemplate, html``, customInputTemplate, html``, html``, propertyActionTemplate),
 
     is: 'tg-multiline-text-editor',
 
     behaviors: [ TgEditorBehavior ],
 
-    ready: function () {
-        this.$.editorDom._editorKind = "MULTILINE_TEXT";
+    created: function () {
+        this._editorKind = "MULTILINE_TEXT";
 
         // this.decorator().querySelector('#inputCounter').target = this.decorator().$.input;
     },
@@ -125,7 +113,7 @@ Polymer({
                 return (function (event) {
                     if (document.activeElement !== this.decoratedInput().textarea) {
                         this.decoratedInput().textarea.select();
-                        this._preventEventBubbling(event);
+                        tearDownEvent(event);
                     }
                 }).bind(this);
             }

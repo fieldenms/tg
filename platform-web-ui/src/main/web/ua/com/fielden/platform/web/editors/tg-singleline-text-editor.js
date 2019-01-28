@@ -6,9 +6,9 @@ import '/resources/editors/tg-editor.js';
 import { Polymer } from '/resources/polymer/@polymer/polymer/lib/legacy/polymer-fn.js';
 import { html } from '/resources/polymer/@polymer/polymer/lib/utils/html-tag.js';
 
-import { TgEditorBehavior } from '/resources/editors/tg-editor-behavior.js';
+import { TgEditorBehavior,  createEditorTemplate} from '/resources/editors/tg-editor-behavior.js';
 
-const template = html`
+const additionalTemplate = html`
     <style>
         #input[disabled] {
             cursor: text;
@@ -16,34 +16,24 @@ const template = html`
         #input.upper-case {
             text-transform: uppercase;
         }
-    </style>
-    <tg-editor 
-        id="editorDom" 
-        prop-title="[[propTitle]]"
-        _disabled="[[_disabled]]" 
-        _editing-value="{{_editingValue}}" 
-        action="[[action]]" 
-        _error="[[_error]]" 
-        _comm-value="[[_commValue]]" 
-        _accepted-value="[[_acceptedValue]]" 
-        debug="[[debug]]">
+    </style>`;
+const customInputTemplate = html`
+    <iron-input slot="input" bind-value="{{_editingValue}}" class="custom-input singleline-text-input">
         <input
             id="input"
-            class="custom-input singleline-text-input"
-            is="iron-input"
-            bind-value="{{_editingValue}}"
             on-change="_onChange"
             on-input="_onInput"
             on-tap="_onTap"
             on-mousedown="_onTap"
             on-keydown="_onKeydown"
             disabled$="[[_disabled]]"
-            tooltip-text$="[[_getTooltip(_editingValue)]]"/>
-        <slot name="property-action"></slot>
-    </tg-editor>`;
+            tooltip-text$="[[_getTooltip(_editingValue)]]"
+            autocomplete="off"/>
+    </iron-input>`;
+const propertyActionTemplate = html`<slot slot="suffix" name="property-action"></slot>`;
 
 Polymer({
-    _template: template,
+    _template: createEditorTemplate(additionalTemplate, html``, customInputTemplate, html``, html``, propertyActionTemplate),
 
     is: 'tg-singleline-text-editor',
     
