@@ -17,8 +17,14 @@ import { tearDownEvent } from '/resources/reflection/tg-polymer-utils.js';
 export function createEditorTemplate (additionalTemplate, customPrefixAttribute, customInput, inputLayer, customIconButtons, propertyAction) {
     return html`
         <style>
-            iron-input > input {
+            :host {
+                --paper-input-container-disabled: {
+                    opacity: 1;
+                }
+            }
+            .custom-input > input {
                 @apply --paper-input-container-shared-input-style;
+                font-weight: 500;
             }
 
             .input-layer {
@@ -34,7 +40,11 @@ export function createEditorTemplate (additionalTemplate, customPrefixAttribute,
                 left: 0;
                 right: 0;
             }
-
+            #decorator[disabled] {
+                --paper-input-container-underline-focus: {
+                    visibility:hidden;
+                }
+            }
             #decorator[disabled] .input-layer {
                 pointer-events: auto;
             }
@@ -49,7 +59,24 @@ export function createEditorTemplate (additionalTemplate, customPrefixAttribute,
             #decorator[has-layer]:not([focused]) .custom-input {
                 opacity: 0;
             }
-            //Further styles should be refactored
+
+            /* style requiredness */
+            #decorator.required {
+                --paper-input-container-color: #03A9F4;
+                --paper-input-container-focus-color: #03A9F4;
+            }
+
+            /* style warning */
+            #decorator[is-invalid].warning {
+                --paper-input-container-color: #FFA000;
+                --paper-input-container-invalid-color: #FFA000;
+            }
+
+            #decorator[is-invalid]:not(.warning) {
+                --paper-input-container-color: var(--google-red-500);
+            }
+
+            /*Further styles should be refactored after collectional editor will be ready*/
 
             .main-container {
                 @apply --layout-horizontal;
@@ -66,16 +93,9 @@ export function createEditorTemplate (additionalTemplate, customPrefixAttribute,
                 @apply --tg-editor-input-container-disabled-mixin;
             }
 
-            
-            
-            
             .main-container .custom-icon-buttons, 
             .main-container ::slotted(.property-action) {
                 padding-bottom: 1px;
-            }
-            paper-input-container::shadow .add-on-content {
-                background-color: red;
-                position: relative;
             }
             
             paper-input-container::shadow .label-and-input-container {
@@ -89,85 +109,14 @@ export function createEditorTemplate (additionalTemplate, customPrefixAttribute,
             
             paper-input-container {
                 
-                --paper-input-container-input: {
-                    font-weight: 500;
-                };
-                
                 @apply --tg-editor-paper-input-container-mixin;
-            }
-                
-            paper-input-error {
-                width: 100%;
-                position: absolute;
-            }
-                
-            paper-char-counter {
-                position: absolute;
-                right: 0;
-                top: 0;
-            }
-            
-            /* style requiredness */
-            paper-input-container.required {
-                --paper-input-container-color: #03A9F4;
-                --paper-input-container-focus-color: #03A9F4;
-            }
-            
-            paper-input-container.decorator-disabled.required::shadow :not(.is-invalid) .unfocused-line {
-                border-bottom: 1px dashed;
-                background: transparent;
-                opacity: 1;
-                border-color: #03A9F4;
-            }
-            
-            /* style warning */
-            paper-input-container.warning {
-                --paper-input-container-invalid-color: #FFA000;
-            }
-            
-            paper-input-container.decorator-disabled.warning::shadow .is-invalid .unfocused-line {
-                border-bottom: 1px dashed;
-                background: transparent;
-                opacity: 1;
-                border-color: #FFA000;
-            }
-            
-            paper-input-container.decorator-disabled.warning::shadow .is-invalid .focused-line {
-                background: transparent !important;
-                border-color: transparent !important;
-            }
-            
-            /* style error */
-            paper-input-container.decorator-disabled:not(.required):not(.warning)::shadow .is-invalid .unfocused-line {
-                border-bottom: 1px dashed;
-                background: transparent;
-                opacity: 1;
-                border-color: var(--google-red-500);
-            }
-            
-            paper-input-container.decorator-disabled:not(.required):not(.warning)::shadow .is-invalid .focused-line {
-                background: transparent !important;
-                border-color: transparent !important;
-            }
-            
-            /* style not required, not warning and not error -- regular one */
-            paper-input-container.decorator-disabled:not(.required):not(.warning)::shadow :not(.is-invalid) .unfocused-line {
-                border-bottom: 1px dashed;
-                background: transparent;
-                opacity: 1;
-                border-color: var(--secondary-text-color);
-            }
-            
-            /* The next style chunk is applied on all 'add-on content', for e.g. char-counter, error message etc. */
-            paper-input-container.decorator-disabled::shadow .add-on-content ::slotted() {
-                opacity: 1;
             }
         </style>
         <custom-style>
             <style include="iron-flex iron-flex-reverse iron-flex-alignment iron-flex-factors iron-positioning"></style>
         </custom-style>
         ${additionalTemplate}
-        <paper-input-container id="decorator" always-float-label has-layer$="[[_hasLayer]]" disabled$="[[_disabled]]" focused$="[[focused]]">
+        <paper-input-container id="decorator" always-float-label has-layer$="[[_hasLayer]]" invalid="[[_invalid]]" is-invalid$="[[_invalid]]" disabled$="[[_disabled]]" focused$="[[focused]]">
             <!-- flex auto  for textarea! -->
             <label style$="[[_calcLabelStyle(_editorKind, _disabled)]]" disabled$="[[_disabled]]" slot="label">[[propTitle]]</label>
             ${customPrefixAttribute}
@@ -318,6 +267,11 @@ export const TgEditorBehaviorImpl = {
             type: Boolean,
             computed: '_isDisabled(currentState, entity, propertyName)',
             observer: '_disabledChanged'
+        },
+
+        _invalid: {
+            type: Boolean,
+            value: false
         },
         
         /**
@@ -933,7 +887,7 @@ export const TgEditorBehaviorImpl = {
     },
 
     _resetMessages: function () {
-        this.decorator().invalid = false;
+        this._invalid = false;
         this._error = null;
         this.decorator().classList.remove("warning");
         this.updateStyles();
@@ -943,7 +897,7 @@ export const TgEditorBehaviorImpl = {
         this._resetMessages();
         this.decorator().classList.remove("required");
         this.decorator().classList.remove("warning");
-        this.decorator().invalid = true;
+        this._invalid = true;
         this._error = msg;
         this.updateStyles();
     },
@@ -952,7 +906,7 @@ export const TgEditorBehaviorImpl = {
         this._resetMessages();
         this.decorator().classList.remove("required");
         this.decorator().classList.add("warning");
-        this.decorator().invalid = true;
+        this._invalid = true;
         this._error = "" + msg;
         this.updateStyles();
     },
