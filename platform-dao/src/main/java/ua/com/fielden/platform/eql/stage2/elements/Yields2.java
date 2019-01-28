@@ -2,78 +2,33 @@ package ua.com.fielden.platform.eql.stage2.elements;
 
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Set;
+import java.util.List;
 import java.util.SortedMap;
 import java.util.TreeMap;
 
-public class Yields2 implements IIgnorableAtS2 {
-    private final SortedMap<String, Yield2> yields = new TreeMap<String, Yield2>();
+public class Yields2 {
+    private final SortedMap<String, Yield2> yieldsMap = new TreeMap<String, Yield2>();
 
-    public void addYield(final Yield2 yield) {
-        if (yields.containsKey(yield.getAlias())) {
-            throw new IllegalStateException("Query contains duplicate yields for alias [" + yield.getAlias() + "]");
-        }
-        yields.put(yield.getAlias(), yield);
-    }
-
-    public void removeYield(final Yield2 yield) {
-        if (!yields.containsKey(yield.getAlias())) {
-            throw new IllegalStateException("Query does not contain the following yield [" + yield + "]");
-        }
-        yields.remove(yield.getAlias());
-    }
-
-    public void removeYields(final Set<Yield2> toBeRemoved) {
-        for (final Yield2 yield : toBeRemoved) {
-            removeYield(yield);
+    public Yields2(List<Yield2> yields) {
+        for (Yield2 yield : yields) {
+            yieldsMap.put(yield.getAlias(), yield);
         }
     }
-
-    public Yield2 getFirstYield() {
-        return !yields.isEmpty() ? yields.values().iterator().next() : null;
-    }
-
-    public int size() {
-        return yields.size();
-    }
-
+    
     public Collection<Yield2> getYields() {
-        return Collections.unmodifiableCollection(yields.values());
-    }
-
-    public void clear() {
-        yields.clear();
-    }
-
-    public Yield2 getYieldByAlias(final String alias) {
-        return yields.get(alias);
-    }
-
-    public Yield2 findMostMatchingYield(final String orderByYieldName) {
-        String bestMatch = null;
-        for (final String yieldName : yields.keySet()) {
-            if (orderByYieldName.startsWith(yieldName) && (bestMatch == null || (bestMatch != null && bestMatch.length() < yieldName.length()))) {
-                bestMatch = yieldName;
-            }
-        }
-        return bestMatch != null ? yields.get(bestMatch) : null;
-    }
-
-    @Override
-    public boolean ignore() {
-        return false;
+        return Collections.unmodifiableCollection(yieldsMap.values());
     }
 
     @Override
     public String toString() {
-        return yields.toString();
+        return yieldsMap.toString();
     }
 
     @Override
     public int hashCode() {
         final int prime = 31;
         int result = 1;
-        result = prime * result + ((yields == null) ? 0 : yields.hashCode());
+        result = prime * result + ((yieldsMap == null) ? 0 : yieldsMap.hashCode());
         return result;
     }
 
@@ -89,11 +44,11 @@ public class Yields2 implements IIgnorableAtS2 {
             return false;
         }
         final Yields2 other = (Yields2) obj;
-        if (yields == null) {
-            if (other.yields != null) {
+        if (yieldsMap == null) {
+            if (other.yieldsMap != null) {
                 return false;
             }
-        } else if (!yields.equals(other.yields)) {
+        } else if (!yieldsMap.equals(other.yieldsMap)) {
             return false;
         }
         return true;

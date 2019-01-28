@@ -8,18 +8,17 @@ import ua.com.fielden.platform.eql.meta.TransformatorToS2;
 import ua.com.fielden.platform.eql.stage2.elements.GroupBy2;
 import ua.com.fielden.platform.eql.stage2.elements.GroupBys2;
 
-public class GroupBys1 implements ITransformableToS2<GroupBys2> {
+public class GroupBys1 {
     private final List<GroupBy1> groups;
 
     public GroupBys1(final List<GroupBy1> groups) {
         this.groups = groups;
     }
 
-    @Override
     public GroupBys2 transform(final TransformatorToS2 resolver) {
         final List<GroupBy2> transformed = new ArrayList<>();
         for (final GroupBy1 groupBy : groups) {
-            transformed.add(new GroupBy2(groupBy.getOperand().transform(resolver)));
+            transformed.add(groupBy.transform(resolver));
         }
         return new GroupBys2(transformed);
     }

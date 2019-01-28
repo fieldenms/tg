@@ -24,7 +24,7 @@ public class EntityInfo<T extends AbstractEntity<?>> implements IResolvable<T> {
         return foundPart == null ? null : foundPart.resolve(parts.getValue());
     }
 
-    protected EntityInfo<T> addProp(final AbstractPropInfo<?, ?> propInfo) { 
+    public EntityInfo<T> addProp(final AbstractPropInfo<?, ?> propInfo) { 
         props.put(propInfo.getName(), propInfo);
         return this;
     }

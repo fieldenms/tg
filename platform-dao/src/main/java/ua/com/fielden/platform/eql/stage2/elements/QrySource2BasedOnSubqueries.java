@@ -1,26 +1,37 @@
 package ua.com.fielden.platform.eql.stage2.elements;
 
+import static ua.com.fielden.platform.utils.EntityUtils.isEntityType;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.query.EntityAggregates;
 import ua.com.fielden.platform.entity.query.exceptions.EqlException;
 import ua.com.fielden.platform.entity.query.exceptions.EqlStage1ProcessingException;
+import ua.com.fielden.platform.eql.meta.AbstractPropInfo;
+import ua.com.fielden.platform.eql.meta.EntityInfo;
+import ua.com.fielden.platform.eql.meta.EntityTypePropInfo;
+import ua.com.fielden.platform.eql.meta.PrimTypePropInfo;
 
 public class QrySource2BasedOnSubqueries implements IQrySource2 {
     private final List<EntQuery2> models = new ArrayList<>();
     private final Map<String, List<Yield2>> yieldsMatrix;
+    private final EntityInfo entityInfo;
+    private final String alias;
 
-    public QrySource2BasedOnSubqueries(final List<EntQuery2> models) {
+    public QrySource2BasedOnSubqueries(final List<EntQuery2> models, final String alias, final Map<Class<? extends AbstractEntity<?>>, EntityInfo<?>> domainInfo) {
         if (models == null || models.isEmpty()) {
             throw new EqlStage1ProcessingException("Couldn't produce instance of QueryBasedSource due to zero models passed to constructor!");
         }
 
         this.models.addAll(models);
         this.yieldsMatrix = populateYieldMatrixFromQueryModels(models);
+        this.alias = alias;
         validateYieldsMatrix();
+        this.entityInfo = produceEntityInfoFrom(domainInfo);
     }
 
     private static Map<String, List<Yield2>> populateYieldMatrixFromQueryModels(final List<EntQuery2> models) {
@@ -103,5 +114,30 @@ public class QrySource2BasedOnSubqueries implements IQrySource2 {
 
     public List<EntQuery2> getModels() {
         return models;
+    }
+
+    @Override
+    public EntityInfo<?> entityInfo() {
+        return entityInfo;
+    }
+    
+    private EntityInfo<?> produceEntityInfoFrom(final Map<Class<? extends AbstractEntity<?>>, EntityInfo<?>> domainInfo) {
+        if (!EntityAggregates.class.equals(sourceType())) {
+            return domainInfo.get(sourceType());
+        } else {
+            final EntityInfo<EntityAggregates> entAggEntityInfo = new EntityInfo<>(EntityAggregates.class, null);
+            for (final Yield2 yield : getYields().getYields()) {
+                final AbstractPropInfo<?, ?> aep = isEntityType(yield.javaType())
+                        ? new EntityTypePropInfo(yield.getAlias(), domainInfo.get(yield.javaType()), entAggEntityInfo)
+                        : new PrimTypePropInfo(yield.getAlias(), yield.javaType(), entAggEntityInfo);
+                entAggEntityInfo.addProp(aep);
+            }
+            return entAggEntityInfo;
+        }
+    }
+
+    @Override
+    public String alias() {
+        return alias;
     }
 }

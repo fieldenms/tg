@@ -7,18 +7,17 @@ import ua.com.fielden.platform.eql.meta.TransformatorToS2;
 import ua.com.fielden.platform.eql.stage2.elements.OrderBy2;
 import ua.com.fielden.platform.eql.stage2.elements.OrderBys2;
 
-public class OrderBys1 implements ITransformableToS2<OrderBys2> {
+public class OrderBys1 {
     private final List<OrderBy1> models;
 
     public OrderBys1(final List<OrderBy1> models) {
         this.models = models;
     }
 
-    @Override
     public OrderBys2 transform(final TransformatorToS2 resolver) {
         final List<OrderBy2> transformed = new ArrayList<>();
         for (final OrderBy1 orderBy : models) {
-            transformed.add(new OrderBy2(orderBy.getOperand().transform(resolver), orderBy.isDesc()));
+            transformed.add(orderBy.transform(resolver));
         }
         return new OrderBys2(transformed);
     }

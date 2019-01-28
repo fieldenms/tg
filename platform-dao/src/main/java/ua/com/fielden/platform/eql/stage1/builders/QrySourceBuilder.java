@@ -20,9 +20,7 @@ import ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory;
 import ua.com.fielden.platform.entity.query.model.QueryModel;
 import ua.com.fielden.platform.eql.stage1.elements.EntQuery1;
 import ua.com.fielden.platform.eql.stage1.elements.QrySource1BasedOnPersistentType;
-import ua.com.fielden.platform.eql.stage1.elements.QrySource1BasedOnPersistentTypeWithCalcProps;
 import ua.com.fielden.platform.eql.stage1.elements.QrySource1BasedOnSubqueries;
-import ua.com.fielden.platform.eql.stage1.elements.QrySource1BasedOnSyntheticType;
 import ua.com.fielden.platform.utils.Pair;
 
 /**
@@ -68,12 +66,12 @@ public class QrySourceBuilder extends AbstractTokensBuilder {
         final Class<AbstractEntity<?>> resultType = (Class<AbstractEntity<?>>) firstValue();
         if (isPersistedEntityType(resultType)) {
             if (hasCalcProps(resultType)) {
-                return pair(QRY_SOURCE, new QrySource1BasedOnPersistentTypeWithCalcProps(resultType, (String) secondValue()));    
+                throw new EqlStage1ProcessingException("Not yet.");    
             } else {
                 return pair(QRY_SOURCE, new QrySource1BasedOnPersistentType(resultType, (String) secondValue()));    
             }
         } else if (isSyntheticEntityType(resultType) || isSyntheticBasedOnPersistentEntityType(resultType)) {
-            return pair(QRY_SOURCE, new QrySource1BasedOnSyntheticType(resultType, (String) secondValue()));
+            throw new EqlStage1ProcessingException("Not yet.");
         } else {
             throw new EqlStage1ProcessingException("Not yet.");
         }

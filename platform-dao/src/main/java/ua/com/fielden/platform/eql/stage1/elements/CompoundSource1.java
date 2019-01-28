@@ -5,7 +5,7 @@ import ua.com.fielden.platform.eql.meta.TransformatorToS2;
 import ua.com.fielden.platform.eql.stage2.elements.CompoundSource2;
 import ua.com.fielden.platform.eql.stage2.elements.IQrySource2;
 
-public class CompoundSource1 implements ITransformableToS2<CompoundSource2> {
+public class CompoundSource1 implements ITransformableToS2<CompoundSource2>{
     private final IQrySource1<? extends IQrySource2> source;
     private final JoinType joinType;
     private final Conditions1 joinConditions;

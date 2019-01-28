@@ -2,7 +2,7 @@ package ua.com.fielden.platform.eql.stage2.elements;
 
 import ua.com.fielden.platform.entity.query.fluent.enums.JoinType;
 
-public class CompoundSource2 implements IIgnorableAtS2 {
+public class CompoundSource2 {
     private final IQrySource2 source;
     private final JoinType joinType;
     private final Conditions2 joinConditions;
@@ -29,11 +29,6 @@ public class CompoundSource2 implements IIgnorableAtS2 {
 
     public Conditions2 getJoinConditions() {
         return joinConditions;
-    }
-
-    @Override
-    public boolean ignore() {
-        return false;
     }
 
     @Override

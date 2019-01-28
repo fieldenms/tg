@@ -1,8 +1,10 @@
 package ua.com.fielden.platform.eql.stage1.elements;
 
+import ua.com.fielden.platform.eql.meta.TransformatorToS2;
 import ua.com.fielden.platform.eql.stage2.elements.ISingleOperand2;
+import ua.com.fielden.platform.eql.stage2.elements.Yield2;
 
-public class Yield1 {
+public class Yield1 implements ITransformableToS2<Yield2>{
     private final ISingleOperand1<? extends ISingleOperand2> operand;
     private final String alias;
     private final boolean requiredHint;
@@ -13,6 +15,8 @@ public class Yield1 {
         this.requiredHint = requiredHint;
     }
 
+    
+    
     public Yield1(final ISingleOperand1<? extends ISingleOperand2> operand, final String alias) {
         this(operand, alias, false);
     }
@@ -70,5 +74,12 @@ public class Yield1 {
 
     protected boolean isRequiredHint() {
         return requiredHint;
+    }
+
+
+
+    @Override
+    public Yield2 transform(TransformatorToS2 resolver) {
+        return new Yield2(operand.transform(resolver), alias, requiredHint);
     }
 }

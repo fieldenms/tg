@@ -1,13 +1,19 @@
 package ua.com.fielden.platform.eql.stage1.elements;
 
+import ua.com.fielden.platform.eql.meta.TransformatorToS2;
+import ua.com.fielden.platform.eql.stage2.elements.GroupBy2;
 import ua.com.fielden.platform.eql.stage2.elements.ISingleOperand2;
 
-public class GroupBy1 {
+public class GroupBy1 implements ITransformableToS2<GroupBy2>{
     private final ISingleOperand1<? extends ISingleOperand2> operand;
 
     public GroupBy1(final ISingleOperand1<? extends ISingleOperand2> operand) {
-        super();
         this.operand = operand;
+    }
+
+    @Override
+    public GroupBy2 transform(TransformatorToS2 resolver) {
+        return new GroupBy2(operand.transform(resolver));
     }
 
     public ISingleOperand1<? extends ISingleOperand2> getOperand() {

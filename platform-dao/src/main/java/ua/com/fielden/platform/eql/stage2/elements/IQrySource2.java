@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.eql.stage2.elements;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.eql.meta.EntityInfo;
 
 public interface IQrySource2 {
     
@@ -11,4 +12,8 @@ public interface IQrySource2 {
      * @return
      */
     Class<? extends AbstractEntity<?>> sourceType();
+    
+    EntityInfo<?> entityInfo();
+    
+    String alias();
 }

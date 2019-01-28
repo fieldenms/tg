@@ -1,5 +1,8 @@
 package ua.com.fielden.platform.eql.stage1.builders;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory;
 import ua.com.fielden.platform.eql.stage1.elements.Yield1;
 import ua.com.fielden.platform.eql.stage1.elements.Yields1;
@@ -24,14 +27,12 @@ public class QryYieldsBuilder extends AbstractTokensBuilder {
             //throw new RuntimeException("Unable to produce result - unfinished model state!");
         }
 
-        final Yields1 result = new Yields1();
+        final List<Yield1> yields= new ArrayList<>();
         for (final Pair<TokenCategory, Object> pair : getTokens()) {
-            final Yield1 yield = (Yield1) pair.getValue();
-
-            result.addYield(yield);
+            yields.add((Yield1) pair.getValue());
         }
 
-        return result;
+        return new Yields1(yields);
     }
 
     @Override

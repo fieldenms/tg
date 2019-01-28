@@ -1,8 +1,10 @@
 package ua.com.fielden.platform.eql.stage1.elements;
 
+import ua.com.fielden.platform.eql.meta.TransformatorToS2;
 import ua.com.fielden.platform.eql.stage2.elements.ISingleOperand2;
+import ua.com.fielden.platform.eql.stage2.elements.OrderBy2;
 
-public class OrderBy1 {
+public class OrderBy1 implements ITransformableToS2<OrderBy2>{
     private final ISingleOperand1<? extends ISingleOperand2> operand;
     private final String yieldName;
     private Yield1 yield;
@@ -14,17 +16,20 @@ public class OrderBy1 {
     }
 
     public OrderBy1(final ISingleOperand1<? extends ISingleOperand2> operand, final boolean desc) {
-        super();
         this.operand = operand;
         this.yieldName = null;
         this.desc = desc;
     }
 
     public OrderBy1(final String yieldName, final boolean desc) {
-        super();
         this.operand = null;
         this.yieldName = yieldName;
         this.desc = desc;
+    }
+
+    @Override
+    public OrderBy2 transform(TransformatorToS2 resolver) {
+        return new OrderBy2(operand.transform(resolver), desc);
     }
 
     public ISingleOperand1<? extends ISingleOperand2> getOperand() {

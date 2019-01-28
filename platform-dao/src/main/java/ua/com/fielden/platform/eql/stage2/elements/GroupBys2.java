@@ -1,7 +1,5 @@
 package ua.com.fielden.platform.eql.stage2.elements;
 
-import static java.util.Collections.emptyList;
-
 import java.util.ArrayList;
 import java.util.List;
 
@@ -10,10 +8,6 @@ public class GroupBys2 implements IIgnorableAtS2 {
 
     public GroupBys2(final List<GroupBy2> groups) {
         this.groups.addAll(groups);
-    }
-
-    public GroupBys2() {
-        this(emptyList());
     }
 
     @Override
