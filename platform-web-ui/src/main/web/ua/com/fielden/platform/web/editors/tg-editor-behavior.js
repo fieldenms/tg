@@ -785,7 +785,10 @@ export const TgEditorBehaviorImpl = {
             this._refreshCycleStarted = false;
             // console.log("_acceptedValueChanged should become false. _refreshCycleStarted ==", this._refreshCycleStarted);
         } else {
-            //TODO this logic should be reviewed and modified because it won't work if the binding property is not lazy.
+            // The following logic shouldn't be executed if binding entity is not fully initialised (i.e. this.entity wasn't defined or _entityChanged wasn't executed).
+            // This is due to the problem that property change is not atomic in Polymer 3.
+            // The problem manifests itself on an early stage of element lifecycle, before the element is attached.
+            // All observers and ready callback are postponed until the element will be inserted into DOM (https://github.com/Polymer/polymer/issues/4526).
             if (this.reflector().isEntity(this.entity) && typeof this.entity[this.propertyName] !== 'undefined') {
                 this.entity.setAndRegisterPropertyTouch(this.propertyName, newValue);
                 
