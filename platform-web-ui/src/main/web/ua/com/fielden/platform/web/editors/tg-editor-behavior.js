@@ -20,6 +20,7 @@ export function createEditorTemplate (additionalTemplate, customPrefixAttribute,
             :host {
                 --paper-input-container-disabled: {
                     opacity: 1;
+                    pointer-events: auto;
                 }
             }
             .custom-input > input {
@@ -40,6 +41,7 @@ export function createEditorTemplate (additionalTemplate, customPrefixAttribute,
                 left: 0;
                 right: 0;
             }
+            
             #decorator[disabled] {
                 --paper-input-container-underline-focus: {
                     visibility:hidden;
@@ -74,42 +76,6 @@ export function createEditorTemplate (additionalTemplate, customPrefixAttribute,
 
             #decorator[is-invalid]:not(.warning) {
                 --paper-input-container-color: var(--google-red-500);
-            }
-
-            /*Further styles should be refactored after collectional editor will be ready*/
-
-            .main-container {
-                @apply --layout-horizontal;
-                @apply --layout-center;
-                @apply --tg-editor-main-container-mixin;
-            }
-            
-            #input-container {
-                @apply --layout-flex;
-                @apply --tg-editor-input-container-mixin;
-            }
-            
-            #input-container[disabled] {
-                @apply --tg-editor-input-container-disabled-mixin;
-            }
-
-            .main-container .custom-icon-buttons, 
-            .main-container ::slotted(.property-action) {
-                padding-bottom: 1px;
-            }
-            
-            paper-input-container::shadow .label-and-input-container {
-                min-width: 0px;
-                @apply --tg-editor-label-and-input-container-mixin;
-            }
-            
-            paper-input-container::shadow .input-content {
-                @apply --tg-editor-input-content-mixin;
-            }
-            
-            paper-input-container {
-                
-                @apply --tg-editor-paper-input-container-mixin;
             }
         </style>
         <custom-style>
