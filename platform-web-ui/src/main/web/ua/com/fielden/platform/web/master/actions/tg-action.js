@@ -1,4 +1,4 @@
-<link rel="import" href="/resources/polymer/polymer/polymer.html">
+/*<link rel="import" href="/resources/polymer/polymer/polymer.html">
 
 <link rel="import" href="/resources/master/actions/tg-action-behavior.html">
 <link rel="import" href="/resources/master/actions/tg-abstract-action.html">
@@ -47,9 +47,8 @@
         behaviors: [Polymer.TgBehaviors.TgActionBehavior, Polymer.TgBehaviors.TgTooltipBehavior],
         
         properties: {
-            /**
-             * Keyboard shortcut combination to invoke this action on entity master.
-             */
+            // Keyboard shortcut combination to invoke this action on entity master.
+            
             shortcut: {
                 type: String
             }
@@ -63,4 +62,4 @@
             }, 100);
         }
     });
-</script>
+</script>*/

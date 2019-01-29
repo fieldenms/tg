@@ -6,6 +6,8 @@ import static ua.com.fielden.platform.web.centre.EntityCentre.IMPORTS;
 import static ua.com.fielden.platform.web.interfaces.ILayout.Device.DESKTOP;
 import static ua.com.fielden.platform.web.interfaces.ILayout.Device.MOBILE;
 import static ua.com.fielden.platform.web.interfaces.ILayout.Device.TABLET;
+import static ua.com.fielden.platform.web.view.master.EntityMaster.ENTITY_TYPE;
+import static ua.com.fielden.platform.web.view.master.EntityMaster.flattenedNameOf;
 import static ua.com.fielden.platform.web.view.master.api.actions.MasterActions.REFRESH;
 import static ua.com.fielden.platform.web.view.master.api.actions.MasterActions.SAVE;
 import static ua.com.fielden.platform.web.view.master.api.impl.SimpleMasterBuilder.createImports;
@@ -100,7 +102,7 @@ public class AttachmentsUploadActionMaster implements IMaster<AttachmentsUploadA
         
         final String entityMasterStr = ResourceLoader.getText("ua/com/fielden/platform/web/master/tg-entity-master-template.js")
                 .replace(IMPORTS, createImports(importPaths))
-                .replace("@entity_type", AttachmentsUploadAction.class.getSimpleName())
+                .replace(ENTITY_TYPE, flattenedNameOf(AttachmentsUploadAction.class))
                 .replace("<!--@tg-entity-master-content-->", elementContainer.toString())
                 .replace("//generatedPrimaryActions", "")
                 .replace("//@ready-callback", 

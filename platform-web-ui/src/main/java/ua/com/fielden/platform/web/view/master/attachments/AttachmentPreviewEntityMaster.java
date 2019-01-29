@@ -1,6 +1,8 @@
 package ua.com.fielden.platform.web.view.master.attachments;
 
 import static ua.com.fielden.platform.web.centre.EntityCentre.IMPORTS;
+import static ua.com.fielden.platform.web.view.master.EntityMaster.ENTITY_TYPE;
+import static ua.com.fielden.platform.web.view.master.EntityMaster.flattenedNameOf;
 
 import java.util.Optional;
 
@@ -39,7 +41,7 @@ public class AttachmentPreviewEntityMaster implements IMaster<AttachmentPreviewE
 
         final String entityMasterStr = ResourceLoader.getText("ua/com/fielden/platform/web/master/tg-entity-master-template.js")
                 .replace(IMPORTS, "")
-                .replace("@entity_type", AttachmentPreviewEntityAction.class.getSimpleName())
+                .replace(ENTITY_TYPE, flattenedNameOf(AttachmentPreviewEntityAction.class))
                 .replace("<!--@tg-entity-master-content-->", container.toString())
                 .replace("//@ready-callback", generateReadyCallback())
                 .replace("@prefDim", "null")

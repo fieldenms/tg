@@ -2,6 +2,8 @@ package ua.com.fielden.platform.web.security;
 
 import static ua.com.fielden.platform.utils.CollectionUtil.linkedSetOf;
 import static ua.com.fielden.platform.web.centre.EntityCentre.IMPORTS;
+import static ua.com.fielden.platform.web.view.master.EntityMaster.ENTITY_TYPE;
+import static ua.com.fielden.platform.web.view.master.EntityMaster.flattenedNameOf;
 import static ua.com.fielden.platform.web.view.master.api.actions.MasterActions.SAVE;
 import static ua.com.fielden.platform.web.view.master.api.impl.SimpleMasterBuilder.createImports;
 import static ua.com.fielden.platform.web.view.master.api.impl.SimpleMasterBuilder.getPostAction;
@@ -77,7 +79,7 @@ public class SecurityMatrixInsertionPointMaster implements IMaster<SecurityMatri
 
         final String entityMasterStr = ResourceLoader.getText("ua/com/fielden/platform/web/master/tg-entity-master-template.js")
                 .replace(IMPORTS, createImports(linkedSetOf("components/tg-security-matrix", "editors/tg-singleline-text-editor")))
-                .replace("@entity_type", SecurityMatrixInsertionPoint.class.getSimpleName())
+                .replace(ENTITY_TYPE, flattenedNameOf(SecurityMatrixInsertionPoint.class))
                 .replace("<!--@tg-entity-master-content-->", securityMatrix.toString())
                 .replace("//generatedPrimaryActions", "")
                 .replace("//@ready-callback", readyCallback())

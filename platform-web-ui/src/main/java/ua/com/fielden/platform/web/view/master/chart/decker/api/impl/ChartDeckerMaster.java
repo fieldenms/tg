@@ -6,6 +6,8 @@ import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract
 import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.getTimeZone;
 import static ua.com.fielden.platform.web.centre.EntityCentre.IMPORTS;
 import static ua.com.fielden.platform.web.centre.api.resultset.impl.FunctionalActionKind.PRIMARY_RESULT_SET;
+import static ua.com.fielden.platform.web.view.master.EntityMaster.ENTITY_TYPE;
+import static ua.com.fielden.platform.web.view.master.EntityMaster.flattenedNameOf;
 import static ua.com.fielden.platform.web.view.master.api.impl.SimpleMasterBuilder.createImports;
 
 import java.util.ArrayList;
@@ -48,7 +50,7 @@ public class ChartDeckerMaster<T extends AbstractEntity<?>> implements IMaster<T
 
         final String entityMasterStr = ResourceLoader.getText("ua/com/fielden/platform/web/components/chart-decker/tg-chart-decker-template.html")
                 .replace(IMPORTS, createImports(importPaths))
-                .replace("@entity_type", deckerConfig.getEntityType().getSimpleName())
+                .replace(ENTITY_TYPE, flattenedNameOf(deckerConfig.getEntityType()))
                 .replace("<!--@tg-entity-master-content-->", decks.toString())
                 .replace("//generatedPrimaryActions", actions.getKey())
                 .replace("//@ready-callback", readyCallback(deckerConfig))

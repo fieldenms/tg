@@ -3,6 +3,8 @@ package ua.com.fielden.platform.web.view.master.api.impl;
 import static java.lang.String.format;
 import static ua.com.fielden.platform.web.centre.EntityCentre.IMPORTS;
 import static ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig.setRole;
+import static ua.com.fielden.platform.web.view.master.EntityMaster.ENTITY_TYPE;
+import static ua.com.fielden.platform.web.view.master.EntityMaster.flattenedNameOf;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -269,7 +271,7 @@ public class SimpleMasterBuilder<T extends AbstractEntity<?>> implements ISimple
 
         final String entityMasterStr = ResourceLoader.getText("ua/com/fielden/platform/web/master/tg-entity-master-template.js")
                 .replace(IMPORTS, createImports(importPaths))
-                .replace("@entity_type", entityType.getSimpleName())
+                .replace(ENTITY_TYPE, flattenedNameOf(entityType))
                 .replace("<!--@tg-entity-master-content-->", elementContainer.toString()) // TODO should contain prop actions
                 .replace("//@ready-callback",
                         layout.code().toString() + "\n"
