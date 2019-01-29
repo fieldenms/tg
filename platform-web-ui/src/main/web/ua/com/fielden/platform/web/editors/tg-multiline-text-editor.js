@@ -12,6 +12,9 @@ import { TgEditorBehavior,  createEditorTemplate} from '/resources/editors/tg-ed
 
 const additionalTemplate = html`
     <style>
+        :host {
+            @apply --layout-vertical;
+        }
         iron-autogrow-textarea {
             @apply --layout-flex;
             min-height: fit-content;
@@ -22,34 +25,9 @@ const additionalTemplate = html`
                 text-transform: uppercase;
             };
         }
-        :host{
+        paper-input-container {
             @apply --layout-vertical;
-            @apply --layout-flex-auto;
-            --tg-editor-paper-input-container-mixin: {
-                @apply --layout-vertical;
-                flex: 1 0 auto;
-            };
-            --tg-editor-input-container-disabled-mixin: {
-                cursor: text;
-            };
-            --tg-editor-input-content-mixin: {
-                @apply --layout-flex-auto;
-                @apply --layout-vertical;
-                @apply --layout-start;
-            };
-            --tg-editor-label-and-input-container-mixin: {
-                @apply --layout-horizontal;
-            };
-            --tg-editor-main-container-mixin: {
-                @apply --layout-start ;
-                @apply --layout-flex;
-            };
-            --tg-editor-input-container-mixin: {
-                @apply --layout-flex-auto;
-                @apply --layout-vertical;
-                @apply --layout-self-stretch;
-                overflow: auto;
-            };
+            flex: 1 0 auto;    
         }
     </style>`;
 const customInputTemplate = html`
@@ -65,7 +43,7 @@ const customInputTemplate = html`
             on-tap="_onTap"
             on-mousedown="_onTap"
             on-keydown="_onKeydown"
-            disabled$="[[_disabled]]"
+            readonly$="[[_disabled]]"
             tooltip-text$="[[_getTooltip(_editingValue)]]"
             autocomplete="off">
         </iron-autogrow-textarea>`;
@@ -82,6 +60,18 @@ Polymer({
         this._editorKind = "MULTILINE_TEXT";
 
         // this.decorator().querySelector('#inputCounter').target = this.decorator().$.input;
+    },
+
+    ready: function () {
+        const inputWrapper = this.decorator().$$(".input-wrapper");
+        inputWrapper.style.flexGrow = "1";
+        const labelAndInputContainer = this.decorator().$.labelAndInputContainer;
+        labelAndInputContainer.style.alignSelf = "stretch";
+        labelAndInputContainer.style.display = "flex";
+        const prefix = this.decorator().$$(".prefix");
+        prefix.style.alignSelf = "flex-start";
+        const suffix = this.decorator().$$(".suffix");
+        suffix.style.alignSelf = "flex-start";
     },
 
     properties: {
