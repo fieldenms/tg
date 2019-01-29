@@ -16,6 +16,9 @@ const additionalTemplate = html`
             @apply --layout-vertical;
         }
         iron-autogrow-textarea {
+            --iron-autogrow-textarea: {
+                font-weight: 500;
+            }
             @apply --layout-flex;
             min-height: fit-content;
             overflow: hidden;
@@ -68,6 +71,7 @@ Polymer({
         const labelAndInputContainer = this.decorator().$.labelAndInputContainer;
         labelAndInputContainer.style.alignSelf = "stretch";
         labelAndInputContainer.style.display = "flex";
+        labelAndInputContainer.style.overflow = "auto";
         const prefix = this.decorator().$$(".prefix");
         prefix.style.alignSelf = "flex-start";
         const suffix = this.decorator().$$(".suffix");

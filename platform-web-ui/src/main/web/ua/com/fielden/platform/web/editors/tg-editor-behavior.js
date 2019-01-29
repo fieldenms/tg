@@ -21,7 +21,7 @@ export function createEditorTemplate (additionalTemplate, customPrefixAttribute,
                 --paper-input-container-disabled: {
                     opacity: 1;
                     pointer-events: auto;
-                }
+                };
             }
             .custom-input > input {
                 @apply --paper-input-container-shared-input-style;
@@ -40,6 +40,12 @@ export function createEditorTemplate (additionalTemplate, customPrefixAttribute,
                 bottom: 0;
                 left: 0;
                 right: 0;
+            }
+            
+            #decorator {
+                --paper-input-container-input: {
+                    font-weight: 500;
+                }
             }
             
             #decorator[disabled] {
@@ -106,7 +112,7 @@ export function createEditorTemplate (additionalTemplate, customPrefixAttribute,
         </template>`;
 };
 
-export const TgEditorBehaviorImpl = {
+export const TgEditorBehavior = {
 
     properties: {
         /////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -425,6 +431,8 @@ export const TgEditorBehaviorImpl = {
             console.log("focus got: _onFocus:", event);
         }, */
     },
+
+    behaviors: [TgTooltipBehavior],
     
     observers: [
         '_recordDefinition(entity, propertyName, _editorValidationMsg)',
@@ -916,5 +924,3 @@ export const TgEditorBehaviorImpl = {
         return contextHolder;
     }
 };
-
-export const TgEditorBehavior = [TgEditorBehaviorImpl, TgTooltipBehavior];

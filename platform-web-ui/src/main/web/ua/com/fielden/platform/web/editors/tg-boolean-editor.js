@@ -8,10 +8,10 @@ import '/resources/editors/tg-editor.js'
 import {Polymer} from '/resources/polymer/@polymer/polymer/lib/legacy/polymer-fn.js';
 import {html} from '/resources/polymer/@polymer/polymer/lib/utils/html-tag.js';
 
-import {TgEditorBehavior} from '/resources/editors/tg-editor-behavior.js'
+import {TgEditorBehavior, createEditorTemplate} from '/resources/editors/tg-editor-behavior.js'
 
-const template = html`
-     <style>
+const additionalTemplate = html`
+    <style>
         /* Styles for boolean property editors. */
         paper-checkbox {
             -moz-user-select: none;
@@ -23,21 +23,18 @@ const template = html`
             --paper-checkbox-checked-color: var(--paper-light-blue-700);
             --paper-checkbox-checked-ink-color: var(--paper-light-blue-700);
             height: 24px;
+            --paper-checkbox-label: {
+                display:grid !important;
+                transform:scale(0.75);
+                transform-origin: left;
+                /*TODO consider adding width:130% as the lable was scaled down*/
+                font-weight: 400;
+                -webkit-font-smoothing: antialiased;
+                text-rendering: optimizeLegibility;
+                color: #757575 !important;
+            };
         }
         
-        paper-checkbox::shadow #checkboxContainer {
-            flex-shrink: 0;
-        }
-        paper-checkbox::shadow #checkboxLabel {
-            display:grid !important;
-            transform:scale(0.75);
-            transform-origin: left;
-            /*TODO consider adding width:130% as the lable was scaled down*/
-            font-weight: 400;
-            -webkit-font-smoothing: antialiased;
-            text-rendering: optimizeLegibility;
-            color: #757575 !important;
-        }
         .truncate {
             white-space: nowrap;
             overflow: hidden;
@@ -46,30 +43,20 @@ const template = html`
     </style>
     <custom-style>
         <style include="iron-flex iron-flex-reverse iron-flex-alignment iron-flex-factors iron-positioning"></style>
-    </custom-style>
-    <tg-editor
-        id="editorDom"
-        prop-title="[[propTitle]]"
-        _disabled="[[_disabled]]"
-        _editing-value="{{_editingValue}}"
-        action="[[action]]"
-        _error="[[_error]]"
-        _comm-value="[[_commValue]]"
-        _accepted-value="[[_acceptedValue]]"
-        debug="[[debug]]"
-        tooltip-text$="[[_getTooltip(_editingValue)]]">
-        <paper-checkbox
+    </custom-style>`;
+const customInputTemplate = html`
+    <paper-checkbox
             id="input"
+            slot="input"
             class="paper-input-input custom-input boolean-input layout horizontal center"
             checked="[[_isBooleanChecked(_editingValue)]]"
             disabled$="[[_disabled]]"
             on-change="_onChange"
-            tooltip-text$="[[_getTooltip(_editingValue)]]"><span class="truncate">[[propTitle]]</span></paper-checkbox>
-        <slot name="property-action"></slot>
-    </tg-editor>`;
+            tooltip-text$="[[_getTooltip(_editingValue)]]"><span class="truncate">[[propTitle]]</span></paper-checkbox>`;
+const propertyActionTemplate = html`<slot slot="suffix" name="property-action"></slot>`;
 
 Polymer({
-    _template: template,
+    _template: createEditorTemplate(additionalTemplate, html``, customInputTemplate, html``, html``, propertyActionTemplate),
 
     is: 'tg-boolean-editor',
 
@@ -85,9 +72,11 @@ Polymer({
         }
     },
 
+    created: function () {
+        this._editorKind = "BOOLEAN";
+    },
+
     ready: function () {
-        this.$.editorDom._editorKind = "BOOLEAN";
-        
         this._onChange = (function (e) {
             console.log("_onChange:", e);
             var target = e.target || e.srcElement;
