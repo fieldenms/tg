@@ -455,8 +455,8 @@ const TgEntityMasterBehaviorImpl = {
                         "class='primary-action'> " +
                         "</tg-ui-action>";
 
-                    Polymer.dom(this.root).appendChild(actionModel);
-                    Polymer.dom.flush();
+                    this.shadowRoot.appendChild(actionModel);
+                    // FIXME not needed? Polymer.dom.flush();
 
                     action = actionModel.$.continuationAction;
 
@@ -475,7 +475,7 @@ const TgEntityMasterBehaviorImpl = {
                         const saveButton = self.querySelector("tg-action[role='save']");
                         self.save(functionalEntity, continuationProperty)
                             .then(
-                                Polymer.TgBehaviors.TgEntityMasterClosingBehavior.createEntityActionThenCallback(self.centreUuid, 'save', postal, null, saveButton ? saveButton.closeAfterExecution : true),
+                                TgEntityMasterClosingBehavior.createEntityActionThenCallback(self.centreUuid, 'save', postal, null, saveButton ? saveButton.closeAfterExecution : true),
                                 function (value) { console.log('AJAX PROMISE CATCH', value); }
                             );
                     };
@@ -668,9 +668,9 @@ const TgEntityMasterBehaviorImpl = {
                 self._actionDialog = dialog;
             } else {
                 self._actionDialog = document.createElement('tg-custom-action-dialog');
-                Polymer.dom(self._actionDialog).setAttribute("id", self.uuid);
-                Polymer.dom(document.body).appendChild(self._actionDialog);
-                Polymer.dom.flush();
+                self._actionDialog.setAttribute("id", self.uuid);
+                document.body.appendChild(self._actionDialog);
+                // FIXME not needed? Polymer.dom.flush();
             }
         }
     },
@@ -920,7 +920,7 @@ const TgEntityMasterBehaviorImpl = {
      * Overridden to populate '_originallyProducedEntity' in case where 'new' entity arrives.
      */
     _postRetrievedDefaultForDescendants: function (entity, bindingEntity, customObject) {
-        Polymer.TgBehaviors.TgEntityBinderBehavior._postRetrievedDefaultForDescendants.call(this, entity, bindingEntity, customObject);
+        TgEntityBinderBehavior._postRetrievedDefaultForDescendants.call(this, entity, bindingEntity, customObject);
 
         if (entity.id === null) {
             this._originallyProducedEntity = entity;
@@ -938,7 +938,7 @@ const TgEntityMasterBehaviorImpl = {
      * Overridden from tg-entity-binder-behavior to reset _continuations.
      */
     _resetState: function () {
-        Polymer.TgBehaviors.TgEntityBinderBehavior._resetState.call(this);
+        TgEntityBinderBehavior._resetState.call(this);
         // need to reset _continuations after 'refresh', 'continuous saving'. See also _postSavedDefault for specific resetting after save. See also _postValidatedDefault for resetting after validation.
         this._continuations = {};
     },

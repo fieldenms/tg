@@ -1,21 +1,26 @@
 import { Polymer } from '/resources/polymer/@polymer/polymer/lib/legacy/polymer-fn.js';
 import { html } from '/resources/polymer/@polymer/polymer/lib/utils/html-tag.js';
 
-import '/resources/serialisation/tg-serialiser.js';
+import { TgSerialiser } from '/resources/serialisation/tg-serialiser.js';
 // FIXME <link rel="import" href="/resources/components/tg-toast.html">
 
 const template = html`
-    <tg-serialiser id="serialiser"></tg-serialiser>
     <!--tg-toast id="toastGreeting"></tg-toast-->
 `;
 Polymer({
+    _template: template,
+
     is: 'tg-entity-binder',
+
+    created: function () {
+        this.__serialiser = new TgSerialiser();
+    },
 
     /**
      * The component for entity serialisation.
      */
     _serialiser: function () {
-        return this.$.serialiser;
+        return this.__serialiser;
     },
 
     /**

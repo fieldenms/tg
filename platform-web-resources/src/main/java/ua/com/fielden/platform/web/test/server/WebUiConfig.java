@@ -481,7 +481,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
         @SuppressWarnings("unchecked")
         final IMaster<TgPersistentEntityWithProperties> masterConfig = smb.forEntity(TgPersistentEntityWithProperties.class)
                 // PROPERTY EDITORS
-                .addProp("entityProp.entityProp").asAutocompleter().withProps(pair("desc", true))
+//                .addProp("entityProp.entityProp").asAutocompleter().withProps(pair("desc", true))
 //                    .withAction(
 //                        action(TgDummyAction.class)
 //                        .withContext(context().withMasterEntity().build())
@@ -493,11 +493,11 @@ public class WebUiConfig extends AbstractWebUiConfig {
 //                        .shortDesc("Dummy")
 //                        .longDesc("Dummy action, simply prints its result into console.")
 //                        .build())
-                .also()
-                .addProp("entityProp").asAutocompleter().withMatcher(ContextMatcher.class)
-                .withProps(pair("desc", true),
-                        pair("compositeProp", false),
-                        pair("booleanProp", false))
+//                .also()
+//                .addProp("entityProp").asAutocompleter().withMatcher(ContextMatcher.class)
+//                .withProps(pair("desc", true),
+//                        pair("compositeProp", false),
+//                        pair("booleanProp", false))
 //                .withAction(
 //                        action(TgExportFunctionalEntity.class)
 //                        .withContext(context().withMasterEntity().build())
@@ -510,7 +510,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
 //                        .shortDesc("Export")
 //                        .longDesc("Export action")
 //                        .build())
-                .also()
+//                .also()
                 .addProp("key").asSinglelineText()
 //                .withAction(
 //                        action(TgDummyAction.class)
@@ -559,8 +559,8 @@ public class WebUiConfig extends AbstractWebUiConfig {
 //                        .shortDesc("Dummy")
 //                        .longDesc("Dummy action, simply prints its result into console.")
 //                        .build())
-                .also()
-                .addProp("dateProp").asDateTimePicker()
+//                .also()
+//                .addProp("dateProp").asDateTimePicker()
 //                    .withAction(
 //                        action(TgDummyAction.class)
 //                        .withContext(context().withMasterEntity().build())
@@ -571,8 +571,8 @@ public class WebUiConfig extends AbstractWebUiConfig {
 //                        .shortDesc("Dummy")
 //                        .longDesc("Dummy action, simply prints its result into console.")
 //                        .build())
-                .also()
-                .addProp("booleanProp").asCheckbox()
+//                .also()
+//                .addProp("booleanProp").asCheckbox()
 //                    .withAction(
 //                        action(TgDummyAction.class)
 //                        .withContext(context().withMasterEntity().build())
@@ -583,8 +583,8 @@ public class WebUiConfig extends AbstractWebUiConfig {
 //                        .shortDesc("Dummy")
 //                        .longDesc("Dummy action, simply prints its result into console.")
 //                        .build())
-                .also()
-                .addProp("compositeProp").asAutocompleter()
+//                .also()
+//                .addProp("compositeProp").asAutocompleter()
 //                    .withAction(
 //                        action(TgDummyAction.class)
 //                        .withContext(context().withMasterEntity().build())
@@ -607,8 +607,8 @@ public class WebUiConfig extends AbstractWebUiConfig {
 //                        .shortDesc("Dummy")
 //                        .longDesc("Dummy action, simply prints its result into console.")
 //                        .build())
-                .also()
-                .addProp("status").asAutocompleter()
+//                .also()
+//                .addProp("status").asAutocompleter()
 //                    .withAction(
 //                        action(TgCreatePersistentStatusAction.class)
 //                        .withContext(context().withMasterEntity().build())
@@ -628,8 +628,8 @@ public class WebUiConfig extends AbstractWebUiConfig {
 //                .also()
                 .addProp("integerProp").asSpinner()
                 .also()
-                .addProp("producerInitProp").asAutocompleter()
-                .also()
+//                .addProp("producerInitProp").asAutocompleter()
+//                .also()
 //                .addProp("moneyProp").asMoney()
 //                .also()
                 .addProp("nonConflictingProp").asSinglelineText()

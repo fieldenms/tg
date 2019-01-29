@@ -126,7 +126,7 @@ export const TgTooltipBehavior = {
 
     _handleTouchStart: function (event) {
         this.touchEventTriggered = true;
-        this._startTooltip();
+        this._startTooltip(event);
     },
 
     _handleTouchEnd: function (event) {
@@ -146,13 +146,13 @@ export const TgTooltipBehavior = {
      */
     _handleTooltipAtMousePos: function (event) {
         if (!this.touchEventTriggered) {
-            this._startTooltip();
+            this._startTooltip(event);
         } else {
             this.touchEventTriggered = false;
         }
     },
 
-    _startTooltip: function (e) {
+    _startTooltip: function (event) {
         const currentActiveElement = extractActiveElement(event.composedPath(), this.triggerElement);
 
         if (currentActiveElement !== this._activeComponent) {
@@ -170,5 +170,5 @@ export const TgTooltipBehavior = {
      */
     _hideTooltip: function () {
         toolTipElement.hide();
-    },
+    }
 };
