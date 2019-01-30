@@ -154,7 +154,6 @@ import ua.com.fielden.platform.web.resources.webui.AbstractWebUiConfig;
 import ua.com.fielden.platform.web.resources.webui.SecurityMatrixWebUiConfig;
 import ua.com.fielden.platform.web.resources.webui.UserRoleWebUiConfig;
 import ua.com.fielden.platform.web.resources.webui.UserWebUiConfig;
-import ua.com.fielden.platform.web.test.matchers.ContextMatcher;
 import ua.com.fielden.platform.web.test.server.config.StandardActions;
 import ua.com.fielden.platform.web.test.server.config.TgEntityWithTimeZoneDatesWebUiConfig;
 import ua.com.fielden.platform.web.test.server.config.TgGeneratedEntityForTrippleDecAnalysisWebUiConfig;
@@ -559,8 +558,8 @@ public class WebUiConfig extends AbstractWebUiConfig {
 //                        .shortDesc("Dummy")
 //                        .longDesc("Dummy action, simply prints its result into console.")
 //                        .build())
-//                .also()
-//                .addProp("dateProp").asDateTimePicker()
+                .also()
+                .addProp("dateProp").asDateTimePicker()
 //                    .withAction(
 //                        action(TgDummyAction.class)
 //                        .withContext(context().withMasterEntity().build())
@@ -571,8 +570,8 @@ public class WebUiConfig extends AbstractWebUiConfig {
 //                        .shortDesc("Dummy")
 //                        .longDesc("Dummy action, simply prints its result into console.")
 //                        .build())
-//                .also()
-//                .addProp("booleanProp").asCheckbox()
+                .also()
+                .addProp("booleanProp").asCheckbox()
 //                    .withAction(
 //                        action(TgDummyAction.class)
 //                        .withContext(context().withMasterEntity().build())
@@ -639,11 +638,11 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 .addProp("domainInitProp").asSinglelineText()
                 .also()
 
-//                .addAction(MasterActions.REFRESH)
-//                    .icon("highlight-off")
-//                    .shortDesc("CANCEL")
-//                    .longDesc("Cancels any changes and closes the master (if in dialog)")
-//                    // .shortcut("ctrl+x") // overridden from default esc
+                .addAction(MasterActions.REFRESH)
+                    .icon("highlight-off")
+                    .shortDesc("CANCEL")
+                    .longDesc("Cancels any changes and closes the master (if in dialog)")
+                    // .shortcut("ctrl+x") // overridden from default esc
 
                 // ENTITY CUSTOM ACTIONS
 //                .addAction(
@@ -661,18 +660,19 @@ public class WebUiConfig extends AbstractWebUiConfig {
 //                        .build())
 
                 .addAction(MasterActions.VALIDATE)
-//                .addAction(MasterActions.SAVE)
+                .addAction(MasterActions.SAVE)
                     // .shortDesc("SAVE")
                     // .longDesc("SAVE")
                     // .shortcut("ctrl+shift+s") // -- overridden from default ctrl+s
-//                .addAction(MasterActions.EDIT)
-//                .addAction(MasterActions.VIEW)
+                .addAction(MasterActions.EDIT)
+                .addAction(MasterActions.VIEW)
 
                 .setActionBarLayoutFor(Device.DESKTOP, Optional.empty(),
                         format("['horizontal', 'center-justified', 'padding: 20px', 'wrap', [%s],[%s],[%s],[%s],[%s],[%s]]", actionMr, actionMr, actionMr, actionMr, actionMr, actionMr))
                 .setLayoutFor(Device.DESKTOP, Optional.empty(), desktopLayout)
                 .setLayoutFor(Device.TABLET, Optional.empty(), tabletLayout)
                 .setLayoutFor(Device.MOBILE, Optional.empty(), mobileLayout)
+                .withDimensions(PrefDim.mkDim("'100%'", "'100%'"))
                 .done();
 
         final IMaster<TgEntityForColourMaster> masterConfigForColour = new SimpleMasterBuilder<TgEntityForColourMaster>().forEntity(TgEntityForColourMaster.class)

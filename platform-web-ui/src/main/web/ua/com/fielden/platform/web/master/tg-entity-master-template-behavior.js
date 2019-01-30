@@ -7,6 +7,7 @@ import { TgEntityMasterBehavior } from '/resources/master/tg-entity-master-behav
 import '/resources/master/tg-entity-master-styles.js';
 // FIXME <link rel="import" href="/resources/actions/tg-shortcut-processing-behavior.html">
 import { generateUUID } from '/resources/reflection/tg-polymer-utils.js';
+import '/resources/polymer/@polymer/iron-flex-layout/iron-flex-layout-classes.js';
 
 const TgEntityMasterTemplateBehaviorImpl = {
 

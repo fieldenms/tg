@@ -15,6 +15,13 @@ import '/resources/binding/tg-entity-binder.js';
 
 const template = html`
     <style>
+        :host([with-dimensions]) #masterContainer{
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            right: 0;
+            left: 0;
+        }
         :host::slotted(tg-flex-layout) { /* previously :host::content tg-flex-layout */
             background-color: white;
         }
@@ -27,6 +34,9 @@ const template = html`
             };
         }
     </style>
+    <custom-style>
+        <style include="iron-flex iron-flex-reverse iron-flex-alignment iron-flex-factors iron-positioning"></style>
+    </custom-style>
     <tg-entity-binder id="binderDom"></tg-entity-binder>
     <!--tg-confirmation-dialog id="confirmationDialog"></tg-confirmation-dialog-->
     <!--tg-entity-validator id="validator"
