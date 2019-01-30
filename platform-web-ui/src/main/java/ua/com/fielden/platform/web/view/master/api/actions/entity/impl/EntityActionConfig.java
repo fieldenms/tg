@@ -12,26 +12,20 @@ import ua.com.fielden.platform.web.view.master.api.actions.entity.IEntityActionC
 import ua.com.fielden.platform.web.view.master.api.actions.entity.IEntityActionConfig2;
 import ua.com.fielden.platform.web.view.master.api.actions.entity.IEntityActionConfig3;
 import ua.com.fielden.platform.web.view.master.api.actions.entity.IEntityActionConfig4;
+import ua.com.fielden.platform.web.view.master.api.actions.entity.IEntityActionConfig4AfterExecutionClose;
 import ua.com.fielden.platform.web.view.master.api.actions.entity.IEntityActionConfig5;
-import ua.com.fielden.platform.web.view.master.api.actions.entity.IEntityActionConfig6;
-import ua.com.fielden.platform.web.view.master.api.actions.entity.IEntityActionConfig7;
-import ua.com.fielden.platform.web.view.master.api.actions.entity.IEntityActionConfig7AfterExecutionClose;
-import ua.com.fielden.platform.web.view.master.api.actions.entity.IEntityActionConfig8;
 import ua.com.fielden.platform.web.view.master.api.actions.impl.AbstractAction;
-import ua.com.fielden.platform.web.view.master.api.actions.impl.AbstractFunctionalAction;
-import ua.com.fielden.platform.web.view.master.api.actions.post.IPostAction;
-import ua.com.fielden.platform.web.view.master.api.actions.pre.IPreAction;
 import ua.com.fielden.platform.web.view.master.api.helpers.IActionBarLayoutConfig1;
 import ua.com.fielden.platform.web.view.master.api.helpers.ILayoutConfigWithDimensionsAndDone;
 import ua.com.fielden.platform.web.view.master.api.impl.SimpleMasterBuilder;
 
-public class EntityActionConfig<T extends AbstractEntity<?>> implements IEntityActionConfig0<T>, IEntityActionConfig1<T>, IEntityActionConfig2<T>, IEntityActionConfig3<T>, IEntityActionConfig4<T>, IEntityActionConfig5<T>, IEntityActionConfig6<T>, IEntityActionConfig7<T>, IEntityActionConfig8<T>, IActionBarLayoutConfig1<T> {
+public class EntityActionConfig<T extends AbstractEntity<?>> implements IEntityActionConfig0<T>, IEntityActionConfig1<T>, IEntityActionConfig2<T>, IEntityActionConfig3<T>, IEntityActionConfig4<T>, IEntityActionConfig5<T>, IActionBarLayoutConfig1<T> {
 
-    private final AbstractAction action;
+    private final DefaultEntityAction action;
     private final SimpleMasterBuilder<T> simpleMasterBuilder;
 
-    public EntityActionConfig(final AbstractAction action, final SimpleMasterBuilder<T> simpleMaster) {
-        this.action = action;
+    public EntityActionConfig(final DefaultEntityAction defaultEntityAction, final SimpleMasterBuilder<T> simpleMaster) {
+        this.action = defaultEntityAction;
         this.simpleMasterBuilder = simpleMaster;
     }
 
@@ -51,50 +45,32 @@ public class EntityActionConfig<T extends AbstractEntity<?>> implements IEntityA
     }
 
     @Override
-    public IEntityActionConfig7<T> longDesc(final String longDesc) {
+    public IEntityActionConfig4<T> longDesc(final String longDesc) {
         action.setLongDesc(longDesc);
         return this;
     }
 
     @Override
-    public IEntityActionConfig7AfterExecutionClose<T> shortcut(final String shortcut) {
+    public IEntityActionConfig4AfterExecutionClose<T> shortcut(final String shortcut) {
         action.setShortcut(shortcut);
         return this;
     }
 
     @Override
-    public IEntityActionConfig6<T> shortDesc(final String shortDesc) {
+    public IEntityActionConfig3<T> shortDesc(final String shortDesc) {
         action.setShortDesc(shortDesc);
         return this;
     }
 
     @Override
-    public IEntityActionConfig5<T> icon(final String iconName) {
+    public IEntityActionConfig2<T> icon(final String iconName) {
         action.setIcon(iconName);
         return this;
     }
 
     @Override
-    public IEntityActionConfig4<T> enabledWhen(final EnabledState state) {
+    public IEntityActionConfig1<T> enabledWhen(final EnabledState state) {
         action.setEnabledState(state);
-        return this;
-    }
-
-    @Override
-    public IEntityActionConfig2<T> postActionSuccess(final IPostAction postActionSuccess) {
-        ((AbstractFunctionalAction) action).setPostActionSuccess(postActionSuccess);
-        return this;
-    }
-
-    @Override
-    public IEntityActionConfig3<T> postActionError(final IPostAction postActionError) {
-        ((AbstractFunctionalAction) action).setPostActionError(postActionError);
-        return this;
-    }
-
-    @Override
-    public IEntityActionConfig1<T> preAction(final IPreAction preAction) {
-        ((AbstractFunctionalAction) action).setPreAction(preAction);
         return this;
     }
 
@@ -103,13 +79,14 @@ public class EntityActionConfig<T extends AbstractEntity<?>> implements IEntityA
     }
 
     @Override
-    public IEntityActionConfig8<T> addAction(final ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig actionConfig) {
+    public IEntityActionConfig5<T> addAction(final ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig actionConfig) {
         return simpleMasterBuilder.addAction(actionConfig);
     }
 
     @Override
-    public IEntityActionConfig8<T> keepMasterOpenAfterExecution() {
+    public IEntityActionConfig5<T> keepMasterOpenAfterExecution() {
         action.setCloseAfterExecution(false);
         return this;
     }
+
 }
