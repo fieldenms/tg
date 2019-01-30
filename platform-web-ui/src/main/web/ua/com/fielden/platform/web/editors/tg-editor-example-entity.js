@@ -102,6 +102,10 @@ Polymer({
         //money
         bindingView["@@origin"]['moneyProp'] = {'amount': 23.50, 'taxPercent': 0.0, 'currency': '$'};
         bindingView['@moneyProp_editable'] = true;
+
+         //hyperlink
+         bindingView["@@origin"]['hyperlinkProp'] = {value: "http://www.google.com"};
+         bindingView['@hyperlinkProp_editable'] = true;
         
         console.log("this.bindingEntity", bindingView);
         return bindingView;

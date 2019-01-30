@@ -26,6 +26,7 @@
         import '/resources/editors/tg-boolean-editor.js';
         import '/resources/editors/tg-entity-editor.js';
         import '/resources/editors/tg-money-editor.js';
+        import '/resources/editors/tg-hyperlink-editor.js';
     </script>
     <style>
         html {
@@ -77,6 +78,10 @@
                     current-state="EDIT" debug prop-title="Money property title" prop-desc="Money property desc"
                     action="null" validation-callback="[[validationCallback]]">
                 </tg-money-editor>
+                <tg-hyperlink-editor entity="[[entity]]" property-name="hyperlinkProp"
+                    current-state="EDIT" debug prop-title="Hyperlink property title" prop-desc="Hyperlink property desc"
+                    action="null" validation-callback="[[validationCallback]]">
+                </tg-hyperlink-editor>
                 <tg-multiline-text-editor entity="[[entity]]" property-name="stringProp"
                     current-state="EDIT" debug prop-title="String property (area) title" prop-desc="String property (area) desc"
                     action="null" validation-callback="[[validationCallback]]" max-length="[[maxTextAreaLength]]">
@@ -91,7 +96,7 @@
     app._whenDesktop = ["padding: 20px", "box-sizing: border-box", "min-height: fit-content", "height: 100%",
             ["justified", ["flex", "margin-right: 20px"], ["flex", "margin-right: 20px"], ["flex"]],
             ["justified", ["flex", "margin-right: 20px"], ["flex", "margin-right: 20px"], ["flex"]],
-            ["justified", ["flex"]],
+            ["justified", ["flex", "margin-right: 20px"], ["flex"]],
             ["justified", "min-height:fit-content", "flex"]
         ];
     app._whenTablet = app._whenDesktop;
