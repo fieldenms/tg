@@ -37,21 +37,21 @@ const additionalTemplate = html`
             padding: 4px;
         }
         paper-spinner {
-            width: 1.5em;
-            height: 1.5em;
-            min-width: 1em;
-            min-height: 1em;
-            max-width: 2em;
-            max-height: 2em;
-            padding: 2px;
+            width: 20px;
+            height: 20px;
+            min-width: 20px;
+            min-height: 20px;
+            max-width: 20px;
+            max-height: 20px;
+            padding: 0px;
             margin-left: 0;
             --paper-spinner-layer-1-color: var(--paper-blue-500);
             --paper-spinner-layer-2-color: var(--paper-blue-500);
             --paper-spinner-layer-3-color: var(--paper-blue-500);
             --paper-spinner-layer-4-color: var(--paper-blue-500);
         }
-        tg-editor {
-             --tg-editor-default-input-layer-display: flex;
+        :host {
+            --tg-editor-default-input-layer-display: flex;
         }
     </style>
     <tg-entity-editor-result id="result"
@@ -770,7 +770,7 @@ const propertyActionTemplate = html`<slot slot="suffix" name="property-action"><
 
         _getTooltip: function (_editingValue, entity, focused) {
             var valueToFormat, fullEntity;
-            if (!focused && entity !== null) {
+            if (!focused && entity) {
                 fullEntity = this.reflector()._getValueFor(entity, "");
                 if (this.reflector().isError(fullEntity.prop(this.propertyName).validationResult())) {
                     valueToFormat = _editingValue;
