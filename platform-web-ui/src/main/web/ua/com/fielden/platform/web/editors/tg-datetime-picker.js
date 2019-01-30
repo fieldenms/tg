@@ -10,7 +10,6 @@ import '/resources/polymer/@polymer/neon-animation/animations/scale-up-animation
 import '/resources/polymer/@polymer/neon-animation/animations/fade-out-animation.js'
 
 import '/resources/components/tg-calendar.js';
-import '/resources/editors/tg-editor.js'
 
 import { IronResizableBehavior } from '/resources/polymer/@polymer/iron-resizable-behavior/iron-resizable-behavior.js';
 import { Polymer } from '/resources/polymer/@polymer/polymer/lib/legacy/polymer-fn.js';
