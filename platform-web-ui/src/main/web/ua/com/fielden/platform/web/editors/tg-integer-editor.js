@@ -37,7 +37,6 @@ const customInputTemplate = html`
             id="input"
             type="number"
             step="1"
-            value="{{value::input}}"
             prevent-invalid-input
             on-change="_onChange"
             on-input="_onInput"

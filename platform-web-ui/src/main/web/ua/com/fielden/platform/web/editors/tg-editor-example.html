@@ -26,6 +26,15 @@
         import '/resources/editors/tg-boolean-editor.js';
         import '/resources/editors/tg-entity-editor.js';
     </script>
+    <style>
+        html {
+            font-size: 10pt;
+        }
+        body {
+            font-family: 'Roboto', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+            font-size: 10pt;
+        }
+    </style>
     <custom-style>
         <style include="iron-flex iron-flex-reverse iron-flex-alignment iron-flex-factors iron-positioning"></style>
     </custom-style>
@@ -56,16 +65,20 @@
                     action="null" validation-callback="[[validationCallback]]" max-length="[[maxTextAreaLength]]">
                     <iron-icon icon="icons:today" slot="property-action" class="property-action"></iron-icon>
                 </tg-multiline-text-editor>
-                <!--<tg-boolean-editor entity="[[entity]]" property-name="booleanProp" current-state="EDIT"
+                <tg-boolean-editor entity="[[entity]]" property-name="booleanProp" current-state="EDIT"
                     debug prop-title="Boolean property title" prop-desc="Boolean property desc" action="null"
                     validation-callback="[[validationCallback]]">
-                </tg-boolean-editor> -->
-                <!-- <tg-datetime-picker entity="[[entity]]" property-name="dateProp"
+                </tg-boolean-editor>
+                <tg-boolean-editor entity="[[entity]]" property-name="booleanProp" current-state="EDIT"
+                    debug prop-title="Boolean property title" prop-desc="Boolean property desc" action="null"
+                    validation-callback="[[validationCallback]]">
+                </tg-boolean-editor>
+                <tg-datetime-picker entity="[[entity]]" property-name="dateProp"
                         current-state="EDIT" debug prop-title="Date property title" prop-desc="Date property desc"
                         action="null" validation-callback="[[validationCallback]]">
                     </tg-datetime-picker>
 
-                    <tg-entity-editor entity="[[entity]]" property-name="entityProp" current-state="EDIT"
+                    <!--<tg-entity-editor entity="[[entity]]" property-name="entityProp" current-state="EDIT"
                         debug prop-title="Entity property title" prop-desc="Entity property desc" action="null"
                         validation-callback="[[validationCallback]]">
                     </tg-entity-editor> -->
@@ -77,9 +90,10 @@
     var app = document.querySelector("dom-bind");
     app._whenDesktop = ["padding: 20px", "box-sizing: border-box", "min-height: fit-content", "height: 100%",
             ["justified", ["flex", "margin-right: 20px"], ["flex", "margin-right: 20px"], ["flex"]],
-            ["justified", "flex", ["flex"]]
+            ["justified", "min-height:fit-content", "flex"],
+            ["justified", ["flex", "margin-right: 20px"], ["flex", "margin-right: 20px"], ["flex"]]
         ];
     app._whenTablet = app._whenDesktop;
-    app._whenMobile = ["padding: 20px",[],[],[],["flex"]];
+    app._whenMobile = app._whenDesktop;/* ["padding: 20px",[],[],[],["flex", "min-height:fit-content"],[],[]]; */
 </script>
 </html>

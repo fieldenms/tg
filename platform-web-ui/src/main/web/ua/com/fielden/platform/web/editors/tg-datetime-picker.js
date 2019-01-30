@@ -16,66 +16,75 @@ import { IronResizableBehavior } from '/resources/polymer/@polymer/iron-resizabl
 import { Polymer } from '/resources/polymer/@polymer/polymer/lib/legacy/polymer-fn.js';
 import { html } from '/resources/polymer/@polymer/polymer/lib/utils/html-tag.js';
 
-import { TgTooltipBehavior } from '/resources/components/tg-tooltip-behavior.js'
-import { TgEditorBehavior } from '/resources/editors/tg-editor-behavior.js'
+import { TgEditorBehavior, createEditorTemplate} from '/resources/editors/tg-editor-behavior.js'
 import { _momentTz, _millisDateRepresentation } from '/resources/reflection/tg-date-utils.js';
 import { tearDownEvent } from '/resources/reflection/tg-polymer-utils.js'
 
-const template = html`
+const pickerStyle = html`
+    <custom-style>
+        <style is="custom-style">
+            .date-picker paper-button {
+                color: var(--paper-light-blue-500);
+                --paper-button-flat-focus-color: var(--paper-light-blue-50);
+            }
+            .date-picker paper-button:hover {
+                background: var(--paper-light-blue-50);
+            }
+            .date-picker > tg-calendar {
+                margin: 0;
+                padding: 0;
+            }
+            .date-picker {
+                line-height: normal;
+                overflow: auto;
+                -webkit-overflow-scrolling: touch;
+            }
+        </style>
+    </custom-style>`;
+pickerStyle.setAttribute('style', 'display: none;');
+document.head.appendChild(pickerStyle.content);
+
+const additionalTemplate = html`
     <style>
         #input[disabled] {
             cursor: text;
         }
-        .picker-button::shadow #ink {
-            width: 1.9rem;
-            height: 1.9rem;
-            top: -0.3rem;
-            left: -0.3rem;
-        }
+       
         .picker-button {
-            width: 1.3rem;
-            height: 1.3rem;
-            padding: 0;
+            display: flex;
+            width: 24px;
+            height: 24px;
+            padding: 4px;
         }
     </style>
     <custom-style>
         <style include="iron-flex iron-flex-reverse iron-flex-alignment iron-flex-factors iron-positioning"></style>
-    </custom-style>
-    <tg-editor
-        id="editorDom"
-        prop-title="[[propTitle]]"
-        _disabled="[[_disabled]]"
-        _editing-value="{{_editingValue}}"
-        action="[[action]]" _error="[[_error]]"
-        _comm-value="[[_commValue]]"
-        _accepted-value="[[_acceptedValue]]"
-        debug="[[debug]]">
+    </custom-style>`;
+const customInputTemplate = html`
+    <iron-input slot="input" bind-value="{{_editingValue}}" class="custom-input date-input">
         <input
             id="input"
-            class="custom-input date-input"
-            is="iron-input"
-            bind-value="{{_editingValue}}"
             on-change="_onChange"
             on-input="_onInput"
             on-keydown="_onKeydown"
             on-tap="_onTap"
             on-mousedown="_onTap"
             disabled$="[[_disabled]]"
-            tooltip-text$="[[_getTooltip(_editingValue)]]"/>
-        <slot name="property-action"></slot>
-        <paper-icon-button class="picker-button custom-icon-buttons" on-tap="_showCalendar" icon="today" disabled$="[[_isCalendarDisabled(_disabled, datePortion)]]" tooltip-text="Show date picker dialog"></paper-icon-buton>
-    </tg-editor>`;
-
-template.setAttribute('strip-whitespace', '');
+            tooltip-text$="[[_getTooltip(_editingValue)]]"
+            autocomplete="off"/>
+    </iron-input>`;
+const customIconButtonsTemplate = html`<paper-icon-button slot="suffix" class="picker-button custom-icon-buttons" on-tap="_showCalendar" icon="today" disabled$="[[_isCalendarDisabled(_disabled, datePortion)]]" tooltip-text="Show date picker dialog"></paper-icon-buton>`;
+const propertyActionTemplate = html`<slot slot="suffix" name="property-action"></slot>`;
 
 Polymer({
-    _template: template,
+    _template: createEditorTemplate(additionalTemplate, html``, customInputTemplate, html``, customIconButtonsTemplate, propertyActionTemplate),
 
     is: 'tg-datetime-picker',
 
-    behaviors: [TgEditorBehavior, IronResizableBehavior, TgTooltipBehavior],
+    behaviors: [TgEditorBehavior, IronResizableBehavior],
 
     ready: function () {
+
         moment.parseTwoDigitYear = function (input) {
             var currYear = moment().year();
             console.debug('parseTwoDigitYear: [', input, '] currYear ', currYear);
@@ -303,7 +312,7 @@ Polymer({
             document.body.appendChild(dialog);
             // let's open the dialog with magical async...
             // this ensures that the dialog is opened after its relocation to body
-            this.async(function () {
+            self.async(function () {
                 dialog.open();
             }.bind(this), 1);
         }.bind(domBind);
@@ -327,7 +336,7 @@ Polymer({
 
         domBind.timeZone = self.timeZone;
 
-        const dialogTemplate = domBind.content.ownerDocument.createElement('template');
+        const dialogTemplate = document.createElement('template');
         dialogTemplate.innerHTML =
             '<paper-dialog id="dateDialog" class="date-picker layout vertical" modal entry-animation="scale-up-animation" exit-animation="fade-out-animation" on-iron-overlay-closed="_closedBind" on-iron-overlay-opened="_dialogOpened">' +
             '<tg-calendar id="datePicker" pick-time time-zone="[[timeZone]]"></tg-calendar>' +
@@ -337,7 +346,7 @@ Polymer({
             '</div>' +
             '</paper-dialog>';
 
-        domBind.content.appendChild(dialogTemplate);
+        domBind.appendChild(dialogTemplate);
         return domBind;
     },
 
