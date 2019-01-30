@@ -1,8 +1,6 @@
 import '/resources/polymer/@polymer/polymer/polymer-legacy.js';
 import '/resources/polymer/@polymer/iron-input/iron-input.js'
 
-import '/resources/editors/tg-editor.js'
-
 import '/app/tg-app-config.js'
 
 import { Polymer } from '/resources/polymer/@polymer/polymer/lib/legacy/polymer-fn.js';
@@ -37,7 +35,6 @@ const customInputTemplate = html`
             id="input"
             type="number"
             step="any"
-            prevent-invalid-input
             bind-value="{{_editingValue}}"
             on-change="_onChange"
             on-input="_onInput"

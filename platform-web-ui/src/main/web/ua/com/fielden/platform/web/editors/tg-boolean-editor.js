@@ -3,8 +3,6 @@ import '/resources/polymer/@polymer/iron-flex-layout/iron-flex-layout.js';
 import '/resources/polymer/@polymer/iron-flex-layout/iron-flex-layout-classes.js';
 import '/resources/polymer/@polymer/paper-checkbox/paper-checkbox.js'
 
-import '/resources/editors/tg-editor.js'
-
 import {Polymer} from '/resources/polymer/@polymer/polymer/lib/legacy/polymer-fn.js';
 import {html} from '/resources/polymer/@polymer/polymer/lib/utils/html-tag.js';
 

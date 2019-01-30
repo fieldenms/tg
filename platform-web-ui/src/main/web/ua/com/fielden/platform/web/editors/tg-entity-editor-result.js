@@ -8,7 +8,6 @@ import '/resources/polymer/@polymer/paper-item/paper-item.js';
 import '/resources/polymer/@polymer/paper-styles/color.js';
 
 import '/resources/components/tg-scrollable-component.js';
-import '/resources/editors/tg-editor.js';
 import '/resources/editors/tg-entity-editor-result.js';
 import '/resources/serialisation/tg-serialiser.js';
 

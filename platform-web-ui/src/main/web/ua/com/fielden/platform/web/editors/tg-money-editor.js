@@ -30,11 +30,11 @@ const additionalTemplate = html`
     </style>
     <tg-app-config id="appConfig"></tg-app-config>`;
 const customInputTemplate = html`
-    <iron-input slot="input" allowed-pattern="[0-9]" bind-value="{{_editingValue}}" class="integer-input custom-input">
+    <iron-input slot="input" bind-value="{{_editingValue}}" class="custom-input money-input">
         <input
             id="input"
             type="number"
-            step="1"
+            step="any"
             on-change="_onChange"
             on-input="_onInput"
             on-keydown="_onKeydown"
@@ -42,8 +42,8 @@ const customInputTemplate = html`
             on-mousedown="_onTap"
             on-focus="_onFocus"
             on-blur="_outFocus"
+            disabled$="[[_disabled}}"
             tooltip-text$="[[_getTooltip(_editingValue)]]"
-            disabled$="[[_disabled]]"
             autocomplete="off"/>
     </iron-input>`;
 const inputLayerTemplate = html`<div slot="input" class="input-layer" tooltip-text$="[[_getTooltip(_editingValue)]]">[[_formatText(_editingValue)]]</div>`;
@@ -52,7 +52,7 @@ const propertyActionTemplate = html`<slot slot="suffix" name="property-action"><
 Polymer({
     _template: createEditorTemplate(additionalTemplate, html``, customInputTemplate, inputLayerTemplate, html``, propertyActionTemplate),
 
-    is: 'tg-integer-editor',
+    is: 'tg-money-editor',
 
     behaviors: [ TgEditorBehavior ],
 
@@ -60,28 +60,36 @@ Polymer({
         this._hasLayer = true;
     },
     
-    /**
-     * Converts the value into string representation (which is used in edititing / comm values).
+   /**
+     * Converts the value into string representation (which is used in editing / comm values).
      */
     convertToString: function (value) {
-        // NOTE: consider the follwing example, of how 'super' method can be invoked.
-        //   Just use concrete name of the 'super' behavior and call the function excplicitly:            		
-        // Polymer.TgBehaviors.TgEditorBehavior.convertToString(value);
-        
-        return value === null ? "" : "" + value;
+        return value === null ? "" : "" + value.amount;
     },
-
+    
     /**
-     * Converts the value from string representation (which is used in edititing / comm values) into concrete type of this editor component (Number).
+     * Converts the value from string representation (which is used in editing / comm values) into concrete type of this editor component (Number).
      */
     convertFromString: function (strValue) {
-        return strValue === '' ? null : parseInt(strValue);
+        if (strValue === '') {
+            return null;
+        }
+        // var convertedNumber = (+strValue);
+        if (isNaN(strValue)) {
+            throw "The entered amount is not a valid number.";
+        }
+        
+        // TODO currency and tax are ignored at this stage, but their support should most likely be implemented at some
+        //      there is a need to have a better more general understanding of the role for currency and tax at the platfrom level
+        var amount = (+strValue) 
+        return {'amount': amount};
     },
     
     _formatText: function(valueToFormat) {
         var value = this.convertFromString(valueToFormat);
         if (value !== null) {
-            return this.reflector().formatNumber(value, this.$.appConfig.locale);
+            const metaProp = this.reflector().getEntityTypeProp(this.reflector()._getValueFor(this.entity, ''), this.propertyName);
+            return this.reflector().formatMoney(value, this.$.appConfig.locale, metaProp && metaProp.scale(), metaProp && metaProp.trailingZeros());
         }
         return '';
     },

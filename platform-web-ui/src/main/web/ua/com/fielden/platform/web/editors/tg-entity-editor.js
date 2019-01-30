@@ -8,26 +8,19 @@ import '/resources/polymer/@polymer/paper-icon-button/paper-icon-button.js';
 import '/resources/polymer/@polymer/paper-spinner/paper-spinner.js';
 import '/resources/polymer/@polymer/paper-styles/color.js';
 
-import '/resources/editors/tg-editor.js';
 import '/resources/editors/tg-entity-editor-result.js'
 import '/resources/serialisation/tg-serialiser.js'
 
 import { Polymer } from '/resources/polymer/@polymer/polymer/lib/legacy/polymer-fn.js';
 import { html } from '/resources/polymer/@polymer/polymer/lib/utils/html-tag.js';
 
-import { TgEditorBehavior } from '/resources/editors/tg-editor-behavior.js';
+import { TgEditorBehavior , createEditorTemplate} from '/resources/editors/tg-editor-behavior.js';
 import { tearDownEvent } from '/resources/reflection/tg-polymer-utils.js'
 
-const template = html`
+const additionalTemplate = html`
     <style>
         #input.upper-case {
             text-transform: uppercase;
-        }
-        .search-button::shadow #ink {
-            width: 1.9rem;
-            height: 1.9rem;
-            top: -0.3rem;
-            left: -0.3rem;
         }
         .input-layer {
             cursor: text;
@@ -38,11 +31,10 @@ const template = html`
             align-items: center;
         }
         .search-button {
-            --iron-icon-height: 1.3rem;
-            --iron-icon-width: 1.3rem;
-            width: 1.3rem;
-            height: 1.3rem;
-            padding: 0;
+            display: flex;
+            width: 24px;
+            height: 24px;
+            padding: 4px;
         }
         paper-spinner {
             width: 1.5em;
@@ -62,20 +54,6 @@ const template = html`
              --tg-editor-default-input-layer-display: flex;
         }
     </style>
-    <tg-editor id="editorDom" prop-title="[[propTitle]]" _disabled="[[_disabled]]" _editing-value="{{_editingValue}}" action="[[action]]" _error="[[_error]]" _comm-value="[[_commValue]]" _accepted-value="[[_acceptedValue]]" _has-layer="[[_hasLayer(_editingValue, entity)]]" _focused="[[focused]]" debug="[[debug]]">
-        <input id="input" class="custom-input entity-input" is="iron-input" type="text" on-blur="_blurEventHandler" bind-value="{{_editingValue}}" on-change="_onChange" on-input="_onInput" on-keydown="_onKeydown" on-tap="_onTap" on-mousedown="_onTap" on-focus="_onFocus" disabled$="[[_disabled]]" tooltip-text$="[[_getTooltip(_editingValue, entity, focused)]]"/>
-        <paper-icon-button id="searcherButton" hidden$="[[searchingOrOpen]]" on-tap="_searchOnTap" icon="search" class="search-button custom-icon-buttons" tabIndex="-1" disabled$="[[_disabled]]" tooltip-text="Show search result"></paper-icon-button>
-        <paper-icon-button hidden$="[[searchingOrClosed]]" on-down="_done" icon="done" class="search-button custom-icon-buttons" tabIndex="-1" disabled$="[[_disabled]]" tooltip-text="Accept the selected entries"></paper-icon-button>
-        <paper-spinner active hidden$="[[!searching]]" class="custom-icon-buttons" tabIndex="-1" alt="searching..." disabled$="[[_disabled]]"></paper-spinner>
-        <div class="input-layer" tooltip-text$="[[_getTooltip(_editingValue, entity, focused)]]">
-            <template is="dom-repeat" items="[[_customPropTitle]]">
-                <span hidden$="[[!item.title]]" style="color:#737373; font-size:0.8rem; padding-right:2px;"><span>[[item.title]]</span>:  </span>
-                <span style$="[[_valueStyle(item, index)]]">[[item.value]]</span>
-            </template>
-            <span style="color:#737373" hidden$="[[!_hasDesc(entity)]]">&nbsp;&ndash;&nbsp;<i>[[_formatDesc(entity)]]</i></span>
-        </div>
-        <slot name="property-action"></slot>
-    </tg-editor>
     <tg-entity-editor-result id="result"
                              tabindex="-1"
                              no-auto-focus
@@ -86,9 +64,37 @@ const template = html`
                              on-tap="_entitySelected"
                              on-dblclick="_done"
                              on-keydown="_onKeydown"></tg-entity-editor-result>
-
     <iron-ajax id="ajaxSearcher" loading="{{searching}}" url="[[_url]]" method="POST" handle-as="json" on-response="_processSearcherResponse" on-error="_processSearcherError"></iron-ajax>
     <tg-serialiser id="serialiser"></tg-serialiser>`;
+const customInputTemplate = html`
+    <iron-input slot="input" bind-value="{{_editingValue}}" class="custom-input entity-input">
+        <input
+            id="input"
+            type="text" 
+            on-blur="_blurEventHandler" 
+            on-change="_onChange" 
+            on-input="_onInput" 
+            on-keydown="_onKeydown" 
+            on-tap="_onTap" 
+            on-mousedown="_onTap" 
+            on-focus="_onFocus" 
+            disabled$="[[_disabled]]" 
+            tooltip-text$="[[_getTooltip(_editingValue, entity, focused)]]"
+            autocomplete="off"/>
+    </iron-input>`;
+const inputLayerTemplate = html`
+    <div class="input-layer" slot="input" tooltip-text$="[[_getTooltip(_editingValue, entity, focused)]]">
+        <template is="dom-repeat" items="[[_customPropTitle]]">
+            <span hidden$="[[!item.title]]" style="color:#737373; font-size:0.8rem; padding-right:2px;"><span>[[item.title]]</span>:  </span>
+            <span style$="[[_valueStyle(item, index)]]">[[item.value]]</span>
+        </template>
+        <span style="color:#737373" hidden$="[[!_hasDesc(entity)]]">&nbsp;&ndash;&nbsp;<i>[[_formatDesc(entity)]]</i></span>
+    </div>`;
+const customIconButtonsTemplate = html`
+    <paper-icon-button id="searcherButton" slot="suffix" hidden$="[[searchingOrOpen]]" on-tap="_searchOnTap" icon="search" class="search-button custom-icon-buttons" tabIndex="-1" disabled$="[[_disabled]]" tooltip-text="Show search result"></paper-icon-button>
+    <paper-icon-button slot="suffix" hidden$="[[searchingOrClosed]]" on-down="_done" icon="done" class="search-button custom-icon-buttons" tabIndex="-1" disabled$="[[_disabled]]" tooltip-text="Accept the selected entries"></paper-icon-button>
+    <paper-spinner slot="suffix" active hidden$="[[!searching]]" class="custom-icon-buttons" tabIndex="-1" alt="searching..." disabled$="[[_disabled]]"></paper-spinner>`;
+const propertyActionTemplate = html`<slot slot="suffix" name="property-action"></slot>`;
 
 (function () {
     /* several helper functions for string manipulation */
@@ -103,7 +109,7 @@ const template = html`
     }
 
     Polymer({
-        _template: template,
+        _template: createEditorTemplate(additionalTemplate, html``, customInputTemplate, inputLayerTemplate, customIconButtonsTemplate, propertyActionTemplate),
 
         is: 'tg-entity-editor',
 
@@ -358,6 +364,10 @@ const template = html`
         },
 
         observers: ["_changeTitle(entity)"],
+
+        created: function () {
+            this._hasLayer = true;
+        },
 
         ready: function () {
             const result = this.$.result;

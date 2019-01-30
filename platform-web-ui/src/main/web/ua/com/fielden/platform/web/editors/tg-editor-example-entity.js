@@ -98,6 +98,10 @@ Polymer({
         // boolean
         bindingView["@@origin"]['booleanProp'] = true;
         bindingView['@booleanProp_editable'] = true;
+
+        //money
+        bindingView["@@origin"]['moneyProp'] = {'amount': 23.50, 'taxPercent': 0.0, 'currency': '$'};
+        bindingView['@moneyProp_editable'] = true;
         
         console.log("this.bindingEntity", bindingView);
         return bindingView;
