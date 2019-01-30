@@ -1,7 +1,17 @@
 package ua.com.fielden.platform.eql.stage1.elements;
 
+import static java.lang.String.format;
+
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
+
+import ua.com.fielden.platform.entity.query.exceptions.EqlStage1ProcessingException;
+import ua.com.fielden.platform.eql.meta.AbstractPropInfo;
+import ua.com.fielden.platform.eql.meta.PropResolution;
 import ua.com.fielden.platform.eql.meta.TransformatorToS2;
 import ua.com.fielden.platform.eql.stage2.elements.EntProp2;
+import ua.com.fielden.platform.eql.stage2.elements.IQrySource2;
 
 public class EntProp1 implements ISingleOperand1<EntProp2> {
     private String name;
@@ -21,9 +31,59 @@ public class EntProp1 implements ISingleOperand1<EntProp2> {
         return name + " " + hashCode();
     }
 
+    @Override
     public EntProp2 transform(final TransformatorToS2 resolver) {
-        return resolver.getTransformedProp(this);
+        //return resolver.getTransformedProp(this);
+        
+        final Iterator<List<IQrySource2>> it = resolver.sources.iterator();
+        if (isExternal()) {
+            it.next();
+        }
+
+        for (; it.hasNext();) {
+            final List<IQrySource2> item = it.next();
+            final PropResolution resolution = resolveProp(item, this);
+            if (resolution != null) {
+                return new EntProp2(resolution.getAliaslessName(), resolution.getSource(), resolution.getType());
+            }
+        }
+
+        throw new EqlStage1ProcessingException(format("Can't resolve property [%s].", getName()));
+        
     }
+    
+    private PropResolution resolvePropAgainstSource(final IQrySource2 source, final EntProp1 entProp) {
+        final AbstractPropInfo<?, ?> asIsResolution = source.entityInfo().resolve(entProp.getName());
+        if (source.alias() != null && entProp.getName().startsWith(source.alias() + ".")) {
+            final String aliasLessPropName = entProp.getName().substring(source.alias().length() + 1);
+            final AbstractPropInfo<?, ?> aliasLessResolution = source.entityInfo().resolve(aliasLessPropName);
+            if (aliasLessResolution != null) {
+                if (asIsResolution == null) {
+                    return new PropResolution(aliasLessPropName, source, aliasLessResolution.javaType());
+                } else {
+                    throw new EqlStage1ProcessingException(format("Ambiguity while resolving prop [%s]. Both [%s] and [%s] are resolvable against the given source.", entProp.getName(), entProp.getName(), aliasLessPropName));
+                }
+            }
+        }
+        return asIsResolution != null ? new PropResolution(entProp.getName(), source, asIsResolution.javaType()) : null;
+    }
+
+    private PropResolution resolveProp(final List<IQrySource2> sources, final EntProp1 entProp) {
+        final List<PropResolution> result = new ArrayList<>();
+        for (final IQrySource2 pair : sources) {
+            final PropResolution resolution = resolvePropAgainstSource(pair, entProp);
+            if (resolution != null) {
+                result.add(resolution);
+            }
+        }
+
+        if (result.size() > 1) {
+            throw new EqlStage1ProcessingException(format("Ambiguity while resolving prop [%s]", entProp.getName()));
+        }
+
+        return result.size() == 1 ? result.get(0) : null;
+    }
+
 
     public String getName() {
         return name;

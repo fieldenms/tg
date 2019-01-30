@@ -8,6 +8,7 @@ import ua.com.fielden.platform.eql.meta.QueryCategory;
 import ua.com.fielden.platform.eql.meta.TransformatorToS2;
 import ua.com.fielden.platform.eql.stage1.builders.EntQueryBlocks;
 import ua.com.fielden.platform.eql.stage2.elements.EntQuery2;
+import ua.com.fielden.platform.eql.stage2.elements.EntQueryBlocks2;
 
 public class EntQuery1 implements ISingleOperand1<EntQuery2>, ITransformableToS2<EntQuery2> {
 
@@ -49,7 +50,16 @@ public class EntQuery1 implements ISingleOperand1<EntQuery2>, ITransformableToS2
 
     @Override
     public EntQuery2 transform(final TransformatorToS2 resolver) {
-        return resolver.getTransformedQuery(this);
+        final TransformatorToS2 localResolver = isSubQuery() ? resolver.produceBasedOn() : resolver.produceNewOne();
+
+        final EntQueryBlocks2 entQueryBlocks = new EntQueryBlocks2(
+                sources.transform(localResolver), 
+                conditions.transform(localResolver), 
+                yields.transform(localResolver), 
+                groups.transform(localResolver), 
+                orderings.transform(localResolver));
+
+        return new EntQuery2(entQueryBlocks, type(), getCategory(), getFetchModel());
     }
 
     public Sources1 getSources() {
