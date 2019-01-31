@@ -553,7 +553,7 @@ const propertyActionTemplate = html`<slot slot="suffix" name="property-action"><
 
                 // focus a new item, if any
                 // this should happen only if new values were loaded after pressing MORE
-                if (document.activeElement == result.loadMoreButton() && indexOfFirstNewValue >= 0) {
+                if (document.activeElement === result && result.shadowRoot.activeElement === result.loadMoreButton() && indexOfFirstNewValue >= 0) {
                     result.focusItemWithIndex(indexOfFirstNewValue);
                 }
             }.bind(this), 100);
@@ -590,11 +590,11 @@ const propertyActionTemplate = html`<slot slot="suffix" name="property-action"><
 
         _resultOpened: function (e) {
             const activeElement = document.activeElement;
-            if (this.$.searcherButton === activeElement ||     /* if autocompleter's button is in focus (this occurs in iOs when tapping on that button) */
-                this.$.input === activeElement          ||     /* or if autocompleter's input is in focus */
-                document.body === activeElement         ||     /* or no other input or button in focus then show found values */
-                "loadMoreButton" === activeElement.id   ||     /* or was the loadMoreButton tapped or */
-                activeElement.classList.contains("tg-item")) { /* or if a list item is an active element */  
+            const shadowActiveElement = this.shadowRoot.activeElement;
+            if (this.$.searcherButton === shadowActiveElement ||     /* if autocompleter's button is in focus (this occurs in iOs when tapping on that button) */
+                this.$.input === shadowActiveElement          ||     /* or if autocompleter's input is in focus */
+                document.body === activeElement               ||     /* or no other input or button in focus then show found values */
+                this.$.result === activeElement               ){     /* or result dialog was in focus*/
                 this.opened = true;
                 this.$.result.highlightMatchedParts();
             } else {
@@ -626,7 +626,7 @@ const propertyActionTemplate = html`<slot slot="suffix" name="property-action"><
 
         _entitySelected: function () {
             // if this this is non-multi mode and the tap happened on a result item then it should be selected
-            if (!this.multi && document.activeElement.classList.contains("tg-item")) {
+            if (!this.multi && this.$.result.shadowRoot.activeElement.classList.contains("tg-item")) {
                 this._done();
             }
         },
