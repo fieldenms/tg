@@ -15,7 +15,7 @@ import { Polymer } from '/resources/polymer/@polymer/polymer/lib/legacy/polymer-
 import { html } from '/resources/polymer/@polymer/polymer/lib/utils/html-tag.js';
 
 import { TgEditorBehavior , createEditorTemplate} from '/resources/editors/tg-editor-behavior.js';
-import { tearDownEvent } from '/resources/reflection/tg-polymer-utils.js'
+import { tearDownEvent, allDefined } from '/resources/reflection/tg-polymer-utils.js'
 
 const additionalTemplate = html`
     <style>
@@ -769,8 +769,11 @@ const propertyActionTemplate = html`<slot slot="suffix" name="property-action"><
         },
 
         _getTooltip: function (_editingValue, entity, focused) {
+            if (!allDefined(arguments)) {
+                return;
+            }
             var valueToFormat, fullEntity;
-            if (!focused && entity) {
+            if (!focused && entity !== null) {
                 fullEntity = this.reflector()._getValueFor(entity, "");
                 if (this.reflector().isError(fullEntity.prop(this.propertyName).validationResult())) {
                     valueToFormat = _editingValue;

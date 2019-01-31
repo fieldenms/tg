@@ -100,18 +100,29 @@ export function isInHierarchy (parent, descendant) {
  * Converts short collectional property with string value
  */
 export function generateShortCollection (entity, property, typeObject) {
-        const collectionValue = entity.get(property);
-        const containerPropertyValue = property.lastIndexOf('.') >= 0 ? entity.get(property.substr(0, property.lastIndexOf('.'))) : entity;
-        const keys = typeObject.compositeKeyNames();
-        return collectionValue.map(function (subEntity) {
-            const key = keys.find(function (key) {
-                if (subEntity.get(key) !== containerPropertyValue) {
-                    return key;
-                }
-            });
-            return subEntity.get(key);
+    const collectionValue = entity.get(property);
+    const containerPropertyValue = property.lastIndexOf('.') >= 0 ? entity.get(property.substr(0, property.lastIndexOf('.'))) : entity;
+    const keys = typeObject.compositeKeyNames();
+    return collectionValue.map(function (subEntity) {
+        const key = keys.find(function (key) {
+            if (subEntity.get(key) !== containerPropertyValue) {
+                return key;
+            }
         });
-    };
+        return subEntity.get(key);
+    });
+};
+
+export function allDefined (args) {
+    const convertedArgs = [...args];
+    for (let i = 0; i < convertedArgs.length; i++) {
+        if (convertedArgs[i] === undefined) {
+            return false;
+        }
+    }
+    return true;
+}
+
 
 /**
  * The class that can be used like an entity for entity grid inspector or any other place.
