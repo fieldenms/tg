@@ -482,17 +482,17 @@ public class WebUiConfig extends AbstractWebUiConfig {
         final IMaster<TgPersistentEntityWithProperties> masterConfig = smb.forEntity(TgPersistentEntityWithProperties.class)
                 // PROPERTY EDITORS
                 .addProp("entityProp.entityProp").asAutocompleter().withProps(pair("desc", true))
-//                    .withAction(
-//                        action(TgDummyAction.class)
-//                        .withContext(context().withMasterEntity().build())
-//                        .postActionSuccess(new PostActionSuccess(""
-//                                + "console.log('ACTION PERFORMED RECEIVING RESULT: ', functionalEntity);\n"
-//                                ))
-//                        .icon("accessibility")
-//                        .withStyle("fill: none; stroke: red; stroke-linejoin: round; stroke-linecap: round;")
-//                        .shortDesc("Dummy")
-//                        .longDesc("Dummy action, simply prints its result into console.")
-//                        .build())
+                    .withAction(
+                        action(TgDummyAction.class)
+                        .withContext(context().withMasterEntity().build())
+                        .postActionSuccess(new PostActionSuccess(""
+                                + "console.log('ACTION PERFORMED RECEIVING RESULT: ', functionalEntity);\n"
+                                ))
+                        .icon("accessibility")
+                        .withStyle("fill: none; stroke: red; stroke-linejoin: round; stroke-linecap: round;")
+                        .shortDesc("Dummy")
+                        .longDesc("Dummy action, simply prints its result into console.")
+                        .build())
                 .also()
                 .addProp("entityProp").asAutocompleter().withMatcher(ContextMatcher.class)
                 .withProps(pair("desc", true),

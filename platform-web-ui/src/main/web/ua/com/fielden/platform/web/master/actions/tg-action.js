@@ -8,6 +8,7 @@ import '/resources/polymer/@polymer/paper-styles/color.js';
 /* FIXME <link rel="import" href="/resources/actions/tg-focus-restoration-behavior.html">
 <link rel="import" href="/resources/master/actions/tg-entity-master-closing-behavior.html">*/
 import { TgTooltipBehavior } from '/resources/components/tg-tooltip-behavior.js';
+import { allDefined } from '/resources/reflection/tg-polymer-utils.js';
 // depends on '/resources/filesaver/FileSaver.min.js' 
 // depends on '/resources/postal/2.0.5/postal.min.js' 
 
@@ -164,13 +165,6 @@ Polymer({
             type: Boolean,
             value: false
         },
-        /////////////////////////////////////////////////////////////////////////////////////////////////////////
-        //////////////////////////////////////////// INNER PROPERTIES ///////////////////////////////////////////
-        /////////////////////////////////////////////////////////////////////////////////////////////////////////
-        // These properties derive from other properties and are considered as 'private' -- need to have '_'   //
-        //   prefix and default values specified in 'value' specificator of the property definition (or,       //
-        //   alternatively, computing function needs to be specified). 									       //
-        /////////////////////////////////////////////////////////////////////////////////////////////////////////
 
         /* Timer to prevent spinner from activating for quick actions. */
         _startSpinnerTimer: {
@@ -178,16 +172,9 @@ Polymer({
             value: null
         },
 
-        /////////////////////////////////////////////////////////////////////////////////////////////////////////
-        //////////////////////////////// INNER PROPERTIES, THAT GOVERN CHILDREN /////////////////////////////////
-        /////////////////////////////////////////////////////////////////////////////////////////////////////////
-        // These properties derive from other properties and are considered as 'private' -- need to have '_'   //
-        //   prefix. 																				           //
-        // Also, these properties are designed to be bound to children element properties -- it is necessary to//
-        //   populate their default values in ready callback (to have these values populated in children)!     //
-        /////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-        /* Indicates wheather the action is in progress. */
+        /**
+         * Indicates wheather the action is in progress.
+         */
         _working: {
             type: Boolean
         },
@@ -254,7 +241,7 @@ Polymer({
      * Returns whether the action is disabled in current moment.
      */
     _isDisabled: function (enabledStates, currentState, _innerEnabled, outerEnabled) {
-        if (enabledStates === undefined || currentState === undefined || _innerEnabled === undefined || outerEnabled === undefined) {
+        if (!allDefined(arguments)) {
             return true;
         }
         // console.log("_isDisabled: enabledStates == ", enabledStates, "currentState == ", currentState, "_innerEnabled == ", _innerEnabled, "outerEnabled == ", outerEnabled);

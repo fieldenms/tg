@@ -220,7 +220,7 @@ public class SimpleMasterBuilder<T extends AbstractEntity<?>> implements ISimple
                     }
                     importPaths.add(el.importPath());
                     editorContainer.add(widget.widget().render()
-                            .add(el.render().clazz("property-action", "property-action-icon")));
+                            .add(el.render().attr("slot", "property-action").clazz("property-action-icon")));
                     primaryActionObjects.append(prefix + el.createActionObject());
                 }
             }
