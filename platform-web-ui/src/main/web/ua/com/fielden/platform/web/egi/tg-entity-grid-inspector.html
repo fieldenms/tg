@@ -964,7 +964,12 @@
                 if (a && b && a.get('id') && b.get('id')) {
                     return a.get('id') === b.get('id');
                 }
-                return this.$.reflector.equalsEx(a, b);
+                try {
+                    return this.$.reflector.equalsEx(a, b);
+                }
+                catch (e) {
+                    return false;
+                }
             },
             
             _findEntity: function (entity, entities) {
