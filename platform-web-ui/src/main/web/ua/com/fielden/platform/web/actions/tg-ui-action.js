@@ -404,7 +404,7 @@ Polymer({
         self._run = (function (event) {
             console.log(this.shortDesc + ": execute");
 
-            self.persistActiveElement();
+            /* FIXME self.persistActiveElement(); */
 
             if (this.preAction) {
                 const result = this.preAction(this)
@@ -533,7 +533,7 @@ Polymer({
      * Override this to restre action's state that might have been stored by preAcion or any other routine.
      */
     restoreActionState: function () {
-        this.restoreActiveElement();
+        /* FIXME this.restoreActiveElement(); */
     },
 
     /**

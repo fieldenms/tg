@@ -659,7 +659,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
                         .longDesc("Export action")
                         .shortcut("ctrl+shift+e")
                         .build())
-
+                .addAction(StandardActions.DELETE_ACTION.mkAction(TgGeneratedEntity.class, (one, two) -> "smth"))
                 .addAction(MasterActions.VALIDATE)
                 .addAction(MasterActions.SAVE)
                     // .shortDesc("SAVE")
