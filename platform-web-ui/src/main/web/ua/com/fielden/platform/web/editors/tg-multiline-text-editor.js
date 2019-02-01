@@ -30,6 +30,9 @@ const additionalTemplate = html`
             @apply --layout-vertical;
             flex: 1 0 auto;    
         }
+        .main-container {
+            @apply --layout-flex;
+        }
     </style>`;
 const customInputTemplate = html`
     <iron-autogrow-textarea
@@ -68,6 +71,7 @@ Polymer({
         const labelAndInputContainer = this.decorator().$.labelAndInputContainer;
         labelAndInputContainer.style.alignSelf = "stretch";
         labelAndInputContainer.style.display = "flex";
+        labelAndInputContainer.style.flexDirection = "column";
         labelAndInputContainer.style.overflow = "auto";
         const prefix = this.decorator().$$(".prefix");
         prefix.style.alignSelf = "flex-start";
