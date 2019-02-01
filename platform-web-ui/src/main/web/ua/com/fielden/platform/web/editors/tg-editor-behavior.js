@@ -23,6 +23,7 @@ export function createEditorTemplate (additionalTemplate, customPrefixAttribute,
                     pointer-events: auto;
                 };
             }
+            .custom-input,
             .custom-input > input {
                 @apply --paper-input-container-shared-input-style;
                 font-weight: 500;
@@ -42,11 +43,12 @@ export function createEditorTemplate (additionalTemplate, customPrefixAttribute,
                 right: 0;
             }
             .main-container {
+                @apply --layout-vertical;
                 position:relative;
             }
             .editor-prefix,
             .editor-suffix {
-                @apply --layout-horizontal
+                @apply --layout-horizontal;
             }
             #decorator {
                 --paper-input-container-input: {

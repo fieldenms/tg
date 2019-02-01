@@ -63,7 +63,7 @@
                     current-state="EDIT" debug prop-title="String property title" prop-desc="String property desc"
                     action="null" validation-callback="[[validationCallback]]">
                 </tg-singleline-text-editor>
-                <tg-boolean-editor entity="[[entity]]" property-name="booleanProp" current-state="EDIT"
+                <!-- <tg-boolean-editor entity="[[entity]]" property-name="booleanProp" current-state="EDIT"
                     debug prop-title="Boolean property title" prop-desc="Boolean property desc" action="null"
                     validation-callback="[[validationCallback]]">
                 </tg-boolean-editor>
@@ -86,7 +86,7 @@
                 <tg-colour-picker entity="[[entity]]" property-name="colourProp"
                     current-state="EDIT" debug prop-title="Colour property title" prop-desc="Colour property desc"
                     action="null" validation-callback="[[validationCallback]]">
-                </tg-colour-picker>
+                </tg-colour-picker> -->
                 <tg-multiline-text-editor entity="[[entity]]" property-name="stringProp"
                     current-state="EDIT" debug prop-title="String property (area) title" prop-desc="String property (area) desc"
                     action="null" validation-callback="[[validationCallback]]" max-length="[[maxTextAreaLength]]">
@@ -100,8 +100,8 @@
     var app = document.querySelector("dom-bind");
     app._whenDesktop = ["padding: 20px", "box-sizing: border-box", "min-height: fit-content", "height: 100%",
             ["justified", ["flex", "margin-right: 20px"], ["flex", "margin-right: 20px"], ["flex"]],
-            ["justified", ["flex", "margin-right: 20px"], ["flex", "margin-right: 20px"], ["flex"]],
-            ["justified", ["flex", "margin-right: 20px"], ["flex", "margin-right: 20px"], ["flex"]],
+            /* ["justified", ["flex", "margin-right: 20px"], ["flex", "margin-right: 20px"], ["flex"]],
+            ["justified", ["flex", "margin-right: 20px"], ["flex", "margin-right: 20px"], ["flex"]], */
             ["justified", "min-height:fit-content", "flex"]
         ];
     app._whenTablet = app._whenDesktop;
