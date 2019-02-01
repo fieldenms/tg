@@ -3,7 +3,7 @@
 
 import { FOCUSABLE_ELEMENTS_SELECTOR, tearDownEvent, isInHierarchy } from '/resources/reflection/tg-polymer-utils.js';
 import { TgEntityBinderBehavior } from '/resources/binding/tg-entity-binder-behavior.js';
-//FIXME <link rel="import" href="/resources/master/actions/tg-entity-master-closing-behavior.html">
+import { createEntityActionThenCallback } from '/resources/master/actions/tg-entity-master-closing-utils.js';
 //FIXME <link rel="import" href="/resources/components/tg-focus-traversal-behavior.html">
 
 const selectEnabledEditor = function (editor) {
@@ -475,7 +475,7 @@ const TgEntityMasterBehaviorImpl = {
                         const saveButton = self.querySelector("tg-action[role='save']");
                         self.save(functionalEntity, continuationProperty)
                             .then(
-                                TgEntityMasterClosingBehavior.createEntityActionThenCallback(self.centreUuid, 'save', postal, null, saveButton ? saveButton.closeAfterExecution : true),
+                                createEntityActionThenCallback(self.centreUuid, 'save', postal, null, saveButton ? saveButton.closeAfterExecution : true),
                                 function (value) { console.log('AJAX PROMISE CATCH', value); }
                             );
                     };

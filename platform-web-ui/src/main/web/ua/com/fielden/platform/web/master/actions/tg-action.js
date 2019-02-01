@@ -5,8 +5,8 @@ import '/resources/polymer/@polymer/paper-button/paper-button.js';
 import '/resources/polymer/@polymer/paper-spinner/paper-spinner.js';
 import '/resources/polymer/@polymer/paper-styles/color.js';
 
-/* FIXME <link rel="import" href="/resources/actions/tg-focus-restoration-behavior.html">
-<link rel="import" href="/resources/master/actions/tg-entity-master-closing-behavior.html">*/
+/* FIXME <link rel="import" href="/resources/actions/tg-focus-restoration-behavior.html"> */
+import { createEntityActionThenCallback } from '/resources/master/actions/tg-entity-master-closing-utils.js';
 import { TgTooltipBehavior } from '/resources/components/tg-tooltip-behavior.js';
 import { allDefined } from '/resources/reflection/tg-polymer-utils.js';
 // depends on '/resources/filesaver/FileSaver.min.js' 
@@ -225,7 +225,7 @@ Polymer({
             if (promise) {
                 promise
                     .then(  // first a handler for successful promise execution
-                        Polymer.TgBehaviors.TgEntityMasterClosingBehavior.createEntityActionThenCallback(self.eventChannel, self.role, postal, self._afterExecution.bind(self), self.closeAfterExecution),
+                        createEntityActionThenCallback(self.eventChannel, self.role, postal, self._afterExecution.bind(self), self.closeAfterExecution),
                         // and in case of some exceptional situation let's provide a trivial catch handler
                         function (value) {
                             console.log('AJAX PROMISE CATCH', value);
