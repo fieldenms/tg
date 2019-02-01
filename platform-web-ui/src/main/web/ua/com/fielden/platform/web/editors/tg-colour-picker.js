@@ -75,14 +75,14 @@ const additionalTemplate = html`
         <style include="iron-flex iron-flex-reverse iron-flex-alignment iron-flex-factors iron-positioning"></style>
     </custom-style>`;
 const customPrefixTemplate = html`
-    <div slot="prefix" class="layout horizontal prefix-custom-attributes" style$="[[_calcDecoratorPartStyle(_disabled)]]">
+    <div class="layout horizontal prefix-custom-attributes" style$="[[_calcDecoratorPartStyle(_disabled)]]">
         <div on-tap="_openColourPicker" class="small-box prefix-custom-attributes" style$="[[_calcColourBoxStyle(_editingValue)]]">
             <iron-icon class$="[[_calcColourSmallIconClass(_editingValue)]]" icon="close"></iron-icon>
         </div>
         <div class="prefix prefix-custom-attributes" style$="[[_calcColourPrefixStyle(_editingValue)]]">#</div>
     </div>`;
 const customInputTemplate = html`
-    <iron-input slot="input" bind-value="{{_editingValue}}" allowed-pattern="[0-9, A-F, a-f]" class="custom-input colour-input">
+    <iron-input bind-value="{{_editingValue}}" allowed-pattern="[0-9, A-F, a-f]" class="custom-input colour-input">
         <input
             id="input"
             style$="[[_calcColourTextStyle(_editingValue)]]"
@@ -96,7 +96,7 @@ const customInputTemplate = html`
             tooltip-text$="[[_getTooltip(_editingValue)]]"
             autocomplete="off"/>
     </iron-input>`;
-const propertyActionTemplate = html`<slot slot="suffix" name="property-action"></slot>`;
+const propertyActionTemplate = html`<slot name="property-action"></slot>`;
 
 const colourLuminance = function (hex, lum) {
     if (hex != null) {

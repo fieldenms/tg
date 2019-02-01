@@ -41,7 +41,13 @@ export function createEditorTemplate (additionalTemplate, customPrefixAttribute,
                 left: 0;
                 right: 0;
             }
-            
+            .main-container {
+                position:relative;
+            }
+            .editor-prefix,
+            .editor-suffix {
+                @apply --layout-horizontal
+            }
             #decorator {
                 --paper-input-container-input: {
                     font-weight: 500;
@@ -91,11 +97,17 @@ export function createEditorTemplate (additionalTemplate, customPrefixAttribute,
         <paper-input-container id="decorator" always-float-label has-layer$="[[_hasLayer]]" invalid="[[_invalid]]" is-invalid$="[[_invalid]]" disabled$="[[_disabled]]" focused$="[[focused]]">
             <!-- flex auto  for textarea! -->
             <label style$="[[_calcLabelStyle(_editorKind, _disabled)]]" disabled$="[[_disabled]]" slot="label">[[propTitle]]</label>
-            ${customPrefixAttribute}
-            ${customInput}
-            ${inputLayer}
-            ${customIconButtons}
-            ${propertyAction}
+            <div clss="editor-prefix" slot="prefix">
+                ${customPrefixAttribute}
+            </div>
+            <div class="main-container" slot="input">
+                ${customInput}
+                ${inputLayer}
+            </div>
+            <div class="editor-suffix" slot="suffix">
+                ${customIconButtons}
+                ${propertyAction}
+            </div>
             <!-- 'autoValidate' attribute for paper-input-container is 'false' -- all validation is performed manually and is bound to paper-input-error, which could be hidden in case of empty '_error' property -->
             <paper-input-error hidden$="[[!_error]]" disabled$="[[_disabled]]" tooltip-text$="[[_error]]" slot="add-on">[[_error]]</paper-input-error>
             <!-- paper-input-char-counter addon is updated whenever 'bindValue' property of child '#input' element is changed -->

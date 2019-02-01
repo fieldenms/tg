@@ -67,7 +67,7 @@ const additionalTemplate = html`
     <iron-ajax id="ajaxSearcher" loading="{{searching}}" url="[[_url]]" method="POST" handle-as="json" on-response="_processSearcherResponse" on-error="_processSearcherError"></iron-ajax>
     <tg-serialiser id="serialiser"></tg-serialiser>`;
 const customInputTemplate = html`
-    <iron-input slot="input" bind-value="{{_editingValue}}" class="custom-input entity-input">
+    <iron-input bind-value="{{_editingValue}}" class="custom-input entity-input">
         <input
             id="input"
             type="text" 
@@ -83,7 +83,7 @@ const customInputTemplate = html`
             autocomplete="off"/>
     </iron-input>`;
 const inputLayerTemplate = html`
-    <div class="input-layer" slot="input" tooltip-text$="[[_getTooltip(_editingValue, entity, focused)]]">
+    <div class="input-layer" tooltip-text$="[[_getTooltip(_editingValue, entity, focused)]]">
         <template is="dom-repeat" items="[[_customPropTitle]]">
             <span hidden$="[[!item.title]]" style="color:#737373; font-size:0.8rem; padding-right:2px;"><span>[[item.title]]</span>:  </span>
             <span style$="[[_valueStyle(item, index)]]">[[item.value]]</span>
@@ -91,10 +91,10 @@ const inputLayerTemplate = html`
         <span style="color:#737373" hidden$="[[!_hasDesc(entity)]]">&nbsp;&ndash;&nbsp;<i>[[_formatDesc(entity)]]</i></span>
     </div>`;
 const customIconButtonsTemplate = html`
-    <paper-icon-button id="searcherButton" slot="suffix" hidden$="[[searchingOrOpen]]" on-tap="_searchOnTap" icon="search" class="search-button custom-icon-buttons" tabIndex="-1" disabled$="[[_disabled]]" tooltip-text="Show search result"></paper-icon-button>
-    <paper-icon-button slot="suffix" hidden$="[[searchingOrClosed]]" on-down="_done" icon="done" class="search-button custom-icon-buttons" tabIndex="-1" disabled$="[[_disabled]]" tooltip-text="Accept the selected entries"></paper-icon-button>
-    <paper-spinner slot="suffix" active hidden$="[[!searching]]" class="custom-icon-buttons" tabIndex="-1" alt="searching..." disabled$="[[_disabled]]"></paper-spinner>`;
-const propertyActionTemplate = html`<slot slot="suffix" name="property-action"></slot>`;
+    <paper-icon-button id="searcherButton" hidden$="[[searchingOrOpen]]" on-tap="_searchOnTap" icon="search" class="search-button custom-icon-buttons" tabIndex="-1" disabled$="[[_disabled]]" tooltip-text="Show search result"></paper-icon-button>
+    <paper-icon-button hidden$="[[searchingOrClosed]]" on-down="_done" icon="done" class="search-button custom-icon-buttons" tabIndex="-1" disabled$="[[_disabled]]" tooltip-text="Accept the selected entries"></paper-icon-button>
+    <paper-spinner active hidden$="[[!searching]]" class="custom-icon-buttons" tabIndex="-1" alt="searching..." disabled$="[[_disabled]]"></paper-spinner>`;
+const propertyActionTemplate = html`<slot name="property-action"></slot>`;
 
 (function () {
     /* several helper functions for string manipulation */
