@@ -16,7 +16,7 @@ const additionalTemplate = html`
         }
     </style>`;
 const customInputTemplate = html`
-    <iron-input slot="input" bind-value="{{_editingValue}}" class="custom-input singleline-text-input">
+    <iron-input bind-value="{{_editingValue}}" class="custom-input singleline-text-input">
         <input
             id="input"
             on-change="_onChange"
@@ -28,7 +28,7 @@ const customInputTemplate = html`
             tooltip-text$="[[_getTooltip(_editingValue)]]"
             autocomplete="off"/>
     </iron-input>`;
-const propertyActionTemplate = html`<slot slot="suffix" name="property-action"></slot>`;
+const propertyActionTemplate = html`<slot name="property-action"></slot>`;
 
 Polymer({
     _template: createEditorTemplate(additionalTemplate, html``, customInputTemplate, html``, html``, propertyActionTemplate),

@@ -34,7 +34,6 @@ const additionalTemplate = html`
 const customInputTemplate = html`
     <iron-autogrow-textarea
             id="input"
-            slot="input"
             class="paper-input-input custom-input multiline-text-input"
             max-rows="[[maxRows]]"
             bind-value="{{_editingValue}}"
@@ -48,7 +47,7 @@ const customInputTemplate = html`
             tooltip-text$="[[_getTooltip(_editingValue)]]"
             autocomplete="off">
         </iron-autogrow-textarea>`;
-const propertyActionTemplate = html`<slot slot="suffix" name="property-action"></slot>`;
+const propertyActionTemplate = html`<slot name="property-action"></slot>`;
 
 Polymer({
     _template: createEditorTemplate(additionalTemplate, html``, customInputTemplate, html``, html``, propertyActionTemplate),

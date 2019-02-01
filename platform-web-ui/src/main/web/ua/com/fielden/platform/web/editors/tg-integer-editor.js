@@ -30,7 +30,7 @@ const additionalTemplate = html`
     </style>
     <tg-app-config id="appConfig"></tg-app-config>`;
 const customInputTemplate = html`
-    <iron-input slot="input" allowed-pattern="[0-9]" bind-value="{{_editingValue}}" class="integer-input custom-input">
+    <iron-input allowed-pattern="[0-9]" bind-value="{{_editingValue}}" class="integer-input custom-input">
         <input
             id="input"
             type="number"
@@ -46,8 +46,8 @@ const customInputTemplate = html`
             disabled$="[[_disabled]]"
             autocomplete="off"/>
     </iron-input>`;
-const inputLayerTemplate = html`<div slot="input" class="input-layer" tooltip-text$="[[_getTooltip(_editingValue)]]">[[_formatText(_editingValue)]]</div>`;
-const propertyActionTemplate = html`<slot slot="suffix" name="property-action"></slot>`;
+const inputLayerTemplate = html`<div class="input-layer" tooltip-text$="[[_getTooltip(_editingValue)]]">[[_formatText(_editingValue)]]</div>`;
+const propertyActionTemplate = html`<slot name="property-action"></slot>`;
 
 Polymer({
     _template: createEditorTemplate(additionalTemplate, html``, customInputTemplate, inputLayerTemplate, html``, propertyActionTemplate),

@@ -30,7 +30,7 @@ const additionalTemplate = html`
     </style>
     <tg-app-config id="appConfig"></tg-app-config>`;
 const customInputTemplate = html`
-    <iron-input slot="input" bind-value="{{_editingValue}}" class="decimal-input custom-input">
+    <iron-input bind-value="{{_editingValue}}" class="decimal-input custom-input">
         <input
             id="input"
             type="number"
@@ -47,8 +47,8 @@ const customInputTemplate = html`
             tooltip-text$="[[_getTooltip(_editingValue)]]"
             autocomplete="off"/>
     </iron-input>`;
-const inputLayerTemplate = html`<div slot="input" class="input-layer" tooltip-text$="[[_getTooltip(_editingValue)]]">[[_formatText(_editingValue)]]</div>`;
-const propertyActionTemplate = html`<slot slot="suffix" name="property-action"></slot>`;
+const inputLayerTemplate = html`<div class="input-layer" tooltip-text$="[[_getTooltip(_editingValue)]]">[[_formatText(_editingValue)]]</div>`;
+const propertyActionTemplate = html`<slot name="property-action"></slot>`;
 
 
 

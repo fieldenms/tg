@@ -45,13 +45,12 @@ const additionalTemplate = html`
 const customInputTemplate = html`
     <paper-checkbox
             id="input"
-            slot="input"
             class="paper-input-input custom-input boolean-input layout horizontal center"
             checked="[[_isBooleanChecked(_editingValue)]]"
             disabled$="[[_disabled]]"
             on-change="_onChange"
             tooltip-text$="[[_getTooltip(_editingValue)]]"><span class="truncate">[[propTitle]]</span></paper-checkbox>`;
-const propertyActionTemplate = html`<slot slot="suffix" name="property-action"></slot>`;
+const propertyActionTemplate = html`<slot name="property-action"></slot>`;
 
 Polymer({
     _template: createEditorTemplate(additionalTemplate, html``, customInputTemplate, html``, html``, propertyActionTemplate),
