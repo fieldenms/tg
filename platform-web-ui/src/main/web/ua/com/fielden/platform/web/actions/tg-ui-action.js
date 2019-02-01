@@ -45,16 +45,8 @@ const template = html`
             --paper-spinner-layer-4-color: var(--paper-blue-500);
         }
 
-        /* FIXME #iActionButton::shadow #ink {
-            width: var(--tg-ui-action-width);
-            height: var(--tg-ui-action-height);
-            top: var(--tg-ui-action-top);
-            left: var(--tg-ui-action-left);
-        } */
-    
         #iActionButton {
-            --iron-icon-height: var(--tg-ui-action-icon-height);
-            --iron-icon-width: var(--tg-ui-action-icon-width);
+            display: flex;
             height: var(--tg-ui-action-icon-button-height);
             width: var(--tg-ui-action-icon-button-width);
             padding: var(--tg-ui-action-icon-button-padding);
