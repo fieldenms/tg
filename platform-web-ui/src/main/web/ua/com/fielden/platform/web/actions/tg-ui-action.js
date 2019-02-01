@@ -45,12 +45,12 @@ const template = html`
             --paper-spinner-layer-4-color: var(--paper-blue-500);
         }
 
-        #iActionButton::shadow #ink { /* FIXME */
+        /* FIXME #iActionButton::shadow #ink {
             width: var(--tg-ui-action-width);
             height: var(--tg-ui-action-height);
             top: var(--tg-ui-action-top);
             left: var(--tg-ui-action-left);
-        }
+        } */
     
         #iActionButton {
             --iron-icon-height: var(--tg-ui-action-icon-height);
@@ -60,7 +60,6 @@ const template = html`
             padding: var(--tg-ui-action-icon-button-padding);
         }
     </style>
-    
     <paper-icon-button id="iActionButton" hidden$="[[!isIconButton]]" icon="[[icon]]" on-tap="_run" disabled$="[[_computeDisabled(isActionInProgress, disabled)]]" tooltip-text$="[[longDesc]]"></paper-icon-button>
     <paper-button id="bActionButton" hidden$="[[isIconButton]]" raised roll="button" on-tap="_run" style="width:100%" disabled$="[[_computeDisabled(isActionInProgress, disabled)]]" tooltip-text$="[[longDesc]]">
         <span>[[shortDesc]]</span>
@@ -119,7 +118,7 @@ const addStyles = function (element, styles) {
 };
 
 Polymer({
-    _teplate: template,
+    _template: template,
 
     is: 'tg-ui-action',
 

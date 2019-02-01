@@ -7,10 +7,8 @@ import '/resources/polymer/@polymer/iron-flex-layout/iron-flex-layout-classes.js
 
 import '/resources/components/tg-scrollable-component.js';
 
-/* FIXME
-<link rel="import" href="/resources/components/tg-confirmation-dialog.html">
-<link rel="import" href="/resources/validation/tg-entity-validator.html">
-*/
+/* FIXME <link rel="import" href="/resources/components/tg-confirmation-dialog.html"> */
+import '/resources/validation/tg-entity-validator.js';
 import '/resources/binding/tg-entity-binder.js';
 
 const template = html`
@@ -38,14 +36,14 @@ const template = html`
         <style include="iron-flex iron-flex-reverse iron-flex-alignment iron-flex-factors iron-positioning"></style>
     </custom-style>
     <tg-entity-binder id="binderDom"></tg-entity-binder>
-    <!--tg-confirmation-dialog id="confirmationDialog"></tg-confirmation-dialog-->
-    <!--tg-entity-validator id="validator"
+    <!-- FIXME tg-confirmation-dialog id="confirmationDialog"></tg-confirmation-dialog -->
+    <tg-entity-validator id="validator"
         entity-type="[[entityType]]"
         post-validated-default="[[_postValidatedDefault]]"
         post-validated-default-error="[[_postValidatedDefaultError]]"
         process-response="[[_processResponse]]"
         process-error="[[_processError]]">
-    </tg-entity-validator-->
+    </tg-entity-validator>
     <iron-ajax id="ajaxRetriever"
         url="[[_url]]"
         method="PUT"

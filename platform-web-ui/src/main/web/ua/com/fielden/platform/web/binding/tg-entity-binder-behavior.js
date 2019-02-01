@@ -599,7 +599,7 @@ export const TgEntityBinderBehavior = {
 
                     // cancel previous validation requests except the last one -- if it exists then retrieval process will be chained on top of that last validation process,
                     // otherwise -- retrieval process will simply start immediately
-                    const lastValidationPromise = null; // FIXME slf._validator().abortValidationExceptLastOne();
+                    const lastValidationPromise = slf._validator().abortValidationExceptLastOne();
                     if (lastValidationPromise !== null) {
                         console.warn("Retrieval is chained to the last validation promise...");
                         return resolve(lastValidationPromise
