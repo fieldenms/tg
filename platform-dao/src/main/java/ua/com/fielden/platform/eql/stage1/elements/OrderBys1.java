@@ -3,7 +3,7 @@ package ua.com.fielden.platform.eql.stage1.elements;
 import java.util.ArrayList;
 import java.util.List;
 
-import ua.com.fielden.platform.eql.meta.TransformatorToS2;
+import ua.com.fielden.platform.eql.meta.PropsResolutionContext;
 import ua.com.fielden.platform.eql.stage2.elements.OrderBy2;
 import ua.com.fielden.platform.eql.stage2.elements.OrderBys2;
 
@@ -14,7 +14,7 @@ public class OrderBys1 {
         this.models = models;
     }
 
-    public OrderBys2 transform(final TransformatorToS2 resolver) {
+    public OrderBys2 transform(final PropsResolutionContext resolver) {
         final List<OrderBy2> transformed = new ArrayList<>();
         for (final OrderBy1 orderBy : models) {
             transformed.add(orderBy.transform(resolver));

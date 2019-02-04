@@ -1,6 +1,6 @@
 package ua.com.fielden.platform.eql.stage1.elements;
 
-import ua.com.fielden.platform.eql.meta.TransformatorToS2;
+import ua.com.fielden.platform.eql.meta.PropsResolutionContext;
 import ua.com.fielden.platform.eql.stage2.elements.SecondOf2;
 import ua.com.fielden.platform.eql.stage2.elements.ISingleOperand2;
 
@@ -11,7 +11,7 @@ public class SecondOf1 extends SingleOperandFunction1<SecondOf2> {
     }
 
     @Override
-    public SecondOf2 transform(final TransformatorToS2 resolver) {
+    public SecondOf2 transform(final PropsResolutionContext resolver) {
         return new SecondOf2(getOperand().transform(resolver));
     }
 }

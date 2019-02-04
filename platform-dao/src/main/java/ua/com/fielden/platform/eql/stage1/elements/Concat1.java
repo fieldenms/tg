@@ -3,7 +3,7 @@ package ua.com.fielden.platform.eql.stage1.elements;
 import java.util.ArrayList;
 import java.util.List;
 
-import ua.com.fielden.platform.eql.meta.TransformatorToS2;
+import ua.com.fielden.platform.eql.meta.PropsResolutionContext;
 import ua.com.fielden.platform.eql.stage2.elements.Concat2;
 import ua.com.fielden.platform.eql.stage2.elements.ISingleOperand2;
 
@@ -16,7 +16,7 @@ public class Concat1 extends AbstractFunction1<Concat2> {
     }
 
     @Override
-    public Concat2 transform(final TransformatorToS2 resolver) {
+    public Concat2 transform(final PropsResolutionContext resolver) {
         final List<ISingleOperand2> transformed = new ArrayList<>();
         for (final ISingleOperand1<? extends ISingleOperand2> operand : operands) {
             transformed.add(operand.transform(resolver));

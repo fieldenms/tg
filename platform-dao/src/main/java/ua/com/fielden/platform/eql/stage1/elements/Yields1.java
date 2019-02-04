@@ -10,7 +10,7 @@ import java.util.SortedMap;
 import java.util.TreeMap;
 
 import ua.com.fielden.platform.entity.query.exceptions.EqlStage1ProcessingException;
-import ua.com.fielden.platform.eql.meta.TransformatorToS2;
+import ua.com.fielden.platform.eql.meta.PropsResolutionContext;
 import ua.com.fielden.platform.eql.stage2.elements.Yield2;
 import ua.com.fielden.platform.eql.stage2.elements.Yields2;
 
@@ -23,7 +23,7 @@ public class Yields1 {
         }
     }
     
-    public Yields2 transform(final TransformatorToS2 resolver) {
+    public Yields2 transform(final PropsResolutionContext resolver) {
         final List<Yield2> yieldsList = new ArrayList<>(); 
         for (final Yield1 yield : yieldsMap.values()) {
             yieldsList.add(yield.transform(resolver));

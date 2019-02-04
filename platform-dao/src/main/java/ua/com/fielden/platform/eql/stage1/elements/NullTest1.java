@@ -1,6 +1,6 @@
 package ua.com.fielden.platform.eql.stage1.elements;
 
-import ua.com.fielden.platform.eql.meta.TransformatorToS2;
+import ua.com.fielden.platform.eql.meta.PropsResolutionContext;
 import ua.com.fielden.platform.eql.stage2.elements.NullTest2;
 import ua.com.fielden.platform.eql.stage2.elements.ISingleOperand2;
 
@@ -19,7 +19,7 @@ public class NullTest1 extends AbstractCondition1<NullTest2> {
     }
 
     @Override
-    public NullTest2 transform(final TransformatorToS2 resolver) {
+    public NullTest2 transform(final PropsResolutionContext resolver) {
         return new NullTest2(operand.transform(resolver), negated);
     }
 

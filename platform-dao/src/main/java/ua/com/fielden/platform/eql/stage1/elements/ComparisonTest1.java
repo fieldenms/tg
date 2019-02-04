@@ -1,7 +1,7 @@
 package ua.com.fielden.platform.eql.stage1.elements;
 
 import ua.com.fielden.platform.entity.query.fluent.enums.ComparisonOperator;
-import ua.com.fielden.platform.eql.meta.TransformatorToS2;
+import ua.com.fielden.platform.eql.meta.PropsResolutionContext;
 import ua.com.fielden.platform.eql.stage2.elements.ComparisonTest2;
 import ua.com.fielden.platform.eql.stage2.elements.ISingleOperand2;
 
@@ -22,7 +22,7 @@ public class ComparisonTest1 extends AbstractCondition1<ComparisonTest2> {
     }
 
     @Override
-    public ComparisonTest2 transform(final TransformatorToS2 resolver) {
+    public ComparisonTest2 transform(final PropsResolutionContext resolver) {
         return new ComparisonTest2(leftOperand.transform(resolver), operator, rightOperand.transform(resolver));
     }
 

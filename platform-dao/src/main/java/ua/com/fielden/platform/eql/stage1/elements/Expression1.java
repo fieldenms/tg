@@ -3,7 +3,7 @@ package ua.com.fielden.platform.eql.stage1.elements;
 import java.util.ArrayList;
 import java.util.List;
 
-import ua.com.fielden.platform.eql.meta.TransformatorToS2;
+import ua.com.fielden.platform.eql.meta.PropsResolutionContext;
 import ua.com.fielden.platform.eql.stage2.elements.CompoundSingleOperand2;
 import ua.com.fielden.platform.eql.stage2.elements.Expression2;
 import ua.com.fielden.platform.eql.stage2.elements.ISingleOperand2;
@@ -21,7 +21,7 @@ public class Expression1 implements ISingleOperand1<Expression2> {
     }
 
     @Override
-    public Expression2 transform(final TransformatorToS2 resolver) {
+    public Expression2 transform(final PropsResolutionContext resolver) {
         final List<CompoundSingleOperand2> transformed = new ArrayList<>();
         for (final CompoundSingleOperand1 item : items) {
             transformed.add(new CompoundSingleOperand2(item.getOperand().transform(resolver), item.getOperator()));

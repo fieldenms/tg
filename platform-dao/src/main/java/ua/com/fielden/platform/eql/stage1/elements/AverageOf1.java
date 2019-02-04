@@ -1,6 +1,6 @@
 package ua.com.fielden.platform.eql.stage1.elements;
 
-import ua.com.fielden.platform.eql.meta.TransformatorToS2;
+import ua.com.fielden.platform.eql.meta.PropsResolutionContext;
 import ua.com.fielden.platform.eql.stage2.elements.AverageOf2;
 import ua.com.fielden.platform.eql.stage2.elements.ISingleOperand2;
 
@@ -13,7 +13,7 @@ public class AverageOf1 extends SingleOperandFunction1<AverageOf2> {
     }
 
     @Override
-    public AverageOf2 transform(final TransformatorToS2 resolver) {
+    public AverageOf2 transform(final PropsResolutionContext resolver) {
         return new AverageOf2(getOperand().transform(resolver), distinct);
     }
 }

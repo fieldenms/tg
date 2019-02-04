@@ -1,6 +1,6 @@
 package ua.com.fielden.platform.eql.stage1.elements;
 
-import ua.com.fielden.platform.eql.meta.TransformatorToS2;
+import ua.com.fielden.platform.eql.meta.PropsResolutionContext;
 import ua.com.fielden.platform.eql.stage2.elements.ExistenceTest2;
 
 public class ExistenceTest1 extends AbstractCondition1<ExistenceTest2> {
@@ -13,7 +13,7 @@ public class ExistenceTest1 extends AbstractCondition1<ExistenceTest2> {
     }
 
     @Override
-    public ExistenceTest2 transform(final TransformatorToS2 resolver) {
+    public ExistenceTest2 transform(final PropsResolutionContext resolver) {
         return new ExistenceTest2(negated, subQuery.transform(resolver));
     }
 

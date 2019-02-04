@@ -6,7 +6,7 @@ import ua.com.fielden.platform.entity.query.DbVersion;
 import ua.com.fielden.platform.entity.query.exceptions.EqlException;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ISingleOperand;
 import ua.com.fielden.platform.entity.query.fluent.enums.DateIntervalUnit;
-import ua.com.fielden.platform.eql.meta.TransformatorToS2;
+import ua.com.fielden.platform.eql.meta.PropsResolutionContext;
 import ua.com.fielden.platform.eql.stage2.elements.IIgnorableAtS2;
 
 public class AddDateInterval extends TwoOperandsFunction1 {
@@ -17,7 +17,7 @@ public class AddDateInterval extends TwoOperandsFunction1 {
     }
 
     @Override
-    public IIgnorableAtS2 transform(TransformatorToS2 resolver) {
+    public IIgnorableAtS2 transform(PropsResolutionContext resolver) {
         // TODO Auto-generated method stub
         return null;
     }

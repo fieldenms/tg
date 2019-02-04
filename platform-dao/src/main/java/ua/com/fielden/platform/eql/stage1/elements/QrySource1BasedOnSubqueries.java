@@ -1,5 +1,7 @@
 package ua.com.fielden.platform.eql.stage1.elements;
 
+import static java.util.stream.Collectors.toList;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -7,7 +9,10 @@ import java.util.Map;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.exceptions.EqlStage1ProcessingException;
+import ua.com.fielden.platform.eql.meta.PropsResolutionContext;
+import ua.com.fielden.platform.eql.stage2.elements.EntQuery2;
 import ua.com.fielden.platform.eql.stage2.elements.QrySource2BasedOnSubqueries;
+import ua.com.fielden.platform.utils.Pair;
 
 public class QrySource1BasedOnSubqueries extends AbstractQrySource1<QrySource2BasedOnSubqueries> {
     private final List<EntQuery1> models = new ArrayList<>();
@@ -99,5 +104,15 @@ public class QrySource1BasedOnSubqueries extends AbstractQrySource1<QrySource2Ba
 
     public List<EntQuery1> getModels() {
         return models;
+    }
+
+    @Override
+    public Pair<QrySource2BasedOnSubqueries, PropsResolutionContext> transform(PropsResolutionContext resolutionContext) {
+        QrySource2BasedOnSubqueries transformedSource = new QrySource2BasedOnSubqueries(extractQueryModels(resolutionContext), alias, resolutionContext.getDomainInfo());
+        return new Pair<>(transformedSource, resolutionContext.cloneWithAddedSource(transformedSource));
+    }
+    
+    private List<EntQuery2> extractQueryModels(PropsResolutionContext resolver) {
+        return models.stream().map(q -> q.transform(resolver.produceNewOne())).collect(toList());
     }
 }

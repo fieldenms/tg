@@ -9,7 +9,7 @@ import java.util.List;
 import ua.com.fielden.platform.entity.query.exceptions.EqlStage1ProcessingException;
 import ua.com.fielden.platform.eql.meta.AbstractPropInfo;
 import ua.com.fielden.platform.eql.meta.PropResolution;
-import ua.com.fielden.platform.eql.meta.TransformatorToS2;
+import ua.com.fielden.platform.eql.meta.PropsResolutionContext;
 import ua.com.fielden.platform.eql.stage2.elements.EntProp2;
 import ua.com.fielden.platform.eql.stage2.elements.IQrySource2;
 
@@ -32,10 +32,9 @@ public class EntProp1 implements ISingleOperand1<EntProp2> {
     }
 
     @Override
-    public EntProp2 transform(final TransformatorToS2 resolver) {
-        //return resolver.getTransformedProp(this);
+    public EntProp2 transform(final PropsResolutionContext resolver) {
         
-        final Iterator<List<IQrySource2>> it = resolver.sources.iterator();
+        final Iterator<List<IQrySource2>> it = resolver.getSources().iterator();
         if (isExternal()) {
             it.next();
         }

@@ -7,7 +7,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import ua.com.fielden.platform.eql.meta.TransformatorToS2;
+import ua.com.fielden.platform.eql.meta.PropsResolutionContext;
 import ua.com.fielden.platform.eql.stage2.elements.Conditions2;
 import ua.com.fielden.platform.eql.stage2.elements.ICondition2;
 
@@ -64,7 +64,7 @@ public class Conditions1 extends AbstractCondition1<Conditions2> {
     }
 
     @Override
-    public Conditions2 transform(final TransformatorToS2 resolver) {
+    public Conditions2 transform(final PropsResolutionContext resolver) {
         final List<List<? extends ICondition2>> transformed = formDnf().stream()
                 .map(andGroup -> andGroup.stream().map(cond -> cond.transform(resolver)).filter(cond -> !cond.ignore()).collect(toList()))
                 .filter(andGroup -> !andGroup.isEmpty())

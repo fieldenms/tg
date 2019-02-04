@@ -1,6 +1,6 @@
 package ua.com.fielden.platform.eql.stage1.elements;
 
-import ua.com.fielden.platform.eql.meta.TransformatorToS2;
+import ua.com.fielden.platform.eql.meta.PropsResolutionContext;
 import ua.com.fielden.platform.eql.stage2.elements.CountOf2;
 import ua.com.fielden.platform.eql.stage2.elements.ISingleOperand2;
 
@@ -13,7 +13,7 @@ public class CountOf1 extends SingleOperandFunction1<CountOf2> {
     }
 
     @Override
-    public CountOf2 transform(final TransformatorToS2 resolver) {
+    public CountOf2 transform(final PropsResolutionContext resolver) {
         return new CountOf2(getOperand().transform(resolver), distinct);
     }
 }

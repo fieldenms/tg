@@ -1,6 +1,6 @@
 package ua.com.fielden.platform.eql.stage1.elements;
 
-import ua.com.fielden.platform.eql.meta.TransformatorToS2;
+import ua.com.fielden.platform.eql.meta.PropsResolutionContext;
 import ua.com.fielden.platform.eql.stage2.elements.IQrySource2;
 
 public abstract class AbstractQrySource1<S2 extends IQrySource2> implements IQrySource1<S2> {
@@ -14,10 +14,10 @@ public abstract class AbstractQrySource1<S2 extends IQrySource2> implements IQry
         this.alias = alias;
     }
 
-    @Override
-    public S2 transform(final TransformatorToS2 resolver) {
-        return (S2) resolver.getTransformedSource(this);
-    }
+//    @Override
+//    public S2 transform(final TransformatorToS2 resolver) {
+//        return (S2) resolver.getTransformedSource(this);
+//    }
     
     @Override
     public String getAlias() {

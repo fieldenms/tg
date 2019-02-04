@@ -2,7 +2,7 @@ package ua.com.fielden.platform.eql.stage1.elements;
 
 import ua.com.fielden.platform.entity.query.fluent.enums.ComparisonOperator;
 import ua.com.fielden.platform.eql.meta.Quantifier;
-import ua.com.fielden.platform.eql.meta.TransformatorToS2;
+import ua.com.fielden.platform.eql.meta.PropsResolutionContext;
 import ua.com.fielden.platform.eql.stage2.elements.QuantifiedTest2;
 import ua.com.fielden.platform.eql.stage2.elements.ISingleOperand2;
 
@@ -20,7 +20,7 @@ public class QuantifiedTest1 extends AbstractCondition1<QuantifiedTest2> {
     }
 
     @Override
-    public QuantifiedTest2 transform(final TransformatorToS2 resolver) {
+    public QuantifiedTest2 transform(final PropsResolutionContext resolver) {
         return new QuantifiedTest2(leftOperand.transform(resolver), operator, quantifier, rightOperand.transform(resolver));
     }
 

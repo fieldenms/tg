@@ -3,7 +3,7 @@ package ua.com.fielden.platform.eql.stage1.elements;
 import java.util.ArrayList;
 import java.util.List;
 
-import ua.com.fielden.platform.eql.meta.TransformatorToS2;
+import ua.com.fielden.platform.eql.meta.PropsResolutionContext;
 import ua.com.fielden.platform.eql.stage2.elements.OperandsBasedSet2;
 import ua.com.fielden.platform.eql.stage2.elements.ISingleOperand2;
 
@@ -16,7 +16,7 @@ public class OperandsBasedSet1 implements ISetOperand1<OperandsBasedSet2> {
     }
 
     @Override
-    public OperandsBasedSet2 transform(final TransformatorToS2 resolver) {
+    public OperandsBasedSet2 transform(final PropsResolutionContext resolver) {
         final List<ISingleOperand2> transformedOperands = new ArrayList<>();
         for (final ISingleOperand1<? extends ISingleOperand2> singleOperand : operands) {
             transformedOperands.add(singleOperand.transform(resolver));

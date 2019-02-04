@@ -1,6 +1,6 @@
 package ua.com.fielden.platform.eql.stage1.elements;
 
-import ua.com.fielden.platform.eql.meta.TransformatorToS2;
+import ua.com.fielden.platform.eql.meta.PropsResolutionContext;
 import ua.com.fielden.platform.eql.stage2.elements.MinuteOf2;
 import ua.com.fielden.platform.eql.stage2.elements.ISingleOperand2;
 
@@ -11,7 +11,7 @@ public class MinuteOf1 extends SingleOperandFunction1<MinuteOf2> {
     }
 
     @Override
-    public MinuteOf2 transform(final TransformatorToS2 resolver) {
+    public MinuteOf2 transform(final PropsResolutionContext resolver) {
         return new MinuteOf2(getOperand().transform(resolver));
     }
 }

@@ -3,10 +3,11 @@ package ua.com.fielden.platform.eql.stage1.elements;
 import java.util.ArrayList;
 import java.util.List;
 
-import ua.com.fielden.platform.eql.meta.TransformatorToS2;
+import ua.com.fielden.platform.eql.meta.PropsResolutionContext;
 import ua.com.fielden.platform.eql.stage2.elements.CompoundSource2;
 import ua.com.fielden.platform.eql.stage2.elements.IQrySource2;
 import ua.com.fielden.platform.eql.stage2.elements.Sources2;
+import ua.com.fielden.platform.utils.Pair;
 
 public class Sources1  {
     private final IQrySource1<? extends IQrySource2> main;
@@ -17,14 +18,18 @@ public class Sources1  {
         this.compounds = compounds;
     }
 
-    public Sources2 transform(final TransformatorToS2 resolver) {
-        final IQrySource2 mainTransformed = main.transform(resolver);    
+    public Pair<Sources2, PropsResolutionContext> transform(final PropsResolutionContext resolutionContext) {
+        final Pair<? extends IQrySource2, PropsResolutionContext> mainTransformationResult = main.transform(resolutionContext);    
                 
         final List<CompoundSource2> transformed = new ArrayList<>();
+        PropsResolutionContext currentResolutionContext = mainTransformationResult.getValue();
+        
         for (final CompoundSource1 compoundSource : compounds) {
-            transformed.add(compoundSource.transform(resolver));
+            Pair<CompoundSource2, PropsResolutionContext> compoundSourceTransformationResult = compoundSource.transform(currentResolutionContext);
+            transformed.add(compoundSourceTransformationResult.getKey());
+            currentResolutionContext = compoundSourceTransformationResult.getValue();
         }
-        return new Sources2(mainTransformed, transformed);
+        return new Pair<>(new Sources2(mainTransformationResult.getKey(), transformed), currentResolutionContext);
     }
 
     @Override

@@ -1,6 +1,6 @@
 package ua.com.fielden.platform.eql.stage1.elements;
 
-import ua.com.fielden.platform.eql.meta.TransformatorToS2;
+import ua.com.fielden.platform.eql.meta.PropsResolutionContext;
 import ua.com.fielden.platform.eql.stage2.elements.QueryBasedSet2;
 
 public class QueryBasedSet1 implements ISetOperand1<QueryBasedSet2> {
@@ -12,7 +12,7 @@ public class QueryBasedSet1 implements ISetOperand1<QueryBasedSet2> {
     }
 
     @Override
-    public QueryBasedSet2 transform(final TransformatorToS2 resolver) {
+    public QueryBasedSet2 transform(final PropsResolutionContext resolver) {
         return new QueryBasedSet2(model.transform(resolver));
     }
 

@@ -1412,6 +1412,6 @@ public class EntityUtils {
      * @return
      */
     public static boolean hasCalcProps(final Class<? extends AbstractEntity<?>> entityType) {
-        return isPersistedEntityType(entityType) && (isCompositeEntity(entityType) || streamRealProperties(entityType, Calculated.class).findFirst().isPresent());
+        return isPersistedEntityType(entityType) && (/*isCompositeEntity(entityType) || */streamRealProperties(entityType, Calculated.class).findFirst().isPresent());
     }
 }

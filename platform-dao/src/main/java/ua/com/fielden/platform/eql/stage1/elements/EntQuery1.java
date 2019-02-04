@@ -5,10 +5,12 @@ import static ua.com.fielden.platform.eql.meta.QueryCategory.SUB_QUERY;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.IRetrievalModel;
 import ua.com.fielden.platform.eql.meta.QueryCategory;
-import ua.com.fielden.platform.eql.meta.TransformatorToS2;
+import ua.com.fielden.platform.eql.meta.PropsResolutionContext;
 import ua.com.fielden.platform.eql.stage1.builders.EntQueryBlocks;
 import ua.com.fielden.platform.eql.stage2.elements.EntQuery2;
 import ua.com.fielden.platform.eql.stage2.elements.EntQueryBlocks2;
+import ua.com.fielden.platform.eql.stage2.elements.Sources2;
+import ua.com.fielden.platform.utils.Pair;
 
 public class EntQuery1 implements ISingleOperand1<EntQuery2>, ITransformableToS2<EntQuery2> {
 
@@ -49,15 +51,15 @@ public class EntQuery1 implements ISingleOperand1<EntQuery2>, ITransformableToS2
     }
 
     @Override
-    public EntQuery2 transform(final TransformatorToS2 resolver) {
-        final TransformatorToS2 localResolver = isSubQuery() ? resolver.produceBasedOn() : resolver.produceNewOne();
-
+    public EntQuery2 transform(final PropsResolutionContext resolver) {
+        final PropsResolutionContext localResolver = isSubQuery() ? resolver.produceBasedOn() : resolver.produceNewOne();
+        Pair<Sources2, PropsResolutionContext> r =  sources.transform(localResolver);
         final EntQueryBlocks2 entQueryBlocks = new EntQueryBlocks2(
-                sources.transform(localResolver), 
-                conditions.transform(localResolver), 
-                yields.transform(localResolver), 
-                groups.transform(localResolver), 
-                orderings.transform(localResolver));
+                r.getKey(), 
+                conditions.transform(r.getValue()), 
+                yields.transform(r.getValue()), 
+                groups.transform(r.getValue()), 
+                orderings.transform(r.getValue()));
 
         return new EntQuery2(entQueryBlocks, type(), getCategory(), getFetchModel());
     }

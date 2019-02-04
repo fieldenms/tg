@@ -1,6 +1,6 @@
 package ua.com.fielden.platform.eql.stage1.elements;
 
-import ua.com.fielden.platform.eql.meta.TransformatorToS2;
+import ua.com.fielden.platform.eql.meta.PropsResolutionContext;
 import ua.com.fielden.platform.eql.stage2.elements.EntValue2;
 
 public class EntValue1 implements ISingleOperand1<EntValue2> {
@@ -22,7 +22,7 @@ public class EntValue1 implements ISingleOperand1<EntValue2> {
     }
 
     @Override
-    public EntValue2 transform(final TransformatorToS2 resolver) {
+    public EntValue2 transform(final PropsResolutionContext resolver) {
         return new EntValue2(getValue(), isIgnoreNull());
     }
 

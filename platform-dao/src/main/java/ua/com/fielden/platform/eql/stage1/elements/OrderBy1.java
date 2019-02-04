@@ -1,6 +1,6 @@
 package ua.com.fielden.platform.eql.stage1.elements;
 
-import ua.com.fielden.platform.eql.meta.TransformatorToS2;
+import ua.com.fielden.platform.eql.meta.PropsResolutionContext;
 import ua.com.fielden.platform.eql.stage2.elements.ISingleOperand2;
 import ua.com.fielden.platform.eql.stage2.elements.OrderBy2;
 
@@ -28,7 +28,7 @@ public class OrderBy1 implements ITransformableToS2<OrderBy2>{
     }
 
     @Override
-    public OrderBy2 transform(TransformatorToS2 resolver) {
+    public OrderBy2 transform(PropsResolutionContext resolver) {
         return new OrderBy2(operand.transform(resolver), desc);
     }
 

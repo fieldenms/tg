@@ -127,7 +127,7 @@ public class BaseEntQueryTCase1 {
         return qb.generateEntQueryAsSourceQuery(qryModel, Optional.empty());
     }
     
-    protected static EntQuery2 entSourceQry(final QueryModel qryModel, final TransformatorToS2 transformator) {
+    protected static EntQuery2 entSourceQry(final QueryModel qryModel, final PropsResolutionContext transformator) {
         return qb.generateEntQueryAsSourceQuery(qryModel, Optional.empty()).transform(transformator);
     }
 
@@ -149,7 +149,7 @@ public class BaseEntQueryTCase1 {
         }
     }
 
-    protected static EntQuery2 entResultQry2(final QueryModel qryModel, final TransformatorToS2 transformator) {
+    protected static EntQuery2 entResultQry2(final QueryModel qryModel, final PropsResolutionContext transformator) {
         if (qryModel instanceof EntityResultQueryModel) {
             return qb.generateEntQueryAsResultQuery(from((EntityResultQueryModel) qryModel).model(), null).transform(transformator);
         } else if (qryModel instanceof AggregatedResultQueryModel) {
