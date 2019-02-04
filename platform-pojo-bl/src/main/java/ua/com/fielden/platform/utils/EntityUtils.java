@@ -1412,6 +1412,7 @@ public class EntityUtils {
      * @return
      */
     public static boolean hasCalcProps(final Class<? extends AbstractEntity<?>> entityType) {
+        // TODO uncomment condition for inclusion of entities with composite keys to those that have calc props
         return isPersistedEntityType(entityType) && (/*isCompositeEntity(entityType) || */streamRealProperties(entityType, Calculated.class).findFirst().isPresent());
     }
 }

@@ -108,7 +108,7 @@ public class QrySource1BasedOnSubqueries extends AbstractQrySource1<QrySource2Ba
 
     @Override
     public Pair<QrySource2BasedOnSubqueries, PropsResolutionContext> transform(PropsResolutionContext resolutionContext) {
-        QrySource2BasedOnSubqueries transformedSource = new QrySource2BasedOnSubqueries(extractQueryModels(resolutionContext), alias, resolutionContext.getDomainInfo());
+        final QrySource2BasedOnSubqueries transformedSource = new QrySource2BasedOnSubqueries(extractQueryModels(resolutionContext), alias, resolutionContext.getDomainInfo());
         return new Pair<>(transformedSource, resolutionContext.cloneWithAddedSource(transformedSource));
     }
     

@@ -10,7 +10,6 @@ public class Sources2 implements IIgnorableAtS2 {
     private final List<CompoundSource2> compounds;
 
     public Sources2(final IQrySource2 main, final List<CompoundSource2> compounds) {
-        super();
         this.main = main;
         this.compounds = compounds;
     }

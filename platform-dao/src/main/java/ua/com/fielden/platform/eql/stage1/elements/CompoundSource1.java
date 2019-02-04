@@ -12,7 +12,6 @@ public class CompoundSource1 implements ITransformableWithSourceToS2<CompoundSou
     private final Conditions1 joinConditions;
 
     public CompoundSource1(final IQrySource1<? extends IQrySource2> source, final JoinType joinType, final Conditions1 joinConditions) {
-        super();
         this.source = source;
         this.joinType = joinType;
         this.joinConditions = joinConditions;
