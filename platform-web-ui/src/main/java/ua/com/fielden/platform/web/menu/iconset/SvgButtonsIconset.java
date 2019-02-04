@@ -9,7 +9,7 @@ public class SvgButtonsIconset {
         final String srcFolder = "src/main/resources/images/collapse-expand";
         final String iconsetId = "tg-icons";
         final int svgWidth = 24;
-        final String outputFile = "src/main/resources/images/tg-icons.html";
+        final String outputFile = "src/main/resources/images/tg-icons.js";
 
         final IronIconsetUtility iconsetUtility = new IronIconsetUtility(iconsetId, svgWidth, srcFolder);
         iconsetUtility.createSvgIconset(outputFile);
