@@ -1,5 +1,7 @@
 package ua.com.fielden.platform.entity;
 
+import static java.util.Optional.ofNullable;
+
 import java.util.Optional;
 import java.util.function.Supplier;
 
@@ -40,7 +42,7 @@ public class AbstractEntityEditActionProducer<T extends EntityEditAction> extend
                         final Class<? extends AbstractEntity<?>> entityTypeForMaster = editedEntity.getEntityTypeAsClass();
                         // current entity is the entity to be represented by master
                         if (currentEntityInstanceOf(entityTypeForMaster) && (chosenPropertyRepresentsThisColumn() || chosenPropertyEmpty())) {
-                            return currEntity.getId();
+                            return ofNullable(currEntity.getId()).orElseThrow(NOTHING_TO_EDIT_EXCEPTION_SUPPLIER);
                         } else if (currentEntityNotEmpty() && chosenPropertyNotEmpty()) {
                             // there are two possible legitimate cases here:
                             // 1. either currentEntity().get(chosenProperty()) is of type for Entity Master and all is good, or
