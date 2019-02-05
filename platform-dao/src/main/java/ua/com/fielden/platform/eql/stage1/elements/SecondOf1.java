@@ -11,7 +11,7 @@ public class SecondOf1 extends SingleOperandFunction1<SecondOf2> {
     }
 
     @Override
-    public SecondOf2 transform(final PropsResolutionContext resolver) {
-        return new SecondOf2(getOperand().transform(resolver));
+    public SecondOf2 transform(final PropsResolutionContext resolutionContext) {
+        return new SecondOf2(getOperand().transform(resolutionContext));
     }
 }

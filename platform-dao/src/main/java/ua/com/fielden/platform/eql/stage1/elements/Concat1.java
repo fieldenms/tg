@@ -16,10 +16,10 @@ public class Concat1 extends AbstractFunction1<Concat2> {
     }
 
     @Override
-    public Concat2 transform(final PropsResolutionContext resolver) {
+    public Concat2 transform(final PropsResolutionContext resolutionContext) {
         final List<ISingleOperand2> transformed = new ArrayList<>();
         for (final ISingleOperand1<? extends ISingleOperand2> operand : operands) {
-            transformed.add(operand.transform(resolver));
+            transformed.add(operand.transform(resolutionContext));
         }
         return new Concat2(transformed);
     }

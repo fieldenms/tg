@@ -11,7 +11,7 @@ public class AbsOf1 extends SingleOperandFunction1<AbsOf2> {
     }
 
     @Override
-    public AbsOf2 transform(final PropsResolutionContext resolver) {
-        return new AbsOf2(getOperand().transform(resolver));
+    public AbsOf2 transform(final PropsResolutionContext resolutionContext) {
+        return new AbsOf2(getOperand().transform(resolutionContext));
     }
 }

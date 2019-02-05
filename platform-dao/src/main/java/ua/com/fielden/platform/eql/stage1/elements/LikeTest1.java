@@ -23,8 +23,8 @@ public class LikeTest1 extends AbstractCondition1<LikeTest2> {
     }
 
     @Override
-    public LikeTest2 transform(final PropsResolutionContext resolver) {
-        return new LikeTest2(leftOperand.transform(resolver), rightOperand.transform(resolver), negated, caseInsensitive);
+    public LikeTest2 transform(final PropsResolutionContext resolutionContext) {
+        return new LikeTest2(leftOperand.transform(resolutionContext), rightOperand.transform(resolutionContext), negated, caseInsensitive);
     }
 
     @Override

@@ -15,10 +15,10 @@ public class GroupBys1 {
         this.groups = groups;
     }
 
-    public GroupBys2 transform(final PropsResolutionContext resolver) {
+    public GroupBys2 transform(final PropsResolutionContext resolutionContext) {
         final List<GroupBy2> transformed = new ArrayList<>();
         for (final GroupBy1 groupBy : groups) {
-            transformed.add(groupBy.transform(resolver));
+            transformed.add(groupBy.transform(resolutionContext));
         }
         return new GroupBys2(transformed);
     }

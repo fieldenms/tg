@@ -22,7 +22,7 @@ public class EntValue1 implements ISingleOperand1<EntValue2> {
     }
 
     @Override
-    public EntValue2 transform(final PropsResolutionContext resolver) {
+    public EntValue2 transform(final PropsResolutionContext resolutionContext) {
         return new EntValue2(getValue(), isIgnoreNull());
     }
 

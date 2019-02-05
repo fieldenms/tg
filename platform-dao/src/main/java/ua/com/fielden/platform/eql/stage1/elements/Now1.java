@@ -9,7 +9,7 @@ public class Now1 extends ZeroOperandFunction1<Now2> {
     }
 
     @Override
-    public Now2 transform(final PropsResolutionContext resolver) {
+    public Now2 transform(final PropsResolutionContext resolutionContext) {
         return new Now2();
     }
 }

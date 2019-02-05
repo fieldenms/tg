@@ -11,7 +11,7 @@ public class IfNull1 extends TwoOperandsFunction1<IfNull2> {
     }
 
     @Override
-    public IfNull2 transform(final PropsResolutionContext resolver) {
-        return new IfNull2(getOperand1().transform(resolver), getOperand2().transform(resolver));
+    public IfNull2 transform(final PropsResolutionContext resolutionContext) {
+        return new IfNull2(getOperand1().transform(resolutionContext), getOperand2().transform(resolutionContext));
     }
 }

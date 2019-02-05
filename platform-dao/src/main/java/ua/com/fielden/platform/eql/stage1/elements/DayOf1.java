@@ -10,7 +10,7 @@ public class DayOf1 extends SingleOperandFunction1<DayOf2> {
     }
 
     @Override
-    public DayOf2 transform(final PropsResolutionContext resolver) {
-        return new DayOf2(getOperand().transform(resolver));
+    public DayOf2 transform(final PropsResolutionContext resolutionContext) {
+        return new DayOf2(getOperand().transform(resolutionContext));
     }
 }

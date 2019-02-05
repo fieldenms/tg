@@ -28,8 +28,8 @@ public class OrderBy1 implements ITransformableToS2<OrderBy2>{
     }
 
     @Override
-    public OrderBy2 transform(PropsResolutionContext resolver) {
-        return new OrderBy2(operand.transform(resolver), desc);
+    public OrderBy2 transform(PropsResolutionContext resolutionContext) {
+        return new OrderBy2(operand.transform(resolutionContext), desc);
     }
 
     public ISingleOperand1<? extends ISingleOperand2> getOperand() {

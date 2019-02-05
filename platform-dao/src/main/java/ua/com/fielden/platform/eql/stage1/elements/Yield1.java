@@ -79,7 +79,7 @@ public class Yield1 implements ITransformableToS2<Yield2>{
 
 
     @Override
-    public Yield2 transform(PropsResolutionContext resolver) {
-        return new Yield2(operand.transform(resolver), alias, requiredHint);
+    public Yield2 transform(PropsResolutionContext resolutionContext) {
+        return new Yield2(operand.transform(resolutionContext), alias, requiredHint);
     }
 }

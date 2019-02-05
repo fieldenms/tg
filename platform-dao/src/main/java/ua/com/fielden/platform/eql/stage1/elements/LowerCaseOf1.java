@@ -10,7 +10,7 @@ public class LowerCaseOf1 extends SingleOperandFunction1<LowerCaseOf2> {
     }
 
     @Override
-    public LowerCaseOf2 transform(final PropsResolutionContext resolver) {
-        return new LowerCaseOf2(getOperand().transform(resolver));
+    public LowerCaseOf2 transform(final PropsResolutionContext resolutionContext) {
+        return new LowerCaseOf2(getOperand().transform(resolutionContext));
     }
 }

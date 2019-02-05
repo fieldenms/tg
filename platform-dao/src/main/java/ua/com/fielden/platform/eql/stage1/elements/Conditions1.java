@@ -64,9 +64,9 @@ public class Conditions1 extends AbstractCondition1<Conditions2> {
     }
 
     @Override
-    public Conditions2 transform(final PropsResolutionContext resolver) {
+    public Conditions2 transform(final PropsResolutionContext resolutionContext) {
         final List<List<? extends ICondition2>> transformed = formDnf().stream()
-                .map(andGroup -> andGroup.stream().map(cond -> cond.transform(resolver)).filter(cond -> !cond.ignore()).collect(toList()))
+                .map(andGroup -> andGroup.stream().map(cond -> cond.transform(resolutionContext)).filter(cond -> !cond.ignore()).collect(toList()))
                 .filter(andGroup -> !andGroup.isEmpty())
                 .collect(toList());
         

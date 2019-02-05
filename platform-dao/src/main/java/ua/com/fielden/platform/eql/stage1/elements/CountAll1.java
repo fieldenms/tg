@@ -10,7 +10,7 @@ public class CountAll1 extends ZeroOperandFunction1<CountAll2> {
     }
 
     @Override
-    public CountAll2 transform(final PropsResolutionContext resolver) {
+    public CountAll2 transform(final PropsResolutionContext resolutionContext) {
         return new CountAll2();
     }
 }

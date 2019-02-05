@@ -11,7 +11,7 @@ public class YearOf1 extends SingleOperandFunction1<YearOf2> {
     }
 
     @Override
-    public YearOf2 transform(final PropsResolutionContext resolver) {
-        return new YearOf2(getOperand().transform(resolver));
+    public YearOf2 transform(final PropsResolutionContext resolutionContext) {
+        return new YearOf2(getOperand().transform(resolutionContext));
     }
 }

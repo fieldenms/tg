@@ -19,8 +19,8 @@ public class NullTest1 extends AbstractCondition1<NullTest2> {
     }
 
     @Override
-    public NullTest2 transform(final PropsResolutionContext resolver) {
-        return new NullTest2(operand.transform(resolver), negated);
+    public NullTest2 transform(final PropsResolutionContext resolutionContext) {
+        return new NullTest2(operand.transform(resolutionContext), negated);
     }
 
     @Override

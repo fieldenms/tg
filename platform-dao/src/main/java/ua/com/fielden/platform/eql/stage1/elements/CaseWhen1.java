@@ -21,12 +21,12 @@ public class CaseWhen1 extends AbstractFunction1<CaseWhen2> {
     }
 
     @Override
-    public CaseWhen2 transform(final PropsResolutionContext resolver) {
+    public CaseWhen2 transform(final PropsResolutionContext resolutionContext) {
         final List<Pair<ICondition2, ISingleOperand2>> transformedWhenThenPairs = new ArrayList<>();
         for (final Pair<ICondition1<? extends ICondition2>, ISingleOperand1<? extends ISingleOperand2>> pair : whenThenPairs) {
-            transformedWhenThenPairs.add(new Pair<ICondition2, ISingleOperand2>(pair.getKey().transform(resolver), pair.getValue().transform(resolver)));
+            transformedWhenThenPairs.add(new Pair<ICondition2, ISingleOperand2>(pair.getKey().transform(resolutionContext), pair.getValue().transform(resolutionContext)));
         }
-        return new CaseWhen2(transformedWhenThenPairs, elseOperand.transform(resolver));
+        return new CaseWhen2(transformedWhenThenPairs, elseOperand.transform(resolutionContext));
     }
 
     @Override

@@ -43,7 +43,7 @@ public class EntQuery1 implements ISingleOperand1<EntQuery2>, ITransformableToS2
    }
     
     public boolean isSubQuery() {
-        return QueryCategory.SUB_QUERY.equals(category);
+        return category == SUB_QUERY;
     }
 
     public Class<? extends AbstractEntity<?>> type() {
@@ -51,15 +51,15 @@ public class EntQuery1 implements ISingleOperand1<EntQuery2>, ITransformableToS2
     }
 
     @Override
-    public EntQuery2 transform(final PropsResolutionContext resolver) {
-        final PropsResolutionContext localResolver = isSubQuery() ? resolver.produceBasedOn() : resolver.produceNewOne();
-        Pair<Sources2, PropsResolutionContext> r =  sources.transform(localResolver);
+    public EntQuery2 transform(final PropsResolutionContext resolutionContext) {
+        final PropsResolutionContext localResolutionContext = isSubQuery() ? resolutionContext.produceBasedOn() : resolutionContext.produceNewOne();
+        final Pair<Sources2, PropsResolutionContext> sourcesTransformationResult =  sources.transform(localResolutionContext);
         final EntQueryBlocks2 entQueryBlocks = new EntQueryBlocks2(
-                r.getKey(), 
-                conditions.transform(r.getValue()), 
-                yields.transform(r.getValue()), 
-                groups.transform(r.getValue()), 
-                orderings.transform(r.getValue()));
+                sourcesTransformationResult.getKey(), 
+                conditions.transform(sourcesTransformationResult.getValue()), 
+                yields.transform(sourcesTransformationResult.getValue()), 
+                groups.transform(sourcesTransformationResult.getValue()), 
+                orderings.transform(sourcesTransformationResult.getValue()));
 
         return new EntQuery2(entQueryBlocks, type(), getCategory(), getFetchModel());
     }

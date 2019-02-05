@@ -13,7 +13,7 @@ public class AverageOf1 extends SingleOperandFunction1<AverageOf2> {
     }
 
     @Override
-    public AverageOf2 transform(final PropsResolutionContext resolver) {
-        return new AverageOf2(getOperand().transform(resolver), distinct);
+    public AverageOf2 transform(final PropsResolutionContext resolutionContext) {
+        return new AverageOf2(getOperand().transform(resolutionContext), distinct);
     }
 }

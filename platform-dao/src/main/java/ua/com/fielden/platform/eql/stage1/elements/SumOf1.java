@@ -13,7 +13,7 @@ public class SumOf1 extends SingleOperandFunction1<SumOf2> {
     }
 
     @Override
-    public SumOf2 transform(final PropsResolutionContext resolver) {
-        return new SumOf2(getOperand().transform(resolver), distinct);
+    public SumOf2 transform(final PropsResolutionContext resolutionContext) {
+        return new SumOf2(getOperand().transform(resolutionContext), distinct);
     }
 }

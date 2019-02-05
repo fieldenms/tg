@@ -11,7 +11,7 @@ public class RoundTo1 extends TwoOperandsFunction1<RoundTo2> {
     }
 
     @Override
-    public RoundTo2 transform(final PropsResolutionContext resolver) {
-        return new RoundTo2(getOperand1().transform(resolver), getOperand2().transform(resolver));
+    public RoundTo2 transform(final PropsResolutionContext resolutionContext) {
+        return new RoundTo2(getOperand1().transform(resolutionContext), getOperand2().transform(resolutionContext));
     }
 }

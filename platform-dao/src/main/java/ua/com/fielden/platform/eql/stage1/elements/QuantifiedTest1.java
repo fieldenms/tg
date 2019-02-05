@@ -20,8 +20,8 @@ public class QuantifiedTest1 extends AbstractCondition1<QuantifiedTest2> {
     }
 
     @Override
-    public QuantifiedTest2 transform(final PropsResolutionContext resolver) {
-        return new QuantifiedTest2(leftOperand.transform(resolver), operator, quantifier, rightOperand.transform(resolver));
+    public QuantifiedTest2 transform(final PropsResolutionContext resolutionContext) {
+        return new QuantifiedTest2(leftOperand.transform(resolutionContext), operator, quantifier, rightOperand.transform(resolutionContext));
     }
 
     @Override

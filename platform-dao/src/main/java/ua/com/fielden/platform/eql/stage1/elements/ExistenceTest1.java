@@ -13,8 +13,8 @@ public class ExistenceTest1 extends AbstractCondition1<ExistenceTest2> {
     }
 
     @Override
-    public ExistenceTest2 transform(final PropsResolutionContext resolver) {
-        return new ExistenceTest2(negated, subQuery.transform(resolver));
+    public ExistenceTest2 transform(final PropsResolutionContext resolutionContext) {
+        return new ExistenceTest2(negated, subQuery.transform(resolutionContext));
     }
 
     @Override

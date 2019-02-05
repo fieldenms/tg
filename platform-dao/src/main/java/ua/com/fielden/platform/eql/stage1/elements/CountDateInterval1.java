@@ -15,7 +15,7 @@ public class CountDateInterval1 extends TwoOperandsFunction1<CountDateInterval2>
     }
 
     @Override
-    public CountDateInterval2 transform(final PropsResolutionContext resolver) {
-        return new CountDateInterval2(intervalUnit, getOperand1().transform(resolver), getOperand2().transform(resolver));
+    public CountDateInterval2 transform(final PropsResolutionContext resolutionContext) {
+        return new CountDateInterval2(intervalUnit, getOperand1().transform(resolutionContext), getOperand2().transform(resolutionContext));
     }
 }

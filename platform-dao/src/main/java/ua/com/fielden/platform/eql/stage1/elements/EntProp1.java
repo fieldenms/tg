@@ -32,9 +32,9 @@ public class EntProp1 implements ISingleOperand1<EntProp2> {
     }
 
     @Override
-    public EntProp2 transform(final PropsResolutionContext resolver) {
+    public EntProp2 transform(final PropsResolutionContext resolutionContext) {
         
-        final Iterator<List<IQrySource2>> it = resolver.getSources().iterator();
+        final Iterator<List<IQrySource2>> it = resolutionContext.getSources().iterator();
         if (isExternal()) {
             it.next();
         }

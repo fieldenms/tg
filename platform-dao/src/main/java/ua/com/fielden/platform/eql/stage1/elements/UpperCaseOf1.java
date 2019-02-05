@@ -10,7 +10,7 @@ public class UpperCaseOf1 extends SingleOperandFunction1<UpperCaseOf2> {
     }
 
     @Override
-    public UpperCaseOf2 transform(final PropsResolutionContext resolver) {
-        return new UpperCaseOf2(getOperand().transform(resolver));
+    public UpperCaseOf2 transform(final PropsResolutionContext resolutionContext) {
+        return new UpperCaseOf2(getOperand().transform(resolutionContext));
     }
 }

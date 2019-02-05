@@ -16,10 +16,10 @@ public class OperandsBasedSet1 implements ISetOperand1<OperandsBasedSet2> {
     }
 
     @Override
-    public OperandsBasedSet2 transform(final PropsResolutionContext resolver) {
+    public OperandsBasedSet2 transform(final PropsResolutionContext resolutionContext) {
         final List<ISingleOperand2> transformedOperands = new ArrayList<>();
         for (final ISingleOperand1<? extends ISingleOperand2> singleOperand : operands) {
-            transformedOperands.add(singleOperand.transform(resolver));
+            transformedOperands.add(singleOperand.transform(resolutionContext));
         }
 
         return new OperandsBasedSet2(transformedOperands);

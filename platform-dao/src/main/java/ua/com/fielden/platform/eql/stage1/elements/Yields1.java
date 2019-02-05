@@ -23,10 +23,10 @@ public class Yields1 {
         }
     }
     
-    public Yields2 transform(final PropsResolutionContext resolver) {
+    public Yields2 transform(final PropsResolutionContext resolutionContext) {
         final List<Yield2> yieldsList = new ArrayList<>(); 
         for (final Yield1 yield : yieldsMap.values()) {
-            yieldsList.add(yield.transform(resolver));
+            yieldsList.add(yield.transform(resolutionContext));
         }
         return new Yields2(yieldsList);
     }

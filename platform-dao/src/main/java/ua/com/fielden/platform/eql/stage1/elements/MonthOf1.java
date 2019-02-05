@@ -11,7 +11,7 @@ public class MonthOf1 extends SingleOperandFunction1<MonthOf2> {
     }
 
     @Override
-    public MonthOf2 transform(final PropsResolutionContext resolver) {
-        return new MonthOf2(getOperand().transform(resolver));
+    public MonthOf2 transform(final PropsResolutionContext resolutionContext) {
+        return new MonthOf2(getOperand().transform(resolutionContext));
     }
 }

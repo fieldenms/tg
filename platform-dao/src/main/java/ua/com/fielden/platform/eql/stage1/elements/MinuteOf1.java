@@ -11,7 +11,7 @@ public class MinuteOf1 extends SingleOperandFunction1<MinuteOf2> {
     }
 
     @Override
-    public MinuteOf2 transform(final PropsResolutionContext resolver) {
-        return new MinuteOf2(getOperand().transform(resolver));
+    public MinuteOf2 transform(final PropsResolutionContext resolutionContext) {
+        return new MinuteOf2(getOperand().transform(resolutionContext));
     }
 }

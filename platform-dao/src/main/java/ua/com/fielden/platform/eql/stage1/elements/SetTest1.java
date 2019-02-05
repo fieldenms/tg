@@ -17,8 +17,8 @@ public class SetTest1 extends AbstractCondition1<SetTest2> {
     }
 
     @Override
-    public SetTest2 transform(final PropsResolutionContext resolver) {
-        return new SetTest2(leftOperand.transform(resolver), negated, rightOperand.transform(resolver));
+    public SetTest2 transform(final PropsResolutionContext resolutionContext) {
+        return new SetTest2(leftOperand.transform(resolutionContext), negated, rightOperand.transform(resolutionContext));
     }
 
     @Override

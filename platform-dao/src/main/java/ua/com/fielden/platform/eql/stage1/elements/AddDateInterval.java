@@ -17,7 +17,7 @@ public class AddDateInterval extends TwoOperandsFunction1 {
     }
 
     @Override
-    public IIgnorableAtS2 transform(PropsResolutionContext resolver) {
+    public IIgnorableAtS2 transform(PropsResolutionContext resolutionContext) {
         // TODO Auto-generated method stub
         return null;
     }

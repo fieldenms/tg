@@ -13,7 +13,7 @@ public class CountOf1 extends SingleOperandFunction1<CountOf2> {
     }
 
     @Override
-    public CountOf2 transform(final PropsResolutionContext resolver) {
-        return new CountOf2(getOperand().transform(resolver), distinct);
+    public CountOf2 transform(final PropsResolutionContext resolutionContext) {
+        return new CountOf2(getOperand().transform(resolutionContext), distinct);
     }
 }

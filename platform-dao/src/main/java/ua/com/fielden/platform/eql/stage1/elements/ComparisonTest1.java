@@ -22,8 +22,8 @@ public class ComparisonTest1 extends AbstractCondition1<ComparisonTest2> {
     }
 
     @Override
-    public ComparisonTest2 transform(final PropsResolutionContext resolver) {
-        return new ComparisonTest2(leftOperand.transform(resolver), operator, rightOperand.transform(resolver));
+    public ComparisonTest2 transform(final PropsResolutionContext resolutionContext) {
+        return new ComparisonTest2(leftOperand.transform(resolutionContext), operator, rightOperand.transform(resolutionContext));
     }
 
     @Override

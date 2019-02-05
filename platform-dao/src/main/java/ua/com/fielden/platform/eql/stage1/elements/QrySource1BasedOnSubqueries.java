@@ -112,7 +112,7 @@ public class QrySource1BasedOnSubqueries extends AbstractQrySource1<QrySource2Ba
         return new Pair<>(transformedSource, resolutionContext.cloneWithAddedSource(transformedSource));
     }
     
-    private List<EntQuery2> extractQueryModels(PropsResolutionContext resolver) {
-        return models.stream().map(q -> q.transform(resolver.produceNewOne())).collect(toList());
+    private List<EntQuery2> extractQueryModels(PropsResolutionContext resolutionContext) {
+        return models.stream().map(q -> q.transform(resolutionContext.produceNewOne())).collect(toList());
     }
 }

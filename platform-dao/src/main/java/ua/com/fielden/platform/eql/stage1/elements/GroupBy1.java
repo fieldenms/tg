@@ -12,8 +12,8 @@ public class GroupBy1 implements ITransformableToS2<GroupBy2>{
     }
 
     @Override
-    public GroupBy2 transform(PropsResolutionContext resolver) {
-        return new GroupBy2(operand.transform(resolver));
+    public GroupBy2 transform(PropsResolutionContext resolutionContext) {
+        return new GroupBy2(operand.transform(resolutionContext));
     }
 
     public ISingleOperand1<? extends ISingleOperand2> getOperand() {

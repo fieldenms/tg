@@ -11,7 +11,7 @@ public class HourOf1 extends SingleOperandFunction1<HourOf2> {
     }
 
     @Override
-    public HourOf2 transform(final PropsResolutionContext resolver) {
-        return new HourOf2(getOperand().transform(resolver));
+    public HourOf2 transform(final PropsResolutionContext resolutionContext) {
+        return new HourOf2(getOperand().transform(resolutionContext));
     }
 }

@@ -11,7 +11,7 @@ public class DateOf1 extends SingleOperandFunction1<DateOf2> {
     }
 
     @Override
-    public DateOf2 transform(final PropsResolutionContext resolver) {
-        return new DateOf2(getOperand().transform(resolver));
+    public DateOf2 transform(final PropsResolutionContext resolutionContext) {
+        return new DateOf2(getOperand().transform(resolutionContext));
     }
 }
