@@ -1007,7 +1007,9 @@
             _handleActionNavigationInvoked: function (e) {
                 this._dataLoaded = false;
                 if (this._errorMsg) {
-                    this._resetState();
+                    this._errorMsg = null;
+                    this._blockingPaneCounter = 0;
+                    //this._resetState();
                 }
                 if (e.detail && e.detail.spinner) {
                     this._displaySpinnerOn(this.$[e.detail.spinner]);
@@ -1049,7 +1051,7 @@
             },
             
             _updateDialogPosition: function (prefDim, _minimised, _maximised) {
-                if (!_minimised && !_maximised ) {
+                if (!_minimised && !_maximised && prefDim) {
                     const width = (typeof prefDim.width === 'function' ? prefDim.width() : prefDim.width) + prefDim.widthUnit;
                     const isWidthPercentage = width.endsWith('%');
                     const widthNum = parseFloat(width);
@@ -1305,7 +1307,7 @@
                 this.$.elementLoader.style.removeProperty("display");
                 if (withClasses) {
                     Polymer.dom(this.$.loadingPanel).classList.remove("visible");
-                    Polymer.dom(this.$.dialogLoader).classList.remove("hdden");
+                    Polymer.dom(this.$.dialogLoader).classList.remove("hidden");
                 }
                 this._resetSpinner();
             },

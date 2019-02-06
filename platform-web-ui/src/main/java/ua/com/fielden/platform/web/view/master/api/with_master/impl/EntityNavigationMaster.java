@@ -37,8 +37,13 @@ public class EntityNavigationMaster extends EntityManipulationMaster<EntityNavig
               + "                     this._prevCurrBindingEntity = e.detail.value;\n"
               + "                 }\n"
               + "             }.bind(self);\n"
+              + "             self._handleBindingEntityRetrievedError = function (e) {\n"
+              + "                 this.fire('tg-master-navigation-error');\n"
+              + "                 this._handleBindingEntityAppeared(e);\n"
+              + "             }.bind(self);\n"
               + "             self.addEventListener('binding-entity-appeared', self._handleBindingEntityAppeared);\n"
-              + "             self.addEventListener('_curr-binding-entity-changed', self._handleBindingEntityChanged);\n");
+              + "             self.addEventListener('_curr-binding-entity-changed', self._handleBindingEntityChanged);\n"
+              + "             self.$.loader.addEventListener('binding-entity-retrieved-error', self._handleBindingEntityRetrievedError);\n");
       this.renderable = () -> new InnerTextElement(masterTemplate);
     }
 
