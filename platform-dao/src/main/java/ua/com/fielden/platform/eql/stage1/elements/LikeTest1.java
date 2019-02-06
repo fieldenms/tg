@@ -4,7 +4,7 @@ import ua.com.fielden.platform.eql.meta.PropsResolutionContext;
 import ua.com.fielden.platform.eql.stage2.elements.LikeTest2;
 import ua.com.fielden.platform.eql.stage2.elements.ISingleOperand2;
 
-public class LikeTest1 extends AbstractCondition1<LikeTest2> {
+public class LikeTest1 implements ICondition1<LikeTest2> {
     private final ISingleOperand1<? extends ISingleOperand2> leftOperand;
     private final ISingleOperand1<? extends ISingleOperand2> rightOperand;
     private final boolean negated;

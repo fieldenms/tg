@@ -11,7 +11,7 @@ import ua.com.fielden.platform.eql.meta.PropsResolutionContext;
 import ua.com.fielden.platform.eql.stage2.elements.Conditions2;
 import ua.com.fielden.platform.eql.stage2.elements.ICondition2;
 
-public class Conditions1 extends AbstractCondition1<Conditions2> {
+public class Conditions1 implements ICondition1<Conditions2> {
     private final boolean negated;
     private final ICondition1<? extends ICondition2> firstCondition;
     private final List<CompoundCondition1> otherConditions = new ArrayList<>();

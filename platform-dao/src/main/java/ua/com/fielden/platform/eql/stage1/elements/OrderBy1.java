@@ -4,7 +4,7 @@ import ua.com.fielden.platform.eql.meta.PropsResolutionContext;
 import ua.com.fielden.platform.eql.stage2.elements.ISingleOperand2;
 import ua.com.fielden.platform.eql.stage2.elements.OrderBy2;
 
-public class OrderBy1 implements ITransformableToS2<OrderBy2>{
+public class OrderBy1 {
     private final ISingleOperand1<? extends ISingleOperand2> operand;
     private final String yieldName;
     private Yield1 yield;
@@ -27,7 +27,6 @@ public class OrderBy1 implements ITransformableToS2<OrderBy2>{
         this.desc = desc;
     }
 
-    @Override
     public OrderBy2 transform(PropsResolutionContext resolutionContext) {
         return new OrderBy2(operand.transform(resolutionContext), desc);
     }

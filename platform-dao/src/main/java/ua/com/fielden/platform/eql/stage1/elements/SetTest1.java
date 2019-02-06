@@ -5,7 +5,7 @@ import ua.com.fielden.platform.eql.stage2.elements.SetTest2;
 import ua.com.fielden.platform.eql.stage2.elements.ISetOperand2;
 import ua.com.fielden.platform.eql.stage2.elements.ISingleOperand2;
 
-public class SetTest1 extends AbstractCondition1<SetTest2> {
+public class SetTest1 implements ICondition1<SetTest2> {
     private final ISingleOperand1<? extends ISingleOperand2> leftOperand;
     private final ISetOperand1<? extends ISetOperand2> rightOperand;
     private final boolean negated;

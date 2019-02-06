@@ -5,7 +5,7 @@ import ua.com.fielden.platform.eql.meta.PropsResolutionContext;
 import ua.com.fielden.platform.eql.stage2.elements.ComparisonTest2;
 import ua.com.fielden.platform.eql.stage2.elements.ISingleOperand2;
 
-public class ComparisonTest1 extends AbstractCondition1<ComparisonTest2> {
+public class ComparisonTest1 implements ICondition1<ComparisonTest2> {
     private final ISingleOperand1<? extends ISingleOperand2> leftOperand;
     private final ISingleOperand1<? extends ISingleOperand2> rightOperand;
     private final ComparisonOperator operator;

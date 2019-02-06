@@ -4,14 +4,13 @@ import ua.com.fielden.platform.eql.meta.PropsResolutionContext;
 import ua.com.fielden.platform.eql.stage2.elements.GroupBy2;
 import ua.com.fielden.platform.eql.stage2.elements.ISingleOperand2;
 
-public class GroupBy1 implements ITransformableToS2<GroupBy2>{
+public class GroupBy1 {
     private final ISingleOperand1<? extends ISingleOperand2> operand;
 
     public GroupBy1(final ISingleOperand1<? extends ISingleOperand2> operand) {
         this.operand = operand;
     }
 
-    @Override
     public GroupBy2 transform(PropsResolutionContext resolutionContext) {
         return new GroupBy2(operand.transform(resolutionContext));
     }

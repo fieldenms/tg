@@ -4,7 +4,7 @@ import ua.com.fielden.platform.eql.meta.PropsResolutionContext;
 import ua.com.fielden.platform.eql.stage2.elements.NullTest2;
 import ua.com.fielden.platform.eql.stage2.elements.ISingleOperand2;
 
-public class NullTest1 extends AbstractCondition1<NullTest2> {
+public class NullTest1 implements ICondition1<NullTest2> {
     private final ISingleOperand1<? extends ISingleOperand2> operand;
     private final boolean negated;
 

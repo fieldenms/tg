@@ -3,7 +3,7 @@ package ua.com.fielden.platform.eql.stage1.elements;
 import ua.com.fielden.platform.eql.meta.PropsResolutionContext;
 import ua.com.fielden.platform.eql.stage2.elements.ExistenceTest2;
 
-public class ExistenceTest1 extends AbstractCondition1<ExistenceTest2> {
+public class ExistenceTest1 implements ICondition1<ExistenceTest2> {
     private final boolean negated;
     private final EntQuery1 subQuery;
 

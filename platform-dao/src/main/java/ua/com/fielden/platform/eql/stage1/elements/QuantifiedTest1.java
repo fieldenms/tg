@@ -6,7 +6,7 @@ import ua.com.fielden.platform.eql.meta.PropsResolutionContext;
 import ua.com.fielden.platform.eql.stage2.elements.QuantifiedTest2;
 import ua.com.fielden.platform.eql.stage2.elements.ISingleOperand2;
 
-public class QuantifiedTest1 extends AbstractCondition1<QuantifiedTest2> {
+public class QuantifiedTest1 implements ICondition1<QuantifiedTest2> {
     private final ISingleOperand1<? extends ISingleOperand2> leftOperand;
     private final EntQuery1 rightOperand;
     private final Quantifier quantifier;

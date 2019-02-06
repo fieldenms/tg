@@ -12,7 +12,7 @@ import ua.com.fielden.platform.eql.stage2.elements.EntQueryBlocks2;
 import ua.com.fielden.platform.eql.stage2.elements.Sources2;
 import ua.com.fielden.platform.utils.Pair;
 
-public class EntQuery1 implements ISingleOperand1<EntQuery2>, ITransformableToS2<EntQuery2> {
+public class EntQuery1 implements ISingleOperand1<EntQuery2> {
 
     private final Sources1 sources;
     private final Conditions1 conditions;
