@@ -1023,6 +1023,7 @@
                 //This condition allows to handle only errors happened when blocking layer was visible.
                 if (this._blockingPaneCounter > 0) {
                     this._resetAnimationBlockingSpinnerState();
+                    this._masterVisibilityChanges = false;
                     this._errorMsg = e.detail;
                 }
             },
