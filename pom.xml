@@ -98,32 +98,6 @@
 			<artifactId>junit</artifactId>
 			<version>4.12</version>
 		</dependency>
-		<dependency>
-			<groupId>org.mockito</groupId>
-			<artifactId>mockito-all</artifactId>
-			<version>1.9.5</version>
-		</dependency>
-		<dependency>
-			<groupId>commons-collections</groupId>
-			<artifactId>commons-collections</artifactId>
-			<version>3.2.2</version>
-		</dependency>
-		<dependency>
-			<groupId>commons-logging</groupId>
-			<artifactId>commons-logging</artifactId>
-			<version>1.2</version>
-		</dependency>
-		<dependency>
-			<groupId>commons-lang</groupId>
-			<artifactId>commons-lang</artifactId>
-			<version>2.6</version>
-		</dependency>
-		<dependency>
-			<groupId>commons-io</groupId>
-			<artifactId>commons-io</artifactId>
-			<version>2.6</version>
-			<type>jar</type>
-		</dependency>
 	</dependencies>
 	<build>
 		<pluginManagement>
@@ -241,9 +215,8 @@
 	</reporting>
 
 	<issueManagement>
-		<system>FMS Trac</system>
-		<url>https://www.fielden.com.ua/trac/pnl-tg/report
-		</url>
+		<system>GitHub Issues</system>
+		<url>https://github.com/fieldenms/tg/issues</url>
 	</issueManagement>
 
 	<distributionManagement>

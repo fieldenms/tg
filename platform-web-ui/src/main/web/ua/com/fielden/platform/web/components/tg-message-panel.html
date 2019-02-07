@@ -84,7 +84,7 @@
 
             // Chrome 1+
             isChrome: function () {
-                return !!window.chrome && !!window.chrome.webstore;
+                return !!window.chrome;
             },
 
             // Blink engine detection
@@ -119,9 +119,7 @@
             observers: ["_shoudDisplayMsg(isRecomendedClient, closed)"],
 
             ready: function () {
-                const isSafari = /constructor/i.test(window.HTMLElement) || (function (p) { return p.toString() === "[object SafariRemoteNotification]"; })(!window['safari'] || (typeof safari !== 'undefined' && safari.pushNotification));
-                const isChrome = !!window.chrome && !!window.chrome.webstore;
-                this.isRecomendedClient = isMobile.any() || isSafari || isChrome;
+                this.isRecomendedClient = isMobile.any() || isDesktop.isSafari() || isDesktop.isChrome();
                 this.closed = this.isRecomendedClient;
                 if (!this.isRecomendedClient) {
                     if (isDesktop.isIE()) {

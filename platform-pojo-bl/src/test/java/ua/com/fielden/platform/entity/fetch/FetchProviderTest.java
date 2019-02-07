@@ -4,7 +4,9 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.*;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchKeyAndDescOnly;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchOnly;
+import static ua.com.fielden.platform.utils.EntityUtils.fetchWithKeyAndDesc;
 
 import java.util.Arrays;
 import java.util.LinkedHashSet;
@@ -12,6 +14,7 @@ import java.util.Set;
 
 import org.junit.Test;
 
+import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
 import ua.com.fielden.platform.sample.domain.TgPersistentCompositeEntity;
 import ua.com.fielden.platform.sample.domain.TgPersistentEntityWithProperties;
 import ua.com.fielden.platform.utils.EntityUtils;
@@ -97,6 +100,19 @@ public class FetchProviderTest {
         assertEquals("Incorrect fetch model has been generated.",
                 fetchKeyAndDescOnly(TgPersistentEntityWithProperties.class),
                 fp.fetchFor("entityProp").fetchModel());
+    }
+    
+    @Test
+    public void fetch_provider_with_propertyDescriptor_typed_property_generates_fetch_model_with_regular_property() {
+        final IFetchProvider<TgPersistentEntityWithProperties> fp =
+            fetchWithKeyAndDesc(TgPersistentEntityWithProperties.class)
+            .with("propertyDescriptorProp");
+        
+        assertFalse("Only the root entity should be intrumented.", fp.fetchFor("propertyDescriptorProp").instrumented());
+        assertEquals("Incorrect property provider.", EntityUtils.fetchWithKeyAndDesc(PropertyDescriptor.class, false), fp.fetchFor("propertyDescriptorProp"));
+        assertEquals("Incorrect fetch model has been generated.",
+            fetchKeyAndDescOnly(TgPersistentEntityWithProperties.class).with("propertyDescriptorProp"),
+            fp.fetchModel());
     }
     
     @Test

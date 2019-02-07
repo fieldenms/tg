@@ -2,6 +2,7 @@ package ua.com.fielden.platform.entity.query.generation.elements;
 
 import static java.lang.String.format;
 import static java.lang.String.join;
+import static ua.com.fielden.platform.entity.query.DbVersion.aliasComment;
 import static ua.com.fielden.platform.utils.Pair.pair;
 
 import java.util.ArrayList;
@@ -13,9 +14,9 @@ import java.util.Map;
 
 import org.apache.commons.lang.StringUtils;
 
-import ua.com.fielden.platform.dao.DomainMetadataAnalyser;
-import ua.com.fielden.platform.dao.PropertyMetadata;
 import ua.com.fielden.platform.entity.query.DbVersion;
+import ua.com.fielden.platform.entity.query.metadata.DomainMetadataAnalyser;
+import ua.com.fielden.platform.entity.query.metadata.PropertyMetadata;
 import ua.com.fielden.platform.utils.Pair;
 
 public class QueryBasedSource extends AbstractSource {
@@ -207,7 +208,7 @@ public class QueryBasedSource extends AbstractSource {
             sb.append(iterator.hasNext() ? "\nUNION ALL\n" : "");
         }
         // AS alias is not applicable for Oracle
-        sb.append(format(")%s %s/*%s*/", dbVersion == DbVersion.ORACLE ? "" : " AS", sqlAlias, alias));
+        sb.append(format(")%s%s%s", dbVersion.AS, sqlAlias, aliasComment(alias)));        
         return sb.toString();
     }
 

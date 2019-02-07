@@ -2,8 +2,6 @@ package ua.com.fielden.platform.attachment.matcher;
 
 import java.util.List;
 
-import org.apache.log4j.Logger;
-
 import com.google.inject.Inject;
 
 import ua.com.fielden.platform.attachment.Attachment;
@@ -21,8 +19,6 @@ import ua.com.fielden.platform.entity.AbstractEntity;
  */
 public abstract class AbstractAttachmentForMasterMatcher<C extends AbstractEntity<?>> extends AbstractSearchEntityByKeyWithContext<C, Attachment> {
 
-    private final Logger logger = Logger.getLogger(this.getClass());
-
     private final IAttachment coAttachment;
     
     @Inject
@@ -33,15 +29,15 @@ public abstract class AbstractAttachmentForMasterMatcher<C extends AbstractEntit
 
     @Override
     public List<Attachment> findMatches(final String searchString) {
-        return findMatchesWithModel(searchString);
+        return findMatchesWithModel(searchString, 1);
     }
     
     @Override
-    public List<Attachment> findMatchesWithModel(final String searchString) {
-        final List<Attachment> matched = super.findMatchesWithModel(searchString);
+    public List<Attachment> findMatchesWithModel(final String searchString, final int dataPage) {
+        final List<Attachment> matched = super.findMatchesWithModel(searchString, dataPage);
         // if no matches found then let's check if an ad-hoc hyperlink-as-attachment needs to be created
         if (matched.isEmpty()) {
-            final String potentialUri = searchString.replaceAll("%$", ""); // remove the last % is present
+            final String potentialUri = searchString.replaceAll("%$", ""); // remove the last % if present
             coAttachment.newAsHyperlink(potentialUri).ifPresent(matched::add);
         }
         return matched;

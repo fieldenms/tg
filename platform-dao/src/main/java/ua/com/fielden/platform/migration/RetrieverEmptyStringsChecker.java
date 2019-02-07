@@ -5,9 +5,9 @@ import java.util.List;
 import java.util.Map.Entry;
 import java.util.Set;
 
-import ua.com.fielden.platform.dao.DomainMetadataAnalyser;
-import ua.com.fielden.platform.dao.PropertyMetadata;
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.query.metadata.DomainMetadataAnalyser;
+import ua.com.fielden.platform.entity.query.metadata.PropertyMetadata;
 
 public class RetrieverEmptyStringsChecker {
     private final DomainMetadataAnalyser dma;

@@ -46,12 +46,6 @@ mark element with tooltip-text attribute.
                 _mousePosX: Number,
                 _mousePosY: Number,
                 /**
-                 * The handle for tooltip timer can be used to cancel tooltip timer. (Tooltip timer - the timer for tooltip to be shown).
-                 */
-                _tooltipTimer: {
-                    type: Number
-                },
-                /**
                  * Element under mouse pointer, for which tooltip should be shown. Also this element should be marked with tooltip-id attribute.
                  */
                 _activeComponent: {
@@ -76,17 +70,7 @@ mark element with tooltip-text attribute.
              * Displayes the tooltip with specified text at current mouse position.
              */
             showTooltip: function (tooltipText) {
-                Polymer.dom(toolTipElement).innerHTML = tooltipText;
-                toolTipElement.showAt(this._mousePosX, this._mousePosY);
-            },
-
-            /**
-             * Hides the tooltip.
-             */
-            hideTooltip: function () {
-                if (toolTipElement._showing) {
-                    toolTipElement.hide();
-                }
+                toolTipElement.show(tooltipText, this._mousePosX, this._mousePosY);
             },
 
             /**
@@ -146,7 +130,7 @@ mark element with tooltip-text attribute.
 
             _handleTouchStart: function (event) {
                 this.touchEventTriggered = true;
-                this._startTooltipTimer();
+                this._startTooltip();
             },
 
             _handleTouchEnd: function (event) {
@@ -166,13 +150,13 @@ mark element with tooltip-text attribute.
              */
             _handleTooltipAtMousePos: function (event) {
                 if (!this.touchEventTriggered) {
-                    this._startTooltipTimer();
+                    this._startTooltip();
                 } else {
                     this.touchEventTriggered = false;
                 }
             },
 
-            _startTooltipTimer: function (e) {
+            _startTooltip: function (e) {
                 const currentActiveElement = extractActiveElement(event.target, this.triggerElement);
 
                 if (currentActiveElement !== this._activeComponent) {
@@ -181,13 +165,7 @@ mark element with tooltip-text attribute.
                 }
                 const tooltipText = this._activeComponent && this._activeComponent.getAttribute("tooltip-text");
                 if (tooltipText !== null && tooltipText.length > 0) {
-                    if (this._tooltipTimer) {
-                        this.cancelAsync(this._tooltipTimer);
-                        this._tooltipTimer = null;
-                    }
-                    this._tooltipTimer = this.async(function () {
-                        this.showTooltip(tooltipText);
-                    }.bind(this), 1000);
+                    this.showTooltip(tooltipText);
                 }
             },
 
@@ -195,12 +173,8 @@ mark element with tooltip-text attribute.
              * Hides the tooltip. Used as a mouse handler for mouse leave event.
              */
             _hideTooltip: function () {
-                this.hideTooltip();
-                if (this._tooltipTimer) {
-                    this.cancelAsync(this._tooltipTimer);
-                    this._tooltipTimer = null;
-                }
-            }
+                toolTipElement.hide();
+            },
         };
     })();
 </script>

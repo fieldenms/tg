@@ -1,9 +1,23 @@
 <script>
-    
+
     /**
-     * 
+     *
      */
     const FOCUSABLE_ELEMENTS_SELECTOR = 'a[href], area[href], input, select, textarea, button, iframe, object, embed, [tabindex="0"], [contenteditable]';
+    
+    /**
+     * Generates the unique identifier.
+     */
+    const generateUUID = function () {
+        var d = new Date().getTime();
+        var uuid = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
+            var r = (d + Math.random() * 16) % 16 | 0;
+            d = Math.floor(d / 16);
+            return (c == 'x' ? r : (r & 0x3 | 0x8)).toString(16);
+        });
+        return uuid;
+    };
+    
     /**
      * Removes all Light DOM children from Polymer 'element'.
      *
@@ -53,7 +67,7 @@
             e.returnValue = false;
         }
     };
-    
+
     /**
      * Makes color lighter or darker depending on whether lum parameter is greater or less then 0.
      */
@@ -86,6 +100,23 @@
         }
         return current !== null;
     };
+
+    /**
+     * Converts short collectional property with string value
+     */
+    const generateShortCollection = function (entity, property, typeObject) {
+            const collectionValue = entity.get(property);
+            const containerPropertyValue = property.lastIndexOf('.') >= 0 ? entity.get(property.substr(0, property.lastIndexOf('.'))) : entity;
+            const keys = typeObject.compositeKeyNames();
+            return collectionValue.map(function (subEntity) {
+                const key = keys.find(function (key) {
+                    if (subEntity.get(key) !== containerPropertyValue) {
+                        return key;
+                    }
+                });
+                return subEntity.get(key);
+            });
+        };
 
     /**
      * The class that can be used like an entity for entity grid inspector or any other place.

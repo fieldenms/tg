@@ -31,6 +31,7 @@
             left: -0.3rem;
         }
         .input-layer {
+            cursor: text;
             text-overflow: ellipsis;
             white-space: nowrap;
             overflow: hidden;
@@ -65,16 +66,16 @@
 
     <template>
         <tg-editor id="editorDom" prop-title="[[propTitle]]" _disabled="[[_disabled]]" _editing-value="{{_editingValue}}" action="[[action]]" _error="[[_error]]" _comm-value="[[_commValue]]" _accepted-value="[[_acceptedValue]]" _has-layer="[[_hasLayer(_editingValue, entity)]]" _focused="[[focused]]" debug="[[debug]]">
-            <input id="input" class="custom-input entity-input" is="iron-input" type="text" on-blur="_blurEventHandler" bind-value="{{_editingValue}}" on-change="_onChange" on-input="_onInput" on-keydown="_onKeydown" on-tap="_onTap" on-mousedown="_onTap" on-focus="_onFocus" tooltip-text$="[[_getTooltip(_editingValue, entity, focused)]]" disabled$="[[_disabled]]" />
+            <input id="input" class="custom-input entity-input" is="iron-input" type="text" on-blur="_blurEventHandler" bind-value="{{_editingValue}}" on-change="_onChange" on-input="_onInput" on-keydown="_onKeydown" on-tap="_onTap" on-mousedown="_onTap" on-focus="_onFocus" disabled$="[[_disabled]]" tooltip-text$="[[_getTooltip(_editingValue, entity, focused)]]"/>
             <paper-icon-button id="searcherButton" hidden$="[[searchingOrOpen]]" on-tap="_searchOnTap" icon="search" class="search-button custom-icon-buttons" tabIndex="-1" disabled$="[[_disabled]]" tooltip-text="Show search result"></paper-icon-button>
             <paper-icon-button hidden$="[[searchingOrClosed]]" on-down="_done" icon="done" class="search-button custom-icon-buttons" tabIndex="-1" disabled$="[[_disabled]]" tooltip-text="Accept the selected entries"></paper-icon-button>
             <paper-spinner active hidden$="[[!searching]]" class="custom-icon-buttons" tabIndex="-1" alt="searching..." disabled$="[[_disabled]]"></paper-spinner>
-            <div class="input-layer">
+            <div class="input-layer" tooltip-text$="[[_getTooltip(_editingValue, entity, focused)]]">
                 <template is="dom-repeat" items="[[_customPropTitle]]">
                     <span hidden$="[[!item.title]]" style="color:#737373; font-size:0.8rem; padding-right:2px;"><span>[[item.title]]</span>:  </span>
                     <span style$="[[_valueStyle(item, index)]]">[[item.value]]</span>
                 </template>
-                <span style="color:#737373" hidden$="[[!_hasDesc(entity)]]"> &ndash; <i>[[_formatDesc(entity)]]</i></span>
+                <span style="color:#737373" hidden$="[[!_hasDesc(entity)]]">&nbsp;&ndash;&nbsp;<i>[[_formatDesc(entity)]]</i></span>
             </div>
             <content class=".property-action"></content>
         </tg-editor>
@@ -270,6 +271,12 @@
                     value: 0
                 },
 
+                /** A state to maintain information about the page number of the matching values to be retrieved. */
+                _dataPage: {
+                    type: Number,
+                    value: 1
+                },
+
                 separator: {
                     type: String,
                     value: ","
@@ -359,11 +366,13 @@
                     type: Function
                 }
             },
-            
+
             observers: ["_changeTitle(entity)"],
 
             ready: function () {
-                var result = this.$.result;
+                const result = this.$.result;
+                result.acceptValues = this._done.bind(this);
+                result.loadMore = this._loadMore.bind(this);
                 result.multi = this.multi;
                 if (this.additionalProperties) {
                     result.additionalProperties = JSON.parse(this.additionalProperties);
@@ -375,7 +384,7 @@
 
                     // check whether relatedTarget has anything to do with this.$.result
                     // if it is then there is no need to cancel the overlay, which is this.$.result
-                    var parent = e.relatedTarget;
+                    let parent = e.relatedTarget;
                     while (parent !== null && parent !== this.$.result) {
                         parent = parent.parentElement;
                     }
@@ -385,7 +394,7 @@
                 }).bind(this);
 
                 this._retrieveContainerSizes = function () {
-                    var container = this.decorator();
+                    const container = this.decorator();
                     return [container.getBoundingClientRect(), container.offsetHeight];
                 }.bind(this);
             },
@@ -432,9 +441,17 @@
                 this._search('');
             },
 
-            _search: function (defaultSearchQuery) {
+            /** Loads more matching values. */
+            _loadMore: function () {
+                if (!this.searching) {
+                    this._dataPage = this._dataPage + 1;
+                    this._search(this._searchQuery, this._dataPage);
+                }
+            },
+
+            _search: function (defaultSearchQuery, dataPage) {
                 // What is the query string?
-                var inputText = ''; // default value
+                let inputText = ''; // default value
                 if (this.multi === false) {
                     // assign the actual search string
                     inputText = this._prepInput(this.decoratedInput().value) || defaultSearchQuery;
@@ -443,19 +460,11 @@
                     // in order to detremine what part of the input text should be used for search and
                     // also for later insertion of selected values (this._replaceFromIndex and this._replaceToIndex govern this).
 
-                    var text = this.decoratedInput().value;
-                    var caretPos = this.decoratedInput().selectionStart;
-                    var toIndex = text.indexOf(this.separator, caretPos);
-
-                    if (toIndex < 0) {
-                        toIndex = text.length;
-                    }
-                    var startOfText = text.substring(0, caretPos);
-                    var fromIndex = startOfText.lastIndexOf(this.separator);
-
-                    if (fromIndex < 0) {
-                        fromIndex = -1; // just to make sure that it is -1
-                    }
+                    const text = this.decoratedInput().value;
+                    const caretPos = this.decoratedInput().selectionStart;
+                    const toIndex = text.indexOf(this.separator, caretPos) < 0 ? text.length : text.indexOf(this.separator, caretPos);
+                    const startOfText = text.substring(0, caretPos);
+                    const fromIndex = startOfText.lastIndexOf(this.separator) < 0? -1 : startOfText.lastIndexOf(this.separator); // just to make sure that it is -1
 
                     this._replaceFromIndex = fromIndex;
                     this._replaceToIndex = toIndex;
@@ -472,23 +481,21 @@
                 }
 
                 // collect new matching values
-                var self = this;
-                var result = self.$.result;
+                const self = this;
+                const result = self.$.result;
                 result.searchQuery = self._searchQuery;
-                var container = self.$.container;
+                const container = self.$.container;
 
-                if (this._searchQuery /*&& this.hasFocus === true*/ ) {
-
-                    self.async((function () {
-                        // clear previous search result
+                if (self._searchQuery /*&& this.hasFocus === true*/ ) {
+                    // if this is not a request to load more data then let's clear the current result, if any
+                    if (!dataPage) {
                         result.clearSelection();
-                    }).bind(self), 1);
-
+                    }
                     // prepare the AJAX request based on the raw search string
-                    var serialisedSearchQuery = this.$.serialiser.serialise(this.createContextHolder(inputText));
-                    this.$.ajaxSearcher.body = JSON.stringify(serialisedSearchQuery);
-                    this.$.ajaxSearcher.generateRequest();
-                } else if (result.opened) { // make sure overlay is closed is no search is performed
+                    const serialisedSearchQuery = self.$.serialiser.serialise(self.createContextHolder(self._searchQuery, dataPage));
+                    self.$.ajaxSearcher.body = JSON.stringify(serialisedSearchQuery);
+                    self.$.ajaxSearcher.generateRequest();
+                } else if (result.opened) { // make sure overlay is closed if no search is performed
                     result.close();
                     this._focusInput();
                 }
@@ -502,15 +509,25 @@
                 // make sure to assign reflector to the result object
                 result.reflector = this.reflector();
 
-                result.clearSelection();
-
+                let wasNewValueObserved = false;
+                let indexOfFirstNewValue = -1;
                 for (let index = 0; index < entities.length; index++) {
                     // Entity is converted to a string representation of its key.
                     // This includes correct conversion of simple, composite and union entities
                     const key = this.reflector().convert(entities[index]);
                     entities[index].key = key;
-                    result.pushValue(entities[index]);
+                    const isNew = result.pushValue(entities[index]);
+                    // if a new value was observed for the first time then capture its index
+                    // so that later this new item could be focused
+                    if (!wasNewValueObserved && isNew) {
+                        indexOfFirstNewValue = index;
+                    }
+                    wasNewValueObserved = isNew || wasNewValueObserved;
                 }
+
+                // if no new values were observed then there is no more to load
+                // let's disable the load more action in this case
+                result.enableLoadMore = wasNewValueObserved;
 
                 // There is a need to check whether element already exists before appending it to document.body.
                 // Under Microsoft Edge appending the same element more than once blows up with exception HierarchyRequestError.
@@ -519,7 +536,7 @@
                     Polymer.dom(document.body).appendChild(this.$.result);
                     Polymer.dom.flush();
                 }
-                
+
                 this.async(function () {
                     if (result.opened) {
                         this._resultOpened();
@@ -534,33 +551,35 @@
                         }
                     }
                     result.notifyResize();
+
+                    // focus a new item, if any
+                    // this should happen only if new values were loaded after pressing MORE
+                    if (document.activeElement == result.loadMoreButton() && indexOfFirstNewValue >= 0) {
+                        result.focusItemWithIndex(indexOfFirstNewValue);
+                    }
                 }.bind(this), 100);
             },
-            
+
             /**
              * Create context holder with custom '@@searchString' property ('tg-entity-editor' and 'tg-entity-search-criteria' only).
              */
-            createContextHolder: function (inputText) {
-                if (this.multi === false) {
-                    if (this.asPartOfEntityMaster) {
-                        const modifHolder = this.createModifiedPropertiesHolder();
-                        const originallyProducedEntity = this.reflector()._validateOriginallyProducedEntity(this.originallyProducedEntity, modifHolder.id);
-                        console.debug(':MASTER:AUTOCOMPLETE1', '|type', this.autocompletionType, '|id', modifHolder.id);
-                        console.debug(':MASTER:AUTOCOMPLETE2', '|mph', modifHolder);
-                        console.debug(':MASTER:AUTOCOMPLETE3', '|ope', originallyProducedEntity);
-                        const contextHolder = this.reflector().createContextHolder(
-                            "true", null, null,
-                            function () { return modifHolder; }, null, null,
-                            originallyProducedEntity
-                        );
-                        this.reflector().setCustomProperty(contextHolder, "@@searchString", inputText);
-                        return contextHolder;
-                    } else {
-                        return Polymer.TgBehaviors.TgEditorBehavior.createContextHolder.call(this, inputText);
-                    }
+            createContextHolder: function (inputText, dataPage) {
+                let contextHolder = null;
+                if (this.multi === false && this.asPartOfEntityMaster) {
+                    const modifHolder = this.createModifiedPropertiesHolder();
+                    const originallyProducedEntity = this.reflector()._validateOriginallyProducedEntity(this.originallyProducedEntity, modifHolder.id);
+                    contextHolder = this.reflector().createContextHolder(
+                        "true", null, null,
+                        function () { return modifHolder; }, null, null,
+                        originallyProducedEntity
+                    );
+                    this.reflector().setCustomProperty(contextHolder, "@@searchString", inputText);
                 } else {
-                    return Polymer.TgBehaviors.TgEditorBehavior.createContextHolder.call(this, inputText);
+                    contextHolder = Polymer.TgBehaviors.TgEditorBehavior.createContextHolder.call(this, inputText);
                 }
+
+                this.reflector().setCustomProperty(contextHolder, "@@dataPage", dataPage);
+                return contextHolder;
             },
 
             _cancelSearch: function () {
@@ -572,9 +591,11 @@
 
             _resultOpened: function (e) {
                 const activeElement = document.activeElement;
-                if (this.$.searcherButton === activeElement || /* if autocompleter's button is in focus (this occurs in iOs when tapping on that button) */
-                    this.$.input === activeElement || /* if autocompleter's input is in focus */
-                    document.body === activeElement   /* or no other input or button in focus then show found values */) {
+                if (this.$.searcherButton === activeElement ||     /* if autocompleter's button is in focus (this occurs in iOs when tapping on that button) */
+                    this.$.input === activeElement          ||     /* or if autocompleter's input is in focus */
+                    document.body === activeElement         ||     /* or no other input or button in focus then show found values */
+                    "loadMoreButton" === activeElement.id   ||     /* or was the loadMoreButton tapped or */
+                    activeElement.classList.contains("tg-item")) { /* or if a list item is an active element */  
                     this.opened = true;
                     this.$.result.highlightMatchedParts();
                 } else {
@@ -586,11 +607,12 @@
             _resultClosed: function (e) {
                 // property this.opened controls whether overlay on-close event should
                 // perfrom on-change event handler that does all the validation megic
+                this._dataPage = 1;
                 if (this.opened === true) {
                     this.opened = false;
                     this._onChange();
                 }
-                var elementExists = Polymer.dom(document.body).querySelector("#result");
+                const elementExists = Polymer.dom(document.body).querySelector("#result");
                 if (elementExists) {
                 	Polymer.dom(document.body).removeChild(this.$.result);
                 	Polymer.dom.flush();
@@ -598,13 +620,15 @@
             },
 
             _resultCanceled : function (event, detail) {
+                this._dataPage = 1;
                 if (detail.keyCode && detail.keyCode === 27) {
                     this._focusInput();
                 }
             },
 
             _entitySelected: function () {
-                if (!this.multi) {
+                // if this this is non-multi mode and the tap happened on a result item then it should be selected
+                if (!this.multi && document.activeElement.classList.contains("tg-item")) {
                     this._done();
                 }
             },
@@ -617,8 +641,8 @@
                 const input = this.decoratedInput();
                 const result = this.$.result;
 
-                // let's make sure that at least one matching value is selected if _don()
-                // this is mainly relecant for the case of multi autocompleter that has been focused, no values selected, but Enter/Accept is pressed
+                // let's make sure that at least one matching value is selected if _done()
+                // this is mainly relevant for the case of multi autocompleter that has been focused, no values selected, but Enter/Accept is pressed
                 result.selectCurrentIfNoneSelected();
                 const hasValuesToProcess = Object.keys(result.selectedValues).length > 0;
 
@@ -713,16 +737,17 @@
             },
 
             _processSearcherResponse: function (e) {
-                var self = this;
+                const self = this;
                 self.processResponse(e, "search", function (foundEntities) {
                     self._onFound(foundEntities);
                 });
             },
 
             _processSearcherError: function (e) {
-                this.opened = true;
-                this.$.result.close();
-                this.processError(e, "search", function (errorResult) {
+                const self = this;
+                self.opened = true;
+                self.$.result.close();
+                self.processError(e, "search", function (errorResult) {
                    	if (self.postSearchedDefaultError) {
                     	self.postSearchedDefaultError(errorResult);
                    	}
@@ -773,7 +798,7 @@
                 }
                 return '';
             },
-            
+
             _createEntityTooltip: function (entity) {
                 const titles = this._createEntityTitleObject(entity);
                 if (titles.length === 1) {
@@ -784,11 +809,11 @@
                     "</table>"  + (entity.get('desc') ? "<br>" + entity.get('desc') : "");
                 }
             },
-            
+
             _changeTitle: function (entity) {
                 this._customPropTitle = this._createTitleObject(entity);
             },
-            
+
             _valueStyle: function (item, index) {
                 if (this._customPropTitle && this._customPropTitle.length > 1) {
                     if (index < this._customPropTitle.length - 1) {
@@ -797,7 +822,7 @@
                 }
                 return "";
             },
-            
+
             _createTitleObject: function (entity) {
                 if (entity !== null) {
                     var entityValue = this.reflector()._getValueFor(entity, this.propertyName);
@@ -807,14 +832,14 @@
                 }
                 return [{value: ""}];
             },
-            
+
             _createEntityTitleObject: function (entity) {
                 if (entity.type().isCompositeEntity()) {
                     return this._createCompositeTitle(entity);
                 }
                 return this._createSimpleTitle(entity);
             },
-            
+
             _createCompositeTitle: function (entityValue) {
                 const titles = [];
                 const entityType = entityValue.type();
@@ -831,7 +856,7 @@
                 }
                 return titles;
             },
-            
+
             _createSimpleTitle: function (entityValue) {
                 return [{value: this.reflector().convert(entityValue)}];
             },

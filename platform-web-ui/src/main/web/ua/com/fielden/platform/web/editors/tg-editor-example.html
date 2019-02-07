@@ -7,8 +7,6 @@
 
     <script src="/resources/polymer/webcomponentsjs/webcomponents-lite.js"></script>
 
-    <link rel="import" href="/resources/polymer/iron-ajax/iron-ajax.html">
-
     <link rel="import" href="/resources/editors/tg-editor-example-entity.html">
 
     <link rel="import" href="/resources/editors/tg-integer-editor.html">
@@ -20,11 +18,8 @@
     <link rel="import" href="/resources/editors/tg-entity-editor.html">
 </head>
 
-<body unresolved>
+<body unresolved class="fullbleed">
     <template is="dom-bind">
-        <iron-ajax auto url='/entity/ua.com.fielden.platform.sample.domain.TgPersistentEntityWithProperties/new' method="POST" handle-as="json" on-response="processResponse" on-error="processError">
-        </iron-ajax>
-
         <tg-editor-example-entity binding-entity="{{entity}}" validation-callback="{{validationCallback}}" process-response="{{processResponse}}" process-error="{{processError}}" or-null="{{orNull}}" not="{{not}}">
         </tg-editor-example-entity>
 
@@ -53,5 +48,7 @@
         </div>
     </template>
 </body>
-
+<script>
+    var app = document.querySelector("#app");
+</script>
 </html>

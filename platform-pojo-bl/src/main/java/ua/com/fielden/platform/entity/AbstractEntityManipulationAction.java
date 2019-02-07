@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.entity;
 
+import static java.lang.String.format;
 import static ua.com.fielden.platform.entity.NoKey.NO_KEY;
 
 import ua.com.fielden.platform.entity.annotation.IsProperty;
@@ -22,6 +23,8 @@ public abstract class AbstractEntityManipulationAction extends AbstractFunctiona
     @Title("Entity Type")
     private String entityType;
 
+    private Class<? extends AbstractEntity<?>> entityTypeAsClass;
+    
     @IsProperty
     @MapTo
     @Title("Import URI")
@@ -47,7 +50,7 @@ public abstract class AbstractEntityManipulationAction extends AbstractFunctiona
     }
 
     @Observable
-    public AbstractEntityManipulationAction setImportUri(final String importUri) {
+    protected AbstractEntityManipulationAction setImportUri(final String importUri) {
         this.importUri = importUri;
         return this;
     }
@@ -56,8 +59,19 @@ public abstract class AbstractEntityManipulationAction extends AbstractFunctiona
         return importUri;
     }
 
+    public void setEntityTypeForEntityMaster(Class<? extends AbstractEntity<?>> entityTypeAsClass) {
+        this.entityTypeAsClass = entityTypeAsClass;
+        setEntityType(entityTypeAsClass.getName());
+        setImportUri(format("/master_ui/%s", getEntityType()));
+        setElementName(format("tg-%s-master", this.entityTypeAsClass.getSimpleName()));
+    }
+
+    public Class<? extends AbstractEntity<?>> getEntityTypeAsClass() {
+        return entityTypeAsClass;
+    }
+
     @Observable
-    public AbstractEntityManipulationAction setEntityType(final String entityType) {
+    protected AbstractEntityManipulationAction setEntityType(final String entityType) {
         this.entityType = entityType;
         return this;
     }

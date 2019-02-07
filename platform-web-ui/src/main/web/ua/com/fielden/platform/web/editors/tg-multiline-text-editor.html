@@ -28,6 +28,9 @@
                 @apply(--layout-vertical);
                 flex: 1 0 auto;
             };
+            --tg-editor-input-container-disabled-mixin: {
+                cursor: text;
+            };
             --tg-editor-input-content-mixin: {
                 @apply(--layout-flex-auto);
                 @apply(--layout-vertical);
@@ -59,7 +62,8 @@
     		_error="[[_error]]"
     		_comm-value="[[_commValue]]"
     		_accepted-value="[[_acceptedValue]]"
-    		debug="[[debug]]">
+    		debug="[[debug]]"
+            tooltip-text$="[[_getTooltip(_editingValue)]]">
             <iron-autogrow-textarea
             	id="input"
             	class="paper-input-input custom-input multiline-text-input"
@@ -72,7 +76,7 @@
             	on-mousedown="_onTap"
             	on-keydown="_onKeydown"
             	disabled$="[[_disabled]]"
-                tooltip-text$="[[_getTooltip(_editingValue)]]"/>
+                tooltip-text$="[[_getTooltip(_editingValue)]]">
             </iron-autogrow-textarea>
     		<content class=".property-action"></content>
     	</tg-editor>

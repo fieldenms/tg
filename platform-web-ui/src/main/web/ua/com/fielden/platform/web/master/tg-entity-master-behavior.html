@@ -3,6 +3,7 @@
 <link rel="import" href="/resources/reflection/tg-polymer-utils.html">
 <link rel="import" href="/resources/binding/tg-entity-binder-behavior.html">
 <link rel="import" href="/resources/master/actions/tg-entity-master-closing-behavior.html">
+<link rel="import" href="/resources/components/tg-focus-traversal-behavior.html">
 
 <script>
     (function () {
@@ -675,6 +676,17 @@
                     }
                 }
             },
+            
+            /**
+             * Publishes a closure to be executed by an Entity Centre identified by centreUuid (opening centre).
+             */
+            publishExecute: function (closure) {
+                postal.publish({
+                    channel: "centre_" + this.centreUuid, 
+                    topic: "execute",
+                    data: closure.bind(this)
+                });
+            },
 
             _modificationsChanged: function (_bindingEntityNotPersistentOrNotPersistedOrModified, _editedPropsExist) {
                 const self = this;
@@ -1049,6 +1061,7 @@
 
         Polymer.TgBehaviors.TgEntityMasterBehavior = [
             Polymer.TgBehaviors.TgEntityBinderBehavior,
+            Polymer.TgBehaviors.TgFocusTraversalBehavior,
             Polymer.TgBehaviors.TgEntityMasterBehaviorImpl
         ];
 

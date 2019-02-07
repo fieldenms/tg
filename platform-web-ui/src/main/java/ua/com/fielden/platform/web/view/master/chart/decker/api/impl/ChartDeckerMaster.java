@@ -1,11 +1,16 @@
 package ua.com.fielden.platform.web.view.master.chart.decker.api.impl;
 
+import static java.util.Optional.ofNullable;
+import static org.apache.commons.lang.StringUtils.join;
+import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.getTimePortionToDisplay;
+import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.getTimeZone;
 import static ua.com.fielden.platform.web.centre.api.resultset.impl.FunctionalActionKind.PRIMARY_RESULT_SET;
 
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.function.Function;
 
 import org.apache.commons.lang.StringUtils;
 
@@ -15,6 +20,7 @@ import ua.com.fielden.platform.dom.DomElement;
 import ua.com.fielden.platform.dom.InnerTextElement;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.types.Money;
+import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
 import ua.com.fielden.platform.utils.ResourceLoader;
 import ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig;
@@ -59,14 +65,19 @@ public class ChartDeckerMaster<T extends AbstractEntity<?>> implements IMaster<T
     private Pair<String, DomElement> generateActions(final IChartDeckerConfig<T> deckerConfig, final LinkedHashSet<String> importPaths) {
         final DomElement container = new DomContainer();
         final List<String> primaryActionObjects = new ArrayList<>();
-        for (int deckIndex = 0; deckIndex < deckerConfig.getDecs().size(); deckIndex++) {
-            final EntityActionConfig config = deckerConfig.getDecs().get(deckIndex).getAction();
-            this.actions.add(config);
-            if (config != null && !config.isNoAction()) {
-                final FunctionalActionElement el = FunctionalActionElement.newEntityActionForMaster(config, deckIndex);
-                importPaths.add(el.importPath());
-                container.add(el.render().clazz("chart-action").attr("hidden", true));
-                primaryActionObjects.add(el.createActionObject());
+        final List<ChartDeck<T>> decs = deckerConfig.getDecs();
+        for (int deckIndex = 0; deckIndex < decs.size(); deckIndex++) {
+            final List<ChartSeries<T>> series = decs.get(deckIndex).getSeries();
+            for (int seriesIndex = 0; seriesIndex < series.size(); seriesIndex++) {
+                final ChartSeries<T> s = series.get(seriesIndex);
+                final EntityActionConfig config = s.getAction();
+                this.actions.add(config);
+                if (config != null && !config.isNoAction()) {
+                    final FunctionalActionElement el = FunctionalActionElement.newPropertyActionForMaster(config, deckIndex, s.getPropertyName());
+                    importPaths.add(el.importPath());
+                    container.add(el.render().clazz("chart-action").attr("hidden", true).attr("action-index", seriesIndex).attr("deck-index", deckIndex));
+                    primaryActionObjects.add(el.createActionObject());
+                }
             }
         }
         return new Pair<>(StringUtils.join(primaryActionObjects, ",\n"), container);
@@ -78,6 +89,9 @@ public class ChartDeckerMaster<T extends AbstractEntity<?>> implements IMaster<T
         for (int chartIndex = 0; chartIndex < charts.size(); chartIndex++) {
             container.add(new DomElement("tg-bar-chart")
                     .clazz("flex", "chart-deck")
+                    .attr("show-legend", charts.get(chartIndex).isShowLegend())
+                    .attr("legend-items", "[[legendItems." + chartIndex + "]]")
+                    .attr("line-legend-items", "[[lineLegendItems." + chartIndex + "]]")
                     .attr("data", "[[retrievedEntities]]")
                     .attr("options", "[[barOptions." + chartIndex + "]]"));
         }
@@ -86,38 +100,79 @@ public class ChartDeckerMaster<T extends AbstractEntity<?>> implements IMaster<T
 
     private String readyCallback(final IChartDeckerConfig<T> deckerConfig) {
         final List<String> chartOptions = new ArrayList<>();
+        final List<String> legendItems = new ArrayList<>();
+        final List<String> lineLegendItems = new ArrayList<>();
         for (int deckIndex = 0; deckIndex < deckerConfig.getDecs().size(); deckIndex++) {
             final ChartDeck<T> deck = deckerConfig.getDecs().get(deckIndex);
+            legendItems.add(generateListOfValues(deck.getSeries(), s -> generateLegendItem(s)));
+            lineLegendItems.add(generateListOfValues(deck.getLines(), l -> generateLineLegendItem(l)));
             chartOptions.add("{\n"
+                    + "    mode: d3.barChart.BarMode." + deck.getMode().name() + ",\n"
                     + "    label: '" + deck.getTitle() + "',\n"
                     + "    xAxis: {\n"
-                    + "        label: '" + deck.getXAxisTitle() + "'\n"
+                    + "        label: '" + deck.getXAxisTitle() + "',\n"
+                    + "        orientation: d3.barChart.LabelOrientation." + deck.getxAxisLabelOrientation().name() + "\n"
                     + "    },\n"
                     + "    yAxis: {\n"
                     + "        label: '" + deck.getYAxisTitle() + "'\n"
                     + "    },\n"
+                    + "    lines: " + generateListOfValues(deck.getLines(), l -> generateLine(l)) + ",\n"
                     + "    dataPropertyNames: {\n"
-                    + "        groupKeyProp: '" + deck.getGroupKeyProp() + "',\n"
+                    + "        groupKeyProp: " + generateValueAccessor(deck.getEntityType(), deck.getPropertyType(), deck.getGroupKeyProp()) + ",\n"
                     + "        groupDescProp: '" + deck.getGroupDescProperty() + "',\n"
-                    + "        valueProp: " + generateValueAccessor(deck.getPropertyType(), deck.getAggregationProperty()) + "\n"
+                    + "        valueProps: " + generateListOfValues(deck.getSeries(), s -> generateValueAccessor(s.getEntityType(), s.getPropertyType(), s.getPropertyName())) + "\n"
                     + "    },\n"
-                    + "    barColour: d => '" + deck.getBarColour() + "',\n"
-                    + "    barLabel: this._labelFormatter('" + deck.getPropertyType().getSimpleName() + "', '" + deck.getAggregationProperty() + "'),\n"
-                    + "    tooltip: " + generateTooltipRetriever(deck, deckIndex) + (deck.getAction() != null ? ",\n" : "\n")
-                    + (deck.getAction() != null ? "    click: this._click(" + deckIndex + ")\n" : "")
+                    + "    colours: " + generateListOfValues(deck.getSeries(), s -> "'" + s.getColour().getColourValue() + "'") + ",\n"
+                    + "    barColour: (d, i) => self.barOptions[" + deckIndex + "].colours[i],\n"
+                    + "    propertyNames: " + generateListOfValues(deck.getSeries(), s -> "'" + s.getPropertyName() + "'") + ",\n"
+                    + "    propertyTypes: " + generateListOfValues(deck.getSeries(), s -> "'" + s.getPropertyType().getSimpleName() + "'") + ",\n"
+                    + "    barLabel: (d, i) => this._labelFormatter(d, i, self.barOptions[" + deckIndex + "].propertyNames, self.barOptions[" + deckIndex + "].propertyTypes, self.barOptions[" + deckIndex + "].mode),\n"
+                    + "    tooltip: (d, i) => this._tooltip(d, "
+                                + generateValueAccessor(deck.getEntityType(), deck.getPropertyType(), deck.getGroupKeyProp()) + ", "
+                                + "self.barOptions[" + deckIndex + "].propertyNames[i], "
+                                + "self.barOptions[" + deckIndex + "].propertyTypes[i], "
+                                + "self.legendItems[" + deckIndex + "][i].title, " + deckIndex + ", i),\n"
+                    + "    click: this._click(" + deckIndex + ")\n"
                     + "}");
         }
-        return "self.barOptions = [" + StringUtils.join(chartOptions, ",\n") + "];\n";
+        return "self.barOptions = [" + join(chartOptions, ",\n") + "];\n"
+                + "self.legendItems =[" + join(legendItems, ",\n") + "];\n"
+                + "self.lineLegendItems =[" + join(lineLegendItems, ",\n") + "];\n";
     }
 
-    private String generateTooltipRetriever(final ChartDeck<T> deck, final int deckIndex) {
-        return "this._tooltip('" + deck.getGroupDescProperty() + "', '" + deck.getAggregationProperty() + "', '"
-                + deck.getPropertyType().getSimpleName() + "', this.actions[" + deckIndex + "])";
+    private String generateLineLegendItem(final ChartLine<T> line) {
+        return "{title: '"  + line.getTitle() + "', colour: '" + line.getColour().getColourValue() + "'}";
     }
 
-    private String generateValueAccessor(final Class<?> propertyType, final String aggregationProperty) {
+    private String generateLine(final ChartLine<T> line) {
+        return "{property: " + generateValueAccessor(line.getEntityType(), line.getPropertyType(), line.getProperty()) + ", title: '"  + line.getTitle() + "', colour: '" + line.getColour().getColourValue() + "'}";
+    }
+
+    private <C> String generateListOfValues(final List<C> series, final Function<C, String> func) {
+        final StringBuilder items = new StringBuilder("[");
+        series.stream().forEach(nextSeries -> {
+            items.append(func.apply(nextSeries) + ",");
+        });
+        if (items.length() > 1) {
+            items.setCharAt(items.length() - 1, ']');
+        } else {
+            items.append(']');
+        }
+        return items.toString();
+    }
+
+    private String generateLegendItem(final ChartSeries<T> series) {
+        return "{title: '"  + series.getTitle() + "', colour: '" + series.getColour().getColourValue() + "'}";
+    }
+
+    private String generateValueAccessor(final Class<?> deckType, final Class<?> propertyType, final String aggregationProperty) {
         if (Money.class.isAssignableFrom(propertyType)) {
             return "this._moneyPropAccessor('" + aggregationProperty + "')";
+        } else if (EntityUtils.isDate(propertyType)) {
+            final Optional<String> timeZone = ofNullable(getTimeZone(deckType, aggregationProperty));
+            final Optional<String> timePortion = ofNullable(getTimePortionToDisplay(deckType, aggregationProperty));
+            final String typeSpec = "Date:" + timeZone.orElse(":") + timePortion.orElse("");
+            return "this._datePropAccessor('" + aggregationProperty + "', '" + typeSpec + "')";
         }
         return "'" + aggregationProperty + "'";
     }

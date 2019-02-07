@@ -646,7 +646,7 @@
                         function (detail) {
                             const sc = self.$.selection_criteria;
                             const deserialisedResult = sc._serialiser().deserialise(detail.response);
-                            if (!sc._reflector().isError(deserialisedResult)) {
+                            if (!sc._reflector().isError(deserialisedResult) && (!sc._reflector().isEntity(deserialisedResult.instance[0]) || deserialisedResult.instance[0].isValidWithoutException())) {
                                 self.runInsertionPointActions();
                             }
                             self._actionInProgress = false;
@@ -709,8 +709,13 @@
                 
                 //Add event listener that indicates whne the layout has finished
                 self.addEventListener("layout-finished",  e => {
-                    self._viewLoaded = true;
-                    self.fire('tg-view-loaded', self);
+                    const target = e.target || e.srcElement;
+                    if (target === e.detail) {
+                        tearDownEvent(e);
+                        self.isSelectionCriteriaEmpty = !e.detail.componentsToLayout || e.detail.componentsToLayout.length === 0;
+                        self._viewLoaded = true;
+                        self.fire('tg-view-loaded', self);
+                    }
                 });
                 
                 //Add event listener that listens when egi entities appeared and fires the data was loaded and focused event for the dialog
@@ -744,6 +749,16 @@
                         self._postFunctionalEntitySaved(data.savingException, data.entity, data.shouldRefreshParentCentreAfterSave, data.selectedEntitiesInContext);
                     }
                 });
+                
+                /////////////////////// Execute action for this centre subscriber////////////////////////
+                //This event can be published from entity master which holds the call back that should be executed for this centre.
+                this.masterExecuteListener = postal.subscribe({
+                    channel: "centre_" + self.$.selection_criteria.uuid,
+                    topic: "execute",
+                    callback: function (callback, envelope) {
+                        callback(self);
+                    }
+                });
 
                 //Select the result view if autoRun is true
                 if (self.autoRun || self.queryPart) {
@@ -767,6 +782,7 @@
 
             detached: function () {
                 this.masterSavedListener.unsubscribe();
+                this.masterExecuteListener.unsubscribe();
             },
 
             focusNextView: function (e) {

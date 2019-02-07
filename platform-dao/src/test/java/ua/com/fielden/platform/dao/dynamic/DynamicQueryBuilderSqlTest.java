@@ -27,7 +27,6 @@ import org.junit.Test;
 
 import com.google.inject.Injector;
 
-import ua.com.fielden.platform.dao.DomainMetadata;
 import ua.com.fielden.platform.dao.HibernateMappingsGenerator;
 import ua.com.fielden.platform.domaintree.ICalculatedProperty.CalculatedPropertyAttribute;
 import ua.com.fielden.platform.domaintree.IDomainTreeEnhancer;
@@ -39,6 +38,7 @@ import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.query.DbVersion;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ICompleted;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IJoin;
+import ua.com.fielden.platform.entity.query.metadata.DomainMetadata;
 import ua.com.fielden.platform.entity.query.model.ConditionModel;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.entity_centre.review.DynamicQueryBuilder;
@@ -110,7 +110,7 @@ public class DynamicQueryBuilderSqlTest {
         slaveCollectionType = (Class<? extends AbstractEntity<?>>) PropertyTypeDeterminator.determinePropertyType(masterKlass, "collection");
         evenSlaverCollectionType = (Class<? extends AbstractEntity<?>>) PropertyTypeDeterminator.determinePropertyType(masterKlass, "entityProp.collection");
 
-        iJoin = select(masterKlass).as(alias);
+        iJoin = select(select(masterKlass).model()).as(alias);
         queryProperties = new LinkedHashMap<>();
 
         final Configuration hibConf = new Configuration();
@@ -1331,7 +1331,7 @@ public class DynamicQueryBuilderSqlTest {
         property.setValue2(7);
 
         final ICompleted<? extends AbstractEntity<?>> expected = //
-        /**/select(TgBogie.class).as(alias).where().condition(cond() //
+        /**/select(select(TgBogie.class).model()).as(alias).where().condition(cond() //
         /*  */.condition(cond().prop(alias).isNotNull().and() //
         /*    */.condition(cond().prop(alias + ".key").iLike().anyOfValues(new Object[] { "some val 1%", "some val 2%" }).model())//
         /*  */.model()).and()//
