@@ -27,22 +27,7 @@ public class CleanupFilter extends Filter {
     protected void afterHandle(final Request request, final Response response) {
         Kryo.getContext().reset();
         EntitySerialiser.getContext().reset();
-        
-        super.afterHandle(request, response);
-        
-        final long startedAt = request.getDate().getTime();
-        final long finishedAt = System.currentTimeMillis();
-        final long totalTimeInMillis = finishedAt - startedAt;
-        System.out.printf("Request: %s, %s; client info: %s, %s, %s, %s, %s, %s, %s%n", 
-                                                                             request.getDate(),
-                                                                             request.getClientInfo().getAgent(), 
-                                                                             request.getClientInfo().getUpstreamAddress(),
-                                                                             request.getClientInfo().isAuthenticated(),
-                                                                             request.getResourceRef(),
-                                                                             request.getMethod(),
-                                                                             request.getClientInfo().getUser(),
-                                                                             response.getStatus().getCode(),
-                                                                             totalTimeInMillis);
 
+        super.afterHandle(request, response);
     }
 }
