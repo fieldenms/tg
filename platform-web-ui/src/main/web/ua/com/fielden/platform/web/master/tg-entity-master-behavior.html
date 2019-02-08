@@ -644,7 +644,9 @@
                     const target = e.target || e.srcElement;
                     if (target === this) {
                         this.focusView();
-                        if (!this._hasEmbededView()) {
+                        //The next event (data-loaded-and-focused) should be fired only by master that has any embedded master 
+                        // and this master should be visible (i.e. should be UI master)
+                        if (!this._hasEmbededView() && !this.noUI) {
                             this.async(function () {
                                 this.fire('data-loaded-and-focused', this._currBindingEntity);
                             }, 100);
