@@ -4,10 +4,10 @@ import java.util.ArrayList;
 import java.util.List;
 
 import ua.com.fielden.platform.eql.meta.PropsResolutionContext;
+import ua.com.fielden.platform.eql.meta.TransformationResult;
 import ua.com.fielden.platform.eql.stage2.elements.CompoundSource2;
 import ua.com.fielden.platform.eql.stage2.elements.IQrySource2;
 import ua.com.fielden.platform.eql.stage2.elements.Sources2;
-import ua.com.fielden.platform.utils.Pair;
 
 public class Sources1  {
     private final IQrySource1<? extends IQrySource2> main;
@@ -18,18 +18,18 @@ public class Sources1  {
         this.compounds = compounds;
     }
 
-    public Pair<Sources2, PropsResolutionContext> transform(final PropsResolutionContext resolutionContext) {
-        final Pair<? extends IQrySource2, PropsResolutionContext> mainTransformationResult = main.transform(resolutionContext);    
+    public TransformationResult<Sources2> transform(final PropsResolutionContext resolutionContext) {
+        final TransformationResult<? extends IQrySource2> mainTransformationResult = main.transform(resolutionContext);    
                 
         final List<CompoundSource2> transformed = new ArrayList<>();
-        PropsResolutionContext currentResolutionContext = mainTransformationResult.getValue();
+        PropsResolutionContext currentResolutionContext = mainTransformationResult.getUpdatedContext();
         
         for (final CompoundSource1 compoundSource : compounds) {
-            Pair<CompoundSource2, PropsResolutionContext> compoundSourceTransformationResult = compoundSource.transform(currentResolutionContext);
-            transformed.add(compoundSourceTransformationResult.getKey());
-            currentResolutionContext = compoundSourceTransformationResult.getValue();
+            TransformationResult<CompoundSource2> compoundSourceTransformationResult = compoundSource.transform(currentResolutionContext);
+            transformed.add(compoundSourceTransformationResult.getItem());
+            currentResolutionContext = compoundSourceTransformationResult.getUpdatedContext();
         }
-        return new Pair<>(new Sources2(mainTransformationResult.getKey(), transformed), currentResolutionContext);
+        return new TransformationResult<Sources2>(new Sources2(mainTransformationResult.getItem(), transformed), currentResolutionContext);
     }
 
     @Override

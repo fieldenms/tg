@@ -3,8 +3,8 @@ package ua.com.fielden.platform.eql.stage1.elements;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.exceptions.EqlStage1ProcessingException;
 import ua.com.fielden.platform.eql.meta.PropsResolutionContext;
+import ua.com.fielden.platform.eql.meta.TransformationResult;
 import ua.com.fielden.platform.eql.stage2.elements.QrySource2BasedOnPersistentType;
-import ua.com.fielden.platform.utils.Pair;
 
 public class QrySource1BasedOnPersistentType extends AbstractQrySource1<QrySource2BasedOnPersistentType> {
     private final Class<? extends AbstractEntity<?>> sourceType;
@@ -54,8 +54,8 @@ public class QrySource1BasedOnPersistentType extends AbstractQrySource1<QrySourc
     }
 
     @Override
-    public Pair<QrySource2BasedOnPersistentType, PropsResolutionContext> transform(PropsResolutionContext resolutionContext) {
+    public TransformationResult<QrySource2BasedOnPersistentType> transform(PropsResolutionContext resolutionContext) {
         final QrySource2BasedOnPersistentType transformedSource = new QrySource2BasedOnPersistentType(sourceType(), resolutionContext.getDomainInfo().get(sourceType()), getAlias());
-        return new Pair<>(transformedSource, resolutionContext.cloneWithAddedSource(transformedSource));
+        return new TransformationResult<QrySource2BasedOnPersistentType>(transformedSource, resolutionContext.cloneWithAddedSource(transformedSource));
     }
 }

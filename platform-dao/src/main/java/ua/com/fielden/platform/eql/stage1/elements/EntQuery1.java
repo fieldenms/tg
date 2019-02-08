@@ -4,13 +4,13 @@ import static ua.com.fielden.platform.eql.meta.QueryCategory.SUB_QUERY;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.IRetrievalModel;
-import ua.com.fielden.platform.eql.meta.QueryCategory;
 import ua.com.fielden.platform.eql.meta.PropsResolutionContext;
+import ua.com.fielden.platform.eql.meta.QueryCategory;
+import ua.com.fielden.platform.eql.meta.TransformationResult;
 import ua.com.fielden.platform.eql.stage1.builders.EntQueryBlocks;
 import ua.com.fielden.platform.eql.stage2.elements.EntQuery2;
 import ua.com.fielden.platform.eql.stage2.elements.EntQueryBlocks2;
 import ua.com.fielden.platform.eql.stage2.elements.Sources2;
-import ua.com.fielden.platform.utils.Pair;
 
 public class EntQuery1 implements ISingleOperand1<EntQuery2> {
 
@@ -53,13 +53,13 @@ public class EntQuery1 implements ISingleOperand1<EntQuery2> {
     @Override
     public EntQuery2 transform(final PropsResolutionContext resolutionContext) {
         final PropsResolutionContext localResolutionContext = isSubQuery() ? resolutionContext.produceBasedOn() : resolutionContext.produceNewOne();
-        final Pair<Sources2, PropsResolutionContext> sourcesTransformationResult =  sources.transform(localResolutionContext);
+        final TransformationResult<Sources2> sourcesTransformationResult =  sources.transform(localResolutionContext);
         final EntQueryBlocks2 entQueryBlocks = new EntQueryBlocks2(
-                sourcesTransformationResult.getKey(), 
-                conditions.transform(sourcesTransformationResult.getValue()), 
-                yields.transform(sourcesTransformationResult.getValue()), 
-                groups.transform(sourcesTransformationResult.getValue()), 
-                orderings.transform(sourcesTransformationResult.getValue()));
+                sourcesTransformationResult.getItem(), 
+                conditions.transform(sourcesTransformationResult.getUpdatedContext()), 
+                yields.transform(sourcesTransformationResult.getUpdatedContext()), 
+                groups.transform(sourcesTransformationResult.getUpdatedContext()), 
+                orderings.transform(sourcesTransformationResult.getUpdatedContext()));
 
         return new EntQuery2(entQueryBlocks, type(), getCategory(), getFetchModel());
     }

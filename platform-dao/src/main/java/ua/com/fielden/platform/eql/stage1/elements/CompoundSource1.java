@@ -2,9 +2,9 @@ package ua.com.fielden.platform.eql.stage1.elements;
 
 import ua.com.fielden.platform.entity.query.fluent.enums.JoinType;
 import ua.com.fielden.platform.eql.meta.PropsResolutionContext;
+import ua.com.fielden.platform.eql.meta.TransformationResult;
 import ua.com.fielden.platform.eql.stage2.elements.CompoundSource2;
 import ua.com.fielden.platform.eql.stage2.elements.IQrySource2;
-import ua.com.fielden.platform.utils.Pair;
 
 public class CompoundSource1 implements ITransformableWithSourceToS2<CompoundSource2>{
     private final IQrySource1<? extends IQrySource2> source;
@@ -18,9 +18,9 @@ public class CompoundSource1 implements ITransformableWithSourceToS2<CompoundSou
     }
 
     @Override
-    public Pair<CompoundSource2, PropsResolutionContext> transform(final PropsResolutionContext resolutionContext) {
-        Pair<? extends IQrySource2, PropsResolutionContext> transformationResult = source.transform(resolutionContext);
-        return new Pair<>(new CompoundSource2(transformationResult.getKey(), joinType, joinConditions.transform(transformationResult.getValue())), transformationResult.getValue());
+    public TransformationResult<CompoundSource2> transform(final PropsResolutionContext resolutionContext) {
+        TransformationResult<? extends IQrySource2> transformationResult = source.transform(resolutionContext);
+        return new TransformationResult<CompoundSource2>(new CompoundSource2(transformationResult.getItem(), joinType, joinConditions.transform(transformationResult.getUpdatedContext())), transformationResult.getUpdatedContext());
     }
 
     @Override

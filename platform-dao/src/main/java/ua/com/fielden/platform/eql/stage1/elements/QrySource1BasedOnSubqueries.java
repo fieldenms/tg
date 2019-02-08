@@ -10,9 +10,9 @@ import java.util.Map;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.exceptions.EqlStage1ProcessingException;
 import ua.com.fielden.platform.eql.meta.PropsResolutionContext;
+import ua.com.fielden.platform.eql.meta.TransformationResult;
 import ua.com.fielden.platform.eql.stage2.elements.EntQuery2;
 import ua.com.fielden.platform.eql.stage2.elements.QrySource2BasedOnSubqueries;
-import ua.com.fielden.platform.utils.Pair;
 
 public class QrySource1BasedOnSubqueries extends AbstractQrySource1<QrySource2BasedOnSubqueries> {
     private final List<EntQuery1> models = new ArrayList<>();
@@ -107,9 +107,9 @@ public class QrySource1BasedOnSubqueries extends AbstractQrySource1<QrySource2Ba
     }
 
     @Override
-    public Pair<QrySource2BasedOnSubqueries, PropsResolutionContext> transform(PropsResolutionContext resolutionContext) {
+    public TransformationResult<QrySource2BasedOnSubqueries> transform(PropsResolutionContext resolutionContext) {
         final QrySource2BasedOnSubqueries transformedSource = new QrySource2BasedOnSubqueries(extractQueryModels(resolutionContext), alias, resolutionContext.getDomainInfo());
-        return new Pair<>(transformedSource, resolutionContext.cloneWithAddedSource(transformedSource));
+        return new TransformationResult<QrySource2BasedOnSubqueries>(transformedSource, resolutionContext.cloneWithAddedSource(transformedSource));
     }
     
     private List<EntQuery2> extractQueryModels(PropsResolutionContext resolutionContext) {
