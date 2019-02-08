@@ -1044,9 +1044,7 @@
             _handleActionNavigationInvoked: function (e) {
                 //Reset dataLoaded property to ensure that blocking layer will work correctly and appropriate event handlers will be invoked.
                 this._dataLoaded = false;
-                if (this._errorMsg) {
-                    this._errorMsg = null;
-                }
+                this._errorMsg = null;
                 if (e.detail && e.detail.spinner) {
                     this._displaySpinnerOn(this.$[e.detail.spinner]);
                 }
