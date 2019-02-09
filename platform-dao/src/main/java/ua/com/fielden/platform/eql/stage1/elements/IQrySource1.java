@@ -3,7 +3,7 @@ package ua.com.fielden.platform.eql.stage1.elements;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.eql.stage2.elements.IQrySource2;
 
-public interface IQrySource1<S2 extends IQrySource2> extends ITransformableWithSourceToS2<S2> {
+public interface IQrySource1<S2 extends IQrySource2> extends ITransformableToS2<S2> {
     /**
      * Represents business alias of the query source
      * 
