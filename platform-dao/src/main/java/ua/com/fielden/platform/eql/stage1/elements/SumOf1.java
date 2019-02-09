@@ -1,8 +1,9 @@
 package ua.com.fielden.platform.eql.stage1.elements;
 
 import ua.com.fielden.platform.eql.meta.PropsResolutionContext;
-import ua.com.fielden.platform.eql.stage2.elements.SumOf2;
+import ua.com.fielden.platform.eql.meta.TransformationResult;
 import ua.com.fielden.platform.eql.stage2.elements.ISingleOperand2;
+import ua.com.fielden.platform.eql.stage2.elements.SumOf2;
 
 public class SumOf1 extends SingleOperandFunction1<SumOf2> {
     private final boolean distinct;
@@ -13,7 +14,8 @@ public class SumOf1 extends SingleOperandFunction1<SumOf2> {
     }
 
     @Override
-    public SumOf2 transform(final PropsResolutionContext resolutionContext) {
-        return new SumOf2(getOperand().transform(resolutionContext), distinct);
+    public TransformationResult<SumOf2> transform(final PropsResolutionContext resolutionContext) {
+        final TransformationResult<? extends ISingleOperand2> operandTransformationResult = getOperand().transform(resolutionContext);
+        return new TransformationResult<SumOf2>(new SumOf2(operandTransformationResult.getItem(), distinct), operandTransformationResult.getUpdatedContext());
     }
 }

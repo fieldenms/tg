@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import ua.com.fielden.platform.eql.meta.PropsResolutionContext;
+import ua.com.fielden.platform.eql.meta.TransformationResult;
 import ua.com.fielden.platform.eql.stage2.elements.Concat2;
 import ua.com.fielden.platform.eql.stage2.elements.ISingleOperand2;
 
@@ -16,12 +17,15 @@ public class Concat1 extends AbstractFunction1<Concat2> {
     }
 
     @Override
-    public Concat2 transform(final PropsResolutionContext resolutionContext) {
+    public TransformationResult<Concat2> transform(final PropsResolutionContext resolutionContext) {
         final List<ISingleOperand2> transformed = new ArrayList<>();
+        PropsResolutionContext currentResolutionContext = resolutionContext;
         for (final ISingleOperand1<? extends ISingleOperand2> operand : operands) {
-            transformed.add(operand.transform(resolutionContext));
+            final TransformationResult<? extends ISingleOperand2> operandTransformationResult = operand.transform(resolutionContext);
+            transformed.add(operandTransformationResult.getItem());
+            currentResolutionContext = operandTransformationResult.getUpdatedContext();
         }
-        return new Concat2(transformed);
+        return new TransformationResult<Concat2>(new Concat2(transformed), currentResolutionContext);
     }
 
     public List<ISingleOperand1<? extends ISingleOperand2>> getOperands() {

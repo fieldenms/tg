@@ -2,6 +2,7 @@ package ua.com.fielden.platform.eql.stage1.elements;
 
 import ua.com.fielden.platform.entity.query.fluent.enums.DateIntervalUnit;
 import ua.com.fielden.platform.eql.meta.PropsResolutionContext;
+import ua.com.fielden.platform.eql.meta.TransformationResult;
 import ua.com.fielden.platform.eql.stage2.elements.CountDateInterval2;
 import ua.com.fielden.platform.eql.stage2.elements.ISingleOperand2;
 
@@ -15,7 +16,9 @@ public class CountDateInterval1 extends TwoOperandsFunction1<CountDateInterval2>
     }
 
     @Override
-    public CountDateInterval2 transform(final PropsResolutionContext resolutionContext) {
-        return new CountDateInterval2(intervalUnit, getOperand1().transform(resolutionContext), getOperand2().transform(resolutionContext));
+    public TransformationResult<CountDateInterval2> transform(final PropsResolutionContext resolutionContext) {
+        final TransformationResult<? extends ISingleOperand2> firstOperandTransformationResult = getOperand1().transform(resolutionContext);
+        final TransformationResult<? extends ISingleOperand2> secondOperandTransformationResult = getOperand2().transform(firstOperandTransformationResult.getUpdatedContext());
+        return new TransformationResult<CountDateInterval2>(new CountDateInterval2(intervalUnit, firstOperandTransformationResult.getItem(), secondOperandTransformationResult.getItem()), secondOperandTransformationResult.getUpdatedContext());
     }
 }

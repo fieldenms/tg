@@ -1,6 +1,8 @@
 package ua.com.fielden.platform.eql.stage1.elements;
 
 import ua.com.fielden.platform.eql.meta.PropsResolutionContext;
+import ua.com.fielden.platform.eql.meta.TransformationResult;
+import ua.com.fielden.platform.eql.stage2.elements.EntQuery2;
 import ua.com.fielden.platform.eql.stage2.elements.QueryBasedSet2;
 
 public class QueryBasedSet1 implements ISetOperand1<QueryBasedSet2> {
@@ -12,8 +14,9 @@ public class QueryBasedSet1 implements ISetOperand1<QueryBasedSet2> {
     }
 
     @Override
-    public QueryBasedSet2 transform(final PropsResolutionContext resolutionContext) {
-        return new QueryBasedSet2(model.transform(resolutionContext));
+    public TransformationResult<QueryBasedSet2> transform(final PropsResolutionContext resolutionContext) {
+        final TransformationResult<EntQuery2> modelTransformationResult = model.transform(resolutionContext);
+        return new TransformationResult<QueryBasedSet2>(new QueryBasedSet2(modelTransformationResult.getItem()), modelTransformationResult.getUpdatedContext());
     }
 
     @Override

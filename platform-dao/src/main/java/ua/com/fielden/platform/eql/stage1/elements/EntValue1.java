@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.eql.stage1.elements;
 
 import ua.com.fielden.platform.eql.meta.PropsResolutionContext;
+import ua.com.fielden.platform.eql.meta.TransformationResult;
 import ua.com.fielden.platform.eql.stage2.elements.EntValue2;
 
 public class EntValue1 implements ISingleOperand1<EntValue2> {
@@ -12,7 +13,6 @@ public class EntValue1 implements ISingleOperand1<EntValue2> {
     }
 
     public EntValue1(final Object value, final boolean ignoreNull) {
-        super();
         this.value = value;
         this.ignoreNull = ignoreNull;
         if (!ignoreNull && value == null) {
@@ -22,8 +22,9 @@ public class EntValue1 implements ISingleOperand1<EntValue2> {
     }
 
     @Override
-    public EntValue2 transform(final PropsResolutionContext resolutionContext) {
-        return new EntValue2(getValue(), isIgnoreNull());
+    public TransformationResult<EntValue2> transform(final PropsResolutionContext resolutionContext) {
+        final EntValue2 transformed = new EntValue2(getValue(), isIgnoreNull());
+        return new TransformationResult<EntValue2>(transformed, resolutionContext.cloneWithAdded(transformed));
     }
 
     @Override

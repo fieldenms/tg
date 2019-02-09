@@ -7,7 +7,10 @@ import java.util.List;
 import java.util.Map;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.eql.stage2.elements.EntProp2;
+import ua.com.fielden.platform.eql.stage2.elements.EntValue2;
 import ua.com.fielden.platform.eql.stage2.elements.IQrySource2;
+import ua.com.fielden.platform.utils.Pair;
 
 public class PropsResolutionContext {
     private final List<List<IQrySource2>> sources;
@@ -31,12 +34,31 @@ public class PropsResolutionContext {
         return new PropsResolutionContext(domainInfo, srcs);
     }
 
-    public PropsResolutionContext cloneWithAddedSource(final IQrySource2 transformedSource) {
+    public PropsResolutionContext cloneWithAdded(final IQrySource2 transformedSource) {
         final List<List<IQrySource2>> srcs = new ArrayList<>();
         srcs.addAll(sources);
         srcs.get(0).add(transformedSource); // adding source to current query list of sources
         return new PropsResolutionContext(domainInfo, srcs);
     }
+
+    public PropsResolutionContext cloneWithAdded(final Pair<EntProp2, PropResolution> propResolution) {
+        final List<List<IQrySource2>> srcs = new ArrayList<>();
+        srcs.addAll(sources);
+        return new PropsResolutionContext(domainInfo, srcs);
+    }
+
+    public PropsResolutionContext cloneWithAdded(final EntValue2 value) {
+        final List<List<IQrySource2>> srcs = new ArrayList<>();
+        srcs.addAll(sources);
+        return new PropsResolutionContext(domainInfo, srcs);
+    }
+
+    public PropsResolutionContext cloneNew() {
+        final List<List<IQrySource2>> srcs = new ArrayList<>();
+        srcs.addAll(sources);
+        return new PropsResolutionContext(domainInfo, srcs);
+    }
+
     
     public PropsResolutionContext produceNewOne() {
         return new PropsResolutionContext(domainInfo);

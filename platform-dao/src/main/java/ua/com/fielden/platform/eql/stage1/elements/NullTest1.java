@@ -1,8 +1,9 @@
 package ua.com.fielden.platform.eql.stage1.elements;
 
 import ua.com.fielden.platform.eql.meta.PropsResolutionContext;
-import ua.com.fielden.platform.eql.stage2.elements.NullTest2;
+import ua.com.fielden.platform.eql.meta.TransformationResult;
 import ua.com.fielden.platform.eql.stage2.elements.ISingleOperand2;
+import ua.com.fielden.platform.eql.stage2.elements.NullTest2;
 
 public class NullTest1 implements ICondition1<NullTest2> {
     private final ISingleOperand1<? extends ISingleOperand2> operand;
@@ -14,13 +15,9 @@ public class NullTest1 implements ICondition1<NullTest2> {
     }
 
     @Override
-    public String toString() {
-        return operand + " IS " + (negated ? "NOT NULL" : "NULL");
-    }
-
-    @Override
-    public NullTest2 transform(final PropsResolutionContext resolutionContext) {
-        return new NullTest2(operand.transform(resolutionContext), negated);
+    public TransformationResult<NullTest2> transform(final PropsResolutionContext resolutionContext) {
+        final TransformationResult<? extends ISingleOperand2> operandTransformationResult = operand.transform(resolutionContext);
+        return new TransformationResult<NullTest2>(new NullTest2(operandTransformationResult.getItem(), negated), operandTransformationResult.getUpdatedContext());
     }
 
     @Override

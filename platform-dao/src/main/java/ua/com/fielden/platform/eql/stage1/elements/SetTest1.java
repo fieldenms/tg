@@ -1,9 +1,10 @@
 package ua.com.fielden.platform.eql.stage1.elements;
 
 import ua.com.fielden.platform.eql.meta.PropsResolutionContext;
-import ua.com.fielden.platform.eql.stage2.elements.SetTest2;
+import ua.com.fielden.platform.eql.meta.TransformationResult;
 import ua.com.fielden.platform.eql.stage2.elements.ISetOperand2;
 import ua.com.fielden.platform.eql.stage2.elements.ISingleOperand2;
+import ua.com.fielden.platform.eql.stage2.elements.SetTest2;
 
 public class SetTest1 implements ICondition1<SetTest2> {
     private final ISingleOperand1<? extends ISingleOperand2> leftOperand;
@@ -17,8 +18,10 @@ public class SetTest1 implements ICondition1<SetTest2> {
     }
 
     @Override
-    public SetTest2 transform(final PropsResolutionContext resolutionContext) {
-        return new SetTest2(leftOperand.transform(resolutionContext), negated, rightOperand.transform(resolutionContext));
+    public TransformationResult<SetTest2> transform(final PropsResolutionContext resolutionContext) {
+        final TransformationResult<? extends ISingleOperand2> leftOperandTransformationResult = leftOperand.transform(resolutionContext);
+        final TransformationResult<? extends ISetOperand2> rightOperandTransformationResult = rightOperand.transform(leftOperandTransformationResult.getUpdatedContext());
+        return new TransformationResult<SetTest2>(new SetTest2(leftOperandTransformationResult.getItem(), negated, rightOperandTransformationResult.getItem()), rightOperandTransformationResult.getUpdatedContext());
     }
 
     @Override

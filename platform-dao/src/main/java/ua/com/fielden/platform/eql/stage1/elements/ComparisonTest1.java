@@ -2,6 +2,7 @@ package ua.com.fielden.platform.eql.stage1.elements;
 
 import ua.com.fielden.platform.entity.query.fluent.enums.ComparisonOperator;
 import ua.com.fielden.platform.eql.meta.PropsResolutionContext;
+import ua.com.fielden.platform.eql.meta.TransformationResult;
 import ua.com.fielden.platform.eql.stage2.elements.ComparisonTest2;
 import ua.com.fielden.platform.eql.stage2.elements.ISingleOperand2;
 
@@ -10,11 +11,6 @@ public class ComparisonTest1 implements ICondition1<ComparisonTest2> {
     private final ISingleOperand1<? extends ISingleOperand2> rightOperand;
     private final ComparisonOperator operator;
 
-    @Override
-    public String toString() {
-        return leftOperand + " " + operator + " " + rightOperand;
-    }
-
     public ComparisonTest1(final ISingleOperand1<? extends ISingleOperand2> leftOperand, final ComparisonOperator operator, final ISingleOperand1<? extends ISingleOperand2> rightOperand) {
         this.leftOperand = leftOperand;
         this.rightOperand = rightOperand;
@@ -22,8 +18,10 @@ public class ComparisonTest1 implements ICondition1<ComparisonTest2> {
     }
 
     @Override
-    public ComparisonTest2 transform(final PropsResolutionContext resolutionContext) {
-        return new ComparisonTest2(leftOperand.transform(resolutionContext), operator, rightOperand.transform(resolutionContext));
+    public TransformationResult<ComparisonTest2> transform(final PropsResolutionContext resolutionContext) {
+        final TransformationResult<? extends ISingleOperand2> leftOperandTransformationResult = leftOperand.transform(resolutionContext);
+        final TransformationResult<? extends ISingleOperand2> rightOperandTransformationResult = rightOperand.transform(leftOperandTransformationResult.getUpdatedContext());
+        return new TransformationResult<ComparisonTest2>(new ComparisonTest2(leftOperandTransformationResult.getItem(), operator, rightOperandTransformationResult.getItem()), rightOperandTransformationResult.getUpdatedContext());
     }
 
     @Override

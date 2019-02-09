@@ -1,6 +1,8 @@
 package ua.com.fielden.platform.eql.stage1.elements;
 
 import ua.com.fielden.platform.eql.meta.PropsResolutionContext;
+import ua.com.fielden.platform.eql.meta.TransformationResult;
+import ua.com.fielden.platform.eql.stage2.elements.EntQuery2;
 import ua.com.fielden.platform.eql.stage2.elements.ExistenceTest2;
 
 public class ExistenceTest1 implements ICondition1<ExistenceTest2> {
@@ -13,8 +15,9 @@ public class ExistenceTest1 implements ICondition1<ExistenceTest2> {
     }
 
     @Override
-    public ExistenceTest2 transform(final PropsResolutionContext resolutionContext) {
-        return new ExistenceTest2(negated, subQuery.transform(resolutionContext));
+    public TransformationResult<ExistenceTest2> transform(final PropsResolutionContext resolutionContext) {
+        final TransformationResult<EntQuery2> subQueryTransformationResult = subQuery.transform(resolutionContext);
+        return new TransformationResult<ExistenceTest2>(new ExistenceTest2(negated, subQueryTransformationResult.getItem()), subQueryTransformationResult.getUpdatedContext());
     }
 
     @Override

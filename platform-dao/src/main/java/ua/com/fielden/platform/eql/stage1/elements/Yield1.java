@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.eql.stage1.elements;
 
 import ua.com.fielden.platform.eql.meta.PropsResolutionContext;
+import ua.com.fielden.platform.eql.meta.TransformationResult;
 import ua.com.fielden.platform.eql.stage2.elements.ISingleOperand2;
 import ua.com.fielden.platform.eql.stage2.elements.Yield2;
 
@@ -14,16 +15,14 @@ public class Yield1 {
         this.alias = alias;
         this.requiredHint = requiredHint;
     }
-
-    
     
     public Yield1(final ISingleOperand1<? extends ISingleOperand2> operand, final String alias) {
         this(operand, alias, false);
     }
 
-    @Override
-    public String toString() {
-        return alias;//sql();
+    public TransformationResult<Yield2> transform(PropsResolutionContext resolutionContext) {
+        TransformationResult<? extends ISingleOperand2> operandTransformationResult = operand.transform(resolutionContext);
+        return new TransformationResult<Yield2>(new Yield2(operandTransformationResult.getItem(), alias, requiredHint), operandTransformationResult.getUpdatedContext());
     }
 
     public ISingleOperand1<? extends ISingleOperand2> getOperand() {
@@ -32,6 +31,10 @@ public class Yield1 {
 
     public String getAlias() {
         return alias;
+    }
+
+    protected boolean isRequiredHint() {
+        return requiredHint;
     }
 
     @Override
@@ -70,13 +73,5 @@ public class Yield1 {
             return false;
         }
         return true;
-    }
-
-    protected boolean isRequiredHint() {
-        return requiredHint;
-    }
-
-    public Yield2 transform(PropsResolutionContext resolutionContext) {
-        return new Yield2(operand.transform(resolutionContext), alias, requiredHint);
     }
 }

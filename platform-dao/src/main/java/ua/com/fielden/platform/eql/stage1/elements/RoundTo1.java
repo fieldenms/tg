@@ -1,8 +1,9 @@
 package ua.com.fielden.platform.eql.stage1.elements;
 
 import ua.com.fielden.platform.eql.meta.PropsResolutionContext;
-import ua.com.fielden.platform.eql.stage2.elements.RoundTo2;
+import ua.com.fielden.platform.eql.meta.TransformationResult;
 import ua.com.fielden.platform.eql.stage2.elements.ISingleOperand2;
+import ua.com.fielden.platform.eql.stage2.elements.RoundTo2;
 
 public class RoundTo1 extends TwoOperandsFunction1<RoundTo2> {
 
@@ -11,7 +12,9 @@ public class RoundTo1 extends TwoOperandsFunction1<RoundTo2> {
     }
 
     @Override
-    public RoundTo2 transform(final PropsResolutionContext resolutionContext) {
-        return new RoundTo2(getOperand1().transform(resolutionContext), getOperand2().transform(resolutionContext));
+    public TransformationResult<RoundTo2> transform(final PropsResolutionContext resolutionContext) {
+        final TransformationResult<? extends ISingleOperand2> firstOperandTransformationResult = getOperand1().transform(resolutionContext);
+        final TransformationResult<? extends ISingleOperand2> secondOperandTransformationResult = getOperand2().transform(firstOperandTransformationResult.getUpdatedContext());
+        return new TransformationResult<RoundTo2>(new RoundTo2(firstOperandTransformationResult.getItem(), secondOperandTransformationResult.getItem()), secondOperandTransformationResult.getUpdatedContext());
     }
 }

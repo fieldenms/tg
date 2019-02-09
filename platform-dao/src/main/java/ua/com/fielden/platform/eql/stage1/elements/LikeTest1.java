@@ -1,8 +1,9 @@
 package ua.com.fielden.platform.eql.stage1.elements;
 
 import ua.com.fielden.platform.eql.meta.PropsResolutionContext;
-import ua.com.fielden.platform.eql.stage2.elements.LikeTest2;
+import ua.com.fielden.platform.eql.meta.TransformationResult;
 import ua.com.fielden.platform.eql.stage2.elements.ISingleOperand2;
+import ua.com.fielden.platform.eql.stage2.elements.LikeTest2;
 
 public class LikeTest1 implements ICondition1<LikeTest2> {
     private final ISingleOperand1<? extends ISingleOperand2> leftOperand;
@@ -18,13 +19,10 @@ public class LikeTest1 implements ICondition1<LikeTest2> {
     }
 
     @Override
-    public String toString() {
-        return leftOperand + (negated ? " NOT LIKE " : " LIKE ") + rightOperand;
-    }
-
-    @Override
-    public LikeTest2 transform(final PropsResolutionContext resolutionContext) {
-        return new LikeTest2(leftOperand.transform(resolutionContext), rightOperand.transform(resolutionContext), negated, caseInsensitive);
+    public TransformationResult<LikeTest2> transform(final PropsResolutionContext resolutionContext) {
+        final TransformationResult<? extends ISingleOperand2> leftOperandTransformationResult = leftOperand.transform(resolutionContext);
+        final TransformationResult<? extends ISingleOperand2> rightOperandTransformationResult = rightOperand.transform(leftOperandTransformationResult.getUpdatedContext());
+        return new TransformationResult<LikeTest2>(new LikeTest2(leftOperandTransformationResult.getItem(), rightOperandTransformationResult.getItem(), negated, caseInsensitive), rightOperandTransformationResult.getUpdatedContext());
     }
 
     @Override

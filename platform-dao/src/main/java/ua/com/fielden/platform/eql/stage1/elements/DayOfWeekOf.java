@@ -1,10 +1,7 @@
 package ua.com.fielden.platform.eql.stage1.elements;
 
-import static java.lang.String.format;
-
-import ua.com.fielden.platform.entity.query.DbVersion;
-import ua.com.fielden.platform.entity.query.exceptions.EqlException;
 import ua.com.fielden.platform.eql.meta.PropsResolutionContext;
+import ua.com.fielden.platform.eql.meta.TransformationResult;
 import ua.com.fielden.platform.eql.stage2.elements.IIgnorableAtS2;
 
 public class DayOfWeekOf extends SingleOperandFunction1 {
@@ -15,7 +12,7 @@ public class DayOfWeekOf extends SingleOperandFunction1 {
     }
 
     @Override
-    public IIgnorableAtS2 transform(PropsResolutionContext resolutionContext) {
+    public TransformationResult<IIgnorableAtS2> transform(PropsResolutionContext resolutionContext) {
         // TODO Auto-generated method stub
         return null;
     }

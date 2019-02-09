@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.eql.stage1.elements;
 
 import ua.com.fielden.platform.eql.meta.PropsResolutionContext;
+import ua.com.fielden.platform.eql.meta.TransformationResult;
 import ua.com.fielden.platform.eql.stage2.elements.ISingleOperand2;
 import ua.com.fielden.platform.eql.stage2.elements.OrderBy2;
 
@@ -27,8 +28,9 @@ public class OrderBy1 {
         this.desc = desc;
     }
 
-    public OrderBy2 transform(PropsResolutionContext resolutionContext) {
-        return new OrderBy2(operand.transform(resolutionContext), desc);
+    public TransformationResult<OrderBy2> transform(PropsResolutionContext resolutionContext) {
+        final TransformationResult<? extends ISingleOperand2> operandTransformationResult = operand.transform(resolutionContext);
+        return new TransformationResult<OrderBy2>(new OrderBy2(operandTransformationResult.getItem(), desc), operandTransformationResult.getUpdatedContext());
     }
 
     public ISingleOperand1<? extends ISingleOperand2> getOperand() {

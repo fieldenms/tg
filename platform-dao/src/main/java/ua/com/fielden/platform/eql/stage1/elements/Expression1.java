@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import ua.com.fielden.platform.eql.meta.PropsResolutionContext;
+import ua.com.fielden.platform.eql.meta.TransformationResult;
 import ua.com.fielden.platform.eql.stage2.elements.CompoundSingleOperand2;
 import ua.com.fielden.platform.eql.stage2.elements.Expression2;
 import ua.com.fielden.platform.eql.stage2.elements.ISingleOperand2;
@@ -15,18 +16,21 @@ public class Expression1 implements ISingleOperand1<Expression2> {
     private final List<CompoundSingleOperand1> items;
 
     public Expression1(final ISingleOperand1<? extends ISingleOperand2> first, final List<CompoundSingleOperand1> items) {
-        super();
         this.first = first;
         this.items = items;
     }
 
     @Override
-    public Expression2 transform(final PropsResolutionContext resolutionContext) {
+    public TransformationResult<Expression2> transform(final PropsResolutionContext resolutionContext) {
         final List<CompoundSingleOperand2> transformed = new ArrayList<>();
+        final TransformationResult<? extends ISingleOperand2> firstTransformationResult = first.transform(resolutionContext);
+        PropsResolutionContext currentResolutionContext = firstTransformationResult.getUpdatedContext();
         for (final CompoundSingleOperand1 item : items) {
-            transformed.add(new CompoundSingleOperand2(item.getOperand().transform(resolutionContext), item.getOperator()));
+            final TransformationResult<? extends ISingleOperand2> itemTransformationResult = item.getOperand().transform(currentResolutionContext);
+            transformed.add(new CompoundSingleOperand2(itemTransformationResult.getItem(), item.getOperator()));
+            currentResolutionContext = itemTransformationResult.getUpdatedContext();
         }
-        return new Expression2(first.transform(resolutionContext), transformed);
+        return new TransformationResult<Expression2>(new Expression2(firstTransformationResult.getItem(), transformed), currentResolutionContext);
     }
 
     @Override

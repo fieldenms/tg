@@ -11,6 +11,7 @@ import java.util.TreeMap;
 
 import ua.com.fielden.platform.entity.query.exceptions.EqlStage1ProcessingException;
 import ua.com.fielden.platform.eql.meta.PropsResolutionContext;
+import ua.com.fielden.platform.eql.meta.TransformationResult;
 import ua.com.fielden.platform.eql.stage2.elements.Yield2;
 import ua.com.fielden.platform.eql.stage2.elements.Yields2;
 
@@ -23,12 +24,15 @@ public class Yields1 {
         }
     }
     
-    public Yields2 transform(final PropsResolutionContext resolutionContext) {
+    public TransformationResult<Yields2> transform(final PropsResolutionContext resolutionContext) {
         final List<Yield2> yieldsList = new ArrayList<>(); 
+        PropsResolutionContext currentResolutionContext = resolutionContext;
         for (final Yield1 yield : yieldsMap.values()) {
-            yieldsList.add(yield.transform(resolutionContext));
+            TransformationResult<Yield2> yieldTransformationResult = yield.transform(currentResolutionContext);
+            currentResolutionContext = yieldTransformationResult.getUpdatedContext();
+            yieldsList.add(yieldTransformationResult.getItem());
         }
-        return new Yields2(yieldsList);
+        return new TransformationResult<Yields2>(new Yields2(yieldsList), currentResolutionContext);
     }
 
     public void addYield(final Yield1 yield) {
@@ -40,11 +44,6 @@ public class Yields1 {
 
     public Collection<Yield1> getYields() {
         return unmodifiableCollection(yieldsMap.values());
-    }
-
-    @Override
-    public String toString() {
-        return yieldsMap.toString();
     }
 
     @Override

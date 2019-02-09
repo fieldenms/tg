@@ -1,6 +1,5 @@
 package ua.com.fielden.platform.eql.stage1.elements;
 
-import static java.util.stream.Collectors.toList;
 import static ua.com.fielden.platform.entity.query.fluent.enums.LogicalOperator.AND;
 
 import java.util.ArrayList;
@@ -8,6 +7,7 @@ import java.util.Collections;
 import java.util.List;
 
 import ua.com.fielden.platform.eql.meta.PropsResolutionContext;
+import ua.com.fielden.platform.eql.meta.TransformationResult;
 import ua.com.fielden.platform.eql.stage2.elements.Conditions2;
 import ua.com.fielden.platform.eql.stage2.elements.ICondition2;
 
@@ -64,13 +64,34 @@ public class Conditions1 implements ICondition1<Conditions2> {
     }
 
     @Override
-    public Conditions2 transform(final PropsResolutionContext resolutionContext) {
-        final List<List<? extends ICondition2>> transformed = formDnf().stream()
-                .map(andGroup -> andGroup.stream().map(cond -> cond.transform(resolutionContext)).filter(cond -> !cond.ignore()).collect(toList()))
-                .filter(andGroup -> !andGroup.isEmpty())
-                .collect(toList());
+    public TransformationResult<Conditions2> transform(final PropsResolutionContext resolutionContext) {
+        final List<List<ICondition1<? extends ICondition2>>> dnfs = formDnf();
+        final List<List<? extends ICondition2>> result = new ArrayList<>();
+        PropsResolutionContext currentResolutionContext = resolutionContext;
+        for (List<ICondition1<? extends ICondition2>> andGroup : dnfs) {
+            List<ICondition2> transformedAndGroup = new ArrayList<>(); 
+            for (ICondition1<? extends ICondition2> andGroupCondition : andGroup) {
+                final TransformationResult<? extends ICondition2> andGroupConditionTransformationResult = andGroupCondition.transform(currentResolutionContext);
+                if (!andGroupConditionTransformationResult.getItem().ignore()) {
+                    transformedAndGroup.add(andGroupConditionTransformationResult.getItem());
+                    currentResolutionContext = andGroupConditionTransformationResult.getUpdatedContext();
+                }
+            }
+            if (!transformedAndGroup.isEmpty()) {
+                result.add(transformedAndGroup);
+            }
+        }
         
-        return new Conditions2(negated, transformed);
+//        final List<List<? extends ICondition2>> transformed = formDnf().stream()
+//                .map(andGroup -> 
+//                                  andGroup.stream().map(cond -> cond.transform(resolutionContext))
+//                                                   .filter(cond -> !cond.ignore())
+//                                                   .collect(toList())
+//                    )
+//                .filter(andGroup -> !andGroup.isEmpty())
+//                .collect(toList());
+        
+        return new TransformationResult<Conditions2>(new Conditions2(negated, result), currentResolutionContext);//new Conditions2(negated, transformed);
     }
 
     @Override

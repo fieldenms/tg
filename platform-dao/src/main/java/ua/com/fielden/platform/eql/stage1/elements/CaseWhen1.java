@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import ua.com.fielden.platform.eql.meta.PropsResolutionContext;
+import ua.com.fielden.platform.eql.meta.TransformationResult;
 import ua.com.fielden.platform.eql.stage2.elements.CaseWhen2;
 import ua.com.fielden.platform.eql.stage2.elements.ICondition2;
 import ua.com.fielden.platform.eql.stage2.elements.ISingleOperand2;
@@ -21,12 +22,19 @@ public class CaseWhen1 extends AbstractFunction1<CaseWhen2> {
     }
 
     @Override
-    public CaseWhen2 transform(final PropsResolutionContext resolutionContext) {
+    public TransformationResult<CaseWhen2> transform(final PropsResolutionContext resolutionContext) {
         final List<Pair<ICondition2, ISingleOperand2>> transformedWhenThenPairs = new ArrayList<>();
+        PropsResolutionContext currentResolutionContext = resolutionContext;
         for (final Pair<ICondition1<? extends ICondition2>, ISingleOperand1<? extends ISingleOperand2>> pair : whenThenPairs) {
-            transformedWhenThenPairs.add(new Pair<ICondition2, ISingleOperand2>(pair.getKey().transform(resolutionContext), pair.getValue().transform(resolutionContext)));
+            final TransformationResult<? extends ICondition2> conditionTransformationResult = pair.getKey().transform(currentResolutionContext);
+            currentResolutionContext = conditionTransformationResult.getUpdatedContext();
+            final TransformationResult<? extends ISingleOperand2> operandTransformationResult = pair.getValue().transform(currentResolutionContext);
+            currentResolutionContext = operandTransformationResult.getUpdatedContext();
+            transformedWhenThenPairs.add(new Pair<ICondition2, ISingleOperand2>(conditionTransformationResult.getItem(), operandTransformationResult.getItem()));
         }
-        return new CaseWhen2(transformedWhenThenPairs, elseOperand.transform(resolutionContext));
+        final TransformationResult<? extends ISingleOperand2> elseOperandTransformationResult = elseOperand.transform(currentResolutionContext);
+        
+        return new TransformationResult<CaseWhen2>(new CaseWhen2(transformedWhenThenPairs, elseOperandTransformationResult.getItem()), elseOperandTransformationResult.getUpdatedContext());
     }
 
     @Override

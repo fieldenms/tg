@@ -24,6 +24,11 @@ public class PropResolution {
     public Class<?> getType() {
         return type;
     }
+    
+    @Override
+    public String toString() {
+        return source + "  " + type;
+    }
 
     @Override
     public int hashCode() {

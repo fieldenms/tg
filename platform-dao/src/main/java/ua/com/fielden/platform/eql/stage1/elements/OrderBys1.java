@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import ua.com.fielden.platform.eql.meta.PropsResolutionContext;
+import ua.com.fielden.platform.eql.meta.TransformationResult;
 import ua.com.fielden.platform.eql.stage2.elements.OrderBy2;
 import ua.com.fielden.platform.eql.stage2.elements.OrderBys2;
 
@@ -14,12 +15,15 @@ public class OrderBys1 {
         this.models = models;
     }
 
-    public OrderBys2 transform(final PropsResolutionContext resolutionContext) {
+    public TransformationResult<OrderBys2> transform(final PropsResolutionContext resolutionContext) {
         final List<OrderBy2> transformed = new ArrayList<>();
+        PropsResolutionContext currentResolutionContext = resolutionContext;
         for (final OrderBy1 orderBy : models) {
-            transformed.add(orderBy.transform(resolutionContext));
+            TransformationResult<OrderBy2> orderByTransformationResult = orderBy.transform(currentResolutionContext);
+            transformed.add(orderByTransformationResult.getItem());
+            currentResolutionContext = orderByTransformationResult.getUpdatedContext();
         }
-        return new OrderBys2(transformed);
+        return new TransformationResult<OrderBys2>(new OrderBys2(transformed), currentResolutionContext);
     }
 
     @Override

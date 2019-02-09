@@ -10,8 +10,10 @@ import ua.com.fielden.platform.entity.query.exceptions.EqlStage1ProcessingExcept
 import ua.com.fielden.platform.eql.meta.AbstractPropInfo;
 import ua.com.fielden.platform.eql.meta.PropResolution;
 import ua.com.fielden.platform.eql.meta.PropsResolutionContext;
+import ua.com.fielden.platform.eql.meta.TransformationResult;
 import ua.com.fielden.platform.eql.stage2.elements.EntProp2;
 import ua.com.fielden.platform.eql.stage2.elements.IQrySource2;
+import ua.com.fielden.platform.utils.Pair;
 
 public class EntProp1 implements ISingleOperand1<EntProp2> {
     private String name;
@@ -32,7 +34,7 @@ public class EntProp1 implements ISingleOperand1<EntProp2> {
     }
 
     @Override
-    public EntProp2 transform(final PropsResolutionContext resolutionContext) {
+    public TransformationResult<EntProp2> transform(final PropsResolutionContext resolutionContext) {
         
         final Iterator<List<IQrySource2>> it = resolutionContext.getSources().iterator();
         if (isExternal()) {
@@ -43,7 +45,9 @@ public class EntProp1 implements ISingleOperand1<EntProp2> {
             final List<IQrySource2> item = it.next();
             final PropResolution resolution = resolveProp(item, this);
             if (resolution != null) {
-                return new EntProp2(resolution.getAliaslessName(), resolution.getSource(), resolution.getType());
+                final EntProp2 transformedProp = new EntProp2(resolution.getAliaslessName(), resolution.getSource(), resolution.getType());
+                
+                return new TransformationResult<EntProp2>(transformedProp, resolutionContext.cloneWithAdded(new Pair<>(transformedProp, resolution)));
             }
         }
 
@@ -77,6 +81,8 @@ public class EntProp1 implements ISingleOperand1<EntProp2> {
         }
 
         if (result.size() > 1) {
+             System.out.println(result.get(0));
+             System.out.println(result.get(1));
             throw new EqlStage1ProcessingException(format("Ambiguity while resolving prop [%s]", entProp.getName()));
         }
 

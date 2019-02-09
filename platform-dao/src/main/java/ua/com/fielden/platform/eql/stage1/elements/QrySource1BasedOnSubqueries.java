@@ -1,7 +1,5 @@
 package ua.com.fielden.platform.eql.stage1.elements;
 
-import static java.util.stream.Collectors.toList;
-
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -53,16 +51,23 @@ public class QrySource1BasedOnSubqueries extends AbstractQrySource1<QrySource2Ba
             }
         }
     }
-    private boolean getYieldNullability(final String yieldAlias) {
-        final boolean result = false;
-        for (final Yield1 yield : yieldsMatrix.get(yieldAlias)) {
-            //      if (yield.getInfo().isNullable()) {
-            return true;
-            //      }
-        }
-        return result;
-    }
    
+    @Override
+    public TransformationResult<QrySource2BasedOnSubqueries> transform(PropsResolutionContext resolutionContext) {
+        
+        final List<EntQuery2> transformedQueries = new ArrayList<>();
+        PropsResolutionContext currentResolutionContext = resolutionContext;
+
+        for (final EntQuery1 model : models) {
+            TransformationResult<EntQuery2> modelTransformationResult = model.transform(currentResolutionContext/*.produceNewOne() // as already invoked as part of EntQuery1.transform(..)*/);
+            transformedQueries.add(modelTransformationResult.getItem());
+            currentResolutionContext = modelTransformationResult.getUpdatedContext();  
+        }
+           
+        final QrySource2BasedOnSubqueries transformedSource = new QrySource2BasedOnSubqueries(transformedQueries, alias, resolutionContext.getDomainInfo());
+        return new TransformationResult<QrySource2BasedOnSubqueries>(transformedSource, /*currentResolutionContext*/resolutionContext.cloneWithAdded(transformedSource));
+    }
+    
     private EntQuery1 firstModel() {
         return models.get(0);
     }
@@ -104,15 +109,5 @@ public class QrySource1BasedOnSubqueries extends AbstractQrySource1<QrySource2Ba
 
     public List<EntQuery1> getModels() {
         return models;
-    }
-
-    @Override
-    public TransformationResult<QrySource2BasedOnSubqueries> transform(PropsResolutionContext resolutionContext) {
-        final QrySource2BasedOnSubqueries transformedSource = new QrySource2BasedOnSubqueries(extractQueryModels(resolutionContext), alias, resolutionContext.getDomainInfo());
-        return new TransformationResult<QrySource2BasedOnSubqueries>(transformedSource, resolutionContext.cloneWithAddedSource(transformedSource));
-    }
-    
-    private List<EntQuery2> extractQueryModels(PropsResolutionContext resolutionContext) {
-        return models.stream().map(q -> q.transform(resolutionContext.produceNewOne())).collect(toList());
     }
 }

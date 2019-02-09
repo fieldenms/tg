@@ -70,6 +70,106 @@ public class PropResolutionTest extends BaseEntQueryTCase1 {
     }
 
     @Test
+    public void test_q21() {
+        final EntityResultQueryModel<TgVehicleModel> qry = select(TgVehicleModel.class).where().prop("make").isNotNull().model();
+        final EntQuery2 qry2 = entResultQry2(qry, new PropsResolutionContext(metadata));
+
+        final QrySource2BasedOnPersistentType source = new QrySource2BasedOnPersistentType(TgVehicleModel.class, metadata.get(TgVehicleModel.class), null);
+        final Sources2 sources = new Sources2(source);
+        final List<List<? extends ICondition2>> allConditions = new ArrayList<>();
+        final List<ICondition2> firstAndConditionsGroup = new ArrayList<>();
+        firstAndConditionsGroup.add(new NullTest2(new EntProp2("make", source, TgVehicleMake.class), true));
+        allConditions.add(firstAndConditionsGroup);
+        final Conditions2 conditions = new Conditions2(false, allConditions);
+
+        final EntQueryBlocks2 parts = new EntQueryBlocks2(sources, conditions, emptyYields2, emptyGroupBys2, emptyOrderBys2);
+        final EntQuery2 exp = new EntQuery2(parts, TgVehicleModel.class, RESULT_QUERY, null);
+
+        assertEquals(qry2, exp);
+    }
+
+    @Test
+    public void test_18_1() {
+        final EntityResultQueryModel<TgOrgUnit1> qry = select(TgOrgUnit1.class).where().exists( //
+                select(TgOrgUnit2.class).where().prop("parent").eq().extProp("id"). //
+                model()). //
+                model();  
+        final EntQuery2 qry2 = entResultQry2(qry, new PropsResolutionContext(metadata));
+
+    }
+
+    
+
+    @Test
+    public void test_12() {
+        final EntityResultQueryModel<TgVehicleModel> sourceModel1 = select(TgVehicleModel.class).where().prop("key").eq().val("316").model();
+        final EntityResultQueryModel<TgVehicleModel> sourceModel2 = select(TgVehicleModel.class).where().prop("key").eq().val("317").model();
+        transform(select(sourceModel1, sourceModel2).where().prop("key").in().values("316", "317").model());
+    }
+
+    @Test
+    public void test_18() {
+        transform(//
+        select(TgOrgUnit1.class).where().exists( //
+        select(TgOrgUnit2.class).where().prop("parent").eq().extProp("id").and().exists( //
+        select(TgOrgUnit3.class).where().prop("parent").eq().extProp("id").and().exists( // 
+        select(TgOrgUnit4.class).where().prop("parent").eq().extProp("id").and().exists( //
+        select(TgOrgUnit5.class).where().prop("parent").eq().extProp("id").and().prop("key").isNotNull(). //
+        model()). //
+        model()). //
+        model()). //
+        model()). //
+        model());
+    }
+
+    @Test
+    public void test_19() {
+        transform(//
+        select(TgOrgUnit1.class).as("L1").where().exists( //
+        select(TgOrgUnit2.class).as("L2").where().prop("parent").eq().extProp("L1.id").and().exists( //
+        select(TgOrgUnit3.class).as("L3").where().prop("parent").eq().extProp("L2.id").and().exists( // 
+        select(TgOrgUnit4.class).as("L4").where().prop("parent").eq().extProp("L3.id").and().exists( //
+        select(TgOrgUnit5.class).as("L5").where().prop("parent").eq().extProp("L4.id").and().prop("key").isNotNull(). //
+        model()). //
+        model()). //
+        model()). //
+        model()). //
+        model());
+    }
+
+    @Test
+    public void test_20() {
+        transform(//
+        select(TgOrgUnit1.class).as("L1").where().exists( //
+        select(TgOrgUnit2.class).as("L2").where().prop("parent").eq().extProp("L1.id").and().exists( //
+        select(TgOrgUnit3.class).as("L3").where().prop("parent").eq().extProp("L2.id").and().exists( // 
+        select(TgOrgUnit4.class).as("L4").where().prop("parent").eq().extProp("L3.id").and().exists( //
+        select(TgOrgUnit5.class).as("L5").where().prop("parent").eq().extProp("L4").and().prop("key").isNotNull(). //
+        model()). //
+        model()). //
+        model()). //
+        model()). //
+        model());
+    }
+
+
+    @Test
+    public void test_21() {
+        transform(//
+        select(TgOrgUnit1.class).as("L1").where().exists( //
+        select(TgOrgUnit2.class).as("L2").where().prop("parent").eq().extProp("L1.id").and().exists( //
+        select(TgOrgUnit3.class).as("L3").where().prop("parent").eq().extProp("L1.id").and().exists( // 
+        select(TgOrgUnit4.class).as("L4").where().prop("parent").eq().extProp("L1.id").and().exists( //
+        select(TgOrgUnit5.class).as("L5").where().prop("parent").eq().extProp("L1.id").and().prop("key").isNotNull(). //
+        model()). //
+        model()). //
+        model()). //
+        model()). //
+        model());
+    }
+
+    
+    @Test
     public void test_that_prop_name_is_without_alias_at_stage2() {
         final EntityResultQueryModel<TgWorkshop> qry = select(TgWorkshop.class).as("w").where().prop("w.key").isNotNull().model();
         final EntQuery2 qry2 = entResultQry2(qry, new PropsResolutionContext(metadata));
@@ -149,24 +249,6 @@ public class PropResolutionTest extends BaseEntQueryTCase1 {
         assertEquals(qry2, exp);
     }
 
-    @Test
-    public void test_q21() {
-        final EntityResultQueryModel<TgVehicleModel> qry = select(TgVehicleModel.class).where().prop("make").isNotNull().model();
-        final EntQuery2 qry2 = entResultQry2(qry, new PropsResolutionContext(metadata));
-
-        final QrySource2BasedOnPersistentType source = new QrySource2BasedOnPersistentType(TgVehicleModel.class, metadata.get(TgVehicleModel.class), null);
-        final Sources2 sources = new Sources2(source);
-        final List<List<? extends ICondition2>> allConditions = new ArrayList<>();
-        final List<ICondition2> firstAndConditionsGroup = new ArrayList<>();
-        firstAndConditionsGroup.add(new NullTest2(new EntProp2("make", source, TgVehicleMake.class), true));
-        allConditions.add(firstAndConditionsGroup);
-        final Conditions2 conditions = new Conditions2(false, allConditions);
-
-        final EntQueryBlocks2 parts = new EntQueryBlocks2(sources, conditions, emptyYields2, emptyGroupBys2, emptyOrderBys2);
-        final EntQuery2 exp = new EntQuery2(parts, TgVehicleModel.class, RESULT_QUERY, null);
-
-        assertEquals(qry2, exp);
-    }
 
 //    @Test
 //    public void test_q212() {
@@ -464,12 +546,6 @@ public class PropResolutionTest extends BaseEntQueryTCase1 {
         transform(select(TgAuthorship.class).where().beginExpr().val(100).mult().model(select(TgAuthor.class).yield().countAll().modelAsPrimitive()).endExpr().ge().val(1000).model());
     }
 
-    @Test
-    public void test_12() {
-        final EntityResultQueryModel<TgVehicleModel> sourceModel1 = select(TgVehicleModel.class).where().prop("key").eq().val("316").model();
-        final EntityResultQueryModel<TgVehicleModel> sourceModel2 = select(TgVehicleModel.class).where().prop("key").eq().val("317").model();
-        transform(select(sourceModel1, sourceModel2).where().prop("key").in().values("316", "317").model());
-    }
 
     @Test
     public void test_13() {
@@ -498,67 +574,6 @@ public class PropResolutionTest extends BaseEntQueryTCase1 {
     @Test
     public void test_17() {
         transform(select(TgAuthor.class).where().prop("name").isNotNull().groupBy().prop("name").yield().prop("name").modelAsEntity(TgPersonName.class));
-    }
-
-    @Test
-    public void test_18() {
-        transform(//
-        select(TgOrgUnit1.class).where().exists( //
-        select(TgOrgUnit2.class).where().prop("parent").eq().extProp("id").and().exists( //
-        select(TgOrgUnit3.class).where().prop("parent").eq().extProp("id").and().exists( // 
-        select(TgOrgUnit4.class).where().prop("parent").eq().extProp("id").and().exists( //
-        select(TgOrgUnit5.class).where().prop("parent").eq().extProp("id").and().prop("key").isNotNull(). //
-        model()). //
-        model()). //
-        model()). //
-        model()). //
-        model());
-    }
-
-    @Test
-    public void test_19() {
-        transform(//
-        select(TgOrgUnit1.class).as("L1").where().exists( //
-        select(TgOrgUnit2.class).as("L2").where().prop("parent").eq().extProp("L1.id").and().exists( //
-        select(TgOrgUnit3.class).as("L3").where().prop("parent").eq().extProp("L2.id").and().exists( // 
-        select(TgOrgUnit4.class).as("L4").where().prop("parent").eq().extProp("L3.id").and().exists( //
-        select(TgOrgUnit5.class).as("L5").where().prop("parent").eq().extProp("L4.id").and().prop("key").isNotNull(). //
-        model()). //
-        model()). //
-        model()). //
-        model()). //
-        model());
-    }
-
-    @Test
-    public void test_20() {
-        transform(//
-        select(TgOrgUnit1.class).as("L1").where().exists( //
-        select(TgOrgUnit2.class).as("L2").where().prop("parent").eq().extProp("L1.id").and().exists( //
-        select(TgOrgUnit3.class).as("L3").where().prop("parent").eq().extProp("L2.id").and().exists( // 
-        select(TgOrgUnit4.class).as("L4").where().prop("parent").eq().extProp("L3.id").and().exists( //
-        select(TgOrgUnit5.class).as("L5").where().prop("parent").eq().extProp("L4").and().prop("key").isNotNull(). //
-        model()). //
-        model()). //
-        model()). //
-        model()). //
-        model());
-    }
-
-
-    @Test
-    public void test_21() {
-        transform(//
-        select(TgOrgUnit1.class).as("L1").where().exists( //
-        select(TgOrgUnit2.class).as("L2").where().prop("parent").eq().extProp("L1.id").and().exists( //
-        select(TgOrgUnit3.class).as("L3").where().prop("parent").eq().extProp("L1.id").and().exists( // 
-        select(TgOrgUnit4.class).as("L4").where().prop("parent").eq().extProp("L1.id").and().exists( //
-        select(TgOrgUnit5.class).as("L5").where().prop("parent").eq().extProp("L1.id").and().prop("key").isNotNull(). //
-        model()). //
-        model()). //
-        model()). //
-        model()). //
-        model());
     }
 
     @Test

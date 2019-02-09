@@ -5,6 +5,7 @@ import java.util.Iterator;
 import java.util.List;
 
 import ua.com.fielden.platform.eql.meta.PropsResolutionContext;
+import ua.com.fielden.platform.eql.meta.TransformationResult;
 import ua.com.fielden.platform.eql.stage2.elements.GroupBy2;
 import ua.com.fielden.platform.eql.stage2.elements.GroupBys2;
 
@@ -15,12 +16,15 @@ public class GroupBys1 {
         this.groups = groups;
     }
 
-    public GroupBys2 transform(final PropsResolutionContext resolutionContext) {
+    public TransformationResult<GroupBys2> transform(final PropsResolutionContext resolutionContext) {
         final List<GroupBy2> transformed = new ArrayList<>();
+        PropsResolutionContext currentResolutionContext = resolutionContext;
         for (final GroupBy1 groupBy : groups) {
-            transformed.add(groupBy.transform(resolutionContext));
+            final TransformationResult<GroupBy2> groupByTransformationResult = groupBy.transform(currentResolutionContext);
+            transformed.add(groupByTransformationResult.getItem());
+            currentResolutionContext = groupByTransformationResult.getUpdatedContext();
         }
-        return new GroupBys2(transformed);
+        return new TransformationResult<GroupBys2>(new GroupBys2(transformed), currentResolutionContext);
     }
 
     public List<GroupBy1> getGroups() {
