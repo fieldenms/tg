@@ -3,23 +3,30 @@ import '/resources/polymer/@polymer/iron-flex-layout/iron-flex-layout-classes.js
 import '/resources/polymer/@polymer/iron-icon/iron-icon.js';
 import '/resources/polymer/@polymer/iron-icons/iron-icons.js';
 import '/resources/polymer/@polymer/iron-list/iron-list.js';
-import '/resources/polymer/@polymer/paper-checkbox/paper-checkbox.js'
+import '/resources/polymer/@polymer/paper-checkbox/paper-checkbox.js';
 
-/*import '/resources/images/tg-icons.js';*/
-import '/resources/editors/tg-dom-stamper.js'
+import '/resources/images/tg-icons.js';
+import '/resources/editors/tg-dom-stamper.js';
 
 import {Polymer} from '/resources/polymer/@polymer/polymer/lib/legacy/polymer-fn.js';
 import {html} from '/resources/polymer/@polymer/polymer/lib/utils/html-tag.js';
 
-import { TgHighlightingBehavior } from '/resources/editors/tg-highlighting-behavior.js'
+import { TgHighlightingBehavior } from '/resources/editors/tg-highlighting-behavior.js';
 import { TgEditorBehavior , createEditorTemplate } from '/resources/editors/tg-editor-behavior.js';
-import { tearDownEvent } from '/resources/reflection/tg-polymer-utils.js'
+import { tearDownEvent, allDefined } from '/resources/reflection/tg-polymer-utils.js';
 
-const template = html`
+const additionalTemplate = html`
     <style>
         :host {
-            @apply(--layout-vertical);
-            @apply(--layout-flex);
+            @apply --layout-vertical;
+            @apply --layout-flex;
+        }
+        paper-input-container {
+            @apply --layout-vertical;
+            flex: 1 0 auto;    
+        }
+        .main-container {
+            @apply --layout-flex;
         }
         /* tg-editor {
             --tg-editor-paper-input-container-mixin: {
@@ -65,8 +72,8 @@ const template = html`
         }
         
         .item {
-            @apply(--layout-horizontal);
-            @apply(--layout-center);
+            @apply --layout-horizontal;
+            @apply --layout-center;
             padding: 16px 22px 16px 0;
             border-bottom: 1px solid #DDD;
         }
@@ -125,11 +132,11 @@ const template = html`
         .pad {
             padding-left: 14px;
             overflow: hidden;
-            @apply(--layout-vertical);
+            @apply --layout-vertical;
         }
         .without-pad {
             overflow: hidden;
-            @apply(--layout-vertical);
+            @apply --layout-vertical;
         }
         .primary {
             font-size: 10pt;
@@ -154,7 +161,7 @@ const template = html`
         }
         .sorting-group {
             cursor: pointer;
-            @apply(--layout-horizontal);
+            @apply --layout-horizontal;
         }
         .sorting-invisible {
             visibility: hidden;
@@ -317,6 +324,18 @@ Polymer({
     ],
     
     ready: function () {
+        const inputWrapper = this.decorator().$$(".input-wrapper");
+        inputWrapper.style.flexGrow = "1";
+        const labelAndInputContainer = this.decorator().$.labelAndInputContainer;
+        labelAndInputContainer.style.alignSelf = "stretch";
+        labelAndInputContainer.style.display = "flex";
+        labelAndInputContainer.style.flexDirection = "column";
+        const prefix = this.decorator().$$(".prefix");
+        prefix.style.alignSelf = "flex-start";
+        const suffix = this.decorator().$$(".suffix");
+        suffix.style.alignSelf = "flex-start";
+
+
         this._draggingItem = null;
         this._eventHandler = (function(e) {
             // There is no need to proceed with search if user moved out of the search field
@@ -363,7 +382,7 @@ Polymer({
      * This method relies on a fact that the entity gets initialised earlier than originalEntity (see '_postEntityReceived' method in tg-entity-binder-behavior).
      */
     _originalEntityChanged: function (newValue, oldValue) {
-        Polymer.TgBehaviors.TgEditorBehavior._originalEntityChanged.call(this, newValue, oldValue);
+        TgEditorBehavior._originalEntityChanged.call(this, newValue, oldValue);
         
         if (this.reflector().isEntity(newValue)) {
             if (newValue.type()._simpleClassName() === 'CentreConfigLoadAction') {
@@ -389,7 +408,7 @@ Polymer({
                     }
                 }
                 this._updateEntitiesAndSelection(chosenIds, this.entity, arrivedEntities);
-                this.scrollToFirstFoundElement();
+                //this.scrollToFirstFoundElement();
             }
             
             this.provideSorting(this.entity.sortingVals, this._entities);
@@ -649,6 +668,9 @@ Polymer({
     },
     
     _highlightedValue : function (propertyValue, phraseForSearchingCommited) {
+        if (!allDefined(arguments)) {
+            return '';
+        }
         var html = '';
         var matchedParts = this._matchedParts(propertyValue, phraseForSearchingCommited);
         for (var index = 0; index < matchedParts.length; index++) {
