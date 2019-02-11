@@ -9,6 +9,7 @@ import {html} from '/resources/polymer/@polymer/polymer/lib/utils/html-tag.js';
 const template = html`
     <style>
         :host {
+            min-height: 0;
             @apply --layout-vertical;
         }
         #scrollablePanel {
