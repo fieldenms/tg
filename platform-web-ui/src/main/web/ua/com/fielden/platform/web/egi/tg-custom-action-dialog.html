@@ -946,12 +946,14 @@
                         customAction.restoreActionState();
                     }
                 } else {
-                    var self = this;
+                    const self = this;
                     if (self.isRunning === false) {
                         self._lastAction = this._customiseAction(customAction);
                         self._setIsRunning(true);
                         self.staticTitle = customAction.shortDesc;
                         self.dynamicTitle = null;
+                        //Should also reset _dataLoaded because master's entity also changes as in case of entity navigation action.
+                        self._dataLoaded = false;
 
                         self._getElement(customAction)
                             .then(function(element) {
