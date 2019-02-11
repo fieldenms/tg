@@ -310,7 +310,7 @@ public class SourceControllerImpl implements ISourceController {
             return getTgAppSource(webUiConfig, deviceProfile);
         } else if ("/app/tg-reflector.js".equalsIgnoreCase(resourceURI)) {
             return getReflectorSource(serialiser, tgJackson);
-        } else if ("/app/tg-element-loader.html".equalsIgnoreCase(resourceURI)) {
+        } else if ("/app/tg-element-loader.js".equalsIgnoreCase(resourceURI)) {
             return getElementLoaderSource(this, webUiConfig, deviceProfile);
         } else if (resourceURI.startsWith("/master_ui")) {
             return getMasterSource(resourceURI.replaceFirst(quote("/master_ui/"), "").replaceFirst(quote(".js"), ""), webUiConfig);
@@ -438,7 +438,7 @@ public class SourceControllerImpl implements ISourceController {
     }
 
     private static String getElementLoaderSource(final SourceControllerImpl sourceControllerImpl, final IWebUiConfig webUiConfig, final DeviceProfile deviceProfile) {
-        final String source = getFileSource("/resources/element_loader/tg-element-loader.html", webUiConfig.resourcePaths());
+        final String source = getFileSource("/resources/element_loader/tg-element-loader.js", webUiConfig.resourcePaths());
         return source.replace("importedURLs = {}", sourceControllerImpl.isPreloadedResourcesInitialised() ? generateImportUrlsFrom(sourceControllerImpl.getPreloadedResources(deviceProfile))
                 : "importedIrrelevantURLs = {}");
     }
