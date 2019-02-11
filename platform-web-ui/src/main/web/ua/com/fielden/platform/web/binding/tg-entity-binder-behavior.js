@@ -651,6 +651,7 @@ export const TgEntityBinderBehavior = {
             }
             this.enableView();
             this._retrievalInitiated = false;
+            this.fire('binding-entity-retrieved-error', errorResult);
         }).bind(self);
         // 				validation:
         self._postValidatedDefault = (function (entityAndCustomObject) {

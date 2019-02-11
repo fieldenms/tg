@@ -4,12 +4,11 @@ const styleElement = document.createElement('dom-module');
 styleElement.innerHTML = `
     <template>
         <style>
-             tg-entity-master[with-dimensions]::shadow #masterContainer{
-                position: absolute;
-                top: 0;
-                bottom: 0;
-                right: 0;
-                left: 0;
+            :host {
+                min-height: 0;
+            }
+            tg-entity-master {
+                min-height: 0;
             }
             .property-action-icon {
                 --tg-ui-action-icon-button-width: 24px;
