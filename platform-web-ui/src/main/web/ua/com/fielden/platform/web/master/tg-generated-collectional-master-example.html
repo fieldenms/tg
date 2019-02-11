@@ -1,0 +1,79 @@
+<!doctype html>
+<html>
+
+<head>
+    <!--meta charset="utf-8"-->
+    <title>Generated Master</title>
+    <script src='/resources/polymer/@webcomponents/webcomponentsjs/webcomponents-bundle.js'></script>
+    <script src='/resources/polymer/web-animations-js/web-animations-next-lite.min.js'></script>
+    <script src='/resources/moment/moment.js'></script>
+    <script src='/resources/moment/moment-with-locales.js'></script>
+    <script src="/resources/lodash/4.17.11/lodash.min.js"></script>
+    <script src="/resources/postal/2.0.5/postal.min.js"></script>
+    <script src="/resources/filesaver/FileSaver.min.js"></script>
+    <script type="module">
+        import '/resources/polymer/@polymer/iron-flex-layout/iron-flex-layout-classes.js'; // fullbleed class
+        import '/resources/polymer/@polymer/paper-styles/paper-styles-classes.js'; // Roboto font
+        import '/master_ui/ua.com.fielden.platform.security.user.UserRolesUpdater.js';
+    </script>
+    <style>
+        body {
+            font-family: 'Roboto', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+            font-size: 10pt;
+        }
+    </style>
+    <custom-style>
+        <style include="iron-flex iron-flex-reverse iron-flex-alignment iron-flex-factors iron-positioning"></style>
+        <style> /* tg-confirmation-dialog -specific */
+            .confirm-dialog paper-button {
+                color: var(--paper-light-blue-500);
+                --paper-button-flat-focus-color: var(--paper-light-blue-50);
+            }
+            .confirm-dialog paper-button:hover {
+                background: var(--paper-light-blue-50);
+            }
+        </style>
+    </custom-style>
+</head>
+
+<body unresolved class="fullbleed">
+    <tg-userrolesupdater-master id="master" entity-type="ua.com.fielden.platform.security.user.UserRolesUpdater"
+        entity-id="new" current-state="EDIT">
+    </tg-userrolesupdater-master>
+    <script>
+        (function () {
+            window.addEventListener('WebComponentsReady', function (e) {
+                // imports are loaded and elements have been registered
+                console.log('Components are ready');
+                const master = document.querySelector('#master');
+                master.postRetrieved = function (entity, bindingEntity, customObject) {
+                    console.log("postRetrieved");
+                };
+                master.postValidated = function (validatedEntity, bindingEntity, customObject) {
+                    console.log("postValidated");
+                };
+                master.postSaved = function (potentiallySavedOrNewEntity, newBindingEntity) {
+                    console.log("postSaved");
+                };
+                const user = master._reflector().newEntity("ua.com.fielden.platform.security.user.User");
+                user.id = 0;
+                user.key = 'SU';
+                
+                const getSelectedEntities = () => [ user ];
+                const contextHolder = master._reflector().createContextHolder(
+                    null, 'ONE', null,
+                    null, getSelectedEntities, null,
+                    null
+                );
+                
+                master._reflector().setCustomProperty(contextHolder, "@@miType", 'ua.com.fielden.platform.ui.menu.sample.MiUser');
+                master._reflector().setCustomProperty(contextHolder, "@@actionKind", 'SECONDARY_RESULT_SET');
+                master._reflector().setCustomProperty(contextHolder, "@@actionNumber", 0);
+                master._reflector().setCustomProperty(contextHolder, "@@saveAsName", '');
+                master.retrieve(contextHolder);
+            });
+        })();
+    </script>
+</body>
+
+</html>
