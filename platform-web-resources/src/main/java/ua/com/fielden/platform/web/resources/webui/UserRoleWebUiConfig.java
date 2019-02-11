@@ -1,12 +1,16 @@
 package ua.com.fielden.platform.web.resources.webui;
 
 import static java.lang.String.format;
+import static ua.com.fielden.platform.entity.AbstractEntity.DESC;
+import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
 import static ua.com.fielden.platform.entity.ActivatableAbstractEntity.ACTIVE;
 import static ua.com.fielden.platform.web.PrefDim.mkDim;
 import static ua.com.fielden.platform.web.action.StandardMastersWebUiConfig.MASTER_ACTION_SPECIFICATION;
 import static ua.com.fielden.platform.web.action.pre.ConfirmationPreAction.okCancel;
 import static ua.com.fielden.platform.web.centre.api.actions.impl.EntityActionBuilder.action;
 import static ua.com.fielden.platform.web.centre.api.context.impl.EntityCentreContextSelector.context;
+import static ua.com.fielden.platform.web.layout.api.impl.LayoutBuilder.cell;
+import static ua.com.fielden.platform.web.layout.api.impl.LayoutCellBuilder.layout;
 
 import java.util.Optional;
 
@@ -25,6 +29,7 @@ import ua.com.fielden.platform.web.centre.EntityCentre;
 import ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig;
 import ua.com.fielden.platform.web.centre.api.impl.EntityCentreBuilder;
 import ua.com.fielden.platform.web.interfaces.ILayout.Device;
+import ua.com.fielden.platform.web.layout.api.impl.FlexLayoutConfig;
 import ua.com.fielden.platform.web.view.master.EntityMaster;
 import ua.com.fielden.platform.web.view.master.api.IMaster;
 import ua.com.fielden.platform.web.view.master.api.actions.MasterActions;
@@ -90,27 +95,31 @@ public class UserRoleWebUiConfig {
      * @return
      */
     private static EntityMaster<UserRole> createMaster(final Injector injector) {
-        final String fmr = "'flex'";
+        final int MARGIN = 20;
+        final String MARGIN_PIX = MARGIN + "px";
+        final FlexLayoutConfig CELL_LAYOUT = layout().flex().end();
+        final FlexLayoutConfig FLEXIBLE_ROW = layout().flexAuto().end();
+        final FlexLayoutConfig FLEXIBLE_LAYOUT_WITH_PADDING = layout()
+                .withStyle("height", "100%")
+                .withStyle("box-sizing", "border-box")
+                .withStyle("min-height", "fit-content")
+                .withStyle("padding", MARGIN_PIX).end();
 
-        final String layout =
-            "['padding:20px', 'width: 300px', "
-            + format("[%s],", fmr)
-            + format("[%s],", fmr)
-            + format("[%s]", fmr)
-            + "]";
+        final String layout = cell(
+                cell(cell(CELL_LAYOUT).repeat(2).withGapBetweenCells(MARGIN)).
+                cell(cell(CELL_LAYOUT), FLEXIBLE_ROW),
+                FLEXIBLE_LAYOUT_WITH_PADDING).toString();
+
         final IMaster<UserRole> masterConfigForUserRole = new SimpleMasterBuilder<UserRole>()
                 .forEntity(UserRole.class)
-                .addProp("key").asSinglelineText()
-                .also()
-                .addProp("desc").asMultilineText()
-                .also()
-                .addProp(ActivatableAbstractEntity.ACTIVE).asCheckbox()
-                .also()
+                .addProp(KEY).asSinglelineText().also()
+                .addProp(ACTIVE).asCheckbox().also()
+                .addProp(DESC).asMultilineText().also()
                 .addAction(MasterActions.REFRESH).shortDesc("CANCEL").longDesc("Cancel changes")
                 .addAction(MasterActions.SAVE).longDesc("Save changes")
-
                 .setActionBarLayoutFor(Device.DESKTOP, Optional.empty(), format(bottomButtonPanel, actionButton, actionButton))
                 .setLayoutFor(Device.DESKTOP, Optional.empty(), layout)
+                .withDimensions(mkDim(480, 320))
                 .done();
         return new EntityMaster<UserRole>(
                 UserRole.class,

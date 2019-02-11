@@ -31,7 +31,7 @@
             <template is="dom-if" if="[[!_isCentre(menuItem)]]" on-dom-change="_viewWasDefined" restamp>
                 <paper-material id="customViewContainer">
                     <div class="master-insertion-point">
-                        <tg-element-loader id="elementToLoad" class="layout vertical" auto="[[autoLoad]]" import="[[menuItem.view.htmlImport]]" element-name="[[menuItem.view.elementName]]" attrs="[[menuItem.view.attrs]]" on-after-load="_afterLoadListener"></tg-element-loader>
+                        <tg-element-loader id="elementToLoad" class="layout vertical" style="min-height:0;" auto="[[autoLoad]]" import="[[menuItem.view.htmlImport]]" element-name="[[menuItem.view.elementName]]" attrs="[[menuItem.view.attrs]]" on-after-load="_afterLoadListener"></tg-element-loader>
                     </div>
                 </paper-material>
             </template>

@@ -24,10 +24,12 @@ public class IronIconsetUtility {
     private final String srcFolder;
 
     public IronIconsetUtility(final String iconsetId, final int svgWidth, final String srcFolder) {
-        this.fileBegin = format("<link rel=\"import\" href=\"/resources/polymer/iron-icon/iron-icon.html\"> %n " +
-                                "<link rel=\"import\" href=\"/resources/polymer/iron-iconset-svg/iron-iconset-svg.html\"> %n " +
-                                "<iron-iconset-svg name=\"%s\" size=\"%d\"> %n <svg> %n <defs> %n", iconsetId, svgWidth);
-        this.fileEnd = "</defs> %n </svg> %n </iron-iconset-svg>";
+        this.fileBegin = format("import '/resources/polymer/@polymer/iron-icon/iron-icon.js';%n" +
+                                "import '/resources/polymer/@polymer/iron-iconset-svg/iron-iconset-svg.js';%n" +
+                                "import {html} from '/resources/polymer/@polymer/polymer/lib/utils/html-tag.js';%n" +
+                                "const template = html`<iron-iconset-svg name='%s' size='%d'> %n <svg> %n <defs> %n", iconsetId, svgWidth);
+        this.fileEnd = "</defs> \n </svg> \n </iron-iconset-svg>`;\n"
+                + "document.head.appendChild(template.content);";
         this.srcFolder = srcFolder;
     }
 

@@ -1,8 +1,9 @@
-<link rel="import" href="/resources/polymer/iron-icon/iron-icon.html">
- <link rel="import" href="/resources/polymer/iron-iconset-svg/iron-iconset-svg.html">
- <iron-iconset-svg name="tg-icons" size="24">
- <svg>
- <defs>
+import '/resources/polymer/@polymer/iron-icon/iron-icon.js';
+import '/resources/polymer/@polymer/iron-iconset-svg/iron-iconset-svg.js';
+import {html} from '/resources/polymer/@polymer/polymer/lib/utils/html-tag.js';
+const template = html`<iron-iconset-svg name='tg-icons' size='24'> 
+ <svg> 
+ <defs> 
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <!-- Created with Inkscape (http://www.inkscape.org/) -->
 <svg id="expandMin" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns="http://www.w3.org/2000/svg" height="24" width="24" version="1.1" xmlns:cc="http://creativecommons.org/ns#" xmlns:dc="http://purl.org/dc/elements/1.1/">
@@ -156,20 +157,6 @@
 </svg>
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <!-- Created with Inkscape (http://www.inkscape.org/) -->
-<svg id="expandInvertedLeft" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns="http://www.w3.org/2000/svg" height="24" width="24" version="1.1" xmlns:cc="http://creativecommons.org/ns#" xmlns:dc="http://purl.org/dc/elements/1.1/">
- <metadata id="metadata7">
-  <rdf:RDF>
-   <cc:Work rdf:about="">
-    <dc:format>image/svg+xml</dc:format>
-    <dc:type rdf:resource="http://purl.org/dc/dcmitype/StillImage"/>
-    <dc:title/>
-   </cc:Work>
-  </rdf:RDF>
- </metadata>
- <path id="path3015" stroke-width="0" d="m12 2.1662c5.4285 0 9.834 4.4055 9.834 9.834s-4.4055 9.834-9.834 9.834-9.834-4.4055-9.834-9.834v-0.09407c0.0443-5.3968 4.437-9.7402 9.834-9.7402zm-5.3697 4.3396 0.43718 3.5589 0.49952 3.5589 3.0595-3.0593 3.0595-2.9969-3.559-0.56195-3.4965-0.49957zm9.8652 3.8713-3.1219 2.9969-3.0595 3.0593 3.4965 0.49957 3.559 0.56195-0.43718-3.5589-0.43718-3.5589z"/>
-</svg>
-<?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<!-- Created with Inkscape (http://www.inkscape.org/) -->
 <svg id="collapse" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns="http://www.w3.org/2000/svg" height="24" width="24" version="1.1" xmlns:cc="http://creativecommons.org/ns#" xmlns:dc="http://purl.org/dc/elements/1.1/">
  <metadata id="metadata7">
   <rdf:RDF>
@@ -186,6 +173,21 @@
   <path id="path3765-3-3" d="m12 2.1525c-5.4317 0-9.8475 4.4158-9.8475 9.8475 0 5.4315 4.4158 9.8475 9.8475 9.8475s9.8475-4.4159 9.8475-9.8475v-0.08028c-0.045-5.3999-4.448-9.7675-9.848-9.7675zm0 1.2845c4.7069 0 8.5246 3.7762 8.563 8.4827v0.08028c0 4.7346-3.8285 8.563-8.563 8.563s-8.563-3.828-8.563-8.563c0-4.7344 3.8285-8.563 8.563-8.563z"/>
  </g>
 </svg>
-</defs>
- </svg>
- </iron-iconset-svg>
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+<svg id="expandInvertedLeft" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns="http://www.w3.org/2000/svg" height="24" width="24" version="1.1" xmlns:cc="http://creativecommons.org/ns#" xmlns:dc="http://purl.org/dc/elements/1.1/">
+ <metadata id="metadata7">
+  <rdf:RDF>
+   <cc:Work rdf:about="">
+    <dc:format>image/svg+xml</dc:format>
+    <dc:type rdf:resource="http://purl.org/dc/dcmitype/StillImage"/>
+    <dc:title/>
+   </cc:Work>
+  </rdf:RDF>
+ </metadata>
+ <path id="path3015" stroke-width="0" d="m12 2.1662c5.4285 0 9.834 4.4055 9.834 9.834s-4.4055 9.834-9.834 9.834-9.834-4.4055-9.834-9.834v-0.09407c0.0443-5.3968 4.437-9.7402 9.834-9.7402zm-5.3697 4.3396 0.43718 3.5589 0.49952 3.5589 3.0595-3.0593 3.0595-2.9969-3.559-0.56195-3.4965-0.49957zm9.8652 3.8713-3.1219 2.9969-3.0595 3.0593 3.4965 0.49957 3.559 0.56195-0.43718-3.5589-0.43718-3.5589z"/>
+</svg>
+</defs> 
+ </svg> 
+ </iron-iconset-svg>`;
+document.head.appendChild(template.content);
