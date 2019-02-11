@@ -92,11 +92,13 @@
         }
         paper-material {
             border-radius: 2px;
+            min-height: 0;
         }
         paper-material[fit-to-height] {
             flex-grow: 1;
         }
         #scrollContainer {
+            min-height: 0;
             overflow: auto;
             -webkit-overflow-scrolling: touch;
         }
@@ -264,7 +266,7 @@
         <tg-serialiser id="serialiser"></tg-serialiser>
 
         <paper-material elevation="1" style$="[[_calcMaterialStyle(showMarginAround)]]" fit-to-height$="[[fitToHeight]]" class="layout vertical">
-            <div class="layout vertical flex data-table">
+            <div class="layout vertical flex data-table" style="min-height:0;">
                 <!--Table toolbar-->
                 <div class="grid-toolbar layout horizontal wrap" hidden$="[[!toolbarVisible]]">
                     <paper-progress id="progressBar" hidden$="[[!_showProgress]]"></paper-progress>
@@ -275,7 +277,7 @@
                         <content select=".standart-action"></content>
                     </div>
                 </div>
-                <div id="baseContainer" class="relative layout horizontal flex" on-wheel="_handleWheel" on-focusin="_baseContainerFocusIn" on-focusout="_baseContainerFocusOut">
+                <div id="baseContainer" class="relative layout horizontal flex" style="min-height: 0;" on-wheel="_handleWheel" on-focusin="_baseContainerFocusIn" on-focusout="_baseContainerFocusOut">
                     <div id="scrollContainer" on-scroll="_handleScrollEvent" class="layout vertical flex">
                         <!-- Table header -->
                         <div class="layout horizontal table-header-row">
