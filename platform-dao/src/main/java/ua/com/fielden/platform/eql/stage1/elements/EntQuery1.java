@@ -56,7 +56,8 @@ public class EntQuery1 implements ISingleOperand1<EntQuery2> {
 
     @Override
     public TransformationResult<EntQuery2> transform(final PropsResolutionContext resolutionContext) {
-        final PropsResolutionContext localResolutionContext = isSubQuery() ? resolutionContext.produceBasedOn() : resolutionContext.produceNewOne();
+        final PropsResolutionContext localResolutionContext = isSubQuery() ? resolutionContext.produceForCorrelatedSubquery() : resolutionContext.produceForUncorrelatedSubquery();
+        // .produceNewOne() should be used only for cases of synthetic entities (where source query can only be uncorrelated)
         final TransformationResult<Sources2> sourcesTransformationResult =  sources.transform(localResolutionContext);
         final TransformationResult<Conditions2> conditionsTransformationResult =  conditions.transform(sourcesTransformationResult.getUpdatedContext());
         final TransformationResult<Yields2> yieldsTransformationResult =  yields.transform(conditionsTransformationResult.getUpdatedContext());
