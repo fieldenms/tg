@@ -1,5 +1,6 @@
 import '/resources/polymer/@polymer/polymer/polymer-legacy.js';
 import '/resources/polymer/@polymer/iron-flex-layout/iron-flex-layout-classes.js';
+import '/resources/polymer/@polymer/iron-input/iron-input.js';
 import '/resources/polymer/@polymer/iron-icon/iron-icon.js';
 import '/resources/polymer/@polymer/iron-icons/iron-icons.js';
 import '/resources/polymer/@polymer/iron-list/iron-list.js';
@@ -13,7 +14,7 @@ import {html} from '/resources/polymer/@polymer/polymer/lib/utils/html-tag.js';
 
 import { TgHighlightingBehavior } from '/resources/editors/tg-highlighting-behavior.js';
 import { TgEditorBehavior , createEditorTemplate } from '/resources/editors/tg-editor-behavior.js';
-import { tearDownEvent, allDefined } from '/resources/reflection/tg-polymer-utils.js';
+import { tearDownEvent} from '/resources/reflection/tg-polymer-utils.js';
 
 const additionalTemplate = html`
     <style>
@@ -28,26 +29,6 @@ const additionalTemplate = html`
         .main-container {
             @apply --layout-flex;
         }
-        /* tg-editor {
-            --tg-editor-paper-input-container-mixin: {
-                @apply(--layout-vertical);
-                @apply(--layout-flex);
-            };
-            --tg-editor-input-content-mixin: {
-                @apply(--layout-start);
-                height: 100%;
-            };
-            --tg-editor-label-and-input-container-mixin: {
-                height: 100%;
-            };
-            --tg-editor-main-container-mixin: {
-                height: 100%;
-            };
-            --tg-editor-input-container-mixin: {
-                @apply(--layout-vertical);
-                height: 100%;
-            };
-        } */
         .noselect {
             -webkit-touch-callout: none;
             /* iOS Safari */
@@ -60,8 +41,7 @@ const additionalTemplate = html`
             -ms-user-select: none;
             /* Internet Explorer/Edge */
             user-select: none;
-            /* Non-prefixed version, currently
-                                  supported by Chrome and Opera */
+            /* Non-prefixed version, currently supported by Chrome and Opera */
         }
         iron-list {
             overflow: auto;
@@ -174,7 +154,7 @@ const customInputTemplate = html`
     <iron-input bind-value="{{_phraseForSearching}}" class="custom-input" >
         <input id="searchInput" placeholder="Type to search..." on-input="_onInput" on-tap="_onTap" on-mousedown="_onTap" on-blur="_eventHandler">
     </iron-input>
-    <div class="custom-input layout vertical flex relative">
+    <div class="layout vertical flex relative">
         <iron-list id="input" class="collectional-input fit" items="[[_entities]]" selected-items="{{_selectedEntities}}" selected-item="{{_selectedEntity}}" selection-enabled="[[_isSelectionEnabled(_forReview)]]" multi-selection>
             <template>
                 <div class$="[[_computedItemClass(_disabled)]]" collectional-index$="[[index]]">
@@ -408,7 +388,7 @@ Polymer({
                     }
                 }
                 this._updateEntitiesAndSelection(chosenIds, this.entity, arrivedEntities);
-                //this.scrollToFirstFoundElement();
+                this.scrollToFirstFoundElement();
             }
             
             this.provideSorting(this.entity.sortingVals, this._entities);
@@ -516,7 +496,7 @@ Polymer({
     },
     
     _computedItemClass: function (isDisabled) {
-        var classes = 'relative';
+        var classes = '';
         if (isDisabled) {
           classes += ' item-disabled';
         }
@@ -668,9 +648,6 @@ Polymer({
     },
     
     _highlightedValue : function (propertyValue, phraseForSearchingCommited) {
-        if (!allDefined(arguments)) {
-            return '';
-        }
         var html = '';
         var matchedParts = this._matchedParts(propertyValue, phraseForSearchingCommited);
         for (var index = 0; index < matchedParts.length; index++) {
