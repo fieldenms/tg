@@ -6,7 +6,7 @@ import '/resources/polymer/@polymer/paper-button/paper-button.js';
 import '/resources/polymer/@polymer/paper-spinner/paper-spinner.js';
 import '/resources/polymer/@polymer/paper-styles/color.js';
 
-/* FIXME <link rel="import" href="/resources/actions/tg-focus-restoration-behavior.html">*/
+import { TgFocusRestorationBehavior } from '/resources/actions/tg-focus-restoration-behavior.js';
 import { TgTooltipBehavior } from '/resources/components/tg-tooltip-behavior.js';
 import { tearDownEvent, allDefined } from '/resources/reflection/tg-polymer-utils.js';
 // depends on '/resources/postal/2.0.5/postal.min.js' 
@@ -389,7 +389,7 @@ Polymer({
         }
     },
 
-    behaviors: [TgTooltipBehavior /* FIXME Polymer.TgBehaviors.TgFocusRestorationBehavior */],
+    behaviors: [TgTooltipBehavior, TgFocusRestorationBehavior ],
 
     created: function () {
         this._reflector = new TgReflector();
@@ -404,7 +404,7 @@ Polymer({
         self._run = (function (event) {
             console.log(this.shortDesc + ": execute");
 
-            /* FIXME self.persistActiveElement(); */
+            self.persistActiveElement();
 
             if (this.preAction) {
                 const result = this.preAction(this)
@@ -533,7 +533,7 @@ Polymer({
      * Override this to restre action's state that might have been stored by preAcion or any other routine.
      */
     restoreActionState: function () {
-        /* FIXME this.restoreActiveElement(); */
+        this.restoreActiveElement();
     },
 
     /**

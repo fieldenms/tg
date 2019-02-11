@@ -5,10 +5,12 @@ import static java.util.Optional.empty;
 import static java.util.Optional.of;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchOnly;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
+import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getEntityTitleAndDesc;
 import static ua.com.fielden.platform.utils.Pair.pair;
 import static ua.com.fielden.platform.web.PrefDim.mkDim;
 import static ua.com.fielden.platform.web.action.StandardMastersWebUiConfig.MASTER_ACTION_DEFAULT_WIDTH;
 import static ua.com.fielden.platform.web.action.StandardMastersWebUiConfig.MASTER_ACTION_SPECIFICATION;
+import static ua.com.fielden.platform.web.action.pre.ConfirmationPreAction.okCancel;
 import static ua.com.fielden.platform.web.action.pre.ConfirmationPreAction.yesNo;
 import static ua.com.fielden.platform.web.centre.api.actions.impl.EntityActionBuilder.action;
 import static ua.com.fielden.platform.web.centre.api.context.impl.EntityCentreContextSelector.context;
@@ -23,6 +25,7 @@ import static ua.com.fielden.platform.web.layout.api.impl.LayoutComposer.MARGIN;
 import static ua.com.fielden.platform.web.layout.api.impl.LayoutComposer.MARGIN_PIX;
 import static ua.com.fielden.platform.web.test.server.config.StandardActions.EDIT_ACTION;
 import static ua.com.fielden.platform.web.test.server.config.StandardActions.SEQUENTIAL_EDIT_ACTION;
+import static ua.com.fielden.platform.web.test.server.config.StandardMessages.DELETE_CONFIRMATION;
 
 import java.math.BigDecimal;
 import java.util.Date;
@@ -659,7 +662,13 @@ public class WebUiConfig extends AbstractWebUiConfig {
                         .longDesc("Export action")
                         .shortcut("ctrl+shift+e")
                         .build())
-                .addAction(StandardActions.DELETE_ACTION.mkAction(TgGeneratedEntity.class, (one, two) -> "smth"))
+                .addAction(action(EntityDeleteAction.class)
+                        .withContext(context().withMasterEntity().build())
+                        .preAction(okCancel(DELETE_CONFIRMATION.msg))
+                        .shortDesc("DELETE")
+                        .longDesc(format("Delete current %s entity", getEntityTitleAndDesc(TgPersistentEntityWithProperties.class).getKey()))
+                        .shortcut("alt+d")
+                        .build())
                 .addAction(MasterActions.VALIDATE)
                 .addAction(MasterActions.SAVE)
                     // .shortDesc("SAVE")
@@ -669,7 +678,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 .addAction(MasterActions.VIEW)
 
                 .setActionBarLayoutFor(Device.DESKTOP, Optional.empty(),
-                        format("['horizontal', 'center-justified', 'padding: 20px', 'wrap', [%s],[%s],[%s],[%s],[%s],[%s]]", actionMr, actionMr, actionMr, actionMr, actionMr, actionMr))
+                        format("['horizontal', 'center-justified', 'padding: 20px', 'wrap', [%s],[%s],[%s],[%s],[%s],[%s],[%s]]", actionMr, actionMr, actionMr, actionMr, actionMr, actionMr, actionMr))
                 .setLayoutFor(Device.DESKTOP, Optional.empty(), desktopLayout)
                 .setLayoutFor(Device.TABLET, Optional.empty(), tabletLayout)
                 .setLayoutFor(Device.MOBILE, Optional.empty(), mobileLayout)

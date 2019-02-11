@@ -5,7 +5,7 @@ import '/resources/polymer/@polymer/paper-button/paper-button.js';
 import '/resources/polymer/@polymer/paper-spinner/paper-spinner.js';
 import '/resources/polymer/@polymer/paper-styles/color.js';
 
-/* FIXME <link rel="import" href="/resources/actions/tg-focus-restoration-behavior.html"> */
+import { TgFocusRestorationBehavior } from '/resources/actions/tg-focus-restoration-behavior.js';
 import { createEntityActionThenCallback } from '/resources/master/actions/tg-entity-master-closing-utils.js';
 import { TgTooltipBehavior } from '/resources/components/tg-tooltip-behavior.js';
 import { allDefined } from '/resources/reflection/tg-polymer-utils.js';
@@ -39,7 +39,7 @@ Polymer({
 
     is: 'tg-action',
 
-    behaviors: [/* FIXME Polymer.TgBehaviors.TgFocusRestorationBehavior, */ TgTooltipBehavior],
+    behaviors: [ TgFocusRestorationBehavior, TgTooltipBehavior ],
 
     properties: {
         /**
@@ -207,12 +207,12 @@ Polymer({
     _createRun: function () {
         const self = this;
         return (function () {
-            /* FIXME self.persistActiveElement(); */
+            self.persistActiveElement();
 
             this._innerEnabled = false;
             console.log(this.shortDesc + ": execute");
 
-            /* FIXME self.persistActiveElement(self.focusingCallback); */
+            self.persistActiveElement(self.focusingCallback);
 
             if (this._startSpinnerTimer) {
                 clearTimeout(this._startSpinnerTimer);
@@ -297,12 +297,12 @@ Polymer({
         // do the super stuff
         console.log(this.shortDesc + ": after execution");
         this._innerEnabled = true;
-        /* FIXME this.restoreActiveElement(); */
+        this.restoreActiveElement();
 
         // Make spinner invisible
         this.$.spinner.style.visibility = 'hidden';
 
-        /* FIXME this.restoreActiveElement(); */
+        this.restoreActiveElement();
     },
 
     _asyncRun: function () {

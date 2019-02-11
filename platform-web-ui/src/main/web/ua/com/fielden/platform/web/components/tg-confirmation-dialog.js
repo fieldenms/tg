@@ -6,7 +6,7 @@ import '/resources/polymer/@polymer/paper-dialog/paper-dialog.js';
 import '/resources/polymer/@polymer/polymer/lib/elements/dom-bind.js';
 import '/resources/polymer/@polymer/polymer/lib/elements/dom-repeat.js';
 
-/* FIXME <link rel="import" href="/resources/actions/tg-focus-restoration-behavior.html">*/
+import { TgFocusRestorationBehavior } from '/resources/actions/tg-focus-restoration-behavior.js';
 
 // custom-style has been moved to main html file as last child of <head>
 
@@ -46,10 +46,10 @@ Polymer({
 
     is: 'tg-confirmation-dialog',
 
-    /* FIXME behaviors: [Polymer.TgBehaviors.TgFocusRestorationBehavior], */
+    behaviors: [ TgFocusRestorationBehavior ],
 
     showConfirmationDialog: function (message, buttons) {
-        // FIXME this.persistActiveElement();
+        this.persistActiveElement();
         if (this._lastPromise) {
             this._lastPromise = this._lastPromise.then(
                 value => this._showConfirmationDialog(message, buttons),
@@ -64,7 +64,7 @@ Polymer({
         const self = this;
         const restoreActiveElement = function () {
             self.async(function () {
-                // FIXME self.restoreActiveElement();
+                self.restoreActiveElement();
             }, 1);
         };
         return new Promise(function (resolve, reject) {
@@ -74,17 +74,17 @@ Polymer({
                 if (e.keyCode === 13) {
                     dialog.close();
                     resolve("ENTER");
-                    // FIXME restoreActiveElement();
+                    restoreActiveElement();
                 }
             }
 
             dialogModel.dialogCanceled = function (e) {
                 reject("ESC");
-                // FIXME restoreActiveElement();
+                restoreActiveElement();
             };
             dialogModel.closeDialog = function () {
                 reject("ESC");
-                // FIXME restoreActiveElement();
+                restoreActiveElement();
             };
 
             dialogModel._action = function (e) {
@@ -94,7 +94,7 @@ Polymer({
                 } else {
                     reject(button.name);
                 }
-                // FIXME restoreActiveElement();
+                restoreActiveElement();
             };
 
             dialogModel.message = message;
