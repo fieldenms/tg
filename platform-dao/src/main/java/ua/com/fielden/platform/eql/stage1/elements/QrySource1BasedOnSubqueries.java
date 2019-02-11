@@ -61,7 +61,7 @@ public class QrySource1BasedOnSubqueries extends AbstractQrySource1<QrySource2Ba
         for (final EntQuery1 model : models) {
             TransformationResult<EntQuery2> modelTransformationResult = model.transform(currentResolutionContext/*.produceNewOne() // as already invoked as part of EntQuery1.transform(..)*/);
             transformedQueries.add(modelTransformationResult.getItem());
-            currentResolutionContext = modelTransformationResult.getUpdatedContext();  
+            currentResolutionContext = modelTransformationResult.getUpdatedContext(); // TODO should be just resolutionContext with propsResolutions added from this model transformation   
         }
            
         final QrySource2BasedOnSubqueries transformedSource = new QrySource2BasedOnSubqueries(transformedQueries, alias, resolutionContext.getDomainInfo());

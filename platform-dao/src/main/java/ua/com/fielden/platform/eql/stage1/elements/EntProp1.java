@@ -81,8 +81,6 @@ public class EntProp1 implements ISingleOperand1<EntProp2> {
         }
 
         if (result.size() > 1) {
-             System.out.println(result.get(0));
-             System.out.println(result.get(1));
             throw new EqlStage1ProcessingException(format("Ambiguity while resolving prop [%s]", entProp.getName()));
         }
 
