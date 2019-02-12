@@ -61,18 +61,18 @@ public class PropResolutionTest extends BaseEntQueryTCase1 {
     private static Yields2 emptyYields2 = new Yields2(emptyList());
     private static Conditions2 emptyConditions2 = new Conditions2();
     
-    private EntQuery2 transform(final EntityResultQueryModel qry) {
+    private static TransformationResult<EntQuery2> transform(final EntityResultQueryModel qry) {
         return entResultQry2(qry, new PropsResolutionContext(metadata));
     }
 
-    private EntQuery2 transform(final AggregatedResultQueryModel qry) {
+    private static TransformationResult<EntQuery2> transform(final AggregatedResultQueryModel qry) {
         return entResultQry2(qry, new PropsResolutionContext(metadata));
     }
 
     @Test
     public void test_q21() {
         final EntityResultQueryModel<TgVehicleModel> qry = select(TgVehicleModel.class).where().prop("make").isNotNull().model();
-        final EntQuery2 qry2 = entResultQry2(qry, new PropsResolutionContext(metadata));
+        final TransformationResult<EntQuery2> qry2 = transform(qry);
 
         final QrySource2BasedOnPersistentType source = new QrySource2BasedOnPersistentType(TgVehicleModel.class, metadata.get(TgVehicleModel.class), null);
         final Sources2 sources = new Sources2(source);
@@ -85,7 +85,8 @@ public class PropResolutionTest extends BaseEntQueryTCase1 {
         final EntQueryBlocks2 parts = new EntQueryBlocks2(sources, conditions, emptyYields2, emptyGroupBys2, emptyOrderBys2);
         final EntQuery2 exp = new EntQuery2(parts, TgVehicleModel.class, RESULT_QUERY, null);
 
-        assertEquals(qry2, exp);
+        assertEquals(qry2.getItem(), exp);
+        System.out.println(qry2.getUpdatedContext().getResolvedProps());
     }
 
     @Test
@@ -94,17 +95,16 @@ public class PropResolutionTest extends BaseEntQueryTCase1 {
                 select(TgOrgUnit2.class).where().prop("parent").eq().extProp("id"). //
                 model()). //
                 model();  
-        final EntQuery2 qry2 = entResultQry2(qry, new PropsResolutionContext(metadata));
-
+        final TransformationResult<EntQuery2> qry2 = entResultQry2(qry, new PropsResolutionContext(metadata));
+        System.out.println(qry2.getUpdatedContext().getResolvedProps());
     }
-
-    
 
     @Test
     public void test_12() {
-        final EntityResultQueryModel<TgVehicleModel> sourceModel1 = select(TgVehicleModel.class).where().prop("key").eq().val("316").model();
+        final EntityResultQueryModel<TgVehicleModel> sourceModel1 = select(TgVehicleModel.class).as("a").where().prop("key").eq().val("316").model();
         final EntityResultQueryModel<TgVehicleModel> sourceModel2 = select(TgVehicleModel.class).where().prop("key").eq().val("317").model();
-        transform(select(sourceModel1, sourceModel2).where().prop("key").in().values("316", "317").model());
+        TransformationResult<EntQuery2> qry2 = transform(select(sourceModel1, sourceModel2).where().prop("key").in().values("316", "317").model());
+        System.out.println(qry2.getUpdatedContext().getResolvedProps());
     }
 
     @Test
@@ -172,7 +172,7 @@ public class PropResolutionTest extends BaseEntQueryTCase1 {
     @Test
     public void test_that_prop_name_is_without_alias_at_stage2() {
         final EntityResultQueryModel<TgWorkshop> qry = select(TgWorkshop.class).as("w").where().prop("w.key").isNotNull().model();
-        final EntQuery2 qry2 = entResultQry2(qry, new PropsResolutionContext(metadata));
+        final TransformationResult<EntQuery2> qry2 = entResultQry2(qry, new PropsResolutionContext(metadata));
 
         final QrySource2BasedOnPersistentType source = new QrySource2BasedOnPersistentType(TgWorkshop.class, metadata.get(WORKSHOP), "w");
         
@@ -185,7 +185,7 @@ public class PropResolutionTest extends BaseEntQueryTCase1 {
         final Conditions2 conditions = new Conditions2(false, allConditions);
         final EntQueryBlocks2 parts = new EntQueryBlocks2(new Sources2(source), conditions, emptyYields2, emptyGroupBys2, emptyOrderBys2);
         final EntQuery2 exp = new EntQuery2(parts, TgWorkshop.class, RESULT_QUERY, null);
-        assertEquals(qry2, exp);
+        assertEquals(qry2.getItem(), exp);
     }
 
 //    @Test
@@ -228,7 +228,7 @@ public class PropResolutionTest extends BaseEntQueryTCase1 {
     @Test
     public void test_q2() {
         final EntityResultQueryModel<TgAuthor> qry = select(TgAuthor.class).where().prop("surname").isNotNull().model();
-        final EntQuery2 qry2 = entResultQry2(qry, new PropsResolutionContext(metadata));
+        final TransformationResult<EntQuery2> qry2 = entResultQry2(qry, new PropsResolutionContext(metadata));
 
         final QrySource2BasedOnPersistentType source = new QrySource2BasedOnPersistentType(TgAuthor.class, metadata.get(TgAuthor.class), null);
         final Sources2 sources = new Sources2(source);
@@ -241,12 +241,12 @@ public class PropResolutionTest extends BaseEntQueryTCase1 {
         final EntQueryBlocks2 parts = new EntQueryBlocks2(sources, conditions, emptyYields2, new GroupBys2(Collections.<GroupBy2> emptyList()), new OrderBys2(null));
         final EntQuery2 exp = new EntQuery2(parts, TgAuthor.class, RESULT_QUERY, null);
 
-        System.out.println(qry2.getConditions().equals(exp.getConditions()));
-        System.out.println(qry2.getGroups().equals(exp.getGroups()));
-        System.out.println(qry2.getYields().equals(exp.getYields()));
-        System.out.println(qry2.getSources().equals(exp.getSources()));
-        System.out.println(qry2.getOrderings().equals(exp.getOrderings()));
-        assertEquals(qry2, exp);
+        System.out.println(qry2.getItem().getConditions().equals(exp.getConditions()));
+        System.out.println(qry2.getItem().getGroups().equals(exp.getGroups()));
+        System.out.println(qry2.getItem().getYields().equals(exp.getYields()));
+        System.out.println(qry2.getItem().getSources().equals(exp.getSources()));
+        System.out.println(qry2.getItem().getOrderings().equals(exp.getOrderings()));
+        assertEquals(qry2.getItem(), exp);
     }
 
 
@@ -309,7 +309,7 @@ public class PropResolutionTest extends BaseEntQueryTCase1 {
     @Test
     public void test_q212_copy() {
         final EntityResultQueryModel<TgVehicleModelWithCalc> qry = select(TgVehicleModelWithCalc.class).where().prop("make").isNotNull().model();
-        final EntQuery2 qry2 = entResultQry2(qry, new PropsResolutionContext(metadata));
+        final TransformationResult<EntQuery2> qry2 = entResultQry2(qry, new PropsResolutionContext(metadata));
 
         final QrySource2BasedOnPersistentType source = new QrySource2BasedOnPersistentType(TgVehicleModelWithCalc.class, metadata.get(TgVehicleModelWithCalc.class), null);
         final Sources2 sources = new Sources2(source);
@@ -322,18 +322,18 @@ public class PropResolutionTest extends BaseEntQueryTCase1 {
         final EntQueryBlocks2 parts = new EntQueryBlocks2(sources, conditions, emptyYields2, new GroupBys2(Collections.<GroupBy2> emptyList()), new OrderBys2(Collections.<OrderBy2> emptyList()));
         final EntQuery2 exp = new EntQuery2(parts, TgVehicleModelWithCalc.class, RESULT_QUERY, null);
 
-        System.out.println(qry2.getConditions().equals(exp.getConditions()));
-        System.out.println(qry2.getGroups().equals(exp.getGroups()));
-        System.out.println(qry2.getYields().equals(exp.getYields()));
-        System.out.println(qry2.getSources().equals(exp.getSources()));
-        System.out.println(qry2.getOrderings().equals(exp.getOrderings()));
-        assertEquals(qry2, exp);
+        System.out.println(qry2.getItem().getConditions().equals(exp.getConditions()));
+        System.out.println(qry2.getItem().getGroups().equals(exp.getGroups()));
+        System.out.println(qry2.getItem().getYields().equals(exp.getYields()));
+        System.out.println(qry2.getItem().getSources().equals(exp.getSources()));
+        System.out.println(qry2.getItem().getOrderings().equals(exp.getOrderings()));
+        assertEquals(qry2.getItem(), exp);
     }
 
     @Test
     public void test_q3() {
         final EntityResultQueryModel<TgAuthor> qry = select(TgAuthor.class).as("a").where().prop("a.surname").isNotNull().model();
-        final EntQuery2 qry2 = entResultQry2(qry, new PropsResolutionContext(metadata));
+        final TransformationResult<EntQuery2> qry2 = entResultQry2(qry, new PropsResolutionContext(metadata));
 
         final QrySource2BasedOnPersistentType source = new QrySource2BasedOnPersistentType(TgAuthor.class, metadata.get(TgAuthor.class), "a");
         final Sources2 sources = new Sources2(source, Collections.<CompoundSource2> emptyList());
@@ -346,13 +346,13 @@ public class PropResolutionTest extends BaseEntQueryTCase1 {
         final EntQueryBlocks2 parts = new EntQueryBlocks2(sources, conditions, emptyYields2, new GroupBys2(Collections.<GroupBy2> emptyList()), new OrderBys2(null));
         final EntQuery2 exp = new EntQuery2(parts, TgAuthor.class, RESULT_QUERY, null);
 
-        assertEquals(qry2, exp);
+        assertEquals(qry2.getItem(), exp);
     }
 
     @Test
     public void test_q4() {
         final EntityResultQueryModel<TgAuthor> qry = select(TgAuthor.class).where().prop("surname").isNotNull().and().prop("name").eq().iVal(null).model();
-        final EntQuery2 qry2 = entResultQry2(qry, new PropsResolutionContext(metadata));
+        final TransformationResult<EntQuery2> qry2 = entResultQry2(qry, new PropsResolutionContext(metadata));
 
         final QrySource2BasedOnPersistentType source = new QrySource2BasedOnPersistentType(TgAuthor.class, metadata.get(TgAuthor.class), null);
         final Sources2 sources = new Sources2(source, Collections.<CompoundSource2> emptyList());
@@ -365,13 +365,13 @@ public class PropResolutionTest extends BaseEntQueryTCase1 {
         final EntQueryBlocks2 parts = new EntQueryBlocks2(sources, conditions, emptyYields2, new GroupBys2(Collections.<GroupBy2> emptyList()), new OrderBys2(null));
         final EntQuery2 exp = new EntQuery2(parts, TgAuthor.class, RESULT_QUERY, null);
 
-        assertEquals(qry2, exp);
+        assertEquals(qry2.getItem(), exp);
     }
 
     @Test
     public void test_q5() {
         final EntityResultQueryModel<TgAuthor> qry = select(TgAuthor.class).where().prop("surname").isNotNull().and().prop("name").eq().iParam("param").model();
-        final EntQuery2 qry2 = entResultQry2(qry, new PropsResolutionContext(metadata));
+        final TransformationResult<EntQuery2> qry2 = entResultQry2(qry, new PropsResolutionContext(metadata));
 
         final QrySource2BasedOnPersistentType source = new QrySource2BasedOnPersistentType(TgAuthor.class, metadata.get(TgAuthor.class), null);
         final Sources2 sources = new Sources2(source, Collections.<CompoundSource2> emptyList());
@@ -384,7 +384,7 @@ public class PropResolutionTest extends BaseEntQueryTCase1 {
         final EntQueryBlocks2 parts = new EntQueryBlocks2(sources, conditions, emptyYields2, new GroupBys2(Collections.<GroupBy2> emptyList()), new OrderBys2(null));
         final EntQuery2 exp = new EntQuery2(parts, TgAuthor.class, RESULT_QUERY, null);
 
-        assertEquals(qry2, exp);
+        assertEquals(qry2.getItem(), exp);
     }
 
     @Test
@@ -392,7 +392,7 @@ public class PropResolutionTest extends BaseEntQueryTCase1 {
         final EntityResultQueryModel<TgAuthor> qry = select(TgAuthor.class).where().prop("surname").eq().param("param").model();
         final Map<String, Object> params = new HashMap<>();
         params.put("param", 1);
-        final EntQuery2 qry2 = entResultQry2(qry, new PropsResolutionContext(metadata));
+        final TransformationResult<EntQuery2> qry2 = entResultQry2(qry, new PropsResolutionContext(metadata));
 
         final QrySource2BasedOnPersistentType source = new QrySource2BasedOnPersistentType(TgAuthor.class, metadata.get(TgAuthor.class), null);
         final Sources2 sources = new Sources2(source, Collections.<CompoundSource2> emptyList());
@@ -405,14 +405,14 @@ public class PropResolutionTest extends BaseEntQueryTCase1 {
         final EntQueryBlocks2 parts = new EntQueryBlocks2(sources, conditions, emptyYields2, new GroupBys2(Collections.<GroupBy2> emptyList()), new OrderBys2(null));
         final EntQuery2 exp = new EntQuery2(parts, TgAuthor.class, RESULT_QUERY, null);
 
-        assertEquals(exp, qry2);
+        assertEquals(exp, qry2.getItem());
     }
 
     @Test
     public void test_q7() {
         final EntityResultQueryModel<TgAuthor> qry = select(TgAuthor.class).leftJoin(TgPersonName.class).as("pn").on().prop("name").eq().prop("pn.id"). //
         where().prop("surname").eq().val(1).model();
-        final EntQuery2 qry2 = entResultQry2(qry, new PropsResolutionContext(metadata));
+        final TransformationResult<EntQuery2> qry2 = entResultQry2(qry, new PropsResolutionContext(metadata));
 
         final QrySource2BasedOnPersistentType source = new QrySource2BasedOnPersistentType(TgAuthor.class, metadata.get(TgAuthor.class), null);
         final QrySource2BasedOnPersistentType source2 = new QrySource2BasedOnPersistentType(TgPersonName.class, metadata.get(TgPersonName.class), "pn");
@@ -436,14 +436,14 @@ public class PropResolutionTest extends BaseEntQueryTCase1 {
         final EntQueryBlocks2 parts = new EntQueryBlocks2(sources, conditions, emptyYields2, new GroupBys2(Collections.<GroupBy2> emptyList()), new OrderBys2(null));
         final EntQuery2 exp = new EntQuery2(parts, TgAuthor.class, RESULT_QUERY, null);
 
-        assertEquals(exp, qry2);
+        assertEquals(exp, qry2.getItem());
     }
 
     @Test
     public void test_q8() {
         final EntityResultQueryModel<TgAuthor> qry = select(TgAuthor.class).leftJoin(TgPersonName.class).as("pn").on().prop("name").eq().prop("pn.id"). //
         where().prop("lastRoyalty").eq().val(1).model();
-        final EntQuery2 qry2 = entResultQry2(qry, new PropsResolutionContext(metadata));
+        final TransformationResult<EntQuery2> qry2 = entResultQry2(qry, new PropsResolutionContext(metadata));
 
         final QrySource2BasedOnPersistentType sourceAuthor = new QrySource2BasedOnPersistentType(TgAuthor.class, metadata.get(TgAuthor.class), null);
 
@@ -482,7 +482,7 @@ public class PropResolutionTest extends BaseEntQueryTCase1 {
         final EntQueryBlocks2 parts = new EntQueryBlocks2(sources, conditions, emptyYields2, new GroupBys2(Collections.<GroupBy2> emptyList()), new OrderBys2(null));
         final EntQuery2 exp = new EntQuery2(parts, TgAuthor.class, RESULT_QUERY, null);
 
-        assertEquals(exp, qry2);
+        assertEquals(exp, qry2.getItem());
     }
 
     @Test

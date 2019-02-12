@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.eql.stage1.elements;
 
+import static ua.com.fielden.platform.eql.meta.QueryCategory.SOURCE_QUERY;
 import static ua.com.fielden.platform.eql.meta.QueryCategory.SUB_QUERY;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
@@ -49,6 +50,10 @@ public class EntQuery1 implements ISingleOperand1<EntQuery2> {
     public boolean isSubQuery() {
         return category == SUB_QUERY;
     }
+    
+    public boolean isSourceQuery() {
+        return category == SOURCE_QUERY;
+    }
 
     public Class<? extends AbstractEntity<?>> type() {
         return resultType;
@@ -57,7 +62,7 @@ public class EntQuery1 implements ISingleOperand1<EntQuery2> {
     @Override
     public TransformationResult<EntQuery2> transform(final PropsResolutionContext resolutionContext) {
         final PropsResolutionContext localResolutionContext = isSubQuery() ? resolutionContext.produceForCorrelatedSubquery() : resolutionContext.produceForUncorrelatedSubquery();
-        // .produceNewOne() should be used only for cases of synthetic entities (where source query can only be uncorrelated)
+        // .produceForUncorrelatedSubquery() should be used only for cases of synthetic entities (where source query can only be uncorrelated) -- simple queries as source queries are accessible for correlation
         final TransformationResult<Sources2> sourcesTransformationResult =  sources.transform(localResolutionContext);
         final TransformationResult<Conditions2> conditionsTransformationResult =  conditions.transform(sourcesTransformationResult.getUpdatedContext());
         final TransformationResult<Yields2> yieldsTransformationResult =  yields.transform(conditionsTransformationResult.getUpdatedContext());
@@ -71,7 +76,11 @@ public class EntQuery1 implements ISingleOperand1<EntQuery2> {
                 groupsTransformationResult.getItem(), 
                 orderingsTransformationResult.getItem());
 
-        return new TransformationResult<EntQuery2>(new EntQuery2(entQueryBlocks, type(), getCategory(), getFetchModel()), orderingsTransformationResult.getUpdatedContext());
+        final PropsResolutionContext resultResolutionContext = (isSubQuery() || isSourceQuery()) ? 
+                new PropsResolutionContext(resolutionContext.getDomainInfo(), resolutionContext.getSources(), orderingsTransformationResult.getUpdatedContext().getResolvedProps()) :
+                    orderingsTransformationResult.getUpdatedContext();
+               
+        return new TransformationResult<EntQuery2>(new EntQuery2(entQueryBlocks, type(), getCategory(), getFetchModel()), resultResolutionContext);
     }
 
     public Sources1 getSources() {

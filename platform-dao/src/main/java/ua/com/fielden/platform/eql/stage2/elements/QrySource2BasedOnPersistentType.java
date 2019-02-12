@@ -24,6 +24,7 @@ public class QrySource2BasedOnPersistentType implements IQrySource2 {
         final int prime = 31;
         int result = 1;
         result = prime * result + ((sourceType == null) ? 0 : sourceType.hashCode());
+        result = prime * result + ((alias == null) ? 0 : alias.hashCode());
         return result;
     }
 
@@ -46,6 +47,15 @@ public class QrySource2BasedOnPersistentType implements IQrySource2 {
         } else if (!sourceType.equals(other.sourceType)) {
             return false;
         }
+        if (alias == null) {
+            if (other.alias != null) {
+                return false;
+            }
+        } else if (!alias.equals(other.alias)) {
+            return false;
+        }
+
+        
         return true;
     }
 

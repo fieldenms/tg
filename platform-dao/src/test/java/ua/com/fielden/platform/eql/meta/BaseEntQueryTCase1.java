@@ -149,11 +149,11 @@ public class BaseEntQueryTCase1 {
         }
     }
 
-    protected static EntQuery2 entResultQry2(final QueryModel qryModel, final PropsResolutionContext transformator) {
+    protected static TransformationResult<EntQuery2> entResultQry2(final QueryModel qryModel, final PropsResolutionContext transformator) {
         if (qryModel instanceof EntityResultQueryModel) {
-            return qb.generateEntQueryAsResultQuery(from((EntityResultQueryModel) qryModel).model(), null).transform(transformator).getItem();
+            return qb.generateEntQueryAsResultQuery(from((EntityResultQueryModel) qryModel).model(), null).transform(transformator);
         } else if (qryModel instanceof AggregatedResultQueryModel) {
-            return qb.generateEntQueryAsResultQuery(from((AggregatedResultQueryModel) qryModel).model(), null).transform(transformator).getItem();
+            return qb.generateEntQueryAsResultQuery(from((AggregatedResultQueryModel) qryModel).model(), null).transform(transformator);
         }
         throw new IllegalStateException("Not implemented yet");
     }

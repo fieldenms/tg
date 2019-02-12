@@ -65,7 +65,7 @@ public class QrySource1BasedOnSubqueries extends AbstractQrySource1<QrySource2Ba
         }
            
         final QrySource2BasedOnSubqueries transformedSource = new QrySource2BasedOnSubqueries(transformedQueries, alias, resolutionContext.getDomainInfo());
-        return new TransformationResult<QrySource2BasedOnSubqueries>(transformedSource, /*currentResolutionContext*/resolutionContext.cloneWithAdded(transformedSource));
+        return new TransformationResult<QrySource2BasedOnSubqueries>(transformedSource, /*currentResolutionContext*/resolutionContext.cloneWithAdded(transformedSource, currentResolutionContext.getResolvedProps()));
     }
     
     private EntQuery1 firstModel() {

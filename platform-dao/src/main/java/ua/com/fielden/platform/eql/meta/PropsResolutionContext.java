@@ -28,7 +28,7 @@ public class PropsResolutionContext {
         this.resolvedProps = new HashSet<>();
     }
     
-    private PropsResolutionContext(final Map<Class<? extends AbstractEntity<?>>, EntityInfo<?>> domainInfo, final List<List<IQrySource2>> sources, final Set<EntProp2> props) {
+    public PropsResolutionContext(final Map<Class<? extends AbstractEntity<?>>, EntityInfo<?>> domainInfo, final List<List<IQrySource2>> sources, final Set<EntProp2> props) {
         this.domainInfo = new HashMap<>(domainInfo);
         this.sources = sources;
         this.resolvedProps = new HashSet<>(props);
@@ -49,7 +49,7 @@ public class PropsResolutionContext {
         return srcs;
     }
     
-    public PropsResolutionContext cloneWithAdded(final IQrySource2 transformedSource) {
+    public PropsResolutionContext cloneWithAdded(final IQrySource2 transformedSource, final Set<EntProp2> resolvedProps) {
         final List<List<IQrySource2>> srcs = new ArrayList<>();
         srcs.addAll(sources);
         srcs.get(0).add(transformedSource); // adding source to current query list of sources
@@ -57,6 +57,7 @@ public class PropsResolutionContext {
     }
 
     public PropsResolutionContext cloneWithAdded(final EntProp2 transformedProp) {
+        System.out.println("=== adding transformed prop: " + transformedProp);
         final List<List<IQrySource2>> srcs = new ArrayList<>();
         srcs.addAll(sources);
         final Set<EntProp2> props = new HashSet<>(resolvedProps);
