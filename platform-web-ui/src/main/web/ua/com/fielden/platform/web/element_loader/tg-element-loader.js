@@ -11,9 +11,9 @@ const template = html`
 template.setAttribute('strip-whitespace', '');
 
 //Creates the element with specified elementName and attributes and inserts it into insertToElement element.
-var insertElement = function (insertToElement, elementName, attributes) {
+const insertElement = function (insertToElement, elementName, attributes) {
     if (elementName && elementName.toString().length > 0) {
-        var customElement = document.createElement(elementName);
+        const customElement = document.createElement(elementName);
 
         // need to clear prefDim just in case the same loader was alredy used to load some different element
         insertToElement.prefDim = null;
@@ -25,7 +25,7 @@ var insertElement = function (insertToElement, elementName, attributes) {
         }
 
         if (attributes && typeof attributes === "object") {
-            for (attr in attributes) {
+            for (const attr in attributes) {
                 customElement[attr] = attributes[attr];
                 if (attr === 'prefDim') {
                     insertToElement.prefDim = customElement[attr];
@@ -120,11 +120,10 @@ Polymer({
         }
     },
 
-    attached: function () {
-        var self = this;
-        this.async(function () {
-            if (self.auto) {
-                self.load();
+    ready: function () {
+        this.async(() => {
+            if (this.auto) {
+                this.load();
             }
         });
     },
@@ -145,9 +144,8 @@ Polymer({
      * For backward compatibility reasons, an "after-load" event is fired in loading was successful.
      */
     load: function () {
-        var self = this;
-        var attributes = this.attrs || {};
-        var elementName = this.elementName || (this.import && this.import.split('/').slice(-1)[0].replace('.html', ''));
+        const attributes = this.attrs || {};
+        const elementName = this.elementName || (this.import && this.import.split('/').slice(-1)[0].replace('.html', ''));
 
         console.warn("loading");
         console.time("loading");
@@ -157,39 +155,37 @@ Polymer({
         if (this.wasLoaded === true) {
             // in case of already loaded an inserted element the only sensible thing to do is to 
             // return a resolved Promise with the value of actually loaded element...
-            return Promise.resolve(self.loadedElement);
+            return Promise.resolve(this.loadedElement);
         } else {
-            self.loadedElement = null;
-            if (self.import) {
+            this.loadedElement = null;
+            if (this.import && !customElements.get(elementName)) {
 
-                return import(self.import).then((module) => {
+                return import(this.import).then((module) => {
                     console.timeEnd("loading");
 
                     // insert the element
-                    var insertedElement = insertElement(self, elementName, attributes);
-                    self.wasLoaded = true;
-                    // resolve the pormise
-                    resolve(insertedElement);
+                    const insertedElement = insertElement(this, elementName, attributes);
+                    this.wasLoaded = true;
 
                     // fire event for backward compatibility
-                    self.fire('after-load', insertedElement);
+                    this.fire('after-load', insertedElement);
                 }).catch((error) => {
                     console.timeEnd("loading");
                     // TODO during 'import' method invocation the server error json can arrive instead of piece of DOM -- need to handle this somehow
-                    console.warn("error happened", event);
+                    console.warn("error happened", error);
                     // loading error
                 });
             } else {
-                return new Promise(function (resolve, reject) {
+                return new Promise((resolve, reject) => {
 
                     // insert the element
-                    var insertedElement = insertElement(self, elementName, attributes);
-                    self.wasLoaded = true;
+                    const insertedElement = insertElement(this, elementName, attributes);
+                    this.wasLoaded = true;
 
                     // resolve the promise
                     resolve(insertedElement);
 
-                    self.fire('after-load', insertedElement);
+                    this.fire('after-load', insertedElement);
                 });
             }
 

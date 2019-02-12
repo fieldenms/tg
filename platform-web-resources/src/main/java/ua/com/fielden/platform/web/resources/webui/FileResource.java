@@ -100,7 +100,7 @@ public class FileResource extends AbstractWebResource {
         // this is a preventive stuff: if the server receives additional link parameters -- JUST IGNORE THEM. Was used to run
         // appropriately Mocha / Chai tests for Polymer web components. See http://localhost:8091/resources/polymer/runner.html for results.
         final String filePath = path.contains("?") ? path.substring(0, path.indexOf('?')) : path;
-        final String filePathWithExtension = isEmpty(extension) ? filePath + ".js" : filePath;
+        final String filePathWithExtension = filePath;
 
         for (int pathIndex = 0; pathIndex < resourcePaths.size(); pathIndex++) {
             final String prepender = resourcePaths.get(pathIndex);
@@ -119,7 +119,7 @@ public class FileResource extends AbstractWebResource {
      * @return
      */
     private static MediaType determineMediaType(final String extension) {
-        switch (isEmpty(extension) ? "" : extension.substring(extension.lastIndexOf(".") + 1)) {
+        switch (extension.substring(extension.lastIndexOf(".") + 1)) {
         case "png":
             return MediaType.IMAGE_PNG;
         case "js":
