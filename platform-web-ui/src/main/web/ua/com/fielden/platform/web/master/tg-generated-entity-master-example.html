@@ -33,52 +33,6 @@
             .confirm-dialog paper-button:hover {
                 background: var(--paper-light-blue-50);
             }
-            /* tg-toast -specific */
-            .paper-toast {
-                @apply --layout-horizontal;
-                @apply --layout-center;
-                max-width: 256px;
-                white-space: nowrap;
-                overflow: hidden;
-                text-overflow: ellipsis;
-                font-smooth: always;
-            }
-            .more {
-                padding-left: 8px;
-                color: #03A9F4;
-                font-weight: 800;
-                font-smooth: always;
-                cursor: pointer;
-            }
-            /* style to truncate the toast text */
-            body /deep/ paper-toast::shadow #label {
-                @apply(--layout-flex);
-                max-width: 248px;
-                white-space: nowrap;
-                overflow: hidden;
-                text-overflow: ellipsis;
-            }
-            .toast-dialog paper-button {
-                color: var(--paper-light-blue-500);
-                --paper-button-flat-focus-color: var(--paper-light-blue-50);
-            }
-            .toast-dialog paper-button:hover {
-                background: var(--paper-light-blue-50);
-            }
-            #toast paper-spinner {
-                width: 1.5em;
-                height: 1.5em;
-                min-width: 1em;
-                min-height: 1em;
-                max-width: 2em;
-                max-height: 2em;
-                padding: 2px;
-                margin-left: 1em;
-                --paper-spinner-layer-1-color: var(--paper-blue-500);
-                --paper-spinner-layer-2-color: var(--paper-blue-500);
-                --paper-spinner-layer-3-color: var(--paper-blue-500);
-                --paper-spinner-layer-4-color: var(--paper-blue-500);
-            }
         </style>
     </custom-style>
 </head>

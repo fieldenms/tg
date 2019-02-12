@@ -2,10 +2,10 @@ import { Polymer } from '/resources/polymer/@polymer/polymer/lib/legacy/polymer-
 import { html } from '/resources/polymer/@polymer/polymer/lib/utils/html-tag.js';
 
 import { TgSerialiser } from '/resources/serialisation/tg-serialiser.js';
-// FIXME <link rel="import" href="/resources/components/tg-toast.html">
+import '/resources/components/tg-toast.js';
 
 const template = html`
-    <!--tg-toast id="toastGreeting"></tg-toast-->
+    <tg-toast id="toastGreeting"></tg-toast>
 `;
 Polymer({
     _template: template,
@@ -30,10 +30,10 @@ Polymer({
         return this._serialiser().reflector();
     },
 
-    // /**
-    //  * The toast component.
-    //  */
-    // _toastGreeting: function () {
-    //     return this.$.toastGreeting;
-    // }
+    /**
+     * The toast component.
+     */
+    _toastGreeting: function () {
+        return this.$.toastGreeting;
+    }
 });

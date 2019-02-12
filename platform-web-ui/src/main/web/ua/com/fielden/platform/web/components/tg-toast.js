@@ -1,7 +1,9 @@
-import '/resources/polymer/@polymer/iron-flex-layout/iron-flex-layout-classes.js'; // FIXME not needed?
+import '/resources/polymer/@polymer/iron-flex-layout/iron-flex-layout.js';
+import '/resources/polymer/@polymer/paper-dialog/paper-dialog.js'
+import '/resources/polymer/@polymer/paper-dialog-scrollable/paper-dialog-scrollable.js'
 import '/resources/polymer/@polymer/paper-styles/color.js';
 import '/resources/polymer/@polymer/paper-button/paper-button.js';
-import '/resources/polymer/@polymer/paper-toast/paper-toast.js'; // FIXME does not exist yet
+import '/resources/polymer/@polymer/paper-toast/paper-toast.js';
 import '/resources/polymer/@polymer/paper-spinner/paper-spinner.js';
 import '/resources/polymer/@polymer/polymer/lib/elements/dom-bind.js';
 
@@ -10,10 +12,49 @@ import { tearDownEvent } from '/resources/reflection/tg-polymer-utils.js';
 import { Polymer } from '/resources/polymer/@polymer/polymer/lib/legacy/polymer-fn.js';
 import { html } from '/resources/polymer/@polymer/polymer/lib/utils/html-tag.js';
 
+const paperToastStyle = html`
+    <custom-style>
+        <style is="custom-style">
+            #toast {
+                @apply --layout-horizontal;
+                @apply --layout-center;
+                max-width: 256px;
+                left:0;
+                bottom:0;
+            }
+            .more {
+                padding-left: 8px;
+                color: #03A9F4;
+                font-weight: 800;
+                cursor: pointer;
+            }
+            #toast paper-spinner {
+                width: 1.5em;
+                height: 1.5em;
+                min-width: 1em;
+                min-height: 1em;
+                max-width: 2em;
+                max-height: 2em;
+                padding: 2px;
+                margin-left: 1em;
+                --paper-spinner-layer-1-color: var(--paper-blue-500);
+                --paper-spinner-layer-2-color: var(--paper-blue-500);
+                --paper-spinner-layer-3-color: var(--paper-blue-500);
+                --paper-spinner-layer-4-color: var(--paper-blue-500);
+            }
+            .toast-dialog paper-button {
+                color: var(--paper-light-blue-500);
+                --paper-button-flat-focus-color: var(--paper-light-blue-50);
+            }
+            .toast-dialog paper-button:hover {
+                background: var(--paper-light-blue-50);
+            }
+        </style>
+    </custom-style>`;
+paperToastStyle.setAttribute('style', 'display: none;');
+document.head.appendChild(paperToastStyle.content);
+
 const template = html`
-    <!--custom-style>
-        <style include="iron-flex iron-flex-reverse iron-flex-alignment iron-flex-factors iron-positioning"></style>
-    </custom-style-->
     <paper-toast id="toast" class="paper-toast" text="[[_text]]" on-tap="_showMoreIfPossible" always-on-top duration="0">
         <!-- TODO responsive-width="250px" -->
         <paper-spinner id="spinner" hidden$="[[_skipShowProgress]]" active alt="in progress..." tabIndex="-1"></paper-spinner>
@@ -22,9 +63,9 @@ const template = html`
 `;
 
 const PROGRESS_DURATION = 3600000; // 1 hour
-const CRITICAL_DURATION = 5000; // 5 seconds
-const MORE_DURATION = 4000; // 4 seconds
-const STANDARD_DURATION = 2000; // 2 seconds
+const CRITICAL_DURATION = 3600000; //5000; // 5 seconds
+const MORE_DURATION =3600000;// 4000; // 4 seconds
+const STANDARD_DURATION = 3600000;//2000; // 2 seconds
 
 function containsRestictedTags(htmlText) {
     const offensiveTag = new RegExp('<html|<body|<script|<img|<a', 'mi');
@@ -106,6 +147,13 @@ Polymer({
     ready: function () {
         //Indicates whether toast overlay can be closed via history (back button or not)
         this.$.toast.skipHistoryAction = true;
+
+        // Styles to truncate the toast text.
+        const label = this.$.toast.$$('#label');
+        label.style.flex = '1';
+        label.style.whiteSpace = 'nowrap';
+        label.style.overflow = 'hidden';
+        label.style.textOverflow = 'ellipsis';
     },
 
     _hasMoreChanged: function (newValue, oldValue) {
@@ -129,10 +177,9 @@ Polymer({
 
             domBind._dialogClosed = function () {
                 document.body.removeChild(this);
-                // Polymer.dom.flush(); FIXME
             }.bind(domBind);
 
-            const paperDialog = domBind.content.ownerDocument.createElement('paper-dialog'); // FIXME
+            const paperDialog = document.createElement('paper-dialog');
             paperDialog.setAttribute("class", "toast-dialog");
             paperDialog.setAttribute("id", "msgDialog");
             paperDialog.setAttribute("on-iron-overlay-closed", "_dialogClosed");
@@ -140,8 +187,8 @@ Polymer({
             paperDialog.setAttribute("entry-animation", "scale-up-animation");
             paperDialog.setAttribute("exit-animation", "fade-out-animation");
 
-            const paperDialogScrollable = domBind.content.ownerDocument.createElement('paper-dialog-scrollable'); // FIXME
-            const msgPar = domBind.content.ownerDocument.createElement('p'); // FIXME
+            const paperDialogScrollable = document.createElement('paper-dialog-scrollable');
+            const msgPar = document.createElement('p');
             msgPar.setAttribute("style", "padding: 10px");
             if (containsRestictedTags(this._msgText) === true) {
                 msgPar.textContent = this._msgText;
@@ -150,15 +197,15 @@ Polymer({
             }
             paperDialogScrollable.appendChild(msgPar);
 
-            const buttonsDiv = domBind.content.ownerDocument.createElement('div'); // FIXME
+            const buttonsDiv = document.createElement('div');
             buttonsDiv.setAttribute("class", "buttons");
 
-            const buttons = domBind.content.ownerDocument.createElement('paper-button'); // FIXME
+            const buttons = document.createElement('paper-button');
             buttons.setAttribute("dialog-confirm", "dialog-confirm");
             buttons.setAttribute("affirmative", "affirmative");
             buttons.setAttribute("autofocus", "autofocus");
 
-            const textSpan = domBind.content.ownerDocument.createElement('span'); // FIXME
+            const textSpan = document.createElement('span');
             textSpan.textContent = 'Close';
             buttons.appendChild(textSpan);
 
@@ -167,13 +214,14 @@ Polymer({
             paperDialog.appendChild(paperDialogScrollable);
             paperDialog.appendChild(buttonsDiv);
 
-            domBind.content.appendChild(paperDialog); // FIXME
+            const templateContainer = document.createElement('template');
+            templateContainer.appendChild(paperDialog);
+            domBind.appendChild(templateContainer);
             document.body.appendChild(domBind);
-            // FIXME Polymer.dom.flush();
 
             this.async(function () {
-                domBind.$.msgDialog.open();
-            }, 100);
+                domBind.querySelector('#msgDialog').open();
+            },100);
 
             self.$.toast.close();
         }, 100);
@@ -214,15 +262,15 @@ Polymer({
             this.$.toast._autoCloseCallBack = null; // must NOT interfere with _autoClose of paper-toast
             // Override refit function for paper-toast which behaves really weird (Maybe next releas of paper-toast iron-fit-behavior and iron-overlay-behavior will change this weird behaviour).
             this.$.toast.refit = function () { };
-            Polymer.dom(document.body).appendChild(this.$.toast);
-            Polymer.dom().flush();
+            document.body.appendChild(this.$.toast);
+            // FIXME Polymer.dom().flush();
             this._showNewToast();
         } else if (previousToast.error === true && previousToast.opened && this.isCritical === false) { // discard new toast if existing toast is critical and new one is not; however if new one is critical -- do not discard it -- show overridden information
             console.warn('    toast show: DISCARDED: text = ', this.text + ', critical = ' + this.isCritical);
         } else {
-            // 'dataHost' is used to detemine 'tg-toast' instance from 'previousToast' found on body (parent of 'previousToast' is body, that is why there is a need to use other accessing method).
-            // WARNING: 'dataHost' is not a public Polymer API.
-            const previousTgToast = previousToast.dataHost; // FIXME
+            // '__dataHost' is used to detemine 'tg-toast' instance from 'previousToast' found on body (parent of 'previousToast' is body, that is why there is a need to use other accessing method).
+            // WARNING: '__dataHost' is not a public Polymer API.
+            const previousTgToast = previousToast.__dataHost;
 
             if (previousTgToast !== this) {
                 previousTgToast.text = this.text;

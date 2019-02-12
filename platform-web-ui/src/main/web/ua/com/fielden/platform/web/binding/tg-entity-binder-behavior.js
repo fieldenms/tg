@@ -620,7 +620,7 @@ export const TgEntityBinderBehavior = {
             var customObject = this._reflector().customObject(entityAndCustomObject);
 
             var msg = this._toastMsg("Refreshing", entity);
-            // FIXME this._openToast(entity, msg, !entity.isValid() || entity.isValidWithWarning(), msg, false);
+            this._openToast(entity, msg, !entity.isValid() || entity.isValidWithWarning(), msg, false);
 
             var newBindingEntity = this._postEntityReceived(entity, true);
 
