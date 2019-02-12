@@ -21,7 +21,7 @@
   "_resolved": "https://registry.npmjs.org/lodash._basecreate/-/lodash._basecreate-3.0.3.tgz",
   "_shasum": "1bc661614daa7fc311b7d03bf16806a0213cf821",
   "_spec": "lodash._basecreate@^3.0.0",
-  "_where": "/home/oleh/workspace/tg/platform-web-ui/src/main/resources/node_modules/lodash.create",
+  "_where": "/home/jhou/workspace/tg/platform-web-ui/src/main/resources/node_modules/lodash.create",
   "author": {
     "name": "John-David Dalton",
     "email": "john.david.dalton@gmail.com",
