@@ -45,6 +45,7 @@
     "@polymer/paper-styles": "^3.0.1",
     "@polymer/paper-swatch-picker": "^3.0.1",
     "@polymer/paper-tabs": "^3.0.1",
+    "@polymer/paper-toast": "^3.0.1",
     "@polymer/paper-toolbar": "^3.0.1",
     "@polymer/paper-tooltip": "^3.0.1",
     "@polymer/polymer": "^3.0.0",
