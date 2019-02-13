@@ -1,3 +1,5 @@
+import { deepestActiveElement } from '/resources/reflection/tg-polymer-utils.js';
+
 /**
  * It is used to restore focus after action execution. This is global variable that holds previously active element that is relevant for 
  * focus restoration logic.
@@ -17,26 +19,12 @@ export const TgFocusRestorationBehavior = {
             return;
         }
         const self = this;
-        const activeElement = focusingCallback ? focusingCallback : this._deepestActiveElementOf(document.activeElement);
+        const activeElement = focusingCallback ? focusingCallback : deepestActiveElement();
         console.debug('persistActiveElement: initiator', self, 'elem', activeElement);
         _previousActiveElements.push({
             initiator: self,
             elem: activeElement
         });
-    },
-
-    /**
-     * Finds deepest active element including those inside Shadow root children of custom web components starting lookup from non-empty 'element'.
-     * 
-     * @param element -- non-empty active element (sometimes <body> or 'null' if there is no focused element), that could be activeElement
-     *  on its own or its shadowRoot can contain more granular activeElement inside.
-     */
-    _deepestActiveElementOf: function (element) {
-        if (element && element.shadowRoot && element.shadowRoot.activeElement) {
-            return this._deepestActiveElementOf(element.shadowRoot.activeElement);
-        } else {
-            return element;
-        }
     },
 
     /**
