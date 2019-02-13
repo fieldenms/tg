@@ -14,7 +14,7 @@ import { html } from '/resources/polymer/@polymer/polymer/lib/utils/html-tag.js'
 
 const paperToastStyle = html`
     <custom-style>
-        <style is="custom-style">
+        <style>
             #toast {
                 @apply --layout-horizontal;
                 @apply --layout-center;
@@ -63,9 +63,9 @@ const template = html`
 `;
 
 const PROGRESS_DURATION = 3600000; // 1 hour
-const CRITICAL_DURATION = 3600000; //5000; // 5 seconds
-const MORE_DURATION =3600000;// 4000; // 4 seconds
-const STANDARD_DURATION = 3600000;//2000; // 2 seconds
+const CRITICAL_DURATION = 5000; // 5 seconds
+const MORE_DURATION = 4000; // 4 seconds
+const STANDARD_DURATION = 2000; // 2 seconds
 
 function containsRestictedTags(htmlText) {
     const offensiveTag = new RegExp('<html|<body|<script|<img|<a', 'mi');
@@ -179,49 +179,32 @@ Polymer({
                 document.body.removeChild(this);
             }.bind(domBind);
 
-            const paperDialog = document.createElement('paper-dialog');
-            paperDialog.setAttribute("class", "toast-dialog");
-            paperDialog.setAttribute("id", "msgDialog");
-            paperDialog.setAttribute("on-iron-overlay-closed", "_dialogClosed");
-            paperDialog.setAttribute("with-backdrop", "true");
-            paperDialog.setAttribute("entry-animation", "scale-up-animation");
-            paperDialog.setAttribute("exit-animation", "fade-out-animation");
-
-            const paperDialogScrollable = document.createElement('paper-dialog-scrollable');
-            const msgPar = document.createElement('p');
-            msgPar.setAttribute("style", "padding: 10px");
-            if (containsRestictedTags(this._msgText) === true) {
-                msgPar.textContent = this._msgText;
-            } else {
-                msgPar.innerHTML = this._msgText;
-            }
-            paperDialogScrollable.appendChild(msgPar);
-
-            const buttonsDiv = document.createElement('div');
-            buttonsDiv.setAttribute("class", "buttons");
-
-            const buttons = document.createElement('paper-button');
-            buttons.setAttribute("dialog-confirm", "dialog-confirm");
-            buttons.setAttribute("affirmative", "affirmative");
-            buttons.setAttribute("autofocus", "autofocus");
-
-            const textSpan = document.createElement('span');
-            textSpan.textContent = 'Close';
-            buttons.appendChild(textSpan);
-
-            buttonsDiv.appendChild(buttons);
-
-            paperDialog.appendChild(paperDialogScrollable);
-            paperDialog.appendChild(buttonsDiv);
-
-            const templateContainer = document.createElement('template');
-            templateContainer.appendChild(paperDialog);
-            domBind.appendChild(templateContainer);
+            domBind.innerHTML = `
+                <template>
+                    <paper-dialog id="msgDialog" class="toast-dialog" on-iron-overlay-closed="_dialogClosed" with-backdrop entry-animation="scale-up-animation" exit-animation="fade-out-animation">
+                        <paper-dialog-scrollable>
+                            <p id="msgPar" style="padding: 10px;"></p>
+                        </paper-dialog-scrollable>
+                        <div class="buttons">
+                            <paper-button dialog-confirm affirmative autofocus>
+                                <span>Close</span>
+                            </paper-button>
+                        </div>
+                    </paper-dialog>
+                </template>
+            `;
             document.body.appendChild(domBind);
 
             this.async(function () {
-                domBind.querySelector('#msgDialog').open();
-            },100);
+                // please note that domBind.$.msgPar is rendered after body.appendChild(domBind), but has been put here (into async(100)) to provide stronger guarantees along with msgDialog.open()
+                if (containsRestictedTags(self._msgText) === true) {
+                    domBind.$.msgPar.textContent = self._msgText;
+                } else {
+                    domBind.$.msgPar.innerHTML = self._msgText;
+                }
+                // actual msgDialog opening
+                domBind.$.msgDialog.open();
+            }, 100);
 
             self.$.toast.close();
         }, 100);
@@ -263,7 +246,6 @@ Polymer({
             // Override refit function for paper-toast which behaves really weird (Maybe next releas of paper-toast iron-fit-behavior and iron-overlay-behavior will change this weird behaviour).
             this.$.toast.refit = function () { };
             document.body.appendChild(this.$.toast);
-            // FIXME Polymer.dom().flush();
             this._showNewToast();
         } else if (previousToast.error === true && previousToast.opened && this.isCritical === false) { // discard new toast if existing toast is critical and new one is not; however if new one is critical -- do not discard it -- show overridden information
             console.warn('    toast show: DISCARDED: text = ', this.text + ', critical = ' + this.isCritical);
