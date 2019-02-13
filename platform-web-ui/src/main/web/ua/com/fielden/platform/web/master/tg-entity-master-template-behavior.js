@@ -5,7 +5,7 @@ import { IronA11yKeysBehavior } from '/resources/polymer/@polymer/iron-a11y-keys
 import '/resources/master/tg-entity-master.js';
 import { TgEntityMasterBehavior } from '/resources/master/tg-entity-master-behavior.js';
 import '/resources/master/tg-entity-master-styles.js';
-// FIXME <link rel="import" href="/resources/actions/tg-shortcut-processing-behavior.html">
+import { TgShortcutProcessingBehavior } from '/resources/actions/tg-shortcut-processing-behavior.js';
 import { generateUUID } from '/resources/reflection/tg-polymer-utils.js';
 import '/resources/polymer/@polymer/iron-flex-layout/iron-flex-layout-classes.js';
 
@@ -179,7 +179,7 @@ const TgEntityMasterTemplateBehaviorImpl = {
 
 export const TgEntityMasterTemplateBehavior = [
     IronA11yKeysBehavior,
-    //Polymer.TgBehaviors.TgShortcutProcessingBehavior,
+    TgShortcutProcessingBehavior,
     TgEntityMasterBehavior,
     TgEntityMasterTemplateBehaviorImpl
 ];

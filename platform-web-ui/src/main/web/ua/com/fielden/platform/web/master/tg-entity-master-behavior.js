@@ -456,7 +456,6 @@ const TgEntityMasterBehaviorImpl = {
                         "</tg-ui-action>";
 
                     this.shadowRoot.appendChild(actionModel);
-                    // FIXME not needed? Polymer.dom.flush();
 
                     action = actionModel.$.continuationAction;
 
@@ -670,7 +669,6 @@ const TgEntityMasterBehaviorImpl = {
                 self._actionDialog = document.createElement('tg-custom-action-dialog');
                 self._actionDialog.setAttribute("id", self.uuid);
                 document.body.appendChild(self._actionDialog);
-                // FIXME not needed? Polymer.dom.flush();
             }
         }
     },

@@ -8,7 +8,20 @@ import '/resources/polymer/@polymer/polymer/lib/elements/dom-repeat.js';
 
 import { TgFocusRestorationBehavior } from '/resources/actions/tg-focus-restoration-behavior.js';
 
-// custom-style has been moved to main html file as last child of <head>
+const confirmationDialogStyle = html`
+    <custom-style>
+        <style is="custom-style">
+            .confirm-dialog paper-button {
+                color: var(--paper-light-blue-500);
+                --paper-button-flat-focus-color: var(--paper-light-blue-50);
+            }
+            .confirm-dialog paper-button:hover {
+                background: var(--paper-light-blue-50);
+            }
+        </style>
+    </custom-style>`;
+confirmationDialogStyle.setAttribute('style', 'display: none;');
+document.head.appendChild(confirmationDialogStyle.content);
 
 const dialogModel = document.createElement('dom-bind');
 dialogModel.innerHTML = '<template><paper-dialog id="confirmDialog" class="confirm-dialog layout vertical" modal always-on-top entry-animation="scale-up-animation" exit-animation="fade-out-animation" on-iron-overlay-canceled="dialogCanceled" on-iron-overlay-opened="dialogOpened" on-iron-overlay-closed="dialogClosed">' +
@@ -39,14 +52,13 @@ dialogModel.dialogClosed = function (e) {
 }
 
 document.body.appendChild(dialogModel);
-// FIXME is this needed? Polymer.dom.flush();
 
 Polymer({
     _template: html``,
 
     is: 'tg-confirmation-dialog',
 
-    behaviors: [ TgFocusRestorationBehavior ],
+    behaviors: [TgFocusRestorationBehavior],
 
     showConfirmationDialog: function (message, buttons) {
         this.persistActiveElement();
