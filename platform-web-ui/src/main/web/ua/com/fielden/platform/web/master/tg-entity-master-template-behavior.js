@@ -85,7 +85,7 @@ const TgEntityMasterTemplateBehaviorImpl = {
     },
 
     _shouldOverridePrefDim: function () {
-        let parent = this.parentElement || parent.getRootNode().host;
+        let parent = this.parentElement || this.getRootNode().host;
         while (parent && (parent.tagName !== 'TG-CUSTOM-ACTION-DIALOG' && parent.tagName !== 'TG-MENU-ITEM-VIEW')) {
             if (parent.isMasterTemplate && parent.prefDim) {
                 return false;

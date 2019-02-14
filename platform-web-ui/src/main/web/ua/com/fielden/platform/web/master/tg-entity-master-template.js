@@ -34,15 +34,18 @@ Polymer({
 
     behaviors: [TgEntityMasterTemplateBehavior],
 
+    created: function () {
+        const self = this;
+        self.prefDim = @prefDim;
+        self.noUI = @noUiValue;
+        self.saveOnActivation = @saveOnActivationValue;
+    },
+
     /**
      * Initialisation block. It has all children web components already initialised.
      */
     ready: function () {
         const self = this;
-        self.prefDim = @prefDim;
-        self.noUI = @noUiValue;
-        self.saveOnActivation = @saveOnActivationValue;
-
         //START OF GENERATED JS LOGIC
         //@ready-callback
         //END OF GENERATED JS LOGIC

@@ -668,7 +668,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
                         shortDesc("New").
                         longDesc("Create new entity").
                         shortcut("alt+n").
-                        prefDimForView(PrefDim.mkDim("'100px'", "'600px'")).
+                        prefDimForView(PrefDim.mkDim("'1000px'", "'600px'")).
                         withNoParentCentreRefresh().
                         build())
                 .addAction(action(EntityDeleteAction.class)
