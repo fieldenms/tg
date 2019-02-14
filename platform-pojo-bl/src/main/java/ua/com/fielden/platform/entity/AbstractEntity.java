@@ -479,6 +479,10 @@ public abstract class AbstractEntity<K extends Comparable> implements Comparable
         }
 
         // TODO need to carefully consider this bit of logic for comparing ID-only values
+        if (that.isIdOnlyProxy() && this.isIdOnlyProxy()) {
+            return that.getId().equals(this.getId());
+        }
+        // TODO need to carefully consider this bit of logic for comparing ID-only values
         if (this.isPersistent() && (that.isIdOnlyProxy() || this.isIdOnlyProxy()) &&
                 (!that.isInstrumented() || !that.isDirty()) &&
                 (!this.isInstrumented() || !this.isDirty()) &&
