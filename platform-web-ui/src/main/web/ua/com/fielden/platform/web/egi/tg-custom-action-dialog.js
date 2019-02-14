@@ -514,8 +514,8 @@ Polymer({
         const lastIndex = forward ? focusables.length - 1 : 0;
         const firstIndex = forward ? 0 : focusables.length - 1;
         const callback = this._lastElement ? (forward ? this._lastElement.focusNextView.bind(this._lastElement) : this._lastElement.focusPreviousView.bind(this._lastElement)) : null;
-        if (document.activeElement === this || isInHierarchy(this.$.titleBar, this.shadowRoot().activeElement)) {
-            if (this.shadowRoot().activeElement === focusables[lastIndex]) {
+        if (document.activeElement === this || isInHierarchy(this.$.titleBar, this.shadowRoot.activeElement)) {
+            if (this.shadowRoot.activeElement === focusables[lastIndex]) {
                 if (callback) {
                     callback(e);
                 } else {

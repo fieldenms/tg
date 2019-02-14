@@ -85,12 +85,12 @@ const TgEntityMasterTemplateBehaviorImpl = {
     },
 
     _shouldOverridePrefDim: function () {
-        let parent = this.parentElement;
+        let parent = this.parentElement || parent.getRootNode().host;
         while (parent && (parent.tagName !== 'TG-CUSTOM-ACTION-DIALOG' && parent.tagName !== 'TG-MENU-ITEM-VIEW')) {
             if (parent.isMasterTemplate && parent.prefDim) {
                 return false;
             }
-            parent = parent.parentElement;
+            parent = parent.parentElement || parent.getRootNode().host;
         }
         return true;
     },
@@ -118,7 +118,7 @@ const TgEntityMasterTemplateBehaviorImpl = {
             if (parent.tagName === 'TG-MASTER-MENU-ITEM-SECTION') {
                 automaticAddKeyBindings = false;
             }
-            parent = parent.parentElement;
+            parent = parent.parentElement || parent.getRootNode().host;
         }
         if (automaticAddKeyBindings) {
             this.addOwnKeyBindings();
