@@ -662,6 +662,15 @@ public class WebUiConfig extends AbstractWebUiConfig {
                         .longDesc("Export action")
                         .shortcut("ctrl+shift+e")
                         .build())
+                .addAction(action(EntityNewAction.class).
+                        withContext(context().withMasterEntity().withComputation((entity, context) -> TgPersistentEntityWithProperties.class).build()).
+                        icon("add-circle-outline").
+                        shortDesc("New").
+                        longDesc("Create new entity").
+                        shortcut("alt+n").
+                        prefDimForView(PrefDim.mkDim("'100px'", "'600px'")).
+                        withNoParentCentreRefresh().
+                        build())
                 .addAction(action(EntityDeleteAction.class)
                         .withContext(context().withMasterEntity().build())
                         .preAction(okCancel(DELETE_CONFIRMATION.msg))
@@ -678,7 +687,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 .addAction(MasterActions.VIEW)
 
                 .setActionBarLayoutFor(Device.DESKTOP, Optional.empty(),
-                        format("['horizontal', 'center-justified', 'padding: 20px', 'wrap', [%s],[%s],[%s],[%s],[%s],[%s],[%s]]", actionMr, actionMr, actionMr, actionMr, actionMr, actionMr, actionMr))
+                        format("['horizontal', 'center-justified', 'padding: 20px', 'wrap', [%s],[%s],[%s],[%s],[%s],[%s],[%s],[%s]]", actionMr, actionMr, actionMr, actionMr, actionMr, actionMr, actionMr, actionMr))
                 .setLayoutFor(Device.DESKTOP, Optional.empty(), desktopLayout)
                 .setLayoutFor(Device.TABLET, Optional.empty(), tabletLayout)
                 .setLayoutFor(Device.MOBILE, Optional.empty(), mobileLayout)

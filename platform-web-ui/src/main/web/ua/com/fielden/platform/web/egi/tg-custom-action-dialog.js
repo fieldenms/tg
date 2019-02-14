@@ -25,7 +25,7 @@ import {html} from '/resources/polymer/@polymer/polymer/lib/utils/html-tag.js';
 import {TgFocusRestorationBehavior} from '/resources/actions/tg-focus-restoration-behavior.js'
 import {TgTooltipBehavior} from '/resources/components/tg-tooltip-behavior.js';
 import {TgBackButtonBehavior} from '/resources/views/tg-back-button-behavior.js'
-import {tearDownEvent, isInHierarchy, allDefined} from '/resources/reflection/tg-polymer-utils.js';
+import {FOCUSABLE_ELEMENTS_SELECTOR, tearDownEvent, isInHierarchy, allDefined} from '/resources/reflection/tg-polymer-utils.js';
 
 const template = html`
     <style>
@@ -210,6 +210,8 @@ const findParentDialog = function(action) {
     return parent;
 }
 Polymer({
+
+    _template: template,
 
     is: "tg-custom-action-dialog",
 
@@ -1402,7 +1404,7 @@ Polymer({
      * Returns 'true' if Closer button is hidden, 'false' otherwise.
      */
     _closerHidden: function(_lastAction, mobile) {
-        return _lastAction.continuous || mobile === true;
+        return (_lastAction && _lastAction.continuous) || mobile === true;
     },
 
     /**

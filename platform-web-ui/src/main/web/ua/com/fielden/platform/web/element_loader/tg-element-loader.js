@@ -158,7 +158,7 @@ Polymer({
             return Promise.resolve(this.loadedElement);
         } else {
             this.loadedElement = null;
-            if (this.import && !customElements.get(elementName)) {
+            if (this.import && !customElements.get(elementName.toLowerCase())) {
 
                 return import(this.import).then((module) => {
                     console.timeEnd("loading");
@@ -169,11 +169,13 @@ Polymer({
 
                     // fire event for backward compatibility
                     this.fire('after-load', insertedElement);
+                    return insertedElement;
                 }).catch((error) => {
                     console.timeEnd("loading");
                     // TODO during 'import' method invocation the server error json can arrive instead of piece of DOM -- need to handle this somehow
                     console.warn("error happened", error);
                     // loading error
+                    throw new Error('Could not load element <tt>' + elementName + '</tt>.');
                 });
             } else {
                 return new Promise((resolve, reject) => {

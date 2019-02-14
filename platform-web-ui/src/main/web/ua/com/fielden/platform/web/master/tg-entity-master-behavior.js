@@ -1,6 +1,8 @@
 // FIXME postal lib, and its dependency lodash lib, we add to main html file:
 // <link rel="import" href="/resources/components/postal-lib.html">
 
+import '/resources/egi/tg-custom-action-dialog.js';
+
 import { FOCUSABLE_ELEMENTS_SELECTOR, tearDownEvent, isInHierarchy } from '/resources/reflection/tg-polymer-utils.js';
 import { TgEntityBinderBehavior } from '/resources/binding/tg-entity-binder-behavior.js';
 import { createEntityActionThenCallback } from '/resources/master/actions/tg-entity-master-closing-utils.js';
