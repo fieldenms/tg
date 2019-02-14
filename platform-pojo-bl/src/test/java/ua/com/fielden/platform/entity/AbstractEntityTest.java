@@ -107,21 +107,21 @@ public class AbstractEntityTest {
 
     @Test
     public void testThatObservablePropertyMaintainsOriginalAndPrevValue() {
-        entity.getProperty("observableProperty").setPrevValue(new Double("0.0"));
-        assertEquals("current value must be changed (original value 0)", true, entity.getProperty("observableProperty").isChangedFromOriginal());
-        assertEquals("current value must be changed (previous value 0)", false, entity.getProperty("observableProperty").isChangedFromPrevious());
+        entity.getProperty("observableProperty").setPrevValue(new Double("0.0")); // setting the same value as the current one does not change prev-value
+        assertEquals("current value must be changed (original value null)", true, entity.getProperty("observableProperty").isChangedFromOriginal());
+        assertEquals("current value must be changed (previous value null)", true, entity.getProperty("observableProperty").isChangedFromPrevious());
         final Double newValue = new Double("22.0");
         entity.setObservableProperty(newValue);
         assertEquals("Prev property value is incorrect", new Double("0.0"), entity.getProperty("observableProperty").getPrevValue());
         assertNull("Original property value is incorrect", entity.getProperty("observableProperty").getOriginalValue());
-        assertEquals("Property change count is incorrect", 2, entity.getProperty("observableProperty").getValueChangeCount());
+        assertEquals("Property change count is incorrect", 1, entity.getProperty("observableProperty").getValueChangeCount());
         assertEquals("current value must be changed (original value 1)", true, entity.getProperty("observableProperty").isChangedFromOriginal());
         assertEquals("current value must be changed (previous value 1)", true, entity.getProperty("observableProperty").isChangedFromPrevious());
 
         entity.setObservableProperty(23.0);
         assertEquals("Prev property value is incorrect", newValue, entity.getProperty("observableProperty").getPrevValue());
         assertNull("Original property value is incorrect", entity.getProperty("observableProperty").getOriginalValue());
-        assertEquals("Property change count is incorrect", 3, entity.getProperty("observableProperty").getValueChangeCount());
+        assertEquals("Property change count is incorrect", 2, entity.getProperty("observableProperty").getValueChangeCount());
         assertEquals("current value must be changed (original value 2)", true, entity.getProperty("observableProperty").isChangedFromOriginal());
         assertEquals("current value must be changed (previous value 2)", true, entity.getProperty("observableProperty").isChangedFromPrevious());
     }

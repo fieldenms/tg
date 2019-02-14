@@ -647,13 +647,16 @@ public final class MetaPropertyFull<T> extends MetaProperty<T> {
      */
     @Override
     public final MetaPropertyFull<T> setPrevValue(final T value) {
-        incValueChangeCount();
         // just in case cater for correct processing of collection properties
         if (isCollectional()) {
             // set the shallow copy of collection into this.prevValue to be able to perform comparison between actual value and previous value of the collection
+            incValueChangeCount();
             this.prevValue = EntityUtils.copyCollectionalValue(value);
         } else {
-            this.prevValue = value;
+            if (!EntityUtils.equalsEx(getValue(), value)) {
+                incValueChangeCount();
+                this.prevValue = value;
+            }
         }
         return this;
     }
