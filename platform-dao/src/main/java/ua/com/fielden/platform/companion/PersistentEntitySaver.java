@@ -16,6 +16,7 @@ import static ua.com.fielden.platform.reflection.ActivatableEntityRetrospectionH
 import static ua.com.fielden.platform.reflection.ActivatableEntityRetrospectionHelper.isNotSpecialActivatableToBeSkipped;
 import static ua.com.fielden.platform.reflection.Reflector.isMethodOverriddenOrDeclared;
 import static ua.com.fielden.platform.utils.DbUtils.nextIdValue;
+import static ua.com.fielden.platform.utils.EntityUtils.equalsEx;
 import static ua.com.fielden.platform.utils.Validators.findActiveDeactivatableDependencies;
 
 import java.lang.reflect.Field;
@@ -286,6 +287,12 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
      */
     private void handleDirtyActivatableProperty(final T entity, final T persistedEntity, final MetaProperty<?> prop, final Object value) {
         final String propName = prop.getName();
+        // dirty activatable handling only needs to be performed if the current and persisted values are different
+        // at this stage of program execution, these values can only be the same iff a concurrent modification to the same value took place (i.e. non-conflicting concurrent change)
+        // in such case recalculation of refCount for respective entities has already been performed, and double dipping should be avoided
+        if (equalsEx(value, persistedEntity.get(propName))) {
+            return;
+        }
         // if value is null then an activatable entity has been dereferenced and its refCount needs to be decremented
         // but only if the dereferenced value is an active activatable and the entity being saved is not being made active -- thus previously it was not counted as a reference
         if (value == null) {
@@ -396,7 +403,7 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
      * @return
      */
     private boolean shouldProcessAsActivatable(final T entity, final MetaProperty<?> prop) {
-        boolean shouldProcessAsActivatable;
+        final boolean shouldProcessAsActivatable;
         if (prop.isActivatable() && entity instanceof ActivatableAbstractEntity && isNotSpecialActivatableToBeSkipped(prop)) {
             final Class<? extends ActivatableAbstractEntity<?>> type = (Class<? extends ActivatableAbstractEntity<?>>) prop.getType();
             final DeactivatableDependencies ddAnnotation = type.getAnnotation(DeactivatableDependencies.class);

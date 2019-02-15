@@ -370,6 +370,39 @@ public class SettingAndSavingActivatableEntitiesTest extends AbstractDaoTestCase
         assertEquals("RefCount should not have been changed for this intermediate value.", cat6.getRefCount() + 0, co$(TgCategory.class).findByKey("Cat6").getRefCount() + 0);
     }
 
+    @Test
+    public void refCount_for_dereferenced_entity_is_decremented_and_incremented_for_referened_entity_only_once_upon_concurrent_modification_of_the_same_entity() {
+        final TgSystem sys1User1 = co$(TgSystem.class).findByKeyAndFetch(fetchAll(TgSystem.class), "Sys1");
+        final TgSystem sys1User2 = co$(TgSystem.class).findByKeyAndFetch(fetchAll(TgSystem.class), "Sys1");
+
+        final TgCategory cat1 = co$(TgCategory.class).findByKeyAndFetch(fetchAll(TgCategory.class), "Cat1");
+        assertEquals(Integer.valueOf(2), cat1.getRefCount());
+        final TgCategory cat5 = co$(TgCategory.class).findByKeyAndFetch(fetchAll(TgCategory.class), "Cat5");
+        assertEquals(Integer.valueOf(0), cat5.getRefCount());
+
+        save(sys1User1.setCategory(cat5));
+        save(sys1User2.setCategory(cat5)); // concurrent, non-conflicting change
+
+        // how about refCount values?
+        assertEquals(cat1.getRefCount() - 1, co$(TgCategory.class).findByKey("Cat1").getRefCount() + 0);
+        assertEquals(cat5.getRefCount() + 1, co$(TgCategory.class).findByKey("Cat5").getRefCount() + 0);
+    }
+
+    @Test
+    public void refCount_for_dereferenced_entity_is_decremented_only_once_upon_concurrent_dereferencing_from_the_same_entity() {
+        final TgSystem sys1User1 = co$(TgSystem.class).findByKeyAndFetch(fetchAll(TgSystem.class), "Sys1");
+        final TgSystem sys1User2 = co$(TgSystem.class).findByKeyAndFetch(fetchAll(TgSystem.class), "Sys1");
+
+        final TgCategory cat1 = co$(TgCategory.class).findByKeyAndFetch(fetchAll(TgCategory.class), "Cat1");
+        assertEquals(Integer.valueOf(2), cat1.getRefCount());
+
+        save(sys1User1.setCategory(null));
+        save(sys1User2.setCategory(null)); // concurrent, non-conflicting change
+
+        // how about refCount values?
+        assertEquals(cat1.getRefCount() - 1, co$(TgCategory.class).findByKey("Cat1").getRefCount() + 0);
+    }
+
     @Override
     protected void populateDomain() {
         super.populateDomain();
