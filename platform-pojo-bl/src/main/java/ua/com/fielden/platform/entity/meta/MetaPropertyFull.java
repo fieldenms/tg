@@ -7,6 +7,7 @@ import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getEntityTitl
 import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getTitleAndDesc;
 import static ua.com.fielden.platform.reflection.TitlesDescsGetter.processReqErrorMsg;
 import static ua.com.fielden.platform.types.tuples.T2.t2;
+import static ua.com.fielden.platform.utils.EntityUtils.equalsEx;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
@@ -647,13 +648,16 @@ public final class MetaPropertyFull<T> extends MetaProperty<T> {
      */
     @Override
     public final MetaPropertyFull<T> setPrevValue(final T value) {
-        incValueChangeCount();
         // just in case cater for correct processing of collection properties
         if (isCollectional()) {
             // set the shallow copy of collection into this.prevValue to be able to perform comparison between actual value and previous value of the collection
+            incValueChangeCount();
             this.prevValue = EntityUtils.copyCollectionalValue(value);
         } else {
-            this.prevValue = value;
+            if (!equalsEx(getValue(), value)) {
+                incValueChangeCount();
+                this.prevValue = value;
+            }
         }
         return this;
     }
@@ -679,7 +683,7 @@ public final class MetaPropertyFull<T> extends MetaProperty<T> {
      */
     private final boolean isChangedFrom(final T value) {
         try {
-            return !EntityUtils.equalsEx(getValue(), value);
+            return !equalsEx(getValue(), value);
         } catch (final Exception e) {
             logger.debug(e.getMessage(), e);
         }
