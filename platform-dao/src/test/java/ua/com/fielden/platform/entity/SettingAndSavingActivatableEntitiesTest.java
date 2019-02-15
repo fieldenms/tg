@@ -260,19 +260,93 @@ public class SettingAndSavingActivatableEntitiesTest extends AbstractDaoTestCase
         sys = save(sys.setActive(false));
         assertEquals(Integer.valueOf(0), co$(TgCategory.class).findByKey(cat.getKey()).getRefCount());
     }
-    
+
+    @Test
+    public void recomputation_of_refCount_after_mutiple_changes_of_activatable_property_with_referencing_is_performed_for_correct_instances() {
+        final TgSystem sys1 = co$(TgSystem.class).findByKeyAndFetch(fetchAll(TgSystem.class), "Sys1");
+
+        final TgCategory cat1 = co$(TgCategory.class).findByKeyAndFetch(fetchAll(TgCategory.class), "Cat1");
+        assertEquals(Integer.valueOf(2), cat1.getRefCount());
+        final TgCategory cat5 = co$(TgCategory.class).findByKeyAndFetch(fetchAll(TgCategory.class), "Cat5");
+        assertEquals(Integer.valueOf(0), cat5.getRefCount());        
+        final TgCategory cat6 = co$(TgCategory.class).findByKeyAndFetch(fetchAll(TgCategory.class), "Cat6");
+        assertEquals(Integer.valueOf(2), cat6.getRefCount());
+
+        final MetaProperty<TgCategory> mpCategory = sys1.getProperty("category");
+        assertEquals(cat1, mpCategory.getValue());
+        assertEquals(cat1, mpCategory.getPrevValue());
+        assertEquals(cat1, mpCategory.getOriginalValue());
+        
+        sys1.setCategory(cat6); // intermediate category, which will be replaced before saving changes
+        assertEquals(cat6, mpCategory.getValue());
+        assertEquals(cat1, mpCategory.getPrevValue());
+        assertEquals(cat1, mpCategory.getOriginalValue());
+
+        sys1.setCategory(cat5);
+        assertEquals(cat5, mpCategory.getValue());
+        assertEquals(cat6, mpCategory.getPrevValue());
+        assertEquals(cat1, mpCategory.getOriginalValue());
+
+        final TgSystem savedSys1 = save(sys1);
+        final MetaProperty<TgCategory> savedMpCategory = savedSys1.getProperty("category");
+        assertEquals(cat5, savedMpCategory.getValue());
+        assertEquals(cat5, savedMpCategory.getPrevValue());
+        assertEquals(cat5, savedMpCategory.getOriginalValue());
+ 
+        // how about refCount values?
+        assertEquals(cat1.getRefCount() - 1, co$(TgCategory.class).findByKey("Cat1").getRefCount() + 0);
+        assertEquals(cat5.getRefCount() + 1, co$(TgCategory.class).findByKey("Cat5").getRefCount() + 0);
+        assertEquals("RefCount should not have been changed for this intermediate value.", cat6.getRefCount() + 0, co$(TgCategory.class).findByKey("Cat6").getRefCount() + 0);
+    }
+
+    @Test
+    public void recomputation_of_refCount_after_mutiple_changes_of_activatable_property_with_dereferencing_is_performed_for_correct_instances() {
+        final TgSystem sys1 = co$(TgSystem.class).findByKeyAndFetch(fetchAll(TgSystem.class), "Sys1");
+
+        final TgCategory cat1 = co$(TgCategory.class).findByKeyAndFetch(fetchAll(TgCategory.class), "Cat1");
+        assertEquals(Integer.valueOf(2), cat1.getRefCount());
+        final TgCategory cat6 = co$(TgCategory.class).findByKeyAndFetch(fetchAll(TgCategory.class), "Cat6");
+        assertEquals(Integer.valueOf(2), cat6.getRefCount());
+
+        final MetaProperty<TgCategory> mpCategory = sys1.getProperty("category");
+        assertEquals(cat1, mpCategory.getValue());
+        assertEquals(cat1, mpCategory.getPrevValue());
+        assertEquals(cat1, mpCategory.getOriginalValue());
+        
+        sys1.setCategory(cat6); // intermediate category, which will be dereferenced before saving changes
+        assertEquals(cat6, mpCategory.getValue());
+        assertEquals(cat1, mpCategory.getPrevValue());
+        assertEquals(cat1, mpCategory.getOriginalValue());
+
+        sys1.setCategory(null);
+        assertNull(mpCategory.getValue());
+        assertEquals(cat6, mpCategory.getPrevValue());
+        assertEquals(cat1, mpCategory.getOriginalValue());
+
+        final TgSystem savedSys1 = save(sys1);
+        final MetaProperty<TgCategory> savedMpCategory = savedSys1.getProperty("category");
+        assertNull(savedMpCategory.getValue());
+        assertNull(savedMpCategory.getPrevValue());
+        assertNull(savedMpCategory.getOriginalValue());
+ 
+        // how about refCount values?
+        assertEquals(cat1.getRefCount() - 1, co$(TgCategory.class).findByKey("Cat1").getRefCount() + 0);
+        assertEquals("RefCount should not have been changed for this intermediate value.", cat6.getRefCount() + 0, co$(TgCategory.class).findByKey("Cat6").getRefCount() + 0);
+    }
+
     @Override
     protected void populateDomain() {
         super.populateDomain();
+        
         // set up logged in person, which is needed for TgSubSystem
         final String loggedInUser = "LOGGED_IN_USER";
         final IUser coUser = co$(User.class);
         final User lUser = coUser.save(new_(User.class, loggedInUser).setBase(true).setEmail(loggedInUser + "@unit-test.software").setActive(true));
-        
+
         // associate the admin role with lUser
         final UserRole admin = co$(UserRole.class).findByKey(UNIT_TEST_ROLE);
         save(new_composite(UserAndRoleAssociation.class, lUser, admin));
-        
+
         save(new_(TgPerson.class, loggedInUser).setUser(lUser));
 
         final IUserProvider up = getInstance(IUserProvider.class);
