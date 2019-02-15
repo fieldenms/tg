@@ -5,11 +5,11 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
+import static ua.com.fielden.platform.utils.EntityUtils.equalsEx;
 
 import org.joda.time.DateTime;
 import org.junit.Test;
 
-import ua.com.fielden.platform.entity.meta.MetaProperty;
 import ua.com.fielden.platform.persistence.composite.EntityWithDynamicCompositeKey;
 import ua.com.fielden.platform.persistence.types.EntityWithMoney;
 import ua.com.fielden.platform.test_config.AbstractDaoTestCase;
@@ -24,21 +24,34 @@ import ua.com.fielden.platform.types.Money;
 public class MetaPropertyFromPersistancePerspectiveTest extends AbstractDaoTestCase {
 
     @Test
-    public void all_properties_should_be_not_dirty_and_marked_as_assigned() {
+    public void all_properties_are_not_dirty_and_marked_as_assigned() {
         final EntityWithMoney entity = co$(EntityWithMoney.class).findByKey("key1");
         assertFalse(entity.getProperty("money").isDirty());
         assertTrue(entity.getProperty("money").isAssigned());
     }
 
     @Test
-    public void original_value_for_property_should_not_be_null() {
+    public void orig_prev_and_curr_prop_value_for_assigned_prop_are_the_same_for_retrieved_and_unmodified_entity() {
         final EntityWithMoney entity = co$(EntityWithMoney.class).findByKey("key1");
         assertNotNull(entity.getProperty("money").getValue());
         assertNotNull(entity.getProperty("money").getOriginalValue());
+        assertNotNull(entity.getProperty("money").getPrevValue());
+        assertTrue(equalsEx(entity.getProperty("money").getValue(), entity.getProperty("money").getOriginalValue()) &&
+                   equalsEx(entity.getProperty("money").getValue(), entity.getProperty("money").getPrevValue()));
     }
 
     @Test
-    public void persisted_entities_shoul_have_original_values_of_their_properties_unchanged_regardless_of_property_changes() {
+    public void orig_prev_and_curr_prop_value_for_unassigned_prop_are_the_same_for_retrieved_and_unmodified_entity() {
+        final EntityWithMoney entity = co$(EntityWithMoney.class).findByKey("key2");
+        assertNull(entity.getProperty("dateTimeProperty").getValue());
+        assertNull(entity.getProperty("dateTimeProperty").getOriginalValue());
+        assertNull(entity.getProperty("dateTimeProperty").getPrevValue());
+        assertTrue(equalsEx(entity.getProperty("dateTimeProperty").getValue(), entity.getProperty("dateTimeProperty").getOriginalValue()) &&
+                   equalsEx(entity.getProperty("dateTimeProperty").getValue(), entity.getProperty("dateTimeProperty").getPrevValue()));
+    }
+
+    @Test
+    public void persisted_entities_maitain_original_values_of_their_properties_unchanged_regardless_of_property_changes() {
         final EntityWithMoney entity = co$(EntityWithMoney.class).findByKey("key1");
         assertEquals(new Money("20.00"), entity.getProperty("money").getOriginalValue());
         entity.setMoney(new Money("30.00"));
@@ -51,14 +64,14 @@ public class MetaPropertyFromPersistancePerspectiveTest extends AbstractDaoTestC
     }
 
     @Test
-    public void last_attempted_value_should_match_original() {
+    public void last_attempted_value_matches_original() {
         final EntityWithMoney entity = co$(EntityWithMoney.class).findByKey("key1");
         assertEquals(new Money("20.00"), entity.getProperty("money").getLastAttemptedValue());
         assertEquals(new Money("20.00"), entity.getProperty("money").getOriginalValue());
     }
 
     @Test
-    public void resetting_invalid_property_changes_should_null_out_last_invalid_value_information() {
+    public void resetting_invalid_property_changes_nulls_out_last_invalid_value_information() {
         final EntityWithMoney entity = co$(EntityWithMoney.class).findByKey("key1");
         entity.setMoney(null);
         assertNull(entity.getProperty("money").getLastAttemptedValue());
