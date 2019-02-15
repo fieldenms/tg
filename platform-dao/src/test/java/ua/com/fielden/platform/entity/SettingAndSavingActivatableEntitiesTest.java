@@ -334,6 +334,42 @@ public class SettingAndSavingActivatableEntitiesTest extends AbstractDaoTestCase
         assertEquals("RefCount should not have been changed for this intermediate value.", cat6.getRefCount() + 0, co$(TgCategory.class).findByKey("Cat6").getRefCount() + 0);
     }
 
+    @Test
+    public void recomputation_of_refCount_after_mutiple_changes_of_activatable_property_that_had_no_value_before_is_performed_for_correct_instances() {
+        final TgSystem sys2 = co$(TgSystem.class).findByKeyAndFetch(fetchAll(TgSystem.class), "Sys2");
+        assertNull(sys2.getCategory());
+
+        final TgCategory cat1 = co$(TgCategory.class).findByKeyAndFetch(fetchAll(TgCategory.class), "Cat1");
+        assertEquals(Integer.valueOf(2), cat1.getRefCount());
+        final TgCategory cat6 = co$(TgCategory.class).findByKeyAndFetch(fetchAll(TgCategory.class), "Cat6");
+        assertEquals(Integer.valueOf(2), cat6.getRefCount());
+
+        final MetaProperty<TgCategory> mpCategory = sys2.getProperty("category");
+        assertNull(mpCategory.getValue());
+        assertNull(mpCategory.getPrevValue());
+        assertNull(mpCategory.getOriginalValue());
+
+        sys2.setCategory(cat6); // intermediate category, which will be dereferenced before saving changes
+        assertEquals(cat6, mpCategory.getValue());
+        assertNull(mpCategory.getPrevValue());
+        assertNull(mpCategory.getOriginalValue());
+
+        sys2.setCategory(cat1);
+        assertEquals(cat1, mpCategory.getValue());
+        assertEquals(cat6, mpCategory.getPrevValue());
+        assertNull(mpCategory.getOriginalValue());
+
+        final TgSystem savedSys2 = save(sys2);
+        final MetaProperty<TgCategory> savedMpCategory = savedSys2.getProperty("category");
+        assertEquals(cat1, savedMpCategory.getValue());
+        assertEquals(cat1, savedMpCategory.getPrevValue());
+        assertEquals(cat1, savedMpCategory.getOriginalValue());
+
+        // how about refCount values?
+        assertEquals(cat1.getRefCount() + 1, co$(TgCategory.class).findByKey("Cat1").getRefCount() + 0);
+        assertEquals("RefCount should not have been changed for this intermediate value.", cat6.getRefCount() + 0, co$(TgCategory.class).findByKey("Cat6").getRefCount() + 0);
+    }
+
     @Override
     protected void populateDomain() {
         super.populateDomain();

@@ -292,7 +292,7 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
             final MetaProperty<Boolean> activeProp = entity.getProperty(ACTIVE);
             final boolean beingActivated = activeProp.isDirty() && activeProp.getValue();
             // get the latest value of the dereferenced activatable as the current value of the persisted entity version from the database and decrement its ref count
-            // original property value should not be null as it would not become dirty otherwise, also, there was no property conflict, so it can be safely assumed that original value is NOT null
+            // original property value should not be null, otherwise property would not become dirty by assigning null
             final ActivatableAbstractEntity<?> origValue = (ActivatableAbstractEntity<?>) entity.getProperty(propName).getOriginalValue();
             final ActivatableAbstractEntity<?> persistedValue = (ActivatableAbstractEntity<?>) session.get().load(prop.getType(), origValue.getId(), UPGRADE);
             // if persistedValue active and does not equal to the entity being saving then need to decrement its refCount
