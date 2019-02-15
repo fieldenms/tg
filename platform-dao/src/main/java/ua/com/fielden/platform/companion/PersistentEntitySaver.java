@@ -292,9 +292,9 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
             final MetaProperty<Boolean> activeProp = entity.getProperty(ACTIVE);
             final boolean beingActivated = activeProp.isDirty() && activeProp.getValue();
             // get the latest value of the dereferenced activatable as the current value of the persisted entity version from the database and decrement its ref count
-            // previous property value should not be null as it would become dirty, also, there was no property conflict, so it can be safely assumed that previous value is NOT null
-            final ActivatableAbstractEntity<?> prevValue = (ActivatableAbstractEntity<?>) entity.getProperty(propName).getPrevValue();
-            final ActivatableAbstractEntity<?> persistedValue = (ActivatableAbstractEntity<?>) session.get().load(prop.getType(), prevValue.getId(), UPGRADE);
+            // original property value should not be null, otherwise property would not become dirty by assigning null
+            final ActivatableAbstractEntity<?> origValue = (ActivatableAbstractEntity<?>) entity.getProperty(propName).getOriginalValue();
+            final ActivatableAbstractEntity<?> persistedValue = (ActivatableAbstractEntity<?>) session.get().load(prop.getType(), origValue.getId(), UPGRADE);
             // if persistedValue active and does not equal to the entity being saving then need to decrement its refCount
             if (!beingActivated && persistedValue.isActive() && !entity.equals(persistedValue)) { // avoid counting self-references
                 persistedValue.setIgnoreEditableState(true);
@@ -305,9 +305,9 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
             persistedEntity.set(propName, null);
         } else { // otherwise there could be either referencing (i.e. before property was null) or a reference change (i.e. from one value to some other)
             // need to process previous property value
-            final AbstractEntity<?> prevValue = (ActivatableAbstractEntity<?>) entity.getProperty(propName).getPrevValue();
-            if (prevValue != null && !entity.equals(prevValue)) { // need to decrement refCount for the dereferenced entity, but avoid counting self-references
-                final ActivatableAbstractEntity<?> persistedValue = (ActivatableAbstractEntity<?>) session.get().load(prop.getType(), prevValue.getId(), UPGRADE);
+            final AbstractEntity<?> origValue = (ActivatableAbstractEntity<?>) entity.getProperty(propName).getOriginalValue();
+            if (origValue != null && !entity.equals(origValue)) { // need to decrement refCount for the dereferenced entity, but avoid counting self-references
+                final ActivatableAbstractEntity<?> persistedValue = (ActivatableAbstractEntity<?>) session.get().load(prop.getType(), origValue.getId(), UPGRADE);
                 persistedValue.setIgnoreEditableState(true);
                 session.get().update(persistedValue.decRefCount());
             }

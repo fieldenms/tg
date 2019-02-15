@@ -30,7 +30,7 @@ import ua.com.fielden.platform.test_config.AbstractDaoTestCase;
 public class SettingAndSavingActivatableEntitiesTest extends AbstractDaoTestCase {
 
     @Test
-    public void active_entity_with_active_references_should_not_be_allowed_to_become_inactive() {
+    public void active_entity_with_active_references_cannot_be_deactivated() {
         final TgCategory cat1 = co$(TgCategory.class).findByKey("Cat1");
         cat1.setActive(false);
 
@@ -95,7 +95,7 @@ public class SettingAndSavingActivatableEntitiesTest extends AbstractDaoTestCase
 
     
     @Test
-    public void deactivation_and_saving_of_self_referenced_activatable_should_be_permissible_and_not_decrement_its_ref_count() {
+    public void deactivation_and_saving_of_self_referenced_activatable_is_permissible_but_does_not_decrement_its_ref_count() {
         final TgCategory cat5 = co$(TgCategory.class).findByKeyAndFetch(fetchAll(TgCategory.class), "Cat5");
         assertEquals(Integer.valueOf(0), cat5.getRefCount());
 
@@ -106,7 +106,7 @@ public class SettingAndSavingActivatableEntitiesTest extends AbstractDaoTestCase
     }
 
     @Test
-    public void activating_entity_that_is_referenced_by_inactive_should_be_permitted_but_not_change_its_ref_count_and_also_update_referenced_not_dirty_active_activatables() {
+    public void activating_entity_that_is_referenced_by_inactive_is_permitted_but_does_not_change_its_ref_count_and_also_updates_referenced_not_dirty_active_activatables() {
         final TgCategory cat3 = co$(TgCategory.class).findByKeyAndFetch(fetchAll(TgCategory.class), "Cat3");
         assertEquals(Integer.valueOf(0), cat3.getRefCount());
         final TgCategory cat1 = co$(TgCategory.class).findByKey("Cat1");
@@ -119,7 +119,7 @@ public class SettingAndSavingActivatableEntitiesTest extends AbstractDaoTestCase
     }
 
     @Test
-    public void activating_entity_that_was_referencing_inactive_activatable_should_not_change_ref_count_of_that_activatable() {
+    public void activating_entity_that_was_referencing_inactive_activatable_does_not_change_ref_count_of_that_activatable() {
         final TgCategory cat4 = co$(TgCategory.class).findByKeyAndFetch(fetchAll(TgCategory.class), "Cat4");
         final TgCategory oldParent = cat4.getParent();
         assertFalse(cat4.isActive());
@@ -132,7 +132,7 @@ public class SettingAndSavingActivatableEntitiesTest extends AbstractDaoTestCase
     }
 
     @Test
-    public void activating_entity_that_gets_its_active_activatable_property_dereferenced_should_decrement_ref_counts_of_the_dereferenced_entity() {
+    public void activating_entity_that_gets_its_active_activatable_property_dereferenced_decrements_ref_counts_of_the_dereferenced_entity() {
         final TgCategory cat3 = co$(TgCategory.class).findByKeyAndFetch(fetchAll(TgCategory.class), "Cat3");
         final TgCategory oldParent = cat3.getParent();
         assertEquals(Integer.valueOf(0), cat3.getRefCount());
@@ -148,7 +148,7 @@ public class SettingAndSavingActivatableEntitiesTest extends AbstractDaoTestCase
     }
 
     @Test
-    public void deactivating_entity_should_lead_to_decrement_of_the_referenced_activatables() {
+    public void deactivating_entity_leads_to_decrementing_of_the_referenced_activatables() {
         final TgCategory cat2 = co$(TgCategory.class).findByKeyAndFetch(fetchAll(TgCategory.class), "Cat2");
         assertTrue(cat2.isActive());
         final TgCategory oldParent = cat2.getParent();
@@ -159,7 +159,7 @@ public class SettingAndSavingActivatableEntitiesTest extends AbstractDaoTestCase
     }
 
     @Test
-    public void changing_activatable_properties_should_lead_to_decrement_of_dereferenced_instances_and_increment_of_just_referenced_ones() {
+    public void changing_activatable_properties_leads_to_decrement_of_dereferenced_instances_and_increment_of_just_referenced_ones() {
         final TgSystem sys1 = co$(TgSystem.class).findByKeyAndFetch(fetchAll(TgSystem.class), "Sys1");
         final TgCategory cat1BeforeChange = sys1.getCategory();
         assertEquals(Integer.valueOf(2), cat1BeforeChange.getRefCount());
@@ -171,7 +171,7 @@ public class SettingAndSavingActivatableEntitiesTest extends AbstractDaoTestCase
     }
 
     @Test
-    public void non_activatable_entities_should_not_effect_ref_count_of_referenced_activatables() {
+    public void non_activatable_entities_do_not_effect_ref_count_of_referenced_activatables() {
         final TgSubSystem subSys1 = co$(TgSubSystem.class).findByKeyAndFetch(fetchAll(TgSubSystem.class), "SubSys1");
         final TgCategory cat6BeforeChange = subSys1.getFirstCategory();
         assertEquals(Integer.valueOf(2), cat6BeforeChange.getRefCount());
@@ -182,9 +182,8 @@ public class SettingAndSavingActivatableEntitiesTest extends AbstractDaoTestCase
         assertEquals(cat1.getRefCount(), savedSubSys1.getFirstCategory().getRefCount());
     }
 
-
     @Test
-    public void changing_and_unsetting_activatable_properties_should_lead_to_decrement_of_dereferenced_instances_and_increment_of_just_referenced_ones() {
+    public void changing_and_unsetting_activatable_properties_leads_to_decrement_of_dereferenced_instances_and_increment_of_just_referenced_ones() {
         final TgSystem sys2 = co$(TgSystem.class).findByKeyAndFetch(fetchAll(TgSystem.class), "Sys2");
         final TgCategory cat6BeforeChange = sys2.getFirstCategory();
         assertEquals(Integer.valueOf(2), cat6BeforeChange.getRefCount());
@@ -196,7 +195,7 @@ public class SettingAndSavingActivatableEntitiesTest extends AbstractDaoTestCase
     }
 
     @Test
-    public void self_referenced_activatable_should_be_able_to_become_inactive() {
+    public void self_referenced_activatable_can_become_inactive() {
         final TgCategory cat5 = co$(TgCategory.class).findByKeyAndFetch(fetchAll(TgCategory.class), "Cat5");
         final TgCategory savedCat5 = save(cat5.setActive(false));
 
@@ -206,7 +205,7 @@ public class SettingAndSavingActivatableEntitiesTest extends AbstractDaoTestCase
     }
 
     @Test
-    public void deactivation_with_simultaneous_derefernesing_of_active_actiavatables_should_be_supported() {
+    public void deactivation_with_simultaneous_derefernesing_of_active_actiavatables_is_supported() {
         final TgCategory cat2 = co$(TgCategory.class).findByKeyAndFetch(fetchAll(TgCategory.class), "Cat2");
         final TgCategory cat1 = cat2.getParent();
         final TgCategory savedCat2 = save(cat2.setParent(null).setActive(false));
@@ -218,7 +217,7 @@ public class SettingAndSavingActivatableEntitiesTest extends AbstractDaoTestCase
 
 
     @Test
-    public void concurrent_referencing_of_activatable_that_has_just_became_inactive_should_have_been_prevented() {
+    public void concurrent_referencing_of_activatable_that_has_just_became_inactive_is_prevented() {
         final TgCategory cat7 = co$(TgCategory.class).findByKeyAndFetch(fetchAll(TgCategory.class), "Cat7");
         final TgSystem sys3 = new_(TgSystem.class, "Sys3").setActive(true).setFirstCategory(cat7);
 
@@ -261,19 +260,129 @@ public class SettingAndSavingActivatableEntitiesTest extends AbstractDaoTestCase
         sys = save(sys.setActive(false));
         assertEquals(Integer.valueOf(0), co$(TgCategory.class).findByKey(cat.getKey()).getRefCount());
     }
-    
+
+    @Test
+    public void recomputation_of_refCount_after_mutiple_changes_of_activatable_property_with_referencing_is_performed_for_correct_instances() {
+        final TgSystem sys1 = co$(TgSystem.class).findByKeyAndFetch(fetchAll(TgSystem.class), "Sys1");
+
+        final TgCategory cat1 = co$(TgCategory.class).findByKeyAndFetch(fetchAll(TgCategory.class), "Cat1");
+        assertEquals(Integer.valueOf(2), cat1.getRefCount());
+        final TgCategory cat5 = co$(TgCategory.class).findByKeyAndFetch(fetchAll(TgCategory.class), "Cat5");
+        assertEquals(Integer.valueOf(0), cat5.getRefCount());        
+        final TgCategory cat6 = co$(TgCategory.class).findByKeyAndFetch(fetchAll(TgCategory.class), "Cat6");
+        assertEquals(Integer.valueOf(2), cat6.getRefCount());
+
+        final MetaProperty<TgCategory> mpCategory = sys1.getProperty("category");
+        assertEquals(cat1, mpCategory.getValue());
+        assertEquals(cat1, mpCategory.getPrevValue());
+        assertEquals(cat1, mpCategory.getOriginalValue());
+        
+        sys1.setCategory(cat6); // intermediate category, which will be replaced before saving changes
+        assertEquals(cat6, mpCategory.getValue());
+        assertEquals(cat1, mpCategory.getPrevValue());
+        assertEquals(cat1, mpCategory.getOriginalValue());
+
+        sys1.setCategory(cat5);
+        assertEquals(cat5, mpCategory.getValue());
+        assertEquals(cat6, mpCategory.getPrevValue());
+        assertEquals(cat1, mpCategory.getOriginalValue());
+
+        final TgSystem savedSys1 = save(sys1);
+        final MetaProperty<TgCategory> savedMpCategory = savedSys1.getProperty("category");
+        assertEquals(cat5, savedMpCategory.getValue());
+        assertEquals(cat5, savedMpCategory.getPrevValue());
+        assertEquals(cat5, savedMpCategory.getOriginalValue());
+ 
+        // how about refCount values?
+        assertEquals(cat1.getRefCount() - 1, co$(TgCategory.class).findByKey("Cat1").getRefCount() + 0);
+        assertEquals(cat5.getRefCount() + 1, co$(TgCategory.class).findByKey("Cat5").getRefCount() + 0);
+        assertEquals("RefCount should not have been changed for this intermediate value.", cat6.getRefCount() + 0, co$(TgCategory.class).findByKey("Cat6").getRefCount() + 0);
+    }
+
+    @Test
+    public void recomputation_of_refCount_after_mutiple_changes_of_activatable_property_with_dereferencing_is_performed_for_correct_instances() {
+        final TgSystem sys1 = co$(TgSystem.class).findByKeyAndFetch(fetchAll(TgSystem.class), "Sys1");
+
+        final TgCategory cat1 = co$(TgCategory.class).findByKeyAndFetch(fetchAll(TgCategory.class), "Cat1");
+        assertEquals(Integer.valueOf(2), cat1.getRefCount());
+        final TgCategory cat6 = co$(TgCategory.class).findByKeyAndFetch(fetchAll(TgCategory.class), "Cat6");
+        assertEquals(Integer.valueOf(2), cat6.getRefCount());
+
+        final MetaProperty<TgCategory> mpCategory = sys1.getProperty("category");
+        assertEquals(cat1, mpCategory.getValue());
+        assertEquals(cat1, mpCategory.getPrevValue());
+        assertEquals(cat1, mpCategory.getOriginalValue());
+        
+        sys1.setCategory(cat6); // intermediate category, which will be dereferenced before saving changes
+        assertEquals(cat6, mpCategory.getValue());
+        assertEquals(cat1, mpCategory.getPrevValue());
+        assertEquals(cat1, mpCategory.getOriginalValue());
+
+        sys1.setCategory(null);
+        assertNull(mpCategory.getValue());
+        assertEquals(cat6, mpCategory.getPrevValue());
+        assertEquals(cat1, mpCategory.getOriginalValue());
+
+        final TgSystem savedSys1 = save(sys1);
+        final MetaProperty<TgCategory> savedMpCategory = savedSys1.getProperty("category");
+        assertNull(savedMpCategory.getValue());
+        assertNull(savedMpCategory.getPrevValue());
+        assertNull(savedMpCategory.getOriginalValue());
+ 
+        // how about refCount values?
+        assertEquals(cat1.getRefCount() - 1, co$(TgCategory.class).findByKey("Cat1").getRefCount() + 0);
+        assertEquals("RefCount should not have been changed for this intermediate value.", cat6.getRefCount() + 0, co$(TgCategory.class).findByKey("Cat6").getRefCount() + 0);
+    }
+
+    @Test
+    public void recomputation_of_refCount_after_mutiple_changes_of_activatable_property_that_had_no_value_before_is_performed_for_correct_instances() {
+        final TgSystem sys2 = co$(TgSystem.class).findByKeyAndFetch(fetchAll(TgSystem.class), "Sys2");
+        assertNull(sys2.getCategory());
+
+        final TgCategory cat1 = co$(TgCategory.class).findByKeyAndFetch(fetchAll(TgCategory.class), "Cat1");
+        assertEquals(Integer.valueOf(2), cat1.getRefCount());
+        final TgCategory cat6 = co$(TgCategory.class).findByKeyAndFetch(fetchAll(TgCategory.class), "Cat6");
+        assertEquals(Integer.valueOf(2), cat6.getRefCount());
+
+        final MetaProperty<TgCategory> mpCategory = sys2.getProperty("category");
+        assertNull(mpCategory.getValue());
+        assertNull(mpCategory.getPrevValue());
+        assertNull(mpCategory.getOriginalValue());
+
+        sys2.setCategory(cat6); // intermediate category, which will be dereferenced before saving changes
+        assertEquals(cat6, mpCategory.getValue());
+        assertNull(mpCategory.getPrevValue());
+        assertNull(mpCategory.getOriginalValue());
+
+        sys2.setCategory(cat1);
+        assertEquals(cat1, mpCategory.getValue());
+        assertEquals(cat6, mpCategory.getPrevValue());
+        assertNull(mpCategory.getOriginalValue());
+
+        final TgSystem savedSys2 = save(sys2);
+        final MetaProperty<TgCategory> savedMpCategory = savedSys2.getProperty("category");
+        assertEquals(cat1, savedMpCategory.getValue());
+        assertEquals(cat1, savedMpCategory.getPrevValue());
+        assertEquals(cat1, savedMpCategory.getOriginalValue());
+
+        // how about refCount values?
+        assertEquals(cat1.getRefCount() + 1, co$(TgCategory.class).findByKey("Cat1").getRefCount() + 0);
+        assertEquals("RefCount should not have been changed for this intermediate value.", cat6.getRefCount() + 0, co$(TgCategory.class).findByKey("Cat6").getRefCount() + 0);
+    }
+
     @Override
     protected void populateDomain() {
         super.populateDomain();
+        
         // set up logged in person, which is needed for TgSubSystem
         final String loggedInUser = "LOGGED_IN_USER";
         final IUser coUser = co$(User.class);
         final User lUser = coUser.save(new_(User.class, loggedInUser).setBase(true).setEmail(loggedInUser + "@unit-test.software").setActive(true));
-        
+
         // associate the admin role with lUser
         final UserRole admin = co$(UserRole.class).findByKey(UNIT_TEST_ROLE);
         save(new_composite(UserAndRoleAssociation.class, lUser, admin));
-        
+
         save(new_(TgPerson.class, loggedInUser).setUser(lUser));
 
         final IUserProvider up = getInstance(IUserProvider.class);
