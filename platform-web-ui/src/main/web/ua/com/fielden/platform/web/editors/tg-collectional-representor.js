@@ -79,7 +79,7 @@ Polymer({
             } else {
                 valueToFormat = this.reflector()._getValueFor(entity, this.propertyName);
             }
-            return Polymer.TgBehaviors.TgEditorBehaviorImpl._getTooltip.call(this, valueToFormat);
+            return TgEditorBehaviorImpl._getTooltip.call(this, valueToFormat);
         }
         return "";
     },
