@@ -403,6 +403,23 @@ public class SettingAndSavingActivatableEntitiesTest extends AbstractDaoTestCase
         assertEquals(cat1.getRefCount() - 1, co$(TgCategory.class).findByKey("Cat1").getRefCount() + 0);
     }
 
+    @Test
+    public void refCount_for_referenced_entity_is_incremented_only_once_upon_concurrent_modification_of_the_same_entity() {
+        final TgSystem sys2User1 = co$(TgSystem.class).findByKeyAndFetch(fetchAll(TgSystem.class), "Sys2");
+        final TgSystem sys2User2 = co$(TgSystem.class).findByKeyAndFetch(fetchAll(TgSystem.class), "Sys2");
+
+        final TgCategory cat1 = co$(TgCategory.class).findByKeyAndFetch(fetchAll(TgCategory.class), "Cat1");
+        assertEquals(Integer.valueOf(2), cat1.getRefCount());
+
+        assertNull(sys2User1.getCategory());
+        save(sys2User1.setCategory(cat1));
+        assertNull(sys2User2.getCategory());
+        save(sys2User2.setCategory(cat1)); // concurrent, non-conflicting change
+
+        // how about refCount values?
+        assertEquals(cat1.getRefCount() + 1, co$(TgCategory.class).findByKey("Cat1").getRefCount() + 0);
+    }
+
     @Override
     protected void populateDomain() {
         super.populateDomain();
