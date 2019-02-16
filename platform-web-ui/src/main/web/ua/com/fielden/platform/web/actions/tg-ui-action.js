@@ -8,6 +8,7 @@ import '/resources/polymer/@polymer/paper-styles/color.js';
 
 import { TgFocusRestorationBehavior } from '/resources/actions/tg-focus-restoration-behavior.js';
 import { TgTooltipBehavior } from '/resources/components/tg-tooltip-behavior.js';
+import { TgFocusableBehavior } from '/resources/components/tg-focusable-behavior.js';
 import { tearDownEvent, allDefined } from '/resources/reflection/tg-polymer-utils.js';
 // depends on '/resources/postal/2.0.5/postal.min.js' 
 import { TgReflector } from '/app/tg-reflector.js';
@@ -389,7 +390,7 @@ Polymer({
         }
     },
 
-    behaviors: [TgTooltipBehavior, TgFocusRestorationBehavior ],
+    behaviors: [TgTooltipBehavior, TgFocusRestorationBehavior , TgFocusableBehavior],
 
     created: function () {
         this._reflector = new TgReflector();

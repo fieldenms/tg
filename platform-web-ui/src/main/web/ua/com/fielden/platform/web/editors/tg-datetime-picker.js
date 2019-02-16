@@ -15,7 +15,7 @@ import { IronResizableBehavior } from '/resources/polymer/@polymer/iron-resizabl
 import { Polymer } from '/resources/polymer/@polymer/polymer/lib/legacy/polymer-fn.js';
 import { html } from '/resources/polymer/@polymer/polymer/lib/utils/html-tag.js';
 
-import { TgEditorBehavior, createEditorTemplate} from '/resources/editors/tg-editor-behavior.js'
+import { TgEditorBehavior, TgEditorBehaviorImpl, createEditorTemplate} from '/resources/editors/tg-editor-behavior.js'
 import { _momentTz, _millisDateRepresentation } from '/resources/reflection/tg-date-utils.js';
 import { tearDownEvent } from '/resources/reflection/tg-polymer-utils.js'
 
@@ -60,9 +60,10 @@ const additionalTemplate = html`
         <style include="iron-flex iron-flex-reverse iron-flex-alignment iron-flex-factors iron-positioning"></style>
     </custom-style>`;
 const customInputTemplate = html`
-    <iron-input bind-value="{{_editingValue}}" class="custom-input date-input">
+    <iron-input bind-value="{{_editingValue}}" class="custom-input-wrapper date-input">
         <input
             id="input"
+            class="custom-input"
             on-change="_onChange"
             on-input="_onInput"
             on-keydown="_onKeydown"
@@ -350,7 +351,7 @@ Polymer({
     },
 
     _editingValueChanged: function (newValue, oldValue) {
-        TgEditorBehavior._editingValueChanged.call(this, newValue, oldValue);
+        TgEditorBehaviorImpl._editingValueChanged.call(this, newValue, oldValue);
 
         if (this._isAcceptingDateFromPicker) {
             this._isAcceptingDateFromPicker = false;

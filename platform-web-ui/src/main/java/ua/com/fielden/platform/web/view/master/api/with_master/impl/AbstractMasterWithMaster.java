@@ -31,7 +31,7 @@ public abstract class AbstractMasterWithMaster<T extends AbstractEntity<?>> impl
                         + "    attrs='[[_calcAttrs(_currBindingEntity)]]'"
                         + "    >"
                         + "</tg-element-loader>")
-                .replace("//@ready-callback",
+                .replace("//@created-callback",
                         "this.masterWithMaster = true;\n" +
                         "this._focusEmbededView = function () {\n" +
                         "    if (this.$.loader.loadedElement && this.$.loader.loadedElement.focusView) {\n" +
@@ -62,6 +62,7 @@ public abstract class AbstractMasterWithMaster<T extends AbstractEntity<?>> impl
                         "       return " + getAttributes(embededMasterType, "_currBindingEntity", shouldRefreshParentCentreAfterSave) +
                         "   };\n" +
                         "}).bind(this);\n")
+                .replace("//@ready-callback","")
                 .replace("//@attached-callback",
                           "this.canLeave = function () {"
                         + "    const embeddedMaster = this.$.loader.loadedElement;\n"
