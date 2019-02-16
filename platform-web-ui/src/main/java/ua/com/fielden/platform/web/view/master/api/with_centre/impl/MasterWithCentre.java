@@ -65,8 +65,9 @@ class MasterWithCentre<T extends AbstractEntity<?>> implements IMaster<T> {
                         + "    element-name='tg-%s-centre'>"
                         + "</tg-element-loader>",
                         entityCentre.getMenuItemType().getName(), entityCentre.getMenuItemType().getSimpleName()))
-                .replace("//@created-callback",
+                .replace("//@ready-callback",
                         "self.masterWithCentre = true;\n" +
+                        "self.classList.remove('canLeave');\n" +
                         "self._focusEmbededView = function () {\n" +
                         "    if (this.$.loader.loadedElement && this.$.loader.loadedElement.focusView) {\n" +
                         "        this.$.loader.loadedElement.focusView();\n" +
@@ -91,8 +92,6 @@ class MasterWithCentre<T extends AbstractEntity<?>> implements IMaster<T> {
                         "        this.$.loader.loadedElement.focusPreviousView(e);\n" +
                         "    }\n" +
                         "}.bind(self);\n")
-                .replace("//@ready-callback",
-                        "self.classList.remove('canLeave');\n")
                 .replace("//@attached-callback",
                         format(""
                         + "self.$.loader.attrs = %s;\n"

@@ -39,8 +39,6 @@ Polymer({
         self.prefDim = @prefDim;
         self.noUI = @noUiValue;
         self.saveOnActivation = @saveOnActivationValue;
-
-        //@created-callback
     },
 
     /**

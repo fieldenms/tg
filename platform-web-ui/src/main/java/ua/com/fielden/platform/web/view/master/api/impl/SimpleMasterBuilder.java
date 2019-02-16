@@ -273,7 +273,7 @@ public class SimpleMasterBuilder<T extends AbstractEntity<?>> implements ISimple
                 .replace(IMPORTS, createImports(importPaths))
                 .replace(ENTITY_TYPE, flattenedNameOf(entityType))
                 .replace("<!--@tg-entity-master-content-->", elementContainer.toString()) // TODO should contain prop actions
-                .replace("//@created-callback",
+                .replace("//@ready-callback",
                         layout.code().toString() + "\n"
                       + actionBarLayout.code().toString() + "\n"
                       + entityActionsStr.toString() + "\n"

@@ -115,8 +115,10 @@ class MasterWithMenu<T extends AbstractEntity<?>, F extends AbstractFunctionalEn
                         + menuItemViewsDom + "\n"
                         + "</tg-master-menu>",
                         this.menuItemActions.get(defaultMenuItemIndex).functionalEntity.get().getSimpleName()))
-                .replace("//@created-callback",
+                .replace("//@ready-callback",
                         format("            self.menuItemActions = [%s];\n"
+                             + "            self.$.menu.parent = self;\n"
+                             + "            self.canLeave = self.$.menu.canLeave.bind(self.$.menu);\n"
                              + "            // Overridden to support hidden properties conversion on the client-side ('key' and 'sectionTitle'). \n"
                              + "            self._isNecessaryForConversion = function (propertyName) { \n"
                              + "                return ['key', 'sectionTitle', 'menuToOpen', 'calculated'].indexOf(propertyName) !== -1; \n"
@@ -133,11 +135,7 @@ class MasterWithMenu<T extends AbstractEntity<?>, F extends AbstractFunctionalEn
                              + "            self._hasEmbededView = function () {\n"
                              + "                return true;\n"
                              + "            }.bind(self);\n",
-                            jsMenuItemActionObjects))
-                .replace("//@ready-callback",
-                        format("            self.$.menu.parent = self;\n"
-                             + "            self.canLeave = self.$.menu.canLeave.bind(self.$.menu);\n"
-                             )) //
+                             jsMenuItemActionObjects)) //
                 .replace("@prefDim", "null")
                 .replace("@noUiValue", "false")
                 .replace("@saveOnActivationValue", "true");

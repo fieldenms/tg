@@ -651,10 +651,6 @@ const TgEntityMasterBehaviorImpl = {
                 }
             }
         }.bind(self));
-
-        if (!this._hasEmbededView()) {
-            this._componentsToFocus = this.getFocusableElements();
-        }
     }, // end of ready callback
 
     attached: function () {
@@ -673,6 +669,10 @@ const TgEntityMasterBehaviorImpl = {
                 self._actionDialog.setAttribute("id", self.uuid);
                 document.body.appendChild(self._actionDialog);
             }
+        }
+
+        if (!this._hasEmbededView() && !this._componentsToFocus) {
+            this._componentsToFocus = this.getFocusableElements();
         }
     },
 
