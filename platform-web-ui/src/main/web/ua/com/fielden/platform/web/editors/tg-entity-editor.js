@@ -363,7 +363,7 @@ const propertyActionTemplate = html`<slot name="property-action"></slot>`;
             }
         },
 
-        observers: ["_changeTitle(entity)"],
+        observers: ["_changeTitle(entity)", "_changeLayerExistance(_editingValue, entity)"],
 
         created: function () {
             this._hasLayer = true;
@@ -882,12 +882,16 @@ const propertyActionTemplate = html`<slot name="property-action"></slot>`;
             return '';
         },
 
-        _hasLayer: function (_editingValue, entity) {
+        _changeLayerExistance: function (_editingValue, entity) {
+            if (!allDefined(arguments)) {
+                return;
+            }
             if (entity !== null) {
                 var entityValue = this.reflector()._getValueFor(entity, this.propertyName);
-                return entityValue !== null && this.convertToString(this.reflector().convert(entityValue)) === _editingValue && !Array.isArray(entityValue) && entityValue.type().shouldDisplayDescription();
+                this._hasLayer = entityValue !== null && this.convertToString(this.reflector().convert(entityValue)) === _editingValue && !Array.isArray(entityValue) && entityValue.type().shouldDisplayDescription();
+            } else {
+                this._hasLayer = false;
             }
-            return false;
         }
     });
 })();
