@@ -78,7 +78,7 @@ public class PropResolutionTest extends BaseEntQueryTCase1 {
         final Sources2 sources = new Sources2(source);
         final List<List<? extends ICondition2>> allConditions = new ArrayList<>();
         final List<ICondition2> firstAndConditionsGroup = new ArrayList<>();
-        firstAndConditionsGroup.add(new NullTest2(new EntProp2("make", source, TgVehicleMake.class), true));
+        firstAndConditionsGroup.add(new NullTest2(new EntProp2("make", source, TgVehicleMake.class, 1), true));
         allConditions.add(firstAndConditionsGroup);
         final Conditions2 conditions = new Conditions2(false, allConditions);
 
@@ -179,7 +179,7 @@ public class PropResolutionTest extends BaseEntQueryTCase1 {
         final List<List<? extends ICondition2>> allConditions = new ArrayList<>();
         final List<ICondition2> firstAndConditionsGroup = new ArrayList<>();
         // TODO make utility method for easy creation of Conditions2 with only one condition
-        firstAndConditionsGroup.add(new NullTest2(new EntProp2("key", source, String.class), true));
+        firstAndConditionsGroup.add(new NullTest2(new EntProp2("key", source, String.class, 1), true));
         allConditions.add(firstAndConditionsGroup);
 
         final Conditions2 conditions = new Conditions2(false, allConditions);
@@ -234,7 +234,7 @@ public class PropResolutionTest extends BaseEntQueryTCase1 {
         final Sources2 sources = new Sources2(source);
         final List<List<? extends ICondition2>> allConditions = new ArrayList<>();
         final List<ICondition2> firstAndConditionsGroup = new ArrayList<>();
-        firstAndConditionsGroup.add(new NullTest2(new EntProp2("surname", source, String.class), true));
+        firstAndConditionsGroup.add(new NullTest2(new EntProp2("surname", source, String.class, 1), true));
         allConditions.add(firstAndConditionsGroup);
         final Conditions2 conditions = new Conditions2(false, allConditions);
 
@@ -315,7 +315,7 @@ public class PropResolutionTest extends BaseEntQueryTCase1 {
         final Sources2 sources = new Sources2(source);
         final List<List<? extends ICondition2>> allConditions = new ArrayList<>();
         final List<ICondition2> firstAndConditionsGroup = new ArrayList<>();
-        firstAndConditionsGroup.add(new NullTest2(new EntProp2("make", source, TgVehicleMake.class), true));
+        firstAndConditionsGroup.add(new NullTest2(new EntProp2("make", source, TgVehicleMake.class, 1), true));
         allConditions.add(firstAndConditionsGroup);
         final Conditions2 conditions = new Conditions2(false, allConditions);
 
@@ -339,7 +339,7 @@ public class PropResolutionTest extends BaseEntQueryTCase1 {
         final Sources2 sources = new Sources2(source, Collections.<CompoundSource2> emptyList());
         final List<List<? extends ICondition2>> allConditions = new ArrayList<>();
         final List<ICondition2> firstAndConditionsGroup = new ArrayList<>();
-        firstAndConditionsGroup.add(new NullTest2(new EntProp2("surname", source, String.class), true));
+        firstAndConditionsGroup.add(new NullTest2(new EntProp2("surname", source, String.class, 1), true));
         allConditions.add(firstAndConditionsGroup);
         final Conditions2 conditions = new Conditions2(false, allConditions);
 
@@ -358,7 +358,7 @@ public class PropResolutionTest extends BaseEntQueryTCase1 {
         final Sources2 sources = new Sources2(source, Collections.<CompoundSource2> emptyList());
         final List<List<? extends ICondition2>> allConditions = new ArrayList<>();
         final List<ICondition2> firstAndConditionsGroup = new ArrayList<>();
-        firstAndConditionsGroup.add(new NullTest2(new EntProp2("surname", source, String.class), true));
+        firstAndConditionsGroup.add(new NullTest2(new EntProp2("surname", source, String.class, 1), true));
         allConditions.add(firstAndConditionsGroup);
         final Conditions2 conditions = new Conditions2(false, allConditions);
 
@@ -377,7 +377,7 @@ public class PropResolutionTest extends BaseEntQueryTCase1 {
         final Sources2 sources = new Sources2(source, Collections.<CompoundSource2> emptyList());
         final List<List<? extends ICondition2>> allConditions = new ArrayList<>();
         final List<ICondition2> firstAndConditionsGroup = new ArrayList<>();
-        firstAndConditionsGroup.add(new NullTest2(new EntProp2("surname", source, String.class), true));
+        firstAndConditionsGroup.add(new NullTest2(new EntProp2("surname", source, String.class, 1), true));
         allConditions.add(firstAndConditionsGroup);
         final Conditions2 conditions = new Conditions2(false, allConditions);
 
@@ -398,7 +398,7 @@ public class PropResolutionTest extends BaseEntQueryTCase1 {
         final Sources2 sources = new Sources2(source, Collections.<CompoundSource2> emptyList());
         final List<List<? extends ICondition2>> allConditions = new ArrayList<>();
         final List<ICondition2> firstAndConditionsGroup = new ArrayList<>();
-        firstAndConditionsGroup.add(new ComparisonTest2(new EntProp2("surname", source, String.class), EQ, new EntValue2(1)));
+        firstAndConditionsGroup.add(new ComparisonTest2(new EntProp2("surname", source, String.class, 1), EQ, new EntValue2(1)));
         allConditions.add(firstAndConditionsGroup);
         final Conditions2 conditions = new Conditions2(false, allConditions);
 
@@ -419,7 +419,7 @@ public class PropResolutionTest extends BaseEntQueryTCase1 {
 
         final List<List<? extends ICondition2>> allConditions = new ArrayList<>();
         final List<ICondition2> firstAndConditionsGroup = new ArrayList<>();
-        firstAndConditionsGroup.add(new ComparisonTest2(new EntProp2("name", source, TgPersonName.class), EQ, new EntProp2("id", source2, Long.class)));
+        firstAndConditionsGroup.add(new ComparisonTest2(new EntProp2("name", source, TgPersonName.class, 1), EQ, new EntProp2("id", source2, Long.class, 1)));
         allConditions.add(firstAndConditionsGroup);
         final Conditions2 joinConditions = new Conditions2(false, allConditions);
 
@@ -429,7 +429,7 @@ public class PropResolutionTest extends BaseEntQueryTCase1 {
         final Sources2 sources = new Sources2(source, compounds);
         final List<List<? extends ICondition2>> allConditions2 = new ArrayList<>();
         final List<ICondition2> firstAndConditionsGroup2 = new ArrayList<>();
-        firstAndConditionsGroup2.add(new ComparisonTest2(new EntProp2("surname", source, String.class), EQ, new EntValue2(1)));
+        firstAndConditionsGroup2.add(new ComparisonTest2(new EntProp2("surname", source, String.class, 1), EQ, new EntValue2(1)));
         allConditions2.add(firstAndConditionsGroup2);
         final Conditions2 conditions = new Conditions2(false, allConditions2);
 
@@ -451,8 +451,8 @@ public class PropResolutionTest extends BaseEntQueryTCase1 {
 
         final List<List<? extends ICondition2>> lrAllConditions2 = new ArrayList<>();
         final List<ICondition2> lrFirstAndConditionsGroup2 = new ArrayList<>();
-        lrFirstAndConditionsGroup2.add(new ComparisonTest2(new EntProp2("authorship.author", sourceAuthorRoyalty, TgAuthor.class), EQ,
-                new EntProp2("id", sourceAuthor, Long.class)));
+        lrFirstAndConditionsGroup2.add(new ComparisonTest2(new EntProp2("authorship.author", sourceAuthorRoyalty, TgAuthor.class, 1), EQ,
+                new EntProp2("id", sourceAuthor, Long.class, 1)));
         lrAllConditions2.add(lrFirstAndConditionsGroup2);
         final Conditions2 lrConditions = new Conditions2(false, lrAllConditions2);
 
@@ -463,7 +463,7 @@ public class PropResolutionTest extends BaseEntQueryTCase1 {
 
         final List<List<? extends ICondition2>> allConditions = new ArrayList<>();
         final List<ICondition2> firstAndConditionsGroup = new ArrayList<>();
-        firstAndConditionsGroup.add(new ComparisonTest2(new EntProp2("name", sourceAuthor, TgPersonName.class), EQ, new EntProp2("id", sourcePersonName, Long.class)));
+        firstAndConditionsGroup.add(new ComparisonTest2(new EntProp2("name", sourceAuthor, TgPersonName.class, 1), EQ, new EntProp2("id", sourcePersonName, Long.class, 1)));
         allConditions.add(firstAndConditionsGroup);
         final Conditions2 joinConditions = new Conditions2(false, allConditions);
 
@@ -475,7 +475,7 @@ public class PropResolutionTest extends BaseEntQueryTCase1 {
         final List<ICondition2> firstAndConditionsGroup2 = new ArrayList<>();
 
         final Expression2 lrExpr = new Expression2(lastRoyaltySubqry);
-        firstAndConditionsGroup2.add(new ComparisonTest2(new EntProp2("lastRoyalty", sourceAuthor, TgAuthorRoyalty.class), EQ, new EntValue2(1)));
+        firstAndConditionsGroup2.add(new ComparisonTest2(new EntProp2("lastRoyalty", sourceAuthor, TgAuthorRoyalty.class, 1), EQ, new EntValue2(1)));
         allConditions2.add(firstAndConditionsGroup2);
         final Conditions2 conditions = new Conditions2(false, allConditions2);
 

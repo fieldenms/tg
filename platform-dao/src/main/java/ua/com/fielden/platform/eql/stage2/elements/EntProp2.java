@@ -1,11 +1,12 @@
 package ua.com.fielden.platform.eql.stage2.elements;
 
-public class EntProp2 implements ISingleOperand2 {
+public class EntProp2 extends AbstractElement2 implements ISingleOperand2 {
     private final String name;
     private final IQrySource2 source;
     private final Class<?> type;
 
-    public EntProp2(final String name, final IQrySource2 source, final Class<?> type) {
+    public EntProp2(final String name, final IQrySource2 source, final Class<?> type, final int contextId) {
+        super(contextId);
         this.name = name;
         this.source = source;
         this.type = type;
@@ -13,7 +14,7 @@ public class EntProp2 implements ISingleOperand2 {
 
     @Override
     public String toString() {
-        return " name = " + name + ";\n source = " + source + ";\n type = " + type;
+        return " name = " + name + ";\n source = " + source + ";\n type = " + type + " contextId = " + getContextId();
     }
 
     @Override
@@ -33,7 +34,7 @@ public class EntProp2 implements ISingleOperand2 {
     @Override
     public int hashCode() {
         final int prime = 31;
-        int result = 1;
+        int result = super.hashCode();
         result = prime * result + ((name == null) ? 0 : name.hashCode());
         result = prime * result + ((type == null) ? 0 : type.hashCode());
         result = prime * result + ((source == null) ? 0 : source.hashCode());
@@ -45,9 +46,15 @@ public class EntProp2 implements ISingleOperand2 {
         if (this == obj) {
             return true;
         }
+        
+        if (!super.equals(obj)) {
+            return false;
+        }
+        
         if (obj == null) {
             return false;
         }
+        
         if (!(obj instanceof EntProp2)) {
             return false;
         }
