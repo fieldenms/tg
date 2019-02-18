@@ -48,7 +48,7 @@ import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.ExpressionModel;
 import ua.com.fielden.platform.eql.stage1.builders.EntQueryGenerator;
 import ua.com.fielden.platform.eql.stage1.builders.StandAloneExpressionBuilder;
-import ua.com.fielden.platform.eql.stage1.elements.Expression1;
+import ua.com.fielden.platform.eql.stage1.elements.operands.Expression1;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.utils.EntityUtils;
 

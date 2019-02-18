@@ -1,6 +1,6 @@
 package ua.com.fielden.platform.eql.stage1.builders;
 
-import ua.com.fielden.platform.eql.stage1.elements.SecondOf1;
+import ua.com.fielden.platform.eql.stage1.elements.functions.SecondOf1;
 
 public class SecondOfBuilder extends OneArgumentFunctionBuilder {
 

@@ -1,6 +1,6 @@
 package ua.com.fielden.platform.eql.stage1.builders;
 
-import ua.com.fielden.platform.eql.stage1.elements.SumOf1;
+import ua.com.fielden.platform.eql.stage1.elements.functions.SumOf1;
 
 public class SumOfBuilder extends OneArgumentFunctionBuilder {
     private final boolean distinct;

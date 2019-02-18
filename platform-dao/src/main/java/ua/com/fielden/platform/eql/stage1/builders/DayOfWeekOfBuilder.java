@@ -2,7 +2,7 @@ package ua.com.fielden.platform.eql.stage1.builders;
 
 import java.util.Map;
 
-import ua.com.fielden.platform.eql.stage1.elements.DayOfWeekOf;
+import ua.com.fielden.platform.eql.stage1.elements.functions.DayOfWeekOf;
 
 public class DayOfWeekOfBuilder extends OneArgumentFunctionBuilder {
 

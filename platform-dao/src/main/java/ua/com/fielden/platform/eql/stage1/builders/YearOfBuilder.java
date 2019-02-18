@@ -1,6 +1,6 @@
 package ua.com.fielden.platform.eql.stage1.builders;
 
-import ua.com.fielden.platform.eql.stage1.elements.YearOf1;
+import ua.com.fielden.platform.eql.stage1.elements.functions.YearOf1;
 
 public class YearOfBuilder extends OneArgumentFunctionBuilder {
 

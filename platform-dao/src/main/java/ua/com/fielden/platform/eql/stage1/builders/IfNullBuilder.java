@@ -1,6 +1,6 @@
 package ua.com.fielden.platform.eql.stage1.builders;
 
-import ua.com.fielden.platform.eql.stage1.elements.IfNull1;
+import ua.com.fielden.platform.eql.stage1.elements.functions.IfNull1;
 
 public class IfNullBuilder extends TwoArgumentsFunctionBuilder {
 

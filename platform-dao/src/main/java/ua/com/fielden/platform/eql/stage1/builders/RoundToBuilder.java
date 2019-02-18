@@ -1,6 +1,6 @@
 package ua.com.fielden.platform.eql.stage1.builders;
 
-import ua.com.fielden.platform.eql.stage1.elements.RoundTo1;
+import ua.com.fielden.platform.eql.stage1.elements.functions.RoundTo1;
 
 public class RoundToBuilder extends TwoArgumentsFunctionBuilder {
 

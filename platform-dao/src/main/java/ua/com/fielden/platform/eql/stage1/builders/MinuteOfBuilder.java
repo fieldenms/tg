@@ -1,6 +1,6 @@
 package ua.com.fielden.platform.eql.stage1.builders;
 
-import ua.com.fielden.platform.eql.stage1.elements.MinuteOf1;
+import ua.com.fielden.platform.eql.stage1.elements.functions.MinuteOf1;
 
 public class MinuteOfBuilder extends OneArgumentFunctionBuilder {
 

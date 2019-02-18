@@ -2,8 +2,8 @@ package ua.com.fielden.platform.eql.stage1.builders;
 
 import ua.com.fielden.platform.entity.query.fluent.enums.JoinType;
 import ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory;
-import ua.com.fielden.platform.eql.stage1.elements.CompoundSource1;
-import ua.com.fielden.platform.eql.stage1.elements.IQrySource1;
+import ua.com.fielden.platform.eql.stage1.elements.sources.CompoundSource1;
+import ua.com.fielden.platform.eql.stage1.elements.sources.IQrySource1;
 import ua.com.fielden.platform.utils.Pair;
 
 public class CompoundQrySourceBuilder extends AbstractTokensBuilder {

@@ -1,7 +1,7 @@
 package ua.com.fielden.platform.eql.stage1.builders;
 
 import ua.com.fielden.platform.entity.query.fluent.enums.DateIntervalUnit;
-import ua.com.fielden.platform.eql.stage1.elements.CountDateInterval1;
+import ua.com.fielden.platform.eql.stage1.elements.functions.CountDateInterval1;
 
 public class CountDateIntervalBuilder extends ThreeArgumentsFunctionBuilder {
 

@@ -1,6 +1,6 @@
 package ua.com.fielden.platform.eql.stage1.builders;
 
-import ua.com.fielden.platform.eql.stage1.elements.MonthOf1;
+import ua.com.fielden.platform.eql.stage1.elements.functions.MonthOf1;
 
 public class MonthOfBuilder extends OneArgumentFunctionBuilder {
 

@@ -1,6 +1,6 @@
 package ua.com.fielden.platform.eql.stage1.builders;
 
-import ua.com.fielden.platform.eql.stage1.elements.AverageOf1;
+import ua.com.fielden.platform.eql.stage1.elements.functions.AverageOf1;
 
 public class AverageOfBuilder extends OneArgumentFunctionBuilder {
     private final boolean distinct;

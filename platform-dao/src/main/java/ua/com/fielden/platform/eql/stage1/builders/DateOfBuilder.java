@@ -1,6 +1,6 @@
 package ua.com.fielden.platform.eql.stage1.builders;
 
-import ua.com.fielden.platform.eql.stage1.elements.DateOf1;
+import ua.com.fielden.platform.eql.stage1.elements.functions.DateOf1;
 
 public class DateOfBuilder extends OneArgumentFunctionBuilder {
 

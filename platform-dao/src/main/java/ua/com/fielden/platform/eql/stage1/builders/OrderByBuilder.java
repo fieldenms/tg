@@ -4,8 +4,8 @@ import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.YI
 
 import ua.com.fielden.platform.entity.query.fluent.enums.QueryTokens;
 import ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory;
-import ua.com.fielden.platform.eql.stage1.elements.ISingleOperand1;
 import ua.com.fielden.platform.eql.stage1.elements.OrderBy1;
+import ua.com.fielden.platform.eql.stage1.elements.operands.ISingleOperand1;
 import ua.com.fielden.platform.utils.Pair;
 
 public class OrderByBuilder extends AbstractTokensBuilder {

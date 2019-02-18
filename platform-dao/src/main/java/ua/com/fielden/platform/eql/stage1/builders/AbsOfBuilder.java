@@ -1,6 +1,6 @@
 package ua.com.fielden.platform.eql.stage1.builders;
 
-import ua.com.fielden.platform.eql.stage1.elements.AbsOf1;
+import ua.com.fielden.platform.eql.stage1.elements.functions.AbsOf1;
 
 public class AbsOfBuilder extends OneArgumentFunctionBuilder {
 

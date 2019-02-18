@@ -1,6 +1,6 @@
 package ua.com.fielden.platform.eql.stage1.builders;
 
-import ua.com.fielden.platform.eql.stage1.elements.CountOf1;
+import ua.com.fielden.platform.eql.stage1.elements.functions.CountOf1;
 
 public class CountOfBuilder extends OneArgumentFunctionBuilder {
     private final boolean distinct;

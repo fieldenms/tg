@@ -2,8 +2,8 @@ package ua.com.fielden.platform.eql.stage1.builders;
 
 import ua.com.fielden.platform.entity.query.fluent.enums.LogicalOperator;
 import ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory;
-import ua.com.fielden.platform.eql.stage1.elements.CompoundCondition1;
-import ua.com.fielden.platform.eql.stage1.elements.ICondition1;
+import ua.com.fielden.platform.eql.stage1.elements.conditions.CompoundCondition1;
+import ua.com.fielden.platform.eql.stage1.elements.conditions.ICondition1;
 import ua.com.fielden.platform.utils.Pair;
 
 public class CompoundConditionBuilder extends AbstractTokensBuilder {

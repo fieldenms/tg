@@ -1,10 +1,10 @@
 package ua.com.fielden.platform.eql.stage1.builders;
 
-import ua.com.fielden.platform.eql.stage1.elements.Conditions1;
 import ua.com.fielden.platform.eql.stage1.elements.GroupBys1;
 import ua.com.fielden.platform.eql.stage1.elements.OrderBys1;
-import ua.com.fielden.platform.eql.stage1.elements.Sources1;
 import ua.com.fielden.platform.eql.stage1.elements.Yields1;
+import ua.com.fielden.platform.eql.stage1.elements.conditions.Conditions1;
+import ua.com.fielden.platform.eql.stage1.elements.sources.Sources1;
 
 public class EntQueryBlocks {
     final Sources1 sources;

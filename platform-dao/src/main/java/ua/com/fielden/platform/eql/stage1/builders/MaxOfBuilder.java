@@ -1,6 +1,6 @@
 package ua.com.fielden.platform.eql.stage1.builders;
 
-import ua.com.fielden.platform.eql.stage1.elements.MaxOf1;
+import ua.com.fielden.platform.eql.stage1.elements.functions.MaxOf1;
 
 public class MaxOfBuilder extends OneArgumentFunctionBuilder {
 

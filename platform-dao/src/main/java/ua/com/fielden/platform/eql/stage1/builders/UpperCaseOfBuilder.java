@@ -1,6 +1,6 @@
 package ua.com.fielden.platform.eql.stage1.builders;
 
-import ua.com.fielden.platform.eql.stage1.elements.UpperCaseOf1;
+import ua.com.fielden.platform.eql.stage1.elements.functions.UpperCaseOf1;
 
 public class UpperCaseOfBuilder extends OneArgumentFunctionBuilder {
 
