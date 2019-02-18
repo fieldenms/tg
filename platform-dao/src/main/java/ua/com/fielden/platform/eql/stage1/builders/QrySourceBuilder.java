@@ -68,7 +68,7 @@ public class QrySourceBuilder extends AbstractTokensBuilder {
             if (hasCalcProps(resultType)) {
                 throw new EqlStage1ProcessingException("Not yet.");    
             } else {
-                return pair(QRY_SOURCE, new QrySource1BasedOnPersistentType(resultType, (String) secondValue()));    
+                return pair(QRY_SOURCE, new QrySource1BasedOnPersistentType(resultType, (String) secondValue(), getQueryBuilder().nextCondtextId()));    
             }
         } else if (isSyntheticEntityType(resultType) || isSyntheticBasedOnPersistentEntityType(resultType)) {
             throw new EqlStage1ProcessingException("Not yet.");
@@ -85,7 +85,7 @@ public class QrySourceBuilder extends AbstractTokensBuilder {
             queries.add(getQueryBuilder().generateEntQueryAsSourceQuery(qryModel, /*resultType = */ Optional.empty()));
         }
 
-        return pair(QRY_SOURCE, new QrySource1BasedOnSubqueries(alias, queries));
+        return pair(QRY_SOURCE, new QrySource1BasedOnSubqueries(alias, queries, getQueryBuilder().nextCondtextId()));
     }
 
     @Override

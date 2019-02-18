@@ -22,6 +22,13 @@ import ua.com.fielden.platform.eql.stage1.elements.operands.EntQuery1;
 import ua.com.fielden.platform.utils.Pair;
 
 public class EntQueryGenerator {
+    
+    private int contextId = 0;
+    
+    public int nextCondtextId() {
+        contextId = contextId + 1;
+        return contextId;
+    }
 
     public <T extends AbstractEntity<?>, Q extends QueryModel<T>> EntQuery1 generateEntQueryAsResultQuery(final QueryExecutionModel<T, Q> qem, final IRetrievalModel<T> fetchModel) {
         return generateEntQuery(qem.getQueryModel(), qem.getOrderModel(), Optional.empty(), fetchModel, RESULT_QUERY);
@@ -85,7 +92,8 @@ public class EntQueryGenerator {
         resultType.orElse(qryModel.getResultType()), 
         category, 
         qryModel.isFilterable(),
-        fetchModel);
+        fetchModel,
+        nextCondtextId());
     }
 
     private OrderBys1 produceOrderBys(final OrderingModel orderModel) {

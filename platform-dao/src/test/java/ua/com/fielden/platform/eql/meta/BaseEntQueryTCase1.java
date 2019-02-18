@@ -186,8 +186,8 @@ public class BaseEntQueryTCase1 {
     //	}
     //    }
 
-    protected static EntProp1 prop(final String propName) {
-        return new EntProp1(propName);
+    protected static EntProp1 prop(final String propName, final int contextId) {
+        return new EntProp1(propName, contextId);
     }
 
     protected static EntValue1 val(final Object value) {

@@ -9,6 +9,7 @@ import ua.com.fielden.platform.eql.meta.PropsResolutionContext;
 import ua.com.fielden.platform.eql.meta.QueryCategory;
 import ua.com.fielden.platform.eql.meta.TransformationResult;
 import ua.com.fielden.platform.eql.stage1.builders.EntQueryBlocks;
+import ua.com.fielden.platform.eql.stage1.elements.AbstractElement1;
 import ua.com.fielden.platform.eql.stage1.elements.GroupBys1;
 import ua.com.fielden.platform.eql.stage1.elements.OrderBys1;
 import ua.com.fielden.platform.eql.stage1.elements.Yields1;
@@ -22,7 +23,7 @@ import ua.com.fielden.platform.eql.stage2.elements.OrderBys2;
 import ua.com.fielden.platform.eql.stage2.elements.Sources2;
 import ua.com.fielden.platform.eql.stage2.elements.Yields2;
 
-public class EntQuery1 implements ISingleOperand1<EntQuery2> {
+public class EntQuery1 extends AbstractElement1 implements ISingleOperand1<EntQuery2> {
 
     private final Sources1 sources;
     private final Conditions1 conditions;
@@ -37,7 +38,8 @@ public class EntQuery1 implements ISingleOperand1<EntQuery2> {
     private final IRetrievalModel fetchModel;
 
     public EntQuery1(final EntQueryBlocks queryBlocks, final Class resultType, final QueryCategory category, //
-            final boolean filterable, final IRetrievalModel fetchModel) {
+            final boolean filterable, final IRetrievalModel fetchModel, final int contextId) {
+       super(contextId);
        this.filterable = filterable;
        this.category = category;
        this.sources = queryBlocks.getSources();

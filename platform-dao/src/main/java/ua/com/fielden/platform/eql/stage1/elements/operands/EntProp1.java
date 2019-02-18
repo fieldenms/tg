@@ -11,21 +11,22 @@ import ua.com.fielden.platform.eql.meta.AbstractPropInfo;
 import ua.com.fielden.platform.eql.meta.PropResolution;
 import ua.com.fielden.platform.eql.meta.PropsResolutionContext;
 import ua.com.fielden.platform.eql.meta.TransformationResult;
+import ua.com.fielden.platform.eql.stage1.elements.AbstractElement1;
 import ua.com.fielden.platform.eql.stage2.elements.EntProp2;
 import ua.com.fielden.platform.eql.stage2.elements.IQrySource2;
-import ua.com.fielden.platform.utils.Pair;
 
-public class EntProp1 implements ISingleOperand1<EntProp2> {
+public class EntProp1 extends AbstractElement1 implements ISingleOperand1<EntProp2> {
     private String name;
     private boolean external;
 
-    public EntProp1(final String name, final boolean external) {
+    public EntProp1(final String name, final boolean external, final int contextId) {
+        super(contextId);
         this.name = name;
         this.external = external;
     }
 
-    public EntProp1(final String name) {
-        this(name, false);
+    public EntProp1(final String name, final int contextId) {
+        this(name, false, contextId);
     }
 
     @Override

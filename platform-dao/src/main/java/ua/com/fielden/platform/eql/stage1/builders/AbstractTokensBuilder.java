@@ -238,9 +238,9 @@ public abstract class AbstractTokensBuilder implements ITokensBuilder {
     protected ISingleOperand1<? extends ISingleOperand2> getModelForSingleOperand(final TokenCategory cat, final Object value) {
         switch (cat) {
         case PROP:
-            return new EntProp1((String) value);
+            return new EntProp1((String) value, queryBuilder.nextCondtextId());
         case EXT_PROP:
-            return new EntProp1((String) value, true);
+            return new EntProp1((String) value, true, queryBuilder.nextCondtextId());
 //        case PARAM:
 //            return new EntParam1((String) value);
 //        case IPARAM:
