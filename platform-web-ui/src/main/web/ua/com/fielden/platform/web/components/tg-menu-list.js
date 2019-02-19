@@ -10,7 +10,6 @@ import '/resources/editors/tg-dom-stamper.js';
 import {Polymer} from '/resources/polymer/@polymer/polymer/lib/legacy/polymer-fn.js';
 import {html} from '/resources/polymer/@polymer/polymer/lib/utils/html-tag.js';
 import {IronOverlayBehavior} from '/resources/polymer/@polymer/iron-overlay-behavior/iron-overlay-behavior.js';
-import {IronFitBehavior} from '/resources/polymer/@polymer/iron-fit-behavior/iron-fit-behavior.js';
 
 import { TgTooltipBehavior } from '/resources/components/tg-tooltip-behavior.js';
 import { TgHighlightingBehavior } from '/resources/editors/tg-highlighting-behavior.js';
