@@ -1,9 +1,4 @@
 /**
- * The selector for focusable elements.
- */
-export const FOCUSABLE_ELEMENTS_SELECTOR = 'a[href], area[href], input, select, textarea, button, iframe, object, embed, [tabindex="0"], [contenteditable]';
-
-/**
  * Generates the unique identifier.
  */
 export function generateUUID () {
@@ -90,10 +85,10 @@ export function shadeColor (hex, lum) {
  */
 export function isInHierarchy (parent, descendant) {
     let current = descendant;
-    while (current !== null && current !== parent) {
-        current = current.parentElement;
+    while (current && current !== parent) {
+        current = current.parentElement || current.getRootNode().host;
     }
-    return current !== null;
+    return !!current;
 };
 
 /**

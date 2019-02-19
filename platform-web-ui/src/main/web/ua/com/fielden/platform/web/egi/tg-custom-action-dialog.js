@@ -26,7 +26,8 @@ import {html} from '/resources/polymer/@polymer/polymer/lib/utils/html-tag.js';
 import {TgFocusRestorationBehavior} from '/resources/actions/tg-focus-restoration-behavior.js'
 import {TgTooltipBehavior} from '/resources/components/tg-tooltip-behavior.js';
 import {TgBackButtonBehavior} from '/resources/views/tg-back-button-behavior.js'
-import {FOCUSABLE_ELEMENTS_SELECTOR, tearDownEvent, isInHierarchy, allDefined} from '/resources/reflection/tg-polymer-utils.js';
+import {tearDownEvent, isInHierarchy, allDefined} from '/resources/reflection/tg-polymer-utils.js';
+import {FOCUSABLE_ELEMENTS_SELECTOR} from '/resources/components/tg-focusable-behavior.js'
 
 const template = html`
     <style>
@@ -514,7 +515,7 @@ Polymer({
         const lastIndex = forward ? focusables.length - 1 : 0;
         const firstIndex = forward ? 0 : focusables.length - 1;
         const callback = this._lastElement ? (forward ? this._lastElement.focusNextView.bind(this._lastElement) : this._lastElement.focusPreviousView.bind(this._lastElement)) : null;
-        if (document.activeElement === this || isInHierarchy(this.$.titleBar, this.shadowRoot.activeElement)) {
+        if ((document.activeElement === this && !this.shadowRoot.activeElement)|| isInHierarchy(this.$.titleBar, this.shadowRoot.activeElement)) {
             if (this.shadowRoot.activeElement === focusables[lastIndex]) {
                 if (callback) {
                     callback(e);

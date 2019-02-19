@@ -3,14 +3,15 @@
 
 import '/resources/egi/tg-custom-action-dialog.js';
 
-import { FOCUSABLE_ELEMENTS_SELECTOR, tearDownEvent, isInHierarchy } from '/resources/reflection/tg-polymer-utils.js';
+import { tearDownEvent, isInHierarchy, deepestActiveElement } from '/resources/reflection/tg-polymer-utils.js';
 import { TgEntityBinderBehavior } from '/resources/binding/tg-entity-binder-behavior.js';
 import { createEntityActionThenCallback } from '/resources/master/actions/tg-entity-master-closing-utils.js';
-//FIXME <link rel="import" href="/resources/components/tg-focus-traversal-behavior.html">
+import { TgFocusableBehavior } from '/resources/components/tg-focusable-behavior.js';
+import {TgRequiredPropertiesFocusTraversalBehavior} from '/resources/components/tg-required-properties-focus-traversal-behavior.js';
 
 const selectEnabledEditor = function (editor) {
-    const selectedElement = editor.querySelector('.custom-input:not([hidden]):not([disabled])');
-    return (selectedElement && selectedElement.querySelector('textarea')) || selectedElement;
+    const selectedElement = editor.shadowRoot.querySelector('.custom-input:not([hidden]):not([disabled])');
+    return (selectedElement && selectedElement.shadowRoot && selectedElement.shadowRoot.querySelector('textarea')) || selectedElement;
 }
 
 const TgEntityMasterBehaviorImpl = {
@@ -650,10 +651,6 @@ const TgEntityMasterBehaviorImpl = {
                 }
             }
         }.bind(self));
-
-        if (!this._hasEmbededView()) {
-            this._componentsToFocus = Array.from(this.querySelectorAll(FOCUSABLE_ELEMENTS_SELECTOR));
-        }
     }, // end of ready callback
 
     attached: function () {
@@ -672,6 +669,10 @@ const TgEntityMasterBehaviorImpl = {
                 self._actionDialog.setAttribute("id", self.uuid);
                 document.body.appendChild(self._actionDialog);
             }
+        }
+
+        if (!this._hasEmbededView() && !this._componentsToFocus) {
+            this._componentsToFocus = this.getFocusableElements();
         }
     },
 
@@ -743,13 +744,13 @@ const TgEntityMasterBehaviorImpl = {
             const focusedElements = this._getCurrentFocusableElements();
             if (focusedElements.length > 0) {
                 const lastIndex = forward ? focusedElements.length - 1 : 0;
-                if (!isInHierarchy(this, document.activeElement)) {
+                if (!isInHierarchy(this, this.shadowRoot.activeElement)) {
                     const firstIndex = forward ? 0 : focusedElements.length - 1;
                     focusedElements[firstIndex].focus()
                     tearDownEvent(e);
                 } else {
                     const lastIndex = forward ? focusedElements.length - 1 : 0;
-                    const activeElement = document.activeElement;
+                    const activeElement = deepestActiveElement();
                     if (activeElement === focusedElements[lastIndex]) {
                         this.fire("tg-last-item-focused", { forward: forward, event: e });
                     }
@@ -765,7 +766,7 @@ const TgEntityMasterBehaviorImpl = {
      * Looks for the first input that is not hidden and not disabled to focus it.
      */
     _focusFirstInput: function () {
-        const editors = this.querySelectorAll('tg-editor');
+        const editors = this.shadowRoot.querySelectorAll('[tg-editor]');
         let editorIndex, firstInput, selectedElement;
         for (editorIndex = 0; editorIndex < editors.length; editorIndex++) {
             if (editors[editorIndex].offsetParent !== null) {
@@ -1059,6 +1060,7 @@ const TgEntityMasterBehaviorImpl = {
 
 export const TgEntityMasterBehavior = [
     TgEntityBinderBehavior,
-    // FIXME TgFocusTraversalBehavior,
+    TgFocusableBehavior,
+    TgRequiredPropertiesFocusTraversalBehavior,
     TgEntityMasterBehaviorImpl
 ];

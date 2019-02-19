@@ -3,7 +3,7 @@ import '/resources/polymer/@polymer/polymer/polymer-legacy.js';
 import { Polymer } from '/resources/polymer/@polymer/polymer/lib/legacy/polymer-fn.js';
 import { html } from '/resources/polymer/@polymer/polymer/lib/utils/html-tag.js';
 
-import { TgEditorBehavior , createEditorTemplate} from '/resources/editors/tg-editor-behavior.js';
+import { TgEditorBehavior, TgEditorBehaviorImpl, createEditorTemplate} from '/resources/editors/tg-editor-behavior.js';
 import { generateShortCollection } from '/resources/reflection/tg-polymer-utils.js';
 
 const additionalTemplate = html`
@@ -13,9 +13,10 @@ const additionalTemplate = html`
         }
     </style>`;
 const customInputTemplate = html`
-    <iron-input bind-value="{{_editingValue}}" class="custom-input collectional-representor-input">
+    <iron-input bind-value="{{_editingValue}}" class="custom-input-wrapper collectional-representor-input">
         <input
             id="input"
+            class="custom-input"
             on-change="_onChange"
             on-input="_onInput"
             on-tap="_onTap"
@@ -78,7 +79,7 @@ Polymer({
             } else {
                 valueToFormat = this.reflector()._getValueFor(entity, this.propertyName);
             }
-            return Polymer.TgBehaviors.TgEditorBehavior._getTooltip.call(this, valueToFormat);
+            return TgEditorBehaviorImpl._getTooltip.call(this, valueToFormat);
         }
         return "";
     },

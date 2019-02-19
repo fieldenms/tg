@@ -12,6 +12,7 @@ import {TgReflector} from '/app/tg-reflector.js';
 import {html} from '/resources/polymer/@polymer/polymer/lib/utils/html-tag.js';
 
 import {TgTooltipBehavior} from '/resources/components/tg-tooltip-behavior.js';
+import {TgFocusableBehavior} from '/resources/components/tg-focusable-behavior.js';
 import { tearDownEvent } from '/resources/reflection/tg-polymer-utils.js';
 
 export function createEditorTemplate (additionalTemplate, customPrefixAttribute, customInput, inputLayer, customIconButtons, propertyAction) {
@@ -23,8 +24,7 @@ export function createEditorTemplate (additionalTemplate, customPrefixAttribute,
                     pointer-events: auto;
                 };
             }
-            .custom-input,
-            .custom-input > input {
+            .custom-input-wrapper, .custom-input {
                 @apply --paper-input-container-shared-input-style;
                 font-weight: 500;
             }
@@ -126,7 +126,7 @@ export function createEditorTemplate (additionalTemplate, customPrefixAttribute,
         </template>`;
 };
 
-export const TgEditorBehavior = {
+export const TgEditorBehaviorImpl = {
 
     properties: {
         /////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -446,7 +446,9 @@ export const TgEditorBehavior = {
         }, */
     },
 
-    behaviors: [TgTooltipBehavior],
+    hostAttributes: {
+        'tg-editor': true
+    },
     
     observers: [
         '_recordDefinition(entity, propertyName, _editorValidationMsg)',
@@ -938,3 +940,5 @@ export const TgEditorBehavior = {
         return contextHolder;
     }
 };
+
+export const TgEditorBehavior = [TgEditorBehaviorImpl, TgTooltipBehavior, TgFocusableBehavior];

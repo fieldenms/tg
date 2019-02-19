@@ -6,7 +6,7 @@ import '/resources/polymer/@polymer/paper-checkbox/paper-checkbox.js'
 import {Polymer} from '/resources/polymer/@polymer/polymer/lib/legacy/polymer-fn.js';
 import {html} from '/resources/polymer/@polymer/polymer/lib/utils/html-tag.js';
 
-import {TgEditorBehavior, createEditorTemplate} from '/resources/editors/tg-editor-behavior.js'
+import {TgEditorBehavior, TgEditorBehaviorImpl, createEditorTemplate} from '/resources/editors/tg-editor-behavior.js'
 
 const additionalTemplate = html`
     <style>
@@ -79,7 +79,7 @@ Polymer({
             var target = e.target || e.srcElement;
             this._editingValue = this.convertToString(target.checked);
             
-            var parentFunction = TgEditorBehavior.properties._onChange.value.call(this);
+            var parentFunction = TgEditorBehaviorImpl.properties._onChange.value.call(this);
             parentFunction.call(this, e);
         }).bind(this);
         

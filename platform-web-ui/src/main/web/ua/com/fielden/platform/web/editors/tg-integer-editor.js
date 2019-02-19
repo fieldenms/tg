@@ -30,9 +30,10 @@ const additionalTemplate = html`
     </style>
     <tg-app-config id="appConfig"></tg-app-config>`;
 const customInputTemplate = html`
-    <iron-input allowed-pattern="[0-9]" bind-value="{{_editingValue}}" class="integer-input custom-input">
+    <iron-input allowed-pattern="[0-9]" bind-value="{{_editingValue}}" class="integer-input custom-input-wrapper">
         <input
             id="input"
+            class="custom-input"
             type="number"
             step="1"
             on-change="_onChange"
@@ -66,7 +67,7 @@ Polymer({
     convertToString: function (value) {
         // NOTE: consider the follwing example, of how 'super' method can be invoked.
         //   Just use concrete name of the 'super' behavior and call the function excplicitly:            		
-        // Polymer.TgBehaviors.TgEditorBehavior.convertToString(value);
+        // TgEditorBehaviorImpl.convertToString(value);
         
         return value === null ? "" : "" + value;
     },
