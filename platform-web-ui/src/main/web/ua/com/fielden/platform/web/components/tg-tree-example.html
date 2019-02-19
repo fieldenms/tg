@@ -5,24 +5,34 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, minimum-scale=1.0, initial-scale=1.0, user-scalable=yes">
     <title>Menu list example</title>
+    <script src='/resources/polymer/@webcomponents/webcomponentsjs/webcomponents-bundle.js'></script>
+    <script src='/resources/polymer/web-animations-js/web-animations-next-lite.min.js'></script>
+    <script src='/resources/moment/moment.js'></script>
+    <script src='/resources/moment/moment-with-locales.js'></script>
     <script src="/resources/polymer/webcomponentsjs/webcomponents-lite.js"></script>
-    <link rel="import" href="/resources/polymer/paper-input/paper-input.html">
-    <link rel="import" href="/resources/polymer/paper-styles/paper-styles-classes.html">
-    <link rel="import" href="tg-tree.html">
-    <style>
-    </style>
+    <script type="module">
+        import '/resources/polymer/@polymer/iron-flex-layout/iron-flex-layout-classes.js';
+        import '/resources/polymer/@polymer/paper-styles/paper-styles-classes.js';
+        import '/resources/polymer/@polymer/paper-input/paper-input.js'
+        import './tg-tree.js';
+    </script>
+    <custom-style>
+        <style include="iron-flex iron-flex-reverse iron-flex-alignment iron-flex-factors iron-positioning"></style>
+    </custom-style>
 </head>
 
 <body unresolved class="fullbleed">
-    <template is="dom-bind" id="app">
-        <div class="fit layout vertical">
-            <paper-input on-bind-value-changed="_filterTree"></paper-input>
-            <tg-tree class="flex" id="tree" model="[[model]]" on-tg-load-subtree="_loadSubtree" content-builder="[[_buildContent]]"></tg-tree>
-        </div>
-    </template>
+    <dom-bind>
+        <template is="dom-bind">
+            <div class="fit layout vertical">
+                <paper-input on-bind-value-changed="_filterTree"></paper-input>
+                <tg-tree class="flex" id="tree" model="[[model]]" on-tg-load-subtree="_loadSubtree" content-builder="[[_buildContent]]"></tg-tree>
+            </div>
+        </template>
+    </dom-bind>
 </body>
 <script>
-    var app = document.querySelector("#app");
+    var app = document.querySelector("dom-bind");
     const numberOfItems = 10;
     const deepth = 4;
     const generateItems = function (numberOfItems, deepth) {
@@ -56,7 +66,7 @@
         return "<span>" + entity.entity.key + "</span>&nbsp;&ndash;&nbsp;<span style='color:#737373'><i>" + entity.entity.desc + "</i></span>";
     }
     app._loadSubtree = function (e) {
-        const parentsPath = e.detail;
+        const parentsPath = e.detail.parentPath;
         if (parentsPath.length < deepth) {
             const idxs = [];
             let modelList = app.model;

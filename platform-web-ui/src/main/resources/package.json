@@ -21,6 +21,8 @@
     "@polymer/iron-media-query": "^3.0.1",
     "@polymer/iron-overlay-behavior": "^3.0.2",
     "@polymer/iron-pages": "^3.0.1",
+    "@polymer/iron-scroll-threshold": "^3.0.1",
+    "@polymer/iron-selector": "^3.0.1",
     "@polymer/iron-swipeable-container": "^3.0.1",
     "@polymer/paper-badge": "^3.0.1",
     "@polymer/paper-behaviors": "^3.0.1",
@@ -51,6 +53,7 @@
     "chai": "^4.2.0",
     "mocha": "^5.2.0",
     "wct-browser-legacy": "^1.0.2",
-    "wct-mocha": "^1.0.0-pre.3"
+    "wct-mocha": "^1.0.0-pre.3",
+    "web-animations-js": "^2.3.1"
   }
 }

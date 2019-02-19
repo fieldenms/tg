@@ -5,15 +5,19 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, minimum-scale=1.0, initial-scale=1.0, user-scalable=yes">
     <title>Tooltip example</title>
-    <script src="/resources/polymer/webcomponentsjs/webcomponents-lite.js"></script>
-    <link rel="import" href="/resources/polymer/paper-styles/paper-styles-classes.html">
-    <link rel="import" href="tg-component-with-tooltip.html">
-
-    <body unresolved class="fullbleed" tooltip-text="Shouldn't be visible">
-        <tg-component-with-tooltip></tg-component-with-tooltip>
-        <div>No tooltips</div>
-    </body>
-    <script>
+    <script src='/resources/polymer/@webcomponents/webcomponentsjs/webcomponents-bundle.js'></script>
+    <script src='/resources/polymer/web-animations-js/web-animations-next-lite.min.js'></script>
+    <script src='/resources/moment/moment.js'></script>
+    <script src='/resources/moment/moment-with-locales.js'></script>
+    <script type="module">
+        import '/resources/polymer/@polymer/paper-styles/paper-styles-classes.js';
+        import './tg-component-with-tooltip.js';
     </script>
+</head>
+
+<body unresolved class="fullbleed" tooltip-text="Shouldn't be visible">
+    <tg-component-with-tooltip></tg-component-with-tooltip>
+    <div>No tooltips</div>
+</body>
 
 </html>

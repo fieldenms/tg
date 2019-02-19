@@ -1,8 +1,8 @@
 {
   "_from": "@webcomponents/webcomponentsjs@^2.0.0",
-  "_id": "@webcomponents/webcomponentsjs@2.2.3",
+  "_id": "@webcomponents/webcomponentsjs@2.2.4",
   "_inBundle": false,
-  "_integrity": "sha512-8ndihKAmH01M1GifAxIwNMJU6yI2uFnMjm6rPvLxO4IG1nzeyOFJB1B2LQRHnx7ChQCKCLap2B18zIOVY4ROoQ==",
+  "_integrity": "sha512-YkLxK9Mbw6QK5bNZ67Rarb/yj0gN+Ziy5+2sLjM0lDb3XafM36gXKZXaIBz4zvLA/cYYTdg+l1LlqXeHEcmeiA==",
   "_location": "/@webcomponents/webcomponentsjs",
   "_phantomChildren": {},
   "_requested": {
@@ -20,8 +20,8 @@
     "/",
     "/wct-browser-legacy"
   ],
-  "_resolved": "https://registry.npmjs.org/@webcomponents/webcomponentsjs/-/webcomponentsjs-2.2.3.tgz",
-  "_shasum": "1db73557e44df927ee5458c63b56f4a75183ca09",
+  "_resolved": "https://registry.npmjs.org/@webcomponents/webcomponentsjs/-/webcomponentsjs-2.2.4.tgz",
+  "_shasum": "b520d586e46517914d9708c2220b263116d5f86a",
   "_spec": "@webcomponents/webcomponentsjs@^2.0.0",
   "_where": "/home/oleh/workspace/tg/platform-web-ui/src/main/resources",
   "author": {
@@ -37,7 +37,7 @@
     "@gulp-sourcemaps/sources-content": "^1.0.0",
     "@webcomponents/custom-elements": "^1.2.1",
     "@webcomponents/shadycss": "^1.8.0",
-    "@webcomponents/shadydom": "^1.4.1",
+    "@webcomponents/shadydom": "^1.4.2",
     "@webcomponents/template": "^1.4.0",
     "@webcomponents/url": "^0.7.2",
     "@webcomponents/webcomponents-platform": "^1.0.0",
@@ -97,5 +97,5 @@
     "regen-package-lock": "rm -rf node_modules package-lock.json; npm install",
     "test": "wct"
   },
-  "version": "2.2.3"
+  "version": "2.2.4"
 }

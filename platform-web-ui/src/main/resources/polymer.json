@@ -4,7 +4,8 @@
   "extraDependencies": [
     "./node_modules/@polymer/test-fixture/test-fixture.js",
     "./node_modules/@polymer/sinonjs/sinon.js",
-    "./node_modules/wct-browser-legacy/browser.js"
+    "./node_modules/wct-browser-legacy/browser.js",
+    "./node_modules/web-animations-js/web-animations-next-lite.min.js"
   ],
   "builds": [
     { 

@@ -27,7 +27,7 @@ import ua.com.fielden.platform.web.interfaces.IDeviceProvider;
  */
 public class TgReflectorComponentResource extends AbstractWebResource {
     private final ISourceController sourceController;
-    
+
     public TgReflectorComponentResource(final ISourceController sourceController, final IDeviceProvider deviceProvider, final Context context, final Request request, final Response response) {
         super(context, request, response, deviceProvider);
         this.sourceController = sourceController;
@@ -39,8 +39,8 @@ public class TgReflectorComponentResource extends AbstractWebResource {
     @Get
     @Override
     public Representation get() {
-        final String source = sourceController.loadSource("/app/tg-reflector.html", device());
-        return new EncodeRepresentation(Encoding.GZIP, new InputRepresentation(new ByteArrayInputStream(source.getBytes(Charsets.UTF_8)), MediaType.TEXT_HTML));
+        final String source = sourceController.loadSource("/app/tg-reflector.js", device());
+        return new EncodeRepresentation(Encoding.GZIP, new InputRepresentation(new ByteArrayInputStream(source.getBytes(Charsets.UTF_8)), MediaType.TEXT_JAVASCRIPT));
     }
 
 }

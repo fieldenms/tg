@@ -21,7 +21,6 @@ const template = html`
 template.setAttribute('strip-whitespace', '');
 
 (function () {
-    'use strict'
     // Set the layout for the given layout specification.
     const setLayout = function (layoutSpec) {
         if (typeof layoutSpec === "string") {

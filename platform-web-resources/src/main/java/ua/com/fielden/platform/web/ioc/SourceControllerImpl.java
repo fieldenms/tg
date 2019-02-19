@@ -307,7 +307,7 @@ public class SourceControllerImpl implements ISourceController {
             return getTgAppConfigSource(webUiConfig, deviceProfile);
         } else if ("/app/tg-app.html".equalsIgnoreCase(resourceURI)) {
             return getTgAppSource(webUiConfig, deviceProfile);
-        } else if ("/app/tg-reflector.html".equalsIgnoreCase(resourceURI)) {
+        } else if ("/app/tg-reflector.js".equalsIgnoreCase(resourceURI)) {
             return getReflectorSource(serialiser, tgJackson);
         } else if ("/app/tg-element-loader.html".equalsIgnoreCase(resourceURI)) {
             return getElementLoaderSource(this, webUiConfig, deviceProfile);
@@ -363,7 +363,7 @@ public class SourceControllerImpl implements ISourceController {
 
     private static String getReflectorSource(final ISerialiser serialiser, final TgJackson tgJackson) {
         final String typeTableRepresentation = new String(serialiser.serialise(tgJackson.getTypeTable(), SerialiserEngines.JACKSON), Charsets.UTF_8);
-        final String originalSource = ResourceLoader.getText("ua/com/fielden/platform/web/reflection/tg-reflector.html");
+        final String originalSource = ResourceLoader.getText("ua/com/fielden/platform/web/reflection/tg-reflector.js");
 
         return originalSource.replace("@typeTable", typeTableRepresentation);
     }

@@ -5,16 +5,26 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, minimum-scale=1.0, initial-scale=1.0, user-scalable=yes">
     <title>Flex insertion example</title>
-    <script src="/resources/polymer/webcomponentsjs/webcomponents-lite.js"></script>
-    <link rel="import" href="/resources/polymer/paper-styles/paper-styles-classes.html">
-    <link rel="import" href="tg-content-layout.html">
+    <script src='/resources/polymer/@webcomponents/webcomponentsjs/webcomponents-bundle.js'></script>
+    <script src='/resources/moment//moment.js'></script>
+    <script src='/resources/moment//moment-with-locales.js'></script>
+    <script type="module">
+        import '/resources/polymer/@polymer/iron-flex-layout/iron-flex-layout-classes.js';
+        import '/resources/polymer/@polymer/paper-styles/paper-styles-classes.js';
+        import './tg-content-layout.js';
+    </script>
+    <custom-style>
+        <style include="iron-flex iron-flex-reverse iron-flex-alignment iron-flex-factors iron-positioning"></style>
+    </custom-style>
+</head>
 
-    <body unresolved class="fullbleed">
-        <tg-content-layout>
-            <div>Test1</div>
-            <div>Test2</div>
-            <div>Test3</div>
-            <div>Test4</div>
-        </tg-content-layout>
-    </body>
+<body unresolved class="fullbleed">
+    <tg-content-layout>
+        <div>Test1</div>
+        <div>Test2</div>
+        <div>Test3</div>
+        <div>Test4</div>
+    </tg-content-layout>
+</body>
+
 </html>

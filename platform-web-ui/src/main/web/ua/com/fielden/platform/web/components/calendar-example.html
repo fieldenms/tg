@@ -3,9 +3,14 @@
 
 <head>
     <title>calendar example</title>
-    <script src="/resources/polymer/webcomponentsjs/webcomponents-lite.js"></script>
-    <link rel="import" href="/resources/polymer/paper-styles/paper-styles-classes.html">
-    <link rel="import" href="tg-calendar.html">
+    <script src='/resources/polymer/@webcomponents/webcomponentsjs/webcomponents-bundle.js'></script>
+    <script src='/resources/polymer/web-animations-js/web-animations-next-lite.min.js'></script>
+    <script src='/resources/moment/moment.js'></script>
+    <script src='/resources/moment/moment-with-locales.js'></script>
+    <script type="module">
+        import '/resources/polymer/@polymer/paper-styles/paper-styles-classes.js';
+        import './tg-calendar.js';
+    </script>
     <style>
         body {
             font-family: 'Roboto', 'Helvetica Neue', Helvetica, Arial, sans-serif;
@@ -15,13 +20,12 @@
 </head>
 
 <body unresolved class="fullbleed">
-    <template id="app" is="dom-bind">
-        <tg-calendar pick-time selected-date="{{selectedDate}}" selected-hour="{{selectedHour}}" selected-minute="{{selectedMinute}}"></tg-calendar>
-        <span>[[selectedDate]]</span> <span>[[selectedHour]]</span> <span>[[selectedMinute]]</span>
-    </template>
+    <dom-bind>
+        <template is="dom-bind">
+            <tg-calendar pick-time selected-date="{{selectedDate}}" selected-hour="{{selectedHour}}" selected-minute="{{selectedMinute}}"></tg-calendar>
+            <span>[[selectedDate]]</span> <span>[[selectedHour]]</span> <span>[[selectedMinute]]</span>
+        </template>
+    </dom-bind>
 </body>
-<script>
-    var app = document.querySelector("#app");
-</script>
 
 </html>
