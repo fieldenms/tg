@@ -1,6 +1,3 @@
-// FIXME postal lib, and its dependency lodash lib, we add to main html file:
-// <link rel="import" href="/resources/components/postal-lib.html">
-
 import '/resources/egi/tg-custom-action-dialog.js';
 
 import { tearDownEvent, isInHierarchy, deepestActiveElement } from '/resources/reflection/tg-polymer-utils.js';

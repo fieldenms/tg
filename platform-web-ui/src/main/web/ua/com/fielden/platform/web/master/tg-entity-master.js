@@ -20,7 +20,7 @@ const template = html`
             right: 0;
             left: 0;
         }
-        :host::slotted(tg-flex-layout) { /* previously :host::content tg-flex-layout */
+        :host::slotted(tg-flex-layout) {
             background-color: white;
         }
         #masterContainer {
