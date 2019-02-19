@@ -41,7 +41,6 @@ const customInputTemplate = html`
             max-rows="[[maxRows]]"
             bind-value="{{_editingValue}}"
             max-length="[[maxLength]]"
-            on-change="_onChange"
             on-input="_onInput"
             on-tap="_onTap"
             on-mousedown="_onTap"
@@ -77,6 +76,7 @@ Polymer({
         prefix.style.alignSelf = "flex-start";
         const suffix = this.decorator().$$(".suffix");
         suffix.style.alignSelf = "flex-start";
+        this.decoratedInput().textarea.addEventListener("change", this._onChange);
     },
 
     properties: {
