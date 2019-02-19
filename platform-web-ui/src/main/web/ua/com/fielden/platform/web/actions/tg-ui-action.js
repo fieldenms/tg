@@ -390,7 +390,7 @@ Polymer({
         }
     },
 
-    behaviors: [TgTooltipBehavior, TgFocusRestorationBehavior , TgFocusableBehavior],
+    behaviors: [TgTooltipBehavior, TgFocusRestorationBehavior, TgFocusableBehavior],
 
     created: function () {
         this._reflector = new TgReflector();

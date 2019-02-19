@@ -449,8 +449,6 @@ export const TgEditorBehaviorImpl = {
     hostAttributes: {
         'tg-editor': true
     },
-
-    behaviors: [TgFocusableBehavior, TgTooltipBehavior],
     
     observers: [
         '_recordDefinition(entity, propertyName, _editorValidationMsg)',
