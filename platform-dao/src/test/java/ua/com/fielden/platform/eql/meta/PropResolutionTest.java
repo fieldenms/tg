@@ -20,6 +20,13 @@ import org.junit.Test;
 import ua.com.fielden.platform.entity.query.fluent.enums.JoinType;
 import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
+import ua.com.fielden.platform.eql.stage1.builders.EntQueryBlocks;
+import ua.com.fielden.platform.eql.stage1.elements.conditions.Conditions1;
+import ua.com.fielden.platform.eql.stage1.elements.conditions.NullTest1;
+import ua.com.fielden.platform.eql.stage1.elements.operands.EntProp1;
+import ua.com.fielden.platform.eql.stage1.elements.operands.EntQuery1;
+import ua.com.fielden.platform.eql.stage1.elements.sources.QrySource1BasedOnPersistentType;
+import ua.com.fielden.platform.eql.stage1.elements.sources.Sources1;
 import ua.com.fielden.platform.eql.stage2.elements.ComparisonTest2;
 import ua.com.fielden.platform.eql.stage2.elements.CompoundSource2;
 import ua.com.fielden.platform.eql.stage2.elements.Conditions2;
@@ -70,12 +77,41 @@ public class PropResolutionTest extends BaseEntQueryTCase1 {
     }
 
     @Test
+    public void test_q21_s1s2() {
+        final EntityResultQueryModel<TgVehicleModel> qry = select(TgVehicleModel.class).where().prop("make").isNotNull().model();
+        
+        
+        final Sources1 sources1 = new Sources1(new QrySource1BasedOnPersistentType(TgVehicleModel.class, 1));
+        final Conditions1 conditions1 = new Conditions1(false, new NullTest1(new EntProp1("make", 2), true));
+
+        final EntQueryBlocks parts1 = new EntQueryBlocks(sources1, conditions1);
+        final EntQuery1 act = new EntQuery1(parts1, TgVehicleModel.class, RESULT_QUERY, false, null, 3);
+
+        assertEquals(act, entResultQry(qry));
+        
+        final QrySource2BasedOnPersistentType source = new QrySource2BasedOnPersistentType(TgVehicleModel.class, metadata.get(TgVehicleModel.class));
+        final Sources2 sources = new Sources2(source);
+        final List<List<? extends ICondition2>> allConditions = new ArrayList<>();
+        final List<ICondition2> firstAndConditionsGroup = new ArrayList<>();
+        firstAndConditionsGroup.add(new NullTest2(new EntProp2("make", source, TgVehicleMake.class, 2), true));
+        allConditions.add(firstAndConditionsGroup);
+        final Conditions2 conditions = new Conditions2(false, allConditions);
+
+        final EntQueryBlocks2 parts = new EntQueryBlocks2(sources, conditions, emptyYields2, emptyGroupBys2, emptyOrderBys2);
+        final EntQuery2 exp = new EntQuery2(parts, TgVehicleModel.class, RESULT_QUERY, null);
+
+        TransformationResult<EntQuery2> act2 = act.transform(new PropsResolutionContext(metadata));
+        assertEquals(act2.getItem(), exp);
+        System.out.println(act2.getUpdatedContext().getResolvedProps());
+    }
+    
+    @Test
     public void test_q21() {
         final EntityResultQueryModel<TgVehicleModel> qry = select(TgVehicleModel.class).where().prop("make").isNotNull().model();
         final TransformationResult<EntQuery2> qry2 = transform(qry);
 
-        final QrySource2BasedOnPersistentType source = new QrySource2BasedOnPersistentType(TgVehicleModel.class, metadata.get(TgVehicleModel.class), null);
-        final Sources2 sources = new Sources2(source);
+        final QrySource1BasedOnPersistentType source = new QrySource1BasedOnPersistentType(TgVehicleModel.class, null, 1);
+        final Sources sources = new Sources1(source);
         final List<List<? extends ICondition2>> allConditions = new ArrayList<>();
         final List<ICondition2> firstAndConditionsGroup = new ArrayList<>();
         firstAndConditionsGroup.add(new NullTest2(new EntProp2("make", source, TgVehicleMake.class, 1), true));

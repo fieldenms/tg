@@ -14,6 +14,10 @@ public class QrySource2BasedOnPersistentType implements IQrySource2 {
         this.alias = alias;               
     }
 
+    public QrySource2BasedOnPersistentType(final Class<? extends AbstractEntity<?>> sourceType, final EntityInfo entityInfo) {
+        this(sourceType, entityInfo, null);               
+    }
+
     @Override
     public Class<? extends AbstractEntity<?>> sourceType() {
         return sourceType;

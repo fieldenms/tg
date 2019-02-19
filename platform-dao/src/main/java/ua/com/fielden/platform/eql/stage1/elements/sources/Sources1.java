@@ -18,6 +18,10 @@ public class Sources1  {
         this.compounds = compounds;
     }
 
+    public Sources1(final IQrySource1<? extends IQrySource2> main) {
+        this(main, new ArrayList<>());
+    }
+
     public TransformationResult<Sources2> transform(final PropsResolutionContext resolutionContext) {
         final TransformationResult<? extends IQrySource2> mainTransformationResult = main.transform(resolutionContext);    
                 

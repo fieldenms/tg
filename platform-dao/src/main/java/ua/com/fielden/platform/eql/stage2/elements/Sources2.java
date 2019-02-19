@@ -3,8 +3,6 @@ package ua.com.fielden.platform.eql.stage2.elements;
 import java.util.ArrayList;
 import java.util.List;
 
-import ua.com.fielden.platform.eql.stage2.elements.IQrySource2;
-
 public class Sources2 implements IIgnorableAtS2 {
     private final IQrySource2 main;
     private final List<CompoundSource2> compounds;
@@ -15,9 +13,7 @@ public class Sources2 implements IIgnorableAtS2 {
     }
 
     public Sources2(final IQrySource2 main) {
-        super();
-        this.main = main;
-        this.compounds = new ArrayList<>();
+        this(main, new ArrayList<>());
     }
 
     @Override

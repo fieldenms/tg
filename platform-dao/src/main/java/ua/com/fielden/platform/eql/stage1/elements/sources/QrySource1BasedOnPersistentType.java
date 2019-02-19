@@ -18,6 +18,10 @@ public class QrySource1BasedOnPersistentType extends AbstractQrySource1<QrySourc
         this.sourceType = sourceType;
     }
 
+    public QrySource1BasedOnPersistentType(final Class<? extends AbstractEntity<?>> sourceType, final int contextId) {
+        this(sourceType, null, contextId);
+    }
+    
     @Override
     public Class<? extends AbstractEntity<?>> sourceType() {
         return sourceType;

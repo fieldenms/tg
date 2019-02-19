@@ -15,6 +15,10 @@ public class NullTest1 implements ICondition1<NullTest2> {
         this.negated = negated;
     }
 
+    public NullTest1(final ISingleOperand1<? extends ISingleOperand2> operand) {
+        this(operand, false);
+    }
+
     @Override
     public TransformationResult<NullTest2> transform(final PropsResolutionContext resolutionContext) {
         final TransformationResult<? extends ISingleOperand2> operandTransformationResult = operand.transform(resolutionContext);
