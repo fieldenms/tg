@@ -1,5 +1,9 @@
 package ua.com.fielden.platform.web.view.master.api.with_master.impl;
 
+import static ua.com.fielden.platform.web.centre.EntityCentre.IMPORTS;
+import static ua.com.fielden.platform.web.view.master.EntityMaster.ENTITY_TYPE;
+import static ua.com.fielden.platform.web.view.master.EntityMaster.flattenedNameOf;
+
 import java.util.Optional;
 
 import ua.com.fielden.platform.basic.IValueMatcherWithContext;
@@ -17,9 +21,9 @@ public abstract class AbstractMasterWithMaster<T extends AbstractEntity<?>> impl
     private final IRenderable renderable;
 
     public AbstractMasterWithMaster(final Class<T> entityType, final Class<? extends AbstractEntity<?>> embededMasterType, final boolean shouldRefreshParentCentreAfterSave) {
-        final String entityMasterStr = ResourceLoader.getText("ua/com/fielden/platform/web/master/tg-entity-master-template.html")
-                .replace("<!--@imports-->", "<link rel='import' href='/app/tg-element-loader.html'>\n")
-                .replace("@entity_type", entityType.getSimpleName())
+        final String entityMasterStr = ResourceLoader.getText("ua/com/fielden/platform/web/master/tg-entity-master-template.js")
+                .replace(IMPORTS, "import '/resources/element_loader/tg-element-loader.js';\n")
+                .replace(ENTITY_TYPE, flattenedNameOf(entityType))
                 .replace("<!--@tg-entity-master-content-->",
                           "<tg-element-loader id='loader' context='[[_createContextHolderForEmbeddedViews]]' context-property='getMasterEntity' "
                         + "    import=" + getImportUri(embededMasterType)

@@ -1,10 +1,14 @@
 package ua.com.fielden.platform.web.security;
 
+import static ua.com.fielden.platform.utils.CollectionUtil.linkedSetOf;
+import static ua.com.fielden.platform.web.centre.EntityCentre.IMPORTS;
+import static ua.com.fielden.platform.web.view.master.EntityMaster.ENTITY_TYPE;
+import static ua.com.fielden.platform.web.view.master.EntityMaster.flattenedNameOf;
 import static ua.com.fielden.platform.web.view.master.api.actions.MasterActions.SAVE;
+import static ua.com.fielden.platform.web.view.master.api.impl.SimpleMasterBuilder.createImports;
 import static ua.com.fielden.platform.web.view.master.api.impl.SimpleMasterBuilder.getPostAction;
 import static ua.com.fielden.platform.web.view.master.api.impl.SimpleMasterBuilder.getPostActionError;
 
-import java.util.LinkedHashSet;
 import java.util.Optional;
 
 import ua.com.fielden.platform.basic.IValueMatcherWithContext;
@@ -17,7 +21,6 @@ import ua.com.fielden.platform.web.centre.api.resultset.impl.FunctionalActionKin
 import ua.com.fielden.platform.web.interfaces.IRenderable;
 import ua.com.fielden.platform.web.view.master.api.IMaster;
 import ua.com.fielden.platform.web.view.master.api.actions.entity.impl.DefaultEntityAction;
-import ua.com.fielden.platform.web.view.master.api.impl.SimpleMasterBuilder;
 
 /**
  * An entity master that represents a chart for {@link VehiclePmCostSavingsChart}.
@@ -32,11 +35,6 @@ public class SecurityMatrixInsertionPointMaster implements IMaster<SecurityMatri
     private final DefaultEntityAction realodActionConfig;
 
     public SecurityMatrixInsertionPointMaster() {
-
-        final LinkedHashSet<String> importPaths = new LinkedHashSet<>();
-        importPaths.add("components/tg-security-matrix");
-        importPaths.add("editors/tg-singleline-text-editor");
-
         final DomElement tokenFilter = new DomElement("tg-singleline-text-editor")
                 .attr("id", "tokenFilter")
                 .attr("class", "filter-element")
@@ -79,9 +77,9 @@ public class SecurityMatrixInsertionPointMaster implements IMaster<SecurityMatri
                 .attr("lock", "[[lock]]")
                 .add(tokenFilter, roleFilter, reloadAction);
 
-        final String entityMasterStr = ResourceLoader.getText("ua/com/fielden/platform/web/master/tg-entity-master-template.html")
-                .replace("<!--@imports-->", SimpleMasterBuilder.createImports(importPaths))
-                .replace("@entity_type", SecurityMatrixInsertionPoint.class.getSimpleName())
+        final String entityMasterStr = ResourceLoader.getText("ua/com/fielden/platform/web/master/tg-entity-master-template.js")
+                .replace(IMPORTS, createImports(linkedSetOf("components/tg-security-matrix", "editors/tg-singleline-text-editor")))
+                .replace(ENTITY_TYPE, flattenedNameOf(SecurityMatrixInsertionPoint.class))
                 .replace("<!--@tg-entity-master-content-->", securityMatrix.toString())
                 .replace("//generatedPrimaryActions", "")
                 .replace("//@ready-callback", readyCallback())

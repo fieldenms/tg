@@ -30,9 +30,10 @@ const additionalTemplate = html`
     </style>
     <tg-app-config id="appConfig"></tg-app-config>`;
 const customInputTemplate = html`
-    <iron-input bind-value="{{_editingValue}}" class="custom-input money-input">
+    <iron-input bind-value="{{_editingValue}}" class="custom-input-wrapper money-input">
         <input
             id="input"
+            class="custom-input"
             type="number"
             step="any"
             on-change="_onChange"

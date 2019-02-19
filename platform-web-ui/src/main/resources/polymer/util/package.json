@@ -21,7 +21,7 @@
   "_resolved": "https://registry.npmjs.org/util/-/util-0.11.1.tgz",
   "_shasum": "3236733720ec64bb27f6e26f421aaa2e1b588d61",
   "_spec": "util@>=0.10.3 <1",
-  "_where": "/home/oleh/workspace/tg/platform-web-ui/src/main/resources/node_modules/sinon",
+  "_where": "/home/jhou/workspace/tg/platform-web-ui/src/main/resources/node_modules/sinon",
   "author": {
     "name": "Joyent",
     "url": "http://www.joyent.com"

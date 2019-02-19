@@ -16,12 +16,12 @@ import ua.com.fielden.platform.web.view.master.api.helpers.IActionBarLayoutConfi
  *
  * @param <T>
  */
-public interface IEntityActionConfig7AfterExecutionClose <T extends AbstractEntity<?>> extends IEntityActionConfig<T>, IActionBarLayoutConfig0<T> {
+public interface IEntityActionConfig4AfterExecutionClose <T extends AbstractEntity<?>> extends IEntityActionConfig<T>, IActionBarLayoutConfig0<T> {
 
     /**
      * Configures action so that it doesn't close dialog after execution.
      *
      * @return
      */
-    IEntityActionConfig8<T> keepMasterOpenAfterExecution();
+    IEntityActionConfig5<T> keepMasterOpenAfterExecution();
 }

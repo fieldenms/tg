@@ -13,7 +13,7 @@ import {Polymer} from '/resources/polymer/@polymer/polymer/lib/legacy/polymer-fn
 import {html} from '/resources/polymer/@polymer/polymer/lib/utils/html-tag.js';
 
 import { TgHighlightingBehavior } from '/resources/editors/tg-highlighting-behavior.js';
-import { TgEditorBehavior , createEditorTemplate } from '/resources/editors/tg-editor-behavior.js';
+import { TgEditorBehavior, TgEditorBehaviorImpl, createEditorTemplate } from '/resources/editors/tg-editor-behavior.js';
 import { tearDownEvent} from '/resources/reflection/tg-polymer-utils.js';
 
 const additionalTemplate = html`
@@ -151,8 +151,8 @@ const additionalTemplate = html`
         <style include="iron-flex iron-flex-reverse iron-flex-alignment iron-flex-factors iron-positioning"></style>
     </custom-style>`;
 const customInputTemplate = html`
-    <iron-input bind-value="{{_phraseForSearching}}" class="custom-input" >
-        <input id="searchInput" placeholder="Type to search..." on-input="_onInput" on-tap="_onTap" on-mousedown="_onTap" on-blur="_eventHandler">
+    <iron-input bind-value="{{_phraseForSearching}}" class="custom-input-wrapper" >
+        <input id="searchInput" class="custom-input" placeholder="Type to search..." on-input="_onInput" on-tap="_onTap" on-mousedown="_onTap" on-blur="_eventHandler">
     </iron-input>
     <div class="layout vertical flex relative">
         <iron-list id="input" class="collectional-input fit" items="[[_entities]]" selected-items="{{_selectedEntities}}" selected-item="{{_selectedEntity}}" selection-enabled="[[_isSelectionEnabled(_forReview)]]" multi-selection>
@@ -362,7 +362,7 @@ Polymer({
      * This method relies on a fact that the entity gets initialised earlier than originalEntity (see '_postEntityReceived' method in tg-entity-binder-behavior).
      */
     _originalEntityChanged: function (newValue, oldValue) {
-        TgEditorBehavior._originalEntityChanged.call(this, newValue, oldValue);
+        TgEditorBehaviorImpl._originalEntityChanged.call(this, newValue, oldValue);
         
         if (this.reflector().isEntity(newValue)) {
             if (newValue.type()._simpleClassName() === 'CentreConfigLoadAction') {

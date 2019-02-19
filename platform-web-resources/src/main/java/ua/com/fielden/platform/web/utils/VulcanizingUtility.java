@@ -198,7 +198,6 @@ public class VulcanizingUtility {
         downloadSource("app", "tg-app-config.js", sourceController, deviceProfile, logger);
       //TODO This code below was temporary commented out in order to implemented simple vulcanization for scrollable example. Later, the code below, should be uncommented and modified to provide full application vulcanization.
 //        downloadSource("app", "tg-app.html", sourceController, deviceProfile, logger);
-//        downloadSource("app", "tg-element-loader.html", sourceController, deviceProfile, logger);
 //        if (DeviceProfile.DESKTOP.equals(deviceProfile)) {
 //            logger.info("\t\t\tDownloading " + deviceProfile + " generated resource 'desktop-application-startup-resources.html'...");
 //            downloadSource("app", "desktop-application-startup-resources.html", sourceController, deviceProfile, logger);

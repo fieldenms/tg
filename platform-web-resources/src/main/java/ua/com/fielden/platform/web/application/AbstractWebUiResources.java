@@ -29,7 +29,6 @@ import ua.com.fielden.platform.web.factories.webui.MainWebUiComponentResourceFac
 import ua.com.fielden.platform.web.factories.webui.MasterComponentResourceFactory;
 import ua.com.fielden.platform.web.factories.webui.MasterTestsComponentResourceFactory;
 import ua.com.fielden.platform.web.factories.webui.SerialisationTestResourceFactory;
-import ua.com.fielden.platform.web.factories.webui.TgElementLoaderComponentResourceFactory;
 import ua.com.fielden.platform.web.factories.webui.TgReflectorComponentResourceFactory;
 import ua.com.fielden.platform.web.factories.webui.WebUiPreferencesResourceFactory;
 import ua.com.fielden.platform.web.interfaces.IDeviceProvider;
@@ -122,7 +121,6 @@ public abstract class AbstractWebUiResources extends Application {
         router.attach("/app/tg-app.html", new MainWebUiComponentResourceFactory(sourceController, deviceProvider));
         // type meta info resource
         router.attach("/app/tg-reflector.js", new TgReflectorComponentResourceFactory(sourceController, deviceProvider));
-        router.attach("/app/tg-element-loader.html", new TgElementLoaderComponentResourceFactory(sourceController, deviceProvider));
         router.attach("/app/desktop-application-startup-resources.html", new DesktopApplicationStartupResourcesComponentResourceFactory(sourceController, deviceProvider));
 
         // serialisation testing resource

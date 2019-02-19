@@ -5,10 +5,12 @@ import static java.util.Optional.empty;
 import static java.util.Optional.of;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchOnly;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
+import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getEntityTitleAndDesc;
 import static ua.com.fielden.platform.utils.Pair.pair;
 import static ua.com.fielden.platform.web.PrefDim.mkDim;
 import static ua.com.fielden.platform.web.action.StandardMastersWebUiConfig.MASTER_ACTION_DEFAULT_WIDTH;
 import static ua.com.fielden.platform.web.action.StandardMastersWebUiConfig.MASTER_ACTION_SPECIFICATION;
+import static ua.com.fielden.platform.web.action.pre.ConfirmationPreAction.okCancel;
 import static ua.com.fielden.platform.web.action.pre.ConfirmationPreAction.yesNo;
 import static ua.com.fielden.platform.web.centre.api.actions.impl.EntityActionBuilder.action;
 import static ua.com.fielden.platform.web.centre.api.context.impl.EntityCentreContextSelector.context;
@@ -23,6 +25,7 @@ import static ua.com.fielden.platform.web.layout.api.impl.LayoutComposer.MARGIN;
 import static ua.com.fielden.platform.web.layout.api.impl.LayoutComposer.MARGIN_PIX;
 import static ua.com.fielden.platform.web.test.server.config.StandardActions.EDIT_ACTION;
 import static ua.com.fielden.platform.web.test.server.config.StandardActions.SEQUENTIAL_EDIT_ACTION;
+import static ua.com.fielden.platform.web.test.server.config.StandardMessages.DELETE_CONFIRMATION;
 
 import java.math.BigDecimal;
 import java.util.Date;
@@ -217,7 +220,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
                         " ['padding:20px', "
                         + " [['flex']]]"))
                 .done();
-        final EntityMaster<ExportAction> master = new EntityMaster<ExportAction>(
+        final EntityMaster<ExportAction> master = new EntityMaster<>(
                 ExportAction.class,
                 ExportActionProducer.class,
                 masterConfig,
@@ -264,7 +267,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
                         // .addProp("additionalProp")
                         .build(), injector(), null);
         configApp().addCentre(deletionTestCentre);
-        final SimpleMasterBuilder<TgDeletionTestEntity> masterBuilder = new SimpleMasterBuilder<TgDeletionTestEntity>();
+        final SimpleMasterBuilder<TgDeletionTestEntity> masterBuilder = new SimpleMasterBuilder<>();
         final String actionStyle = MASTER_ACTION_SPECIFICATION;
         final String outer = "'flex', 'min-width:200px'";
 
@@ -282,7 +285,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
             .addAction(MasterActions.SAVE)
             .setActionBarLayoutFor(Device.DESKTOP, Optional.empty(), actionBarLayout)
             .setLayoutFor(Device.DESKTOP, Optional.empty(), desktopTabletMasterLayout).done();
-        configApp().addMaster(new EntityMaster<TgDeletionTestEntity>(TgDeletionTestEntity.class, TgDeletionTestEntityProducer.class, deletionMaster, injector()));
+        configApp().addMaster(new EntityMaster<>(TgDeletionTestEntity.class, TgDeletionTestEntityProducer.class, deletionMaster, injector()));
 
         TgEntityWithTimeZoneDatesWebUiConfig.register(injector(), configApp());
         TgGeneratedEntityWebUiConfig.register(injector(), configApp());
@@ -477,7 +480,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 .html("<span>This is binded text for Status.desc: </span><span id='status_Desc_bind' style='color:blue'>{{status.desc}}</span>", layout().withStyle("padding-top", MARGIN_PIX).end()),
                 layoutConfig).toString();
         // Add entity masters.
-        final SimpleMasterBuilder<TgPersistentEntityWithProperties> smb = new SimpleMasterBuilder<TgPersistentEntityWithProperties>();
+        final SimpleMasterBuilder<TgPersistentEntityWithProperties> smb = new SimpleMasterBuilder<>();
         @SuppressWarnings("unchecked")
         final IMaster<TgPersistentEntityWithProperties> masterConfig = smb.forEntity(TgPersistentEntityWithProperties.class)
                 // PROPERTY EDITORS
@@ -659,7 +662,22 @@ public class WebUiConfig extends AbstractWebUiConfig {
                         .longDesc("Export action")
                         .shortcut("ctrl+shift+e")
                         .build())
-
+                .addAction(action(EntityNewAction.class).
+                        withContext(context().withMasterEntity().withComputation((entity, context) -> TgPersistentEntityWithProperties.class).build()).
+                        icon("add-circle-outline").
+                        shortDesc("New").
+                        longDesc("Create new entity").
+                        shortcut("alt+n").
+                        prefDimForView(PrefDim.mkDim("'1000px'", "'600px'")).
+                        withNoParentCentreRefresh().
+                        build())
+                .addAction(action(EntityDeleteAction.class)
+                        .withContext(context().withMasterEntity().build())
+                        .preAction(okCancel(DELETE_CONFIRMATION.msg))
+                        .shortDesc("DELETE")
+                        .longDesc(format("Delete current %s entity", getEntityTitleAndDesc(TgPersistentEntityWithProperties.class).getKey()))
+                        .shortcut("alt+d")
+                        .build())
                 .addAction(MasterActions.VALIDATE)
                 .addAction(MasterActions.SAVE)
                     // .shortDesc("SAVE")
@@ -669,10 +687,11 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 .addAction(MasterActions.VIEW)
 
                 .setActionBarLayoutFor(Device.DESKTOP, Optional.empty(),
-                        format("['horizontal', 'center-justified', 'padding: 20px', 'wrap', [%s],[%s],[%s],[%s],[%s],[%s]]", actionMr, actionMr, actionMr, actionMr, actionMr, actionMr))
+                        format("['horizontal', 'center-justified', 'padding: 20px', 'wrap', [%s],[%s],[%s],[%s],[%s],[%s],[%s],[%s]]", actionMr, actionMr, actionMr, actionMr, actionMr, actionMr, actionMr, actionMr))
                 .setLayoutFor(Device.DESKTOP, Optional.empty(), desktopLayout)
                 .setLayoutFor(Device.TABLET, Optional.empty(), tabletLayout)
                 .setLayoutFor(Device.MOBILE, Optional.empty(), mobileLayout)
+                .withDimensions(PrefDim.mkDim("'100%'", "'100%'"))
                 .done();
 
         final IMaster<TgEntityForColourMaster> masterConfigForColour = new SimpleMasterBuilder<TgEntityForColourMaster>().forEntity(TgEntityForColourMaster.class)
@@ -801,7 +820,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
                         + "['justified', ['flex', 'margin-right: 20px'], ['flex']]]"))
                 .done();
 
-        final EntityMaster<TgPersistentEntityWithProperties> entityMaster = new EntityMaster<TgPersistentEntityWithProperties>(
+        final EntityMaster<TgPersistentEntityWithProperties> entityMaster = new EntityMaster<>(
                 TgPersistentEntityWithProperties.class,
                 TgPersistentEntityWithPropertiesProducer.class,
                 masterConfig,
@@ -809,7 +828,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
 
         final EntityMaster<NewEntityAction> functionalMasterWithEmbeddedPersistentMaster =  NewEntityActionWebUiConfig.createMaster(injector(), entityMaster);
 
-        final EntityMaster<TgEntityForColourMaster> clourMaster = new EntityMaster<TgEntityForColourMaster>(TgEntityForColourMaster.class, masterConfigForColour, injector());
+        final EntityMaster<TgEntityForColourMaster> clourMaster = new EntityMaster<>(TgEntityForColourMaster.class, masterConfigForColour, injector());
 
 
         final EntityMaster<AttachmentsUploadAction> attachmentsUploadActionMaster = StandardMastersWebUiConfig
@@ -822,16 +841,16 @@ public class WebUiConfig extends AbstractWebUiConfig {
 
         configApp().
             addMaster(attachmentsUploadActionMaster).
-            addMaster(new EntityMaster<EntityWithInteger>(EntityWithInteger.class, null, injector())). // efs(EntityWithInteger.class).with("prop")
+            addMaster(new EntityMaster<>(EntityWithInteger.class, null, injector())). // efs(EntityWithInteger.class).with("prop")
             addMaster(entityMaster).//
             addMaster(functionalMasterWithEmbeddedPersistentMaster).
             addMaster(createExportActionMaster()).
-            addMaster(new EntityMaster<TgEntityWithPropertyDependency>(
+            addMaster(new EntityMaster<>(
                     TgEntityWithPropertyDependency.class,
                     TgEntityWithPropertyDependencyProducer.class,
                     masterConfigForPropDependencyExample,
                     injector())).
-            addMaster(new EntityMaster<TgCollectionalSerialisationParent>(
+            addMaster(new EntityMaster<>(
                     TgCollectionalSerialisationParent.class,
                     TgCollectionalSerialisationParentProducer.class,
                     masterConfigForCollSerialisationTest,
@@ -846,48 +865,48 @@ public class WebUiConfig extends AbstractWebUiConfig {
             addMaster(userRoleWebUiConfig.tokensUpdater).
             addMaster(clourMaster).//
 
-                addMaster(new EntityMaster<TgFunctionalEntityWithCentreContext>(
+                addMaster(new EntityMaster<>(
                         TgFunctionalEntityWithCentreContext.class,
                         TgFunctionalEntityWithCentreContextProducer.class,
                         masterConfigForFunctionalEntity,
                         injector())).
-                addMaster(new EntityMaster<TgCentreInvokerWithCentreContext>(
+                addMaster(new EntityMaster<>(
                         TgCentreInvokerWithCentreContext.class,
                         TgCentreInvokerWithCentreContextProducer.class,
                         new MasterWithCentreBuilder<TgCentreInvokerWithCentreContext>().forEntityWithSaveOnActivate(TgCentreInvokerWithCentreContext.class).withCentre(detailsCentre).done(),
                         injector())).
-                addMaster(new EntityMaster<TgPersistentCompositeEntity>(
+                addMaster(new EntityMaster<>(
                         TgPersistentCompositeEntity.class,
                         null,
                         injector())).
                 addMaster(EntityMaster.noUiFunctionalMaster(TgExportFunctionalEntity.class, TgExportFunctionalEntityProducer.class, injector())).
                 addMaster(EntityMaster.noUiFunctionalMaster(TgDummyAction.class, injector())).
-                addMaster(new EntityMaster<TgCreatePersistentStatusAction>(
+                addMaster(new EntityMaster<>(
                         TgCreatePersistentStatusAction.class,
                         TgCreatePersistentStatusActionProducer.class,
                         masterConfigForTgCreatePersistentStatusAction(), // TODO need to provide functional entity master configuration
                         injector())).
-                addMaster(new EntityMaster<TgStatusActivationFunctionalEntity>(
+                addMaster(new EntityMaster<>(
                         TgStatusActivationFunctionalEntity.class,
                         TgStatusActivationFunctionalEntityProducer.class,
                         null,
                         injector())).
-                addMaster(new EntityMaster<TgISStatusActivationFunctionalEntity>(
+                addMaster(new EntityMaster<>(
                         TgISStatusActivationFunctionalEntity.class,
                         TgISStatusActivationFunctionalEntityProducer.class,
                         null,
                         injector())).
-                addMaster(new EntityMaster<TgIRStatusActivationFunctionalEntity>(
+                addMaster(new EntityMaster<>(
                         TgIRStatusActivationFunctionalEntity.class,
                         TgIRStatusActivationFunctionalEntityProducer.class,
                         null,
                         injector())).
-                addMaster(new EntityMaster<TgONStatusActivationFunctionalEntity>(
+                addMaster(new EntityMaster<>(
                         TgONStatusActivationFunctionalEntity.class,
                         TgONStatusActivationFunctionalEntityProducer.class,
                         null,
                         injector())).
-                addMaster(new EntityMaster<TgSRStatusActivationFunctionalEntity>(
+                addMaster(new EntityMaster<>(
                         TgSRStatusActivationFunctionalEntity.class,
                         TgSRStatusActivationFunctionalEntityProducer.class,
                         null,

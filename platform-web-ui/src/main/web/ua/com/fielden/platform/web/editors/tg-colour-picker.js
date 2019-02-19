@@ -7,7 +7,7 @@ import '/resources/polymer/@polymer/iron-dropdown/iron-dropdown.js'
 import { Polymer } from '/resources/polymer/@polymer/polymer/lib/legacy/polymer-fn.js';
 import { html } from '/resources/polymer/@polymer/polymer/lib/utils/html-tag.js';
 
-import { TgEditorBehavior,  createEditorTemplate} from '/resources/editors/tg-editor-behavior.js';
+import { TgEditorBehavior,  TgEditorBehaviorImpl, createEditorTemplate} from '/resources/editors/tg-editor-behavior.js';
 import { tearDownEvent } from '/resources/reflection/tg-polymer-utils.js'
 
 const additionalTemplate = html`
@@ -82,9 +82,10 @@ const customPrefixTemplate = html`
         <div class="prefix prefix-custom-attributes" style$="[[_calcColourPrefixStyle(_editingValue)]]">#</div>
     </div>`;
 const customInputTemplate = html`
-    <iron-input bind-value="{{_editingValue}}" allowed-pattern="[0-9, A-F, a-f]" class="custom-input colour-input">
+    <iron-input bind-value="{{_editingValue}}" allowed-pattern="[0-9, A-F, a-f]" class="custom-input-wrapper colour-input">
         <input
             id="input"
+            class="custom-input"
             style$="[[_calcColourTextStyle(_editingValue)]]"
             maxlength="6"
             on-change="_onChange"
@@ -282,7 +283,7 @@ Polymer({
     },
     
     _editingValueChanged: function (newValue, oldValue) {
-        TgEditorBehavior._editingValueChanged.call(this, newValue, oldValue);
+        TgEditorBehaviorImpl._editingValueChanged.call(this, newValue, oldValue);
         if (this._isAcceptingColourFromPicker) {
             this._isAcceptingColourFromPicker = false;
             this.commit();

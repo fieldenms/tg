@@ -14,7 +14,7 @@ import '/resources/serialisation/tg-serialiser.js'
 import { Polymer } from '/resources/polymer/@polymer/polymer/lib/legacy/polymer-fn.js';
 import { html } from '/resources/polymer/@polymer/polymer/lib/utils/html-tag.js';
 
-import { TgEditorBehavior , createEditorTemplate} from '/resources/editors/tg-editor-behavior.js';
+import { TgEditorBehavior, TgEditorBehaviorImpl, createEditorTemplate} from '/resources/editors/tg-editor-behavior.js';
 import { tearDownEvent, allDefined } from '/resources/reflection/tg-polymer-utils.js'
 
 const additionalTemplate = html`
@@ -67,9 +67,10 @@ const additionalTemplate = html`
     <iron-ajax id="ajaxSearcher" loading="{{searching}}" url="[[_url]]" method="POST" handle-as="json" on-response="_processSearcherResponse" on-error="_processSearcherError"></iron-ajax>
     <tg-serialiser id="serialiser"></tg-serialiser>`;
 const customInputTemplate = html`
-    <iron-input bind-value="{{_editingValue}}" class="custom-input entity-input">
+    <iron-input bind-value="{{_editingValue}}" class="custom-input-wrapper entity-input">
         <input
             id="input"
+            class="custom-input"
             type="text" 
             on-blur="_blurEventHandler" 
             on-change="_onChange" 
@@ -348,7 +349,7 @@ const propertyActionTemplate = html`<slot name="property-action"></slot>`;
                         console.log("_onChange (for entity editor):", event);
 
                         if (this.opened === false) {
-                            var parentFunction = TgEditorBehavior.properties._onChange.value.call(this);
+                            var parentFunction = TgEditorBehaviorImpl.properties._onChange.value.call(this);
                             parentFunction.call(this, event);
                         }
                     }).bind(this);
@@ -574,7 +575,7 @@ const propertyActionTemplate = html`<slot name="property-action"></slot>`;
                 );
                 this.reflector().setCustomProperty(contextHolder, "@@searchString", inputText);
             } else {
-                contextHolder = TgEditorBehavior.createContextHolder.call(this, inputText);
+                contextHolder = TgEditorBehaviorImpl.createContextHolder.call(this, inputText);
             }
 
             this.reflector().setCustomProperty(contextHolder, "@@dataPage", dataPage);
@@ -780,7 +781,7 @@ const propertyActionTemplate = html`<slot name="property-action"></slot>`;
                 } else {
                     valueToFormat = this.reflector()._getValueFor(entity, this.propertyName);
                 }
-                return TgEditorBehavior._getTooltip.call(this, valueToFormat);
+                return TgEditorBehaviorImpl._getTooltip.call(this, valueToFormat);
             }
             return "";
         },

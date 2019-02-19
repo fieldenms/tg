@@ -1,5 +1,9 @@
 package ua.com.fielden.platform.web.view.master.attachments;
 
+import static ua.com.fielden.platform.web.centre.EntityCentre.IMPORTS;
+import static ua.com.fielden.platform.web.view.master.EntityMaster.ENTITY_TYPE;
+import static ua.com.fielden.platform.web.view.master.EntityMaster.flattenedNameOf;
+
 import java.util.Optional;
 
 import ua.com.fielden.platform.attachment.AttachmentPreviewEntityAction;
@@ -30,13 +34,14 @@ public class AttachmentPreviewEntityMaster implements IMaster<AttachmentPreviewE
                 .style("font-size: 18px", "color: #bdbdbd", "background-color: white")
                 .add(new InnerTextElement("[[_getAltImageText(_currBindingEntity)]]"));
         final DomElement container = new DomElement("div")
-                .clazz("property-editors", "relative")
+                .attr("slot", "property-editors")
+                .clazz("relative")
                 .style("width:100%", "height:100%","padding:8px","box-sizing:border-box")
                 .add(altImage, img);
 
-        final String entityMasterStr = ResourceLoader.getText("ua/com/fielden/platform/web/master/tg-entity-master-template.html")
-                .replace("<!--@imports-->", "")
-                .replace("@entity_type", AttachmentPreviewEntityAction.class.getSimpleName())
+        final String entityMasterStr = ResourceLoader.getText("ua/com/fielden/platform/web/master/tg-entity-master-template.js")
+                .replace(IMPORTS, "")
+                .replace(ENTITY_TYPE, flattenedNameOf(AttachmentPreviewEntityAction.class))
                 .replace("<!--@tg-entity-master-content-->", container.toString())
                 .replace("//@ready-callback", generateReadyCallback())
                 .replace("@prefDim", "null")

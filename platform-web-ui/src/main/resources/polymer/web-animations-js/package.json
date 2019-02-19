@@ -21,7 +21,7 @@
   "_resolved": "https://registry.npmjs.org/web-animations-js/-/web-animations-js-2.3.1.tgz",
   "_shasum": "3a6d9bc15196377a90f8e2803fa5262165b04510",
   "_spec": "web-animations-js@^2.3.1",
-  "_where": "/home/oleh/workspace/tg/platform-web-ui/src/main/resources",
+  "_where": "/home/jhou/workspace/tg/platform-web-ui/src/main/resources",
   "bugs": {
     "url": "https://github.com/web-animations/web-animations-js/issues"
   },

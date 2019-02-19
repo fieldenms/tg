@@ -2,12 +2,12 @@ package ua.com.fielden.platform.web.ioc;
 
 import static java.lang.String.format;
 import static java.util.Collections.sort;
+import static java.util.regex.Pattern.quote;
 
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.EnumMap;
-import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -130,7 +130,7 @@ public class SourceControllerImpl implements ISourceController {
         final String nextCurr = source.substring(startOfURI);
         final int endOfURIIndex = doubleQuote ? nextCurr.indexOf("\"") : nextCurr.indexOf("'");
         final String importURI = nextCurr.substring(0, endOfURIIndex);
-        final LinkedHashSet<String> set = new LinkedHashSet<String>(currentRootDependencies);
+        final LinkedHashSet<String> set = new LinkedHashSet<>(currentRootDependencies);
         set.add(importURI);
         return getRootDependencies(nextCurr.substring(endOfURIIndex), set);
     }
@@ -309,10 +309,8 @@ public class SourceControllerImpl implements ISourceController {
             return getTgAppSource(webUiConfig, deviceProfile);
         } else if ("/app/tg-reflector.js".equalsIgnoreCase(resourceURI)) {
             return getReflectorSource(serialiser, tgJackson);
-        } else if ("/app/tg-element-loader.html".equalsIgnoreCase(resourceURI)) {
-            return getElementLoaderSource(this, webUiConfig, deviceProfile);
         } else if (resourceURI.startsWith("/master_ui")) {
-            return getMasterSource(resourceURI.replaceFirst("/master_ui/", ""), webUiConfig);
+            return getMasterSource(resourceURI.replaceFirst(quote("/master_ui/"), "").replaceFirst(quote(".js"), ""), webUiConfig);
 //        } else if (resourceURI.startsWith("/centre_ui/egi")) {
 //            return getCentreEgiSource(resourceURI.replaceFirst("/centre_ui/egi/", ""), webUiConfig);
         } else if (resourceURI.startsWith("/centre_ui")) {
@@ -434,38 +432,6 @@ public class SourceControllerImpl implements ISourceController {
      */
     private static boolean alreadyIncluded(final String name, final String source) {
         return source.contains(name);
-    }
-
-    private static String getElementLoaderSource(final SourceControllerImpl sourceControllerImpl, final IWebUiConfig webUiConfig, final DeviceProfile deviceProfile) {
-        final String source = getFileSource("/resources/element_loader/tg-element-loader.html", webUiConfig.resourcePaths());
-        return source.replace("importedURLs = {}", sourceControllerImpl.isPreloadedResourcesInitialised() ? generateImportUrlsFrom(sourceControllerImpl.getPreloadedResources(deviceProfile))
-                : "importedIrrelevantURLs = {}");
-    }
-
-    private boolean isPreloadedResourcesInitialised() {
-        return preloadedResourcesByProfile != null;
-    }
-
-    private LinkedHashSet<String> getPreloadedResources(final DeviceProfile deviceProfile) {
-        return preloadedResourcesByProfile.get(deviceProfile);
-    }
-
-    /**
-     * Generates the string of tg-element-loader's 'importedURLs' from 'appSpecificPreloadedResources'.
-     *
-     * @param appSpecificPreloadedResources
-     * @return
-     */
-    private static String generateImportUrlsFrom(final LinkedHashSet<String> appSpecificPreloadedResources) {
-        final String prepender = "importedURLs = {";
-        final StringBuilder sb = new StringBuilder("");
-        final Iterator<String> iter = appSpecificPreloadedResources.iterator();
-        while (iter.hasNext()) {
-            final String next = iter.next();
-            sb.append(",'" + next + "': 'imported'");
-        }
-        final String res = sb.toString();
-        return prepender + (StringUtils.isEmpty(res) ? "" : res.substring(1)) + "}";
     }
 
     private static String getMasterSource(final String entityTypeString, final IWebUiConfig webUiConfig) {
