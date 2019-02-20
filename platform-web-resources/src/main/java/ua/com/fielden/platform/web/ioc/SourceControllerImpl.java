@@ -282,8 +282,8 @@ public class SourceControllerImpl implements ISourceController {
 
     private EnumMap<DeviceProfile, LinkedHashSet<String>> calculatePreloadedResourcesByProfile() {
         final EnumMap<DeviceProfile, LinkedHashSet<String>> result = new EnumMap<>(DeviceProfile.class);
-        result.put(DeviceProfile.DESKTOP, calculatePreloadedResources("/resources/desktop-startup-resources-origin.html", DeviceProfile.DESKTOP));
-        result.put(DeviceProfile.MOBILE, calculatePreloadedResources("/resources/mobile-startup-resources-origin.html", DeviceProfile.MOBILE));
+        result.put(DeviceProfile.DESKTOP, calculatePreloadedResources("/resources/desktop-startup-resources-origin.js", DeviceProfile.DESKTOP));
+        result.put(DeviceProfile.MOBILE, calculatePreloadedResources("/resources/mobile-startup-resources-origin.js", DeviceProfile.MOBILE));
         return result;
     }
 
@@ -299,7 +299,7 @@ public class SourceControllerImpl implements ISourceController {
     }
 
     private String getSource(final String resourceURI, final DeviceProfile deviceProfile) {
-        if ("/app/desktop-application-startup-resources.html".equalsIgnoreCase(resourceURI)) {
+        if ("/app/desktop-application-startup-resources.js".equalsIgnoreCase(resourceURI)) {
             return getDesktopApplicationStartupResourcesSource(webUiConfig, this);
         } else if ("/app/tg-app-index.html".equalsIgnoreCase(resourceURI)) {
             return getTgAppIndexSource(webUiConfig, deviceProfile);
@@ -367,7 +367,7 @@ public class SourceControllerImpl implements ISourceController {
     }
 
     private static String getDesktopApplicationStartupResourcesSource(final IWebUiConfig webUiConfig, final SourceControllerImpl sourceControllerImpl) {
-        final String source = getFileSource("/resources/desktop-application-startup-resources.html", webUiConfig.resourcePaths());
+        final String source = getFileSource("/resources/desktop-application-startup-resources.js", webUiConfig.resourcePaths());
 
         if (sourceControllerImpl.vulcanizingMode || sourceControllerImpl.deploymentMode) {
             final String sourceWithMastersAndCentres = appendMastersAndCentresImportURIs(source, webUiConfig);

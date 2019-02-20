@@ -118,10 +118,10 @@ public abstract class AbstractWebUiResources extends Application {
         // Attach main application resource.
         router.attach("/", new AppIndexResourceFactory(sourceController, webApp, userProvider, deviceProvider));
         router.attach("/app/tg-app-config.js", new WebUiPreferencesResourceFactory(sourceController, deviceProvider));
-        router.attach("/app/tg-app.html", new MainWebUiComponentResourceFactory(sourceController, deviceProvider));
+        router.attach("/app/tg-app.js", new MainWebUiComponentResourceFactory(sourceController, deviceProvider));
         // type meta info resource
         router.attach("/app/tg-reflector.js", new TgReflectorComponentResourceFactory(sourceController, deviceProvider));
-        router.attach("/app/desktop-application-startup-resources.html", new DesktopApplicationStartupResourcesComponentResourceFactory(sourceController, deviceProvider));
+        router.attach("/app/desktop-application-startup-resources.js", new DesktopApplicationStartupResourcesComponentResourceFactory(sourceController, deviceProvider));
 
         // serialisation testing resource
         router.attach("/test/serialisation", new SerialisationTestResourceFactory(injector));

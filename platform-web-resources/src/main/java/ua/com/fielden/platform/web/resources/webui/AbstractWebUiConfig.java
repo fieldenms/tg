@@ -144,7 +144,7 @@ public abstract class AbstractWebUiConfig implements IWebUiConfig {
     @Override
     public final String genDesktopMainWebUIComponent() {
         final Pair<DomElement, JsCode> generatedMenu = desktopMainMenuConfig.generateMenuActions();
-        return ResourceLoader.getText("ua/com/fielden/platform/web/app/tg-app-template.html").
+        return ResourceLoader.getText("ua/com/fielden/platform/web/app/tg-app-template.js").
                 replace("@isMobileDevice", "false").
                 replace("<!--menu action dom-->", generatedMenu.getKey().toString()).
                 replace("//actionsObject", generatedMenu.getValue().toString());
@@ -153,7 +153,7 @@ public abstract class AbstractWebUiConfig implements IWebUiConfig {
     @Override
     public final String genMobileMainWebUIComponent() {
         final Pair<DomElement, JsCode> generatedMenu = mobileMainMenuConfig.generateMenuActions();
-        return ResourceLoader.getText("ua/com/fielden/platform/web/app/tg-app-template.html").
+        return ResourceLoader.getText("ua/com/fielden/platform/web/app/tg-app-template.js").
                 replace("@isMobileDevice", "true").
                 replace("<!--menu action dom-->", generatedMenu.getKey().toString()).
                 replace("//actionsObject", generatedMenu.getValue().toString());
