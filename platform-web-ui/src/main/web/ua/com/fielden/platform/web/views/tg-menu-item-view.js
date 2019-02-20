@@ -21,10 +21,10 @@ const template = html`
         }
         .master-insertion-point {
             overflow: auto;
-            @apply(--layout-vertical);
+            @apply --layout-vertical;
         }
         .paper-material {
-            @apply(--layout-vertical);
+            @apply --layout-vertical;
             border-radius: 2px;
             overflow: hidden;
             background-color: white;
