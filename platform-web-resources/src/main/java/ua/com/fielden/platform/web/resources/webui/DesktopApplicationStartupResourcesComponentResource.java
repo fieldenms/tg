@@ -39,7 +39,7 @@ public class DesktopApplicationStartupResourcesComponentResource extends Abstrac
     @Get
     public Representation loadDesktopAppResources() {
         final String source = sourceController.loadSource("/app/desktop-application-startup-resources.js", device());
-        return new EncodeRepresentation(Encoding.GZIP, new InputRepresentation(new ByteArrayInputStream(source.getBytes(Charsets.UTF_8)), MediaType.TEXT_HTML));
+        return new EncodeRepresentation(Encoding.GZIP, new InputRepresentation(new ByteArrayInputStream(source.getBytes(Charsets.UTF_8)), MediaType.TEXT_JAVASCRIPT));
     }
 
 }
