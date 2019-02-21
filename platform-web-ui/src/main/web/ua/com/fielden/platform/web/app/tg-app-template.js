@@ -138,8 +138,7 @@ Polymer({
             value: IronOverlayManager
         },
         _route: {
-            type: Object,
-            observer: "_routeChanged"
+            type: Object
         },
         _routeData: Object,
         _subroute: Object,
@@ -182,6 +181,8 @@ Polymer({
         }
     },
 
+    observers: ['_routeChanged(_route.path)'],
+
     behaviors: [TgEntityMasterBehavior, IronA11yKeysBehavior, TgFocusRestorationBehavior, IronResizableBehavior],
     
     keyBindings: {
@@ -219,7 +220,7 @@ Polymer({
         this.restoreActiveElement();
     },
     
-    _routeChanged: function (newValue, oldValue) {
+    _routeChanged: function (routePath) {
         // in case where there is an open overlay we 1) close it on back 2) remain it open on forward. Still the history state will not be changed.
         if (typeof this.currentHistoryState === "undefined") {
             this._loadApplicationInfrastructureIntoHistory();
