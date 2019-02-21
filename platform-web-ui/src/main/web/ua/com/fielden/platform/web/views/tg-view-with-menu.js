@@ -4,8 +4,6 @@ import '/resources/polymer/@polymer/iron-icons/iron-icons.js';
 import '/resources/polymer/@polymer/iron-icons/av-icons.js';
 
 import '/resources/polymer/@polymer/paper-styles/paper-styles.js';
-import '/resources/polymer/@polymer/paper-menu/paper-menu.js';
-import '/resources/polymer/@polymer/paper-menu/paper-submenu.js';
 import '/resources/polymer/@polymer/paper-icon-button/paper-icon-button.js';
 import '/resources/polymer/@polymer/paper-item/paper-item.js';
 import '/resources/polymer/@polymer/paper-checkbox/paper-checkbox.js'
@@ -14,6 +12,10 @@ import '/resources/polymer/@polymer/app-layout/app-drawer/app-drawer.js';
 import '/resources/polymer/@polymer/app-layout/app-drawer-layout/app-drawer-layout.js';
 
 import '/resources/polymer/@polymer/neon-animation/neon-animated-pages.js';
+import '/resources/polymer/@polymer/neon-animation/animations/slide-from-top-animation.js';
+import '/resources/polymer/@polymer/neon-animation/animations/slide-from-bottom-animation.js';
+import '/resources/polymer/@polymer/neon-animation/animations/slide-up-animation.js';
+import '/resources/polymer/@polymer/neon-animation/animations/slide-down-animation.js';
 
 import '/app/tg-app-config.js';
 
@@ -26,7 +28,8 @@ import { html } from '/resources/polymer/@polymer/polymer/lib/utils/html-tag.js'
 import { TgTooltipBehavior } from '/resources/components/tg-tooltip-behavior.js';
 import { TgFocusRestorationBehavior } from '/resources/actions/tg-focus-restoration-behavior.js';
 import {TgBackButtonBehavior} from '/resources/views/tg-back-button-behavior.js';
-import {tearDownEvent} from '/resources/reflection/tg-polymer-utils.js';
+import {tearDownEvent, allDefined} from '/resources/reflection/tg-polymer-utils.js';
+
 import { NeonAnimatableBehavior } from '/resources/polymer/@polymer/neon-animation/neon-animatable-behavior.js';
 
 const template = html`
@@ -50,6 +53,10 @@ const template = html`
         app-drawer {
             @apply --layout-vertical;
         }
+        .menu-stub {
+            background-color: white;
+            @apply --layout-flex;
+        }
         paper-menu {
             @apply --layout-flex;
         }
@@ -63,7 +70,7 @@ const template = html`
         .main-content {
             @apply --layout-vertical;
         }
-        /*FIXME*/
+        /*FIXME the display of checkbox label should be hidden*/
         paper-checkbox {
             margin: 0 4px 2px 2px;
             --paper-checkbox-size: 16px;
@@ -158,7 +165,8 @@ const template = html`
             <div id="menuToolBar" class="tool-bar layout horizontal center">
                 <div class="flex">[[menuItem.key]]</div>
             </div>
-            <paper-menu id="menu" attr-for-selected="name" on-iron-activate="_itemActivated">
+            <div class="menu-stub"></div>
+            <!-- <paper-menu id="menu" attr-for-selected="name" on-iron-activate="_itemActivated">
                 <template is="dom-repeat" items="[[menuItem.menu]]" as="firstLevelItem" index-as="groupIndex">
                     <paper-submenu name$="[[_calcItemPath(firstLevelItem)]]" opened={{firstLevelItem.opened}} on-focus="_focusSubmenu">
                         <paper-item class="menu-trigger" tooltip-text$="[[firstLevelItem.desc]]">
@@ -178,7 +186,7 @@ const template = html`
                         </template>
                     </paper-submenu>
                 </template>
-            </paper-menu>
+            </paper-menu> -->
         </app-drawer>
 
         <div class="main-content">
@@ -230,6 +238,7 @@ function findNestedMenuItem (itemPath, menuItem) {
 };
 
 Polymer({
+    _template: template, 
 
     is: "tg-view-with-menu",
 
@@ -244,30 +253,6 @@ Polymer({
         },
         canEdit: Boolean,
         menuSaveCallback: Function,
-        animationConfig: {
-            value: function () {
-                return {
-                    'entry': [
-                        {
-                            name: 'slide-from-top-animation',
-                            node: this.$.viewToolBar
-                        }, {
-                            name: 'slide-from-bottom-animation',
-                            node: this.$.pages
-                        }
-                    ],
-                    'exit': [
-                        {
-                            name: 'slide-up-animation',
-                            node: this.$.viewToolBar
-                        }, {
-                            name: 'slide-down-animation',
-                            node: this.$.pages
-                        }
-                    ]
-                };
-            }
-        },
 
         //Private members those starts with underscore
         _selectedPage: {
@@ -301,7 +286,29 @@ Polymer({
     },
     
     ready: function () {
-        this.$.menu.addEventListener("keydown", this._menuKeyDown.bind(this));
+        //FIXME menu
+        //this.$.menu.addEventListener("keydown", this._menuKeyDown.bind(this));
+
+        this.animationConfig = {
+            'entry': [
+                {
+                    name: 'slide-from-top-animation',
+                    node: this.$.viewToolBar
+                }, {
+                    name: 'slide-from-bottom-animation',
+                    node: this.$.pages
+                }
+            ],
+            'exit': [
+                {
+                    name: 'slide-up-animation',
+                    node: this.$.viewToolBar
+                }, {
+                    name: 'slide-down-animation',
+                    node: this.$.pages
+                }
+            ]
+        };
         
         this.mobile = this.$.app_config.mobile;
         if (this.$.app_config.mobile === true && this.$.app_config.iPhoneOs()) {
@@ -314,9 +321,10 @@ Polymer({
     },
 
     attached: function () {
-        this.$.menu.querySelectorAll("paper-menu").forEach(function (menu) {
+        //FIXME menu
+        /* this.$.menu.querySelectorAll("paper-menu").forEach(function (menu) {
             menu.addEventListener("keydown", this._menuKeyDown.bind(this))
-        });
+        }); */
         this.async(function () {
             if (!this._selectedPage) {
                 this.set("_selectedPage", "_");
@@ -447,8 +455,10 @@ Polymer({
     },
 
     _updatePage(menuItem, submodule) {
-        var pageName;
-        var submodulePart = submodule.substring(1).split("?")[0];
+        if (!allDefined(arguments)) {
+            return;
+        }
+        const submodulePart = submodule.substring(1).split("?")[0];
         if (menuItem.key === decodeURIComponent(this.selectedModule)) {
             this._selectMenu(submodulePart);
             this._selectPage(submodulePart);
@@ -511,6 +521,9 @@ Polymer({
     },
     
     _calcSelectedPageTitle: function (page, saveAsName) {
+        if (!allDefined(arguments)) {
+            return;
+        }
         if (page === '_') {
             return '';
         }
@@ -518,6 +531,9 @@ Polymer({
     },
     
     _calcSelectedPageDesc: function (page, saveAsName, saveAsDesc) {
+        if (!allDefined(arguments)) {
+            return;
+        }
         if (page === '_') {
             return '';
         }

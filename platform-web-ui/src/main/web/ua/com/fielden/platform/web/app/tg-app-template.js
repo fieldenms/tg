@@ -11,7 +11,6 @@ import '/resources/polymer/@polymer/neon-animation/neon-animated-pages.js';
 import '/resources/views/tg-app-menu.js';
 import '/resources/views/tg-app-view.js';
 import '/resources/master/tg-entity-master.js';
-import '/resources/master/tg-entity-master-behavior.js';
 import '/resources/actions/tg-ui-action.js';
 import '/resources/components/tg-message-panel.js';
 
@@ -21,8 +20,9 @@ import { IronOverlayManager } from '/resources/polymer/@polymer/iron-overlay-beh
 import { IronA11yKeysBehavior } from '/resources/polymer/@polymer/iron-a11y-keys-behavior/iron-a11y-keys-behavior.js';
 import { IronResizableBehavior } from '/resources/polymer/@polymer/iron-resizable-behavior/iron-resizable-behavior.js';
 
+import { TgEntityMasterBehavior } from '/resources/master/tg-entity-master-behavior.js';
 import { TgFocusRestorationBehavior } from '/resources/actions/tg-focus-restoration-behavior.js'
-import { tearDownEvent, deepestActiveElement } from '/resources/reflection/tg-polymer-utils.js';
+import { tearDownEvent, deepestActiveElement, generateUUID } from '/resources/reflection/tg-polymer-utils.js';
 
 const template = html`
     <style>
@@ -165,8 +165,7 @@ Polymer({
          */
         mobile: {
             type: Boolean,
-            //FIXME add @
-            value: isMobileDevice
+            value: @isMobileDevice
         },
         
         /**

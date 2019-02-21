@@ -11,6 +11,8 @@ import { html } from '/resources/polymer/@polymer/polymer/lib/utils/html-tag.js'
 import { IronResizableBehavior } from '/resources/polymer/@polymer/iron-resizable-behavior/iron-resizable-behavior.js';
 import { NeonAnimatableBehavior } from '/resources/polymer/@polymer/neon-animation/neon-animatable-behavior.js';
 
+import { TgAppAnimationBehavior } from '/resources/views/tg-app-animation-behavior.js'; 
+
 const template = html`
     <style>
         .item-bg {
