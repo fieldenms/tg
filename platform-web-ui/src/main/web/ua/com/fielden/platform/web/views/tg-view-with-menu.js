@@ -1,5 +1,6 @@
 import '/resources/polymer/@polymer/polymer/polymer-legacy.js';
 
+import '/resources/polymer/@polymer/iron-flex-layout/iron-flex-layout.js';
 import '/resources/polymer/@polymer/iron-icons/iron-icons.js';
 import '/resources/polymer/@polymer/iron-icons/av-icons.js';
 
@@ -158,6 +159,9 @@ const template = html`
             flex-direction: row-reverse;
         }
     </style>
+    <custom-style>
+        <style include="iron-flex iron-flex-reverse iron-flex-alignment iron-flex-factors iron-positioning"></style>
+    </custom-style>
     <tg-app-config id="app_config"></tg-app-config>
     <app-drawer-layout id="drawerPanel" force-narrow>
 

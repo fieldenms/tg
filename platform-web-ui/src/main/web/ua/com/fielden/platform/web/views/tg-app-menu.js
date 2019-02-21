@@ -9,8 +9,6 @@ import '/resources/polymer/@polymer/iron-icons/editor-icons.js';
 import '/resources/polymer/@polymer/iron-icons/hardware-icons.js';
 import '/resources/polymer/@polymer/iron-icons/image-icons.js';
 
-import '/resources/polymer/@polymer/app-layout/app-toolbar/app-toolbar.js';
-
 import '/resources/polymer/@polymer/paper-icon-button/paper-icon-button.js';
 
 import '/resources/polymer/@polymer/neon-animation/animations/hero-animation.js';
@@ -36,10 +34,16 @@ const template = html`
     <style>
         :host {
             overflow: hidden;
-            --paper-toolbar-background: var(--paper-light-blue-700);
-            --paper-toolbar-color: white;
-            --paper-toolbar-height: 44px;
-            --paper-toolbar-sm-height: 44px;
+        }
+        .tool-bar {
+            padding: 0 16px;
+            height: 44px;
+            font-size: 18px;
+            color: white;
+            background-color: var(--paper-light-blue-700);
+            @apply --layout-horizontal;
+            @apply --layout-center;
+            @apply --layout-justified;
         }
         a paper-icon-button,
         a:active paper-icon-button,
@@ -89,15 +93,14 @@ const template = html`
     <custom-style>
         <style include="iron-flex iron-flex-reverse iron-flex-alignment iron-flex-factors iron-positioning"></style>
     </custom-style>
-    <app-toolbar id="toolbar">
-        <div id="toolbarTitle" main-title class="layout horizontal centre justified">
-            <tg-menu-search-input id="menuSearcher" menu="[[menuConfig.menu]]" tooltip="Application-wide menu search (tap or hit F3 to invoke)."></tg-menu-search-input>
-            <div id="logoutContainer" class="layout horizontal center" style="display: contents">
-                <span class="flex truncate" style="font-size:1rem; padding-right:4px; text-align: right;">[[menuConfig.userName]]</span>
-                <paper-icon-button id="logoutButton" icon="icons:exit-to-app" tooltip-text="Logout" on-tap="_logout"></paper-icon-button>
-            </div>
+
+    <div id="toolbar" class="tool-bar">
+        <tg-menu-search-input id="menuSearcher" menu="[[menuConfig.menu]]" tooltip="Application-wide menu search (tap or hit F3 to invoke)."></tg-menu-search-input>
+        <div id="logoutContainer" class="layout horizontal center" style="display: contents">
+            <span class="flex truncate" style="font-size:1rem; padding-right:4px; text-align: right;">[[menuConfig.userName]]</span>
+            <paper-icon-button id="logoutButton" icon="icons:exit-to-app" tooltip-text="Logout" on-tap="_logout"></paper-icon-button>
         </div>
-    </app-toolbar>
+    </div>
 
     <div class="items">
         <tg-tile-layout class="fit" when-desktop="[[menuConfig.whenDesktop]]" when-tablet="[[menuConfig.whenTablet]]" when-mobile="[[menuConfig.whenMobile]]" min-cell-height="[[menuConfig.minCellHeight]]" min-cell-width="[[menuConfig.minCellWidth]]">
