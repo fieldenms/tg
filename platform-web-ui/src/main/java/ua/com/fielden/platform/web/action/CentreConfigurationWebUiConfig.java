@@ -50,7 +50,7 @@ import ua.com.fielden.platform.web.view.master.api.impl.SimpleMasterBuilder;
  *
  */
 public class CentreConfigurationWebUiConfig {
-    private static final String LAYOUT_FOR_COLLECTIONAL_MASTER = "['padding:20px', 'height: 100%', 'box-sizing: border-box', ['flex', ['flex']] ]";
+    private static final String LAYOUT_FOR_COLLECTIONAL_MASTER = "['padding:20px', 'height: 100%', 'box-sizing: border-box', ['flex', ['flex']], [['flex', 'padding-right:20px'], ['flex']]]";
 
     public final EntityMaster<CentreConfigUpdater> centreConfigUpdater;
     public final EntityMaster<CentreColumnWidthConfigUpdater> centreColumnWidthConfigUpdater;
@@ -85,7 +85,9 @@ public class CentreConfigurationWebUiConfig {
         final String actionLayout = cell(cell().cell().layoutForEach(layout().withStyle("width", MASTER_ACTION_DEFAULT_WIDTH + "px").withStyle("margin", "0px 10px 10px 10px").end()), horizontal).toString();
         final IMaster<CentreConfigUpdater> masterConfig = new SimpleMasterBuilder<CentreConfigUpdater>()
                 .forEntity(CentreConfigUpdater.class)
-                .addProp("customisableColumns").asCollectionalEditor().reorderable().withHeader("title")
+                .addProp("customisableColumns").asCollectionalEditor().reorderable().withHeader("title").also()
+                .addProp("pageCapacity").asSpinner().also()
+                .addProp("visibleRows").asSpinner()
                 .also()
                 .addAction(REFRESH).shortDesc("CANCEL").longDesc("Cancel not applied changes and close the dialog.")
                 .addAction(SAVE).shortDesc("APPLY").longDesc("Apply changes.").keepMasterOpenAfterExecution()
@@ -115,8 +117,19 @@ public class CentreConfigurationWebUiConfig {
             public EntityActionConfig mkAction() {
                 return action(CentreConfigUpdater.class)
                         .withContext(context().withSelectionCrit().build())
+                        .preAction(() ->
+                            new JsCode(""
+                                    + "    if (!action.modifyFunctionalEntity) {\n"
+                                    + "        action.modifyFunctionalEntity = (function (bindingEntity, master) {\n"
+                                    + "            action.modifyValue4Property('pageCapacity', bindingEntity, self.$.selection_criteria.pageCapacity);\n"
+                                    + "            action.modifyValue4Property('visibleRows', bindingEntity, self.$.egi.visibleRowCount);\n"
+                                    +"         });\n"
+                                    + "    }\n"
+                                    + ""))
                         .postActionSuccess(() ->// self.run should be invoked with isSortingAction=true parameter (and isAutoRunning=undefined). See tg-entity-centre-behavior 'run' property for more details.
                                 new JsCode(""
+                                    + "    self.$.selection_criteria.pageCapacity = functionalEntity.get('pageCapacity');\n"
+                                    + "    self.$.egi.visibleRowCount = functionalEntity.get('visibleRows');\n"
                                     + "    if (functionalEntity.get('sortingChanged') === true) {\n"
                                     + "        return self.retrieve().then(function () { self.run(undefined, true); });\n"
                                     + "    } else {\n"
