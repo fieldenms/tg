@@ -10,9 +10,14 @@ import ua.com.fielden.platform.entity.AbstractFunctionalEntityForCollectionModif
 import ua.com.fielden.platform.entity.annotation.CompanionObject;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.Observable;
+import ua.com.fielden.platform.entity.annotation.Required;
 import ua.com.fielden.platform.entity.annotation.Title;
 import ua.com.fielden.platform.entity.annotation.mutator.AfterChange;
+import ua.com.fielden.platform.entity.annotation.mutator.BeforeChange;
+import ua.com.fielden.platform.entity.annotation.mutator.Handler;
+import ua.com.fielden.platform.entity.annotation.mutator.StrParam;
 import ua.com.fielden.platform.entity.functional.centre.CentreContextHolder;
+import ua.com.fielden.platform.entity.validation.GreaterValidator;
 
 /**
  * Functional entity for updating centre configuration: centre's column visibility / order and centre's sorting.
@@ -47,10 +52,14 @@ public class CentreConfigUpdater extends AbstractFunctionalEntityForCollectionMo
 
     @IsProperty
     @Title(value = "Page Capacity", desc = "The number of entities on the page")
+    @Required
+    @BeforeChange({@Handler(value = GreaterValidator.class,
+    /*      */ str = {@StrParam(name = "limit", value = "0")})})
     private Integer pageCapacity;
 
     @IsProperty
     @Title(value = "Visible Rows", desc = "The number of visible rows")
+    @Required
     private Integer visibleRows;
 
     @Observable
