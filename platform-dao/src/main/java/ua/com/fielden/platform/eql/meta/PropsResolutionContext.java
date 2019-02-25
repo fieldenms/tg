@@ -57,7 +57,6 @@ public class PropsResolutionContext {
     }
 
     public PropsResolutionContext cloneWithAdded(final EntProp2 transformedProp) {
-        System.out.println("=== adding transformed prop: " + transformedProp);
         final List<List<IQrySource2>> srcs = new ArrayList<>();
         srcs.addAll(sources);
         final Set<EntProp2> props = new HashSet<>(resolvedProps);

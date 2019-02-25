@@ -3,19 +3,20 @@ package ua.com.fielden.platform.eql.stage2.elements;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.eql.meta.EntityInfo;
 
-public class QrySource2BasedOnPersistentType implements IQrySource2 {
+public class QrySource2BasedOnPersistentType extends AbstractElement2 implements IQrySource2 {
     private final Class<? extends AbstractEntity<?>> sourceType;
     private final EntityInfo entityInfo;
     private final String alias;
 
-    public QrySource2BasedOnPersistentType(final Class<? extends AbstractEntity<?>> sourceType, final EntityInfo entityInfo, final String alias) {
+    public QrySource2BasedOnPersistentType(final Class<? extends AbstractEntity<?>> sourceType, final EntityInfo entityInfo, final String alias, final int contextId) {
+        super(contextId);
         this.sourceType = sourceType;
         this.entityInfo = entityInfo;
         this.alias = alias;               
     }
 
-    public QrySource2BasedOnPersistentType(final Class<? extends AbstractEntity<?>> sourceType, final EntityInfo entityInfo) {
-        this(sourceType, entityInfo, null);               
+    public QrySource2BasedOnPersistentType(final Class<? extends AbstractEntity<?>> sourceType, final EntityInfo entityInfo, final int contextId) {
+        this(sourceType, entityInfo, null, contextId);               
     }
 
     @Override
@@ -26,7 +27,7 @@ public class QrySource2BasedOnPersistentType implements IQrySource2 {
     @Override
     public int hashCode() {
         final int prime = 31;
-        int result = 1;
+        int result = super.hashCode();
         result = prime * result + ((sourceType == null) ? 0 : sourceType.hashCode());
         result = prime * result + ((alias == null) ? 0 : alias.hashCode());
         return result;
@@ -37,9 +38,11 @@ public class QrySource2BasedOnPersistentType implements IQrySource2 {
         if (this == obj) {
             return true;
         }
-        if (obj == null) {
+        
+        if (!super.equals(obj)) {
             return false;
         }
+        
         if (!(obj instanceof QrySource2BasedOnPersistentType)) {
             return false;
         }

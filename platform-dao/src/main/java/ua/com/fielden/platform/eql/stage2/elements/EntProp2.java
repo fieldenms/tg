@@ -14,7 +14,7 @@ public class EntProp2 extends AbstractElement2 implements ISingleOperand2 {
 
     @Override
     public String toString() {
-        return " name = " + name + ";\n source = " + source + ";\n type = " + type + " contextId = " + getContextId();
+        return " name = " + name + ";\n source = " + source + ";\n type = " + type + " contextId = " + contextId;
     }
 
     @Override

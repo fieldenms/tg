@@ -12,7 +12,6 @@ public class OperandsBasedSet1 implements ISetOperand1<OperandsBasedSet2> {
     private final List<ISingleOperand1<? extends ISingleOperand2>> operands;
 
     public OperandsBasedSet1(final List<ISingleOperand1<? extends ISingleOperand2>> operands) {
-        super();
         this.operands = operands;
     }
 

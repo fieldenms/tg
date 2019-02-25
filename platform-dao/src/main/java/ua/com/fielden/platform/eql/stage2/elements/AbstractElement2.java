@@ -1,12 +1,8 @@
 package ua.com.fielden.platform.eql.stage2.elements;
 
 public abstract class AbstractElement2 {
-    private final int contextId;
+    public final int contextId;
     
-    public int getContextId() {
-        return contextId;
-    }
-
     protected AbstractElement2(final int contextId) {
         this.contextId = contextId;
     }

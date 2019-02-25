@@ -46,7 +46,7 @@ public class EntProp1 extends AbstractElement1 implements ISingleOperand1<EntPro
             final List<IQrySource2> item = it.next();
             final PropResolution resolution = resolveProp(item, this);
             if (resolution != null) {
-                final EntProp2 transformedProp = new EntProp2(resolution.getAliaslessName(), resolution.getSource(), resolution.getType(), getContextId());
+                final EntProp2 transformedProp = new EntProp2(resolution.getAliaslessName(), resolution.getSource(), resolution.getType(), contextId);
                 
                 return new TransformationResult<EntProp2>(transformedProp, resolutionContext.cloneWithAdded(transformedProp));
             }
