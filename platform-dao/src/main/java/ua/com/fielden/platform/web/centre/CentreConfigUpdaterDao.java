@@ -47,7 +47,7 @@ public class CentreConfigUpdaterDao extends CommonEntityDao<CentreConfigUpdater>
         });
 
         // in case where sorting has been changed from previous value, we need to trigger running from client-side using 'sortingChanged' parameter
-        actionToSave.setSortingChanged(actionToSave.getProperty("sortingVals").isChangedFromOriginal() || actionToSave.getProperty("pageCapacity").isChangedFromOriginal());
+        actionToSave.setSortingChanged(actionToSave.getProperty("sortingVals").isChangedFromOriginal());
         if (!actionToSave.isSortingChanged()) {
             // in case where sorting has not been changed from previous value (and re-running will not occur), we need to send 'centreChanged' parameter and bind it to 'Show selection criteria' button (orange or black)
             actionToSave.setCentreChanged(criteriaEntityBeingUpdated.isCentreChanged());

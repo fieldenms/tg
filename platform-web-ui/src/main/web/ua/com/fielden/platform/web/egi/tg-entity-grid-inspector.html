@@ -2214,7 +2214,7 @@
                 var shadowStyle = "left:0;right:0;bottom:0;";
                 shadowStyle += "height:calc(1.5rem * " + _totalsRowCount + " + " + _totalsRowCount + "px);";
                 if (_showBottomShadow) {
-                    shadowStyle += "box-shadow: 0px -3px 6px -2px rgba(0,0,0,0.7);";
+                    shadowStyle += "box-shadow: 0px -6px 6px -5px rgba(0,0,0,0.7);";
                 }
                 return shadowStyle;
             },
@@ -2222,7 +2222,7 @@
             _calcTopShadowStyle: function (_showTopShadow) {
                 var shadowStyle = "left:0;right:0;top:0;height:3rem;";
                 if (_showTopShadow) {
-                    shadowStyle += "box-shadow: 0px 3px 6px -2px rgba(0,0,0,0.7);";
+                    shadowStyle += "box-shadow: 0px 6px 6px -5px rgba(0,0,0,0.7);";
                 }
                 return shadowStyle;
             },
@@ -2233,7 +2233,7 @@
                 const primaryActionFixed = this._isPrimaryActionsFixed(checkboxesWithPrimaryActionsFixed, numOfFixedCols);
                 let shadowStyle = "left:0;top:0;bottom:0;width:calc(" + this._calculateDragAnchorWidth(canDragFrom, anchorFixed) + " + " + this._calculateCheckboxWidth(canDragFrom, checkboxVisible, checkboxFixed) + " + " + this._calculatePrimaryActionWidth(primaryAction, primaryActionFixed) + " + " + this._calculateFixedColsWidth(numOfFixedCols) + ");";
                 if (_showLeftShadow) {
-                    shadowStyle += "box-shadow: 3px 0px 6px -2px rgba(0,0,0,0.7);";
+                    shadowStyle += "box-shadow: 6px 0px 6px -5px rgba(0,0,0,0.7);";
                 }
                 return shadowStyle;
             },
@@ -2241,7 +2241,7 @@
             _calcRightShadowStyle: function (secondaryActions, secondaryActionsFixed, _showRightShadow, _fixedColumnWidth, _scrollableColumnWidth) {
                 var shadowStyle = "right:0;top:0;bottom:0;width:calc(" + this._calculateSecondaryActionWidth(secondaryActions, secondaryActionsFixed) + ");";
                 if (_showRightShadow) {
-                    shadowStyle += "box-shadow: -3px 0px 6px -2px rgba(0,0,0,0.7);";
+                    shadowStyle += "box-shadow: -6px 0px 6px -5px rgba(0,0,0,0.7);";
                 }
                 return shadowStyle;
             },
@@ -2249,7 +2249,7 @@
             _calcTBShadowStyle: function (_showTopShadow) {
                 var shadowStyle = "left:0;right:0;top:-50px;height:50px;";
                 if (_showTopShadow) {
-                    shadowStyle += "box-shadow: 0px 3px 6px -2px rgba(0,0,0,0.7);";
+                    shadowStyle += "box-shadow: 0px 6px 6px -5px rgba(0,0,0,0.7);";
                 }
                 return shadowStyle;
             },
