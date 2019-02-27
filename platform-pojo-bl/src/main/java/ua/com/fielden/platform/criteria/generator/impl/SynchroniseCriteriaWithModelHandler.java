@@ -50,19 +50,9 @@ public class SynchroniseCriteriaWithModelHandler<CDTME extends ICentreDomainTree
             // set corresponding critOnlySinglePrototype's property which will trigger all necessary validations / definers and dependent properties processing
             criteriaEntity.critOnlySinglePrototypeInit(entityType, CRITERIA_ENTITY_ID).set(propName, newValue);
             
-            // LOGGER.error(format("\tclearing requiredness..."));
             // Need to clear requiredness errors on each application of criteria entity property (crit-only single), not just on initial creation of critOnlySinglePrototype.
             // This is required to mimic 'new entity' application which permits empty required values.
-            // The following code is inspired by EntityResourceUtils.disregardCritOnlyRequiredProperties method and its siblings.
-            criteriaEntity.critOnlySinglePrototype().nonProxiedProperties().filter(mp -> mp.isRequired() && isCritOnlySingle(entityType, mp.getName())).forEach(mp -> {
-                // It is not sufficient enough just to clear requiredness validation result by setRequiredValidationResult(successful("ok")).
-                // We need to perform re-validation by making the property non-required first. This makes empty attempted value to become 'actual' one.
-                // LOGGER.error(format("\t\tclearing requiredness... property [%s]", mp.getName()));
-                mp.setRequired(false);
-                // And then we need to return the property to required state.
-                mp.setRequired(true);
-            });
-            // LOGGER.error(format("\tclearing requiredness...done"));
+            clearRequiredness(criteriaEntity.critOnlySinglePrototype(), entityType);
             
             // take a snapshot of all needed crit-only single prop information to be applied back against criteriaEntity
             final Stream<MetaProperty<?>> snapshot = criteriaEntity.critOnlySinglePrototype().nonProxiedProperties().filter(metaProp -> isCritOnlySingle(entityType, metaProp.getName()));
@@ -73,6 +63,26 @@ public class SynchroniseCriteriaWithModelHandler<CDTME extends ICentreDomainTree
         } else {
             updateTreeManagerProperty(criteriaEntity.getCentreDomainTreeMangerAndEnhancer().getFirstTick(), entityType, propName, newValue, criteriaType, criteriaPropName);
         }
+    }
+    
+    /**
+     * Clears requiredness errors for <code>cosPrototype</code>'s crit-only single properties.
+     * 
+     * @param cosPrototype
+     * @param entityType
+     */
+    public static void clearRequiredness(final AbstractEntity<?> cosPrototype, final Class<AbstractEntity<?>> entityType) {
+        // LOGGER.error(format("\tclearing requiredness..."));
+        // The following code is inspired by EntityResourceUtils.disregardCritOnlyRequiredProperties method and its siblings.
+        cosPrototype.nonProxiedProperties().filter(mp -> mp.isRequired() && isCritOnlySingle(entityType, mp.getName())).forEach(mp -> {
+            // It is not sufficient enough just to clear requiredness validation result by setRequiredValidationResult(successful("ok")).
+            // We need to perform re-validation by making the property non-required first. This makes empty attempted value to become 'actual' one.
+            // LOGGER.error(format("\t\tclearing requiredness... property [%s]", mp.getName()));
+            mp.setRequired(false);
+            // And then we need to return the property to required state.
+            mp.setRequired(true);
+        });
+        // LOGGER.error(format("\tclearing requiredness...done"));
     }
     
     /**
@@ -98,7 +108,6 @@ public class SynchroniseCriteriaWithModelHandler<CDTME extends ICentreDomainTree
             }
         }*/
         final IAddToCriteriaTickManager v = !areDifferent(currValue, newValue) ? criteriaTick : 
-
                isSecond                      ? criteriaTick.setValue2(entityType, propName, newValue) 
                                              : criteriaTick.setValue(entityType, propName, newValue);
         /*if (isCritOnlySingle(entityType, propName)) {

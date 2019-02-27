@@ -816,6 +816,8 @@ public abstract class EntityQueryCriteria<C extends ICentreDomainTreeManagerAndE
         if (critOnlySinglePrototype == null) {
             critOnlySinglePrototype = getEntityFactory().newEntity(entityType, id);
             critOnlySinglePrototype.resetMetaState();
+            // Initialisation phase is started here, so that definers will be actioned with isInitialising = true mark. Validation will be deferred to the moment when initialisation phase ends.
+            critOnlySinglePrototype.beginInitialising();
         }
         return critOnlySinglePrototype();
     }

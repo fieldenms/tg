@@ -6,6 +6,9 @@ import static ua.com.fielden.platform.criteria.generator.impl.CriteriaReflector.
 import static ua.com.fielden.platform.criteria.generator.impl.CriteriaReflector.is;
 import static ua.com.fielden.platform.criteria.generator.impl.CriteriaReflector.not;
 import static ua.com.fielden.platform.criteria.generator.impl.CriteriaReflector.to;
+import static ua.com.fielden.platform.criteria.generator.impl.SynchroniseCriteriaWithModelHandler.applySnapshot;
+import static ua.com.fielden.platform.criteria.generator.impl.SynchroniseCriteriaWithModelHandler.clearRequiredness;
+import static ua.com.fielden.platform.domaintree.impl.AbstractDomainTree.isCritOnlySingle;
 import static ua.com.fielden.platform.domaintree.impl.AbstractDomainTree.isDoubleCriterion;
 import static ua.com.fielden.platform.reflection.AnnotationReflector.getAnnotation;
 import static ua.com.fielden.platform.types.tuples.T2.t2;
@@ -16,6 +19,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.WeakHashMap;
+import java.util.stream.Stream;
 
 import org.apache.log4j.Logger;
 
@@ -45,6 +49,7 @@ import ua.com.fielden.platform.entity.annotation.factory.IsPropertyAnnotation;
 import ua.com.fielden.platform.entity.annotation.factory.SecondParamAnnotation;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
+import ua.com.fielden.platform.entity.meta.MetaProperty;
 import ua.com.fielden.platform.entity_centre.review.criteria.EnhancedCentreEntityQueryCriteria;
 import ua.com.fielden.platform.entity_centre.review.criteria.EnhancedLocatorEntityQueryCriteria;
 import ua.com.fielden.platform.entity_centre.review.criteria.EntityQueryCriteria;
@@ -265,6 +270,23 @@ public class CriteriaGenerator implements ICriteriaGenerator {
                 LOGGER.warn(format("\tCould not assign crit value to [%s] in root [%s].", field.getName(), root.getName()));
             } 
             // finally { LOGGER.error(format("\tsynchroniseWithModel prop [%s] setting...done", field.getName())); }
+        });
+        criteriaEntity.critOnlySinglePrototypeOptional().ifPresent(cosPrototype -> {
+            final Class<AbstractEntity<?>> entityType = (Class<AbstractEntity<?>>) root;
+            // complete initialisation phase
+            cosPrototype.endInitialising();
+            // revalidate cosPrototype (this separate process is needed because isInitialising was true and validators were skipped during initialisation process)
+            cosPrototype.nonProxiedProperties().filter(mp -> isCritOnlySingle(entityType, mp.getName())).forEach(mp -> {
+                // LOGGER.error(format("\t\trevalidate... property [%s]", mp.getName()));
+                mp.revalidate(false);
+            });
+            // Need to clear requiredness errors after revalidation.
+            clearRequiredness(cosPrototype, entityType);
+            
+            // take a snapshot of all needed crit-only single prop information to be applied back against criteriaEntity
+            final Stream<MetaProperty<?>> snapshot = criteriaEntity.critOnlySinglePrototype().nonProxiedProperties().filter(metaProp -> isCritOnlySingle(entityType, metaProp.getName()));
+            // apply the snapshot against criteriaEntity
+            applySnapshot(criteriaEntity, snapshot);
         });
         // LOGGER.error(format("synchroniseWithModel started...done"));
     }
