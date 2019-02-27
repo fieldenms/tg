@@ -58,6 +58,7 @@ import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.reflection.asm.api.NewProperty;
 import ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader;
+import ua.com.fielden.platform.utils.DefinersExecutor;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
 
@@ -273,8 +274,12 @@ public class CriteriaGenerator implements ICriteriaGenerator {
         });
         criteriaEntity.critOnlySinglePrototypeOptional().ifPresent(cosPrototype -> {
             final Class<AbstractEntity<?>> entityType = (Class<AbstractEntity<?>>) root;
+            // execute definers
+            DefinersExecutor.execute(cosPrototype, false);
+            
             // complete initialisation phase
             cosPrototype.endInitialising();
+            
             // revalidate cosPrototype (this separate process is needed because isInitialising was true and validators were skipped during initialisation process)
             cosPrototype.nonProxiedProperties().filter(mp -> isCritOnlySingle(entityType, mp.getName())).forEach(mp -> {
                 // LOGGER.error(format("\t\trevalidate... property [%s]", mp.getName()));

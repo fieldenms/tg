@@ -41,6 +41,9 @@ import ua.com.fielden.platform.reflection.exceptions.ReflectionException;
 public class DefinersExecutor {
     private DefinersExecutor() {}
 
+    public static <T extends AbstractEntity<?>> T execute(final T entity) {
+        return execute(entity, true);
+    }
     /**
      * Employs the DFS algorithm to traverse the object graph starting with a node represented by <code>entity</code>. 
      * The boundary of an object graph is outlined by <code>proxied</code> properties and <code>non-entity typed</code> properties.
@@ -49,13 +52,16 @@ public class DefinersExecutor {
      * 
      * @return
      */
-    public static <T extends AbstractEntity<?>> T execute(final T entity) {
+    public static <T extends AbstractEntity<?>> T execute(final T entity, final boolean notCritOnlySingle) {
         if (entity != null) {
-            execute(Arrays.asList(entity));
+            execute(Arrays.asList(entity), notCritOnlySingle);
         }
         return entity;
     }
 
+    public static <T extends AbstractEntity<?>> List<T> execute(final List<T> entities) {
+        return execute(entities, true);
+    }
     /**
      * The same as {@link #execute(AbstractEntity)}, but for a list of entities.
      * 
@@ -63,7 +69,7 @@ public class DefinersExecutor {
      * 
      * @return
      */
-    public static <T extends AbstractEntity<?>> List<T> execute(final List<T> entities) {
+    public static <T extends AbstractEntity<?>> List<T> execute(final List<T> entities, final boolean notCritOnlySingle) {
         if (entities == null || entities.isEmpty()) {
             return entities;
         }
@@ -81,7 +87,7 @@ public class DefinersExecutor {
                     throw new DefinersExecutorException("After full exploration of previous top-level node entity (if any) 'frontier' is necessary to be empty.");
                 }
                 frontier.push(entity);
-                explore(frontier, explored);
+                explore(frontier, explored, notCritOnlySingle);
             }
         }
         return entities;
@@ -96,7 +102,8 @@ public class DefinersExecutor {
      */
     private static void explore(
             final Deque<AbstractEntity<?>> frontier, 
-            final Set<String> explored) {
+            final Set<String> explored,
+            final boolean notCritOnlySingle) {
         
         if (frontier.isEmpty()) {
             throw new DefinersExecutorException("There is nothing to process.");
@@ -130,7 +137,7 @@ public class DefinersExecutor {
 
         // collect properties to process
         final Map<Boolean, List<Field>> propFieldsToProcess = streamRealProperties(entity.getType())
-                .filter(field -> !isPropertyProxied(entity, field.getName()) && !isCritOnlySingle(entity.getType(), field.getName()) )
+                .filter(field -> !isPropertyProxied(entity, field.getName()) && (notCritOnlySingle ? !isCritOnlySingle(entity.getType(), field.getName()): isCritOnlySingle(entity.getType(), field.getName())) )
                 .collect(partitioningBy(field -> isValueProxied(entity, field)));
 
         // process original values of properties that have id-only-proxy value if the entity is instrumented and persisted
@@ -161,7 +168,7 @@ public class DefinersExecutor {
                             if (item != null && item instanceof AbstractEntity) {
                                 final AbstractEntity<?> value = (AbstractEntity<?>) item;
                                 frontier.push(value);
-                                explore(frontier, explored);
+                                explore(frontier, explored, notCritOnlySingle);
                             }
                         }
                     }
@@ -170,7 +177,7 @@ public class DefinersExecutor {
                         final AbstractEntity<?> value = (AbstractEntity<?>) propertyValue;
                         // produce fetch
                         frontier.push(value);
-                        explore(frontier, explored);
+                        explore(frontier, explored, notCritOnlySingle);
                     }
                 }
                 
