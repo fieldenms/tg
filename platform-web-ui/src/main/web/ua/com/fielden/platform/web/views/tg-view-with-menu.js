@@ -2,11 +2,11 @@ import '/resources/polymer/@polymer/polymer/polymer-legacy.js';
 
 import '/resources/polymer/@polymer/iron-flex-layout/iron-flex-layout.js';
 import '/resources/polymer/@polymer/iron-icons/iron-icons.js';
-import '/resources/polymer/@polymer/iron-icons/av-icons.js';
 
 import '/resources/polymer/@polymer/paper-styles/paper-styles.js';
 import '/resources/polymer/@polymer/paper-icon-button/paper-icon-button.js';
 import '/resources/polymer/@polymer/paper-item/paper-item.js';
+import '/resources/polymer/@polymer/paper-listbox/paper-listbox.js';
 import '/resources/polymer/@polymer/paper-checkbox/paper-checkbox.js'
 
 import '/resources/polymer/@polymer/app-layout/app-drawer/app-drawer.js';
@@ -22,6 +22,7 @@ import '/app/tg-app-config.js';
 
 import '/resources/components/tg-menu-search-input.js';
 import '/resources/views/tg-menu-item-view.js';
+import '/resources/components/tg-sublistbox.js'
 
 import { Polymer } from '/resources/polymer/@polymer/polymer/lib/legacy/polymer-fn.js';
 import { html } from '/resources/polymer/@polymer/polymer/lib/utils/html-tag.js';
@@ -37,10 +38,8 @@ const template = html`
     <style>
         :host {
             @apply --layout-vertical;
-            --paper-menu-color: var(--paper-light-blue-700);
-            --paper-menu-undone-color: var(--paper-light-blue-100);
-            --paper-item-min-height: 40px;
-            --paper-menu: {
+            --paper-listbox-color: var(--paper-light-blue-700);
+            --paper-listbox: {
                 padding: 0;
                 margin: 0;
                 overflow: auto;
@@ -54,19 +53,8 @@ const template = html`
         app-drawer {
             @apply --layout-vertical;
         }
-        .menu-stub {
-            background-color: white;
+        paper-listbox {
             @apply --layout-flex;
-        }
-        paper-menu {
-            @apply --layout-flex;
-        }
-        paper-menu.menu-content {
-            --paper-menu: {
-                padding: 0;
-                margin: 0;
-                overflow: hidden;
-            };
         }
         .main-content {
             @apply --layout-vertical;
@@ -75,19 +63,19 @@ const template = html`
         paper-checkbox {
             margin: 0 4px 2px 2px;
             --paper-checkbox-size: 16px;
-            --paper-checkbox-unchecked-color: var(--paper-menu-color);
-            --paper-checkbox-unchecked-ink-color: var(--paper-menu-color);
+            --paper-checkbox-unchecked-color: var(--paper-listbox-color);
+            --paper-checkbox-unchecked-ink-color: var(--paper-listbox-color);
             --paper-checkbox-label: {
                 display: none !important;
             }
         }
         paper-checkbox.blue {
-            --paper-checkbox-checked-color: var(--paper-menu-color);
-            --paper-checkbox-checked-ink-color: var(--paper-menu-color);
+            --paper-checkbox-checked-color: var(--paper-listbox-color);
+            --paper-checkbox-checked-ink-color: var(--paper-listbox-color);
         }
         paper-checkbox.blue.undone {
             --paper-checkbox-checked-color: #acdbfe;
-            --paper-checkbox-checked-ink-color: var(--paper-menu-color);
+            --paper-checkbox-checked-ink-color: var(--paper-listbox-color);
         }
         neon-animated-pages {
             position: absolute;
@@ -96,26 +84,16 @@ const template = html`
             right: 0;
             top: 44px;
         }
-        iron-icon {
+        /* iron-icon {
             transform: translate(0, -1px);
             --iron-icon-width: 16px;
             --iron-icon-height: 16px;
             min-width: 16px;
             min-height: 16px;
-        }
-        iron-icon[without-menu] {
+        } */
+        iron-icon[without-menu],
+        iron-icon[has-no-icon] {
             visibility: hidden;
-        }
-        iron-icon[opened] {
-            fill: none;
-            stroke: var(--paper-menu-color, var(--primary-text-color));
-            stroke-width: 2;
-            stroke-linecap: round;
-            stroke-linejoin: round;
-            transform: translate(0, -1.5px) rotate(90deg);
-        }
-        .submenu-item {
-            padding-left: 42px;
         }
         .menu-item-view {
             overflow: auto;
@@ -142,9 +120,6 @@ const template = html`
         #drawerPanel:not([narrow]) #menuButton {
             display: none;
         }
-        #drawerPanel:not([narrow]) paper-menu {
-            border-right: 1px solid #CBCDCE;
-        }
         tg-menu-search-input {
             margin-right: 8px;
             --menu-search-icon-color: white;
@@ -169,28 +144,30 @@ const template = html`
             <div id="menuToolBar" class="tool-bar layout horizontal center">
                 <div class="flex">[[menuItem.key]]</div>
             </div>
-            <div class="menu-stub"></div>
-            <!-- <paper-menu id="menu" attr-for-selected="name" on-iron-activate="_itemActivated">
+            <paper-listbox id="menu" attr-for-selected="name" on-iron-activate="_itemActivated">
                 <template is="dom-repeat" items="[[menuItem.menu]]" as="firstLevelItem" index-as="groupIndex">
-                    <paper-submenu name$="[[_calcItemPath(firstLevelItem)]]" opened={{firstLevelItem.opened}} on-focus="_focusSubmenu">
-                        <paper-item class="menu-trigger" tooltip-text$="[[firstLevelItem.desc]]">
-                            <iron-icon icon="av:play-arrow" opened$="[[firstLevelItem.opened]]" without-menu$="[[!_isMenuPresent(firstLevelItem.menu)]]"></iron-icon>
+                    <tg-sublistbox name$="[[_calcItemPath(firstLevelItem)]]" opened={{firstLevelItem.opened}} on-focus="_focusSubmenu">
+                        <paper-item tooltip-text$="[[firstLevelItem.desc]]" slot="trigger">
+                        <iron-icon icon="[[firstLevelItem.icon]]" has-no-icon$="[[_calcHasNoIcon(firstLevelItem.icon)]]"></iron-icon>
+                            <span class="flex menu-item-title">[[firstLevelItem.key]]</span>
                             <paper-checkbox class$="[[_calcGroupStyle(firstLevelItem)]]" group-item$="[[groupIndex]]" hidden$="[[!canEdit]]" checked="[[firstLevelItem.visible]]" on-change="_changeGroupVisibility" on-tap="_tapCheckbox" tooltip-text$="[[_calcCheckboxTooltip(firstLevelItem.menu, firstLevelItem.visible)]]"></paper-checkbox>
-                            <span>[[firstLevelItem.key]]</span>
+                            <iron-icon icon="[[_calcExpandCollapseIcon(firstLevelItem.opened)]]" opened$="[[firstLevelItem.opened]]" without-menu$="[[!_isMenuPresent(firstLevelItem.menu)]]"></iron-icon>
                         </paper-item>
                         <template is="dom-if" if="[[_isMenuPresent(firstLevelItem.menu)]]" on-dom-change="_menuItemsRendered">
-                            <paper-menu class="menu-content" name$="[[_calcItemPath(firstLevelItem)]]" attr-for-selected="name">
+                            <paper-listbox slot="content" name$="[[_calcItemPath(firstLevelItem)]]" attr-for-selected="name">
                                 <template is="dom-repeat" items="[[firstLevelItem.menu]]">
                                     <paper-item class="submenu-item" name$="[[_calcItemPath(firstLevelItem, item, groupIndex)]]" tooltip-text$="[[item.desc]]">
+                                        <iron-icon icon="[[item.icon]]" has-no-icon$="[[_calcHasNoIcon(item.icon)]]"></iron-icon>
+                                        <span class="flex menu-item-title">[[item.key]]</span>
                                         <paper-checkbox class="blue" hidden$="[[!canEdit]]" checked="[[item.visible]]" on-change="_changeVisibility" on-tap="_tapCheckbox" tooltip-text$="[[_calcCheckboxTooltip(item.menu, item.visible)]]"></paper-checkbox>
-                                        <span class="menu-item-title">[[item.key]]</span>
+                                        <iron-icon without-menu></iron-icon>
                                     </paper-item>
                                 </template>
-                            </paper-menu>
+                            </paper-listbox>
                         </template>
-                    </paper-submenu>
+                    </tg-sublistbox>
                 </template>
-            </paper-menu> -->
+            </paper-listbox>
         </app-drawer>
 
         <div class="main-content">
@@ -357,6 +334,14 @@ Polymer({
         this.$.menuSearcher.searchMenu();
     },
 
+    _calcExpandCollapseIcon: function (isItemOpened) {
+        return isItemOpened ? "icons:expand-less" : "icons:expand-more";
+    },
+
+    _calcHasNoIcon: function (icon) {
+        return !icon;
+    },
+
     _menuItemsRendered: function (event) {
         const subItem = event.model.firstLevelItem;
         if (this._isMenuPresent(subItem.menu)) {
@@ -484,9 +469,9 @@ Polymer({
             menuPath = findNestedMenuItem(pagePath, this.menuItem);
             path = menuPath.path;
             pathParts = path.split('/');
-            topMenu = this.shadowRoot.querySelector("paper-submenu[name='" + pathParts[0] + "']");
-            previousTopMenu = this.$.menu.selected && this.$$("paper-submenu[name='" + this.$.menu.selected + "']");
-            submenu = this.shadowRoot.querySelector("paper-menu[name='" + pathParts[0] + "']");
+            topMenu = this.shadowRoot.querySelector("tg-sublistbox[name='" + pathParts[0] + "']");
+            previousTopMenu = this.$.menu.selected && this.shadowRoot.querySelector("tg-sublistbox[name='" + this.$.menu.selected + "']");
+            submenu = this.shadowRoot.querySelector("paper-sublist[name='" + pathParts[0] + "']");
             if (this.$.menu.selected !== pathParts[0]) {
                 if (previousTopMenu) {
                     previousTopMenu.close();
@@ -568,7 +553,7 @@ Polymer({
         var shouldUnselect = oldValue && oldValue.split('/')[1];
         var submenu;
         if (shouldUnselect && oldFirstLevelItem && newFirstLevelItem !== oldFirstLevelItem) {
-            submenu = this.shadowRoot.querySelector("paper-menu[name='" + oldFirstLevelItem + "']");
+            submenu = this.shadowRoot.querySelector("paper-listbox[name='" + oldFirstLevelItem + "']");
             submenu.select();
         }
     },
