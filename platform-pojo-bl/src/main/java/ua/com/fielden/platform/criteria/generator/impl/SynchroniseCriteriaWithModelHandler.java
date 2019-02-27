@@ -35,7 +35,6 @@ public class SynchroniseCriteriaWithModelHandler<CDTME extends ICentreDomainTree
     
     @Override
     public void handle(final MetaProperty<Object> property, final Object newValue) {
-        // LOGGER.error(format("\t\tACE started for [%s]...", property.getName()));
         // criteria entity and property
         final EntityQueryCriteria<CDTME, T, IEntityDao<T>> criteriaEntity = (EntityQueryCriteria<CDTME, T, IEntityDao<T>>) property.getEntity();
         final Class<?> criteriaType = criteriaEntity.getType();
@@ -44,10 +43,10 @@ public class SynchroniseCriteriaWithModelHandler<CDTME extends ICentreDomainTree
         // real entity and property from which criteria entity and property were generated
         final Class<AbstractEntity<?>> entityType = (Class<AbstractEntity<?>>) criteriaEntity.getEntityClass();
         final String propName = getCriteriaProperty(criteriaType, criteriaPropName);
-        
         // crit-only single property processing differs from any other property processing
         if (isCritOnlySingle(entityType, propName)) {
-            // LOGGER.error(format("\t\t\toriginal property [%s] is crit-only single...", propName));
+            // LOGGER.error(format("\t\tACE started for [%s]...", criteriaPropName));
+            // LOGGER.error(format("\t\t\toriginal property [%s] is ...", propName));
             // set corresponding critOnlySinglePrototype's property which will trigger all necessary validations / definers and dependent properties processing
             criteriaEntity.critOnlySinglePrototypeInit(entityType, CRITERIA_ENTITY_ID).set(propName, newValue);
             
@@ -70,12 +69,10 @@ public class SynchroniseCriteriaWithModelHandler<CDTME extends ICentreDomainTree
             // apply the snapshot against criteriaEntity
             applySnapshot(criteriaEntity, snapshot);
             // LOGGER.error(format("\t\t\toriginal property [%s] is crit-only single...done", propName));
+            // LOGGER.error(format("\t\tACE started for [%s]...done", criteriaPropName));
         } else {
-            // LOGGER.error(format("\t\t\toriginal property [%s] is simple...", propName));
             updateTreeManagerProperty(criteriaEntity.getCentreDomainTreeMangerAndEnhancer().getFirstTick(), entityType, propName, newValue, criteriaType, criteriaPropName);
-            // LOGGER.error(format("\t\t\toriginal property [%s] is simple...done", propName));
         }
-        // LOGGER.error(format("\t\tACE started for [%s]...done", property.getName()));
     }
     
     /**
@@ -93,18 +90,23 @@ public class SynchroniseCriteriaWithModelHandler<CDTME extends ICentreDomainTree
         final boolean isSecond = isSecondParam(criteriaType, criteriaPropName);
         final Object currValue = isSecond    ? criteriaTick.getValue2(entityType, propName)
                                              : criteriaTick.getValue(entityType, propName);
-        /*if (!equalsEx(currValue, newValue)) {
-            LOGGER.error(format("\t\t\t\tupdateTreeManagerProperty: propName = [%s] current -> new = [%s] -> [%s]...", propName, currValue, newValue));
-        } else {
-            LOGGER.error(format("\t\t\t\tupdateTreeManagerProperty: propName = [%s] current value unchanged [%s]...", propName, currValue));
+        /*if (isCritOnlySingle(entityType, propName)) {
+            if (!equalsEx(currValue, newValue)) {
+                LOGGER.error(format("\t\t\t\tupdateTreeManagerProperty: propName = [%s] current -> new = [%s] -> [%s]...", propName, currValue, newValue));
+            } else {
+                LOGGER.error(format("\t\t\t\tupdateTreeManagerProperty: propName = [%s] current value unchanged [%s]...", propName, currValue));
+            }
         }*/
         final IAddToCriteriaTickManager v = !areDifferent(currValue, newValue) ? criteriaTick : 
+
                isSecond                      ? criteriaTick.setValue2(entityType, propName, newValue) 
                                              : criteriaTick.setValue(entityType, propName, newValue);
-        /*if (!equalsEx(currValue, newValue)) {
-            LOGGER.error(format("\t\t\t\tupdateTreeManagerProperty: propName = [%s] current -> new = [%s] -> [%s]...done", propName, currValue, newValue));
-        } else {
-            LOGGER.error(format("\t\t\t\tupdateTreeManagerProperty: propName = [%s] current value unchanged [%s]...done", propName, currValue));
+        /*if (isCritOnlySingle(entityType, propName)) {
+            if (!equalsEx(currValue, newValue)) {
+                LOGGER.error(format("\t\t\t\tupdateTreeManagerProperty: propName = [%s] current -> new = [%s] -> [%s]...done", propName, currValue, newValue));
+            } else {
+                LOGGER.error(format("\t\t\t\tupdateTreeManagerProperty: propName = [%s] current value unchanged [%s]...done", propName, currValue));
+            }
         }*/
         return v;
     }

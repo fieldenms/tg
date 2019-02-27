@@ -114,31 +114,31 @@ public class CriteriaGenerator implements ICriteriaGenerator {
                 generatedClasses.put(miType, queryCriteriaClass);
             }
 
-            final DefaultEntityProducerWithContext<EntityQueryCriteria<CDTME, T, IEntityDao<T>>> entityProducer = new DefaultEntityProducerWithContext<>(entityFactory, (Class<EntityQueryCriteria<CDTME, T, IEntityDao<T>>>) queryCriteriaClass, coFinder);
-            final EntityQueryCriteria<CDTME, T, IEntityDao<T>> entity = entityProducer.newEntity();
-            entity.beginInitialising();
-            entity.setKey("not required");
-            entity.endInitialising();
+            final DefaultEntityProducerWithContext<EntityQueryCriteria<CDTME, T, IEntityDao<T>>> criteriaEntityProducer = new DefaultEntityProducerWithContext<>(entityFactory, (Class<EntityQueryCriteria<CDTME, T, IEntityDao<T>>>) queryCriteriaClass, coFinder);
+            final EntityQueryCriteria<CDTME, T, IEntityDao<T>> criteriaEntity = criteriaEntityProducer.newEntity();
+            criteriaEntity.beginInitialising();
+            criteriaEntity.setKey("not required");
+            criteriaEntity.endInitialising();
 
             //Set dao for generated entity query criteria.
             final Field daoField = Finder.findFieldByName(EntityQueryCriteria.class, "dao");
             final boolean isDaoAccessable = daoField.isAccessible();
             daoField.setAccessible(true);
-            daoField.set(entity, coFinder.find(root));
+            daoField.set(criteriaEntity, coFinder.find(root));
             daoField.setAccessible(isDaoAccessable);
 
             //Set domain tree manager for entity query criteria.
             final Field dtmField = Finder.findFieldByName(EntityQueryCriteria.class, "cdtme");
             final boolean isCdtmeAccessable = dtmField.isAccessible();
             dtmField.setAccessible(true);
-            dtmField.set(entity, cdtme);
+            dtmField.set(criteriaEntity, cdtme);
             dtmField.setAccessible(isCdtmeAccessable);
 
             //Add change support to the entity query criteria instance
             //in order to synchronise entity query criteria values with model values
-            synchroniseWithModel(entity);
+            synchroniseWithModel(criteriaEntity);
 
-            return entity;
+            return criteriaEntity;
         } catch (final Exception e) {
             LOGGER.error(e.getMessage(), e);
             throw new IllegalStateException(e);
@@ -158,7 +158,7 @@ public class CriteriaGenerator implements ICriteriaGenerator {
         final Class<?> propertyType = isEntityItself ? managedType : PropertyTypeDeterminator.determinePropertyType(managedType, propertyName);
         final CritOnly critOnlyAnnotation = isEntityItself ? null : AnnotationReflector.getPropertyAnnotation(CritOnly.class, managedType, propertyName);
         final Pair<String, String> titleAndDesc = CriteriaReflector.getCriteriaTitleAndDesc(managedType, propertyName);
-        final List<NewProperty> generatedProperties = new ArrayList<NewProperty>();
+        final List<NewProperty> generatedProperties = new ArrayList<>();
         
         final IsProperty isPropertyAnnotation = isEntityItself ? null : AnnotationReflector.getPropertyAnnotation(IsProperty.class, managedType, propertyName);
         if (isDoubleCriterion(managedType, propertyName)) {
@@ -185,7 +185,7 @@ public class CriteriaGenerator implements ICriteriaGenerator {
         final boolean isSingle = critOnlyAnnotation != null && Type.SINGLE.equals(critOnlyAnnotation.value());
         final Class<?> newPropertyType = isEntity ? (isSingle ? propertyType : List.class) : (EntityUtils.isBoolean(propertyType) ? boolean.class : propertyType);
 
-        final List<Annotation> annotations = new ArrayList<Annotation>();
+        final List<Annotation> annotations = new ArrayList<>();
         if (isEntity && !isSingle && EntityUtils.isCollectional(newPropertyType)) {
             annotations.add(new IsPropertyAnnotation(String.class, "--stub-link-property--").newInstance());
             annotations.add(new EntityTypeAnnotation((Class<? extends AbstractEntity<?>>) propertyType).newInstance());
@@ -245,13 +245,13 @@ public class CriteriaGenerator implements ICriteriaGenerator {
     /**
      * Synchronises entity query criteria property values with domain tree model.
      *
-     * @param entity
+     * @param criteriaEntity
      */
-    private static <T extends AbstractEntity<?>, CDTME extends ICentreDomainTreeManagerAndEnhancer> void synchroniseWithModel(final EntityQueryCriteria<CDTME, T, IEntityDao<T>> entity) {
+    private static <T extends AbstractEntity<?>, CDTME extends ICentreDomainTreeManagerAndEnhancer> void synchroniseWithModel(final EntityQueryCriteria<CDTME, T, IEntityDao<T>> criteriaEntity) {
         // LOGGER.error(format("synchroniseWithModel started..."));
-        final Class<T> root = entity.getEntityClass();
-        final IAddToCriteriaTickManager ftm = entity.getCentreDomainTreeMangerAndEnhancer().getFirstTick();
-        CriteriaReflector.getCriteriaProperties(entity.getType()).stream().map(propertyField -> {
+        final Class<T> root = criteriaEntity.getEntityClass();
+        final IAddToCriteriaTickManager ftm = criteriaEntity.getCentreDomainTreeMangerAndEnhancer().getFirstTick();
+        CriteriaReflector.getCriteriaProperties(criteriaEntity.getType()).stream().map(propertyField -> {
             final String critPropName = getAnnotation(propertyField, CriteriaProperty.class).propertyName();
             return t2(propertyField, getAnnotation(propertyField, SecondParam.class) == null ? ftm.getValue(root, critPropName) : ftm.getValue2(root, critPropName));
         }).collect(toList()).forEach(fieldAndVal -> { // there is a need to collect all results BEFORE forEach processing due to mutable nature of 'getValue*' methods
@@ -259,8 +259,8 @@ public class CriteriaGenerator implements ICriteriaGenerator {
             try {
                 // LOGGER.error(format("\tsynchroniseWithModel prop [%s] setting... val = [%s]", field.getName(), fieldAndVal._2));
                 // need to enforce the setting to ensure invocation of SynchroniseCriteriaWithModelHandler; this will ensure application of editable / required (and other) attributes and integrity of property dependencies
-                entity.getProperty(field.getName()).setValue(fieldAndVal._2, true);
-                // LOGGER.error("\tsynchroniseWithModel. valResult = " + entity.getProperty(field.getName()).getFirstFailure());
+                criteriaEntity.getProperty(field.getName()).setValue(fieldAndVal._2, true);
+                // LOGGER.error("\tsynchroniseWithModel. valResult = " + criteriaEntity.getProperty(field.getName()).getFirstFailure());
             } catch (final Exception ex) {
                 LOGGER.warn(format("\tCould not assign crit value to [%s] in root [%s].", field.getName(), root.getName()));
             } 
