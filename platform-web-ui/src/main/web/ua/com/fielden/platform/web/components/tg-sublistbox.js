@@ -10,6 +10,8 @@ import {Polymer} from '/resources/polymer/@polymer/polymer/lib/legacy/polymer-fn
 import {html} from '/resources/polymer/@polymer/polymer/lib/utils/html-tag.js';
 import { IronControlState } from "/resources/polymer/@polymer/iron-behaviors/iron-control-state.js";
 
+import {deepestActiveElement} from '/resources/reflection/tg-polymer-utils.js';
+
 
 const template = html`
     <div class="selectable-content" on-tap="_onTap">
@@ -51,8 +53,62 @@ Polymer({
         return this.$.content.assignedNodes()[0];
     },
 
+    _focusNextMenuItem: function () {
+        if (this.__content && this.opened) {
+            const menu = this.__content;
+            const length = menu.items.length;
+            const curFocusIndex = Number(menu.indexOf(menu.focusedItem));
+
+            for (let i = (curFocusIndex < 0 ? -1: curFocusIndex) + 1; i < length; i++) {
+                const item = menu.items[i];
+
+                if (item && !item.hasAttribute('disabled')) {
+                    menu._setFocusedItem(item);
+                    return;
+                }
+            }
+
+            this.fire("focus-next-parent-item", this);
+        }
+    },
+
+    _focusPreviousMenuItem: function () {
+        if (this.__content && this.opened) {
+            const menu = this.__content;
+            const length = menu.items.length;
+            const curFocusIndex = Number(menu.indexOf(menu.focusedItem));
+
+            for (var i = (curFocusIndex < 0 ? length : curFocusIndex) - 1; i >= 0; i--) {
+                const item = menu.items[i];
+
+                if (item && !item.hasAttribute('disabled')) {
+                    menu._setFocusedItem(item);
+                    return;
+                }
+                
+            }
+            menu._setFocusedItem(null);
+        }
+        this.focus();
+    },
+
     attached: function() {
         this.listen(this.__parent, 'iron-activate', '_onParentIronActivate');
+        this.async(() => {
+            if (this.__content) {
+                this.__content._focusNext = this._focusNextMenuItem.bind(this);
+                this.__content._focusPrevious = this._focusPreviousMenuItem.bind(this);
+            }
+        }, 1);
+    },
+
+    isLastItemFocused: function () {
+        return Number(this.indexOf(this.focusedItem)) === length - 1;
+    },
+
+    isTriggerFocused: function () {
+        console.log(deepestActiveElement());
+        return deepestActiveElement() === this.__trigger;
     },
 
     dettached: function() {
@@ -149,7 +205,7 @@ Polymer({
      * @param {FocusEvent} event A focus event.
      */
     _onFocus: function(event) {
-        //this.__trigger && this.__trigger.focus();
+        this.__trigger && this.__trigger.focus();
     }
 
 });

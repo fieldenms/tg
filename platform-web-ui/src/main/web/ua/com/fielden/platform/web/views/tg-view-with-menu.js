@@ -1,6 +1,7 @@
 import '/resources/polymer/@polymer/polymer/polymer-legacy.js';
 
 import '/resources/polymer/@polymer/iron-flex-layout/iron-flex-layout.js';
+import '/resources/polymer/@polymer/iron-icon/iron-icon.js';
 import '/resources/polymer/@polymer/iron-icons/iron-icons.js';
 
 import '/resources/polymer/@polymer/paper-styles/paper-styles.js';
@@ -146,9 +147,9 @@ const template = html`
             </div>
             <paper-listbox id="menu" attr-for-selected="name" on-iron-activate="_itemActivated">
                 <template is="dom-repeat" items="[[menuItem.menu]]" as="firstLevelItem" index-as="groupIndex">
-                    <tg-sublistbox name$="[[_calcItemPath(firstLevelItem)]]" opened={{firstLevelItem.opened}} on-focus="_focusSubmenu">
+                    <tg-sublistbox name$="[[_calcItemPath(firstLevelItem)]]" opened={{firstLevelItem.opened}} on-focus="_focusSubmenu" on-focus-next-parent-item="_focusNextMenuItem">
                         <paper-item tooltip-text$="[[firstLevelItem.desc]]" slot="trigger">
-                        <iron-icon icon="[[firstLevelItem.icon]]" has-no-icon$="[[_calcHasNoIcon(firstLevelItem.icon)]]"></iron-icon>
+                            <iron-icon icon="[[firstLevelItem.icon]]" has-no-icon$="[[_calcHasNoIcon(firstLevelItem.icon)]]"></iron-icon>
                             <span class="flex menu-item-title">[[firstLevelItem.key]]</span>
                             <paper-checkbox class$="[[_calcGroupStyle(firstLevelItem)]]" group-item$="[[groupIndex]]" hidden$="[[!canEdit]]" checked="[[firstLevelItem.visible]]" on-change="_changeGroupVisibility" on-tap="_tapCheckbox" tooltip-text$="[[_calcCheckboxTooltip(firstLevelItem.menu, firstLevelItem.visible)]]"></paper-checkbox>
                             <iron-icon icon="[[_calcExpandCollapseIcon(firstLevelItem.opened)]]" opened$="[[firstLevelItem.opened]]" without-menu$="[[!_isMenuPresent(firstLevelItem.menu)]]"></iron-icon>
@@ -270,6 +271,11 @@ Polymer({
         //FIXME menu
         //this.$.menu.addEventListener("keydown", this._menuKeyDown.bind(this));
 
+        this._focusNextMenuItem = this._focusNextMenuItem.bind(this.$.menu);
+        this._focusPreviousMenuItem = this._focusPreviousMenuItem.bind(this.$.menu);
+        this.$.menu._focusNext = this._focusNextMenuItem;
+        this.$.menu._focusPrevious = this._focusPreviousMenuItem;
+
         this.animationConfig = {
             'entry': [
                 {
@@ -298,6 +304,40 @@ Polymer({
             this.$.viewToolBarContainer.appendChild(this.createBackButton());
             this.$.viewToolBar.classList.add('reverse');
             this.$.drawerPanel.drawer.align = 'end';
+        }
+    },
+
+    _focusNextMenuItem: function () {
+        const length = this.items.length;
+        const curFocusIndex = Number(this.indexOf(this.focusedItem));
+
+        for (var i = 1; i < length + 1; i++) {
+            const item = this.items[(curFocusIndex + i + length) % length];
+
+            if (this.focusedItem && this.focusedItem.isTriggerFocused() && this.focusedItem.__content && this.focusedItem.opened) {
+                this.focusedItem._focusNextMenuItem();
+                return;
+            }
+
+            if (!item.hasAttribute('disabled')) {
+                this._setFocusedItem(item);
+                return;
+            }
+        }
+    },
+
+    _focusPreviousMenuItem: function () {
+        const length = this.items.length;
+        const curFocusIndex = Number(this.indexOf(this.focusedItem));
+
+        for (var i = 1; i < length + 1; i++) {
+            const item = this.items[(curFocusIndex - i + length) % length];
+            console.log("view witj menu", item);
+            if (!item.hasAttribute('disabled')) {
+                this._setFocusedItem(item);
+                item._focusPreviousMenuItem();
+                return;
+            }
         }
     },
 
