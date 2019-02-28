@@ -7,7 +7,6 @@ import static ua.com.fielden.platform.criteria.generator.impl.CriteriaReflector.
 import static ua.com.fielden.platform.criteria.generator.impl.CriteriaReflector.not;
 import static ua.com.fielden.platform.criteria.generator.impl.CriteriaReflector.to;
 import static ua.com.fielden.platform.criteria.generator.impl.SynchroniseCriteriaWithModelHandler.applySnapshot;
-import static ua.com.fielden.platform.criteria.generator.impl.SynchroniseCriteriaWithModelHandler.clearRequiredness;
 import static ua.com.fielden.platform.domaintree.impl.AbstractDomainTree.isCritOnlySingle;
 import static ua.com.fielden.platform.domaintree.impl.AbstractDomainTree.isDoubleCriterion;
 import static ua.com.fielden.platform.reflection.AnnotationReflector.getAnnotation;
@@ -58,7 +57,6 @@ import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.reflection.asm.api.NewProperty;
 import ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader;
-import ua.com.fielden.platform.utils.DefinersExecutor;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
 
@@ -273,20 +271,32 @@ public class CriteriaGenerator implements ICriteriaGenerator {
             // finally { LOGGER.error(format("\tsynchroniseWithModel prop [%s] setting...done", field.getName())); }
         });
         criteriaEntity.critOnlySinglePrototypeOptional().ifPresent(cosPrototype -> {
+            // At this stage 'cosPrototype' is in initialising phase, aka 'cosPrototype.isInitialising() == true'.
+            // This was done deliberately to prevent invoking of cosPrototype's definers with 'isInitialising == false' marker, that triggers defining (changing) of other properties, sometimes in badly "overriding" order.
+            // Still, we need to validate and define (with isInitialising == true) all properties.
             final Class<AbstractEntity<?>> entityType = (Class<AbstractEntity<?>>) root;
-            // execute definers
-            DefinersExecutor.execute(cosPrototype, false);
             
-            // complete initialisation phase
-            cosPrototype.endInitialising();
-            
-            // revalidate cosPrototype (this separate process is needed because isInitialising was true and validators were skipped during initialisation process)
+            // Validation need be performed first - we must avoid defining for invalid properties, that are really possible in cdtmae from which criteria entity is derived.
+            // For that purpose we invoke meta-property revalidation.
+            // MetaPropertyFull.revalidate implementation requires 'assigned == true' for revalidation to be actually performed.
+            // ObservableMutatorInterceptor guarantees that 'assigned == true' if value is set in isInitialising phase.
+            // Thus we can be sure that all crit-only single props will be revalidated.
+            cosPrototype.endInitialising(); // this initialising:=false setting is made to ensure that if revalidate method is changed (aka made dependent on isInitialising flag) revalidation still will be processed
             cosPrototype.nonProxiedProperties().filter(mp -> isCritOnlySingle(entityType, mp.getName())).forEach(mp -> {
                 // LOGGER.error(format("\t\trevalidate... property [%s]", mp.getName()));
-                mp.revalidate(false);
+                mp.revalidate(true); // it is very handy to ignore requiredness here instead of making some special clearing after revalidation
             });
-            // Need to clear requiredness errors after revalidation.
-            clearRequiredness(cosPrototype, entityType);
+            cosPrototype.beginInitialising();
+            
+            // Only valid crit-only single properties should be defined.
+            // DefinersExecutor is not applicable for the following reasons:
+            //  1. setOriginalValue should not be actioned, because original values we leave empty.
+            //  2. do not need to process entity-typed values; they can even be instrumented for some reason, however DefinersExecutor does not allow this.
+            cosPrototype.nonProxiedProperties().filter(mp -> isCritOnlySingle(entityType, mp.getName()) && mp.isValid()).forEach(mp -> {
+                final MetaProperty<Object> metaProp = (MetaProperty<Object>) mp;
+                metaProp.define(metaProp.getValue());
+            });
+            cosPrototype.endInitialising();
             
             // take a snapshot of all needed crit-only single prop information to be applied back against criteriaEntity
             final Stream<MetaProperty<?>> snapshot = criteriaEntity.critOnlySinglePrototype().nonProxiedProperties().filter(metaProp -> isCritOnlySingle(entityType, metaProp.getName()));
