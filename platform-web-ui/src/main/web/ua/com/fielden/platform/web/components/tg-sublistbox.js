@@ -31,6 +31,7 @@ Polymer({
             type: Boolean,
             value: false,
             notify: true,
+            reflectToAttribute: true,
             observer: '_openedChanged'
         }
     },
@@ -53,51 +54,14 @@ Polymer({
         return this.$.content.assignedNodes()[0];
     },
 
-    _focusNextMenuItem: function () {
-        if (this.__content && this.opened) {
-            const menu = this.__content;
-            const length = menu.items.length;
-            const curFocusIndex = Number(menu.indexOf(menu.focusedItem));
-
-            for (let i = (curFocusIndex < 0 ? -1: curFocusIndex) + 1; i < length; i++) {
-                const item = menu.items[i];
-
-                if (item && !item.hasAttribute('disabled')) {
-                    menu._setFocusedItem(item);
-                    return;
-                }
-            }
-            menu._setFocusedItem(null);
-            this.fire("focus-next-parent-item", this);
-        }
-    },
-
-    _focusPreviousMenuItem: function () {
-        if (this.__content && this.opened) {
-            const menu = this.__content;
-            const length = menu.items.length;
-            const curFocusIndex = Number(menu.indexOf(menu.focusedItem));
-
-            for (var i = (curFocusIndex < 0 ? length : curFocusIndex) - 1; i >= 0; i--) {
-                const item = menu.items[i];
-
-                if (item && !item.hasAttribute('disabled')) {
-                    menu._setFocusedItem(item);
-                    return;
-                }
-                
-            }
-            menu._setFocusedItem(null);
-        }
-        this.focus();
-    },
-
     attached: function() {
         this.listen(this.__parent, 'iron-activate', '_onParentIronActivate');
         this.async(() => {
             if (this.__content) {
                 this.__content._focusNext = this._focusNextMenuItem.bind(this);
                 this.__content._focusPrevious = this._focusPreviousMenuItem.bind(this);
+                this._oldMenuEscKey = this.__content._onEscKey;
+                this.__content._onEscKey = this._menuEscKey.bind(this); 
             }
         }, 1);
     },
@@ -147,6 +111,53 @@ Polymer({
         } else {
             this.open();
         }
+    },
+
+    _focusNextMenuItem: function () {
+        if (this.__content && this.opened) {
+            const menu = this.__content;
+            const length = menu.items.length;
+            const curFocusIndex = Number(menu.indexOf(menu.focusedItem));
+
+            for (let i = (curFocusIndex < 0 ? -1: curFocusIndex) + 1; i < length; i++) {
+                const item = menu.items[i];
+
+                if (item && !item.hasAttribute('disabled')) {
+                    menu._setFocusedItem(item);
+                    return;
+                }
+            }
+            menu._setFocusedItem(null);
+            this.fire("focus-next-parent-item", this);
+        }
+    },
+
+    _focusPreviousMenuItem: function () {
+        if (this.__content && this.opened) {
+            const menu = this.__content;
+            const length = menu.items.length;
+            const curFocusIndex = Number(menu.indexOf(menu.focusedItem));
+
+            for (var i = (curFocusIndex < 0 ? length : curFocusIndex) - 1; i >= 0; i--) {
+                const item = menu.items[i];
+
+                if (item && !item.hasAttribute('disabled')) {
+                    menu._setFocusedItem(item);
+                    return;
+                }
+                
+            }
+            menu._setFocusedItem(null);
+        }
+        this.focus();
+    },
+
+    _menuEscKey: function (event) {
+        this._oldMenuEscKey(event);
+        if (this.__content) {
+            this.__content._setFocusedItem(null);
+        }
+        this.fire("tg-submenu-module-esc");
     },
 
     /**

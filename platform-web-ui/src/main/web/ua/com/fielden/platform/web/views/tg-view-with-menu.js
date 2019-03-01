@@ -60,7 +60,6 @@ const template = html`
         .main-content {
             @apply --layout-vertical;
         }
-        /*FIXME the display of checkbox label should be hidden*/
         paper-checkbox {
             margin: 0 4px 2px 2px;
             --paper-checkbox-size: 16px;
@@ -85,13 +84,6 @@ const template = html`
             right: 0;
             top: 44px;
         }
-        /* iron-icon {
-            transform: translate(0, -1px);
-            --iron-icon-width: 16px;
-            --iron-icon-height: 16px;
-            min-width: 16px;
-            min-height: 16px;
-        } */
         iron-icon[without-menu],
         iron-icon[has-no-icon] {
             visibility: hidden;
@@ -147,14 +139,14 @@ const template = html`
             </div>
             <paper-listbox id="menu" attr-for-selected="name" on-iron-activate="_itemActivated">
                 <template is="dom-repeat" items="[[menuItem.menu]]" as="firstLevelItem" index-as="groupIndex">
-                    <tg-sublistbox name$="[[_calcItemPath(firstLevelItem)]]" opened={{firstLevelItem.opened}} on-focus="_focusSubmenu" on-focus-next-parent-item="_focusNextMenuItem">
+                    <tg-sublistbox name$="[[_calcItemPath(firstLevelItem)]]" opened={{firstLevelItem.opened}} on-focus="_focusSubmenu" on-focus-next-parent-item="_focusNextMenuItem" on-tg-submenu-module-esc="_closeDrawerOnEsc">
                         <paper-item tooltip-text$="[[firstLevelItem.desc]]" slot="trigger">
                             <iron-icon icon="[[firstLevelItem.icon]]" has-no-icon$="[[_calcHasNoIcon(firstLevelItem.icon)]]"></iron-icon>
                             <span class="flex menu-item-title">[[firstLevelItem.key]]</span>
                             <paper-checkbox class$="[[_calcGroupStyle(firstLevelItem)]]" group-item$="[[groupIndex]]" hidden$="[[!canEdit]]" checked="[[firstLevelItem.visible]]" on-change="_changeGroupVisibility" on-tap="_tapCheckbox" tooltip-text$="[[_calcCheckboxTooltip(firstLevelItem.menu, firstLevelItem.visible)]]"></paper-checkbox>
                             <iron-icon icon="[[_calcExpandCollapseIcon(firstLevelItem.opened)]]" opened$="[[firstLevelItem.opened]]" without-menu$="[[!_isMenuPresent(firstLevelItem.menu)]]"></iron-icon>
                         </paper-item>
-                        <template is="dom-if" if="[[_isMenuPresent(firstLevelItem.menu)]]" on-dom-change="_menuItemsRendered">
+                        <template is="dom-if" if="[[_isMenuPresent(firstLevelItem.menu)]]">
                             <paper-listbox slot="content" name$="[[_calcItemPath(firstLevelItem)]]" attr-for-selected="name">
                                 <template is="dom-repeat" items="[[firstLevelItem.menu]]">
                                     <paper-item class="submenu-item" name$="[[_calcItemPath(firstLevelItem, item, groupIndex)]]" tooltip-text$="[[item.desc]]">
@@ -268,13 +260,13 @@ Polymer({
     },
     
     ready: function () {
-        //FIXME menu
-        //this.$.menu.addEventListener("keydown", this._menuKeyDown.bind(this));
-
         this._focusNextMenuItem = this._focusNextMenuItem.bind(this.$.menu);
         this._focusPreviousMenuItem = this._focusPreviousMenuItem.bind(this.$.menu);
+        this._menuEscKey = this._menuEscKey.bind(this);
         this.$.menu._focusNext = this._focusNextMenuItem;
         this.$.menu._focusPrevious = this._focusPreviousMenuItem;
+        this._oldMenuEscKey = this.$.menu._onEscKey;
+        this.$.menu._onEscKey = this._menuEscKey;
 
         this.animationConfig = {
             'entry': [
@@ -341,11 +333,17 @@ Polymer({
         }
     },
 
+    _menuEscKey: function (event) {
+        this._oldMenuEscKey(event);
+        this._closeDrawerOnEsc();
+    },
+
+    _closeDrawerOnEsc:  function () {
+        this.$.drawerPanel.drawer.close();
+        this.fire("tg-module-menu-closed");
+    },
+
     attached: function () {
-        //FIXME menu
-        /* this.$.menu.querySelectorAll("paper-menu").forEach(function (menu) {
-            menu.addEventListener("keydown", this._menuKeyDown.bind(this))
-        }); */
         this.async(function () {
             if (!this._selectedPage) {
                 this.set("_selectedPage", "_");
@@ -380,20 +378,6 @@ Polymer({
 
     _calcHasNoIcon: function (icon) {
         return !icon;
-    },
-
-    _menuItemsRendered: function (event) {
-        const subItem = event.model.firstLevelItem;
-        if (this._isMenuPresent(subItem.menu)) {
-            this.shadowRoot.querySelector("paper-menu[name='" + this._calcItemPath(subItem) + "']").addEventListener("keydown", this._menuKeyDown.bind(this));
-        }
-    },
-
-    _menuKeyDown: function (event) {
-        if (event.keyCode === 27 /*Escape*/ ) {
-            this.$.drawerPanel.drawer.close();
-            this.fire("tg-module-menu-closed");
-        }
     },
 
     openModuleMenu: function (event) {
@@ -614,7 +598,6 @@ Polymer({
         }
     },
 
-    /*FIXME*/
     _focusSubmenu: function (e) {
         var target = e.target || e.srcElement;
         if (e.relatedTarget === this.$.menu) {
