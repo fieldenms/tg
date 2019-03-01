@@ -67,7 +67,7 @@ Polymer({
                     return;
                 }
             }
-
+            menu._setFocusedItem(null);
             this.fire("focus-next-parent-item", this);
         }
     },
