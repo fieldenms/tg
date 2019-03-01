@@ -1,5 +1,8 @@
 package ua.com.fielden.platform.entity.validation;
 
+import static ua.com.fielden.platform.error.Result.failure;
+import static ua.com.fielden.platform.error.Result.successful;
+
 import java.lang.annotation.Annotation;
 import java.math.BigDecimal;
 import java.util.Set;
@@ -11,14 +14,16 @@ import ua.com.fielden.platform.types.Money;
 /**
  * This validator implements a check for a numerical value to be not greater than the specified limit.
  *
- * @author 01es
+ * @author TG Team
  *
  */
 public class MaxValueValidator implements IBeforeChangeEventHandler<Object> {
-    private final BigDecimal limit;
+    protected String limit;
+
+    protected MaxValueValidator() { }
 
     public MaxValueValidator(final Integer limit) {
-        this.limit = new BigDecimal(limit);
+        this.limit = limit.toString();
     }
 
     @Override
@@ -31,9 +36,9 @@ public class MaxValueValidator implements IBeforeChangeEventHandler<Object> {
         final String strValue = (newValue instanceof Money) ? ((Money) newValue).getAmount().toString() : newValue.toString();
         final BigDecimal value = new BigDecimal(strValue);
 
-        return value.compareTo(limit) > 0 //
-        ? new Result(entity, new Exception("Value '" + value + "' is greater than the maximum limit of " + limit + ".")) //
-                : new Result(entity, "Value '" + value + "' is less than the maximum limit of " + limit + ".");
+        return value.compareTo(new BigDecimal(limit)) > 0
+                ? failure(entity, "Value '" + value + "' is greater than the maximum limit of " + limit + ".") //
+                : successful(entity);
     }
 
 }
