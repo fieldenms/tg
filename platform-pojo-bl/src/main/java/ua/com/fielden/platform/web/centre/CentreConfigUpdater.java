@@ -17,7 +17,9 @@ import ua.com.fielden.platform.entity.annotation.mutator.BeforeChange;
 import ua.com.fielden.platform.entity.annotation.mutator.Handler;
 import ua.com.fielden.platform.entity.annotation.mutator.StrParam;
 import ua.com.fielden.platform.entity.functional.centre.CentreContextHolder;
+import ua.com.fielden.platform.entity.validation.GreaterOrEqualValidator;
 import ua.com.fielden.platform.entity.validation.GreaterValidator;
+import ua.com.fielden.platform.entity.validation.MaxValueValidator;
 
 /**
  * Functional entity for updating centre configuration: centre's column visibility / order and centre's sorting.
@@ -51,15 +53,16 @@ public class CentreConfigUpdater extends AbstractFunctionalEntityForCollectionMo
     private boolean centreChanged;
 
     @IsProperty
-    @Title(value = "Page Capacity", desc = "The number of entities on the page")
+    @Title(value = "Page Capacity", desc = "The maximum number of entities retrieved.")
     @Required
-    @BeforeChange({@Handler(value = GreaterValidator.class,
-    /*      */ str = {@StrParam(name = "limit", value = "0")})})
+    @BeforeChange({@Handler(value = GreaterValidator.class, str = {@StrParam(name = "limit", value = "0")}),
+                   @Handler(value = MaxValueValidator.class, str = {@StrParam(name = "limit", value = "300")})})
     private Integer pageCapacity;
 
     @IsProperty
-    @Title(value = "Visible Rows", desc = "The number of visible rows")
+    @Title(value = "Visible Rows", desc = "The number of visible rows. Value 0 (zero) stands for \"display all data retrieved\".")
     @Required
+    @BeforeChange({@Handler(value = GreaterOrEqualValidator.class, str = {@StrParam(name = "limit", value = "0")})})
     private Integer visibleRows;
 
     @Observable
