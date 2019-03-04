@@ -40,6 +40,7 @@ const template = html`
         :host {
             @apply --layout-vertical;
             --paper-listbox-color: var(--paper-light-blue-700);
+            --paper-item-min-height: 40px;
             --paper-listbox: {
                 padding: 0;
                 margin: 0;
@@ -56,6 +57,13 @@ const template = html`
         }
         paper-listbox {
             @apply --layout-flex;
+        }
+        tg-sublistbox {
+            display: block;
+        }
+        tg-sublistbox[opened] {
+            border-top: 2px solid var(--paper-blue-100);
+            border-bottom: 2px solid var(--paper-blue-100);
         }
         .main-content {
             @apply --layout-vertical;
@@ -472,9 +480,14 @@ Polymer({
             return;
         }
         const submodulePart = submodule.substring(1).split("?")[0];
+        /* This decoding is needed because the submodule part might be enoceded or decoded. It will encoded if user click some menu item
+         * amd will be decoded when refreshing the page*/
+        const parts = submodulePart.split('/').map(part => decodeURIComponent(part))
         if (menuItem.key === decodeURIComponent(this.selectedModule)) {
-            this._selectMenu(submodulePart);
-            this._selectPage(submodulePart);
+            /* Encoding and joining path parts back in order to select proper menu item and page */
+            const fixedPath = parts.map(part => encodeURIComponent(part)).join('/');
+            this._selectMenu(fixedPath);
+            this._selectPage(fixedPath);
         }
     },
 
@@ -583,9 +596,8 @@ Polymer({
     },
 
     _animationFinished: function (e, detail, source) {
-        var viewToLoad;
         if (this.$.pages.selected !== '_') {
-            viewToLoad = detail.toPage;
+            const viewToLoad = detail.toPage;
             if (viewToLoad) {
                 if (!viewToLoad.wasLoaded()) {
                     viewToLoad.load(decodeURIComponent(this.submodule.substring(1)).split("?")[1]);

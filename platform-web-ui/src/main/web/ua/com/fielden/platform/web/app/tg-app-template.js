@@ -331,7 +331,6 @@ Polymer({
 
     _showView: function (e) {
         var menuPathItems = e.detail.split("/");
-        var moduleName = decodeURIComponent(menuPathItems[0]);
         var route = "/" + menuPathItems[0];
         menuPathItems.splice(0,1);
         route += "/" + (menuPathItems.length > 0 ? menuPathItems.join("/") : "_");

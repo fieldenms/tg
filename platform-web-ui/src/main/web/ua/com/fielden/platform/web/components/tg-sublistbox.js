@@ -84,7 +84,9 @@ Polymer({
      */
     open: function() {
         if (!this.disabled && !this._active) {
-            this.$.collapse.show();
+            if (this.__content) {
+                this.$.collapse.show();
+            }
             this._active = true;
             this.__trigger && this.__trigger.classList.add('iron-selected');
             this.__content && this.__content.focus();
@@ -96,7 +98,9 @@ Polymer({
      */
     close: function() {
         if (this._active) {
-            this.$.collapse.hide();
+            if (this.__content) {
+                this.$.collapse.hide();
+            }
             this._active = false;
             this.__trigger && this.__trigger.classList.remove('iron-selected');
         }
