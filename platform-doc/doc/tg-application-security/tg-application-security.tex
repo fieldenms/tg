@@ -1,0 +1,264 @@
+%\documentclass[a4paper,12pt,oneside,openright,final]{memoir} %twocolumn,
+\documentclass[a4paper,12pt,oneside,openright]{memoir}
+
+\let\footruleskip\undefined
+\usepackage[utf8]{inputenc}
+\usepackage[english]{babel}
+\usepackage{etex}
+\usepackage{times}
+\DisemulatePackage{setspace}
+\usepackage{setspace}
+\usepackage{amssymb}
+\usepackage{amsfonts}
+
+\usepackage{graphicx}
+\usepackage[printwatermark]{xwatermark}
+% uncomment for watermarks
+%\newwatermark[allpages,color=red!10,angle=45,scale=5,xpos=-15,ypos=30]{DRAFT}
+
+\usepackage{alltt}
+\usepackage{moreverb}
+%for more info on hyperref package see http://en.wikibooks.org/wiki/LaTeX/Packages/Hyperref
+\usepackage[pdftex,colorlinks=true,linkcolor=blue, citecolor=magenta]{hyperref}
+\usepackage{eso-pic}
+\usepackage{transparent}
+\setlength{\columnsep}{3em}
+
+\usepackage{tcolorbox}
+\usepackage{listings}
+\definecolor{codebgcolor}{HTML}{6E84D6}  
+\definecolor{codefgcolor}{HTML}{000000}% 071D70
+\definecolor{basiccolor}{HTML}{000000}%1435AD
+\definecolor{stringcolor}{HTML}{050505}% 2C3E82
+\definecolor{highlight}{HTML}{FFB100}
+\definecolor{annotationbgcolor}{HTML}{FFD473}
+
+\usepackage{wrapfig}
+\usepackage{caption}
+\usepackage{subcaption}
+\usepackage{alltt}
+\usepackage{moreverb}
+% tikz related packages to provide scalable graphics 
+\usepackage{tikz}
+\usetikzlibrary{calc,mindmap,backgrounds,positioning,arrows,shapes,shapes.arrows,shapes.misc,automata,petri,patterns,scopes,chains,matrix,decorations.pathmorphing,shadows,calc}
+
+\usepackage{geometry}
+\geometry{hmargin={15mm,15mm},vmargin={15mm,20mm}}
+
+\usepackage[pages=some]{background}
+
+\backgroundsetup{
+  scale=1.2,
+  angle=0,
+  opacity=0.4,
+  contents={
+    \includegraphics[width=1.1\paperwidth,height=1.1\paperheight, keepaspectratio]{images/00-background.png}} 
+}
+
+
+%%%%%%%%%%%%% copyright %%%%%%%%%%%%%%
+\title{Application security in TG applications}
+\author{Fielden Management Services Pty. Ltd.}
+\date{}
+\usepackage{hyperxmp}
+\hypersetup{
+    pdftitle={Application security in TG applications},
+    pdfauthor={Fielden Management Services Pty. Ltd.},
+    pdfsubject={An overview of key principles and approaches to security in TG applications.},
+    pdfcopyright={Copyright (C) 2019 by Fielden Management Services Pty. Ltd.  All rights reserved.}
+}
+
+\usepackage{xcolor}
+\makeevenhead{headings}%
+    {\thepage}{}{\slshape\bookname~\thebook\qquad\partname~\thepart\qquad\leftmark}
+    \makeoddfoot{headings}{\slshape\rightmark}{\color{gray}Copyright (C) 2019 by Fielden Management Services Pty. Ltd.  All rights reserved.}{\thepage}
+	\makeoddhead{headings}{\slshape\rightmark}{}{}
+
+\copypagestyle{headingsnobook}{headings}
+\makeevenhead{headingsnobook}{\thepage}{}{\slshape\leftmark}
+
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage{url}
+\usepackage{pdfcolmk}
+%% for dingbats
+\usepackage{pifont}
+
+
+\newcommand*{\titleTH}{\begingroup% T&H Typography
+\raggedleft
+\vspace*{\baselineskip}
+{\Large ~}\\[0.167\textheight]
+{\bfseries Trident Genesis}\\[\baselineskip]
+{\textcolor{basiccolor}{\Huge Application security}}\\[\baselineskip]
+{\small authentication, authorisation and environment}\par
+\vfill
+{\Large Fielden Management Services Pty Ltd}\par
+%\vspace*{3\baselineskip}
+\endgroup}
+
+
+\begin{document}
+\titleTH
+\thispagestyle{empty}
+\clearpage
+\counterwithout{figure}{chapter}
+
+\lstset{language=Java,
+	  escapechar=\%,
+	  numbers=left, numberstyle=\tiny, basicstyle=\tiny, basicstyle=\scriptsize\color{basiccolor}, stepnumber=1, numbersep=5pt, keywordstyle=\bfseries\color{codefgcolor}, stringstyle=\color{stringcolor}}
+
+\onehalfspacing
+
+\section*{Introduction}
+	Web facing applications are exposed to a lot more risk than Intranet applications, and thus require a lot more resilient to hacking security system that could withstand both eavesdropping and interrogative adversaries.
+	Application security cannot be an ``afterthought'' and simply must by weaved into the underlying software architecture.
+	This document provides an overview of the security system for applications that are based on Trident Genesis.
+	Having Trident Genesis as their foundation, applications can leverage a wide range of its intrinsic capabilities to:
+
+	\begin{itemize}
+	\item sanitise input data and ensure its validity,
+	\item authenticate requests, 
+	\item establish and protect authorisation boundaries,
+	\item filter responses to prevent leaking of sensitive data, and
+	\item audit access to web resources.
+	\end{itemize}
+
+	Although the primary objective of this document is to provide an overview of the application security.
+	However, we also touch on the question of security pertaining to the deployment environment for TG-based applications.
+	Hosting of cloud-native applications is either based on VMs or containers, and there is an on-going debate as to what approach is more secure and what can be improved.
+	The deployment environment that we recommend for TG applications follows a hybrid approach, whereby VMs are used for isolation and Docker containers are used for controlled sharing and reliable continuous delivery.
+
+\section*{Authentication}
+
+\subsection*{Server Authentication for User Protection}
+
+\subsubsection*{How HTTPS works}
+
+\subsubsection*{Communication over HTTPS}
+
+\subsection*{Client Authentication for Server Protection}
+
+\subsubsection*{Login and 2-factor authentication}
+
+\paragraph*{Password strength}
+
+\paragraph*{Preventing rapid-fire login attempts}
+
+\subsubsection*{Restoring a password}
+
+
+\subsubsection*{Reduced Sign-On instead of Single Sign-On}
+
+\paragraph*{Authenticators}
+
+
+\section*{Authorisation}
+
+\subsection*{User roles and security tokens}
+
+\paragraph{Security Matrix.}
+
+\section*{User-driven data filtering}
+
+\section*{Deployment environment and its security}
+
+%
+% ---- Bibliography ----
+%
+\begin{thebibliography}{5}
+
+\bibitem{Kay2003}
+Kay, A. On the Meaning of ``Object-Oriented Programming''
+\href{http://www.purl.org/stefan_ram/pub/doc_kay_oop_en}{Online}
+
+\bibitem{Barnes:2007:ORM}
+Bar\-nes, J.~M. Object-Relational Mapping as a Persistence Mechanism for Object-Oriented Applications, 2007,
+\href{http://digitalcommons.macalester.edu/mathcs_honors/6/}{Online}
+
+\bibitem{DeMichiel:2012:JPA}
+De\-Mi\-chiel. L. JSR 338: Java Persistence API, Version 2.1, 2012,
+\href{http://jcp.org/aboutJava/communityprocess/pr/jsr338/index.html}{Online}
+
+\bibitem{evans2003}
+Evans, E. Domain-Driven Design: Tackling Complexity in the Heart of Software, 2003, Addison-Wesley Professional.
+
+\bibitem{Fowler:2010:DSL}
+Fow\-ler, M. Domain-Specific Languages, Addison-Wesley Professional, 2010.
+
+\bibitem{Fowler:2012:OH}
+Fow\-ler. M. OrmHate, 2012,
+\href{http://martinfowler.com/bliki/OrmHate.html}{Online}
+
+\bibitem{Fielding2000}
+Fielding, R. T. Architectural styles and the design of network-based software architectures: Phd thesis, University of California, Irvine, USA, 2000.
+
+\bibitem{HBBPB:2008}
+Hambrick, G. et al. Persistence in the Enterprise: A Guide to Persistence Technologies, 2008, IBM Press.
+
+\bibitem{haywood2009}
+Haywood, D. Domain-Driven Design Using Naked Objects, 2009, Pragmatic Bookshelf.
+
+\bibitem{Hodych:2012}
+Hodych, O. et al. Visual Domain-Specific Query Language for Business Applications, in Proceedings of 14-th International Conference on System Analysis and Information Technologies (SAIT 2012), Kyiv, Ukraine, 2012, pp. 311-312.
+
+\bibitem{Hodych:2013}
+Hodych, O. et al. Object-relational mapping: Limitations of data querying, in Proceedings of 15-th International Conference on System Analysis and Information Technologies (SAIT 2013), Kyiv, Ukraine, May 27-31, 2013. — P. 376–377.
+
+\bibitem{HHN1986}
+Hutchins, E., Holland, J. and Norman, D. Direct Manipulation Interfaces, in User Centered System Design: New Perspectives on Human-computer Interaction, 1986, CRC Press.
+
+\bibitem{jacobson1992}
+Jacobson, I. Object Oriented Software Engineering: A Use Case Driven Approach, 1992, Addison-Wesley Professional.
+
+\bibitem{UBob:2002}
+Martin, R.~C. Agile Software Development, Principles, Patterns, and Practices, 2002, Prentice Hall.
+
+\bibitem{Neward:2006:VCS}
+New\-ard. T. The Vietnam of Computer Science, 2006,
+\href{http://blogs.tedneward.com/2006/06/26/The+Vietnam+Of+Computer+Science.aspx}{Online}
+
+\bibitem{oli2007}
+Oliv\'{e}, A. Conceptual Modeling of Information Systems, 2007, Springer.
+
+\bibitem{pawson2001}
+Pawson, R. and Matthews, R. Naked objects: a technique for designing more expressive systems, SIGPLAN Notices, V.36(12), pp.61--67, 2001.
+
+\bibitem{pawson2004}
+Pawson, R., Naked Objects, Ph.D Thesis, 2004, Trinity College, Dublin, Ireland.
+
+\bibitem{vernon2013}
+Vernon, V. Implementing Domain-Driven Design, 2013, Addison-Wesley Professional.
+
+\bibitem{shneiderman1982}
+Shneiderman, B. The future of interactive systems and the emergence of direct manipulation. Behaviour and Information Technology, 1(3):237–256, 1982.
+
+\bibitem{shneiderman1983}
+Shneiderman, B. Direct manipulation: A step beyond programming languages. Computer, 16(8):57–69, 1983.
+
+\bibitem{fowler2003} Fowler, M. AnemicDomainModel, 
+\href{http://www.martinfowler.com/bliki/AnemicDomainModel.html}{Online}
+
+\bibitem{fowler2006} Fowler, M. DslBoundary, 
+\href{http://martinfowler.com/bliki/DslBoundary.html}{Online}
+
+\bibitem{bozhanov2010} Bozhanov, B. On Domain-Driven Design, Anemic Domain Model, Code Generation, Dependency Injection and More…
+\href{http://techblog.bozho.net/on-domain-driven-design-anemic-domain-models-code-generation-dependency-injection-and-more/}{Online}
+
+\bibitem{sapm2014}  The Anaemic Domain Model is no Anti-Pattern, it’s a SOLID design, The School of Informatics, University of Edinburgh,
+\href{https://blog.inf.ed.ac.uk/sapm/2014/02/04/the-anaemic-domain-model-is-no-anti-pattern-its-a-solid-design/}{Online}
+
+\bibitem{yegge2006} Yegge, S. Execution in the Kingdom of Nouns,  
+\href{http://steve-yegge.blogspot.com.au/2006/03/execution-in-kingdom-of-nouns.html}{Online}
+
+\bibitem{SOLID} SOLID (object-oriented design), 
+\href{https://en.wikipedia.org/wiki/SOLID_(object-oriented_design)}{Online}
+
+\bibitem{CQRS} CQRS design pattern, 
+\href{https://cqrs.files.wordpress.com/2010/11/cqrs_documents.pdf}{Online}
+
+\end{thebibliography}
+%
+
+\end{document}
+
