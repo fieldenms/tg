@@ -32,7 +32,7 @@ public class QrySource1BasedOnSubqueries extends AbstractQrySource1<QrySource2Ba
     private static Map<String, List<Yield1>> populateYieldMatrixFromQueryModels(final List<EntQuery1> models) {
         final Map<String, List<Yield1>> yieldsMatrix = new HashMap<>();        
         for (final EntQuery1 entQuery : models) {
-            for (final Yield1 yield : entQuery.getYields().getYields()) {
+            for (final Yield1 yield : entQuery.yields.getYields()) {
                 final List<Yield1> foundYields = yieldsMatrix.get(yield.getAlias());
                 if (foundYields != null) {
                     foundYields.add(yield);

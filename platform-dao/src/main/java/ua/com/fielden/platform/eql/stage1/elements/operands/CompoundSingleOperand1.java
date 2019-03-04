@@ -1,24 +1,17 @@
 package ua.com.fielden.platform.eql.stage1.elements.operands;
 
+import java.util.Objects;
+
 import ua.com.fielden.platform.entity.query.fluent.enums.ArithmeticalOperator;
 import ua.com.fielden.platform.eql.stage2.elements.ISingleOperand2;
 
 public class CompoundSingleOperand1 {
-    private final ISingleOperand1<? extends ISingleOperand2> operand;
-    private final ArithmeticalOperator operator;
+    public final ISingleOperand1<? extends ISingleOperand2> operand;
+    public final ArithmeticalOperator operator;
 
     public CompoundSingleOperand1(final ISingleOperand1<? extends ISingleOperand2> operand, final ArithmeticalOperator operator) {
-        super();
         this.operand = operand;
         this.operator = operator;
-    }
-
-    public ISingleOperand1<? extends ISingleOperand2> getOperand() {
-        return operand;
-    }
-
-    public ArithmeticalOperator getOperator() {
-        return operator;
     }
 
     @Override
@@ -35,23 +28,13 @@ public class CompoundSingleOperand1 {
         if (this == obj) {
             return true;
         }
-        if (obj == null) {
-            return false;
-        }
+
         if (!(obj instanceof CompoundSingleOperand1)) {
             return false;
         }
+        
         final CompoundSingleOperand1 other = (CompoundSingleOperand1) obj;
-        if (operand == null) {
-            if (other.operand != null) {
-                return false;
-            }
-        } else if (!operand.equals(other.operand)) {
-            return false;
-        }
-        if (operator != other.operator) {
-            return false;
-        }
-        return true;
+        
+        return Objects.equals(operand, other.operand) && Objects.equals(operator, other.operator);
     }
 }

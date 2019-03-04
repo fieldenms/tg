@@ -2,6 +2,7 @@ package ua.com.fielden.platform.eql.stage1.elements.operands;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 import ua.com.fielden.platform.eql.meta.PropsResolutionContext;
 import ua.com.fielden.platform.eql.meta.TransformationResult;
@@ -26,8 +27,8 @@ public class Expression1 implements ISingleOperand1<Expression2> {
         final TransformationResult<? extends ISingleOperand2> firstTransformationResult = first.transform(resolutionContext);
         PropsResolutionContext currentResolutionContext = firstTransformationResult.getUpdatedContext();
         for (final CompoundSingleOperand1 item : items) {
-            final TransformationResult<? extends ISingleOperand2> itemTransformationResult = item.getOperand().transform(currentResolutionContext);
-            transformed.add(new CompoundSingleOperand2(itemTransformationResult.getItem(), item.getOperator()));
+            final TransformationResult<? extends ISingleOperand2> itemTransformationResult = item.operand.transform(currentResolutionContext);
+            transformed.add(new CompoundSingleOperand2(itemTransformationResult.getItem(), item.operator));
             currentResolutionContext = itemTransformationResult.getUpdatedContext();
         }
         return new TransformationResult<Expression2>(new Expression2(firstTransformationResult.getItem(), transformed), currentResolutionContext);
@@ -47,27 +48,12 @@ public class Expression1 implements ISingleOperand1<Expression2> {
         if (this == obj) {
             return true;
         }
-        if (obj == null) {
-            return false;
-        }
+
         if (!(obj instanceof Expression1)) {
             return false;
         }
         final Expression1 other = (Expression1) obj;
-        if (first == null) {
-            if (other.first != null) {
-                return false;
-            }
-        } else if (!first.equals(other.first)) {
-            return false;
-        }
-        if (items == null) {
-            if (other.items != null) {
-                return false;
-            }
-        } else if (!items.equals(other.items)) {
-            return false;
-        }
-        return true;
+        
+        return Objects.equals(first, other.first) && Objects.equals(items, other.items);
     }
 }

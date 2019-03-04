@@ -5,6 +5,7 @@ import static java.lang.String.format;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Objects;
 
 import ua.com.fielden.platform.entity.query.exceptions.EqlStage1ProcessingException;
 import ua.com.fielden.platform.eql.meta.AbstractPropInfo;
@@ -16,8 +17,8 @@ import ua.com.fielden.platform.eql.stage2.elements.EntProp2;
 import ua.com.fielden.platform.eql.stage2.elements.IQrySource2;
 
 public class EntProp1 extends AbstractElement1 implements ISingleOperand1<EntProp2> {
-    private String name;
-    private boolean external;
+    public String name;
+    public boolean external;
 
     public EntProp1(final String name, final boolean external, final int contextId) {
         super(contextId);
@@ -38,7 +39,7 @@ public class EntProp1 extends AbstractElement1 implements ISingleOperand1<EntPro
     public TransformationResult<EntProp2> transform(final PropsResolutionContext resolutionContext) {
         
         final Iterator<List<IQrySource2>> it = resolutionContext.getSources().iterator();
-        if (isExternal()) {
+        if (external) {
             it.next();
         }
 
@@ -52,24 +53,24 @@ public class EntProp1 extends AbstractElement1 implements ISingleOperand1<EntPro
             }
         }
 
-        throw new EqlStage1ProcessingException(format("Can't resolve property [%s].", getName()));
+        throw new EqlStage1ProcessingException(format("Can't resolve property [%s].", name));
         
     }
     
     private PropResolution resolvePropAgainstSource(final IQrySource2 source, final EntProp1 entProp) {
-        final AbstractPropInfo<?, ?> asIsResolution = source.entityInfo().resolve(entProp.getName());
-        if (source.alias() != null && entProp.getName().startsWith(source.alias() + ".")) {
-            final String aliasLessPropName = entProp.getName().substring(source.alias().length() + 1);
+        final AbstractPropInfo<?, ?> asIsResolution = source.entityInfo().resolve(entProp.name);
+        if (source.alias() != null && entProp.name.startsWith(source.alias() + ".")) {
+            final String aliasLessPropName = entProp.name.substring(source.alias().length() + 1);
             final AbstractPropInfo<?, ?> aliasLessResolution = source.entityInfo().resolve(aliasLessPropName);
             if (aliasLessResolution != null) {
                 if (asIsResolution == null) {
                     return new PropResolution(aliasLessPropName, source, aliasLessResolution.javaType());
                 } else {
-                    throw new EqlStage1ProcessingException(format("Ambiguity while resolving prop [%s]. Both [%s] and [%s] are resolvable against the given source.", entProp.getName(), entProp.getName(), aliasLessPropName));
+                    throw new EqlStage1ProcessingException(format("Ambiguity while resolving prop [%s]. Both [%s] and [%s] are resolvable against the given source.", entProp.name, entProp.name, aliasLessPropName));
                 }
             }
         }
-        return asIsResolution != null ? new PropResolution(entProp.getName(), source, asIsResolution.javaType()) : null;
+        return asIsResolution != null ? new PropResolution(entProp.name, source, asIsResolution.javaType()) : null;
     }
 
     private PropResolution resolveProp(final List<IQrySource2> sources, final EntProp1 entProp) {
@@ -82,19 +83,10 @@ public class EntProp1 extends AbstractElement1 implements ISingleOperand1<EntPro
         }
 
         if (result.size() > 1) {
-            throw new EqlStage1ProcessingException(format("Ambiguity while resolving prop [%s]", entProp.getName()));
+            throw new EqlStage1ProcessingException(format("Ambiguity while resolving prop [%s]", entProp.name));
         }
 
         return result.size() == 1 ? result.get(0) : null;
-    }
-
-
-    public String getName() {
-        return name;
-    }
-
-    public boolean isExternal() {
-        return external;
     }
 
     @Override
@@ -110,20 +102,13 @@ public class EntProp1 extends AbstractElement1 implements ISingleOperand1<EntPro
         if (this == obj) {
             return true;
         }
-        if (obj == null) {
-            return false;
-        }
+
         if (!(obj instanceof EntProp1)) {
             return false;
         }
+        
         final EntProp1 other = (EntProp1) obj;
-        if (name == null) {
-            if (other.name != null) {
-                return false;
-            }
-        } else if (!name.equals(other.name)) {
-            return false;
-        }
-        return true;
+        
+        return Objects.equals(name, other.name) && external == other.external;
     }
 }

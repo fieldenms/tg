@@ -1,12 +1,14 @@
 package ua.com.fielden.platform.eql.stage1.elements.operands;
 
+import java.util.Objects;
+
 import ua.com.fielden.platform.eql.meta.PropsResolutionContext;
 import ua.com.fielden.platform.eql.meta.TransformationResult;
 import ua.com.fielden.platform.eql.stage2.elements.EntValue2;
 
 public class EntValue1 implements ISingleOperand1<EntValue2> {
-    private final Object value;
-    private final boolean ignoreNull;
+    public final Object value;
+    public final boolean ignoreNull;
 
     public EntValue1(final Object value) {
         this(value, false);
@@ -23,7 +25,7 @@ public class EntValue1 implements ISingleOperand1<EntValue2> {
 
     @Override
     public TransformationResult<EntValue2> transform(final PropsResolutionContext resolutionContext) {
-        final EntValue2 transformed = new EntValue2(getValue(), isIgnoreNull());
+        final EntValue2 transformed = new EntValue2(value, ignoreNull);
         return new TransformationResult<EntValue2>(transformed, resolutionContext.cloneWithAdded(transformed));
     }
 
@@ -40,28 +42,13 @@ public class EntValue1 implements ISingleOperand1<EntValue2> {
         if (this == obj) {
             return true;
         }
-        if (obj == null) {
-            return false;
-        }
+
         if (!(obj instanceof EntValue1)) {
             return false;
         }
+
         final EntValue1 other = (EntValue1) obj;
-        if (value == null) {
-            if (other.value != null) {
-                return false;
-            }
-        } else if (!value.equals(other.value)) {
-            return false;
-        }
-        return true;
-    }
-
-    public Object getValue() {
-        return value;
-    }
-
-    public boolean isIgnoreNull() {
-        return ignoreNull;
+        
+        return Objects.equals(value, other.value) && ignoreNull == other.ignoreNull;
     }
 }
