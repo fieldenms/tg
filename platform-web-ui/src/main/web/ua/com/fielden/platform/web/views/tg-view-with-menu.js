@@ -92,6 +92,9 @@ const template = html`
             right: 0;
             top: 44px;
         }
+        iron-icon.menu-icon {
+            margin-right: 8px;
+        }
         iron-icon[without-menu],
         iron-icon[has-no-icon] {
             visibility: hidden;
@@ -149,7 +152,7 @@ const template = html`
                 <template is="dom-repeat" items="[[menuItem.menu]]" as="firstLevelItem" index-as="groupIndex">
                     <tg-sublistbox name$="[[_calcItemPath(firstLevelItem)]]" opened={{firstLevelItem.opened}} on-focus="_focusSubmenu" on-focus-next-parent-item="_focusNextMenuItem" on-tg-submenu-module-esc="_closeDrawerOnEsc">
                         <paper-item tooltip-text$="[[firstLevelItem.desc]]" slot="trigger">
-                            <iron-icon icon="[[firstLevelItem.icon]]" has-no-icon$="[[_calcHasNoIcon(firstLevelItem.icon)]]"></iron-icon>
+                            <iron-icon class="menu-icon" icon="[[firstLevelItem.icon]]" has-no-icon$="[[_calcHasNoIcon(firstLevelItem.icon)]]"></iron-icon>
                             <span class="flex menu-item-title">[[firstLevelItem.key]]</span>
                             <paper-checkbox class$="[[_calcGroupStyle(firstLevelItem)]]" group-item$="[[groupIndex]]" hidden$="[[!canEdit]]" checked="[[firstLevelItem.visible]]" on-change="_changeGroupVisibility" on-tap="_tapCheckbox" tooltip-text$="[[_calcCheckboxTooltip(firstLevelItem.menu, firstLevelItem.visible)]]"></paper-checkbox>
                             <iron-icon icon="[[_calcExpandCollapseIcon(firstLevelItem.opened)]]" opened$="[[firstLevelItem.opened]]" without-menu$="[[!_isMenuPresent(firstLevelItem.menu)]]"></iron-icon>
@@ -158,7 +161,7 @@ const template = html`
                             <paper-listbox slot="content" name$="[[_calcItemPath(firstLevelItem)]]" attr-for-selected="name">
                                 <template is="dom-repeat" items="[[firstLevelItem.menu]]">
                                     <paper-item class="submenu-item" name$="[[_calcItemPath(firstLevelItem, item, groupIndex)]]" tooltip-text$="[[item.desc]]">
-                                        <iron-icon icon="[[item.icon]]" has-no-icon$="[[_calcHasNoIcon(item.icon)]]"></iron-icon>
+                                        <iron-icon class="menu-icon" icon="[[item.icon]]" has-no-icon$="[[_calcHasNoIcon(item.icon)]]"></iron-icon>
                                         <span class="flex menu-item-title">[[item.key]]</span>
                                         <paper-checkbox class="blue" hidden$="[[!canEdit]]" checked="[[item.visible]]" on-change="_changeVisibility" on-tap="_tapCheckbox" tooltip-text$="[[_calcCheckboxTooltip(item.menu, item.visible)]]"></paper-checkbox>
                                         <iron-icon without-menu></iron-icon>

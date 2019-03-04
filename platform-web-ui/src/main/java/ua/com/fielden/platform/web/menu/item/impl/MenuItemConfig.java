@@ -26,7 +26,7 @@ public class MenuItemConfig implements IModuleMenuConfig0, IModuleMenuConfig1Wit
     }
 
     @Override
-    public IModuleMenuConfig1 description(final String desc) {
+    public IModuleMenuConfig1WithIcon description(final String desc) {
         menuItem.description(desc);
         return this;
     }
@@ -57,5 +57,11 @@ public class MenuItemConfig implements IModuleMenuConfig0, IModuleMenuConfig1Wit
     @Override
     public IModuleMenuConfig3 addMenuItem(final String title) {
         return new SubMenuItemConfig(menuItem.addMenuItem(title), this);
+    }
+
+    @Override
+    public IModuleMenuConfig1 icon(final String icon) {
+        menuItem.icon(icon);
+        return this;
     }
 }

@@ -5,12 +5,13 @@ import ua.com.fielden.platform.web.custom_view.AbstractCustomView;
 import ua.com.fielden.platform.web.menu.item.IModuleMenuConfig2WithDone;
 import ua.com.fielden.platform.web.menu.item.IModuleMenuConfig3;
 import ua.com.fielden.platform.web.menu.item.IModuleMenuConfig4;
+import ua.com.fielden.platform.web.menu.item.IModuleMenuConfig4WithIcon;
 import ua.com.fielden.platform.web.menu.item.IModuleMenuConfig5;
 import ua.com.fielden.platform.web.menu.module.impl.WebSubMenuItem;
 import ua.com.fielden.platform.web.menu.module.impl.WebView;
 import ua.com.fielden.platform.web.view.master.EntityMaster;
 
-public class SubMenuItemConfig implements IModuleMenuConfig3, IModuleMenuConfig4, IModuleMenuConfig5 {
+public class SubMenuItemConfig implements IModuleMenuConfig3, IModuleMenuConfig4WithIcon, IModuleMenuConfig5 {
 
     private final WebSubMenuItem subMenuItem;
     private final MenuItemConfig menuItemConfig;
@@ -21,7 +22,7 @@ public class SubMenuItemConfig implements IModuleMenuConfig3, IModuleMenuConfig4
     }
 
     @Override
-    public IModuleMenuConfig4 description(final String desc) {
+    public IModuleMenuConfig4WithIcon description(final String desc) {
         subMenuItem.description(desc);
         return this;
     }
@@ -47,5 +48,11 @@ public class SubMenuItemConfig implements IModuleMenuConfig3, IModuleMenuConfig4
     @Override
     public IModuleMenuConfig2WithDone done() {
         return menuItemConfig;
+    }
+
+    @Override
+    public IModuleMenuConfig4 icon(final String icon) {
+        subMenuItem.icon(icon);
+        return this;
     }
 }

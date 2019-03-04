@@ -1,13 +1,12 @@
 package ua.com.fielden.platform.web.menu.module.impl;
 
 import ua.com.fielden.platform.menu.ModuleMenuItem;
-import ua.com.fielden.platform.web.interfaces.IExecutable;
-import ua.com.fielden.platform.web.minijs.JsCode;
 
-public class WebSubMenuItem implements IExecutable {
+public class WebSubMenuItem {
 
     private final String title;
     private String description;
+    private String icon;
     private WebView view;
 
     public WebSubMenuItem(final String title) {
@@ -22,24 +21,15 @@ public class WebSubMenuItem implements IExecutable {
         this.view = view;
     }
 
-    @Override
-    public JsCode code() {
-        final String code = "{ title: \"" + this.title + "\", " +
-                "description: \"" + this.description + "\"" +
-                (this.view != null ? ", view: " + view.code() : "") +
-                "}";
-        return new JsCode(code);
-    }
-
-    @Override
-    public String toString() {
-        return code().toString();
+    public void icon(final String icon) {
+        this.icon = icon;
     }
 
     public ModuleMenuItem getMenuItem() {
         final ModuleMenuItem menuItem = new ModuleMenuItem();
         menuItem.setKey(title);
         menuItem.setDesc(description);
+        menuItem.setIcon(icon);
         if (view != null) {
             menuItem.setView(view.getView());
         }

@@ -81,7 +81,7 @@ const template = html`
             --menu-search-icon-color: white;
             --menu-search-input-color: white;
         }
-        .tile-toolbar[action-disabled] ::content tg-ui-action {
+        .tile-toolbar[action-disabled] ::slotted(tg-ui-action) {
             pointer-events: none;
         }
         .truncate {
@@ -114,7 +114,7 @@ const template = html`
                                     <iron-icon class="fit" style$="[[_calcIconStyleForItem(item)]]" icon="[[item.icon]]"></iron-icon>
                                 </div>
                             </div>
-                            <div class="tile-toolbar layut horizontal wrap" action-disabled$="[[_isDisabled(item)]]">
+                            <div class="tile-toolbar layout horizontal wrap" action-disabled$="[[_isDisabled(item)]]">
                                 <slot name$="[[item.key]]"></slot>
                             </div>
                         </div>
