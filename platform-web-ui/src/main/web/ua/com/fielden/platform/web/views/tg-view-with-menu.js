@@ -126,6 +126,9 @@ const template = html`
         iron-icon[has-no-icon] {
             visibility: hidden;
         }
+        iron-icon[has-no-any-icon] {
+            display: none;
+        }
         .menu-item-view {
             overflow: auto;
         }
@@ -180,10 +183,10 @@ const template = html`
                 <template is="dom-repeat" items="[[menuItem.menu]]" as="firstLevelItem" index-as="groupIndex">
                     <tg-sublistbox name$="[[_calcItemPath(firstLevelItem)]]" opened={{firstLevelItem.opened}} on-focus="_focusSubmenu" on-focus-next-parent-item="_focusNextMenuItem" on-tg-submenu-module-esc="_closeDrawerOnEsc">
                         <paper-item tooltip-text$="[[firstLevelItem.desc]]" slot="trigger">
-                            <iron-icon class="menu-icon" icon="[[firstLevelItem.icon]]" has-no-icon$="[[_calcHasNoIcon(firstLevelItem.icon)]]"></iron-icon>
+                            <iron-icon class="menu-icon" icon="[[firstLevelItem.icon]]" has-no-any-icon$="[[!_hasSomeIcon]]" has-no-icon$="[[_calcHasNoIcon(firstLevelItem.icon)]]"></iron-icon>
                             <span class="flex menu-item-title">[[firstLevelItem.key]]</span>
                             <paper-checkbox class$="[[_calcGroupStyle(firstLevelItem)]]" group-item$="[[groupIndex]]" hidden$="[[!canEdit]]" checked="[[firstLevelItem.visible]]" on-change="_changeGroupVisibility" on-tap="_tapCheckbox" tooltip-text$="[[_calcCheckboxTooltip(firstLevelItem.menu, firstLevelItem.visible)]]"></paper-checkbox>
-                            <iron-icon class="submenu-trigger-icon" icon="[[_calcExpandCollapseIcon(firstLevelItem.opened)]]" opened$="[[firstLevelItem.opened]]" without-menu$="[[!_isMenuPresent(firstLevelItem.menu)]]"></iron-icon>
+                            <iron-icon class="submenu-trigger-icon" icon="[[_calcExpandCollapseIcon(firstLevelItem.opened)]]" opened$="[[firstLevelItem.opened]]" has-no-any-icon$="[[!_hasSomeMenu]]" without-menu$="[[!_isMenuPresent(firstLevelItem.menu)]]"></iron-icon>
                         </paper-item>
                         <template is="dom-if" if="[[_isMenuPresent(firstLevelItem.menu)]]">
                             <paper-listbox slot="content" name$="[[_calcItemPath(firstLevelItem)]]" attr-for-selected="name">
@@ -272,6 +275,8 @@ Polymer({
             type: String,
             observer: '_selectedPageChanged'
         },
+        _hasSomeIcon: Boolean,
+        _hasSomeMenu: Boolean,
         saveAsName: {
             type: String,
             value: ''
@@ -336,6 +341,9 @@ Polymer({
             this.$.viewToolBar.classList.add('reverse');
             this.$.drawerPanel.drawer.align = 'end';
         }
+
+        this._hasSomeIcon = this._calcMenuIconsExistence(this.menuItem);
+        this._hasSomeMenu = this._calcSomeMenuExistance(this.menuItem);
     },
 
     _focusNextMenuItem: function () {
@@ -417,6 +425,14 @@ Polymer({
 
     _calcHasNoIcon: function (icon) {
         return !icon;
+    },
+
+    _calcMenuIconsExistence: function (menuItem) {
+        return !!menuItem.menu && menuItem.menu.some(item => !!item.icon || this._calcMenuIconsExistence(item));
+    },
+
+    _calcSomeMenuExistance: function (menuItem) {
+        return menuItem.menu.some(item => this._isMenuPresent(item.menu));
     },
 
     openModuleMenu: function (event) {
