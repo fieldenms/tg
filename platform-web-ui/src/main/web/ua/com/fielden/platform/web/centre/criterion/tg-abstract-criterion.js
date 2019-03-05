@@ -29,11 +29,11 @@ const template = html`
         .criterion-container {
             margin-right: 10px;
         }
-        .mnemonic-layer, .criterion-container ::content /*FIXME*/ .mnemonic-layer {
+        .mnemonic-layer, .criterion-container ::slotted(.mnemonic-layer) {
             margin-bottom: 8px;
             margin-top: 28px;
         }
-        .criterion-container ::content /*FIXME*/ .date-mnemonic {
+        .criterion-container ::slotted(.date-mnemonic) {
             background-color: var(--paper-blue-100);
             opacity: 0.95;
             color: var(--paper-blue-800);
@@ -48,11 +48,6 @@ const template = html`
             opacity: 0.5;
             pointer-events: none;
         }
-        .criterion-container ::content /*FIXME*/ .exclusive-mnemonic {
-            background-color: var(--paper-blue-200);
-            opacity: 0.5;
-            pointer-events: none;
-        }
         .crossed { /* look at https://stackoverflow.com/questions/18012420/draw-diagonal-lines-in-div-background-with-css */
             background: linear-gradient(to top right,
                 rgba(0,0,0,0) calc(48% - 1.5px),
@@ -61,7 +56,7 @@ const template = html`
             );
             pointer-events: none;
         }
-        #iconButton::shadow /*FIXME*/ #ink {
+        #iconButton::shadow #ink /*FIXME*/ {
             width: 32px;
             height: 32px;
             top: -4px;

@@ -4,6 +4,7 @@ import { html } from '/resources/polymer/@polymer/polymer/lib/utils/html-tag.js'
 import '/resources/centre/criterion/tg-abstract-criterion.js';
 import { TgAbstractRangeCriterionBehavior } from '/resources/centre/criterion/multi/range/tg-abstract-range-criterion-behavior.js';
 import '/resources/polymer/@polymer/iron-flex-layout/iron-flex-layout-classes.js';
+import '/resources/polymer/@polymer/paper-styles/color.js';
 
 import '/resources/centre/criterion/multi/range/tg-date-range-criterion-config.js';
 
@@ -13,6 +14,13 @@ const template = html`
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
+        }
+        .exclusive-mnemonic {
+            background-color: var(--paper-blue-200);
+            opacity: 0.5;
+            pointer-events: none;
+            margin-bottom: 8px;
+            margin-top: 28px;
         }
     </style>
     <custom-style>

@@ -16,6 +16,9 @@ const template = html`
     <style>
         tg-accordion {
             margin-bottom: 20px;
+            --tg-accordion-selected-heading-background-color: var(--paper-light-blue-700);
+            --tg-accordion-selected-heading-color: white;
+            --tg-accordion-selected-label-color: white;
         }
         paper-radio-button {
             margin: 10px;
@@ -23,25 +26,18 @@ const template = html`
             --paper-radio-button-checked-ink-color: var(--paper-light-blue-700);
             font-family: 'Roboto', 'Noto', sans-serif;
         }
-        paper-radio-button::shadow #ink {
+        paper-radio-button::shadow #ink /* FIXME */ {
             top: -10px;
             left: -10px;
             width: 36px;
             height: 36px;
-        }
-        .selected::shadow .heading {
-            background-color: var(--paper-light-blue-700);
-            color: white;
-        }
-         .selected::shadow a {
-            color: white;
         }
     </style>
     <custom-style>
         <style include="iron-flex iron-flex-reverse iron-flex-alignment iron-flex-factors iron-positioning"></style>
     </custom-style>
     <template is="dom-repeat" items="{{_datePrefixes}}" as="prefix" index-as="pIndex">
-        <tg-accordion id$="[[prefix]]" dont-close-on-tap heading="[[_getPrefixTitle(_prefixTitles, pIndex)]]" class$="[[_calcClass(prefix, _datePrefix)]]" on-accordion-toggled="_accordionToggledListener">
+        <tg-accordion id$="[[prefix]]" dont-close-on-tap heading="[[_getPrefixTitle(_prefixTitles, pIndex)]]" selected="[[_calcSelected(prefix, _datePrefix)]]" on-accordion-toggled="_accordionToggledListener">
             <div class="layout horizontal wrap">
                 <template is="dom-repeat" items="{{_andBefores}}" as="before" index-as="bIndex">
                     <div class="layout vertical">
@@ -96,15 +92,14 @@ Polymer({
             // let's make sure that one of accordion items with date mnemonics is expanded
             // the preference is for the accordion with one of its options chosen
             // however, if non is chosen then the first accorion shoudl be expanded
-            var selectedClass = "selected";
-            var accordion = Polymer.dom(this.root).querySelector("#" + this._datePrefixes[0]); // by default the fist accordion should be open
-            if (!_.includes(accordion.classList, selectedClass)) {
-                var curr = Polymer.dom(this.root).querySelector("#" + this._datePrefixes[1]);
-                if (_.includes(curr.classList, selectedClass)) {
+            let accordion = this.shadowRoot.querySelector("#" + this._datePrefixes[0]); // by default the fist accordion should be open
+            if (!accordion.selected) {
+                const curr = this.shadowRoot.querySelector("#" + this._datePrefixes[1]);
+                if (curr.selected) {
                     accordion = curr;
                 } else {
-                    var next = Polymer.dom(this.root).querySelector("#" + this._datePrefixes[2]);
-                    if (_.includes(next.classList, selectedClass)) {
+                    const next = this.shadowRoot.querySelector("#" + this._datePrefixes[2]);
+                    if (next.selected) {
                         accordion = next;
                     }
                 }
@@ -115,11 +110,11 @@ Polymer({
     },
 
     _accordionToggledListener: function (e) {
-        var self = this;
+        const self = this;
         if (e.detail) {
             Array.prototype.forEach.call(this._datePrefixes, function (prefix) {
-                var accordion = Polymer.dom(self.root).querySelector("#" + prefix);
-                var target = e.target || e.srcElement;
+                const accordion = self.shadowRoot.querySelector("#" + prefix);
+                const target = e.target || e.srcElement;
                 if (accordion !== target) {
                     accordion.opened = false;
                 }
@@ -127,13 +122,13 @@ Polymer({
         }
     },
 
-    _calcClass: function (prefix, _datePrefix) {
-        var klass = prefix === _datePrefix ? "selected" : "normal";
-        return klass;
+    _calcSelected: function (prefix, _datePrefix) {
+        const selected = prefix === _datePrefix;
+        return selected;
     },
 
     _dateMetaValueChanged: function (e, detail) {
-        var source = e.target || e.srcElement;
+        const source = e.target || e.srcElement;
         if (source.checked) {
             this._datePrefix = source.dateprefix;
             this._dateMnemonic = source.datemnemonic;

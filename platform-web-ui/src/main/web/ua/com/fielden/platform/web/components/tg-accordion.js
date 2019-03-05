@@ -42,6 +42,13 @@ const template = html`
         iron-icon {
             cursor: pointer;
         }
+        :host([selected]) .heading {
+            background-color: var(--tg-accordion-selected-heading-background-color);
+            color: var(--tg-accordion-selected-heading-color);
+        }
+        :host([selected]) a {
+            color: var(--tg-accordion-selected-label-color);
+        }
     </style>
     <div class="panel layout vertical">
         <div class="heading layout horizontal center justified" on-tap="_toggle">
@@ -74,7 +81,16 @@ Polymer({
                 return false;
             }
         },
-        heading: String
+        heading: String,
+
+        /**
+         * Indicates whether accordion is selected.
+         */
+        selected: {
+            type: Boolean,
+            value: false,
+            reflectToAttribute: true
+        }
     },
 
     ready: function () {
