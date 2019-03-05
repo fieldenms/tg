@@ -6,7 +6,6 @@ public class WebSubMenuItem {
 
     private final String title;
     private String description;
-    private String icon;
     private WebView view;
 
     public WebSubMenuItem(final String title) {
@@ -21,15 +20,10 @@ public class WebSubMenuItem {
         this.view = view;
     }
 
-    public void icon(final String icon) {
-        this.icon = icon;
-    }
-
     public ModuleMenuItem getMenuItem() {
         final ModuleMenuItem menuItem = new ModuleMenuItem();
         menuItem.setKey(title);
         menuItem.setDesc(description);
-        menuItem.setIcon(icon);
         if (view != null) {
             menuItem.setView(view.getView());
         }

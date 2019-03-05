@@ -40,19 +40,23 @@ const template = html`
         :host {
             @apply --layout-vertical;
             --paper-listbox-color: var(--paper-light-blue-700);
-            --paper-item-min-height: 40px;
             --paper-listbox: {
                 padding: 0;
                 margin: 0;
                 overflow: auto;
             };
             --paper-item: {
+                padding: 0;
                 font-size: 13px;
                 cursor: pointer;
                 transition: all 300ms ease-in-out;
             };
         }
         app-drawer {
+            --app-drawer-width: auto;
+            --app-drawer-content-container: {
+                max-width: 100%;
+            }
             @apply --layout-vertical;
         }
         paper-listbox {
@@ -69,7 +73,7 @@ const template = html`
             @apply --layout-vertical;
         }
         paper-checkbox {
-            margin: 0 4px 2px 2px;
+            padding-right: 16px;
             --paper-checkbox-size: 16px;
             --paper-checkbox-unchecked-color: var(--paper-listbox-color);
             --paper-checkbox-unchecked-ink-color: var(--paper-listbox-color);
@@ -93,7 +97,10 @@ const template = html`
             top: 44px;
         }
         iron-icon.menu-icon {
-            margin-right: 8px;
+            padding: 0 16px;
+        }
+        iron-icon.submenu-trigger-icon {
+            padding-right: 16px; 
         }
         iron-icon[without-menu],
         iron-icon[has-no-icon] {
@@ -106,6 +113,7 @@ const template = html`
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
+            padding: 0 16px;
         }
         .tool-bar {
             padding: 0 12px;
@@ -155,7 +163,7 @@ const template = html`
                             <iron-icon class="menu-icon" icon="[[firstLevelItem.icon]]" has-no-icon$="[[_calcHasNoIcon(firstLevelItem.icon)]]"></iron-icon>
                             <span class="flex menu-item-title">[[firstLevelItem.key]]</span>
                             <paper-checkbox class$="[[_calcGroupStyle(firstLevelItem)]]" group-item$="[[groupIndex]]" hidden$="[[!canEdit]]" checked="[[firstLevelItem.visible]]" on-change="_changeGroupVisibility" on-tap="_tapCheckbox" tooltip-text$="[[_calcCheckboxTooltip(firstLevelItem.menu, firstLevelItem.visible)]]"></paper-checkbox>
-                            <iron-icon icon="[[_calcExpandCollapseIcon(firstLevelItem.opened)]]" opened$="[[firstLevelItem.opened]]" without-menu$="[[!_isMenuPresent(firstLevelItem.menu)]]"></iron-icon>
+                            <iron-icon class="submenu-trigger-icon" icon="[[_calcExpandCollapseIcon(firstLevelItem.opened)]]" opened$="[[firstLevelItem.opened]]" without-menu$="[[!_isMenuPresent(firstLevelItem.menu)]]"></iron-icon>
                         </paper-item>
                         <template is="dom-if" if="[[_isMenuPresent(firstLevelItem.menu)]]">
                             <paper-listbox slot="content" name$="[[_calcItemPath(firstLevelItem)]]" attr-for-selected="name">
@@ -164,7 +172,7 @@ const template = html`
                                         <iron-icon class="menu-icon" icon="[[item.icon]]" has-no-icon$="[[_calcHasNoIcon(item.icon)]]"></iron-icon>
                                         <span class="flex menu-item-title">[[item.key]]</span>
                                         <paper-checkbox class="blue" hidden$="[[!canEdit]]" checked="[[item.visible]]" on-change="_changeVisibility" on-tap="_tapCheckbox" tooltip-text$="[[_calcCheckboxTooltip(item.menu, item.visible)]]"></paper-checkbox>
-                                        <iron-icon without-menu></iron-icon>
+                                        <iron-icon class="submenu-trigger-icon" without-menu></iron-icon>
                                     </paper-item>
                                 </template>
                             </paper-listbox>
