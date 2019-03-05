@@ -39,7 +39,7 @@ const template = html`
     <style>
         :host {
             @apply --layout-vertical;
-            --paper-listbox-color: var(--paper-light-blue-700);
+            --paper-listbox-color: var(--paper-blue-grey-500);
             --paper-listbox: {
                 padding: 0;
                 margin: 0;
@@ -47,7 +47,7 @@ const template = html`
             };
             --paper-item: {
                 padding: 0;
-                font-size: 13px;
+                font-size: 16px;
                 cursor: pointer;
                 transition: all 300ms ease-in-out;
             };
@@ -62,12 +62,34 @@ const template = html`
         paper-listbox {
             @apply --layout-flex;
         }
+
+        paper-item.iron-selected:before {
+            @apply --layout-fit;
+            content: "";
+            background-color: currentColor;
+            opacity: var(--dark-divider-opacity);
+            pointer-events: none;
+        }
+
         tg-sublistbox {
             display: block;
         }
         tg-sublistbox[opened] {
-            border-top: 2px solid var(--paper-blue-100);
-            border-bottom: 2px solid var(--paper-blue-100);
+            border-top: 2px solid var(--paper-blue-grey-100);
+            border-bottom: 2px solid var(--paper-blue-grey-100);
+        }
+        tg-sublistbox[opened] paper-item[slot=trigger] {
+            color: var(--paper-light-blue-700);
+        }
+        tg-sublistbox[opened] paper-item[slot=trigger] paper-checkbox {
+            --paper-checkbox-unchecked-color: var(--paper-light-blue-700);
+            --paper-checkbox-unchecked-ink-color: var(--paper-light-blue-700);
+            --paper-checkbox-checked-color: var(--paper-light-blue-700);
+            --paper-checkbox-checked-ink-color: var(--paper-light-blue-700);
+        }
+        tg-sublistbox[opened] paper-item[slot=trigger] paper-checkbox.undone {
+            --paper-checkbox-checked-color: var(--paper-light-blue-100);
+            --paper-checkbox-checked-ink-color: var(--paper-light-blue-100);
         }
         .main-content {
             @apply --layout-vertical;
@@ -77,16 +99,14 @@ const template = html`
             --paper-checkbox-size: 16px;
             --paper-checkbox-unchecked-color: var(--paper-listbox-color);
             --paper-checkbox-unchecked-ink-color: var(--paper-listbox-color);
+            --paper-checkbox-checked-color: var(--paper-listbox-color);
+            --paper-checkbox-checked-ink-color: var(--paper-listbox-color);
             --paper-checkbox-label: {
                 display: none !important;
             }
         }
-        paper-checkbox.blue {
-            --paper-checkbox-checked-color: var(--paper-listbox-color);
-            --paper-checkbox-checked-ink-color: var(--paper-listbox-color);
-        }
-        paper-checkbox.blue.undone {
-            --paper-checkbox-checked-color: #acdbfe;
+        paper-checkbox.undone {
+            --paper-checkbox-checked-color: var(--paper-blue-grey-100);
             --paper-checkbox-checked-ink-color: var(--paper-listbox-color);
         }
         neon-animated-pages {
@@ -171,7 +191,7 @@ const template = html`
                                     <paper-item class="submenu-item" name$="[[_calcItemPath(firstLevelItem, item, groupIndex)]]" tooltip-text$="[[item.desc]]">
                                         <iron-icon class="menu-icon" icon="[[item.icon]]" has-no-icon$="[[_calcHasNoIcon(item.icon)]]"></iron-icon>
                                         <span class="flex menu-item-title">[[item.key]]</span>
-                                        <paper-checkbox class="blue" hidden$="[[!canEdit]]" checked="[[item.visible]]" on-change="_changeVisibility" on-tap="_tapCheckbox" tooltip-text$="[[_calcCheckboxTooltip(item.menu, item.visible)]]"></paper-checkbox>
+                                        <paper-checkbox hidden$="[[!canEdit]]" checked="[[item.visible]]" on-change="_changeVisibility" on-tap="_tapCheckbox" tooltip-text$="[[_calcCheckboxTooltip(item.menu, item.visible)]]"></paper-checkbox>
                                         <iron-icon class="submenu-trigger-icon" without-menu></iron-icon>
                                     </paper-item>
                                 </template>
@@ -408,7 +428,7 @@ Polymer({
     },
 
     _calcGroupStyle: function (firstLevelItem) {
-        var clazz = "blue";
+        var clazz = "";
         if (firstLevelItem.visible && firstLevelItem.menu && !firstLevelItem.menu.every(function (element) {
             return element.visible === true
         }) && !firstLevelItem.menu.every(function (element) {
