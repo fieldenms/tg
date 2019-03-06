@@ -51,14 +51,13 @@ const template = html`
                 cursor: pointer;
                 transition: all 300ms ease-in-out;
             };
-        }
-        app-drawer {
             --app-drawer-width: auto;
             --app-drawer-content-container: {
                 max-width: 100%;
-            }
-            @apply --layout-vertical;
+                @apply --layout-vertical;
+            };
         }
+        
         paper-listbox {
             @apply --layout-flex;
         }
@@ -173,13 +172,13 @@ const template = html`
         <style include="iron-flex iron-flex-reverse iron-flex-alignment iron-flex-factors iron-positioning"></style>
     </custom-style>
     <tg-app-config id="app_config"></tg-app-config>
-    <app-drawer-layout id="drawerPanel" force-narrow>
+    <app-drawer-layout id="drawerPanel" fullbleed force-narrow>
 
         <app-drawer disable-swipe="[[!mobile]]" slot="drawer">
             <div id="menuToolBar" class="tool-bar layout horizontal center">
                 <div class="flex">[[menuItem.key]]</div>
             </div>
-            <paper-listbox id="menu" attr-for-selected="name" on-iron-activate="_itemActivated">
+            <paper-listbox id="menu" attr-for-selected="name" on-iron-activate="_itemActivated" style="overflow:auto;">
                 <template is="dom-repeat" items="[[menuItem.menu]]" as="firstLevelItem" index-as="groupIndex">
                     <tg-sublistbox name$="[[_calcItemPath(firstLevelItem)]]" opened={{firstLevelItem.opened}} on-focus="_focusSubmenu" on-focus-next-parent-item="_focusNextMenuItem" on-tg-submenu-module-esc="_closeDrawerOnEsc">
                         <paper-item tooltip-text$="[[firstLevelItem.desc]]" slot="trigger">
