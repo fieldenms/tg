@@ -111,23 +111,65 @@
 \onehalfspacing
 
 \section*{Introduction}
-	Web facing applications are exposed to a lot more risk than Intranet applications, and thus require a lot more resilient to hacking security system that could withstand both eavesdropping and interrogative adversaries.
-	Application security cannot be an ``afterthought'' and simply must by weaved into the underlying software architecture.
-	This document provides an overview of the security system for applications that are based on Trident Genesis.
+	Web-facing applications are exposed to a lot more risk than Intranet applications, and thus require a lot more resilient to hacking security system that could withstand both eavesdropping and interrogative adversaries.
+	Application security cannot be an ``afterthought'' and simply must by weaved into the underlying software architecture and the application lifecycle.
+	The primary objective of this document is to provide an overview of the security system for application that are based on Trident Genesis (TG), and how our software engineering process facilitates the development of reliable and secure applications.
 	Having Trident Genesis as their foundation, applications can leverage a wide range of its intrinsic capabilities to:
 
 	\begin{itemize}
+	\item ensure secure communication
 	\item sanitise input data and ensure its validity,
-	\item authenticate requests, 
+	\item authenticate requests,
 	\item establish and protect authorisation boundaries,
 	\item filter responses to prevent leaking of sensitive data, and
-	\item audit access to web resources.
+	\item audit access to web resources
 	\end{itemize}
 
-	Although the primary objective of this document is to provide an overview of the application security.
-	However, we also touch on the question of security pertaining to the deployment environment for TG-based applications.
+	We also touch on the question of security pertaining to the deployment environment for TG applications.
 	Hosting of cloud-native applications is either based on VMs or containers, and there is an on-going debate as to what approach is more secure and what can be improved.
-	The deployment environment that we recommend for TG applications follows a hybrid approach, whereby VMs are used for isolation and Docker containers are used for controlled sharing and reliable continuous delivery.
+	The environment that we recommend for deploying TG applications follows a hybrid approach, whereby VMs are used for isolation and Docker containers are used for controlled sharing and reliable continuous delivery.
+
+\subsection*{Security Objectives}
+
+	The following primary security objectives are defined for all TG applications.
+	As such they identify the primary security-related activities that are included into our current software engineering processes.
+
+	\paragraph{Secure communication.} 
+	    Communication between the client (web browser) and the application server, and the application server and the databases server need to be encrypted.
+		Secure Sockets Layer (SSL) is a protocol for establishing a secure communication channel to prevent the interception of critical or sensitive information across the network and other Internet communications. 
+		SSL allows the client and the server (both application and database) to authenticate the identity of each other. 
+		After the participants are authenticated, SSL provides encrypted connections between them for secure message transmission.
+
+	\paragraph{Validating user inputs.}
+		When engineering applications that accesses and accept data, it should always be assumed that all user input is malicious until proven otherwise. 
+		A well-known type of attack that can occur is called SQL injection, where a user input representing a malicious code is added to strings that are later passed to a database server for execution.
+		In TG applications this type of attacks is completely avoided due to its model-based architecture.
+		All user inputs are converted to a typed data as defined by the model and validated based on the business rules that are defined for the model.
+		In addition, Entity Query Language (EQL) is used instead of SQL for data interrogation.
+		EQL is one level higher than SQL, and it guarantees that data queries are never concatenated from strings, and the use of typed parameters is enforced throughout.
+
+	\paragraph{Authenticatication.}
+		Application users should be certain that they are accessing the right application on the correct server, and that their communication with the server is secure.
+		The HTTP protocol over TLS (Transport Layer Security) provides a complete solution for this.
+		At the same time, the application server needs to be protected from anonymous access, which requires a client authentication mechanism.
+		There are no standard reliable HTTP mechanisms for user authentication. 
+		However, there are very reasonable approaches on top of HTTP that proved to be highly reliable.
+		Both server and user authentication is discussed in details further in this document.
+
+	\paragraph{Authorisation.}
+		Access control to application resources and operations is defined through a mechanism of authorisation.
+	  	In TG applications, the authorisation mechanism utilises a combination of \emph{role-based} (RBAC) and \emph{rule-based} (RAC) access control models.
+		Roles are defined by application administrators and each users can have multiple roles assigned to them.
+		The concept of \emph{security tokens} is used to define authorisation boundaries, access to which is controlled by user roles.
+		Authorisation boundaries can be as granular as the modification of an individual entity property (a data field).
+		The RAC model provides a way to implement domain-specific access control rules that cannot be otherwise achieved by using the RBAC model.
+
+	\paragraph{Filter responses to prevent leaking of sensitive data.}
+
+	\paragraph{Auditing access to web resources.}
+
+	\paragraph{Configuration management.}
+
 
 \section*{Authentication}
 
