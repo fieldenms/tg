@@ -129,10 +129,10 @@
 	Hosting of cloud-native applications is either based on VMs or containers, and there is an on-going debate as to what approach is more secure and what can be improved.
 	The environment that we recommend for deploying TG applications follows a hybrid approach, whereby VMs are used for isolation and Docker containers are used for controlled sharing and reliable continuous delivery.
 
-\subsection*{Security Objectives}
+\section*{Security Objectives}
 
 	The following primary security objectives are defined for all TG applications.
-	As such they identify the primary security-related activities that are included into our current software engineering processes.
+	As such they identify the primary security-related activities that are included into our current software engineering processes, and are enabled by the underlying software development technology.
 
 	\paragraph{Secure communication.} 
 	    Communication between the client (web browser) and the application server, and the application server and the databases server need to be encrypted.
@@ -142,11 +142,11 @@
 
 	\paragraph{Validating user inputs.}
 		When engineering applications that accesses and accept data, it should always be assumed that all user input is malicious until proven otherwise. 
-		A well-known type of attack that can occur is called SQL injection, where a user input representing a malicious code is added to strings that are later passed to a database server for execution.
+		For example, one well-known type of attack that can occur is called SQL injection, where a user input representing a malicious code is added to strings that are later passed to a database server for execution.
 		In TG applications this type of attacks is completely avoided due to its model-based architecture.
-		All user inputs are converted to a typed data as defined by the model and validated based on the business rules that are defined for the model.
+		All user inputs are processed by the application server, which converts them to a typed data as defined by the model and, if successful, this typed data is validated based on the business rules that are defined for the model.
 		In addition, Entity Query Language (EQL) is used instead of SQL for data interrogation.
-		EQL is one level higher than SQL, and it guarantees that data queries are never concatenated from strings, and the use of typed parameters is enforced throughout.
+		EQL is one level higher than SQL, and it guarantees that data queries are never concatenated from strings, and the use of typed parameters is automatically ensured throughout the application code.
 
 	\paragraph{Authenticatication.}
 		Application users should be certain that they are accessing the right application on the correct server, and that their communication with the server is secure.
@@ -165,6 +165,12 @@
 		The RAC model provides a way to implement domain-specific access control rules that cannot be otherwise achieved by using the RBAC model.
 
 	\paragraph{Filter responses to prevent leaking of sensitive data.}
+		Filtering of responses is related to \emph{access control}, but deserves to be recognised as a separate objective.
+		There are two cases where the data to be returned as part of a request needs filtering -- if it represents a secrete that should never be transmitted to the client (e.g. a hash code of a user password), and if some portion of the data that is requested by the user should not be revealed to that user (i.e. work orders performed by competing consultants).
+		TG applications have native support for handling both cases.
+		The first case is handled by simply annotating the relevant entity properties (data fields) with \texttt{@Secret} annotation, and the data marshalling mechanism automatically restricts passing such data to the client.
+		The second case is handled by the mechanism of \emph{user-driven} filtering that provides a way to configure application-wide filtering conditions, which are recognised by EQL when preparing SQL queries.
+		This means that only permitted for the user, who is making the request, data is retrieved from the database server.
 
 	\paragraph{Auditing access to web resources.}
 
