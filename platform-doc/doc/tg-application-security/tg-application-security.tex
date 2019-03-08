@@ -110,7 +110,7 @@
 
 \onehalfspacing
 
-\section*{Introduction}
+\section*{Introduction}\label{sec:00}
 	Web-facing applications are exposed to a lot more risk than Intranet applications, and thus require a lot more resilient to hacking security system that could withstand both eavesdropping and interrogative adversaries.
 	Application security cannot be an ``afterthought'' and simply must by weaved into the underlying software architecture and the application lifecycle.
 	The primary objective of this document is to provide an overview of the security system for application that are based on Trident Genesis (TG), and how our software engineering process facilitates the development of reliable and secure applications.
@@ -129,14 +129,14 @@
 	Hosting of cloud-native applications is either based on VMs or containers, and there is an on-going debate as to what approach is more secure and what can be improved.
 	The environment that we recommend for deploying TG applications follows a hybrid approach, whereby VMs are used for isolation and Docker containers are used for controlled sharing and reliable continuous delivery.
 
-\section*{Security Objectives}
+\section*{Security Objectives}\label{sec:01}
 
 	The following primary security objectives are defined for all TG applications.
 	As such they identify the primary security-related activities that are included into our current software engineering processes, and are enabled by the underlying software development technology.
 
 	\paragraph{Secure communication.} 
 	    Communication between the client (web browser) and the application server, and the application server and the databases server need to be encrypted.
-		Secure Sockets Layer (SSL) is a protocol for establishing a secure communication channel to prevent the interception of critical or sensitive information across the network and other Internet communications. 
+		Transport Layer Security (TLS) is a cryptographic protocol for establishing a secure communication channel to prevent the interception of critical or sensitive information across the network and other Internet communications. 
 		SSL allows the client and the server (both application and database) to authenticate the identity of each other. 
 		After the participants are authenticated, SSL provides encrypted connections between them for secure message transmission.
 
@@ -150,7 +150,7 @@
 
 	\paragraph{Authenticatication.}
 		Application users should be certain that they are accessing the right application on the correct server, and that their communication with the server is secure.
-		The HTTP protocol over TLS (Transport Layer Security) provides a complete solution for this.
+		The HTTP protocol over TLS provides a complete solution for this.
 		At the same time, the application server needs to be protected from anonymous access, which requires a client authentication mechanism.
 		There are no standard reliable HTTP mechanisms for user authentication. 
 		However, there are very reasonable approaches on top of HTTP that proved to be highly reliable.
@@ -166,16 +166,36 @@
 
 	\paragraph{Filter responses to prevent leaking of sensitive data.}
 		Filtering of responses is related to \emph{access control}, but deserves to be recognised as a separate objective.
-		There are two cases where the data to be returned as part of a request needs filtering -- if it represents a secrete that should never be transmitted to the client (e.g. a hash code of a user password), and if some portion of the data that is requested by the user should not be revealed to that user (i.e. work orders performed by competing consultants).
+		There are two cases where the data to be returned as part of a request needs filtering~-- if it represents a secrete that should never be transmitted to the client (e.g. a hash code of a user password), and if some portion of the data that is requested by the user should not be revealed to that user (i.e. work orders performed by competing consultants).
 		TG applications have native support for handling both cases.
 		The first case is handled by simply annotating the relevant entity properties (data fields) with \texttt{@Secret} annotation, and the data marshalling mechanism automatically restricts passing such data to the client.
 		The second case is handled by the mechanism of \emph{user-driven} filtering that provides a way to configure application-wide filtering conditions, which are recognised by EQL when preparing SQL queries.
 		This means that only permitted for the user, who is making the request, data is retrieved from the database server.
 
 	\paragraph{Auditing access to web resources.}
+		Unlike access control, which is responsible for permitting or restricting access to resources, access auditing is responsible for recording all access attempts~-- successful or not.
+		Every authenticated request in TG applications gets logged, including the information who made the request and the details of the request and its response.
+		This information can be used for retrospective analysis and audit to identify what information was accessed by what user in case of a security breach.
+		The same information is useful for identifying usage patterns by different users, what resources represent performance bottle necks and need to be optimised, etc.
+		Potentially, auditing information can also be used for identifying anomalies in usage patterns to recognise, stop or prevent attacks on the system.
 
 	\paragraph{Configuration management.}
+		Many questions arise when it comes to actually running an application -- which databases does the application connect to, how TLS is enabled, how upgrades are performed, how application configuration (e.g. database URI and credentials) are secured, etc.
+		Configuration management refers to how these operational issues are handled.
+		The specific details may vary depending on different deployment environments.
+		However, many important principles stay the same.
+		Further in this document we review a configuration management approach, which can be used as a pattern in application to TG applications.
+	
+	\bigskip
+	The sections that follow cover some of the above security objectives in greater details.
+	\hyperref[sec:01:fig:1]{Fig.~\ref*{sec:01:fig:1}} represents a high-level security diagram, which outlines a security context for TG applications and these security objectives.
 
+	\begin{figure}[h!tbp]
+	\centering
+	\hspace*{-5.5cm}
+	\includegraphics[scale=0.35]{images/01-security-diagram.pdf}
+	\caption{A high-level security diagram for TG applications.}\label{sec:01:fig:1}
+	\end{figure}
 
 \section*{Authentication}
 
