@@ -194,18 +194,101 @@
 
 	\begin{figure}[h!tbp]
 	\centering
-	%\hspace*{-5.5cm}
 	\includegraphics[width=1\linewidth]{images/01-security-diagram.png}
 	\caption{A high-level security diagram for TG applications.}\label{sec:01:fig:1}
 	\end{figure}
 
-\section*{Authentication}
+\section*{Secure communication and authentication}
 
 \subsection*{Server Authentication for User Protection}
 
+	Application users should be certain that they are accessing the right application on the correct server, and that their communication with the server is secure.
+	This basically means three things:
+
+	\begin{itemize}
+	\item The server is \emph{authentic}.
+	\item The \emph{data integrity} of the communicated information is ensured.
+	\item The communication channel is \emph{encrypted}.
+	\end{itemize}
+
+	The HTTP protocol over TLS (Transport Layer Security, aka SSL, Secure Sockets Layer) provides a complete solution to the above requirements.
+	Thus, the HTTPS protocol support by the TG Application 	Server is the most rigorous solution to the problem of Server Authentication.
+
 \subsubsection*{How HTTPS works}
+	Without going too much into the details, it is beneficial to have a general understanding of the HTTPS security and how it actually makes communication safe.
+	There are two parts to the TLS mechanism.
+	One has to do with encrypting the communication channel, another has to do with certification, which identifies the server as the entity it claims to be. Let's start with channel encryption.
+
+	\paragraph{Channel encryption.}
+	The TLS clockwork employs the use of Asymmetric~\cite{PKC} and Symmetric~\cite{SKC} Cryptography.
+	The asymmetric cryptography uses two keys -- public and private -- for encryption/decryption of messages.
+	If a messages gets encrypted with a private key it can only be decrypted with corresponding public key and wise versa.
+	The public key, as the name suggests, gets send to the client application (e.g. a web browser) via an open channel.
+	Any eavesdropping adversary would be able to see it, and that is completely fine. The private key remains private to the server.
+	So, unless the server is hacked, only the server should be in a possession of the private key.
+
+	Thus, once the client received a public key, all the information encrypted by the client and send back to the server can only be decrypted at by the server.
+	However, any information encrypted and send by the server can be decrypted not only by the client, but also by the eavesdropping adversary, who might have captured the public key during its initial transmission to the client.
+
+	This is where the symmetric cryptography comes into place.
+	Symmetric cryptography uses a single key for encoding/decoding, and is much faster than asymmetric cryptography at that.
+	Therefore, upon receiving a public key, the client generates a key for symmetric cryptography, encodes it with its public key and sends back to the server.
+	Thus provided key for symmetric cryptography would only be decrypted at the server end.
+	At this stage both client and server have a shared key and start using it to encode/decode all further communication.
+	No eavesdropping adversary would not be able to understand any of the information being communicated this way.
+
+	\paragraph{Server Certification.}
+	Another part of the TLS clockwork has to do with server identification, and this is where certification plays its role.
+	As part of the HTTPS handshake between the client and server, the server presents a certificate of authenticity.
+	This certificate has to be signed by a Certificate Authority (CA) or it could be self signed.
+
+	The client such as a web browser has means for checking whether it can trust the presented certificate.
+	If the certificate is signed by some CA, the client checks agains its reference of trusted CAs and if make a decision to trust or not to trust the presented certificate.
+	If the certificate is self signed, all web browsers reject such certificate unless it was added to a list of exceptions (i.e. the user explicitly informed the browser to trust this certificate).
+
+	If the certificate is rejected then all communication with the server is stopped, as it could be an imposter trying to emulate the actual server that the client intends to connect to.
+	However, if the certificate is accepted, the client carries out with a HTTPS handshake (exchanges the keys etc.).
+
+	An interesting thing about CAs is that any organisation (or person for that matter) could become a CA and start signing, for example, its server certificates.
+	Customers may choose to trust a particular not well known CA (e.g. FMS) by adding a corresponding CA certificate to their OS or browser.
+	So, this all boils down to the trust, and has nothing to do with the actual encryption of the communication channel.
+
+	Please note that each server certificate is issued for a single fully qualified domain name (FQDN).
+	This information is used by browser to check that the FQDN part of the URI they are accessing matches the \texttt{Common Name} property of the presented certificate.
+	Certificates for different servers should always be issued by signing Public/Private Keys that are unique to those servers (i.e. no server certificate should reuse the same key pair).
+
 
 \subsubsection*{Communication over HTTPS}
+
+	Jetty, which is a Servlet Engine and a HTTP Server used as the basis for TG Application Server, together with Restlet (a framework used for implementing Resource Oriented architecture of TG Application Server) support TLS infrastructure, and can be configured to enable communication over HTTPS.
+
+	A Java KeyStore (JKS) infrastructure is used for that (as in case of any Java application) to establish a TLS infrastructure.
+	The server Public/Private Keys and its Certificate, which are used to establish a HTTPS communication, are stored in a keystore file.
+	A keystore file should be protected by a password. Access to Private Keys, which are stored there, are also protected by yet another password.
+
+	The keystore file password is mainly used to check file integrity when accessing it in order to make sure that it was not tempered with.
+	Also, it provides an additional layer of protection is case the keystore file gets leaked/stolen.
+	The Private Key password is there to protect the Private Keys that are stored in a keystore file.
+	This introduces yet another security layer to protect the most essential information, which is used for establishing secure communication between the client and server software.
+	It a keystore gets stolen and cracked then eavesdropping adversaries in possession of this information would easily read all communication, and could even set up a fake server to obtain user names and passwords by redirecting users to thus set up service.
+
+	In most cases, the keystore file is located on the same physical server as the application server, and is protected by the underlying OS.
+	Thus, if the server security is sound there would be no way to steal the keystore file.
+
+	Another important concern is how to handle passwords to a keystore file and Private Keys.
+	One common anti-pattern is to store those passwords in a class file as part of the source.
+	This leads to two possible ways for an adversary to access the passwords. Firstly, the application source might get stolen (e.g. a GitHub repo gets hacked).
+	In this case an adversary would obtain the passwords from the source files.
+	Secondly, packed jar files of the application server might get leaked as a result of some (even accidental) security breach (e.g. jar files got uploaded to an insecure FTP server).
+	By decompiling classes from jars, an adversary would obtain the passwords.
+
+	The most reasonable option is to provide those password as an application server argument during its start up.
+	Even in case of keeping them in a start up script on the deployment server would be much safer than keeping them in a class file (source or compiled).
+
+	In addition, different TLS certificates should be used for development and deployment purposes, and kept in different keystore files.
+	In fact, the deployment keystore file should only be kept at the deployment server, and it would be best if the only person who knows the password to that keystore and Public Keys is the administrator of the deployment server.
+	This way any accidental information leaks would be significantly reduced.
+
 
 \subsection*{Client Authentication for Server Protection}
 
@@ -238,94 +321,12 @@
 %
 \begin{thebibliography}{5}
 
-\bibitem{Kay2003}
-Kay, A. On the Meaning of ``Object-Oriented Programming''
-\href{http://www.purl.org/stefan_ram/pub/doc_kay_oop_en}{Online}
+\bibitem{PKC} Public Key Cryptography, 
+\href{http://en.wikipedia.org/wiki/Public-key_cryptography}{Online}
 
-\bibitem{Barnes:2007:ORM}
-Bar\-nes, J.~M. Object-Relational Mapping as a Persistence Mechanism for Object-Oriented Applications, 2007,
-\href{http://digitalcommons.macalester.edu/mathcs_honors/6/}{Online}
+\bibitem{SKC} Symmetric Key Cryptography, 
+\href{http://en.wikipedia.org/wiki/Symmetric-key_algorithm}{Online}
 
-\bibitem{DeMichiel:2012:JPA}
-De\-Mi\-chiel. L. JSR 338: Java Persistence API, Version 2.1, 2012,
-\href{http://jcp.org/aboutJava/communityprocess/pr/jsr338/index.html}{Online}
-
-\bibitem{evans2003}
-Evans, E. Domain-Driven Design: Tackling Complexity in the Heart of Software, 2003, Addison-Wesley Professional.
-
-\bibitem{Fowler:2010:DSL}
-Fow\-ler, M. Domain-Specific Languages, Addison-Wesley Professional, 2010.
-
-\bibitem{Fowler:2012:OH}
-Fow\-ler. M. OrmHate, 2012,
-\href{http://martinfowler.com/bliki/OrmHate.html}{Online}
-
-\bibitem{Fielding2000}
-Fielding, R. T. Architectural styles and the design of network-based software architectures: Phd thesis, University of California, Irvine, USA, 2000.
-
-\bibitem{HBBPB:2008}
-Hambrick, G. et al. Persistence in the Enterprise: A Guide to Persistence Technologies, 2008, IBM Press.
-
-\bibitem{haywood2009}
-Haywood, D. Domain-Driven Design Using Naked Objects, 2009, Pragmatic Bookshelf.
-
-\bibitem{Hodych:2012}
-Hodych, O. et al. Visual Domain-Specific Query Language for Business Applications, in Proceedings of 14-th International Conference on System Analysis and Information Technologies (SAIT 2012), Kyiv, Ukraine, 2012, pp. 311-312.
-
-\bibitem{Hodych:2013}
-Hodych, O. et al. Object-relational mapping: Limitations of data querying, in Proceedings of 15-th International Conference on System Analysis and Information Technologies (SAIT 2013), Kyiv, Ukraine, May 27-31, 2013. — P. 376–377.
-
-\bibitem{HHN1986}
-Hutchins, E., Holland, J. and Norman, D. Direct Manipulation Interfaces, in User Centered System Design: New Perspectives on Human-computer Interaction, 1986, CRC Press.
-
-\bibitem{jacobson1992}
-Jacobson, I. Object Oriented Software Engineering: A Use Case Driven Approach, 1992, Addison-Wesley Professional.
-
-\bibitem{UBob:2002}
-Martin, R.~C. Agile Software Development, Principles, Patterns, and Practices, 2002, Prentice Hall.
-
-\bibitem{Neward:2006:VCS}
-New\-ard. T. The Vietnam of Computer Science, 2006,
-\href{http://blogs.tedneward.com/2006/06/26/The+Vietnam+Of+Computer+Science.aspx}{Online}
-
-\bibitem{oli2007}
-Oliv\'{e}, A. Conceptual Modeling of Information Systems, 2007, Springer.
-
-\bibitem{pawson2001}
-Pawson, R. and Matthews, R. Naked objects: a technique for designing more expressive systems, SIGPLAN Notices, V.36(12), pp.61--67, 2001.
-
-\bibitem{pawson2004}
-Pawson, R., Naked Objects, Ph.D Thesis, 2004, Trinity College, Dublin, Ireland.
-
-\bibitem{vernon2013}
-Vernon, V. Implementing Domain-Driven Design, 2013, Addison-Wesley Professional.
-
-\bibitem{shneiderman1982}
-Shneiderman, B. The future of interactive systems and the emergence of direct manipulation. Behaviour and Information Technology, 1(3):237–256, 1982.
-
-\bibitem{shneiderman1983}
-Shneiderman, B. Direct manipulation: A step beyond programming languages. Computer, 16(8):57–69, 1983.
-
-\bibitem{fowler2003} Fowler, M. AnemicDomainModel, 
-\href{http://www.martinfowler.com/bliki/AnemicDomainModel.html}{Online}
-
-\bibitem{fowler2006} Fowler, M. DslBoundary, 
-\href{http://martinfowler.com/bliki/DslBoundary.html}{Online}
-
-\bibitem{bozhanov2010} Bozhanov, B. On Domain-Driven Design, Anemic Domain Model, Code Generation, Dependency Injection and More…
-\href{http://techblog.bozho.net/on-domain-driven-design-anemic-domain-models-code-generation-dependency-injection-and-more/}{Online}
-
-\bibitem{sapm2014}  The Anaemic Domain Model is no Anti-Pattern, it’s a SOLID design, The School of Informatics, University of Edinburgh,
-\href{https://blog.inf.ed.ac.uk/sapm/2014/02/04/the-anaemic-domain-model-is-no-anti-pattern-its-a-solid-design/}{Online}
-
-\bibitem{yegge2006} Yegge, S. Execution in the Kingdom of Nouns,  
-\href{http://steve-yegge.blogspot.com.au/2006/03/execution-in-kingdom-of-nouns.html}{Online}
-
-\bibitem{SOLID} SOLID (object-oriented design), 
-\href{https://en.wikipedia.org/wiki/SOLID_(object-oriented_design)}{Online}
-
-\bibitem{CQRS} CQRS design pattern, 
-\href{https://cqrs.files.wordpress.com/2010/11/cqrs_documents.pdf}{Online}
 
 \end{thebibliography}
 %
