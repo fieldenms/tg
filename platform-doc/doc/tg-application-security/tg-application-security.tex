@@ -315,6 +315,14 @@
 \subsubsection*{Login and 2-factor authentication}
 	It is assumed that before the first time any user attempts to login to the system, they've been registered by a system administrator and have been provided with their username.
 	No passwords are specified for such first time users.
+	As the result of their registration, users receive an email advice of the fact and asking to setup their passwords.
+	\hyperref[sec:02:fig:2]{Fig.~\ref*{sec:02:fig:2}} depicts an example of such email.
+
+	\begin{figure}[h!tbp]
+	\centering
+	\includegraphics[width=1\linewidth]{images/02-new-user-registration-email.png}
+	\caption{An email for a newly registered user.}\label{sec:02:fig:2}
+	\end{figure}
 
 	When users access the system, they are presented with a login prompt where they can sing in by entering their credentials or, as it would be in case of first time users, choose to sign up.
 	The sign up functionality provides users with a prompt to enter their username (provided to them by a system administrator) and the password of their choosing (see more regarding this in the next subsection).
@@ -350,7 +358,7 @@
 
 	\begin{figure}[h!tbp]
 	\centering
-	\includegraphics[width=0.7\linewidth]{images/03-new-user-setting-up-password.png}
+	\includegraphics[width=0.6\linewidth]{images/03-new-user-setting-up-password.png}
 	\caption{Password strength indication.}\label{sec:02:fig:1}
 	\end{figure}
 
@@ -367,7 +375,7 @@
 	The delay time may increase exponentially with the increase of the number of unsuccessful sequential tries for the same username.
 	Such approach makes brute force attacks impractical.
 
-	TG applications implement for following algorithm:
+	TG applications implement for following rules:
 	\begin{itemize}
 	\item[--] 3 attempts within the first 15 seconds are permitted without any delay; and
 	\item[--] 1 attempt per 15 seconds is permitted after that; and
@@ -376,8 +384,34 @@
 
 	In addition, a possibility for a timing-based attacks during login to identify valid and invalid users is reduced by performing equivalent computations to take the same time for all login attempts.
 
-\subsubsection*{Restoring and resetting a password}
+\subsubsection*{Restoring or resetting a password}
+	The process of password restoring is almost identical to the sign up procedure.
+	\hyperref[sec:02:fig:3]{Fig.~\ref*{sec:02:fig:3}} illustrates how users can initial the password restoring/resetting process by going to ``Forgotten password''~(4), and specifying their user name or email address.
 
+	\begin{figure}[h!tbp]
+	\centering
+	\includegraphics[width=1\linewidth]{images/04-login-or-forgotten-password.png}
+	\caption{Restoring forgotten password.}\label{sec:02:fig:3}
+	\end{figure}
+
+	
+	The web page that is present after submitting a reset request is identical for successful and unsuccessful requests.
+	This is required to harden applications against enumerating of valid users or their email addresses.
+	\hyperref[sec:02:fig:4]{Fig.~\ref*{sec:02:fig:4}} provides an example of such a web page.
+	Further to that, TG applications implement the randomisation of the request/response time that is based on the real-time statistics for valid requests in order to reduce the risk of timing-based attacks whereby response times for valid and invalid users get analysed.
+
+	\begin{figure}[h!tbp]
+	\centering
+	\includegraphics[width=0.7\linewidth]{images/05-password-reset.png}
+	\caption{Password reset.}\label{sec:02:fig:4}
+	\end{figure}
+	
+	If the request to reset the password was submitted successfully, the user should receive an email containing a URI with a cryptographically random token.
+	The hash code of this token (not a token) is persisted at the server side agains the user to be used in the password resetting process for validation, and has an expiration time (15 minutes by default).
+	Clicking the hyperlink with a valid token loads a web page as in \hyperref[sec:02:fig:3]{Fig.~\ref*{sec:02:fig:3}}, where a new password can be specified.
+
+	As with the sign up procedure, the user needs to log in explicitly after successfully reseting their password.
+	At his stage and if enabled, a 2FA mechanism should require user to enter a valid passcode.
 
 \subsubsection*{Reduced Sign-On instead of Single Sign-On}
 
