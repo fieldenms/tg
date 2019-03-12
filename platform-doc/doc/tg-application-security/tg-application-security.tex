@@ -354,9 +354,29 @@
 	\caption{Password strength indication.}\label{sec:02:fig:1}
 	\end{figure}
 
-\paragraph*{Preventing rapid-fire login attempts}
+\paragraph*{Preventing rapid-fire login attempts and account lockout.}
 
-\subsubsection*{Restoring a password}
+	Success of brute force methods for guessing passwords is largely based on the number of passwords that can be fed into the systems in a given timeframe.
+	If the target application does not restrict the number of passwords that can be presented for a given user then the password will be picked up very quickly on the modern hardware.
+
+	The 2-factor or even 1.5-factor authentication helps a great deal to increase the number of combinations that would need to be presented to the system during a brute force attack.
+	However, depending on the computational power used for attacking, such approach could still be practical.
+
+	A better approach would be to slowdown the rate at which passwords can be presented to the system for a given user.
+	For example, three unsuccessful sequential entries for the same user could result in 1 minute delay before another password could be presented for the same user.
+	The delay time may increase exponentially with the increase of the number of unsuccessful sequential tries for the same username.
+	Such approach makes brute force attacks impractical.
+
+	TG applications implement for following algorithm:
+	\begin{itemize}
+	\item[--] 3 attempts within the first 15 seconds are permitted without any delay; and
+	\item[--] 1 attempt per 15 seconds is permitted after that; and
+	\item[--] lockout a user account after 6 unsuccessful attempts.
+	\end{itemize}
+
+	In addition, a possibility for a timing-based attacks during login to identify valid and invalid users is reduced by performing equivalent computations to take the same time for all login attempts.
+
+\subsubsection*{Restoring and resetting a password}
 
 
 \subsubsection*{Reduced Sign-On instead of Single Sign-On}
