@@ -198,7 +198,7 @@
 	\caption{A high-level security diagram for TG applications.}\label{sec:01:fig:1}
 	\end{figure}
 
-\section*{Secure communication and authentication}
+\section*{Secure communication and authentication}\label{sec:02}
 
 \subsection*{Server Authentication for User Protection}
 
@@ -257,9 +257,9 @@
 	This information is used by browser to check that the FQDN part of the URI they are accessing matches the \texttt{Common Name} property of the presented certificate.
 	Certificates for different servers should always be issued by signing Public/Private Keys that are unique to those servers (i.e. no server certificate should reuse the same key pair).
 
-
 \subsubsection*{Communication over HTTPS}
 
+	\paragraph{Java KeyStore.}
 	Jetty, which is a Servlet Engine and a HTTP Server used as the basis for TG Application Server, together with Restlet (a framework used for implementing Resource Oriented architecture of TG Application Server) support TLS infrastructure, and can be configured to enable communication over HTTPS.
 
 	A Java KeyStore (JKS) infrastructure is used for that (as in case of any Java application) to establish a TLS infrastructure.
@@ -277,17 +277,25 @@
 
 	Another important concern is how to handle passwords to a keystore file and Private Keys.
 	One common anti-pattern is to store those passwords in a class file as part of the source.
-	This leads to two possible ways for an adversary to access the passwords. Firstly, the application source might get stolen (e.g. a GitHub repo gets hacked).
+	This leads to two possible ways for an adversary to access the passwords.
+	Firstly, the application source might get stolen (e.g. a GitHub repo gets hacked).
 	In this case an adversary would obtain the passwords from the source files.
 	Secondly, packed jar files of the application server might get leaked as a result of some (even accidental) security breach (e.g. jar files got uploaded to an insecure FTP server).
 	By decompiling classes from jars, an adversary would obtain the passwords.
 
-	The most reasonable option is to provide those password as an application server argument during its start up.
-	Even in case of keeping them in a start up script on the deployment server would be much safer than keeping them in a class file (source or compiled).
+	The most reasonable option is to provide those password as an application server parameter during its start up.
+	Securing application configurations falls into the domain of the configuration management, and is usually specific to a deployment environment.
 
-	In addition, different TLS certificates should be used for development and deployment purposes, and kept in different keystore files.
+	In addition, different TLS certificates are used for development and deployment purposes, and kept in different keystore files.
 	In fact, the deployment keystore file should only be kept at the deployment server, and it would be best if the only person who knows the password to that keystore and Public Keys is the administrator of the deployment server.
 	This way any accidental information leaks would be significantly reduced.
+
+	\paragraph{Let's Encrypt.}
+	An alternative to maintaining JKS files, it to use Let's Encrypt -- a non-profit certificate authority that provides X.509 certificates for TLS at no charge~\cite{LEC}.
+	This approach is arguable more secure and easier to maintain due to an automated process for certificate renewal.
+	Also, using this approach fosters better modularity by moving responsibility for maintaining the TLS infrastructure away from the application.
+	For example, a reverse proxy such as HA Proxy, can be responsible for maintaining the TLS infrastructure.
+	This approached proved to be reliable in real life production deployments of TG applications, and is recommended as a default option.
 
 
 \subsection*{Client Authentication for Server Protection}
@@ -306,7 +314,10 @@
 \paragraph*{Authenticators}
 
 
-\section*{Authorisation}
+\subsection*{Securing communication between applications and databases}
+
+
+\section*{Authorisation}\label{sec:03}
 
 \subsection*{User roles and security tokens}
 
@@ -314,7 +325,7 @@
 
 \section*{User-driven data filtering}
 
-\section*{Deployment environment and its security}
+\section*{Deployment environment and its security}\label{sec:04}
 
 %
 % ---- Bibliography ----
@@ -327,6 +338,8 @@
 \bibitem{SKC} Symmetric Key Cryptography, 
 \href{http://en.wikipedia.org/wiki/Symmetric-key_algorithm}{Online}
 
+\bibitem{LEC} Let's Encrypt,
+\href{https://letsencrypt.org}{Online}
 
 \end{thebibliography}
 %
