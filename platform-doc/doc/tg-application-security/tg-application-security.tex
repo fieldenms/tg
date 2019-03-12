@@ -26,7 +26,7 @@
 
 \usepackage{tcolorbox}
 \usepackage{listings}
-\definecolor{codebgcolor}{HTML}{6E84D6}  
+\definecolor{codebgcolor}{HTML}{6E84D6}
 \definecolor{codefgcolor}{HTML}{000000}% 071D70
 \definecolor{basiccolor}{HTML}{000000}%1435AD
 \definecolor{stringcolor}{HTML}{050505}% 2C3E82
@@ -38,7 +38,7 @@
 \usepackage{subcaption}
 \usepackage{alltt}
 \usepackage{moreverb}
-% tikz related packages to provide scalable graphics 
+% tikz related packages to provide scalable graphics
 \usepackage{tikz}
 \usetikzlibrary{calc,mindmap,backgrounds,positioning,arrows,shapes,shapes.arrows,shapes.misc,automata,petri,patterns,scopes,chains,matrix,decorations.pathmorphing,shadows,calc}
 
@@ -52,7 +52,7 @@
   angle=0,
   opacity=0.4,
   contents={
-    \includegraphics[width=1.1\paperwidth,height=1.1\paperheight, keepaspectratio]{images/00-background.png}} 
+    \includegraphics[width=1.1\paperwidth,height=1.1\paperheight, keepaspectratio]{images/00-background.png}}
 }
 
 
@@ -111,73 +111,73 @@
 \onehalfspacing
 
 \section*{Introduction}\label{sec:00}
-	Web-facing applications are exposed to a lot more risk than Intranet applications, and thus require a lot more resilient to hacking security system that could withstand both eavesdropping and interrogative adversaries.
-	Application security cannot be an ``afterthought'' and simply must by weaved into the underlying software architecture and the application lifecycle.
-	The primary objective of this document is to provide an overview of the security system for application that are based on Trident Genesis (TG), and how our software engineering process facilitates the development of reliable and secure applications.
-	Having Trident Genesis as their foundation, applications can leverage a wide range of its intrinsic capabilities to:
+	Web-facing applications are exposed to a lot more risk than Intranet applications, and thus require a lot more resilience to malicious users hacking the security system, and the ability to withstand both eavesdropping and interrogative adversaries.
+	Application security cannot be an ``afterthought'' and simply must be woven into the underlying software architecture and application lifecycle.
+	The primary objective of this document is to provide an overview of the security system for applications that are based on Trident Genesis (TG), and how our software engineering process facilitates the development of reliable and secure applications.
+	Having Trident Genesis as their foundation, applications can leverage its wide range of intrinsic capabilities to:
 
 	\begin{itemize}
-	\item ensure secure communication
+	\item ensure secure communication,
 	\item sanitise input data and ensure its validity,
 	\item authenticate requests,
 	\item establish and protect authorisation boundaries,
-	\item filter responses to prevent leaking of sensitive data, and
+	\item filter responses to prevent the leaking of sensitive data, and
 	\item audit access to web resources
 	\end{itemize}
 
 	We also touch on the question of security pertaining to the deployment environment for TG applications.
-	Hosting of cloud-native applications is either based on VMs or containers, and there is an on-going debate as to what approach is more secure and what can be improved.
+    Hosting of cloud-native applications is either based on virtual machines (VMs) or containers, and there is an on-going debate as to what approach is more secure and what can be improved.
 	The environment that we recommend for deploying TG applications follows a hybrid approach, whereby VMs are used for isolation and Docker containers are used for controlled sharing and reliable continuous delivery.
 
 \section*{Security Objectives}\label{sec:01}
 
 	The following primary security objectives are defined for all TG applications.
-	As such they identify the primary security-related activities that are included into our current software engineering processes, and are enabled by the underlying software development technology\footnote{The numbers specified in brackets after each security objective title, are later used to designate elements of the security diagram, concerned with corresponding security objectives.)}.
+	As such they identify the primary security-related activities that are included into our current software engineering processes, and are enabled by the underlying software development technology\footnote{The numbers specified in brackets after each security objective title are used later on to designate elements of the security diagram relating to the corresponding security objectives.)}.
 
-	\paragraph{Secure communication (1).} 
-	    Communication between the client (web browser) and the application server, and the application server and the databases server need to be encrypted.
-		Transport Layer Security (TLS) is a cryptographic protocol for establishing a secure communication channel to prevent the interception of critical or sensitive information across the network and other Internet communications. 
-		SSL allows the client and the server (both application and database) to authenticate the identity of each other. 
+	\paragraph{Secure communication (1).}
+	    Communication between the client (web browser) and the application server, and the application server and the databases server, needs to be encrypted.
+		Transport Layer Security (TLS) is a cryptographic protocol for establishing a secure communication channel to prevent the interception of critical or sensitive information across the network.
+		SSL allows the client and the server (both application and database servers) to authenticate each other's identities.
 		After the participants are authenticated, SSL provides encrypted connections between them for secure message transmission.
 
 	\paragraph{Validating user inputs (2).}
-		When engineering applications that accesses and accept data, it should always be assumed that all user input is malicious until proven otherwise. 
-		For example, one well-known type of attack that can occur is called SQL injection, where a user input representing a malicious code is added to strings that are later passed to a database server for execution.
-		In TG applications this type of attacks is completely avoided due to its model-based architecture.
-		All user inputs are processed by the application server, which converts them to a typed data as defined by the model and, if successful, this typed data is validated based on the business rules that are defined for the model.
-		It is important to emphasise that the same validation rules are applied regardless of the request's origin -- be that a user input via a web browser or a GraphQL API request issued by a 3rd party server.
-		In addition, Entity Query Language (EQL) is used instead of SQL for data interrogation.
+		When engineering applications that access and accept data, it should always be assumed that all user input is malicious until proven otherwise.
+		For example, one well-known type of attack that can occur is called SQL injection, where user input representing malicious code is added to strings that are later passed to a database server for execution.
+		In TG applications this type of attack is completely avoided due to its model-based architecture.
+		All user input is processed by the application server, which converts it to typed data as defined by the model and, if successful, this typed data is validated based on the business rules that are defined for the model.
+		It is important to emphasise that the same validation rules are applied regardless of the request's origin -- be that user input via a web browser, or a GraphQL API request issued by a 3rd party server.
+		In addition, Entity Query Language (EQL) is used, instead of SQL, for data interrogation.
 		EQL is one level higher than SQL, and it guarantees that data queries are never concatenated from strings, and the use of typed parameters is automatically ensured throughout the application code.
 
-	\paragraph{Authenticatication (3).}
+	\paragraph{Authentication (3).}
 		Application users should be certain that they are accessing the right application on the correct server, and that their communication with the server is secure.
 		The HTTP protocol over TLS provides a complete solution for this.
 		At the same time, the application server needs to be protected from anonymous access, which requires a client authentication mechanism.
-		There are no standard reliable HTTP mechanisms for user authentication. 
-		However, there are very reasonable approaches on top of HTTP that proved to be highly reliable.
-		Both server and user authentication is discussed in details further in this document.
+		There are no standard reliable HTTP mechanisms for user authentication.
+		However, there are very reasonable approaches on top of HTTP that have proven to be highly reliable.
+		Both server and user authentication is discussed in more detail later in this document.
 
 	\paragraph{Authorisation (4).}
 		Access control to application resources and operations is defined through a mechanism of authorisation.
 	  	In TG applications, the authorisation mechanism utilises a combination of \emph{role-based} (RBAC) and \emph{rule-based} (RAC) access control models.
-		Roles are defined by application administrators and each users can have multiple roles assigned to them.
-		The concept of \emph{security tokens} is used to define authorisation boundaries, access to which is controlled by user roles.
+		Roles are defined by application administrators and each user can have multiple roles assigned to them.
+		The concept of \emph{security tokens} is used to define authorisation boundaries, access to, which is controlled by user roles.
 		Authorisation boundaries can be as granular as the modification of an individual entity property (a data field).
 		The RAC model provides a way to implement domain-specific access control rules that cannot be otherwise achieved by using the RBAC model.
 
 	\paragraph{Filter responses to prevent leaking of sensitive data (5).}
 		Filtering of responses is related to \emph{access control}, but deserves to be recognised as a separate objective.
-		There are two cases where the data to be returned as part of a request needs filtering~-- if it represents a secrete that should never be transmitted to the client (e.g. a hash code of a user password), and if some portion of the data that is requested by the user should not be revealed to that user (i.e. work orders performed by competing consultants).
+		There are two cases where the data to be returned as part of a request needs filtering~-- if it represents a secret that should never be transmitted to the client (e.g. a hash code of a user password), and if some portion of the data that is requested by the user should not be revealed to that user (e.g. work orders performed by competing consultants).
 		TG applications have native support for handling both cases.
-		The first case is handled by simply annotating the relevant entity properties (data fields) with \texttt{@Secret} annotation, and the data marshalling mechanism automatically restricts passing such data to the client.
+		The first case is handled by simply annotating the relevant entity properties (data fields) with the \texttt{@Secret} annotation, and the data marshalling mechanism automatically restricts passing such data to the client.
 		The second case is handled by the mechanism of \emph{user-driven} filtering that provides a way to configure application-wide filtering conditions, which are recognised by EQL when preparing SQL queries.
-		This means that only permitted for the user, who is making the request, data is retrieved from the database server.
+		This means that only data that should be visible to the user making the request is retrieved from the database server.
 
 	\paragraph{Auditing access to web resources (6).}
 		Unlike access control, which is responsible for permitting or restricting access to resources, access auditing is responsible for recording all access attempts~-- successful or not.
-		Every authenticated request in TG applications gets logged, including the information who made the request and the details of the request and its response.
-		This information can be used for retrospective analysis and audit to identify what information was accessed by what user in case of a security breach.
-		The same information is useful for identifying usage patterns by different users, what resources represent performance bottle necks and need to be optimised, etc.
+		Every authenticated request in TG applications gets logged, including information about who made the request, details of the request, and its response.
+		This information can be used for retrospective analysis and audit to identify what information was accessed by what user in the event of a security breach.
+		The same information is useful for identifying usage patterns by different users, what resources represent performance bottlenecks and need to be optimised, etc.
 		Potentially, auditing information can also be used for identifying anomalies in usage patterns to recognise, stop or prevent attacks on the system.
 
 	\paragraph{Configuration management (7).}
@@ -185,12 +185,12 @@
 		Configuration management refers to how these operational issues are handled.
 		The specific details may vary depending on different deployment environments.
 		However, many important principles stay the same.
-		Further in this document we review a configuration management approach, which can be used as a pattern in application to TG applications.
-	
+		Later in this document we review a configuration management approach, which can be used as a pattern in relation to TG applications.
+
 	\bigskip
 	The sections that follow cover some of the above security objectives in greater details.
 	\hyperref[sec:01:fig:1]{Fig.~\ref*{sec:01:fig:1}}~represents a high-level security diagram, which outlines a typical security context for TG applications.
-	Numbered labels designate those parts of the diagram that correspond to security objectives.
+	Numbered labels designate those parts of the diagram that correspond to the security objectives discussed above.
 
 	\begin{figure}[h!tbp]
 	\centering
@@ -332,10 +332,10 @@
 %
 \begin{thebibliography}{5}
 
-\bibitem{PKC} Public Key Cryptography, 
+\bibitem{PKC} Public Key Cryptography,
 \href{http://en.wikipedia.org/wiki/Public-key_cryptography}{Online}
 
-\bibitem{SKC} Symmetric Key Cryptography, 
+\bibitem{SKC} Symmetric Key Cryptography,
 \href{http://en.wikipedia.org/wiki/Symmetric-key_algorithm}{Online}
 
 \bibitem{LEC} Let's Encrypt,
