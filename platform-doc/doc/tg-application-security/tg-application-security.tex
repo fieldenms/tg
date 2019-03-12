@@ -300,9 +300,59 @@
 
 \subsection*{Client Authentication for Server Protection}
 
+	The previous section describes a way to protect the user from connecting to an untrusted server and from eavesdropping adversary listening to the data being exchanged.
+	This, however, does not protect the server from being accessed by an interrogative adversary, who would want to access the data that is stored at the server side.
+	There are no bullet proof methods agains user imposters, but there are approaches that would most certainly make it really challenging to break.
+
+	If a server needs to be protected from anonymous access, a client authentication mechanism would need to be put in place.
+	Unfortunately, unlike in case of HTTPS, there are no standard reliable HTTP mechanisms for user authentication.
+	However, there are very reasonable approaches on top of HTTP that proved to be highly reliable.
+	Article ``Dos and Don’ts of Client Authentication on the Web''~\cite{MIT} by MIT Laboratory for Computer Science provides a really good insight into the problem with client authentication and offers one possible solution that was well analysed from different penetration perspectives.
+	TG employs the system based on the proposed approach, but with its own modification to further hardens the schema.
+
+	The rest of the discussion is presented in several subsections, each addressing specific concerns of the developed methodology for client authentication.
+
 \subsubsection*{Login and 2-factor authentication}
+	It is assumed that before the first time any user attempts to login to the system, they've been registered by a system administrator and have been provided with their username.
+	No passwords are specified for such first time users.
+
+	When users access the system, they are presented with a login prompt where they can sing in by entering their credentials or, as it would be in case of first time users, choose to sign up.
+	The sign up functionality provides users with a prompt to enter their username (provided to them by a system administrator) and the password of their choosing (see more regarding this in the next subsection).
+
+	In order to validate that the person who is signing up is in fact a valid user and not an imposter, a cryptographically random token gets send to user's email and should be presented by the user to complete the sigh up process.
+	As the result of successful sign up, user's system record gets updated with a HMAC-SHA1 hash code of the password.
+
+	Once user is signed up, s/he is required to login explicitly.
+	Each explicit login can done in conjunction with 2-factor authentication~(2FA), where the user should enter a one-time passcode generated using HOTP~\cite{HOTP} or TOTP~\cite{TOTP} algorithms.
+	The delivery mechanism for passcodes could be an SMS or a mobile app such as Google Authenticator.
+	Alternatively, if neither SMS capability nor mobile authentication app is available, there could always be a weaker 1.5-factor authentication put in place, whereby passcodes are provided to users via email.
+
+	Upon login, the user may choose to mark the device that is used for accessing the application as trusted.
+	This tells the system not to require explicit login on this device in future.
+	More about this capability is discussed in later sections.
 
 \paragraph*{Password strength}
+	The resilience of user passwords to guessing is one of the essential security aspects.
+	If user passwords can be easily guessed then no matter how clever and bullet proof is the rest of the application security subsystem, an adversary would have one less barrier to break before gaining access to the application.
+	This would be almost like having no user passwords at all.
+	The 2-factor authentication makes this a bit harder for an adversary to use the password without the access to user's phone, but through social engineering this kind of information can also be obtained.
+	Therefore, it is best to all parts of the security puzzle to be really hard to break or guess.
+
+	There are information entropy based approaches to measuring the strength of passwords (e.g.~\cite{NIST}, \cite{DROPBOX}).
+	This approach is both stronger and easier to follow by users comparing to rule-based approaches.
+	The lower threshold for the password strength in TG applications is configurable.
+	
+	The strength of user passwords is only checked when users sing up or change their passwords.
+	Password strength is checked at both the client and the server sides.
+	At the client side users are provided with an instantaneous strength estimation feedback upon entering their password.
+	\hyperref[sec:02:fig:1]{Fig.~\ref*{sec:02:fig:1}} illustrates a situation where password, entered by the user, was recognised as ``strong''.
+	This way users know that their passwords are reliable and would not be rejected by the server upon submit.
+
+	\begin{figure}[h!tbp]
+	\centering
+	\includegraphics[width=0.7\linewidth]{images/03-new-user-setting-up-password.png}
+	\caption{Password strength indication.}\label{sec:02:fig:1}
+	\end{figure}
 
 \paragraph*{Preventing rapid-fire login attempts}
 
@@ -340,6 +390,22 @@
 
 \bibitem{LEC} Let's Encrypt,
 \href{https://letsencrypt.org}{Online}
+
+\bibitem{MIT} Dos and Don'ts of Client Authentication on the Web,
+\href{https://pdos.csail.mit.edu/papers/webauth:sec10.pdf}{Online}
+
+\bibitem{HOTP} HMAC-based one-time password algorithm,
+\href{https://en.wikipedia.org/wiki/HMAC-based_One-time_Password_algorithm}{Online}
+
+\bibitem{TOTP} Time-based one-time password algorithm,
+\href{https://en.wikipedia.org/wiki/Time-based_One-time_Password_algorithm}{Online}
+
+\bibitem{NIST} Password strength: NIST special publication 800-63,
+\href{http://en.wikipedia.org/wiki/Password_strength#NIST_Special_Publication_800-63}{Online}
+
+\bibitem{DROPBOX} Dropbox approach to passwords,
+\href{https://blogs.dropbox.com/tech/2012/04/zxcvbn-realistic-password-strength-estimation}{Online}
+
 
 \end{thebibliography}
 %
