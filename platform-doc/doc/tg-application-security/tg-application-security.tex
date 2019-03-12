@@ -11,6 +11,12 @@
 \usepackage{amssymb}
 \usepackage{amsfonts}
 
+% for making quotations
+\usepackage{etoolbox}
+\AtBeginEnvironment{quote}{\singlespacing\small}
+
+\usepackage{verbatim}
+
 \usepackage{graphicx}
 \usepackage[printwatermark]{xwatermark}
 % uncomment for watermarks
@@ -413,10 +419,79 @@
 	As with the sign up procedure, the user needs to log in explicitly after successfully reseting their password.
 	At his stage and if enabled, a 2FA mechanism should require user to enter a valid passcode.
 
-\subsubsection*{Reduced Sign-On instead of Single Sign-On}
+\subsection*{Reduced Sign-On instead of Single Sign-On}
+	A quote from a Wikipedia entry states the following about the very nature of single sign-on~(SSO):
 
-\paragraph*{Authenticators}
+	\begin{quote}
+	Single sign-on (SSO) is a property of access control of multiple related, but independent software systems.
+	With this property a user logs in once and gains access to all systems without being prompted to log in again at each of them.
+	\end{quote}
 
+	SSO implies a mutual trust between multiple software systems that are potentially developed by different vendors.
+	If one of such trusted systems gets hacked, the adversary automatically gains access to all other systems in the same SSO circle of trust.
+
+	A widely adopted alternative to this quite vulnerable approach is Reduced Sign-On~(RSO).
+	The main idea behind it is to reduce the number of times users need to enter their name and password, but require the users to login explicitly (at least once) to the independent software systems separately.
+	This approach is especially applicable for Web facing software systems, where weakness in one trusted application would give an adversary an unrestricted access to the rest of applications on the same server.
+
+	Although, TG applications can be integrated with identity providers (e.g. a corporate ADFS~\cite{ADFS}) by means of SAML~\cite{SAML} to achieve SSO, the default security subsystem in TG applications follows the RSO principle, and employs the concept of \emph{trusted devices} to identify devices where login sessions may remain valid for a long time without the need to re-authenticate explicitly.
+	Upon login, users indicate whether their current device (PC, tablet etc.) can be trusted for future sessions.
+	If so, session authenticators (discussed below) for those devices would be remembered as \emph{trusted} by the application, and all future attempts to access the application from trusted devices would not require the user to login explicitly again.
+
+	\emph{Untrusted devices} would also not require an explicit login for the duration of a uninterrupted/continuous user session.
+	Once the user was logged in, each request to a TG application is recognised as a part of an \emph{uninterrupted} session if the time between sequential requests is sufficiently short (e.g. 5 minutes).
+	If a session from an untrusted device expires (e.g. the 5 minute timeframe has lapsed between sequential requests), the user is required to login explicitly again.
+	The same is true for trusted devices, but the expiration time is much longer (e.g. days rather than minutes, configurable).
+
+	The approach with trusted and untrusted devices provides a way to accomplish a reduced sing-on in different scenarious.
+	For trusted devices, this provides users with a convenience almost identical to SSO, whereby users do not need to login repeatedly.
+	And at the same time, it provides convenient and secure way for users to access the application from devices that cannot be fully trusted at times where there is no other alternative (e.g. a computer that is used by multiple users).
+
+\subsubsection*{Session management}
+	Upon a successful user login, the server issues a specially designed token to the client.
+	This token is used to automatically authenticate the same user for subsequent requests.
+	Such tokens are often referred to as \emph{security tokens} or simply \emph{authenticators}.
+	Their main purpose is to protect user passwords by removing the need to transmit it over a communication channel as part of each request.
+	This significantly reduces chances for user passwords to be stolen.
+	Authenticators play a key role to designate and track user sessions with the application, and provide a way to differentiate between trusted and untrusted devices.
+
+	\paragraph{Authenticator structure and lifecycle.}
+	Authenticators in TG applications consist of a username, series identifier, expiration time and a hash code of these three parts (HMAC-SHA1), all separated by double colon:
+	\begin{verbatim}
+	username::series identifier :: expiration time :: HMAC-SHA1
+	\end{verbatim}
+
+	The \texttt{username} part should correspond to the name provided by the user upon an explicit login.
+	It is considered to be ``easily guessable''.
+	That is, any usernames for registered in the system users can be easily obtained by an adversary by means of algorithmic generation.
+
+	The \texttt{series identifier} part is a cryptographically strong random string, which uniquely identifies a user session in a way that is extremely difficult to guess.
+	It is used in addition to a username in order to make authenticators more difficult to forge in a way explained further.
+	New series identifiers are generated for each request, replacing the previously associated with a corresponding user identifier.
+	Series identifiers are persisted into the session table.
+	However, to prevent massive identifier leaking in case of a stolen database, instead of the actual series identifiers, their HMAC codes are stored (the same protection as with user passwords).
+	The same username can be associated with several series identifiers in case of several devices being used by the user (e.g. user's table and a workstation).
+
+	The \texttt{expiration time} part holds the unix timestamp (number of milliseconds since 1970-01-01) when the session becomes stale (i.e. expires).
+	It allows for a quick check to be performed in order to identify requests against expired sessions without doing any database lookups.
+	This is especially convenient due to the RESTful nature of TG applications, which do not keep user sessions at the server side.
+
+	The \texttt{HMAC-SHA1} part is the hash code of the string that is built as a concatenation of the first three parts.
+	It is the corner stone of the authenticator's verification to ensure that the presented authenticator is indeed the same as was generated by the system and was not tempered with.
+	Hash codes for authenticators are generated using a secrete key (2048 or 4096 bit long), which is known only at the server side.
+	Therefore, if at least one character in the authenticator was tempered with, it would be identified immediately.
+
+	As can be deduced from the above, authenticators have several mutually checked layers of protection:
+	\begin{itemize}
+	\item Series identifiers are cryptographically random and thus difficult to guess in order to forge valid authenticators.
+	Even if authenticators get intercepted by an adversary, and are used to synthesise authenticators for other users, then due to series identifier uniqueness this would be automatically recognised as an attack.
+	Because series identifier are associated with usernames, it is possible to identify whose authenticators were intercepted or leaked, and a symmetrical protective action could be taken (e.g. invalidate all sessions or even disable user accounts associated with the stolen authenticators until the situation is being investigated).
+
+	\item The use of information hashing as part of authenticators provides quick and reliable way to verify authenticity of authenticators without any database lookups.
+	So, even if somehow series identifier/username associations are obtained and new authenticators are forged, the knowledge of a secrete key would be required to generate a valid hash code.
+	In order to obtain a secrete key a sophisticated server attack would be required.
+	At the same time, if a secrete key gets obtained by an adversary, users would still remain relatively safe due to the use of random difficult-to-guess series identifiers that are required to forge valid authenticators.
+	\end{itemize}
 
 \subsection*{Securing communication between applications and databases}
 
@@ -460,6 +535,14 @@
 \bibitem{DROPBOX} Dropbox approach to passwords,
 \href{https://blogs.dropbox.com/tech/2012/04/zxcvbn-realistic-password-strength-estimation}{Online}
 
+\bibitem{SSO} Single Sign-On,
+\href{https://en.wikipedia.org/wiki/Single_sign-on}{Online}
+
+\bibitem{ADFS} Active Directory Federation Services,
+\href{https://en.wikipedia.org/wiki/Active_Directory_Federation_Services}{Online}
+
+\bibitem{SAML} Security Assertion Markup Language,
+\href{https://en.wikipedia.org/wiki/Security_Assertion_Markup_Language}{Online}
 
 \end{thebibliography}
 %
