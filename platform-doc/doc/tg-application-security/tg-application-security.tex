@@ -10,7 +10,7 @@
 \usepackage{setspace}
 \usepackage{amssymb}
 \usepackage{amsfonts}
-
+\usepackage{underscore} % allows the use of _ in text without escaping
 % for making quotations
 \usepackage{etoolbox}
 \AtBeginEnvironment{quote}{\singlespacing\small}
@@ -561,13 +561,138 @@
 
 \section*{Authorisation}\label{sec:03}
 
+	Authorisation represents the next layer of security after authentication.
+	It governs \emph{access control} by identifying whether authenticated requests have sufficient privileges to access or execute the functionality of the application that is specified in the request.
+	This section discusses how \emph{user roles} and \emph{security tokens} are used by TG applications to manage access control.
+
 \subsection*{User roles and security tokens}
 
-\paragraph{Security Matrix.}
+	\paragraph{User Roles.}
+	Each application user may have 0 or more roles associated with them.
+	Active users should really have at least 1 role.
+	Editing data and executing actions, including the majority of the standard actions such as ``Delete'', requires an appropriate user role.
+	\hyperref[sec:03_01:fig:1]{Fig.~\ref*{sec:03_01:fig:1}} illustrates an attempt to delete selected entities by a user without a role.
+	Upon clicking the ``Delete'' action~(1) and confirming the intent, the user is toasted with a permission error~(2), which can be viewed in an information dialog~(3) by clicking the toast.
+	Permission errors are thrown either because the user has no active roles or their roles were not granted access to the corresponding \emph{security tokens}, which are discussed a bit further in this section.
 
-\section*{User-driven data filtering}
+	\begin{figure}[h!tbp]
+	\centering
+	\includegraphics[width=\linewidth]{images/06-permission-denied.png}
+	\caption{A permission error for a user with no active roles or the right security token permission.}\label{sec:03_01:fig:1}
+	\end{figure}
 
-\section*{Deployment environment and its security}\label{sec:04}
+	\hyperref[sec:03_01:fig:2]{Fig.~\ref*{sec:03_01:fig:2}} shows User Role Centre and Master.
+	As can be observed, entity User Role is a very simple activatable entity.
+	User roles are defined uniquely by their property ``Role Title'', require a description, and can either be active or inactive.
+	It is a good idea to provide a meaningful role description that would convey the role's intent.
+
+	Only active user roles are used as part of the authorisation process.
+	Users may have multiple roles and each user needs to have their roles specified separately.
+	Inactive roles have no impact on users' permissions (i.e. inactive roles are ignored).
+	That is why it may be convenient to simply deactivate a role instead of disassociating that role from each user individually.
+
+	\begin{figure}[h!tbp]
+	\centering
+	\includegraphics[width=0.8\linewidth]{images/07-new-user-role.png}
+	\caption{Adding roles to a user.}\label{sec:03_01:fig:2}
+	\end{figure}
+
+	Roles are associated with users by using a secondary action in User Centre.
+	\hyperref[sec:03_01:fig:3]{Fig.~\ref*{sec:03_01:fig:3}} depicts ``Add/Remove Roles'' dialog, which appears when the secondary action is clicked~(1).
+	Those roles that are already associated with the current user appear at the top of the list as ticked items~(2).
+	The rest of the items are sorted alphabetically.
+	Roles can be found in the list by either scrolling or searching in the ``Type to search\ldots'' field at the top of the list.
+	Searching uses both role titles and their descriptions to find matching values.
+	Once the all the necessary roles are ticked, clicking ``SAVE''~(3) saves changes and associates the user with the selected roles.
+
+	\begin{figure}[h!tbp]
+	\centering
+	\includegraphics[width=0.8\linewidth]{images/08-adding-roles-to-users.png}
+	\caption{Adding roles to a user.}\label{sec:03_01:fig:3}
+	\end{figure}
+
+	\paragraph{Security Matrix.}
+	\emph{Security tokens} demarcate \emph{authorisation boundaries} within the system, and together with \emph{user roles} they form Security Matrix, which identifies what boundaries are accessible for which roles.
+	The union of authorisation boundaries that are accessible to all  \emph{user roles} for a specific \emph{user}, defines authorisation boundaries for that user.
+
+	\hyperref[sec:03_01:fig:4]{Fig.~\ref*{sec:03_01:fig:4}} depicts Security Matrix for a subset of security tokens and roles defined for one of TG applications.
+	Security tokens are represented as a 2-level tree~(1).
+	The first level represents logical grouping of security tokens.
+	They correspond to application modules.
+	Tree nodes on the second level are the actual security tokens.
+
+	\begin{figure}[h!tbp]
+	\centering
+	\includegraphics[width=0.9\linewidth]{images/09-security-matrix.png}
+	\caption{Security Matrix.}\label{sec:03_01:fig:4}
+	\end{figure}
+
+	User roles are represented as columns~(2).
+	Both active and inactive roles are displayed.
+	The intersection of tree-nodes and columns~(3) is a matrix of actionable checkboxes\footnote{Can be ticked/unticked.}, which identify whether a user role has access to a specific security token or a group of tokens in case an intersection corresponds to a tree node in the first level (i.e. a group).
+	Empty checkboxes represent \emph{no access}.
+	Ticked checkboxes represent \emph{access}.
+	And finally, checkboxes with a ``minus'' icon represent a group access, where some of security tokens are accessible and some are not.
+
+	For example, the checkbox at the intersection of role ``ADMIN'' and module ``Timesheets'' in \hyperref[sec:03_01:fig:4]{Fig.~\ref*{sec:03_01:fig:4}} is ticked.
+	As can be easily observed, all security tokens in that group are also ticked for role ``ADMIN''.
+	The checkbox at the intersection of role ``CTRT'' and module ``Timesheets'' is unticked -- no security tokens are accessible for this role.
+	Role ``CTRT_INV'' has partial access to module ``Timesheets'' -- the checkbox is a ``minus'' and only some security tokens under ``Timesheets'' are ticked.
+
+	The tree with security tokens also has actionable checkboxes to the left of each node.
+	Similarly as before, these checkboxes indicate whether a security token, or a group of security tokens, is fully applied (ticked), partially applied (minus) or not applied (empty) to all of the user roles.
+	Ticking/unticking these checkboxes affects all visible user roles\footnote{Security Matrix supports filtering by user roles and security tokens. Actioning checkboxes affect only the visible data.}.
+	In the case of group nodes, the effect is applied to all visible security tokens in that group and all visible user roles.
+
+	All security tokens belong to 1 of 6 possible authorisation boundary types and each pertains to a separate entity.
+	The titles of security tokens identify both an entity and an authorisation boundary that they belong to.
+	The following list explains all authorisation boundary types.
+
+	\begin{enumerate}
+		\item\textbf{Deletion of Entities} -- an authorisation boundary type that guards deletion of data; titles of security tokens demarcating this type of boundaries contain \texttt{Can Delete}; for example, \texttt{Holiday Can Delete} guards deletion of holidays; some entities such as \texttt{Work Activity} cannot be deleted by their nature, and hence there is no security token \texttt{Work Activity Can Delete}.
+
+		\item\textbf{Saving of Entity changes} -- an authorisation boundary type that guards saving of new and modified data; titles of corresponding security tokens contain \texttt{Can Save}; for example, \texttt{Holiday Can Save} guards saving of new and modification of existing holidays.
+
+		\item\textbf{Modification of Entity properties} -- an type that represents fine-grained authorisation boundaries, guarding changes to individual entity properties; titles of corresponding security tokens contain \texttt{Can Modify}; for example, \texttt{Person Can Modify property [User]} determines if property ``User'' of entity \texttt{Person} can be changed; some user roles may have the authority to change and save changes to any property entity \texttt{Person}, except its property ``User''.
+
+		\item\textbf{Execution of Actions} -- an authorisation boundary type that guards execution of action, be that top-level, primary, secondary or property action; titles of corresponding security tokens contain \texttt{Can Execute}; for example \texttt{Rotable Swap Action Can Execute} guards the ability to execute \texttt{Rotable Swap Action}.
+
+		\item\textbf{Opening Entity Masters} -- an authorisation boundary type that guards the ability to open Entity Masters, be that simple or compound ones; titles of corresponding security tokens contain \texttt{Can Open}; for example, \texttt{Work Activity Master Can Open} guards the ability to open Work Activity Master; users may have the authority to search and view work activities in Work Activity Centre, but may have no authority to load those work activities into the corresponding master; the same security token guards the ability to create new work activities via Work Activity Master.
+
+		\item\textbf{Access to Compound Entity Masters menu} -- an authorisation boundary type that guards access to individual menu items on Compound Entity Masters, effectively providing fine-grained control over what parts of any Compound Entity Master can and cannot be accessed by users; titles of corresponding security tokens contain \texttt{Can Access}; for example, \texttt{Work Activity Master Purchase Orders Menu Item Can Access} guards the ability to access menu item ``Purchase Orders'' on Work Activity Master.
+	\end{enumerate}
+
+	Security Matrix provides the ability to filter by security tokens and user roles (case insensitive), which can be convenient when there is a need to work with a specific subset of user roles or security tokens.
+	Filtering is performed by matching the values specified anywhere in the security token titles and user role titles.
+	Multiple filtering values can be specified by separated them with a comma.
+
+	\hyperref[sec:03_01:fig:5]{Fig.~\ref*{sec:03_01:fig:5}} depicts the result of Security Matrix filtering.
+	Field~(1) is used to filter Security Matrix by security tokens, and in this case it contains value ``holiday''.
+	Field~(2) is used for filtering by user roles, which is empty.
+	As can be observed, Security Matrix displays~(3) only those security tokens that contains value ``holiday'' (highlighted in bold) and the corresponding grouping node.
+	All existing user roles (active or not)~(4) are present as there was no filtering applied to them.
+	Any changes to security token accessibility would affect only the visible tokens and roles.
+	For example, ticking group node ``Administration'' would assign access for all currently visible user roles to all currently visible security tokens.
+	Invisible security tokens that belong to the same group would not be affected.
+
+	\begin{figure}[h!tbp]
+	\centering
+	\includegraphics[width=0.9\linewidth]{images/10-security-matrix-filtering.png}
+	\caption{Filtering in Security Matrix.}\label{sec:03_01:fig:5}
+	\end{figure}
+
+	Changes to security token access rights are recognised by the system immediately after these changes are saved, which can be achieved by clicking button ``SAVE''~(5).
+	Security Matrix is a convenient tool where the relationships between multiple security tokens and multiple user roles can be setup and saved in a single transaction.
+
+	As another example of filtering in Security Matrix, \hyperref[sec:03_01:fig:6]{Fig.~\ref*{sec:03_01:fig:6}} depicts the result of filtering by both security tokens and user roles with multiple matching values, which are separated by a comma.
+
+	\begin{figure}[h!tbp]
+	\centering
+	\includegraphics[width=0.9\linewidth]{images/11-security-matrix-filtering-can-modif-and-roles.png}
+	\caption{More filtering in Security Matrix.}\label{sec:03_01:fig:6}
+	\end{figure}
+
+\section*{Configuration management}\label{sec:04}
 
 %
 % ---- Bibliography ----
