@@ -21,7 +21,7 @@
   "_resolved": "https://registry.npmjs.org/lodash.create/-/lodash.create-3.1.1.tgz",
   "_shasum": "d7f2849f0dbda7e04682bb8cd72ab022461debe7",
   "_spec": "lodash.create@3.1.1",
-  "_where": "/home/jhou/workspace/tg/platform-web-ui/src/main/resources/node_modules/wct-browser-legacy/node_modules/mocha",
+  "_where": "C:\\Users\\oleh\\workspace\\tg\\platform-web-ui\\src\\main\\resources\\node_modules\\wct-browser-legacy\\node_modules\\mocha",
   "author": {
     "name": "John-David Dalton",
     "email": "john.david.dalton@gmail.com",

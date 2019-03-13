@@ -976,15 +976,15 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 .bgColor("#CFD8DC")
                 .captionBgColor("#78909C")
                 .menu()
-                /*  */.addMenuItem("Close Leave Example").description("Close Leave Example").centre(configApp().getCentre(MiTgCloseLeaveExample.class).get()).done()
-                /*  */.addMenuItem("Custom group").description("Custom group")
+                /*  */.addMenuItem("Close Leave Example").description("Close Leave Example").icon("icons:close").centre(configApp().getCentre(MiTgCloseLeaveExample.class).get()).done()
+                /*  */.addMenuItem("Custom group").description("Custom group").icon("icons:group-work")
                 /*    */.addMenuItem("Entity Centre").description("Entity centre description").centre(entityCentre).done()
                 /*    */.addMenuItem("Not Generated Centre").description("Entity centre without calculated / custom properties, which type is strictly TgPersistentEntityWithProperties.class").centre(entityCentreNotGenerated).done()
                 /*  */.done()
-                /*  */.addMenuItem("Custom View").description("Custom view description").view(customView).done()
-                /*  */.addMenuItem("Tripple dec example").description("Tripple dec example").centre(configApp().getCentre(MiTgGeneratedEntityForTrippleDecAnalysis.class).get()).done()
-                /*  */.addMenuItem("Deletion Centre").description("Deletion centre description").centre(deletionTestCentre).done()
-                /*  */.addMenuItem("Last group").description("Last group")
+                /*  */.addMenuItem("Custom View").description("Custom view description").icon("icons:face").view(customView).done()
+                /*  */.addMenuItem("Tripple dec example").description("Tripple dec example").icon("icons:favorite-border").centre(configApp().getCentre(MiTgGeneratedEntityForTrippleDecAnalysis.class).get()).done()
+                /*  */.addMenuItem("Deletion Centre").description("Deletion centre description").icon("icons:find-in-page").centre(deletionTestCentre).done()
+                /*  */.addMenuItem("Last group").description("Last group").icon("icons:find-replace")
                 /*    */.addMenuItem("Property Dependency Example").description("Property Dependency Example description").centre(propDependencyCentre).done()
                 /*    */.addMenuItem("Property Descriptor Example").description("Property Descriptor Example description").centre(propDescriptorCentre).done()
                 /*    */.addMenuItem("TimeZones Example").description("TimeZone properties handling example").centre(configApp().getCentre(MiTgEntityWithTimeZoneDates.class).get()).done()
@@ -994,19 +994,19 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 .addMenuItem("GPS-треки").description(
                         "Перегляд, моніторинг та аналіз GPS повідомлень (у вигляді треків), отриманих від GPS-модулів, які встановлені на машини компанії." + //
                         "Є можливість переглядати обчислений кілометраж у вигляді графіка і / або таблиці."
-                ).centre(configApp().getCentre(MiTgMessage.class).get()).done()
+                ).icon("icons:cloud-queue").centre(configApp().getCentre(MiTgMessage.class).get()).done()
                 .addMenuItem("Зупинки").description(
                         "Перегляд, моніторинг та аналіз зупинок, які були здійснені машинами компанії." + "<br><br>"
                       + "Зупинка означає, що машина деякий час простоювала або повільно їхала в межах певної невеликої території. Порогові значення "
                       + "для радіусу території чи швидкості переміщення задає користувач. Також можна задавати "
                       + "пошук по машинах, організаційних підрозділах та часу здійснення зупинки."
-                ).centre(configApp().getCentre(MiTgStop.class).get()).done()
+                ).icon("icons:card-giftcard").centre(configApp().getCentre(MiTgStop.class).get()).done()
                 .addMenuItem("Моніторинг в реальному часі").description(
                         "Центр для перегляду машин у реальному часі на карті."
-                ).centre(configApp().getCentre(MiTgMachineRealtimeMonitor.class).get()).done()
+                ).icon("icons:open-with").centre(configApp().getCentre(MiTgMachineRealtimeMonitor.class).get()).done()
                 .addMenuItem("Гео-зони").description(
                         "Перегляд, моніторинг та аналіз гео-зон."
-                ).centre(configApp().getCentre(MiTgPolygon.class).get()).done()
+                ).icon("icons:flag").centre(configApp().getCentre(MiTgPolygon.class).get()).done()
                 .done().done()
                 .addModule("Accidents")
                 .description("Accidents")

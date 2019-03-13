@@ -48,9 +48,9 @@ const template = html`
 
         #iActionButton {
             display: flex;
-            height: var(--tg-ui-action-icon-button-height);
-            width: var(--tg-ui-action-icon-button-width);
-            padding: var(--tg-ui-action-icon-button-padding);
+            height: var(--tg-ui-action-icon-button-height, 40px);
+            width: var(--tg-ui-action-icon-button-width, 40px);
+            padding: var(--tg-ui-action-icon-button-padding, 8px);
         }
     </style>
     <paper-icon-button id="iActionButton" hidden$="[[!isIconButton]]" icon="[[icon]]" on-tap="_run" disabled$="[[_computeDisabled(isActionInProgress, disabled)]]" tooltip-text$="[[longDesc]]"></paper-icon-button>

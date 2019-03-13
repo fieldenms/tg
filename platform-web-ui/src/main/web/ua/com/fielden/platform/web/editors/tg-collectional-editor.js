@@ -152,7 +152,7 @@ const additionalTemplate = html`
     </custom-style>`;
 const customInputTemplate = html`
     <iron-input bind-value="{{_phraseForSearching}}" class="custom-input-wrapper" >
-        <input id="searchInput" class="custom-input" placeholder="Type to search..." on-input="_onInput" on-tap="_onTap" on-mousedown="_onTap" on-blur="_eventHandler">
+        <input id="searchInput" class="custom-input" placeholder="Type to search..." on-input="_onInput" on-tap="_onTap" on-mousedown="_onTap" on-blur="_eventHandler" autocomplete="off">
     </iron-input>
     <div class="layout vertical flex relative">
         <iron-list id="input" class="collectional-input fit" items="[[_entities]]" selected-items="{{_selectedEntities}}" selected-item="{{_selectedEntity}}" selection-enabled="[[_isSelectionEnabled(_forReview)]]" multi-selection>
