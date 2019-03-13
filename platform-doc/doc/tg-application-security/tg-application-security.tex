@@ -345,7 +345,7 @@
 	This tells the system not to require explicit login on this device in future.
 	More about this capability is discussed in later sections.
 
-\paragraph*{Password strength}
+	\paragraph*{Password strength}
 	The resilience of user passwords to guessing is one of the essential security aspects.
 	If user passwords can be easily guessed then no matter how clever and bullet proof is the rest of the application security subsystem, an adversary would have one less barrier to break before gaining access to the application.
 	This would be almost like having no user passwords at all.
@@ -493,6 +493,11 @@
 	At the same time, if a secrete key gets obtained by an adversary, users would still remain relatively safe due to the use of random difficult-to-guess series identifiers that are required to forge valid authenticators.
 	\end{itemize}
 
+	Another important aspect of the authenticator lifecycle is the fact that \texttt{series identifiers} get regenerated upon each request.
+	Effectively, by presenting a valid authenticator, a new authenticator gets issued with a newly generated \texttt{series identifier}, and this new authenticator is sent back to the client as part of the response.
+	Any previous authenticators for the same user are invalidated.
+	This property of authenticators is referred to as \emph{continuity} -- it helps to reduce the risk associated with stolen authenticators.
+
 	\paragraph{Safekeeping of authenticators.}
 	Authenticators identify users in exactly the same way as usernames and passwords.
 	This means that authenticators need to be protected from being stolen or leaked.
@@ -518,6 +523,32 @@
 	This informs the browser that such cookie should only be accessed by the originating server, and any attempt to access them from client-side scripts is strictly forbidden.
 	More about this can be read in~\cite{OWASP_HttpOnly} and in~\cite{HttpOnly}.
 
+	\paragraph{What happens if an authenticator gets stolen?}
+	Although, extremely unlikely, it is still possible to envisage a situation where users may have their authenticator stolen.
+	In this subsection we'd like to discuss what is the worst case scenario under this condition and what can be done to mitigate such risks.
+	There are two possible cases -- an authenticator is stolen from an untrusted devices, and from a trusted device:
+
+	\begin{itemize}
+	\item\textbf{Untrusted Device.}
+	Due to a very short (minutes) session life for untrusted devices, an adversary can only obtain a still valid session if they have access to the authenticated device immediately after the user performed the last request from that device.
+	In this case, an adversary would have a full access to the same application functionality and data as the original user.
+	Again, this is a very unlikely event, but still possible.
+
+	In order to prevent this from happening, the user must logout from the application once the work they were doing from an untrusted device is completed.
+	If this does not happen, it would only be possible to recognise a potentially unauthorised access by performing usage pattern analysis (e.g. too intensive system usage due to multiple simultaneous or close to each other requests that are not typical for a normal user activity, the same user may have started using the system from a different device, but there is still some activity associated with another session).
+
+	\item\textbf{Trusted Device.}
+	Authenticators on the trusted devices don't expire quickly and therefore represent a higher risk than authenticators on the untrusted devices.
+	Due to the use of HTTPS for communication and \texttt{HttpOnly} cookies for storing authenticators at the client side, the only way for an adversary to obtain an authenticator from a trusted device is to have direct access to that device.
+
+	If an adversary, after gaining access, would keep using the same trusted device, then the only way to identify unauthorised access is by analysing the usage patterns as in case of untrusted devices.
+	However, a more likely scenario is where an authenticator is stolen from a trusted device, and then used to access the application from a different device by presenting the stolen authenticator.
+
+	In this case, there are two possible scenarios -- the usage pattern analysis as before, or the legitimate user tries to access the system from the same trusted device where the authenticator was stolen from.
+	The latter case can be easily identified as an attack due to the property of continuity for authenticators.
+	Basically, if a verified by HMAC code authenticator is presented, but a series identifier is no longer associated with the username due to its regeneration upon every request, then all user sessions would be invalidated and an explicit login required.
+	This would prevent the adversary from any further access to the application.
+	\end{itemize}
 
 \subsection*{Securing communication between applications and databases}
 
