@@ -303,9 +303,9 @@ public class VulcanizingUtility {
             if (appWebUiResourcesPath != null) { // TODO remove if statement
                 FileUtils.copyDirectory(new File(appWebUiResourcesPath), new File("vulcan/resources"));
             }
-            FileUtils.copyFile(new File("vulcan/resources/desktop-startup-resources-origin.html"), new File("vulcan/desktop-startup-resources-origin.html"));
-            FileUtils.copyFile(new File("vulcan/resources/mobile-startup-resources-origin.html"), new File("vulcan/mobile-startup-resources-origin.html"));
-            FileUtils.copyFile(new File("vulcan/resources/login-startup-resources-origin.html"), new File("vulcan/login-startup-resources-origin.html"));
+            FileUtils.copyFile(new File("vulcan/resources/desktop-startup-resources-origin.js"), new File("vulcan/desktop-startup-resources-origin.js"));
+            FileUtils.copyFile(new File("vulcan/resources/mobile-startup-resources-origin.js"), new File("vulcan/mobile-startup-resources-origin.js"));
+            FileUtils.copyFile(new File("vulcan/resources/login-startup-resources-origin.js"), new File("vulcan/login-startup-resources-origin.js"));
         } catch (final IOException e) {
             logger.error(e.getMessage(), e);
             throw new IllegalStateException(e);

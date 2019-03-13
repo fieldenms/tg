@@ -21,7 +21,7 @@
   "_resolved": "https://registry.npmjs.org/sinon-chai/-/sinon-chai-2.14.0.tgz",
   "_shasum": "da7dd4cc83cd6a260b67cca0f7a9fdae26a1205d",
   "_spec": "sinon-chai@^2.10.0",
-  "_where": "/home/jhou/workspace/tg/platform-web-ui/src/main/resources/node_modules/wct-browser-legacy",
+  "_where": "C:\\Users\\oleh\\workspace\\tg\\platform-web-ui\\src\\main\\resources\\node_modules\\wct-browser-legacy",
   "author": {
     "name": "Domenic Denicola",
     "email": "d@domenic.me",

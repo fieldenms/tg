@@ -2,6 +2,8 @@ import '@polymer/polymer/polymer-element.js';
 import '@polymer/polymer/polymer-legacy.js';
 import '@polymer/app-layout/app-layout.js';
 import '@polymer/app-route/app-route.js';
+import '@polymer/app-route/app-location.js';
+import '@polymer/app-route/app-route-converter.js';
 import '@polymer/iron-a11y-keys-behavior/iron-a11y-keys-behavior.js';
 import '@polymer/iron-ajax/iron-ajax.js';
 import '@polymer/iron-autogrow-textarea/iron-autogrow-textarea.js';

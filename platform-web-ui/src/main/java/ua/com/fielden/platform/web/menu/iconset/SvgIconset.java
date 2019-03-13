@@ -12,8 +12,8 @@ public class SvgIconset {
         final String iconsetId = "menu";
         final String iconsetIdDet = "menu-detailed";
         final int svgWidth = 1000;
-        final String outputFile = "src/main/resources/images/menu.html";
-        final String outputFileDet = "src/main/resources/images/detailed/menu-detailed.html";
+        final String outputFile = "src/main/resources/images/menu.js";
+        final String outputFileDet = "src/main/resources/images/detailed/menu-detailed.js";
 
         final IronIconsetUtility iconsetUtility = new IronIconsetUtility(iconsetId, svgWidth, srcFolder);
         final IronIconsetUtility iconsetUtilityDet = new IronIconsetUtility(iconsetIdDet, svgWidth, srcFolderDet);
