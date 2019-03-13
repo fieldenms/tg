@@ -551,7 +551,13 @@
 	\end{itemize}
 
 \subsection*{Securing communication between applications and databases}
+	The need to secure a connection between web clients and the application server is obvious.
+	However, it might be equally important to secure communication between the application server and the database server.
+	This is especially relevant for cloud environments whereby these servers are virtual and should strictly limit who can and cannot connect to them.
 
+	Most popular RDBMS vendors these days provide capabilities to encrypt client/server\footnote{\emph{Client} is in this case the application server, and \emph{server} is the database server.} communications for increased security.
+	For example, Microsoft SQL Server and PostgreSQL natively support TLS, which can be used to encrypt the communication as well as to perform identity verification of clients and servers.
+	Alternatively, if for some reason the target RDBMS does not support TLS or setting up the TLS infrastructure for individual applications yields too much administrative overhead, it is always possible to use SSH tunnelling to encrypt the network connection between the application and RDBMS servers.
 
 \section*{Authorisation}\label{sec:03}
 
