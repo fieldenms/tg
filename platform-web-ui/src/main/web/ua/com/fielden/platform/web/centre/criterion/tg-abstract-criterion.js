@@ -27,7 +27,7 @@ const template = html`
             padding-top: 15px;
         }
         .criterion-container {
-            margin-right: 10px;
+            margin-right: 6px;
         }
         .mnemonic-layer, .criterion-container ::slotted(.mnemonic-layer) {
             margin-bottom: 8px;
@@ -56,16 +56,10 @@ const template = html`
             );
             pointer-events: none;
         }
-        #iconButton::shadow #ink /*FIXME*/ {
+        #iconButton {
             width: 32px;
             height: 32px;
-            top: -4px;
-            left: -4px;
-        }
-        #iconButton {
-            width: 24px;
-            height: 24px;
-            padding: 0;
+            padding: 4px;
             margin-bottom: 8px;
         }
     </style>

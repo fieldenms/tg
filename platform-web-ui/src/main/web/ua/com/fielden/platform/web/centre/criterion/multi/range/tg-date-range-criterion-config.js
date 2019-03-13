@@ -26,11 +26,8 @@ const template = html`
             --paper-radio-button-checked-ink-color: var(--paper-light-blue-700);
             font-family: 'Roboto', 'Noto', sans-serif;
         }
-        paper-radio-button::shadow #ink /* FIXME */ {
-            top: -10px;
-            left: -10px;
-            width: 36px;
-            height: 36px;
+        paper-radio-button {
+            --calculated-paper-radio-button-ink-size: 36px;
         }
     </style>
     <custom-style>
