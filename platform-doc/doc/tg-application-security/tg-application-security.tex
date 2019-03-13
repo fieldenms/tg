@@ -466,7 +466,7 @@
 	That is, any usernames for registered in the system users can be easily obtained by an adversary by means of algorithmic generation.
 
 	The \texttt{series identifier} part is a cryptographically strong random string, which uniquely identifies a user session in a way that is extremely difficult to guess.
-	It is used in addition to a username in order to make authenticators more difficult to forge in a way explained further.
+	It is used in addition to a username in order to make authenticators more difficult to forge in a way explained a bit later.
 	New series identifiers are generated for each request, replacing the previously associated with a corresponding user identifier.
 	Series identifiers are persisted into the session table.
 	However, to prevent massive identifier leaking in case of a stolen database, instead of the actual series identifiers, their HMAC codes are stored (the same protection as with user passwords).
@@ -492,6 +492,32 @@
 	In order to obtain a secrete key a sophisticated server attack would be required.
 	At the same time, if a secrete key gets obtained by an adversary, users would still remain relatively safe due to the use of random difficult-to-guess series identifiers that are required to forge valid authenticators.
 	\end{itemize}
+
+	\paragraph{Safekeeping of authenticators.}
+	Authenticators identify users in exactly the same way as usernames and passwords.
+	This means that authenticators need to be protected from being stolen or leaked.
+
+	The most obvious way to steal authenticators would be eavesdropping on the communication channel.
+	However, this is avoided by using HTTPS, which should be taken for granted in case of all TG applications.
+	Another, less obvious way, is obtaining authenticators from either the server or the client side, where authenticators have to be persisted for reuse.
+
+	In case of the server side, persisting of authenticators is required for validation.
+	This is especially essential to identify stolen authenticators as explained later.
+	Safekeeping authenticators at the server side is achieved by hashing their series identifier part before persisting.
+	This way, it is impossible to reconstruct the original value by the very nature of cryptographic hashing (has codes cannot be decoded, they are one way encoding only).
+	One needs to have the original value in order to obtain a corresponding hash code.
+	Therefore, when a client request presents a series identifier as part of its authenticator, its hash code gets computed and then the hash code is compared agains the persisted value.
+	It is important to note that such approach also reduces the risk of Remote Timing Attacks~\cite{RTA}.
+
+	For the client request to be authenticated it needs to include a valid authenticator.
+	If a client request does not have an authenticator it results in HTTP error 401 (unauthorised).
+	This means that once issued by the server, the authenticator has to be persisted also at the client side and be automatically included as part of the request each time the user attempts to access the server.
+	This is achieved by means of persistent cookies.
+
+	In order to protect cookies at the client side, mainly from being used in cross-site scripting (XSS)~\cite{XXS} attacks, they are marked as \texttt{HttpOnly} cookies.
+	This informs the browser that such cookie should only be accessed by the originating server, and any attempt to access them from client-side scripts is strictly forbidden.
+	More about this can be read in~\cite{OWASP_HttpOnly} and in~\cite{HttpOnly}.
+
 
 \subsection*{Securing communication between applications and databases}
 
@@ -543,6 +569,20 @@
 
 \bibitem{SAML} Security Assertion Markup Language,
 \href{https://en.wikipedia.org/wiki/Security_Assertion_Markup_Language}{Online}
+
+\bibitem{RTA} Remote Timing Attack,
+\href{http://en.wikipedia.org/wiki/Timing_attack}{Online}
+
+\bibitem{XXS} Cross-site scripting,
+\href{http://en.wikipedia.org/wiki/Cross-site_scripting}{Online}
+
+\bibitem{HttpOnly} Protecting your cookies with HttpOnly,
+\href{http://blog.codinghorror.com/protecting-your-cookies-httponly/}{Online}
+
+\bibitem{OWASP_HttpOnly} OWASP on HttpOnly,
+\href{https://www.owasp.org/index.php/HttpOnly}{Online}
+
+
 
 \end{thebibliography}
 %
