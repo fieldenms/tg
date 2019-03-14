@@ -1,5 +1,6 @@
 import { Polymer } from '/resources/polymer/@polymer/polymer/lib/legacy/polymer-fn.js';
 import { html } from '/resources/polymer/@polymer/polymer/lib/utils/html-tag.js';
+import { dom } from '/resources/polymer/@polymer/polymer/lib/legacy/polymer.dom.js';
 
 import '/resources/polymer/@polymer/iron-icons/maps-icons.js';
 import '/resources/polymer/@polymer/iron-icons/iron-icons.js';
@@ -13,7 +14,6 @@ import '/resources/polymer/@polymer/app-layout/app-drawer-layout/app-drawer-layo
 import '/resources/polymer/@polymer/app-layout/app-drawer/app-drawer.js';
 import '/resources/polymer/@polymer/paper-icon-button/paper-icon-button.js';
 import '/resources/polymer/@polymer/paper-item/paper-item.js';
-/* FIXME import '/resources/polymer/@polymer/paper-styles/element-styles/paper-material-styles.js'; */
 import '/resources/polymer/@polymer/paper-listbox/paper-listbox.js';
 import '/resources/polymer/@polymer/paper-styles/paper-styles-classes.js';
 import '/resources/polymer/@polymer/paper-toolbar/paper-toolbar.js';
@@ -488,10 +488,7 @@ Polymer({
     },
 
     _focusMenu: function () {
-        const autoFocusedNode = this.$.drawerPanel._getAutoFocusedNode(); /* FIXME */
-        if (autoFocusedNode) {
-            autoFocusedNode.focus();
-        }
+        this.$.menu.focus();
     },
 
     _onTransitionEnd: function (e) {
