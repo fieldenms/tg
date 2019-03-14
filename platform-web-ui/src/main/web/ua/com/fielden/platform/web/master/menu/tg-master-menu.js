@@ -19,7 +19,7 @@ import '/resources/polymer/@polymer/paper-styles/paper-styles-classes.js';
 import '/resources/polymer/@polymer/paper-toolbar/paper-toolbar.js';
 /* TG ELEMENTS */
 import { TgFocusRestorationBehavior } from '/resources/actions/tg-focus-restoration-behavior.js';
-import { isInHierarchy } from '/resources/reflection/tg-polymer-utils.js';
+import { isInHierarchy, deepestActiveElement, tearDownEvent } from '/resources/reflection/tg-polymer-utils.js';
 import { TgTooltipBehavior } from '/resources/components/tg-tooltip-behavior.js';
 import { TgReflector } from '/app/tg-reflector.js';
 import '/app/tg-app-config.js';
@@ -39,28 +39,28 @@ const template = html`
             --disabled-text-color: var(--paper-grey-400);
             --divider-color: #B6B6B6;
             /* Components */
-            /* FIXME paper-drawer-panel */
-            /* FIXME */--drawer-menu-color: #ffffff;
-            /* FIXME */--drawer-border-color: 1px solid #ccc;
-            /* FIXME */--drawer-toolbar-border-color: 1px solid rgba(0, 0, 0, 0.22);
             /* paper-listbox */
             --paper-listbox-background-color: #fff;
-            /* FIXME */--menu-link-color: #111111;
         }
         :host {
             display: inline-block;
-            /* FIXME */--paper-listbox-selected-item: {
-                background-color: var(--paper-blue-50)
-                /*var(--paper-blue-grey-50)*/
-                ;
-            }
-            ;
-            /* FIXME */--paper-menu-focused-item: {
+            --paper-item-selected: {
+                background-color: var(--paper-blue-50);
+            };
+            --paper-item-focused: {
                 background-color: inherit;
-            }
-            ;
+            };
         }
-        /* FIXME */paper-scroll-header-panel {
+        #drawer {
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            --app-drawer-content-container: {
+                border-right: 1px solid rgba(0, 0, 0, 0.14);
+                padding: 0;
+            }
+        }
+        .master-container {
             height: 100%;
         }
         paper-listbox {
@@ -75,21 +75,6 @@ const template = html`
             padding: 0 16px;
             height: 44px;
             font-size: 18px;
-        }
-        /* FIXME .paper-material {
-            border-radius: 2px;
-            height: 100%;
-            margin: 16px auto;
-            background: white;
-            width: calc(98% - 46px);
-            margin-bottom: 32px;
-            padding-left: 30px;
-            padding-right: 30px;
-        }*/
-        app-drawer-layout {
-            /* FIXME */--paper-drawer-panel-drawer-container: {
-                border-right: 1px solid rgba(0, 0, 0, 0.14);
-            }
         }
         iron-pages {
             padding: 8px 8px;
@@ -109,10 +94,10 @@ const template = html`
     <app-drawer-layout id="drawerPanel" fullbleed>
         <app-drawer id="drawer" disable-swipe="[[!mobile]]" slot="drawer">
             <paper-listbox id="menu" attr-for-selected="data-route" selected="{{route}}" style="height: 100%; overflow: auto;">
-                <slot id="menuItems" select="menu-item"></slot>
+                <slot id="menuItems" name="menu-item"></slot>
             </paper-listbox>
         </app-drawer>
-        <div class="relative">
+        <div class="master-container relative">
             <iron-pages id="mainPages" class="fit" attr-for-selected="data-route" selected="[[sectionRoute]]">
                 <slot name="menu-item-section"></slot>
             </iron-pages>
@@ -123,7 +108,7 @@ const template = html`
 const getKeyEventTarget = function (startFrom) {
     let parent = startFrom;
     while (parent && parent.tagName !== 'TG-CUSTOM-ACTION-DIALOG') {
-        parent = parent.parentElement || this.getRootNode().host;
+        parent = parent.parentElement || parent.getRootNode().host;
     }
     return parent || startFrom;
 };
@@ -486,12 +471,12 @@ Polymer({
 
     _showMenu: function () {
         if (this.isMenuVisible()) {
-            if (!isInHierarchy(this.$.drawerPanel._getDrawerContent(), document.activeElement)) {
-                this._previousActiveElement = document.activeElement;
+            if (!isInHierarchy(this.$.drawerPanel.drawer, deepestActiveElement())) {
+                this._previousActiveElement = deepestActiveElement();
                 this._focusMenu();
             }
         } else {
-            this._previousActiveElement = document.activeElement;
+            this._previousActiveElement = deepestActiveElement();
             this._toggleMenu();
         }
     },
@@ -503,14 +488,14 @@ Polymer({
     },
 
     _focusMenu: function () {
-        const autoFocusedNode = this.$.drawerPanel._getAutoFocusedNode();
+        const autoFocusedNode = this.$.drawerPanel._getAutoFocusedNode(); /* FIXME */
         if (autoFocusedNode) {
             autoFocusedNode.focus();
         }
     },
 
     _onTransitionEnd: function (e) {
-        const target = Polymer.dom(e).localTarget;
+        const target = e.target;
         if (target !== this) {
             // ignore events coming from the light dom
             return;
@@ -522,8 +507,8 @@ Polymer({
                     delete this._openedByAction;
                 }
             } else {
-                const drawerContent = this.$.drawerPanel._getDrawerContent();
-                if (isInHierarchy(drawerContent, document.activeElement) || !isInHierarchy(this.keyEventTarget, document.activeElement)) {
+                const drawerContent = this.$.drawerPanel.drawer;
+                if (isInHierarchy(drawerContent, deepestActiveElement()) || !isInHierarchy(this.keyEventTarget, deepestActiveElement())) {
                     if (this._previousActiveElement && !isInHierarchy(drawerContent, this._previousActiveElement) && isInHierarchy(this.keyEventTarget, this._previousActiveElement)) {
                         this._previousActiveElement.focus();
                     } else {
@@ -583,7 +568,7 @@ Polymer({
      * A function for show-dialog attribute of tg-ui-action, which is used in case of master with menu to load and display a corresponding menu item view.
      */
     _showMenuItemView: function (action) {
-        var section = Polymer.dom(this).querySelector('tg-master-menu-item-section[data-route=' + action.getAttribute('data-route') + ']');
+        const section = this.querySelector('tg-master-menu-item-section[data-route=' + action.getAttribute('data-route') + ']');
         section.activate(action);
     },
 
@@ -592,13 +577,13 @@ Polymer({
      */
     focusView: function () {
         if (this.sectionRoute !== undefined) {
-            const section = Polymer.dom(this).querySelector('tg-master-menu-item-section[data-route=' + this.sectionRoute + ']');
+            const section = this.querySelector('tg-master-menu-item-section[data-route=' + this.sectionRoute + ']');
             section.focusView();
         }
     },
 
     focusNextView: function (e) {
-        const currentlyFocused = document.activeElement;
+        const currentlyFocused = deepestActiveElement();
         if (!isInHierarchy(this, currentlyFocused) && this.isMenuVisible()) {
             this._focusMenu();
             tearDownEvent(e);
@@ -608,8 +593,8 @@ Polymer({
     },
 
     focusPreviousView: function (e) {
-        const currentlyFocused = document.activeElement;
-        if (isInHierarchy(this.$.drawerPanel._getDrawerContent(), currentlyFocused)) {
+        const currentlyFocused = deepestActiveElement();
+        if (isInHierarchy(this.$.drawerPanel.drawer, currentlyFocused)) {
             this.fire("tg-last-item-focused", {
                 forward: false,
                 event: e
@@ -621,7 +606,7 @@ Polymer({
 
     _focusNextSectionView: function (e) {
         if (this.sectionRoute !== undefined && (!this.$.drawerPanel.narrow || this.$.drawerPanel.selected === "main")) {
-            const section = Polymer.dom(this).querySelector('tg-master-menu-item-section[data-route=' + this.sectionRoute + ']');
+            const section = this.querySelector('tg-master-menu-item-section[data-route=' + this.sectionRoute + ']');
             section.focusNextView(e);
         } else {
             this.fire("tg-last-item-focused", {
@@ -633,7 +618,7 @@ Polymer({
 
     _focusPreviousSectionView: function (e) {
         if (this.sectionRoute !== undefined && (!this.$.drawerPanel.narrow || this.$.drawerPanel.selected === "main")) {
-            const section = Polymer.dom(this).querySelector('tg-master-menu-item-section[data-route=' + this.sectionRoute + ']');
+            const section = this.querySelector('tg-master-menu-item-section[data-route=' + this.sectionRoute + ']');
             section.focusPreviousView(e);
         } else if (this.isMenuVisible()) {
             this._focusMenu();
@@ -647,7 +632,7 @@ Polymer({
     },
 
     _focusMenuAndTearDown: function (e) {
-        if (!e.detail.forward && !isInHierarchy(this.$.drawerPanel._getDrawerContent(), document.activeElement) && this.isMenuVisible()) {
+        if (!e.detail.forward && !isInHierarchy(this.$.drawerPanel.drawer, deepestActiveElement()) && this.isMenuVisible()) {
             this._focusMenu();
             tearDownEvent(e.detail.event);
             tearDownEvent(e);
@@ -657,7 +642,7 @@ Polymer({
     _routeChanged: function (newRoute, oldRoute) {
         if (this.route !== this.sectionRoute) {
             if (this.sectionRoute !== undefined) {
-                const currentSection = Polymer.dom(this).querySelector('tg-master-menu-item-section[data-route=' + this.sectionRoute + ']');
+                const currentSection = this.querySelector('tg-master-menu-item-section[data-route=' + this.sectionRoute + ']');
                 if (!currentSection) {
                     throw 'Compound master\'s menu item section [' + this.sectionRoute + '] does not exist.';
                 }
@@ -710,7 +695,7 @@ Polymer({
 
     /** Used by the master, which incorporates this menu to check if it can be closed. */
     canLeave: function () {
-        const section = Polymer.dom(this).querySelector('tg-master-menu-item-section[data-route=' + this.route + ']');
+        const section = this.querySelector('tg-master-menu-item-section[data-route=' + this.route + ']');
         return section.canLeave();
     },
 
@@ -719,8 +704,8 @@ Polymer({
             this.$.drawerPanel.selected = 'main'; // close drawer in tablet|mobile mode when section route changes (menu item has been actioned by user)
         }
 
-        var oldSection = Polymer.dom(this).querySelector('tg-master-menu-item-section[data-route=' + oldRoute + ']');
-        var action = Polymer.dom(this).querySelector('tg-ui-action[data-route=' + newRoute + ']');
+        const oldSection = this.querySelector('tg-master-menu-item-section[data-route=' + oldRoute + ']');
+        const action = this.querySelector('tg-ui-action[data-route=' + newRoute + ']');
 
         if (oldSection && oldSection._element && typeof oldSection._element.removeOwnKeyBindings === 'function') {
             oldSection._element.removeOwnKeyBindings();

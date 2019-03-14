@@ -23,6 +23,7 @@ import static ua.com.fielden.platform.web.layout.api.impl.LayoutCellBuilder.layo
 import static ua.com.fielden.platform.web.layout.api.impl.LayoutComposer.CELL_LAYOUT;
 import static ua.com.fielden.platform.web.layout.api.impl.LayoutComposer.MARGIN;
 import static ua.com.fielden.platform.web.layout.api.impl.LayoutComposer.MARGIN_PIX;
+import static ua.com.fielden.platform.web.test.server.config.LocatorFactory.mkLocator;
 import static ua.com.fielden.platform.web.test.server.config.StandardActions.EDIT_ACTION;
 import static ua.com.fielden.platform.web.test.server.config.StandardActions.SEQUENTIAL_EDIT_ACTION;
 import static ua.com.fielden.platform.web.test.server.config.StandardMessages.DELETE_CONFIRMATION;
@@ -38,6 +39,7 @@ import org.apache.log4j.Logger;
 import com.google.inject.Inject;
 
 import fielden.test_app.config.close_leave.TgCloseLeaveExampleWebUiConfig;
+import fielden.test_app.config.compound.TgCompoundEntityWebUiConfig;
 import fielden.test_app.main.menu.close_leave.MiTgCloseLeaveExample;
 import ua.com.fielden.platform.attachment.AttachmentsUploadAction;
 import ua.com.fielden.platform.basic.autocompleter.AbstractSearchEntityByKeyWithCentreContext;
@@ -97,6 +99,7 @@ import ua.com.fielden.platform.sample.domain.TgSelectedEntitiesExampleAction;
 import ua.com.fielden.platform.sample.domain.TgSelectedEntitiesExampleActionProducer;
 import ua.com.fielden.platform.sample.domain.TgStatusActivationFunctionalEntity;
 import ua.com.fielden.platform.sample.domain.TgStatusActivationFunctionalEntityProducer;
+import ua.com.fielden.platform.sample.domain.compound.TgCompoundEntityLocator;
 import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.serialisation.jackson.entities.EntityWithInteger;
@@ -242,7 +245,9 @@ public class WebUiConfig extends AbstractWebUiConfig {
         TgStopWebUiConfig.register(injector(), configApp());
         TgMachineRealtimeMonitorWebUiConfig.register(injector(), configApp());
         TgPolygonWebUiConfig.register(injector(), configApp());
-
+        final TgCompoundEntityWebUiConfig tgCompoundEntityWebUiConfig = TgCompoundEntityWebUiConfig.register(injector(), configApp());
+        final EntityActionConfig mkTgCompoundEntityLocator = mkLocator(configApp(), injector(), TgCompoundEntityLocator.class, "tgCompoundEntity", "color: #0d4b8a");
+        
         //Centre configuration for deletion test case entity.
         final EntityCentre<TgDeletionTestEntity> deletionTestCentre = new EntityCentre<>(MiDeletionTestEntity.class, "TgDeletionTestEntity",
                 EntityCentreBuilder.centreFor(TgDeletionTestEntity.class)
@@ -951,6 +956,8 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 .addModule("Import utilities")
                 .description("Import utilities")
                 .withAction(actionForMainMenu(TgGeneratedEntity.class, "copyright", "color: yellow", null))
+                .withAction(mkTgCompoundEntityLocator)
+                .withAction(tgCompoundEntityWebUiConfig.newTgCompoundEntityAction)
                 .icon("menu:import-utilities")
                 .detailIcon("menu-detailed:import-utilities")
                 .bgColor("#5FBCD3")
