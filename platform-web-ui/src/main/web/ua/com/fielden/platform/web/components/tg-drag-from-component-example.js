@@ -1,7 +1,7 @@
 import '/resources/polymer/@polymer/polymer/polymer-legacy.js';
 
-import {Polymer} from '/resources/polymer/@polymer/polymer/lib/legacy/polymer-fn.js';
-import {html} from '/resources/polymer/@polymer/polymer/lib/utils/html-tag.js';
+import { Polymer } from '/resources/polymer/@polymer/polymer/lib/legacy/polymer-fn.js';
+import { html } from '/resources/polymer/@polymer/polymer/lib/utils/html-tag.js';
 
 import { TgDragFromBehavior } from '/resources/components/tg-drag-from-behavior.js';
 
@@ -21,9 +21,9 @@ Polymer({
     _template: template,
 
     is: 'tg-drag-from-component-example',
-    
+
     behaviors: [TgDragFromBehavior],
-    
+
     getElementToDragFrom: function (target) {
         const elem = document.createElement('div');
         elem.style.width = "50px";
@@ -31,11 +31,13 @@ Polymer({
         elem.style.backgroundColor = "green";
         return elem;
     },
-    
+
     getDataToDragFrom: function () {
         return {
-            name: "drag-from",
-            value: 12
+            "text/plain": JSON.stringify({
+                name: "drag-from",
+                value: 12
+            })
         };
     }
 });
