@@ -695,8 +695,8 @@
 \section*{Configuration management}\label{sec:04}
 	Configuration management is a systems engineering process for establishing and maintaining consistency of a product's performance, functional, and physical attributes with its requirements, design, and operational information throughout its life~\cite{CM}.
 	Until virtualisation was introduced, configuration management of applications and their environments was a complex process with multiple complicated, often manual, steps.
-	Ubiquitous use of the cloud and the computing platform of choice, led to the development of specialised configuration management tools such as Puppet and Chef.
-	Running software as containers such as Docker, offers an alternative approach that is many respects is simpler and more reliable.
+	Ubiquitous use of the cloud as the computing platform of choice, led to the development of specialised configuration management tools such as Puppet and Chef.
+	Running software as containers such as Docker, offers an alternative approach that in many respects is simpler and more reliable.
 
 	We highly recommend using Docker for deploying TG applications.
 	This provides a number of benefits:
@@ -715,13 +715,15 @@
 	Deployment environments for Docker vary in functionality and complexity, and can be represented by a single Virtual Machine (VM) with just a couple of Docker containers or a cluster of VMs with hundreds of containers orchestrated by Docker Swarm or Kubernetes.
 	Unless an orchestrated Docker environment is readily available, deploying a TG application to a Docker environment with a single VM represents a simple and proven in production approach.
 
-	\hyperref[sec:04:fig:1]{Fig.~\ref*{sec:04:fig:1}}~depicts a networking/security diagram for such a simple environment, which is a more detailed version of~\hyperref[sec:01:fig:1]{Fig.~\ref*{sec:01:fig:1}}.
+	\hyperref[sec:04:fig:1]{Fig.~\ref*{sec:04:fig:1}}~depicts a networking/security diagram for such a simple environment.
 	There are two zones on this diagram -- Internet~(1) and Cloud Environment~(2), which could be on-prem or a public cloud.
 	Virtual Machine~(3) represents the Docker environment, and Database Services~(4) can be either a database service such as Microsoft Azure SQL, or a database server running, for example, Microsoft SQL Server or PostgreSQL.
 
-	The first Docker container~(5) represents a reverse proxy and a load balancer such as HAProxy.
-	The second Docker container~(6) is an actual TG application.
-	Such configurations provides an easy way to scale the deployment up when and if required.
+	The first Docker container~(5) represents a reverse proxy and a load balancer such as HA Proxy.
+	In the proposed configuration it is also responsible for TLS termination of web requests (HTTPS)~-- encrypting and decrypting the traffic -- as well as maintaining certificates using the Let's Encrypt service~(8).
+	The second Docker container~(6) is the actual TG application.
+	Running instances of TG application servers behind HA Proxy that is both a load balancer and TLS termination proxy, provides an easy way to scale the deployment up when and if required by spinning off new Docker containers.
+	This configuration is also well suited for maintaining separate identical environments for UAT, training and production use.
 
 	\begin{figure}[h!tbp]
 	\centering
@@ -729,7 +731,20 @@
 	\caption{A single VM Docker deployment environment.}\label{sec:04:fig:1}
 	\end{figure}
 
+	Application settings~(7), including DB URI and login credentials, are stored outside the Docker image for a TG application.
+	There are several approaches how these settings can be passed to the Docker container.
+	In the simplest form application settings can be stored in a text file on the VM running Docker containers.
+	If the VM can be trusted then this file can potentially be stored as a plain text.
+	A better approach would be to encrypt the file in order to avoid accidental unauthorised access to its content.
+	A key to decrypt this file would still need to be passed into the TG application.
 
+	More sophisticated approaches for handling application secrets exist and can be utilised if required.
+	For example, Docker Swarm secrets~\cite{DSS} or HashiCorp Vault~\cite{HCV}.
+	However, these approaches do introduce additional administrative overheads.
+
+	In all cases, communication is tightly controlled by firewalls, which limits both ports and IP addresses that are permitted.
+	For example, a secure real-time application monitoring~(10) can be achieved by establishing an SSH tunnel.
+	Unlike normal HTTPS traffic(9) that is not limited to specific IP addresses, application monitoring requests should be restricted to a small number of IP addresses.
 %
 % ---- Bibliography ----
 %
@@ -782,6 +797,12 @@
 
 \bibitem{CM} Configuration management,
 \href{https://en.wikipedia.org/wiki/Configuration_management}{Online}
+
+\bibitem{DSS} Docker Swarm Secrets,
+\href{https://docs.docker.com/engine/swarm/secrets/}{Online}
+
+\bibitem{HCV} HashiCorp Vault,
+\href{https://www.vaultproject.io/}{Online}
 
 
 \end{thebibliography}
