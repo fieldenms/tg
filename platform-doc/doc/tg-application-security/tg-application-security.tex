@@ -693,36 +693,36 @@
 	\end{figure}
 
 \section*{Configuration management}\label{sec:04}
-	Configuration management is a systems engineering process for establishing and maintaining consistency of a product's performance, functional, and physical attributes with its requirements, design, and operational information throughout its life~\cite{CM}.
+	Configuration management is a systems engineering process for establishing and maintaining consistency of a product's performance, functional and physical attributes with its requirements, design and operational information throughout its life~\cite{CM}.
 	Until virtualisation was introduced, configuration management of applications and their environments was a complex process with multiple complicated, often manual, steps.
-	Ubiquitous use of the cloud as the computing platform of choice, led to the development of specialised configuration management tools such as Puppet and Chef.
-	Running software as containers such as Docker, offers an alternative approach that in many respects is simpler and more reliable.
+	Ubiquitous use of the cloud as the computing platform of choice led to the development of specialised configuration management tools such as Puppet and Chef.
+	Running software in containers such as Docker offers an alternative approach that in many respects is simpler and more reliable.
 
 	We highly recommend using Docker for deploying TG applications.
 	This provides a number of benefits:
 \begin{enumerate}
 	\item Exactly the same image that is tested in the integration development environment is deployed to the User Acceptance Testing (UAT) environment, and then deployed to the production environment.
-	\item Deployment consists of simply backing up the database, changing the Docker image tag, and then restarting the container/s.
+	\item Deployment consists of simply backing up the database, changing the Docker image tag in the startup script, and then restarting the container/s.
 	\item Rollbacks consist of simply restoring the database from the previous backup, changing the Docker image tag to the previous version, and restarting the container/s.
 	\item An appropriate Java Runtime and other dependencies are included in the Docker image -- configuration happens at build time rather than deployment time, which significantly reduces system maintenance overheads.
 	\item Any TG application can run anywhere that Docker is supported -- all that is needed is a relatively up-to-date Docker installation and a network connection.
 	\item Any number of containers can be spun up to cater for increased application load.
 	      Unused or idle containers can be spun down to save on infrastructure operating costs.
-	\item Distribution of updates is handled by Docker -- no more zipping/unzipping multiple files and copying directories around, or dealing with failed dependency downloads at the deployment time.
+	\item Distribution of updates is handled by Docker -- no more zipping/unzipping multiple files and copying directories around, or dealing with failed dependency downloads at deployment time.
 	\item Initial installation is a breeze -- just a few small changes to a configuration file in a template deployment directory and spin up a new container.
 \end{enumerate}
 
 	Deployment environments for Docker vary in functionality and complexity, and can be represented by a single Virtual Machine (VM) with just a couple of Docker containers or a cluster of VMs with hundreds of containers orchestrated by Docker Swarm or Kubernetes.
-	Unless an orchestrated Docker environment is readily available, deploying a TG application to a Docker environment with a single VM represents a simple and proven in production approach.
+	Unless an orchestrated Docker environment is readily available, deploying a TG application to a Docker environment with a single VM represents a simple approach that has been proven in a production environment.
 
 	\hyperref[sec:04:fig:1]{Fig.~\ref*{sec:04:fig:1}}~depicts a networking/security diagram for such a simple environment.
 	There are two zones on this diagram -- Internet~(1) and Cloud Environment~(2), which could be on-prem or a public cloud.
 	Virtual Machine~(3) represents the Docker environment, and Database Services~(4) can be either a database service such as Microsoft Azure SQL, or a database server running, for example, Microsoft SQL Server or PostgreSQL.
 
-	The first Docker container~(5) represents a reverse proxy and a load balancer such as HA Proxy.
+	The first Docker container~(5) represents a reverse proxy and a load balancer such as HAProxy.
 	In the proposed configuration it is also responsible for TLS termination of web requests (HTTPS)~-- encrypting and decrypting the traffic -- as well as maintaining certificates using the Let's Encrypt service~(8).
 	The second Docker container~(6) is the actual TG application.
-	Running instances of TG application servers behind HA Proxy that is both a load balancer and TLS termination proxy, provides an easy way to scale the deployment up when and if required by spinning off new Docker containers.
+	Running instances of TG application servers behind HAProxy that is both a load balancer and TLS termination proxy provides an easy way to scale the deployment up when and if required by spinning off new Docker containers.
 	This configuration is also well suited for maintaining separate identical environments for UAT, training and production use.
 
 	\begin{figure}[h!tbp]
@@ -732,7 +732,7 @@
 	\end{figure}
 
 	Application settings~(7), including DB URI and login credentials, are stored outside the Docker image for a TG application.
-	There are several approaches how these settings can be passed to the Docker container.
+	There are several approaches as to how these settings can be passed to the Docker container.
 	In the simplest form application settings can be stored in a text file on the VM running Docker containers.
 	If the VM can be trusted then this file can potentially be stored as a plain text.
 	A better approach would be to encrypt the file in order to avoid accidental unauthorised access to its content.
