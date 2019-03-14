@@ -17,8 +17,7 @@ function dragStartListener (e) {
 }
 
 function dragEndListener(e) {
-    Polymer.dom(document.body).removeChild(elementToDrag);
-    Polymer.dom.flush();
+    document.body.removeChild(elementToDrag);
     elementToDrag = null;
 }
 
