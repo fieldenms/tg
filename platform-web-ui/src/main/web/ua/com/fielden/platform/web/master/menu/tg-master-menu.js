@@ -469,9 +469,13 @@ Polymer({
         }
     },
 
+    _isElementInDrawer: function (element) {
+        return element.assignedSlot && element.assignedSlot.parentElement === this.$.menu;
+    },
+
     _showMenu: function () {
         if (this.isMenuVisible()) {
-            if (!isInHierarchy(this.$.drawerPanel.drawer, deepestActiveElement())) {
+            if (!this._isElementInDrawer(deepestActiveElement())) {
                 this._previousActiveElement = deepestActiveElement();
                 this._focusMenu();
             }
@@ -505,8 +509,8 @@ Polymer({
                 }
             } else {
                 const drawerContent = this.$.drawerPanel.drawer;
-                if (isInHierarchy(drawerContent, deepestActiveElement()) || !isInHierarchy(this.keyEventTarget, deepestActiveElement())) {
-                    if (this._previousActiveElement && !isInHierarchy(drawerContent, this._previousActiveElement) && isInHierarchy(this.keyEventTarget, this._previousActiveElement)) {
+                if (this._isElementInDrawer(deepestActiveElement()) || !isInHierarchy(this.keyEventTarget, deepestActiveElement())) {
+                    if (this._previousActiveElement && !this._isElementInDrawer(this._previousActiveElement) && isInHierarchy(this.keyEventTarget, this._previousActiveElement)) {
                         this._previousActiveElement.focus();
                     } else {
                         this.focusView();
@@ -591,7 +595,7 @@ Polymer({
 
     focusPreviousView: function (e) {
         const currentlyFocused = deepestActiveElement();
-        if (isInHierarchy(this.$.drawerPanel.drawer, currentlyFocused)) {
+        if (currentlyFocused.assignedSlot && currentlyFocused.assignedSlot.parentElement === this.$.menu) {
             this.fire("tg-last-item-focused", {
                 forward: false,
                 event: e
@@ -629,7 +633,7 @@ Polymer({
     },
 
     _focusMenuAndTearDown: function (e) {
-        if (!e.detail.forward && !isInHierarchy(this.$.drawerPanel.drawer, deepestActiveElement()) && this.isMenuVisible()) {
+        if (!e.detail.forward && !this._isElementInDrawer(deepestActiveElement()) && this.isMenuVisible()) {
             this._focusMenu();
             tearDownEvent(e.detail.event);
             tearDownEvent(e);

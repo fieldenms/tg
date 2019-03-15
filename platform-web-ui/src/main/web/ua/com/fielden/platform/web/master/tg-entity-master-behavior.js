@@ -667,10 +667,6 @@ const TgEntityMasterBehaviorImpl = {
                 document.body.appendChild(self._actionDialog);
             }
         }
-
-        if (!this._hasEmbededView() && !this._componentsToFocus) {
-            this._componentsToFocus = this.getFocusableElements();
-        }
     },
 
     /**
@@ -705,7 +701,7 @@ const TgEntityMasterBehaviorImpl = {
     },
 
     _getCurrentFocusableElements: function () {
-        return this._componentsToFocus.filter(element => !element.disabled && element.offsetParent !== null);
+        return this.getFocusableElements().filter(element => !element.disabled && element.offsetParent !== null);
     },
 
     wasLoaded: function () {
