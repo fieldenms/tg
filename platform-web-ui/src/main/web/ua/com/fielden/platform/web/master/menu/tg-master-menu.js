@@ -1,6 +1,5 @@
 import { Polymer } from '/resources/polymer/@polymer/polymer/lib/legacy/polymer-fn.js';
 import { html } from '/resources/polymer/@polymer/polymer/lib/utils/html-tag.js';
-import { dom } from '/resources/polymer/@polymer/polymer/lib/legacy/polymer.dom.js';
 
 import '/resources/polymer/@polymer/iron-icons/maps-icons.js';
 import '/resources/polymer/@polymer/iron-icons/iron-icons.js';
@@ -301,9 +300,9 @@ Polymer({
 
     attached: function () {
         const self = this;
-        // assign _createContextHolderForMenu to all tg-ui-action instances
-        setTimeout(function() {
-            const tgUiActions = self.$.menuItemActions.assignedNodes({flatten: true});
+        setTimeout(function () {
+            // assign _createContextHolderForMenu to all tg-ui-action instances
+            const tgUiActions = self.$.menuItemActions.assignedNodes({ flatten: true });
             if (tgUiActions && tgUiActions.length > 0) {
                 for (let index = 0; index < tgUiActions.length; index++) {
                     tgUiActions[index].createContextHolder = self._createContextHolderForMenu;
@@ -312,73 +311,76 @@ Polymer({
                     tgUiActions[index].style.display = 'none';
                 }
             }
-        }.bind(this), 0);
 
-        // subscribe to the channel and topics used by embedded masters (views for menu items) in order to 
-        // refresh the master entity that is bound to the top-most functional entity that is used for compound master header and gets propagated downwards to all menu items
-        // this ensures that changes to the master entity on any embedded master are correctly reflected everywhere else on the compound master
-        const eventChannel = self.uuid;
-        const eventTopics = ['save.post.success'];
-        // subscrive if needed
-        if (self._subscriptions.length === 0) {
-            for (let index = 0; index < eventTopics.length; index++) {
-                self._subscriptions.push(
-                    postal.subscribe({
-                        channel: eventChannel,
-                        topic: eventTopics[index],
-                        callback: self._refreshCompoundMaster.bind(self)
-                    }));
+            // Following postal subscriptions depend on self.uuid property which gets assigned through binding to parent master (Open Compound Master Action).
+            // We need to wait until the property actually gets assigned, that's why we put these subscriptions into setTimeout(function () {...}, 0) under attached callback (since web components v1).
+
+            // subscribe to the channel and topics used by embedded masters (views for menu items) in order to 
+            // refresh the master entity that is bound to the top-most functional entity that is used for compound master header and gets propagated downwards to all menu items
+            // this ensures that changes to the master entity on any embedded master are correctly reflected everywhere else on the compound master
+            const eventChannel = self.uuid;
+            const eventTopics = ['save.post.success'];
+            // subscrive if needed
+            if (self._subscriptions.length === 0) {
+                for (let index = 0; index < eventTopics.length; index++) {
+                    self._subscriptions.push(
+                        postal.subscribe({
+                            channel: eventChannel,
+                            topic: eventTopics[index],
+                            callback: self._refreshCompoundMaster.bind(self)
+                        }));
+                }
             }
-        }
 
-        // Every compound master gets opened from some centre as part of its functional action, usually 'result-set' action.
-        // This centre is needed to be refreshed in cases where some menu item embedded master has been saved and its flag 'shouldRefreshParentCentreAfterSave' is 'true'.
-        // Flag 'shouldRefreshParentCentreAfterSave' is now controlled using IMasterWithMasterBuilder API, specifically 
-        //   using methods 'withMaster' or 'withMasterAndWithNoParentCentreRefresh' on IMasterWithMaster0.
-        // Note, that centre could even be refreshed when:
-        //   1) Opening of compound master is performed; Updating of compound master header is performed;
-        //      -- need to just 'not specify' flag 'withNoParentCentreRefresh' on corresponding action, for e.g. for OpenVehicleMasterAction
-        //   2) Opening (or switching to) concrete compound master menu item;
-        //      -- need to just 'not specify' flag 'withNoParentCentreRefresh' on corresponding action, for e.g. for VehicleMaster_OpenTechDetails_MenuItem
-        // However, even if in 1) and 2) cases the centre could be refreshed, it is usually unpractical and should be avoided.
-        // TODO when Compound Master API will be implemented -- master-with-master menu item creation should hide the specification of flag 'withNoParentCentreRefresh' inside impl details.
+            // Every compound master gets opened from some centre as part of its functional action, usually 'result-set' action.
+            // This centre is needed to be refreshed in cases where some menu item embedded master has been saved and its flag 'shouldRefreshParentCentreAfterSave' is 'true'.
+            // Flag 'shouldRefreshParentCentreAfterSave' is now controlled using IMasterWithMasterBuilder API, specifically 
+            //   using methods 'withMaster' or 'withMasterAndWithNoParentCentreRefresh' on IMasterWithMaster0.
+            // Note, that centre could even be refreshed when:
+            //   1) Opening of compound master is performed; Updating of compound master header is performed;
+            //      -- need to just 'not specify' flag 'withNoParentCentreRefresh' on corresponding action, for e.g. for OpenVehicleMasterAction
+            //   2) Opening (or switching to) concrete compound master menu item;
+            //      -- need to just 'not specify' flag 'withNoParentCentreRefresh' on corresponding action, for e.g. for VehicleMaster_OpenTechDetails_MenuItem
+            // However, even if in 1) and 2) cases the centre could be refreshed, it is usually unpractical and should be avoided.
+            // TODO when Compound Master API will be implemented -- master-with-master menu item creation should hide the specification of flag 'withNoParentCentreRefresh' inside impl details.
 
-        // The following code subscribes tg-master-menu, which holds all menu items, to the events of successful save of its embedded masters.
-        // These events arrive only from those menu items, which have embedded masters inside (embedded centres or simple functional menu item do not generate such events).
-        // The channel contains uuid of parent OpenCompoundMaster master (for e.g. 'centre_tg-openvehiclemasteraction-master/b3e1343d-dd62-491e-89f9-f46d6fdf609f')
-        // After that the event is redirected to corresponding centre with tg-master-menu's centreUuid (for e.g. 'centre_Fleet/Vehicles')
-        if (self._centreRefreshRedirector === null) {
-            const embeddedMasterPostSaveChannel = 'centre_' + self.uuid;
-            const compoundMasterCentreRefreshChannel = 'centre_' + self.centreUuid;
-            const centreRefreshTopic = 'detail.saved';
-            self._centreRefreshRedirector = postal.subscribe({
-                channel: embeddedMasterPostSaveChannel,
-                topic: centreRefreshTopic,
-                callback: function (data, envelope) {
-                    postal.publish({
-                        channel: compoundMasterCentreRefreshChannel,
-                        topic: centreRefreshTopic,
-                        data: data
-                    });
-                }
-            });
-        }
-        if (self._dialogClosingRedirector === null) {
-            const embeddedMasterCancelChannel = self.uuid;
-            const compoundMasterCancelChannel = self.centreUuid;
-            const cancelTopic = 'refresh.post.success';
-            self._dialogClosingRedirector = postal.subscribe({
-                channel: embeddedMasterCancelChannel,
-                topic: cancelTopic,
-                callback: function (data, envelope) {
-                    postal.publish({
-                        channel: compoundMasterCancelChannel,
-                        topic: cancelTopic,
-                        data: data
-                    });
-                }
-            });
-        }
+            // The following code subscribes tg-master-menu, which holds all menu items, to the events of successful save of its embedded masters.
+            // These events arrive only from those menu items, which have embedded masters inside (embedded centres or simple functional menu item do not generate such events).
+            // The channel contains uuid of parent OpenCompoundMaster master (for e.g. 'centre_tg-openvehiclemasteraction-master/b3e1343d-dd62-491e-89f9-f46d6fdf609f')
+            // After that the event is redirected to corresponding centre with tg-master-menu's centreUuid (for e.g. 'centre_Fleet/Vehicles')
+            if (self._centreRefreshRedirector === null) {
+                const embeddedMasterPostSaveChannel = 'centre_' + self.uuid;
+                const compoundMasterCentreRefreshChannel = 'centre_' + self.centreUuid;
+                const centreRefreshTopic = 'detail.saved';
+                self._centreRefreshRedirector = postal.subscribe({
+                    channel: embeddedMasterPostSaveChannel,
+                    topic: centreRefreshTopic,
+                    callback: function (data, envelope) {
+                        postal.publish({
+                            channel: compoundMasterCentreRefreshChannel,
+                            topic: centreRefreshTopic,
+                            data: data
+                        });
+                    }
+                });
+            }
+            if (self._dialogClosingRedirector === null) {
+                const embeddedMasterCancelChannel = self.uuid;
+                const compoundMasterCancelChannel = self.centreUuid;
+                const cancelTopic = 'refresh.post.success';
+                self._dialogClosingRedirector = postal.subscribe({
+                    channel: embeddedMasterCancelChannel,
+                    topic: cancelTopic,
+                    callback: function (data, envelope) {
+                        postal.publish({
+                            channel: compoundMasterCancelChannel,
+                            topic: cancelTopic,
+                            data: data
+                        });
+                    }
+                });
+            }
+        }.bind(this), 0);
         //Needed to set the dynamic title
         this.fire('tg-dynamic-title-changed', this.sectionTitle);
         this.fire('tg-menu-appeared', {
