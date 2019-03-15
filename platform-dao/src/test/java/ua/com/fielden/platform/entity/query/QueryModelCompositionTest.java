@@ -6,6 +6,7 @@ import static ua.com.fielden.platform.entity.query.DbVersion.H2;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.expr;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.orderBy;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
+import static ua.com.fielden.platform.entity.query.fluent.LikeOptions.options;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -71,14 +72,14 @@ public class QueryModelCompositionTest extends BaseEntQueryCompositionTCase {
     @Test
     public void test_like() {
         assertModelsEquals( //
-        conditions(new LikeTest(prop("model.desc"), val(mercLike), false, false, H2)), //
+        conditions(new LikeTest(prop("model.desc"), val(mercLike), options().build(), H2)), //
                 conditions(where_veh.prop("model.desc").like().val(mercLike)));
     }
 
     @Test
     public void test_notLike() {
         assertModelsEquals( //
-        conditions(new LikeTest(prop("model.desc"), val(mercLike), true, false, H2)), //
+        conditions(new LikeTest(prop("model.desc"), val(mercLike), options().negated().build(), H2)), //
                 conditions(where_veh.prop("model.desc").notLike().val(mercLike)));
     }
 
@@ -224,14 +225,14 @@ public class QueryModelCompositionTest extends BaseEntQueryCompositionTCase {
     @Test
     public void test_ignore_of_null_value_in_condition1() {
         assertModelsEquals(//
-        conditions(new LikeTest(prop("model.desc"), val(mercLike), false, false, H2)), //
+        conditions(new LikeTest(prop("model.desc"), val(mercLike), options().build(), H2)), //
                 conditions(where_veh.prop("model.desc").like().iVal(mercLike)));
     }
 
     @Test
     public void test_ignore_of_null_value_in_condition2() {
         assertModelsEquals(//
-        conditions(new LikeTest(prop("model.desc"), iVal(null), false, false, H2)), //
+        conditions(new LikeTest(prop("model.desc"), iVal(null), options().build(), H2)), //
                 conditions(where_veh.prop("model.desc").like().iVal(null)));
     }
 
@@ -240,7 +241,7 @@ public class QueryModelCompositionTest extends BaseEntQueryCompositionTCase {
         final Map<String, Object> paramValues = new HashMap<String, Object>();
         paramValues.put("param", "MERC%");
         assertModelsEquals(//
-        conditions(new LikeTest(prop("model.desc"), val("MERC%"), false, false, H2)), //
+        conditions(new LikeTest(prop("model.desc"), val("MERC%"), options().build(), H2)), //
                 conditions(where_veh.prop("model.desc").like().param("param"), paramValues));
     }
 
@@ -249,7 +250,7 @@ public class QueryModelCompositionTest extends BaseEntQueryCompositionTCase {
         final Map<String, Object> paramValues = new HashMap<String, Object>();
         paramValues.put("param", null);
         assertModelsEquals(//
-        conditions(new LikeTest(prop("model.desc"), iVal(null), false, false, H2)), //
+        conditions(new LikeTest(prop("model.desc"), iVal(null), options().build(), H2)), //
                 conditions(where_veh.prop("model.desc").like().iParam("param"), paramValues));
     }
 

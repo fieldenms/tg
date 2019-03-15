@@ -1,5 +1,7 @@
 package ua.com.fielden.platform.entity.query.fluent;
 
+import static ua.com.fielden.platform.entity.query.fluent.LikeOptions.options;
+
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IComparisonOperand;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IComparisonOperator;
@@ -59,22 +61,22 @@ abstract class ComparisonOperator<T extends ILogicalOperator<?>, ET extends Abst
 
 	@Override
 	public IComparisonOperand<T, ET> like() {
-		return createIComparisonOperand(getTokens().like(false));
+		return createIComparisonOperand(getTokens().like(options().build()));
 	}
 
 	@Override
 	public IComparisonOperand<T, ET> notLike() {
-		return createIComparisonOperand(getTokens().like(true));
+		return createIComparisonOperand(getTokens().like(options().negated().build()));
 	}
 
 	@Override
 	public IComparisonOperand<T, ET> iLike() {
-		return createIComparisonOperand(getTokens().iLike(false));
+		return createIComparisonOperand(getTokens().like(options().caseInsensitive().build()));
 	}
 
 	@Override
 	public IComparisonOperand<T, ET> notILike() {
-		return createIComparisonOperand(getTokens().iLike(true));
+		return createIComparisonOperand(getTokens().like(options().caseInsensitive().negated().build()));
 	}
 
 	@Override

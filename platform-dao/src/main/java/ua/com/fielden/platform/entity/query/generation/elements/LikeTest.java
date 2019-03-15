@@ -7,6 +7,7 @@ import java.util.List;
 
 import ua.com.fielden.platform.entity.query.DbVersion;
 import ua.com.fielden.platform.entity.query.exceptions.EqlException;
+import ua.com.fielden.platform.entity.query.fluent.LikeOptions;
 
 public class LikeTest extends AbstractCondition {
     private final ISingleOperand leftOperand;
@@ -15,14 +16,14 @@ public class LikeTest extends AbstractCondition {
     private final boolean caseInsensitive;
     private final DbVersion dbVersion;
 
-    public LikeTest(final ISingleOperand leftOperand, final ISingleOperand rightOperand, final boolean negated, final boolean caseInsensitive, final DbVersion dbVersion) {
+    public LikeTest(final ISingleOperand leftOperand, final ISingleOperand rightOperand, final LikeOptions options, final DbVersion dbVersion) {
         if (dbVersion == null) {
             throw new EqlException("The dabase version is missing.");
         }
         this.leftOperand = leftOperand;
         this.rightOperand = rightOperand;
-        this.negated = negated;
-        this.caseInsensitive = caseInsensitive;
+        this.negated = options.negated;
+        this.caseInsensitive = options.caseInsensitive;
         this.dbVersion = dbVersion;
     }
 
