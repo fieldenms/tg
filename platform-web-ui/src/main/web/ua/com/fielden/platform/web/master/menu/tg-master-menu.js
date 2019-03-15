@@ -510,7 +510,6 @@ Polymer({
                     delete this._openedByAction;
                 }
             } else {
-                const drawerContent = this.$.drawerPanel.drawer;
                 if (this._isElementInDrawer(deepestActiveElement()) || !isInHierarchy(this.keyEventTarget, deepestActiveElement())) {
                     if (this._previousActiveElement && !this._isElementInDrawer(this._previousActiveElement) && isInHierarchy(this.keyEventTarget, this._previousActiveElement)) {
                         this._previousActiveElement.focus();
@@ -519,7 +518,6 @@ Polymer({
                     }
                 }
             }
-
         }
     },
 
