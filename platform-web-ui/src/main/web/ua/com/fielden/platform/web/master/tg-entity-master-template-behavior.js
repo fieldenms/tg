@@ -49,7 +49,7 @@ const TgEntityMasterTemplateBehaviorImpl = {
     },
 
     addOwnKeyBindings: function () {
-        const ownKeyBindings = this._ownKeyBindings;
+        const keyBindings = this.keyBindings;
         if (this.$.loader) {
             if (this.$.loader.wasLoaded) {
                 if (typeof this.$.loader.loadedElement.addOwnKeyBindings === 'function') {
@@ -61,8 +61,8 @@ const TgEntityMasterTemplateBehaviorImpl = {
                 return;
             }
         }
-        for (let shortcuts in ownKeyBindings) {
-            this.addOwnKeyBinding(shortcuts, ownKeyBindings[shortcuts]);
+        for (let shortcuts in keyBindings) {
+            this.addOwnKeyBinding(shortcuts, keyBindings[shortcuts]);
         }
     },
 

@@ -465,9 +465,9 @@
 
         _configViewBindings: function (prevView, newView) {
             prevView.removeOwnKeyBindings();
-            var ownKeyBindings = newView._ownKeyBindings;
-            for (var shortcuts in ownKeyBindings) {
-                newView.addOwnKeyBinding(shortcuts, ownKeyBindings[shortcuts]);
+            const keyBindings = newView.keyBindings;
+            for (let shortcuts in keyBindings) {
+                newView.addOwnKeyBinding(shortcuts, keyBindings[shortcuts]);
             }
         },
 
