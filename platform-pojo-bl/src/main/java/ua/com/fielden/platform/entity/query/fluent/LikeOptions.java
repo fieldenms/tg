@@ -3,10 +3,12 @@ package ua.com.fielden.platform.entity.query.fluent;
 public class LikeOptions {
     public final boolean negated;
     public final boolean caseInsensitive;
+    public final boolean withCast;
     
     private LikeOptions(final Builder builder) {
         negated = builder.negated;
         caseInsensitive = builder.caseInsensitive;
+        withCast = builder.withCast;
     }
 
     @Override
@@ -15,6 +17,7 @@ public class LikeOptions {
         int result = 1;
         result = prime * result + (caseInsensitive ? 1231 : 1237);
         result = prime * result + (negated ? 1231 : 1237);
+        result = prime * result + (withCast ? 1231 : 1237);
         return result;
     }
 
@@ -30,7 +33,7 @@ public class LikeOptions {
         
         LikeOptions other = (LikeOptions) obj;
         
-        return negated == other.negated && caseInsensitive == other.caseInsensitive;
+        return negated == other.negated && caseInsensitive == other.caseInsensitive && withCast == other.withCast;
     }
 
     public static LikeOptions.Builder options() {
@@ -40,7 +43,7 @@ public class LikeOptions {
     public static class Builder {
         private boolean negated = false;
         private boolean caseInsensitive = false;
-
+        private boolean withCast = false;
         
         public Builder negated() {
             negated = true;
@@ -52,6 +55,11 @@ public class LikeOptions {
             return this;
         }
         
+        public Builder withCast() {
+            withCast = true;
+            return this;
+        }
+
         public LikeOptions build() {
             return new LikeOptions(this);
         }

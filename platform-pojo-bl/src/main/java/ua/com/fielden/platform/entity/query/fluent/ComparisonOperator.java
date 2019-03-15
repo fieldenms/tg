@@ -79,6 +79,26 @@ abstract class ComparisonOperator<T extends ILogicalOperator<?>, ET extends Abst
 		return createIComparisonOperand(getTokens().like(options().caseInsensitive().negated().build()));
 	}
 
+    @Override
+    public IComparisonOperand<T, ET> likeWithCast() {
+        return createIComparisonOperand(getTokens().like(options().withCast().build()));
+    }
+
+    @Override
+    public IComparisonOperand<T, ET> notLikeWithCast() {
+        return createIComparisonOperand(getTokens().like(options().withCast().negated().build()));
+    }
+
+    @Override
+    public IComparisonOperand<T, ET> iLikeWithCast() {
+        return createIComparisonOperand(getTokens().like(options().caseInsensitive().withCast().build()));
+    }
+
+    @Override
+    public IComparisonOperand<T, ET> notILikeWithCast() {
+        return createIComparisonOperand(getTokens().like(options().caseInsensitive().negated().withCast().build()));
+    }
+	
 	@Override
 	public T isNull() {
 		return nextForComparisonOperator(getTokens().isNull(false));

@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.entity.query.generation.elements;
 
+import static java.lang.String.format;
 import static ua.com.fielden.platform.utils.CollectionUtil.listOf;
 import static ua.com.fielden.platform.utils.EntityUtils.equalsEx;
 
@@ -14,6 +15,7 @@ public class LikeTest extends AbstractCondition {
     private final ISingleOperand rightOperand;
     private final boolean negated;
     private final boolean caseInsensitive;
+    private final boolean withCast;
     private final DbVersion dbVersion;
 
     public LikeTest(final ISingleOperand leftOperand, final ISingleOperand rightOperand, final LikeOptions options, final DbVersion dbVersion) {
@@ -24,14 +26,27 @@ public class LikeTest extends AbstractCondition {
         this.rightOperand = rightOperand;
         this.negated = options.negated;
         this.caseInsensitive = options.caseInsensitive;
+        this.withCast = options.withCast;
         this.dbVersion = dbVersion;
     }
 
     @Override
     public String sql() {
-        return dbVersion.likeSql(negated, leftOperand.sql(), rightOperand.sql(), caseInsensitive);
+        return dbVersion.likeSql(negated, leftOperandSql(), rightOperand.sql(), caseInsensitive);
     }
 
+    private String leftOperandSql() {
+        return withCast ? leftOperandWithTypecastingSql() : leftOperand.sql(); 
+    }
+    
+    private String leftOperandWithTypecastingSql() {
+        if (Integer.class.equals(leftOperand.type())) {
+            return format("CAST(%s AS VARCHAR(11))", leftOperand.sql());
+        } else {
+            return leftOperand.sql();
+        }
+    }
+    
     @Override
     public boolean ignore() {
         return leftOperand.ignore() || rightOperand.ignore();
@@ -50,6 +65,7 @@ public class LikeTest extends AbstractCondition {
         result = prime * result + dbVersion.hashCode();
         result = prime * result + (leftOperand == null ? 0 : leftOperand.hashCode());
         result = prime * result + (negated ? 1231 : 1237);
+        result = prime * result + (withCast ? 1231 : 1237);
         result = prime * result + (rightOperand == null ? 0 : rightOperand.hashCode());
         return result;
     }
@@ -66,6 +82,7 @@ public class LikeTest extends AbstractCondition {
         final LikeTest other = (LikeTest) obj;
         return caseInsensitive == other.caseInsensitive &&
                negated == other.negated &&
+               withCast ==  other.withCast &&
                dbVersion == other.dbVersion &&
                equalsEx(leftOperand, other.leftOperand) && 
                equalsEx(rightOperand, other.rightOperand);
