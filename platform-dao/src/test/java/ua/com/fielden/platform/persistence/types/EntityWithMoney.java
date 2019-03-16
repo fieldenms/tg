@@ -58,6 +58,10 @@ public class EntityWithMoney extends AbstractEntity<String> {
     @Required
     private Integer requiredCritOnly;
 
+    @IsProperty(length = 5)
+    @MapTo
+    private String shortComment;
+
     protected EntityWithMoney() {}
 
     public EntityWithMoney(final String key, final String desc, final Money money) {
@@ -117,5 +121,14 @@ public class EntityWithMoney extends AbstractEntity<String> {
     public Integer getRequiredCritOnly() {
         return requiredCritOnly;
     }
+    
+    @Observable
+    public EntityWithMoney setShortComment(final String shortComment) {
+        this.shortComment = shortComment;
+        return this;
+    }
 
+    public String getShortComment() {
+        return shortComment;
+    }
 }

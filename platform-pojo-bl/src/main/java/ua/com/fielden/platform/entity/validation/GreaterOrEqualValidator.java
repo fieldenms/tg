@@ -28,8 +28,8 @@ public class GreaterOrEqualValidator implements IBeforeChangeEventHandler<Object
 
     @Override
     public Result handle(final MetaProperty<Object> property, final Object newValue, final Set<Annotation> mutatorAnnotations) {
-        if (newValue == null) {
-            return new Result(null, "Value is null and thus not applicable for validation.");
+        if (newValue == null) { // no violation
+            return successful("Value is null.");
         }
         // Money new value should be correctly converted :
         final String strValue = (newValue instanceof Money) ? ((Money) newValue).getAmount().toString() : newValue.toString();
