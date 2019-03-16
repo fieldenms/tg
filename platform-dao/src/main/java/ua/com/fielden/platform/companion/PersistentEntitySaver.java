@@ -450,7 +450,6 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
      */
     private T saveNewEntity(final T entity) {
         // let's make sure that entity is not a duplicate
-        
         if (entityExists.apply(createQueryByKey(dbVersion.get(), entityType, keyType, isFilterable.get(), entity.getKey()))) {
             throw new EntityAlreadyExists(format("%s [%s] already exists.", TitlesDescsGetter.getEntityTitleAndDesc(entity.getType()).getKey(), entity));
         }
@@ -501,11 +500,18 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
             }
         }
 
-        // save the entity
-        session.get().save(entity.set(ID, nextIdValue(ID_SEQUENCE_NAME, session.get())));
-        session.get().flush();
-        session.get().clear();
-
+        // let's now assign a new ID and attempt to save the entity
+        // this may result in a runtime exception, e.g. some text values were too long
+        // in case of an exception, ID needs to be reset to null, otherwise the entity would be recognisable as persisted
+        try {
+            session.get().save(entity.set(ID, nextIdValue(ID_SEQUENCE_NAME, session.get())));
+            session.get().flush(); // force saving to DB
+            session.get().clear();
+        } catch (final Exception ex) {
+            entity.set(ID, null);
+            throw ex;
+        }
+        
         return entityFetchOption.map(fetch -> findById.apply(entity.getId(), fetch)).orElse(entity);
     }
 
