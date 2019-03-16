@@ -165,6 +165,7 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
     private static final String EGI_VISIBLE_ROW_COUNT = "@visibleRowCount";
     private static final String EGI_HEIGHT = "@egiHeight";
     private static final String EGI_FIT_TO_HEIGHT = "@fitToHeight";
+    private static final String EGI_ROW_HEIGHT = "@egiRowHeight";
     private static final String EGI_PAGE_CAPACITY = "@pageCapacity";
     private static final String EGI_ACTIONS = "//generatedActionObjects";
     private static final String EGI_PRIMARY_ACTION = "//generatedPrimaryAction";
@@ -207,7 +208,7 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
     private final UnaryOperator<ICentreDomainTreeManagerAndEnhancer> postCentreCreated;
     private Optional<JsCode> customCode = Optional.empty();
     private Optional<JsCode> customCodeOnAttach = Optional.empty();
-    
+
     private final IUserProvider userProvider;
     private final ISerialiser serialiser;
     private final IDomainTreeEnhancerCache domainTreeEnhancerCache;
@@ -215,7 +216,7 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
     private final IEntityCentreConfig eccCompanion;
     private final IMainMenuItem mmiCompanion;
     private final IUser userCompanion;
-    
+
     /**
      * Creates new {@link EntityCentre} instance for the menu item type and with specified name.
      *
@@ -229,15 +230,15 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
     public EntityCentre(final Class<? extends MiWithConfigurationSupport<?>> miType, final String name, final EntityCentreConfig<T> dslDefaultConfig, final Injector injector, final UnaryOperator<ICentreDomainTreeManagerAndEnhancer> postCentreCreated) {
         this.name = name;
         this.dslDefaultConfig = dslDefaultConfig;
-        
+
         this.injector = injector;
-        
+
         validateMenuItemTypeRootType(miType);
         this.miType = miType;
         this.entityType = EntityResourceUtils.getEntityType(miType);
         this.coFinder = this.injector.getInstance(ICompanionObjectFinder.class);
         this.postCentreCreated = postCentreCreated;
-        
+
         userProvider = injector.getInstance(IUserProvider.class);
         serialiser = injector.getInstance(ISerialiser.class);
         domainTreeEnhancerCache = injector.getInstance(IDomainTreeEnhancerCache.class);
@@ -248,7 +249,7 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
         // this is to trigger caching of DomainTreeEnhancers to avoid heavy computations later
         createDefaultCentre();
     }
-    
+
     /**
      * Validates root type corresponding to <code>menuItemType</code>.
      *
@@ -262,7 +263,7 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
         final Class<?> root = etAnnotation.value();
         validateRootType(root);
     }
-    
+
     /**
      * Generates default centre from DSL config and postCentreCreated callback (user unspecific).
      *
@@ -284,10 +285,10 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
     private ICentreDomainTreeManagerAndEnhancer createDefaultCentre(final EntityCentreConfig<T> dslDefaultConfig, final ISerialiser serialiser, final UnaryOperator<ICentreDomainTreeManagerAndEnhancer> postCentreCreated) {
         return createDefaultCentre0(dslDefaultConfig, serialiser, postCentreCreated, true);
     }
-    
+
     /**
      * Creates calculated / custom property containers from Centre DSL definition. This is to be used when constructing {@link CentreDomainTreeManagerAndEnhancer} instances.
-     * 
+     *
      * @param entityType
      * @param resultSetProps
      * @param summaryExpressions
@@ -298,7 +299,7 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
         calculatedPropertiesInfo.put(entityType, new LinkedHashSet<>());
         final Map<Class<?>, List<CustomProperty>> customProperties = new LinkedHashMap<>();
         customProperties.put(entityType, new ArrayList<CustomProperty>());
-        
+
         if (resultSetProps.isPresent()) {
             for (final ResultSetProp property : resultSetProps.get()) {
                 if (!property.propName.isPresent()) {
@@ -320,13 +321,13 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
                 }
             }
         }
-        
+
         return t2(calculatedPropertiesInfo, customProperties);
     }
-    
+
     /**
      * Creates default centre from Centre DSL configuration by adding calculated / custom props, applying selection crit defaults, EGI column widths / ordering etc.
-     * 
+     *
      * @param dslDefaultConfig
      * @param serialiser
      * @param postCentreCreated
@@ -336,9 +337,9 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
     private ICentreDomainTreeManagerAndEnhancer createDefaultCentre0(final EntityCentreConfig<T> dslDefaultConfig, final ISerialiser serialiser, final UnaryOperator<ICentreDomainTreeManagerAndEnhancer> postCentreCreated, final boolean userSpecific) {
         final Optional<List<ResultSetProp>> resultSetProps = dslDefaultConfig.getResultSetProperties();
         final Optional<ListMultimap<String, SummaryPropDef>> summaryExpressions = dslDefaultConfig.getSummaryExpressions();
-        
+
         final ICentreDomainTreeManagerAndEnhancer cdtmae = createEmptyCentre(entityType, serialiser, domainTreeEnhancerCache, createCalculatedAndCustomProperties(entityType, resultSetProps, summaryExpressions), miType);
-        
+
         final Optional<List<String>> selectionCriteria = dslDefaultConfig.getSelectionCriteria();
         if (selectionCriteria.isPresent()) {
             for (final String property : selectionCriteria.get()) {
@@ -349,7 +350,7 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
                 }
             }
         }
-        
+
         if (resultSetProps.isPresent()) {
             final Map<String, Integer> growFactors = calculateGrowFactors(resultSetProps.get());
             for (final ResultSetProp property : resultSetProps.get()) {
@@ -1092,6 +1093,7 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
                 replace(EGI_SUMMARY_FIXED, SUMMARY_FIXED.eval(dslDefaultConfig.getScrollConfig().isSummaryFixed())).
                 replace(EGI_VISIBLE_ROW_COUNT, dslDefaultConfig.getVisibleRowsCount() + "").
                 replace(EGI_HEIGHT, dslDefaultConfig.getEgiHeight()).
+                replace(EGI_ROW_HEIGHT, dslDefaultConfig.getRowHeight()).
                 replace(EGI_FIT_TO_HEIGHT, FIT_TO_HEIGHT.eval(dslDefaultConfig.isFitToHeight())).
                 ///////////////////////
                 replace(TOOLBAR_DOM, dslDefaultConfig.getToolbarConfig().render().toString()).
@@ -1328,21 +1330,21 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
         final Class<V> propType = dslDefaultConfig.getProvidedTypeForAutocompletedSelectionCriterion(originalPropertyName)
                 .map(propertyType -> (Class<V>) propertyType)
                 .orElseGet(() -> (Class<V>) ("".equals(originalPropertyName) ? getOriginalType(criteriaType) : determinePropertyType(getOriginalType(criteriaType), originalPropertyName)));
-        
-        final Pair<IValueMatcherWithCentreContext<V>, Optional<CentreContextConfig>> matcherAndConfig = 
+
+        final Pair<IValueMatcherWithCentreContext<V>, Optional<CentreContextConfig>> matcherAndConfig =
             dslDefaultConfig.getValueMatchersForSelectionCriteria() // take all matchers
             .map(matchers -> matchers.get(dslName(originalPropertyName))) // choose single matcher with concrete property name
             .map(customMatcherAndConfig -> pair((IValueMatcherWithCentreContext<V>) injector.getInstance(customMatcherAndConfig.getKey()), customMatcherAndConfig.getValue())) // instantiate the matcher: [matcherType; config] => [matcherInstance; config]
             .orElseGet(() -> pair(new FallbackValueMatcherWithCentreContext<>(coFinder.find(propType)), empty())); // if no custom matcher was created then create default matcher
-        
+
         // provide fetch model for created matcher
         matcherAndConfig.getKey().setFetch(createFetchModelForAutocompleter(originalPropertyName, propType));
         return matcherAndConfig;
     }
-    
+
     /**
      * Creates fetch model for entity-typed criteria autocompleted values. Fetches key and description complemented with additional properties specified in Centre DSL configuration.
-     * 
+     *
      * @param originalPropertyName
      * @param propType
      * @return
@@ -1355,7 +1357,7 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
                 .collect(toSet())
             ).fetchModel();
     }
-    
+
     public Optional<Class<? extends ICustomPropsAssignmentHandler>> getCustomPropertiesAsignmentHandler() {
         return dslDefaultConfig.getResultSetCustomPropAssignmentHandlerType();
     }
