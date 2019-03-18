@@ -4,6 +4,7 @@ import { html } from '/resources/polymer/@polymer/polymer/lib/utils/html-tag.js'
 import '/resources/element_loader/tg-element-loader.js';
 import { tearDownEvent } from '/resources/reflection/tg-polymer-utils.js';
 import '/resources/polymer/@polymer/iron-flex-layout/iron-flex-layout-classes.js';
+import { TgElementSelectorBehavior } from '/resources/components/tg-element-selector-behavior.js';
 
 const template = html`
     <style>
@@ -87,6 +88,8 @@ Polymer({
             value: null
         },
     },
+
+    behaviors: [ TgElementSelectorBehavior ],
 
     listeners: {
         'data-loaded-and-focused': '_handleDataLoaded',

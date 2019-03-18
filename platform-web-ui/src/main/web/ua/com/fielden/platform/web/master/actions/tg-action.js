@@ -8,7 +8,7 @@ import '/resources/polymer/@polymer/paper-styles/color.js';
 import { TgFocusRestorationBehavior } from '/resources/actions/tg-focus-restoration-behavior.js';
 import { createEntityActionThenCallback } from '/resources/master/actions/tg-entity-master-closing-utils.js';
 import { TgTooltipBehavior } from '/resources/components/tg-tooltip-behavior.js';
-import { TgFocusableBehavior } from '/resources/components/tg-focusable-behavior.js';
+import { TgElementSelectorBehavior } from '/resources/components/tg-element-selector-behavior.js';
 import { allDefined } from '/resources/reflection/tg-polymer-utils.js';
 // depends on '/resources/filesaver/FileSaver.min.js' 
 // depends on '/resources/postal/2.0.5/postal.min.js' 
@@ -40,7 +40,7 @@ Polymer({
 
     is: 'tg-action',
 
-    behaviors: [ TgFocusRestorationBehavior, TgTooltipBehavior, TgFocusableBehavior ],
+    behaviors: [ TgFocusRestorationBehavior, TgTooltipBehavior, TgElementSelectorBehavior ],
 
     properties: {
         /**

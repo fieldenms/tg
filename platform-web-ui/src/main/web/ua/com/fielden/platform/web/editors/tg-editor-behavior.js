@@ -12,7 +12,7 @@ import {TgReflector} from '/app/tg-reflector.js';
 import {html} from '/resources/polymer/@polymer/polymer/lib/utils/html-tag.js';
 
 import {TgTooltipBehavior} from '/resources/components/tg-tooltip-behavior.js';
-import {TgFocusableBehavior} from '/resources/components/tg-focusable-behavior.js';
+import {TgElementSelectorBehavior} from '/resources/components/tg-element-selector-behavior.js';
 import { tearDownEvent } from '/resources/reflection/tg-polymer-utils.js';
 
 export function createEditorTemplate (additionalTemplate, customPrefixAttribute, customInput, inputLayer, customIconButtons, propertyAction) {
@@ -941,4 +941,4 @@ export const TgEditorBehaviorImpl = {
     }
 };
 
-export const TgEditorBehavior = [TgEditorBehaviorImpl, TgTooltipBehavior, TgFocusableBehavior];
+export const TgEditorBehavior = [TgEditorBehaviorImpl, TgTooltipBehavior, TgElementSelectorBehavior];
