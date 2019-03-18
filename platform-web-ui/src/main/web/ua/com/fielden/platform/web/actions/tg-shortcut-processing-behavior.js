@@ -103,7 +103,7 @@ export const TgShortcutProcessingBehavior = {
     _findFirstComittableAncestorFor: function (element) {
         let el = element;
         while (el && !this._canBeCommitted(el)) {
-            el = el.parentElement;
+            el = el.parentElement || el.getRootNode().host;
         }
         return el;
     },
