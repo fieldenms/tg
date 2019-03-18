@@ -36,7 +36,7 @@
     <template>
         <iron-icon id="searchIcon" icon="icons:search" on-tap="searchMenu" on-transitionend="_iconTransitionFinished" tooltip-text$="[[tooltip]]"></iron-icon>
         <paper-input-container id="inputContainer" no-label-float style="display:none;" on-transitionend="_inputTransitionFinished">
-            <input id="input" is="iron-input" type="text" bind-value="{{_menuToSearch}}" on-blur="_onBlur" on-focus="_onFocus" on-keydown="_inputKeyDown">
+            <input id="input" is="iron-input" autocomplete="off" type="text" bind-value="{{_menuToSearch}}" on-blur="_onBlur" on-focus="_onFocus" on-keydown="_inputKeyDown">
         </paper-input-container>
         <tg-menu-list id="menuList" menu="[[menu]]" phrase-to-highlight="[[_menuToSearch]]" retrieve-container-sizes="[[_retrieveContainerSizes]]" on-iron-overlay-closed="_menuListClosed" on-tap="_menuTapped"></tg-menu-list>
     </template>

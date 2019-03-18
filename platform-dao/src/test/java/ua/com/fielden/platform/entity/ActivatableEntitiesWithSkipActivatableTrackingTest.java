@@ -16,7 +16,7 @@ import ua.com.fielden.platform.sample.domain.TgCategory;
 import ua.com.fielden.platform.sample.domain.TgSystem;
 import ua.com.fielden.platform.test_config.AbstractDaoTestCase;
 
-public class ActivatableEntitiesWithSkipeActivatableTrackingTest extends AbstractDaoTestCase {
+public class ActivatableEntitiesWithSkipActivatableTrackingTest extends AbstractDaoTestCase {
 
     private static final String entityTitle = getEntityTitleAndDesc(TgCategory.class).getKey();
     

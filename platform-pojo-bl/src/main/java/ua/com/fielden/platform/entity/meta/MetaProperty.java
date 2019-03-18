@@ -27,11 +27,12 @@ import ua.com.fielden.platform.utils.Pair;
  *
  */
 public class MetaProperty<T> implements Comparable<MetaProperty<T>> {
-    
+
+    public static final String ERR_REQUIRED = "Required property [%s] is not specified for entity [%s].";
     public static final String EDITABLE_PROPERTY_NAME = "editable";
     public static final String REQUIRED_PROPERTY_NAME = "required";
     public static final String VALIDATION_RESULTS_PROPERTY_NAME = "validationResults";
-    
+
     protected final AbstractEntity<?> entity;
     protected final String name;
     protected Class<?> type;

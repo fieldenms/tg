@@ -1,5 +1,9 @@
 package ua.com.fielden.platform.web.resources;
 
+import static java.lang.String.format;
+import static ua.com.fielden.platform.error.Result.failure;
+import static ua.com.fielden.platform.error.Result.successful;
+
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -349,30 +353,29 @@ public class RestServerUtil {
             if (ex instanceof Result) {
                 final Result thrownResult = (Result) ex;
                 if (thrownResult.isSuccessful()) {
-                    throw Result.failure(String.format("The successful result [%s] was thrown during unsuccesful saving of entity with id [%s] of type [%s]. This is most likely programming error.", thrownResult, entity.getId(), entity.getClass().getSimpleName()));
+                    throw failure(format("The successful result [%s] was thrown during unsuccesful saving of entity with id [%s] of type [%s]. This is most likely programming error.", thrownResult, entity.getId(), entity.getClass().getSimpleName()));
                 }
                 
                 // iterate over properties in search of the first invalid one (without required checks)
-                final java.util.Optional<Result> firstFailure = entity.nonProxiedProperties()
+                final Optional<Result> firstFailure = entity.nonProxiedProperties()
                 .filter(mp -> mp.getFirstFailure() != null)
                 .findFirst().map(mp -> mp.getFirstFailure());
                 
                 // returns first failure if exists or successful result if there was no failure.
-                final Result isValid = firstFailure.isPresent() ? firstFailure.get() : Result.successful(entity);
-                
+                final Result isValid = firstFailure.orElse(successful(entity));
                 if (ex != isValid) {
                     // Log the server side error only in case where exception, that was thrown, does not equal to validation result of the entity (by reference).
-                    // Please, note that the Results, that are thrown in companion objects, often represents validation results of some complimentary entities during saving.
+                    // Please, note that Results, that are thrown in companion objects, often represents validation results of some complimentary entities during saving.
                     // For example, see ServiceRepairSubmitActionDao save method, which internally invokes saveWorkOrder(serviceRepair) method of ServiceRepairDao, where during saving of workOrder
                     //  some validation result is thrown.
-                    // In these cases -- server error log will appear about saving error.
+                    // In these cases -- server error log should report the saving error.
                     logger.error(ex.getMessage(), ex);
                 }
                 result = thrownResult.copyWith(entity);
-                logger.warn(String.format("The unsuccessful result [%s] was thrown during unsuccesful saving of entity with id [%s] of type [%s]. Its instance will be overridden by the entity with id [%s] to be able to bind the entity to respective master.", thrownResult, entity.getId(), entity.getClass().getSimpleName(), entity.getId()));
+                logger.warn(format("The unsuccessful result [%s] was thrown during unsuccesful saving of entity with id [%s] of type [%s]. Its instance will be overridden by the entity with id [%s] to be able to bind the entity to respective master.", thrownResult, entity.getId(), entity.getClass().getSimpleName(), entity.getId()));
             } else {
                 logger.error(ex.getMessage(), ex);
-                result = new Result(entity, ex);
+                result = failure(entity, ex);
             }
             final byte[] bytes = serialiser.serialise(result, SerialiserEngines.JACKSON);
             return encodedRepresentation(new ByteArrayInputStream(bytes), MediaType.APPLICATION_JSON /* TODO , bytes.length*/);
