@@ -843,7 +843,6 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
     private IRenderable createRenderableRepresentation(final ICentreDomainTreeManagerAndEnhancer centre) {
 
         final LinkedHashSet<String> importPaths = new LinkedHashSet<>();
-        importPaths.add("polymer/polymer/polymer");
         importPaths.add("master/tg-entity-master");
 
         logger.debug("Initiating layout...");

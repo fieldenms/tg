@@ -40,7 +40,7 @@
         <!--Selection view toolbar-->
         <div class="toolbar layout horizontal wrap">
             <div class="toolbar-content layout horizontal center">
-                <content id="custom_action_selector" select=".custom-front-action"></content>
+                <slot id="custom_action_selector" name="custom-front-action"></slot>
             </div>
             <div class="toolbar-content layout horizontal center" style="margin-left:auto">
               <tg-ui-action ui-role='ICON' short-desc='New configuration' long-desc='Create new configuration' icon='tg-document-related-icons:file-outline' icon-style='' component-uri='/master_ui/ua.com.fielden.platform.web.centre.CentreConfigNewAction' element-name='tg-CentreConfigNewAction-master' action-kind='TOP_LEVEL' element-alias='tg-CentreConfigNewAction-master_0_TOP_LEVEL' show-dialog='[[_showDialog]]' create-context-holder='[[_createContextHolder]]' attrs='[[topLevelActions.0.attrs]]' pre-action='[[topLevelActions.0.preAction]]' post-action-success='[[topLevelActions.0.postActionSuccess]]' post-action-error='[[topLevelActions.0.postActionError]]' require-selection-criteria='true' require-selected-entities='NONE' require-master-entity='false' disabled='[[_computeConfigButtonDisabled(saveAsName)]]' style='[[_computeConfigButtonStyle(saveAsName)]]'></tg-ui-action>
@@ -52,9 +52,9 @@
             </div>
         </div>
         <tg-scrollable-component class="flex relative">
-            <content select=".custom-selection-criteria"></content>
+            <slot name="custom-selection-criteria"></slot>
         </tg-scrollable-component>
-        <content select=".selection-criteria-buttons"></content>
+        <slot name="selection-criteria-buttons"></slot>
     </template>
     <script>
         Polymer({

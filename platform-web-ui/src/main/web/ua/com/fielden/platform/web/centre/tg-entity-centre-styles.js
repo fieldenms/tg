@@ -1,11 +1,13 @@
-<link rel="import" href="/resources/polymer/iron-flex-layout/iron-flex-layout.html">
+import '/resources/polymer/@polymer/polymer/lib/elements/dom-module.js';
+import '/resources/polymer/@polymer/iron-flex-layout/iron-flex-layout.js';
 
-<dom-module id="tg-entity-centre-styles">
+const styleElement = document.createElement('dom-module');
+styleElement.innerHTML = `
     <template>
         <style>
             .left-insertion-point, .right-insertion-point {
-                @apply(--layout-vertical);
-                @apply(--layout-start);
+                @apply --layout-vertical;
+                @apply --layout-start;
             }
             paper-icon-button.revers {
                 --paper-icon-button: {
@@ -20,4 +22,5 @@
             }
         </style>
     </template>
-</dom-module>
+`;
+styleElement.register('tg-entity-centre-styles');

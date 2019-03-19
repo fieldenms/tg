@@ -1,32 +1,32 @@
-<link rel="import" href="/resources/polymer/polymer/polymer.html">
+import { Polymer } from '/resources/polymer/@polymer/polymer/lib/legacy/polymer-fn.js';
+import { html } from '/resources/polymer/@polymer/polymer/lib/utils/html-tag.js';
 
-<link rel="import" href="/resources/polymer/paper-styles/color.html">
-<link rel="import" href="/resources/polymer/paper-tabs/paper-tabs.html">
-<link rel="import" href="/resources/polymer/paper-tabs/paper-tab.html">
-<link rel="import" href="/resources/polymer/paper-material/paper-material.html">
+import '/resources/polymer/@polymer/paper-styles/color.js';
+import '/resources/polymer/@polymer/paper-tabs/paper-tabs.js';
+import '/resources/polymer/@polymer/paper-tabs/paper-tab.js';
+import '/resources/polymer/@polymer/paper-styles/element-styles/paper-material-styles.js';
 
-<link rel="import" href="/resources/components/postal-lib.html">
-<link rel="import" href="/resources/components/tg-confirmation-dialog.html">
-<link rel="import" href="/resources/components/tg-tooltip-behavior.html">
-<link rel="import" href="/resources/centre/tg-selection-view.html">
-<link rel="import" href="/resources/centre/tg-centre-result-view.html">
-<link rel="import" href="/resources/actions/tg-focus-restoration-behavior.html">
-<link rel="import" href="/resources/reflection/tg-polymer-utils.html">
-<link rel="import" href="/resources/actions/tg-ui-action.html">
+import '/resources/components/tg-confirmation-dialog.js';
+import { TgTooltipBehavior } from '/resources/components/tg-tooltip-behavior.js';
+import '/resources/centre/tg-selection-view.js';
+import '/resources/centre/tg-centre-result-view.js';
+import { TgFocusRestorationBehavior } from '/resources/actions/tg-focus-restoration-behavior.js';
+import {FIXME} from '/resources/reflection/tg-polymer-utils.js';
+import '/resources/actions/tg-ui-action.js';
 
-<link rel="import" href="/resources/polymer/iron-pages/iron-pages.html">
-<link rel="import" href="/resources/polymer/iron-ajax/iron-ajax.html">
-<link rel="import" href="/resources/polymer/iron-flex-layout/iron-flex-layout.html">
-<link rel="import" href="/resources/polymer/iron-flex-layout/iron-flex-layout-classes.html">
-<link rel="import" href="/resources/polymer/iron-resizable-behavior/iron-resizable-behavior.html">
+import '/resources/polymer/@polymer/iron-pages/iron-pages.js';
+import '/resources/polymer/@polymer/iron-ajax/iron-ajax.js';
+import '/resources/polymer/@polymer/iron-flex-layout/iron-flex-layout.js';
+import '/resources/polymer/@polymer/iron-flex-layout/iron-flex-layout-classes.js';
+import { IronResizableBehavior } from '/resources/polymer/iron-resizable-behavior/iron-resizable-behavior.js';
 
-<dom-module id="tg-entity-centre">
+const template = html`
     <style>
         .tabs {
             background-color: #0288D1;
             color: #fff;
-            @apply(--layout-horizontal);
-            @apply(--layout-center-justified);
+            @apply --layout-horizontal;
+            @apply --layout-center-justified;
         }
         .selection-criteria {
             background-color: white;
@@ -40,7 +40,7 @@
             right: 0px;
             bottom: 0px;
         }
-        paper-material {
+        .paper-material {
             border-radius: 2px;
             max-height: 100%;
             overflow: hidden;
@@ -58,8 +58,8 @@
             --paper-spinner-layer-4-color: var(--paper-blue-500);
         }
         .splitter {
-            @apply(--layout-vertical);
-            @apply(--layout-center);
+            @apply --layout-vertical;
+            @apply --layout-center;
             background: var(--paper-light-blue-700);
             padding-top: 10px;
             width: 9px;
@@ -134,66 +134,66 @@
             min-height: fit-content;
         }
     </style>
+    <custom-style>
+        <style include="paper-material-styles iron-flex iron-flex-reverse iron-flex-alignment iron-flex-factors iron-positioning"></style>
+    </custom-style>
+    <tg-serialiser id="serialiser"></tg-serialiser>
 
-    <template>
-        <tg-serialiser id="serialiser"></tg-serialiser>
+    <iron-ajax id="ajaxDiscarder" url="[[_url]]" method="PUT" handle-as="json" on-response="_processDiscarderResponse" on-error="_processDiscarderError"></iron-ajax>
 
-        <iron-ajax id="ajaxDiscarder" url="[[_url]]" method="PUT" handle-as="json" on-response="_processDiscarderResponse" on-error="_processDiscarderError"></iron-ajax>
+    <tg-confirmation-dialog id="confirmationDialog"></tg-confirmation-dialog>
 
-        <tg-confirmation-dialog id="confirmationDialog"></tg-confirmation-dialog>
-
-        <iron-pages id="views" selected="[[_selectedView]]" on-iron-select="_pageSelectionChanged">
-            <div class="fit layout vertical">
-                <paper-material class="selection-material layout vertical">
-                    <tg-selection-view id="selectionView" _show-dialog="[[_showDialog]]" save-as-name="{{saveAsName}}" _create-context-holder="[[_createContextHolder]]" uuid="[[uuid]]" _confirm="[[_confirm]]" _create-action-object="[[_createActionObject]]">
-                        <content select=".custom-front-action"></content>
-                        <content select=".custom-selection-criteria"></content>
-                        <div class="selection-criteria-buttons layout horizontal justified wrap">
-                            <div class="layout horizontal button-group">
-                                <tg-ui-action id="saveAction" shortcut="ctrl+s" ui-role='BUTTON' short-desc='Save' long-desc='Save configuration, Ctrl&nbsp+&nbsps'
-                                              component-uri='/master_ui/ua.com.fielden.platform.web.centre.CentreConfigSaveAction' element-name='tg-CentreConfigSaveAction-master' show-dialog='[[_showDialog]]' create-context-holder='[[_createContextHolder]]'
-                                              attrs='[[bottomActions.0.attrs]]' pre-action='[[bottomActions.0.preAction]]' post-action-success='[[bottomActions.0.postActionSuccess]]' post-action-error='[[bottomActions.0.postActionError]]'
-                                              require-selection-criteria='true' require-selected-entities='NONE' require-master-entity='false'
-                                              disabled='[[_saverDisabled]]' style='[[_computeSaveButtonStyle(_saverDisabled)]]'></tg-ui-action>
-                                <paper-button id="discarder" raised shortcut="ctrl+r" roll="button" on-tap="discardAsync" disabled$="[[_discarderDisabled]]" tooltip-text="Discard the latest changes to selection criteria, which effectively returns configuration to the last saved state, Ctrl&nbsp+&nbspr">Discard</paper-button>
-                            </div>
-                            <div class="layout horizontal button-group right-button-group">
-                                <paper-button id="view" raised shortcut="ctrl+e" roll="button" on-tap="_activateResultSetView" disabled$="[[_viewerDisabled]]" tooltip-text="Show result view, Ctrl&nbsp+&nbspe">View</paper-button>
-                                <paper-button id="runner" raised shortcut="f5" roll="button" on-tap="runAsync" style="margin-right: 0px;" disabled$="[[_runnerDisabled]]" tooltip-text="Execute entity centre and show result, F5">
-                                    <paper-spinner id="spinner" active="[[_runnerDisabled]]" class="blue" style="visibility: 'hidden'" alt="in progress">
-                                    </paper-spinner>
-                                    <span>Run</span>
-                                </paper-button>
-                            </div>
+    <iron-pages id="views" selected="[[_selectedView]]" on-iron-select="_pageSelectionChanged">
+        <div class="fit layout vertical">
+            <div class="paper-material selection-material layout vertical">
+                <tg-selection-view id="selectionView" _show-dialog="[[_showDialog]]" save-as-name="{{saveAsName}}" _create-context-holder="[[_createContextHolder]]" uuid="[[uuid]]" _confirm="[[_confirm]]" _create-action-object="[[_createActionObject]]">
+                    <slot name="custom-front-action" slot="custom-front-action"></slot>
+                    <slot name="custom-selection-criteria" slot="custom-selection-criteria"></slot>
+                    <div slot="selection-criteria-buttons" class="selection-criteria-buttons layout horizontal justified wrap">
+                        <div class="layout horizontal button-group">
+                            <tg-ui-action id="saveAction" shortcut="ctrl+s" ui-role='BUTTON' short-desc='Save' long-desc='Save configuration, Ctrl&nbsp+&nbsps'
+                                            component-uri='/master_ui/ua.com.fielden.platform.web.centre.CentreConfigSaveAction' element-name='tg-CentreConfigSaveAction-master' show-dialog='[[_showDialog]]' create-context-holder='[[_createContextHolder]]'
+                                            attrs='[[bottomActions.0.attrs]]' pre-action='[[bottomActions.0.preAction]]' post-action-success='[[bottomActions.0.postActionSuccess]]' post-action-error='[[bottomActions.0.postActionError]]'
+                                            require-selection-criteria='true' require-selected-entities='NONE' require-master-entity='false'
+                                            disabled='[[_saverDisabled]]' style='[[_computeSaveButtonStyle(_saverDisabled)]]'></tg-ui-action>
+                            <paper-button id="discarder" raised shortcut="ctrl+r" roll="button" on-tap="discardAsync" disabled$="[[_discarderDisabled]]" tooltip-text="Discard the latest changes to selection criteria, which effectively returns configuration to the last saved state, Ctrl&nbsp+&nbspr">Discard</paper-button>
                         </div>
-                    </tg-selection-view>
-                </paper-material>
+                        <div class="layout horizontal button-group right-button-group">
+                            <paper-button id="view" raised shortcut="ctrl+e" roll="button" on-tap="_activateResultSetView" disabled$="[[_viewerDisabled]]" tooltip-text="Show result view, Ctrl&nbsp+&nbspe">View</paper-button>
+                            <paper-button id="runner" raised shortcut="f5" roll="button" on-tap="runAsync" style="margin-right: 0px;" disabled$="[[_runnerDisabled]]" tooltip-text="Execute entity centre and show result, F5">
+                                <paper-spinner id="spinner" active="[[_runnerDisabled]]" class="blue" style="visibility: 'hidden'" alt="in progress">
+                                </paper-spinner>
+                                <span>Run</span>
+                            </paper-button>
+                        </div>
+                    </div>
+                </tg-selection-view>
             </div>
-            <tg-centre-result-view id="centreResultContainer">
-                <div id="leftInsertionPointContainer" class="insertion-point-slot layout vertical">
-                    <content id="leftInsertionPointContent" select=".left-insertion-point"></content>
-                </div>
-                <div id="leftSplitter" class="splitter" hidden$="[[!leftInsertionPointPresent]]" on-down="_makeCentreUnselectable" on-up="_makeCentreSelectable" on-track="_changeLeftInsertionPointSize">
-                    <div class="arrow-left" tooltip-text="Collapse" on-tap="_collapseLeftInsertionPoint"></div>
-                    <div class="arrow-right" tooltip-text="Expand to default width" on-tap="_expandLeftInsertionPoint"></div>
-                </div>
-                <div id="centreInsertionPointContainer" class="insertion-point-slot layout vertical flex" style="min-width:0">
-                    <content select=".top-insertion-point"></content>
-                    <content select=".custom-egi"></content>
-                    <content select=".bottom-insertion-point"></content>
-                </div>
-                <div id="rightSplitter" class="splitter" hidden$="[[!rightInsertionPointPresent]]" on-down="_makeCentreUnselectable" on-up="_makeCentreSelectable" on-track="_changeRightInsertionPointSize">
-                    <div class="arrow-left" tooltip-text="Expand to default width" on-tap="_expandRightInsertionPoint"></div>
-                    <div class="arrow-right" tooltip-text="Collapse" on-tap="_collapseRightInsertionPoint"></div>
-                </div>
-                <div id="rightInsertionPointContainer" class="insertion-point-slot layout vertical">
-                    <content id="rightInsertionPointContent" select=".right-insertion-point"></content>
-                </div>
-                <div id="fantomSplitter" class="fantom-splitter"></div>
-            </tg-centre-result-view>
-        </iron-pages>
-    </template>
-</dom-module>
+        </div>
+        <tg-centre-result-view id="centreResultContainer">
+            <div id="leftInsertionPointContainer" class="insertion-point-slot layout vertical">
+                <content id="leftInsertionPointContent" select=".left-insertion-point"></content>
+            </div>
+            <div id="leftSplitter" class="splitter" hidden$="[[!leftInsertionPointPresent]]" on-down="_makeCentreUnselectable" on-up="_makeCentreSelectable" on-track="_changeLeftInsertionPointSize">
+                <div class="arrow-left" tooltip-text="Collapse" on-tap="_collapseLeftInsertionPoint"></div>
+                <div class="arrow-right" tooltip-text="Expand to default width" on-tap="_expandLeftInsertionPoint"></div>
+            </div>
+            <div id="centreInsertionPointContainer" class="insertion-point-slot layout vertical flex" style="min-width:0">
+                <content select=".top-insertion-point"></content>
+                <content select=".custom-egi"></content>
+                <content select=".bottom-insertion-point"></content>
+            </div>
+            <div id="rightSplitter" class="splitter" hidden$="[[!rightInsertionPointPresent]]" on-down="_makeCentreUnselectable" on-up="_makeCentreSelectable" on-track="_changeRightInsertionPointSize">
+                <div class="arrow-left" tooltip-text="Expand to default width" on-tap="_expandRightInsertionPoint"></div>
+                <div class="arrow-right" tooltip-text="Collapse" on-tap="_collapseRightInsertionPoint"></div>
+            </div>
+            <div id="rightInsertionPointContainer" class="insertion-point-slot layout vertical">
+                <content id="rightInsertionPointContent" select=".right-insertion-point"></content>
+            </div>
+            <div id="fantomSplitter" class="fantom-splitter"></div>
+        </tg-centre-result-view>
+    </iron-pages>
+`;
 
 <script>
     Polymer({

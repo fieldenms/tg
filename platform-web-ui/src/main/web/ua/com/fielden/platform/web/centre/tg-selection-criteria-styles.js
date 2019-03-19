@@ -1,4 +1,7 @@
-<dom-module id="tg-selection-criteria-styles">
+import '/resources/polymer/@polymer/polymer/lib/elements/dom-module.js';
+
+const styleElement = document.createElement('dom-module');
+styleElement.innerHTML = `
     <template>
         <style>
             tg-flex-layout * {
@@ -9,4 +12,5 @@
             }
         </style>
     </template>
-</dom-module>
+`;
+styleElement.register('tg-selection-criteria-styles');
