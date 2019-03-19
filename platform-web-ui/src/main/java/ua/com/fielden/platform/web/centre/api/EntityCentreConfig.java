@@ -60,6 +60,7 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
     private final int visibleRowsCount;
     private final String egiHeight;
     private final boolean fitToHeight;
+    private final String rowHeight;
 
     /////////////////////////////////////////////
     ///////////// TOP LEVEL ACTIONS /////////////
@@ -333,6 +334,7 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
             final int visibleRowsCount,
             final String egiHeight,
             final boolean fitToHeight,
+            final String rowHeight,
 
             final List<Pair<EntityActionConfig, Optional<String>>> topLevelActions,
             final List<EntityActionConfig> frontActions,
@@ -399,6 +401,7 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
         this.visibleRowsCount = visibleRowsCount;
         this.egiHeight = egiHeight;
         this.fitToHeight = fitToHeight;
+        this.rowHeight = rowHeight;
 
         this.topLevelActions.addAll(topLevelActions);
         this.frontActions.addAll(frontActions);
@@ -832,5 +835,9 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
 
     public boolean isFitToHeight() {
         return fitToHeight;
+    }
+
+    public String getRowHeight() {
+        return rowHeight;
     }
 }

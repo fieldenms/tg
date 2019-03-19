@@ -52,7 +52,7 @@ public class Entity extends AbstractEntity<String> {
     @Title(value = "First Property", desc = "used for testing")
     @Calculated
     private Integer firstProperty = null;
-    private static ExpressionModel firstProperty_ = expr().val(null).model();
+    protected static ExpressionModel firstProperty_ = expr().val(null).model();
 
     @IsProperty
     @Title("Observable Property")

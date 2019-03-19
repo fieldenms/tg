@@ -140,12 +140,12 @@
         <div class="vertical-section">
             <paper-input-container id="in-passwd-container">
                 <label>New password</label>
-                <input id="in-passwd" is="iron-input" type="password" name="passwd" required prevent-invalid-input onCopy="return false" onDrag="return false" onDrop="return false" onPaste="return false"/>
+                <input id="in-passwd" is="iron-input" autocomplete="off" type="password" name="passwd" required prevent-invalid-input onCopy="return false" onDrag="return false" onDrop="return false" onPaste="return false"/>
             </paper-input-container>
 
             <paper-input-container id="in-passwd-confirm-container">
                 <label>Confirm new password</label>
-                <input id="in-passwd-confirm" is="iron-input" type="password" name="passwd-confirmed" required prevent-invalid-input onCopy="return false" onDrag="return false" onDrop="return false" onPaste="return false"/>
+                <input id="in-passwd-confirm" is="iron-input" autocomplete="off" type="password" name="passwd-confirmed" required prevent-invalid-input onCopy="return false" onDrag="return false" onDrop="return false" onPaste="return false"/>
             </paper-input-container>
 
             <input name='uuid' type='hidden' value='@uuid'/>
