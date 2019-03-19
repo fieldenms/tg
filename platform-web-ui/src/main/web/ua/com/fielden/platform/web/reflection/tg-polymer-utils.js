@@ -140,6 +140,11 @@ export function deepestActiveElement () {
 };
 
 /**
+ * The selector for focusable elements.
+ */
+export const FOCUSABLE_ELEMENTS_SELECTOR = 'a[href], area[href], input, select, textarea, button, iframe, object, embed, [tabindex="0"], [contenteditable]';
+
+/**
  * The class that can be used like an entity for entity grid inspector or any other place.
  */
 export class EntityStub {

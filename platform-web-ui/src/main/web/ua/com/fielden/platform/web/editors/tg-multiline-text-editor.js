@@ -133,8 +133,11 @@ Polymer({
         }
     },
 
-    getFocusableElements: function () {
-        return [this.$.input.$.textarea];
+    getElements: function (selector) {
+        if (this.$.input.$.textarea.matches(selector)) {
+            return [this.$.input.$.textarea];
+        }
+        return [];
     },
 
     /**

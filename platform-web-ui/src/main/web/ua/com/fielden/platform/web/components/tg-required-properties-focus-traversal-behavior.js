@@ -1,6 +1,6 @@
 import '/resources/polymer/@polymer/polymer/polymer-legacy.js';
-import { FOCUSABLE_ELEMENTS_SELECTOR, queryFocusableElements } from '/resources/components/tg-focusable-behavior.js';
-import { tearDownEvent, deepestActiveElement } from '/resources/reflection/tg-polymer-utils.js';
+import { queryElements } from '/resources/components/tg-element-selector-behavior.js';
+import { FOCUSABLE_ELEMENTS_SELECTOR, tearDownEvent, deepestActiveElement } from '/resources/reflection/tg-polymer-utils.js';
 
 function _onCaptureKeyDown (event) {
     if (event.ctrlKey || event.metaKey) {
@@ -54,12 +54,12 @@ function _focusFirstElement (focusables, isNext) {
 };
 
 function _getCurrentFocusableElements (container) {
-    return queryFocusableElements(container).filter(element => !element.disabled && element.offsetParent !== null);
+    return queryElements(container, FOCUSABLE_ELEMENTS_SELECTOR).filter(element => !element.disabled && element.offsetParent !== null);
 };
 
 function _getCurrentRequiredFocusableElements (container) {
-    return Array.from(container.shadowRoot.querySelectorAll("[required]"))
-        .map(editor => editor.shadowRoot.querySelector(FOCUSABLE_ELEMENTS_SELECTOR))
+    return queryElements(container, "[required]")
+        .flatMap(editor => editor.getElements(FOCUSABLE_ELEMENTS_SELECTOR))
         .filter(element => !element.disabled && element.offsetParent !== null);
 };
 

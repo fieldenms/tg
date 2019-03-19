@@ -1,9 +1,9 @@
 import '/resources/egi/tg-custom-action-dialog.js';
 
-import { tearDownEvent, isInHierarchy, deepestActiveElement } from '/resources/reflection/tg-polymer-utils.js';
+import { tearDownEvent, isInHierarchy, deepestActiveElement, FOCUSABLE_ELEMENTS_SELECTOR } from '/resources/reflection/tg-polymer-utils.js';
 import { TgEntityBinderBehavior } from '/resources/binding/tg-entity-binder-behavior.js';
 import { createEntityActionThenCallback } from '/resources/master/actions/tg-entity-master-closing-utils.js';
-import { TgFocusableBehavior } from '/resources/components/tg-focusable-behavior.js';
+import { TgElementSelectorBehavior } from '/resources/components/tg-element-selector-behavior.js';
 import {TgRequiredPropertiesFocusTraversalBehavior} from '/resources/components/tg-required-properties-focus-traversal-behavior.js';
 
 const selectEnabledEditor = function (editor) {
@@ -667,10 +667,6 @@ const TgEntityMasterBehaviorImpl = {
                 document.body.appendChild(self._actionDialog);
             }
         }
-
-        if (!this._hasEmbededView() && !this._componentsToFocus) {
-            this._componentsToFocus = this.getFocusableElements();
-        }
     },
 
     /**
@@ -705,7 +701,7 @@ const TgEntityMasterBehaviorImpl = {
     },
 
     _getCurrentFocusableElements: function () {
-        return this._componentsToFocus.filter(element => !element.disabled && element.offsetParent !== null);
+        return this.getElements(FOCUSABLE_ELEMENTS_SELECTOR).filter(element => !element.disabled && element.offsetParent !== null);
     },
 
     wasLoaded: function () {
@@ -1057,7 +1053,7 @@ const TgEntityMasterBehaviorImpl = {
 
 export const TgEntityMasterBehavior = [
     TgEntityBinderBehavior,
-    TgFocusableBehavior,
+    TgElementSelectorBehavior,
     TgRequiredPropertiesFocusTraversalBehavior,
     TgEntityMasterBehaviorImpl
 ];

@@ -102,7 +102,7 @@ public class FunctionalActionElement implements IRenderable, IImportable {
         if (FunctionalActionKind.TOP_LEVEL == functionalActionKind) {
             attrs.put("class", "entity-specific-action");
         } else if (FunctionalActionKind.MENU_ITEM == functionalActionKind) {
-            attrs.put("class", "menu-item-action");
+            attrs.put("slot", "menu-item-action");
             attrs.put("data-route", getDataRoute());
         } else if (FunctionalActionKind.FRONT == functionalActionKind) {
             attrs.put("class", "custom-front-action");
@@ -186,7 +186,7 @@ public class FunctionalActionElement implements IRenderable, IImportable {
      */
     protected Map<String, Object> createCustomAttributes() {
         return new LinkedHashMap<>();
-    };
+    }
 
     public EntityActionConfig conf() {
         return entityActionConfig;
