@@ -146,6 +146,7 @@ public abstract class DbCreator {
         }
 
         if (raisedEx.isPresent()) {
+            raisedEx.ifPresent(ex -> logger.fatal(ex.getMessage(), ex));
             throw new IllegalStateException("Population of the test data has failed.", raisedEx.get());
         }
 

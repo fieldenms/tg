@@ -9,12 +9,12 @@ import ua.com.fielden.platform.entity.AbstractEntity;
  *
  * @param <T>
  */
-public interface IResultSetBuilder1dFitBehaviour<T extends AbstractEntity<?>> extends IResultSetBuilder2Properties<T> {
+public interface IResultSetBuilder1dFitBehaviour<T extends AbstractEntity<?>> extends IResultSetBuilder1eRowHeight<T> {
 
     /**
      * Makes egi content fit to it's height
      *
      * @return
      */
-    IResultSetBuilder2Properties<T> fitToHeight();
+    IResultSetBuilder1eRowHeight<T> fitToHeight();
 }
