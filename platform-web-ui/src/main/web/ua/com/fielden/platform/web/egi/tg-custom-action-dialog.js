@@ -26,8 +26,8 @@ import {html} from '/resources/polymer/@polymer/polymer/lib/utils/html-tag.js';
 import {TgFocusRestorationBehavior} from '/resources/actions/tg-focus-restoration-behavior.js'
 import {TgTooltipBehavior} from '/resources/components/tg-tooltip-behavior.js';
 import {TgBackButtonBehavior} from '/resources/views/tg-back-button-behavior.js'
-import {tearDownEvent, isInHierarchy, allDefined} from '/resources/reflection/tg-polymer-utils.js';
-import {FOCUSABLE_ELEMENTS_SELECTOR} from '/resources/components/tg-focusable-behavior.js'
+import {tearDownEvent, isInHierarchy, allDefined, FOCUSABLE_ELEMENTS_SELECTOR} from '/resources/reflection/tg-polymer-utils.js';
+import { TgElementSelectorBehavior } from '/resources/components/tg-element-selector-behavior.js';
 
 const template = html`
     <style>
@@ -222,7 +222,8 @@ Polymer({
         IronOverlayBehavior,
         TgFocusRestorationBehavior,
         TgTooltipBehavior,
-        TgBackButtonBehavior
+        TgBackButtonBehavior,
+        TgElementSelectorBehavior
     ],
 
     listeners: {
