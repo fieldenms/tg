@@ -13,17 +13,11 @@ import '/resources/binding/tg-entity-binder.js';
 
 const template = html`
     <style>
-        :host([with-dimensions]) #masterContainer{
-            position: absolute;
-            top: 0;
-            bottom: 0;
-            right: 0;
-            left: 0;
-        }
         :host::slotted(tg-flex-layout) {
             background-color: white;
         }
         #masterContainer {
+            @apply --master-with-dimensions-mixin;
             overflow-y: auto; /* vertical scrollbar is needed in case where master content does not fit into parent container; this works as a fallback when editorContainer has been shrinked to zero height */
         }
         tg-scrollable-component {

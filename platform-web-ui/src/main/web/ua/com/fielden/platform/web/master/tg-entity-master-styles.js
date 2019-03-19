@@ -7,6 +7,15 @@ styleElement.innerHTML = `
             :host {
                 min-height: 0;
             }
+            tg-entity-master[with-dimensions] {
+                --master-with-dimensions-mixin: {
+                    position: absolute;
+                    top: 0;
+                    bottom: 0;
+                    right: 0;
+                    left: 0;
+                };
+            }
             tg-entity-master {
                 min-height: 0;
             }

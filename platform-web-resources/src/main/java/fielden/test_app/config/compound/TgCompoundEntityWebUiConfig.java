@@ -49,9 +49,9 @@ import ua.com.fielden.platform.web.view.master.api.compound.Compound;
 import ua.com.fielden.platform.web.view.master.api.compound.impl.CompoundMasterBuilder;
 import ua.com.fielden.platform.web.view.master.api.impl.SimpleMasterBuilder;
 
-/** 
+/**
  * {@link TgCompoundEntity} Web UI configuration.
- * 
+ *
  * @author TG Team
  *
  */
@@ -161,7 +161,6 @@ public class TgCompoundEntityWebUiConfig {
                 .setLayoutFor(Device.DESKTOP, Optional.empty(), layout)
                 .setLayoutFor(Device.TABLET, Optional.empty(), layout)
                 .setLayoutFor(Device.MOBILE, Optional.empty(), layout)
-                .withDimensions(PrefDim.mkDim(400, 300))
                 .done();
 
         return new EntityMaster<>(TgCompoundEntity.class, TgCompoundEntityProducer.class, masterConfig, injector);
