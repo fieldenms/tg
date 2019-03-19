@@ -392,16 +392,12 @@ Polymer({
 
     behaviors: [TgTooltipBehavior, TgFocusRestorationBehavior, TgElementSelectorBehavior],
 
-    created: function () {
-        this._reflector = new TgReflector();
-    },
-
     /**
      * Initialisation block.
      */
-    ready: function () {
+    created: function () {
         const self = this;
-
+        this._reflector = new TgReflector();
         self._run = (function (event) {
             console.log(this.shortDesc + ": execute");
 
