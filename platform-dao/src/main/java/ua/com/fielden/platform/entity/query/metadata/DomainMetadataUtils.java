@@ -35,6 +35,7 @@ import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfa
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.ExpressionModel;
 import ua.com.fielden.platform.expression.ExpressionText2ModelConverter;
+import ua.com.fielden.platform.types.tuples.T3;
 import ua.com.fielden.platform.utils.Pair;
 
 public class DomainMetadataUtils {
@@ -59,29 +60,29 @@ public class DomainMetadataUtils {
     }
 
     public static ExpressionModel getVirtualKeyPropForEntityWithCompositeKey(final Class<? extends AbstractEntity<DynamicEntityKey>> entityType) {
-        final List<Pair<Field, Boolean>> keyMembersWithOptionality = new ArrayList<>();
+        final List<T3<String, Class<?>, Boolean>> keyMembersWithOptionality = new ArrayList<>();
         for (final Field field : getKeyMembers(entityType)) {
-            keyMembersWithOptionality.add(new Pair<>(field, getPropertyAnnotation(Optional.class, entityType, field.getName()) != null));
+            keyMembersWithOptionality.add(new T3<String, Class<?>, Boolean>(field.getName(), field.getType(), getPropertyAnnotation(Optional.class, entityType, field.getName()) != null));
         }
         
         return composeExpression(keyMembersWithOptionality, getKeyMemberSeparator(entityType));
     }
 
-    private static String getKeyMemberConcatenationExpression(final Field keyMember) {
-        if (PropertyDescriptor.class != keyMember.getType() && isEntityType(keyMember.getType())) {
-            return keyMember.getName() + "." + KEY;
+    private static String getKeyMemberConcatenationExpression(final String keyMemberName, final Class<?> keyMemberType) {
+        if (PropertyDescriptor.class != keyMemberType && isEntityType(keyMemberType)) {
+            return keyMemberName + "." + KEY;
         } else {
-            return keyMember.getName();
+            return keyMemberName;
         }
     }
 
-    private static ExpressionModel composeExpression(final List<Pair<Field, Boolean>> original, final String separator) {
+    private static ExpressionModel composeExpression(final List<T3<String, Class<?>, Boolean>> original, final String separator) {
         ExpressionModel currExp = null;
         Boolean currExpIsOptional = null;
 
-        for (final Pair<Field, Boolean> originalField : original) {
+        for (final T3<String, Class<?>, Boolean>  originalField : original) {
             currExp = composeTwo(new Pair<ExpressionModel, Boolean>(currExp, currExpIsOptional), originalField, separator);
-            currExpIsOptional = currExpIsOptional != null ? currExpIsOptional && originalField.getValue() : originalField.getValue();
+            currExpIsOptional = currExpIsOptional != null ? currExpIsOptional && originalField._3 : originalField._3;
         }
 
         return currExp;
@@ -91,15 +92,15 @@ public class DomainMetadataUtils {
         return expr().concat().expr(first).with().val(separator).with().prop(secondPropName).end().model();
     }
 
-    private static ExpressionModel composeTwo(final Pair<ExpressionModel, Boolean> first, final Pair<Field, Boolean> second, final String separator) {
+    private static ExpressionModel composeTwo(final Pair<ExpressionModel, Boolean> first, final T3<String, Class<?>, Boolean>  second, final String separator) {
         final ExpressionModel firstModel = first.getKey();
         final Boolean firstIsOptional = first.getValue();
 
-        final String secondPropName = getKeyMemberConcatenationExpression(second.getKey());
-        final boolean secondPropIsOptional = second.getValue();
+        final String secondPropName = getKeyMemberConcatenationExpression(second._1, second._2);
+        final boolean secondPropIsOptional = second._3;
 
         if (first.getKey() == null) {
-            return expr().concat().prop(secondPropName).with().val("").end().model();
+            return expr().prop(secondPropName).model();
         } else {
             if (firstIsOptional) {
                 if (secondPropIsOptional) {
