@@ -1706,6 +1706,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 //.setHeight("100%")
                 .setVisibleRowsCount(10)
                 //.fitToHeight()
+                .rowHeight("3rem")
                 .addProp("this")
                     .order(2).asc()
                     .width(60);
