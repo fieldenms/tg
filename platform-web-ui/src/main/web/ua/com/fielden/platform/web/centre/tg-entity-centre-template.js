@@ -1,4 +1,4 @@
-< !--@imports-->
+<!--@imports-->
 
 import { Polymer } from '/resources/polymer/@polymer/polymer/lib/legacy/polymer-fn.js';
 import { html } from '/resources/polymer/@polymer/polymer/lib/utils/html-tag.js';

@@ -9,7 +9,7 @@ import '/resources/polymer/@polymer/paper-styles/paper-styles-classes.js';
 
 import { TgReflector } from '/app/tg-reflector.js';
 import '/resources/components/tg-scrollable-component.js';
-import { TgFocusTraversalBehavior } from '/resources/components/tg-focus-traversal-behavior.js';
+import { TgRequiredPropertiesFocusTraversalBehavior } from '/resources/components/tg-required-properties-focus-traversal-behavior.js';
 import { TgShortcutProcessingBehavior } from '/resources/actions/tg-shortcut-processing-behavior.js';
 import '/resources/actions/tg-ui-action.js';
 import '/resources/images/tg-document-related-icons.js';
@@ -68,7 +68,7 @@ Polymer({
 
     behaviors: [
         IronA11yKeysBehavior,
-        TgFocusTraversalBehavior,
+        TgRequiredPropertiesFocusTraversalBehavior,
         TgShortcutProcessingBehavior
     ],
 

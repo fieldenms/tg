@@ -79,7 +79,7 @@ public class InsertionPointBuilder implements IRenderable, IExecutable {
         final LinkedHashSet<String> importPaths = new LinkedHashSet<>();
         importPaths.add(insertionPointActionElement.importPath());
         if (insertionPointConfig.hasPaginationButtons()) {
-            importPaths.add("polymer/paper-icon-button/paper-icon-button");
+            importPaths.add("polymer/@polymer/paper-icon-button/paper-icon-button");
         }
         return importPaths;
     }

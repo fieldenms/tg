@@ -29,7 +29,7 @@ public class CentreToolbar implements IToolbarConfig {
 
     @Override
     public String importPath() {
-        return "polymer/paper-icon-button/paper-icon-button";
+        return "polymer/@polymer/paper-icon-button/paper-icon-button";
     }
 
     @Override

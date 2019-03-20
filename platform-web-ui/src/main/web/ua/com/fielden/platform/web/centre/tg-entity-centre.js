@@ -18,7 +18,7 @@ import '/resources/polymer/@polymer/iron-pages/iron-pages.js';
 import '/resources/polymer/@polymer/iron-ajax/iron-ajax.js';
 import '/resources/polymer/@polymer/iron-flex-layout/iron-flex-layout.js';
 import '/resources/polymer/@polymer/iron-flex-layout/iron-flex-layout-classes.js';
-import { IronResizableBehavior } from '/resources/polymer/iron-resizable-behavior/iron-resizable-behavior.js';
+import { IronResizableBehavior } from '/resources/polymer/@polymer/iron-resizable-behavior/iron-resizable-behavior.js';
 
 const template = html`
     <style>

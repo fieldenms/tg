@@ -57,7 +57,7 @@ public class CentreComponentResource extends AbstractWebResource {
     public Representation get() {
         return handleUndesiredExceptions(getResponse(), () -> {
             final String source = sourceController.loadSource("/centre_ui/" + this.mitypeString, device());
-            return new EncodeRepresentation(Encoding.GZIP, new InputRepresentation(new ByteArrayInputStream(source.getBytes(Charsets.UTF_8)), MediaType.TEXT_HTML));
+            return new EncodeRepresentation(Encoding.GZIP, new InputRepresentation(new ByteArrayInputStream(source.getBytes(Charsets.UTF_8)), MediaType.TEXT_JAVASCRIPT));
         }, restUtil);
     }
 }

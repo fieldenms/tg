@@ -1071,7 +1071,7 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
         final Pair<String, String> gridLayoutConfig = generateGridLayoutConfig();
         final int prefixLength = prefix.length();
         logger.debug("Initiating template...");
-        final String text = ResourceLoader.getText("ua/com/fielden/platform/web/centre/tg-entity-centre-template.html");
+        final String text = ResourceLoader.getText("ua/com/fielden/platform/web/centre/tg-entity-centre-template.js");
         logger.debug("Replacing some parts...");
         final String entityCentreStr = text.
                 replace(IMPORTS, SimpleMasterBuilder.createImports(importPaths)).
