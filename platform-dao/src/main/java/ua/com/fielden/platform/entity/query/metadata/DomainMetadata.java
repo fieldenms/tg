@@ -30,7 +30,6 @@ import static ua.com.fielden.platform.reflection.AnnotationReflector.getAnnotati
 import static ua.com.fielden.platform.reflection.AnnotationReflector.getKeyType;
 import static ua.com.fielden.platform.reflection.AnnotationReflector.getPropertyAnnotation;
 import static ua.com.fielden.platform.reflection.AnnotationReflector.isAnnotationPresent;
-import static ua.com.fielden.platform.reflection.Finder.getKeyMembers;
 import static ua.com.fielden.platform.reflection.Finder.hasLinkProperty;
 import static ua.com.fielden.platform.reflection.Finder.isOne2One_association;
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.determinePropertyType;
@@ -83,7 +82,6 @@ import ua.com.fielden.platform.entity.query.ICompositeUserTypeInstantiate;
 import ua.com.fielden.platform.entity.query.model.ExpressionModel;
 import ua.com.fielden.platform.eql.dbschema.ColumnDefinitionExtractor;
 import ua.com.fielden.platform.eql.dbschema.TableDdl;
-import ua.com.fielden.platform.utils.Pair;
 import ua.com.fielden.platform.utils.StreamUtils;
 
 public class DomainMetadata {
@@ -455,11 +453,10 @@ public class DomainMetadata {
         final boolean isEntity = isPersistedEntityType(javaType);
         final boolean isUnionEntity = isUnionEntityType(javaType);
 
-        final Boolean compositeKeyMemberOptionalityInfo = getCompositeKeyMemberOptionalityInfo(parentInfo.entityType, propName);
-        final boolean isCompositeKeyMember = compositeKeyMemberOptionalityInfo != null;
+        final boolean isCompositeKeyMember = getPropertyAnnotation(CompositeKeyMember.class, parentInfo.entityType, propName) != null;
         final boolean isRequired = isAnnotationPresent(propField, Required.class);
         final PersistentType persistentType = getPersistentType(parentInfo.entityType, propName);
-        final boolean nullable = !(isRequired || (isCompositeKeyMember && !compositeKeyMemberOptionalityInfo));
+        final boolean nullable = !(isRequired || (isCompositeKeyMember && getPropertyAnnotation(Optional.class, parentInfo.entityType, propName) == null));
 
         final Object hibernateType = getHibernateType(javaType, persistentType, isEntity);
 
@@ -480,13 +477,7 @@ public class DomainMetadata {
     }
 
     private PropertyMetadata getVirtualPropInfoForDynamicEntityKey(final EntityTypeInfo <? extends AbstractEntity<DynamicEntityKey>> parentInfo) throws Exception {
-        final List<Field> keyMembers = getKeyMembers(parentInfo.entityType);
-        final List<Pair<Field, Boolean>> keyMembersWithOptionality = new ArrayList<>();
-        for (final Field field : keyMembers) {
-            keyMembersWithOptionality.add(new Pair<>(field, getCompositeKeyMemberOptionalityInfo(parentInfo.entityType, field.getName())));
-        }
-        
-        return new PropertyMetadata.Builder(KEY, String.class, true, parentInfo).expression(getVirtualKeyPropForEntityWithCompositeKey(parentInfo.entityType, keyMembersWithOptionality)).hibType(H_STRING).category(VIRTUAL_OVERRIDE).build();
+        return new PropertyMetadata.Builder(KEY, String.class, true, parentInfo).expression(getVirtualKeyPropForEntityWithCompositeKey(parentInfo.entityType)).hibType(H_STRING).category(VIRTUAL_OVERRIDE).build();
     }
 
     private PropertyMetadata getCalculatedPropInfo(final Field propField, final EntityTypeInfo <? extends AbstractEntity<?>> parentInfo) throws Exception {
@@ -521,12 +512,6 @@ public class DomainMetadata {
 
     private PropertyMetadata getCollectionalPropInfo(final Field propField, final EntityTypeInfo <? extends AbstractEntity<?>> parentInfo) throws Exception {
         return new PropertyMetadata.Builder(propField.getName(), determinePropertyType(parentInfo.entityType, propField.getName()), true, parentInfo).category(COLLECTIONAL).build();
-    }
-
-    private Boolean getCompositeKeyMemberOptionalityInfo(final Class entityType, final String propName) {
-        final boolean isCompositeKeyMember = getPropertyAnnotation(CompositeKeyMember.class, entityType, propName) != null;
-        final boolean isOptionalCompositeKeyMember = getPropertyAnnotation(Optional.class, entityType, propName) != null;
-        return isCompositeKeyMember ? isOptionalCompositeKeyMember : null;
     }
 
     private PersistentType getPersistentType(final Class entityType, final String propName) {

@@ -8,8 +8,10 @@ import static ua.com.fielden.platform.entity.AbstractUnionEntity.unionProperties
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.expr;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 import static ua.com.fielden.platform.reflection.AnnotationReflector.getAnnotation;
+import static ua.com.fielden.platform.reflection.AnnotationReflector.getPropertyAnnotation;
 import static ua.com.fielden.platform.reflection.AnnotationReflector.isContextual;
 import static ua.com.fielden.platform.reflection.Finder.getFieldByName;
+import static ua.com.fielden.platform.reflection.Finder.getKeyMembers;
 import static ua.com.fielden.platform.reflection.Reflector.getKeyMemberSeparator;
 import static ua.com.fielden.platform.utils.EntityUtils.isEntityType;
 import static ua.com.fielden.platform.utils.EntityUtils.isUnionEntityType;
@@ -23,6 +25,7 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.AbstractUnionEntity;
 import ua.com.fielden.platform.entity.DynamicEntityKey;
 import ua.com.fielden.platform.entity.annotation.Calculated;
+import ua.com.fielden.platform.entity.annotation.Optional;
 import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
 import ua.com.fielden.platform.entity.query.exceptions.EqlException;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ICaseWhenFunctionWhen;
@@ -55,8 +58,13 @@ public class DomainMetadataUtils {
         return expressionModelInProgress.otherwise().val(null).end().model();
     }
 
-    public static ExpressionModel getVirtualKeyPropForEntityWithCompositeKey(final Class<? extends AbstractEntity<DynamicEntityKey>> entityType, final List<Pair<Field, Boolean>> keyMembers) {
-        return composeExpression(keyMembers, getKeyMemberSeparator(entityType));
+    public static ExpressionModel getVirtualKeyPropForEntityWithCompositeKey(final Class<? extends AbstractEntity<DynamicEntityKey>> entityType) {
+        final List<Pair<Field, Boolean>> keyMembersWithOptionality = new ArrayList<>();
+        for (final Field field : getKeyMembers(entityType)) {
+            keyMembersWithOptionality.add(new Pair<>(field, getPropertyAnnotation(Optional.class, entityType, field.getName()) != null));
+        }
+        
+        return composeExpression(keyMembersWithOptionality, getKeyMemberSeparator(entityType));
     }
 
     private static String getKeyMemberConcatenationExpression(final Field keyMember) {
@@ -91,7 +99,7 @@ public class DomainMetadataUtils {
         final boolean secondPropIsOptional = second.getValue();
 
         if (first.getKey() == null) {
-            return expr().prop(secondPropName).model();
+            return expr().concat().prop(secondPropName).with().val("").end().model();
         } else {
             if (firstIsOptional) {
                 if (secondPropIsOptional) {
