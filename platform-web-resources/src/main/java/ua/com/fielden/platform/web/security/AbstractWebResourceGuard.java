@@ -104,7 +104,7 @@ public abstract class AbstractWebResourceGuard extends ChallengeAuthenticator {
             }
 
             // the provided authenticator was valid and a new cookie should be send back to the client
-            assignAuthenticatingCookie(constants.now(), session.get().getAuthenticator().get(), domainName, path, request, response);
+            assignAuthenticatingCookie(session.get().getUser(), constants.now(), session.get().getAuthenticator().get(), domainName, path, request, response);
 
         } catch (final Exception ex) {
             // in case of any internal exception forbid the request
@@ -151,7 +151,7 @@ public abstract class AbstractWebResourceGuard extends ChallengeAuthenticator {
      * @param authenticator
      * @param response
      */
-    public static void assignAuthenticatingCookie(final DateTime now, final Authenticator authenticator, final String domainName, final String path, final Request request, final Response response) {
+    public static void assignAuthenticatingCookie(final User user, final DateTime now, final Authenticator authenticator, final String domainName, final String path, final Request request, final Response response) {
         // create a cookie that will carry an updated authenticator back to the client for further use
         // it is important to note that the time that will be used by further processing of this request is not known
         // and thus is not factored in for session authentication time frame
@@ -183,7 +183,7 @@ public abstract class AbstractWebResourceGuard extends ChallengeAuthenticator {
         // let's record the current username as the Restlet security User that forms part of the HTTP request information.
         // This information can then be easily reused whenever the current username is required, but there is no access to the application user provider (e.g. in HTTP request filters).
         final org.restlet.security.User restletUser = new org.restlet.security.User();
-        restletUser.setIdentifier(authenticator.username);
+        restletUser.setIdentifier(user.getId().toString());
         request.getClientInfo().setUser(restletUser);
     }
 
