@@ -30,7 +30,7 @@ import rx.subjects.Subject;
  * @author TG Team
  *
  */
-public class CuncurrentBatchLoggingUsingRxJava {
+public class ConcurrentBatchLoggingUsingRxJava {
     public static void main(final String[] args) throws Exception {
         final ExecutorService subsribeOnExecutor = Executors.newSingleThreadExecutor();
         final Subject<Integer, Integer> observable = new SerializedSubject<>(PublishSubject.create());
@@ -46,7 +46,7 @@ public class CuncurrentBatchLoggingUsingRxJava {
                 .map(v -> exec.scheduleWithFixedDelay(new EventProducer("Event Producer 1", observable), (int) (Math.random() * 200) + 1, (int) (Math.random() * 1000) + 1, TimeUnit.MILLISECONDS))
                 .collect(toList());
         // let's terminate the whole process after the specified period of time
-        exec.schedule(new SubjectTerminator(exec, subsribeOnExecutor, observable, producers.toArray(new ScheduledFuture<?>[0])), 10, TimeUnit.SECONDS);
+        exec.schedule(new SubjectTerminator(exec, subsribeOnExecutor, observable, subscirption, producers.toArray(new ScheduledFuture<?>[0])), 10, TimeUnit.SECONDS);
         
     }
 
@@ -80,12 +80,14 @@ public class CuncurrentBatchLoggingUsingRxJava {
      */
     static final class SubjectTerminator implements Runnable {
         private final Subject<Integer, Integer> subject;
+        private final Subscription subscirption;
         private final List<ScheduledFuture<?>> toCancel = new ArrayList<>();
         private final ExecutorService exec;
         private final ExecutorService subsribeOnExecutor;
 
-        private SubjectTerminator(final ExecutorService executor, final ExecutorService subsribeOnExecutor, final Subject<Integer, Integer> subject, final ScheduledFuture<?>... features) {
+        private SubjectTerminator(final ExecutorService executor, final ExecutorService subsribeOnExecutor, final Subject<Integer, Integer> subject, final Subscription subscirption, final ScheduledFuture<?>... features) {
             this.subject = subject;
+            this.subscirption = subscirption;
             this.toCancel.addAll(Arrays.asList(features));
             this.exec = executor;
             this.subsribeOnExecutor = subsribeOnExecutor;
@@ -94,12 +96,13 @@ public class CuncurrentBatchLoggingUsingRxJava {
         @Override
         public void run() {
             System.out.println("Shutting down...");
-            subject.onCompleted();
             for (final ScheduledFuture<?> future : toCancel) {
                 future.cancel(true);
                 System.out.println("cancelling");
             }
-
+            
+            subject.onCompleted();
+            subscirption.unsubscribe();
             subsribeOnExecutor.shutdown();
             exec.shutdown();
         }
