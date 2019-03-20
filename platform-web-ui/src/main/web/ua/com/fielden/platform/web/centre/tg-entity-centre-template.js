@@ -15,11 +15,11 @@ import '/resources/polymer/@polymer/iron-flex-layout/iron-flex-layout-classes.js
 
 import '/resources/egi/tg-entity-grid-inspector.js';
 import '/resources/centre/tg-selection-criteria.js';
-import '/resources/centre/tg-selection-criteria-template-behavior.js';
+import { TgSelectionCriteriaTemplateBehavior } from '/resources/centre/tg-selection-criteria-template-behavior.js';
 import '/resources/centre/tg-entity-centre.js';
 import '/resources/centre/tg-entity-centre-styles.js';
 import '/resources/centre/tg-selection-criteria-styles.js';
-import '/resources/centre/tg-entity-centre-template-behavior.js';
+import { TgEntityCentreTemplateBehavior } from '/resources/centre/tg-entity-centre-template-behavior.js';
 import '/resources/centre/tg-entity-centre-insertion-point.js';
 
 const selectionCritTemplate = html`
@@ -59,7 +59,7 @@ const entityCentreTemplate = html`
 
         <!--@custom-front-actions-->
         
-        <tg-entity-grid-inspector id="egi" class="entity-grid-inspector custom-egi" centre-selection="[[centreSelection]]" column-properties-mapper="{{columnPropertiesMapper}}" custom-shortcuts="@customShortcuts" visible-row-count="@visibleRowCount" constant-height="@egiHeight" row-height="@egiRowHeight" @fitToHeight @canDragFrom @toolbarVisible @checkboxVisible @dragAnchorFixed @checkboxesFixed @checkboxesWithPrimaryActionsFixed num-of-fixed-cols="@numOfFixedCols" @secondaryActionsFixed @headerFixed @summaryFixed @gridLayout>
+        <tg-entity-grid-inspector id="egi" slot="custom-egi" class="entity-grid-inspector" centre-selection="[[centreSelection]]" column-properties-mapper="{{columnPropertiesMapper}}" custom-shortcuts="@customShortcuts" visible-row-count="@visibleRowCount" constant-height="@egiHeight" row-height="@egiRowHeight" @fitToHeight @canDragFrom @toolbarVisible @checkboxVisible @dragAnchorFixed @checkboxesFixed @checkboxesWithPrimaryActionsFixed num-of-fixed-cols="@numOfFixedCols" @secondaryActionsFixed @headerFixed @summaryFixed @gridLayout>
             <!-- EGI COLUMNS DOM (GENERATED) -->
             <!--@egi_columns-->
 
@@ -70,16 +70,16 @@ const entityCentreTemplate = html`
             <!--@insertion_point_actions-->
         </tg-entity-grid-inspector>
 
-        <div class="left-insertion-point">
+        <div slot="left-insertion-point" class="left-insertion-point">
             <!--@left_insertion_points-->
         </div>
-        <div class="right-insertion-point">
+        <div slot="right-insertion-point" class="right-insertion-point">
             <!--@right_insertion_points-->
         </div>
-        <div class="bottom-insertion-point">
+        <div slot="bottom-insertion-point">
             <!--@bottom_insertion_points-->
         </div>
-        <div class="top-insertion-point">
+        <div slot="top-insertion-point">
             <!--@top_insertion_points-->
         </div>
     </tg-entity-centre>
