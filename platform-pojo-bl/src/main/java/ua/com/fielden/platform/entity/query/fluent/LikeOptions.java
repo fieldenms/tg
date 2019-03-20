@@ -1,5 +1,7 @@
 package ua.com.fielden.platform.entity.query.fluent;
 
+import static java.lang.String.format;
+
 public class LikeOptions {
     public final boolean negated;
     public final boolean caseInsensitive;
@@ -34,6 +36,11 @@ public class LikeOptions {
         LikeOptions other = (LikeOptions) obj;
         
         return negated == other.negated && caseInsensitive == other.caseInsensitive && withCast == other.withCast;
+    }
+    
+    @Override
+    public String toString() {
+        return format("negated: %s caseInsensitive: %s withCast: %s", negated, caseInsensitive, withCast);
     }
 
     public static LikeOptions.Builder options() {
