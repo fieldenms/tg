@@ -1,6 +1,12 @@
+import '/resources/polymer/@polymer/polymer/polymer-legacy.js';
 import { TgSelectionCriteriaBehavior } from '/resources/centre/tg-selection-criteria-behavior.js';
+import { TgReflector } from '/app/tg-reflector.js';
 
 const TgSelectionCriteriaTemplateBehaviorImpl = {
+
+    created: function () {
+        this.reflector = new TgReflector();
+    },
 
     ////////////// Template related methods are here in order to reduce the template size ///////////////
     //////// Also this enforces user to provide appropriate elements and their ids when using it////////
@@ -40,7 +46,7 @@ const TgSelectionCriteriaTemplateBehaviorImpl = {
      * The reflector component.
      */
     _reflector: function () {
-        return this._dom()._reflector();
+        return this.reflector;
     },
 
     /**

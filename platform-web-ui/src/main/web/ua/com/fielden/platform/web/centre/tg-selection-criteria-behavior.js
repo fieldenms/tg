@@ -1,3 +1,4 @@
+import '/resources/polymer/@polymer/polymer/polymer-legacy.js';
 import { TgEntityBinderBehavior } from '/resources/binding/tg-entity-binder-behavior.js';
 
 //Actions those can be applied to entity centre.
@@ -359,7 +360,7 @@ const TgSelectionCriteriaBehaviorImpl = {
     },
 
     _extractModifiedPropertiesHolder: function (bindingEntity, _originalBindingEntity) {
-        const modPropHolder = Polymer.TgBehaviors.TgEntityBinderBehavior._extractModifiedPropertiesHolder.call(this, bindingEntity, _originalBindingEntity);
+        const modPropHolder = TgEntityBinderBehavior._extractModifiedPropertiesHolder.call(this, bindingEntity, _originalBindingEntity);
         if (this._reflector().isEntity(bindingEntity)) {
             modPropHolder["@@metaValues"] = {};
             modPropHolder["@@wasRun"] = this._wasRun;

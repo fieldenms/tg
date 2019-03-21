@@ -1,3 +1,4 @@
+import '/resources/polymer/@polymer/polymer/polymer-legacy.js';
 import { Polymer } from '/resources/polymer/@polymer/polymer/lib/legacy/polymer-fn.js';
 import { html } from '/resources/polymer/@polymer/polymer/lib/utils/html-tag.js';
 
@@ -5,6 +6,7 @@ import '/resources/polymer/@polymer/iron-ajax/iron-ajax.js';
 
 import '/resources/centre/tg-criteria-validator.js';
 import '/resources/binding/tg-entity-binder.js';
+import { TgReflector } from '/app/tg-reflector.js';
 
 const template = html`
     <style>
@@ -92,6 +94,10 @@ Polymer({
         }
     },
 
+    created: function () {
+        this._reflector = new TgReflector();
+    },
+
     ready: function () {
         // this is very important to assign initial value, because the following property is used in multi-property observers like 'canNotFirst: function (pageNumber, pageCount, isRunning) ...'
         this.isRunning = false;
@@ -108,7 +114,7 @@ Polymer({
      * Computes URLs for 'ajaxRetriever' and 'ajaxRunner'.
      */
     _computeUrl: function (miType, saveAsName) {
-        return '/criteria/' + this._reflector()._centreKey(miType, saveAsName);
+        return '/criteria/' + this._reflector._centreKey(miType, saveAsName);
     },
 
     /**
@@ -144,13 +150,6 @@ Polymer({
      */
     _serialiser: function () {
         return this._binderDom()._serialiser();
-    },
-
-    /**
-     * The reflector component.
-     */
-    _reflector: function () {
-        return this._binderDom()._reflector();
     },
 
     /**

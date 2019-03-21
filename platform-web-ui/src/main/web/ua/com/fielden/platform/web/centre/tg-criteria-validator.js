@@ -1,8 +1,10 @@
+import '/resources/polymer/@polymer/polymer/polymer-legacy.js';
 import { Polymer } from '/resources/polymer/@polymer/polymer/lib/legacy/polymer-fn.js';
 import { html } from '/resources/polymer/@polymer/polymer/lib/utils/html-tag.js';
 
 import '/resources/polymer/@polymer/iron-ajax/iron-ajax.js';
 import { TgSerialiser } from '/resources/serialisation/tg-serialiser.js';
+import { TgReflector } from '/app/tg-reflector.js';
 
 const template = html`
     <iron-ajax id="ajaxSender" url="[[_url]]" method="POST" handle-as="json" on-response="_processValidatorResponse" on-error="_processValidatorError"></iron-ajax>
@@ -42,6 +44,7 @@ Polymer({
     },
 
     created: function () {
+        this._reflector = new TgReflector();
         this._serialiser = new TgSerialiser();
     },
 
@@ -78,8 +81,7 @@ Polymer({
      * Cancels any unfinished validation that was requested earlier (if any).
      */
     abortValidationIfAny: function () {
-        const reflector = this._serialiser.$.reflector;
-        const numberOfAbortedRequests = reflector.discardAllRequests(this.$.ajaxSender);
+        const numberOfAbortedRequests = this._reflector.discardAllRequests(this.$.ajaxSender);
         if (numberOfAbortedRequests > 0) {
             console.warn("abortValidationIfAny: number of aborted requests =", numberOfAbortedRequests);
         }
@@ -90,8 +92,7 @@ Polymer({
      * Cancels any unfinished validation that was requested earlier (if any) except the last one and returns corresponding promise.
      */
     abortValidationExceptLastOne: function () {
-        const reflector = this._serialiser.$.reflector;
-        const numberOfAbortedRequests = reflector.discardAllRequests(this.$.ajaxSender, true);
+        const numberOfAbortedRequests = this._reflector.discardAllRequests(this.$.ajaxSender, true);
         if (numberOfAbortedRequests > 0) {
             console.warn("abortValidationExceptLastOne: number of aborted requests =", numberOfAbortedRequests);
         }
@@ -112,6 +113,6 @@ Polymer({
      * Computes URL for 'ajaxSender'.
      */
     _computeUrl: function (miType, saveAsName) {
-        return '/criteria/' + this._serialiser.$.reflector._centreKey(miType, saveAsName);
+        return '/criteria/' + this._reflector._centreKey(miType, saveAsName);
     }
 });

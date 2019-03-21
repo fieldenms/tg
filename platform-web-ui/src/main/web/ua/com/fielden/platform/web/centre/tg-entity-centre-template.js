@@ -1,3 +1,5 @@
+import '/resources/polymer/@polymer/polymer/polymer-legacy.js';
+
 <!--@imports-->
 
 import { Polymer } from '/resources/polymer/@polymer/polymer/lib/legacy/polymer-fn.js';

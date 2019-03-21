@@ -1,17 +1,19 @@
 import '/resources/element_loader/tg-element-loader.js';
 
+import '/resources/polymer/@polymer/polymer/polymer-legacy.js';
 import { Polymer } from '/resources/polymer/@polymer/polymer/lib/legacy/polymer-fn.js';
 import { html } from '/resources/polymer/@polymer/polymer/lib/utils/html-tag.js';
 
 import '/resources/polymer/@polymer/iron-flex-layout/iron-flex-layout.js';
 import '/resources/polymer/@polymer/iron-flex-layout/iron-flex-layout-classes.js';
 import '/resources/polymer/@polymer/iron-icons/iron-icons.js';
-import { IronA11yKeysBehavior } from '/resources/polymer/@polymer/iron-a11y-key-behavior/iron-a11y-keys-behavior.js';
+import { IronA11yKeysBehavior } from '/resources/polymer/@polymer/iron-a11y-keys-behavior/iron-a11y-keys-behavior.js';
 import { IronResizableBehavior } from '/resources/polymer/@polymer/iron-resizable-behavior/iron-resizable-behavior.js';
 
 import '/resources/images/tg-icons.js';
 import '/resources/components/tg-toast.js';
 import { TgTooltipBehavior } from '/resources/components/tg-tooltip-behavior.js';
+import { TgShortcutProcessingBehavior } from '/resources/actions/tg-shortcut-processing-behavior.js';
 
 import '/resources/polymer/@polymer/paper-styles/color.js';
 import '/resources/polymer/@polymer/paper-styles/shadow.js';

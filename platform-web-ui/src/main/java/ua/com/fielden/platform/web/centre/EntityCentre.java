@@ -26,6 +26,7 @@ import static ua.com.fielden.platform.web.centre.WebApiUtils.dslName;
 import static ua.com.fielden.platform.web.centre.WebApiUtils.treeName;
 import static ua.com.fielden.platform.web.utils.EntityResourceUtils.getOriginalPropertyName;
 import static ua.com.fielden.platform.web.utils.EntityResourceUtils.getOriginalType;
+import static ua.com.fielden.platform.web.view.master.EntityMaster.flattenedNameOf;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
@@ -131,6 +132,7 @@ import ua.com.fielden.platform.web.interfaces.IRenderable;
 import ua.com.fielden.platform.web.layout.FlexLayout;
 import ua.com.fielden.platform.web.minijs.JsCode;
 import ua.com.fielden.platform.web.utils.EntityResourceUtils;
+import ua.com.fielden.platform.web.view.master.EntityMaster;
 import ua.com.fielden.platform.web.view.master.api.impl.SimpleMasterBuilder;
 import ua.com.fielden.snappy.DateRangeConditionEnum;
 
@@ -1077,7 +1079,7 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
                 replace(IMPORTS, SimpleMasterBuilder.createImports(importPaths)).
                 replace(EGI_LAYOUT, gridLayoutConfig.getKey()).
                 replace(FULL_ENTITY_TYPE, entityType.getName()).
-                replace(MI_TYPE, miType.getSimpleName()).
+                replace(MI_TYPE, flattenedNameOf(miType)).
                 //egi related properties
                 replace(EGI_SHORTCUTS, shortcuts).
                 replace(EGI_DRAGGABLE, DRAGGABLE.eval(dslDefaultConfig.isDraggable())).

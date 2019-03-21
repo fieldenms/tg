@@ -1,9 +1,11 @@
+import '/resources/polymer/@polymer/polymer/polymer-legacy.js';
 import { TgTooltipBehavior } from '/resources/components/tg-tooltip-behavior.js';
 import { TgSseBehavior } from '/resources/sse/tg-sse-behavior.js';
 import '/resources/egi/tg-custom-action-dialog.js';
 import { TgFocusRestorationBehavior } from '/resources/actions/tg-focus-restoration-behavior.js';
 import '/resources/actions/tg-ui-action.js';
 import { tearDownEvent, isInHierarchy, deepestActiveElement, FOCUSABLE_ELEMENTS_SELECTOR } from '/resources/reflection/tg-polymer-utils.js';
+import { TgReflector } from '/app/tg-reflector.js';
 
 const generateCriteriaName = function (root, property, suffix) {
     const rootName = root.substring(0, 1).toLowerCase() + root.substring(1) + "_";
@@ -442,7 +444,7 @@ const TgEntityCentreBehaviorImpl = {
      * Returns 'true' in case where current saveAsName represent link configuration, 'false' otherwise.
      */
     _isLinkConfig: function (saveAsName) {
-        return saveAsName === this.$.selection_criteria._reflector().LINK_CONFIG_TITLE;
+        return saveAsName === this._reflector.LINK_CONFIG_TITLE;
     },
 
     /**
@@ -472,13 +474,17 @@ const TgEntityCentreBehaviorImpl = {
         this.$.egi.columnPropertiesMapper = columnPropertiesMapper;
     },
 
+    created: function () {
+        this._reflector = new TgReflector();
+    },
+
     /**
      * Initialisation block. It has all children web components already initialised.
      */
     ready: function () {
         const self = this;
 
-        self.saveAsName = self.$.selection_criteria._reflector().UNDEFINED_CONFIG_TITLE; // this default value means that preferred configuration is not yet known and will be loaded during first 'retrieve' request
+        self.saveAsName = self._reflector.UNDEFINED_CONFIG_TITLE; // this default value means that preferred configuration is not yet known and will be loaded during first 'retrieve' request
         self._selectedView = 0;
         self._showProgress = false;
         //Configures the egi's margin.
@@ -638,7 +644,7 @@ const TgEntityCentreBehaviorImpl = {
                 function (detail) {
                     const sc = self.$.selection_criteria;
                     const deserialisedResult = sc._serialiser().deserialise(detail.response);
-                    if (!sc._reflector().isError(deserialisedResult) && (!sc._reflector().isEntity(deserialisedResult.instance[0]) || deserialisedResult.instance[0].isValidWithoutException())) {
+                    if (!self._reflector.isError(deserialisedResult) && (!self._reflector.isEntity(deserialisedResult.instance[0]) || deserialisedResult.instance[0].isValidWithoutException())) {
                         self.runInsertionPointActions();
                     }
                     self._actionInProgress = false;
@@ -728,9 +734,8 @@ const TgEntityCentreBehaviorImpl = {
 
         if (this.actionDialog == null) {
             this.actionDialog = document.createElement('tg-custom-action-dialog');
-            Polymer.dom(this.actionDialog).setAttribute("id", self.uuid + '');
-            Polymer.dom(document.body).appendChild(this.actionDialog);
-            Polymer.dom.flush();
+            this.actionDialog.setAttribute("id", self.uuid + '');
+            document.body.appendChild(this.actionDialog);
         }
 
         ///////////////////////// Detail postSaved listener //////////////////////////////////////
@@ -1022,13 +1027,12 @@ const TgEntityCentreBehaviorImpl = {
      * Computes URL for 'ajaxDiscarder'.
      */
     _computeUrl: function (miType, saveAsName) {
-        return '/centre/' + this.$.selection_criteria._reflector()._centreKey(miType, saveAsName);
+        return '/centre/' + this._reflector._centreKey(miType, saveAsName);
     },
 
     _saveAsNameChanged: function (newSaveAsName, oldSaveAsName) {
         const self = this;
-        const reflector = self.$.selection_criteria._reflector();
-        if (newSaveAsName !== reflector.UNDEFINED_CONFIG_TITLE // initial 'saveAsName' definition (value UNDEFINED_CONFIG_TITLE, that means unknown config) will be disregarded
+        if (newSaveAsName !== self._reflector.UNDEFINED_CONFIG_TITLE // initial 'saveAsName' definition (value UNDEFINED_CONFIG_TITLE, that means unknown config) will be disregarded
             && newSaveAsName !== undefined // undefined is a marker value to make saveAsName changed when setting actual value (including '')
         ) {
             self._fireSaveAsNameChanged(newSaveAsName, self);
@@ -1036,8 +1040,7 @@ const TgEntityCentreBehaviorImpl = {
     },
 
     _fireSaveAsNameChanged: function (newSaveAsName, self) {
-        const reflector = self.$.selection_criteria._reflector();
-        if (reflector.LINK_CONFIG_TITLE !== newSaveAsName) {
+        if (self._reflector.LINK_CONFIG_TITLE !== newSaveAsName) {
             self.fire('tg-save-as-name-changed', newSaveAsName);
         }
     },

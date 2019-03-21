@@ -1,3 +1,4 @@
+import '/resources/polymer/@polymer/polymer/polymer-legacy.js';
 import { Polymer } from '/resources/polymer/@polymer/polymer/lib/legacy/polymer-fn.js';
 import { html } from '/resources/polymer/@polymer/polymer/lib/utils/html-tag.js';
 
@@ -461,7 +462,7 @@ Polymer({
     },
 
     _configViewBindings: function (prevView, newView) {
-        prevView.removeOwnKeyBindings();
+        // FIXME egi not yet defined here prevView.removeOwnKeyBindings();
         const keyBindings = newView.keyBindings;
         for (let shortcuts in keyBindings) {
             newView.addOwnKeyBinding(shortcuts, keyBindings[shortcuts]);

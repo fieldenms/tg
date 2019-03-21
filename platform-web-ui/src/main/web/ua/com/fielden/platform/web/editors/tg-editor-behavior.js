@@ -13,7 +13,7 @@ import {html} from '/resources/polymer/@polymer/polymer/lib/utils/html-tag.js';
 
 import {TgTooltipBehavior} from '/resources/components/tg-tooltip-behavior.js';
 import {TgElementSelectorBehavior} from '/resources/components/tg-element-selector-behavior.js';
-import { tearDownEvent } from '/resources/reflection/tg-polymer-utils.js';
+import { tearDownEvent, allDefined } from '/resources/reflection/tg-polymer-utils.js';
 
 export function createEditorTemplate (additionalTemplate, customPrefixAttribute, customInput, inputLayer, customIconButtons, propertyAction) {
     return html`
@@ -588,7 +588,9 @@ export const TgEditorBehaviorImpl = {
      * Returns 'true' if the editor is disabled, 'false' otherwise (based on the editor's state and 'editable' meta-state for the property).
      */
     _isDisabled: function (currentState, bindingEntity, propertyName) {
-        if (currentState === 'VIEW') {
+        if (!allDefined(arguments)) {
+            return true;
+        } else if (currentState === 'VIEW') {
             return true;
         } else if (currentState === 'EDIT') {
             if (this.reflector().isEntity(bindingEntity)) {

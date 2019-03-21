@@ -1,3 +1,4 @@
+import '/resources/polymer/@polymer/polymer/polymer-legacy.js';
 import { TgEntityCentreBehavior } from '/resources/centre/tg-entity-centre-behavior.js';
 
 const TgEntityCentreTemplateBehaviorImpl = {

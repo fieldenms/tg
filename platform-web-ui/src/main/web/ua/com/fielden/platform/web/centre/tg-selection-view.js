@@ -1,3 +1,4 @@
+import '/resources/polymer/@polymer/polymer/polymer-legacy.js';
 import { Polymer } from '/resources/polymer/@polymer/polymer/lib/legacy/polymer-fn.js';
 import { html } from '/resources/polymer/@polymer/polymer/lib/utils/html-tag.js';
 
@@ -111,16 +112,16 @@ Polymer({
         const self = this;
         this.async(function () {
             self.keyEventTarget = self._getKeyEventTarget();
-        }, 1);
 
-        self.topLevelActions = [
-            self._createActionObject('ua.com.fielden.platform.web.centre.CentreConfigNewAction'),
-            self._createActionObject('ua.com.fielden.platform.web.centre.CentreConfigDuplicateAction'),
-            self._createActionObject('ua.com.fielden.platform.web.centre.CentreConfigLoadAction'),
-            self._createActionObject('ua.com.fielden.platform.web.centre.CentreConfigEditAction'),
-            self._createActionObject('ua.com.fielden.platform.web.centre.CentreConfigDeleteAction', () => self._confirm('Should this configuration be deleted?', [{ name: 'NO' }, { name: 'YES', confirm: true, autofocus: true }])),
-            self._createActionObject('ua.com.fielden.platform.web.centre.CentreConfigSettingsAction')
-        ];
+            self.topLevelActions = [
+                self._createActionObject('ua.com.fielden.platform.web.centre.CentreConfigNewAction'),
+                self._createActionObject('ua.com.fielden.platform.web.centre.CentreConfigDuplicateAction'),
+                self._createActionObject('ua.com.fielden.platform.web.centre.CentreConfigLoadAction'),
+                self._createActionObject('ua.com.fielden.platform.web.centre.CentreConfigEditAction'),
+                self._createActionObject('ua.com.fielden.platform.web.centre.CentreConfigDeleteAction', () => self._confirm('Should this configuration be deleted?', [{ name: 'NO' }, { name: 'YES', confirm: true, autofocus: true }])),
+                self._createActionObject('ua.com.fielden.platform.web.centre.CentreConfigSettingsAction')
+            ];
+        }, 1);
     },
 
     _getKeyEventTarget: function () {

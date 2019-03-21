@@ -412,7 +412,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
                         build())
                 .build(), injector(), null);
 
-        final EntityCentre<TgPersistentEntityWithProperties> entityCentre = createEntityCentre(MiTgPersistentEntityWithProperties.class, "TgPersistentEntityWithProperties", createEntityCentreConfig(true, true, false, true, false));
+        final EntityCentre<TgPersistentEntityWithProperties> entityCentre = createEntityCentre(MiTgPersistentEntityWithProperties.class, "TgPersistentEntityWithProperties", createEntityCentreConfig(true, false, false, true, false));
         final EntityCentre<TgPersistentEntityWithProperties> entityCentreNotGenerated = createEntityCentre(MiEntityCentreNotGenerated.class, "MiEntityCentreNotGenerated", createEntityCentreConfig(true, true, false, false, false));
         final EntityCentre<TgPersistentEntityWithProperties> entityCentre1 = createEntityCentre(MiTgPersistentEntityWithProperties1.class, "TgPersistentEntityWithProperties 1", createEntityCentreConfig(false, false, false, true, false));
         final EntityCentre<TgPersistentEntityWithProperties> entityCentre2 = createEntityCentre(MiTgPersistentEntityWithProperties2.class, "TgPersistentEntityWithProperties 2", createEntityCentreConfig(false, false, false, true, false));

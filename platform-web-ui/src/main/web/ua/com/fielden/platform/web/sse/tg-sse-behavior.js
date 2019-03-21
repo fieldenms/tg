@@ -1,3 +1,5 @@
+import '/resources/polymer/@polymer/polymer/polymer-legacy.js';
+
 export const TgSseBehavior = {
 
     properties: {

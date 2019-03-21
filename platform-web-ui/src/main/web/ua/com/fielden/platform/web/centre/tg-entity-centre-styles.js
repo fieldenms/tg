@@ -1,3 +1,4 @@
+import '/resources/polymer/@polymer/polymer/polymer-legacy.js';
 import '/resources/polymer/@polymer/polymer/lib/elements/dom-module.js';
 import '/resources/polymer/@polymer/iron-flex-layout/iron-flex-layout.js';
 
