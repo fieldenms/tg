@@ -25,8 +25,8 @@ import { IronResizableBehavior } from '/resources/polymer/@polymer/iron-resizabl
 import { TgTooltipBehavior } from '/resources/components/tg-tooltip-behavior.js';
 import { TgDragFromBehavior } from '/resources/components/tg-drag-from-behavior.js';
 import { TgShortcutProcessingBehavior } from '/resources/actions/tg-shortcut-processing-behavior.js';
-import '/resources/reflection/tg-polymer-utils.js';
-import '/resources/reflection/tg-date-utils.js';
+import { generateShortCollection } from '/resources/reflection/tg-polymer-utils.js';
+import { _millisDateRepresentation } from '/resources/reflection/tg-date-utils.js';
 import { TgReflector } from '/app/tg-reflector.js';
 import { TgAppConfig } from '/app/tg-app-config.js';
 import { TgSerialiser } from '/resources/serialisation/tg-serialiser.js';
@@ -103,9 +103,12 @@ const template = html`
             @apply --layout-horizontal;
         }
         .drag-anchor {
+            width: 1.5rem;
             --iron-icon-width: 1.5rem;
             --iron-icon-height: 1.5rem;
-            @apply(--layout-self-center);
+            @apply --layout-horizontal;
+            @apply --layout-center;
+            @apply --layout-relative;
         }
         .drag-anchor[selected]:hover {
             cursor: move;
@@ -118,10 +121,6 @@ const template = html`
             cursor: grabbing;
             cursor: -moz-grabbing;
             cursor: -webkit-grabbing;
-        }
-        .dummy-drag-box {
-            width: 1.5rem;
-            height: 1.5rem;
         }
         paper-checkbox {
             --paper-checkbox-label: {
@@ -155,10 +154,29 @@ const template = html`
             width: 20px;
             padding: 0 0.3rem;
         }
-        .drag-anchor {
-            --iron-icon-width: 1.5rem;
-            --iron-icon-height: 1.5rem;
-            @apply(--layout-self-center);
+        .action {
+            --tg-ui-action-icon-button-height: 1.6rem;
+            --tg-ui-action-icon-button-width: 1.6rem;
+            --tg-ui-action-icon-button-padding: 2px;
+            --tg-secondary-action-icon-button-height: 1.6rem;
+            --tg-secondary-action-icon-button-width: 1.6rem;
+            --tg-secondary-action-icon-button-padding: 2px;
+            --tg-ui-action-spinner-width: 1.5rem;
+            --tg-ui-action-spinner-height: 1.5rem;
+            --tg-ui-action-spinner-min-width: 1rem;
+            --tg-ui-action-spinner-min-height: 1rem;
+            --tg-ui-action-spinner-max-width: 1.5rem;
+            --tg-ui-action-spinner-max-height: 1.5rem;
+            --tg-ui-action-spinner-padding: 0px;
+            --tg-ui-action-spinner-margin-left: 0;
+            --tg-secondary-action-spinner-width: 1.5rem;
+            --tg-secondary-action-spinner-height: 1.5rem;
+            --tg-secondary-action-spinner-min-width: 1rem;
+            --tg-secondary-action-spinner-min-height: 1rem;
+            --tg-secondary-action-spinner-max-width: 1.5rem;
+            --tg-secondary-action-spinner-max-height: 1.5rem;
+            --tg-secondary-action-spinner-padding: 0px;
+            --tg-secondary-action-spinner-margin-left: 0;
         }
     </style>
     <custom-style>
@@ -183,7 +201,7 @@ const template = html`
         <div id="baseContainer">
             <!-- Table header -->
             <div class="table-header-row">
-                <div class="dummy-drag-box" hidden$="[[!canDragFrom]]" style$="[[_calcDragBoxStyle(dragAnchorFixed, headerFixed)]]"></div>
+                <div class="drag-anchor" hidden$="[[!canDragFrom]]" style$="[[_calcDragBoxStyle(dragAnchorFixed, headerFixed)]]"></div>
                 <div class="table-cell" style$="[[_calcSelectCheckBoxStyle(canDragFrom, checkboxesFixed, headerFixed)]]" hidden$="[[!checkboxVisible]]" tooltip-text$="[[_selectAllTooltip(selectedAll)]]">
                     <paper-checkbox class="all-checkbox blue header" checked="[[selectedAll]]" on-change="_allSelectionChanged"></paper-checkbox>
                 </div>
@@ -192,14 +210,14 @@ const template = html`
                 </div>
                 <div class="fixed-columns-container" hidden$="[[!numOfFixedCols]]" style$="[[_calcFixedColumnContainerStyle(canDragFrom, checkboxVisible, primaryAction, numOfFixedCols, headerFixed)]]">
                     <template is="dom-repeat" items="[[fixedColumns]]">
-                        <div class="table-cell" style$="[[_calcColumnHeaderStyle(item, item.width, item.growFactor, index, numOfFixedCols)]]" on-down="_makeEgiUnselectable" on-up="_makeEgiSelectable" on-track="_changeColumnSize" tooltip-text$="[[item.columnDesc]]" is-resizing$="[[_columnResizingObject]]" is-mobile$="[[mobile]]">
+                        <div class="table-cell" style$="[[_calcColumnHeaderStyle(item, item.width, item.growFactor, 'true')]]" on-down="_makeEgiUnselectable" on-up="_makeEgiSelectable" on-track="_changeColumnSize" tooltip-text$="[[item.columnDesc]]" is-resizing$="[[_columnResizingObject]]" is-mobile$="[[mobile]]">
                             <div class="truncate" style="width:100%">[[item.columnTitle]]</div>
                             <div class="resizing-box"></div>
                         </div>
                     </template>
                 </div>
                 <template is="dom-repeat" items="[[columns]]">
-                    <div class="table-cell" style$="[[_calcColumnHeaderStyle(item, item.width, item.growFactor, index, numOfFixedCols)]]" on-down="_makeEgiUnselectable" on-up="_makeEgiSelectable" on-track="_changeColumnSize" tooltip-text$="[[item.columnDesc]]" is-resizing$="[[_columnResizingObject]]" is-mobile$="[[mobile]]">
+                    <div class="table-cell" style$="[[_calcColumnHeaderStyle(item, item.width, item.growFactor, 'false')]]" on-down="_makeEgiUnselectable" on-up="_makeEgiSelectable" on-track="_changeColumnSize" tooltip-text$="[[item.columnDesc]]" is-resizing$="[[_columnResizingObject]]" is-mobile$="[[mobile]]">
                         <div class="truncate" style="width:100%">[[item.columnTitle]]</div>
                         <div class="resizing-box"></div>
                     </div>
@@ -210,7 +228,9 @@ const template = html`
             </div>
             <template is="dom-repeat" items="[[egiModel]]" as="egiEntity" index-as="entityIndex" >
                 <div class="table-data-row" selected$="[[egiEntity.selected]]">
-                    <iron-icon draggable="true" class="drag-anchor" selected$="[[egiEntity.selected]]" hidden$="[[!canDragFrom]]" style$="[[_calcDragBoxStyle(dragAnchorFixed)]]" icon="tg-icons:dragVertical"></iron-icon>
+                    <div class="drag-anchor" draggable="true" selected$="[[egiEntity.selected]]" hidden$="[[!canDragFrom]]" style$="[[_calcDragBoxStyle(dragAnchorFixed)]]">
+                        <iron-icon icon="tg-icons:dragVertical"></iron-icon>
+                    </div>
                     <div class="table-cell" style$="[[_calcSelectCheckBoxStyle(canDragFrom, checkboxesFixed)]]" hidden$="[[!checkboxVisible]]" tooltip-text$="[[_selectTooltip(egiEntity.selected)]]">
                         <paper-checkbox class="blue body" checked="[[egiEntity.selected]]" on-change="_selectionChanged" on-mousedown="_checkSelectionState" on-keydown="_checkSelectionState"></paper-checkbox>
                     </div>
@@ -219,14 +239,14 @@ const template = html`
                     </div>
                     <div class="fixed-columns-container" hidden$="[[!numOfFixedCols]]" style$="[[_calcFixedColumnContainerStyle(canDragFrom, checkboxVisible, primaryAction, numOfFixedCols)]]">
                         <template is="dom-repeat" items="[[fixedColumns]]">
-                            <tg-egi-cell column="[[column]]" entity="[[egiEntity.entity]]" with-action$="[[hasAction(egiEntity.entity, column)]]"></tg-egi-cell>
+                            <tg-egi-cell column="[[column]]" entity="[[egiEntity.entity]]" style$="[[_calcColumnStyle(column, column.width, column.growFactor, 'true')]]" tooltip-text$="[[_getTooltip(egiEntity.entity, column, column.customAction)]]" with-action$="[[hasAction(egiEntity.entity, column)]]" on-tap="_tapAction"></tg-egi-cell>
                         </template>
                     </div>
                     <template is="dom-repeat" items="[[columns]]" as="column">
-                        <tg-egi-cell column="[[column]]" entity="[[egiEntity.entity]]" with-action$="[[hasAction(egiEntity.entity, column)]]"></tg-egi-cell>
+                        <tg-egi-cell column="[[column]]" entity="[[egiEntity.entity]]" style$="[[_calcColumnStyle(column, column.width, column.growFactor, 'false')]]" tooltip-text$="[[_getTooltip(egiEntity.entity, column, column.customAction)]]" with-action$="[[hasAction(egiEntity.entity, column)]]" on-tap="_tapAction"></tg-egi-cell>
                     </template>
-                    <div class="action-cell layout horizontal center no-flexible">
-                        <div class="action"></div>
+                    <div class="action-cell" hidden$="[[!_isSecondaryActionsPresent(secondaryActions)]]" style$="[[_calcSecondaryActionStyle(secondaryActionsFixed)]]">
+                        <tg-secondary-action-button class="action" current-entity="[[egiEntity.entity]]" actions="[[secondaryActions]]"></tg-secondary-action-button>
                     </div>
                 </div>
             </template>
@@ -268,11 +288,7 @@ Polymer({
             observer: "_columnsChanged"
         },
         allColumns: Array,
-
-        fixedColumns: {
-            type: Array,
-            computed: '_computeFixedColumns(columns, numOfFixedCols)'
-        },
+        fixedColumns: Array,
 
         renderingHints: {
             type: Array,
@@ -329,6 +345,8 @@ Polymer({
         _lastSelectedIndex: Number
     },
 
+    observers: ["_adjustColumns(allColumns, numOfFixedCols)"],
+
     behaviors: [TgTooltipBehavior, IronResizableBehavior, IronA11yKeysBehavior, TgShortcutProcessingBehavior, TgDragFromBehavior],
 
     created: function () {
@@ -363,8 +381,9 @@ Polymer({
         this.selectedEntities = [];
 
         //Initialise columns
-        this.allColumns = [];
+        this.fixedColumns = [];
         this.columns = [];
+        this.allColumns = [];
     },
 
     ready: function () {
@@ -382,8 +401,6 @@ Polymer({
         //Observe column DOM changes
         this.$.column_selector.addEventListener('slotchange', (e) => {
             this.allColumns = this.$.column_selector.assignedNodes();
-            this._adjustColumns(this.columns.filter(column => this.allColumns.some(elem => elem.property === column.property)));
-            
           });
     },
 
@@ -431,6 +448,34 @@ Polymer({
             }
         }
     },
+
+    adjustColumnsVisibility: function (newColumnNames) {
+        const resultantColumns = [];
+        newColumns.forEach(columnName => {
+            const column = this.allColumns.find(item => item.property === columnName);
+            if (column) {
+                resultantColumns.push(column);
+            }
+        });
+        this._updateColumns(resultantColumns, this.numOfFixedCols);
+    },
+
+    tap: function (entity, index, column) {
+        if (column.runAction(entity) === false) {
+            // if the clicked property is a hyperlink and there was no custom action associted with it
+            // then let's open the linked resources
+            if (this._isHyperlinkProp(entity, column) === true) {
+                const url = this._getValue(entity, column.property, column.type);
+                const win = window.open(url, '_blank');
+                win.focus();
+            } else {
+                const attachment = this._getAttachmentIfPossible(entity, column);
+                if (attachment && this.downloadAttachment) {
+                    this.downloadAttachment(attachment);
+                }
+            }
+        }
+    },
     //Entities changed related functions
 
     _entitiesChanged: function (newEntities, oldEntities) {
@@ -466,18 +511,24 @@ Polymer({
         this.fire("tg-egi-entities-loaded", newValue);
     },
 
-    _adjustColumns: function (newColumns) {
+    _adjustColumns: function (allColumns, numOfFixedCols) {
         const resultantColumns = [];
-        newColumns.forEach(columnName => {
-            const column = this.allColumns.find(item => item.property === columnName);
+        this.fixedColumns.concat(this.columns).forEach(mergedColumn => {
+            const column = allColumns.find(item => item.property === mergedColumn.property);
             if (column) {
                 resultantColumns.push(column);
             }
         });
-        if (!this._reflector.equalsEx(this.columns, resultantColumns)) {
+        this._updateColumns(resultantColumns, numOfFixedCols);
+    },
+
+    _updateColumns: function (resultantColumns, numOfFixedCols) {
+        const mergedColumns = this.fixedColumns.concat(this.columns);
+        if (!this._reflector.equalsEx(mergedColumns, resultantColumns) || numOfFixedCols !== this.fixedColumns.length) {
+            this.fixedColumns = resultantColumns.splice(0, numOfFixedCols);
             this.columns = resultantColumns;
-            const columnWithGrowFactor = this.columns.find((item, index) => index >= this.numOfFixedCols && item.growFactor > 0);
-            if (!columnWithGrowFactor && this.columns.length > 0 && this.columns.length >= this.numOfFixedCols) {
+            const columnWithGrowFactor = this.columns.find((item) => item.growFactor > 0);
+            if (!columnWithGrowFactor && this.columns.length > 0) {
                 this.set("columns." + (this.columns.length - 1) + ".growFactor", 1);
                 const column = this.columns[this.columns.length - 1];
                 const parameters = {};
@@ -537,6 +588,10 @@ Polymer({
         this._rangeSelection = event.shiftKey;
     },
 
+    _tapAction: function (e, detail) {
+        this.tap(this.filteredEntities[e.model.entityIndex], e.model.index, this.columns[e.model.index]);
+    },
+
     //Style calculator
 
     _calcDragBoxStyle: function (dragAnchorFixed, headerFixed) {
@@ -589,10 +644,10 @@ Polymer({
         return style;
     },
 
-    _calcColumnHeaderStyle: function (item, itemWidth, columnGrowFactor, index, numOfFixedCols) {
+    _calcColumnHeaderStyle: function (item, itemWidth, columnGrowFactor, fixed) {
         let colStyle = "min-width: " + itemWidth + "px;" + "width: " + itemWidth + "px;"
-        if (columnGrowFactor === 0 || index < numOfFixedCols) {
-            colStyle += "flex-grow: 0;flex-shrink:0;";
+        if (columnGrowFactor === 0 || fixed === 'true') {
+            colStyle += "flex-grow: 0;flex-shrink: 0;";
         } else {
             colStyle += "flex-grow: " + columnGrowFactor + ";";
         }
@@ -603,6 +658,10 @@ Polymer({
             colStyle += "text-align: right;"
         }
         return colStyle;
+    },
+
+    _calcColumnStyle: function (item, itemWidth, columnGrowFactor, fixed) {
+        return this._calcColumnHeaderStyle(item, itemWidth, columnGrowFactor, fixed);
     },
 
     _calcSecondaryActionStyle: function (secondaryActionsFixed, headerFixed) {
@@ -633,6 +692,87 @@ Polymer({
 
     _selectTooltip: function (selected) {
         return (selected ? 'Unselect' : 'Select') + ' this entity';
+    },
+
+    _getTooltip: function (entity, column, action) {
+        try {
+            let tooltip = this.getValueTooltip(entity, column);
+            const columnDescPart = this.getDescTooltip(entity, column);
+            const actionDescPart = this.getActionTooltip(entity, column, action);
+            tooltip += (columnDescPart && tooltip && "<br><br>") + columnDescPart;
+            tooltip += (actionDescPart && tooltip && "<br><br>") + actionDescPart;
+            return tooltip;
+        } catch (e) {
+            return '';
+        }
+    },
+
+    getValueTooltip: function (entity, column) {
+        const validationResult = entity.prop(column.property).validationResult();
+        if (this._reflector.isWarning(validationResult) || this._reflector.isError(validationResult)) {
+            return validationResult.message && ("<b>" + validationResult.message + "</b>");
+        } else if (column.tooltipProperty) {
+            const value = this._getValue(entity, column.tooltipProperty, "String").toString();
+            return value && ("<b>" + value + "</b>");
+        } else if (this._reflector.findTypeByName(column.type)) {
+            return this._generateEntityTooltip(entity, column);
+        } else {
+            const value = this._getValue(entity, column.property, column.type).toString();
+            return value && ("<b>" + value + "</b>");
+        }
+        return "";
+    },
+
+    getDescTooltip: function (entity, column) {
+        if (column.columnDesc) {
+            return column.columnDesc;
+        }
+        return "";
+    },
+
+    getActionTooltip: function (entity, column, action) {
+        if (action && (action.shortDesc || action.longDesc)) {
+            return this._generateActionTooltip(action);
+        } else if (this._getAttachmentIfPossible(entity, column)) {
+            return this._generateActionTooltip({
+                shortDesc: 'Download',
+                longDesc: 'Click to download attachment.'
+            });
+        }
+        return "";
+    },
+    
+    _generateEntityTooltip: function (entity, column) {
+        var key = this._getValue(entity, column.property, column.type);
+        var desc;
+        try {
+            if (Array.isArray(this._getValueFromEntity(entity, column.property))) {
+                desc = generateShortCollection(entity, column.property, this._reflector.findTypeByName(column.type))
+                    .map(function (subEntity) {
+                        return subEntity.get("desc");
+                    }).join(", ");
+            } else {
+                desc = entity.get(column.property === '' ? "desc" : (column.property + ".desc"));
+            }
+        } catch (e) {
+            desc = ""; // TODO consider leaving the exception (especially strict proxies) to be able to see the problems of 'badly fetched columns'
+        }
+        return (key && ("<b>" + key + "</b>")) + (desc ? "<br>" + desc : "");
+    },
+
+    _generateActionTooltip: function (action) {
+        var shortDesc = "<b>" + action.shortDesc + "</b>";
+        var longDesc;
+        if (shortDesc) {
+            longDesc = action.longDesc ? "<br>" + action.longDesc : "";
+        } else {
+            longDesc = action.longDesc ? "<b>" + action.longDesc + "</b>" : "";
+        }
+        var tooltip = shortDesc + longDesc;
+        return tooltip && "<div style='display:flex;'>" +
+            "<div style='margin-right:10px;'>With action: </div>" +
+            "<div style='flex-grow:1;'>" + tooltip + "</div>" +
+            "</div>"
     },
 
     //Utility methods
@@ -714,5 +854,36 @@ Polymer({
 
     _getValueFromEntity: function (entity, column) {
         return entity && entity.get(column.property);
-    }
+    },
+
+    _getValue: function (entity, property, type) {
+        if (entity === null || property === null || type === null || this._getValueFromEntity(entity, property) === null) {
+            return "";
+        } else if (this._reflector.findTypeByName(type)) {
+            var propertyValue = this._getValueFromEntity(entity, property);
+            if (Array.isArray(propertyValue)) {
+                propertyValue = generateShortCollection(entity, property, this._reflector.findTypeByName(type));
+            }
+            return Array.isArray(propertyValue) ? this._reflector.convert(propertyValue).join(", ") : this._reflector.convert(propertyValue);
+        } else if (type.lastIndexOf('Date', 0) === 0) { // check whether type startsWith 'Date'. Type can be like 'Date', 'Date:UTC:' or 'Date:Europe/London:'
+            var splitedType = type.split(':');
+            return _millisDateRepresentation(entity.get(property), splitedType[1] || null, splitedType[2] || null);
+        } else if (typeof entity.get(property) === 'number') {
+            if (type === 'BigDecimal') {
+                const metaProp = this._reflector.getEntityTypeProp(entity, property);
+                return this._reflector.formatDecimal(entity.get(property), this._appConfig.locale, metaProp && metaProp.scale(), metaProp && metaProp.trailingZeros());
+            } else {
+                return this._reflector.formatNumber(entity.get(property), this._appConfig.locale);
+            }
+        } else if (type === 'Money') {
+            const metaProp = this._reflector.getEntityTypeProp(entity, property);
+            return this._reflector.formatMoney(entity.get(property), this._appConfig.locale, metaProp && metaProp.scale(), metaProp && metaProp.trailingZeros());
+        } else if (type === 'Colour') {
+            return '#' + entity.get(property)['hashlessUppercasedColourValue'];
+        } else if (type === 'Hyperlink') {
+            return entity.get(property)['value'];
+        } else {
+            return entity.get(property);
+        }
+    },
 });
