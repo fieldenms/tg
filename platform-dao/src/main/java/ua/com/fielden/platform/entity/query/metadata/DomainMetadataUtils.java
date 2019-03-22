@@ -18,6 +18,7 @@ import static ua.com.fielden.platform.utils.EntityUtils.isUnionEntityType;
 
 import java.lang.reflect.Field;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 
@@ -29,6 +30,7 @@ import ua.com.fielden.platform.entity.annotation.Optional;
 import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
 import ua.com.fielden.platform.entity.query.exceptions.EqlException;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ICaseWhenFunctionWhen;
+import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IConcatFunctionWith;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IFromAlias;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IStandAloneExprOperationAndClose;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ISubsequentCompletedAndYielded;
@@ -39,6 +41,8 @@ import ua.com.fielden.platform.types.tuples.T3;
 import ua.com.fielden.platform.utils.Pair;
 
 public class DomainMetadataUtils {
+
+    private static final String EMPTY_STRING = "";
 
     /** Private default constructor to prevent instantiation. */
     private DomainMetadataUtils() {
@@ -60,69 +64,39 @@ public class DomainMetadataUtils {
     }
 
     public static ExpressionModel getVirtualKeyPropForEntityWithCompositeKey(final Class<? extends AbstractEntity<DynamicEntityKey>> entityType) {
-        final List<T3<String, Class<?>, Boolean>> keyMembersWithOptionality = new ArrayList<>();
-        for (final Field field : getKeyMembers(entityType)) {
-            keyMembersWithOptionality.add(new T3<String, Class<?>, Boolean>(field.getName(), field.getType(), getPropertyAnnotation(Optional.class, entityType, field.getName()) != null));
-        }
+        final String keyMemberSeparator = getKeyMemberSeparator(entityType);
+        final Iterator<Field> kmIter = getKeyMembers(entityType).iterator();
+        final Field firstKeyMember = kmIter.next();
         
-        return composeExpression(keyMembersWithOptionality, getKeyMemberSeparator(entityType));
-    }
-
-    private static String getKeyMemberConcatenationExpression(final String keyMemberName, final Class<?> keyMemberType) {
-        if (PropertyDescriptor.class != keyMemberType && isEntityType(keyMemberType)) {
-            return keyMemberName + "." + KEY;
+        if (!kmIter.hasNext()) {
+            return processFirstKeyMember(firstKeyMember.getName(), firstKeyMember.getType(), keyMemberSeparator); 
         } else {
-            return keyMemberName;
-        }
-    }
-
-    private static ExpressionModel composeExpression(final List<T3<String, Class<?>, Boolean>> original, final String separator) {
-        ExpressionModel currExp = null;
-        Boolean currExpIsOptional = null;
-
-        for (final T3<String, Class<?>, Boolean>  originalField : original) {
-            currExp = composeTwo(new Pair<ExpressionModel, Boolean>(currExp, currExpIsOptional), originalField, separator);
-            currExpIsOptional = currExpIsOptional != null ? currExpIsOptional && originalField._3 : originalField._3;
-        }
-
-        return currExp;
-    }
-
-    private static ExpressionModel concatTwo(final ExpressionModel first, final String secondPropName, final String separator) {
-        return expr().concat().expr(first).with().val(separator).with().prop(secondPropName).end().model();
-    }
-
-    private static ExpressionModel composeTwo(final Pair<ExpressionModel, Boolean> first, final T3<String, Class<?>, Boolean>  second, final String separator) {
-        final ExpressionModel firstModel = first.getKey();
-        final Boolean firstIsOptional = first.getValue();
-
-        final String secondPropName = getKeyMemberConcatenationExpression(second._1, second._2);
-        final boolean secondPropIsOptional = second._3;
-
-        if (first.getKey() == null) {
-            return expr().prop(secondPropName).model();
-        } else {
-            if (firstIsOptional) {
-                if (secondPropIsOptional) {
-                    return expr().caseWhen().expr(firstModel).isNotNull().and().prop(secondPropName).isNotNull().then().expr(concatTwo(firstModel, secondPropName, separator)). //
-                    when().expr(firstModel).isNotNull().and().prop(secondPropName).isNull().then().expr(firstModel). //
-                    when().prop(secondPropName).isNotNull().then().prop(secondPropName). //
-                    otherwise().val(null).endAsStr(256).model();
-                } else {
-                    return expr().caseWhen().expr(firstModel).isNotNull().then().expr(concatTwo(firstModel, secondPropName, separator)). //
-                    otherwise().prop(secondPropName).endAsStr(256).model();
-                }
-            } else {
-                if (secondPropIsOptional) {
-                    return expr().caseWhen().prop(secondPropName).isNotNull().then().expr(concatTwo(firstModel, secondPropName, separator)). //
-                    otherwise().expr(firstModel).endAsStr(256).model();
-                } else {
-                    return concatTwo(firstModel, secondPropName, separator);
-                }
+            IConcatFunctionWith<IStandAloneExprOperationAndClose, AbstractEntity<?>> concatStart = expr().concat().expr(processFirstKeyMember(firstKeyMember.getName(), firstKeyMember.getType(), keyMemberSeparator));
+            
+            while (kmIter.hasNext()) {
+                final Field nextKeyMember = kmIter.next();
+                concatStart = getPropertyAnnotation(Optional.class, entityType, nextKeyMember.getName()) != null ? 
+                        concatStart.with().expr(processOptionalKeyMember(nextKeyMember.getName(), nextKeyMember.getType(), keyMemberSeparator))
+                        :
+                            concatStart.with().val(keyMemberSeparator).with().expr(expr().prop(getKeyMemberConcatenationPropName(nextKeyMember.getName(), nextKeyMember.getType())).model());
             }
+            
+            return concatStart.end().model();
         }
     }
 
+    private static String getKeyMemberConcatenationPropName(final String keyMemberName, final Class<?> keyMemberType) {
+        return PropertyDescriptor.class != keyMemberType && isEntityType(keyMemberType) ? keyMemberName + "." + KEY : keyMemberName;
+    }
+
+    private static ExpressionModel processFirstKeyMember(final String keyMemberName, final Class<?> keyMemberType, final String separator) {
+        return expr().prop(getKeyMemberConcatenationPropName(keyMemberName, keyMemberType)).model();
+    }
+    
+    private static ExpressionModel processOptionalKeyMember(final String keyMemberName, final Class<?> keyMemberType, final String separator) {
+        return expr().caseWhen().prop(keyMemberName).isNotNull().then().concat().val(separator).with().prop(getKeyMemberConcatenationPropName(keyMemberName, keyMemberType)).end().otherwise().val(EMPTY_STRING).end()/*.endAsStr(256)*/.model();
+    }
+    
     public static ExpressionModel extractExpressionModelFromCalculatedProperty(final Class<? extends AbstractEntity<?>> entityType, final Field calculatedPropfield) throws Exception {
         final Calculated calcAnnotation = getAnnotation(calculatedPropfield, Calculated.class);
         if (isNotEmpty(calcAnnotation.value())) {
