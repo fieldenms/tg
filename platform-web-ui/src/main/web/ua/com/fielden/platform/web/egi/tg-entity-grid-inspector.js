@@ -19,16 +19,14 @@ import '/resources/egi/tg-egi-cell.js';
 
 import {Polymer} from '/resources/polymer/@polymer/polymer/lib/legacy/polymer-fn.js';
 import {html} from '/resources/polymer/@polymer/polymer/lib/utils/html-tag.js';
+import { FlattenedNodesObserver } from '/resources/polymer/@polymer/polymer/lib/utils/flattened-nodes-observer.js';
 import { IronA11yKeysBehavior } from '/resources/polymer/@polymer/iron-a11y-keys-behavior/iron-a11y-keys-behavior.js';
 import { IronResizableBehavior } from '/resources/polymer/@polymer/iron-resizable-behavior/iron-resizable-behavior.js';
 
+import { TgEgiDataRetrievalBehavior } from '/resources/egi/tg-egi-data-retrieval-behavior.js';
 import { TgTooltipBehavior } from '/resources/components/tg-tooltip-behavior.js';
 import { TgDragFromBehavior } from '/resources/components/tg-drag-from-behavior.js';
 import { TgShortcutProcessingBehavior } from '/resources/actions/tg-shortcut-processing-behavior.js';
-import { generateShortCollection } from '/resources/reflection/tg-polymer-utils.js';
-import { _millisDateRepresentation } from '/resources/reflection/tg-date-utils.js';
-import { TgReflector } from '/app/tg-reflector.js';
-import { TgAppConfig } from '/app/tg-app-config.js';
 import { TgSerialiser } from '/resources/serialisation/tg-serialiser.js';
 
 const template = html`
@@ -145,6 +143,11 @@ const template = html`
             @apply --layout-relative;
             padding: 0 0.6rem;
         }
+        .truncate {
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
         tg-egi-cell[with-action] {
             cursor:pointer;
         }
@@ -226,6 +229,7 @@ const template = html`
                     <!--Secondary actions header goes here-->
                 </div>
             </div>
+            <!--Table body-->
             <template is="dom-repeat" items="[[egiModel]]" as="egiEntity" index-as="entityIndex" >
                 <div class="table-data-row" selected$="[[egiEntity.selected]]">
                     <div class="drag-anchor" draggable="true" selected$="[[egiEntity.selected]]" hidden$="[[!canDragFrom]]" style$="[[_calcDragBoxStyle(dragAnchorFixed)]]">
@@ -252,6 +256,15 @@ const template = html`
             </template>
         </div>
     </div>`;
+
+function removeColumn (column, fromColumns) {
+    const index = fromColumns.indexOf(column);
+    if (index >= 0) {
+        fromColumns.splice(index, 1);
+        return true;
+    }
+    return false;
+};
 
 Polymer({
 
@@ -323,7 +336,8 @@ Polymer({
         },
         numOfFixedCols: {
             type: Number,
-            value: 0
+            value: 0,
+            observer: "_numOfFixedColsChanged" 
         },
         secondaryActionsFixed: {
             type: Boolean,
@@ -345,13 +359,9 @@ Polymer({
         _lastSelectedIndex: Number
     },
 
-    observers: ["_adjustColumns(allColumns, numOfFixedCols)"],
-
-    behaviors: [TgTooltipBehavior, IronResizableBehavior, IronA11yKeysBehavior, TgShortcutProcessingBehavior, TgDragFromBehavior],
+    behaviors: [TgEgiDataRetrievalBehavior, TgTooltipBehavior, IronResizableBehavior, IronA11yKeysBehavior, TgShortcutProcessingBehavior, TgDragFromBehavior],
 
     created: function () {
-        this._reflector = new TgReflector();
-        this._appConfig = new TgAppConfig();
         this._serialiser = new TgSerialiser();
         //Configure device profile
         this.mobile = this._appConfig.mobile;
@@ -399,9 +409,9 @@ Polymer({
         this.addEventListener("iron-resize", this._resizeEventListener.bind(this));
 
         //Observe column DOM changes
-        this.$.column_selector.addEventListener('slotchange', (e) => {
-            this.allColumns = this.$.column_selector.assignedNodes();
-          });
+        new FlattenedNodesObserver(this.$.column_selector, (info) => {
+            this._columnDomChanged(info.addedNodes, info.removedNodes);
+        });
     },
 
     //Filtering related functions
@@ -416,7 +426,7 @@ Polymer({
     },
 
     hasAction: function (entity, column) {
-        return column.customAction || this._isHyperlinkProp(entity, column) === true || this._getAttachmentIfPossible(entity, column);
+        return column.customAction || this.isHyperlinkProp(entity, column.property, column.type) === true || this.getAttachmentIfPossible(entity, column.property);
     },
 
     isVisible: function (entity) {
@@ -451,25 +461,25 @@ Polymer({
 
     adjustColumnsVisibility: function (newColumnNames) {
         const resultantColumns = [];
-        newColumns.forEach(columnName => {
+        newColumnNames.forEach(columnName => {
             const column = this.allColumns.find(item => item.property === columnName);
             if (column) {
                 resultantColumns.push(column);
             }
         });
-        this._updateColumns(resultantColumns, this.numOfFixedCols);
+        this._updateColumns(resultantColumns);
     },
 
     tap: function (entity, index, column) {
         if (column.runAction(entity) === false) {
             // if the clicked property is a hyperlink and there was no custom action associted with it
             // then let's open the linked resources
-            if (this._isHyperlinkProp(entity, column) === true) {
-                const url = this._getValue(entity, column.property, column.type);
+            if (this.isHyperlinkProp(entity, column.property, column.type) === true) {
+                const url = this.getValue(entity, column.property, column.type);
                 const win = window.open(url, '_blank');
                 win.focus();
             } else {
-                const attachment = this._getAttachmentIfPossible(entity, column);
+                const attachment = this.getAttachmentIfPossible(entity, column.property);
                 if (attachment && this.downloadAttachment) {
                     this.downloadAttachment(attachment);
                 }
@@ -511,21 +521,10 @@ Polymer({
         this.fire("tg-egi-entities-loaded", newValue);
     },
 
-    _adjustColumns: function (allColumns, numOfFixedCols) {
-        const resultantColumns = [];
-        this.fixedColumns.concat(this.columns).forEach(mergedColumn => {
-            const column = allColumns.find(item => item.property === mergedColumn.property);
-            if (column) {
-                resultantColumns.push(column);
-            }
-        });
-        this._updateColumns(resultantColumns, numOfFixedCols);
-    },
-
-    _updateColumns: function (resultantColumns, numOfFixedCols) {
+    _updateColumns: function (resultantColumns) {
         const mergedColumns = this.fixedColumns.concat(this.columns);
-        if (!this._reflector.equalsEx(mergedColumns, resultantColumns) || numOfFixedCols !== this.fixedColumns.length) {
-            this.fixedColumns = resultantColumns.splice(0, numOfFixedCols);
+        if (!this._reflector.equalsEx(mergedColumns, resultantColumns)) {
+            this.fixedColumns = resultantColumns.splice(0, this.numOfFixedCols);
             this.columns = resultantColumns;
             const columnWithGrowFactor = this.columns.find((item) => item.growFactor > 0);
             if (!columnWithGrowFactor && this.columns.length > 0) {
@@ -589,7 +588,28 @@ Polymer({
     },
 
     _tapAction: function (e, detail) {
-        this.tap(this.filteredEntities[e.model.entityIndex], e.model.index, this.columns[e.model.index]);
+        this.tap(this.filteredEntities[e.model.parentModel.entityIndex], e.model.index, this.columns[e.model.index]);
+    },
+
+    _columnDomChanged: function (addedColumns, removedColumns) {
+        const columnsCopy = this.fixedColumns.concat(this.columns);
+        let columnsChanged = false;
+        removedColumns.forEach(col => {
+            removeColumn(col, this.allColumns);
+            columnsChanged = removeColumn(col, columnsCopy);
+        });
+
+        addedColumns.forEach(col => {
+            const index = this.allColumns.findIndex(column => column.property === col.property);
+            if (index < 0) {
+                this.allColumns.push(col);
+                columnsCopy.push(col);
+                columnsChanged = true;
+            }
+        });
+        if (columnsChanged) {
+            this._updateColumns(columnsCopy);
+        }
     },
 
     //Style calculator
@@ -677,8 +697,8 @@ Polymer({
     },
 
     // Observers
-    _computeFixedColumns: function (columns, numOfFixedCols) {
-        this.fixedColumns = columns.slice(0, numOfFixedCols);
+    _numOfFixedColsChanged: function () {
+        this._updateColumns(this.fixedColumns.concat(this.columns));
     },
 
     _isSecondaryActionsPresent: function (secondaryActions) {
@@ -712,12 +732,12 @@ Polymer({
         if (this._reflector.isWarning(validationResult) || this._reflector.isError(validationResult)) {
             return validationResult.message && ("<b>" + validationResult.message + "</b>");
         } else if (column.tooltipProperty) {
-            const value = this._getValue(entity, column.tooltipProperty, "String").toString();
+            const value = this.getValue(entity, column.tooltipProperty, "String").toString();
             return value && ("<b>" + value + "</b>");
         } else if (this._reflector.findTypeByName(column.type)) {
             return this._generateEntityTooltip(entity, column);
         } else {
-            const value = this._getValue(entity, column.property, column.type).toString();
+            const value = this.getValue(entity, column.property, column.type).toString();
             return value && ("<b>" + value + "</b>");
         }
         return "";
@@ -733,7 +753,7 @@ Polymer({
     getActionTooltip: function (entity, column, action) {
         if (action && (action.shortDesc || action.longDesc)) {
             return this._generateActionTooltip(action);
-        } else if (this._getAttachmentIfPossible(entity, column)) {
+        } else if (this.getAttachmentIfPossible(entity, column.property)) {
             return this._generateActionTooltip({
                 shortDesc: 'Download',
                 longDesc: 'Click to download attachment.'
@@ -743,10 +763,10 @@ Polymer({
     },
     
     _generateEntityTooltip: function (entity, column) {
-        var key = this._getValue(entity, column.property, column.type);
+        var key = this.getValue(entity, column.property, column.type);
         var desc;
         try {
-            if (Array.isArray(this._getValueFromEntity(entity, column.property))) {
+            if (Array.isArray(this.getValueFromEntity(entity, column.property))) {
                 desc = generateShortCollection(entity, column.property, this._reflector.findTypeByName(column.type))
                     .map(function (subEntity) {
                         return subEntity.get("desc");
@@ -828,62 +848,6 @@ Polymer({
                 shouldScrollToSelected: false,
                 entities: selectionDetails
             });
-        }
-    },
-
-    _isHyperlinkProp: function (entity, column) {
-        return column.type === 'Hyperlink' && this._getValueFromEntity(entity, column) !== null
-    },
-
-    _getAttachmentIfPossible: function (entity, column) {
-        if (entity.type && entity.type().notEnhancedFullClassName() === "ua.com.fielden.platform.attachment.Attachment") {
-            return entity;
-        } else if (this._getValueFromEntity(entity, column) && this._getValueFromEntity(entity, column).type &&
-            this._getValueFromEntity(entity, column).type().notEnhancedFullClassName() === "ua.com.fielden.platform.attachment.Attachment") {
-            return this._getValueFromEntity(entity, column);
-        } else if (this._reflector.entityPropOwner(entity, column)) {
-            const owner = this._reflector.entityPropOwner(entity, column);
-            if (owner.type().notEnhancedFullClassName() === "ua.com.fielden.platform.attachment.Attachment") {
-                return owner;
-            }
-            return null;
-        } else {
-            return null;
-        }
-    },
-
-    _getValueFromEntity: function (entity, column) {
-        return entity && entity.get(column.property);
-    },
-
-    _getValue: function (entity, property, type) {
-        if (entity === null || property === null || type === null || this._getValueFromEntity(entity, property) === null) {
-            return "";
-        } else if (this._reflector.findTypeByName(type)) {
-            var propertyValue = this._getValueFromEntity(entity, property);
-            if (Array.isArray(propertyValue)) {
-                propertyValue = generateShortCollection(entity, property, this._reflector.findTypeByName(type));
-            }
-            return Array.isArray(propertyValue) ? this._reflector.convert(propertyValue).join(", ") : this._reflector.convert(propertyValue);
-        } else if (type.lastIndexOf('Date', 0) === 0) { // check whether type startsWith 'Date'. Type can be like 'Date', 'Date:UTC:' or 'Date:Europe/London:'
-            var splitedType = type.split(':');
-            return _millisDateRepresentation(entity.get(property), splitedType[1] || null, splitedType[2] || null);
-        } else if (typeof entity.get(property) === 'number') {
-            if (type === 'BigDecimal') {
-                const metaProp = this._reflector.getEntityTypeProp(entity, property);
-                return this._reflector.formatDecimal(entity.get(property), this._appConfig.locale, metaProp && metaProp.scale(), metaProp && metaProp.trailingZeros());
-            } else {
-                return this._reflector.formatNumber(entity.get(property), this._appConfig.locale);
-            }
-        } else if (type === 'Money') {
-            const metaProp = this._reflector.getEntityTypeProp(entity, property);
-            return this._reflector.formatMoney(entity.get(property), this._appConfig.locale, metaProp && metaProp.scale(), metaProp && metaProp.trailingZeros());
-        } else if (type === 'Colour') {
-            return '#' + entity.get(property)['hashlessUppercasedColourValue'];
-        } else if (type === 'Hyperlink') {
-            return entity.get(property)['value'];
-        } else {
-            return entity.get(property);
         }
     },
 });
