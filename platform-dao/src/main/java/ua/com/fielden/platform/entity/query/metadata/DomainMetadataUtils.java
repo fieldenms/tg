@@ -18,7 +18,6 @@ import static ua.com.fielden.platform.utils.EntityUtils.isUnionEntityType;
 
 import java.lang.reflect.Field;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 
@@ -37,8 +36,6 @@ import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfa
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.ExpressionModel;
 import ua.com.fielden.platform.expression.ExpressionText2ModelConverter;
-import ua.com.fielden.platform.types.tuples.T3;
-import ua.com.fielden.platform.utils.Pair;
 
 public class DomainMetadataUtils {
 
@@ -78,24 +75,24 @@ public class DomainMetadataUtils {
                 concatStart = getPropertyAnnotation(Optional.class, entityType, nextKeyMember.getName()) != null ? 
                         concatStart.with().expr(processOptionalKeyMember(nextKeyMember.getName(), nextKeyMember.getType(), keyMemberSeparator))
                         :
-                            concatStart.with().val(keyMemberSeparator).with().expr(expr().prop(getKeyMemberConcatenationPropName(nextKeyMember.getName(), nextKeyMember.getType())).model());
+                            concatStart.with().val(keyMemberSeparator).with().expr(getKeyMemberConcatenationPropName(nextKeyMember.getName(), nextKeyMember.getType()));
             }
             
             return concatStart.end().model();
         }
     }
 
-    private static String getKeyMemberConcatenationPropName(final String keyMemberName, final Class<?> keyMemberType) {
-        return PropertyDescriptor.class != keyMemberType && isEntityType(keyMemberType) ? keyMemberName + "." + KEY : keyMemberName;
+    private static ExpressionModel getKeyMemberConcatenationPropName(final String keyMemberName, final Class<?> keyMemberType) {
+        return expr().prop(PropertyDescriptor.class != keyMemberType && isEntityType(keyMemberType) ? keyMemberName + "." + KEY : keyMemberName).model();
     }
 
     private static ExpressionModel processFirstKeyMember(final String keyMemberName, final Class<?> keyMemberType, final String separator) {
         return Integer.class.equals(keyMemberType) ? expr().concat().prop(keyMemberName).with().val(EMPTY_STRING).end().model() 
-                : expr().prop(getKeyMemberConcatenationPropName(keyMemberName, keyMemberType)).model();
+                : getKeyMemberConcatenationPropName(keyMemberName, keyMemberType);
     }
     
     private static ExpressionModel processOptionalKeyMember(final String keyMemberName, final Class<?> keyMemberType, final String separator) {
-        return expr().caseWhen().prop(keyMemberName).isNotNull().then().concat().val(separator).with().prop(getKeyMemberConcatenationPropName(keyMemberName, keyMemberType)).end().otherwise().val(EMPTY_STRING).end()/*.endAsStr(256)*/.model();
+        return expr().caseWhen().prop(keyMemberName).isNotNull().then().concat().val(separator).with().expr(getKeyMemberConcatenationPropName(keyMemberName, keyMemberType)).end().otherwise().val(EMPTY_STRING).end()/*.endAsStr(256)*/.model();
     }
     
     public static ExpressionModel extractExpressionModelFromCalculatedProperty(final Class<? extends AbstractEntity<?>> entityType, final Field calculatedPropfield) throws Exception {
