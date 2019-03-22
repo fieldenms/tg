@@ -10,7 +10,7 @@ import { TgReflector } from '/app/tg-reflector.js';
 
 const template = html`
     <style>
-        :host::slotted(tg-flex-layout) {
+        :host ::slotted(tg-flex-layout) {
             padding: 0 20px 20px 20px;
         }
     </style>

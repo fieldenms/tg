@@ -35,7 +35,7 @@ const template = html`
             flex-grow: 0;
             flex-shrink: 0;
         }
-        .toolbar-content::slotted(*) {
+        .toolbar-content ::slotted(*) {
             margin-top: 8px;
         }
     </style>
@@ -56,7 +56,7 @@ const template = html`
             <tg-ui-action ui-role='ICON' short-desc='Settings' long-desc='Customize selection criteria and resultset of the current configuration' icon='icons:settings' icon-style='' component-uri='/master_ui/fielden.work.ui_actions.OpenWorkActivityMasterAction' element-name='tg-OpenWorkActivityMasterAction-master' action-kind='TOP_LEVEL' element-alias='tg-OpenWorkActivityMasterAction-master_5_TOP_LEVEL' show-dialog='[[_showDialog]]' create-context-holder='[[_createContextHolder]]' attrs='[[topLevelActions.5.attrs]]' pre-action='[[topLevelActions.5.preAction]]' post-action-success='[[topLevelActions.5.postActionSuccess]]' post-action-error='[[topLevelActions.5.postActionError]]' require-selection-criteria='true' require-selected-entities='NONE' require-master-entity='false' disabled style='cursor:initial'></tg-ui-action>
         </div>
     </div>
-    <tg-scrollable-component class="flex relative">
+    <tg-scrollable-component class="relative">
         <slot name="custom-selection-criteria"></slot>
     </tg-scrollable-component>
     <slot name="selection-criteria-buttons"></slot>
