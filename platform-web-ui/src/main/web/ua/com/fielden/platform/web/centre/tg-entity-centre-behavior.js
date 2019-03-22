@@ -499,8 +499,8 @@ const TgEntityCentreBehaviorImpl = {
                 this.retrievedEntities = resultEntities;
                 this.selectionCriteriaEntity = criteriaEntity;
                 this.$.egi.renderingHints = renderingHints;
-                this.$.egi._adjustColumnWidths(columnWidths);
-                this.$.egi._adjustColumns(visibleColumnsWithOrder.map(column => column === "this" ? "" : column));
+                // FIXME this.$.egi._adjustColumnWidths(columnWidths);
+                // FIXME this.$.egi._adjustColumns(visibleColumnsWithOrder.map(column => column === "this" ? "" : column));
                 if (this._triggerRun) {
                     if (this._selectedView === 0) {
                         this.async(function () {
@@ -621,7 +621,7 @@ const TgEntityCentreBehaviorImpl = {
 
             const self = this;
             self._actionInProgress = true;
-            self.$.egi.clearSelection();
+            // FIXME self.$.egi.clearSelection();
             self._triggerRun = true;
 
             // let's register a timer to kickoff a spinner if the run action is taking too long...
@@ -1047,7 +1047,7 @@ const TgEntityCentreBehaviorImpl = {
 
     runInsertionPointActions: function () {
         const self = this;
-        const actions = Polymer.dom(self.$.egi).querySelectorAll('.insertion-point-action');
+        const actions = self.$.egi.querySelectorAll('.insertion-point-action');
         if (actions) {
             actions.forEach(function (action) {
                 self.async(function () {

@@ -127,6 +127,7 @@ public class PropertyColumnElement implements IRenderable, IImportable {
         if (this.underlyingPropertyName().isPresent()) {
             attrs.put("underlying-property", this.underlyingPropertyName().get());
         }
+        attrs.put("slot", "property-column");
         attrs.put("width", width);
         attrs.put("min-width", MIN_COLUMN_WIDTH > width ? width : MIN_COLUMN_WIDTH);
         attrs.put("grow-factor", isFlexible ? growFactor : 0);
@@ -145,7 +146,7 @@ public class PropertyColumnElement implements IRenderable, IImportable {
      */
     protected Map<String, Object> createCustomAttributes() {
         return new LinkedHashMap<>();
-    };
+    }
 
     public Optional<FunctionalActionElement> getAction() {
         return action;
