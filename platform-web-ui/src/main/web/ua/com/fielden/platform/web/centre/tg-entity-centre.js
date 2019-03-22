@@ -146,7 +146,7 @@ const template = html`
 
     <iron-pages id="views" selected="[[_selectedView]]" on-iron-select="_pageSelectionChanged">
         <div class="fit layout vertical">
-            <div class="paper-material selection-material layout vertical">
+            <div class="paper-material selection-material layout vertical" elevation="1">
                 <tg-selection-view id="selectionView" _show-dialog="[[_showDialog]]" save-as-name="{{saveAsName}}" _create-context-holder="[[_createContextHolder]]" uuid="[[uuid]]" _confirm="[[_confirm]]" _create-action-object="[[_createActionObject]]">
                     <slot name="custom-front-action" slot="custom-front-action"></slot>
                     <slot name="custom-selection-criteria" slot="custom-selection-criteria"></slot>
