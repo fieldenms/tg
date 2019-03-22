@@ -9,8 +9,6 @@ import { html } from '/resources/polymer/@polymer/polymer/lib/utils/html-tag.js'
 
 import { TgReflector } from '/app/tg-reflector.js';
 import { TgAppConfig } from '/app/tg-app-config.js';
-import { generateShortCollection } from '/resources/reflection/tg-polymer-utils.js';
-import { _millisDateRepresentation } from '/resources/reflection/tg-date-utils.js';
 
 const template = html`
     <style>
@@ -30,9 +28,9 @@ const template = html`
         }
     </style>
     <div class="cell-background" style$="[[_calcBackgroundRenderingHintsStyle(renderingHints, column)]]"></div>
-    <iron-icon class="table-icon" hidden$="[[!_isBooleanProp(entity, column)]]" style$="[[_calcValueRenderingHintsStyle(renderingHints, column, 'true')]]" icon="[[_getBooleanIcon(entity, column)]]"></iron-icon>
-    <a class="truncate" hidden$="[[!_isHyperlinkProp(entity, column)]]" href$="[[_getBindedValue(entity, column)]]" style$="[[_calcValueRenderingHintsStyle(entity, column, 'false')]]">[[_getBindedValue(entity, column)]]</a>
-    <div class="truncate relative" hidden$="[[!_isNotBooleanOrHyperlinkProp(entity, column)]]" style$="[[_calcValueRenderingHintsStyle(renderingHints, column, 'false')]]">[[_getBindedValue(entity, column)]]</div>`;
+    <iron-icon class="table-icon" hidden$="[[!_isBooleanProp(hostComponent, entity, column)]]" style$="[[_calcValueRenderingHintsStyle(renderingHints, column, 'true')]]" icon="[[_getBooleanIcon(hostComponent, entity, column)]]"></iron-icon>
+    <a class="truncate" hidden$="[[!_isHyperlinkProp(hostComponent, entity, column)]]" href$="[[_getBindedValue(hostComponent, entity, column)]]" style$="[[_calcValueRenderingHintsStyle(entity, column, 'false')]]">[[_getBindedValue(hostComponent, entity, column)]]</a>
+    <div class="truncate relative" hidden$="[[!_isNotBooleanOrHyperlinkProp(hostComponent, entity, column)]]" style$="[[_calcValueRenderingHintsStyle(renderingHints, column, 'false')]]">[[_getBindedValue(hostComponent, entity, column)]]</div>`;
 
 Polymer({
 
@@ -43,13 +41,19 @@ Polymer({
     properties: {
         renderingHints: Object,
         column: Object,
-        entity: Object
+        entity: Object,
+        hostComponent: Object
     },
 
     created: function () {
         this._reflector = new TgReflector();
         this._appConfig = new TgAppConfig();
     },
+
+    attached: function() {
+        this.hostComponent = this.getRootNode().host;
+    },
+
 
     _calcBackgroundRenderingHintsStyle: function(renderingHints, column) {
         let style = "opacity: 0.5;";
@@ -80,29 +84,29 @@ Polymer({
     /**
      * Determines whether property is boolean or not.
      */
-    _isBooleanProp: function (entity, column) {
-        return column.type === 'Boolean' && this._getValueFromEntity(entity, column) !== null
+    _isBooleanProp: function (hostComponent, entity, column) {
+        return hostComponent && hostComponent.isBooleanProp(entity, column.property, column.type);
     },
 
     /**
      * Determines whether property is Hypelink or not.
      */
-    _isHyperlinkProp: function (entity, column) {
-        return column.type === 'Hyperlink' && this._getValueFromEntity(entity, column) !== null
+    _isHyperlinkProp: function (hostComponent, entity, column) {
+        return hostComponent && hostComponent.isHyperlinkProp(entity, column.property, column.type);
     },
 
     /**
      * Determines whether property is not boolean property or is.
      */
-    _isNotBooleanOrHyperlinkProp: function (entity, column) {
-        return !(this._isBooleanProp(entity, column) || this._isHyperlinkProp(entity, column));
+    _isNotBooleanOrHyperlinkProp: function (hostComponent, entity, column) {
+        return hostComponent && hostComponent.isNotBooleanOrHyperlinkProp(entity, column.property, column.type);
     },
 
     /**
      * Returns icon that represents the boolean value.
      */
-    _getBooleanIcon: function (entity, column) {
-        if (this._getValueFromEntity(entity, column) === true) {
+    _getBooleanIcon: function (hostComponent, entity, column) {
+        if (this._getValueFromEntity(hostComponent, entity, column) === true) {
             return "icons:check";
         } else {
             return "noicon";
@@ -112,46 +116,17 @@ Polymer({
     /**
      * Returns the property value of the specified entity.
      */
-    _getValueFromEntity: function (entity, column) {
-        return entity && entity.get(column.property);
+    _getValueFromEntity: function (hostComponent, entity, column) {
+        return hostComponent && hostComponent.getValueFromEntity(entity, column.property);
     },
 
-    _getBindedValue: function (entity, column) {
-        return this._getValue(entity, column);
+    _getBindedValue: function (hostComponent, entity, column) {
+        return hostComponent && hostComponent.getBindedValue(entity, column.property, column.type);
     },
     /**
      * Returns the property value of the specified entity and converts it to string.
      */
-    _getValue: function (entity, column) {
-        const property = column.property;
-        const type = column.type;
-        if (entity === null || property === null || type === null || this._getValueFromEntity(entity, column) === null) {
-            return "";
-        } else if (this._reflector.findTypeByName(type)) {
-            let propertyValue = this._getValueFromEntity(entity, column);
-            if (Array.isArray(propertyValue)) {
-                propertyValue = generateShortCollection(entity, property, this._reflector.findTypeByName(type));
-            }
-            return Array.isArray(propertyValue) ? this._reflector.convert(propertyValue).join(", ") : this._reflector.convert(propertyValue);
-        } else if (type.lastIndexOf('Date', 0) === 0) { // check whether type startsWith 'Date'. Type can be like 'Date', 'Date:UTC:' or 'Date:Europe/London:'
-            var splitedType = type.split(':');
-            return _millisDateRepresentation(entity.get(property), splitedType[1] || null, splitedType[2] || null);
-        } else if (typeof entity.get(property) === 'number') {
-            if (type === 'BigDecimal') {
-                const metaProp = this._reflector.getEntityTypeProp(entity, property);
-                return this._reflector.formatDecimal(entity.get(property), this._appConfig.locale, metaProp && metaProp.scale(), metaProp && metaProp.trailingZeros());
-            } else {
-                return this._reflector.formatNumber(entity.get(property), this._appConfig.locale);
-            }
-        } else if (type === 'Money') {
-            const metaProp = this._reflector.getEntityTypeProp(entity, property);
-            return this._reflector.formatMoney(entity.get(property), this._appConfig.locale, metaProp && metaProp.scale(), metaProp && metaProp.trailingZeros());
-        } else if (type === 'Colour') {
-            return '#' + entity.get(property)['hashlessUppercasedColourValue'];
-        } else if (type === 'Hyperlink') {
-            return entity.get(property)['value'];
-        } else {
-            return entity.get(property);
-        }
+    _getValue: function (hostComponent, entity, column) {
+        return hostComponent && hostComponent.getValue(entity, column.property, column.type);
     },
 });

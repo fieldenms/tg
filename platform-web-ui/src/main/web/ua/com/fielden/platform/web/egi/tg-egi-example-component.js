@@ -9,7 +9,7 @@ import {html} from '/resources/polymer/@polymer/polymer/lib/utils/html-tag.js';
 import { EntityStub } from '/resources/reflection/tg-polymer-utils.js';
 
 const template = html`
-    <tg-entity-grid-inspector entities="[[entities]]" checkbox-visible>
+    <tg-entity-grid-inspector id="egi" entities="[[entities]]" checkbox-visible>
         <tg-property-column slot='property-column' property="key" type="String" width="60" min-width="40" grow-factor="1" column-title="Key" column-desc="Entity Key"></tg-property-column>
         <tg-property-column slot='property-column' property="desc" type="String" width="80" min-width="60" grow-factor="1" column-title="Description" column-desc="Entity Description"></tg-property-column>
         <tg-property-column slot='property-column' property="intProp" type="Integer" width="60" min-width="40" grow-factor="1" column-title="Integer Property" column-desc="Some Integer Property"></tg-property-column>
@@ -47,5 +47,8 @@ Polymer({
         customEntitites.push(createEntity(3, {key: "KEY9", desc: "9 Entity", intProp: 42, decProp: 20.23}));
         customEntitites.push(createEntity(3, {key: "KEY10", desc: "10 Entity", intProp: 43, decProp: 21.23}));
         this.entities = customEntitites;
+
+        this.$.egi.hasAction = () => false;
+        this.$.egi.tap = () => {};
     }
 });
