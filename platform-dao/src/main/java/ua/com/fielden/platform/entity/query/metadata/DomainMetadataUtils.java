@@ -90,7 +90,8 @@ public class DomainMetadataUtils {
     }
 
     private static ExpressionModel processFirstKeyMember(final String keyMemberName, final Class<?> keyMemberType, final String separator) {
-        return expr().prop(getKeyMemberConcatenationPropName(keyMemberName, keyMemberType)).model();
+        return Integer.class.equals(keyMemberType) ? expr().concat().prop(keyMemberName).with().val(EMPTY_STRING).end().model() 
+                : expr().prop(getKeyMemberConcatenationPropName(keyMemberName, keyMemberType)).model();
     }
     
     private static ExpressionModel processOptionalKeyMember(final String keyMemberName, final Class<?> keyMemberType, final String separator) {
