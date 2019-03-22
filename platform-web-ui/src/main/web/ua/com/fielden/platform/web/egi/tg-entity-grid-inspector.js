@@ -35,6 +35,7 @@ const template = html`
             @apply --layout-vertical;
         }
         .paper-material {
+            background-color: white;
             border-radius: 2px;
             @apply --layout-vertical;
         }
@@ -66,6 +67,7 @@ const template = html`
         }
         #baseContainer {
             min-height: 0;
+            overflow: auto;
             @apply --layout-vertical;
             @apply --layout-flex;
             @apply --layout-relative;
@@ -230,7 +232,7 @@ const template = html`
                 </div>
             </div>
             <!--Table body-->
-            <template is="dom-repeat" items="[[egiModel]]" as="egiEntity" index-as="entityIndex" >
+            <template is="dom-repeat" items="[[egiModel]]" as="egiEntity" index-as="entityIndex" on-dom-change="_scrollContainerEntitiesStamped">
                 <div class="table-data-row" selected$="[[egiEntity.selected]]">
                     <div class="drag-anchor" draggable="true" selected$="[[egiEntity.selected]]" hidden$="[[!canDragFrom]]" style$="[[_calcDragBoxStyle(dragAnchorFixed)]]">
                         <iron-icon icon="tg-icons:dragVertical"></iron-icon>
@@ -278,7 +280,6 @@ Polymer({
         downloadAttachment: {
             type: Function
         },
-
         entities: {
             type: Array,
             observer: "_entitiesChanged"
@@ -293,16 +294,34 @@ Polymer({
             type: Object,
             value: null
         },
-
         totals: Object,
-        
         columns: {
             type: Array,
             observer: "_columnsChanged"
         },
         allColumns: Array,
         fixedColumns: Array,
-
+        /**
+         * The function to map column properties of the entity to the form [{ dotNotation: 'prop1.prop2', value: '56.67'}, ...]. The order is
+         * consistent with the order of columns.
+         *
+         * @param entity -- the entity to be processed with the mapper function
+         */
+        columnPropertiesMapper: {
+            type: Function,
+            notify: true
+        },
+        /**
+         * Holds the entity centre selection and updates it's own selection model when it changes.
+         */
+        centreSelection: {
+            type: Object,
+            observer: "_centreSelectionChanged"
+        },
+        lock: {
+            type: Boolean,
+            value: false
+        },
         renderingHints: {
             type: Array,
             observer: "_renderingHintsChanged"
@@ -310,6 +329,44 @@ Polymer({
         selectedAll: {
             type: Boolean,
             value: false
+        },
+        /**
+         * Indicates whether margin should be visible around egi or not.
+         */
+        showMarginAround: {
+            type: Boolean,
+            value: true
+        },
+        /**
+         * Defines the number of visible rows.
+         */
+        visibleRowCount: {
+            type: Number,
+            value: 0
+        },
+        rowHeight: {
+            type: String,
+            value: "1.5rem",
+            observer: "_rowHeightChanged"
+        },
+        /**
+         * This is alternative to visible row count and default egi behaviour that allows one to configure egi's height independently from content height.
+         */
+        constantHeight: {
+            type: String,
+            value: ""
+        },
+        /**
+         * Indicates whether content should be extended to EGI's height or not.
+         */
+        fitToHeight: {
+            type: Boolean,
+            value: false
+        },
+        //Controls visibility of the toolbar.
+        toolbarVisible: {
+            type: Boolean,
+            value: true
         },
         //Determines whether entities can be dragged from this EGI.
         canDragFrom: {
@@ -351,6 +408,49 @@ Polymer({
             type: Boolean,
             value: false
         },
+        /**
+         * Provides custom key bindings.
+         */
+        customShortcuts: {
+            type: String
+        },
+        /**
+         * The property that determines whether progress bar is visible or not.
+         */
+        _showProgress: {
+            type: Boolean
+        },
+        //Private properties that defines config object for totals.
+        _totalsRowCount: Number,
+        _totalsRows: Array,
+        //FIXME The following properties might not be needed any longer.
+        //Shadow related properties
+        _showBottomShadow: Boolean,
+        _showTopShadow: Boolean,
+        _showLeftShadow: Boolean,
+        _showRightShadow: Boolean,
+        //Scroling properties
+        _scrollLeft: Number,
+        _scrollTop: Number,
+        //Need when resizing column to recalculate styles.
+        _fixedColumnWidth: Number,
+        _scrollableColumnWidth: Number,
+        //miscelenia private variables
+        //FIXME till here.
+        //FIXME the next one might not be needded too
+        _actionWidth: {
+            type: String,
+            value: "20px"
+        },
+        _cellPadding: {
+            type: String,
+            value: "1.2rem"
+        },
+        _bottomMargin: {
+            type: String,
+            value: "15px"
+        },
+        //FIXIME Till here
         //Range selection related properties
         _rangeSelection: {
             type: Boolean,
@@ -369,6 +469,7 @@ Polymer({
         this._totalsRowCount = 0;
         this._showProgress = false;
 
+        //FIXIME the following entities might not be needed any longer
         //Initialising shadows
         this._showTopShadow = false;
         this._showBottomShadow = false;
@@ -378,6 +479,7 @@ Polymer({
         //Initilialising scrolling properties
         this._scrollLeft = 0;
         this._scrollTop = 0;
+        //FIXIME till this property.
 
         //Initialising entities.
         this.totals = null;
@@ -412,6 +514,30 @@ Polymer({
         new FlattenedNodesObserver(this.$.column_selector, (info) => {
             this._columnDomChanged(info.addedNodes, info.removedNodes);
         });
+    },
+
+    attached: function () {
+        this._updateTableSizeAsync();
+        this._ownKeyBindings = {};
+        if (this.customShortcuts) {
+            this._ownKeyBindings[this.customShortcuts] = '_shortcutPressed';
+        }
+        //Initialising property column mappings
+        this.columnPropertiesMapper = (function (entity) {
+            const result = [];
+            for (let index = 0; index < this.columns.length; index++) {
+                const column = this.columns[index];
+                const entry = {
+                    dotNotation: column.property,
+                    value: this.getValue(entity, column.property, column.type)
+                };
+                result.push(entry);
+            }
+            return result;
+        }).bind(this);
+        this.async(function () {
+            this.keyEventTarget = this._getKeyEventTarget();
+        }, 1);
     },
 
     //Filtering related functions
@@ -541,6 +667,7 @@ Polymer({
     },
 
     //Event listeners
+    //FIXME this should be implemented
     _resizeEventListener: function() {
 
     },
@@ -610,6 +737,16 @@ Polymer({
         if (columnsChanged) {
             this._updateColumns(columnsCopy);
         }
+    },
+
+    _scrollContainerEntitiesStampedCustomAction: function () {},
+
+    _scrollContainerEntitiesStamped: function (event) {
+        this._scrollContainerEntitiesStampedCustomAction();
+    },
+
+    _shortcutPressed: function (e) {
+        this.processShortcut(e, ['paper-icon-button', 'tg-action', 'tg-ui-action']);
     },
 
     //Style calculator
@@ -703,6 +840,10 @@ Polymer({
 
     _isSecondaryActionsPresent: function (secondaryActions) {
         return secondaryActions && secondaryActions.length > 0;
+    },
+
+    _rowHeightChanged: function (newValue, oldValue) {
+        this.updateStyles({"--egi-row-height": newValue});
     },
 
     //Tooltip related functions.
@@ -850,4 +991,18 @@ Polymer({
             });
         }
     },
+
+    _updateTableSizeAsync: function () {
+        this.async(function () {
+            this._resizeEventListener();
+        }.bind(this), 1);
+    },
+
+    _getKeyEventTarget: function () {
+        let parent = this;
+        while (parent && (parent.tagName !== 'TG-CUSTOM-ACTION-DIALOG' && parent.tagName !== 'TG-MENU-ITEM-VIEW')) {
+            parent = parent.parentElement || parent.getRootNode().host;
+        }
+        return parent || this;
+    }
 });
