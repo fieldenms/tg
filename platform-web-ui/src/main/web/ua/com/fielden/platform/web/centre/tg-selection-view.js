@@ -14,6 +14,7 @@ import { TgRequiredPropertiesFocusTraversalBehavior } from '/resources/component
 import { TgShortcutProcessingBehavior } from '/resources/actions/tg-shortcut-processing-behavior.js';
 import '/resources/actions/tg-ui-action.js';
 import '/resources/images/tg-document-related-icons.js';
+import { TgElementSelectorBehavior } from '/resources/components/tg-element-selector-behavior.js';
 
 const template = html`
     <style>
@@ -70,7 +71,8 @@ Polymer({
     behaviors: [
         IronA11yKeysBehavior,
         TgRequiredPropertiesFocusTraversalBehavior,
-        TgShortcutProcessingBehavior
+        TgShortcutProcessingBehavior,
+        TgElementSelectorBehavior
     ],
 
     properties: {

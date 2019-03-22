@@ -6,6 +6,7 @@ import { TgFocusRestorationBehavior } from '/resources/actions/tg-focus-restorat
 import '/resources/actions/tg-ui-action.js';
 import { tearDownEvent, isInHierarchy, deepestActiveElement, FOCUSABLE_ELEMENTS_SELECTOR } from '/resources/reflection/tg-polymer-utils.js';
 import { TgReflector } from '/app/tg-reflector.js';
+import { TgElementSelectorBehavior } from '/resources/components/tg-element-selector-behavior.js';
 
 const generateCriteriaName = function (root, property, suffix) {
     const rootName = root.substring(0, 1).toLowerCase() + root.substring(1) + "_";
@@ -794,21 +795,20 @@ const TgEntityCentreBehaviorImpl = {
         const focusables = this._getCurrentFocusableElements();
         const frirstIndex = forward ? 0 : focusables.length - 1;
         const lastIndex = forward ? focusables.length - 1 : 0;
-        if (!isInHierarchy(this, document.activeElement)) { // FIXME deepestActiveElement?
+        if (!isInHierarchy(this, deepestActiveElement())) {
             if (focusables.length > 0) {
                 focusables[frirstIndex].focus();
                 tearDownEvent(e);
             } else {
                 this.fire("tg-last-item-focused", { forward: forward, event: e });
             }
-        } else if (focusables.length === 0 || document.activeElement == focusables[lastIndex]) { // deepestActiveElement?
+        } else if (focusables.length === 0 || deepestActiveElement() == focusables[lastIndex]) {
             this.fire("tg-last-item-focused", { forward: forward, event: e });
         }
     },
 
     _getCurrentFocusableElements: function () {
-        /* FIXME, queryElements */const _componentsToFocus = Array.from(this.querySelectorAll(FOCUSABLE_ELEMENTS_SELECTOR));
-        return _componentsToFocus.filter(element => !element.disabled && element.offsetParent !== null);
+        return this.getElements(FOCUSABLE_ELEMENTS_SELECTOR).filter(element => !element.disabled && element.offsetParent !== null);
     },
 
     _saveColumnWidth: function (e) {
@@ -1087,5 +1087,6 @@ export const TgEntityCentreBehavior = [
     TgEntityCentreBehaviorImpl,
     TgTooltipBehavior,
     TgSseBehavior,
-    TgFocusRestorationBehavior
+    TgFocusRestorationBehavior,
+    TgElementSelectorBehavior
 ];
