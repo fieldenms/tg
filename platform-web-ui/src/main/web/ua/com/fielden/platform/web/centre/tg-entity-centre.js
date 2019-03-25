@@ -20,7 +20,7 @@ import '/resources/polymer/@polymer/iron-ajax/iron-ajax.js';
 import '/resources/polymer/@polymer/iron-flex-layout/iron-flex-layout.js';
 import '/resources/polymer/@polymer/iron-flex-layout/iron-flex-layout-classes.js';
 import { IronResizableBehavior } from '/resources/polymer/@polymer/iron-resizable-behavior/iron-resizable-behavior.js';
-import { TgElementSelectorBehavior } from '/resources/components/tg-element-selector-behavior.js';
+import { TgElementSelectorBehavior, queryElements} from '/resources/components/tg-element-selector-behavior.js';
 
 const template = html`
     <style>
@@ -125,16 +125,6 @@ const template = html`
             /* Non-prefixed version, currently
                                   supported by Chrome and Opera */
         }
-        .button-group {
-            margin-bottom: 20px;
-        }
-        .right-button-group {
-            margin-left: auto;
-        }
-        .selection-criteria-buttons {
-            padding: 20px 20px 0 20px;
-            min-height: fit-content;
-        }
     </style>
     <custom-style>
         <style include="paper-material-styles iron-flex iron-flex-reverse iron-flex-alignment iron-flex-factors iron-positioning"></style>
@@ -151,24 +141,18 @@ const template = html`
                 <tg-selection-view id="selectionView" _show-dialog="[[_showDialog]]" save-as-name="{{saveAsName}}" _create-context-holder="[[_createContextHolder]]" uuid="[[uuid]]" _confirm="[[_confirm]]" _create-action-object="[[_createActionObject]]">
                     <slot name="custom-front-action" slot="custom-front-action"></slot>
                     <slot name="custom-selection-criteria" slot="custom-selection-criteria"></slot>
-                    <div slot="selection-criteria-buttons" class="selection-criteria-buttons layout horizontal justified wrap">
-                        <div class="layout horizontal button-group">
-                            <tg-ui-action id="saveAction" shortcut="ctrl+s" ui-role='BUTTON' short-desc='Save' long-desc='Save configuration, Ctrl&nbsp+&nbsps'
-                                            component-uri='/master_ui/ua.com.fielden.platform.web.centre.CentreConfigSaveAction' element-name='tg-CentreConfigSaveAction-master' show-dialog='[[_showDialog]]' create-context-holder='[[_createContextHolder]]'
-                                            attrs='[[bottomActions.0.attrs]]' pre-action='[[bottomActions.0.preAction]]' post-action-success='[[bottomActions.0.postActionSuccess]]' post-action-error='[[bottomActions.0.postActionError]]'
-                                            require-selection-criteria='true' require-selected-entities='NONE' require-master-entity='false'
-                                            disabled='[[_saverDisabled]]' style='[[_computeSaveButtonStyle(_saverDisabled)]]'></tg-ui-action>
-                            <paper-button id="discarder" raised shortcut="ctrl+r" roll="button" on-tap="discardAsync" disabled$="[[_discarderDisabled]]" tooltip-text="Discard the latest changes to selection criteria, which effectively returns configuration to the last saved state, Ctrl&nbsp+&nbspr">Discard</paper-button>
-                        </div>
-                        <div class="layout horizontal button-group right-button-group">
-                            <paper-button id="view" raised shortcut="ctrl+e" roll="button" on-tap="_activateResultSetView" disabled$="[[_viewerDisabled]]" tooltip-text="Show result view, Ctrl&nbsp+&nbspe">View</paper-button>
-                            <paper-button id="runner" raised shortcut="f5" roll="button" on-tap="runAsync" style="margin-right: 0px;" disabled$="[[_runnerDisabled]]" tooltip-text="Execute entity centre and show result, F5">
-                                <paper-spinner id="spinner" active="[[_runnerDisabled]]" class="blue" style="visibility: 'hidden'" alt="in progress">
-                                </paper-spinner>
-                                <span>Run</span>
-                            </paper-button>
-                        </div>
-                    </div>
+                    <tg-ui-action slot="left-selection-criteria-button" id="saveAction" shortcut="ctrl+s" ui-role='BUTTON' short-desc='Save' long-desc='Save configuration, Ctrl&nbsp+&nbsps'
+                                    component-uri='/master_ui/ua.com.fielden.platform.web.centre.CentreConfigSaveAction' element-name='tg-CentreConfigSaveAction-master' show-dialog='[[_showDialog]]' create-context-holder='[[_createContextHolder]]'
+                                    attrs='[[bottomActions.0.attrs]]' pre-action='[[bottomActions.0.preAction]]' post-action-success='[[bottomActions.0.postActionSuccess]]' post-action-error='[[bottomActions.0.postActionError]]'
+                                    require-selection-criteria='true' require-selected-entities='NONE' require-master-entity='false'
+                                    disabled='[[_saverDisabled]]' style$='[[_computeSaveButtonStyle(_saverDisabled)]]'></tg-ui-action>
+                    <paper-button slot="left-selection-criteria-button" id="discarder" raised shortcut="ctrl+r" roll="button" on-tap="discardAsync" disabled$="[[_discarderDisabled]]" tooltip-text="Discard the latest changes to selection criteria, which effectively returns configuration to the last saved state, Ctrl&nbsp+&nbspr">Discard</paper-button>
+                    <paper-button slot="right-selection-criteria-button" id="view" raised shortcut="ctrl+e" roll="button" on-tap="_activateResultSetView" disabled$="[[_viewerDisabled]]" tooltip-text="Show result view, Ctrl&nbsp+&nbspe">View</paper-button>
+                    <paper-button slot="right-selection-criteria-button" id="runner" raised shortcut="f5" roll="button" on-tap="runAsync" style="margin-right: 0px;" disabled$="[[_runnerDisabled]]" tooltip-text="Execute entity centre and show result, F5">
+                        <paper-spinner id="spinner" active="[[_runnerDisabled]]" class="blue" style="visibility: 'hidden'" alt="in progress">
+                        </paper-spinner>
+                        <span>Run</span>
+                    </paper-button>
                 </tg-selection-view>
             </div>
         </div>
@@ -475,7 +459,7 @@ Polymer({
     },
 
     _getVisibleFocusableElementIn: function (container) {
-        /* FIXME, queryElements */return Array.from(container.querySelectorAll(FOCUSABLE_ELEMENTS_SELECTOR)).filter(element => !element.disabled && element.offsetParent !== null)[0];
+        return queryElements(container, FOCUSABLE_ELEMENTS_SELECTOR).filter(element => !element.disabled && element.offsetParent !== null)[0];
     },
 
     focusSelectedView: function () {

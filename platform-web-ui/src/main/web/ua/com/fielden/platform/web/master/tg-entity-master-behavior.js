@@ -4,7 +4,8 @@ import { tearDownEvent, isInHierarchy, deepestActiveElement, FOCUSABLE_ELEMENTS_
 import { TgEntityBinderBehavior } from '/resources/binding/tg-entity-binder-behavior.js';
 import { createEntityActionThenCallback } from '/resources/master/actions/tg-entity-master-closing-utils.js';
 import { TgElementSelectorBehavior } from '/resources/components/tg-element-selector-behavior.js';
-import {TgRequiredPropertiesFocusTraversalBehavior} from '/resources/components/tg-required-properties-focus-traversal-behavior.js';
+import { TgRequiredPropertiesFocusTraversalBehavior } from '/resources/components/tg-required-properties-focus-traversal-behavior.js';
+import { queryElements } from '/resources/components/tg-element-selector-behavior.js';
 
 const selectEnabledEditor = function (editor) {
     const selectedElement = editor.shadowRoot.querySelector('.custom-input:not([hidden]):not([disabled])');
@@ -701,7 +702,7 @@ const TgEntityMasterBehaviorImpl = {
     },
 
     _getCurrentFocusableElements: function () {
-        return this.getElements(FOCUSABLE_ELEMENTS_SELECTOR).filter(element => !element.disabled && element.offsetParent !== null);
+        return queryElements(this, FOCUSABLE_ELEMENTS_SELECTOR).filter(element => !element.disabled && element.offsetParent !== null);
     },
 
     wasLoaded: function () {

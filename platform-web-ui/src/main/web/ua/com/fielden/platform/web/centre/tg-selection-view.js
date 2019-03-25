@@ -39,6 +39,16 @@ const template = html`
         .toolbar-content ::slotted(*) {
             margin-top: 8px;
         }
+        .button-group {
+            margin-bottom: 20px;
+        }
+        .right-button-group {
+            margin-left: auto;
+        }
+        .selection-criteria-buttons {
+            padding: 20px 20px 0 20px;
+            min-height: fit-content;
+        }
     </style>
     <custom-style>
         <style include="iron-flex iron-flex-reverse iron-flex-alignment iron-flex-factors iron-positioning"></style>
@@ -60,8 +70,14 @@ const template = html`
     <tg-scrollable-component class="relative">
         <slot name="custom-selection-criteria"></slot>
     </tg-scrollable-component>
-    <slot name="selection-criteria-buttons"></slot>
-`;
+    <div class="selection-criteria-buttons layout horizontal justified wrap">
+        <div class="layout horizontal button-group">
+            <slot name="left-selection-criteria-button"></slot>
+        </div>
+        <div class="layout horizontal button-group right-button-group">
+            <slot name="right-selection-criteria-button"></slot>
+        </div>
+    </div>`;
 
 Polymer({
     _template: template,

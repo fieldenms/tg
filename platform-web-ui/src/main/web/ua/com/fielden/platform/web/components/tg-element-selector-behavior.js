@@ -6,26 +6,26 @@ import '/resources/polymer/@polymer/polymer/polymer-legacy.js';
 const SELECTOR_EXTENDER = ', slot, [selectable-elements-container]';
 
 export function queryElements (container, selector) {
-    return [...queryElements0(container, selector)];
-};
-
-function queryElements0 (container, selector) {
     const selectedElements  = container.shadowRoot ? [...container.shadowRoot.querySelectorAll(selector + SELECTOR_EXTENDER)] 
                                                     : [...container.querySelectorAll(selector + SELECTOR_EXTENDER)];
-    return processSelectedElements(selectedElements, selector);
+    return processSelectedElements(selectedElements.filter(element => !isInLightDom(element)), selector);
 };
 
+function isInLightDom (element) {
+    return element && ((element.parentElement && element.parentElement.shadowRoot && element.parentElement.hasAttribute('selectable-elements-container')) || isInLightDom(element.parentElement));
+}
+
 function processSelectedElements (selectedElements, selector) {
-    const extendedSelectedElements = new Set();
+    const extendedSelectedElements = [];
     selectedElements.forEach(element => {
         if (element.matches(selector)) {
-            extendedSelectedElements.add(element);
+            extendedSelectedElements.push(element);
         }
-        if (typeof element.getElements === 'function' && element.hasAttribute('selectable-elements-container')) {
-            element.getElements(selector).forEach(el => extendedSelectedElements.add(el));
-        } else if (element.tagName === 'SLOT') {
-            processSelectedElements(element.assignedNodes(), selector).forEach(el => extendedSelectedElements.add(el));            
-        }
+        if (element.tagName === 'SLOT') {
+            extendedSelectedElements.push(...processSelectedElements(element.assignedNodes(), selector));
+        } else if (element.hasAttribute('selectable-elements-container')) {
+            extendedSelectedElements.push(...queryElements(element, selector));
+        } 
     });
     return extendedSelectedElements;
 }
@@ -34,9 +34,5 @@ export const TgElementSelectorBehavior = {
 
     hostAttributes: {
         'selectable-elements-container': true
-    },
-
-    getElements: function (selector) {
-        return queryElements(this, selector);
     }
 };

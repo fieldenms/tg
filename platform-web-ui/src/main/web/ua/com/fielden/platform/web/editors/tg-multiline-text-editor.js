@@ -47,7 +47,8 @@ const customInputTemplate = html`
             on-keydown="_onKeydown"
             readonly$="[[_disabled]]"
             tooltip-text$="[[_getTooltip(_editingValue)]]"
-            autocomplete="off">
+            autocomplete="off"
+            selectable-elements-container>
         </iron-autogrow-textarea>`;
 const propertyActionTemplate = html`<slot name="property-action"></slot>`;
 
@@ -131,13 +132,6 @@ Polymer({
                 }).bind(this);
             }
         }
-    },
-
-    getElements: function (selector) {
-        if (this.$.input.$.textarea.matches(selector)) {
-            return [this.$.input.$.textarea];
-        }
-        return [];
     },
 
     /**

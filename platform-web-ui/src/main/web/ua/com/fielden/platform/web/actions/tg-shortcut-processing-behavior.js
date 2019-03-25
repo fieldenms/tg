@@ -1,4 +1,5 @@
 import { tearDownEvent, deepestActiveElement } from '/resources/reflection/tg-polymer-utils.js';
+import { queryElements } from '/resources/components/tg-element-selector-behavior.js';
 
 export const TgShortcutProcessingBehavior = {
 
@@ -49,9 +50,7 @@ export const TgShortcutProcessingBehavior = {
     _findVisibleEnabledActionElement: function (elementTag, shortcut) {
         const whereToSearch = this.keyEventTarget || this;
         const searchSelector = elementTag + '[shortcut~="' + shortcut + '"]';
-        const matchingElements = typeof whereToSearch.getElements === 'function' && whereToSearch.hasAttribute('selectable-elements-container')
-            ? whereToSearch.getElements(searchSelector)
-            : [...whereToSearch.querySelectorAll(searchSelector)].concat([...whereToSearch.shadowRoot.querySelectorAll(searchSelector)]); // find all tag-matching elements with concrete 'shortcut'
+        const matchingElements = queryElements(whereToSearch, searchSelector); // find all tag-matching elements with concrete 'shortcut'
         for (let matchingElement of matchingElements) {
             if (matchingElement && matchingElement.offsetParent !== null) { // find visible element (offsetParent should be defined)
                 return (this._isEnabled(matchingElement, elementTag)) ? matchingElement : 'disabled'; // return found element if it is enabled or 'disabled' string if not

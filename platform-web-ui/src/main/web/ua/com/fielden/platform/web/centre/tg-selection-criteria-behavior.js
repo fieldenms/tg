@@ -1,5 +1,6 @@
 import '/resources/polymer/@polymer/polymer/polymer-legacy.js';
 import { TgEntityBinderBehavior } from '/resources/binding/tg-entity-binder-behavior.js';
+import { TgElementSelectorBehavior } from '/resources/components/tg-element-selector-behavior.js';
 
 //Actions those can be applied to entity centre.
 const RunActions = {
@@ -712,5 +713,6 @@ const TgSelectionCriteriaBehaviorImpl = {
 
 export const TgSelectionCriteriaBehavior = [
     TgEntityBinderBehavior,
-    TgSelectionCriteriaBehaviorImpl
+    TgSelectionCriteriaBehaviorImpl,
+    TgElementSelectorBehavior
 ];

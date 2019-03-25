@@ -6,7 +6,7 @@ import { TgFocusRestorationBehavior } from '/resources/actions/tg-focus-restorat
 import '/resources/actions/tg-ui-action.js';
 import { tearDownEvent, isInHierarchy, deepestActiveElement, FOCUSABLE_ELEMENTS_SELECTOR } from '/resources/reflection/tg-polymer-utils.js';
 import { TgReflector } from '/app/tg-reflector.js';
-import { TgElementSelectorBehavior } from '/resources/components/tg-element-selector-behavior.js';
+import { TgElementSelectorBehavior, queryElements } from '/resources/components/tg-element-selector-behavior.js';
 
 const generateCriteriaName = function (root, property, suffix) {
     const rootName = root.substring(0, 1).toLowerCase() + root.substring(1) + "_";
@@ -808,7 +808,7 @@ const TgEntityCentreBehaviorImpl = {
     },
 
     _getCurrentFocusableElements: function () {
-        return this.getElements(FOCUSABLE_ELEMENTS_SELECTOR).filter(element => !element.disabled && element.offsetParent !== null);
+        return queryElements(this, FOCUSABLE_ELEMENTS_SELECTOR).filter(element => !element.disabled && element.offsetParent !== null);
     },
 
     _saveColumnWidth: function (e) {
