@@ -3,17 +3,12 @@ package ua.com.fielden.platform.entity.query.metadata;
 import static java.lang.String.format;
 import static org.apache.commons.lang.StringUtils.isNotEmpty;
 import static ua.com.fielden.platform.entity.AbstractEntity.ID;
-import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
 import static ua.com.fielden.platform.entity.AbstractUnionEntity.unionProperties;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.expr;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 import static ua.com.fielden.platform.reflection.AnnotationReflector.getAnnotation;
-import static ua.com.fielden.platform.reflection.AnnotationReflector.getPropertyAnnotation;
 import static ua.com.fielden.platform.reflection.AnnotationReflector.isContextual;
 import static ua.com.fielden.platform.reflection.Finder.getFieldByName;
-import static ua.com.fielden.platform.reflection.Finder.getKeyMembers;
-import static ua.com.fielden.platform.reflection.Reflector.getKeyMemberSeparator;
-import static ua.com.fielden.platform.utils.EntityUtils.isEntityType;
 import static ua.com.fielden.platform.utils.EntityUtils.isUnionEntityType;
 
 import java.lang.reflect.Field;
@@ -23,13 +18,9 @@ import java.util.List;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.AbstractUnionEntity;
-import ua.com.fielden.platform.entity.DynamicEntityKey;
 import ua.com.fielden.platform.entity.annotation.Calculated;
-import ua.com.fielden.platform.entity.annotation.Optional;
-import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
 import ua.com.fielden.platform.entity.query.exceptions.EqlException;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ICaseWhenFunctionWhen;
-import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IConcatFunctionWith;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IFromAlias;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IStandAloneExprOperationAndClose;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ISubsequentCompletedAndYielded;
@@ -38,8 +29,6 @@ import ua.com.fielden.platform.entity.query.model.ExpressionModel;
 import ua.com.fielden.platform.expression.ExpressionText2ModelConverter;
 
 public class DomainMetadataUtils {
-
-    private static final String EMPTY_STRING = "";
 
     /** Private default constructor to prevent instantiation. */
     private DomainMetadataUtils() {
@@ -60,41 +49,6 @@ public class DomainMetadataUtils {
         return expressionModelInProgress.otherwise().val(null).end().model();
     }
 
-    public static ExpressionModel getVirtualKeyPropForEntityWithCompositeKey(final Class<? extends AbstractEntity<DynamicEntityKey>> entityType) {
-        final String keyMemberSeparator = getKeyMemberSeparator(entityType);
-        final Iterator<Field> kmIter = getKeyMembers(entityType).iterator();
-        final Field firstKeyMember = kmIter.next();
-        
-        if (!kmIter.hasNext()) {
-            return processFirstKeyMember(firstKeyMember.getName(), firstKeyMember.getType(), keyMemberSeparator); 
-        } else {
-            IConcatFunctionWith<IStandAloneExprOperationAndClose, AbstractEntity<?>> concatStart = expr().concat().expr(processFirstKeyMember(firstKeyMember.getName(), firstKeyMember.getType(), keyMemberSeparator));
-            
-            while (kmIter.hasNext()) {
-                final Field nextKeyMember = kmIter.next();
-                concatStart = getPropertyAnnotation(Optional.class, entityType, nextKeyMember.getName()) != null ? 
-                        concatStart.with().expr(processOptionalKeyMember(nextKeyMember.getName(), nextKeyMember.getType(), keyMemberSeparator))
-                        :
-                            concatStart.with().val(keyMemberSeparator).with().expr(getKeyMemberConcatenationPropName(nextKeyMember.getName(), nextKeyMember.getType()));
-            }
-            
-            return concatStart.end().model();
-        }
-    }
-
-    private static ExpressionModel getKeyMemberConcatenationPropName(final String keyMemberName, final Class<?> keyMemberType) {
-        return expr().prop(PropertyDescriptor.class != keyMemberType && isEntityType(keyMemberType) ? keyMemberName + "." + KEY : keyMemberName).model();
-    }
-
-    private static ExpressionModel processFirstKeyMember(final String keyMemberName, final Class<?> keyMemberType, final String separator) {
-        return Integer.class.equals(keyMemberType) ? expr().concat().prop(keyMemberName).with().val(EMPTY_STRING).end().model() 
-                : getKeyMemberConcatenationPropName(keyMemberName, keyMemberType);
-    }
-    
-    private static ExpressionModel processOptionalKeyMember(final String keyMemberName, final Class<?> keyMemberType, final String separator) {
-        return expr().caseWhen().prop(keyMemberName).isNotNull().then().concat().val(separator).with().expr(getKeyMemberConcatenationPropName(keyMemberName, keyMemberType)).end().otherwise().val(EMPTY_STRING).end()/*.endAsStr(256)*/.model();
-    }
-    
     public static ExpressionModel extractExpressionModelFromCalculatedProperty(final Class<? extends AbstractEntity<?>> entityType, final Field calculatedPropfield) throws Exception {
         final Calculated calcAnnotation = getAnnotation(calculatedPropfield, Calculated.class);
         if (isNotEmpty(calcAnnotation.value())) {
