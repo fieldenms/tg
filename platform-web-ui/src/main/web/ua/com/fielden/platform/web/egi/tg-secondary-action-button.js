@@ -85,11 +85,11 @@ Polymer({
     
     _showDropdown: function (e, detail) {
         this.persistActiveElement();
-        this.$.dropdown.open();
+        this.shadowRoot.querySelector("#dropdown").open();
     },
 
     _closeDropdown: function (e, detail) {
-        this.$.dropdown.close();
+        this.shadowRoot.querySelector("#dropdown").close();
     },
 
     _dropdownOpened: function () {
