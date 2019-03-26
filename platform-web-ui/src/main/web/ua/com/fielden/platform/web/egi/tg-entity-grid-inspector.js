@@ -94,6 +94,16 @@ const template = html`
             min-width: fit-content;
             @apply --layout-horizontal;
         }
+        .table-footer-row {
+            font-size: 0.9rem;
+            color: #757575;
+            height: var(--egi-row-height, 1.5rem);
+            border-top: 1px solid #e3e3e3;
+            -webkit-font-smoothing: antialiased;
+            text-rendering: optimizeLegibility;
+            min-width: fit-content;
+            @apply --layout-horizontal;
+        }
         .table-data-row:hover {
             background-color: #EEEEEE;
         }
@@ -217,14 +227,14 @@ const template = html`
         <div id="baseContainer">
             <!-- Table header -->
             <div class="table-header-row">
-                <div class="drag-anchor" hidden$="[[!canDragFrom]]" style$="[[_calcDragBoxStyle(dragAnchorFixed, headerFixed)]]"></div>
-                <div class="table-cell" style$="[[_calcSelectCheckBoxStyle(canDragFrom, checkboxesFixed, headerFixed)]]" hidden$="[[!checkboxVisible]]" tooltip-text$="[[_selectAllTooltip(selectedAll)]]">
+                <div class="drag-anchor" hidden$="[[!canDragFrom]]" style$="[[_calcDragBoxStyle(dragAnchorFixed, headerFixed, 'true')]]"></div>
+                <div class="table-cell" style$="[[_calcSelectCheckBoxStyle(canDragFrom, checkboxesFixed, headerFixed, 'true')]]" hidden$="[[!checkboxVisible]]" tooltip-text$="[[_selectAllTooltip(selectedAll)]]">
                     <paper-checkbox class="all-checkbox blue header" checked="[[selectedAll]]" on-change="_allSelectionChanged"></paper-checkbox>
                 </div>
-                <div class="action-cell" hidden$="[[!primaryAction]]" style$="[[_calcPrimaryActionStyle(canDragFrom, checkboxVisible, checkboxesWithPrimaryActionsFixed, headerFixed)]]">
+                <div class="action-cell" hidden$="[[!primaryAction]]" style$="[[_calcPrimaryActionStyle(canDragFrom, checkboxVisible, checkboxesWithPrimaryActionsFixed, headerFixed, 'true')]]">
                     <!--Primary action stub header goes here-->
                 </div>
-                <div class="fixed-columns-container" hidden$="[[!numOfFixedCols]]" style$="[[_calcFixedColumnContainerStyle(canDragFrom, checkboxVisible, primaryAction, numOfFixedCols, headerFixed)]]">
+                <div class="fixed-columns-container" hidden$="[[!numOfFixedCols]]" style$="[[_calcFixedColumnContainerStyle(canDragFrom, checkboxVisible, primaryAction, numOfFixedCols, headerFixed, 'true')]]">
                     <template is="dom-repeat" items="[[fixedColumns]]">
                         <div class="table-cell" style$="[[_calcColumnHeaderStyle(item, item.width, item.growFactor, 'true')]]" on-down="_makeEgiUnselectable" on-up="_makeEgiSelectable" on-track="_changeColumnSize" tooltip-text$="[[item.columnDesc]]" is-resizing$="[[_columnResizingObject]]" is-mobile$="[[mobile]]">
                             <div class="truncate" style="width:100%">[[item.columnTitle]]</div>
@@ -238,7 +248,7 @@ const template = html`
                         <div class="resizing-box"></div>
                     </div>
                 </template>
-                <div class="action-cell" hidden$="[[!_isSecondaryActionsPresent(secondaryActions)]]" style$="[[_calcSecondaryActionStyle(secondaryActionsFixed, headerFixed)]]">
+                <div class="action-cell" hidden$="[[!_isSecondaryActionsPresent(secondaryActions)]]" style$="[[_calcSecondaryActionStyle(secondaryActionsFixed, headerFixed, 'true')]]">
                     <!--Secondary actions header goes here-->
                 </div>
             </div>
@@ -265,6 +275,26 @@ const template = html`
                     <div class="action-cell" hidden$="[[!_isSecondaryActionsPresent(secondaryActions)]]" style$="[[_calcSecondaryActionStyle(secondaryActionsFixed)]]">
                         <tg-secondary-action-button class="action" current-entity="[[egiEntity.entity]]" actions="[[secondaryActions]]"></tg-secondary-action-button>
                     </div>
+                </div>
+            </template>
+            <!-- Table footer -->
+            <template is="dom-repeat" items="[[_totalsRows]]" as="summaryRow" index-as="summaryIndex">
+                <div class="table-footer-row">
+                    <div class="drag-anchor" hidden$="[[!canDragFrom]]" style$="[[_calcDragBoxStyle(dragAnchorFixed, summaryFixed)]]"></div>
+                    <div class="table-cell" style$="[[_calcSelectCheckBoxStyle(canDragFrom, checkboxesFixed, summaryFixed)]]" hidden$="[[!checkboxVisible]]" tooltip-text$="[[_selectAllTooltip(selectedAll)]]">
+                        <!--Footer's select checkbox stub goes here-->
+                    </div>
+                    <div class="action-cell" hidden$="[[!primaryAction]]" style$="[[_calcPrimaryActionStyle(canDragFrom, checkboxVisible, checkboxesWithPrimaryActionsFixed, summaryFixed)]]">
+                        <!--Footer's primary action stub goes here-->
+                    </div>
+                    <div class="fixed-columns-container" hidden$="[[!numOfFixedCols]]" style$="[[_calcFixedColumnContainerStyle(canDragFrom, checkboxVisible, primaryAction, numOfFixedCols, summaryFixed)]]">
+                        <template is="dom-repeat" items="[[summaryRow.0]]" as="column">
+                            <tg-egi-cell column="[[column]]" entity="[[egiTotalsEntity.entity]]" style$="[[_calcColumnStyle(column, column.width, column.growFactor, 'true')]]" tooltip-text$="[[_getTotalTooltip(column)]]"></tg-egi-cell>
+                        </template>
+                    </div>
+                    <template is="dom-repeat" items="[[summaryRow.0]]" as="column">
+                        <tg-egi-cell column="[[column]]" entity="[[egiTotalsEntity.entity]]" style$="[[_calcColumnStyle(column, column.width, column.growFactor, 'false')]]" tooltip-text$="[[_getTotalTooltip(column)]]"></tg-egi-cell>
+                    </template>
                 </div>
             </template>
         </div>
@@ -307,10 +337,12 @@ Polymer({
             type: Object,
             value: null
         },
-        totals: Object,
+        totals: {
+            type: Object,
+            observer: "_totalsChanged"
+        },
         columns: {
-            type: Array,
-            observer: "_columnsChanged"
+            type: Array
         },
         allColumns: Array,
         fixedColumns: Array,
@@ -473,6 +505,8 @@ Polymer({
     },
 
     behaviors: [TgEgiDataRetrievalBehavior, TgTooltipBehavior, IronResizableBehavior, IronA11yKeysBehavior, TgShortcutProcessingBehavior, TgDragFromBehavior],
+
+    observers: ["_columnsChanged(columns, fixedColumns)"],
 
     created: function () {
         this._serialiser = new TgSerialiser();
@@ -764,38 +798,38 @@ Polymer({
 
     //Style calculator
 
-    _calcDragBoxStyle: function (dragAnchorFixed, headerFixed) {
-        let style = dragAnchorFixed || headerFixed ? "postion: sticky;" : "";
+    _calcDragBoxStyle: function (dragAnchorFixed, rowFixed, topRow) {
+        let style = dragAnchorFixed || rowFixed ? "postion: sticky;" : "";
 
         if (dragAnchorFixed) {
             style += "left: 0;";
         }
-        if (headerFixed) {
-            style += "top: 0;"
+        if (rowFixed) {
+            style += topRow ? "top: 0;" : "bottom: 0;"
         }
         return style;
     },
 
-    _calcSelectCheckBoxStyle: function (canDragFrom, checkboxesFixed, headerFixed) {
-        let style = checkboxesFixed || headerFixed ? "postion: sticky;" : "";
+    _calcSelectCheckBoxStyle: function (canDragFrom, checkboxesFixed, rowFixed, topRow) {
+        let style = checkboxesFixed || rowFixed ? "postion: sticky;" : "";
         if (checkboxesFixed) {
             style += "left: " + (canDragFrom ? "1.5rem" : "0") + ";"; 
         }
-        if (headerFixed) {
-            style += "top: 0";
+        if (rowFixed) {
+            style += topRow ? "top: 0;" : "bottom: 0;"
         }
         return style + "width:18px; padding-left:" + (canDragFrom ? "0;" : "0.6rem;");
     },
 
-    _calcPrimaryActionStyle: function (canDragFrom, checkboxVisible, checkboxesWithPrimaryActionsFixed, headerFixed) {
-        let style = checkboxesWithPrimaryActionsFixed || headerFixed ? "postion: sticky;" : "";
+    _calcPrimaryActionStyle: function (canDragFrom, checkboxVisible, checkboxesWithPrimaryActionsFixed, rowFixed, topRow) {
+        let style = checkboxesWithPrimaryActionsFixed || rowFixed ? "postion: sticky;" : "";
         if (checkboxesWithPrimaryActionsFixed) {
             let calcStyle = "calc(" + (canDragFrom ? "1.5rem" : "0");
             calcStyle += (checkboxVisible ? " + 18px" : " + 0") + ")";
             style += "left: " + calcStyle + ";"; 
         }
-        if (headerFixed) {
-            style += "top: 0";
+        if (rowFixed) {
+            style += topRow ? "top: 0;" : "bottom: 0;"
         }
         return style;
     },
@@ -855,8 +889,45 @@ Polymer({
         return secondaryActions && secondaryActions.length > 0;
     },
 
-    _rowHeightChanged: function (newValue, oldValue) {
+    _rowHeightChanged: function (newValue) {
         this.updateStyles({"--egi-row-height": newValue});
+    },
+
+    _totalsChanged: function (newTotals) {
+        if (newTotals) {
+            this.egiTotalsEntity = {entity: newTotals};
+        }
+    },
+
+    _columnsChanged: function (columns, fixedColumns) {
+        const mergedColumns = fixedColumns.concat(columns);
+        let summaryRowsCount = 0;
+        mergedColumns.forEach(function (item) {
+            if (item.summary && item.summary.length > summaryRowsCount) {
+                summaryRowsCount = item.summary.length;
+            }
+        });
+        //Initialising totals.
+        const gridSummary = [];
+        if (summaryRowsCount > 0) {
+            for (let summaryRowCounter = 0; summaryRowCounter < summaryRowsCount; summaryRowCounter += 1) {
+                const totalsRow = [];
+                mergedColumns.forEach(function (item) {
+                    if (item.summary && item.summary[summaryRowCounter]) {
+                        const totalColumn = item.summary[summaryRowCounter]
+                        totalColumn.width = item.width;
+                        totalColumn.growFactor = item.growFactor;
+                        totalsRow.push(item.summary[summaryRowCounter]);
+                    } else {
+                        totalsRow.push(null);
+                    }
+                });
+                gridSummary.push([totalsRow.splice(0, this.numOfFixedCols), totalsRow]);
+            }
+        }
+        //Set the _totalsRowCount property so that calculation of the scroll container height would be triggered.
+        this._totalsRowCount = summaryRowsCount;
+        this._totalsRows = gridSummary;
     },
 
     //Tooltip related functions.
@@ -947,6 +1018,12 @@ Polymer({
             "<div style='margin-right:10px;'>With action: </div>" +
             "<div style='flex-grow:1;'>" + tooltip + "</div>" +
             "</div>"
+    },
+
+    _getTotalTooltip: function (summary) {
+        let tooltip = summary.columnTitle ? "<b>" + summary.columnTitle + "</b>" : "";
+        tooltip += summary.columnDesc ? (tooltip ? "<br>" + summary.columnDesc : summary.columnDesc) : "";
+        return tooltip;
     },
 
     //Utility methods
