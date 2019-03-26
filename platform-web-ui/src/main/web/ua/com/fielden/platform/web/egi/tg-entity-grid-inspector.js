@@ -38,6 +38,7 @@ const template = html`
             background-color: white;
             border-radius: 2px;
             @apply --layout-vertical;
+            @apply --layout-relative;
         }
         .grid-toolbar {
             position: relative;
@@ -183,6 +184,16 @@ const template = html`
             --tg-secondary-action-spinner-padding: 0px;
             --tg-secondary-action-spinner-margin-left: 0;
         }
+        /*miscellanea styles*/
+        .lock-layer {
+            opacity: 0.5;
+            display: none;
+            background-color: white;
+            @apply --layout-fit;
+        }
+        .lock-layer[lock] {
+            display: initial;
+        }
     </style>
     <custom-style>
         <style include="iron-flex iron-flex-reverse iron-flex-alignment iron-flex-factors iron-positioning paper-material-styles"></style>
@@ -257,6 +268,8 @@ const template = html`
                 </div>
             </template>
         </div>
+        <!-- table lock layer -->
+        <div class="lock-layer" lock$="[[lock]]"></div>
     </div>`;
 
 function removeColumn (column, fromColumns) {
