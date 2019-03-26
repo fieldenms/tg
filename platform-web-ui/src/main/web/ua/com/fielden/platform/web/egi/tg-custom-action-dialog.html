@@ -250,10 +250,40 @@
                 },
                 
                 ///////The properties needed for synchronising animation steps during master changes.///
+                //This property might have three states: true, false and undefined.
+                //True - means that master visibility changes (i.e. blocking layer is becoming visible and master container is becoming invisible or vice versa).
+                //       This value is applied to this property only in two methods: _showBlockingPane and _hideBlockingPane.
+                //False - means that blocking layer has become visible and master container has become invisible.
+                //        This value is applied only in _handleBodyTransitionEnd method, only when master container is invisisble.
+                //Undefined - means that blocking layer has become invisible and master container has become visible. This indicates also that all animations have finished.
+                //            This value is applied in _handleBodyTransitionEnd method when master container is visible and in _resetState method to ensure that all animation is finished 
+                //            in case when master was closed during animation process.
+                //This property is checked in three methods: _updateDialogDimensions, _updateDialogAnimation and _handleMasterBeforeChange.
+                //_updateDialogDimensions - this method checks the value of this property to find out whether master dimensions can be changed or not. Please note that if this property
+                //                          is true then master dimensions in this method can not be changed. Dimensions will be changed later in _updateDialogAnimation method.
+                //_updateDialogAnimation - this method checks this property to find out when to play dialog resize animation. Dialog is being resized smoothly when blocking layer is visible
+                //                          and master container is invisible also _masterLayoutChanges is false.
+                //_handleMasterBeforeChange - This method is invoked only when master is about to change it's type, therefore blocking layer might changing it's visibility or already changed it
+                //                              as this process is asynchronous in relation to tg-master-type-before-change event. The code that checks this property optimises animation when dialog
+                //                              resizing is required.
                 _masterVisibilityChanges: {
                     type: Boolean
                 },
                 
+                //This property also has three states: true, false and undefined.
+                //True - means that master is about to change it's layout when master type is changing. This value is applied only in _handleMasterBeforeChange method.
+                //False - means that master has changed it's type and can be resized smoothly using the CSS transitioning functionality, which is invoked in _updateDialogAnimation method.
+                //        This value is applied only in _handleMasterChanged method.
+                //Undefined - means that dialog has changed it's size and blocking layer has become invisible. This indicates also that all animations have finished.
+                //            This value is applied in _handleBodyTransitionEnd method when master container is visible and in _resetAnimationBlockingSpinnerState method to ensure 
+                //            that all animation is finished in case when master was closed during animation process or error happend when navigating to another entity. 
+                //This property is checked in three methods: _updateDialogDimensions, _updateDialogAnimation and _handleBodyTransitionEnd.
+                //_updateDialogDimensions - this method checks the value of this property to find out whether master dimensions can be changed or not. Please note that if this property
+                //                          is true then master dimensions in this method can not be changed. Dimensions will be changed later in _updateDialogAnimation method.
+                //_updateDialogAnimation - this method checks this property to find out when to play dialog resize animation. Dialog is being resized smoothly when blocking layer is visible
+                //                          and master container is invisible also this property value should be false.
+                //_handleBodyTransitionEnd - This method is invoked only when blocking layer changes it's visibility, This method checks the value of this property in order to optimise animation
+                //                           when dialog resizing is required.
                 _masterLayoutChanges: {
                     type: Boolean
                 },
@@ -763,7 +793,7 @@
             },
             
             /**
-             * Updates dimensions and position of the dialog based on minimised / maximised state and prefDim appearance.
+             * Updates dimensions and position of the dialog based on minimised / maximised state and prefDim appearance. This method changes the dialog's dimension and position only when dialog is not animating anything.
              */
             _updateDialogDimensions: function(prefDim, minimised, maximised) {
                 if (!this._masterVisibilityChanges && !this._masterLayoutChanges) {
@@ -916,12 +946,14 @@
                         customAction.restoreActionState();
                     }
                 } else {
-                    var self = this;
+                    const self = this;
                     if (self.isRunning === false) {
                         self._lastAction = this._customiseAction(customAction);
                         self._setIsRunning(true);
                         self.staticTitle = customAction.shortDesc;
                         self.dynamicTitle = null;
+                        //Should also reset _dataLoaded because master's entity also changes as in case of entity navigation action.
+                        self._dataLoaded = false;
 
                         self._getElement(customAction)
                             .then(function(element) {
@@ -980,16 +1012,21 @@
                 return newAction;
             },
             
+            // This method handles data-loaded-and-focused event. This event can be fired when dialog is opening or navigating to another entity and resets the spinner state and hides blocking layer.
             _handleDataLoaded: function () {
                 this._dataLoaded = true;
                 this._resetSpinner();
                 this._hideBlockingPane();
             },
             
+            // This method handles error-happened event which can be fired during navigation from one entity to another. It updtes error message when blocking layer is visible (i.e. before data was loaded).
+            // It resets blocking layer counter and spinner state in order to ensure that animation was reset.
             _handleError: function (e) {
+                //This condition allows to handle only errors happened when blocking layer was visible.
                 if (this._blockingPaneCounter > 0) {
+                    this._resetAnimationBlockingSpinnerState();
+                    this._masterVisibilityChanges = false;
                     this._errorMsg = e.detail;
-                    this._resetSpinner();
                 }
             },
                 
@@ -997,6 +1034,7 @@
                 return _errorMsg || "Loading data...";
             },
             
+            // Is invoked when button navigation state was changed due to entity centre refresh action or master was navigated to another entity.
             _handleActionNavigationChange: function (e) {
                 this._setNavigationDetails(e.detail);
                 if (e.detail.shouldResetSpinner) {
@@ -1004,17 +1042,18 @@
                 }
             },
             
+            // Inoked by navigation buttons it turns on spinner on navigation button and makes blocking layer visible. Also it resets error message if it is present due to previous navigation action.
             _handleActionNavigationInvoked: function (e) {
+                //Reset dataLoaded property to ensure that blocking layer will work correctly and appropriate event handlers will be invoked.
                 this._dataLoaded = false;
-                if (this._errorMsg) {
-                    this._resetState();
-                }
+                this._errorMsg = null;
                 if (e.detail && e.detail.spinner) {
                     this._displaySpinnerOn(this.$[e.detail.spinner]);
                 }
                 this._showBlockingPane();
             },
             
+            //Resets the spinner state. can be invoked when data was loaded or some error happened during navigation action execution.
             _resetSpinner: function () {
                 if (this.isNavigationActionInProgress) {
                     this.isNavigationActionInProgress = false;
@@ -1022,6 +1061,7 @@
                 }
             },
             
+            //Set the navigation properties to properly manage next, prev and other navigation actions. Also updates text in navigation bar to depicts the currently loaded entity and number of available entities.
             _setNavigationDetails: function (obj) {
                 if (obj.supportsNavigation) {
                     this._hasPrev = obj.hasPrev;
@@ -1030,26 +1070,32 @@
                 }
             },
             
+            //Resizes dialog smoothly when blcking layer is visible and finished it's animation also master was changed and it's preferred dimension was defined.
             _updateDialogAnimation: function (_masterVisibilityChanges, _masterLayoutChanges) {
                 if (!_masterVisibilityChanges && !_masterLayoutChanges) {
+                    //Animate dialog dimensons if it wasn't resized.
                     if (!this._wasResized) {
                         this._updateDialogDimensions(this.prefDim, this._minimised, this._maximised);
                     }
+                    //Animate dialog position if it wasn't moved.
                     if (!this._wasMoved) {
                         this._updateDialogPosition(this.prefDim, this._minimised, this._maximised);
                     }
+                    //Indicates that dialog is resized and moved after the resizing animation will be finished.
                     this.async(this._dialogResized, 500);
                 }
             },
             
+            //Removes animation properties and hides blocking pane. (Please note that blocking layer was shown twice if master changed it's type that's why _hideBlockingLayer invokaction is needed here)
             _dialogResized: function () {
                 this.style.removeProperty("transition-property");
                 this.style.removeProperty("transition-duration");
                 this._hideBlockingPane();
             },
             
+            //Updates dialog position for potentialy new loaded master.
             _updateDialogPosition: function (prefDim, _minimised, _maximised) {
-                if (!_minimised && !_maximised ) {
+                if (!_minimised && !_maximised && prefDim) {
                     const width = (typeof prefDim.width === 'function' ? prefDim.width() : prefDim.width) + prefDim.widthUnit;
                     const isWidthPercentage = width.endsWith('%');
                     const widthNum = parseFloat(width);
@@ -1071,34 +1117,44 @@
                 }
             },
             
+            //Invoked when master is about to change it's type.
             _handleMasterBeforeChange: function () {
                 if (this.opened) {
                     //First animate the blocking pane.
                     this._showBlockingPane();
-                    //Then set dimension properties as transitional for dialog for futher animation.
+                    //Indicate that master is about to change it's type
                     this._masterLayoutChanges = true;
+                    //This is an optimisational hook and should be applied only after blocking layer becomes visible.
+                    //This optimisation hook makes master content invisible by setting it's display property to 'none'. This prevents browser from recalculating master's layout and dimensions.
                     if (!this._masterVisibilityChanges) {
                         this.$.elementLoader.style.display = "none";
                     }
+                    //Then set dimension properties as transitional for dialog for futher animation.
                     this.style.transitionProperty = "top, left, width, height";
                     this.style.transitionDuration = "500ms";
                 }
             },
             
+            //Invoked when master has changed it's type, then _masterLayoutChanges property becomes false that should trigger resizing animation if blocking layer has finished animating.
             _handleMasterChanged: function (e) {
                 if (this.opened) {
                     this._masterLayoutChanges = false;
                 }
             },
             
+            //Invoked only when blocking layer has finished it's animation.
             _handleBodyTransitionEnd: function (e) {
                 if (e.target === this.$.dialogLoader) {
+                    //The next condition checks whether blocking layer is visible then
                     if (Polymer.dom(this.$.dialogLoader).classList.contains("hidden")) {
+                        //Provide animation hook if also master type should be changed.
                         if (this._masterLayoutChanges) {
                             this.$.elementLoader.style.display = "none";
                         }
+                        //Indicate that blocking layer has changed it's visibility and has become visible.
                         this._masterVisibilityChanges = false;
                     } else {
+                        //The following instruction will take place after the last _hideBlockingLayer invocation causes blocking layer to become invisible.
                         this._masterVisibilityChanges = undefined;
                         this._masterLayoutChanges = undefined;
                         this.notifyResize();
@@ -1177,9 +1233,11 @@
                 this._showBlockingPane();
             },
             
+            //Makes blocking pane visible via the animation. If the blocking pane is already visible then just increase _blockingPaneCounter.
             _showBlockingPane: function () {
                 if (!this._dataLoaded) {
                     if (this._blockingPaneCounter === 0 && !Polymer.dom(this.$.loadingPanel).classList.contains("visible")) {
+                        //Indicate that blocking pane is changing it's visibility from invisible to visible.
                         this._masterVisibilityChanges = true;
                         Polymer.dom(this.$.loadingPanel).classList.add("visible");
                         Polymer.dom(this.$.dialogLoader).classList.add("hidden");
@@ -1188,14 +1246,17 @@
                 }
             },
             
+            //Makes blocking pane invisible via the animation. If the blocking pane is already invisible then just decrease _blockingPaneCounter.
             _hideBlockingPane: function () {
                 if (this._blockingPaneCounter > 0) {
                     this._blockingPaneCounter--;
                 }
                 if (this._blockingPaneCounter === 0 && Polymer.dom(this.$.loadingPanel).classList.contains("visible")) {
+                    //Indicate that blocking pane is changing it's visibility from visible to invisible.
                     this._masterVisibilityChanges = true;
                     Polymer.dom(this.$.loadingPanel).classList.remove("visible");
                     Polymer.dom(this.$.dialogLoader).classList.remove("hidden");
+                    //Removes the optimisation hook if master size or position was changed.
                     this.$.elementLoader.style.removeProperty("display");
                 }
             },
@@ -1274,7 +1335,7 @@
                     for (var index = 0; index < this._subscriptions.length; index++) {
                         postal.unsubscribe(this._subscriptions[index]);
                     }
-                    this._resetState(true);
+                    this._resetState();
                     this._subscriptions.length = 0;
                     this._wasMoved = false;
                     this._wasResized = false;
@@ -1294,19 +1355,26 @@
                 }
             },
             
-            _resetState: function (withClasses) {
+            //Resets the dialogs state when it gets closed.
+            _resetState: function () {
                 this._dataLoaded = false;
                 this._hasNext = false;
                 this._hasPrev = false;
                 this._errorMsg = null;
-                this._blockingPaneCounter = 0;
                 this._masterVisibilityChanges = undefined;
+                this._resetAnimationBlockingSpinnerState();
+                Polymer.dom(this.$.loadingPanel).classList.remove("visible");
+                Polymer.dom(this.$.dialogLoader).classList.remove("hidden");
+            },
+
+            //Resets the state of spinner on navigation action, blocking pane counter and removes potentialy setted animation properties.
+            //This method is invoked when error happened during navigation action execution or after dialog closed (Dialog closed might happen during animation process!).
+            _resetAnimationBlockingSpinnerState: function () {
+                this._blockingPaneCounter = 0;
                 this._masterLayoutChanges = undefined;
                 this.$.elementLoader.style.removeProperty("display");
-                if (withClasses) {
-                    Polymer.dom(this.$.loadingPanel).classList.remove("visible");
-                    Polymer.dom(this.$.dialogLoader).classList.remove("hdden");
-                }
+                this.style.removeProperty("transition-property");
+                this.style.removeProperty("transition-duration");
                 this._resetSpinner();
             },
 

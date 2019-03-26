@@ -23,7 +23,6 @@ import org.junit.Test;
 
 import ua.com.fielden.platform.entity.DynamicEntityKey;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
-import ua.com.fielden.platform.entity.validation.custom.DefaultEntityValidator;
 import ua.com.fielden.platform.pagination.IPage;
 import ua.com.fielden.platform.persistence.composite.EntityWithDynamicCompositeKey;
 import ua.com.fielden.platform.persistence.types.EntityWithMoney;
@@ -425,42 +424,75 @@ public class CommonEntityDaoTest extends AbstractDaoTestCase {
     }
 
     @Test
-    public void test_entity_property_dirty_support() {
+    public void persisted_unmodified_entities_are_not_dirty() {
         final EntityWithMoneyDao dao = co$(EntityWithMoney.class);
-
-        EntityWithMoney entity = dao.findByKey("key1");
+        final EntityWithMoney entity = dao.findByKey("key1");
+        assertFalse("Entity should not be dirty after retrieval", entity.isDirty());
         assertEquals("There should be no dirty properties after entity retrieval.", 0, entity.getDirtyProperties().size());
-        final String originalDesc = entity.getDesc();
+    }
+
+    @Test
+    public void persisted_entity_that_has_been_modified_becomes_dirty() {
+        final EntityWithMoneyDao dao = co$(EntityWithMoney.class);
+        final EntityWithMoney entity = dao.findByKey("key1");
         entity.setDesc("modified desc");
         assertTrue("Entity should be dirty after property modification", entity.isDirty());
         assertTrue("Property should be dirty after modification", entity.getProperty("desc").isDirty());
+        assertEquals(1, entity.getDirtyProperties().size());
+    }
 
-        entity.setDesc(originalDesc);
+    @Test
+    public void persisted_entity_that_has_been_modified_and_then_assigned_original_values_to_modified_properties_remains_not_dirty() {
+        final EntityWithMoneyDao dao = co$(EntityWithMoney.class);
+        final EntityWithMoney entity = dao.findByKey("key1");
+        final String originalDesc = entity.getDesc();
+        entity.setDesc("modified desc"); // modify
+        assertTrue("Entity should be dirty after property modification", entity.isDirty());
+        assertTrue("Property should be dirty after modification", entity.getProperty("desc").isDirty());
+        entity.setDesc(originalDesc); // unmodify
         assertFalse("Property should be not dirty after modification back to original value", entity.getProperty("desc").isDirty());
         assertFalse("Entity should not stay dirty when all properties are not dirty", entity.isDirty());
+    }
 
-        dao.save(entity);
-        entity = dao.findByKey("key1");
-        assertFalse("Entity should not be dirty after save", entity.isDirty());
-        assertEquals("There should be no dirty properties after entity retrieval.", 0, entity.getDirtyProperties().size());
-
-        entity.setDesc("modified desc");
-        assertTrue("Entity should be dirty after property modification after resetting the state", entity.isDirty());
-        assertTrue("Property should be dirty after modification", entity.getProperty("desc").isDirty());
-
-        EntityWithMoney newEntity = new_(EntityWithMoney.class, "some key");
+    @Test
+    public void non_persisted_entity_is_dirty_with_all_its_properties_dirty() {
+        final EntityWithMoney newEntity = new_(EntityWithMoney.class, "some key");
         assertTrue("New entity should be dirty", newEntity.isDirty());
-        assertEquals("All properties should be dirty after entity creation.", 6, newEntity.getDirtyProperties().size());
+        assertEquals("All properties should be dirty after entity creation.", 7, newEntity.getDirtyProperties().size());
+    }
 
-        final Date originalDate = newEntity.getDateTimeProperty();
-        newEntity.setDateTimeProperty(new Date());
+    @Test
+    public void resetting_state_for_properties_of_non_persisted_entities_does_not_affect_their_dirty_state() {
+        final EntityWithMoney newEntity = new_(EntityWithMoney.class, "some key");
+        assertNull(newEntity.getProperty("dateTimeProperty").getOriginalValue());
+        newEntity.setDateTimeProperty(new Date());// modify...
+        assertNotNull(newEntity.getDateTimeProperty());
+        newEntity.getProperty("dateTimeProperty").resetState(); // and reset
+        assertTrue(newEntity.getProperty("dateTimeProperty").isDirty());
+        assertNotNull(newEntity.getProperty("dateTimeProperty").getOriginalValue());
+        assertEquals(newEntity.getDateTimeProperty(), newEntity.getProperty("dateTimeProperty").getOriginalValue());
+    }
+
+    @Test
+    public void modifying_and_then_revering_value_for_properties_of_non_persisted_entities_does_not_affect_their_dirty_state() {
+        final EntityWithMoney newEntity = new_(EntityWithMoney.class, "some key");
+        final Date dateTime = new Date();
+        newEntity.setDateTimeProperty(dateTime);// modify...
+        newEntity.getProperty("dateTimeProperty").resetState(); // and reset to assign orig value
+        newEntity.setDateTimeProperty(new Date());// modify again
+        newEntity.setDateTimeProperty(dateTime);// unmodify
         assertTrue("Property should be dirty after modification", newEntity.getProperty("dateTimeProperty").isDirty());
+    }
 
-        newEntity.setDateTimeProperty(originalDate);
-        assertTrue("Property should remain dirty after modification to original value on a non persisted entity", newEntity.getProperty("dateTimeProperty").isDirty());
+    @Test
+    public void new_entities_become_not_dirty_once_saved() {
+        final EntityWithMoneyDao dao = co$(EntityWithMoney.class);
 
-        newEntity = dao.save(newEntity);
-        assertFalse("New entity should not be dirty after save", newEntity.isDirty());
+        final EntityWithMoney newEntity = new_(EntityWithMoney.class, "some key")
+                                          .setDateTimeProperty(new Date());
+        final EntityWithMoney savedEntity = dao.save(newEntity);
+        assertFalse("New entity should not be dirty after save", savedEntity.isDirty());
+        assertTrue("But the original new entiti instance remains dirty...", newEntity.isDirty());
     }
 
     @Test

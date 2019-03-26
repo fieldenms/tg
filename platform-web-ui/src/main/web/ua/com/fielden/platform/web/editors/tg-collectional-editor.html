@@ -173,7 +173,7 @@
             _on-change="[[_onChange]]"
             _on-input="[[_onInput]]"
             _on-keydown="[[_onKeydown]]">
-            <input id="searchInput" is="iron-input" placeholder="Type to search..." bind-value="{{_phraseForSearching}}" class="custom-input" on-input="_onInput" on-tap="_onTap" on-mousedown="_onTap" on-blur="_eventHandler" prevent-invalid-input>
+            <input id="searchInput" is="iron-input" autocomplete="off" placeholder="Type to search..." bind-value="{{_phraseForSearching}}" class="custom-input" on-input="_onInput" on-tap="_onTap" on-mousedown="_onTap" on-blur="_eventHandler" prevent-invalid-input>
             <div class="custom-input layout vertical flex relative">
                 <iron-list id="input" class="collectional-input fit" items="[[_entities]]" selected-items="{{_selectedEntities}}" selected-item="{{_selectedEntity}}" selection-enabled="[[_isSelectionEnabled(_forReview)]]" multi-selection>
                     <template>
