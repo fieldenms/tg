@@ -48,7 +48,7 @@ const template = html`
     <template is="dom-if" if="[[!_isOnlyOneActions(actions)]]">
         <paper-icon-button id="dropDownButton" icon="more-vert" on-tap="_showDropdown" tooltip-text="Opens list of available actions"></paper-icon-button>
         <iron-dropdown id="dropdown" style="color:black" on-tap="_closeDropdown" on-iron-overlay-opened="_dropdownOpened" on-iron-overlay-closed="_dropdownClosed">
-            <div class="dropdown-content">
+            <div slot="dropdown-content" class="dropdown-content">
                 <div class="button-container">
                     <template is="dom-repeat" items="[[actions]]" as="action">
                         <tg-ui-action show-dialog="[[action.showDialog]]" current-entity="[[currentEntity]]" short-desc="[[action.shortDesc]]" long-desc="[[action.longDesc]]" icon="[[action.icon]]" component-uri="[[action.componentUri]]" element-name="[[action.elementName]]" element-alias="[[action.elementAlias]]" action-kind="[[action.actionKind]]" number-of-action="[[action.numberOfAction]]" attrs="[[action.attrs]]" create-context-holder="[[action.createContextHolder]]" require-selection-criteria="[[action.requireSelectionCriteria]]" require-selected-entities="[[action.requireSelectedEntities]]" require-master-entity="[[action.requireMasterEntity]]" pre-action="[[action.preAction]]" post-action-success="[[action.postActionSuccess]]" post-action-error="[[action.postActionError]]" should-refresh-parent-centre-after-save="[[action.shouldRefreshParentCentreAfterSave]]" ui-role="[[action.uiRole]]"  icon-style="[[action.iconStyle]]"></tg-ui-action>
@@ -85,11 +85,11 @@ Polymer({
     
     _showDropdown: function (e, detail) {
         this.persistActiveElement();
-        this.$.dropdown.open();
+        this.shadowRoot.querySelector("#dropdown").open();
     },
 
     _closeDropdown: function (e, detail) {
-        this.$.dropdown.close();
+        this.shadowRoot.querySelector("#dropdown").close();
     },
 
     _dropdownOpened: function () {

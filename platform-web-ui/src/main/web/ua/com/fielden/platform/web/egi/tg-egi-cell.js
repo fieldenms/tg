@@ -56,15 +56,15 @@ Polymer({
 
 
     _calcBackgroundRenderingHintsStyle: function(renderingHints, column) {
-        let style = "opacity: 0.5;";
-        let rendHints = (renderingHints && renderingHints[column.property]) || {};
+        let style = "";
+        let rendHints = (column && renderingHints && renderingHints[column.property]) || {};
         rendHints = rendHints.backgroundStyles || rendHints;
         for (let property in rendHints) {
             if (rendHints.hasOwnProperty(property)) {
                 style += " " + property + ": " + rendHints[property] + ";";
             }
         }
-        return style;
+        return style && "opacity: 0.5;" + style;
     },
 
     /**
@@ -72,7 +72,7 @@ Polymer({
      */
     _calcValueRenderingHintsStyle: function (renderingHints, column, isBoolean) {
         let style = isBoolean === 'true' ? "" : "width: 100%;";
-        let rendHints = (renderingHints && renderingHints[column.property] && renderingHints[column.property].valueStyles) || {};
+        let rendHints = (column && renderingHints && renderingHints[column.property] && renderingHints[column.property].valueStyles) || {};
         for (let property in rendHints) {
             if (rendHints.hasOwnProperty(property)) {
                 style += " " + property + ": " + rendHints[property] + ";";
@@ -85,21 +85,21 @@ Polymer({
      * Determines whether property is boolean or not.
      */
     _isBooleanProp: function (hostComponent, entity, column) {
-        return hostComponent && hostComponent.isBooleanProp(entity, column.property, column.type);
+        return hostComponent && column && hostComponent.isBooleanProp(entity, column.property, column.type);
     },
 
     /**
      * Determines whether property is Hypelink or not.
      */
     _isHyperlinkProp: function (hostComponent, entity, column) {
-        return hostComponent && hostComponent.isHyperlinkProp(entity, column.property, column.type);
+        return hostComponent && column && hostComponent.isHyperlinkProp(entity, column.property, column.type);
     },
 
     /**
      * Determines whether property is not boolean property or is.
      */
     _isNotBooleanOrHyperlinkProp: function (hostComponent, entity, column) {
-        return hostComponent && hostComponent.isNotBooleanOrHyperlinkProp(entity, column.property, column.type);
+        return hostComponent && column && hostComponent.isNotBooleanOrHyperlinkProp(entity, column.property, column.type);
     },
 
     /**
@@ -117,16 +117,16 @@ Polymer({
      * Returns the property value of the specified entity.
      */
     _getValueFromEntity: function (hostComponent, entity, column) {
-        return hostComponent && hostComponent.getValueFromEntity(entity, column.property);
+        return hostComponent && column && hostComponent.getValueFromEntity(entity, column.property);
     },
 
     _getBindedValue: function (hostComponent, entity, column) {
-        return hostComponent && hostComponent.getBindedValue(entity, column.property, column.type);
+        return hostComponent && column && hostComponent.getBindedValue(entity, column.property, column.type);
     },
     /**
      * Returns the property value of the specified entity and converts it to string.
      */
     _getValue: function (hostComponent, entity, column) {
-        return hostComponent && hostComponent.getValue(entity, column.property, column.type);
+        return hostComponent && column && hostComponent.getValue(entity, column.property, column.type);
     },
 });
