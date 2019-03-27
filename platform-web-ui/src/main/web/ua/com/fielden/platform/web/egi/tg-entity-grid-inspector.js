@@ -950,15 +950,9 @@ Polymer({
     },
 
     //Style calculator
-
-<<<<<<< Updated upstream
-    _calcDragBoxStyle: function (dragAnchorFixed, rowFixed, topRow) {
-        let style = dragAnchorFixed || rowFixed ? "postion: sticky; z-index: 1;" : "";
-=======
     _calcDragBoxStyle: function (dragAnchorFixed) {
         return dragAnchorFixed ? "position: sticky; z-index: 1; left: 0;" : "";
     },
->>>>>>> Stashed changes
 
     _calcDragAnchorWidth: function (canDragFrom) {
         return canDragFrom ? this.getComputedStyleValue('--egi-drag-anchor-width').trim() || "1.5rem" : "0px";
