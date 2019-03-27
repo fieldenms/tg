@@ -293,9 +293,12 @@ const template = html`
                             <tg-egi-cell column="[[column]]" entity="[[egiTotalsEntity.entity]]" style$="[[_calcColumnStyle(column, column.width, column.growFactor, 'true')]]" tooltip-text$="[[_getTotalTooltip(column)]]"></tg-egi-cell>
                         </template>
                     </div>
-                    <template is="dom-repeat" items="[[summaryRow.0]]" as="column">
+                    <template is="dom-repeat" items="[[summaryRow.1]]" as="column">
                         <tg-egi-cell column="[[column]]" entity="[[egiTotalsEntity.entity]]" style$="[[_calcColumnStyle(column, column.width, column.growFactor, 'false')]]" tooltip-text$="[[_getTotalTooltip(column)]]"></tg-egi-cell>
                     </template>
+                    <div class="action-cell" hidden$="[[!_isSecondaryActionsPresent(secondaryActions)]]" style$="[[_calcSecondaryActionStyle(secondaryActionsFixed, summaryFixed)]]">
+                        <!--Secondary actions header goes here-->
+                    </div>
                 </div>
             </template>
         </div>
@@ -920,7 +923,11 @@ Polymer({
                         totalColumn.growFactor = item.growFactor;
                         totalsRow.push(item.summary[summaryRowCounter]);
                     } else {
-                        totalsRow.push(null);
+                        const totalColumn = {};
+                        totalColumn.width = item.width;
+                        totalColumn.growFactor = item.growFactor;
+                        totalColumn.type = item.type
+                        totalsRow.push(totalColumn);
                     }
                 });
                 gridSummary.push([totalsRow.splice(0, this.numOfFixedCols), totalsRow]);
@@ -1022,8 +1029,8 @@ Polymer({
     },
 
     _getTotalTooltip: function (summary) {
-        let tooltip = summary.columnTitle ? "<b>" + summary.columnTitle + "</b>" : "";
-        tooltip += summary.columnDesc ? (tooltip ? "<br>" + summary.columnDesc : summary.columnDesc) : "";
+        let tooltip = summary && summary.columnTitle ? "<b>" + summary.columnTitle + "</b>" : "";
+        tooltip += summary && summary.columnDesc ? (tooltip ? "<br>" + summary.columnDesc : summary.columnDesc) : "";
         return tooltip;
     },
 
