@@ -101,6 +101,7 @@ public class FunctionalActionElement implements IRenderable, IImportable {
 
         if (FunctionalActionKind.TOP_LEVEL == functionalActionKind) {
             attrs.put("class", "entity-specific-action");
+            attrs.put("slot", "entity-specific-action");
         } else if (FunctionalActionKind.MENU_ITEM == functionalActionKind) {
             attrs.put("slot", "menu-item-action");
             attrs.put("data-route", getDataRoute());

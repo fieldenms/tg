@@ -69,6 +69,7 @@ const template = html`
         #baseContainer {
             min-height: 0;
             overflow: auto;
+            z-index: 0;
             @apply --layout-vertical;
             @apply --layout-flex;
             @apply --layout-relative;
@@ -265,7 +266,7 @@ const template = html`
                         <tg-ui-action class="action" show-dialog="[[primaryAction.showDialog]]" current-entity="[[egiEntity.entity]]" short-desc="[[primaryAction.shortDesc]]" long-desc="[[primaryAction.longDesc]]" icon="[[primaryAction.icon]]" component-uri="[[primaryAction.componentUri]]" element-name="[[primaryAction.elementName]]" action-kind="[[primaryAction.actionKind]]" number-of-action="[[primaryAction.numberOfAction]]" attrs="[[primaryAction.attrs]]" create-context-holder="[[primaryAction.createContextHolder]]" require-selection-criteria="[[primaryAction.requireSelectionCriteria]]" require-selected-entities="[[primaryAction.requireSelectedEntities]]" require-master-entity="[[primaryAction.requireMasterEntity]]" pre-action="[[primaryAction.preAction]]" post-action-success="[[primaryAction.postActionSuccess]]" post-action-error="[[primaryAction.postActionError]]" should-refresh-parent-centre-after-save="[[primaryAction.shouldRefreshParentCentreAfterSave]]" ui-role="[[primaryAction.uiRole]]" icon-style="[[primaryAction.iconStyle]]"></tg-ui-action>
                     </div>
                     <div class="fixed-columns-container" hidden$="[[!numOfFixedCols]]" style$="[[_calcFixedColumnContainerStyle(canDragFrom, checkboxVisible, primaryAction, numOfFixedCols)]]">
-                        <template is="dom-repeat" items="[[fixedColumns]]">
+                        <template is="dom-repeat" items="[[fixedColumns]]" as="column">
                             <tg-egi-cell column="[[column]]" entity="[[egiEntity.entity]]" style$="[[_calcColumnStyle(column, column.width, column.growFactor, 'true')]]" tooltip-text$="[[_getTooltip(egiEntity.entity, column, column.customAction)]]" with-action$="[[hasAction(egiEntity.entity, column)]]" on-tap="_tapAction"></tg-egi-cell>
                         </template>
                     </div>
@@ -799,7 +800,7 @@ Polymer({
     //Style calculator
 
     _calcDragBoxStyle: function (dragAnchorFixed, rowFixed, topRow) {
-        let style = dragAnchorFixed || rowFixed ? "postion: sticky;" : "";
+        let style = dragAnchorFixed || rowFixed ? "postion: sticky; z-index: 1;" : "";
 
         if (dragAnchorFixed) {
             style += "left: 0;";
@@ -811,7 +812,7 @@ Polymer({
     },
 
     _calcSelectCheckBoxStyle: function (canDragFrom, checkboxesFixed, rowFixed, topRow) {
-        let style = checkboxesFixed || rowFixed ? "postion: sticky;" : "";
+        let style = checkboxesFixed || rowFixed ? "position: sticky; z-index: 1;" : "";
         if (checkboxesFixed) {
             style += "left: " + (canDragFrom ? "1.5rem" : "0") + ";"; 
         }
@@ -822,10 +823,10 @@ Polymer({
     },
 
     _calcPrimaryActionStyle: function (canDragFrom, checkboxVisible, checkboxesWithPrimaryActionsFixed, rowFixed, topRow) {
-        let style = checkboxesWithPrimaryActionsFixed || rowFixed ? "postion: sticky;" : "";
+        let style = checkboxesWithPrimaryActionsFixed || rowFixed ? "position: sticky; z-index: 1;" : "";
         if (checkboxesWithPrimaryActionsFixed) {
-            let calcStyle = "calc(" + (canDragFrom ? "1.5rem" : "0");
-            calcStyle += (checkboxVisible ? " + 18px" : " + 0") + ")";
+            let calcStyle = "calc(" + (canDragFrom ? "1.5rem" : "0px");
+            calcStyle += (checkboxVisible ? " + 18px" : " + 0px") + ")";
             style += "left: " + calcStyle + ";"; 
         }
         if (rowFixed) {
@@ -835,11 +836,11 @@ Polymer({
     },
 
     _calcFixedColumnContainerStyle: function (canDragFrom, checkboxVisible, primaryAction, numOfFixedCols, headerFixed) {
-        let style = numOfFixedCols > 0 || headerFixed ? "postion: sticky;" : "";
+        let style = numOfFixedCols > 0 || headerFixed ? "position: sticky; z-index: 1;" : "";
         if (numOfFixedCols > 0) {
-            let calcStyle = "calc(" + (canDragFrom ? "1.5rem" : "0");
-            calcStyle += (checkboxVisible ? " + 18px" : " + 0");
-            calcStyle += (primaryAction ? " + 20px" : " + 0") + ")";
+            let calcStyle = "calc(" + (canDragFrom ? "1.5rem" : "0px");
+            calcStyle += (checkboxVisible ? " + 18px" : " + 0px");
+            calcStyle += (primaryAction ? " + 20px" : " + 0px") + ")";
             style += "left: " + calcStyle + ";";
         }
         if (headerFixed) {
@@ -869,7 +870,7 @@ Polymer({
     },
 
     _calcSecondaryActionStyle: function (secondaryActionsFixed, headerFixed) {
-        let style = secondaryActionsFixed || headerFixed ? "postion: sticky;" : "";
+        let style = secondaryActionsFixed || headerFixed ? "position: sticky; z-index: 1;" : "";
 
         if (secondaryActionsFixed) {
             style += "right: 0;";

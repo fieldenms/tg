@@ -950,7 +950,7 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
         final DomContainer functionalActionsDom = new DomContainer();
 
         for (final List<FunctionalActionElement> group : actionGroups) {
-            final DomElement groupElement = new DomElement("div").clazz("entity-specific-action", "group");
+            final DomElement groupElement = new DomElement("div").attr("slot", "entity-specific-action").clazz("entity-specific-action", "group");
             for (final FunctionalActionElement el : group) {
                 importPaths.add(el.importPath());
                 groupElement.add(el.render());
@@ -969,7 +969,7 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
             final FunctionalActionElement el = new FunctionalActionElement(resultSetPrimaryEntityAction.get(), 0, FunctionalActionKind.PRIMARY_RESULT_SET);
 
             importPaths.add(el.importPath());
-            primaryActionDom.add(el.render().clazz("primary-action").attr("hidden", null));
+            primaryActionDom.add(el.render().attr("slot", "primary-action").clazz("primary-action").attr("hidden", null));
             primaryActionObject.append(prefix + createActionObject(el));
         }
         ////////////////////Primary result-set action [END] //////////////
@@ -1003,7 +1003,7 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
         final StringBuilder secondaryActionsObjects = new StringBuilder();
         for (final FunctionalActionElement el : secondaryActionElements) {
             importPaths.add(el.importPath());
-            secondaryActionsDom.add(el.render().clazz("secondary-action").attr("hidden", null));
+            secondaryActionsDom.add(el.render().attr("slot", "secondary-action").clazz("secondary-action").attr("hidden", null));
             secondaryActionsObjects.append(prefix + createActionObject(el));
         }
 

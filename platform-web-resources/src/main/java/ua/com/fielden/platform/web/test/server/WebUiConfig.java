@@ -247,7 +247,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
         TgPolygonWebUiConfig.register(injector(), configApp());
         final TgCompoundEntityWebUiConfig tgCompoundEntityWebUiConfig = TgCompoundEntityWebUiConfig.register(injector(), configApp());
         final EntityActionConfig mkTgCompoundEntityLocator = mkLocator(configApp(), injector(), TgCompoundEntityLocator.class, "tgCompoundEntity", "color: #0d4b8a");
-        
+
         //Centre configuration for deletion test case entity.
         final EntityCentre<TgDeletionTestEntity> deletionTestCentre = new EntityCentre<>(MiDeletionTestEntity.class, "TgDeletionTestEntity",
                 EntityCentreBuilder.centreFor(TgDeletionTestEntity.class)
@@ -1706,7 +1706,6 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 //.setHeight("100%")
                 .setVisibleRowsCount(10)
                 //.fitToHeight()
-                .rowHeight("3rem")
                 .addProp("this")
                     .order(2).asc()
                     .width(60);
