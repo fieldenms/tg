@@ -1,10 +1,10 @@
-package ua.com.fielden.platform.entity.query.metadata.utils;
+package ua.com.fielden.platform.entity.query.metadata;
 
 import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.expr;
-import static ua.com.fielden.platform.entity.query.metadata.utils.EntityKeyExpressionGenerator.TypeInfo.ENTITY;
-import static ua.com.fielden.platform.entity.query.metadata.utils.EntityKeyExpressionGenerator.TypeInfo.NON_STRING;
-import static ua.com.fielden.platform.entity.query.metadata.utils.EntityKeyExpressionGenerator.TypeInfo.STRING;
+import static ua.com.fielden.platform.entity.query.metadata.EntityKeyExpressionGenerator.TypeInfo.ENTITY;
+import static ua.com.fielden.platform.entity.query.metadata.EntityKeyExpressionGenerator.TypeInfo.NON_STRING;
+import static ua.com.fielden.platform.entity.query.metadata.EntityKeyExpressionGenerator.TypeInfo.STRING;
 import static ua.com.fielden.platform.reflection.AnnotationReflector.getPropertyAnnotation;
 import static ua.com.fielden.platform.reflection.Finder.getKeyMembers;
 import static ua.com.fielden.platform.reflection.Reflector.getKeyMemberSeparator;
