@@ -30,7 +30,7 @@ const customStyle = html`
         <style>
             .insertion-point-dialog > #insertionPointContent {
                 background-color: white;
-                @apply(--shadow-elevation-2dp);
+                @apply --shadow-elevation-2dp;
             }
             .insertion-point-dialog .title-bar paper-icon-button {
                 transform: scale(-1, -1);
@@ -81,10 +81,9 @@ customStyle.setAttribute('style', 'display: none;');
 document.head.appendChild(customStyle.content);
 
 const template = html`
-    <style include="tg-entity-centre-styles"></style>
     <style>
         :host {
-            @apply(--layout-self-stretch);
+            @apply --layout-self-stretch;
             overflow: auto;
         }
         .truncate {
@@ -119,10 +118,16 @@ const template = html`
             fill: var(--paper-grey-300);
             color: var(--paper-grey-300);
         }
+        .paper-material {
+            background: white;
+            border-radius: 2px;
+            margin: 10px;
+        }
     </style>
-    <paper-material id="pm" hidden$="[[detached]]" class="layout vertical" style="background: white; border-radius: 2px; margin: 10px;">
+    <style include="iron-flex iron-flex-reverse iron-flex-alignment iron-flex-factors iron-positioning tg-entity-centre-styles paper-material-styles"></style>
+    <div id="pm" hidden$="[[detached]]" class="paper-material layout vertical">
         <div hidden>
-            <content select=":not(text):not(template)" id="custom_actions_content"></content>
+            <slot name="insertion-point-child" id="custom_actions_content"></slot>
         </div>
         <div id="insertionPointContent" tabindex='0' class="layout vertical flex relative">
             <div class="title-bar layout horizontal justified center" hidden$="[[!_hasTitleBar(shortDesc)]]">
@@ -135,7 +140,7 @@ const template = html`
             <div id="custom_actions_container" class="layout horizontal center end-justified" style="padding-right:2px" hidden$="[[!detached]]">
             </div>
         </div>
-    </paper-material>
+    </div>
     <tg-toast id="toaster"></tg-toast>
 `;
 
