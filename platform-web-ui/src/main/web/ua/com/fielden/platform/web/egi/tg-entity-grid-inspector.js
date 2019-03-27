@@ -267,11 +267,11 @@ const template = html`
                     </div>
                     <div class="fixed-columns-container" hidden$="[[!numOfFixedCols]]" style$="[[_calcFixedColumnContainerStyle(canDragFrom, checkboxVisible, primaryAction, numOfFixedCols)]]">
                         <template is="dom-repeat" items="[[fixedColumns]]" as="column">
-                            <tg-egi-cell column="[[column]]" entity="[[egiEntity.entity]]" style$="[[_calcColumnStyle(column, column.width, column.growFactor, 'true')]]" tooltip-text$="[[_getTooltip(egiEntity.entity, column, column.customAction)]]" with-action$="[[hasAction(egiEntity.entity, column)]]" on-tap="_tapAction"></tg-egi-cell>
+                            <tg-egi-cell column="[[column]]" egi-entity="[[egiEntity]]" style$="[[_calcColumnStyle(column, column.width, column.growFactor, 'true')]]" tooltip-text$="[[_getTooltip(egiEntity.entity, column, column.customAction)]]" with-action$="[[hasAction(egiEntity.entity, column)]]" on-tap="_tapAction"></tg-egi-cell>
                         </template>
                     </div>
                     <template is="dom-repeat" items="[[columns]]" as="column">
-                        <tg-egi-cell column="[[column]]" entity="[[egiEntity.entity]]" style$="[[_calcColumnStyle(column, column.width, column.growFactor, 'false')]]" tooltip-text$="[[_getTooltip(egiEntity.entity, column, column.customAction)]]" with-action$="[[hasAction(egiEntity.entity, column)]]" on-tap="_tapAction"></tg-egi-cell>
+                        <tg-egi-cell column="[[column]]" egi-entity="[[egiEntity]]" style$="[[_calcColumnStyle(column, column.width, column.growFactor, 'false')]]" tooltip-text$="[[_getTooltip(egiEntity.entity, column, column.customAction)]]" with-action$="[[hasAction(egiEntity.entity, column)]]" on-tap="_tapAction"></tg-egi-cell>
                     </template>
                     <div class="action-cell" hidden$="[[!_isSecondaryActionsPresent(secondaryActions)]]" style$="[[_calcSecondaryActionStyle(secondaryActionsFixed)]]">
                         <tg-secondary-action-button class="action" current-entity="[[egiEntity.entity]]" actions="[[secondaryActions]]"></tg-secondary-action-button>
@@ -290,11 +290,11 @@ const template = html`
                     </div>
                     <div class="fixed-columns-container" hidden$="[[!numOfFixedCols]]" style$="[[_calcFixedColumnContainerStyle(canDragFrom, checkboxVisible, primaryAction, numOfFixedCols, summaryFixed)]]">
                         <template is="dom-repeat" items="[[summaryRow.0]]" as="column">
-                            <tg-egi-cell column="[[column]]" entity="[[egiTotalsEntity.entity]]" style$="[[_calcColumnStyle(column, column.width, column.growFactor, 'true')]]" tooltip-text$="[[_getTotalTooltip(column)]]"></tg-egi-cell>
+                            <tg-egi-cell column="[[column]]" egi-entity="[[egiTotalsEntity]]" style$="[[_calcColumnStyle(column, column.width, column.growFactor, 'true')]]" tooltip-text$="[[_getTotalTooltip(column)]]"></tg-egi-cell>
                         </template>
                     </div>
                     <template is="dom-repeat" items="[[summaryRow.1]]" as="column">
-                        <tg-egi-cell column="[[column]]" entity="[[egiTotalsEntity.entity]]" style$="[[_calcColumnStyle(column, column.width, column.growFactor, 'false')]]" tooltip-text$="[[_getTotalTooltip(column)]]"></tg-egi-cell>
+                        <tg-egi-cell column="[[column]]" egi-entity="[[egiTotalsEntity]]" style$="[[_calcColumnStyle(column, column.width, column.growFactor, 'false')]]" tooltip-text$="[[_getTotalTooltip(column)]]"></tg-egi-cell>
                     </template>
                     <div class="action-cell" hidden$="[[!_isSecondaryActionsPresent(secondaryActions)]]" style$="[[_calcSecondaryActionStyle(secondaryActionsFixed, summaryFixed)]]">
                         <!--Secondary actions header goes here-->
@@ -590,6 +590,32 @@ Polymer({
             this.keyEventTarget = this._getKeyEventTarget();
         }, 1);
     },
+
+    //API functions to update entity and rendering hints
+    updateEntity: function (entity, propPath) {
+        const entityIndex = this._findEntity(entity, this.filteredEntities);
+        if (entityIndex >= 0) {
+            const egiEntity = this.egiModel[entityIndex];
+            egiEntity._propertyChangedHandlers && egiEntity._propertyChangedHandlers[propPath] && egiEntity._propertyChangedHandlers[propPath]();
+        }
+    },
+    
+    findEntityIndex: function (entity) {
+        return this._findEntity(entity, this.entities);
+    },
+    
+    findFilteredEntityIndex: function (entity) {
+        return this._findEntity(entity, this.filteredEntities);
+    },
+
+    setRenderingHints: function (entity, property, renderingHints) {
+        const entityIndex = this._findEntity(entity, this.filteredEntities);
+        if (entityIndex >= 0) {
+            this.set("egiModel." + entityIndex + ".renderingHints." + property, renderingHints);
+            const egiEntity = this.egiModel[entityIndex];
+            egiEntity._propertyRenderingHintsChangedHandlers && egiEntity._propertyRenderingHintsChangedHandlers[property] && egiEntity._propertyRenderingHintsChangedHandlers[property]();
+        }
+    },    
 
     //Filtering related functions
     filter: function () {
@@ -936,6 +962,16 @@ Polymer({
         //Set the _totalsRowCount property so that calculation of the scroll container height would be triggered.
         this._totalsRowCount = summaryRowsCount;
         this._totalsRows = gridSummary;
+    },
+
+    _renderingHintsChanged: function (newValue) {
+        if (this.egiModel) {
+            this.egiModel.forEach((egiEntity, index) => {
+                egiEntity.renderingHints = (newValue && newValue[index]) || {};
+                egiEntity._renderingHintsChangedHandler && egiEntity._renderingHintsChangedHandler();
+            });
+            //this._updateTableSizeAsync();
+        }
     },
 
     //Tooltip related functions.
