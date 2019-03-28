@@ -50,10 +50,10 @@ public class EntityKeyExpressionGenerator {
         final Iterator<KeyMemberInfo> kmIter = keyMembers.iterator();
         final KeyMemberInfo firstKeyMember = kmIter.next();
         
-        ExpressionModel firstMemberExpr = processFirstKeyMember(firstKeyMember.name, firstKeyMember.typeInfo);
         if (!kmIter.hasNext()) {
-            return firstMemberExpr;
+            return processSingleKeyMember(firstKeyMember.name, firstKeyMember.typeInfo);
         } else {
+            final ExpressionModel firstMemberExpr = getKeyMemberConcatenationPropName(firstKeyMember.name, firstKeyMember.typeInfo);
             IConcatFunctionWith<IStandAloneExprOperationAndClose, AbstractEntity<?>> concatStart = expr().concat().expr(firstMemberExpr);
             
             while (kmIter.hasNext()) {
@@ -72,11 +72,11 @@ public class EntityKeyExpressionGenerator {
         return expr().prop(keyMemberType == ENTITY ? keyMemberName + "." + KEY : keyMemberName).model();
     }
 
-    private static ExpressionModel processFirstKeyMember(final String keyMemberName, final TypeInfo keyMemberType) {
+    private static ExpressionModel processSingleKeyMember(final String keyMemberName, final TypeInfo keyMemberType) {
         return keyMemberType == NON_STRING ? expr().concat().prop(keyMemberName).with().val(EMPTY_STRING).end().model()
                 : getKeyMemberConcatenationPropName(keyMemberName, keyMemberType);
     }
-    
+
     private static ExpressionModel processOptionalKeyMember(final String keyMemberName, final TypeInfo keyMemberType, final String separator) {
         return expr().caseWhen().prop(keyMemberName).isNotNull().then().concat().val(separator).with().expr(getKeyMemberConcatenationPropName(keyMemberName, keyMemberType)).end().otherwise().val(EMPTY_STRING).end()/*.endAsStr(256)*/.model();
     }
