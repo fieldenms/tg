@@ -823,6 +823,25 @@ Polymer({
         }
     },
 
+    /**
+     * Adjusts widths for columns based on current widths values, which could be altered by dragging column right border.
+     */
+    adjustColumnWidths: function (columnWidths) {
+        this.columns.forEach((column, columnIndex) => {
+            this.set("columns." + columnIndex + ".growFactor", columnWidths[column.property].newGrowFactor);
+            this.set("columns." + columnIndex + ".width", columnWidths[column.property].newWidth);
+            this._updateTotalRowGrowFactor(columnIndex, columnWidths[column.property].newGrowFactor);
+            this._updateTotalRowWidth(columnIndex, columnWidths[column.property].newWidth);
+        });
+        this.fixedColumns.forEach((column, columnIndex) => {
+            this.set("fixedColumns." + columnIndex + ".growFactor", columnWidths[column.property].newGrowFactor);
+            this.set("fixedColumns." + columnIndex + ".width", columnWidths[column.property].newWidth);
+            this._updateFixedTotalRowGrowFactor(columnIndex, columnWidths[column.property].newGrowFactor);
+            this._updateFixedTotalRowWidth(columnIndex, columnWidths[column.property].newWidth);
+        });
+        // this._updateColumnsWidthProperties();
+    },
+
     /** 
      * Updates the column visibility 
      */
@@ -1048,9 +1067,7 @@ Polymer({
 
             if (columnWidth !== newWidth) {
                 this.set("fixedColumns." + e.model.index + ".width", newWidth);
-                this._totalsRows.forEach((totalRow, totalIndex) => {
-                    this.set("_totalsRows." + totalIndex + ".0." + e.model.index + ".width", newWidth);
-                });
+                this._updateFixedTotalRowWidth(e.model.index, newWidth);
             }
         }
     },
@@ -1075,9 +1092,7 @@ Polymer({
                 } else {
                     if (!this._columnResizingObject.hasAnyFlex) {
                         this.set("columns." + (this.columns.length - 1) + ".growFactor", 1);
-                        this._totalsRows.forEach((totalRow, totalIndex) => {
-                            this.set("_totalsRows." + totalIndex + ".1." + (this.columns.length - 1) + ".growFactor", 1);
-                        });
+                        this._updateTotalRowGrowFactor(this.columns.length - 1, 1);
                         this._columnResizingObject.hasAnyFlex = true;
                         const columnParameters = this._columnResizingObject.columnParameters || {}; // this.$.reflector.newEntity("ua.com.fielden.platform.web.centre.ColumnParameter");
                         columnParameters[this.columns[this.columns.length - 1].property] = {
@@ -1097,9 +1112,7 @@ Polymer({
             if (columnWidth !== newWidth) {
                 if (e.model.item.growFactor !== 0) {
                     this.set("columns." + e.model.index + ".growFactor", 0);
-                    this._totalsRows.forEach((totalRow, totalIndex) => {
-                        this.set("_totalsRows." + totalIndex + ".1." + e.model.index + ".growFactor", 0);
-                    });
+                    this._updateTotalRowGrowFactor(e.model.index, 0);
                     const columnParameters = this._columnResizingObject.columnParameters || {};
                     columnParameters[e.model.item.property] = {
                         growFactor: 1
@@ -1107,9 +1120,7 @@ Polymer({
                     this._columnResizingObject.columnParameters = columnParameters;
                 }
                 this.set("columns." + e.model.index + ".width", newWidth);
-                this._totalsRows.forEach((totalRow, totalIndex) => {
-                    this.set("_totalsRows." + totalIndex + ".1." + e.model.index + ".width", newWidth);
-                });
+                this._updateTotalRowWidth(e.model.index, newWidth);
                 //this._updateColumnsWidthProperties();
                 //scroll if needed.
                 if (mousePos.x > this._columnResizingObject.containerWithoutFixedSecondaryActionWidth || mousePos.x < this._columnResizingObject.leftFixedContainerWidth) {
@@ -1117,6 +1128,38 @@ Polymer({
                 }
             }
 
+        }
+    },
+
+    _updateFixedTotalRowWidth: function (colIndex, value) {
+        if (this._totalsRows) {
+            this._totalsRows.forEach((totalRow, totalIndex) => {
+                this.set("_totalsRows." + totalIndex + ".0." + colIndex + ".width", value);
+            });
+        }
+    },
+
+    _updateFixedTotalRowGrowFactor: function (colIndex, value) {
+        if (this._totalsRows) {
+            this._totalsRows.forEach((totalRow, totalIndex) => {
+                this.set("_totalsRows." + totalIndex + ".0." + colIndex + ".growFactor", value);
+            });
+        }
+    },
+
+    _updateTotalRowWidth: function (colIndex, value) {
+        if (this._totalsRows) {
+            this._totalsRows.forEach((totalRow, totalIndex) => {
+                this.set("_totalsRows." + totalIndex + ".1." + colIndex + ".width", value);
+            });
+        }
+    },
+
+    _updateTotalRowGrowFactor: function (colIndex, value) {
+        if (this._totalsRows) {
+            this._totalsRows.forEach((totalRow, totalIndex) => {
+                this.set("_totalsRows." + totalIndex + ".1." + colIndex + ".growFactor", value);
+            });
         }
     },
 
