@@ -500,8 +500,8 @@ const TgEntityCentreBehaviorImpl = {
                 this.retrievedEntities = resultEntities;
                 this.selectionCriteriaEntity = criteriaEntity;
                 this.$.egi.renderingHints = renderingHints;
-                // FIXME this.$.egi._adjustColumnWidths(columnWidths);
-                // FIXME this.$.egi._adjustColumns(visibleColumnsWithOrder.map(column => column === "this" ? "" : column));
+                this.$.egi.adjustColumnWidths(columnWidths);
+                this.$.egi.adjustColumnsVisibility(visibleColumnsWithOrder.map(column => column === "this" ? "" : column));
                 if (this._triggerRun) {
                     if (this._selectedView === 0) {
                         this.async(function () {
