@@ -28,6 +28,7 @@ import { TgTooltipBehavior } from '/resources/components/tg-tooltip-behavior.js'
 import { TgDragFromBehavior } from '/resources/components/tg-drag-from-behavior.js';
 import { TgShortcutProcessingBehavior } from '/resources/actions/tg-shortcut-processing-behavior.js';
 import { TgSerialiser } from '/resources/serialisation/tg-serialiser.js';
+import { tearDownEvent, getRelativePos } from '/resources/reflection/tg-polymer-utils.js';
 
 const template = html`
     <style>
@@ -73,6 +74,36 @@ const template = html`
             @apply --layout-vertical;
             @apply --layout-flex;
             @apply --layout-relative;
+        }
+        .noselect {
+            -webkit-touch-callout: none;
+            /* iOS Safari */
+            -webkit-user-select: none;
+            /* Safari */
+            -khtml-user-select: none;
+            /* Konqueror HTML */
+            -moz-user-select: none;
+            /* Firefox */
+            -ms-user-select: none;
+            /* Internet Explorer/Edge */
+            user-select: none;
+            /* Non-prefixed version, currently
+                                  supported by Chrome and Opera */
+        }
+        .resizing-box {
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            right: 0;
+            width: 10px;
+            cursor: col-resize;
+        }
+        .table-cell:hover:not([is-resizing]):not([is-mobile]) > .resizing-box,
+        .resizing-action > .resizing-box {
+            border-right: 4px solid var(--paper-light-blue-100);
+        }
+        .resizing-action {
+             cursor: col-resize;
         }
         .table-header-row {
             font-size: 0.9rem;
@@ -247,7 +278,7 @@ const template = html`
                 </div>
                 <div class="fixed-columns-container" hidden$="[[!numOfFixedCols]]" style$="[[_calcFixedColumnContainerStyle(canDragFrom, checkboxVisible, primaryAction, numOfFixedCols)]]">
                     <template is="dom-repeat" items="[[fixedColumns]]">
-                        <div class="table-cell cell" style$="[[_calcColumnHeaderStyle(item, item.width, item.growFactor, 'true')]]" on-down="_makeEgiUnselectable" on-up="_makeEgiSelectable" on-track="_changeColumnSize" tooltip-text$="[[item.columnDesc]]" is-resizing$="[[_columnResizingObject]]" is-mobile$="[[mobile]]">
+                        <div class="table-cell cell" fixed style$="[[_calcColumnHeaderStyle(item, item.width, item.growFactor, 'true')]]" on-down="_makeEgiUnselectable" on-up="_makeEgiSelectable" on-track="_changeColumnSize" tooltip-text$="[[item.columnDesc]]" is-resizing$="[[_columnResizingObject]]" is-mobile$="[[mobile]]">
                             <div class="truncate" style="width:100%">[[item.columnTitle]]</div>
                             <div class="resizing-box"></div>
                         </div>
@@ -315,6 +346,28 @@ const template = html`
         <!-- table lock layer -->
         <div class="lock-layer" lock$="[[lock]]"></div>
     </div>`;
+
+function calculateColumnWidthExcept (egi, columnIndex, columnElements, columnLength, dragAnchor, checkboxes, primaryActions, secondaryActions) {
+    let columnWidth = 0;
+    if (egi.canDragFrom && dragAnchor()) {
+        columnWidth += columnElements[0].offsetWidth;
+    }
+    if (egi.checkboxVisible && checkboxes()) {
+        columnWidth += columnElements[1].offsetWidth;
+    }
+    if (egi.primaryAction && primaryActions()) {
+        columnWidth += columnElements[2].offsetWidth;
+    }
+    for (let i = 0; i < columnLength; i++) {
+        if (columnIndex !== i) {
+            columnWidth += columnElements[i + 3].offsetWidth;
+        }
+    }
+    if (egi.secondaryActions.length > 0 && secondaryActions()) {
+        columnWidth += columnElements[columnElements.length - 1].offsetWidth;
+    }
+    return columnWidth;
+};
 
 function removeColumn (column, fromColumns) {
     const index = fromColumns.indexOf(column);
@@ -947,6 +1000,162 @@ Polymer({
         if (!this.editingEntity  || !this._areEqual(this.editingEntity, this.filteredEntities[index])) {
             this.set("egiModel." + index + ".over", false);
         }
+    },
+
+    _changeColumnSize: function (e) {
+        switch (e.detail.state) {
+        case 'start':
+            this._startColumnResize(e);
+            break;
+        case 'track':
+            e.currentTarget.hasAttribute("fixed") ? this._trackFixedColumnSize(e) : this._trackColumnSize(e);
+            break;
+        case 'end':
+            this._endColumnResizing(e);
+            break;
+        }
+        tearDownEvent(e);
+    },
+
+    _startColumnResize: function (e) {
+        //Change the style to visualise column resizing.
+        //this.style.cursor = "col-resize";
+        e.currentTarget.classList.toggle("resizing-action", true);
+        //Calculate all properties needed for column resizing logic and create appropriate resizing object
+        const columnElements = this.$.baseContainer.querySelector(".table-header-row").querySelectorAll(".cell");
+        const leftFixedContainerWidth = calculateColumnWidthExcept (this, -1, columnElements, this.numOfFixedCols, () => this.dragAnchorFixed, () => this.checkboxesFixed, () => this.checkboxesWithPrimaryActionsFixed, () => false);
+        const containerWithoutFixedSecondaryActionWidth = this.$.baseContainer.offsetWidth - (this.secondaryActions.length > 0 && this.secondaryActionsFixed ? columnElements[columnElements.length - 1].offsetWidth : 0);
+        this._columnResizingObject = {
+            oldColumnWidth: e.model.item.width,
+            oldColumnGrowFactor: e.model.item.growFactor,
+            leftFixedContainerWidth: leftFixedContainerWidth,
+            containerWithoutFixedSecondaryActionWidth: containerWithoutFixedSecondaryActionWidth,
+            otherColumnWidth: calculateColumnWidthExcept(this, e.model.index, columnElements, this.allColumns.length, () => true, () => true, () => true, () => true),
+            widthCorrection: e.currentTarget.offsetWidth - e.currentTarget.firstElementChild.offsetWidth,
+            hasAnyFlex: this.columns.find((column, index) => index !== e.model.index && column.growFactor !== 0)
+        };
+    },
+
+    _trackFixedColumnSize: function(e) {
+        if (this._columnResizingObject) {
+            const columnWidth = e.currentTarget.firstElementChild.offsetWidth;
+            let newWidth = columnWidth + e.detail.ddx;
+
+            //Correct size if EGI is less then min width.
+            if (newWidth < e.model.item.minWidth) {
+                newWidth = e.model.item.minWidth;
+            }
+
+            if (columnWidth !== newWidth) {
+                this.set("fixedColumns." + e.model.index + ".width", newWidth);
+                this._totalsRows.forEach((totalRow, totalIndex) => {
+                    this.set("_totalsRows." + totalIndex + ".0." + e.model.index + ".width", newWidth);
+                });
+            }
+        }
+    },
+
+    _trackColumnSize: function (e) {
+        if (this._columnResizingObject) {
+            const columnWidth = e.currentTarget.firstElementChild.offsetWidth;
+            let newWidth = columnWidth + e.detail.ddx;
+
+            //Correct size for mouse out of EGI.
+            const mousePos = getRelativePos(e.detail.x, e.detail.y, this.$.baseContainer);
+            if (mousePos.x > this._columnResizingObject.containerWithoutFixedSecondaryActionWidth) {
+                newWidth += mousePos.x - this._columnResizingObject.containerWithoutFixedSecondaryActionWidth;
+            } else if (mousePos.x < this._columnResizingObject.leftFixedContainerWidth) {
+                newWidth -= this._columnResizingObject.leftFixedContainerWidth - mousePos.x;
+            }
+
+            //Correct new width when dragging last column or other column and overall width is less then width of container.
+            if (this._columnResizingObject.otherColumnWidth + newWidth + this._columnResizingObject.widthCorrection < this.$.baseContainer.offsetWidth) {
+                if (e.model.index === this.columns.length - 1) {
+                    newWidth = this.$.baseContainer.offsetWidth - this._columnResizingObject.otherColumnWidth - this._columnResizingObject.widthCorrection;
+                } else {
+                    if (!this._columnResizingObject.hasAnyFlex) {
+                        this.set("columns." + (this.columns.length - 1) + ".growFactor", 1);
+                        this._totalsRows.forEach((totalRow, totalIndex) => {
+                            this.set("_totalsRows." + totalIndex + ".1." + (this.columns.length - 1) + ".growFactor", 1);
+                        });
+                        this._columnResizingObject.hasAnyFlex = true;
+                        const columnParameters = this._columnResizingObject.columnParameters || {}; // this.$.reflector.newEntity("ua.com.fielden.platform.web.centre.ColumnParameter");
+                        columnParameters[this.columns[this.columns.length - 1].property] = {
+                            growFactor: 1
+                        };
+                        this._columnResizingObject.columnParameters = columnParameters;
+                    }
+                }
+            }
+
+            //Correct size if EGI is less then min width.
+            if (newWidth < e.model.item.minWidth) {
+                newWidth = e.model.item.minWidth;
+            }
+            
+            //Change the column width if it is needed
+            if (columnWidth !== newWidth) {
+                if (e.model.item.growFactor !== 0) {
+                    this.set("columns." + e.model.index + ".growFactor", 0);
+                    this._totalsRows.forEach((totalRow, totalIndex) => {
+                        this.set("_totalsRows." + totalIndex + ".1." + e.model.index + ".growFactor", 0);
+                    });
+                    const columnParameters = this._columnResizingObject.columnParameters || {};
+                    columnParameters[e.model.item.property] = {
+                        growFactor: 1
+                    };
+                    this._columnResizingObject.columnParameters = columnParameters;
+                }
+                this.set("columns." + e.model.index + ".width", newWidth);
+                this._totalsRows.forEach((totalRow, totalIndex) => {
+                    this.set("_totalsRows." + totalIndex + ".1." + e.model.index + ".width", newWidth);
+                });
+                //this._updateColumnsWidthProperties();
+                //scroll if needed.
+                if (mousePos.x > this._columnResizingObject.containerWithoutFixedSecondaryActionWidth || mousePos.x < this._columnResizingObject.leftFixedContainerWidth) {
+                    this.$.baseContainer.scrollLeft += newWidth - columnWidth;
+                }
+            }
+
+        }
+    },
+
+    _endColumnResizing: function (e) {
+        //this.style.cursor = "default";
+        e.currentTarget.classList.toggle("resizing-action", false);
+        if (this._columnResizingObject && (this._columnResizingObject.oldColumnWidth !== e.model.item.width || this._columnResizingObject.oldColumnGrowFactor !== e.model.item.growFactor)) {
+            const columnParameters = this._columnResizingObject.columnParameters || {};
+            const columnParameter = columnParameters[e.model.item.property] || {};
+            if (this._columnResizingObject.oldColumnWidth !== e.model.item.width) {
+                columnParameter.width = (+(e.model.item.width.toFixed(0)));
+            }
+            if (this._columnResizingObject.oldColumnGrowFactor !== e.model.item.growFactor) {
+                columnParameter.growFactor = e.model.item.growFactor;
+            }
+            columnParameters[e.model.item.property] = columnParameter;
+            this._columnResizingObject.columnParameters = columnParameters;
+        }
+        if (this._columnResizingObject && this._columnResizingObject.columnParameters) {
+            this.fire("tg-egi-column-change", this._columnResizingObject.columnParameters);
+        }
+        this._columnResizingObject = null;
+    },
+
+    _makeEgiUnselectable: function (e) {
+        if (this._appConfig.mobile) {
+            e.currentTarget.classList.toggle("resizing-action", true);
+            console.log("set resizing action");
+        }
+        this.$.baseContainer.classList.toggle("noselect", true);
+        document.body.style["cursor"] = "col-resize";
+    },
+
+    _makeEgiSelectable: function (e) {
+        if (this._appConfig.mobile) {
+            e.currentTarget.classList.toggle("resizing-action", false);
+        }
+        this.$.baseContainer.classList.toggle("noselect", false);
+        document.body.style["cursor"] = "";
     },
 
     //Style calculator
