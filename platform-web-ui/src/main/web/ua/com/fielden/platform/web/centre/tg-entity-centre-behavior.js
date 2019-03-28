@@ -812,7 +812,7 @@ const TgEntityCentreBehaviorImpl = {
     },
 
     _saveColumnWidth: function (e) {
-        const target = e.target || e.srcElement;
+        const target = e.composedPath()[0];
         //Run save column action only for if the selection criteria is present and the even't target is centre's egi.
         //If selection criteira is not present then save column action was triggered because of incorrect egi DOM configuration. (e.g user specified all columns with grow factor equal to 0)
         if (this.$.selection_criteria._currBindingEntity && target === this.$.egi) {
