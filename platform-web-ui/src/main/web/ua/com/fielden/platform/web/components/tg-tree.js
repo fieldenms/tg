@@ -86,7 +86,7 @@ const template = html`
 const calculateNumberOfOpenedItems = function (entity) {
     let length = 0;
     if (entity.entity.hasChildren && entity.opened) {
-        const filteredChildren = entity.children.forEach(child => {
+        entity.children.forEach(child => {
             if (child.visible) {
                 length += calculateNumberOfOpenedItems(child) + 1;
             }
