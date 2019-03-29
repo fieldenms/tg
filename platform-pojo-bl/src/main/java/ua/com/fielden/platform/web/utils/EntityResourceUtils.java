@@ -53,6 +53,7 @@ import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.entity.fetch.IFetchProvider;
 import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
+import ua.com.fielden.platform.entity.proxy.MockNotFoundEntityMaker;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.entity.validation.EntityExistsValidator;
@@ -337,7 +338,7 @@ public class EntityResourceUtils {
         if (isEmpty(stringQuery)) {
             throw new EntityResourceUtilsException("Mock 'not found' entity could not be created due to empty 'stringQuery'.");
         }
-        return  newPlainEntity(type, null).setDesc(stringQuery);
+        return  newPlainEntity(MockNotFoundEntityMaker.mock(type), null).setDesc(stringQuery);
     }
     
     /**
@@ -357,10 +358,7 @@ public class EntityResourceUtils {
      * @return
      */
     public static boolean isMockNotFoundEntity(final Object obj) {
-        return obj instanceof AbstractEntity /* obj can be null and will return false as a result */
-                && ((AbstractEntity<?>) obj).getId() == null
-                && (obj instanceof PropertyDescriptor && ((PropertyDescriptor<?>) obj).getKey() == null || KEY_NOT_ASSIGNED.equals(obj.toString()) )
-                && !isEmpty(((AbstractEntity<?>) obj).getDesc());
+        return obj instanceof AbstractEntity && MockNotFoundEntityMaker.isMockNotFoundValue((AbstractEntity<?>)obj);
     }
     
     /**
