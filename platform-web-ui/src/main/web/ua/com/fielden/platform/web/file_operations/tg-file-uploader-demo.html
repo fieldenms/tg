@@ -2,55 +2,56 @@
 <html>
 
 <head>
-	<meta charset="utf-8">
-	<meta name="viewport" content="width=device-width, minimum-scale=1.0, initial-scale=1.0, user-scalable=yes">
-	<title>File Upload Demo</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, minimum-scale=1.0, initial-scale=1.0, user-scalable=yes">
+    <title>File Upload Demo</title>
 
-	<script src="/resources/polymer/webcomponentsjs/webcomponents-lite.js"></script>
-	<link rel="import" href="/resources/polymer/polymer/polymer.html">
-	<link rel="import" href="/resources/file_operations/tg-file-upload-paper-button.html">
+    <script src="/resources/polymer/@webcomponents/webcomponentsjs/webcomponents-bundle.js"></script>
+    <script type="module">
+        import '/resources/polymer/@polymer/iron-flex-layout/iron-flex-layout-classes.js'; // fullbleed class
+        import '/resources/polymer/@polymer/paper-styles/paper-styles-classes.js'; // Roboto font
+        import '/resources/file_operations/tg-file-upload-paper-button.js';
+    </script>
 
-
-	<style is="custom-style">
-		body {
-			font-family: 'Roboto', 'Helvetica Neue', 'Helvetica', 'Arial',
-			'sans-serif';
-			font-size: 10pt;
-			background: white;
-			-webkit-font-smoothing: antialiased;
-		}
-	</style>
-
+    <style>
+        body {
+            font-family: 'Roboto', 'Helvetica Neue', 'Helvetica', 'Arial',
+            'sans-serif';
+            font-size: 10pt;
+            background: white;
+            -webkit-font-smoothing: antialiased;
+        }
+    </style>
 </head>
 
 <body unresolved class="fullbleed">
-
-	<template id="t" is="dom-bind">
-		<tg-file-upload-paper-button id="fileUploader" upload-size-limit-kb='10240' debug mime-types-accepted='.csv,.txt,text/plain,text/csv' url="/csv-txt-file-processing" style="width: 200px"></tg-file-upload-paper-button>
-		<br/>
-		<paper-button raised roll="button" id="btnAbort" on-tap='abort'><span>Abort</span></paper-button>
-	</template>
-	
+    <dom-bind>
+        <template id="t">
+            <tg-file-upload-paper-button id="fileUploader" upload-size-limit-kb='10240' debug mime-types-accepted='.csv,.txt,text/plain,text/csv' url="/csv-txt-file-processing" style="width: 200px"></tg-file-upload-paper-button>
+            <br/>
+            <paper-button raised roll="button" id="btnAbort" on-tap='abort'><span>Abort</span></paper-button>
+        </template>
+    </dom-bind>
 </body>
 
 <script>
-	var t = document.querySelector('#t');
+    const t = document.querySelector('#t');
 
-	t.addEventListener('dom-change', function() {
-		t.$.fileUploader.processFileUploadedEvent = function() {
-			console.log("file uploaded!");
-		};
+    t.addEventListener('dom-change', function() {
+        t.$.fileUploader.processFileUploadedEvent = function() {
+            console.log("file uploaded!");
+        };
 
-		t.$.fileUploader.processResponse = function(e) {
-			console.log("file processed:", e);
-		}
+        t.$.fileUploader.processResponse = function(e) {
+            console.log("file processed:", e);
+        }
 
-		t.$.fileUploader.processError = function(e) {
-			console.log("file processing resulted in error:", e);
-		}
-		
-		t.abort = () => console.log(t.$.fileUploader.abort());
-	}.bind(t));
+        t.$.fileUploader.processError = function(e) {
+            console.log("file processing resulted in error:", e);
+        }
+        
+        t.abort = () => console.log(t.$.fileUploader.abort());
+    }.bind(t));
 </script>
 
 </html>
