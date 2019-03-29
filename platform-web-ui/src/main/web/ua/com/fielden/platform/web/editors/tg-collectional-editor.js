@@ -804,7 +804,8 @@ Polymer({
         const removedItems = this.splice("_entities", fromIndex, 1);
         if (removedItems.length > 0) {
             this.splice("_entities", toIndex, 0, removedItems[0]);
-            this.$.input.selectItem(removedItems[0]);
+            this.$.input.updateSizeForIndex(toIndex);
+            this.$.input.selectIndex(toIndex);
         }
         this.entity.set("chosenIds", this._entities.filter(entity => chosenIds.indexOf(this.idOrKey(entity)) >= 0).map(entity => this.idOrKey(entity)));
         this._disableSelectionListeners = false;
