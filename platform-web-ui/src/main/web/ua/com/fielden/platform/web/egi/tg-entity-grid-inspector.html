@@ -32,7 +32,6 @@
     <style>
         :host {
             @apply(--layout-vertical);
-
         }
         /*miscellanea styles*/
         .lock-layer {
@@ -92,11 +91,13 @@
         }
         paper-material {
             border-radius: 2px;
+            min-height: 0;
         }
         paper-material[fit-to-height] {
             flex-grow: 1;
         }
         #scrollContainer {
+            min-height: 0;
             overflow: auto;
             -webkit-overflow-scrolling: touch;
         }
@@ -137,7 +138,7 @@
             font-size: 1rem;
             font-weight: 400;
             color: #212121;
-            height: 1.5rem;
+            height: var(--egi-row-height, 1.5rem);
             border-top: 1px solid #e3e3e3;
             -webkit-font-smoothing: antialiased;
             text-rendering: optimizeLegibility;
@@ -159,7 +160,7 @@
         .table-footer-row {
             font-size: 0.9rem;
             color: #757575;
-            height: 1.5rem;
+            height: var(--egi-row-height, 1.5rem);
             border-top: 1px solid #e3e3e3;
             -webkit-font-smoothing: antialiased;
             text-rendering: optimizeLegibility;
@@ -207,6 +208,7 @@
         .drag-anchor {
             --iron-icon-width: 1.5rem;
             --iron-icon-height: 1.5rem;
+            @apply(--layout-self-center);
         }
         .drag-anchor[selected]:hover {
             cursor: move;
@@ -264,7 +266,7 @@
         <tg-serialiser id="serialiser"></tg-serialiser>
 
         <paper-material elevation="1" style$="[[_calcMaterialStyle(showMarginAround)]]" fit-to-height$="[[fitToHeight]]" class="layout vertical">
-            <div class="layout vertical flex data-table">
+            <div class="layout vertical flex data-table" style="min-height:0;">
                 <!--Table toolbar-->
                 <div class="grid-toolbar layout horizontal wrap" hidden$="[[!toolbarVisible]]">
                     <paper-progress id="progressBar" hidden$="[[!_showProgress]]"></paper-progress>
@@ -275,7 +277,7 @@
                         <content select=".standart-action"></content>
                     </div>
                 </div>
-                <div id="baseContainer" class="relative layout horizontal flex" on-wheel="_handleWheel" on-focusin="_baseContainerFocusIn" on-focusout="_baseContainerFocusOut">
+                <div id="baseContainer" class="relative layout horizontal flex" style="min-height: 0;" on-wheel="_handleWheel" on-focusin="_baseContainerFocusIn" on-focusout="_baseContainerFocusOut">
                     <div id="scrollContainer" on-scroll="_handleScrollEvent" class="layout vertical flex">
                         <!-- Table header -->
                         <div class="layout horizontal table-header-row">
@@ -618,7 +620,7 @@
                                 </template>
                             </div>
                         </template>
-                        <div id="bottomShadow" class="absolute" hidden$="[[!_isSummaryPresentAndFixed(totals, summaryFixed)]]" style$="[[_calcBottomShadowStyle(_totalsRowCount, _showBottomShadow)]]"></div>
+                        <div id="bottomShadow" class="absolute" hidden$="[[!_isSummaryPresentAndFixed(totals, summaryFixed)]]" style$="[[_calcBottomShadowStyle(rowHeight, _totalsRowCount, _showBottomShadow)]]"></div>
                         <div id="topShadow" class="absolute" hidden$="[[!_isHeaderFixed(headerFixed)]]" style$="[[_calcTopShadowStyle(_showTopShadow)]]"></div>
                         <div id="tbShadow" class="absolute" hidden$="[[_isHeaderFixed(headerFixed)]]" style$="[[_calcTBShadowStyle(_showTopShadow)]]"></div>
                     </div>
@@ -833,6 +835,11 @@
                     type: String,
                     value: "20px"
                 },
+                rowHeight: {
+                    type: String,
+                    value: "1.5rem",
+                    observer: "_rowHeightChanged"
+                },
                 _cellPadding: {
                     type: String,
                     value: "1.2rem"
@@ -849,7 +856,7 @@
             },
 
             observers: [
-          '_heightRelatedPropertiesChanged(visibleRowCount, constantHeight, fitToHeight, summaryFixed, _totalsRowCount, _bottomMargin)'
+          '_heightRelatedPropertiesChanged(visibleRowCount, rowHeight, constantHeight, fitToHeight, summaryFixed, _totalsRowCount, _bottomMargin)'
             ],
 
             behaviors: [Polymer.TgBehaviors.TgTooltipBehavior, Polymer.IronResizableBehavior, Polymer.IronA11yKeysBehavior, Polymer.TgBehaviors.TgShortcutProcessingBehavior, Polymer.TgBehaviors.TgDragFromBehavior],
@@ -964,7 +971,11 @@
                 if (a && b && a.get('id') && b.get('id')) {
                     return a.get('id') === b.get('id');
                 }
-                return this.$.reflector.equalsEx(a, b);
+                try {
+                    return this.$.reflector.equalsEx(a, b);
+                } catch (e) {
+                    return false;
+                }
             },
             
             _findEntity: function (entity, entities) {
@@ -1286,7 +1297,11 @@
                 this._handleScrollEvent();
             },
 
-            _heightRelatedPropertiesChanged: function (visibleRowCount, constantHeight, fitToHeight, summaryFixed, _totalsRowCount, _bottomMargin) {
+            _rowHeightChanged: function (newValue, oldValue) {
+                this.updateStyles({"--egi-row-height": newValue});
+            },
+
+            _heightRelatedPropertiesChanged: function (visibleRowCount, rowHeight, constantHeight, fitToHeight, summaryFixed, _totalsRowCount, _bottomMargin) {
                 //Constant height take precedence over visible row count which takes precedence over default behaviour that extends the EGI's height to it's content height
                 this.style.removeProperty("height");
                 this.style.removeProperty("min-height");
@@ -1297,7 +1312,7 @@
                 } else if (visibleRowCount > 0) { //Set the height or max height for the scroll container so that only specified number of rows become visible.
                     this.style["min-height"] = "fit-content";
                     const rowCount = visibleRowCount + (summaryFixed ? _totalsRowCount : 0);
-                    const height = "calc(3rem + " + rowCount + " * 1.5rem + " + rowCount + "px" + (this.summaryFixed && this._totalsRowCount > 0 ? (" + " + this._bottomMargin) : "") + ")";
+                    const height = "calc(3rem + " + rowCount + " * " + rowHeight + " + " + rowCount + "px" + (this.summaryFixed && this._totalsRowCount > 0 ? (" + " + this._bottomMargin) : "") + ")";
                     if (fitToHeight) {
                         this.$.scrollContainer.style["height"] = height;
                     } else {
@@ -2204,11 +2219,11 @@
             /*
              * Below are functions those are related to shadow style calculation.
              */
-            _calcBottomShadowStyle: function (_totalsRowCount, _showBottomShadow) {
-                var shadowStyle = "left:0;right:0;bottom:0;";
-                shadowStyle += "height:calc(1.5rem * " + _totalsRowCount + " + " + _totalsRowCount + "px);";
+            _calcBottomShadowStyle: function (rowHeight, _totalsRowCount, _showBottomShadow) {
+                let shadowStyle = "left:0;right:0;bottom:0;";
+                shadowStyle += "height:calc(" + rowHeight + " * " + _totalsRowCount + " + " + _totalsRowCount + "px);";
                 if (_showBottomShadow) {
-                    shadowStyle += "box-shadow: 0px -3px 6px -2px rgba(0,0,0,0.7);";
+                    shadowStyle += "box-shadow: 0px -6px 6px -5px rgba(0,0,0,0.7);";
                 }
                 return shadowStyle;
             },
@@ -2216,7 +2231,7 @@
             _calcTopShadowStyle: function (_showTopShadow) {
                 var shadowStyle = "left:0;right:0;top:0;height:3rem;";
                 if (_showTopShadow) {
-                    shadowStyle += "box-shadow: 0px 3px 6px -2px rgba(0,0,0,0.7);";
+                    shadowStyle += "box-shadow: 0px 6px 6px -5px rgba(0,0,0,0.7);";
                 }
                 return shadowStyle;
             },
@@ -2227,7 +2242,7 @@
                 const primaryActionFixed = this._isPrimaryActionsFixed(checkboxesWithPrimaryActionsFixed, numOfFixedCols);
                 let shadowStyle = "left:0;top:0;bottom:0;width:calc(" + this._calculateDragAnchorWidth(canDragFrom, anchorFixed) + " + " + this._calculateCheckboxWidth(canDragFrom, checkboxVisible, checkboxFixed) + " + " + this._calculatePrimaryActionWidth(primaryAction, primaryActionFixed) + " + " + this._calculateFixedColsWidth(numOfFixedCols) + ");";
                 if (_showLeftShadow) {
-                    shadowStyle += "box-shadow: 3px 0px 6px -2px rgba(0,0,0,0.7);";
+                    shadowStyle += "box-shadow: 6px 0px 6px -5px rgba(0,0,0,0.7);";
                 }
                 return shadowStyle;
             },
@@ -2235,7 +2250,7 @@
             _calcRightShadowStyle: function (secondaryActions, secondaryActionsFixed, _showRightShadow, _fixedColumnWidth, _scrollableColumnWidth) {
                 var shadowStyle = "right:0;top:0;bottom:0;width:calc(" + this._calculateSecondaryActionWidth(secondaryActions, secondaryActionsFixed) + ");";
                 if (_showRightShadow) {
-                    shadowStyle += "box-shadow: -3px 0px 6px -2px rgba(0,0,0,0.7);";
+                    shadowStyle += "box-shadow: -6px 0px 6px -5px rgba(0,0,0,0.7);";
                 }
                 return shadowStyle;
             },
@@ -2243,7 +2258,7 @@
             _calcTBShadowStyle: function (_showTopShadow) {
                 var shadowStyle = "left:0;right:0;top:-50px;height:50px;";
                 if (_showTopShadow) {
-                    shadowStyle += "box-shadow: 0px 3px 6px -2px rgba(0,0,0,0.7);";
+                    shadowStyle += "box-shadow: 0px 6px 6px -5px rgba(0,0,0,0.7);";
                 }
                 return shadowStyle;
             },

@@ -35,6 +35,7 @@ import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder1aScrol
 import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder1bPageCapacity;
 import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder1cVisibleRows;
 import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder1dFitBehaviour;
+import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder1eRowHeight;
 import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder2Properties;
 import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder2aDraggable;
 import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder3Ordering;
@@ -470,8 +471,14 @@ class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilder
     }
 
     @Override
-    public IResultSetBuilder2Properties<T> fitToHeight() {
+    public IResultSetBuilder1eRowHeight<T> fitToHeight() {
         this.builder.fitToHeight = true;
+        return this;
+    }
+
+    @Override
+    public IResultSetBuilder2Properties<T> rowHeight(final String rowHeight) {
+        this.builder.rowHeight = rowHeight;
         return this;
     }
 }

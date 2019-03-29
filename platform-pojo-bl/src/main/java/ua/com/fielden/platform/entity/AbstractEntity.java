@@ -461,7 +461,7 @@ public abstract class AbstractEntity<K extends Comparable> implements Comparable
      * Hashing is based on the business key implementation.
      */
     @Override
-    public final int hashCode() {
+    public int hashCode() {
         return (getKey() != null ? getKey().hashCode() : 0) * 23;
     }
 
@@ -482,6 +482,10 @@ public abstract class AbstractEntity<K extends Comparable> implements Comparable
             return false;
         }
 
+        // TODO need to carefully consider this bit of logic for comparing ID-only values
+        if (that.isIdOnlyProxy() && this.isIdOnlyProxy()) {
+            return that.getId().equals(this.getId());
+        }
         // TODO need to carefully consider this bit of logic for comparing ID-only values
         if (this.isPersistent() && (that.isIdOnlyProxy() || this.isIdOnlyProxy()) &&
                 (!that.isInstrumented() || !that.isDirty()) &&
@@ -858,7 +862,7 @@ public abstract class AbstractEntity<K extends Comparable> implements Comparable
      * @param propType
      * @return
      */
-    private boolean isEntityExistsValidationApplicable(final Field field, final Class<?> propType) {
+    private static boolean isEntityExistsValidationApplicable(final Field field, final Class<?> propType) {
         final SkipEntityExistsValidation seevAnnotation =  AnnotationReflector.getAnnotation(field, SkipEntityExistsValidation.class);
         final boolean skipEntityExistsValidation = seevAnnotation != null ? !seevAnnotation.skipActiveOnly() && !seevAnnotation.skipDirtyOnly() : false;
         return !skipEntityExistsValidation && (isPersistedEntityType(propType) || isPropertyDescriptor(propType));

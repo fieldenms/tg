@@ -16,6 +16,7 @@ import static ua.com.fielden.platform.reflection.ActivatableEntityRetrospectionH
 import static ua.com.fielden.platform.reflection.ActivatableEntityRetrospectionHelper.isNotSpecialActivatableToBeSkipped;
 import static ua.com.fielden.platform.reflection.Reflector.isMethodOverriddenOrDeclared;
 import static ua.com.fielden.platform.utils.DbUtils.nextIdValue;
+import static ua.com.fielden.platform.utils.EntityUtils.equalsEx;
 import static ua.com.fielden.platform.utils.Validators.findActiveDeactivatableDependencies;
 
 import java.lang.reflect.Field;
@@ -286,15 +287,21 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
      */
     private void handleDirtyActivatableProperty(final T entity, final T persistedEntity, final MetaProperty<?> prop, final Object value) {
         final String propName = prop.getName();
+        // dirty activatable handling only needs to be performed if the current and persisted values are different
+        // at this stage of program execution, these values can only be the same iff a concurrent modification to the same value took place (i.e. non-conflicting concurrent change)
+        // in such case recalculation of refCount for respective entities has already been performed, and double dipping should be avoided
+        if (equalsEx(value, persistedEntity.get(propName))) {
+            return;
+        }
         // if value is null then an activatable entity has been dereferenced and its refCount needs to be decremented
         // but only if the dereferenced value is an active activatable and the entity being saved is not being made active -- thus previously it was not counted as a reference
         if (value == null) {
             final MetaProperty<Boolean> activeProp = entity.getProperty(ACTIVE);
             final boolean beingActivated = activeProp.isDirty() && activeProp.getValue();
             // get the latest value of the dereferenced activatable as the current value of the persisted entity version from the database and decrement its ref count
-            // previous property value should not be null as it would become dirty, also, there was no property conflict, so it can be safely assumed that previous value is NOT null
-            final ActivatableAbstractEntity<?> prevValue = (ActivatableAbstractEntity<?>) entity.getProperty(propName).getPrevValue();
-            final ActivatableAbstractEntity<?> persistedValue = (ActivatableAbstractEntity<?>) session.get().load(prop.getType(), prevValue.getId(), UPGRADE);
+            // original property value should not be null, otherwise property would not become dirty by assigning null
+            final ActivatableAbstractEntity<?> origValue = (ActivatableAbstractEntity<?>) entity.getProperty(propName).getOriginalValue();
+            final ActivatableAbstractEntity<?> persistedValue = (ActivatableAbstractEntity<?>) session.get().load(prop.getType(), origValue.getId(), UPGRADE);
             // if persistedValue active and does not equal to the entity being saving then need to decrement its refCount
             if (!beingActivated && persistedValue.isActive() && !entity.equals(persistedValue)) { // avoid counting self-references
                 persistedValue.setIgnoreEditableState(true);
@@ -305,9 +312,9 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
             persistedEntity.set(propName, null);
         } else { // otherwise there could be either referencing (i.e. before property was null) or a reference change (i.e. from one value to some other)
             // need to process previous property value
-            final AbstractEntity<?> prevValue = (ActivatableAbstractEntity<?>) entity.getProperty(propName).getPrevValue();
-            if (prevValue != null && !entity.equals(prevValue)) { // need to decrement refCount for the dereferenced entity, but avoid counting self-references
-                final ActivatableAbstractEntity<?> persistedValue = (ActivatableAbstractEntity<?>) session.get().load(prop.getType(), prevValue.getId(), UPGRADE);
+            final AbstractEntity<?> origValue = (ActivatableAbstractEntity<?>) entity.getProperty(propName).getOriginalValue();
+            if (origValue != null && !entity.equals(origValue)) { // need to decrement refCount for the dereferenced entity, but avoid counting self-references
+                final ActivatableAbstractEntity<?> persistedValue = (ActivatableAbstractEntity<?>) session.get().load(prop.getType(), origValue.getId(), UPGRADE);
                 persistedValue.setIgnoreEditableState(true);
                 session.get().update(persistedValue.decRefCount());
             }
@@ -396,7 +403,7 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
      * @return
      */
     private boolean shouldProcessAsActivatable(final T entity, final MetaProperty<?> prop) {
-        boolean shouldProcessAsActivatable;
+        final boolean shouldProcessAsActivatable;
         if (prop.isActivatable() && entity instanceof ActivatableAbstractEntity && isNotSpecialActivatableToBeSkipped(prop)) {
             final Class<? extends ActivatableAbstractEntity<?>> type = (Class<? extends ActivatableAbstractEntity<?>>) prop.getType();
             final DeactivatableDependencies ddAnnotation = type.getAnnotation(DeactivatableDependencies.class);
@@ -443,7 +450,6 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
      */
     private T saveNewEntity(final T entity) {
         // let's make sure that entity is not a duplicate
-        
         if (entityExists.apply(createQueryByKey(dbVersion.get(), entityType, keyType, isFilterable.get(), entity.getKey()))) {
             throw new EntityAlreadyExists(format("%s [%s] already exists.", TitlesDescsGetter.getEntityTitleAndDesc(entity.getType()).getKey(), entity));
         }
@@ -494,11 +500,18 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
             }
         }
 
-        // save the entity
-        session.get().save(entity.set(ID, nextIdValue(ID_SEQUENCE_NAME, session.get())));
-        session.get().flush();
-        session.get().clear();
-
+        // let's now assign a new ID and attempt to save the entity
+        // this may result in a runtime exception, e.g. some text values were too long
+        // in case of an exception, ID needs to be reset to null, otherwise the entity would be recognisable as persisted
+        try {
+            session.get().save(entity.set(ID, nextIdValue(ID_SEQUENCE_NAME, session.get())));
+            session.get().flush(); // force saving to DB
+            session.get().clear();
+        } catch (final Exception ex) {
+            entity.set(ID, null);
+            throw ex;
+        }
+        
         return entityFetchOption.map(fetch -> findById.apply(entity.getId(), fetch)).orElse(entity);
     }
 

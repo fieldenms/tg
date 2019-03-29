@@ -14,6 +14,7 @@ import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.selec
 import static ua.com.fielden.platform.error.Result.successful;
 import static ua.com.fielden.platform.reflection.AnnotationReflector.getPropertyAnnotation;
 import static ua.com.fielden.platform.utils.EntityUtils.isEntityType;
+
 import java.lang.reflect.Field;
 import java.lang.reflect.ParameterizedType;
 import java.math.BigDecimal;
@@ -52,6 +53,7 @@ import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.entity.fetch.IFetchProvider;
 import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
+import ua.com.fielden.platform.entity.proxy.MockNotFoundEntityMaker;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.entity.validation.EntityExistsValidator;
@@ -287,7 +289,7 @@ public class EntityResourceUtils {
             if (valToBeApplied != null && convertedValue == null) {
                 final Class<?> propType = determinePropertyType(type, name);
                 if (isEntityType(propType)) {
-                    valueToBeApplied = createMockNotFoundEntity(propType, (String) valToBeApplied); // here valToBeApplied must be string; look at 'convert' method with 'reflectedValue' parameter always string for entity-typed 'propertyType'
+                    valueToBeApplied = createMockNotFoundEntity((Class<AbstractEntity<?>>) propType, (String) valToBeApplied); // here valToBeApplied must be string; look at 'convert' method with 'reflectedValue' parameter always string for entity-typed 'propertyType'
                 } else {
                     valueToBeApplied = convertedValue;
                 }
@@ -332,13 +334,11 @@ public class EntityResourceUtils {
      * 
      * @return
      */
-    public static AbstractEntity<?> createMockNotFoundEntity(final Class<?> type, final String stringQuery) {
+    public static AbstractEntity<?> createMockNotFoundEntity(final Class<? extends AbstractEntity> type, final String stringQuery) {
         if (isEmpty(stringQuery)) {
-            throw new EntityResourceUtilsException(format("Mock 'not found' entity could not be created due to empty 'stringQuery' [%s].", stringQuery));
+            throw new EntityResourceUtilsException("Mock 'not found' entity could not be created due to empty 'stringQuery'.");
         }
-        final AbstractEntity<?> mockEntity = newPlainEntity((Class<AbstractEntity<?>>) type, null);
-        mockEntity.set(DESC, stringQuery);
-        return mockEntity;
+        return  newPlainEntity(MockNotFoundEntityMaker.mock(type), null).setDesc(stringQuery);
     }
     
     /**
@@ -358,10 +358,7 @@ public class EntityResourceUtils {
      * @return
      */
     public static boolean isMockNotFoundEntity(final Object obj) {
-        return obj instanceof AbstractEntity /* obj can be null and will return false as a result */
-                && ((AbstractEntity) obj).getId() == null
-                && (obj instanceof PropertyDescriptor && ((PropertyDescriptor) obj).getKey() == null || KEY_NOT_ASSIGNED.equals(obj.toString()) )
-                && !isEmpty(((AbstractEntity) obj).getDesc());
+        return obj instanceof AbstractEntity && MockNotFoundEntityMaker.isMockNotFoundValue((AbstractEntity<?>)obj);
     }
     
     /**
@@ -387,7 +384,7 @@ public class EntityResourceUtils {
      * @param type
      * @return
      */
-    public static <T extends AbstractEntity<?>> T entityWithMocksFromString(final Function<String, T> specificConverter, final String str, final Class<?> type) {
+    public static <T extends AbstractEntity<?>> T entityWithMocksFromString(final Function<String, T> specificConverter, final String str, final Class<? extends AbstractEntity> type) {
         if (str.startsWith(NOT_FOUND_MOCK_PREFIX)) {
             return (T) createMockNotFoundEntity(type, str.replaceFirst(quote(NOT_FOUND_MOCK_PREFIX), ""));
         }

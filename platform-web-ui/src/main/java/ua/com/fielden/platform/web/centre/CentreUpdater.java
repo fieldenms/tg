@@ -839,11 +839,11 @@ public class CentreUpdater {
                     final IEntityDao<AbstractEntity<?>> companion = companionFinder.find(root, true);
                     final fetch<AbstractEntity<?>> fetch = fetchForPropertyOrDefault(companion.getFetchProvider(), property).fetchModel();
                     if (idOrKey.startsWith(ID_PREFIX)) {
-                        return (AbstractEntity) propertyCompanion.findById(Long.valueOf(idOrKey.replaceFirst(quote(ID_PREFIX), "")), fetch);
+                        return (AbstractEntity<?>) propertyCompanion.findById(Long.valueOf(idOrKey.replaceFirst(quote(ID_PREFIX), "")), fetch);
                     } else {
-                        return (AbstractEntity) propertyCompanion.findByKeyAndFetch(fetch, idOrKey);
+                        return (AbstractEntity<?>) propertyCompanion.findByKeyAndFetch(fetch, idOrKey);
                     }
-                }, str, propertyType));
+                }, str, (Class<AbstractEntity<?>>) propertyType));
             }
         } else {
             return value; // boolean and String values here
@@ -886,7 +886,7 @@ public class CentreUpdater {
      * @param conversionFunc
      * @return
      */
-    private static <T, M> M nullOrConvert(final Object value, final Function<T, M> conversionFunc) {
+    private static <T> Object nullOrConvert(final Object value, final Function<T, ?> conversionFunc) {
         return value == null ? null : conversionFunc.apply((T) value);
     }
     
@@ -1049,8 +1049,8 @@ public class CentreUpdater {
             
             processValue(diff, EXCLUSIVE.name(), selectionCriteriaContains, "selection criteria", (value) -> targetCentre.getFirstTick().setExclusive(root, property, (Boolean) value), property);
             processValue(diff, EXCLUSIVE2.name(), selectionCriteriaContains, "selection criteria", (value) -> targetCentre.getFirstTick().setExclusive2(root, property, (Boolean) value), property);
-            processValue(diff, DATE_PREFIX.name(), selectionCriteriaContains, "selection criteria", (value) -> targetCentre.getFirstTick().setDatePrefix(root, property, nullOrConvert(value, STRING_TO_DATE_PREFIX)), property);
-            processValue(diff, DATE_MNEMONIC.name(), selectionCriteriaContains, "selection criteria", (value) -> targetCentre.getFirstTick().setDateMnemonic(root, property, nullOrConvert(value, STRING_TO_DATE_MNEMONIC)), property);
+            processValue(diff, DATE_PREFIX.name(), selectionCriteriaContains, "selection criteria", (value) -> targetCentre.getFirstTick().setDatePrefix(root, property, (DateRangePrefixEnum) nullOrConvert(value, STRING_TO_DATE_PREFIX)), property);
+            processValue(diff, DATE_MNEMONIC.name(), selectionCriteriaContains, "selection criteria", (value) -> targetCentre.getFirstTick().setDateMnemonic(root, property, (MnemonicEnum) nullOrConvert(value, STRING_TO_DATE_MNEMONIC)), property);
             processValue(diff, AND_BEFORE.name(), selectionCriteriaContains, "selection criteria", (value) -> targetCentre.getFirstTick().setAndBefore(root, property, (Boolean) value), property);
             processValue(diff, OR_NULL.name(), selectionCriteriaContains, "selection criteria", (value) -> targetCentre.getFirstTick().setOrNull(root, property, (Boolean) value), property);
             processValue(diff, NOT.name(), selectionCriteriaContains, "selection criteria", (value) -> targetCentre.getFirstTick().setNot(root, property, (Boolean) value), property);

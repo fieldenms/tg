@@ -14,6 +14,7 @@ import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder1aScrol
 import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder1bPageCapacity;
 import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder1cVisibleRows;
 import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder1dFitBehaviour;
+import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder1eRowHeight;
 import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder2Properties;
 import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder2aDraggable;
 import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder3Ordering;
@@ -137,11 +138,6 @@ class TopLevelActionsBuilder<T extends AbstractEntity<?>> implements ICentreTopL
     }
 
     @Override
-    public IResultSetBuilder2Properties<T> fitToHeight() {
-        return new ResultSetBuilder<>(builder).fitToHeight();
-    }
-
-    @Override
     public IResultSetBuilder3Ordering<T> addProp(final String propName) {
         return new ResultSetBuilder<>(builder).addProp(propName);
     }
@@ -149,5 +145,15 @@ class TopLevelActionsBuilder<T extends AbstractEntity<?>> implements ICentreTopL
     @Override
     public IResultSetBuilder4aWidth<T> addProp(final PropDef<?> propDef) {
         return new ResultSetBuilder<>(builder).addProp(propDef);
+    }
+
+    @Override
+    public IResultSetBuilder1eRowHeight<T> fitToHeight() {
+        return new ResultSetBuilder<>(builder).fitToHeight();
+    }
+
+    @Override
+    public IResultSetBuilder2Properties<T> rowHeight(final String rowHeight) {
+        return new ResultSetBuilder<>(builder).rowHeight(rowHeight);
     }
 }
