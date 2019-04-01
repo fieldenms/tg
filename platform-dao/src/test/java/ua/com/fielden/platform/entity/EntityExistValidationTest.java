@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.entity;
 
+import static java.lang.String.format;
 import static java.util.Arrays.asList;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -19,9 +20,11 @@ import ua.com.fielden.platform.domaintree.centre.impl.CentreDomainTreeManagerAnd
 import ua.com.fielden.platform.domaintree.impl.DomainTreeEnhancerCache;
 import ua.com.fielden.platform.domaintree.testing.ClassProviderForTestingPurposes;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
+import ua.com.fielden.platform.entity.validation.EntityExistsValidator;
 import ua.com.fielden.platform.entity_centre.review.criteria.EntityQueryCriteria;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
+import ua.com.fielden.platform.reflection.TitlesDescsGetter;
 import ua.com.fielden.platform.sample.domain.TgCategory;
 import ua.com.fielden.platform.sample.domain.TgSystem;
 import ua.com.fielden.platform.sample.domain.crit_gen.CriteriaGeneratorTestModule;
@@ -148,6 +151,39 @@ public class EntityExistValidationTest extends AbstractDaoTestCase {
         assertNotNull(sys.getThirdCategory());
     }
 
+    @Test
+    public void entity_exists_validation_does_not_permit_dirty_entities() {
+        final TgCategory cat1 = co$(TgCategory.class).findByKey("Cat1");
+        cat1.setDesc(cat1.getDesc() + "some change");
+        final TgSystem sys = new_(TgSystem.class, "Sys2").setActive(true).setFirstCategory(cat1);
+
+        final String entityTitle = TitlesDescsGetter.getEntityTitleAndDesc(cat1.getType()).getKey(); 
+        final Result result = sys.isValid();
+        assertFalse(result.isSuccessful());
+        assertEquals(format(EntityExistsValidator.DIRTY_ERR, cat1, entityTitle), result.getMessage());
+    }
+
+    @Test
+    public void skipped_entity_validation_does_not_restrict_dirty_entities() {
+        final TgCategory cat1 = co$(TgCategory.class).findByKey("Cat1");
+        cat1.setDesc(cat1.getDesc() + "some change");
+        final TgSystem sys = new_(TgSystem.class, "Sys2").setActive(true).setSecondCategory(cat1);
+
+        assertTrue(sys.isValid().isSuccessful());
+        assertNotNull(sys.getSecondCategory());
+    }
+
+    @Test
+    public void entity_exists_validation_with_skipActiveOnly_does_not_permit_dirty_entities() {
+        final TgCategory cat1 = co$(TgCategory.class).findByKey("Cat1");
+        cat1.setDesc(cat1.getDesc() + "some change");
+        final TgSystem sys = new_(TgSystem.class, "Sys2").setActive(true).setThirdCategory(cat1);
+
+        final String entityTitle = TitlesDescsGetter.getEntityTitleAndDesc(cat1.getType()).getKey(); 
+        final Result result = sys.isValid();
+        assertFalse(result.isSuccessful());
+        assertEquals(format(EntityExistsValidator.DIRTY_ERR, cat1, entityTitle), result.getMessage());
+    }
 
     @Override
     protected void populateDomain() {

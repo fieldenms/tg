@@ -864,8 +864,8 @@ public abstract class AbstractEntity<K extends Comparable> implements Comparable
      */
     private static boolean isEntityExistsValidationApplicable(final Field field, final Class<?> propType) {
         final SkipEntityExistsValidation seevAnnotation =  AnnotationReflector.getAnnotation(field, SkipEntityExistsValidation.class);
-        final boolean skipEntityExistsValidation = seevAnnotation != null ? !seevAnnotation.skipActiveOnly() && !seevAnnotation.skipDirtyOnly() : false;
-        return !skipEntityExistsValidation && (isPersistedEntityType(propType) || isPropertyDescriptor(propType));
+        final boolean doNotSkipEntityExistsValidation = seevAnnotation == null || seevAnnotation.skipActiveOnly() || seevAnnotation.skipDirtyOnly();
+        return doNotSkipEntityExistsValidation && (isPersistedEntityType(propType) || isPropertyDescriptor(propType));
     }
 
     /**

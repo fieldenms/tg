@@ -5,6 +5,7 @@ import static java.util.Optional.empty;
 import static java.util.Optional.of;
 import static ua.com.fielden.platform.entity.AbstractEntity.KEY_NOT_ASSIGNED;
 import static ua.com.fielden.platform.entity.ActivatableAbstractEntity.ACTIVE;
+import static ua.com.fielden.platform.entity.proxy.MockNotFoundEntityMaker.isMockNotFoundValue;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchOnly;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
@@ -13,7 +14,6 @@ import static ua.com.fielden.platform.error.Result.successful;
 import static ua.com.fielden.platform.reflection.AnnotationReflector.getAnnotation;
 import static ua.com.fielden.platform.reflection.Finder.findFieldByName;
 import static ua.com.fielden.platform.utils.EntityUtils.isPropertyDescriptor;
-import static ua.com.fielden.platform.web.utils.EntityResourceUtils.isMockNotFoundEntity;
 
 import java.lang.annotation.Annotation;
 import java.util.Optional;
@@ -44,6 +44,7 @@ public class EntityExistsValidator<T extends AbstractEntity<?>> implements IBefo
     public static final String WAS_NOT_FOUND_CONCRETE_ERR = "%s [%s] was not found.";
     private static final String WAS_NOT_FOUND_ERR = "%s was not found.";
     public static final String EXISTS_BUT_NOT_ACTIVE_ERR = "%s [%s] exists, but is not active.";
+    public static final String DIRTY_ERR = "EntityExists validator: dirty entity %s (%s) is not acceptable.";
 
     private final Class<T> type;
     private final ICompanionObjectFinder coFinder;
@@ -82,7 +83,7 @@ public class EntityExistsValidator<T extends AbstractEntity<?>> implements IBefo
                     return successful(entity);
                 }
                 final String entityTitle = TitlesDescsGetter.getEntityTitleAndDesc(newValue.getType()).getKey();
-                return failure(entity, format("EntityExists validator: dirty entity %s (%s) is not acceptable.", newValue, entityTitle));
+                return failure(entity, format(DIRTY_ERR, newValue, entityTitle));
             }
             
             if (property.criteriaParent) {
@@ -93,7 +94,7 @@ public class EntityExistsValidator<T extends AbstractEntity<?>> implements IBefo
             final boolean exists;
             final boolean activeEnough; // Does not have to 100% active - see below
             if (!property.isActivatable()) { // is property value represents non-activatable?
-                exists = isPropertyDescriptor ? !isMockNotFoundEntity(newValue) : co.entityExists(newValue);
+                exists = isPropertyDescriptor ? !isMockNotFoundValue(newValue) : co.entityExists(newValue);
                 activeEnough = true;
             } else { // otherwise, property value is activatable
                 final Class<T> entityType = co.getEntityType();
