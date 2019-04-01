@@ -138,7 +138,7 @@ public final class MetaPropertyFull<T> extends MetaProperty<T> {
      * might be desirable to specify type more accurately.
      *
      * @param entity
-     * @param criteriaParent
+     * @param criteriaOwner
      * @param field
      * @param type
      * @param isKey
@@ -153,7 +153,7 @@ public final class MetaPropertyFull<T> extends MetaProperty<T> {
      */
     public MetaPropertyFull(
             final AbstractEntity<?> entity,
-            final boolean criteriaParent,
+            final boolean criteriaOwner,
             final Field field,
             final Class<?> type,
             final boolean isProxy,
@@ -167,7 +167,7 @@ public final class MetaPropertyFull<T> extends MetaProperty<T> {
             final Map<ValidationAnnotation, Map<IBeforeChangeEventHandler<T>, Result>> validators,
             final IAfterChangeEventHandler<T> aceHandler,
             final String[] dependentPropertyNames) {
-        super(entity, criteriaParent, field, type, isKey, isProxy, dependentPropertyNames);
+        super(entity, criteriaOwner, field, type, isKey, isProxy, dependentPropertyNames);
         
         this.validationAnnotations.addAll(validationAnnotations);
         this.validators = validators;
@@ -195,7 +195,7 @@ public final class MetaPropertyFull<T> extends MetaProperty<T> {
     @Override
     public final Result validate(final T newValue, final Set<Annotation> applicableValidationAnnotations, final boolean ignoreRequiredness) {
         setLastInvalidValue(null);
-        if (!ignoreRequiredness && isRequired() && isNull(newValue, getValue()) && !criteriaParent) {
+        if (!ignoreRequiredness && isRequired() && isNull(newValue, getValue()) && !criteriaOwner) {
             final Map<IBeforeChangeEventHandler<T>, Result> requiredHandler = getValidators().get(ValidationAnnotation.REQUIRED);
             if (requiredHandler == null || requiredHandler.size() > 1) {
                 throw new IllegalArgumentException("There are no or there is more than one REQUIRED validation handler for required property!");

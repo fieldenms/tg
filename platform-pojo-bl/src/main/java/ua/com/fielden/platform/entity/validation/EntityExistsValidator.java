@@ -62,16 +62,15 @@ public class EntityExistsValidator<T extends AbstractEntity<?>> implements IBefo
     @Override
     public Result handle(final MetaProperty<T> property, final T newValue, final Set<Annotation> mutatorAnnotations) {
         final IEntityDao<T> co = coFinder.find(type);
-        final Optional<Boolean> isPropertyDescriptorOpt;
+        final boolean isPropertyDescriptor;
         if (co == null) {
-            isPropertyDescriptorOpt = of(isPropertyDescriptor(type));
-            if (!isPropertyDescriptorOpt.get()) {
+            isPropertyDescriptor = isPropertyDescriptor(type);
+            if (!isPropertyDescriptor) {
                 throw new IllegalStateException("EntityExistsValidator is not fully initialised: companion object is missing");
             }
         } else {
-            isPropertyDescriptorOpt = empty();
+            isPropertyDescriptor = false;
         }
-        final boolean isPropertyDescriptor = isPropertyDescriptorOpt.orElse(false);
         
         final AbstractEntity<?> entity = property.getEntity();
         try {
@@ -86,7 +85,7 @@ public class EntityExistsValidator<T extends AbstractEntity<?>> implements IBefo
                 return failure(entity, format(DIRTY_ERR, newValue, entityTitle));
             }
             
-            if (property.criteriaParent) {
+            if (property.criteriaOwner) {
                 return successful(entity);
             }
             // the notion of existence is different for activatable and non-activatable entities,
