@@ -22,7 +22,7 @@ public abstract class AbstractAttachment<AA extends AbstractAttachment<AA, A>, A
     @Title("Attachment")
     @MapTo
     @CompositeKeyMember(2)
-    @SkipEntityExistsValidation(skipDirtyOnly = true)
+    @SkipEntityExistsValidation(skipNew = true)
     private Attachment attachment;
 
     @Observable

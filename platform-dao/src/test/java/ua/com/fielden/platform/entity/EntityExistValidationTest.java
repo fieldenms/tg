@@ -184,6 +184,27 @@ public class EntityExistValidationTest extends AbstractDaoTestCase {
         assertFalse(result.isSuccessful());
         assertEquals(format(EntityExistsValidator.DIRTY_ERR, cat1, entityTitle), result.getMessage());
     }
+    
+    @Test
+    public void entity_exists_validation_with_skipNew_permints_new_entity_values() {
+        final TgCategory cat42 = co$(TgCategory.class).new_().setKey("Cat42");
+        final TgSystem sys = new_(TgSystem.class, "Sys2").setActive(true).setPermitNewCategory(cat42);
+
+        assertTrue(sys.isValid().isSuccessful());
+        assertNotNull(sys.getPermitNewCategory());
+    }
+
+    @Test
+    public void entity_exists_validation_with_skipNew_does_not_permit_persited_dirty_entities() {
+        final TgCategory cat1 = co$(TgCategory.class).findByKey("Cat1");
+        cat1.setDesc(cat1.getDesc() + "some change");
+        final TgSystem sys = new_(TgSystem.class, "Sys2").setActive(true).setPermitNewCategory(cat1);
+
+        final String entityTitle = TitlesDescsGetter.getEntityTitleAndDesc(cat1.getType()).getKey(); 
+        final Result result = sys.isValid();
+        assertFalse(result.isSuccessful());
+        assertEquals(format(EntityExistsValidator.DIRTY_ERR, cat1, entityTitle), result.getMessage());
+    }
 
     @Override
     protected void populateDomain() {

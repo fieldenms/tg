@@ -79,7 +79,7 @@ public class EntityExistsValidator<T extends AbstractEntity<?>> implements IBefo
                 return successful(entity);
             } else if (newValue.isInstrumented() && newValue.isDirty()) { // if entity uninstrumented its dirty state is irrelevant and cannot be checked
                 final SkipEntityExistsValidation seevAnnotation =  getAnnotation(findFieldByName(entity.getType(), property.getName()), SkipEntityExistsValidation.class);
-                if (seevAnnotation != null && seevAnnotation.skipDirtyOnly()) {
+                if (seevAnnotation != null && seevAnnotation.skipNew() && !newValue.isPersisted()) {
                     return successful(entity);
                 }
                 final String entityTitle = TitlesDescsGetter.getEntityTitleAndDesc(newValue.getType()).getKey();

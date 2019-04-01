@@ -30,11 +30,11 @@ public @interface SkipEntityExistsValidation {
     boolean skipActiveOnly() default false;
     
     /**
-     * If set to <code>true</code> the property validation process checks whether an entity exists, but ignores dirty and / or new entities, most likely created ad-hoc through {@link IEntityReader#findByEntityAndFetch(ua.com.fielden.platform.entity.query.fluent.fetch, ua.com.fielden.platform.entity.AbstractEntity)}.
-     * This provides a way to assign dirty / new entity values where it makes sense.
+     * If set to <code>true</code> the property validation process checks whether an entity exists, but ignores new entities that were not yet persisted, and most likely created ad-hoc through {@link IEntityReader#findByEntityAndFetch(ua.com.fielden.platform.entity.query.fluent.fetch, ua.com.fielden.platform.entity.AbstractEntity)}.
+     * This attribute provides a way to support assigning new entity values while still restricting assignment of persisted, but modified values.
      * 
      * @return
      */
-    boolean skipDirtyOnly() default false;
+    boolean skipNew() default false;
     
 }

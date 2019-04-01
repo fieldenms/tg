@@ -61,7 +61,23 @@ public class TgSystem extends ActivatableAbstractEntity<String> {
     @CritOnly(SINGLE)
     @Title(value = "Crit-only Single Category", desc = "Desc")
     private TgCategory critOnlySingleCategory;
-    
+
+    @IsProperty
+    @MapTo
+    @Title(value = "Permit New", desc = "Permits new entity instances.")
+    @SkipEntityExistsValidation(skipNew = true)
+    private TgCategory permitNewCategory;
+
+    @Observable
+    public TgSystem setPermitNewCategory(final TgCategory permitNewCategory) {
+        this.permitNewCategory = permitNewCategory;
+        return this;
+    }
+
+    public TgCategory getPermitNewCategory() {
+        return permitNewCategory;
+    }
+
     @Observable
     public TgSystem setCritOnlySingleCategory(final TgCategory critOnlySingleCategory) {
         this.critOnlySingleCategory = critOnlySingleCategory;
