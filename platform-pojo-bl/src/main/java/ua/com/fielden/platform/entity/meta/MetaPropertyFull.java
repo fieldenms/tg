@@ -8,6 +8,7 @@ import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getTitleAndDe
 import static ua.com.fielden.platform.reflection.TitlesDescsGetter.processReqErrorMsg;
 import static ua.com.fielden.platform.types.tuples.T2.t2;
 import static ua.com.fielden.platform.utils.EntityUtils.equalsEx;
+import static ua.com.fielden.platform.utils.EntityUtils.isCriteriaEntityType;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
@@ -27,7 +28,6 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.AbstractFunctionalEntityForCollectionModification;
 import ua.com.fielden.platform.entity.DynamicEntityKey;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
-import ua.com.fielden.platform.entity.annotation.Required;
 import ua.com.fielden.platform.entity.exceptions.EntityDefinitionException;
 import ua.com.fielden.platform.entity.proxy.StrictProxyException;
 import ua.com.fielden.platform.entity.validation.FinalValidator;
@@ -138,7 +138,6 @@ public final class MetaPropertyFull<T> extends MetaProperty<T> {
      * might be desirable to specify type more accurately.
      *
      * @param entity
-     * @param criteriaOwner
      * @param field
      * @param type
      * @param isKey
@@ -153,7 +152,6 @@ public final class MetaPropertyFull<T> extends MetaProperty<T> {
      */
     public MetaPropertyFull(
             final AbstractEntity<?> entity,
-            final boolean criteriaOwner,
             final Field field,
             final Class<?> type,
             final boolean isProxy,
@@ -167,7 +165,7 @@ public final class MetaPropertyFull<T> extends MetaProperty<T> {
             final Map<ValidationAnnotation, Map<IBeforeChangeEventHandler<T>, Result>> validators,
             final IAfterChangeEventHandler<T> aceHandler,
             final String[] dependentPropertyNames) {
-        super(entity, criteriaOwner, field, type, isKey, isProxy, dependentPropertyNames);
+        super(entity, field, type, isKey, isProxy, dependentPropertyNames);
         
         this.validationAnnotations.addAll(validationAnnotations);
         this.validators = validators;
@@ -195,7 +193,7 @@ public final class MetaPropertyFull<T> extends MetaProperty<T> {
     @Override
     public final Result validate(final T newValue, final Set<Annotation> applicableValidationAnnotations, final boolean ignoreRequiredness) {
         setLastInvalidValue(null);
-        if (!ignoreRequiredness && isRequired() && isNull(newValue, getValue()) && !criteriaOwner) {
+        if (!ignoreRequiredness && isRequired() && isNull(newValue, getValue()) && !isCriteriaEntityType(entity.getType())) {
             final Map<IBeforeChangeEventHandler<T>, Result> requiredHandler = getValidators().get(ValidationAnnotation.REQUIRED);
             if (requiredHandler == null || requiredHandler.size() > 1) {
                 throw new IllegalArgumentException("There are no or there is more than one REQUIRED validation handler for required property!");

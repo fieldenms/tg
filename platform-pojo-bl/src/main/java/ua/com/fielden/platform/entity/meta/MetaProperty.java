@@ -40,7 +40,7 @@ public class MetaProperty<T> implements Comparable<MetaProperty<T>> {
      * According to #979 issue requiredness needs to be processed as part of 'crit-only-single prototype' validation logic similar to all other validators.
      * This property indicates whether meta-property owner represents 'criteria entity' and is used in {@link #validate(Object, Set, boolean)} method to skip {@link Required} validation.
      */
-    public final boolean criteriaOwner;
+    //public final boolean criteriaOwner;
     protected final String name;
     protected Class<?> type;
     private final boolean isEntity;
@@ -62,14 +62,12 @@ public class MetaProperty<T> implements Comparable<MetaProperty<T>> {
 
     public MetaProperty(
             final AbstractEntity<?> entity,
-            final boolean criteriaOwner,
             final Field field,
             final Class<?> type,
             final boolean isKey,
             final boolean isProxy,
             final String[] dependentPropertyNames) {
         this.entity = entity;
-        this.criteriaOwner = criteriaOwner;
         this.name = field.getName();
         this.type = type;
         this.isEntity = AbstractEntity.class.isAssignableFrom(type);
