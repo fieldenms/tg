@@ -629,7 +629,10 @@ public abstract class AbstractEntity<K extends Comparable> implements Comparable
         for (final Field field : fields) { // for each property field
             final String propName = field.getName();
 
-            // Reflector.obtainPropertyAccessor(getType(), propName); -- commented out due to heavy nature of this computation; perhaps this check to be performed only in development mode of the server
+            if (STRICT_MODEL_VERIFICATION) {
+                // TODO this kind of validation should really be implemented as part of the compilation process
+                Reflector.obtainPropertyAccessor(getType(), propName); // computationally heavy
+            }
             // determine property type and adjacent virtues
             final Class<?> type = determineType(field);
             final boolean isKey = keyMembers.contains(field);
