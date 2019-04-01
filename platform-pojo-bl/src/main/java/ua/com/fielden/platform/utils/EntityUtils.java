@@ -653,16 +653,16 @@ public class EntityUtils {
         if (type == null) {
             return false;
         } else {
-            final Boolean value = persistentTypes.getIfPresent(type);
-            if (value == null) {
-                final boolean result = isEntityType(type)
-                    && !isUnionEntityType(type)
-                    && !isSyntheticEntityType((Class<? extends AbstractEntity<?>>) type)
-                    && AnnotationReflector.getAnnotation(type, MapEntityTo.class) != null;
-                persistentTypes.put(type, result);
-                return result;
-            } else {
-                return value;
+            try {
+                return persistentTypes.get(type, () ->
+                        isEntityType(type)
+                        && !isUnionEntityType(type)
+                        && !isSyntheticEntityType((Class<? extends AbstractEntity<?>>) type)
+                        && AnnotationReflector.getAnnotation(type, MapEntityTo.class) != null);
+            } catch (final Exception ex) {
+                final String msg = format("Could not determine persistent nature of entity type [%s].", type.getSimpleName());
+                logger.error(msg, ex);
+                throw new ReflectionException(msg, ex);
             }
         }
     }
@@ -677,15 +677,15 @@ public class EntityUtils {
         if (type == null) {
             return false;
         } else {
-            final Boolean value  = syntheticTypes.getIfPresent(type);
-            if (value == null) {
-                final boolean foundModelField = listOf(type.getDeclaredFields()).stream().anyMatch(field -> isStatic(field.getModifiers()) && //
-                        ("model_".equals(field.getName()) && EntityResultQueryModel.class.equals(field.getType()) || "models_".equals(field.getName()) && List.class.equals(field.getType())));
-                final boolean result = !isUnionEntityType(type) && foundModelField;
-                syntheticTypes.put(type, result);
-                return result;
-            } else {
-                return value;
+            try {
+                return syntheticTypes.get(type, () -> {
+                        final boolean foundModelField = listOf(type.getDeclaredFields()).stream().anyMatch(field -> isStatic(field.getModifiers()) && //
+                                ("model_".equals(field.getName()) && EntityResultQueryModel.class.equals(field.getType()) || "models_".equals(field.getName()) && List.class.equals(field.getType())));
+                        return foundModelField && !isUnionEntityType(type);});
+            } catch (final Exception ex) {
+                final String msg = format("Could not determine synthetic nature of entity type [%s].", type.getSimpleName());
+                logger.error(msg, ex);
+                throw new ReflectionException(msg, ex);
             }
         }
     }
