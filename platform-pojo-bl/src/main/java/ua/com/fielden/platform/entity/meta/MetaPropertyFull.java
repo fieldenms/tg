@@ -193,6 +193,8 @@ public final class MetaPropertyFull<T> extends MetaProperty<T> {
     @Override
     public final Result validate(final T newValue, final Set<Annotation> applicableValidationAnnotations, final boolean ignoreRequiredness) {
         setLastInvalidValue(null);
+        // Validation for requiredness needs to be skipped for criteria entities.
+        // According to #979 issue requiredness needs to be processed as part of 'crit-only-single prototype' validation logic similar to all other validators.
         if (!ignoreRequiredness && isRequired() && isNull(newValue, getValue()) && !isCriteriaEntityType(entity.getType())) {
             final Map<IBeforeChangeEventHandler<T>, Result> requiredHandler = getValidators().get(ValidationAnnotation.REQUIRED);
             if (requiredHandler == null || requiredHandler.size() > 1) {

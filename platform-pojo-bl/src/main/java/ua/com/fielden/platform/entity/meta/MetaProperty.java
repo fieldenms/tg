@@ -35,12 +35,6 @@ public class MetaProperty<T> implements Comparable<MetaProperty<T>> {
     public static final String VALIDATION_RESULTS_PROPERTY_NAME = "validationResults";
 
     protected final AbstractEntity<?> entity;
-    /**
-     * Validation for requiredness needs to be skipped for criteria entities.
-     * According to #979 issue requiredness needs to be processed as part of 'crit-only-single prototype' validation logic similar to all other validators.
-     * This property indicates whether meta-property owner represents 'criteria entity' and is used in {@link #validate(Object, Set, boolean)} method to skip {@link Required} validation.
-     */
-    //public final boolean criteriaOwner;
     protected final String name;
     protected Class<?> type;
     private final boolean isEntity;
