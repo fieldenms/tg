@@ -93,7 +93,7 @@ public class EntityKeyExpressionGeneratorTest {
                 with().
                 expr(expr().caseWhen().prop("prop2").isNotNull().then().concat().val(separator).with().expr(expr().prop("prop2").model()).end().otherwise().val(EMPTY_STRING).end().model()).
                 with().
-                val(separator).
+                expr(expr().val(separator).model()).
                 with().
                 expr(expr().prop("prop3").model()).
                 end().model();
@@ -127,11 +127,11 @@ public class EntityKeyExpressionGeneratorTest {
                 concat().
                 expr(expr().prop("prop1").model()).
                 with().
-                val(separator).
+                expr(expr().val(separator).model()).
                 with().
                 expr(expr().prop("prop2").model()).
                 with().
-                val(separator).
+                expr(expr().val(separator).model()).
                 with().
                 expr(expr().prop("prop3.key").model()).
                 end().
@@ -149,11 +149,11 @@ public class EntityKeyExpressionGeneratorTest {
                 concat().
                 expr(expr().prop("prop1").model()).
                 with().
-                val(separator).
+                expr(expr().val(separator).model()).
                 with().
                 expr(expr().prop("prop2").model()).
                 with().
-                val(separator).
+                expr(expr().val(separator).model()).
                 with().
                 expr(expr().prop("prop3").model()).
                 end().
