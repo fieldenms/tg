@@ -15,6 +15,7 @@ import '/resources/images/tg-icons.js';
 
 import '/resources/actions/tg-ui-action.js';
 import '/resources/egi/tg-secondary-action-button.js';
+import '/resources/egi/tg-secondary-action-dropdown.js';
 import '/resources/egi/tg-egi-cell.js';
 
 import {Polymer} from '/resources/polymer/@polymer/polymer/lib/legacy/polymer-fn.js';
@@ -40,6 +41,9 @@ const template = html`
             border-radius: 2px;
             @apply --layout-vertical;
             @apply --layout-relative;
+        }
+        .paper-material[fit-to-height] {
+            @apply --layout-flex;
         }
         .grid-toolbar {
             position: relative;
@@ -118,6 +122,7 @@ const template = html`
             @apply --layout-horizontal;
         }
         .table-data-row {
+            z-index: 0;
             font-size: 1rem;
             font-weight: 400;
             color: #212121;
@@ -131,6 +136,7 @@ const template = html`
             @apply --layout-horizontal;
         }
         .table-footer-row {
+            z-index: 0;
             font-size: 0.9rem;
             color: #757575;
             height: var(--egi-row-height, 1.5rem);
@@ -141,6 +147,17 @@ const template = html`
             flex-grow: 0;
             flex-shrink: 0;
             @apply --layout-horizontal;
+        }
+        .table-data-row:last-of-type, {
+            margin-bottom: var(--egi-bottom-margin, 15px);
+        }
+        .footer {
+            background-color: white;
+            min-width: fit-content;
+            flex-grow: 0;
+            flex-shrink: 0;
+            padding-bottom: var(--egi-bottom-margin, 15px);
+            @apply --layout-vertical;
         }
         .cell[over] {
             background-color: #EEEEEE !important;
@@ -212,7 +229,7 @@ const template = html`
             width: var(--egi-action-cell-width, 20px);
             padding: 0 var(--egi-action-cell-padding, 0.3rem);
         }
-        .action {
+        .action, tg-secondary-action-dropdown ::slotted(.secondary-action) {
             --tg-ui-action-icon-button-height: 1.6rem;
             --tg-ui-action-icon-button-width: 1.6rem;
             --tg-ui-action-icon-button-padding: 2px;
@@ -253,9 +270,8 @@ const template = html`
     <!--configuring slotted elements-->
     <slot id="column_selector" name="property-column" hidden></slot>
     <slot id="primary_action_selector" name="primary-action" hidden></slot>
-    <slot id="secondary_action_selector" name="secondary-action" hidden></slot>
     <!--EGI template-->
-    <div class="paper-material" elevation="1">
+    <div class="paper-material" elevation="1" fit-to-height$="[[fitToHeight]]">
         <!--Table toolbar-->
         <div class="grid-toolbar">
             <paper-progress id="progressBar" hidden$="[[!_showProgress]]"></paper-progress>
@@ -268,7 +284,7 @@ const template = html`
         </div>
         <div id="baseContainer">
             <!-- Table header -->
-            <div class="table-header-row">
+            <div class="table-header-row" style$="[[_calcHeaderStyle(headerFixed)]]">
                 <div class="drag-anchor cell" hidden$="[[!canDragFrom]]" style$="[[_calcDragBoxStyle(dragAnchorFixed)]]"></div>
                 <div class="table-cell cell" style$="[[_calcSelectCheckBoxStyle(canDragFrom, checkboxesFixed)]]" hidden$="[[!checkboxVisible]]" tooltip-text$="[[_selectAllTooltip(selectedAll)]]">
                     <paper-checkbox class="all-checkbox blue header" checked="[[selectedAll]]" on-change="_allSelectionChanged"></paper-checkbox>
@@ -290,7 +306,7 @@ const template = html`
                         <div class="resizing-box"></div>
                     </div>
                 </template>
-                <div class="action-cell cell" hidden$="[[!_isSecondaryActionsPresent(secondaryActions)]]" style$="[[_calcSecondaryActionStyle(secondaryActionsFixed)]]">
+                <div class="action-cell cell" hidden$="[[!_isSecondaryActionPresent]]" style$="[[_calcSecondaryActionStyle(secondaryActionsFixed)]]">
                     <!--Secondary actions header goes here-->
                 </div>
             </div>
@@ -314,37 +330,43 @@ const template = html`
                     <template is="dom-repeat" items="[[columns]]" as="column">
                         <tg-egi-cell class="cell" selected$="[[egiEntity.selected]]" over$="[[egiEntity.over]]" column="[[column]]" egi-entity="[[egiEntity]]" style$="[[_calcColumnStyle(column, column.width, column.growFactor, 'false')]]" tooltip-text$="[[_getTooltip(egiEntity.entity, column, column.customAction)]]" with-action$="[[hasAction(egiEntity.entity, column)]]" on-tap="_tapAction"></tg-egi-cell>
                     </template>
-                    <div class="action-cell cell" selected$="[[egiEntity.selected]]" over$="[[egiEntity.over]]" hidden$="[[!_isSecondaryActionsPresent(secondaryActions)]]" style$="[[_calcSecondaryActionStyle(secondaryActionsFixed)]]">
-                        <tg-secondary-action-button class="action" current-entity="[[egiEntity.entity]]" actions="[[secondaryActions]]"></tg-secondary-action-button>
+                    <div class="action-cell cell" selected$="[[egiEntity.selected]]" over$="[[egiEntity.over]]" hidden$="[[!_isSecondaryActionPresent]]" style$="[[_calcSecondaryActionStyle(secondaryActionsFixed)]]">
+                        <tg-secondary-action-button class="action" current-entity="[[egiEntity.entity]]" is-single="[[_isSingleSecondaryAction]]" dropdown-trigger="[[_openDropDown]]"></tg-secondary-action-button>
                     </div>
                 </div>
             </template>
             <!-- Table footer -->
-            <template is="dom-repeat" items="[[_totalsRows]]" as="summaryRow" index-as="summaryIndex">
-                <div class="table-footer-row">
-                    <div class="drag-anchor cell" hidden$="[[!canDragFrom]]" style$="[[_calcDragBoxStyle(dragAnchorFixed)]]"></div>
-                    <div class="table-cell cell" style$="[[_calcSelectCheckBoxStyle(canDragFrom, checkboxesFixed)]]" hidden$="[[!checkboxVisible]]" tooltip-text$="[[_selectAllTooltip(selectedAll)]]">
-                        <!--Footer's select checkbox stub goes here-->
-                    </div>
-                    <div class="action-cell cell" hidden$="[[!primaryAction]]" style$="[[_calcPrimaryActionStyle(canDragFrom, checkboxVisible, checkboxesWithPrimaryActionsFixed)]]">
-                        <!--Footer's primary action stub goes here-->
-                    </div>
-                    <div class="fixed-columns-container" hidden$="[[!numOfFixedCols]]" style$="[[_calcFixedColumnContainerStyle(canDragFrom, checkboxVisible, primaryAction, numOfFixedCols)]]">
-                        <template is="dom-repeat" items="[[summaryRow.0]]" as="column">
-                            <tg-egi-cell class="cell" column="[[column]]" egi-entity="[[egiTotalsEntity]]" style$="[[_calcColumnStyle(column, column.width, column.growFactor, 'true')]]" tooltip-text$="[[_getTotalTooltip(column)]]"></tg-egi-cell>
+            <div class="footer" style$="[[_calcFooterStyle(summaryFixed, fitToHeight)]]">
+                <template is="dom-repeat" items="[[_totalsRows]]" as="summaryRow" index-as="summaryIndex">
+                    <div class="table-footer-row">
+                        <div class="drag-anchor cell" hidden$="[[!canDragFrom]]" style$="[[_calcDragBoxStyle(dragAnchorFixed)]]"></div>
+                        <div class="table-cell cell" style$="[[_calcSelectCheckBoxStyle(canDragFrom, checkboxesFixed)]]" hidden$="[[!checkboxVisible]]" tooltip-text$="[[_selectAllTooltip(selectedAll)]]">
+                            <!--Footer's select checkbox stub goes here-->
+                        </div>
+                        <div class="action-cell cell" hidden$="[[!primaryAction]]" style$="[[_calcPrimaryActionStyle(canDragFrom, checkboxVisible, checkboxesWithPrimaryActionsFixed)]]">
+                            <!--Footer's primary action stub goes here-->
+                        </div>
+                        <div class="fixed-columns-container" hidden$="[[!numOfFixedCols]]" style$="[[_calcFixedColumnContainerStyle(canDragFrom, checkboxVisible, primaryAction, numOfFixedCols)]]">
+                            <template is="dom-repeat" items="[[summaryRow.0]]" as="column">
+                                <tg-egi-cell class="cell" column="[[column]]" egi-entity="[[egiTotalsEntity]]" style$="[[_calcColumnStyle(column, column.width, column.growFactor, 'true')]]" tooltip-text$="[[_getTotalTooltip(column)]]"></tg-egi-cell>
+                            </template>
+                        </div>
+                        <template is="dom-repeat" items="[[summaryRow.1]]" as="column">
+                            <tg-egi-cell class="cell" column="[[column]]" egi-entity="[[egiTotalsEntity]]" style$="[[_calcColumnStyle(column, column.width, column.growFactor, 'false')]]" tooltip-text$="[[_getTotalTooltip(column)]]"></tg-egi-cell>
                         </template>
+                        <div class="action-cell cell" hidden$="[[!_isSecondaryActionPresent]]" style$="[[_calcSecondaryActionStyle(secondaryActionsFixed)]]">
+                            <!--Secondary actions header goes here-->
+                        </div>
                     </div>
-                    <template is="dom-repeat" items="[[summaryRow.1]]" as="column">
-                        <tg-egi-cell class="cell" column="[[column]]" egi-entity="[[egiTotalsEntity]]" style$="[[_calcColumnStyle(column, column.width, column.growFactor, 'false')]]" tooltip-text$="[[_getTotalTooltip(column)]]"></tg-egi-cell>
-                    </template>
-                    <div class="action-cell cell" hidden$="[[!_isSecondaryActionsPresent(secondaryActions)]]" style$="[[_calcSecondaryActionStyle(secondaryActionsFixed)]]">
-                        <!--Secondary actions header goes here-->
-                    </div>
-                </div>
-            </template>
+                </template>
+            </div>
         </div>
         <!-- table lock layer -->
         <div class="lock-layer" lock$="[[lock]]"></div>
+        <!-- secondary action dropdown that will be used by each secondary aciton -->
+        <tg-secondary-action-dropdown id="secondaryActionDropDown" is-single="{{_isSingleSecondaryAction}}" is-present="{{_isSecondaryActionPresent}}">
+            <slot id="secondary_action_selector" slot="actions" name="secondary-action"></slot>
+        </tg-secondary-action-dropdown>
     </div>`;
 
 function calculateColumnWidthExcept (egi, columnIndex, columnElements, columnLength, dragAnchor, checkboxes, primaryActions, secondaryActions) {
@@ -363,7 +385,7 @@ function calculateColumnWidthExcept (egi, columnIndex, columnElements, columnLen
             columnWidth += columnElements[i + 3].offsetWidth;
         }
     }
-    if (egi.secondaryActions.length > 0 && secondaryActions()) {
+    if (egi._isSecondaryActionPresent && secondaryActions()) {
         columnWidth += columnElements[columnElements.length - 1].offsetWidth;
     }
     return columnWidth;
@@ -555,33 +577,25 @@ Polymer({
         //Need when resizing column to recalculate styles.
         _fixedColumnWidth: Number,
         _scrollableColumnWidth: Number,
-        //miscelenia private variables
-        //FIXME till here.
-        //FIXME the next one might not be needded too
-        _actionWidth: {
-            type: String,
-            value: "20px"
-        },
-        _cellPadding: {
-            type: String,
-            value: "1.2rem"
-        },
-        _bottomMargin: {
-            type: String,
-            value: "15px"
-        },
-        //FIXIME Till here
         //Range selection related properties
         _rangeSelection: {
             type: Boolean,
             value: false
         },
-        _lastSelectedIndex: Number
+        _lastSelectedIndex: Number,
+        //The property that indicates whether secondary action is only one or there are more secondary actions.
+        _isSingleSecondaryAction: Boolean,
+        //Indicates whether secondary actions is present
+        _isSecondaryActionPresent: Boolean,
+        //The callback to open drop down for secondary action.
+        _openDropDown: Function
     },
 
     behaviors: [TgEgiDataRetrievalBehavior, TgTooltipBehavior, IronResizableBehavior, IronA11yKeysBehavior, TgShortcutProcessingBehavior, TgDragFromBehavior],
 
-    observers: ["_columnsChanged(columns, fixedColumns)"],
+    observers: [
+        "_columnsChanged(columns, fixedColumns)",
+        "_heightRelatedPropertiesChanged(visibleRowCount, rowHeight, constantHeight, fitToHeight, summaryFixed, _totalsRowCount)"],
 
     created: function () {
         this._serialiser = new TgSerialiser();
@@ -626,9 +640,6 @@ Polymer({
         //Initialising the primary action.
         this.primaryAction = primaryActions.length > 0 ? primaryActions[0] : null;
 
-        //Initialising the secondary actions' list.
-        this.secondaryActions = this.$.secondary_action_selector.assignedNodes();
-
         //Initialising event listeners.
         this.addEventListener("iron-resize", this._resizeEventListener.bind(this));
 
@@ -636,6 +647,11 @@ Polymer({
         new FlattenedNodesObserver(this.$.column_selector, (info) => {
             this._columnDomChanged(info.addedNodes, info.removedNodes);
         });
+
+        //Init secondary action drop down trigger
+        this._openDropDown = function (currentEntity, currentAction) {
+            this.$.secondaryActionDropDown.open(currentEntity, currentAction);
+        }.bind(this);
     },
 
     attached: function () {
@@ -1043,7 +1059,7 @@ Polymer({
         //Calculate all properties needed for column resizing logic and create appropriate resizing object
         const columnElements = this.$.baseContainer.querySelector(".table-header-row").querySelectorAll(".cell");
         const leftFixedContainerWidth = calculateColumnWidthExcept (this, -1, columnElements, this.numOfFixedCols, () => this.dragAnchorFixed, () => this.checkboxesFixed, () => this.checkboxesWithPrimaryActionsFixed, () => false);
-        const containerWithoutFixedSecondaryActionWidth = this.$.baseContainer.offsetWidth - (this.secondaryActions.length > 0 && this.secondaryActionsFixed ? columnElements[columnElements.length - 1].offsetWidth : 0);
+        const containerWithoutFixedSecondaryActionWidth = this.$.baseContainer.offsetWidth - (this._isSecondaryActionPresent && this.secondaryActionsFixed ? columnElements[columnElements.length - 1].offsetWidth : 0);
         this._columnResizingObject = {
             oldColumnWidth: e.model.item.width,
             oldColumnGrowFactor: e.model.item.growFactor,
@@ -1202,6 +1218,10 @@ Polymer({
     },
 
     //Style calculator
+    _calcHeaderStyle: function (headerFixed) {
+        return headerFixed ? "position: sticky; z-index: 1; top: 0;" : "";
+    },
+
     _calcDragBoxStyle: function (dragAnchorFixed) {
         return dragAnchorFixed ? "position: sticky; z-index: 1; left: 0;" : "";
     },
@@ -1278,13 +1298,14 @@ Polymer({
         return secondaryActionsFixed ? "position: sticky; z-index: 1; right: 0;" : "";
     },
 
+    _calcFooterStyle: function (summaryFixed, fitToHeight) {
+        const style = summaryFixed ? "position: sticky; z-index: 1; bottom: 0;" : "";
+        return style + (fitToHeight ? "margin-top:auto;" : "");
+    },
+
     // Observers
     _numOfFixedColsChanged: function () {
         this._updateColumns(this.fixedColumns.concat(this.columns));
-    },
-
-    _isSecondaryActionsPresent: function (secondaryActions) {
-        return secondaryActions && secondaryActions.length > 0;
     },
 
     _rowHeightChanged: function (newValue) {
@@ -1330,6 +1351,28 @@ Polymer({
         //Set the _totalsRowCount property so that calculation of the scroll container height would be triggered.
         this._totalsRowCount = summaryRowsCount;
         this._totalsRows = gridSummary;
+    },
+
+    _heightRelatedPropertiesChanged: function (visibleRowCount, rowHeight, constantHeight, fitToHeight, summaryFixed, _totalsRowCount) {
+        //Constant height take precedence over visible row count which takes precedence over default behaviour that extends the EGI's height to it's content height
+        this.style.removeProperty("height");
+        this.style.removeProperty("min-height");
+        this.$.baseContainer.style.removeProperty("height");
+        this.$.baseContainer.style.removeProperty("max-height");
+        if (constantHeight) { //Set the height for the egi
+            this.style["height"] = constantHeight;
+        } else if (visibleRowCount > 0) { //Set the height or max height for the scroll container so that only specified number of rows become visible.
+            this.style["min-height"] = "fit-content";
+            const rowCount = visibleRowCount + (summaryFixed ? _totalsRowCount : 0);
+            const bottomMargin = this.getComputedStyleValue('--egi-bottom-margin').trim() || "15px";
+            const height = "calc(3rem + " + rowCount + " * " + rowHeight + " + " + rowCount + "px" + (summaryFixed && _totalsRowCount > 0 ? (" + " + bottomMargin) : "") + ")";
+            if (fitToHeight) {
+                this.$.baseContainer.style["height"] = height;
+            } else {
+                this.$.baseContainer.style["max-height"] = height;
+            }
+        }
+        this._resizeEventListener();
     },
 
     _renderingHintsChanged: function (newValue) {

@@ -1003,7 +1003,7 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
         final StringBuilder secondaryActionsObjects = new StringBuilder();
         for (final FunctionalActionElement el : secondaryActionElements) {
             importPaths.add(el.importPath());
-            secondaryActionsDom.add(el.render().attr("slot", "secondary-action").clazz("secondary-action").attr("hidden", null));
+            secondaryActionsDom.add(el.render().attr("slot", "secondary-action").clazz("secondary-action"));
             secondaryActionsObjects.append(prefix + createActionObject(el));
         }
 
