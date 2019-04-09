@@ -79,11 +79,9 @@ import ua.com.fielden.platform.entity.meta.MetaProperty;
 import ua.com.fielden.platform.entity.meta.MetaPropertyFull;
 import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
 import ua.com.fielden.platform.entity.proxy.StrictProxyException;
-import ua.com.fielden.platform.entity.validation.DomainValidationConfig;
 import ua.com.fielden.platform.entity.validation.EntityExistsValidator;
 import ua.com.fielden.platform.entity.validation.IBeforeChangeEventHandler;
 import ua.com.fielden.platform.entity.validation.ICustomValidator;
-import ua.com.fielden.platform.entity.validation.annotation.DomainValidation;
 import ua.com.fielden.platform.entity.validation.annotation.EntityExists;
 import ua.com.fielden.platform.entity.validation.annotation.Final;
 import ua.com.fielden.platform.entity.validation.annotation.ValidationAnnotation;
@@ -235,18 +233,12 @@ import ua.com.fielden.platform.utils.EntityUtils;
  * </ul>
  * <p>
  * Please note that mutators for the same collectional property may have different validation annotations.
- * However, annotation {@link DomainValidation} always points to the same actual validator, and it is developer's responsibility to ensure that it executes correctly regardless as part of what mutator it has been invoked.
- * Please refer to {@link DomainValidation} documentation for more details.
  * <p>
  * ==================================================================<br/>
  * <p>
  * <h3>Notable changes</h3>
  * Date: 2008-10-28
  * Introduced validation synchronisation mechanism.
- *
- * Date: 2008-10-29
- * Implemented support for domain validation logic. Simply annotate property setter with {@link DomainValidation} and
- * provide appropriate {@link IBeforeChangeEventHandler} instance as part of {@link DomainValidationConfig} configuration.
  *
  * Date: 2009-02-09
  * Introduced property <code>initialising</code> to indicate an entity state where its properties are being initialised and thus no properties require any validation.
@@ -628,6 +620,8 @@ public abstract class AbstractEntity<K extends Comparable> implements Comparable
 
             if (STRICT_MODEL_VERIFICATION) {
                 // TODO this kind of validation should really be implemented as part of the compilation process
+                // ensure that there is an accessor -- with out it field is not a property
+                // throws exception if method does not exists
                 Reflector.obtainPropertyAccessor(getType(), propName); // computationally heavy
             }
             // determine property type and adjacent virtues
@@ -638,12 +632,6 @@ public abstract class AbstractEntity<K extends Comparable> implements Comparable
                 properties.put(propName, new MetaProperty(this, field, type, isKey, true, extractDependentProperties(field, fields)));
             } else {
                 try {
-                    // ensure that there is an accessor -- with out it field is not a property
-                    // throws exception if method does not exists
-                    if (STRICT_MODEL_VERIFICATION) {
-                        Reflector.obtainPropertyAccessor(getType(), propName);
-                    }
-
                     final boolean isCollectional = Collection.class.isAssignableFrom(type);
 
                     final IsProperty isPropertyAnnotation = AnnotationReflector.getAnnotation(field, IsProperty.class);
@@ -652,7 +640,7 @@ public abstract class AbstractEntity<K extends Comparable> implements Comparable
                     // perform some early runtime validation whether property was defined correctly
                     if (STRICT_MODEL_VERIFICATION) {
                         // TODO this kind of validation should really be implemented as part of the compilation process
-                        earlyRuntimePropertyDefinitionValidation(propName, type, isCollectional, isPropertyAnnotation, propertyAnnotationType);
+                        earlyRuntimePropertyDefinitionValidation(propName, type, isCollectional, isPropertyAnnotation, propertyAnnotationType); // computationally heavy
                     }
 
                     // if setter is annotated then try to instantiate specified validator
