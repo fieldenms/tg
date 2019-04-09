@@ -64,7 +64,7 @@ public class Concat extends AbstractFunction implements ISingleOperand {
         return false;
     }
 
-    public String sqlForH2() {
+    public String sqlForH2AndMssql() {
         final StringBuffer sb = new StringBuffer();
         sb.append("CONCAT (");
 
@@ -72,22 +72,6 @@ public class Concat extends AbstractFunction implements ISingleOperand {
             sb.append(getConvertToStringSql(iterator.next()));
             if (iterator.hasNext()) {
                 sb.append(", ");
-            }
-        }
-
-        sb.append(")");
-
-        return sb.toString();
-    }
-
-    public String sqlForMsSql2005() {
-        final StringBuffer sb = new StringBuffer();
-        sb.append(" (");
-
-        for (final Iterator<ISingleOperand> iterator = operands.iterator(); iterator.hasNext();) {
-            sb.append(getConvertToStringSql(iterator.next()));
-            if (iterator.hasNext()) {
-                sb.append(" + ");
             }
         }
 
@@ -116,9 +100,8 @@ public class Concat extends AbstractFunction implements ISingleOperand {
     public String sql() {
         switch (getDbVersion()) {
         case H2:
-            return sqlForH2();
         case MSSQL:
-            return sqlForMsSql2005();
+            return sqlForH2AndMssql();
         case POSTGRESQL:
             return sqlForPostgresql();
         default:
