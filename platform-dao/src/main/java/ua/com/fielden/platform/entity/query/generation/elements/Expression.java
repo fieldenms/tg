@@ -62,8 +62,8 @@ public class Expression implements ISingleOperand {
     }
 
     @Override
-    public Class type() {
-        return null;
+    public Class<?> type() {
+        return items.size() == 0 ? first.type() : null;
     }
 
     @Override
