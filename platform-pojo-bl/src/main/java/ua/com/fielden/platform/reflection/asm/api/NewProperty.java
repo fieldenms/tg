@@ -5,6 +5,9 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import ua.com.fielden.platform.entity.annotation.IsProperty;
+import ua.com.fielden.platform.entity.annotation.factory.IsPropertyAnnotation;
+
 /**
  * A convenient abstraction for representing data needed for dynamic construction of properties.
  * 
@@ -12,6 +15,8 @@ import java.util.List;
  * 
  */
 public final class NewProperty {
+    private static final IsProperty DEFAULT_IS_PROPERTY_ANNOTATION = new IsPropertyAnnotation().newInstance();
+
     public final String name;
     public final Class<?> type;
     public final boolean changeSignature;
@@ -34,6 +39,7 @@ public final class NewProperty {
         this.title = title;
         this.desc = desc;
         this.annotations.addAll(Arrays.asList(annotations));
+        this.addAnnotation(DEFAULT_IS_PROPERTY_ANNOTATION); // add just in case if it was not already provided
     }
 
     /**
