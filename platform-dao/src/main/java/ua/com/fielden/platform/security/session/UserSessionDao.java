@@ -300,7 +300,7 @@ public class UserSessionDao extends CommonEntityDao<UserSession> implements IUse
             // remove all user sessions if theft scenario should be considered
             if (shouldConsiderTheftScenario) {
                 // if the session was not found in the cache then proceed with the theft story...
-                logger.warn(format("A seemingly correct authenticator %s did not have a corresponding sesssion record. An authenticator theft is suspected. An adversary might have had access to the system as user %s", auth, user.getKey()));
+                logger.warn(format("A seemingly correct authenticator %s did not have a corresponding sesssion record.", auth));
                 // in this case, sessions are removed based on user name and series ID, which is required taking into consideration that series ID could have been already regenerated
                 final int count = clearAll(user) + removeSessionsForUsersBy(auth.seriesId);
                 logger.debug(format("Removed %s session(s) for series ID %s", count, auth.seriesId));

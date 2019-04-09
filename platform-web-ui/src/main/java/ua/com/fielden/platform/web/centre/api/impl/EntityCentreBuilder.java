@@ -68,6 +68,7 @@ public class EntityCentreBuilder<T extends AbstractEntity<?>> implements IEntity
     protected int visibleRowsCount = 0;
     protected String egiHeight = "";
     protected boolean fitToHeight = false;
+    protected String rowHeight = "1.5rem";
 
     ////////////////////////////////////////////////
     //////////////// SELECTION CRITERIA ////////////
@@ -173,6 +174,7 @@ public class EntityCentreBuilder<T extends AbstractEntity<?>> implements IEntity
                 visibleRowsCount,
                 egiHeight,
                 fitToHeight,
+                rowHeight,
                 topLevelActions,
                 frontActions,
                 insertionPointConfigs,

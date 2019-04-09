@@ -21,6 +21,13 @@ public interface IUniversalConstants {
      * @return
      */
     DateTime now();
+    
+    /**
+     * The same is {@link #now()}, but with 0 time.
+     */
+    default DateTime today() {
+        return now().withMillisOfDay(0);
+    }
 
     /**
      * Returns a value indicating the current locale.
