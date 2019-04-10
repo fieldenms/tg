@@ -1,3 +1,4 @@
+export default `
 .marker-cluster-small {
 	background-color: rgba(181, 226, 140, 0.6);
 	}
@@ -58,3 +59,4 @@
 .marker-cluster span {
 	line-height: 30px;
 	}
+`;

@@ -1,3 +1,4 @@
+export default `
 /* required styles */
 
 .leaflet-map-pane,
@@ -477,3 +478,4 @@
 	background: #fff;
 	border: 1px solid #666;
 	}
+`;

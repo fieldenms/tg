@@ -29,7 +29,6 @@ public abstract class AbstractMapMaster<T extends AbstractFunctionalEntityWithCe
     private final IRenderable renderable;
 
     public AbstractMapMaster(final Class<T> entityType, final String gisComponentImportPath, final String gisComponentName) {
-        final int funcActionSeq = 0; // used for both entity and property level functional actions
         final String prefix = ",\n";
         final int prefixLength = prefix.length();
         final StringBuilder primaryActionObjects = new StringBuilder();
@@ -45,14 +44,14 @@ public abstract class AbstractMapMaster<T extends AbstractFunctionalEntityWithCe
         final String primaryActionObjectsString = primaryActionObjects.toString();
 
         final String entityMasterStr = ResourceLoader.getText("ua/com/fielden/platform/web/master/tg-entity-master-template.js")
-                .replace(IMPORTS, createImports(linkedSetOf("gis/tg-map", gisComponentImportPath)))
+                .replace(IMPORTS, createImports(linkedSetOf("gis/tg-map")) + "import { " + gisComponentName + " } from '/resources/" + gisComponentImportPath + ".js';\n" )
                 .replace(ENTITY_TYPE, flattenedNameOf(entityType))
                 .replace("<!--@tg-entity-master-content-->", tgMessageMap.toString())
                 .replace("//generatedPrimaryActions", primaryActionObjectsString.length() > prefixLength ? primaryActionObjectsString.substring(prefixLength)
                         : primaryActionObjectsString)
                 .replace("//@attached-callback",
                         "self.classList.remove('canLeave');\n"
-                        + "self.querySelector('.tg-map').initialiseOrInvalidate(L.GIS." + gisComponentName + ");\n")
+                        + "self.shadowRoot.querySelector('.tg-map').initialiseOrInvalidate(" + gisComponentName + ");\n")
                 .replace("@prefDim", "null")
                 .replace("@noUiValue", "false")
                 .replace("@saveOnActivationValue", "true");

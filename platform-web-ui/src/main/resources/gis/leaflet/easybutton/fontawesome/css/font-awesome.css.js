@@ -1,3 +1,4 @@
+export default `
 /*!
  *  Font Awesome 4.6.3 by @davegandy - http://fontawesome.io - @fontawesome
  *  License - http://fontawesome.io/license (Font: SIL OFL 1.1, CSS: MIT License)
@@ -2197,3 +2198,4 @@
   overflow: visible;
   clip: auto;
 }
+`;

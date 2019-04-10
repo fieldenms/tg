@@ -1,3 +1,4 @@
+export default `
 .leaflet-cluster-anim .leaflet-marker-icon, .leaflet-cluster-anim .leaflet-marker-shadow {
 	-webkit-transition: -webkit-transform 0.3s ease-out, opacity 0.3s ease-in;
 	-moz-transition: -moz-transform 0.3s ease-out, opacity 0.3s ease-in;
@@ -12,3 +13,4 @@
 	-o-transition: -o-stroke-dashoffset 0.3s ease-out, -o-stroke-opacity 0.3s ease-in;
 	transition: stroke-dashoffset 0.3s ease-out, stroke-opacity 0.3s ease-in;
 }
+`;

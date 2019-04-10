@@ -1,4 +1,6 @@
+export default `
 .leaflet-top,
 .leaflet-bottom {
     z-index: 0; /* overridden to show leaflet controls (zoom, draw, attribution, layer chooser, fitToBounds) under polymer menu drawer, under tg-toast, tg-tooltip etc. */
 }
+`;
