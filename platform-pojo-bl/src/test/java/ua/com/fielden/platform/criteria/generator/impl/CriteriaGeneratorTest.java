@@ -71,9 +71,9 @@ public class CriteriaGeneratorTest {
     });
     {
         //Adding calculated properties to the centre domain tree manager and enhancer.
-        cdtm.getEnhancer().addCalculatedProperty(TopLevelEntity.class, "", "3 + integerProp", "firstCalc", "firstCalc", CalculatedPropertyAttribute.NO_ATTR, "integerProp");
-        cdtm.getEnhancer().addCalculatedProperty(TopLevelEntity.class, "entityProp.entityProp", "3 + MONTH(dateProp)", "secondCalc", "secondCalc", CalculatedPropertyAttribute.NO_ATTR, "dateProp");
-        cdtm.getEnhancer().addCalculatedProperty(TopLevelEntity.class, "", "3 + moneyProp", "thirdCalc", "thirdCalc", CalculatedPropertyAttribute.NO_ATTR, "moneyProp");
+        cdtm.getEnhancer().addCalculatedProperty(TopLevelEntity.class, "", "3 + integerProp", "firstCalc", "firstCalc", CalculatedPropertyAttribute.NO_ATTR, "integerProp", IsProperty.DEFAULT_PRECISION, IsProperty.DEFAULT_SCALE);
+        cdtm.getEnhancer().addCalculatedProperty(TopLevelEntity.class, "entityProp.entityProp", "3 + MONTH(dateProp)", "secondCalc", "secondCalc", CalculatedPropertyAttribute.NO_ATTR, "dateProp", IsProperty.DEFAULT_PRECISION, IsProperty.DEFAULT_SCALE);
+        cdtm.getEnhancer().addCalculatedProperty(TopLevelEntity.class, "", "3 + moneyProp", "thirdCalc", "thirdCalc", CalculatedPropertyAttribute.NO_ATTR, "moneyProp", IsProperty.DEFAULT_PRECISION, IsProperty.DEFAULT_SCALE);
         cdtm.getEnhancer().apply();
 
         //Configuring first tick check properties.

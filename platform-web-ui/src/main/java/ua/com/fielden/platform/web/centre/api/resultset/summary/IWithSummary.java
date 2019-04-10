@@ -11,6 +11,7 @@ import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder5WithPr
  * @param <T>
  */
 public interface IWithSummary<T extends AbstractEntity<?>> extends  IResultSetBuilder5WithPropAction<T> {
+
     /**
      * Adds a summary expression to be computed and displayed underneath a corresponding property column in the grid EGI representation.
      * The provided <code>alias</code> can be used to refer to the summary property to specify card layouts.
@@ -21,4 +22,10 @@ public interface IWithSummary<T extends AbstractEntity<?>> extends  IResultSetBu
      * @return
      */
     IWithSummary<T> withSummary(final String alias, final String expression, final String titleAndDesc);
+
+
+    /**
+     * The same as {@link #withSummary(String, String, String)}, but for numeric expressions that benefit from having explicit {@code precision} and {@code scale}.
+     */
+    IWithSummary<T> withSummary(final String alias, final String expression, final String titleAndDesc, final int precision, final int scale);
 }

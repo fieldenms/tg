@@ -11,6 +11,8 @@ public class CalculatedPropertyInfo {
     private final String originationProperty;
     private final String desc;
     private final String customPropertyName;
+    private final Integer precision;
+    private final Integer scale;
 
     public CalculatedPropertyInfo() {
         root = null;
@@ -21,9 +23,21 @@ public class CalculatedPropertyInfo {
         originationProperty = null;
         desc = null;
         customPropertyName = null;
+        precision = null;
+        scale = null;
     }
 
-    public CalculatedPropertyInfo(final Class<?> root, final String contextPath, final String customPropertyName, final String contextualExpression, final String title, final CalculatedPropertyAttribute attribute, final String originationProperty, final String desc) {
+    public CalculatedPropertyInfo(
+            final Class<?> root,
+            final String contextPath,
+            final String customPropertyName,
+            final String contextualExpression,
+            final String title,
+            final CalculatedPropertyAttribute attribute,
+            final String originationProperty,
+            final String desc,
+            final Integer precision,
+            final Integer scale) {
         this.root = root;
         this.contextPath = contextPath;
         this.customPropertyName = customPropertyName;
@@ -32,6 +46,8 @@ public class CalculatedPropertyInfo {
         this.attribute = attribute;
         this.originationProperty = originationProperty;
         this.desc = desc;
+        this.precision = precision;
+        this.scale = scale;
     }
 
     public Class<?> getRoot() {
@@ -64,6 +80,14 @@ public class CalculatedPropertyInfo {
 
     public String getDesc() {
         return desc;
+    }
+
+    public Integer getPrecision() {
+        return precision;
+    }
+
+    public Integer getScale() {
+        return scale;
     }
 
     @Override
