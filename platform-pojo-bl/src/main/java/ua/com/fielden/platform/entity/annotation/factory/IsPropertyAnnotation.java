@@ -44,7 +44,7 @@ public class IsPropertyAnnotation {
         this(value, linkProperty, assignBeforeSave, DEFAULT_LENGTH, DEFAULT_PRECISION, DEFAULT_SCALE, IsProperty.DEFAULT_TRAILING_ZEROS);
     }
 
-    public IsPropertyAnnotation(final Class<?> value, final int precision, final int scale) {
+    public IsPropertyAnnotation(final int precision, final int scale) {
         this(Void.class, DEFAULT_LINK_PROPERTY, false, DEFAULT_LENGTH, precision, scale, IsProperty.DEFAULT_TRAILING_ZEROS);
     }
 

@@ -15,7 +15,7 @@ import ua.com.fielden.platform.entity.annotation.factory.IsPropertyAnnotation;
  * 
  */
 public final class NewProperty {
-    private static final IsProperty DEFAULT_IS_PROPERTY_ANNOTATION = new IsPropertyAnnotation().newInstance();
+    public static final IsProperty DEFAULT_IS_PROPERTY_ANNOTATION = new IsPropertyAnnotation().newInstance();
 
     public final String name;
     public final Class<?> type;

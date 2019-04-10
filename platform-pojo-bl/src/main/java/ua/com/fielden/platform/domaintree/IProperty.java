@@ -14,4 +14,8 @@ public interface IProperty {
     Class<?> resultType();
 
     String path();
+    
+    Integer getPrecision();
+    
+    Integer getScale();
 }
