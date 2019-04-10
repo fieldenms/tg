@@ -500,8 +500,8 @@ const TgEntityCentreBehaviorImpl = {
                 this.retrievedEntities = resultEntities;
                 this.selectionCriteriaEntity = criteriaEntity;
                 this.$.egi.renderingHints = renderingHints;
-                // FIXME this.$.egi._adjustColumnWidths(columnWidths);
-                // FIXME this.$.egi._adjustColumns(visibleColumnsWithOrder.map(column => column === "this" ? "" : column));
+                this.$.egi.adjustColumnWidths(columnWidths);
+                this.$.egi.adjustColumnsVisibility(visibleColumnsWithOrder.map(column => column === "this" ? "" : column));
                 if (this._triggerRun) {
                     if (this._selectedView === 0) {
                         this.async(function () {
@@ -812,7 +812,7 @@ const TgEntityCentreBehaviorImpl = {
     },
 
     _saveColumnWidth: function (e) {
-        const target = e.target || e.srcElement;
+        const target = e.composedPath()[0];
         //Run save column action only for if the selection criteria is present and the even't target is centre's egi.
         //If selection criteira is not present then save column action was triggered because of incorrect egi DOM configuration. (e.g user specified all columns with grow factor equal to 0)
         if (this.$.selection_criteria._currBindingEntity && target === this.$.egi) {
