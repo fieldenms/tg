@@ -1,7 +1,7 @@
 export default `
 .leaflet-control-loading {
     /* This is where your loading indicator would go */
-    background: url("images/loading.gif"); /* /resources/gis/leaflet/controlloading/ */
+    background: url("resources/gis/leaflet/controlloading/images/loading.gif"); /* was images/loading.gif */
 }
 
 .leaflet-control-loading,

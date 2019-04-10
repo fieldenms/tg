@@ -24,15 +24,15 @@ export default `
 }
 
 .leaflet-draw-toolbar a {
-    background-image: url('images/spritesheet.png');
-    background-image: linear-gradient(transparent, transparent), url('images/spritesheet.svg');
+    background-image: url('resources/gis/leaflet/draw/images/spritesheet.png'); /* was images/spritesheet.png */
+    background-image: linear-gradient(transparent, transparent), url('resources/gis/leaflet/draw/images/spritesheet.svg'); /* was images/spritesheet.svg */
     background-repeat: no-repeat;
     background-size: 270px 30px;
 }
 
 .leaflet-retina .leaflet-draw-toolbar a {
-    background-image: url('images/spritesheet-2x.png');
-    background-image: linear-gradient(transparent, transparent), url('images/spritesheet.svg');
+    background-image: url('resources/gis/leaflet/draw/images/spritesheet-2x.png'); /* was images/spritesheet-2x.png */
+    background-image: linear-gradient(transparent, transparent), url('resources/gis/leaflet/draw/images/spritesheet.svg'); /* was images/spritesheet.svg */
 }
 
 .leaflet-draw a {
