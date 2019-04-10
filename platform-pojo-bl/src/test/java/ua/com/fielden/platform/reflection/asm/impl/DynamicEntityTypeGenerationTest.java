@@ -74,10 +74,11 @@ public class DynamicEntityTypeGenerationTest {
     private final EntityFactory factory = injector.getInstance(EntityFactory.class);
     private DynamicEntityClassLoader cl;
 
+    private final IsProperty propertyWithPrecision = new IsPropertyAnnotation(19, 4).newInstance();
     private final Calculated calculated = new CalculatedAnnotation().contextualExpression(NEW_PROPERTY_EXPRESSION).newInstance();
     private final Calculated boolCalculated = new CalculatedAnnotation().contextualExpression(NEW_PROPERTY_EXPRESSION_BOOL).newInstance();
 
-    private final NewProperty pd1 = new NewProperty(NEW_PROPERTY_1, Money.class, false, NEW_PROPERTY_TITLE, NEW_PROPERTY_DESC, calculated);
+    private final NewProperty pd1 = new NewProperty(NEW_PROPERTY_1, Money.class, false, NEW_PROPERTY_TITLE, NEW_PROPERTY_DESC, propertyWithPrecision, calculated);
     private final NewProperty pd2 = new NewProperty(NEW_PROPERTY_2, Money.class, false, NEW_PROPERTY_TITLE, NEW_PROPERTY_DESC, calculated);
     private final NewProperty pdBool = new NewProperty(NEW_PROPERTY_BOOL, boolean.class, false, NEW_PROPERTY_TITLE, NEW_PROPERTY_DESC, boolCalculated);
 
@@ -201,6 +202,19 @@ public class DynamicEntityTypeGenerationTest {
         assertEquals("The last - 1 field of class should correspond to a last - 1 'freshly added' property.", pd2.name, newType.getDeclaredFields()[size - 2].getName());
         assertEquals("The last - 2 field of class should correspond to a last - 2 'freshly added' property.", pd1.name, newType.getDeclaredFields()[size - 3].getName());
     }
+
+    @Test
+    public void precision_and_scale_are_generated_correctly_when_specified_as_part_of_new_property_definition() throws Exception {
+        final Class<? extends AbstractEntity<String>> newType = (Class<? extends AbstractEntity<String>>) cl.startModification(Entity.class.getName()).addProperties(pd1, pd2).endModification();
+        
+        final IsProperty pd1PropAnnot = AnnotationReflector.getPropertyAnnotation(IsProperty.class, newType, pd1.name); 
+        assertEquals(19, pd1PropAnnot.precision());
+        assertEquals(4, pd1PropAnnot.scale());
+
+        final IsProperty pd2PropAnnot = AnnotationReflector.getPropertyAnnotation(IsProperty.class, newType, pd2.name); 
+        assertEquals(IsProperty.DEFAULT_PRECISION, pd2PropAnnot.precision());
+        assertEquals(IsProperty.DEFAULT_SCALE, pd2PropAnnot.scale());
+}
 
     @Test
     public void test_to_ensure_that_conflicting_new_properties_are_not_added() throws Exception {
