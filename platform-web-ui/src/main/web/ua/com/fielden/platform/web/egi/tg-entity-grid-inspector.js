@@ -272,7 +272,7 @@ const template = html`
     <slot id="column_selector" name="property-column" hidden></slot>
     <slot id="primary_action_selector" name="primary-action" hidden></slot>
     <!--EGI template-->
-    <div class="paper-material" elevation="1" fit-to-height$="[[fitToHeight]]">
+    <div class="paper-material" elevation="1" style$="[[_calcMaterialStyle(showMarginAround)]]" fit-to-height$="[[fitToHeight]]">
         <!--Table toolbar-->
         <div class="grid-toolbar">
             <paper-progress id="progressBar" hidden$="[[!_showProgress]]"></paper-progress>
@@ -595,7 +595,8 @@ Polymer({
 
     observers: [
         "_columnsChanged(columns, fixedColumns)",
-        "_heightRelatedPropertiesChanged(visibleRowCount, rowHeight, constantHeight, fitToHeight, summaryFixed, _totalsRowCount)"],
+        "_heightRelatedPropertiesChanged(visibleRowCount, rowHeight, constantHeight, fitToHeight, summaryFixed, _totalsRowCount)"
+    ],
 
     created: function () {
         this._serialiser = new TgSerialiser();
@@ -681,6 +682,21 @@ Polymer({
             egiEntity._propertyChangedHandlers && egiEntity._propertyChangedHandlers[propPath] && egiEntity._propertyChangedHandlers[propPath]();
         }
     },
+
+    selectEntity: function (entity, select) {
+        const entityIndex = this._findEntity(entity, this.filteredEntities);
+        if (entityIndex >= 0 && this.egiModel[entityIndex].selected !== select) {
+            this.set("egiModel." + entityIndex + ".selected", select);
+            this._processEntitySelection(this.filteredEntities[entityIndex], select);
+            this.fire("tg-entity-selected", {
+                shouldScrollToSelected: false,
+                entities: [{
+                    entity: this.filteredEntities[entityIndex],
+                    select: select
+                }]
+            });
+        }
+    },
     
     findEntityIndex: function (entity) {
         return this._findEntity(entity, this.entities);
@@ -688,6 +704,20 @@ Polymer({
     
     findFilteredEntityIndex: function (entity) {
         return this._findEntity(entity, this.filteredEntities);
+    },
+
+    updateProgress: function (percentage, clazz, isVisible) {
+        const progressBar = this.$.progressBar;
+        this._showProgress = isVisible;
+        progressBar.classList.remove("processing");
+        progressBar.classList.remove("uploading");
+        if (clazz !== "") {
+            progressBar.classList.add(clazz);
+        }
+        if (percentage >= 0 && percentage <= 100) {
+            progressBar.value = percentage;
+        }
+        progressBar.updateStyles();
     },
 
     /**
@@ -1225,6 +1255,13 @@ Polymer({
     },
 
     //Style calculator
+    _calcMaterialStyle: function (showMarginAround) {
+        if (showMarginAround) {
+            return "margin:10px;";
+        }
+        return "";
+    },
+
     _calcHeaderStyle: function (headerFixed, _showTopShadow) {
         let headerStyle = headerFixed ? "position: sticky; z-index: 1; top: 0;" : "";
         if (_showTopShadow) {
