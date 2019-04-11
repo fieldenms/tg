@@ -68,8 +68,11 @@ const template = html`
             @apply --layout-horizontal;
             @apply --layout-center;
         }
-        .grid-toolbar-content::slotted(*) {
+        .grid-toolbar-content ::slotted(*) {
             margin-top: 8px;
+        }
+        .grid-toolbar-content ::slotted(.group) {
+            margin-left: 30px;
         }
         #baseContainer {
             min-height: 0;
@@ -359,8 +362,8 @@ const template = html`
                 </template>
             </div>
             <div class="shadow-container">
-                <div class="shadow-box" style$="[[_calcLeftShadowStyle(canDragFrom, dragAnchorFixed, checkboxVisible, checkboxesFixed, primaryAction, checkboxesWithPrimaryActionsFixed, numOfFixedCols, filteredEntities, _totalsRowCount, _showLeftShadow, _shouldTriggerShadowRecalulation)]]"></div>
-                <div class="shadow-box" style$="[[_calcRightShadowStyle(_isSecondaryActionPresent, secondaryActionsFixed, _showRightShadow, filteredEntities, _totalsRowCount, _shouldTriggerShadowRecalulation)]]"></div>
+                <div class="shadow-box" style$="[[_calcLeftShadowStyle(canDragFrom, dragAnchorFixed, checkboxVisible, checkboxesFixed, primaryAction, checkboxesWithPrimaryActionsFixed, numOfFixedCols, _showLeftShadow, _shouldTriggerShadowRecalulation)]]"></div>
+                <div class="shadow-box" style$="[[_calcRightShadowStyle(_isSecondaryActionPresent, secondaryActionsFixed, _showRightShadow, _shouldTriggerShadowRecalulation)]]"></div>
             </div>
         </div>
         <!-- table lock layer -->
@@ -1016,6 +1019,7 @@ Polymer({
     _scrollContainerEntitiesStampedCustomAction: function () {},
 
     _scrollContainerEntitiesStamped: function (event) {
+        this._triggerShadowRecalulation();
         this._scrollContainerEntitiesStampedCustomAction();
     },
 
@@ -1224,7 +1228,7 @@ Polymer({
     _calcHeaderStyle: function (headerFixed, _showTopShadow) {
         let headerStyle = headerFixed ? "position: sticky; z-index: 1; top: 0;" : "";
         if (_showTopShadow) {
-            headerStyle += "box-shadow: 0px 6px 6px -5px rgba(0,0,0,0.7);";
+            headerStyle += "box-shadow: 0px 1px 6px -1px rgba(0,0,0,0.7);";
         }
         return headerStyle;
     },
@@ -1319,13 +1323,13 @@ Polymer({
         let style = summaryFixed ? "position: sticky; z-index: 1; bottom: 0;" : "";
         style += (fitToHeight ? "margin-top:auto;" : "");
         if (_showBottomShadow) {
-            style += "box-shadow: 0px -6px 6px -5px rgba(0,0,0,0.7);";
+            style += "box-shadow: 0px -1px 6px -1px rgba(0,0,0,0.7);";
         }
         return style;
     },
 
-    _calcLeftShadowStyle: function (canDragFrom, dragAnchorFixed, checkboxVisible, checkboxesFixed, primaryAction, checkboxesWithPrimaryActionsFixed, numOfFixedCols, filteredEntities, _totalsRowCount, _showLeftShadow, _shouldTriggerShadowRecalulation) {
-        let shadowStyle = "left:-5px;bottom:0;width:calc(@columnsWidth + 5px);height:@egiHeight;";
+    _calcLeftShadowStyle: function (canDragFrom, dragAnchorFixed, checkboxVisible, checkboxesFixed, primaryAction, checkboxesWithPrimaryActionsFixed, numOfFixedCols, _showLeftShadow, _shouldTriggerShadowRecalulation) {
+        let shadowStyle = "left:0;bottom:0;width:calc(@columnsWidth);height:@egiHeight;";
         if (numOfFixedCols > 0) {
             shadowStyle = shadowStyle.replace("@columnsWidth", this._calcFixedColumnWidth(canDragFrom, checkboxVisible, primaryAction, numOfFixedCols));
         } else if (checkboxesWithPrimaryActionsFixed) {
@@ -1344,8 +1348,8 @@ Polymer({
         return shadowStyle;
     },
 
-    _calcRightShadowStyle: function (_isSecondaryActionPresent, secondaryActionsFixed, filteredEntities, _totalsRowCount, _showRightShadow, _shouldTriggerShadowRecalulation) {
-        let shadowStyle = "right:-5px;bottom:0;width:calc(@actionWidth + 5px);height:calc(@egiHeight);";
+    _calcRightShadowStyle: function (_isSecondaryActionPresent, secondaryActionsFixed, _showRightShadow, _shouldTriggerShadowRecalulation) {
+        let shadowStyle = "right:0;bottom:0;width:calc(@actionWidth);height:calc(@egiHeight);";
         if (_isSecondaryActionPresent && secondaryActionsFixed) {
             const actionWidth = this.getComputedStyleValue('--egi-action-cell-width').trim() || "20px";
             const actionPadding = this.getComputedStyleValue('--egi-action-cell-padding').trim() || "0.3rem * 2";
