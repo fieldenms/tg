@@ -37,6 +37,18 @@ const template = html`
             height: 100%;
             width: 100%;
         }
+        @font-face {
+            font-family: 'FontAwesome';
+            src: url('/resources/gis/leaflet/easybutton/fontawesome/fonts/fontawesome-webfont.eot');
+            src: 
+                url('resources/gis/leaflet/easybutton/fontawesome/fonts/fontawesome-webfont.eot') format('embedded-opentype'),
+                url('resources/gis/leaflet/easybutton/fontawesome/fonts/fontawesome-webfont.woff2') format('woff2'),
+                url('resources/gis/leaflet/easybutton/fontawesome/fonts/fontawesome-webfont.woff') format('woff'),
+                url('resources/gis/leaflet/easybutton/fontawesome/fonts/fontawesome-webfont.ttf') format('truetype'),
+                url('resources/gis/leaflet/easybutton/fontawesome/fonts/fontawesome-webfont.svg') format('svg');
+            font-weight: normal;
+            font-style: normal;
+        }
     </style>
     <div class="map-container">
         <div class="progress">

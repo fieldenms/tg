@@ -1,4 +1,4 @@
-export default `
+export default String.raw`
 .leaflet-control-loading {
     /* This is where your loading indicator would go */
     background: url("resources/gis/leaflet/controlloading/images/loading.gif"); /* was images/loading.gif */

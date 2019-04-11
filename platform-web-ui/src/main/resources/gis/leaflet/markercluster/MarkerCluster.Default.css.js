@@ -1,4 +1,4 @@
-export default `
+export default String.raw`
 .marker-cluster-small {
 	background-color: rgba(181, 226, 140, 0.6);
 	}

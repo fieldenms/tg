@@ -1,4 +1,4 @@
-export default `
+export default String.raw`
 /*!
  *  Font Awesome 4.6.3 by @davegandy - http://fontawesome.io - @fontawesome
  *  License - http://fontawesome.io/license (Font: SIL OFL 1.1, CSS: MIT License)
@@ -7,8 +7,13 @@ export default `
  * -------------------------- */
 @font-face {
   font-family: 'FontAwesome';
-  src: url('../fonts/fontawesome-webfont.eot?v=4.6.3');
-  src: url('../fonts/fontawesome-webfont.eot?#iefix&v=4.6.3') format('embedded-opentype'), url('../fonts/fontawesome-webfont.woff2?v=4.6.3') format('woff2'), url('../fonts/fontawesome-webfont.woff?v=4.6.3') format('woff'), url('../fonts/fontawesome-webfont.ttf?v=4.6.3') format('truetype'), url('../fonts/fontawesome-webfont.svg?v=4.6.3#fontawesomeregular') format('svg');
+  src: url('/resources/gis/leaflet/easybutton/fontawesome/fonts/fontawesome-webfont.eot?v=4.6.3');
+  src: 
+    url('resources/gis/leaflet/easybutton/fontawesome/fonts/fontawesome-webfont.eot?#iefix&v=4.6.3') format('embedded-opentype'),
+    url('resources/gis/leaflet/easybutton/fontawesome/fonts/fontawesome-webfont.woff2?v=4.6.3') format('woff2'),
+    url('resources/gis/leaflet/easybutton/fontawesome/fonts/fontawesome-webfont.woff?v=4.6.3') format('woff'),
+    url('resources/gis/leaflet/easybutton/fontawesome/fonts/fontawesome-webfont.ttf?v=4.6.3') format('truetype'),
+    url('resources/gis/leaflet/easybutton/fontawesome/fonts/fontawesome-webfont.svg?v=4.6.3#fontawesomeregular') format('svg');
   font-weight: normal;
   font-style: normal;
 }

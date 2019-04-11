@@ -1,4 +1,4 @@
-export default `
+export default String.raw`
 /* required styles */
 
 .leaflet-map-pane,

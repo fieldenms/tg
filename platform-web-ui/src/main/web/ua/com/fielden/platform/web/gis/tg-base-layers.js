@@ -1,5 +1,5 @@
 import { L } from '/resources/gis/leaflet/leaflet-lib.js';
-// FIXME import { Google } from '/resources/gis/leaflet/providers/leaflet-google-maps-lib.js';
+import { Google } from '/resources/gis/leaflet/providers/leaflet-google-maps-lib.js';
 // <!-- TODO does not work due to error: Imported resource from origin 'https://api-maps.yandex.ru' has been blocked from loading by Cross-Origin Resource Sharing policy: No 'Access-Control-Allow-Origin' header is present on the requested resource. Origin 'https://tgdev.com:9999' is therefore not allowed access. link rel='import' href='/resources/gis/leaflet/providers/leaflet-yandex-maps.html'>  -->
 
 export const BaseLayers = function () {
@@ -26,7 +26,7 @@ export const BaseLayers = function () {
     });
     // var bingMap = new L.BingLayer("YOUR_BING_API_KEY"); -- need an API key to use it 
     // http://stackoverflow.com/questions/14442055/use-bing-maps-tiles-with-leaflet
-    /* FIXME const googleRoadMap = new Google('ROADMAP', {
+    const googleRoadMap = new Google('ROADMAP', {
         maxZoom: 21,
         minZoom: 0
     });
@@ -42,7 +42,7 @@ export const BaseLayers = function () {
         maxZoom: 15,
         minZoom: 0
     });
-    */
+
     /*const yandexRoadMap = new L.Yandex('map', {
         maxZoom: 18,
         minZoom: 0
@@ -60,14 +60,14 @@ export const BaseLayers = function () {
 
     self._baseLayers = {
         "OpenStreetMap": osmMap,
-        "Landscape": landMap
+        "Landscape": landMap,
         // "Bing": bingMap,	
         //"Yandex Roadmap": yandexRoadMap,
         //"Yandex Hybrid": yandexHybridMap,
-        /* FIXME "Google Roadmap": googleRoadMap,
+        "Google Roadmap": googleRoadMap,
         "Google Sattelite": googleSatelliteMap,
         "Google Hybrid": googleHybridMap,
-        "Google Terrain": googleTerrainMap*/
+        "Google Terrain": googleTerrainMap
     };
 };
 
