@@ -3,7 +3,9 @@ package ua.com.fielden.platform.entity.query.generation.elements;
 import static ua.com.fielden.platform.entity.query.DbVersion.H2;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import ua.com.fielden.platform.entity.query.DbVersion;
 import ua.com.fielden.platform.entity.query.fluent.ITypeCast;
@@ -67,8 +69,19 @@ public class CaseWhen implements ISingleOperand {
     }
 
     @Override
-    public Class type() {
-        return null;
+    public Class<?> type() {
+        final Set<Class<?>> thenTypes = new HashSet<>();
+        for (Pair<ICondition, ISingleOperand> pair : whenThenPairs) {
+            if (pair.getValue().type() != null) {
+                thenTypes.add(pair.getValue().type());    
+            }
+        }
+        
+        if (elseOperand != null && elseOperand.type() != null) {
+            thenTypes.add(elseOperand.type());    
+        }
+
+        return thenTypes.size() == 1 ? thenTypes.iterator().next() : null; 
     }
 
     @Override
