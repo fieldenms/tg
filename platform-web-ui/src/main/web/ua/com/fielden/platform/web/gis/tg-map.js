@@ -1,5 +1,6 @@
 import { Polymer } from '/resources/polymer/@polymer/polymer/lib/legacy/polymer-fn.js';
 import { html } from '/resources/polymer/@polymer/polymer/lib/utils/html-tag.js';
+import { allDefined } from '/resources/reflection/tg-polymer-utils.js';
 
 const template = html`
     <style>
@@ -36,18 +37,6 @@ const template = html`
         .map-container {
             height: 100%;
             width: 100%;
-        }
-        @font-face {
-            font-family: 'FontAwesome';
-            src: url('/resources/gis/leaflet/easybutton/fontawesome/fonts/fontawesome-webfont.eot');
-            src: 
-                url('resources/gis/leaflet/easybutton/fontawesome/fonts/fontawesome-webfont.eot') format('embedded-opentype'),
-                url('resources/gis/leaflet/easybutton/fontawesome/fonts/fontawesome-webfont.woff2') format('woff2'),
-                url('resources/gis/leaflet/easybutton/fontawesome/fonts/fontawesome-webfont.woff') format('woff'),
-                url('resources/gis/leaflet/easybutton/fontawesome/fonts/fontawesome-webfont.ttf') format('truetype'),
-                url('resources/gis/leaflet/easybutton/fontawesome/fonts/fontawesome-webfont.svg') format('svg');
-            font-weight: normal;
-            font-style: normal;
         }
     </style>
     <div class="map-container">
@@ -144,15 +133,24 @@ Polymer({
     },
 
     _centreSelectionChanged: function (centreSelection, _initialised) {
+        if (!allDefined(arguments)) {
+            return;
+        }
         this.centreSelectionHandler(centreSelection);
     },
 
     _columnPropertiesMapperChanged: function (columnPropertiesMapper, _initialised) {
+        if (!allDefined(arguments)) {
+            return;
+        }
         // console.debug('tg-map: columnPropertiesMapper = ', columnPropertiesMapper);
         this.columnPropertiesMapperHandler(columnPropertiesMapper);
     },
 
     _entityChanged: function (entity, _initialised) {
+        if (!allDefined(arguments)) {
+            return;
+        }
         this.entityHandler(entity);
     },
 
@@ -160,6 +158,9 @@ Polymer({
     },
 
     _retrievedEntitiesChanged: function (retrievedEntities, _initialised) {
+        if (!allDefined(arguments)) {
+            return;
+        }
         // console.debug('tg-map: retrievedEntities = ', retrievedEntities);
         this.retrivedEntitiesHandler(retrievedEntities);
     },

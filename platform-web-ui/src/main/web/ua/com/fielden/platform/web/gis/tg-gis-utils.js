@@ -1,5 +1,3 @@
-// import { html, htmlLiteral } from '/resources/polymer/@polymer/polymer/lib/utils/html-tag.js';
-
 /**
  * There are feautures of two types: 
  * 1) features derived from real entities (Message etc.)
@@ -11,24 +9,13 @@ export const _featureType = function (feature) {
     return (typeof feature.properties !== 'undefined' && typeof feature.properties._featureType !== 'undefined') ? feature.properties._featureType : (feature.constructor.prototype.type.call(feature))._notEnhancedSimpleClassName();
 };
 
+/**
+ * Creates style module with concrete 'moduleId' that can later be included using <style include='module-id'></style> into shadow DOM of some target element.
+ * 
+ * @param moduleId -- a name of style module being created
+ * @param styleStrings -- a couple of style strings to be cancatenated into the style module
+ */
 export const createStyleModule = function (moduleId, ...styleStrings) {
-    // const concatenatedStyles = htmlLiteral(styleStrings.join(''));
-    // const styleTemplate = html`
-    //     <custom-style>
-    //         <style>
-    //             ${concatenatedStyles}
-    //         </style>
-    //     </custom-style>
-    // `;
-    // styleTemplate.setAttribute('style', 'display: none;');
-    // document.head.appendChild(styleTemplate.content);
-
-
-
-
-
-
-
     const styleElement = document.createElement('dom-module');
     const concatenatedStyles = styleStrings.join('\n');
     styleElement.innerHTML = `
@@ -39,4 +26,4 @@ export const createStyleModule = function (moduleId, ...styleStrings) {
         </template>
     `;
     styleElement.register(moduleId);
-}
+};
