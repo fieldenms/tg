@@ -68,8 +68,11 @@ const template = html`
             @apply --layout-horizontal;
             @apply --layout-center;
         }
-        .grid-toolbar-content::slotted(*) {
+        .grid-toolbar-content ::slotted(*) {
             margin-top: 8px;
+        }
+        .grid-toolbar-content ::slotted(.group) {
+            margin-left: 30px;
         }
         #baseContainer {
             min-height: 0;
@@ -233,9 +236,6 @@ const template = html`
             --tg-ui-action-icon-button-height: 1.6rem;
             --tg-ui-action-icon-button-width: 1.6rem;
             --tg-ui-action-icon-button-padding: 2px;
-            --tg-secondary-action-icon-button-height: 1.6rem;
-            --tg-secondary-action-icon-button-width: 1.6rem;
-            --tg-secondary-action-icon-button-padding: 2px;
             --tg-ui-action-spinner-width: 1.5rem;
             --tg-ui-action-spinner-height: 1.5rem;
             --tg-ui-action-spinner-min-width: 1rem;
@@ -244,14 +244,15 @@ const template = html`
             --tg-ui-action-spinner-max-height: 1.5rem;
             --tg-ui-action-spinner-padding: 0px;
             --tg-ui-action-spinner-margin-left: 0;
-            --tg-secondary-action-spinner-width: 1.5rem;
-            --tg-secondary-action-spinner-height: 1.5rem;
-            --tg-secondary-action-spinner-min-width: 1rem;
-            --tg-secondary-action-spinner-min-height: 1rem;
-            --tg-secondary-action-spinner-max-width: 1.5rem;
-            --tg-secondary-action-spinner-max-height: 1.5rem;
-            --tg-secondary-action-spinner-padding: 0px;
-            --tg-secondary-action-spinner-margin-left: 0;
+        }
+        .shadow-container {
+            position: sticky;
+            top:0;
+            left: 0;
+            pointer-events: none;
+        }
+        .shadow-box{
+            position: absolute;
         }
         /*miscellanea styles*/
         .lock-layer {
@@ -271,7 +272,7 @@ const template = html`
     <slot id="column_selector" name="property-column" hidden></slot>
     <slot id="primary_action_selector" name="primary-action" hidden></slot>
     <!--EGI template-->
-    <div class="paper-material" elevation="1" fit-to-height$="[[fitToHeight]]">
+    <div class="paper-material" elevation="1" style$="[[_calcMaterialStyle(showMarginAround)]]" fit-to-height$="[[fitToHeight]]">
         <!--Table toolbar-->
         <div class="grid-toolbar">
             <paper-progress id="progressBar" hidden$="[[!_showProgress]]"></paper-progress>
@@ -282,9 +283,9 @@ const template = html`
                 <slot name="standart-action"></slot>
             </div>
         </div>
-        <div id="baseContainer">
+        <div id="baseContainer" on-scroll="_handleScrollEvent">
             <!-- Table header -->
-            <div class="table-header-row" style$="[[_calcHeaderStyle(headerFixed)]]">
+            <div class="table-header-row" style$="[[_calcHeaderStyle(headerFixed, _showTopShadow)]]">
                 <div class="drag-anchor cell" hidden$="[[!canDragFrom]]" style$="[[_calcDragBoxStyle(dragAnchorFixed)]]"></div>
                 <div class="table-cell cell" style$="[[_calcSelectCheckBoxStyle(canDragFrom, checkboxesFixed)]]" hidden$="[[!checkboxVisible]]" tooltip-text$="[[_selectAllTooltip(selectedAll)]]">
                     <paper-checkbox class="all-checkbox blue header" checked="[[selectedAll]]" on-change="_allSelectionChanged"></paper-checkbox>
@@ -336,7 +337,7 @@ const template = html`
                 </div>
             </template>
             <!-- Table footer -->
-            <div class="footer" style$="[[_calcFooterStyle(summaryFixed, fitToHeight)]]">
+            <div class="footer" style$="[[_calcFooterStyle(summaryFixed, fitToHeight, _showBottomShadow)]]">
                 <template is="dom-repeat" items="[[_totalsRows]]" as="summaryRow" index-as="summaryIndex">
                     <div class="table-footer-row">
                         <div class="drag-anchor cell" hidden$="[[!canDragFrom]]" style$="[[_calcDragBoxStyle(dragAnchorFixed)]]"></div>
@@ -359,6 +360,10 @@ const template = html`
                         </div>
                     </div>
                 </template>
+            </div>
+            <div class="shadow-container">
+                <div class="shadow-box" style$="[[_calcLeftShadowStyle(canDragFrom, dragAnchorFixed, checkboxVisible, checkboxesFixed, primaryAction, checkboxesWithPrimaryActionsFixed, numOfFixedCols, _showLeftShadow, _shouldTriggerShadowRecalulation)]]"></div>
+                <div class="shadow-box" style$="[[_calcRightShadowStyle(_isSecondaryActionPresent, secondaryActionsFixed, _showRightShadow, _shouldTriggerShadowRecalulation)]]"></div>
             </div>
         </div>
         <!-- table lock layer -->
@@ -565,18 +570,13 @@ Polymer({
         //Private properties that defines config object for totals.
         _totalsRowCount: Number,
         _totalsRows: Array,
-        //FIXME The following properties might not be needed any longer.
         //Shadow related properties
         _showBottomShadow: Boolean,
         _showTopShadow: Boolean,
         _showLeftShadow: Boolean,
         _showRightShadow: Boolean,
-        //Scroling properties
-        _scrollLeft: Number,
-        _scrollTop: Number,
         //Need when resizing column to recalculate styles.
-        _fixedColumnWidth: Number,
-        _scrollableColumnWidth: Number,
+        _shouldTriggerShadowRecalulation: Boolean,
         //Range selection related properties
         _rangeSelection: {
             type: Boolean,
@@ -595,7 +595,8 @@ Polymer({
 
     observers: [
         "_columnsChanged(columns, fixedColumns)",
-        "_heightRelatedPropertiesChanged(visibleRowCount, rowHeight, constantHeight, fitToHeight, summaryFixed, _totalsRowCount)"],
+        "_heightRelatedPropertiesChanged(visibleRowCount, rowHeight, constantHeight, fitToHeight, summaryFixed, _totalsRowCount)"
+    ],
 
     created: function () {
         this._serialiser = new TgSerialiser();
@@ -605,17 +606,12 @@ Polymer({
         this._totalsRowCount = 0;
         this._showProgress = false;
 
-        //FIXIME the following entities might not be needed any longer
         //Initialising shadows
         this._showTopShadow = false;
         this._showBottomShadow = false;
         this._showLeftShadow = false;
         this._showRightShadow = false;
-
-        //Initilialising scrolling properties
-        this._scrollLeft = 0;
-        this._scrollTop = 0;
-        //FIXIME till this property.
+        this._shouldTriggerShadowRecalulation = false;
 
         //Initialising entities.
         this.totals = null;
@@ -686,6 +682,21 @@ Polymer({
             egiEntity._propertyChangedHandlers && egiEntity._propertyChangedHandlers[propPath] && egiEntity._propertyChangedHandlers[propPath]();
         }
     },
+
+    selectEntity: function (entity, select) {
+        const entityIndex = this._findEntity(entity, this.filteredEntities);
+        if (entityIndex >= 0 && this.egiModel[entityIndex].selected !== select) {
+            this.set("egiModel." + entityIndex + ".selected", select);
+            this._processEntitySelection(this.filteredEntities[entityIndex], select);
+            this.fire("tg-entity-selected", {
+                shouldScrollToSelected: false,
+                entities: [{
+                    entity: this.filteredEntities[entityIndex],
+                    select: select
+                }]
+            });
+        }
+    },
     
     findEntityIndex: function (entity) {
         return this._findEntity(entity, this.entities);
@@ -693,6 +704,20 @@ Polymer({
     
     findFilteredEntityIndex: function (entity) {
         return this._findEntity(entity, this.filteredEntities);
+    },
+
+    updateProgress: function (percentage, clazz, isVisible) {
+        const progressBar = this.$.progressBar;
+        this._showProgress = isVisible;
+        progressBar.classList.remove("processing");
+        progressBar.classList.remove("uploading");
+        if (clazz !== "") {
+            progressBar.classList.add(clazz);
+        }
+        if (percentage >= 0 && percentage <= 100) {
+            progressBar.value = percentage;
+        }
+        progressBar.updateStyles();
     },
 
     /**
@@ -855,7 +880,7 @@ Polymer({
             this._updateFixedTotalRowGrowFactor(columnIndex, columnWidths[column.property].newGrowFactor);
             this._updateFixedTotalRowWidth(columnIndex, columnWidths[column.property].newWidth);
         });
-        // this._updateColumnsWidthProperties();
+        this._triggerShadowRecalulation();
     },
 
     /** 
@@ -939,13 +964,19 @@ Polymer({
                 this.fire("tg-egi-column-change", parameters);
             }
         }
-        //this._updateColumnsWidthProperties();
+        this._triggerShadowRecalulation();
     },
 
     //Event listeners
-    //FIXME this should be implemented
     _resizeEventListener: function() {
+        this._handleScrollEvent();
+    },
 
+    _handleScrollEvent: function () {
+        this._showLeftShadow = this.$.baseContainer.scrollLeft !== 0;
+        this._showRightShadow = (this.$.baseContainer.clientWidth + this.$.baseContainer.scrollLeft) !== this.$.baseContainer.scrollWidth;
+        this._showTopShadow = this.$.baseContainer.scrollTop !== 0;
+        this._showBottomShadow = (this.$.baseContainer.clientHeight + this.$.baseContainer.scrollTop) !== this.$.baseContainer.scrollHeight;
     },
 
     _allSelectionChanged: function (e) {
@@ -1018,6 +1049,7 @@ Polymer({
     _scrollContainerEntitiesStampedCustomAction: function () {},
 
     _scrollContainerEntitiesStamped: function (event) {
+        this._triggerShadowRecalulation();
         this._scrollContainerEntitiesStampedCustomAction();
     },
 
@@ -1084,6 +1116,7 @@ Polymer({
             if (columnWidth !== newWidth) {
                 this.set("fixedColumns." + e.model.index + ".width", newWidth);
                 this._updateFixedTotalRowWidth(e.model.index, newWidth);
+                this._triggerShadowRecalulation();
             }
         }
     },
@@ -1137,7 +1170,7 @@ Polymer({
                 }
                 this.set("columns." + e.model.index + ".width", newWidth);
                 this._updateTotalRowWidth(e.model.index, newWidth);
-                //this._updateColumnsWidthProperties();
+                this._triggerShadowRecalulation();
                 //scroll if needed.
                 if (mousePos.x > this._columnResizingObject.containerWithoutFixedSecondaryActionWidth || mousePos.x < this._columnResizingObject.leftFixedContainerWidth) {
                     this.$.baseContainer.scrollLeft += newWidth - columnWidth;
@@ -1145,6 +1178,10 @@ Polymer({
             }
 
         }
+    },
+
+    _triggerShadowRecalulation: function () {
+        this._shouldTriggerShadowRecalulation = !this._shouldTriggerShadowRecalulation;
     },
 
     _updateFixedTotalRowWidth: function (colIndex, value) {
@@ -1218,8 +1255,19 @@ Polymer({
     },
 
     //Style calculator
-    _calcHeaderStyle: function (headerFixed) {
-        return headerFixed ? "position: sticky; z-index: 1; top: 0;" : "";
+    _calcMaterialStyle: function (showMarginAround) {
+        if (showMarginAround) {
+            return "margin:10px;";
+        }
+        return "";
+    },
+
+    _calcHeaderStyle: function (headerFixed, _showTopShadow) {
+        let headerStyle = headerFixed ? "position: sticky; z-index: 1; top: 0;" : "";
+        if (_showTopShadow) {
+            headerStyle += "box-shadow: 0px 1px 6px -1px rgba(0,0,0,0.7);";
+        }
+        return headerStyle;
     },
 
     _calcDragBoxStyle: function (dragAnchorFixed) {
@@ -1274,6 +1322,16 @@ Polymer({
         return style;
     },
 
+    _calcFixedColumnWidth: function (canDragFrom, checkboxVisible, primaryAction, numOfFixedCols) {
+        let columnStyleWidth = "";
+        if (numOfFixedCols > 0) {
+            const cellPadding = this.getComputedStyleValue('--egi-cell-padding').trim() || "0.6rem";
+            const columnsWidth = this.fixedColumns.reduce((acc, curr) => acc + curr.width, 0);
+            columnStyleWidth = columnsWidth + "px + 2 * " + this.fixedColumns.length + " * " + cellPadding;
+        }
+        return this._calcPrimaryActionWidth(canDragFrom, checkboxVisible, primaryAction) + " + " + columnStyleWidth;
+    },
+
     _calcColumnHeaderStyle: function (item, itemWidth, columnGrowFactor, fixed) {
         let colStyle = "min-width: " + itemWidth + "px;" + "width: " + itemWidth + "px;"
         if (columnGrowFactor === 0 || fixed === 'true') {
@@ -1298,9 +1356,49 @@ Polymer({
         return secondaryActionsFixed ? "position: sticky; z-index: 1; right: 0;" : "";
     },
 
-    _calcFooterStyle: function (summaryFixed, fitToHeight) {
-        const style = summaryFixed ? "position: sticky; z-index: 1; bottom: 0;" : "";
-        return style + (fitToHeight ? "margin-top:auto;" : "");
+    _calcFooterStyle: function (summaryFixed, fitToHeight, _showBottomShadow) {
+        let style = summaryFixed ? "position: sticky; z-index: 1; bottom: 0;" : "";
+        style += (fitToHeight ? "margin-top:auto;" : "");
+        if (_showBottomShadow) {
+            style += "box-shadow: 0px -1px 6px -1px rgba(0,0,0,0.7);";
+        }
+        return style;
+    },
+
+    _calcLeftShadowStyle: function (canDragFrom, dragAnchorFixed, checkboxVisible, checkboxesFixed, primaryAction, checkboxesWithPrimaryActionsFixed, numOfFixedCols, _showLeftShadow, _shouldTriggerShadowRecalulation) {
+        let shadowStyle = "left:0;bottom:0;width:calc(@columnsWidth);height:@egiHeight;";
+        if (numOfFixedCols > 0) {
+            shadowStyle = shadowStyle.replace("@columnsWidth", this._calcFixedColumnWidth(canDragFrom, checkboxVisible, primaryAction, numOfFixedCols));
+        } else if (checkboxesWithPrimaryActionsFixed) {
+            shadowStyle = shadowStyle.replace("@columnsWidth", this._calcPrimaryActionWidth(canDragFrom, checkboxVisible, primaryAction));
+        } else if (checkboxesFixed) {
+            shadowStyle = shadowStyle.replace("@columnsWidth", this._calcSelectionCheckboxWidth(canDragFrom, checkboxVisible));
+        } else if (dragAnchorFixed) {
+            shadowStyle = shadowStyle.replace("@columnsWidth", this._calcDragAnchorWidth(canDragFrom));
+        } else {
+            shadowStyle = shadowStyle.replace("@columnsWidth", "0px");
+        }
+        shadowStyle = shadowStyle.replace("@egiHeight", this.$.baseContainer.scrollHeight + "px");
+        if (_showLeftShadow) {
+            shadowStyle += "box-shadow: 6px 0px 6px -5px rgba(0,0,0,0.7);";
+        }
+        return shadowStyle;
+    },
+
+    _calcRightShadowStyle: function (_isSecondaryActionPresent, secondaryActionsFixed, _showRightShadow, _shouldTriggerShadowRecalulation) {
+        let shadowStyle = "right:0;bottom:0;width:calc(@actionWidth);height:calc(@egiHeight);";
+        if (_isSecondaryActionPresent && secondaryActionsFixed) {
+            const actionWidth = this.getComputedStyleValue('--egi-action-cell-width').trim() || "20px";
+            const actionPadding = this.getComputedStyleValue('--egi-action-cell-padding').trim() || "0.3rem * 2";
+            shadowStyle = shadowStyle.replace("@actionWidth", actionWidth + " + " + actionPadding);
+        } else {
+            shadowStyle = shadowStyle.replace("@actionWidth", "0px");
+        }
+        shadowStyle = shadowStyle.replace("@egiHeight", this.$.baseContainer.scrollHeight + "px");
+        if (_showRightShadow) {
+            shadowStyle += "box-shadow: -6px 0px 6px -5px rgba(0,0,0,0.7);";
+        }
+        return shadowStyle;
     },
 
     // Observers

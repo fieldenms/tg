@@ -18,9 +18,6 @@ styleElement.innerHTML = `
             .selection-criteria {
                 background-color: white;
             }
-            .group:not(:first-child) {
-                margin-left: 30px;
-            }
         </style>
     </template>
 `;
