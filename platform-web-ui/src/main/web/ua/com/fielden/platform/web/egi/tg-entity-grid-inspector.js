@@ -326,7 +326,7 @@ const template = html`
                     </div>
                     <div class="fixed-columns-container" hidden$="[[!numOfFixedCols]]" style$="[[_calcFixedColumnContainerStyle(canDragFrom, checkboxVisible, primaryAction, numOfFixedCols)]]">
                         <template is="dom-repeat" items="[[fixedColumns]]" as="column">
-                            <tg-egi-cell class="cell" selected$="[[egiEntity.selected]]" over$="[[egiEntity.over]]" column="[[column]]" egi-entity="[[egiEntity]]" style$="[[_calcColumnStyle(column, column.width, column.growFactor, 'true')]]" tooltip-text$="[[_getTooltip(egiEntity.entity, column, column.customAction)]]" with-action$="[[hasAction(egiEntity.entity, column)]]" on-tap="_tapAction"></tg-egi-cell>
+                            <tg-egi-cell class="cell" selected$="[[egiEntity.selected]]" over$="[[egiEntity.over]]" column="[[column]]" egi-entity="[[egiEntity]]" style$="[[_calcColumnStyle(column, column.width, column.growFactor, 'true')]]" tooltip-text$="[[_getTooltip(egiEntity.entity, column, column.customAction)]]" with-action$="[[hasAction(egiEntity.entity, column)]]" on-tap="_tapFixedAction"></tg-egi-cell>
                         </template>
                     </div>
                     <template is="dom-repeat" items="[[columns]]" as="column">
@@ -1020,6 +1020,10 @@ Polymer({
 
     _checkSelectionState: function (event) {
         this._rangeSelection = event.shiftKey;
+    },
+
+    _tapFixedAction: function (e, detail) {
+        this.tap(this.filteredEntities[e.model.parentModel.entityIndex], e.model.index, this.fixedColumns[e.model.index]);
     },
 
     _tapAction: function (e, detail) {
