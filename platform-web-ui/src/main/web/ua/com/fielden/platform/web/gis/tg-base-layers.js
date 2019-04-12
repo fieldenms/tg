@@ -1,6 +1,5 @@
 import { L } from '/resources/gis/leaflet/leaflet-lib.js';
-import { Google } from '/resources/gis/leaflet/providers/leaflet-google-maps-lib.js';
-// <!-- TODO does not work due to error: Imported resource from origin 'https://api-maps.yandex.ru' has been blocked from loading by Cross-Origin Resource Sharing policy: No 'Access-Control-Allow-Origin' header is present on the requested resource. Origin 'https://tgdev.com:9999' is therefore not allowed access. link rel='import' href='/resources/gis/leaflet/providers/leaflet-yandex-maps.html'>  -->
+import { googleMutant } from '/resources/gis/leaflet/providers/leaflet-google-maps-lib.js';
 
 export const BaseLayers = function () {
     const self = this;
@@ -26,7 +25,24 @@ export const BaseLayers = function () {
     });
     // var bingMap = new L.BingLayer("YOUR_BING_API_KEY"); -- need an API key to use it 
     // http://stackoverflow.com/questions/14442055/use-bing-maps-tiles-with-leaflet
-    const googleRoadMap = new Google('ROADMAP', {
+    const googleRoadMap = googleMutant({
+        maxZoom: 21,
+        type:'roadmap'
+    });
+    const googleSatelliteMap = googleMutant({
+        maxZoom: 19,
+        type:'satellite'
+    });
+    const googleHybridMap = googleMutant({
+        maxZoom: 19,
+        type:'hybrid'
+    });
+    const googleTerrainMap = googleMutant({
+        maxZoom: 15,
+        type:'terrain'
+    });
+
+    /*const googleRoadMap = new Google('ROADMAP', {
         maxZoom: 21,
         minZoom: 0
     });
@@ -41,29 +57,11 @@ export const BaseLayers = function () {
     const googleTerrainMap = new Google('TERRAIN', {
         maxZoom: 15,
         minZoom: 0
-    });
-
-    /*const yandexRoadMap = new L.Yandex('map', {
-        maxZoom: 18,
-        minZoom: 0
-    });
-    const yandexHybridMap = new L.Yandex('hybrid', {
-        maxZoom: 19,
-        minZoom: 0
-    });
-    
-    self._ytraffic = new L.Yandex("null", {
-        traffic: true,
-        opacity: 0.8,
-        overlay: true
     });*/
-
     self._baseLayers = {
         "OpenStreetMap": osmMap,
         "Landscape": landMap,
         // "Bing": bingMap,	
-        //"Yandex Roadmap": yandexRoadMap,
-        //"Yandex Hybrid": yandexHybridMap,
         "Google Roadmap": googleRoadMap,
         "Google Sattelite": googleSatelliteMap,
         "Google Hybrid": googleHybridMap,
@@ -80,7 +78,3 @@ BaseLayers.prototype.getBaseLayer = function (name) {
 BaseLayers.prototype.getBaseLayers = function () {
     return this._baseLayers;
 }
-
-/* BaseLayers.prototype.getYTrafficLayer = function() {
-    return this._ytraffic;
-} */

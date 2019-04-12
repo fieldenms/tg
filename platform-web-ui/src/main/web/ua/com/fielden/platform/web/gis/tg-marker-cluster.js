@@ -105,9 +105,9 @@ MarkerCluster.prototype.iconCreateFunction = function (cluster, self) {
 
     return self._markerFactory.createClusterIcon(
         '<div class="img-overlay"><img src="resources/gis/images/arrow-blue.png" style="-webkit-transform: rotate(' +
-        chosenMarker.options.angle +
+        chosenMarker.options.rotationAngle +
         'deg); " /><div class="overlay" style="-webkit-transform: rotate(' +
-        (chosenMarker.options.angle + 90) +
+        (chosenMarker.options.rotationAngle + 90) +
         'deg); ">&#x2194</div></div>'
     );
 }

@@ -1,5 +1,5 @@
 import { L, leafletStylesName } from '/resources/gis/leaflet/leaflet-lib.js';
-import { RotatedMarker } from '/resources/gis/leaflet/markerrotation/leaflet-markerrotation-lib.js';
+import '/resources/gis/leaflet/markerrotation/leaflet-markerrotation-lib.js';
 import { IconFactory, tgIconFactoryStylesName } from '/resources/gis/tg-icon-factory.js';
 import { _featureType } from '/resources/gis/tg-gis-utils.js';
 
@@ -28,7 +28,7 @@ export const MarkerFactory = function () {
         }
     });
 
-    self.ArrowMarker = RotatedMarker.extend({
+    self.ArrowMarker = L.Marker.extend({
         options: {
             icon: self._iconFactory.getArrowIcon(false),
             title: "BlaBla",
@@ -59,7 +59,7 @@ MarkerFactory.prototype.createFeatureMarker = function (feature, latlng) {
         if (featureType === 'TgMessage') {
             if (feature.get('vectorSpeed')) { // TODO featureType.get('vectorSpeed') !== 0?
                 return new this.ArrowMarker(latlng, {
-                    angle: (feature.get('vectorAngle') ? (feature.get('vectorAngle') - 180) : 0)
+                    rotationAngle: (feature.get('vectorAngle') ? (feature.get('vectorAngle') - 180) : 0)
                 });
             } else {
                 return new this.CircleMarker(latlng);
