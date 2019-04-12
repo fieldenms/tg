@@ -36,10 +36,8 @@ public class EntityKeyExpressionGenerator {
 
     public static ExpressionModel getVirtualKeyPropForEntityWithCompositeKey(final Class<? extends AbstractEntity<DynamicEntityKey>> entityType) {
         final List<KeyMemberInfo> keyMembersInfo = new ArrayList<>();
-        boolean hasNotOptional = false;
         for (Field keyMemberField : getKeyMembers(entityType)) {
             final KeyMemberInfo keyMemberInfo = getKeyMemberInfo(entityType, keyMemberField);
-            hasNotOptional = hasNotOptional || !keyMemberInfo.optional;
             keyMembersInfo.add(keyMemberInfo);
         }
 
@@ -47,12 +45,12 @@ public class EntityKeyExpressionGenerator {
     }
 
     protected static ExpressionModel getVirtualKeyPropForEntityWithCompositeKey(final String keyMemberSeparator, List<KeyMemberInfo> keyMembers) {
-        boolean hasNotOptional = false;
+        boolean hasSomeRequired = false;
         for (KeyMemberInfo keyMemberInfo : keyMembers) {
-            hasNotOptional = hasNotOptional || !keyMemberInfo.optional;
+            hasSomeRequired = hasSomeRequired || !keyMemberInfo.optional;
         }
 
-        if (hasNotOptional) {
+        if (hasSomeRequired) {
             return getVirtualKeyPropForEntityWithCompositeKeyWithNotOptionalMember(keyMemberSeparator, keyMembers);
         } else if (keyMembers.size() > 1) {
             return getVirtualKeyPropForEntityWithCompositeKeyWithOnlyOptionalMembers(keyMemberSeparator, keyMembers);
@@ -96,14 +94,14 @@ public class EntityKeyExpressionGenerator {
         final Iterator<ExpressionModel> kmIter = expressions.iterator();
         final ExpressionModel firstMemberExpr = kmIter.next();
 
-        IConcatFunctionWith<IStandAloneExprOperationAndClose, AbstractEntity<?>> concatStart = expr().concat().expr(firstMemberExpr);
+        IConcatFunctionWith<IStandAloneExprOperationAndClose, AbstractEntity<?>> concatInProgress = expr().concat().expr(firstMemberExpr);
 
         while (kmIter.hasNext()) {
             final ExpressionModel nextKeyMember = kmIter.next();
-            concatStart = concatStart.with().expr(nextKeyMember);
+            concatInProgress = concatInProgress.with().expr(nextKeyMember);
         }
 
-        return concatStart.end().model();
+        return concatInProgress.end().model();
     }
 
     private static ExpressionModel getVirtualKeyPropForEntityWithCompositeKeyWithNotOptionalMember(final String keyMemberSeparator, List<KeyMemberInfo> keyMembers) {
@@ -147,11 +145,13 @@ public class EntityKeyExpressionGenerator {
     }
 
     private static ExpressionModel processOptionalKeyMemberAfter(final String keyMemberName, final TypeInfo keyMemberType, final String separator) {
-        return expr().caseWhen().prop(keyMemberName).isNotNull().then().concat().val(separator).with().expr(getKeyMemberConcatenationPropName(keyMemberName, keyMemberType)).end().otherwise().val(EMPTY_STRING).end()/*.endAsStr(256)*/.model();
+        return expr().caseWhen().prop(keyMemberName).isNotNull().then().concat().val(separator).with().expr(getKeyMemberConcatenationPropName(keyMemberName, keyMemberType)).end() //
+                .otherwise().val(EMPTY_STRING).end().model();
     }
 
     private static ExpressionModel processOptionalKeyMemberBefore(final String keyMemberName, final TypeInfo keyMemberType, final String separator) {
-        return expr().caseWhen().prop(keyMemberName).isNotNull().then().concat().expr(getKeyMemberConcatenationPropName(keyMemberName, keyMemberType)).with().val(separator).end().otherwise().val(EMPTY_STRING).end()/*.endAsStr(256)*/.model();
+        return expr().caseWhen().prop(keyMemberName).isNotNull().then().concat().expr(getKeyMemberConcatenationPropName(keyMemberName, keyMemberType)).with().val(separator).end() //
+                .otherwise().val(EMPTY_STRING).end().model();
     }
 
     public static class KeyMemberInfo {
