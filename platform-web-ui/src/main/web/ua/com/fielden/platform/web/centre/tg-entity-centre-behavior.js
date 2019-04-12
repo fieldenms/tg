@@ -622,7 +622,7 @@ const TgEntityCentreBehaviorImpl = {
 
             const self = this;
             self._actionInProgress = true;
-            // FIXME self.$.egi.clearSelection();
+            self.$.egi.clearSelection();
             self._triggerRun = true;
 
             // let's register a timer to kickoff a spinner if the run action is taking too long...
