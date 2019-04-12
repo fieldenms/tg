@@ -933,12 +933,13 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
         final List<List<FunctionalActionElement>> actionGroups = new ArrayList<>();
         if (topLevelActions.isPresent()) {
 
-            final String currentGroup = null;
+            String currentGroup = null;
             for (int i = 0; i < topLevelActions.get().size(); i++) {
                 final Pair<EntityActionConfig, Optional<String>> topLevelAction = topLevelActions.get().get(i);
                 final String cg = getGroup(topLevelAction.getValue());
                 if (!EntityUtils.equalsEx(cg, currentGroup)) {
                     actionGroups.add(new ArrayList<>());
+                    currentGroup = cg;
                 }
                 addToLastGroup(actionGroups, topLevelAction.getKey(), i);
             }
@@ -949,9 +950,9 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
 
         final DomContainer functionalActionsDom = new DomContainer();
 
-        for (final List<FunctionalActionElement> group : actionGroups) {
-            final DomElement groupElement = new DomElement("div").attr("slot", "entity-specific-action").clazz("entity-specific-action", "group");
-            for (final FunctionalActionElement el : group) {
+        for (int i = 0; i < actionGroups.size(); i++) {
+            final DomElement groupElement = new DomElement("div").attr("slot", "entity-specific-action").clazz("entity-specific-action", i == 0 ? "first-group" : "group");
+            for (final FunctionalActionElement el : actionGroups.get(i)) {
                 importPaths.add(el.importPath());
                 groupElement.add(el.render());
                 functionalActionsObjects.append(prefix + createActionObject(el));
