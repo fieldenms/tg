@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.entity.query.metadata;
 
+import static java.util.stream.Collectors.toList;
 import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.cond;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.expr;
@@ -35,12 +36,7 @@ public class EntityKeyExpressionGenerator {
     }
 
     public static ExpressionModel getVirtualKeyPropForEntityWithCompositeKey(final Class<? extends AbstractEntity<DynamicEntityKey>> entityType) {
-        final List<KeyMemberInfo> keyMembersInfo = new ArrayList<>();
-        for (Field keyMemberField : getKeyMembers(entityType)) {
-            final KeyMemberInfo keyMemberInfo = getKeyMemberInfo(entityType, keyMemberField);
-            keyMembersInfo.add(keyMemberInfo);
-        }
-
+        final List<KeyMemberInfo> keyMembersInfo = getKeyMembers(entityType).stream().map(keyMemberInfo -> getKeyMemberInfo(entityType, keyMemberInfo)).collect(toList()); 
         return getVirtualKeyPropForEntityWithCompositeKey(getKeyMemberSeparator(entityType), keyMembersInfo);
     }
 
@@ -50,20 +46,20 @@ public class EntityKeyExpressionGenerator {
             hasSomeRequired = hasSomeRequired || !keyMemberInfo.optional;
         }
 
-        if (hasSomeRequired) {
-            return getVirtualKeyPropForEntityWithCompositeKeyWithNotOptionalMember(keyMemberSeparator, keyMembers);
-        } else if (keyMembers.size() > 1) {
-            return getVirtualKeyPropForEntityWithCompositeKeyWithOnlyOptionalMembers(keyMemberSeparator, keyMembers);
+        if (keyMembers.size() == 1) {
+            return processSingleKeyMember(keyMembers.get(0));
+        } else if (hasSomeRequired) {
+            return concatenateExpressions(getVirtualKeyPropForEntityWithCompositeKeyList(keyMemberSeparator, keyMembers));
         } else {
-            throw new EqlException("Entity with single-optional composite key member is not allowed.");
+            return getVirtualKeyPropForEntityWithCompositeKeyWithOnlyOptionalMembers(keyMemberSeparator, keyMembers);
         }
     }
 
     private static ExpressionModel getVirtualKeyPropForEntityWithCompositeKeyWithOnlyOptionalMembers(final String keyMemberSeparator, List<KeyMemberInfo> keyMembers) {
         ExpressionModel currExp = null;
 
-        for (final KeyMemberInfo originalField : keyMembers) {
-            currExp = composeTwo(currExp, originalField, keyMemberSeparator);
+        for (final KeyMemberInfo keyMember : keyMembers) {
+            currExp = composeTwo(currExp, keyMember, keyMemberSeparator);
         }
 
         return currExp;
@@ -104,14 +100,6 @@ public class EntityKeyExpressionGenerator {
         return concatInProgress.end().model();
     }
 
-    private static ExpressionModel getVirtualKeyPropForEntityWithCompositeKeyWithNotOptionalMember(final String keyMemberSeparator, List<KeyMemberInfo> keyMembers) {
-        if (keyMembers.size() == 1) {
-            return processSingleKeyMember(keyMembers.get(0).name, keyMembers.get(0).typeInfo);
-        } else {
-            return concatenateExpressions(getVirtualKeyPropForEntityWithCompositeKeyList(keyMemberSeparator, keyMembers));
-        }
-    }
-
     private static List<ExpressionModel> getVirtualKeyPropForEntityWithCompositeKeyList(final String keyMemberSeparator, List<KeyMemberInfo> keyMembers) {
         boolean foundFirstNonOptional = false;
         final List<ExpressionModel> result = new ArrayList<>();
@@ -139,9 +127,9 @@ public class EntityKeyExpressionGenerator {
         return expr().prop(keyMemberType == ENTITY ? keyMemberName + "." + KEY : keyMemberName).model();
     }
 
-    private static ExpressionModel processSingleKeyMember(final String keyMemberName, final TypeInfo keyMemberType) {
-        return keyMemberType == NON_STRING ? expr().concat().prop(keyMemberName).with().val(EMPTY_STRING).end().model()
-                : getKeyMemberConcatenationPropName(keyMemberName, keyMemberType);
+    private static ExpressionModel processSingleKeyMember(final KeyMemberInfo keyMember) {
+        return keyMember.typeInfo == NON_STRING ? expr().concat().prop(keyMember.name).with().val(EMPTY_STRING).end().model()
+                : getKeyMemberConcatenationPropName(keyMember.name, keyMember.typeInfo);
     }
 
     private static ExpressionModel processOptionalKeyMemberAfter(final String keyMemberName, final TypeInfo keyMemberType, final String separator) {
