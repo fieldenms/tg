@@ -23,7 +23,6 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.DynamicEntityKey;
 import ua.com.fielden.platform.entity.annotation.Optional;
 import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
-import ua.com.fielden.platform.entity.query.exceptions.EqlException;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IConcatFunctionWith;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IStandAloneExprOperationAndClose;
 import ua.com.fielden.platform.entity.query.model.ExpressionModel;
@@ -49,7 +48,7 @@ public class EntityKeyExpressionGenerator {
         if (keyMembers.size() == 1) {
             return processSingleKeyMember(keyMembers.get(0));
         } else if (hasSomeRequired) {
-            return concatenateExpressions(getVirtualKeyPropForEntityWithCompositeKeyList(keyMemberSeparator, keyMembers));
+            return concatenate(getVirtualKeyPropForEntityWithCompositeKeyList(keyMemberSeparator, keyMembers));
         } else {
             return getVirtualKeyPropForEntityWithCompositeKeyWithOnlyOptionalMembers(keyMemberSeparator, keyMembers);
         }
@@ -71,7 +70,7 @@ public class EntityKeyExpressionGenerator {
         if (firstExpr == null) {
             return secondExpr;
         } else {
-            return expr().caseWhen().condition(cond().expr(firstExpr).isNotNull().and().expr(secondExpr).isNotNull().model()).then().expr(concatenateExpressions(listOf(firstExpr, expr().val(separator).model(), secondExpr))). // 
+            return expr().caseWhen().condition(cond().expr(firstExpr).isNotNull().and().expr(secondExpr).isNotNull().model()).then().expr(concatenate(listOf(firstExpr, expr().val(separator).model(), secondExpr))). // 
                     when().condition(cond().expr(firstExpr).isNotNull().and().expr(secondExpr).isNull().model()).then().expr(firstExpr). //
                     when().expr(secondExpr).isNotNull().then().expr(secondExpr). //
                     otherwise().val(null).end().model();
@@ -86,7 +85,7 @@ public class EntityKeyExpressionGenerator {
         return new KeyMemberInfo(keyMemberField.getName(), typeInfo, optional);
     }
 
-    private static ExpressionModel concatenateExpressions(final List<ExpressionModel> expressions) {
+    private static ExpressionModel concatenate(final List<ExpressionModel> expressions) {
         final Iterator<ExpressionModel> kmIter = expressions.iterator();
         final ExpressionModel firstMemberExpr = kmIter.next();
 
@@ -116,10 +115,6 @@ public class EntityKeyExpressionGenerator {
             }
         }
 
-        if (!foundFirstNonOptional) {
-            throw new EqlException("Composite key should consist of at least one not-optional member.");
-        }
-
         return result;
     }
 
@@ -128,8 +123,13 @@ public class EntityKeyExpressionGenerator {
     }
 
     private static ExpressionModel processSingleKeyMember(final KeyMemberInfo keyMember) {
-        return keyMember.typeInfo == NON_STRING ? expr().concat().prop(keyMember.name).with().val(EMPTY_STRING).end().model()
+        final ExpressionModel resultExpression = keyMember.typeInfo == NON_STRING ? expr().concat().prop(keyMember.name).with().val(EMPTY_STRING).end().model()
                 : getKeyMemberConcatenationPropName(keyMember.name, keyMember.typeInfo);
+        if (keyMember.optional) {
+            return expr().caseWhen().prop(keyMember.name).isNotNull().then().expr(resultExpression).end().model();
+        } else {
+            return resultExpression; 
+        }
     }
 
     private static ExpressionModel processOptionalKeyMemberAfter(final String keyMemberName, final TypeInfo keyMemberType, final String separator) {

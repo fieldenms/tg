@@ -47,6 +47,27 @@ public class EntityKeyExpressionGeneratorTest {
     }
     
     @Test
+    public void tes_op1sk_1() {
+        ExpressionModel act = getVirtualKeyPropForEntityWithCompositeKey(separator, listOf(kmi(prop1, STRING, true)));
+        ExpressionModel exp = expr().caseWhen().prop(prop1).isNotNull().then().expr(expr().prop(prop1).model()).end().model();
+        assertEquals(exp, act);
+    }
+
+    @Test
+    public void tes_op1sk_2() {
+        ExpressionModel act = getVirtualKeyPropForEntityWithCompositeKey(separator, listOf(kmi(prop1, ENTITY, true)));
+        ExpressionModel exp = expr().caseWhen().prop(prop1).isNotNull().then().expr(expr().prop(prop1 + ".key").model()).end().model();
+        assertEquals(exp, act);
+    }
+    
+    @Test
+    public void tes_op1sk_3() {
+        ExpressionModel act = getVirtualKeyPropForEntityWithCompositeKey(separator, listOf(kmi(prop1, NON_STRING, true)));
+        ExpressionModel exp = expr().caseWhen().prop(prop1).isNotNull().then().expr(expr().concat().prop(prop1).with().val(EMPTY_STRING).end().model()).end().model();
+        assertEquals(exp, act);
+    }
+
+    @Test
     public void tes_2op_1() {
         ExpressionModel act = getVirtualKeyPropForEntityWithCompositeKey(separator, listOf(
                 kmi(prop1, STRING, false), 
