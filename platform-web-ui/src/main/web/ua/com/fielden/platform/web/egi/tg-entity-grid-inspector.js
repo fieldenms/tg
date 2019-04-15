@@ -957,20 +957,17 @@ Polymer({
     },
 
     _updateColumns: function (resultantColumns) {
-        const mergedColumns = this.fixedColumns.concat(this.columns);
-        if (!this._reflector.equalsEx(mergedColumns, resultantColumns)) {
-            this.fixedColumns = resultantColumns.splice(0, this.numOfFixedCols);
-            this.columns = resultantColumns;
-            const columnWithGrowFactor = this.columns.find((item) => item.growFactor > 0);
-            if (!columnWithGrowFactor && this.columns.length > 0) {
-                this.set("columns." + (this.columns.length - 1) + ".growFactor", 1);
-                const column = this.columns[this.columns.length - 1];
-                const parameters = {};
-                parameters[column.property] = {
-                    growFactor: 1
-                }
-                this.fire("tg-egi-column-change", parameters);
+        this.fixedColumns = resultantColumns.splice(0, this.numOfFixedCols);
+        this.columns = resultantColumns;
+        const columnWithGrowFactor = this.columns.find((item) => item.growFactor > 0);
+        if (!columnWithGrowFactor && this.columns.length > 0) {
+            this.set("columns." + (this.columns.length - 1) + ".growFactor", 1);
+            const column = this.columns[this.columns.length - 1];
+            const parameters = {};
+            parameters[column.property] = {
+                growFactor: 1
             }
+            this.fire("tg-egi-column-change", parameters);
         }
         this._triggerShadowRecalulation();
     },
