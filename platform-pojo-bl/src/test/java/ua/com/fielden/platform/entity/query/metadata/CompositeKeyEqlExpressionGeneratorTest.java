@@ -26,49 +26,49 @@ public class CompositeKeyEqlExpressionGeneratorTest {
     }
     
     @Test
-    public void tes_1sk_1() {
+    public void key_with_single_not_optional_string_member_works() {
         ExpressionModel act = generateCompositeKeyEqlExpression(separator, listOf(kmi(prop1, STRING, false)));
         ExpressionModel exp = expr().prop(prop1).model();
         assertEquals(exp, act);
     }
 
     @Test
-    public void tes_1sk_2() {
+    public void key_with_single_not_optional_entity_member_works() {
         ExpressionModel act = generateCompositeKeyEqlExpression(separator, listOf(kmi(prop1, ENTITY, false)));
         ExpressionModel exp = expr().prop(prop1 + ".key").model();
         assertEquals(exp, act);
     }
     
     @Test
-    public void tes_1sk_3() {
+    public void key_with_single_not_optional_non_string_member_works() {
         ExpressionModel act = generateCompositeKeyEqlExpression(separator, listOf(kmi(prop1, NON_STRING, false)));
         ExpressionModel exp = expr().concat().prop(prop1).with().val(EMPTY_STRING).end().model();
         assertEquals(exp, act);
     }
     
     @Test
-    public void tes_op1sk_1() {
+    public void key_with_single_optional_string_member_works() {
         ExpressionModel act = generateCompositeKeyEqlExpression(separator, listOf(kmi(prop1, STRING, true)));
         ExpressionModel exp = expr().caseWhen().prop(prop1).isNotNull().then().expr(expr().prop(prop1).model()).end().model();
         assertEquals(exp, act);
     }
 
     @Test
-    public void tes_op1sk_2() {
+    public void key_with_single_optional_entity_member_works() {
         ExpressionModel act = generateCompositeKeyEqlExpression(separator, listOf(kmi(prop1, ENTITY, true)));
         ExpressionModel exp = expr().caseWhen().prop(prop1).isNotNull().then().expr(expr().prop(prop1 + ".key").model()).end().model();
         assertEquals(exp, act);
     }
     
     @Test
-    public void tes_op1sk_3() {
+    public void key_with_single_optional_non_string_member_works() {
         ExpressionModel act = generateCompositeKeyEqlExpression(separator, listOf(kmi(prop1, NON_STRING, true)));
         ExpressionModel exp = expr().caseWhen().prop(prop1).isNotNull().then().expr(expr().concat().prop(prop1).with().val(EMPTY_STRING).end().model()).end().model();
         assertEquals(exp, act);
     }
 
     @Test
-    public void tes_2op_1() {
+    public void key_with_first_not_optional_string_member_and_second_optional_string_member_works() {
         ExpressionModel act = generateCompositeKeyEqlExpression(separator, listOf(
                 kmi(prop1, STRING, false), 
                 kmi(prop2, STRING, true)));
@@ -81,7 +81,7 @@ public class CompositeKeyEqlExpressionGeneratorTest {
     }
 
     @Test
-    public void tes_2op_2() {
+    public void key_with_first_not_optional_string_member_and_second_optional_non_string_member_works() {
         ExpressionModel act = generateCompositeKeyEqlExpression(separator, listOf(
                 kmi(prop1, STRING, false), 
                 kmi(prop2, NON_STRING, true)));
@@ -94,7 +94,7 @@ public class CompositeKeyEqlExpressionGeneratorTest {
     }
     
     @Test
-    public void tes_2op_3() {
+    public void key_with_first_not_optional_string_member_and_second_optional_entity_member_works() {
         ExpressionModel act = generateCompositeKeyEqlExpression(separator, listOf(
                 kmi(prop1, STRING, false), 
                 kmi(prop2, ENTITY, true)));
@@ -107,7 +107,7 @@ public class CompositeKeyEqlExpressionGeneratorTest {
     }
     
     @Test
-    public void tes_3_1op() {
+    public void key_with_three_string_members_where_second_one_is_optional_works() {
         ExpressionModel act = generateCompositeKeyEqlExpression(separator, listOf(
                 kmi(prop1, STRING, false), 
                 kmi(prop2, STRING, true), 
@@ -126,7 +126,7 @@ public class CompositeKeyEqlExpressionGeneratorTest {
     }
 
     @Test
-    public void tes_3_2op() {
+    public void key_with_three_string_members_where_only_first_one_is_not_optional_works() {
         ExpressionModel act = generateCompositeKeyEqlExpression(separator, listOf(
                 kmi(prop1, STRING, false), 
                 kmi(prop2, STRING, true), 
@@ -143,7 +143,7 @@ public class CompositeKeyEqlExpressionGeneratorTest {
     }
     
     @Test
-    public void tes1() {
+    public void key_with_all_key_members_not_optional_and_of_different_types_works() {
         ExpressionModel act = generateCompositeKeyEqlExpression(separator, listOf(
                 kmi(prop1, STRING, false), 
                 kmi(prop2, NON_STRING, false), 
@@ -165,7 +165,7 @@ public class CompositeKeyEqlExpressionGeneratorTest {
     }
     
     @Test
-    public void tes_3ns() {
+    public void key_with_three_string_not_optional_members_works() {
         ExpressionModel act = generateCompositeKeyEqlExpression(separator, listOf(
                 kmi(prop1, NON_STRING, false), 
                 kmi(prop2, NON_STRING, false), 
@@ -187,7 +187,7 @@ public class CompositeKeyEqlExpressionGeneratorTest {
     }
     
     @Test
-    public void tes_1_2op() {
+    public void key_with_two_entity_optional_members_works() {
         ExpressionModel act = generateCompositeKeyEqlExpression(separator, listOf(
                 kmi(prop1, ENTITY, true), 
                 kmi(prop2, ENTITY, true)));
