@@ -34,38 +34,49 @@ public class CompositeKeyEqlExpressionGenerator {
     private CompositeKeyEqlExpressionGenerator() {
     }
 
-    public static ExpressionModel getVirtualKeyPropForEntityWithCompositeKey(final Class<? extends AbstractEntity<DynamicEntityKey>> entityType) {
+    public static ExpressionModel generateCompositeKeyEqlExpression(final Class<? extends AbstractEntity<DynamicEntityKey>> entityType) {
         final List<KeyMemberInfo> keyMembersInfo = getKeyMembers(entityType).stream().map(keyMemberInfo -> getKeyMemberInfo(entityType, keyMemberInfo)).collect(toList()); 
-        return getVirtualKeyPropForEntityWithCompositeKey(getKeyMemberSeparator(entityType), keyMembersInfo);
+        return generateCompositeKeyEqlExpression(getKeyMemberSeparator(entityType), keyMembersInfo);
     }
 
-    protected static ExpressionModel getVirtualKeyPropForEntityWithCompositeKey(final String keyMemberSeparator, List<KeyMemberInfo> keyMembers) {
-        boolean hasSomeRequired = false;
+    protected static ExpressionModel generateCompositeKeyEqlExpression(final String keyMemberSeparator, List<KeyMemberInfo> keyMembers) {
+        boolean hasAtLeastOneNotOptionalMember = false;
         for (KeyMemberInfo keyMemberInfo : keyMembers) {
-            hasSomeRequired = hasSomeRequired || !keyMemberInfo.optional;
+            hasAtLeastOneNotOptionalMember = hasAtLeastOneNotOptionalMember || !keyMemberInfo.optional;
         }
 
         if (keyMembers.size() == 1) {
-            return processSingleKeyMember(keyMembers.get(0));
-        } else if (hasSomeRequired) {
-            return concatenate(getVirtualKeyPropForEntityWithCompositeKeyList(keyMemberSeparator, keyMembers));
+            return generateExpressionForCompositeKeyWithSingleMember(keyMembers.get(0));
+        } else if (hasAtLeastOneNotOptionalMember) {
+            return generateExpressionForCompositeKeyWithAtLeastOneNotOptionalMember(keyMemberSeparator, keyMembers);
         } else {
-            return getVirtualKeyPropForEntityWithCompositeKeyWithOnlyOptionalMembers(keyMemberSeparator, keyMembers);
+            return generateExpressionForCompositeKeyWithOnlyOptionalMembers(keyMemberSeparator, keyMembers);
         }
     }
+    
+    private static ExpressionModel generateExpressionForCompositeKeyWithSingleMember(final KeyMemberInfo keyMember) {
+        final ExpressionModel resultExpression = keyMember.typeInfo == NON_STRING ? expr().concat().prop(keyMember.name).with().val(EMPTY_STRING).end().model()
+                : adoptPropName(keyMember.name, keyMember.typeInfo);
+        return !keyMember.optional ? resultExpression : expr().caseWhen().prop(keyMember.name).isNotNull().then().expr(resultExpression).end().model();
+    }
 
-    private static ExpressionModel getVirtualKeyPropForEntityWithCompositeKeyWithOnlyOptionalMembers(final String keyMemberSeparator, List<KeyMemberInfo> keyMembers) {
+    private static ExpressionModel generateExpressionForCompositeKeyWithOnlyOptionalMembers(final String keyMemberSeparator, List<KeyMemberInfo> keyMembers) {
         ExpressionModel currExp = null;
 
         for (final KeyMemberInfo keyMember : keyMembers) {
-            currExp = composeTwo(currExp, keyMember, keyMemberSeparator);
+            currExp = concatenateOptionalExpressionWithOptionalKeyMember(currExp, keyMember, keyMemberSeparator);
         }
 
         return currExp;
     }
 
-    private static ExpressionModel composeTwo(final ExpressionModel firstExpr, final KeyMemberInfo second, final String separator) {
-        final ExpressionModel secondExpr = getKeyMemberConcatenationPropName(second.name, second.typeInfo);
+    private static ExpressionModel generateExpressionForCompositeKeyWithAtLeastOneNotOptionalMember(final String keyMemberSeparator, List<KeyMemberInfo> keyMembers) {
+        return concatenate(getCompositeKeyExpressionsSequenceForConcatenation(keyMemberSeparator, keyMembers));
+    }
+
+    
+    private static ExpressionModel concatenateOptionalExpressionWithOptionalKeyMember(final ExpressionModel firstExpr, final KeyMemberInfo second, final String separator) {
+        final ExpressionModel secondExpr = adoptPropName(second.name, second.typeInfo);
 
         if (firstExpr == null) {
             return secondExpr;
@@ -77,7 +88,7 @@ public class CompositeKeyEqlExpressionGenerator {
         }
     }
 
-    public static KeyMemberInfo getKeyMemberInfo(final Class<? extends AbstractEntity<DynamicEntityKey>> entityType, final Field keyMemberField) {
+    private static KeyMemberInfo getKeyMemberInfo(final Class<? extends AbstractEntity<DynamicEntityKey>> entityType, final Field keyMemberField) {
         final boolean optional = getPropertyAnnotation(Optional.class, entityType, keyMemberField.getName()) != null;
         final TypeInfo typeInfo = Integer.class.equals(keyMemberField.getType()) ? NON_STRING
                 : (!PropertyDescriptor.class.equals(keyMemberField.getType()) && isEntityType(keyMemberField.getType()) ? ENTITY : STRING);
@@ -99,46 +110,38 @@ public class CompositeKeyEqlExpressionGenerator {
         return concatInProgress.end().model();
     }
 
-    private static List<ExpressionModel> getVirtualKeyPropForEntityWithCompositeKeyList(final String keyMemberSeparator, List<KeyMemberInfo> keyMembers) {
-        boolean foundFirstNonOptional = false;
+    private static List<ExpressionModel> getCompositeKeyExpressionsSequenceForConcatenation(final String keyMemberSeparator, List<KeyMemberInfo> keyMembers) {
+        boolean foundFirstNotOptional = false;
         final List<ExpressionModel> result = new ArrayList<>();
         for (KeyMemberInfo keyMemberInfo : keyMembers) {
             if (keyMemberInfo.optional) {
-                result.add(foundFirstNonOptional ? processOptionalKeyMemberAfter(keyMemberInfo.name, keyMemberInfo.typeInfo, keyMemberSeparator)
-                        : processOptionalKeyMemberBefore(keyMemberInfo.name, keyMemberInfo.typeInfo, keyMemberSeparator));
-            } else if (foundFirstNonOptional) {
+                result.add(foundFirstNotOptional ? 
+                          concatenateDelimiterWithOptionalKeyMember(keyMemberInfo.name, keyMemberInfo.typeInfo, keyMemberSeparator)
+                          : 
+                          concatenateOptionalKeyMemberWithDelimiter(keyMemberInfo.name, keyMemberInfo.typeInfo, keyMemberSeparator));
+            } else if (foundFirstNotOptional) {
                 result.add(expr().val(keyMemberSeparator).model());
-                result.add(getKeyMemberConcatenationPropName(keyMemberInfo.name, keyMemberInfo.typeInfo));
+                result.add(adoptPropName(keyMemberInfo.name, keyMemberInfo.typeInfo));
             } else {
-                foundFirstNonOptional = true;
-                result.add(getKeyMemberConcatenationPropName(keyMemberInfo.name, keyMemberInfo.typeInfo));
+                foundFirstNotOptional = true;
+                result.add(adoptPropName(keyMemberInfo.name, keyMemberInfo.typeInfo));
             }
         }
 
         return result;
     }
 
-    private static ExpressionModel getKeyMemberConcatenationPropName(final String keyMemberName, final TypeInfo keyMemberType) {
+    private static ExpressionModel adoptPropName(final String keyMemberName, final TypeInfo keyMemberType) {
         return expr().prop(keyMemberType == ENTITY ? keyMemberName + "." + KEY : keyMemberName).model();
     }
 
-    private static ExpressionModel processSingleKeyMember(final KeyMemberInfo keyMember) {
-        final ExpressionModel resultExpression = keyMember.typeInfo == NON_STRING ? expr().concat().prop(keyMember.name).with().val(EMPTY_STRING).end().model()
-                : getKeyMemberConcatenationPropName(keyMember.name, keyMember.typeInfo);
-        if (keyMember.optional) {
-            return expr().caseWhen().prop(keyMember.name).isNotNull().then().expr(resultExpression).end().model();
-        } else {
-            return resultExpression; 
-        }
-    }
-
-    private static ExpressionModel processOptionalKeyMemberAfter(final String keyMemberName, final TypeInfo keyMemberType, final String separator) {
-        return expr().caseWhen().prop(keyMemberName).isNotNull().then().concat().val(separator).with().expr(getKeyMemberConcatenationPropName(keyMemberName, keyMemberType)).end() //
+    private static ExpressionModel concatenateDelimiterWithOptionalKeyMember(final String keyMemberName, final TypeInfo keyMemberType, final String separator) {
+        return expr().caseWhen().prop(keyMemberName).isNotNull().then().concat().val(separator).with().expr(adoptPropName(keyMemberName, keyMemberType)).end() //
                 .otherwise().val(EMPTY_STRING).end().model();
     }
 
-    private static ExpressionModel processOptionalKeyMemberBefore(final String keyMemberName, final TypeInfo keyMemberType, final String separator) {
-        return expr().caseWhen().prop(keyMemberName).isNotNull().then().concat().expr(getKeyMemberConcatenationPropName(keyMemberName, keyMemberType)).with().val(separator).end() //
+    private static ExpressionModel concatenateOptionalKeyMemberWithDelimiter(final String keyMemberName, final TypeInfo keyMemberType, final String separator) {
+        return expr().caseWhen().prop(keyMemberName).isNotNull().then().concat().expr(adoptPropName(keyMemberName, keyMemberType)).with().val(separator).end() //
                 .otherwise().val(EMPTY_STRING).end().model();
     }
 

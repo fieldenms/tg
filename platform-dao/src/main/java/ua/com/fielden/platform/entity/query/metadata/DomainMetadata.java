@@ -477,7 +477,7 @@ public class DomainMetadata {
     }
 
     private PropertyMetadata getVirtualPropInfoForDynamicEntityKey(final EntityTypeInfo <? extends AbstractEntity<DynamicEntityKey>> parentInfo) throws Exception {
-        return new PropertyMetadata.Builder(KEY, String.class, true, parentInfo).expression(getVirtualKeyPropForEntityWithCompositeKey(parentInfo.entityType)).hibType(H_STRING).category(VIRTUAL_OVERRIDE).build();
+        return new PropertyMetadata.Builder(KEY, String.class, true, parentInfo).expression(generateCompositeKeyEqlExpression(parentInfo.entityType)).hibType(H_STRING).category(VIRTUAL_OVERRIDE).build();
     }
 
     private PropertyMetadata getCalculatedPropInfo(final Field propField, final EntityTypeInfo <? extends AbstractEntity<?>> parentInfo) throws Exception {
