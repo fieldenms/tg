@@ -27,6 +27,12 @@ import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfa
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IStandAloneExprOperationAndClose;
 import ua.com.fielden.platform.entity.query.model.ExpressionModel;
 
+/**
+ * Functions to generate EQL expression models for composite keys.
+ *
+ * @author TG Team
+ *
+ */
 public class CompositeKeyEqlExpressionGenerator {
     public static final String EMPTY_STRING = "";
 
@@ -34,16 +40,19 @@ public class CompositeKeyEqlExpressionGenerator {
     private CompositeKeyEqlExpressionGenerator() {
     }
 
+    /**
+     * A function that generates {@code ExpressionModel} for the composite key of the {@code entityType} specified.
+     *
+     * @param entityType
+     * @return
+     */
     public static ExpressionModel generateCompositeKeyEqlExpression(final Class<? extends AbstractEntity<DynamicEntityKey>> entityType) {
         final List<KeyMemberInfo> keyMembersInfo = getKeyMembers(entityType).stream().map(keyMemberInfo -> getKeyMemberInfo(entityType, keyMemberInfo)).collect(toList()); 
         return generateCompositeKeyEqlExpression(getKeyMemberSeparator(entityType), keyMembersInfo);
     }
 
-    protected static ExpressionModel generateCompositeKeyEqlExpression(final String keyMemberSeparator, List<KeyMemberInfo> keyMembers) {
-        boolean hasAtLeastOneNotOptionalMember = false;
-        for (KeyMemberInfo keyMemberInfo : keyMembers) {
-            hasAtLeastOneNotOptionalMember = hasAtLeastOneNotOptionalMember || !keyMemberInfo.optional;
-        }
+    protected static ExpressionModel generateCompositeKeyEqlExpression(final String keyMemberSeparator, final List<KeyMemberInfo> keyMembers) {
+        final boolean hasAtLeastOneNotOptionalMember = keyMembers.stream().anyMatch(km -> !km.optional);
 
         if (keyMembers.size() == 1) {
             return generateExpressionForCompositeKeyWithSingleMember(keyMembers.get(0));
@@ -55,22 +64,17 @@ public class CompositeKeyEqlExpressionGenerator {
     }
     
     private static ExpressionModel generateExpressionForCompositeKeyWithSingleMember(final KeyMemberInfo keyMember) {
-        final ExpressionModel resultExpression = keyMember.typeInfo == NON_STRING ? expr().concat().prop(keyMember.name).with().val(EMPTY_STRING).end().model()
-                : adoptPropName(keyMember.name, keyMember.typeInfo);
+        final ExpressionModel resultExpression = keyMember.typeInfo == NON_STRING 
+                                                 ? expr().concat().prop(keyMember.name).with().val(EMPTY_STRING).end().model()
+                                                 : adoptPropName(keyMember.name, keyMember.typeInfo);
         return !keyMember.optional ? resultExpression : expr().caseWhen().prop(keyMember.name).isNotNull().then().expr(resultExpression).end().model();
     }
 
-    private static ExpressionModel generateExpressionForCompositeKeyWithOnlyOptionalMembers(final String keyMemberSeparator, List<KeyMemberInfo> keyMembers) {
-        ExpressionModel currExp = null;
-
-        for (final KeyMemberInfo keyMember : keyMembers) {
-            currExp = concatenateOptionalExpressionWithOptionalKeyMember(currExp, keyMember, keyMemberSeparator);
-        }
-
-        return currExp;
+    private static ExpressionModel generateExpressionForCompositeKeyWithOnlyOptionalMembers(final String keyMemberSeparator, final List<KeyMemberInfo> keyMembers) {
+        return keyMembers.stream().reduce((ExpressionModel) null, (a, b) -> concatenateOptionalExpressionWithOptionalKeyMember(a, b, keyMemberSeparator), (xs, ys) -> xs);
     }
 
-    private static ExpressionModel generateExpressionForCompositeKeyWithAtLeastOneNotOptionalMember(final String keyMemberSeparator, List<KeyMemberInfo> keyMembers) {
+    private static ExpressionModel generateExpressionForCompositeKeyWithAtLeastOneNotOptionalMember(final String keyMemberSeparator, final List<KeyMemberInfo> keyMembers) {
         return concatenate(getCompositeKeyExpressionsSequenceForConcatenation(keyMemberSeparator, keyMembers));
     }
 
@@ -110,20 +114,21 @@ public class CompositeKeyEqlExpressionGenerator {
         return concatInProgress.end().model();
     }
 
-    private static List<ExpressionModel> getCompositeKeyExpressionsSequenceForConcatenation(final String keyMemberSeparator, List<KeyMemberInfo> keyMembers) {
+    private static List<ExpressionModel> getCompositeKeyExpressionsSequenceForConcatenation(final String keyMemberSeparator, final List<KeyMemberInfo> keyMembers) {
         boolean foundFirstNotOptional = false;
         final List<ExpressionModel> result = new ArrayList<>();
         for (KeyMemberInfo keyMemberInfo : keyMembers) {
-            if (keyMemberInfo.optional) {
-                result.add(foundFirstNotOptional ? 
-                          concatenateDelimiterWithOptionalKeyMember(keyMemberInfo.name, keyMemberInfo.typeInfo, keyMemberSeparator)
-                          : 
-                          concatenateOptionalKeyMemberWithDelimiter(keyMemberInfo.name, keyMemberInfo.typeInfo, keyMemberSeparator));
-            } else if (foundFirstNotOptional) {
-                result.add(expr().val(keyMemberSeparator).model());
-                result.add(adoptPropName(keyMemberInfo.name, keyMemberInfo.typeInfo));
-            } else {
-                foundFirstNotOptional = true;
+            if (keyMemberInfo.optional) { // if the key member is optional
+                result.add(foundFirstNotOptional 
+                           ? concatenateDelimiterWithOptionalKeyMember(keyMemberInfo.name, keyMemberInfo.typeInfo, keyMemberSeparator)
+                           : concatenateOptionalKeyMemberWithDelimiter(keyMemberInfo.name, keyMemberInfo.typeInfo, keyMemberSeparator));
+            } else { // otherwise, the key member is not optional 
+                if (foundFirstNotOptional) {
+                    // because the first non-empty key member is already added, we need to introduce a key member separator
+                    result.add(expr().val(keyMemberSeparator).model());
+                } else {
+                    foundFirstNotOptional = true; // this will happen only once
+                }
                 result.add(adoptPropName(keyMemberInfo.name, keyMemberInfo.typeInfo));
             }
         }
@@ -145,6 +150,9 @@ public class CompositeKeyEqlExpressionGenerator {
                 .otherwise().val(EMPTY_STRING).end().model();
     }
 
+    /**
+     * An inner helper data structure.
+     */
     public static class KeyMemberInfo {
         public final String name;
         public final TypeInfo typeInfo;
@@ -176,8 +184,7 @@ public class CompositeKeyEqlExpressionGenerator {
                 return false;
             }
 
-            KeyMemberInfo other = (KeyMemberInfo) obj;
-
+            final KeyMemberInfo other = (KeyMemberInfo) obj;
             return Objects.equals(other.name, name) && Objects.equals(other.typeInfo, typeInfo) && optional == other.optional;
         }
     }

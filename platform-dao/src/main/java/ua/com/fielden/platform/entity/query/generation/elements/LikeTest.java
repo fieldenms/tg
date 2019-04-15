@@ -40,10 +40,12 @@ public class LikeTest extends AbstractCondition {
     }
     
     private String leftOperandWithTypecastingSql() {
-        if (Integer.class.equals(leftOperand.type())) {
+        if (Integer.class == leftOperand.type()) {
             return format("CAST(%s AS VARCHAR(11))", leftOperand.sql());
-        } else {
+        } else if (leftOperand.type() == null || String.class == leftOperand.type()) {
             return leftOperand.sql();
+        } else {
+            throw new EqlException(format("Left operand type [%s] is not supported for operand LIKE.", leftOperand.type()));
         }
     }
     
@@ -82,7 +84,7 @@ public class LikeTest extends AbstractCondition {
         final LikeTest other = (LikeTest) obj;
         return caseInsensitive == other.caseInsensitive &&
                negated == other.negated &&
-               withCast ==  other.withCast &&
+               withCast == other.withCast &&
                dbVersion == other.dbVersion &&
                equalsEx(leftOperand, other.leftOperand) && 
                equalsEx(rightOperand, other.rightOperand);

@@ -2,6 +2,12 @@ package ua.com.fielden.platform.entity.query.fluent;
 
 import static java.lang.String.format;
 
+/**
+ * A structure that expresses configuration parameters for operator {@code LIKE}.
+ *
+ * @author TG Team
+ *
+ */
 public class LikeOptions {
     public final boolean negated;
     public final boolean caseInsensitive;
@@ -32,9 +38,8 @@ public class LikeOptions {
         if (!(obj instanceof LikeOptions)) {
             return false;
         }
-        
-        LikeOptions other = (LikeOptions) obj;
-        
+
+        final LikeOptions other = (LikeOptions) obj;
         return negated == other.negated && caseInsensitive == other.caseInsensitive && withCast == other.withCast;
     }
     

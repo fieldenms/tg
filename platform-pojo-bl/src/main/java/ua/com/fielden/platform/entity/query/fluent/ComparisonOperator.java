@@ -99,40 +99,40 @@ abstract class ComparisonOperator<T extends ILogicalOperator<?>, ET extends Abst
         return createIComparisonOperand(getTokens().like(options().caseInsensitive().negated().withCast().build()));
     }
 	
-	@Override
-	public T isNull() {
-		return nextForComparisonOperator(getTokens().isNull(false));
-	}
+    @Override
+    public T isNull() {
+        return nextForComparisonOperator(getTokens().isNull(false));
+    }
 
-	@Override
-	public T isNotNull() {
-		return nextForComparisonOperator(getTokens().isNull(true));
-	}
-	
-	private IComparisonOperand<T, ET> createIComparisonOperand(final Tokens tokens) {
-		return new ExpConditionalOperand<T, ET>(tokens) {
-			@Override
-			protected T nextForSingleOperand(final Tokens tokens) {
-				return ComparisonOperator.this.nextForComparisonOperator(tokens);
-			}
-		};
-	}
+    @Override
+    public T isNotNull() {
+        return nextForComparisonOperator(getTokens().isNull(true));
+    }
 
-	private IComparisonSetOperand<T> createIComparisonSetOperand(final Tokens tokens) {
-		return new SetOfOperands<T, ET>(tokens) {
-			@Override
-			protected T nextForSingleOperand(final Tokens tokens) {
-				return ComparisonOperator.this.nextForComparisonOperator(tokens);
-			}
-		};
-	}
+    private IComparisonOperand<T, ET> createIComparisonOperand(final Tokens tokens) {
+        return new ExpConditionalOperand<T, ET>(tokens) {
+            @Override
+            protected T nextForSingleOperand(final Tokens tokens) {
+                return ComparisonOperator.this.nextForComparisonOperator(tokens);
+            }
+        };
+    }
 
-	private IComparisonQuantifiedOperand<T, ET> createIComparisonQuantifiedOperand(final Tokens tokens) {
-		return new ExpRightSideConditionalOperand<T, ET>(tokens) {
-			@Override
-			protected T nextForSingleOperand(final Tokens tokens) {
-				return ComparisonOperator.this.nextForComparisonOperator(tokens);
-			}
-		};
-	}
+    private IComparisonSetOperand<T> createIComparisonSetOperand(final Tokens tokens) {
+        return new SetOfOperands<T, ET>(tokens) {
+            @Override
+            protected T nextForSingleOperand(final Tokens tokens) {
+                return ComparisonOperator.this.nextForComparisonOperator(tokens);
+            }
+        };
+    }
+
+    private IComparisonQuantifiedOperand<T, ET> createIComparisonQuantifiedOperand(final Tokens tokens) {
+        return new ExpRightSideConditionalOperand<T, ET>(tokens) {
+            @Override
+            protected T nextForSingleOperand(final Tokens tokens) {
+                return ComparisonOperator.this.nextForComparisonOperator(tokens);
+            }
+        };
+    }
 }

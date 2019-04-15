@@ -1,5 +1,7 @@
 package ua.com.fielden.platform.entity.query.generation.elements;
 
+import static java.util.stream.Collectors.joining;
+
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -65,35 +67,11 @@ public class Concat extends AbstractFunction implements ISingleOperand {
     }
 
     public String sqlForH2AndMssql() {
-        final StringBuffer sb = new StringBuffer();
-        sb.append("CONCAT (");
-
-        for (final Iterator<ISingleOperand> iterator = operands.iterator(); iterator.hasNext();) {
-            sb.append(getConvertToStringSql(iterator.next()));
-            if (iterator.hasNext()) {
-                sb.append(", ");
-            }
-        }
-
-        sb.append(")");
-
-        return sb.toString();
+        return "CONCAT (" + operands.stream().map(so -> getConvertToStringSql(so)).collect(joining(", ")) + ")";
     }
 
     public String sqlForPostgresql() {
-        final StringBuffer sb = new StringBuffer();
-        sb.append(" (");
-
-        for (final Iterator<ISingleOperand> iterator = operands.iterator(); iterator.hasNext();) {
-            sb.append(getConvertToStringSql(iterator.next()));
-            if (iterator.hasNext()) {
-                sb.append(" || ");
-            }
-        }
-
-        sb.append(")");
-
-        return sb.toString();
+        return " (" + operands.stream().map(so -> getConvertToStringSql(so)).collect(joining(" || ")) + ")";
     }
 
     @Override
