@@ -54,7 +54,7 @@ const template = html`
         loading="{{_saverLoading}}">
     </iron-ajax>
     <div id="masterContainer" class="layout vertical">
-        <tg-scrollable-component id="scrollableContainer" class="layout vertical flex relative">
+        <tg-scrollable-component id="scrollableContainer" class="layout vertical flex-auto relative">
             <slot name="property-editors"></slot>
         </tg-scrollable-component>
         <div id="actionContainer">
