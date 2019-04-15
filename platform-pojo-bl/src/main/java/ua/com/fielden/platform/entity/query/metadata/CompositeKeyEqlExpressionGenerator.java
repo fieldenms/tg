@@ -4,9 +4,9 @@ import static java.util.stream.Collectors.toList;
 import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.cond;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.expr;
-import static ua.com.fielden.platform.entity.query.metadata.EntityKeyExpressionGenerator.TypeInfo.ENTITY;
-import static ua.com.fielden.platform.entity.query.metadata.EntityKeyExpressionGenerator.TypeInfo.NON_STRING;
-import static ua.com.fielden.platform.entity.query.metadata.EntityKeyExpressionGenerator.TypeInfo.STRING;
+import static ua.com.fielden.platform.entity.query.metadata.CompositeKeyEqlExpressionGenerator.TypeInfo.ENTITY;
+import static ua.com.fielden.platform.entity.query.metadata.CompositeKeyEqlExpressionGenerator.TypeInfo.NON_STRING;
+import static ua.com.fielden.platform.entity.query.metadata.CompositeKeyEqlExpressionGenerator.TypeInfo.STRING;
 import static ua.com.fielden.platform.reflection.AnnotationReflector.getPropertyAnnotation;
 import static ua.com.fielden.platform.reflection.Finder.getKeyMembers;
 import static ua.com.fielden.platform.reflection.Reflector.getKeyMemberSeparator;
@@ -27,11 +27,11 @@ import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfa
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IStandAloneExprOperationAndClose;
 import ua.com.fielden.platform.entity.query.model.ExpressionModel;
 
-public class EntityKeyExpressionGenerator {
+public class CompositeKeyEqlExpressionGenerator {
     public static final String EMPTY_STRING = "";
 
     /** Private default constructor to prevent instantiation. */
-    private EntityKeyExpressionGenerator() {
+    private CompositeKeyEqlExpressionGenerator() {
     }
 
     public static ExpressionModel getVirtualKeyPropForEntityWithCompositeKey(final Class<? extends AbstractEntity<DynamicEntityKey>> entityType) {

@@ -3,26 +3,26 @@ package ua.com.fielden.platform.entity.query.metadata;
 import static org.junit.Assert.assertEquals;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.cond;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.expr;
-import static ua.com.fielden.platform.entity.query.metadata.EntityKeyExpressionGenerator.EMPTY_STRING;
-import static ua.com.fielden.platform.entity.query.metadata.EntityKeyExpressionGenerator.getVirtualKeyPropForEntityWithCompositeKey;
-import static ua.com.fielden.platform.entity.query.metadata.EntityKeyExpressionGenerator.TypeInfo.ENTITY;
-import static ua.com.fielden.platform.entity.query.metadata.EntityKeyExpressionGenerator.TypeInfo.NON_STRING;
-import static ua.com.fielden.platform.entity.query.metadata.EntityKeyExpressionGenerator.TypeInfo.STRING;
+import static ua.com.fielden.platform.entity.query.metadata.CompositeKeyEqlExpressionGenerator.EMPTY_STRING;
+import static ua.com.fielden.platform.entity.query.metadata.CompositeKeyEqlExpressionGenerator.getVirtualKeyPropForEntityWithCompositeKey;
+import static ua.com.fielden.platform.entity.query.metadata.CompositeKeyEqlExpressionGenerator.TypeInfo.ENTITY;
+import static ua.com.fielden.platform.entity.query.metadata.CompositeKeyEqlExpressionGenerator.TypeInfo.NON_STRING;
+import static ua.com.fielden.platform.entity.query.metadata.CompositeKeyEqlExpressionGenerator.TypeInfo.STRING;
 import static ua.com.fielden.platform.utils.CollectionUtil.listOf;
 
 import org.junit.Test;
 
-import ua.com.fielden.platform.entity.query.metadata.EntityKeyExpressionGenerator.TypeInfo;
+import ua.com.fielden.platform.entity.query.metadata.CompositeKeyEqlExpressionGenerator.TypeInfo;
 import ua.com.fielden.platform.entity.query.model.ExpressionModel;
 
-public class EntityKeyExpressionGeneratorTest {
+public class CompositeKeyEqlExpressionGeneratorTest {
     private static final String separator = " ";
     private static final String prop1 = "prop1";
     private static final String prop2 = "prop2";
     private static final String prop3 = "prop3";
 
-    private static EntityKeyExpressionGenerator.KeyMemberInfo kmi(final String name, final TypeInfo type, final boolean optional) {
-        return new EntityKeyExpressionGenerator.KeyMemberInfo(name, type, optional);
+    private static CompositeKeyEqlExpressionGenerator.KeyMemberInfo kmi(final String name, final TypeInfo type, final boolean optional) {
+        return new CompositeKeyEqlExpressionGenerator.KeyMemberInfo(name, type, optional);
     }
     
     @Test
