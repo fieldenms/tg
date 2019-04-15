@@ -529,15 +529,18 @@ Polymer({
         //Scrolling related properties.
         dragAnchorFixed: {
             type: Boolean,
-            value: false
+            value: false,
+            observer: "_dragAnchorFixedChanged"
         },
         checkboxesFixed: {
             type: Boolean,
-            value: false
+            value: false,
+            observer: "_checkboxesFixedChanged"
         },
         checkboxesWithPrimaryActionsFixed: {
             type: Boolean,
-            value: false
+            value: false,
+            observer: "_checkboxesWithPrimaryActionsFixedChanged"
         },
         numOfFixedCols: {
             type: Number,
@@ -1407,7 +1410,29 @@ Polymer({
     },
 
     // Observers
-    _numOfFixedColsChanged: function () {
+    _dragAnchorFixedChanged: function (newValue) {
+        if (!newValue) {
+            this.checkboxesFixed = false;
+        }
+    },
+    _checkboxesFixedChanged: function (newValue) {
+        if (newValue) {
+            this.dragAnchorFixed = true;
+        } else {
+            this.checkboxesWithPrimaryActionsFixed = false;
+        }
+    },    
+    _checkboxesWithPrimaryActionsFixedChanged: function (newValue) {
+        if (newValue) {
+            this.checkboxesFixed = true;
+        } else {
+            this.numOfFixedCols = 0;
+        }
+    },
+    _numOfFixedColsChanged: function (newValue) {
+        if (newValue > 0) {
+            this.checkboxesWithPrimaryActionsFixed = true;
+        }
         this._updateColumns(this.fixedColumns.concat(this.columns));
     },
 
