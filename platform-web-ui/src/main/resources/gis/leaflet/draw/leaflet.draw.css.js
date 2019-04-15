@@ -24,21 +24,33 @@ export default String.raw`
 }
 
 .leaflet-draw-toolbar a {
-    background-image: url('resources/gis/leaflet/draw/images/spritesheet.png'); /* was images/spritesheet.png */
-    background-image: linear-gradient(transparent, transparent), url('resources/gis/leaflet/draw/images/spritesheet.svg'); /* was images/spritesheet.svg */
+    background-image: url('resources/gis/leaflet/draw/images/spritesheet.png');
+    background-image: linear-gradient(transparent, transparent), url('resources/gis/leaflet/draw/images/spritesheet.svg');
     background-repeat: no-repeat;
-    background-size: 270px 30px;
+    background-size: 300px 30px;
+    background-clip: padding-box;
 }
 
 .leaflet-retina .leaflet-draw-toolbar a {
-    background-image: url('resources/gis/leaflet/draw/images/spritesheet-2x.png'); /* was images/spritesheet-2x.png */
-    background-image: linear-gradient(transparent, transparent), url('resources/gis/leaflet/draw/images/spritesheet.svg'); /* was images/spritesheet.svg */
+    background-image: url('resources/gis/leaflet/draw/images/spritesheet-2x.png');
+    background-image: linear-gradient(transparent, transparent), url('resources/gis/leaflet/draw/images/spritesheet.svg');
 }
 
 .leaflet-draw a {
     display: block;
     text-align: center;
     text-decoration: none;
+}
+
+.leaflet-draw a .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    border: 0;
 }
 
 /* ================================================================== */
@@ -61,13 +73,13 @@ export default String.raw`
 }
 
 .leaflet-right .leaflet-draw-actions {
-    right:26px;
-    left:auto;
+    right: 26px;
+    left: auto;
 }
 
 .leaflet-touch .leaflet-right .leaflet-draw-actions {
-    right:32px;
-    left:auto;
+    right: 32px;
+    left: auto;
 }
 
 .leaflet-draw-actions li {
@@ -80,17 +92,17 @@ export default String.raw`
 
 .leaflet-draw-actions li:last-child a {
     -webkit-border-radius: 0 4px 4px 0;
-            border-radius: 0 4px 4px 0;
+    border-radius: 0 4px 4px 0;
 }
 
 .leaflet-right .leaflet-draw-actions li:last-child a {
     -webkit-border-radius: 0;
-            border-radius: 0;
+    border-radius: 0;
 }
 
 .leaflet-right .leaflet-draw-actions li:first-child a {
     -webkit-border-radius: 4px 0 0 4px;
-            border-radius: 4px 0 0 4px;
+    border-radius: 4px 0 0 4px;
 }
 
 .leaflet-draw-actions a {
@@ -178,6 +190,14 @@ export default String.raw`
     background-position: -120px -1px;
 }
 
+.leaflet-draw-toolbar .leaflet-draw-draw-circlemarker {
+    background-position: -273px -2px;
+}
+
+.leaflet-touch .leaflet-draw-toolbar .leaflet-draw-draw-circlemarker {
+    background-position: -271px -1px;
+}
+
 /* ================================================================== */
 /* Edit toolbar
 /* ================================================================== */
@@ -228,7 +248,7 @@ export default String.raw`
     background: rgba(0, 0, 0, 0.5);
     border: 1px solid transparent;
     -webkit-border-radius: 4px;
-            border-radius: 4px;
+    border-radius: 4px;
     color: #fff;
     font: 12px/18px "Helvetica Neue", Arial, Helvetica, sans-serif;
     margin-left: 20px;
@@ -282,10 +302,10 @@ export default String.raw`
 /* ================================================================== */
 
 .leaflet-edit-marker-selected {
-    background: rgba(254, 87, 161, 0.1);
+    background-color: rgba(254, 87, 161, 0.1);
     border: 4px dashed rgba(254, 87, 161, 0.6);
     -webkit-border-radius: 4px;
-            border-radius: 4px;
+    border-radius: 4px;
     box-sizing: content-box;
 }
 

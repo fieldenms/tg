@@ -23,7 +23,7 @@ export const Controls = function (_map, _markersClusterGroup, _baseLayers) {
     );*/
 
     // fitToBounds control
-    const fitToBoundsControl = new easyButton(
+    const fitToBoundsControl = easyButton(
         'fa-compress',
         function () {
             self._map.fitBounds(self._markersClusterGroup.getBounds());
@@ -31,6 +31,7 @@ export const Controls = function (_map, _markersClusterGroup, _baseLayers) {
         'Fit to bounds',
         self._map
     );
+    self._map.addControl(fitToBoundsControl);
 
     // Add our zoom control manually where we want to
     const zoomControl = L.control.zoom({

@@ -344,12 +344,12 @@ export default String.raw`
 	border-radius: 5px;
 	}
 .leaflet-control-layers-toggle {
-	background-image: url(images/layers.png);
+	background-image: url(resources/gis/leaflet/images/layers.png);
 	width: 36px;
 	height: 36px;
 	}
 .leaflet-retina .leaflet-control-layers-toggle {
-	background-image: url(images/layers-2x.png);
+	background-image: url(resources/gis/leaflet/images/layers-2x.png);
 	background-size: 26px 26px;
 	}
 .leaflet-touch .leaflet-control-layers-toggle {
@@ -390,7 +390,7 @@ export default String.raw`
 
 /* Default icon URLs */
 .leaflet-default-icon-path {
-	background-image: url(images/marker-icon.png);
+	background-image: url(resources/gis/leaflet/images/marker-icon.png);
 	}
 
 
