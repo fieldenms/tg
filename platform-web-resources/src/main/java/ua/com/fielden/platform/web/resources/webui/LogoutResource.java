@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.web.resources.webui;
 
 import static ua.com.fielden.platform.web.security.AbstractWebResourceGuard.extractAuthenticator;
+import static ua.com.fielden.platform.web.security.AbstractWebResourceGuard.mkAuthenticationCookieToExpire;
 
 import java.io.ByteArrayInputStream;
 import java.util.Optional;
@@ -93,20 +94,6 @@ public class LogoutResource extends ServerResource {
             response.getCookieSettings().clear();
             response.getCookieSettings().add(mkAuthenticationCookieToExpire(domainName, path));
         }
-    }
-
-    private static CookieSetting mkAuthenticationCookieToExpire(final String domainName, final String path) {
-        final CookieSetting newCookie = new CookieSetting(
-                0 /*version*/,
-                AbstractWebResourceGuard.AUTHENTICATOR_COOKIE_NAME /*name*/,
-                "" /*value*/,
-                path,
-                domainName,
-                null /*comment*/,
-                0 /* number of seconds before cookie expires */,
-                true /*secure*/, // if secure is set to true then this cookie would only be included into the request if it is done over HTTPS!
-                true /*accessRestricted*/);
-        return newCookie;
     }
 
     public Representation loggedOutPage() {
