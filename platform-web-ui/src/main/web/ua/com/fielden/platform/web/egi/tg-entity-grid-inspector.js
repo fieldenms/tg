@@ -289,6 +289,10 @@ const template = html`
             </div>
         </div>
         <div id="baseContainer" on-scroll="_handleScrollEvent">
+            <!--Shadow container that is displayed if container is not fixed-->
+            <div class="shadow-container" style="z-index:1;">
+                <div class="shadow-box" style$="[[_calcShadows(headerFixed, _showTopShadow)]]"></div>
+            </div>
             <!-- Table header -->
             <div class="table-header-row" style$="[[_calcHeaderStyle(headerFixed, _showTopShadow)]]">
                 <div class="drag-anchor cell" hidden$="[[!canDragFrom]]" style$="[[_calcDragBoxStyle(dragAnchorFixed)]]"></div>
@@ -1409,6 +1413,10 @@ Polymer({
             shadowStyle += "box-shadow: -6px 0px 6px -5px rgba(0,0,0,0.7);";
         }
         return shadowStyle;
+    },
+
+    _calcShadows: function (headerFixed, _showTopShadow) {
+        return "box-shadow: inset 0px " + (!headerFixed && _showTopShadow? "6px " : "0px") + " 6px " + (!headerFixed && _showTopShadow? "-5px " : "-200px ") + " rgba(0,0,0,0.7);position:absolute;top:0;left:0;right:0;height:5px;";
     },
 
     // Observers

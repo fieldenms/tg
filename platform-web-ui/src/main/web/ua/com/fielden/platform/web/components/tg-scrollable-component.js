@@ -78,10 +78,10 @@ Polymer({
         if (scrollTarget) {
             let shadowStyle = "";
             if (scrollTarget.scrollTop) {
-                shadowStyle += "inset 0 3px 6px -2px rgba(0,0,0,0.7)";
+                shadowStyle += "inset 0 6px 6px -6px rgba(0,0,0,0.7)";
             }
             if (Math.ceil(scrollTarget.scrollTop + scrollTarget.offsetHeight) < scrollTarget.scrollHeight) {
-                shadowStyle += (shadowStyle ? ", " : "") + "inset 0 -3px 6px -2px rgba(0,0,0,0.7)";
+                shadowStyle += (shadowStyle ? ", " : "") + "inset 0 -6px 6px -6px rgba(0,0,0,0.7)";
             } else if (e && this.endOfScroll) {
                 this.endOfScroll(e);
             }
