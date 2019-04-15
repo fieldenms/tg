@@ -40,8 +40,10 @@ const template = html`
         .paper-material {
             background-color: white;
             border-radius: 2px;
-            @apply --layout-vertical;
-            @apply --layout-relative;
+            --paper-material: {
+                @apply --layout-vertical;
+                @apply --layout-relative;
+            }
         }
         .paper-material[fit-to-height] {
             @apply --layout-flex;
@@ -49,6 +51,8 @@ const template = html`
         .grid-toolbar {
             position: relative;
             overflow: hidden;
+            flex-grow: 0;
+            flex-shrink: 0;
             @apply --layout-horizontal;
             @apply --layout-wrap;
         }
@@ -80,7 +84,7 @@ const template = html`
             overflow: auto;
             z-index: 0;
             @apply --layout-vertical;
-            @apply --layout-flex;
+            @apply --layout-flex-auto;
             @apply --layout-relative;
         }
         .noselect {
@@ -273,7 +277,7 @@ const template = html`
     <slot id="column_selector" name="property-column" hidden></slot>
     <slot id="primary_action_selector" name="primary-action" hidden></slot>
     <!--EGI template-->
-    <div class="paper-material" elevation="1" style$="[[_calcMaterialStyle(showMarginAround)]]" fit-to-height$="[[fitToHeight]]">
+    <div id="paperMaterial" class="paper-material" elevation="1" style$="[[_calcMaterialStyle(showMarginAround)]]" fit-to-height$="[[fitToHeight]]">
         <!--Table toolbar-->
         <div class="grid-toolbar">
             <paper-progress id="progressBar" hidden$="[[!_showProgress]]"></paper-progress>
@@ -974,6 +978,7 @@ Polymer({
     //Event listeners
     _resizeEventListener: function() {
         this._handleScrollEvent();
+        this._triggerShadowRecalulation();
     },
 
     _handleScrollEvent: function () {
@@ -1483,14 +1488,14 @@ Polymer({
 
     _heightRelatedPropertiesChanged: function (visibleRowCount, rowHeight, constantHeight, fitToHeight, summaryFixed, _totalsRowCount) {
         //Constant height take precedence over visible row count which takes precedence over default behaviour that extends the EGI's height to it's content height
-        this.style.removeProperty("height");
-        this.style.removeProperty("min-height");
+        this.$.paperMaterial.style.removeProperty("height");
+        this.$.paperMaterial.style.removeProperty("min-height");
         this.$.baseContainer.style.removeProperty("height");
         this.$.baseContainer.style.removeProperty("max-height");
         if (constantHeight) { //Set the height for the egi
-            this.style["height"] = constantHeight;
+            this.$.paperMaterial.style["height"] = constantHeight;
         } else if (visibleRowCount > 0) { //Set the height or max height for the scroll container so that only specified number of rows become visible.
-            this.style["min-height"] = "fit-content";
+            this.$.paperMaterial.style["min-height"] = "fit-content";
             const rowCount = visibleRowCount + (summaryFixed ? _totalsRowCount : 0);
             const bottomMargin = this.getComputedStyleValue('--egi-bottom-margin').trim() || "15px";
             const height = "calc(3rem + " + rowCount + " * " + rowHeight + " + " + rowCount + "px" + (summaryFixed && _totalsRowCount > 0 ? (" + " + bottomMargin) : "") + ")";
