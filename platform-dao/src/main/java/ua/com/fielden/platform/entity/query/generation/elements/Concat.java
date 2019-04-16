@@ -47,7 +47,7 @@ public class Concat extends AbstractFunction implements ISingleOperand {
     }
 
     @Override
-    public Class type() {
+    public Class<?> type() {
         return String.class;
     }
 
