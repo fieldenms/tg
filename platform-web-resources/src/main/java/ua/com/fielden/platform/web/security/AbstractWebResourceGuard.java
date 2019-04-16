@@ -100,6 +100,7 @@ public abstract class AbstractWebResourceGuard extends ChallengeAuthenticator {
                 // However, the client side would not be able to receive a response.
                 //request.abort();
                 forbid(response);
+                assignAuthenticatorCookieToExpire(response);
                 return false;
             }
 
@@ -109,6 +110,7 @@ public abstract class AbstractWebResourceGuard extends ChallengeAuthenticator {
         } catch (final Exception ex) {
             // in case of any internal exception forbid the request
             forbid(response);
+            assignAuthenticatorCookieToExpire(response);
             logger.fatal(ex);
             return false;
         }
@@ -193,4 +195,34 @@ public abstract class AbstractWebResourceGuard extends ChallengeAuthenticator {
      * @return
      */
     protected abstract User getUser(final String username);
+
+    /**
+     * Assigns "expired" authentication cookie to inform the browser that this cookie is no longer valid.
+     * @param response
+     */
+    private void assignAuthenticatorCookieToExpire(final Response response) {
+        final CookieSetting cookie = mkAuthenticationCookieToExpire(domainName, path);
+        response.getCookieSettings().clear();
+        response.getCookieSettings().add(cookie);
+    }
+
+    /**
+     * A convenient factory method for creating expiring authentication cookies.
+     * @param domainName
+     * @param path
+     * @return
+     */
+    public static CookieSetting mkAuthenticationCookieToExpire(final String domainName, final String path) {
+        return new CookieSetting(
+                0 /*version*/,
+                AbstractWebResourceGuard.AUTHENTICATOR_COOKIE_NAME /*name*/,
+                "" /* empty value*/,
+                path,
+                domainName,
+                null /*comment*/,
+                0 /* number of seconds before cookie expires, 0 -- expires immediately */,
+                true /*secure*/, // if secure is set to true then this cookie would only be included into the request if it is done over HTTPS!
+                true /*accessRestricted*/);
+    }
+
 }
