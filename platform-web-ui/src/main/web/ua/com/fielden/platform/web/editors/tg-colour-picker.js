@@ -1,8 +1,8 @@
 import '/resources/polymer/@polymer/polymer/polymer-legacy.js';
 import '/resources/polymer/@polymer/iron-flex-layout/iron-flex-layout-classes.js';
-import '/resources/polymer/@polymer/iron-icon/iron-icon.js'
+import '/resources/polymer/@polymer/iron-icon/iron-icon.js';
 import '/resources/polymer/@polymer/iron-input/iron-input.js';
-import '/resources/polymer/@polymer/iron-dropdown/iron-dropdown.js'
+import '/resources/polymer/@polymer/iron-dropdown/iron-dropdown.js';
 
 import { Polymer } from '/resources/polymer/@polymer/polymer/lib/legacy/polymer-fn.js';
 import { html } from '/resources/polymer/@polymer/polymer/lib/utils/html-tag.js';

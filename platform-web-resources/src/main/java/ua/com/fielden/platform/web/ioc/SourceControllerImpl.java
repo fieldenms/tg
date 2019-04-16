@@ -314,7 +314,7 @@ public class SourceControllerImpl implements ISourceController {
 //        } else if (resourceURI.startsWith("/centre_ui/egi")) {
 //            return getCentreEgiSource(resourceURI.replaceFirst("/centre_ui/egi/", ""), webUiConfig);
         } else if (resourceURI.startsWith("/centre_ui")) {
-            return getCentreSource(resourceURI.replaceFirst("/centre_ui/", ""), webUiConfig, deviceProfile);
+            return getCentreSource(resourceURI.replaceFirst(quote("/centre_ui/"), "").replaceFirst(quote(".js"), ""), webUiConfig, deviceProfile);
         } else if (resourceURI.startsWith("/custom_view")) {
             return getCustomViewSource(resourceURI.replaceFirst("/custom_view/", ""), webUiConfig);
         } else if (resourceURI.startsWith("/resources/")) {

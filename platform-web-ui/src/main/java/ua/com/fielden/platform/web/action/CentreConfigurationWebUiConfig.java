@@ -136,7 +136,7 @@ public class CentreConfigurationWebUiConfig {
                                     + "    if (shouldRunCentre) {\n"
                                     + "        return self.retrieve().then(function () { self.run(undefined, true); });\n"
                                     + "    } else {\n"
-                                    + "        self.$.egi._adjustColumns(functionalEntity.get('chosenIds').map(column => column === 'this' ? '' : column));\n"
+                                    + "        self.$.egi.adjustColumnsVisibility(functionalEntity.get('chosenIds').map(column => column === 'this' ? '' : column));\n"
                                     + "        self._centreChanged = functionalEntity.get('centreChanged');\n"
                                     + "    }\n"
                                     + ""))

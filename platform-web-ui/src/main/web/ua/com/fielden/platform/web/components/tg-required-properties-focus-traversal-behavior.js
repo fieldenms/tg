@@ -59,7 +59,7 @@ function _getCurrentFocusableElements (container) {
 
 function _getCurrentRequiredFocusableElements (container) {
     return queryElements(container, "[required]")
-        .flatMap(editor => editor.getElements(FOCUSABLE_ELEMENTS_SELECTOR))
+        .map(editor => queryElements(editor, FOCUSABLE_ELEMENTS_SELECTOR)[0])
         .filter(element => !element.disabled && element.offsetParent !== null);
 };
 

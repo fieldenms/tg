@@ -47,7 +47,7 @@ public class InsertionPointBuilder implements IRenderable, IExecutable {
                 .attr("column-properties-mapper", "{{columnPropertiesMapper}}")
                 .attr("context-retriever", "[[insertionPointContextRetriever]]");
         if (insertionPointConfig.hasPaginationButtons()) {
-            insertionPointDom.add(pagination());
+            insertionPointDom.add(pagination("insertion-point-child"));
             insertionPointDom.attr("custom-shortcuts", join(paginationShortcut(), " "));
         }
         return insertionPointDom;
@@ -79,7 +79,7 @@ public class InsertionPointBuilder implements IRenderable, IExecutable {
         final LinkedHashSet<String> importPaths = new LinkedHashSet<>();
         importPaths.add(insertionPointActionElement.importPath());
         if (insertionPointConfig.hasPaginationButtons()) {
-            importPaths.add("polymer/paper-icon-button/paper-icon-button");
+            importPaths.add("polymer/@polymer/paper-icon-button/paper-icon-button");
         }
         return importPaths;
     }

@@ -602,6 +602,7 @@ const propertyActionTemplate = html`<slot name="property-action"></slot>`;
                 this.opened = true;
                 this.$.result.cancel(e);
             }
+            this.async(() => this.$.result.notifyResize(), 1);
         },
 
         _resultClosed: function (e) {

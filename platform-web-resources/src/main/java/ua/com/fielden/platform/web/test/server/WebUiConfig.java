@@ -150,7 +150,7 @@ import ua.com.fielden.platform.web.centre.api.resultset.scrolling.impl.ScrollCon
 import ua.com.fielden.platform.web.centre.api.resultset.summary.ISummaryCardLayout;
 import ua.com.fielden.platform.web.centre.api.resultset.summary.IWithSummary;
 import ua.com.fielden.platform.web.centre.api.resultset.tooltip.IWithTooltip;
-import ua.com.fielden.platform.web.centre.api.top_level_actions.ICentreTopLevelActions;
+import ua.com.fielden.platform.web.centre.api.top_level_actions.ICentreTopLevelActionsInGroup;
 import ua.com.fielden.platform.web.centre.api.top_level_actions.ICentreTopLevelActionsWithRunConfig;
 import ua.com.fielden.platform.web.interfaces.ILayout.Device;
 import ua.com.fielden.platform.web.layout.api.impl.FlexLayoutConfig;
@@ -247,7 +247,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
         TgPolygonWebUiConfig.register(injector(), configApp());
         final TgCompoundEntityWebUiConfig tgCompoundEntityWebUiConfig = TgCompoundEntityWebUiConfig.register(injector(), configApp());
         final EntityActionConfig mkTgCompoundEntityLocator = mkLocator(configApp(), injector(), TgCompoundEntityLocator.class, "tgCompoundEntity", "color: #0d4b8a");
-        
+
         //Centre configuration for deletion test case entity.
         final EntityCentre<TgDeletionTestEntity> deletionTestCentre = new EntityCentre<>(MiDeletionTestEntity.class, "TgDeletionTestEntity",
                 EntityCentreBuilder.centreFor(TgDeletionTestEntity.class)
@@ -412,7 +412,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
                         build())
                 .build(), injector(), null);
 
-        final EntityCentre<TgPersistentEntityWithProperties> entityCentre = createEntityCentre(MiTgPersistentEntityWithProperties.class, "TgPersistentEntityWithProperties", createEntityCentreConfig(true, true, false, true, false));
+        final EntityCentre<TgPersistentEntityWithProperties> entityCentre = createEntityCentre(MiTgPersistentEntityWithProperties.class, "TgPersistentEntityWithProperties", createEntityCentreConfig(true, false, false, true, false));
         final EntityCentre<TgPersistentEntityWithProperties> entityCentreNotGenerated = createEntityCentre(MiEntityCentreNotGenerated.class, "MiEntityCentreNotGenerated", createEntityCentreConfig(true, true, false, false, false));
         final EntityCentre<TgPersistentEntityWithProperties> entityCentre1 = createEntityCentre(MiTgPersistentEntityWithProperties1.class, "TgPersistentEntityWithProperties 1", createEntityCentreConfig(false, false, false, true, false));
         final EntityCentre<TgPersistentEntityWithProperties> entityCentre2 = createEntityCentre(MiTgPersistentEntityWithProperties2.class, "TgPersistentEntityWithProperties 2", createEntityCentreConfig(false, false, false, true, false));
@@ -696,7 +696,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 .setLayoutFor(Device.DESKTOP, Optional.empty(), desktopLayout)
                 .setLayoutFor(Device.TABLET, Optional.empty(), tabletLayout)
                 .setLayoutFor(Device.MOBILE, Optional.empty(), mobileLayout)
-                .withDimensions(PrefDim.mkDim("'100%'", "'100%'"))
+                .withDimensions(PrefDim.mkDim("'50%'", "'400px'"))
                 .done();
 
         final IMaster<TgEntityForColourMaster> masterConfigForColour = new SimpleMasterBuilder<TgEntityForColourMaster>().forEntity(TgEntityForColourMaster.class)
@@ -1338,7 +1338,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
         final String centreMrLast = "['flex']";
 
         final ICentreTopLevelActionsWithRunConfig<TgPersistentEntityWithProperties> partialCentre = EntityCentreBuilder.centreFor(TgPersistentEntityWithProperties.class);
-        ICentreTopLevelActions<TgPersistentEntityWithProperties> actionConf = (runAutomatically ? partialCentre.runAutomatically() : partialCentre)
+        ICentreTopLevelActionsInGroup<TgPersistentEntityWithProperties> actionConf = (runAutomatically ? partialCentre.runAutomatically() : partialCentre)
                 .hasEventSourceAt("/entity-centre-events")
                 .enforcePostSaveRefresh()
                 .addFrontAction(action(EntityNewAction.class).
@@ -1349,17 +1349,17 @@ public class WebUiConfig extends AbstractWebUiConfig {
                         shortcut("alt+n").
                         withNoParentCentreRefresh().
                         build())
-                .addTopAction(action(EntityNewAction.class).
-                        withContext(context().withSelectionCrit().build()).
-                        icon("add-circle-outline").
-                        shortDesc("Add new").
-                        longDesc("Start coninuous creatio of entities").
-                        shortcut("alt+n").
-                        build())
-                .also()
-                .addTopAction(SEQUENTIAL_EDIT_ACTION.mkAction(TgPersistentEntityWithProperties.class)).also()
-                .addTopAction(EDIT_ACTION.mkAction(TgPersistentEntityWithProperties.class)).also()
-                .addTopAction(action(EntityDeleteAction.class).
+                .beginTopActionsGroup("group 1")
+                .addGroupAction(action(EntityNewAction.class).
+                    withContext(context().withSelectionCrit().build()).
+                    icon("add-circle-outline").
+                    shortDesc("Add new").
+                    longDesc("Start coninuous creatio of entities").
+                    shortcut("alt+n").
+                    build())
+                .addGroupAction(SEQUENTIAL_EDIT_ACTION.mkAction(TgPersistentEntityWithProperties.class))
+                .addGroupAction(EDIT_ACTION.mkAction(TgPersistentEntityWithProperties.class))
+                .addGroupAction(action(EntityDeleteAction.class).
                         withContext(context().withSelectedEntities().build()).
                         postActionSuccess(new IPostAction() {
 
@@ -1373,36 +1373,34 @@ public class WebUiConfig extends AbstractWebUiConfig {
                         longDesc("Deletes the selected entities").
                         shortcut("alt+d").
                         build())
-                .also()
-                .addTopAction(CentreConfigActions.CUSTOMISE_COLUMNS_ACTION.mkAction())
-                .also()
-                .addTopAction(action(NewEntityAction.class).
+                .addGroupAction(CentreConfigActions.CUSTOMISE_COLUMNS_ACTION.mkAction())
+                .addGroupAction(action(NewEntityAction.class).
                         withContext(context().withCurrentEntity().build()).// the current entity could potentially be used to demo "copy" functionality
                         icon("add-circle").
                         shortDesc("Add new").
                         longDesc("Start coninuous creatio of entities").
                         withNoParentCentreRefresh().
                         build())
-                .also();
+                .endTopActionsGroup().also().beginTopActionsGroup("group 2");
 
 
         if (isComposite) {
-            actionConf = actionConf.addTopAction(
+            actionConf = actionConf.addGroupAction(
                     action(TgCentreInvokerWithCentreContext.class)
                             .withContext(context().withSelectionCrit().withSelectedEntities().build())
                             .icon("assignment-ind")
                             .shortDesc("Function 4 (TgCentreInvokerWithCentreContext)")
                             .longDesc("Functional context-dependent action 4 (TgCentreInvokerWithCentreContext)")
-                            .prefDimForView(mkDim("document.body.clientWidth / 4 + 'px'", "'400px'"))
+                            .prefDimForView(mkDim("'80%'", "'400px'"))
                             .withNoParentCentreRefresh()
                             .build()
-                    ).also();
+                    ).endTopActionsGroup().also().beginTopActionsGroup("group 3");
 
         }
 
         @SuppressWarnings("unchecked")
         final IAlsoCrit<TgPersistentEntityWithProperties> afterAddCritConf = actionConf
-                .addTopAction(
+                .addGroupAction(
                         action(TgFunctionalEntityWithCentreContext.class).
                                 withContext(context().withSelectedEntities().build()).
                                 preAction(yesNo("Are you sure you want to proceed?")).
@@ -1412,8 +1410,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
                                 prefDimForView(mkDim(300, 200)).
                                 build()
                 )
-                .also()
-                .addTopAction(
+                .addGroupAction(
                         action(TgFunctionalEntityWithCentreContext.class).
                                 withContext(context().withSelectedEntities().build()).
                                 icon("assignment-returned").
@@ -1421,8 +1418,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
                                 longDesc("Functional context-dependent action 2 (TgFunctionalEntityWithCentreContext)").
                                 build()
                 )
-                .also()
-                .addTopAction(
+                .addGroupAction(
                         action(TgFunctionalEntityWithCentreContext.class).
                                 withContext(context().withCurrentEntity().build()).
                                 icon("assignment").
@@ -1430,8 +1426,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
                                 longDesc("Functional context-dependent action 3 (TgFunctionalEntityWithCentreContext)").
                                 build()
                 )
-                .also()
-                .addTopAction(
+                .addGroupAction(
                         action(ExportAction.class).
                                 withContext(context().withSelectionCrit().withSelectedEntities().build())
                                 .preAction(yesNo("Would you like to proceed with data export?"))
@@ -1440,8 +1435,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
                                 .shortDesc("Export Data")
                                 .build()
                 )
-                .also()
-                .addTopAction(
+                .addGroupAction(
                         action(EntityExportAction.class)
                                 .withContext(context().withSelectionCrit().withSelectedEntities().build())
                                 .postActionSuccess(new FileSaverPostAction())
@@ -1450,14 +1444,13 @@ public class WebUiConfig extends AbstractWebUiConfig {
                                 .withNoParentCentreRefresh()
                                 .build()
                 )
-                .also()
-                .addTopAction(
+                .addGroupAction(
                         action(AttachmentsUploadAction.class)
                                 .withContext(context().withSelectedEntities().build())
                                 .icon("icons:attachment")
                                 .shortDesc("Attach file to a selected entity")
                                 .build()
-                )
+                ).endTopActionsGroup()
                 .addCrit("this").asMulti().autocompleter(TgPersistentEntityWithProperties.class)
                 .withMatcher(KeyPropValueMatcherForCentre.class, context().withSelectedEntities()./*withMasterEntity().*/build())
                 .withProps(pair("desc", true), pair("booleanProp", false), pair("compositeProp", true), pair("compositeProp.desc", true))
@@ -1701,12 +1694,11 @@ public class WebUiConfig extends AbstractWebUiConfig {
                                 .withFixedHeader()
                                 .withFixedSummary()
                                 .done())
-                .draggable()
+                //.draggable()
                 .setPageCapacity(20)
                 //.setHeight("100%")
                 .setVisibleRowsCount(10)
                 //.fitToHeight()
-                .rowHeight("3rem")
                 .addProp("this")
                     .order(2).asc()
                     .width(60);
