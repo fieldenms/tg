@@ -8,7 +8,7 @@ import { MarkerCluster, leafletMarkerClusterStylesName, tgMarkerClusterStylesNam
 import { Select } from '/resources/gis/tg-select.js';
 import { Controls, leafletDrawStylesName, leafletControlloadingStylesName, leafletEasybuttonStylesName } from '/resources/gis/tg-controls.js';
 
-export const GisComponent = function (mapDiv, progressDiv, progressBarDiv, tgMap) {
+export const GisComponent = function (mapDiv, progressDiv, progressBarDiv, tgMap, ...otherStyles) {
     // IMPORTANT: use the following reference in cases when you need some properties of the 
     // GisComponent inside the functions or nested classes
     const self = this;
@@ -24,7 +24,8 @@ export const GisComponent = function (mapDiv, progressDiv, progressBarDiv, tgMap
 
         leafletDrawStylesName,
         leafletControlloadingStylesName,
-        leafletEasybuttonStylesName
+        leafletEasybuttonStylesName,
+        ...otherStyles
     );
 
     tgMap.retrivedEntitiesHandler = function (newRetrievedEntities) {
