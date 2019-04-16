@@ -595,7 +595,8 @@
                     this.$.input === activeElement          ||     /* or if autocompleter's input is in focus */
                     document.body === activeElement         ||     /* or no other input or button in focus then show found values */
                     "loadMoreButton" === activeElement.id   ||     /* or was the loadMoreButton tapped or */
-                    activeElement.classList.contains("tg-item")) { /* or if a list item is an active element */  
+                    this.$.result === activeElement         ||     /* or active element is the result element itself (e.g. occurs when scrolling with a scrollbar) */
+                    activeElement.classList.contains("tg-item")) { /* or if a list item is an active element */
                     this.opened = true;
                     this.$.result.highlightMatchedParts();
                 } else {
