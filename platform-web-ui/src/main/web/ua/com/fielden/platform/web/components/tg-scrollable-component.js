@@ -3,7 +3,6 @@ import '/resources/polymer/@polymer/iron-flex-layout/iron-flex-layout.js';
 import '/app/tg-app-config.js'
 
 import {IronResizableBehavior} from '/resources/polymer/@polymer/iron-resizable-behavior/iron-resizable-behavior.js';
-import { FlattenedNodesObserver } from '/resources/polymer/@polymer/polymer/lib/utils/flattened-nodes-observer.js';
 import {Polymer} from '/resources/polymer/@polymer/polymer/lib/legacy/polymer-fn.js';
 import {html} from '/resources/polymer/@polymer/polymer/lib/utils/html-tag.js';
 
