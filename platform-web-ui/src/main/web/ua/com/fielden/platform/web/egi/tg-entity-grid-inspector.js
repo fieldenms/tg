@@ -1111,7 +1111,7 @@ Polymer({
             oldColumnGrowFactor: e.model.item.growFactor,
             leftFixedContainerWidth: leftFixedContainerWidth,
             containerWithoutFixedSecondaryActionWidth: containerWithoutFixedSecondaryActionWidth,
-            otherColumnWidth: calculateColumnWidthExcept(this, e.model.index, columnElements, this.allColumns.length, () => true, () => true, () => true, () => true),
+            otherColumnWidth: calculateColumnWidthExcept(this, e.model.index, columnElements, this.columns.length + this.fixedColumns.length, () => true, () => true, () => true, () => true),
             widthCorrection: e.currentTarget.offsetWidth - e.currentTarget.firstElementChild.offsetWidth,
             hasAnyFlex: this.columns.find((column, index) => index !== e.model.index && column.growFactor !== 0)
         };

@@ -429,9 +429,9 @@ const TgEntityMasterBehaviorImpl = {
 
                 let action = this.querySelector('tg-ui-action[continuation-property="' + continuationProperty + '"]');
                 if (!action) {
-                    const actionModel = document.createElement('template', 'dom-bind');
+                    const actionModel = document.createElement('dom-bind');
                     actionModel.innerHTML =
-                        "<tg-ui-action " +
+                        "<template><tg-ui-action " +
                         "hidden " +
                         "id='continuationAction' " +
                         "ui-role='BUTTON' " + // it does not matter -- hidden
@@ -454,7 +454,7 @@ const TgEntityMasterBehaviorImpl = {
                         "require-selected-entities='NONE' " +
                         "require-master-entity='true' " +
                         "class='primary-action'> " +
-                        "</tg-ui-action>";
+                        "</tg-ui-action></template>";
 
                     this.shadowRoot.appendChild(actionModel);
 
