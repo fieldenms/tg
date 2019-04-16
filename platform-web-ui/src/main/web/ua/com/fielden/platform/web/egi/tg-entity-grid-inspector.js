@@ -15,6 +15,7 @@ import '/resources/images/tg-icons.js';
 
 import '/resources/actions/tg-ui-action.js';
 import '/resources/egi/tg-secondary-action-button.js';
+import '/resources/egi/tg-secondary-action-dropdown.js';
 import '/resources/egi/tg-egi-cell.js';
 
 import {Polymer} from '/resources/polymer/@polymer/polymer/lib/legacy/polymer-fn.js';
@@ -24,6 +25,7 @@ import { IronA11yKeysBehavior } from '/resources/polymer/@polymer/iron-a11y-keys
 import { IronResizableBehavior } from '/resources/polymer/@polymer/iron-resizable-behavior/iron-resizable-behavior.js';
 
 import { TgEgiDataRetrievalBehavior } from '/resources/egi/tg-egi-data-retrieval-behavior.js';
+import { TgElementSelectorBehavior } from '/resources/components/tg-element-selector-behavior.js';
 import { TgTooltipBehavior } from '/resources/components/tg-tooltip-behavior.js';
 import { TgDragFromBehavior } from '/resources/components/tg-drag-from-behavior.js';
 import { TgShortcutProcessingBehavior } from '/resources/actions/tg-shortcut-processing-behavior.js';
@@ -38,12 +40,19 @@ const template = html`
         .paper-material {
             background-color: white;
             border-radius: 2px;
-            @apply --layout-vertical;
-            @apply --layout-relative;
+            --paper-material: {
+                @apply --layout-vertical;
+                @apply --layout-relative;
+            }
+        }
+        .paper-material[fit-to-height] {
+            @apply --layout-flex;
         }
         .grid-toolbar {
             position: relative;
             overflow: hidden;
+            flex-grow: 0;
+            flex-shrink: 0;
             @apply --layout-horizontal;
             @apply --layout-wrap;
         }
@@ -64,15 +73,18 @@ const template = html`
             @apply --layout-horizontal;
             @apply --layout-center;
         }
-        .grid-toolbar-content::slotted(*) {
+        .grid-toolbar-content ::slotted(*) {
             margin-top: 8px;
+        }
+        .grid-toolbar-content ::slotted(.group) {
+            margin-left: 30px;
         }
         #baseContainer {
             min-height: 0;
             overflow: auto;
             z-index: 0;
             @apply --layout-vertical;
-            @apply --layout-flex;
+            @apply --layout-flex-auto;
             @apply --layout-relative;
         }
         .noselect {
@@ -118,6 +130,7 @@ const template = html`
             @apply --layout-horizontal;
         }
         .table-data-row {
+            z-index: 0;
             font-size: 1rem;
             font-weight: 400;
             color: #212121;
@@ -131,6 +144,7 @@ const template = html`
             @apply --layout-horizontal;
         }
         .table-footer-row {
+            z-index: 0;
             font-size: 0.9rem;
             color: #757575;
             height: var(--egi-row-height, 1.5rem);
@@ -141,6 +155,17 @@ const template = html`
             flex-grow: 0;
             flex-shrink: 0;
             @apply --layout-horizontal;
+        }
+        .table-data-row:last-of-type, {
+            margin-bottom: var(--egi-bottom-margin, 15px);
+        }
+        .footer {
+            background-color: white;
+            min-width: fit-content;
+            flex-grow: 0;
+            flex-shrink: 0;
+            padding-bottom: var(--egi-bottom-margin, 15px);
+            @apply --layout-vertical;
         }
         .cell[over] {
             background-color: #EEEEEE !important;
@@ -212,13 +237,10 @@ const template = html`
             width: var(--egi-action-cell-width, 20px);
             padding: 0 var(--egi-action-cell-padding, 0.3rem);
         }
-        .action {
+        .action, tg-secondary-action-dropdown ::slotted(.secondary-action) {
             --tg-ui-action-icon-button-height: 1.6rem;
             --tg-ui-action-icon-button-width: 1.6rem;
             --tg-ui-action-icon-button-padding: 2px;
-            --tg-secondary-action-icon-button-height: 1.6rem;
-            --tg-secondary-action-icon-button-width: 1.6rem;
-            --tg-secondary-action-icon-button-padding: 2px;
             --tg-ui-action-spinner-width: 1.5rem;
             --tg-ui-action-spinner-height: 1.5rem;
             --tg-ui-action-spinner-min-width: 1rem;
@@ -227,14 +249,15 @@ const template = html`
             --tg-ui-action-spinner-max-height: 1.5rem;
             --tg-ui-action-spinner-padding: 0px;
             --tg-ui-action-spinner-margin-left: 0;
-            --tg-secondary-action-spinner-width: 1.5rem;
-            --tg-secondary-action-spinner-height: 1.5rem;
-            --tg-secondary-action-spinner-min-width: 1rem;
-            --tg-secondary-action-spinner-min-height: 1rem;
-            --tg-secondary-action-spinner-max-width: 1.5rem;
-            --tg-secondary-action-spinner-max-height: 1.5rem;
-            --tg-secondary-action-spinner-padding: 0px;
-            --tg-secondary-action-spinner-margin-left: 0;
+        }
+        .shadow-container {
+            position: sticky;
+            top:0;
+            left: 0;
+            pointer-events: none;
+        }
+        .shadow-box{
+            position: absolute;
         }
         /*miscellanea styles*/
         .lock-layer {
@@ -253,9 +276,8 @@ const template = html`
     <!--configuring slotted elements-->
     <slot id="column_selector" name="property-column" hidden></slot>
     <slot id="primary_action_selector" name="primary-action" hidden></slot>
-    <slot id="secondary_action_selector" name="secondary-action" hidden></slot>
     <!--EGI template-->
-    <div class="paper-material" elevation="1">
+    <div id="paperMaterial" class="paper-material" elevation="1" style$="[[_calcMaterialStyle(showMarginAround)]]" fit-to-height$="[[fitToHeight]]">
         <!--Table toolbar-->
         <div class="grid-toolbar">
             <paper-progress id="progressBar" hidden$="[[!_showProgress]]"></paper-progress>
@@ -266,9 +288,13 @@ const template = html`
                 <slot name="standart-action"></slot>
             </div>
         </div>
-        <div id="baseContainer">
+        <div id="baseContainer" on-scroll="_handleScrollEvent">
+            <!--Shadow container that is displayed if container is not fixed-->
+            <div class="shadow-container" style="z-index:1;">
+                <div class="shadow-box" style$="[[_calcShadows(headerFixed, _showTopShadow)]]"></div>
+            </div>
             <!-- Table header -->
-            <div class="table-header-row">
+            <div class="table-header-row" style$="[[_calcHeaderStyle(headerFixed, _showTopShadow)]]">
                 <div class="drag-anchor cell" hidden$="[[!canDragFrom]]" style$="[[_calcDragBoxStyle(dragAnchorFixed)]]"></div>
                 <div class="table-cell cell" style$="[[_calcSelectCheckBoxStyle(canDragFrom, checkboxesFixed)]]" hidden$="[[!checkboxVisible]]" tooltip-text$="[[_selectAllTooltip(selectedAll)]]">
                     <paper-checkbox class="all-checkbox blue header" checked="[[selectedAll]]" on-change="_allSelectionChanged"></paper-checkbox>
@@ -290,7 +316,7 @@ const template = html`
                         <div class="resizing-box"></div>
                     </div>
                 </template>
-                <div class="action-cell cell" hidden$="[[!_isSecondaryActionsPresent(secondaryActions)]]" style$="[[_calcSecondaryActionStyle(secondaryActionsFixed)]]">
+                <div class="action-cell cell" hidden$="[[!_isSecondaryActionPresent]]" style$="[[_calcSecondaryActionStyle(secondaryActionsFixed)]]">
                     <!--Secondary actions header goes here-->
                 </div>
             </div>
@@ -308,43 +334,53 @@ const template = html`
                     </div>
                     <div class="fixed-columns-container" hidden$="[[!numOfFixedCols]]" style$="[[_calcFixedColumnContainerStyle(canDragFrom, checkboxVisible, primaryAction, numOfFixedCols)]]">
                         <template is="dom-repeat" items="[[fixedColumns]]" as="column">
-                            <tg-egi-cell class="cell" selected$="[[egiEntity.selected]]" over$="[[egiEntity.over]]" column="[[column]]" egi-entity="[[egiEntity]]" style$="[[_calcColumnStyle(column, column.width, column.growFactor, 'true')]]" tooltip-text$="[[_getTooltip(egiEntity.entity, column, column.customAction)]]" with-action$="[[hasAction(egiEntity.entity, column)]]" on-tap="_tapAction"></tg-egi-cell>
+                            <tg-egi-cell class="cell" selected$="[[egiEntity.selected]]" over$="[[egiEntity.over]]" column="[[column]]" egi-entity="[[egiEntity]]" style$="[[_calcColumnStyle(column, column.width, column.growFactor, 'true')]]" tooltip-text$="[[_getTooltip(egiEntity.entity, column, column.customAction)]]" with-action$="[[hasAction(egiEntity.entity, column)]]" on-tap="_tapFixedAction"></tg-egi-cell>
                         </template>
                     </div>
                     <template is="dom-repeat" items="[[columns]]" as="column">
                         <tg-egi-cell class="cell" selected$="[[egiEntity.selected]]" over$="[[egiEntity.over]]" column="[[column]]" egi-entity="[[egiEntity]]" style$="[[_calcColumnStyle(column, column.width, column.growFactor, 'false')]]" tooltip-text$="[[_getTooltip(egiEntity.entity, column, column.customAction)]]" with-action$="[[hasAction(egiEntity.entity, column)]]" on-tap="_tapAction"></tg-egi-cell>
                     </template>
-                    <div class="action-cell cell" selected$="[[egiEntity.selected]]" over$="[[egiEntity.over]]" hidden$="[[!_isSecondaryActionsPresent(secondaryActions)]]" style$="[[_calcSecondaryActionStyle(secondaryActionsFixed)]]">
-                        <tg-secondary-action-button class="action" current-entity="[[egiEntity.entity]]" actions="[[secondaryActions]]"></tg-secondary-action-button>
+                    <div class="action-cell cell" selected$="[[egiEntity.selected]]" over$="[[egiEntity.over]]" hidden$="[[!_isSecondaryActionPresent]]" style$="[[_calcSecondaryActionStyle(secondaryActionsFixed)]]">
+                        <tg-secondary-action-button class="action" current-entity="[[egiEntity.entity]]" is-single="[[_isSingleSecondaryAction]]" dropdown-trigger="[[_openDropDown]]"></tg-secondary-action-button>
                     </div>
                 </div>
             </template>
             <!-- Table footer -->
-            <template is="dom-repeat" items="[[_totalsRows]]" as="summaryRow" index-as="summaryIndex">
-                <div class="table-footer-row">
-                    <div class="drag-anchor cell" hidden$="[[!canDragFrom]]" style$="[[_calcDragBoxStyle(dragAnchorFixed)]]"></div>
-                    <div class="table-cell cell" style$="[[_calcSelectCheckBoxStyle(canDragFrom, checkboxesFixed)]]" hidden$="[[!checkboxVisible]]" tooltip-text$="[[_selectAllTooltip(selectedAll)]]">
-                        <!--Footer's select checkbox stub goes here-->
-                    </div>
-                    <div class="action-cell cell" hidden$="[[!primaryAction]]" style$="[[_calcPrimaryActionStyle(canDragFrom, checkboxVisible, checkboxesWithPrimaryActionsFixed)]]">
-                        <!--Footer's primary action stub goes here-->
-                    </div>
-                    <div class="fixed-columns-container" hidden$="[[!numOfFixedCols]]" style$="[[_calcFixedColumnContainerStyle(canDragFrom, checkboxVisible, primaryAction, numOfFixedCols)]]">
-                        <template is="dom-repeat" items="[[summaryRow.0]]" as="column">
-                            <tg-egi-cell class="cell" column="[[column]]" egi-entity="[[egiTotalsEntity]]" style$="[[_calcColumnStyle(column, column.width, column.growFactor, 'true')]]" tooltip-text$="[[_getTotalTooltip(column)]]"></tg-egi-cell>
+            <div class="footer" style$="[[_calcFooterStyle(summaryFixed, fitToHeight, _showBottomShadow)]]">
+                <template is="dom-repeat" items="[[_totalsRows]]" as="summaryRow" index-as="summaryIndex">
+                    <div class="table-footer-row">
+                        <div class="drag-anchor cell" hidden$="[[!canDragFrom]]" style$="[[_calcDragBoxStyle(dragAnchorFixed)]]"></div>
+                        <div class="table-cell cell" style$="[[_calcSelectCheckBoxStyle(canDragFrom, checkboxesFixed)]]" hidden$="[[!checkboxVisible]]" tooltip-text$="[[_selectAllTooltip(selectedAll)]]">
+                            <!--Footer's select checkbox stub goes here-->
+                        </div>
+                        <div class="action-cell cell" hidden$="[[!primaryAction]]" style$="[[_calcPrimaryActionStyle(canDragFrom, checkboxVisible, checkboxesWithPrimaryActionsFixed)]]">
+                            <!--Footer's primary action stub goes here-->
+                        </div>
+                        <div class="fixed-columns-container" hidden$="[[!numOfFixedCols]]" style$="[[_calcFixedColumnContainerStyle(canDragFrom, checkboxVisible, primaryAction, numOfFixedCols)]]">
+                            <template is="dom-repeat" items="[[summaryRow.0]]" as="column">
+                                <tg-egi-cell class="cell" column="[[column]]" egi-entity="[[egiTotalsEntity]]" style$="[[_calcColumnStyle(column, column.width, column.growFactor, 'true')]]" tooltip-text$="[[_getTotalTooltip(column)]]"></tg-egi-cell>
+                            </template>
+                        </div>
+                        <template is="dom-repeat" items="[[summaryRow.1]]" as="column">
+                            <tg-egi-cell class="cell" column="[[column]]" egi-entity="[[egiTotalsEntity]]" style$="[[_calcColumnStyle(column, column.width, column.growFactor, 'false')]]" tooltip-text$="[[_getTotalTooltip(column)]]"></tg-egi-cell>
                         </template>
+                        <div class="action-cell cell" hidden$="[[!_isSecondaryActionPresent]]" style$="[[_calcSecondaryActionStyle(secondaryActionsFixed)]]">
+                            <!--Secondary actions header goes here-->
+                        </div>
                     </div>
-                    <template is="dom-repeat" items="[[summaryRow.1]]" as="column">
-                        <tg-egi-cell class="cell" column="[[column]]" egi-entity="[[egiTotalsEntity]]" style$="[[_calcColumnStyle(column, column.width, column.growFactor, 'false')]]" tooltip-text$="[[_getTotalTooltip(column)]]"></tg-egi-cell>
-                    </template>
-                    <div class="action-cell cell" hidden$="[[!_isSecondaryActionsPresent(secondaryActions)]]" style$="[[_calcSecondaryActionStyle(secondaryActionsFixed)]]">
-                        <!--Secondary actions header goes here-->
-                    </div>
-                </div>
-            </template>
+                </template>
+            </div>
+            <div class="shadow-container">
+                <div class="shadow-box" style$="[[_calcLeftShadowStyle(canDragFrom, dragAnchorFixed, checkboxVisible, checkboxesFixed, primaryAction, checkboxesWithPrimaryActionsFixed, numOfFixedCols, _showLeftShadow, _shouldTriggerShadowRecalulation)]]"></div>
+                <div class="shadow-box" style$="[[_calcRightShadowStyle(_isSecondaryActionPresent, secondaryActionsFixed, _showRightShadow, _shouldTriggerShadowRecalulation)]]"></div>
+            </div>
         </div>
         <!-- table lock layer -->
         <div class="lock-layer" lock$="[[lock]]"></div>
+        <!-- secondary action dropdown that will be used by each secondary aciton -->
+        <tg-secondary-action-dropdown id="secondaryActionDropDown" is-single="{{_isSingleSecondaryAction}}" is-present="{{_isSecondaryActionPresent}}">
+            <slot id="secondary_action_selector" slot="actions" name="secondary-action"></slot>
+        </tg-secondary-action-dropdown>
     </div>`;
 
 function calculateColumnWidthExcept (egi, columnIndex, columnElements, columnLength, dragAnchor, checkboxes, primaryActions, secondaryActions) {
@@ -363,7 +399,7 @@ function calculateColumnWidthExcept (egi, columnIndex, columnElements, columnLen
             columnWidth += columnElements[i + 3].offsetWidth;
         }
     }
-    if (egi.secondaryActions.length > 0 && secondaryActions()) {
+    if (egi._isSecondaryActionPresent && secondaryActions()) {
         columnWidth += columnElements[columnElements.length - 1].offsetWidth;
     }
     return columnWidth;
@@ -501,15 +537,18 @@ Polymer({
         //Scrolling related properties.
         dragAnchorFixed: {
             type: Boolean,
-            value: false
+            value: false,
+            observer: "_dragAnchorFixedChanged"
         },
         checkboxesFixed: {
             type: Boolean,
-            value: false
+            value: false,
+            observer: "_checkboxesFixedChanged"
         },
         checkboxesWithPrimaryActionsFixed: {
             type: Boolean,
-            value: false
+            value: false,
+            observer: "_checkboxesWithPrimaryActionsFixedChanged"
         },
         numOfFixedCols: {
             type: Number,
@@ -543,45 +582,33 @@ Polymer({
         //Private properties that defines config object for totals.
         _totalsRowCount: Number,
         _totalsRows: Array,
-        //FIXME The following properties might not be needed any longer.
         //Shadow related properties
         _showBottomShadow: Boolean,
         _showTopShadow: Boolean,
         _showLeftShadow: Boolean,
         _showRightShadow: Boolean,
-        //Scroling properties
-        _scrollLeft: Number,
-        _scrollTop: Number,
         //Need when resizing column to recalculate styles.
-        _fixedColumnWidth: Number,
-        _scrollableColumnWidth: Number,
-        //miscelenia private variables
-        //FIXME till here.
-        //FIXME the next one might not be needded too
-        _actionWidth: {
-            type: String,
-            value: "20px"
-        },
-        _cellPadding: {
-            type: String,
-            value: "1.2rem"
-        },
-        _bottomMargin: {
-            type: String,
-            value: "15px"
-        },
-        //FIXIME Till here
+        _shouldTriggerShadowRecalulation: Boolean,
         //Range selection related properties
         _rangeSelection: {
             type: Boolean,
             value: false
         },
-        _lastSelectedIndex: Number
+        _lastSelectedIndex: Number,
+        //The property that indicates whether secondary action is only one or there are more secondary actions.
+        _isSingleSecondaryAction: Boolean,
+        //Indicates whether secondary actions is present
+        _isSecondaryActionPresent: Boolean,
+        //The callback to open drop down for secondary action.
+        _openDropDown: Function
     },
 
-    behaviors: [TgEgiDataRetrievalBehavior, TgTooltipBehavior, IronResizableBehavior, IronA11yKeysBehavior, TgShortcutProcessingBehavior, TgDragFromBehavior],
+    behaviors: [TgEgiDataRetrievalBehavior, TgTooltipBehavior, IronResizableBehavior, IronA11yKeysBehavior, TgShortcutProcessingBehavior, TgDragFromBehavior, TgElementSelectorBehavior],
 
-    observers: ["_columnsChanged(columns, fixedColumns)"],
+    observers: [
+        "_columnsChanged(columns, fixedColumns)",
+        "_heightRelatedPropertiesChanged(visibleRowCount, rowHeight, constantHeight, fitToHeight, summaryFixed, _totalsRowCount)"
+    ],
 
     created: function () {
         this._serialiser = new TgSerialiser();
@@ -591,17 +618,12 @@ Polymer({
         this._totalsRowCount = 0;
         this._showProgress = false;
 
-        //FIXIME the following entities might not be needed any longer
         //Initialising shadows
         this._showTopShadow = false;
         this._showBottomShadow = false;
         this._showLeftShadow = false;
         this._showRightShadow = false;
-
-        //Initilialising scrolling properties
-        this._scrollLeft = 0;
-        this._scrollTop = 0;
-        //FIXIME till this property.
+        this._shouldTriggerShadowRecalulation = false;
 
         //Initialising entities.
         this.totals = null;
@@ -626,9 +648,6 @@ Polymer({
         //Initialising the primary action.
         this.primaryAction = primaryActions.length > 0 ? primaryActions[0] : null;
 
-        //Initialising the secondary actions' list.
-        this.secondaryActions = this.$.secondary_action_selector.assignedNodes();
-
         //Initialising event listeners.
         this.addEventListener("iron-resize", this._resizeEventListener.bind(this));
 
@@ -636,6 +655,11 @@ Polymer({
         new FlattenedNodesObserver(this.$.column_selector, (info) => {
             this._columnDomChanged(info.addedNodes, info.removedNodes);
         });
+
+        //Init secondary action drop down trigger
+        this._openDropDown = function (currentEntity, currentAction) {
+            this.$.secondaryActionDropDown.open(currentEntity, currentAction);
+        }.bind(this);
     },
 
     attached: function () {
@@ -670,6 +694,21 @@ Polymer({
             egiEntity._propertyChangedHandlers && egiEntity._propertyChangedHandlers[propPath] && egiEntity._propertyChangedHandlers[propPath]();
         }
     },
+
+    selectEntity: function (entity, select) {
+        const entityIndex = this._findEntity(entity, this.filteredEntities);
+        if (entityIndex >= 0 && this.egiModel[entityIndex].selected !== select) {
+            this.set("egiModel." + entityIndex + ".selected", select);
+            this._processEntitySelection(this.filteredEntities[entityIndex], select);
+            this.fire("tg-entity-selected", {
+                shouldScrollToSelected: false,
+                entities: [{
+                    entity: this.filteredEntities[entityIndex],
+                    select: select
+                }]
+            });
+        }
+    },
     
     findEntityIndex: function (entity) {
         return this._findEntity(entity, this.entities);
@@ -677,6 +716,20 @@ Polymer({
     
     findFilteredEntityIndex: function (entity) {
         return this._findEntity(entity, this.filteredEntities);
+    },
+
+    updateProgress: function (percentage, clazz, isVisible) {
+        const progressBar = this.$.progressBar;
+        this._showProgress = isVisible;
+        progressBar.classList.remove("processing");
+        progressBar.classList.remove("uploading");
+        if (clazz !== "") {
+            progressBar.classList.add(clazz);
+        }
+        if (percentage >= 0 && percentage <= 100) {
+            progressBar.value = percentage;
+        }
+        progressBar.updateStyles();
     },
 
     /**
@@ -839,7 +892,7 @@ Polymer({
             this._updateFixedTotalRowGrowFactor(columnIndex, columnWidths[column.property].newGrowFactor);
             this._updateFixedTotalRowWidth(columnIndex, columnWidths[column.property].newWidth);
         });
-        // this._updateColumnsWidthProperties();
+        this._triggerShadowRecalulation();
     },
 
     /** 
@@ -908,28 +961,32 @@ Polymer({
     },
 
     _updateColumns: function (resultantColumns) {
-        const mergedColumns = this.fixedColumns.concat(this.columns);
-        if (!this._reflector.equalsEx(mergedColumns, resultantColumns)) {
-            this.fixedColumns = resultantColumns.splice(0, this.numOfFixedCols);
-            this.columns = resultantColumns;
-            const columnWithGrowFactor = this.columns.find((item) => item.growFactor > 0);
-            if (!columnWithGrowFactor && this.columns.length > 0) {
-                this.set("columns." + (this.columns.length - 1) + ".growFactor", 1);
-                const column = this.columns[this.columns.length - 1];
-                const parameters = {};
-                parameters[column.property] = {
-                    growFactor: 1
-                }
-                this.fire("tg-egi-column-change", parameters);
+        this.fixedColumns = resultantColumns.splice(0, this.numOfFixedCols);
+        this.columns = resultantColumns;
+        const columnWithGrowFactor = this.columns.find((item) => item.growFactor > 0);
+        if (!columnWithGrowFactor && this.columns.length > 0) {
+            this.set("columns." + (this.columns.length - 1) + ".growFactor", 1);
+            const column = this.columns[this.columns.length - 1];
+            const parameters = {};
+            parameters[column.property] = {
+                growFactor: 1
             }
+            this.fire("tg-egi-column-change", parameters);
         }
-        //this._updateColumnsWidthProperties();
+        this._triggerShadowRecalulation();
     },
 
     //Event listeners
-    //FIXME this should be implemented
     _resizeEventListener: function() {
+        this._handleScrollEvent();
+        this._triggerShadowRecalulation();
+    },
 
+    _handleScrollEvent: function () {
+        this._showLeftShadow = this.$.baseContainer.scrollLeft !== 0;
+        this._showRightShadow = (this.$.baseContainer.clientWidth + this.$.baseContainer.scrollLeft) !== this.$.baseContainer.scrollWidth;
+        this._showTopShadow = this.$.baseContainer.scrollTop !== 0;
+        this._showBottomShadow = (this.$.baseContainer.clientHeight + this.$.baseContainer.scrollTop) !== this.$.baseContainer.scrollHeight;
     },
 
     _allSelectionChanged: function (e) {
@@ -974,6 +1031,10 @@ Polymer({
         this._rangeSelection = event.shiftKey;
     },
 
+    _tapFixedAction: function (e, detail) {
+        this.tap(this.filteredEntities[e.model.parentModel.entityIndex], e.model.index, this.fixedColumns[e.model.index]);
+    },
+
     _tapAction: function (e, detail) {
         this.tap(this.filteredEntities[e.model.parentModel.entityIndex], e.model.index, this.columns[e.model.index]);
     },
@@ -1002,6 +1063,7 @@ Polymer({
     _scrollContainerEntitiesStampedCustomAction: function () {},
 
     _scrollContainerEntitiesStamped: function (event) {
+        this._triggerShadowRecalulation();
         this._scrollContainerEntitiesStampedCustomAction();
     },
 
@@ -1043,13 +1105,13 @@ Polymer({
         //Calculate all properties needed for column resizing logic and create appropriate resizing object
         const columnElements = this.$.baseContainer.querySelector(".table-header-row").querySelectorAll(".cell");
         const leftFixedContainerWidth = calculateColumnWidthExcept (this, -1, columnElements, this.numOfFixedCols, () => this.dragAnchorFixed, () => this.checkboxesFixed, () => this.checkboxesWithPrimaryActionsFixed, () => false);
-        const containerWithoutFixedSecondaryActionWidth = this.$.baseContainer.offsetWidth - (this.secondaryActions.length > 0 && this.secondaryActionsFixed ? columnElements[columnElements.length - 1].offsetWidth : 0);
+        const containerWithoutFixedSecondaryActionWidth = this.$.baseContainer.offsetWidth - (this._isSecondaryActionPresent && this.secondaryActionsFixed ? columnElements[columnElements.length - 1].offsetWidth : 0);
         this._columnResizingObject = {
             oldColumnWidth: e.model.item.width,
             oldColumnGrowFactor: e.model.item.growFactor,
             leftFixedContainerWidth: leftFixedContainerWidth,
             containerWithoutFixedSecondaryActionWidth: containerWithoutFixedSecondaryActionWidth,
-            otherColumnWidth: calculateColumnWidthExcept(this, e.model.index, columnElements, this.allColumns.length, () => true, () => true, () => true, () => true),
+            otherColumnWidth: calculateColumnWidthExcept(this, e.model.index, columnElements, this.columns.length + this.fixedColumns.length, () => true, () => true, () => true, () => true),
             widthCorrection: e.currentTarget.offsetWidth - e.currentTarget.firstElementChild.offsetWidth,
             hasAnyFlex: this.columns.find((column, index) => index !== e.model.index && column.growFactor !== 0)
         };
@@ -1068,6 +1130,7 @@ Polymer({
             if (columnWidth !== newWidth) {
                 this.set("fixedColumns." + e.model.index + ".width", newWidth);
                 this._updateFixedTotalRowWidth(e.model.index, newWidth);
+                this._triggerShadowRecalulation();
             }
         }
     },
@@ -1121,7 +1184,7 @@ Polymer({
                 }
                 this.set("columns." + e.model.index + ".width", newWidth);
                 this._updateTotalRowWidth(e.model.index, newWidth);
-                //this._updateColumnsWidthProperties();
+                this._triggerShadowRecalulation();
                 //scroll if needed.
                 if (mousePos.x > this._columnResizingObject.containerWithoutFixedSecondaryActionWidth || mousePos.x < this._columnResizingObject.leftFixedContainerWidth) {
                     this.$.baseContainer.scrollLeft += newWidth - columnWidth;
@@ -1129,6 +1192,10 @@ Polymer({
             }
 
         }
+    },
+
+    _triggerShadowRecalulation: function () {
+        this._shouldTriggerShadowRecalulation = !this._shouldTriggerShadowRecalulation;
     },
 
     _updateFixedTotalRowWidth: function (colIndex, value) {
@@ -1202,6 +1269,21 @@ Polymer({
     },
 
     //Style calculator
+    _calcMaterialStyle: function (showMarginAround) {
+        if (showMarginAround) {
+            return "margin:10px;";
+        }
+        return "";
+    },
+
+    _calcHeaderStyle: function (headerFixed, _showTopShadow) {
+        let headerStyle = headerFixed ? "position: sticky; z-index: 1; top: 0;" : "";
+        if (_showTopShadow) {
+            headerStyle += "box-shadow: 0px 1px 6px -1px rgba(0,0,0,0.7);";
+        }
+        return headerStyle;
+    },
+
     _calcDragBoxStyle: function (dragAnchorFixed) {
         return dragAnchorFixed ? "position: sticky; z-index: 1; left: 0;" : "";
     },
@@ -1254,6 +1336,16 @@ Polymer({
         return style;
     },
 
+    _calcFixedColumnWidth: function (canDragFrom, checkboxVisible, primaryAction, numOfFixedCols) {
+        let columnStyleWidth = "";
+        if (numOfFixedCols > 0) {
+            const cellPadding = this.getComputedStyleValue('--egi-cell-padding').trim() || "0.6rem";
+            const columnsWidth = this.fixedColumns.reduce((acc, curr) => acc + curr.width, 0);
+            columnStyleWidth = columnsWidth + "px + 2 * " + this.fixedColumns.length + " * " + cellPadding;
+        }
+        return this._calcPrimaryActionWidth(canDragFrom, checkboxVisible, primaryAction) + " + " + columnStyleWidth;
+    },
+
     _calcColumnHeaderStyle: function (item, itemWidth, columnGrowFactor, fixed) {
         let colStyle = "min-width: " + itemWidth + "px;" + "width: " + itemWidth + "px;"
         if (columnGrowFactor === 0 || fixed === 'true') {
@@ -1278,13 +1370,80 @@ Polymer({
         return secondaryActionsFixed ? "position: sticky; z-index: 1; right: 0;" : "";
     },
 
-    // Observers
-    _numOfFixedColsChanged: function () {
-        this._updateColumns(this.fixedColumns.concat(this.columns));
+    _calcFooterStyle: function (summaryFixed, fitToHeight, _showBottomShadow) {
+        let style = summaryFixed ? "position: sticky; z-index: 1; bottom: 0;" : "";
+        style += (fitToHeight ? "margin-top:auto;" : "");
+        if (_showBottomShadow) {
+            style += "box-shadow: 0px -1px 6px -1px rgba(0,0,0,0.7);";
+        }
+        return style;
     },
 
-    _isSecondaryActionsPresent: function (secondaryActions) {
-        return secondaryActions && secondaryActions.length > 0;
+    _calcLeftShadowStyle: function (canDragFrom, dragAnchorFixed, checkboxVisible, checkboxesFixed, primaryAction, checkboxesWithPrimaryActionsFixed, numOfFixedCols, _showLeftShadow, _shouldTriggerShadowRecalulation) {
+        let shadowStyle = "left:0;bottom:0;width:calc(@columnsWidth);height:@egiHeight;";
+        if (numOfFixedCols > 0) {
+            shadowStyle = shadowStyle.replace("@columnsWidth", this._calcFixedColumnWidth(canDragFrom, checkboxVisible, primaryAction, numOfFixedCols));
+        } else if (checkboxesWithPrimaryActionsFixed) {
+            shadowStyle = shadowStyle.replace("@columnsWidth", this._calcPrimaryActionWidth(canDragFrom, checkboxVisible, primaryAction));
+        } else if (checkboxesFixed) {
+            shadowStyle = shadowStyle.replace("@columnsWidth", this._calcSelectionCheckboxWidth(canDragFrom, checkboxVisible));
+        } else if (dragAnchorFixed) {
+            shadowStyle = shadowStyle.replace("@columnsWidth", this._calcDragAnchorWidth(canDragFrom));
+        } else {
+            shadowStyle = shadowStyle.replace("@columnsWidth", "0px");
+        }
+        shadowStyle = shadowStyle.replace("@egiHeight", this.$.baseContainer.scrollHeight + "px");
+        if (_showLeftShadow) {
+            shadowStyle += "box-shadow: 6px 0px 6px -5px rgba(0,0,0,0.7);";
+        }
+        return shadowStyle;
+    },
+
+    _calcRightShadowStyle: function (_isSecondaryActionPresent, secondaryActionsFixed, _showRightShadow, _shouldTriggerShadowRecalulation) {
+        let shadowStyle = "right:0;bottom:0;width:calc(@actionWidth);height:calc(@egiHeight);";
+        if (_isSecondaryActionPresent && secondaryActionsFixed) {
+            const actionWidth = this.getComputedStyleValue('--egi-action-cell-width').trim() || "20px";
+            const actionPadding = this.getComputedStyleValue('--egi-action-cell-padding').trim() || "0.3rem * 2";
+            shadowStyle = shadowStyle.replace("@actionWidth", actionWidth + " + " + actionPadding);
+        } else {
+            shadowStyle = shadowStyle.replace("@actionWidth", "0px");
+        }
+        shadowStyle = shadowStyle.replace("@egiHeight", this.$.baseContainer.scrollHeight + "px");
+        if (_showRightShadow) {
+            shadowStyle += "box-shadow: -6px 0px 6px -5px rgba(0,0,0,0.7);";
+        }
+        return shadowStyle;
+    },
+
+    _calcShadows: function (headerFixed, _showTopShadow) {
+        return "box-shadow: inset 0px " + (!headerFixed && _showTopShadow? "6px " : "0px") + " 6px " + (!headerFixed && _showTopShadow? "-5px " : "-200px ") + " rgba(0,0,0,0.7);position:absolute;top:0;left:0;right:0;height:5px;";
+    },
+
+    // Observers
+    _dragAnchorFixedChanged: function (newValue) {
+        if (!newValue) {
+            this.checkboxesFixed = false;
+        }
+    },
+    _checkboxesFixedChanged: function (newValue) {
+        if (newValue) {
+            this.dragAnchorFixed = true;
+        } else {
+            this.checkboxesWithPrimaryActionsFixed = false;
+        }
+    },    
+    _checkboxesWithPrimaryActionsFixedChanged: function (newValue) {
+        if (newValue) {
+            this.checkboxesFixed = true;
+        } else {
+            this.numOfFixedCols = 0;
+        }
+    },
+    _numOfFixedColsChanged: function (newValue) {
+        if (newValue > 0) {
+            this.checkboxesWithPrimaryActionsFixed = true;
+        }
+        this._updateColumns(this.fixedColumns.concat(this.columns));
     },
 
     _rowHeightChanged: function (newValue) {
@@ -1330,6 +1489,28 @@ Polymer({
         //Set the _totalsRowCount property so that calculation of the scroll container height would be triggered.
         this._totalsRowCount = summaryRowsCount;
         this._totalsRows = gridSummary;
+    },
+
+    _heightRelatedPropertiesChanged: function (visibleRowCount, rowHeight, constantHeight, fitToHeight, summaryFixed, _totalsRowCount) {
+        //Constant height take precedence over visible row count which takes precedence over default behaviour that extends the EGI's height to it's content height
+        this.$.paperMaterial.style.removeProperty("height");
+        this.$.paperMaterial.style.removeProperty("min-height");
+        this.$.baseContainer.style.removeProperty("height");
+        this.$.baseContainer.style.removeProperty("max-height");
+        if (constantHeight) { //Set the height for the egi
+            this.$.paperMaterial.style["height"] = constantHeight;
+        } else if (visibleRowCount > 0) { //Set the height or max height for the scroll container so that only specified number of rows become visible.
+            this.$.paperMaterial.style["min-height"] = "fit-content";
+            const rowCount = visibleRowCount + (summaryFixed ? _totalsRowCount : 0);
+            const bottomMargin = this.getComputedStyleValue('--egi-bottom-margin').trim() || "15px";
+            const height = "calc(3rem + " + rowCount + " * " + rowHeight + " + " + rowCount + "px" + (summaryFixed && _totalsRowCount > 0 ? (" + " + bottomMargin) : "") + ")";
+            if (fitToHeight) {
+                this.$.baseContainer.style["height"] = height;
+            } else {
+                this.$.baseContainer.style["max-height"] = height;
+            }
+        }
+        this._resizeEventListener();
     },
 
     _renderingHintsChanged: function (newValue) {

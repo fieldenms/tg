@@ -1,66 +1,63 @@
-<link rel="import" href="/resources/centre/tg-selection-criteria-behavior.html">
+import '/resources/polymer/@polymer/polymer/polymer-legacy.js';
+import { TgSelectionCriteriaBehavior } from '/resources/centre/tg-selection-criteria-behavior.js';
+import { TgReflector } from '/app/tg-reflector.js';
 
-<script>
-    (function () {
+const TgSelectionCriteriaTemplateBehaviorImpl = {
 
-        Polymer.TgBehaviors = Polymer.TgBehaviors || {};
-        Polymer.TgBehaviors.TgSelectionCriteriaTemplateBehaviorImpl = {
-            
-            ////////////// Template related method are here in order to reduce the template size ///////////////
-            //////// Also this enforces user to provide appropriate elemnts and theitr ids when using it////////
-            _dom: function () {
-                return this.$.masterDom;
-            },
+    created: function () {
+        this.reflector = new TgReflector();
+    },
 
-            /**
-             * The iron-ajax component for entity retrieval.
-             */
-            _ajaxRetriever: function () {
-                return this._dom()._ajaxRetriever();
-            },
+    ////////////// Template related methods are here in order to reduce the template size ///////////////
+    //////// Also this enforces user to provide appropriate elements and their ids when using it////////
+    _dom: function () {
+        return this.$.masterDom;
+    },
 
-            /**
-             * The iron-ajax component for query running.
-             */
-            _ajaxRunner: function () {
-                return this._dom()._ajaxRunner();
-            },
+    /**
+     * The iron-ajax component for entity retrieval.
+     */
+    _ajaxRetriever: function () {
+        return this._dom()._ajaxRetriever();
+    },
 
-            /**
-             * The validator component.
-             */
-            _validator: function () {
-                return this._dom()._validator();
-            },
+    /**
+     * The iron-ajax component for query running.
+     */
+    _ajaxRunner: function () {
+        return this._dom()._ajaxRunner();
+    },
 
-            /**
-             * The component for entity serialisation.
-             */
-            _serialiser: function () {
-                return this._dom()._serialiser();
-            },
+    /**
+     * The validator component.
+     */
+    _validator: function () {
+        return this._dom()._validator();
+    },
 
-            /**
-             * The reflector component.
-             */
-            _reflector: function () {
-                return this._dom()._reflector();
-            },
+    /**
+     * The component for entity serialisation.
+     */
+    _serialiser: function () {
+        return this._dom()._serialiser();
+    },
 
-            /**
-             * The toast component.
-             */
-            _toastGreeting: function () {
-                return this._dom()._toastGreeting();
-            }
-        };
-            ///////////////////////////////////////////////////////////////////////////////////////////////////
-            
+    /**
+     * The reflector component.
+     */
+    _reflector: function () {
+        return this.reflector;
+    },
 
-        Polymer.TgBehaviors.TgSelectionCriteriaTemplateBehavior = [
-            Polymer.TgBehaviors.TgSelectionCriteriaBehavior,
-            Polymer.TgBehaviors.TgSelectionCriteriaTemplateBehaviorImpl
-        ];
+    /**
+     * The toast component.
+     */
+    _toastGreeting: function () {
+        return this._dom()._toastGreeting();
+    }
+};
 
-    })();
-</script>
+export const TgSelectionCriteriaTemplateBehavior = [
+    TgSelectionCriteriaBehavior,
+    TgSelectionCriteriaTemplateBehaviorImpl
+];

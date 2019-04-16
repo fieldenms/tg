@@ -25,12 +25,12 @@ const insertElement = function (insertToElement, elementName, attributes) {
         }
 
         if (attributes && typeof attributes === "object") {
-            for (const attr in attributes) {
+            Object.keys(attributes).forEach(attr => {
                 customElement[attr] = attributes[attr];
                 if (attr === 'prefDim') {
                     insertToElement.prefDim = customElement[attr];
                 }
-            }
+            });
         }
         // insert the loaded and instantiated custom element
         insertToElement.insert(customElement);

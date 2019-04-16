@@ -200,6 +200,7 @@ public class TgCompoundEntityWebUiConfig {
 
         final EntityCentreConfig<TgCompoundEntityChild> ecc = EntityCentreBuilder.centreFor(root)
                 .runAutomatically()
+                .addFrontAction(standardNewAction)
                 .addTopAction(standardNewAction).also()
                 .addTopAction(standardDeleteAction).also()
                 .addTopAction(standardSortAction).also()

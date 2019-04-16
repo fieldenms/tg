@@ -5,23 +5,27 @@ import '/resources/polymer/@polymer/polymer/polymer-legacy.js';
  */
 const SELECTOR_EXTENDER = ', slot, [selectable-elements-container]';
 
-export function queryElements (container, selector) {
+export function queryElements (container, selector, lightTillParent) {
     const selectedElements  = container.shadowRoot ? [...container.shadowRoot.querySelectorAll(selector + SELECTOR_EXTENDER)] 
                                                     : [...container.querySelectorAll(selector + SELECTOR_EXTENDER)];
-    return processSelectedElements(selectedElements, selector);
+    return processSelectedElements(selectedElements.filter(element => !isInLightDom(element, lightTillParent)), selector, lightTillParent);
 };
 
-function processSelectedElements (selectedElements, selector) {
+function isInLightDom (element, lightTillParent) {
+    return element && ((element.parentElement && element.parentElement.shadowRoot && element.parentElement.hasAttribute('selectable-elements-container')) || (element.parentElement !== lightTillParent && isInLightDom(element.parentElement, lightTillParent)));
+}
+
+function processSelectedElements (selectedElements, selector, lightTillParent) {
     const extendedSelectedElements = [];
     selectedElements.forEach(element => {
         if (element.matches(selector)) {
             extendedSelectedElements.push(element);
         }
-        if (typeof element.getElements === 'function' && element.hasAttribute('selectable-elements-container')) {
-            extendedSelectedElements.push(...element.getElements(selector));
-        } else if (element.tagName === 'SLOT') {
-            extendedSelectedElements.push(...processSelectedElements(element.assignedNodes(), selector));
-        }
+        if (element.tagName === 'SLOT') {
+            extendedSelectedElements.push(...element.assignedNodes().flatMap(assignedNode => processSelectedElements([assignedNode], selector, assignedNode)))
+        } else if (element.hasAttribute('selectable-elements-container')) {
+            extendedSelectedElements.push(...queryElements(element, selector, lightTillParent));
+        } 
     });
     return extendedSelectedElements;
 }
@@ -30,9 +34,5 @@ export const TgElementSelectorBehavior = {
 
     hostAttributes: {
         'selectable-elements-container': true
-    },
-
-    getElements: function (selector) {
-        return queryElements(this, selector);
     }
 };
