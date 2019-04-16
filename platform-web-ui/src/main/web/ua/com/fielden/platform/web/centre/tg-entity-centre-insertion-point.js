@@ -24,13 +24,14 @@ import '/resources/polymer/@polymer/paper-styles/element-styles/paper-material-s
 import '/resources/polymer/@polymer/neon-animation/animations/fade-in-animation.js';
 import '/resources/polymer/@polymer/neon-animation/animations/fade-out-animation.js';
 import '/resources/centre/tg-entity-centre-styles.js';
+import { tearDownEvent } from '/resources/reflection/tg-polymer-utils.js';
 
 const customStyle = html`
     <custom-style>
         <style>
             .insertion-point-dialog > #insertionPointContent {
                 background-color: white;
-                @apply(--shadow-elevation-2dp);
+                @apply --shadow-elevation-2dp;
             }
             .insertion-point-dialog .title-bar paper-icon-button {
                 transform: scale(-1, -1);
@@ -81,10 +82,9 @@ customStyle.setAttribute('style', 'display: none;');
 document.head.appendChild(customStyle.content);
 
 const template = html`
-    <style include="tg-entity-centre-styles"></style>
     <style>
         :host {
-            @apply(--layout-self-stretch);
+            @apply --layout-self-stretch;
             overflow: auto;
         }
         .truncate {
@@ -119,32 +119,43 @@ const template = html`
             fill: var(--paper-grey-300);
             color: var(--paper-grey-300);
         }
+        .paper-material {
+            background: white;
+            border-radius: 2px;
+            margin: 10px;
+        }
     </style>
-    <paper-material id="pm" hidden$="[[detached]]" class="layout vertical" style="background: white; border-radius: 2px; margin: 10px;">
+    <style include="iron-flex iron-flex-reverse iron-flex-alignment iron-flex-factors iron-positioning tg-entity-centre-styles paper-material-styles"></style>
+    <div id="pm" hidden$="[[detached]]" class="paper-material layout vertical" elevation="1">
         <div hidden>
-            <content select=":not(text):not(template)" id="custom_actions_content"></content>
+            <slot name="insertion-point-child" id="custom_actions_content"></slot>
         </div>
         <div id="insertionPointContent" tabindex='0' class="layout vertical flex relative">
             <div class="title-bar layout horizontal justified center" hidden$="[[!_hasTitleBar(shortDesc)]]">
                 <span class="title-text truncate" style="margin-left:16px;" tooltip-text$="[[longDesc]]">[[shortDesc]]</span>
                 <paper-icon-button class="title-bar-button expand-colapse-button" style="margin-left:10px;margin-right:2px;" icon="icons:open-in-new" on-tap="_expandColapseTap"></paper-icon-button>
             </div>
-            <div id="loadableContent" class="relative flex">
+            <div id="loadableContent" class="relative">
                 <tg-element-loader id="elementLoader"></tg-element-loader>
             </div>
             <div id="custom_actions_container" class="layout horizontal center end-justified" style="padding-right:2px" hidden$="[[!detached]]">
             </div>
         </div>
-    </paper-material>
+    </div>
     <tg-toast id="toaster"></tg-toast>
 `;
 
 Polymer({
     _template: template,
 
-    is: "tg-entity-centre-insertion-point",
+    is: 'tg-entity-centre-insertion-point',
 
-    behaviors: [IronResizableBehavior, IronA11yKeysBehavior, TgTooltipBehavior, TgShortcutProcessingBehavior],
+    behaviors: [
+        IronResizableBehavior,
+        IronA11yKeysBehavior,
+        TgTooltipBehavior,
+        TgShortcutProcessingBehavior
+    ],
 
     properties: {
         activated: {
@@ -226,10 +237,7 @@ Polymer({
         },
 
         keyEventTarget: {
-            type: Object,
-            value: function () {
-                return this.$.insertionPointContent
-            }
+            type: Object
         },
 
         contextRetriever: {
@@ -250,28 +258,31 @@ Polymer({
 
     ready: function () {
         this.triggerElement = this.$.insertionPointContent;
-        //Initialising the custom actions' list.
-        const customActionsList = [];
-        Array.prototype.forEach.call(Polymer.dom(this.$.custom_actions_content).getDistributedNodes(), function (item) {
-            customActionsList.push(item);
-        }.bind(this));
-        this.customActions = customActionsList;
+        setTimeout(function() {
+            // Initialising the custom actions' list.
+            const customActionsList = [];
+            Array.prototype.forEach.call(this.$.custom_actions_content.assignedNodes({ flatten: true }), function (item) {
+                customActionsList.push(item);
+            }.bind(this));
+            this.customActions = customActionsList;
+        }.bind(this), 0);
     },
 
     attached: function () {
-        if (!this.egiBindingAdded) {
-            // cache parent result view, that contains this insertion point
-            this.resultView = this.findResultView();
-            if (this.resultView) {
-                // add all EGI shortcuts to this result view to listen to EGI shotcuts when insertion point is focused
-                this.addOwnKeyBinding(this.resultView._findParentCentre().$.egi.customShortcuts, '_egiShortcutPressed');
-                this.egiBindingAdded = true;
-            }
-        }
+        const self = this;
         this.async(function () {
+            if (!self.egiBindingAdded) {
+                // cache parent result view, that contains this insertion point
+                self.resultView = self.findResultView();
+                if (self.resultView) {
+                    // add all EGI shortcuts to this result view to listen to EGI shotcuts when insertion point is focused
+                    self.addOwnKeyBinding(self.resultView._findParentCentre().$.egi.customShortcuts, '_egiShortcutPressed');
+                    self.egiBindingAdded = true;
+                }
+            }
+            self.keyEventTarget = self.$.insertionPointContent;
             if (this.customActions) {
-                this.customActions.forEach(elem => Polymer.dom(this.$.custom_actions_container).appendChild(elem));
-                Polymer.dom.flush();
+                this.customActions.forEach(elem => this.$.custom_actions_container.appendChild(elem));
             }
         }, 1);
     },
@@ -284,23 +295,23 @@ Polymer({
 
     _customShortcutsChanged: function (newValue, oldValue) {
         this.removeOwnKeyBindings();
-        this.addOwnKeyBinding(newValue, "_shortcutPressed");
+        this.addOwnKeyBinding(newValue, '_shortcutPressed');
     },
 
     /**
      * Creates dynamically the 'dom-bind' template, which hold the dialog for the calendar.
      */
     _createDialog: function () {
-        var dialog = document.createElement('div');
-        dialog.classList.toggle("insertion-point-dialog", true);
-        dialog.classList.toggle("layout", true);
-        dialog.classList.toggle("vertical", true);
-        dialog.style.position = "absolute";
-        dialog.style.top = "2%";
-        dialog.style.left = "2%";
-        dialog.style.width = "96%";
-        dialog.style.height = "96%";
-        dialog.style.zIndex = "1";
+        const dialog = document.createElement('div');
+        dialog.classList.toggle('insertion-point-dialog', true);
+        dialog.classList.toggle('layout', true);
+        dialog.classList.toggle('vertical', true);
+        dialog.style.position = 'absolute';
+        dialog.style.top = '2%';
+        dialog.style.left = '2%';
+        dialog.style.width = '96%';
+        dialog.style.height = '96%';
+        dialog.style.zIndex = '1';
         return dialog;
     },
 
@@ -310,24 +321,22 @@ Polymer({
         }
 
         this.detached = true;
-        Polymer.dom(document.body).appendChild(this._dialog);
-        Polymer.dom(this._dialog).appendChild(this.$.insertionPointContent);
-        Polymer.dom.flush();
+        document.body.appendChild(this._dialog);
+        this._dialog.appendChild(this.$.insertionPointContent);
         this.$.insertionPointContent.focus();
     },
 
     _closeDialog: function () {
-        Polymer.dom(document.body).removeChild(this._dialog);
+        document.body.removeChild(this._dialog);
         this.detached = false;
-        Polymer.dom(this.$.pm).appendChild(this.$.insertionPointContent);
-        Polymer.dom.flush();
+        this.$.pm.appendChild(this.$.insertionPointContent);
         if (this.contextRetriever && this.contextRetriever().$.centreResultContainer) {
             this.contextRetriever().$.centreResultContainer.focus();
         }
     },
 
     _getElement: function (customAction) {
-        var self = this;
+        const self = this;
         if (self._element) {
             return Promise.resolve(self._element);
         } else {
@@ -378,7 +387,7 @@ Polymer({
      * customAction -- an action that was actioned by user and may require showing a diglog (e.g. with master)
      */
     activate: function (customAction) {
-        var self = this;
+        const self = this;
         if (this.activated === true) {
             return self._getElement(customAction)
                 .then(function (element) {
@@ -393,22 +402,22 @@ Polymer({
                     self._element = element;
                     self._element.selectionCriteriaEntity = self.selectionCriteriaEntity;
                     self._element.isCentreRunning = self.isCentreRunning;
-                    self._element.addEventListener("retrieved-entities-changed", function (ev) {
+                    self._element.addEventListener('retrieved-entities-changed', function (ev) {
                         self.retrievedEntities = this.retrievedEntities;
                     });
                     self._element.retrievedEntities = self.retrievedEntities;
-                    self._element.addEventListener("retrieved-totals-changed", function (ev) {
+                    self._element.addEventListener('retrieved-totals-changed', function (ev) {
                         self.retrievedTotals = this.retrievedTotals;
                     });
                     self._element.retrievedTotals = self.retrievedTotals;
                     self._element.centreSelection = self.centreSelection;
-                    self._element.addEventListener("column-properties-mapper-changed", function (ev) {
+                    self._element.addEventListener('column-properties-mapper-changed', function (ev) {
                         self.columnPropertiesMapper = this.columnPropertiesMapper;
                     });
                     self._element.columnPropertiesMapper = self.columnPropertiesMapper;
                     self._element.customEventTarget = self;
 
-                    var promise = customAction._onExecuted(null, element, null);
+                    const promise = customAction._onExecuted(null, element, null);
                     if (promise) {
                         return promise
                             .then(function () {
@@ -437,16 +446,15 @@ Polymer({
     },
 
     _adjustView: function (detached) {
-        var self = this;
         if (this.$.elementLoader.prefDim && detached === false) {
-            var prefDim = this.$.elementLoader.prefDim;
+            const prefDim = this.$.elementLoader.prefDim;
             this.$.pm.style.width = prefDim.width() + prefDim.widthUnit;
-            this.$.loadableContent.style.removeProperty("width");
+            this.$.loadableContent.style.removeProperty('width');
             this.$.loadableContent.style.height = prefDim.height() + prefDim.heightUnit;
         } else {
-            this.$.pm.style.removeProperty("width");
-            this.$.loadableContent.style.width = "100%";
-            this.$.loadableContent.style.height = "100%";
+            this.$.pm.style.removeProperty('width');
+            this.$.loadableContent.style.width = '100%';
+            this.$.loadableContent.style.height = '100%';
         }
         this.updateStyles();
         this.notifyResize();
@@ -458,10 +466,7 @@ Polymer({
         } else {
             this._showDialog();
         }
-        if (event.stopPropagation) event.stopPropagation();
-        if (event.preventDefault) event.preventDefault();
-        event.cancelBubble = true;
-        event.returnValue = false;
+        tearDownEvent(event);
     },
 
     _hasTitleBar: function (shortDesc) {
@@ -485,9 +490,9 @@ Polymer({
      * Finds parent result view for this insertion point. It should be done only in 'attached' insertion point state.
      */
     findResultView: function () {
-        let parent = this;
+        let parent = this.parentElement.assignedSlot;
         while (parent && !parent.classList.contains('centreResultView')) {
-            parent = parent.parentElement;
+            parent = parent.parentElement || parent.getRootNode().host;
         }
         return parent;
     }

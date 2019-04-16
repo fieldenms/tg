@@ -489,7 +489,7 @@ const TgEntityCentreBehaviorImpl = {
         self._selectedView = 0;
         self._showProgress = false;
         //Configures the egi's margin.
-        const insertionPoints = this.querySelectorAll('tg-entity-centre-insertion-point');// FIXME
+        const insertionPoints = this.shadowRoot.querySelectorAll('tg-entity-centre-insertion-point');
         this.$.egi.showMarginAround = insertionPoints.length > 0;
 
         self._postRun = (function (criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, summary, columnWidths, visibleColumnsWithOrder) {
@@ -1013,7 +1013,7 @@ const TgEntityCentreBehaviorImpl = {
      */
     canLeave: function () {
         // Check whether all insertion points can be left.
-        const insertionPoints = this.querySelectorAll('tg-entity-centre-insertion-point'); // FIXME
+        const insertionPoints = this.shadowRoot.querySelectorAll('tg-entity-centre-insertion-point');
         for (let insPoIndex = 0; insPoIndex < insertionPoints.length; insPoIndex++) {
             const elementWithCanLeave = insertionPoints[insPoIndex].querySelector('.canLeave');
             const canLeaveChild = elementWithCanLeave && elementWithCanLeave.canLeave();

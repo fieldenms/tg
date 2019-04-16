@@ -19,7 +19,7 @@ public class CentreToolbar implements IToolbarConfig {
     protected final InnerTextElement topLevelPlacement = new InnerTextElement("<!-- GENERATED FUNCTIONAL ACTIONS: -->\n<!--@functional_actions-->");
 
     protected DomElement createToolbarElement() {
-        return new DomContainer().add(topLevelPlacement, configButton(), pagination(), refreshButton());
+        return new DomContainer().add(topLevelPlacement, configButton(), pagination("standart-action"), refreshButton());
     }
 
     @Override
@@ -64,11 +64,11 @@ public class CentreToolbar implements IToolbarConfig {
         return Arrays.asList("ctrl+e");
     }
 
-    public static DomElement pagination() {
+    public static DomElement pagination(final String slot) {
         return new DomContainer()
                 .add(new DomElement("paper-icon-button")
                         .clazz("revers", "standart-action")
-                        .attr("slot", "standart-action")
+                        .attr("slot", slot)
                         .attr("shortcut", "ctrl+up")
                         .attr("icon", "hardware:keyboard-tab")
                         .attr("on-tap", "firstPage")
@@ -76,7 +76,7 @@ public class CentreToolbar implements IToolbarConfig {
                         .attr("tooltip-text", "First page, Ctrl&nbsp+&nbsp<span style=\"font-size:18px;font-weight:bold\">&#8593</span>"))
                 .add(new DomElement("paper-icon-button")
                         .clazz("standart-action")
-                        .attr("slot", "standart-action")
+                        .attr("slot", slot)
                         .attr("shortcut", "ctrl+left")
                         .attr("icon", "hardware:keyboard-backspace")
                         .attr("on-tap", "prevPage")
@@ -84,11 +84,11 @@ public class CentreToolbar implements IToolbarConfig {
                         .attr("tooltip-text", "Previous page, Ctrl&nbsp+&nbsp<span style=\"font-size:18px;font-weight:bold\">&#8592</span>"))
                 .add(new DomElement("span")
                         .clazz("standart-action")
-                        .attr("slot", "standart-action")
+                        .attr("slot", slot)
                         .add(new InnerTextElement("[[currPageFeedback(pageNumberUpdated, pageCountUpdated)]]")))
                 .add(new DomElement("paper-icon-button")
                         .clazz("revers", "standart-action")
-                        .attr("slot", "standart-action")
+                        .attr("slot", slot)
                         .attr("shortcut", "ctrl+right")
                         .attr("icon", "hardware:keyboard-backspace")
                         .attr("on-tap", "nextPage")
@@ -96,7 +96,7 @@ public class CentreToolbar implements IToolbarConfig {
                         .attr("tooltip-text", "Next page, Ctrl&nbsp+&nbsp<span style=\"font-size:18px;font-weight:bold\">&#8594</span>"))
                 .add(new DomElement("paper-icon-button")
                         .clazz("standart-action")
-                        .attr("slot", "standart-action")
+                        .attr("slot", slot)
                         .attr("shortcut", "ctrl+down")
                         .attr("icon", "hardware:keyboard-tab")
                         .attr("on-tap", "lastPage")
