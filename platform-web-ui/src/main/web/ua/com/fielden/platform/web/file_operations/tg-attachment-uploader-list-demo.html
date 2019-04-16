@@ -2,58 +2,58 @@
 <html>
 
 <head>
-	<meta charset="utf-8">
-	<meta name="viewport" content="width=device-width, minimum-scale=1.0, initial-scale=1.0, user-scalable=yes">
-	<title>Attachment Uploader List Demo</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, minimum-scale=1.0, initial-scale=1.0, user-scalable=yes">
+    <title>Attachment Uploader List Demo</title>
 
-	<script src="/resources/polymer/webcomponentsjs/webcomponents-lite.js"></script>
-	<link rel="import" href="/resources/polymer/polymer/polymer.html">
-	<link rel="import" href="/resources/file_operations/tg-attachment-uploader-list.html">
-
-
-	<style is="custom-style">
-		body {
-			font-family: 'Roboto', 'Helvetica Neue', 'Helvetica', 'Arial',
-			'sans-serif';
-			font-size: 10pt;
-			background: white;
-			-webkit-font-smoothing: antialiased;
-		}
-	</style>
-
+    <script src="/resources/polymer/@webcomponents/webcomponentsjs/webcomponents-bundle.js"></script>
+    <script type="module">
+        import '/resources/polymer/@polymer/iron-flex-layout/iron-flex-layout-classes.js'; // fullbleed class
+        import '/resources/polymer/@polymer/paper-styles/paper-styles-classes.js'; // Roboto font
+        import '/resources/file_operations/tg-attachment-uploader-list.js';
+    </script>
+    <style>
+        body {
+            font-family: 'Roboto', 'Helvetica Neue', 'Helvetica', 'Arial',
+            'sans-serif';
+            font-size: 10pt;
+            background: white;
+            -webkit-font-smoothing: antialiased;
+        }
+    </style>
 </head>
 
 <body unresolved class="fullbleed">
-
-	<div style="display: flex; flex-direction: column; width: 400px; height: 300px; overflow: auto; border:1px solid #ff5555; padding: 8px;">
-	<template id="t" is="dom-bind">
-		<!-- mime-types-accepted='.csv,.txt,text/plain,text/csv' -->
-		<tg-attachment-uploader-list 
-			debug
-			id="attachmentUploader" 
-			upload-size-limit-kb='10240' 
-			mime-types-accepted='image/png,image/jpeg,application/pdf,application/zip,.csv,.txt,text/plain,text/csv,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' 
-			url="/upload-attachment"></tg-attachment-uploader-list>
-	</template>
-	</div>
-	
+    <div style="display: flex; flex-direction: column; width: 400px; height: 300px; overflow: auto; border:1px solid #ff5555; padding: 8px;">
+        <dom-bind>
+            <template id="t">
+                <!-- mime-types-accepted='.csv,.txt,text/plain,text/csv' -->
+                <tg-attachment-uploader-list 
+                    debug
+                    id="attachmentUploader" 
+                    upload-size-limit-kb='10240' 
+                    mime-types-accepted='image/png,image/jpeg,application/pdf,application/zip,.csv,.txt,text/plain,text/csv,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' 
+                    url="/upload-attachment"></tg-attachment-uploader-list>
+            </template>
+        </dom-bind>
+    </div>
 </body>
 
 <script>
-	var t = document.querySelector('#t');
+    const t = document.querySelector('#t');
 
-	t.addEventListener('dom-change', function() {
-	    const uploaderList = t.$.attachmentUploader;
-	    
-	    uploaderList.processUploadingStopped = function() {
-	        console.log('COMPLETED UPLOADING. Uploaded files:', uploaderList.numberOfUploaded, 'Attachments created:', uploaderList.attachments.length, 'Aborted files:', uploaderList.numberOfAborted, 'Failed files:', uploaderList.numberOfFailed);
-	        uploaderList.attachments.forEach( att => console.log('Attachment: id=', att.id, 'fileName:', att.origFileName, 'SHA1:', att.sha1) );   
-	    }
-	    
-	    uploaderList.processUploadingStarted = function(uploader) {
-	        console.log('STARTED UPLOADING of', uploader.fileName);
-	    }
-	}.bind(t));
+    t.addEventListener('dom-change', function() {
+        const uploaderList = t.$.attachmentUploader;
+        
+        uploaderList.processUploadingStopped = function() {
+            console.log('COMPLETED UPLOADING. Uploaded files:', uploaderList.numberOfUploaded, 'Attachments created:', uploaderList.attachments.length, 'Aborted files:', uploaderList.numberOfAborted, 'Failed files:', uploaderList.numberOfFailed);
+            uploaderList.attachments.forEach( att => console.log('Attachment: id=', att.id, 'fileName:', att.origFileName, 'SHA1:', att.sha1) );   
+        }
+        
+        uploaderList.processUploadingStarted = function(uploader) {
+            console.log('STARTED UPLOADING of', uploader.fileName);
+        }
+    }.bind(t));
 </script>
 
 </html>
