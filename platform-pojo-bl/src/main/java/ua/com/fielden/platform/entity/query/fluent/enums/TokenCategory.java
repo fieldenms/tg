@@ -27,7 +27,6 @@ public enum TokenCategory {
     NULL_OPERATOR,
     EXISTS_OPERATOR,
     LIKE_OPERATOR,
-    ILIKE_OPERATOR,
     IN_OPERATOR,
     ANY_OPERATOR,
     ALL_OPERATOR,

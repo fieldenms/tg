@@ -15,7 +15,7 @@ public interface ISingleOperand extends IPropertyCollector {
      * 
      * @return
      */
-    Class type();
+    Class<?> type();
 
     Object hibType();
 

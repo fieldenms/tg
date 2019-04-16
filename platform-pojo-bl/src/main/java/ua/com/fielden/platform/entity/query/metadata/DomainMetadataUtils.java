@@ -3,15 +3,12 @@ package ua.com.fielden.platform.entity.query.metadata;
 import static java.lang.String.format;
 import static org.apache.commons.lang.StringUtils.isNotEmpty;
 import static ua.com.fielden.platform.entity.AbstractEntity.ID;
-import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
 import static ua.com.fielden.platform.entity.AbstractUnionEntity.unionProperties;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.expr;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 import static ua.com.fielden.platform.reflection.AnnotationReflector.getAnnotation;
 import static ua.com.fielden.platform.reflection.AnnotationReflector.isContextual;
 import static ua.com.fielden.platform.reflection.Finder.getFieldByName;
-import static ua.com.fielden.platform.reflection.Reflector.getKeyMemberSeparator;
-import static ua.com.fielden.platform.utils.EntityUtils.isEntityType;
 import static ua.com.fielden.platform.utils.EntityUtils.isUnionEntityType;
 
 import java.lang.reflect.Field;
@@ -21,9 +18,7 @@ import java.util.List;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.AbstractUnionEntity;
-import ua.com.fielden.platform.entity.DynamicEntityKey;
 import ua.com.fielden.platform.entity.annotation.Calculated;
-import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
 import ua.com.fielden.platform.entity.query.exceptions.EqlException;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ICaseWhenFunctionWhen;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IFromAlias;
@@ -32,7 +27,6 @@ import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfa
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.ExpressionModel;
 import ua.com.fielden.platform.expression.ExpressionText2ModelConverter;
-import ua.com.fielden.platform.utils.Pair;
 
 public class DomainMetadataUtils {
 
@@ -53,65 +47,6 @@ public class DomainMetadataUtils {
         }
 
         return expressionModelInProgress.otherwise().val(null).end().model();
-    }
-
-    public static ExpressionModel getVirtualKeyPropForEntityWithCompositeKey(final Class<? extends AbstractEntity<DynamicEntityKey>> entityType, final List<Pair<Field, Boolean>> keyMembers) {
-        return composeExpression(keyMembers, getKeyMemberSeparator(entityType));
-    }
-
-    private static String getKeyMemberConcatenationExpression(final Field keyMember) {
-        if (PropertyDescriptor.class != keyMember.getType() && isEntityType(keyMember.getType())) {
-            return keyMember.getName() + "." + KEY;
-        } else {
-            return keyMember.getName();
-        }
-    }
-
-    private static ExpressionModel composeExpression(final List<Pair<Field, Boolean>> original, final String separator) {
-        ExpressionModel currExp = null;
-        Boolean currExpIsOptional = null;
-
-        for (final Pair<Field, Boolean> originalField : original) {
-            currExp = composeTwo(new Pair<ExpressionModel, Boolean>(currExp, currExpIsOptional), originalField, separator);
-            currExpIsOptional = currExpIsOptional != null ? currExpIsOptional && originalField.getValue() : originalField.getValue();
-        }
-
-        return currExp;
-    }
-
-    private static ExpressionModel concatTwo(final ExpressionModel first, final String secondPropName, final String separator) {
-        return expr().concat().expr(first).with().val(separator).with().prop(secondPropName).end().model();
-    }
-
-    private static ExpressionModel composeTwo(final Pair<ExpressionModel, Boolean> first, final Pair<Field, Boolean> second, final String separator) {
-        final ExpressionModel firstModel = first.getKey();
-        final Boolean firstIsOptional = first.getValue();
-
-        final String secondPropName = getKeyMemberConcatenationExpression(second.getKey());
-        final boolean secondPropIsOptional = second.getValue();
-
-        if (first.getKey() == null) {
-            return expr().prop(secondPropName).model();
-        } else {
-            if (firstIsOptional) {
-                if (secondPropIsOptional) {
-                    return expr().caseWhen().expr(firstModel).isNotNull().and().prop(secondPropName).isNotNull().then().expr(concatTwo(firstModel, secondPropName, separator)). //
-                    when().expr(firstModel).isNotNull().and().prop(secondPropName).isNull().then().expr(firstModel). //
-                    when().prop(secondPropName).isNotNull().then().prop(secondPropName). //
-                    otherwise().val(null).endAsStr(256).model();
-                } else {
-                    return expr().caseWhen().expr(firstModel).isNotNull().then().expr(concatTwo(firstModel, secondPropName, separator)). //
-                    otherwise().prop(secondPropName).endAsStr(256).model();
-                }
-            } else {
-                if (secondPropIsOptional) {
-                    return expr().caseWhen().prop(secondPropName).isNotNull().then().expr(concatTwo(firstModel, secondPropName, separator)). //
-                    otherwise().expr(firstModel).endAsStr(256).model();
-                } else {
-                    return concatTwo(firstModel, secondPropName, separator);
-                }
-            }
-        }
     }
 
     public static ExpressionModel extractExpressionModelFromCalculatedProperty(final Class<? extends AbstractEntity<?>> entityType, final Field calculatedPropfield) throws Exception {

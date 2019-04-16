@@ -119,7 +119,7 @@ public class EntProp implements ISingleOperand {
     }
 
     @Override
-    public Class type() {
+    public Class<?> type() {
         return propType;
     }
 

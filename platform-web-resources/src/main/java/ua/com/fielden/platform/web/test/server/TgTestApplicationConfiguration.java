@@ -50,12 +50,14 @@ public class TgTestApplicationConfiguration extends Component {
             final OldVersionResource oldVersionResource = new OldVersionResource(serverRestUtil);
             getDefaultHost().attach("/v0", oldVersionResource);
 
+            // application configuration
+            final IWebUiConfig webApp = injector.getInstance(IWebUiConfig.class);
             // attach system resources, which should be beyond the version scope
             // the interactive login page resource is considered one of the system resources, which does not require guarding
             getDefaultHost().attach(LoginResource.BINDING_PATH, new LoginResourceFactory(injector.getInstance(RestServerUtil.class), injector));
             getDefaultHost().attach(LoginInitiateResetResource.BINDING_PATH, new LoginInitiateResetResourceFactory(injector));
             getDefaultHost().attach(LoginCompleteResetResource.BINDING_PATH, new LoginCompleteResetResourceFactory(injector, "Robust solutions serve the sociaty well."));
-            getDefaultHost().attach(LogoutResource.BINDING_PATH, new LogoutResourceFactory(injector));
+            getDefaultHost().attach(LogoutResource.BINDING_PATH, new LogoutResourceFactory(webApp.getDomainName(), webApp.getPath(), injector));
 
             // FIXME The old resources need to be completely removed from the platform
 //            getDefaultHost().attach(
@@ -85,7 +87,6 @@ public class TgTestApplicationConfiguration extends Component {
 //                            BasicServerApplication.companionObjectTypes(applicationDomainProvider.domainTypes()))
 //                    );
 
-            final IWebUiConfig webApp = injector.getInstance(IWebUiConfig.class);
             getDefaultHost().attach( // TODO potentially versioning is desirable "/v1"
                     new WebUiResources(
                             getContext().createChildContext(), injector,
