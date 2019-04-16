@@ -747,7 +747,7 @@ public class EntQuery implements ISingleOperand {
     }
 
     @Override
-    public Class type() {
+    public Class<?> type() {
         return resultType;
     }
 
@@ -781,9 +781,6 @@ public class EntQuery implements ISingleOperand {
     public boolean equals(final Object obj) {
         if (this == obj) {
             return true;
-        }
-        if (obj == null) {
-            return false;
         }
         if (!(obj instanceof EntQuery)) {
             return false;
