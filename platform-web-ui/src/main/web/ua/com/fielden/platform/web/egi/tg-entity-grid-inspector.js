@@ -25,6 +25,7 @@ import { IronA11yKeysBehavior } from '/resources/polymer/@polymer/iron-a11y-keys
 import { IronResizableBehavior } from '/resources/polymer/@polymer/iron-resizable-behavior/iron-resizable-behavior.js';
 
 import { TgEgiDataRetrievalBehavior } from '/resources/egi/tg-egi-data-retrieval-behavior.js';
+import { TgElementSelectorBehavior } from '/resources/components/tg-element-selector-behavior.js';
 import { TgTooltipBehavior } from '/resources/components/tg-tooltip-behavior.js';
 import { TgDragFromBehavior } from '/resources/components/tg-drag-from-behavior.js';
 import { TgShortcutProcessingBehavior } from '/resources/actions/tg-shortcut-processing-behavior.js';
@@ -39,8 +40,10 @@ const template = html`
         .paper-material {
             background-color: white;
             border-radius: 2px;
-            @apply --layout-vertical;
-            @apply --layout-relative;
+            --paper-material: {
+                @apply --layout-vertical;
+                @apply --layout-relative;
+            }
         }
         .paper-material[fit-to-height] {
             @apply --layout-flex;
@@ -48,6 +51,8 @@ const template = html`
         .grid-toolbar {
             position: relative;
             overflow: hidden;
+            flex-grow: 0;
+            flex-shrink: 0;
             @apply --layout-horizontal;
             @apply --layout-wrap;
         }
@@ -79,7 +84,7 @@ const template = html`
             overflow: auto;
             z-index: 0;
             @apply --layout-vertical;
-            @apply --layout-flex;
+            @apply --layout-flex-auto;
             @apply --layout-relative;
         }
         .noselect {
@@ -272,7 +277,7 @@ const template = html`
     <slot id="column_selector" name="property-column" hidden></slot>
     <slot id="primary_action_selector" name="primary-action" hidden></slot>
     <!--EGI template-->
-    <div class="paper-material" elevation="1" style$="[[_calcMaterialStyle(showMarginAround)]]" fit-to-height$="[[fitToHeight]]">
+    <div id="paperMaterial" class="paper-material" elevation="1" style$="[[_calcMaterialStyle(showMarginAround)]]" fit-to-height$="[[fitToHeight]]">
         <!--Table toolbar-->
         <div class="grid-toolbar">
             <paper-progress id="progressBar" hidden$="[[!_showProgress]]"></paper-progress>
@@ -284,6 +289,10 @@ const template = html`
             </div>
         </div>
         <div id="baseContainer" on-scroll="_handleScrollEvent">
+            <!--Shadow container that is displayed if container is not fixed-->
+            <div class="shadow-container" style="z-index:1;">
+                <div class="shadow-box" style$="[[_calcShadows(headerFixed, _showTopShadow)]]"></div>
+            </div>
             <!-- Table header -->
             <div class="table-header-row" style$="[[_calcHeaderStyle(headerFixed, _showTopShadow)]]">
                 <div class="drag-anchor cell" hidden$="[[!canDragFrom]]" style$="[[_calcDragBoxStyle(dragAnchorFixed)]]"></div>
@@ -325,7 +334,7 @@ const template = html`
                     </div>
                     <div class="fixed-columns-container" hidden$="[[!numOfFixedCols]]" style$="[[_calcFixedColumnContainerStyle(canDragFrom, checkboxVisible, primaryAction, numOfFixedCols)]]">
                         <template is="dom-repeat" items="[[fixedColumns]]" as="column">
-                            <tg-egi-cell class="cell" selected$="[[egiEntity.selected]]" over$="[[egiEntity.over]]" column="[[column]]" egi-entity="[[egiEntity]]" style$="[[_calcColumnStyle(column, column.width, column.growFactor, 'true')]]" tooltip-text$="[[_getTooltip(egiEntity.entity, column, column.customAction)]]" with-action$="[[hasAction(egiEntity.entity, column)]]" on-tap="_tapAction"></tg-egi-cell>
+                            <tg-egi-cell class="cell" selected$="[[egiEntity.selected]]" over$="[[egiEntity.over]]" column="[[column]]" egi-entity="[[egiEntity]]" style$="[[_calcColumnStyle(column, column.width, column.growFactor, 'true')]]" tooltip-text$="[[_getTooltip(egiEntity.entity, column, column.customAction)]]" with-action$="[[hasAction(egiEntity.entity, column)]]" on-tap="_tapFixedAction"></tg-egi-cell>
                         </template>
                     </div>
                     <template is="dom-repeat" items="[[columns]]" as="column">
@@ -528,15 +537,18 @@ Polymer({
         //Scrolling related properties.
         dragAnchorFixed: {
             type: Boolean,
-            value: false
+            value: false,
+            observer: "_dragAnchorFixedChanged"
         },
         checkboxesFixed: {
             type: Boolean,
-            value: false
+            value: false,
+            observer: "_checkboxesFixedChanged"
         },
         checkboxesWithPrimaryActionsFixed: {
             type: Boolean,
-            value: false
+            value: false,
+            observer: "_checkboxesWithPrimaryActionsFixedChanged"
         },
         numOfFixedCols: {
             type: Number,
@@ -591,7 +603,7 @@ Polymer({
         _openDropDown: Function
     },
 
-    behaviors: [TgEgiDataRetrievalBehavior, TgTooltipBehavior, IronResizableBehavior, IronA11yKeysBehavior, TgShortcutProcessingBehavior, TgDragFromBehavior],
+    behaviors: [TgEgiDataRetrievalBehavior, TgTooltipBehavior, IronResizableBehavior, IronA11yKeysBehavior, TgShortcutProcessingBehavior, TgDragFromBehavior, TgElementSelectorBehavior],
 
     observers: [
         "_columnsChanged(columns, fixedColumns)",
@@ -949,20 +961,17 @@ Polymer({
     },
 
     _updateColumns: function (resultantColumns) {
-        const mergedColumns = this.fixedColumns.concat(this.columns);
-        if (!this._reflector.equalsEx(mergedColumns, resultantColumns)) {
-            this.fixedColumns = resultantColumns.splice(0, this.numOfFixedCols);
-            this.columns = resultantColumns;
-            const columnWithGrowFactor = this.columns.find((item) => item.growFactor > 0);
-            if (!columnWithGrowFactor && this.columns.length > 0) {
-                this.set("columns." + (this.columns.length - 1) + ".growFactor", 1);
-                const column = this.columns[this.columns.length - 1];
-                const parameters = {};
-                parameters[column.property] = {
-                    growFactor: 1
-                }
-                this.fire("tg-egi-column-change", parameters);
+        this.fixedColumns = resultantColumns.splice(0, this.numOfFixedCols);
+        this.columns = resultantColumns;
+        const columnWithGrowFactor = this.columns.find((item) => item.growFactor > 0);
+        if (!columnWithGrowFactor && this.columns.length > 0) {
+            this.set("columns." + (this.columns.length - 1) + ".growFactor", 1);
+            const column = this.columns[this.columns.length - 1];
+            const parameters = {};
+            parameters[column.property] = {
+                growFactor: 1
             }
+            this.fire("tg-egi-column-change", parameters);
         }
         this._triggerShadowRecalulation();
     },
@@ -970,6 +979,7 @@ Polymer({
     //Event listeners
     _resizeEventListener: function() {
         this._handleScrollEvent();
+        this._triggerShadowRecalulation();
     },
 
     _handleScrollEvent: function () {
@@ -1019,6 +1029,10 @@ Polymer({
 
     _checkSelectionState: function (event) {
         this._rangeSelection = event.shiftKey;
+    },
+
+    _tapFixedAction: function (e, detail) {
+        this.tap(this.filteredEntities[e.model.parentModel.entityIndex], e.model.index, this.fixedColumns[e.model.index]);
     },
 
     _tapAction: function (e, detail) {
@@ -1401,8 +1415,34 @@ Polymer({
         return shadowStyle;
     },
 
+    _calcShadows: function (headerFixed, _showTopShadow) {
+        return "box-shadow: inset 0px " + (!headerFixed && _showTopShadow? "6px " : "0px") + " 6px " + (!headerFixed && _showTopShadow? "-5px " : "-200px ") + " rgba(0,0,0,0.7);position:absolute;top:0;left:0;right:0;height:5px;";
+    },
+
     // Observers
-    _numOfFixedColsChanged: function () {
+    _dragAnchorFixedChanged: function (newValue) {
+        if (!newValue) {
+            this.checkboxesFixed = false;
+        }
+    },
+    _checkboxesFixedChanged: function (newValue) {
+        if (newValue) {
+            this.dragAnchorFixed = true;
+        } else {
+            this.checkboxesWithPrimaryActionsFixed = false;
+        }
+    },    
+    _checkboxesWithPrimaryActionsFixedChanged: function (newValue) {
+        if (newValue) {
+            this.checkboxesFixed = true;
+        } else {
+            this.numOfFixedCols = 0;
+        }
+    },
+    _numOfFixedColsChanged: function (newValue) {
+        if (newValue > 0) {
+            this.checkboxesWithPrimaryActionsFixed = true;
+        }
         this._updateColumns(this.fixedColumns.concat(this.columns));
     },
 
@@ -1453,14 +1493,14 @@ Polymer({
 
     _heightRelatedPropertiesChanged: function (visibleRowCount, rowHeight, constantHeight, fitToHeight, summaryFixed, _totalsRowCount) {
         //Constant height take precedence over visible row count which takes precedence over default behaviour that extends the EGI's height to it's content height
-        this.style.removeProperty("height");
-        this.style.removeProperty("min-height");
+        this.$.paperMaterial.style.removeProperty("height");
+        this.$.paperMaterial.style.removeProperty("min-height");
         this.$.baseContainer.style.removeProperty("height");
         this.$.baseContainer.style.removeProperty("max-height");
         if (constantHeight) { //Set the height for the egi
-            this.style["height"] = constantHeight;
+            this.$.paperMaterial.style["height"] = constantHeight;
         } else if (visibleRowCount > 0) { //Set the height or max height for the scroll container so that only specified number of rows become visible.
-            this.style["min-height"] = "fit-content";
+            this.$.paperMaterial.style["min-height"] = "fit-content";
             const rowCount = visibleRowCount + (summaryFixed ? _totalsRowCount : 0);
             const bottomMargin = this.getComputedStyleValue('--egi-bottom-margin').trim() || "15px";
             const height = "calc(3rem + " + rowCount + " * " + rowHeight + " + " + rowCount + "px" + (summaryFixed && _totalsRowCount > 0 ? (" + " + bottomMargin) : "") + ")";

@@ -16,7 +16,7 @@ const template = html`
             @apply --layout-horizontal;
             @apply --layout-center;
             @apply --layout-relative;
-            padding: 0 0.6rem;
+            padding: 0 var(--egi-cell-padding, 0.6rem);
         }
         .value-container {
             @apply --layout-relative;

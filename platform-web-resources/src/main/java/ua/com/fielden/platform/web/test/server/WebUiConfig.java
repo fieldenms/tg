@@ -696,7 +696,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 .setLayoutFor(Device.DESKTOP, Optional.empty(), desktopLayout)
                 .setLayoutFor(Device.TABLET, Optional.empty(), tabletLayout)
                 .setLayoutFor(Device.MOBILE, Optional.empty(), mobileLayout)
-                .withDimensions(PrefDim.mkDim("'100%'", "'100%'"))
+                .withDimensions(PrefDim.mkDim("'50%'", "'400px'"))
                 .done();
 
         final IMaster<TgEntityForColourMaster> masterConfigForColour = new SimpleMasterBuilder<TgEntityForColourMaster>().forEntity(TgEntityForColourMaster.class)
@@ -1391,7 +1391,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
                             .icon("assignment-ind")
                             .shortDesc("Function 4 (TgCentreInvokerWithCentreContext)")
                             .longDesc("Functional context-dependent action 4 (TgCentreInvokerWithCentreContext)")
-                            .prefDimForView(mkDim("document.body.clientWidth / 4 + 'px'", "'400px'"))
+                            .prefDimForView(mkDim("'80%'", "'400px'"))
                             .withNoParentCentreRefresh()
                             .build()
                     ).endTopActionsGroup().also().beginTopActionsGroup("group 3");

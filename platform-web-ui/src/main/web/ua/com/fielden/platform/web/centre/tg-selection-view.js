@@ -151,7 +151,7 @@ Polymer({
     },
 
     _shortcutPressed: function (e) {
-        this.processShortcut(e, ['paper-button', 'tg-ui-action']);
+        this.processShortcut(e, ['paper-button', 'tg-ui-action', 'paper-icon-button']);
     },
 
     _computeConfigButtonDisabled: function (saveAsName) {
