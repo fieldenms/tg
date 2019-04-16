@@ -609,7 +609,7 @@ Polymer({
         if (newValue === true && this._isSpinnerRequired === true) {
             this._startSpinnerTimer = setTimeout(this._startSpinnerCallback.bind(this), 700);
         } else {
-            // FIXME this.$.spinner.style.display = 'none';
+            this.$.spinner.style.display = 'none';
         }
     },
 

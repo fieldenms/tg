@@ -951,7 +951,7 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
         final DomContainer functionalActionsDom = new DomContainer();
 
         for (int i = 0; i < actionGroups.size(); i++) {
-            final DomElement groupElement = new DomElement("div").attr("slot", "entity-specific-action").clazz("entity-specific-action", i == 0 ? "first-group" : "group");
+            final DomElement groupElement = new DomElement("div").attr("selectable-elements-container", null).attr("slot", "entity-specific-action").clazz("entity-specific-action", i == 0 ? "first-group" : "group");
             for (final FunctionalActionElement el : actionGroups.get(i)) {
                 importPaths.add(el.importPath());
                 groupElement.add(el.render());

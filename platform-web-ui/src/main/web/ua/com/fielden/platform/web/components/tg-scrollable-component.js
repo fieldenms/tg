@@ -3,6 +3,7 @@ import '/resources/polymer/@polymer/iron-flex-layout/iron-flex-layout.js';
 import '/app/tg-app-config.js'
 
 import {IronResizableBehavior} from '/resources/polymer/@polymer/iron-resizable-behavior/iron-resizable-behavior.js';
+import { FlattenedNodesObserver } from '/resources/polymer/@polymer/polymer/lib/utils/flattened-nodes-observer.js';
 import {Polymer} from '/resources/polymer/@polymer/polymer/lib/legacy/polymer-fn.js';
 import {html} from '/resources/polymer/@polymer/polymer/lib/utils/html-tag.js';
 
@@ -25,7 +26,7 @@ const template = html`
         }
     </style>
     <div id="scrollablePanel" on-scroll="_contentScrolled" class="webkit-scroll-inertia">
-        <slot></slot>
+        <slot id="content_selector"></slot>
     </div>
     <div id="shadowContainer"></div>
     <tg-app-config id="appConfig"></tg-app-config>`;
@@ -47,22 +48,12 @@ Polymer({
 
     ready: function () {
         this.addEventListener("iron-resize", this._resizeEventListener.bind(this));
-        this._mutationConfig = {childList: true, subtree: true};
-        const observer = mutationList => {
-            this.async(function () {
-                this._resizeEventListener();
-            }, 1);
-        };
-        this._mutationObserver = new MutationObserver(observer);
-
+        //Add layout finished in case if this container may slot the tg-flex-layout component.
+        this.addEventListener("layout-finished", this._resizeEventListener.bind(this));
     },
 
     attached: function () {
-        this._mutationObserver.observe(this.$.scrollablePanel, this._mutationConfig);
-    },
-
-    detached: function () {
-        this._mutationObserver.disconnect();
+        this.async(this._resizeEventListener, 1);
     },
 
     _resizeEventListener: function (event, details) {
@@ -87,10 +78,10 @@ Polymer({
         if (scrollTarget) {
             let shadowStyle = "";
             if (scrollTarget.scrollTop) {
-                shadowStyle += "inset 0 3px 6px -2px rgba(0,0,0,0.7)";
+                shadowStyle += "inset 0 6px 6px -6px rgba(0,0,0,0.7)";
             }
             if (Math.ceil(scrollTarget.scrollTop + scrollTarget.offsetHeight) < scrollTarget.scrollHeight) {
-                shadowStyle += (shadowStyle ? ", " : "") + "inset 0 -3px 6px -2px rgba(0,0,0,0.7)";
+                shadowStyle += (shadowStyle ? ", " : "") + "inset 0 -6px 6px -6px rgba(0,0,0,0.7)";
             } else if (e && this.endOfScroll) {
                 this.endOfScroll(e);
             }

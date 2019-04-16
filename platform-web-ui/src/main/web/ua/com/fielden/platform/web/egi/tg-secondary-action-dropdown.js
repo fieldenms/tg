@@ -16,6 +16,7 @@ const template = html`
             background-color: white;
             box-shadow: 0px 2px 6px #ccc;
             padding: 5px;
+            overflow: hidden;
         }
         .button-container {
             @apply --layout-vertical;

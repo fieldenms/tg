@@ -178,8 +178,7 @@ const template = html`
             </div>
             <div id="fantomSplitter" class="fantom-splitter"></div>
         </tg-centre-result-view>
-    </iron-pages>
-`;
+    </iron-pages>`;
 
 Polymer({
     _template: template,
@@ -447,7 +446,7 @@ Polymer({
     },
 
     _configViewBindings: function (prevView, newView) {
-        // FIXME egi not yet defined here prevView.removeOwnKeyBindings();
+        prevView.removeOwnKeyBindings();
         const keyBindings = newView.keyBindings;
         for (let shortcuts in keyBindings) {
             newView.addOwnKeyBinding(shortcuts, keyBindings[shortcuts]);

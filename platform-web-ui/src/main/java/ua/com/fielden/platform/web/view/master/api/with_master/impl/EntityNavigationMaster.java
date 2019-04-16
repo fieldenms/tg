@@ -14,7 +14,7 @@ public class EntityNavigationMaster extends EntityManipulationMaster<EntityNavig
                 "             //Provide custom after load listener\n"
               + "             self._seqEditAfterLoadListener = function (e) {\n"
               + "                 this._assignPostSavedHandlersForEmbeddedMaster(e);\n"
-              + "                 const saveButton = e.detail.querySelector(\"tg-action[role='save']\");\n"
+              + "                 const saveButton = e.detail.shadowRoot.querySelector(\"tg-action[role='save']\");\n"
               + "                 saveButton.closeAfterExecution = false;\n"
               + "             }.bind(self);\n"
               + "             self._handleBindingEntityAppeared = function (e) {\n"
