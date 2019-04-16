@@ -519,7 +519,7 @@ const TgEntityCentreBehaviorImpl = {
         }).bind(self);
 
         self._getSelectedEntities = (function () {
-            return []; // FIXME this.$.egi.getSelectedEntities();
+            return this.$.egi.getSelectedEntities();
         }).bind(self);
 
         /**
