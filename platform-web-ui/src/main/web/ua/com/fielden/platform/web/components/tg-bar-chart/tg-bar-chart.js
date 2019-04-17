@@ -186,9 +186,9 @@ Polymer({
     },
 
     attached: function () {
-        async(() => {
-            const width = self.$.chartContainer.offsetWidth;
-            const height = self.$.chartContainer.offsetHeight;
+        this.async(() => {
+            const width = this.$.chartContainer.offsetWidth;
+            const height = this.$.chartContainer.offsetHeight;
             this._chart.options({
                 width: width,
                 height: height
@@ -242,9 +242,8 @@ Polymer({
     },
 
     _resizeEventListener: function (event, details) {
-        const self = this;
-        const width = self.$.chartContainer.offsetWidth;
-        const height = self.$.chartContainer.offsetHeight;
+        const width = this.$.chartContainer.offsetWidth;
+        const height = this.$.chartContainer.offsetHeight;
         if (this._chart && width && height) {
             this._chart.options({
                 width: width,

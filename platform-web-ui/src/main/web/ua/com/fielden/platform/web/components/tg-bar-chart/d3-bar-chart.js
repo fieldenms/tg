@@ -1,5 +1,6 @@
-import '/resources/d3/d3.min.js';
-import '/resources/reflection/tg-polymer-utils.js';
+import '/resources/components/d3-lib.js';
+import { generateUUID } from '/resources/reflection/tg-polymer-utils.js';
+
 
 //Merges two objects up to two 
 const merge2LevelData = function (oldOptions, newOptions) {

@@ -25,19 +25,24 @@
             min-height: 200px;
         }
     </style>
+    <custom-style>
+        <style include="iron-flex iron-flex-reverse iron-flex-alignment iron-flex-factors iron-positioning"></style>
+    </custom-style>
 </head>
 
 <body unresolved class="fullbleed">
-    <template is="dom-bind" id="app">
-        <tg-app-config id="appConfig"></tg-app-config>
-        <tg-reflector id="reflector"></tg-reflector>
-        <tg-bar-chart id="chart" class="fit" data="[[data]]"></tg-bar-chart>
-    </template>
+    <dom-bind>
+        <template is="dom-bind">
+            <tg-app-config id="appConfig"></tg-app-config>
+            <tg-reflector id="reflector"></tg-reflector>
+            <tg-bar-chart id="chart" class="fit"></tg-bar-chart>
+        </template>
+    </dom-bind>
     <script>
         (function () {
-            const app = document.querySelector('dom-bind');
-            const colors = ["#375e97", "#fb6542", "#ffbb00", "#3f681c"];
-            app.addEventListener('dom-change', function() {
+            window.addEventListener('WebComponentsReady', function (e) {
+                const app = document.querySelector('dom-bind');
+                const colors = ["#375e97", "#fb6542", "#ffbb00", "#3f681c"];
                 const mode = d3.barChart.BarMode.STACKED;
                 app.$.chart.options = {
                     mode: mode,
@@ -77,7 +82,7 @@
                     click: d => {},
                     
                 };
-                app.data = [
+                app.$.chart.data = [
                     {id:0, name: 'A', value: 1, value1: 0.2, value2: 0.1, value3: 0.7},
                     {id:1, name: 'B', value: 1.4, value1: 1, value2: 2, value3: -0.5},
                     {id:2, name: 'C', value: 1.2, value1: 0.1, value2: 1, value3: 1.1},
