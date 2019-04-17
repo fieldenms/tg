@@ -1,5 +1,5 @@
 import '/resources/components/d3-lib.js';
-import { generateUUID } from '/resources/reflection/tg-polymer-utils.js';
+import { generateUUID, shadeColor } from '/resources/reflection/tg-polymer-utils.js';
 
 
 //Merges two objects up to two 
@@ -47,6 +47,7 @@ const fireSelectEvent = (entity, select, chartArea) => {
             }]
         },
         bubbles: true,
+        composed: true,
         cancelable: true
     });
     chartArea.dispatchEvent(event);
@@ -56,6 +57,7 @@ const fireLabelPlacedEvent = (eventName, newRequiredMargin, chartArea) => {
     const event = new CustomEvent(eventName, {
         detail: newRequiredMargin,
         bubbles: true,
+        composed: true,
         cancelable: true
     });
     chartArea.dispatchEvent(event);
