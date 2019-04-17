@@ -40,7 +40,7 @@ const value = (obj, data, value) => {
 const fireSelectEvent = (entity, select, chartArea) => {
     const event = new CustomEvent("bar-entity-selected", {
         detail: {
-            shouldScrollToSelected: true,
+            shouldScrollToSelected: false,
             entities: [{
                 entity: entity,
                 select: select
