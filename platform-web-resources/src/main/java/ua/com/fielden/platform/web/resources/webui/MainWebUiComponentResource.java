@@ -43,7 +43,7 @@ public class MainWebUiComponentResource  extends AbstractWebResource {
     @Get
     @Override
     public Representation get() {
-        final String source = sourceController.loadSource("/app/tg-app.html", device());
+        final String source = sourceController.loadSource("/app/tg-app.js", device());
         return new EncodeRepresentation(Encoding.GZIP, new InputRepresentation(new ByteArrayInputStream(source.getBytes(Charsets.UTF_8)), MediaType.TEXT_JAVASCRIPT));
     }
 
