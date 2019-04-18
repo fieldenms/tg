@@ -270,9 +270,7 @@ const template = html`
             display: initial;
         }
     </style>
-    <custom-style>
-        <style include="iron-flex iron-flex-reverse iron-flex-alignment iron-flex-factors iron-positioning paper-material-styles"></style>
-    </custom-style>
+    <style include="iron-flex iron-flex-reverse iron-flex-alignment iron-flex-factors iron-positioning paper-material-styles"></style>
     <!--configuring slotted elements-->
     <slot id="column_selector" name="property-column" hidden></slot>
     <slot id="primary_action_selector" name="primary-action" hidden></slot>

@@ -1,6 +1,7 @@
 import '/resources/polymer/@polymer/polymer/polymer-legacy.js';
 
 import '/resources/polymer/@polymer/iron-flex-layout/iron-flex-layout.js';
+import '/resources/polymer/@polymer/iron-flex-layout/iron-flex-layout-classes.js';
 
 import '/resources/components/tree-table/tg-tree-table-row.js';
 
@@ -22,13 +23,11 @@ const template = html`
             background-color: white;
             border-radius: 2px;
             @apply --layout-vertical;
-            @apply --layout-flex;
             @apply --layout-relative;
         }
         #baseContainer {
             min-height: 0;
             @apply --layout-horizontal;
-            @apply --layout-flex;
             @apply --layout-relative;
         }
         #scrollContainer {
@@ -100,8 +99,8 @@ const template = html`
             pointer-events: auto;
         }
     </style>
+    <style include="iron-flex iron-flex-reverse iron-flex-alignment iron-flex-factors iron-positioning paper-material-styles"></style>
     <slot id="column_selector" name="tg-tree-table-property-column" hidden></slot>
-
     <div id="elementToFocus">
         <div id="baseContainer">
             <!--Scroll Container-->

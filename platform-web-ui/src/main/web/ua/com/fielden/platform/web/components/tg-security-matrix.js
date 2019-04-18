@@ -18,8 +18,6 @@ import { EntityStub } from '/resources/reflection/tg-polymer-utils.js';
 const template = html`
     <style>
         :host {
-            height: 100%;
-            width: 100%;
             min-height: 0;
             @apply --layout-vertical;
 
@@ -47,7 +45,6 @@ const template = html`
         }
         tg-tree-table {
             min-height:0;
-            @apply --layout-flex; 
         }
         .filter-panel ::slotted(.filter-element) {
             margin: 0 10px;

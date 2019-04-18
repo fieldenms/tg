@@ -1,6 +1,7 @@
 import '/resources/polymer/@polymer/polymer/polymer-legacy.js';
 
 import '/resources/polymer/@polymer/iron-flex-layout/iron-flex-layout.js';
+import '/resources/polymer/@polymer/iron-flex-layout/iron-flex-layout-classes.js';
 
 import '/resources/components/tree-table/tg-hierarchy-tree-table-cell.js';
 import '/resources/components/tree-table/tg-tree-table-regular-cell.js';
@@ -45,6 +46,7 @@ const template = html`
             @apply --layout-center;
         }
     </style>
+    <style include="iron-flex iron-flex-reverse iron-flex-alignment iron-flex-factors iron-positioning paper-material-styles"></style>
     <div class="tree-table-data-row" over$="[[entity.over]]" on-mouseenter="_mouseRowEnter" on-mouseleave="_mouseRowLeave">
         <tg-hierarchy-tree-table-cell class="table-data-cell" column-type="hierarchy" column="[[hierarchyColumn]]" entity="[[entity]]" highlighted="[[entity.highlighted]]" collapsed="{{entity.collapsed}}"></tg-hierarchy-tree-table-cell>
         <template is="dom-repeat" items="[[columns]]" as="column">
