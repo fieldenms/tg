@@ -38,6 +38,7 @@ public class SecurityMatrixInsertionPointMaster implements IMaster<SecurityMatri
         final DomElement tokenFilter = new DomElement("tg-singleline-text-editor")
                 .attr("id", "tokenFilter")
                 .attr("class", "filter-element")
+                .attr("slot", "filter-element")
                 .attr("entity", "{{_currBindingEntity}}")
                 .attr("original-entity", "{{_originalBindingEntity}}")
                 .attr("previous-modified-properties-holder", "[[_previousModifiedPropertiesHolder]]")
@@ -50,6 +51,7 @@ public class SecurityMatrixInsertionPointMaster implements IMaster<SecurityMatri
         final DomElement roleFilter = new DomElement("tg-singleline-text-editor")
                 .attr("id", "roleFilter")
                 .attr("class", "filter-element")
+                .attr("slot", "filter-element")
                 .attr("entity", "{{_currBindingEntity}}")
                 .attr("original-entity", "{{_originalBindingEntity}}")
                 .attr("previous-modified-properties-holder", "[[_previousModifiedPropertiesHolder]]")
@@ -62,7 +64,7 @@ public class SecurityMatrixInsertionPointMaster implements IMaster<SecurityMatri
         realodActionConfig = new DefaultEntityAction(SAVE.name(), getPostAction(SAVE), getPostActionError(SAVE));
         realodActionConfig.setShortDesc("Reload");
         realodActionConfig.setLongDesc("Cancels changes and reloads security matrix");
-        final DomElement reloadAction = realodActionConfig.render().attr("id", "reloadAction");
+        final DomElement reloadAction = realodActionConfig.render().attr("slot", "reload-action");
 
         final DomElement securityMatrix = new DomElement("tg-security-matrix")
                 .attr("id", "securityMatrix")
