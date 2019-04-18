@@ -41,7 +41,7 @@ const template = html`
             @apply --layout-horizontal;
             @apply --layout-center-justified;
         }
-        #actionPanel::slotted(tg-action),
+        #actionPanel ::slotted(tg-action),
         tg-action {
             margin: 10px;
         }
@@ -49,7 +49,7 @@ const template = html`
             min-height:0;
             @apply --layout-flex; 
         }
-        .filter-panel::slotted(.filter-element) {
+        .filter-panel ::slotted(.filter-element) {
             margin: 0 10px;
             @apply --layout-flex;
 

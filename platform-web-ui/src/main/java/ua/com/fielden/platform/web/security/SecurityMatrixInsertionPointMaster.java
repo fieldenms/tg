@@ -80,7 +80,8 @@ public class SecurityMatrixInsertionPointMaster implements IMaster<SecurityMatri
                 .add(tokenFilter, roleFilter, reloadAction);
 
         final String entityMasterStr = ResourceLoader.getText("ua/com/fielden/platform/web/master/tg-entity-master-template.js")
-                .replace(IMPORTS, createImports(linkedSetOf("components/tg-security-matrix", "editors/tg-singleline-text-editor")))
+                .replace(IMPORTS, createImports(linkedSetOf("components/tg-security-matrix", "editors/tg-singleline-text-editor"))
+                        + "import { TgEntityBinderBehavior } from '/resources/binding/tg-entity-binder-behavior.js';\n")
                 .replace(ENTITY_TYPE, flattenedNameOf(SecurityMatrixInsertionPoint.class))
                 .replace("<!--@tg-entity-master-content-->", securityMatrix.toString())
                 .replace("//generatedPrimaryActions", "")
@@ -141,12 +142,12 @@ public class SecurityMatrixInsertionPointMaster implements IMaster<SecurityMatri
                 + "}.bind(self);\n"
                 + "//Locks/Unlocks tg-security-matrix lock layer during insertion point activation.\n"
                 + "self.disableViewForDescendants = function () {\n"
-                + "    Polymer.TgBehaviors.TgEntityBinderBehavior.disableViewForDescendants.call(this);\n"
+                + "    TgEntityBinderBehavior.disableViewForDescendants.call(this);\n"
                 + "    self.lock = true;\n"
                 + "    self.showDataLoadingPromt();\n"
                 + "};\n"
                 + "self.enableViewForDescendants = function () {\n"
-                + "    Polymer.TgBehaviors.TgEntityBinderBehavior.enableViewForDescendants.call(this);\n"
+                + "    TgEntityBinderBehavior.enableViewForDescendants.call(this);\n"
                 + "    self.lock = false;"
                 + "    self.showDataLoadedPromt();\n"
                 + "};\n"
