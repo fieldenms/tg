@@ -112,9 +112,9 @@
             --paper-checkbox-unchecked-ink-color: var(--paper-grey-900:);
         }
 
-        paper-checkbox.select-all-checkbox {
-            --paper-checkbox-checked-color: var(--select-all-color, --paper-light-blue-700);
-            --paper-checkbox-checked-ink-color: var(--select-all-ink, --paper-light-blue-700);
+        paper-checkbox[semi-checked] {
+            --paper-checkbox-checked-color: #acdbfe;
+            --paper-checkbox-checked-ink-color: var(--paper-light-blue-700);
         }
         
         .item.selected {
@@ -181,7 +181,7 @@
             _on-keydown="[[_onKeydown]]">
             <div class="layout horizontal custom-input center">
                 <div class="resizing-box" hidden$="[[!canReorderItems]]"></div>
-                <paper-checkbox class="select-all-checkbox" id="selectAllCheckbox" hidden$="[[_selectingIconHidden(_forReview)]]" checked="[[_selectedAll]]" on-change="_allSelectionChanged"></paper-checkbox>
+                <paper-checkbox class="select-all-checkbox" id="selectAllCheckbox" hidden$="[[_selectingIconHidden(_forReview)]]" checked="[[_selectedAll]]" semi-checked$="[[_semiCheckedAll]]" on-change="_allSelectionChanged"></paper-checkbox>
                 <input id="searchInput" is="iron-input" autocomplete="nope" placeholder="Type to search..." bind-value="{{_phraseForSearching}}" on-input="_onInput" on-tap="_onTap" on-mousedown="_onTap" on-blur="_eventHandler" prevent-invalid-input>
             </div>
             <div class="custom-input layout vertical flex relative">
@@ -243,6 +243,11 @@
              */
             _selectedAll: {
                 type: Boolean
+            },
+
+            _semiCheckedAll: {
+                type: Boolean,
+                value: false
             },
 
             /**
@@ -918,21 +923,12 @@
             if (this._selectedEntities && this._entities) {
                 const everySelected = this._entities.every(item => this._selectedEntities.includes(item));
                 const someSelected = this._entities.some(item => this._selectedEntities.includes(item));
-                if (someSelected && !everySelected) {
-                    this.updateStyles({
-                        "--select-all-color": "#acdbfe",
-                        "--select-all-ink": "#0288d1"
-                    });
-                } else {
-                    this.updateStyles({
-                        "--select-all-color": "#0288d1",
-                        "--select-all-ink": "#0288d1"
-                    });
-                }
-                if (everySelected  || someSelected) {
+                if (someSelected || everySelected) {
                     this._selectedAll = true;
+                    this._semiCheckedAll = !everySelected;
                 } else {
                     this._selectedAll = false;
+                    this._semiCheckedAll = false;
                 }
             }
         },
