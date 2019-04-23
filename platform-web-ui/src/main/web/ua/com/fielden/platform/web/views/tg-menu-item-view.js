@@ -24,11 +24,13 @@ const template = html`
             @apply --layout-vertical;
         }
         .paper-material {
-            @apply --layout-vertical;
             border-radius: 2px;
             overflow: hidden;
             background-color: white;
             max-height: 100%;
+            --paper-material: {
+                @apply --layout-vertical;
+            }
         }
     </style>
     <custom-style>

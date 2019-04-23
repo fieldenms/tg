@@ -48,7 +48,7 @@ public class ChartDeckerMaster<T extends AbstractEntity<?>> implements IMaster<T
         final Pair<String, DomElement> actions = generateActions(deckerConfig, importPaths);
         decks.add(actions.getValue());
 
-        final String entityMasterStr = ResourceLoader.getText("ua/com/fielden/platform/web/components/chart-decker/tg-chart-decker-template.html")
+        final String entityMasterStr = ResourceLoader.getText("ua/com/fielden/platform/web/components/chart-decker/tg-chart-decker-template.js")
                 .replace(IMPORTS, createImports(importPaths))
                 .replace(ENTITY_TYPE, flattenedNameOf(deckerConfig.getEntityType()))
                 .replace("<!--@tg-entity-master-content-->", decks.toString())
