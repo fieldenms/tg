@@ -1,6 +1,6 @@
 import '/resources/polymer/@polymer/polymer/polymer-legacy.js';
 import '/resources/polymer/@polymer/iron-input/iron-input.js';
-/*import '/resources/polymer/@polymer/iron-form/iron-form.js';*/
+import '/resources/polymer/@polymer/iron-form/iron-form.js';
 import '/resources/polymer/@polymer/iron-flex-layout/iron-flex-layout.js';
 import '/resources/polymer/@polymer/paper-styles/paper-styles.js';
 import '/resources/polymer/@polymer/paper-input/paper-input-container.js';
