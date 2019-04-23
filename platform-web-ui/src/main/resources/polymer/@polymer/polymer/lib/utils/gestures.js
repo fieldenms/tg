@@ -23,7 +23,8 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 import './boot.js';
 import { timeOut, microTask } from './async.js';
 import { Debouncer } from './debounce.js';
-import { passiveTouchGestures } from './settings.js'; // detect native touch action support
+import { passiveTouchGestures } from './settings.js';
+import { wrap } from './wrap.js'; // detect native touch action support
 
 let HAS_NATIVE_TA = typeof document.head.style.touchAction === 'string';
 let GESTURE_KEY = '__polymerGestures';
@@ -195,25 +196,29 @@ let mouseCanceller = function (mouseEvent) {
 
   if (mouseEvent.type === 'click') {
     let clickFromLabel = false;
-    let path = mouseEvent.composedPath && mouseEvent.composedPath();
+    let path = getComposedPath(mouseEvent);
 
-    if (path) {
-      for (let i = 0; i < path.length; i++) {
-        if (path[i].nodeType === Node.ELEMENT_NODE) {
-          if (path[i].localName === 'label') {
-            clickedLabels.push(path[i]);
-          } else if (canBeLabelled(path[i])) {
-            let ownerLabels = matchingLabels(path[i]); // check if one of the clicked labels is labelling this element
+    for (let i = 0; i < path.length; i++) {
+      if (path[i].nodeType === Node.ELEMENT_NODE) {
+        if (path[i].localName === 'label') {
+          clickedLabels.push(
+          /** @type {!HTMLLabelElement} */
+          path[i]);
+        } else if (canBeLabelled(
+        /** @type {!HTMLElement} */
+        path[i])) {
+          let ownerLabels = matchingLabels(
+          /** @type {!HTMLElement} */
+          path[i]); // check if one of the clicked labels is labelling this element
 
-            for (let j = 0; j < ownerLabels.length; j++) {
-              clickFromLabel = clickFromLabel || clickedLabels.indexOf(ownerLabels[j]) > -1;
-            }
+          for (let j = 0; j < ownerLabels.length; j++) {
+            clickFromLabel = clickFromLabel || clickedLabels.indexOf(ownerLabels[j]) > -1;
           }
         }
+      }
 
-        if (path[i] === POINTERSTATE.mouse.target) {
-          return;
-        }
+      if (path[i] === POINTERSTATE.mouse.target) {
+        return;
       }
     } // if one of the clicked labels was labelling the target element,
     // this is not a ghost click
@@ -260,7 +265,7 @@ function ignoreMouse(e) {
     POINTERSTATE.mouse.mouseIgnoreJob = null;
   };
 
-  POINTERSTATE.mouse.target = e.composedPath()[0];
+  POINTERSTATE.mouse.target = getComposedPath(e)[0];
   POINTERSTATE.mouse.mouseIgnoreJob = Debouncer.debounce(POINTERSTATE.mouse.mouseIgnoreJob, timeOut.after(MOUSE_TIMEOUT), unset);
 }
 /**
@@ -344,16 +349,14 @@ let POINTERSTATE = {
 
 function firstTouchAction(ev) {
   let ta = 'auto';
-  let path = ev.composedPath && ev.composedPath();
+  let path = getComposedPath(ev);
 
-  if (path) {
-    for (let i = 0, n; i < path.length; i++) {
-      n = path[i];
+  for (let i = 0, n; i < path.length; i++) {
+    n = path[i];
 
-      if (n[TOUCH_ACTION]) {
-        ta = n[TOUCH_ACTION];
-        break;
-      }
+    if (n[TOUCH_ACTION]) {
+      ta = n[TOUCH_ACTION];
+      break;
     }
   }
 
@@ -379,6 +382,13 @@ function untrackDocument(stateObj) {
 document.addEventListener('touchend', ignoreMouse, SUPPORTS_PASSIVE ? {
   passive: true
 } : false);
+/**
+ * Returns the composedPath for the given event.
+ * @param {Event} event to process
+ * @return {!Array<!EventTarget>} Path of the event
+ */
+
+const getComposedPath = window.ShadyDOM && window.ShadyDOM.noPatch ? window.ShadyDOM.composedPath : event => event.composedPath && event.composedPath() || [];
 /** @type {!Object<string, !GestureRecognizer>} */
 
 export const gestures = {};
@@ -428,17 +438,11 @@ export function deepTargetFind(x, y) {
  */
 
 function _findOriginalTarget(ev) {
-  // shadowdom
-  if (ev.composedPath) {
-    const targets =
-    /** @type {!Array<!EventTarget>} */
-    ev.composedPath(); // It shouldn't be, but sometimes targets is empty (window on Safari).
+  const path = getComposedPath(
+  /** @type {?Event} */
+  ev); // It shouldn't be, but sometimes path is empty (window on Safari).
 
-    return targets.length > 0 ? targets[0] : ev.target;
-  } // shadydom
-
-
-  return ev.target;
+  return path.length > 0 ? path[0] : ev.target;
 }
 /**
  * @private
@@ -762,7 +766,9 @@ function _fire(target, type, detail) {
     composed: true
   });
   ev.detail = detail;
-  target.dispatchEvent(ev); // forward `preventDefault` in a clean way
+  wrap(
+  /** @type {!Node} */
+  target).dispatchEvent(ev); // forward `preventDefault` in a clean way
 
   if (ev.defaultPrevented) {
     let preventer = detail.preventer || detail.sourceEvent;

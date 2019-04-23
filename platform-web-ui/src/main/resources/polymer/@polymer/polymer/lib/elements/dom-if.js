@@ -13,6 +13,7 @@ import { Debouncer } from '../utils/debounce.js';
 import { enqueueDebouncer, flush } from '../utils/flush.js';
 import { microTask } from '../utils/async.js';
 import { root } from '../utils/path.js';
+import { wrap } from '../utils/wrap.js';
 /**
  * The `<dom-if>` element will stamp a light-dom `<template>` child when
  * the `if` property becomes truthy, and the template can use Polymer
@@ -116,8 +117,9 @@ export class DomIf extends PolymerElement {
 
   disconnectedCallback() {
     super.disconnectedCallback();
+    const parent = wrap(this).parentNode;
 
-    if (!this.parentNode || this.parentNode.nodeType == Node.DOCUMENT_FRAGMENT_NODE && !this.parentNode.host) {
+    if (!parent || parent.nodeType == Node.DOCUMENT_FRAGMENT_NODE && !wrap(parent).host) {
       this.__teardownInstance();
     }
   }
@@ -175,18 +177,18 @@ export class DomIf extends PolymerElement {
   }
 
   __ensureInstance() {
-    let parentNode = this.parentNode; // Guard against element being detached while render was queued
+    let parentNode = wrap(this).parentNode; // Guard against element being detached while render was queued
 
     if (parentNode) {
       if (!this.__ctor) {
         let template =
         /** @type {HTMLTemplateElement} */
-        this.querySelector('template');
+        wrap(this).querySelector('template');
 
         if (!template) {
           // Wait until childList changes and template should be there by then
           let observer = new MutationObserver(() => {
-            if (this.querySelector('template')) {
+            if (wrap(this).querySelector('template')) {
               observer.disconnect();
 
               this.__render();
@@ -229,7 +231,7 @@ export class DomIf extends PolymerElement {
 
       if (!this.__instance) {
         this.__instance = new this.__ctor();
-        parentNode.insertBefore(this.__instance.root, this);
+        wrap(parentNode).insertBefore(this.__instance.root, this);
       } else {
         this.__syncHostProperties();
 
@@ -237,11 +239,11 @@ export class DomIf extends PolymerElement {
 
         if (c$ && c$.length) {
           // Detect case where dom-if was re-attached in new position
-          let lastChild = this.previousSibling;
+          let lastChild = wrap(this).previousSibling;
 
           if (lastChild !== c$[c$.length - 1]) {
             for (let i = 0, n; i < c$.length && (n = c$[i]); i++) {
-              parentNode.insertBefore(n, this);
+              wrap(parentNode).insertBefore(n, this);
             }
           }
         }
@@ -271,10 +273,12 @@ export class DomIf extends PolymerElement {
 
       if (c$ && c$.length) {
         // use first child parent, for case when dom-if may have been detached
-        let parent = c$[0].parentNode; // Instance children may be disconnected from parents when dom-if
+        let parent = wrap(c$[0]).parentNode; // Instance children may be disconnected from parents when dom-if
         // detaches if a tree was innerHTML'ed
 
         if (parent) {
+          parent = wrap(parent);
+
           for (let i = 0, n; i < c$.length && (n = c$[i]); i++) {
             parent.removeChild(n);
           }

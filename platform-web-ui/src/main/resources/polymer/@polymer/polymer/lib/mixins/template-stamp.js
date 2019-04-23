@@ -8,7 +8,8 @@ Code distributed by Google as part of the polymer project is also
 subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
 */
 import '../utils/boot.js';
-import { dedupingMixin } from '../utils/mixin.js'; // 1.x backwards-compatible auto-wrapper for template type extensions
+import { dedupingMixin } from '../utils/mixin.js';
+const walker = document.createTreeWalker(document, NodeFilter.SHOW_ALL, null, false); // 1.x backwards-compatible auto-wrapper for template type extensions
 // This is a clear layering violation and gives favored-nation status to
 // dom-if and dom-repeat templates.  This is a conceit we're choosing to keep
 // a.) to ease 1.x backwards-compatibility due to loss of `is`, and
@@ -47,7 +48,9 @@ function findTemplateNode(root, nodeInfo) {
   if (parent) {
     // note: marginally faster than indexing via childNodes
     // (http://jsperf.com/childnodes-lookup)
-    for (let n = parent.firstChild, i = 0; n; n = n.nextSibling) {
+    walker.currentNode = parent;
+
+    for (let n = walker.firstChild(), i = 0; n; n = walker.nextSibling()) {
       if (nodeInfo.parentIndex === i++) {
         return n;
       }
@@ -244,7 +247,9 @@ superClass => {
         templateInfo.hasInsertionPoint = true;
       }
 
-      if (element.firstChild) {
+      walker.currentNode = element;
+
+      if (walker.firstChild()) {
         noted = this._parseTemplateChildNodes(element, templateInfo, nodeInfo) || noted;
       }
 
@@ -274,7 +279,9 @@ superClass => {
         return;
       }
 
-      for (let node = root.firstChild, parentIndex = 0, next; node; node = next) {
+      walker.currentNode = root;
+
+      for (let node = walker.firstChild(), parentIndex = 0, next; node; node = next) {
         // Wrap templates
         if (node.localName == 'template') {
           node = wrapTemplateExtension(node);
@@ -284,7 +291,8 @@ superClass => {
         // manually.
 
 
-        next = node.nextSibling;
+        walker.currentNode = node;
+        next = walker.nextSibling();
 
         if (node.nodeType === Node.TEXT_NODE) {
           let
@@ -293,7 +301,7 @@ superClass => {
 
           while (n && n.nodeType === Node.TEXT_NODE) {
             node.textContent += n.textContent;
-            next = n.nextSibling;
+            next = walker.nextSibling();
             root.removeChild(n);
             n = next;
           } // optionally strip whitespace
@@ -317,7 +325,9 @@ superClass => {
         } // Increment if not removed
 
 
-        if (node.parentNode) {
+        walker.currentNode = node;
+
+        if (walker.parentNode()) {
           parentIndex++;
         }
       }

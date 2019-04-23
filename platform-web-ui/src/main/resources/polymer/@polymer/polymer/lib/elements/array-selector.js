@@ -35,7 +35,6 @@ import { ElementMixin } from '../mixins/element-mixin.js';
 let ArraySelectorMixin = dedupingMixin(superClass => {
   /**
    * @constructor
-   * @extends {superClass}
    * @implements {Polymer_ElementMixin}
    * @private
    */
@@ -71,7 +70,7 @@ let ArraySelectorMixin = dedupingMixin(superClass => {
          * When `multi` is true, this is an array that contains any selected.
          * When `multi` is false, this is the currently selected item, or `null`
          * if no item is selected.
-         * @type {?(Object|Array<!Object>)}
+         * @type {?Object|?Array<!Object>}
          */
         selected: {
           type: Object,
@@ -113,7 +112,7 @@ let ArraySelectorMixin = dedupingMixin(superClass => {
     __updateSelection(multi, itemsInfo) {
       let path = itemsInfo.path;
 
-      if (path == 'items') {
+      if (path == JSCompiler_renameProperty('items', this)) {
         // Case 1 - items array changed, so diff against previous array and
         // deselect any removed items and adjust selected indices
         let newItems = itemsInfo.base || [];
@@ -132,14 +131,14 @@ let ArraySelectorMixin = dedupingMixin(superClass => {
 
         this.__lastItems = newItems;
         this.__lastMulti = multi;
-      } else if (itemsInfo.path == 'items.splices') {
+      } else if (itemsInfo.path == `${JSCompiler_renameProperty('items', this)}.splices`) {
         // Case 2 - got specific splice information describing the array mutation:
         // deselect any removed items and adjust selected indices
         this.__applySplices(itemsInfo.value.indexSplices);
       } else {
         // Case 3 - an array element was changed, so deselect the previous
         // item for that index if it was previously selected
-        let part = path.slice('items.'.length);
+        let part = path.slice(`${JSCompiler_renameProperty('items', this)}.`.length);
         let idx = parseInt(part, 10);
 
         if (part.indexOf('.') < 0 && part == idx) {
@@ -181,7 +180,7 @@ let ArraySelectorMixin = dedupingMixin(superClass => {
       selected.forEach((idx, item) => {
         if (idx < 0) {
           if (this.multi) {
-            this.splice('selected', sidx, 1);
+            this.splice(JSCompiler_renameProperty('selected', this), sidx, 1);
           } else {
             this.selected = this.selectedItem = null;
           }
@@ -201,18 +200,19 @@ let ArraySelectorMixin = dedupingMixin(superClass => {
 
         this.__selectedMap.forEach(idx => {
           if (idx >= 0) {
-            this.linkPaths('items.' + idx, 'selected.' + sidx++);
+            this.linkPaths(`${JSCompiler_renameProperty('items', this)}.${idx}`, `${JSCompiler_renameProperty('selected', this)}.${sidx++}`);
           }
         });
       } else {
         this.__selectedMap.forEach(idx => {
-          this.linkPaths('selected', 'items.' + idx);
-          this.linkPaths('selectedItem', 'items.' + idx);
+          this.linkPaths(JSCompiler_renameProperty('selected', this), `${JSCompiler_renameProperty('items', this)}.${idx}`);
+          this.linkPaths(JSCompiler_renameProperty('selectedItem', this), `${JSCompiler_renameProperty('items', this)}.${idx}`);
         });
       }
     }
     /**
      * Clears the selection state.
+     * @override
      * @return {void}
      */
 
@@ -232,6 +232,7 @@ let ArraySelectorMixin = dedupingMixin(superClass => {
     /**
      * Returns whether the item is currently selected.
      *
+     * @override
      * @param {*} item Item from `items` array to test
      * @return {boolean} Whether the item is selected
      */
@@ -243,6 +244,7 @@ let ArraySelectorMixin = dedupingMixin(superClass => {
     /**
      * Returns whether the item is currently selected.
      *
+     * @override
      * @param {number} idx Index from `items` array to test
      * @return {boolean} Whether the item is selected
      */
@@ -267,15 +269,16 @@ let ArraySelectorMixin = dedupingMixin(superClass => {
     }
 
     __selectedIndexForItemIndex(idx) {
-      let selected = this.__dataLinkedPaths['items.' + idx];
+      let selected = this.__dataLinkedPaths[`${JSCompiler_renameProperty('items', this)}.${idx}`];
 
       if (selected) {
-        return parseInt(selected.slice('selected.'.length), 10);
+        return parseInt(selected.slice(`${JSCompiler_renameProperty('selected', this)}.`.length), 10);
       }
     }
     /**
      * Deselects the given item if it is already selected.
      *
+     * @override
      * @param {*} item Item from `items` array to deselect
      * @return {void}
      */
@@ -296,7 +299,7 @@ let ArraySelectorMixin = dedupingMixin(superClass => {
         this.__updateLinks();
 
         if (this.multi) {
-          this.splice('selected', sidx, 1);
+          this.splice(JSCompiler_renameProperty('selected', this), sidx, 1);
         } else {
           this.selected = this.selectedItem = null;
         }
@@ -305,6 +308,7 @@ let ArraySelectorMixin = dedupingMixin(superClass => {
     /**
      * Deselects the given index if it is already selected.
      *
+     * @override
      * @param {number} idx Index from `items` array to deselect
      * @return {void}
      */
@@ -317,6 +321,7 @@ let ArraySelectorMixin = dedupingMixin(superClass => {
      * Selects the given item.  When `toggle` is true, this will automatically
      * deselect the item if already selected.
      *
+     * @override
      * @param {*} item Item from `items` array to select
      * @return {void}
      */
@@ -329,6 +334,7 @@ let ArraySelectorMixin = dedupingMixin(superClass => {
      * Selects the given index.  When `toggle` is true, this will automatically
      * deselect the item if already selected.
      *
+     * @override
      * @param {number} idx Index from `items` array to select
      * @return {void}
      */
@@ -347,7 +353,7 @@ let ArraySelectorMixin = dedupingMixin(superClass => {
         this.__updateLinks();
 
         if (this.multi) {
-          this.push('selected', item);
+          this.push(JSCompiler_renameProperty('selected', this), item);
         } else {
           this.selected = this.selectedItem = item;
         }
@@ -450,6 +456,10 @@ class ArraySelector extends baseArraySelector {
   // can find the tag name from customElements.define call
   static get is() {
     return 'array-selector';
+  }
+
+  static get template() {
+    return null;
   }
 
 }

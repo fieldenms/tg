@@ -1,24 +1,28 @@
 /**
-@license
-Copyright (c) 2017 The Polymer Project Authors. All rights reserved.
-This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
-The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
-The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
-Code distributed by Google as part of the polymer project is also
-subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
-*/
+ * @fileoverview
+ * @suppress {checkPrototypalTypes}
+ * @license Copyright (c) 2017 The Polymer Project Authors. All rights reserved.
+ * This code may only be used under the BSD style license found at
+ * http://polymer.github.io/LICENSE.txt The complete set of authors may be found
+ * at http://polymer.github.io/AUTHORS.txt The complete set of contributors may
+ * be found at http://polymer.github.io/CONTRIBUTORS.txt Code distributed by
+ * Google as part of the polymer project is also subject to an additional IP
+ * rights grant found at http://polymer.github.io/PATENTS.txt
+ */
 import { PropertyAccessors } from './property-accessors.js';
 import { dedupingMixin } from '../utils/mixin.js';
 const HOST_DIR = /:host\(:dir\((ltr|rtl)\)\)/g;
 const HOST_DIR_REPLACMENT = ':host([dir="$1"])';
 const EL_DIR = /([\s\w-#\.\[\]\*]*):dir\((ltr|rtl)\)/g;
 const EL_DIR_REPLACMENT = ':host([dir="$2"]) $1';
+const DIR_CHECK = /:dir\((?:ltr|rtl)\)/;
+const SHIM_SHADOW = Boolean(window['ShadyDOM'] && window['ShadyDOM']['inUse']);
 /**
  * @type {!Array<!Polymer_DirMixin>}
  */
 
 const DIR_INSTANCES = [];
-/** @type {MutationObserver} */
+/** @type {?MutationObserver} */
 
 let observer = null;
 let DOCUMENT_DIR = '';
@@ -80,17 +84,18 @@ function takeRecords() {
 
 
 export const DirMixin = dedupingMixin(base => {
-  if (!observer) {
-    getRTL();
-    observer = new MutationObserver(updateDirection);
-    observer.observe(document.documentElement, {
-      attributes: true,
-      attributeFilter: ['dir']
-    });
+  if (!SHIM_SHADOW) {
+    if (!observer) {
+      getRTL();
+      observer = new MutationObserver(updateDirection);
+      observer.observe(document.documentElement, {
+        attributes: true,
+        attributeFilter: ['dir']
+      });
+    }
   }
   /**
    * @constructor
-   * @extends {base}
    * @implements {Polymer_PropertyAccessors}
    * @private
    */
@@ -105,12 +110,19 @@ export const DirMixin = dedupingMixin(base => {
 
   class Dir extends elementBase {
     /**
-     * @override
+     * @param {string} cssText .
+     * @param {string} baseURI .
+     * @return {string} .
      * @suppress {missingProperties} Interfaces in closure do not inherit statics, but classes do
      */
     static _processStyleText(cssText, baseURI) {
       cssText = super._processStyleText(cssText, baseURI);
-      cssText = this._replaceDirInCssText(cssText);
+
+      if (!SHIM_SHADOW && DIR_CHECK.test(cssText)) {
+        cssText = this._replaceDirInCssText(cssText);
+        this.__activateDir = true;
+      }
+
       return cssText;
     }
     /**
@@ -125,11 +137,6 @@ export const DirMixin = dedupingMixin(base => {
       let replacedText = text;
       replacedText = replacedText.replace(HOST_DIR, HOST_DIR_REPLACMENT);
       replacedText = replacedText.replace(EL_DIR, EL_DIR_REPLACMENT);
-
-      if (text !== replacedText) {
-        this.__activateDir = true;
-      }
-
       return replacedText;
     }
 
@@ -140,7 +147,9 @@ export const DirMixin = dedupingMixin(base => {
       this.__autoDirOptOut = false;
     }
     /**
-     * @suppress {invalidCasts} Closure doesn't understand that `this` is an HTMLElement
+     * @override
+     * @suppress {invalidCasts} Closure doesn't understand that `this` is an
+     *     HTMLElement
      * @return {void}
      */
 
@@ -152,7 +161,9 @@ export const DirMixin = dedupingMixin(base => {
       this.hasAttribute('dir');
     }
     /**
-     * @suppress {missingProperties} If it exists on elementBase, it can be super'd
+     * @override
+     * @suppress {missingProperties} If it exists on elementBase, it can be
+     *   super'd
      * @return {void}
      */
 
@@ -169,7 +180,9 @@ export const DirMixin = dedupingMixin(base => {
       }
     }
     /**
-     * @suppress {missingProperties} If it exists on elementBase, it can be super'd
+     * @override
+     * @suppress {missingProperties} If it exists on elementBase, it can be
+     *   super'd
      * @return {void}
      */
 

@@ -242,14 +242,14 @@ $_documentContainer.innerHTML = `<dom-module id="paper-spinner-styles">
        * spinner is rotating (appears on Chrome 50, Safari 9.1.1, and Edge).
        */
       .spinner-layer::after {
+        content: '';
         left: 45%;
         width: 10%;
         border-top-style: solid;
       }
 
       .spinner-layer::after,
-      .circle-clipper::after {
-        content: '';
+      .circle-clipper .circle {
         box-sizing: border-box;
         position: absolute;
         top: 0;
@@ -257,21 +257,21 @@ $_documentContainer.innerHTML = `<dom-module id="paper-spinner-styles">
         border-radius: 50%;
       }
 
-      .circle-clipper::after {
+      .circle-clipper .circle {
         bottom: 0;
         width: 200%;
         border-style: solid;
         border-bottom-color: transparent !important;
       }
 
-      .circle-clipper.left::after {
+      .circle-clipper.left .circle {
         left: 0;
         border-right-color: transparent !important;
         -webkit-transform: rotate(129deg);
         transform: rotate(129deg);
       }
 
-      .circle-clipper.right::after {
+      .circle-clipper.right .circle {
         left: -100%;
         border-left-color: transparent !important;
         -webkit-transform: rotate(-129deg);
@@ -279,7 +279,7 @@ $_documentContainer.innerHTML = `<dom-module id="paper-spinner-styles">
       }
 
       .active .gap-patch::after,
-      .active .circle-clipper::after {
+      .active .circle-clipper .circle {
         -webkit-animation-duration: var(--paper-spinner-expand-contract-duration);
         -webkit-animation-timing-function: cubic-bezier(0.4, 0.0, 0.2, 1);
         -webkit-animation-iteration-count: infinite;
@@ -288,12 +288,12 @@ $_documentContainer.innerHTML = `<dom-module id="paper-spinner-styles">
         animation-iteration-count: infinite;
       }
 
-      .active .circle-clipper.left::after {
+      .active .circle-clipper.left .circle {
         -webkit-animation-name: left-spin;
         animation-name: left-spin;
       }
 
-      .active .circle-clipper.right::after {
+      .active .circle-clipper.right .circle {
         -webkit-animation-name: right-spin;
         animation-name: right-spin;
       }
@@ -340,3 +340,4 @@ $_documentContainer.innerHTML = `<dom-module id="paper-spinner-styles">
   </template>
 </dom-module>`;
 document.head.appendChild($_documentContainer.content);
+export {};

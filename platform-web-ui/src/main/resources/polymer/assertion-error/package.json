@@ -22,7 +22,7 @@
   "_resolved": "https://registry.npmjs.org/assertion-error/-/assertion-error-1.1.0.tgz",
   "_shasum": "e60b6b0e8f301bd97e5375215bda406c85118c0b",
   "_spec": "assertion-error@^1.1.0",
-  "_where": "C:\\Users\\oleh\\workspace\\tg\\platform-web-ui\\src\\main\\resources\\node_modules\\chai",
+  "_where": "/home/jhou/workspace/tg/platform-web-ui/src/main/resources/node_modules/chai",
   "author": {
     "name": "Jake Luer",
     "email": "jake@qualiancy.com",
