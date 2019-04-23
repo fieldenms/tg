@@ -14,6 +14,7 @@ import '@polymer/iron-dropdown/iron-dropdown.js';
 import '@polymer/iron-fit-behavior/iron-fit-behavior.js';
 import '@polymer/iron-flex-layout/iron-flex-layout.js';
 import '@polymer/iron-flex-layout/iron-flex-layout-classes.js';
+import '@polymer/iron-form/iron-form.js';
 import '@polymer/iron-icon/iron-icon.js';
 import '@polymer/iron-icons/iron-icons.js';
 import '@polymer/iron-icons/av-icons.js';
