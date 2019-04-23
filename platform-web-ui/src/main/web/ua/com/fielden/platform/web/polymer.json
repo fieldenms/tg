@@ -1,6 +1,7 @@
 {
-  "entrypoint": "./resources/desktop-index.html",
-  "shell": "./resources/desktop-startup-resources-origin.js",
+  "root": "vulcan",
+  "entrypoint": "./resources/build-index.html",
+  "shell": "./resources/@profile-startup-resources-origin.js",
   "extraDependencies": [
     "./resources/polymer/@webcomponents/webcomponentsjs/custom-elements-es5-adapter.js",
     "./resources/polymer/@webcomponents/webcomponentsjs/webcomponents-loader.js"

@@ -1,5 +1,8 @@
 package ua.com.fielden.platform.web.utils;
 
+import static java.lang.String.format;
+import static ua.com.fielden.platform.web.interfaces.DeviceProfile.DESKTOP;
+
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
@@ -10,7 +13,7 @@ import java.io.InputStreamReader;
 import java.io.PrintStream;
 import java.util.Arrays;
 import java.util.Properties;
-import java.util.function.Function;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 import org.apache.commons.io.Charsets;
@@ -37,16 +40,13 @@ import ua.com.fielden.platform.web.interfaces.DeviceProfile;
 public class VulcanizingUtility {
     private static final Logger LOGGER = Logger.getLogger(VulcanizingUtility.class);
 
-    public static String[] unixCommands(final String prefix) {
-        return new String[] {"/bin/bash", prefix + "-script.sh"};
+    public static String[] unixCommands() {
+        return new String[] {"/bin/bash", "build-script.bat"};
     }
 
-    public static String[] windowsCommands(final String prefix) {
+    public static String[] windowsCommands() {
         // JVM arguments (brackets should be removed): [src/main/resources/application.properties "C:/Program Files/nodejs;C:/Users/Yuriy/AppData/Roaming/npm"]
-        return new String[] {"CMD", "/c", "vulcanize", "--strip-comments", "-p", "\"vulcan/\"", "/" + prefix + "-startup-resources-origin.html", "^>", prefix + "-startup-resources-origin-vulcanized.html"};
-        // OTHER WAY: create three files login-script.bat, desktop-script.bat and mobile-script.bat and place them where similar *.sh scripts reside.
-        // Contents of the login-script.bat file should be following (brackets should be removed): [vulcanize -p "vulcan/" /login-startup-resources-origin.html ^> login-startup-resources-origin-vulcanized.html].
-        // UNCOMMENT: return new String[] {"CMD", "/c", prefix + "-script.bat"};
+        return new String[] {"CMD", "/c", "build-script.bat"};
     }
 
     protected static Pair<Properties, String[]> processVmArguments(final String[] args) throws IOException {
@@ -124,7 +124,7 @@ public class VulcanizingUtility {
             final String appWebUiResourcesPath,
             final String loginTargetPlatformSpecificPath,
             final String mobileAndDesktopAppSpecificPath,
-            final Function<String, String[]> commandMaker,
+            final Supplier<String[]> commandMaker,
             final String[] additionalPaths) {
         if (LOGGER == null) {
             throw new IllegalArgumentException("Logger is a required argumet.");
@@ -137,42 +137,72 @@ public class VulcanizingUtility {
 
         // create the directory in which all needed resources will reside
         final File dir = new File("vulcan");
-        clearObsoleteResources(dir);
         dir.mkdir();
 
         copyStaticResources(platformVendorResourcesPath, platformWebUiResourcesPath, appVendorResourcesPath, appWebUiResourcesPath, LOGGER);
         LOGGER.info("\t------------------------------");
 
-//        LOGGER.info("\tVulcanizing login resources...");
-//        vulcanizeStartupResourcesFor("login", DeviceProfile.MOBILE, sourceController, loginTargetPlatformSpecificPath, commandMaker.apply("login"), additionalPaths, LOGGER, dir);
-//        LOGGER.info("\tVulcanized login resources.");
-//
-//        LOGGER.info("\t------------------------------");
-//
+        LOGGER.info("\tVulcanizing login resources...");
+        adjustRootResources(sourceController, LOGGER, "login");
+        vulcanizeStartupResourcesFor("login", DeviceProfile.MOBILE, sourceController, loginTargetPlatformSpecificPath, commandMaker.get(), additionalPaths, LOGGER, dir);
+        LOGGER.info("\tVulcanized login resources.");
+
+        LOGGER.info("\t------------------------------");
+
         downloadCommonGeneratedResources(webUiConfig, sourceController, LOGGER);
-//        LOGGER.info("\t------------------------------");
-//
-//        LOGGER.info("\tVulcanizing mobile resources...");
+        LOGGER.info("\t------------------------------");
+
+        LOGGER.info("\tVulcanizing mobile resources...");
         downloadSpecificGeneratedResourcesFor(webUiConfig, DeviceProfile.MOBILE, sourceController, LOGGER);
-//        vulcanizeStartupResourcesFor("mobile", DeviceProfile.MOBILE, sourceController, mobileAndDesktopAppSpecificPath, commandMaker.apply("mobile"), additionalPaths, LOGGER, dir);
-//        LOGGER.info("\tVulcanized mobile resources.");
-//        LOGGER.info("\t------------------------------");
-//
-//        LOGGER.info("\tVulcanizing desktop resources...");
+        adjustRootResources(sourceController, LOGGER, "mobile");
+        vulcanizeStartupResourcesFor("mobile", DeviceProfile.MOBILE, sourceController, mobileAndDesktopAppSpecificPath, commandMaker.get(), additionalPaths, LOGGER, dir);
+        LOGGER.info("\tVulcanized mobile resources.");
+        LOGGER.info("\t------------------------------");
+
+        LOGGER.info("\tVulcanizing desktop resources...");
         downloadSpecificGeneratedResourcesFor(webUiConfig, DeviceProfile.DESKTOP, sourceController, LOGGER);
-//        vulcanizeStartupResourcesFor("desktop", DeviceProfile.DESKTOP, sourceController, mobileAndDesktopAppSpecificPath, commandMaker.apply("desktop"), additionalPaths, LOGGER, dir);
-//        LOGGER.info("\tVulcanized desktop resources.");
-//        LOGGER.info("\t------------------------------");
-//
-//        clearObsoleteResources(dir);
+        adjustRootResources(sourceController, LOGGER, "desktop");
+        vulcanizeStartupResourcesFor("desktop", DeviceProfile.DESKTOP, sourceController, mobileAndDesktopAppSpecificPath, commandMaker.get(), additionalPaths, LOGGER, dir);
+        LOGGER.info("\tVulcanized desktop resources.");
+        LOGGER.info("\t------------------------------");
+
+        clearObsoleteResources();
 
         LOGGER.info("Vulcanized.");
     }
 
-    private static void clearObsoleteResources(final File dir) {
+    private static void adjustRootResources(final ISourceController sourceController, final Logger logger, final String profile) {
+        downloadSource("resources", "build-index.html", sourceController, DESKTOP, logger);
+        adjustFileContents("vulcan/resources/build-index.html", profile);
+        try {
+            FileUtils.copyFile(new File("vulcan/resources/polymer.json"), new File("polymer.json"));
+            adjustFileContents("polymer.json", profile);
+        } catch (final IOException e) {
+            logger.error(e.getMessage(), e);
+            throw new IllegalStateException(e);
+        }
+    }
+    
+    private static void adjustFileContents(final String name, final String profile) {
+        try {
+            final FileInputStream fileInputStream = new FileInputStream(name);
+            final String contents = IOUtils.toString(fileInputStream, Charsets.UTF_8.name());
+            fileInputStream.close();
+            final PrintStream ps = new PrintStream(name);
+            ps.print(contents.replace("@profile", profile));
+            ps.close();
+        } catch (final IOException e) {
+            throw new IllegalStateException(e);
+        }
+    }
+
+    private static void clearObsoleteResources() {
         LOGGER.info("\tClear obsolete files...");
         try {
-            FileUtils.deleteDirectory(dir);
+            FileUtils.deleteDirectory(new File("vulcan"));
+            FileUtils.deleteDirectory(new File("build"));
+            new File("build-script.bat").delete();
+            new File("polymer.json").delete();
         } catch (final IOException e) {
             LOGGER.error(e.getMessage(), e);
             throw new IllegalStateException(e);
@@ -187,7 +217,7 @@ public class VulcanizingUtility {
             downloadSource("master_ui", masterType.getName() + ".js", sourceController, null, logger);
         }
         for (final String viewName : webUiConfig.getCustomViews().keySet()) {
-            downloadSource("custom_view", viewName /*+ ".js"*/, sourceController, null, logger);
+            downloadSource("custom_view", viewName, sourceController, null, logger);
         }
         logger.info("\tDownloaded common generated resources.");
     }
@@ -252,7 +282,7 @@ public class VulcanizingUtility {
             logger.error(e.getMessage(), e);
 
             // need to clear obsolete resources in case of vulcanization failure
-            clearObsoleteResources(dir);
+            clearObsoleteResources();
 
             throw new IllegalStateException(e);
         }
@@ -274,8 +304,7 @@ public class VulcanizingUtility {
 
         logger.info("\t\tMove vulcanized file to its destination...");
         try {
-            FileUtils.copyFile(new File(prefix + "-vulcanized.html"), new File(targetAppSpecificPath + prefix + "-vulcanized.html"));
-            new File(prefix + "-vulcanized.html").delete();
+            FileUtils.copyFile(new File("build/default/vulcan/resources/" + prefix + "-startup-resources-origin.js"), new File(targetAppSpecificPath + prefix + "-startup-resources-vulcanized.js"));
         } catch (final IOException e) {
             logger.error(e.getMessage(), e);
             throw new IllegalStateException(e);
@@ -304,10 +333,9 @@ public class VulcanizingUtility {
             if (appWebUiResourcesPath != null) { // TODO remove if statement
                 FileUtils.copyDirectory(new File(appWebUiResourcesPath), new File("vulcan/resources"));
             }
-            // FIXME FileUtils.copyFile(new File("vulcan/resources/desktop-startup-resources-origin.js"), new File("vulcan/desktop-startup-resources-origin.js"));
+            FileUtils.copyFile(new File("vulcan/resources/build-script.bat"), new File("build-script.bat"));
             // FIXME FileUtils.copyFile(new File("vulcan/resources/mobile-startup-resources-origin.js"), new File("vulcan/mobile-startup-resources-origin.js"));
             // FIXME FileUtils.copyFile(new File("vulcan/resources/login-startup-resources-origin.js"), new File("vulcan/login-startup-resources-origin.js"));
-            FileUtils.copyFile(new File("vulcan/resources/polymer.json"), new File("vulcan/polymer.json"));
         } catch (final IOException e) {
             logger.error(e.getMessage(), e);
             throw new IllegalStateException(e);
