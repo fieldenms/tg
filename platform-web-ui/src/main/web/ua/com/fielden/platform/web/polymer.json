@@ -1,6 +1,6 @@
 {
-  "entrypoint": "./resources/components/scrollShadowExample.html",
-  "shell": "./resources/components/tg-scrollable-component-example.js",
+  "entrypoint": "./resources/desktop-index.html",
+  "shell": "./resources/desktop-startup-resources-origin.js",
   "extraDependencies": [
     "./resources/polymer/@webcomponents/webcomponentsjs/custom-elements-es5-adapter.js",
     "./resources/polymer/@webcomponents/webcomponentsjs/webcomponents-loader.js"
@@ -14,12 +14,12 @@
       "css": {"minify": true},
       "html": {"minify": true},
       "bundle": {
-	    "inlineCss": true,          
-	    "inlineScripts": true,       
-	    "rewriteUrlsInTemplates": true, 
-	    "sourcemaps": true,          
-	    "stripComments": true   
-	  }
+        "inlineCss": true,
+        "inlineScripts": true,
+        "rewriteUrlsInTemplates": true,
+        "sourcemaps": true,
+        "stripComments": true
+      }
     }
   ]
 }

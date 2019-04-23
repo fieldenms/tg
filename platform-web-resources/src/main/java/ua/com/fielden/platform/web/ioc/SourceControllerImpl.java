@@ -420,21 +420,21 @@ public class SourceControllerImpl implements ISourceController {
             }
         };
 
-        sb.append("\n\n<!-- GENERATED MASTERS FROM IWebUiConfig-->\n");
+        sb.append("\n\n/* GENERATED MASTERS FROM IWebUiConfig */\n");
         final List<Class<? extends AbstractEntity<?>>> sortedMasterTypes = new ArrayList<>(webUiConfig.getMasters().keySet());
         sort(sortedMasterTypes, classComparator); // sort types by name to provide predictable order inside vulcanized resources
         for (final Class<? extends AbstractEntity<?>> masterEntityType : sortedMasterTypes) {
             if (!alreadyIncluded(masterEntityType.getName(), source)) {
-                sb.append(String.format("import '/master_ui/%s';\n", masterEntityType.getName()));
+                sb.append(String.format("import '/master_ui/%s.js';\n", masterEntityType.getName()));
             }
         }
 
-        sb.append("\n<!-- GENERATED CENTRES FROM IWebUiConfig-->\n");
+        sb.append("\n/* GENERATED CENTRES FROM IWebUiConfig */\n");
         final List<Class<? extends MiWithConfigurationSupport<?>>> sortedCentreTypes = new ArrayList<>(webUiConfig.getCentres().keySet());
         sort(sortedCentreTypes, classComparator); // sort types by name to provide predictable order inside vulcanized resources
         for (final Class<? extends MiWithConfigurationSupport<?>> centreMiType : sortedCentreTypes) {
             if (!alreadyIncluded(centreMiType.getName(), source)) {
-                sb.append(String.format("import '/centre_ui/%s';\n", centreMiType.getName()));
+                sb.append(String.format("import '/centre_ui/%s.js';\n", centreMiType.getName()));
             }
         }
 
