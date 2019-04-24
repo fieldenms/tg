@@ -47,6 +47,8 @@ const template = html`
         }
         .selection-criteria-buttons {
             padding: 20px 20px 0 20px;
+            min-height: -webkit-fit-content;
+            min-height: -moz-fit-content;
             min-height: fit-content;
         }
     </style>

@@ -62,6 +62,8 @@ const template = html`
             color: #757575;
             -webkit-font-smoothing: antialiased;
             text-rendering: optimizeLegibility;
+            min-width: -webkit-fit-content;
+            min-width: -moz-fit-content;
             min-width: fit-content;
             flex-grow: 0;
             flex-shrink: 0;
