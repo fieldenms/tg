@@ -181,7 +181,9 @@
 
             window.addEventListener('WebComponentsReady', function(e) {
                 form.reset();
-                inUserName.focus();
+                setTimeout(() => {
+                    inUserName.focus();
+                }, 1);
             });
 
             submit.onclick = function () {
