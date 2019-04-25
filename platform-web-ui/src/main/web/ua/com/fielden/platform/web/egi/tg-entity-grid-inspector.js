@@ -124,6 +124,8 @@ const template = html`
             height: 3rem;
             -webkit-font-smoothing: antialiased;
             text-rendering: optimizeLegibility;
+            min-width: -webkit-fit-content;
+            min-width: -moz-fit-content;
             min-width: fit-content;
             flex-grow: 0;
             flex-shrink: 0;
@@ -138,6 +140,8 @@ const template = html`
             border-top: 1px solid #e3e3e3;
             -webkit-font-smoothing: antialiased;
             text-rendering: optimizeLegibility;
+            min-width: -webkit-fit-content;
+            min-width: -moz-fit-content;
             min-width: fit-content;
             flex-grow: 0;
             flex-shrink: 0;
@@ -151,6 +155,8 @@ const template = html`
             border-top: 1px solid #e3e3e3;
             -webkit-font-smoothing: antialiased;
             text-rendering: optimizeLegibility;
+            min-width: -webkit-fit-content;
+            min-width: -moz-fit-content;
             min-width: fit-content;
             flex-grow: 0;
             flex-shrink: 0;
@@ -161,6 +167,8 @@ const template = html`
         }
         .footer {
             background-color: white;
+            min-width: -webkit-fit-content;
+            min-width: -moz-fit-content;
             min-width: fit-content;
             flex-grow: 0;
             flex-shrink: 0;

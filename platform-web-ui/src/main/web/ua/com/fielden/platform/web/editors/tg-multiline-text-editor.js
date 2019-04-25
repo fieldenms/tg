@@ -14,12 +14,14 @@ const additionalTemplate = html`
             @apply --layout-vertical;
         }
         iron-autogrow-textarea {
+            min-height: -webkit-fit-content;
+            min-height: -moz-fit-content;
+            min-height: fit-content;
+            overflow: hidden;
             --iron-autogrow-textarea: {
                 font-weight: 500;
             }
             @apply --layout-flex;
-            min-height: fit-content;
-            overflow: hidden;
         }
         .upper-case {
             --iron-autogrow-textarea: {
