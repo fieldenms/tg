@@ -1,1 +1,1 @@
-NODE_OPTIONS="--max-old-space-size=3072" polymer build
+NODE_OPTIONS="--max-old-space-size=6144" polymer build

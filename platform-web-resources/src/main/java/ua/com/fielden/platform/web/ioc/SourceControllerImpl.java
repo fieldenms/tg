@@ -90,7 +90,7 @@ public class SourceControllerImpl implements ISourceController {
         final Workflows workflow = this.webUiConfig.workflow();
         this.deploymentMode = deployment.equals(workflow);
         this.vulcanizingMode = vulcanizing.equals(workflow);
-        logger.info(String.format("\t[%s MODE]", vulcanizingMode ? "VULCANIZING (uses DEVELOPMENT internally)" : deploymentMode ? "DEPLOYMENT" : "DEVELOPMENT"));
+        logger.info(format("\t[%s MODE]", vulcanizingMode ? "VULCANIZING (uses DEVELOPMENT internally)" : deploymentMode ? "DEPLOYMENT" : "DEVELOPMENT"));
         this.preloadedResourcesByProfile = calculatePreloadedResourcesByProfile();
         this.dependenciesByURI.clear();
     }

@@ -1,4 +1,4 @@
-/*-- entity masters: */
+/* entity masters: */
 import '/master_ui/ua.com.fielden.platform.sample.domain.TgPersistentEntityWithProperties.js';
 
 /* entity centres: */
