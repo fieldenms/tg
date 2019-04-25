@@ -12,9 +12,6 @@
     <script src="/resources/postal/2.0.5/postal.min.js"></script>
     <script src="/resources/filesaver/FileSaver.min.js"></script>
     <script src="/resources/polymer/wct-browser-legacy/browser.js"></script>
-    <script type="module">
-        import '/app/tg-app.js';        
-    </script>
 </head>
 
 <body>
@@ -25,6 +22,8 @@
     </test-fixture>
 
     <script type="module">
+
+        import '/app/tg-app.js'; 
 
         suite('Test menu changes callback', function () {
             let app;

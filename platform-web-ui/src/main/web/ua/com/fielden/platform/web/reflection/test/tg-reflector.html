@@ -12,15 +12,15 @@
     <script src="/resources/postal/2.0.5/postal.min.js"></script>
     <script src="/resources/filesaver/FileSaver.min.js"></script>
     <script src="/resources/polymer/wct-browser-legacy/browser.js"></script>
-    <script type="module">
-        import '/app/tg-reflector.js';        
-    </script>
 </head>
 
 <body>
 	<tg-reflector id="reflector"></tg-reflector>
 
-    <script>
+    <script type="module">
+
+        import '/app/tg-reflector.js';
+
         suite('reflector\'s', function() {
             let reflector;
             const typeName1 = 'ua.com.fielden.platform.sample.domain.TgPersistentEntityWithProperties';
