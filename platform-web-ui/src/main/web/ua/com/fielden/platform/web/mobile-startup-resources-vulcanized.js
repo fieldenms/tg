@@ -6579,6 +6579,8 @@ styles. All other styles should exist as single lines."
             height: 3rem;
             -webkit-font-smoothing: antialiased;
             text-rendering: optimizeLegibility;
+            min-width: -webkit-fit-content;
+            min-width: -moz-fit-content;
             min-width: fit-content;
             flex-grow: 0;
             flex-shrink: 0;
@@ -6593,6 +6595,8 @@ styles. All other styles should exist as single lines."
             border-top: 1px solid #e3e3e3;
             -webkit-font-smoothing: antialiased;
             text-rendering: optimizeLegibility;
+            min-width: -webkit-fit-content;
+            min-width: -moz-fit-content;
             min-width: fit-content;
             flex-grow: 0;
             flex-shrink: 0;
@@ -6606,6 +6610,8 @@ styles. All other styles should exist as single lines."
             border-top: 1px solid #e3e3e3;
             -webkit-font-smoothing: antialiased;
             text-rendering: optimizeLegibility;
+            min-width: -webkit-fit-content;
+            min-width: -moz-fit-content;
             min-width: fit-content;
             flex-grow: 0;
             flex-shrink: 0;
@@ -6616,6 +6622,8 @@ styles. All other styles should exist as single lines."
         }
         .footer {
             background-color: white;
+            min-width: -webkit-fit-content;
+            min-width: -moz-fit-content;
             min-width: fit-content;
             flex-grow: 0;
             flex-shrink: 0;
@@ -7096,6 +7104,8 @@ styles. All other styles should exist as single lines."
         }
         .selection-criteria-buttons {
             padding: 20px 20px 0 20px;
+            min-height: -webkit-fit-content;
+            min-height: -moz-fit-content;
             min-height: fit-content;
         }
     </style>
@@ -7230,6 +7240,8 @@ styles. All other styles should exist as single lines."
             border-left: 7px solid white;
         }
         .centre-result-container {
+            min-height: -webkit-fit-content;
+            min-height: -moz-fit-content;
             min-height: fit-content;
         }
         .insertion-point-slot {
@@ -7684,12 +7696,14 @@ border-color: var(--paper-orange-500);
             @apply --layout-vertical;
         }
         iron-autogrow-textarea {
+            min-height: -webkit-fit-content;
+            min-height: -moz-fit-content;
+            min-height: fit-content;
+            overflow: hidden;
             --iron-autogrow-textarea: {
                 font-weight: 500;
             }
             @apply --layout-flex;
-            min-height: fit-content;
-            overflow: hidden;
         }
         .upper-case {
             --iron-autogrow-textarea: {

@@ -2,23 +2,14 @@
   "root": "vulcan",
   "entrypoint": "./resources/build-index.html",
   "shell": "./resources/@profile-startup-resources-origin.js",
-  "extraDependencies": [
-    "./resources/polymer/@webcomponents/webcomponentsjs/custom-elements-es5-adapter.js",
-    "./resources/polymer/@webcomponents/webcomponentsjs/webcomponents-loader.js"
-  ],
-  "lint": {
-    "rules": ["polymer-3"]
-  },
   "builds": [
     { 
-      "js": {"minify": true, "compile": false},
+      "js": {"minify": true},
       "css": {"minify": true},
       "html": {"minify": true},
       "bundle": {
         "inlineCss": true,
         "inlineScripts": true,
-        "rewriteUrlsInTemplates": true,
-        "sourcemaps": true,
         "stripComments": true
       }
     }
