@@ -100,20 +100,17 @@ public abstract class AbstractWebResourceGuard extends ChallengeAuthenticator {
                 // However, the client side would not be able to receive a response.
                 //request.abort();
                 forbid(response);
+                assignAuthenticatorCookieToExpire(response);
                 return false;
             }
 
-            // at this stage it is safe to record the fact of successful resource access for later analysis of resources being accessed and
-            // to count concurrent users ... it would be wise to use some key/value database for this instead of the underlying RDBMS
-            // TODO #236 implement logging of accessed by users resources... potentially a custom log4j appender could be created for this purpose
-
-
             // the provided authenticator was valid and a new cookie should be send back to the client
-            assignAuthenticatingCookie(constants.now(), session.get().getAuthenticator().get(), domainName, path, request, response);
+            assignAuthenticatingCookie(session.get().getUser(), constants.now(), session.get().getAuthenticator().get(), domainName, path, request, response);
 
         } catch (final Exception ex) {
             // in case of any internal exception forbid the request
             forbid(response);
+            assignAuthenticatorCookieToExpire(response);
             logger.fatal(ex);
             return false;
         }
@@ -156,7 +153,7 @@ public abstract class AbstractWebResourceGuard extends ChallengeAuthenticator {
      * @param authenticator
      * @param response
      */
-    public static void assignAuthenticatingCookie(final DateTime now, final Authenticator authenticator, final String domainName, final String path, final Request request, final Response response) {
+    public static void assignAuthenticatingCookie(final User user, final DateTime now, final Authenticator authenticator, final String domainName, final String path, final Request request, final Response response) {
         // create a cookie that will carry an updated authenticator back to the client for further use
         // it is important to note that the time that will be used by further processing of this request is not known
         // and thus is not factored in for session authentication time frame
@@ -184,6 +181,12 @@ public abstract class AbstractWebResourceGuard extends ChallengeAuthenticator {
         // finally associate the refreshed authenticator with the response
         response.getCookieSettings().clear();
         response.getCookieSettings().add(newCookie);
+        
+        // let's record the current username as the Restlet security User that forms part of the HTTP request information.
+        // This information can then be easily reused whenever the current username is required, but there is no access to the application user provider (e.g. in HTTP request filters).
+        final org.restlet.security.User restletUser = new org.restlet.security.User();
+        restletUser.setIdentifier(user.getId().toString());
+        request.getClientInfo().setUser(restletUser);
     }
 
     /**
@@ -192,4 +195,34 @@ public abstract class AbstractWebResourceGuard extends ChallengeAuthenticator {
      * @return
      */
     protected abstract User getUser(final String username);
+
+    /**
+     * Assigns "expired" authentication cookie to inform the browser that this cookie is no longer valid.
+     * @param response
+     */
+    private void assignAuthenticatorCookieToExpire(final Response response) {
+        final CookieSetting cookie = mkAuthenticationCookieToExpire(domainName, path);
+        response.getCookieSettings().clear();
+        response.getCookieSettings().add(cookie);
+    }
+
+    /**
+     * A convenient factory method for creating expiring authentication cookies.
+     * @param domainName
+     * @param path
+     * @return
+     */
+    public static CookieSetting mkAuthenticationCookieToExpire(final String domainName, final String path) {
+        return new CookieSetting(
+                0 /*version*/,
+                AbstractWebResourceGuard.AUTHENTICATOR_COOKIE_NAME /*name*/,
+                "" /* empty value*/,
+                path,
+                domainName,
+                null /*comment*/,
+                0 /* number of seconds before cookie expires, 0 -- expires immediately */,
+                true /*secure*/, // if secure is set to true then this cookie would only be included into the request if it is done over HTTPS!
+                true /*accessRestricted*/);
+    }
+
 }
