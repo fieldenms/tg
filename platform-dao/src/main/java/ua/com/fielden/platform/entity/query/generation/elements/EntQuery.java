@@ -297,7 +297,7 @@ public class EntQuery implements ISingleOperand {
         for (final OrderBy orderBy : orderings.getModels()) {
             if (orderBy.getYieldName() != null) {
                 if (orderBy.getYieldName().equals(KEY) && isCompositeEntity(resultType)) {
-                    final List<String> keyOrderProps = keyPaths((Class<? extends AbstractEntity<DynamicEntityKey>>) resultType, sources.getMain().getAlias());
+                    final List<String> keyOrderProps = keyPaths((Class<? extends AbstractEntity<DynamicEntityKey>>) resultType);
                     for (final String keyMemberProp : keyOrderProps) {
                         toBeAdded.add(new OrderBy(new EntProp(keyMemberProp), orderBy.isDesc()));
                     }
