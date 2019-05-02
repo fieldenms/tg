@@ -292,44 +292,55 @@ public class EntQuery implements ISingleOperand {
         return allFetchedPropsAreAggregatedExpressions ? (!presentInFetchModel || isHeaderOfMoneyType) : !presentInFetchModel;
     }
 
-    private void adjustOrderBys() {
+    private void enhanceOrderBys() {
         final List<OrderBy> toBeAdded = new ArrayList<>();
         for (final OrderBy orderBy : orderings.getModels()) {
-            if (orderBy.getYieldName() != null) {
-                if (orderBy.getYieldName().equals(KEY) && isCompositeEntity(resultType)) {
-                    final List<String> keyOrderProps = keyPaths((Class<? extends AbstractEntity<DynamicEntityKey>>) resultType);
-                    for (final String keyMemberProp : keyOrderProps) {
-                        toBeAdded.add(new OrderBy(new EntProp(keyMemberProp), orderBy.isDesc()));
-                    }
-                } else {
-                    final Yield correspondingYield = yields.getYieldByAlias(orderBy.getYieldName());
-                    final Yield correspondingYieldWithAmount = yields.getYieldByAlias(orderBy.getYieldName() + ".amount");
-                    if (correspondingYieldWithAmount != null) {
-                        orderBy.setYield(correspondingYieldWithAmount);
-                        toBeAdded.add(orderBy);
-                    } else if (correspondingYield != null) {
-                        orderBy.setYield(correspondingYield);
-                        toBeAdded.add(orderBy);
-                    } else {
-                        toBeAdded.addAll(transformOrderByFromYieldIntoOrderByFromProp(yields.findMostMatchingYield(orderBy.getYieldName()), orderBy));
-                    }
-                }
-            } else {
-                if (orderBy.getOperand() instanceof EntProp && ((EntProp) orderBy.getOperand()).getName().equals(KEY) && isCompositeEntity(resultType)) {
-                    final List<String> keyOrderProps = keyPaths((Class<? extends AbstractEntity<DynamicEntityKey>>) resultType);
-                    for (final String keyMemberProp : keyOrderProps) {
-                        toBeAdded.add(new OrderBy(new EntProp(keyMemberProp), orderBy.isDesc()));
-                    }
-                } else {
-                    toBeAdded.add(orderBy);
-                }
-            }
-
+            toBeAdded.addAll(orderBy.getYieldName() != null ? enhanceOrderByYield(orderBy) : enhanceOrderByOther(orderBy));
         }
         orderings.getModels().clear();
         orderings.getModels().addAll(toBeAdded);
     }
 
+    private List<OrderBy> enhanceOrderByYield(final OrderBy orderBy) {
+        final List<OrderBy> toBeAdded = new ArrayList<>();
+        
+        if (orderBy.getYieldName().equals(KEY) && isCompositeEntity(resultType)) {
+            final List<String> keyOrderProps = keyPaths((Class<? extends AbstractEntity<DynamicEntityKey>>) resultType);
+            for (final String keyMemberProp : keyOrderProps) {
+                toBeAdded.add(new OrderBy(new EntProp(keyMemberProp), orderBy.isDesc()));
+            }
+        } else {
+            final Yield correspondingYield = yields.getYieldByAlias(orderBy.getYieldName());
+            final Yield correspondingYieldWithAmount = yields.getYieldByAlias(orderBy.getYieldName() + ".amount");
+            if (correspondingYieldWithAmount != null) {
+                orderBy.setYield(correspondingYieldWithAmount);
+                toBeAdded.add(orderBy);
+            } else if (correspondingYield != null) {
+                orderBy.setYield(correspondingYield);
+                toBeAdded.add(orderBy);
+            } else {
+                toBeAdded.addAll(transformOrderByFromYieldIntoOrderByFromProp(yields.findMostMatchingYield(orderBy.getYieldName()), orderBy));
+            }
+        }
+        return toBeAdded;
+    }
+    
+    private List<OrderBy> enhanceOrderByOther(final OrderBy orderBy) {
+        final List<OrderBy> toBeAdded = new ArrayList<>();
+        
+        if (orderBy.getOperand() instanceof EntProp && ((EntProp) orderBy.getOperand()).getName().equals(KEY) && isCompositeEntity(resultType)) {
+            final List<String> keyOrderProps = keyPaths((Class<? extends AbstractEntity<DynamicEntityKey>>) resultType);
+            for (final String keyMemberProp : keyOrderProps) {
+                toBeAdded.add(new OrderBy(new EntProp(keyMemberProp), orderBy.isDesc()));
+            }
+        } else {
+            toBeAdded.add(orderBy);
+        }
+
+        return toBeAdded;
+    }
+
+    
     private List<OrderBy> transformOrderByFromYieldIntoOrderByFromProp(final Yield bestYield, final OrderBy original) {
         if (bestYield == null) {
             throw new IllegalStateException("Could not find best yield match for order by yield [" + original.getYieldName() + "]");
@@ -518,7 +529,7 @@ public class EntQuery implements ISingleOperand {
 
         enhanceYieldsModel();
         adjustYieldsModelAccordingToFetchModel(fetchModel);
-        adjustOrderBys();
+        enhanceOrderBys();
         enhanceGroupBysModelFromYields();
         enhanceGroupBysModelFromOrderBys();
 
