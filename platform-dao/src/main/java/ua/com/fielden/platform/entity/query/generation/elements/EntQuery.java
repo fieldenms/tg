@@ -315,7 +315,14 @@ public class EntQuery implements ISingleOperand {
                     }
                 }
             } else {
-                toBeAdded.add(orderBy);
+                if (orderBy.getOperand() instanceof EntProp && ((EntProp) orderBy.getOperand()).getName().equals(KEY) && isCompositeEntity(resultType)) {
+                    final List<String> keyOrderProps = keyPaths((Class<? extends AbstractEntity<DynamicEntityKey>>) resultType);
+                    for (final String keyMemberProp : keyOrderProps) {
+                        toBeAdded.add(new OrderBy(new EntProp(keyMemberProp), orderBy.isDesc()));
+                    }
+                } else {
+                    toBeAdded.add(orderBy);
+                }
             }
 
         }

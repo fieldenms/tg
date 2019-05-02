@@ -57,6 +57,7 @@ import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.OrderingModel;
 import ua.com.fielden.platform.entity.query.model.PrimitiveResultQueryModel;
+import ua.com.fielden.platform.sample.domain.TgAuthor;
 import ua.com.fielden.platform.sample.domain.TgAverageFuelUsage;
 import ua.com.fielden.platform.sample.domain.TgFuelUsage;
 import ua.com.fielden.platform.sample.domain.TgVehicle;
@@ -379,6 +380,19 @@ public class QueryModelCompositionTest extends BaseEntQueryCompositionTCase {
         orderings.add(new OrderBy(prop("key"), true));
         final OrderBys exp2 = new OrderBys(orderings);
         assertEquals("models are different", exp2, act.getOrderings());
+    }
+    
+    @Test
+    public void implicit_ordering_by_composite_key_members_works() {
+        final EntityResultQueryModel<TgAuthor> qry = select(TgAuthor.class).model();
+        final OrderingModel orderModel = orderBy().prop("key").desc().model();
+        final EntQuery act = entResultQry(qry, orderModel);
+
+        final EntityResultQueryModel<TgAuthor> qryExplicit = select(TgAuthor.class).model();
+        final OrderingModel orderModelExplicit = orderBy().prop("name.key").desc().prop("surname").desc().prop("patronymic").desc().model();
+        final EntQuery actExplicit = entResultQry(qryExplicit, orderModelExplicit);
+
+        assertEquals("models are different", actExplicit, act);
     }
 
     //////////////////////////////////////////////////////// Yielding ///////////////////////////////////////////////////////////////////
