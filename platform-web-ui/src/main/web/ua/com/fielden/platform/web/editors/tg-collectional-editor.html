@@ -181,7 +181,7 @@
             _on-keydown="[[_onKeydown]]">
             <div class="layout horizontal custom-input center">
                 <div class="resizing-box" hidden$="[[!canReorderItems]]"></div>
-                <paper-checkbox class="select-all-checkbox" id="selectAllCheckbox" hidden$="[[_selectingIconHidden(_forReview)]]" checked="[[_selectedAll]]" semi-checked$="[[_semiCheckedAll]]" on-change="_allSelectionChanged"></paper-checkbox>
+                <paper-checkbox class="select-all-checkbox" id="selectAllCheckbox" style$="[[_computeCheckAllStyle(canReorderItems)]]" hidden$="[[_selectingIconHidden(_forReview)]]" checked="[[_selectedAll]]" semi-checked$="[[_semiCheckedAll]]" on-change="_allSelectionChanged"></paper-checkbox>
                 <input id="searchInput" is="iron-input" autocomplete="nope" placeholder="Type to search..." bind-value="{{_phraseForSearching}}" on-input="_onInput" on-tap="_onTap" on-mousedown="_onTap" on-blur="_eventHandler" prevent-invalid-input>
             </div>
             <div class="custom-input layout vertical flex relative">
@@ -586,6 +586,10 @@
             let style = _forReview || _draggingItem ? '' : 'cursor: pointer;';
             style += canReorderItems ? "" : "padding-left: 22px;";
             return style;
+        },
+
+        _computeCheckAllStyle: function (canReorderItems) {
+            return canReorderItems ? "" : "padding-left: 22px;";
         },
         
         _computeStyleForResizingBox : function (selected) {
