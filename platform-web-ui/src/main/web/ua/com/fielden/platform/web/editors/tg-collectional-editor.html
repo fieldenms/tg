@@ -179,7 +179,7 @@
             _on-change="[[_onChange]]"
             _on-input="[[_onInput]]"
             _on-keydown="[[_onKeydown]]">
-            <div class="layout horizontal custom-input center">
+            <div class="layout horizontal custom-input center" style$="[[_computeInputStyle(_forReview)]]">
                 <div class="resizing-box" hidden$="[[!canReorderItems]]"></div>
                 <paper-checkbox class="select-all-checkbox" id="selectAllCheckbox" style$="[[_computeCheckAllStyle(canReorderItems)]]" hidden$="[[_selectingIconHidden(_forReview)]]" checked="[[_selectedAll]]" semi-checked$="[[_semiCheckedAll]]" on-change="_allSelectionChanged"></paper-checkbox>
                 <input id="searchInput" is="iron-input" autocomplete="nope" placeholder="Type to search..." bind-value="{{_phraseForSearching}}" on-input="_onInput" on-tap="_onTap" on-mousedown="_onTap" on-blur="_eventHandler" prevent-invalid-input>
@@ -348,6 +348,8 @@
         
         ready: function () {
             this._draggingItem = null;
+            this.$.editorDom._editorKind = "COLLECTIONAL";
+            this.$.editorDom.$.decorator.noLabelFloat = true;
             this._eventHandler = (function(e) {
             	// There is no need to proceed with search if user moved out of the search field
             	this._cancelSearch();
@@ -588,8 +590,12 @@
             return style;
         },
 
+        _computeInputStyle: function (_forReview) {
+            return _forReview ? "" : "padding-bottom: 20px;";
+        },
+
         _computeCheckAllStyle: function (canReorderItems) {
-            return canReorderItems ? "" : "padding-left: 22px;";
+            return canReorderItems ? "" : "padding-left: 22px;padding-right:14px;";
         },
         
         _computeStyleForResizingBox : function (selected) {
