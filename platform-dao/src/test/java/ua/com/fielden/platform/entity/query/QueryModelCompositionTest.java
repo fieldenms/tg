@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.entity.query;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.fail;
 import static ua.com.fielden.platform.entity.query.DbVersion.H2;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.expr;
@@ -383,7 +384,7 @@ public class QueryModelCompositionTest extends BaseEntQueryCompositionTCase {
     }
 
     @Test
-    public void ordering_by_key_that_is_composite_expands_to_ordering_by_individual_key_members() {
+    public void ordering_by_key_that_is_composite_descending_expands_to_ordering_by_individual_key_members_descending() {
         final EntityResultQueryModel<TgAuthor> qry = select(TgAuthor.class).model();
 
         final OrderingModel orderModelByKey = orderBy().prop("key").desc().model();
@@ -393,6 +394,25 @@ public class QueryModelCompositionTest extends BaseEntQueryCompositionTCase {
         final EntQuery modelWithOrderByKeyMembers = entResultQry(qry, orderModelByKeyMembers);
 
         assertEquals(modelWithOrderByKeyMembers, modelWithOrderByKey);
+    }
+
+    @Test
+    public void ordering_by_key_that_is_composite_ascending_expands_to_ordering_by_individual_key_members_ascending() {
+        final EntityResultQueryModel<TgAuthor> qry = select(TgAuthor.class).model();
+
+        final OrderingModel orderModelByKey = orderBy().prop("key").asc().model();
+        final EntQuery modelWithOrderByKey = entResultQry(qry, orderModelByKey);
+
+        final OrderingModel orderModelByKeyMembers = orderBy().prop("name.key").asc().prop("surname").asc().prop("patronymic").asc().model();
+        final EntQuery modelWithOrderByKeyMembers = entResultQry(qry, orderModelByKeyMembers);
+
+        assertEquals(modelWithOrderByKeyMembers, modelWithOrderByKey);
+    }
+
+    @Test
+    public void order_by_models_with_different_directions_are_not_equal() {
+        assertNotEquals(orderBy().prop("key").desc().model(), orderBy().prop("key").asc().model());
+        assertNotEquals(orderBy().prop("surname").asc().model(), orderBy().prop("surname").desc().model());
     }
 
     //////////////////////////////////////////////////////// Yielding ///////////////////////////////////////////////////////////////////

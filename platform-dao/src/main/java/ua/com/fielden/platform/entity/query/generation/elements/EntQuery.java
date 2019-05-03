@@ -27,6 +27,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Map.Entry;
 import java.util.Set;
 import java.util.SortedSet;
@@ -787,6 +788,7 @@ public class EntQuery implements ISingleOperand {
         int result = 1;
         result = prime * result + ((conditions == null) ? 0 : conditions.hashCode());
         result = prime * result + ((groups == null) ? 0 : groups.hashCode());
+        result = prime * result + ((orderings == null) ? 0 : orderings.hashCode());
         result = prime * result + ((category == null) ? 0 : category.hashCode());
         result = prime * result + ((resultType == null) ? 0 : resultType.hashCode());
         result = prime * result + ((sources == null) ? 0 : sources.hashCode());
@@ -802,45 +804,14 @@ public class EntQuery implements ISingleOperand {
         if (!(obj instanceof EntQuery)) {
             return false;
         }
-        final EntQuery other = (EntQuery) obj;
-        if (conditions == null) {
-            if (other.conditions != null) {
-                return false;
-            }
-        } else if (!conditions.equals(other.conditions)) {
-            return false;
-        }
-        if (groups == null) {
-            if (other.groups != null) {
-                return false;
-            }
-        } else if (!groups.equals(other.groups)) {
-            return false;
-        }
-        if (category != other.category) {
-            return false;
-        }
-        if (resultType == null) {
-            if (other.resultType != null) {
-                return false;
-            }
-        } else if (!resultType.equals(other.resultType)) {
-            return false;
-        }
-        if (sources == null) {
-            if (other.sources != null) {
-                return false;
-            }
-        } else if (!sources.equals(other.sources)) {
-            return false;
-        }
-        if (yields == null) {
-            if (other.yields != null) {
-                return false;
-            }
-        } else if (!yields.equals(other.yields)) {
-            return false;
-        }
-        return true;
-    }
+
+        final EntQuery that = (EntQuery) obj;
+        return Objects.equals(conditions, that.conditions)
+            && Objects.equals(groups, that.groups)
+            && Objects.equals(orderings, that.orderings)
+            && Objects.equals(category, that.category)
+            && Objects.equals(resultType, that.resultType)
+            && Objects.equals(sources, that.sources)
+            && Objects.equals(yields, that.yields);
+     }
 }
