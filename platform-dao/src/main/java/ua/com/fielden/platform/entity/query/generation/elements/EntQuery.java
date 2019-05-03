@@ -51,7 +51,6 @@ import ua.com.fielden.platform.entity.query.metadata.PersistedEntityMetadata;
 import ua.com.fielden.platform.entity.query.metadata.PropertyMetadata;
 import ua.com.fielden.platform.entity.query.model.ConditionModel;
 import ua.com.fielden.platform.types.Money;
-import ua.com.fielden.platform.utils.CollectionUtil;
 import ua.com.fielden.platform.utils.Pair;
 
 public class EntQuery implements ISingleOperand {
@@ -85,7 +84,7 @@ public class EntQuery implements ISingleOperand {
      * modifiable set of unresolved props (introduced for performance reason - in order to avoid multiple execution of the same search against all query props while searching for
      * unresolved only; if at some master the property of this subquery is resolved - it should be removed from here
      */
-    private List<EntProp> unresolvedProps = new ArrayList<>();
+    private final List<EntProp> unresolvedProps = new ArrayList<>();
 
     @Override
     public String toString() {
@@ -284,7 +283,7 @@ public class EntQuery implements ISingleOperand {
         }
     }
 
-    private boolean shouldYieldBeRemoved(final IRetrievalModel fetchModel, final Yield yield) {
+    private boolean shouldYieldBeRemoved(final IRetrievalModel<?> fetchModel, final Yield yield) {
         final boolean presentInFetchModel = fetchModel.containsProp(yield.getAlias());
         final boolean allFetchedPropsAreAggregatedExpressions = areAllFetchedPropsAggregatedExpressions(fetchModel);
         // this means that all not fetched props should be 100% removed -- in order to get valid sql stmt for entity centre totals query
@@ -606,7 +605,7 @@ public class EntQuery implements ISingleOperand {
         for (final EntProp propToBeResolvedPair : propsToBeResolved) {
             if (!propToBeResolvedPair.isFinallyResolved()) {
                 final Map<ISource, PropResolutionInfo> sourceCandidates = findSourceMatchCandidates(propToBeResolvedPair);
-                if (sourceCandidates.size() == 0) {
+                if (sourceCandidates.isEmpty()) {
                     propToBeResolvedPair.setUnresolved(true);
                     unresolved.add(propToBeResolvedPair);
                 } else {
@@ -756,7 +755,7 @@ public class EntQuery implements ISingleOperand {
     }
 
     public List<EntProp> getUnresolvedProps() {
-        return unresolvedProps;
+        return Collections.unmodifiableList(unresolvedProps);
     }
 
     @Override
