@@ -381,18 +381,18 @@ public class QueryModelCompositionTest extends BaseEntQueryCompositionTCase {
         final OrderBys exp2 = new OrderBys(orderings);
         assertEquals("models are different", exp2, act.getOrderings());
     }
-    
+
     @Test
-    public void implicit_ordering_by_composite_key_members_works() {
+    public void ordering_by_key_that_is_composite_expands_to_ordering_by_individual_key_members() {
         final EntityResultQueryModel<TgAuthor> qry = select(TgAuthor.class).model();
-        final OrderingModel orderModel = orderBy().prop("key").desc().model();
-        final EntQuery act = entResultQry(qry, orderModel);
 
-        final EntityResultQueryModel<TgAuthor> qryExplicit = select(TgAuthor.class).model();
-        final OrderingModel orderModelExplicit = orderBy().prop("name.key").desc().prop("surname").desc().prop("patronymic").desc().model();
-        final EntQuery actExplicit = entResultQry(qryExplicit, orderModelExplicit);
+        final OrderingModel orderModelByKey = orderBy().prop("key").desc().model();
+        final EntQuery modelWithOrderByKey = entResultQry(qry, orderModelByKey);
 
-        assertEquals("models are different", actExplicit, act);
+        final OrderingModel orderModelByKeyMembers = orderBy().prop("name.key").desc().prop("surname").desc().prop("patronymic").desc().model();
+        final EntQuery modelWithOrderByKeyMembers = entResultQry(qry, orderModelByKeyMembers);
+
+        assertEquals(modelWithOrderByKeyMembers, modelWithOrderByKey);
     }
 
     //////////////////////////////////////////////////////// Yielding ///////////////////////////////////////////////////////////////////
