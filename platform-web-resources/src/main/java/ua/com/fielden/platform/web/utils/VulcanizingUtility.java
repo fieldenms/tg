@@ -155,18 +155,17 @@ public class VulcanizingUtility {
     }
     
     /**
-     * Downloads templates for 'build-index.html' and 'polymer.json' and adjusts them according to <code>profile</code>.
+     * Copies template for 'rollup.config.js' and adjusts it according to <code>profile</code>.
      * 
      * @param sourceController
      * @param logger
      * @param profile
      */
     private static void adjustRootResources(final ISourceController sourceController, final String profile) {
-        downloadSource("resources", "build-index.html", sourceController, DESKTOP);
-        adjustFileContents("vulcan/resources/build-index.html", profile);
         try {
-            FileUtils.copyFile(new File("vulcan/resources/polymer.json"), new File("polymer.json"));
-            adjustFileContents("polymer.json", profile);
+            FileUtils.copyFile(new File("vulcan/resources/rollup.config.js"), new File("rollup.config.js"));
+            adjustFileContents("rollup.config.js", profile);
+            copyFile(new File("vulcan/resources/" + profile + "-startup-resources-origin.js"), new File(profile + "-startup-resources-origin.js"));
         } catch (final IOException e) {
             LOGGER.error(e.getMessage(), e);
             throw new IllegalStateException(e);
@@ -202,7 +201,13 @@ public class VulcanizingUtility {
             deleteDirectory(new File("vulcan"));
             deleteDirectory(new File("build"));
             new File("build-script.bat").delete();
-            new File("polymer.json").delete();
+            new File("rollup.config.js").delete();
+            new File("login-startup-resources-origin.js").delete();
+            new File("login-startup-resources-vulcanized.js").delete();
+            new File("mobile-startup-resources-origin.js").delete();
+            new File("mobile-startup-resources-vulcanized.js").delete();
+            new File("desktop-startup-resources-origin.js").delete();
+            new File("desktop-startup-resources-vulcanized.js").delete();
         } catch (final IOException e) {
             LOGGER.error(e.getMessage(), e);
             throw new IllegalStateException(e);
@@ -301,7 +306,7 @@ public class VulcanizingUtility {
         LOGGER.info("\t\tVulcanized [" + prefix + "].");
         LOGGER.info("\t\tMove vulcanized file to its destination...");
         try {
-            copyFile(new File("build/default/vulcan/resources/" + prefix + "-startup-resources-origin.js"), new File(targetAppSpecificPath + prefix + "-startup-resources-vulcanized.js"));
+            copyFile(new File(prefix + "-startup-resources-vulcanized.js"), new File(targetAppSpecificPath + prefix + "-startup-resources-vulcanized.js"));
         } catch (final IOException e) {
             LOGGER.error(e.getMessage(), e);
             throw new IllegalStateException(e);
