@@ -82,10 +82,10 @@ const customPrefixTemplate = html`
         <div class="prefix prefix-custom-attributes" style$="[[_calcColourPrefixStyle(_editingValue)]]">#</div>
     </div>`;
 const customInputTemplate = html`
-    <iron-input bind-value="{{_editingValue}}" allowed-pattern="[0-9, A-F, a-f]" class="custom-input-wrapper colour-input">
+    <iron-input bind-value="{{_editingValue}}" allowed-pattern="[0-9, A-F, a-f]" class="custom-input-wrapper">
         <input
             id="input"
-            class="custom-input"
+            class="custom-input colour-input"
             style$="[[_calcColourTextStyle(_editingValue)]]"
             maxlength="6"
             on-change="_onChange"

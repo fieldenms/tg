@@ -60,10 +60,10 @@ const additionalTemplate = html`
         <style include="iron-flex iron-flex-reverse iron-flex-alignment iron-flex-factors iron-positioning"></style>
     </custom-style>`;
 const customInputTemplate = html`
-    <iron-input bind-value="{{_editingValue}}" class="custom-input-wrapper date-input">
+    <iron-input bind-value="{{_editingValue}}" class="custom-input-wrapper">
         <input
             id="input"
-            class="custom-input"
+            class="custom-input date-input"
             on-change="_onChange"
             on-input="_onInput"
             on-keydown="_onKeydown"
