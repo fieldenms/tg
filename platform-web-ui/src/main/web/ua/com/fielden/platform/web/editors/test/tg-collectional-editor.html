@@ -68,13 +68,16 @@
                 originalEntity.roles = [one, two, three, four];
                 originalEntity.chosenIds = [];
                 
-                // perform initialisation
-                editor.entity = entity;
-                editor.originalEntity = originalEntity;
                 
-                // check the order
-                assert.deepEqual(editor._entities, [one, two, three, four]);
-                done();
+                setTimeout(() => {
+                    // perform initialisation
+                    editor.entity = entity;
+                    editor.originalEntity = originalEntity;
+
+                    // check the order
+                    assert.deepEqual(editor._entities, [one, two, three, four]);
+                    done();
+                },1);
             });
             
             test('places selected entities on top and unselected at the bottom and preserves the order in each group', function (done) {
@@ -98,13 +101,15 @@
                 originalEntity.roles = [one, two, three, four];
                 originalEntity.chosenIds = [];
                 
-                // perform initialisation
-                editor.entity = entity;
-                editor.originalEntity = originalEntity;
-                
-                // check the order
-                assert.deepEqual(editor._entities, [two, four, one, three]);
-                done();
+                setTimeout(() => {
+                    // perform initialisation
+                    editor.entity = entity;
+                    editor.originalEntity = originalEntity;
+                    
+                    // check the order
+                    assert.deepEqual(editor._entities, [two, four, one, three]);
+                    done();
+                },1);
             });
         });
     </script>
