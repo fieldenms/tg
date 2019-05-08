@@ -30,10 +30,10 @@ const additionalTemplate = html`
     </style>
     <tg-app-config id="appConfig"></tg-app-config>`;
 const customInputTemplate = html`
-    <iron-input allowed-pattern="[0-9]" bind-value="{{_editingValue}}" class="integer-input custom-input-wrapper">
+    <iron-input allowed-pattern="[0-9]" bind-value="{{_editingValue}}" class="custom-input-wrapper">
         <input
             id="input"
-            class="custom-input"
+            class="custom-input integer-input"
             type="number"
             step="1"
             on-change="_onChange"

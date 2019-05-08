@@ -1,5 +1,7 @@
 import {Polymer} from '/resources/polymer/@polymer/polymer/lib/legacy/polymer-fn.js';
 
+import '/resources/components/moment-lib.js';
+
 moment.locale('custom-locale', {
     longDateFormat: {
         LTS: @timeWithMillisFormat,
