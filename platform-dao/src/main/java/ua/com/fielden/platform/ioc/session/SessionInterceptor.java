@@ -174,7 +174,7 @@ public class SessionInterceptor implements MethodInterceptor {
                 tr.rollback();
             }
         } catch (final Exception ex) {
-            LOGGER.error("Could not commit transaction.", ex);
+            LOGGER.error("Could not rollback transaction.", ex);
         }
         
         try {

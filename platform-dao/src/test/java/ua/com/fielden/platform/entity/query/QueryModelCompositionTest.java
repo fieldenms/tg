@@ -1,11 +1,13 @@
 package ua.com.fielden.platform.entity.query;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.fail;
 import static ua.com.fielden.platform.entity.query.DbVersion.H2;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.expr;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.orderBy;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
+import static ua.com.fielden.platform.entity.query.fluent.LikeOptions.options;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -56,6 +58,7 @@ import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.OrderingModel;
 import ua.com.fielden.platform.entity.query.model.PrimitiveResultQueryModel;
+import ua.com.fielden.platform.sample.domain.TgAuthor;
 import ua.com.fielden.platform.sample.domain.TgAverageFuelUsage;
 import ua.com.fielden.platform.sample.domain.TgFuelUsage;
 import ua.com.fielden.platform.sample.domain.TgVehicle;
@@ -71,14 +74,14 @@ public class QueryModelCompositionTest extends BaseEntQueryCompositionTCase {
     @Test
     public void test_like() {
         assertModelsEquals( //
-        conditions(new LikeTest(prop("model.desc"), val(mercLike), false, false, H2)), //
+        conditions(new LikeTest(prop("model.desc"), val(mercLike), options().build(), H2)), //
                 conditions(where_veh.prop("model.desc").like().val(mercLike)));
     }
 
     @Test
     public void test_notLike() {
         assertModelsEquals( //
-        conditions(new LikeTest(prop("model.desc"), val(mercLike), true, false, H2)), //
+        conditions(new LikeTest(prop("model.desc"), val(mercLike), options().negated().build(), H2)), //
                 conditions(where_veh.prop("model.desc").notLike().val(mercLike)));
     }
 
@@ -224,14 +227,14 @@ public class QueryModelCompositionTest extends BaseEntQueryCompositionTCase {
     @Test
     public void test_ignore_of_null_value_in_condition1() {
         assertModelsEquals(//
-        conditions(new LikeTest(prop("model.desc"), val(mercLike), false, false, H2)), //
+        conditions(new LikeTest(prop("model.desc"), val(mercLike), options().build(), H2)), //
                 conditions(where_veh.prop("model.desc").like().iVal(mercLike)));
     }
 
     @Test
     public void test_ignore_of_null_value_in_condition2() {
         assertModelsEquals(//
-        conditions(new LikeTest(prop("model.desc"), iVal(null), false, false, H2)), //
+        conditions(new LikeTest(prop("model.desc"), iVal(null), options().build(), H2)), //
                 conditions(where_veh.prop("model.desc").like().iVal(null)));
     }
 
@@ -240,7 +243,7 @@ public class QueryModelCompositionTest extends BaseEntQueryCompositionTCase {
         final Map<String, Object> paramValues = new HashMap<String, Object>();
         paramValues.put("param", "MERC%");
         assertModelsEquals(//
-        conditions(new LikeTest(prop("model.desc"), val("MERC%"), false, false, H2)), //
+        conditions(new LikeTest(prop("model.desc"), val("MERC%"), options().build(), H2)), //
                 conditions(where_veh.prop("model.desc").like().param("param"), paramValues));
     }
 
@@ -249,7 +252,7 @@ public class QueryModelCompositionTest extends BaseEntQueryCompositionTCase {
         final Map<String, Object> paramValues = new HashMap<String, Object>();
         paramValues.put("param", null);
         assertModelsEquals(//
-        conditions(new LikeTest(prop("model.desc"), iVal(null), false, false, H2)), //
+        conditions(new LikeTest(prop("model.desc"), iVal(null), options().build(), H2)), //
                 conditions(where_veh.prop("model.desc").like().iParam("param"), paramValues));
     }
 
@@ -378,6 +381,38 @@ public class QueryModelCompositionTest extends BaseEntQueryCompositionTCase {
         orderings.add(new OrderBy(prop("key"), true));
         final OrderBys exp2 = new OrderBys(orderings);
         assertEquals("models are different", exp2, act.getOrderings());
+    }
+
+    @Test
+    public void ordering_by_key_that_is_composite_descending_expands_to_ordering_by_individual_key_members_descending() {
+        final EntityResultQueryModel<TgAuthor> qry = select(TgAuthor.class).model();
+
+        final OrderingModel orderModelByKey = orderBy().prop("key").desc().model();
+        final EntQuery modelWithOrderByKey = entResultQry(qry, orderModelByKey);
+
+        final OrderingModel orderModelByKeyMembers = orderBy().prop("name.key").desc().prop("surname").desc().prop("patronymic").desc().model();
+        final EntQuery modelWithOrderByKeyMembers = entResultQry(qry, orderModelByKeyMembers);
+
+        assertEquals(modelWithOrderByKeyMembers, modelWithOrderByKey);
+    }
+
+    @Test
+    public void ordering_by_key_that_is_composite_ascending_expands_to_ordering_by_individual_key_members_ascending() {
+        final EntityResultQueryModel<TgAuthor> qry = select(TgAuthor.class).model();
+
+        final OrderingModel orderModelByKey = orderBy().prop("key").asc().model();
+        final EntQuery modelWithOrderByKey = entResultQry(qry, orderModelByKey);
+
+        final OrderingModel orderModelByKeyMembers = orderBy().prop("name.key").asc().prop("surname").asc().prop("patronymic").asc().model();
+        final EntQuery modelWithOrderByKeyMembers = entResultQry(qry, orderModelByKeyMembers);
+
+        assertEquals(modelWithOrderByKeyMembers, modelWithOrderByKey);
+    }
+
+    @Test
+    public void order_by_models_with_different_directions_are_not_equal() {
+        assertNotEquals(orderBy().prop("key").desc().model(), orderBy().prop("key").asc().model());
+        assertNotEquals(orderBy().prop("surname").asc().model(), orderBy().prop("surname").desc().model());
     }
 
     //////////////////////////////////////////////////////// Yielding ///////////////////////////////////////////////////////////////////

@@ -22,9 +22,13 @@ import ua.com.fielden.platform.web.resources.webui.LogoutResource;
  */
 public class LogoutResourceFactory extends Restlet {
 
+    private final String domainName;
+    private final String path;
     private final Injector injector;
 
-    public LogoutResourceFactory(final Injector injector) {
+    public LogoutResourceFactory(final String domainName, final String path, final Injector injector) {
+        this.domainName = domainName;
+        this.path = path;
         this.injector = injector;
     }
 
@@ -41,6 +45,8 @@ public class LogoutResourceFactory extends Restlet {
                     injector.getInstance(IUserProvider.class),
                     coUser,
                     injector.getInstance(IUserSession.class),
+                    domainName,
+                    path,
                     getContext(),
                     request,
                     response

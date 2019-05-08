@@ -232,6 +232,11 @@ public class WebResourceGuardTestCase extends AbstractDaoTestCase {
         request2.getCookies().add(cookie);
         final Response response2 = client.handle(request2);
         assertEquals(403, response2.getStatus().getCode());
+        assertEquals(1, response2.getCookieSettings().size());
+        final CookieSetting authCookie = response2.getCookieSettings().get(0);
+        assertEquals("", authCookie.getValue());
+        assertEquals(0, authCookie.getMaxAge());
+        
 
         // another request by an adversary with what is thought a valid authenticator
         constants.setNow(dateTime("2015-04-23 18:41:00"));

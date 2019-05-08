@@ -109,7 +109,7 @@ public class LoginResource extends ServerResource {
                 final Optional<UserSession> session = coUserSession.currentSession(up.getUser(), auth.toString(), false);
                 if (session.isPresent()) {
                     // response needs to be provided with an authenticating cookie
-                    assignAuthenticatingCookie(constants.now(), session.get().getAuthenticator().get(), domainName, path, getRequest(), getResponse());
+                    assignAuthenticatingCookie(session.get().getUser(), constants.now(), session.get().getAuthenticator().get(), domainName, path, getRequest(), getResponse());
                     // response needs to provide redirection instructions
                     getResponse().redirectSeeOther("/");
                     return new EmptyRepresentation();
@@ -201,7 +201,7 @@ public class LoginResource extends ServerResource {
                 final UserSession session = coUserSession.newSession(user, credo.trustedDevice);
          
                 // ...and provide the response with an authenticating cookie
-                assignAuthenticatingCookie(constants.now(), session.getAuthenticator().get(), domainName, path, getRequest(), getResponse());
+                assignAuthenticatingCookie(user, constants.now(), session.getAuthenticator().get(), domainName, path, getRequest(), getResponse());
                 getResponse().setEntity(new JsonRepresentation("{\"msg\": \"Credentials are valid.\"}"));
             }
         }
