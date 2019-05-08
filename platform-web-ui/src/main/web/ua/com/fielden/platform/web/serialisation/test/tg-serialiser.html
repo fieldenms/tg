@@ -6,12 +6,12 @@
 	<title>tg-serialiser basic tests</title>
 	<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 	
-	<script src="/resources/polymer/webcomponentsjs/webcomponents-lite.js"></script>
-	<script src="/resources/polymer/web-component-tester/browser.js"></script>
-	<script src="/resources/polymer/test-fixture/test-fixture-mocha.js"></script>
-	<script src="/resources/polymer/iron-test-helpers/mock-interactions.js"></script>
-	
-	<link rel="import" href="/resources/polymer/test-fixture/test-fixture.html">
+	<script src="/resources/polymer/@webcomponents/webcomponentsjs/webcomponents-bundle.js"></script>
+    <script src='/resources/polymer/web-animations-js/web-animations-next-lite.min.js'></script>
+    <script src="/resources/lodash/4.17.11/lodash.min.js"></script>
+    <script src="/resources/postal/2.0.5/postal.min.js"></script>
+    <script src="/resources/filesaver/FileSaver.min.js"></script>
+    <script src="/resources/polymer/wct-browser-legacy/browser.js"></script>
   
     <link rel="import" href="/resources/polymer/iron-ajax/iron-ajax.html">
     <link rel="import" href="/resources/serialisation/tg-serialiser.html">
@@ -23,7 +23,11 @@
 
 	<tg-serialiser id="serialiser"></tg-serialiser>
 
-	<script>
+	<script type="module">
+
+        import '/resources/polymer/@polymer/iron-ajax/iron-ajax.js';
+        import '/resources/serialisation/tg-serialiser.js';
+
 		suite('serialisation', function() {
 		    var serialiser, reflector;
 		

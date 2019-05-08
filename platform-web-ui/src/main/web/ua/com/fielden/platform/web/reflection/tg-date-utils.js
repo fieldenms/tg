@@ -1,3 +1,5 @@
+import '/resources/components/moment-lib.js';
+
 export const timeZoneFormats = {
     "UTC": {
         "L": "YYYY-MM-DD",

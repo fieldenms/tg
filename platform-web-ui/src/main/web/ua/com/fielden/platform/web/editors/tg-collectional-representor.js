@@ -4,7 +4,7 @@ import { Polymer } from '/resources/polymer/@polymer/polymer/lib/legacy/polymer-
 import { html } from '/resources/polymer/@polymer/polymer/lib/utils/html-tag.js';
 
 import { TgEditorBehavior, TgEditorBehaviorImpl, createEditorTemplate} from '/resources/editors/tg-editor-behavior.js';
-import { generateShortCollection } from '/resources/reflection/tg-polymer-utils.js';
+import { generateShortCollection, allDefined } from '/resources/reflection/tg-polymer-utils.js';
 
 const additionalTemplate = html`
     <style>
@@ -71,6 +71,9 @@ Polymer({
     },
     
     _getTooltip: function(_editingValue, entity) {
+        if (!allDefined(arguments)) {
+            return "";
+        }
         if (entity !== null) {
             const fullEntity = this.reflector()._getValueFor(entity, "");
             let valueToFormat = "";
