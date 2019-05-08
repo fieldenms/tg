@@ -54,7 +54,7 @@ const additionalTemplate = html`
         .item {
             @apply --layout-horizontal;
             @apply --layout-center;
-            padding: 16px 22px 16px 0;
+            padding: 16px 16px 16px 0;
             border-bottom: 1px solid #DDD;
         }
         
@@ -74,6 +74,7 @@ const additionalTemplate = html`
             cursor: grab;
             cursor: -moz-grab;
             cursor: -webkit-grab;
+            color: var(--paper-light-blue-700);
         }
         .resizing-box:active { 
             cursor: grabbing;
@@ -81,11 +82,10 @@ const additionalTemplate = html`
             cursor: -webkit-grabbing;
         }
         .resizing-box {
-            visibility: hidden;
             margin: 0 2px;
-            color: var(--paper-light-blue-700);
             min-width: 32px;
             min-height: 32px;
+            color: var(--paper-grey-400);
         }
         .dummy-box {
             background-color: transparent;
@@ -93,6 +93,7 @@ const additionalTemplate = html`
         }
         .dragging-item > .resizing-box{
             visibility: visible;
+            color: var(--paper-light-blue-700);
         }
         paper-checkbox {
             --paper-checkbox-checked-color: var(--paper-light-blue-700);
@@ -109,14 +110,11 @@ const additionalTemplate = html`
             width: 1rem;
         }
         
-        .pad {
-            padding-left: 14px;
+        .title {
+            padding-left: 16px;
             overflow: hidden;
             @apply --layout-vertical;
-        }
-        .without-pad {
-            overflow: hidden;
-            @apply --layout-vertical;
+            @apply --layout-flex;
         }
         .primary {
             font-size: 10pt;
@@ -161,15 +159,15 @@ const customInputTemplate = html`
                     <div class="dummy-box fit" hidden$="[[!_isDummyBoxVisible(item, _draggingItem)]]"></div>
                     <div tabindex="0" class$="[[_computedClass(selected, item, _draggingItem)]]" style$="[[_computeItemStyle(_forReview, _draggingItem, canReorderItems)]]">
                         <iron-icon class="resizing-box" on-down="_makeListUnselectable" on-up="_makeListSelectable" on-track="_changeItemOrder" hidden$="[[!canReorderItems]]" icon="tg-icons:dragVertical" style$="[[_computeStyleForResizingBox(selected)]]" on-touchstart="_disableScrolling" on-touchmove="_disableScrolling"></iron-icon>
-                        <paper-checkbox on-change="_selectionHandler" hidden$="[[_selectingIconHidden(_forReview)]]" checked="[[selected]]"></paper-checkbox>
+                        <div class="title" tooltip-text$="[[_calcItemTooltip(item)]]">
+                            <tg-dom-stamper class$="[[_computedHeaderClass(item)]]" dom-text="[[_calcItemTextHighlighted(item, headerPropertyName, _phraseForSearchingCommited)]]"></tg-dom-stamper>
+                            <tg-dom-stamper class$="[[_computedDescriptionClass(item)]]" dom-text="[[_calcItemTextHighlighted(item, descriptionPropertyName, _phraseForSearchingCommited)]]"></tg-dom-stamper>
+                        </div>
                         <div class$="[[_computeSortingClass(item)]]" hidden$="[[_sortingIconHidden(_forReview, item)]]">
                             <iron-icon icon$="[[_sortingIconForItem(item.sorting)]]" style$="[[_computeSortingIconStyle(item.sorting)]]" on-tap="_changeOrdering"></iron-icon>
                             <span class="ordering-number self-center">[[_calculateOrder(item.sortingNumber)]]</span>
                         </div>
-                        <div class$="[[_computedPadClass(_forReview)]]" tooltip-text$="[[_calcItemTooltip(item)]]">
-                            <tg-dom-stamper class$="[[_computedHeaderClass(item)]]" dom-text="[[_calcItemTextHighlighted(item, headerPropertyName, _phraseForSearchingCommited)]]"></tg-dom-stamper>
-                            <tg-dom-stamper class$="[[_computedDescriptionClass(item)]]" dom-text="[[_calcItemTextHighlighted(item, descriptionPropertyName, _phraseForSearchingCommited)]]"></tg-dom-stamper>
-                        </div>
+                        <paper-checkbox on-change="_selectionHandler" hidden$="[[_selectingIconHidden(_forReview)]]" checked="[[selected]]"></paper-checkbox>
                     </div>
                     <div class="border"></div>
                 </div>
@@ -503,16 +501,6 @@ Polymer({
         var classes = '';
         if (isDisabled) {
           classes += ' item-disabled';
-        }
-        return classes;
-    },
-    
-    _computedPadClass: function (_forReview) {
-        var classes = '';
-        if (!_forReview) {
-          classes += ' pad';
-        } else {
-          classes += ' without-pad';
         }
         return classes;
     },
