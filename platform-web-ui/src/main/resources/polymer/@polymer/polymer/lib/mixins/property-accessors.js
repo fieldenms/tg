@@ -72,16 +72,18 @@ function saveAccessorValue(model, property) {
  *
  * For basic usage of this mixin:
  *
- * -   Declare attributes to observe via the standard `static get observedAttributes()`. Use
- *     `dash-case` attribute names to represent `camelCase` property names.
+ * -   Declare attributes to observe via the standard `static get
+ *     observedAttributes()`. Use `dash-case` attribute names to represent
+ *     `camelCase` property names.
  * -   Implement the `_propertiesChanged` callback on the class.
- * -   Call `MyClass.createPropertiesForAttributes()` **once** on the class to generate
- *     property accessors for each observed attribute. This must be called before the first
- *     instance is created, for example, by calling it before calling `customElements.define`.
- *     It can also be called lazily from the element's `constructor`, as long as it's guarded so
- *     that the call is only made once, when the first instance is created.
- * -   Call `this._enableProperties()` in the element's `connectedCallback` to enable
- *     the accessors.
+ * -   Call `MyClass.createPropertiesForAttributes()` **once** on the class to
+ *     generate property accessors for each observed attribute. This must be
+ *     called before the first instance is created, for example, by calling it
+ *     before calling `customElements.define`. It can also be called lazily from
+ *     the element's `constructor`, as long as it's guarded so that the call is
+ *     only made once, when the first instance is created.
+ * -   Call `this._enableProperties()` in the element's `connectedCallback` to
+ *     enable the accessors.
  *
  * Any `observedAttributes` will automatically be
  * deserialized via `attributeChangedCallback` and set to the associated
@@ -98,7 +100,6 @@ function saveAccessorValue(model, property) {
 export const PropertyAccessors = dedupingMixin(superClass => {
   /**
    * @constructor
-   * @extends {superClass}
    * @implements {Polymer_PropertiesChanged}
    * @unrestricted
    * @private
@@ -149,6 +150,7 @@ export const PropertyAccessors = dedupingMixin(superClass => {
      *
      * @return {void}
      * @protected
+     * @override
      */
 
 
@@ -173,6 +175,7 @@ export const PropertyAccessors = dedupingMixin(superClass => {
      *   when creating property accessors.
      * @return {void}
      * @protected
+     * @override
      */
 
 
@@ -185,11 +188,13 @@ export const PropertyAccessors = dedupingMixin(superClass => {
      * Ensures the element has the given attribute. If it does not,
      * assigns the given value to the attribute.
      *
-     * @suppress {invalidCasts} Closure can't figure out `this` is infact an element
+     * @suppress {invalidCasts} Closure can't figure out `this` is infact an
+     *     element
      *
      * @param {string} attribute Name of attribute to ensure is set.
      * @param {string} value of the attribute.
      * @return {void}
+     * @override
      */
 
 
@@ -206,7 +211,9 @@ export const PropertyAccessors = dedupingMixin(superClass => {
      * Overrides PropertiesChanged implemention to serialize objects as JSON.
      *
      * @param {*} value Property value to serialize.
-     * @return {string | undefined} String serialized from the provided property value.
+     * @return {string | undefined} String serialized from the provided property
+     *     value.
+     * @override
      */
 
 
@@ -242,6 +249,7 @@ export const PropertyAccessors = dedupingMixin(superClass => {
      * @param {?string} value Attribute value to deserialize.
      * @param {*=} type Type to deserialize the string to.
      * @return {*} Typed value deserialized from the provided string.
+     * @override
      */
 
 
@@ -304,6 +312,7 @@ export const PropertyAccessors = dedupingMixin(superClass => {
      * for the values to take effect.
      * @protected
      * @return {void}
+     * @override
      */
 
 
@@ -317,6 +326,7 @@ export const PropertyAccessors = dedupingMixin(superClass => {
      *
      * @param {string} property Property name
      * @return {boolean} True if an accessor was created
+     * @override
      */
 
 
@@ -329,6 +339,7 @@ export const PropertyAccessors = dedupingMixin(superClass => {
      * @param {string} prop Property name
      * @return {boolean} True if property has a pending change
      * @protected
+     * @override
      */
 
 

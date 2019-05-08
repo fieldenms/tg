@@ -21,7 +21,7 @@
   "_resolved": "https://registry.npmjs.org/sinon/-/sinon-1.17.7.tgz",
   "_shasum": "4542a4f49ba0c45c05eb2e9dd9d203e2b8efe0bf",
   "_spec": "sinon@^1.17.1",
-  "_where": "C:\\Users\\oleh\\workspace\\tg\\platform-web-ui\\src\\main\\resources\\node_modules\\wct-browser-legacy",
+  "_where": "/home/jhou/workspace/tg/platform-web-ui/src/main/resources/node_modules/wct-browser-legacy",
   "author": {
     "name": "Christian Johansen"
   },

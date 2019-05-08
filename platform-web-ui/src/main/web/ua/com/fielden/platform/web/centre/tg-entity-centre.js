@@ -105,6 +105,8 @@ const template = html`
             border-left: 7px solid white;
         }
         .centre-result-container {
+            min-height: -webkit-fit-content;
+            min-height: -moz-fit-content;
             min-height: fit-content;
         }
         .insertion-point-slot {

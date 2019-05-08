@@ -10,6 +10,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 import './boot.js';
 import { calculateSplices } from './array-splice.js';
 import { microTask } from './async.js';
+import { wrap } from './wrap.js';
 /**
  * Returns true if `node` is a slot element
  * @param {!Node} node Node to test.
@@ -60,10 +61,11 @@ function isSlot(node) {
  *
  * @summary Class that listens for changes (additions or removals) to
  * "flattened nodes" on a given `node`.
+ * @implements {PolymerDomApi.ObserveHandle}
  */
 
 
-export class FlattenedNodesObserver {
+export let FlattenedNodesObserver = class {
   /**
    * Returns the list of flattened nodes for the given `node`.
    * This list consists of a node's children and, for any children
@@ -78,23 +80,26 @@ export class FlattenedNodesObserver {
    * @return {!Array<!Node>} The list of flattened nodes for the given `node`.
    * @nocollapse See https://github.com/google/closure-compiler/issues/2763
    */
+  // eslint-disable-next-line
   static getFlattenedNodes(node) {
+    const wrapped = wrap(node);
+
     if (isSlot(node)) {
       node =
       /** @type {!HTMLSlotElement} */
       node; // eslint-disable-line no-self-assign
 
-      return node.assignedNodes({
+      return wrapped.assignedNodes({
         flatten: true
       });
     } else {
-      return Array.from(node.childNodes).map(node => {
+      return Array.from(wrapped.childNodes).map(node => {
         if (isSlot(node)) {
           node =
           /** @type {!HTMLSlotElement} */
           node; // eslint-disable-line no-self-assign
 
-          return node.assignedNodes({
+          return wrap(node).assignedNodes({
             flatten: true
           });
         } else {
@@ -108,6 +113,7 @@ export class FlattenedNodesObserver {
    * @param {?function(this: Element, { target: !HTMLElement, addedNodes: !Array<!Element>, removedNodes: !Array<!Element> }):void} callback Function called when there are additions
    * or removals from the target's list of flattened nodes.
    */
+  // eslint-disable-next-line
 
 
   constructor(target, callback) {
@@ -158,10 +164,10 @@ export class FlattenedNodesObserver {
   connect() {
     if (isSlot(this._target)) {
       this._listenSlots([this._target]);
-    } else if (this._target.children) {
+    } else if (wrap(this._target).children) {
       this._listenSlots(
       /** @type {!NodeList<!Node>} */
-      this._target.children);
+      wrap(this._target).children);
 
       if (window.ShadyDOM) {
         this._shadyChildrenObserver = ShadyDOM.observeChildren(this._target, mutations => {
@@ -187,16 +193,17 @@ export class FlattenedNodesObserver {
    * the observer.
    *
    * @return {void}
+   * @override
    */
 
 
   disconnect() {
     if (isSlot(this._target)) {
       this._unlistenSlots([this._target]);
-    } else if (this._target.children) {
+    } else if (wrap(this._target).children) {
       this._unlistenSlots(
       /** @type {!NodeList<!Node>} */
-      this._target.children);
+      wrap(this._target).children);
 
       if (window.ShadyDOM && this._shadyChildrenObserver) {
         ShadyDOM.unobserveChildren(this._shadyChildrenObserver);
@@ -347,4 +354,4 @@ export class FlattenedNodesObserver {
     }
   }
 
-}
+};

@@ -12,32 +12,21 @@ import "../polymer/polymer-legacy.js";
 import "../iron-a11y-keys-behavior/iron-a11y-keys-behavior.js";
 import { IronResizableBehavior } from "../iron-resizable-behavior/iron-resizable-behavior.js";
 import { IronScrollTargetBehavior } from "../iron-scroll-target-behavior/iron-scroll-target-behavior.js";
-import { OptionalMutableDataBehavior as OptionalMutableDataBehavior$0 } from "../polymer/lib/legacy/mutable-data-behavior.js";
-import { Polymer as Polymer$0 } from "../polymer/lib/legacy/polymer-fn.js";
-import { addDebouncer, dom, flush as flush$0 } from "../polymer/lib/legacy/polymer.dom.js";
+import { OptionalMutableDataBehavior } from "../polymer/lib/legacy/mutable-data-behavior.js";
+import { Polymer } from "../polymer/lib/legacy/polymer-fn.js";
+import { dom } from "../polymer/lib/legacy/polymer.dom.js";
 import { Templatizer } from "../polymer/lib/legacy/templatizer-behavior.js";
 import { animationFrame, idlePeriod, microTask } from "../polymer/lib/utils/async.js";
 import { Debouncer } from "../polymer/lib/utils/debounce.js";
 import { enqueueDebouncer, flush } from "../polymer/lib/utils/flush.js";
 import { html } from "../polymer/lib/utils/html-tag.js";
 import { matches, translate } from "../polymer/lib/utils/path.js";
+import { TemplateInstanceBase } from "../polymer/lib/utils/templatize.js";
 var IOS = navigator.userAgent.match(/iP(?:hone|ad;(?: U;)? CPU) OS (\d+)/);
 var IOS_TOUCH_SCROLLING = IOS && IOS[1] >= 8;
 var DEFAULT_PHYSICAL_COUNT = 3;
 var HIDDEN_Y = '-10000px';
-var ITEM_WIDTH = 0;
-var ITEM_HEIGHT = 1;
 var SECRET_TABINDEX = -100;
-var IS_V2 = flush != null;
-var ANIMATION_FRAME = IS_V2 ? animationFrame : 0;
-var IDLE_TIME = IS_V2 ? idlePeriod : 1;
-var MICRO_TASK = IS_V2 ? microTask : 2;
-/* Polymer.OptionalMutableDataBehavior is only available with Polymer 2.0. */
-
-if (!OptionalMutableDataBehavior$0) {
-  /** @polymerBehavior */
-  Polymer.OptionalMutableDataBehavior = {};
-}
 /**
 
 `iron-list` displays a virtual, 'infinite' list. The template inside
@@ -262,8 +251,7 @@ items, and iron-list will only render 20.
 
 */
 
-
-Polymer$0({
+Polymer({
   _template: html`
     <style>
       :host {
@@ -412,7 +400,7 @@ Polymer$0({
     }
   },
   observers: ['_itemsChanged(items.*)', '_selectionEnabledChanged(selectionEnabled)', '_multiSelectionChanged(multiSelection)', '_setOverflow(scrollTarget, scrollOffset)'],
-  behaviors: [Templatizer, IronResizableBehavior, IronScrollTargetBehavior, OptionalMutableDataBehavior$0],
+  behaviors: [Templatizer, IronResizableBehavior, IronScrollTargetBehavior, OptionalMutableDataBehavior],
 
   /**
    * The ratio of hidden tiles that should remain in the scroll direction.
@@ -481,7 +469,7 @@ Polymer$0({
 
   /**
    * An array of DOM nodes that are currently in the tree
-   * @type {?Array<!TemplatizerNode>}
+   * @type {?Array<!TemplateInstanceBase>}
    */
   _physicalItems: null,
 
@@ -497,12 +485,6 @@ Polymer$0({
    * @type {?number}
    */
   _firstVisibleIndexVal: null,
-
-  /**
-   * A Polymer collection for the items.
-   * @type {?Polymer.Collection}
-   */
-  _collection: null,
 
   /**
    * A cached value for the last visible index.
@@ -772,7 +754,7 @@ Polymer$0({
     this.addEventListener('focus', this._didFocus.bind(this), true);
   },
   attached: function () {
-    this._debounce('_render', this._render, ANIMATION_FRAME); // `iron-resize` is fired when the list is attached if the event is added
+    this._debounce('_render', this._render, animationFrame); // `iron-resize` is fired when the list is attached if the event is added
     // before attached causing unnecessary work.
 
 
@@ -794,7 +776,7 @@ Polymer$0({
     this._lastVisibleIndexVal = null;
     this._firstVisibleIndexVal = null;
 
-    this._debounce('_render', this._render, ANIMATION_FRAME);
+    this._debounce('_render', this._render, animationFrame);
   },
 
   /**
@@ -850,7 +832,7 @@ Polymer$0({
 
       this._update(reusables.indexes, isScrollingDown ? null : reusables.indexes);
 
-      this._debounce('_increasePoolIfNeeded', this._increasePoolIfNeeded.bind(this, 0), MICRO_TASK);
+      this._debounce('_increasePoolIfNeeded', this._increasePoolIfNeeded.bind(this, 0), microTask);
     }
   },
 
@@ -1037,11 +1019,11 @@ Polymer$0({
 
     if (this._virtualEnd >= this._virtualCount - 1 || nextIncrease === 0) {// Do nothing.
     } else if (!this._isClientFull()) {
-      this._debounce('_increasePoolIfNeeded', this._increasePoolIfNeeded.bind(this, nextIncrease), MICRO_TASK);
+      this._debounce('_increasePoolIfNeeded', this._increasePoolIfNeeded.bind(this, nextIncrease), microTask);
     } else if (this._physicalSize < this._optPhysicalSize) {
       // Yield and increase the pool during idle time until the physical size is
       // optimal.
-      this._debounce('_increasePoolIfNeeded', this._increasePoolIfNeeded.bind(this, this._clamp(Math.round(50 / this._templateCost), 1, nextIncrease)), IDLE_TIME);
+      this._debounce('_increasePoolIfNeeded', this._increasePoolIfNeeded.bind(this, this._clamp(Math.round(50 / this._templateCost), 1, nextIncrease)), idlePeriod);
     }
   },
 
@@ -1099,7 +1081,7 @@ Polymer$0({
   _gridChanged: function (newGrid, oldGrid) {
     if (typeof oldGrid === 'undefined') return;
     this.notifyResize();
-    flush ? flush() : flush$0();
+    flush();
     newGrid && this._updateGridMetrics();
   },
 
@@ -1112,7 +1094,6 @@ Polymer$0({
       this._virtualStart = 0;
       this._physicalTop = 0;
       this._virtualCount = this.items ? this.items.length : 0;
-      this._collection = this.items && undefined ? undefined.get(this.items) : null;
       this._physicalIndexForKey = {};
       this._firstVisibleIndexVal = null;
       this._lastVisibleIndexVal = null;
@@ -1127,7 +1108,7 @@ Polymer$0({
 
       this._removeFocusedItem();
 
-      this._debounce('_render', this._render, ANIMATION_FRAME);
+      this._debounce('_render', this._render, animationFrame);
     } else if (change.path === 'items.splices') {
       this._adjustVirtualIndex(change.value.indexSplices);
 
@@ -1153,7 +1134,7 @@ Polymer$0({
       }, this);
 
       if (!this._isClientFull() || affectedIndexRendered) {
-        this._debounce('_render', this._render, ANIMATION_FRAME);
+        this._debounce('_render', this._render, animationFrame);
       }
     } else if (change.path !== 'items.length') {
       this._forwardItemPath(change.path, change.value);
@@ -1172,40 +1153,25 @@ Polymer$0({
     var pidx;
     var inst;
     var offscreenInstance = this.modelForElement(this._offscreenFocusedItem);
+    var vidx = parseInt(path.substring(0, dot), 10);
+    isIndexRendered = this._isIndexRendered(vidx);
 
-    if (IS_V2) {
-      var vidx = parseInt(path.substring(0, dot), 10);
-      isIndexRendered = this._isIndexRendered(vidx);
+    if (isIndexRendered) {
+      pidx = this._getPhysicalIndex(vidx);
+      inst = this.modelForElement(this._physicalItems[pidx]);
+    } else if (offscreenInstance) {
+      inst = offscreenInstance;
+    }
 
-      if (isIndexRendered) {
-        pidx = this._getPhysicalIndex(vidx);
-        inst = this.modelForElement(this._physicalItems[pidx]);
-      } else if (offscreenInstance) {
-        inst = offscreenInstance;
-      }
-
-      if (!inst || inst[this.indexAs] !== vidx) {
-        return;
-      }
-    } else {
-      // Polymer 1.x - get physical instance by key (`#1`), not index.
-      var key = path.substring(0, dot);
-
-      if (offscreenInstance && offscreenInstance.__key__ === key) {
-        inst = offscreenInstance;
-      } else {
-        pidx = this._physicalIndexForKey[key];
-        inst = this.modelForElement(this._physicalItems[pidx]);
-
-        if (!inst || inst.__key__ !== key) {
-          return;
-        }
-      }
+    if (!inst || inst[this.indexAs] !== vidx) {
+      return;
     }
 
     path = path.substring(dot + 1);
     path = this.as + (path ? '.' + path : '');
-    IS_V2 ? inst._setPendingPropertyOrPath(path, value, false, true) : inst.notifyPath(path, value, true);
+
+    inst._setPendingPropertyOrPath(path, value, false, true);
+
     inst._flushProperties && inst._flushProperties(true); // TODO(blasten): V1 doesn't do this and it's a bug
 
     if (isIndexRendered) {
@@ -1218,7 +1184,7 @@ Polymer$0({
   },
 
   /**
-   * @param {!Array<!PolymerSplice>} splices
+   * @param {!Array<!Object>} splices
    */
   _adjustVirtualIndex: function (splices) {
     splices.forEach(function (splice) {
@@ -1306,7 +1272,7 @@ Polymer$0({
 
       if (item != null) {
         var inst = this.modelForElement(el);
-        inst.__key__ = this._collection ? this._collection.getKey(item) : null;
+        inst.__key__ = null;
 
         this._forwardProperty(inst, this.as, item);
 
@@ -1333,7 +1299,7 @@ Polymer$0({
   _updateMetrics: function (itemSet) {
     // Make sure we distributed all the physical items
     // so we can measure them.
-    flush ? flush() : flush$0();
+    flush();
     var newPhysicalSize = 0;
     var oldPhysicalSize = 0;
     var prevAvgCount = this._physicalAverageCount;
@@ -1495,7 +1461,7 @@ Polymer$0({
       return;
     }
 
-    flush ? flush() : flush$0(); // Items should have been rendered prior scrolling to an index.
+    flush(); // Items should have been rendered prior scrolling to an index.
 
     if (this._physicalCount === 0) {
       return;
@@ -1555,13 +1521,11 @@ Polymer$0({
     this._debounce('_render', function () {
       // clear cached visible index.
       this._firstVisibleIndexVal = null;
-      this._lastVisibleIndexVal = null; // Skip the resize event on touch devices when the address bar slides up.
-
-      var delta = Math.abs(this._viewportHeight - this._scrollTargetHeight);
-      this.updateViewportBoundaries();
+      this._lastVisibleIndexVal = null;
 
       if (this._isVisible) {
-        // Reinstall the scroll event listener.
+        this.updateViewportBoundaries(); // Reinstall the scroll event listener.
+
         this.toggleScrollListener(true);
 
         this._resetAverage();
@@ -1571,7 +1535,7 @@ Polymer$0({
         // Uninstall the scroll event listener.
         this.toggleScrollListener(false);
       }
-    }, ANIMATION_FRAME);
+    }, animationFrame);
   },
 
   /**
@@ -1609,13 +1573,7 @@ Polymer$0({
       this.updateSizeForIndex(index);
     }
 
-    if (this.$.selector.selectIndex) {
-      // v2
-      this.$.selector.selectIndex(index);
-    } else {
-      // v1
-      this.$.selector.select(this.items[index]);
-    }
+    this.$.selector.selectIndex(index);
   },
 
   /**
@@ -1645,13 +1603,7 @@ Polymer$0({
       this.updateSizeForIndex(index);
     }
 
-    if (this.$.selector.deselectIndex) {
-      // v2
-      this.$.selector.deselectIndex(index);
-    } else {
-      // v1
-      this.$.selector.deselect(this.items[index]);
-    }
+    this.$.selector.deselectIndex(index);
   },
 
   /**
@@ -1810,7 +1762,7 @@ Polymer$0({
     return idx >= this.firstVisibleIndex && idx <= this.lastVisibleIndex;
   },
   _getPhysicalIndex: function (vidx) {
-    return IS_V2 ? (this._physicalStart + (vidx - this._virtualStart)) % this._physicalCount : this._physicalIndexForKey[this._collection.getKey(this.items[vidx])];
+    return (this._physicalStart + (vidx - this._virtualStart)) % this._physicalCount;
   },
   focusItem: function (idx) {
     this._focusPhysicalItem(idx);
@@ -2002,20 +1954,12 @@ Polymer$0({
     return Math.min(max, Math.max(min, v));
   },
   _debounce: function (name, cb, asyncModule) {
-    if (IS_V2) {
-      this._debouncers = this._debouncers || {};
-      this._debouncers[name] = Debouncer.debounce(this._debouncers[name], asyncModule, cb.bind(this));
-      enqueueDebouncer(this._debouncers[name]);
-    } else {
-      addDebouncer(this.debounce(name, cb));
-    }
+    this._debouncers = this._debouncers || {};
+    this._debouncers[name] = Debouncer.debounce(this._debouncers[name], asyncModule, cb.bind(this));
+    enqueueDebouncer(this._debouncers[name]);
   },
   _forwardProperty: function (inst, name, value) {
-    if (IS_V2) {
-      inst._setPendingProperty(name, value);
-    } else {
-      inst[name] = value;
-    }
+    inst._setPendingProperty(name, value);
   },
 
   /* Templatizer bindings for v2 */

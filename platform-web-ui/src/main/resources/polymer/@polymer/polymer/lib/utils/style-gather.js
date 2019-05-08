@@ -107,7 +107,7 @@ export function stylesFromModule(moduleId) {
  * Returns the `<style>` elements within a given template.
  *
  * @param {!HTMLTemplateElement} template Template to gather styles from
- * @param {string} baseURI baseURI for style content
+ * @param {string=} baseURI baseURI for style content
  * @return {!Array<!HTMLStyleElement>} Array of styles
  */
 
@@ -130,7 +130,9 @@ export function stylesFromTemplate(template, baseURI) {
       }
 
       if (baseURI) {
-        e.textContent = resolveCss(e.textContent, baseURI);
+        e.textContent = resolveCss(e.textContent,
+        /** @type {string} */
+        baseURI);
       }
 
       styles.push(e);

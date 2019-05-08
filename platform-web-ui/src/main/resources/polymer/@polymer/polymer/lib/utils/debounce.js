@@ -36,6 +36,7 @@ export class Debouncer {
     this._callback = callback;
     this._timer = this._asyncModule.run(() => {
       this._timer = null;
+      debouncerQueue.delete(this);
 
       this._callback();
     });
@@ -48,6 +49,24 @@ export class Debouncer {
 
 
   cancel() {
+    if (this.isActive()) {
+      this._cancelAsync(); // Canceling a debouncer removes its spot from the flush queue,
+      // so if a debouncer is manually canceled and re-debounced, it
+      // will reset its flush order (this is a very minor difference from 1.x)
+      // Re-debouncing via the `debounce` API retains the 1.x FIFO flush order
+
+
+      debouncerQueue.delete(this);
+    }
+  }
+  /**
+   * Cancels a debouncer's async callback.
+   *
+   * @return {void}
+   */
+
+
+  _cancelAsync() {
     if (this.isActive()) {
       this._asyncModule.cancel(
       /** @type {number} */
@@ -118,7 +137,9 @@ export class Debouncer {
 
   static debounce(debouncer, asyncModule, callback) {
     if (debouncer instanceof Debouncer) {
-      debouncer.cancel();
+      // Cancel the async callback, but leave in debouncerQueue if it was
+      // enqueued, to maintain 1.x flush order
+      debouncer._cancelAsync();
     } else {
       debouncer = new Debouncer();
     }
@@ -128,3 +149,35 @@ export class Debouncer {
   }
 
 }
+let debouncerQueue = new Set();
+/**
+ * Adds a `Debouncer` to a list of globally flushable tasks.
+ *
+ * @param {!Debouncer} debouncer Debouncer to enqueue
+ * @return {void}
+ */
+
+export const enqueueDebouncer = function (debouncer) {
+  debouncerQueue.add(debouncer);
+};
+/**
+ * Flushes any enqueued debouncers
+ *
+ * @return {boolean} Returns whether any debouncers were flushed
+ */
+
+export const flushDebouncers = function () {
+  const didFlush = Boolean(debouncerQueue.size); // If new debouncers are added while flushing, Set.forEach will ensure
+  // newly added ones are also flushed
+
+  debouncerQueue.forEach(debouncer => {
+    try {
+      debouncer.flush();
+    } catch (e) {
+      setTimeout(() => {
+        throw e;
+      });
+    }
+  });
+  return didFlush;
+};

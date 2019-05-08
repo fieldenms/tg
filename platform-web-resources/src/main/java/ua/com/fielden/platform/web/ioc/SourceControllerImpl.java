@@ -48,15 +48,15 @@ import ua.com.fielden.platform.web.view.master.EntityMaster;
  *
  */
 public class SourceControllerImpl implements ISourceController {
-    private static final String COMMENT_END = "-->";
+    private static final String COMMENT_END = "*/";
     private static final int COMMENT_END_LENGTH = COMMENT_END.length();
 
-    private static final String COMMENT_START = "<!--";
+    private static final String COMMENT_START = "/*";
     private static final int COMMENT_START_LENGTH = COMMENT_START.length();
 
-    private static final String SGL_QUOTED_HREF = "href='";
-    private static final String DBL_QUOTED_HREF = "href=\"";
-    private static final int HREF_LENGTH = DBL_QUOTED_HREF.length();
+    private static final String SGL_QUOTED_IMPORT = "import '";
+    private static final String DBL_QUOTED_IMPORT = "import \"";
+    private static final int IMPORT_LENGTH = DBL_QUOTED_IMPORT.length();
 
     private final IWebUiConfig webUiConfig;
     private final ISerialiser serialiser;
@@ -93,12 +93,10 @@ public class SourceControllerImpl implements ISourceController {
      * @return
      */
     private static LinkedHashSet<String> getRootDependencies(final String source, final LinkedHashSet<String> currentRootDependencies) {
-        final int commentStart = source.indexOf(COMMENT_START);
+        final int commentStart = source.indexOf(COMMENT_START); // FIXME what about // comments?
         // TODO enhance the logic to support whitespaces etc.?
-        final int dqs = source.indexOf(" " + DBL_QUOTED_HREF);
-        final int doubleQuotedStart = dqs < 0 ? dqs : dqs + 1;
-        final int sqs = source.indexOf(" " + SGL_QUOTED_HREF);
-        final int singleQuotedStart = sqs < 0 ? sqs : sqs + 1;
+        final int doubleQuotedStart = source.indexOf(DBL_QUOTED_IMPORT);
+        final int singleQuotedStart = source.indexOf(SGL_QUOTED_IMPORT);
 
         final boolean doubleQuotedPresent = doubleQuotedStart >= 0;
         final boolean singleQuotedPresent = singleQuotedStart >= 0;
@@ -126,7 +124,7 @@ public class SourceControllerImpl implements ISourceController {
 
     private static LinkedHashSet<String> rootDependencies0(final String source, final LinkedHashSet<String> currentRootDependencies, final int start, final boolean doubleQuote) {
         // process the rest of source
-        final int startOfURI = start + HREF_LENGTH;
+        final int startOfURI = start + IMPORT_LENGTH;
         final String nextCurr = source.substring(startOfURI);
         final int endOfURIIndex = doubleQuote ? nextCurr.indexOf("\"") : nextCurr.indexOf("'");
         final String importURI = nextCurr.substring(0, endOfURIIndex);
@@ -163,13 +161,27 @@ public class SourceControllerImpl implements ISourceController {
      *
      * @return
      */
-    private LinkedHashSet<String> getAllDependenciesFor(final String previousPath, final String resourceURI, final DeviceProfile deviceProfile) {
+    private LinkedHashSet<String> getAllDependenciesFor(final String previousPath, final String resourceURI, final DeviceProfile deviceProfile, final String tab) {
+//        if (!resourceURI.endsWith("polymer-legacy.js")
+//                && !resourceURI.endsWith("templatizer-behavior.js")
+//                && !resourceURI.endsWith("dom-bind.js")
+//                && !resourceURI.endsWith("boot.js")
+//                && !resourceURI.endsWith("dom-repeat.js")
+//                && !resourceURI.endsWith("dom-if.js")
+//                && !resourceURI.endsWith("array-selector.js")
+//                && !resourceURI.endsWith("custom-style.js")
+//                && !resourceURI.endsWith("custom-style-interface.js")
+//                && !resourceURI.endsWith("mutable-data-behavior.js")
+//                && !resourceURI.endsWith("dom-repeat.js")
+//        ) {
+//            System.out.println(tab + "[" + tab.length() + "]getAllDependenciesFor(" + resourceURI + "), previousPath = " + previousPath);
+//        }
         final String absolutePath = calculateAbsoluteURI(resourceURI, previousPath);
         final LinkedHashSet<String> roots = getRootDependenciesFor(absolutePath, deviceProfile);
         final String currentPath = absolutePath.substring(0, absolutePath.lastIndexOf("/") + 1);
         final LinkedHashSet<String> all = new LinkedHashSet<>();
         for (final String root : roots) {
-            final LinkedHashSet<String> rootDependencies = getAllDependenciesFor(currentPath, root, deviceProfile);
+            final LinkedHashSet<String> rootDependencies = getAllDependenciesFor(currentPath, root, deviceProfile, tab + " ");
             all.add(calculateAbsoluteURI(root, currentPath));
             all.addAll(rootDependencies);
         }
@@ -211,8 +223,8 @@ public class SourceControllerImpl implements ISourceController {
      * @return
      */
     private static boolean isVulcanized(final String filePath) {
-        // covers three cases: desktop-startup-resources-vulcanized.html, mobile-startup-resources-vulcanized.html and login-startup-resources-vulcanized.html
-        return filePath.endsWith("-startup-resources-vulcanized.html");
+        // covers three cases: desktop-startup-resources-vulcanized.js, mobile-startup-resources-vulcanized.js and login-startup-resources-vulcanized.js
+        return filePath.endsWith("-startup-resources-vulcanized.js");
     }
 
     @Override
@@ -262,18 +274,22 @@ public class SourceControllerImpl implements ISourceController {
 
         // TODO VERY FRAGILE APPROACH!
         // TODO VERY FRAGILE APPROACH!
-        // TODO VERY FRAGILE APPROACH! please, provide better implementation (whitespaces, exchanged rel and href, etc.?):
+        // TODO VERY FRAGILE APPROACH! please, provide better implementation (whitespaces, ' or ", ;, etc.):
         final String replacedOurDependency = source
-                .replace("<link rel=\"import\" href=\"" + dependency + "\">", "")
-                .replace("<link rel='import' href='" + dependency + "'>", "");
+                .replace("import \"" + dependency + "\";", "")
+                .replace("import '" + dependency + "';", "")
+                .replace("import \"" + dependency + "\"", "")
+                .replace("import '" + dependency + "'", "");
 
         // let's replace inner polymer dependencies:
         if (dependency.startsWith("/resources/polymer/")) {
             final String polymerDependencyFileName = dependency.substring(dependency.lastIndexOf("/") + 1);
 
             final String replacedPolymerDependency = replacedOurDependency
-                    .replaceAll("<link rel=\"import\" href=\".*" + polymerDependencyFileName + "\">", "")
-                    .replaceAll("<link rel='import' href='.*" + polymerDependencyFileName + "'>", "");
+                    .replaceAll("import \".*" + polymerDependencyFileName + "\";", "")
+                    .replaceAll("import '.*" + polymerDependencyFileName + "';", "")
+                    .replaceAll("import \".*" + polymerDependencyFileName + "\"", "")
+                    .replaceAll("import '.*" + polymerDependencyFileName + "'", "");
             return replacedPolymerDependency;
         } else {
             return replacedOurDependency;
@@ -290,7 +306,7 @@ public class SourceControllerImpl implements ISourceController {
     private LinkedHashSet<String> calculatePreloadedResources(final String startupResourcesOrigin, final DeviceProfile deviceProfile) {
         logger.info("======== Calculating " + deviceProfile + " preloaded resources... ========");
         final DateTime start = new DateTime();
-        final LinkedHashSet<String> all = getAllDependenciesFor("/", startupResourcesOrigin, deviceProfile);
+        final LinkedHashSet<String> all = getAllDependenciesFor("/", startupResourcesOrigin, deviceProfile, "");
         logger.info("\t ==> " + all + ".");
         final Period pd = new Period(start, new DateTime());
         logger.info("-------- Calculated " + deviceProfile + " preloaded resources [" + all.size() + "]. Duration [" + pd.getMinutes() + " m " + pd.getSeconds() + " s "
@@ -305,7 +321,7 @@ public class SourceControllerImpl implements ISourceController {
             return getTgAppIndexSource(webUiConfig, deviceProfile);
         } else if ("/app/tg-app-config.js".equalsIgnoreCase(resourceURI)) {
             return getTgAppConfigSource(webUiConfig, deviceProfile);
-        } else if ("/app/tg-app.html".equalsIgnoreCase(resourceURI)) {
+        } else if ("/app/tg-app.js".equalsIgnoreCase(resourceURI)) {
             return getTgAppSource(webUiConfig, deviceProfile);
         } else if ("/app/tg-reflector.js".equalsIgnoreCase(resourceURI)) {
             return getReflectorSource(serialiser, tgJackson);
@@ -335,7 +351,9 @@ public class SourceControllerImpl implements ISourceController {
     private String merge(final String currentPath, final String uri) {
         return (currentPath == null || !isRelative(uri)) ? uri :
                 uri.startsWith("../") ? merge(currentPathWithoutLast(currentPath), uri.substring(3)) :
-                        uri.contains("/") ? merge(currentPathWith(currentPath, uri.substring(0, uri.indexOf("/"))), uri.substring(uri.indexOf("/") + 1)) : currentPath + uri;
+                uri.startsWith("./") ? merge(currentPath, uri.substring(2)) :
+                uri.contains("/") ? merge(currentPathWith(currentPath, uri.substring(0, uri.indexOf("/"))), uri.substring(uri.indexOf("/") + 1))
+                        : currentPath + uri;
     }
 
     private String currentPathWithoutLast(final String currentPath) {
@@ -402,21 +420,21 @@ public class SourceControllerImpl implements ISourceController {
             }
         };
 
-        sb.append("\n\n<!-- GENERATED MASTERS FROM IWebUiConfig-->\n");
+        sb.append("\n\n/* GENERATED MASTERS FROM IWebUiConfig */\n");
         final List<Class<? extends AbstractEntity<?>>> sortedMasterTypes = new ArrayList<>(webUiConfig.getMasters().keySet());
         sort(sortedMasterTypes, classComparator); // sort types by name to provide predictable order inside vulcanized resources
         for (final Class<? extends AbstractEntity<?>> masterEntityType : sortedMasterTypes) {
             if (!alreadyIncluded(masterEntityType.getName(), source)) {
-                sb.append(String.format("<link rel=\"import\" href=\"/master_ui/%s\">\n", masterEntityType.getName()));
+                sb.append(String.format("import '/master_ui/%s.js';\n", masterEntityType.getName()));
             }
         }
 
-        sb.append("\n<!-- GENERATED CENTRES FROM IWebUiConfig-->\n");
+        sb.append("\n/* GENERATED CENTRES FROM IWebUiConfig */\n");
         final List<Class<? extends MiWithConfigurationSupport<?>>> sortedCentreTypes = new ArrayList<>(webUiConfig.getCentres().keySet());
         sort(sortedCentreTypes, classComparator); // sort types by name to provide predictable order inside vulcanized resources
         for (final Class<? extends MiWithConfigurationSupport<?>> centreMiType : sortedCentreTypes) {
             if (!alreadyIncluded(centreMiType.getName(), source)) {
-                sb.append(String.format("<link rel=\"import\" href=\"/centre_ui/%s\">\n", centreMiType.getName()));
+                sb.append(String.format("import '/centre_ui/%s.js';\n", centreMiType.getName()));
             }
         }
 

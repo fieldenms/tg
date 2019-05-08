@@ -1,28 +1,28 @@
 {
-  "_from": "@webcomponents/shadycss@^1.5.2",
-  "_id": "@webcomponents/shadycss@1.9.0",
+  "_from": "@webcomponents/shadycss@^1.8.0",
+  "_id": "@webcomponents/shadycss@1.9.1",
   "_inBundle": false,
-  "_integrity": "sha512-g8Xa+6RSEME4g/wLJW4YII0eq15rvXp76RxPAuv7hx+Bdoi7GzZJ/EoZOUfyIbqAsQbII1TcWD4/+Xhs5NcM1w==",
+  "_integrity": "sha512-IaZOnWOKXHghqk/WfPNDRIgDBi3RsVPY2IFAw6tYiL9UBGvQRy5R6uC+Fk7qTZsReTJ0xh5MTT8yAcb3MUR4mQ==",
   "_location": "/@webcomponents/shadycss",
   "_phantomChildren": {},
   "_requested": {
     "type": "range",
     "registry": true,
-    "raw": "@webcomponents/shadycss@^1.5.2",
+    "raw": "@webcomponents/shadycss@^1.8.0",
     "name": "@webcomponents/shadycss",
     "escapedName": "@webcomponents%2fshadycss",
     "scope": "@webcomponents",
-    "rawSpec": "^1.5.2",
+    "rawSpec": "^1.8.0",
     "saveSpec": null,
-    "fetchSpec": "^1.5.2"
+    "fetchSpec": "^1.8.0"
   },
   "_requiredBy": [
     "/@polymer/polymer"
   ],
-  "_resolved": "https://registry.npmjs.org/@webcomponents/shadycss/-/shadycss-1.9.0.tgz",
-  "_shasum": "8450465037370d4f5c32e801bb2554a7cf2f5037",
-  "_spec": "@webcomponents/shadycss@^1.5.2",
-  "_where": "C:\\Users\\oleh\\workspace\\tg\\platform-web-ui\\src\\main\\resources\\node_modules\\@polymer\\polymer",
+  "_resolved": "https://registry.npmjs.org/@webcomponents/shadycss/-/shadycss-1.9.1.tgz",
+  "_shasum": "d769fbadfa504f11b84caeef26701f89070ec49a",
+  "_spec": "@webcomponents/shadycss@^1.8.0",
+  "_where": "/home/jhou/workspace/tg/platform-web-ui/src/main/resources/node_modules/@polymer/polymer",
   "author": {
     "name": "The Polymer Project Authors",
     "url": "https://polymer.github.io/AUTHORS.txt"
@@ -96,5 +96,5 @@
     "prepack": "gulp closure",
     "test": "npm run lint && gulp && wct"
   },
-  "version": "1.9.0"
+  "version": "1.9.1"
 }

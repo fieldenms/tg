@@ -47,7 +47,8 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 import './boot.js';
 import { PropertyEffects } from '../mixins/property-effects.js';
 import { MutableData } from '../mixins/mutable-data.js';
-import { strictTemplatePolicy } from "./settings.js"; // Base class for HTMLTemplateElement extension that has property effects
+import { strictTemplatePolicy } from './settings.js';
+import { wrap } from './wrap.js'; // Base class for HTMLTemplateElement extension that has property effects
 // machinery for propagating host properties to children. This is an ES5
 // class only because Babel (incorrectly) requires super() in the class
 // constructor even though no `this` is used and it returns an instance.
@@ -100,7 +101,7 @@ function upgradeTemplate(template, constructor) {
  */
 
 
-const base = PropertyEffects(class {});
+const templateInstanceBase = PropertyEffects(class {});
 /**
  * @polymer
  * @customElement
@@ -108,15 +109,17 @@ const base = PropertyEffects(class {});
  * @unrestricted
  */
 
-class TemplateInstanceBase extends base {
+class TemplateInstanceBase extends templateInstanceBase {
   constructor(props) {
     super();
 
     this._configureProperties(props);
+    /** @type {!StampedTemplate} */
+
 
     this.root = this._stampTemplate(this.__dataHost); // Save list of stamped children
 
-    let children = this.children = [];
+    let children = this.children = []; // Polymer 1.x did not use `Polymer.dom` here so not bothering.
 
     for (let n = this.root.firstChild; n; n = n.nextSibling) {
       children.push(n);
@@ -235,12 +238,12 @@ class TemplateInstanceBase extends base {
         } else if (n.localName === 'slot') {
           if (hide) {
             n.__polymerReplaced__ = document.createComment('hidden-slot');
-            n.parentNode.replaceChild(n.__polymerReplaced__, n);
+            wrap(wrap(n).parentNode).replaceChild(n.__polymerReplaced__, n);
           } else {
             const replace = n.__polymerReplaced__;
 
             if (replace) {
-              replace.parentNode.replaceChild(n, replace);
+              wrap(wrap(replace).parentNode).replaceChild(n, replace);
             }
           }
         } else if (n.style) {
@@ -365,15 +368,25 @@ function findMethodHost(template) {
 
 
 function createTemplatizerClass(template, templateInfo, options) {
-  // Anonymous class created by the templatize
-  let base = options.mutableData ? MutableTemplateInstanceBase : TemplateInstanceBase;
   /**
    * @constructor
-   * @extends {base}
+   * @extends {TemplateInstanceBase}
+   */
+  let templatizerBase = options.mutableData ? MutableTemplateInstanceBase : TemplateInstanceBase; // Affordance for global mixins onto TemplatizeInstance
+
+  if (templatize.mixin) {
+    templatizerBase = templatize.mixin(templatizerBase);
+  }
+  /**
+   * Anonymous class created by the templatize
+   * @constructor
    * @private
    */
 
-  let klass = class extends base {};
+
+  let klass = class extends templatizerBase {};
+  /** @override */
+
   klass.prototype.__templatizeOptions = options;
 
   klass.prototype._bindTemplate(template);
@@ -394,10 +407,14 @@ function addPropagateEffects(template, templateInfo, options) {
     let klass = templateInfo.templatizeTemplateClass;
 
     if (!klass) {
-      let base = options.mutableData ? MutableDataTemplate : DataTemplate;
+      /**
+       * @constructor
+       * @extends {DataTemplate}
+       */
+      let templatizedBase = options.mutableData ? MutableDataTemplate : DataTemplate;
       /** @private */
 
-      klass = templateInfo.templatizeTemplateClass = class TemplatizedTemplate extends base {}; // Add template - >instances effects
+      klass = templateInfo.templatizeTemplateClass = class TemplatizedTemplate extends templatizedBase {}; // Add template - >instances effects
       // and host <- template effects
 
       let hostProps = templateInfo.hostProps;
@@ -573,6 +590,11 @@ export function templatize(template, owner, options) {
   let templateInfo = ctor._parseTemplate(template); // Get memoized base class for the prototypical template, which
   // includes property effects for binding template & forwarding
 
+  /**
+   * @constructor
+   * @extends {TemplateInstanceBase}
+   */
+
 
   let baseClass = templateInfo.templatizeInstanceClass;
 
@@ -587,9 +609,21 @@ export function templatize(template, owner, options) {
   /** @private */
 
   let klass = class TemplateInstance extends baseClass {};
+  /** @override */
+
   klass.prototype._methodHost = findMethodHost(template);
-  klass.prototype.__dataHost = template;
-  klass.prototype.__templatizeOwner = owner;
+  /** @override */
+
+  klass.prototype.__dataHost =
+  /** @type {!DataTemplate} */
+  template;
+  /** @override */
+
+  klass.prototype.__templatizeOwner =
+  /** @type {!Object} */
+  owner;
+  /** @override */
+
   klass.prototype.__hostProps = templateInfo.hostProps;
   klass =
   /** @type {function(new:TemplateInstanceBase)} */
@@ -636,7 +670,7 @@ export function modelForElement(template, node) {
     } else {
       // Still in a template scope, keep going up until
       // a __templatizeInstance is found
-      node = node.parentNode;
+      node = wrap(node).parentNode;
     }
   }
 
