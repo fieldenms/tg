@@ -11,6 +11,7 @@ import '/resources/editors/tg-dom-stamper.js';
 
 import {Polymer} from '/resources/polymer/@polymer/polymer/lib/legacy/polymer-fn.js';
 import {html} from '/resources/polymer/@polymer/polymer/lib/utils/html-tag.js';
+import { IronResizableBehavior } from '/resources/polymer/@polymer/iron-resizable-behavior/iron-resizable-behavior.js';
 
 import { TgHighlightingBehavior } from '/resources/editors/tg-highlighting-behavior.js';
 import { TgEditorBehavior, TgEditorBehaviorImpl, createEditorTemplate } from '/resources/editors/tg-editor-behavior.js';
@@ -42,6 +43,11 @@ const additionalTemplate = html`
             /* Internet Explorer/Edge */
             user-select: none;
             /* Non-prefixed version, currently supported by Chrome and Opera */
+        }
+        .search-controls-wrapper {
+            @apply --layout-horizontal;
+            @apply --layout-center;
+            padding-left:16px;
         }
         iron-list {
             overflow: auto;
@@ -101,6 +107,12 @@ const additionalTemplate = html`
             --paper-checkbox-unchecked-color: var(--paper-grey-900:);
             --paper-checkbox-unchecked-ink-color: var(--paper-grey-900:);
         }
+
+        paper-checkbox[semi-checked] {
+            --paper-checkbox-checked-color: #acdbfe;
+            --paper-checkbox-checked-ink-color: var(--paper-light-blue-700);
+        }
+
         .item.selected {
             background-color: var(--google-grey-100);
         }
@@ -149,9 +161,13 @@ const additionalTemplate = html`
         <style include="iron-flex iron-flex-reverse iron-flex-alignment iron-flex-factors iron-positioning"></style>
     </custom-style>`;
 const customInputTemplate = html`
-    <iron-input bind-value="{{_phraseForSearching}}" class="custom-input-wrapper" >
-        <input id="searchInput" class="custom-input" placeholder="Type to search..." on-input="_onInput" on-tap="_onTap" on-mousedown="_onTap" on-blur="_eventHandler" autocomplete="off">
-    </iron-input>
+    <div class="search-controls-wrapper" style$="[[_computeInputStyle(_forReview)]]">
+        <div class="resizing-box" hidden$="[[!canReorderItems]]"></div>
+        <iron-input bind-value="{{_phraseForSearching}}" class="custom-input-wrapper" >
+            <input id="searchInput" class="custom-input" placeholder="Type to search..." on-input="_onInput" on-tap="_onTap" on-mousedown="_onTap" on-blur="_eventHandler" autocomplete="off">
+        </iron-input>
+        <paper-checkbox class="select-all-checkbox" style$="[[_computeSelectAllCheckboxStyle(_scrollBarWidth)]]" id="selectAllCheckbox" hidden$="[[_selectingIconHidden(_forReview)]]" checked="[[_selectedAll]]" semi-checked$="[[_semiCheckedAll]]" on-change="_allSelectionChanged"></paper-checkbox>
+    </div>
     <div class="layout vertical flex relative">
         <iron-list id="input" class="collectional-input fit" items="[[_entities]]" selected-items="{{_selectedEntities}}" selected-item="{{_selectedEntity}}" selection-enabled="[[_isSelectionEnabled(_forReview)]]" multi-selection>
             <template>
@@ -180,7 +196,7 @@ Polymer({
 
     is: 'tg-collectional-editor',
 
-    behaviors: [ TgEditorBehavior, TgHighlightingBehavior ],
+    behaviors: [ IronResizableBehavior, TgEditorBehavior, TgHighlightingBehavior ],
     
     properties: {
         /**
@@ -224,6 +240,21 @@ Polymer({
         _selectedEntities: {
             type: Array
         },
+
+        /**
+         * controls select All checkbox
+         */
+        _selectedAll: {
+            type: Boolean
+        },
+
+        _semiCheckedAll: {
+            type: Boolean,
+            value: false
+        },
+
+        _scrollBarWidth: Number,
+
         /**
          * Selected entity to be bound to iron-list.
          */
@@ -313,16 +344,21 @@ Polymer({
         const suffix = this.decorator().$$(".suffix");
         suffix.style.alignSelf = "flex-start";
 
+        this._editorKind = "COLLECTIONAL";
+        this.decorator().noLabelFloat = true;
 
         this._draggingItem = null;
         this._eventHandler = (function(e) {
             // There is no need to proceed with search if user moved out of the search field
             this._cancelSearch();
         }).bind(this);
+
+        this.$.input.addEventListener("iron-resize", this._resizeEventListener.bind(this));
     },
     
     attached: function () {
         this._originalChosenIds = null;
+        this._updateSizeAsync();
     },
     
     _calcItemTooltip: function (item) {
@@ -395,6 +431,18 @@ Polymer({
 
     _selectionHandler: function (e) {
         this.$.input.toggleSelectionForItem(e.model.item);
+    },
+
+    _resizeEventListener: function () {
+        this.async(() => {
+            this._scrollBarWidth = this.$.input.offsetWidth - this.$.input.clientWidth;
+        }, 1);
+    },
+
+    _updateSizeAsync: function () {
+        this.async(function () {
+            this._resizeEventListener();
+        }.bind(this), 1)
     },
     
     /**
@@ -536,7 +584,15 @@ Polymer({
     _isSelectionEnabled: function (_forReview) {
         return !_forReview;
     },
-    
+
+    _computeInputStyle: function (_forReview) {
+        return _forReview ? "" : "padding-bottom: 20px;";
+    },
+
+    _computeSelectAllCheckboxStyle: function (_scrollBarWidth) {
+        return "padding-right: " + ( _scrollBarWidth + 16 ) + "px";
+    },
+
     _computeSortingIconStyle: function (sorting)  {
         var style = sorting !== null ? 'color: black;' : 'color: grey;';
         style += sorting === true ? 'align-self:flex-start' : (sorting === false ? 'align-self:flex-end' : 'align-self:flex-start');
@@ -545,7 +601,6 @@ Polymer({
     
     _computeItemStyle: function (_forReview, _draggingItem, canReorderItems) {
         let style = _forReview || _draggingItem ? '' : 'cursor: pointer;';
-        style += canReorderItems ? "" : "padding-left: 22px;";
         return style;
     },
     
@@ -753,6 +808,7 @@ Polymer({
                 }
             }, self);
         }
+        this._updateSelectAll();
     },
     
     /**
@@ -878,5 +934,35 @@ Polymer({
     _makeListSelectable: function () {
         this.$.input.classList.toggle("noselect", false);
         document.body.style["cursor"] = '';
+    },
+
+    _updateSelectAll: function () {
+        if (this._selectedEntities && this._entities) {
+            const everySelected = this._entities.every(item => this._selectedEntities.includes(item));
+            const someSelected = this._entities.some(item => this._selectedEntities.includes(item));
+            if (someSelected || everySelected) {
+                this._selectedAll = true;
+                this._semiCheckedAll = !everySelected;
+            } else {
+                this._selectedAll = false;
+                this._semiCheckedAll = false;
+            }
+        }
+    },
+
+     _allSelectionChanged: function (e) {
+        const target = e.target || e.srcElement;
+        this.selectAll(target.checked);
+        this._selectedAll = target.checked;            
+    },
+
+    selectAll: function (select) {
+        this._entities.forEach(item => {
+            if (select) {
+                this.$.input.selectItem(item);
+            } else {
+                this.$.input.deselectItem(item);
+            }
+        });
     }
 });
