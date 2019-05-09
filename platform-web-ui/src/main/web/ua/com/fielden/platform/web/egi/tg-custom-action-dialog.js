@@ -998,6 +998,7 @@ Polymer({
                     })
                     .catch(function(error) {
                         console.error(error);
+                        self._setIsRunning(false);
                         self.$.toaster.text = 'There was an error displaying the dialog.';
                         self.$.toaster.hasMore = true;
                         self.$.toaster.msgText = 'There was an error displaying the dialog.<br><br> \
