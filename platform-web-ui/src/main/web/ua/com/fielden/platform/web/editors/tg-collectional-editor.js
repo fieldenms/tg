@@ -11,7 +11,6 @@ import '/resources/editors/tg-dom-stamper.js';
 
 import {Polymer} from '/resources/polymer/@polymer/polymer/lib/legacy/polymer-fn.js';
 import {html} from '/resources/polymer/@polymer/polymer/lib/utils/html-tag.js';
-import { IronResizableBehavior } from '/resources/polymer/@polymer/iron-resizable-behavior/iron-resizable-behavior.js';
 
 import { TgHighlightingBehavior } from '/resources/editors/tg-highlighting-behavior.js';
 import { TgEditorBehavior, TgEditorBehaviorImpl, createEditorTemplate } from '/resources/editors/tg-editor-behavior.js';
@@ -196,7 +195,7 @@ Polymer({
 
     is: 'tg-collectional-editor',
 
-    behaviors: [ IronResizableBehavior, TgEditorBehavior, TgHighlightingBehavior ],
+    behaviors: [ TgEditorBehavior, TgHighlightingBehavior ],
     
     properties: {
         /**
@@ -353,12 +352,15 @@ Polymer({
             this._cancelSearch();
         }).bind(this);
 
-        this.$.input.addEventListener("iron-resize", this._resizeEventListener.bind(this));
+        const oldListRender = this.$.input._render.bind(this.$.input);
+        this.$.input._render = function () {
+            oldListRender();
+            this._scrollBarWidth = this.$.input.offsetWidth - this.$.input.clientWidth;
+        }.bind(this);
     },
     
     attached: function () {
         this._originalChosenIds = null;
-        this._updateSizeAsync();
     },
     
     _calcItemTooltip: function (item) {
@@ -433,18 +435,6 @@ Polymer({
         this.$.input.toggleSelectionForItem(e.model.item);
     },
 
-    _resizeEventListener: function () {
-        this.async(() => {
-            this._scrollBarWidth = this.$.input.offsetWidth - this.$.input.clientWidth;
-        }, 1);
-    },
-
-    _updateSizeAsync: function () {
-        this.async(function () {
-            this._resizeEventListener();
-        }.bind(this), 1)
-    },
-    
     /**
      * Updates iron-list '_entities' based on updated 'chosenIds'; updates selection of that items.
      */
