@@ -361,6 +361,10 @@ Polymer({
     attached: function () {
         this._originalChosenIds = null;
     },
+
+    detached: function () {
+        this._phraseForSearching ="";
+    },
     
     _calcItemTooltip: function (item) {
         var header = this._calcItemText(item, this.headerPropertyName);
