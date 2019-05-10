@@ -39,7 +39,7 @@ public class TgReflectorComponentResource extends AbstractWebResource {
     @Get
     @Override
     public Representation get() {
-        final String source = sourceController.loadSource("/app/tg-reflector.js", device());
+        final String source = sourceController.loadSource("/app/tg-reflector.js");
         return new EncodeRepresentation(Encoding.GZIP, new InputRepresentation(new ByteArrayInputStream(source.getBytes(Charsets.UTF_8)), MediaType.TEXT_JAVASCRIPT));
     }
 

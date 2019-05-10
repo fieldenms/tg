@@ -205,7 +205,7 @@ public class WebUiBuilder implements IWebUiBuilder {
      *
      * @return
      */
-    public String genWebUiPrefComponent(final DeviceProfile deviceProfile) {
+    public String genWebUiPrefComponent() {
         if (this.minDesktopWidth <= this.minTabletWidth) {
             throw new IllegalStateException("The desktop width can not be less then or equal tablet width.");
         }
@@ -215,8 +215,7 @@ public class WebUiBuilder implements IWebUiBuilder {
                 replace("@locale", "\"" + this.locale + "\"").
                 replace("@dateFormat", "\"" + this.dateFormat + "\"").
                 replace("@timeFormat", "\"" + this.timeFormat + "\"").
-                replace("@timeWithMillisFormat", "\"" + this.timeWithMillisFormat + "\"").
-                replace("@mobile", Boolean.toString(MOBILE.equals(deviceProfile)));
+                replace("@timeWithMillisFormat", "\"" + this.timeWithMillisFormat + "\"");
     }
 
     @Override

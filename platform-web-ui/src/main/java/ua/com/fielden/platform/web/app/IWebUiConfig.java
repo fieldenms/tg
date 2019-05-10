@@ -66,39 +66,25 @@ public interface IWebUiConfig extends IMenuRetriever {
     IMainMenuBuilder configMobileMainMenu();
 
     /**
-     * Generates the main html file of desktop web application.
+     * Generates the main html file of web application.
      *
      * @return
      */
-    String genDesktopAppIndex();
-
-    /**
-     * Generates the main html file of mobile web application.
-     *
-     * @return
-     */
-    String genMobileAppIndex();
-
-    /**
-     * Generates the main menu component for mobile application.
-     *
-     * @return
-     */
-    String genMobileMainWebUIComponent();
+    String genAppIndex();
 
     /**
      * Generates the main menu component for desktop application.
      *
      * @return
      */
-    String genDesktopMainWebUIComponent();
+    String genMainWebUIComponent();
 
     /**
-     * Generates the global configuration component depending on {@link DeviceProfile}.
+     * Generates the global configuration component.
      *
      * @return
      */
-    String genWebUiPreferences(final DeviceProfile deviceProfile);
+    String genWebUiPreferences();
 
     /**
      * Returns the map of entity masters for this web application.

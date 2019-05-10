@@ -28,7 +28,7 @@ const template = html`
     <style>
         :host {
             overflow: hidden;
-            @apply(--layout-vertical);
+            @apply --layout-vertical;
         }
     </style>
     <custom-style>
@@ -164,7 +164,7 @@ Polymer({
          */
         mobile: {
             type: Boolean,
-            value: @isMobileDevice
+            value: window.navigator.userAgent.includes("Mobi") // consistent with AbstractWebResource.calculateDeviceProfile
         },
         
         /**

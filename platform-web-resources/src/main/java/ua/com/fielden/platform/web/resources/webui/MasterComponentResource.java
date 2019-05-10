@@ -57,7 +57,7 @@ public class MasterComponentResource extends AbstractWebResource {
     @Override
     public Representation get() {
         return handleUndesiredExceptions(getResponse(), () -> {
-            final String source = sourceController.loadSource("/master_ui/" + this.entityTypeString, device());
+            final String source = sourceController.loadSource("/master_ui/" + this.entityTypeString);
             return new EncodeRepresentation(Encoding.GZIP, new InputRepresentation(new ByteArrayInputStream(source.getBytes(Charsets.UTF_8)), MediaType.TEXT_JAVASCRIPT));
         }, restUtil);
     }

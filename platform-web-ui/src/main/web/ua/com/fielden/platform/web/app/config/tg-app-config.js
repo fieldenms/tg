@@ -43,7 +43,7 @@ export const TgAppConfig = Polymer({
 
         /**
          * Returns 'true' if this tg-app-config instance is loaded during mobile application loading (vulcanised or non-vulcanised loading), 'false' otherwise.
-         * See AbstactWebResource for more details.
+         * See AbstractWebResource for more details.
          * 
          * It is very important not to confuse this parameter with MOBILE / TABLET / DESKTOP layouts (tg-tile-layout, tg-flex-layout).
          * These three layout modes can be used in 'desktop' application when resizing application window.
@@ -53,7 +53,7 @@ export const TgAppConfig = Polymer({
         mobile: {
             type: Boolean,
             readOnly: true,
-            value: @mobile,
+            value: window.navigator.userAgent.includes("Mobi"), // consistent with AbstractWebResource.calculateDeviceProfile
             notify: true
         }
     },

@@ -7,19 +7,19 @@ import org.restlet.data.Method;
 
 import ua.com.fielden.platform.web.app.ISourceController;
 import ua.com.fielden.platform.web.interfaces.IDeviceProvider;
-import ua.com.fielden.platform.web.resources.webui.DesktopApplicationStartupResourcesComponentResource;
+import ua.com.fielden.platform.web.resources.webui.ApplicationStartupResourcesComponentResource;
 
 /**
- * Resource factory for 'desktop-application-startup-resources' component.
+ * Resource factory for 'application-startup-resources' component.
  *
  * @author TG Team
  *
  */
-public class DesktopApplicationStartupResourcesComponentResourceFactory extends Restlet {
+public class ApplicationStartupResourcesComponentResourceFactory extends Restlet {
     private final ISourceController sourceController;
     private final IDeviceProvider deviceProvider;
 
-    public DesktopApplicationStartupResourcesComponentResourceFactory(final ISourceController sourceController, final IDeviceProvider deviceProvider) {
+    public ApplicationStartupResourcesComponentResourceFactory(final ISourceController sourceController, final IDeviceProvider deviceProvider) {
         this.sourceController = sourceController;
         this.deviceProvider = deviceProvider;
     }
@@ -29,7 +29,7 @@ public class DesktopApplicationStartupResourcesComponentResourceFactory extends 
         super.handle(request, response);
 
         if (Method.GET == request.getMethod()) {
-            final DesktopApplicationStartupResourcesComponentResource resource = new DesktopApplicationStartupResourcesComponentResource(sourceController, deviceProvider, getContext(), request, response);
+            final ApplicationStartupResourcesComponentResource resource = new ApplicationStartupResourcesComponentResource(sourceController, deviceProvider, getContext(), request, response);
             resource.handle();
         }
     }

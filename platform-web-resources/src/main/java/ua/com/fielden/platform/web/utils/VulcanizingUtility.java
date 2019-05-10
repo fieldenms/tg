@@ -131,24 +131,19 @@ public class VulcanizingUtility {
         
         copyStaticResources(platformVendorResourcesPath, platformWebUiResourcesPath, appVendorResourcesPath, appWebUiResourcesPath);
         
-        LOGGER.info("\tVulcanizing login resources...");
-        adjustRootResources(sourceController, "login");
-        vulcanizeStartupResourcesFor("login", MOBILE, sourceController, loginTargetPlatformSpecificPath, commandMaker.get(), additionalPaths, dir);
-        LOGGER.info("\tVulcanized login resources.");
+        final String loginPrefix = "login-";
+        LOGGER.info(format("\tVulcanizing [%s] resources...", loginPrefix));
+        adjustRootResources(sourceController, loginPrefix);
+        vulcanizeStartupResourcesFor(loginPrefix, sourceController, loginTargetPlatformSpecificPath, commandMaker.get(), additionalPaths, dir);
+        LOGGER.info(format("\tVulcanized [%s] resources.", loginPrefix));
         
-        downloadCommonGeneratedResources(webUiConfig, sourceController);
+        downloadGeneratedResources(webUiConfig, sourceController);
         
-        LOGGER.info("\tVulcanizing mobile resources...");
-        downloadSpecificGeneratedResourcesFor(webUiConfig, MOBILE, sourceController);
-        adjustRootResources(sourceController, "mobile");
-        vulcanizeStartupResourcesFor("mobile", MOBILE, sourceController, mobileAndDesktopAppSpecificPath, commandMaker.get(), additionalPaths, dir);
-        LOGGER.info("\tVulcanized mobile resources.");
-        
-        LOGGER.info("\tVulcanizing desktop resources...");
-        downloadSpecificGeneratedResourcesFor(webUiConfig, DESKTOP, sourceController);
-        adjustRootResources(sourceController, "desktop");
-        vulcanizeStartupResourcesFor("desktop", DESKTOP, sourceController, mobileAndDesktopAppSpecificPath, commandMaker.get(), additionalPaths, dir);
-        LOGGER.info("\tVulcanized desktop resources.");
+        final String prefix = "";
+        LOGGER.info(format("\tVulcanizing [%s] resources...", prefix));
+        adjustRootResources(sourceController, prefix);
+        vulcanizeStartupResourcesFor(prefix, sourceController, mobileAndDesktopAppSpecificPath, commandMaker.get(), additionalPaths, dir);
+        LOGGER.info(format("\tVulcanized [%s] resources...", prefix));
         
         clearObsoleteResources();
         LOGGER.info("Vulcanized.");
@@ -165,7 +160,7 @@ public class VulcanizingUtility {
         try {
             FileUtils.copyFile(new File("vulcan/resources/rollup.config.js"), new File("rollup.config.js"));
             adjustFileContents("rollup.config.js", profile);
-            copyFile(new File("vulcan/resources/" + profile + "-startup-resources-origin.js"), new File(profile + "-startup-resources-origin.js"));
+            copyFile(new File("vulcan/resources/" + profile + "startup-resources-origin.js"), new File(profile + "startup-resources-origin.js"));
         } catch (final IOException e) {
             LOGGER.error(e.getMessage(), e);
             throw new IllegalStateException(e);
@@ -184,7 +179,7 @@ public class VulcanizingUtility {
             final String contents = IOUtils.toString(fileInputStream, UTF_8.name());
             fileInputStream.close();
             final PrintStream ps = new PrintStream(fileName);
-            ps.print(contents.replace("@profile", profile));
+            ps.print(contents.replace("@profile-", profile));
             ps.close();
         } catch (final IOException e) {
             LOGGER.error(e.getMessage(), e);
@@ -204,10 +199,8 @@ public class VulcanizingUtility {
             new File("rollup.config.js").delete();
             new File("login-startup-resources-origin.js").delete();
             new File("login-startup-resources-vulcanized.js").delete();
-            new File("mobile-startup-resources-origin.js").delete();
-            new File("mobile-startup-resources-vulcanized.js").delete();
-            new File("desktop-startup-resources-origin.js").delete();
-            new File("desktop-startup-resources-vulcanized.js").delete();
+            new File("startup-resources-origin.js").delete();
+            new File("startup-resources-vulcanized.js").delete();
         } catch (final IOException e) {
             LOGGER.error(e.getMessage(), e);
             throw new IllegalStateException(e);
@@ -216,13 +209,13 @@ public class VulcanizingUtility {
     }
     
     /**
-     * Downloads common generated resources for both DESKTOP and MOBILE profiles.
+     * Downloads generated resources.
      * 
      * @param webUiConfig
      * @param sourceController
      */
-    private static void downloadCommonGeneratedResources(final IWebUiConfig webUiConfig, final ISourceController sourceController) {
-        LOGGER.info("\tDownloading common generated resources...");
+    private static void downloadGeneratedResources(final IWebUiConfig webUiConfig, final ISourceController sourceController) {
+        LOGGER.info("\tDownloading generated resources...");
         downloadSource("app", "tg-reflector.js", sourceController, null);
         for (final Class<? extends AbstractEntity<?>> masterType : webUiConfig.getMasters().keySet()) {
             downloadSource("master_ui", masterType.getName() + ".js", sourceController, null);
@@ -230,35 +223,20 @@ public class VulcanizingUtility {
         for (final String viewName : webUiConfig.getCustomViews().keySet()) {
             downloadSource("custom_view", viewName, sourceController, null);
         }
-        LOGGER.info("\tDownloaded common generated resources.");
-    }
-    
-    /**
-     * Downloads specific generated resources for concrete <code>deviceProfile</code>.
-     * 
-     * @param webUiConfig
-     * @param deviceProfile
-     * @param sourceController
-     */
-    private static void downloadSpecificGeneratedResourcesFor(final IWebUiConfig webUiConfig, final DeviceProfile deviceProfile, final ISourceController sourceController) {
-        LOGGER.info("\t\tDownloading " + deviceProfile + " generated resources...");
         for (final Class<? extends MiWithConfigurationSupport<?>> centreMiType : webUiConfig.getCentres().keySet()) {
-            downloadSource("centre_ui", centreMiType.getName() + ".js", sourceController, deviceProfile);
+            downloadSource("centre_ui", centreMiType.getName() + ".js", sourceController, null);
         }
-        downloadSource("app", "tg-app-config.js", sourceController, deviceProfile);
-        downloadSource("app", "tg-app.js", sourceController, deviceProfile);
-        if (DESKTOP.equals(deviceProfile)) {
-            LOGGER.info("\t\t\tDownloading " + deviceProfile + " generated resource 'desktop-application-startup-resources.js'...");
-            downloadSource("app", "desktop-application-startup-resources.js", sourceController, deviceProfile);
-        }
-        LOGGER.info("\t\tDownloaded " + deviceProfile + " generated resources.");
+        downloadSource("app", "tg-app-config.js", sourceController, null);
+        downloadSource("app", "tg-app.js", sourceController, null);
+        LOGGER.info("\t\t\tDownloading generated resource 'application-startup-resources.js'...");
+        downloadSource("app", "application-startup-resources.js", sourceController, null);
+        LOGGER.info("\tDownloaded generated resources.");
     }
     
     /**
      * Executes vulcanisation process.
      * 
      * @param prefix
-     * @param deviceProfile
      * @param sourceController
      * @param targetAppSpecificPath
      * @param commands
@@ -267,7 +245,6 @@ public class VulcanizingUtility {
      */
     private static void vulcanizeStartupResourcesFor(
             final String prefix,
-            final DeviceProfile deviceProfile,
             final ISourceController sourceController,
             final String targetAppSpecificPath,
             final String[] commands,
@@ -306,7 +283,7 @@ public class VulcanizingUtility {
         LOGGER.info("\t\tVulcanized [" + prefix + "].");
         LOGGER.info("\t\tMove vulcanized file to its destination...");
         try {
-            copyFile(new File(prefix + "-startup-resources-vulcanized.js"), new File(targetAppSpecificPath + prefix + "-startup-resources-vulcanized.js"));
+            copyFile(new File(prefix + "startup-resources-vulcanized.js"), new File(targetAppSpecificPath + prefix + "startup-resources-vulcanized.js"));
         } catch (final IOException e) {
             LOGGER.error(e.getMessage(), e);
             throw new IllegalStateException(e);
@@ -360,7 +337,7 @@ public class VulcanizingUtility {
             }
             final String pathAndName = "/" + dir + "/" + name;
             ps = new PrintStream("vulcan" + pathAndName);
-            ps.println(sourceController.loadSource(pathAndName, deviceProfile));
+            ps.println(sourceController.loadSource(pathAndName));
             ps.close();
         } catch (final FileNotFoundException e) {
             LOGGER.error(e.getMessage(), e);

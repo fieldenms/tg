@@ -68,7 +68,7 @@ public class FileResource extends AbstractWebResource {
         } else {
             final MediaType mediaType = determineMediaType(extension);
             if (MediaType.TEXT_HTML.equals(mediaType)) {
-                final String source = sourceController.loadSourceWithFilePath(filePath, device());
+                final String source = sourceController.loadSourceWithFilePath(filePath);
                 if (source != null) {
                     return RestServerUtil.encodedRepresentation(new ByteArrayInputStream(source.getBytes(Charsets.UTF_8)), mediaType);
                 } else {
