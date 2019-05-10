@@ -213,6 +213,10 @@ const template = html`
             --paper-checkbox-unchecked-color: var(--paper-grey-600);
             --paper-checkbox-unchecked-ink-color: var(--paper-grey-600);
         }
+        paper-checkbox.header[semi-checked] {
+            --paper-checkbox-checked-color: #acdbfe;
+            --paper-checkbox-checked-ink-color: var(--paper-light-blue-700);
+        }
         paper-checkbox.body {
             --paper-checkbox-unchecked-color: var(--paper-grey-900);
             --paper-checkbox-unchecked-ink-color: var(--paper-grey-900);
@@ -295,7 +299,7 @@ const template = html`
             <div class="table-header-row" style$="[[_calcHeaderStyle(headerFixed, _showTopShadow)]]">
                 <div class="drag-anchor cell" hidden$="[[!canDragFrom]]" style$="[[_calcDragBoxStyle(dragAnchorFixed)]]"></div>
                 <div class="table-cell cell" style$="[[_calcSelectCheckBoxStyle(canDragFrom, checkboxesFixed)]]" hidden$="[[!checkboxVisible]]" tooltip-text$="[[_selectAllTooltip(selectedAll)]]">
-                    <paper-checkbox class="all-checkbox blue header" checked="[[selectedAll]]" on-change="_allSelectionChanged"></paper-checkbox>
+                    <paper-checkbox class="all-checkbox blue header" checked="[[selectedAll]]" semi-checked$="[[semiSelectedAll]]" on-change="_allSelectionChanged"></paper-checkbox>
                 </div>
                 <div class="action-cell cell" hidden$="[[!primaryAction]]" style$="[[_calcPrimaryActionStyle(canDragFrom, checkboxVisible, checkboxesWithPrimaryActionsFixed)]]">
                     <!--Primary action stub header goes here-->
@@ -413,10 +417,14 @@ function removeColumn (column, fromColumns) {
 };
 
 function updateSelectAll (egi, egiModel) {
-    if (egiModel.length > 0 && egiModel.every(elem => elem.selected)) {
+    const everySelected = egiModel.every(item => item.selected);
+    const someSelected = egiModel.some(item => item.selected);
+    if (egiModel.length > 0 && (everySelected || someSelected)) {
         egi.selectedAll = true;
+        egi.semiSelectedAll = !everySelected;
     } else {
         egi.selectedAll = false;
+        egi.semiSelectedAll = false;
     }
 };
 
@@ -481,6 +489,10 @@ Polymer({
             observer: "_renderingHintsChanged"
         },
         selectedAll: {
+            type: Boolean,
+            value: false
+        },
+        semiSelectedAll: {
             type: Boolean,
             value: false
         },
@@ -802,7 +814,6 @@ Polymer({
                     });
                 }
             }
-            this.selectedAll = checked;
             if (selectionDetails.length > 0) {
                 this.fire("tg-entity-selected", {
                     shouldScrollToSelected: false,
@@ -1017,11 +1028,7 @@ Polymer({
                 this._lastSelectedIndex = -1;
             }
             //Set up selecteAll property.
-            if (this.selectedAll && !target.checked) {
-                this.selectedAll = false;
-            } else if (this.egiModel.length > 0 && this.egiModel.every(elem => elem.selected)) {
-                this.selectedAll = true;
-            }
+            updateSelectAll(this, this.egiModel);
         }
     },
 
