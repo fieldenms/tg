@@ -46,7 +46,6 @@ const additionalTemplate = html`
         .search-controls-wrapper {
             @apply --layout-horizontal;
             @apply --layout-center;
-            padding-left:16px;
         }
         iron-list {
             overflow: auto;
@@ -87,7 +86,7 @@ const additionalTemplate = html`
             cursor: -webkit-grabbing;
         }
         .resizing-box {
-            margin: 0 2px;
+            margin: 0 5px;
             min-width: 32px;
             min-height: 32px;
             color: var(--paper-grey-400);
@@ -122,7 +121,6 @@ const additionalTemplate = html`
         }
         
         .title {
-            padding-left: 16px;
             overflow: hidden;
             @apply --layout-vertical;
             @apply --layout-flex;
@@ -150,17 +148,18 @@ const additionalTemplate = html`
         }
         .sorting-group {
             cursor: pointer;
+            padding-left:16px;
             @apply --layout-horizontal;
         }
         .sorting-invisible {
-            visibility: hidden;
+            display: none;
         }
     </style>
     <custom-style>
         <style include="iron-flex iron-flex-reverse iron-flex-alignment iron-flex-factors iron-positioning"></style>
     </custom-style>`;
 const customInputTemplate = html`
-    <div class="search-controls-wrapper" style$="[[_computeInputStyle(_forReview)]]">
+    <div class="search-controls-wrapper" style$="[[_computeInputStyle(_forReview, canReorderItems)]]">
         <div class="resizing-box" hidden$="[[!canReorderItems]]"></div>
         <iron-input bind-value="{{_phraseForSearching}}" class="custom-input-wrapper" >
             <input id="searchInput" class="custom-input" placeholder="Type to search..." on-input="_onInput" on-tap="_onTap" on-mousedown="_onTap" on-blur="_eventHandler" autocomplete="off">
@@ -174,7 +173,7 @@ const customInputTemplate = html`
                     <div class="dummy-box fit" hidden$="[[!_isDummyBoxVisible(item, _draggingItem)]]"></div>
                     <div tabindex="0" class$="[[_computedClass(selected, item, _draggingItem)]]" style$="[[_computeItemStyle(_forReview, _draggingItem, canReorderItems)]]">
                         <iron-icon class="resizing-box" on-down="_makeListUnselectable" on-up="_makeListSelectable" on-track="_changeItemOrder" hidden$="[[!canReorderItems]]" icon="tg-icons:dragVertical" style$="[[_computeStyleForResizingBox(selected)]]" on-touchstart="_disableScrolling" on-touchmove="_disableScrolling"></iron-icon>
-                        <div class="title" tooltip-text$="[[_calcItemTooltip(item)]]">
+                        <div class="title" tooltip-text$="[[_calcItemTooltip(item)]]" style$="[[_computeTitleStyle(canReorderItems)]]">
                             <tg-dom-stamper class$="[[_computedHeaderClass(item)]]" dom-text="[[_calcItemTextHighlighted(item, headerPropertyName, _phraseForSearchingCommited)]]"></tg-dom-stamper>
                             <tg-dom-stamper class$="[[_computedDescriptionClass(item)]]" dom-text="[[_calcItemTextHighlighted(item, descriptionPropertyName, _phraseForSearchingCommited)]]"></tg-dom-stamper>
                         </div>
@@ -182,7 +181,7 @@ const customInputTemplate = html`
                             <iron-icon icon$="[[_sortingIconForItem(item.sorting)]]" style$="[[_computeSortingIconStyle(item.sorting)]]" on-tap="_changeOrdering"></iron-icon>
                             <span class="ordering-number self-center">[[_calculateOrder(item.sortingNumber)]]</span>
                         </div>
-                        <paper-checkbox on-change="_selectionHandler" hidden$="[[_selectingIconHidden(_forReview)]]" checked="[[selected]]"></paper-checkbox>
+                        <paper-checkbox style="padding-left:16px;" on-change="_selectionHandler" hidden$="[[_selectingIconHidden(_forReview)]]" checked="[[selected]]"></paper-checkbox>
                     </div>
                     <div class="border"></div>
                 </div>
@@ -575,8 +574,10 @@ Polymer({
         return !_forReview;
     },
 
-    _computeInputStyle: function (_forReview) {
-        return _forReview ? "" : "padding-bottom: 20px;";
+    _computeInputStyle: function (_forReview, canReorderItems) {
+        let style = canReorderItems ? "" : "padding-left:16px;";
+        style += _forReview ? "" : "padding-bottom: 20px;";
+        return style;
     },
 
     _computeSelectAllCheckboxStyle: function (_scrollBarWidth) {
@@ -593,11 +594,15 @@ Polymer({
         let style = _forReview || _draggingItem ? '' : 'cursor: pointer;';
         return style;
     },
-    
+
     _computeStyleForResizingBox : function (selected) {
         return !selected ? "visibility: hidden;" : ""; 
     },
-    
+
+    _computeTitleStyle: function (canReorderItems) {
+        return canReorderItems ? "" : "padding-left: 16px;";
+    },
+
     _calculateOrder: function (sortingNumber) {
         return sortingNumber >= 0 ? sortingNumber + 1 + "" : "";
     },
