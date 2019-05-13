@@ -11,8 +11,6 @@ import static org.apache.commons.io.FileUtils.copyFile;
 import static org.apache.commons.io.FileUtils.deleteDirectory;
 import static org.apache.log4j.xml.DOMConfigurator.configure;
 import static ua.com.fielden.platform.utils.Pair.pair;
-import static ua.com.fielden.platform.web.interfaces.DeviceProfile.DESKTOP;
-import static ua.com.fielden.platform.web.interfaces.DeviceProfile.MOBILE;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -23,7 +21,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.PrintStream;
 import java.util.Properties;
-import java.util.function.Supplier;
+import java.util.function.Function;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
@@ -47,13 +45,13 @@ import ua.com.fielden.platform.web.interfaces.DeviceProfile;
 public class VulcanizingUtility {
     private static final Logger LOGGER = Logger.getLogger(VulcanizingUtility.class);
     
-    public static String[] unixCommands() {
-        return new String[] {"/bin/bash", "build-script.bat"};
+    public static String[] unixCommands(final String action) {
+        return new String[] {"/bin/bash", action + "-script.bat"};
     }
     
-    public static String[] windowsCommands() {
+    public static String[] windowsCommands(final String action) {
         // JVM arguments (brackets should be removed): [src/main/resources/application.properties "C:/Program Files/nodejs;C:/Users/Yuriy/AppData/Roaming/npm"]
-        return new String[] {"CMD", "/c", "build-script.bat"};
+        return new String[] {"CMD", "/c", action + "-script.bat"};
     }
     
     protected static Pair<Properties, String[]> processVmArguments(final String[] args) throws IOException {
@@ -115,7 +113,7 @@ public class VulcanizingUtility {
             final String appWebUiResourcesPath,
             final String loginTargetPlatformSpecificPath,
             final String mobileAndDesktopAppSpecificPath,
-            final Supplier<String[]> commandMaker,
+            final Function<String, String[]> commandMaker,
             final String[] additionalPaths) {
         if (LOGGER == null) {
             throw new IllegalArgumentException("Logger is a required argumet.");
@@ -134,7 +132,7 @@ public class VulcanizingUtility {
         final String loginPrefix = "login-";
         LOGGER.info(format("\tVulcanizing [%s] resources...", loginPrefix));
         adjustRootResources(sourceController, loginPrefix);
-        vulcanizeStartupResourcesFor(loginPrefix, sourceController, loginTargetPlatformSpecificPath, commandMaker.get(), additionalPaths, dir);
+        vulcanizeStartupResourcesFor(loginPrefix, sourceController, loginTargetPlatformSpecificPath, commandMaker.apply("build"), commandMaker.apply("minify"), additionalPaths, dir);
         LOGGER.info(format("\tVulcanized [%s] resources.", loginPrefix));
         
         downloadGeneratedResources(webUiConfig, sourceController);
@@ -142,7 +140,7 @@ public class VulcanizingUtility {
         final String prefix = "";
         LOGGER.info(format("\tVulcanizing [%s] resources...", prefix));
         adjustRootResources(sourceController, prefix);
-        vulcanizeStartupResourcesFor(prefix, sourceController, mobileAndDesktopAppSpecificPath, commandMaker.get(), additionalPaths, dir);
+        vulcanizeStartupResourcesFor(prefix, sourceController, mobileAndDesktopAppSpecificPath, commandMaker.apply("build"), commandMaker.apply("minify"), additionalPaths, dir);
         LOGGER.info(format("\tVulcanized [%s] resources...", prefix));
         
         clearObsoleteResources();
@@ -160,6 +158,8 @@ public class VulcanizingUtility {
         try {
             FileUtils.copyFile(new File("vulcan/resources/rollup.config.js"), new File("rollup.config.js"));
             adjustFileContents("rollup.config.js", profile);
+            copyFile(new File("vulcan/resources/minify-script.bat"), new File("minify-script.bat"));
+            adjustFileContents("minify-script.bat", profile);
             copyFile(new File("vulcan/resources/" + profile + "startup-resources-origin.js"), new File(profile + "startup-resources-origin.js"));
         } catch (final IOException e) {
             LOGGER.error(e.getMessage(), e);
@@ -196,11 +196,14 @@ public class VulcanizingUtility {
             deleteDirectory(new File("vulcan"));
             deleteDirectory(new File("build"));
             new File("build-script.bat").delete();
+            new File("minify-script.bat").delete();
             new File("rollup.config.js").delete();
             new File("login-startup-resources-origin.js").delete();
             new File("login-startup-resources-vulcanized.js").delete();
+            new File("login-startup-resources-vulcanized-minified.js").delete();
             new File("startup-resources-origin.js").delete();
             new File("startup-resources-vulcanized.js").delete();
+            new File("startup-resources-vulcanized-minified.js").delete();
         } catch (final IOException e) {
             LOGGER.error(e.getMessage(), e);
             throw new IllegalStateException(e);
@@ -239,7 +242,7 @@ public class VulcanizingUtility {
      * @param prefix
      * @param sourceController
      * @param targetAppSpecificPath
-     * @param commands
+     * @param vulcanizeCommands
      * @param additionalPaths
      * @param dir
      */
@@ -247,13 +250,30 @@ public class VulcanizingUtility {
             final String prefix,
             final ISourceController sourceController,
             final String targetAppSpecificPath,
-            final String[] commands,
+            final String[] vulcanizeCommands,
+            final String[] minifyCommands,
             final String[] additionalPaths,
             final File dir) {
         if (additionalPaths == null) {
             throw new IllegalArgumentException("Argument additionalPaths cannot be null, but can be empty if no additiona paths are required for the PATH env. variable.");
         }
         LOGGER.info("\t\tVulcanizing [" + prefix + "]...");
+        processCommands(vulcanizeCommands, additionalPaths);
+        LOGGER.info("\t\tVulcanized [" + prefix + "].");
+        LOGGER.info("\t\tMinifying [" + prefix + "]...");
+        processCommands(minifyCommands, additionalPaths);
+        LOGGER.info("\t\tMinified [" + prefix + "].");
+        LOGGER.info("\t\tMove vulcanized file to its destination...");
+        try {
+            copyFile(new File(prefix + "startup-resources-vulcanized-minified.js"), new File(targetAppSpecificPath + prefix + "startup-resources-vulcanized.js"));
+        } catch (final IOException e) {
+            LOGGER.error(e.getMessage(), e);
+            throw new IllegalStateException(e);
+        }
+        LOGGER.info("\t\tMoved vulcanized file to its destination.");
+    }
+
+    private static void processCommands(final String[] commands, final String[] additionalPaths) {
         try {
             final ProcessBuilder pb = new ProcessBuilder(commands);
             // need to enrich the PATH with the paths that point to vulcanize and node
@@ -276,19 +296,10 @@ public class VulcanizingUtility {
             process.waitFor();
         } catch (final IOException | InterruptedException e) {
             LOGGER.error(e.getMessage(), e);
-            // need to clear obsolete resources in case of vulcanization failure
+            // need to clear obsolete resources in case of failure
             clearObsoleteResources();
             throw new IllegalStateException(e);
         }
-        LOGGER.info("\t\tVulcanized [" + prefix + "].");
-        LOGGER.info("\t\tMove vulcanized file to its destination...");
-        try {
-            copyFile(new File(prefix + "startup-resources-vulcanized.js"), new File(targetAppSpecificPath + prefix + "startup-resources-vulcanized.js"));
-        } catch (final IOException e) {
-            LOGGER.error(e.getMessage(), e);
-            throw new IllegalStateException(e);
-        }
-        LOGGER.info("\t\tMoved vulcanized file to its destination.");
     }
     
     /**
