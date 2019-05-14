@@ -75,7 +75,6 @@ import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.CO
 import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.END_COND;
 import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.END_EXPR;
 import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.END_FUNCTION;
-import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.VALUES_AS_QRY_SOURCE;
 import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.ENTITY_TYPE_AS_QRY_SOURCE;
 import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.EQUERY_TOKENS;
 import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.EXISTS_OPERATOR;
@@ -83,7 +82,6 @@ import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.EX
 import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.EXT_PROP;
 import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.FUNCTION;
 import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.FUNCTION_INTERVAL;
-import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.ILIKE_OPERATOR;
 import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.IN_OPERATOR;
 import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.IPARAM;
 import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.IVAL;
@@ -105,6 +103,7 @@ import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.SE
 import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.SET_OF_VALUES;
 import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.SORT_ORDER;
 import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.VAL;
+import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.VALUES_AS_QRY_SOURCE;
 import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.ZERO_ARG_FUNCTION;
 import static ua.com.fielden.platform.utils.EntityUtils.equalsEx;
 
@@ -246,12 +245,8 @@ final class Tokens {
         return add(COMPARISON_OPERATOR, NE);
     }
 
-    public Tokens like(final boolean negated) {
-        return add(LIKE_OPERATOR, negated);
-    }
-
-    public Tokens iLike(final boolean negated) {
-        return add(ILIKE_OPERATOR, negated);
+    public Tokens like(final LikeOptions options) {
+        return add(LIKE_OPERATOR, options);
     }
 
     public Tokens in(final boolean negated) {

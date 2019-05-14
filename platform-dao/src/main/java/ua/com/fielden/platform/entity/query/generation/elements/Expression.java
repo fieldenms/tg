@@ -2,6 +2,7 @@ package ua.com.fielden.platform.entity.query.generation.elements;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class Expression implements ISingleOperand {
 
@@ -15,15 +16,7 @@ public class Expression implements ISingleOperand {
 
     @Override
     public String sql() {
-        final StringBuffer sb = new StringBuffer();
-        sb.append(items.size() > 0 ? "(" : "");
-        sb.append(first.sql());
-        for (final CompoundSingleOperand compoundOperand : items) {
-            sb.append(compoundOperand.sql());
-        }
-        sb.append(items.size() > 0 ? ")" : "");
-
-        return sb.toString();
+        return items.isEmpty() ? first.sql() : "(" + first.sql() + items.stream().map(co -> co.sql()).collect(Collectors.joining()) +")";
     }
 
     @Override
@@ -62,8 +55,8 @@ public class Expression implements ISingleOperand {
     }
 
     @Override
-    public Class type() {
-        return null;
+    public Class<?> type() {
+        return items.isEmpty() ? first.type() : null;
     }
 
     @Override

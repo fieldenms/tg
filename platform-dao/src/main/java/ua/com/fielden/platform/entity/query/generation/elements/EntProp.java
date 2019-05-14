@@ -10,10 +10,13 @@ import static ua.com.fielden.platform.utils.CollectionUtil.listOf;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
+
+import ua.com.fielden.platform.entity.query.exceptions.EqlException;
 
 public class EntProp implements ISingleOperand {
     private String name;
-    private Class propType;
+    private Class<?> propType;
     private Object hibType;
     private boolean nullable;
     private boolean unresolved = false;
@@ -93,7 +96,7 @@ public class EntProp implements ISingleOperand {
         return isExpression() ? expression.getAllValues() : emptyList();
     }
 
-    public Class getPropType() {
+    public Class<?> getPropType() {
         return propType;
     }
 
@@ -105,7 +108,7 @@ public class EntProp implements ISingleOperand {
         this.hibType = hibType;
     }
 
-    public void setPropType(final Class propType) {
+    public void setPropType(final Class<?> propType) {
         this.propType = propType;
     }
 
@@ -119,16 +122,16 @@ public class EntProp implements ISingleOperand {
     }
 
     @Override
-    public Class type() {
+    public Class<?> type() {
         return propType;
     }
 
     @Override
     public int hashCode() {
-        final int prime = 31;
-        int result = 1;
-        result = prime * result + ((name == null) ? 0 : name.hashCode());
-        return result;
+        if (name == null) {
+            throw new EqlException("EntProp instance is missing a value for property name and its hashCode should not be calculated yet.");
+        }
+        return 31 * ((name == null) ? 0 : name.hashCode());
     }
 
     @Override
@@ -136,21 +139,11 @@ public class EntProp implements ISingleOperand {
         if (this == obj) {
             return true;
         }
-        if (obj == null) {
-            return false;
-        }
         if (!(obj instanceof EntProp)) {
             return false;
         }
-        final EntProp other = (EntProp) obj;
-        if (name == null) {
-            if (other.name != null) {
-                return false;
-            }
-        } else if (!name.equals(other.name)) {
-            return false;
-        }
-        return true;
+        final EntProp that = (EntProp) obj;
+        return Objects.equals(this.name, that.name);
     }
 
     public String getSql() {

@@ -24,6 +24,7 @@ import static ua.com.fielden.platform.web.centre.EgiConfigurations.SUMMARY_FIXED
 import static ua.com.fielden.platform.web.centre.EgiConfigurations.TOOLBAR_VISIBLE;
 import static ua.com.fielden.platform.web.centre.WebApiUtils.dslName;
 import static ua.com.fielden.platform.web.centre.WebApiUtils.treeName;
+import static ua.com.fielden.platform.web.interfaces.DeviceProfile.DESKTOP;
 import static ua.com.fielden.platform.web.utils.EntityResourceUtils.getOriginalPropertyName;
 import static ua.com.fielden.platform.web.utils.EntityResourceUtils.getOriginalType;
 import static ua.com.fielden.platform.web.view.master.EntityMaster.flattenedNameOf;
@@ -809,17 +810,16 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
     }
 
     @Override
-    public IRenderable buildFor(final DeviceProfile device) {
-        logger.debug("Initiating fresh centre...");
-        return createRenderableRepresentation(getAssociatedEntityCentreManager(device));
+    public IRenderable buildFor() {
+        return createRenderableRepresentation(getAssociatedEntityCentreManager());
     }
 
-    private final ICentreDomainTreeManagerAndEnhancer getAssociatedEntityCentreManager(final DeviceProfile device) {
+    private final ICentreDomainTreeManagerAndEnhancer getAssociatedEntityCentreManager() {
         final User user = getUser();
         if (user == null) {
             return createUserUnspecificDefaultCentre(dslDefaultConfig, injector.getInstance(ISerialiser.class), postCentreCreated);
         } else {
-            return updateCentre(user, userProvider, miType, FRESH_CENTRE_NAME, empty(), device, serialiser, domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion);
+            return updateCentre(user, userProvider, miType, FRESH_CENTRE_NAME, empty(), DESKTOP, serialiser, domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion);
         }
     }
 

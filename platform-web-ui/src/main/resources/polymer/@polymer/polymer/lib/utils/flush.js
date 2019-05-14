@@ -14,33 +14,10 @@ import { Debouncer } from "./debounce.js"; // used in type annotations
 
 /* eslint-enable no-unused-vars */
 
-let debouncerQueue = [];
-/**
- * Adds a `Debouncer` to a list of globally flushable tasks.
- *
- * @param {!Debouncer} debouncer Debouncer to enqueue
- * @return {void}
- */
+import { flushDebouncers } from "./debounce.js"; // used in type annotations
 
-export const enqueueDebouncer = function (debouncer) {
-  debouncerQueue.push(debouncer);
-};
+export { enqueueDebouncer } from "./debounce.js"; // used in type annotations
 
-function flushDebouncers() {
-  const didFlush = Boolean(debouncerQueue.length);
-
-  while (debouncerQueue.length) {
-    try {
-      debouncerQueue.shift().flush();
-    } catch (e) {
-      setTimeout(() => {
-        throw e;
-      });
-    }
-  }
-
-  return didFlush;
-}
 /**
  * Forces several classes of asynchronously queued tasks to flush:
  * - Debouncers added via `enqueueDebouncer`
@@ -48,7 +25,6 @@ function flushDebouncers() {
  *
  * @return {void}
  */
-
 
 export const flush = function () {
   let shadyDOM, debouncers;

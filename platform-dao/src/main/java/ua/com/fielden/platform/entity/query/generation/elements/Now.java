@@ -49,7 +49,7 @@ public class Now implements ISingleOperand {
     }
 
     @Override
-    public Class type() {
+    public Class<?> type() {
         return null;
     }
 

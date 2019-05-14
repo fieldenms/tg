@@ -1,26 +1,30 @@
 /**
-@license
-Copyright (c) 2017 The Polymer Project Authors. All rights reserved.
-This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
-The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
-The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
-Code distributed by Google as part of the polymer project is also
-subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
-*/
+ * @fileoverview
+ * @suppress {checkPrototypalTypes}
+ * @license Copyright (c) 2017 The Polymer Project Authors. All rights reserved.
+ * This code may only be used under the BSD style license found at
+ * http://polymer.github.io/LICENSE.txt The complete set of authors may be found
+ * at http://polymer.github.io/AUTHORS.txt The complete set of contributors may
+ * be found at http://polymer.github.io/CONTRIBUTORS.txt Code distributed by
+ * Google as part of the polymer project is also subject to an additional IP
+ * rights grant found at http://polymer.github.io/PATENTS.txt
+ */
 import '../utils/boot.js';
-import { rootPath, strictTemplatePolicy, allowTemplateFromDomModule } from '../utils/settings.js';
+import { rootPath, strictTemplatePolicy, allowTemplateFromDomModule, legacyOptimizations, syncInitialRender } from '../utils/settings.js';
 import { dedupingMixin } from '../utils/mixin.js';
 import { stylesFromTemplate, stylesFromModuleImports } from '../utils/style-gather.js';
 import { pathFromUrl, resolveCss, resolveUrl } from '../utils/resolve-url.js';
 import { DomModule } from '../elements/dom-module.js';
 import { PropertyEffects } from './property-effects.js';
 import { PropertiesMixin } from './properties-mixin.js';
+import { wrap } from '../utils/wrap.js';
 /**
  * Current Polymer version in Semver notation.
  * @type {string} Semver notation of the current version of Polymer.
  */
 
-export const version = '3.0.5';
+export const version = '3.2.0';
+const builtCSS = window.ShadyCSS && window.ShadyCSS['cssBuild'];
 /**
  * Element class mixin that provides the core API for Polymer's meta-programming
  * features including template stamping, data-binding, attribute deserialization,
@@ -93,9 +97,9 @@ export const version = '3.0.5';
 export const ElementMixin = dedupingMixin(base => {
   /**
    * @constructor
-   * @extends {base}
    * @implements {Polymer_PropertyEffects}
    * @implements {Polymer_PropertiesMixin}
+   * @extends {HTMLElement}
    * @private
    */
   const polymerElementBase = PropertiesMixin(PropertyEffects(base));
@@ -192,7 +196,6 @@ export const ElementMixin = dedupingMixin(base => {
    * disables the effect, the setter would fail unexpectedly.
    * Based on feedback, we may want to try to make effects more malleable
    * and/or provide an advanced api for manipulating them.
-   * Also consider adding warnings when an effect cannot be changed.
    *
    * @param {!PolymerElement} proto Element class prototype to add accessors
    *   and effects to
@@ -217,20 +220,30 @@ export const ElementMixin = dedupingMixin(base => {
     // dependencies rather than itself.
 
 
-    if (info.computed && !proto._hasReadOnlyEffect(name)) {
-      proto._createComputedProperty(name, info.computed, allProps);
+    if (info.computed) {
+      if (proto._hasReadOnlyEffect(name)) {
+        console.warn(`Cannot redefine computed property '${name}'.`);
+      } else {
+        proto._createComputedProperty(name, info.computed, allProps);
+      }
     }
 
     if (info.readOnly && !proto._hasReadOnlyEffect(name)) {
       proto._createReadOnlyProperty(name, !info.computed);
+    } else if (info.readOnly === false && proto._hasReadOnlyEffect(name)) {
+      console.warn(`Cannot make readOnly property '${name}' non-readOnly.`);
     }
 
     if (info.reflectToAttribute && !proto._hasReflectEffect(name)) {
       proto._createReflectedProperty(name);
+    } else if (info.reflectToAttribute === false && proto._hasReflectEffect(name)) {
+      console.warn(`Cannot make reflected property '${name}' non-reflected.`);
     }
 
     if (info.notify && !proto._hasNotifyEffect(name)) {
       proto._createNotifyingProperty(name);
+    } else if (info.notify === false && proto._hasNotifyEffect(name)) {
+      console.warn(`Cannot make notify property '${name}' non-notify.`);
     } // always add observer
 
 
@@ -254,34 +267,36 @@ export const ElementMixin = dedupingMixin(base => {
 
 
   function processElementStyles(klass, template, is, baseURI) {
-    const templateStyles = template.content.querySelectorAll('style');
-    const stylesWithImports = stylesFromTemplate(template); // insert styles from <link rel="import" type="css"> at the top of the template
+    if (!builtCSS) {
+      const templateStyles = template.content.querySelectorAll('style');
+      const stylesWithImports = stylesFromTemplate(template); // insert styles from <link rel="import" type="css"> at the top of the template
 
-    const linkedStyles = stylesFromModuleImports(is);
-    const firstTemplateChild = template.content.firstElementChild;
+      const linkedStyles = stylesFromModuleImports(is);
+      const firstTemplateChild = template.content.firstElementChild;
 
-    for (let idx = 0; idx < linkedStyles.length; idx++) {
-      let s = linkedStyles[idx];
-      s.textContent = klass._processStyleText(s.textContent, baseURI);
-      template.content.insertBefore(s, firstTemplateChild);
-    } // keep track of the last "concrete" style in the template we have encountered
+      for (let idx = 0; idx < linkedStyles.length; idx++) {
+        let s = linkedStyles[idx];
+        s.textContent = klass._processStyleText(s.textContent, baseURI);
+        template.content.insertBefore(s, firstTemplateChild);
+      } // keep track of the last "concrete" style in the template we have encountered
 
 
-    let templateStyleIndex = 0; // ensure all gathered styles are actually in this template.
+      let templateStyleIndex = 0; // ensure all gathered styles are actually in this template.
 
-    for (let i = 0; i < stylesWithImports.length; i++) {
-      let s = stylesWithImports[i];
-      let templateStyle = templateStyles[templateStyleIndex]; // if the style is not in this template, it's been "included" and
-      // we put a clone of it in the template before the style that included it
+      for (let i = 0; i < stylesWithImports.length; i++) {
+        let s = stylesWithImports[i];
+        let templateStyle = templateStyles[templateStyleIndex]; // if the style is not in this template, it's been "included" and
+        // we put a clone of it in the template before the style that included it
 
-      if (templateStyle !== s) {
-        s = s.cloneNode(true);
-        templateStyle.parentNode.insertBefore(s, templateStyle);
-      } else {
-        templateStyleIndex++;
+        if (templateStyle !== s) {
+          s = s.cloneNode(true);
+          templateStyle.parentNode.insertBefore(s, templateStyle);
+        } else {
+          templateStyleIndex++;
+        }
+
+        s.textContent = klass._processStyleText(s.textContent, baseURI);
       }
-
-      s.textContent = klass._processStyleText(s.textContent, baseURI);
     }
 
     if (window.ShadyCSS) {
@@ -291,8 +306,8 @@ export const ElementMixin = dedupingMixin(base => {
   /**
    * Look up template from dom-module for element
    *
-   * @param {!string} is Element name to look up
-   * @return {!HTMLTemplateElement} Template found in dom module, or
+   * @param {string} is Element name to look up
+   * @return {?HTMLTemplateElement|undefined} Template found in dom module, or
    *   undefined if not found
    * @protected
    */
@@ -303,7 +318,9 @@ export const ElementMixin = dedupingMixin(base => {
     // when opted-in via allowTemplateFromDomModule
 
     if (is && (!strictTemplatePolicy || allowTemplateFromDomModule)) {
-      template = DomModule.import(is, 'template'); // Under strictTemplatePolicy, require any element with an `is`
+      template =
+      /** @type {?HTMLTemplateElement} */
+      DomModule.import(is, 'template'); // Under strictTemplatePolicy, require any element with an `is`
       // specified to have a dom-module
 
       if (strictTemplatePolicy && !template) {
@@ -318,6 +335,7 @@ export const ElementMixin = dedupingMixin(base => {
    * @mixinClass
    * @unrestricted
    * @implements {Polymer_ElementMixin}
+   * @extends {polymerElementBase}
    */
 
 
@@ -334,7 +352,6 @@ export const ElementMixin = dedupingMixin(base => {
      * find the template.
      * @return {void}
      * @protected
-     * @override
      * @suppress {missingProperties} Interfaces in closure do not inherit statics, but classes do
      */
 
@@ -342,17 +359,17 @@ export const ElementMixin = dedupingMixin(base => {
     static _finalizeClass() {
       super._finalizeClass();
 
-      if (this.hasOwnProperty(JSCompiler_renameProperty('is', this)) && this.is) {
-        register(this.prototype);
-      }
-
       const observers = ownObservers(this);
 
       if (observers) {
         this.createObservers(observers, this._properties);
-      } // note: create "working" template that is finalized at instance time
+      }
 
+      this._prepareTemplate();
+    }
 
+    static _prepareTemplate() {
+      // note: create "working" template that is finalized at instance time
       let template =
       /** @type {PolymerElementConstructor} */
       this.template;
@@ -361,7 +378,7 @@ export const ElementMixin = dedupingMixin(base => {
         if (typeof template === 'string') {
           console.error('template getter must return HTMLTemplateElement');
           template = null;
-        } else {
+        } else if (!legacyOptimizations) {
           template = template.cloneNode(true);
         }
       }
@@ -371,9 +388,9 @@ export const ElementMixin = dedupingMixin(base => {
     /**
      * Override of PropertiesChanged createProperties to create accessors
      * and property effects for all of the properties.
+     * @param {!Object} props .
      * @return {void}
      * @protected
-     * @override
      */
 
 
@@ -550,12 +567,11 @@ export const ElementMixin = dedupingMixin(base => {
      *
      * @return {void}
      * @override
-     * @suppress {invalidCasts}
+     * @suppress {invalidCasts,missingProperties} go/missingfnprops
      */
 
 
     _initializeProperties() {
-      instanceCount++;
       this.constructor.finalize(); // note: finalize template when we have access to `localName` to
       // avoid dependence on `is` for polyfilling styling.
 
@@ -638,7 +654,9 @@ export const ElementMixin = dedupingMixin(base => {
      * flushes any pending properties, and updates shimmed CSS properties
      * when using the ShadyCSS scoping/custom properties polyfill.
      *
-     * @suppress {missingProperties, invalidCasts} Super may or may not implement the callback
+     * @override
+     * @suppress {missingProperties, invalidCasts} Super may or may not
+     *     implement the callback
      * @return {void}
      */
 
@@ -699,6 +717,7 @@ export const ElementMixin = dedupingMixin(base => {
      * However, this method may be overridden to allow an element
      * to put its dom in another location.
      *
+     * @override
      * @throws {Error}
      * @suppress {missingReturn}
      * @param {StampedTemplate} dom to attach to the element.
@@ -707,16 +726,23 @@ export const ElementMixin = dedupingMixin(base => {
 
 
     _attachDom(dom) {
-      if (this.attachShadow) {
+      const n = wrap(this);
+
+      if (n.attachShadow) {
         if (dom) {
-          if (!this.shadowRoot) {
-            this.attachShadow({
+          if (!n.shadowRoot) {
+            n.attachShadow({
               mode: 'open'
             });
           }
 
-          this.shadowRoot.appendChild(dom);
-          return this.shadowRoot;
+          n.shadowRoot.appendChild(dom);
+
+          if (syncInitialRender && window.ShadyDOM) {
+            ShadyDOM.flushInitial(n.shadowRoot);
+          }
+
+          return n.shadowRoot;
         }
 
         return null;
@@ -741,6 +767,7 @@ export const ElementMixin = dedupingMixin(base => {
      * Note: This function does not support updating CSS mixins.
      * You can not dynamically change the value of an `@apply`.
      *
+     * @override
      * @param {Object=} properties Bag of custom property key/values to
      *   apply to this element.
      * @return {void}
@@ -765,6 +792,7 @@ export const ElementMixin = dedupingMixin(base => {
      * with `/` (absolute URLs) or `#` (hash identifiers).  For general purpose
      * URL resolution, use `window.URL`.
      *
+     * @override
      * @param {string} url URL to resolve.
      * @param {string=} base Optional base URL to resolve against, defaults
      * to the element's `importPath`
@@ -780,12 +808,15 @@ export const ElementMixin = dedupingMixin(base => {
       return resolveUrl(url, base);
     }
     /**
-     * Overrides `PropertyAccessors` to add map of dynamic functions on
+     * Overrides `PropertyEffects` to add map of dynamic functions on
      * template info, for consumption by `PropertyEffects` template binding
      * code. This map determines which method templates should have accessors
      * created for them.
      *
-     * @override
+     * @param {!HTMLTemplateElement} template Template
+     * @param {!TemplateInfo} templateInfo Template metadata for current template
+     * @param {!NodeInfo} nodeInfo Node metadata for current template.
+     * @return {boolean} .
      * @suppress {missingProperties} Interfaces in closure do not inherit statics, but classes do
      */
 
@@ -794,52 +825,39 @@ export const ElementMixin = dedupingMixin(base => {
       templateInfo.dynamicFns = templateInfo.dynamicFns || this._properties;
       return super._parseTemplateContent(template, templateInfo, nodeInfo);
     }
+    /**
+     * Overrides `PropertyEffects` to warn on use of undeclared properties in
+     * template.
+     *
+     * @param {Object} templateInfo Template metadata to add effect to
+     * @param {string} prop Property that should trigger the effect
+     * @param {Object=} effect Effect metadata object
+     * @return {void}
+     * @protected
+     * @suppress {missingProperties} Interfaces in closure do not inherit statics, but classes do
+     */
+
+
+    static _addTemplatePropertyEffect(templateInfo, prop, effect) {
+      // Warn if properties are used in template without being declared.
+      // Properties must be listed in `properties` to be included in
+      // `observedAttributes` since CE V1 reads that at registration time, and
+      // since we want to keep template parsing lazy, we can't automatically
+      // add undeclared properties used in templates to `observedAttributes`.
+      // The warning is only enabled in `legacyOptimizations` mode, since
+      // we don't want to spam existing users who might have adopted the
+      // shorthand when attribute deserialization is not important.
+      if (legacyOptimizations && !(prop in this._properties)) {
+        console.warn(`Property '${prop}' used in template but not declared in 'properties'; ` + `attribute will not be observed.`);
+      }
+
+      return super._addTemplatePropertyEffect(templateInfo, prop, effect);
+    }
 
   }
 
   return PolymerElement;
 });
-/**
- * Total number of Polymer element instances created.
- * @type {number}
- */
-
-export let instanceCount = 0;
-/**
- * Array of Polymer element classes that have been finalized.
- * @type {Array<PolymerElement>}
- */
-
-export const registrations = [];
-/**
- * @param {!PolymerElementConstructor} prototype Element prototype to log
- * @this {this}
- * @private
- */
-
-function _regLog(prototype) {
-  console.log('[' + prototype.is + ']: registered');
-}
-/**
- * Registers a class prototype for telemetry purposes.
- * @param {HTMLElement} prototype Element prototype to register
- * @this {this}
- * @protected
- */
-
-
-export function register(prototype) {
-  registrations.push(prototype);
-}
-/**
- * Logs all elements registered with an `is` to the console.
- * @public
- * @this {this}
- */
-
-export function dumpRegistrations() {
-  registrations.forEach(_regLog);
-}
 /**
  * When using the ShadyCSS scoping and custom property shim, causes all
  * shimmed `styles` (via `custom-style`) in the document (and its subtree)

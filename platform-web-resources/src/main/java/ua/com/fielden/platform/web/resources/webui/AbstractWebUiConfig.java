@@ -1,5 +1,7 @@
 package ua.com.fielden.platform.web.resources.webui;
 
+import static ua.com.fielden.platform.web.interfaces.DeviceProfile.DESKTOP;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -137,52 +139,30 @@ public abstract class AbstractWebUiConfig implements IWebUiConfig {
     }
 
     @Override
-    public final String genWebUiPreferences(final DeviceProfile deviceProfile) {
-        return webUiBuilder.genWebUiPrefComponent(deviceProfile);
+    public final String genWebUiPreferences() {
+        return webUiBuilder.genWebUiPrefComponent();
     }
 
     @Override
-    public final String genDesktopMainWebUIComponent() {
+    public final String genMainWebUIComponent() {
         final Pair<DomElement, JsCode> generatedMenu = desktopMainMenuConfig.generateMenuActions();
         return ResourceLoader.getText("ua/com/fielden/platform/web/app/tg-app-template.js").
-                replace("@isMobileDevice", "false").
                 replace("<!--menu action dom-->", generatedMenu.getKey().toString()).
                 replace("//actionsObject", generatedMenu.getValue().toString());
     }
 
     @Override
-    public final String genMobileMainWebUIComponent() {
-        final Pair<DomElement, JsCode> generatedMenu = mobileMainMenuConfig.generateMenuActions();
-        return ResourceLoader.getText("ua/com/fielden/platform/web/app/tg-app-template.js").
-                replace("@isMobileDevice", "true").
-                replace("<!--menu action dom-->", generatedMenu.getKey().toString()).
-                replace("//actionsObject", generatedMenu.getValue().toString());
-    }
-
-    @Override
-    public final String genDesktopAppIndex() {
-        final String indexSource = ResourceLoader.getText("ua/com/fielden/platform/web/desktop-index.html").
-                replace("@title", title);
+    public final String genAppIndex() {
+        final String indexSource = ResourceLoader.getText("ua/com/fielden/platform/web/index.html").replace("@title", title);
         if (isDevelopmentWorkflow(this.workflow)) {
-            return indexSource.replace("@desktopStartupResources", "desktop-startup-resources-origin");
+            return indexSource.replace("@startupResources", "startup-resources-origin");
         } else {
-            return indexSource.replace("@desktopStartupResources", "desktop-startup-resources-vulcanized");
+            return indexSource.replace("@startupResources", "startup-resources-vulcanized");
         }
     }
 
     private static boolean isDevelopmentWorkflow(final Workflows workflow) {
         return Workflows.development.equals(workflow) || Workflows.vulcanizing.equals(workflow);
-    }
-
-    @Override
-    public String genMobileAppIndex() {
-        final String indexSource = ResourceLoader.getText("ua/com/fielden/platform/web/mobile-index.html").
-                replace("@title", title);
-        if (isDevelopmentWorkflow(this.workflow)) {
-            return indexSource.replace("@mobileStartupResources", "mobile-startup-resources-origin");
-        } else {
-            return indexSource.replace("@mobileStartupResources", "mobile-startup-resources-vulcanized");
-        }
     }
 
     /**

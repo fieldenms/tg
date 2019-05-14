@@ -12,6 +12,7 @@ import { PropertyEffects } from '../mixins/property-effects.js';
 import { OptionalMutableData } from '../mixins/mutable-data.js';
 import { GestureEventListeners } from '../mixins/gesture-event-listeners.js';
 import { strictTemplatePolicy } from '../utils/settings.js';
+import { wrap } from '../utils/wrap.js';
 /**
  * @constructor
  * @extends {HTMLElement}
@@ -89,7 +90,7 @@ export class DomBind extends domBindBase {
   }
 
   __insertChildren() {
-    this.parentNode.insertBefore(this.root, this);
+    wrap(wrap(this).parentNode).insertBefore(this.root, this);
   }
 
   __removeChildren() {
