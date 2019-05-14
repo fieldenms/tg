@@ -418,7 +418,7 @@ Polymer({
         if (this.desktopMode()) {
             this.$.drawerPanel.forceNarrow = !this.$.drawerPanel.forceNarrow;
         } else {
-            this.$.drawerPanel.togglePanel();
+            this.$.drawer.toggle();
         }
     },
 

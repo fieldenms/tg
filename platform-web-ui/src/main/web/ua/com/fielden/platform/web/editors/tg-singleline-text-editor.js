@@ -16,10 +16,10 @@ const additionalTemplate = html`
         }
     </style>`;
 const customInputTemplate = html`
-    <iron-input bind-value="{{_editingValue}}" class="custom-input-wrapper singleline-text-input">
+    <iron-input bind-value="{{_editingValue}}" class="custom-input-wrapper">
         <input
             id="input"
-            class="custom-input"
+            class="custom-input singleline-text-input"
             on-change="_onChange"
             on-input="_onInput"
             on-tap="_onTap"

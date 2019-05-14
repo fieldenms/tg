@@ -19,7 +19,7 @@ import ua.com.fielden.platform.web.factories.webui.CentreComponentResourceFactor
 import ua.com.fielden.platform.web.factories.webui.CentreResourceFactory;
 import ua.com.fielden.platform.web.factories.webui.CriteriaResourceFactory;
 import ua.com.fielden.platform.web.factories.webui.CustomViewResourceFactory;
-import ua.com.fielden.platform.web.factories.webui.DesktopApplicationStartupResourcesComponentResourceFactory;
+import ua.com.fielden.platform.web.factories.webui.ApplicationStartupResourcesComponentResourceFactory;
 import ua.com.fielden.platform.web.factories.webui.EgiExampleResourceFactory;
 import ua.com.fielden.platform.web.factories.webui.EntityAutocompletionResourceFactory;
 import ua.com.fielden.platform.web.factories.webui.EntityResourceFactory;
@@ -121,7 +121,7 @@ public abstract class AbstractWebUiResources extends Application {
         router.attach("/app/tg-app.js", new MainWebUiComponentResourceFactory(sourceController, deviceProvider));
         // type meta info resource
         router.attach("/app/tg-reflector.js", new TgReflectorComponentResourceFactory(sourceController, deviceProvider));
-        router.attach("/app/desktop-application-startup-resources.js", new DesktopApplicationStartupResourcesComponentResourceFactory(sourceController, deviceProvider));
+        router.attach("/app/application-startup-resources.js", new ApplicationStartupResourcesComponentResourceFactory(sourceController, deviceProvider));
 
         // serialisation testing resource
         router.attach("/test/serialisation", new SerialisationTestResourceFactory(injector));

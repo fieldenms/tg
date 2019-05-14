@@ -6,16 +6,12 @@
     <title>tg-datetime-picker tests</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
     
-    <script src="/resources/polymer/webcomponentsjs/webcomponents-lite.js"></script>
-    <script src="/resources/polymer/web-component-tester/browser.js"></script>
-    <script src="/resources/polymer/test-fixture/test-fixture-mocha.js"></script>
-    <script src="/resources/polymer/iron-test-helpers/mock-interactions.js"></script>
-    
-    <link rel="import" href="/resources/polymer/test-fixture/test-fixture.html">
-    
-    <link rel="import" href="/app/tg-reflector.html">
-    <link rel="import" href="/resources/reflection/tg-date-utils.html">
-    <link rel="import" href="/master_ui/ua.com.fielden.platform.sample.domain.TgPersistentEntityWithProperties">
+    <script src="/resources/polymer/@webcomponents/webcomponentsjs/webcomponents-bundle.js"></script>
+    <script src='/resources/polymer/web-animations-js/web-animations-next-lite.min.js'></script>
+    <script src="/resources/lodash/4.17.11/lodash.min.js"></script>
+    <script src="/resources/postal/2.0.5/postal.min.js"></script>
+    <script src="/resources/filesaver/FileSaver.min.js"></script>
+    <script src="/resources/polymer/wct-browser-legacy/browser.js"></script>
 </head>
 
 <body>
@@ -31,9 +27,14 @@
         </template>
     </test-fixture>
 
-    <script>
+    <script type="module">
+
+        import '/app/tg-reflector.js';
+        import { _millisDateRepresentation, _momentTz, _millis } from '/resources/reflection/tg-date-utils.js';
+        import '/master_ui/ua.com.fielden.platform.sample.domain.TgPersistentEntityWithProperties';
+
         suite('value approximates from', function() {
-            var master, reflector;
+            let master, reflector;
 
             setup(function() {
                 master = fixture('MasterFixture');
@@ -41,8 +42,8 @@
                 reflector = document.querySelector('#reflector');
             });
             
-            var correctlyApproximates = function (done, targetEditingValue, approximatedEditingValue, concreteAcceptedMillis) {
-                var edProperty = master.$.editor_4_dateProp;
+            const correctlyApproximates = function (done, targetEditingValue, approximatedEditingValue, concreteAcceptedMillis) {
+                const edProperty = master.$.editor_4_dateProp;
                 if (concreteAcceptedMillis) {
                     edProperty.timePortionToBecomeEndOfDay = true;
                 }
@@ -50,7 +51,7 @@
                 master.postValidated = function (validatedEntity, bindingEntity, customObject) {
                     assert.strictEqual(edProperty._editingValue, approximatedEditingValue, "_editingValue should be correct.");
                     assert.strictEqual(edProperty._commValue, approximatedEditingValue, "_commValue should be correct.");
-                    var acceptedValue = edProperty._acceptedValue;
+                    const acceptedValue = edProperty._acceptedValue;
                     assert.isNotNull(acceptedValue, "_acceptedValue should be non-empty.");
                     if (concreteAcceptedMillis) {
                         assert.strictEqual(acceptedValue, concreteAcceptedMillis, "_acceptedValue should correspond to 23:59:59.999 millis of the day.");
@@ -63,7 +64,7 @@
                 };
 
                 master.postRetrieved = function (entity, bindingEntity, customObject) {
-                    var localisedMomentOf3609999 = _millisDateRepresentation(3609999); /* 01/01/1970 3:00:09.999 AM in Kyiv locale (UTC+02:00), 01/01/1970 5:00:09.999 AM in Tbilisi locale (UTC+04:00) */
+                    const localisedMomentOf3609999 = _millisDateRepresentation(3609999); /* 01/01/1970 3:00:09.999 AM in Kyiv locale (UTC+02:00), 01/01/1970 5:00:09.999 AM in Tbilisi locale (UTC+04:00) */
                     assert.strictEqual(edProperty._editingValue, localisedMomentOf3609999, "_editingValue should be non-empty on start.");
                     assert.strictEqual(edProperty._commValue, localisedMomentOf3609999, "_commValue should be non-empty on start.");
                     assert.strictEqual(edProperty._acceptedValue, 3609999, "_acceptedValue should be non-empty on start.");
@@ -81,15 +82,15 @@
                 master.retrieve();
             };
             
-            var incorrectlyApproximates = function (done, targetEditingValue) {
-                var edProperty = master.$.editor_4_dateProp;
+            const incorrectlyApproximates = function (done, targetEditingValue) {
+                const edProperty = master.$.editor_4_dateProp;
 
                 master.postValidated = function (validatedEntity, bindingEntity, customObject) {
                     throw 'Validation should not be invoked in case of incorrect date format.';
                 };
 
                 master.postRetrieved = function (entity, bindingEntity, customObject) {
-                    var localisedMomentOf3609999 = _millisDateRepresentation(3609999); /* 01/01/1970 3:00:09.999 AM in Kyiv locale (UTC+02:00), 01/01/1970 5:00:09.999 AM in Tbilisi locale (UTC+04:00) */
+                    const localisedMomentOf3609999 = _millisDateRepresentation(3609999); /* 01/01/1970 3:00:09.999 AM in Kyiv locale (UTC+02:00), 01/01/1970 5:00:09.999 AM in Tbilisi locale (UTC+04:00) */
                     assert.strictEqual(edProperty._editingValue, localisedMomentOf3609999, "_editingValue should be non-empty on start.");
                     assert.strictEqual(edProperty._commValue, localisedMomentOf3609999, "_commValue should be non-empty on start.");
                     assert.strictEqual(edProperty._acceptedValue, 3609999, "_acceptedValue should be non-empty on start.");
@@ -111,7 +112,7 @@
             
             // ===============================
             // day+month aproximations into 'current year' date
-            var currYearStr = _momentTz().format('YYYY'); // '2016';
+            const currYearStr = _momentTz().format('YYYY'); // '2016';
             
             test('[9/9] to [09/09/' + currYearStr + ' 00:00]', function(done) {
                 correctlyApproximates(done, '9/9', '09/09/' + currYearStr + ' 00:00');
@@ -143,7 +144,7 @@
             
             // ===============================
             // time portion aproximations into 'today' date
-            var todayStr = _momentTz().format('L'); // '17/10/2016';
+            const todayStr = _momentTz().format('L'); // '17/10/2016';
             
             test('[11:03:34.567] to [' + todayStr + ' 11:03:34.567]', function(done) {
                 correctlyApproximates(done, '11:03:34.567', todayStr + ' 11:03:34.567');
@@ -324,12 +325,12 @@
             });
             
             test('[09/09/45] to [09/09/2045 00:00]', function (done) {
-                var year = moment().year() - 2000 + 30 - 1;
+                const year = moment().year() - 2000 + 30 - 1;
                 correctlyApproximates(done, '09/09/' + year, '09/09/20' + year + ' 00:00');
             });
             
             test('[09/09/46] to [09/09/1946 00:00]', function (done) {
-                var year = moment().year() - 2000 + 30;
+                const year = moment().year() - 2000 + 30;
                 correctlyApproximates(done, '09/09/' + year, '09/09/19' + year + ' 00:00');
             });
             

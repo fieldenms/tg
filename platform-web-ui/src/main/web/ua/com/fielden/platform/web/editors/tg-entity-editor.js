@@ -67,10 +67,10 @@ const additionalTemplate = html`
     <iron-ajax id="ajaxSearcher" loading="{{searching}}" url="[[_url]]" method="POST" handle-as="json" on-response="_processSearcherResponse" on-error="_processSearcherError"></iron-ajax>
     <tg-serialiser id="serialiser"></tg-serialiser>`;
 const customInputTemplate = html`
-    <iron-input bind-value="{{_editingValue}}" class="custom-input-wrapper entity-input">
+    <iron-input bind-value="{{_editingValue}}" class="custom-input-wrapper">
         <input
             id="input"
-            class="custom-input"
+            class="custom-input entity-input"
             type="text" 
             on-blur="_blurEventHandler" 
             on-change="_onChange" 

@@ -403,7 +403,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
                     .width(60)
                 .also()
                 .addProp("propertyDescriptor")
-                    .width(160)
+                    .minWidth(160)
                 .addPrimaryAction(action(EntityEditAction.class).
                         withContext(context().withCurrentEntity().withSelectionCrit().build()).
                         icon("editor:mode-edit").
