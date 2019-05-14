@@ -1,1 +1,1 @@
-export NODE_PATH=/usr/local/lib/nodejs/node-v10.15.0/lib/node_modules && rollup --config
+rollup --config
