@@ -347,7 +347,7 @@ const template = html`
                         <tg-egi-cell class="cell" selected$="[[egiEntity.selected]]" over$="[[egiEntity.over]]" column="[[column]]" egi-entity="[[egiEntity]]" style$="[[_calcColumnStyle(column, column.width, column.growFactor, 'false')]]" tooltip-text$="[[_getTooltip(egiEntity.entity, column, column.customAction)]]" with-action$="[[hasAction(egiEntity.entity, column)]]" on-tap="_tapAction"></tg-egi-cell>
                     </template>
                     <div class="action-cell cell" selected$="[[egiEntity.selected]]" over$="[[egiEntity.over]]" hidden$="[[!_isSecondaryActionPresent]]" style$="[[_calcSecondaryActionStyle(secondaryActionsFixed)]]">
-                        <tg-secondary-action-button class="action" current-entity="[[egiEntity.entity]]" is-single="[[_isSingleSecondaryAction]]" dropdown-trigger="[[_openDropDown]]"></tg-secondary-action-button>
+                        <tg-secondary-action-button class="action" actions="[[_secondaryActions]]" current-entity="[[egiEntity.entity]]" is-single="[[_isSingleSecondaryAction]]" dropdown-trigger="[[_openDropDown]]"></tg-secondary-action-button>
                     </div>
                 </div>
             </template>
@@ -384,7 +384,7 @@ const template = html`
         <!-- table lock layer -->
         <div class="lock-layer" lock$="[[lock]]"></div>
         <!-- secondary action dropdown that will be used by each secondary aciton -->
-        <tg-secondary-action-dropdown id="secondaryActionDropDown" is-single="{{_isSingleSecondaryAction}}" is-present="{{_isSecondaryActionPresent}}">
+        <tg-secondary-action-dropdown id="secondaryActionDropDown" is-single="{{_isSingleSecondaryAction}}" is-present="{{_isSecondaryActionPresent}}" secondary-actions="{{_secondaryActions}}">
             <slot id="secondary_action_selector" slot="actions" name="secondary-action"></slot>
         </tg-secondary-action-dropdown>
     </div>`;
@@ -605,6 +605,8 @@ Polymer({
         _isSingleSecondaryAction: Boolean,
         //Indicates whether secondary actions is present
         _isSecondaryActionPresent: Boolean,
+        //the list of secondary actions
+        _secondaryActions: Array,
         //The callback to open drop down for secondary action.
         _openDropDown: Function
     },

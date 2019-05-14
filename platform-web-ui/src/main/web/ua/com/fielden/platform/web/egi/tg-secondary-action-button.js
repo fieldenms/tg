@@ -45,8 +45,6 @@ Polymer({
          */
         currentEntity: Object,
 
-        definedDropdown: Object,
-
         isSingle: {
             type: Boolean
         },

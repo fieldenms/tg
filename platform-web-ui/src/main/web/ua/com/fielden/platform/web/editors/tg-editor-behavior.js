@@ -501,6 +501,8 @@ export const TgEditorBehaviorImpl = {
         var style = "";
         if ("BOOLEAN" === editorKind) {
             style += "visibility: hidden;"
+        } else if ("COLLECTIONAL" === editorKind) {
+            style += "display: none;"
         }
         if (_disabled === true) {
             style += "opacity: 1;"

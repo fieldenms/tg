@@ -59,15 +59,20 @@ Polymer({
             notify: true
         },
 
-        definedDropdown: Object,
+        secondaryActions: {
+            type: Array,
+            readOnly: true,
+            notify: true
+        }
     },
 
     behaviors: [ TgFocusRestorationBehavior ],
 
     ready: function () {
-        const numOfActions = this.$.actions_selector.assignedNodes({flatten: true}).length;
-        this._setIsSingle(numOfActions === 1);
-        this._setIsPresent(numOfActions > 0);
+        const actions = this.$.actions_selector.assignedNodes({flatten: true});
+        this._setIsSingle(actions.length === 1);
+        this._setIsPresent(actions.length > 0);
+        this._setSecondaryActions(actions);
     },
 
     open: function(currentEntity, currentAction) {
