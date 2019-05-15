@@ -1513,7 +1513,7 @@ Polymer({
         this.$.baseContainer.style.removeProperty("height");
         this.$.baseContainer.style.removeProperty("max-height");
         if (constantHeight) { //Set the height for the egi
-            this.$.paperMaterial.style["height"] = constantHeight;
+            this.$.paperMaterial.style["height"] = "calc(" + constantHeight + " - 20px)";
         } else if (visibleRowCount > 0) { //Set the height or max height for the scroll container so that only specified number of rows become visible.
             this.$.paperMaterial.style["min-height"] = "fit-content";
             const rowCount = visibleRowCount + (summaryFixed ? _totalsRowCount : 0);
