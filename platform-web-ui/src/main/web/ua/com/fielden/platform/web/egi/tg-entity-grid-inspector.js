@@ -727,6 +727,7 @@ Polymer({
                     select: select
                 }]
             });
+            updateSelectAll(this, this.egiModel);
         }
     },
     
@@ -824,6 +825,7 @@ Polymer({
                     });
                 }
             }
+            updateSelectAll(this, this.egiModel);
             if (selectionDetails.length > 0) {
                 this.fire("tg-entity-selected", {
                     shouldScrollToSelected: false,
@@ -878,7 +880,7 @@ Polymer({
         for (let i = 0; i < this.egiModel.length; i++) {
             this.set("egiModel." + i + ".selected", false);
         }
-        this.selectedAll = false;
+        updateSelectAll(this, this.egiModel);
         // First clear all selection and then fire event
         const prevSelectedEntities = this.selectedEntities;
         this.selectedEntities = [];
