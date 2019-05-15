@@ -264,6 +264,7 @@ const template = html`
         }
         .shadow-container {
             position: sticky;
+            position: -webkit-sticky;
             top:0;
             left: 0;
             pointer-events: none;
@@ -1292,7 +1293,7 @@ Polymer({
     },
 
     _calcHeaderStyle: function (headerFixed, _showTopShadow) {
-        let headerStyle = headerFixed ? "position: sticky; z-index: 1; top: 0;" : "";
+        let headerStyle = headerFixed ? "position: sticky; position: -webkit-sticky; z-index: 1; top: 0;" : "";
         if (_showTopShadow) {
             headerStyle += "box-shadow: 0px 1px 6px -1px rgba(0,0,0,0.7);";
         }
@@ -1300,7 +1301,7 @@ Polymer({
     },
 
     _calcDragBoxStyle: function (dragAnchorFixed) {
-        return dragAnchorFixed ? "position: sticky; z-index: 1; left: 0;" : "";
+        return dragAnchorFixed ? "position: sticky; position: -webkit-sticky; z-index: 1; left: 0;" : "";
     },
 
     _calcDragAnchorWidth: function (canDragFrom) {
@@ -1310,7 +1311,7 @@ Polymer({
     _calcSelectCheckBoxStyle: function (canDragFrom, checkboxesFixed) {
         let style = "";
         if (checkboxesFixed) {
-            style += "position: sticky; z-index: 1; left: " + this._calcDragAnchorWidth(canDragFrom) + ";"; 
+            style += "position: sticky; position: -webkit-sticky; z-index: 1; left: " + this._calcDragAnchorWidth(canDragFrom) + ";"; 
         }
         const cellPadding = this.getComputedStyleValue('--egi-cell-padding').trim() || "0.6rem";
         return style + "width:18px; padding-left:" + (canDragFrom ? "0;" : cellPadding);
@@ -1328,7 +1329,7 @@ Polymer({
         let style = "";
         if (checkboxesWithPrimaryActionsFixed) {
             let calcStyle = "calc(" + this._calcSelectionCheckboxWidth(canDragFrom, checkboxVisible) + ")";
-            style += "position: sticky; z-index: 1; left: " + calcStyle + ";"; 
+            style += "position: sticky; position: -webkit-sticky; z-index: 1; left: " + calcStyle + ";"; 
         }
         return style;
     },
@@ -1346,7 +1347,7 @@ Polymer({
         let style = "";
         if (numOfFixedCols > 0) {
             let calcStyle = "calc(" + this._calcPrimaryActionWidth(canDragFrom, checkboxVisible, primaryAction) + ")";
-            style += "position: sticky; z-index: 1; left: " + calcStyle + ";";
+            style += "position: sticky; position: -webkit-sticky; z-index: 1; left: " + calcStyle + ";";
         }
         return style;
     },
@@ -1382,11 +1383,11 @@ Polymer({
     },
 
     _calcSecondaryActionStyle: function (secondaryActionsFixed) {
-        return secondaryActionsFixed ? "position: sticky; z-index: 1; right: 0;" : "";
+        return secondaryActionsFixed ? "position: sticky; position: -webkit-sticky; z-index: 1; right: 0;" : "";
     },
 
     _calcFooterStyle: function (summaryFixed, fitToHeight, _showBottomShadow) {
-        let style = summaryFixed ? "position: sticky; z-index: 1; bottom: 0;" : "";
+        let style = summaryFixed ? "position: sticky; position: -webkit-sticky; z-index: 1; bottom: 0;" : "";
         style += (fitToHeight ? "margin-top:auto;" : "");
         if (_showBottomShadow) {
             style += "box-shadow: 0px -1px 6px -1px rgba(0,0,0,0.7);";
