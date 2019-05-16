@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.entity.meta;
 
 import static java.lang.String.format;
+import static java.util.Optional.ofNullable;
 import static ua.com.fielden.platform.error.Result.successful;
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.isRequiredByDefinition;
 import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getEntityTitleAndDesc;
@@ -828,16 +829,18 @@ public final class MetaPropertyFull<T> extends MetaProperty<T> {
         // if requirement changed from true to false, then update REQUIRED validation result to be successful
         if (!required && oldRequired) {
             if (containsRequiredValidator()) {
-                final Result result = getValidationResult(ValidationAnnotation.REQUIRED);
-                if (result != null && !result.isSuccessful()) {
+                // if both current and last attempted values are null then it can be safely assumed that the requiredness validation can be considered successful 
+                // the same holds if the assigned requiredness validation result already successful
+                if ((getValue() == null && getLastAttemptedValue() == null) || 
+                    ofNullable(getValidationResult(ValidationAnnotation.REQUIRED)).map(res -> res.isSuccessful()).orElse(true)) {
+                    setValidationResultNoSynch(ValidationAnnotation.REQUIRED, StubValidator.singleton(), new Result(this.getEntity(), "'Required' became false. The validation result cleared."));
+                } else { // otherwise, it is necessary to enforce reassignment of the last attempted value to trigger revalidation
                     setEnforceMutator(true);
                     try {
                         setValue(getLastAttemptedValue());
                     } finally {
                         setEnforceMutator(false);
                     }
-                } else { // associated a successful result with requiredness validator
-                    setValidationResultNoSynch(ValidationAnnotation.REQUIRED, StubValidator.singleton(), new Result(this.getEntity(), "'Required' became false. The validation result cleared."));
                 }
             } else {
                 throw new IllegalStateException("The metaProperty was required but RequiredValidator didn't exist.");
