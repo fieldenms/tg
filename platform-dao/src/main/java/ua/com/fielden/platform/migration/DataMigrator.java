@@ -74,7 +74,7 @@ public class DataMigrator {
             for (final IRetriever<? extends AbstractEntity<?>> ret : retrievers) {
                 LOGGER.debug("Checking props for [" + ret.getClass().getSimpleName() + "]");
                 final SortedMap<String, RetrievedPropValidationError> checkResult = new RetrieverPropsValidator(dma, ret).validate();
-                if (checkResult.size() > 0) {
+                if (!checkResult.isEmpty()) {
                     LOGGER.error("The following issues have been revealed for props in [" + ret.getClass().getSimpleName() + "]:\n " + checkResult);
                 }
             }
@@ -88,7 +88,7 @@ public class DataMigrator {
         final Period pd = new Period(start, new DateTime());
 
         final List<String> sql = new ArrayList<>();
-        sql.add(String.format("ALTER SEQUENCE %s RESTART WITH %s ", ID_SEQUENCE_NAME, finalId + 1));
+        sql.add(format("ALTER SEQUENCE %s RESTART WITH %s ", ID_SEQUENCE_NAME, finalId + 1));
         runSql(sql);
 
         LOGGER.info("Migration duration: " + pd.getMinutes() + " m " + pd.getSeconds() + " s " + pd.getMillis() + " ms");
@@ -168,7 +168,6 @@ public class DataMigrator {
         }
         return result;
     }
-
 
     private boolean checkEmptyStrings(final DomainMetadataAnalyser dma, final Connection conn) throws SQLException {
         final Set<String> stmts = new RetrieverEmptyStringsChecker(dma).getSqls(retrievers);
@@ -260,13 +259,12 @@ public class DataMigrator {
                     final ResultSet legacyRs = legacyStmt.executeQuery(rsp.getSql(retriever))) {
                 // retriever.getClass().getName().contains("StPoInventoryLineRetriever");
 
-                System.out.println("Processing retriever " + retriever);
+                LOGGER.info("Processing retriever " + retriever);
                     if (retriever.isUpdater()) {
                         performBatchUpdates(new RetrieverBatchUpdateStmtGenerator(dma, retriever), legacyRs);
                     } else {
                         id = performBatchInserts(new RetrieverBatchInsertStmtGenerator(dma, retriever), legacyRs, id);
                     }
-
                 }
             }
 
@@ -292,15 +290,15 @@ public class DataMigrator {
                         keyValue.add(legacyRs.getObject(keyIndex.intValue()));
                     }
                 if (keyValue == null) {
-                    System.out.println("keyValue == null");
+                    LOGGER.error("keyValue == null");
                 }
                 final Object key = keyValue.size() == 1 ? keyValue.get(0) : keyValue;
                 if (key == null) {
-                    System.out.println("key == null");
+                    LOGGER.error("key == null");
                 }
                 final Long idObject = typeCache.get(key);
                 if (idObject == null) {
-                    System.out.println("idObject == null");
+                    LOGGER.error("idObject == null");
                 } else {
                     final long id = idObject;
                     int index = 1;
@@ -327,7 +325,6 @@ public class DataMigrator {
         });
         tr.commit();
         LOGGER.info(generateFinalMessage(start, rbsg.getRetriever().getClass().getSimpleName(), typeCache.size(), insertSql, exceptions));
-
     }
 
     private long performBatchInserts(final RetrieverBatchInsertStmtGenerator rbsg, final ResultSet legacyRs, final long startingId) throws SQLException {
@@ -402,12 +399,12 @@ public class DataMigrator {
     private String generateFinalMessage(final DateTime start, final String retrieverName, final int entitiesCount, final String insertSql, final Map<String, List<List<Object>>> exceptions) {
         final Period pd = new Period(start, new DateTime());
         final StringBuilder sb = new StringBuilder();
-        sb.append(retrieverName + " -- duration: " + pd.getMinutes() + " m " + pd.getSeconds() + " s " + pd.getMillis() + " ms. Entities count: " + entitiesCount + "\n");
-        if (exceptions.size() > 0) {
-            sb.append(StringUtils.repeat(" ", retrieverName.length()) + " -- SQL: " + insertSql + "\n");
-            sb.append(StringUtils.repeat(" ", retrieverName.length()) + " -- exceptions:\n");
+        sb.append("    " + retrieverName + " -- duration: " + pd.getMinutes() + " m " + pd.getSeconds() + " s " + pd.getMillis() + " ms. Entities count: " + entitiesCount);
+        if (!exceptions.isEmpty()) {
+            sb.append("\n" + StringUtils.repeat(" ", retrieverName.length()) + " -- SQL: " + insertSql);
+            sb.append("\n" + StringUtils.repeat(" ", retrieverName.length()) + " -- exceptions:");
             for (final Entry<String, List<List<Object>>> entry : exceptions.entrySet()) {
-                sb.append("                 (" + entry.getValue().size() + ") -- " + entry.getKey() + "\n");
+                sb.append("\n" + "                 (" + entry.getValue().size() + ") -- " + entry.getKey());
             }
         }
         return sb.toString();
