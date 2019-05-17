@@ -55,7 +55,7 @@ public class ObservableMutatorInterceptor implements MethodInterceptor {
      */
     @Override
     public Object invoke(final MethodInvocation invocation) throws Throwable {
-        logger.debug("Intercepting " + invocation.getMethod().getName());
+        //logger.debug("Intercepting " + invocation.getMethod().getName());
         // perform some trivial validation to ensure that this intercepter is associated with a recognised mutator
         final Method method = invocation.getMethod();
         if (!Mutator.isMutator(method)) {
@@ -65,15 +65,15 @@ public class ObservableMutatorInterceptor implements MethodInterceptor {
         }
         // get the entity on which mutator is invoked
         final AbstractEntity<?> entity = (AbstractEntity<?>) invocation.getThis();
-        logger.debug(format("Method is invoked on entity of type %s.", entity.getType().getName()));
+        //logger.debug(format("Method is invoked on entity of type %s.", entity.getType().getName()));
         final String propertyName = Mutator.deducePropertyNameFromMutator(method);
         final String fullPropertyName = entity.getType().getName() + "." + propertyName;
-        logger.debug(format("Property name is \"%s\".", fullPropertyName));
+        //logger.debug(format("Property name is \"%s\".", fullPropertyName));
         final Optional<MetaProperty<?>> op = entity.getPropertyOptionally(propertyName);
         // check if entity is not in the initialisation mode during which no property validation should be performed
         if (entity.isInitialising() || !op.isPresent()) {
-            logger.debug(format("Property change observation logic is skipped. Initialisation or instantiation of entity [%s] is in progress.", AbstractUnionEntity.class.isAssignableFrom(entity.getClass()) ? entity.getClass()
-                    : entity.getType().getName()));
+            //logger.debug(format("Property change observation logic is skipped. Initialisation or instantiation of entity [%s] is in progress.", AbstractUnionEntity.class.isAssignableFrom(entity.getClass()) ? entity.getClass()
+            //        : entity.getType().getName()));
             return proceed(invocation, op);
         }
         final MetaProperty property = op.get();
@@ -85,14 +85,14 @@ public class ObservableMutatorInterceptor implements MethodInterceptor {
         }
         // proceed with property processing
         final boolean wasValid = property.isValid(); // this flag is needed for correct change event firing
-        logger.debug(format("Property \"%s\" was valid: %s", fullPropertyName, wasValid));
+        //logger.debug(format("Property \"%s\" was valid: %s", fullPropertyName, wasValid));
         final Pair<Object, Object> newAndOldValues = determineNewAndOldValues(entity, propertyName, invocation.getArguments()[0], method);
         final Object newValue = newAndOldValues.getKey();
         final Object currValue = newAndOldValues.getValue();
         // logger.debug("Property \"" + fullPropertyName + "\" new value is \"" + newValue + "\", old value is \"" + oldValue + "\".");
 
         // perform validation and possibly setting of the passed in value
-        logger.debug(format("Checking if validation is needed for [%s]...", fullPropertyName));
+        //logger.debug(format("Checking if validation is needed for [%s]...", fullPropertyName));
         if (// enforcement happens in case of dependent properties
         property.isEnforceMutator() ||
         // or it could be an error recovery (forces validation + setter + necessarily firePropertyChange(!) )
@@ -106,24 +106,24 @@ public class ObservableMutatorInterceptor implements MethodInterceptor {
             ////////////////////////////////////////////////////
             ///////////////// validation ///////////////////////
             ////////////////////////////////////////////////////
-            logger.debug(format("Check if property \"%s\" has validators...", fullPropertyName));
+            //logger.debug(format("Check if property \"%s\" has validators...", fullPropertyName));
             if (property.hasValidators()) {
-                logger.debug(format("Execute validation for property \"%s\".", fullPropertyName));
+                //logger.debug(format("Execute validation for property \"%s\".", fullPropertyName));
                 final Result result = property.validate(newValue, property.getValidationAnnotations(), false);
                 if (!result.isSuccessful()) {
-                    logger.debug(format("Property \"%s\" validation failed: %s", fullPropertyName, property.getFirstFailure()));
+                    //logger.debug(format("Property \"%s\" validation failed: %s", fullPropertyName, property.getFirstFailure()));
                     // This return is a tricky one, since there in no really information as to what should be returned by the original method call.
                     // However, so far, validation was associated only with entity setters, which should return an instance of its owner or void.
                     return entity;
                 } else if (property.hasWarnings()) {
-                    logger.debug(format("Property \"%s\" validation complains about warning: %s", fullPropertyName, property.getFirstWarning()));
+                    //logger.debug(format("Property \"%s\" validation complains about warning: %s", fullPropertyName, property.getFirstWarning()));
                 }
             }
             // validation was successful -- proceed with observing logic.
             // //////////////////////////////////////////////////
             // /////////////// observing ////////////////////////
             // //////////////////////////////////////////////////
-            logger.debug(format("Property \"%s\" validation succeeded. Proceeding with observing logic.", fullPropertyName));
+            //logger.debug(format("Property \"%s\" validation succeeded. Proceeding with observing logic.", fullPropertyName));
             // the observed setter could either be index or simple: setCollectionPropertyValue(index, value) or setPropertyValue(value)
             if (!property.isCollectional() && Mutator.SETTER == Mutator.getValueByMethod(method)) { // covers setter for a simple property
                 return processSimpleProperty(entity, propertyName, invocation, propertyWasValidAndNotEnforced(property, wasValid), newAndOldValues);
@@ -134,7 +134,7 @@ public class ObservableMutatorInterceptor implements MethodInterceptor {
             logger.error(errorMsg);
             throw new IllegalStateException(errorMsg);
         } else { // here the attempt of setting the same value was performed for the "valid" "simple" property
-            logger.debug(format("Validation for property \"%s\" is not needed and nor further processing is required (mutator is not invoked).", fullPropertyName));
+            //logger.debug(format("Validation for property \"%s\" is not needed and nor further processing is required (mutator is not invoked).", fullPropertyName));
             // the inner setter does not invoke - just return a most likely returning value for a setter, which should be an entity itself
             return entity;
         }
@@ -157,7 +157,7 @@ public class ObservableMutatorInterceptor implements MethodInterceptor {
     private Object processSimpleProperty(final AbstractEntity<?> entity, final String propertyName, final MethodInvocation mutator, final boolean wasValidAndNotEnforced, final Pair<Object, Object> newAndOldValues)
             throws Throwable {
         final String fullPropertyName = entity.getType().getName() + "." + propertyName;
-        logger.debug("Processing simple property \"" + fullPropertyName + "\".");
+        //logger.debug("Processing simple property \"" + fullPropertyName + "\".");
         final Object oldValue = entity.get(propertyName);
         try {
             // try to proceed setter - if unhandled exception throws -> take it to the next level.
@@ -186,7 +186,7 @@ public class ObservableMutatorInterceptor implements MethodInterceptor {
             logger.error("Unhandled exception while processing simple property \"" + fullPropertyName + "\".", e);
             throw e;
         } finally {
-            logger.debug("Finished processing simple property \"" + fullPropertyName + "\".");
+            //logger.debug("Finished processing simple property \"" + fullPropertyName + "\".");
         }
     }
 
@@ -206,7 +206,7 @@ public class ObservableMutatorInterceptor implements MethodInterceptor {
     private Object processMutatorForCollectionalProperty(final AbstractEntity<?> entity, final String propertyName, final MethodInvocation mutator, final boolean wasValidAndNotEnforced, final Pair<Object, Object> newAndOldValues)
             throws Throwable {
         final String fullPropertyName = entity.getType().getName() + "." + propertyName;
-        logger.debug("Processing collectional property \"" + fullPropertyName + "\".");
+        //logger.debug("Processing collectional property \"" + fullPropertyName + "\".");
         // get oldValue (and its size) before invoking mutator
         final Collection<?> currValue = entity.get(propertyName);
         final Integer currSize = currValue == null ? 0 : currValue.size();
@@ -241,7 +241,7 @@ public class ObservableMutatorInterceptor implements MethodInterceptor {
             logger.error("Unhandled exception while processing collectional property \"" + fullPropertyName + "\".", e);
             throw e;
         } finally {
-            logger.debug("Finished processing collectional property \"" + fullPropertyName + "\".");
+            //logger.debug("Finished processing collectional property \"" + fullPropertyName + "\".");
         }
     }
 
@@ -334,7 +334,7 @@ public class ObservableMutatorInterceptor implements MethodInterceptor {
             for (final String dependentPropertyName : metaProperty.getDependentPropertyNames()) {
                 final MetaProperty<?> dependentMetaProperty = entity.getProperty(dependentPropertyName);
                 revalidateDependentProperty(metaProperty, dependentMetaProperty);
-                logger.debug(format("Dependent property [%s] for property [%s] was revalidated.", dependentPropertyName, metaProperty.getName()));
+                //logger.debug(format("Dependent property [%s] for property [%s] was revalidated.", dependentPropertyName, metaProperty.getName()));
             }
         }
 

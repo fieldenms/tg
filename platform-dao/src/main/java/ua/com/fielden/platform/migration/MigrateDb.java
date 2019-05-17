@@ -24,7 +24,7 @@ public class MigrateDb {
      *
      * @param ddl
      * @param conn
-     * @throws SQLException 
+     * @throws SQLException
      * @throws Exception
      */
     private static void checkAndCreate(final List<String> ddl, final HibernateUtil hiberUtil) throws SQLException {
@@ -205,6 +205,7 @@ public class MigrateDb {
             passwordReset.resetAll();
         }
 
-        LOGGER.info("\nData migration completed.");
+        LOGGER.info("Data migration completed.");
     }
 }
+
