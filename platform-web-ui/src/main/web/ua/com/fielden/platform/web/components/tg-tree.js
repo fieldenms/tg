@@ -4,12 +4,11 @@ import '/resources/polymer/@polymer/iron-icons/iron-icons.js';
 import '/resources/polymer/@polymer/iron-icons/av-icons.js';
 import '/resources/polymer/@polymer/iron-list/iron-list.js';
 
-import '/app/tg-app-config.js';
-
 import { Polymer } from '/resources/polymer/@polymer/polymer/lib/legacy/polymer-fn.js';
 import { html } from '/resources/polymer/@polymer/polymer/lib/utils/html-tag.js';
 
 import { TgTooltipBehavior } from '/resources/components/tg-tooltip-behavior.js';
+import { isMobileApp } from '/resources/reflection/tg-polymer-utils.js';
 
 const template = html`
     <style>
@@ -72,7 +71,6 @@ const template = html`
     <custom-style>
         <style include="iron-flex iron-flex-reverse iron-flex-alignment iron-flex-factors iron-positioning"></style>
     </custom-style>
-    <tg-app-config id="appConfig" mobile="{{mobile}}"></tg-app-config>
     <iron-list id="treeList" items="[[_entities]]" as="entity" selection-enabled>
         <template>
             <div class="layout horizontal tree-node no-wrap" selected$="[[selected]]" style$="[[_calcItemStyle(entity)]]">
@@ -210,9 +208,12 @@ Polymer({
         },
         
         /**
-         * Indicates whether component is opened in mobile mode
+         * Indicates whether component is opened in mobile mode.
          */
-        mobile: Boolean,
+        mobile: {
+            type: Boolean,
+            value: isMobileApp()
+        },
         
         contentBuilder: Function,
         actionBuilder: Function,

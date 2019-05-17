@@ -18,7 +18,7 @@ import '/resources/polymer/@polymer/paper-styles/paper-styles-classes.js';
 import '/resources/polymer/@polymer/paper-toolbar/paper-toolbar.js';
 /* TG ELEMENTS */
 import { TgFocusRestorationBehavior } from '/resources/actions/tg-focus-restoration-behavior.js';
-import { isInHierarchy, deepestActiveElement, tearDownEvent } from '/resources/reflection/tg-polymer-utils.js';
+import { isInHierarchy, deepestActiveElement, tearDownEvent, isMobileApp } from '/resources/reflection/tg-polymer-utils.js';
 import { TgTooltipBehavior } from '/resources/components/tg-tooltip-behavior.js';
 import { TgReflector } from '/app/tg-reflector.js';
 import '/app/tg-app-config.js';
@@ -122,7 +122,10 @@ Polymer({
     is: 'tg-master-menu',
 
     properties: {
-        mobile: Boolean,
+        mobile: {
+            type: Boolean,
+            value: isMobileApp()
+        },
         sectionTitle: {
             type: String,
             value: '[[sectionTitle]]',
@@ -292,8 +295,6 @@ Polymer({
         this.$.mainPages.addEventListener("tg-entity-centre-refreshed", this._handleCentreRefresh.bind(this))
         // change drawer panel to narrow layout automatically when moving from tablet|mobile to desktop application layout
         this.$.drawerPanel.responsiveWidth = this.$.appConfig.minDesktopWidth + 'px';
-        //Configure the profile mobile or desktop
-        this.mobile = this.$.appConfig.mobile;
         //Add listener for custom event that was thrown when section is about to lost focus, then this focus should go to the menu if it is opened.
         this.addEventListener("tg-last-item-focused", this._focusMenuAndTearDown.bind(this));
     }, // end of ready 

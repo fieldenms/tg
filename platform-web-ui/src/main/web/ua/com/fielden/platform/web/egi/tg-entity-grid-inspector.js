@@ -30,7 +30,7 @@ import { TgTooltipBehavior } from '/resources/components/tg-tooltip-behavior.js'
 import { TgDragFromBehavior } from '/resources/components/tg-drag-from-behavior.js';
 import { TgShortcutProcessingBehavior } from '/resources/actions/tg-shortcut-processing-behavior.js';
 import { TgSerialiser } from '/resources/serialisation/tg-serialiser.js';
-import { tearDownEvent, getRelativePos } from '/resources/reflection/tg-polymer-utils.js';
+import { tearDownEvent, getRelativePos, isMobileApp } from '/resources/reflection/tg-polymer-utils.js';
 
 const template = html`
     <style>
@@ -444,7 +444,10 @@ Polymer({
     is: 'tg-entity-grid-inspector',
     
     properties: {
-        mobile: Boolean,
+        mobile: {
+            type: Boolean,
+            value: isMobileApp()
+        },
         /** An extrenally assigned function that accepts an instance of type Attachment as an argument and starts the download of the associated file. */
         downloadAttachment: {
             type: Function
@@ -633,9 +636,6 @@ Polymer({
 
     created: function () {
         this._serialiser = new TgSerialiser();
-        //Configure device profile
-        this.mobile = this._appConfig.mobile;
-
         this._totalsRowCount = 0;
         this._showProgress = false;
 
@@ -1268,7 +1268,7 @@ Polymer({
     },
 
     _makeEgiUnselectable: function (e) {
-        if (this._appConfig.mobile) {
+        if (this.mobile) {
             e.currentTarget.classList.toggle("resizing-action", true);
             console.log("set resizing action");
         }
@@ -1277,7 +1277,7 @@ Polymer({
     },
 
     _makeEgiSelectable: function (e) {
-        if (this._appConfig.mobile) {
+        if (this.mobile) {
             e.currentTarget.classList.toggle("resizing-action", false);
         }
         this.$.baseContainer.classList.toggle("noselect", false);

@@ -14,8 +14,6 @@ import '/resources/element_loader/tg-element-loader.js';
 import '/resources/components/tg-toast.js';
 import '/resources/images/tg-icons.js';
 
-import '/app/tg-app-config.js';
-
 import {IronOverlayBehavior, IronOverlayBehaviorImpl} from '/resources/polymer/@polymer/iron-overlay-behavior/iron-overlay-behavior.js';
 import {IronA11yKeysBehavior} from '/resources/polymer/@polymer/iron-a11y-keys-behavior/iron-a11y-keys-behavior.js';
 import {IronFitBehavior} from '/resources/polymer/@polymer/iron-fit-behavior/iron-fit-behavior.js';
@@ -26,7 +24,7 @@ import {html} from '/resources/polymer/@polymer/polymer/lib/utils/html-tag.js';
 import {TgFocusRestorationBehavior} from '/resources/actions/tg-focus-restoration-behavior.js'
 import {TgTooltipBehavior} from '/resources/components/tg-tooltip-behavior.js';
 import {TgBackButtonBehavior} from '/resources/views/tg-back-button-behavior.js'
-import {tearDownEvent, isInHierarchy, allDefined, FOCUSABLE_ELEMENTS_SELECTOR} from '/resources/reflection/tg-polymer-utils.js';
+import { tearDownEvent, isInHierarchy, allDefined, FOCUSABLE_ELEMENTS_SELECTOR, isMobileApp, isIPhoneOs } from '/resources/reflection/tg-polymer-utils.js';
 import { TgElementSelectorBehavior } from '/resources/components/tg-element-selector-behavior.js';
 
 const template = html`
@@ -199,8 +197,7 @@ const template = html`
         </div>
     </div>
     <iron-icon id="resizer" hidden=[[_dialogInteractionsDisabled(_minimised,_maximised)]] icon="tg-icons:resize-bottom-right" on-track="resizeDialog" tooltip-text="Drag to resize"></iron-icon>
-    <tg-toast id="toaster"></tg-toast>
-    <tg-app-config id="appConfig" mobile="{{mobile}}"></tg-app-config>`;
+    <tg-toast id="toaster"></tg-toast>`;
 
 template.setAttribute('strip-whitespace', '');
 
@@ -426,12 +423,13 @@ Polymer({
         _blockingPaneCounter: {
             type: Number
         },
-
+        
         /**
-         * Binds to the property 'appConfig.mobile'.
+         * Convenient property that indicates whether mobile browser is used for rendering this client application.
          */
         mobile: {
-            type: Boolean
+            type: Boolean,
+            value: isMobileApp()
         }
     },
 
@@ -472,9 +470,9 @@ Polymer({
 
         this._setIsRunning(false);
 
-        if (this.mobile === true && this.$.appConfig.iPhoneOs()) {
+        if (this.mobile && isIPhoneOs()) {
             this.$.titleBar.appendChild(this.createBackButton());
-            this.$.titleBar.classList.add('reverse');
+            this.$.titleBar.classList.add('reverse'); // FIXME this reversing does not work on iPhone. However back button is added properly.
         }
         //Add listener for custom event that was thrown when dialogs view is about to lost focus, then this focus should go to title-bar.
         this.addEventListener("tg-last-item-focused", this._viewFocusLostEventListener.bind(this));
@@ -593,7 +591,7 @@ Polymer({
     
     _calcNavigationBarStyle: function (mobile) {
         if (mobile) {
-            if (this.$.appConfig.iPhoneOs()) {
+            if (isIPhoneOs()) {
                 return "margin-right: 10px;"
             }
             return "margin-left:10px;"
@@ -818,10 +816,10 @@ Polymer({
                 this.style.height = prefDim.heightUnit === '%' ? height : ('calc(' + height + ' + 44px)'); // +44px - height of the title bar please see styles for .title-bar selector; applicable only for non-relative units of measure
                 this.style.overflow = 'auto';
             } else if (!minimised && maximised) {
-                this.style.top = this.mobile === true ? '0%' : '2%';
-                this.style.left = this.mobile === true ? '0%' : '2%';
-                this.style.width = this.mobile === true ? '100%' : '96%';
-                this.style.height = this.mobile === true ? '100%' : '96%';
+                this.style.top = this.mobile ? '0%' : '2%';
+                this.style.left = this.mobile ? '0%' : '2%';
+                this.style.width = this.mobile ? '100%' : '96%';
+                this.style.height = this.mobile ? '100%' : '96%';
                 this.style.overflow = 'auto';
             } else if (minimised && !maximised) {
                 this.style.height = '44px';
@@ -862,8 +860,8 @@ Polymer({
         this.$.menuToggler.hidden = !appearedAndFunc.appeared;
         if (appearedAndFunc.appeared) {
             this._toggleMenu = appearedAndFunc.func;
-            if (this.mobile === true && this.$.appConfig.iPhoneOs()) {
-                appearedAndFunc.drawer.rightDrawer = true;
+            if (this.mobile && isIPhoneOs()) {
+                appearedAndFunc.drawer.drawer.align = 'right';
             }
         }
     },
@@ -1238,7 +1236,7 @@ Polymer({
     _openAndRefit: function () {
         this._focusAndRefit(); // this is a legacy support
 
-        if (this.$.appConfig.mobile === true) { // mobile app specific: open all custom action dialogs in maximised state
+        if (this.mobile) { // mobile app specific: open all custom action dialogs in maximised state
             this._invertMaximiseState();
         }
         
@@ -1310,10 +1308,7 @@ Polymer({
      * Listener that listens binding entity appeared event and focuses first input.
      */
     _focusDialogWithInput: function(e) {
-        // Desktop app specific: focus first input when opening dialog.
-        // This is also used when closing dialog: if child dialog was not closed, then its first input should be focused (this however can not be reproduced on mobile due to maximised nature of all dialogs).
-        // So, in mobile app the input will not be focused on dialog opening (and the keyboard will not appear suddenly until the user explicitly clicks on some editor).
-        if (this.$.appConfig.mobile === false && this._lastElement.focusView) {
+        if (this._lastElement.focusView) {
             this._lastElement.focusView();
         }
     },
@@ -1401,20 +1396,20 @@ Polymer({
      * Returns 'true' if Restorer button of maximisation function is hidden, 'false' otherwise.
      */
     _maximiseRestorerHidden: function(_maximised, mobile) {
-        return !_maximised || mobile === true;
+        return !_maximised || mobile;
     },
 
     /**
      * Returns 'true' if Closer button is hidden, 'false' otherwise.
      */
     _closerHidden: function(_lastAction, mobile) {
-        return (_lastAction && _lastAction.continuous) || mobile === true;
+        return (_lastAction && _lastAction.continuous) || mobile;
     },
 
     /**
      * Returns 'true' if Collapser button of minimisation function is hidden, 'false' otherwise.
      */
     _collapserHidden: function(_minimised, mobile) {
-        return _minimised || mobile === true;
+        return _minimised || mobile;
     }
 });

@@ -22,7 +22,7 @@ import { IronResizableBehavior } from '/resources/polymer/@polymer/iron-resizabl
 
 import { TgEntityMasterBehavior } from '/resources/master/tg-entity-master-behavior.js';
 import { TgFocusRestorationBehavior } from '/resources/actions/tg-focus-restoration-behavior.js'
-import { tearDownEvent, deepestActiveElement, generateUUID } from '/resources/reflection/tg-polymer-utils.js';
+import { tearDownEvent, deepestActiveElement, generateUUID, isMobileApp } from '/resources/reflection/tg-polymer-utils.js';
 
 const template = html`
     <style>
@@ -155,17 +155,6 @@ Polymer({
         _visibleMenuItems: Array,
         _invisibleMenuItems: Array,
         _saveMenuVisibilityChanges: Function,
-        
-        /**
-         * Returns 'true' if this generated 'tg-app' component was loaded for mobile device, 'false' otherwise (see AbstactWebResource and DeviceProfile for more details).
-         * 
-         * Currently, the only difference will be in constructing app menu content.
-         * We use this flag when making 'retrieve' call for 'Menu' entity.
-         */
-        mobile: {
-            type: Boolean,
-            value: window.navigator.userAgent.includes("Mobi") // consistent with AbstractWebResource.calculateDeviceProfile
-        },
         
         /**
          * The current number of active history entry.
@@ -497,7 +486,9 @@ Polymer({
             
             self.entityId = 'new';
             const context = self._reflector().createContextHolder(null, null, null, null, null, null, null);
-            context['chosenProperty'] = self.mobile === true ? 'mobile' : 'desktop';
+            // Currently there is a difference in constructing app menu content.
+            // We use isMobileApp differentiator when making 'retrieve' call for 'Menu' entity.
+            context['chosenProperty'] = isMobileApp() ? 'mobile' : 'desktop';
             
             this.retrieve(context);
             this._toastGreeting().text = "Loading menu...";
