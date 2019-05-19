@@ -12,7 +12,7 @@ import { TgTooltipBehavior } from '/resources/components/tg-tooltip-behavior.js'
 import '/resources/centre/tg-selection-view.js';
 import '/resources/centre/tg-centre-result-view.js';
 import { TgFocusRestorationBehavior } from '/resources/actions/tg-focus-restoration-behavior.js';
-import { tearDownEvent, getRelativePos, FOCUSABLE_ELEMENTS_SELECTOR } from '/resources/reflection/tg-polymer-utils.js';
+import { tearDownEvent, getRelativePos, FOCUSABLE_ELEMENTS_SELECTOR, isMobileApp } from '/resources/reflection/tg-polymer-utils.js';
 import '/resources/actions/tg-ui-action.js';
 
 import '/resources/polymer/@polymer/iron-pages/iron-pages.js';
@@ -464,7 +464,7 @@ Polymer({
     },
 
     focusSelectedView: function () {
-        if (this._selectedView === 0) {
+        if (!isMobileApp() && this._selectedView === 0) {
             const elementToFocus = this._getVisibleFocusableElementIn(this.$.selectionView);
             // needs to be focused anyway (first-time loading, moving to selectionCrit from EGI or from another module)
             if (elementToFocus) {
@@ -479,7 +479,7 @@ Polymer({
                 // do not scroll anywhere, scrolling position will be preserved (for e.g. when moving from another module back)
                 this.restoreActiveElement(); // restore active element (only if such element was persisted previously, for e.g. when using f5 and some editor is focused or when explicitly clicking on Run button)
             }
-        } else if (this._selectedView === 1) {
+        } else if (!isMobileApp() && this._selectedView === 1) {
             const egi = this.$.customEgiSlot.assignedNodes({ flatten: true })[0];
             const elementToFocus = this._getVisibleFocusableElementIn(egi);
             // Element to focus is present only for grid representation of EGI. The card representation doesn't support focusing.

@@ -541,7 +541,7 @@ export const TgEditorBehaviorImpl = {
     },
     
     _identifyModification: function (_editingValue, originalEntity) {
-        if (this.reflector().isEntity(this.entity)) {
+        /*if (this.reflector().isEntity(this.entity)) {
             var _originalEditingValue = originalEntity ? this.convertToString(this.reflector().getBindingValue.bind(this.reflector())(originalEntity, this.propertyName)) : _editingValue;
             // console.debug('_bindingEntity (_identifyModification) self = ', this.is, '_editingValue', _editingValue, '_originalEditingValue', _originalEditingValue);
             var prevEditedProps = this.entity['@editedProps'];
@@ -557,7 +557,7 @@ export const TgEditorBehaviorImpl = {
                 delete newEditedProps[this.propertyName];
             }
             this.set('entity.@editedProps', newEditedProps);
-        }
+        }*/
     },
     
     _editedPropsChanged: function (editedProps) {
