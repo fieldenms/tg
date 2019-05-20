@@ -457,6 +457,8 @@ function reduceToSingleString(output, base, braces) {
 
 // NOTE: These type checking functions intentionally don't use `instanceof`
 // because it is fragile and can be easily faked with `Object.create()`.
+exports.types = require('./support/types');
+
 function isArray(ar) {
   return Array.isArray(ar);
 }
@@ -501,6 +503,7 @@ function isRegExp(re) {
   return isObject(re) && objectToString(re) === '[object RegExp]';
 }
 exports.isRegExp = isRegExp;
+exports.types.isRegExp = isRegExp;
 
 function isObject(arg) {
   return typeof arg === 'object' && arg !== null;
@@ -511,12 +514,14 @@ function isDate(d) {
   return isObject(d) && objectToString(d) === '[object Date]';
 }
 exports.isDate = isDate;
+exports.types.isDate = isDate;
 
 function isError(e) {
   return isObject(e) &&
       (objectToString(e) === '[object Error]' || e instanceof Error);
 }
 exports.isError = isError;
+exports.types.isNativeError = isError;
 
 function isFunction(arg) {
   return typeof arg === 'function';
@@ -691,8 +696,8 @@ function callbackify(original) {
     // In true node style we process the callback on `nextTick` with all the
     // implications (stack, `uncaughtException`, `async_hooks`)
     original.apply(this, args)
-      .then(function(ret) { process.nextTick(cb, null, ret) },
-            function(rej) { process.nextTick(callbackifyOnRejected, rej, cb) });
+      .then(function(ret) { process.nextTick(cb.bind(null, null, ret)) },
+            function(rej) { process.nextTick(callbackifyOnRejected.bind(null, rej, cb)) });
   }
 
   Object.setPrototypeOf(callbackified, Object.getPrototypeOf(original));
