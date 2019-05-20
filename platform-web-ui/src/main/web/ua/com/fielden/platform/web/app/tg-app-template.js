@@ -528,14 +528,9 @@ Polymer({
     },
     
     _getUrl: function() {
-        let url = this.$.location.__path;
-        const query = this.$.location.__query;
-        if (query) {
-          url += '?' + query;
-        }
-        if (this.$.location.__hash) {
-          url += '#' + this.$.location.__hash;
-        }
+        let url = window.location.pathname;
+        url += window.location.search;
+        url += window.location.hash;
         return url;
     },
     
