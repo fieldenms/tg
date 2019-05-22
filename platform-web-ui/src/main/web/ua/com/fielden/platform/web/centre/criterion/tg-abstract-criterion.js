@@ -74,7 +74,7 @@ const template = html`
             <div id ="not_layer" class="fit mnemonic-layer not" hidden$="[[!_notVisible(critOnly, _not)]]"></div>
             <div id ="crossed_layer" class="fit mnemonic-layer crossed" hidden$="[[!_notVisible(critOnly, _not)]]"></div>
         </div>
-        <paper-icon-button id="iconButton" on-tap="_showMetaValuesEditor" icon="more-horiz" tooltip-text="Show additional criteria constraints"></paper-icon-buton>
+        <paper-icon-button id="iconButton" on-tap="_showMetaValuesEditor" icon="more-horiz" tooltip-text="Show additional criteria constraints"></paper-icon-button>
     </div>
 `;
 
