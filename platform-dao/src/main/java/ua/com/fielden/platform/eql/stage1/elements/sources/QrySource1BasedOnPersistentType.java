@@ -1,15 +1,15 @@
 package ua.com.fielden.platform.eql.stage1.elements.sources;
 
-import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.exceptions.EqlStage1ProcessingException;
+import ua.com.fielden.platform.eql.meta.EntityInfo;
 import ua.com.fielden.platform.eql.meta.PropsResolutionContext;
 import ua.com.fielden.platform.eql.meta.TransformationResult;
 import ua.com.fielden.platform.eql.stage2.elements.QrySource2BasedOnPersistentType;
 
 public class QrySource1BasedOnPersistentType extends AbstractQrySource1<QrySource2BasedOnPersistentType> {
-    private final Class<? extends AbstractEntity<?>> sourceType;
+    private final EntityInfo sourceType;
 
-    public QrySource1BasedOnPersistentType(final Class<? extends AbstractEntity<?>> sourceType, final String alias, final int contextId) {
+    public QrySource1BasedOnPersistentType(final EntityInfo sourceType, final String alias, final int contextId) {
         super(alias, contextId);
         if (sourceType == null) {
             throw new EqlStage1ProcessingException("Source type is required.");
@@ -18,12 +18,12 @@ public class QrySource1BasedOnPersistentType extends AbstractQrySource1<QrySourc
         this.sourceType = sourceType;
     }
 
-    public QrySource1BasedOnPersistentType(final Class<? extends AbstractEntity<?>> sourceType, final int contextId) {
+    public QrySource1BasedOnPersistentType(final EntityInfo sourceType, final int contextId) {
         this(sourceType, null, contextId);
     }
     
     @Override
-    public Class<? extends AbstractEntity<?>> sourceType() {
+    public EntityInfo sourceType() {
         return sourceType;
     }
 
@@ -59,7 +59,7 @@ public class QrySource1BasedOnPersistentType extends AbstractQrySource1<QrySourc
 
     @Override
     public TransformationResult<QrySource2BasedOnPersistentType> transform(PropsResolutionContext resolutionContext) {
-        final QrySource2BasedOnPersistentType transformedSource = new QrySource2BasedOnPersistentType(sourceType(), resolutionContext.getDomainInfo().get(sourceType()), getAlias(), contextId);
+        final QrySource2BasedOnPersistentType transformedSource = new QrySource2BasedOnPersistentType(resolutionContext.getDomainInfo().get(sourceType().javaType()), getAlias(), contextId);
         return new TransformationResult<QrySource2BasedOnPersistentType>(transformedSource, resolutionContext.cloneWithAdded(transformedSource, resolutionContext.getResolvedProps()));
     }
 }

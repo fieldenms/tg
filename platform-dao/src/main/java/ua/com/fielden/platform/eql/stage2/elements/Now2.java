@@ -8,7 +8,7 @@ public class Now2 extends ZeroOperandFunction2 {
     }
 
     @Override
-    public Class type() {
-        return DateTime.class;
+    public String type() {
+        return DateTime.class.getName();
     }
 }

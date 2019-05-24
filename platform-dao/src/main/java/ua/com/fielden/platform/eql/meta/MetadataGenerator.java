@@ -31,6 +31,7 @@ import static ua.com.fielden.platform.utils.EntityUtils.isUnionEntityType;
 import java.lang.reflect.Field;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.BiFunction;
@@ -73,12 +74,19 @@ public class MetadataGenerator {
         this.qb = qb;
     }
 
-    public final Map<Class<? extends AbstractEntity<?>>, EntityInfo<?>> generate(final Set<Class<? extends AbstractEntity<?>>> entities) throws Exception {
-        final Map<Class<? extends AbstractEntity<?>>, EntityInfo<?>> result = entities.stream()
+    public final Map<String, EntityInfo> generate(final Set<Class<? extends AbstractEntity<?>>> entities) throws Exception {
+        final Map<Class<? extends AbstractEntity<?>>, EntityInfo> result = entities.stream()
                 .filter(t -> isPersistedEntityType(t) || isSyntheticEntityType(t) || isSyntheticBasedOnPersistentEntityType(t) || isUnionEntityType(t))
-                .collect(toMap(k -> k, k -> new EntityInfo<>(k, determineCategory(k))));
-        result.values().stream().forEach(ei -> addProps(ei, result));
-        return result;
+                .collect(toMap(k -> k, k -> new EntityInfo(k.getName(), determineCategory(k))));
+        
+        for (Entry<Class<? extends AbstractEntity<?>>, EntityInfo> re : result.entrySet()) {
+            addProps(re.getKey(), re.getValue(), result);
+            
+        }
+        
+        
+        //result.values().stream().forEach(ei -> addProps(ei, result));
+        return result.entrySet().stream().collect(toMap(k -> k.getKey().getName(), k -> k.getValue()));
     }
 
     private <ET extends AbstractEntity<?>> EntityCategory determineCategory(final Class<ET> entityType) {
@@ -119,24 +127,20 @@ public class MetadataGenerator {
         return isPersistedEntityType(getKeyType(entityType));
     }
 
-    private Expression1 entQryExpression(final ExpressionModel exprModel) {
-        return (Expression1) new StandAloneExpressionBuilder(qb, exprModel).getResult().getValue();
-    }
-
-    private <T extends AbstractEntity<?>> Optional<PrimTypePropInfo<?,?>> generateIdPropertyMetadata(final Class<T> entityType, final EntityInfo<T> entityInfo) {
+    private <T extends AbstractEntity<?>> Optional<PrimTypePropInfo> generateIdPropertyMetadata(final Class<T> entityType, final EntityInfo entityInfo) {
         switch (entityInfo.getCategory()) {
         case PERSISTED:
             //TODO Need to handle expression for one-2-one case.
-            return of(isOneToOne(entityType) ? new PrimTypePropInfo<Long, T>(ID, Long.class, entityInfo)
-                    : new PrimTypePropInfo<Long, T>(ID, Long.class, entityInfo)); 
+            return of(isOneToOne(entityType) ? new PrimTypePropInfo(ID, Long.class, entityInfo)
+                    : new PrimTypePropInfo(ID, Long.class, entityInfo)); 
         case QUERY_BASED:
             if (EntityUtils.isSyntheticBasedOnPersistentEntityType(entityType)) {
                 if (isEntityType(getKeyType(entityType))) {
                     throw new EntityDefinitionException(format("Entity [%s] is recognised as synthetic that is based on a persystent type with an entity-typed key. This is not supported.", entityType.getName()));
                 }
-                return of(new PrimTypePropInfo<Long, T>(ID, Long.class, entityInfo));
+                return of(new PrimTypePropInfo(ID, Long.class, entityInfo));
             } else if (isEntityType(getKeyType(entityType))) {
-                return of(new PrimTypePropInfo<Long, T>(ID, Long.class, entityInfo)); //TODO need to move this to createYieldAllQueryModel -- entQryExpression(expr().prop("key").model())));
+                return of(new PrimTypePropInfo(ID, Long.class, entityInfo)); //TODO need to move this to createYieldAllQueryModel -- entQryExpression(expr().prop("key").model())));
             } else {
                 return empty();
             }
@@ -147,13 +151,13 @@ public class MetadataGenerator {
         }
     }
 
-    private <T extends AbstractEntity<?>> void addProps(final EntityInfo<T> entityInfo, final Map<Class<? extends AbstractEntity<?>>, EntityInfo<?>> allEntitiesInfo) {
-        generateIdPropertyMetadata(entityInfo.javaType(), entityInfo).ifPresent(id -> entityInfo.addProp(id));
-        entityInfo.addProp(new PrimTypePropInfo<Long, T>(VERSION, Long.class, entityInfo));
+    private <T extends AbstractEntity<?>> void addProps(final Class<T> entityType, final EntityInfo entityInfo, final Map<Class<? extends AbstractEntity<?>>, EntityInfo> allEntitiesInfo) {
+        generateIdPropertyMetadata(entityType, entityInfo).ifPresent(id -> entityInfo.addProp(id));
+        entityInfo.addProp(new PrimTypePropInfo(VERSION, Long.class, entityInfo));
         
-        EntityUtils.getRealProperties(entityInfo.javaType()).stream()
+        EntityUtils.getRealProperties(entityType).stream()
         .filter(f -> f.isAnnotationPresent(MapTo.class) || f.isAnnotationPresent(Calculated.class)).forEach(field -> {
-            final Class<?> javaType = determinePropertyType(entityInfo.javaType(), field.getName()); // redetermines prop type in platform understanding (e.g. type of Set<MeterReading> readings property will be MeterReading;
+            final Class<?> javaType = determinePropertyType(entityType, field.getName()); // redetermines prop type in platform understanding (e.g. type of Set<MeterReading> readings property will be MeterReading;
 
             if (AbstractEntity.class.isAssignableFrom(javaType)) {
                 entityInfo.addProp(new EntityTypePropInfo(field.getName(), allEntitiesInfo.get(javaType), entityInfo));

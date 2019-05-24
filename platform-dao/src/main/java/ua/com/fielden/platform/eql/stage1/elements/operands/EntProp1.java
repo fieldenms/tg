@@ -58,10 +58,10 @@ public class EntProp1 extends AbstractElement1 implements ISingleOperand1<EntPro
     }
     
     private PropResolution resolvePropAgainstSource(final IQrySource2 source, final EntProp1 entProp) {
-        final AbstractPropInfo<?, ?> asIsResolution = source.entityInfo().resolve(entProp.name);
+        final AbstractPropInfo asIsResolution = source.entityInfo().resolve(entProp.name);
         if (source.alias() != null && entProp.name.startsWith(source.alias() + ".")) {
             final String aliasLessPropName = entProp.name.substring(source.alias().length() + 1);
-            final AbstractPropInfo<?, ?> aliasLessResolution = source.entityInfo().resolve(aliasLessPropName);
+            final AbstractPropInfo aliasLessResolution = source.entityInfo().resolve(aliasLessPropName);
             if (aliasLessResolution != null) {
                 if (asIsResolution == null) {
                     return new PropResolution(aliasLessPropName, source, aliasLessResolution.javaType());

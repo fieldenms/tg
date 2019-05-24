@@ -27,7 +27,7 @@ public class ComponentTypePropInfo extends AbstractPropInfo {
     }
 
     @Override
-    public Class javaType() {
+    public String javaType() {
         return propEntityInfo.javaType();
     }
 }

@@ -7,5 +7,5 @@ public interface ISingleOperand2 extends IIgnorableAtS2 {
      * 
      * @return
      */
-    Class<?> type();
+    String type();
 }

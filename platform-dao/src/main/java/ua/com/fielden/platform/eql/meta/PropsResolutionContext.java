@@ -19,16 +19,16 @@ import ua.com.fielden.platform.eql.stage2.elements.IQrySource2;
 
 public class PropsResolutionContext {
     private final List<List<IQrySource2>> sources;
-    private final Map<Class<? extends AbstractEntity<?>>, EntityInfo<?>> domainInfo;
+    private final Map<String, EntityInfo> domainInfo;
     private final Set<EntProp2> resolvedProps;
 
-    public PropsResolutionContext(final Map<Class<? extends AbstractEntity<?>>, EntityInfo<?>> domainInfo) {
+    public PropsResolutionContext(final Map<String, EntityInfo> domainInfo) {
         this.domainInfo = new HashMap<>(domainInfo);
         this.sources = buildSourcesStackForNewQuery(emptyList());
         this.resolvedProps = new HashSet<>();
     }
     
-    public PropsResolutionContext(final Map<Class<? extends AbstractEntity<?>>, EntityInfo<?>> domainInfo, final List<List<IQrySource2>> sources, final Set<EntProp2> props) {
+    public PropsResolutionContext(final Map<String, EntityInfo> domainInfo, final List<List<IQrySource2>> sources, final Set<EntProp2> props) {
         this.domainInfo = new HashMap<>(domainInfo);
         this.sources = sources;
         this.resolvedProps = new HashSet<>(props);
@@ -84,7 +84,7 @@ public class PropsResolutionContext {
         return unmodifiableList(sources);
     }
 
-    public Map<Class<? extends AbstractEntity<?>>, EntityInfo<?>> getDomainInfo() {
+    public Map<String, EntityInfo> getDomainInfo() {
         return unmodifiableMap(domainInfo);
     }
 }

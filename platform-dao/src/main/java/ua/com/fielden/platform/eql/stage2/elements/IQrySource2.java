@@ -11,9 +11,7 @@ public interface IQrySource2 {
      * 
      * @return
      */
-    Class<? extends AbstractEntity<?>> sourceType();
-    
-    EntityInfo<?> entityInfo();
+    EntityInfo entityInfo();
     
     String alias();
 }

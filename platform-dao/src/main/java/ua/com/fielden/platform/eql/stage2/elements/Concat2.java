@@ -50,7 +50,7 @@ public class Concat2 extends AbstractFunction2 {
     }
 
     @Override
-    public Class type() {
-        return String.class;
+    public String type() {
+        return String.class.getName();
     }
 }

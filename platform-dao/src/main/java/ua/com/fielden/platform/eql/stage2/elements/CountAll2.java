@@ -7,7 +7,7 @@ public class CountAll2 extends ZeroOperandFunction2 {
     }
 
     @Override
-    public Class type() {
-        return Long.class;
+    public String type() {
+        return Long.class.getName();
     }
 }

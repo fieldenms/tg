@@ -94,7 +94,7 @@ public class BaseEntQueryTCase1 {
     protected static final TypeResolver typeResolver = new TypeResolver();
 
     public static final Map<Class, Class> hibTypeDefaults = new HashMap<>();
-    public static final Map<Class<? extends AbstractEntity<?>>, EntityInfo<?>> metadata = new HashMap<>();
+    public static final Map<String, EntityInfo> metadata = new HashMap<>();
 
 
     protected static Type hibtype(final String name) {
@@ -108,17 +108,18 @@ public class BaseEntQueryTCase1 {
 
     protected static final DomainMetadataAnalyser DOMAIN_METADATA_ANALYSER = new DomainMetadataAnalyser(DOMAIN_METADATA);
 
-    protected static final EntQueryGenerator qb = new EntQueryGenerator();
+    protected static final EntQueryGenerator qb;
 
     static {
         hibTypeDefaults.put(Date.class, DateTimeType.class);
         hibTypeDefaults.put(Money.class, SimpleMoneyType.class);
         try {
-            metadata.putAll(new MetadataGenerator(qb).generate(new HashSet<>(PlatformTestDomainTypes.entityTypes)));
+            metadata.putAll(new MetadataGenerator(null).generate(new HashSet<>(PlatformTestDomainTypes.entityTypes)));
         } catch (final Exception e) {
             // TODO Auto-generated catch block
             e.printStackTrace();
         }
+        qb = new EntQueryGenerator(metadata);
 
     }
     //private static final EntQueryGenerator1 qbwf = new EntQueryGenerator1(DOMAIN_METADATA_ANALYSER, new SimpleUserFilter(), null);

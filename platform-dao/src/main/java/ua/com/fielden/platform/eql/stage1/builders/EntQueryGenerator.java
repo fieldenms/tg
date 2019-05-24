@@ -7,6 +7,7 @@ import static ua.com.fielden.platform.eql.meta.QueryCategory.SOURCE_QUERY;
 import static ua.com.fielden.platform.eql.meta.QueryCategory.SUB_QUERY;
 
 import java.util.Iterator;
+import java.util.Map;
 import java.util.Optional;
 
 import ua.com.fielden.platform.dao.QueryExecutionModel;
@@ -16,6 +17,7 @@ import ua.com.fielden.platform.entity.query.fluent.enums.QueryTokens;
 import ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory;
 import ua.com.fielden.platform.entity.query.model.OrderingModel;
 import ua.com.fielden.platform.entity.query.model.QueryModel;
+import ua.com.fielden.platform.eql.meta.EntityInfo;
 import ua.com.fielden.platform.eql.meta.QueryCategory;
 import ua.com.fielden.platform.eql.stage1.elements.OrderBys1;
 import ua.com.fielden.platform.eql.stage1.elements.operands.EntQuery1;
@@ -24,6 +26,12 @@ import ua.com.fielden.platform.utils.Pair;
 public class EntQueryGenerator {
     
     private int contextId = 0;
+    public final Map<String, EntityInfo> dm;
+    
+    public EntQueryGenerator(final Map<String, EntityInfo> dm) {
+        this.dm = dm;
+    }
+    
     
     public int nextCondtextId() {
         contextId = contextId + 1;
@@ -89,7 +97,7 @@ public class EntQueryGenerator {
 
         return new EntQuery1( 
         parseTokensIntoComponents(qryModel, orderModel), 
-        resultType.orElse(qryModel.getResultType()), 
+        resultType.orElse(qryModel.getResultType()).getName(), 
         category, 
         qryModel.isFilterable(),
         fetchModel,

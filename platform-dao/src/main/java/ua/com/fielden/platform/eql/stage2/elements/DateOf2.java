@@ -9,8 +9,8 @@ public class DateOf2 extends SingleOperandFunction2 {
     }
 
     @Override
-    public Class type() {
+    public String type() {
         // TODO EQL
-        return Date.class;
+        return Date.class.getName();
     }
 }

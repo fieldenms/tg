@@ -22,7 +22,7 @@ public class QrySource2BasedOnSubqueries implements IQrySource2 {
     private final EntityInfo entityInfo;
     private final String alias;
 
-    public QrySource2BasedOnSubqueries(final List<EntQuery2> models, final String alias, final Map<Class<? extends AbstractEntity<?>>, EntityInfo<?>> domainInfo) {
+    public QrySource2BasedOnSubqueries(final List<EntQuery2> models, final String alias, final Map<String, EntityInfo> domainInfo) {
         if (models == null || models.isEmpty()) {
             throw new EqlStage1ProcessingException("Couldn't produce instance of QueryBasedSource due to zero models passed to constructor!");
         }
@@ -73,11 +73,6 @@ public class QrySource2BasedOnSubqueries implements IQrySource2 {
         }
     }
 
-    @Override
-    public Class<? extends AbstractEntity<?>> sourceType() {
-        return firstModel().type();
-    }
-
     public Yields2 getYields() {
         return firstModel().getYields();
     }
@@ -117,21 +112,21 @@ public class QrySource2BasedOnSubqueries implements IQrySource2 {
     }
 
     @Override
-    public EntityInfo<?> entityInfo() {
+    public EntityInfo entityInfo() {
         return entityInfo;
     }
     
-    private EntityInfo<?> produceEntityInfoFrom(final Map<Class<? extends AbstractEntity<?>>, EntityInfo<?>> domainInfo) {
-        if (!EntityAggregates.class.equals(sourceType())) {
-            return domainInfo.get(sourceType());
+    private EntityInfo produceEntityInfoFrom(final Map<String, EntityInfo> domainInfo) {
+        if (!EntityAggregates.class.getName().equals(firstModel().type())) {
+            return domainInfo.get(firstModel().type());
         } else {
-            final EntityInfo<EntityAggregates> entAggEntityInfo = new EntityInfo<>(EntityAggregates.class, null);
-            for (final Yield2 yield : getYields().getYields()) {
-                final AbstractPropInfo<?, ?> aep = isEntityType(yield.javaType())
-                        ? new EntityTypePropInfo(yield.getAlias(), domainInfo.get(yield.javaType()), entAggEntityInfo)
-                        : new PrimTypePropInfo(yield.getAlias(), yield.javaType(), entAggEntityInfo);
-                entAggEntityInfo.addProp(aep);
-            }
+            final EntityInfo entAggEntityInfo = new EntityInfo(EntityAggregates.class.getName(), null);
+//            for (final Yield2 yield : getYields().getYields()) {
+//                final AbstractPropInfo aep = isEntityType(yield.javaType())
+//                        ? new EntityTypePropInfo(yield.getAlias(), domainInfo.get(yield.javaType()), entAggEntityInfo)
+//                        : new PrimTypePropInfo(yield.getAlias(), yield.javaType(), entAggEntityInfo);
+//                entAggEntityInfo.addProp(aep);
+//            }
             return entAggEntityInfo;
         }
     }

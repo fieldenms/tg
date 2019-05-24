@@ -7,7 +7,7 @@ public class IfNull2 extends TwoOperandsFunction2 {
     }
 
     @Override
-    public Class type() {
+    public String type() {
         // TODO EQL
         return getOperand1().type();
     }

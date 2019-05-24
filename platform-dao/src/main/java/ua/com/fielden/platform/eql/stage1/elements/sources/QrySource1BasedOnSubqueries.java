@@ -7,6 +7,7 @@ import java.util.Map;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.exceptions.EqlStage1ProcessingException;
+import ua.com.fielden.platform.eql.meta.EntityInfo;
 import ua.com.fielden.platform.eql.meta.PropsResolutionContext;
 import ua.com.fielden.platform.eql.meta.TransformationResult;
 import ua.com.fielden.platform.eql.stage1.elements.Yield1;
@@ -75,11 +76,6 @@ public class QrySource1BasedOnSubqueries extends AbstractQrySource1<QrySource2Ba
     }
     
     @Override
-    public Class<? extends AbstractEntity<?>> sourceType() {
-        return firstModel().type();
-    }
-
-    @Override
     public int hashCode() {
         final int prime = 31;
         int result = super.hashCode();
@@ -111,5 +107,11 @@ public class QrySource1BasedOnSubqueries extends AbstractQrySource1<QrySource2Ba
 
     public List<EntQuery1> getModels() {
         return models;
+    }
+
+    @Override
+    public EntityInfo sourceType() {
+        // TODO Auto-generated method stub
+        return null;
     }
 }

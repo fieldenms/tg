@@ -7,7 +7,7 @@ public class HourOf2 extends SingleOperandFunction2 {
     }
 
     @Override
-    public Class type() {
-        return Integer.class;
+    public String type() {
+        return Integer.class.getName();
     }
 }

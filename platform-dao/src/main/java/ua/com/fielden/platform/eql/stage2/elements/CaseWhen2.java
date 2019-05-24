@@ -60,7 +60,7 @@ public class CaseWhen2 extends AbstractFunction2 {
     }
 
     @Override
-    public Class type() {
+    public String type() {
         // TODO EQL
         return whenThenPairs.get(0).getValue().type();
     }

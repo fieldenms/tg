@@ -8,9 +8,9 @@ import ua.com.fielden.platform.entity.AbstractEntity;
  * @author TG Team
  *
  */
-public abstract class AbstractPropInfo<T, PARENT extends AbstractEntity<?>> implements IResolvable<T> {
+public abstract class AbstractPropInfo implements IResolvable {
     private final String name;
-    private final EntityInfo<PARENT> parent;
+    private final EntityInfo parent;
 
     /**
      * Principal constructor.
@@ -18,7 +18,7 @@ public abstract class AbstractPropInfo<T, PARENT extends AbstractEntity<?>> impl
      * @param name - property yield alias or property name.
      * @param parent - property holder structure, which represents either query source or query-able entity of type <code>PARENT</code>.
      */
-    public AbstractPropInfo(final String name, final EntityInfo<PARENT> parent) {
+    public AbstractPropInfo(final String name, final EntityInfo parent) {
         this.name = name;
         this.parent = parent;
         parent.addProp(this);
@@ -28,7 +28,7 @@ public abstract class AbstractPropInfo<T, PARENT extends AbstractEntity<?>> impl
         return name;
     }
 
-    protected EntityInfo<PARENT> getParent() {
+    protected EntityInfo getParent() {
         return parent;
     }
     

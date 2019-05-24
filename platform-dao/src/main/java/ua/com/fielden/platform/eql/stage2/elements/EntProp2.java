@@ -3,9 +3,9 @@ package ua.com.fielden.platform.eql.stage2.elements;
 public class EntProp2 extends AbstractElement2 implements ISingleOperand2 {
     private final String name;
     private final IQrySource2 source;
-    private final Class<?> type;
+    private final String type;
 
-    public EntProp2(final String name, final IQrySource2 source, final Class<?> type, final int contextId) {
+    public EntProp2(final String name, final IQrySource2 source, final String type, final int contextId) {
         super(contextId);
         this.name = name;
         this.source = source;
@@ -27,7 +27,7 @@ public class EntProp2 extends AbstractElement2 implements ISingleOperand2 {
     }
 
     @Override
-    public Class<?> type() {
+    public String type() {
         return type;
     }
 

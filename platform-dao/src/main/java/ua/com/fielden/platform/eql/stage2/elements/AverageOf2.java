@@ -11,7 +11,7 @@ public class AverageOf2 extends SingleOperandFunction2 {
     }
 
     @Override
-    public Class type() {
-        return BigDecimal.class;
+    public String type() {
+        return BigDecimal.class.getName();
     }
 }

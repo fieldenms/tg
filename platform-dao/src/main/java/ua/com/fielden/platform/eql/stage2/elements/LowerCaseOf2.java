@@ -6,7 +6,7 @@ public class LowerCaseOf2 extends SingleOperandFunction2 {
     }
 
     @Override
-    public Class type() {
-        return String.class;
+    public String type() {
+        return String.class.getName();
     }
 }

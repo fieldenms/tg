@@ -1,6 +1,6 @@
 package ua.com.fielden.platform.eql.stage1.elements.sources;
 
-import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.eql.meta.EntityInfo;
 import ua.com.fielden.platform.eql.stage1.elements.ITransformableToS2;
 import ua.com.fielden.platform.eql.stage2.elements.IQrySource2;
 
@@ -18,5 +18,5 @@ public interface IQrySource1<S2 extends IQrySource2> extends ITransformableToS2<
      * 
      * @return
      */
-    Class<? extends AbstractEntity<?>> sourceType();
+    EntityInfo sourceType();
 }

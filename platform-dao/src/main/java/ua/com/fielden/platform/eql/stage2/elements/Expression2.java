@@ -66,9 +66,9 @@ public class Expression2 implements ISingleOperand2 {
     }
 
     @Override
-    public Class type() {
+    public String type() {
         // TODO EQL
-        return BigDecimal.class;
+        return BigDecimal.class.getName();
     }
 
     public ISingleOperand2 getFirst() {

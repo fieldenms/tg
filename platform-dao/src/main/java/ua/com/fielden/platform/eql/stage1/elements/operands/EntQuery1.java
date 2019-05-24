@@ -33,13 +33,13 @@ public class EntQuery1 extends AbstractElement1 implements ISingleOperand1<EntQu
     public final GroupBys1 groups;
     public final OrderBys1 orderings;
 
-    public final Class<? extends AbstractEntity<?>> resultType;
+    public final String resultType;
     public final QueryCategory category;
 
     public final boolean filterable;
     public final IRetrievalModel fetchModel;
 
-    public EntQuery1(final EntQueryBlocks queryBlocks, final Class resultType, final QueryCategory category, //
+    public EntQuery1(final EntQueryBlocks queryBlocks, final String resultType, final QueryCategory category, //
             final boolean filterable, final IRetrievalModel fetchModel, final int contextId) {
        super(contextId);
        this.filterable = filterable;
@@ -65,7 +65,7 @@ public class EntQuery1 extends AbstractElement1 implements ISingleOperand1<EntQu
         return category == SOURCE_QUERY;
     }
 
-    public Class<? extends AbstractEntity<?>> type() {
+    public String type() {
         return resultType;
     }
 

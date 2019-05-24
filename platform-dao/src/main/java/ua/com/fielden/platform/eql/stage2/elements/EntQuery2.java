@@ -11,16 +11,16 @@ public class EntQuery2 implements ISingleOperand2 {
     private final Yields2 yields;
     private final GroupBys2 groups;
     private final OrderBys2 orderings;
-    private final Class<? extends AbstractEntity<?>> resultType;
+    private final String resultType;
     private final QueryCategory category;
     private final IRetrievalModel fetchModel;
 
     @Override
-    public Class<? extends AbstractEntity<?>> type() {
+    public String type() {
         return resultType;
     }
 
-    public EntQuery2(final EntQueryBlocks2 queryBlocks, final Class<? extends AbstractEntity<?>> resultType, final QueryCategory category, final IRetrievalModel fetchModel) {
+    public EntQuery2(final EntQueryBlocks2 queryBlocks, final String resultType, final QueryCategory category, final IRetrievalModel fetchModel) {
         this.category = category;
         this.sources = queryBlocks.getSources();
         this.conditions = queryBlocks.getConditions();

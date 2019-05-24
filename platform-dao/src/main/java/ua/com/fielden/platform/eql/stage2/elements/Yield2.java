@@ -18,7 +18,7 @@ public class Yield2 {
         this(operand, alias, false);
     }
 
-    public Class javaType() {
+    public String javaType() {
         return operand.type();
     }
 

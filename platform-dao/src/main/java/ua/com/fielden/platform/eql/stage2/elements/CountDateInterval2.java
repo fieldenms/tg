@@ -14,7 +14,7 @@ public class CountDateInterval2 extends TwoOperandsFunction2 {
     }
 
     @Override
-    public Class type() {
-        return BigDecimal.class;
+    public String type() {
+        return BigDecimal.class.getName();
     }
 }

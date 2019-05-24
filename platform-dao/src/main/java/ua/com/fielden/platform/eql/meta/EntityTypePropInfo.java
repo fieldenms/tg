@@ -10,8 +10,8 @@ import ua.com.fielden.platform.entity.AbstractEntity;
  * @param <T>
  * @param <PARENT>
  */
-public class EntityTypePropInfo<T extends AbstractEntity<?>, PARENT extends AbstractEntity<?>> extends AbstractPropInfo<T, PARENT> {
-    private final EntityInfo<T> propEntityInfo;
+public class EntityTypePropInfo extends AbstractPropInfo {
+    private final EntityInfo propEntityInfo;
 
     /**
      * Principal constructor.
@@ -20,28 +20,28 @@ public class EntityTypePropInfo<T extends AbstractEntity<?>, PARENT extends Abst
      * @param propEntityInfo -- entity info for property.  
      * @param parent - property holder structure, which represents either query source or query-able entity of type <code>PARENT</code>.
      */
-    public EntityTypePropInfo(final String name, final EntityInfo<T> propEntityInfo, final EntityInfo<PARENT> parent) {
+    public EntityTypePropInfo(final String name, final EntityInfo propEntityInfo, final EntityInfo parent) {
         super(name, parent);
         this.propEntityInfo = propEntityInfo;
     }
 
-    protected EntityInfo<T> getPropEntityInfo() {
+    protected EntityInfo getPropEntityInfo() {
         return propEntityInfo;
     }
 
     @Override
-    public AbstractPropInfo<?, ?> resolve(final String dotNotatedSubPropName) {
+    public AbstractPropInfo resolve(final String dotNotatedSubPropName) {
         return dotNotatedSubPropName != null ? getPropEntityInfo().resolve(dotNotatedSubPropName) : this;
     }
 
     @Override
-    public Class<T> javaType() {
+    public String javaType() {
         return propEntityInfo.javaType();
     }
 
     @Override
     public String toString() {
-        return super.toString() + ": " + propEntityInfo.javaType().getSimpleName();
+        return super.toString() + ": " + propEntityInfo.javaType();//.getSimpleName();
     }
 
     @Override
