@@ -393,7 +393,12 @@ Polymer({
                 this._selectedSubmodule = this._subroute.path;
             }
         }
-     },
+        // Delay service worker registration as later as possible to enable smooth first time loading of application (after new application version has been deployed).
+        // Heavyweight caching of static resources will be actioned in 'install' event.
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('/sw.js');
+        }
+    },
 
     //Entity master related functions
 

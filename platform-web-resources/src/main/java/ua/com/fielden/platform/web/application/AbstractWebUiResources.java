@@ -15,11 +15,11 @@ import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.web.app.ISourceController;
 import ua.com.fielden.platform.web.app.IWebUiConfig;
 import ua.com.fielden.platform.web.factories.webui.AppIndexResourceFactory;
+import ua.com.fielden.platform.web.factories.webui.ApplicationStartupResourcesComponentResourceFactory;
 import ua.com.fielden.platform.web.factories.webui.CentreComponentResourceFactory;
 import ua.com.fielden.platform.web.factories.webui.CentreResourceFactory;
 import ua.com.fielden.platform.web.factories.webui.CriteriaResourceFactory;
 import ua.com.fielden.platform.web.factories.webui.CustomViewResourceFactory;
-import ua.com.fielden.platform.web.factories.webui.ApplicationStartupResourcesComponentResourceFactory;
 import ua.com.fielden.platform.web.factories.webui.EgiExampleResourceFactory;
 import ua.com.fielden.platform.web.factories.webui.EntityAutocompletionResourceFactory;
 import ua.com.fielden.platform.web.factories.webui.EntityResourceFactory;
@@ -29,6 +29,7 @@ import ua.com.fielden.platform.web.factories.webui.MainWebUiComponentResourceFac
 import ua.com.fielden.platform.web.factories.webui.MasterComponentResourceFactory;
 import ua.com.fielden.platform.web.factories.webui.MasterTestsComponentResourceFactory;
 import ua.com.fielden.platform.web.factories.webui.SerialisationTestResourceFactory;
+import ua.com.fielden.platform.web.factories.webui.ServiceWorkerResourceFactory;
 import ua.com.fielden.platform.web.factories.webui.TgReflectorComponentResourceFactory;
 import ua.com.fielden.platform.web.factories.webui.WebUiPreferencesResourceFactory;
 import ua.com.fielden.platform.web.interfaces.IDeviceProvider;
@@ -117,6 +118,7 @@ public abstract class AbstractWebUiResources extends Application {
 
         // Attach main application resource.
         router.attach("/", new AppIndexResourceFactory(sourceController, webApp, userProvider, deviceProvider));
+        router.attach("/sw.js", new ServiceWorkerResourceFactory(sourceController, deviceProvider));
         router.attach("/app/tg-app-config.js", new WebUiPreferencesResourceFactory(sourceController, deviceProvider));
         router.attach("/app/tg-app.js", new MainWebUiComponentResourceFactory(sourceController, deviceProvider));
         // type meta info resource
