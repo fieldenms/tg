@@ -1,4 +1,3 @@
-import '/resources/polymer/@polymer/polymer/polymer-legacy.js';
 import '/resources/polymer/@polymer/iron-flex-layout/iron-flex-layout.js';
 import '/resources/polymer/@polymer/iron-flex-layout/iron-flex-layout-classes.js';
 import '/resources/polymer/@polymer/iron-icon/iron-icon.js';
@@ -9,10 +8,10 @@ import '/resources/polymer/@polymer/paper-input/paper-input-char-counter.js';
 
 import {TgReflector} from '/app/tg-reflector.js';
 
-import {html} from '/resources/polymer/@polymer/polymer/lib/utils/html-tag.js';
+import {PolymerElement, html} from '/resources/polymer/@polymer/polymer/polymer-element.js';
 
-import {TgTooltipBehavior} from '/resources/components/tg-tooltip-behavior.js';
-import {TgElementSelectorBehavior} from '/resources/components/tg-element-selector-behavior.js';
+//import {TgTooltipBehavior} from '/resources/components/tg-tooltip-behavior.js';
+//import {TgElementSelectorBehavior} from '/resources/components/tg-element-selector-behavior.js';
 import { tearDownEvent, allDefined } from '/resources/reflection/tg-polymer-utils.js';
 
 export function createEditorTemplate (additionalTemplate, customPrefixAttribute, customInput, inputLayer, customIconButtons, propertyAction) {
@@ -126,378 +125,376 @@ export function createEditorTemplate (additionalTemplate, customPrefixAttribute,
         </template>`;
 };
 
-export const TgEditorBehaviorImpl = {
+export class TgEditorBehavior extends PolymerElement {
 
-    properties: {
-        /////////////////////////////////////////////////////////////////////////////////////////////////////////
-        ////////////////////////////////////////// EXTERNAL PROPERTIES //////////////////////////////////////////
-        /////////////////////////////////////////////////////////////////////////////////////////////////////////
-        // These mandatory properties must be specified in attributes, when constructing <tg-*-editor>s.       //
-        // No default values are allowed in this case.														   //
-        /////////////////////////////////////////////////////////////////////////////////////////////////////////
-        
-        /**
-         * The title for this editor. It normally appears as the caption for the editor.
-         */
-        propTitle: {
-            type: String
-        },
-
-        /**
-         * The description for this editor.
-         */
-        propDesc: {
-            type: String
-        },
-
-        /**
-        * True if the input is in focus, otherwise false.
-        */
-        focused: {
-            readOnly: true,
-            type: Boolean,
-            value: false,
-            notify: true
-        },
-
-        /**
-         * This published property specifies to what binding entity this editor should be bound.
-         */
-        entity: {
-            type: Object,
-            observer: '_entityChanged',
-            notify: true
-        },
-        
-        /**
-         * The entity that contains original binding values. This should be used to identify whether _editingValue is modified from original _editingValue during editing.
-         */
-        originalEntity: {
-            type: Object,
-            observer: '_originalEntityChanged',
-            notify: true
-        },
-        
-        /**
-         * This published property specifies to what property this editor should be bound.
-         */
-        propertyName: {
-            type: String
-        },
-
-        /**
-         * This callback should be used for custom action after the '_acceptedValue' has been changed (for e.g. validation).
-         */
-        validationCallback: {
-            type: Function
-        },
-        
-        /**
-         * The state for the editor (governed by external hosts, that hold this editor).
-         *
-         * The editor can be only in two states: EDIT and VIEW. The state EDIT
-         * allows user to edit property.
-         *
-         * The state VIEW allows user to review the property.
-         *
-         * The initial state can be VIEW or EDIT.
-         */
-        currentState: {
-            type: String
-            // TODO why is this needed??? reflectToAttribute: true
-        },
-        
-        /**
-         * The action object that represents an action to be embedded as an icon button inside this editor.
-         *
-         * If the action attribute is 'null' -- no action button should be displayed.
-         *
-         * Action object and 'null' are the only permitted values.
-         */
-        action: {
-            type: Object
-        },
-
-        ////////////////////////////////////// SUBSECTION: NOT MANDATORY PROPERTIES //////////////////////////////////////
-        /**
-         * Controls rendering of debug information for an entity editor. 
-         */
-        debug: {
-            type: Boolean
-        },
-        
-        /**
-         * This modif holder is needed for lazy value conversion.
-         */
-        previousModifiedPropertiesHolder: {
-            type: Object
-        },
-
-        /////////////////////////////////////////////////////////////////////////////////////////////////////////
-        //////////////////////////////////////////// INNER PROPERTIES ///////////////////////////////////////////
-        /////////////////////////////////////////////////////////////////////////////////////////////////////////
-        // These properties derive from other properties and are considered as 'private' -- need to have '_'   //
-        //   prefix and default values specified in 'value' specificator of the property definition (or,       //
-        //   alternatively, computing function needs to be specified). 									       //
-        /////////////////////////////////////////////////////////////////////////////////////////////////////////
-        
-        _hasLayer:{
-            type: Boolean
-        },
-
-        _editorKind:{
-            type: String
-        },
-
-        _disabled: {
-            type: Boolean,
-            computed: '_isDisabled(currentState, entity, propertyName)',
-            observer: '_disabledChanged'
-        },
-
-        _invalid: {
-            type: Boolean,
-            value: false
-        },
-        
-        /**
-         * The message about the editor-specific validation. If 'null' -- the validation was successfull.
-         */
-        _editorValidationMsg: {
-            type: String,
-            value: null,
-            observer: '_editorValidationMsgChanged'
-        },
-        
-        /**
-         * Returns 'true' in case where 'entity', 'propertyName' and '_editorValidationMsg' have been already defined, 'false' otherwise.
-         */
-        _validationComponentsDefined: {
-            type: Boolean,
-            value: false
-        },
-        
-        /**
-         * Indicates whether 'refresh cycle' has been initiated, which means that new entity has been arrived.  
-         *   After the '_editingValue' has been populated -- this value should be immediately committed, but 
-         *   without additional validation.
-         *
-         * 'true' and 'false' are the only permitted values.
-         */
-        _refreshCycleStarted: {
-            type: Boolean, 
-            value: false
-        },
-        
-        /**
-         * The validation error message.
-         */
-        _error: {
-            type: String,
-            value: null
-        },
-
-        /////////////////////////////////////////////////////////////////////////////////////////////////////////
-        //////////////////////////////// INNER PROPERTIES, THAT GOVERN CHILDREN /////////////////////////////////
-        /////////////////////////////////////////////////////////////////////////////////////////////////////////
-        // These properties derive from other properties and are considered as 'private' -- need to have '_'   //
-        //   prefix. 																				           //
-        // Also, these properties are designed to be bound to children element properties -- it is necessary to//
-        //   populate their default values in ready callback (to have these values populated in children)!     //
-        /////////////////////////////////////////////////////////////////////////////////////////////////////////
-        
-        /**
-         * The value being edited (main editing capability). If there are other editing views in this editor -- maintain their editingValues separately.
-         *
-         * This value is of the data type for editing (main editing capability), most likely String.
-         */
-        _editingValue: {
-            type: String,
-            observer: '_editingValueChanged'
-        },
-        
-        /**
-         * The value being committed (main editing capability). If there are other editing views in this editor -- maintain their committedValues separately.
-         *
-         * This value is of the data type for editing (main editing capability), most likely String.
-         */
-        _commValue: {
-            type: String,
-            observer: '_commValueChanged'
-        },
-        
-        /**
-         * The value being accepted after the editing. The commit can be done using 'TAB off' or 'Enter key pressed'.
-         *
-         * This value is of the data type for concrete component, for e.g. for tg-datetime-picker it is Number, tg-textfield -- String etc.
-         * The type strictly conforms to the type of 'bindTo' attribute.
-         */
-        _acceptedValue: {
-            type: String,
-            observer: '_acceptedValueChanged'
-        },
-        
-        /**
-         * The mouse tap event listener that selectes the text inside input when first time tapped.
-         */
-        _onTap: {
-            type: Function,
-            value: function () {
-                return (function (event) {
-                    if (this.shadowRoot.activeElement !== this.decoratedInput()) {
-                        this.decoratedInput().select();
-                        tearDownEvent(event);
-                    }
-                }).bind(this);
-            }
-        },
-        
-        /**
-         * This event is invoked after the component gained focus.
-         *
-         * Designated to be bound to child elements.
-         */
-        _onFocus: {
-            type: Function,
-            value: function () {
-                return (function (event) {
-                    this._setFocused(true);
-                }).bind(this);
-            }
-        },
+    static get properties() {
+        return {
+            /////////////////////////////////////////////////////////////////////////////////////////////////////////
+            ////////////////////////////////////////// EXTERNAL PROPERTIES //////////////////////////////////////////
+            /////////////////////////////////////////////////////////////////////////////////////////////////////////
+            // These mandatory properties must be specified in attributes, when constructing <tg-*-editor>s.       //
+            // No default values are allowed in this case.														   //
+            /////////////////////////////////////////////////////////////////////////////////////////////////////////
+            
+            /**
+             * The title for this editor. It normally appears as the caption for the editor.
+             */
+            propTitle: {
+                type: String
+            },
     
-        /**
-         * This event is invoked after the component lost focus.
-         *
-         * Designated to be bound to child elements.
-         */
-        _outFocus: {
-            type: Function,
-            value: function () {
-                return (function (event) {
-                    this._setFocused(false);
-                }).bind(this);
-            }
-        },
-        
-        /**
-         * This event is invoked after the component has been changed (it is invoked after the focus was lost). Provides value commit behaviour.
-         *
-         * Designated to be bound to child elements.
-         */
-        _onChange: {
-            type: Function,
-            value: function () {
-                return (function (event) {
-                    // console.debug("_onChange:", event);
-                    if (this['_onChange_handler']) {
-                        this.cancelAsync(this['_onChange_handler']);
-                    }
-                    this['_onChange_handler'] = this.async(function() {
-                        this.commitIfChanged();
-                    }.bind(this), 50);
-                }).bind(this);
+            /**
+             * The description for this editor.
+             */
+            propDesc: {
+                type: String
+            },
+    
+            /**
+            * True if the input is in focus, otherwise false.
+            */
+            focused: {
+                readOnly: true,
+                type: Boolean,
+                value: false,
+                notify: true
+            },
+    
+            /**
+             * This published property specifies to what binding entity this editor should be bound.
+             */
+            entity: {
+                type: Object,
+                observer: '_entityChanged',
+                notify: true
+            },
+            
+            /**
+             * The entity that contains original binding values. This should be used to identify whether _editingValue is modified from original _editingValue during editing.
+             */
+            originalEntity: {
+                type: Object,
+                observer: '_originalEntityChanged',
+                notify: true
+            },
+            
+            /**
+             * This published property specifies to what property this editor should be bound.
+             */
+            propertyName: {
+                type: String
+            },
+    
+            /**
+             * This callback should be used for custom action after the '_acceptedValue' has been changed (for e.g. validation).
+             */
+            validationCallback: {
+                type: Function
+            },
+            
+            /**
+             * The state for the editor (governed by external hosts, that hold this editor).
+             *
+             * The editor can be only in two states: EDIT and VIEW. The state EDIT
+             * allows user to edit property.
+             *
+             * The state VIEW allows user to review the property.
+             *
+             * The initial state can be VIEW or EDIT.
+             */
+            currentState: {
+                type: String
+                // TODO why is this needed??? reflectToAttribute: true
+            },
+            
+            /**
+             * The action object that represents an action to be embedded as an icon button inside this editor.
+             *
+             * If the action attribute is 'null' -- no action button should be displayed.
+             *
+             * Action object and 'null' are the only permitted values.
+             */
+            action: {
+                type: Object
+            },
+    
+            ////////////////////////////////////// SUBSECTION: NOT MANDATORY PROPERTIES //////////////////////////////////////
+            /**
+             * Controls rendering of debug information for an entity editor. 
+             */
+            debug: {
+                type: Boolean
+            },
+            
+            /**
+             * This modif holder is needed for lazy value conversion.
+             */
+            previousModifiedPropertiesHolder: {
+                type: Object
+            },
+    
+            /////////////////////////////////////////////////////////////////////////////////////////////////////////
+            //////////////////////////////////////////// INNER PROPERTIES ///////////////////////////////////////////
+            /////////////////////////////////////////////////////////////////////////////////////////////////////////
+            // These properties derive from other properties and are considered as 'private' -- need to have '_'   //
+            //   prefix and default values specified in 'value' specificator of the property definition (or,       //
+            //   alternatively, computing function needs to be specified). 									       //
+            /////////////////////////////////////////////////////////////////////////////////////////////////////////
+            
+            _hasLayer:{
+                type: Boolean
+            },
+    
+            _editorKind:{
+                type: String
+            },
+    
+            _disabled: {
+                type: Boolean,
+                computed: '_isDisabled(currentState, entity, propertyName)',
+                observer: '_disabledChanged'
+            },
+    
+            _invalid: {
+                type: Boolean,
+                value: false
+            },
+            
+            /**
+             * The message about the editor-specific validation. If 'null' -- the validation was successfull.
+             */
+            _editorValidationMsg: {
+                type: String,
+                value: null,
+                observer: '_editorValidationMsgChanged'
+            },
+            
+            /**
+             * Returns 'true' in case where 'entity', 'propertyName' and '_editorValidationMsg' have been already defined, 'false' otherwise.
+             */
+            _validationComponentsDefined: {
+                type: Boolean,
+                value: false
+            },
+            
+            /**
+             * Indicates whether 'refresh cycle' has been initiated, which means that new entity has been arrived.  
+             *   After the '_editingValue' has been populated -- this value should be immediately committed, but 
+             *   without additional validation.
+             *
+             * 'true' and 'false' are the only permitted values.
+             */
+            _refreshCycleStarted: {
+                type: Boolean, 
+                value: false
+            },
+            
+            /**
+             * The validation error message.
+             */
+            _error: {
+                type: String,
+                value: null
+            },
+    
+            /////////////////////////////////////////////////////////////////////////////////////////////////////////
+            //////////////////////////////// INNER PROPERTIES, THAT GOVERN CHILDREN /////////////////////////////////
+            /////////////////////////////////////////////////////////////////////////////////////////////////////////
+            // These properties derive from other properties and are considered as 'private' -- need to have '_'   //
+            //   prefix. 																				           //
+            // Also, these properties are designed to be bound to children element properties -- it is necessary to//
+            //   populate their default values in ready callback (to have these values populated in children)!     //
+            /////////////////////////////////////////////////////////////////////////////////////////////////////////
+            
+            /**
+             * The value being edited (main editing capability). If there are other editing views in this editor -- maintain their editingValues separately.
+             *
+             * This value is of the data type for editing (main editing capability), most likely String.
+             */
+            _editingValue: {
+                type: String,
+                observer: '_editingValueChanged'
+            },
+            
+            /**
+             * The value being committed (main editing capability). If there are other editing views in this editor -- maintain their committedValues separately.
+             *
+             * This value is of the data type for editing (main editing capability), most likely String.
+             */
+            _commValue: {
+                type: String,
+                observer: '_commValueChanged'
+            },
+            
+            /**
+             * The value being accepted after the editing. The commit can be done using 'TAB off' or 'Enter key pressed'.
+             *
+             * This value is of the data type for concrete component, for e.g. for tg-datetime-picker it is Number, tg-textfield -- String etc.
+             * The type strictly conforms to the type of 'bindTo' attribute.
+             */
+            _acceptedValue: {
+                type: String,
+                observer: '_acceptedValueChanged'
+            },
+            
+            /**
+             * The mouse tap event listener that selectes the text inside input when first time tapped.
+             */
+            _onTap: {
+                type: Function,
+                value: function () {
+                    return (function (event) {
+                        if (this.shadowRoot.activeElement !== this.decoratedInput()) {
+                            this.decoratedInput().select();
+                            tearDownEvent(event);
+                        }
+                    }).bind(this);
                 }
-        },
+            },
+            
+            /**
+             * This event is invoked after the component gained focus.
+             *
+             * Designated to be bound to child elements.
+             */
+            _onFocus: {
+                type: Function,
+                value: function () {
+                    return (function (event) {
+                        this._setFocused(true);
+                    }).bind(this);
+                }
+            },
         
-        /**
-         * This event is invoked after some key has been pressed. We are interested in 'Enter' key to provide value commit behaviour.
-         *
-         * Designated to be bound to child elements.
-         */
-        _onKeydown: {
-            type: Function,
-            value: function () {
-                return (function (event) {
-                    // console.debug("_onKeydown:", event);
-                    if (event.keyCode === 13) { // 'Enter' has been pressed
-                        this.commitIfChanged();
+            /**
+             * This event is invoked after the component lost focus.
+             *
+             * Designated to be bound to child elements.
+             */
+            _outFocus: {
+                type: Function,
+                value: function () {
+                    return (function (event) {
+                        this._setFocused(false);
+                    }).bind(this);
+                }
+            },
+            
+            /**
+             * This event is invoked after the component has been changed (it is invoked after the focus was lost). Provides value commit behaviour.
+             *
+             * Designated to be bound to child elements.
+             */
+            _onChange: {
+                type: Function,
+                value: function () {
+                    return (function (event) {
+                        // console.debug("_onChange:", event);
+                        if (this['_onChange_handler']) {
+                            this.cancelAsync(this['_onChange_handler']);
+                        }
+                        this['_onChange_handler'] = this.async(function() {
+                            this.commitIfChanged();
+                        }.bind(this), 50);
+                    }).bind(this);
                     }
-                }).bind(this);
+            },
+            
+            /**
+             * This event is invoked after some key has been pressed. We are interested in 'Enter' key to provide value commit behaviour.
+             *
+             * Designated to be bound to child elements.
+             */
+            _onKeydown: {
+                type: Function,
+                value: function () {
+                    return (function (event) {
+                        // console.debug("_onKeydown:", event);
+                        if (event.keyCode === 13) { // 'Enter' has been pressed
+                            this.commitIfChanged();
+                        }
+                    }).bind(this);
+                }
+            },
+            
+            /**
+             * This event is invoked after some key has been pressed. We are interested in 'Enter' key to provide value commit behaviour.
+             *
+             * Designated to be bound to child elements.
+             */
+            _onInput: {
+                type: Function,
+                value: function () {
+                    return (function (event) {
+                        // console.debug("_onInput:", event);
+                    }).bind(this);
+                }
             }
-        },
-        
-        /**
-         * This event is invoked after some key has been pressed. We are interested in 'Enter' key to provide value commit behaviour.
-         *
-         * Designated to be bound to child elements.
-         */
-        _onInput: {
-            type: Function,
-            value: function () {
-                return (function (event) {
-                    // console.debug("_onInput:", event);
-                }).bind(this);
-            }
-        }
-        
-        /* The following functions will potentially be needed. In this case, use the appropriate form of 'function-property' definition (to be able to bind to child elements). */
-
-        /* _onInput: function (event) {
-            console.log("_onInput:", event);
-        },
-        
-        _onBlur: function (event) {
-            console.log("focus lost: _onBlur:", event);
-        },
-        
-        _onFocus: function (event) {
-            console.log("focus got: _onFocus:", event);
-        }, */
-    },
-
-    hostAttributes: {
-        'tg-editor': true
-    },
+            
+            /* The following functions will potentially be needed. In this case, use the appropriate form of 'function-property' definition (to be able to bind to child elements). */
     
-    observers: [
-        '_recordDefinition(entity, propertyName, _editorValidationMsg)',
-        '_identifyModification(_editingValue, originalEntity)',
-        '_editedPropsChanged(entity.@editedProps)'
-    ],
+            /* _onInput: function (event) {
+                console.log("_onInput:", event);
+            },
+            
+            _onBlur: function (event) {
+                console.log("focus lost: _onBlur:", event);
+            },
+            
+            _onFocus: function (event) {
+                console.log("focus got: _onFocus:", event);
+            }, */
+        };
+    }
 
-    created: function () {
+    static get observers() {
+        return [
+            '_recordDefinition(entity, propertyName, _editorValidationMsg)',
+            '_identifyModification(_editingValue, originalEntity)',
+            '_editedPropsChanged(entity.@editedProps)'
+        ]
+    }
+
+    constructor () {
+        super();
         this._reflector = new TgReflector();
         //////////// INNER PROPERTIES, THAT GOVERN CHILDREN: default values population ////////////
         this._editingValue = this._defaultEditingValue();
         // The following 'commit' call synchronises '_commValue' with '_editingValue' after default editing value population.
         //  Please, also note that this call also triggers '_acceptedValue' population, as per '_commValueChanged' method.
         this.commit();
-    },
+    }
 
-    ready: function () {
-        var self = this;
+    ready () {
+        super.ready();
+        const self = this;
         this.decorator().labelVisible = false;
-    },
+        this._ensureAttribute('tg-editor', true);
+        if (!this._editorKind) {
+            this._editorKind = 'NOT_MULTILINETEXT_OR_BOOLEAN';
+        }
+    }
 
-    attached: function (){
-        this.async((function () {
-            if (!this._editorKind) {
-                this._editorKind = 'NOT_MULTILINETEXT_OR_BOOLEAN';
-            }
-        }).bind(this), 1);
-    },
-
-    isInWarning: function () {
+    isInWarning () {
         return this.$.decorator.classList.contains("warning");
-    },
+    }
 
-    reflector: function () {
+    reflector () {
         return this._reflector;
-    },
+    }
 
-    decorator: function () {
+    decorator () {
         return this.$.decorator;
-    },
+    }
     
-    _isMultilineText: function (editorKind) {
+    _isMultilineText (editorKind) {
         return 'MULTILINE_TEXT' === editorKind;
-    },
-    
+    }
+
     /**
      * Calculates the style for container's label.
      */
-    _calcLabelStyle: function (editorKind, _disabled) {
+    _calcLabelStyle (editorKind, _disabled) {
         var style = "";
         if ("BOOLEAN" === editorKind) {
             style += "visibility: hidden;"
@@ -508,39 +505,39 @@ export const TgEditorBehaviorImpl = {
             style += "opacity: 1;"
         }
         return style;
-    },
+    }
     
     /**
      * Calculates the style for decorator inner parts, based on '_disabled' property.
      */
-    _calcDecoratorPartStyle: function (_disabled) {
+    _calcDecoratorPartStyle (_disabled) {
         var style = "min-width: 0px;";
         if (_disabled === true) {
             style += "opacity: 1;"
         }
         return style;
-    },
+    }
 
     /**
      * The observer to the '_disabled' property, which maintains appropriately the class list of the decorator (regarding the class 'decorator-disabled').
      */
-    _disabledChanged: function (newValue, oldValue) {
+    _disabledChanged (newValue, oldValue) {
         if (newValue === true) {
             this.$.decorator.classList.add("decorator-disabled");
         } else {
             this.$.decorator.classList.remove("decorator-disabled");
         }
         this.updateStyles();
-    },
+    }
     
-    _recordDefinition: function (entity, propertyName, _editorValidationMsg) {
+    _recordDefinition (entity, propertyName, _editorValidationMsg) {
         if (this._validationComponentsDefined === false) {
             this._bindMessages(entity, propertyName, _editorValidationMsg);
             this._validationComponentsDefined = true;
         }
-    },
+    }
     
-    _identifyModification: function (_editingValue, originalEntity) {
+    _identifyModification (_editingValue, originalEntity) {
         /*if (this.reflector().isEntity(this.entity)) {
             var _originalEditingValue = originalEntity ? this.convertToString(this.reflector().getBindingValue.bind(this.reflector())(originalEntity, this.propertyName)) : _editingValue;
             // console.debug('_bindingEntity (_identifyModification) self = ', this.is, '_editingValue', _editingValue, '_originalEditingValue', _originalEditingValue);
@@ -558,19 +555,19 @@ export const TgEditorBehaviorImpl = {
             }
             this.set('entity.@editedProps', newEditedProps);
         }*/
-    },
+    }
     
-    _editedPropsChanged: function (editedProps) {
-    },
-    
+    _editedPropsChanged (editedProps) {
+    }
+
     /**
      * This function returns the tooltip for this editor.
      */
-    _getTooltip: function (value) {
+    _getTooltip (value) {
         var tooltip = this._formatTooltipText(value);
         tooltip += this.propDesc && (tooltip ? '<br><br>' : '') + this.propDesc;
         return tooltip;
-    },
+    }
     
     /**
      * This method returns a default value for '_editingValue', which is used 
@@ -578,18 +575,18 @@ export const TgEditorBehaviorImpl = {
      *
      * Please, override this method in case when empty string is not applicable (for example in boolean editor 'true' or 'false' values are applicable only).
      */
-    _defaultEditingValue: function () {
+    _defaultEditingValue () {
         return '';
-    },
+    }
     
-    decoratedInput: function () {
+    decoratedInput () {
         return this.$.input;
-    },
+    }
     
     /**
      * Returns 'true' if the editor is disabled, 'false' otherwise (based on the editor's state and 'editable' meta-state for the property).
      */
-    _isDisabled: function (currentState, bindingEntity, propertyName) {
+    _isDisabled (currentState, bindingEntity, propertyName) {
         if (!allDefined(arguments)) {
             return true;
         } else if (currentState === 'VIEW') {
@@ -603,14 +600,14 @@ export const TgEditorBehaviorImpl = {
         } else {
             throw "Unsupported state exception: " + currentState + ".";
         }
-    },
+    }
 
     /**
      * This method is called during editing.
      *
      * IMPORTANT: please do override this method if needed, but only with this.super([oldValue, newValue]); invoked!
      */
-    _editingValueChanged: function (newValue, oldValue) {
+    _editingValueChanged (newValue, oldValue) {
         // console.debug("_editingValueChanged", oldValue, newValue, "_refreshCycleStarted ==", this._refreshCycleStarted);
         
         // TODO provide alternative?
@@ -624,21 +621,21 @@ export const TgEditorBehaviorImpl = {
         if (this._refreshCycleStarted === true) {
             this.commit();
         }
-    },
+    }
     
-    _originalEntityChanged: function (newValue, oldValue) {
+    _originalEntityChanged (newValue, oldValue) {
         if (this.reflector().isEntity(newValue)) {
             // lazy conversion of original property value performs here (previusly it was done for all properties inside tg-entity-binder-behavior)
             this.reflector().convertOriginalPropertyValue(newValue, this.propertyName, newValue["@@origin"]);
         }
-    },
+    }
 
     /**
      * This method is called once the entity was changed from the outside of the component.
      *
      * IMPORTANT: please do override this method if needed, but only with this.super([oldValue, newValue]); invoked!
      */
-    _entityChanged: function (newValue, oldValue) {
+    _entityChanged (newValue, oldValue) {
         // console.log("_entityChanged", newValue, oldValue, "still _refreshCycleStarted ==", this._refreshCycleStarted);
         if (this.reflector().isEntity(newValue)) {
             // IMPORTANT: Initiate 'refresh cycle' -- in new logic refresh cycle is also mandatory after 'validation' has been performed,
@@ -678,38 +675,38 @@ export const TgEditorBehaviorImpl = {
             this._updateMessagesForEntity(newValue);
         }
         this._tryFireErrorMsg(this._error);
-    },
+    }
     
-    _updateMessagesForEntity: function (newEntity) {
+    _updateMessagesForEntity (newEntity) {
         if (this._validationComponentsDefined === true) {
             this._bindMessages(newEntity, this.propertyName, this._editorValidationMsg);
         }
-    },
+    }
     
-    _assignConvertedValue: function (propValue) {
+    _assignConvertedValue (propValue) {
         var newEditingValue = this.convertToString(propValue);
         if (newEditingValue === this._editingValue && (this._refreshCycleStarted === true) ) {
             this._refreshCycleStarted = false;
         }
         this._editingValue = newEditingValue;
-    },
+    }
     
-    assignValue: function (entity, propertyName, getPropertyValue) {
+    assignValue (entity, propertyName, getPropertyValue) {
         var convertedValue = getPropertyValue(entity, propertyName);
         this._assignConvertedValue(convertedValue);
-    },
+    }
     
-    assignConcreteValue: function (value, converter) {
+    assignConcreteValue (value, converter) {
         var convertedValue = converter(value);
         this._assignConvertedValue(convertedValue);
-    },
+    }
 
     /**
      * This method is called once the the accepted value was changed after the editor has commited its value.
      *
      * IMPORTANT: please do not override this method.
      */
-    _commValueChanged: function (newValue, oldValue) {
+    _commValueChanged (newValue, oldValue) {
         // console.log("_commValueChanged", oldValue, newValue, "_refreshCycleStarted ==", this._refreshCycleStarted);
         try {
             this._acceptedValue = this.convertFromString(newValue);
@@ -718,7 +715,7 @@ export const TgEditorBehaviorImpl = {
             console.log("_commValueChanged catched", error, this);
             this._editorValidationMsg = error;
         }
-    },
+    }
 
     /**
      * This method is called once the the accepted value was changed after the editor has commited its value.
@@ -726,7 +723,7 @@ export const TgEditorBehaviorImpl = {
      * IMPORTANT: please do not override this method. This method have some additional customisation points:
      * _shouldInvokeValidation() and _skipValidationAction().
      */
-    _acceptedValueChanged: function (newValue, oldValue) {
+    _acceptedValueChanged (newValue, oldValue) {
         // console.log("_acceptedValueChanged", oldValue, newValue, "_refreshCycleStarted ==", this._refreshCycleStarted);
 
         if (this._refreshCycleStarted) {
@@ -747,14 +744,14 @@ export const TgEditorBehaviorImpl = {
                 }
             }
         }
-    },
+    }
     
     /**
      * Commits recently edited value (_editingValue) skipping validation cycle.
      *
      * This method performs all editor-driven approximations, commits value to _commValue, _acceptedValue and into binding entity that is bound into this editor.
      */
-    commitWithoutValidation: function () {
+    commitWithoutValidation () {
         // turn validation off
         const _shouldInvokeValidation = this._shouldInvokeValidation;
         this._shouldInvokeValidation = function () { return false; };
@@ -762,40 +759,40 @@ export const TgEditorBehaviorImpl = {
         this.commit();
         // turn validation on again
         this._shouldInvokeValidation = _shouldInvokeValidation;
-    },
+    }
     
     /**
      * Please override this method in case when no validation should occur after _acceptedValueChanged.
      */
-    _shouldInvokeValidation: function () {
+    _shouldInvokeValidation () {
         return true;
-    },
+    }
 
     /**
      * Please override this method in case when some custom action is needed when _shouldInvokeValidation() returns 'false' after _acceptedValueChanged.
      */
-    _skipValidationAction: function () {},
+    _skipValidationAction () {}
 
     /**
      * Converts the value into string representation (which is used in editing / comm values). Please implement this method in descendant editor.
      */
-    convertToString: function (value) {
+    convertToString (value) {
         // return "" + value;
         throw "Conversion to string is not specified for this editor.";
-    },
+    }
 
     /**
      * Converts the value from string representation (which is used in editing / comm values) into concrete type of this editor component. Please implement this method in descendant editor.
      */
-    convertFromString: function (strValue) {
+    convertFromString (strValue) {
         // return strValue;
         throw "Conversion from string into entity property type is not specified for this editor.";
-    },
+    }
 
     /**
      * Commits editing value.
      */
-    commit: function () {
+    commit () {
         // console.debug('COMMIT: start.');
         if (this.reflector().isEntity(this.entity)) {
             if (typeof this.entity["@" + this.propertyName + "_uppercase"] !== 'undefined') {
@@ -810,24 +807,24 @@ export const TgEditorBehaviorImpl = {
         }
         // console.debug("COMMIT: [", this._editingValue, "] value.");
         this._commValue = this._editingValue;
-    },
-    
+    }
+
     /**
      * Commits editing value '_editingValue' in case if it is changed from previously committed value '_commValue'.
      */
-    commitIfChanged: function () {
+    commitIfChanged () {
         if (!this.reflector().equalsEx(this._editingValue, this._commValue)) {
             this.commit();
         }
-    },
+    }
     
     /**
      * Please, override this method (in descendant editors) in case where some custom '_editingValue' preprocessing is needed. 
      */
-    _commitForDescendants: function () {
-    },
+    _commitForDescendants () {
+    }
     
-    _bindMessages: function (entity, propertyName, _editorValidationMsg) {
+    _bindMessages (entity, propertyName, _editorValidationMsg) {
         // console.log("_bindMessages: ", entity, propertyName, _editorValidationMsg);
         if (_editorValidationMsg !== null) {
             this._bindError(_editorValidationMsg);
@@ -851,61 +848,61 @@ export const TgEditorBehaviorImpl = {
             this._resetMessages();
             this._resetMetaPropDecorations();
         }
-    },
+    }
     
-    _editorValidationMsgChanged: function (newValue, oldValue) {
+    _editorValidationMsgChanged (newValue, oldValue) {
         if (this._validationComponentsDefined === true) {
             this._bindMessages(this.entity, this.propertyName, newValue);
             this._tryFireErrorMsg(newValue);
         }
-    },
+    }
     
-    _tryFireErrorMsg: function (error) {
+    _tryFireErrorMsg (error) {
         if (error) {
             this.fire('editor-error-appeared', this);
         }
-    },
+    }
 
-    _bindUppercase: function (entity, propertyName) {
+    _bindUppercase (entity, propertyName) {
         if (typeof entity["@" + propertyName + "_uppercase"] !== 'undefined') {
             this.decoratedInput().classList.add("upper-case");
         } else {
             this.decoratedInput().classList.remove("upper-case");
         }
         this.updateStyles();
-    },
+    }
 
-    _resetMetaPropDecorations: function () {
+    _resetMetaPropDecorations () {
         this.decorator().classList.remove("required");
         this.updateStyles();
-    },
+    }
 
-    _resetMessages: function () {
+    _resetMessages () {
         this._invalid = false;
         this._error = null;
         this.decorator().classList.remove("warning");
         this.updateStyles();
-    },
+    }
 
-    _bindError: function (msg) {
+    _bindError (msg) {
         this._resetMessages();
         this.decorator().classList.remove("required");
         this.decorator().classList.remove("warning");
         this._invalid = true;
         this._error = msg;
         this.updateStyles();
-    },
-
-    _bindWarning: function (msg) {
+    }
+    
+    _bindWarning (msg) {
         this._resetMessages();
         this.decorator().classList.remove("required");
         this.decorator().classList.add("warning");
         this._invalid = true;
         this._error = "" + msg;
         this.updateStyles();
-    },
+    }
 
-    _bindRequired: function (required) {
+    _bindRequired (required) {
         this._resetMessages();
         if (required) {
             this.setAttribute("required", "");
@@ -915,27 +912,27 @@ export const TgEditorBehaviorImpl = {
             this.decorator().classList.remove("required");
         }
         this.updateStyles();
-    },
+    }
 
     /**
      * Overide this to provide custom formatting for entered text.
      */
-    _formatText: function (value) {
+    _formatText (value) {
         return value;
-    },
+    }
     
         /**
      * Overide this to provide custom formatting for tooltip text.
      */
-    _formatTooltipText: function (value) {
+    _formatTooltipText (value) {
         const formatedText = this._formatText(value);
         return formatedText && "<b>" + formatedText + "</b>";
-    },
+    }
     
     /**
      * Create context holder with custom '@@searchString' property ('tg-entity-editor' and 'tg-entity-search-criteria' only).
      */
-    createContextHolder: function(inputText) {
+    createContextHolder (inputText) {
         var contextHolder = this.reflector().createContextHolder(
             this.requireSelectionCriteria, this.requireSelectedEntities, this.requireMasterEntity,
             this.createModifiedPropertiesHolder, this.getSelectedEntities, this.getMasterEntity
@@ -943,6 +940,4 @@ export const TgEditorBehaviorImpl = {
         this.reflector().setCustomProperty(contextHolder, "@@searchString", inputText);
         return contextHolder;
     }
-};
-
-export const TgEditorBehavior = [TgEditorBehaviorImpl, TgTooltipBehavior, TgElementSelectorBehavior];
+}
