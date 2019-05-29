@@ -7,13 +7,16 @@ import '/resources/components/tg-subheader.js';
 
 import '/app/tg-app-config.js'
 
-import {_removeAllLightDOMChildrenFrom} from '/resources/reflection/tg-polymer-utils.js';
-import {Polymer} from '/resources/polymer/@polymer/polymer/lib/legacy/polymer-fn.js';
-import {html} from '/resources/polymer/@polymer/polymer/lib/utils/html-tag.js';
+import { beforeNextRender } from "/resources/polymer/@polymer/polymer/lib/utils/render-status.js";
+import { Polymer } from '/resources/polymer/@polymer/polymer/lib/legacy/polymer-fn.js';
+import { html } from '/resources/polymer/@polymer/polymer/lib/utils/html-tag.js';
 
 const template = html`
-   <style>
-        :host ::slotted(.hidden-with-subheader) {
+    <style>
+        :host(.debug), :host(.debug) *, :host(.debug) ::slotted(*) {
+            border: 1px dashed red !important;
+        }
+        .hidden-with-subheader {
             display: none !important;
         }
     </style>
@@ -23,8 +26,7 @@ const template = html`
     <tg-app-config id="appConfig"></tg-app-config>
     <iron-media-query query="[[_calcMobileQuery()]]" on-query-matches-changed="_mobileChanged"></iron-media-query>
     <iron-media-query query="[[_calcTabletQuery()]]" on-query-matches-changed="_tabletChanged"></iron-media-query>
-    <iron-media-query query="[[_calcDesktopQuery()]]" on-query-matches-changed="_desktopChanged"></iron-media-query>
-    <slot id="elements"></slot>`;
+    <iron-media-query query="[[_calcDesktopQuery()]]" on-query-matches-changed="_desktopChanged"></iron-media-query>`;
 
 template.setAttribute('strip-whitespace', '');
 
@@ -58,7 +60,7 @@ template.setAttribute('strip-whitespace', '');
                 const selectCondition = layoutElem.split(':')[1].split('=');
                 const attribute = selectCondition[0].trim();
                 if (selectedElements.length > 0 && selectedElements[0].hasAttribute(attribute) && selectedElements[0].getAttribute(attribute) === selectCondition[1].trim()) {
-                    return selectedElements.splice(0, 1)[0];
+                    return createSlotFor(selectedElements.splice(0, 1)[0]);
                 }
             },
             "subheader": function (selectedElements, orderedElements, layoutElem) {
@@ -91,6 +93,15 @@ template.setAttribute('strip-whitespace', '');
                 }
             }
         };
+
+    const createSlotFor= function (elem) {
+        const slotElement = document.createElement("slot");
+        if (elem.hasAttribute("slot")) {
+            slotElement.setAttribute("name", elem.getAttribute("slot"));
+        }
+        return slotElement;
+    }
+
     const createSubheader = function (layoutElem, collapsible, closed) {
         const elemToReturn = document.createElement('tg-subheader');
         elemToReturn.subheaderTitle = layoutElem.split(':')[1].trim();
@@ -107,27 +118,29 @@ template.setAttribute('strip-whitespace', '');
         if (this.currentLayout !== layout) {
             if (!this.componentsToLayout) {
                 this.componentsToLayout = [];
-                this.$.elements.assignedNodes({flatten: true})
-                    .filter(node => node.nodeType === Node.ELEMENT_NODE && node.tagName !== 'SLOT')
-                    .forEach( item => this.componentsToLayout.push(item));
+                this.slottedElements = {};
+                Array.from(this.children).forEach((item, idx) => {
+                    item.setAttribute("slot", "layout_element_" + idx);
+                    this.componentsToLayout.push(item);
+                    this.slottedElements["layout_element_" + idx] = item;
+                });
             }
-            // Removes all Light DOM children, that were distributed through content insertion points or added manually using DOM API
-            // This method is defined in tg-polymer-utils.
-            _removeAllLightDOMChildrenFrom(this);
+            //First of all clear all appended elements
+            if (this.appendedElements) {
+                this.appendedElements.forEach(element => this.shadowRoot.removeChild(element));
+            }
+            this.appendedElements  = [];
+            //Clear sub headers and remove styles and set default one those might be overriden later.
             resetSubheaderComponents.bind(this)();
-
             removeStylesAndClasses.bind(this)(this);
             this.toggleClass("layout", true);
             this.toggleClass("vertical", true);
-            if (this.debug) {
-                setDebugStyle(this);
-            } else {
-                removeDebugStyle(this);
-            }
+            
             const selectedElements = [];
             const orderedElements = this.componentsToLayout.slice();
             splitElements.bind(this)(selectedElements, orderedElements, layout);
-            this._mutationObserver.observe(this, this._mutationConfig);
+            //TODO need to revisit after optimisation
+            //this._mutationObserver.observe(this, this._mutationConfig);
             let subheader = null;
             layout.forEach((function (layoutElem) {
                 subheader = createFlexCell.bind(this)(this, layoutElem, selectedElements, orderedElements, subheader, true);
@@ -175,16 +188,6 @@ template.setAttribute('strip-whitespace', '');
         }
         return null;
     };
-    const setDebugStyle = function (element) {
-        if (element.style) {
-            element.style.border = "1px dashed red";
-        }
-    };
-    const removeDebugStyle = function (element) {
-        if (element.style) {
-            element.style.removeProperty("border");
-        }
-    };
     const removeStylesAndClasses = function (element) {
         if (element.stylesToRemove) {
             element.stylesToRemove.forEach(function (style) {
@@ -204,26 +207,31 @@ template.setAttribute('strip-whitespace', '');
         let newSubheader = subheader;
         if (typeof layoutElem === "string") {
             const trimmedLayoutElement = layoutElem.trim();
+            const elemToSetStyles = container.tagName === "SLOT" ? this.slottedElements[container.getAttribute("name")] : container;
             if (layoutElem.indexOf(':') >= 0) {
                 const styleValues = layoutElem.split(":");
                 if (!keyWords[styleValues[0].trim()]) {
-                    container.style[styleValues[0].trim()] = styleValues[1].trim();
-                    container.stylesToRemove = container.stylesToRemove || [];
-                    container.stylesToRemove.push(styleValues[0].trim());
+                    elemToSetStyles.style[styleValues[0].trim()] = styleValues[1].trim();
+                    elemToSetStyles.stylesToRemove = elemToSetStyles.stylesToRemove || [];
+                    elemToSetStyles.stylesToRemove.push(styleValues[0].trim());
                 }
             } else {
-                container.classesToRemove = container.classesToRemove || [];
-                container.classesToRemove.push(trimmedLayoutElement);
+                elemToSetStyles.classesToRemove = elemToSetStyles.classesToRemove || [];
+                elemToSetStyles.classesToRemove.push(trimmedLayoutElement);
                 if (trimmedLayoutElement === "horizontal" || trimmedLayoutElement === "vertical") {
-                    this.toggleClass(horizontal ? "vertical" : "horizontal", false, container);
+                    this.toggleClass(horizontal ? "vertical" : "horizontal", false, elemToSetStyles);
                 }
-                this.toggleClass(trimmedLayoutElement, true, container);
+                this.toggleClass(trimmedLayoutElement, true, elemToSetStyles);
             }
         } else if (Array.isArray(layoutElem)) {
             let rowElement;
             if (!hasArray(layoutElem)) {
                 rowElement = getNextElement.bind(this)(selectedElements, orderedElements, layoutElem);
-                removeStylesAndClasses.bind(this)(rowElement);
+                if (rowElement.tagName === "SLOT") {
+                    removeStylesAndClasses.bind(this)(this.slottedElements[rowElement.getAttribute("name")]);
+                } else {
+                    removeStylesAndClasses.bind(this)(rowElement);
+                }
             } else {
                 rowElement = document.createElement("div");
                 this.toggleClass("layout", true, rowElement);
@@ -237,15 +245,15 @@ template.setAttribute('strip-whitespace', '');
             } else if (newSubheader) {
                 newSubheader.addRelativeElement(rowElement);
             }
-            if (this.debug) {
-                setDebugStyle(rowElement);
-            } else {
-                removeDebugStyle(rowElement);
-            }
             layoutElem.forEach((function (columnLayout) {
                 newSubheader = createFlexCell.bind(this)(rowElement, columnLayout, selectedElements, orderedElements, newSubheader, !horizontal);
             }).bind(this));
-            container.appendChild(rowElement);
+            if (container === this) {
+                this.shadowRoot.appendChild(rowElement);
+                this.appendedElements.push(rowElement);
+            } else {
+                container.appendChild(rowElement);
+            }
         }
         return newSubheader;
     };
@@ -253,7 +261,7 @@ template.setAttribute('strip-whitespace', '');
         let elemToReturn = findKeyWordElement.bind(this)(selectedElements, orderedElements, layoutElem);
         if (!elemToReturn) {
             if (orderedElements.length > 0) {
-                elemToReturn = orderedElements.splice(0, 1)[0];
+                elemToReturn = createSlotFor(orderedElements.splice(0, 1)[0]);
             } else {
                 elemToReturn = document.createElement('div');
                 elemToReturn.innerHTML = "element not found!";
@@ -296,18 +304,9 @@ template.setAttribute('strip-whitespace', '');
         is: "tg-flex-layout",
 
         properties: {
-            whenDesktop: {
-                type: Array,
-                observer: "_whenDesktopChanged"
-            },
-            whenTablet: {
-                type: Array,
-                observer: "_whenTabletChanged"
-            },
-            whenMobile: {
-                type: Array,
-                observer: "_whenMobileChanged"
-            },
+            whenDesktop: Array,
+            whenTablet: Array,
+            whenMobile: Array,
             debug: {
                 type: Boolean,
                 value: false,
@@ -316,18 +315,15 @@ template.setAttribute('strip-whitespace', '');
             },
             desktopScreen: {
                 type: Boolean,
-                readOnly: true,
-                observer: "_handleDesktopScreen"
+                readOnly: true
             },
             tabletScreen: {
                 type: Boolean,
-                readOnly: true,
-                observer: "_handleTabletScreen"
+                readOnly: true
             },
             mobileScreen: {
                 type: Boolean,
-                readOnly: true,
-                observer: "_handleMobileScreen"
+                readOnly: true
             },
             currentLayout: {
                 type: Boolean,
@@ -349,30 +345,31 @@ template.setAttribute('strip-whitespace', '');
                 type: Object
             }
         },
-        observers: ["_contextChanged(context.*)"],
+        observers: [
+            "_handleDesktopScreen(whenDesktop, whenTablet, whenMobile, desktopScreen, contentLoaded)",
+            "_handleTabletScreen(whenTablet, whenMobile, whenDesktop, tabletScreen, contentLoaded)",
+            "_handleMobileScreen(whenMobile, whenTablet, whenDesktop, mobileScreen, contentLoaded)",
+            "_contextChanged(context.*)"],
+
         ready: function () {
             this._subheaders = [];
             
             this._editorErrorHandler = this._editorErrorHandler.bind(this);
             this.addEventListener('editor-error-appeared', this._editorErrorHandler);
+
+            this._setContentLoaded(true);
         
-            this._mutationConfig = {childList: true, subtree: true};
-            const observer = mutationList => {
-                this.async(function () {
-                    this.fire('layout-finished', this);
-                }, 1);
-                this._mutationObserver.disconnect();
-            };
-            this._mutationObserver = new MutationObserver(observer);
+            //TODO should be revisited and updated according to last modifications
+            // this._mutationConfig = {childList: true, subtree: true};
+            // const observer = mutationList => {
+            //     this.async(function () {
+            //         this.fire('layout-finished', this);
+            //     }, 1);
+            //     this._mutationObserver.disconnect();
+            // };
+            // this._mutationObserver = new MutationObserver(observer);
         },
-        attached: function () {
-            this.async(function () {
-                this._setContentLoaded(true);
-                if (!this.whenDesktop && !this.whenTablet && !this.whenMobile) {
-                    this.fire('layout-finished', this);
-                }
-            }, 1);
-        },
+        
         _editorErrorHandler: function (e) {
             const subheader = e.detail.$$relativeSubheader$$;
             if (this._subheaders.indexOf(subheader) >= 0) {
@@ -392,33 +389,32 @@ template.setAttribute('strip-whitespace', '');
             }
             return subheaderHierarchy;
         },
-        _handleMobileScreen: function (newValue, oldValue) {
-            const layout = this.whenMobile || this.whenTablet || this.whenDesktop;
-            if (newValue && layout && this.contentLoaded) {
+        _setLayout: function (layout) {
+            beforeNextRender(this, () => {
                 setLayout.bind(this)(layout);
+            });
+        },
+        _handleMobileScreen: function (whenMobile, whenTablet, whenDesktop, mobileScreen, contentLoaded) {
+            const layout = whenMobile || whenTablet || whenDesktop;
+            if (contentLoaded && mobileScreen && layout) {
+                this._setLayout(layout);
             }
         },
-        _handleTabletScreen: function (newValue, oldValue) {
-            const layout = this.whenTablet || this.whenMobile || this.whenDesktop;
-            if (newValue && layout && this.contentLoaded) {
-                setLayout.bind(this)(layout);
+        _handleTabletScreen: function (whenTablet, whenMobile, whenDesktop, tabletScreen, contentLoaded) {
+            const layout = whenTablet || whenMobile || whenDesktop;
+            if (contentLoaded && tabletScreen && layout ) {
+                this._setLayout(layout);
             }
         },
-        _handleDesktopScreen: function (newValue, oldValue) {
-            const layout = this.whenDesktop || this.whenTablet || this.whenMobile;
-            if (newValue && layout && this.contentLoaded) {
-                setLayout.bind(this)(layout);
+        _handleDesktopScreen: function (whenDesktop, whenTablet, whenMobile, desktopScreen, contentLoaded) {
+            const layout = whenDesktop || whenTablet || whenMobile;
+            if (contentLoaded && desktopScreen && layout) {
+                this._setLayout(layout);
             }
         },
-        _handleContentLoading: function (newValue, oldValue) {
-            if (newValue && (this.whenDesktop || this.whenTablet || this.whenMobile)) {
-                if (this.desktopScreen) {
-                    setLayout.bind(this)(this.whenDesktop || this.whenTablet || this.whenMobile);
-                } else if (this.tabletScreen) {
-                    setLayout.bind(this)(this.whenTablet || this.whenMobile || this.whenDesktop);
-                } else if (this.mobileScreen) {
-                    setLayout.bind(this)(this.whenMobile || this.whenTablet || this.whenDesktop);
-                }
+        _handleContentLoading: function (contentLoaded) {
+            if (contentLoaded && !this.whenDesktop && !this.whenTablet && !this.whenMobile) {
+                this.fire('layout-finished', this);
             }
         },
         _mobileChanged: function (e, detail) {
@@ -430,31 +426,8 @@ template.setAttribute('strip-whitespace', '');
         _desktopChanged: function (e, detail) {
             this._setDesktopScreen(detail.value);
         },
-        _whenMobileChanged: function (newValue, oldValue) {
-            if (this.mobileScreen && newValue && this.contentLoaded) {
-                setLayout.bind(this)(this.whenMobile);
-            }
-        },
-        _whenTabletChanged: function (newValue, oldValue) {
-            if (this.tabletScreen && newValue && this.contentLoaded) {
-                setLayout.bind(this)(this.whenTablet);
-            }
-        },
-        _whenDesktopChanged: function (newValue, oldValue) {
-            if (this.desktopScreen && newValue && this.contentLoaded) {
-                setLayout.bind(this)(this.whenDesktop);
-            }
-        },
         _debugChanged: function (newValue, oldValue) {
-            if (this.componentsToLayout) {
-                this.componentsToLayout.forEach(function (element) {
-                    if (newValue) {
-                        setDebugStyle(element);
-                    } else {
-                        removeDebugStyle(element);
-                    }
-                });
-            }
+            this.toggleClass("debug", newValue);
         },
         _calcMobileQuery: function () {
             return "max-width: " + (this.$.appConfig.minTabletWidth - 1) + "px";
