@@ -14,7 +14,7 @@ openssl req \
 
 openssl x509 -in ./localhost.pem -text -noout
 
-echo "Inspect the generated certificate, wich should have Subject Alternative Name afer the public key."
+echo "Inspect the generated certificate, which should have Subject Alternative Name afer the public key."
 read -p "Press enter to continue"
 
 echo "Concatenating keys into haproxy.pem..."
