@@ -7,13 +7,11 @@ import '/resources/polymer/@polymer/iron-list/iron-list.js';
 import '/resources/polymer/@polymer/paper-checkbox/paper-checkbox.js';
 
 import '/resources/images/tg-icons.js';
-import '/resources/editors/tg-dom-stamper.js';
 
-import {Polymer} from '/resources/polymer/@polymer/polymer/lib/legacy/polymer-fn.js';
-import {html} from '/resources/polymer/@polymer/polymer/lib/utils/html-tag.js';
+import {html} from '/resources/polymer/@polymer/polymer/polymer-element.js';
 
-import { TgHighlightingBehavior } from '/resources/editors/tg-highlighting-behavior.js';
-import { TgEditorBehavior, TgEditorBehaviorImpl, createEditorTemplate } from '/resources/editors/tg-editor-behavior.js';
+import { matchedParts } from '/resources/editors/tg-highlighter.js';
+import { TgEditorBehavior, createEditorTemplate } from '/resources/editors/tg-editor.js';
 import { tearDownEvent} from '/resources/reflection/tg-polymer-utils.js';
 
 const additionalTemplate = html`
@@ -174,8 +172,8 @@ const customInputTemplate = html`
                     <div tabindex="0" class$="[[_computedClass(selected, item, _draggingItem)]]" style$="[[_computeItemStyle(_forReview, _draggingItem, canReorderItems)]]">
                         <iron-icon class="resizing-box" on-down="_makeListUnselectable" on-up="_makeListSelectable" on-track="_changeItemOrder" hidden$="[[!canReorderItems]]" icon="tg-icons:dragVertical" style$="[[_computeStyleForResizingBox(selected)]]" on-touchstart="_disableScrolling" on-touchmove="_disableScrolling"></iron-icon>
                         <div class="title" tooltip-text$="[[_calcItemTooltip(item)]]" style$="[[_computeTitleStyle(canReorderItems)]]">
-                            <tg-dom-stamper class$="[[_computedHeaderClass(item)]]" dom-text="[[_calcItemTextHighlighted(item, headerPropertyName, _phraseForSearchingCommited)]]"></tg-dom-stamper>
-                            <tg-dom-stamper class$="[[_computedDescriptionClass(item)]]" dom-text="[[_calcItemTextHighlighted(item, descriptionPropertyName, _phraseForSearchingCommited)]]"></tg-dom-stamper>
+                            <div class$="[[_computedHeaderClass(item)]]" inner-h-t-m-l="[[_calcItemTextHighlighted(item, headerPropertyName, _phraseForSearchingCommited)]]"></div>
+                            <div class$="[[_computedDescriptionClass(item)]]" inner-h-t-m-l="[[_calcItemTextHighlighted(item, descriptionPropertyName, _phraseForSearchingCommited)]]"></div>
                         </div>
                         <div class$="[[_computeSortingClass(item)]]" hidden$="[[_sortingIconHidden(_forReview, item)]]">
                             <iron-icon icon$="[[_sortingIconForItem(item.sorting)]]" style$="[[_computeSortingIconStyle(item.sorting)]]" on-tap="_changeOrdering"></iron-icon>
@@ -189,148 +187,161 @@ const customInputTemplate = html`
         </iron-list>
     </div>`;
 
-Polymer({
-    _template: createEditorTemplate(additionalTemplate, html``, customInputTemplate, html``, html``, html``),
+export class TgCollectionalEditor extends TgEditor {
 
-    is: 'tg-collectional-editor',
+    static get template () { 
+        return createEditorTemplate(additionalTemplate, html``, customInputTemplate, html``, html``, html``);
+    }
 
-    behaviors: [ TgEditorBehavior, TgHighlightingBehavior ],
+    static get properties () {
+        return {
+            /**
+             * The name of the property to be shown in item header.
+             */
+            headerPropertyName: {
+                type: String
+            },
+            
+            /**
+             * The name of the property to be shown in item description.
+             */
+            descriptionPropertyName: {
+                type: String
+            },
+            
+            /**
+             * Indicates whether items can be rordered.
+             */
+            canReorderItems: {
+                type: Boolean,
+                value: false
+            },
+            
+            /**
+             * Indicates the item that is currently dragging. It might be null if there is no dragging item.
+             */
+            _draggingItem: {
+                type: Object
+            },
+            
+            /**
+             * Entities to be bound to iron-list.
+             */
+            _entities: {
+                type: Array
+            },
+            /**
+             * Selected entities to be bound to iron-list.
+             */
+            _selectedEntities: {
+                type: Array
+            },
     
-    properties: {
-        /**
-         * The name of the property to be shown in item header.
-         */
-        headerPropertyName: {
-            type: String
-        },
-        
-        /**
-         * The name of the property to be shown in item description.
-         */
-        descriptionPropertyName: {
-            type: String
-        },
-        
-        /**
-         * Indicates whether items can be rordered.
-         */
-        canReorderItems: {
-            type: Boolean,
-            value: false
-        },
-        
-        /**
-         * Indicates the item that is currently dragging. It might be null if there is no dragging item.
-         */
-        _draggingItem: {
-            type: Object
-        },
-        
-        /**
-         * Entities to be bound to iron-list.
-         */
-        _entities: {
-            type: Array
-        },
-        /**
-         * Selected entities to be bound to iron-list.
-         */
-        _selectedEntities: {
-            type: Array
-        },
-
-        /**
-         * controls select All checkbox
-         */
-        _selectedAll: {
-            type: Boolean
-        },
-
-        _semiCheckedAll: {
-            type: Boolean,
-            value: false
-        },
-
-        _scrollBarWidth: Number,
-
-        /**
-         * Selected entity to be bound to iron-list.
-         */
-        _selectedEntity: {
-            type: Object,
-            observer: '_selectedEntityChanged'
-        },
-        
-        /**
-         * Switch for disabling selection listeners during iron-list initialisation.
-         */
-        _disableSelectionListeners: {
-            type: Boolean,
-            value: false
-        },
-        
-        /**
-         * Original list of chosen ids. Used to implement the logic of 'what was changed' during editing.
-         */
-        _originalChosenIds: {
-            type: Array
-        },
-        
-        _phraseForSearching: {
-            type: String
-        },
-        
-        _phraseForSearchingCommited: {
-            type: String
-        },
-        _asyncSearchHandle: {
-            type: Object,
-            value: null
-        },
-        
-        _eventHandler: {
-            type: Function
-        },
-        
-        /**
-         * The mouse tap event listener that selectes the text inside input when first time tapped.
-         */
-        _onTap: {
-            type: Function,
-            value: function () {
-                return (function (event) {
-                    if (this.shadowRoot.activeElement !== this.$.searchInput) {
-                        this.$.searchInput.select();
-                        tearDownEvent(event);
-                    }
-                }).bind(this);
+            /**
+             * controls select All checkbox
+             */
+            _selectedAll: {
+                type: Boolean
+            },
+    
+            _semiCheckedAll: {
+                type: Boolean,
+                value: false
+            },
+    
+            _scrollBarWidth: Number,
+    
+            /**
+             * Selected entity to be bound to iron-list.
+             */
+            _selectedEntity: {
+                type: Object,
+                observer: '_selectedEntityChanged'
+            },
+            
+            /**
+             * Switch for disabling selection listeners during iron-list initialisation.
+             */
+            _disableSelectionListeners: {
+                type: Boolean,
+                value: false
+            },
+            
+            /**
+             * Original list of chosen ids. Used to implement the logic of 'what was changed' during editing.
+             */
+            _originalChosenIds: {
+                type: Array
+            },
+            
+            _phraseForSearching: {
+                type: String
+            },
+            
+            _phraseForSearchingCommited: {
+                type: String
+            },
+            _asyncSearchHandle: {
+                type: Object,
+                value: null
+            },
+            
+            _eventHandler: {
+                type: Function
+            },
+            
+            /**
+             * The mouse tap event listener that selectes the text inside input when first time tapped.
+             */
+            _onTap: {
+                type: Function,
+                value: function () {
+                    return (function (event) {
+                        if (this.shadowRoot.activeElement !== this.$.searchInput) {
+                            this.$.searchInput.select();
+                            tearDownEvent(event);
+                        }
+                    }).bind(this);
+                }
+            },
+            
+            _onInput: {
+                type: Function,
+                value: function () {
+                    return (function () {
+                       this._cancelSearch();
+                       this._asyncSearchHandle = this.async(this.scrollToFirstFoundElement, 700);
+                    }).bind(this);
+                }
+            },
+            
+            /**
+             * Indicates that this collectional editor is 'for review' only and will not be selectable and no icon will exist before each item.
+             */
+            _forReview: {
+                type: Boolean,
+                value: false
             }
-        },
-        
-        _onInput: {
-            type: Function,
-            value: function () {
-                return (function () {
-                   this._cancelSearch();
-                   this._asyncSearchHandle = this.async(this.scrollToFirstFoundElement, 700);
-                }).bind(this);
-            }
-        },
-        
-        /**
-         * Indicates that this collectional editor is 'for review' only and will not be selectable and no icon will exist before each item.
-         */
-        _forReview: {
-            type: Boolean,
-            value: false
-        }
-    },
+        };
+    }
     
-    observers: [
-        '_selectedEntitiesAddedOrRemoved(_selectedEntities.splices)'
-    ],
-    
-    ready: function () {
+    static get observers () {
+        return [
+            '_selectedEntitiesAddedOrRemoved(_selectedEntities.splices)'
+        ];
+    }
+
+    constructor () {
+        super();
+        this._editorKind = "COLLECTIONAL";
+        this._draggingItem = null;
+        this._eventHandler = (function(e) {
+            // There is no need to proceed with search if user moved out of the search field
+            this._cancelSearch();
+        }).bind(this);
+    }
+
+    ready () {
         const inputWrapper = this.decorator().$$(".input-wrapper");
         inputWrapper.style.flexGrow = "1";
         const labelAndInputContainer = this.decorator().$.labelAndInputContainer;
@@ -342,66 +353,57 @@ Polymer({
         const suffix = this.decorator().$$(".suffix");
         suffix.style.alignSelf = "flex-start";
 
-        this._editorKind = "COLLECTIONAL";
         this.decorator().noLabelFloat = true;
-
-        this._draggingItem = null;
-        this._eventHandler = (function(e) {
-            // There is no need to proceed with search if user moved out of the search field
-            this._cancelSearch();
-        }).bind(this);
 
         const oldListRender = this.$.input._render.bind(this.$.input);
         this.$.input._render = function () {
             oldListRender();
             this._scrollBarWidth = this.$.input.offsetWidth - this.$.input.clientWidth;
         }.bind(this);
-    },
-    
-    attached: function () {
-        this._originalChosenIds = null;
-    },
+    }
 
-    detached: function () {
+    connectedCallback () {
+        super.connectedCallback();
+        this._originalChosenIds = null;
         this._phraseForSearching ="";
-    },
-    
-    _calcItemTooltip: function (item) {
+    }
+
+    _calcItemTooltip (item) {
         var header = this._calcItemText(item, this.headerPropertyName);
         var desc = this._calcItemText(item, this.descriptionPropertyName);
         var tooltip = header ? "<b>" + header + "</b>" : "";
         tooltip += desc ? (tooltip ? "<br>" + desc : desc) : "";
         return tooltip;
-    },
+    }
     
     /**
      * Returns the text representation of the item to be shown in header or description.
      */
-    _calcItemText: function (item, propName) {
+    _calcItemText (item, propName) {
         const value = item.get(propName);
         return value ? value : '';
-    },
+    }
     
     /**
      * Returns the text representation of the item to be shown in header or description.
      */
-    _calcItemTextHighlighted: function (item, propName, searchPhrase) {
+    _calcItemTextHighlighted (item, propName, searchPhrase) {
         return this._highlightedValue(this._calcItemText(item, propName), searchPhrase);
-    },
+    }
     
     /**
      * This method promotes 'IRRELEVANT' into _editingValue which should not be a problem, since this 'editor' edits entity property (with name 'chosenNumbersPropertyName') directly.
      */
-    convertToString: function (value) {
+    convertToString (value) {
         return 'IRRELEVANT';
-    },
+    }
     
     /**
      * Assignes initial values as soon as 'this.entity' and 'this.originalEntity' becomes available.
      * This method relies on a fact that the entity gets initialised earlier than originalEntity (see '_postEntityReceived' method in tg-entity-binder-behavior).
      */
-    _originalEntityChanged: function (newValue, oldValue) {
-        TgEditorBehaviorImpl._originalEntityChanged.call(this, newValue, oldValue);
+    _originalEntityChanged (newValue, oldValue) {
+        super._originalEntityChanged(newValue, oldValue);
         
         if (this.reflector().isEntity(newValue)) {
             if (newValue.type()._simpleClassName() === 'CentreConfigLoadAction') {
@@ -432,16 +434,16 @@ Polymer({
             
             this.provideSorting(this.entity.sortingVals, this._entities);
         }
-    },
+    }
 
-    _selectionHandler: function (e) {
+    _selectionHandler (e) {
         this.$.input.toggleSelectionForItem(e.model.item);
-    },
+    }
 
     /**
      * Updates iron-list '_entities' based on updated 'chosenIds'; updates selection of that items.
      */
-    _updateEntitiesAndSelection: function (chosenIds, entity, arrivedEntities) {
+    _updateEntitiesAndSelection (chosenIds, entity, arrivedEntities) {
         const selEntities = [];
         for (let index = 0; index < chosenIds.length; index++) {
             const foundEntity = this._find(arrivedEntities, chosenIds[index]);
@@ -461,27 +463,27 @@ Polymer({
             this.$.input.selectItem(selEntities[index]);
         }
         this._disableSelectionListeners = false;
-    },
+    }
     
-    _isCentreConfigEntity: function (entity) {
+    _isCentreConfigEntity (entity) {
         return entity.type()._simpleClassName() === 'CentreConfigUpdater';
-    },
+    }
     
     /**
      * Creates a new array of entities placing 'selEntities' on top and preserving the original order as in 'arrivedEntities' in unselected group.
      */
-    _placeSelectedOnTop: function (arrivedEntities, selEntities, chosenIds) {
+    _placeSelectedOnTop (arrivedEntities, selEntities, chosenIds) {
         return this._fillEntitiesAndConcat(selEntities, [], arrivedEntities, chosenIds, true);
-    },
+    }
     
     /**
      * Creates a new array of entities placing chosen ones on top and preserving the same order as in 'arrivedEntities' in each groups.
      */
-    _placeSelectedOnTopPreservingOriginalOrder: function (arrivedEntities, chosenIds) {
+    _placeSelectedOnTopPreservingOriginalOrder (arrivedEntities, chosenIds) {
         return this._fillEntitiesAndConcat([], [], arrivedEntities, chosenIds, false);
-    },
+    }
     
-    _fillEntitiesAndConcat: function (selectedEntities, unselectedEntities, arrivedEntities, chosenIds, onlyUnselected) {
+    _fillEntitiesAndConcat (selectedEntities, unselectedEntities, arrivedEntities, chosenIds, onlyUnselected) {
         for (let index = 0; index < arrivedEntities.length; index++) {
             const currEntity = arrivedEntities[index];
             const chosenIdsIndex = chosenIds.indexOf(this.idOrKey(currEntity));
@@ -494,40 +496,40 @@ Polymer({
             }
         }
         return selectedEntities.concat(unselectedEntities);
-    },
+    }
     
     /**
      * Returns identifier of the entity. If it is persisted -- such identifier is represented by id, otherwise -- by key.
      */
-    idOrKey: function (entity) {
+    idOrKey (entity) {
         return entity.get('id') === null ? entity.get('key') : entity.get('id');
-    },
+    }
     
-    _find: function (entities, idOrKey) {
+    _find (entities, idOrKey) {
         for (var i = 0; i < entities.length; i++) {
             if (idOrKey === this.idOrKey(entities[i])) {
                 return entities[i];
             }
         }
         return null;
-    },
+    }
 
     /**
      * This method promotes 'IRRELEVANT' into _acceptedValue which should not be a problem, since this 'representor' is not editable at all.
      */
-    convertFromString: function (strValue) {
+    convertFromString (strValue) {
         return 'IRRELEVANT';
-    },
+    }
     
-    _isDummyBoxVisible: function (item, _draggingItem) {
+    _isDummyBoxVisible (item, _draggingItem) {
         return item === _draggingItem;
-    },
+    }
     
-    _computeSortingClass: function (item) {
+    _computeSortingClass (item) {
         return 'sorting-group' + (!item.sortable ? " sorting-invisible" : "");
-    },
+    }
     
-    _computedClass: function (isSelected, item, _draggingItem) {
+    _computedClass (isSelected, item, _draggingItem) {
         var classes = 'item';
         if (isSelected) {
           classes += ' selected';
@@ -536,87 +538,87 @@ Polymer({
             classes += ' dragging-item'
         }
         return classes;
-    },
+    }
     
-    _computedItemClass: function (isDisabled) {
+    _computedItemClass (isDisabled) {
         var classes = '';
         if (isDisabled) {
           classes += ' item-disabled';
         }
         return classes;
-    },
+    }
     
-    _computedHeaderClass: function (item) {
+    _computedHeaderClass (item) {
         let classes = 'primary truncate';
         if (item.inherited) {
             classes += ' inherited-primary';
         }
         return classes;
-    },
+    }
     
-    _computedDescriptionClass: function (item) {
+    _computedDescriptionClass (item) {
         let classes = 'secondary dim truncate';
         if (item.inherited) {
             classes += ' inherited-secondary';
         }
         return classes;
-    },
+    }
     
-    _sortingIconForItem: function (sorting) {
+    _sortingIconForItem (sorting) {
         return sorting === true ? 'arrow-drop-up' : (sorting === false ? 'arrow-drop-down' : 'arrow-drop-up');
-    },
+    }
     
-    _selectingIconHidden: function (_forReview) {
+    _selectingIconHidden (_forReview) {
         return _forReview;
-    },
+    }
     
-    _sortingIconHidden: function (_forReview, item) {
+    _sortingIconHidden (_forReview, item) {
         return _forReview || (typeof item.sorting === 'undefined');
-    },
+    }
     
-    _isSelectionEnabled: function (_forReview) {
+    _isSelectionEnabled (_forReview) {
         return !_forReview;
-    },
+    }
 
-    _computeInputStyle: function (_forReview, canReorderItems) {
+    _computeInputStyle (_forReview, canReorderItems) {
         let style = canReorderItems ? "" : "padding-left:16px;";
         style += _forReview ? "" : "padding-bottom: 20px;";
         return style;
-    },
+    }
 
-    _computeSelectAllCheckboxStyle: function (_scrollBarWidth) {
+    _computeSelectAllCheckboxStyle (_scrollBarWidth) {
         return "padding-right: " + ( _scrollBarWidth + 16 ) + "px";
-    },
+    }
 
-    _computeSortingIconStyle: function (sorting)  {
+    _computeSortingIconStyle (sorting)  {
         var style = sorting !== null ? 'color: black;' : 'color: grey;';
         style += sorting === true ? 'align-self:flex-start' : (sorting === false ? 'align-self:flex-end' : 'align-self:flex-start');
         return style;
-    },
+    }
     
-    _computeItemStyle: function (_forReview, _draggingItem, canReorderItems) {
+    _computeItemStyle (_forReview, _draggingItem, canReorderItems) {
         let style = _forReview || _draggingItem ? '' : 'cursor: pointer;';
         return style;
-    },
+    }
 
-    _computeStyleForResizingBox : function (selected) {
+    _computeStyleForResizingBox (selected) {
         return !selected ? "visibility: hidden;" : ""; 
-    },
+    }
 
-    _computeTitleStyle: function (canReorderItems) {
+    _computeTitleStyle (canReorderItems) {
         return canReorderItems ? "" : "padding-left: 16px;";
-    },
+    }
 
-    _calculateOrder: function (sortingNumber) {
+    _calculateOrder (sortingNumber) {
         return sortingNumber >= 0 ? sortingNumber + 1 + "" : "";
-    },
+    }
     
-    _changeOrdering: function (e) {
+    _changeOrdering (e) {
         e.stopPropagation( );
         this._toggleOrdering(e.model.item, e.model.index);
-    },
+    }
     
-    _toggleOrdering: function (item, index) {
+    _toggleOrdering (item, index) {
         if (item.sorting === true) {
             this.set("_entities." + index + ".sorting", false);
         } else if (item.sorting === false) {
@@ -629,17 +631,17 @@ Polymer({
         this.provideSorting(this.entity.sortingVals, this._entities);
         // invoke validation after user has toggled ordering of some property
         this._invokeValidation();
-    },
+    }
     
-    _invokeValidation: function () {
+    _invokeValidation () {
         if (this._shouldInvokeValidation()) {
             this.validationCallback();
         } else {
             this._skipValidationAction();
         }
-    },
+    }
     
-    _turnOnOrdering: function (index) {
+    _turnOnOrdering (index) {
         var itemIndex, item;
         var maxSortingNumber= this._entities[0].sortingNumber;
         for (itemIndex = 1; itemIndex < this._entities.length; itemIndex++) {
@@ -649,9 +651,9 @@ Polymer({
             }
         }
         this.set("_entities." + index + ".sortingNumber", maxSortingNumber + 1);
-    },
+    }
     
-    _turnOffOrdering: function (sortingNumber) {
+    _turnOffOrdering (sortingNumber) {
         var itemIndex, item;
         for (itemIndex = 0; itemIndex < this._entities.length; itemIndex++) {
             item = this._entities[itemIndex];
@@ -663,20 +665,20 @@ Polymer({
                 }
             }
         }
-    },
+    }
     
-    _makeId: function(id) {
+    _makeId (id) {
         return "id" + id;
-    },
+    }
     
-    _cancelSearch: function() {
+    _cancelSearch () {
         if (this._asyncSearchHandle) {
             this.cancelAsync(this._asyncSearchHandle);
             this._asyncSearchHandle = null;
         }
-    }, 
+    }
     
-    searchForPhrase: function (entities, phrase) {
+    searchForPhrase (entities, phrase) {
         for (var entityIndex = 0; entityIndex < entities.length; entityIndex++) {
             var currentEntity = entities[entityIndex];
             var positionInHeader = (this._calcItemText(currentEntity, this.headerPropertyName).toLowerCase()).search(phrase.toLowerCase());
@@ -685,17 +687,17 @@ Polymer({
                 return entityIndex; 
             }
         }
-    },
+    }
     
-    scrollToFirstFoundElement: function () {
+    scrollToFirstFoundElement () {
         this._phraseForSearchingCommited = this._phraseForSearching;
         var indexOfFirstElementWithPhrase = this.searchForPhrase(this._entities, this._phraseForSearchingCommited); 
         this.$.input.scrollToIndex(indexOfFirstElementWithPhrase);
-    },
+    }
     
-    _highlightedValue : function (propertyValue, phraseForSearchingCommited) {
+    _highlightedValue (propertyValue, phraseForSearchingCommited) {
         var html = '';
-        var matchedParts = this._matchedParts(propertyValue, phraseForSearchingCommited);
+        var matchedParts = matchedParts(propertyValue, phraseForSearchingCommited);
         for (var index = 0; index < matchedParts.length; index++) {
             var part = matchedParts[index];
             if (part.matched) {
@@ -711,9 +713,9 @@ Polymer({
             html = propertyValue;
         }
         return html;
-    },
+    }
     
-    _selectedEntityChanged: function (newValue, oldValue) {
+    _selectedEntityChanged (newValue, oldValue) {
         const self = this;
         if (self.entity && self._disableSelectionListeners === false) {
             const chosenIds = self.entity.get('chosenIds');
@@ -729,9 +731,9 @@ Polymer({
                 }
             }
         }
-    },
+    }
     
-    _performAddition: function (addedIds, self, added, chosenIds, removedIds) {
+    _performAddition (addedIds, self, added, chosenIds, removedIds) {
         if (addedIds.indexOf(self.idOrKey(added)) > -1) {
             throw 'Cannot add ' + self.idOrKey(added) + ' again (addedIds = ' + addedIds + ').';
         } else {
@@ -759,9 +761,9 @@ Polymer({
             // invoke validation after user has added some item to collection
             self._invokeValidation.bind(self)();
         }
-    },
+    }
     
-    _performRemoval: function (removedIds, self, removed, chosenIds, addedIds) {
+    _performRemoval (removedIds, self, removed, chosenIds, addedIds) {
         if (removedIds.indexOf(self.idOrKey(removed)) > -1) {
             throw 'Cannot remove ' + self.idOrKey(removed) + ' again (removedIds = ' + removedIds + ').';
         } else {
@@ -787,9 +789,9 @@ Polymer({
             // invoke validation after user has removed some item from collection
             self._invokeValidation.bind(self)();
         }
-    },
+    }
     
-    _selectedEntitiesAddedOrRemoved: function (changeRecord) {
+    _selectedEntitiesAddedOrRemoved (changeRecord) {
         const self = this;
         if (changeRecord && self.entity && self._disableSelectionListeners === false) {
             const chosenIds = self.entity.get('chosenIds');
@@ -808,12 +810,12 @@ Polymer({
             }, self);
         }
         this._updateSelectAll();
-    },
+    }
     
     /**
      * Finds an index in 'chosenIds' where 'added' entity key should be inserted. This takes into account the order of '_entities'.
      */
-    findPlaceToInsert: function (added, _entities, chosenIds) {
+    findPlaceToInsert (added, _entities, chosenIds) {
         let indexToInsert = 0;
         for (let index = 0; index < _entities.length; index++) {
             const entity = _entities[index];
@@ -825,9 +827,9 @@ Polymer({
             }
         }
         throw 'Recently checked item with key [' + this.idOrKey(added) + '] could not be found in _entities [' + _entities + '] list.';
-    },
+    }
     
-    provideSorting: function (sortingVals, customisableColumns) {
+    provideSorting (sortingVals, customisableColumns) {
         if (typeof sortingVals !== 'undefined') {
             while (sortingVals.length > 0) {
                 sortingVals.pop();
@@ -839,9 +841,9 @@ Polymer({
                 }
             } 
         }
-    }, 
+    } 
     
-    moveItem: function (fromIndex, toIndex) {
+    moveItem (fromIndex, toIndex) {
         const chosenIds = this.entity.get("chosenIds");
         this._disableSelectionListeners = true;
         const removedItems = this.splice("_entities", fromIndex, 1);
@@ -852,9 +854,9 @@ Polymer({
         }
         this.entity.set("chosenIds", this._entities.filter(entity => chosenIds.indexOf(this.idOrKey(entity)) >= 0).map(entity => this.idOrKey(entity)));
         this._disableSelectionListeners = false;
-    },
+    }
     
-    _changeItemOrder: function (e) {
+    _changeItemOrder (e) {
        switch (e.detail.state) {
            case 'start':
                this._startItemReordering(e);
@@ -870,16 +872,16 @@ Polymer({
        if (e.preventDefault) e.preventDefault();
        e.cancelBubble = true;
        e.returnValue = false;
-    },
+    }
     
-    _disableScrolling: function (e) {
+    _disableScrolling (e) {
         if (e.stopPropagation) e.stopPropagation();
        if (e.preventDefault) e.preventDefault();
        e.cancelBubble = true;
        e.returnValue = false;
-    },
+    }
     
-    _startItemReordering: function (e) {
+    _startItemReordering (e) {
         if (e.model.selected) {
             this._reorderingObject = {
                 from: e.model.index,
@@ -887,9 +889,9 @@ Polymer({
             }
             this._draggingItem = e.model.item;
         }
-    },
+    }
 
-    _trackItemOrder: function (e) {
+    _trackItemOrder (e) {
         if (this._reorderingObject)  {
             const list = this.$.input;
             let currentElementIndex = this._getIndexForElement(e.detail.hover());
@@ -910,32 +912,32 @@ Polymer({
                 this._reorderingObject.from = currentElementIndex;
             }
         }
-    },
+    }
 
-    _endItemReordering: function (e) {
+    _endItemReordering (e) {
         delete this._reorderingObject;
         this._draggingItem = null;
-    },
+    }
     
-    _getIndexForElement: function (element) {
+    _getIndexForElement (element) {
         let currentElement = element;
         while (currentElement && !currentElement.hasAttribute("collectional-index")) {
             currentElement = currentElement.parentElement;
         }
         return currentElement ? +currentElement.getAttribute("collectional-index") : -1;
-    },
+    }
     
-    _makeListUnselectable: function () {
+    _makeListUnselectable () {
         this.$.input.classList.toggle("noselect", true);
         document.body.style["cursor"] = "-webkit-grabbing";
-    },
+    }
     
-    _makeListSelectable: function () {
+    _makeListSelectable () {
         this.$.input.classList.toggle("noselect", false);
         document.body.style["cursor"] = '';
-    },
+    }
 
-    _updateSelectAll: function () {
+    _updateSelectAll () {
         if (this._selectedEntities && this._entities) {
             const everySelected = this._entities.every(item => this._selectedEntities.includes(item));
             const someSelected = this._entities.some(item => this._selectedEntities.includes(item));
@@ -947,15 +949,15 @@ Polymer({
                 this._semiCheckedAll = false;
             }
         }
-    },
+    }
 
-     _allSelectionChanged: function (e) {
+     _allSelectionChanged (e) {
         const target = e.target || e.srcElement;
         this.selectAll(target.checked);
         this._selectedAll = target.checked;            
-    },
+    }
 
-    selectAll: function (select) {
+    selectAll (select) {
         this._entities.forEach(item => {
             if (select) {
                 this.$.input.selectItem(item);
@@ -964,4 +966,6 @@ Polymer({
             }
         });
     }
-});
+}
+
+customElements.define('tg-collectional-editor', TgCollectionalEditor);

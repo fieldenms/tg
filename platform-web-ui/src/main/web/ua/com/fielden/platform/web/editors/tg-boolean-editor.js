@@ -3,10 +3,9 @@ import '/resources/polymer/@polymer/iron-flex-layout/iron-flex-layout.js';
 import '/resources/polymer/@polymer/iron-flex-layout/iron-flex-layout-classes.js';
 import '/resources/polymer/@polymer/paper-checkbox/paper-checkbox.js'
 
-import {Polymer} from '/resources/polymer/@polymer/polymer/lib/legacy/polymer-fn.js';
-import {html} from '/resources/polymer/@polymer/polymer/lib/utils/html-tag.js';
+import {html} from '/resources/polymer/@polymer/polymer/polymer-element.js';
 
-import {TgEditorBehavior, TgEditorBehaviorImpl, createEditorTemplate} from '/resources/editors/tg-editor-behavior.js'
+import {TgEditor, createEditorTemplate} from '/resources/editors/tg-editors.js'
 
 const additionalTemplate = html`
     <style>
@@ -52,66 +51,69 @@ const customInputTemplate = html`
             tooltip-text$="[[_getTooltip(_editingValue)]]"><span class="truncate">[[propTitle]]</span></paper-checkbox>`;
 const propertyActionTemplate = html`<slot name="property-action"></slot>`;
 
-Polymer({
-    _template: createEditorTemplate(additionalTemplate, html``, customInputTemplate, html``, html``, propertyActionTemplate),
+export class TgBooleanEditor extends TgEditor {
 
-    is: 'tg-boolean-editor',
+    static get template() { 
+        return createEditorTemplate(additionalTemplate, html``, customInputTemplate, html``, html``, propertyActionTemplate);
+    }
 
-    behaviors: [TgEditorBehavior],
-
-    properties: {
-        _onChange: {
-            type: Function
-        },
-        
-        _isBooleanChecked: {
-            type: Function
+    static get properties() {
+        return {
+            _onChange: {
+                type: Function
+            },
+            
+            _isBooleanChecked: {
+                type: Function
+            }
         }
-    },
-
-    created: function () {
+    }
+    
+    constructor () {
+        super();
         this._editorKind = "BOOLEAN";
-    },
 
-    ready: function () {
         this._onChange = (function (e) {
             console.log("_onChange:", e);
             var target = e.target || e.srcElement;
             this._editingValue = this.convertToString(target.checked);
             
-            var parentFunction = TgEditorBehaviorImpl.properties._onChange.value.call(this);
+            var parentFunction = TgEditor.properties._onChange.value.call(this);
             parentFunction.call(this, e);
         }).bind(this);
         
         this._isBooleanChecked = (function (editingValue) {
             return editingValue === 'true';
         }).bind(this);
-    },
-    
+    }
+
+        
     /**
      * This method returns a default value for '_editingValue', which is used 
      *  for representing the value when no entity was bound to this editor yet.
      *
      * Overriden to return 'false' as the value that will be used when no entity is bound to this editor yet.
      */
-    _defaultEditingValue: function () {
+    _defaultEditingValue () {
         return 'false';
-    },
+    }
     
     /**
      * Converts the value into string representation (which is used in edititing / comm values).
      */
-    convertToString: function (value) {
+    convertToString (value) {
         return "" + value;
-    },
+    }
 
     /**
      * Converts the value from string representation (which is used in edititing / comm values) into concrete type of this editor component (String).
      */
-    convertFromString: function (strValue) {
+    convertFromString (strValue) {
         if (strValue !== "false" && strValue !== "true") {
             throw "The entered check value is incorrect [" + strValue + "].";
         }
         return strValue === "true" ? true : false;
     }
-});
+}
+
+customElements.define('tg-boolean-editor', TgBooleanEditor);

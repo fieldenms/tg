@@ -3,10 +3,9 @@ import '/resources/polymer/@polymer/iron-input/iron-input.js'
 import '/resources/polymer/@polymer/iron-icons/iron-icons.js'
 import '/resources/polymer/@polymer/paper-icon-button/paper-icon-button.js'
 
-import { Polymer } from '/resources/polymer/@polymer/polymer/lib/legacy/polymer-fn.js';
-import { html } from '/resources/polymer/@polymer/polymer/lib/utils/html-tag.js';
+import {html} from '/resources/polymer/@polymer/polymer/polymer-element.js';
 
-import { TgEditorBehavior, createEditorTemplate} from '/resources/editors/tg-editor-behavior.js'
+import { TgEditor, createEditorTemplate} from '/resources/editors/tg-editor.js'
 
 const additionalTemplate = html`
     <style>
@@ -37,24 +36,20 @@ const customInputTemplate = html`
 const customIconButtonsTemplate = html`<paper-icon-button on-tap="_openLink" icon="open-in-browser" class="open-button custom-icon-buttons" tabIndex="-1" tooltip-text="Open link"></paper-icon-button>`;
 const propertyActionTemplate = html`<slot name="property-action"></slot>`;
 
-Polymer({
-    _template: createEditorTemplate(additionalTemplate, html``, customInputTemplate, html``, customIconButtonsTemplate, propertyActionTemplate),
+export class TgHyperlinkEditor extends TgEditor {
 
-    is: 'tg-hyperlink-editor',
-
-    behaviors: [ TgEditorBehavior ],
-
-    /**
-     * Converts a JSON object represneting a value of Java type Hyperlink into a string.
-     */
-    convertToString: function (link) {
+    static get template() { 
+        return createEditorTemplate(additionalTemplate, html``, customInputTemplate, html``, customIconButtonsTemplate, propertyActionTemplate);
+    }
+    
+    convertToString (link) {
         return link === null ? "" : link.value;
-    },
+    }
 
     /**
      * Converts the value from string representation into a JSON object that is used for representing value of Java type Hyperlink.
      */
-    convertFromString: function (value) {
+    convertFromString (value) {
         var strValue = value.trim();
         if (strValue === '') {
             return null;
@@ -69,15 +64,17 @@ Polymer({
                 value: strValue
             };
         }
-    },
+    }
 
     /**
      * A handler to open a linked resource in browser
      */
-    _openLink: function () {
+    _openLink () {
         if (this._acceptedValue) {
             var win = window.open(this._acceptedValue.value, '_blank');
             win.focus();
         }
     }
-});
+}
+
+customElements.define('tg-hyperlink-editor', TgHyperlinkEditor);

@@ -680,6 +680,7 @@ export const ElementMixin = dedupingMixin(base => {
 
     ready() {
       if (this._template) {
+        console.count(this.constructor.name);
         this.root = this._stampTemplate(this._template);
         this.$ = this.root.$;
       }

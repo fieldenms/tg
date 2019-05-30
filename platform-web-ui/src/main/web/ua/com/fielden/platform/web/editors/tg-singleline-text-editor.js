@@ -2,7 +2,7 @@ import '/resources/polymer/@polymer/iron-input/iron-input.js';
 
 import {html} from '/resources/polymer/@polymer/polymer/polymer-element.js';
 
-import { TgEditorBehavior,  createEditorTemplate} from '/resources/editors/tg-editor-behavior.js';
+import { TgEditor,  createEditorTemplate} from '/resources/editors/tg-editor.js';
 
 const additionalTemplate = html`
     <style>
@@ -29,7 +29,7 @@ const customInputTemplate = html`
     </iron-input>`;
 const propertyActionTemplate = html`<slot name="property-action"></slot>`;
 
-class TgSinglelineTextEditor extends TgEditorBehavior {
+export class TgSinglelineTextEditor extends TgEditor {
 
     static get template() { 
         return createEditorTemplate(additionalTemplate, html``, customInputTemplate, html``, html``, propertyActionTemplate);

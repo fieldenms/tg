@@ -125,7 +125,7 @@ export function createEditorTemplate (additionalTemplate, customPrefixAttribute,
         </template>`;
 };
 
-export class TgEditorBehavior extends PolymerElement {
+export class TgEditor extends PolymerElement {
 
     static get properties() {
         return {
