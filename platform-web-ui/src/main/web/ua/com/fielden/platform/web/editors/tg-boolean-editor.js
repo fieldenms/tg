@@ -5,7 +5,7 @@ import '/resources/polymer/@polymer/paper-checkbox/paper-checkbox.js'
 
 import {html} from '/resources/polymer/@polymer/polymer/polymer-element.js';
 
-import {TgEditor, createEditorTemplate} from '/resources/editors/tg-editors.js'
+import {TgEditor, createEditorTemplate} from '/resources/editors/tg-editor.js'
 
 const additionalTemplate = html`
     <style>

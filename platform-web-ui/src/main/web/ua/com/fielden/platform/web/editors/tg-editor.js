@@ -391,9 +391,9 @@ export class TgEditor extends PolymerElement {
                     return (function (event) {
                         // console.debug("_onChange:", event);
                         if (this['_onChange_handler']) {
-                            this.cancelAsync(this['_onChange_handler']);
+                            clearTimeout(this['_onChange_handler']);
                         }
-                        this['_onChange_handler'] = this.async(function() {
+                        this['_onChange_handler'] = setTimeout(function() {
                             this.commitIfChanged();
                         }.bind(this), 50);
                     }).bind(this);

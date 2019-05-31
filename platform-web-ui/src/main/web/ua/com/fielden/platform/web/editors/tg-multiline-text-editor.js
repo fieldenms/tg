@@ -121,6 +121,7 @@ export class TgMultilineTextEditor extends TgEditor {
     }
 
     ready () {
+        super.ready();
         const inputWrapper = this.decorator().$$(".input-wrapper");
         inputWrapper.style.flexGrow = "1";
         const labelAndInputContainer = this.decorator().$.labelAndInputContainer;

@@ -13,7 +13,7 @@ import '/resources/components/tg-calendar.js';
 
 import {html} from '/resources/polymer/@polymer/polymer/polymer-element.js';
 
-import { TgEditor, createEditorTemplate} from '/resources/editors/tg-editor-behavior.js'
+import { TgEditor, createEditorTemplate} from '/resources/editors/tg-editor.js'
 import { _momentTz, _millisDateRepresentation, timeZoneFormats } from '/resources/reflection/tg-date-utils.js';
 import { tearDownEvent } from '/resources/reflection/tg-polymer-utils.js'
 
@@ -311,7 +311,7 @@ export class TgDatetimePicker extends TgEditor {
             document.body.appendChild(dialog);
             // let's open the dialog with magical async...
             // this ensures that the dialog is opened after its relocation to body
-            self.async(function () {
+            setTimeout(function () {
                 dialog.open();
             }.bind(this), 1);
         }.bind(domBind);

@@ -10,11 +10,13 @@ import '/resources/polymer/@polymer/paper-styles/color.js';
 import '/resources/components/tg-scrollable-component.js';
 import '/resources/serialisation/tg-serialiser.js';
 
-import { IronOverlayBehavior } from '/resources/polymer/@polymer/iron-overlay-behavior/iron-overlay-behavior.js';
-import {mixinBehaviors} from '/resources/polymer/@polymer/polymer/lib/legacy/class.js';
-import {html} from '/resources/polymer/@polymer/polymer/polymer-element.js';
 
 import { matchedParts } from '/resources/editors/tg-highlighter.js';
+
+import { IronOverlayBehavior } from '/resources/polymer/@polymer/iron-overlay-behavior/iron-overlay-behavior.js';
+import {mixinBehaviors} from '/resources/polymer/@polymer/polymer/lib/legacy/class.js';
+import {html, PolymerElement} from '/resources/polymer/@polymer/polymer/polymer-element.js';
+import {microTask} from '/resources/polymer/@polymer/polymer/lib/utils/async.js';
 
 const template = html`
     <style>
@@ -326,7 +328,7 @@ export class TgEntityEditorResult extends mixinBehaviors([IronOverlayBehavior], 
     /* Highlights matched parts of autocompleted values.
      * Handles all properties that were specified as to be highlighted. */
     highlightMatchedParts () {
-        this.async(function() {
+        microTask.run(function() {
             this._foundSome = this._values.length > 0;
             for (let index = 0; index < this._values.length; index++) {
                 let html = '';
@@ -361,12 +363,12 @@ export class TgEntityEditorResult extends mixinBehaviors([IronOverlayBehavior], 
         let html = '<div style="white-space: nowrap">';
 
         // let's first handle the key
-        let matchedParts = matchedParts(v.key, this.searchQuery);
-        if (matchedParts.length === 0) {
+        let parts = matchedParts(v.key, this.searchQuery);
+        if (parts.length === 0) {
             html = html + v.key;
         } else {
-            for (let index = 0; index < matchedParts.length; index++) {
-                const part = matchedParts[index];
+            for (let index = 0; index < parts.length; index++) {
+                const part = parts[index];
                 if (part.matched === true) {
                     // addition style-scope and this.is (element name) styles is required to enformse custom style processing
                     html = html +
@@ -382,12 +384,12 @@ export class TgEntityEditorResult extends mixinBehaviors([IronOverlayBehavior], 
             let propValueAsString = this._propValueByName(v, 'desc');
             if (propValueAsString && propValueAsString !== 'null' && propValueAsString !== '') {
                 html = html + '<span style="color:#737373"> &ndash; <i>';
-                matchedParts = matchedParts(propValueAsString, this.searchQuery);
-                if (matchedParts.length === 0) {
+                parts = matchedParts(propValueAsString, this.searchQuery);
+                if (parts.length === 0) {
                     html = html + propValueAsString;
                 } else {
-                    for (let index = 0; index < matchedParts.length; index++) {
-                        const part = matchedParts[index];
+                    for (let index = 0; index < parts.length; index++) {
+                        const part = parts[index];
                         if (part.matched) {
                             // addition style-scope and this.is (element name) styles is required to enformse custom style processing
                             html = html + '<span class="key-value-highlighted">' + part.part + '</span>';
@@ -416,9 +418,9 @@ export class TgEntityEditorResult extends mixinBehaviors([IronOverlayBehavior], 
         } else {
             // matched parts should be in a separate div
             html = html + '<div style="white-space: nowrap;">';
-            let matchedParts = matchedParts(propValueAsString, this.searchQuery);
-            for (let index = 0; index < matchedParts.length; index++) {
-                let part = matchedParts[index];
+            let parts = matchedParts(propValueAsString, this.searchQuery);
+            for (let index = 0; index < parts.length; index++) {
+                let part = parts[index];
                 if (part.matched) {
                     // addition style-scope and this.is (element name) styles is required to enformse custom style processing
                     html = html +
@@ -453,7 +455,7 @@ export class TgEntityEditorResult extends mixinBehaviors([IronOverlayBehavior], 
 
         const value = event.detail.item.getAttribute("value");
         delete this.selectedValues[value];
-    },
+    }
 
     /**
      * Locates a HTML element that represent a list item with the specified index and focuses it.

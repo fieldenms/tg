@@ -11,7 +11,7 @@ import '/resources/images/tg-icons.js';
 import {html} from '/resources/polymer/@polymer/polymer/polymer-element.js';
 
 import { matchedParts } from '/resources/editors/tg-highlighter.js';
-import { TgEditorBehavior, createEditorTemplate } from '/resources/editors/tg-editor.js';
+import { TgEditor, createEditorTemplate } from '/resources/editors/tg-editor.js';
 import { tearDownEvent} from '/resources/reflection/tg-polymer-utils.js';
 
 const additionalTemplate = html`
@@ -310,7 +310,7 @@ export class TgCollectionalEditor extends TgEditor {
                 value: function () {
                     return (function () {
                        this._cancelSearch();
-                       this._asyncSearchHandle = this.async(this.scrollToFirstFoundElement, 700);
+                       this._asyncSearchHandle = setTimeout(this.scrollToFirstFoundElement, 700);
                     }).bind(this);
                 }
             },
@@ -342,6 +342,7 @@ export class TgCollectionalEditor extends TgEditor {
     }
 
     ready () {
+        super.ready();
         const inputWrapper = this.decorator().$$(".input-wrapper");
         inputWrapper.style.flexGrow = "1";
         const labelAndInputContainer = this.decorator().$.labelAndInputContainer;
@@ -673,7 +674,7 @@ export class TgCollectionalEditor extends TgEditor {
     
     _cancelSearch () {
         if (this._asyncSearchHandle) {
-            this.cancelAsync(this._asyncSearchHandle);
+            clearTimeout(this._asyncSearchHandle);
             this._asyncSearchHandle = null;
         }
     }
@@ -697,9 +698,9 @@ export class TgCollectionalEditor extends TgEditor {
     
     _highlightedValue (propertyValue, phraseForSearchingCommited) {
         var html = '';
-        var matchedParts = matchedParts(propertyValue, phraseForSearchingCommited);
-        for (var index = 0; index < matchedParts.length; index++) {
-            var part = matchedParts[index];
+        var parts = matchedParts(propertyValue, phraseForSearchingCommited);
+        for (var index = 0; index < parts.length; index++) {
+            var part = parts[index];
             if (part.matched) {
                 // addition style-scope and this.is (element name) styles is required to enformse custom style processing
                 html = html
