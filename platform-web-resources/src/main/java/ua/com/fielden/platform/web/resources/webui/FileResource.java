@@ -17,6 +17,8 @@ import org.restlet.resource.Get;
 
 import com.google.common.base.Charsets;
 
+import ua.com.fielden.platform.cypher.Checksum;
+import ua.com.fielden.platform.roa.HttpHeaders;
 import ua.com.fielden.platform.utils.ResourceLoader;
 import ua.com.fielden.platform.web.app.ISourceController;
 import ua.com.fielden.platform.web.interfaces.IDeviceProvider;
@@ -33,6 +35,7 @@ public class FileResource extends AbstractWebResource {
 
     private final List<String> resourcePaths;
     private final ISourceController sourceController;
+    private final RestServerUtil serverRestUtil;
 
     /**
      * Creates an instance of {@link FileResource} with custom resource paths.
@@ -42,10 +45,11 @@ public class FileResource extends AbstractWebResource {
      * @param request
      * @param response
      */
-    public FileResource(final ISourceController sourceController, final List<String> resourcePaths, final IDeviceProvider deviceProvider, final Context context, final Request request, final Response response) {
+    public FileResource(final RestServerUtil serverRestUtil, final ISourceController sourceController, final List<String> resourcePaths, final IDeviceProvider deviceProvider, final Context context, final Request request, final Response response) {
         super(context, request, response, deviceProvider);
         this.resourcePaths = resourcePaths;
         this.sourceController = sourceController;
+        this.serverRestUtil = serverRestUtil;
     }
 
     /**
@@ -70,7 +74,13 @@ public class FileResource extends AbstractWebResource {
             if (MediaType.TEXT_HTML.equals(mediaType)) {
                 final String source = sourceController.loadSourceWithFilePath(filePath);
                 if (source != null) {
-                    return RestServerUtil.encodedRepresentation(new ByteArrayInputStream(source.getBytes(Charsets.UTF_8)), mediaType);
+                    final byte[] bytes = source.getBytes(Charsets.UTF_8);
+                    try {
+                        serverRestUtil.setHeaderEntry(getResponse(), HttpHeaders.INFO, Checksum.sha1(bytes));
+                    } catch (final Exception e) {
+                        e.printStackTrace();
+                    }
+                    return RestServerUtil.encodedRepresentation(new ByteArrayInputStream(bytes), mediaType);
                 } else {
                     return null;
                 }
