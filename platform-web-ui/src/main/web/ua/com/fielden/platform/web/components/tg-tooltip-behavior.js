@@ -107,12 +107,12 @@ export const TgTooltipBehavior = {
     },
 
     _registerTooltipRelatedEvents: function (trigger) {
-        // //Register mouse listener for new trigger element in order to trigger tooltips automatically
-        // trigger.addEventListener('mousemove', this._handleTooltipAtMousePos);
-        // trigger.addEventListener('mouseleave', this._hideTooltip);
-        // //Register touch listener for new trigger element in order to trigger tooltips automatically
-        // trigger.addEventListener('touchstart', this._handleTouchStart);
-        // trigger.addEventListener('touchend', this._handleTouchEnd);
+        //Register mouse listener for new trigger element in order to trigger tooltips automatically
+        trigger.addEventListener('mousemove', this._handleTooltipAtMousePos);
+        trigger.addEventListener('mouseleave', this._hideTooltip);
+        //Register touch listener for new trigger element in order to trigger tooltips automatically
+        trigger.addEventListener('touchstart', this._handleTouchStart);
+        trigger.addEventListener('touchend', this._handleTouchEnd);
     },
 
     _unregisterTooltipRelatedEvents: function (trigger) {

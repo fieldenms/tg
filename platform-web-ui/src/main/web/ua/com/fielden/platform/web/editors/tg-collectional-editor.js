@@ -310,7 +310,7 @@ export class TgCollectionalEditor extends TgEditor {
                 value: function () {
                     return (function () {
                        this._cancelSearch();
-                       this._asyncSearchHandle = setTimeout(this.scrollToFirstFoundElement, 700);
+                       this._asyncSearchHandle = setTimeout(this.scrollToFirstFoundElement.bind(this), 700);
                     }).bind(this);
                 }
             },

@@ -291,7 +291,7 @@ export class TgEntityEditor extends TgEditor {
                    return (function (event) {
                        // clear any search request in already in progress
                        this._cancelSearch();
-                       this._asyncSearchHandle = setTimeout(this._searchForOnInput, 700);
+                       this._asyncSearchHandle = setTimeout(this._searchForOnInput.bind(this), 700);
                    }).bind(this);
                }
            },
@@ -690,7 +690,7 @@ export class TgEntityEditor extends TgEditor {
     _focusInput () {
         // at the end let's focus the input...
         const input = this.decoratedInput();
-        setTimeout(function () {
+        setTimeout(() => {
             input.focus();
         }, 100);
     }
