@@ -7,7 +7,10 @@ const isStatic = function (url) {
     // console.debug(`isStatic [${url}] pathname [${pathname}]`);
     return pathname === '/' ||
         pathname.startsWith('/resources/') ||
-        pathname.startsWith('/app/'); // 
+        pathname.startsWith('/app/') ||
+        pathname.startsWith('/centre_ui/') ||
+        pathname.startsWith('/master_ui/') ||
+        pathname.startsWith('/custom_view/');
         // pathname === '/resources/startup-resources-vulcanized.js' ||
         // pathname === '/resources/polymer/@webcomponents/webcomponentsjs/webcomponents-bundle.js' ||
         // pathname === '/resources/polymer/web-animations-js/web-animations-next-lite.min.js' ||
@@ -28,53 +31,74 @@ const isResponseSuccessful = function (response) {
     return response && response.status === 200 && response.type === 'basic';
 };
 
-const cacheIfSuccessful = async function (response, checksumRequest, checksumResponse, url, cache) {
+const cacheIfSuccessful = function (response, checksumRequest, checksumResponseToCache, url, cache) {
     if (isResponseSuccessful(response)) { // cache response if it is successful
         // IMPORTANT: Clone the response. A response is a stream
         // and because we want the browser to consume the response
         // as well as the cache consuming the response, we need
         // to clone it so we have two streams.
         const responseToCache = response.clone();
-        await cache.put(url, responseToCache);
-        await cache.put(checksumRequest, checksumResponse);
+        return cache.put(url, responseToCache).then(function() {
+            return cache.put(checksumRequest, checksumResponseToCache).then(function () {
+                return response;
+            });
+        });
     }
+    return Promise.resolve(response);
 };
 
 self.addEventListener('fetch', function (event) {
     const request = event.request;
     const url = request.url;
     if (isStatic(url)) {
-        event.respondWith(async function() {
-            const cache = await caches.open(cacheName);
-            const cachedResponseAndChecksum = await cache.matchAll(url, { ignoreMethod: true });
-            const serverChecksumRequest = new Request(url, { method: 'HEAD' });
-            const serverChecksumResponse = await fetch(serverChecksumRequest);
-            const serverChecksumResponseToCache = serverChecksumResponse.clone();
-            const serverChecksum = isResponseSuccessful(serverChecksumResponse) && serverChecksumResponse.text;
-            if (cachedResponseAndChecksum && cachedResponseAndChecksum.length === 2) { // cached entry exists and it has proper checksum too
-                const cachedChecksum = cachedResponseAndChecksum[0].text;
-                if (!serverChecksum) { // resource has been deleted on server
-                    const deleted = await cache.delete(url);
-                    if (!deleted) {
-                        console.warn(`Cached resource [${url}] was not deleted.`);
-                    }
-                    return staleResponse();
-                } else if (serverChecksum !== cachedChecksum) { // resource has been modified on server
-                    const fetchedResponse = await fetch(url);
-                    cacheIfSuccessful(fetchedResponse, serverChecksumRequest, serverChecksumResponseToCache, url, cache);
-                    return fetchedResponse;
-                } else { // serverChecksum === cachedChecksum; resource is the same on server and in client cache
-                    return cachedResponseAndChecksum[0];
-                }
-            } else { // there is no cached entry
-                if (!serverChecksum) { // resource has been deleted on server
-                    return staleResponse();
-                } else { // resource exists on server
-                    const fetchedResponse = await fetch(url);
-                    cacheIfSuccessful(fetchedResponse, serverChecksumRequest, serverChecksumResponseToCache, url, cache);
-                    return fetchedResponse;
-                }
-            }
+        event.respondWith(function() {
+            console.time('open and fetch checksum ' + url);
+            return caches.open(cacheName).then(function (cache) {
+                const serverChecksumRequest = new Request(url + '?checksum=true', { method: 'GET' });
+                return fetch(serverChecksumRequest).then(function(serverChecksumResponse) {
+                    console.timeEnd('open and fetch checksum ' + url);
+                    console.time('matchAll ' + url);
+                    return cache.matchAll(url, { ignoreSearch: true }).then(function (cachedResponseAndChecksum) {
+                        console.timeEnd('matchAll ' + url);
+                        const serverChecksumResponseToCache = isResponseSuccessful(serverChecksumResponse) && serverChecksumResponse.clone();
+                        // const serverChecksum = /* isResponseSuccessful(serverChecksumResponse) && */ await serverChecksumResponse.text();
+                        return serverChecksumResponse.text().then(function (serverChecksum) {
+                            if (cachedResponseAndChecksum && cachedResponseAndChecksum.length === 2) { // cached entry exists and it has proper checksum too
+                                return cachedResponseAndChecksum[1].text().then(function (cachedChecksum) {
+                                    console.debug(`${url} CACHED: cachedChecksum = ${cachedChecksum} serverChecksum = ${serverChecksum}`);
+                                    if (!serverChecksum) { // resource has been deleted on server
+                                        console.warn(`Resource ${url} has been deleted on server.`);
+                                        return cache.delete(url).then(function (deleted) {
+                                            if (!deleted) {
+                                                console.error(`Cached resource [${url}] was not deleted.`);
+                                            }
+                                            return staleResponse();
+                                        });
+                                    } else if (serverChecksum !== cachedChecksum) { // resource has been modified on server
+                                        console.warn(`Resource ${url} has been modified on server. CachedChecksum ${cachedChecksum} vs serverChecksum ${serverChecksum}. MODIFIED RESOURCE WILL BE RE-CACHED.`);
+                                        return fetch(url).then(function (fetchedResponse) {
+                                            return cacheIfSuccessful(fetchedResponse, serverChecksumRequest, serverChecksumResponseToCache, url, cache);
+                                        });
+                                    } else { // serverChecksum === cachedChecksum; resource is the same on server and in client cache
+                                        return cachedResponseAndChecksum[0];
+                                    }
+                                });
+                            } else { // there is no cached entry
+                                console.debug(`${url} NEW: serverChecksum = ${serverChecksum}`);
+                                if (!serverChecksum) { // resource has been deleted on server
+                                    console.warn(`Resource ${url} has been deleted on server.`);
+                                    return staleResponse();
+                                } else { // resource exists on server
+                                    console.warn(`Resource ${url} exists on server. ServerChecksum ${serverChecksum}. NEW RESOURCE WILL BE CACHED.`);
+                                    return fetch(url).then(function (fetchedResponse) {
+                                        return cacheIfSuccessful(fetchedResponse, serverChecksumRequest, serverChecksumResponseToCache, url, cache);
+                                    });
+                                }
+                            }
+                        });
+                    });
+                });
+            });
         }());
     } // all non-static resources should be bypassed by service worker, just ignoring them in 'fetch' event; this will trigger default logic
 });

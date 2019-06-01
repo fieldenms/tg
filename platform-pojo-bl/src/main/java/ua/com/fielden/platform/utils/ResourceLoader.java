@@ -49,7 +49,7 @@ public class ResourceLoader {
      */
     public static String getText(final String pathAndFileName) {
         try {
-            return IOUtils.toString(getURL(pathAndFileName).openStream(), "UTF-8");
+            return IOUtils.toString(getStream(pathAndFileName), "UTF-8");
         } catch (final Exception e) {
             logger.error(e.getMessage() + " for path: " + pathAndFileName);
             return null;

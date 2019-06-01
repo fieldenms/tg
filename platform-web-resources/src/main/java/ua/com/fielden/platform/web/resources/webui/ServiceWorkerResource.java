@@ -1,16 +1,14 @@
 package ua.com.fielden.platform.web.resources.webui;
 
 import static com.google.common.base.Charsets.UTF_8;
-import static org.restlet.data.Encoding.GZIP;
-import static org.restlet.data.MediaType.APPLICATION_JAVASCRIPT;
+import static org.restlet.data.MediaType.TEXT_JAVASCRIPT;
+import static ua.com.fielden.platform.web.resources.RestServerUtil.encodedRepresentation;
 
 import java.io.ByteArrayInputStream;
 
 import org.restlet.Context;
 import org.restlet.Request;
 import org.restlet.Response;
-import org.restlet.engine.application.EncodeRepresentation;
-import org.restlet.representation.InputRepresentation;
 import org.restlet.representation.Representation;
 import org.restlet.resource.Get;
 
@@ -46,7 +44,7 @@ public class ServiceWorkerResource extends AbstractWebResource {
     @Get
     @Override
     public Representation get() {
-        return new EncodeRepresentation(GZIP, new InputRepresentation(new ByteArrayInputStream(sourceController.loadSource("/resources/service-worker.js").getBytes(UTF_8)), APPLICATION_JAVASCRIPT));
+        return encodedRepresentation(new ByteArrayInputStream(sourceController.loadSource("/resources/service-worker.js").getBytes(UTF_8)), TEXT_JAVASCRIPT);
     }
     
 }

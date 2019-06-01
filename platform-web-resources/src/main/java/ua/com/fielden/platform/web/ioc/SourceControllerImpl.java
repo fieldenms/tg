@@ -202,17 +202,10 @@ public class SourceControllerImpl implements ISourceController {
     
     ////////////////////////////////// Getting file source //////////////////////////////////
     private static String getFileSource(final String resourceURI, final List<String> resourcePaths) {
-        final String rest = resourceURI.replaceFirst("/resources/", "");
-        final int lastDotIndex = rest.lastIndexOf(".");
-        final String originalPath = rest.substring(0);
-        final String extension = rest.substring(lastDotIndex + 1);
-        return getFileSource(originalPath, extension, resourcePaths);
-    }
-    
-    private static String getFileSource(final String originalPath, final String extension, final List<String> resourcePaths) {
-        final String filePath = generateFileName(resourcePaths, originalPath, extension);
+        final String originalPath = resourceURI.replaceFirst("/resources/", "");
+        final String filePath = generateFileName(resourcePaths, originalPath);
         if (isEmpty(filePath)) {
-            logger.error(format("The requested resource (%s + %s) wasn't found.", originalPath, extension));
+            logger.error(format("The requested resource (%s) wasn't found.", originalPath));
             return null;
         } else {
             return getFileSource(filePath);

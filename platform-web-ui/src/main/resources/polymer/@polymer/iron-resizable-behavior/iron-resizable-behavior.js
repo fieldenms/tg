@@ -62,7 +62,7 @@ export const IronResizableBehavior = {
     this._boundOnDescendantIronResize = this._onDescendantIronResize.bind(this);
   },
   attached: function () {
-    this._requestResizeNotifications();
+    //this._requestResizeNotifications();
   },
   detached: function () {
     if (this._parentResizable) {

@@ -1,20 +1,14 @@
 package ua.com.fielden.platform.web.resources.webui;
 
+import static org.restlet.data.MediaType.TEXT_HTML;
+import static ua.com.fielden.platform.web.resources.webui.FileResource.createRepresentation;
 import static ua.com.fielden.platform.web.utils.WebUiResourceUtils.handleUndesiredExceptions;
-
-import java.io.ByteArrayInputStream;
 
 import org.restlet.Context;
 import org.restlet.Request;
 import org.restlet.Response;
-import org.restlet.data.Encoding;
-import org.restlet.data.MediaType;
-import org.restlet.engine.application.EncodeRepresentation;
-import org.restlet.representation.InputRepresentation;
 import org.restlet.representation.Representation;
 import org.restlet.resource.Get;
-
-import com.google.common.base.Charsets;
 
 import ua.com.fielden.platform.web.app.ISourceController;
 import ua.com.fielden.platform.web.interfaces.IDeviceProvider;
@@ -57,8 +51,7 @@ public class CustomViewResource extends AbstractWebResource {
     @Override
     public Representation get() {
         return handleUndesiredExceptions(getResponse(), () -> {
-            final String source = sourceController.loadSource("/custom_view/" + this.viewName);
-            return new EncodeRepresentation(Encoding.GZIP, new InputRepresentation(new ByteArrayInputStream(source.getBytes(Charsets.UTF_8)), MediaType.TEXT_HTML));
+            return createRepresentation(sourceController, TEXT_HTML, "/custom_view/" + this.viewName, getReference().getRemainingPart());
         }, restUtil);
     }
 }

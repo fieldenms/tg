@@ -1,18 +1,13 @@
 package ua.com.fielden.platform.web.resources.webui;
 
-import java.io.ByteArrayInputStream;
+import static org.restlet.data.MediaType.TEXT_JAVASCRIPT;
+import static ua.com.fielden.platform.web.resources.webui.FileResource.createRepresentation;
 
 import org.restlet.Context;
 import org.restlet.Request;
 import org.restlet.Response;
-import org.restlet.data.Encoding;
-import org.restlet.data.MediaType;
-import org.restlet.engine.application.EncodeRepresentation;
-import org.restlet.representation.InputRepresentation;
 import org.restlet.representation.Representation;
 import org.restlet.resource.Get;
-
-import com.google.common.base.Charsets;
 
 import ua.com.fielden.platform.web.app.ISourceController;
 import ua.com.fielden.platform.web.interfaces.IDeviceProvider;
@@ -43,8 +38,7 @@ public class MainWebUiComponentResource  extends AbstractWebResource {
     @Get
     @Override
     public Representation get() {
-        final String source = sourceController.loadSource("/app/tg-app.js");
-        return new EncodeRepresentation(Encoding.GZIP, new InputRepresentation(new ByteArrayInputStream(source.getBytes(Charsets.UTF_8)), MediaType.TEXT_JAVASCRIPT));
+        return createRepresentation(sourceController, TEXT_JAVASCRIPT, "/app/tg-app.js", getReference().getRemainingPart());
     }
 
 }
