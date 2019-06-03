@@ -110,11 +110,6 @@ public final class Reflector {
                 + "].");
     }
 
-    /** Clear cached methods. */
-    public static void clearMethodsCache() {
-        METHOD_CACHE.cleanUp();
-    }
-
     /**
      * Returns method specified with methodName from {@code startWithClass} class.
      *

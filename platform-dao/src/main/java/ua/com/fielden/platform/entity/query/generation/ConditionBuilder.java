@@ -1,6 +1,5 @@
 package ua.com.fielden.platform.entity.query.generation;
 
-import static ua.com.fielden.platform.utils.CollectionUtil.listOf;
 import static ua.com.fielden.platform.entity.query.fluent.enums.LogicalOperator.AND;
 import static ua.com.fielden.platform.entity.query.fluent.enums.LogicalOperator.OR;
 import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.ALL_OF_EQUERY_TOKENS;
@@ -26,7 +25,6 @@ import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.EX
 import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.EXT_PROP;
 import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.FUNCTION_MODEL;
 import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.GROUPED_CONDITIONS;
-import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.ILIKE_OPERATOR;
 import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.IN_OPERATOR;
 import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.IPARAM;
 import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.IVAL;
@@ -43,13 +41,14 @@ import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.VA
 import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.ZERO_ARG_FUNCTION;
 import static ua.com.fielden.platform.entity.query.generation.elements.Quantifier.ALL;
 import static ua.com.fielden.platform.entity.query.generation.elements.Quantifier.ANY;
+import static ua.com.fielden.platform.utils.CollectionUtil.listOf;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import ua.com.fielden.platform.entity.query.fluent.LikeOptions;
 import ua.com.fielden.platform.entity.query.fluent.enums.ComparisonOperator;
 import ua.com.fielden.platform.entity.query.fluent.enums.LogicalOperator;
 import ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory;
@@ -62,7 +61,6 @@ import ua.com.fielden.platform.entity.query.generation.elements.ICondition;
 import ua.com.fielden.platform.entity.query.generation.elements.ISetOperand;
 import ua.com.fielden.platform.entity.query.generation.elements.ISingleOperand;
 import ua.com.fielden.platform.entity.query.generation.elements.LikeTest;
-import ua.com.fielden.platform.entity.query.generation.elements.LowerCaseOf;
 import ua.com.fielden.platform.entity.query.generation.elements.NullTest;
 import ua.com.fielden.platform.entity.query.generation.elements.QuantifiedTest;
 import ua.com.fielden.platform.entity.query.generation.elements.Quantifier;
@@ -132,32 +130,16 @@ public class ConditionBuilder extends AbstractTokensBuilder {
         return testThreeSome(singleOperands, LIKE_OPERATOR, singleOperands);
     }
 
-    private boolean isPlainILikeTest() {
-        return testThreeSome(singleOperands, ILIKE_OPERATOR, singleOperands);
-    }
-
     private boolean isSingleVsMultipleLikeTest() {
         return testThreeSome(singleOperands, LIKE_OPERATOR, mutlipleOperands);
-    }
-
-    private boolean isSingleVsMultipleILikeTest() {
-        return testThreeSome(singleOperands, ILIKE_OPERATOR, mutlipleOperands);
     }
 
     private boolean isMultipleVsSingleLikeTest() {
         return testThreeSome(mutlipleOperands, LIKE_OPERATOR, singleOperands);
     }
 
-    private boolean isMultipleVsSingleILikeTest() {
-        return testThreeSome(mutlipleOperands, ILIKE_OPERATOR, singleOperands);
-    }
-
     private boolean isMultipleVsMultipleLikeTest() {
         return testThreeSome(mutlipleOperands, LIKE_OPERATOR, mutlipleOperands);
-    }
-
-    private boolean isMultipleVsMultipleILikeTest() {
-        return testThreeSome(mutlipleOperands, ILIKE_OPERATOR, mutlipleOperands);
     }
 
     private boolean isPlainSetTest() {
@@ -182,7 +164,6 @@ public class ConditionBuilder extends AbstractTokensBuilder {
                 isPlainNullTest() || isMultipleNullTest() || //
                 isPlainComparisonTest() || isMultipleVsSingleComparisonTest() || isMultipleVsMultipleComparisonTest() || isSingleVsMultiplePlainComparisonTest() || //
                 isPlainLikeTest() || isMultipleVsSingleLikeTest() || isMultipleVsMultipleLikeTest() || isSingleVsMultipleLikeTest() || //
-                isPlainILikeTest() || isMultipleVsSingleILikeTest() || isMultipleVsMultipleILikeTest() || isSingleVsMultipleILikeTest() || //
                 isPlainSetTest() || isMultipleSetTest() || isPlainQuantifiedTest() || isMultipleQuantifiedTest() //
         ;
     }
@@ -214,14 +195,6 @@ public class ConditionBuilder extends AbstractTokensBuilder {
             return getMultipleVsMultipleLikeTest();
         } else if (isSingleVsMultipleLikeTest()) {
             return getSingleVsMultipleLikeTest();
-        } else if (isPlainILikeTest()) {
-            return getPlainILikeTest();
-        } else if (isMultipleVsSingleILikeTest()) {
-            return getMultipleVsSingleILikeTest();
-        } else if (isMultipleVsMultipleILikeTest()) {
-            return getMultipleVsMultipleILikeTest();
-        } else if (isSingleVsMultipleILikeTest()) {
-            return getSingleVsMultipleILikeTest();
         } else if (isPlainSetTest()) {
             return getPlainSetTest();
         } else if (isMultipleSetTest()) {
@@ -345,13 +318,7 @@ public class ConditionBuilder extends AbstractTokensBuilder {
     private LikeTest getPlainLikeTest() {
         final ISingleOperand firstOperand = getModelForSingleOperand(firstCat(), firstValue());
         final ISingleOperand secondOperand = getModelForSingleOperand(thirdCat(), thirdValue());
-        return new LikeTest(firstOperand, secondOperand, (Boolean) secondValue(), false, getDbVersion());
-    }
-
-    private LikeTest getPlainILikeTest() {
-        final ISingleOperand firstOperand = getModelForSingleOperand(firstCat(), firstValue());
-        final ISingleOperand secondOperand = getModelForSingleOperand(thirdCat(), thirdValue());
-        return new LikeTest(firstOperand, secondOperand, (Boolean) secondValue(), true, getDbVersion());
+        return new LikeTest(firstOperand, secondOperand, (LikeOptions) secondValue(), getDbVersion());
     }
 
     private GroupedConditions getMultipleVsMultipleLikeTest() {
@@ -365,26 +332,7 @@ public class ConditionBuilder extends AbstractTokensBuilder {
         for (final ISingleOperand leftOperand : leftOperands) {
             final List<ICondition> innerConditions = new ArrayList<>();
             for (final ISingleOperand rightOperand : rightOperands) {
-                innerConditions.add(new LikeTest(leftOperand, rightOperand, (Boolean) secondValue(), false, getDbVersion()));
-            }
-            final GroupedConditions group = getGroup(innerConditions, rightLogicalOperator);
-            outerConditions.add(group);
-        }
-        return getGroup(outerConditions, leftLogicalOperator);
-    }
-
-    private GroupedConditions getMultipleVsMultipleILikeTest() {
-        final List<ISingleOperand> leftOperands = getModelForMultipleOperands(firstCat(), firstValue());
-        final List<ISingleOperand> rightOperands = getModelForMultipleOperands(thirdCat(), thirdValue());
-
-        final LogicalOperator leftLogicalOperator = mutlipleAnyOperands.contains(firstCat()) ? OR : AND;
-        final LogicalOperator rightLogicalOperator = mutlipleAnyOperands.contains(thirdCat()) ? OR : AND;
-
-        final List<ICondition> outerConditions = new ArrayList<>();
-        for (final ISingleOperand leftOperand : leftOperands) {
-            final List<ICondition> innerConditions = new ArrayList<>();
-            for (final ISingleOperand rightOperand : rightOperands) {
-                innerConditions.add(new LikeTest(leftOperand, rightOperand, (Boolean) secondValue(), true, getDbVersion()));
+                innerConditions.add(new LikeTest(leftOperand, rightOperand, (LikeOptions) secondValue(), getDbVersion()));
             }
             final GroupedConditions group = getGroup(innerConditions, rightLogicalOperator);
             outerConditions.add(group);
@@ -397,18 +345,7 @@ public class ConditionBuilder extends AbstractTokensBuilder {
         final ISingleOperand singleOperand = getModelForSingleOperand(thirdCat(), thirdValue());
         final List<ICondition> conditions = new ArrayList<>();
         for (final ISingleOperand operand : operands) {
-            conditions.add(new LikeTest(operand, singleOperand, (Boolean) secondValue(), false, getDbVersion()));
-        }
-        final LogicalOperator logicalOperator = mutlipleAnyOperands.contains(firstCat()) ? OR : AND;
-        return getGroup(conditions, logicalOperator);
-    }
-
-    private GroupedConditions getMultipleVsSingleILikeTest() {
-        final List<ISingleOperand> operands = getModelForMultipleOperands(firstCat(), firstValue());
-        final ISingleOperand singleOperand = getModelForSingleOperand(thirdCat(), thirdValue());
-        final List<ICondition> conditions = new ArrayList<>();
-        for (final ISingleOperand operand : operands) {
-            conditions.add(new LikeTest(operand, singleOperand, (Boolean) secondValue(), true, getDbVersion()));
+            conditions.add(new LikeTest(operand, singleOperand, (LikeOptions) secondValue(), getDbVersion()));
         }
         final LogicalOperator logicalOperator = mutlipleAnyOperands.contains(firstCat()) ? OR : AND;
         return getGroup(conditions, logicalOperator);
@@ -419,18 +356,7 @@ public class ConditionBuilder extends AbstractTokensBuilder {
         final ISingleOperand singleOperand = getModelForSingleOperand(firstCat(), firstValue());
         final List<ICondition> conditions = new ArrayList<>();
         for (final ISingleOperand operand : operands) {
-            conditions.add(new LikeTest(singleOperand, operand, (Boolean) secondValue(), false, getDbVersion()));
-        }
-        final LogicalOperator logicalOperator = mutlipleAnyOperands.contains(thirdCat()) ? OR : AND;
-        return getGroup(conditions, logicalOperator);
-    }
-
-    private GroupedConditions getSingleVsMultipleILikeTest() {
-        final List<ISingleOperand> operands = getModelForMultipleOperands(thirdCat(), thirdValue());
-        final ISingleOperand singleOperand = getModelForSingleOperand(firstCat(), firstValue());
-        final List<ICondition> conditions = new ArrayList<>();
-        for (final ISingleOperand operand : operands) {
-            conditions.add(new LikeTest(singleOperand, operand, (Boolean) secondValue(), true, getDbVersion()));
+            conditions.add(new LikeTest(singleOperand, operand, (LikeOptions) secondValue(), getDbVersion()));
         }
         final LogicalOperator logicalOperator = mutlipleAnyOperands.contains(thirdCat()) ? OR : AND;
         return getGroup(conditions, logicalOperator);

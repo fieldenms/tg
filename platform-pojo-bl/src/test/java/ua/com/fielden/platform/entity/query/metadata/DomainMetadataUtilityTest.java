@@ -1,15 +1,15 @@
-package ua.com.fielden.platform.dao;
+package ua.com.fielden.platform.entity.query.metadata;
 
-import org.junit.Test;
-
-import ua.com.fielden.platform.entity.query.generation.BaseEntQueryTCase;
-import ua.com.fielden.platform.entity.query.model.ExpressionModel;
-import ua.com.fielden.platform.sample.domain.TgBogieLocation;
 import static org.junit.Assert.assertEquals;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.expr;
 import static ua.com.fielden.platform.entity.query.metadata.DomainMetadataUtils.generateUnionEntityPropertyExpression;
 
-public class DomainMetadataUtilityTest extends BaseEntQueryTCase {
+import org.junit.Test;
+
+import ua.com.fielden.platform.entity.query.model.ExpressionModel;
+import ua.com.fielden.platform.sample.domain.TgBogieLocation;
+
+public class DomainMetadataUtilityTest {
 
     @Test
     public void test_union_entity_key_prop_model_generation() throws Exception {

@@ -2,13 +2,9 @@ package ua.com.fielden.platform.dao.session;
 
 import static org.apache.commons.lang.StringUtils.isEmpty;
 
-import java.sql.Connection;
-import java.util.function.Consumer;
-
 import org.hibernate.Session;
 
 import ua.com.fielden.platform.dao.ISessionEnabled;
-import ua.com.fielden.platform.dao.annotations.SessionRequired;
 
 /**
  * A convenient transactional wrapper for executing instances of {@code Consumer<Connection>}.
@@ -20,16 +16,11 @@ import ua.com.fielden.platform.dao.annotations.SessionRequired;
  * @author TG Team
  *
  */
-public class WithTransaction implements ISessionEnabled  {
+public abstract class WithTransaction implements ISessionEnabled  {
 
     private Session session;
     private String transactionGuid;
 
-    @SessionRequired
-    public void call(final Consumer<Connection> action) {
-        getSession().doWork(conn -> action.accept(conn));
-    }
-    
     @Override
     public Session getSession() {
         if (session == null) {

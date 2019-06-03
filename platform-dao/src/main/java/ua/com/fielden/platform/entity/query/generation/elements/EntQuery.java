@@ -27,6 +27,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Map.Entry;
 import java.util.Set;
 import java.util.SortedSet;
@@ -51,7 +52,6 @@ import ua.com.fielden.platform.entity.query.metadata.PersistedEntityMetadata;
 import ua.com.fielden.platform.entity.query.metadata.PropertyMetadata;
 import ua.com.fielden.platform.entity.query.model.ConditionModel;
 import ua.com.fielden.platform.types.Money;
-import ua.com.fielden.platform.utils.CollectionUtil;
 import ua.com.fielden.platform.utils.Pair;
 
 public class EntQuery implements ISingleOperand {
@@ -85,7 +85,7 @@ public class EntQuery implements ISingleOperand {
      * modifiable set of unresolved props (introduced for performance reason - in order to avoid multiple execution of the same search against all query props while searching for
      * unresolved only; if at some master the property of this subquery is resolved - it should be removed from here
      */
-    private List<EntProp> unresolvedProps = new ArrayList<>();
+    private final List<EntProp> unresolvedProps = new ArrayList<>();
 
     @Override
     public String toString() {
@@ -284,7 +284,7 @@ public class EntQuery implements ISingleOperand {
         }
     }
 
-    private boolean shouldYieldBeRemoved(final IRetrievalModel fetchModel, final Yield yield) {
+    private boolean shouldYieldBeRemoved(final IRetrievalModel<?> fetchModel, final Yield yield) {
         final boolean presentInFetchModel = fetchModel.containsProp(yield.getAlias());
         final boolean allFetchedPropsAreAggregatedExpressions = areAllFetchedPropsAggregatedExpressions(fetchModel);
         // this means that all not fetched props should be 100% removed -- in order to get valid sql stmt for entity centre totals query
@@ -292,37 +292,55 @@ public class EntQuery implements ISingleOperand {
         return allFetchedPropsAreAggregatedExpressions ? (!presentInFetchModel || isHeaderOfMoneyType) : !presentInFetchModel;
     }
 
-    private void adjustOrderBys() {
+    private void enhanceOrderBys() {
         final List<OrderBy> toBeAdded = new ArrayList<>();
         for (final OrderBy orderBy : orderings.getModels()) {
-            if (orderBy.getYieldName() != null) {
-                if (orderBy.getYieldName().equals(KEY) && isCompositeEntity(resultType)) {
-                    final List<String> keyOrderProps = keyPaths((Class<? extends AbstractEntity<DynamicEntityKey>>) resultType, sources.getMain().getAlias());
-                    for (final String keyMemberProp : keyOrderProps) {
-                        toBeAdded.add(new OrderBy(new EntProp(keyMemberProp), orderBy.isDesc()));
-                    }
-                } else {
-                    final Yield correspondingYield = yields.getYieldByAlias(orderBy.getYieldName());
-                    final Yield correspondingYieldWithAmount = yields.getYieldByAlias(orderBy.getYieldName() + ".amount");
-                    if (correspondingYieldWithAmount != null) {
-                        orderBy.setYield(correspondingYieldWithAmount);
-                        toBeAdded.add(orderBy);
-                    } else if (correspondingYield != null) {
-                        orderBy.setYield(correspondingYield);
-                        toBeAdded.add(orderBy);
-                    } else {
-                        toBeAdded.addAll(transformOrderByFromYieldIntoOrderByFromProp(yields.findMostMatchingYield(orderBy.getYieldName()), orderBy));
-                    }
-                }
-            } else {
-                toBeAdded.add(orderBy);
-            }
-
+            toBeAdded.addAll(orderBy.getYieldName() != null ? enhanceOrderByYield(orderBy) : enhanceOrderByOther(orderBy));
         }
         orderings.getModels().clear();
         orderings.getModels().addAll(toBeAdded);
     }
 
+    private List<OrderBy> enhanceOrderByYield(final OrderBy orderBy) {
+        final List<OrderBy> toBeAdded = new ArrayList<>();
+        
+        if (orderBy.getYieldName().equals(KEY) && isCompositeEntity(resultType)) {
+            final List<String> keyOrderProps = keyPaths((Class<? extends AbstractEntity<DynamicEntityKey>>) resultType);
+            for (final String keyMemberProp : keyOrderProps) {
+                toBeAdded.add(new OrderBy(new EntProp(keyMemberProp), orderBy.isDesc()));
+            }
+        } else {
+            final Yield correspondingYield = yields.getYieldByAlias(orderBy.getYieldName());
+            final Yield correspondingYieldWithAmount = yields.getYieldByAlias(orderBy.getYieldName() + ".amount");
+            if (correspondingYieldWithAmount != null) {
+                orderBy.setYield(correspondingYieldWithAmount);
+                toBeAdded.add(orderBy);
+            } else if (correspondingYield != null) {
+                orderBy.setYield(correspondingYield);
+                toBeAdded.add(orderBy);
+            } else {
+                toBeAdded.addAll(transformOrderByFromYieldIntoOrderByFromProp(yields.findMostMatchingYield(orderBy.getYieldName()), orderBy));
+            }
+        }
+        return toBeAdded;
+    }
+    
+    private List<OrderBy> enhanceOrderByOther(final OrderBy orderBy) {
+        final List<OrderBy> toBeAdded = new ArrayList<>();
+        
+        if (orderBy.getOperand() instanceof EntProp && ((EntProp) orderBy.getOperand()).getName().equals(KEY) && isCompositeEntity(resultType)) {
+            final List<String> keyOrderProps = keyPaths((Class<? extends AbstractEntity<DynamicEntityKey>>) resultType);
+            for (final String keyMemberProp : keyOrderProps) {
+                toBeAdded.add(new OrderBy(new EntProp(keyMemberProp), orderBy.isDesc()));
+            }
+        } else {
+            toBeAdded.add(orderBy);
+        }
+
+        return toBeAdded;
+    }
+
+    
     private List<OrderBy> transformOrderByFromYieldIntoOrderByFromProp(final Yield bestYield, final OrderBy original) {
         if (bestYield == null) {
             throw new IllegalStateException("Could not find best yield match for order by yield [" + original.getYieldName() + "]");
@@ -511,7 +529,7 @@ public class EntQuery implements ISingleOperand {
 
         enhanceYieldsModel();
         adjustYieldsModelAccordingToFetchModel(fetchModel);
-        adjustOrderBys();
+        enhanceOrderBys();
         enhanceGroupBysModelFromYields();
         enhanceGroupBysModelFromOrderBys();
 
@@ -588,7 +606,7 @@ public class EntQuery implements ISingleOperand {
         for (final EntProp propToBeResolvedPair : propsToBeResolved) {
             if (!propToBeResolvedPair.isFinallyResolved()) {
                 final Map<ISource, PropResolutionInfo> sourceCandidates = findSourceMatchCandidates(propToBeResolvedPair);
-                if (sourceCandidates.size() == 0) {
+                if (sourceCandidates.isEmpty()) {
                     propToBeResolvedPair.setUnresolved(true);
                     unresolved.add(propToBeResolvedPair);
                 } else {
@@ -738,7 +756,7 @@ public class EntQuery implements ISingleOperand {
     }
 
     public List<EntProp> getUnresolvedProps() {
-        return unresolvedProps;
+        return Collections.unmodifiableList(unresolvedProps);
     }
 
     @Override
@@ -747,7 +765,7 @@ public class EntQuery implements ISingleOperand {
     }
 
     @Override
-    public Class type() {
+    public Class<?> type() {
         return resultType;
     }
 
@@ -770,6 +788,7 @@ public class EntQuery implements ISingleOperand {
         int result = 1;
         result = prime * result + ((conditions == null) ? 0 : conditions.hashCode());
         result = prime * result + ((groups == null) ? 0 : groups.hashCode());
+        result = prime * result + ((orderings == null) ? 0 : orderings.hashCode());
         result = prime * result + ((category == null) ? 0 : category.hashCode());
         result = prime * result + ((resultType == null) ? 0 : resultType.hashCode());
         result = prime * result + ((sources == null) ? 0 : sources.hashCode());
@@ -782,51 +801,17 @@ public class EntQuery implements ISingleOperand {
         if (this == obj) {
             return true;
         }
-        if (obj == null) {
-            return false;
-        }
         if (!(obj instanceof EntQuery)) {
             return false;
         }
-        final EntQuery other = (EntQuery) obj;
-        if (conditions == null) {
-            if (other.conditions != null) {
-                return false;
-            }
-        } else if (!conditions.equals(other.conditions)) {
-            return false;
-        }
-        if (groups == null) {
-            if (other.groups != null) {
-                return false;
-            }
-        } else if (!groups.equals(other.groups)) {
-            return false;
-        }
-        if (category != other.category) {
-            return false;
-        }
-        if (resultType == null) {
-            if (other.resultType != null) {
-                return false;
-            }
-        } else if (!resultType.equals(other.resultType)) {
-            return false;
-        }
-        if (sources == null) {
-            if (other.sources != null) {
-                return false;
-            }
-        } else if (!sources.equals(other.sources)) {
-            return false;
-        }
-        if (yields == null) {
-            if (other.yields != null) {
-                return false;
-            }
-        } else if (!yields.equals(other.yields)) {
-            return false;
-        }
-        return true;
-    }
+
+        final EntQuery that = (EntQuery) obj;
+        return Objects.equals(conditions, that.conditions)
+            && Objects.equals(groups, that.groups)
+            && Objects.equals(orderings, that.orderings)
+            && Objects.equals(category, that.category)
+            && Objects.equals(resultType, that.resultType)
+            && Objects.equals(sources, that.sources)
+            && Objects.equals(yields, that.yields);
+     }
 }
