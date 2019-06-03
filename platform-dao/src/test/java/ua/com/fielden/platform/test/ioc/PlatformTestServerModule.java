@@ -39,6 +39,7 @@ import ua.com.fielden.platform.sample.domain.ITgBogieLocation;
 import ua.com.fielden.platform.sample.domain.ITgCategory;
 import ua.com.fielden.platform.sample.domain.ITgCentreDiffSerialisation;
 import ua.com.fielden.platform.sample.domain.ITgCentreDiffSerialisationNonPersistentChild;
+import ua.com.fielden.platform.sample.domain.ITgCentreDiffSerialisationNonPersistentCompositeChild;
 import ua.com.fielden.platform.sample.domain.ITgCentreDiffSerialisationPersistentChild;
 import ua.com.fielden.platform.sample.domain.ITgCollectionalSerialisationChild;
 import ua.com.fielden.platform.sample.domain.ITgCollectionalSerialisationParent;
@@ -83,6 +84,7 @@ import ua.com.fielden.platform.sample.domain.TgBogieLocationDao;
 import ua.com.fielden.platform.sample.domain.TgCategoryDao;
 import ua.com.fielden.platform.sample.domain.TgCentreDiffSerialisationDao;
 import ua.com.fielden.platform.sample.domain.TgCentreDiffSerialisationNonPersistentChildDao;
+import ua.com.fielden.platform.sample.domain.TgCentreDiffSerialisationNonPersistentCompositeChildDao;
 import ua.com.fielden.platform.sample.domain.TgCentreDiffSerialisationPersistentChildDao;
 import ua.com.fielden.platform.sample.domain.TgCollectionalSerialisationChildDao;
 import ua.com.fielden.platform.sample.domain.TgCollectionalSerialisationParentDao;
@@ -240,6 +242,7 @@ public class PlatformTestServerModule extends BasicWebServerModule {
         bind(ITgCentreDiffSerialisation.class).to(TgCentreDiffSerialisationDao.class);
         bind(ITgCentreDiffSerialisationPersistentChild.class).to(TgCentreDiffSerialisationPersistentChildDao.class);
         bind(ITgCentreDiffSerialisationNonPersistentChild.class).to(TgCentreDiffSerialisationNonPersistentChildDao.class);
+        bind(ITgCentreDiffSerialisationNonPersistentCompositeChild.class).to(TgCentreDiffSerialisationNonPersistentCompositeChildDao.class);
     }
 
     public static class TestSessionCacheBuilder implements Provider<Cache<String, UserSession>> {

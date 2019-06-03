@@ -26,6 +26,7 @@ import ua.com.fielden.platform.sample.domain.TgBogieClass;
 import ua.com.fielden.platform.sample.domain.TgCategory;
 import ua.com.fielden.platform.sample.domain.TgCentreDiffSerialisation;
 import ua.com.fielden.platform.sample.domain.TgCentreDiffSerialisationNonPersistentChild;
+import ua.com.fielden.platform.sample.domain.TgCentreDiffSerialisationNonPersistentCompositeChild;
 import ua.com.fielden.platform.sample.domain.TgCentreDiffSerialisationPersistentChild;
 import ua.com.fielden.platform.sample.domain.TgCollectionalSerialisationChild;
 import ua.com.fielden.platform.sample.domain.TgCollectionalSerialisationParent;
@@ -73,7 +74,7 @@ import ua.com.fielden.platform.web.centre.CentreConfigUpdater;
  *
  */
 public class PlatformTestDomainTypes implements IApplicationDomainProvider {
-    public static final List<Class<? extends AbstractEntity<?>>> entityTypes = new ArrayList<Class<? extends AbstractEntity<?>>>();
+    public static final List<Class<? extends AbstractEntity<?>>> entityTypes = new ArrayList<>();
 
     static void add(final Class<? extends AbstractEntity<?>> domainType) {
         entityTypes.add(domainType);
@@ -143,6 +144,7 @@ public class PlatformTestDomainTypes implements IApplicationDomainProvider {
         add(TgCentreDiffSerialisation.class);
         add(TgCentreDiffSerialisationPersistentChild.class);
         add(TgCentreDiffSerialisationNonPersistentChild.class);
+        add(TgCentreDiffSerialisationNonPersistentCompositeChild.class);
     }
 
     @Override
