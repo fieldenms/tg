@@ -28,15 +28,13 @@ const template = html`
             width: 22px;
             height: 22px;
             padding: 0px;
-            --paper-icon-button: {
-                color: var(--paper-grey-600);
-            };
-            --paper-icon-button-disabled: {
-                color: var(--paper-grey-400);
-            };
-            --paper-icon-button-hover: {
-                color: var(--paper-grey-400);
-            };
+            color: var(--paper-grey-600);
+        }
+        .close-button[disabled] {
+            color: var(--paper-grey-400);
+        }
+        .close-button:hover {
+            color: var(--paper-grey-400);
         }
     </style>
     <div class="mesage-panel">[[messageText]]</div>

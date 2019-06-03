@@ -28,7 +28,6 @@ const template = html`
     <style>
         :host {
             overflow: hidden;
-            @apply --layout-vertical;
         }
     </style>
     <custom-style>
