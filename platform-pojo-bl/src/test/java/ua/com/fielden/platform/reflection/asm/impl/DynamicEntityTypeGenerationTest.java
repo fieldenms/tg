@@ -86,7 +86,7 @@ public class DynamicEntityTypeGenerationTest {
     public void setUp() {
         observed = false;
         cl = DynamicEntityClassLoader.getInstance(ClassLoader.getSystemClassLoader());
-        Reflector.clearMethodsCache();
+        Reflector.cleanUp();
     }
 
     @Test
