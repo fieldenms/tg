@@ -144,6 +144,7 @@ template.setAttribute('strip-whitespace', '');
                 subheader = createFlexCell.bind(this)(this, layoutElem, selectedElements, orderedElements, subheader, true);
             }).bind(this));
             this._setCurrentLayout(layout);
+            this.fire('layout-finished', this);
         }
     };
     const resetSubheaderComponents = function () {
@@ -354,8 +355,12 @@ template.setAttribute('strip-whitespace', '');
             
             this._editorErrorHandler = this._editorErrorHandler.bind(this);
             this.addEventListener('editor-error-appeared', this._editorErrorHandler);
+        },
 
-            this._setContentLoaded(true);
+        attached: function () {
+            beforeNextRender(this, () => {
+                this._setContentLoaded(true);
+            })
         },
         
         _editorErrorHandler: function (e) {
@@ -380,7 +385,6 @@ template.setAttribute('strip-whitespace', '');
         _setLayout: function (layout) {
             beforeNextRender(this, () => {
                 setLayout.bind(this)(layout);
-                this.fire('layout-finished', this);
             });
         },
         _handleMobileScreen: function (whenMobile, whenTablet, whenDesktop, mobileScreen, contentLoaded) {
