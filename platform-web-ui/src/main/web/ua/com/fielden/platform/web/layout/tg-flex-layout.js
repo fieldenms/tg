@@ -139,8 +139,6 @@ template.setAttribute('strip-whitespace', '');
             const selectedElements = [];
             const orderedElements = this.componentsToLayout.slice();
             splitElements.bind(this)(selectedElements, orderedElements, layout);
-            //TODO need to revisit after optimisation
-            //this._mutationObserver.observe(this, this._mutationConfig);
             let subheader = null;
             layout.forEach((function (layoutElem) {
                 subheader = createFlexCell.bind(this)(this, layoutElem, selectedElements, orderedElements, subheader, true);
@@ -358,16 +356,6 @@ template.setAttribute('strip-whitespace', '');
             this.addEventListener('editor-error-appeared', this._editorErrorHandler);
 
             this._setContentLoaded(true);
-        
-            //TODO should be revisited and updated according to last modifications
-            // this._mutationConfig = {childList: true, subtree: true};
-            // const observer = mutationList => {
-            //     this.async(function () {
-            //         this.fire('layout-finished', this);
-            //     }, 1);
-            //     this._mutationObserver.disconnect();
-            // };
-            // this._mutationObserver = new MutationObserver(observer);
         },
         
         _editorErrorHandler: function (e) {
@@ -392,6 +380,7 @@ template.setAttribute('strip-whitespace', '');
         _setLayout: function (layout) {
             beforeNextRender(this, () => {
                 setLayout.bind(this)(layout);
+                this.fire('layout-finished', this);
             });
         },
         _handleMobileScreen: function (whenMobile, whenTablet, whenDesktop, mobileScreen, contentLoaded) {

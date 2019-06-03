@@ -55,7 +55,7 @@ Polymer({
     },
 
     _resizeEventListener: function (event, details) {
-        //this._contentScrolled();
+        this._contentScrolled();
 
         if (isMobileApp() && isIPhoneOs()) { // TODO perhaps MacOs webkit browsers are also affected, then it needs to be fixed here too
             // In webkit-based browsers we use '-webkit-overflow-scrolling: touch' css fix to enable scroll inertia (all other browsers implement that natively).
