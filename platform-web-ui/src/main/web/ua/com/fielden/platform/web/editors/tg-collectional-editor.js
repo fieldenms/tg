@@ -160,7 +160,7 @@ const customInputTemplate = html`
     <div class="search-controls-wrapper" style$="[[_computeInputStyle(_forReview, canReorderItems)]]">
         <div class="resizing-box" hidden$="[[!canReorderItems]]"></div>
         <iron-input bind-value="{{_phraseForSearching}}" class="custom-input-wrapper" >
-            <input id="searchInput" class="custom-input" placeholder="Type to search..." on-input="_onInput" on-tap="_onTap" on-mousedown="_onTap" on-blur="_eventHandler" autocomplete="off">
+            <input id="searchInput" class="custom-input" placeholder="Type to search..." on-input="_onInput" on-mouseup="_onMouseUp" on-mousedown="_onMouseDown" on-blur="_eventHandler" autocomplete="off">
         </iron-input>
         <paper-checkbox class="select-all-checkbox" style$="[[_computeSelectAllCheckboxStyle(_scrollBarWidth)]]" id="selectAllCheckbox" hidden$="[[_selectingIconHidden(_forReview)]]" checked="[[_selectedAll]]" semi-checked$="[[_semiCheckedAll]]" on-change="_allSelectionChanged"></paper-checkbox>
     </div>
@@ -289,22 +289,19 @@ export class TgCollectionalEditor extends TgEditor {
             _eventHandler: {
                 type: Function
             },
-            
-            /**
-             * The mouse tap event listener that selectes the text inside input when first time tapped.
-             */
-            _onTap: {
+
+            _onMouseDown: {
                 type: Function,
                 value: function () {
                     return (function (event) {
                         if (this.shadowRoot.activeElement !== this.$.searchInput) {
                             this.$.searchInput.select();
-                            tearDownEvent(event);
+                            this._tearDownEventOnUp = true;
                         }
                     }).bind(this);
                 }
             },
-            
+
             _onInput: {
                 type: Function,
                 value: function () {

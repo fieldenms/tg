@@ -75,8 +75,8 @@ const customInputTemplate = html`
             on-change="_onChange" 
             on-input="_onInput" 
             on-keydown="_onKeydown" 
-            on-tap="_onTap" 
-            on-mousedown="_onTap" 
+            on-mouseup="_onMouseUp" 
+            on-mousedown="_onMouseDown" 
             on-focus="_onFocus" 
             disabled$="[[_disabled]]" 
             tooltip-text$="[[_getTooltip(_editingValue, entity, focused)]]"
@@ -604,6 +604,7 @@ export class TgEntityEditor extends TgEditor {
             this.$.result.cancel(e);
         }
         setTimeout(() => this.$.result.notifyResize(), 1);
+        console.log(document.activeElement)
     }
 
     _resultClosed (e) {

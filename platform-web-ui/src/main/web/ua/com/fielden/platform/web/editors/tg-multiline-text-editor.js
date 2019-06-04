@@ -43,8 +43,8 @@ const customInputTemplate = html`
             bind-value="{{_editingValue}}"
             max-length="[[maxLength]]"
             on-input="_onInput"
-            on-tap="_onTap"
-            on-mousedown="_onTap"
+            on-mouseup="_onMouseUp" 
+            on-mousedown="_onMouseDown"
             on-keydown="_onKeydown"
             readonly$="[[_disabled]]"
             tooltip-text$="[[_getTooltip(_editingValue)]]"
@@ -83,18 +83,18 @@ export class TgMultilineTextEditor extends TgEditor {
                 value: 5
             },
     
-            _onTap: {
+            _onMouseDown: {
                 type: Function,
                 value: function () {
                     return (function (event) {
                         if (this.shadowRoot.activeElement !== this.decoratedInput()) {
                             this.decoratedInput().textarea.select();
-                            tearDownEvent(event);
+                            this._tearDownEventOnUp = true;
                         }
                     }).bind(this);
                 }
             },
-    
+            
             /**
              * OVERRIDDEN FROM TgEditorBehavior: this specific textArea's event is invoked after some key has been pressed.
              *

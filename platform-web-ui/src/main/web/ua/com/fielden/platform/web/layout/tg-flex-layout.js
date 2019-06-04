@@ -360,7 +360,7 @@ template.setAttribute('strip-whitespace', '');
         attached: function () {
             beforeNextRender(this, () => {
                 this._setContentLoaded(true);
-            })
+            });
         },
         
         _editorErrorHandler: function (e) {

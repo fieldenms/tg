@@ -340,13 +340,25 @@ export class TgEditor extends PolymerElement {
             /**
              * The mouse tap event listener that selectes the text inside input when first time tapped.
              */
-            _onTap: {
+            _onMouseDown: {
                 type: Function,
                 value: function () {
                     return (function (event) {
                         if (this.shadowRoot.activeElement !== this.decoratedInput()) {
                             this.decoratedInput().select();
+                            this._tearDownEventOnUp = true;
+                        }
+                    }).bind(this);
+                }
+            },
+
+            _onMouseUp: {
+                type: Function,
+                value: function () {
+                    return (function (event) {
+                        if (this._tearDownEventOnUp) {
                             tearDownEvent(event);
+                            delete this._tearDownEventOnUp;
                         }
                     }).bind(this);
                 }

@@ -56,11 +56,11 @@ Polymer({
 
     attached: function () {
         const self = this;
+        self.keyEventTarget = self._getKeyEventTarget();
+        if (self._shouldOverridePrefDim()) {
+            self.keyEventTarget.prefDim = self.prefDim;
+        }
         self.async(function () {
-            self.keyEventTarget = self._getKeyEventTarget();
-            if (self._shouldOverridePrefDim()) {
-                self.keyEventTarget.prefDim = self.prefDim;
-            }
 
             self.primaryAction = [
                 //generatedPrimaryActions
