@@ -33,6 +33,7 @@ import ua.com.fielden.platform.domaintree.testing.ClassProviderForTestingPurpose
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.EntityType;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
+import ua.com.fielden.platform.entity.annotation.SkipEntityExistsValidation;
 import ua.com.fielden.platform.entity.annotation.Title;
 import ua.com.fielden.platform.entity.annotation.mutator.AfterChange;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
@@ -418,6 +419,7 @@ public class CriteriaGeneratorTest {
                     put(IsProperty.class, createAnnotationMap());
                     put(Title.class, createAnnotationMap(new Pair<String, Object>("value", "single entity property"), new Pair<String, Object>("desc", "single entity property description")));
                     put(CriteriaProperty.class, createAnnotationMap(new Pair<String, Object>("rootType", managedType), new Pair<String, Object>("propertyName", "critSingleEntity")));
+                    put(SkipEntityExistsValidation.class, createAnnotationMap());
                     put(AfterChange.class, createAnnotationMap(new Pair<String, Object>("value", SynchroniseCriteriaWithModelHandler.class)));
                 }
             });

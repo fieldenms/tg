@@ -1,8 +1,6 @@
 package ua.com.fielden.platform.entity.validation;
 
 import static java.lang.String.format;
-import static java.util.Optional.empty;
-import static java.util.Optional.of;
 import static ua.com.fielden.platform.entity.AbstractEntity.KEY_NOT_ASSIGNED;
 import static ua.com.fielden.platform.entity.ActivatableAbstractEntity.ACTIVE;
 import static ua.com.fielden.platform.entity.proxy.MockNotFoundEntityMaker.isMockNotFoundValue;
@@ -13,11 +11,9 @@ import static ua.com.fielden.platform.error.Result.failure;
 import static ua.com.fielden.platform.error.Result.successful;
 import static ua.com.fielden.platform.reflection.AnnotationReflector.getAnnotation;
 import static ua.com.fielden.platform.reflection.Finder.findFieldByName;
-import static ua.com.fielden.platform.utils.EntityUtils.isCriteriaEntityType;
 import static ua.com.fielden.platform.utils.EntityUtils.isPropertyDescriptor;
 
 import java.lang.annotation.Annotation;
-import java.util.Optional;
 import java.util.Set;
 
 import ua.com.fielden.platform.dao.IEntityDao;
@@ -31,7 +27,6 @@ import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.reflection.TitlesDescsGetter;
-import ua.com.fielden.platform.utils.EntityUtils;
 
 /**
  * Validator that checks entity value for existence using an {@link IEntityDao} instance.
@@ -80,16 +75,13 @@ public class EntityExistsValidator<T extends AbstractEntity<?>> implements IBefo
                 return successful(entity);
             } else if (newValue.isInstrumented() && newValue.isDirty()) { // if entity uninstrumented its dirty state is irrelevant and cannot be checked
                 final SkipEntityExistsValidation seevAnnotation =  getAnnotation(findFieldByName(entity.getType(), property.getName()), SkipEntityExistsValidation.class);
-                if (seevAnnotation != null && seevAnnotation.skipNew() && !newValue.isPersisted() || isCriteriaEntityType(property.getEntity().getType())) {
+                if (seevAnnotation != null && seevAnnotation.skipNew() && !newValue.isPersisted()) {
                     return successful(entity);
                 }
                 final String entityTitle = TitlesDescsGetter.getEntityTitleAndDesc(newValue.getType()).getKey();
                 return failure(entity, format(DIRTY_ERR, newValue, entityTitle));
             }
             
-            if (isCriteriaEntityType(property.getEntity().getType())) {
-                return successful(entity);
-            }
             // the notion of existence is different for activatable and non-activatable entities,
             // where for activatable entities to exists mens also to be active
             final boolean exists;

@@ -46,6 +46,7 @@ import ua.com.fielden.platform.entity.annotation.factory.EntityTypeAnnotation;
 import ua.com.fielden.platform.entity.annotation.factory.FirstParamAnnotation;
 import ua.com.fielden.platform.entity.annotation.factory.IsPropertyAnnotation;
 import ua.com.fielden.platform.entity.annotation.factory.SecondParamAnnotation;
+import ua.com.fielden.platform.entity.annotation.factory.SkipEntityExistsValidationAnnotation;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
@@ -190,6 +191,9 @@ public class CriteriaGenerator implements ICriteriaGenerator {
         final Class<?> newPropertyType = isEntity ? (isSingle ? propertyType : List.class) : (EntityUtils.isBoolean(propertyType) ? boolean.class : propertyType);
 
         final List<Annotation> annotations = new ArrayList<>();
+        if (isEntity && isSingle) {
+            annotations.add(new SkipEntityExistsValidationAnnotation(false, false).newInstance());
+        }
         if (isEntity && !isSingle && EntityUtils.isCollectional(newPropertyType)) {
             annotations.add(new IsPropertyAnnotation(String.class, "--stub-link-property--").newInstance());
             annotations.add(new EntityTypeAnnotation((Class<? extends AbstractEntity<?>>) propertyType).newInstance());
