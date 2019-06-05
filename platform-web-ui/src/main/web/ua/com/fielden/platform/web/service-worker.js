@@ -1,6 +1,7 @@
 console.debug('Service worker script...started');
 
 const cacheName = 'tg-air-dev-cache';
+const checksumCacheName = 'tg-air-dev-cache-checksums';
 
 const isStatic = function (url) {
     const pathname = new URL(url).pathname;
@@ -31,7 +32,7 @@ const isResponseSuccessful = function (response) {
     return response && response.status === 200 && response.type === 'basic';
 };
 
-const cacheIfSuccessful = function (response, checksumRequest, checksumResponseToCache, url, cache) {
+const cacheIfSuccessful = function (response, checksumRequest, checksumResponseToCache, url, cache, checksumCache) {
     if (isResponseSuccessful(response)) { // cache response if it is successful
         // IMPORTANT: Clone the response. A response is a stream
         // and because we want the browser to consume the response
@@ -39,7 +40,7 @@ const cacheIfSuccessful = function (response, checksumRequest, checksumResponseT
         // to clone it so we have two streams.
         const responseToCache = response.clone();
         return cache.put(url, responseToCache).then(function() {
-            return cache.put(checksumRequest, checksumResponseToCache).then(function () {
+            return checksumCache.put(checksumRequest, checksumResponseToCache).then(function () {
                 return response;
             });
         });
@@ -58,43 +59,47 @@ self.addEventListener('fetch', function (event) {
                 return fetch(serverChecksumRequest).then(function(serverChecksumResponse) {
                     console.timeEnd('open and fetch checksum ' + url);
                     console.time('matchAll ' + url);
-                    return cache.matchAll(url, { ignoreSearch: true }).then(function (cachedResponseAndChecksum) {
-                        console.timeEnd('matchAll ' + url);
-                        const serverChecksumResponseToCache = isResponseSuccessful(serverChecksumResponse) && serverChecksumResponse.clone();
-                        // const serverChecksum = /* isResponseSuccessful(serverChecksumResponse) && */ await serverChecksumResponse.text();
-                        return serverChecksumResponse.text().then(function (serverChecksum) {
-                            if (cachedResponseAndChecksum && cachedResponseAndChecksum.length === 2) { // cached entry exists and it has proper checksum too
-                                return cachedResponseAndChecksum[1].text().then(function (cachedChecksum) {
-                                    console.debug(`${url} CACHED: cachedChecksum = ${cachedChecksum} serverChecksum = ${serverChecksum}`);
-                                    if (!serverChecksum) { // resource has been deleted on server
-                                        console.warn(`Resource ${url} has been deleted on server.`);
-                                        return cache.delete(url).then(function (deleted) {
-                                            if (!deleted) {
-                                                console.error(`Cached resource [${url}] was not deleted.`);
+                    return cache.match(url).then(function (cachedResponse) {
+                        return caches.open(checksumCacheName).then(function (checksumCache) {
+                            return checksumCache.match(url + '?checksum=true').then(function (cachedChecksum1) {
+                                console.timeEnd('matchAll ' + url);
+                                const serverChecksumResponseToCache = isResponseSuccessful(serverChecksumResponse) && serverChecksumResponse.clone();
+                                // const serverChecksum = /* isResponseSuccessful(serverChecksumResponse) && */ await serverChecksumResponse.text();
+                                return serverChecksumResponse.text().then(function (serverChecksum) {
+                                    if (cachedResponse && cachedChecksum1) { // cached entry exists and it has proper checksum too
+                                        return cachedChecksum1.text().then(function (cachedChecksum) {
+                                            console.debug(`${url} CACHED: cachedChecksum = ${cachedChecksum} serverChecksum = ${serverChecksum}`);
+                                            if (!serverChecksum) { // resource has been deleted on server
+                                                console.warn(`Resource ${url} has been deleted on server.`);
+                                                return cache.delete(url).then(function (deleted) {
+                                                    if (!deleted) {
+                                                        console.error(`Cached resource [${url}] was not deleted.`);
+                                                    }
+                                                    return staleResponse();
+                                                });
+                                            } else if (serverChecksum !== cachedChecksum) { // resource has been modified on server
+                                                console.warn(`Resource ${url} has been modified on server. CachedChecksum ${cachedChecksum} vs serverChecksum ${serverChecksum}. MODIFIED RESOURCE WILL BE RE-CACHED.`);
+                                                return fetch(url).then(function (fetchedResponse) {
+                                                    return cacheIfSuccessful(fetchedResponse, serverChecksumRequest, serverChecksumResponseToCache, url, cache, checksumCache);
+                                                });
+                                            } else { // serverChecksum === cachedChecksum; resource is the same on server and in client cache
+                                                return cachedResponse;
                                             }
+                                        });
+                                    } else { // there is no cached entry
+                                        console.debug(`${url} NEW: serverChecksum = ${serverChecksum}`);
+                                        if (!serverChecksum) { // resource has been deleted on server
+                                            console.warn(`Resource ${url} has been deleted on server.`);
                                             return staleResponse();
-                                        });
-                                    } else if (serverChecksum !== cachedChecksum) { // resource has been modified on server
-                                        console.warn(`Resource ${url} has been modified on server. CachedChecksum ${cachedChecksum} vs serverChecksum ${serverChecksum}. MODIFIED RESOURCE WILL BE RE-CACHED.`);
-                                        return fetch(url).then(function (fetchedResponse) {
-                                            return cacheIfSuccessful(fetchedResponse, serverChecksumRequest, serverChecksumResponseToCache, url, cache);
-                                        });
-                                    } else { // serverChecksum === cachedChecksum; resource is the same on server and in client cache
-                                        return cachedResponseAndChecksum[0];
+                                        } else { // resource exists on server
+                                            console.warn(`Resource ${url} exists on server. ServerChecksum ${serverChecksum}. NEW RESOURCE WILL BE CACHED.`);
+                                            return fetch(url).then(function (fetchedResponse) {
+                                                return cacheIfSuccessful(fetchedResponse, serverChecksumRequest, serverChecksumResponseToCache, url, cache, checksumCache);
+                                            });
+                                        }
                                     }
                                 });
-                            } else { // there is no cached entry
-                                console.debug(`${url} NEW: serverChecksum = ${serverChecksum}`);
-                                if (!serverChecksum) { // resource has been deleted on server
-                                    console.warn(`Resource ${url} has been deleted on server.`);
-                                    return staleResponse();
-                                } else { // resource exists on server
-                                    console.warn(`Resource ${url} exists on server. ServerChecksum ${serverChecksum}. NEW RESOURCE WILL BE CACHED.`);
-                                    return fetch(url).then(function (fetchedResponse) {
-                                        return cacheIfSuccessful(fetchedResponse, serverChecksumRequest, serverChecksumResponseToCache, url, cache);
-                                    });
-                                }
-                            }
+                            });
                         });
                     });
                 });
