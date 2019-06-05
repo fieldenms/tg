@@ -3,7 +3,6 @@ import { html } from '/resources/polymer/@polymer/polymer/lib/utils/html-tag.js'
 import '/resources/polymer/@polymer/iron-flex-layout/iron-flex-layout-classes.js';
 
 import '/resources/layout/tg-flex-layout.js';
-import { TgTooltipBehavior } from '/resources/components/tg-tooltip-behavior.js';
 
 import '/resources/polymer/@polymer/paper-icon-button/paper-icon-button.js';
 import '/resources/polymer/@polymer/paper-button/paper-button.js';
@@ -115,7 +114,6 @@ Polymer({
         }
     },
 
-    behaviors: [ TgTooltipBehavior ],
 
     attached: function () {
         // we need to use this trick to enforce invisibility after component has been attached... simple attribute binding does not work

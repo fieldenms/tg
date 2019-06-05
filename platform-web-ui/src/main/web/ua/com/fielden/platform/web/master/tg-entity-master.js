@@ -2,7 +2,6 @@ import { Polymer } from '/resources/polymer/@polymer/polymer/lib/legacy/polymer-
 import { html } from '/resources/polymer/@polymer/polymer/lib/utils/html-tag.js';
 
 import '/resources/polymer/@polymer/iron-ajax/iron-ajax.js';
-import { IronResizableBehavior } from '/resources/polymer/@polymer/iron-resizable-behavior/iron-resizable-behavior.js';
 import '/resources/polymer/@polymer/iron-flex-layout/iron-flex-layout-classes.js';
 
 import '/resources/components/tg-scrollable-component.js';
@@ -107,8 +106,6 @@ Polymer({
             computed: '_computeUrl(entityType, entityId)'
         }
     },
-
-    behaviors: [IronResizableBehavior],
 
     observers: ['_masterLoaded(_bodyLoaded, _actionBarLoaded)'],
 

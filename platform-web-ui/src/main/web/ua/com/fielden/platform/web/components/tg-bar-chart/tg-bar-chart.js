@@ -7,8 +7,6 @@ import {IronResizableBehavior} from '/resources/polymer/@polymer/iron-resizable-
 import {Polymer} from '/resources/polymer/@polymer/polymer/lib/legacy/polymer-fn.js';
 import {html} from '/resources/polymer/@polymer/polymer/lib/utils/html-tag.js';
 
-import {TgTooltipBehavior} from '/resources/components/tg-tooltip-behavior.js';
-
 const template = html`
     <style>
         :host {
@@ -171,7 +169,7 @@ Polymer({
         _chart: Object
     },
 
-    behaviors: [IronResizableBehavior, TgTooltipBehavior],
+    behaviors: [IronResizableBehavior],
 
     ready: function () {
         this._chart = d3.barChart(this.$.chart);

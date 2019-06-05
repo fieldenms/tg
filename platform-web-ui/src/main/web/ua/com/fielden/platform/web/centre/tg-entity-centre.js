@@ -8,7 +8,6 @@ import '/resources/polymer/@polymer/paper-tabs/paper-tab.js';
 import '/resources/polymer/@polymer/paper-styles/element-styles/paper-material-styles.js';
 
 import '/resources/components/tg-confirmation-dialog.js';
-import { TgTooltipBehavior } from '/resources/components/tg-tooltip-behavior.js';
 import '/resources/centre/tg-selection-view.js';
 import '/resources/centre/tg-centre-result-view.js';
 import { TgFocusRestorationBehavior } from '/resources/actions/tg-focus-restoration-behavior.js';
@@ -235,7 +234,7 @@ Polymer({
         _confirm: Function
     },
 
-    behaviors: [ IronResizableBehavior, TgTooltipBehavior, TgFocusRestorationBehavior, TgElementSelectorBehavior ],
+    behaviors: [ IronResizableBehavior, TgFocusRestorationBehavior, TgElementSelectorBehavior ],
 
     ready: function () {
         setTimeout(function() {

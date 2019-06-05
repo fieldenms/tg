@@ -10,8 +10,6 @@ import {TgReflector} from '/app/tg-reflector.js';
 
 import {PolymerElement, html} from '/resources/polymer/@polymer/polymer/polymer-element.js';
 
-//import {TgTooltipBehavior} from '/resources/components/tg-tooltip-behavior.js';
-//import {TgElementSelectorBehavior} from '/resources/components/tg-element-selector-behavior.js';
 import { tearDownEvent, allDefined } from '/resources/reflection/tg-polymer-utils.js';
 
 export function createEditorTemplate (additionalTemplate, customPrefixAttribute, customInput, inputLayer, customIconButtons, propertyAction) {
@@ -479,7 +477,7 @@ export class TgEditor extends PolymerElement {
 
     ready () {
         super.ready();
-        const self = this;
+        this._ensureAttribute('selectable-elements-container', true);
         this.decorator().labelVisible = false;
         this._ensureAttribute('tg-editor', true);
         if (!this._editorKind) {
@@ -550,7 +548,7 @@ export class TgEditor extends PolymerElement {
     }
     
     _identifyModification (_editingValue, originalEntity) {
-        /*if (this.reflector().isEntity(this.entity)) {
+        if (this.reflector().isEntity(this.entity)) {
             var _originalEditingValue = originalEntity ? this.convertToString(this.reflector().getBindingValue.bind(this.reflector())(originalEntity, this.propertyName)) : _editingValue;
             // console.debug('_bindingEntity (_identifyModification) self = ', this.is, '_editingValue', _editingValue, '_originalEditingValue', _originalEditingValue);
             var prevEditedProps = this.entity['@editedProps'];
@@ -566,7 +564,7 @@ export class TgEditor extends PolymerElement {
                 delete newEditedProps[this.propertyName];
             }
             this.set('entity.@editedProps', newEditedProps);
-        }*/
+        }
     }
     
     _editedPropsChanged (editedProps) {

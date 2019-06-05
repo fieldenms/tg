@@ -7,7 +7,6 @@ import '/resources/polymer/@polymer/paper-styles/color.js';
 import '/resources/polymer/@polymer/paper-progress/paper-progress.js';
 
 import { TgSerialiser } from '/resources/serialisation/tg-serialiser.js';
-import { TgTooltipBehavior } from '/resources/components/tg-tooltip-behavior.js';
 import { TgFileProcessingBehavior } from '/resources/file_operations/tg-file-processing-behavior.js';
 
 const template = html`
@@ -145,8 +144,7 @@ Polymer({
     is: 'tg-attachment-uploader',
 
     behaviors: [
-        TgFileProcessingBehavior,
-        TgTooltipBehavior
+        TgFileProcessingBehavior
     ],
 
     observers: [

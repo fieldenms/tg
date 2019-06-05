@@ -11,7 +11,6 @@ import {Polymer} from '/resources/polymer/@polymer/polymer/lib/legacy/polymer-fn
 import {html} from '/resources/polymer/@polymer/polymer/lib/utils/html-tag.js';
 
 import { TgFocusRestorationBehavior } from '/resources/actions/tg-focus-restoration-behavior.js';
-import { TgTooltipBehavior } from '/resources/components/tg-tooltip-behavior.js';
 
 const template = html`
     <style>
@@ -34,7 +33,7 @@ Polymer({
 
     is: "tg-secondary-action-button",
     
-    behaviors: [ TgTooltipBehavior, TgFocusRestorationBehavior ],
+    behaviors: [ TgFocusRestorationBehavior ],
 
     properties: {
         actions: Array,

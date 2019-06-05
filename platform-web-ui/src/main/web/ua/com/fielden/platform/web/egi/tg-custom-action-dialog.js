@@ -1076,6 +1076,9 @@ Polymer({
     
     //Resizes dialog smoothly when blcking layer is visible and finished it's animation also master was changed and it's preferred dimension was defined.
     _updateDialogAnimation: function (_masterVisibilityChanges, _masterLayoutChanges) {
+        if (!allDefined(arguments)) {
+            return;
+        }
         if (!_masterVisibilityChanges && !_masterLayoutChanges) {
             //Animate dialog dimensons if it wasn't resized.
             if (!this._wasResized) {

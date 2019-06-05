@@ -5,7 +5,6 @@ import '/resources/polymer/@polymer/paper-styles/color.js';
 import '/resources/polymer/@polymer/iron-flex-layout/iron-flex-layout.js';
 import { IronResizableBehavior } from '/resources/polymer/@polymer/iron-resizable-behavior/iron-resizable-behavior.js';
 
-import { TgTooltipBehavior } from '/resources/components/tg-tooltip-behavior.js';
 import '/resources/file_operations/tg-attachment-uploader.js';
 import { tearDownEvent } from '/resources/reflection/tg-polymer-utils.js';
 
@@ -84,8 +83,7 @@ Polymer({
     is: 'tg-attachment-uploader-list',
 
     behaviors: [
-        IronResizableBehavior,
-        TgTooltipBehavior
+        IronResizableBehavior
     ],
 
     properties: {
