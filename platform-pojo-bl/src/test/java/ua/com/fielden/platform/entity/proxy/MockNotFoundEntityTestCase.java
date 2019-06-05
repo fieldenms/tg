@@ -8,6 +8,7 @@ import com.google.inject.Injector;
 
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
+import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.test.CommonTestEntityModuleWithPropertyFactory;
 import ua.com.fielden.platform.test.EntityModuleWithPropertyFactory;
 
@@ -25,7 +26,7 @@ public class MockNotFoundEntityTestCase {
     @Test
     public void instances_of_mocked_types_are_recognise_as_mock_not_found_values() throws Exception {
         final Class<? extends TgOwnerEntity> mockType = MockNotFoundEntityMaker.mock(TgOwnerEntity.class);
-        assertTrue(MockNotFoundEntityMaker.isMockNotFoundType(mockType));
+        assertTrue(PropertyTypeDeterminator.isMockNotFoundType(mockType));
         assertTrue(MockNotFoundEntityMaker.isMockNotFoundValue(factory.newPlainEntity(mockType, null)));
     }
 

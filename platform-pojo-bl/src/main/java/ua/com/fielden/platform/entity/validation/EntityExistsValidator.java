@@ -85,9 +85,13 @@ public class EntityExistsValidator<T extends AbstractEntity<?>> implements IBefo
             // the notion of existence is different for activatable and non-activatable entities,
             // where for activatable entities to exists mens also to be active
             final boolean exists;
-            final boolean activeEnough; // Does not have to 100% active - see below
-            if (!property.isActivatable()) { // is property value represents non-activatable?
-                exists = isPropertyDescriptor ? !isMockNotFoundValue(newValue) : co.entityExists(newValue);
+            final boolean activeEnough; // Does not have to be 100% active - see below
+            final boolean isMockNotFoundValue = isMockNotFoundValue(newValue);
+            if (isMockNotFoundValue) {
+                exists = false;
+                activeEnough = true;
+            } else if (!property.isActivatable()) { // is property value represents non-activatable?
+                exists = isPropertyDescriptor || co.entityExists(newValue);
                 activeEnough = true;
             } else { // otherwise, property value is activatable
                 final Class<T> entityType = co.getEntityType();
@@ -109,7 +113,10 @@ public class EntityExistsValidator<T extends AbstractEntity<?>> implements IBefo
             if (!exists || !activeEnough) {
                 final String entityTitle = TitlesDescsGetter.getEntityTitleAndDesc(newValue.getType()).getKey();
                 if (!exists) {
-                    return failure(entity, isPropertyDescriptor || KEY_NOT_ASSIGNED.equals(newValue.toString()) ? format(WAS_NOT_FOUND_ERR, entityTitle) : format(WAS_NOT_FOUND_CONCRETE_ERR, entityTitle, newValue.toString()));
+                    if (isMockNotFoundValue) {
+                        return failure(entity, format(WAS_NOT_FOUND_CONCRETE_ERR, entityTitle, newValue.getDesc()));
+                    }
+                    return failure(entity, isPropertyDescriptor || isMockNotFoundValue || KEY_NOT_ASSIGNED.equals(newValue.toString()) ? format(WAS_NOT_FOUND_ERR, entityTitle) : format(WAS_NOT_FOUND_CONCRETE_ERR, entityTitle, newValue.toString()));
                 } else {
                     return failure(entity, format(EXISTS_BUT_NOT_ACTIVE_ERR, entityTitle, newValue.toString()));
                 }

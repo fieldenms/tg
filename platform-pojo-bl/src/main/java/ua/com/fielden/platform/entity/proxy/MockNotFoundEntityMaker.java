@@ -1,5 +1,7 @@
 package ua.com.fielden.platform.entity.proxy;
 
+import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.isMockNotFoundType;
+
 import java.util.concurrent.ExecutionException;
 
 import com.google.common.cache.Cache;
@@ -22,7 +24,7 @@ import ua.com.fielden.platform.entity.exceptions.EntityException;
 public class MockNotFoundEntityMaker {
 
     private static final Cache<String, Class<? extends AbstractEntity<?>>> TYPES = CacheBuilder.newBuilder().weakKeys().initialCapacity(10).maximumSize(100).concurrencyLevel(50).build();
-    private static final String MOCK_TYPE_ENDING = "_MOCK_VALUE_NOT_FOUND";
+    public static final String MOCK_TYPE_ENDING = "_MOCK_VALUE_NOT_FOUND";
 
     private MockNotFoundEntityMaker() { }
 
@@ -38,17 +40,7 @@ public class MockNotFoundEntityMaker {
      * @return
      */
     public static <T extends AbstractEntity<?>> boolean isMockNotFoundValue(final T entity) {
-        return isMockNotFoundType(entity.getType());
-    }
-
-    /**
-     * A predicate to identify whether {@code entityType} represents a mock-not-found type.
-     *
-     * @param entityType
-     * @return
-     */
-    public static <T extends AbstractEntity<?>> boolean isMockNotFoundType(final Class<T> entityType) {
-        return entityType.getName().endsWith(MOCK_TYPE_ENDING);
+        return isMockNotFoundType(entity.getClass());
     }
 
     /**
