@@ -11,8 +11,8 @@ public class CalculatedPropertyInfo {
     private final String originationProperty;
     private final String desc;
     private final String customPropertyName;
-    private final Integer precision;
-    private final Integer scale;
+    private final transient Integer precision;
+    private final transient Integer scale;
 
     public CalculatedPropertyInfo() {
         root = null;
