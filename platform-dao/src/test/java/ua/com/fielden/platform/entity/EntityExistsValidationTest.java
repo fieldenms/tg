@@ -20,6 +20,8 @@ import ua.com.fielden.platform.domaintree.centre.impl.CentreDomainTreeManagerAnd
 import ua.com.fielden.platform.domaintree.impl.DomainTreeEnhancerCache;
 import ua.com.fielden.platform.domaintree.testing.ClassProviderForTestingPurposes;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
+import ua.com.fielden.platform.entity.meta.MetaProperty;
+import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
 import ua.com.fielden.platform.entity.validation.EntityExistsValidator;
 import ua.com.fielden.platform.entity_centre.review.criteria.EntityQueryCriteria;
 import ua.com.fielden.platform.error.Result;
@@ -32,7 +34,7 @@ import ua.com.fielden.platform.serialisation.api.ISerialiser;
 import ua.com.fielden.platform.serialisation.api.impl.SerialiserForDomainTreesTestingPurposes;
 import ua.com.fielden.platform.test_config.AbstractDaoTestCase;
 
-public class EntityExistValidationTest extends AbstractDaoTestCase {
+public class EntityExistsValidationTest extends AbstractDaoTestCase {
     private final CriteriaGeneratorTestModule module = new CriteriaGeneratorTestModule();
     private final Injector injector = new ApplicationInjectorFactory().add(module).getInjector();
     private final ClassProviderForTestingPurposes provider = new ClassProviderForTestingPurposes(TgSystem.class, TgCategory.class);
@@ -204,6 +206,16 @@ public class EntityExistValidationTest extends AbstractDaoTestCase {
         final Result result = sys.isValid();
         assertFalse(result.isSuccessful());
         assertEquals(format(EntityExistsValidator.DIRTY_ERR, cat1, entityTitle), result.getMessage());
+    }
+
+    @Test
+    public void values_of_type_PropertyDescriptor_are_recognised_as_existent() {
+        final PropertyDescriptor<TgCategory> pd = new PropertyDescriptor<>(TgCategory.class, "parent");
+        final TgSystem sys = new_(TgSystem.class, "Sys2");
+        sys.setPropDescriptor(pd);
+        final MetaProperty<?> mp = sys.getProperty("propDescriptor");
+        assertTrue(mp.isValid());
+        assertEquals(pd, mp.getValue());
     }
 
     @Override
