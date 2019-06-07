@@ -11,6 +11,7 @@ import static ua.com.fielden.platform.error.Result.failure;
 import static ua.com.fielden.platform.error.Result.successful;
 import static ua.com.fielden.platform.reflection.AnnotationReflector.getAnnotation;
 import static ua.com.fielden.platform.reflection.Finder.findFieldByName;
+import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getEntityTitleAndDesc;
 import static ua.com.fielden.platform.utils.EntityUtils.isPropertyDescriptor;
 
 import java.lang.annotation.Annotation;
@@ -111,9 +112,10 @@ public class EntityExistsValidator<T extends AbstractEntity<?>> implements IBefo
             }
 
             if (!exists || !activeEnough) {
-                final String entityTitle = TitlesDescsGetter.getEntityTitleAndDesc(newValue.getType()).getKey();
+                final String entityTitle = getEntityTitleAndDesc(newValue.getType()).getKey();
                 if (!exists) {
                     if (isMockNotFoundValue) {
+                        // using newValue.getDesc() depends on the fact the it contains the value typed by the user
                         return failure(entity, format(WAS_NOT_FOUND_CONCRETE_ERR, entityTitle, newValue.getDesc()));
                     }
                     return failure(entity, isPropertyDescriptor || isMockNotFoundValue || KEY_NOT_ASSIGNED.equals(newValue.toString()) ? format(WAS_NOT_FOUND_ERR, entityTitle) : format(WAS_NOT_FOUND_CONCRETE_ERR, entityTitle, newValue.toString()));
