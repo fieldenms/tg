@@ -739,21 +739,6 @@ public abstract class AbstractEntity<K extends Comparable> implements Comparable
     }
 
     /**
-     * Standard logic whether to create or to skip {@link EntityExistsValidator} creation is defined in method {@link #isEntityExistsValidationApplicable(Field, Class)}.
-     * Basically it is defined by persistence of property type. If the type represents persistent entity type then it should have {@link EntityExistsValidator}.
-     * One exception from this rule is {@link PropertyDescriptor}-typed properties that can also be checked for existence.
-     * <p>
-     * But there are some examples of non-persistent (or synthetic-persistent) properties that would benefit by 'entity existence' logic being used.
-     * This method can be used to enforce creation of {@link EntityExistsValidator} for such properties even if they are not applicable by standard definition.
-     *
-     * @param propertyName
-     * @return
-     */
-    protected boolean isEntityExistsValidationEnforced(final String propertyName) {
-        return false;
-    }
-
-    /**
      * A predicate method to identify whether a collectional property requires, but is missing a corresponding <code>link property</code> information.
      *
      * @param propertyName
@@ -799,7 +784,7 @@ public abstract class AbstractEntity<K extends Comparable> implements Comparable
             }
 
             // now let's see if we need to add EntityExists validation
-            if (!validators.containsKey(ValidationAnnotation.ENTITY_EXISTS) && (isEntityExistsValidationApplicable(getType(), field) || isEntityExistsValidationEnforced(field.getName()))) {
+            if (!validators.containsKey(ValidationAnnotation.ENTITY_EXISTS) && (isEntityExistsValidationApplicable(getType(), field))) {
                 final EntityExists eeAnnotation = entityExistsAnnotation(getType(), field.getName(),  (Class<? extends AbstractEntity<?>>) properyType);
                 final IBeforeChangeEventHandler<?>[] annotationValidators = metaPropertyFactory.create(eeAnnotation, this, field.getName(), properyType);
 

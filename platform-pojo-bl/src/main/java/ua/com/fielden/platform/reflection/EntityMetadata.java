@@ -18,6 +18,7 @@ import ua.com.fielden.platform.entity.annotation.SkipEntityExistsValidation;
 import ua.com.fielden.platform.entity.annotation.factory.EntityExistsAnnotation;
 import ua.com.fielden.platform.entity.exceptions.EntityDefinitionException;
 import ua.com.fielden.platform.entity.validation.annotation.EntityExists;
+import ua.com.fielden.platform.entity.validation.annotation.SupportsEntityExistsValidation;
 import ua.com.fielden.platform.reflection.exceptions.ReflectionException;
 
 /**
@@ -96,11 +97,15 @@ public class EntityMetadata {
                         final Class<?> propType = determinePropType(entityType, field);
                         final SkipEntityExistsValidation seevAnnotation = getAnnotation(field, SkipEntityExistsValidation.class);
                         final boolean doNotSkipEntityExistsValidation = seevAnnotation == null || seevAnnotation.skipActiveOnly() || seevAnnotation.skipNew();
-                        return doNotSkipEntityExistsValidation && (isPersistedEntityType(propType) || isPropertyDescriptor(propType) /*|| isEntityExistsForced(entityType, field)*/);                        
+                        return doNotSkipEntityExistsValidation && (isPersistedEntityType(propType) || isPropertyDescriptor(propType) || isSupportsEntityExistsValidation(propType));                        
                     });
          } catch (final ExecutionException ex) {
              throw new ReflectionException(format("Could not determine applicability of EntityExists validation for property [%s] of entity [%s].", field.getName(), entityType.getName()), ex);
          } 
+    }
+
+    private static boolean isSupportsEntityExistsValidation(Class<?> propType) {
+        return getAnnotation(propType, SupportsEntityExistsValidation.class) != null;
     }
 
     /**
