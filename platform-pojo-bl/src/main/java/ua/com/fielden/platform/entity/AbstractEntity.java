@@ -17,6 +17,8 @@ import static ua.com.fielden.platform.entity.exceptions.EntityDefinitionExceptio
 import static ua.com.fielden.platform.entity.exceptions.EntityDefinitionException.INVALID_VALUES_FOR_PRECITION_AND_SCALE_MSG;
 import static ua.com.fielden.platform.entity.validation.custom.DefaultEntityValidator.validateWithCritOnly;
 import static ua.com.fielden.platform.error.Result.asRuntime;
+import static ua.com.fielden.platform.reflection.EntityMetadata.entityExistsAnnotation;
+import static ua.com.fielden.platform.reflection.EntityMetadata.isEntityExistsValidationApplicable;
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.isNumeric;
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.stripIfNeeded;
 import static ua.com.fielden.platform.utils.CollectionUtil.unmodifiableSetOf;
@@ -60,11 +62,9 @@ import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.entity.annotation.Optional;
 import ua.com.fielden.platform.entity.annotation.Readonly;
 import ua.com.fielden.platform.entity.annotation.Required;
-import ua.com.fielden.platform.entity.annotation.SkipEntityExistsValidation;
 import ua.com.fielden.platform.entity.annotation.Title;
 import ua.com.fielden.platform.entity.annotation.Unique;
 import ua.com.fielden.platform.entity.annotation.UpperCase;
-import ua.com.fielden.platform.entity.annotation.factory.EntityExistsAnnotation;
 import ua.com.fielden.platform.entity.annotation.mutator.BeforeChange;
 import ua.com.fielden.platform.entity.exceptions.EntityDefinitionException;
 import ua.com.fielden.platform.entity.exceptions.EntityException;
@@ -77,16 +77,16 @@ import ua.com.fielden.platform.entity.meta.MetaProperty;
 import ua.com.fielden.platform.entity.meta.MetaPropertyFull;
 import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
 import ua.com.fielden.platform.entity.proxy.StrictProxyException;
-import ua.com.fielden.platform.entity.validation.DomainValidationConfig;
+import ua.com.fielden.platform.entity.validation.EntityExistsValidator;
 import ua.com.fielden.platform.entity.validation.IBeforeChangeEventHandler;
 import ua.com.fielden.platform.entity.validation.ICustomValidator;
-import ua.com.fielden.platform.entity.validation.annotation.DomainValidation;
 import ua.com.fielden.platform.entity.validation.annotation.EntityExists;
 import ua.com.fielden.platform.entity.validation.annotation.Final;
 import ua.com.fielden.platform.entity.validation.annotation.ValidationAnnotation;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.error.Warning;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
+import ua.com.fielden.platform.reflection.EntityMetadata;
 import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.reflection.Reflector;
@@ -232,18 +232,12 @@ import ua.com.fielden.platform.utils.EntityUtils;
  * </ul>
  * <p>
  * Please note that mutators for the same collectional property may have different validation annotations.
- * However, annotation {@link DomainValidation} always points to the same actual validator, and it is developer's responsibility to ensure that it executes correctly regardless as part of what mutator it has been invoked.
- * Please refer to {@link DomainValidation} documentation for more details.
  * <p>
  * ==================================================================<br/>
  * <p>
  * <h3>Notable changes</h3>
  * Date: 2008-10-28
  * Introduced validation synchronisation mechanism.
- *
- * Date: 2008-10-29
- * Implemented support for domain validation logic. Simply annotate property setter with {@link DomainValidation} and
- * provide appropriate {@link IBeforeChangeEventHandler} instance as part of {@link DomainValidationConfig} configuration.
  *
  * Date: 2009-02-09
  * Introduced property <code>initialising</code> to indicate an entity state where its properties are being initialised and thus no properties require any validation.
@@ -364,10 +358,7 @@ public abstract class AbstractEntity<K extends Comparable> implements Comparable
     protected AbstractEntity() {
         actualEntityType = (Class<? extends AbstractEntity<?>>) stripIfNeeded(getClass());
 
-        keyType = (Class<K>) AnnotationReflector.getKeyType(this.getClass());
-        if (keyType == null) {
-            throw new EntityDefinitionException(format("Entity [%s] is not fully defined -- key type is missing.", actualEntityType.getName()));
-        }
+        keyType = (Class<K>) EntityMetadata.keyTypeInfo(actualEntityType);
 
         if(!(this instanceof ActivatableAbstractEntity) && getType().isAnnotationPresent(DeactivatableDependencies.class)) {
             throw new EntityDefinitionException(format("Non-activatable entity [%s] cannot have deactivatable dependencies.", actualEntityType.getName()));
@@ -457,7 +448,7 @@ public abstract class AbstractEntity<K extends Comparable> implements Comparable
      * Hashing is based on the business key implementation.
      */
     @Override
-    public final int hashCode() {
+    public int hashCode() {
         return (getKey() != null ? getKey().hashCode() : 0) * 23;
     }
 
@@ -623,21 +614,20 @@ public abstract class AbstractEntity<K extends Comparable> implements Comparable
         for (final Field field : fields) { // for each property field
             final String propName = field.getName();
 
-            // Reflector.obtainPropertyAccessor(getType(), propName); -- commented out due to heavy nature of this computation; perhaps this check to be performed only in development mode of the server
+            if (STRICT_MODEL_VERIFICATION) {
+                // TODO this kind of validation should really be implemented as part of the compilation process
+                // ensure that there is an accessor -- with out it field is not a property
+                // throws exception if method does not exists
+                Reflector.obtainPropertyAccessor(getType(), propName); // computationally heavy
+            }
             // determine property type and adjacent virtues
-            final Class<?> type = determineType(field);
+            final Class<?> type = EntityMetadata.determinePropType(getType(), field);
             final boolean isKey = keyMembers.contains(field);
 
             if (Reflector.isPropertyProxied(this, propName)) {
                 properties.put(propName, new MetaProperty(this, field, type, isKey, true, extractDependentProperties(field, fields)));
             } else {
                 try {
-                    // ensure that there is an accessor -- with out it field is not a property
-                    // throws exception if method does not exists
-                    if (STRICT_MODEL_VERIFICATION) {
-                        Reflector.obtainPropertyAccessor(getType(), propName);
-                    }
-
                     final boolean isCollectional = Collection.class.isAssignableFrom(type);
 
                     final IsProperty isPropertyAnnotation = AnnotationReflector.getAnnotation(field, IsProperty.class);
@@ -646,7 +636,7 @@ public abstract class AbstractEntity<K extends Comparable> implements Comparable
                     // perform some early runtime validation whether property was defined correctly
                     if (STRICT_MODEL_VERIFICATION) {
                         // TODO this kind of validation should really be implemented as part of the compilation process
-                        earlyRuntimePropertyDefinitionValidation(propName, type, isCollectional, isPropertyAnnotation, propertyAnnotationType);
+                        earlyRuntimePropertyDefinitionValidation(propName, type, isCollectional, isPropertyAnnotation, propertyAnnotationType); // computationally heavy
                     }
 
                     // if setter is annotated then try to instantiate specified validator
@@ -759,20 +749,6 @@ public abstract class AbstractEntity<K extends Comparable> implements Comparable
     }
 
     /**
-     * Determines property type.
-     *
-     * @param field
-     * @return
-     */
-    private Class<?> determineType(final Field field) {
-        if (KEY.equals(field.getName())) {
-            return keyType;
-        } else {
-            return PropertyTypeDeterminator.stripIfNeeded(field.getType());
-        }
-    }
-
-    /**
      * Analyses mutators and their annotations to collect and instantiate all property validators.
      *
      * @param metaPropertyFactory
@@ -808,8 +784,8 @@ public abstract class AbstractEntity<K extends Comparable> implements Comparable
             }
 
             // now let's see if we need to add EntityExists validation
-            if (!validators.containsKey(ValidationAnnotation.ENTITY_EXISTS) && isEntityExistsValidationApplicable(field, properyType)) {
-                final EntityExists eeAnnotation = new EntityExistsAnnotation((Class<? extends AbstractEntity<?>>) properyType).newInstance();
+            if (!validators.containsKey(ValidationAnnotation.ENTITY_EXISTS) && (isEntityExistsValidationApplicable(getType(), field))) {
+                final EntityExists eeAnnotation = entityExistsAnnotation(getType(), field.getName(),  (Class<? extends AbstractEntity<?>>) properyType);
                 final IBeforeChangeEventHandler<?>[] annotationValidators = metaPropertyFactory.create(eeAnnotation, this, field.getName(), properyType);
 
                 if (annotationValidators.length != 1) {
@@ -831,20 +807,6 @@ public abstract class AbstractEntity<K extends Comparable> implements Comparable
             logger.error(format("Exception during collection of validators for property [%s] in entity type [%s].", field.getName(), getType().getSimpleName()), ex);
             throw ex;
         }
-    }
-
-    /**
-     * Determines whether entity exists validation is applicable for the provided type.
-     *
-     * @param propName
-     * @param propType
-     * @return
-     */
-    private boolean isEntityExistsValidationApplicable(final Field field, final Class<?> propType) {
-        final SkipEntityExistsValidation seevAnnotation =  AnnotationReflector.getAnnotation(field, SkipEntityExistsValidation.class);
-        final boolean skipEntityExistsValidation = seevAnnotation != null ? !seevAnnotation.skipActiveOnly() : false;
-        return !skipEntityExistsValidation &&
-                EntityUtils.isPersistedEntityType(propType);
     }
 
     /**

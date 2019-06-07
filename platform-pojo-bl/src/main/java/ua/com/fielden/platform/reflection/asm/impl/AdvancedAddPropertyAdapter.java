@@ -31,7 +31,13 @@ import ua.com.fielden.platform.utils.Pair;
  *
  */
 public class AdvancedAddPropertyAdapter extends ClassVisitor implements Opcodes {
-    private final IsPropertyAnnotation isPropertyAnnotation = new IsPropertyAnnotation();
+    private static final Generated GENERATED_ANNOTATION = new Generated() {
+        @Override
+        public Class<Generated> annotationType() {
+            return Generated.class;
+        }
+    };
+
     /**
      * Properties to be added.
      */
@@ -135,17 +141,8 @@ public class AdvancedAddPropertyAdapter extends ClassVisitor implements Opcodes 
 
     private void addRequiredAnnotations(final NewProperty pd) {
         // mark the field as generated
-        pd.addAnnotation(new Generated() {
-            @Override
-            public Class<Generated> annotationType() {
-                return Generated.class;
-            }
-        });
+        pd.addAnnotation(GENERATED_ANNOTATION);
 
-        // the generated field should correspond to a property
-        // thus it should have annotation IsProperty, but the annotation descriptor list may already contain it
-        // therefore add IsProperty just in case -- it will not be added if already present
-        pd.addAnnotation(isPropertyAnnotation.newInstance());
         // the same goes about the Title annotation as property should have title and description
         pd.addAnnotation(new Title() {
             @Override

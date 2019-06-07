@@ -265,16 +265,22 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
         public final String expression;
         public final String title;
         public final String desc;
+        public final int precision;
+        public final int scale;
 
         public SummaryPropDef(
                 final String alias,
                 final String expression,
                 final String title,
-                final String desc) {
+                final String desc,
+                final int precision,
+                final int scale) {
             this.alias = alias;
             this.expression = expression;
             this.title = title;
             this.desc = desc;
+            this.precision = precision;
+            this.scale = scale;
         }
     }
 
@@ -533,11 +539,8 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
         return Optional.of(Collections.unmodifiableList(resultSetProperties));
     }
 
-    public Optional<ListMultimap<String, SummaryPropDef>> getSummaryExpressions() {
-        if (summaryExpressions == null || summaryExpressions.isEmpty()) {
-            return Optional.empty();
-        }
-        return Optional.of(ImmutableListMultimap.copyOf(summaryExpressions));
+    public ListMultimap<String, SummaryPropDef> getSummaryExpressions() {
+        return ImmutableListMultimap.copyOf(summaryExpressions);
     }
 
     public Optional<Map<String, Pair<Class<? extends IValueMatcherWithCentreContext<? extends AbstractEntity<?>>>, Optional<CentreContextConfig>>>> getValueMatchersForSelectionCriteria() {

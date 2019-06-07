@@ -26,6 +26,7 @@ import ua.com.fielden.platform.domaintree.testing.MasterEntity;
 import ua.com.fielden.platform.domaintree.testing.MasterEntityForIncludedPropertiesLogic;
 import ua.com.fielden.platform.domaintree.testing.MasterEntityWithUnionForIncludedPropertiesLogic;
 import ua.com.fielden.platform.domaintree.testing.SlaveEntity;
+import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.equery.lifecycle.LifecycleModel.GroupingPeriods;
 
 /**
@@ -131,7 +132,7 @@ public class LifecycleDomainTreeRepresentationTest extends AbstractAnalysisDomai
     @Test
     public void test_that_Category_properties_are_NOT_disabled_for_second_tick() {
         final LifecycleDomainTreeRepresentation repr = (LifecycleDomainTreeRepresentation) dtm();
-        repr.parentCentreDomainTreeManager().getEnhancer().addCalculatedProperty(MasterEntity.class, "", LifecycleDomainTreeRepresentation.CATEGORY_PROPERTY_MARKER, "Category 1", "Category 1 desc", CalculatedPropertyAttribute.NO_ATTR, "SELF");
+        repr.parentCentreDomainTreeManager().getEnhancer().addCalculatedProperty(MasterEntity.class, "", LifecycleDomainTreeRepresentation.CATEGORY_PROPERTY_MARKER, "Category 1", "Category 1 desc", CalculatedPropertyAttribute.NO_ATTR, "SELF", IsProperty.DEFAULT_PRECISION, IsProperty.DEFAULT_SCALE);
         repr.parentCentreDomainTreeManager().getEnhancer().apply();
 
         assertFalse("Category property should be enabled.", dtm().getSecondTick().isDisabledImmutably(MasterEntity.class, "category1"));

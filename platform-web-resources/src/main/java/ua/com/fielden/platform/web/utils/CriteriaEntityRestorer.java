@@ -13,7 +13,6 @@ import ua.com.fielden.platform.entity_centre.review.criteria.EnhancedCentreEntit
 import ua.com.fielden.platform.security.user.IUser;
 import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.security.user.User;
-import ua.com.fielden.platform.serialisation.api.ISerialiser;
 import ua.com.fielden.platform.ui.config.EntityCentreConfig;
 import ua.com.fielden.platform.ui.config.MainMenuItem;
 import ua.com.fielden.platform.ui.config.api.IEntityCentreConfig;
@@ -32,7 +31,6 @@ public class CriteriaEntityRestorer implements ICriteriaEntityRestorer {
     private final IUserProvider userProvider;
     private final IDeviceProvider deviceProvider;
     private final ICriteriaGenerator critGenerator;
-    private final ISerialiser serialiser;
     private final IDomainTreeEnhancerCache domainTreeEnhancerCache;
     private final IWebUiConfig webUiConfig;
     private final EntityFactory entityFactory;
@@ -43,7 +41,6 @@ public class CriteriaEntityRestorer implements ICriteriaEntityRestorer {
             final IUserProvider userProvider,
             final IDeviceProvider deviceProvider,
             final ICriteriaGenerator critGenerator,
-            final ISerialiser serialiser,
             final IDomainTreeEnhancerCache domainTreeEnhancerCache,
             final IWebUiConfig webUiConfig,
             final EntityFactory entityFactory) {
@@ -51,7 +48,6 @@ public class CriteriaEntityRestorer implements ICriteriaEntityRestorer {
         this.userProvider = userProvider;
         this.deviceProvider = deviceProvider;
         this.critGenerator = critGenerator;
-        this.serialiser = serialiser;
         this.domainTreeEnhancerCache = domainTreeEnhancerCache;
         this.webUiConfig = webUiConfig;
         this.entityFactory = entityFactory;
@@ -64,6 +60,6 @@ public class CriteriaEntityRestorer implements ICriteriaEntityRestorer {
         final IMainMenuItem mmiCompanion = companionFinder.find(MainMenuItem.class);
         final IUser userCompanion = companionFinder.find(User.class);
         
-        return createCriteriaEntityForContext(centreContextHolder, companionFinder, user, critGenerator, userProvider, webUiConfig, entityFactory, deviceProvider.getDeviceProfile(), serialiser, domainTreeEnhancerCache, eccCompanion, mmiCompanion, userCompanion);
+        return createCriteriaEntityForContext(centreContextHolder, companionFinder, user, critGenerator, userProvider, webUiConfig, entityFactory, deviceProvider.getDeviceProfile(), domainTreeEnhancerCache, eccCompanion, mmiCompanion, userCompanion);
     }
 }
