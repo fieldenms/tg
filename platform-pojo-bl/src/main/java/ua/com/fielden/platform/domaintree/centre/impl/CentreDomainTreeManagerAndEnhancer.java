@@ -48,6 +48,7 @@ import ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeManager.TickMan
 import ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeRepresentation;
 import ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeRepresentation.AbstractTickRepresentation;
+import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.domaintree.impl.CalculatedProperty;
 import ua.com.fielden.platform.domaintree.impl.CalculatedPropertyInfo;
 import ua.com.fielden.platform.domaintree.impl.CustomProperty;
@@ -325,7 +326,7 @@ public class CentreDomainTreeManagerAndEnhancer extends AbstractDomainTreeManage
             try {
                 getEnhancer().getCalculatedProperty(rootType, SentinelDomainTreeRepresentation.COUNT_OF_SELF_DASHBOARD);
             } catch (final IncorrectCalcPropertyException e) {
-                getEnhancer().addCalculatedProperty(rootType, "", "COUNT(SELF)", "Count of self (Dashboard)", "This calculated property is used for sentinels as aggregation function that calculates a number of entities by each status.", CalculatedPropertyAttribute.NO_ATTR, "SELF");
+                getEnhancer().addCalculatedProperty(rootType, "", "COUNT(SELF)", "Count of self (Dashboard)", "This calculated property is used for sentinels as aggregation function that calculates a number of entities by each status.", CalculatedPropertyAttribute.NO_ATTR, "SELF", IsProperty.DEFAULT_PRECISION, IsProperty.DEFAULT_SCALE);
                 getEnhancer().apply();
             }
         }
@@ -352,7 +353,7 @@ public class CentreDomainTreeManagerAndEnhancer extends AbstractDomainTreeManage
             final String expr = "\"This is date period String property, which should be enabled for distribution\"";
             final String descAddition = "\nThis calculated property is used for lifecycle as distribution property (by time).";
             final CalculatedProperty calc = (CalculatedProperty) getEnhancer().addCalculatedProperty(rootType, "", expr, period.getTitle() /* period.getPropertyName() */, period.getDesc()
-                    + descAddition, CalculatedPropertyAttribute.NO_ATTR, "SELF");
+                    + descAddition, CalculatedPropertyAttribute.NO_ATTR, "SELF", IsProperty.DEFAULT_PRECISION, IsProperty.DEFAULT_SCALE);
 
             // TODO tricky setting!
             calc.setNameVeryTricky(period.getPropertyName());

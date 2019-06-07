@@ -11,6 +11,7 @@ import ua.com.fielden.platform.entity.annotation.CompanionObject;
 import ua.com.fielden.platform.entity.annotation.EntityTitle;
 import ua.com.fielden.platform.entity.annotation.KeyTitle;
 import ua.com.fielden.platform.entity.annotation.KeyType;
+import ua.com.fielden.platform.entity.validation.annotation.SupportsEntityExistsValidation;
 
 /**
  * Non-persistent enum-like entity that is used in CentreUpdaterTest for testing centre diff serialisation; used as property value in {@link TgCentreDiffSerialisation}.
@@ -22,6 +23,7 @@ import ua.com.fielden.platform.entity.annotation.KeyType;
 @KeyTitle("Key")
 @CompanionObject(ITgCentreDiffSerialisationNonPersistentChild.class)
 @EntityTitle("Grouping Property")
+@SupportsEntityExistsValidation
 public class TgCentreDiffSerialisationNonPersistentChild extends AbstractEntity<String> {
     
     public enum GroupingProperty {

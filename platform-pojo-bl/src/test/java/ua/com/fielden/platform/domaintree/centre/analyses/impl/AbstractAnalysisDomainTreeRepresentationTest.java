@@ -32,6 +32,7 @@ import ua.com.fielden.platform.domaintree.testing.EvenSlaverEntity;
 import ua.com.fielden.platform.domaintree.testing.MasterEntity;
 import ua.com.fielden.platform.domaintree.testing.MasterSyntheticEntity;
 import ua.com.fielden.platform.domaintree.testing.SlaveEntity;
+import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.utils.Pair;
 
 /**
@@ -213,7 +214,7 @@ public class AbstractAnalysisDomainTreeRepresentationTest extends AbstractDomain
         allLevelsWithoutCollections(new IAction() {
             @Override
             public void action(final String name) {
-                ((AbstractAnalysisDomainTreeRepresentation) dtm()).parentCentreDomainTreeManager().getEnhancer().addCalculatedProperty(MasterEntity.class, name, "YEAR(dateProp)", "Calc date prop", "Desc", CalculatedPropertyAttribute.NO_ATTR, "dateProp");
+                ((AbstractAnalysisDomainTreeRepresentation) dtm()).parentCentreDomainTreeManager().getEnhancer().addCalculatedProperty(MasterEntity.class, name, "YEAR(dateProp)", "Calc date prop", "Desc", CalculatedPropertyAttribute.NO_ATTR, "dateProp", IsProperty.DEFAULT_PRECISION, IsProperty.DEFAULT_SCALE);
                 ((AbstractAnalysisDomainTreeRepresentation) dtm()).parentCentreDomainTreeManager().getEnhancer().apply();
                 if (!dtm().isExcludedImmutably(MasterEntity.class, name(name, "calcDateProp"))) {
                     assertFalse("EXPRESSION calculated properties of integer type based on date property should be enabled for first tick.", dtm().getFirstTick().isDisabledImmutably(MasterEntity.class, name(name, "calcDateProp")));
@@ -267,7 +268,7 @@ public class AbstractAnalysisDomainTreeRepresentationTest extends AbstractDomain
 
     protected void checkSecTickEnablementForAGGR_EXPRessions(final String originationProperty, final int i, final String contextPath) {
         ((AbstractAnalysisDomainTreeRepresentation) dtm()).parentCentreDomainTreeManager().getEnhancer().addCalculatedProperty(MasterEntity.class, contextPath, "MAX("
-                + originationProperty + ")", originationProperty + " aggr expr " + i, "Desc", CalculatedPropertyAttribute.NO_ATTR, originationProperty);
+                + originationProperty + ")", originationProperty + " aggr expr " + i, "Desc", CalculatedPropertyAttribute.NO_ATTR, originationProperty, IsProperty.DEFAULT_PRECISION, IsProperty.DEFAULT_SCALE);
         ((AbstractAnalysisDomainTreeRepresentation) dtm()).parentCentreDomainTreeManager().getEnhancer().apply();
         final String name = originationProperty + "AggrExpr" + i;
         if (!dtm().isExcludedImmutably(MasterEntity.class, name)) {

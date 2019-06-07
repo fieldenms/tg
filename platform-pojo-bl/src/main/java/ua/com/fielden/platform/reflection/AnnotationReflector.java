@@ -271,13 +271,12 @@ public final class AnnotationReflector {
      */
     public static <T extends Annotation> T getAnnotationForClass(final Class<T> annotationType, final Class<?> forType) {
         Class<?> runningType = forType;
-        while (runningType != null && !runningType.equals(Object.class)) { // need to iterated thought entity hierarchy
-            if (runningType.isAnnotationPresent(annotationType)) {
-                return runningType.getAnnotation(annotationType);
-            }
+        T annotation = null;
+        while (annotation == null && runningType != null && runningType != Object.class) { // need to iterated thought entity hierarchy
+            annotation = runningType.getAnnotation(annotationType); 
             runningType = runningType.getSuperclass();
         }
-        return null;
+        return annotation;
     }
 
     /**

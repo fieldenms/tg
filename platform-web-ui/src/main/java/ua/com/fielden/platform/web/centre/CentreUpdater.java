@@ -27,6 +27,7 @@ import static ua.com.fielden.platform.domaintree.impl.AbstractDomainTree.isDoubl
 import static ua.com.fielden.platform.domaintree.impl.AbstractDomainTree.isDummyMarker;
 import static ua.com.fielden.platform.domaintree.impl.AbstractDomainTree.isPlaceholder;
 import static ua.com.fielden.platform.domaintree.impl.AbstractDomainTree.reflectionProperty;
+import static ua.com.fielden.platform.entity.AbstractEntity.KEY_NOT_ASSIGNED;
 import static ua.com.fielden.platform.entity.AbstractPersistentEntity.LAST_UPDATED_BY;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetch;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
@@ -159,6 +160,21 @@ public class CentreUpdater {
     private static final Function<AbstractEntity<?>, String> ENTITY_TO_STRING = entity -> entityWithMocksToString((ent) -> {
         if (isPersistedEntityType(ent.getType()) || isSyntheticBasedOnPersistentEntityType(ent.getType())) {
             if (ent.getId() == null) {
+                // Usually persistent (or synthetic based on persistent) entities should have IDs when conversion to diff object is performed.
+                // However we have two edge-cases here.
+                // The first edge-case is where old configurations convert to new ones:
+                //     old 'not found mocks' are not recognised (in method entityWithMocksToString above) and fall into category as UNKNOWN not found mock.
+                // Other edge-case is much more important: consider @SkipEntityExists property that creates ad-hoc inside overridden findByKeyAndFetch method.
+                //     We need to treat this entity as new by converting its key toString and saving it in diff object. When diff object is used for centre restoration,
+                //     this string will be passed back to findByKeyAndFetch method and, again, the entity will be created ad-hoc (convertFrom method).
+                try {
+                    final String entString = ent.toString();
+                    if (!ent.isIdOnlyProxy() && !KEY_NOT_ASSIGNED.equals(entString)) {
+                        return entString;
+                    }
+                } catch (final Exception ex) {
+                    logger.warn("Ad-hoc created entity with empty ID, that is used in crit-only single criterion, can not be converted to string. UNKNOWN 'not found mock' will be used.", ex);
+                }
                 return createNotFoundMockString("UNKNOWN");
             }
             return ID_PREFIX + ent.getId().toString();

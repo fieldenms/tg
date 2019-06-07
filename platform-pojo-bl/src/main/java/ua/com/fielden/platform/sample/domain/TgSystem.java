@@ -15,6 +15,7 @@ import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.entity.annotation.SkipActivatableTracking;
 import ua.com.fielden.platform.entity.annotation.SkipEntityExistsValidation;
 import ua.com.fielden.platform.entity.annotation.Title;
+import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
 
 /**
  * Master entity object.
@@ -61,7 +62,27 @@ public class TgSystem extends ActivatableAbstractEntity<String> {
     @CritOnly(SINGLE)
     @Title(value = "Crit-only Single Category", desc = "Desc")
     private TgCategory critOnlySingleCategory;
-    
+
+    @IsProperty
+    @MapTo
+    @Title(value = "Permit New", desc = "Permits new entity instances.")
+    @SkipEntityExistsValidation(skipNew = true)
+    private TgCategory permitNewCategory;
+
+    @IsProperty(TgCategory.class)
+    @MapTo
+    private PropertyDescriptor<TgCategory> propDescriptor;
+
+    @Observable
+    public TgSystem setPermitNewCategory(final TgCategory permitNewCategory) {
+        this.permitNewCategory = permitNewCategory;
+        return this;
+    }
+
+    public TgCategory getPermitNewCategory() {
+        return permitNewCategory;
+    }
+
     @Observable
     public TgSystem setCritOnlySingleCategory(final TgCategory critOnlySingleCategory) {
         this.critOnlySingleCategory = critOnlySingleCategory;
@@ -127,6 +148,16 @@ public class TgSystem extends ActivatableAbstractEntity<String> {
     public TgSystem setActive(final boolean active) {
         super.setActive(active);
         return this;
+    }
+
+    @Observable
+    public TgSystem setPropDescriptor(final PropertyDescriptor<TgCategory> propDescriptor) {
+        this.propDescriptor = propDescriptor;
+        return this;
+    }
+
+    public PropertyDescriptor<TgCategory> getPropDescriptor() {
+        return propDescriptor;
     }
 
 }

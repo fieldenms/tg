@@ -96,6 +96,11 @@ public class TgCentreDiffSerialisation extends AbstractEntity<String> {
     @CritOnly(SINGLE)
     private TgCentreDiffSerialisationNonPersistentChild nonPersistentEntityPropCritSingle;
     
+    @IsProperty
+    @Title("Non Persistent Composite Entity Prop Crit Single")
+    @CritOnly(SINGLE)
+    private TgCentreDiffSerialisationNonPersistentCompositeChild nonPersistentCompositeEntityPropCritSingle;
+    
     @IsProperty(TgCentreDiffSerialisation.class)
     @Title("Property Descriptor Prop")
     private PropertyDescriptor<TgCentreDiffSerialisation> propertyDescriptorProp;
@@ -489,6 +494,16 @@ public class TgCentreDiffSerialisation extends AbstractEntity<String> {
     }
     
     @Observable
+    public TgCentreDiffSerialisation setNonPersistentCompositeEntityPropCritSingle(final TgCentreDiffSerialisationNonPersistentCompositeChild nonPersistentCompositeEntityPropCritSingle) {
+        this.nonPersistentCompositeEntityPropCritSingle = nonPersistentCompositeEntityPropCritSingle;
+        return this;
+    }
+    
+    public TgCentreDiffSerialisationNonPersistentCompositeChild getNonPersistentCompositeEntityPropCritSingle() {
+        return nonPersistentCompositeEntityPropCritSingle;
+    }
+    
+    @Observable
     public TgCentreDiffSerialisation setNonPersistentEntityPropCritSingle(final TgCentreDiffSerialisationNonPersistentChild nonPersistentEntityPropCritSingle) {
         this.nonPersistentEntityPropCritSingle = nonPersistentEntityPropCritSingle;
         return this;
@@ -617,10 +632,5 @@ public class TgCentreDiffSerialisation extends AbstractEntity<String> {
     public Date getDateProp() {
         return dateProp;
     }
-    
-    @Override
-    protected boolean isEntityExistsValidationEnforced(final String propertyName) {
-        return "nonPersistentEntityPropCritSingle".equals(propertyName);
-    }
-    
+   
 }

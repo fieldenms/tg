@@ -13,6 +13,7 @@ import ua.com.fielden.platform.entity.annotation.Calculated;
 import ua.com.fielden.platform.entity.annotation.factory.CalculatedAnnotation;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.proxy.EntityProxyContainer;
+import ua.com.fielden.platform.entity.proxy.MockNotFoundEntityMaker;
 import ua.com.fielden.platform.entity.proxy.TgOwnerEntity;
 import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
 import ua.com.fielden.platform.reflection.asm.api.NewProperty;
@@ -247,7 +248,14 @@ public class PropertyTypeDeterminatorCheckingEnhancementsTest {
         final AbstractEntity<?> entity = factory.newEntity(EntityProxyContainer.proxy(entityTypeGenerated, "entityProp"), 1L);
         assertEquals(entityTypeGenerated, PropertyTypeDeterminator.stripIfNeeded(entity.getClass()));
     }
-    
+
+    @Test
+    public void stripIfNeeded_returns_original_type_for_mock_not_found_entity() {
+        final Class<? extends TgOwnerEntity> mockType = MockNotFoundEntityMaker.mock(TgOwnerEntity.class);
+        final AbstractEntity<?> entity = factory.newEntity(mockType, 1L);
+        assertEquals(TgOwnerEntity.class, PropertyTypeDeterminator.stripIfNeeded(entity.getClass()));
+    }
+
     @Test
     public void baseEntityType_correctly_determines_the_base_type_for_dynamically_generated_entity_types() throws Exception {
         final DynamicEntityClassLoader cl = DynamicEntityClassLoader.getInstance(ClassLoader.getSystemClassLoader());

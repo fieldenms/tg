@@ -1,10 +1,9 @@
 package ua.com.fielden.platform.entity.validation;
 
 import static java.lang.String.format;
-import static java.util.Optional.empty;
-import static java.util.Optional.of;
 import static ua.com.fielden.platform.entity.AbstractEntity.KEY_NOT_ASSIGNED;
 import static ua.com.fielden.platform.entity.ActivatableAbstractEntity.ACTIVE;
+import static ua.com.fielden.platform.entity.proxy.MockNotFoundEntityMaker.isMockNotFoundValue;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchOnly;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
@@ -12,11 +11,10 @@ import static ua.com.fielden.platform.error.Result.failure;
 import static ua.com.fielden.platform.error.Result.successful;
 import static ua.com.fielden.platform.reflection.AnnotationReflector.getAnnotation;
 import static ua.com.fielden.platform.reflection.Finder.findFieldByName;
+import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getEntityTitleAndDesc;
 import static ua.com.fielden.platform.utils.EntityUtils.isPropertyDescriptor;
-import static ua.com.fielden.platform.web.utils.EntityResourceUtils.isMockNotFoundEntity;
 
 import java.lang.annotation.Annotation;
-import java.util.Optional;
 import java.util.Set;
 
 import ua.com.fielden.platform.dao.IEntityDao;
@@ -44,6 +42,7 @@ public class EntityExistsValidator<T extends AbstractEntity<?>> implements IBefo
     public static final String WAS_NOT_FOUND_CONCRETE_ERR = "%s [%s] was not found.";
     private static final String WAS_NOT_FOUND_ERR = "%s was not found.";
     public static final String EXISTS_BUT_NOT_ACTIVE_ERR = "%s [%s] exists, but is not active.";
+    public static final String DIRTY_ERR = "EntityExists validator: dirty entity %s (%s) is not acceptable.";
 
     private final Class<T> type;
     private final ICompanionObjectFinder coFinder;
@@ -61,16 +60,15 @@ public class EntityExistsValidator<T extends AbstractEntity<?>> implements IBefo
     @Override
     public Result handle(final MetaProperty<T> property, final T newValue, final Set<Annotation> mutatorAnnotations) {
         final IEntityDao<T> co = coFinder.find(type);
-        final Optional<Boolean> isPropertyDescriptorOpt;
+        final boolean isPropertyDescriptor;
         if (co == null) {
-            isPropertyDescriptorOpt = of(isPropertyDescriptor(type));
-            if (!isPropertyDescriptorOpt.get()) {
+            isPropertyDescriptor = isPropertyDescriptor(type);
+            if (!isPropertyDescriptor) {
                 throw new IllegalStateException("EntityExistsValidator is not fully initialised: companion object is missing");
             }
         } else {
-            isPropertyDescriptorOpt = empty();
+            isPropertyDescriptor = false;
         }
-        final boolean isPropertyDescriptor = isPropertyDescriptorOpt.orElse(false);
         
         final AbstractEntity<?> entity = property.getEntity();
         try {
@@ -78,22 +76,23 @@ public class EntityExistsValidator<T extends AbstractEntity<?>> implements IBefo
                 return successful(entity);
             } else if (newValue.isInstrumented() && newValue.isDirty()) { // if entity uninstrumented its dirty state is irrelevant and cannot be checked
                 final SkipEntityExistsValidation seevAnnotation =  getAnnotation(findFieldByName(entity.getType(), property.getName()), SkipEntityExistsValidation.class);
-                if (seevAnnotation != null && seevAnnotation.skipDirtyOnly()) {
+                if (seevAnnotation != null && seevAnnotation.skipNew() && !newValue.isPersisted()) {
                     return successful(entity);
                 }
                 final String entityTitle = TitlesDescsGetter.getEntityTitleAndDesc(newValue.getType()).getKey();
-                return failure(entity, format("EntityExists validator: dirty entity %s (%s) is not acceptable.", newValue, entityTitle));
+                return failure(entity, format(DIRTY_ERR, newValue, entityTitle));
             }
             
-            if (property.criteriaParent) {
-                return successful(entity);
-            }
             // the notion of existence is different for activatable and non-activatable entities,
             // where for activatable entities to exists mens also to be active
             final boolean exists;
-            final boolean activeEnough; // Does not have to 100% active - see below
-            if (!property.isActivatable()) { // is property value represents non-activatable?
-                exists = isPropertyDescriptor ? !isMockNotFoundEntity(newValue) : co.entityExists(newValue);
+            final boolean activeEnough; // Does not have to be 100% active - see below
+            final boolean isMockNotFoundValue = isMockNotFoundValue(newValue);
+            if (isMockNotFoundValue) {
+                exists = false;
+                activeEnough = true;
+            } else if (!property.isActivatable()) { // is property value represents non-activatable?
+                exists = isPropertyDescriptor || co.entityExists(newValue);
                 activeEnough = true;
             } else { // otherwise, property value is activatable
                 final Class<T> entityType = co.getEntityType();
@@ -113,9 +112,13 @@ public class EntityExistsValidator<T extends AbstractEntity<?>> implements IBefo
             }
 
             if (!exists || !activeEnough) {
-                final String entityTitle = TitlesDescsGetter.getEntityTitleAndDesc(newValue.getType()).getKey();
+                final String entityTitle = getEntityTitleAndDesc(newValue.getType()).getKey();
                 if (!exists) {
-                    return failure(entity, isPropertyDescriptor || KEY_NOT_ASSIGNED.equals(newValue.toString()) ? format(WAS_NOT_FOUND_ERR, entityTitle) : format(WAS_NOT_FOUND_CONCRETE_ERR, entityTitle, newValue.toString()));
+                    if (isMockNotFoundValue) {
+                        // using newValue.getDesc() depends on the fact the it contains the value typed by the user
+                        return failure(entity, format(WAS_NOT_FOUND_CONCRETE_ERR, entityTitle, newValue.getDesc()));
+                    }
+                    return failure(entity, isPropertyDescriptor || isMockNotFoundValue || KEY_NOT_ASSIGNED.equals(newValue.toString()) ? format(WAS_NOT_FOUND_ERR, entityTitle) : format(WAS_NOT_FOUND_CONCRETE_ERR, entityTitle, newValue.toString()));
                 } else {
                     return failure(entity, format(EXISTS_BUT_NOT_ACTIVE_ERR, entityTitle, newValue.toString()));
                 }
