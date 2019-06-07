@@ -8,11 +8,15 @@ import static ua.com.fielden.platform.utils.EntityUtils.isPersistedEntityType;
 import static ua.com.fielden.platform.utils.EntityUtils.isPropertyDescriptor;
 
 import java.lang.reflect.Field;
+import java.util.List;
 import java.util.concurrent.ExecutionException;
+
+import org.apache.log4j.Logger;
 
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 
+import ua.com.fielden.platform.basic.config.IApplicationDomainProvider;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.SkipEntityExistsValidation;
 import ua.com.fielden.platform.entity.annotation.factory.EntityExistsAnnotation;
@@ -29,22 +33,38 @@ import ua.com.fielden.platform.reflection.exceptions.ReflectionException;
  *
  */
 public class EntityMetadata {
+    private static final Logger LOGGER = Logger.getLogger(EntityMetadata.class);
     private static final Cache<Class<? extends AbstractEntity<?>>, Cache<String, Boolean>> CACHE_IS_ENTITY_EXISTS_APPLICABLE = CacheBuilder.newBuilder().initialCapacity(1000).concurrencyLevel(50).build();
     private static final Cache<Class<? extends AbstractEntity<?>>, Class<? extends Comparable>> CACHE_KEY_TYPE = CacheBuilder.newBuilder().initialCapacity(1000).concurrencyLevel(50).build();
     private static final Cache<Class<? extends AbstractEntity<?>>, Cache<String, Class<?>>> CACHE_PROP_TYPE = CacheBuilder.newBuilder().initialCapacity(1000).concurrencyLevel(50).build();
     private static final Cache<Class<? extends AbstractEntity<?>>, Cache<String, EntityExists>> CACHE_ENTITY_EXISTS_ANNOTATION = CacheBuilder.newBuilder().initialCapacity(1000).concurrencyLevel(50).build();
     private EntityMetadata() {}
     
-//    public static void build(final IApplicationDomainProvider domainProvider) {
-//        for (final Class<? extends AbstractEntity<?>> entityType : domainProvider.entityTypes()) {
-//            keyTypeInfo(entityType);
-//            final List<Field> fields = Finder.findRealProperties(entityType);
-//            for (final Field field : fields) { // for each property field
-//                determinePropType(entityType, field);
-//                isEntityExistsValidationApplicable(entityType, field);
-//            }
-//        }
-//    }
+    /**
+     * Builds metadata for domain entities.
+     * Doing this at the application startup time should result in improved performance related to accessing entity metadata.
+     *
+     * @param domainProvider
+     */
+    public static void build(final IApplicationDomainProvider domainProvider) {
+        long typeCount = 0;
+        long propCount = 0;
+        long eevCount = 0;
+        for (final Class<? extends AbstractEntity<?>> entityType : domainProvider.entityTypes()) {
+            keyTypeInfo(entityType);
+            final List<Field> fields = Finder.findRealProperties(entityType);
+            for (final Field field : fields) { // for each property field
+                propCount++;
+                final Class<?> propType = determinePropType(entityType, field);
+                if (isEntityExistsValidationApplicable(entityType, field)) {
+                    entityExistsAnnotation(entityType, field.getName(), (Class<? extends AbstractEntity<?>>) propType);
+                    eevCount++;
+                }
+            }
+            typeCount++;
+        }
+        LOGGER.info(format("Entity metadata built: entities [%s], properties [%s], entity exists annotations [%s].", typeCount, propCount, eevCount));
+    }
 
     /**
      * Determines the type of property KEY.
