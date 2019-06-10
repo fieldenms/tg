@@ -439,7 +439,7 @@ const TgEntityCentreBehaviorImpl = {
      * Returns 'true' in case where current saveAsName represent link configuration, 'false' otherwise.
      */
     _isLinkConfig: function (saveAsName) {
-        return saveAsName === this.$.selection_criteria._reflector().LINK_CONFIG_TITLE;
+        return saveAsName === this._reflector.LINK_CONFIG_TITLE;
     },
 
     /**
