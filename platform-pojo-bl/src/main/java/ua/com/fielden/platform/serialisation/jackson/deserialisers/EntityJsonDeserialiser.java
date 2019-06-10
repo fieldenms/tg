@@ -1,10 +1,15 @@
 package ua.com.fielden.platform.serialisation.jackson.deserialisers;
 
+import static java.util.Optional.of;
+import static ua.com.fielden.platform.entity.factory.EntityFactory.newPlainEntity;
+import static ua.com.fielden.platform.entity.meta.PropertyDescriptor.fromString;
+import static ua.com.fielden.platform.entity.proxy.EntityProxyContainer.proxy;
 import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.getEditableDefault;
 import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.getRequiredDefault;
 import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.getValueChangeCountDefault;
 import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.getVisibleDefault;
 import static ua.com.fielden.platform.serialisation.jackson.EntitySerialiser.ID_ONLY_PROXY_PREFIX;
+import static ua.com.fielden.platform.web.utils.EntityResourceUtils.entityWithMocksFromString;
 
 import java.io.IOException;
 import java.lang.reflect.Field;
@@ -12,7 +17,6 @@ import java.lang.reflect.ParameterizedType;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Set;
 import java.util.function.Supplier;
 import java.util.regex.Pattern;
@@ -31,8 +35,6 @@ import com.fasterxml.jackson.databind.type.TypeFactory;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
-import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
-import ua.com.fielden.platform.entity.proxy.EntityProxyContainer;
 import ua.com.fielden.platform.entity.proxy.IIdOnlyProxiedEntityTypeCache;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
@@ -119,18 +121,10 @@ public class EntityJsonDeserialiser<T extends AbstractEntity<?>> extends StdDese
                     .toArray(new String[] {});
             final T entity;
             // Property Descriptor: key and desc properties of propDescriptor are set through setters, not through fields; avoid validators on these properties or otherwise isInitialising:=true would be needed here
-            if (uninstrumented) {
-                if (propertyDescriptorType) {
-                    entity = (T) PropertyDescriptor.fromString(node.get("@pdString").asText());
-                } else {
-                    entity = EntityFactory.newPlainEntity(EntityProxyContainer.proxy(type, proxiedProps), id);
-                }
+            if (propertyDescriptorType) {
+                entity = entityWithMocksFromString(str -> (T) (uninstrumented ? fromString(str) : fromString(str, of(factory))), node.get("@pdString").asText(), type);
             } else {
-                if (propertyDescriptorType) {
-                    entity = (T) PropertyDescriptor.fromString(node.get("@pdString").asText(), Optional.of(factory));
-                } else {
-                    entity = factory.newEntity(EntityProxyContainer.proxy(type, proxiedProps), id);
-                }
+                entity = uninstrumented ? newPlainEntity(proxy(type, proxiedProps), id) : factory.newEntity(proxy(type, proxiedProps), id);
             }
             final JsonNode atIdNode = node.get("@id");
             // At this stage 'clientSideReference' has been already decoded using ISerialisationTypeEncoder, that is why concrete EntityJsonDeserialiser has been chosen for deserialisation

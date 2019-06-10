@@ -33,6 +33,7 @@ import ua.com.fielden.platform.domaintree.testing.ClassProviderForTestingPurpose
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.EntityType;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
+import ua.com.fielden.platform.entity.annotation.SkipEntityExistsValidation;
 import ua.com.fielden.platform.entity.annotation.Title;
 import ua.com.fielden.platform.entity.annotation.mutator.AfterChange;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
@@ -71,9 +72,9 @@ public class CriteriaGeneratorTest {
     });
     {
         //Adding calculated properties to the centre domain tree manager and enhancer.
-        cdtm.getEnhancer().addCalculatedProperty(TopLevelEntity.class, "", "3 + integerProp", "firstCalc", "firstCalc", CalculatedPropertyAttribute.NO_ATTR, "integerProp");
-        cdtm.getEnhancer().addCalculatedProperty(TopLevelEntity.class, "entityProp.entityProp", "3 + MONTH(dateProp)", "secondCalc", "secondCalc", CalculatedPropertyAttribute.NO_ATTR, "dateProp");
-        cdtm.getEnhancer().addCalculatedProperty(TopLevelEntity.class, "", "3 + moneyProp", "thirdCalc", "thirdCalc", CalculatedPropertyAttribute.NO_ATTR, "moneyProp");
+        cdtm.getEnhancer().addCalculatedProperty(TopLevelEntity.class, "", "3 + integerProp", "firstCalc", "firstCalc", CalculatedPropertyAttribute.NO_ATTR, "integerProp", IsProperty.DEFAULT_PRECISION, IsProperty.DEFAULT_SCALE);
+        cdtm.getEnhancer().addCalculatedProperty(TopLevelEntity.class, "entityProp.entityProp", "3 + MONTH(dateProp)", "secondCalc", "secondCalc", CalculatedPropertyAttribute.NO_ATTR, "dateProp", IsProperty.DEFAULT_PRECISION, IsProperty.DEFAULT_SCALE);
+        cdtm.getEnhancer().addCalculatedProperty(TopLevelEntity.class, "", "3 + moneyProp", "thirdCalc", "thirdCalc", CalculatedPropertyAttribute.NO_ATTR, "moneyProp", IsProperty.DEFAULT_PRECISION, IsProperty.DEFAULT_SCALE);
         cdtm.getEnhancer().apply();
 
         //Configuring first tick check properties.
@@ -418,6 +419,7 @@ public class CriteriaGeneratorTest {
                     put(IsProperty.class, createAnnotationMap());
                     put(Title.class, createAnnotationMap(new Pair<String, Object>("value", "single entity property"), new Pair<String, Object>("desc", "single entity property description")));
                     put(CriteriaProperty.class, createAnnotationMap(new Pair<String, Object>("rootType", managedType), new Pair<String, Object>("propertyName", "critSingleEntity")));
+                    put(SkipEntityExistsValidation.class, createAnnotationMap());
                     put(AfterChange.class, createAnnotationMap(new Pair<String, Object>("value", SynchroniseCriteriaWithModelHandler.class)));
                 }
             });

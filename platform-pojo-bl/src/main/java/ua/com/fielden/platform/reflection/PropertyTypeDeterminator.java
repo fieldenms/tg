@@ -25,6 +25,7 @@ import ua.com.fielden.platform.entity.annotation.DescRequired;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.MapTo;
 import ua.com.fielden.platform.entity.annotation.Required;
+import ua.com.fielden.platform.entity.proxy.MockNotFoundEntityMaker;
 import ua.com.fielden.platform.reflection.asm.impl.DynamicTypeNamingService;
 import ua.com.fielden.platform.reflection.exceptions.ReflectionException;
 import ua.com.fielden.platform.utils.EntityUtils;
@@ -263,7 +264,7 @@ public class PropertyTypeDeterminator {
     public static Class<?> stripIfNeeded(final Class<?> clazz) {
         if (clazz == null) {
             throw new ReflectionException("Class stripping is not applicable to null values.");
-        } else if (isInstrumented(clazz) || isProxied(clazz) || isLoadedByHibernate(clazz)) {
+        } else if (isInstrumented(clazz) || isProxied(clazz) || isLoadedByHibernate(clazz) || isMockNotFoundType(clazz)) {
             return stripIfNeeded(clazz.getSuperclass());
         }
         return clazz;
@@ -313,6 +314,16 @@ public class PropertyTypeDeterminator {
      */
     public static boolean isInstrumented(final Class<?> clazz) {
         return clazz.getName().contains("$$EnhancerByGuice");
+    }
+
+    /**
+     * A predicate to identify whether {@code entityType} represents a mock-not-found type.
+     *
+     * @param entityType
+     * @return
+     */
+    public static boolean isMockNotFoundType(final Class<?> entityType) {
+        return entityType.getName().endsWith(MockNotFoundEntityMaker.MOCK_TYPE_ENDING);
     }
 
     public static boolean isDotNotation(final String exp) {

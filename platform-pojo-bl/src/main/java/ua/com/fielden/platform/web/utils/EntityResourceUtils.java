@@ -2,12 +2,18 @@ package ua.com.fielden.platform.web.utils;
 
 import static java.lang.String.format;
 import static java.util.Locale.getDefault;
+import static java.util.regex.Pattern.quote;
+import static org.apache.commons.lang.StringUtils.isEmpty;
 import static org.apache.commons.lang.StringUtils.uncapitalize;
+import static ua.com.fielden.platform.entity.AbstractEntity.DESC;
 import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
+import static ua.com.fielden.platform.entity.AbstractEntity.KEY_NOT_ASSIGNED;
 import static ua.com.fielden.platform.entity.factory.EntityFactory.newPlainEntity;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
+import static ua.com.fielden.platform.error.Result.successful;
 import static ua.com.fielden.platform.reflection.AnnotationReflector.getPropertyAnnotation;
+import static ua.com.fielden.platform.utils.EntityUtils.isCompositeEntity;
 import static ua.com.fielden.platform.utils.EntityUtils.isEntityType;
 
 import java.lang.reflect.Field;
@@ -24,6 +30,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -31,7 +38,6 @@ import java.util.stream.Stream;
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 
-import ua.com.fielden.platform.attachment.Attachment;
 import ua.com.fielden.platform.basic.autocompleter.PojoValueMatcher;
 import ua.com.fielden.platform.companion.IEntityReader;
 import ua.com.fielden.platform.criteria.generator.impl.CriteriaReflector;
@@ -48,6 +54,7 @@ import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.entity.fetch.IFetchProvider;
 import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
+import ua.com.fielden.platform.entity.proxy.MockNotFoundEntityMaker;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.entity.validation.EntityExistsValidator;
@@ -58,6 +65,7 @@ import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.reflection.Reflector;
+import ua.com.fielden.platform.serialisation.jackson.deserialisers.EntityJsonDeserialiser;
 import ua.com.fielden.platform.types.Colour;
 import ua.com.fielden.platform.types.Hyperlink;
 import ua.com.fielden.platform.types.Money;
@@ -77,7 +85,22 @@ public class EntityResourceUtils {
     public static final String CENTRE_CONFIG_CONFLICT_WARNING = "Configuration with this title already exists.";
     public static final String CENTRE_CONFIG_CONFLICT_ERROR = "Base " + uncapitalize(CENTRE_CONFIG_CONFLICT_WARNING);
     private static final String RESOLVE_CONFLICT_INSTRUCTION = "Please either edit the value back to [%s] to resolve the conflict or cancel all of your changes.";
+    /**
+     * Used to indicate the start of 'not found mock' serialisation sequence.
+     */
+    private static final String NOT_FOUND_MOCK_PREFIX = "__________NOT_FOUND__________";
     private static final Logger logger = Logger.getLogger(EntityResourceUtils.class);
+    /**
+     * Standard {@link PropertyDescriptor}'s convertor to string. Includes handling for 'not found mock' instances.
+     */
+    public static final Function<PropertyDescriptor<?>, String> PROPERTY_DESCRIPTOR_TO_STRING = entity -> entityWithMocksToString(pd -> pd.toString(), entity);
+    /**
+     * Standard {@link PropertyDescriptor}'s convertor from string. Includes handling for 'not found mock' instances.
+     * <p>
+     * Note that this is applicable only to restore uninstrumented {@link PropertyDescriptor}s. This is common case of {@link PropertyDescriptor} usage -- as a property value of some other entity.
+     * However, we also have similar logic in {@link EntityJsonDeserialiser}, which also deserialises instrumented instances.
+     */
+    public static final Function<String, PropertyDescriptor<?>> PROPERTY_DESCRIPTOR_FROM_STRING = str -> entityWithMocksFromString(PropertyDescriptor::fromString, str, PropertyDescriptor.class);
     
     private EntityResourceUtils() {}
     
@@ -114,12 +137,23 @@ public class EntityResourceUtils {
      */
     private static <V extends AbstractEntity<?>> IFetchProvider<V> fetchForPropertyOrDefault(final ICompanionObjectFinder coFinder, final Class<? extends AbstractEntity<?>> entityType, final String propertyName) {
         final IFetchProvider<? extends AbstractEntity<?>> fetchProvider = coFinder.find(entityType).getFetchProvider();
-        //        return fetchProvider.fetchFor(propertyName);
-        return fetchProvider.shouldFetch(propertyName)
-                ? fetchProvider.fetchFor(propertyName)
-                : fetchProvider.with(propertyName).fetchFor(propertyName);
+        return fetchForPropertyOrDefault(fetchProvider, propertyName);
     }
-
+    
+    /**
+     * Returns fetch provider for property or, if the property should not be fetched according to default strategy, returns the 'default' property fetch provider with 'keys'
+     * (simple an composite) and 'desc' (if 'desc' exists in domain entity).
+     *
+     * @param fetchProvider
+     * @param propertyName
+     * @return
+     */
+    public static <V extends AbstractEntity<?>> IFetchProvider<V> fetchForPropertyOrDefault(final IFetchProvider<? extends AbstractEntity<?>> fetchProvider, final String propertyName) {
+        return fetchProvider.shouldFetch(propertyName)
+            ? fetchProvider.fetchFor(propertyName)
+            : fetchProvider.with(propertyName).fetchFor(propertyName);
+    }
+    
     /**
      * Determines the version that is shipped with 'modifiedPropertiesHolder'.
      *
@@ -190,7 +224,7 @@ public class EntityResourceUtils {
 
         disregardCritOnlyRequiredProperties(entity);
         disregardUntouchedRequiredProperties(entity, touchedProps);
-        disregardTouchedRequiredPropertiesWithEmptyValueForNotPersistedEntity(entity, touchedProps);
+        disregardTouchedRequiredPropertiesWithEmptyValue(entity, touchedProps);
 
         return entity;
     }
@@ -256,7 +290,7 @@ public class EntityResourceUtils {
             if (valToBeApplied != null && convertedValue == null) {
                 final Class<?> propType = determinePropertyType(type, name);
                 if (isEntityType(propType)) {
-                    valueToBeApplied = createMockNotFoundEntity(propType);
+                    valueToBeApplied = createMockNotFoundEntity((Class<AbstractEntity<?>>) propType, (String) valToBeApplied); // here valToBeApplied must be string; look at 'convert' method with 'reflectedValue' parameter always string for entity-typed 'propertyType'
                 } else {
                     valueToBeApplied = convertedValue;
                 }
@@ -293,12 +327,69 @@ public class EntityResourceUtils {
     /**
      * Creates lightweight mock entity instance which will be invalid against {@link EntityExistsValidator} due to empty ID.
      * ToString conversion will give us {@link AbstractEntity#KEY_NOT_ASSIGNED}.
+     * <p>
+     * This mock instance contains the string query by which the entity was not found.
      * 
+     * @param type
+     * @param stringQuery -- string query by which the entity was not found
+     * 
+     * @return
+     */
+    public static AbstractEntity<?> createMockNotFoundEntity(final Class<? extends AbstractEntity> type, final String stringQuery) {
+        if (isEmpty(stringQuery)) {
+            throw new EntityResourceUtilsException("Mock 'not found' entity could not be created due to empty 'stringQuery'.");
+        }
+        return  newPlainEntity(MockNotFoundEntityMaker.mock(type), null).setDesc(stringQuery);
+    }
+    
+    /**
+     * Creates a string that can be used for 'not found mock' entity serialisation.
+     * 
+     * @param stringQuery
+     * @return
+     */
+    public static String createNotFoundMockString(final String stringQuery) {
+        return NOT_FOUND_MOCK_PREFIX + stringQuery;
+    }
+    
+    /**
+     * Returns indication whether <code>obj</code> represents 'mock not found entity'.
+     * 
+     * @param obj
+     * @return
+     */
+    public static boolean isMockNotFoundEntity(final Object obj) {
+        return obj instanceof AbstractEntity && MockNotFoundEntityMaker.isMockNotFoundValue((AbstractEntity<?>)obj);
+    }
+    
+    /**
+     * Converts <code>entity</code> to serialisation string.
+     * 
+     * @param specificConverter -- used to convert entity if it is not 'not found mock', otherwise the standard scheme for 'not found mocks' is used
+     * @param entity
+     * @return
+     */
+    public static <T extends AbstractEntity<?>> String entityWithMocksToString(final Function<T, String> specificConverter, final T entity) {
+        if (isMockNotFoundEntity(entity)) {
+            return createNotFoundMockString(entity.get(DESC));
+        } else {
+            return specificConverter.apply(entity);
+        }
+    }
+    
+    /**
+     * Converts serialisation <code>str</code> to entity.
+     * 
+     * @param specificConverter -- used to convert string if it does not represent 'not found mock', otherwise the standard scheme for 'not found mocks' is used
+     * @param str
      * @param type
      * @return
      */
-    private static AbstractEntity<?> createMockNotFoundEntity(final Class<?> type) {
-        return newPlainEntity((Class<AbstractEntity<?>>) type, null);
+    public static <T extends AbstractEntity<?>> T entityWithMocksFromString(final Function<String, T> specificConverter, final String str, final Class<? extends AbstractEntity> type) {
+        if (str.startsWith(NOT_FOUND_MOCK_PREFIX)) {
+            return (T) createMockNotFoundEntity(type, str.replaceFirst(quote(NOT_FOUND_MOCK_PREFIX), ""));
+        }
+        return specificConverter.apply(str);
     }
     
     /**
@@ -398,7 +489,7 @@ public class EntityResourceUtils {
     private static <M extends AbstractEntity<?>> void validateUnmodifiedPropertyValue(final Class<M> type, final String name, final Map<String, Object> valAndOrigVal, final M entity, final ICompanionObjectFinder companionFinder, final boolean isEntityStale, final boolean isCriteriaEntity) {
         processPropertyValue(false, true, type, name, valAndOrigVal, entity, companionFinder, isEntityStale, isCriteriaEntity);
     }
-
+    
     /**
      * Disregards the 'required' errors for those properties, that were not 'touched' directly by the user (for both criteria and simple entities).
      *
@@ -407,13 +498,13 @@ public class EntityResourceUtils {
      * @return
      */
     public static <M extends AbstractEntity<?>> M disregardUntouchedRequiredProperties(final M entity, final Set<String> touchedProps) {
+        // both criteria and simple entities will be affected
         entity.nonProxiedProperties().filter(mp -> mp.isRequired() && !touchedProps.contains(mp.getName())).forEach(mp -> {
-            mp.setRequiredValidationResult(Result.successful(entity));
+            mp.setRequiredValidationResult(successful(entity));
         });
-
         return entity;
     }
-
+    
     /**
      * Disregards the 'required' errors for those properties, that were provided with some value and then cleared back to empty value during editing of new entity.
      *
@@ -421,16 +512,16 @@ public class EntityResourceUtils {
      * @param touchedProps -- list of 'touched' properties, i.e. those for which editing has occurred during validation lifecycle (maybe returning to original value thus making them unmodified)
      * @return
      */
-    private static <M extends AbstractEntity<?>> M disregardTouchedRequiredPropertiesWithEmptyValueForNotPersistedEntity(final M entity, final Set<String> touchedProps) {
-        if (!entity.isPersisted()) {
+    private static <M extends AbstractEntity<?>> M disregardTouchedRequiredPropertiesWithEmptyValue(final M entity, final Set<String> touchedProps) {
+        // both criteria and simple non-persisted (new) entities will be affected
+        if (!entity.isPersisted() || EntityQueryCriteria.class.isAssignableFrom(entity.getType())) {
             entity.nonProxiedProperties().filter(mp -> mp.isRequired() && touchedProps.contains(mp.getName()) && mp.getValue() == null).forEach(mp -> {
-                mp.setRequiredValidationResult(Result.successful(entity));
+                mp.setRequiredValidationResult(successful(entity));
             });
         }
-
         return entity;
     }
-
+    
     /**
      * Disregards the 'required' errors for crit-only properties on masters for non-criteria entity types.
      *
@@ -441,14 +532,14 @@ public class EntityResourceUtils {
         if (!EntityQueryCriteria.class.isAssignableFrom(managedType)) {
             entity.nonProxiedProperties().filter(mp -> mp.isRequired()).forEach(mp -> {
                 final String prop = mp.getName();
-                final CritOnly critOnlyAnnotation = AnnotationReflector.getPropertyAnnotation(CritOnly.class, managedType, prop);
+                final CritOnly critOnlyAnnotation = getPropertyAnnotation(CritOnly.class, managedType, prop);
                 if (critOnlyAnnotation != null) {
-                    mp.setRequiredValidationResult(Result.successful(entity));
+                    mp.setRequiredValidationResult(successful(entity));
                 }
             });
         }
     }
-
+    
     /**
      * Determines property type.
      * <p>
@@ -503,42 +594,20 @@ public class EntityResourceUtils {
 
             final Class<AbstractEntity<?>> entityPropertyType = (Class<AbstractEntity<?>>) propertyType;
 
+            final String reflectedValueAsString = (String) reflectedValue;
             if (EntityUtils.isPropertyDescriptor(entityPropertyType)) {
                 final Class<AbstractEntity<?>> enclosingEntityType = (Class<AbstractEntity<?>>) AnnotationReflector.getPropertyAnnotation(IsProperty.class, type, propertyName).value();
-                return extractPropertyDescriptor((String) reflectedValue, enclosingEntityType).orElse(null);
-            } else if (reflectedValueId.isPresent()) {
-                logger.debug(format("ID-based restoration of value: type [%s] property [%s] propertyType [%s] id [%s] reflectedValue [%s].", type.getSimpleName(), propertyName, entityPropertyType.getSimpleName(), reflectedValueId.get(), reflectedValue));
-                // regardless of whether entityPropertyType is composite or not, the entity should be retrieved by non-empty reflectedValueId that has been arrived from the client application
-                final IEntityDao<AbstractEntity<?>> propertyCompanion = companionFinder.find(entityPropertyType, true);
-                return propertyCompanion.findById(reflectedValueId.get(), fetchForProperty(companionFinder, type, propertyName).fetchModel());
-            } else if (EntityUtils.isCompositeEntity(entityPropertyType)) {
-                logger.debug(format("KEY-based restoration of value: type [%s] property [%s] propertyType [%s] id [%s] reflectedValue [%s].", type.getSimpleName(), propertyName, entityPropertyType.getSimpleName(), reflectedValueId, reflectedValue));
-                final String compositeKeyAsString = MiscUtilities.prepare(prepSearchStringForCompositeKey(propertyType, entityPropertyType, (String) reflectedValue));
-                final EntityResultQueryModel<AbstractEntity<?>> model = select(entityPropertyType).where().prop(KEY).iLike().val(compositeKeyAsString).model();
-                final fetch<AbstractEntity<?>> fetchModel = fetchForProperty(companionFinder, type, propertyName).fetchModel();
-                final QueryExecutionModel<AbstractEntity<?>, EntityResultQueryModel<AbstractEntity<?>>> qem = from(model).with(fetchModel).model();
-                try {
-                    final IEntityDao<AbstractEntity<?>> propertyCompanion = companionFinder.<IEntityDao<AbstractEntity<?>>, AbstractEntity<?>> find(entityPropertyType, true);
-                    final Object converted = propertyCompanion.getEntity(qem);
-                    
-                    return orElseFindByKey(converted, propertyCompanion, fetchModel, compositeKeyAsString);
-                } catch (final UnexpectedNumberOfReturnedEntities e) {
-                    return null;
-                }
+                return extractPropertyDescriptor(reflectedValueAsString, enclosingEntityType).orElse(null);
             } else {
-                logger.debug(format("KEY-based restoration of value: type [%s] property [%s] propertyType [%s] id [%s] reflectedValue [%s].", type.getSimpleName(), propertyName, entityPropertyType.getSimpleName(), reflectedValueId, reflectedValue));
-                final String[] keys = MiscUtilities.prepare(Arrays.asList((String) reflectedValue));
-                final String key;
-                if (keys.length > 1) {
-                    throw new IllegalArgumentException(format("Value [%s] does not represent a single key value, which is required for coversion to an instance of type [%s].", reflectedValue, entityPropertyType.getName()));
-                } else if (keys.length == 0) {
-                    key = "";
+                final fetch<AbstractEntity<?>> fetch = fetchForProperty(companionFinder, type, propertyName).fetchModel();
+                final IEntityDao<AbstractEntity<?>> propertyCompanion = companionFinder.<IEntityDao<AbstractEntity<?>>, AbstractEntity<?>> find(entityPropertyType, true);
+                if (reflectedValueId.isPresent()) {
+                    logger.debug(format("ID-based restoration of value: type [%s] property [%s] propertyType [%s] id [%s] reflectedValue [%s].", type.getSimpleName(), propertyName, entityPropertyType.getSimpleName(), reflectedValueId.get(), reflectedValue));
+                    // regardless of whether entityPropertyType is composite or not, the entity should be retrieved by non-empty reflectedValueId that has been arrived from the client application
+                    return propertyCompanion.findById(reflectedValueId.get(), fetch);
                 } else {
-                    key = keys[0];
+                    return findAndFetchBy(reflectedValueAsString, entityPropertyType, fetch, propertyCompanion);
                 }
-
-                final IEntityDao<AbstractEntity<?>> propertyCompanion = companionFinder.find(entityPropertyType, true);
-                return propertyCompanion.findByKeyAndFetch(fetchForProperty(companionFinder, type, propertyName).fetchModel(), key);
             }
             // prev implementation => return propertyCompanion.findByKeyAndFetch(getFetchProvider().fetchFor(propertyName).fetchModel(), reflectedValue);
         } else if (PropertyTypeDeterminator.isCollectional(type, propertyName)) {
@@ -620,6 +689,46 @@ public class EntityResourceUtils {
     }
 
     /**
+     * Finds entity value by <code>searchString</code> from autocompleter.
+     * <p>
+     * This method takes care of proper composite entity search string decomposition (including situations with {@link PropertyDescriptor} as key member) and early checking for search string correctness.
+     * 
+     * @param searchString
+     * @param entityType -- the type of entity being looked for
+     * @param fetch -- fetch model for resultant entity
+     * @param companion -- companion for the entity being looked for
+     * @return
+     */
+    public static AbstractEntity<?> findAndFetchBy(final String searchString, final Class<AbstractEntity<?>> entityType, final fetch<AbstractEntity<?>> fetch, final IEntityDao<AbstractEntity<?>> companion) {
+        if (isCompositeEntity(entityType)) {
+            //logger.debug(format("KEY-based restoration of value: type [%s] property [%s] propertyType [%s] id [%s] reflectedValue [%s].", type.getSimpleName(), propertyName, entityPropertyType.getSimpleName(), reflectedValueId, reflectedValue));
+            final String compositeKeyAsString = MiscUtilities.prepare(prepSearchStringForCompositeKey(entityType, searchString));
+            final EntityResultQueryModel<AbstractEntity<?>> model = select(entityType).where().prop(KEY).iLike().val(compositeKeyAsString).model();
+            final fetch<AbstractEntity<?>> fetchModel = fetch;
+            final QueryExecutionModel<AbstractEntity<?>, EntityResultQueryModel<AbstractEntity<?>>> qem = from(model).with(fetchModel).model();
+            try {
+                final AbstractEntity<?> converted = companion.getEntity(qem);
+                
+                return orElseFindByKey(converted, companion, fetchModel, compositeKeyAsString);
+            } catch (final UnexpectedNumberOfReturnedEntities e) {
+                return null;
+            }
+        } else {
+            //logger.debug(format("KEY-based restoration of value: type [%s] property [%s] propertyType [%s] id [%s] reflectedValue [%s].", type.getSimpleName(), propertyName, entityPropertyType.getSimpleName(), reflectedValueId, reflectedValue));
+            final String[] keys = MiscUtilities.prepare(Arrays.asList(searchString));
+            final String key;
+            if (keys.length > 1) {
+                throw new IllegalArgumentException(format("Value [%s] does not represent a single key value, which is required for coversion to an instance of type [%s].", searchString, entityType.getName()));
+            } else if (keys.length == 0) {
+                key = "";
+            } else {
+                key = keys[0];
+            }
+            return companion.findByKeyAndFetch(fetch, key);
+        }
+    }
+
+    /**
      * Returns {@code converted} is not {@code null}. Otherwise, tries to call {@link IEntityReader#findByKeyAndFetch(fetch, Object...)}.
      * If that call is unsuccessful then {@code null} is returned.
      * <p>
@@ -631,7 +740,7 @@ public class EntityResourceUtils {
      * @param compositeKeyAsString
      * @return
      */
-    private static Object orElseFindByKey(Object converted, final IEntityDao<AbstractEntity<?>> propertyCompanion, fetch<AbstractEntity<?>> fetchModel, String compositeKeyAsString) {
+    private static AbstractEntity<?> orElseFindByKey(final AbstractEntity<?> converted, final IEntityDao<AbstractEntity<?>> propertyCompanion, final fetch<AbstractEntity<?>> fetchModel, final String compositeKeyAsString) {
         if (converted == null) {
             try {
                 return propertyCompanion.findByKeyAndFetch(fetchModel, compositeKeyAsString);
@@ -668,12 +777,11 @@ public class EntityResourceUtils {
      * for property descriptors to the required form.
      * </ul>
      *
-     * @param propertyType
      * @param entityPropertyType
      * @param compositeKeyAsString
      * @return
      */
-    private static String prepSearchStringForCompositeKey(final Class<?> propertyType, final Class<AbstractEntity<?>> entityPropertyType, final String compositeKeyAsString) {
+    private static String prepSearchStringForCompositeKey(final Class<AbstractEntity<?>> entityPropertyType, final String compositeKeyAsString) {
         // if one or more composite key members are of type ProperyDescriptor then those values need to be converted to a DB aware representation
         // regrettable this process is error prone due to a potential use of the key member separator as part of property titles...
         final List<Field> keyMembers = Finder.getKeyMembers(entityPropertyType);
@@ -684,6 +792,7 @@ public class EntityResourceUtils {
         } else {
             final StringBuilder convertedKeyValue = new StringBuilder();
             String keyValues = compositeKeyAsString; // mutable!
+            final Class<?> propertyType = entityPropertyType;
             final String keyMemberSeparator = Reflector.getKeyMemberSeparator((Class<? extends AbstractEntity<DynamicEntityKey>>) propertyType);
             for (int index = 0; index < keyMembers.size(); index++) {
                 final boolean isLastKeyMember = index == keyMembers.size() - 1;

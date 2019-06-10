@@ -1103,6 +1103,9 @@ Polymer({
     _dialogResized: function () {
         this.style.removeProperty("transition-property");
         this.style.removeProperty("transition-duration");
+        //Removes the optimisation hook if master size or position was changed.
+        this.$.elementLoader.style.removeProperty("display");
+        this._focusDialogWithInput();
         this._hideBlockingPane();
     },
     
@@ -1171,7 +1174,6 @@ Polymer({
                 this._masterVisibilityChanges = undefined;
                 this._masterLayoutChanges = undefined;
                 this.notifyResize();
-                this._focusDialogWithInput();
             }
             
         }
@@ -1236,7 +1238,7 @@ Polymer({
     },
     
     _openAndRefit: function () {
-        this._focusAndRefit(); // this is a legacy support
+        this._refit(); // this is a legacy support
 
         if (this.$.appConfig.mobile === true) { // mobile app specific: open all custom action dialogs in maximised state
             this._invertMaximiseState();
@@ -1269,8 +1271,6 @@ Polymer({
             this._masterVisibilityChanges = true;
             this.$.loadingPanel.classList.remove("visible");
             this.$.dialogLoader.classList.remove("hidden");
-            //Removes the optimisation hook if master size or position was changed.
-            this.$.elementLoader.style.removeProperty("display");
         }
     },
 
@@ -1322,11 +1322,10 @@ Polymer({
      * Refits this dialog on async after 50 millis and focuses its input in case where 'binding-entity-appered' event has occured earlier than dialog .
      * A named function was used in favoir of an anonymous one in order to avoid accumulation of event listeners.
      */
-    _focusAndRefit: function() {
+    _refit: function() {
         this.async(function() {
             this.refit();
         }.bind(this), 50);
-        this._focusDialogWithInput();
     },
 
     _dialogOpened: function(e, detail, source) {

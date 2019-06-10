@@ -1,13 +1,20 @@
 package ua.com.fielden.platform.entity.meta;
 
+import static java.lang.String.format;
+import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getTitleAndDesc;
+import static ua.com.fielden.platform.utils.EntityUtils.equalsEx;
+
+import java.lang.reflect.Field;
 import java.util.Optional;
+
+import org.apache.log4j.Logger;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.DescTitle;
 import ua.com.fielden.platform.entity.annotation.KeyTitle;
 import ua.com.fielden.platform.entity.annotation.KeyType;
+import ua.com.fielden.platform.entity.exceptions.EntityException;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
-import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.reflection.TitlesDescsGetter;
 import ua.com.fielden.platform.utils.Pair;
 
@@ -36,6 +43,7 @@ import ua.com.fielden.platform.utils.Pair;
 @KeyTitle(value = "Property", desc = "Property title")
 @DescTitle(value = "Description", desc = "Property description")
 public class PropertyDescriptor<T extends AbstractEntity<?>> extends AbstractEntity<String> {
+    private static final Logger LOGGER = Logger.getLogger(PropertyDescriptor.class);
 
     private Class<T> entityType;
     private String propertyName;
@@ -73,16 +81,28 @@ public class PropertyDescriptor<T extends AbstractEntity<?>> extends AbstractEnt
         return entityType.getName() + ":" + propertyName;
     }
 
+    @Override
+    public int hashCode() {
+        return entityType.hashCode() * 31 + propertyName.hashCode() + 23;
+    }
+
+    @Override
+    public boolean equals(final Object obj) {
+        if (this == obj) {
+            return true;
+        }
+        
+        if (!(obj instanceof PropertyDescriptor)) {
+            return false;
+        }
+        
+        final PropertyDescriptor<?> that = (PropertyDescriptor<?>) obj;
+        return equalsEx(this.entityType, that.entityType) && equalsEx(this.propertyName, that.propertyName);
+    }
+    
     /** A convenient factory method, which instantiates property descriptor from its toString representation. */
     public static <T extends AbstractEntity<?>> PropertyDescriptor<T> fromString(final String toStringRepresentation) {
-        try {
-            final String[] parts = toStringRepresentation.split(":");
-            final Class<T> entityType = (Class<T>) Class.forName(parts[0]);
-            final String propertyName = parts[1];
-            return new PropertyDescriptor<>(entityType, propertyName);
-        } catch (final ClassNotFoundException ex) {
-            throw Result.failure(ex);
-        }
+        return fromString(toStringRepresentation, Optional.empty());
     }
 
     /** A convenient factory method, which instantiates property descriptor from its toString representation. */
@@ -92,25 +112,17 @@ public class PropertyDescriptor<T extends AbstractEntity<?>> extends AbstractEnt
             final Class<T> entityType = (Class<T>) Class.forName(parts[0]);
             final String propertyName = parts[1];
 
-            final Pair<String, String> pair = TitlesDescsGetter.getTitleAndDesc(propertyName, entityType);
+            final Pair<String, String> pair = getTitleAndDesc(propertyName, entityType);
             final PropertyDescriptor<T> inst = (PropertyDescriptor<T>) factory.map(f -> f.newByKey(PropertyDescriptor.class, pair.getKey())).orElse(new PropertyDescriptor<>());
             inst.setKey(pair.getKey());
             inst.setDesc(pair.getValue());
-            inst.setEntityType(entityType);
-            inst.setPropertyName(propertyName);
-
-            return inst;//new PropertyDescriptor<T>(entityType, propertyName);
-        } catch (final ClassNotFoundException ex) {
-            throw Result.failure(ex);
+            inst.entityType = entityType;
+            inst.propertyName = propertyName;
+            return inst;
+        } catch (final Exception ex) {
+            final String msg = format("PropertyDescriptor could not be created from value [%s].", toStringRepresentation);
+            LOGGER.error(msg, ex);
+            throw EntityException.wrapIfNecessary(msg, ex);
         }
     }
-
-    private void setEntityType(final Class<T> entityType) {
-        this.entityType = entityType;
-    }
-
-    private void setPropertyName(final String propertyName) {
-        this.propertyName = propertyName;
-    }
-
 }

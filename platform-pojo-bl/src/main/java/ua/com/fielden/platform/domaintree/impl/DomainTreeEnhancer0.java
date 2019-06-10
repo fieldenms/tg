@@ -28,6 +28,7 @@ import ua.com.fielden.platform.domaintree.impl.DomainTreeEnhancer.ByteArray;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.Calculated;
 import ua.com.fielden.platform.entity.annotation.Ignore;
+import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.Title;
 import ua.com.fielden.platform.entity.annotation.factory.CalculatedAnnotation;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
@@ -420,8 +421,9 @@ public final class DomainTreeEnhancer0 extends AbstractDomainTree implements IDo
                     final Title titleAnnotation = AnnotationReflector.getAnnotation(calculatedField, Title.class);
                     final String title = titleAnnotation == null ? "" : titleAnnotation.value();
                     final String desc = titleAnnotation == null ? "" : titleAnnotation.desc();
+                    final IsProperty isPropertyAnnotation = AnnotationReflector.getAnnotation(calculatedField, IsProperty.class);
                     final CalculatedProperty calculatedProperty = CalculatedProperty.createCorrect(dte.getFactory(), root, calcAnnotation.contextPath(), calcAnnotation.value(), title, desc, calcAnnotation.attribute(), "".equals(calcAnnotation.origination()) ? null
-                            : calcAnnotation.origination(), dte, validateTitleContextOfExtractedProperties);
+                            : calcAnnotation.origination(), isPropertyAnnotation.precision(), isPropertyAnnotation.scale(), dte, validateTitleContextOfExtractedProperties);
 
                     // TODO tricky setting!
                     calculatedProperty.setNameVeryTricky(calculatedField.getName());
@@ -509,13 +511,13 @@ public final class DomainTreeEnhancer0 extends AbstractDomainTree implements IDo
     }
 
     @Override
-    public ICalculatedProperty addCalculatedProperty(final Class<?> root, final String contextPath, final String contextualExpression, final String title, final String desc, final CalculatedPropertyAttribute attribute, final String originationProperty) {
-        return addCalculatedProperty(CalculatedProperty.createCorrect(getFactory(), root, contextPath, contextualExpression, title, desc, attribute, originationProperty, this));
+    public ICalculatedProperty addCalculatedProperty(final Class<?> root, final String contextPath, final String contextualExpression, final String title, final String desc, final CalculatedPropertyAttribute attribute, final String originationProperty, final Integer precision, final Integer scale) {
+        return addCalculatedProperty(CalculatedProperty.createCorrect(getFactory(), root, contextPath, contextualExpression, title, desc, attribute, originationProperty, precision, scale, this));
     }
 
     @Override
-    public ICalculatedProperty addCalculatedProperty(final Class<?> root, final String contextPath, final String customPropertyName, final String contextualExpression, final String title, final String desc, final CalculatedPropertyAttribute attribute, final String originationProperty) {
-        return addCalculatedProperty(CalculatedProperty.createCorrect(getFactory(), root, contextPath, customPropertyName, contextualExpression, title, desc, attribute, originationProperty, this));
+    public ICalculatedProperty addCalculatedProperty(final Class<?> root, final String contextPath, final String customPropertyName, final String contextualExpression, final String title, final String desc, final CalculatedPropertyAttribute attribute, final String originationProperty, final Integer precision, final Integer scale) {
+        return addCalculatedProperty(CalculatedProperty.createCorrect(getFactory(), root, contextPath, customPropertyName, contextualExpression, title, desc, attribute, originationProperty, precision, scale, this));
     }
 
     @Override
@@ -678,7 +680,7 @@ public final class DomainTreeEnhancer0 extends AbstractDomainTree implements IDo
     }
 
     @Override
-    public IDomainTreeEnhancer addCustomProperty(final Class<?> root, final String contextPath, final String name, final String title, final String desc, final Class<?> type) {
+    public IDomainTreeEnhancer addCustomProperty(final Class<?> root, final String contextPath, final String name, final String title, final String desc, final Class<?> type, final Integer precision, final Integer scale) {
         throw new UnsupportedOperationException("Need not to be supported in deprecated enhancer0.");
     }
 

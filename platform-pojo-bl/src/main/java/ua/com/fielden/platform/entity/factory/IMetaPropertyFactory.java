@@ -3,11 +3,11 @@ package ua.com.fielden.platform.entity.factory;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 
+import com.google.inject.Injector;
+
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.meta.IAfterChangeEventHandler;
 import ua.com.fielden.platform.entity.validation.IBeforeChangeEventHandler;
-
-import com.google.inject.Injector;
 
 /**
  * This is a preliminary interface for a meta-property factory.
@@ -45,7 +45,7 @@ public interface IMetaPropertyFactory {
      * @throws Exception
      */
     IAfterChangeEventHandler<?> create(//
-    final AbstractEntity<?> entity,//
+            final AbstractEntity<?> entity,//
             final Field propertyField) throws Exception;
 
     /**

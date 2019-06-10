@@ -131,7 +131,7 @@ public interface IDomainTreeEnhancer extends IRootTyped {
      * @param attribute
      * @param originationProperty
      */
-    ICalculatedProperty addCalculatedProperty(final Class<?> root, final String contextPath, final String contextualExpression, final String title, final String desc, final CalculatedPropertyAttribute attribute, final String originationProperty);
+    ICalculatedProperty addCalculatedProperty(final Class<?> root, final String contextPath, final String contextualExpression, final String title, final String desc, final CalculatedPropertyAttribute attribute, final String originationProperty, final Integer precision, final Integer scale);
 
     /**
      * Creates a new calculated property based on provided meta-information and adds it to the root type's {@link ICalculatedProperty#getRoot()} hierarchy. Throws
@@ -147,7 +147,7 @@ public interface IDomainTreeEnhancer extends IRootTyped {
      * @param attribute
      * @param originationProperty
      */
-    ICalculatedProperty addCalculatedProperty(final Class<?> root, final String contextPath, final String customPropertyName, final String contextualExpression, final String title, final String desc, final CalculatedPropertyAttribute attribute, final String originationProperty);
+    ICalculatedProperty addCalculatedProperty(final Class<?> root, final String contextPath, final String customPropertyName, final String contextualExpression, final String title, final String desc, final CalculatedPropertyAttribute attribute, final String originationProperty, final Integer precision, final Integer scale);
 
     /**
      * Removes the calculated property with a name <code>calculatedPropertyName</code>(dot-notation expression) from <code>rootType</code> hierarchy. Throws
@@ -239,6 +239,8 @@ public interface IDomainTreeEnhancer extends IRootTyped {
      * @param title
      * @param desc
      * @param type
+     * @param precision
+     * @param scale
      */
-    IDomainTreeEnhancer addCustomProperty(final Class<?> root, final String contextPath, final String name, final String title, final String desc, final Class<?> type);
+    IDomainTreeEnhancer addCustomProperty(final Class<?> root, final String contextPath, final String name, final String title, final String desc, final Class<?> type, final Integer precision, final Integer scale);
 }

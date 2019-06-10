@@ -452,7 +452,7 @@ export const TgEditorBehaviorImpl = {
     
     observers: [
         '_recordDefinition(entity, propertyName, _editorValidationMsg)',
-        '_identifyModification(_editingValue, originalEntity)',
+        '_identifyModification(_editingValue, entity)',
         '_editedPropsChanged(entity.@editedProps)'
     ],
 
@@ -540,12 +540,12 @@ export const TgEditorBehaviorImpl = {
         }
     },
     
-    _identifyModification: function (_editingValue, originalEntity) {
-        if (this.reflector().isEntity(this.entity)) {
-            var _originalEditingValue = originalEntity ? this.convertToString(this.reflector().getBindingValue.bind(this.reflector())(originalEntity, this.propertyName)) : _editingValue;
+    _identifyModification: function (_editingValue, entity) {
+        if (this.reflector().isEntity(entity)) {
+            const _originalEditingValue = entity ? this._extractOriginalEditingValue(entity, this.propertyName) : _editingValue;
             // console.debug('_bindingEntity (_identifyModification) self = ', this.is, '_editingValue', _editingValue, '_originalEditingValue', _originalEditingValue);
-            var prevEditedProps = this.entity['@editedProps'];
-            var newEditedProps = {};
+            const prevEditedProps = entity['@editedProps'];
+            const newEditedProps = {};
             for (var prop in prevEditedProps) {
                 if (prevEditedProps.hasOwnProperty(prop)) {
                     newEditedProps[prop] = prevEditedProps[prop];
@@ -557,7 +557,21 @@ export const TgEditorBehaviorImpl = {
                 delete newEditedProps[this.propertyName];
             }
             this.set('entity.@editedProps', newEditedProps);
+            // if ('some_name' === this.propertyName) { console.error('_identifyModification: prop [', this.propertyName, '] originalEditingValue = [', _originalEditingValue, '] editingValue = [', _editingValue, '] newEditedProps [', newEditedProps, ']'); }
         }
+    },
+    
+    /**
+     * Extracts 'original' version of editing value taking into account the erroneous properties.
+     *
+     * Please note that 'original' notion has nothing to do with 'entity.getOriginal() values' or 'originalBindingEntity'.
+     * We just care about 'original' editing value that we started with immediately after validation request has bee completed 
+     * and before next consequent validation request; aka during editing without value committing.
+     *
+     * Erroneous values are considered here too. Binding entities creation contains such logic.
+     */
+    _extractOriginalEditingValue: function (bindingEntity, propertyName) {
+        return this.convertToString(this.reflector().getBindingValue.bind(this.reflector())(bindingEntity, propertyName));
     },
     
     _editedPropsChanged: function (editedProps) {
