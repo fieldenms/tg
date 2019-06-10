@@ -264,17 +264,11 @@ const TgEntityCentreBehaviorImpl = {
         },
 
         /**
-         * The next three properties are bound from respective properties from tg-selection-criteria-behavior (which incorporates tg-entity-binder-behavior).
-         * They (and '_centreChanged' property) are needed for correct enabling / disabling of Save / Discard buttons.
+         * The property is bound from respective property from tg-selection-criteria-behavior (which incorporates tg-entity-binder-behavior).
+         * This property and '_centreChanged' are needed for correct enabling / disabling of Save / Discard buttons.
          */
-        _bindingEntityNotPersistentOrNotPersistedOrModified: {
-            type: Boolean
-        },
         _editedPropsExist: {
             type: Boolean
-        },
-        _currEntity: {
-            type: Object
         },
 
         /**
@@ -295,12 +289,12 @@ const TgEntityCentreBehaviorImpl = {
 
         _saverDisabled: {
             type: Boolean,
-            computed: '_computeSaverDisabled(saveAsName, _centreChanged, _bindingEntityNotPersistentOrNotPersistedOrModified, _editedPropsExist, _currEntity, _actionInProgress)'
+            computed: '_computeSaverDisabled(saveAsName, _centreChanged, _editedPropsExist, _actionInProgress)'
         },
 
         _discarderDisabled: {
             type: Boolean,
-            computed: '_computeDiscarderDisabled(saveAsName, _centreChanged, _bindingEntityNotPersistentOrNotPersistedOrModified, _editedPropsExist, _currEntity, _actionInProgress)'
+            computed: '_computeDiscarderDisabled(saveAsName, _centreChanged, _editedPropsExist, _actionInProgress)'
         },
 
         _runnerDisabled: {
@@ -435,24 +429,24 @@ const TgEntityCentreBehaviorImpl = {
     /**
      * Computes SAVE button disablement: always enabled for default configurations, always disabled for link configurations and when action is in progress. Otherwise enabled when centre is changed from last saved version.
      */
-    _computeSaverDisabled: function (saveAsName, _centreChanged, _bindingEntityNotPersistentOrNotPersistedOrModified, _editedPropsExist, _currEntity, _actionInProgress) {
+    _computeSaverDisabled: function (saveAsName, _centreChanged, _editedPropsExist, _actionInProgress) {
         return _actionInProgress === true /* disabled when some action is in progress */ ||
             (saveAsName !== '' /* always enabled for default configuration */ &&
-                (this._isLinkConfig(saveAsName) || !this.canSave(_centreChanged, _bindingEntityNotPersistentOrNotPersistedOrModified, _editedPropsExist, _currEntity)));
+            (this._isLinkConfig(saveAsName) || !this.canSave(_centreChanged, _editedPropsExist)));
     },
 
     /**
      * Returns 'true' in case where current saveAsName represent link configuration, 'false' otherwise.
      */
     _isLinkConfig: function (saveAsName) {
-        return saveAsName === this._reflector.LINK_CONFIG_TITLE;
+        return saveAsName === this.$.selection_criteria._reflector().LINK_CONFIG_TITLE;
     },
 
     /**
      * Computes DISCARD button disablement: always disabled for link configurations and when action is in progress. Otherwise enabled when centre is changed from last saved version.
      */
-    _computeDiscarderDisabled: function (saveAsName, _centreChanged, _bindingEntityNotPersistentOrNotPersistedOrModified, _editedPropsExist, _currEntity, _actionInProgress) {
-        return this._isLinkConfig(saveAsName) || _actionInProgress === true || !this.canDiscard(_centreChanged, _bindingEntityNotPersistentOrNotPersistedOrModified, _editedPropsExist, _currEntity);
+    _computeDiscarderDisabled: function (saveAsName, _centreChanged, _editedPropsExist, _actionInProgress) {
+        return this._isLinkConfig(saveAsName) || _actionInProgress === true || !this.canDiscard(_centreChanged, _editedPropsExist);
     },
 
     _computeRunnerDisabled: function (_criteriaLoaded, _actionInProgress) {
@@ -988,17 +982,17 @@ const TgEntityCentreBehaviorImpl = {
         return ('' + (pageNumberUpdated !== null ? (pageNumberUpdated + 1) : 1)) + ' / ' + ('' + (pageCountUpdated !== null ? pageCountUpdated : 1));
     },
 
-    canSave: function (centreChanged, _bindingEntityNotPersistentOrNotPersistedOrModified, _editedPropsExist, _currEntity) {
-        return this.canManageCentreConfig(centreChanged, _bindingEntityNotPersistentOrNotPersistedOrModified, _editedPropsExist, _currEntity);
+    canSave: function (centreChanged, _editedPropsExist) {
+        return this.canManageCentreConfig(centreChanged, _editedPropsExist);
     },
 
-    canDiscard: function (centreChanged, _bindingEntityNotPersistentOrNotPersistedOrModified, _editedPropsExist, _currEntity) {
-        return this.canManageCentreConfig(centreChanged, _bindingEntityNotPersistentOrNotPersistedOrModified, _editedPropsExist, _currEntity);
+    canDiscard: function (centreChanged, _editedPropsExist) {
+        return this.canManageCentreConfig(centreChanged, _editedPropsExist);
     },
 
-    canManageCentreConfig: function (centreChanged, _bindingEntityNotPersistentOrNotPersistedOrModified, _editedPropsExist, _currEntity) {
+    canManageCentreConfig: function (centreChanged, _editedPropsExist) {
         return (typeof this.$ === 'undefined' || typeof this.$.selection_criteria === 'undefined') ? false :
-            this.$.selection_criteria.canManageCentreConfig(centreChanged, _bindingEntityNotPersistentOrNotPersistedOrModified, _editedPropsExist, _currEntity);
+            this.$.selection_criteria.canManageCentreConfig(centreChanged, _editedPropsExist);
     },
 
     /**
