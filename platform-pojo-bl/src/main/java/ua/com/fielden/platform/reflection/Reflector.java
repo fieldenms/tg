@@ -530,7 +530,7 @@ public final class Reflector {
     
     /**
      * Identifies whether the specified field represents a retrievable property.
-     * The notion retrievable is different to persistent as it also includes calculated properties, which do get retrieved from a database. 
+     * The notion of <code>retrievable</code> is different to <code>persistent</code> as it also includes calculated properties, which do get retrieved from a database. 
      * 
      * @param entity
      * @param propName

@@ -21,6 +21,7 @@ import ua.com.fielden.platform.domaintree.IDomainTreeManager.IDomainTreeManagerA
 import ua.com.fielden.platform.domaintree.testing.DomainTreeManagerAndEnhancer1;
 import ua.com.fielden.platform.domaintree.testing.MasterEntity;
 import ua.com.fielden.platform.domaintree.testing.MasterEntityForIncludedPropertiesLogic;
+import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.reflection.exceptions.ReflectionException;
 
 /**
@@ -83,10 +84,10 @@ public class AbstractDomainTreeManagerAndEnhancerTest extends AbstractDomainTree
     public void test_that_domain_changes_are_correctly_reflected_in_CHECKed_properties() {
         assertEquals("Incorrect checked properties.", Collections.emptyList(), dtm().getFirstTick().checkedProperties(MasterEntityForIncludedPropertiesLogic.class));
 
-        dtm().getEnhancer().addCalculatedProperty(MasterEntityForIncludedPropertiesLogic.class, "entityProp", "1 * 2 * integerProp", "Prop1_mutably checked prop", "Desc", CalculatedPropertyAttribute.NO_ATTR, "integerProp");
+        dtm().getEnhancer().addCalculatedProperty(MasterEntityForIncludedPropertiesLogic.class, "entityProp", "1 * 2 * integerProp", "Prop1_mutably checked prop", "Desc", CalculatedPropertyAttribute.NO_ATTR, "integerProp", IsProperty.DEFAULT_PRECISION, IsProperty.DEFAULT_SCALE);
         dtm().getEnhancer().apply();
         assertEquals("Incorrect checked properties.", Arrays.asList("entityProp.prop1_mutablyCheckedProp"), dtm().getFirstTick().checkedProperties(MasterEntityForIncludedPropertiesLogic.class));
-        dtm().getEnhancer().addCalculatedProperty(MasterEntityForIncludedPropertiesLogic.class, "entityProp", "1 * 2 * integerProp", "Prop2_mutably checked prop", "Desc", CalculatedPropertyAttribute.NO_ATTR, "integerProp");
+        dtm().getEnhancer().addCalculatedProperty(MasterEntityForIncludedPropertiesLogic.class, "entityProp", "1 * 2 * integerProp", "Prop2_mutably checked prop", "Desc", CalculatedPropertyAttribute.NO_ATTR, "integerProp", IsProperty.DEFAULT_PRECISION, IsProperty.DEFAULT_SCALE);
         dtm().getEnhancer().apply();
         assertEquals("Incorrect checked properties.", Arrays.asList("entityProp.prop1_mutablyCheckedProp", "entityProp.prop2_mutablyCheckedProp"), dtm().getFirstTick().checkedProperties(MasterEntityForIncludedPropertiesLogic.class));
         dtm().getFirstTick().swap(MasterEntityForIncludedPropertiesLogic.class, "entityProp.prop1_mutablyCheckedProp", "entityProp.prop2_mutablyCheckedProp");
@@ -108,7 +109,7 @@ public class AbstractDomainTreeManagerAndEnhancerTest extends AbstractDomainTree
     public void test_that_calculated_properties_work() throws Exception {
         /////////////// ADDING & MANAGING ///////////////
         // enhance domain with new calculated property
-        dtm().getEnhancer().addCalculatedProperty(MasterEntity.class, "", "1 * 2 * integerProp", "Calc prop1", "Desc", CalculatedPropertyAttribute.NO_ATTR, "integerProp");
+        dtm().getEnhancer().addCalculatedProperty(MasterEntity.class, "", "1 * 2 * integerProp", "Calc prop1", "Desc", CalculatedPropertyAttribute.NO_ATTR, "integerProp", IsProperty.DEFAULT_PRECISION, IsProperty.DEFAULT_SCALE);
         dtm().getEnhancer().apply();
         assertFalse("The brand new calculated property should be included.", dtm().getRepresentation().isExcludedImmutably(MasterEntity.class, "calcProp1"));
         dtm().getRepresentation().excludeImmutably(MasterEntity.class, "calcProp1");
@@ -116,7 +117,7 @@ public class AbstractDomainTreeManagerAndEnhancerTest extends AbstractDomainTree
 
         // enhance domain with new calculated property
         final String calcProp2 = "calcProp2"; // "entityProp.calcProp2";
-        dtm().getEnhancer().addCalculatedProperty(MasterEntity.class, "entityProp", "MAX(1 * 2.5 * moneyProp)", "Calc prop2", "Desc", CalculatedPropertyAttribute.NO_ATTR, "moneyProp");
+        dtm().getEnhancer().addCalculatedProperty(MasterEntity.class, "entityProp", "MAX(1 * 2.5 * moneyProp)", "Calc prop2", "Desc", CalculatedPropertyAttribute.NO_ATTR, "moneyProp", IsProperty.DEFAULT_PRECISION, IsProperty.DEFAULT_SCALE);
         dtm().getEnhancer().apply();
         assertFalse("The calculated property should 'be' enabled at first.", dtm().getRepresentation().getSecondTick().isDisabledImmutably(MasterEntity.class, calcProp2));
         dtm().getRepresentation().getSecondTick().disableImmutably(MasterEntity.class, calcProp2);
@@ -124,7 +125,7 @@ public class AbstractDomainTreeManagerAndEnhancerTest extends AbstractDomainTree
         assertTrue("The brand new calculated property should be disabled.", dtm().getRepresentation().getSecondTick().isDisabledImmutably(MasterEntity.class, calcProp2));
 
         // enhance domain with new calculated property
-        dtm().getEnhancer().addCalculatedProperty(MasterEntity.class, "", "1 * 2.5 * moneyProp", "Calc prop3", "Desc", CalculatedPropertyAttribute.NO_ATTR, "moneyProp");
+        dtm().getEnhancer().addCalculatedProperty(MasterEntity.class, "", "1 * 2.5 * moneyProp", "Calc prop3", "Desc", CalculatedPropertyAttribute.NO_ATTR, "moneyProp", IsProperty.DEFAULT_PRECISION, IsProperty.DEFAULT_SCALE);
         dtm().getEnhancer().apply();
         assertFalse("The brand new calculated property should be immutable unchecked.", dtm().getRepresentation().getSecondTick().isCheckedImmutably(MasterEntity.class, "calcProp3"));
         dtm().getSecondTick().check(MasterEntity.class, "calcProp3", true);
@@ -135,11 +136,11 @@ public class AbstractDomainTreeManagerAndEnhancerTest extends AbstractDomainTree
         assertTrue("The brand new calculated property should be disabled.", dtm().getRepresentation().getSecondTick().isDisabledImmutably(MasterEntity.class, "calcProp3"));
 
         // enhance domain with new calculated property
-        dtm().getEnhancer().addCalculatedProperty(MasterEntity.class, "", "1 * 2.5 * moneyProp", "Calc prop4", "Desc", CalculatedPropertyAttribute.NO_ATTR, "moneyProp");
+        dtm().getEnhancer().addCalculatedProperty(MasterEntity.class, "", "1 * 2.5 * moneyProp", "Calc prop4", "Desc", CalculatedPropertyAttribute.NO_ATTR, "moneyProp", IsProperty.DEFAULT_PRECISION, IsProperty.DEFAULT_SCALE);
         dtm().getEnhancer().apply();
 
         // enhance domain with new calculated property
-        dtm().getEnhancer().addCalculatedProperty(MasterEntity.class, "", "MAX(1 * 2.5 * bigDecimalProp)", "Calc prop5", "Desc", CalculatedPropertyAttribute.NO_ATTR, "bigDecimalProp");
+        dtm().getEnhancer().addCalculatedProperty(MasterEntity.class, "", "MAX(1 * 2.5 * bigDecimalProp)", "Calc prop5", "Desc", CalculatedPropertyAttribute.NO_ATTR, "bigDecimalProp", IsProperty.DEFAULT_PRECISION, IsProperty.DEFAULT_SCALE);
         dtm().getEnhancer().apply();
         assertFalse("The brand new calculated property should be unchecked.", dtm().getSecondTick().isChecked(MasterEntity.class, "calcProp5"));
         dtm().getSecondTick().check(MasterEntity.class, "calcProp5", true);

@@ -47,8 +47,8 @@ public class CentreManagerConfigurator {
         return this;
     }
 
-    public CentreManagerConfigurator addTotal(final ICentreDomainTreeManagerAndEnhancer cdtme, final String title, final String description, final String formula, final String relatedProperty) {
-        cdtme.getEnhancer().addCalculatedProperty(root, "", formula, title, description, CalculatedPropertyAttribute.NO_ATTR, relatedProperty);
+    public CentreManagerConfigurator addTotal(final ICentreDomainTreeManagerAndEnhancer cdtme, final String title, final String description, final String formula, final String relatedProperty, final Integer precision, final Integer scale) {
+        cdtme.getEnhancer().addCalculatedProperty(root, "", formula, title, description, CalculatedPropertyAttribute.NO_ATTR, relatedProperty, precision, scale);
         cdtme.getEnhancer().apply();
         cdtme.getSecondTick().check(root, CalculatedProperty.generateNameFrom(title), true);
         return this;
