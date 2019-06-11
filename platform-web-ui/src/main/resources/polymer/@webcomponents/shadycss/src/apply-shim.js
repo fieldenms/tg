@@ -230,18 +230,15 @@ class ApplyShim {
       rule['selector'] = ':host > *';
     }
   }
-
   /**
    * @param {string} cssText
    * @param {!StyleNode} rule
    * @return {string}
    */
   transformCssText(cssText, rule) {
-    const func1 = function (matchText, propertyName, valueProperty, valueMixin) {
-      return this._produceCssProperties(matchText, propertyName, valueProperty, valueMixin, rule);
-    }.bind(this);
     // produce variables
-    cssText = cssText.replace(VAR_ASSIGN, func1);
+    cssText = cssText.replace(VAR_ASSIGN, (matchText, propertyName, valueProperty, valueMixin) =>
+      this._produceCssProperties(matchText, propertyName, valueProperty, valueMixin, rule));
     // consume mixins
     return this._consumeCssProperties(cssText, rule);
   }

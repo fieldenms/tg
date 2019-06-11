@@ -272,7 +272,7 @@ export const IronFitBehavior = {
     // Memoize this to avoid expensive calculations & relayouts.
     // Make sure we do it only once
     if (typeof this._isRTL === 'undefined') {
-      this._isRTL = false; // window.getComputedStyle(this).direction == 'rtl';
+      this._isRTL = window.getComputedStyle(this).direction == 'rtl';
     }
 
     this.positionTarget = this.positionTarget || this._defaultPositionTarget;
