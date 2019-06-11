@@ -69,3 +69,4 @@ import '@polymer/paper-tabs/paper-tabs.js';
 import '@polymer/paper-toast/paper-toast.js';
 import '@polymer/paper-toolbar/paper-toolbar.js';
 import '@polymer/paper-tooltip/paper-tooltip.js';
+import '@google-web-components/google-chart/google-chart.js'

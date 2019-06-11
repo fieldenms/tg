@@ -30,6 +30,7 @@ import ua.com.fielden.platform.domaintree.testing.MasterEntity;
 import ua.com.fielden.platform.domaintree.testing.MasterEntityForCentreDomainTree;
 import ua.com.fielden.platform.domaintree.testing.MasterEntityForIncludedPropertiesLogic;
 import ua.com.fielden.platform.domaintree.testing.MasterSyntheticEntity;
+import ua.com.fielden.platform.entity.annotation.IsProperty;
 
 /**
  * A test for {@link CentreDomainTreeManager}.
@@ -96,7 +97,7 @@ public class CentreDomainTreeManagerAndEnhancerTest extends AbstractDomainTreeMa
     @Test
     public void test_that_domain_changes_are_not_permitted_for_used_in_analyses_properties() throws Exception {
         // enhance centre domain with new calculated property
-        dtm().getEnhancer().addCalculatedProperty(MasterEntity.class, "", "MAX(1 * 2.5 * bigDecimalProp)", "Calc prop5", "Desc", CalculatedPropertyAttribute.NO_ATTR, "bigDecimalProp");
+        dtm().getEnhancer().addCalculatedProperty(MasterEntity.class, "", "MAX(1 * 2.5 * bigDecimalProp)", "Calc prop5", "Desc", CalculatedPropertyAttribute.NO_ATTR, "bigDecimalProp", IsProperty.DEFAULT_PRECISION, IsProperty.DEFAULT_SCALE);
         dtm().getEnhancer().apply();
 
         dtm().initAnalysisManagerByDefault("Report", AnalysisType.SIMPLE);
@@ -143,10 +144,10 @@ public class CentreDomainTreeManagerAndEnhancerTest extends AbstractDomainTreeMa
         dtm().getFirstTick().check(MasterEntityForIncludedPropertiesLogic.class, "integerProp", true);
         assertEquals("The checked properties are incorrect.", Arrays.asList("integerProp", "0-placeholder-origin-0-1", "1-placeholder-origin-0-2"), dtm().getFirstTick().checkedProperties(MasterEntityForIncludedPropertiesLogic.class));
 
-        dtm().getEnhancer().addCalculatedProperty(MasterEntityForIncludedPropertiesLogic.class, "entityProp", "1 * 2 * integerProp", "Prop1_mutably checked prop", "Desc", CalculatedPropertyAttribute.NO_ATTR, "integerProp");
+        dtm().getEnhancer().addCalculatedProperty(MasterEntityForIncludedPropertiesLogic.class, "entityProp", "1 * 2 * integerProp", "Prop1_mutably checked prop", "Desc", CalculatedPropertyAttribute.NO_ATTR, "integerProp", IsProperty.DEFAULT_PRECISION, IsProperty.DEFAULT_SCALE);
         dtm().getEnhancer().apply();
         assertEquals("Incorrect checked properties.", Arrays.asList("integerProp", "entityProp.prop1_mutablyCheckedProp", "1-placeholder-origin-0-2"), dtm().getFirstTick().checkedProperties(MasterEntityForIncludedPropertiesLogic.class));
-        dtm().getEnhancer().addCalculatedProperty(MasterEntityForIncludedPropertiesLogic.class, "entityProp", "1 * 2 * integerProp", "Prop2_mutably checked prop", "Desc", CalculatedPropertyAttribute.NO_ATTR, "integerProp");
+        dtm().getEnhancer().addCalculatedProperty(MasterEntityForIncludedPropertiesLogic.class, "entityProp", "1 * 2 * integerProp", "Prop2_mutably checked prop", "Desc", CalculatedPropertyAttribute.NO_ATTR, "integerProp", IsProperty.DEFAULT_PRECISION, IsProperty.DEFAULT_SCALE);
         dtm().getEnhancer().apply();
         assertEquals("Incorrect checked properties.", Arrays.asList("integerProp", "entityProp.prop1_mutablyCheckedProp", "entityProp.prop2_mutablyCheckedProp"), dtm().getFirstTick().checkedProperties(MasterEntityForIncludedPropertiesLogic.class));
         dtm().getFirstTick().swap(MasterEntityForIncludedPropertiesLogic.class, "entityProp.prop1_mutablyCheckedProp", "entityProp.prop2_mutablyCheckedProp");

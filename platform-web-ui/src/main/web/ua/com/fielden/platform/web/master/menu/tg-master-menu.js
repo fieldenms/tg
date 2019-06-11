@@ -74,9 +74,6 @@ const template = html`
             height: 44px;
             font-size: 18px;
         }
-        iron-pages {
-            padding: 8px 8px;
-        }
         .truncate {
             white-space: nowrap;
             overflow: hidden;

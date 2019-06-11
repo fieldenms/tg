@@ -28,7 +28,9 @@ const template = html`
             cursor: pointer;
             z-index: 0;
         }
-        
+        :host([hidden]) {
+            display: none !important;
+        }
         #spinner {
             position: absolute;
             width: var(--tg-ui-action-spinner-width);

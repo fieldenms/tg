@@ -547,8 +547,8 @@ public abstract class EntityQueryCriteria<C extends ICentreDomainTreeManagerAndE
     public Pair<String[], String[]> generatePropTitlesToExport() {
         final Class<?> root = getEntityClass();
         final IAddToResultTickManager tickManager = getCentreDomainTreeMangerAndEnhancer().getSecondTick();
-        final List<String> propertyNames = new ArrayList<String>();
-        final List<String> propertyTitles = new ArrayList<String>();
+        final List<String> propertyNames = new ArrayList<>();
+        final List<String> propertyTitles = new ArrayList<>();
         for (final String propertyName : tickManager.usedProperties(root)) {
             if (tickManager.getWidth(root, propertyName) > 0) {
                 propertyNames.add(propertyName);
@@ -617,7 +617,7 @@ public abstract class EntityQueryCriteria<C extends ICentreDomainTreeManagerAndE
      * @return
      */
     public final List<QueryProperty> createQueryProperties() {
-        final List<QueryProperty> queryProperties = new ArrayList<QueryProperty>();
+        final List<QueryProperty> queryProperties = new ArrayList<>();
         for (final String actualProperty : getCentreDomainTreeMangerAndEnhancer().getFirstTick().checkedProperties(getEntityClass())) {
             if (!AbstractDomainTree.isPlaceholder(actualProperty)) {
                 queryProperties.add(createQueryProperty(actualProperty));
@@ -783,7 +783,7 @@ public abstract class EntityQueryCriteria<C extends ICentreDomainTreeManagerAndE
      * @return
      */
     private List<byte[]> toByteArray(final List<ByteArray> list) {
-        final List<byte[]> byteArray = new ArrayList<byte[]>(list.size());
+        final List<byte[]> byteArray = new ArrayList<>(list.size());
         for (final ByteArray array : list) {
             byteArray.add(array.getArray());
         }
@@ -816,6 +816,8 @@ public abstract class EntityQueryCriteria<C extends ICentreDomainTreeManagerAndE
         if (critOnlySinglePrototype == null) {
             critOnlySinglePrototype = getEntityFactory().newEntity(entityType, id);
             critOnlySinglePrototype.resetMetaState();
+            // Initialisation phase is started here, so that definers will be actioned with isInitialising = true mark. Validation will be deferred to the moment when initialisation phase ends.
+            critOnlySinglePrototype.beginInitialising();
         }
         return critOnlySinglePrototype();
     }
@@ -835,7 +837,7 @@ public abstract class EntityQueryCriteria<C extends ICentreDomainTreeManagerAndE
      * @return
      */
     public Optional<AbstractEntity<?>> critOnlySinglePrototypeOptional() {
-        return ofNullable(critOnlySinglePrototype);
+        return ofNullable(critOnlySinglePrototype());
     }
     
 }

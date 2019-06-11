@@ -167,15 +167,8 @@ Polymer({
         }
         if (oldEntity) {
             delete oldEntity._entityChangedHandler;
-            egiEntity._propertyChangedHandlers = egiEntity._propertyChangedHandlers || {};
-            if (this._isProperty(this.column)) {
-                delete egiEntity._propertyChangedHandlers[this.column.property];
-            }
-            delete egiEntity._renderingHintsChangedHandler;
-            egiEntity._propertyRenderingHintsChangedHandlers = egiEntity._propertyRenderingHintsChangedHandlers || {};
-            if (this._isProperty(this.column)) {
-                delete egiEntity._propertyRenderingHintsChangedHandlers[this.column.property];
-            }
+            delete oldEntity._propertyChangedHandlers;
+            delete oldEntity._propertyRenderingHintsChangedHandlers;
         }
     },
 

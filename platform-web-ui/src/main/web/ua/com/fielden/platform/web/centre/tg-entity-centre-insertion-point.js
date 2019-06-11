@@ -36,6 +36,9 @@ const customStyle = html`
             .insertion-point-dialog .title-bar paper-icon-button {
                 transform: scale(-1, -1);
             }
+            .insertion-point-dialog paper-icon-button.revers {
+                transform: scale(-1, 1);
+            }
             #insertionPointContent .truncate {
                 white-space: nowrap;
                 overflow: hidden;
@@ -126,7 +129,7 @@ const template = html`
         }
     </style>
     <style include="iron-flex iron-flex-reverse iron-flex-alignment iron-flex-factors iron-positioning tg-entity-centre-styles paper-material-styles"></style>
-    <div id="pm" hidden$="[[detached]]" class="paper-material layout vertical" elevation="1">
+    <div id="pm" hidden$="[[detachedView]]" class="paper-material layout vertical" elevation="1">
         <div hidden>
             <slot name="insertion-point-child" id="custom_actions_content"></slot>
         </div>
@@ -138,7 +141,7 @@ const template = html`
             <div id="loadableContent" class="relative">
                 <tg-element-loader id="elementLoader"></tg-element-loader>
             </div>
-            <div id="custom_actions_container" class="layout horizontal center end-justified" style="padding-right:2px" hidden$="[[!detached]]">
+            <div id="custom_actions_container" class="layout horizontal center end-justified" style="padding-right:2px" hidden$="[[!detachedView]]">
             </div>
         </div>
     </div>
@@ -163,9 +166,9 @@ Polymer({
             value: false
         },
         /**
-         * Determnes whether insertion point is in the detached mode or not.
+         * Determnes whether insertion point is in the detachedView mode or not.
          */
-        detached: {
+        detachedView: {
             type: Boolean,
             value: false
         },
@@ -249,12 +252,12 @@ Polymer({
             value: null
         },
         /**
-         * The dialog for detached insertion point.
+         * The dialog for detachedView insertion point.
          */
         _dialog: Object
     },
 
-    observers: ['_adjustView(detached)'],
+    observers: ['_adjustView(detachedView)'],
 
     ready: function () {
         this.triggerElement = this.$.insertionPointContent;
@@ -320,7 +323,7 @@ Polymer({
             this._dialog = this._createDialog();
         }
 
-        this.detached = true;
+        this.detachedView = true;
         document.body.appendChild(this._dialog);
         this._dialog.appendChild(this.$.insertionPointContent);
         this.$.insertionPointContent.focus();
@@ -328,7 +331,7 @@ Polymer({
 
     _closeDialog: function () {
         document.body.removeChild(this._dialog);
-        this.detached = false;
+        this.detachedView = false;
         this.$.pm.appendChild(this.$.insertionPointContent);
         if (this.contextRetriever && this.contextRetriever().$.centreResultContainer) {
             this.contextRetriever().$.centreResultContainer.focus();
@@ -421,13 +424,13 @@ Polymer({
                     if (promise) {
                         return promise
                             .then(function () {
-                                self._adjustView(self.detached);
+                                self._adjustView(self.detachedView);
                                 customAction.restoreActiveElement();
                             });
                     } else {
                         return Promise.resolve()
                             .then(function () {
-                                self._adjustView(self.detached);
+                                self._adjustView(self.detachedView);
                                 customAction.restoreActiveElement();
                             });
                     }
@@ -445,8 +448,8 @@ Polymer({
         }
     },
 
-    _adjustView: function (detached) {
-        if (this.$.elementLoader.prefDim && detached === false) {
+    _adjustView: function (detachedView) {
+        if (this.$.elementLoader.prefDim && detachedView === false) {
             const prefDim = this.$.elementLoader.prefDim;
             this.$.pm.style.width = prefDim.width() + prefDim.widthUnit;
             this.$.loadableContent.style.removeProperty('width');
@@ -461,7 +464,7 @@ Polymer({
     },
 
     _expandColapseTap: function (event) {
-        if (this.detached) {
+        if (this.detachedView) {
             this._closeDialog();
         } else {
             this._showDialog();

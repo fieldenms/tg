@@ -1,8 +1,8 @@
 {
   "_from": "util@>=0.10.3 <1",
-  "_id": "util@0.11.1",
+  "_id": "util@0.12.0",
   "_inBundle": false,
-  "_integrity": "sha512-HShAsny+zS2TZfaXxD9tYj4HQGlBezXZMZuM/S5PKLLoZkShZiGk9o5CzukI1LVHZvjdvZ2Sj1aW/Ndn2NB/HQ==",
+  "_integrity": "sha512-pPSOFl7VLhZ7LO/SFABPraZEEurkJUWSMn3MuA/r3WQZc+Z1fqou2JqLSOZbCLl73EUIxuUVX8X4jkX2vfJeAA==",
   "_location": "/util",
   "_phantomChildren": {},
   "_requested": {
@@ -18,10 +18,10 @@
   "_requiredBy": [
     "/sinon"
   ],
-  "_resolved": "https://registry.npmjs.org/util/-/util-0.11.1.tgz",
-  "_shasum": "3236733720ec64bb27f6e26f421aaa2e1b588d61",
+  "_resolved": "https://registry.npmjs.org/util/-/util-0.12.0.tgz",
+  "_shasum": "bb5e3d29ba2703c7add0ad337003be3ca477798a",
   "_spec": "util@>=0.10.3 <1",
-  "_where": "/home/jhou/workspace/tg/platform-web-ui/src/main/resources/node_modules/sinon",
+  "_where": "/home/oleh/workspace/tg/platform-web-ui/src/main/resources/node_modules/sinon",
   "author": {
     "name": "Joyent",
     "url": "http://www.joyent.com"
@@ -30,16 +30,20 @@
     "./support/isBuffer.js": "./support/isBufferBrowser.js"
   },
   "bugs": {
-    "url": "https://github.com/defunctzombie/node-util/issues"
+    "url": "https://github.com/browserify/node-util/issues"
   },
   "bundleDependencies": false,
   "dependencies": {
-    "inherits": "2.0.3"
+    "inherits": "2.0.3",
+    "is-arguments": "^1.0.4",
+    "is-generator-function": "^1.0.7",
+    "object.entries": "^1.1.0",
+    "safe-buffer": "^5.1.2"
   },
   "deprecated": false,
-  "description": "Node.JS util module",
+  "description": "Node.js's util module for all engines",
   "devDependencies": {
-    "airtap": "~0.1.0",
+    "airtap": "~1.0.0",
     "is-async-supported": "~1.2.0",
     "run-series": "~1.1.4",
     "tape": "~4.9.0"
@@ -48,7 +52,7 @@
     "util.js",
     "support"
   ],
-  "homepage": "https://github.com/defunctzombie/node-util",
+  "homepage": "https://github.com/browserify/node-util",
   "keywords": [
     "util"
   ],
@@ -57,11 +61,12 @@
   "name": "util",
   "repository": {
     "type": "git",
-    "url": "git://github.com/defunctzombie/node-util.git"
+    "url": "git://github.com/browserify/node-util.git"
   },
   "scripts": {
     "test": "node test/node/index.js",
-    "test:browsers": "airtap test/browser/index.js"
+    "test:browsers": "airtap test/browser/index.js",
+    "test:browsers:local": "npm run test:browsers -- --local"
   },
-  "version": "0.11.1"
+  "version": "0.12.0"
 }
