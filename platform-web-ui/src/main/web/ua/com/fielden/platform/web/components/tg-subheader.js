@@ -76,7 +76,7 @@ Polymer({
             type: Array
         }
     },
-    
+
     ready: function () {
         this.relativeElements = [];
         this.toggle = this.toggle.bind(this);
@@ -103,6 +103,10 @@ Polymer({
         if (this.collapsible) {
             this.closed = !this.closed;
             this._syncRelativeElements();
+            this.fire("iron-resize", {
+                node: this,
+                bubbles: true,
+            });
         }
     },
 

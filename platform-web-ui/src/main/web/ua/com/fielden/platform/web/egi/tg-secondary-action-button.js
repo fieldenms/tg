@@ -1,6 +1,5 @@
 import '/resources/polymer/@polymer/polymer/polymer-legacy.js';
 
-import '/resources/polymer/@polymer/iron-dropdown/iron-dropdown.js';
 import '/resources/polymer/@polymer/iron-flex-layout/iron-flex-layout.js';
 
 import '/resources/polymer/@polymer/paper-icon-button/paper-icon-button.js';

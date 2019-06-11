@@ -206,7 +206,7 @@ export class TgColourPicker extends TgEditor {
 
         var template = document.createElement('template');
         template.innerHTML =
-            '<iron-dropdown id="dropdown" on-iron-overlay-closed="_colorPickerClosed" on-iron-overlay-opened="_colorPickerOpened">' + // tabindex="0" on-iron-overlay-opened="_colorPickerOpened" 
+            '<iron-dropdown id="dropdown" always-on-top on-iron-overlay-closed="_colorPickerClosed" on-iron-overlay-opened="_colorPickerOpened">' + // tabindex="0" on-iron-overlay-opened="_colorPickerOpened" 
             '<div slot="dropdown-content" class="dropdown-content">' +
             '<div class="layout vertical" style="margin:10px 10px 10px 10px;">' +
             '<div class="layout horizontal">' +

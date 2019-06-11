@@ -883,7 +883,7 @@ export class TgEditor extends PolymerElement {
     
     _tryFireErrorMsg (error) {
         if (error) {
-            this.fire('editor-error-appeared', this);
+            this.dispatchEvent(new CustomEvent('editor-error-appeared', { bubbles: true, composed: true, detail: this }));
         }
     }
 
