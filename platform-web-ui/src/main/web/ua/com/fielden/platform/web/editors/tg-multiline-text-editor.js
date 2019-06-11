@@ -2,11 +2,10 @@ import '/resources/polymer/@polymer/polymer/polymer-legacy.js';
 import '/resources/polymer/@polymer/iron-flex-layout/iron-flex-layout.js';
 import '/resources/polymer/@polymer/iron-autogrow-textarea/iron-autogrow-textarea.js';
 
-import { Polymer } from '/resources/polymer/@polymer/polymer/lib/legacy/polymer-fn.js';
-import { html } from '/resources/polymer/@polymer/polymer/lib/utils/html-tag.js';
+import {html} from '/resources/polymer/@polymer/polymer/polymer-element.js';
 import { tearDownEvent } from '/resources/reflection/tg-polymer-utils.js';
 
-import { TgEditorBehavior,  createEditorTemplate} from '/resources/editors/tg-editor-behavior.js';
+import { TgEditor,  createEditorTemplate} from '/resources/editors/tg-editor.js';
 
 const additionalTemplate = html`
     <style>
@@ -44,8 +43,8 @@ const customInputTemplate = html`
             bind-value="{{_editingValue}}"
             max-length="[[maxLength]]"
             on-input="_onInput"
-            on-tap="_onTap"
-            on-mousedown="_onTap"
+            on-mouseup="_onMouseUp" 
+            on-mousedown="_onMouseDown"
             on-keydown="_onKeydown"
             readonly$="[[_disabled]]"
             tooltip-text$="[[_getTooltip(_editingValue)]]"
@@ -54,20 +53,75 @@ const customInputTemplate = html`
         </iron-autogrow-textarea>`;
 const propertyActionTemplate = html`<slot name="property-action"></slot>`;
 
-Polymer({
-    _template: createEditorTemplate(additionalTemplate, html``, customInputTemplate, html``, html``, propertyActionTemplate),
+export class TgMultilineTextEditor extends TgEditor {
 
-    is: 'tg-multiline-text-editor',
+    static get template () { 
+        return createEditorTemplate(additionalTemplate, html``, customInputTemplate, html``, html``, propertyActionTemplate);
+    }
 
-    behaviors: [ TgEditorBehavior ],
+    static get properties() {
+        return {
+            /////////////////////////////////////////////////////////////////////////////////////////////////////////
+            ////////////////////////////////////////// EXTERNAL PROPERTIES //////////////////////////////////////////
+            /////////////////////////////////////////////////////////////////////////////////////////////////////////
+            // These mandatory properties must be specified in attributes, when constructing <tg-*-editor>s.       //
+            // No default values are allowed in this case.														   //
+            /////////////////////////////////////////////////////////////////////////////////////////////////////////
+    
+            /**
+             * The maximum number of characters for this text editor
+             */
+            maxLength: {
+                type: Number
+            },
+    
+            /**
+             * The maximum count for textarea rows.
+             */
+            maxRows: {
+                type: Number,
+                value: 5
+            },
+    
+            _onMouseDown: {
+                type: Function,
+                value: function () {
+                    return (function (event) {
+                        if (this.shadowRoot.activeElement !== this.decoratedInput()) {
+                            this.decoratedInput().textarea.select();
+                            this._tearDownEventOnUp = true;
+                        }
+                    }).bind(this);
+                }
+            },
+            
+            /**
+             * OVERRIDDEN FROM TgEditorBehavior: this specific textArea's event is invoked after some key has been pressed.
+             *
+             * Designated to be bound to child elements.
+             */
+            _onKeydown: {
+                type: Function,
+                value: function () {
+                    return (function (event) {
+                    // need to invoke base function-property? Just do it like this:
+                    //   var parentFunction = TgEditorBehaviorImpl.properties._onKeydown.value.call(this);
+                    //   parentFunction.call(this, event);
+                    //console.log("_onKeydown (for text area):", event);
+                        // TODO potentially, commit on CTRL+Enter?
+                    }).bind(this);
+                }
+            }
+        };
+    }
 
-    created: function () {
+    constructor () {
+        super();
         this._editorKind = "MULTILINE_TEXT";
+    }
 
-        // this.decorator().querySelector('#inputCounter').target = this.decorator().$.input;
-    },
-
-    ready: function () {
+    ready () {
+        super.ready();
         const inputWrapper = this.decorator().$$(".input-wrapper");
         inputWrapper.style.flexGrow = "1";
         const labelAndInputContainer = this.decorator().$.labelAndInputContainer;
@@ -80,73 +134,21 @@ Polymer({
         const suffix = this.decorator().$$(".suffix");
         suffix.style.alignSelf = "flex-start";
         this.decoratedInput().textarea.addEventListener("change", this._onChange);
-    },
-
-    properties: {
-        /////////////////////////////////////////////////////////////////////////////////////////////////////////
-        ////////////////////////////////////////// EXTERNAL PROPERTIES //////////////////////////////////////////
-        /////////////////////////////////////////////////////////////////////////////////////////////////////////
-        // These mandatory properties must be specified in attributes, when constructing <tg-*-editor>s.       //
-        // No default values are allowed in this case.														   //
-        /////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-        /**
-         * The maximum number of characters for this text editor
-         */
-        maxLength: {
-            type: Number
-        },
-
-        /**
-         * The maximum count for textarea rows.
-         */
-        maxRows: {
-            type: Number,
-            value: 5
-        },
-
-        _onTap: {
-            type: Function,
-            value: function () {
-                return (function (event) {
-                    if (this.shadowRoot.activeElement !== this.decoratedInput()) {
-                        this.decoratedInput().textarea.select();
-                        tearDownEvent(event);
-                    }
-                }).bind(this);
-            }
-        },
-
-        /**
-         * OVERRIDDEN FROM TgEditorBehavior: this specific textArea's event is invoked after some key has been pressed.
-         *
-         * Designated to be bound to child elements.
-         */
-        _onKeydown: {
-            type: Function,
-            value: function () {
-                return (function (event) {
-                // need to invoke base function-property? Just do it like this:
-                //   var parentFunction = TgEditorBehaviorImpl.properties._onKeydown.value.call(this);
-                //   parentFunction.call(this, event);
-                //console.log("_onKeydown (for text area):", event);
-                    // TODO potentially, commit on CTRL+Enter?
-                }).bind(this);
-            }
-        }
-    },
-
+    }
+    
     /**
      * Converts the value into string representation (which is used in edititing / comm values).
      */
-    convertToString: function (value) {
+    convertToString (value) {
         return value === null ? "" : "" + value;
-    },
+    }
 
     /**
      * Converts the value from string representation (which is used in edititing / comm values) into concrete type of this editor component (String).
      */
-    convertFromString: function (strValue) {
+    convertFromString (strValue) {
         return strValue === '' ? null : strValue;
     }
-});
+}
+
+customElements.define('tg-multiline-text-editor', TgMultilineTextEditor);

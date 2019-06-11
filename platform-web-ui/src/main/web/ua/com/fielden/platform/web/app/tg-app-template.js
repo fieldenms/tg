@@ -22,13 +22,13 @@ import { IronResizableBehavior } from '/resources/polymer/@polymer/iron-resizabl
 
 import { TgEntityMasterBehavior } from '/resources/master/tg-entity-master-behavior.js';
 import { TgFocusRestorationBehavior } from '/resources/actions/tg-focus-restoration-behavior.js'
+import {TgTooltipBehavior} from '/resources/components/tg-tooltip-behavior.js';
 import { tearDownEvent, deepestActiveElement, generateUUID, isMobileApp } from '/resources/reflection/tg-polymer-utils.js';
 
 const template = html`
     <style>
         :host {
             overflow: hidden;
-            @apply --layout-vertical;
         }
     </style>
     <custom-style>
@@ -172,7 +172,7 @@ Polymer({
 
     observers: ['_routeChanged(_route.path)'],
 
-    behaviors: [TgEntityMasterBehavior, IronA11yKeysBehavior, TgFocusRestorationBehavior, IronResizableBehavior],
+    behaviors: [TgEntityMasterBehavior, IronA11yKeysBehavior, TgTooltipBehavior, TgFocusRestorationBehavior, IronResizableBehavior],
     
     keyBindings: {
         'f3': '_searchMenu',

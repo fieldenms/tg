@@ -37,7 +37,7 @@ const template = html`
             overflow: auto;
             /* this is to make host scorable when needed */
             box-shadow: rgba(0, 0, 0, 0.24) -2.3408942051048403px 5.524510324047423px 12.090680100755666px 0px, rgba(0, 0, 0, 0.12) 0px 0px 12px 0px;
-            @apply(--layout-vertical);
+            @apply --layout-vertical;
         }
         .title-bar {
             padding: 0 16px 0 8px;
@@ -94,15 +94,13 @@ const template = html`
             color: white;
         }
         .title-bar-button {
-            --paper-icon-button: {
-                color: var(--paper-grey-100);
-            };
-            --paper-icon-button-disabled: {
-                color: var(--paper-grey-300);
-            };
-            --paper-icon-button-hover: {
-                color: var(--paper-grey-300);
-            };
+            color: var(--paper-grey-100);
+        }
+        .title-bar-button[disabled] {
+            color: var(--paper-grey-300);
+        }
+        .title-bar-button:hover {
+            color: var(--paper-grey-300);
         }
         .close-button, .navigation-button{
             width: 22px;
@@ -134,9 +132,7 @@ const template = html`
             flex-direction: row-reverse;
         }
         paper-icon-button.button-reverse {
-            --paper-icon-button: {
-                transform: scale(-1, 1);
-            };
+            transform: scale(-1, 1);
         }
         paper-spinner {
             position: absolute;

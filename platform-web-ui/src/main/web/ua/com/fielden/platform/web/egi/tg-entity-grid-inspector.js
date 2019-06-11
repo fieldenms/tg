@@ -7,7 +7,7 @@ import '/resources/polymer/@polymer/iron-icons/iron-icons.js';
 
 import '/resources/polymer/@polymer/paper-checkbox/paper-checkbox.js';
 import '/resources/polymer/@polymer/paper-icon-button/paper-icon-button.js';
-import "/resources/polymer/@polymer/paper-styles/element-styles/paper-material-styles.js";
+import "/resources/polymer/@polymer/paper-styles/shadow.js";
 import '/resources/polymer/@polymer/paper-progress/paper-progress.js';
 import '/resources/polymer/@polymer/paper-styles/color.js';
 
@@ -26,7 +26,6 @@ import { IronResizableBehavior } from '/resources/polymer/@polymer/iron-resizabl
 
 import { TgEgiDataRetrievalBehavior } from '/resources/egi/tg-egi-data-retrieval-behavior.js';
 import { TgElementSelectorBehavior } from '/resources/components/tg-element-selector-behavior.js';
-import { TgTooltipBehavior } from '/resources/components/tg-tooltip-behavior.js';
 import { TgDragFromBehavior } from '/resources/components/tg-drag-from-behavior.js';
 import { TgShortcutProcessingBehavior } from '/resources/actions/tg-shortcut-processing-behavior.js';
 import { TgSerialiser } from '/resources/serialisation/tg-serialiser.js';
@@ -37,15 +36,14 @@ const template = html`
         :host {
             @apply --layout-vertical;
         }
-        .paper-material {
+        .grid-container {
             background-color: white;
             border-radius: 2px;
-            --paper-material: {
-                @apply --layout-vertical;
-                @apply --layout-relative;
-            }
+            @apply --layout-vertical;
+            @apply --layout-relative;
+            @apply --shadow-elevation-2dp;
         }
-        .paper-material[fit-to-height] {
+        .grid-container[fit-to-height] {
             @apply --layout-flex;
         }
         .grid-toolbar {
@@ -286,12 +284,12 @@ const template = html`
             display: initial;
         }
     </style>
-    <style include="iron-flex iron-flex-reverse iron-flex-alignment iron-flex-factors iron-positioning paper-material-styles"></style>
+    <style include="iron-flex iron-flex-reverse iron-flex-alignment iron-flex-factors iron-positioning"></style>
     <!--configuring slotted elements-->
     <slot id="column_selector" name="property-column" hidden></slot>
     <slot id="primary_action_selector" name="primary-action" hidden></slot>
     <!--EGI template-->
-    <div id="paperMaterial" class="paper-material" elevation="1" style$="[[_calcMaterialStyle(showMarginAround)]]" fit-to-height$="[[fitToHeight]]">
+    <div id="paperMaterial" class="grid-container" elevation="1" style$="[[_calcMaterialStyle(showMarginAround)]]" fit-to-height$="[[fitToHeight]]">
         <!--Table toolbar-->
         <div class="grid-toolbar" style$="[[_calcToolbarStyle(canDragFrom)]]">
             <paper-progress id="progressBar" hidden$="[[!_showProgress]]"></paper-progress>
@@ -630,7 +628,7 @@ Polymer({
         _openDropDown: Function
     },
 
-    behaviors: [TgEgiDataRetrievalBehavior, TgTooltipBehavior, IronResizableBehavior, IronA11yKeysBehavior, TgShortcutProcessingBehavior, TgDragFromBehavior, TgElementSelectorBehavior],
+    behaviors: [TgEgiDataRetrievalBehavior, IronResizableBehavior, IronA11yKeysBehavior, TgShortcutProcessingBehavior, TgDragFromBehavior, TgElementSelectorBehavior],
 
     observers: [
         "_columnsChanged(columns, fixedColumns)",

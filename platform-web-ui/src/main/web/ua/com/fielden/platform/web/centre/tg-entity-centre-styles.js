@@ -11,9 +11,7 @@ styleElement.innerHTML = `
                 @apply --layout-start;
             }
             paper-icon-button.revers {
-                --paper-icon-button: {
-                    transform: scale(-1, 1);
-                };
+                transform: scale(-1, 1);
             }
             .selection-criteria {
                 background-color: white;

@@ -1,9 +1,8 @@
 import '/resources/polymer/@polymer/polymer/polymer-legacy.js';
 
-import { Polymer } from '/resources/polymer/@polymer/polymer/lib/legacy/polymer-fn.js';
-import { html } from '/resources/polymer/@polymer/polymer/lib/utils/html-tag.js';
+import {html} from '/resources/polymer/@polymer/polymer/polymer-element.js';
 
-import { TgEditorBehavior, TgEditorBehaviorImpl, createEditorTemplate} from '/resources/editors/tg-editor-behavior.js';
+import { TgEditor, createEditorTemplate} from '/resources/editors/tg-editor.js';
 import { generateShortCollection, allDefined } from '/resources/reflection/tg-polymer-utils.js';
 
 const additionalTemplate = html`
@@ -19,8 +18,8 @@ const customInputTemplate = html`
             class="custom-input"
             on-change="_onChange"
             on-input="_onInput"
-            on-tap="_onTap"
-            on-mousedown="_onTap"
+            on-mouseup="_onMouseUp" 
+            on-mousedown="_onMouseDown"
             on-keydown="_onKeydown"
             disabled$="[[_disabled]]"
             tooltip-text$="[[_getTooltip(_editingValue, entity)]]"
@@ -28,17 +27,16 @@ const customInputTemplate = html`
     </iron-input>`;
 const propertyActionTemplate = html`<slot name="property-action"></slot>`;
 
-Polymer({
-    _template: createEditorTemplate(additionalTemplate, html``, customInputTemplate, html``, html``, propertyActionTemplate),
+export class TgCollectionalRepresentor extends TgEditor {
 
-    is: 'tg-collectional-representor',
-    
-    behaviors: [ TgEditorBehavior ],
+    static get template() { 
+        return createEditorTemplate(additionalTemplate, html``, customInputTemplate, html``, html``, propertyActionTemplate);
+    }
     
     /**
      * Converts the value into string representation (which is used in edititing / comm values).
      */
-    convertToString: function(value) {
+    convertToString (value) {
         if (value === null) {
             return "";
         }
@@ -54,23 +52,23 @@ Polymer({
         } else {
             return this.reflector().convert(generateShortCollection(fullEntity, this.propertyName, originValue[0].type())).join(", ");
         }
-    },
+    }
 
     /**
      * This method promotes 'IRRELEVANT' into _acceptedValue which should not be a problem, since this 'representor' is not editable at all.
      */
-    convertFromString: function(strValue) {
+    convertFromString (strValue) {
         return 'IRRELEVANT';
-    },
+    }
 
     /**
      * This 'representor' is disabled for editing (just gives a view of the entity collection).
      */
-    _isDisabled: function(currentState, bindingEntity, propertyName) {
+    _isDisabled (currentState, bindingEntity, propertyName) {
         return true;
-    },
+    }
     
-    _getTooltip: function(_editingValue, entity) {
+    _getTooltip (_editingValue, entity) {
         if (!allDefined(arguments)) {
             return "";
         }
@@ -82,12 +80,12 @@ Polymer({
             } else {
                 valueToFormat = this.reflector()._getValueFor(entity, this.propertyName);
             }
-            return TgEditorBehaviorImpl._getTooltip.call(this, valueToFormat);
+            return super._getTooltip(valueToFormat);
         }
         return "";
-    },
+    }
     
-    _formatTooltipText: function (valueToFormat) {
+    _formatTooltipText (valueToFormat) {
         if (valueToFormat !== null) {
             if (Array.isArray(valueToFormat)) {
                 if (valueToFormat.length === 0 || !valueToFormat[0].type().isCompositeEntity()) {
@@ -104,4 +102,6 @@ Polymer({
         }
         return '';
     }
-});
+}
+
+customElements.define('tg-collectional-representor', TgCollectionalRepresentor);

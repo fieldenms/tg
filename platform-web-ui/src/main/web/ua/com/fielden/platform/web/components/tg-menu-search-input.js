@@ -11,7 +11,6 @@ import '/resources/components/tg-menu-list.js';
 import {Polymer} from '/resources/polymer/@polymer/polymer/lib/legacy/polymer-fn.js';
 import {html} from '/resources/polymer/@polymer/polymer/lib/utils/html-tag.js';
 
-import { TgTooltipBehavior } from '/resources/components/tg-tooltip-behavior.js';
 import { tearDownEvent } from '/resources/reflection/tg-polymer-utils.js';
 
 
@@ -86,8 +85,6 @@ Polymer({
         }
     },
     
-    behaviors: [TgTooltipBehavior],
-
     ready: function () {
         this._retrieveContainerSizes = function () {
             var container = this.$.inputContainer;

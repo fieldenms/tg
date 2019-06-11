@@ -19,7 +19,6 @@ import '/resources/polymer/@polymer/paper-toolbar/paper-toolbar.js';
 /* TG ELEMENTS */
 import { TgFocusRestorationBehavior } from '/resources/actions/tg-focus-restoration-behavior.js';
 import { isInHierarchy, deepestActiveElement, tearDownEvent, isMobileApp } from '/resources/reflection/tg-polymer-utils.js';
-import { TgTooltipBehavior } from '/resources/components/tg-tooltip-behavior.js';
 import { TgReflector } from '/app/tg-reflector.js';
 import '/app/tg-app-config.js';
 
@@ -260,7 +259,7 @@ Polymer({
         }
     },
 
-    behaviors: [ TgTooltipBehavior, IronA11yKeysBehavior, TgFocusRestorationBehavior ],
+    behaviors: [ IronA11yKeysBehavior, TgFocusRestorationBehavior ],
 
     listeners: {
         transitionend: '_onTransitionEnd'

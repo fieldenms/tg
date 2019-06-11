@@ -22,10 +22,8 @@ import '/resources/actions/tg-ui-action.js';
 
 import { Polymer } from '/resources/polymer/@polymer/polymer/lib/legacy/polymer-fn.js';
 import { html } from '/resources/polymer/@polymer/polymer/lib/utils/html-tag.js';
-import { IronResizableBehavior } from '/resources/polymer/@polymer/iron-resizable-behavior/iron-resizable-behavior.js';
 import { NeonAnimatableBehavior } from '/resources/polymer/@polymer/neon-animation/neon-animatable-behavior.js';
 
-import { TgTooltipBehavior } from '/resources/components/tg-tooltip-behavior.js';
 import { TgAppAnimationBehavior } from '/resources/views/tg-app-animation-behavior.js'; 
 import { isMobileApp, isIPhoneOs } from '/resources/reflection/tg-polymer-utils.js';
 
@@ -157,9 +155,7 @@ Polymer({
 
     behaviors: [
         NeonAnimatableBehavior,
-        TgAppAnimationBehavior,
-        IronResizableBehavior,
-        TgTooltipBehavior
+        TgAppAnimationBehavior
     ],
     
     ready: function () {

@@ -26,7 +26,6 @@ import '/resources/components/tg-sublistbox.js'
 import { Polymer } from '/resources/polymer/@polymer/polymer/lib/legacy/polymer-fn.js';
 import { html } from '/resources/polymer/@polymer/polymer/lib/utils/html-tag.js';
 
-import { TgTooltipBehavior } from '/resources/components/tg-tooltip-behavior.js';
 import { TgFocusRestorationBehavior } from '/resources/actions/tg-focus-restoration-behavior.js';
 import {TgBackButtonBehavior} from '/resources/views/tg-back-button-behavior.js';
 import { tearDownEvent, allDefined, isMobileApp, isIPhoneOs } from '/resources/reflection/tg-polymer-utils.js';
@@ -288,7 +287,6 @@ Polymer({
 
     behaviors: [
         NeonAnimatableBehavior,
-        TgTooltipBehavior,
         TgFocusRestorationBehavior,
         TgBackButtonBehavior
     ],
