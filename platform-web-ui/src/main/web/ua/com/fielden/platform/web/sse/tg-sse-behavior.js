@@ -1,4 +1,5 @@
 import '/resources/polymer/@polymer/polymer/polymer-legacy.js';
+import { random } from '/resources/reflection/tg-numeric-utils.js'
 
 export const TgSseBehavior = {
 
