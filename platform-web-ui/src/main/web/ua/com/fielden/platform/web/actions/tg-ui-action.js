@@ -7,7 +7,6 @@ import '/resources/polymer/@polymer/paper-spinner/paper-spinner.js';
 import '/resources/polymer/@polymer/paper-styles/color.js';
 
 import { TgFocusRestorationBehavior } from '/resources/actions/tg-focus-restoration-behavior.js';
-import { TgTooltipBehavior } from '/resources/components/tg-tooltip-behavior.js';
 import { TgElementSelectorBehavior } from '/resources/components/tg-element-selector-behavior.js';
 import { tearDownEvent, allDefined } from '/resources/reflection/tg-polymer-utils.js';
 // depends on '/resources/postal/2.0.5/postal.min.js' 
@@ -29,7 +28,9 @@ const template = html`
             cursor: pointer;
             z-index: 0;
         }
-        
+        :host([hidden]) {
+            display: none !important;
+        }
         #spinner {
             position: absolute;
             width: var(--tg-ui-action-spinner-width);
@@ -390,7 +391,7 @@ Polymer({
         }
     },
 
-    behaviors: [TgTooltipBehavior, TgFocusRestorationBehavior, TgElementSelectorBehavior],
+    behaviors: [TgFocusRestorationBehavior, TgElementSelectorBehavior],
 
     /**
      * Initialisation block.

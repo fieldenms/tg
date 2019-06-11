@@ -5,14 +5,12 @@ import '/resources/polymer/@polymer/iron-selector/iron-selector.js';
 import '/resources/polymer/@polymer/paper-styles/color.js';
 import '/resources/polymer/@polymer/paper-item/paper-item.js';
 
-import '/resources/editors/tg-dom-stamper.js';
-
 import {Polymer} from '/resources/polymer/@polymer/polymer/lib/legacy/polymer-fn.js';
 import {html} from '/resources/polymer/@polymer/polymer/lib/utils/html-tag.js';
 import {IronOverlayBehavior} from '/resources/polymer/@polymer/iron-overlay-behavior/iron-overlay-behavior.js';
 
-import { TgTooltipBehavior } from '/resources/components/tg-tooltip-behavior.js';
-import { TgHighlightingBehavior } from '/resources/editors/tg-highlighting-behavior.js';
+import {TgTooltipBehavior} from '/resources/components/tg-tooltip-behavior.js';
+import { matchedParts } from '/resources/editors/tg-highlighter.js';
 
 const template = html`
    <style>
@@ -73,8 +71,8 @@ const template = html`
         <template is="dom-repeat" items="[[_filteredMenu]]" as="menuItem">
             <div class="menu-item" tooltip-text$="[[_calcTooltip(menuItem)]]">
                 <div class="menu-item-container" style$="[[_calcMenuItemStyle(menuItem)]]">
-                    <tg-dom-stamper class="primary truncate" dom-text="[[_highlightValue(menuItem, 'title', phraseToHighlight)]]"></tg-dom-stamper>
-                    <tg-dom-stamper class="secondary truncate" dom-text="[[menuItem.description]]"></tg-dom-stamper>
+                    <div class="primary truncate" inner-h-t-m-l="[[_highlightValue(menuItem, 'title', phraseToHighlight)]]"></div>
+                    <div class="secondary truncate" inner-h-t-m-l="[[menuItem.description]]"></div>
                 </div>
             </div>
         </template>
@@ -121,7 +119,7 @@ Polymer({
 
     is: 'tg-menu-list',
 
-    behaviors: [IronOverlayBehavior, TgHighlightingBehavior, TgTooltipBehavior],
+    behaviors: [IronOverlayBehavior, TgTooltipBehavior],
 
     properties: {
         /**
@@ -344,7 +342,7 @@ Polymer({
     _highlightValue: function (menuItem, propName, phraseToHighlight) {
         return phraseToHighlight === '' ?
             menuItem[propName] :
-            this._matchedParts(menuItem[propName], phraseToHighlight).reduce(function (html, part) {
+            matchedParts(menuItem[propName], phraseToHighlight).reduce(function (html, part) {
                 return html + (part.matched ? '<span class="highlighted">' + part.part + '</span>' : part.part);
             }, "");
     },

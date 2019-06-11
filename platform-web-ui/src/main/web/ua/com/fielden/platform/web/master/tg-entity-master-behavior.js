@@ -1,6 +1,6 @@
 import '/resources/egi/tg-custom-action-dialog.js';
 
-import { tearDownEvent, isInHierarchy, deepestActiveElement, FOCUSABLE_ELEMENTS_SELECTOR } from '/resources/reflection/tg-polymer-utils.js';
+import { tearDownEvent, isInHierarchy, deepestActiveElement, FOCUSABLE_ELEMENTS_SELECTOR, isMobileApp } from '/resources/reflection/tg-polymer-utils.js';
 import { TgEntityBinderBehavior } from '/resources/binding/tg-entity-binder-behavior.js';
 import { createEntityActionThenCallback } from '/resources/master/actions/tg-entity-master-closing-utils.js';
 import { TgElementSelectorBehavior } from '/resources/components/tg-element-selector-behavior.js';
@@ -737,10 +737,9 @@ const TgEntityMasterBehaviorImpl = {
         } else {
             const focusedElements = this._getCurrentFocusableElements();
             if (focusedElements.length > 0) {
-                const lastIndex = forward ? focusedElements.length - 1 : 0;
                 if (!isInHierarchy(this, this.shadowRoot.activeElement)) {
                     const firstIndex = forward ? 0 : focusedElements.length - 1;
-                    focusedElements[firstIndex].focus()
+                    focusedElements[firstIndex].focus();
                     tearDownEvent(e);
                 } else {
                     const lastIndex = forward ? focusedElements.length - 1 : 0;
@@ -790,7 +789,12 @@ const TgEntityMasterBehaviorImpl = {
             if (this._hasEmbededView()) {
                 this._focusEmbededView()
             } else {
-                this._focusFirstInput();
+                // Desktop app specific: focus first input when opening dialog.
+                // This is also used when closing dialog: if child dialog was not closed, then its first input should be focused (this however can not be reproduced on mobile due to maximised nature of all dialogs).
+                // So, in mobile app the input will not be focused on dialog opening (and the keyboard will not appear suddenly until the user explicitly clicks on some editor).
+                if (!isMobileApp()) {
+                    this._focusFirstInput();
+                }
             }
         }.bind(this), 100);
     },

@@ -7,7 +7,7 @@ import '/resources/polymer/@polymer/iron-icons/iron-icons.js';
 
 import '/resources/polymer/@polymer/paper-checkbox/paper-checkbox.js';
 import '/resources/polymer/@polymer/paper-icon-button/paper-icon-button.js';
-import "/resources/polymer/@polymer/paper-styles/element-styles/paper-material-styles.js";
+import "/resources/polymer/@polymer/paper-styles/shadow.js";
 import '/resources/polymer/@polymer/paper-progress/paper-progress.js';
 import '/resources/polymer/@polymer/paper-styles/color.js';
 
@@ -26,26 +26,24 @@ import { IronResizableBehavior } from '/resources/polymer/@polymer/iron-resizabl
 
 import { TgEgiDataRetrievalBehavior } from '/resources/egi/tg-egi-data-retrieval-behavior.js';
 import { TgElementSelectorBehavior } from '/resources/components/tg-element-selector-behavior.js';
-import { TgTooltipBehavior } from '/resources/components/tg-tooltip-behavior.js';
 import { TgDragFromBehavior } from '/resources/components/tg-drag-from-behavior.js';
 import { TgShortcutProcessingBehavior } from '/resources/actions/tg-shortcut-processing-behavior.js';
 import { TgSerialiser } from '/resources/serialisation/tg-serialiser.js';
-import { tearDownEvent, getRelativePos } from '/resources/reflection/tg-polymer-utils.js';
+import { tearDownEvent, getRelativePos, isMobileApp } from '/resources/reflection/tg-polymer-utils.js';
 
 const template = html`
     <style>
         :host {
             @apply --layout-vertical;
         }
-        .paper-material {
+        .grid-container {
             background-color: white;
             border-radius: 2px;
-            --paper-material: {
-                @apply --layout-vertical;
-                @apply --layout-relative;
-            }
+            @apply --layout-vertical;
+            @apply --layout-relative;
+            @apply --shadow-elevation-2dp;
         }
-        .paper-material[fit-to-height] {
+        .grid-container[fit-to-height] {
             @apply --layout-flex;
         }
         .grid-toolbar {
@@ -267,6 +265,7 @@ const template = html`
         }
         .shadow-container {
             position: sticky;
+            position: -webkit-sticky;
             top:0;
             left: 0;
             pointer-events: none;
@@ -285,12 +284,12 @@ const template = html`
             display: initial;
         }
     </style>
-    <style include="iron-flex iron-flex-reverse iron-flex-alignment iron-flex-factors iron-positioning paper-material-styles"></style>
+    <style include="iron-flex iron-flex-reverse iron-flex-alignment iron-flex-factors iron-positioning"></style>
     <!--configuring slotted elements-->
     <slot id="column_selector" name="property-column" hidden></slot>
     <slot id="primary_action_selector" name="primary-action" hidden></slot>
     <!--EGI template-->
-    <div id="paperMaterial" class="paper-material" elevation="1" style$="[[_calcMaterialStyle(showMarginAround)]]" fit-to-height$="[[fitToHeight]]">
+    <div id="paperMaterial" class="grid-container" elevation="1" style$="[[_calcMaterialStyle(showMarginAround)]]" fit-to-height$="[[fitToHeight]]">
         <!--Table toolbar-->
         <div class="grid-toolbar" style$="[[_calcToolbarStyle(canDragFrom)]]">
             <paper-progress id="progressBar" hidden$="[[!_showProgress]]"></paper-progress>
@@ -446,7 +445,10 @@ Polymer({
     is: 'tg-entity-grid-inspector',
     
     properties: {
-        mobile: Boolean,
+        mobile: {
+            type: Boolean,
+            value: isMobileApp()
+        },
         /** An extrenally assigned function that accepts an instance of type Attachment as an argument and starts the download of the associated file. */
         downloadAttachment: {
             type: Function
@@ -626,7 +628,7 @@ Polymer({
         _openDropDown: Function
     },
 
-    behaviors: [TgEgiDataRetrievalBehavior, TgTooltipBehavior, IronResizableBehavior, IronA11yKeysBehavior, TgShortcutProcessingBehavior, TgDragFromBehavior, TgElementSelectorBehavior],
+    behaviors: [TgEgiDataRetrievalBehavior, IronResizableBehavior, IronA11yKeysBehavior, TgShortcutProcessingBehavior, TgDragFromBehavior, TgElementSelectorBehavior],
 
     observers: [
         "_columnsChanged(columns, fixedColumns)",
@@ -635,9 +637,6 @@ Polymer({
 
     created: function () {
         this._serialiser = new TgSerialiser();
-        //Configure device profile
-        this.mobile = this._appConfig.mobile;
-
         this._totalsRowCount = 0;
         this._showProgress = false;
 
@@ -1272,7 +1271,7 @@ Polymer({
     },
 
     _makeEgiUnselectable: function (e) {
-        if (this._appConfig.mobile) {
+        if (this.mobile) {
             e.currentTarget.classList.toggle("resizing-action", true);
             console.log("set resizing action");
         }
@@ -1281,7 +1280,7 @@ Polymer({
     },
 
     _makeEgiSelectable: function (e) {
-        if (this._appConfig.mobile) {
+        if (this.mobile) {
             e.currentTarget.classList.toggle("resizing-action", false);
         }
         this.$.baseContainer.classList.toggle("noselect", false);
@@ -1301,7 +1300,7 @@ Polymer({
     },
 
     _calcHeaderStyle: function (headerFixed, _showTopShadow) {
-        let headerStyle = headerFixed ? "position: sticky; z-index: 1; top: 0;" : "";
+        let headerStyle = headerFixed ? "position: sticky; position: -webkit-sticky; z-index: 1; top: 0;" : "";
         if (_showTopShadow) {
             headerStyle += "box-shadow: 0px 1px 6px -1px rgba(0,0,0,0.7);";
         }
@@ -1309,7 +1308,7 @@ Polymer({
     },
 
     _calcDragBoxStyle: function (dragAnchorFixed) {
-        return dragAnchorFixed ? "position: sticky; z-index: 1; left: 0;" : "";
+        return dragAnchorFixed ? "position: sticky; position: -webkit-sticky; z-index: 1; left: 0;" : "";
     },
 
     _calcDragAnchorWidth: function (canDragFrom) {
@@ -1319,7 +1318,7 @@ Polymer({
     _calcSelectCheckBoxStyle: function (canDragFrom, checkboxesFixed) {
         let style = "";
         if (checkboxesFixed) {
-            style += "position: sticky; z-index: 1; left: " + this._calcDragAnchorWidth(canDragFrom) + ";"; 
+            style += "position: sticky; position: -webkit-sticky; z-index: 1; left: " + this._calcDragAnchorWidth(canDragFrom) + ";"; 
         }
         const cellPadding = this.getComputedStyleValue('--egi-cell-padding').trim() || "0.6rem";
         return style + "width:18px; padding-left:" + (canDragFrom ? "0;" : cellPadding);
@@ -1337,7 +1336,7 @@ Polymer({
         let style = "";
         if (checkboxesWithPrimaryActionsFixed) {
             let calcStyle = "calc(" + this._calcSelectionCheckboxWidth(canDragFrom, checkboxVisible) + ")";
-            style += "position: sticky; z-index: 1; left: " + calcStyle + ";"; 
+            style += "position: sticky; position: -webkit-sticky; z-index: 1; left: " + calcStyle + ";"; 
         }
         return style;
     },
@@ -1355,7 +1354,7 @@ Polymer({
         let style = "";
         if (numOfFixedCols > 0) {
             let calcStyle = "calc(" + this._calcPrimaryActionWidth(canDragFrom, checkboxVisible, primaryAction) + ")";
-            style += "position: sticky; z-index: 1; left: " + calcStyle + ";";
+            style += "position: sticky; position: -webkit-sticky; z-index: 1; left: " + calcStyle + ";";
         }
         return style;
     },
@@ -1395,11 +1394,11 @@ Polymer({
     },
 
     _calcSecondaryActionStyle: function (secondaryActionsFixed) {
-        return secondaryActionsFixed ? "position: sticky; z-index: 1; right: 0;" : "";
+        return secondaryActionsFixed ? "position: sticky; position: -webkit-sticky; z-index: 1; right: 0;" : "";
     },
 
     _calcFooterStyle: function (summaryFixed, fitToHeight, _showBottomShadow) {
-        let style = summaryFixed ? "position: sticky; z-index: 1; bottom: 0;" : "";
+        let style = summaryFixed ? "position: sticky; position: -webkit-sticky; z-index: 1; bottom: 0;" : "";
         style += (fitToHeight ? "margin-top:auto;" : "");
         if (_showBottomShadow) {
             style += "box-shadow: 0px -1px 6px -1px rgba(0,0,0,0.7);";
@@ -1577,14 +1576,14 @@ Polymer({
             const entityRows = this.$.baseContainer.querySelectorAll('.table-data-row');
             const entityRow = entityRows[lastSelectedIndex];
             if (entityRow) {
-                entityRow.scrollIntoView({behavior: "smooth"});
+                entityRow.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'start' });
             } else { // in case where selected entity is outside existing stamped EGI rows, which means that entity rows stamping still needs to be occured, defer _scrollTo invocation until dom stamps
                 const oldAction = this._scrollContainerEntitiesStampedCustomAction;
                 this._scrollContainerEntitiesStampedCustomAction = (function () {
                     oldAction();
                     const entityRows = this.$.baseContainer.querySelectorAll('.table-data-row');
                     const entityRow = entityRows[lastSelectedIndex];
-                    entityRow.scrollIntoView({behavior: "smooth"});
+                    entityRow.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'start' });
                     this._scrollContainerEntitiesStampedCustomAction = oldAction;
                 }).bind(this);
             }

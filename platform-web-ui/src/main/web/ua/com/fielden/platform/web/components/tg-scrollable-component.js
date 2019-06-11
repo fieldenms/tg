@@ -1,10 +1,10 @@
 import '/resources/polymer/@polymer/polymer/polymer-legacy.js';
 import '/resources/polymer/@polymer/iron-flex-layout/iron-flex-layout.js';
-import '/app/tg-app-config.js'
 
 import {IronResizableBehavior} from '/resources/polymer/@polymer/iron-resizable-behavior/iron-resizable-behavior.js';
 import {Polymer} from '/resources/polymer/@polymer/polymer/lib/legacy/polymer-fn.js';
 import {html} from '/resources/polymer/@polymer/polymer/lib/utils/html-tag.js';
+import { isMobileApp, isIPhoneOs } from '/resources/reflection/tg-polymer-utils.js';
 
 const template = html`
     <style>
@@ -27,8 +27,7 @@ const template = html`
     <div id="scrollablePanel" on-scroll="_contentScrolled" class="webkit-scroll-inertia">
         <slot id="content_selector"></slot>
     </div>
-    <div id="shadowContainer"></div>
-    <tg-app-config id="appConfig"></tg-app-config>`;
+    <div id="shadowContainer"></div>`;
 
 template.setAttribute('strip-whitespace', '');
 
@@ -58,7 +57,7 @@ Polymer({
     _resizeEventListener: function (event, details) {
         this._contentScrolled();
 
-        if (this.$.appConfig.mobile === true && this.$.appConfig.iPhoneOs()) { // TODO perhaps MacOs webkit browsers are also affected, then it needs to be fixed here too
+        if (isMobileApp() && isIPhoneOs()) { // TODO perhaps MacOs webkit browsers are also affected, then it needs to be fixed here too
             // In webkit-based browsers we use '-webkit-overflow-scrolling: touch' css fix to enable scroll inertia (all other browsers implement that natively).
             // However, this causes completely broken scrolling in cases where inner content changes its sizes.
             // Specifically the size change should be following: at the beginng the content becomes small and non-scrollable and then, again, big and scrollable.

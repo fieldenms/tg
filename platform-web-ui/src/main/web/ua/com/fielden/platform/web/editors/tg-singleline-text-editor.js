@@ -1,10 +1,8 @@
-import '/resources/polymer/@polymer/polymer/polymer-legacy.js';
 import '/resources/polymer/@polymer/iron-input/iron-input.js';
 
-import { Polymer } from '/resources/polymer/@polymer/polymer/lib/legacy/polymer-fn.js';
-import { html } from '/resources/polymer/@polymer/polymer/lib/utils/html-tag.js';
+import {html} from '/resources/polymer/@polymer/polymer/polymer-element.js';
 
-import { TgEditorBehavior,  createEditorTemplate} from '/resources/editors/tg-editor-behavior.js';
+import { TgEditor,  createEditorTemplate} from '/resources/editors/tg-editor.js';
 
 const additionalTemplate = html`
     <style>
@@ -22,8 +20,8 @@ const customInputTemplate = html`
             class="custom-input singleline-text-input"
             on-change="_onChange"
             on-input="_onInput"
-            on-tap="_onTap"
-            on-mousedown="_onTap"
+            on-mouseup="_onMouseUp" 
+            on-mousedown="_onMouseDown"
             on-keydown="_onKeydown"
             disabled$="[[_disabled]]"
             tooltip-text$="[[_getTooltip(_editingValue)]]"
@@ -31,24 +29,25 @@ const customInputTemplate = html`
     </iron-input>`;
 const propertyActionTemplate = html`<slot name="property-action"></slot>`;
 
-Polymer({
-    _template: createEditorTemplate(additionalTemplate, html``, customInputTemplate, html``, html``, propertyActionTemplate),
+export class TgSinglelineTextEditor extends TgEditor {
 
-    is: 'tg-singleline-text-editor',
-    
-    behaviors: [ TgEditorBehavior ],
+    static get template() { 
+        return createEditorTemplate(additionalTemplate, html``, customInputTemplate, html``, html``, propertyActionTemplate);
+    }
     
     /**
      * Converts the value into string representation (which is used in edititing / comm values).
      */
-    convertToString: function (value) {
+    convertToString (value) {
         return value === null ? "" : "" + value;
-    },
+    }
     
     /**
      * Converts the value from string representation (which is used in edititing / comm values) into concrete type of this editor component (String).
      */
-    convertFromString: function (strValue) {
+    convertFromString (strValue) {
         return strValue === '' ? null : strValue;
     }
-});
+}
+
+customElements.define('tg-singleline-text-editor', TgSinglelineTextEditor);

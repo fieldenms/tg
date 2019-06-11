@@ -1,5 +1,4 @@
 import '/resources/polymer/@polymer/polymer/polymer-legacy.js';
-import { TgTooltipBehavior } from '/resources/components/tg-tooltip-behavior.js';
 import { TgSseBehavior } from '/resources/sse/tg-sse-behavior.js';
 import '/resources/egi/tg-custom-action-dialog.js';
 import { TgFocusRestorationBehavior } from '/resources/actions/tg-focus-restoration-behavior.js';
@@ -766,7 +765,7 @@ const TgEntityCentreBehaviorImpl = {
             });
         });
         //Update other insertion point entities
-        const insertionPoints = this.querySelectorAll('tg-entity-centre-insertion-point');
+        const insertionPoints = this.shadowRoot.querySelectorAll('tg-entity-centre-insertion-point');
         for (let insPoIndex = 0; insPoIndex < insertionPoints.length; insPoIndex++) {
             insertionPoints[insPoIndex].refreshEntitiesLocaly(entities, properties);
         }
@@ -1079,7 +1078,6 @@ const TgEntityCentreBehaviorImpl = {
 
 export const TgEntityCentreBehavior = [
     TgEntityCentreBehaviorImpl,
-    TgTooltipBehavior,
     TgSseBehavior,
     TgFocusRestorationBehavior,
     TgElementSelectorBehavior

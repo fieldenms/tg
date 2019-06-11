@@ -10,12 +10,14 @@ import '/resources/polymer/@polymer/paper-styles/color.js';
 import '/resources/components/tg-scrollable-component.js';
 import '/resources/serialisation/tg-serialiser.js';
 
-import { IronOverlayBehavior } from '/resources/polymer/@polymer/iron-overlay-behavior/iron-overlay-behavior.js';
-import { Polymer } from '/resources/polymer/@polymer/polymer/lib/legacy/polymer-fn.js';
-import { html } from '/resources/polymer/@polymer/polymer/lib/utils/html-tag.js';
 
-import { TgHighlightingBehavior } from '/resources/editors/tg-highlighting-behavior.js';
-import { TgTooltipBehavior } from '/resources/components/tg-tooltip-behavior.js';
+import { matchedParts } from '/resources/editors/tg-highlighter.js';
+import {TgTooltipBehavior} from '/resources/components/tg-tooltip-behavior.js';
+
+import { IronOverlayBehavior } from '/resources/polymer/@polymer/iron-overlay-behavior/iron-overlay-behavior.js';
+import {mixinBehaviors} from '/resources/polymer/@polymer/polymer/lib/legacy/class.js';
+import {html, PolymerElement} from '/resources/polymer/@polymer/polymer/polymer-element.js';
+import {microTask} from '/resources/polymer/@polymer/polymer/lib/utils/async.js';
 
 const template = html`
     <style>
@@ -140,127 +142,129 @@ const template = html`
     </div>
     </tg-editor>`;
 
-Polymer({
-    _template: template,
+export class TgEntityEditorResult extends mixinBehaviors([IronOverlayBehavior, TgTooltipBehavior], PolymerElement) {
 
-    is: 'tg-entity-editor-result',
+    static get template() { 
+        return template;
+    }
 
-    behaviors: [IronOverlayBehavior, TgHighlightingBehavior, TgTooltipBehavior],
-
-    properties: {
-        /* Indicates whether multiple (true) or a single (false, default) value is acceptable. */
-        multi: {
-            type: Boolean,
-            value: false
-        },
-
-        /* An array of entities that match the search request.
-         * Should NOT be manipulated directly -- only via methods pushValue and clearSelection.*/
-        _values: {
-            type: Array,
-            value: function() {
-                return [];
+    static get properties () {
+        return {
+            /* Indicates whether multiple (true) or a single (false, default) value is acceptable. */
+            multi: {
+                type: Boolean,
+                value: false
+            },
+    
+            /* An array of entities that match the search request.
+             * Should NOT be manipulated directly -- only via methods pushValue and clearSelection.*/
+            _values: {
+                type: Array,
+                value: function() {
+                    return [];
+                }
+            },
+    
+            _foundSome: {
+                type: Boolean,
+                value: false
+            },
+            /* Contains selected entities in a form of key:entity pairs.
+             * Can be empty. Should contain at most one entity in case of single selection mode.
+             */
+            selectedValues: {
+                type: Object,
+                value: function() {
+                    return {};
+                }
+            },
+    
+            /* Represents the search query string that was used to find resultant values to be displayed */
+            searchQuery: {
+                type: String,
+                value: ''
+            },
+    
+            /* Should contain the names of additional properties to be displayed. */
+            additionalProperties: {
+                type: Object,
+                value: function() {
+                    return {};
+                }
+            },
+    
+            _selectedIndex: {
+                type: Number,
+                value: 0
+            },
+    
+            /**
+             * A private property to indicate the fact that the internal state of the component is ready for keyboard navigation (up/down keys).
+             */
+            _keyBoardNavigationReady: {
+                type: Boolean,
+                value: false
+            },
+    
+            /** A property to pass in an instance of tg-reflector, used for value conversion during rendering. */
+            reflector: {
+                type: Object,
+                value: null
+            },
+    
+            /**
+             * A function that retrives boundClientRect and offsetHeight from wrapping decorator (paper-input-container) from parent tg-entity-editor.
+             */
+            retrieveContainerSizes: {
+                type: Function
+            },
+    
+            /**
+             * A function that perorms acceptance of selected values. It is assigned in tg-entity-editor. 
+             */
+            acceptValues: {
+                type: Function
+            },
+    
+            /**
+             * A function to load more matching values, if any. It is assigned in tg-entity-editor.
+             */
+            loadMore: {
+                type: Function
+            },
+    
+            /**
+             * Controls if buton MORE is enabled.
+             */
+            enableLoadMore: {
+                type: Boolean,
+                value: true
+            },
+    
+            _tryToLoadMore: {
+                type: Function,
+                value: function () {
+                    return function (e) {
+                        if (this.enableLoadMore === true) {
+                            this.loadMore();
+                        }                            
+                    }.bind(this);
+                }
             }
-        },
-
-        _foundSome: {
-            type: Boolean,
-            value: false
-        },
-        /* Contains selected entities in a form of key:entity pairs.
-         * Can be empty. Should contain at most one entity in case of single selection mode.
-         */
-        selectedValues: {
-            type: Object,
-            value: function() {
-                return {};
-            }
-        },
-
-        /* Represents the search query string that was used to find resultant values to be displayed */
-        searchQuery: {
-            type: String,
-            value: ''
-        },
-
-        /* Should contain the names of additional properties to be displayed. */
-        additionalProperties: {
-            type: Object,
-            value: function() {
-                return {};
-            }
-        },
-
-        _selectedIndex: {
-            type: Number,
-            value: 0
-        },
-
-        /**
-         * A private property to indicate the fact that the internal state of the component is ready for keyboard navigation (up/down keys).
-         */
-        _keyBoardNavigationReady: {
-            type: Boolean,
-            value: false
-        },
-
-        /** A property to pass in an instance of tg-reflector, used for value conversion during rendering. */
-        reflector: {
-            type: Object,
-            value: null
-        },
-
-        /**
-         * A function that retrives boundClientRect and offsetHeight from wrapping decorator (paper-input-container) from parent tg-entity-editor.
-         */
-        retrieveContainerSizes: {
-            type: Function
-        },
-
-        /**
-         * A function that perorms acceptance of selected values. It is assigned in tg-entity-editor. 
-         */
-        acceptValues: {
-            type: Function
-        },
-
-        /**
-         * A function to load more matching values, if any. It is assigned in tg-entity-editor.
-         */
-        loadMore: {
-            type: Function
-        },
-
-        /**
-         * Controls if buton MORE is enabled.
-         */
-        enableLoadMore: {
-            type: Boolean,
-            value: true
-        },
-
-        _tryToLoadMore: {
-            type: Function,
-            value: function () {
-                return function (e) {
-                    if (this.enableLoadMore === true) {
-                        this.loadMore();
-                    }                            
-                }.bind(this);
-            }
-        }
-    },
-
-    ready: function() {
+        };
+    }
+    
+    constructor () {
+        super();
         this.noAutoFocus = true;
         this.alwaysOnTop = true;
-    },
+    }
 
-    loadMoreButton: function () {
+    loadMoreButton () {
         return this.$.loadMoreButton;
-    },
+    }
 
-    clearSelection: function() {
+    clearSelection () {
         this._selectedIndex = 0;
         this._keyBoardNavigationReady = false;
         this.$.selector.selectedItem = null;
@@ -273,11 +277,11 @@ Polymer({
         } else {
             this.$.selector.selected = '';
         }
-    },
+    }
 
     /* Pushes the specified value into the tail of array _values if that value is not yet present.
      * Returns true if the value was new, false otherwise. */
-    pushValue: function(value) {
+    pushValue (value) {
         const existingValue = _.find(this._values, function(obj) {
             return obj.key === value.key;
         });
@@ -287,45 +291,45 @@ Polymer({
         }
 
         return !existingValue;
-    },
+    }
 
     /*
      * Determines a title of the specified entity.propName.
      */
-    _propTitleByName: function(entity, propName) {
+    _propTitleByName (entity, propName) {
         if (entity.type().prop(propName)) {
             return entity.type().prop(propName).title();
         } else {
             return propName;
         }
-    },
+    }
     /*
      * Obtains a value of the specified by name property for the passed in entity.
      */
-    _propValueByName: function(entity, propName) {
+    _propValueByName (entity, propName) {
         const propValue = this.reflector.convert(entity.get(propName));
         return (propValue === null ? '' : propValue) + '';
-    },
+    }
 
     /**
      * Makes a value for attribute id based on the provided index.
      * Such id values are used for paperItem HTML elements representing list items.
      */
-    _makeId: function(index) {
+    _makeId (index) {
         return "id" + index;
-    },
+    }
 
     /**
      * Extracts a list item index from the id value of a corresponding paperItem HTML element.
      */
-    _unmakeId: function(id) {
+    _unmakeId (id) {
         return Number(id.substring(2));
-    },
+    }
 
     /* Highlights matched parts of autocompleted values.
      * Handles all properties that were specified as to be highlighted. */
-    highlightMatchedParts: function() {
-        this.async(function() {
+    highlightMatchedParts () {
+        microTask.run(function() {
             this._foundSome = this._values.length > 0;
             for (let index = 0; index < this._values.length; index++) {
                 let html = '';
@@ -354,18 +358,18 @@ Polymer({
                 }
             }
         }.bind(this));
-    },
+    }
 
-    _addHighlightedKeyProp: function(v, withDesc) {
+    _addHighlightedKeyProp (v, withDesc) {
         let html = '<div style="white-space: nowrap">';
 
         // let's first handle the key
-        let matchedParts = this._matchedParts(v.key, this.searchQuery);
-        if (matchedParts.length === 0) {
+        let parts = matchedParts(v.key, this.searchQuery);
+        if (parts.length === 0) {
             html = html + v.key;
         } else {
-            for (let index = 0; index < matchedParts.length; index++) {
-                const part = matchedParts[index];
+            for (let index = 0; index < parts.length; index++) {
+                const part = parts[index];
                 if (part.matched === true) {
                     // addition style-scope and this.is (element name) styles is required to enformse custom style processing
                     html = html +
@@ -381,12 +385,12 @@ Polymer({
             let propValueAsString = this._propValueByName(v, 'desc');
             if (propValueAsString && propValueAsString !== 'null' && propValueAsString !== '') {
                 html = html + '<span style="color:#737373"> &ndash; <i>';
-                matchedParts = this._matchedParts(propValueAsString, this.searchQuery);
-                if (matchedParts.length === 0) {
+                parts = matchedParts(propValueAsString, this.searchQuery);
+                if (parts.length === 0) {
                     html = html + propValueAsString;
                 } else {
-                    for (let index = 0; index < matchedParts.length; index++) {
-                        const part = matchedParts[index];
+                    for (let index = 0; index < parts.length; index++) {
+                        const part = parts[index];
                         if (part.matched) {
                             // addition style-scope and this.is (element name) styles is required to enformse custom style processing
                             html = html + '<span class="key-value-highlighted">' + part.part + '</span>';
@@ -400,9 +404,9 @@ Polymer({
             }
         }
         return html + '</div>';
-    },
+    }
 
-    _addHighlightedPropByName: function(v, propName, highlight) {
+    _addHighlightedPropByName (v, propName, highlight) {
         var html = '<div class="additional-prop">';
         // add prop title
         html = html + '<span class="prop-name"><span>' + this._propTitleByName(v, propName) + '</span>:</span>';
@@ -415,9 +419,9 @@ Polymer({
         } else {
             // matched parts should be in a separate div
             html = html + '<div style="white-space: nowrap;">';
-            let matchedParts = this._matchedParts(propValueAsString, this.searchQuery);
-            for (let index = 0; index < matchedParts.length; index++) {
-                let part = matchedParts[index];
+            let parts = matchedParts(propValueAsString, this.searchQuery);
+            for (let index = 0; index < parts.length; index++) {
+                let part = parts[index];
                 if (part.matched) {
                     // addition style-scope and this.is (element name) styles is required to enformse custom style processing
                     html = html +
@@ -430,13 +434,13 @@ Polymer({
         }
 
         return html + '</div>';
-    },
+    }
 
 
     /*********************************************************
      ****************** SELECTION HANDLERS *******************
      *********************************************************/
-    _itemSelected: function(event) {
+    _itemSelected (event) {
         this._keyBoardNavigationReady = true;
         this._selectedIndex = this._unmakeId(event.detail.item.id);
 
@@ -444,37 +448,37 @@ Polymer({
         this.selectedValues[value] = _.find(this._values, function(obj) {
             return obj.key === value;
         });
-    },
+    }
 
-    _itemDeselected: function(event) {
+    _itemDeselected (event) {
         this._keyBoardNavigationReady = true;
         this._selectedIndex = this._unmakeId(event.detail.item.id);
 
         const value = event.detail.item.getAttribute("value");
         delete this.selectedValues[value];
-    },
+    }
 
     /**
      * Locates a HTML element that represent a list item with the specified index and focuses it.
      * Corresponding to list items HTML elements must have attribute "tabindex = -1", otherwise calls to .focus() have no effect.
      */
-    focusItemWithIndex: function(index) {
+    focusItemWithIndex (index) {
         this._selectedIndex = index;
         const id = this._makeId(index);
         const paperItem = this.shadowRoot.querySelector("#" + id);
         if (paperItem) {
             paperItem.focus();
         }
-    },
+    }
 
-    selectFirst: function() {
+    selectFirst() {
         if (this._values.length > 0) {
             this._selectedIndex = 0;
             this.$.selector.select(this.$.selector._indexToValue(this._selectedIndex));
         }
-    },
+    }
 
-    selectNext: function() {
+    selectNext () {
         if (this._keyBoardNavigationReady === false) {
             this._keyBoardNavigationReady = true;
             if (this.multi === true) {
@@ -497,9 +501,9 @@ Polymer({
             }
         }
         this._scrollToSelected();
-    },
+    }
 
-    selectPrev: function() {
+    selectPrev () {
         if (this._keyBoardNavigationReady === false) {
             this._keyBoardNavigationReady = true;
             if (this.multi === true) {
@@ -519,18 +523,18 @@ Polymer({
             }
         }
         this._scrollToSelected();
-    },
+    }
 
     /** Selects the currenlty focused item in the list if none was selected.
      * It is used to treat the focused item as if it was selected upon user's attempts to "accept" values.
      */
-    selectCurrentIfNoneSelected: function() {
+    selectCurrentIfNoneSelected () {
         if (Object.keys(this.selectedValues).length === 0) {
             this.$.selector.select(this.$.selector._indexToValue(this._selectedIndex));
         }
-    },
+    }
 
-    _scrollToSelected: function() {
+    _scrollToSelected () {
         if (!isNaN(this._selectedIndex)) {
             const item = this.querySelectorAll(".tg-item")[this._selectedIndex];
             // item is going to be undefined if there are no matching values
@@ -545,10 +549,10 @@ Polymer({
                 }
             }
         }
-    },
+    }
 
     /* Iron reseze event listener for correct resizing and positioning of an open result overlay. */
-    refit: function() {
+    refit () {
         var clientRectAndOffsetHeight = this.retrieveContainerSizes();
         var rect = clientRectAndOffsetHeight[0]; // container.getBoundingClientRect();//getClientRects()[0];
         var scrollTop = document.documentElement.scrollTop || document.body.scrollTop;
@@ -592,12 +596,12 @@ Polymer({
         // the current vertical location of the element
         var visibleHeight = Math.max(document.documentElement.clientHeight, window.innerHeight || 0);
         this.style['max-height'] = (visibleHeight - top - 10) + 'px'; // 10 pixels is an arbitrary adjustment
-    },
+    }
 
     /**
      * Defines reasonable rule for 'small height for showing autocompleter results'. For now three items need to be shown, otherwise scrolling will be triggered.
      */
-    visibleHeightUnderEditorIsSmall: function() {
+    visibleHeightUnderEditorIsSmall () {
         const clientRectAndOffsetHeight = this.retrieveContainerSizes();
         const rect = clientRectAndOffsetHeight[0];
         const scrollTop = document.documentElement.scrollTop || document.body.scrollTop;
@@ -608,4 +612,6 @@ Polymer({
         const itemHeight = 24 + 2 * 6 + 1; // see tg-item styles with min-height, top / bottom padding and top border
         return visibleHeight - top - 10 < 3 * itemHeight; // three items do not fit, so visible height is small for showing items
     }
-});
+}
+
+customElements.define('tg-entity-editor-result', TgEntityEditorResult);

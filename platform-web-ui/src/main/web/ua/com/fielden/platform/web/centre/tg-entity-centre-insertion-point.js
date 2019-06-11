@@ -36,6 +36,9 @@ const customStyle = html`
             .insertion-point-dialog .title-bar paper-icon-button {
                 transform: scale(-1, -1);
             }
+            .insertion-point-dialog paper-icon-button.revers {
+                transform: scale(-1, 1);
+            }
             #insertionPointContent .truncate {
                 white-space: nowrap;
                 overflow: hidden;
