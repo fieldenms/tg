@@ -12,16 +12,6 @@ const isStatic = function (url) {
         pathname.startsWith('/centre_ui/') ||
         pathname.startsWith('/master_ui/') ||
         pathname.startsWith('/custom_view/');
-        // pathname === '/resources/startup-resources-vulcanized.js' ||
-        // pathname === '/resources/polymer/@webcomponents/webcomponentsjs/webcomponents-bundle.js' ||
-        // pathname === '/resources/polymer/web-animations-js/web-animations-next-lite.min.js' ||
-        // pathname === '/resources/lodash/4.17.11/lodash.min.js' ||
-        // pathname === '/resources/postal/2.0.5/postal.min.js' ||
-        // pathname === '/resources/filesaver/FileSaver.min.js' ||
-        // pathname === '/resources/manifest.webmanifest' ||
-        // pathname === '/resources/icons/tg-icon192x192.png' ||
-        // pathname === '/resources/icons/tg-icon144x144.png';
-        // TODO caching here does not work, strangely; this will be example to make loading successful in complete offline mode; || pathname === '/entity/ua.com.fielden.platform.menu.Menu/new'
 };
 
 const staleResponse = function () {
@@ -50,7 +40,8 @@ const cacheIfSuccessful = function (response, checksumRequest, checksumResponseT
 
 self.addEventListener('fetch', function (event) {
     const request = event.request;
-    const url = request.url;
+    const urlObj = new URL(request.url);
+    const url = urlObj.origin + urlObj.pathname;
     if (isStatic(url)) {
         event.respondWith(function() {
             console.time('open and fetch checksum ' + url);
