@@ -36,11 +36,8 @@ import ua.com.fielden.platform.web.resources.RestServerUtil;
  *
  */
 public class FileResource extends AbstractWebResource {
-    private static final Logger LOGGER = Logger.getLogger(FileResource.class);
-
     private final List<String> resourcePaths;
     private final ISourceController sourceController;
-    private final RestServerUtil serverRestUtil;
 
     /**
      * Creates an instance of {@link FileResource} with custom resource paths.
@@ -50,11 +47,10 @@ public class FileResource extends AbstractWebResource {
      * @param request
      * @param response
      */
-    public FileResource(final RestServerUtil serverRestUtil, final ISourceController sourceController, final List<String> resourcePaths, final IDeviceProvider deviceProvider, final Context context, final Request request, final Response response) {
+    public FileResource(final ISourceController sourceController, final List<String> resourcePaths, final IDeviceProvider deviceProvider, final Context context, final Request request, final Response response) {
         super(context, request, response, deviceProvider);
         this.resourcePaths = resourcePaths;
         this.sourceController = sourceController;
-        this.serverRestUtil = serverRestUtil;
     }
 
     /**

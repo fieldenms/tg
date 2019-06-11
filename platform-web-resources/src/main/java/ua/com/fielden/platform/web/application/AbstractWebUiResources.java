@@ -158,7 +158,7 @@ public abstract class AbstractWebUiResources extends Application {
         final Router mainRouter = new Router(getContext());
         // standard Polymer components and other resources should not be guarded
         // Register resources those are in resource paths.
-        attachResources(mainRouter, restUtil);
+        attachResources(mainRouter);
 
         mainRouter.attach(guard);
 
@@ -212,8 +212,8 @@ public abstract class AbstractWebUiResources extends Application {
      *
      * @param router
      */
-    private void attachResources(final Router router, final RestServerUtil restUtil) {
+    private void attachResources(final Router router) {
         logger.info("\t\tResources attaching for following resource paths:" + "\n\t\t|" + StringUtils.join(webApp.resourcePaths(), "|\n\t\t|") + "|\n");
-        router.attach("/resources/", new FileResourceFactory(sourceController, webApp.resourcePaths(), deviceProvider, restUtil), Template.MODE_STARTS_WITH);
+        router.attach("/resources/", new FileResourceFactory(sourceController, webApp.resourcePaths(), deviceProvider), Template.MODE_STARTS_WITH);
     }
 }

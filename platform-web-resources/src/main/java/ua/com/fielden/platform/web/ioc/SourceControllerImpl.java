@@ -141,7 +141,7 @@ public class SourceControllerImpl implements ISourceController {
         final List<Class<? extends AbstractEntity<?>>> sortedMasterTypes = new ArrayList<>(webUiConfig.getMasters().keySet());
         sort(sortedMasterTypes, classComparator); // sort types by name to provide predictable order inside vulcanized resources
         for (final Class<? extends AbstractEntity<?>> masterEntityType : sortedMasterTypes) {
-            if (!alreadyIncluded(masterEntityType.getName(), source)&& /* FIXME remove */ !Arrays.asList("ReServiceUnavailabilityChart", "Hierarchy", "PlanningWorkActivityInsertionPoint", "SchedulingProfileInsertionPoint", "SchedulingWorkActivityLegendInsertionPoint", "WorkActivityStateLegendInsertionPoint", "PlanningAction").contains(masterEntityType.getSimpleName())) {
+            if (!alreadyIncluded(masterEntityType.getName(), source)) {
                 sb.append(format("import '/master_ui/%s.js';\n", masterEntityType.getName()));
             }
         }

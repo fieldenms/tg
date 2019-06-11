@@ -24,18 +24,16 @@ public class FileResourceFactory extends Restlet {
     private final ISourceController sourceController;
     private final List<String> resourcePaths;
     private final IDeviceProvider deviceProvider;
-    private final RestServerUtil serverRestUtil;
 
     /**
      * Creates new {@link FileResourceFactory} instance with specified paths of file resources.
      *
      * @param resourcePaths
      */
-    public FileResourceFactory(final ISourceController sourceController, final List<String> resourcePaths, final IDeviceProvider deviceProvider, final RestServerUtil serverRestUtil) {
+    public FileResourceFactory(final ISourceController sourceController, final List<String> resourcePaths, final IDeviceProvider deviceProvider) {
         this.sourceController = sourceController;
         this.resourcePaths = resourcePaths;
         this.deviceProvider = deviceProvider;
-        this.serverRestUtil = serverRestUtil;
     }
 
     /**
@@ -46,7 +44,7 @@ public class FileResourceFactory extends Restlet {
         super.handle(request, response);
 
         if (Method.GET.equals(request.getMethod())) {
-            new FileResource(serverRestUtil, sourceController, Collections.unmodifiableList(resourcePaths), deviceProvider, getContext(), request, response).handle();
+            new FileResource(sourceController, Collections.unmodifiableList(resourcePaths), deviceProvider, getContext(), request, response).handle();
         }
     }
 
