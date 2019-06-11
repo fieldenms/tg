@@ -11,19 +11,7 @@ import ua.com.fielden.platform.entity.validation.annotation.EntityExists;
  */
 public class EntityExistsAnnotation {
 
-    private final Class<? extends AbstractEntity<?>> value;
-    private final String errorMsg;
-
-    public EntityExistsAnnotation(final Class<? extends AbstractEntity<?>> value) {
-        this(value, "");
-    }
-
-    public EntityExistsAnnotation(final Class<? extends AbstractEntity<?>> value, final String errorMsg) {
-        this.value = value;
-        this.errorMsg = errorMsg;
-    }
-
-    public EntityExists newInstance() {
+    public static EntityExists newInstance(final Class<? extends AbstractEntity<?>> value) {
         return new EntityExists() {
 
             @Override
@@ -38,7 +26,7 @@ public class EntityExistsAnnotation {
 
             @Override
             public String errorMsg() {
-                return errorMsg;
+                return "";
             }
 
         };

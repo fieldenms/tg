@@ -61,7 +61,7 @@
     }
     app.model = generateChildren(numberOfItems, true);
     app._buildContent = function (entity) {
-        return "<span>" + entity.entity.key + "</span>&nbsp;&ndash;&nbsp;<span style='color:#737373'><i>" + entity.entity.desc + "</i></span>";
+        return "<span class='part-to-highlight'>" + entity.entity.key + "</span>&nbsp;&ndash;&nbsp;<span style='color:#737373'><i>" + entity.entity.desc + "</i></span>";
     }
     app._loadSubtree = function (e) {
         const parentsPath = e.detail.parentPath;

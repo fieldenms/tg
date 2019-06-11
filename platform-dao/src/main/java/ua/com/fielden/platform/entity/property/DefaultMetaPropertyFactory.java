@@ -21,12 +21,12 @@ import ua.com.fielden.platform.entity.validation.annotation.EntityExists;
  * @author TG Team
  *
  */
-public class DaoMetaPropertyFactory extends AbstractMetaPropertyFactory {
+public class DefaultMetaPropertyFactory extends AbstractMetaPropertyFactory {
 
     private final ICompanionObjectFinder coFinder;
 
     @Inject
-    public DaoMetaPropertyFactory(
+    public DefaultMetaPropertyFactory(
             final DomainValidationConfig domainConfig,
             final DomainMetaPropertyConfig domainMetaConfig,
             final ICompanionObjectFinder coFinder) {

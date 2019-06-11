@@ -21,7 +21,7 @@
   "_resolved": "https://registry.npmjs.org/formatio/-/formatio-1.1.1.tgz",
   "_shasum": "5ed3ccd636551097383465d996199100e86161e9",
   "_spec": "formatio@1.1.1",
-  "_where": "/home/jhou/workspace/tg/platform-web-ui/src/main/resources/node_modules/sinon",
+  "_where": "/home/oleh/workspace/tg/platform-web-ui/src/main/resources/node_modules/sinon",
   "author": {
     "name": "Christian Johansen"
   },

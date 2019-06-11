@@ -191,6 +191,7 @@ const template = html`
             width: var(--egi-drag-anchor-width, 1.5rem);
             --iron-icon-width: var(--egi-drag-anchor-width, 1.5rem);
             --iron-icon-height: var(--egi-drag-anchor-width, 1.5rem);
+            color: var(--paper-grey-400);
             @apply --layout-horizontal;
             @apply --layout-center;
             @apply --layout-relative;
@@ -201,11 +202,13 @@ const template = html`
             cursor: grab;
             cursor: -moz-grab;
             cursor: -webkit-grab;
+            color: var(--paper-light-blue-700);
         }
         .drag-anchor[selected]:active {
             cursor: grabbing;
             cursor: -moz-grabbing;
             cursor: -webkit-grabbing;
+            color: var(--paper-light-blue-700);
         }
         paper-checkbox {
             --paper-checkbox-label: {
@@ -290,7 +293,7 @@ const template = html`
     <!--EGI template-->
     <div id="paperMaterial" class="paper-material" elevation="1" style$="[[_calcMaterialStyle(showMarginAround)]]" fit-to-height$="[[fitToHeight]]">
         <!--Table toolbar-->
-        <div class="grid-toolbar">
+        <div class="grid-toolbar" style$="[[_calcToolbarStyle(canDragFrom)]]">
             <paper-progress id="progressBar" hidden$="[[!_showProgress]]"></paper-progress>
             <div class="grid-toolbar-content">
                 <slot id="top_action_selctor" name="entity-specific-action"></slot>
@@ -334,7 +337,7 @@ const template = html`
             <!--Table body-->
             <template is="dom-repeat" items="[[egiModel]]" as="egiEntity" index-as="entityIndex" on-dom-change="_scrollContainerEntitiesStamped">
                 <div class="table-data-row" on-mouseenter="_mouseRowEnter" on-mouseleave="_mouseRowLeave">
-                    <div class="drag-anchor cell" draggable="true" selected$="[[egiEntity.selected]]" over$="[[egiEntity.over]]" hidden$="[[!canDragFrom]]" style$="[[_calcDragBoxStyle(dragAnchorFixed)]]">
+                    <div class="drag-anchor cell" draggable$="[[_isDraggable(egiEntity.selected)]]" selected$="[[egiEntity.selected]]" over$="[[egiEntity.over]]" hidden$="[[!canDragFrom]]" style$="[[_calcDragBoxStyle(dragAnchorFixed)]]">
                         <iron-icon icon="tg-icons:dragVertical"></iron-icon>
                     </div>
                     <div class="table-cell cell" selected$="[[egiEntity.selected]]" over$="[[egiEntity.over]]" style$="[[_calcSelectCheckBoxStyle(canDragFrom, checkboxesFixed)]]" hidden$="[[!checkboxVisible]]" tooltip-text$="[[_selectTooltip(egiEntity.selected)]]">
@@ -728,6 +731,7 @@ Polymer({
                     select: select
                 }]
             });
+            updateSelectAll(this, this.egiModel);
         }
     },
     
@@ -825,6 +829,7 @@ Polymer({
                     });
                 }
             }
+            updateSelectAll(this, this.egiModel);
             if (selectionDetails.length > 0) {
                 this.fire("tg-entity-selected", {
                     shouldScrollToSelected: false,
@@ -879,7 +884,7 @@ Polymer({
         for (let i = 0; i < this.egiModel.length; i++) {
             this.set("egiModel." + i + ".selected", false);
         }
-        this.selectedAll = false;
+        updateSelectAll(this, this.egiModel);
         // First clear all selection and then fire event
         const prevSelectedEntities = this.selectedEntities;
         this.selectedEntities = [];
@@ -1292,6 +1297,10 @@ Polymer({
         return "";
     },
 
+    _calcToolbarStyle: function (canDragFrom) {
+        return canDragFrom ? "padding-left: 8px;" : "";
+    },
+
     _calcHeaderStyle: function (headerFixed, _showTopShadow) {
         let headerStyle = headerFixed ? "position: sticky; position: -webkit-sticky; z-index: 1; top: 0;" : "";
         if (_showTopShadow) {
@@ -1360,6 +1369,10 @@ Polymer({
             columnStyleWidth = columnsWidth + "px + 2 * " + this.fixedColumns.length + " * " + cellPadding;
         }
         return this._calcPrimaryActionWidth(canDragFrom, checkboxVisible, primaryAction) + " + " + columnStyleWidth;
+    },
+
+    _isDraggable: function (entitySelected) {
+        return entitySelected ? "true" : "false";
     },
 
     _calcColumnHeaderStyle: function (item, itemWidth, columnGrowFactor, fixed) {
@@ -1514,7 +1527,7 @@ Polymer({
         this.$.baseContainer.style.removeProperty("height");
         this.$.baseContainer.style.removeProperty("max-height");
         if (constantHeight) { //Set the height for the egi
-            this.$.paperMaterial.style["height"] = constantHeight;
+            this.$.paperMaterial.style["height"] = "calc(" + constantHeight + " - 20px)";
         } else if (visibleRowCount > 0) { //Set the height or max height for the scroll container so that only specified number of rows become visible.
             this.$.paperMaterial.style["min-height"] = "fit-content";
             const rowCount = visibleRowCount + (summaryFixed ? _totalsRowCount : 0);
@@ -1565,14 +1578,14 @@ Polymer({
             const entityRows = this.$.baseContainer.querySelectorAll('.table-data-row');
             const entityRow = entityRows[lastSelectedIndex];
             if (entityRow) {
-                entityRow.scrollIntoView({block: "center", inline: "center", behavior: "smooth"});
+                entityRow.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'start' });
             } else { // in case where selected entity is outside existing stamped EGI rows, which means that entity rows stamping still needs to be occured, defer _scrollTo invocation until dom stamps
                 const oldAction = this._scrollContainerEntitiesStampedCustomAction;
                 this._scrollContainerEntitiesStampedCustomAction = (function () {
                     oldAction();
                     const entityRows = this.$.baseContainer.querySelectorAll('.table-data-row');
                     const entityRow = entityRows[lastSelectedIndex];
-                    entityRow.scrollIntoView({block: "center", inline: "center", behavior: "smooth"});
+                    entityRow.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'start' });
                     this._scrollContainerEntitiesStampedCustomAction = oldAction;
                 }).bind(this);
             }

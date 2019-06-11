@@ -182,14 +182,12 @@ const generateLoadingIndicator = function (parent) {
 };
 
 const refreshTree = function () {
-    if (this.$.treeList._collection) {
-        const props = ["opened", "highlight"];
-        this._entities.forEach((entity, idx) => {
-            if (typeof this.$.treeList._collection.getKey(entity) !== 'undefined' && typeof this.$.treeList._getPhysicalIndex(entity) !== 'undefined') {
-                props.forEach(prop => this.notifyPath("_entities." + idx + "." + prop)); 
-            }
-        });
-    }
+    const props = ["opened", "highlight"];
+    this._entities.forEach((entity, idx) => {
+        if (this.$.treeList._isIndexRendered(idx)) {
+            props.forEach(prop => this.notifyPath("_entities." + idx + "." + prop)); 
+        }
+    });
 };
 
 Polymer({

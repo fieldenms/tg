@@ -20,6 +20,7 @@ import ua.com.fielden.platform.domaintree.IDomainTreeManager.IDomainTreeManagerA
 import ua.com.fielden.platform.domaintree.testing.DomainTreeManagerAndEnhancer1;
 import ua.com.fielden.platform.domaintree.testing.MasterEntity;
 import ua.com.fielden.platform.domaintree.testing.MasterEntityForIncludedPropertiesLogic;
+import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 
 /**
@@ -65,7 +66,7 @@ public class AbstractDomainTreeRepresentationAndEnhancerTest extends AbstractDom
         allLevelsWithoutCollections(new IAction() {
             @Override
             public void action(final String name) {
-                dtmae.getEnhancer().addCalculatedProperty(MasterEntity.class, name, "1 * integerProp", "Calc integer prop", "Desc", CalculatedPropertyAttribute.NO_ATTR, "integerProp");
+                dtmae.getEnhancer().addCalculatedProperty(MasterEntity.class, name, "1 * integerProp", "Calc integer prop", "Desc", CalculatedPropertyAttribute.NO_ATTR, "integerProp", IsProperty.DEFAULT_PRECISION, IsProperty.DEFAULT_SCALE);
                 dtmae.getEnhancer().apply();
             }
         }, "");
@@ -92,7 +93,7 @@ public class AbstractDomainTreeRepresentationAndEnhancerTest extends AbstractDom
     @Test
     public void test_that_domain_changes_for_First_Level_are_correctly_reflected_in_Included_properties() {
         assertEquals("Incorrect included properties.", Arrays.asList("", "desc", "integerProp", "entityPropOfSelfType", "entityPropOfSelfType.dummy-property", "entityProp", "entityProp.dummy-property", "entityPropCollection", "entityPropCollection.dummy-property").toString(), dtm().getRepresentation().includedProperties(MasterEntityForIncludedPropertiesLogic.class).toString());
-        dtm().getEnhancer().addCalculatedProperty(MasterEntityForIncludedPropertiesLogic.class, "", "2 * integerProp", "Prop1", "desc", CalculatedPropertyAttribute.NO_ATTR, "integerProp");
+        dtm().getEnhancer().addCalculatedProperty(MasterEntityForIncludedPropertiesLogic.class, "", "2 * integerProp", "Prop1", "desc", CalculatedPropertyAttribute.NO_ATTR, "integerProp", IsProperty.DEFAULT_PRECISION, IsProperty.DEFAULT_SCALE);
         dtm().getEnhancer().apply();
         assertEquals("Incorrect included properties.", Arrays.asList("", "desc", "integerProp", "entityPropOfSelfType", "entityPropOfSelfType.dummy-property", "entityProp", "entityProp.dummy-property", "entityPropCollection", "entityPropCollection.dummy-property", "prop1").toString(), dtm().getRepresentation().includedProperties(MasterEntityForIncludedPropertiesLogic.class).toString());
         dtm().getEnhancer().removeCalculatedProperty(MasterEntityForIncludedPropertiesLogic.class, "prop1");
@@ -104,7 +105,7 @@ public class AbstractDomainTreeRepresentationAndEnhancerTest extends AbstractDom
     @Test
     public void test_that_domain_changes_for_First_Level_COLLECTIONS_are_correctly_reflected_in_Included_properties() {
         assertEquals("Incorrect included properties.", Arrays.asList("", "desc", "integerProp", "entityPropOfSelfType", "entityPropOfSelfType.dummy-property", "entityProp", "entityProp.dummy-property", "entityPropCollection", "entityPropCollection.dummy-property"), dtm().getRepresentation().includedProperties(MasterEntityForIncludedPropertiesLogic.class));
-        dtm().getEnhancer().addCalculatedProperty(MasterEntityForIncludedPropertiesLogic.class, "entityPropCollection", "2 * integerProp", "Prop1", "desc", CalculatedPropertyAttribute.NO_ATTR, "integerProp");
+        dtm().getEnhancer().addCalculatedProperty(MasterEntityForIncludedPropertiesLogic.class, "entityPropCollection", "2 * integerProp", "Prop1", "desc", CalculatedPropertyAttribute.NO_ATTR, "integerProp", IsProperty.DEFAULT_PRECISION, IsProperty.DEFAULT_SCALE);
         dtm().getEnhancer().apply();
         assertEquals("Incorrect included properties.", Arrays.asList("", "desc", "integerProp", "entityPropOfSelfType", "entityPropOfSelfType.dummy-property", "entityProp", "entityProp.dummy-property", "entityPropCollection", "entityPropCollection.integerProp", "entityPropCollection.moneyProp", "entityPropCollection.prop1"), dtm().getRepresentation().includedProperties(MasterEntityForIncludedPropertiesLogic.class));
 
@@ -119,11 +120,11 @@ public class AbstractDomainTreeRepresentationAndEnhancerTest extends AbstractDom
     @Test
     public void test_that_domain_changes_for_Second_Level_are_correctly_reflected_in_Included_properties() {
         assertEquals("Incorrect included properties.", Arrays.asList("", "desc", "integerProp", "entityPropOfSelfType", "entityPropOfSelfType.dummy-property", "entityProp", "entityProp.dummy-property", "entityPropCollection", "entityPropCollection.dummy-property"), dtm().getRepresentation().includedProperties(MasterEntityForIncludedPropertiesLogic.class));
-        dtm().getEnhancer().addCalculatedProperty(MasterEntityForIncludedPropertiesLogic.class, "entityProp", "2 * integerProp", "Prop1", "desc", CalculatedPropertyAttribute.NO_ATTR, "integerProp");
+        dtm().getEnhancer().addCalculatedProperty(MasterEntityForIncludedPropertiesLogic.class, "entityProp", "2 * integerProp", "Prop1", "desc", CalculatedPropertyAttribute.NO_ATTR, "integerProp", IsProperty.DEFAULT_PRECISION, IsProperty.DEFAULT_SCALE);
         dtm().getEnhancer().apply();
         assertEquals("Incorrect included properties.", Arrays.asList("", "desc", "integerProp", "entityPropOfSelfType", "entityPropOfSelfType.dummy-property", "entityProp", "entityProp.integerProp", "entityProp.moneyProp", "entityProp.prop1", "entityPropCollection", "entityPropCollection.dummy-property"), dtm().getRepresentation().includedProperties(MasterEntityForIncludedPropertiesLogic.class));
 
-        dtm().getEnhancer().addCalculatedProperty(MasterEntityForIncludedPropertiesLogic.class, "entityProp", "2 * integerProp", "Prop2", "desc", CalculatedPropertyAttribute.NO_ATTR, "integerProp");
+        dtm().getEnhancer().addCalculatedProperty(MasterEntityForIncludedPropertiesLogic.class, "entityProp", "2 * integerProp", "Prop2", "desc", CalculatedPropertyAttribute.NO_ATTR, "integerProp", IsProperty.DEFAULT_PRECISION, IsProperty.DEFAULT_SCALE);
         dtm().getEnhancer().apply();
         assertEquals("Incorrect included properties.", Arrays.asList("", "desc", "integerProp", "entityPropOfSelfType", "entityPropOfSelfType.dummy-property", "entityProp", "entityProp.integerProp", "entityProp.moneyProp", "entityProp.prop1", "entityProp.prop2", "entityPropCollection", "entityPropCollection.dummy-property").toString(), dtm().getRepresentation().includedProperties(MasterEntityForIncludedPropertiesLogic.class).toString());
         dtm().getEnhancer().removeCalculatedProperty(MasterEntityForIncludedPropertiesLogic.class, "entityProp.prop1");
@@ -139,7 +140,7 @@ public class AbstractDomainTreeRepresentationAndEnhancerTest extends AbstractDom
     public void test_that_domain_changes_for_Second_Level_circular_properties_are_correctly_reflected_in_Included_properties() {
         assertEquals("Incorrect included properties.", Arrays.asList("", "desc", "integerProp", "entityPropOfSelfType", "entityPropOfSelfType.dummy-property", "entityProp", "entityProp.dummy-property", "entityPropCollection", "entityPropCollection.dummy-property"), dtm().getRepresentation().includedProperties(MasterEntityForIncludedPropertiesLogic.class));
 
-        dtm().getEnhancer().addCalculatedProperty(MasterEntityForIncludedPropertiesLogic.class, "entityPropOfSelfType", "2 * integerProp", "Prop1", "desc", CalculatedPropertyAttribute.NO_ATTR, "integerProp");
+        dtm().getEnhancer().addCalculatedProperty(MasterEntityForIncludedPropertiesLogic.class, "entityPropOfSelfType", "2 * integerProp", "Prop1", "desc", CalculatedPropertyAttribute.NO_ATTR, "integerProp", IsProperty.DEFAULT_PRECISION, IsProperty.DEFAULT_SCALE);
         dtm().getEnhancer().apply();
 
         assertTrue("Should be excluded.", dtm().getRepresentation().isExcludedImmutably(MasterEntityForIncludedPropertiesLogic.class, "entityPropOfSelfType.entityProp.keyPartProp"));
@@ -150,7 +151,7 @@ public class AbstractDomainTreeRepresentationAndEnhancerTest extends AbstractDom
     @Test
     public void test_that_domain_changes_for_property_removal_are_correctly_reflected_in_Included_properties_with_resetting_of_the_meta_state() {
         assertEquals("Incorrect included properties.", Arrays.asList("", "desc", "integerProp", "entityPropOfSelfType", "entityPropOfSelfType.dummy-property", "entityProp", "entityProp.dummy-property", "entityPropCollection", "entityPropCollection.dummy-property"), dtm().getRepresentation().includedProperties(MasterEntityForIncludedPropertiesLogic.class));
-        dtm().getEnhancer().addCalculatedProperty(MasterEntityForIncludedPropertiesLogic.class, "", "2 * integerProp", "Prop1", "desc", CalculatedPropertyAttribute.NO_ATTR, "integerProp");
+        dtm().getEnhancer().addCalculatedProperty(MasterEntityForIncludedPropertiesLogic.class, "", "2 * integerProp", "Prop1", "desc", CalculatedPropertyAttribute.NO_ATTR, "integerProp", IsProperty.DEFAULT_PRECISION, IsProperty.DEFAULT_SCALE);
         dtm().getEnhancer().apply();
         assertEquals("Incorrect included properties.", Arrays.asList("", "desc", "integerProp", "entityPropOfSelfType", "entityPropOfSelfType.dummy-property", "entityProp", "entityProp.dummy-property", "entityPropCollection", "entityPropCollection.dummy-property", "prop1"), dtm().getRepresentation().includedProperties(MasterEntityForIncludedPropertiesLogic.class));
         dtm().getFirstTick().check(MasterEntityForIncludedPropertiesLogic.class, "prop1", true);
@@ -164,7 +165,7 @@ public class AbstractDomainTreeRepresentationAndEnhancerTest extends AbstractDom
     @Ignore("Ignored due to the removal of support for listeners. Need to revisit.")
     public void test_that_domain_changes_for_calc_property_modifications_are_correctly_reflected_in_Included_properties() {
         assertEquals("Incorrect included properties.", Arrays.asList("", "desc", "integerProp", "entityPropOfSelfType", "entityPropOfSelfType.dummy-property", "entityProp", "entityProp.dummy-property", "entityPropCollection", "entityPropCollection.dummy-property"), dtm().getRepresentation().includedProperties(MasterEntityForIncludedPropertiesLogic.class));
-        dtm().getEnhancer().addCalculatedProperty(MasterEntityForIncludedPropertiesLogic.class, "", "2 * integerProp", "Prop1", "desc", CalculatedPropertyAttribute.NO_ATTR, "integerProp");
+        dtm().getEnhancer().addCalculatedProperty(MasterEntityForIncludedPropertiesLogic.class, "", "2 * integerProp", "Prop1", "desc", CalculatedPropertyAttribute.NO_ATTR, "integerProp", IsProperty.DEFAULT_PRECISION, IsProperty.DEFAULT_SCALE);
         dtm().getEnhancer().apply();
         assertEquals("Incorrect included properties.", Arrays.asList("", "desc", "integerProp", "entityPropOfSelfType", "entityPropOfSelfType.dummy-property", "entityProp", "entityProp.dummy-property", "entityPropCollection", "entityPropCollection.dummy-property", "prop1"), dtm().getRepresentation().includedProperties(MasterEntityForIncludedPropertiesLogic.class));
         dtm().getFirstTick().check(MasterEntityForIncludedPropertiesLogic.class, "prop1", true);
@@ -238,7 +239,7 @@ public class AbstractDomainTreeRepresentationAndEnhancerTest extends AbstractDom
         allLevelsWithoutCollections(new IAction() {
             @Override
             public void action(final String name) {
-                dtm().getEnhancer().addCalculatedProperty(MasterEntity.class, name, "YEAR(dateProp)", "Integer Prop Originated From Date", "desc", CalculatedPropertyAttribute.NO_ATTR, "dateProp");
+                dtm().getEnhancer().addCalculatedProperty(MasterEntity.class, name, "YEAR(dateProp)", "Integer Prop Originated From Date", "desc", CalculatedPropertyAttribute.NO_ATTR, "dateProp", IsProperty.DEFAULT_PRECISION, IsProperty.DEFAULT_SCALE);
                 dtm().getEnhancer().apply();
                 assertEquals(m, Arrays.asList(Function.SELF, Function.COUNT_DISTINCT, Function.SUM, Function.AVG, Function.MIN, Function.MAX), new ArrayList<Function>(dtm().getRepresentation().availableFunctions(MasterEntity.class, AbstractDomainTreeTest.name(name, "integerPropOriginatedFromDate"))));
             }
@@ -248,7 +249,7 @@ public class AbstractDomainTreeRepresentationAndEnhancerTest extends AbstractDom
         allLevelsWithCollections(new IAction() {
             @Override
             public void action(final String name) {
-                dtm().getEnhancer().addCalculatedProperty(MasterEntity.class, name, "YEAR(dateProp)", "Integer Prop Originated From Date", "desc", CalculatedPropertyAttribute.NO_ATTR, "dateProp");
+                dtm().getEnhancer().addCalculatedProperty(MasterEntity.class, name, "YEAR(dateProp)", "Integer Prop Originated From Date", "desc", CalculatedPropertyAttribute.NO_ATTR, "dateProp", IsProperty.DEFAULT_PRECISION, IsProperty.DEFAULT_SCALE);
                 dtm().getEnhancer().apply();
                 assertEquals(m, enhanceFunctionsWithCollectionalAttributes(Arrays.asList(Function.SELF, Function.COUNT_DISTINCT, Function.SUM, Function.AVG, Function.MIN, Function.MAX)), new ArrayList<Function>(dtm().getRepresentation().availableFunctions(MasterEntity.class, AbstractDomainTreeTest.name(name, "integerPropOriginatedFromDate"))));
             }
@@ -276,7 +277,7 @@ public class AbstractDomainTreeRepresentationAndEnhancerTest extends AbstractDom
         allLevelsWithoutCollections(new IAction() {
             @Override
             public void action(final String name) {
-                dtm().getEnhancer().addCalculatedProperty(MasterEntity.class, name, "2 * integerProp", "Calculated Integer Prop", "desc", CalculatedPropertyAttribute.NO_ATTR, "integerProp");
+                dtm().getEnhancer().addCalculatedProperty(MasterEntity.class, name, "2 * integerProp", "Calculated Integer Prop", "desc", CalculatedPropertyAttribute.NO_ATTR, "integerProp", IsProperty.DEFAULT_PRECISION, IsProperty.DEFAULT_SCALE);
                 dtm().getEnhancer().apply();
                 assertEquals(m, Arrays.asList(Function.SELF, Function.SUM, Function.AVG, Function.MIN, Function.MAX), new ArrayList<Function>(dtm().getRepresentation().availableFunctions(MasterEntity.class, AbstractDomainTreeTest.name(name, "calculatedIntegerProp"))));
             }
@@ -285,15 +286,15 @@ public class AbstractDomainTreeRepresentationAndEnhancerTest extends AbstractDom
         allLevelsWithCollections(new IAction() {
             @Override
             public void action(final String name) {
-                dtm().getEnhancer().addCalculatedProperty(MasterEntity.class, name, "2 * integerProp", "Calculated Integer Prop", "desc", CalculatedPropertyAttribute.NO_ATTR, "integerProp");
+                dtm().getEnhancer().addCalculatedProperty(MasterEntity.class, name, "2 * integerProp", "Calculated Integer Prop", "desc", CalculatedPropertyAttribute.NO_ATTR, "integerProp", IsProperty.DEFAULT_PRECISION, IsProperty.DEFAULT_SCALE);
                 dtm().getEnhancer().apply();
                 assertEquals(m, enhanceFunctionsWithCollectionalAttributes(Arrays.asList(Function.SELF, Function.SUM, Function.AVG, Function.MIN, Function.MAX)), new ArrayList<Function>(dtm().getRepresentation().availableFunctions(MasterEntity.class, AbstractDomainTreeTest.name(name, "calculatedIntegerProp"))));
             }
         }, ""); // calculatedIntegerProp
 
-        dtm().getEnhancer().addCalculatedProperty(MasterEntity.class, "", "COUNT(integerProp)", "Calc From Integer Prop 1", "desc", CalculatedPropertyAttribute.NO_ATTR, "integerProp");
-        dtm().getEnhancer().addCalculatedProperty(MasterEntity.class, "entityProp", "COUNT(integerProp)", "Calc From Integer Prop 2", "desc", CalculatedPropertyAttribute.NO_ATTR, "integerProp");
-        dtm().getEnhancer().addCalculatedProperty(MasterEntity.class, "entityProp.entityProp", "COUNT(integerProp)", "Calc From Integer Prop 3", "desc", CalculatedPropertyAttribute.NO_ATTR, "integerProp");
+        dtm().getEnhancer().addCalculatedProperty(MasterEntity.class, "", "COUNT(integerProp)", "Calc From Integer Prop 1", "desc", CalculatedPropertyAttribute.NO_ATTR, "integerProp", IsProperty.DEFAULT_PRECISION, IsProperty.DEFAULT_SCALE);
+        dtm().getEnhancer().addCalculatedProperty(MasterEntity.class, "entityProp", "COUNT(integerProp)", "Calc From Integer Prop 2", "desc", CalculatedPropertyAttribute.NO_ATTR, "integerProp", IsProperty.DEFAULT_PRECISION, IsProperty.DEFAULT_SCALE);
+        dtm().getEnhancer().addCalculatedProperty(MasterEntity.class, "entityProp.entityProp", "COUNT(integerProp)", "Calc From Integer Prop 3", "desc", CalculatedPropertyAttribute.NO_ATTR, "integerProp", IsProperty.DEFAULT_PRECISION, IsProperty.DEFAULT_SCALE);
         dtm().getEnhancer().apply();
         assertEquals(m, Arrays.asList(Function.SELF), new ArrayList<Function>(dtm().getRepresentation().availableFunctions(MasterEntity.class, "calcFromIntegerProp1")));
         assertEquals(m, Arrays.asList(Function.SELF), new ArrayList<Function>(dtm().getRepresentation().availableFunctions(MasterEntity.class, "calcFromIntegerProp2")));
@@ -307,18 +308,18 @@ public class AbstractDomainTreeRepresentationAndEnhancerTest extends AbstractDom
         final String m = "Available functions are incorrect.";
 
         // Check whether count distinct function can be applied to calculated property of CalculatedPropertyCategory.AGGREGATED_COLLECTIONAL_EXPRESSION type based on entity property.
-        dtm().getEnhancer().addCalculatedProperty(MasterEntity.class, "collection", "COUNT(entityProp)", "Calc From Entity Prop 1", "desc", CalculatedPropertyAttribute.NO_ATTR, "entityProp");
-        dtm().getEnhancer().addCalculatedProperty(MasterEntity.class, "entityProp.collection", "COUNT(entityProp)", "Calc From Entity Prop 2", "desc", CalculatedPropertyAttribute.NO_ATTR, "entityProp");
-        dtm().getEnhancer().addCalculatedProperty(MasterEntity.class, "entityProp.collection.slaveEntityProp", "COUNT(entityProp)", "Calc From Entity Prop 3", "desc", CalculatedPropertyAttribute.NO_ATTR, "entityProp");
+        dtm().getEnhancer().addCalculatedProperty(MasterEntity.class, "collection", "COUNT(entityProp)", "Calc From Entity Prop 1", "desc", CalculatedPropertyAttribute.NO_ATTR, "entityProp", IsProperty.DEFAULT_PRECISION, IsProperty.DEFAULT_SCALE);
+        dtm().getEnhancer().addCalculatedProperty(MasterEntity.class, "entityProp.collection", "COUNT(entityProp)", "Calc From Entity Prop 2", "desc", CalculatedPropertyAttribute.NO_ATTR, "entityProp", IsProperty.DEFAULT_PRECISION, IsProperty.DEFAULT_SCALE);
+        dtm().getEnhancer().addCalculatedProperty(MasterEntity.class, "entityProp.collection.slaveEntityProp", "COUNT(entityProp)", "Calc From Entity Prop 3", "desc", CalculatedPropertyAttribute.NO_ATTR, "entityProp", IsProperty.DEFAULT_PRECISION, IsProperty.DEFAULT_SCALE);
         dtm().getEnhancer().apply();
         assertEquals(m, Arrays.asList(Function.SELF, Function.COUNT_DISTINCT, Function.SUM, Function.AVG, Function.MIN, Function.MAX), new ArrayList<Function>(dtm().getRepresentation().availableFunctions(MasterEntity.class, "calcFromEntityProp1")));
         assertEquals(m, Arrays.asList(Function.SELF, Function.COUNT_DISTINCT, Function.SUM, Function.AVG, Function.MIN, Function.MAX), new ArrayList<Function>(dtm().getRepresentation().availableFunctions(MasterEntity.class, "entityProp.calcFromEntityProp2")));
         assertEquals(m, Arrays.asList(Function.SELF, Function.COUNT_DISTINCT, Function.SUM, Function.AVG, Function.MIN, Function.MAX), new ArrayList<Function>(dtm().getRepresentation().availableFunctions(MasterEntity.class, "entityProp.calcFromEntityProp3")));
 
         // Check whether count distinct function can be applied to calculated property of CalculatedPropertyCategory.AGGREGATED_COLLECTIONAL_EXPRESSION type based on boolean property.
-        dtm().getEnhancer().addCalculatedProperty(MasterEntity.class, "collection", "COUNT(booleanProp)", "Calc From Boolean Prop 1", "desc", CalculatedPropertyAttribute.NO_ATTR, "booleanProp");
-        dtm().getEnhancer().addCalculatedProperty(MasterEntity.class, "entityProp.collection", "COUNT(booleanProp)", "Calc From Boolean Prop 2", "desc", CalculatedPropertyAttribute.NO_ATTR, "booleanProp");
-        dtm().getEnhancer().addCalculatedProperty(MasterEntity.class, "entityProp.collection.slaveEntityProp", "COUNT(booleanProp)", "Calc From Boolean Prop 3", "desc", CalculatedPropertyAttribute.NO_ATTR, "booleanProp");
+        dtm().getEnhancer().addCalculatedProperty(MasterEntity.class, "collection", "COUNT(booleanProp)", "Calc From Boolean Prop 1", "desc", CalculatedPropertyAttribute.NO_ATTR, "booleanProp", IsProperty.DEFAULT_PRECISION, IsProperty.DEFAULT_SCALE);
+        dtm().getEnhancer().addCalculatedProperty(MasterEntity.class, "entityProp.collection", "COUNT(booleanProp)", "Calc From Boolean Prop 2", "desc", CalculatedPropertyAttribute.NO_ATTR, "booleanProp", IsProperty.DEFAULT_PRECISION, IsProperty.DEFAULT_SCALE);
+        dtm().getEnhancer().addCalculatedProperty(MasterEntity.class, "entityProp.collection.slaveEntityProp", "COUNT(booleanProp)", "Calc From Boolean Prop 3", "desc", CalculatedPropertyAttribute.NO_ATTR, "booleanProp", IsProperty.DEFAULT_PRECISION, IsProperty.DEFAULT_SCALE);
         dtm().getEnhancer().apply();
         assertEquals(m, Arrays.asList(Function.SELF, Function.COUNT_DISTINCT, Function.SUM, Function.AVG, Function.MIN, Function.MAX), new ArrayList<Function>(dtm().getRepresentation().availableFunctions(MasterEntity.class, "calcFromBooleanProp1")));
         assertEquals(m, Arrays.asList(Function.SELF, Function.COUNT_DISTINCT, Function.SUM, Function.AVG, Function.MIN, Function.MAX), new ArrayList<Function>(dtm().getRepresentation().availableFunctions(MasterEntity.class, "entityProp.calcFromBooleanProp2")));
@@ -370,7 +371,7 @@ public class AbstractDomainTreeRepresentationAndEnhancerTest extends AbstractDom
         assertEquals("Incorrect value 'i'.", 0, i);
         assertEquals("Incorrect value 'j'.", 1, j);
 
-        dtm().getEnhancer().addCalculatedProperty(MasterEntity.class, "", "1 * 2 * integerProp", "Calc prop1", "Desc", CalculatedPropertyAttribute.NO_ATTR, "bigDecimalProp");
+        dtm().getEnhancer().addCalculatedProperty(MasterEntity.class, "", "1 * 2 * integerProp", "Calc prop1", "Desc", CalculatedPropertyAttribute.NO_ATTR, "bigDecimalProp", IsProperty.DEFAULT_PRECISION, IsProperty.DEFAULT_SCALE);
         dtm().getEnhancer().apply();
         assertEquals("Incorrect value 'i'.", 1, i);
         assertEquals("Incorrect value 'j'.", 1, j);
@@ -398,7 +399,7 @@ public class AbstractDomainTreeRepresentationAndEnhancerTest extends AbstractDom
         assertEquals("Incorrect value 'i'.", 0, i);
         assertEquals("Incorrect value 'j'.", 1, j);
 
-        dtm().getEnhancer().addCalculatedProperty(MasterEntity.class, "", "1 * 2 * integerProp", "Calc prop1", "Desc", CalculatedPropertyAttribute.NO_ATTR, "bigDecimalProp");
+        dtm().getEnhancer().addCalculatedProperty(MasterEntity.class, "", "1 * 2 * integerProp", "Calc prop1", "Desc", CalculatedPropertyAttribute.NO_ATTR, "bigDecimalProp", IsProperty.DEFAULT_PRECISION, IsProperty.DEFAULT_SCALE);
         dtm().getEnhancer().apply();
         assertEquals("Incorrect value 'i'.", 0, i);
         assertEquals("Incorrect value 'j'.", 1, j);

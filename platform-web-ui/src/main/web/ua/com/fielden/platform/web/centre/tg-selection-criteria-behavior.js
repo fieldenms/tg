@@ -302,7 +302,7 @@ const TgSelectionCriteriaBehaviorImpl = {
                 this._openToast(potentiallySavedEntity, msg, !potentiallySavedEntity.isValid() || potentiallySavedEntity.isValidWithWarning(), msg, false);
             }
 
-            const newBindingEntity = this._postEntityReceived(potentiallySavedEntity, false);
+            const newBindingEntity = this._postEntityReceived(potentiallySavedEntity, true);
 
             if (potentiallySavedEntity.isValidWithoutException()) {
                 // in case where successful save occured we need to reset @@touchedProps that are transported with bindingEntity
@@ -504,12 +504,8 @@ const TgSelectionCriteriaBehaviorImpl = {
         return !(pageCount <= 0);
     },
 
-    canManageCentreConfig: function (centreChanged, _bindingEntityNotPersistentOrNotPersistedOrModified, _editedPropsExist, _currEntity) {
-        return _editedPropsExist ? true
-            : (((this._reflector().isEntity(_currEntity) && _currEntity.isValid()) || (!this._reflector().isEntity(_currEntity)))
-                ? (centreChanged === true)
-                : _bindingEntityNotPersistentOrNotPersistedOrModified
-            );
+    canManageCentreConfig: function (centreChanged, _editedPropsExist) {
+        return _editedPropsExist || (centreChanged === true);
     },
 
     /**
