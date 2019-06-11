@@ -12,6 +12,7 @@ import '/resources/serialisation/tg-serialiser.js';
 
 
 import { matchedParts } from '/resources/editors/tg-highlighter.js';
+import {TgTooltipBehavior} from '/resources/components/tg-tooltip-behavior.js';
 
 import { IronOverlayBehavior } from '/resources/polymer/@polymer/iron-overlay-behavior/iron-overlay-behavior.js';
 import {mixinBehaviors} from '/resources/polymer/@polymer/polymer/lib/legacy/class.js';
@@ -141,7 +142,7 @@ const template = html`
     </div>
     </tg-editor>`;
 
-export class TgEntityEditorResult extends mixinBehaviors([IronOverlayBehavior], PolymerElement) {
+export class TgEntityEditorResult extends mixinBehaviors([IronOverlayBehavior, TgTooltipBehavior], PolymerElement) {
 
     static get template() { 
         return template;
