@@ -27,8 +27,8 @@ import ua.com.fielden.platform.eql.stage1.elements.operands.ISetOperand1;
 import ua.com.fielden.platform.eql.stage1.elements.operands.ISingleOperand1;
 import ua.com.fielden.platform.eql.stage1.elements.operands.OperandsBasedSet1;
 import ua.com.fielden.platform.eql.stage1.elements.operands.QueryBasedSet1;
-import ua.com.fielden.platform.eql.stage2.elements.ISetOperand2;
-import ua.com.fielden.platform.eql.stage2.elements.ISingleOperand2;
+import ua.com.fielden.platform.eql.stage2.elements.operands.ISetOperand2;
+import ua.com.fielden.platform.eql.stage2.elements.operands.ISingleOperand2;
 import ua.com.fielden.platform.utils.Pair;
 
 /**

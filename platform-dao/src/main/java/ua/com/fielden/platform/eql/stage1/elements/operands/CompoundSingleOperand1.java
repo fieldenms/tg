@@ -3,7 +3,7 @@ package ua.com.fielden.platform.eql.stage1.elements.operands;
 import java.util.Objects;
 
 import ua.com.fielden.platform.entity.query.fluent.enums.ArithmeticalOperator;
-import ua.com.fielden.platform.eql.stage2.elements.ISingleOperand2;
+import ua.com.fielden.platform.eql.stage2.elements.operands.ISingleOperand2;
 
 public class CompoundSingleOperand1 {
     public final ISingleOperand1<? extends ISingleOperand2> operand;

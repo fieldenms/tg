@@ -11,12 +11,12 @@ import java.util.Optional;
 
 import ua.com.fielden.platform.dao.QueryExecutionModel;
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.query.IRetrievalModel;
 import ua.com.fielden.platform.entity.query.fluent.enums.QueryTokens;
 import ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory;
 import ua.com.fielden.platform.entity.query.model.OrderingModel;
 import ua.com.fielden.platform.entity.query.model.QueryModel;
 import ua.com.fielden.platform.eql.meta.QueryCategory;
+import ua.com.fielden.platform.eql.stage1.elements.EntQueryBlocks1;
 import ua.com.fielden.platform.eql.stage1.elements.OrderBys1;
 import ua.com.fielden.platform.eql.stage1.elements.operands.EntQuery1;
 import ua.com.fielden.platform.utils.Pair;
@@ -30,19 +30,19 @@ public class EntQueryGenerator {
         return contextId;
     }
 
-    public <T extends AbstractEntity<?>, Q extends QueryModel<T>> EntQuery1 generateEntQueryAsResultQuery(final QueryExecutionModel<T, Q> qem, final IRetrievalModel<T> fetchModel) {
-        return generateEntQuery(qem.getQueryModel(), qem.getOrderModel(), Optional.empty(), fetchModel, RESULT_QUERY);
+    public <T extends AbstractEntity<?>, Q extends QueryModel<T>> EntQuery1 generateEntQueryAsResultQuery(final QueryExecutionModel<T, Q> qem) {
+        return generateEntQuery(qem.getQueryModel(), qem.getOrderModel(), Optional.empty(), RESULT_QUERY);
     }
 
-    public EntQuery1 generateEntQueryAsSourceQuery(final QueryModel<?> qryModel, final Optional<Class<?>> resultType) {
-        return generateEntQuery(qryModel, null, resultType, null, SOURCE_QUERY);
+    public <T extends AbstractEntity<?>> EntQuery1 generateEntQueryAsSourceQuery(final QueryModel<T> qryModel, final Optional<Class<T>> resultType) {
+        return generateEntQuery(qryModel, null, resultType, SOURCE_QUERY);
     }
 
     public EntQuery1 generateEntQueryAsSubquery(final QueryModel<?> qryModel) {
-        return generateEntQuery(qryModel, null, Optional.empty(), null, SUB_QUERY);
+        return generateEntQuery(qryModel, null, Optional.empty(), SUB_QUERY);
     }
 
-    public EntQueryBlocks parseTokensIntoComponents(final QueryModel<?> qryModel, final OrderingModel orderModel) {
+    public EntQueryBlocks1 parseTokensIntoComponents(final QueryModel<?> qryModel, final OrderingModel orderModel) {
         final QrySourcesBuilder from = new QrySourcesBuilder(this);
         final ConditionsBuilder where = new ConditionsBuilder(null, this);
         final QryYieldsBuilder select = new QryYieldsBuilder(this);
@@ -78,21 +78,18 @@ public class EntQueryGenerator {
             }
         }
 
-        return new EntQueryBlocks(from.getModel(), where.getModel(), select.getModel(), groupBy.getModel(), produceOrderBys(orderModel));
+        return new EntQueryBlocks1(from.getModel(), where.getModel(), select.getModel(), groupBy.getModel(), produceOrderBys(orderModel));
     }
 
-    private EntQuery1 generateEntQuery(final QueryModel<?> qryModel, 
+    private <T extends AbstractEntity<?>> EntQuery1 generateEntQuery(final QueryModel<T> qryModel, 
             final OrderingModel orderModel, 
-            final Optional<Class<?>> resultType, 
-            final IRetrievalModel fetchModel,  
+            final Optional<Class<T>> resultType, 
             final QueryCategory category) {
 
         return new EntQuery1( 
         parseTokensIntoComponents(qryModel, orderModel), 
         resultType.orElse(qryModel.getResultType()), 
         category, 
-        qryModel.isFilterable(),
-        fetchModel,
         nextCondtextId());
     }
 

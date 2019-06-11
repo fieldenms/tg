@@ -7,7 +7,7 @@ import java.util.List;
 import ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory;
 import ua.com.fielden.platform.eql.stage1.elements.functions.Concat1;
 import ua.com.fielden.platform.eql.stage1.elements.operands.ISingleOperand1;
-import ua.com.fielden.platform.eql.stage2.elements.ISingleOperand2;
+import ua.com.fielden.platform.eql.stage2.elements.operands.ISingleOperand2;
 import ua.com.fielden.platform.utils.Pair;
 
 public class ConcatFunctionBuilder extends AbstractTokensBuilder {

@@ -3,8 +3,8 @@ package ua.com.fielden.platform.eql.stage1.elements;
 import ua.com.fielden.platform.eql.meta.PropsResolutionContext;
 import ua.com.fielden.platform.eql.meta.TransformationResult;
 import ua.com.fielden.platform.eql.stage1.elements.operands.ISingleOperand1;
-import ua.com.fielden.platform.eql.stage2.elements.ISingleOperand2;
 import ua.com.fielden.platform.eql.stage2.elements.Yield2;
+import ua.com.fielden.platform.eql.stage2.elements.operands.ISingleOperand2;
 
 public class Yield1 {
     private final ISingleOperand1<? extends ISingleOperand2> operand;

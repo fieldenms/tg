@@ -41,8 +41,8 @@ import ua.com.fielden.platform.eql.stage1.elements.operands.EntValue1;
 import ua.com.fielden.platform.eql.stage1.elements.operands.Expression1;
 import ua.com.fielden.platform.eql.stage1.elements.operands.ISingleOperand1;
 import ua.com.fielden.platform.eql.stage1.elements.operands.OperandsBasedSet1;
-import ua.com.fielden.platform.eql.stage2.elements.EntQuery2;
-import ua.com.fielden.platform.eql.stage2.elements.ISingleOperand2;
+import ua.com.fielden.platform.eql.stage2.elements.operands.EntQuery2;
+import ua.com.fielden.platform.eql.stage2.elements.operands.ISingleOperand2;
 import ua.com.fielden.platform.ioc.HibernateUserTypesModule;
 import ua.com.fielden.platform.persistence.types.DateTimeType;
 import ua.com.fielden.platform.persistence.types.SimpleMoneyType;
@@ -142,9 +142,9 @@ public class BaseEntQueryTCase1 {
 
     protected static EntQuery1 entResultQry(final QueryModel qryModel) {
         if (qryModel instanceof EntityResultQueryModel) {
-            return qb.generateEntQueryAsResultQuery(from((EntityResultQueryModel) qryModel).model(), null);
+            return qb.generateEntQueryAsResultQuery(from((EntityResultQueryModel) qryModel).model());
         } else if (qryModel instanceof AggregatedResultQueryModel) {
-            return qb.generateEntQueryAsResultQuery(from((AggregatedResultQueryModel) qryModel).model(), null);
+            return qb.generateEntQueryAsResultQuery(from((AggregatedResultQueryModel) qryModel).model());
         } else {
             throw new IllegalArgumentException("Instance of incorrect QueryModel descendant");
         }
@@ -152,22 +152,22 @@ public class BaseEntQueryTCase1 {
 
     protected static TransformationResult<EntQuery2> entResultQry2(final QueryModel qryModel, final PropsResolutionContext transformator) {
         if (qryModel instanceof EntityResultQueryModel) {
-            return qb.generateEntQueryAsResultQuery(from((EntityResultQueryModel) qryModel).model(), null).transform(transformator);
+            return qb.generateEntQueryAsResultQuery(from((EntityResultQueryModel) qryModel).model()).transform(transformator);
         } else if (qryModel instanceof AggregatedResultQueryModel) {
-            return qb.generateEntQueryAsResultQuery(from((AggregatedResultQueryModel) qryModel).model(), null).transform(transformator);
+            return qb.generateEntQueryAsResultQuery(from((AggregatedResultQueryModel) qryModel).model()).transform(transformator);
         }
         throw new IllegalStateException("Not implemented yet");
     }
 
     protected static EntQuery1 entResultQry(final EntityResultQueryModel qryModel, final OrderingModel orderModel) {
-        return qb.generateEntQueryAsResultQuery(from(qryModel).with(orderModel).model(), null);
+        return qb.generateEntQueryAsResultQuery(from(qryModel).with(orderModel).model());
     }
 
     protected static EntQuery1 entResultQry(final QueryModel qryModel, final Map<String, Object> paramValues) {
         if (qryModel instanceof EntityResultQueryModel) {
-            return qb.generateEntQueryAsResultQuery(from((EntityResultQueryModel) qryModel).with(paramValues).model(), null);
+            return qb.generateEntQueryAsResultQuery(from((EntityResultQueryModel) qryModel).with(paramValues).model());
         } else if (qryModel instanceof AggregatedResultQueryModel) {
-            return qb.generateEntQueryAsResultQuery(from((AggregatedResultQueryModel) qryModel).with(paramValues).model(), null);
+            return qb.generateEntQueryAsResultQuery(from((AggregatedResultQueryModel) qryModel).with(paramValues).model());
         } else {
             throw new IllegalArgumentException("Instance of incorrect QueryModel descendant");
         }
@@ -289,11 +289,11 @@ public class BaseEntQueryTCase1 {
         return typeResolver.basic(name);
     }
 
-    public static PropertyMetadata ppi(final String name, final Class javaType, final boolean nullable, final Object hibType, final String column, final PropertyCategory type, final EntityTypeInfo <? extends AbstractEntity<?>> entityCategory) {
-        return new PropertyMetadata.Builder(name, javaType, nullable, entityCategory).column(new PropertyColumn(column)).hibType(hibType).category(type).build();
+    public static PropertyMetadata ppi(final String name, final Class javaType, final boolean nullable, final Object hibType, final String column, final PropertyCategory type/*, final EntityTypeInfo <? extends AbstractEntity<?>> entityCategory*/) {
+        return new PropertyMetadata.Builder(name, javaType, nullable, null /*entityCategory*/).column(new PropertyColumn(column)).hibType(hibType).category(type).build();
     }
 
-    public static PropertyMetadata ppi(final String name, final Class javaType, final boolean nullable, final Object hibType, final List<PropertyColumn> columns, final PropertyCategory type, final EntityTypeInfo <? extends AbstractEntity<?>> entityCategory) {
-        return new PropertyMetadata.Builder(name, javaType, nullable, entityCategory).columns(columns).hibType(hibType).category(type).build();
+    public static PropertyMetadata ppi(final String name, final Class javaType, final boolean nullable, final Object hibType, final List<PropertyColumn> columns, final PropertyCategory type/*, final EntityTypeInfo <? extends AbstractEntity<?>> entityCategory*/) {
+        return new PropertyMetadata.Builder(name, javaType, nullable, null /*entityCategory*/).columns(columns).hibType(hibType).category(type).build();
     }
 }

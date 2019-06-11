@@ -3,8 +3,8 @@ package ua.com.fielden.platform.eql.stage1.elements.functions;
 import ua.com.fielden.platform.eql.meta.PropsResolutionContext;
 import ua.com.fielden.platform.eql.meta.TransformationResult;
 import ua.com.fielden.platform.eql.stage1.elements.operands.ISingleOperand1;
-import ua.com.fielden.platform.eql.stage2.elements.ISingleOperand2;
-import ua.com.fielden.platform.eql.stage2.elements.MaxOf2;
+import ua.com.fielden.platform.eql.stage2.elements.functions.MaxOf2;
+import ua.com.fielden.platform.eql.stage2.elements.operands.ISingleOperand2;
 
 public class MaxOf1 extends SingleOperandFunction1<MaxOf2> {
 

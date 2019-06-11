@@ -4,7 +4,7 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.exceptions.EqlStage1ProcessingException;
 import ua.com.fielden.platform.eql.meta.PropsResolutionContext;
 import ua.com.fielden.platform.eql.meta.TransformationResult;
-import ua.com.fielden.platform.eql.stage2.elements.QrySource2BasedOnPersistentType;
+import ua.com.fielden.platform.eql.stage2.elements.sources.QrySource2BasedOnPersistentType;
 
 public class QrySource1BasedOnPersistentType extends AbstractQrySource1<QrySource2BasedOnPersistentType> {
     private final Class<? extends AbstractEntity<?>> sourceType;

@@ -3,8 +3,8 @@ package ua.com.fielden.platform.eql.stage1.elements.conditions;
 import ua.com.fielden.platform.eql.meta.PropsResolutionContext;
 import ua.com.fielden.platform.eql.meta.TransformationResult;
 import ua.com.fielden.platform.eql.stage1.elements.operands.EntQuery1;
-import ua.com.fielden.platform.eql.stage2.elements.EntQuery2;
-import ua.com.fielden.platform.eql.stage2.elements.ExistenceTest2;
+import ua.com.fielden.platform.eql.stage2.elements.conditions.ExistenceTest2;
+import ua.com.fielden.platform.eql.stage2.elements.operands.EntQuery2;
 
 public class ExistenceTest1 implements ICondition1<ExistenceTest2> {
     private final boolean negated;

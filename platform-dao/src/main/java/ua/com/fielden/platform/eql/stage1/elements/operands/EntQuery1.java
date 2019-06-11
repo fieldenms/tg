@@ -6,24 +6,23 @@ import static ua.com.fielden.platform.eql.meta.QueryCategory.SUB_QUERY;
 import com.google.common.base.Objects;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.query.IRetrievalModel;
 import ua.com.fielden.platform.eql.meta.PropsResolutionContext;
 import ua.com.fielden.platform.eql.meta.QueryCategory;
 import ua.com.fielden.platform.eql.meta.TransformationResult;
-import ua.com.fielden.platform.eql.stage1.builders.EntQueryBlocks;
 import ua.com.fielden.platform.eql.stage1.elements.AbstractElement1;
+import ua.com.fielden.platform.eql.stage1.elements.EntQueryBlocks1;
 import ua.com.fielden.platform.eql.stage1.elements.GroupBys1;
 import ua.com.fielden.platform.eql.stage1.elements.OrderBys1;
 import ua.com.fielden.platform.eql.stage1.elements.Yields1;
 import ua.com.fielden.platform.eql.stage1.elements.conditions.Conditions1;
 import ua.com.fielden.platform.eql.stage1.elements.sources.Sources1;
-import ua.com.fielden.platform.eql.stage2.elements.Conditions2;
-import ua.com.fielden.platform.eql.stage2.elements.EntQuery2;
 import ua.com.fielden.platform.eql.stage2.elements.EntQueryBlocks2;
 import ua.com.fielden.platform.eql.stage2.elements.GroupBys2;
 import ua.com.fielden.platform.eql.stage2.elements.OrderBys2;
-import ua.com.fielden.platform.eql.stage2.elements.Sources2;
 import ua.com.fielden.platform.eql.stage2.elements.Yields2;
+import ua.com.fielden.platform.eql.stage2.elements.conditions.Conditions2;
+import ua.com.fielden.platform.eql.stage2.elements.operands.EntQuery2;
+import ua.com.fielden.platform.eql.stage2.elements.sources.Sources2;
 
 public class EntQuery1 extends AbstractElement1 implements ISingleOperand1<EntQuery2> {
 
@@ -36,20 +35,14 @@ public class EntQuery1 extends AbstractElement1 implements ISingleOperand1<EntQu
     public final Class<? extends AbstractEntity<?>> resultType;
     public final QueryCategory category;
 
-    public final boolean filterable;
-    public final IRetrievalModel fetchModel;
-
-    public EntQuery1(final EntQueryBlocks queryBlocks, final Class resultType, final QueryCategory category, //
-            final boolean filterable, final IRetrievalModel fetchModel, final int contextId) {
+    public EntQuery1(final EntQueryBlocks1 queryBlocks, final Class<? extends AbstractEntity<?>> resultType, final QueryCategory category, final int contextId) {
        super(contextId);
-       this.filterable = filterable;
        this.category = category;
        this.sources = queryBlocks.getSources();
        this.conditions = queryBlocks.getConditions();
        this.yields = queryBlocks.getYields();
        this.groups = queryBlocks.getGroups();
        this.orderings = queryBlocks.getOrderings();
-       this.fetchModel = fetchModel;
        this.resultType = resultType;
        
        if (this.resultType == null && category != SUB_QUERY) { // only primitive result queries have result type not assigned
@@ -90,7 +83,7 @@ public class EntQuery1 extends AbstractElement1 implements ISingleOperand1<EntQu
                 new PropsResolutionContext(resolutionContext.getDomainInfo(), resolutionContext.getSources(), orderingsTransformationResult.getUpdatedContext().getResolvedProps()) :
                     orderingsTransformationResult.getUpdatedContext();
                
-        return new TransformationResult<EntQuery2>(new EntQuery2(entQueryBlocks, type(), category, fetchModel), resultResolutionContext);
+        return new TransformationResult<EntQuery2>(new EntQuery2(entQueryBlocks, type(), category), resultResolutionContext);
     }
 
     @Override
@@ -104,7 +97,6 @@ public class EntQuery1 extends AbstractElement1 implements ISingleOperand1<EntQu
         result = prime * result + ((resultType == null) ? 0 : resultType.hashCode());
         result = prime * result + ((sources == null) ? 0 : sources.hashCode());
         result = prime * result + ((yields == null) ? 0 : yields.hashCode());
-        result = prime * result + ((fetchModel == null) ? 0 : fetchModel.hashCode());
         return result;
     }
 
@@ -126,7 +118,6 @@ public class EntQuery1 extends AbstractElement1 implements ISingleOperand1<EntQu
                 Objects.equal(yields, other.yields) &&
                 Objects.equal(conditions, other.conditions) &&
                 Objects.equal(groups, other.groups) &&
-                Objects.equal(orderings, other.orderings) &&
-                Objects.equal(fetchModel, other.fetchModel);
+                Objects.equal(orderings, other.orderings);
    }
 }

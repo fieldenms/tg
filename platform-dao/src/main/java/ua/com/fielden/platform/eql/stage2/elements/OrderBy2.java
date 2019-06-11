@@ -1,5 +1,7 @@
 package ua.com.fielden.platform.eql.stage2.elements;
 
+import ua.com.fielden.platform.eql.stage2.elements.operands.ISingleOperand2;
+
 public class OrderBy2 {
     private final ISingleOperand2 operand;
     private final String yieldName;

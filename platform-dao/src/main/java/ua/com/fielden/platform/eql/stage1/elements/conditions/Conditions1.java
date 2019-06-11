@@ -8,8 +8,8 @@ import java.util.List;
 
 import ua.com.fielden.platform.eql.meta.PropsResolutionContext;
 import ua.com.fielden.platform.eql.meta.TransformationResult;
-import ua.com.fielden.platform.eql.stage2.elements.Conditions2;
-import ua.com.fielden.platform.eql.stage2.elements.ICondition2;
+import ua.com.fielden.platform.eql.stage2.elements.conditions.Conditions2;
+import ua.com.fielden.platform.eql.stage2.elements.conditions.ICondition2;
 
 public class Conditions1 implements ICondition1<Conditions2> {
     private final boolean negated;

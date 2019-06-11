@@ -7,9 +7,9 @@ import ua.com.fielden.platform.eql.meta.PropsResolutionContext;
 import ua.com.fielden.platform.eql.meta.TransformationResult;
 import ua.com.fielden.platform.eql.stage1.elements.conditions.ICondition1;
 import ua.com.fielden.platform.eql.stage1.elements.operands.ISingleOperand1;
-import ua.com.fielden.platform.eql.stage2.elements.CaseWhen2;
-import ua.com.fielden.platform.eql.stage2.elements.ICondition2;
-import ua.com.fielden.platform.eql.stage2.elements.ISingleOperand2;
+import ua.com.fielden.platform.eql.stage2.elements.conditions.ICondition2;
+import ua.com.fielden.platform.eql.stage2.elements.functions.CaseWhen2;
+import ua.com.fielden.platform.eql.stage2.elements.operands.ISingleOperand2;
 import ua.com.fielden.platform.utils.Pair;
 
 public class CaseWhen1 extends AbstractFunction1<CaseWhen2> {

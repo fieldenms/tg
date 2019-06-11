@@ -6,9 +6,9 @@ import ua.com.fielden.platform.eql.meta.Quantifier;
 import ua.com.fielden.platform.eql.meta.TransformationResult;
 import ua.com.fielden.platform.eql.stage1.elements.operands.EntQuery1;
 import ua.com.fielden.platform.eql.stage1.elements.operands.ISingleOperand1;
-import ua.com.fielden.platform.eql.stage2.elements.EntQuery2;
-import ua.com.fielden.platform.eql.stage2.elements.ISingleOperand2;
-import ua.com.fielden.platform.eql.stage2.elements.QuantifiedTest2;
+import ua.com.fielden.platform.eql.stage2.elements.conditions.QuantifiedTest2;
+import ua.com.fielden.platform.eql.stage2.elements.operands.EntQuery2;
+import ua.com.fielden.platform.eql.stage2.elements.operands.ISingleOperand2;
 
 public class QuantifiedTest1 implements ICondition1<QuantifiedTest2> {
     private final ISingleOperand1<? extends ISingleOperand2> leftOperand;

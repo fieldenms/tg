@@ -4,7 +4,7 @@ import java.util.Objects;
 
 import ua.com.fielden.platform.eql.meta.PropsResolutionContext;
 import ua.com.fielden.platform.eql.meta.TransformationResult;
-import ua.com.fielden.platform.eql.stage2.elements.EntValue2;
+import ua.com.fielden.platform.eql.stage2.elements.operands.EntValue2;
 
 public class EntValue1 implements ISingleOperand1<EntValue2> {
     public final Object value;

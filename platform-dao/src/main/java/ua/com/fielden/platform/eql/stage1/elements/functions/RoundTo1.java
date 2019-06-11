@@ -3,8 +3,8 @@ package ua.com.fielden.platform.eql.stage1.elements.functions;
 import ua.com.fielden.platform.eql.meta.PropsResolutionContext;
 import ua.com.fielden.platform.eql.meta.TransformationResult;
 import ua.com.fielden.platform.eql.stage1.elements.operands.ISingleOperand1;
-import ua.com.fielden.platform.eql.stage2.elements.ISingleOperand2;
-import ua.com.fielden.platform.eql.stage2.elements.RoundTo2;
+import ua.com.fielden.platform.eql.stage2.elements.functions.RoundTo2;
+import ua.com.fielden.platform.eql.stage2.elements.operands.ISingleOperand2;
 
 public class RoundTo1 extends TwoOperandsFunction1<RoundTo2> {
 

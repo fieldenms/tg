@@ -4,8 +4,8 @@ import ua.com.fielden.platform.entity.query.fluent.LikeOptions;
 import ua.com.fielden.platform.eql.meta.PropsResolutionContext;
 import ua.com.fielden.platform.eql.meta.TransformationResult;
 import ua.com.fielden.platform.eql.stage1.elements.operands.ISingleOperand1;
-import ua.com.fielden.platform.eql.stage2.elements.ISingleOperand2;
-import ua.com.fielden.platform.eql.stage2.elements.LikeTest2;
+import ua.com.fielden.platform.eql.stage2.elements.conditions.LikeTest2;
+import ua.com.fielden.platform.eql.stage2.elements.operands.ISingleOperand2;
 
 public class LikeTest1 implements ICondition1<LikeTest2> {
     private final ISingleOperand1<? extends ISingleOperand2> leftOperand;

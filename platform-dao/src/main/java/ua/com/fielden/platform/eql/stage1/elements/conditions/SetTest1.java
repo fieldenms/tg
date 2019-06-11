@@ -4,9 +4,9 @@ import ua.com.fielden.platform.eql.meta.PropsResolutionContext;
 import ua.com.fielden.platform.eql.meta.TransformationResult;
 import ua.com.fielden.platform.eql.stage1.elements.operands.ISetOperand1;
 import ua.com.fielden.platform.eql.stage1.elements.operands.ISingleOperand1;
-import ua.com.fielden.platform.eql.stage2.elements.ISetOperand2;
-import ua.com.fielden.platform.eql.stage2.elements.ISingleOperand2;
-import ua.com.fielden.platform.eql.stage2.elements.SetTest2;
+import ua.com.fielden.platform.eql.stage2.elements.conditions.SetTest2;
+import ua.com.fielden.platform.eql.stage2.elements.operands.ISetOperand2;
+import ua.com.fielden.platform.eql.stage2.elements.operands.ISingleOperand2;
 
 public class SetTest1 implements ICondition1<SetTest2> {
     private final ISingleOperand1<? extends ISingleOperand2> leftOperand;

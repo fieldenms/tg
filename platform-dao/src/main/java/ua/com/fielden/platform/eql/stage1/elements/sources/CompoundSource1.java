@@ -5,9 +5,9 @@ import ua.com.fielden.platform.eql.meta.PropsResolutionContext;
 import ua.com.fielden.platform.eql.meta.TransformationResult;
 import ua.com.fielden.platform.eql.stage1.elements.ITransformableToS2;
 import ua.com.fielden.platform.eql.stage1.elements.conditions.Conditions1;
-import ua.com.fielden.platform.eql.stage2.elements.CompoundSource2;
-import ua.com.fielden.platform.eql.stage2.elements.Conditions2;
-import ua.com.fielden.platform.eql.stage2.elements.IQrySource2;
+import ua.com.fielden.platform.eql.stage2.elements.conditions.Conditions2;
+import ua.com.fielden.platform.eql.stage2.elements.sources.CompoundSource2;
+import ua.com.fielden.platform.eql.stage2.elements.sources.IQrySource2;
 
 public class CompoundSource1 implements ITransformableToS2<CompoundSource2>{
     private final IQrySource1<? extends IQrySource2> source;

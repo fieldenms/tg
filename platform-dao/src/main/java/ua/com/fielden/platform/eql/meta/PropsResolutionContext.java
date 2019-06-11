@@ -13,9 +13,9 @@ import java.util.Map;
 import java.util.Set;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.eql.stage2.elements.EntProp2;
-import ua.com.fielden.platform.eql.stage2.elements.EntValue2;
-import ua.com.fielden.platform.eql.stage2.elements.IQrySource2;
+import ua.com.fielden.platform.eql.stage2.elements.operands.EntProp2;
+import ua.com.fielden.platform.eql.stage2.elements.operands.EntValue2;
+import ua.com.fielden.platform.eql.stage2.elements.sources.IQrySource2;
 
 public class PropsResolutionContext {
     private final List<List<IQrySource2>> sources;

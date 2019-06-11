@@ -9,7 +9,7 @@ import ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory;
 import ua.com.fielden.platform.eql.stage1.elements.sources.CompoundSource1;
 import ua.com.fielden.platform.eql.stage1.elements.sources.IQrySource1;
 import ua.com.fielden.platform.eql.stage1.elements.sources.Sources1;
-import ua.com.fielden.platform.eql.stage2.elements.IQrySource2;
+import ua.com.fielden.platform.eql.stage2.elements.sources.IQrySource2;
 import ua.com.fielden.platform.utils.Pair;
 
 public class QrySourcesBuilder extends AbstractTokensBuilder {

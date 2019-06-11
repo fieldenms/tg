@@ -23,7 +23,7 @@ import org.junit.Test;
 import ua.com.fielden.platform.entity.query.fluent.enums.JoinType;
 import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
-import ua.com.fielden.platform.eql.stage1.builders.EntQueryBlocks;
+import ua.com.fielden.platform.eql.stage1.elements.EntQueryBlocks1;
 import ua.com.fielden.platform.eql.stage1.elements.conditions.ComparisonTest1;
 import ua.com.fielden.platform.eql.stage1.elements.conditions.Conditions1;
 import ua.com.fielden.platform.eql.stage1.elements.conditions.NullTest1;
@@ -35,26 +35,26 @@ import ua.com.fielden.platform.eql.stage1.elements.operands.OperandsBasedSet1;
 import ua.com.fielden.platform.eql.stage1.elements.sources.QrySource1BasedOnPersistentType;
 import ua.com.fielden.platform.eql.stage1.elements.sources.QrySource1BasedOnSubqueries;
 import ua.com.fielden.platform.eql.stage1.elements.sources.Sources1;
-import ua.com.fielden.platform.eql.stage2.elements.ComparisonTest2;
-import ua.com.fielden.platform.eql.stage2.elements.CompoundSource2;
-import ua.com.fielden.platform.eql.stage2.elements.Conditions2;
-import ua.com.fielden.platform.eql.stage2.elements.EntProp2;
-import ua.com.fielden.platform.eql.stage2.elements.EntQuery2;
 import ua.com.fielden.platform.eql.stage2.elements.EntQueryBlocks2;
-import ua.com.fielden.platform.eql.stage2.elements.EntValue2;
-import ua.com.fielden.platform.eql.stage2.elements.Expression2;
 import ua.com.fielden.platform.eql.stage2.elements.GroupBy2;
 import ua.com.fielden.platform.eql.stage2.elements.GroupBys2;
-import ua.com.fielden.platform.eql.stage2.elements.ICondition2;
-import ua.com.fielden.platform.eql.stage2.elements.NullTest2;
-import ua.com.fielden.platform.eql.stage2.elements.OperandsBasedSet2;
 import ua.com.fielden.platform.eql.stage2.elements.OrderBy2;
 import ua.com.fielden.platform.eql.stage2.elements.OrderBys2;
-import ua.com.fielden.platform.eql.stage2.elements.QrySource2BasedOnPersistentType;
-import ua.com.fielden.platform.eql.stage2.elements.QrySource2BasedOnSubqueries;
-import ua.com.fielden.platform.eql.stage2.elements.SetTest2;
-import ua.com.fielden.platform.eql.stage2.elements.Sources2;
 import ua.com.fielden.platform.eql.stage2.elements.Yields2;
+import ua.com.fielden.platform.eql.stage2.elements.conditions.ComparisonTest2;
+import ua.com.fielden.platform.eql.stage2.elements.conditions.Conditions2;
+import ua.com.fielden.platform.eql.stage2.elements.conditions.ICondition2;
+import ua.com.fielden.platform.eql.stage2.elements.conditions.NullTest2;
+import ua.com.fielden.platform.eql.stage2.elements.conditions.SetTest2;
+import ua.com.fielden.platform.eql.stage2.elements.operands.EntProp2;
+import ua.com.fielden.platform.eql.stage2.elements.operands.EntQuery2;
+import ua.com.fielden.platform.eql.stage2.elements.operands.EntValue2;
+import ua.com.fielden.platform.eql.stage2.elements.operands.Expression2;
+import ua.com.fielden.platform.eql.stage2.elements.operands.OperandsBasedSet2;
+import ua.com.fielden.platform.eql.stage2.elements.sources.CompoundSource2;
+import ua.com.fielden.platform.eql.stage2.elements.sources.QrySource2BasedOnPersistentType;
+import ua.com.fielden.platform.eql.stage2.elements.sources.QrySource2BasedOnSubqueries;
+import ua.com.fielden.platform.eql.stage2.elements.sources.Sources2;
 import ua.com.fielden.platform.sample.domain.TgAuthor;
 import ua.com.fielden.platform.sample.domain.TgAuthorRoyalty;
 import ua.com.fielden.platform.sample.domain.TgAuthorship;
@@ -95,8 +95,8 @@ public class PropResolutionTest extends BaseEntQueryTCase1 {
         final Sources1 sources1 = new Sources1(new QrySource1BasedOnPersistentType(TgVehicleModel.class, 1));
         final Conditions1 conditions1 = new Conditions1(false, new NullTest1(new EntProp1("make", 2), true));
 
-        final EntQueryBlocks parts1 = new EntQueryBlocks(sources1, conditions1);
-        final EntQuery1 expQry1 = new EntQuery1(parts1, TgVehicleModel.class, RESULT_QUERY, false, null, 3);
+        final EntQueryBlocks1 parts1 = new EntQueryBlocks1(sources1, conditions1);
+        final EntQuery1 expQry1 = new EntQuery1(parts1, TgVehicleModel.class, RESULT_QUERY, 3);
 
         assertEquals(expQry1, entResultQry(qry));
         
@@ -110,7 +110,7 @@ public class PropResolutionTest extends BaseEntQueryTCase1 {
         final Conditions2 conditions = new Conditions2(false, allConditions);
 
         final EntQueryBlocks2 parts = new EntQueryBlocks2(sources, conditions, emptyYields2, emptyGroupBys2, emptyOrderBys2);
-        final EntQuery2 expQry2 = new EntQuery2(parts, TgVehicleModel.class, RESULT_QUERY, null);
+        final EntQuery2 expQry2 = new EntQuery2(parts, TgVehicleModel.class, RESULT_QUERY);
 
         TransformationResult<EntQuery2> trQry2 = expQry1.transform(new PropsResolutionContext(metadata));
         assertEquals(expQry2, trQry2.getItem());
@@ -124,8 +124,8 @@ public class PropResolutionTest extends BaseEntQueryTCase1 {
         final Sources1 sm1Sources1 = new Sources1(new QrySource1BasedOnPersistentType(TgVehicleModel.class, 1));
         final Conditions1 sm1Conditions1 = new Conditions1(false, new ComparisonTest1(new EntProp1("key", 2), EQ, new EntValue1("316")));
 
-        final EntQueryBlocks sm1Parts1 = new EntQueryBlocks(sm1Sources1, sm1Conditions1);
-        final EntQuery1 sm1ExpQry1 = new EntQuery1(sm1Parts1, TgVehicleModel.class, SOURCE_QUERY, false, null, 3);
+        final EntQueryBlocks1 sm1Parts1 = new EntQueryBlocks1(sm1Sources1, sm1Conditions1);
+        final EntQuery1 sm1ExpQry1 = new EntQuery1(sm1Parts1, TgVehicleModel.class, SOURCE_QUERY, 3);
 
 //        assertEquals(sm1ExpQry1, entSourceQry(sourceModel1Qry));
 
@@ -139,7 +139,7 @@ public class PropResolutionTest extends BaseEntQueryTCase1 {
         final Conditions2 sm1Conditions2 = new Conditions2(false, sm1AllConditions2);
 
         final EntQueryBlocks2 sm1Parts2 = new EntQueryBlocks2(sm1Sources2, sm1Conditions2, emptyYields2, emptyGroupBys2, emptyOrderBys2);
-        final EntQuery2 sm1ExpQry2 = new EntQuery2(sm1Parts2, TgVehicleModel.class, SOURCE_QUERY, null);
+        final EntQuery2 sm1ExpQry2 = new EntQuery2(sm1Parts2, TgVehicleModel.class, SOURCE_QUERY);
         
 //        TransformationResult<EntQuery2> sm1TrQry2 = sm1ExpQry1.transform(new PropsResolutionContext(metadata));
 //        assertEquals(sm1ExpQry2, sm1TrQry2.getItem());
@@ -151,8 +151,8 @@ public class PropResolutionTest extends BaseEntQueryTCase1 {
         final Sources1 sm2Sources1 = new Sources1(new QrySource1BasedOnPersistentType(TgVehicleModel.class, 4));
         final Conditions1 sm2Conditions1 = new Conditions1(false, new ComparisonTest1(new EntProp1("key", 5), EQ, new EntValue1("317")));
 
-        final EntQueryBlocks sm2Parts1 = new EntQueryBlocks(sm2Sources1, sm2Conditions1);
-        final EntQuery1 sm2ExpQry1 = new EntQuery1(sm2Parts1, TgVehicleModel.class, SOURCE_QUERY, false, null, 6);
+        final EntQueryBlocks1 sm2Parts1 = new EntQueryBlocks1(sm2Sources1, sm2Conditions1);
+        final EntQuery1 sm2ExpQry1 = new EntQuery1(sm2Parts1, TgVehicleModel.class, SOURCE_QUERY, 6);
 
 //        assertEquals(sm2ExpQry1, entSourceQry(sourceModel2Qry));
         
@@ -166,7 +166,7 @@ public class PropResolutionTest extends BaseEntQueryTCase1 {
         final Conditions2 sm2Conditions2 = new Conditions2(false, sm2AllConditions2);
 
         final EntQueryBlocks2 sm2Parts2 = new EntQueryBlocks2(sm2Sources2, sm2Conditions2, emptyYields2, emptyGroupBys2, emptyOrderBys2);
-        final EntQuery2 sm2ExpQry2 = new EntQuery2(sm2Parts2, TgVehicleModel.class, SOURCE_QUERY, null);
+        final EntQuery2 sm2ExpQry2 = new EntQuery2(sm2Parts2, TgVehicleModel.class, SOURCE_QUERY);
         
 //        TransformationResult<EntQuery2> sm2TrQry2 = sm2ExpQry1.transform(new PropsResolutionContext(metadata));
 //        assertEquals(sm2ExpQry2, sm2TrQry2.getItem());
@@ -179,8 +179,8 @@ public class PropResolutionTest extends BaseEntQueryTCase1 {
         final Sources1 sources1 = new Sources1(new QrySource1BasedOnSubqueries(null, listOf(sm1ExpQry1, sm2ExpQry1), 7));
         final Conditions1 conditions1 = new Conditions1(false, new SetTest1(new EntProp1("key", 8), false, new OperandsBasedSet1(listOf(new EntValue1("316"), new EntValue1("317")))));
 
-        final EntQueryBlocks parts1 = new EntQueryBlocks(sources1, conditions1);
-        final EntQuery1 expQry1 = new EntQuery1(parts1, TgVehicleModel.class, RESULT_QUERY, false, null, 9);
+        final EntQueryBlocks1 parts1 = new EntQueryBlocks1(sources1, conditions1);
+        final EntQuery1 expQry1 = new EntQuery1(parts1, TgVehicleModel.class, RESULT_QUERY, 9);
 
         
         EntQuery1 actQry1 = entResultQry(qry);
@@ -198,7 +198,7 @@ public class PropResolutionTest extends BaseEntQueryTCase1 {
         final Conditions2 conditions2 = new Conditions2(false, allConditions2);
 
         final EntQueryBlocks2 parts2 = new EntQueryBlocks2(sources2, conditions2, emptyYields2, emptyGroupBys2, emptyOrderBys2);
-        final EntQuery2 expQry2 = new EntQuery2(parts2, TgVehicleModel.class, RESULT_QUERY, null);
+        final EntQuery2 expQry2 = new EntQuery2(parts2, TgVehicleModel.class, RESULT_QUERY);
         
         TransformationResult<EntQuery2> trQry2 = expQry1.transform(new PropsResolutionContext(metadata));
         assertEquals(expQry2, trQry2.getItem());
@@ -294,7 +294,7 @@ public class PropResolutionTest extends BaseEntQueryTCase1 {
 
         final Conditions2 conditions = new Conditions2(false, allConditions);
         final EntQueryBlocks2 parts = new EntQueryBlocks2(new Sources2(source), conditions, emptyYields2, emptyGroupBys2, emptyOrderBys2);
-        final EntQuery2 exp = new EntQuery2(parts, TgWorkshop.class, RESULT_QUERY, null);
+        final EntQuery2 exp = new EntQuery2(parts, TgWorkshop.class, RESULT_QUERY);
         assertEquals(qry2.getItem(), exp);
     }
 
@@ -349,7 +349,7 @@ public class PropResolutionTest extends BaseEntQueryTCase1 {
         final Conditions2 conditions = new Conditions2(false, allConditions);
 
         final EntQueryBlocks2 parts = new EntQueryBlocks2(sources, conditions, emptyYields2, new GroupBys2(Collections.<GroupBy2> emptyList()), new OrderBys2(null));
-        final EntQuery2 exp = new EntQuery2(parts, TgAuthor.class, RESULT_QUERY, null);
+        final EntQuery2 exp = new EntQuery2(parts, TgAuthor.class, RESULT_QUERY);
 
         System.out.println(qry2.getItem().getConditions().equals(exp.getConditions()));
         System.out.println(qry2.getItem().getGroups().equals(exp.getGroups()));
@@ -430,7 +430,7 @@ public class PropResolutionTest extends BaseEntQueryTCase1 {
         final Conditions2 conditions = new Conditions2(false, allConditions);
 
         final EntQueryBlocks2 parts = new EntQueryBlocks2(sources, conditions, emptyYields2, new GroupBys2(Collections.<GroupBy2> emptyList()), new OrderBys2(Collections.<OrderBy2> emptyList()));
-        final EntQuery2 exp = new EntQuery2(parts, TgVehicleModelWithCalc.class, RESULT_QUERY, null);
+        final EntQuery2 exp = new EntQuery2(parts, TgVehicleModelWithCalc.class, RESULT_QUERY);
 
         System.out.println(qry2.getItem().getConditions().equals(exp.getConditions()));
         System.out.println(qry2.getItem().getGroups().equals(exp.getGroups()));
@@ -454,7 +454,7 @@ public class PropResolutionTest extends BaseEntQueryTCase1 {
         final Conditions2 conditions = new Conditions2(false, allConditions);
 
         final EntQueryBlocks2 parts = new EntQueryBlocks2(sources, conditions, emptyYields2, new GroupBys2(Collections.<GroupBy2> emptyList()), new OrderBys2(null));
-        final EntQuery2 exp = new EntQuery2(parts, TgAuthor.class, RESULT_QUERY, null);
+        final EntQuery2 exp = new EntQuery2(parts, TgAuthor.class, RESULT_QUERY);
 
         assertEquals(qry2.getItem(), exp);
     }
@@ -473,7 +473,7 @@ public class PropResolutionTest extends BaseEntQueryTCase1 {
         final Conditions2 conditions = new Conditions2(false, allConditions);
 
         final EntQueryBlocks2 parts = new EntQueryBlocks2(sources, conditions, emptyYields2, new GroupBys2(Collections.<GroupBy2> emptyList()), new OrderBys2(null));
-        final EntQuery2 exp = new EntQuery2(parts, TgAuthor.class, RESULT_QUERY, null);
+        final EntQuery2 exp = new EntQuery2(parts, TgAuthor.class, RESULT_QUERY);
 
         assertEquals(qry2.getItem(), exp);
     }
@@ -492,7 +492,7 @@ public class PropResolutionTest extends BaseEntQueryTCase1 {
         final Conditions2 conditions = new Conditions2(false, allConditions);
 
         final EntQueryBlocks2 parts = new EntQueryBlocks2(sources, conditions, emptyYields2, new GroupBys2(Collections.<GroupBy2> emptyList()), new OrderBys2(null));
-        final EntQuery2 exp = new EntQuery2(parts, TgAuthor.class, RESULT_QUERY, null);
+        final EntQuery2 exp = new EntQuery2(parts, TgAuthor.class, RESULT_QUERY);
 
         assertEquals(qry2.getItem(), exp);
     }
@@ -513,7 +513,7 @@ public class PropResolutionTest extends BaseEntQueryTCase1 {
         final Conditions2 conditions = new Conditions2(false, allConditions);
 
         final EntQueryBlocks2 parts = new EntQueryBlocks2(sources, conditions, emptyYields2, new GroupBys2(Collections.<GroupBy2> emptyList()), new OrderBys2(null));
-        final EntQuery2 exp = new EntQuery2(parts, TgAuthor.class, RESULT_QUERY, null);
+        final EntQuery2 exp = new EntQuery2(parts, TgAuthor.class, RESULT_QUERY);
 
         assertEquals(exp, qry2.getItem());
     }
@@ -544,7 +544,7 @@ public class PropResolutionTest extends BaseEntQueryTCase1 {
         final Conditions2 conditions = new Conditions2(false, allConditions2);
 
         final EntQueryBlocks2 parts = new EntQueryBlocks2(sources, conditions, emptyYields2, new GroupBys2(Collections.<GroupBy2> emptyList()), new OrderBys2(null));
-        final EntQuery2 exp = new EntQuery2(parts, TgAuthor.class, RESULT_QUERY, null);
+        final EntQuery2 exp = new EntQuery2(parts, TgAuthor.class, RESULT_QUERY);
 
         assertEquals(exp, qry2.getItem());
     }
@@ -567,7 +567,7 @@ public class PropResolutionTest extends BaseEntQueryTCase1 {
         final Conditions2 lrConditions = new Conditions2(false, lrAllConditions2);
 
         final EntQueryBlocks2 lastRoyaltyParts = new EntQueryBlocks2(new Sources2(sourceAuthorRoyalty), lrConditions, emptyYields2, new GroupBys2(Collections.<GroupBy2> emptyList()), new OrderBys2(null));
-        final EntQuery2 lastRoyaltySubqry = new EntQuery2(lastRoyaltyParts, TgAuthorRoyalty.class, SUB_QUERY, null);
+        final EntQuery2 lastRoyaltySubqry = new EntQuery2(lastRoyaltyParts, TgAuthorRoyalty.class, SUB_QUERY);
 
         final QrySource2BasedOnPersistentType sourcePersonName = new QrySource2BasedOnPersistentType(TgPersonName.class, metadata.get(TgPersonName.class), "pn", 0);
 
@@ -590,7 +590,7 @@ public class PropResolutionTest extends BaseEntQueryTCase1 {
         final Conditions2 conditions = new Conditions2(false, allConditions2);
 
         final EntQueryBlocks2 parts = new EntQueryBlocks2(sources, conditions, emptyYields2, new GroupBys2(Collections.<GroupBy2> emptyList()), new OrderBys2(null));
-        final EntQuery2 exp = new EntQuery2(parts, TgAuthor.class, RESULT_QUERY, null);
+        final EntQuery2 exp = new EntQuery2(parts, TgAuthor.class, RESULT_QUERY);
 
         assertEquals(exp, qry2.getItem());
     }

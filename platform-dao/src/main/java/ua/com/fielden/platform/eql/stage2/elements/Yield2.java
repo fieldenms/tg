@@ -1,6 +1,6 @@
 package ua.com.fielden.platform.eql.stage2.elements;
 
-import ua.com.fielden.platform.eql.stage2.elements.ISingleOperand2;
+import ua.com.fielden.platform.eql.stage2.elements.operands.ISingleOperand2;
 
 public class Yield2 {
     private final ISingleOperand2 operand;

@@ -1,7 +1,7 @@
 package ua.com.fielden.platform.eql.stage1.elements.sources;
 
 import ua.com.fielden.platform.eql.stage1.elements.AbstractElement1;
-import ua.com.fielden.platform.eql.stage2.elements.IQrySource2;
+import ua.com.fielden.platform.eql.stage2.elements.sources.IQrySource2;
 
 public abstract class AbstractQrySource1<S2 extends IQrySource2> extends AbstractElement1 implements IQrySource1<S2> {
 

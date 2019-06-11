@@ -11,8 +11,8 @@ import ua.com.fielden.platform.eql.meta.PropsResolutionContext;
 import ua.com.fielden.platform.eql.meta.TransformationResult;
 import ua.com.fielden.platform.eql.stage1.elements.Yield1;
 import ua.com.fielden.platform.eql.stage1.elements.operands.EntQuery1;
-import ua.com.fielden.platform.eql.stage2.elements.EntQuery2;
-import ua.com.fielden.platform.eql.stage2.elements.QrySource2BasedOnSubqueries;
+import ua.com.fielden.platform.eql.stage2.elements.operands.EntQuery2;
+import ua.com.fielden.platform.eql.stage2.elements.sources.QrySource2BasedOnSubqueries;
 
 public class QrySource1BasedOnSubqueries extends AbstractQrySource1<QrySource2BasedOnSubqueries> {
     private final List<EntQuery1> models = new ArrayList<>();

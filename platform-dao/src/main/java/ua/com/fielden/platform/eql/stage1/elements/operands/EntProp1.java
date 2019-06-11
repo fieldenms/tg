@@ -13,8 +13,8 @@ import ua.com.fielden.platform.eql.meta.PropResolution;
 import ua.com.fielden.platform.eql.meta.PropsResolutionContext;
 import ua.com.fielden.platform.eql.meta.TransformationResult;
 import ua.com.fielden.platform.eql.stage1.elements.AbstractElement1;
-import ua.com.fielden.platform.eql.stage2.elements.EntProp2;
-import ua.com.fielden.platform.eql.stage2.elements.IQrySource2;
+import ua.com.fielden.platform.eql.stage2.elements.operands.EntProp2;
+import ua.com.fielden.platform.eql.stage2.elements.sources.IQrySource2;
 
 public class EntProp1 extends AbstractElement1 implements ISingleOperand1<EntProp2> {
     public String name;

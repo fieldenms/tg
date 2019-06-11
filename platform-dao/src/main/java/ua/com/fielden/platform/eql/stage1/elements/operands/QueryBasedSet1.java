@@ -2,8 +2,8 @@ package ua.com.fielden.platform.eql.stage1.elements.operands;
 
 import ua.com.fielden.platform.eql.meta.PropsResolutionContext;
 import ua.com.fielden.platform.eql.meta.TransformationResult;
-import ua.com.fielden.platform.eql.stage2.elements.EntQuery2;
-import ua.com.fielden.platform.eql.stage2.elements.QueryBasedSet2;
+import ua.com.fielden.platform.eql.stage2.elements.operands.EntQuery2;
+import ua.com.fielden.platform.eql.stage2.elements.operands.QueryBasedSet2;
 
 public class QueryBasedSet1 implements ISetOperand1<QueryBasedSet2> {
     private final EntQuery1 model;

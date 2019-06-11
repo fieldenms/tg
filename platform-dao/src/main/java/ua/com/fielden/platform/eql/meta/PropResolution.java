@@ -1,6 +1,6 @@
 package ua.com.fielden.platform.eql.meta;
 
-import ua.com.fielden.platform.eql.stage2.elements.IQrySource2;
+import ua.com.fielden.platform.eql.stage2.elements.sources.IQrySource2;
 
 public class PropResolution {
     private final String aliaslessName;

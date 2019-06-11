@@ -5,9 +5,9 @@ import java.util.List;
 
 import ua.com.fielden.platform.eql.meta.PropsResolutionContext;
 import ua.com.fielden.platform.eql.meta.TransformationResult;
-import ua.com.fielden.platform.eql.stage2.elements.CompoundSource2;
-import ua.com.fielden.platform.eql.stage2.elements.IQrySource2;
-import ua.com.fielden.platform.eql.stage2.elements.Sources2;
+import ua.com.fielden.platform.eql.stage2.elements.sources.CompoundSource2;
+import ua.com.fielden.platform.eql.stage2.elements.sources.IQrySource2;
+import ua.com.fielden.platform.eql.stage2.elements.sources.Sources2;
 
 public class Sources1  {
     private final IQrySource1<? extends IQrySource2> main;

@@ -3,8 +3,8 @@ package ua.com.fielden.platform.eql.stage1.elements.functions;
 import ua.com.fielden.platform.eql.meta.PropsResolutionContext;
 import ua.com.fielden.platform.eql.meta.TransformationResult;
 import ua.com.fielden.platform.eql.stage1.elements.operands.ISingleOperand1;
-import ua.com.fielden.platform.eql.stage2.elements.ISingleOperand2;
-import ua.com.fielden.platform.eql.stage2.elements.MinOf2;
+import ua.com.fielden.platform.eql.stage2.elements.functions.MinOf2;
+import ua.com.fielden.platform.eql.stage2.elements.operands.ISingleOperand2;
 
 public class MinOf1 extends SingleOperandFunction1<MinOf2> {
 
