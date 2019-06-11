@@ -1360,13 +1360,14 @@ Polymer({
     },
 
     _calcFixedColumnWidth: function (canDragFrom, checkboxVisible, primaryAction, numOfFixedCols) {
+        const columnsWithWidth = this.fixedColumns.filter(column => column.width > 0);
         let columnStyleWidth = "";
-        if (numOfFixedCols > 0) {
+        if (numOfFixedCols > 0 && columnsWithWidth.length > 0) {
             const cellPadding = this.getComputedStyleValue('--egi-cell-padding').trim() || "0.6rem";
-            const columnsWidth = this.fixedColumns.reduce((acc, curr) => acc + curr.width, 0);
-            columnStyleWidth = columnsWidth + "px + 2 * " + this.fixedColumns.length + " * " + cellPadding;
+            const columnsWidth = columnsWithWidth.reduce((acc, curr) => acc + curr.width, 0);
+            columnStyleWidth = columnsWidth + "px + 2 * " + columnsWithWidth.length + " * " + cellPadding;
         }
-        return this._calcPrimaryActionWidth(canDragFrom, checkboxVisible, primaryAction) + " + " + columnStyleWidth;
+        return this._calcPrimaryActionWidth(canDragFrom, checkboxVisible, primaryAction) + (columnStyleWidth ? " + " + columnStyleWidth : "");
     },
 
     _isDraggable: function (entitySelected) {
