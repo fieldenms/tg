@@ -11,11 +11,9 @@ import '/resources/polymer/@polymer/neon-animation/animations/fade-out-animation
 
 import '/resources/components/tg-calendar.js';
 
-import { IronResizableBehavior } from '/resources/polymer/@polymer/iron-resizable-behavior/iron-resizable-behavior.js';
-import { Polymer } from '/resources/polymer/@polymer/polymer/lib/legacy/polymer-fn.js';
-import { html } from '/resources/polymer/@polymer/polymer/lib/utils/html-tag.js';
+import {html} from '/resources/polymer/@polymer/polymer/polymer-element.js';
 
-import { TgEditorBehavior, TgEditorBehaviorImpl, createEditorTemplate} from '/resources/editors/tg-editor-behavior.js'
+import { TgEditor, createEditorTemplate} from '/resources/editors/tg-editor.js'
 import { _momentTz, _millisDateRepresentation, timeZoneFormats } from '/resources/reflection/tg-date-utils.js';
 import { tearDownEvent } from '/resources/reflection/tg-polymer-utils.js'
 
@@ -67,8 +65,8 @@ const customInputTemplate = html`
             on-change="_onChange"
             on-input="_onInput"
             on-keydown="_onKeydown"
-            on-tap="_onTap"
-            on-mousedown="_onTap"
+            on-mouseup="_onMouseUp" 
+            on-mousedown="_onMouseDown"
             disabled$="[[_disabled]]"
             tooltip-text$="[[_getTooltip(_editingValue)]]"
             autocomplete="off"/>
@@ -76,151 +74,152 @@ const customInputTemplate = html`
 const customIconButtonsTemplate = html`<paper-icon-button class="picker-button custom-icon-buttons" on-tap="_showCalendar" icon="today" disabled$="[[_isCalendarDisabled(_disabled, datePortion)]]" tooltip-text="Show date picker dialog"></paper-icon-buton>`;
 const propertyActionTemplate = html`<slot name="property-action"></slot>`;
 
-Polymer({
-    _template: createEditorTemplate(additionalTemplate, html``, customInputTemplate, html``, customIconButtonsTemplate, propertyActionTemplate),
+export class TgDatetimePicker extends TgEditor {
 
-    is: 'tg-datetime-picker',
+    static get template() { 
+        return createEditorTemplate(additionalTemplate, html``, customInputTemplate, html``, customIconButtonsTemplate, propertyActionTemplate);
+    }
 
-    behaviors: [TgEditorBehavior, IronResizableBehavior],
+    static get properties () {
+        return {
+            /**
+             * If empty then default timezone should be used for toString and fromString conversions in 'moment()' and 'moment(...)' methods.
+             * Otherwise -- the specified timezone should be used in 'moment.tz(timeZone)' and 'moment.tz(..., timeZone)' methods.
+             */
+            timeZone: {
+                type: String,
+                value: null
+            },
+    
+            /**
+             * Defines what date portion to show: date, time or date & time. If the value is 'DATE' then only date portion of the date property value will be shown,
+             * If the value is 'TIME' then only time portion of the date property value will be shown, otherwise date & time wil be shown.
+             */
+            datePortion: {
+                type: String,
+                value: null
+            },
+    
+            /**
+             * If true -- the empty time portion should be approximated to '23:59:59.999', otherwise -- to '00:00:00.000'.
+             */
+            timePortionToBecomeEndOfDay: {
+                type: Boolean
+            },
+    
+            /////////////////////////////////////////////////////////////////////////////////////////////////////////
+            //////////////////////////////////////////// INNER PROPERTIES ///////////////////////////////////////////
+            /////////////////////////////////////////////////////////////////////////////////////////////////////////
+            // These properties derive from other properties and are considered as 'private' -- need to have '_'   //
+            //   prefix and default values specified in 'value' specificator of the property definition (or,       //
+            //   alternatively, computing function needs to be specified). 									       //
+            /////////////////////////////////////////////////////////////////////////////////////////////////////////
+            _isAcceptingDateFromPicker: {
+                type: Boolean,
+                value: false
+            },
+    
+            /**
+             * The formats for approximation. The order of this array is important -- it defines the order in which formats are tried during approximation.
+             */
+            _formats: {
+                type: Array,
+                value: function () {
+                    return [
+                        'L LTS',
+                        'D/M/YYYY h:m:ss.SSSa',
+                        'D/M/YY h:m:ss.SSSa',
+                        'D/M/Y h:m:ss.SSSa',
+                        'D/M/YYYY H:m:ss.SSS',
+                        'D/M/YY H:m:ss.SSS',
+                        'D/M/Y H:m:ss.SSS',
+                        'L LT',
+                        'D/M/YYYY hmma',
+                        'D/M/YY hmma',
+                        'D/M/Y hmma',
+                        'D/M/YYYY Hmm',
+                        'D/M/YY Hmm',
+                        'D/M/Y Hmm',
+                        'D/M/YYYY h:ma',
+                        'D/M/YY h:ma',
+                        'D/M/Y h:ma',
+                        'D/M/YYYY H:m',
+                        'D/M/YY H:m',
+                        'D/M/Y H:m',
+                        'D/M/YYYY ha',
+                        'D/M/YY ha',
+                        'D/M/Y ha',
+                        'D/M/YYYY H',
+                        'D/M/YY H',
+                        'D/M/Y H',
+                        'D/M/YYYY',
+                        'D/M/YY',
+                        'D/M/Y'
+                    ];
+                }
+            },
+    
+            /**
+             * The formats for approximation. The order of this array is important -- it defines the order in which formats are tried during approximation.
+             */
+            _timePortionFormats: {
+                type: Array,
+                value: function () {
+                    return [
+                        'LTS',
+                        'h:m:ss.SSSa',
+                        'H:m:ss.SSS',
+                        'LT',
+                        'hmma',
+                        'Hmm',
+                        'h:ma',
+                        'H:m',
+                        'ha',
+                        'H',
+                        'T', //Means today,
+                        't', //Means today
+                        'N',  //Means now
+                        'n' //Means now
+                    ];
+                }
+            },
+    
+            /**
+             * The date picker literals for date approximaton.
+             */
+            _literals: {
+                type: Array,
+                value: function () {
+                    return [
+                        'T',
+                        'N'
+                    ];
+                }
+            },
+    
+            /**
+             * The property that holds valid approximated 'moment' value in case if approximation has been successful or 'null' otherwise.
+             */
+            _validMoment: {
+                type: Object,
+                value: null
+            }
+        }
+    }
 
-    ready: function () {
-
+    constructor () {
+        super();
         moment.parseTwoDigitYear = function (input) {
             var currYear = moment().year();
             console.debug('parseTwoDigitYear: [', input, '] currYear ', currYear);
             return parseInt(input, 10) + ((parseInt(input, 10) < currYear - 2000 + 30) ? 2000 : 1900);
         };
-    },
-
-    properties: {
-        /**
-         * If empty then default timezone should be used for toString and fromString conversions in 'moment()' and 'moment(...)' methods.
-         * Otherwise -- the specified timezone should be used in 'moment.tz(timeZone)' and 'moment.tz(..., timeZone)' methods.
-         */
-        timeZone: {
-            type: String,
-            value: null
-        },
-
-        /**
-         * Defines what date portion to show: date, time or date & time. If the value is 'DATE' then only date portion of the date property value will be shown,
-         * If the value is 'TIME' then only time portion of the date property value will be shown, otherwise date & time wil be shown.
-         */
-        datePortion: {
-            type: String,
-            value: null
-        },
-
-        /**
-         * If true -- the empty time portion should be approximated to '23:59:59.999', otherwise -- to '00:00:00.000'.
-         */
-        timePortionToBecomeEndOfDay: {
-            type: Boolean
-        },
-
-        /////////////////////////////////////////////////////////////////////////////////////////////////////////
-        //////////////////////////////////////////// INNER PROPERTIES ///////////////////////////////////////////
-        /////////////////////////////////////////////////////////////////////////////////////////////////////////
-        // These properties derive from other properties and are considered as 'private' -- need to have '_'   //
-        //   prefix and default values specified in 'value' specificator of the property definition (or,       //
-        //   alternatively, computing function needs to be specified). 									       //
-        /////////////////////////////////////////////////////////////////////////////////////////////////////////
-        _isAcceptingDateFromPicker: {
-            type: Boolean,
-            value: false
-        },
-
-        /**
-         * The formats for approximation. The order of this array is important -- it defines the order in which formats are tried during approximation.
-         */
-        _formats: {
-            type: Array,
-            value: function () {
-                return [
-                    'L LTS',
-                    'D/M/YYYY h:m:ss.SSSa',
-                    'D/M/YY h:m:ss.SSSa',
-                    'D/M/Y h:m:ss.SSSa',
-                    'D/M/YYYY H:m:ss.SSS',
-                    'D/M/YY H:m:ss.SSS',
-                    'D/M/Y H:m:ss.SSS',
-                    'L LT',
-                    'D/M/YYYY hmma',
-                    'D/M/YY hmma',
-                    'D/M/Y hmma',
-                    'D/M/YYYY Hmm',
-                    'D/M/YY Hmm',
-                    'D/M/Y Hmm',
-                    'D/M/YYYY h:ma',
-                    'D/M/YY h:ma',
-                    'D/M/Y h:ma',
-                    'D/M/YYYY H:m',
-                    'D/M/YY H:m',
-                    'D/M/Y H:m',
-                    'D/M/YYYY ha',
-                    'D/M/YY ha',
-                    'D/M/Y ha',
-                    'D/M/YYYY H',
-                    'D/M/YY H',
-                    'D/M/Y H',
-                    'D/M/YYYY',
-                    'D/M/YY',
-                    'D/M/Y'
-                ];
-            }
-        },
-
-        /**
-         * The formats for approximation. The order of this array is important -- it defines the order in which formats are tried during approximation.
-         */
-        _timePortionFormats: {
-            type: Array,
-            value: function () {
-                return [
-                    'LTS',
-                    'h:m:ss.SSSa',
-                    'H:m:ss.SSS',
-                    'LT',
-                    'hmma',
-                    'Hmm',
-                    'h:ma',
-                    'H:m',
-                    'ha',
-                    'H',
-                    'T', //Means today,
-                    't', //Means today
-                    'N',  //Means now
-                    'n' //Means now
-                ];
-            }
-        },
-
-        /**
-         * The date picker literals for date approximaton.
-         */
-        _literals: {
-            type: Array,
-            value: function () {
-                return [
-                    'T',
-                    'N'
-                ];
-            }
-        },
-
-        /**
-         * The property that holds valid approximated 'moment' value in case if approximation has been successful or 'null' otherwise.
-         */
-        _validMoment: {
-            type: Object,
-            value: null
-        }
-    },
-
+    }
+    
     /**
      * Converts the value from string representation (which is used in editing / comm values) into concrete type of this editor component (Number).
      */
-    convertFromString: function (strValue) {
+    convertFromString (strValue) {
         // console.log(moment.localeData().longDateFormat("LT").toLowerCase().indexOf("a"));
         if (strValue) {
             if (this._validMoment !== null) {
@@ -231,20 +230,20 @@ Polymer({
         } else {
             return null;
         }
-    },
+    }
 
     /**
      * Converts the value into string representation (which is used in editing / comm values).
      */
-    convertToString: function (value) {
+    convertToString (value) {
         if (value === null) {
             return "";
         } else {
             return _millisDateRepresentation(value, this.timeZone, this.datePortion);
         }
-    },
+    }
 
-    _showCalendar: function (e) {
+    _showCalendar (e) {
         if (!this._isCalendarOpen) {
             this._isCalendarOpen = true;
             var mve = this._createCalendarDialog();
@@ -252,16 +251,16 @@ Polymer({
             //Opening date picker dialog itself.
             mve.open();
         }
-    },
+    }
 
-    _isCalendarDisabled: function (_disabled, datePortion) {
+    _isCalendarDisabled (_disabled, datePortion) {
         return _disabled || datePortion === "TIME";
-    },
+    }
 
     /**
      * Creates dynamically the 'dom-bind' template, which hold the dialog for the calendar.
      */
-    _createCalendarDialog: function () {
+    _createCalendarDialog () {
         const self = this;
         const domBind = document.createElement('dom-bind');
 
@@ -312,7 +311,7 @@ Polymer({
             document.body.appendChild(dialog);
             // let's open the dialog with magical async...
             // this ensures that the dialog is opened after its relocation to body
-            self.async(function () {
+            setTimeout(function () {
                 dialog.open();
             }.bind(this), 1);
         }.bind(domBind);
@@ -348,35 +347,35 @@ Polymer({
 
         domBind.appendChild(dialogTemplate);
         return domBind;
-    },
+    }
 
-    _editingValueChanged: function (newValue, oldValue) {
-        TgEditorBehaviorImpl._editingValueChanged.call(this, newValue, oldValue);
+    _editingValueChanged (newValue, oldValue) {
+        super._editingValueChanged(newValue, oldValue);
 
         if (this._isAcceptingDateFromPicker) {
             this._isAcceptingDateFromPicker = false;
 
             this.commit();
         }
-    },
+    }
 
     /**
      * Overridden to provide value approximations.
      */
-    _commitForDescendants: function () {
+    _commitForDescendants () {
         var approximated = this._approximate(this._editingValue);
         console.debug('COMMIT (value should be approximated): current editingValue = [', this._editingValue, '] approximated = [', approximated, ']');
         if (!this.reflector().equalsEx(approximated, this._editingValue)) {
             console.debug('COMMIT (value should be approximated): change editingValue to [', approximated, ']');
             this._editingValue = approximated;
         }
-    },
+    }
 
     /**
      * Approximates the 'dateEditingValue' using registered '_formats' to the standard form like [09/09/2002 11:03 AM].
      * If approximation is failed -- returns the same 'dateEditingValue'.
      */
-    _approximate: function (dateEditingValue) {
+    _approximate (dateEditingValue) {
         this._validMoment = null;
         if (dateEditingValue) {
             const firstSlashIndex = dateEditingValue.indexOf('/');
@@ -421,14 +420,14 @@ Polymer({
             }
         }
         return dateEditingValue;
-    },
+    }
 
-    _isLiteral: function (value) {
+    _isLiteral (value) {
         const upperCasedValue = value[0].toUpperCase();
         return this._literals.indexOf(upperCasedValue) >= 0;
-    },
+    }
 
-    _tryLiterals: function (editingValue) {
+    _tryLiterals (editingValue) {
         const upperCasedValue = editingValue[0].toUpperCase();
         if ('T' === upperCasedValue) {
             const todayMoment = moment().startOf("day");
@@ -437,9 +436,9 @@ Polymer({
             return moment().startOf('minute');
         }
         return null;
-    },
+    }
 
-    _approximateWithNumberOfDigits: function (dateEditingValue, numberOfDigits) {
+    _approximateWithNumberOfDigits (dateEditingValue, numberOfDigits) {
         const value = this._insertOneSpace(dateEditingValue.replace(new RegExp(' ', 'g'), ''), numberOfDigits).trim();
         if (value) {
             this._validMoment = this._tryFormats(value, this._formats.slice() /* the copy is made  */);
@@ -448,24 +447,24 @@ Polymer({
             }
         }
         return undefined;
-    },
+    }
 
     /**
      * Tries UTC formats one by one and returns valid moment or null if there are no appropriate format.
      */
-    _tryUTCFormats: function (stringValue) {
+    _tryUTCFormats (stringValue) {
         const timeZone = this.timeZone;
         const tryingMoment = Object.values(timeZoneFormats['UTC'])
             .map(f => _momentTz(stringValue, f, true, timeZone))
             .find(m => m.isValid());
         return tryingMoment ? tryingMoment : null;
-    },
+    }
 
     /**
      * Tries the formats one-by-one and returns the valid 'moment' object in case where some format has been successed.
      * In case of all formats failure -- returns 'null'.
      */
-    _tryFormats: function (stringValue, formats) {
+    _tryFormats (stringValue, formats) {
         if (formats.length === 0) {
             return null;
         } else {
@@ -485,13 +484,13 @@ Polymer({
                 return this._tryFormats(stringValue, formats);
             }
         }
-    },
+    }
 
     /**
      * Tries time portion formats one-by-one and returns the valid 'moment' object in case where some format has been successed.
      * In case of all formats failure -- returns 'null'.
      */
-    _tryTimePortionFormats: function (stringValue, formats) {
+    _tryTimePortionFormats (stringValue, formats) {
         if (formats.length === 0) {
             return null;
         } else {
@@ -505,14 +504,14 @@ Polymer({
                 return this._tryFormats(stringValue, formats);
             }
         }
-    },
+    }
 
-    _convertToDoubleDigitYear: function (oneDigitYearString) {
+    _convertToDoubleDigitYear (oneDigitYearString) {
         var insertionPoint = this._findSecondSlashIndex(oneDigitYearString) + 1;
         return oneDigitYearString.slice(0, insertionPoint) + "0" + oneDigitYearString.slice(insertionPoint);
-    },
+    }
 
-    _findSecondSlashIndex: function (str) {
+    _findSecondSlashIndex (str) {
         var firstSlashIndex = str.indexOf('/');
         if (firstSlashIndex === -1) {
             return -1;
@@ -523,9 +522,9 @@ Polymer({
             }
             return secondSlashIndex;
         }
-    },
+    }
 
-    _calculateNumberOfDigitsAfterLastSlash: function (str) {
+    _calculateNumberOfDigitsAfterLastSlash (str) {
         var secondSlashIndex = this._findSecondSlashIndex(str);
         var numberOfDigits = null;
         if (secondSlashIndex === -1) {
@@ -538,9 +537,9 @@ Polymer({
             secondSlashExists: secondSlashIndex > -1,
             number: numberOfDigits
         };
-    },
+    }
 
-    _calculateNumberOfDigitsAfterIndex: function (str, slashIndex) {
+    _calculateNumberOfDigitsAfterIndex (str, slashIndex) {
         if (slashIndex === -1) {
             throw '_calculateNumberOfDigitsAfterIndex: index of slash should not be -1.';
         }
@@ -556,12 +555,12 @@ Polymer({
             }
         }
         return numberOfDigits;
-    },
+    }
 
     /**
      * Inserts one space after year digits (two slashes exist) or '/currYear ' after month digits (one slash exists).
      */
-    _insertOneSpace: function (strWithoutSpaces, numberOfDigitsAfterLastSlash) {
+    _insertOneSpace (strWithoutSpaces, numberOfDigitsAfterLastSlash) {
         if (numberOfDigitsAfterLastSlash === 0) {
             return strWithoutSpaces;
         } else {
@@ -580,4 +579,6 @@ Polymer({
             return strWithoutSpaces.slice(0, insertionPoint) + ' ' + strWithoutSpaces.slice(insertionPoint);
         }
     }
-});
+}
+
+customElements.define('tg-datetime-picker', TgDatetimePicker);

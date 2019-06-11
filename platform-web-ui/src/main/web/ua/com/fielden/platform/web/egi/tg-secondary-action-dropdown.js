@@ -22,7 +22,7 @@ const template = html`
             @apply --layout-vertical;
         }
     </style>
-    <iron-dropdown class="secondary-action-dropdown" id="dropdown" style="color:black" on-tap="_closeDropdown" on-iron-overlay-opened="_dropdownOpened" on-iron-overlay-closed="_dropdownClosed">
+    <iron-dropdown class="secondary-action-dropdown" id="dropdown" always-on-top style="color:black" on-tap="_closeDropdown" on-iron-overlay-opened="_dropdownOpened" on-iron-overlay-closed="_dropdownClosed">
         <div slot="dropdown-content" class="dropdown-content">
             <div class="button-container">
                 <slot id="actions_selector" name="actions"></slot>

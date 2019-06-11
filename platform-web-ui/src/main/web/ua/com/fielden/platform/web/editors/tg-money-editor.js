@@ -3,10 +3,9 @@ import '/resources/polymer/@polymer/iron-input/iron-input.js';
 
 import '/app/tg-app-config.js';
 
-import { Polymer } from '/resources/polymer/@polymer/polymer/lib/legacy/polymer-fn.js';
-import { html } from '/resources/polymer/@polymer/polymer/lib/utils/html-tag.js';
+import {html} from '/resources/polymer/@polymer/polymer/polymer-element.js';
 
-import { TgEditorBehavior,  createEditorTemplate} from '/resources/editors/tg-editor-behavior.js';
+import { TgEditor,  createEditorTemplate} from '/resources/editors/tg-editor.js';
 import { truncateInsignificantZeros } from '/resources/reflection/tg-numeric-utils.js';
 
 const additionalTemplate = html`
@@ -39,8 +38,8 @@ const customInputTemplate = html`
             on-change="_onChange"
             on-input="_onInput"
             on-keydown="_onKeydown"
-            on-tap="_onTap"
-            on-mousedown="_onTap"
+            on-mouseup="_onMouseUp" 
+            on-mousedown="_onMouseDown"
             on-focus="_onFocus"
             on-blur="_outFocus"
             disabled$="[[_disabled}}"
@@ -50,28 +49,28 @@ const customInputTemplate = html`
 const inputLayerTemplate = html`<div class="input-layer" tooltip-text$="[[_getTooltip(_editingValue)]]">[[_formatText(_editingValue)]]</div>`;
 const propertyActionTemplate = html`<slot name="property-action"></slot>`;
 
-Polymer({
-    _template: createEditorTemplate(additionalTemplate, html``, customInputTemplate, inputLayerTemplate, html``, propertyActionTemplate),
+export class TgMoneyEditor extends TgEditor {
 
-    is: 'tg-money-editor',
-
-    behaviors: [ TgEditorBehavior ],
-
-    created: function () {
-        this._hasLayer = true;
-    },
+    static get template () { 
+        return createEditorTemplate(additionalTemplate, html``, customInputTemplate, inputLayerTemplate, html``, propertyActionTemplate);
+    }
     
-   /**
+    constructor () {
+        super();
+        this._hasLayer = true;
+    }
+
+    /**
      * Converts the value into string representation (which is used in editing / comm values).
      */
-    convertToString: function (value) {
+    convertToString (value) {
         return value === null ? "" : "" + value.amount;
-    },
+    }
     
     /**
      * Converts the value from string representation (which is used in editing / comm values) into concrete type of this editor component (Number).
      */
-    convertFromString: function (strValue) {
+    convertFromString (strValue) {
         if (strValue === '') {
             return null;
         }
@@ -84,24 +83,26 @@ Polymer({
         //      there is a need to have a better more general understanding of the role for currency and tax at the platfrom level
         var amount = (+strValue) 
         return {'amount': amount};
-    },
+    }
     
-    _formatText: function(valueToFormat) {
+    _formatText (valueToFormat) {
         var value = this.convertFromString(valueToFormat);
         if (value !== null) {
             const metaProp = this.reflector().getEntityTypeProp(this.reflector()._getValueFor(this.entity, ''), this.propertyName);
             return this.reflector().formatMoney(value, this.$.appConfig.locale, metaProp && metaProp.scale(), metaProp && metaProp.trailingZeros());
         }
         return '';
-    },
+    }
     
     /**
      * Overridden to provide value corrections.
      */
-    _commitForDescendants: function () {
+    _commitForDescendants () {
         const correctedValue = truncateInsignificantZeros(this._editingValue);
         if (!this.reflector().equalsEx(correctedValue, this._editingValue)) {
             this._editingValue = correctedValue;
         }
     }
-});
+}
+
+customElements.define('tg-money-editor', TgMoneyEditor);

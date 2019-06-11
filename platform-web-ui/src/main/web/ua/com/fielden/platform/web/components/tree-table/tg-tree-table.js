@@ -9,8 +9,6 @@ import {Polymer} from '/resources/polymer/@polymer/polymer/lib/legacy/polymer-fn
 import {html} from '/resources/polymer/@polymer/polymer/lib/utils/html-tag.js';
 import { IronResizableBehavior } from '/resources/polymer/@polymer/iron-resizable-behavior/iron-resizable-behavior.js';
 
-import { TgTooltipBehavior } from '/resources/components/tg-tooltip-behavior.js';
-
 const template = html`
     <style>
         /* Container styles*/
@@ -147,7 +145,7 @@ Polymer({
 
     is: 'tg-tree-table',
 
-    behaviors: [IronResizableBehavior, TgTooltipBehavior],
+    behaviors: [IronResizableBehavior],
     
     listeners: {"tg-tree-toggle-collapse-state": "_toggleTreeEntityToggleState"},
 

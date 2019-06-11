@@ -20,15 +20,12 @@ import '/resources/layout/tg-tile-layout.js';
 import '/resources/components/tg-menu-search-input.js';
 import '/resources/actions/tg-ui-action.js';
 
-import '/app/tg-app-config.js';
-
 import { Polymer } from '/resources/polymer/@polymer/polymer/lib/legacy/polymer-fn.js';
 import { html } from '/resources/polymer/@polymer/polymer/lib/utils/html-tag.js';
-import { IronResizableBehavior } from '/resources/polymer/@polymer/iron-resizable-behavior/iron-resizable-behavior.js';
 import { NeonAnimatableBehavior } from '/resources/polymer/@polymer/neon-animation/neon-animatable-behavior.js';
 
-import { TgTooltipBehavior } from '/resources/components/tg-tooltip-behavior.js';
 import { TgAppAnimationBehavior } from '/resources/views/tg-app-animation-behavior.js'; 
+import { isMobileApp, isIPhoneOs } from '/resources/reflection/tg-polymer-utils.js';
 
 const template = html`
     <style>
@@ -129,8 +126,7 @@ const template = html`
                 </div>
             </template>
         </tg-tile-layout>
-    </div>
-    <tg-app-config id="appConfig"></tg-app-config>`;
+    </div>`;
 
 template.setAttribute('strip-whitespace', '');
 
@@ -159,13 +155,11 @@ Polymer({
 
     behaviors: [
         NeonAnimatableBehavior,
-        TgAppAnimationBehavior,
-        IronResizableBehavior,
-        TgTooltipBehavior
+        TgAppAnimationBehavior
     ],
     
     ready: function () {
-        if (this.$.appConfig.mobile === true && this.$.appConfig.iPhoneOs()) {
+        if (isMobileApp() && isIPhoneOs()) {
             this.$.toolbar.removeChild(this.$.menuSearcher);
             this.$.logoutContainer.insertBefore(this.$.menuSearcher, this.$.logoutButton);
         }

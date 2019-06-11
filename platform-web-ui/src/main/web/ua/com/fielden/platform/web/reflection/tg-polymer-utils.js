@@ -190,4 +190,26 @@ export class EntityStub {
             validationResult: () => null
         }
     }
-}
+};
+
+/**
+ * Returns 'true' if client application was loaded on mobile device, 'false' otherwise (see AbstractWebResource and DeviceProfile for more details).
+ * 
+ * It is recommended to use word "Mobi" for mobile device detection, see https://developer.mozilla.org/en-US/docs/Web/HTTP/Browser_detection_using_the_user_agent for more info.
+ * 
+ * It is very important not to confuse this function with MOBILE / TABLET / DESKTOP layouts (tg-tile-layout, tg-flex-layout).
+ * These three layout modes can be used in 'desktop' application when resizing application window.
+ * Two of these modes can be used for 'mobile' application: MOBILE / TABLET.
+ * TABLET is activated commonly when landscape orientation is used for mobile device.
+ */
+export const isMobileApp = function () {
+    return window.navigator.userAgent.includes('Mobi'); // consistent with AbstractWebResource.calculateDeviceProfile method
+};
+
+/**
+ * Determines whether iPhone specific browser is used for rendering this client application. This could be Safari, Chrome for iOS, Opera Mini (iOS WebKit), Firefox for iOS.
+ * See https://deviceatlas.com/blog/mobile-browser-user-agent-strings for more details.
+ */
+export const isIPhoneOs = function () {
+    return window.navigator.userAgent.includes('iPhone OS');
+};

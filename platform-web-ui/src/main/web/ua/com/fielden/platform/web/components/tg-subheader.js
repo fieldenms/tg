@@ -4,7 +4,6 @@ import '/resources/polymer/@polymer/iron-icons/av-icons.js';
 import '/resources/polymer/@polymer/paper-styles/paper-styles-classes.js';
 import '/resources/polymer/@polymer/iron-flex-layout/iron-flex-layout-classes.js';
 
-import {IronResizableBehavior} from '/resources/polymer/@polymer/iron-resizable-behavior/iron-resizable-behavior.js';
 import {Polymer} from '/resources/polymer/@polymer/polymer/lib/legacy/polymer-fn.js';
 import {html} from '/resources/polymer/@polymer/polymer/lib/utils/html-tag.js';
 
@@ -77,8 +76,6 @@ Polymer({
             type: Array
         }
     },
-    
-    behaviors: [IronResizableBehavior],
 
     ready: function () {
         this.relativeElements = [];
@@ -106,7 +103,10 @@ Polymer({
         if (this.collapsible) {
             this.closed = !this.closed;
             this._syncRelativeElements();
-            this.notifyResize();
+            this.fire("iron-resize", {
+                node: this,
+                bubbles: true,
+            });
         }
     },
 

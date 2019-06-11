@@ -4,10 +4,9 @@ import '/resources/polymer/@polymer/iron-icon/iron-icon.js';
 import '/resources/polymer/@polymer/iron-input/iron-input.js';
 import '/resources/polymer/@polymer/iron-dropdown/iron-dropdown.js';
 
-import { Polymer } from '/resources/polymer/@polymer/polymer/lib/legacy/polymer-fn.js';
-import { html } from '/resources/polymer/@polymer/polymer/lib/utils/html-tag.js';
+import {html} from '/resources/polymer/@polymer/polymer/polymer-element.js';
 
-import { TgEditorBehavior,  TgEditorBehaviorImpl, createEditorTemplate} from '/resources/editors/tg-editor-behavior.js';
+import { TgEditor,  createEditorTemplate} from '/resources/editors/tg-editor.js';
 import { tearDownEvent } from '/resources/reflection/tg-polymer-utils.js'
 
 const additionalTemplate = html`
@@ -90,8 +89,8 @@ const customInputTemplate = html`
             maxlength="6"
             on-change="_onChange"
             on-input="_onInput"
-            on-tap="_onTap"
-            on-mousedown="_onTap"
+            on-mouseup="_onMouseUp" 
+            on-mousedown="_onMouseDown"
             on-keydown="_onKeydown"
             disabled$="[[_disabled]]"
             tooltip-text$="[[_getTooltip(_editingValue)]]"
@@ -129,32 +128,29 @@ const rgbToHex = function (colourString) {
     return "#" + ((r.length == 1 ? "0" + r : r) +(g.length == 1 ? "0" + g : g) + (b.length == 1 ? "0" + b : b));
 };
 
-Polymer({
-    _template: createEditorTemplate(additionalTemplate, customPrefixTemplate, customInputTemplate, html``, html``, propertyActionTemplate),
+export class TgColourPicker extends TgEditor {
 
-    is: 'tg-colour-picker',
+    static get template() { 
+        return createEditorTemplate(additionalTemplate, customPrefixTemplate, customInputTemplate, html``, html``, propertyActionTemplate);
+    }
     
-    behaviors: [ TgEditorBehavior ],
-    
-    ready: function () {
-        this._calcColourTextStyle = (function (editingValue) {
-            if (editingValue === "" || editingValue.length === 3 || editingValue.length === 6) {
-                return "margin-left: 1px; color: #212121";
-            } else {
-                return "margin-left: 1px; color: #DD2C00";
-            }
-        }).bind(this);  
-    },
+    _calcColourTextStyle (editingValue) {
+        if (editingValue === "" || editingValue.length === 3 || editingValue.length === 6) {
+            return "margin-left: 1px; color: #212121";
+        } else {
+            return "margin-left: 1px; color: #DD2C00";
+        }
+    }
 
-    convertToString: function (value) {
+    convertToString (value) {
         if (value === null) {
             return "";
         } else {
             return value.hashlessUppercasedColourValue;
         }
-    },
+    }
 
-    convertFromString: function (strValue) {
+    convertFromString (strValue) {
         if (strValue.length !== 3 && strValue.length !== 6 && strValue !== "") {
             throw "The entered value [ #" + strValue + "] is not a valid colour (use only [0-9; A-F], 3 or 6 characters).";
         } else {
@@ -162,9 +158,9 @@ Polymer({
                 hashlessUppercasedColourValue: strValue
             };
         }
-    },
+    }
     
-    _openColourPicker: function () {
+    _openColourPicker () {
         if (this._disabled === false) {
             if (!this._colourPalette) {
                 this._colourPalette = this._createDialog();
@@ -172,9 +168,9 @@ Polymer({
             }
             this._colourPalette.open();
         }
-    },
+    }
 
-    _createDialog: function () {
+    _createDialog () {
         var self = this;
         var domBind = document.createElement('dom-bind');
         
@@ -210,7 +206,7 @@ Polymer({
 
         var template = document.createElement('template');
         template.innerHTML =
-            '<iron-dropdown id="dropdown" on-iron-overlay-closed="_colorPickerClosed" on-iron-overlay-opened="_colorPickerOpened">' + // tabindex="0" on-iron-overlay-opened="_colorPickerOpened" 
+            '<iron-dropdown id="dropdown" always-on-top on-iron-overlay-closed="_colorPickerClosed" on-iron-overlay-opened="_colorPickerOpened">' + // tabindex="0" on-iron-overlay-opened="_colorPickerOpened" 
             '<div slot="dropdown-content" class="dropdown-content">' +
             '<div class="layout vertical" style="margin:10px 10px 10px 10px;">' +
             '<div class="layout horizontal">' +
@@ -280,32 +276,32 @@ Polymer({
 
         domBind.appendChild(template);
         return domBind;
-    },
+    }
     
-    _editingValueChanged: function (newValue, oldValue) {
-        TgEditorBehaviorImpl._editingValueChanged.call(this, newValue, oldValue);
+    _editingValueChanged (newValue, oldValue) {
+        super._editingValueChanged(newValue, oldValue);
         if (this._isAcceptingColourFromPicker) {
             this._isAcceptingColourFromPicker = false;
             this.commit();
         }
-    },
+    }
 
-    _calcColourBoxStyle: function (editingValue) {
+    _calcColourBoxStyle (editingValue) {
         if (editingValue.length === 3 || editingValue.length === 6) {
             return "border-color: " + colourLuminance('#' + editingValue, -0.1) + ";background-color: " + '#' + editingValue;
         } 
         return "";
-    },
+    }
 
-    _calcColourSmallIconClass: function (editingValue) {
+    _calcColourSmallIconClass (editingValue) {
         if (editingValue.length === 3 || editingValue.length === 6) {
             return "hidden-icon";
         } else  {
             return "small-icon";
         }
-    },
+    }
 
-    _calcColourPrefixStyle: function (editingValue) {
+    _calcColourPrefixStyle (editingValue) {
         if (editingValue === "") {
             return "visibility: hidden;";
         }else if (editingValue.length === 3 || editingValue.length === 6) {
@@ -313,15 +309,19 @@ Polymer({
         } else {
             return "color: #DD2C00;";
         }
-    },
-    _calcDecoratorPartStyle: function (_disabled) {
+    }
+
+    _calcDecoratorPartStyle (_disabled) {
         var style = "";
         if (_disabled === true) {
             style += "opacity: 1;"
         }
         return style;
-    },
-    _formatText: function (value) {
+    }
+
+    _formatText (value) {
         return value && '#' + value;
     }
-});
+}
+
+customElements.define('tg-colour-picker', TgColourPicker);

@@ -23,13 +23,10 @@ const criterionBehaviorStyle = html`
             .meta-value-editor > tg-scrollable-component {
                 margin: 0;
                 padding: 0;
-                --tg-scrollable-layout: {
-                    padding: 0 24px;
-                };
             }
             
             .metavalue-editor {
-                padding-top: 24px;
+                padding: 24px 24px 0 24px;
             }
         </style>
     </custom-style>

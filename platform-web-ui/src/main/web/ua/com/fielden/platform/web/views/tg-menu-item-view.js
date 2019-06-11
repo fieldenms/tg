@@ -3,13 +3,12 @@ import '/resources/polymer/@polymer/polymer/polymer-legacy.js';
 import '/resources/polymer/@polymer/iron-flex-layout/iron-flex-layout.js';
 import '/resources/polymer/@polymer/iron-flex-layout/iron-flex-layout-classes.js';
 
-import "/resources/polymer/@polymer/paper-styles/element-styles/paper-material-styles.js";
+import "/resources/polymer/@polymer/paper-styles/shadow.js";
 
 import '/resources/element_loader/tg-element-loader.js';
 
 import { Polymer } from '/resources/polymer/@polymer/polymer/lib/legacy/polymer-fn.js';
 import { html } from '/resources/polymer/@polymer/polymer/lib/utils/html-tag.js';
-import { IronResizableBehavior } from '/resources/polymer/@polymer/iron-resizable-behavior/iron-resizable-behavior.js';
 
 const template = html`
     <style>
@@ -23,14 +22,13 @@ const template = html`
             overflow: auto;
             @apply --layout-vertical;
         }
-        .paper-material {
+        .master-container {
             border-radius: 2px;
             overflow: hidden;
             background-color: white;
             max-height: 100%;
-            --paper-material: {
-                @apply --layout-vertical;
-            }
+            @apply --layout-vertical;
+            @apply --shadow-elevation-2dp;
         }
     </style>
     <custom-style>
@@ -38,7 +36,7 @@ const template = html`
     </custom-style>
     <template is="dom-if" if="[[menuItem.view]]" restamp>
         <template is="dom-if" if="[[!_isCentre(menuItem)]]" on-dom-change="_viewWasDefined" restamp>
-            <div class="paper-material" id="customViewContainer" elevation="1">
+            <div class="master-container" id="customViewContainer">
                 <div class="master-insertion-point">
                     <tg-element-loader id="elementToLoad" class="layout vertical" style="min-height:0;" auto="[[autoLoad]]" import="[[menuItem.view.htmlImport]]" element-name="[[menuItem.view.elementName]]" attrs="[[menuItem.view.attrs]]" on-after-load="_afterLoadListener"></tg-element-loader>
                 </div>
@@ -87,8 +85,6 @@ Polymer({
             observer: "_prefDimChanged"
         }
     },
-
-    behaviors: [IronResizableBehavior],
 
     hostAttributes: {
         "tabindex": "0"

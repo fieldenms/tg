@@ -19,8 +19,6 @@ import '/resources/polymer/@polymer/neon-animation/animations/slide-from-bottom-
 import '/resources/polymer/@polymer/neon-animation/animations/slide-up-animation.js';
 import '/resources/polymer/@polymer/neon-animation/animations/slide-down-animation.js';
 
-import '/app/tg-app-config.js';
-
 import '/resources/components/tg-menu-search-input.js';
 import '/resources/views/tg-menu-item-view.js';
 import '/resources/components/tg-sublistbox.js'
@@ -28,10 +26,9 @@ import '/resources/components/tg-sublistbox.js'
 import { Polymer } from '/resources/polymer/@polymer/polymer/lib/legacy/polymer-fn.js';
 import { html } from '/resources/polymer/@polymer/polymer/lib/utils/html-tag.js';
 
-import { TgTooltipBehavior } from '/resources/components/tg-tooltip-behavior.js';
 import { TgFocusRestorationBehavior } from '/resources/actions/tg-focus-restoration-behavior.js';
 import {TgBackButtonBehavior} from '/resources/views/tg-back-button-behavior.js';
-import {tearDownEvent, allDefined} from '/resources/reflection/tg-polymer-utils.js';
+import { tearDownEvent, allDefined, isMobileApp, isIPhoneOs } from '/resources/reflection/tg-polymer-utils.js';
 
 import { NeonAnimatableBehavior } from '/resources/polymer/@polymer/neon-animation/neon-animatable-behavior.js';
 
@@ -171,7 +168,6 @@ const template = html`
     <custom-style>
         <style include="iron-flex iron-flex-reverse iron-flex-alignment iron-flex-factors iron-positioning"></style>
     </custom-style>
-    <tg-app-config id="app_config"></tg-app-config>
     <app-drawer-layout id="drawerPanel" fullbleed force-narrow>
 
         <app-drawer disable-swipe="[[!mobile]]" slot="drawer">
@@ -258,7 +254,10 @@ Polymer({
     is: "tg-view-with-menu",
 
     properties: {
-        mobile: Boolean,
+        mobile: {
+            type: Boolean,
+            value: isMobileApp()
+        },
         menu: Array,
         menuItem: Object,
         selectedModule: String,
@@ -288,7 +287,6 @@ Polymer({
 
     behaviors: [
         NeonAnimatableBehavior,
-        TgTooltipBehavior,
         TgFocusRestorationBehavior,
         TgBackButtonBehavior
     ],
@@ -331,9 +329,7 @@ Polymer({
                 }
             ]
         };
-        
-        this.mobile = this.$.app_config.mobile;
-        if (this.$.app_config.mobile === true && this.$.app_config.iPhoneOs()) {
+        if (this.mobile && isIPhoneOs()) {
             this.$.viewToolBarContainer.removeChild(this.$.mainMenu);
             this.$.viewToolBarContainer.insertBefore(this.$.mainMenu, this.$.menuButton);
             this.$.viewToolBarContainer.appendChild(this.createBackButton());

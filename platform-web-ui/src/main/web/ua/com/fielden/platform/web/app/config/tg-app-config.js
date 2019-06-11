@@ -11,9 +11,9 @@ moment.locale('custom-locale', {
 });
 
 export const TgAppConfig = Polymer({
-
+    
     is: "tg-app-config",
-
+    
     properties: {
         minDesktopWidth: {
             type: Number,
@@ -39,34 +39,11 @@ export const TgAppConfig = Polymer({
             type: String,
             readOnly: true,
             value: @timeFormat
-        },
-
-        /**
-         * Returns 'true' if this tg-app-config instance is loaded during mobile application loading (vulcanised or non-vulcanised loading), 'false' otherwise.
-         * See AbstractWebResource for more details.
-         * 
-         * It is very important not to confuse this parameter with MOBILE / TABLET / DESKTOP layouts (tg-tile-layout, tg-flex-layout).
-         * These three layout modes can be used in 'desktop' application when resizing application window.
-         * Two of these modes can be used for 'mobile' application: MOBILE / TABLET.
-         * TABLET is activated commonly when landscape orientation is used for mobile device.
-         */
-        mobile: {
-            type: Boolean,
-            readOnly: true,
-            value: window.navigator.userAgent.includes("Mobi"), // consistent with AbstractWebResource.calculateDeviceProfile
-            notify: true
         }
     },
-
+    
     attached: function() {
         this.style.display = "none";
-    },
-
-    /**
-     * Determines whether iPhone specific browser is used for rendering this client application. This could be Safari, Chrome for iOS, 
-     * Opera Mini (iOS WebKit), Firefox for iOS. See https://deviceatlas.com/blog/mobile-browser-user-agent-strings for more details.
-     */
-    iPhoneOs: function () {
-        return window.navigator.userAgent.indexOf('iPhone OS') > 0;
     }
+    
 });
