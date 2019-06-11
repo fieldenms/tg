@@ -1,16 +1,21 @@
 package ua.com.fielden.platform.web.resources.webui;
 
-import static ua.com.fielden.platform.web.interfaces.DeviceProfile.DESKTOP;
+import static ua.com.fielden.platform.utils.ResourceLoader.getStream;
+import static ua.com.fielden.platform.web.resources.webui.FileResource.generateFileName;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 
 import org.apache.log4j.Logger;
 
+import com.fasterxml.jackson.databind.JsonMappingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.Injector;
 
 import ua.com.fielden.platform.attachment.AttachmentPreviewEntityAction;
@@ -64,6 +69,7 @@ public abstract class AbstractWebUiConfig implements IWebUiConfig {
      */
     private final List<String> resourcePaths;
     private final Workflows workflow;
+    private final Map<String, String> checksums;
 
     /**
      * Creates abstract {@link IWebUiConfig}.
@@ -85,6 +91,14 @@ public abstract class AbstractWebUiConfig implements IWebUiConfig {
         allResourcePaths.addAll(Arrays.asList(externalResourcePaths));
         this.resourcePaths = new ArrayList<>(Collections.unmodifiableSet(allResourcePaths));
         Collections.reverse(this.resourcePaths);
+        
+        final ObjectMapper objectMapper = new ObjectMapper();
+        try {
+            checksums = objectMapper.readValue(getStream(generateFileName(resourcePaths, "checksums.json")), LinkedHashMap.class);
+        } catch (final IOException e) {
+            e.printStackTrace();
+            throw new RuntimeException(e);
+        }
     }
 
     @Override
@@ -221,5 +235,10 @@ public abstract class AbstractWebUiConfig implements IWebUiConfig {
     public Menu getMenuEntity(final DeviceProfile deviceProfile) {
         return DeviceProfile.DESKTOP.equals(deviceProfile) ? desktopMainMenuConfig.getMenu() : mobileMainMenuConfig.getMenu();
     }
-
+    
+    @Override
+    public String checksum(final String resourceURI) {
+        return checksums.get(resourceURI);
+    }
+    
 }

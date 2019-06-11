@@ -1,18 +1,18 @@
 package ua.com.fielden.platform.web.resources.webui;
 
 import static com.google.common.base.Charsets.UTF_8;
-import static java.lang.String.format;
-import static org.apache.commons.lang.StringUtils.isEmpty;
 import static org.restlet.data.MediaType.ALL;
 import static org.restlet.data.MediaType.IMAGE_PNG;
 import static ua.com.fielden.platform.cypher.Checksum.sha1;
 import static ua.com.fielden.platform.web.resources.RestServerUtil.encodedRepresentation;
 
 import java.io.ByteArrayInputStream;
+import java.io.IOException;
 import java.io.InputStream;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
-import org.apache.log4j.Logger;
 import org.restlet.Context;
 import org.restlet.Request;
 import org.restlet.Response;
@@ -20,14 +20,11 @@ import org.restlet.data.MediaType;
 import org.restlet.representation.Representation;
 import org.restlet.resource.Get;
 
-import com.google.common.base.Charsets;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
-import ua.com.fielden.platform.cypher.Checksum;
-import ua.com.fielden.platform.roa.HttpHeaders;
 import ua.com.fielden.platform.utils.ResourceLoader;
 import ua.com.fielden.platform.web.app.ISourceController;
 import ua.com.fielden.platform.web.interfaces.IDeviceProvider;
-import ua.com.fielden.platform.web.resources.RestServerUtil;
 
 /**
  * Web server resource that searches for file resource among resource paths and returns it to client.
@@ -74,27 +71,17 @@ public class FileResource extends AbstractWebResource {
             return createRepresentation(sourceController, mediaType, path, remainingPart);
         }
     }
-
+    
     public static Representation createRepresentation(final ISourceController sourceController, final MediaType mediaType, final String path, final String remainingPart) {
-        final String source = sourceController.loadSource(path);
-        if (source != null) {
-            final byte[] bytes = source.getBytes(UTF_8);
-            final byte[] result;
-            if (remainingPart.contains("?") && remainingPart.substring(remainingPart.indexOf('?')).contains("checksum=true")) {
-                try {
-                    final String sha = sha1(bytes);
-                    //System.out.println("remainingPart = " + remainingPart + " sha1 = " + sha);
-                    result = sha.getBytes(UTF_8);
-                } catch (final Exception e) {
-                    e.printStackTrace();
-                    return null;
-                }
-            } else {
-                result = bytes;
+        if (remainingPart.contains("?") && remainingPart.substring(remainingPart.indexOf('?')).contains("checksum=true")) {
+            return encodedRepresentation(new ByteArrayInputStream(sourceController.checksum(path).getBytes(UTF_8)), mediaType);
+        } else {
+            final String source = sourceController.loadSource(path);
+            if (source != null) {
+                return encodedRepresentation(new ByteArrayInputStream(source.getBytes(UTF_8)), mediaType);
             }
-            return encodedRepresentation(new ByteArrayInputStream(result), mediaType);
+            return null;
         }
-        return null;
     }
 
     /**

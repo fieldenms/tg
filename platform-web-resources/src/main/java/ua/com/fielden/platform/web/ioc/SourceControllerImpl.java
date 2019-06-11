@@ -104,6 +104,11 @@ public class SourceControllerImpl implements ISourceController {
         }
     }
     
+    @Override
+    public String checksum(final String resourceURI) {
+        return webUiConfig.checksum(resourceURI);
+    }
+    
     private static String getReflectorSource(final ISerialiser serialiser, final TgJackson tgJackson) {
         final String typeTableRepresentation = new String(serialiser.serialise(tgJackson.getTypeTable(), JACKSON), UTF_8);
         final String originalSource = getText("ua/com/fielden/platform/web/reflection/tg-reflector.js");

@@ -39,4 +39,12 @@ public interface ISourceController {
      */
     InputStream loadStreamWithFilePath(final String filePath);
     
+    /**
+     * Loads checksum for resource.
+     * 
+     * @param resourceURI
+     * @return
+     */
+    String checksum(final String resourceURI);
+    
 }

@@ -1,5 +1,4 @@
 package ua.com.fielden.platform.web.utils;
-
 import static java.io.File.pathSeparator;
 import static java.lang.String.format;
 import static java.lang.System.getenv;
@@ -10,6 +9,7 @@ import static org.apache.commons.io.FileUtils.copyDirectory;
 import static org.apache.commons.io.FileUtils.copyFile;
 import static org.apache.commons.io.FileUtils.deleteDirectory;
 import static org.apache.log4j.xml.DOMConfigurator.configure;
+import static ua.com.fielden.platform.cypher.Checksum.sha1;
 import static ua.com.fielden.platform.utils.Pair.pair;
 
 import java.io.BufferedReader;
@@ -20,6 +20,9 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.PrintStream;
+import java.util.Arrays;
+import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.Properties;
 import java.util.function.Function;
 
@@ -27,6 +30,7 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.log4j.Logger;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.Injector;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
@@ -143,10 +147,52 @@ public class VulcanizingUtility {
         vulcanizeStartupResourcesFor(prefix, sourceController, mobileAndDesktopAppSpecificPath, commandMaker.apply("build"), commandMaker.apply("minify"), additionalPaths, dir);
         LOGGER.info(format("\tVulcanized [%s] resources...", prefix));
         
+        LOGGER.info(format("\tGenerating checksums..."));
+        final Map<String, String> checksums = generateChecksums(
+            "/app/tg-app-index.html",
+            "/resources/startup-resources-vulcanized.js",
+            "/resources/polymer/@webcomponents/webcomponentsjs/webcomponents-bundle.js",
+            "/resources/polymer/web-animations-js/web-animations-next-lite.min.js",
+            "/resources/lodash/4.17.11/lodash.min.js",
+            "/resources/postal/2.0.5/postal.min.js",
+            "/resources/filesaver/FileSaver.min.js",
+            "/resources/manifest.webmanifest",
+            "/resources/icons/tg-icon192x192.png",
+            "/resources/icons/tg-icon144x144.png"
+        );
+        try {
+            final ObjectMapper objectMapper = new ObjectMapper();
+            objectMapper.writeValue(new File(mobileAndDesktopAppSpecificPath + prefix + "checksums.json"), checksums);
+        } catch (final IOException e) {
+            LOGGER.error(e.getMessage(), e);
+            throw new IllegalStateException(e);
+        }
+        
+        LOGGER.info(format("\tGenerated checksums... [%s]", checksums));
+        
         clearObsoleteResources();
         LOGGER.info("Vulcanized.");
     }
     
+    private static Map<String, String> generateChecksums(final String ... paths) {
+        final Map<String, String> checksums = new LinkedHashMap<>();
+        for (final String path: Arrays.asList(paths)) {
+            try {
+                final FileInputStream fileInputStream = new FileInputStream("vulcan" + path);
+                final String contents = IOUtils.toString(fileInputStream, UTF_8.name());
+                fileInputStream.close();
+                
+                final byte[] bytes = contents.getBytes(UTF_8);
+                final String sha = sha1(bytes);
+                checksums.put(path, sha);
+            } catch (final Exception e) {
+                LOGGER.error(e.getMessage(), e);
+                throw new IllegalStateException(e);
+            }
+        }
+        return checksums;
+    }
+
     /**
      * Copies template for 'rollup.config.js' and adjusts it according to <code>profile</code>.
      * 
@@ -219,6 +265,7 @@ public class VulcanizingUtility {
      */
     private static void downloadGeneratedResources(final IWebUiConfig webUiConfig, final ISourceController sourceController) {
         LOGGER.info("\tDownloading generated resources...");
+        downloadSource("app", "tg-app-index.html", sourceController, null);
         downloadSource("app", "tg-reflector.js", sourceController, null);
         for (final Class<? extends AbstractEntity<?>> masterType : webUiConfig.getMasters().keySet()) {
             downloadSource("master_ui", masterType.getName() + ".js", sourceController, null);
@@ -266,6 +313,7 @@ public class VulcanizingUtility {
         LOGGER.info("\t\tMove vulcanized file to its destination...");
         try {
             copyFile(new File(prefix + "startup-resources-vulcanized-minified.js"), new File(targetAppSpecificPath + prefix + "startup-resources-vulcanized.js"));
+            copyFile(new File(prefix + "startup-resources-vulcanized-minified.js"), new File("vulcan/resources/" + prefix + "startup-resources-vulcanized.js"));
         } catch (final IOException e) {
             LOGGER.error(e.getMessage(), e);
             throw new IllegalStateException(e);

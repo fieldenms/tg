@@ -129,4 +129,12 @@ public interface IWebUiConfig extends IMenuRetriever {
      * @return
      */
     Workflows workflow();
+    
+    /**
+     * Loads checksum for resource.
+     * 
+     * @param resourceURI
+     * @return
+     */
+    String checksum(final String resourceURI);
 }
