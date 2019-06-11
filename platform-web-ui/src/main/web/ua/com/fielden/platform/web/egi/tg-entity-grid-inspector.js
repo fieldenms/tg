@@ -1577,14 +1577,14 @@ Polymer({
             const entityRows = this.$.baseContainer.querySelectorAll('.table-data-row');
             const entityRow = entityRows[lastSelectedIndex];
             if (entityRow) {
-                entityRow.scrollIntoView({behavior: "smooth"});
+                entityRow.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'start' });
             } else { // in case where selected entity is outside existing stamped EGI rows, which means that entity rows stamping still needs to be occured, defer _scrollTo invocation until dom stamps
                 const oldAction = this._scrollContainerEntitiesStampedCustomAction;
                 this._scrollContainerEntitiesStampedCustomAction = (function () {
                     oldAction();
                     const entityRows = this.$.baseContainer.querySelectorAll('.table-data-row');
                     const entityRow = entityRows[lastSelectedIndex];
-                    entityRow.scrollIntoView({behavior: "smooth"});
+                    entityRow.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'start' });
                     this._scrollContainerEntitiesStampedCustomAction = oldAction;
                 }).bind(this);
             }
