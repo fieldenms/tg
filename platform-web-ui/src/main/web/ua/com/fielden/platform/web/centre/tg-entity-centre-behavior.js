@@ -765,7 +765,7 @@ const TgEntityCentreBehaviorImpl = {
             });
         });
         //Update other insertion point entities
-        const insertionPoints = this.querySelectorAll('tg-entity-centre-insertion-point');
+        const insertionPoints = this.shadowRoot.querySelectorAll('tg-entity-centre-insertion-point');
         for (let insPoIndex = 0; insPoIndex < insertionPoints.length; insPoIndex++) {
             insertionPoints[insPoIndex].refreshEntitiesLocaly(entities, properties);
         }
