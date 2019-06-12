@@ -17,9 +17,9 @@ import static ua.com.fielden.platform.web.resources.webui.FileResource.generateF
 
 import java.io.InputStream;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Optional;
 
 import org.apache.log4j.Logger;
 
@@ -70,11 +70,6 @@ public class SourceControllerImpl implements ISourceController {
     }
     
     @Override
-    public String loadSourceWithFilePath(final String filePath) {
-        return getFileSource(filePath);
-    }
-    
-    @Override
     public InputStream loadStreamWithFilePath(final String filePath) {
         return getStream(filePath);
     }
@@ -105,7 +100,7 @@ public class SourceControllerImpl implements ISourceController {
     }
     
     @Override
-    public String checksum(final String resourceURI) {
+    public Optional<String> checksum(final String resourceURI) {
         return webUiConfig.checksum(resourceURI);
     }
     

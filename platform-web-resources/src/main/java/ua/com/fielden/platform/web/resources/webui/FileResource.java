@@ -3,15 +3,15 @@ package ua.com.fielden.platform.web.resources.webui;
 import static com.google.common.base.Charsets.UTF_8;
 import static org.restlet.data.MediaType.ALL;
 import static org.restlet.data.MediaType.IMAGE_PNG;
-import static ua.com.fielden.platform.cypher.Checksum.sha1;
+import static org.restlet.data.MediaType.IMAGE_SVG;
+import static org.restlet.data.MediaType.TEXT_CSS;
+import static org.restlet.data.MediaType.TEXT_HTML;
+import static org.restlet.data.MediaType.TEXT_JAVASCRIPT;
 import static ua.com.fielden.platform.web.resources.RestServerUtil.encodedRepresentation;
 
 import java.io.ByteArrayInputStream;
-import java.io.IOException;
 import java.io.InputStream;
-import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
 
 import org.restlet.Context;
 import org.restlet.Request;
@@ -19,8 +19,6 @@ import org.restlet.Response;
 import org.restlet.data.MediaType;
 import org.restlet.representation.Representation;
 import org.restlet.resource.Get;
-
-import com.fasterxml.jackson.databind.ObjectMapper;
 
 import ua.com.fielden.platform.utils.ResourceLoader;
 import ua.com.fielden.platform.web.app.ISourceController;
@@ -58,23 +56,29 @@ public class FileResource extends AbstractWebResource {
         final String extension = getReference().getExtensions();
         final MediaType mediaType = determineMediaType(extension);
         if (IMAGE_PNG.equals(mediaType) || ALL.equals(mediaType)) {
-            final String filePath = generateFileName(resourcePaths, getReference().getRemainingPart());
+            return createStreamRepresentation(sourceController, resourcePaths, mediaType, getReference().getPath(), getReference().getRemainingPart());
+        } else {
+            return createRepresentation(sourceController, mediaType, getReference().getPath(), getReference().getRemainingPart());
+        }
+    }
+    
+    private static Representation createStreamRepresentation(final ISourceController sourceController, final List<String> resourcePaths, final MediaType mediaType, final String path, final String remainingPart) {
+        if (remainingPart.endsWith("?checksum=true")) {
+            return encodedRepresentation(new ByteArrayInputStream(sourceController.checksum(path).orElse("").getBytes(UTF_8)), mediaType);
+        } else {
+            final String filePath = generateFileName(resourcePaths, remainingPart);
             final InputStream stream = sourceController.loadStreamWithFilePath(filePath);
             if (stream != null) {
                 return encodedRepresentation(stream, mediaType);
             } else {
                 return null;
             }
-        } else {
-            final String path = getReference().getPath();
-            final String remainingPart = getReference().getRemainingPart();
-            return createRepresentation(sourceController, mediaType, path, remainingPart);
         }
     }
     
     public static Representation createRepresentation(final ISourceController sourceController, final MediaType mediaType, final String path, final String remainingPart) {
-        if (remainingPart.contains("?") && remainingPart.substring(remainingPart.indexOf('?')).contains("checksum=true")) {
-            return encodedRepresentation(new ByteArrayInputStream(sourceController.checksum(path).getBytes(UTF_8)), mediaType);
+        if (remainingPart.endsWith("?checksum=true")) {
+            return encodedRepresentation(new ByteArrayInputStream(sourceController.checksum(path).orElse("").getBytes(UTF_8)), mediaType);
         } else {
             final String source = sourceController.loadSource(path);
             if (source != null) {
@@ -114,20 +118,20 @@ public class FileResource extends AbstractWebResource {
     private static MediaType determineMediaType(final String extension) {
         switch (extension.substring(extension.lastIndexOf(".") + 1)) {
         case "png":
-            //return MediaType.IMAGE_PNG;
+            return IMAGE_PNG;
         case "js":
         case "json":
         case "webmanifest":
         case "":
-            return MediaType.TEXT_JAVASCRIPT;
+            return TEXT_JAVASCRIPT;
         case "html":
-            return MediaType.TEXT_HTML;
+            return TEXT_HTML;
         case "css":
-            return MediaType.TEXT_CSS;
+            return TEXT_CSS;
         case "svg":
-            return MediaType.IMAGE_SVG;
+            return IMAGE_SVG;
         default:
-            return MediaType.ALL;
+            return ALL;
         }
     }
 }

@@ -2,6 +2,7 @@ package ua.com.fielden.platform.web.app;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import ua.com.fielden.platform.basic.config.Workflows;
 import ua.com.fielden.platform.entity.AbstractEntity;
@@ -10,7 +11,6 @@ import ua.com.fielden.platform.ui.menu.MiWithConfigurationSupport;
 import ua.com.fielden.platform.web.app.config.IWebUiBuilder;
 import ua.com.fielden.platform.web.centre.EntityCentre;
 import ua.com.fielden.platform.web.custom_view.AbstractCustomView;
-import ua.com.fielden.platform.web.interfaces.DeviceProfile;
 import ua.com.fielden.platform.web.menu.IMainMenuBuilder;
 import ua.com.fielden.platform.web.view.master.EntityMaster;
 
@@ -136,5 +136,5 @@ public interface IWebUiConfig extends IMenuRetriever {
      * @param resourceURI
      * @return
      */
-    String checksum(final String resourceURI);
+    Optional<String> checksum(final String resourceURI);
 }

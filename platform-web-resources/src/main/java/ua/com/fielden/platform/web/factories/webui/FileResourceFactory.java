@@ -8,10 +8,8 @@ import org.restlet.Response;
 import org.restlet.Restlet;
 import org.restlet.data.Method;
 
-import ua.com.fielden.platform.roa.HttpHeaders;
 import ua.com.fielden.platform.web.app.ISourceController;
 import ua.com.fielden.platform.web.interfaces.IDeviceProvider;
-import ua.com.fielden.platform.web.resources.RestServerUtil;
 import ua.com.fielden.platform.web.resources.webui.FileResource;
 
 /**

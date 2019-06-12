@@ -3,6 +3,7 @@ import static java.io.File.pathSeparator;
 import static java.lang.String.format;
 import static java.lang.System.getenv;
 import static java.nio.charset.StandardCharsets.UTF_8;
+import static java.util.Arrays.asList;
 import static java.util.Arrays.stream;
 import static java.util.stream.Collectors.joining;
 import static org.apache.commons.io.FileUtils.copyDirectory;
@@ -176,18 +177,14 @@ public class VulcanizingUtility {
     
     private static Map<String, String> generateChecksums(final String ... paths) {
         final Map<String, String> checksums = new LinkedHashMap<>();
-        for (final String path: Arrays.asList(paths)) {
+        for (final String path: asList(paths)) {
             try {
                 final FileInputStream fileInputStream = new FileInputStream("vulcan" + path);
-                final String contents = IOUtils.toString(fileInputStream, UTF_8.name());
-                fileInputStream.close();
-                
-                final byte[] bytes = contents.getBytes(UTF_8);
-                final String sha = sha1(bytes);
+                final String sha = sha1(fileInputStream).getKey();
                 checksums.put(path, sha);
-            } catch (final Exception e) {
-                LOGGER.error(e.getMessage(), e);
-                throw new IllegalStateException(e);
+            } catch (final Exception ex) {
+                LOGGER.error(format("Could not generate checksum for resource [%s].", path), ex);
+                throw new IllegalStateException(ex);
             }
         }
         return checksums;

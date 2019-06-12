@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.web.app;
 
 import java.io.InputStream;
+import java.util.Optional;
 
 /**
  * The contract for loading resources by their URIs of filePaths.
@@ -22,15 +23,6 @@ public interface ISourceController {
     String loadSource(final String resourceURI);
     
     /**
-     * Loads the text representation of the resource with the specified 'filePath'.
-     *
-     * @param resourceURI
-     *
-     * @return
-     */
-    String loadSourceWithFilePath(final String filePath);
-    
-    /**
      * Loads input stream representation of the resource with the specified 'filePath'.
      *
      * @param resourceURI
@@ -45,6 +37,6 @@ public interface ISourceController {
      * @param resourceURI
      * @return
      */
-    String checksum(final String resourceURI);
+    Optional<String> checksum(final String resourceURI);
     
 }

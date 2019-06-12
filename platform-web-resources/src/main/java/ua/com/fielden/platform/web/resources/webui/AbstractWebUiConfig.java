@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.web.resources.webui;
 
+import static java.util.Optional.ofNullable;
 import static ua.com.fielden.platform.utils.ResourceLoader.getStream;
 import static ua.com.fielden.platform.web.resources.webui.FileResource.generateFileName;
 
@@ -11,10 +12,10 @@ import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import org.apache.log4j.Logger;
 
-import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.Injector;
 
@@ -95,9 +96,8 @@ public abstract class AbstractWebUiConfig implements IWebUiConfig {
         final ObjectMapper objectMapper = new ObjectMapper();
         try {
             checksums = objectMapper.readValue(getStream(generateFileName(resourcePaths, "checksums.json")), LinkedHashMap.class);
-        } catch (final IOException e) {
-            e.printStackTrace();
-            throw new RuntimeException(e);
+        } catch (final IOException ex) {
+            throw new IllegalStateException("Could not read checksums from file.", ex);
         }
     }
 
@@ -237,8 +237,8 @@ public abstract class AbstractWebUiConfig implements IWebUiConfig {
     }
     
     @Override
-    public String checksum(final String resourceURI) {
-        return checksums.get(resourceURI);
+    public Optional<String> checksum(final String resourceURI) {
+        return ofNullable(checksums.get(resourceURI));
     }
     
 }
