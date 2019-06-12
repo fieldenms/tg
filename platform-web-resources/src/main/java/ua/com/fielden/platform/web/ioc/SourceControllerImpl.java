@@ -82,7 +82,7 @@ public class SourceControllerImpl implements ISourceController {
         } else if ("/app/tg-app-config.js".equalsIgnoreCase(resourceURI)) {
             return webUiConfig.genWebUiPreferences();
         } else if ("/app/tg-app.js".equalsIgnoreCase(resourceURI)) {
-            return webUiConfig.genMainWebUIComponent();
+            return getTgAppSource(webUiConfig.genMainWebUIComponent(), this);
         } else if ("/app/tg-reflector.js".equalsIgnoreCase(resourceURI)) {
             return getReflectorSource(serialiser, tgJackson);
         } else if (resourceURI.startsWith("/master_ui")) {
@@ -108,6 +108,14 @@ public class SourceControllerImpl implements ISourceController {
         final String typeTableRepresentation = new String(serialiser.serialise(tgJackson.getTypeTable(), JACKSON), UTF_8);
         final String originalSource = getText("ua/com/fielden/platform/web/reflection/tg-reflector.js");
         return originalSource.replace("@typeTable", typeTableRepresentation);
+    }
+    
+    private static String getTgAppSource(final String originalSource, final SourceControllerImpl sourceControllerImpl) {
+        if (sourceControllerImpl.vulcanizingMode || sourceControllerImpl.deploymentMode) {
+            return originalSource.replace("//@service-worker", "if ('serviceWorker' in navigator) { navigator.serviceWorker.register('/service-worker.js'); }");
+        } else {
+            return originalSource;
+        }
     }
     
     private static String getApplicationStartupResourcesSource(final IWebUiConfig webUiConfig, final SourceControllerImpl sourceControllerImpl) {

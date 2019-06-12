@@ -382,10 +382,7 @@ Polymer({
                 this._selectedSubmodule = this._subroute.path;
             }
         }
-        // Delay service worker registration as later as possible to enable smooth first time loading of application.
-        if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('/service-worker.js');
-        }
+        //@service-worker
     },
 
     //Entity master related functions
