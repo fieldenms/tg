@@ -16,6 +16,7 @@ export function createEditorTemplate (additionalTemplate, customPrefixAttribute,
     return html`
         <style>
             :host {
+                --paper-input-container-input-color: #212121;
                 --paper-input-container-disabled: {
                     opacity: 1;
                     pointer-events: auto;
