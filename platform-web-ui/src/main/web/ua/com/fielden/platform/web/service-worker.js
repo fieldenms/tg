@@ -5,7 +5,6 @@ const checksumCacheName = 'tg-air-dev-cache-checksums';
 
 const isStatic = function (url) {
     const pathname = new URL(url).pathname;
-    // console.debug(`isStatic [${url}] pathname [${pathname}]`);
     return pathname === '/' ||
         pathname.startsWith('/resources/') ||
         pathname.startsWith('/app/') ||
@@ -23,7 +22,7 @@ const isResponseSuccessful = function (response) {
 };
 
 const cacheIfSuccessful = function (response, checksumRequest, checksumResponseToCache, url, cache, checksumCache) {
-    if (isResponseSuccessful(response)) { // cache response if it is successful
+    if (isResponseSuccessful(response) && isResponseSuccessful(checksumResponseToCache)) { // cache response if it is successful
         // IMPORTANT: Clone the response. A response is a stream
         // and because we want the browser to consume the response
         // as well as the cache consuming the response, we need
@@ -38,28 +37,35 @@ const cacheIfSuccessful = function (response, checksumRequest, checksumResponseT
     return Promise.resolve(response);
 };
 
+/**
+ * Returns promise resolving to reponse text if successful, otherwise to empty string.
+ * 
+ * @param {*} serverChecksumResponse 
+ */
+const serverChecksumPromise = function (serverChecksumResponse) {
+    if (isResponseSuccessful(serverChecksumResponse)) {
+        return serverChecksumResponse.text();
+    } else {
+        return Promise.resolve(''); // empty serverChecksum
+    }
+};
+
 self.addEventListener('fetch', function (event) {
     const request = event.request;
     const urlObj = new URL(request.url);
     const url = urlObj.origin + urlObj.pathname;
     if (isStatic(url)) {
         event.respondWith(function() {
-            console.time('open and fetch checksum ' + url);
             return caches.open(cacheName).then(function (cache) {
                 const serverChecksumRequest = new Request(url + '?checksum=true', { method: 'GET' });
                 return fetch(serverChecksumRequest).then(function(serverChecksumResponse) {
-                    console.timeEnd('open and fetch checksum ' + url);
-                    console.time('matchAll ' + url);
                     return cache.match(url).then(function (cachedResponse) {
                         return caches.open(checksumCacheName).then(function (checksumCache) {
-                            return checksumCache.match(url + '?checksum=true').then(function (cachedChecksum1) {
-                                console.timeEnd('matchAll ' + url);
+                            return checksumCache.match(url + '?checksum=true').then(function (cachedChecksumResponse) {
                                 const serverChecksumResponseToCache = isResponseSuccessful(serverChecksumResponse) && serverChecksumResponse.clone();
-                                // const serverChecksum = /* isResponseSuccessful(serverChecksumResponse) && */ await serverChecksumResponse.text();
-                                return serverChecksumResponse.text().then(function (serverChecksum) {
-                                    if (cachedResponse && cachedChecksum1) { // cached entry exists and it has proper checksum too
-                                        return cachedChecksum1.text().then(function (cachedChecksum) {
-                                            console.debug(`${url} CACHED: cachedChecksum = ${cachedChecksum} serverChecksum = ${serverChecksum}`);
+                                return serverChecksumPromise(serverChecksumResponse).then(function (serverChecksum) {
+                                    if (cachedResponse && cachedChecksumResponse) { // cached entry exists and it has proper checksum too
+                                        return cachedChecksumResponse.text().then(function (cachedChecksum) {
                                             if (!serverChecksum) { // resource has been deleted on server
                                                 console.warn(`Resource ${url} has been deleted on server.`);
                                                 return cache.delete(url).then(function (deleted) {
@@ -78,7 +84,6 @@ self.addEventListener('fetch', function (event) {
                                             }
                                         });
                                     } else { // there is no cached entry
-                                        console.debug(`${url} NEW: serverChecksum = ${serverChecksum}`);
                                         if (!serverChecksum) { // resource has been deleted on server
                                             console.warn(`Resource ${url} has been deleted on server.`);
                                             return staleResponse();
