@@ -22,6 +22,7 @@ const template = html`
         tg-scrollable-component {
             --tg-scrollable-layout: {
                 flex: 1;
+                @apply --master-with-dimensions-mixin;
             };
         }
     </style>
