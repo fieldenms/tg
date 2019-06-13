@@ -367,10 +367,15 @@ public class UserSessionDao extends CommonEntityDao<UserSession> implements IUse
     }
 
     @Override
+    public String genSeriesId() {
+        return crypto.nextSessionId();
+    }
+
+    @Override
     @SessionRequired
     public UserSession newSession(final User user, final boolean isDeviceTrusted) {
         // let's first construct the next series id
-        final String seriesId = crypto.nextSessionId();
+        final String seriesId = genSeriesId();
         final UserSession session = new_().setUser(user).setSeriesId(seriesHash(seriesId));
         
         session.setTrusted(isDeviceTrusted);
@@ -399,7 +404,8 @@ public class UserSessionDao extends CommonEntityDao<UserSession> implements IUse
      * @param expiryTime
      * @return
      */
-    private Authenticator mkAuthenticator(final User user, final String seriesId, final Date expiryTime) {
+    @Override
+    public Authenticator mkAuthenticator(final User user, final String seriesId, final Date expiryTime) {
         try {
             final String token = mkToken(user.getKey(), seriesId, expiryTime);
             final String hash = crypto.calculateRFC2104HMAC(token, hashingKey);

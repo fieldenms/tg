@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.security.session;
 
+import java.util.Date;
 import java.util.Optional;
 
 import ua.com.fielden.platform.dao.IEntityDao;
@@ -49,7 +50,7 @@ public interface IUserSession extends IEntityDao<UserSession> {
     Optional<UserSession> currentSession(final User user, final String authenticator, final boolean skipRegeneration);
 
     /**
-     * This method creates a new session for the provided users.
+     * This method creates and persists a new session for the provided users.
      * It is assumed that the user has been explicitly authenticated by the system before making a call to this method.
      * <p>
      * It is considered that a new user session can always be created for the provided user.
@@ -58,13 +59,29 @@ public interface IUserSession extends IEntityDao<UserSession> {
      * <p>
      * Argument <code>isDeviceTruested</code> indicates whether the session is being established from trusted or untrusted devices.
      * This provides hints to the system to establish a long or short lived sessions.
-     * <p>
-     * The <code>key</code> is used to produce the authenticator and to encode the dynamically generated series id for the session.
      *
-     * @param key
+     * @param user
+     * @param isDeviceTrusted
      * @return
      */
     UserSession newSession(final User user, final boolean isDeviceTrusted);
+
+    /**
+     * Generates cryptographically strong series that is used as session id.
+     *
+     * @return
+     */
+    String genSeriesId();
+
+    /**
+     * Makes a session authenticator from {@code user}, {@code seriesId} and {@code expiryTime}.
+     *
+     * @param user
+     * @param seriesId
+     * @param expiryTime
+     * @return
+     */
+    Authenticator mkAuthenticator(final User user, final String seriesId, final Date expiryTime);
 
     /**
      * Invalidates the specified user session. 
