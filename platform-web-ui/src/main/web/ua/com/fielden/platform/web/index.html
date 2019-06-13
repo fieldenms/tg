@@ -9,14 +9,50 @@
     <meta name="viewport" content="width=device-width, minimum-scale=1.0, initial-scale=1.0, user-scalable=yes">
     <title>@title</title>
     <!--<title>@title</title>-->
-    <!--@service-worker-->
-    <script src='/resources/polymer/@webcomponents/webcomponentsjs/webcomponents-bundle.js'></script>
-    <script src='/resources/polymer/web-animations-js/web-animations-next-lite.min.js'></script>
-    <script src="/resources/lodash/4.17.11/lodash.min.js"></script>
-    <script src="/resources/postal/2.0.5/postal.min.js"></script>
-    <script src="/resources/filesaver/FileSaver.min.js"></script>
-    <script type="module">
-        import '/resources/@startupResources.js';
+    <script>
+        const loadJavaScriptSync = function (filePath) {
+            const req = new XMLHttpRequest();
+            req.open("GET", filePath, false); // 'false': synchronous.
+            req.send(null);
+
+            const headElement = document.getElementsByTagName("head")[0];
+            const newScriptElement = document.createElement("script");
+            newScriptElement.type = "text/javascript";
+            newScriptElement.text = req.responseText;
+            headElement.appendChild(newScriptElement);
+        }
+        const loadJavaScript = function (filePath, async) {
+            const headElement = document.getElementsByTagName('head')[0];
+            const newScriptElement = document.createElement('script');
+            newScriptElement.type = 'text/javascript';
+            newScriptElement.src = filePath;
+            newScriptElement.async = async;
+            headElement.appendChild(newScriptElement);
+        };
+        const loadScripts = function () {
+            loadJavaScript('/resources/polymer/@webcomponents/webcomponentsjs/webcomponents-bundle.js', 'true');
+            loadJavaScript('/resources/polymer/web-animations-js/web-animations-next-lite.min.js', 'true');
+            loadJavaScript('/resources/lodash/4.17.11/lodash.min.js', 'false');
+            loadJavaScript('/resources/postal/2.0.5/postal.min.js', 'true');
+            loadJavaScript('/resources/filesaver/FileSaver.min.js', 'true');
+            import('/resources/@startupResources.js');
+        };
+        if (@service-worker && 'serviceWorker' in navigator) {
+            navigator.serviceWorker.register('/service-worker.js').then(function (registration) {
+                if (registration.active) {
+                    loadScripts();
+                } else {
+                    registration.onupdatefound = function () {
+                        const installingWorker = registration.installing;
+                        installingWorker.onstatechange = function () {
+                            if (installingWorker.state === 'activated') {
+                                loadScripts();
+                            }
+                        };
+                    };
+                }
+            });
+        }
     </script>
     
     <!-- Add to homescreen for Chrome on Android -->

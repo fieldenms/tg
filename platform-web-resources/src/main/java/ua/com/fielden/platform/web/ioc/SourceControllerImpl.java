@@ -111,11 +111,7 @@ public class SourceControllerImpl implements ISourceController {
     }
     
     private static String getTgAppIndexSource(final String originalSource, final SourceControllerImpl sourceControllerImpl) {
-        if (sourceControllerImpl.vulcanizingMode || sourceControllerImpl.deploymentMode) {
-            return originalSource.replace("<!--@service-worker-->", "<script> if ('serviceWorker' in navigator) { navigator.serviceWorker.register('/service-worker.js'); } </script>");
-        } else {
-            return originalSource;
-        }
+        return originalSource.replace("@service-worker", "" + (sourceControllerImpl.vulcanizingMode || sourceControllerImpl.deploymentMode));
     }
     
     private static String getApplicationStartupResourcesSource(final IWebUiConfig webUiConfig, final SourceControllerImpl sourceControllerImpl) {
