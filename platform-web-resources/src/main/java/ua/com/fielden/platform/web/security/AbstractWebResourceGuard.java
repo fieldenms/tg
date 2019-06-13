@@ -131,20 +131,10 @@ public abstract class AbstractWebResourceGuard extends ChallengeAuthenticator {
                 .filter(c -> AUTHENTICATOR_COOKIE_NAME.equals(c.getName()) && !StringUtils.isEmpty(c.getValue()))
                 .collect(Collectors.toList());
 
-        // if there are no authenticating cookies then return an empty result
-        if (cookies.isEmpty()) {
-            return Optional.empty();
-        }
-
-        // convert authenticating cookies to authenticators and sort them by expiry date oldest first...
-        final List<Authenticator> authenticators = cookies.stream()
+        // convert authenticating cookies to authenticators and get the most recent one by expiry date...
+        return cookies.stream()
                 .map(c -> fromString(c.getValue()))
-                .sorted((auth1, auth2) -> auth1.getExpiryTime().compareTo(auth2.getExpiryTime()))
-                .collect(Collectors.toList());
-
-        // ...and get the most recent authenticator...
-        final Authenticator auth = Iterables.getLast(authenticators);
-        return Optional.of(auth);
+                .max((auth1, auth2) -> Long.compare(auth1.expiryTime, auth2.expiryTime));
     }
 
     /**
