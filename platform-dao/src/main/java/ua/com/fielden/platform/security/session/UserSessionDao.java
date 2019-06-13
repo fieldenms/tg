@@ -317,23 +317,19 @@ public class UserSessionDao extends CommonEntityDao<UserSession> implements IUse
         }
 
         // if this point is reached then the identified session is considered valid
-        // now we need to decide whether a new authenticator needs to be regenerated
-        if(skipRegeneration) {
-            return Optional.of(session);
-        }
-
-        // regeneration of the authenticator is in order...
-        // it needs to be updated with a new series ID and a refreshed expiry time, and returned as the result
-        final String seriesId = crypto.nextSessionId();
-        session.setSeriesId(seriesHash(seriesId));
-        session.setLastAccess(constants.now().toDate());
-        final Date expiryTime = calcExpiryTime(session.isTrusted());
-        session.setExpiryTime(expiryTime);
-
         // due to potentially highly concurrent requests from the same web client upon a refresh after some stale period where cache has already been evicted
-        // saving of the newly created session may fail due to concurrent update
+        // saving of the newly created session may fail due to concurrent updates
         // therefore, in case the save call fails, we hope that an updated session has already been placed into the cache by a concurrent process
         try {
+            // need to decide whether a new session needs to be generated
+            final String seriesId = skipRegeneration ? auth.seriesId : crypto.nextSessionId(); 
+        
+            // set session's series id (hashed), refresh expiry time, and returned as the result
+            session.setSeriesId(seriesHash(seriesId));
+            session.setLastAccess(constants.now().toDate());
+            final Date expiryTime = calcExpiryTime(session.isTrusted());
+            session.setExpiryTime(expiryTime);
+            
             final UserSession updated = save(session);
             final UserSession userSessionForCache = updated.copyTo(newPlainEntity(UserSession.class,  updated.getId()));
             // assign authenticator, but in way not to disturb the entity meta-state

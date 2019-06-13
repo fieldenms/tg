@@ -116,7 +116,7 @@ public class UserSessionValidationAndReestablishmentTestCase extends AbstractDao
     }
 
     @Test
-    public void reestablishing_a_session_with_option_skipRegeneration_true_returns_the_same_session() {
+    public void reestablishing_a_session_with_option_skipRegeneration_true_returns_a_session_with_the_same_authenticator() {
         // set the current time...
         constants.setNow(dateTime("2015-04-23 17:26:00"));
         // establish a new session
@@ -129,6 +129,13 @@ public class UserSessionValidationAndReestablishmentTestCase extends AbstractDao
         final Optional<UserSession> restoredSession = coSession.currentSession(currUser, authenticator, true /*skipRegeneration*/);
         assertTrue(restoredSession.isPresent());
         assertEquals(session, restoredSession.get());
+        assertTrue("Session is missing an authenticator.", restoredSession.get().getAuthenticator().isPresent());
+        
+        final Optional<UserSession> restoredAgainSession = coSession.currentSession(currUser, authenticator, true /*skipRegeneration*/);
+        assertTrue(restoredAgainSession.isPresent());
+        assertEquals(session, restoredAgainSession.get());
+        assertSame("Expected the cached session, but new instance is returned.", restoredSession.get(), restoredAgainSession.get());
+
     }
 
     @Test
