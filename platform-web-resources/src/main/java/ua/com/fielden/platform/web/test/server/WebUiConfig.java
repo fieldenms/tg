@@ -1313,7 +1313,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
 
         final ICentreTopLevelActionsWithRunConfig<TgPersistentEntityWithProperties> partialCentre = EntityCentreBuilder.centreFor(TgPersistentEntityWithProperties.class);
         ICentreTopLevelActions<TgPersistentEntityWithProperties> actionConf = (runAutomatically ? partialCentre.runAutomatically() : partialCentre)
-                .hasEventSourceAt("/entity-centre-events")
+                .hasEventSourceAt("/sse/entity-centre-events")
                 .enforcePostSaveRefresh()
                 .addFrontAction(action(EntityNewAction.class).
                         withContext(context().withSelectionCrit().build()).
