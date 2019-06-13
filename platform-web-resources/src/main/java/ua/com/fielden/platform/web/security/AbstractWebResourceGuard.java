@@ -1,12 +1,9 @@
 package ua.com.fielden.platform.web.security;
 
 import static java.lang.String.format;
-import static java.util.stream.Collectors.toList;
 import static ua.com.fielden.platform.security.session.Authenticator.fromString;
 
-import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
@@ -15,11 +12,9 @@ import org.restlet.Context;
 import org.restlet.Request;
 import org.restlet.Response;
 import org.restlet.data.ChallengeScheme;
-import org.restlet.data.Cookie;
 import org.restlet.data.CookieSetting;
 import org.restlet.security.ChallengeAuthenticator;
 
-import com.google.common.collect.Iterables;
 import com.google.inject.Injector;
 
 import ua.com.fielden.platform.security.session.Authenticator;
@@ -40,6 +35,7 @@ import ua.com.fielden.platform.utils.IUniversalConstants;
 public abstract class AbstractWebResourceGuard extends ChallengeAuthenticator {
     private final Logger logger = Logger.getLogger(getClass());
     public static final String AUTHENTICATOR_COOKIE_NAME = "authenticator";
+    public static final String SSE_URI = "/sse/";
     protected final Injector injector;
     private final IUniversalConstants constants;
     private final String domainName;
@@ -93,9 +89,9 @@ public abstract class AbstractWebResourceGuard extends ChallengeAuthenticator {
 
             // let's validate the authenticator
             final IUserSession coUserSession = injector.getInstance(IUserSession.class);
-            // TODO For SSE requests authenticators should not be regenerated
-            //      This is due to the fact that for SSE requests no HTTP responses are sent, and so there is nothing to carry an updated cookie with a new authenticator back to the client
-            final boolean skipRegeneration = false;
+            // for SSE requests session ID should not be regenerated
+            // this is due to the fact that for SSE requests no HTTP responses are sent, and so there is nothing to carry an updated cookie with a new authenticator back to the client
+            final boolean skipRegeneration = request.getResourceRef().toString().contains(SSE_URI);
             final Optional<UserSession> session = coUserSession.currentSession(getUser(auth.username), auth.toString(), skipRegeneration);
             if (!session.isPresent()) {
                 logger.warn(format("Authenticator validation failed for a request to a resource at URI %s (%s, %s, %s)", request.getResourceRef(), request.getClientInfo().getAddress(), request.getClientInfo().getAgentName(), request.getClientInfo().getAgentVersion()));
