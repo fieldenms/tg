@@ -149,7 +149,7 @@ public class FileProcessingResource<T extends AbstractEntityWithInputStream<?>> 
         final ProcessingProgressSubject subject = new ProcessingProgressSubject();
         final EventSourcingResourceFactory eventSource = new EventSourcingResourceFactory(new ProcessingProgressEventSource(subject), deviceProvider);
         final String baseUri = getRequest().getResourceRef().getPath(true);
-        router.attach(baseUri + "/" + jobUid, eventSource);
+        router.attach(baseUri + "/sse/" + jobUid, eventSource);
         
         try {
             final T entity = entityCreator.apply(factory);

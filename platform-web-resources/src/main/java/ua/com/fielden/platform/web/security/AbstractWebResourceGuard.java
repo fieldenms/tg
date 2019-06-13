@@ -3,9 +3,7 @@ package ua.com.fielden.platform.web.security;
 import static java.lang.String.format;
 import static ua.com.fielden.platform.security.session.Authenticator.fromString;
 
-import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
@@ -14,11 +12,9 @@ import org.restlet.Context;
 import org.restlet.Request;
 import org.restlet.Response;
 import org.restlet.data.ChallengeScheme;
-import org.restlet.data.Cookie;
 import org.restlet.data.CookieSetting;
 import org.restlet.security.ChallengeAuthenticator;
 
-import com.google.common.collect.Iterables;
 import com.google.inject.Injector;
 
 import ua.com.fielden.platform.security.session.Authenticator;
@@ -39,6 +35,7 @@ import ua.com.fielden.platform.utils.IUniversalConstants;
 public abstract class AbstractWebResourceGuard extends ChallengeAuthenticator {
     private final Logger logger = Logger.getLogger(getClass());
     public static final String AUTHENTICATOR_COOKIE_NAME = "authenticator";
+    public static final String SSE_URI = "/sse/";
     protected final Injector injector;
     private final IUniversalConstants constants;
     private final String domainName;
@@ -92,7 +89,10 @@ public abstract class AbstractWebResourceGuard extends ChallengeAuthenticator {
 
             // let's validate the authenticator
             final IUserSession coUserSession = injector.getInstance(IUserSession.class);
-            final Optional<UserSession> session = coUserSession.currentSession(getUser(auth.username), auth.toString());
+            // for SSE requests session ID should not be regenerated
+            // this is due to the fact that for SSE requests no HTTP responses are sent, and so there is nothing to carry an updated cookie with a new authenticator back to the client
+            final boolean skipRegeneration = request.getResourceRef().toString().contains(SSE_URI);
+            final Optional<UserSession> session = coUserSession.currentSession(getUser(auth.username), auth.toString(), skipRegeneration);
             if (!session.isPresent()) {
                 logger.warn(format("Authenticator validation failed for a request to a resource at URI %s (%s, %s, %s)", request.getResourceRef(), request.getClientInfo().getAddress(), request.getClientInfo().getAgentName(), request.getClientInfo().getAgentVersion()));
                 // TODO this is an interesting approach to prevent any further processing of the request, this event prevents receiving it completely
@@ -126,25 +126,11 @@ public abstract class AbstractWebResourceGuard extends ChallengeAuthenticator {
      * @return
      */
     public static Optional<Authenticator> extractAuthenticator(final Request request) {
-        // first collect non-empty authenticating cookies
-        final List<Cookie> cookies = request.getCookies().stream()
+        // convert non-empty authenticating cookies to authenticators and get the most recent one by expiry date...
+        return request.getCookies().stream()
                 .filter(c -> AUTHENTICATOR_COOKIE_NAME.equals(c.getName()) && !StringUtils.isEmpty(c.getValue()))
-                .collect(Collectors.toList());
-
-        // if there are no authenticating cookies then return an empty result
-        if (cookies.isEmpty()) {
-            return Optional.empty();
-        }
-
-        // convert authenticating cookies to authenticators and sort them by expiry date oldest first...
-        final List<Authenticator> authenticators = cookies.stream()
                 .map(c -> fromString(c.getValue()))
-                .sorted((auth1, auth2) -> auth1.getExpiryTime().compareTo(auth2.getExpiryTime()))
-                .collect(Collectors.toList());
-
-        // ...and get the most recent authenticator...
-        final Authenticator auth = Iterables.getLast(authenticators);
-        return Optional.of(auth);
+                .max((auth1, auth2) -> Long.compare(auth1.expiryTime, auth2.expiryTime));
     }
 
     /**

@@ -263,7 +263,7 @@ const TgFileProcessingBehaviorImpl = {
                     }
 
                     // can now subscribe to a server side processing progress eventing source
-                    this.uri = this.url + "/" + jobUid;
+                    this.uri = this.url + "/sse/" + jobUid;
                 }
 
             }.bind(this);
