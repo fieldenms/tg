@@ -382,7 +382,6 @@ Polymer({
                 this._selectedSubmodule = this._subroute.path;
             }
         }
-        //@service-worker
     },
 
     //Entity master related functions

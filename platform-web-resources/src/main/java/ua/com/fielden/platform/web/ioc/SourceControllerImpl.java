@@ -78,11 +78,11 @@ public class SourceControllerImpl implements ISourceController {
         if ("/app/application-startup-resources.js".equalsIgnoreCase(resourceURI)) {
             return getApplicationStartupResourcesSource(webUiConfig, this);
         } else if ("/app/tg-app-index.html".equalsIgnoreCase(resourceURI)) {
-            return webUiConfig.genAppIndex();
+            return getTgAppIndexSource(webUiConfig.genAppIndex(), this);
         } else if ("/app/tg-app-config.js".equalsIgnoreCase(resourceURI)) {
             return webUiConfig.genWebUiPreferences();
         } else if ("/app/tg-app.js".equalsIgnoreCase(resourceURI)) {
-            return getTgAppSource(webUiConfig.genMainWebUIComponent(), this);
+            return webUiConfig.genMainWebUIComponent();
         } else if ("/app/tg-reflector.js".equalsIgnoreCase(resourceURI)) {
             return getReflectorSource(serialiser, tgJackson);
         } else if (resourceURI.startsWith("/master_ui")) {
@@ -110,9 +110,9 @@ public class SourceControllerImpl implements ISourceController {
         return originalSource.replace("@typeTable", typeTableRepresentation);
     }
     
-    private static String getTgAppSource(final String originalSource, final SourceControllerImpl sourceControllerImpl) {
+    private static String getTgAppIndexSource(final String originalSource, final SourceControllerImpl sourceControllerImpl) {
         if (sourceControllerImpl.vulcanizingMode || sourceControllerImpl.deploymentMode) {
-            return originalSource.replace("//@service-worker", "if ('serviceWorker' in navigator) { navigator.serviceWorker.register('/service-worker.js'); }");
+            return originalSource.replace("<!--@service-worker-->", "<script> if ('serviceWorker' in navigator) { navigator.serviceWorker.register('/service-worker.js'); } </script>");
         } else {
             return originalSource;
         }

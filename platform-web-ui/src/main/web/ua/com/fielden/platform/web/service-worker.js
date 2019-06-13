@@ -50,6 +50,10 @@ const serverChecksumPromise = function (serverChecksumResponse) {
     }
 };
 
+self.addEventListener('activate', event => {
+    clients.claim();
+});
+
 self.addEventListener('fetch', function (event) {
     const request = event.request;
     const urlObj = new URL(request.url);
