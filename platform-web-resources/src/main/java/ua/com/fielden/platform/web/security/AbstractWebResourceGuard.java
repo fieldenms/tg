@@ -92,7 +92,10 @@ public abstract class AbstractWebResourceGuard extends ChallengeAuthenticator {
 
             // let's validate the authenticator
             final IUserSession coUserSession = injector.getInstance(IUserSession.class);
-            final Optional<UserSession> session = coUserSession.currentSession(getUser(auth.username), auth.toString());
+            // TODO For SSE requests authenticators should not be regenerated
+            //      This is due to the fact that for SSE requests no HTTP responses are sent, and so there is nothing to carry an updated cookie with a new authenticator back to the client
+            final boolean skipRegeneration = false;
+            final Optional<UserSession> session = coUserSession.currentSession(getUser(auth.username), auth.toString(), skipRegeneration);
             if (!session.isPresent()) {
                 logger.warn(format("Authenticator validation failed for a request to a resource at URI %s (%s, %s, %s)", request.getResourceRef(), request.getClientInfo().getAddress(), request.getClientInfo().getAgentName(), request.getClientInfo().getAgentVersion()));
                 // TODO this is an interesting approach to prevent any further processing of the request, this event prevents receiving it completely

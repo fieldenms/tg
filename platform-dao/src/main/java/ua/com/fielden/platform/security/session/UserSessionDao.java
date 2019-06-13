@@ -220,7 +220,7 @@ public class UserSessionDao extends CommonEntityDao<UserSession> implements IUse
      */
     @Override
     //@SessionRequired -- db session should not be used here
-    public Optional<UserSession> currentSession(final User user, final String authenticator, final boolean shouldConsiderTheftScenario) {
+    public Optional<UserSession> currentSession(final User user, final String authenticator, final boolean shouldConsiderTheftScenario, final boolean skipRegeneration) {
         // reconstruct authenticator from string and then proceed with its validation
         // in case of validation failure, no reason should be provided to the outside as this could reveal too much information to a potential adversary
         final Authenticator auth = fromString(authenticator);
@@ -317,6 +317,12 @@ public class UserSessionDao extends CommonEntityDao<UserSession> implements IUse
         }
 
         // if this point is reached then the identified session is considered valid
+        // now we need to decide whether a new authenticator needs to be regenerated
+        if(skipRegeneration) {
+            return Optional.of(session);
+        }
+
+        // regeneration of the authenticator is in order...
         // it needs to be updated with a new series ID and a refreshed expiry time, and returned as the result
         final String seriesId = crypto.nextSessionId();
         session.setSeriesId(seriesHash(seriesId));
@@ -356,8 +362,8 @@ public class UserSessionDao extends CommonEntityDao<UserSession> implements IUse
     }
 
     @Override
-    public final Optional<UserSession> currentSession(final User user, final String authenticator) {
-        return currentSession(user, authenticator, true);
+    public final Optional<UserSession> currentSession(final User user, final String authenticator, final boolean skipRegeneration) {
+        return currentSession(user, authenticator, true, skipRegeneration);
     }
 
     @Override
