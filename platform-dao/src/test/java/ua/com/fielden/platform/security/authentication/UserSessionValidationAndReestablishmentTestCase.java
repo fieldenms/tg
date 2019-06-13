@@ -88,7 +88,6 @@ public class UserSessionValidationAndReestablishmentTestCase extends AbstractDao
         assertFalse(session.isPresent());
     }
 
-
     @Test
     public void current_user_should_be_able_to_have_valid_trusted_and_expired_untrusted_sessions() throws SignatureException {
         // set the current time... the time when the user accessed the systems for the last time during the working day
@@ -97,7 +96,6 @@ public class UserSessionValidationAndReestablishmentTestCase extends AbstractDao
         final User currUser = getInstance(IUserProvider.class).getUser();
         final UserSession trustedSession = coSession.newSession(currUser, true);
         final String trustedAuthenticator = trustedSession.getAuthenticator().get().toString();
-
 
         // early next morning, the user access the system from an untrusted tablet device on the way to work
         constants.setNow(dateTime("2015-04-24 07:30:00"));
@@ -117,4 +115,35 @@ public class UserSessionValidationAndReestablishmentTestCase extends AbstractDao
         assertFalse(failedSession.isPresent());
     }
 
+    @Test
+    public void reestablishing_a_session_with_option_skipRegeneration_true_returns_the_same_session() {
+        // set the current time...
+        constants.setNow(dateTime("2015-04-23 17:26:00"));
+        // establish a new session
+        final User currUser = getInstance(IUserProvider.class).getUser();
+        final UserSession session = coSession.newSession(currUser, true);
+        final String authenticator = session.getAuthenticator().get().toString();
+
+        // some time later, after the session cache has been evicted, a user session is requested for skipRegeneration = true...
+        constants.setNow(dateTime("2015-04-24 07:30:00"));
+        final Optional<UserSession> restoredSession = coSession.currentSession(currUser, authenticator, true /*skipRegeneration*/);
+        assertTrue(restoredSession.isPresent());
+        assertEquals(session, restoredSession.get());
+    }
+
+    @Test
+    public void reestablishing_a_session_with_option_skipRegeneration_false_returns_a_new_session() {
+        // set the current time...
+        constants.setNow(dateTime("2015-04-23 17:26:00"));
+        // establish a new session
+        final User currUser = getInstance(IUserProvider.class).getUser();
+        final UserSession session = coSession.newSession(currUser, true);
+        final String authenticator = session.getAuthenticator().get().toString();
+
+        // some time later, after the session cache has been evicted, a user session is requested for skipRegeneration = true...
+        constants.setNow(dateTime("2015-04-24 07:30:00"));
+        final Optional<UserSession> restoredSession = coSession.currentSession(currUser, authenticator, false /*skipRegeneration*/);
+        assertTrue(restoredSession.isPresent());
+        assertNotEquals(session, restoredSession.get());
+    }
 }

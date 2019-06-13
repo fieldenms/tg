@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.web.security;
 
 import static java.lang.String.format;
+import static java.util.stream.Collectors.toList;
 import static ua.com.fielden.platform.security.session.Authenticator.fromString;
 
 import java.util.List;
@@ -129,13 +130,9 @@ public abstract class AbstractWebResourceGuard extends ChallengeAuthenticator {
      * @return
      */
     public static Optional<Authenticator> extractAuthenticator(final Request request) {
-        // first collect non-empty authenticating cookies
-        final List<Cookie> cookies = request.getCookies().stream()
+        // convert non-empty authenticating cookies to authenticators and get the most recent one by expiry date...
+        return request.getCookies().stream()
                 .filter(c -> AUTHENTICATOR_COOKIE_NAME.equals(c.getName()) && !StringUtils.isEmpty(c.getValue()))
-                .collect(Collectors.toList());
-
-        // convert authenticating cookies to authenticators and get the most recent one by expiry date...
-        return cookies.stream()
                 .map(c -> fromString(c.getValue()))
                 .max((auth1, auth2) -> Long.compare(auth1.expiryTime, auth2.expiryTime));
     }
