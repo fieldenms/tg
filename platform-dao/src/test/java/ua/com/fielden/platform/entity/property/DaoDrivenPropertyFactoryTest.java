@@ -6,8 +6,6 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
-import java.util.List;
-
 import org.joda.time.DateTime;
 import org.junit.Test;
 
@@ -23,7 +21,6 @@ import ua.com.fielden.platform.entity.meta.MetaProperty;
 import ua.com.fielden.platform.entity.validation.annotation.ValidationAnnotation;
 import ua.com.fielden.platform.persistence.composite.EntityWithDynamicCompositeKey;
 import ua.com.fielden.platform.persistence.types.EntityWithMoney;
-import ua.com.fielden.platform.test.PlatformTestDomainTypes;
 import ua.com.fielden.platform.test_config.AbstractDaoTestCase;
 import ua.com.fielden.platform.types.Money;
 
@@ -111,20 +108,11 @@ public class DaoDrivenPropertyFactoryTest extends AbstractDaoTestCase {
         save(new_composite(EntityWithDynamicCompositeKey.class, "key-1-1", ewm1).setDesc("soem desc"));
     }
 
-    @Override
-    protected List<Class<? extends AbstractEntity<?>>> domainEntityTypes() {
-        return PlatformTestDomainTypes.entityTypes;
-    }
-
     /**
      * This is a test entity class that has two properties, which are entities -- one with an ordinary key, another with a composite key.
-     *
-     * @author 01es
-     *
      */
     @KeyType(String.class)
     public static class Entity extends AbstractEntity<String> {
-        private static final long serialVersionUID = 1L;
 
         @IsProperty
         @Required
