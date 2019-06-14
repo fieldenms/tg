@@ -428,7 +428,7 @@ Polymer({
     },
 
     isMenuVisible: function () {
-        return !this.$.drawerPanel.narrow || this.$.drawerPanel.selected === "drawer";
+        return !this.$.drawerPanel.narrow || this.$.drawer.opened;
     },
 
     _menuKeyDown: function (e) {
@@ -462,7 +462,7 @@ Polymer({
     _activateIfPossible: function (paperMenuItem) {
         if (paperMenuItem.getAttribute("data-route") === this.sectionRoute) {
             if (this.$.drawerPanel.narrow) {
-                this.$.drawerPanel.selected = 'main'; // select main if drawer is in narrow mode
+                this.$.drawer.close(); // select main if drawer is in narrow mode
             }
             this.focusView();
         }
@@ -485,7 +485,7 @@ Polymer({
     },
 
     _closeMenu: function () {
-        if (this.$.drawerPanel.narrow && this.$.drawerPanel.selected === "drawer") {
+        if (this.$.drawerPanel.narrow && this.$.drawer.opened) {
             this._toggleMenu();
         }
     },
@@ -603,7 +603,7 @@ Polymer({
     },
 
     _focusNextSectionView: function (e) {
-        if (this.sectionRoute !== undefined && (!this.$.drawerPanel.narrow || this.$.drawerPanel.selected === "main")) {
+        if (this.sectionRoute !== undefined && (!this.$.drawerPanel.narrow || !this.$.drawer.opened)) {
             const section = this.querySelector('tg-master-menu-item-section[data-route=' + this.sectionRoute + ']');
             section.focusNextView(e);
         } else {
@@ -615,7 +615,7 @@ Polymer({
     },
 
     _focusPreviousSectionView: function (e) {
-        if (this.sectionRoute !== undefined && (!this.$.drawerPanel.narrow || this.$.drawerPanel.selected === "main")) {
+        if (this.sectionRoute !== undefined && (!this.$.drawerPanel.narrow || !this.$.drawer.opened)) {
             const section = this.querySelector('tg-master-menu-item-section[data-route=' + this.sectionRoute + ']');
             section.focusPreviousView(e);
         } else if (this.isMenuVisible()) {
@@ -699,7 +699,7 @@ Polymer({
 
     _sectionRouteChanged: function (newRoute, oldRoute) {
         if (!this.desktopMode()) {
-            this.$.drawerPanel.selected = 'main'; // close drawer in tablet|mobile mode when section route changes (menu item has been actioned by user)
+            this.$.drawer.close(); // close drawer in tablet|mobile mode when section route changes (menu item has been actioned by user)
         }
 
         const oldSection = this.querySelector('tg-master-menu-item-section[data-route=' + oldRoute + ']');
