@@ -36,7 +36,6 @@ const template = html`
     <style>
         :host {
             @apply --layout-vertical;
-            --paper-listbox-color: var(--paper-blue-grey-500);
             --paper-listbox: {
                 padding: 0;
                 margin: 0;
@@ -74,19 +73,6 @@ const template = html`
             border-top: 2px solid var(--paper-blue-grey-100);
             border-bottom: 2px solid var(--paper-blue-grey-100);
         }
-        tg-sublistbox[opened] paper-item[slot=trigger] {
-            color: var(--paper-light-blue-700);
-        }
-        tg-sublistbox[opened] paper-item[slot=trigger] paper-checkbox {
-            --paper-checkbox-unchecked-color: var(--paper-light-blue-700);
-            --paper-checkbox-unchecked-ink-color: var(--paper-light-blue-700);
-            --paper-checkbox-checked-color: var(--paper-light-blue-700);
-            --paper-checkbox-checked-ink-color: var(--paper-light-blue-700);
-        }
-        tg-sublistbox[opened] paper-item[slot=trigger] paper-checkbox.undone {
-            --paper-checkbox-checked-color: var(--paper-light-blue-100);
-            --paper-checkbox-checked-ink-color: var(--paper-light-blue-100);
-        }
         .main-content {
             @apply --layout-vertical;
         }
@@ -102,8 +88,18 @@ const template = html`
             }
         }
         paper-checkbox.undone {
-            --paper-checkbox-checked-color: var(--paper-blue-grey-100);
-            --paper-checkbox-checked-ink-color: var(--paper-listbox-color);
+            --paper-checkbox-checked-color: var(--checkbox-undone-color);
+            --paper-checkbox-checked-ink-color: var(--checkbox-undone-color);
+        }
+        paper-item {
+            color: var(--paper-blue-grey-500);
+            --paper-listbox-color: var(--paper-blue-grey-500);
+            --checkbox-undone-color: var(--paper-blue-grey-100);
+        }
+        paper-item.iron-selected:not([focused]) {
+            color: var(--paper-light-blue-700);
+            --paper-listbox-color: var(--paper-light-blue-700);
+            --checkbox-undone-color: var(--paper-light-blue-100);
         }
         neon-animated-pages {
             position: absolute;
