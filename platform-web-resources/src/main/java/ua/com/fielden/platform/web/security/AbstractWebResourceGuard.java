@@ -22,6 +22,7 @@ import ua.com.fielden.platform.security.session.IUserSession;
 import ua.com.fielden.platform.security.session.UserSession;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.utils.IUniversalConstants;
+import ua.com.fielden.platform.web.sse.SseUtils;
 
 /**
  * This is a guard that is based on the new TG authentication scheme, developed as part of the Web UI initiative. It it used to restrict access to sensitive web resources.
@@ -35,7 +36,6 @@ import ua.com.fielden.platform.utils.IUniversalConstants;
 public abstract class AbstractWebResourceGuard extends ChallengeAuthenticator {
     private final Logger logger = Logger.getLogger(getClass());
     public static final String AUTHENTICATOR_COOKIE_NAME = "authenticator";
-    public static final String SSE_URI = "/sse/";
     protected final Injector injector;
     private final IUniversalConstants constants;
     private final String domainName;
@@ -91,7 +91,7 @@ public abstract class AbstractWebResourceGuard extends ChallengeAuthenticator {
             final IUserSession coUserSession = injector.getInstance(IUserSession.class);
             // for SSE requests session ID should not be regenerated
             // this is due to the fact that for SSE requests no HTTP responses are sent, and so there is nothing to carry an updated cookie with a new authenticator back to the client
-            final boolean skipRegeneration = request.getResourceRef().toString().contains(SSE_URI);
+            final boolean skipRegeneration = SseUtils.isEventSourceRequest(request);
             final Optional<UserSession> session = coUserSession.currentSession(getUser(auth.username), auth.toString(), skipRegeneration);
             if (!session.isPresent()) {
                 logger.warn(format("Authenticator validation failed for a request to a resource at URI %s (%s, %s, %s)", request.getResourceRef(), request.getClientInfo().getAddress(), request.getClientInfo().getAgentName(), request.getClientInfo().getAgentVersion()));

@@ -111,7 +111,7 @@ public abstract class AbstractWebUiResources extends Application {
     @Override
     public final Restlet createInboundRoot() {
         // Create router and web application for registering resources.
-        final Router router = new Router(getContext());
+        final Router router = new ResourceRouter(getContext());
 
         final RestServerUtil restUtil = injector.getInstance(RestServerUtil.class);
 
