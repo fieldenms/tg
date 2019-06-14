@@ -48,6 +48,7 @@ const template = html`
                 cursor: pointer;
                 transition: all 300ms ease-in-out;
             };
+            --app-drawer-width: 356px;
             --app-drawer-content-container: {
                 max-width: 100%;
                 @apply --layout-vertical;
