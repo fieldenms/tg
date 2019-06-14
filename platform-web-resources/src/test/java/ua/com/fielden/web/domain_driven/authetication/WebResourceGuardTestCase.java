@@ -1,9 +1,13 @@
 package ua.com.fielden.web.domain_driven.authetication;
 
 import static java.lang.String.format;
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 import java.security.SignatureException;
+import java.util.Optional;
 
 import org.junit.After;
 import org.junit.Before;
@@ -16,6 +20,7 @@ import org.restlet.data.Method;
 import org.restlet.data.Protocol;
 
 import ua.com.fielden.platform.sample.domain.TgPerson;
+import ua.com.fielden.platform.security.session.Authenticator;
 import ua.com.fielden.platform.security.session.UserSession;
 import ua.com.fielden.platform.security.session.UserSessionDao;
 import ua.com.fielden.platform.security.user.IUser;
@@ -244,5 +249,29 @@ public class WebResourceGuardTestCase extends AbstractDaoTestCase {
         request3.getCookies().add(returnedCookie1);
         final Response response3 = client.handle(request3);
         assertEquals(403, response3.getStatus().getCode());
+    }
+
+    @Test
+    public void extractAuthenticator_returns_the_latest_authenticator_if_multiple_authentication_cookies_are_present() {
+        constants.setNow(dateTime("2015-04-23 17:26:00"));
+        final User currUser = getInstance(IUserProvider.class).getUser();
+
+        // establish generate two authenticators with the second authenticator having a greater expiration time
+        final Authenticator auth1 = coSession.mkAuthenticator(currUser, coSession.genSeriesId(), dateTime("2015-04-23 18:00:00").toDate());
+        final Authenticator auth2 = coSession.mkAuthenticator(currUser, coSession.genSeriesId(), dateTime("2015-04-23 19:00:00").toDate());
+        final String strAuth1 = auth1.toString();
+        final String strAuth2 = auth2.toString();
+
+        final Request request = new Request(Method.GET, format("%s/users/%s/%s/%s", baseUri, User.system_users.UNIT_TEST_USER, TgPerson.class.getSimpleName(), 12L));
+        final CookieSetting cookie1 = new CookieSetting(1, AbstractWebResourceGuard.AUTHENTICATOR_COOKIE_NAME, strAuth1, "/", null);
+        cookie1.setAccessRestricted(true);
+        final CookieSetting cookie2 = new CookieSetting(1, AbstractWebResourceGuard.AUTHENTICATOR_COOKIE_NAME, strAuth2, "/", null);
+        cookie2.setAccessRestricted(true);
+        
+        request.getCookies().add(cookie1);
+        request.getCookies().add(cookie2);
+
+        final Optional<Authenticator> auth = AbstractWebResourceGuard.extractAuthenticator(request);
+        assertEquals(strAuth2, auth.get().toString());
     }
 }

@@ -119,31 +119,33 @@ public class VulcanizingUtility {
             throw new IllegalArgumentException("Logger is a required argumet.");
         }
         
-        LOGGER.info("Vulcanizing...");
-        final ISourceController sourceController = injector.getInstance(ISourceController.class);
-        final IWebUiConfig webUiConfig = injector.getInstance(IWebUiConfig.class);
-        
-        // create the directory in which all needed resources will reside
-        final File dir = new File("vulcan");
-        dir.mkdir();
-        
-        copyStaticResources(platformVendorResourcesPath, platformWebUiResourcesPath, appVendorResourcesPath, appWebUiResourcesPath);
-        
-        final String loginPrefix = "login-";
-        LOGGER.info(format("\tVulcanizing [%s] resources...", loginPrefix));
-        adjustRootResources(sourceController, loginPrefix);
-        vulcanizeStartupResourcesFor(loginPrefix, sourceController, loginTargetPlatformSpecificPath, commandMaker.apply("build"), commandMaker.apply("minify"), additionalPaths, dir);
-        LOGGER.info(format("\tVulcanized [%s] resources.", loginPrefix));
-        
-        downloadGeneratedResources(webUiConfig, sourceController);
-        
-        final String prefix = "";
-        LOGGER.info(format("\tVulcanizing [%s] resources...", prefix));
-        adjustRootResources(sourceController, prefix);
-        vulcanizeStartupResourcesFor(prefix, sourceController, mobileAndDesktopAppSpecificPath, commandMaker.apply("build"), commandMaker.apply("minify"), additionalPaths, dir);
-        LOGGER.info(format("\tVulcanized [%s] resources...", prefix));
-        
-        clearObsoleteResources();
+        try {
+            LOGGER.info("Vulcanizing...");
+            final ISourceController sourceController = injector.getInstance(ISourceController.class);
+            final IWebUiConfig webUiConfig = injector.getInstance(IWebUiConfig.class);
+
+            // create the directory in which all needed resources will reside
+            final File dir = new File("vulcan");
+            dir.mkdir();
+
+            copyStaticResources(platformVendorResourcesPath, platformWebUiResourcesPath, appVendorResourcesPath, appWebUiResourcesPath);
+
+            final String loginPrefix = "login-";
+            LOGGER.info(format("\tVulcanizing [%s] resources...", loginPrefix));
+            adjustRootResources(sourceController, loginPrefix);
+            vulcanizeStartupResourcesFor(loginPrefix, sourceController, loginTargetPlatformSpecificPath, commandMaker.apply("build"), commandMaker.apply("minify"), additionalPaths, dir);
+            LOGGER.info(format("\tVulcanized [%s] resources.", loginPrefix));
+
+            downloadGeneratedResources(webUiConfig, sourceController);
+
+            final String prefix = "";
+            LOGGER.info(format("\tVulcanizing [%s] resources...", prefix));
+            adjustRootResources(sourceController, prefix);
+            vulcanizeStartupResourcesFor(prefix, sourceController, mobileAndDesktopAppSpecificPath, commandMaker.apply("build"), commandMaker.apply("minify"), additionalPaths, dir);
+            LOGGER.info(format("\tVulcanized [%s] resources...", prefix));
+        } finally {
+            clearObsoleteResources();
+        }
         LOGGER.info("Vulcanized.");
     }
     

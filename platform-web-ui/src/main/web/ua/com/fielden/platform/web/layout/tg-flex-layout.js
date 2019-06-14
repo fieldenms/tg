@@ -36,9 +36,9 @@ template.setAttribute('strip-whitespace', '');
     };
     const stampTemplate = function (template, model) {
         if (template && model) {
-            for (let prop in model) {
+            Object.keys(model).forEach(prop => {
                 template[prop] = model[prop];
-            }
+            });
         }
     };
     const forEachPropValue = function (obj, callback) {

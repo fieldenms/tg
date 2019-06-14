@@ -43,12 +43,6 @@ export const TgSseBehavior = {
         _timerIdForReconnection: {
             type: Number,
             value: null
-        },
-
-        /* Counts the number of attempts to reconnect to the server. */
-        _reconnectAttempts: {
-            type: Number,
-            value: 0
         }
     },
 
@@ -123,16 +117,13 @@ export const TgSseBehavior = {
                 // Connection was closed by the server
                 self.closeEventSource();
                 // Let's kick a timer for reconnection and we have not tried hard enough...
-                if (self._reconnectAttempts < 10) {
-                    self._reconnectAttempts = self._reconnectAttempts + 1;
-                    _timerIdForReconnection = setTimeout(() => {
-                        try {
-                            self._registerEventSourceHandlers();
-                        } finally {
-                            self._timerIdForReconnection = null;
-                        }
-                    }, 15000);
-                }
+                _timerIdForReconnection = setTimeout(() => {
+                    try {
+                        self._registerEventSourceHandlers();
+                    } finally {
+                        self._timerIdForReconnection = null;
+                    }
+                }, 15000);
             }
 
             // invoke error handler if provided
