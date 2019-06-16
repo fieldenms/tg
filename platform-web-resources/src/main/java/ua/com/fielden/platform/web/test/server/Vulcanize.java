@@ -7,7 +7,7 @@ import java.util.function.Function;
 import org.apache.log4j.Logger;
 
 import ua.com.fielden.platform.types.tuples.T3;
-import ua.com.fielden.platform.web.utils.VulcanizingUtility;
+import ua.com.fielden.platform.web.vulcanizer.VulcanizingUtility;
 
 /**
  * Web UI vulcanization launching class for TG example web server.

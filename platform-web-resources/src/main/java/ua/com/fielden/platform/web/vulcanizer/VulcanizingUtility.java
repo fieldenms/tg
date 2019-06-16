@@ -1,4 +1,4 @@
-package ua.com.fielden.platform.web.utils;
+package ua.com.fielden.platform.web.vulcanizer;
 
 import static java.io.File.pathSeparator;
 import static java.lang.String.format;
