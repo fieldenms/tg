@@ -2,6 +2,7 @@ package ua.com.fielden.platform.web.utils;
 
 import static java.io.File.pathSeparator;
 import static java.lang.String.format;
+import static java.lang.System.arraycopy;
 import static java.lang.System.getenv;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Arrays.stream;
@@ -10,7 +11,6 @@ import static org.apache.commons.io.FileUtils.copyDirectory;
 import static org.apache.commons.io.FileUtils.copyFile;
 import static org.apache.commons.io.FileUtils.deleteDirectory;
 import static org.apache.log4j.xml.DOMConfigurator.configure;
-import static ua.com.fielden.platform.utils.Pair.pair;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -22,6 +22,7 @@ import java.io.InputStreamReader;
 import java.io.PrintStream;
 import java.util.Properties;
 import java.util.function.Function;
+import java.util.stream.Stream;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
@@ -30,11 +31,12 @@ import org.apache.log4j.Logger;
 import com.google.inject.Injector;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.types.tuples.T3;
 import ua.com.fielden.platform.ui.menu.MiWithConfigurationSupport;
-import ua.com.fielden.platform.utils.Pair;
 import ua.com.fielden.platform.web.app.ISourceController;
 import ua.com.fielden.platform.web.app.IWebUiConfig;
 import ua.com.fielden.platform.web.interfaces.DeviceProfile;
+import ua.com.fielden.platform.web.vulcanizer.exceptions.VulcanisationException;
 
 /**
  * A set of utilities to facilitate Web UI application vulcanization.
@@ -54,35 +56,29 @@ public class VulcanizingUtility {
         return new String[] {"CMD", "/c", action + "-script.bat"};
     }
     
-    protected static Pair<Properties, String[]> processVmArguments(final String[] args) throws IOException {
+    protected static T3<Properties, String[], String[]> processVmArguments(final String[] args) throws IOException {
         if (args.length < 1) {
-            throw new IllegalArgumentException(""
-                    + "One or two arguments are expected: \n"
-                    + "\t1st is the path to the application properties file;\n"
-                    + "\t2nd is the additional paths to be added to the PATH env. variable.\n");
+            throw new VulcanisationException(
+                    "One or two arguments are expected: \n" +
+                    "\t1st is the path to the application properties file;\n" +
+                    "\t2nd is the additional paths to be added to the PATH env. variable.\n" +
+                    "\t3nd and more should represent environment variables in a form of NAME=VALUE.\n");
         }
-        if (args.length > 2) {
-            LOGGER.warn("There are more than 2 arguments. Only first two will be used, the rest will be ignored.");
-        }
-        final String propertyFile;
-        final String paths;
-        if (args.length == 1) {
-            propertyFile = args[0];
-            paths = "";
-        } else {
-            propertyFile = args[0];
-            paths = args[1];
-        }
+        final String propertyFile = args[0];
+        final String paths = args.length == 1 ? "" : args[1];
+        final String[] envVars = new String[args.length - 2];
+        arraycopy(args, 2, envVars, 0, args.length - 2); 
+        
         try {
             final Properties props = retrieveApplicationPropertiesAndConfigureLogging(propertyFile);
             final String[] additionalPaths = paths.split(pathSeparator);
-            return pair(props, additionalPaths);
+            return T3.t3(props, additionalPaths, envVars);
         } catch (final IOException ex) {
             LOGGER.fatal(format("Application property file %s could not be located or its values are not recognised.", propertyFile), ex);
             throw ex;
         }
     }
-    
+        
     /**
      * Retrieves application properties from the specified file.
      *
@@ -114,7 +110,8 @@ public class VulcanizingUtility {
             final String loginTargetPlatformSpecificPath,
             final String mobileAndDesktopAppSpecificPath,
             final Function<String, String[]> commandMaker,
-            final String[] additionalPaths) {
+            final String[] additionalPaths,
+            final String[] envVarPairs) {
         if (LOGGER == null) {
             throw new IllegalArgumentException("Logger is a required argumet.");
         }
@@ -133,7 +130,7 @@ public class VulcanizingUtility {
             final String loginPrefix = "login-";
             LOGGER.info(format("\tVulcanizing [%s] resources...", loginPrefix));
             adjustRootResources(sourceController, loginPrefix);
-            vulcanizeStartupResourcesFor(loginPrefix, sourceController, loginTargetPlatformSpecificPath, commandMaker.apply("build"), commandMaker.apply("minify"), additionalPaths, dir);
+            vulcanizeStartupResourcesFor(loginPrefix, sourceController, loginTargetPlatformSpecificPath, commandMaker.apply("build"), commandMaker.apply("minify"), additionalPaths, envVarPairs, dir);
             LOGGER.info(format("\tVulcanized [%s] resources.", loginPrefix));
 
             downloadGeneratedResources(webUiConfig, sourceController);
@@ -141,7 +138,7 @@ public class VulcanizingUtility {
             final String prefix = "";
             LOGGER.info(format("\tVulcanizing [%s] resources...", prefix));
             adjustRootResources(sourceController, prefix);
-            vulcanizeStartupResourcesFor(prefix, sourceController, mobileAndDesktopAppSpecificPath, commandMaker.apply("build"), commandMaker.apply("minify"), additionalPaths, dir);
+            vulcanizeStartupResourcesFor(prefix, sourceController, mobileAndDesktopAppSpecificPath, commandMaker.apply("build"), commandMaker.apply("minify"), additionalPaths, envVarPairs, dir);
             LOGGER.info(format("\tVulcanized [%s] resources...", prefix));
         } finally {
             clearObsoleteResources();
@@ -255,15 +252,16 @@ public class VulcanizingUtility {
             final String[] vulcanizeCommands,
             final String[] minifyCommands,
             final String[] additionalPaths,
+            final String[] envVarPairs,
             final File dir) {
         if (additionalPaths == null) {
             throw new IllegalArgumentException("Argument additionalPaths cannot be null, but can be empty if no additiona paths are required for the PATH env. variable.");
         }
         LOGGER.info("\t\tVulcanizing [" + prefix + "]...");
-        processCommands(vulcanizeCommands, additionalPaths);
+        processCommands(vulcanizeCommands, additionalPaths, envVarPairs);
         LOGGER.info("\t\tVulcanized [" + prefix + "].");
         LOGGER.info("\t\tMinifying [" + prefix + "]...");
-        processCommands(minifyCommands, additionalPaths);
+        processCommands(minifyCommands, additionalPaths, envVarPairs);
         LOGGER.info("\t\tMinified [" + prefix + "].");
         LOGGER.info("\t\tMove vulcanized file to its destination...");
         try {
@@ -275,15 +273,26 @@ public class VulcanizingUtility {
         LOGGER.info("\t\tMoved vulcanized file to its destination.");
     }
 
-    private static void processCommands(final String[] commands, final String[] additionalPaths) {
+    private static void processCommands(final String[] commands, final String[] additionalPaths, final String[] envVarPairs) {
         try {
             final ProcessBuilder pb = new ProcessBuilder(commands);
             // need to enrich the PATH with the paths that point to vulcanize and node
             if (additionalPaths.length > 0) {
                 final String addPaths = stream(additionalPaths).collect(joining(pathSeparator));
                 final String path = getenv().get("PATH");
-                pb.environment().put("PATH", format("%s%s%s", path, pathSeparator, addPaths));
+                final String newPathVal = format("%s%s%s", path, pathSeparator, addPaths);
+                LOGGER.info(format("Setting environment variable PATH=%s", newPathVal));
+                pb.environment().put("PATH", newPathVal);
             }
+            Stream.of(envVarPairs).forEach(pair -> {
+                final String[] p = pair.split("=");
+                if (p.length != 2) {
+                    throw new VulcanisationException(format("Pair name/value [%s] for an environment variable is not formatted correctly.", p));
+                }
+                LOGGER.info(format("Setting environment variable %s=%s", p[0], p[1]));
+                pb.environment().put(p[0], p[1]);
+            });
+
             // redirect error stream to the output
             pb.redirectErrorStream(true);
             // start the process
