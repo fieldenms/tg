@@ -285,7 +285,7 @@ public class VulcanizingUtility {
                 pb.environment().put("PATH", newPathVal);
             }
             Stream.of(envVarPairs).forEach(pair -> {
-                final String[] p = pair.split("=");
+                final String[] p = pair.split("=", 2);
                 if (p.length != 2) {
                     throw new VulcanisationException(format("Pair name/value [%s] for an environment variable is not formatted correctly.", p));
                 }
