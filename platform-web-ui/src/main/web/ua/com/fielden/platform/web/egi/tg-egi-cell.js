@@ -62,7 +62,12 @@ Polymer({
             type: Object,
             observer: "_contextChanged"
         },
-        _value: String
+        _value: String,
+        withAction: {
+            type: Boolean,
+            observer: 'withActionChanged',
+            value: false
+        }
     },
 
     created: function () {
@@ -79,6 +84,13 @@ Polymer({
         this._hostComponent = this.getRootNode().host;
     },
 
+    withActionChanged: function (withAction) {
+        if (withAction) {
+            this.classList.add('with-action');
+        } else {
+            this.classList.remove('with-action');
+        }
+    },
 
     _calcBackgroundRenderingHintsStyle: function(_renderingHints, column) {
         let style = "";
