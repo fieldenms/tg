@@ -47,7 +47,7 @@ Polymer({
 
     properties: {
         egiEntity: {
-            tyoe: Object,
+            type: Object,
             observer: "_egiEntityChanged"
         },
         column: {

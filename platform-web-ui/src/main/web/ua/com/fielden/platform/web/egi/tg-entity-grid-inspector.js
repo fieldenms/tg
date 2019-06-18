@@ -1481,6 +1481,8 @@ Polymer({
     _totalsChanged: function (newTotals) {
         if (newTotals) {
             this.egiTotalsEntity = {entity: newTotals};
+        } else {
+            this.egiTotalsEntity = null; 
         }
     },
 
