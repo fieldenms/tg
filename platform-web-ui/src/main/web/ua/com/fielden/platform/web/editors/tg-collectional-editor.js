@@ -12,6 +12,7 @@ import {html} from '/resources/polymer/@polymer/polymer/polymer-element.js';
 
 import { matchedParts } from '/resources/editors/tg-highlighter.js';
 import { TgEditor, createEditorTemplate } from '/resources/editors/tg-editor.js';
+import {GestureEventListeners} from '/resources/polymer/@polymer/polymer/lib/mixins/gesture-event-listeners.js';
 import { tearDownEvent} from '/resources/reflection/tg-polymer-utils.js';
 
 const additionalTemplate = html`
@@ -187,7 +188,7 @@ const customInputTemplate = html`
         </iron-list>
     </div>`;
 
-export class TgCollectionalEditor extends TgEditor {
+export class TgCollectionalEditor extends GestureEventListeners(TgEditor) {
 
     static get template () { 
         return createEditorTemplate(additionalTemplate, html``, customInputTemplate, html``, html``, html``);
@@ -866,17 +867,11 @@ export class TgCollectionalEditor extends TgEditor {
                this._endItemReordering(e);
                break;
        }
-       if (e.stopPropagation) e.stopPropagation();
-       if (e.preventDefault) e.preventDefault();
-       e.cancelBubble = true;
-       e.returnValue = false;
+       tearDownEvent(e);
     }
     
     _disableScrolling (e) {
-        if (e.stopPropagation) e.stopPropagation();
-       if (e.preventDefault) e.preventDefault();
-       e.cancelBubble = true;
-       e.returnValue = false;
+        tearDownEvent(e);
     }
     
     _startItemReordering (e) {
