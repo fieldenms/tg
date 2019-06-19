@@ -1,8 +1,7 @@
 package ua.com.fielden.platform.eql.stage2.elements.operands;
 
 import java.util.List;
-
-import com.google.common.base.Objects;
+import java.util.Objects;
 
 public class OperandsBasedSet2 implements ISetOperand2 {
     private final List<ISingleOperand2> operands;
@@ -30,6 +29,6 @@ public class OperandsBasedSet2 implements ISetOperand2 {
         }
         final OperandsBasedSet2 other = (OperandsBasedSet2) obj;
         
-        return Objects.equal(operands, other.operands);
+        return Objects.equals(operands, other.operands);
     }
 }

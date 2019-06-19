@@ -1,6 +1,6 @@
 package ua.com.fielden.platform.eql.stage2.elements.operands;
 
-import com.google.common.base.Objects;
+import java.util.Objects;
 
 import ua.com.fielden.platform.entity.query.fluent.enums.ArithmeticalOperator;
 
@@ -34,7 +34,7 @@ public class CompoundSingleOperand2 {
         
         final CompoundSingleOperand2 other = (CompoundSingleOperand2) obj;
         
-        return Objects.equal(operand, other.operand) &&
-                Objects.equal(operator, other.operator);
+        return Objects.equals(operand, other.operand) &&
+                Objects.equals(operator, other.operator);
     }
 }

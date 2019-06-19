@@ -276,11 +276,8 @@ public abstract class AbstractTokensBuilder implements ITokensBuilder {
             singleCat = VAL;
             break;
         case SET_OF_PARAMS:
-            singleCat = PARAM;
-            break;
         case SET_OF_IPARAMS:
-            singleCat = IPARAM;
-            break;
+            throw new UnsupportedOperationException("Operations with params not yet supported");
         case SET_OF_EXPR_TOKENS:
             singleCat = EXPR_TOKENS;
             break;

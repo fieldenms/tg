@@ -1,8 +1,10 @@
 package ua.com.fielden.platform.eql.stage1.elements.sources;
 
+import static java.util.Collections.emptyList;
+
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 
 import ua.com.fielden.platform.eql.meta.PropsResolutionContext;
 import ua.com.fielden.platform.eql.meta.TransformationResult;
@@ -20,7 +22,7 @@ public class Sources1  {
     }
 
     public Sources1(final IQrySource1<? extends IQrySource2> main) {
-        this(main, Collections.emptyList());
+        this(main, emptyList());
     }
 
     public TransformationResult<Sources2> transform(final PropsResolutionContext resolutionContext) {
@@ -38,20 +40,6 @@ public class Sources1  {
     }
 
     @Override
-    public String toString() {
-        final StringBuffer sb = new StringBuffer();
-        sb.append(main);
-        for (final CompoundSource1 compound : compounds) {
-            sb.append(" " + compound);
-        }
-        return sb.toString();
-    }
-
-    public List<CompoundSource1> getCompounds() {
-        return compounds;
-    }
-
-    @Override
     public int hashCode() {
         final int prime = 31;
         int result = 1;
@@ -65,27 +53,14 @@ public class Sources1  {
         if (this == obj) {
             return true;
         }
-        if (obj == null) {
-            return false;
-        }
+
         if (!(obj instanceof Sources1)) {
             return false;
         }
+        
         final Sources1 other = (Sources1) obj;
-        if (compounds == null) {
-            if (other.compounds != null) {
-                return false;
-            }
-        } else if (!compounds.equals(other.compounds)) {
-            return false;
-        }
-        if (main == null) {
-            if (other.main != null) {
-                return false;
-            }
-        } else if (!main.equals(other.main)) {
-            return false;
-        }
-        return true;
+        
+        return Objects.equals(main, other.main) &&
+                Objects.equals(compounds, other.compounds);
     }
 }

@@ -3,8 +3,7 @@ package ua.com.fielden.platform.eql.stage2.elements.sources;
 import static java.util.Collections.emptyList;
 
 import java.util.List;
-
-import com.google.common.base.Objects;
+import java.util.Objects;
 
 public class Sources2 {
     public final IQrySource2 main;
@@ -17,16 +16,6 @@ public class Sources2 {
 
     public Sources2(final IQrySource2 main) {
         this(main, emptyList());
-    }
-
-    @Override
-    public String toString() {
-        final StringBuffer sb = new StringBuffer();
-        sb.append(main);
-        for (final CompoundSource2 compound : compounds) {
-            sb.append(" " + compound);
-        }
-        return sb.toString();
     }
 
     public List<CompoundSource2> getCompounds() {
@@ -51,10 +40,10 @@ public class Sources2 {
         if (!(obj instanceof Sources2)) {
             return false;
         }
-        
+
         final Sources2 other = (Sources2) obj;
-        
-        return Objects.equal(main, other.main) &&
-                Objects.equal(compounds, other.compounds);
+
+        return Objects.equals(main, other.main) &&
+                Objects.equals(compounds, other.compounds);
     }
 }

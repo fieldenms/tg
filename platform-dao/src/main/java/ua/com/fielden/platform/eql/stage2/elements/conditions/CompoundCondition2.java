@@ -1,6 +1,6 @@
 package ua.com.fielden.platform.eql.stage2.elements.conditions;
 
-import com.google.common.base.Objects;
+import java.util.Objects;
 
 import ua.com.fielden.platform.entity.query.fluent.enums.LogicalOperator;
 
@@ -34,7 +34,7 @@ public class CompoundCondition2 {
         
         final CompoundCondition2 other = (CompoundCondition2) obj;
         
-        return Objects.equal(logicalOperator, other.logicalOperator) &&
-                Objects.equal(condition, other.condition);
+        return Objects.equals(logicalOperator, other.logicalOperator) &&
+                Objects.equals(condition, other.condition);
     }
 }

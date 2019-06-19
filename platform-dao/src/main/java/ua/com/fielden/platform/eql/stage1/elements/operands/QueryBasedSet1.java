@@ -1,5 +1,7 @@
 package ua.com.fielden.platform.eql.stage1.elements.operands;
 
+import java.util.Objects;
+
 import ua.com.fielden.platform.eql.meta.PropsResolutionContext;
 import ua.com.fielden.platform.eql.meta.TransformationResult;
 import ua.com.fielden.platform.eql.stage2.elements.operands.EntQuery2;
@@ -9,7 +11,6 @@ public class QueryBasedSet1 implements ISetOperand1<QueryBasedSet2> {
     private final EntQuery1 model;
 
     public QueryBasedSet1(final EntQuery1 model) {
-        super();
         this.model = model;
     }
 
@@ -32,13 +33,13 @@ public class QueryBasedSet1 implements ISetOperand1<QueryBasedSet2> {
         if (this == obj) {
             return true;
         }
-        if (obj == null) {
-            return false;
-        }
+
         if (!(obj instanceof QueryBasedSet1)) {
             return false;
         }
+        
         final QueryBasedSet1 other = (QueryBasedSet1) obj;
+        
         if (model == null) {
             if (other.model != null) {
                 return false;
@@ -46,6 +47,7 @@ public class QueryBasedSet1 implements ISetOperand1<QueryBasedSet2> {
         } else if (!model.equals(other.model)) {
             return false;
         }
-        return true;
+        
+        return Objects.equals(model, other.model);
     }
 }

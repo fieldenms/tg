@@ -1,6 +1,6 @@
 package ua.com.fielden.platform.eql.stage2.elements.operands;
 
-import com.google.common.base.Objects;
+import java.util.Objects;
 
 import ua.com.fielden.platform.eql.stage2.elements.AbstractElement2;
 import ua.com.fielden.platform.eql.stage2.elements.sources.IQrySource2;
@@ -58,8 +58,8 @@ public class EntProp2 extends AbstractElement2 implements ISingleOperand2 {
         
         final EntProp2 other = (EntProp2) obj;
         
-        return Objects.equal(name, other.name) &&
-                Objects.equal(type, other.type) &&
-                Objects.equal(source, other.source);
+        return Objects.equals(name, other.name) &&
+                Objects.equals(type, other.type) &&
+                Objects.equals(source, other.source);
     }
 }

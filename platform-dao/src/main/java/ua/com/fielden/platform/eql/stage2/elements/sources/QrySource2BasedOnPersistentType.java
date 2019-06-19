@@ -1,6 +1,6 @@
 package ua.com.fielden.platform.eql.stage2.elements.sources;
 
-import com.google.common.base.Objects;
+import java.util.Objects;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.eql.meta.EntityInfo;
@@ -62,7 +62,7 @@ public class QrySource2BasedOnPersistentType extends AbstractElement2 implements
         
         final QrySource2BasedOnPersistentType other = (QrySource2BasedOnPersistentType) obj;
         
-        return Objects.equal(sourceType, other.sourceType) &&
-                Objects.equal(alias, other.alias);
+        return Objects.equals(sourceType, other.sourceType) &&
+                Objects.equals(alias, other.alias);
     }
 }

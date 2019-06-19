@@ -48,7 +48,7 @@ public class QrySourcesBuilder extends AbstractTokensBuilder {
         }
         final Iterator<Pair<TokenCategory, Object>> iterator = getTokens().iterator();
         final IQrySource1<? extends IQrySource2> mainSource = (IQrySource1<? extends IQrySource2>) iterator.next().getValue();
-        final List<CompoundSource1> otherSources = new ArrayList<CompoundSource1>();
+        final List<CompoundSource1> otherSources = new ArrayList<>();
         for (; iterator.hasNext();) {
             final CompoundSource1 subsequentSource = (CompoundSource1) iterator.next().getValue();
             otherSources.add(subsequentSource);

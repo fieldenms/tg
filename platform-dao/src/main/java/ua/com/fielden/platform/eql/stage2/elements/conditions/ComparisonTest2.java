@@ -1,6 +1,6 @@
 package ua.com.fielden.platform.eql.stage2.elements.conditions;
 
-import com.google.common.base.Objects;
+import java.util.Objects;
 
 import ua.com.fielden.platform.entity.query.fluent.enums.ComparisonOperator;
 import ua.com.fielden.platform.eql.stage2.elements.operands.ISingleOperand2;
@@ -43,8 +43,8 @@ public class ComparisonTest2 extends AbstractCondition2 {
         
         final ComparisonTest2 other = (ComparisonTest2) obj;
         
-        return Objects.equal(leftOperand, other.leftOperand) &&
-                Objects.equal(rightOperand, other.rightOperand) &&
-                Objects.equal(operator, other.operator);
+        return Objects.equals(leftOperand, other.leftOperand) &&
+                Objects.equals(rightOperand, other.rightOperand) &&
+                Objects.equals(operator, other.operator);
    }
 }

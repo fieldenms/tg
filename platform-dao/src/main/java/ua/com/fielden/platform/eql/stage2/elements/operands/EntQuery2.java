@@ -1,6 +1,6 @@
 package ua.com.fielden.platform.eql.stage2.elements.operands;
 
-import com.google.common.base.Objects;
+import java.util.Objects;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.eql.meta.QueryCategory;
@@ -67,12 +67,12 @@ public class EntQuery2 implements ISingleOperand2 {
         
         final EntQuery2 other = (EntQuery2) obj;
         
-        return Objects.equal(category, other.category) &&
-                Objects.equal(resultType, other.resultType) &&
-                Objects.equal(sources, other.sources) &&
-                Objects.equal(yields, other.yields) &&
-                Objects.equal(conditions, other.conditions) &&
-                Objects.equal(groups, other.groups) &&
-                Objects.equal(orderings, other.orderings);
+        return Objects.equals(category, other.category) &&
+                Objects.equals(resultType, other.resultType) &&
+                Objects.equals(sources, other.sources) &&
+                Objects.equals(yields, other.yields) &&
+                Objects.equals(conditions, other.conditions) &&
+                Objects.equals(groups, other.groups) &&
+                Objects.equals(orderings, other.orderings);
     }
 }

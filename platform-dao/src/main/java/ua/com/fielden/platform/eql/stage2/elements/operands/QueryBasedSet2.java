@@ -1,6 +1,6 @@
 package ua.com.fielden.platform.eql.stage2.elements.operands;
 
-import com.google.common.base.Objects;
+import java.util.Objects;
 
 public class QueryBasedSet2 implements ISetOperand2 {
     private final EntQuery2 model;
@@ -29,6 +29,6 @@ public class QueryBasedSet2 implements ISetOperand2 {
         
         final QueryBasedSet2 other = (QueryBasedSet2) obj;
         
-        return Objects.equal(model, other.model);
+        return Objects.equals(model, other.model);
     }
 }

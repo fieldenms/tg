@@ -1,6 +1,6 @@
 package ua.com.fielden.platform.eql.stage2.elements.sources;
 
-import com.google.common.base.Objects;
+import java.util.Objects;
 
 import ua.com.fielden.platform.entity.query.fluent.enums.JoinType;
 import ua.com.fielden.platform.eql.stage2.elements.conditions.Conditions2;
@@ -14,11 +14,6 @@ public class CompoundSource2 {
         this.source = source;
         this.joinType = joinType;
         this.joinConditions = joinConditions;
-    }
-
-    @Override
-    public String toString() {
-        return joinType + " " + source + " ON " + joinConditions;
     }
 
     @Override
@@ -44,8 +39,8 @@ public class CompoundSource2 {
         
         final CompoundSource2 other = (CompoundSource2) obj;
         
-        return Objects.equal(source, other.source) &&
-                Objects.equal(joinType, other.joinType) &&
-                Objects.equal(joinConditions, other.joinConditions);
+        return Objects.equals(source, other.source) &&
+                Objects.equals(joinType, other.joinType) &&
+                Objects.equals(joinConditions, other.joinConditions);
     }
 }

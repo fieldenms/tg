@@ -2,6 +2,7 @@ package ua.com.fielden.platform.eql.stage1.elements.operands;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 import ua.com.fielden.platform.eql.meta.PropsResolutionContext;
 import ua.com.fielden.platform.eql.meta.TransformationResult;
@@ -41,20 +42,13 @@ public class OperandsBasedSet1 implements ISetOperand1<OperandsBasedSet2> {
         if (this == obj) {
             return true;
         }
-        if (obj == null) {
-            return false;
-        }
+
         if (!(obj instanceof OperandsBasedSet1)) {
             return false;
         }
+        
         final OperandsBasedSet1 other = (OperandsBasedSet1) obj;
-        if (operands == null) {
-            if (other.operands != null) {
-                return false;
-            }
-        } else if (!operands.equals(other.operands)) {
-            return false;
-        }
-        return true;
+        
+        return Objects.equals(operands, other.operands);
     }
 }

@@ -4,8 +4,7 @@ import static java.util.Collections.emptyList;
 
 import java.math.BigDecimal;
 import java.util.List;
-
-import com.google.common.base.Objects;
+import java.util.Objects;
 
 public class Expression2 implements ISingleOperand2 {
 
@@ -47,8 +46,8 @@ public class Expression2 implements ISingleOperand2 {
         
         final Expression2 other = (Expression2) obj;
         
-        return Objects.equal(first, other.first) &&
-                Objects.equal(items, other.items);
+        return Objects.equals(first, other.first) &&
+                Objects.equals(items, other.items);
     }
 
     @Override
