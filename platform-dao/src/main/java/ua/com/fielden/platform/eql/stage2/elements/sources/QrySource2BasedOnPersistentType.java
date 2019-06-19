@@ -62,7 +62,6 @@ public class QrySource2BasedOnPersistentType extends AbstractElement2 implements
         
         final QrySource2BasedOnPersistentType other = (QrySource2BasedOnPersistentType) obj;
         
-        return Objects.equals(sourceType, other.sourceType) &&
-                Objects.equals(alias, other.alias);
+        return Objects.equals(sourceType, other.sourceType) && Objects.equals(alias, other.alias);
     }
 }

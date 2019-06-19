@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.EntityAggregates;
@@ -14,17 +15,19 @@ import ua.com.fielden.platform.eql.meta.AbstractPropInfo;
 import ua.com.fielden.platform.eql.meta.EntityInfo;
 import ua.com.fielden.platform.eql.meta.EntityTypePropInfo;
 import ua.com.fielden.platform.eql.meta.PrimTypePropInfo;
+import ua.com.fielden.platform.eql.stage2.elements.AbstractElement2;
 import ua.com.fielden.platform.eql.stage2.elements.Yield2;
 import ua.com.fielden.platform.eql.stage2.elements.Yields2;
 import ua.com.fielden.platform.eql.stage2.elements.operands.EntQuery2;
 
-public class QrySource2BasedOnSubqueries implements IQrySource2 {
+public class QrySource2BasedOnSubqueries extends AbstractElement2 implements IQrySource2 {
     private final List<EntQuery2> models = new ArrayList<>();
     private final Map<String, List<Yield2>> yieldsMatrix;
     private final EntityInfo entityInfo;
     private final String alias;
 
-    public QrySource2BasedOnSubqueries(final List<EntQuery2> models, final String alias, final Map<Class<? extends AbstractEntity<?>>, EntityInfo<?>> domainInfo) {
+    public QrySource2BasedOnSubqueries(final List<EntQuery2> models, final String alias, final Map<Class<? extends AbstractEntity<?>>, EntityInfo<?>> domainInfo, final int contextId) {
+        super(contextId);
         if (models == null || models.isEmpty()) {
             throw new EqlStage1ProcessingException("Couldn't produce instance of QueryBasedSource due to zero models passed to constructor!");
         }
@@ -77,7 +80,7 @@ public class QrySource2BasedOnSubqueries implements IQrySource2 {
     @Override
     public int hashCode() {
         final int prime = 31;
-        int result = 1;
+        int result = super.hashCode();
         result = prime * result + ((models == null) ? 0 : models.hashCode());
         return result;
     }
@@ -87,21 +90,18 @@ public class QrySource2BasedOnSubqueries implements IQrySource2 {
         if (this == obj) {
             return true;
         }
-        if (obj == null) {
+
+        if (!super.equals(obj)) {
             return false;
         }
+        
         if (!(obj instanceof QrySource2BasedOnSubqueries)) {
             return false;
         }
+        
         final QrySource2BasedOnSubqueries other = (QrySource2BasedOnSubqueries) obj;
-        if (models == null) {
-            if (other.models != null) {
-                return false;
-            }
-        } else if (!models.equals(other.models)) {
-            return false;
-        }
-        return true;
+        
+        return Objects.equals(models, other.models);   
     }
 
     public List<EntQuery2> getModels() {

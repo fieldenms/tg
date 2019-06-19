@@ -187,7 +187,7 @@ public class PropResolutionTest extends BaseEntQueryTCase1 {
         assertEquals(expQry1, actQry1);
         
         
-        final QrySource2BasedOnSubqueries source2 = new QrySource2BasedOnSubqueries(listOf(sm1ExpQry2, sm2ExpQry2), null,  metadata);
+        final QrySource2BasedOnSubqueries source2 = new QrySource2BasedOnSubqueries(listOf(sm1ExpQry2, sm2ExpQry2), null,  metadata, 7);
         
         final Sources2 sources2 = new Sources2(source2);
         final List<List<? extends ICondition2>> allConditions2 = new ArrayList<>();

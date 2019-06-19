@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.exceptions.EqlStage1ProcessingException;
@@ -66,7 +67,7 @@ public class QrySource1BasedOnSubqueries extends AbstractQrySource1<QrySource2Ba
             currentResolutionContext = modelTransformationResult.getUpdatedContext(); // TODO should be just resolutionContext with propsResolutions added from this model transformation   
         }
            
-        final QrySource2BasedOnSubqueries transformedSource = new QrySource2BasedOnSubqueries(transformedQueries, alias, resolutionContext.getDomainInfo());
+        final QrySource2BasedOnSubqueries transformedSource = new QrySource2BasedOnSubqueries(transformedQueries, alias, resolutionContext.getDomainInfo(), contextId);
         return new TransformationResult<QrySource2BasedOnSubqueries>(transformedSource, /*currentResolutionContext*/resolutionContext.cloneWithAdded(transformedSource, currentResolutionContext.getResolvedProps()));
     }
     
@@ -92,21 +93,18 @@ public class QrySource1BasedOnSubqueries extends AbstractQrySource1<QrySource2Ba
         if (this == obj) {
             return true;
         }
+        
         if (!super.equals(obj)) {
             return false;
         }
+        
         if (!(obj instanceof QrySource1BasedOnSubqueries)) {
             return false;
         }
+        
         final QrySource1BasedOnSubqueries other = (QrySource1BasedOnSubqueries) obj;
-        if (models == null) {
-            if (other.models != null) {
-                return false;
-            }
-        } else if (!models.equals(other.models)) {
-            return false;
-        }
-        return true;
+        
+        return Objects.equals(models, other.models);        
     }
 
     public List<EntQuery1> getModels() {

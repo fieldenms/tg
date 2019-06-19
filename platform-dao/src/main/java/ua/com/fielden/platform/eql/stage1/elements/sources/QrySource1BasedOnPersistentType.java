@@ -1,5 +1,7 @@
 package ua.com.fielden.platform.eql.stage1.elements.sources;
 
+import java.util.Objects;
+
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.exceptions.EqlStage1ProcessingException;
 import ua.com.fielden.platform.eql.meta.PropsResolutionContext;
@@ -50,15 +52,12 @@ public class QrySource1BasedOnPersistentType extends AbstractQrySource1<QrySourc
         }
 
         final QrySource1BasedOnPersistentType other = (QrySource1BasedOnPersistentType) obj;
-        if (!sourceType.equals(other.sourceType)) {
-            return false;
-        }
 
-        return true;
+        return Objects.equals(sourceType, other.sourceType);
     }
 
     @Override
-    public TransformationResult<QrySource2BasedOnPersistentType> transform(PropsResolutionContext resolutionContext) {
+    public TransformationResult<QrySource2BasedOnPersistentType> transform(final PropsResolutionContext resolutionContext) {
         final QrySource2BasedOnPersistentType transformedSource = new QrySource2BasedOnPersistentType(sourceType(), resolutionContext.getDomainInfo().get(sourceType()), getAlias(), contextId);
         return new TransformationResult<QrySource2BasedOnPersistentType>(transformedSource, resolutionContext.cloneWithAdded(transformedSource, resolutionContext.getResolvedProps()));
     }
