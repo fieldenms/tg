@@ -7,35 +7,23 @@ import ua.com.fielden.platform.eql.stage2.elements.Yield2;
 import ua.com.fielden.platform.eql.stage2.elements.operands.ISingleOperand2;
 
 public class Yield1 {
-    private final ISingleOperand1<? extends ISingleOperand2> operand;
-    private final String alias;
-    private final boolean requiredHint;
+    public final ISingleOperand1<? extends ISingleOperand2> operand;
+    public final String alias;
+    public final boolean hasRequiredHint;
 
-    public Yield1(final ISingleOperand1<? extends ISingleOperand2> operand, final String alias, final boolean requiredHint) {
+    public Yield1(final ISingleOperand1<? extends ISingleOperand2> operand, final String alias, final boolean hasRequiredHint) {
         this.operand = operand;
         this.alias = alias;
-        this.requiredHint = requiredHint;
+        this.hasRequiredHint = hasRequiredHint;
     }
     
     public Yield1(final ISingleOperand1<? extends ISingleOperand2> operand, final String alias) {
         this(operand, alias, false);
     }
 
-    public TransformationResult<Yield2> transform(PropsResolutionContext resolutionContext) {
-        TransformationResult<? extends ISingleOperand2> operandTransformationResult = operand.transform(resolutionContext);
-        return new TransformationResult<Yield2>(new Yield2(operandTransformationResult.getItem(), alias, requiredHint), operandTransformationResult.getUpdatedContext());
-    }
-
-    public ISingleOperand1<? extends ISingleOperand2> getOperand() {
-        return operand;
-    }
-
-    public String getAlias() {
-        return alias;
-    }
-
-    protected boolean isRequiredHint() {
-        return requiredHint;
+    public TransformationResult<Yield2> transform(final PropsResolutionContext resolutionContext) {
+        final TransformationResult<? extends ISingleOperand2> operandTransformationResult = operand.transform(resolutionContext);
+        return new TransformationResult<Yield2>(new Yield2(operandTransformationResult.getItem(), alias, hasRequiredHint), operandTransformationResult.getUpdatedContext());
     }
 
     @Override

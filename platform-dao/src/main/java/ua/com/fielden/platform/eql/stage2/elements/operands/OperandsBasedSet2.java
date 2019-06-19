@@ -2,17 +2,13 @@ package ua.com.fielden.platform.eql.stage2.elements.operands;
 
 import java.util.List;
 
+import com.google.common.base.Objects;
+
 public class OperandsBasedSet2 implements ISetOperand2 {
     private final List<ISingleOperand2> operands;
 
     public OperandsBasedSet2(final List<ISingleOperand2> operands) {
-        super();
         this.operands = operands;
-    }
-
-    @Override
-    public boolean ignore() {
-        return false;
     }
 
     @Override
@@ -28,20 +24,12 @@ public class OperandsBasedSet2 implements ISetOperand2 {
         if (this == obj) {
             return true;
         }
-        if (obj == null) {
-            return false;
-        }
+
         if (!(obj instanceof OperandsBasedSet2)) {
             return false;
         }
         final OperandsBasedSet2 other = (OperandsBasedSet2) obj;
-        if (operands == null) {
-            if (other.operands != null) {
-                return false;
-            }
-        } else if (!operands.equals(other.operands)) {
-            return false;
-        }
-        return true;
+        
+        return Objects.equal(operands, other.operands);
     }
 }

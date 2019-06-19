@@ -3,7 +3,7 @@ package ua.com.fielden.platform.eql.stage2.elements.conditions;
 import ua.com.fielden.platform.eql.stage2.elements.operands.ISingleOperand2;
 
 public class NullTest2 extends AbstractCondition2 {
-    private final ISingleOperand2 operand;
+    public final ISingleOperand2 operand;
     private final boolean negated;
 
     public NullTest2(final ISingleOperand2 operand, final boolean negated) {

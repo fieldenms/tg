@@ -3,10 +3,10 @@ package ua.com.fielden.platform.eql.stage2.elements.conditions;
 import ua.com.fielden.platform.eql.stage2.elements.operands.ISingleOperand2;
 
 public class LikeTest2 extends AbstractCondition2 {
-    private final ISingleOperand2 leftOperand;
-    private final ISingleOperand2 rightOperand;
-    private final boolean negated;
-    private final boolean caseInsensitive;
+    public final ISingleOperand2 leftOperand;
+    public final ISingleOperand2 rightOperand;
+    public final boolean negated;
+    public final boolean caseInsensitive;
 
     public LikeTest2(final ISingleOperand2 leftOperand, final ISingleOperand2 rightOperand, final boolean negated, final boolean caseInsensitive) {
         this.leftOperand = leftOperand;

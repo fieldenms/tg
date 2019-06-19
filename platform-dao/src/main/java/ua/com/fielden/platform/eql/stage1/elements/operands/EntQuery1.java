@@ -38,11 +38,11 @@ public class EntQuery1 extends AbstractElement1 implements ISingleOperand1<EntQu
     public EntQuery1(final EntQueryBlocks1 queryBlocks, final Class<? extends AbstractEntity<?>> resultType, final QueryCategory category, final int contextId) {
        super(contextId);
        this.category = category;
-       this.sources = queryBlocks.getSources();
-       this.conditions = queryBlocks.getConditions();
-       this.yields = queryBlocks.getYields();
-       this.groups = queryBlocks.getGroups();
-       this.orderings = queryBlocks.getOrderings();
+       this.sources = queryBlocks.sources;
+       this.conditions = queryBlocks.conditions;
+       this.yields = queryBlocks.yields;
+       this.groups = queryBlocks.groups;
+       this.orderings = queryBlocks.orderings;
        this.resultType = resultType;
        
        if (this.resultType == null && category != SUB_QUERY) { // only primitive result queries have result type not assigned

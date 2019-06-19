@@ -3,16 +3,11 @@ package ua.com.fielden.platform.eql.stage2.elements;
 import java.util.ArrayList;
 import java.util.List;
 
-public class GroupBys2 implements IIgnorableAtS2 {
+public class GroupBys2 {
     private final List<GroupBy2> groups = new ArrayList<>();
 
     public GroupBys2(final List<GroupBy2> groups) {
         this.groups.addAll(groups);
-    }
-
-    @Override
-    public boolean ignore() {
-        return false;
     }
 
     public List<GroupBy2> getGroups() {

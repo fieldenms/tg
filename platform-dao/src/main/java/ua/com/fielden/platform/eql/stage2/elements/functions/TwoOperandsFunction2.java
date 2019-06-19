@@ -1,28 +1,14 @@
 package ua.com.fielden.platform.eql.stage2.elements.functions;
 
-import ua.com.fielden.platform.eql.stage2.elements.functions.AbstractFunction2;
 import ua.com.fielden.platform.eql.stage2.elements.operands.ISingleOperand2;
 
 abstract class TwoOperandsFunction2 extends AbstractFunction2 {
-    private final ISingleOperand2 operand1;
-    private final ISingleOperand2 operand2;
+    public final ISingleOperand2 operand1;
+    public final ISingleOperand2 operand2;
 
     public TwoOperandsFunction2(final ISingleOperand2 operand1, final ISingleOperand2 operand2) {
         this.operand1 = operand1;
         this.operand2 = operand2;
-    }
-
-    @Override
-    public boolean ignore() {
-        return false;
-    }
-
-    public ISingleOperand2 getOperand1() {
-        return operand1;
-    }
-
-    public ISingleOperand2 getOperand2() {
-        return operand2;
     }
 
     @Override

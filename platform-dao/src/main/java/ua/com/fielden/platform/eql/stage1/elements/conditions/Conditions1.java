@@ -1,9 +1,9 @@
 package ua.com.fielden.platform.eql.stage1.elements.conditions;
 
+import static java.util.Collections.emptyList;
 import static ua.com.fielden.platform.entity.query.fluent.enums.LogicalOperator.AND;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 import ua.com.fielden.platform.eql.meta.PropsResolutionContext;
@@ -12,8 +12,8 @@ import ua.com.fielden.platform.eql.stage2.elements.conditions.Conditions2;
 import ua.com.fielden.platform.eql.stage2.elements.conditions.ICondition2;
 
 public class Conditions1 implements ICondition1<Conditions2> {
-    private final boolean negated;
-    private final ICondition1<? extends ICondition2> firstCondition;
+    public final boolean negated;
+    public final ICondition1<? extends ICondition2> firstCondition;
     private final List<CompoundCondition1> otherConditions = new ArrayList<>();
 
     public Conditions1(final boolean negated, final ICondition1<? extends ICondition2> firstCondition, final List<CompoundCondition1> otherConditions) {
@@ -23,7 +23,7 @@ public class Conditions1 implements ICondition1<Conditions2> {
     }
 
     public Conditions1(final boolean negated, final ICondition1<? extends ICondition2> firstCondition) {
-        this(negated, firstCondition, Collections.<CompoundCondition1> emptyList());
+        this(negated, firstCondition, emptyList());
     }
 
     public Conditions1() {
@@ -68,9 +68,9 @@ public class Conditions1 implements ICondition1<Conditions2> {
         final List<List<ICondition1<? extends ICondition2>>> dnfs = formDnf();
         final List<List<? extends ICondition2>> result = new ArrayList<>();
         PropsResolutionContext currentResolutionContext = resolutionContext;
-        for (List<ICondition1<? extends ICondition2>> andGroup : dnfs) {
-            List<ICondition2> transformedAndGroup = new ArrayList<>(); 
-            for (ICondition1<? extends ICondition2> andGroupCondition : andGroup) {
+        for (final List<ICondition1<? extends ICondition2>> andGroup : dnfs) {
+            final List<ICondition2> transformedAndGroup = new ArrayList<>(); 
+            for (final ICondition1<? extends ICondition2> andGroupCondition : andGroup) {
                 final TransformationResult<? extends ICondition2> andGroupConditionTransformationResult = andGroupCondition.transform(currentResolutionContext);
                 if (!andGroupConditionTransformationResult.getItem().ignore()) {
                     transformedAndGroup.add(andGroupConditionTransformationResult.getItem());

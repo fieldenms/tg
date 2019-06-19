@@ -15,7 +15,6 @@ public class EntValue2 implements ISingleOperand2 {
     }
 
     public EntValue2(final Object value, final boolean ignoreNull) {
-        super();
         this.value = preprocessValue(value);
         this.ignoreNull = ignoreNull;
         if (!ignoreNull && value == null) {

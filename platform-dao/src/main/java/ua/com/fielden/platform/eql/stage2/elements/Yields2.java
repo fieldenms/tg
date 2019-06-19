@@ -9,9 +9,9 @@ import java.util.TreeMap;
 public class Yields2 {
     private final SortedMap<String, Yield2> yieldsMap = new TreeMap<String, Yield2>();
 
-    public Yields2(List<Yield2> yields) {
-        for (Yield2 yield : yields) {
-            yieldsMap.put(yield.getAlias(), yield);
+    public Yields2(final List<Yield2> yields) {
+        for (final Yield2 yield : yields) {
+            yieldsMap.put(yield.alias, yield);
         }
     }
     

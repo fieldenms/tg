@@ -7,19 +7,15 @@ import ua.com.fielden.platform.eql.stage2.elements.GroupBy2;
 import ua.com.fielden.platform.eql.stage2.elements.operands.ISingleOperand2;
 
 public class GroupBy1 {
-    private final ISingleOperand1<? extends ISingleOperand2> operand;
+    public final ISingleOperand1<? extends ISingleOperand2> operand;
 
     public GroupBy1(final ISingleOperand1<? extends ISingleOperand2> operand) {
         this.operand = operand;
     }
 
-    public TransformationResult<GroupBy2> transform(PropsResolutionContext resolutionContext) {
-        TransformationResult<? extends ISingleOperand2> operandTransformationResult = operand.transform(resolutionContext);
+    public TransformationResult<GroupBy2> transform(final PropsResolutionContext resolutionContext) {
+        final TransformationResult<? extends ISingleOperand2> operandTransformationResult = operand.transform(resolutionContext);
         return new TransformationResult<GroupBy2>(new GroupBy2(operandTransformationResult.getItem()), operandTransformationResult.getUpdatedContext());
-    }
-
-    public ISingleOperand1<? extends ISingleOperand2> getOperand() {
-        return operand;
     }
 
     @Override

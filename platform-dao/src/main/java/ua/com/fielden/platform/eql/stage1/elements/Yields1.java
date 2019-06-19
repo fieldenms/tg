@@ -18,8 +18,8 @@ import ua.com.fielden.platform.eql.stage2.elements.Yields2;
 public class Yields1 {
     private final SortedMap<String, Yield1> yieldsMap = new TreeMap<String, Yield1>();
 
-    public Yields1(List<Yield1> yields) {
-        for (Yield1 yield : yields) {
+    public Yields1(final List<Yield1> yields) {
+        for (final Yield1 yield : yields) {
             addYield(yield);
         }
     }
@@ -28,7 +28,7 @@ public class Yields1 {
         final List<Yield2> yieldsList = new ArrayList<>(); 
         PropsResolutionContext currentResolutionContext = resolutionContext;
         for (final Yield1 yield : yieldsMap.values()) {
-            TransformationResult<Yield2> yieldTransformationResult = yield.transform(currentResolutionContext);
+            final TransformationResult<Yield2> yieldTransformationResult = yield.transform(currentResolutionContext);
             currentResolutionContext = yieldTransformationResult.getUpdatedContext();
             yieldsList.add(yieldTransformationResult.getItem());
         }
@@ -36,10 +36,10 @@ public class Yields1 {
     }
 
     public void addYield(final Yield1 yield) {
-        if (yieldsMap.containsKey(yield.getAlias())) {
-            throw new EqlStage1ProcessingException(format("Query contains duplicate yields for alias [%s].", yield.getAlias()));
+        if (yieldsMap.containsKey(yield.alias)) {
+            throw new EqlStage1ProcessingException(format("Query contains duplicate yields for alias [%s].", yield.alias));
         }
-        yieldsMap.put(yield.getAlias(), yield);
+        yieldsMap.put(yield.alias, yield);
     }
 
     public Collection<Yield1> getYields() {

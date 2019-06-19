@@ -13,14 +13,8 @@ public class CaseWhen2 extends AbstractFunction2 {
     private final ISingleOperand2 elseOperand;
 
     public CaseWhen2(final List<Pair<ICondition2, ISingleOperand2>> whenThenPairs, final ISingleOperand2 elseOperand) {
-        super();
         this.whenThenPairs.addAll(whenThenPairs);
         this.elseOperand = elseOperand;
-    }
-
-    @Override
-    public boolean ignore() {
-        return false;
     }
 
     @Override

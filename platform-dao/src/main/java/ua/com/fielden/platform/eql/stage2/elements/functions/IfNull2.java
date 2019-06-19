@@ -11,6 +11,6 @@ public class IfNull2 extends TwoOperandsFunction2 {
     @Override
     public Class type() {
         // TODO EQL
-        return getOperand1().type();
+        return operand1.type();
     }
 }

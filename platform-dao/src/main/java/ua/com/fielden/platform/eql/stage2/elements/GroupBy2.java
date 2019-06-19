@@ -3,15 +3,11 @@ package ua.com.fielden.platform.eql.stage2.elements;
 import ua.com.fielden.platform.eql.stage2.elements.operands.ISingleOperand2;
 
 public class GroupBy2 {
-    private final ISingleOperand2 operand;
+    public final ISingleOperand2 operand;
 
     public GroupBy2(final ISingleOperand2 operand) {
         super();
         this.operand = operand;
-    }
-
-    public ISingleOperand2 getOperand() {
-        return operand;
     }
 
     @Override

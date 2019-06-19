@@ -1,12 +1,14 @@
 package ua.com.fielden.platform.eql.stage2.elements.operands;
 
+import com.google.common.base.Objects;
+
 import ua.com.fielden.platform.eql.stage2.elements.AbstractElement2;
 import ua.com.fielden.platform.eql.stage2.elements.sources.IQrySource2;
 
 public class EntProp2 extends AbstractElement2 implements ISingleOperand2 {
-    private final String name;
-    private final IQrySource2 source;
-    private final Class<?> type;
+    public final String name;
+    public final IQrySource2 source;
+    public final Class<?> type;
 
     public EntProp2(final String name, final IQrySource2 source, final Class<?> type, final int contextId) {
         super(contextId);
@@ -23,10 +25,6 @@ public class EntProp2 extends AbstractElement2 implements ISingleOperand2 {
     @Override
     public boolean ignore() {
         return false;
-    }
-
-    public String getName() {
-        return name;
     }
 
     @Override
@@ -54,35 +52,14 @@ public class EntProp2 extends AbstractElement2 implements ISingleOperand2 {
             return false;
         }
         
-        if (obj == null) {
-            return false;
-        }
-        
         if (!(obj instanceof EntProp2)) {
             return false;
         }
+        
         final EntProp2 other = (EntProp2) obj;
-        if (name == null) {
-            if (other.name != null) {
-                return false;
-            }
-        } else if (!name.equals(other.name)) {
-            return false;
-        }
-        if (type == null) {
-            if (other.type != null) {
-                return false;
-            }
-        } else if (!type.equals(other.type)) {
-            return false;
-        }
-        if (source == null) {
-            if (other.source != null) {
-                return false;
-            }
-        } else if (!source.equals(other.source)) {
-            return false;
-        }
-        return true;
+        
+        return Objects.equal(name, other.name) &&
+                Objects.equal(type, other.type) &&
+                Objects.equal(source, other.source);
     }
 }

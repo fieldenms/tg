@@ -9,7 +9,6 @@ import java.util.Map;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.EntityAggregates;
-import ua.com.fielden.platform.entity.query.exceptions.EqlException;
 import ua.com.fielden.platform.entity.query.exceptions.EqlStage1ProcessingException;
 import ua.com.fielden.platform.eql.meta.AbstractPropInfo;
 import ua.com.fielden.platform.eql.meta.EntityInfo;
@@ -40,14 +39,14 @@ public class QrySource2BasedOnSubqueries implements IQrySource2 {
     private static Map<String, List<Yield2>> populateYieldMatrixFromQueryModels(final List<EntQuery2> models) {
         final Map<String, List<Yield2>> yieldsMatrix = new HashMap<>();
         for (final EntQuery2 entQuery : models) {
-            for (final Yield2 yield : entQuery.getYields().getYields()) {
-                final List<Yield2> foundYields = yieldsMatrix.get(yield.getAlias());
+            for (final Yield2 yield : entQuery.yields.getYields()) {
+                final List<Yield2> foundYields = yieldsMatrix.get(yield.alias);
                 if (foundYields != null) {
                     foundYields.add(yield);
                 } else {
                     final List<Yield2> newList = new ArrayList<Yield2>();
                     newList.add(yield);
-                    yieldsMatrix.put(yield.getAlias(), newList);
+                    yieldsMatrix.put(yield.alias, newList);
                 }
             }
         }
@@ -57,16 +56,6 @@ public class QrySource2BasedOnSubqueries implements IQrySource2 {
     private EntQuery2 firstModel() {
         return models.get(0);
     }
-
-    //    private boolean getYieldNullability(final String yieldAlias) {
-    //	final boolean result = false;
-    //	for (final Yield2 yield : yieldsMatrix.get(yieldAlias)) {
-    //	    if (false/*yield.getInfo().isNullable()*/) {
-    //		return true;
-    //	    }
-    //	}
-    //	return result;
-    //    }
 
     private void validateYieldsMatrix() {
         for (final Map.Entry<String, List<Yield2>> entry : yieldsMatrix.entrySet()) {
@@ -82,7 +71,7 @@ public class QrySource2BasedOnSubqueries implements IQrySource2 {
     }
 
     public Yields2 getYields() {
-        return firstModel().getYields();
+        return firstModel().yields;
     }
 
     @Override
@@ -131,8 +120,8 @@ public class QrySource2BasedOnSubqueries implements IQrySource2 {
             final EntityInfo<EntityAggregates> entAggEntityInfo = new EntityInfo<>(EntityAggregates.class, null);
             for (final Yield2 yield : getYields().getYields()) {
                 final AbstractPropInfo<?, ?> aep = isEntityType(yield.javaType())
-                        ? new EntityTypePropInfo(yield.getAlias(), domainInfo.get(yield.javaType()), entAggEntityInfo)
-                        : new PrimTypePropInfo(yield.getAlias(), yield.javaType(), entAggEntityInfo);
+                        ? new EntityTypePropInfo(yield.alias, domainInfo.get(yield.javaType()), entAggEntityInfo)
+                        : new PrimTypePropInfo(yield.alias, yield.javaType(), entAggEntityInfo);
                 entAggEntityInfo.addProp(aep);
             }
             return entAggEntityInfo;

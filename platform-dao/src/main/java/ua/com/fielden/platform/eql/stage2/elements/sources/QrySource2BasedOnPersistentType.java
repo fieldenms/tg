@@ -1,5 +1,7 @@
 package ua.com.fielden.platform.eql.stage2.elements.sources;
 
+import com.google.common.base.Objects;
+
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.eql.meta.EntityInfo;
 import ua.com.fielden.platform.eql.stage2.elements.AbstractElement2;
@@ -26,6 +28,16 @@ public class QrySource2BasedOnPersistentType extends AbstractElement2 implements
     }
 
     @Override
+    public EntityInfo<?> entityInfo() {
+        return entityInfo;
+    }
+
+    @Override
+    public String alias() {
+        return alias;
+    }
+    
+    @Override
     public int hashCode() {
         final int prime = 31;
         int result = super.hashCode();
@@ -47,33 +59,10 @@ public class QrySource2BasedOnPersistentType extends AbstractElement2 implements
         if (!(obj instanceof QrySource2BasedOnPersistentType)) {
             return false;
         }
-        final QrySource2BasedOnPersistentType other = (QrySource2BasedOnPersistentType) obj;
-        if (sourceType == null) {
-            if (other.sourceType != null) {
-                return false;
-            }
-        } else if (!sourceType.equals(other.sourceType)) {
-            return false;
-        }
-        if (alias == null) {
-            if (other.alias != null) {
-                return false;
-            }
-        } else if (!alias.equals(other.alias)) {
-            return false;
-        }
-
         
-        return true;
-    }
-
-    @Override
-    public EntityInfo<?> entityInfo() {
-        return entityInfo;
-    }
-
-    @Override
-    public String alias() {
-        return alias;
+        final QrySource2BasedOnPersistentType other = (QrySource2BasedOnPersistentType) obj;
+        
+        return Objects.equal(sourceType, other.sourceType) &&
+                Objects.equal(alias, other.alias);
     }
 }

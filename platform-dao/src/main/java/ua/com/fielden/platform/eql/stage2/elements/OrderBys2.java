@@ -2,7 +2,7 @@ package ua.com.fielden.platform.eql.stage2.elements;
 
 import java.util.List;
 
-public class OrderBys2 implements IIgnorableAtS2 {
+public class OrderBys2 {
     private final List<OrderBy2> models;
 
     public OrderBys2(final List<OrderBy2> models) {
@@ -12,11 +12,6 @@ public class OrderBys2 implements IIgnorableAtS2 {
     @Override
     public String toString() {
         return models.toString();
-    }
-
-    @Override
-    public boolean ignore() {
-        return false;
     }
 
     public List<OrderBy2> getModels() {

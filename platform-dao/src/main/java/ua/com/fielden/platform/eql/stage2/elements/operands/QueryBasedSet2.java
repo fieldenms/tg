@@ -1,18 +1,12 @@
 package ua.com.fielden.platform.eql.stage2.elements.operands;
 
-import ua.com.fielden.platform.eql.stage2.elements.operands.ISetOperand2;
+import com.google.common.base.Objects;
 
 public class QueryBasedSet2 implements ISetOperand2 {
     private final EntQuery2 model;
 
     public QueryBasedSet2(final EntQuery2 model) {
-        super();
         this.model = model;
-    }
-
-    @Override
-    public boolean ignore() {
-        return false;
     }
 
     @Override
@@ -28,20 +22,13 @@ public class QueryBasedSet2 implements ISetOperand2 {
         if (this == obj) {
             return true;
         }
-        if (obj == null) {
-            return false;
-        }
+
         if (!(obj instanceof QueryBasedSet2)) {
             return false;
         }
+        
         final QueryBasedSet2 other = (QueryBasedSet2) obj;
-        if (model == null) {
-            if (other.model != null) {
-                return false;
-            }
-        } else if (!model.equals(other.model)) {
-            return false;
-        }
-        return true;
+        
+        return Objects.equal(model, other.model);
     }
 }

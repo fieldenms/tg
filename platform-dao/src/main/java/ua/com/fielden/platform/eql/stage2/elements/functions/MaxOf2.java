@@ -10,6 +10,6 @@ public class MaxOf2 extends SingleOperandFunction2 {
 
     @Override
     public Class type() {
-        return getOperand().type();
+        return operand.type();
     }
 }

@@ -33,13 +33,13 @@ public class QrySource1BasedOnSubqueries extends AbstractQrySource1<QrySource2Ba
         final Map<String, List<Yield1>> yieldsMatrix = new HashMap<>();        
         for (final EntQuery1 entQuery : models) {
             for (final Yield1 yield : entQuery.yields.getYields()) {
-                final List<Yield1> foundYields = yieldsMatrix.get(yield.getAlias());
+                final List<Yield1> foundYields = yieldsMatrix.get(yield.alias);
                 if (foundYields != null) {
                     foundYields.add(yield);
                 } else {
                     final List<Yield1> newList = new ArrayList<>();
                     newList.add(yield);
-                    yieldsMatrix.put(yield.getAlias(), newList);
+                    yieldsMatrix.put(yield.alias, newList);
                 }
             }
         }
@@ -55,13 +55,13 @@ public class QrySource1BasedOnSubqueries extends AbstractQrySource1<QrySource2Ba
     }
    
     @Override
-    public TransformationResult<QrySource2BasedOnSubqueries> transform(PropsResolutionContext resolutionContext) {
+    public TransformationResult<QrySource2BasedOnSubqueries> transform(final PropsResolutionContext resolutionContext) {
         
         final List<EntQuery2> transformedQueries = new ArrayList<>();
         PropsResolutionContext currentResolutionContext = resolutionContext;
 
         for (final EntQuery1 model : models) {
-            TransformationResult<EntQuery2> modelTransformationResult = model.transform(currentResolutionContext/*.produceNewOne() // as already invoked as part of EntQuery1.transform(..)*/);
+            final TransformationResult<EntQuery2> modelTransformationResult = model.transform(currentResolutionContext/*.produceNewOne() // as already invoked as part of EntQuery1.transform(..)*/);
             transformedQueries.add(modelTransformationResult.getItem());
             currentResolutionContext = modelTransformationResult.getUpdatedContext(); // TODO should be just resolutionContext with propsResolutions added from this model transformation   
         }

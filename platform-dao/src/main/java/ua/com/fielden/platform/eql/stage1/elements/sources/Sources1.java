@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.eql.stage1.elements.sources;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import ua.com.fielden.platform.eql.meta.PropsResolutionContext;
@@ -10,7 +11,7 @@ import ua.com.fielden.platform.eql.stage2.elements.sources.IQrySource2;
 import ua.com.fielden.platform.eql.stage2.elements.sources.Sources2;
 
 public class Sources1  {
-    private final IQrySource1<? extends IQrySource2> main;
+    public final IQrySource1<? extends IQrySource2> main;
     private final List<CompoundSource1> compounds;
 
     public Sources1(final IQrySource1<? extends IQrySource2> main, final List<CompoundSource1> compounds) {
@@ -19,7 +20,7 @@ public class Sources1  {
     }
 
     public Sources1(final IQrySource1<? extends IQrySource2> main) {
-        this(main, new ArrayList<>());
+        this(main, Collections.emptyList());
     }
 
     public TransformationResult<Sources2> transform(final PropsResolutionContext resolutionContext) {
@@ -29,7 +30,7 @@ public class Sources1  {
         PropsResolutionContext currentResolutionContext = mainTransformationResult.getUpdatedContext();
         
         for (final CompoundSource1 compoundSource : compounds) {
-            TransformationResult<CompoundSource2> compoundSourceTransformationResult = compoundSource.transform(currentResolutionContext);
+            final TransformationResult<CompoundSource2> compoundSourceTransformationResult = compoundSource.transform(currentResolutionContext);
             transformed.add(compoundSourceTransformationResult.getItem());
             currentResolutionContext = compoundSourceTransformationResult.getUpdatedContext();
         }
@@ -46,21 +47,8 @@ public class Sources1  {
         return sb.toString();
     }
 
-    public IQrySource1<? extends IQrySource2> getMain() {
-        return main;
-    }
-
     public List<CompoundSource1> getCompounds() {
         return compounds;
-    }
-
-    public List<IQrySource1<? extends IQrySource2>> getAllSources() {
-        final List<IQrySource1<? extends IQrySource2>> result = new ArrayList<>();
-        result.add(main);
-        for (final CompoundSource1 compound : compounds) {
-            result.add(compound.getSource());
-        }
-        return result;
     }
 
     @Override

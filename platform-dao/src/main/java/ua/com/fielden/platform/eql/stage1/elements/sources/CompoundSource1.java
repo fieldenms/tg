@@ -10,9 +10,9 @@ import ua.com.fielden.platform.eql.stage2.elements.sources.CompoundSource2;
 import ua.com.fielden.platform.eql.stage2.elements.sources.IQrySource2;
 
 public class CompoundSource1 implements ITransformableToS2<CompoundSource2>{
-    private final IQrySource1<? extends IQrySource2> source;
-    private final JoinType joinType;
-    private final Conditions1 joinConditions;
+    public final IQrySource1<? extends IQrySource2> source;
+    public final JoinType joinType;
+    public final Conditions1 joinConditions;
 
     public CompoundSource1(final IQrySource1<? extends IQrySource2> source, final JoinType joinType, final Conditions1 joinConditions) {
         this.source = source;
@@ -30,18 +30,6 @@ public class CompoundSource1 implements ITransformableToS2<CompoundSource2>{
     @Override
     public String toString() {
         return joinType + " " + source + " ON " + joinConditions;
-    }
-
-    public IQrySource1<? extends IQrySource2> getSource() {
-        return source;
-    }
-
-    public JoinType getJoinType() {
-        return joinType;
-    }
-
-    public Conditions1 getJoinConditions() {
-        return joinConditions;
     }
 
     @Override

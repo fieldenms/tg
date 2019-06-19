@@ -6,11 +6,11 @@ import ua.com.fielden.platform.eql.stage1.elements.conditions.Conditions1;
 import ua.com.fielden.platform.eql.stage1.elements.sources.Sources1;
 
 public class EntQueryBlocks1 {
-    final Sources1 sources;
-    final Conditions1 conditions;
-    final Yields1 yields;
-    final GroupBys1 groups;
-    final OrderBys1 orderings;
+    public final Sources1 sources;
+    public final Conditions1 conditions;
+    public final Yields1 yields;
+    public final GroupBys1 groups;
+    public final OrderBys1 orderings;
 
     public EntQueryBlocks1(final Sources1 sources, final Conditions1 conditions, final Yields1 yields, final GroupBys1 groups, final OrderBys1 orderings) {
         this.sources = sources;
@@ -22,25 +22,5 @@ public class EntQueryBlocks1 {
 
     public EntQueryBlocks1(final Sources1 sources, final Conditions1 conditions) {
         this(sources, conditions, new Yields1(emptyList()), new GroupBys1(emptyList()), new OrderBys1(emptyList()));
-    }
-
-    public Sources1 getSources() {
-        return sources;
-    }
-
-    public Conditions1 getConditions() {
-        return conditions;
-    }
-
-    public Yields1 getYields() {
-        return yields;
-    }
-
-    public GroupBys1 getGroups() {
-        return groups;
-    }
-
-    public OrderBys1 getOrderings() {
-        return orderings;
     }
 }

@@ -1,12 +1,13 @@
 package ua.com.fielden.platform.eql.stage2.elements.sources;
 
-import java.util.ArrayList;
+import static java.util.Collections.emptyList;
+
 import java.util.List;
 
-import ua.com.fielden.platform.eql.stage2.elements.IIgnorableAtS2;
+import com.google.common.base.Objects;
 
-public class Sources2 implements IIgnorableAtS2 {
-    private final IQrySource2 main;
+public class Sources2 {
+    public final IQrySource2 main;
     private final List<CompoundSource2> compounds;
 
     public Sources2(final IQrySource2 main, final List<CompoundSource2> compounds) {
@@ -15,12 +16,7 @@ public class Sources2 implements IIgnorableAtS2 {
     }
 
     public Sources2(final IQrySource2 main) {
-        this(main, new ArrayList<>());
-    }
-
-    @Override
-    public boolean ignore() {
-        return false;
+        this(main, emptyList());
     }
 
     @Override
@@ -33,21 +29,8 @@ public class Sources2 implements IIgnorableAtS2 {
         return sb.toString();
     }
 
-    public IQrySource2 getMain() {
-        return main;
-    }
-
     public List<CompoundSource2> getCompounds() {
         return compounds;
-    }
-
-    public List<IQrySource2> getAllSources() {
-        final List<IQrySource2> result = new ArrayList<IQrySource2>();
-        result.add(main);
-        for (final CompoundSource2 compound : compounds) {
-            result.add(compound.getSource());
-        }
-        return result;
     }
 
     @Override
@@ -64,27 +47,14 @@ public class Sources2 implements IIgnorableAtS2 {
         if (this == obj) {
             return true;
         }
-        if (obj == null) {
-            return false;
-        }
+
         if (!(obj instanceof Sources2)) {
             return false;
         }
+        
         final Sources2 other = (Sources2) obj;
-        if (compounds == null) {
-            if (other.compounds != null) {
-                return false;
-            }
-        } else if (!compounds.equals(other.compounds)) {
-            return false;
-        }
-        if (main == null) {
-            if (other.main != null) {
-                return false;
-            }
-        } else if (!main.equals(other.main)) {
-            return false;
-        }
-        return true;
+        
+        return Objects.equal(main, other.main) &&
+                Objects.equal(compounds, other.compounds);
     }
 }

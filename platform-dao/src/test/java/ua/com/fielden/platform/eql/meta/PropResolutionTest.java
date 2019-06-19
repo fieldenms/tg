@@ -112,7 +112,7 @@ public class PropResolutionTest extends BaseEntQueryTCase1 {
         final EntQueryBlocks2 parts = new EntQueryBlocks2(sources, conditions, emptyYields2, emptyGroupBys2, emptyOrderBys2);
         final EntQuery2 expQry2 = new EntQuery2(parts, TgVehicleModel.class, RESULT_QUERY);
 
-        TransformationResult<EntQuery2> trQry2 = expQry1.transform(new PropsResolutionContext(metadata));
+        final TransformationResult<EntQuery2> trQry2 = expQry1.transform(new PropsResolutionContext(metadata));
         assertEquals(expQry2, trQry2.getItem());
         assertEquals(setOf(makeProp2), trQry2.getUpdatedContext().getResolvedProps());
     }
@@ -183,7 +183,7 @@ public class PropResolutionTest extends BaseEntQueryTCase1 {
         final EntQuery1 expQry1 = new EntQuery1(parts1, TgVehicleModel.class, RESULT_QUERY, 9);
 
         
-        EntQuery1 actQry1 = entResultQry(qry);
+        final EntQuery1 actQry1 = entResultQry(qry);
         assertEquals(expQry1, actQry1);
         
         
@@ -200,7 +200,7 @@ public class PropResolutionTest extends BaseEntQueryTCase1 {
         final EntQueryBlocks2 parts2 = new EntQueryBlocks2(sources2, conditions2, emptyYields2, emptyGroupBys2, emptyOrderBys2);
         final EntQuery2 expQry2 = new EntQuery2(parts2, TgVehicleModel.class, RESULT_QUERY);
         
-        TransformationResult<EntQuery2> trQry2 = expQry1.transform(new PropsResolutionContext(metadata));
+        final TransformationResult<EntQuery2> trQry2 = expQry1.transform(new PropsResolutionContext(metadata));
         assertEquals(expQry2, trQry2.getItem());
         assertEquals(setOf(prop2, sm1Prop2, sm2Prop2), trQry2.getUpdatedContext().getResolvedProps());
     }
@@ -351,11 +351,11 @@ public class PropResolutionTest extends BaseEntQueryTCase1 {
         final EntQueryBlocks2 parts = new EntQueryBlocks2(sources, conditions, emptyYields2, new GroupBys2(Collections.<GroupBy2> emptyList()), new OrderBys2(null));
         final EntQuery2 exp = new EntQuery2(parts, TgAuthor.class, RESULT_QUERY);
 
-        System.out.println(qry2.getItem().getConditions().equals(exp.getConditions()));
-        System.out.println(qry2.getItem().getGroups().equals(exp.getGroups()));
-        System.out.println(qry2.getItem().getYields().equals(exp.getYields()));
-        System.out.println(qry2.getItem().getSources().equals(exp.getSources()));
-        System.out.println(qry2.getItem().getOrderings().equals(exp.getOrderings()));
+        System.out.println(qry2.getItem().conditions.equals(exp.conditions));
+        System.out.println(qry2.getItem().groups.equals(exp.groups));
+        System.out.println(qry2.getItem().yields.equals(exp.yields));
+        System.out.println(qry2.getItem().sources.equals(exp.sources));
+        System.out.println(qry2.getItem().orderings.equals(exp.orderings));
         assertEquals(qry2.getItem(), exp);
     }
 
@@ -432,11 +432,11 @@ public class PropResolutionTest extends BaseEntQueryTCase1 {
         final EntQueryBlocks2 parts = new EntQueryBlocks2(sources, conditions, emptyYields2, new GroupBys2(Collections.<GroupBy2> emptyList()), new OrderBys2(Collections.<OrderBy2> emptyList()));
         final EntQuery2 exp = new EntQuery2(parts, TgVehicleModelWithCalc.class, RESULT_QUERY);
 
-        System.out.println(qry2.getItem().getConditions().equals(exp.getConditions()));
-        System.out.println(qry2.getItem().getGroups().equals(exp.getGroups()));
-        System.out.println(qry2.getItem().getYields().equals(exp.getYields()));
-        System.out.println(qry2.getItem().getSources().equals(exp.getSources()));
-        System.out.println(qry2.getItem().getOrderings().equals(exp.getOrderings()));
+        System.out.println(qry2.getItem().conditions.equals(exp.conditions));
+        System.out.println(qry2.getItem().groups.equals(exp.groups));
+        System.out.println(qry2.getItem().yields.equals(exp.yields));
+        System.out.println(qry2.getItem().sources.equals(exp.sources));
+        System.out.println(qry2.getItem().orderings.equals(exp.orderings));
         assertEquals(qry2.getItem(), exp);
     }
 

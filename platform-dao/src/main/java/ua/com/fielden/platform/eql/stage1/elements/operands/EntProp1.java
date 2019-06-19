@@ -17,8 +17,8 @@ import ua.com.fielden.platform.eql.stage2.elements.operands.EntProp2;
 import ua.com.fielden.platform.eql.stage2.elements.sources.IQrySource2;
 
 public class EntProp1 extends AbstractElement1 implements ISingleOperand1<EntProp2> {
-    public String name;
-    public boolean external;
+    public final String name;
+    public final boolean external;
 
     public EntProp1(final String name, final boolean external, final int contextId) {
         super(contextId);

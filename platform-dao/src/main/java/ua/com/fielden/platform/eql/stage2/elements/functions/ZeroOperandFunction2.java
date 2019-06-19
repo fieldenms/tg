@@ -1,18 +1,11 @@
 package ua.com.fielden.platform.eql.stage2.elements.functions;
 
-import ua.com.fielden.platform.eql.stage2.elements.functions.AbstractFunction2;
-
 abstract class ZeroOperandFunction2 extends AbstractFunction2 {
 
     private final String functionName;
 
     public ZeroOperandFunction2(final String functionName) {
         this.functionName = functionName;
-    }
-
-    @Override
-    public boolean ignore() {
-        return false;
     }
 
     @Override

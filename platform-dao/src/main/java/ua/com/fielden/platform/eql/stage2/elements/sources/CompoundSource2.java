@@ -1,15 +1,16 @@
 package ua.com.fielden.platform.eql.stage2.elements.sources;
 
+import com.google.common.base.Objects;
+
 import ua.com.fielden.platform.entity.query.fluent.enums.JoinType;
 import ua.com.fielden.platform.eql.stage2.elements.conditions.Conditions2;
 
 public class CompoundSource2 {
-    private final IQrySource2 source;
-    private final JoinType joinType;
-    private final Conditions2 joinConditions;
+    public final IQrySource2 source;
+    public final JoinType joinType;
+    public final Conditions2 joinConditions;
 
     public CompoundSource2(final IQrySource2 source, final JoinType joinType, final Conditions2 joinConditions) {
-        super();
         this.source = source;
         this.joinType = joinType;
         this.joinConditions = joinConditions;
@@ -18,18 +19,6 @@ public class CompoundSource2 {
     @Override
     public String toString() {
         return joinType + " " + source + " ON " + joinConditions;
-    }
-
-    public IQrySource2 getSource() {
-        return source;
-    }
-
-    public JoinType getJoinType() {
-        return joinType;
-    }
-
-    public Conditions2 getJoinConditions() {
-        return joinConditions;
     }
 
     @Override
@@ -47,30 +36,16 @@ public class CompoundSource2 {
         if (this == obj) {
             return true;
         }
-        if (obj == null) {
-            return false;
-        }
+
         if (!(obj instanceof CompoundSource2)) {
             return false;
         }
+        
+        
         final CompoundSource2 other = (CompoundSource2) obj;
-        if (joinConditions == null) {
-            if (other.joinConditions != null) {
-                return false;
-            }
-        } else if (!joinConditions.equals(other.joinConditions)) {
-            return false;
-        }
-        if (joinType != other.joinType) {
-            return false;
-        }
-        if (source == null) {
-            if (other.source != null) {
-                return false;
-            }
-        } else if (!source.equals(other.source)) {
-            return false;
-        }
-        return true;
+        
+        return Objects.equal(source, other.source) &&
+                Objects.equal(joinType, other.joinType) &&
+                Objects.equal(joinConditions, other.joinConditions);
     }
 }

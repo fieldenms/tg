@@ -3,43 +3,33 @@ package ua.com.fielden.platform.eql.stage2.elements;
 import ua.com.fielden.platform.eql.stage2.elements.operands.ISingleOperand2;
 
 public class OrderBy2 {
-    private final ISingleOperand2 operand;
-    private final String yieldName;
-    private Yield2 yield;
-    private final boolean desc;
+    public final ISingleOperand2 operand;
+    public final String yieldName;
+    public Yield2 yield;
+    public final boolean isDesc;
 
     @Override
     public String toString() {
-        return (yieldName == null ? operand : yieldName) + (desc ? " DESC" : " ASC");
+        return (yieldName == null ? operand : yieldName) + (isDesc ? " DESC" : " ASC");
     }
 
-    public OrderBy2(final ISingleOperand2 operand, final boolean desc) {
-        super();
+    public OrderBy2(final ISingleOperand2 operand, final boolean isDesc) {
         this.operand = operand;
         this.yieldName = null;
-        this.desc = desc;
+        this.isDesc = isDesc;
     }
 
-    public OrderBy2(final String yieldName, final boolean desc) {
-        super();
+    public OrderBy2(final String yieldName, final boolean isDesc) {
         this.operand = null;
         this.yieldName = yieldName;
-        this.desc = desc;
-    }
-
-    public ISingleOperand2 getOperand() {
-        return operand;
-    }
-
-    public String getYieldName() {
-        return yieldName;
+        this.isDesc = isDesc;
     }
 
     @Override
     public int hashCode() {
         final int prime = 31;
         int result = 1;
-        result = prime * result + (desc ? 1231 : 1237);
+        result = prime * result + (isDesc ? 1231 : 1237);
         result = prime * result + ((operand == null) ? 0 : operand.hashCode());
         result = prime * result + ((yieldName == null) ? 0 : yieldName.hashCode());
         return result;
@@ -57,7 +47,7 @@ public class OrderBy2 {
             return false;
         }
         final OrderBy2 other = (OrderBy2) obj;
-        if (desc != other.desc) {
+        if (isDesc != other.isDesc) {
             return false;
         }
         if (operand == null) {
@@ -83,9 +73,5 @@ public class OrderBy2 {
 
     public void setYield(final Yield2 yield) {
         this.yield = yield;
-    }
-
-    public boolean isDesc() {
-        return desc;
     }
 }

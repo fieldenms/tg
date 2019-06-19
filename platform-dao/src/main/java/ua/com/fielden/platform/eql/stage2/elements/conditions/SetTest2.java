@@ -1,13 +1,12 @@
 package ua.com.fielden.platform.eql.stage2.elements.conditions;
 
-import ua.com.fielden.platform.eql.stage2.elements.conditions.AbstractCondition2;
 import ua.com.fielden.platform.eql.stage2.elements.operands.ISetOperand2;
 import ua.com.fielden.platform.eql.stage2.elements.operands.ISingleOperand2;
 
 public class SetTest2 extends AbstractCondition2 {
-    private final ISingleOperand2 leftOperand;
-    private final ISetOperand2 rightOperand;
-    private final boolean negated;
+    public final ISingleOperand2 leftOperand;
+    public final ISetOperand2 rightOperand;
+    public final boolean negated;
 
     public SetTest2(final ISingleOperand2 leftOperand, final boolean negated, final ISetOperand2 rightOperand) {
         this.leftOperand = leftOperand;

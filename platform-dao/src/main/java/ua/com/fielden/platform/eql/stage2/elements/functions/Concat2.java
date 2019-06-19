@@ -12,11 +12,6 @@ public class Concat2 extends AbstractFunction2 {
         this.operands = operands;
     }
 
-    @Override
-    public boolean ignore() {
-        return false;
-    }
-
     public List<ISingleOperand2> getOperands() {
         return operands;
     }

@@ -3,15 +3,15 @@ package ua.com.fielden.platform.eql.stage2.elements;
 import ua.com.fielden.platform.eql.stage2.elements.operands.ISingleOperand2;
 
 public class Yield2 {
-    private final ISingleOperand2 operand;
-    private final String alias;
-    private final boolean requiredHint;
+    public final ISingleOperand2 operand;
+    public final String alias;
+    public final boolean hasRequiredHint;
     private ResultQueryYieldDetails2 info;
 
-    public Yield2(final ISingleOperand2 operand, final String alias, final boolean requiredHint) {
+    public Yield2(final ISingleOperand2 operand, final String alias, final boolean hasRequiredHint) {
         this.operand = operand;
         this.alias = alias;
-        this.requiredHint = requiredHint;
+        this.hasRequiredHint = hasRequiredHint;
     }
 
     public Yield2(final ISingleOperand2 operand, final String alias) {
@@ -25,14 +25,6 @@ public class Yield2 {
     @Override
     public String toString() {
         return alias;//sql();
-    }
-
-    public ISingleOperand2 getOperand() {
-        return operand;
-    }
-
-    public String getAlias() {
-        return alias;
     }
 
     public boolean isCompositePropertyHeader() {
@@ -75,9 +67,5 @@ public class Yield2 {
             return false;
         }
         return true;
-    }
-
-    protected boolean isRequiredHint() {
-        return requiredHint;
     }
 }

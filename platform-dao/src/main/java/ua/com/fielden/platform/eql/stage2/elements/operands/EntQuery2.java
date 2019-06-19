@@ -1,7 +1,8 @@
 package ua.com.fielden.platform.eql.stage2.elements.operands;
 
+import com.google.common.base.Objects;
+
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.query.IRetrievalModel;
 import ua.com.fielden.platform.eql.meta.QueryCategory;
 import ua.com.fielden.platform.eql.stage2.elements.EntQueryBlocks2;
 import ua.com.fielden.platform.eql.stage2.elements.GroupBys2;
@@ -12,52 +13,32 @@ import ua.com.fielden.platform.eql.stage2.elements.sources.Sources2;
 
 public class EntQuery2 implements ISingleOperand2 {
 
-    private final Sources2 sources;
-    private final Conditions2 conditions;
-    private final Yields2 yields;
-    private final GroupBys2 groups;
-    private final OrderBys2 orderings;
-    private final Class<? extends AbstractEntity<?>> resultType;
-    private final QueryCategory category;
+    public final Sources2 sources;
+    public final Conditions2 conditions;
+    public final Yields2 yields;
+    public final GroupBys2 groups;
+    public final OrderBys2 orderings;
+    public final Class<? extends AbstractEntity<?>> resultType;
+    public final QueryCategory category;
+
+    public EntQuery2(final EntQueryBlocks2 queryBlocks, final Class<? extends AbstractEntity<?>> resultType, final QueryCategory category) {
+        this.category = category;
+        this.sources = queryBlocks.sources;
+        this.conditions = queryBlocks.conditions;
+        this.yields = queryBlocks.yields;
+        this.groups = queryBlocks.groups;
+        this.orderings = queryBlocks.orderings;
+        this.resultType = resultType;
+    }
 
     @Override
     public Class<? extends AbstractEntity<?>> type() {
         return resultType;
     }
 
-    public EntQuery2(final EntQueryBlocks2 queryBlocks, final Class<? extends AbstractEntity<?>> resultType, final QueryCategory category) {
-        this.category = category;
-        this.sources = queryBlocks.getSources();
-        this.conditions = queryBlocks.getConditions();
-        this.yields = queryBlocks.getYields();
-        this.groups = queryBlocks.getGroups();
-        this.orderings = queryBlocks.getOrderings();
-        this.resultType = resultType;
-    }
-
     @Override
     public boolean ignore() {
         return false;
-    }
-
-    public Sources2 getSources() {
-        return sources;
-    }
-
-    public Conditions2 getConditions() {
-        return conditions;
-    }
-
-    public Yields2 getYields() {
-        return yields;
-    }
-
-    public GroupBys2 getGroups() {
-        return groups;
-    }
-
-    public OrderBys2 getOrderings() {
-        return orderings;
     }
 
     @Override
@@ -79,59 +60,19 @@ public class EntQuery2 implements ISingleOperand2 {
         if (this == obj) {
             return true;
         }
-        if (obj == null) {
-            return false;
-        }
+
         if (!(obj instanceof EntQuery2)) {
             return false;
         }
+        
         final EntQuery2 other = (EntQuery2) obj;
-        if (conditions == null) {
-            if (other.conditions != null) {
-                return false;
-            }
-        } else if (!conditions.equals(other.conditions)) {
-            return false;
-        }
-        if (groups == null) {
-            if (other.groups != null) {
-                return false;
-            }
-        } else if (!groups.equals(other.groups)) {
-            return false;
-        }
-        if (category != other.category) {
-            return false;
-        }
-        if (resultType == null) {
-            if (other.resultType != null) {
-                return false;
-            }
-        } else if (!resultType.equals(other.resultType)) {
-            return false;
-        }
-        if (sources == null) {
-            if (other.sources != null) {
-                return false;
-            }
-        } else if (!sources.equals(other.sources)) {
-            return false;
-        }
-        if (yields == null) {
-            if (other.yields != null) {
-                return false;
-            }
-        } else if (!yields.equals(other.yields)) {
-            return false;
-        }
-
-        if (orderings == null) {
-            if (other.orderings != null) {
-                return false;
-            }
-        } else if (!orderings.equals(other.orderings)) {
-            return false;
-        }
-        return true;
+        
+        return Objects.equal(category, other.category) &&
+                Objects.equal(resultType, other.resultType) &&
+                Objects.equal(sources, other.sources) &&
+                Objects.equal(yields, other.yields) &&
+                Objects.equal(conditions, other.conditions) &&
+                Objects.equal(groups, other.groups) &&
+                Objects.equal(orderings, other.orderings);
     }
 }
