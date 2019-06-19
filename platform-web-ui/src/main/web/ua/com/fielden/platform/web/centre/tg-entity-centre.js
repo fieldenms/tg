@@ -448,9 +448,9 @@ Polymer({
 
     _configViewBindings: function (prevView, newView) {
         prevView.removeOwnKeyBindings();
-        const keyBindings = newView.keyBindings;
-        for (let shortcuts in keyBindings) {
-            newView.addOwnKeyBinding(shortcuts, keyBindings[shortcuts]);
+        const ownKeyBindings = newView._ownKeyBindings;
+        for (let shortcuts in ownKeyBindings) {
+            newView.addOwnKeyBinding(shortcuts, ownKeyBindings[shortcuts]);
         }
     },
 

@@ -686,9 +686,9 @@ Polymer({
 
     attached: function () {
         this._updateTableSizeAsync();
-        this.keyBindings = {};
+        this._ownKeyBindings = {};
         if (this.customShortcuts) {
-            this.keyBindings[this.customShortcuts] = '_shortcutPressed';
+            this._ownKeyBindings[this.customShortcuts] = '_shortcutPressed';
         }
         //Initialising property column mappings
         this.columnPropertiesMapper = (function (entity) {
