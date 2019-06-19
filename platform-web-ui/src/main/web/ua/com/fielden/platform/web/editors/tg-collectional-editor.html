@@ -181,11 +181,11 @@
             _on-keydown="[[_onKeydown]]">
             <div class="layout horizontal custom-input center" style$="[[_computeInputStyle(_forReview)]]">
                 <div class="resizing-box" hidden$="[[!canReorderItems]]"></div>
-                <paper-checkbox class="select-all-checkbox" id="selectAllCheckbox" style$="[[_computeCheckAllStyle(canReorderItems)]]" hidden$="[[_selectingIconHidden(_forReview)]]" checked="[[_selectedAll]]" semi-checked$="[[_semiCheckedAll]]" on-change="_allSelectionChanged"></paper-checkbox>
+                <paper-checkbox class="select-all-checkbox" id="selectAllCheckbox" style$="[[_computeCheckAllStyle(canReorderItems, _multiSelection)]]" hidden$="[[_selectingIconHidden(_forReview)]]" checked="[[_selectedAll]]" semi-checked$="[[_semiCheckedAll]]" on-change="_allSelectionChanged"></paper-checkbox>
                 <input id="searchInput" is="iron-input" autocomplete="nope" placeholder="Type to search..." bind-value="{{_phraseForSearching}}" on-input="_onInput" on-tap="_onTap" on-mousedown="_onTap" on-blur="_eventHandler" prevent-invalid-input>
             </div>
             <div class="custom-input layout vertical flex relative">
-                <iron-list id="input" class="collectional-input fit" items="[[_entities]]" selected-items="{{_selectedEntities}}" selected-item="{{_selectedEntity}}" selection-enabled="[[_isSelectionEnabled(_forReview)]]" multi-selection>
+                <iron-list id="input" class="collectional-input fit" items="[[_entities]]" selected-items="{{_selectedEntities}}" selected-item="{{_selectedEntity}}" selection-enabled="[[_isSelectionEnabled(_forReview)]]" multi-selection="[[_multiSelection]]">
                     <template>
                         <div class$="[[_computedItemClass(_disabled)]]" collectional-index$="[[index]]">
                             <div class="dummy-box fit" hidden$="[[!_isDummyBoxVisible(item, _draggingItem)]]"></div>
@@ -238,6 +238,10 @@
                 value: false
             },
 
+            _multiSelection: {
+                type: Boolean,
+                value: true
+            },
             /**
              * controls select All checkbox
              */
@@ -399,7 +403,7 @@
             
             if (this.reflector().isEntity(newValue)) {
                 if (newValue.type()._simpleClassName() === 'CentreConfigLoadAction') {
-                    this.$.input.multiSelection = false;
+                    this._multiSelection = false;
                 }
                 // _entities, _originalChosenIds, this.$.input should be initialised only once for the session of collectional editing.
                 // This session includes initial refresh, multiple validation cycles and finishing save / cancel.
@@ -565,7 +569,7 @@
         _sortingIconForItem: function (sorting) {
             return sorting === true ? 'arrow-drop-up' : (sorting === false ? 'arrow-drop-down' : 'arrow-drop-up');
         },
-        
+
         _selectingIconHidden: function (_forReview) {
             return _forReview;
         },
@@ -594,8 +598,10 @@
             return _forReview ? "" : "padding-bottom: 20px;";
         },
 
-        _computeCheckAllStyle: function (canReorderItems) {
-            return canReorderItems ? "" : "padding-left: 22px;padding-right:14px;";
+        _computeCheckAllStyle: function (canReorderItems, _multiSelection) {
+            let selectAllStyle = canReorderItems ? "" : "padding-left: 22px;padding-right:14px;";
+            selectAllStyle += _multiSelection ? "" : "visibility: hidden;";
+            return selectAllStyle;
         },
         
         _computeStyleForResizingBox : function (selected) {
@@ -930,7 +936,7 @@
         },
 
         _updateSelectAll: function () {
-            if (this._selectedEntities && this._entities) {
+            if (this._multiSelection && this._selectedEntities && this._entities) {
                 const everySelected = this._entities.every(item => this._selectedEntities.includes(item));
                 const someSelected = this._entities.some(item => this._selectedEntities.includes(item));
                 if (someSelected || everySelected) {
