@@ -128,9 +128,6 @@ const template = html`
         #resizer:hover {
             cursor: nwse-resize;
         }
-        .reverse {
-            flex-direction: row-reverse;
-        }
         paper-icon-button.button-reverse {
             transform: scale(-1, 1);
         }
@@ -468,7 +465,8 @@ Polymer({
 
         if (this.mobile && isIPhoneOs()) {
             this.$.titleBar.appendChild(this.createBackButton());
-            this.$.titleBar.classList.add('reverse'); // FIXME this reversing does not work on iPhone. However back button is added properly.
+            this.$.titleBar.classList.remove('horizontal');
+            this.$.titleBar.classList.add('horizontal-reverse');
         }
         //Add listener for custom event that was thrown when dialogs view is about to lost focus, then this focus should go to title-bar.
         this.addEventListener("tg-last-item-focused", this._viewFocusLostEventListener.bind(this));
