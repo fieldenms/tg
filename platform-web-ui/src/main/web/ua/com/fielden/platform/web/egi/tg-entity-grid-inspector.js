@@ -1055,7 +1055,7 @@ Polymer({
     },
 
     _tapAction: function (e, detail) {
-        this.tap(this.filteredEntities[e.model.parentModel.entityIndex], e.model.index, this.columns[e.model.index]);
+        this.tap(this.filteredEntities[e.model.parentModel.entityIndex], this.fixedColumns.length + e.model.index, this.columns[e.model.index]);
     },
 
     _columnDomChanged: function (addedColumns, removedColumns) {
