@@ -26,6 +26,12 @@ public class Expression2 implements ISingleOperand2 {
     }
 
     @Override
+    public Class type() {
+        // TODO EQL Need to provide proper implementation.
+        return BigDecimal.class;
+    }
+
+    @Override
     public int hashCode() {
         final int prime = 31;
         int result = 1;
@@ -48,11 +54,5 @@ public class Expression2 implements ISingleOperand2 {
         
         return Objects.equals(first, other.first) &&
                 Objects.equals(items, other.items);
-    }
-
-    @Override
-    public Class type() {
-        // TODO EQL
-        return BigDecimal.class;
     }
 }

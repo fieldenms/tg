@@ -36,7 +36,7 @@ public class EntQuery1 extends AbstractElement1 implements ISingleOperand1<EntQu
     public final QueryCategory category;
 
     public EntQuery1(final EntQueryBlocks1 queryBlocks, final Class<? extends AbstractEntity<?>> resultType, final QueryCategory category, final int contextId) {
-       super(contextId);
+       super(contextId);  // contextId is not taken into consideration in hashCode() and equals(..) methods on purpose -- Stage1 elements have no need to reference uniquely one another.
        this.category = category;
        this.sources = queryBlocks.sources;
        this.conditions = queryBlocks.conditions;

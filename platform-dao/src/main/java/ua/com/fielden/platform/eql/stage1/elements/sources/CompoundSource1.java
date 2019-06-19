@@ -1,5 +1,7 @@
 package ua.com.fielden.platform.eql.stage1.elements.sources;
 
+import java.util.Objects;
+
 import ua.com.fielden.platform.entity.query.fluent.enums.JoinType;
 import ua.com.fielden.platform.eql.meta.PropsResolutionContext;
 import ua.com.fielden.platform.eql.meta.TransformationResult;
@@ -28,11 +30,6 @@ public class CompoundSource1 implements ITransformableToS2<CompoundSource2>{
     }
 
     @Override
-    public String toString() {
-        return joinType + " " + source + " ON " + joinConditions;
-    }
-
-    @Override
     public int hashCode() {
         final int prime = 31;
         int result = 1;
@@ -47,30 +44,13 @@ public class CompoundSource1 implements ITransformableToS2<CompoundSource2>{
         if (this == obj) {
             return true;
         }
-        if (obj == null) {
-            return false;
-        }
+
         if (!(obj instanceof CompoundSource1)) {
             return false;
         }
+        
         final CompoundSource1 other = (CompoundSource1) obj;
-        if (joinConditions == null) {
-            if (other.joinConditions != null) {
-                return false;
-            }
-        } else if (!joinConditions.equals(other.joinConditions)) {
-            return false;
-        }
-        if (joinType != other.joinType) {
-            return false;
-        }
-        if (source == null) {
-            if (other.source != null) {
-                return false;
-            }
-        } else if (!source.equals(other.source)) {
-            return false;
-        }
-        return true;
+
+        return Objects.equals(joinConditions, other.joinConditions) && Objects.equals(joinType, other.joinType) && Objects.equals(source, other.source);
     }
 }

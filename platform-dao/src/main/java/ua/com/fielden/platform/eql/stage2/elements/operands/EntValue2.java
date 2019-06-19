@@ -53,6 +53,16 @@ public class EntValue2 implements ISingleOperand2 {
         return ignoreNull && value == null;
     }
 
+    public Object getValue() {
+        return value;
+    }
+
+    @Override
+    public Class type() {
+        // TODO EQL
+        return value != null ? value.getClass() : null;
+    }
+
     @Override
     public int hashCode() {
         final int prime = 31;
@@ -66,13 +76,13 @@ public class EntValue2 implements ISingleOperand2 {
         if (this == obj) {
             return true;
         }
-        if (obj == null) {
-            return false;
-        }
+
         if (!(obj instanceof EntValue2)) {
             return false;
         }
+        
         final EntValue2 other = (EntValue2) obj;
+        
         if (value == null) {
             if (other.value != null) {
                 return false;
@@ -81,15 +91,5 @@ public class EntValue2 implements ISingleOperand2 {
             return false;
         }
         return true;
-    }
-
-    public Object getValue() {
-        return value;
-    }
-
-    @Override
-    public Class type() {
-        // TODO EQL
-        return value != null ? value.getClass() : null;
     }
 }

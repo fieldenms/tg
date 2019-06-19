@@ -75,11 +75,15 @@ public class QrySource1BasedOnSubqueries extends AbstractQrySource1<QrySource2Ba
         return models.get(0);
     }
     
+    public List<EntQuery1> getModels() {
+        return models;
+    }
+
     @Override
     public Class<? extends AbstractEntity<?>> sourceType() {
         return firstModel().type();
     }
-
+    
     @Override
     public int hashCode() {
         final int prime = 31;
@@ -105,9 +109,5 @@ public class QrySource1BasedOnSubqueries extends AbstractQrySource1<QrySource2Ba
         final QrySource1BasedOnSubqueries other = (QrySource1BasedOnSubqueries) obj;
         
         return Objects.equals(models, other.models);        
-    }
-
-    public List<EntQuery1> getModels() {
-        return models;
     }
 }

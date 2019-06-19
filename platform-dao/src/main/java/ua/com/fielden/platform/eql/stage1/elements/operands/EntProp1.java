@@ -21,7 +21,7 @@ public class EntProp1 extends AbstractElement1 implements ISingleOperand1<EntPro
     public final boolean external;
 
     public EntProp1(final String name, final boolean external, final int contextId) {
-        super(contextId);
+        super(contextId);  // contextId is not taken into consideration in hashCode() and equals(..) methods on purpose -- Stage1 elements have no need to reference uniquely one another.
         this.name = name;
         this.external = external;
     }

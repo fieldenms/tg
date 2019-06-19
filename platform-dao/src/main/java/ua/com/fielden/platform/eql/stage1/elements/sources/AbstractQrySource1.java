@@ -1,5 +1,7 @@
 package ua.com.fielden.platform.eql.stage1.elements.sources;
 
+import java.util.Objects;
+
 import ua.com.fielden.platform.eql.stage1.elements.AbstractElement1;
 import ua.com.fielden.platform.eql.stage2.elements.sources.IQrySource2;
 
@@ -11,7 +13,7 @@ public abstract class AbstractQrySource1<S2 extends IQrySource2> extends Abstrac
     protected final String alias;
 
     public AbstractQrySource1(final String alias, final int contextId) {
-        super(contextId);
+        super(contextId); // contextId is not taken into consideration in hashCode() and equals(..) methods on purpose -- Stage1 elements have no need to reference uniquely one another.
         this.alias = alias;
     }
 
@@ -33,20 +35,13 @@ public abstract class AbstractQrySource1<S2 extends IQrySource2> extends Abstrac
         if (this == obj) {
             return true;
         }
-        if (obj == null) {
-            return false;
-        }
+
         if (!(obj instanceof AbstractQrySource1)) {
             return false;
         }
-        final AbstractQrySource1 other = (AbstractQrySource1) obj;
-        if (alias == null) {
-            if (other.alias != null) {
-                return false;
-            }
-        } else if (!alias.equals(other.alias)) {
-            return false;
-        }
-        return true;
+        
+        final AbstractQrySource1<?> other = (AbstractQrySource1<?>) obj;
+        
+        return Objects.equals(alias, other.alias);
     }
 }

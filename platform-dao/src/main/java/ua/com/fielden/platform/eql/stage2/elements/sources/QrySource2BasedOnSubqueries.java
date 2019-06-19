@@ -68,6 +68,34 @@ public class QrySource2BasedOnSubqueries extends AbstractElement2 implements IQr
         }
     }
 
+    private EntityInfo<?> produceEntityInfoFrom(final Map<Class<? extends AbstractEntity<?>>, EntityInfo<?>> domainInfo) {
+        if (!EntityAggregates.class.equals(sourceType())) {
+            return domainInfo.get(sourceType());
+        } else {
+            final EntityInfo<EntityAggregates> entAggEntityInfo = new EntityInfo<>(EntityAggregates.class, null);
+            for (final Yield2 yield : getYields().getYields()) {
+                final AbstractPropInfo<?, ?> aep = isEntityType(yield.javaType())
+                        ? new EntityTypePropInfo(yield.alias, domainInfo.get(yield.javaType()), entAggEntityInfo)
+                        : new PrimTypePropInfo(yield.alias, yield.javaType(), entAggEntityInfo);
+                entAggEntityInfo.addProp(aep);
+            }
+            return entAggEntityInfo;
+        }
+    }
+
+    public List<EntQuery2> getModels() {
+        return models;
+    }
+
+    @Override
+    public EntityInfo<?> entityInfo() {
+        return entityInfo;
+    }
+    
+    @Override
+    public String alias() {
+        return alias;
+    }
     @Override
     public Class<? extends AbstractEntity<?>> sourceType() {
         return firstModel().type();
@@ -102,34 +130,5 @@ public class QrySource2BasedOnSubqueries extends AbstractElement2 implements IQr
         final QrySource2BasedOnSubqueries other = (QrySource2BasedOnSubqueries) obj;
         
         return Objects.equals(models, other.models);   
-    }
-
-    public List<EntQuery2> getModels() {
-        return models;
-    }
-
-    @Override
-    public EntityInfo<?> entityInfo() {
-        return entityInfo;
-    }
-    
-    private EntityInfo<?> produceEntityInfoFrom(final Map<Class<? extends AbstractEntity<?>>, EntityInfo<?>> domainInfo) {
-        if (!EntityAggregates.class.equals(sourceType())) {
-            return domainInfo.get(sourceType());
-        } else {
-            final EntityInfo<EntityAggregates> entAggEntityInfo = new EntityInfo<>(EntityAggregates.class, null);
-            for (final Yield2 yield : getYields().getYields()) {
-                final AbstractPropInfo<?, ?> aep = isEntityType(yield.javaType())
-                        ? new EntityTypePropInfo(yield.alias, domainInfo.get(yield.javaType()), entAggEntityInfo)
-                        : new PrimTypePropInfo(yield.alias, yield.javaType(), entAggEntityInfo);
-                entAggEntityInfo.addProp(aep);
-            }
-            return entAggEntityInfo;
-        }
-    }
-
-    @Override
-    public String alias() {
-        return alias;
     }
 }
