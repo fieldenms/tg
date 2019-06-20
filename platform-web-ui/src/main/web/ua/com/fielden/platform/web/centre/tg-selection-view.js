@@ -124,8 +124,8 @@ Polymer({
                 customShortcuts.push(item.getAttribute("shortcut"));
             }
         }.bind(this));
-        this.keyBindings = {};
-        this.keyBindings[customShortcuts.join(" ") + (customShortcuts.length > 0 ? " " : "") + "ctrl+s ctrl+e ctrl+r f5"] = '_shortcutPressed';
+        this._ownKeyBindings = {};
+        this._ownKeyBindings[customShortcuts.join(" ") + (customShortcuts.length > 0 ? " " : "") + "ctrl+s ctrl+e ctrl+r f5"] = '_shortcutPressed';
     },
 
     attached: function () {
