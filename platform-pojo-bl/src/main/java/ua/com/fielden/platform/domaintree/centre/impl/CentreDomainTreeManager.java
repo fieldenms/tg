@@ -792,6 +792,8 @@ public class CentreDomainTreeManager extends AbstractDomainTreeManager implement
                     return false;
                 }
             } else if (propertyValuesDifferent(propertiesValues1, other.propertiesValues1)) {
+                logger().error("       propertiesValues1 = " + propertiesValues1);
+                logger().error(" other.propertiesValues1 = " + other.propertiesValues1);
                 return false;
             }
             if (propertiesValues2 == null) {
@@ -799,6 +801,8 @@ public class CentreDomainTreeManager extends AbstractDomainTreeManager implement
                     return false;
                 }
             } else if (!propertiesValues2.equals(other.propertiesValues2)) {
+                logger().error("       propertiesValues2 = " + propertiesValues2);
+                logger().error(" other.propertiesValues2 = " + other.propertiesValues2);
                 return false;
             }
             return true;
@@ -861,8 +865,8 @@ public class CentreDomainTreeManager extends AbstractDomainTreeManager implement
             if (rootsListsOfOrderings.containsKey(root)) {
                 return rootsListsOfOrderings.get(root);
             } else {
-                final List<Pair<String, Ordering>> orderedPropertiesByDefault = new ArrayList<Pair<String, Ordering>>(tr().orderedPropertiesByDefault(root));
-                final List<Pair<String, Ordering>> orderedPropertiesByDefaultWithoutUnchecked = new ArrayList<Pair<String, Ordering>>(orderedPropertiesByDefault);
+                final List<Pair<String, Ordering>> orderedPropertiesByDefault = new ArrayList<>(tr().orderedPropertiesByDefault(root));
+                final List<Pair<String, Ordering>> orderedPropertiesByDefaultWithoutUnchecked = new ArrayList<>(orderedPropertiesByDefault);
                 for (final Pair<String, Ordering> propAndOrdering : orderedPropertiesByDefault) {
                     if (!isChecked(root, propAndOrdering.getKey())) {
                         orderedPropertiesByDefaultWithoutUnchecked.remove(propAndOrdering);
@@ -877,9 +881,9 @@ public class CentreDomainTreeManager extends AbstractDomainTreeManager implement
             illegalUncheckedProperties(this, root, property, "Could not toggle 'ordering' for 'unchecked' property [" + property + "] in type ["
                     + root.getSimpleName() + "].");
             if (!rootsListsOfOrderings.containsKey(root)) {
-                rootsListsOfOrderings.put(root, new ArrayList<Pair<String, Ordering>>(orderedProperties(root)));
+                rootsListsOfOrderings.put(root, new ArrayList<>(orderedProperties(root)));
             }
-            final List<Pair<String, Ordering>> list = new ArrayList<Pair<String, Ordering>>(rootsListsOfOrderings.get(root));
+            final List<Pair<String, Ordering>> list = new ArrayList<>(rootsListsOfOrderings.get(root));
             for (final Pair<String, Ordering> pair : list) {
                 if (pair.getKey().equals(property)) {
                     final int index = rootsListsOfOrderings.get(root).indexOf(pair);
@@ -891,7 +895,7 @@ public class CentreDomainTreeManager extends AbstractDomainTreeManager implement
                     return this;
                 }
             } // if the property does not have an Ordering assigned -- put a ASC ordering to it (into the end of the list)
-            rootsListsOfOrderings.get(root).add(new Pair<String, Ordering>(property, Ordering.ASCENDING));
+            rootsListsOfOrderings.get(root).add(new Pair<>(property, Ordering.ASCENDING));
             return this;
         }
 
@@ -900,7 +904,7 @@ public class CentreDomainTreeManager extends AbstractDomainTreeManager implement
             super.removeCheckedProperty(root, property);
 
             if (rootsListsOfOrderings.containsKey(root)) {
-                final List<Pair<String, Ordering>> list = new ArrayList<Pair<String, Ordering>>(rootsListsOfOrderings.get(root));
+                final List<Pair<String, Ordering>> list = new ArrayList<>(rootsListsOfOrderings.get(root));
                 for (final Pair<String, Ordering> pair : list) {
                     if (pair.getKey().equals(property)) {
                         final int index = rootsListsOfOrderings.get(root).indexOf(pair);

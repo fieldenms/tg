@@ -665,7 +665,7 @@ public class CentreUpdater {
      * @param miType
      * @return
      */
-    private static ICentreDomainTreeManagerAndEnhancer getDefaultCentre(final Class<? extends MiWithConfigurationSupport<?>> miType, final IWebUiConfig webUiConfig) {
+    public static ICentreDomainTreeManagerAndEnhancer getDefaultCentre(final Class<? extends MiWithConfigurationSupport<?>> miType, final IWebUiConfig webUiConfig) {
         return applyWebUIDefaultValues(createDefaultCentre(miType, webUiConfig), getEntityType(miType));
     }
     
@@ -1045,6 +1045,168 @@ public class CentreUpdater {
         }
     }
     
+
+    private static boolean propertyRemovedFromDomainType(final Class<?> diffManagedType, final String property) {
+        // Check whether the 'property' has not been disappeared from domain type since last server restart.
+        // In such case 'orderedProperties' will contain that property but 'managedType(root, differencesCentre)' will not contain corresponding field.
+        // Such properties need to be silently ignored. During next diffCentre creation such properties will disappear from diffCentre fully.
+        final boolean isEntityItself = "".equals(property); // empty property means "entity itself"
+        if (!isEntityItself) {
+            try {
+                determinePropertyType(diffManagedType, property);
+                return false;
+            } catch (final Exception ex) {
+                logger.warn(format("Apply   old diff: Property [%s] could not be found in type [%s] in diffCentre. It will be skipped. Most likely this property was deleted from domain type definition.", property, diffManagedType.getSimpleName())/*, ex*/);
+                return true;
+            }
+        } else {
+            return false;
+        }
+    }
+
+    /**
+     * Computes a list of items that contain in <code>from</code> list and do not contain in <code>to</code> list, preserving the order of <code>from</code> list inside resultant list.
+     *
+     * @param from
+     * @param to
+     * @return
+     */
+    private static List<String> minus(final List<String> from, final List<String> to) {
+        return minus(from, to, Function.identity());
+    }
+
+    /**
+     * Computes a list of items that contain in <code>from</code> list and their keys do not contain in <code>to</code> list, preserving the order of <code>from</code> list inside resultant list.
+     *
+     * @param from
+     * @param to
+     * @param keyRetriever -- mapping function to retrieve the key of the item
+     * @return
+     */
+    private static <T> List<T> minus(final List<T> from, final List<String> to, final Function<T, String> keyRetriever) {
+        final List<T> result = new ArrayList<>();
+        for (final T fromItem: from) {
+            if (!to.contains(keyRetriever.apply(fromItem))) {
+                result.add(fromItem);
+            }
+        }
+        return result;
+    }
+
+    
+    /**
+     * Applies the differences from 'differences centre' on top of 'target centre'.
+     *
+     * @param targetCentre
+     * @param differencesCentre
+     * @param root
+     * @return
+     */
+    public static ICentreDomainTreeManagerAndEnhancer applyDifferencesOld(final ICentreDomainTreeManagerAndEnhancer targetCentre, final ICentreDomainTreeManagerAndEnhancer differencesCentre, final Class<AbstractEntity<?>> root) {
+        final Class<?> diffManagedType = managedType(root, differencesCentre);
+        for (final String property : differencesCentre.getFirstTick().checkedProperties(root)) {
+            if (!isPlaceholder(property) && !propertyRemovedFromDomainType(diffManagedType, property)) {
+                if (isDoubleCriterion(diffManagedType, property) && !isBooleanCriterion(diffManagedType, property)) {
+                    if (differencesCentre.getFirstTick().isMetaValuePresent(EXCLUSIVE, root, property)) {
+                        targetCentre.getFirstTick().setExclusive(root, property, differencesCentre.getFirstTick().getExclusive(root, property));
+                    }
+                    if (differencesCentre.getFirstTick().isMetaValuePresent(EXCLUSIVE2, root, property)) {
+                        targetCentre.getFirstTick().setExclusive2(root, property, differencesCentre.getFirstTick().getExclusive2(root, property));
+                    }
+                }
+                final Class<?> propertyType = isEmpty(property) ? diffManagedType : determinePropertyType(diffManagedType, property);
+                if (isDate(propertyType)) {
+                    if (differencesCentre.getFirstTick().isMetaValuePresent(DATE_PREFIX, root, property)) {
+                        targetCentre.getFirstTick().setDatePrefix(root, property, differencesCentre.getFirstTick().getDatePrefix(root, property));
+                    }
+                    if (differencesCentre.getFirstTick().isMetaValuePresent(DATE_MNEMONIC, root, property)) {
+                        targetCentre.getFirstTick().setDateMnemonic(root, property, differencesCentre.getFirstTick().getDateMnemonic(root, property));
+                    }
+                    if (differencesCentre.getFirstTick().isMetaValuePresent(AND_BEFORE, root, property)) {
+                        targetCentre.getFirstTick().setAndBefore(root, property, differencesCentre.getFirstTick().getAndBefore(root, property));
+                    }
+                }
+
+                if (differencesCentre.getFirstTick().isMetaValuePresent(OR_NULL, root, property)) {
+                    targetCentre.getFirstTick().setOrNull(root, property, differencesCentre.getFirstTick().getOrNull(root, property));
+                }
+                if (differencesCentre.getFirstTick().isMetaValuePresent(NOT, root, property)) {
+                    targetCentre.getFirstTick().setNot(root, property, differencesCentre.getFirstTick().getNot(root, property));
+                }
+
+                if (differencesCentre.getFirstTick().isMetaValuePresent(VALUE, root, property)) {
+                    targetCentre.getFirstTick().setValue(root, property, differencesCentre.getFirstTick().getValue(root, property));
+                }
+                if (isDoubleCriterion(diffManagedType, property)
+                        && differencesCentre.getFirstTick().isMetaValuePresent(VALUE2, root, property)) {
+                    targetCentre.getFirstTick().setValue2(root, property, differencesCentre.getFirstTick().getValue2(root, property));
+                }
+            }
+        }
+
+        // Diff centre contains full information of checkedProperties and usedProperties.
+        // Such information should be carefully merged with potentially updated targetCentre.
+        final List<String> diffCheckedPropertiesWithoutSummaries = checkedPropertiesWithoutSummaries(differencesCentre.getSecondTick().checkedProperties(root), differencesCentre.getEnhancer().getManagedType(root));
+        final List<String> diffUsedProperties = differencesCentre.getSecondTick().usedProperties(root);
+
+        final List<String> targetCheckedPropertiesWithoutSummaries = checkedPropertiesWithoutSummaries(targetCentre.getSecondTick().checkedProperties(root), targetCentre.getEnhancer().getManagedType(root));
+
+        // determine properties that were added into targetCentre (default config) comparing to differencesCentre (currently saved config)
+        // final List<String> addedIntoTarget = minus(targetCheckedPropertiesWithoutSummaries, diffCheckedPropertiesWithoutSummaries);
+
+        // determine properties that were removed from targetCentre (default config) comparing to differencesCentre (currently saved config)
+        final List<String> removedFromTarget = minus(diffCheckedPropertiesWithoutSummaries, targetCheckedPropertiesWithoutSummaries);
+
+        if (!equalsEx(diffCheckedPropertiesWithoutSummaries, diffUsedProperties)) {
+            // remove removedFromTarget properties custom configuration (custom column order / visibility); this custom configuration was explicitly changed by the user, because it's different from diffCheckedProperties
+            final List<String> diffUsedPropertiesWithoutRemovedProps = minus(diffUsedProperties, removedFromTarget);
+            // apply resultant properties on top of targetCentre (default config)
+            final List<String> targetUsedProperties = targetCentre.getSecondTick().usedProperties(root);
+            for (final String targetUsedProperty: targetUsedProperties) { // remove (un-use) all previous props
+                targetCentre.getSecondTick().use(root, targetUsedProperty, false);
+            }
+            for (final String newUsedProperty : diffUsedPropertiesWithoutRemovedProps) { // apply (use) all new props
+                targetCentre.getSecondTick().use(root, newUsedProperty, true);
+            }
+        }
+
+        // apply widths and grow factor that were marked as changed
+        final List<String> diffCheckedPropertiesWithoutRemovedProps = minus(diffCheckedPropertiesWithoutSummaries, removedFromTarget);
+        for (final String property : diffCheckedPropertiesWithoutRemovedProps) {
+            if (!propertyRemovedFromDomainType(diffManagedType, property)) {
+                if (differencesCentre.getFirstTick().isMetaValuePresent(WIDTH, root, property)) {
+                    targetCentre.getSecondTick().setWidth(root, property, differencesCentre.getSecondTick().getWidth(root, property));
+                }
+                if (differencesCentre.getFirstTick().isMetaValuePresent(GROW_FACTOR, root, property)) {
+                    targetCentre.getSecondTick().setGrowFactor(root, property, differencesCentre.getSecondTick().getGrowFactor(root, property));
+                }
+            }
+        }
+
+        if (differencesCentre.getFirstTick().isMetaValuePresent(ALL_ORDERING, root, "")) {
+            // need to clear all previous orderings:
+            final List<Pair<String, Ordering>> orderedProperties = new ArrayList<>(targetCentre.getSecondTick().orderedProperties(root));
+            for (final Pair<String, Ordering> orderedProperty: orderedProperties) {
+                if (Ordering.ASCENDING == orderedProperty.getValue()) {
+                    targetCentre.getSecondTick().toggleOrdering(root, orderedProperty.getKey());
+                }
+                targetCentre.getSecondTick().toggleOrdering(root, orderedProperty.getKey());
+            }
+            // and apply new ones from diff centre:
+            final List<Pair<String, Ordering>> diffSortedPropertiesWithoutRemovedProps = minus(differencesCentre.getSecondTick().orderedProperties(root), removedFromTarget, propAndSorting -> propAndSorting.getKey());
+            for (final Pair<String, Ordering> newOrderedProperty: diffSortedPropertiesWithoutRemovedProps) {
+                final String property = newOrderedProperty.getKey();
+                if (!propertyRemovedFromDomainType(diffManagedType, property)) {
+                    targetCentre.getSecondTick().toggleOrdering(root, property);
+                    if (Ordering.DESCENDING == newOrderedProperty.getValue()) {
+                        targetCentre.getSecondTick().toggleOrdering(root, property);
+                    }
+                }
+            }
+        }
+        return targetCentre;
+    }
+    
     /**
      * Applies the differences from 'differences centre' on top of 'target centre'.
      *
@@ -1054,7 +1216,7 @@ public class CentreUpdater {
      * @param companionFinder -- to process crit-only single entity-typed values
      * @return
      */
-    static ICentreDomainTreeManagerAndEnhancer applyDifferences(final ICentreDomainTreeManagerAndEnhancer targetCentre, final Map<String, Object> differences, final Class<AbstractEntity<?>> root, final ICompanionObjectFinder companionFinder) {
+    public static ICentreDomainTreeManagerAndEnhancer applyDifferences(final ICentreDomainTreeManagerAndEnhancer targetCentre, final Map<String, Object> differences, final Class<AbstractEntity<?>> root, final ICompanionObjectFinder companionFinder) {
         final Supplier<Class<?>> managedTypeSupplier = () -> targetCentre.getEnhancer().getManagedType(root);
         final Map<String, Map<String, Object>> propertiesDiff = (Map<String, Map<String, Object>>) differences.get(PROPERTIES);
         
@@ -1185,7 +1347,7 @@ public class CentreUpdater {
                     return false;
                 } catch (final Exception ex) {
                     // System.out.println();
-                    // logger.warn(format("Property [%s] could not be found in type [%s] in diffCentre. It will be skipped. Most likely this property was deleted from domain type definition.", property, diffManagedType.getSimpleName()));
+                    logger.warn(format("Convert old diff: Property [%s] could not be found in type [%s] in diffCentre. It will be skipped. Most likely this property was deleted from domain type definition.", property, diffManagedType.getSimpleName()));
                     return true;
                 }
             } else {
