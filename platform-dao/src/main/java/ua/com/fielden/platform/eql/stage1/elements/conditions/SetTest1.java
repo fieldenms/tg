@@ -1,5 +1,7 @@
 package ua.com.fielden.platform.eql.stage1.elements.conditions;
 
+import java.util.Objects;
+
 import ua.com.fielden.platform.eql.meta.PropsResolutionContext;
 import ua.com.fielden.platform.eql.meta.TransformationResult;
 import ua.com.fielden.platform.eql.stage1.elements.operands.ISetOperand1;
@@ -41,30 +43,15 @@ public class SetTest1 implements ICondition1<SetTest2> {
         if (this == obj) {
             return true;
         }
-        if (obj == null) {
-            return false;
-        }
+
         if (!(obj instanceof SetTest1)) {
             return false;
         }
+        
         final SetTest1 other = (SetTest1) obj;
-        if (leftOperand == null) {
-            if (other.leftOperand != null) {
-                return false;
-            }
-        } else if (!leftOperand.equals(other.leftOperand)) {
-            return false;
-        }
-        if (negated != other.negated) {
-            return false;
-        }
-        if (rightOperand == null) {
-            if (other.rightOperand != null) {
-                return false;
-            }
-        } else if (!rightOperand.equals(other.rightOperand)) {
-            return false;
-        }
-        return true;
+        
+        return Objects.equals(leftOperand, other.leftOperand) &&
+                Objects.equals(rightOperand, other.rightOperand) &&
+                Objects.equals(negated, other.negated);
     }
 }

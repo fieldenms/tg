@@ -34,7 +34,6 @@ public class CompoundCondition2 {
         
         final CompoundCondition2 other = (CompoundCondition2) obj;
         
-        return Objects.equals(logicalOperator, other.logicalOperator) &&
-                Objects.equals(condition, other.condition);
+        return Objects.equals(logicalOperator, other.logicalOperator) && Objects.equals(condition, other.condition);
     }
 }

@@ -20,11 +20,6 @@ public class Yields2 {
     }
 
     @Override
-    public String toString() {
-        return yieldsMap.toString();
-    }
-
-    @Override
     public int hashCode() {
         final int prime = 31;
         int result = 1;
@@ -37,20 +32,13 @@ public class Yields2 {
         if (this == obj) {
             return true;
         }
-        if (obj == null) {
-            return false;
-        }
+
         if (!(obj instanceof Yields2)) {
             return false;
         }
+        
         final Yields2 other = (Yields2) obj;
-        if (yieldsMap == null) {
-            if (other.yieldsMap != null) {
-                return false;
-            }
-        } else if (!yieldsMap.equals(other.yieldsMap)) {
-            return false;
-        }
-        return true;
+
+        return yieldsMap.equals(other.yieldsMap);
     }
 }

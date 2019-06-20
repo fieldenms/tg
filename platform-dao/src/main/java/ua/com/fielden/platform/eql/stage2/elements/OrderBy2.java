@@ -1,5 +1,7 @@
 package ua.com.fielden.platform.eql.stage2.elements;
 
+import java.util.Objects;
+
 import ua.com.fielden.platform.eql.stage2.elements.operands.ISingleOperand2;
 
 public class OrderBy2 {
@@ -7,11 +9,6 @@ public class OrderBy2 {
     public final String yieldName;
     public Yield2 yield;
     public final boolean isDesc;
-
-    @Override
-    public String toString() {
-        return (yieldName == null ? operand : yieldName) + (isDesc ? " DESC" : " ASC");
-    }
 
     public OrderBy2(final ISingleOperand2 operand, final boolean isDesc) {
         this.operand = operand;
@@ -23,6 +20,14 @@ public class OrderBy2 {
         this.operand = null;
         this.yieldName = yieldName;
         this.isDesc = isDesc;
+    }
+
+    public Yield2 getYield() {
+        return yield;
+    }
+
+    public void setYield(final Yield2 yield) {
+        this.yield = yield;
     }
 
     @Override
@@ -40,38 +45,16 @@ public class OrderBy2 {
         if (this == obj) {
             return true;
         }
-        if (obj == null) {
-            return false;
-        }
+
         if (!(obj instanceof OrderBy2)) {
             return false;
         }
+        
         final OrderBy2 other = (OrderBy2) obj;
-        if (isDesc != other.isDesc) {
-            return false;
-        }
-        if (operand == null) {
-            if (other.operand != null) {
-                return false;
-            }
-        } else if (!operand.equals(other.operand)) {
-            return false;
-        }
-        if (yieldName == null) {
-            if (other.yieldName != null) {
-                return false;
-            }
-        } else if (!yieldName.equals(other.yieldName)) {
-            return false;
-        }
-        return true;
-    }
 
-    public Yield2 getYield() {
-        return yield;
-    }
-
-    public void setYield(final Yield2 yield) {
-        this.yield = yield;
+        return Objects.equals(isDesc, other.isDesc) &&
+                Objects.equals(operand, other.operand) &&
+                Objects.equals(yield, other.yield) &&
+                Objects.equals(yieldName, other.yieldName);
     }
 }

@@ -1,5 +1,7 @@
 package ua.com.fielden.platform.eql.stage1.elements;
 
+import java.util.Objects;
+
 import ua.com.fielden.platform.eql.meta.PropsResolutionContext;
 import ua.com.fielden.platform.eql.meta.TransformationResult;
 import ua.com.fielden.platform.eql.stage1.elements.operands.ISingleOperand1;
@@ -31,20 +33,13 @@ public class GroupBy1 {
         if (this == obj) {
             return true;
         }
-        if (obj == null) {
-            return false;
-        }
+
         if (!(obj instanceof GroupBy1)) {
             return false;
         }
+        
         final GroupBy1 other = (GroupBy1) obj;
-        if (operand == null) {
-            if (other.operand != null) {
-                return false;
-            }
-        } else if (!operand.equals(other.operand)) {
-            return false;
-        }
-        return true;
+        
+        return Objects.equals(operand, other.operand);
     }
 }

@@ -59,20 +59,13 @@ public class Yields1 {
         if (this == obj) {
             return true;
         }
-        if (obj == null) {
-            return false;
-        }
+
         if (!(obj instanceof Yields1)) {
             return false;
         }
+        
         final Yields1 other = (Yields1) obj;
-        if (yieldsMap == null) {
-            if (other.yieldsMap != null) {
-                return false;
-            }
-        } else if (!yieldsMap.equals(other.yieldsMap)) {
-            return false;
-        }
-        return true;
+        
+        return yieldsMap.equals(other.yieldsMap);
     }
 }

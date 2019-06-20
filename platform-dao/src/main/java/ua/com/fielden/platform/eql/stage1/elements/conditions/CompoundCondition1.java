@@ -1,23 +1,17 @@
 package ua.com.fielden.platform.eql.stage1.elements.conditions;
 
+import java.util.Objects;
+
 import ua.com.fielden.platform.entity.query.fluent.enums.LogicalOperator;
 import ua.com.fielden.platform.eql.stage2.elements.conditions.ICondition2;
 
 public class CompoundCondition1 {
-    private final LogicalOperator logicalOperator;
-    private final ICondition1<? extends ICondition2> condition;
+    public final LogicalOperator logicalOperator;
+    public final ICondition1<? extends ICondition2> condition;
 
     public CompoundCondition1(final LogicalOperator logicalOperator, final ICondition1<? extends ICondition2> condition) {
         this.logicalOperator = logicalOperator;
         this.condition = condition;
-    }
-
-    public LogicalOperator getLogicalOperator() {
-        return logicalOperator;
-    }
-
-    public ICondition1<? extends ICondition2> getCondition() {
-        return condition;
     }
 
     @Override
@@ -34,23 +28,14 @@ public class CompoundCondition1 {
         if (this == obj) {
             return true;
         }
-        if (obj == null) {
-            return false;
-        }
+        
         if (!(obj instanceof CompoundCondition1)) {
             return false;
         }
+        
         final CompoundCondition1 other = (CompoundCondition1) obj;
-        if (condition == null) {
-            if (other.condition != null) {
-                return false;
-            }
-        } else if (!condition.equals(other.condition)) {
-            return false;
-        }
-        if (logicalOperator != other.logicalOperator) {
-            return false;
-        }
-        return true;
+
+        return Objects.equals(logicalOperator, other.logicalOperator) &&
+                Objects.equals(condition, other.condition);
     }
 }

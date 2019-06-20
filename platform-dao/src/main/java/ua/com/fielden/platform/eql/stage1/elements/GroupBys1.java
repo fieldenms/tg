@@ -1,8 +1,8 @@
 package ua.com.fielden.platform.eql.stage1.elements;
 
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
+import java.util.Objects;
 
 import ua.com.fielden.platform.eql.meta.PropsResolutionContext;
 import ua.com.fielden.platform.eql.meta.TransformationResult;
@@ -32,22 +32,6 @@ public class GroupBys1 {
     }
 
     @Override
-    public String toString() {
-        final StringBuffer sb = new StringBuffer();
-        if (groups.size() > 0) {
-            sb.append("\nGROUP BY ");
-        }
-        for (final Iterator<GroupBy1> iterator = groups.iterator(); iterator.hasNext();) {
-            sb.append(iterator.next());
-            if (iterator.hasNext()) {
-                sb.append(", ");
-            }
-        }
-
-        return sb.toString();
-    }
-
-    @Override
     public int hashCode() {
         final int prime = 31;
         int result = 1;
@@ -60,20 +44,12 @@ public class GroupBys1 {
         if (this == obj) {
             return true;
         }
-        if (obj == null) {
-            return false;
-        }
         if (!(obj instanceof GroupBys1)) {
             return false;
         }
+
         final GroupBys1 other = (GroupBys1) obj;
-        if (groups == null) {
-            if (other.groups != null) {
-                return false;
-            }
-        } else if (!groups.equals(other.groups)) {
-            return false;
-        }
-        return true;
+        
+        return Objects.equals(groups, other.groups);
     }
 }

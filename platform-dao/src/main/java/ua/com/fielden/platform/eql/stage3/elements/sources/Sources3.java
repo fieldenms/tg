@@ -1,24 +1,24 @@
-package ua.com.fielden.platform.eql.stage2.elements.sources;
+package ua.com.fielden.platform.eql.stage3.elements.sources;
 
 import static java.util.Collections.emptyList;
 
 import java.util.List;
 import java.util.Objects;
 
-public class Sources2 {
-    public final IQrySource2 main;
-    private final List<CompoundSource2> compounds;
+public class Sources3 {
+    public final IQrySource3 main;
+    private final List<CompoundSource3> compounds;
 
-    public Sources2(final IQrySource2 main, final List<CompoundSource2> compounds) {
+    public Sources3(final IQrySource3 main, final List<CompoundSource3> compounds) {
         this.main = main;
         this.compounds = compounds;
     }
 
-    public Sources2(final IQrySource2 main) {
+    public Sources3(final IQrySource3 main) {
         this(main, emptyList());
     }
 
-    public List<CompoundSource2> getCompounds() {
+    public List<CompoundSource3> getCompounds() {
         return compounds;
     }
 
@@ -37,11 +37,11 @@ public class Sources2 {
             return true;
         }
 
-        if (!(obj instanceof Sources2)) {
+        if (!(obj instanceof Sources3)) {
             return false;
         }
 
-        final Sources2 other = (Sources2) obj;
+        final Sources3 other = (Sources3) obj;
 
         return Objects.equals(main, other.main) && Objects.equals(compounds, other.compounds);
     }

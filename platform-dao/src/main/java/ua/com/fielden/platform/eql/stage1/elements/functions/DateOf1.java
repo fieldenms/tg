@@ -14,7 +14,7 @@ public class DateOf1 extends SingleOperandFunction1<DateOf2> {
 
     @Override
     public TransformationResult<DateOf2> transform(final PropsResolutionContext resolutionContext) {
-        final TransformationResult<? extends ISingleOperand2> operandTransformationResult = getOperand().transform(resolutionContext);
+        final TransformationResult<? extends ISingleOperand2> operandTransformationResult = operand.transform(resolutionContext);
         return new TransformationResult<DateOf2>(new DateOf2(operandTransformationResult.getItem()), operandTransformationResult.getUpdatedContext());
     }
 }

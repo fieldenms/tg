@@ -31,11 +31,6 @@ public class EntProp1 extends AbstractElement1 implements ISingleOperand1<EntPro
     }
 
     @Override
-    public String toString() {
-        return name + " " + hashCode();
-    }
-
-    @Override
     public TransformationResult<EntProp2> transform(final PropsResolutionContext resolutionContext) {
         
         final Iterator<List<IQrySource2>> it = resolutionContext.getSources().iterator();
@@ -94,6 +89,7 @@ public class EntProp1 extends AbstractElement1 implements ISingleOperand1<EntPro
         final int prime = 31;
         int result = 1;
         result = prime * result + ((name == null) ? 0 : name.hashCode());
+        result = prime * result + (external ? 1231 : 1237);
         return result;
     }
 
@@ -109,6 +105,6 @@ public class EntProp1 extends AbstractElement1 implements ISingleOperand1<EntPro
         
         final EntProp1 other = (EntProp1) obj;
         
-        return Objects.equals(name, other.name) && external == other.external;
+        return Objects.equals(name, other.name) && (external == other.external);
     }
 }

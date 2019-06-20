@@ -2,6 +2,7 @@ package ua.com.fielden.platform.eql.stage1.elements.functions;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 import ua.com.fielden.platform.eql.meta.PropsResolutionContext;
 import ua.com.fielden.platform.eql.meta.TransformationResult;
@@ -15,10 +16,9 @@ import ua.com.fielden.platform.utils.Pair;
 public class CaseWhen1 extends AbstractFunction1<CaseWhen2> {
 
     private List<Pair<ICondition1<? extends ICondition2>, ISingleOperand1<? extends ISingleOperand2>>> whenThenPairs = new ArrayList<>();
-    private final ISingleOperand1<? extends ISingleOperand2> elseOperand;
+    public final ISingleOperand1<? extends ISingleOperand2> elseOperand;
 
     public CaseWhen1(final List<Pair<ICondition1<? extends ICondition2>, ISingleOperand1<? extends ISingleOperand2>>> whenThenPairs, final ISingleOperand1<? extends ISingleOperand2> elseOperand) {
-        super();
         this.whenThenPairs.addAll(whenThenPairs);
         this.elseOperand = elseOperand;
     }
@@ -53,27 +53,13 @@ public class CaseWhen1 extends AbstractFunction1<CaseWhen2> {
         if (this == obj) {
             return true;
         }
-        if (obj == null) {
-            return false;
-        }
+
         if (!(obj instanceof CaseWhen1)) {
             return false;
         }
+        
         final CaseWhen1 other = (CaseWhen1) obj;
-        if (elseOperand == null) {
-            if (other.elseOperand != null) {
-                return false;
-            }
-        } else if (!elseOperand.equals(other.elseOperand)) {
-            return false;
-        }
-        if (whenThenPairs == null) {
-            if (other.whenThenPairs != null) {
-                return false;
-            }
-        } else if (!whenThenPairs.equals(other.whenThenPairs)) {
-            return false;
-        }
-        return true;
+        
+        return Objects.equals(whenThenPairs, other.whenThenPairs) && Objects.equals(elseOperand, other.elseOperand);
     }
 }

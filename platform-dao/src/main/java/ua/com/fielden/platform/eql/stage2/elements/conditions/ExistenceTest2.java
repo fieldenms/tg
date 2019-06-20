@@ -1,5 +1,7 @@
 package ua.com.fielden.platform.eql.stage2.elements.conditions;
 
+import java.util.Objects;
+
 import ua.com.fielden.platform.eql.stage2.elements.operands.EntQuery2;
 
 public class ExistenceTest2 extends AbstractCondition2 {
@@ -30,23 +32,13 @@ public class ExistenceTest2 extends AbstractCondition2 {
         if (this == obj) {
             return true;
         }
-        if (obj == null) {
-            return false;
-        }
+     
         if (!(obj instanceof ExistenceTest2)) {
             return false;
         }
+        
         final ExistenceTest2 other = (ExistenceTest2) obj;
-        if (negated != other.negated) {
-            return false;
-        }
-        if (subQuery == null) {
-            if (other.subQuery != null) {
-                return false;
-            }
-        } else if (!subQuery.equals(other.subQuery)) {
-            return false;
-        }
-        return true;
+        
+        return Objects.equals(negated, other.negated) && Objects.equals(subQuery, other.subQuery);
     }
 }

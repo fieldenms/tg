@@ -5,6 +5,7 @@ import static ua.com.fielden.platform.entity.query.fluent.enums.LogicalOperator.
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 import ua.com.fielden.platform.eql.meta.PropsResolutionContext;
 import ua.com.fielden.platform.eql.meta.TransformationResult;
@@ -44,15 +45,15 @@ public class Conditions1 implements ICondition1<Conditions2> {
         }
 
         for (final CompoundCondition1 compoundCondition : otherConditions) {
-            if (compoundCondition.getLogicalOperator() == AND) {
-                andGroup.add(compoundCondition.getCondition());
+            if (compoundCondition.logicalOperator == AND) {
+                andGroup.add(compoundCondition.condition);
             } else {
                 if (!andGroup.isEmpty()) {
                     dnf.add(andGroup);
                 }
 
                 andGroup = new ArrayList<>();
-                andGroup.add(compoundCondition.getCondition());
+                andGroup.add(compoundCondition.condition);
             }
         }
 
@@ -109,30 +110,15 @@ public class Conditions1 implements ICondition1<Conditions2> {
         if (this == obj) {
             return true;
         }
-        if (obj == null) {
-            return false;
-        }
+
         if (!(obj instanceof Conditions1)) {
             return false;
         }
+        
         final Conditions1 other = (Conditions1) obj;
-        if (firstCondition == null) {
-            if (other.firstCondition != null) {
-                return false;
-            }
-        } else if (!firstCondition.equals(other.firstCondition)) {
-            return false;
-        }
-        if (negated != other.negated) {
-            return false;
-        }
-        if (otherConditions == null) {
-            if (other.otherConditions != null) {
-                return false;
-            }
-        } else if (!otherConditions.equals(other.otherConditions)) {
-            return false;
-        }
-        return true;
+        
+        return Objects.equals(firstCondition, other.firstCondition) &&
+                Objects.equals(otherConditions, other.otherConditions) &&
+                Objects.equals(negated, other.negated);
     }
 }

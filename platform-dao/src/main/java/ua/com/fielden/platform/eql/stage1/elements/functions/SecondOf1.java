@@ -14,7 +14,7 @@ public class SecondOf1 extends SingleOperandFunction1<SecondOf2> {
 
     @Override
     public TransformationResult<SecondOf2> transform(final PropsResolutionContext resolutionContext) {
-        final TransformationResult<? extends ISingleOperand2> operandTransformationResult = getOperand().transform(resolutionContext);
+        final TransformationResult<? extends ISingleOperand2> operandTransformationResult = operand.transform(resolutionContext);
         return new TransformationResult<SecondOf2>(new SecondOf2(operandTransformationResult.getItem()), operandTransformationResult.getUpdatedContext());
     }
 }

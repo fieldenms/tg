@@ -1,5 +1,7 @@
 package ua.com.fielden.platform.eql.stage2.elements.functions;
 
+import java.util.Objects;
+
 abstract class ZeroOperandFunction2 extends AbstractFunction2 {
 
     private final String functionName;
@@ -21,20 +23,13 @@ abstract class ZeroOperandFunction2 extends AbstractFunction2 {
         if (this == obj) {
             return true;
         }
-        if (obj == null) {
-            return false;
-        }
+
         if (!(obj instanceof ZeroOperandFunction2)) {
             return false;
         }
+        
         final ZeroOperandFunction2 other = (ZeroOperandFunction2) obj;
-        if (functionName == null) {
-            if (other.functionName != null) {
-                return false;
-            }
-        } else if (!functionName.equals(other.functionName)) {
-            return false;
-        }
-        return true;
+
+        return Objects.equals(functionName, other.functionName);
     }
 }

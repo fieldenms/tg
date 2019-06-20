@@ -1,5 +1,7 @@
 package ua.com.fielden.platform.eql.stage1.elements;
 
+import java.util.Objects;
+
 import ua.com.fielden.platform.eql.meta.PropsResolutionContext;
 import ua.com.fielden.platform.eql.meta.TransformationResult;
 import ua.com.fielden.platform.eql.stage1.elements.operands.ISingleOperand1;
@@ -31,6 +33,7 @@ public class Yield1 {
         final int prime = 31;
         int result = 1;
         result = prime * result + ((alias == null) ? 0 : alias.hashCode());
+        result = prime * result + (hasRequiredHint ? 1231 : 1237);
         result = prime * result + ((operand == null) ? 0 : operand.hashCode());
         return result;
     }
@@ -40,27 +43,13 @@ public class Yield1 {
         if (this == obj) {
             return true;
         }
-        if (obj == null) {
-            return false;
-        }
+    
         if (!(obj instanceof Yield1)) {
             return false;
         }
+        
         final Yield1 other = (Yield1) obj;
-        if (alias == null) {
-            if (other.alias != null) {
-                return false;
-            }
-        } else if (!alias.equals(other.alias)) {
-            return false;
-        }
-        if (operand == null) {
-            if (other.operand != null) {
-                return false;
-            }
-        } else if (!operand.equals(other.operand)) {
-            return false;
-        }
-        return true;
+
+        return Objects.equals(operand, other.operand) && Objects.equals(alias, other.alias) && (hasRequiredHint == other.hasRequiredHint);
     }
 }

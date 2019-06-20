@@ -1,23 +1,17 @@
 package ua.com.fielden.platform.eql.stage1.elements.functions;
 
+import java.util.Objects;
+
 import ua.com.fielden.platform.eql.stage1.elements.operands.ISingleOperand1;
 import ua.com.fielden.platform.eql.stage2.elements.operands.ISingleOperand2;
 
 abstract class TwoOperandsFunction1<S2 extends ISingleOperand2> extends AbstractFunction1<S2> {
-    private final ISingleOperand1<? extends ISingleOperand2> operand1;
-    private final ISingleOperand1<? extends ISingleOperand2> operand2;
+    public final ISingleOperand1<? extends ISingleOperand2> operand1;
+    public final ISingleOperand1<? extends ISingleOperand2> operand2;
 
     public TwoOperandsFunction1(final ISingleOperand1<? extends ISingleOperand2> operand1, final ISingleOperand1<? extends ISingleOperand2> operand2) {
         this.operand1 = operand1;
         this.operand2 = operand2;
-    }
-
-    public ISingleOperand1<? extends ISingleOperand2> getOperand1() {
-        return operand1;
-    }
-
-    public ISingleOperand1<? extends ISingleOperand2> getOperand2() {
-        return operand2;
     }
 
     @Override
@@ -34,27 +28,13 @@ abstract class TwoOperandsFunction1<S2 extends ISingleOperand2> extends Abstract
         if (this == obj) {
             return true;
         }
-        if (obj == null) {
-            return false;
-        }
+
         if (!(obj instanceof TwoOperandsFunction1)) {
             return false;
         }
-        final TwoOperandsFunction1 other = (TwoOperandsFunction1) obj;
-        if (operand1 == null) {
-            if (other.operand1 != null) {
-                return false;
-            }
-        } else if (!operand1.equals(other.operand1)) {
-            return false;
-        }
-        if (operand2 == null) {
-            if (other.operand2 != null) {
-                return false;
-            }
-        } else if (!operand2.equals(other.operand2)) {
-            return false;
-        }
-        return true;
+        
+        final TwoOperandsFunction1<S2> other = (TwoOperandsFunction1<S2>) obj;
+        
+        return Objects.equals(operand1, other.operand1) && Objects.equals(operand2, other.operand2);
     }
 }

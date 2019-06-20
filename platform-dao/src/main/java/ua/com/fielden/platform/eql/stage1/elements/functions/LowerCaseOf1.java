@@ -13,7 +13,7 @@ public class LowerCaseOf1 extends SingleOperandFunction1<LowerCaseOf2> {
 
     @Override
     public TransformationResult<LowerCaseOf2> transform(final PropsResolutionContext resolutionContext) {
-        final TransformationResult<? extends ISingleOperand2> operandTransformationResult = getOperand().transform(resolutionContext);
+        final TransformationResult<? extends ISingleOperand2> operandTransformationResult = operand.transform(resolutionContext);
         return new TransformationResult<LowerCaseOf2>(new LowerCaseOf2(operandTransformationResult.getItem()), operandTransformationResult.getUpdatedContext());
     }
 }

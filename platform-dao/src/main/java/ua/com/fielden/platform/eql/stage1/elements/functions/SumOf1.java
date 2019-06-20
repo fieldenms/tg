@@ -16,7 +16,7 @@ public class SumOf1 extends SingleOperandFunction1<SumOf2> {
 
     @Override
     public TransformationResult<SumOf2> transform(final PropsResolutionContext resolutionContext) {
-        final TransformationResult<? extends ISingleOperand2> operandTransformationResult = getOperand().transform(resolutionContext);
+        final TransformationResult<? extends ISingleOperand2> operandTransformationResult = operand.transform(resolutionContext);
         return new TransformationResult<SumOf2>(new SumOf2(operandTransformationResult.getItem(), distinct), operandTransformationResult.getUpdatedContext());
     }
 }

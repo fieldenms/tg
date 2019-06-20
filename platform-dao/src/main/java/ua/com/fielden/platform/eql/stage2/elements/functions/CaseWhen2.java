@@ -2,6 +2,7 @@ package ua.com.fielden.platform.eql.stage2.elements.functions;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 import ua.com.fielden.platform.eql.stage2.elements.conditions.ICondition2;
 import ua.com.fielden.platform.eql.stage2.elements.operands.ISingleOperand2;
@@ -18,6 +19,12 @@ public class CaseWhen2 extends AbstractFunction2 {
     }
 
     @Override
+    public Class type() {
+        // TODO EQL
+        return whenThenPairs.get(0).getValue().type();
+    }
+    
+    @Override
     public int hashCode() {
         final int prime = 31;
         int result = 1;
@@ -31,33 +38,13 @@ public class CaseWhen2 extends AbstractFunction2 {
         if (this == obj) {
             return true;
         }
-        if (obj == null) {
-            return false;
-        }
+        
         if (!(obj instanceof CaseWhen2)) {
             return false;
         }
-        final CaseWhen2 other = (CaseWhen2) obj;
-        if (elseOperand == null) {
-            if (other.elseOperand != null) {
-                return false;
-            }
-        } else if (!elseOperand.equals(other.elseOperand)) {
-            return false;
-        }
-        if (whenThenPairs == null) {
-            if (other.whenThenPairs != null) {
-                return false;
-            }
-        } else if (!whenThenPairs.equals(other.whenThenPairs)) {
-            return false;
-        }
-        return true;
-    }
 
-    @Override
-    public Class type() {
-        // TODO EQL
-        return whenThenPairs.get(0).getValue().type();
+        final CaseWhen2 other = (CaseWhen2) obj;
+
+        return Objects.equals(whenThenPairs, other.whenThenPairs) && Objects.equals(elseOperand, other.elseOperand);
     }
 }

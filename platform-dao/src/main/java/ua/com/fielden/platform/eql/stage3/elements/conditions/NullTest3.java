@@ -1,21 +1,16 @@
-package ua.com.fielden.platform.eql.stage2.elements.conditions;
+package ua.com.fielden.platform.eql.stage3.elements.conditions;
 
 import java.util.Objects;
 
-import ua.com.fielden.platform.eql.stage2.elements.operands.ISingleOperand2;
+import ua.com.fielden.platform.eql.stage3.elements.operands.ISingleOperand3;
 
-public class NullTest2 extends AbstractCondition2 {
-    public final ISingleOperand2 operand;
+public class NullTest3 implements ICondition3 {
+    public final ISingleOperand3 operand;
     private final boolean negated;
 
-    public NullTest2(final ISingleOperand2 operand, final boolean negated) {
+    public NullTest3(final ISingleOperand3 operand, final boolean negated) {
         this.operand = operand;
         this.negated = negated;
-    }
-
-    @Override
-    public boolean ignore() {
-        return operand.ignore();
     }
 
     @Override
@@ -33,12 +28,11 @@ public class NullTest2 extends AbstractCondition2 {
             return true;
         }
 
-        if (!(obj instanceof NullTest2)) {
+        if (!(obj instanceof NullTest3)) {
             return false;
         }
-        
-        final NullTest2 other = (NullTest2) obj;
-        
+        final NullTest3 other = (NullTest3) obj;
+
         return Objects.equals(negated, other.negated) && Objects.equals(operand, other.operand);
     }
 }

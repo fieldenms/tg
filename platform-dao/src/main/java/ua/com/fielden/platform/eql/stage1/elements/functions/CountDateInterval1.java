@@ -18,8 +18,8 @@ public class CountDateInterval1 extends TwoOperandsFunction1<CountDateInterval2>
 
     @Override
     public TransformationResult<CountDateInterval2> transform(final PropsResolutionContext resolutionContext) {
-        final TransformationResult<? extends ISingleOperand2> firstOperandTransformationResult = getOperand1().transform(resolutionContext);
-        final TransformationResult<? extends ISingleOperand2> secondOperandTransformationResult = getOperand2().transform(firstOperandTransformationResult.getUpdatedContext());
+        final TransformationResult<? extends ISingleOperand2> firstOperandTransformationResult = operand1.transform(resolutionContext);
+        final TransformationResult<? extends ISingleOperand2> secondOperandTransformationResult = operand2.transform(firstOperandTransformationResult.getUpdatedContext());
         return new TransformationResult<CountDateInterval2>(new CountDateInterval2(intervalUnit, firstOperandTransformationResult.getItem(), secondOperandTransformationResult.getItem()), secondOperandTransformationResult.getUpdatedContext());
     }
 }

@@ -1,4 +1,4 @@
-package ua.com.fielden.platform.eql.stage2.elements.conditions;
+package ua.com.fielden.platform.eql.stage3.elements.conditions;
 
 import static java.util.Collections.emptyList;
 
@@ -6,22 +6,17 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
-public class Conditions2 extends AbstractCondition2 {
-    private final List<List<? extends ICondition2>> allConditionsAsDnf = new ArrayList<>();
+public class Conditions3 {
+    private final List<List<? extends ICondition3>> allConditionsAsDnf = new ArrayList<>();
     private final boolean negated;
 
-    public Conditions2(final boolean negated, final List<List<? extends ICondition2>> allConditions) {
+    public Conditions3(final boolean negated, final List<List<? extends ICondition3>> allConditions) {
         this.allConditionsAsDnf.addAll(allConditions);
         this.negated = negated;
     }
     
-    public Conditions2() {
+    public Conditions3() {
         this(false, emptyList());
-    }
-
-    @Override
-    public boolean ignore() {
-        return allConditionsAsDnf.isEmpty();
     }
 
     @Override
@@ -39,12 +34,13 @@ public class Conditions2 extends AbstractCondition2 {
             return true;
         }
 
-        if (!(obj instanceof Conditions2)) {
+        if (!(obj instanceof Conditions3)) {
             return false;
         }
         
-        final Conditions2 other = (Conditions2) obj;
+        final Conditions3 other = (Conditions3) obj;
         
-        return Objects.equals(allConditionsAsDnf, other.allConditionsAsDnf) && Objects.equals(negated, other.negated);
+        return Objects.equals(allConditionsAsDnf, other.allConditionsAsDnf) &&
+                Objects.equals(negated, other.negated);
     }
 }

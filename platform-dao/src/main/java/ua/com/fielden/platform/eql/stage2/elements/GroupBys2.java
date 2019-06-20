@@ -1,13 +1,13 @@
 package ua.com.fielden.platform.eql.stage2.elements;
 
-import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 public class GroupBys2 {
-    private final List<GroupBy2> groups = new ArrayList<>();
+    private final List<GroupBy2> groups;
 
     public GroupBys2(final List<GroupBy2> groups) {
-        this.groups.addAll(groups);
+        this.groups = groups;
     }
 
     public List<GroupBy2> getGroups() {
@@ -18,7 +18,7 @@ public class GroupBys2 {
     public int hashCode() {
         final int prime = 31;
         int result = 1;
-        result = prime * result + groups.hashCode();
+        result = prime * result + ((groups == null) ? 0 : groups.hashCode());
         return result;
     }
 
@@ -27,22 +27,13 @@ public class GroupBys2 {
         if (this == obj) {
             return true;
         }
-        if (obj == null) {
-            return false;
-        }
+
         if (!(obj instanceof GroupBys2)) {
             return false;
         }
+
         final GroupBys2 other = (GroupBys2) obj;
-        if (groups == null) {
-            if (other.groups != null) {
-                return false;
-            }
-        } else if (!groups.equals(other.groups)) {
-            return false;
-        }
-        return true;
+        
+        return Objects.equals(groups, other.groups);
     }
-
-
 }

@@ -1,5 +1,7 @@
 package ua.com.fielden.platform.eql.stage1.elements.conditions;
 
+import java.util.Objects;
+
 import ua.com.fielden.platform.eql.meta.PropsResolutionContext;
 import ua.com.fielden.platform.eql.meta.TransformationResult;
 import ua.com.fielden.platform.eql.stage1.elements.operands.ISingleOperand1;
@@ -39,23 +41,13 @@ public class NullTest1 implements ICondition1<NullTest2> {
         if (this == obj) {
             return true;
         }
-        if (obj == null) {
-            return false;
-        }
+
         if (!(obj instanceof NullTest1)) {
             return false;
         }
+        
         final NullTest1 other = (NullTest1) obj;
-        if (negated != other.negated) {
-            return false;
-        }
-        if (operand == null) {
-            if (other.operand != null) {
-                return false;
-            }
-        } else if (!operand.equals(other.operand)) {
-            return false;
-        }
-        return true;
+        
+        return Objects.equals(negated, other.negated) && Objects.equals(operand, other.operand);
     }
 }

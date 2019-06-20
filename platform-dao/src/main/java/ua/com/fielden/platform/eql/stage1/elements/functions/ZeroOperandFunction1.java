@@ -1,5 +1,7 @@
 package ua.com.fielden.platform.eql.stage1.elements.functions;
 
+import java.util.Objects;
+
 import ua.com.fielden.platform.eql.stage2.elements.IIgnorableAtS2;
 
 abstract class ZeroOperandFunction1<S2 extends IIgnorableAtS2> extends AbstractFunction1<S2> {
@@ -23,20 +25,13 @@ abstract class ZeroOperandFunction1<S2 extends IIgnorableAtS2> extends AbstractF
         if (this == obj) {
             return true;
         }
-        if (obj == null) {
-            return false;
-        }
+
         if (!(obj instanceof ZeroOperandFunction1)) {
             return false;
         }
-        final ZeroOperandFunction1 other = (ZeroOperandFunction1) obj;
-        if (functionName == null) {
-            if (other.functionName != null) {
-                return false;
-            }
-        } else if (!functionName.equals(other.functionName)) {
-            return false;
-        }
-        return true;
+        
+        final ZeroOperandFunction1<S2> other = (ZeroOperandFunction1<S2>) obj;
+
+        return Objects.equals(functionName, other.functionName);
     }
 }

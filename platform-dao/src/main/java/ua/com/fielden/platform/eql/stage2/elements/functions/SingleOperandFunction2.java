@@ -1,5 +1,7 @@
 package ua.com.fielden.platform.eql.stage2.elements.functions;
 
+import java.util.Objects;
+
 import ua.com.fielden.platform.eql.stage2.elements.operands.ISingleOperand2;
 
 abstract class SingleOperandFunction2 extends AbstractFunction2 {
@@ -23,20 +25,13 @@ abstract class SingleOperandFunction2 extends AbstractFunction2 {
         if (this == obj) {
             return true;
         }
-        if (obj == null) {
-            return false;
-        }
+
         if (!(obj instanceof SingleOperandFunction2)) {
             return false;
         }
+        
         final SingleOperandFunction2 other = (SingleOperandFunction2) obj;
-        if (operand == null) {
-            if (other.operand != null) {
-                return false;
-            }
-        } else if (!operand.equals(other.operand)) {
-            return false;
-        }
-        return true;
+        
+        return Objects.equals(operand, other.operand);
     }
 }

@@ -1,17 +1,13 @@
 package ua.com.fielden.platform.eql.stage2.elements;
 
 import java.util.List;
+import java.util.Objects;
 
 public class OrderBys2 {
     private final List<OrderBy2> models;
 
     public OrderBys2(final List<OrderBy2> models) {
         this.models = models;
-    }
-
-    @Override
-    public String toString() {
-        return models.toString();
     }
 
     public List<OrderBy2> getModels() {
@@ -31,20 +27,13 @@ public class OrderBys2 {
         if (this == obj) {
             return true;
         }
-        if (obj == null) {
-            return false;
-        }
+    
         if (!(obj instanceof OrderBys2)) {
             return false;
         }
+        
         final OrderBys2 other = (OrderBys2) obj;
-        if (models == null) {
-            if (other.models != null) {
-                return false;
-            }
-        } else if (!models.equals(other.models)) {
-            return false;
-        }
-        return true;
+        
+        return Objects.equals(models, other.models);
     }
 }

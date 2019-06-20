@@ -1,5 +1,7 @@
 package ua.com.fielden.platform.eql.stage1.elements.conditions;
 
+import java.util.Objects;
+
 import ua.com.fielden.platform.eql.meta.PropsResolutionContext;
 import ua.com.fielden.platform.eql.meta.TransformationResult;
 import ua.com.fielden.platform.eql.stage1.elements.operands.EntQuery1;
@@ -35,23 +37,13 @@ public class ExistenceTest1 implements ICondition1<ExistenceTest2> {
         if (this == obj) {
             return true;
         }
-        if (obj == null) {
-            return false;
-        }
+        
         if (!(obj instanceof ExistenceTest1)) {
             return false;
         }
+        
         final ExistenceTest1 other = (ExistenceTest1) obj;
-        if (negated != other.negated) {
-            return false;
-        }
-        if (subQuery == null) {
-            if (other.subQuery != null) {
-                return false;
-            }
-        } else if (!subQuery.equals(other.subQuery)) {
-            return false;
-        }
-        return true;
+
+        return Objects.equals(negated, other.negated) && Objects.equals(subQuery, other.subQuery);
     }
 }

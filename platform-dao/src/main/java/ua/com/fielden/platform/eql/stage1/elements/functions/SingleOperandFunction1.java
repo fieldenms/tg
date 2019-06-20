@@ -1,11 +1,13 @@
 package ua.com.fielden.platform.eql.stage1.elements.functions;
 
+import java.util.Objects;
+
 import ua.com.fielden.platform.eql.stage1.elements.operands.ISingleOperand1;
 import ua.com.fielden.platform.eql.stage2.elements.operands.ISingleOperand2;
 
 abstract class SingleOperandFunction1<S2 extends ISingleOperand2> extends AbstractFunction1<S2> {
 
-    private final ISingleOperand1<? extends ISingleOperand2> operand;
+    public final ISingleOperand1<? extends ISingleOperand2> operand;
 
     public SingleOperandFunction1(final ISingleOperand1<? extends ISingleOperand2> operand) {
         this.operand = operand;
@@ -24,24 +26,13 @@ abstract class SingleOperandFunction1<S2 extends ISingleOperand2> extends Abstra
         if (this == obj) {
             return true;
         }
-        if (obj == null) {
-            return false;
-        }
+
         if (!(obj instanceof SingleOperandFunction1)) {
             return false;
         }
-        final SingleOperandFunction1 other = (SingleOperandFunction1) obj;
-        if (operand == null) {
-            if (other.operand != null) {
-                return false;
-            }
-        } else if (!operand.equals(other.operand)) {
-            return false;
-        }
-        return true;
-    }
-
-    public ISingleOperand1<? extends ISingleOperand2> getOperand() {
-        return operand;
+        
+        final SingleOperandFunction1<S2> other = (SingleOperandFunction1<S2>) obj;
+        
+        return Objects.equals(operand, other.operand);
     }
 }

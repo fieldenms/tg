@@ -2,6 +2,7 @@ package ua.com.fielden.platform.eql.stage1.elements.functions;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 import ua.com.fielden.platform.eql.meta.PropsResolutionContext;
 import ua.com.fielden.platform.eql.meta.TransformationResult;
@@ -46,20 +47,13 @@ public class Concat1 extends AbstractFunction1<Concat2> {
         if (this == obj) {
             return true;
         }
-        if (obj == null) {
-            return false;
-        }
+
         if (!(obj instanceof Concat1)) {
             return false;
         }
+        
         final Concat1 other = (Concat1) obj;
-        if (operands == null) {
-            if (other.operands != null) {
-                return false;
-            }
-        } else if (!operands.equals(other.operands)) {
-            return false;
-        }
-        return true;
+        
+        return Objects.equals(operands, other.operands);
     }
 }

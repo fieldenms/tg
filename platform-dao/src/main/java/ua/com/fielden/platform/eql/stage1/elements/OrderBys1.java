@@ -2,6 +2,7 @@ package ua.com.fielden.platform.eql.stage1.elements;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 import ua.com.fielden.platform.eql.meta.PropsResolutionContext;
 import ua.com.fielden.platform.eql.meta.TransformationResult;
@@ -19,16 +20,11 @@ public class OrderBys1 {
         final List<OrderBy2> transformed = new ArrayList<>();
         PropsResolutionContext currentResolutionContext = resolutionContext;
         for (final OrderBy1 orderBy : models) {
-            TransformationResult<OrderBy2> orderByTransformationResult = orderBy.transform(currentResolutionContext);
+            final TransformationResult<OrderBy2> orderByTransformationResult = orderBy.transform(currentResolutionContext);
             transformed.add(orderByTransformationResult.getItem());
             currentResolutionContext = orderByTransformationResult.getUpdatedContext();
         }
         return new TransformationResult<OrderBys2>(new OrderBys2(transformed), currentResolutionContext);
-    }
-
-    @Override
-    public String toString() {
-        return models.toString();
     }
 
     public List<OrderBy1> getModels() {
@@ -48,20 +44,13 @@ public class OrderBys1 {
         if (this == obj) {
             return true;
         }
-        if (obj == null) {
-            return false;
-        }
+
         if (!(obj instanceof OrderBys1)) {
             return false;
         }
+        
         final OrderBys1 other = (OrderBys1) obj;
-        if (models == null) {
-            if (other.models != null) {
-                return false;
-            }
-        } else if (!models.equals(other.models)) {
-            return false;
-        }
-        return true;
+        
+        return Objects.equals(models, other.models);
     }
 }

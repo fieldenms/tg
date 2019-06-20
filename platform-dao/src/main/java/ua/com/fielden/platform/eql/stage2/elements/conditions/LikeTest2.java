@@ -1,5 +1,7 @@
 package ua.com.fielden.platform.eql.stage2.elements.conditions;
 
+import java.util.Objects;
+
 import ua.com.fielden.platform.eql.stage2.elements.operands.ISingleOperand2;
 
 public class LikeTest2 extends AbstractCondition2 {
@@ -36,33 +38,16 @@ public class LikeTest2 extends AbstractCondition2 {
         if (this == obj) {
             return true;
         }
-        if (obj == null) {
-            return false;
-        }
+        
         if (!(obj instanceof LikeTest2)) {
             return false;
         }
+        
         final LikeTest2 other = (LikeTest2) obj;
-        if (caseInsensitive != other.caseInsensitive) {
-            return false;
-        }
-        if (leftOperand == null) {
-            if (other.leftOperand != null) {
-                return false;
-            }
-        } else if (!leftOperand.equals(other.leftOperand)) {
-            return false;
-        }
-        if (negated != other.negated) {
-            return false;
-        }
-        if (rightOperand == null) {
-            if (other.rightOperand != null) {
-                return false;
-            }
-        } else if (!rightOperand.equals(other.rightOperand)) {
-            return false;
-        }
-        return true;
+
+        return Objects.equals(leftOperand, other.leftOperand) &&
+                Objects.equals(rightOperand, other.rightOperand) &&
+                Objects.equals(caseInsensitive, other.caseInsensitive) &&
+                Objects.equals(negated, other.negated);
     }
 }

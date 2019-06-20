@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.eql.stage2.elements.functions;
 
 import java.util.List;
+import java.util.Objects;
 
 import ua.com.fielden.platform.eql.stage2.elements.operands.ISingleOperand2;
 
@@ -17,6 +18,11 @@ public class Concat2 extends AbstractFunction2 {
     }
 
     @Override
+    public Class type() {
+        return String.class;
+    }
+    
+    @Override
     public int hashCode() {
         final int prime = 31;
         int result = 1;
@@ -29,25 +35,13 @@ public class Concat2 extends AbstractFunction2 {
         if (this == obj) {
             return true;
         }
-        if (obj == null) {
-            return false;
-        }
+    
         if (!(obj instanceof Concat2)) {
             return false;
         }
+        
         final Concat2 other = (Concat2) obj;
-        if (operands == null) {
-            if (other.operands != null) {
-                return false;
-            }
-        } else if (!operands.equals(other.operands)) {
-            return false;
-        }
-        return true;
-    }
-
-    @Override
-    public Class type() {
-        return String.class;
+        
+        return Objects.equals(operands, other.operands);
     }
 }
