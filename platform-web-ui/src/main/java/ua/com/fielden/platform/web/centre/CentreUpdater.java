@@ -4,7 +4,9 @@ import static java.lang.String.format;
 import static java.util.Arrays.stream;
 import static java.util.Optional.empty;
 import static java.util.Optional.of;
+import static java.util.Optional.ofNullable;
 import static java.util.regex.Pattern.quote;
+import static java.util.stream.Collectors.toCollection;
 import static org.apache.commons.lang.StringUtils.isEmpty;
 import static ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.IAddToCriteriaTickManager.MetaValueType.ALL_ORDERING;
 import static ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.IAddToCriteriaTickManager.MetaValueType.AND_BEFORE;
@@ -994,7 +996,7 @@ public class CentreUpdater {
         // determine whether orderedProperties have been changed (as a whole) and add them to the diff if true
         final List<Pair<String, Ordering>> sortingPropertiesVal = centre.getSecondTick().orderedProperties(root);
         if (!equalsEx(sortingPropertiesVal, defaultCentre.getSecondTick().orderedProperties(root))) {
-            diff.put(SORTING, sortingPropertiesVal);
+            diff.put(SORTING, createSerialisableSortingProperties(sortingPropertiesVal));
         }
         
         return diff;
@@ -1097,7 +1099,7 @@ public class CentreUpdater {
         }
         
         // process EGI data sorting
-        final ArrayList<?> sorting = (ArrayList<?>) differences.get(SORTING);
+        final ArrayList<LinkedHashMap<String, String>> sorting = (ArrayList<LinkedHashMap<String, String>>) differences.get(SORTING);
         if (sorting != null) { // if it exists then it was explicitly changed by user; whole snapshot will be applied against target centre
             // need to clear all previous orderings:
             final List<Pair<String, Ordering>> sortingProperties = new ArrayList<>(targetCentre.getSecondTick().orderedProperties(root));
@@ -1108,13 +1110,10 @@ public class CentreUpdater {
                 targetCentre.getSecondTick().toggleOrdering(root, sortingProperty.getKey());
             }
             // and apply new ones from diff:
-            for (final /*Pair<String, Ordering> or LinkedHashMap<String, String>*/ Object propAndDirectionMapped: sorting) {
-                final Optional<LinkedHashMap<String, String>> maybeMap = propAndDirectionMapped instanceof LinkedHashMap ? Optional.of((LinkedHashMap<String, String>) propAndDirectionMapped) : Optional.empty();
-                final Pair<String, Ordering> propertyAndDirection = maybeMap.map(m -> m.entrySet().iterator().next())
-                                                                            .map(entry -> Pair.pair(entry.getKey(), valueOf(entry.getValue())))
-                                                                            .orElseGet(() -> (Pair<String, Ordering>) propAndDirectionMapped);
+            for (final LinkedHashMap<String, String> propertyAndDirectionMapped: sorting) {
+                final Entry<String, String> propertyAndDirection = propertyAndDirectionMapped.entrySet().iterator().next();
                 final String property = propertyAndDirection.getKey();
-                final Ordering direction = propertyAndDirection.getValue();
+                final Ordering direction = valueOf(propertyAndDirection.getValue());
                 if (targetCentre.getSecondTick().checkedProperties(root).contains(property)) {
                     targetCentre.getSecondTick().toggleOrdering(root, property);
                     if (DESCENDING == direction) {
@@ -1272,9 +1271,35 @@ public class CentreUpdater {
         
         if (differencesCentre.getFirstTick().isMetaValuePresent(ALL_ORDERING, root, "")) {
             final List<Pair<String, Ordering>> sortingPropertiesVal = differencesCentre.getSecondTick().orderedProperties(root);
-            diff.put(SORTING, sortingPropertiesVal);
+            diff.put(SORTING, createSerialisableSortingProperties(sortingPropertiesVal));
         }
         return diff;
+    }
+    
+    /**
+     * Creates serialisable representation of sorting properties to be used in diff object.
+     * This representation should be exactly the same as the representation returning after diff deserialisation.
+     * This is because further restoring logic ({@link #applyDifferences(ICentreDomainTreeManagerAndEnhancer, Map, Class, ICompanionObjectFinder)} method)
+     * requires <code>ArrayList<LinkedHashMap<String, String>></code> and when base configuration is loaded the diff object is created on-the-fly 
+     * by {@link #createDifferences(ICentreDomainTreeManagerAndEnhancer, ICentreDomainTreeManagerAndEnhancer, Class)} method and not directly deserialised.
+     * 
+     * @param sortingPropertiesVal
+     * @return
+     */
+    private static ArrayList<LinkedHashMap<String, String>> createSerialisableSortingProperties(final List<Pair<String, Ordering>> sortingPropertiesVal) {
+        return sortingPropertiesVal.stream().map(CentreUpdater::pairToMap).collect(toCollection(ArrayList::new));
+    }
+    
+    /**
+     * Creates raw serialisable map from pair of property name and its {@link Ordering}.
+     * 
+     * @param pair
+     * @return
+     */
+    private static LinkedHashMap<String, String> pairToMap(final Pair<String, Ordering> pair) {
+        final LinkedHashMap<String, String> map = new LinkedHashMap<>();
+        map.put(pair.getKey(), ofNullable(pair.getValue()).map(Ordering::name).orElse(null)); // pair.getValue() should not be null, but added handling of nulls to avoid potential risks in future
+        return map;
     }
     
     /**
