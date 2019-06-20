@@ -65,30 +65,33 @@ Polymer({
     path: {
       type: String,
       notify: true,
-      value: function() {
+      value: function () {
         return this.noDecode ? window.location.pathname : window.decodeURIComponent(window.location.pathname);
       }
     },
+
     /**
      * The query string portion of the URL.
      */
     query: {
       type: String,
       notify: true,
-      value: function() {
+      value: function () {
         return window.location.search.slice(1);
       }
     },
+
     /**
      * The hash component of the URL.
      */
     hash: {
       type: String,
       notify: true,
-      value: function() {
+      value: function () {
         return this.noDecode ? window.location.hash.slice(1) : window.decodeURIComponent(window.location.hash.slice(1));
       }
     },
+
     /**
      * If the user was on a URL for less than `dwellTime` milliseconds, it
      * won't be added to the browser's history, but instead will be replaced
@@ -101,6 +104,7 @@ Polymer({
       type: Number,
       value: 2000
     },
+
     /**
      * A regexp that defines the set of URLs that should be considered part
      * of this web app.
@@ -140,7 +144,7 @@ Polymer({
     _urlSpaceRegExp: {
       computed: '_makeRegExp(urlSpaceRegex)'
     },
-    _lastChangedAtAt: {
+    _lastChangedAt: {
       type: Number
     },
     _initialized: {
@@ -155,7 +159,7 @@ Polymer({
   created: function () {
     this.__location = window.location;
   },
-  attached: function() {
+  attached: function () {
     this.listen(window, 'hashchange', '_hashChanged');
     this.listen(window, 'location-changed', '_urlChanged');
     this.listen(window, 'popstate', '_urlChanged');
@@ -169,7 +173,7 @@ Polymer({
 
     this._urlChanged();
   },
-  detached: function() {
+  detached: function () {
     this.unlisten(window, 'hashchange', '_hashChanged');
     this.unlisten(window, 'location-changed', '_urlChanged');
     this.unlisten(window, 'popstate', '_urlChanged');
@@ -178,27 +182,27 @@ Polymer({
     document.body, 'click', '_globalOnClick');
     this._initialized = false;
   },
-  _hashChanged: function() {
+  _hashChanged: function () {
     if (this.noDecode) {
       this._hashChangedOld();
     } else {
       this._hashChangedNew();
     }
   },  
-  _hashChangedOld: function() {
+  _hashChangedOld: function () {
     this.hash = window.location.hash.substring(1);
   },
   _hashChangedNew: function () {
     this.hash = window.decodeURIComponent(this.__location.hash.substring(1));
   },
-  _urlChanged: function() {
+  _urlChanged: function () {
     if (this.noDecode) {
       this._urlChangedOld();
     } else {
       this._urlChangedNew();
     }
   },
-  _urlChangedOld: function() {
+  _urlChangedOld: function () {
     // We want to extract all info out of the updated URL before we
     // try to write anything back into it.
     //
@@ -227,7 +231,7 @@ Polymer({
 
     this._updateUrl();
   },
-  _getUrl: function() {
+  _getUrl: function () {
     if (this.noDecode) {
       return this._getUrlOld();
     } else {
@@ -331,6 +335,7 @@ Polymer({
       node: window
     });
   },
+  
   /**
    * A necessary evil so that links work as expected. Does its best to
    * bail out early if possible.
