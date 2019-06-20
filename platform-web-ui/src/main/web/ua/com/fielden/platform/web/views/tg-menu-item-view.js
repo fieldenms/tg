@@ -9,6 +9,7 @@ import '/resources/element_loader/tg-element-loader.js';
 
 import { Polymer } from '/resources/polymer/@polymer/polymer/lib/legacy/polymer-fn.js';
 import { html } from '/resources/polymer/@polymer/polymer/lib/utils/html-tag.js';
+import { IronResizableBehavior } from '/resources/polymer/@polymer/iron-resizable-behavior/iron-resizable-behavior.js';
 
 const template = html`
     <style>
@@ -85,6 +86,8 @@ Polymer({
             observer: "_prefDimChanged"
         }
     },
+
+    behaviors: [IronResizableBehavior],
 
     hostAttributes: {
         "tabindex": "0"
