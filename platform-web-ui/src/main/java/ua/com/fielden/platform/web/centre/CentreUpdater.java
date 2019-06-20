@@ -4,7 +4,6 @@ import static java.lang.String.format;
 import static java.util.Arrays.stream;
 import static java.util.Optional.empty;
 import static java.util.Optional.of;
-import static java.util.Optional.ofNullable;
 import static java.util.regex.Pattern.quote;
 import static java.util.stream.Collectors.toCollection;
 import static org.apache.commons.lang.StringUtils.isEmpty;
@@ -1286,7 +1285,7 @@ public class CentreUpdater {
      * @param sortingPropertiesVal
      * @return
      */
-    private static ArrayList<LinkedHashMap<String, String>> createSerialisableSortingProperties(final List<Pair<String, Ordering>> sortingPropertiesVal) {
+    private static List<LinkedHashMap<String, String>> createSerialisableSortingProperties(final List<Pair<String, Ordering>> sortingPropertiesVal) {
         return sortingPropertiesVal.stream().map(CentreUpdater::pairToMap).collect(toCollection(ArrayList::new));
     }
     
@@ -1298,7 +1297,12 @@ public class CentreUpdater {
      */
     private static LinkedHashMap<String, String> pairToMap(final Pair<String, Ordering> pair) {
         final LinkedHashMap<String, String> map = new LinkedHashMap<>();
-        map.put(pair.getKey(), ofNullable(pair.getValue()).map(Ordering::name).orElse(null)); // pair.getValue() should not be null, but added handling of nulls to avoid potential risks in future
+        // pair.getValue() should not be null, but added handling of nulls just in case to avoid potential risks in future
+        if (pair.getValue() != null) {
+            map.put(pair.getKey(), pair.getValue().name());
+        } else {
+            logger.warn(format("NULL value for [%s].", pair.getKey()));
+        }
         return map;
     }
     
