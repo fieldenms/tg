@@ -1097,7 +1097,7 @@ public class CentreUpdater {
         }
         
         // process EGI data sorting
-        final ArrayList<LinkedHashMap<String, String>> sorting = (ArrayList<LinkedHashMap<String, String>>) differences.get(SORTING);
+        final ArrayList<?> sorting = (ArrayList<?>) differences.get(SORTING);
         if (sorting != null) { // if it exists then it was explicitly changed by user; whole snapshot will be applied against target centre
             // need to clear all previous orderings:
             final List<Pair<String, Ordering>> sortingProperties = new ArrayList<>(targetCentre.getSecondTick().orderedProperties(root));
@@ -1108,10 +1108,13 @@ public class CentreUpdater {
                 targetCentre.getSecondTick().toggleOrdering(root, sortingProperty.getKey());
             }
             // and apply new ones from diff:
-            for (final LinkedHashMap<String, String> propertyAndDirectionMapped: sorting) {
-                final Entry<String, String> propertyAndDirection = propertyAndDirectionMapped.entrySet().iterator().next();
+            for (final /*Pair<String, Ordering> or LinkedHashMap<String, String>*/ Object propAndDirectionMapped: sorting) {
+                final Optional<LinkedHashMap<String, String>> maybeMap = propAndDirectionMapped instanceof LinkedHashMap ? Optional.of((LinkedHashMap<String, String>) propAndDirectionMapped) : Optional.empty();
+                final Pair<String, Ordering> propertyAndDirection = maybeMap.map(m -> m.entrySet().iterator().next())
+                                                                            .map(entry -> Pair.pair(entry.getKey(), valueOf(entry.getValue())))
+                                                                            .orElseGet(() -> (Pair<String, Ordering>) propAndDirectionMapped);
                 final String property = propertyAndDirection.getKey();
-                final Ordering direction = valueOf(propertyAndDirection.getValue());
+                final Ordering direction = propertyAndDirection.getValue();
                 if (targetCentre.getSecondTick().checkedProperties(root).contains(property)) {
                     targetCentre.getSecondTick().toggleOrdering(root, property);
                     if (DESCENDING == direction) {
