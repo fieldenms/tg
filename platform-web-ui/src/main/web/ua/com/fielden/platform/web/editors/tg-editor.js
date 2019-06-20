@@ -482,6 +482,7 @@ export class TgEditor extends PolymerElement {
         super.ready();
         this._ensureAttribute('selectable-elements-container', true);
         this.decorator().labelVisible = false;
+        this.decorator().shadowRoot.querySelector(".underline").style.height="0";
         this._ensureAttribute('tg-editor', true);
         if (!this._editorKind) {
             this._editorKind = 'NOT_MULTILINETEXT_OR_BOOLEAN';
