@@ -200,7 +200,7 @@ template.setAttribute('strip-whitespace', '');
 const findParentDialog = function(action) {
     let parent = action;
     while (parent && parent.tagName !== 'TG-CUSTOM-ACTION-DIALOG') {
-        parent = parent.parentElement;
+        parent = parent.parentElement || parent.getRootNode().host;
     }
     return parent;
 }
