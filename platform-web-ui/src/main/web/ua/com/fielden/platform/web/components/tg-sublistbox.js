@@ -54,6 +54,16 @@ Polymer({
         return this.$.content.assignedNodes()[0];
     },
 
+    ready: function () {
+        this.$.collapse.addEventListener("transitioning-changed", this._transitioninigChanged.bind(this));
+    },
+
+    _transitioninigChanged: function () {
+        if (this.opened) {
+            this.scrollIntoView({ behavior: 'smooth', block: 'start', inline: 'start' });
+        }
+    },
+
     attached: function() {
         this.listen(this.__parent, 'iron-activate', '_onParentIronActivate');
         this.async(() => {
