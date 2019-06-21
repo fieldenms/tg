@@ -522,14 +522,9 @@ Polymer({
             return;
         }
         const submodulePart = submodule.substring(1).split("?")[0];
-        /* This decoding is needed because the submodule part might be enoceded or decoded. It will encoded if user click some menu item
-         * amd will be decoded when refreshing the page*/
-        const parts = submodulePart.split('/').map(part => decodeURIComponent(part))
         if (menuItem.key === decodeURIComponent(this.selectedModule)) {
-            /* Encoding and joining path parts back in order to select proper menu item and page */
-            const fixedPath = parts.map(part => encodeURIComponent(part)).join('/');
-            this._selectMenu(fixedPath);
-            this._selectPage(fixedPath);
+            this._selectMenu(submodulePart);
+            this._selectPage(submodulePart);
         }
     },
 
