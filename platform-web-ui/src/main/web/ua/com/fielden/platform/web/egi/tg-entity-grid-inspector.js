@@ -135,7 +135,7 @@ const template = html`
             font-weight: 400;
             color: #212121;
             height: var(--egi-row-height, 1.5rem);
-            border-top: 1px solid #e3e3e3;
+            border-top: thin solid #e3e3e3;
             -webkit-font-smoothing: antialiased;
             text-rendering: optimizeLegibility;
             min-width: -webkit-fit-content;
@@ -150,7 +150,7 @@ const template = html`
             font-size: 0.9rem;
             color: #757575;
             height: var(--egi-row-height, 1.5rem);
-            border-top: 1px solid #e3e3e3;
+            border-top: thin solid #e3e3e3;
             -webkit-font-smoothing: antialiased;
             text-rendering: optimizeLegibility;
             min-width: -webkit-fit-content;
