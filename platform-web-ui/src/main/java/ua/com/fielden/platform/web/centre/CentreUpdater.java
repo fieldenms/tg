@@ -5,6 +5,7 @@ import static java.util.Arrays.stream;
 import static java.util.Optional.empty;
 import static java.util.Optional.of;
 import static java.util.regex.Pattern.quote;
+import static java.util.stream.Collectors.toCollection;
 import static org.apache.commons.lang.StringUtils.isEmpty;
 import static ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.IAddToCriteriaTickManager.MetaValueType.ALL_ORDERING;
 import static ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.IAddToCriteriaTickManager.MetaValueType.AND_BEFORE;
@@ -994,7 +995,7 @@ public class CentreUpdater {
         // determine whether orderedProperties have been changed (as a whole) and add them to the diff if true
         final List<Pair<String, Ordering>> sortingPropertiesVal = centre.getSecondTick().orderedProperties(root);
         if (!equalsEx(sortingPropertiesVal, defaultCentre.getSecondTick().orderedProperties(root))) {
-            diff.put(SORTING, sortingPropertiesVal);
+            diff.put(SORTING, createSerialisableSortingProperties(sortingPropertiesVal));
         }
         
         return diff;
@@ -1269,9 +1270,40 @@ public class CentreUpdater {
         
         if (differencesCentre.getFirstTick().isMetaValuePresent(ALL_ORDERING, root, "")) {
             final List<Pair<String, Ordering>> sortingPropertiesVal = differencesCentre.getSecondTick().orderedProperties(root);
-            diff.put(SORTING, sortingPropertiesVal);
+            diff.put(SORTING, createSerialisableSortingProperties(sortingPropertiesVal));
         }
         return diff;
+    }
+    
+    /**
+     * Creates serialisable representation of sorting properties to be used in diff object.
+     * This representation should be exactly the same as the representation returning after diff deserialisation.
+     * This is because further restoring logic ({@link #applyDifferences(ICentreDomainTreeManagerAndEnhancer, Map, Class, ICompanionObjectFinder)} method)
+     * requires <code>ArrayList<LinkedHashMap<String, String>></code> and when base configuration is loaded the diff object is created on-the-fly 
+     * by {@link #createDifferences(ICentreDomainTreeManagerAndEnhancer, ICentreDomainTreeManagerAndEnhancer, Class)} method and not directly deserialised.
+     * 
+     * @param sortingPropertiesVal
+     * @return
+     */
+    private static List<LinkedHashMap<String, String>> createSerialisableSortingProperties(final List<Pair<String, Ordering>> sortingPropertiesVal) {
+        return sortingPropertiesVal.stream().map(CentreUpdater::pairToMap).collect(toCollection(ArrayList::new));
+    }
+    
+    /**
+     * Creates raw serialisable map from pair of property name and its {@link Ordering}.
+     * 
+     * @param pair
+     * @return
+     */
+    private static LinkedHashMap<String, String> pairToMap(final Pair<String, Ordering> pair) {
+        final LinkedHashMap<String, String> map = new LinkedHashMap<>();
+        // pair.getValue() should not be null, but added handling of nulls just in case to avoid potential risks in future
+        if (pair.getValue() != null) {
+            map.put(pair.getKey(), pair.getValue().name());
+        } else {
+            logger.warn(format("NULL value for [%s].", pair.getKey()));
+        }
+        return map;
     }
     
     /**
