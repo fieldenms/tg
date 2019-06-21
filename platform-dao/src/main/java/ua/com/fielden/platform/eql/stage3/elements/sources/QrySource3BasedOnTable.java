@@ -2,6 +2,7 @@ package ua.com.fielden.platform.eql.stage3.elements.sources;
 
 import java.util.Objects;
 
+import ua.com.fielden.platform.eql.stage3.elements.Column;
 import ua.com.fielden.platform.eql.stage3.elements.Table;
 
 public class QrySource3BasedOnTable implements IQrySource3 {
@@ -11,6 +12,21 @@ public class QrySource3BasedOnTable implements IQrySource3 {
     public QrySource3BasedOnTable(final Table table, final int contextId) {
         this.table = table;
         this.contextId = contextId;
+    }
+
+    @Override
+    public Column column(final String colName) {
+         return table.columns.get(colName);
+    }
+
+    @Override
+    public String sqlAlias() {
+        return "T_" + contextId;
+    }
+
+    @Override
+    public String sql() {
+        return table.name + " AS " + sqlAlias();
     }
 
     @Override

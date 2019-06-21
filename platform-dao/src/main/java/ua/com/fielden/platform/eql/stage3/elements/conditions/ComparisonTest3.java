@@ -1,5 +1,7 @@
 package ua.com.fielden.platform.eql.stage3.elements.conditions;
 
+import static java.lang.String.format;
+
 import java.util.Objects;
 
 import ua.com.fielden.platform.entity.query.fluent.enums.ComparisonOperator;
@@ -14,6 +16,11 @@ public class ComparisonTest3 implements ICondition3 {
         this.leftOperand = leftOperand;
         this.rightOperand = rightOperand;
         this.operator = operator;
+    }
+
+    @Override
+    public String sql() {
+        return format("%s %s %s", leftOperand.sql(), operator, rightOperand.sql());
     }
 
     @Override

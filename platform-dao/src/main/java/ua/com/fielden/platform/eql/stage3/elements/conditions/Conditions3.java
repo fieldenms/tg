@@ -1,12 +1,13 @@
 package ua.com.fielden.platform.eql.stage3.elements.conditions;
 
 import static java.util.Collections.emptyList;
+import static java.util.stream.Collectors.joining;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
-public class Conditions3 {
+public class Conditions3 implements ICondition3 {
     private final List<List<? extends ICondition3>> allConditionsAsDnf = new ArrayList<>();
     private final boolean negated;
 
@@ -19,6 +20,15 @@ public class Conditions3 {
         this(false, emptyList());
     }
 
+    @Override
+    public String sql() {
+        if (allConditionsAsDnf.isEmpty()) {
+            return "";
+        } else {
+            return allConditionsAsDnf.stream().map(dl -> dl.stream().map(cond -> cond.sql()).collect(joining(" AND "))).collect(joining(" OR "));
+        }
+    }
+    
     @Override
     public int hashCode() {
         final int prime = 31;

@@ -1,5 +1,7 @@
 package ua.com.fielden.platform.eql.stage3.elements.sources;
 
+import static org.apache.commons.lang.StringUtils.isNotEmpty;
+
 import java.util.Objects;
 
 import ua.com.fielden.platform.entity.query.fluent.enums.JoinType;
@@ -14,6 +16,11 @@ public class CompoundSource3 {
         this.source = source;
         this.joinType = joinType;
         this.joinConditions = joinConditions;
+    }
+
+    public String sql() {
+        final String joinConditionsSql = joinConditions.sql();
+        return "\n  " + joinType + "\n" + source.sql() + (isNotEmpty(joinConditionsSql) ? "  ON " : "") + joinConditionsSql;
     }
 
     @Override
@@ -35,7 +42,6 @@ public class CompoundSource3 {
         if (!(obj instanceof CompoundSource3)) {
             return false;
         }
-        
         
         final CompoundSource3 other = (CompoundSource3) obj;
         

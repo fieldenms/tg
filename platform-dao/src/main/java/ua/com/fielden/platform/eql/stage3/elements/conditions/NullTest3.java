@@ -14,6 +14,11 @@ public class NullTest3 implements ICondition3 {
     }
 
     @Override
+    public String sql() {
+        return " IS " + (negated ? "NOT" : "") + " NULL" + operand.sql();
+    }
+
+    @Override
     public int hashCode() {
         final int prime = 31;
         int result = 1;

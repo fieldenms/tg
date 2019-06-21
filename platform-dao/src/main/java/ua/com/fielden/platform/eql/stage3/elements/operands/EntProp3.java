@@ -14,6 +14,11 @@ public class EntProp3 implements ISingleOperand3 {
     }
 
     @Override
+    public String sql() {
+        return source.sqlAlias() + "." + source.column(name).name;
+    }
+    
+    @Override
     public int hashCode() {
         final int prime = 31;
         int result = super.hashCode();

@@ -21,6 +21,17 @@ public class Sources3 {
     public List<CompoundSource3> getCompounds() {
         return compounds;
     }
+    
+    public String sql() {
+        final StringBuffer sb = new StringBuffer();
+        sb.append("\nFROM\n");
+        sb.append(main.sql());
+        for (final CompoundSource3 compoundSource3 : compounds) {
+            sb.append(compoundSource3.sql());    
+        }
+        
+        return sb.toString();
+    }
 
     @Override
     public int hashCode() {
