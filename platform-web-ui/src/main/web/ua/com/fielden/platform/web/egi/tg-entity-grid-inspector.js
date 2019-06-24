@@ -150,7 +150,6 @@ const template = html`
             font-size: 0.9rem;
             color: #757575;
             height: var(--egi-row-height, 1.5rem);
-            border-top: thin solid #e3e3e3;
             -webkit-font-smoothing: antialiased;
             text-rendering: optimizeLegibility;
             min-width: -webkit-fit-content;
@@ -160,9 +159,6 @@ const template = html`
             flex-shrink: 0;
             @apply --layout-horizontal;
         }
-        .table-data-row:last-of-type, {
-            margin-bottom: var(--egi-bottom-margin, 15px);
-        }
         .footer {
             background-color: white;
             min-width: -webkit-fit-content;
@@ -170,6 +166,7 @@ const template = html`
             min-width: fit-content;
             flex-grow: 0;
             flex-shrink: 0;
+            border-top: thin solid #e3e3e3;
             padding-bottom: var(--egi-bottom-margin, 15px);
             @apply --layout-vertical;
         }
