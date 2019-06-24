@@ -231,6 +231,7 @@ public class VulcanizingUtility {
                 final String path = System.getenv().get("PATH");
                 pb.environment().put("PATH", String.format("%s%s%s", path, File.pathSeparator, addPaths));
             }
+            pb.environment().put("NODE_OPTIONS", "--max-old-space-size=3072");
 
             // redirect error stream to the output
             pb.redirectErrorStream(true);
