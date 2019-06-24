@@ -80,7 +80,7 @@ Polymer({
     /**
      * Generated shortcut bindings to single function _shortcutPressed, which locates appropriate tg-action / tg-ui-action and invokes its function 'shortcutPressed'.
      */
-    keyBindings: {
+    _ownKeyBindings: {
         '@SHORTCUTS': '_shortcutPressed'
     }
 });

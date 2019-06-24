@@ -135,7 +135,7 @@ const template = html`
             font-weight: 400;
             color: #212121;
             height: var(--egi-row-height, 1.5rem);
-            border-top: 1px solid #e3e3e3;
+            border-top: thin solid #e3e3e3;
             -webkit-font-smoothing: antialiased;
             text-rendering: optimizeLegibility;
             min-width: -webkit-fit-content;
@@ -150,7 +150,6 @@ const template = html`
             font-size: 0.9rem;
             color: #757575;
             height: var(--egi-row-height, 1.5rem);
-            border-top: 1px solid #e3e3e3;
             -webkit-font-smoothing: antialiased;
             text-rendering: optimizeLegibility;
             min-width: -webkit-fit-content;
@@ -160,9 +159,6 @@ const template = html`
             flex-shrink: 0;
             @apply --layout-horizontal;
         }
-        .table-data-row:last-of-type, {
-            margin-bottom: var(--egi-bottom-margin, 15px);
-        }
         .footer {
             background-color: white;
             min-width: -webkit-fit-content;
@@ -170,6 +166,7 @@ const template = html`
             min-width: fit-content;
             flex-grow: 0;
             flex-shrink: 0;
+            border-top: thin solid #e3e3e3;
             padding-bottom: var(--egi-bottom-margin, 15px);
             @apply --layout-vertical;
         }
@@ -383,8 +380,8 @@ const template = html`
                 </template>
             </div>
             <div class="shadow-container">
-                <div class="shadow-box" style$="[[_calcLeftShadowStyle(canDragFrom, dragAnchorFixed, checkboxVisible, checkboxesFixed, primaryAction, checkboxesWithPrimaryActionsFixed, numOfFixedCols, _showLeftShadow, _shouldTriggerShadowRecalulation)]]"></div>
-                <div class="shadow-box" style$="[[_calcRightShadowStyle(_isSecondaryActionPresent, secondaryActionsFixed, _showRightShadow, _shouldTriggerShadowRecalulation)]]"></div>
+                <div class="shadow-box" style$="[[_calcLeftShadowStyle(canDragFrom, dragAnchorFixed, checkboxVisible, checkboxesFixed, primaryAction, checkboxesWithPrimaryActionsFixed, numOfFixedCols, _showLeftShadow, _shouldTriggerShadowRecalculation)]]"></div>
+                <div class="shadow-box" style$="[[_calcRightShadowStyle(_isSecondaryActionPresent, secondaryActionsFixed, _showRightShadow, _shouldTriggerShadowRecalculation)]]"></div>
             </div>
         </div>
         <!-- table lock layer -->
@@ -611,7 +608,7 @@ Polymer({
         _showLeftShadow: Boolean,
         _showRightShadow: Boolean,
         //Need when resizing column to recalculate styles.
-        _shouldTriggerShadowRecalulation: Boolean,
+        _shouldTriggerShadowRecalculation: Boolean,
         //Range selection related properties
         _rangeSelection: {
             type: Boolean,
@@ -645,7 +642,7 @@ Polymer({
         this._showBottomShadow = false;
         this._showLeftShadow = false;
         this._showRightShadow = false;
-        this._shouldTriggerShadowRecalulation = false;
+        this._shouldTriggerShadowRecalculation = false;
 
         //Initialising entities.
         this.totals = null;
@@ -915,7 +912,7 @@ Polymer({
             this._updateFixedTotalRowGrowFactor(columnIndex, columnWidths[column.property].newGrowFactor);
             this._updateFixedTotalRowWidth(columnIndex, columnWidths[column.property].newWidth);
         });
-        this._triggerShadowRecalulation();
+        this._updateTableSizeAsync();
     },
 
     /** 
@@ -979,7 +976,7 @@ Polymer({
         });
         updateSelectAll(this, tempEgiModel);
         this.egiModel = tempEgiModel;
-        //this._updateTableSizeAsync();
+        this._updateTableSizeAsync();
         this.fire("tg-egi-entities-loaded", newValue);
     },
 
@@ -996,13 +993,13 @@ Polymer({
             }
             this.fire("tg-egi-column-change", parameters);
         }
-        this._triggerShadowRecalulation();
+        this._updateTableSizeAsync();
     },
 
     //Event listeners
     _resizeEventListener: function() {
         this._handleScrollEvent();
-        this._triggerShadowRecalulation();
+        this._triggerShadowRecalculation();
     },
 
     _handleScrollEvent: function () {
@@ -1082,7 +1079,7 @@ Polymer({
     _scrollContainerEntitiesStampedCustomAction: function () {},
 
     _scrollContainerEntitiesStamped: function (event) {
-        this._triggerShadowRecalulation();
+        this._updateTableSizeAsync();
         this._scrollContainerEntitiesStampedCustomAction();
     },
 
@@ -1130,7 +1127,7 @@ Polymer({
             oldColumnGrowFactor: e.model.item.growFactor,
             leftFixedContainerWidth: leftFixedContainerWidth,
             containerWithoutFixedSecondaryActionWidth: containerWithoutFixedSecondaryActionWidth,
-            otherColumnWidth: calculateColumnWidthExcept(this, e.model.index, columnElements, this.columns.length + this.fixedColumns.length, () => true, () => true, () => true, () => true),
+            otherColumnWidth: calculateColumnWidthExcept(this, e.currentTarget.hasAttribute("fixed") ? e.model.index : this.fixedColumns.length + e.model.index, columnElements, this.columns.length + this.fixedColumns.length, () => true, () => true, () => true, () => true),
             widthCorrection: e.currentTarget.offsetWidth - e.currentTarget.firstElementChild.offsetWidth,
             hasAnyFlex: this.columns.find((column, index) => index !== e.model.index && column.growFactor !== 0)
         };
@@ -1149,7 +1146,7 @@ Polymer({
             if (columnWidth !== newWidth) {
                 this.set("fixedColumns." + e.model.index + ".width", newWidth);
                 this._updateFixedTotalRowWidth(e.model.index, newWidth);
-                this._triggerShadowRecalulation();
+                this._updateTableSizeAsync();
             }
         }
     },
@@ -1169,10 +1166,12 @@ Polymer({
 
             //Correct new width when dragging last column or other column and overall width is less then width of container.
             if (this._columnResizingObject.otherColumnWidth + newWidth + this._columnResizingObject.widthCorrection < this.$.baseContainer.offsetWidth) {
+                console.log("widht is less");
                 if (e.model.index === this.columns.length - 1) {
                     newWidth = this.$.baseContainer.offsetWidth - this._columnResizingObject.otherColumnWidth - this._columnResizingObject.widthCorrection;
                 } else {
                     if (!this._columnResizingObject.hasAnyFlex) {
+                        console.log("should set flex");
                         this.set("columns." + (this.columns.length - 1) + ".growFactor", 1);
                         this._updateTotalRowGrowFactor(this.columns.length - 1, 1);
                         this._columnResizingObject.hasAnyFlex = true;
@@ -1203,7 +1202,7 @@ Polymer({
                 }
                 this.set("columns." + e.model.index + ".width", newWidth);
                 this._updateTotalRowWidth(e.model.index, newWidth);
-                this._triggerShadowRecalulation();
+                this._updateTableSizeAsync();
                 //scroll if needed.
                 if (mousePos.x > this._columnResizingObject.containerWithoutFixedSecondaryActionWidth || mousePos.x < this._columnResizingObject.leftFixedContainerWidth) {
                     this.$.baseContainer.scrollLeft += newWidth - columnWidth;
@@ -1213,8 +1212,8 @@ Polymer({
         }
     },
 
-    _triggerShadowRecalulation: function () {
-        this._shouldTriggerShadowRecalulation = !this._shouldTriggerShadowRecalulation;
+    _triggerShadowRecalculation: function () {
+        this._shouldTriggerShadowRecalculation = !this._shouldTriggerShadowRecalculation;
     },
 
     _updateFixedTotalRowWidth: function (colIndex, value) {
@@ -1407,7 +1406,7 @@ Polymer({
         return style;
     },
 
-    _calcLeftShadowStyle: function (canDragFrom, dragAnchorFixed, checkboxVisible, checkboxesFixed, primaryAction, checkboxesWithPrimaryActionsFixed, numOfFixedCols, _showLeftShadow, _shouldTriggerShadowRecalulation) {
+    _calcLeftShadowStyle: function (canDragFrom, dragAnchorFixed, checkboxVisible, checkboxesFixed, primaryAction, checkboxesWithPrimaryActionsFixed, numOfFixedCols, _showLeftShadow, _shouldTriggerShadowRecalculation) {
         let shadowStyle = "left:0;bottom:0;width:calc(@columnsWidth);height:@egiHeight;";
         if (numOfFixedCols > 0) {
             shadowStyle = shadowStyle.replace("@columnsWidth", this._calcFixedColumnWidth(canDragFrom, checkboxVisible, primaryAction, numOfFixedCols));
@@ -1427,7 +1426,7 @@ Polymer({
         return shadowStyle;
     },
 
-    _calcRightShadowStyle: function (_isSecondaryActionPresent, secondaryActionsFixed, _showRightShadow, _shouldTriggerShadowRecalulation) {
+    _calcRightShadowStyle: function (_isSecondaryActionPresent, secondaryActionsFixed, _showRightShadow, _shouldTriggerShadowRecalculation) {
         let shadowStyle = "right:0;bottom:0;width:calc(@actionWidth);height:calc(@egiHeight);";
         if (_isSecondaryActionPresent && secondaryActionsFixed) {
             const actionWidth = this.getComputedStyleValue('--egi-action-cell-width').trim() || "20px";
@@ -1540,7 +1539,7 @@ Polymer({
                 this.$.baseContainer.style["max-height"] = height;
             }
         }
-        this._resizeEventListener();
+        this._updateTableSizeAsync();
     },
 
     _renderingHintsChanged: function (newValue) {
@@ -1549,7 +1548,7 @@ Polymer({
                 egiEntity.renderingHints = (newValue && newValue[index]) || {};
                 egiEntity._renderingHintsChangedHandler && egiEntity._renderingHintsChangedHandler();
             });
-            //this._updateTableSizeAsync();
+            this._updateTableSizeAsync();
         }
     },
 

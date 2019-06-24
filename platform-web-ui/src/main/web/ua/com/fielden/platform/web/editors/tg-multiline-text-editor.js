@@ -19,11 +19,12 @@ const additionalTemplate = html`
             overflow: hidden;
             --iron-autogrow-textarea: {
                 font-weight: 500;
-            }
+            };
             @apply --layout-flex;
         }
         .upper-case {
             --iron-autogrow-textarea: {
+                font-weight: 500;
                 text-transform: uppercase;
             };
         }
