@@ -293,7 +293,30 @@ Polymer({
         this.$.drawerPanel.responsiveWidth = this.$.appConfig.minDesktopWidth + 'px';
         //Add listener for custom event that was thrown when section is about to lost focus, then this focus should go to the menu if it is opened.
         this.addEventListener("tg-last-item-focused", this._focusMenuAndTearDown.bind(this));
-    }, // end of ready 
+        //Configure track events for drawer
+        const oldTrackStart = this.$.drawer._trackStart.bind(this.$.drawer);
+        const oldTrackMove = this.$.drawer._trackMove.bind(this.$.drawer);
+        const oldTrackEnd = this.$.drawer._trackEnd.bind(this.$.drawer);
+        this.$.drawer._trackStart = function (e) {
+            if (Math.abs(e.detail.dy) > Math.abs(e.detail.dx)) {
+                this._menuScrolling = true;
+            } else {
+                oldTrackStart(e);
+            }
+        }
+        this.$.drawer._trackMove = function (e) {
+            if (!this._menuScrolling) {
+                oldTrackMove(e);
+            } 
+        }
+        this.$.drawer._trackEnd = function (e) {
+            if (!this._menuScrolling) {
+                oldTrackEnd(e);
+            } else {
+                this._menuScrolling = false;
+            }
+        }
+    },
 
     attached: function () {
         const self = this;
