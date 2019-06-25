@@ -46,6 +46,7 @@ public class PropertyDescriptorTypeTestCase extends AbstractDaoTestCase {
 
     @Override
     protected void populateDomain() {
+        super.populateDomain();
         save(new_(TgWorkOrder.class, "WO_001", "desc1").setActCost(Money.zero).setEstCost(Money.zero).setYearlyCost(Money.zero).setImportantProperty(fromString("ua.com.fielden.platform.sample.domain.TgWorkOrder:vehicle")));
         save(new_(TgWorkOrder.class, "WO_002", "desc2").setActCost(Money.zero).setEstCost(Money.zero).setYearlyCost(Money.zero));
     }

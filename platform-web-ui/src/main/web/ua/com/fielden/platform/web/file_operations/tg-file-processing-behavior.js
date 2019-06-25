@@ -227,7 +227,7 @@ const TgFileProcessingBehaviorImpl = {
             const jobUid = generateUUID();
             xhr.setRequestHeader('jobUid', jobUid);
             // and also let's provide the original file meta-data
-            xhr.setRequestHeader('origFileName', file.name);
+            xhr.setRequestHeader('origFileName', encodeURIComponent(file.name));
             xhr.setRequestHeader('lastModified', file.lastModified);
             xhr.setRequestHeader('mime', mimeTypes);
 

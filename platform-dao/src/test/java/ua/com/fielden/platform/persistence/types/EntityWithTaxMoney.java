@@ -39,7 +39,7 @@ public class EntityWithTaxMoney extends AbstractEntity<String> {
     }
 
     @Observable
-    public void setMoney(final Money money) {
+    public EntityWithTaxMoney setMoney(final Money money) {
         if (money == null) {
             throw new IllegalArgumentException("money should not be null");
         }
@@ -47,6 +47,7 @@ public class EntityWithTaxMoney extends AbstractEntity<String> {
             throw new IllegalArgumentException("money should tax sensitive");
         }
         this.money = money;
+        return this;
     }
 
     public Money getMoney() {

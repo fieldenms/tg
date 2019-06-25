@@ -7,6 +7,9 @@ import static ua.com.fielden.platform.web.utils.WebUiResourceUtils.handleUndesir
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.UnsupportedEncodingException;
+import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
 import java.util.Date;
 import java.util.Set;
 import java.util.function.Function;
@@ -25,7 +28,6 @@ import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.entity.AbstractEntityWithInputStream;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.rx.observables.ProcessingProgressSubject;
-import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.web.interfaces.IDeviceProvider;
 import ua.com.fielden.platform.web.resources.RestServerUtil;
 import ua.com.fielden.platform.web.rx.eventsources.ProcessingProgressEventSource;
@@ -79,7 +81,12 @@ public class FileProcessingResource<T extends AbstractEntityWithInputStream<?>> 
             throw new IllegalArgumentException("jobUid is required");
         }
         
-        this.origFileName = request.getHeaders().getFirstValue("origFileName");
+        try {
+            this.origFileName = URLDecoder.decode(request.getHeaders().getFirstValue("origFileName"), StandardCharsets.UTF_8.toString());
+        } catch (final UnsupportedEncodingException ex) {
+            throw new IllegalArgumentException("Could not decode the value for origFileName.", ex);
+        }
+        
         if (isEmpty(origFileName)) {
             throw new IllegalArgumentException("origFileName is required");
         }

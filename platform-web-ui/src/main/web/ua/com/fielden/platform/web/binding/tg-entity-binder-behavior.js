@@ -400,7 +400,16 @@ export const TgEntityBinderBehavior = {
                             // the blob URL can be used for the <a> element for the user to download/open the file
                             const a = document.createElement("a");
                             a.href = blobUrl;
-                            a.download = filename;
+                            // let's perform decoding, followed by removal of leading and trailing double quotes if present
+                            // browsers replace double quotes with _ automatically, which may corrupt the file extension
+                            let trimmedFileName = decodeURIComponent(filename);
+                            if (trimmedFileName.startsWith('"')) {
+                                trimmedFileName = trimmedFileName.substring(1);
+                            }
+                            if (trimmedFileName.endsWith('"')) {
+                                trimmedFileName = trimmedFileName.substring(0, trimmedFileName.length - 1);
+                            }
+                            a.download = trimmedFileName;
                             a.click();
                             // release the reference to the file by revoking the Object URL
                             window.URL.revokeObjectURL(blobUrl);
