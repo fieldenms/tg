@@ -3,7 +3,11 @@ package ua.com.fielden.platform.eql.stage2.elements.operands;
 import java.util.List;
 import java.util.Objects;
 
-public class OperandsBasedSet2 implements ISetOperand2 {
+import ua.com.fielden.platform.eql.stage2.elements.TransformationContext;
+import ua.com.fielden.platform.eql.stage2.elements.TransformationResult;
+import ua.com.fielden.platform.eql.stage3.elements.operands.OperandsBasedSet3;
+
+public class OperandsBasedSet2 implements ISetOperand2<OperandsBasedSet3> {
     private final List<ISingleOperand2> operands;
 
     public OperandsBasedSet2(final List<ISingleOperand2> operands) {
@@ -30,5 +34,11 @@ public class OperandsBasedSet2 implements ISetOperand2 {
         final OperandsBasedSet2 other = (OperandsBasedSet2) obj;
         
         return Objects.equals(operands, other.operands);
+    }
+
+    @Override
+    public TransformationResult transform(final TransformationContext transformationContext) {
+        // TODO Auto-generated method stub
+        return null;
     }
 }

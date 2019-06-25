@@ -1,8 +1,8 @@
 package ua.com.fielden.platform.eql.stage1.elements.functions;
 
 import ua.com.fielden.platform.entity.query.fluent.enums.DateIntervalUnit;
-import ua.com.fielden.platform.eql.meta.PropsResolutionContext;
-import ua.com.fielden.platform.eql.meta.TransformationResult;
+import ua.com.fielden.platform.eql.stage1.elements.PropsResolutionContext;
+import ua.com.fielden.platform.eql.stage1.elements.TransformationResult;
 import ua.com.fielden.platform.eql.stage1.elements.operands.ISingleOperand1;
 import ua.com.fielden.platform.eql.stage2.elements.functions.CountDateInterval2;
 import ua.com.fielden.platform.eql.stage2.elements.operands.ISingleOperand2;

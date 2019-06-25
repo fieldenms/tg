@@ -1,4 +1,4 @@
-package ua.com.fielden.platform.eql.meta;
+package ua.com.fielden.platform.eql.stage1.elements;
 
 import static java.util.Collections.emptyList;
 import static java.util.Collections.unmodifiableList;
@@ -13,6 +13,7 @@ import java.util.Map;
 import java.util.Set;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.eql.meta.EntityInfo;
 import ua.com.fielden.platform.eql.stage2.elements.operands.EntProp2;
 import ua.com.fielden.platform.eql.stage2.elements.operands.EntValue2;
 import ua.com.fielden.platform.eql.stage2.elements.sources.IQrySource2;

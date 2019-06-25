@@ -1,4 +1,4 @@
-package ua.com.fielden.platform.eql.meta;
+package ua.com.fielden.platform.eql.stage1.elements;
 
 import ua.com.fielden.platform.eql.stage2.elements.sources.IQrySource2;
 

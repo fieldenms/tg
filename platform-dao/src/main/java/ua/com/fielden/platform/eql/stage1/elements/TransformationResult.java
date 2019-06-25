@@ -1,4 +1,4 @@
-package ua.com.fielden.platform.eql.meta;
+package ua.com.fielden.platform.eql.stage1.elements;
 
 public class TransformationResult<S2> {
     private final S2 item;

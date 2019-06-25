@@ -5,8 +5,11 @@ import java.util.Objects;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.eql.meta.EntityInfo;
 import ua.com.fielden.platform.eql.stage2.elements.AbstractElement2;
+import ua.com.fielden.platform.eql.stage2.elements.TransformationContext;
+import ua.com.fielden.platform.eql.stage2.elements.TransformationResult;
+import ua.com.fielden.platform.eql.stage3.elements.sources.QrySource3BasedOnTable;
 
-public class QrySource2BasedOnPersistentType extends AbstractElement2 implements IQrySource2 {
+public class QrySource2BasedOnPersistentType extends AbstractElement2 implements IQrySource2<QrySource3BasedOnTable> {
     private final Class<? extends AbstractEntity<?>> sourceType;
     private final EntityInfo entityInfo;
     private final String alias;
@@ -22,6 +25,12 @@ public class QrySource2BasedOnPersistentType extends AbstractElement2 implements
         this(sourceType, entityInfo, null, contextId);               
     }
 
+    @Override
+    public TransformationResult<QrySource3BasedOnTable> transform(final TransformationContext transformationContext) {
+        // TODO Auto-generated method stub
+        return null;
+    }
+    
     @Override
     public Class<? extends AbstractEntity<?>> sourceType() {
         return sourceType;

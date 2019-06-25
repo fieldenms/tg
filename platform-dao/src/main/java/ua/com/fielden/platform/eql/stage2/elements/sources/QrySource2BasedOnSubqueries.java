@@ -16,11 +16,14 @@ import ua.com.fielden.platform.eql.meta.EntityInfo;
 import ua.com.fielden.platform.eql.meta.EntityTypePropInfo;
 import ua.com.fielden.platform.eql.meta.PrimTypePropInfo;
 import ua.com.fielden.platform.eql.stage2.elements.AbstractElement2;
+import ua.com.fielden.platform.eql.stage2.elements.TransformationContext;
+import ua.com.fielden.platform.eql.stage2.elements.TransformationResult;
 import ua.com.fielden.platform.eql.stage2.elements.Yield2;
 import ua.com.fielden.platform.eql.stage2.elements.Yields2;
 import ua.com.fielden.platform.eql.stage2.elements.operands.EntQuery2;
+import ua.com.fielden.platform.eql.stage3.elements.sources.QrySource3BasedOnQry;
 
-public class QrySource2BasedOnSubqueries extends AbstractElement2 implements IQrySource2 {
+public class QrySource2BasedOnSubqueries extends AbstractElement2 implements IQrySource2<QrySource3BasedOnQry> {
     private final List<EntQuery2> models = new ArrayList<>();
     private final Map<String, List<Yield2>> yieldsMatrix;
     private final EntityInfo entityInfo;
@@ -83,6 +86,12 @@ public class QrySource2BasedOnSubqueries extends AbstractElement2 implements IQr
         }
     }
 
+    @Override
+    public TransformationResult<QrySource3BasedOnQry> transform(final TransformationContext transformationContext) {
+        // TODO Auto-generated method stub
+        return null;
+    }
+    
     public List<EntQuery2> getModels() {
         return models;
     }

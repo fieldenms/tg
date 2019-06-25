@@ -6,7 +6,11 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
-public class EntValue2 implements ISingleOperand2 {
+import ua.com.fielden.platform.eql.stage2.elements.TransformationContext;
+import ua.com.fielden.platform.eql.stage2.elements.TransformationResult;
+import ua.com.fielden.platform.eql.stage3.elements.operands.EntValue3;
+
+public class EntValue2 implements ISingleOperand2<EntValue3> {
     private final Object value;
     private final boolean ignoreNull;
 
@@ -61,6 +65,12 @@ public class EntValue2 implements ISingleOperand2 {
     public Class type() {
         // TODO EQL
         return value != null ? value.getClass() : null;
+    }
+
+    @Override
+    public TransformationResult<EntValue3> transform(final TransformationContext transformationContext) {
+        // TODO Auto-generated method stub
+        return null;
     }
 
     @Override

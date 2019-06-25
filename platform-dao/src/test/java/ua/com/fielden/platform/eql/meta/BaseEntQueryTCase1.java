@@ -35,6 +35,8 @@ import ua.com.fielden.platform.entity.query.model.OrderingModel;
 import ua.com.fielden.platform.entity.query.model.QueryModel;
 import ua.com.fielden.platform.eql.stage1.builders.EntQueryGenerator;
 import ua.com.fielden.platform.eql.stage1.builders.StandAloneExpressionBuilder;
+import ua.com.fielden.platform.eql.stage1.elements.PropsResolutionContext;
+import ua.com.fielden.platform.eql.stage1.elements.TransformationResult;
 import ua.com.fielden.platform.eql.stage1.elements.operands.EntProp1;
 import ua.com.fielden.platform.eql.stage1.elements.operands.EntQuery1;
 import ua.com.fielden.platform.eql.stage1.elements.operands.EntValue1;

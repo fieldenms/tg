@@ -2,11 +2,21 @@ package ua.com.fielden.platform.eql.stage2.elements.operands;
 
 import java.util.Objects;
 
-public class QueryBasedSet2 implements ISetOperand2 {
+import ua.com.fielden.platform.eql.stage2.elements.TransformationContext;
+import ua.com.fielden.platform.eql.stage2.elements.TransformationResult;
+import ua.com.fielden.platform.eql.stage3.elements.operands.QueryBasedSet3;
+
+public class QueryBasedSet2 implements ISetOperand2<QueryBasedSet3> {
     private final EntQuery2 model;
 
     public QueryBasedSet2(final EntQuery2 model) {
         this.model = model;
+    }
+
+    @Override
+    public TransformationResult<QueryBasedSet3> transform(final TransformationContext transformationContext) {
+        // TODO Auto-generated method stub
+        return null;
     }
 
     @Override

@@ -6,7 +6,11 @@ import java.math.BigDecimal;
 import java.util.List;
 import java.util.Objects;
 
-public class Expression2 implements ISingleOperand2 {
+import ua.com.fielden.platform.eql.stage2.elements.TransformationContext;
+import ua.com.fielden.platform.eql.stage2.elements.TransformationResult;
+import ua.com.fielden.platform.eql.stage3.elements.operands.Expression3;
+
+public class Expression2 implements ISingleOperand2<Expression3> {
 
     public final ISingleOperand2 first;
     private final List<CompoundSingleOperand2> items;
@@ -18,6 +22,12 @@ public class Expression2 implements ISingleOperand2 {
 
     public Expression2(final ISingleOperand2 first) {
         this(first, emptyList());
+    }
+    
+    @Override
+    public TransformationResult<Expression3> transform(final TransformationContext transformationContext) {
+        // TODO Auto-generated method stub
+        return null;
     }
     
     @Override

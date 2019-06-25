@@ -2,9 +2,12 @@ package ua.com.fielden.platform.eql.stage2.elements.conditions;
 
 import java.util.Objects;
 
+import ua.com.fielden.platform.eql.stage2.elements.TransformationContext;
+import ua.com.fielden.platform.eql.stage2.elements.TransformationResult;
 import ua.com.fielden.platform.eql.stage2.elements.operands.ISingleOperand2;
+import ua.com.fielden.platform.eql.stage3.elements.conditions.NullTest3;
 
-public class NullTest2 extends AbstractCondition2 {
+public class NullTest2 extends AbstractCondition2<NullTest3> {
     public final ISingleOperand2 operand;
     private final boolean negated;
 
@@ -16,6 +19,12 @@ public class NullTest2 extends AbstractCondition2 {
     @Override
     public boolean ignore() {
         return operand.ignore();
+    }
+
+    @Override
+    public TransformationResult<NullTest3> transform(final TransformationContext transformationContext) {
+        // TODO Auto-generated method stub
+        return null;
     }
 
     @Override

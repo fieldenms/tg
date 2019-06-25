@@ -3,9 +3,12 @@ package ua.com.fielden.platform.eql.stage2.elements.operands;
 import java.util.Objects;
 
 import ua.com.fielden.platform.eql.stage2.elements.AbstractElement2;
+import ua.com.fielden.platform.eql.stage2.elements.TransformationContext;
+import ua.com.fielden.platform.eql.stage2.elements.TransformationResult;
 import ua.com.fielden.platform.eql.stage2.elements.sources.IQrySource2;
+import ua.com.fielden.platform.eql.stage3.elements.operands.EntProp3;
 
-public class EntProp2 extends AbstractElement2 implements ISingleOperand2 {
+public class EntProp2 extends AbstractElement2 implements ISingleOperand2<EntProp3> {
     public final String name;
     public final IQrySource2 source;
     public final Class<?> type;
@@ -18,8 +21,9 @@ public class EntProp2 extends AbstractElement2 implements ISingleOperand2 {
     }
 
     @Override
-    public String toString() {
-        return " name = " + name + ";\n source = " + source + ";\n type = " + type + " contextId = " + contextId;
+    public TransformationResult<EntProp3> transform(final TransformationContext transformationContext) {
+        // TODO Auto-generated method stub
+        return null;
     }
 
     @Override

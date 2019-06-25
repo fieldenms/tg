@@ -2,9 +2,12 @@ package ua.com.fielden.platform.eql.stage2.elements.conditions;
 
 import java.util.Objects;
 
+import ua.com.fielden.platform.eql.stage2.elements.TransformationContext;
+import ua.com.fielden.platform.eql.stage2.elements.TransformationResult;
 import ua.com.fielden.platform.eql.stage2.elements.operands.EntQuery2;
+import ua.com.fielden.platform.eql.stage3.elements.conditions.ExistenceTest3;
 
-public class ExistenceTest2 extends AbstractCondition2 {
+public class ExistenceTest2 extends AbstractCondition2<ExistenceTest3> {
     private final boolean negated;
     private final EntQuery2 subQuery;
 
@@ -16,6 +19,12 @@ public class ExistenceTest2 extends AbstractCondition2 {
     @Override
     public boolean ignore() {
         return false;
+    }
+
+    @Override
+    public TransformationResult<ExistenceTest3> transform(final TransformationContext transformationContext) {
+        // TODO Auto-generated method stub
+        return null;
     }
 
     @Override

@@ -7,11 +7,14 @@ import ua.com.fielden.platform.eql.meta.QueryCategory;
 import ua.com.fielden.platform.eql.stage2.elements.EntQueryBlocks2;
 import ua.com.fielden.platform.eql.stage2.elements.GroupBys2;
 import ua.com.fielden.platform.eql.stage2.elements.OrderBys2;
+import ua.com.fielden.platform.eql.stage2.elements.TransformationContext;
+import ua.com.fielden.platform.eql.stage2.elements.TransformationResult;
 import ua.com.fielden.platform.eql.stage2.elements.Yields2;
 import ua.com.fielden.platform.eql.stage2.elements.conditions.Conditions2;
 import ua.com.fielden.platform.eql.stage2.elements.sources.Sources2;
+import ua.com.fielden.platform.eql.stage3.elements.operands.EntQuery3;
 
-public class EntQuery2 implements ISingleOperand2 {
+public class EntQuery2 implements ISingleOperand2<EntQuery3> {
 
     public final Sources2 sources;
     public final Conditions2 conditions;
@@ -29,6 +32,12 @@ public class EntQuery2 implements ISingleOperand2 {
         this.groups = queryBlocks.groups;
         this.orderings = queryBlocks.orderings;
         this.resultType = resultType;
+    }
+
+    @Override
+    public TransformationResult<EntQuery3> transform(final TransformationContext transformationContext) {
+        // TODO Auto-generated method stub
+        return null;
     }
 
     @Override

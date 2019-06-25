@@ -3,20 +3,20 @@ package ua.com.fielden.platform.eql.stage1.elements.sources;
 import java.util.Objects;
 
 import ua.com.fielden.platform.entity.query.fluent.enums.JoinType;
-import ua.com.fielden.platform.eql.meta.PropsResolutionContext;
-import ua.com.fielden.platform.eql.meta.TransformationResult;
 import ua.com.fielden.platform.eql.stage1.elements.ITransformableToS2;
+import ua.com.fielden.platform.eql.stage1.elements.PropsResolutionContext;
+import ua.com.fielden.platform.eql.stage1.elements.TransformationResult;
 import ua.com.fielden.platform.eql.stage1.elements.conditions.Conditions1;
 import ua.com.fielden.platform.eql.stage2.elements.conditions.Conditions2;
 import ua.com.fielden.platform.eql.stage2.elements.sources.CompoundSource2;
 import ua.com.fielden.platform.eql.stage2.elements.sources.IQrySource2;
 
 public class CompoundSource1 implements ITransformableToS2<CompoundSource2>{
-    public final IQrySource1<? extends IQrySource2> source;
+    public final IQrySource1<? extends IQrySource2<?>> source;
     public final JoinType joinType;
     public final Conditions1 joinConditions;
 
-    public CompoundSource1(final IQrySource1<? extends IQrySource2> source, final JoinType joinType, final Conditions1 joinConditions) {
+    public CompoundSource1(final IQrySource1<? extends IQrySource2<?>> source, final JoinType joinType, final Conditions1 joinConditions) {
         this.source = source;
         this.joinType = joinType;
         this.joinConditions = joinConditions;
@@ -24,7 +24,7 @@ public class CompoundSource1 implements ITransformableToS2<CompoundSource2>{
 
     @Override
     public TransformationResult<CompoundSource2> transform(final PropsResolutionContext resolutionContext) {
-        final TransformationResult<? extends IQrySource2> sourceTransformationResult = source.transform(resolutionContext);
+        final TransformationResult<? extends IQrySource2<?>> sourceTransformationResult = source.transform(resolutionContext);
         final TransformationResult<Conditions2> joinConditionsTransformationResult = joinConditions.transform(sourceTransformationResult.getUpdatedContext());
         return new TransformationResult<CompoundSource2>(new CompoundSource2(sourceTransformationResult.getItem(), joinType, joinConditionsTransformationResult.getItem()), joinConditionsTransformationResult.getUpdatedContext());
     }

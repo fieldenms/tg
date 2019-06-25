@@ -6,7 +6,11 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
-public class Conditions2 extends AbstractCondition2 {
+import ua.com.fielden.platform.eql.stage2.elements.TransformationContext;
+import ua.com.fielden.platform.eql.stage2.elements.TransformationResult;
+import ua.com.fielden.platform.eql.stage3.elements.conditions.Conditions3;
+
+public class Conditions2 extends AbstractCondition2<Conditions3> {
     private final List<List<? extends ICondition2>> allConditionsAsDnf = new ArrayList<>();
     private final boolean negated;
 
@@ -22,6 +26,12 @@ public class Conditions2 extends AbstractCondition2 {
     @Override
     public boolean ignore() {
         return allConditionsAsDnf.isEmpty();
+    }
+
+    @Override
+    public TransformationResult<Conditions3> transform(final TransformationContext transformationContext) {
+        // TODO Auto-generated method stub
+        return null;
     }
 
     @Override

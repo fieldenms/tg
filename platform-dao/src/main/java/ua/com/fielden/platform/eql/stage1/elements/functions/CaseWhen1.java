@@ -4,8 +4,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
-import ua.com.fielden.platform.eql.meta.PropsResolutionContext;
-import ua.com.fielden.platform.eql.meta.TransformationResult;
+import ua.com.fielden.platform.eql.stage1.elements.PropsResolutionContext;
+import ua.com.fielden.platform.eql.stage1.elements.TransformationResult;
 import ua.com.fielden.platform.eql.stage1.elements.conditions.ICondition1;
 import ua.com.fielden.platform.eql.stage1.elements.operands.ISingleOperand1;
 import ua.com.fielden.platform.eql.stage2.elements.conditions.ICondition2;

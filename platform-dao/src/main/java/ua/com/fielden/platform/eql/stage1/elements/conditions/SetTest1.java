@@ -2,8 +2,8 @@ package ua.com.fielden.platform.eql.stage1.elements.conditions;
 
 import java.util.Objects;
 
-import ua.com.fielden.platform.eql.meta.PropsResolutionContext;
-import ua.com.fielden.platform.eql.meta.TransformationResult;
+import ua.com.fielden.platform.eql.stage1.elements.PropsResolutionContext;
+import ua.com.fielden.platform.eql.stage1.elements.TransformationResult;
 import ua.com.fielden.platform.eql.stage1.elements.operands.ISetOperand1;
 import ua.com.fielden.platform.eql.stage1.elements.operands.ISingleOperand1;
 import ua.com.fielden.platform.eql.stage2.elements.conditions.SetTest2;

@@ -1,7 +1,7 @@
 package ua.com.fielden.platform.eql.stage1.elements.functions;
 
-import ua.com.fielden.platform.eql.meta.PropsResolutionContext;
-import ua.com.fielden.platform.eql.meta.TransformationResult;
+import ua.com.fielden.platform.eql.stage1.elements.PropsResolutionContext;
+import ua.com.fielden.platform.eql.stage1.elements.TransformationResult;
 import ua.com.fielden.platform.eql.stage2.elements.functions.CountAll2;
 
 public class CountAll1 extends ZeroOperandFunction1<CountAll2> {

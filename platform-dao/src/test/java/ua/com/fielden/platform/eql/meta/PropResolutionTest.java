@@ -24,6 +24,8 @@ import ua.com.fielden.platform.entity.query.fluent.enums.JoinType;
 import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.eql.stage1.elements.EntQueryBlocks1;
+import ua.com.fielden.platform.eql.stage1.elements.PropsResolutionContext;
+import ua.com.fielden.platform.eql.stage1.elements.TransformationResult;
 import ua.com.fielden.platform.eql.stage1.elements.conditions.ComparisonTest1;
 import ua.com.fielden.platform.eql.stage1.elements.conditions.Conditions1;
 import ua.com.fielden.platform.eql.stage1.elements.conditions.NullTest1;

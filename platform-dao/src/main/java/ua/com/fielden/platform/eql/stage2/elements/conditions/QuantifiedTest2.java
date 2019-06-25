@@ -4,10 +4,13 @@ import java.util.Objects;
 
 import ua.com.fielden.platform.entity.query.fluent.enums.ComparisonOperator;
 import ua.com.fielden.platform.eql.meta.Quantifier;
+import ua.com.fielden.platform.eql.stage2.elements.TransformationContext;
+import ua.com.fielden.platform.eql.stage2.elements.TransformationResult;
 import ua.com.fielden.platform.eql.stage2.elements.operands.EntQuery2;
 import ua.com.fielden.platform.eql.stage2.elements.operands.ISingleOperand2;
+import ua.com.fielden.platform.eql.stage3.elements.conditions.QuantifiedTest3;
 
-public class QuantifiedTest2 extends AbstractCondition2 {
+public class QuantifiedTest2 extends AbstractCondition2<QuantifiedTest3> {
     public final ISingleOperand2 leftOperand;
     public final EntQuery2 rightOperand;
     public final Quantifier quantifier;
@@ -23,6 +26,12 @@ public class QuantifiedTest2 extends AbstractCondition2 {
     @Override
     public boolean ignore() {
         return leftOperand.ignore();
+    }
+
+    @Override
+    public TransformationResult<QuantifiedTest3> transform(final TransformationContext transformationContext) {
+        // TODO Auto-generated method stub
+        return null;
     }
 
     @Override

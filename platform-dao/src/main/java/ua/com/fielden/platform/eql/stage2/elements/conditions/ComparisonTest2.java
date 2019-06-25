@@ -3,9 +3,12 @@ package ua.com.fielden.platform.eql.stage2.elements.conditions;
 import java.util.Objects;
 
 import ua.com.fielden.platform.entity.query.fluent.enums.ComparisonOperator;
+import ua.com.fielden.platform.eql.stage2.elements.TransformationContext;
+import ua.com.fielden.platform.eql.stage2.elements.TransformationResult;
 import ua.com.fielden.platform.eql.stage2.elements.operands.ISingleOperand2;
+import ua.com.fielden.platform.eql.stage3.elements.conditions.ComparisonTest3;
 
-public class ComparisonTest2 extends AbstractCondition2 {
+public class ComparisonTest2 extends AbstractCondition2<ComparisonTest3> {
     public final ISingleOperand2 leftOperand;
     public final ISingleOperand2 rightOperand;
     public final ComparisonOperator operator;
@@ -19,6 +22,12 @@ public class ComparisonTest2 extends AbstractCondition2 {
     @Override
     public boolean ignore() {
         return leftOperand.ignore() || rightOperand.ignore();
+    }
+
+    @Override
+    public TransformationResult<ComparisonTest3> transform(final TransformationContext transformationContext) {
+        // TODO Auto-generated method stub
+        return null;
     }
 
     @Override

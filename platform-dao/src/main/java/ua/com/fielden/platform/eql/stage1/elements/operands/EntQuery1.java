@@ -6,13 +6,13 @@ import static ua.com.fielden.platform.eql.meta.QueryCategory.SUB_QUERY;
 import java.util.Objects;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.eql.meta.PropsResolutionContext;
 import ua.com.fielden.platform.eql.meta.QueryCategory;
-import ua.com.fielden.platform.eql.meta.TransformationResult;
 import ua.com.fielden.platform.eql.stage1.elements.AbstractElement1;
 import ua.com.fielden.platform.eql.stage1.elements.EntQueryBlocks1;
 import ua.com.fielden.platform.eql.stage1.elements.GroupBys1;
 import ua.com.fielden.platform.eql.stage1.elements.OrderBys1;
+import ua.com.fielden.platform.eql.stage1.elements.PropsResolutionContext;
+import ua.com.fielden.platform.eql.stage1.elements.TransformationResult;
 import ua.com.fielden.platform.eql.stage1.elements.Yields1;
 import ua.com.fielden.platform.eql.stage1.elements.conditions.Conditions1;
 import ua.com.fielden.platform.eql.stage1.elements.sources.Sources1;
