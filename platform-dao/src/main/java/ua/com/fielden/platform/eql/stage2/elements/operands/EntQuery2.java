@@ -12,7 +12,13 @@ import ua.com.fielden.platform.eql.stage2.elements.TransformationResult;
 import ua.com.fielden.platform.eql.stage2.elements.Yields2;
 import ua.com.fielden.platform.eql.stage2.elements.conditions.Conditions2;
 import ua.com.fielden.platform.eql.stage2.elements.sources.Sources2;
+import ua.com.fielden.platform.eql.stage3.elements.EntQueryBlocks3;
+import ua.com.fielden.platform.eql.stage3.elements.GroupBys3;
+import ua.com.fielden.platform.eql.stage3.elements.OrderBys3;
+import ua.com.fielden.platform.eql.stage3.elements.Yields3;
+import ua.com.fielden.platform.eql.stage3.elements.conditions.Conditions3;
 import ua.com.fielden.platform.eql.stage3.elements.operands.EntQuery3;
+import ua.com.fielden.platform.eql.stage3.elements.sources.Sources3;
 
 public class EntQuery2 implements ISingleOperand2<EntQuery3> {
 
@@ -36,9 +42,21 @@ public class EntQuery2 implements ISingleOperand2<EntQuery3> {
 
     @Override
     public TransformationResult<EntQuery3> transform(final TransformationContext transformationContext) {
-        // TODO Auto-generated method stub
-        return null;
-    }
+        final TransformationResult<Sources3> sourcesTransformationResult =  sources.transform(new TransformationContext());
+        final TransformationResult<Conditions3> conditionsTransformationResult =  conditions.transform(sourcesTransformationResult.getUpdatedContext());
+        final TransformationResult<Yields3> yieldsTransformationResult =  yields.transform(conditionsTransformationResult.getUpdatedContext());
+        final TransformationResult<GroupBys3> groupsTransformationResult =  groups.transform(yieldsTransformationResult.getUpdatedContext());
+        final TransformationResult<OrderBys3> orderingsTransformationResult =  orderings.transform(groupsTransformationResult.getUpdatedContext());
+
+        final EntQueryBlocks3 entQueryBlocks = new EntQueryBlocks3(
+                sourcesTransformationResult.getItem(), 
+                conditionsTransformationResult.getItem(), 
+                yieldsTransformationResult.getItem(), 
+                groupsTransformationResult.getItem(), 
+                orderingsTransformationResult.getItem());
+
+        return new TransformationResult<EntQuery3>(new EntQuery3(entQueryBlocks), orderingsTransformationResult.getUpdatedContext());
+    }    
 
     @Override
     public Class<? extends AbstractEntity<?>> type() {

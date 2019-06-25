@@ -2,8 +2,15 @@ package ua.com.fielden.platform.eql.stage2.elements.sources;
 
 import static java.util.Collections.emptyList;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+
+import ua.com.fielden.platform.eql.stage2.elements.TransformationContext;
+import ua.com.fielden.platform.eql.stage2.elements.TransformationResult;
+import ua.com.fielden.platform.eql.stage3.elements.sources.CompoundSource3;
+import ua.com.fielden.platform.eql.stage3.elements.sources.IQrySource3;
+import ua.com.fielden.platform.eql.stage3.elements.sources.Sources3;
 
 public class Sources2 {
     public final IQrySource2 main;
@@ -20,6 +27,21 @@ public class Sources2 {
 
     public List<CompoundSource2> getCompounds() {
         return compounds;
+    }
+
+    public TransformationResult<Sources3> transform(final TransformationContext transformationContext) {
+        final TransformationResult<? extends IQrySource3> mainTransformationResult = main.transform(transformationContext);    
+        
+        final List<CompoundSource3> transformed = new ArrayList<>();
+        TransformationContext currentResolutionContext = mainTransformationResult.getUpdatedContext();
+        
+        for (final CompoundSource2 compoundSource : compounds) {
+            final TransformationResult<CompoundSource3> compoundSourceTransformationResult = compoundSource.transform(currentResolutionContext);
+            
+            transformed.add(compoundSourceTransformationResult.getItem());
+            currentResolutionContext = compoundSourceTransformationResult.getUpdatedContext();
+        }
+        return new TransformationResult<Sources3>(new Sources3(mainTransformationResult.getItem(), transformed), currentResolutionContext);
     }
 
     @Override

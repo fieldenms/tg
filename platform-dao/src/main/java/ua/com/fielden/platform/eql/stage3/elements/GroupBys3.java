@@ -1,26 +1,19 @@
-package ua.com.fielden.platform.eql.stage2.elements;
+package ua.com.fielden.platform.eql.stage3.elements;
 
 import java.util.List;
 import java.util.Objects;
 
-import ua.com.fielden.platform.eql.stage3.elements.GroupBys3;
+public class GroupBys3 {
+    private final List<GroupBy3> groups;
 
-public class GroupBys2 {
-    private final List<GroupBy2> groups;
-
-    public GroupBys2(final List<GroupBy2> groups) {
+    public GroupBys3(final List<GroupBy3> groups) {
         this.groups = groups;
     }
 
-    public List<GroupBy2> getGroups() {
+    public List<GroupBy3> getGroups() {
         return groups;
     }
     
-    public TransformationResult<GroupBys3> transform(final TransformationContext transformationContext) {
-        // TODO Auto-generated method stub
-        return null;
-    }
-
     @Override
     public int hashCode() {
         final int prime = 31;
@@ -35,11 +28,11 @@ public class GroupBys2 {
             return true;
         }
 
-        if (!(obj instanceof GroupBys2)) {
+        if (!(obj instanceof GroupBys3)) {
             return false;
         }
 
-        final GroupBys2 other = (GroupBys2) obj;
+        final GroupBys3 other = (GroupBys3) obj;
         
         return Objects.equals(groups, other.groups);
     }

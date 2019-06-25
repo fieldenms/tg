@@ -6,6 +6,8 @@ import java.util.List;
 import java.util.SortedMap;
 import java.util.TreeMap;
 
+import ua.com.fielden.platform.eql.stage3.elements.Yields3;
+
 public class Yields2 {
     private final SortedMap<String, Yield2> yieldsMap = new TreeMap<String, Yield2>();
 
@@ -17,6 +19,11 @@ public class Yields2 {
     
     public Collection<Yield2> getYields() {
         return Collections.unmodifiableCollection(yieldsMap.values());
+    }
+    
+    public TransformationResult<Yields3> transform(final TransformationContext transformationContext) {
+        // TODO Auto-generated method stub
+        return null;
     }
 
     @Override

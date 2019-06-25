@@ -3,7 +3,12 @@ package ua.com.fielden.platform.eql.stage2.elements.sources;
 import java.util.Objects;
 
 import ua.com.fielden.platform.entity.query.fluent.enums.JoinType;
+import ua.com.fielden.platform.eql.stage2.elements.TransformationContext;
+import ua.com.fielden.platform.eql.stage2.elements.TransformationResult;
 import ua.com.fielden.platform.eql.stage2.elements.conditions.Conditions2;
+import ua.com.fielden.platform.eql.stage3.elements.conditions.Conditions3;
+import ua.com.fielden.platform.eql.stage3.elements.sources.CompoundSource3;
+import ua.com.fielden.platform.eql.stage3.elements.sources.IQrySource3;
 
 public class CompoundSource2 {
     public final IQrySource2 source;
@@ -14,6 +19,12 @@ public class CompoundSource2 {
         this.source = source;
         this.joinType = joinType;
         this.joinConditions = joinConditions;
+    }
+    
+    public TransformationResult<CompoundSource3> transform(final TransformationContext resolutionContext) {
+        final TransformationResult<? extends IQrySource3> sourceTransformationResult = source.transform(resolutionContext);
+        final TransformationResult<Conditions3> joinConditionsTransformationResult = joinConditions.transform(sourceTransformationResult.getUpdatedContext());
+        return new TransformationResult<CompoundSource3>(new CompoundSource3(sourceTransformationResult.getItem(), joinType, joinConditionsTransformationResult.getItem()), joinConditionsTransformationResult.getUpdatedContext());
     }
 
     @Override

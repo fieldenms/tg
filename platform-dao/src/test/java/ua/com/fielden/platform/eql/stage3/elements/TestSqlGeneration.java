@@ -84,11 +84,11 @@ public class TestSqlGeneration {
     }
     
     static EntQuery3 qry(final Sources3 sources) {
-        return new EntQuery3(new EntQueryBlocks3(sources, new Conditions3(), yields()));
+        return new EntQuery3(new EntQueryBlocks3(sources, new Conditions3(), yields(), groups(), orders()));
     }
 
     static EntQuery3 qry(final Sources3 sources, final Yields3 yields) {
-        return new EntQuery3(new EntQueryBlocks3(sources, new Conditions3(), yields));
+        return new EntQuery3(new EntQueryBlocks3(sources, new Conditions3(), yields, groups(), orders()));
     }
 
     static Yields3 yields(final Yield3 ... yields) {
@@ -97,6 +97,22 @@ public class TestSqlGeneration {
             list.add(yield3);
         }
         return new Yields3(list);
+    }
+
+    static GroupBys3 groups(final GroupBy3 ... groups) {
+        final List<GroupBy3> list = new ArrayList<>();
+        for (final GroupBy3 groupBy : groups) {
+            list.add(groupBy);
+        }
+        return new GroupBys3(list);
+    }
+
+    static OrderBys3 orders(final OrderBy3 ... orders) {
+        final List<OrderBy3> list = new ArrayList<>();
+        for (final OrderBy3 orderBy : orders) {
+            list.add(orderBy);
+        }
+        return new OrderBys3(list);
     }
 
     static List<? extends ICondition3> andConditions(final ICondition3 ... conditions) {

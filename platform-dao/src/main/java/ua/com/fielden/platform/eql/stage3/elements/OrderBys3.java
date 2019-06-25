@@ -1,24 +1,17 @@
-package ua.com.fielden.platform.eql.stage2.elements;
+package ua.com.fielden.platform.eql.stage3.elements;
 
 import java.util.List;
 import java.util.Objects;
 
-import ua.com.fielden.platform.eql.stage3.elements.OrderBys3;
+public class OrderBys3 {
+    private final List<OrderBy3> models;
 
-public class OrderBys2 {
-    private final List<OrderBy2> models;
-
-    public OrderBys2(final List<OrderBy2> models) {
+    public OrderBys3(final List<OrderBy3> models) {
         this.models = models;
     }
 
-    public List<OrderBy2> getModels() {
+    public List<OrderBy3> getModels() {
         return models;
-    }
-
-    public TransformationResult<OrderBys3> transform(final TransformationContext transformationContext) {
-        // TODO Auto-generated method stub
-        return null;
     }
 
     @Override
@@ -35,11 +28,11 @@ public class OrderBys2 {
             return true;
         }
     
-        if (!(obj instanceof OrderBys2)) {
+        if (!(obj instanceof OrderBys3)) {
             return false;
         }
         
-        final OrderBys2 other = (OrderBys2) obj;
+        final OrderBys3 other = (OrderBys3) obj;
         
         return Objects.equals(models, other.models);
     }
