@@ -3,12 +3,19 @@ package ua.com.fielden.platform.eql.stage2.elements;
 import java.util.Objects;
 
 import ua.com.fielden.platform.eql.stage2.elements.operands.ISingleOperand2;
+import ua.com.fielden.platform.eql.stage3.elements.GroupBy3;
+import ua.com.fielden.platform.eql.stage3.elements.operands.ISingleOperand3;
 
 public class GroupBy2 {
     public final ISingleOperand2 operand;
 
     public GroupBy2(final ISingleOperand2 operand) {
         this.operand = operand;
+    }
+    
+    public TransformationResult<GroupBy3> transform(final TransformationContext resolutionContext) {
+        final TransformationResult<? extends ISingleOperand3> operandTransformationResult = operand.transform(resolutionContext);
+        return new TransformationResult<GroupBy3>(new GroupBy3(operandTransformationResult.getItem()), operandTransformationResult.getUpdatedContext());
     }
 
     @Override

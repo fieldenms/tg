@@ -7,6 +7,7 @@ import ua.com.fielden.platform.eql.stage2.elements.TransformationContext;
 import ua.com.fielden.platform.eql.stage2.elements.TransformationResult;
 import ua.com.fielden.platform.eql.stage2.elements.operands.ISingleOperand2;
 import ua.com.fielden.platform.eql.stage3.elements.conditions.ComparisonTest3;
+import ua.com.fielden.platform.eql.stage3.elements.operands.ISingleOperand3;
 
 public class ComparisonTest2 extends AbstractCondition2<ComparisonTest3> {
     public final ISingleOperand2 leftOperand;
@@ -26,8 +27,9 @@ public class ComparisonTest2 extends AbstractCondition2<ComparisonTest3> {
 
     @Override
     public TransformationResult<ComparisonTest3> transform(final TransformationContext transformationContext) {
-        // TODO Auto-generated method stub
-        return null;
+        final TransformationResult<? extends ISingleOperand3> leftOperandTransformationResult = leftOperand.transform(transformationContext);
+        final TransformationResult<? extends ISingleOperand3> rightOperandTransformationResult = rightOperand.transform(leftOperandTransformationResult.getUpdatedContext());
+        return new TransformationResult<ComparisonTest3>(new ComparisonTest3(leftOperandTransformationResult.getItem(), operator, rightOperandTransformationResult.getItem()), rightOperandTransformationResult.getUpdatedContext());
     }
 
     @Override

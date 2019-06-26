@@ -1,11 +1,13 @@
 package ua.com.fielden.platform.eql.stage2.elements;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.SortedMap;
 import java.util.TreeMap;
 
+import ua.com.fielden.platform.eql.stage3.elements.Yield3;
 import ua.com.fielden.platform.eql.stage3.elements.Yields3;
 
 public class Yields2 {
@@ -22,8 +24,14 @@ public class Yields2 {
     }
     
     public TransformationResult<Yields3> transform(final TransformationContext transformationContext) {
-        // TODO Auto-generated method stub
-        return null;
+        final List<Yield3> yieldsList = new ArrayList<>(); 
+        TransformationContext currentResolutionContext = transformationContext;
+        for (final Yield2 yield : yieldsMap.values()) {
+            final TransformationResult<Yield3> yieldTransformationResult = yield.transform(currentResolutionContext);
+            currentResolutionContext = yieldTransformationResult.getUpdatedContext();
+            yieldsList.add(yieldTransformationResult.getItem());
+        }
+        return new TransformationResult<Yields3>(new Yields3(yieldsList), currentResolutionContext);
     }
 
     @Override

@@ -3,6 +3,8 @@ package ua.com.fielden.platform.eql.stage2.elements;
 import java.util.Objects;
 
 import ua.com.fielden.platform.eql.stage2.elements.operands.ISingleOperand2;
+import ua.com.fielden.platform.eql.stage3.elements.Yield3;
+import ua.com.fielden.platform.eql.stage3.elements.operands.ISingleOperand3;
 
 public class Yield2 {
     public final ISingleOperand2 operand;
@@ -26,6 +28,11 @@ public class Yield2 {
 
     public boolean isCompositePropertyHeader() {
         return info != null && info.isCompositeProperty();
+    }
+    
+    public TransformationResult<Yield3> transform(final TransformationContext resolutionContext) {
+        final TransformationResult<? extends ISingleOperand3> operandTransformationResult = operand.transform(resolutionContext);
+        return new TransformationResult<Yield3>(new Yield3(operandTransformationResult.getItem(), alias), operandTransformationResult.getUpdatedContext());
     }
 
     @Override

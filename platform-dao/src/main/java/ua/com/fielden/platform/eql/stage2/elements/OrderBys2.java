@@ -1,8 +1,10 @@
 package ua.com.fielden.platform.eql.stage2.elements;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
+import ua.com.fielden.platform.eql.stage3.elements.OrderBy3;
 import ua.com.fielden.platform.eql.stage3.elements.OrderBys3;
 
 public class OrderBys2 {
@@ -17,8 +19,14 @@ public class OrderBys2 {
     }
 
     public TransformationResult<OrderBys3> transform(final TransformationContext transformationContext) {
-        // TODO Auto-generated method stub
-        return null;
+            final List<OrderBy3> transformed = new ArrayList<>();
+            TransformationContext currentResolutionContext = transformationContext;
+            for (final OrderBy2 orderBy : models) {
+                final TransformationResult<OrderBy3> orderByTransformationResult = orderBy.transform(currentResolutionContext);
+                transformed.add(orderByTransformationResult.getItem());
+                currentResolutionContext = orderByTransformationResult.getUpdatedContext();
+            }
+            return new TransformationResult<OrderBys3>(new OrderBys3(transformed), currentResolutionContext);
     }
 
     @Override

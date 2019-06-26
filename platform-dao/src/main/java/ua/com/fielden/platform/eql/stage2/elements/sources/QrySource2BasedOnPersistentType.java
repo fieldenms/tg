@@ -27,8 +27,8 @@ public class QrySource2BasedOnPersistentType extends AbstractElement2 implements
 
     @Override
     public TransformationResult<QrySource3BasedOnTable> transform(final TransformationContext transformationContext) {
-        // TODO Auto-generated method stub
-        return null;
+        final QrySource3BasedOnTable transformedSource = new QrySource3BasedOnTable(transformationContext.getTable(sourceType().getName()),contextId);
+        return new TransformationResult<QrySource3BasedOnTable>(transformedSource, transformationContext.cloneWithAdded(transformedSource, this));
     }
     
     @Override

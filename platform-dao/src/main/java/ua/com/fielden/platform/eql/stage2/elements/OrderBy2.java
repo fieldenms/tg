@@ -3,6 +3,8 @@ package ua.com.fielden.platform.eql.stage2.elements;
 import java.util.Objects;
 
 import ua.com.fielden.platform.eql.stage2.elements.operands.ISingleOperand2;
+import ua.com.fielden.platform.eql.stage3.elements.OrderBy3;
+import ua.com.fielden.platform.eql.stage3.elements.operands.ISingleOperand3;
 
 public class OrderBy2 {
     public final ISingleOperand2 operand;
@@ -29,7 +31,12 @@ public class OrderBy2 {
     public void setYield(final Yield2 yield) {
         this.yield = yield;
     }
-
+    
+    public TransformationResult<OrderBy3> transform(final TransformationContext resolutionContext) {
+        final TransformationResult<? extends ISingleOperand3> operandTransformationResult = operand.transform(resolutionContext);
+        return new TransformationResult<OrderBy3>(new OrderBy3(operandTransformationResult.getItem(), isDesc), operandTransformationResult.getUpdatedContext());
+    }
+    
     @Override
     public int hashCode() {
         final int prime = 31;

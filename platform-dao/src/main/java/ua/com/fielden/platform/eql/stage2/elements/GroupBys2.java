@@ -1,8 +1,10 @@
 package ua.com.fielden.platform.eql.stage2.elements;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
+import ua.com.fielden.platform.eql.stage3.elements.GroupBy3;
 import ua.com.fielden.platform.eql.stage3.elements.GroupBys3;
 
 public class GroupBys2 {
@@ -17,8 +19,14 @@ public class GroupBys2 {
     }
     
     public TransformationResult<GroupBys3> transform(final TransformationContext transformationContext) {
-        // TODO Auto-generated method stub
-        return null;
+            final List<GroupBy3> transformed = new ArrayList<>();
+            TransformationContext currentResolutionContext = transformationContext;
+            for (final GroupBy2 groupBy : groups) {
+                final TransformationResult<GroupBy3> groupByTransformationResult = groupBy.transform(currentResolutionContext);
+                transformed.add(groupByTransformationResult.getItem());
+                currentResolutionContext = groupByTransformationResult.getUpdatedContext();
+            }
+            return new TransformationResult<GroupBys3>(new GroupBys3(transformed), currentResolutionContext);
     }
 
     @Override

@@ -24,7 +24,6 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.DbVersion;
 import ua.com.fielden.platform.entity.query.metadata.DomainMetadata;
 import ua.com.fielden.platform.entity.query.metadata.DomainMetadataAnalyser;
-import ua.com.fielden.platform.entity.query.metadata.EntityTypeInfo;
 import ua.com.fielden.platform.entity.query.metadata.PropertyCategory;
 import ua.com.fielden.platform.entity.query.metadata.PropertyColumn;
 import ua.com.fielden.platform.entity.query.metadata.PropertyMetadata;
@@ -43,8 +42,10 @@ import ua.com.fielden.platform.eql.stage1.elements.operands.EntValue1;
 import ua.com.fielden.platform.eql.stage1.elements.operands.Expression1;
 import ua.com.fielden.platform.eql.stage1.elements.operands.ISingleOperand1;
 import ua.com.fielden.platform.eql.stage1.elements.operands.OperandsBasedSet1;
+import ua.com.fielden.platform.eql.stage2.elements.TransformationContext;
 import ua.com.fielden.platform.eql.stage2.elements.operands.EntQuery2;
 import ua.com.fielden.platform.eql.stage2.elements.operands.ISingleOperand2;
+import ua.com.fielden.platform.eql.stage3.elements.operands.EntQuery3;
 import ua.com.fielden.platform.ioc.HibernateUserTypesModule;
 import ua.com.fielden.platform.persistence.types.DateTimeType;
 import ua.com.fielden.platform.persistence.types.SimpleMoneyType;
@@ -157,6 +158,15 @@ public class BaseEntQueryTCase1 {
             return qb.generateEntQueryAsResultQuery(from((EntityResultQueryModel) qryModel).model()).transform(transformator);
         } else if (qryModel instanceof AggregatedResultQueryModel) {
             return qb.generateEntQueryAsResultQuery(from((AggregatedResultQueryModel) qryModel).model()).transform(transformator);
+        }
+        throw new IllegalStateException("Not implemented yet");
+    }
+    
+    protected static ua.com.fielden.platform.eql.stage2.elements.TransformationResult<EntQuery3> entResultQry3(final QueryModel qryModel, final PropsResolutionContext transformator, final TransformationContext context) {
+        if (qryModel instanceof EntityResultQueryModel) {
+            return qb.generateEntQueryAsResultQuery(from((EntityResultQueryModel) qryModel).model()).transform(transformator).getItem().transform(context);
+        } else if (qryModel instanceof AggregatedResultQueryModel) {
+            return qb.generateEntQueryAsResultQuery(from((AggregatedResultQueryModel) qryModel).model()).transform(transformator).getItem().transform(context);
         }
         throw new IllegalStateException("Not implemented yet");
     }

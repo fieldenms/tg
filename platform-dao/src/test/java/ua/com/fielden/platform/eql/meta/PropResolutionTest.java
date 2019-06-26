@@ -42,6 +42,7 @@ import ua.com.fielden.platform.eql.stage2.elements.GroupBy2;
 import ua.com.fielden.platform.eql.stage2.elements.GroupBys2;
 import ua.com.fielden.platform.eql.stage2.elements.OrderBy2;
 import ua.com.fielden.platform.eql.stage2.elements.OrderBys2;
+import ua.com.fielden.platform.eql.stage2.elements.TransformationContext;
 import ua.com.fielden.platform.eql.stage2.elements.Yields2;
 import ua.com.fielden.platform.eql.stage2.elements.conditions.ComparisonTest2;
 import ua.com.fielden.platform.eql.stage2.elements.conditions.Conditions2;
@@ -57,6 +58,9 @@ import ua.com.fielden.platform.eql.stage2.elements.sources.CompoundSource2;
 import ua.com.fielden.platform.eql.stage2.elements.sources.QrySource2BasedOnPersistentType;
 import ua.com.fielden.platform.eql.stage2.elements.sources.QrySource2BasedOnSubqueries;
 import ua.com.fielden.platform.eql.stage2.elements.sources.Sources2;
+import ua.com.fielden.platform.eql.stage3.elements.Column;
+import ua.com.fielden.platform.eql.stage3.elements.Table;
+import ua.com.fielden.platform.eql.stage3.elements.operands.EntQuery3;
 import ua.com.fielden.platform.sample.domain.TgAuthor;
 import ua.com.fielden.platform.sample.domain.TgAuthorRoyalty;
 import ua.com.fielden.platform.sample.domain.TgAuthorship;
@@ -89,6 +93,27 @@ public class PropResolutionTest extends BaseEntQueryTCase1 {
         return entResultQry2(qry, new PropsResolutionContext(metadata));
     }
 
+    @Test
+    public void test_q21_s1s3() {
+        final AggregatedResultQueryModel qry = select(TgVehicle.class).as("veh").leftJoin(TgVehicle.class).as("rbv").
+                on().prop("veh.replacedBy").eq().prop("rbv.id").or().prop("veh.replacedBy").ne().prop("rbv.id").
+                yield().prop("veh.key").as("vehicle-key").
+                yield().prop("rbv.key").as("replacedByVehicle-key").
+                modelAsAggregate();
+        
+        final Map<String, Table> tables = new HashMap<>();
+        
+        final Map<String, Column> columns = new HashMap<>();
+        columns.put("id", new Column("_ID"));
+        columns.put("key", new Column("KEY_"));
+        columns.put("replacedBy", new Column("REPLACED_BY_"));
+        final Table vehT = new Table("EQDET", columns);
+        tables.put(TgVehicle.class.getName(), vehT);
+        final ua.com.fielden.platform.eql.stage2.elements.TransformationResult<EntQuery3> qry3 = entResultQry3(qry,  new PropsResolutionContext(metadata), new TransformationContext(tables));
+       
+        System.out.println(qry3.getItem().sql());
+    }
+    
     @Test
     public void test_q21_s1s2() {
         final EntityResultQueryModel<TgVehicleModel> qry = select(TgVehicleModel.class).where().prop("make").isNotNull().model();

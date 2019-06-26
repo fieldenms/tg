@@ -22,8 +22,8 @@ public class EntProp2 extends AbstractElement2 implements ISingleOperand2<EntPro
 
     @Override
     public TransformationResult<EntProp3> transform(final TransformationContext transformationContext) {
-        // TODO Auto-generated method stub
-        return null;
+        final EntProp3 transformedProp = new EntProp3(name, transformationContext.getSource(source));
+        return new TransformationResult<EntProp3>(transformedProp, transformationContext);
     }
 
     @Override

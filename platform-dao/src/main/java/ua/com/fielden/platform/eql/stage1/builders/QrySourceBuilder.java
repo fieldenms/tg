@@ -66,7 +66,8 @@ public class QrySourceBuilder extends AbstractTokensBuilder {
         final Class<AbstractEntity<?>> resultType = (Class<AbstractEntity<?>>) firstValue();
         if (isPersistedEntityType(resultType)) {
             if (hasCalcProps(resultType)) {
-                throw new EqlStage1ProcessingException("Not yet.");    
+                //throw new EqlStage1ProcessingException("Not yet.");    
+                return pair(QRY_SOURCE, new QrySource1BasedOnPersistentType(resultType, (String) secondValue(), getQueryBuilder().nextCondtextId()));    
             } else {
                 return pair(QRY_SOURCE, new QrySource1BasedOnPersistentType(resultType, (String) secondValue(), getQueryBuilder().nextCondtextId()));    
             }
