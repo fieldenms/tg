@@ -7,6 +7,7 @@ import '/resources/polymer/@polymer/iron-pages/iron-pages.js';
 import '/resources/polymer/@polymer/iron-selector/iron-selector.js';
 import '/resources/polymer/@polymer/iron-flex-layout/iron-flex-layout-classes.js';
 import { IronA11yKeysBehavior } from '/resources/polymer/@polymer/iron-a11y-keys-behavior/iron-a11y-keys-behavior.js';
+import { afterNextRender } from "/resources/polymer/@polymer/polymer/lib/utils/render-status.js";
 /* Paper elements */
 import '/resources/polymer/@polymer/paper-styles/color.js';
 import '/resources/polymer/@polymer/app-layout/app-drawer-layout/app-drawer-layout.js';
@@ -412,6 +413,10 @@ Polymer({
         self.async(function () {
             self.keyEventTarget = getKeyEventTarget(self);
         }, 1);
+        //Reset narrow state to remove no-transition attribute
+        afterNextRender(this, () => {
+            this.$.drawerPanel._narrowChanged();
+        });
     },
 
     _entityChanged: function (newBindingEntity, oldOne) {
@@ -467,7 +472,7 @@ Polymer({
     },
 
     _handleCentreRefresh: function (e) {
-        const menuItemSection = findMenuItemSection(e.path);
+        const menuItemSection = findMenuItemSection(e.composedPath());
         if (menuItemSection) {
             this._setHighlightMenuItem(menuItemSection.sectionTitle, e.detail.entities && e.detail.entities.length > 0 && e.detail.pageCount > 0);
         }
