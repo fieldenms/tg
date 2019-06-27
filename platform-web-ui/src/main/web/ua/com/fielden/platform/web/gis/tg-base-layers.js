@@ -1,4 +1,5 @@
 import { L } from '/resources/gis/leaflet/leaflet-lib.js';
+import { esri } from '/resources/gis/leaflet/esri/esri-leaflet-lib.js';
 import { googleMutant } from '/resources/gis/leaflet/providers/leaflet-google-maps-lib.js';
 
 export const BaseLayers = function () {
@@ -11,6 +12,8 @@ export const BaseLayers = function () {
     const osmAttrib = '&copy; ' + osmLink + ' Contributors';
     const landUrl = 'https://{s}.tile.thunderforest.com/landscape/{z}/{x}/{y}.png';
     const thunAttrib = '&copy; ' + osmLink + ' Contributors & ' + thunLink;
+    
+    const esriStreetsMap = esri.basemapLayer('Streets');
 
     // initialise different BaseLayers for different tile providers
     const osmMap = L.tileLayer(osmUrl, {
@@ -59,6 +62,7 @@ export const BaseLayers = function () {
         minZoom: 0
     });*/
     self._baseLayers = {
+        "Esri Streets": esriStreetsMap,
         "OpenStreetMap": osmMap,
         "Landscape": landMap,
         // "Bing": bingMap,	

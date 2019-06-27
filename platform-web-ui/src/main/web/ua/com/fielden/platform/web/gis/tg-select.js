@@ -1,10 +1,11 @@
 import { L } from '/resources/gis/leaflet/leaflet-lib.js';
 
-export const Select = function (_map, _getLayerById, _markerFactory, tgMap) {
+export const Select = function (_map, _getLayerById, _markerFactory, tgMap, findEntityBy, getLayerByGlobalId) {
     const self = this;
 
     self._map = _map;
     self._getLayerById = _getLayerById;
+    self.findEntityBy = findEntityBy;
     self._markerFactory = _markerFactory;
 
     self._featureToLeafletIds = {};
@@ -15,9 +16,9 @@ export const Select = function (_map, _getLayerById, _markerFactory, tgMap) {
         if (newSelection.entities.length == 1) {
             const selectionEntity = newSelection.entities[0];
             if (selectionEntity.select) {
-                self._silentlySelectById(selectionEntity.entity.properties.layerId);
+                self._silentlySelectById(getLayerByGlobalId(selectionEntity.entity.get('arcGisId'))._leaflet_id);
             } else {
-                self._silentlyDeselectById(selectionEntity.entity.properties.layerId)
+                self._silentlyDeselectById(getLayerByGlobalId(selectionEntity.entity.get('arcGisId'))._leaflet_id)
             }
         }
     };
@@ -32,13 +33,13 @@ Select.prototype.select = function (layerId) {
         this._silentlySelect(layerId);
         this._prevId = layerId;
         details.push({
-            entity: this._getLayerById(layerId).feature,
+            entity: this.findEntityBy(this._getLayerById(layerId).feature),
             select: true
         });
         if (prevId !== null) {
             this._silentlyDeselect(prevId);
             details.push({
-                entity: this._getLayerById(prevId).feature,
+                entity: this.findEntityBy(this._getLayerById(prevId).feature),
                 select: false
             });
         }
@@ -49,6 +50,7 @@ Select.prototype.select = function (layerId) {
                     entities: details
                 },
                 bubbles: true,
+                composed: true,
                 cancelable: true
             });
             this._tgMap.getCustomEventTarget().dispatchEvent(event);
@@ -64,11 +66,12 @@ Select.prototype._deselect = function (layerId) {
         detail: {
             shouldScrollToSelected: true,
             entities: [{
-                entity: feature,
+                entity: this.findEntityBy(feature),
                 select: false
             }]
         },
         bubbles: true,
+        composed: true,
         cancelable: true
     });
     this._tgMap.getCustomEventTarget().dispatchEvent(event);

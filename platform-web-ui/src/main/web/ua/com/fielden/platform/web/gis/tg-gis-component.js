@@ -1,5 +1,6 @@
 import '/resources/polymer/@polymer/polymer/lib/elements/custom-style.js';
 import { L, leafletStylesName } from '/resources/gis/leaflet/leaflet-lib.js';
+import { esri } from '/resources/gis/leaflet/esri/esri-leaflet-lib.js';
 import { _featureType } from '/resources/gis/tg-gis-utils.js';
 import { BaseLayers } from '/resources/gis/tg-base-layers.js';
 import { EntityStyling } from '/resources/gis/tg-entity-styling.js';
@@ -40,6 +41,7 @@ export const GisComponent = function (mapDiv, progressDiv, progressBarDiv, tgMap
         self.promoteEntities(newRetrievedEntitiesCopy);
 
         self._markerCluster.getGisMarkerClusterGroup().addLayer(self._geoJsonOverlay);
+        self._markerCluster.getGisMarkerClusterGroup().addLayer(self._geoJsonOverlay2);
         self.finishReload();
 
         // In standard cases ShouldFitToBounds is always true. However, sse (event sourcing) dataHandlers could change ShouldFitToBounds to false.
@@ -56,17 +58,19 @@ export const GisComponent = function (mapDiv, progressDiv, progressBarDiv, tgMap
     self._baseLayers = new BaseLayers();
 
     self._map = L.map(mapDiv, {
-        layers: [self._baseLayers.getBaseLayer("OpenStreetMap")], // only add one!
+        layers: [self._baseLayers.getBaseLayer("Esri Streets")], // only add one!
         zoomControl: false, // add it later
         loadingControl: false // add it later
-    }).setView([49.841919, 24.0316], 18); // Lviv (Rynok Sq) has been centered
+    }).setView([-37.004833314, 174.78833018], 10); // Auckland Airport has been centered
 
     // create a factory for markers
     self._markerFactory = self.createMarkerFactory();
     self._markerCluster = self.createMarkerCluster(self._map, self._markerFactory, progressDiv, progressBarDiv);
 
     self._entityStyling = self.createEntityStyling();
-    self._geoJsonOverlay = L.geoJson([], {
+    self._geoJsonOverlay = L.esri.featureLayer({
+        url: 'https://services9.arcgis.com/hf8lTMw1xiMRR4fz/arcgis/rest/services/tg_airport_geozones/FeatureServer/0',
+
         style: function (feature) {
             return self._entityStyling.getStyle(feature);
         },
@@ -76,9 +80,7 @@ export const GisComponent = function (mapDiv, progressDiv, progressBarDiv, tgMap
         },
 
         onEachFeature: function (feature, layer) {
-            const layerId = self._geoJsonOverlay.getLayerId(layer);
-            // provide leafletId of the layer directly inside corresponding entity
-            feature.properties.layerId = layerId;
+            feature.properties._featureType = 'Asset';
 
             layer.on('mouseover', function () {
                 if (!feature.properties.popupContentInitialised) { // initialise popupContent (text or even heavyweight HTMLElement) only once when mouseOver occurs
@@ -87,35 +89,75 @@ export const GisComponent = function (mapDiv, progressDiv, progressBarDiv, tgMap
                 }
             });
 
-            layer.on('mouseout', function () {
-                // console.debug("mouseout (leaved):");
-                // console.debug(layer);
+            layer.on('click', function () { // dblclick
+                if (!feature.properties.layerId) {
+                    feature.properties.layerId = layer._leaflet_id;
+                }
+                self._select.select(feature.properties.layerId);
+            });
+        }
+    });
+    self._geoJsonOverlay2 = L.esri.featureLayer({
+        url: 'https://services9.arcgis.com/hf8lTMw1xiMRR4fz/arcgis/rest/services/tg_airport/FeatureServer/0',
+
+        style: function (feature) {
+            return self._entityStyling.getStyle(feature);
+        },
+
+        pointToLayer: function (feature, latlng) {
+        	feature.properties._featureType = 'Asset';
+            return self._markerFactory.createFeatureMarker(feature, latlng);
+        },
+
+        onEachFeature: function (feature, layer) {
+            feature.properties._featureType = 'Asset';
+
+            layer.on('mouseover', function () {
+                if (!feature.properties.popupContentInitialised) { // initialise popupContent (text or even heavyweight HTMLElement) only once when mouseOver occurs
+                    layer.bindPopup(self.createPopupContent(feature));
+                    feature.properties.popupContentInitialised = true;
+                }
             });
 
             layer.on('click', function () { // dblclick
-                // console.debug("clicked:");
-                // console.debug(layer);
-                self._select.select(layerId);
+                if (!feature.properties.layerId) {
+                    feature.properties.layerId = layer._leaflet_id;
+                }
+                self._select.select(feature.properties.layerId);
             });
-            // if (layer instanceof CoordMarker) {
-            //     layer.setOpacity(0.0);
-            // }
         }
     });
 
     self._controls = new Controls(self._map, self._markerCluster.getGisMarkerClusterGroup(), self._baseLayers);
 
     const getLayerById = function (layerId) {
-        return self._geoJsonOverlay.getLayer(layerId);
+        const foundKey = Object.keys(self._geoJsonOverlay._layers).find(function (key) {
+            var value = self._geoJsonOverlay._layers[key];
+            return value && value._leaflet_id === layerId;
+        });
+        if (foundKey) {
+            return self._geoJsonOverlay._layers[foundKey];
+        }
+        return null;
+    }
+    
+    const getLayerByGlobalId = function (globalId) {
+        const foundKey = Object.keys(self._geoJsonOverlay._layers).find(function (key) {
+            var value = self._geoJsonOverlay._layers[key];
+            return value && value.feature.properties.GlobalID === globalId;
+        });
+        if (foundKey) {
+            return self._geoJsonOverlay._layers[foundKey];
+        }
+        return null;
     }
 
-    self._select = new Select(self._map, getLayerById, self._markerFactory, tgMap);
+    self._select = new Select(self._map, getLayerById, self._markerFactory, tgMap, self.findEntityBy.bind(self), getLayerByGlobalId);
 
     self._map.fire('dataloading');
 
-    self.initialise();
-
     self._markerCluster.getGisMarkerClusterGroup().addLayer(self._geoJsonOverlay);
+    self._markerCluster.getGisMarkerClusterGroup().addLayer(self._geoJsonOverlay2);
     self._map.addLayer(self._markerCluster.getGisMarkerClusterGroup());
 
     self._map.fire('dataload');
@@ -144,7 +186,6 @@ GisComponent.prototype.getTopEntityFor = function (feature) {
 }
 
 GisComponent.prototype.initialise = function () {
-    this._geoJsonOverlay.addData([]);
 };
 
 GisComponent.prototype.createMarkerFactory = function () {
@@ -170,7 +211,6 @@ GisComponent.prototype.finishReload = function () {
 };
 
 GisComponent.prototype.clearAll = function () {
-    this._geoJsonOverlay.clearLayers();
     this._markerCluster.getGisMarkerClusterGroup().clearLayers();
     this._select._prevId = null;
 };
@@ -178,39 +218,6 @@ GisComponent.prototype.clearAll = function () {
 GisComponent.prototype.promoteEntities = function (newEntities) {
     const self = this;
     this._entities = newEntities;
-
-    this.traverseEntities(this._entities, null /* the parent for top-level entities is null! */, function (entity) {
-        if (entity.type) {
-            console.warn('Entity already has "type" object. Cannot continue with conversion into feature.');
-        }
-        entity.type = "Feature";
-
-        if (entity.properties) {
-            console.warn('Entity already has "properties" object. Cannot continue with conversion into feature.');
-        }
-        entity.properties = entity.properties || {};
-        entity.properties._parentFeature = null;
-
-        if (entity.geometry) {
-            throw 'Entity already has "geometry" object. Cannot continue with conversion into feature.';
-        }
-        entity.geometry = self.createGeometry(entity);
-
-        // console.debug('entity:');
-        // console.debug(entity);
-        // console.debug('entity.geometry:');
-        // console.debug(entity.geometry);
-
-        if (entity.geometry) {
-            self._geoJsonOverlay.addData(entity);
-        } else {
-            // TODO do nothing in case when the entity has no visual representation
-            console.debug("entity with no visual representation: ");
-            console.debug(entity);
-        }
-    }, function (entities) {
-        return self.createSummaryFeature(entities);
-    });
 };
 
 /** 
@@ -312,17 +319,37 @@ GisComponent.prototype.createCoordinatesFromMessage = function (message) {
     return (message.altitude) ? [message.x, message.y, message.altitude] : [message.x, message.y]
 }
 
-GisComponent.prototype.createPopupContent = function (feature) {
+GisComponent.prototype.createPopupContent = function (arcGisFeature) {
     const self = this;
-    const columnPropertiesMapped = self.columnPropertiesMapper(feature);
-    let popupText = '';
-    for (let index = 0; index < columnPropertiesMapped.length; index++) {
-        const entry = columnPropertiesMapped[index];
-        const value = entry.value === true ? "&#x2714" : (entry.value === false ? "&#x2718" : entry.value);
-        const type = feature.constructor.prototype.type.call(feature);
-        popupText = popupText + "" + self.titleFor(feature, entry.dotNotation) + ": " + value + "<br>";
+    const feature = self.findEntityBy(arcGisFeature);
+    if (feature) {
+        const columnPropertiesMapped = self.columnPropertiesMapper(feature);
+        let popupText = '';
+        Object.keys(arcGisFeature.properties).forEach(key => {
+            if (key !== 'layerId' && key !== 'popupContentInitialised' && key !== '_featureType') {
+            	popupText = popupText + "ArcGIS " + key + ": " + arcGisFeature.properties[key] + "<br>";
+            }
+        });
+        for (let index = 0; index < columnPropertiesMapped.length; index++) {
+            const entry = columnPropertiesMapped[index];
+            const value = entry.value === true ? "&#x2714" : (entry.value === false ? "&#x2718" : entry.value);
+            const type = feature.constructor.prototype.type.call(feature);
+            popupText = popupText + "" + self.titleFor(feature, entry.dotNotation) + ": " + value + "<br>";
+        }
+        return popupText;
     }
-    return popupText;
+    return '';
+}
+
+GisComponent.prototype.findEntityBy = function (arcGisFeature) {
+    const globalId = arcGisFeature.properties.GlobalID;
+    for (let i = 0; i < this._entities.length; i++) {
+        const entity = this._entities[i];
+        if (entity.get('arcGisId') === globalId) {
+            return entity;
+        }
+    }
+    return null;
 }
 
 GisComponent.prototype.titleFor = function (feature, dotNotation) {
