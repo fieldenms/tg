@@ -6,6 +6,7 @@ import ua.com.fielden.platform.eql.stage2.elements.TransformationContext;
 import ua.com.fielden.platform.eql.stage2.elements.TransformationResult;
 import ua.com.fielden.platform.eql.stage2.elements.operands.EntQuery2;
 import ua.com.fielden.platform.eql.stage3.elements.conditions.ExistenceTest3;
+import ua.com.fielden.platform.eql.stage3.elements.operands.EntQuery3;
 
 public class ExistenceTest2 extends AbstractCondition2<ExistenceTest3> {
     private final boolean negated;
@@ -23,8 +24,8 @@ public class ExistenceTest2 extends AbstractCondition2<ExistenceTest3> {
 
     @Override
     public TransformationResult<ExistenceTest3> transform(final TransformationContext transformationContext) {
-        // TODO Auto-generated method stub
-        return null;
+        final TransformationResult<EntQuery3> subQueryTransformationResult = subQuery.transform(transformationContext);
+        return new TransformationResult<ExistenceTest3>(new ExistenceTest3(negated, subQueryTransformationResult.getItem()), subQueryTransformationResult.getUpdatedContext());
     }
 
     @Override

@@ -33,6 +33,10 @@ public class EntQueryGenerator {
     public <T extends AbstractEntity<?>, Q extends QueryModel<T>> EntQuery1 generateEntQueryAsResultQuery(final QueryExecutionModel<T, Q> qem) {
         return generateEntQuery(qem.getQueryModel(), qem.getOrderModel(), Optional.empty(), RESULT_QUERY);
     }
+    
+    public <T extends AbstractEntity<?>, Q extends QueryModel<T>> EntQuery1 generateEntQueryAsResultQuery(final QueryModel<T> qm, final OrderingModel orderModel) {
+        return generateEntQuery(qm, orderModel, Optional.empty(), RESULT_QUERY);
+    }
 
     public <T extends AbstractEntity<?>> EntQuery1 generateEntQueryAsSourceQuery(final QueryModel<T> qryModel, final Optional<Class<T>> resultType) {
         return generateEntQuery(qryModel, null, resultType, SOURCE_QUERY);

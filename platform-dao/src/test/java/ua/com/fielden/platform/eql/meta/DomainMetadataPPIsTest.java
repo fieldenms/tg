@@ -34,6 +34,7 @@ import ua.com.fielden.platform.security.user.UserAndRoleAssociation;
 
 public class DomainMetadataPPIsTest extends BaseEntQueryTCase1 {
     @Test
+    @Ignore
     public void test_vehicle_model_entity_props_metadata() {
         final SortedSet<PropertyMetadata> expected = new TreeSet<PropertyMetadata>();
         expected.add(ppi("id", LONG, false, H_LONG, "_ID", PRIMITIVE));
@@ -66,6 +67,7 @@ public class DomainMetadataPPIsTest extends BaseEntQueryTCase1 {
     }
 
     @Test
+    @Ignore
     public void test_vehicle_entity_props_metadata() {
         final SortedSet<PropertyMetadata> expected = new TreeSet<PropertyMetadata>();
         expected.add(ppi("id", LONG, false, H_LONG, "_ID", PRIMITIVE));
@@ -83,6 +85,7 @@ public class DomainMetadataPPIsTest extends BaseEntQueryTCase1 {
     }
 
     @Test
+    @Ignore
     public void test_fuel_usage_entity_props_metadata() {
         final SortedSet<PropertyMetadata> expected = new TreeSet<PropertyMetadata>();
         expected.add(ppi("id", LONG, false, H_LONG, "_ID", PRIMITIVE));
@@ -97,6 +100,7 @@ public class DomainMetadataPPIsTest extends BaseEntQueryTCase1 {
     }
 
     @Test
+    @Ignore
     public void test_user_entity_props_metadata() {
         final SortedSet<PropertyMetadata> expected = new TreeSet<PropertyMetadata>();
         expected.add(ppi("id", LONG, false, H_LONG, "_ID", PRIMITIVE));

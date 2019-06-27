@@ -275,6 +275,7 @@ public class PropResolutionTest extends BaseEntQueryTCase1 {
     }
 
     @Test
+    @Ignore
     public void test_20() {
         transform(//
         select(TgOrgUnit1.class).as("L1").where().exists( //
@@ -307,6 +308,7 @@ public class PropResolutionTest extends BaseEntQueryTCase1 {
 
     
     @Test
+    @Ignore
     public void test_that_prop_name_is_without_alias_at_stage2() {
         final EntityResultQueryModel<TgWorkshop> qry = select(TgWorkshop.class).as("w").where().prop("w.key").isNotNull().model();
         final TransformationResult<EntQuery2> qry2 = entResultQry2(qry, new PropsResolutionContext(metadata));
@@ -363,6 +365,7 @@ public class PropResolutionTest extends BaseEntQueryTCase1 {
 //    }
 
     @Test
+    @Ignore
     public void test_q2() {
         final EntityResultQueryModel<TgAuthor> qry = select(TgAuthor.class).where().prop("surname").isNotNull().model();
         final TransformationResult<EntQuery2> qry2 = entResultQry2(qry, new PropsResolutionContext(metadata));
@@ -444,6 +447,7 @@ public class PropResolutionTest extends BaseEntQueryTCase1 {
     
 
     @Test
+    @Ignore
     public void test_q212_copy() {
         final EntityResultQueryModel<TgVehicleModelWithCalc> qry = select(TgVehicleModelWithCalc.class).where().prop("make").isNotNull().model();
         final TransformationResult<EntQuery2> qry2 = entResultQry2(qry, new PropsResolutionContext(metadata));
@@ -468,6 +472,7 @@ public class PropResolutionTest extends BaseEntQueryTCase1 {
     }
 
     @Test
+    @Ignore
     public void test_q3() {
         final EntityResultQueryModel<TgAuthor> qry = select(TgAuthor.class).as("a").where().prop("a.surname").isNotNull().model();
         final TransformationResult<EntQuery2> qry2 = entResultQry2(qry, new PropsResolutionContext(metadata));
@@ -487,6 +492,7 @@ public class PropResolutionTest extends BaseEntQueryTCase1 {
     }
 
     @Test
+    @Ignore
     public void test_q4() {
         final EntityResultQueryModel<TgAuthor> qry = select(TgAuthor.class).where().prop("surname").isNotNull().and().prop("name").eq().iVal(null).model();
         final TransformationResult<EntQuery2> qry2 = entResultQry2(qry, new PropsResolutionContext(metadata));
@@ -506,6 +512,7 @@ public class PropResolutionTest extends BaseEntQueryTCase1 {
     }
 
     @Test
+    @Ignore
     public void test_q5() {
         final EntityResultQueryModel<TgAuthor> qry = select(TgAuthor.class).where().prop("surname").isNotNull().and().prop("name").eq().iParam("param").model();
         final TransformationResult<EntQuery2> qry2 = entResultQry2(qry, new PropsResolutionContext(metadata));
@@ -525,6 +532,7 @@ public class PropResolutionTest extends BaseEntQueryTCase1 {
     }
 
     @Test
+    @Ignore
     public void test_q6() {
         final EntityResultQueryModel<TgAuthor> qry = select(TgAuthor.class).where().prop("surname").eq().param("param").model();
         final Map<String, Object> params = new HashMap<>();
@@ -546,6 +554,7 @@ public class PropResolutionTest extends BaseEntQueryTCase1 {
     }
 
     @Test
+    @Ignore
     public void test_q7() {
         final EntityResultQueryModel<TgAuthor> qry = select(TgAuthor.class).leftJoin(TgPersonName.class).as("pn").on().prop("name").eq().prop("pn.id"). //
         where().prop("surname").eq().val(1).model();
@@ -577,6 +586,7 @@ public class PropResolutionTest extends BaseEntQueryTCase1 {
     }
 
     @Test
+    @Ignore
     public void test_q8() {
         final EntityResultQueryModel<TgAuthor> qry = select(TgAuthor.class).leftJoin(TgPersonName.class).as("pn").on().prop("name").eq().prop("pn.id"). //
         where().prop("lastRoyalty").eq().val(1).model();
@@ -685,6 +695,7 @@ public class PropResolutionTest extends BaseEntQueryTCase1 {
 
 
     @Test
+    @Ignore
     public void test_13() {
         transform(select(TgAverageFuelUsage.class).where().prop("key.key").eq().val("CAR2").model());
     }

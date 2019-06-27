@@ -7,6 +7,8 @@ import ua.com.fielden.platform.eql.stage2.elements.TransformationResult;
 import ua.com.fielden.platform.eql.stage2.elements.operands.ISetOperand2;
 import ua.com.fielden.platform.eql.stage2.elements.operands.ISingleOperand2;
 import ua.com.fielden.platform.eql.stage3.elements.conditions.SetTest3;
+import ua.com.fielden.platform.eql.stage3.elements.operands.ISetOperand3;
+import ua.com.fielden.platform.eql.stage3.elements.operands.ISingleOperand3;
 
 public class SetTest2 extends AbstractCondition2<SetTest3> {
     public final ISingleOperand2 leftOperand;
@@ -26,8 +28,9 @@ public class SetTest2 extends AbstractCondition2<SetTest3> {
 
     @Override
     public TransformationResult<SetTest3> transform(final TransformationContext transformationContext) {
-        // TODO Auto-generated method stub
-        return null;
+        final TransformationResult<? extends ISingleOperand3> leftOperandTransformationResult = leftOperand.transform(transformationContext);
+        final TransformationResult<? extends ISetOperand3> rightOperandTransformationResult = rightOperand.transform(leftOperandTransformationResult.getUpdatedContext());
+        return new TransformationResult<SetTest3>(new SetTest3(leftOperandTransformationResult.getItem(), negated, rightOperandTransformationResult.getItem()), rightOperandTransformationResult.getUpdatedContext());
     }
 
     @Override

@@ -118,7 +118,7 @@ public class BaseEntQueryTCase1 {
         hibTypeDefaults.put(Date.class, DateTimeType.class);
         hibTypeDefaults.put(Money.class, SimpleMoneyType.class);
         try {
-            metadata.putAll(new MetadataGenerator(qb).generate(new HashSet<>(PlatformTestDomainTypes.entityTypes)));
+            metadata.putAll(new MetadataGenerator(null).generate(new HashSet<>(PlatformTestDomainTypes.entityTypes)));
         } catch (final Exception e) {
             // TODO Auto-generated catch block
             e.printStackTrace();

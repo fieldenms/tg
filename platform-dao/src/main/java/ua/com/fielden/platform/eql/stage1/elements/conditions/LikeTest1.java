@@ -12,14 +12,12 @@ import ua.com.fielden.platform.eql.stage2.elements.operands.ISingleOperand2;
 public class LikeTest1 implements ICondition1<LikeTest2> {
     private final ISingleOperand1<? extends ISingleOperand2> leftOperand;
     private final ISingleOperand1<? extends ISingleOperand2> rightOperand;
-    private final boolean negated;
-    private final boolean caseInsensitive;
+    private final LikeOptions options;
 
     public LikeTest1(final ISingleOperand1<? extends ISingleOperand2> leftOperand, final ISingleOperand1<? extends ISingleOperand2> rightOperand, final LikeOptions options) {
         this.leftOperand = leftOperand;
         this.rightOperand = rightOperand;
-        this.negated = options.negated;
-        this.caseInsensitive = options.caseInsensitive;
+        this.options = options;
         /*TODO TFM compare with original*/
     }
 
@@ -27,16 +25,15 @@ public class LikeTest1 implements ICondition1<LikeTest2> {
     public TransformationResult<LikeTest2> transform(final PropsResolutionContext resolutionContext) {
         final TransformationResult<? extends ISingleOperand2> leftOperandTransformationResult = leftOperand.transform(resolutionContext);
         final TransformationResult<? extends ISingleOperand2> rightOperandTransformationResult = rightOperand.transform(leftOperandTransformationResult.getUpdatedContext());
-        return new TransformationResult<LikeTest2>(new LikeTest2(leftOperandTransformationResult.getItem(), rightOperandTransformationResult.getItem(), negated, caseInsensitive), rightOperandTransformationResult.getUpdatedContext());
+        return new TransformationResult<LikeTest2>(new LikeTest2(leftOperandTransformationResult.getItem(), rightOperandTransformationResult.getItem(), options), rightOperandTransformationResult.getUpdatedContext());
     }
 
     @Override
     public int hashCode() {
         final int prime = 31;
         int result = 1;
-        result = prime * result + (caseInsensitive ? 1231 : 1237);
         result = prime * result + ((leftOperand == null) ? 0 : leftOperand.hashCode());
-        result = prime * result + (negated ? 1231 : 1237);
+        result = prime * result + ((options == null) ? 0 : options.hashCode());
         result = prime * result + ((rightOperand == null) ? 0 : rightOperand.hashCode());
         return result;
     }
@@ -55,7 +52,6 @@ public class LikeTest1 implements ICondition1<LikeTest2> {
         
         return Objects.equals(leftOperand, other.leftOperand) &&
                 Objects.equals(rightOperand, other.rightOperand) &&
-                Objects.equals(caseInsensitive, other.caseInsensitive) &&
-                Objects.equals(negated, other.negated);
+                Objects.equals(options, other.options);
     }
 }

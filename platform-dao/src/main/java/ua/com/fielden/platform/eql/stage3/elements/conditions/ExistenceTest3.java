@@ -15,7 +15,7 @@ public class ExistenceTest3 implements ICondition3 {
 
     @Override
     public String sql() {
-        return (negated ? "NOT EXISTS " : "EXISTS ") + subQuery.sql();
+        return (negated ? "NOT" : "") + " EXISTS (" + subQuery.sql() + ")";
     }
 
     @Override

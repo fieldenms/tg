@@ -9,6 +9,8 @@ import ua.com.fielden.platform.eql.stage2.elements.TransformationResult;
 import ua.com.fielden.platform.eql.stage2.elements.operands.EntQuery2;
 import ua.com.fielden.platform.eql.stage2.elements.operands.ISingleOperand2;
 import ua.com.fielden.platform.eql.stage3.elements.conditions.QuantifiedTest3;
+import ua.com.fielden.platform.eql.stage3.elements.operands.EntQuery3;
+import ua.com.fielden.platform.eql.stage3.elements.operands.ISingleOperand3;
 
 public class QuantifiedTest2 extends AbstractCondition2<QuantifiedTest3> {
     public final ISingleOperand2 leftOperand;
@@ -30,8 +32,10 @@ public class QuantifiedTest2 extends AbstractCondition2<QuantifiedTest3> {
 
     @Override
     public TransformationResult<QuantifiedTest3> transform(final TransformationContext transformationContext) {
-        // TODO Auto-generated method stub
-        return null;
+        final TransformationResult<? extends ISingleOperand3> leftOperandTransformationResult = leftOperand.transform(transformationContext);
+        final TransformationResult<EntQuery3> rightOperandTransformationResult = rightOperand.transform(leftOperandTransformationResult.getUpdatedContext());
+        
+        return new TransformationResult<QuantifiedTest3>(new QuantifiedTest3(leftOperandTransformationResult.getItem(), operator, quantifier, rightOperandTransformationResult.getItem()), rightOperandTransformationResult.getUpdatedContext());
     }
 
     @Override

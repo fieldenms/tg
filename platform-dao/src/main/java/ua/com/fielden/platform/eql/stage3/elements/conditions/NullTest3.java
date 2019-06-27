@@ -15,7 +15,7 @@ public class NullTest3 implements ICondition3 {
 
     @Override
     public String sql() {
-        return " IS " + (negated ? "NOT" : "") + " NULL" + operand.sql();
+        return operand.sql() + " IS " + (negated ? "NOT" : "") + " NULL";
     }
 
     @Override

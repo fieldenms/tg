@@ -1,11 +1,12 @@
 package ua.com.fielden.platform.entity.query;
 
 import static java.lang.String.format;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetch;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.SortedSet;
 import java.util.TreeSet;
@@ -17,17 +18,27 @@ import org.hibernate.ScrollMode;
 import org.joda.time.DateTime;
 import org.joda.time.Period;
 
-import ua.com.fielden.platform.dao.QueryExecutionModel;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.generation.EntQueryGenerator;
 import ua.com.fielden.platform.entity.query.generation.elements.EntQuery;
 import ua.com.fielden.platform.entity.query.generation.elements.ResultQueryYieldDetails;
+import ua.com.fielden.platform.entity.query.generation.elements.ResultQueryYieldDetails.YieldDetailsType;
 import ua.com.fielden.platform.entity.query.generation.elements.Yield;
 import ua.com.fielden.platform.entity.query.generation.elements.Yields;
 import ua.com.fielden.platform.entity.query.metadata.DomainMetadataAnalyser;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.SingleResultQueryModel;
 import ua.com.fielden.platform.entity.query.stream.ScrollableResultStream;
+import ua.com.fielden.platform.eql.meta.EntityInfo;
+import ua.com.fielden.platform.eql.meta.MetadataGenerator;
+import ua.com.fielden.platform.eql.stage1.elements.PropsResolutionContext;
+import ua.com.fielden.platform.eql.stage2.elements.TransformationContext;
+import ua.com.fielden.platform.eql.stage3.elements.Column;
+import ua.com.fielden.platform.eql.stage3.elements.Table;
+import ua.com.fielden.platform.eql.stage3.elements.Yield3;
+import ua.com.fielden.platform.eql.stage3.elements.Yields3;
+import ua.com.fielden.platform.eql.stage3.elements.operands.EntQuery3;
+import ua.com.fielden.platform.sample.domain.TgVehicle;
 import ua.com.fielden.platform.streaming.SequentialGroupingStream;
 
 public class EntityContainerFetcher {
@@ -119,17 +130,48 @@ public class EntityContainerFetcher {
     }
 
     private <E extends AbstractEntity<?>> QueryModelResult<E> getModelResult(final QueryProcessingModel<E, ?> qem, final DomainMetadataAnalyser domainMetadataAnalyser, final IFilter filter, final String username) {
-        final EntQueryGenerator gen = new EntQueryGenerator(domainMetadataAnalyser, filter, username, executionContext.getUniversalConstants());
-
-        final EntQuery entQuery = gen.generateEntQueryAsResultQuery(qem.queryModel, qem.orderModel, qem.queryModel.getResultType(), qem.fetchModel, qem.paramValues);
-        final String sql = entQuery.sql();
-        return new QueryModelResult<>((Class<E>)entQuery.type(), sql, getResultPropsInfos(entQuery.getYields()), entQuery.getValuesForSqlParams(), qem.fetchModel);
+        if (qem.paramValues.containsKey("EQL3")) {
+            final ua.com.fielden.platform.eql.stage1.builders.EntQueryGenerator gen1 = new ua.com.fielden.platform.eql.stage1.builders.EntQueryGenerator();
+            Map<Class<? extends AbstractEntity<?>>, EntityInfo<?>> domainInfo = null;
+            
+            try {
+                domainInfo = new MetadataGenerator(null).generate(executionContext.getDomainMetadata().getPersistedEntityMetadataMap().keySet());
+            } catch (final Exception e) {
+                e.printStackTrace();
+            }
+            
+            final PropsResolutionContext resolutionContext = new PropsResolutionContext(domainInfo );
+            final Map<String, Table> tables = new HashMap<>();
+            final Map<String, Column> columns = new HashMap<>();
+            columns.put("id", new Column("_ID"));
+            columns.put("key", new Column("KEY_"));
+            columns.put("replacedBy", new Column("REPLACEDBY_"));
+            final Table vehT = new Table("TGVEHICLE_", columns);
+            tables.put(TgVehicle.class.getName(), vehT);
+            final EntQuery3 entQuery3 = gen1.generateEntQueryAsResultQuery(qem.queryModel, qem.orderModel).transform(resolutionContext).getItem().transform(new TransformationContext(tables)).getItem();
+            final String sql3 = entQuery3.sql();
+            return new QueryModelResult<>((Class<E>)EntityAggregates.class, sql3, getResultPropsInfos(entQuery3.yields), Collections.<String, Object>emptyMap(), qem.fetchModel);
+            
+        } else {
+            final EntQueryGenerator gen = new EntQueryGenerator(domainMetadataAnalyser, filter, username, executionContext.getUniversalConstants());
+            final EntQuery entQuery = gen.generateEntQueryAsResultQuery(qem.queryModel, qem.orderModel, qem.queryModel.getResultType(), qem.fetchModel, qem.paramValues);
+            final String sql = entQuery.sql();
+            return new QueryModelResult<>((Class<E>)entQuery.type(), sql, getResultPropsInfos(entQuery.getYields()), entQuery.getValuesForSqlParams(), qem.fetchModel);
+        }
     }
 
     private SortedSet<ResultQueryYieldDetails> getResultPropsInfos(final Yields model) {
         final SortedSet<ResultQueryYieldDetails> result = new TreeSet<>();
         for (final Yield yield : model.getYields()) {
             result.add(new ResultQueryYieldDetails(yield.getInfo().getName(), yield.getInfo().getJavaType(), yield.getInfo().getHibType(), yield.getInfo().getColumn(), yield.getInfo().getYieldDetailsType()));
+        }
+        return result;
+    }
+    
+    private SortedSet<ResultQueryYieldDetails> getResultPropsInfos(final Yields3 model) {
+        final SortedSet<ResultQueryYieldDetails> result = new TreeSet<>();
+        for (final Yield3 yield : model.getYields()) {
+            result.add(new ResultQueryYieldDetails(yield.alias, null, null, yield.alias, YieldDetailsType.USUAL_PROP));
         }
         return result;
     }

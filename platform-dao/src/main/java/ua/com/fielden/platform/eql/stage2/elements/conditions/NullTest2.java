@@ -6,6 +6,7 @@ import ua.com.fielden.platform.eql.stage2.elements.TransformationContext;
 import ua.com.fielden.platform.eql.stage2.elements.TransformationResult;
 import ua.com.fielden.platform.eql.stage2.elements.operands.ISingleOperand2;
 import ua.com.fielden.platform.eql.stage3.elements.conditions.NullTest3;
+import ua.com.fielden.platform.eql.stage3.elements.operands.ISingleOperand3;
 
 public class NullTest2 extends AbstractCondition2<NullTest3> {
     public final ISingleOperand2 operand;
@@ -23,8 +24,8 @@ public class NullTest2 extends AbstractCondition2<NullTest3> {
 
     @Override
     public TransformationResult<NullTest3> transform(final TransformationContext transformationContext) {
-        // TODO Auto-generated method stub
-        return null;
+        final TransformationResult<? extends ISingleOperand3> operandTransformationResult = operand.transform(transformationContext);
+        return new TransformationResult<NullTest3>(new NullTest3(operandTransformationResult.getItem(), negated), operandTransformationResult.getUpdatedContext());
     }
 
     @Override
