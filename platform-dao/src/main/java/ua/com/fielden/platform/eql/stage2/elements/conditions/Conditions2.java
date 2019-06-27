@@ -15,7 +15,7 @@ public class Conditions2 extends AbstractCondition2<Conditions3> {
     private final List<List<? extends ICondition2>> allConditionsAsDnf = new ArrayList<>();
     private final boolean negated;
 
-    public Conditions2(final boolean negated, final List<List<? extends ICondition2>> allConditions) {
+    public Conditions2(final boolean negated, final List<List<? extends ICondition2<?>>> allConditions) {
         this.allConditionsAsDnf.addAll(allConditions);
         this.negated = negated;
     }

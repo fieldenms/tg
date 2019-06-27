@@ -67,10 +67,10 @@ public class Conditions1 implements ICondition1<Conditions2> {
     @Override
     public TransformationResult<Conditions2> transform(final PropsResolutionContext resolutionContext) {
         final List<List<ICondition1<? extends ICondition2>>> dnfs = formDnf();
-        final List<List<? extends ICondition2>> result = new ArrayList<>();
+        final List<List<? extends ICondition2<?>>> result = new ArrayList<>();
         PropsResolutionContext currentResolutionContext = resolutionContext;
         for (final List<ICondition1<? extends ICondition2>> andGroup : dnfs) {
-            final List<ICondition2> transformedAndGroup = new ArrayList<>(); 
+            final List<ICondition2<?>> transformedAndGroup = new ArrayList<>(); 
             for (final ICondition1<? extends ICondition2> andGroupCondition : andGroup) {
                 final TransformationResult<? extends ICondition2> andGroupConditionTransformationResult = andGroupCondition.transform(currentResolutionContext);
                 if (!andGroupConditionTransformationResult.getItem().ignore()) {
