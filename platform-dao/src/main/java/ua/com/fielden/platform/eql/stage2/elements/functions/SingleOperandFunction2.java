@@ -7,9 +7,9 @@ import ua.com.fielden.platform.eql.stage3.elements.operands.ISingleOperand3;
 
 abstract class SingleOperandFunction2<S3 extends ISingleOperand3> extends AbstractFunction2<S3> {
 
-    public final ISingleOperand2<?> operand;
+    public final ISingleOperand2<? extends ISingleOperand3> operand;
 
-    public SingleOperandFunction2(final ISingleOperand2<?> operand) {
+    public SingleOperandFunction2(final ISingleOperand2<? extends ISingleOperand3> operand) {
         this.operand = operand;
     }
 

@@ -11,11 +11,11 @@ import ua.com.fielden.platform.eql.stage3.elements.operands.ISetOperand3;
 import ua.com.fielden.platform.eql.stage3.elements.operands.ISingleOperand3;
 
 public class SetTest2 extends AbstractCondition2<SetTest3> {
-    public final ISingleOperand2 leftOperand;
-    public final ISetOperand2 rightOperand;
+    public final ISingleOperand2<? extends ISingleOperand3> leftOperand;
+    public final ISetOperand2<? extends ISetOperand3> rightOperand;
     public final boolean negated;
 
-    public SetTest2(final ISingleOperand2 leftOperand, final boolean negated, final ISetOperand2 rightOperand) {
+    public SetTest2(final ISingleOperand2<? extends ISingleOperand3> leftOperand, final boolean negated, final ISetOperand2<? extends ISetOperand3> rightOperand) {
         this.leftOperand = leftOperand;
         this.rightOperand = rightOperand;
         this.negated = negated;

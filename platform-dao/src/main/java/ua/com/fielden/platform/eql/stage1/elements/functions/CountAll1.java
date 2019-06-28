@@ -11,7 +11,7 @@ public class CountAll1 extends ZeroOperandFunction1<CountAll2> {
     }
 
     @Override
-    public TransformationResult<CountAll2> transform(final PropsResolutionContext resolutionContext) {
-        return new TransformationResult<CountAll2>(new CountAll2(), resolutionContext.cloneNew());
+    public TransformationResult<CountAll2> transform(final PropsResolutionContext context) {
+        return new TransformationResult<CountAll2>(new CountAll2(), context.cloneNew());
     }
 }

@@ -11,6 +11,8 @@ import ua.com.fielden.platform.eql.stage1.elements.operands.ISingleOperand1;
 import ua.com.fielden.platform.eql.stage2.elements.conditions.ICondition2;
 import ua.com.fielden.platform.eql.stage2.elements.functions.CaseWhen2;
 import ua.com.fielden.platform.eql.stage2.elements.operands.ISingleOperand2;
+import ua.com.fielden.platform.eql.stage3.elements.conditions.ICondition3;
+import ua.com.fielden.platform.eql.stage3.elements.operands.ISingleOperand3;
 import ua.com.fielden.platform.utils.Pair;
 
 public class CaseWhen1 extends AbstractFunction1<CaseWhen2> {
@@ -25,16 +27,16 @@ public class CaseWhen1 extends AbstractFunction1<CaseWhen2> {
 
     @Override
     public TransformationResult<CaseWhen2> transform(final PropsResolutionContext context) {
-        final List<Pair<ICondition2, ISingleOperand2>> transformedWhenThenPairs = new ArrayList<>();
+        final List<Pair<ICondition2<? extends ICondition3>, ISingleOperand2<? extends ISingleOperand3>>> transformedWhenThenPairs = new ArrayList<>();
         PropsResolutionContext currentResolutionContext = context;
         for (final Pair<ICondition1<? extends ICondition2<?>>, ISingleOperand1<? extends ISingleOperand2<?>>> pair : whenThenPairs) {
-            final TransformationResult<? extends ICondition2> conditionTransformationResult = pair.getKey().transform(currentResolutionContext);
+            final TransformationResult<? extends ICondition2<? extends ICondition3>> conditionTransformationResult = pair.getKey().transform(currentResolutionContext);
             currentResolutionContext = conditionTransformationResult.updatedContext;
-            final TransformationResult<? extends ISingleOperand2> operandTransformationResult = pair.getValue().transform(currentResolutionContext);
+            final TransformationResult<? extends ISingleOperand2<? extends ISingleOperand3>> operandTransformationResult = pair.getValue().transform(currentResolutionContext);
             currentResolutionContext = operandTransformationResult.updatedContext;
-            transformedWhenThenPairs.add(new Pair<ICondition2, ISingleOperand2>(conditionTransformationResult.item, operandTransformationResult.item));
+            transformedWhenThenPairs.add(new Pair<ICondition2<? extends ICondition3>, ISingleOperand2<? extends ISingleOperand3>>(conditionTransformationResult.item, operandTransformationResult.item));
         }
-        final TransformationResult<? extends ISingleOperand2> elseOperandTransformationResult = elseOperand.transform(currentResolutionContext);
+        final TransformationResult<? extends ISingleOperand2<? extends ISingleOperand3>> elseOperandTransformationResult = elseOperand.transform(currentResolutionContext);
         
         return new TransformationResult<CaseWhen2>(new CaseWhen2(transformedWhenThenPairs, elseOperandTransformationResult.item), elseOperandTransformationResult.updatedContext);
     }

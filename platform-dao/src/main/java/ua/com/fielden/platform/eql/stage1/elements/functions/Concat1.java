@@ -9,6 +9,7 @@ import ua.com.fielden.platform.eql.stage1.elements.TransformationResult;
 import ua.com.fielden.platform.eql.stage1.elements.operands.ISingleOperand1;
 import ua.com.fielden.platform.eql.stage2.elements.functions.Concat2;
 import ua.com.fielden.platform.eql.stage2.elements.operands.ISingleOperand2;
+import ua.com.fielden.platform.eql.stage3.elements.operands.ISingleOperand3;
 
 public class Concat1 extends AbstractFunction1<Concat2> {
 
@@ -20,10 +21,10 @@ public class Concat1 extends AbstractFunction1<Concat2> {
 
     @Override
     public TransformationResult<Concat2> transform(final PropsResolutionContext context) {
-        final List<ISingleOperand2> transformed = new ArrayList<>();
+        final List<ISingleOperand2<? extends ISingleOperand3>> transformed = new ArrayList<>();
         PropsResolutionContext currentResolutionContext = context;
-        for (final ISingleOperand1<? extends ISingleOperand2> operand : operands) {
-            final TransformationResult<? extends ISingleOperand2> operandTransformationResult = operand.transform(context);
+        for (final ISingleOperand1<? extends ISingleOperand2<? extends ISingleOperand3>> operand : operands) {
+            final TransformationResult<? extends ISingleOperand2<? extends ISingleOperand3>> operandTransformationResult = operand.transform(context);
             transformed.add(operandTransformationResult.item);
             currentResolutionContext = operandTransformationResult.updatedContext;
         }

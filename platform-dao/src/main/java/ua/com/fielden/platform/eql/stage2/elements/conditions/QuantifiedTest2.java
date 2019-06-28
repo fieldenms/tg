@@ -13,12 +13,12 @@ import ua.com.fielden.platform.eql.stage3.elements.operands.EntQuery3;
 import ua.com.fielden.platform.eql.stage3.elements.operands.ISingleOperand3;
 
 public class QuantifiedTest2 extends AbstractCondition2<QuantifiedTest3> {
-    public final ISingleOperand2 leftOperand;
+    public final ISingleOperand2<? extends ISingleOperand3> leftOperand;
     public final EntQuery2 rightOperand;
     public final Quantifier quantifier;
     public final ComparisonOperator operator;
 
-    public QuantifiedTest2(final ISingleOperand2 leftOperand, final ComparisonOperator operator, final Quantifier quantifier, final EntQuery2 rightOperand) {
+    public QuantifiedTest2(final ISingleOperand2<? extends ISingleOperand3> leftOperand, final ComparisonOperator operator, final Quantifier quantifier, final EntQuery2 rightOperand) {
         this.leftOperand = leftOperand;
         this.rightOperand = rightOperand;
         this.operator = operator;

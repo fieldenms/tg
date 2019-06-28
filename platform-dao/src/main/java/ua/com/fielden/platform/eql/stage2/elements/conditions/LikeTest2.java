@@ -10,11 +10,11 @@ import ua.com.fielden.platform.eql.stage3.elements.conditions.LikeTest3;
 import ua.com.fielden.platform.eql.stage3.elements.operands.ISingleOperand3;
 
 public class LikeTest2 extends AbstractCondition2<LikeTest3> {
-    public final ISingleOperand2 leftOperand;
-    public final ISingleOperand2 rightOperand;
+    public final ISingleOperand2<? extends ISingleOperand3> leftOperand;
+    public final ISingleOperand2<? extends ISingleOperand3> rightOperand;
     public final LikeOptions options;
 
-    public LikeTest2(final ISingleOperand2 leftOperand, final ISingleOperand2 rightOperand, final LikeOptions options) {
+    public LikeTest2(final ISingleOperand2<? extends ISingleOperand3> leftOperand, final ISingleOperand2<? extends ISingleOperand3> rightOperand, final LikeOptions options) {
         this.leftOperand = leftOperand;
         this.rightOperand = rightOperand;
         this.options = options;

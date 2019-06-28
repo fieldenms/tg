@@ -1,5 +1,7 @@
 package ua.com.fielden.platform.eql.stage2.elements.functions;
 
+import ua.com.fielden.platform.eql.stage2.elements.TransformationContext;
+import ua.com.fielden.platform.eql.stage2.elements.TransformationResult;
 import ua.com.fielden.platform.eql.stage2.elements.operands.ISingleOperand2;
 import ua.com.fielden.platform.eql.stage3.elements.functions.MaxOf3;
 import ua.com.fielden.platform.eql.stage3.elements.operands.ISingleOperand3;
@@ -11,7 +13,13 @@ public class MaxOf2 extends SingleOperandFunction2<MaxOf3> {
     }
 
     @Override
-    public Class type() {
-        return operand.type();
+    public Class<?> type() {
+        return operand.type(); //TODO
+    }
+
+    @Override
+    public TransformationResult<MaxOf3> transform(final TransformationContext context) {
+        final TransformationResult<? extends ISingleOperand3> operandTransformationResult = operand.transform(context);
+        return new TransformationResult<MaxOf3>(new MaxOf3(operandTransformationResult.item), operandTransformationResult.updatedContext);
     }
 }
