@@ -15,7 +15,7 @@ public class RoundTo1 extends TwoOperandsFunction1<RoundTo2> {
     @Override
     public TransformationResult<RoundTo2> transform(final PropsResolutionContext resolutionContext) {
         final TransformationResult<? extends ISingleOperand2> firstOperandTransformationResult = operand1.transform(resolutionContext);
-        final TransformationResult<? extends ISingleOperand2> secondOperandTransformationResult = operand2.transform(firstOperandTransformationResult.getUpdatedContext());
-        return new TransformationResult<RoundTo2>(new RoundTo2(firstOperandTransformationResult.getItem(), secondOperandTransformationResult.getItem()), secondOperandTransformationResult.getUpdatedContext());
+        final TransformationResult<? extends ISingleOperand2> secondOperandTransformationResult = operand2.transform(firstOperandTransformationResult.updatedContext);
+        return new TransformationResult<RoundTo2>(new RoundTo2(firstOperandTransformationResult.item, secondOperandTransformationResult.item), secondOperandTransformationResult.updatedContext);
     }
 }

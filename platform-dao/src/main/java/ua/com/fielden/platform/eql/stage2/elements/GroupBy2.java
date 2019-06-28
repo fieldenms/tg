@@ -15,7 +15,7 @@ public class GroupBy2 {
     
     public TransformationResult<GroupBy3> transform(final TransformationContext resolutionContext) {
         final TransformationResult<? extends ISingleOperand3> operandTransformationResult = operand.transform(resolutionContext);
-        return new TransformationResult<GroupBy3>(new GroupBy3(operandTransformationResult.getItem()), operandTransformationResult.getUpdatedContext());
+        return new TransformationResult<GroupBy3>(new GroupBy3(operandTransformationResult.item), operandTransformationResult.updatedContext);
     }
 
     @Override

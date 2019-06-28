@@ -10,7 +10,6 @@ public class Yield2 {
     public final ISingleOperand2 operand;
     public final String alias;
     public final boolean hasRequiredHint;
-    private ResultQueryYieldDetails2 info;
 
     public Yield2(final ISingleOperand2 operand, final String alias, final boolean hasRequiredHint) {
         this.operand = operand;
@@ -26,13 +25,9 @@ public class Yield2 {
         return operand.type();
     }
 
-    public boolean isCompositePropertyHeader() {
-        return info != null && info.isCompositeProperty();
-    }
-    
     public TransformationResult<Yield3> transform(final TransformationContext resolutionContext) {
         final TransformationResult<? extends ISingleOperand3> operandTransformationResult = operand.transform(resolutionContext);
-        return new TransformationResult<Yield3>(new Yield3(operandTransformationResult.getItem(), alias), operandTransformationResult.getUpdatedContext());
+        return new TransformationResult<Yield3>(new Yield3(operandTransformationResult.item, alias), operandTransformationResult.updatedContext);
     }
 
     @Override

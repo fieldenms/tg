@@ -23,8 +23,8 @@ public class GroupBys2 {
             TransformationContext currentResolutionContext = transformationContext;
             for (final GroupBy2 groupBy : groups) {
                 final TransformationResult<GroupBy3> groupByTransformationResult = groupBy.transform(currentResolutionContext);
-                transformed.add(groupByTransformationResult.getItem());
-                currentResolutionContext = groupByTransformationResult.getUpdatedContext();
+                transformed.add(groupByTransformationResult.item);
+                currentResolutionContext = groupByTransformationResult.updatedContext;
             }
             return new TransformationResult<GroupBys3>(new GroupBys3(transformed), currentResolutionContext);
     }

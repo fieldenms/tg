@@ -23,8 +23,8 @@ public class OrderBys2 {
             TransformationContext currentResolutionContext = transformationContext;
             for (final OrderBy2 orderBy : models) {
                 final TransformationResult<OrderBy3> orderByTransformationResult = orderBy.transform(currentResolutionContext);
-                transformed.add(orderByTransformationResult.getItem());
-                currentResolutionContext = orderByTransformationResult.getUpdatedContext();
+                transformed.add(orderByTransformationResult.item);
+                currentResolutionContext = orderByTransformationResult.updatedContext;
             }
             return new TransformationResult<OrderBys3>(new OrderBys3(transformed), currentResolutionContext);
     }

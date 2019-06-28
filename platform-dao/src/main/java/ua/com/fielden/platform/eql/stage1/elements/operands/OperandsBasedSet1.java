@@ -22,8 +22,8 @@ public class OperandsBasedSet1 implements ISetOperand1<OperandsBasedSet2> {
         PropsResolutionContext currentResolutionContext = resolutionContext;
         for (final ISingleOperand1<? extends ISingleOperand2> singleOperand : operands) {
             final TransformationResult<? extends ISingleOperand2> operandTransformationResult = singleOperand.transform(resolutionContext);
-            transformedOperands.add(operandTransformationResult.getItem());
-            currentResolutionContext = operandTransformationResult.getUpdatedContext();
+            transformedOperands.add(operandTransformationResult.item);
+            currentResolutionContext = operandTransformationResult.updatedContext;
         }
 
         return new TransformationResult<OperandsBasedSet2>(new OperandsBasedSet2(transformedOperands), currentResolutionContext);

@@ -24,8 +24,8 @@ public class SetTest1 implements ICondition1<SetTest2> {
     @Override
     public TransformationResult<SetTest2> transform(final PropsResolutionContext resolutionContext) {
         final TransformationResult<? extends ISingleOperand2> leftOperandTransformationResult = leftOperand.transform(resolutionContext);
-        final TransformationResult<? extends ISetOperand2> rightOperandTransformationResult = rightOperand.transform(leftOperandTransformationResult.getUpdatedContext());
-        return new TransformationResult<SetTest2>(new SetTest2(leftOperandTransformationResult.getItem(), negated, rightOperandTransformationResult.getItem()), rightOperandTransformationResult.getUpdatedContext());
+        final TransformationResult<? extends ISetOperand2> rightOperandTransformationResult = rightOperand.transform(leftOperandTransformationResult.updatedContext);
+        return new TransformationResult<SetTest2>(new SetTest2(leftOperandTransformationResult.item, negated, rightOperandTransformationResult.item), rightOperandTransformationResult.updatedContext);
     }
 
     @Override

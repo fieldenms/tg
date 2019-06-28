@@ -23,8 +23,8 @@ public class CompoundSource2 {
     
     public TransformationResult<CompoundSource3> transform(final TransformationContext resolutionContext) {
         final TransformationResult<? extends IQrySource3> sourceTransformationResult = source.transform(resolutionContext);
-        final TransformationResult<Conditions3> joinConditionsTransformationResult = joinConditions.transform(sourceTransformationResult.getUpdatedContext());
-        return new TransformationResult<CompoundSource3>(new CompoundSource3(sourceTransformationResult.getItem(), joinType, joinConditionsTransformationResult.getItem()), joinConditionsTransformationResult.getUpdatedContext());
+        final TransformationResult<Conditions3> joinConditionsTransformationResult = joinConditions.transform(sourceTransformationResult.updatedContext);
+        return new TransformationResult<CompoundSource3>(new CompoundSource3(sourceTransformationResult.item, joinType, joinConditionsTransformationResult.item), joinConditionsTransformationResult.updatedContext);
     }
 
     @Override

@@ -43,19 +43,19 @@ public class EntQuery2 implements ISingleOperand2<EntQuery3> {
     @Override
     public TransformationResult<EntQuery3> transform(final TransformationContext transformationContext) {
         final TransformationResult<Sources3> sourcesTransformationResult =  sources.transform(transformationContext);
-        final TransformationResult<Conditions3> conditionsTransformationResult =  conditions.transform(sourcesTransformationResult.getUpdatedContext());
-        final TransformationResult<Yields3> yieldsTransformationResult =  yields.transform(conditionsTransformationResult.getUpdatedContext());
-        final TransformationResult<GroupBys3> groupsTransformationResult =  groups.transform(yieldsTransformationResult.getUpdatedContext());
-        final TransformationResult<OrderBys3> orderingsTransformationResult =  orderings.transform(groupsTransformationResult.getUpdatedContext());
+        final TransformationResult<Conditions3> conditionsTransformationResult =  conditions.transform(sourcesTransformationResult.updatedContext);
+        final TransformationResult<Yields3> yieldsTransformationResult =  yields.transform(conditionsTransformationResult.updatedContext);
+        final TransformationResult<GroupBys3> groupsTransformationResult =  groups.transform(yieldsTransformationResult.updatedContext);
+        final TransformationResult<OrderBys3> orderingsTransformationResult =  orderings.transform(groupsTransformationResult.updatedContext);
 
         final EntQueryBlocks3 entQueryBlocks = new EntQueryBlocks3(
-                sourcesTransformationResult.getItem(), 
-                conditionsTransformationResult.getItem(), 
-                yieldsTransformationResult.getItem(), 
-                groupsTransformationResult.getItem(), 
-                orderingsTransformationResult.getItem());
+                sourcesTransformationResult.item, 
+                conditionsTransformationResult.item, 
+                yieldsTransformationResult.item, 
+                groupsTransformationResult.item, 
+                orderingsTransformationResult.item);
 
-        return new TransformationResult<EntQuery3>(new EntQuery3(entQueryBlocks), orderingsTransformationResult.getUpdatedContext());
+        return new TransformationResult<EntQuery3>(new EntQuery3(entQueryBlocks), orderingsTransformationResult.updatedContext);
     }    
 
     @Override

@@ -34,7 +34,7 @@ public class OrderBy2 {
     
     public TransformationResult<OrderBy3> transform(final TransformationContext resolutionContext) {
         final TransformationResult<? extends ISingleOperand3> operandTransformationResult = operand.transform(resolutionContext);
-        return new TransformationResult<OrderBy3>(new OrderBy3(operandTransformationResult.getItem(), isDesc), operandTransformationResult.getUpdatedContext());
+        return new TransformationResult<OrderBy3>(new OrderBy3(operandTransformationResult.item, isDesc), operandTransformationResult.updatedContext);
     }
     
     @Override

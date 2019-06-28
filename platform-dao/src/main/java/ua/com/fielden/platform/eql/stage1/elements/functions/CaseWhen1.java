@@ -29,14 +29,14 @@ public class CaseWhen1 extends AbstractFunction1<CaseWhen2> {
         PropsResolutionContext currentResolutionContext = resolutionContext;
         for (final Pair<ICondition1<? extends ICondition2>, ISingleOperand1<? extends ISingleOperand2>> pair : whenThenPairs) {
             final TransformationResult<? extends ICondition2> conditionTransformationResult = pair.getKey().transform(currentResolutionContext);
-            currentResolutionContext = conditionTransformationResult.getUpdatedContext();
+            currentResolutionContext = conditionTransformationResult.updatedContext;
             final TransformationResult<? extends ISingleOperand2> operandTransformationResult = pair.getValue().transform(currentResolutionContext);
-            currentResolutionContext = operandTransformationResult.getUpdatedContext();
-            transformedWhenThenPairs.add(new Pair<ICondition2, ISingleOperand2>(conditionTransformationResult.getItem(), operandTransformationResult.getItem()));
+            currentResolutionContext = operandTransformationResult.updatedContext;
+            transformedWhenThenPairs.add(new Pair<ICondition2, ISingleOperand2>(conditionTransformationResult.item, operandTransformationResult.item));
         }
         final TransformationResult<? extends ISingleOperand2> elseOperandTransformationResult = elseOperand.transform(currentResolutionContext);
         
-        return new TransformationResult<CaseWhen2>(new CaseWhen2(transformedWhenThenPairs, elseOperandTransformationResult.getItem()), elseOperandTransformationResult.getUpdatedContext());
+        return new TransformationResult<CaseWhen2>(new CaseWhen2(transformedWhenThenPairs, elseOperandTransformationResult.item), elseOperandTransformationResult.updatedContext);
     }
 
     @Override

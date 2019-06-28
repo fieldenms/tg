@@ -24,8 +24,8 @@ public class LikeTest1 implements ICondition1<LikeTest2> {
     @Override
     public TransformationResult<LikeTest2> transform(final PropsResolutionContext resolutionContext) {
         final TransformationResult<? extends ISingleOperand2> leftOperandTransformationResult = leftOperand.transform(resolutionContext);
-        final TransformationResult<? extends ISingleOperand2> rightOperandTransformationResult = rightOperand.transform(leftOperandTransformationResult.getUpdatedContext());
-        return new TransformationResult<LikeTest2>(new LikeTest2(leftOperandTransformationResult.getItem(), rightOperandTransformationResult.getItem(), options), rightOperandTransformationResult.getUpdatedContext());
+        final TransformationResult<? extends ISingleOperand2> rightOperandTransformationResult = rightOperand.transform(leftOperandTransformationResult.updatedContext);
+        return new TransformationResult<LikeTest2>(new LikeTest2(leftOperandTransformationResult.item, rightOperandTransformationResult.item, options), rightOperandTransformationResult.updatedContext);
     }
 
     @Override

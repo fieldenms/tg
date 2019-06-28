@@ -27,8 +27,8 @@ public class Yields1 {
         PropsResolutionContext currentResolutionContext = resolutionContext;
         for (final Yield1 yield : yieldsMap.values()) {
             final TransformationResult<Yield2> yieldTransformationResult = yield.transform(currentResolutionContext);
-            currentResolutionContext = yieldTransformationResult.getUpdatedContext();
-            yieldsList.add(yieldTransformationResult.getItem());
+            currentResolutionContext = yieldTransformationResult.updatedContext;
+            yieldsList.add(yieldTransformationResult.item);
         }
         return new TransformationResult<Yields2>(new Yields2(yieldsList), currentResolutionContext);
     }

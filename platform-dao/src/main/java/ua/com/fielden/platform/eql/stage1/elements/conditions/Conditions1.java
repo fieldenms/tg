@@ -73,9 +73,9 @@ public class Conditions1 implements ICondition1<Conditions2> {
             final List<ICondition2<?>> transformedAndGroup = new ArrayList<>(); 
             for (final ICondition1<? extends ICondition2> andGroupCondition : andGroup) {
                 final TransformationResult<? extends ICondition2> andGroupConditionTransformationResult = andGroupCondition.transform(currentResolutionContext);
-                if (!andGroupConditionTransformationResult.getItem().ignore()) {
-                    transformedAndGroup.add(andGroupConditionTransformationResult.getItem());
-                    currentResolutionContext = andGroupConditionTransformationResult.getUpdatedContext();
+                if (!andGroupConditionTransformationResult.item.ignore()) {
+                    transformedAndGroup.add(andGroupConditionTransformationResult.item);
+                    currentResolutionContext = andGroupConditionTransformationResult.updatedContext;
                 }
             }
             if (!transformedAndGroup.isEmpty()) {

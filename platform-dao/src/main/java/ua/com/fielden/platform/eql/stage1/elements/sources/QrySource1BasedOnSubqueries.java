@@ -63,8 +63,8 @@ public class QrySource1BasedOnSubqueries extends AbstractQrySource1<QrySource2Ba
 
         for (final EntQuery1 model : models) {
             final TransformationResult<EntQuery2> modelTransformationResult = model.transform(currentResolutionContext/*.produceNewOne() // as already invoked as part of EntQuery1.transform(..)*/);
-            transformedQueries.add(modelTransformationResult.getItem());
-            currentResolutionContext = modelTransformationResult.getUpdatedContext(); // TODO should be just resolutionContext with propsResolutions added from this model transformation   
+            transformedQueries.add(modelTransformationResult.item);
+            currentResolutionContext = modelTransformationResult.updatedContext; // TODO should be just resolutionContext with propsResolutions added from this model transformation   
         }
            
         final QrySource2BasedOnSubqueries transformedSource = new QrySource2BasedOnSubqueries(transformedQueries, alias, resolutionContext.getDomainInfo(), contextId);
@@ -75,10 +75,6 @@ public class QrySource1BasedOnSubqueries extends AbstractQrySource1<QrySource2Ba
         return models.get(0);
     }
     
-    public List<EntQuery1> getModels() {
-        return models;
-    }
-
     @Override
     public Class<? extends AbstractEntity<?>> sourceType() {
         return firstModel().type();

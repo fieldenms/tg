@@ -23,7 +23,7 @@ public class Yield1 {
 
     public TransformationResult<Yield2> transform(final PropsResolutionContext resolutionContext) {
         final TransformationResult<? extends ISingleOperand2> operandTransformationResult = operand.transform(resolutionContext);
-        return new TransformationResult<Yield2>(new Yield2(operandTransformationResult.getItem(), alias, hasRequiredHint), operandTransformationResult.getUpdatedContext());
+        return new TransformationResult<Yield2>(new Yield2(operandTransformationResult.item, alias, hasRequiredHint), operandTransformationResult.updatedContext);
     }
 
     @Override

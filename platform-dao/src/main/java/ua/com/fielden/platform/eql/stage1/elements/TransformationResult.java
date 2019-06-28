@@ -1,19 +1,11 @@
 package ua.com.fielden.platform.eql.stage1.elements;
 
 public class TransformationResult<S2> {
-    private final S2 item;
-    private final PropsResolutionContext updatedContext;
+    public final S2 item;
+    public final PropsResolutionContext updatedContext;
     
-    public TransformationResult(S2 item, PropsResolutionContext updatedContext) {
+    public TransformationResult(final S2 item, final PropsResolutionContext updatedContext) {
         this.item = item;
         this.updatedContext = updatedContext;
-    }
-
-    public S2 getItem() {
-        return item;
-    }
-
-    public PropsResolutionContext getUpdatedContext() {
-        return updatedContext;
     }
 }

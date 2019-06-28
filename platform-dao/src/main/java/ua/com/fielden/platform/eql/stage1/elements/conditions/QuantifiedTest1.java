@@ -28,9 +28,9 @@ public class QuantifiedTest1 implements ICondition1<QuantifiedTest2> {
     @Override
     public TransformationResult<QuantifiedTest2> transform(final PropsResolutionContext resolutionContext) {
         final TransformationResult<? extends ISingleOperand2> leftOperandTransformationResult = leftOperand.transform(resolutionContext);
-        final TransformationResult<EntQuery2> rightOperandTransformationResult = rightOperand.transform(leftOperandTransformationResult.getUpdatedContext());
+        final TransformationResult<EntQuery2> rightOperandTransformationResult = rightOperand.transform(leftOperandTransformationResult.updatedContext);
         
-        return new TransformationResult<QuantifiedTest2>(new QuantifiedTest2(leftOperandTransformationResult.getItem(), operator, quantifier, rightOperandTransformationResult.getItem()), rightOperandTransformationResult.getUpdatedContext());
+        return new TransformationResult<QuantifiedTest2>(new QuantifiedTest2(leftOperandTransformationResult.item, operator, quantifier, rightOperandTransformationResult.item), rightOperandTransformationResult.updatedContext);
     }
 
     @Override

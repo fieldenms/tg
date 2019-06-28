@@ -28,8 +28,8 @@ public class ComparisonTest2 extends AbstractCondition2<ComparisonTest3> {
     @Override
     public TransformationResult<ComparisonTest3> transform(final TransformationContext transformationContext) {
         final TransformationResult<? extends ISingleOperand3> leftOperandTransformationResult = leftOperand.transform(transformationContext);
-        final TransformationResult<? extends ISingleOperand3> rightOperandTransformationResult = rightOperand.transform(leftOperandTransformationResult.getUpdatedContext());
-        return new TransformationResult<ComparisonTest3>(new ComparisonTest3(leftOperandTransformationResult.getItem(), operator, rightOperandTransformationResult.getItem()), rightOperandTransformationResult.getUpdatedContext());
+        final TransformationResult<? extends ISingleOperand3> rightOperandTransformationResult = rightOperand.transform(leftOperandTransformationResult.updatedContext);
+        return new TransformationResult<ComparisonTest3>(new ComparisonTest3(leftOperandTransformationResult.item, operator, rightOperandTransformationResult.item), rightOperandTransformationResult.updatedContext);
     }
 
     @Override

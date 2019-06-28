@@ -28,8 +28,8 @@ public class Yields2 {
         TransformationContext currentResolutionContext = transformationContext;
         for (final Yield2 yield : yieldsMap.values()) {
             final TransformationResult<Yield3> yieldTransformationResult = yield.transform(currentResolutionContext);
-            currentResolutionContext = yieldTransformationResult.getUpdatedContext();
-            yieldsList.add(yieldTransformationResult.getItem());
+            currentResolutionContext = yieldTransformationResult.updatedContext;
+            yieldsList.add(yieldTransformationResult.item);
         }
         return new TransformationResult<Yields3>(new Yields3(yieldsList), currentResolutionContext);
     }

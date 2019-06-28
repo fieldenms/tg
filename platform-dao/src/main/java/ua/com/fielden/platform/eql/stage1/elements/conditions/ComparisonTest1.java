@@ -23,8 +23,8 @@ public class ComparisonTest1 implements ICondition1<ComparisonTest2> {
     @Override
     public TransformationResult<ComparisonTest2> transform(final PropsResolutionContext resolutionContext) {
         final TransformationResult<? extends ISingleOperand2> leftOperandTransformationResult = leftOperand.transform(resolutionContext);
-        final TransformationResult<? extends ISingleOperand2> rightOperandTransformationResult = rightOperand.transform(leftOperandTransformationResult.getUpdatedContext());
-        return new TransformationResult<ComparisonTest2>(new ComparisonTest2(leftOperandTransformationResult.getItem(), operator, rightOperandTransformationResult.getItem()), rightOperandTransformationResult.getUpdatedContext());
+        final TransformationResult<? extends ISingleOperand2> rightOperandTransformationResult = rightOperand.transform(leftOperandTransformationResult.updatedContext);
+        return new TransformationResult<ComparisonTest2>(new ComparisonTest2(leftOperandTransformationResult.item, operator, rightOperandTransformationResult.item), rightOperandTransformationResult.updatedContext);
     }
 
     @Override

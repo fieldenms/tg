@@ -24,7 +24,7 @@ public class NullTest1 implements ICondition1<NullTest2> {
     @Override
     public TransformationResult<NullTest2> transform(final PropsResolutionContext resolutionContext) {
         final TransformationResult<? extends ISingleOperand2> operandTransformationResult = operand.transform(resolutionContext);
-        return new TransformationResult<NullTest2>(new NullTest2(operandTransformationResult.getItem(), negated), operandTransformationResult.getUpdatedContext());
+        return new TransformationResult<NullTest2>(new NullTest2(operandTransformationResult.item, negated), operandTransformationResult.updatedContext);
     }
 
     @Override

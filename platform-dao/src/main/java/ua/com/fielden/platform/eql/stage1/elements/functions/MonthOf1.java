@@ -15,6 +15,6 @@ public class MonthOf1 extends SingleOperandFunction1<MonthOf2> {
     @Override
     public TransformationResult<MonthOf2> transform(final PropsResolutionContext resolutionContext) {
         final TransformationResult<? extends ISingleOperand2> operandTransformationResult = operand.transform(resolutionContext);
-        return new TransformationResult<MonthOf2>(new MonthOf2(operandTransformationResult.getItem()), operandTransformationResult.getUpdatedContext());
+        return new TransformationResult<MonthOf2>(new MonthOf2(operandTransformationResult.item), operandTransformationResult.updatedContext);
     }
 }

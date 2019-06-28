@@ -25,7 +25,7 @@ public class NullTest2 extends AbstractCondition2<NullTest3> {
     @Override
     public TransformationResult<NullTest3> transform(final TransformationContext transformationContext) {
         final TransformationResult<? extends ISingleOperand3> operandTransformationResult = operand.transform(transformationContext);
-        return new TransformationResult<NullTest3>(new NullTest3(operandTransformationResult.getItem(), negated), operandTransformationResult.getUpdatedContext());
+        return new TransformationResult<NullTest3>(new NullTest3(operandTransformationResult.item, negated), operandTransformationResult.updatedContext);
     }
 
     @Override

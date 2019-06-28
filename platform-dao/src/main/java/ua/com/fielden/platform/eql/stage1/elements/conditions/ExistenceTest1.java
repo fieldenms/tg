@@ -20,7 +20,7 @@ public class ExistenceTest1 implements ICondition1<ExistenceTest2> {
     @Override
     public TransformationResult<ExistenceTest2> transform(final PropsResolutionContext resolutionContext) {
         final TransformationResult<EntQuery2> subQueryTransformationResult = subQuery.transform(resolutionContext);
-        return new TransformationResult<ExistenceTest2>(new ExistenceTest2(negated, subQueryTransformationResult.getItem()), subQueryTransformationResult.getUpdatedContext());
+        return new TransformationResult<ExistenceTest2>(new ExistenceTest2(negated, subQueryTransformationResult.item), subQueryTransformationResult.updatedContext);
     }
 
     @Override

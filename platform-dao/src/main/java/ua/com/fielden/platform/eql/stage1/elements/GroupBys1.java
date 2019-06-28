@@ -19,14 +19,10 @@ public class GroupBys1 {
         PropsResolutionContext currentResolutionContext = resolutionContext;
         for (final GroupBy1 groupBy : groups) {
             final TransformationResult<GroupBy2> groupByTransformationResult = groupBy.transform(currentResolutionContext);
-            transformed.add(groupByTransformationResult.getItem());
-            currentResolutionContext = groupByTransformationResult.getUpdatedContext();
+            transformed.add(groupByTransformationResult.item);
+            currentResolutionContext = groupByTransformationResult.updatedContext;
         }
         return new TransformationResult<GroupBys2>(new GroupBys2(transformed), currentResolutionContext);
-    }
-
-    public List<GroupBy1> getGroups() {
-        return groups;
     }
 
     @Override

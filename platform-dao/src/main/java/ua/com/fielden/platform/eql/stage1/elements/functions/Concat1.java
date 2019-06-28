@@ -24,14 +24,10 @@ public class Concat1 extends AbstractFunction1<Concat2> {
         PropsResolutionContext currentResolutionContext = resolutionContext;
         for (final ISingleOperand1<? extends ISingleOperand2> operand : operands) {
             final TransformationResult<? extends ISingleOperand2> operandTransformationResult = operand.transform(resolutionContext);
-            transformed.add(operandTransformationResult.getItem());
-            currentResolutionContext = operandTransformationResult.getUpdatedContext();
+            transformed.add(operandTransformationResult.item);
+            currentResolutionContext = operandTransformationResult.updatedContext;
         }
         return new TransformationResult<Concat2>(new Concat2(transformed), currentResolutionContext);
-    }
-
-    public List<ISingleOperand1<? extends ISingleOperand2>> getOperands() {
-        return operands;
     }
 
     @Override

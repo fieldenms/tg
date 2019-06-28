@@ -67,21 +67,21 @@ public class EntQuery1 extends AbstractElement1 implements ISingleOperand1<EntQu
         final PropsResolutionContext localResolutionContext = isSubQuery() ? resolutionContext.produceForCorrelatedSubquery() : resolutionContext.produceForUncorrelatedSubquery();
         // .produceForUncorrelatedSubquery() should be used only for cases of synthetic entities (where source query can only be uncorrelated) -- simple queries as source queries are accessible for correlation
         final TransformationResult<Sources2> sourcesTransformationResult =  sources.transform(localResolutionContext);
-        final TransformationResult<Conditions2> conditionsTransformationResult =  conditions.transform(sourcesTransformationResult.getUpdatedContext());
-        final TransformationResult<Yields2> yieldsTransformationResult =  yields.transform(conditionsTransformationResult.getUpdatedContext());
-        final TransformationResult<GroupBys2> groupsTransformationResult =  groups.transform(yieldsTransformationResult.getUpdatedContext());
-        final TransformationResult<OrderBys2> orderingsTransformationResult =  orderings.transform(groupsTransformationResult.getUpdatedContext());
+        final TransformationResult<Conditions2> conditionsTransformationResult =  conditions.transform(sourcesTransformationResult.updatedContext);
+        final TransformationResult<Yields2> yieldsTransformationResult =  yields.transform(conditionsTransformationResult.updatedContext);
+        final TransformationResult<GroupBys2> groupsTransformationResult =  groups.transform(yieldsTransformationResult.updatedContext);
+        final TransformationResult<OrderBys2> orderingsTransformationResult =  orderings.transform(groupsTransformationResult.updatedContext);
 
         final EntQueryBlocks2 entQueryBlocks = new EntQueryBlocks2(
-                sourcesTransformationResult.getItem(), 
-                conditionsTransformationResult.getItem(), 
-                yieldsTransformationResult.getItem(), 
-                groupsTransformationResult.getItem(), 
-                orderingsTransformationResult.getItem());
+                sourcesTransformationResult.item, 
+                conditionsTransformationResult.item, 
+                yieldsTransformationResult.item, 
+                groupsTransformationResult.item, 
+                orderingsTransformationResult.item);
 
         final PropsResolutionContext resultResolutionContext = (isSubQuery() || isSourceQuery()) ? 
-                new PropsResolutionContext(resolutionContext.getDomainInfo(), resolutionContext.getSources(), orderingsTransformationResult.getUpdatedContext().getResolvedProps()) :
-                    orderingsTransformationResult.getUpdatedContext();
+                new PropsResolutionContext(resolutionContext.getDomainInfo(), resolutionContext.getSources(), orderingsTransformationResult.updatedContext.getResolvedProps()) :
+                    orderingsTransformationResult.updatedContext;
                
         return new TransformationResult<EntQuery2>(new EntQuery2(entQueryBlocks, type(), category), resultResolutionContext);
     }

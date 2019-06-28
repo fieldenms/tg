@@ -132,7 +132,7 @@ public class BaseEntQueryTCase1 {
     }
     
     protected static EntQuery2 entSourceQry(final QueryModel qryModel, final PropsResolutionContext transformator) {
-        return qb.generateEntQueryAsSourceQuery(qryModel, Optional.empty()).transform(transformator).getItem();
+        return qb.generateEntQueryAsSourceQuery(qryModel, Optional.empty()).transform(transformator).item;
     }
 
     //    protected static EntQuery1 entSourceQry(final QueryModel qryModel, final Map<String, Object> paramValues) {
@@ -164,9 +164,9 @@ public class BaseEntQueryTCase1 {
     
     protected static ua.com.fielden.platform.eql.stage2.elements.TransformationResult<EntQuery3> entResultQry3(final QueryModel qryModel, final PropsResolutionContext transformator, final TransformationContext context) {
         if (qryModel instanceof EntityResultQueryModel) {
-            return qb.generateEntQueryAsResultQuery(from((EntityResultQueryModel) qryModel).model()).transform(transformator).getItem().transform(context);
+            return qb.generateEntQueryAsResultQuery(from((EntityResultQueryModel) qryModel).model()).transform(transformator).item.transform(context);
         } else if (qryModel instanceof AggregatedResultQueryModel) {
-            return qb.generateEntQueryAsResultQuery(from((AggregatedResultQueryModel) qryModel).model()).transform(transformator).getItem().transform(context);
+            return qb.generateEntQueryAsResultQuery(from((AggregatedResultQueryModel) qryModel).model()).transform(transformator).item.transform(context);
         }
         throw new IllegalStateException("Not implemented yet");
     }

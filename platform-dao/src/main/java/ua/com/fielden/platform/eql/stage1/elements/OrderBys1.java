@@ -19,8 +19,8 @@ public class OrderBys1 {
         PropsResolutionContext currentResolutionContext = resolutionContext;
         for (final OrderBy1 orderBy : models) {
             final TransformationResult<OrderBy2> orderByTransformationResult = orderBy.transform(currentResolutionContext);
-            transformed.add(orderByTransformationResult.getItem());
-            currentResolutionContext = orderByTransformationResult.getUpdatedContext();
+            transformed.add(orderByTransformationResult.item);
+            currentResolutionContext = orderByTransformationResult.updatedContext;
         }
         return new TransformationResult<OrderBys2>(new OrderBys2(transformed), currentResolutionContext);
     }

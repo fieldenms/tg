@@ -38,8 +38,8 @@ public class Conditions2 extends AbstractCondition2<Conditions3> {
             final List<ICondition3> transformedAndGroup = new ArrayList<>(); 
             for (final ICondition2<? extends ICondition3> andGroupCondition : andGroup) {
                 final TransformationResult<? extends ICondition3> andGroupConditionTransformationResult = andGroupCondition.transform(currentResolutionContext);
-                transformedAndGroup.add(andGroupConditionTransformationResult.getItem());
-                currentResolutionContext = andGroupConditionTransformationResult.getUpdatedContext();
+                transformedAndGroup.add(andGroupConditionTransformationResult.item);
+                currentResolutionContext = andGroupConditionTransformationResult.updatedContext;
             }
             result.add(transformedAndGroup);
         }

@@ -28,8 +28,8 @@ public class LikeTest2 extends AbstractCondition2<LikeTest3> {
     @Override
     public TransformationResult<LikeTest3> transform(final TransformationContext transformationContext) {
         final TransformationResult<? extends ISingleOperand3> leftOperandTransformationResult = leftOperand.transform(transformationContext);
-        final TransformationResult<? extends ISingleOperand3> rightOperandTransformationResult = rightOperand.transform(leftOperandTransformationResult.getUpdatedContext());
-        return new TransformationResult<LikeTest3>(new LikeTest3(leftOperandTransformationResult.getItem(), rightOperandTransformationResult.getItem(), options), rightOperandTransformationResult.getUpdatedContext());
+        final TransformationResult<? extends ISingleOperand3> rightOperandTransformationResult = rightOperand.transform(leftOperandTransformationResult.updatedContext);
+        return new TransformationResult<LikeTest3>(new LikeTest3(leftOperandTransformationResult.item, rightOperandTransformationResult.item, options), rightOperandTransformationResult.updatedContext);
     }
 
     @Override

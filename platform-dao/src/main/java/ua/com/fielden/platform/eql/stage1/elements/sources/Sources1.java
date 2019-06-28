@@ -29,14 +29,14 @@ public class Sources1  {
         final TransformationResult<? extends IQrySource2> mainTransformationResult = main.transform(resolutionContext);    
                 
         final List<CompoundSource2> transformed = new ArrayList<>();
-        PropsResolutionContext currentResolutionContext = mainTransformationResult.getUpdatedContext();
+        PropsResolutionContext currentResolutionContext = mainTransformationResult.updatedContext;
         
         for (final CompoundSource1 compoundSource : compounds) {
             final TransformationResult<CompoundSource2> compoundSourceTransformationResult = compoundSource.transform(currentResolutionContext);
-            transformed.add(compoundSourceTransformationResult.getItem());
-            currentResolutionContext = compoundSourceTransformationResult.getUpdatedContext();
+            transformed.add(compoundSourceTransformationResult.item);
+            currentResolutionContext = compoundSourceTransformationResult.updatedContext;
         }
-        return new TransformationResult<Sources2>(new Sources2(mainTransformationResult.getItem(), transformed), currentResolutionContext);
+        return new TransformationResult<Sources2>(new Sources2(mainTransformationResult.item, transformed), currentResolutionContext);
     }
 
     @Override

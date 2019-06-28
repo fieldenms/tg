@@ -34,7 +34,7 @@ public class OrderBy1 {
     
     public TransformationResult<OrderBy2> transform(final PropsResolutionContext resolutionContext) {
         final TransformationResult<? extends ISingleOperand2> operandTransformationResult = operand.transform(resolutionContext);
-        return new TransformationResult<OrderBy2>(new OrderBy2(operandTransformationResult.getItem(), isDesc), operandTransformationResult.getUpdatedContext());
+        return new TransformationResult<OrderBy2>(new OrderBy2(operandTransformationResult.item, isDesc), operandTransformationResult.updatedContext);
     }
 
     @Override
