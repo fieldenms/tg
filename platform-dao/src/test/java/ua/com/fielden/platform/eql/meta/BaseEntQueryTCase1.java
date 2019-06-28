@@ -219,7 +219,7 @@ public class BaseEntQueryTCase1 {
 //        return new EntParam1(value, true);
 //    }
 
-    protected static OperandsBasedSet1 set(final ISingleOperand1<? extends ISingleOperand2>... operands) {
+    protected static OperandsBasedSet1 set(final ISingleOperand1<? extends ISingleOperand2<?>>... operands) {
         return new OperandsBasedSet1(Arrays.asList(operands));
     }
 

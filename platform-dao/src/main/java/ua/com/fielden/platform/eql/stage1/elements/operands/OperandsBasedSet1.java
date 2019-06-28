@@ -10,18 +10,18 @@ import ua.com.fielden.platform.eql.stage2.elements.operands.ISingleOperand2;
 import ua.com.fielden.platform.eql.stage2.elements.operands.OperandsBasedSet2;
 
 public class OperandsBasedSet1 implements ISetOperand1<OperandsBasedSet2> {
-    private final List<ISingleOperand1<? extends ISingleOperand2>> operands;
+    private final List<ISingleOperand1<? extends ISingleOperand2<?>>> operands;
 
-    public OperandsBasedSet1(final List<ISingleOperand1<? extends ISingleOperand2>> operands) {
+    public OperandsBasedSet1(final List<ISingleOperand1<? extends ISingleOperand2<?>>> operands) {
         this.operands = operands;
     }
 
     @Override
-    public TransformationResult<OperandsBasedSet2> transform(final PropsResolutionContext resolutionContext) {
+    public TransformationResult<OperandsBasedSet2> transform(final PropsResolutionContext context) {
         final List<ISingleOperand2> transformedOperands = new ArrayList<>();
-        PropsResolutionContext currentResolutionContext = resolutionContext;
+        PropsResolutionContext currentResolutionContext = context;
         for (final ISingleOperand1<? extends ISingleOperand2> singleOperand : operands) {
-            final TransformationResult<? extends ISingleOperand2> operandTransformationResult = singleOperand.transform(resolutionContext);
+            final TransformationResult<? extends ISingleOperand2> operandTransformationResult = singleOperand.transform(context);
             transformedOperands.add(operandTransformationResult.item);
             currentResolutionContext = operandTransformationResult.updatedContext;
         }

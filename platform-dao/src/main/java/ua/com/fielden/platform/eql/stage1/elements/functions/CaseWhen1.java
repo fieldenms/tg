@@ -15,19 +15,19 @@ import ua.com.fielden.platform.utils.Pair;
 
 public class CaseWhen1 extends AbstractFunction1<CaseWhen2> {
 
-    private List<Pair<ICondition1<? extends ICondition2>, ISingleOperand1<? extends ISingleOperand2>>> whenThenPairs = new ArrayList<>();
-    public final ISingleOperand1<? extends ISingleOperand2> elseOperand;
+    private List<Pair<ICondition1<? extends ICondition2<?>>, ISingleOperand1<? extends ISingleOperand2<?>>>> whenThenPairs = new ArrayList<>();
+    public final ISingleOperand1<? extends ISingleOperand2<?>> elseOperand;
 
-    public CaseWhen1(final List<Pair<ICondition1<? extends ICondition2>, ISingleOperand1<? extends ISingleOperand2>>> whenThenPairs, final ISingleOperand1<? extends ISingleOperand2> elseOperand) {
+    public CaseWhen1(final List<Pair<ICondition1<? extends ICondition2<?>>, ISingleOperand1<? extends ISingleOperand2<?>>>> whenThenPairs, final ISingleOperand1<? extends ISingleOperand2<?>> elseOperand) {
         this.whenThenPairs.addAll(whenThenPairs);
         this.elseOperand = elseOperand;
     }
 
     @Override
-    public TransformationResult<CaseWhen2> transform(final PropsResolutionContext resolutionContext) {
+    public TransformationResult<CaseWhen2> transform(final PropsResolutionContext context) {
         final List<Pair<ICondition2, ISingleOperand2>> transformedWhenThenPairs = new ArrayList<>();
-        PropsResolutionContext currentResolutionContext = resolutionContext;
-        for (final Pair<ICondition1<? extends ICondition2>, ISingleOperand1<? extends ISingleOperand2>> pair : whenThenPairs) {
+        PropsResolutionContext currentResolutionContext = context;
+        for (final Pair<ICondition1<? extends ICondition2<?>>, ISingleOperand1<? extends ISingleOperand2<?>>> pair : whenThenPairs) {
             final TransformationResult<? extends ICondition2> conditionTransformationResult = pair.getKey().transform(currentResolutionContext);
             currentResolutionContext = conditionTransformationResult.updatedContext;
             final TransformationResult<? extends ISingleOperand2> operandTransformationResult = pair.getValue().transform(currentResolutionContext);

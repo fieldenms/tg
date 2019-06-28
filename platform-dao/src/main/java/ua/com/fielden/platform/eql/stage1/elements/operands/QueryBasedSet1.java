@@ -15,8 +15,8 @@ public class QueryBasedSet1 implements ISetOperand1<QueryBasedSet2> {
     }
 
     @Override
-    public TransformationResult<QueryBasedSet2> transform(final PropsResolutionContext resolutionContext) {
-        final TransformationResult<EntQuery2> modelTransformationResult = model.transform(resolutionContext);
+    public TransformationResult<QueryBasedSet2> transform(final PropsResolutionContext context) {
+        final TransformationResult<EntQuery2> modelTransformationResult = model.transform(context);
         return new TransformationResult<QueryBasedSet2>(new QueryBasedSet2(modelTransformationResult.item), modelTransformationResult.updatedContext);
     }
 

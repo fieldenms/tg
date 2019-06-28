@@ -8,13 +8,13 @@ import ua.com.fielden.platform.eql.stage2.elements.operands.ISingleOperand2;
 
 public class MaxOf1 extends SingleOperandFunction1<MaxOf2> {
 
-    public MaxOf1(final ISingleOperand1<? extends ISingleOperand2> operand) {
+    public MaxOf1(final ISingleOperand1<? extends ISingleOperand2<?>> operand) {
         super(operand);
     }
 
     @Override
-    public TransformationResult<MaxOf2> transform(final PropsResolutionContext resolutionContext) {
-        final TransformationResult<? extends ISingleOperand2> operandTransformationResult = operand.transform(resolutionContext);
+    public TransformationResult<MaxOf2> transform(final PropsResolutionContext context) {
+        final TransformationResult<? extends ISingleOperand2> operandTransformationResult = operand.transform(context);
         return new TransformationResult<MaxOf2>(new MaxOf2(operandTransformationResult.item), operandTransformationResult.updatedContext);
     }
 }

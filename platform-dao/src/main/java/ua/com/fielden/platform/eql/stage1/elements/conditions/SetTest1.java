@@ -11,20 +11,20 @@ import ua.com.fielden.platform.eql.stage2.elements.operands.ISetOperand2;
 import ua.com.fielden.platform.eql.stage2.elements.operands.ISingleOperand2;
 
 public class SetTest1 implements ICondition1<SetTest2> {
-    private final ISingleOperand1<? extends ISingleOperand2> leftOperand;
-    private final ISetOperand1<? extends ISetOperand2> rightOperand;
+    private final ISingleOperand1<? extends ISingleOperand2<?>> leftOperand;
+    private final ISetOperand1<? extends ISetOperand2<?>> rightOperand;
     private final boolean negated;
 
-    public SetTest1(final ISingleOperand1<? extends ISingleOperand2> leftOperand, final boolean negated, final ISetOperand1<? extends ISetOperand2> rightOperand) {
+    public SetTest1(final ISingleOperand1<? extends ISingleOperand2<?>> leftOperand, final boolean negated, final ISetOperand1<? extends ISetOperand2<?>> rightOperand) {
         this.leftOperand = leftOperand;
         this.rightOperand = rightOperand;
         this.negated = negated;
     }
 
     @Override
-    public TransformationResult<SetTest2> transform(final PropsResolutionContext resolutionContext) {
-        final TransformationResult<? extends ISingleOperand2> leftOperandTransformationResult = leftOperand.transform(resolutionContext);
-        final TransformationResult<? extends ISetOperand2> rightOperandTransformationResult = rightOperand.transform(leftOperandTransformationResult.updatedContext);
+    public TransformationResult<SetTest2> transform(final PropsResolutionContext context) {
+        final TransformationResult<? extends ISingleOperand2<?>> leftOperandTransformationResult = leftOperand.transform(context);
+        final TransformationResult<? extends ISetOperand2<?>> rightOperandTransformationResult = rightOperand.transform(leftOperandTransformationResult.updatedContext);
         return new TransformationResult<SetTest2>(new SetTest2(leftOperandTransformationResult.item, negated, rightOperandTransformationResult.item), rightOperandTransformationResult.updatedContext);
     }
 

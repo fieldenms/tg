@@ -4,17 +4,14 @@ import java.util.List;
 import java.util.Objects;
 
 import ua.com.fielden.platform.eql.stage2.elements.operands.ISingleOperand2;
+import ua.com.fielden.platform.eql.stage3.elements.functions.Concat3;
 
-public class Concat2 extends AbstractFunction2 {
+public class Concat2 extends AbstractFunction2<Concat3> {
 
     private final List<ISingleOperand2> operands;
 
     public Concat2(final List<ISingleOperand2> operands) {
         this.operands = operands;
-    }
-
-    public List<ISingleOperand2> getOperands() {
-        return operands;
     }
 
     @Override

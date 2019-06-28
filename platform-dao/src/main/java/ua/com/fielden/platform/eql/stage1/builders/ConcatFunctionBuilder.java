@@ -27,7 +27,7 @@ public class ConcatFunctionBuilder extends AbstractTokensBuilder {
             getTokens().remove(getSize() - 1);
         }
         final Iterator<Pair<TokenCategory, Object>> iterator = getTokens().iterator();
-        final List<ISingleOperand1<? extends ISingleOperand2>> items = new ArrayList<>();
+        final List<ISingleOperand1<? extends ISingleOperand2<?>>> items = new ArrayList<>();
         final Pair<TokenCategory, Object> firstOperandPair = iterator.next();
         items.add(getModelForSingleOperand(firstOperandPair.getKey(), firstOperandPair.getValue()));
 

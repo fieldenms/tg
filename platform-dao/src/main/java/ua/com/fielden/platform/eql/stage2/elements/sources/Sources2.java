@@ -13,20 +13,16 @@ import ua.com.fielden.platform.eql.stage3.elements.sources.IQrySource3;
 import ua.com.fielden.platform.eql.stage3.elements.sources.Sources3;
 
 public class Sources2 {
-    public final IQrySource2 main;
+    public final IQrySource2<? extends IQrySource3> main;
     private final List<CompoundSource2> compounds;
 
-    public Sources2(final IQrySource2 main, final List<CompoundSource2> compounds) {
+    public Sources2(final IQrySource2<? extends IQrySource3> main, final List<CompoundSource2> compounds) {
         this.main = main;
         this.compounds = compounds;
     }
 
-    public Sources2(final IQrySource2 main) {
+    public Sources2(final IQrySource2<?> main) {
         this(main, emptyList());
-    }
-
-    public List<CompoundSource2> getCompounds() {
-        return compounds;
     }
 
     public TransformationResult<Sources3> transform(final TransformationContext transformationContext) {

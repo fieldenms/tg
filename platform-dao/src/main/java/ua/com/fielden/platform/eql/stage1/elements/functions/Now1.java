@@ -10,7 +10,7 @@ public class Now1 extends ZeroOperandFunction1<Now2> {
     }
 
     @Override
-    public TransformationResult<Now2> transform(final PropsResolutionContext resolutionContext) {
-        return new TransformationResult<Now2>(new Now2(), resolutionContext.cloneNew());
+    public TransformationResult<Now2> transform(final PropsResolutionContext context) {
+        return new TransformationResult<Now2>(new Now2(), context.cloneNew());
     }
 }

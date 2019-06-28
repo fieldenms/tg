@@ -10,11 +10,11 @@ import ua.com.fielden.platform.eql.stage2.elements.conditions.LikeTest2;
 import ua.com.fielden.platform.eql.stage2.elements.operands.ISingleOperand2;
 
 public class LikeTest1 implements ICondition1<LikeTest2> {
-    private final ISingleOperand1<? extends ISingleOperand2> leftOperand;
-    private final ISingleOperand1<? extends ISingleOperand2> rightOperand;
+    private final ISingleOperand1<? extends ISingleOperand2<?>> leftOperand;
+    private final ISingleOperand1<? extends ISingleOperand2<?>> rightOperand;
     private final LikeOptions options;
 
-    public LikeTest1(final ISingleOperand1<? extends ISingleOperand2> leftOperand, final ISingleOperand1<? extends ISingleOperand2> rightOperand, final LikeOptions options) {
+    public LikeTest1(final ISingleOperand1<? extends ISingleOperand2<?>> leftOperand, final ISingleOperand1<? extends ISingleOperand2<?>> rightOperand, final LikeOptions options) {
         this.leftOperand = leftOperand;
         this.rightOperand = rightOperand;
         this.options = options;
@@ -22,9 +22,9 @@ public class LikeTest1 implements ICondition1<LikeTest2> {
     }
 
     @Override
-    public TransformationResult<LikeTest2> transform(final PropsResolutionContext resolutionContext) {
-        final TransformationResult<? extends ISingleOperand2> leftOperandTransformationResult = leftOperand.transform(resolutionContext);
-        final TransformationResult<? extends ISingleOperand2> rightOperandTransformationResult = rightOperand.transform(leftOperandTransformationResult.updatedContext);
+    public TransformationResult<LikeTest2> transform(final PropsResolutionContext context) {
+        final TransformationResult<? extends ISingleOperand2<?>> leftOperandTransformationResult = leftOperand.transform(context);
+        final TransformationResult<? extends ISingleOperand2<?>> rightOperandTransformationResult = rightOperand.transform(leftOperandTransformationResult.updatedContext);
         return new TransformationResult<LikeTest2>(new LikeTest2(leftOperandTransformationResult.item, rightOperandTransformationResult.item, options), rightOperandTransformationResult.updatedContext);
     }
 

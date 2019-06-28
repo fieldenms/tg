@@ -5,11 +5,11 @@ import java.util.Objects;
 import ua.com.fielden.platform.eql.stage1.elements.operands.ISingleOperand1;
 import ua.com.fielden.platform.eql.stage2.elements.operands.ISingleOperand2;
 
-abstract class TwoOperandsFunction1<S2 extends ISingleOperand2> extends AbstractFunction1<S2> {
-    public final ISingleOperand1<? extends ISingleOperand2> operand1;
-    public final ISingleOperand1<? extends ISingleOperand2> operand2;
+abstract class TwoOperandsFunction1<S2 extends ISingleOperand2<?>> extends AbstractFunction1<S2> {
+    public final ISingleOperand1<? extends ISingleOperand2<?>> operand1;
+    public final ISingleOperand1<? extends ISingleOperand2<?>> operand2;
 
-    public TwoOperandsFunction1(final ISingleOperand1<? extends ISingleOperand2> operand1, final ISingleOperand1<? extends ISingleOperand2> operand2) {
+    public TwoOperandsFunction1(final ISingleOperand1<? extends ISingleOperand2<?>> operand1, final ISingleOperand1<? extends ISingleOperand2<?>> operand2) {
         this.operand1 = operand1;
         this.operand2 = operand2;
     }

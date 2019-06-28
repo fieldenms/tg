@@ -1,7 +1,5 @@
 package ua.com.fielden.platform.eql.stage1.elements.sources;
 
-import static java.util.Collections.emptyList;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -13,20 +11,16 @@ import ua.com.fielden.platform.eql.stage2.elements.sources.IQrySource2;
 import ua.com.fielden.platform.eql.stage2.elements.sources.Sources2;
 
 public class Sources1  {
-    public final IQrySource1<? extends IQrySource2> main;
+    public final IQrySource1<? extends IQrySource2<?>> main;
     private final List<CompoundSource1> compounds;
 
-    public Sources1(final IQrySource1<? extends IQrySource2> main, final List<CompoundSource1> compounds) {
+    public Sources1(final IQrySource1<? extends IQrySource2<?>> main, final List<CompoundSource1> compounds) {
         this.main = main;
         this.compounds = compounds;
     }
 
-    public Sources1(final IQrySource1<? extends IQrySource2> main) {
-        this(main, emptyList());
-    }
-
-    public TransformationResult<Sources2> transform(final PropsResolutionContext resolutionContext) {
-        final TransformationResult<? extends IQrySource2> mainTransformationResult = main.transform(resolutionContext);    
+    public TransformationResult<Sources2> transform(final PropsResolutionContext context) {
+        final TransformationResult<? extends IQrySource2<?>> mainTransformationResult = main.transform(context);    
                 
         final List<CompoundSource2> transformed = new ArrayList<>();
         PropsResolutionContext currentResolutionContext = mainTransformationResult.updatedContext;

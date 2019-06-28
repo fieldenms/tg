@@ -36,7 +36,7 @@ public class ConditionsBuilder extends AbstractTokensBuilder {
         if (!iterator.hasNext()) {
             return new Conditions1();
         } else {
-            final ICondition1<? extends ICondition2> firstCondition = (ICondition1<? extends ICondition2>) iterator.next().getValue();
+            final ICondition1<? extends ICondition2<?>> firstCondition = (ICondition1<? extends ICondition2<?>>) iterator.next().getValue();
             final List<CompoundCondition1> otherConditions = new ArrayList<CompoundCondition1>();
             for (; iterator.hasNext();) {
                 final CompoundCondition1 subsequentCompoundCondition = (CompoundCondition1) iterator.next().getValue();

@@ -9,21 +9,17 @@ import ua.com.fielden.platform.eql.stage2.elements.conditions.NullTest2;
 import ua.com.fielden.platform.eql.stage2.elements.operands.ISingleOperand2;
 
 public class NullTest1 implements ICondition1<NullTest2> {
-    private final ISingleOperand1<? extends ISingleOperand2> operand;
+    private final ISingleOperand1<? extends ISingleOperand2<?>> operand;
     private final boolean negated;
 
-    public NullTest1(final ISingleOperand1<? extends ISingleOperand2> operand, final boolean negated) {
+    public NullTest1(final ISingleOperand1<? extends ISingleOperand2<?>> operand, final boolean negated) {
         this.operand = operand;
         this.negated = negated;
     }
 
-    public NullTest1(final ISingleOperand1<? extends ISingleOperand2> operand) {
-        this(operand, false);
-    }
-
     @Override
-    public TransformationResult<NullTest2> transform(final PropsResolutionContext resolutionContext) {
-        final TransformationResult<? extends ISingleOperand2> operandTransformationResult = operand.transform(resolutionContext);
+    public TransformationResult<NullTest2> transform(final PropsResolutionContext context) {
+        final TransformationResult<? extends ISingleOperand2<?>> operandTransformationResult = operand.transform(context);
         return new TransformationResult<NullTest2>(new NullTest2(operandTransformationResult.item, negated), operandTransformationResult.updatedContext);
     }
 

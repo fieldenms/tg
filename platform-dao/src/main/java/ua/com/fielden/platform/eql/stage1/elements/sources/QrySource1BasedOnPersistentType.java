@@ -30,9 +30,9 @@ public class QrySource1BasedOnPersistentType extends AbstractQrySource1<QrySourc
     }
 
     @Override
-    public TransformationResult<QrySource2BasedOnPersistentType> transform(final PropsResolutionContext resolutionContext) {
-        final QrySource2BasedOnPersistentType transformedSource = new QrySource2BasedOnPersistentType(sourceType(), resolutionContext.getDomainInfo().get(sourceType()), getAlias(), contextId);
-        return new TransformationResult<QrySource2BasedOnPersistentType>(transformedSource, resolutionContext.cloneWithAdded(transformedSource, resolutionContext.getResolvedProps()));
+    public TransformationResult<QrySource2BasedOnPersistentType> transform(final PropsResolutionContext context) {
+        final QrySource2BasedOnPersistentType transformedSource = new QrySource2BasedOnPersistentType(sourceType(), context.getDomainInfo().get(sourceType()), getAlias(), contextId);
+        return new TransformationResult<QrySource2BasedOnPersistentType>(transformedSource, context.cloneWithAdded(transformedSource, context.getResolvedProps()));
     }
 
     @Override

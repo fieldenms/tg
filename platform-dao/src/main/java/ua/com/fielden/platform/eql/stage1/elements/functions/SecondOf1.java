@@ -8,13 +8,13 @@ import ua.com.fielden.platform.eql.stage2.elements.operands.ISingleOperand2;
 
 public class SecondOf1 extends SingleOperandFunction1<SecondOf2> {
 
-    public SecondOf1(final ISingleOperand1<? extends ISingleOperand2> operand) {
+    public SecondOf1(final ISingleOperand1<? extends ISingleOperand2<?>> operand) {
         super(operand);
     }
 
     @Override
-    public TransformationResult<SecondOf2> transform(final PropsResolutionContext resolutionContext) {
-        final TransformationResult<? extends ISingleOperand2> operandTransformationResult = operand.transform(resolutionContext);
+    public TransformationResult<SecondOf2> transform(final PropsResolutionContext context) {
+        final TransformationResult<? extends ISingleOperand2> operandTransformationResult = operand.transform(context);
         return new TransformationResult<SecondOf2>(new SecondOf2(operandTransformationResult.item), operandTransformationResult.updatedContext);
     }
 }

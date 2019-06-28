@@ -3,12 +3,13 @@ package ua.com.fielden.platform.eql.stage2.elements.functions;
 import java.util.Objects;
 
 import ua.com.fielden.platform.eql.stage2.elements.operands.ISingleOperand2;
+import ua.com.fielden.platform.eql.stage3.elements.operands.ISingleOperand3;
 
-abstract class TwoOperandsFunction2 extends AbstractFunction2 {
-    public final ISingleOperand2 operand1;
-    public final ISingleOperand2 operand2;
+abstract class TwoOperandsFunction2<S3 extends ISingleOperand3> extends AbstractFunction2<S3> {
+    public final ISingleOperand2<? extends ISingleOperand3> operand1;
+    public final ISingleOperand2<? extends ISingleOperand3> operand2;
 
-    public TwoOperandsFunction2(final ISingleOperand2 operand1, final ISingleOperand2 operand2) {
+    public TwoOperandsFunction2(final ISingleOperand2<? extends ISingleOperand3> operand1, final ISingleOperand2<? extends ISingleOperand3> operand2) {
         this.operand1 = operand1;
         this.operand2 = operand2;
     }

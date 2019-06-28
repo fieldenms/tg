@@ -235,7 +235,7 @@ public abstract class AbstractTokensBuilder implements ITokensBuilder {
         }
     }
 
-    protected ISingleOperand1<? extends ISingleOperand2> getModelForSingleOperand(final TokenCategory cat, final Object value) {
+    protected ISingleOperand1<? extends ISingleOperand2<?>> getModelForSingleOperand(final TokenCategory cat, final Object value) {
         switch (cat) {
         case PROP:
             return new EntProp1((String) value, queryBuilder.nextCondtextId());
@@ -265,7 +265,7 @@ public abstract class AbstractTokensBuilder implements ITokensBuilder {
         }
     }
 
-    protected ISetOperand1<? extends ISetOperand2> getModelForSetOperand(final TokenCategory cat, final Object value) {
+    protected ISetOperand1<? extends ISetOperand2<?>> getModelForSetOperand(final TokenCategory cat, final Object value) {
         TokenCategory singleCat;
 
         switch (cat) {
@@ -287,7 +287,7 @@ public abstract class AbstractTokensBuilder implements ITokensBuilder {
             throw new RuntimeException("Unrecognised token category for SingleOperand: " + cat);
         }
 
-        final List<ISingleOperand1<? extends ISingleOperand2>> result = new ArrayList<>();
+        final List<ISingleOperand1<? extends ISingleOperand2<?>>> result = new ArrayList<>();
 
         for (final Object singleValue : (List<Object>) value) {
             if (singleCat == PARAM || singleCat == IPARAM) {
@@ -301,12 +301,12 @@ public abstract class AbstractTokensBuilder implements ITokensBuilder {
         return new OperandsBasedSet1(result);
     }
 
-    protected ISingleOperand1<? extends ISingleOperand2> getModelForSingleOperand(final Pair<TokenCategory, Object> pair) {
+    protected ISingleOperand1<? extends ISingleOperand2<?>> getModelForSingleOperand(final Pair<TokenCategory, Object> pair) {
         return getModelForSingleOperand(pair.getKey(), pair.getValue());
     }
 
-    protected List<ISingleOperand1<? extends ISingleOperand2>> getModelForMultipleOperands(final TokenCategory cat, final Object value) {
-        final List<ISingleOperand1<? extends ISingleOperand2>> result = new ArrayList<>();
+    protected List<ISingleOperand1<? extends ISingleOperand2<?>>> getModelForMultipleOperands(final TokenCategory cat, final Object value) {
+        final List<ISingleOperand1<? extends ISingleOperand2<?>>> result = new ArrayList<>();
 
         final TokenCategory singleCat;
 

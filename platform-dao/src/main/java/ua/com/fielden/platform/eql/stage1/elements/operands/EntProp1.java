@@ -31,9 +31,9 @@ public class EntProp1 extends AbstractElement1 implements ISingleOperand1<EntPro
     }
 
     @Override
-    public TransformationResult<EntProp2> transform(final PropsResolutionContext resolutionContext) {
+    public TransformationResult<EntProp2> transform(final PropsResolutionContext context) {
         
-        final Iterator<List<IQrySource2>> it = resolutionContext.getSources().iterator();
+        final Iterator<List<IQrySource2>> it = context.getSources().iterator();
         if (external) {
             it.next();
         }
@@ -44,7 +44,7 @@ public class EntProp1 extends AbstractElement1 implements ISingleOperand1<EntPro
             if (resolution != null) {
                 final EntProp2 transformedProp = new EntProp2(resolution.getAliaslessName(), resolution.getSource(), resolution.getType(), contextId);
                 
-                return new TransformationResult<EntProp2>(transformedProp, resolutionContext.cloneWithAdded(transformedProp));
+                return new TransformationResult<EntProp2>(transformedProp, context.cloneWithAdded(transformedProp));
             }
         }
 

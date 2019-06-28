@@ -23,8 +23,8 @@ public class CompoundSource1 implements ITransformableToS2<CompoundSource2>{
     }
 
     @Override
-    public TransformationResult<CompoundSource2> transform(final PropsResolutionContext resolutionContext) {
-        final TransformationResult<? extends IQrySource2<?>> sourceTransformationResult = source.transform(resolutionContext);
+    public TransformationResult<CompoundSource2> transform(final PropsResolutionContext context) {
+        final TransformationResult<? extends IQrySource2<?>> sourceTransformationResult = source.transform(context);
         final TransformationResult<Conditions2> joinConditionsTransformationResult = joinConditions.transform(sourceTransformationResult.updatedContext);
         return new TransformationResult<CompoundSource2>(new CompoundSource2(sourceTransformationResult.item, joinType, joinConditionsTransformationResult.item), joinConditionsTransformationResult.updatedContext);
     }

@@ -24,9 +24,9 @@ public class EntValue1 implements ISingleOperand1<EntValue2> {
     }
 
     @Override
-    public TransformationResult<EntValue2> transform(final PropsResolutionContext resolutionContext) {
+    public TransformationResult<EntValue2> transform(final PropsResolutionContext context) {
         final EntValue2 transformed = new EntValue2(value, ignoreNull);
-        return new TransformationResult<EntValue2>(transformed, resolutionContext.cloneWithAdded(transformed));
+        return new TransformationResult<EntValue2>(transformed, context.cloneWithAdded(transformed));
     }
 
     @Override

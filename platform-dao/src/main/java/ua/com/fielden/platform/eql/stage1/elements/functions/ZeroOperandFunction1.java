@@ -2,9 +2,9 @@ package ua.com.fielden.platform.eql.stage1.elements.functions;
 
 import java.util.Objects;
 
-import ua.com.fielden.platform.eql.stage2.elements.IIgnorableAtS2;
+import ua.com.fielden.platform.eql.stage2.elements.operands.ISingleOperand2;
 
-abstract class ZeroOperandFunction1<S2 extends IIgnorableAtS2> extends AbstractFunction1<S2> {
+abstract class ZeroOperandFunction1<S2 extends ISingleOperand2<?>> extends AbstractFunction1<S2> {
 
     private final String functionName;
 

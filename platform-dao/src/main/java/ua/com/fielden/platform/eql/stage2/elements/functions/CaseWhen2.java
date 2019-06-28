@@ -6,9 +6,10 @@ import java.util.Objects;
 
 import ua.com.fielden.platform.eql.stage2.elements.conditions.ICondition2;
 import ua.com.fielden.platform.eql.stage2.elements.operands.ISingleOperand2;
+import ua.com.fielden.platform.eql.stage3.elements.functions.CaseWhen3;
 import ua.com.fielden.platform.utils.Pair;
 
-public class CaseWhen2 extends AbstractFunction2 {
+public class CaseWhen2 extends AbstractFunction2<CaseWhen3> {
 
     private List<Pair<ICondition2, ISingleOperand2>> whenThenPairs = new ArrayList<Pair<ICondition2, ISingleOperand2>>();
     private final ISingleOperand2 elseOperand;

@@ -7,13 +7,13 @@ import ua.com.fielden.platform.eql.stage2.elements.IIgnorableAtS2;
 
 public class AddDateInterval extends TwoOperandsFunction1 {
 
-    public AddDateInterval(ISingleOperand1 operand1, ISingleOperand1 operand2) {
+    public AddDateInterval(final ISingleOperand1 operand1, final ISingleOperand1 operand2) {
         super(operand1, operand2);
         // TODO Auto-generated constructor stub
     }
 
     @Override
-    public TransformationResult<IIgnorableAtS2> transform(PropsResolutionContext resolutionContext) {
+    public TransformationResult<IIgnorableAtS2> transform(final PropsResolutionContext resolutionContext) {
         // TODO Auto-generated method stub
         return null;
     }

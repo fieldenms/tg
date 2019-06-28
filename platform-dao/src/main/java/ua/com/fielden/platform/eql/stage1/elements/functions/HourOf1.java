@@ -8,13 +8,13 @@ import ua.com.fielden.platform.eql.stage2.elements.operands.ISingleOperand2;
 
 public class HourOf1 extends SingleOperandFunction1<HourOf2> {
 
-    public HourOf1(final ISingleOperand1<? extends ISingleOperand2> operand) {
+    public HourOf1(final ISingleOperand1<? extends ISingleOperand2<?>> operand) {
         super(operand);
     }
 
     @Override
-    public TransformationResult<HourOf2> transform(final PropsResolutionContext resolutionContext) {
-        final TransformationResult<? extends ISingleOperand2> operandTransformationResult = operand.transform(resolutionContext);
+    public TransformationResult<HourOf2> transform(final PropsResolutionContext context) {
+        final TransformationResult<? extends ISingleOperand2> operandTransformationResult = operand.transform(context);
         return new TransformationResult<HourOf2>(new HourOf2(operandTransformationResult.item), operandTransformationResult.updatedContext);
     }
 }

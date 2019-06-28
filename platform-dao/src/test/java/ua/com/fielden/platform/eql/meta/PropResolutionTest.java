@@ -119,8 +119,8 @@ public class PropResolutionTest extends BaseEntQueryTCase1 {
         final EntityResultQueryModel<TgVehicleModel> qry = select(TgVehicleModel.class).where().prop("make").isNotNull().model();
         
         
-        final Sources1 sources1 = new Sources1(new QrySource1BasedOnPersistentType(TgVehicleModel.class, 1));
-        final Conditions1 conditions1 = new Conditions1(false, new NullTest1(new EntProp1("make", 2), true));
+        final Sources1 sources1 = new Sources1(new QrySource1BasedOnPersistentType(TgVehicleModel.class, 1), emptyList());
+        final Conditions1 conditions1 = new Conditions1(false, new NullTest1(new EntProp1("make", 2), true), emptyList());
 
         final EntQueryBlocks1 parts1 = new EntQueryBlocks1(sources1, conditions1);
         final EntQuery1 expQry1 = new EntQuery1(parts1, TgVehicleModel.class, RESULT_QUERY, 3);
@@ -148,8 +148,8 @@ public class PropResolutionTest extends BaseEntQueryTCase1 {
     public void test_12() {
         final EntityResultQueryModel<TgVehicleModel> sourceModel1Qry = select(TgVehicleModel.class).where().prop("key").eq().val("316").model();
         
-        final Sources1 sm1Sources1 = new Sources1(new QrySource1BasedOnPersistentType(TgVehicleModel.class, 1));
-        final Conditions1 sm1Conditions1 = new Conditions1(false, new ComparisonTest1(new EntProp1("key", 2), EQ, new EntValue1("316")));
+        final Sources1 sm1Sources1 = new Sources1(new QrySource1BasedOnPersistentType(TgVehicleModel.class, 1), emptyList());
+        final Conditions1 sm1Conditions1 = new Conditions1(false, new ComparisonTest1(new EntProp1("key", 2), EQ, new EntValue1("316")), emptyList());
 
         final EntQueryBlocks1 sm1Parts1 = new EntQueryBlocks1(sm1Sources1, sm1Conditions1);
         final EntQuery1 sm1ExpQry1 = new EntQuery1(sm1Parts1, TgVehicleModel.class, SOURCE_QUERY, 3);
@@ -175,8 +175,8 @@ public class PropResolutionTest extends BaseEntQueryTCase1 {
         
         final EntityResultQueryModel<TgVehicleModel> sourceModel2Qry = select(TgVehicleModel.class).where().prop("key").eq().val("317").model();
 
-        final Sources1 sm2Sources1 = new Sources1(new QrySource1BasedOnPersistentType(TgVehicleModel.class, 4));
-        final Conditions1 sm2Conditions1 = new Conditions1(false, new ComparisonTest1(new EntProp1("key", 5), EQ, new EntValue1("317")));
+        final Sources1 sm2Sources1 = new Sources1(new QrySource1BasedOnPersistentType(TgVehicleModel.class, 4), emptyList());
+        final Conditions1 sm2Conditions1 = new Conditions1(false, new ComparisonTest1(new EntProp1("key", 5), EQ, new EntValue1("317")), emptyList());
 
         final EntQueryBlocks1 sm2Parts1 = new EntQueryBlocks1(sm2Sources1, sm2Conditions1);
         final EntQuery1 sm2ExpQry1 = new EntQuery1(sm2Parts1, TgVehicleModel.class, SOURCE_QUERY, 6);
@@ -203,8 +203,8 @@ public class PropResolutionTest extends BaseEntQueryTCase1 {
 
         final EntityResultQueryModel<TgVehicleModel> qry = select(sourceModel1Qry, sourceModel2Qry).where().prop("key").in().values("316", "317").model();
         
-        final Sources1 sources1 = new Sources1(new QrySource1BasedOnSubqueries(null, listOf(sm1ExpQry1, sm2ExpQry1), 7));
-        final Conditions1 conditions1 = new Conditions1(false, new SetTest1(new EntProp1("key", 8), false, new OperandsBasedSet1(listOf(new EntValue1("316"), new EntValue1("317")))));
+        final Sources1 sources1 = new Sources1(new QrySource1BasedOnSubqueries(null, listOf(sm1ExpQry1, sm2ExpQry1), 7), emptyList());
+        final Conditions1 conditions1 = new Conditions1(false, new SetTest1(new EntProp1("key", 8), false, new OperandsBasedSet1(listOf(new EntValue1("316"), new EntValue1("317")))), emptyList());
 
         final EntQueryBlocks1 parts1 = new EntQueryBlocks1(sources1, conditions1);
         final EntQuery1 expQry1 = new EntQuery1(parts1, TgVehicleModel.class, RESULT_QUERY, 9);

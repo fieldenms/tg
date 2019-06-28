@@ -7,9 +7,9 @@ import ua.com.fielden.platform.eql.stage2.elements.conditions.ICondition2;
 
 public class CompoundCondition1 {
     public final LogicalOperator logicalOperator;
-    public final ICondition1<? extends ICondition2> condition;
+    public final ICondition1<? extends ICondition2<?>> condition;
 
-    public CompoundCondition1(final LogicalOperator logicalOperator, final ICondition1<? extends ICondition2> condition) {
+    public CompoundCondition1(final LogicalOperator logicalOperator, final ICondition1<? extends ICondition2<?>> condition) {
         this.logicalOperator = logicalOperator;
         this.condition = condition;
     }

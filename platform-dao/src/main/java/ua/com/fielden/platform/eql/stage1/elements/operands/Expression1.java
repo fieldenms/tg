@@ -12,22 +12,21 @@ import ua.com.fielden.platform.eql.stage2.elements.operands.ISingleOperand2;
 
 public class Expression1 implements ISingleOperand1<Expression2> {
 
-    private final ISingleOperand1<? extends ISingleOperand2> first;
-
+    private final ISingleOperand1<? extends ISingleOperand2<?>> first;
     private final List<CompoundSingleOperand1> items;
 
-    public Expression1(final ISingleOperand1<? extends ISingleOperand2> first, final List<CompoundSingleOperand1> items) {
+    public Expression1(final ISingleOperand1<? extends ISingleOperand2<?>> first, final List<CompoundSingleOperand1> items) {
         this.first = first;
         this.items = items;
     }
 
     @Override
-    public TransformationResult<Expression2> transform(final PropsResolutionContext resolutionContext) {
+    public TransformationResult<Expression2> transform(final PropsResolutionContext context) {
         final List<CompoundSingleOperand2> transformed = new ArrayList<>();
-        final TransformationResult<? extends ISingleOperand2> firstTransformationResult = first.transform(resolutionContext);
+        final TransformationResult<? extends ISingleOperand2<?>> firstTransformationResult = first.transform(context);
         PropsResolutionContext currentResolutionContext = firstTransformationResult.updatedContext;
         for (final CompoundSingleOperand1 item : items) {
-            final TransformationResult<? extends ISingleOperand2> itemTransformationResult = item.operand.transform(currentResolutionContext);
+            final TransformationResult<? extends ISingleOperand2<?>> itemTransformationResult = item.operand.transform(currentResolutionContext);
             transformed.add(new CompoundSingleOperand2(itemTransformationResult.item, item.operator));
             currentResolutionContext = itemTransformationResult.updatedContext;
         }

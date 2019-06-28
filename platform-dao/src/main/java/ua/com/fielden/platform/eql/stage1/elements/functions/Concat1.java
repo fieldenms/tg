@@ -12,18 +12,18 @@ import ua.com.fielden.platform.eql.stage2.elements.operands.ISingleOperand2;
 
 public class Concat1 extends AbstractFunction1<Concat2> {
 
-    private final List<ISingleOperand1<? extends ISingleOperand2>> operands;
+    private final List<ISingleOperand1<? extends ISingleOperand2<?>>> operands;
 
-    public Concat1(final List<ISingleOperand1<? extends ISingleOperand2>> operands) {
+    public Concat1(final List<ISingleOperand1<? extends ISingleOperand2<?>>> operands) {
         this.operands = operands;
     }
 
     @Override
-    public TransformationResult<Concat2> transform(final PropsResolutionContext resolutionContext) {
+    public TransformationResult<Concat2> transform(final PropsResolutionContext context) {
         final List<ISingleOperand2> transformed = new ArrayList<>();
-        PropsResolutionContext currentResolutionContext = resolutionContext;
+        PropsResolutionContext currentResolutionContext = context;
         for (final ISingleOperand1<? extends ISingleOperand2> operand : operands) {
-            final TransformationResult<? extends ISingleOperand2> operandTransformationResult = operand.transform(resolutionContext);
+            final TransformationResult<? extends ISingleOperand2> operandTransformationResult = operand.transform(context);
             transformed.add(operandTransformationResult.item);
             currentResolutionContext = operandTransformationResult.updatedContext;
         }

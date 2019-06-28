@@ -8,13 +8,13 @@ import ua.com.fielden.platform.eql.stage2.elements.operands.ISingleOperand2;
 
 public class DateOf1 extends SingleOperandFunction1<DateOf2> {
 
-    public DateOf1(final ISingleOperand1<? extends ISingleOperand2> operand) {
+    public DateOf1(final ISingleOperand1<? extends ISingleOperand2<?>> operand) {
         super(operand);
     }
 
     @Override
-    public TransformationResult<DateOf2> transform(final PropsResolutionContext resolutionContext) {
-        final TransformationResult<? extends ISingleOperand2> operandTransformationResult = operand.transform(resolutionContext);
+    public TransformationResult<DateOf2> transform(final PropsResolutionContext context) {
+        final TransformationResult<? extends ISingleOperand2> operandTransformationResult = operand.transform(context);
         return new TransformationResult<DateOf2>(new DateOf2(operandTransformationResult.item), operandTransformationResult.updatedContext);
     }
 }

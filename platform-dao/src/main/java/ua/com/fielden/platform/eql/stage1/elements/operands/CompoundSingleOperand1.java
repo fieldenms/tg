@@ -6,10 +6,10 @@ import ua.com.fielden.platform.entity.query.fluent.enums.ArithmeticalOperator;
 import ua.com.fielden.platform.eql.stage2.elements.operands.ISingleOperand2;
 
 public class CompoundSingleOperand1 {
-    public final ISingleOperand1<? extends ISingleOperand2> operand;
+    public final ISingleOperand1<? extends ISingleOperand2<?>> operand;
     public final ArithmeticalOperator operator;
 
-    public CompoundSingleOperand1(final ISingleOperand1<? extends ISingleOperand2> operand, final ArithmeticalOperator operator) {
+    public CompoundSingleOperand1(final ISingleOperand1<? extends ISingleOperand2<?>> operand, final ArithmeticalOperator operator) {
         this.operand = operand;
         this.operator = operator;
     }

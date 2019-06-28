@@ -63,8 +63,8 @@ public class EntQuery1 extends AbstractElement1 implements ISingleOperand1<EntQu
     }
 
     @Override
-    public TransformationResult<EntQuery2> transform(final PropsResolutionContext resolutionContext) {
-        final PropsResolutionContext localResolutionContext = isSubQuery() ? resolutionContext.produceForCorrelatedSubquery() : resolutionContext.produceForUncorrelatedSubquery();
+    public TransformationResult<EntQuery2> transform(final PropsResolutionContext context) {
+        final PropsResolutionContext localResolutionContext = isSubQuery() ? context.produceForCorrelatedSubquery() : context.produceForUncorrelatedSubquery();
         // .produceForUncorrelatedSubquery() should be used only for cases of synthetic entities (where source query can only be uncorrelated) -- simple queries as source queries are accessible for correlation
         final TransformationResult<Sources2> sourcesTransformationResult =  sources.transform(localResolutionContext);
         final TransformationResult<Conditions2> conditionsTransformationResult =  conditions.transform(sourcesTransformationResult.updatedContext);
@@ -80,7 +80,7 @@ public class EntQuery1 extends AbstractElement1 implements ISingleOperand1<EntQu
                 orderingsTransformationResult.item);
 
         final PropsResolutionContext resultResolutionContext = (isSubQuery() || isSourceQuery()) ? 
-                new PropsResolutionContext(resolutionContext.getDomainInfo(), resolutionContext.getSources(), orderingsTransformationResult.updatedContext.getResolvedProps()) :
+                new PropsResolutionContext(context.getDomainInfo(), context.getSources(), orderingsTransformationResult.updatedContext.getResolvedProps()) :
                     orderingsTransformationResult.updatedContext;
                
         return new TransformationResult<EntQuery2>(new EntQuery2(entQueryBlocks, type(), category), resultResolutionContext);
