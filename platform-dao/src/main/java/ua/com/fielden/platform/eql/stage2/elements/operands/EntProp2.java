@@ -7,13 +7,14 @@ import ua.com.fielden.platform.eql.stage2.elements.TransformationContext;
 import ua.com.fielden.platform.eql.stage2.elements.TransformationResult;
 import ua.com.fielden.platform.eql.stage2.elements.sources.IQrySource2;
 import ua.com.fielden.platform.eql.stage3.elements.operands.EntProp3;
+import ua.com.fielden.platform.eql.stage3.elements.sources.IQrySource3;
 
 public class EntProp2 extends AbstractElement2 implements ISingleOperand2<EntProp3> {
     public final String name;
-    public final IQrySource2 source;
+    public final IQrySource2<? extends IQrySource3> source;
     public final Class<?> type;
 
-    public EntProp2(final String name, final IQrySource2 source, final Class<?> type, final int contextId) {
+    public EntProp2(final String name, final IQrySource2<? extends IQrySource3> source, final Class<?> type, final int contextId) {
         super(contextId);
         this.name = name;
         this.source = source;
@@ -21,9 +22,9 @@ public class EntProp2 extends AbstractElement2 implements ISingleOperand2<EntPro
     }
 
     @Override
-    public TransformationResult<EntProp3> transform(final TransformationContext transformationContext) {
-        final EntProp3 transformedProp = new EntProp3(name, transformationContext.getSource(source));
-        return new TransformationResult<EntProp3>(transformedProp, transformationContext);
+    public TransformationResult<EntProp3> transform(final TransformationContext context) {
+        final EntProp3 transformedProp = new EntProp3(name, context.getSource(source));
+        return new TransformationResult<EntProp3>(transformedProp, context);
     }
 
     @Override

@@ -14,19 +14,15 @@ public class OrderBys1 {
         this.models = models;
     }
 
-    public TransformationResult<OrderBys2> transform(final PropsResolutionContext resolutionContext) {
+    public TransformationResult<OrderBys2> transform(final PropsResolutionContext context) {
         final List<OrderBy2> transformed = new ArrayList<>();
-        PropsResolutionContext currentResolutionContext = resolutionContext;
+        PropsResolutionContext currentResolutionContext = context;
         for (final OrderBy1 orderBy : models) {
             final TransformationResult<OrderBy2> orderByTransformationResult = orderBy.transform(currentResolutionContext);
             transformed.add(orderByTransformationResult.item);
             currentResolutionContext = orderByTransformationResult.updatedContext;
         }
         return new TransformationResult<OrderBys2>(new OrderBys2(transformed), currentResolutionContext);
-    }
-
-    public List<OrderBy1> getModels() {
-        return models;
     }
 
     @Override

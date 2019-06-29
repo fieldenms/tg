@@ -1,33 +1,37 @@
 package ua.com.fielden.platform.eql.stage2.elements.operands;
 
-import static java.util.Collections.emptyList;
-
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
 import ua.com.fielden.platform.eql.stage2.elements.TransformationContext;
 import ua.com.fielden.platform.eql.stage2.elements.TransformationResult;
+import ua.com.fielden.platform.eql.stage3.elements.operands.CompoundSingleOperand3;
 import ua.com.fielden.platform.eql.stage3.elements.operands.Expression3;
+import ua.com.fielden.platform.eql.stage3.elements.operands.ISingleOperand3;
 
 public class Expression2 implements ISingleOperand2<Expression3> {
 
-    public final ISingleOperand2 first;
+    public final ISingleOperand2<? extends ISingleOperand3> first;
     private final List<CompoundSingleOperand2> items;
 
-    public Expression2(final ISingleOperand2 first, final List<CompoundSingleOperand2> items) {
+    public Expression2(final ISingleOperand2<? extends ISingleOperand3> first, final List<CompoundSingleOperand2> items) {
         this.first = first;
         this.items = items;
     }
-
-    public Expression2(final ISingleOperand2 first) {
-        this(first, emptyList());
-    }
     
     @Override
-    public TransformationResult<Expression3> transform(final TransformationContext transformationContext) {
-        // TODO Auto-generated method stub
-        return null;
+    public TransformationResult<Expression3> transform(final TransformationContext context) {
+        final List<CompoundSingleOperand3> transformed = new ArrayList<>();
+        final TransformationResult<? extends ISingleOperand3> firstTransformationResult = first.transform(context);
+        TransformationContext currentResolutionContext = firstTransformationResult.updatedContext;
+        for (final CompoundSingleOperand2 item : items) {
+            final TransformationResult<? extends ISingleOperand3> itemTransformationResult = item.operand.transform(currentResolutionContext);
+            transformed.add(new CompoundSingleOperand3(itemTransformationResult.item, item.operator));
+            currentResolutionContext = itemTransformationResult.updatedContext;
+        }
+        return new TransformationResult<Expression3>(new Expression3(firstTransformationResult.item, transformed), currentResolutionContext);
     }
     
     @Override
@@ -36,7 +40,7 @@ public class Expression2 implements ISingleOperand2<Expression3> {
     }
 
     @Override
-    public Class type() {
+    public Class<BigDecimal> type() {
         // TODO EQL Need to provide proper implementation.
         return BigDecimal.class;
     }

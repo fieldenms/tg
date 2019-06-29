@@ -33,7 +33,7 @@ abstract class TwoOperandsFunction2<S3 extends ISingleOperand3> extends Abstract
             return false;
         }
         
-        final TwoOperandsFunction2 other = (TwoOperandsFunction2) obj;
+        final TwoOperandsFunction2<?> other = (TwoOperandsFunction2<?>) obj;
         
         return Objects.equals(operand1, other.operand1) && Objects.equals(operand2, other.operand2);
     }

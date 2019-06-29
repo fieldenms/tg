@@ -3,12 +3,13 @@ package ua.com.fielden.platform.eql.stage2.elements.operands;
 import java.util.Objects;
 
 import ua.com.fielden.platform.entity.query.fluent.enums.ArithmeticalOperator;
+import ua.com.fielden.platform.eql.stage3.elements.operands.ISingleOperand3;
 
 public class CompoundSingleOperand2 {
-    public final ISingleOperand2 operand;
+    public final ISingleOperand2<? extends ISingleOperand3> operand;
     public final ArithmeticalOperator operator;
 
-    public CompoundSingleOperand2(final ISingleOperand2 operand, final ArithmeticalOperator operator) {
+    public CompoundSingleOperand2(final ISingleOperand2<? extends ISingleOperand3> operand, final ArithmeticalOperator operator) {
         this.operand = operand;
         this.operator = operator;
     }

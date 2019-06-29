@@ -14,13 +14,9 @@ public class GroupBys2 {
         this.groups = groups;
     }
 
-    public List<GroupBy2> getGroups() {
-        return groups;
-    }
-    
-    public TransformationResult<GroupBys3> transform(final TransformationContext transformationContext) {
+    public TransformationResult<GroupBys3> transform(final TransformationContext context) {
             final List<GroupBy3> transformed = new ArrayList<>();
-            TransformationContext currentResolutionContext = transformationContext;
+            TransformationContext currentResolutionContext = context;
             for (final GroupBy2 groupBy : groups) {
                 final TransformationResult<GroupBy3> groupByTransformationResult = groupBy.transform(currentResolutionContext);
                 transformed.add(groupByTransformationResult.item);

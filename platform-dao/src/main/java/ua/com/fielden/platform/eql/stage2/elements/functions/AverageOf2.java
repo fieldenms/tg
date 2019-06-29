@@ -17,7 +17,7 @@ public class AverageOf2 extends SingleOperandFunction2<AverageOf3> {
     }
 
     @Override
-    public Class type() {
+    public Class<BigDecimal> type() {
         return BigDecimal.class;
     }
 

@@ -22,9 +22,9 @@ public class Yields1 {
         }
     }
     
-    public TransformationResult<Yields2> transform(final PropsResolutionContext resolutionContext) {
+    public TransformationResult<Yields2> transform(final PropsResolutionContext context) {
         final List<Yield2> yieldsList = new ArrayList<>(); 
-        PropsResolutionContext currentResolutionContext = resolutionContext;
+        PropsResolutionContext currentResolutionContext = context;
         for (final Yield1 yield : yieldsMap.values()) {
             final TransformationResult<Yield2> yieldTransformationResult = yield.transform(currentResolutionContext);
             currentResolutionContext = yieldTransformationResult.updatedContext;

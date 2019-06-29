@@ -68,7 +68,7 @@ public class EntValue2 implements ISingleOperand2<EntValue3> {
     }
 
     @Override
-    public TransformationResult<EntValue3> transform(final TransformationContext transformationContext) {
+    public TransformationResult<EntValue3> transform(final TransformationContext context) {
         // TODO Auto-generated method stub
         return null;
     }

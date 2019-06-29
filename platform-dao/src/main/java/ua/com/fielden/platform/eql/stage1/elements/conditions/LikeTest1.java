@@ -18,7 +18,6 @@ public class LikeTest1 implements ICondition1<LikeTest2> {
         this.leftOperand = leftOperand;
         this.rightOperand = rightOperand;
         this.options = options;
-        /*TODO TFM compare with original*/
     }
 
     @Override

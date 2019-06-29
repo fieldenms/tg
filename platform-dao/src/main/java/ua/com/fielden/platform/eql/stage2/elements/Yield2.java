@@ -7,26 +7,22 @@ import ua.com.fielden.platform.eql.stage3.elements.Yield3;
 import ua.com.fielden.platform.eql.stage3.elements.operands.ISingleOperand3;
 
 public class Yield2 {
-    public final ISingleOperand2 operand;
+    public final ISingleOperand2<? extends ISingleOperand3> operand;
     public final String alias;
     public final boolean hasRequiredHint;
 
-    public Yield2(final ISingleOperand2 operand, final String alias, final boolean hasRequiredHint) {
+    public Yield2(final ISingleOperand2<? extends ISingleOperand3> operand, final String alias, final boolean hasRequiredHint) {
         this.operand = operand;
         this.alias = alias;
         this.hasRequiredHint = hasRequiredHint;
     }
 
-    public Yield2(final ISingleOperand2 operand, final String alias) {
-        this(operand, alias, false);
-    }
-
-    public Class javaType() {
+    public Class<?> javaType() {
         return operand.type();
     }
 
-    public TransformationResult<Yield3> transform(final TransformationContext resolutionContext) {
-        final TransformationResult<? extends ISingleOperand3> operandTransformationResult = operand.transform(resolutionContext);
+    public TransformationResult<Yield3> transform(final TransformationContext context) {
+        final TransformationResult<? extends ISingleOperand3> operandTransformationResult = operand.transform(context);
         return new TransformationResult<Yield3>(new Yield3(operandTransformationResult.item, alias), operandTransformationResult.updatedContext);
     }
 

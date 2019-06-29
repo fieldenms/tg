@@ -4,6 +4,7 @@ import java.util.Objects;
 
 import ua.com.fielden.platform.eql.stage2.elements.TransformationContext;
 import ua.com.fielden.platform.eql.stage2.elements.TransformationResult;
+import ua.com.fielden.platform.eql.stage3.elements.operands.EntQuery3;
 import ua.com.fielden.platform.eql.stage3.elements.operands.QueryBasedSet3;
 
 public class QueryBasedSet2 implements ISetOperand2<QueryBasedSet3> {
@@ -14,9 +15,9 @@ public class QueryBasedSet2 implements ISetOperand2<QueryBasedSet3> {
     }
 
     @Override
-    public TransformationResult<QueryBasedSet3> transform(final TransformationContext transformationContext) {
-        // TODO Auto-generated method stub
-        return null;
+    public TransformationResult<QueryBasedSet3> transform(final TransformationContext context) {
+        final TransformationResult<EntQuery3> modelTransformationResult = model.transform(context);
+        return new TransformationResult<QueryBasedSet3>(new QueryBasedSet3(modelTransformationResult.item), modelTransformationResult.updatedContext);
     }
 
     @Override

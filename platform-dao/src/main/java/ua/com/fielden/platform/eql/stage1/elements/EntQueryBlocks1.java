@@ -1,7 +1,5 @@
 package ua.com.fielden.platform.eql.stage1.elements;
 
-import static java.util.Collections.emptyList;
-
 import ua.com.fielden.platform.eql.stage1.elements.conditions.Conditions1;
 import ua.com.fielden.platform.eql.stage1.elements.sources.Sources1;
 
@@ -18,9 +16,5 @@ public class EntQueryBlocks1 {
         this.yields = yields;
         this.groups = groups;
         this.orderings = orderings;
-    }
-
-    public EntQueryBlocks1(final Sources1 sources, final Conditions1 conditions) {
-        this(sources, conditions, new Yields1(emptyList()), new GroupBys1(emptyList()), new OrderBys1(emptyList()));
     }
 }

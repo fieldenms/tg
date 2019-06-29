@@ -27,8 +27,8 @@ public class SetTest2 extends AbstractCondition2<SetTest3> {
     }
 
     @Override
-    public TransformationResult<SetTest3> transform(final TransformationContext transformationContext) {
-        final TransformationResult<? extends ISingleOperand3> leftOperandTransformationResult = leftOperand.transform(transformationContext);
+    public TransformationResult<SetTest3> transform(final TransformationContext context) {
+        final TransformationResult<? extends ISingleOperand3> leftOperandTransformationResult = leftOperand.transform(context);
         final TransformationResult<? extends ISetOperand3> rightOperandTransformationResult = rightOperand.transform(leftOperandTransformationResult.updatedContext);
         return new TransformationResult<SetTest3>(new SetTest3(leftOperandTransformationResult.item, negated, rightOperandTransformationResult.item), rightOperandTransformationResult.updatedContext);
     }

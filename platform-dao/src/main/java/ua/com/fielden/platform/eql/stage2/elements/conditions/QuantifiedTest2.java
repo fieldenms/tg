@@ -31,8 +31,8 @@ public class QuantifiedTest2 extends AbstractCondition2<QuantifiedTest3> {
     }
 
     @Override
-    public TransformationResult<QuantifiedTest3> transform(final TransformationContext transformationContext) {
-        final TransformationResult<? extends ISingleOperand3> leftOperandTransformationResult = leftOperand.transform(transformationContext);
+    public TransformationResult<QuantifiedTest3> transform(final TransformationContext context) {
+        final TransformationResult<? extends ISingleOperand3> leftOperandTransformationResult = leftOperand.transform(context);
         final TransformationResult<EntQuery3> rightOperandTransformationResult = rightOperand.transform(leftOperandTransformationResult.updatedContext);
         
         return new TransformationResult<QuantifiedTest3>(new QuantifiedTest3(leftOperandTransformationResult.item, operator, quantifier, rightOperandTransformationResult.item), rightOperandTransformationResult.updatedContext);

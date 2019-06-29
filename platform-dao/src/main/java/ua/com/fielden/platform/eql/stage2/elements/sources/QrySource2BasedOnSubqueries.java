@@ -87,7 +87,7 @@ public class QrySource2BasedOnSubqueries extends AbstractElement2 implements IQr
     }
 
     @Override
-    public TransformationResult<QrySource3BasedOnQry> transform(final TransformationContext transformationContext) {
+    public TransformationResult<QrySource3BasedOnQry> transform(final TransformationContext context) {
         // TODO Auto-generated method stub
         return null;
     }

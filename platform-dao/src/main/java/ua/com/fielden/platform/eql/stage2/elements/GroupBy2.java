@@ -7,14 +7,14 @@ import ua.com.fielden.platform.eql.stage3.elements.GroupBy3;
 import ua.com.fielden.platform.eql.stage3.elements.operands.ISingleOperand3;
 
 public class GroupBy2 {
-    public final ISingleOperand2 operand;
+    public final ISingleOperand2<? extends ISingleOperand3> operand;
 
-    public GroupBy2(final ISingleOperand2 operand) {
+    public GroupBy2(final ISingleOperand2<? extends ISingleOperand3> operand) {
         this.operand = operand;
     }
     
-    public TransformationResult<GroupBy3> transform(final TransformationContext resolutionContext) {
-        final TransformationResult<? extends ISingleOperand3> operandTransformationResult = operand.transform(resolutionContext);
+    public TransformationResult<GroupBy3> transform(final TransformationContext context) {
+        final TransformationResult<? extends ISingleOperand3> operandTransformationResult = operand.transform(context);
         return new TransformationResult<GroupBy3>(new GroupBy3(operandTransformationResult.item), operandTransformationResult.updatedContext);
     }
 

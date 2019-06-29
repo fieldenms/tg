@@ -23,9 +23,9 @@ public class Yields2 {
         return Collections.unmodifiableCollection(yieldsMap.values());
     }
     
-    public TransformationResult<Yields3> transform(final TransformationContext transformationContext) {
+    public TransformationResult<Yields3> transform(final TransformationContext context) {
         final List<Yield3> yieldsList = new ArrayList<>(); 
-        TransformationContext currentResolutionContext = transformationContext;
+        TransformationContext currentResolutionContext = context;
         for (final Yield2 yield : yieldsMap.values()) {
             final TransformationResult<Yield3> yieldTransformationResult = yield.transform(currentResolutionContext);
             currentResolutionContext = yieldTransformationResult.updatedContext;

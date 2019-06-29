@@ -14,7 +14,7 @@ public class MaxOf1 extends SingleOperandFunction1<MaxOf2> {
 
     @Override
     public TransformationResult<MaxOf2> transform(final PropsResolutionContext context) {
-        final TransformationResult<? extends ISingleOperand2> operandTransformationResult = operand.transform(context);
+        final TransformationResult<? extends ISingleOperand2<?>> operandTransformationResult = operand.transform(context);
         return new TransformationResult<MaxOf2>(new MaxOf2(operandTransformationResult.item), operandTransformationResult.updatedContext);
     }
 }

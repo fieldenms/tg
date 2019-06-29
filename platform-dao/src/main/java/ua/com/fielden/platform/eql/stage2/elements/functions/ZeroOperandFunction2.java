@@ -30,7 +30,7 @@ abstract class ZeroOperandFunction2<S3 extends ISingleOperand3> extends Abstract
             return false;
         }
         
-        final ZeroOperandFunction2 other = (ZeroOperandFunction2) obj;
+        final ZeroOperandFunction2<S3> other = (ZeroOperandFunction2<S3>) obj;
 
         return Objects.equals(functionName, other.functionName);
     }

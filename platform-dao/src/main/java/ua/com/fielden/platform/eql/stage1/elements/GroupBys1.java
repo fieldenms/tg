@@ -14,9 +14,9 @@ public class GroupBys1 {
         this.groups = groups;
     }
 
-    public TransformationResult<GroupBys2> transform(final PropsResolutionContext resolutionContext) {
+    public TransformationResult<GroupBys2> transform(final PropsResolutionContext context) {
         final List<GroupBy2> transformed = new ArrayList<>();
-        PropsResolutionContext currentResolutionContext = resolutionContext;
+        PropsResolutionContext currentResolutionContext = context;
         for (final GroupBy1 groupBy : groups) {
             final TransformationResult<GroupBy2> groupByTransformationResult = groupBy.transform(currentResolutionContext);
             transformed.add(groupByTransformationResult.item);

@@ -41,8 +41,8 @@ public class EntQuery2 implements ISingleOperand2<EntQuery3> {
     }
 
     @Override
-    public TransformationResult<EntQuery3> transform(final TransformationContext transformationContext) {
-        final TransformationResult<Sources3> sourcesTransformationResult =  sources.transform(transformationContext);
+    public TransformationResult<EntQuery3> transform(final TransformationContext context) {
+        final TransformationResult<Sources3> sourcesTransformationResult =  sources.transform(context);
         final TransformationResult<Conditions3> conditionsTransformationResult =  conditions.transform(sourcesTransformationResult.updatedContext);
         final TransformationResult<Yields3> yieldsTransformationResult =  yields.transform(conditionsTransformationResult.updatedContext);
         final TransformationResult<GroupBys3> groupsTransformationResult =  groups.transform(yieldsTransformationResult.updatedContext);

@@ -30,9 +30,9 @@ public class Conditions2 extends AbstractCondition2<Conditions3> {
     }
 
     @Override
-    public TransformationResult<Conditions3> transform(final TransformationContext transformationContext) {
+    public TransformationResult<Conditions3> transform(final TransformationContext context) {
         final List<List<? extends ICondition3>> result = new ArrayList<>();
-        TransformationContext currentResolutionContext = transformationContext;
+        TransformationContext currentResolutionContext = context;
         
         for (final List<? extends ICondition2> andGroup : allConditionsAsDnf) {
             final List<ICondition3> transformedAndGroup = new ArrayList<>(); 

@@ -31,7 +31,7 @@ abstract class SingleOperandFunction2<S3 extends ISingleOperand3> extends Abstra
             return false;
         }
         
-        final SingleOperandFunction2 other = (SingleOperandFunction2) obj;
+        final SingleOperandFunction2<S3> other = (SingleOperandFunction2<S3>) obj;
         
         return Objects.equals(operand, other.operand);
     }

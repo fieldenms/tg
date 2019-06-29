@@ -21,8 +21,8 @@ public class CompoundSource2 {
         this.joinConditions = joinConditions;
     }
     
-    public TransformationResult<CompoundSource3> transform(final TransformationContext resolutionContext) {
-        final TransformationResult<? extends IQrySource3> sourceTransformationResult = source.transform(resolutionContext);
+    public TransformationResult<CompoundSource3> transform(final TransformationContext context) {
+        final TransformationResult<? extends IQrySource3> sourceTransformationResult = source.transform(context);
         final TransformationResult<Conditions3> joinConditionsTransformationResult = joinConditions.transform(sourceTransformationResult.updatedContext);
         return new TransformationResult<CompoundSource3>(new CompoundSource3(sourceTransformationResult.item, joinType, joinConditionsTransformationResult.item), joinConditionsTransformationResult.updatedContext);
     }

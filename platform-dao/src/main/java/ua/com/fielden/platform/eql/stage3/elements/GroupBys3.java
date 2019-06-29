@@ -10,10 +10,6 @@ public class GroupBys3 {
         this.groups = groups;
     }
 
-    public List<GroupBy3> getGroups() {
-        return groups;
-    }
-    
     @Override
     public int hashCode() {
         final int prime = 31;
