@@ -215,7 +215,7 @@ public class ConditionBuilder extends AbstractTokensBuilder {
         return new Pair<TokenCategory, Object>(CONDITION, getResultantCondition());
     }
 
-    private ICondition1<? extends ICondition2> getPlainQuantifiedTest() {
+    private ICondition1<? extends ICondition2<?>> getPlainQuantifiedTest() {
         final ISingleOperand1<? extends ISingleOperand2<?>> firstOperand = getModelForSingleOperand(firstCat(), firstValue());
         final EntQuery1 secondOperand = (EntQuery1) getModelForSingleOperand(thirdCat(), thirdValue());
         final Quantifier quantifier = ANY_OPERATOR == thirdCat() ? ANY : ALL;
@@ -365,7 +365,7 @@ public class ConditionBuilder extends AbstractTokensBuilder {
     }
 
     private ExistenceTest1 getPlainExistenceTest() {
-        return new ExistenceTest1((Boolean) firstValue(), getQueryBuilder().generateEntQueryAsSubquery((QueryModel) secondValue()));
+        return new ExistenceTest1((Boolean) firstValue(), getQueryBuilder().generateEntQueryAsSubquery((QueryModel<?>) secondValue()));
     }
 
     private SetTest1 getPlainSetTest() {

@@ -9,7 +9,7 @@ import ua.com.fielden.platform.eql.stage3.elements.functions.Now3;
 
 public class Now2 extends ZeroOperandFunction2<Now3> {
     public Now2() {
-        super("now");
+        super(Now2.class.getName());
     }
 
     @Override

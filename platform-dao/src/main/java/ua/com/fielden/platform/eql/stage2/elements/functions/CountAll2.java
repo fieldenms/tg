@@ -7,7 +7,7 @@ import ua.com.fielden.platform.eql.stage3.elements.functions.CountAll3;
 public class CountAll2 extends ZeroOperandFunction2<CountAll3> {
 
     public CountAll2() {
-        super("COUNT(*)");
+        super(CountAll2.class.getName());
     }
 
     @Override

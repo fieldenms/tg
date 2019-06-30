@@ -16,7 +16,7 @@ abstract class ZeroOperandFunction2<S3 extends ISingleOperand3> extends Abstract
     public int hashCode() {
         final int prime = 31;
         int result = 1;
-        result = prime * result + ((functionName == null) ? 0 : functionName.hashCode());
+        result = prime * result + functionName.hashCode();
         return result;
     }
 
