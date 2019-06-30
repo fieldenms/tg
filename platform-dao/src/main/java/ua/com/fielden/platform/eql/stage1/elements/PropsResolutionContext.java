@@ -17,9 +17,10 @@ import ua.com.fielden.platform.eql.meta.EntityInfo;
 import ua.com.fielden.platform.eql.stage2.elements.operands.EntProp2;
 import ua.com.fielden.platform.eql.stage2.elements.operands.EntValue2;
 import ua.com.fielden.platform.eql.stage2.elements.sources.IQrySource2;
+import ua.com.fielden.platform.eql.stage3.elements.sources.IQrySource3;
 
 public class PropsResolutionContext {
-    private final List<List<IQrySource2>> sources;
+    private final List<List<IQrySource2<? extends IQrySource3>>> sources;
     private final Map<Class<? extends AbstractEntity<?>>, EntityInfo<?>> domainInfo;
     private final Set<EntProp2> resolvedProps;
 
@@ -29,7 +30,7 @@ public class PropsResolutionContext {
         this.resolvedProps = new HashSet<>();
     }
     
-    public PropsResolutionContext(final Map<Class<? extends AbstractEntity<?>>, EntityInfo<?>> domainInfo, final List<List<IQrySource2>> sources, final Set<EntProp2> props) {
+    public PropsResolutionContext(final Map<Class<? extends AbstractEntity<?>>, EntityInfo<?>> domainInfo, final List<List<IQrySource2<? extends IQrySource3>>> sources, final Set<EntProp2> props) {
         this.domainInfo = new HashMap<>(domainInfo);
         this.sources = sources;
         this.resolvedProps = new HashSet<>(props);
@@ -43,22 +44,22 @@ public class PropsResolutionContext {
         return new PropsResolutionContext(domainInfo, buildSourcesStackForNewQuery(emptyList()), resolvedProps);
     }
     
-    private static List<List<IQrySource2>> buildSourcesStackForNewQuery(final List<List<IQrySource2>> existingSources) {
-        final List<List<IQrySource2>> srcs = new ArrayList<>();
+    private static List<List<IQrySource2<? extends IQrySource3>>> buildSourcesStackForNewQuery(final List<List<IQrySource2<? extends IQrySource3>>> existingSources) {
+        final List<List<IQrySource2<? extends IQrySource3>>> srcs = new ArrayList<>();
         srcs.add(new ArrayList<>());
         srcs.addAll(existingSources);
         return srcs;
     }
     
-    public PropsResolutionContext cloneWithAdded(final IQrySource2 transformedSource, final Set<EntProp2> resolvedProps) {
-        final List<List<IQrySource2>> srcs = new ArrayList<>();
+    public PropsResolutionContext cloneWithAdded(final IQrySource2<? extends IQrySource3> transformedSource, final Set<EntProp2> resolvedProps) {
+        final List<List<IQrySource2<? extends IQrySource3>>> srcs = new ArrayList<>();
         srcs.addAll(sources);
         srcs.get(0).add(transformedSource); // adding source to current query list of sources
         return new PropsResolutionContext(domainInfo, srcs, resolvedProps);
     }
 
     public PropsResolutionContext cloneWithAdded(final EntProp2 transformedProp) {
-        final List<List<IQrySource2>> srcs = new ArrayList<>();
+        final List<List<IQrySource2<? extends IQrySource3>>> srcs = new ArrayList<>();
         srcs.addAll(sources);
         final Set<EntProp2> props = new HashSet<>(resolvedProps);
         props.add(transformedProp);
@@ -66,13 +67,13 @@ public class PropsResolutionContext {
     }
 
     public PropsResolutionContext cloneWithAdded(final EntValue2 value) {
-        final List<List<IQrySource2>> srcs = new ArrayList<>();
+        final List<List<IQrySource2<? extends IQrySource3>>> srcs = new ArrayList<>();
         srcs.addAll(sources);
         return new PropsResolutionContext(domainInfo, srcs, resolvedProps);
     }
 
     public PropsResolutionContext cloneNew() {
-        final List<List<IQrySource2>> srcs = new ArrayList<>();
+        final List<List<IQrySource2<? extends IQrySource3>>> srcs = new ArrayList<>();
         srcs.addAll(sources);
         return new PropsResolutionContext(domainInfo, srcs, resolvedProps);
     }
@@ -81,7 +82,7 @@ public class PropsResolutionContext {
         return unmodifiableSet(resolvedProps);
     }
 
-    public List<List<IQrySource2>> getSources() {
+    public List<List<IQrySource2<? extends IQrySource3>>> getSources() {
         return unmodifiableList(sources);
     }
 

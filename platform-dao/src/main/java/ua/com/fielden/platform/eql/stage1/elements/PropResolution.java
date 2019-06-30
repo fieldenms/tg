@@ -1,13 +1,14 @@
 package ua.com.fielden.platform.eql.stage1.elements;
 
 import ua.com.fielden.platform.eql.stage2.elements.sources.IQrySource2;
+import ua.com.fielden.platform.eql.stage3.elements.sources.IQrySource3;
 
 public class PropResolution {
     private final String aliaslessName;
-    private final IQrySource2 source;
+    private final IQrySource2<? extends IQrySource3> source;
     private final Class<?> type;
 
-    public PropResolution(final String aliaslessName, final IQrySource2 source, final Class<?> type) {
+    public PropResolution(final String aliaslessName, final IQrySource2<? extends IQrySource3> source, final Class<?> type) {
         this.aliaslessName = aliaslessName;
         this.source = source;
         this.type = type;
@@ -17,7 +18,7 @@ public class PropResolution {
         return aliaslessName;
     }
 
-    public IQrySource2 getSource() {
+    public IQrySource2<? extends IQrySource3> getSource() {
         return source;
     }
 

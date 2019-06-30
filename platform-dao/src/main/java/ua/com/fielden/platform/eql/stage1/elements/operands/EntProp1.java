@@ -15,6 +15,7 @@ import ua.com.fielden.platform.eql.stage1.elements.PropsResolutionContext;
 import ua.com.fielden.platform.eql.stage1.elements.TransformationResult;
 import ua.com.fielden.platform.eql.stage2.elements.operands.EntProp2;
 import ua.com.fielden.platform.eql.stage2.elements.sources.IQrySource2;
+import ua.com.fielden.platform.eql.stage3.elements.sources.IQrySource3;
 
 public class EntProp1 extends AbstractElement1 implements ISingleOperand1<EntProp2> {
     public final String name;
@@ -33,13 +34,13 @@ public class EntProp1 extends AbstractElement1 implements ISingleOperand1<EntPro
     @Override
     public TransformationResult<EntProp2> transform(final PropsResolutionContext context) {
         
-        final Iterator<List<IQrySource2>> it = context.getSources().iterator();
+        final Iterator<List<IQrySource2<? extends IQrySource3>>> it = context.getSources().iterator();
         if (external) {
             it.next();
         }
 
         for (; it.hasNext();) {
-            final List<IQrySource2> item = it.next();
+            final List<IQrySource2<? extends IQrySource3>> item = it.next();
             final PropResolution resolution = resolveProp(item, this);
             if (resolution != null) {
                 final EntProp2 transformedProp = new EntProp2(resolution.getAliaslessName(), resolution.getSource(), resolution.getType(), contextId);
@@ -52,7 +53,7 @@ public class EntProp1 extends AbstractElement1 implements ISingleOperand1<EntPro
         
     }
     
-    private PropResolution resolvePropAgainstSource(final IQrySource2 source, final EntProp1 entProp) {
+    private PropResolution resolvePropAgainstSource(final IQrySource2<? extends IQrySource3> source, final EntProp1 entProp) {
         final AbstractPropInfo<?, ?> asIsResolution = source.entityInfo().resolve(entProp.name);
         if (source.alias() != null && entProp.name.startsWith(source.alias() + ".")) {
             final String aliasLessPropName = entProp.name.substring(source.alias().length() + 1);
@@ -68,9 +69,9 @@ public class EntProp1 extends AbstractElement1 implements ISingleOperand1<EntPro
         return asIsResolution != null ? new PropResolution(entProp.name, source, asIsResolution.javaType()) : null;
     }
 
-    private PropResolution resolveProp(final List<IQrySource2> sources, final EntProp1 entProp) {
+    private PropResolution resolveProp(final List<IQrySource2<? extends IQrySource3>> sources, final EntProp1 entProp) {
         final List<PropResolution> result = new ArrayList<>();
-        for (final IQrySource2 pair : sources) {
+        for (final IQrySource2<? extends IQrySource3> pair : sources) {
             final PropResolution resolution = resolvePropAgainstSource(pair, entProp);
             if (resolution != null) {
                 result.add(resolution);
