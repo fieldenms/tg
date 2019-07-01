@@ -18,6 +18,7 @@ const template = html`
         }
         #masterContainer {
             @apply --master-with-dimensions-mixin;
+            overflow-x: hidden;
             overflow-y: auto; /* vertical scrollbar is needed in case where master content does not fit into parent container; this works as a fallback when editorContainer has been shrinked to zero height */
         }
         tg-scrollable-component {

@@ -120,6 +120,7 @@ const template = html`
             font-weight: 400;
             color: #757575;
             height: 3rem;
+            border-bottom: thin solid #e3e3e3;
             -webkit-font-smoothing: antialiased;
             text-rendering: optimizeLegibility;
             min-width: -webkit-fit-content;
@@ -135,7 +136,7 @@ const template = html`
             font-weight: 400;
             color: #212121;
             height: var(--egi-row-height, 1.5rem);
-            border-top: thin solid #e3e3e3;
+            border-bottom: thin solid #e3e3e3;
             -webkit-font-smoothing: antialiased;
             text-rendering: optimizeLegibility;
             min-width: -webkit-fit-content;
@@ -166,7 +167,6 @@ const template = html`
             min-width: fit-content;
             flex-grow: 0;
             flex-shrink: 0;
-            border-top: thin solid #e3e3e3;
             padding-bottom: var(--egi-bottom-margin, 15px);
             @apply --layout-vertical;
         }
@@ -297,7 +297,7 @@ const template = html`
                 <slot name="standart-action"></slot>
             </div>
         </div>
-        <div id="baseContainer" on-scroll="_handleScrollEvent">
+        <div id="baseContainer" on-scroll="_handleScrollEvent" on-touchmove="_handleTouchMove">
             <!--Shadow container that is displayed if container is not fixed-->
             <div class="shadow-container" style="z-index:1;">
                 <div class="shadow-box" style$="[[_calcShadows(headerFixed, _showTopShadow)]]"></div>
@@ -1009,6 +1009,12 @@ Polymer({
         this._showBottomShadow = (this.$.baseContainer.clientHeight + this.$.baseContainer.scrollTop) !== this.$.baseContainer.scrollHeight;
     },
 
+    _handleTouchMove: function (e) {
+        if (this._columnResizingObject) {
+            tearDownEvent(e);
+        }
+    },
+
     _allSelectionChanged: function (e) {
         const target = e.target || e.srcElement;
         this.selectAll(target.checked);
@@ -1100,6 +1106,7 @@ Polymer({
     },
 
     _changeColumnSize: function (e) {
+        tearDownEvent(e);
         switch (e.detail.state) {
         case 'start':
             this._startColumnResize(e);
@@ -1111,7 +1118,6 @@ Polymer({
             this._endColumnResizing(e);
             break;
         }
-        tearDownEvent(e);
     },
 
     _startColumnResize: function (e) {
