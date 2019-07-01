@@ -19,4 +19,30 @@ public class AverageOf1 extends SingleOperandFunction1<AverageOf2> {
         final TransformationResult<? extends ISingleOperand2<?>> operandTransformationResult = operand.transform(context);
         return new TransformationResult<AverageOf2>(new AverageOf2(operandTransformationResult.item, distinct), operandTransformationResult.updatedContext);
     }
+    
+    @Override
+    public int hashCode() {
+        final int prime = 31;
+        final int result = super.hashCode();
+        return prime * result + (distinct ? 1231 : 1237);
+    }
+
+    @Override
+    public boolean equals(final Object obj) {
+        if (this == obj) {
+            return true;
+        }
+        
+        if (!super.equals(obj)) {
+            return false;
+        }
+        
+        if (!(obj instanceof AverageOf1)) {
+            return false;
+        }
+        
+        final AverageOf1 other = (AverageOf1) obj;
+        
+        return distinct == other.distinct;
+    }
 }

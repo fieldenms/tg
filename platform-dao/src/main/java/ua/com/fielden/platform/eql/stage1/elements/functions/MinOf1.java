@@ -17,4 +17,16 @@ public class MinOf1 extends SingleOperandFunction1<MinOf2> {
         final TransformationResult<? extends ISingleOperand2<?>> operandTransformationResult = operand.transform(context);
         return new TransformationResult<MinOf2>(new MinOf2(operandTransformationResult.item), operandTransformationResult.updatedContext);
     }
+    
+    @Override
+    public int hashCode() {
+        final int prime = 31;
+        final int result = super.hashCode();
+        return prime * result + MinOf1.class.getName().hashCode();
+    }
+    
+    @Override
+    public boolean equals(final Object obj) {
+        return this == obj || super.equals(obj) && obj instanceof MinOf1;
+    }    
 }

@@ -17,4 +17,16 @@ public class MinuteOf1 extends SingleOperandFunction1<MinuteOf2> {
         final TransformationResult<? extends ISingleOperand2<?>> operandTransformationResult = operand.transform(context);
         return new TransformationResult<MinuteOf2>(new MinuteOf2(operandTransformationResult.item), operandTransformationResult.updatedContext);
     }
+    
+    @Override
+    public int hashCode() {
+        final int prime = 31;
+        final int result = super.hashCode();
+        return prime * result + MinuteOf1.class.getName().hashCode();
+    }
+    
+    @Override
+    public boolean equals(final Object obj) {
+        return this == obj || super.equals(obj) && obj instanceof MinuteOf1;
+    }     
 }

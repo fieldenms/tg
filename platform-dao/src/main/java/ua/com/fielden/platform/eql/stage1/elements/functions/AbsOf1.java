@@ -17,4 +17,16 @@ public class AbsOf1 extends SingleOperandFunction1<AbsOf2> {
         final TransformationResult<? extends ISingleOperand2<?>> operandTransformationResult = operand.transform(context);
         return new TransformationResult<AbsOf2>(new AbsOf2(operandTransformationResult.item), operandTransformationResult.updatedContext);
     }
+    
+    @Override
+    public int hashCode() {
+        final int prime = 31;
+        final int result = super.hashCode();
+        return prime * result + AbsOf1.class.getName().hashCode();
+    }
+    
+    @Override
+    public boolean equals(final Object obj) {
+        return this == obj || super.equals(obj) && obj instanceof AbsOf1; 
+    }
 }

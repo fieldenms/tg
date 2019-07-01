@@ -19,4 +19,30 @@ public class SumOf1 extends SingleOperandFunction1<SumOf2> {
         final TransformationResult<? extends ISingleOperand2<?>> operandTransformationResult = operand.transform(context);
         return new TransformationResult<SumOf2>(new SumOf2(operandTransformationResult.item, distinct), operandTransformationResult.updatedContext);
     }
+    
+    @Override
+    public int hashCode() {
+        final int prime = 31;
+        final int result = super.hashCode();
+        return prime * result + (distinct ? 1231 : 1237);
+    }
+
+    @Override
+    public boolean equals(final Object obj) {
+        if (this == obj) {
+            return true;
+        }
+        
+        if (!super.equals(obj)) {
+            return false;
+        }
+        
+        if (!(obj instanceof SumOf1)) {
+            return false;
+        }
+        
+        final SumOf1 other = (SumOf1) obj;
+        
+        return distinct == other.distinct;
+    }
 }
