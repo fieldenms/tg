@@ -15,11 +15,6 @@ public class OrderBy1 {
         this.isDesc = isDesc;
     }
 
-    public OrderBy1(final String yieldName, final boolean isDesc) {
-        this.operand = null;
-        this.isDesc = isDesc;
-    }
-
     public TransformationResult<OrderBy2> transform(final PropsResolutionContext context) {
         final TransformationResult<? extends ISingleOperand2<?>> operandTransformationResult = operand.transform(context);
         return new TransformationResult<OrderBy2>(new OrderBy2(operandTransformationResult.item, isDesc), operandTransformationResult.updatedContext);

@@ -223,7 +223,7 @@ public abstract class AbstractTokensBuilder implements ITokensBuilder {
         this.child = child;
     }
 
-    protected ISingleOperand1 getZeroArgFunctionModel(final Functions function) {
+    protected ISingleOperand1<? extends ISingleOperand2<?>> getZeroArgFunctionModel(final Functions function) {
         switch (function) {
         case COUNT_ALL:
             return new CountAll1();
@@ -253,9 +253,9 @@ public abstract class AbstractTokensBuilder implements ITokensBuilder {
             return getZeroArgFunctionModel((Functions) value);
         case EXPR:
         case FUNCTION_MODEL:
-            return (ISingleOperand1) value;
+            return (ISingleOperand1<? extends ISingleOperand2<?>>) value;
         case EXPR_TOKENS:
-            return (ISingleOperand1) new StandAloneExpressionBuilder(queryBuilder, (ExpressionModel) value).getResult().getValue();
+            return (ISingleOperand1<? extends ISingleOperand2<?>>) new StandAloneExpressionBuilder(queryBuilder, (ExpressionModel) value).getResult().getValue();
         case EQUERY_TOKENS:
         case ALL_OPERATOR:
         case ANY_OPERATOR:

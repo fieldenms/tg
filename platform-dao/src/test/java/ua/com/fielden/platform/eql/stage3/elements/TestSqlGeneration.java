@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.eql.stage3.elements;
 
 
+import static java.util.Arrays.asList;
 import static ua.com.fielden.platform.entity.query.fluent.enums.ComparisonOperator.EQ;
 import static ua.com.fielden.platform.entity.query.fluent.enums.ComparisonOperator.NE;
 
@@ -92,35 +93,19 @@ public class TestSqlGeneration {
     }
 
     static Yields3 yields(final Yield3 ... yields) {
-        final List<Yield3> list = new ArrayList<>();
-        for (final Yield3 yield3 : yields) {
-            list.add(yield3);
-        }
-        return new Yields3(list);
+        return new Yields3(asList(yields));
     }
 
     static GroupBys3 groups(final GroupBy3 ... groups) {
-        final List<GroupBy3> list = new ArrayList<>();
-        for (final GroupBy3 groupBy : groups) {
-            list.add(groupBy);
-        }
-        return new GroupBys3(list);
+        return new GroupBys3(asList(groups));
     }
 
     static OrderBys3 orders(final OrderBy3 ... orders) {
-        final List<OrderBy3> list = new ArrayList<>();
-        for (final OrderBy3 orderBy : orders) {
-            list.add(orderBy);
-        }
-        return new OrderBys3(list);
+        return new OrderBys3(asList(orders));
     }
 
     static List<? extends ICondition3> andConditions(final ICondition3 ... conditions) {
-        final List<ICondition3> list = new ArrayList<>();
-        for (final ICondition3 cond : conditions) {
-            list.add(cond);
-        }
-        return list;
+        return asList(conditions);
     }
 
     static Conditions3 orConditions(final List<? extends ICondition3> ... conditions) {
