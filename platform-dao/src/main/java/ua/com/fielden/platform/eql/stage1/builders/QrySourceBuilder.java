@@ -4,23 +4,15 @@ import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.EN
 import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.QRY_MODELS_AS_QRY_SOURCE;
 import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.QRY_SOURCE;
 import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.QRY_SOURCE_ALIAS;
-import static ua.com.fielden.platform.utils.EntityUtils.hasCalcProps;
 import static ua.com.fielden.platform.utils.EntityUtils.isPersistedEntityType;
 import static ua.com.fielden.platform.utils.EntityUtils.isSyntheticBasedOnPersistentEntityType;
 import static ua.com.fielden.platform.utils.EntityUtils.isSyntheticEntityType;
 import static ua.com.fielden.platform.utils.Pair.pair;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.exceptions.EqlStage1ProcessingException;
 import ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory;
-import ua.com.fielden.platform.entity.query.model.QueryModel;
-import ua.com.fielden.platform.eql.stage1.elements.operands.EntQuery1;
 import ua.com.fielden.platform.eql.stage1.elements.sources.QrySource1BasedOnPersistentType;
-import ua.com.fielden.platform.eql.stage1.elements.sources.QrySource1BasedOnSubqueries;
 import ua.com.fielden.platform.utils.Pair;
 
 /**
@@ -65,12 +57,7 @@ public class QrySourceBuilder extends AbstractTokensBuilder {
     private Pair<TokenCategory, Object> buildResultForQrySourceBasedOnEntityType() {
         final Class<AbstractEntity<?>> resultType = (Class<AbstractEntity<?>>) firstValue();
         if (isPersistedEntityType(resultType)) {
-            if (hasCalcProps(resultType)) {
-                //throw new EqlStage1ProcessingException("Not yet.");    
-                return pair(QRY_SOURCE, new QrySource1BasedOnPersistentType(resultType, (String) secondValue(), getQueryBuilder().nextCondtextId()));    
-            } else {
-                return pair(QRY_SOURCE, new QrySource1BasedOnPersistentType(resultType, (String) secondValue(), getQueryBuilder().nextCondtextId()));    
-            }
+            return pair(QRY_SOURCE, new QrySource1BasedOnPersistentType(resultType, (String) secondValue(), getQueryBuilder().nextCondtextId()));    
         } else if (isSyntheticEntityType(resultType) || isSyntheticBasedOnPersistentEntityType(resultType)) {
             throw new EqlStage1ProcessingException("Not yet.");
         } else {
@@ -78,23 +65,12 @@ public class QrySourceBuilder extends AbstractTokensBuilder {
         }
     }
 
-    private Pair<TokenCategory, Object> buildResultForQrySourceBasedOnSubqueries() {
-        final List<EntQuery1> queries = new ArrayList<>();
-        final String alias = secondValue();
-        final List<QueryModel<AbstractEntity<?>>> models = firstValue();
-        for (final QueryModel<AbstractEntity<?>> qryModel : models) {
-            queries.add(getQueryBuilder().generateEntQueryAsSourceQuery(qryModel, /*resultType = */ Optional.empty()));
-        }
-
-        return pair(QRY_SOURCE, new QrySource1BasedOnSubqueries(alias, queries, getQueryBuilder().nextCondtextId()));
-    }
-
     @Override
     public Pair<TokenCategory, Object> getResult() {
         if (isEntityTypeAsSource() || isEntityTypeAsSourceWithoutAlias()) {
             return buildResultForQrySourceBasedOnEntityType();
         } else if (isSubqueriesAsSource() || isSubqueriesAsSourceWithoutAlias()) {
-            return buildResultForQrySourceBasedOnSubqueries();
+            throw new EqlStage1ProcessingException("Not yet.");
         } else {
             throw new RuntimeException("Unable to get result - unrecognised state.");
         }
