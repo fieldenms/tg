@@ -14,6 +14,12 @@ public class Concat3 implements ISingleOperand3 {
     }
 
     @Override
+    public String sql() {
+        // TODO Auto-generated method stub
+        return null;
+    }
+    
+    @Override
     public int hashCode() {
         final int prime = 31;
         int result = 1;
@@ -34,11 +40,5 @@ public class Concat3 implements ISingleOperand3 {
         final Concat3 other = (Concat3) obj;
         
         return Objects.equals(operands, other.operands);
-    }
-
-    @Override
-    public String sql() {
-        // TODO Auto-generated method stub
-        return null;
     }
 }

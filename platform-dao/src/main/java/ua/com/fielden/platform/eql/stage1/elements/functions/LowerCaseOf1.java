@@ -28,5 +28,4 @@ public class LowerCaseOf1 extends SingleOperandFunction1<LowerCaseOf2> {
     public boolean equals(final Object obj) {
         return this == obj || super.equals(obj) && obj instanceof LowerCaseOf1;
     }
-
 }

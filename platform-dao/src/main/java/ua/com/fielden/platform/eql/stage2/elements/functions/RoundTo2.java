@@ -25,4 +25,16 @@ public class RoundTo2 extends TwoOperandsFunction2<RoundTo3> {
         final TransformationResult<? extends ISingleOperand3> secondOperandTransformationResult = operand2.transform(firstOperandTransformationResult.updatedContext);
         return new TransformationResult<RoundTo3>(new RoundTo3(firstOperandTransformationResult.item, secondOperandTransformationResult.item), secondOperandTransformationResult.updatedContext);
     }
+    
+    @Override
+    public int hashCode() {
+        final int prime = 31;
+        final int result = super.hashCode();
+        return prime * result + RoundTo2.class.getName().hashCode();
+    }
+    
+    @Override
+    public boolean equals(final Object obj) {
+        return this == obj || super.equals(obj) && obj instanceof RoundTo2;
+    }
 }

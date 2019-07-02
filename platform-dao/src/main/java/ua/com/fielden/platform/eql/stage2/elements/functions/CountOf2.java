@@ -24,4 +24,30 @@ public class CountOf2 extends SingleOperandFunction2<CountOf3> {
         final TransformationResult<? extends ISingleOperand3> operandTransformationResult = operand.transform(context);
         return new TransformationResult<CountOf3>(new CountOf3(operandTransformationResult.item, distinct), operandTransformationResult.updatedContext);
     }
+    
+    @Override
+    public int hashCode() {
+        final int prime = 31;
+        final int result = super.hashCode();
+        return prime * result + (distinct ? 1231 : 1237);
+    }
+
+    @Override
+    public boolean equals(final Object obj) {
+        if (this == obj) {
+            return true;
+        }
+        
+        if (!super.equals(obj)) {
+            return false;
+        }
+        
+        if (!(obj instanceof CountOf2)) {
+            return false;
+        }
+        
+        final CountOf2 other = (CountOf2) obj;
+        
+        return distinct == other.distinct;
+    }
 }

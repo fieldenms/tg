@@ -22,4 +22,16 @@ public class MonthOf2 extends SingleOperandFunction2<MonthOf3> {
         final TransformationResult<? extends ISingleOperand3> operandTransformationResult = operand.transform(context);
         return new TransformationResult<MonthOf3>(new MonthOf3(operandTransformationResult.item), operandTransformationResult.updatedContext);
     }
+    
+    @Override
+    public int hashCode() {
+        final int prime = 31;
+        final int result = super.hashCode();
+        return prime * result + MonthOf2.class.getName().hashCode();
+    }
+    
+    @Override
+    public boolean equals(final Object obj) {
+        return this == obj || super.equals(obj) && obj instanceof MonthOf2;
+    }  
 }

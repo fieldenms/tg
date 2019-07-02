@@ -14,7 +14,7 @@ public class Now1 extends AbstractFunction1<Now2> {
     @Override
     public int hashCode() {
         final int prime = 31;
-        final int result = super.hashCode();
+        final int result = 1;
         return prime * result + Now1.class.getName().hashCode();
     }
     

@@ -23,4 +23,16 @@ public class IfNull2 extends TwoOperandsFunction2<IfNull3> {
         final TransformationResult<? extends ISingleOperand3> secondOperandTransformationResult = operand2.transform(firstOperandTransformationResult.updatedContext);
         return new TransformationResult<IfNull3>(new IfNull3(firstOperandTransformationResult.item, secondOperandTransformationResult.item), secondOperandTransformationResult.updatedContext);
     }
+    
+    @Override
+    public int hashCode() {
+        final int prime = 31;
+        final int result = super.hashCode();
+        return prime * result + IfNull2.class.getName().hashCode();
+    }
+    
+    @Override
+    public boolean equals(final Object obj) {
+        return this == obj || super.equals(obj) && obj instanceof IfNull2;
+    } 
 }

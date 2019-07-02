@@ -19,6 +19,12 @@ public class CaseWhen3 implements ISingleOperand3 {
     }
 
     @Override
+    public String sql() {
+        // TODO Auto-generated method stub
+        return null;
+    }
+    
+    @Override
     public int hashCode() {
         final int prime = 31;
         int result = 1;
@@ -40,11 +46,5 @@ public class CaseWhen3 implements ISingleOperand3 {
         final CaseWhen3 other = (CaseWhen3) obj;
 
         return Objects.equals(whenThenPairs, other.whenThenPairs) && Objects.equals(elseOperand, other.elseOperand);
-    }
-
-    @Override
-    public String sql() {
-        // TODO Auto-generated method stub
-        return null;
     }
 }

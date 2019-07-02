@@ -13,5 +13,16 @@ public class DateOf3 extends SingleOperandFunction3 {
         // TODO Auto-generated method stub
         return null;
     }
-
+    
+    @Override
+    public int hashCode() {
+        final int prime = 31;
+        final int result = super.hashCode();
+        return prime * result + DateOf3.class.getName().hashCode();
+    }
+    
+    @Override
+    public boolean equals(final Object obj) {
+        return this == obj || super.equals(obj) && obj instanceof DateOf3;
+    }
 }

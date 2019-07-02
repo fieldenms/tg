@@ -21,4 +21,16 @@ public class LowerCaseOf2 extends SingleOperandFunction2<LowerCaseOf3> {
         final TransformationResult<? extends ISingleOperand3> operandTransformationResult = operand.transform(context);
         return new TransformationResult<LowerCaseOf3>(new LowerCaseOf3(operandTransformationResult.item), operandTransformationResult.updatedContext);
     }
+    
+    @Override
+    public int hashCode() {
+        final int prime = 31;
+        final int result = super.hashCode();
+        return prime * result + LowerCaseOf2.class.getName().hashCode();
+    }
+    
+    @Override
+    public boolean equals(final Object obj) {
+        return this == obj || super.equals(obj) && obj instanceof LowerCaseOf2;
+    }
 }

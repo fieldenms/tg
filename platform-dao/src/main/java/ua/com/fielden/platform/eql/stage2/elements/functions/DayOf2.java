@@ -21,4 +21,16 @@ public class DayOf2 extends SingleOperandFunction2<DayOf3> {
         final TransformationResult<? extends ISingleOperand3> operandTransformationResult = operand.transform(context);
         return new TransformationResult<DayOf3>(new DayOf3(operandTransformationResult.item), operandTransformationResult.updatedContext);
     }
+    
+    @Override
+    public int hashCode() {
+        final int prime = 31;
+        final int result = super.hashCode();
+        return prime * result + DayOf2.class.getName().hashCode();
+    }
+    
+    @Override
+    public boolean equals(final Object obj) {
+        return this == obj || super.equals(obj) && obj instanceof DayOf2; 
+    }
 }
