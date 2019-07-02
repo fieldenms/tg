@@ -88,7 +88,7 @@ export const Controls = function (_map, _markersClusterGroup, levelControl, _bas
         // self._markersClusterGroup.refreshClusters();
     });
 
-    _additionalOverlays['GEO-json'] = self._markersClusterGroup;
+    //_additionalOverlays['GEO-json'] = self._markersClusterGroup;
 
     const overlaysControl = L.control.layers(self._baseLayers.getBaseLayers(), _additionalOverlays);
     self._map.addControl(overlaysControl);

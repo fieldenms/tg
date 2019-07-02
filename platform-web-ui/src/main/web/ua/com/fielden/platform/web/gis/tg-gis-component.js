@@ -106,6 +106,7 @@ export const GisComponent = function (mapDiv, progressDiv, progressBarDiv, tgMap
     self._geoJsonOverlay = self._createEsriLayer('https://services9.arcgis.com/hf8lTMw1xiMRR4fz/arcgis/rest/services/tg_airport_geozones/FeatureServer/0', 'Asset');
     self._geoJsonOverlay2 = self._createEsriLayer('https://services9.arcgis.com/hf8lTMw1xiMRR4fz/arcgis/rest/services/tg_airport/FeatureServer/0', 'Asset');
     self._geoJsonOverlay3 = self._createEsriLayer('https://services9.arcgis.com/hf8lTMw1xiMRR4fz/arcgis/rest/services/tg_airport_lines/FeatureServer/0', 'Asset');
+    self._geoJsonOverlay4 = self._createEsriLayer('https://services9.arcgis.com/hf8lTMw1xiMRR4fz/arcgis/rest/services/tg_airport_hazards/FeatureServer/0', 'Hazard');
     $.getJSON("resources/gis/asset/indoor-building.json", function(geoJSON) {
         console.debug('geoJSON', geoJSON);
         
@@ -190,7 +191,8 @@ export const GisComponent = function (mapDiv, progressDiv, progressBarDiv, tgMap
         const overlays = {
             'Assets (zones)': self._geoJsonOverlay,
             'Assets (points)': self._geoJsonOverlay2,
-            'Assets (lines)': self._geoJsonOverlay3
+            'Assets (lines)': self._geoJsonOverlay3,
+            'Hazards': self._geoJsonOverlay4
         };
         self._controls = new Controls(self._map, self._markerCluster.getGisMarkerClusterGroup(), levelControl, self._baseLayers, overlays);
         
@@ -230,6 +232,7 @@ export const GisComponent = function (mapDiv, progressDiv, progressBarDiv, tgMap
         self._map.addLayer(self._geoJsonOverlay);
         self._map.addLayer(self._geoJsonOverlay2);
         self._map.addLayer(self._geoJsonOverlay3);
+        self._map.addLayer(self._geoJsonOverlay4);
         self._map.addLayer(indoorLayer);
 
         self._map.fire('dataload');
@@ -404,15 +407,18 @@ GisComponent.prototype.createCoordinatesFromMessage = function (message) {
 
 GisComponent.prototype.createPopupContent = function (arcGisFeature) {
     const self = this;
+    
+    let popupText = '';
+    Object.keys(arcGisFeature.properties).forEach(key => {
+        if (key !== 'layerId' && key !== 'popupContentInitialised' && key !== '_featureType' && (key === 'desc' || key === 'buildingLevel')) {
+            popupText = popupText + "ArcGIS " + key + ": " + arcGisFeature.properties[key] + "<br>";
+        }
+    });
+    
     const feature = self.findEntityBy(arcGisFeature);
     if (feature) {
         const columnPropertiesMapped = self.columnPropertiesMapper(feature);
-        let popupText = '';
-        Object.keys(arcGisFeature.properties).forEach(key => {
-            if (key !== 'layerId' && key !== 'popupContentInitialised' && key !== '_featureType' && (key === 'desc' || key === 'buildingLevel')) {
-                popupText = popupText + "ArcGIS " + key + ": " + arcGisFeature.properties[key] + "<br>";
-            }
-        });
+        
         for (let index = 0; index < columnPropertiesMapped.length && index < 10; index++) {
             const entry = columnPropertiesMapped[index];
             const value = entry.value === true ? "&#x2714" : (entry.value === false ? "&#x2718" : entry.value);
@@ -421,7 +427,7 @@ GisComponent.prototype.createPopupContent = function (arcGisFeature) {
         }
         return popupText;
     }
-    return '';
+    return popupText;
 }
 
 GisComponent.prototype.findEntityBy = function (arcGisFeature) {

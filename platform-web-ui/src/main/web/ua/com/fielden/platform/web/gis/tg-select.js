@@ -32,16 +32,23 @@ Select.prototype.select = function (layerId) {
         //selecting entity.
         this._silentlySelect(layerId);
         this._prevId = layerId;
-        details.push({
-            entity: this.findEntityBy(this._getLayerById(layerId).feature),
-            select: true
-        });
+        const entity = this.findEntityBy(this._getLayerById(layerId).feature);
+        if (entity) {
+            details.push({
+                entity: entity,
+                select: true
+            });
+        }
+        
         if (prevId !== null) {
             this._silentlyDeselect(prevId);
-            details.push({
-                entity: this.findEntityBy(this._getLayerById(prevId).feature),
-                select: false
-            });
+            const prevEntity = this.findEntityBy(this._getLayerById(prevId).feature);
+            if (prevEntity) {
+                details.push({
+                    entity: prevEntity,
+                    select: false
+                });
+            }
         }
         if (details.length > 0) {
             const event = new CustomEvent("tg-entity-selected", {
