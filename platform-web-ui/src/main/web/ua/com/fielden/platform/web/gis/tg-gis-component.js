@@ -107,6 +107,7 @@ export const GisComponent = function (mapDiv, progressDiv, progressBarDiv, tgMap
     self._geoJsonOverlay2 = self._createEsriLayer('https://services9.arcgis.com/hf8lTMw1xiMRR4fz/arcgis/rest/services/tg_airport/FeatureServer/0', 'Asset');
     self._geoJsonOverlay3 = self._createEsriLayer('https://services9.arcgis.com/hf8lTMw1xiMRR4fz/arcgis/rest/services/tg_airport_lines/FeatureServer/0', 'Asset');
     self._geoJsonOverlay4 = self._createEsriLayer('https://services9.arcgis.com/hf8lTMw1xiMRR4fz/arcgis/rest/services/tg_airport_hazards/FeatureServer/0', 'Hazard');
+    self._geoJsonOverlay5 = self._createEsriLayer('https://services9.arcgis.com/hf8lTMw1xiMRR4fz/arcgis/rest/services/tg_airport_incidents/FeatureServer/0', 'Incident');
     $.getJSON("resources/gis/asset/indoor-building.json", function(geoJSON) {
         console.debug('geoJSON', geoJSON);
         
@@ -192,7 +193,8 @@ export const GisComponent = function (mapDiv, progressDiv, progressBarDiv, tgMap
             'Assets (zones)': self._geoJsonOverlay,
             'Assets (points)': self._geoJsonOverlay2,
             'Assets (lines)': self._geoJsonOverlay3,
-            'Hazards': self._geoJsonOverlay4
+            'Hazards': self._geoJsonOverlay4,
+            'Incidents': self._geoJsonOverlay5
         };
         self._controls = new Controls(self._map, self._markerCluster.getGisMarkerClusterGroup(), levelControl, self._baseLayers, overlays);
         
@@ -233,6 +235,7 @@ export const GisComponent = function (mapDiv, progressDiv, progressBarDiv, tgMap
         self._map.addLayer(self._geoJsonOverlay2);
         self._map.addLayer(self._geoJsonOverlay3);
         self._map.addLayer(self._geoJsonOverlay4);
+        self._map.addLayer(self._geoJsonOverlay5);
         self._map.addLayer(indoorLayer);
 
         self._map.fire('dataload');
@@ -410,7 +413,7 @@ GisComponent.prototype.createPopupContent = function (arcGisFeature) {
     
     let popupText = '';
     Object.keys(arcGisFeature.properties).forEach(key => {
-        if (key !== 'layerId' && key !== 'popupContentInitialised' && key !== '_featureType' && (key === 'desc' || key === 'buildingLevel')) {
+        if (key !== 'layerId' && key !== 'popupContentInitialised' && key !== '_featureType' && (key === 'desc' || key === 'buildingLevel' || key === 'description' || key === 'criticality')) {
             popupText = popupText + "ArcGIS " + key + ": " + arcGisFeature.properties[key] + "<br>";
         }
     });
