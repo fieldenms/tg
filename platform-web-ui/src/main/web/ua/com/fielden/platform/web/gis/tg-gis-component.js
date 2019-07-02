@@ -413,8 +413,10 @@ GisComponent.prototype.createPopupContent = function (arcGisFeature) {
     
     let popupText = '';
     Object.keys(arcGisFeature.properties).forEach(key => {
-        if (key !== 'layerId' && key !== 'popupContentInitialised' && key !== '_featureType' && (key === 'desc' || key === 'buildingLevel' || key === 'description' || key === 'criticality')) {
-            popupText = popupText + "ArcGIS " + key + ": " + arcGisFeature.properties[key] + "<br>";
+        if (key !== 'layerId' && key !== 'popupContentInitialised' && key !== '_featureType' && (key === 'desc' || key === 'buildingLevel' || key === 'description' || key === 'criticality' || key === 'angle')) {
+            if (arcGisFeature.properties[key]) {
+                popupText = popupText + "ArcGIS " + key + ": " + arcGisFeature.properties[key] + "<br>";
+            }
         }
     });
     
