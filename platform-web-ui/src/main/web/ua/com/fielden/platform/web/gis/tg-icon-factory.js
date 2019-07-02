@@ -31,7 +31,8 @@ export const IconFactory = function () {
 
     const ArrowIcon = L.Icon.extend({
         options: {
-            iconAnchor: [12, 12],
+            iconSize: [18, 18],
+            iconAnchor: [9, 9],
             popupAnchor: [0, 0]
         }
     });
