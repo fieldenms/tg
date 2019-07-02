@@ -5,12 +5,14 @@ import { easyButton, leafletEasybuttonStylesName } from '/resources/gis/leaflet/
 
 export { leafletStylesName, leafletDrawStylesName, leafletControlloadingStylesName, leafletEasybuttonStylesName };
 
-export const Controls = function (_map, _markersClusterGroup, _baseLayers) {
+export const Controls = function (_map, _markersClusterGroup, levelControl, _baseLayers, _additionalOverlays) {
     const self = this;
 
     self._map = _map;
     self._markersClusterGroup = _markersClusterGroup;
     self._baseLayers = _baseLayers;
+
+    self._map.addControl(levelControl);
 
     // firebug control
     /*const firebugControl = new easyButton(
@@ -86,12 +88,8 @@ export const Controls = function (_map, _markersClusterGroup, _baseLayers) {
         // self._markersClusterGroup.refreshClusters();
     });
 
-    const overlays = {
-        'GEO-json': self._markersClusterGroup
-        // 'GPS-tracks': gpsTracksOverlay,
-        // 'Traffic': self._baseLayers.getYTrafficLayer()
-    };
+    _additionalOverlays['GEO-json'] = self._markersClusterGroup;
 
-    const overlaysControl = L.control.layers(self._baseLayers.getBaseLayers(), overlays);
+    const overlaysControl = L.control.layers(self._baseLayers.getBaseLayers(), _additionalOverlays);
     self._map.addControl(overlaysControl);
 };

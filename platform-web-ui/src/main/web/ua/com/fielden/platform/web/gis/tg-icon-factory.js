@@ -37,7 +37,8 @@ export const IconFactory = function () {
     });
     const CircleIcon = L.Icon.extend({
         options: {
-            iconAnchor: [12, 12],
+            iconSize: [12, 12],
+            iconAnchor: [6, 6],
             popupAnchor: [0, 0]
         }
     });
