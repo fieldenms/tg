@@ -60,7 +60,7 @@ export const GisComponent = function (mapDiv, progressDiv, progressBarDiv, tgMap
     self._baseLayers = new BaseLayers();
 
     self._map = L.map(mapDiv, {
-        layers: [self._baseLayers.getBaseLayer("Esri Streets")], // only add one!
+        layers: [self._baseLayers.getBaseLayer("Esri Topographic")], // only add one!
         zoomControl: false, // add it later
         loadingControl: false // add it later
     }).setView([-37.002311, 174.782378], 19); // Auckland Airport has been centered (-37.003881, 174.783012)
