@@ -411,11 +411,12 @@ GisComponent.prototype.createCoordinatesFromMessage = function (message) {
 GisComponent.prototype.createPopupContent = function (arcGisFeature) {
     const self = this;
     
-    let popupText = '';
+    const template = document.createElement('template');
+    let popupText = '<table>';
     Object.keys(arcGisFeature.properties).forEach(key => {
         if (key !== 'layerId' && key !== 'popupContentInitialised' && key !== '_featureType' && (key === 'desc' || key === 'buildingLevel' || key === 'description' || key === 'criticality' || key === 'angle')) {
             if (arcGisFeature.properties[key]) {
-                popupText = popupText + "ArcGIS " + key + ": " + arcGisFeature.properties[key] + "<br>";
+                popupText = popupText + '<tr><td>ArcGIS ' + key + ':</td><td>' + arcGisFeature.properties[key] + '</td></tr>';
             }
         }
     });
@@ -426,13 +427,29 @@ GisComponent.prototype.createPopupContent = function (arcGisFeature) {
         
         for (let index = 0; index < columnPropertiesMapped.length && index < 10; index++) {
             const entry = columnPropertiesMapped[index];
-            const value = entry.value === true ? "&#x2714" : (entry.value === false ? "&#x2718" : entry.value);
+            const value = entry.value === true ? '&#x2714' : (entry.value === false ? '&#x2718' : entry.value);
             const type = feature.constructor.prototype.type.call(feature);
-            popupText = popupText + "" + self.titleFor(feature, entry.dotNotation) + ": " + value + "<br>";
+            popupText = popupText + '<tr' + (entry.dotNotation === '' ? ' class="this-row"' : '') + '><td>' + self.titleFor(feature, entry.dotNotation) + ':</td><td>' + value + '</td></tr>';
         }
-        return popupText;
     }
-    return popupText;
+    template.innerHTML = popupText + '</table>';
+    const element = template.content;
+    
+    if (feature && feature.get('key')) {
+        const entityType = 'Asset';
+        const actionElement = element.children[0].children[0].querySelector('.this-row');
+        if (actionElement) {
+            actionElement.addEventListener('click', (function(e, details) {
+                const action = this._select._tgMap.parentElement.querySelector('tg-ui-action[short-desc="' + entityType + ' Master"]');
+                action.modifyFunctionalEntity = (function (bindingEntity, master) {
+                    action.modifyValue4Property('key', bindingEntity, feature.get('key'));
+                }).bind(this);
+                action._run();
+            }).bind(this));
+        }
+    }
+    
+    return element;
 }
 
 GisComponent.prototype.findEntityBy = function (arcGisFeature) {
