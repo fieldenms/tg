@@ -2,6 +2,8 @@ package ua.com.fielden.platform.eql.stage3.elements.operands;
 
 import java.util.Objects;
 
+import ua.com.fielden.platform.entity.query.DbVersion;
+
 public class EntValue3 implements ISingleOperand3 {
     public final Object value;
 
@@ -10,7 +12,7 @@ public class EntValue3 implements ISingleOperand3 {
     }
 
     @Override
-    public String sql() {
+    public String sql(final DbVersion dbVersion) {
         // TODO Auto-generated method stub
         return null;
     }

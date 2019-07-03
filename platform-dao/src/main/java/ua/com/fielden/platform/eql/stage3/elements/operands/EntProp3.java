@@ -2,6 +2,7 @@ package ua.com.fielden.platform.eql.stage3.elements.operands;
 
 import java.util.Objects;
 
+import ua.com.fielden.platform.entity.query.DbVersion;
 import ua.com.fielden.platform.eql.stage3.elements.sources.IQrySource3;
 
 public class EntProp3 implements ISingleOperand3 {
@@ -14,7 +15,7 @@ public class EntProp3 implements ISingleOperand3 {
     }
 
     @Override
-    public String sql() {
+    public String sql(final DbVersion dbVersion) {
         return source.sqlAlias() + "." + source.column(name).name;
     }
     

@@ -1,5 +1,8 @@
 package ua.com.fielden.platform.eql.stage3.elements.functions;
 
+import static java.lang.String.format;
+
+import ua.com.fielden.platform.entity.query.DbVersion;
 import ua.com.fielden.platform.eql.stage3.elements.operands.ISingleOperand3;
 
 public class DayOf3 extends SingleOperandFunction3 {
@@ -9,9 +12,16 @@ public class DayOf3 extends SingleOperandFunction3 {
     }
 
     @Override
-    public String sql() {
-        // TODO Auto-generated method stub
-        return null;
+    public String sql(final DbVersion dbVersion) {
+        switch (dbVersion) {
+        case H2:
+        case MSSQL:
+            return format("DAY(%s)", operand.sql(dbVersion));
+        case POSTGRESQL:
+            return format("CAST(EXTRACT(DAY FROM %s) AS INT)", operand.sql(dbVersion));
+        default:
+            return super.sql(dbVersion);
+        }
     }
 
     @Override

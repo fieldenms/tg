@@ -12,6 +12,7 @@ import java.util.Map;
 
 import org.junit.Test;
 
+import ua.com.fielden.platform.entity.query.DbVersion;
 import ua.com.fielden.platform.entity.query.fluent.enums.JoinType;
 import ua.com.fielden.platform.eql.stage3.elements.conditions.ComparisonTest3;
 import ua.com.fielden.platform.eql.stage3.elements.conditions.Conditions3;
@@ -52,7 +53,7 @@ public class TestSqlGeneration {
 
          final EntQuery3 qry = qry(sources, yields(y1, y2));
          
-         System.out.println(qry.sql());
+         System.out.println(qry.sql(DbVersion.H2));
     }
     
     

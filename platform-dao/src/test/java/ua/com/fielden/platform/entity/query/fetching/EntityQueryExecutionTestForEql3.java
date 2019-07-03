@@ -34,12 +34,18 @@ public class EntityQueryExecutionTestForEql3 extends AbstractDaoTestCase {
                         select(TgVehicle.class).where().prop("replacedBy").eq().extProp("veh.id").model()).
                 yield().prop("veh.key").as("vehiclekey").
                 yield().prop("rbv.key").as("replacedByVehiclekey").
+                yield().countAll().as("allCount").
+                yield().caseWhen().prop("veh.key").eq().prop("rbv.key").then().prop("veh.id").otherwise().prop("rbv.id").endAsInt().as("cwti").
+                yield().caseWhen().prop("veh.key").eq().prop("rbv.key").then().prop("veh.key").otherwise().prop("rbv.key").endAsStr(5).as("cwts").
                 modelAsAggregate();
         
         final List<EntityAggregates> vehicles = aggregateDao.getAllEntities(from(qry).with("EQL3", null).model());
         
         assertEquals("CAR2", vehicles.get(0).get("vehiclekey"));
         assertEquals("CAR1", vehicles.get(0).get("replacedByVehiclekey"));
+        assertEquals("1", vehicles.get(0).get("allCount").toString());
+        assertEquals("1000031", vehicles.get(0).get("cwti").toString());
+        assertEquals("CAR1", vehicles.get(0).get("cwts").toString());
     }
 
     @Override

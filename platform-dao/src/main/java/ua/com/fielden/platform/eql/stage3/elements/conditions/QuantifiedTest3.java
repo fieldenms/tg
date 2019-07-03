@@ -2,6 +2,7 @@ package ua.com.fielden.platform.eql.stage3.elements.conditions;
 
 import java.util.Objects;
 
+import ua.com.fielden.platform.entity.query.DbVersion;
 import ua.com.fielden.platform.entity.query.fluent.enums.ComparisonOperator;
 import ua.com.fielden.platform.eql.meta.Quantifier;
 import ua.com.fielden.platform.eql.stage3.elements.operands.EntQuery3;
@@ -21,8 +22,8 @@ public class QuantifiedTest3 implements ICondition3 {
     }
 
     @Override
-    public String sql() {
-        return leftOperand.sql() + " " + operator + " " + quantifier + " " + rightOperand.sql();
+    public String sql(final DbVersion dbVersion) {
+        return leftOperand.sql(dbVersion) + " " + operator + " " + quantifier + " " + rightOperand.sql(dbVersion);
     }
 
     @Override

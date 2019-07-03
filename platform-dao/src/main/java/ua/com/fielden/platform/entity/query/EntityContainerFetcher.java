@@ -149,7 +149,7 @@ public class EntityContainerFetcher {
             final Table vehT = new Table("TGVEHICLE_", columns);
             tables.put(TgVehicle.class.getName(), vehT);
             final EntQuery3 entQuery3 = gen1.generateEntQueryAsResultQuery(qem.queryModel, qem.orderModel).transform(resolutionContext).item.transform(new TransformationContext(tables)).item;
-            final String sql3 = entQuery3.sql();
+            final String sql3 = entQuery3.sql(domainMetadataAnalyser.getDbVersion());
             return new QueryModelResult<>((Class<E>)EntityAggregates.class, sql3, getResultPropsInfos(entQuery3.yields), Collections.<String, Object>emptyMap(), qem.fetchModel);
             
         } else {

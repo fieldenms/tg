@@ -8,6 +8,8 @@ import java.util.List;
 import java.util.SortedMap;
 import java.util.TreeMap;
 
+import ua.com.fielden.platform.entity.query.DbVersion;
+
 public class Yields3 {
     private final SortedMap<String, Yield3> yieldsMap = new TreeMap<String, Yield3>();
 
@@ -21,8 +23,8 @@ public class Yields3 {
         return Collections.unmodifiableCollection(yieldsMap.values());
     }
 
-    public String sql() {
-        return getYields().stream().map(y -> y.sql()).collect(joining(", "));
+    public String sql(final DbVersion dbVersion) {
+        return getYields().stream().map(y -> y.sql(dbVersion)).collect(joining(", "));
     }
     
     @Override

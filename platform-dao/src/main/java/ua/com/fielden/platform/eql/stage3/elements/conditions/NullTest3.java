@@ -2,6 +2,7 @@ package ua.com.fielden.platform.eql.stage3.elements.conditions;
 
 import java.util.Objects;
 
+import ua.com.fielden.platform.entity.query.DbVersion;
 import ua.com.fielden.platform.eql.stage3.elements.operands.ISingleOperand3;
 
 public class NullTest3 implements ICondition3 {
@@ -14,8 +15,8 @@ public class NullTest3 implements ICondition3 {
     }
 
     @Override
-    public String sql() {
-        return operand.sql() + " IS " + (negated ? "NOT" : "") + " NULL";
+    public String sql(final DbVersion dbVersion) {
+        return operand.sql(dbVersion) + " IS " + (negated ? "NOT" : "") + " NULL";
     }
 
     @Override

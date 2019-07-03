@@ -2,6 +2,7 @@ package ua.com.fielden.platform.eql.stage3.elements;
 
 import java.util.Objects;
 
+import ua.com.fielden.platform.entity.query.DbVersion;
 import ua.com.fielden.platform.eql.stage3.elements.operands.ISingleOperand3;
 
 public class Yield3 {
@@ -13,8 +14,8 @@ public class Yield3 {
         this.alias = alias;
     }
 
-    public String sql() {
-        return operand.sql() + " AS " + alias;
+    public String sql(final DbVersion dbVersion) {
+        return operand.sql(dbVersion) + " AS " + alias;
     }
     
     @Override

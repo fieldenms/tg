@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
+import ua.com.fielden.platform.entity.query.fluent.ITypeCast;
 import ua.com.fielden.platform.eql.stage2.elements.TransformationContext;
 import ua.com.fielden.platform.eql.stage2.elements.TransformationResult;
 import ua.com.fielden.platform.eql.stage2.elements.conditions.ICondition2;
@@ -17,10 +18,12 @@ public class CaseWhen2 extends AbstractFunction2<CaseWhen3> {
 
     private List<Pair<ICondition2<? extends ICondition3>, ISingleOperand2<? extends ISingleOperand3>>> whenThenPairs = new ArrayList<>();
     private final ISingleOperand2<? extends ISingleOperand3> elseOperand;
+    private final ITypeCast typeCast;
 
-    public CaseWhen2(final List<Pair<ICondition2<? extends ICondition3>, ISingleOperand2<? extends ISingleOperand3>>> whenThenPairs, final ISingleOperand2<? extends ISingleOperand3> elseOperand) {
+    public CaseWhen2(final List<Pair<ICondition2<? extends ICondition3>, ISingleOperand2<? extends ISingleOperand3>>> whenThenPairs, final ISingleOperand2<? extends ISingleOperand3> elseOperand, final ITypeCast typeCast) {
         this.whenThenPairs.addAll(whenThenPairs);
         this.elseOperand = elseOperand;
+        this.typeCast = typeCast;
     }
 
     @Override
@@ -42,8 +45,7 @@ public class CaseWhen2 extends AbstractFunction2<CaseWhen3> {
         }
         final TransformationResult<? extends ISingleOperand3> elseOperandTransformationResult = elseOperand.transform(currentResolutionContext);
         
-        return new TransformationResult<CaseWhen3>(new CaseWhen3(transformedWhenThenPairs, elseOperandTransformationResult.item), elseOperandTransformationResult.updatedContext);
-
+        return new TransformationResult<CaseWhen3>(new CaseWhen3(transformedWhenThenPairs, elseOperandTransformationResult.item, typeCast), elseOperandTransformationResult.updatedContext);
     }
 
     @Override
@@ -51,6 +53,7 @@ public class CaseWhen2 extends AbstractFunction2<CaseWhen3> {
         final int prime = 31;
         int result = 1;
         result = prime * result + ((elseOperand == null) ? 0 : elseOperand.hashCode());
+        result = prime * result + ((typeCast == null) ? 0 : typeCast.hashCode());
         result = prime * result + ((whenThenPairs == null) ? 0 : whenThenPairs.hashCode());
         return result;
     }
@@ -67,6 +70,6 @@ public class CaseWhen2 extends AbstractFunction2<CaseWhen3> {
 
         final CaseWhen2 other = (CaseWhen2) obj;
 
-        return Objects.equals(whenThenPairs, other.whenThenPairs) && Objects.equals(elseOperand, other.elseOperand);
+        return Objects.equals(whenThenPairs, other.whenThenPairs) && Objects.equals(elseOperand, other.elseOperand) && Objects.equals(typeCast, other.typeCast);
     }
 }

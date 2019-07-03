@@ -1,7 +1,10 @@
 package ua.com.fielden.platform.eql.stage3.elements.functions;
 
+import static java.lang.String.format;
+
 import java.util.Objects;
 
+import ua.com.fielden.platform.entity.query.DbVersion;
 import ua.com.fielden.platform.entity.query.fluent.enums.DateIntervalUnit;
 import ua.com.fielden.platform.eql.stage3.elements.operands.ISingleOperand3;
 
@@ -14,9 +17,17 @@ public class AddDateInterval3 extends TwoOperandsFunction3 {
     }
 
     @Override
-    public String sql() {
-        // TODO Auto-generated method stub
-        return null;
+    public String sql(final DbVersion dbVersion) {
+        switch (dbVersion) {
+        case POSTGRESQL:
+            return format("('1 %s' * %s + %s)",  intervalUnit, operand1.sql(dbVersion), operand2.sql(dbVersion));
+        case H2:
+            return format("DATEADD('%s', %s, %s)",  intervalUnit, operand1.sql(dbVersion), operand2.sql(dbVersion));
+        case MSSQL:
+            return format("DATEADD(%s, %s, %s)",  intervalUnit, operand1.sql(dbVersion), operand2.sql(dbVersion));
+        default:
+            return super.sql(dbVersion);
+        }
     }
 
     @Override

@@ -18,12 +18,12 @@ public class LikeTest3 implements ICondition3 {
     }
 
     @Override
-    public String sql() {
-        return DbVersion.H2.likeSql(options.negated, leftOperandSql(), rightOperand.sql(), options.caseInsensitive);
+    public String sql(final DbVersion dbVersion) {
+        return DbVersion.H2.likeSql(options.negated, leftOperandSql(dbVersion), rightOperand.sql(dbVersion), options.caseInsensitive);
     }
 
-    private String leftOperandSql() {
-        return leftOperand.sql();
+    private String leftOperandSql(final DbVersion dbVersion) {
+        return leftOperand.sql(dbVersion);
         //TODO support withCast and DbVersions (as part of sql() parameters)
         //return options.withCast ? leftOperandWithTypecastingSql() : leftOperand.sql(); 
     }

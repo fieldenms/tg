@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
+import ua.com.fielden.platform.entity.query.fluent.ITypeCast;
 import ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory;
 import ua.com.fielden.platform.eql.stage1.elements.conditions.ICondition1;
 import ua.com.fielden.platform.eql.stage1.elements.functions.CaseWhen1;
@@ -42,6 +43,8 @@ public class CaseFunctionBuilder extends AbstractTokensBuilder {
     }
 
     public CaseWhen1 getModel() {
+        final Object lastValue = getLastValue();
+        
         if (TokenCategory.END_FUNCTION.equals(getLastCat())) {
             getTokens().remove(getSize() - 1);
         }
@@ -60,7 +63,7 @@ public class CaseFunctionBuilder extends AbstractTokensBuilder {
             }
         }
 
-        return new CaseWhen1(whenThens, elseOperand);
+        return new CaseWhen1(whenThens, elseOperand, (ITypeCast) lastValue);
     }
 
     @Override

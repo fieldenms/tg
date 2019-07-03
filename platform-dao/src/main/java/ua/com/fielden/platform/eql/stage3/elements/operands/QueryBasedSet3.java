@@ -2,6 +2,8 @@ package ua.com.fielden.platform.eql.stage3.elements.operands;
 
 import java.util.Objects;
 
+import ua.com.fielden.platform.entity.query.DbVersion;
+
 public class QueryBasedSet3 implements ISetOperand3 {
     private final EntQuery3 model;
 
@@ -10,8 +12,8 @@ public class QueryBasedSet3 implements ISetOperand3 {
     }
 
     @Override
-    public String sql() {
-        return "(" + model.sql() + ")";
+    public String sql(final DbVersion dbVersion) {
+        return "(" + model.sql(dbVersion) + ")";
     }
 
     @Override

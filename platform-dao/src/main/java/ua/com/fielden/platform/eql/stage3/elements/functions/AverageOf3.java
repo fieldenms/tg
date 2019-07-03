@@ -1,5 +1,8 @@
 package ua.com.fielden.platform.eql.stage3.elements.functions;
 
+import static java.lang.String.format;
+
+import ua.com.fielden.platform.entity.query.DbVersion;
 import ua.com.fielden.platform.eql.stage3.elements.operands.ISingleOperand3;
 
 public class AverageOf3 extends SingleOperandFunction3 {
@@ -11,11 +14,16 @@ public class AverageOf3 extends SingleOperandFunction3 {
     }
 
     @Override
-    public String sql() {
-        // TODO Auto-generated method stub
-        return null;
+    public String sql(final DbVersion dbVersion) {
+        final String distinctClause = distinct ? "DISTINCT " : "";
+        switch (dbVersion) {
+        case H2:
+            return format("AVG(%s CAST (%s AS FLOAT))", distinctClause, operand.sql(dbVersion));
+        default:
+            return format("AVG(%s %s)", distinctClause, operand.sql(dbVersion));
+        }
     }
-
+    
     @Override
     public int hashCode() {
         final int prime = 31;

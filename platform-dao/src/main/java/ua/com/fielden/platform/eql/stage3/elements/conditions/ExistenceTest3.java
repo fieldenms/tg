@@ -2,6 +2,7 @@ package ua.com.fielden.platform.eql.stage3.elements.conditions;
 
 import java.util.Objects;
 
+import ua.com.fielden.platform.entity.query.DbVersion;
 import ua.com.fielden.platform.eql.stage3.elements.operands.EntQuery3;
 
 public class ExistenceTest3 implements ICondition3 {
@@ -14,8 +15,8 @@ public class ExistenceTest3 implements ICondition3 {
     }
 
     @Override
-    public String sql() {
-        return (negated ? "NOT" : "") + " EXISTS (" + subQuery.sql() + ")";
+    public String sql(final DbVersion dbVersion) {
+        return (negated ? "NOT" : "") + " EXISTS (" + subQuery.sql(dbVersion) + ")";
     }
 
     @Override

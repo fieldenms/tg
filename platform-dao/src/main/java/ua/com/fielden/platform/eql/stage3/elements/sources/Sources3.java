@@ -5,6 +5,8 @@ import static java.util.Collections.emptyList;
 import java.util.List;
 import java.util.Objects;
 
+import ua.com.fielden.platform.entity.query.DbVersion;
+
 public class Sources3 {
     public final IQrySource3 main;
     private final List<CompoundSource3> compounds;
@@ -22,12 +24,12 @@ public class Sources3 {
         return compounds;
     }
     
-    public String sql() {
+    public String sql(final DbVersion dbVersion) {
         final StringBuffer sb = new StringBuffer();
         sb.append("\nFROM\n");
-        sb.append(main.sql());
+        sb.append(main.sql(dbVersion));
         for (final CompoundSource3 compoundSource3 : compounds) {
-            sb.append(compoundSource3.sql());    
+            sb.append(compoundSource3.sql(dbVersion));    
         }
         
         return sb.toString();

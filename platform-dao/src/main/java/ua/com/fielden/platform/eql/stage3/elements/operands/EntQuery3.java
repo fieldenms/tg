@@ -4,6 +4,7 @@ import static org.apache.commons.lang.StringUtils.isNotEmpty;
 
 import java.util.Objects;
 
+import ua.com.fielden.platform.entity.query.DbVersion;
 import ua.com.fielden.platform.eql.stage3.elements.EntQueryBlocks3;
 import ua.com.fielden.platform.eql.stage3.elements.Yields3;
 import ua.com.fielden.platform.eql.stage3.elements.conditions.Conditions3;
@@ -22,13 +23,13 @@ public class EntQuery3 implements ISingleOperand3 {
     }
 
     @Override
-    public String sql() {
+    public String sql(final DbVersion dbVersion) {
         final StringBuffer sb = new StringBuffer();
-        final String yieldsSql = yields.sql();
+        final String yieldsSql = yields.sql(dbVersion);
         sb.append("SELECT\n");
         sb.append(isNotEmpty(yieldsSql) ? yieldsSql : " * "); 
-        sb.append(sources.sql());
-        final String conditionsSql = conditions.sql();
+        sb.append(sources.sql(dbVersion));
+        final String conditionsSql = conditions.sql(dbVersion);
         if (isNotEmpty(conditionsSql)) {
             sb.append("\nWHERE ");
             sb.append(conditionsSql);

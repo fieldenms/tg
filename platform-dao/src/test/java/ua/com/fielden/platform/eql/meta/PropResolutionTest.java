@@ -18,6 +18,7 @@ import java.util.Map;
 import org.junit.Ignore;
 import org.junit.Test;
 
+import ua.com.fielden.platform.entity.query.DbVersion;
 import ua.com.fielden.platform.entity.query.fluent.enums.JoinType;
 import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
@@ -103,7 +104,7 @@ public class PropResolutionTest extends BaseEntQueryTCase1 {
         tables.put(TgVehicle.class.getName(), vehT);
         final ua.com.fielden.platform.eql.stage2.elements.TransformationResult<EntQuery3> qry3 = entResultQry3(qry,  new PropsResolutionContext(metadata), new TransformationContext(tables));
        
-        System.out.println(qry3.item.sql());
+        System.out.println(qry3.item.sql(DbVersion.H2));
     }
     
     public static EntQueryBlocks1 qb1(final Sources1 sources, final Conditions1 conditions) {

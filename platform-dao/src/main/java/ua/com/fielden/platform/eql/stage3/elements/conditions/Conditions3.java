@@ -7,6 +7,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
+import ua.com.fielden.platform.entity.query.DbVersion;
+
 public class Conditions3 implements ICondition3 {
     private final List<List<? extends ICondition3>> allConditionsAsDnf = new ArrayList<>();
     private final boolean negated;
@@ -21,11 +23,11 @@ public class Conditions3 implements ICondition3 {
     }
 
     @Override
-    public String sql() {
+    public String sql(final DbVersion dbVersion) {
         if (allConditionsAsDnf.isEmpty()) {
             return "";
         } else {
-            return allConditionsAsDnf.stream().map(dl -> dl.stream().map(cond -> cond.sql()).collect(joining(" AND "))).collect(joining(" OR "));
+            return allConditionsAsDnf.stream().map(dl -> dl.stream().map(cond -> cond.sql(dbVersion)).collect(joining(" AND "))).collect(joining(" OR "));
         }
     }
     

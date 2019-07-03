@@ -1,13 +1,21 @@
 package ua.com.fielden.platform.eql.stage3.elements.functions;
 
-import ua.com.fielden.platform.eql.stage3.elements.operands.ISingleOperand3;
+import ua.com.fielden.platform.entity.query.DbVersion;
 
-public class Now3 implements ISingleOperand3 {
+public class Now3 extends AbstractFunction3 {
 
     @Override
-    public String sql() {
-        // TODO Auto-generated method stub
-        return null;
+    public String sql(final DbVersion dbVersion) {
+        switch (dbVersion) {
+        case H2:
+            return "NOW()";
+        case MSSQL:
+            return "GETDATE()";
+        case POSTGRESQL:
+            return "CURRENT_TIMESTAMP";
+        default:
+            return super.sql(dbVersion);
+        }
     }
 
     @Override

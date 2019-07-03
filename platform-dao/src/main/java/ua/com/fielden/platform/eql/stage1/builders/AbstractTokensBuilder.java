@@ -214,6 +214,10 @@ public abstract class AbstractTokensBuilder implements ITokensBuilder {
     protected TokenCategory getLastCat() {
         return tokens.size() > 0 ? tokens.get(tokens.size() - 1).getKey() : null;
     }
+    
+    protected Object getLastValue() {
+        return tokens.size() > 0 ? tokens.get(tokens.size() - 1).getValue() : null;
+    }
 
     protected ITokensBuilder getChild() {
         return child;

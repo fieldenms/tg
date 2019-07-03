@@ -1,10 +1,12 @@
 package ua.com.fielden.platform.eql.stage3.elements.operands;
 
 import static java.util.Collections.emptyList;
+import static java.util.stream.Collectors.joining;
 
 import java.util.List;
 import java.util.Objects;
-import java.util.stream.Collectors;
+
+import ua.com.fielden.platform.entity.query.DbVersion;
 
 public class Expression3 implements ISingleOperand3 {
 
@@ -21,8 +23,8 @@ public class Expression3 implements ISingleOperand3 {
     }
     
     @Override
-    public String sql() {
-        return items.isEmpty() ? first.sql() : "(" + first.sql() + items.stream().map(co -> co.sql()).collect(Collectors.joining()) +")";
+    public String sql(final DbVersion dbVersion) {
+        return items.isEmpty() ? first.sql(dbVersion) : "(" + first.sql(dbVersion) + items.stream().map(co -> co.sql(dbVersion)).collect(joining()) +")";
     }
 
     @Override

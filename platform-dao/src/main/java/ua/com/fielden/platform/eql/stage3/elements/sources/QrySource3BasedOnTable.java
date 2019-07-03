@@ -2,6 +2,7 @@ package ua.com.fielden.platform.eql.stage3.elements.sources;
 
 import java.util.Objects;
 
+import ua.com.fielden.platform.entity.query.DbVersion;
 import ua.com.fielden.platform.eql.stage3.elements.Column;
 import ua.com.fielden.platform.eql.stage3.elements.Table;
 
@@ -25,7 +26,7 @@ public class QrySource3BasedOnTable implements IQrySource3 {
     }
 
     @Override
-    public String sql() {
+    public String sql(final DbVersion dbVersion) {
         return table.name + " AS " + sqlAlias();
     }
 

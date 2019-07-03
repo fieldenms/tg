@@ -4,7 +4,7 @@ import java.util.Objects;
 
 import ua.com.fielden.platform.eql.stage3.elements.operands.ISingleOperand3;
 
-abstract class TwoOperandsFunction3 implements ISingleOperand3 {
+abstract class TwoOperandsFunction3 extends AbstractFunction3 {
     public final ISingleOperand3 operand1;
     public final ISingleOperand3 operand2;
 

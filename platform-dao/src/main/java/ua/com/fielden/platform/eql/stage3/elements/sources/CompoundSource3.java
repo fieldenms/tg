@@ -4,6 +4,7 @@ import static org.apache.commons.lang.StringUtils.isNotEmpty;
 
 import java.util.Objects;
 
+import ua.com.fielden.platform.entity.query.DbVersion;
 import ua.com.fielden.platform.entity.query.fluent.enums.JoinType;
 import ua.com.fielden.platform.eql.stage3.elements.conditions.Conditions3;
 
@@ -18,9 +19,9 @@ public class CompoundSource3 {
         this.joinConditions = joinConditions;
     }
 
-    public String sql() {
-        final String joinConditionsSql = joinConditions.sql();
-        return "\n  " + joinType + "\n" + source.sql() + (isNotEmpty(joinConditionsSql) ? "  ON " : "") + joinConditionsSql;
+    public String sql(final DbVersion dbVersion) {
+        final String joinConditionsSql = joinConditions.sql(dbVersion);
+        return "\n  " + joinType + "\n" + source.sql(dbVersion) + (isNotEmpty(joinConditionsSql) ? "  ON " : "") + joinConditionsSql;
     }
 
     @Override

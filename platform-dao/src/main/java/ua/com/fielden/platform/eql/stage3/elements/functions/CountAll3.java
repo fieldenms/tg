@@ -1,13 +1,13 @@
 package ua.com.fielden.platform.eql.stage3.elements.functions;
 
-import ua.com.fielden.platform.eql.stage3.elements.operands.ISingleOperand3;
+import ua.com.fielden.platform.entity.query.DbVersion;
 
-public class CountAll3 implements ISingleOperand3 {
-
+public class CountAll3 extends AbstractFunction3 {
+    private static final String sql = "COUNT(*)";
+    
     @Override
-    public String sql() {
-        // TODO Auto-generated method stub
-        return null;
+    public String sql(final DbVersion dbVersion) {
+        return sql;
     }
    
     @Override

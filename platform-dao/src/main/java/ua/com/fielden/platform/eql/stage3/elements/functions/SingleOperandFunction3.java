@@ -4,14 +4,14 @@ import java.util.Objects;
 
 import ua.com.fielden.platform.eql.stage3.elements.operands.ISingleOperand3;
 
-abstract class SingleOperandFunction3 implements ISingleOperand3 {
+abstract class SingleOperandFunction3 extends AbstractFunction3 {
 
     public final ISingleOperand3 operand;
 
     public SingleOperandFunction3(final ISingleOperand3 operand) {
         this.operand = operand;
     }
-
+    
     @Override
     public int hashCode() {
         final int prime = 31;

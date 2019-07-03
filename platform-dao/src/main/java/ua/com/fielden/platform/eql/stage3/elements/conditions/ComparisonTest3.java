@@ -4,6 +4,7 @@ import static java.lang.String.format;
 
 import java.util.Objects;
 
+import ua.com.fielden.platform.entity.query.DbVersion;
 import ua.com.fielden.platform.entity.query.fluent.enums.ComparisonOperator;
 import ua.com.fielden.platform.eql.stage3.elements.operands.ISingleOperand3;
 
@@ -19,8 +20,8 @@ public class ComparisonTest3 implements ICondition3 {
     }
 
     @Override
-    public String sql() {
-        return format("%s %s %s", leftOperand.sql(), operator, rightOperand.sql());
+    public String sql(final DbVersion dbVersion) {
+        return format("%s %s %s", leftOperand.sql(dbVersion), operator, rightOperand.sql(dbVersion));
     }
 
     @Override

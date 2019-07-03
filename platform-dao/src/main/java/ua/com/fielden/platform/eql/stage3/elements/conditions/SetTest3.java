@@ -2,6 +2,7 @@ package ua.com.fielden.platform.eql.stage3.elements.conditions;
 
 import java.util.Objects;
 
+import ua.com.fielden.platform.entity.query.DbVersion;
 import ua.com.fielden.platform.eql.stage3.elements.operands.ISetOperand3;
 import ua.com.fielden.platform.eql.stage3.elements.operands.ISingleOperand3;
 
@@ -17,8 +18,8 @@ public class SetTest3 implements ICondition3 {
     }
 
     @Override
-    public String sql() {
-        return leftOperand.sql() + (negated ? " NOT IN " : " IN ") + rightOperand.sql();
+    public String sql(final DbVersion dbVersion) {
+        return leftOperand.sql(dbVersion) + (negated ? " NOT IN " : " IN ") + rightOperand.sql(dbVersion);
     }
 
     @Override
