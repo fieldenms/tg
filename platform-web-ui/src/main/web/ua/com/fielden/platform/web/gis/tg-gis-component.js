@@ -433,11 +433,11 @@ GisComponent.prototype.createPopupContent = function (arcGisFeature) {
         }
     }
     template.innerHTML = popupText + '</table>';
-    const element = template.content;
+    const element = template.content.firstChild;
     
     if (feature && feature.get('key')) {
         const entityType = 'Asset';
-        const actionElement = element.children[0].children[0].querySelector('.this-row');
+        const actionElement = element.children[0].querySelector('.this-row');
         if (actionElement) {
             actionElement.addEventListener('click', (function(e, details) {
                 const action = this._select._tgMap.parentElement.querySelector('tg-ui-action[short-desc="' + entityType + ' Master"]');
