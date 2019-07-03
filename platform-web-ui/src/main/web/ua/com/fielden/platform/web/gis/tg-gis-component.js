@@ -1,7 +1,6 @@
 import '/resources/polymer/@polymer/polymer/lib/elements/custom-style.js';
 import { L, leafletStylesName } from '/resources/gis/leaflet/leaflet-lib.js';
 import { esri } from '/resources/gis/leaflet/esri/esri-leaflet-lib.js';
-import { Indoor } from '/resources/gis/leaflet/esri/indoor/esri-leaflet-indoor-lib.js';
 import { _featureType } from '/resources/gis/tg-gis-utils.js';
 import { BaseLayers } from '/resources/gis/tg-base-layers.js';
 import { EntityStyling } from '/resources/gis/tg-entity-styling.js';
@@ -9,7 +8,6 @@ import { MarkerFactory, tgIconFactoryStylesName } from '/resources/gis/tg-marker
 import { MarkerCluster, leafletMarkerClusterStylesName, tgMarkerClusterStylesName } from '/resources/gis/tg-marker-cluster.js';
 import { Select } from '/resources/gis/tg-select.js';
 import { Controls, leafletDrawStylesName, leafletControlloadingStylesName, leafletEasybuttonStylesName } from '/resources/gis/tg-controls.js';
-import '/resources/planning_and_scheduling/jquery-1.11.1.js';
 
 export const GisComponent = function (mapDiv, progressDiv, progressBarDiv, tgMap, ...otherStyles) {
     // IMPORTANT: use the following reference in cases when you need some properties of the 
@@ -72,27 +70,23 @@ export const GisComponent = function (mapDiv, progressDiv, progressBarDiv, tgMap
     self._entityStyling = self.createEntityStyling();
 
     self._createEsriLayer = function (url, _featureType) {
-        return L.esri.featureLayer({
+        return esri.featureLayer({
             url: url,
             style: function (feature) {
                 return self._entityStyling.getStyle(feature);
             },
-    
             pointToLayer: function (feature, latlng) {
                 feature.properties._featureType = _featureType;
                 return self._markerFactory.createFeatureMarker(feature, latlng);
             },
-    
             onEachFeature: function (feature, layer) {
                 feature.properties._featureType = _featureType;
-    
                 layer.on('mouseover', function () {
                     if (!feature.properties.popupContentInitialised) { // initialise popupContent (text or even heavyweight HTMLElement) only once when mouseOver occurs
                         layer.bindPopup(self.createPopupContent(feature));
                         feature.properties.popupContentInitialised = true;
                     }
                 });
-    
                 layer.on('click', function () { // dblclick
                     if (!feature.properties.layerId) {
                         feature.properties.layerId = layer._leaflet_id;
@@ -103,151 +97,38 @@ export const GisComponent = function (mapDiv, progressDiv, progressBarDiv, tgMap
         });
     };
 
-    self._geoJsonOverlay = self._createEsriLayer('https://services9.arcgis.com/hf8lTMw1xiMRR4fz/arcgis/rest/services/tg_airport_geozones/FeatureServer/0', 'Asset');
-    self._geoJsonOverlay2 = self._createEsriLayer('https://services9.arcgis.com/hf8lTMw1xiMRR4fz/arcgis/rest/services/tg_airport/FeatureServer/0', 'Asset');
-    self._geoJsonOverlay3 = self._createEsriLayer('https://services9.arcgis.com/hf8lTMw1xiMRR4fz/arcgis/rest/services/tg_airport_lines/FeatureServer/0', 'Asset');
-    self._geoJsonOverlay4 = self._createEsriLayer('https://services9.arcgis.com/hf8lTMw1xiMRR4fz/arcgis/rest/services/tg_airport_hazards/FeatureServer/0', 'Hazard');
-    self._geoJsonOverlay5 = self._createEsriLayer('https://services9.arcgis.com/hf8lTMw1xiMRR4fz/arcgis/rest/services/tg_airport_incidents/FeatureServer/0', 'Incident');
-    $.getJSON("resources/gis/asset/indoor-building.json", function(geoJSON) {
-        console.debug('geoJSON', geoJSON);
-        
-        const dx = -0.00465;
-        const dy = 0.00657;
-        
-        const traverseCoordinates = function (coords, dx, dy) {
-            if (Array.isArray(coords) && Array.isArray(coords[0])) {
-                coords.forEach(function (innerCoords) {
-                    traverseCoordinates(innerCoords, dx, dy);
-                });
-            } else if (Array.isArray(coords)) {
-                coords[0] = coords[0] + dx;
-                coords[1] = coords[1] + dy;
-            }
-        };
-        
-        geoJSON.features.forEach(function (buildingPart) {
-            if (buildingPart && buildingPart.geometry && buildingPart.geometry.coordinates) {
-                traverseCoordinates(buildingPart.geometry.coordinates, dx, dy);
-            }
+    const overlays = self.createOverlays();
+    self._controls = new Controls(self._map, self._markerCluster.getGisMarkerClusterGroup(), self._baseLayers, overlays);
+
+    const findLayerByPredicate = function (overlay, predicate) {
+        const foundKey = Object.keys(overlay._layers).find(function (key) {
+            var value = overlay._layers[key];
+            return value && predicate(value);
         });
-        
-        const indoorLayer = new L.Indoor(geoJSON, {
-            getLevel: function(feature) { 
-                if (feature.properties.relations.length === 0)
-                    return null;
-
-                return feature.properties.relations[0].reltags.level;
-            },
-            onEachFeature: function(feature, layer) {
-                layer.bindPopup(JSON.stringify(feature.properties, null, 4));
-            },
-            style: function(feature) {
-                var fill = 'white';
-
-                if (feature.properties.tags.buildingpart === 'corridor') {
-                    fill = '#169EC6';
-                } else if (feature.properties.tags.buildingpart === 'verticalpassage') {
-                    fill = '#0A485B';
-                }
-
-                return {
-                    fillColor: fill,
-                    weight: 1,
-                    color: '#666',
-                    fillOpacity: 1
-                };
+        if (foundKey) {
+            return overlay._layers[foundKey];
+        }
+        return null;
+    };
+    const findLayerByPredicateIn = function (overlays, predicate) {
+        for (let i = 0; i < overlays.length; i++) {
+            const found = findLayerByPredicate(overlays[i], predicate);
+            if (found) {
+                return found;
             }
-        });
-        indoorLayer.setLevel("-1");
-        const levelControl = new L.Control.Level({
-            level: "-1",
-            levels: indoorLayer.getLevels()
-        });
-        
-        const hideChildrenWithLevel = function (level, hide, overlay) {
-            Object.values(overlay._layers).forEach(function (layer) {
-                if (level !== null && layer.feature && layer.feature.properties && layer.feature.properties.buildingLevel !== null && layer.feature.properties.buildingLevel === level) {
-                    if (hide) {
-                        layer.remove();
-                    } else {
-                        layer.addTo(self._map);
-                    }
-                }
-            });
-        };
-        
-        const hideAndShowChildren = function (event) {
-            hideChildrenWithLevel(event.oldLevel === null ? null : +event.oldLevel, true, self._geoJsonOverlay2);
-            hideChildrenWithLevel(event.newLevel === null ? null : +event.newLevel, false, self._geoJsonOverlay2);
-        };
-        
-        const setLevel = function (event) {
-            hideAndShowChildren(event);
-            return indoorLayer.setLevel(event);
-        };
+        }
+        return null;
+    };
 
-        // Connect the level control to the indoor layer
-        levelControl.addEventListener("levelchange", setLevel, indoorLayer);
-        
-        const overlays = {
-            'Assets (zones)': self._geoJsonOverlay,
-            'Assets (points)': self._geoJsonOverlay2,
-            'Assets (lines)': self._geoJsonOverlay3,
-            'Hazards': self._geoJsonOverlay4,
-            'Incidents': self._geoJsonOverlay5
-        };
-        self._controls = new Controls(self._map, self._markerCluster.getGisMarkerClusterGroup(), levelControl, self._baseLayers, overlays);
-        
-        const findLayerByPredicate = function (overlay, predicate) {
-            const foundKey = Object.keys(overlay._layers).find(function (key) {
-                var value = overlay._layers[key];
-                return value && predicate(value);
-            });
-            if (foundKey) {
-                return overlay._layers[foundKey];
-            }
-            return null;
-        };
-        
-        const findLayerByPredicateIn = function (overlays, predicate) {
-            for (let i = 0; i < overlays.length; i++) {
-                const found = findLayerByPredicate(overlays[i], predicate);
-                if (found) {
-                    return found;
-                }
-            }
-            return null;
-        };
-
-        const getLayerById = function (layerId) {
-            return findLayerByPredicateIn(Object.values(overlays), value => value._leaflet_id === layerId);
-        };
-        
-        const getLayerByGlobalId = function (globalId) {
-            return findLayerByPredicateIn(Object.values(overlays), value => value.feature.properties.GlobalID === globalId);
-        };
-
-        self._select = new Select(self._map, getLayerById, self._markerFactory, tgMap, self.findEntityBy.bind(self), getLayerByGlobalId);
-
-        self._map.fire('dataloading');
-
-        self._map.addLayer(self._geoJsonOverlay);
-        self._map.addLayer(self._geoJsonOverlay2);
-        self._map.addLayer(self._geoJsonOverlay3);
-        self._map.addLayer(self._geoJsonOverlay4);
-        self._map.addLayer(self._geoJsonOverlay5);
-        self._map.addLayer(indoorLayer);
-
-        self._map.fire('dataload');
-        
-        setTimeout(function () {
-            hideAndShowChildren({newLevel: null, oldLevel: -1});
-            hideAndShowChildren({newLevel: null, oldLevel:  0});
-            hideAndShowChildren({newLevel: null, oldLevel:  1});
-            hideAndShowChildren({newLevel: null, oldLevel:  2});
-            setLevel({newLevel: -1, oldLevel: null});
-        }, 2000);
-    });
+    const getLayerById = function (layerId) {
+        return findLayerByPredicateIn(Object.values(overlays), value => value._leaflet_id === layerId);
+    };
+    const getLayerByGlobalId = function (globalId) {
+        return findLayerByPredicateIn(Object.values(overlays), value => value.feature.properties.GlobalID === globalId);
+    };
+    self._select = new Select(self._map, getLayerById, self._markerFactory, tgMap, self.findEntityBy.bind(self), getLayerByGlobalId);
+    self._map.fire('dataloading');
+    self._map.fire('dataload');
 };
 
 GisComponent.prototype.featureType = _featureType;

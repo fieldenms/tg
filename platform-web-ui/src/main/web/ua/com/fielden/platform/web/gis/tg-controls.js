@@ -5,14 +5,14 @@ import { easyButton, leafletEasybuttonStylesName } from '/resources/gis/leaflet/
 
 export { leafletStylesName, leafletDrawStylesName, leafletControlloadingStylesName, leafletEasybuttonStylesName };
 
-export const Controls = function (_map, _markersClusterGroup, levelControl, _baseLayers, _additionalOverlays) {
+export const Controls = function (_map, _markersClusterGroup, _baseLayers, _additionalOverlays, ... customControls) {
     const self = this;
 
     self._map = _map;
     self._markersClusterGroup = _markersClusterGroup;
     self._baseLayers = _baseLayers;
 
-    self._map.addControl(levelControl);
+    customControls.forEach(customControl => self._map.addControl(customControl));
 
     // firebug control
     /*const firebugControl = new easyButton(
@@ -56,39 +56,40 @@ export const Controls = function (_map, _markersClusterGroup, levelControl, _bas
     });
     self._map.addControl(scaleControl);
 
-    // leaflet draw controls
-    const drawControl = new LeafletDraw({
-        position: 'bottomleft',
+//    // leaflet draw controls
+//    const drawControl = new LeafletDraw({
+//        position: 'bottomleft',
+//
+//        edit: {
+//            featureGroup: self._markersClusterGroup // drawnItems
+//        },
+//
+//        draw: {
+//            polygon: {
+//                shapeOptions: {
+//                    color: 'purple'
+//                },
+//                allowIntersection: false,
+//                drawError: {
+//                    color: 'orange',
+//                    timeout: 1000
+//                },
+//                showArea: true,
+//                metric: true
+//            }
+//        }
+//    });
+//    self._map.addControl(drawControl);
+//
+//    self._map.on('draw:created', function (e) {
+//        const type = e.layerType;
+//        const layer = e.layer;
+//        self._markersClusterGroup.addLayer(layer);
+//        // self._markersClusterGroup.refreshClusters();
+//    });
 
-        edit: {
-            featureGroup: self._markersClusterGroup // drawnItems
-        },
-
-        draw: {
-            polygon: {
-                shapeOptions: {
-                    color: 'purple'
-                },
-                allowIntersection: false,
-                drawError: {
-                    color: 'orange',
-                    timeout: 1000
-                },
-                showArea: true,
-                metric: true
-            }
-        }
-    });
-    self._map.addControl(drawControl);
-
-    self._map.on('draw:created', function (e) {
-        const type = e.layerType;
-        const layer = e.layer;
-        self._markersClusterGroup.addLayer(layer);
-        // self._markersClusterGroup.refreshClusters();
-    });
-
-    //_additionalOverlays['GEO-json'] = self._markersClusterGroup;
+    _additionalOverlays['GEO-json'] = self._markersClusterGroup;
+    Object.values(_additionalOverlays).forEach(overlay => self._map.addLayer(overlay));
 
     const overlaysControl = L.control.layers(self._baseLayers.getBaseLayers(), _additionalOverlays);
     self._map.addControl(overlaysControl);
