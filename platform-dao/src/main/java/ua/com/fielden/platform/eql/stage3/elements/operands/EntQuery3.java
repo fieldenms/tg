@@ -6,6 +6,8 @@ import java.util.Objects;
 
 import ua.com.fielden.platform.entity.query.DbVersion;
 import ua.com.fielden.platform.eql.stage3.elements.EntQueryBlocks3;
+import ua.com.fielden.platform.eql.stage3.elements.GroupBys3;
+import ua.com.fielden.platform.eql.stage3.elements.OrderBys3;
 import ua.com.fielden.platform.eql.stage3.elements.Yields3;
 import ua.com.fielden.platform.eql.stage3.elements.conditions.Conditions3;
 import ua.com.fielden.platform.eql.stage3.elements.sources.Sources3;
@@ -15,11 +17,15 @@ public class EntQuery3 implements ISingleOperand3 {
     public final Sources3 sources;
     public final Conditions3 conditions;
     public final Yields3 yields;
+    public final GroupBys3 groups;
+    public final OrderBys3 orderings;
 
     public EntQuery3(final EntQueryBlocks3 queryBlocks) {
         this.sources = queryBlocks.sources;
         this.conditions = queryBlocks.conditions;
         this.yields = queryBlocks.yields;
+        this.groups = queryBlocks.groups;
+        this.orderings = queryBlocks.orderings;
     }
 
     @Override
@@ -34,6 +40,8 @@ public class EntQuery3 implements ISingleOperand3 {
             sb.append("\nWHERE ");
             sb.append(conditionsSql);
         }        
+        sb.append(groups.sql(dbVersion));
+        sb.append(orderings.sql(dbVersion));
         return sb.toString();
     }
 

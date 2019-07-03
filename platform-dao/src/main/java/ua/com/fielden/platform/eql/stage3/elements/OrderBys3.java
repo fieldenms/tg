@@ -1,7 +1,11 @@
 package ua.com.fielden.platform.eql.stage3.elements;
 
+import static java.util.stream.Collectors.joining;
+
 import java.util.List;
 import java.util.Objects;
+
+import ua.com.fielden.platform.entity.query.DbVersion;
 
 public class OrderBys3 {
     private final List<OrderBy3> models;
@@ -35,5 +39,14 @@ public class OrderBys3 {
         final OrderBys3 other = (OrderBys3) obj;
         
         return Objects.equals(models, other.models);
+    }
+
+    public String sql(final DbVersion dbVersion) {
+        final StringBuffer sb = new StringBuffer();
+        if (models.size() > 0) {
+            sb.append("\nORDER BY ");
+            sb.append(models.stream().map(y -> y.sql(dbVersion)).collect(joining(", ")));
+        }
+        return sb.toString();    
     }
 }

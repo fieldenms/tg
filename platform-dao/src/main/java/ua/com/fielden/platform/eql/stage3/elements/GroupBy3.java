@@ -2,6 +2,7 @@ package ua.com.fielden.platform.eql.stage3.elements;
 
 import java.util.Objects;
 
+import ua.com.fielden.platform.entity.query.DbVersion;
 import ua.com.fielden.platform.eql.stage3.elements.operands.ISingleOperand3;
 
 public class GroupBy3 {
@@ -11,6 +12,10 @@ public class GroupBy3 {
         this.operand = operand;
     }
 
+    public String sql(final DbVersion dbVersion) {
+        return operand.sql(dbVersion);
+    }
+    
     @Override
     public int hashCode() {
         final int prime = 31;
