@@ -25,7 +25,7 @@
 \usepackage{alltt}
 \usepackage{moreverb}
 %for more info on hyperref package see http://en.wikibooks.org/wiki/LaTeX/Packages/Hyperref
-\usepackage[pdftex,colorlinks=true,linkcolor=blue, citecolor=magenta]{hyperref}
+\usepackage[colorlinks=true,linkcolor=blue, citecolor=magenta]{hyperref}
 \usepackage{eso-pic}
 \usepackage{transparent}
 \setlength{\columnsep}{3em}
@@ -304,6 +304,20 @@
 	For example, a reverse proxy such as HAProxy can be responsible for maintaining the TLS infrastructure.
 	This approach proved to be reliable in real life production deployments of TG applications, and is recommended as a default option.
 
+	\paragraph{TLS and Security Reports.}
+	\hyperref[sec:02:fig:audit-01]{Fig.~\ref*{sec:02:fig:audit-01}} and \hyperref[sec:02:fig:audit-02]{Fig.~\ref*{sec:02:fig:audit-02}} provide a summary for website security and TLS strength in a typical TG application.
+
+	\begin{figure}[h!tbp]
+		\centering
+		\includegraphics[width=1\linewidth]{images/13-security-report-summary.png}
+		\caption{Security report summary.}\label{sec:02:fig:audit-01}
+	\end{figure}
+	
+	\begin{figure}[h!tbp]
+		\centering
+		\includegraphics[width=1\linewidth]{images/14-ssl-report.png}
+		\caption{TLS report summary.}\label{sec:02:fig:audit-02}
+	\end{figure}
 
 \subsection*{Client Authentication for Server Protection}
 
