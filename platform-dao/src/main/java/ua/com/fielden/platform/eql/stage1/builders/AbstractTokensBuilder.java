@@ -83,6 +83,9 @@ public abstract class AbstractTokensBuilder implements ITokensBuilder {
         case YEAR:
             setChild(new YearOfBuilder(this, queryBuilder));
             break;
+        case DAY_OF_WEEK:
+            setChild(new DayOfWeekOfBuilder(this, queryBuilder));
+            break;
         case DATE:
             setChild(new DateOfBuilder(this, queryBuilder));
             break;
@@ -106,6 +109,9 @@ public abstract class AbstractTokensBuilder implements ITokensBuilder {
             break;
         case IF_NULL:
             setChild(new IfNullBuilder(this, queryBuilder));
+            break;
+        case ADD_DATE_INTERVAL:
+            setChild(new AddDateIntervalBuilder(this, queryBuilder));
             break;
         case COUNT_DATE_INTERVAL:
             setChild(new CountDateIntervalBuilder(this, queryBuilder));
