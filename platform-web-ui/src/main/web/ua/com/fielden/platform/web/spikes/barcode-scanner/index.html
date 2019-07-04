@@ -1,0 +1,85 @@
+<html>
+
+<head>
+    <title></title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+        #barcode-scanner {
+            width: 640px;
+            height:480px;
+            position: relative;
+        }
+        canvas.drawing, canvas.drawingBuffer {
+            position: absolute;
+            left: 0;
+            top: 0;
+        }
+    </style>
+    <script src="quagga.min.js"></script>
+    <script>
+        function order_by_occurrence(arr) {
+            const counts = {};
+            arr.forEach(function(value){
+                if(!counts[value]) {
+                    counts[value] = 0;
+                }
+                counts[value]++;
+            });
+
+            return Object.keys(counts).sort(function(curKey,nextKey) {
+                return counts[curKey] < counts[nextKey];
+            });
+        }
+
+        function startScanner() {
+            if (document.querySelector('#barcode-scanner') && navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+
+                let last_result = [];
+                if (Quagga.initialized == undefined) {
+                    Quagga.onDetected(function(result) {
+                        console.log(result);
+                        const last_code = result.codeResult.code;
+                        last_result.push(last_code);
+                        if (last_result.length > 10) {
+                            const code = order_by_occurrence(last_result)[0];
+                            last_result = [];
+                            //Quagga.stop();
+                            document.getElementById("scanned_code").innerHTML = code;
+                        }
+                    });
+                }
+
+                Quagga.init({
+                    inputStream: {
+                        name: "Live",
+                        type: "LiveStream",
+                        numOfWorkers: navigator.hardwareConcurrency,
+                        target: document.querySelector('#barcode-scanner')
+                    },
+                    decoder: {
+                        readers: ['ean_reader']
+                    }
+                }, function (err) {
+                    if (err) {
+                        console.log(err);
+                        return
+                    }
+                    Quagga.initialized = true;
+                    console.log("Initialization finished. Ready to start");
+                    Quagga.start();
+                });
+            }
+        }
+
+        document.addEventListener("DOMContentLoaded", function(event) {
+            console.log("DOM fully loaded and parsed");
+            startScanner();
+        });
+    </script>
+</head>
+<body>
+    <div id="barcode-scanner"></div>
+    <div id="scanned_code">no code</div>
+</body>
+</html>

@@ -1,0 +1,138 @@
+<html lang="en">
+
+<head>
+    <title></title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+        /* In order to place the tracking correctly */
+        canvas.drawing, canvas.drawingBuffer {
+            position: absolute;
+            left: 0;
+            top: 0;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Div to show the scanner -->
+    <div id="scanner-container"></div>
+    <input type="button" id="btn" value="Start/Stop the scanner" />
+
+    <!-- Include the image-diff library -->
+    <script src="quagga.min.js"></script>
+
+    <script>
+        var _scannerIsRunning = false;
+
+        function order_by_occurrence(arr) {
+            const counts = {};
+            arr.forEach(function(value){
+                if(!counts[value.codeResult.code]) {
+                    counts[value.codeResult.code] = { count:0, obj: value };
+                }
+                counts[value.codeResult.code].count++;
+            });
+
+            return Object.values(counts).sort(function(curKey,nextKey) {
+                return curKey.count < nextKey.count;
+            }).map(function(val) { 
+                return val.obj;
+            });
+        }
+
+        function stopScan() {
+            if (_scannerIsRunning) {
+                Quagga.stop();
+                _scannerIsRunning = false;
+            }
+        }
+
+        let last_result = [];
+        Quagga.onDetected(function (result) {
+            console.log("Barcode detected and processed : [" + result.codeResult.code + "]", result);
+            const last_code = result.codeResult.code;
+            last_result.push(result);
+            if (last_result.length > 20) {
+                const code = order_by_occurrence(last_result)[0];
+                last_result = [];
+                stopScan();
+                const newScannedCode = document.createElement('div');
+                newScannedCode.innerHTML = code.codeResult.code;
+                document.body.appendChild(newScannedCode);
+            }
+        });
+
+        function startScanner() {
+            Quagga.init({
+                inputStream: {
+                    name: "Live",
+                    type: "LiveStream",
+                    target: document.querySelector('#scanner-container'),
+                    constraints: {
+                        width: 480,
+                        height: 320,
+                        facingMode: "environment"
+                    },
+                },
+                decoder: {
+                    readers: [
+                        "ean_reader",
+                    ],
+                    debug: {
+                        showCanvas: true,
+                        showPatches: true,
+                        showFoundPatches: true,
+                        showSkeleton: true,
+                        showLabels: true,
+                        showPatchLabels: true,
+                        showRemainingPatchLabels: true,
+                        boxFromPatches: {
+                            showTransformed: true,
+                            showTransformedBox: true,
+                            showBB: true
+                        }
+                    }
+                },
+
+            }, function (err) {
+                if (err) {
+                    console.log(err);
+                    return
+                }
+
+                console.log("Initialization finished. Ready to start");
+                Quagga.start();
+
+                // Set flag to is running
+                _scannerIsRunning = true;
+            });
+
+            Quagga.onProcessed(function (result) {
+                var drawingCtx = Quagga.canvas.ctx.overlay,
+                drawingCanvas = Quagga.canvas.dom.overlay;
+
+                if (result) {
+                    drawingCtx.clearRect(0, 0, parseInt(drawingCanvas.getAttribute("width")), parseInt(drawingCanvas.getAttribute("height")));
+                    if (result.box) {
+                        Quagga.ImageDebug.drawPath(result.box, { x: 0, y: 1 }, drawingCtx, { color: "#00F", lineWidth: 2 });
+                    }
+
+                    if (result.codeResult && result.codeResult.code) {
+                        Quagga.ImageDebug.drawPath(result.line, { x: 'x', y: 'y' }, drawingCtx, { color: 'red', lineWidth: 3 });
+                    }
+                }
+            });
+        }
+
+
+        // Start/stop scanner
+        document.getElementById("btn").addEventListener("click", function () {
+            if (!_scannerIsRunning) {
+                startScanner();
+            }
+        }, false);
+    </script>
+</body>
+
+</html>
