@@ -56,10 +56,10 @@ MarkerFactory.prototype.createClusterIcon = function (htmlString) {
 MarkerFactory.prototype.createFeatureMarker = function (feature, latlng) {
     if (feature) {
         const featureType = this.featureType(feature);
-        if (featureType === 'Asset') {
-            if (feature.properties.angle) {
+        if (featureType === 'TgMessage') {
+            if (feature.get('vectorSpeed')) { // TODO featureType.get('vectorSpeed') !== 0?
                 return new this.ArrowMarker(latlng, {
-                    rotationAngle: (feature.properties.angle ? (feature.properties.angle - 180) : 0)
+                    rotationAngle: (feature.get('vectorAngle') ? (feature.get('vectorAngle') - 180) : 0)
                 });
             } else {
                 return new this.CircleMarker(latlng);
