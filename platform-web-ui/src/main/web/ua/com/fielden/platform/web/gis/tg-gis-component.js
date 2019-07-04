@@ -8,6 +8,7 @@ import { MarkerFactory, tgIconFactoryStylesName } from '/resources/gis/tg-marker
 import { MarkerCluster, leafletMarkerClusterStylesName, tgMarkerClusterStylesName } from '/resources/gis/tg-marker-cluster.js';
 import { Select } from '/resources/gis/tg-select.js';
 import { Controls, leafletDrawStylesName, leafletControlloadingStylesName, leafletEasybuttonStylesName } from '/resources/gis/tg-controls.js';
+import { _millisDateRepresentation } from '/resources/reflection/tg-date-utils.js';
 
 export const GisComponent = function (mapDiv, progressDiv, progressBarDiv, tgMap, ...otherStyles) {
     // IMPORTANT: use the following reference in cases when you need some properties of the 
@@ -58,10 +59,10 @@ export const GisComponent = function (mapDiv, progressDiv, progressBarDiv, tgMap
     self._baseLayers = new BaseLayers();
 
     self._map = L.map(mapDiv, {
-        layers: [self._baseLayers.getBaseLayer("Esri Topographic")], // only add one!
+        layers: [self._baseLayers.getBaseLayer("Esri Imagery")], // only add one!
         zoomControl: false, // add it later
         loadingControl: false // add it later
-    }).setView([-37.002311, 174.782378], 19); // Auckland Airport has been centered (-37.003881, 174.783012)
+    }).setView([-37.007991, 174.792199], 18); // Auckland Airport has been centered (-37.003881, 174.783012)
 
     // create a factory for markers
     self._markerFactory = self.createMarkerFactory();
@@ -198,9 +199,9 @@ GisComponent.prototype.promoteEntities = function (newEntities) {
 GisComponent.prototype.createSummaryFeature = function (features) {
     if (features.length > 0) {
         const featureType = this.featureType(features[0]);
-        if (featureType === 'TgMessage') {
+        if (featureType === 'AssetGpsMessage') {
             const coords = [];
-            const machine = features[0].machine;
+            const asset = features[0].asset;
             for (let i = 0; i < features.length; i++) {
                 coords.push(this.createCoordinatesFromMessage(features[i]));
             }
@@ -208,12 +209,12 @@ GisComponent.prototype.createSummaryFeature = function (features) {
                 properties: {
                     _featureType: ("Summary_" + featureType),
                     _coordinates: coords,
-                    _machine: machine
+                    _machine: asset
                 }
             };
             return summaryFeature;
         } else {
-            throw "GisComponent.prototype.createSummaryFeature: [" + features + "] have unknown type == [" + featureType + "]. Should be 'TgMessage' only.";
+            throw "GisComponent.prototype.createSummaryFeature: [" + features + "] have unknown type == [" + featureType + "]. Should be 'AssetGpsMessage' only.";
         }
     } else {
         throw "GisComponent.prototype.createSummaryFeature: [" + features + "] is empty.";
@@ -294,10 +295,31 @@ GisComponent.prototype.createPopupContent = function (arcGisFeature) {
     
     const template = document.createElement('template');
     let popupText = '<table>';
+    
+    const capitalizeFirstLetter = function (string) {
+        return string.charAt(0).toUpperCase() + string.slice(1);
+    }
+    
+    const titleFor = function (key) {
+        if (key === 'angle') {
+            return 'Angle (°)';
+        } else if (key === 'speed') {
+            return 'Speed (km / h)';
+        } else if (key === 'altitude') {
+            return 'Altitude (m)';
+        } else if (key === 'gpstime') {
+            return 'GPS Time';
+        } else {
+            return capitalizeFirstLetter(key);
+        }
+    };
+    
     Object.keys(arcGisFeature.properties).forEach(key => {
-        if (key !== 'layerId' && key !== 'popupContentInitialised' && key !== '_featureType' && (key === 'desc' || key === 'buildingLevel' || key === 'description' || key === 'criticality' || key === 'angle')) {
+        if (key !== 'layerId' && key !== 'popupContentInitialised' && key !== '_featureType' && (
+                key === 'desc' || key === 'buildingLevel' || key === 'description' || key === 'criticality' || key === 'angle' || key === 'asset' || key === 'gpstime' || key === 'speed' || key === 'altitude'
+        )) {
             if (arcGisFeature.properties[key]) {
-                popupText = popupText + '<tr><td>ArcGIS ' + key + ':</td><td>' + arcGisFeature.properties[key] + '</td></tr>';
+                popupText = popupText + '<tr><td>' + titleFor(key) + ':</td><td>' + (key === 'gpstime' ? _millisDateRepresentation(arcGisFeature.properties[key]) : arcGisFeature.properties[key]) + '</td></tr>';
             }
         }
     });
