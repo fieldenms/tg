@@ -61,7 +61,9 @@ export const GisComponent = function (mapDiv, progressDiv, progressBarDiv, tgMap
     self._map = L.map(mapDiv, {
         layers: [self._baseLayers.getBaseLayer("Esri Imagery")], // only add one!
         zoomControl: false, // add it later
-        loadingControl: false // add it later
+        loadingControl: false, // add it later
+        editable: true,
+        doubleClickZoom: false
     }).setView([-37.007991, 174.792199], 18); // Auckland Airport has been centered (-37.003881, 174.783012)
 
     // create a factory for markers
@@ -99,7 +101,7 @@ export const GisComponent = function (mapDiv, progressDiv, progressBarDiv, tgMap
     };
 
     const overlays = self.createOverlays();
-    self._controls = new Controls(self._map, self._markerCluster.getGisMarkerClusterGroup(), self._baseLayers, overlays);
+    self._controls = new Controls(self._map, self._markerCluster.getGisMarkerClusterGroup(), self._baseLayers, overlays, Object.values(overlays)[0]);
 
     const findLayerByPredicate = function (overlay, predicate) {
         const foundKey = Object.keys(overlay._layers).find(function (key) {
