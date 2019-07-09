@@ -4,6 +4,7 @@ import { controlLoading, leafletControlloadingStylesName } from '/resources/gis/
 import { easyButton, leafletEasybuttonStylesName } from '/resources/gis/leaflet/easybutton/leaflet-easybutton-lib.js';
 import '/resources/gis/leaflet/editable/leaflet-editable-lib.js';
 import '/resources/gis/leaflet/pathdrag/leaflet-pathdrag-lib.js';
+import { fitToBounds } from '/resources/gis/tg-gis-utils.js';
 
 export { leafletStylesName, leafletDrawStylesName, leafletControlloadingStylesName, leafletEasybuttonStylesName };
 
@@ -30,7 +31,7 @@ export const Controls = function (_map, _markersClusterGroup, _baseLayers, _addi
     const fitToBoundsControl = easyButton(
         'fa-compress',
         function () {
-            self._map.fitBounds(self._markersClusterGroup.getBounds());
+            fitToBounds(self._map, self._markersClusterGroup, _additionalOverlays);
         },
         'Fit to bounds',
         self._map
@@ -90,82 +91,82 @@ export const Controls = function (_map, _markersClusterGroup, _baseLayers, _addi
 //        // self._markersClusterGroup.refreshClusters();
 //    });
     
-    //----------------------------------------------------------
-    // Editable plugin + Path.Drag.js plugin + ArcGIS backend
-    
-    // create a generic control to invoke editing
-    L.EditControl = L.Control.extend({
-        options: {
-            position: 'topleft',
-            callback: null,
-            kind: '',
-            html: ''
-        },
-        // when the control is added to the map, wire up its DOM dynamically and add a click listener
-        onAdd: function (map) {
-            const container = L.DomUtil.create('div', 'leaflet-control leaflet-bar');
-            const link = L.DomUtil.create('a', '', container);
-            link.href = '#';
-            link.title = 'Create a new ' + this.options.kind;
-            link.innerHTML = this.options.html;
-            L.DomEvent
-                .on(link, 'click', L.DomEvent.stop)
-                .on(link, 'click', function () {
-                    window.LAYER = this.options.callback.call(map.editTools);
-                }, this);
-            return container;
-        }
-    });
+    if (_editableArcGisOverlay) {
+        // Editable plugin + Path.Drag.js plugin + ArcGIS backend
 
-    // extend the control to draw polygons
-    L.NewPolygonControl = L.EditControl.extend({
-        options: {
-            position: 'topleft',
-            callback: self._map.editTools.startPolygon,
-            kind: 'polygon',
-            html: '▰'
-        }
-    });
+        // create a generic control to invoke editing
+        L.EditControl = L.Control.extend({
+            options: {
+                position: 'topleft',
+                callback: null,
+                kind: '',
+                html: ''
+            },
+            // when the control is added to the map, wire up its DOM dynamically and add a click listener
+            onAdd: function (map) {
+                const container = L.DomUtil.create('div', 'leaflet-control leaflet-bar');
+                const link = L.DomUtil.create('a', '', container);
+                link.href = '#';
+                link.title = 'Create a new ' + this.options.kind;
+                link.innerHTML = this.options.html;
+                L.DomEvent
+                    .on(link, 'click', L.DomEvent.stop)
+                    .on(link, 'click', function () {
+                        window.LAYER = this.options.callback.call(map.editTools);
+                    }, this);
+                return container;
+            }
+        });
 
-    // extend the control to draw rectangles
-    L.NewRectangleControl = L.EditControl.extend({
-        options: {
-            position: 'topleft',
-            callback: self._map.editTools.startRectangle,
-            kind: 'rectangle',
-            html: '⬛'
-        }
-    });
-    
-    // add the two new controls to the map
-    self._map.addControl(new L.NewPolygonControl());
-    self._map.addControl(new L.NewRectangleControl());
-    
-    // when users CMD/CTRL click an editable feature, remove it from the map and delete it from the service
-    _editableArcGisOverlay.on('click', function (e) {
-        if ((e.originalEvent.ctrlKey || e.originalEvent.metaKey) && e.layer.editEnabled()) {
-            e.layer.editor.deleteShapeAt(e.latlng);
-            // delete expects an id, not the whole geojson object
-            _editableArcGisOverlay.deleteFeature(e.layer.feature.id);
-        }
-    });
+        // extend the control to draw polygons
+        L.NewPolygonControl = L.EditControl.extend({
+            options: {
+                position: 'topleft',
+                callback: self._map.editTools.startPolygon,
+                kind: 'polygon',
+                html: '▰'
+            }
+        });
 
-    // when users double click a graphic toggle its editable status
-    // when deselecting, pass the geometry update to the service
-    _editableArcGisOverlay.on('dblclick', function (e) {
-        e.layer.toggleEdit();
-        if (!e.layer.editEnabled()) {
-            _editableArcGisOverlay.updateFeature(e.layer.toGeoJSON());
-        }
-    });
+        // extend the control to draw rectangles
+        L.NewRectangleControl = L.EditControl.extend({
+            options: {
+                position: 'topleft',
+                callback: self._map.editTools.startRectangle,
+                kind: 'rectangle',
+                html: '⬛'
+            }
+        });
+        
+        // add the two new controls to the map
+        self._map.addControl(new L.NewPolygonControl());
+        self._map.addControl(new L.NewRectangleControl());
+        
+        // when users CMD/CTRL click an editable feature, remove it from the map and delete it from the service
+        _editableArcGisOverlay.on('click', function (e) {
+            if ((e.originalEvent.ctrlKey || e.originalEvent.metaKey) && e.layer.editEnabled()) {
+                e.layer.editor.deleteShapeAt(e.latlng);
+                // delete expects an id, not the whole geojson object
+                _editableArcGisOverlay.deleteFeature(e.layer.feature.id);
+            }
+        });
 
-    // when a new feature is drawn using one of the custom controls, pass the edit to the service
-    self._map.on('editable:drawing:commit', function (e) {
-        _editableArcGisOverlay.addFeature(e.layer.toGeoJSON());
-        e.layer.toggleEdit();
-    });
+        // when users double click a graphic toggle its editable status
+        // when deselecting, pass the geometry update to the service
+        _editableArcGisOverlay.on('dblclick', function (e) {
+            e.layer.toggleEdit();
+            if (!e.layer.editEnabled()) {
+                _editableArcGisOverlay.updateFeature(e.layer.toGeoJSON());
+            }
+        });
+
+        // when a new feature is drawn using one of the custom controls, pass the edit to the service
+        self._map.on('editable:drawing:commit', function (e) {
+            _editableArcGisOverlay.addFeature(e.layer.toGeoJSON());
+            e.layer.toggleEdit();
+        });
+    }
     
-    //----------------------------------------------------------
     _additionalOverlays['GEO-json'] = self._markersClusterGroup;
     Object.values(_additionalOverlays).forEach(overlay => self._map.addLayer(overlay));
 

@@ -41,8 +41,7 @@ export const GisComponent = function (mapDiv, progressDiv, progressBarDiv, tgMap
 
         self.promoteEntities(newRetrievedEntitiesCopy);
 
-        //self._markerCluster.getGisMarkerClusterGroup().addLayer(self._geoJsonOverlay);
-        //self._markerCluster.getGisMarkerClusterGroup().addLayer(self._geoJsonOverlay2);
+        self._markerCluster.getGisMarkerClusterGroup().addLayer(self._geoJsonOverlay);
         self.finishReload();
 
         // In standard cases ShouldFitToBounds is always true. However, sse (event sourcing) dataHandlers could change ShouldFitToBounds to false.
@@ -59,18 +58,15 @@ export const GisComponent = function (mapDiv, progressDiv, progressBarDiv, tgMap
     self._baseLayers = new BaseLayers();
 
     self._map = L.map(mapDiv, {
-        layers: [self._baseLayers.getBaseLayer("Esri Imagery")], // only add one!
+        layers: [self._baseLayers.getBaseLayer(self.defaultBaseLayer())], // only add one!
         zoomControl: false, // add it later
         loadingControl: false, // add it later
         editable: true,
         doubleClickZoom: false
-    }).setView([-37.007991, 174.792199], 18); // Auckland Airport has been centered (-37.003881, 174.783012)
+    }).setView(self.defaultCoordinates(), self.defaultZoomLevel()); // Auckland Airport has been centered (-37.003881, 174.783012)
 
     // create a factory for markers
     self._markerFactory = self.createMarkerFactory();
-    self._markerCluster = self.createMarkerCluster(self._map, self._markerFactory, progressDiv, progressBarDiv);
-
-    self._entityStyling = self.createEntityStyling();
 
     self._createEsriLayer = function (url, _featureType) {
         return esri.featureLayer({
@@ -101,17 +97,46 @@ export const GisComponent = function (mapDiv, progressDiv, progressBarDiv, tgMap
     };
 
     const overlays = self.createOverlays();
+    self._markerCluster = self.createMarkerCluster(self._map, self._markerFactory, progressDiv, progressBarDiv, overlays);
+
+    self._entityStyling = self.createEntityStyling();
+    self._geoJsonOverlay = L.geoJson([], {
+        style: function (feature) {
+            return self._entityStyling.getStyle(feature);
+        },
+        pointToLayer: function (feature, latlng) {
+            return self._markerFactory.createFeatureMarker(feature, latlng);
+        },
+        onEachFeature: function (feature, layer) {
+            const layerId = self._geoJsonOverlay.getLayerId(layer);
+            feature.properties.layerId = layerId;
+            layer.on('mouseover', function () {
+                if (!feature.properties.popupContentInitialised) { // initialise popupContent (text or even heavyweight HTMLElement) only once when mouseOver occurs
+                    layer.bindPopup(self.createPopupContent(feature));
+                    feature.properties.popupContentInitialised = true;
+                }
+            });
+            layer.on('click', function () { // dblclick
+                self._select.select(layerId);
+            });
+        }
+    });
+
     self._controls = new Controls(self._map, self._markerCluster.getGisMarkerClusterGroup(), self._baseLayers, overlays, Object.values(overlays)[0]);
 
     const findLayerByPredicate = function (overlay, predicate) {
-        const foundKey = Object.keys(overlay._layers).find(function (key) {
-            var value = overlay._layers[key];
-            return value && predicate(value);
-        });
-        if (foundKey) {
-            return overlay._layers[foundKey];
+        if (overlay._layers) {
+            const foundKey = Object.keys(overlay._layers).find(function (key) {
+                const value = overlay._layers[key];
+                return value && predicate(value);
+            });
+            if (foundKey) {
+                return overlay._layers[foundKey];
+            }
+            return null;
+        } else {
+            return null;
         }
-        return null;
     };
     const findLayerByPredicateIn = function (overlays, predicate) {
         for (let i = 0; i < overlays.length; i++) {
@@ -124,13 +149,19 @@ export const GisComponent = function (mapDiv, progressDiv, progressBarDiv, tgMap
     };
 
     const getLayerById = function (layerId) {
-        return findLayerByPredicateIn(Object.values(overlays), value => value._leaflet_id === layerId);
+        const found = findLayerByPredicateIn(Object.values(overlays), value => value._leaflet_id === layerId);
+        if (found) {
+            return found;
+        }
+        return self._geoJsonOverlay.getLayer(layerId);
     };
     const getLayerByGlobalId = function (globalId) {
         return findLayerByPredicateIn(Object.values(overlays), value => value.feature.properties.GlobalID === globalId);
     };
     self._select = new Select(self._map, getLayerById, self._markerFactory, tgMap, self.findEntityBy.bind(self), getLayerByGlobalId);
     self._map.fire('dataloading');
+    self.initialise();
+    self._markerCluster.getGisMarkerClusterGroup().addLayer(self._geoJsonOverlay);
     self._map.fire('dataload');
 };
 
@@ -142,6 +173,22 @@ GisComponent.prototype.appendStyles = function (tgMap, ...styleModuleNames) {
     style.setAttribute('include', styleModuleNames.join(' '));
     styleWrapper.appendChild(style);
     tgMap.shadowRoot.appendChild(styleWrapper);
+};
+
+GisComponent.prototype.createOverlays = function () {
+    return {};
+};
+
+GisComponent.prototype.defaultBaseLayer = function () {
+    return 'Open Street Map';
+};
+
+GisComponent.prototype.defaultCoordinates = function () {
+    return [49.841919, 24.0316]; // Lviv (Rynok Sq) has been centered
+};
+
+GisComponent.prototype.defaultZoomLevel = function () {
+    return 18;
 };
 
 GisComponent.prototype.getTopEntityFor = function (feature) {
@@ -157,14 +204,15 @@ GisComponent.prototype.getTopEntityFor = function (feature) {
 }
 
 GisComponent.prototype.initialise = function () {
+    this._geoJsonOverlay.addData([]);
 };
 
 GisComponent.prototype.createMarkerFactory = function () {
     return new MarkerFactory();
 };
 
-GisComponent.prototype.createMarkerCluster = function (map, markerFactory, progressDiv, progressBarDiv) {
-    return new MarkerCluster(map, markerFactory, progressDiv, progressBarDiv);
+GisComponent.prototype.createMarkerCluster = function (map, markerFactory, progressDiv, progressBarDiv, overlays) {
+    return new MarkerCluster(map, markerFactory, progressDiv, progressBarDiv, overlays);
 };
 
 GisComponent.prototype.createEntityStyling = function () {
@@ -182,6 +230,7 @@ GisComponent.prototype.finishReload = function () {
 };
 
 GisComponent.prototype.clearAll = function () {
+    this._geoJsonOverlay.clearLayers();
     this._markerCluster.getGisMarkerClusterGroup().clearLayers();
     if (this._select) {
         this._select._prevId = null;
@@ -191,6 +240,39 @@ GisComponent.prototype.clearAll = function () {
 GisComponent.prototype.promoteEntities = function (newEntities) {
     const self = this;
     this._entities = newEntities;
+
+    this.traverseEntities(this._entities, null /* the parent for top-level entities is null! */, function (entity) {
+        if (entity.type) {
+            console.warn('Entity already has "type" object. Cannot continue with conversion into feature.');
+        }
+        entity.type = "Feature";
+
+         if (entity.properties) {
+            console.warn('Entity already has "properties" object. Cannot continue with conversion into feature.');
+        }
+        entity.properties = entity.properties || {};
+        entity.properties._parentFeature = null;
+
+         if (entity.geometry) {
+            throw 'Entity already has "geometry" object. Cannot continue with conversion into feature.';
+        }
+        entity.geometry = self.createGeometry(entity);
+
+         // console.debug('entity:');
+        // console.debug(entity);
+        // console.debug('entity.geometry:');
+        // console.debug(entity.geometry);
+
+         if (entity.geometry) {
+            self._geoJsonOverlay.addData(entity);
+        } else {
+            // TODO do nothing in case when the entity has no visual representation
+            console.debug("entity with no visual representation: ");
+            console.debug(entity);
+        }
+    }, function (entities) {
+        return self.createSummaryFeature(entities);
+    });
 };
 
 /** 
@@ -201,9 +283,9 @@ GisComponent.prototype.promoteEntities = function (newEntities) {
 GisComponent.prototype.createSummaryFeature = function (features) {
     if (features.length > 0) {
         const featureType = this.featureType(features[0]);
-        if (featureType === 'AssetGpsMessage') {
+        if (featureType === 'TgMessage') {
             const coords = [];
-            const asset = features[0].asset;
+            const machine = features[0].machine;
             for (let i = 0; i < features.length; i++) {
                 coords.push(this.createCoordinatesFromMessage(features[i]));
             }
@@ -211,12 +293,12 @@ GisComponent.prototype.createSummaryFeature = function (features) {
                 properties: {
                     _featureType: ("Summary_" + featureType),
                     _coordinates: coords,
-                    _machine: asset
+                    _machine: machine
                 }
             };
             return summaryFeature;
         } else {
-            throw "GisComponent.prototype.createSummaryFeature: [" + features + "] have unknown type == [" + featureType + "]. Should be 'AssetGpsMessage' only.";
+            throw "GisComponent.prototype.createSummaryFeature: [" + features + "] have unknown type == [" + featureType + "]. Should be 'TgMessage' only.";
         }
     } else {
         throw "GisComponent.prototype.createSummaryFeature: [" + features + "] is empty.";
@@ -292,7 +374,7 @@ GisComponent.prototype.createCoordinatesFromMessage = function (message) {
     return (message.altitude) ? [message.x, message.y, message.altitude] : [message.x, message.y]
 }
 
-GisComponent.prototype.createPopupContent = function (arcGisFeature) {
+GisComponent.prototype.createPopupContent = function (feature) {
     const self = this;
     
     const template = document.createElement('template');
@@ -316,38 +398,40 @@ GisComponent.prototype.createPopupContent = function (arcGisFeature) {
         }
     };
     
-    Object.keys(arcGisFeature.properties).forEach(key => {
-        if (key !== 'layerId' && key !== 'popupContentInitialised' && key !== '_featureType' && (
-                key === 'desc' || key === 'buildingLevel' || key === 'description' || key === 'criticality' || key === 'angle' || key === 'asset' || key === 'gpstime' || key === 'speed' || key === 'altitude'
-        )) {
-            if (arcGisFeature.properties[key]) {
-                popupText = popupText + '<tr><td>' + titleFor(key) + ':</td><td>' + (key === 'gpstime' ? _millisDateRepresentation(arcGisFeature.properties[key]) : arcGisFeature.properties[key]) + '</td></tr>';
+    if (feature.properties && feature.properties.GlobalID) { // this is ArcGIS feature
+        Object.keys(feature.properties).forEach(key => {
+            if (key !== 'layerId' && key !== 'popupContentInitialised' && key !== '_featureType' && (
+                    key === 'desc' || key === 'buildingLevel' || key === 'description' || key === 'criticality' || key === 'angle' || key === 'asset' || key === 'gpstime' || key === 'speed' || key === 'altitude'
+            )) {
+                if (feature.properties[key]) {
+                    popupText = popupText + '<tr><td>' + titleFor(key) + ':</td><td>' + (key === 'gpstime' ? _millisDateRepresentation(feature.properties[key]) : feature.properties[key]) + '</td></tr>';
+                }
             }
-        }
-    });
+        });
+    }
     
-    const feature = self.findEntityBy(arcGisFeature);
-    if (feature) {
-        const columnPropertiesMapped = self.columnPropertiesMapper(feature);
+    const entity = self.findEntityBy(feature);
+    if (entity) {
+        const columnPropertiesMapped = self.columnPropertiesMapper(entity);
         
         for (let index = 0; index < columnPropertiesMapped.length && index < 10; index++) {
             const entry = columnPropertiesMapped[index];
             const value = entry.value === true ? '&#x2714' : (entry.value === false ? '&#x2718' : entry.value);
-            const type = feature.constructor.prototype.type.call(feature);
-            popupText = popupText + '<tr' + (entry.dotNotation === '' ? ' class="this-row"' : '') + '><td>' + self.titleFor(feature, entry.dotNotation) + ':</td><td>' + value + '</td></tr>';
+            const type = entity.constructor.prototype.type.call(entity);
+            popupText = popupText + '<tr' + (entry.dotNotation === '' ? ' class="this-row"' : '') + '><td>' + self.titleFor(entity, entry.dotNotation) + ':</td><td>' + value + '</td></tr>';
         }
     }
     template.innerHTML = popupText + '</table>';
     const element = template.content.firstChild;
     
-    if (feature && feature.get('key')) {
+    if (entity && entity.get('key') && feature.properties && feature.properties.GlobalID) {
         const entityType = 'Asset';
         const actionElement = element.children[0].querySelector('.this-row');
         if (actionElement) {
             actionElement.addEventListener('click', (function(e, details) {
                 const action = this._select._tgMap.parentElement.querySelector('tg-ui-action[short-desc="' + entityType + ' Master"]');
                 action.modifyFunctionalEntity = (function (bindingEntity, master) {
-                    action.modifyValue4Property('key', bindingEntity, feature.get('key'));
+                    action.modifyValue4Property('key', bindingEntity, entity.get('key'));
                 }).bind(this);
                 action._run();
             }).bind(this));
@@ -357,15 +441,19 @@ GisComponent.prototype.createPopupContent = function (arcGisFeature) {
     return element;
 }
 
-GisComponent.prototype.findEntityBy = function (arcGisFeature) {
-    const globalId = arcGisFeature.properties.GlobalID;
-    for (let i = 0; i < this._entities.length; i++) {
-        const entity = this._entities[i];
-        if (entity.get('arcGisId') === globalId) {
-            return entity;
+GisComponent.prototype.findEntityBy = function (feature) {
+    if (feature.properties && feature.properties.GlobalID) { // this is ArcGIS feature
+        const globalId = feature.properties.GlobalID;
+        for (let i = 0; i < this._entities.length; i++) {
+            const entity = this._entities[i];
+            if (entity.get('arcGisId') === globalId) {
+                return entity;
+            }
         }
+        return null;
+    } else { // simple feature-entity, does not have ArcGIS nature
+        return feature;
     }
-    return null;
 }
 
 GisComponent.prototype.titleFor = function (feature, dotNotation) {

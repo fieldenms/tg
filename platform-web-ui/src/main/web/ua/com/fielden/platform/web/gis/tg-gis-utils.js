@@ -27,3 +27,38 @@ export const createStyleModule = function (moduleId, ...styleStrings) {
     `;
     styleElement.register(moduleId);
 };
+
+/**
+ * Fits all markers / layers into view by zooming and panning them in the map.
+ * 
+ * @param map -- the map in which all features are about to be fitted
+ * @param markerClusterGroup -- default overlay for which the children will be fitted to bounds (non-ArcGIS GIS components)
+ * @param overlays -- all existing overlays for which the children will be fitted to bounds (ArcGIS GIS components)
+ */
+export const fitToBounds = function (map, markerClusterGroup, overlays) {
+    window.setTimeout(function () {
+        try {
+            map.fitBounds(markerClusterGroup.getBounds());
+        } catch (error) {
+            let bounds = null;
+            let processedArcGisOverlaysCount = 0;
+            let arcGisOverlaysCount = 0;
+            Object.values(overlays).forEach(overlay => {
+                if (overlay.query) {
+                    arcGisOverlaysCount++;
+                    overlay.query().bounds(function (error, latlngbounds) {
+                        if (bounds) {
+                            bounds = bounds.extend(latlngbounds);
+                        } else {
+                            bounds = latlngbounds;
+                        }
+                        processedArcGisOverlaysCount++;
+                        if (processedArcGisOverlaysCount === arcGisOverlaysCount) {
+                            map.fitBounds(bounds);
+                        }
+                    });
+                }
+            });
+        }
+    }, 1);
+}

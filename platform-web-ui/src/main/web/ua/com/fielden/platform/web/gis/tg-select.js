@@ -15,10 +15,14 @@ export const Select = function (_map, _getLayerById, _markerFactory, tgMap, find
     self._centreSelectionHandler = function (newSelection) {
         if (newSelection.entities.length == 1) {
             const selectionEntity = newSelection.entities[0];
+            const layerId = 
+                selectionEntity.entity.properties && selectionEntity.entity.properties.layerId 
+                    ? selectionEntity.entity.properties.layerId
+                    : getLayerByGlobalId(selectionEntity.entity.get('arcGisId'))._leaflet_id;
             if (selectionEntity.select) {
-                self._silentlySelectById(getLayerByGlobalId(selectionEntity.entity.get('arcGisId'))._leaflet_id);
+                self._silentlySelectById(layerId);
             } else {
-                self._silentlyDeselectById(getLayerByGlobalId(selectionEntity.entity.get('arcGisId'))._leaflet_id)
+                self._silentlyDeselectById(layerId);
             }
         }
     };
