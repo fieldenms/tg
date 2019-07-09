@@ -91,9 +91,9 @@ const inputLayerTemplate = html`
         <span style="color:#737373" hidden$="[[!_hasDesc(entity)]]">&nbsp;&ndash;&nbsp;<i>[[_formatDesc(entity)]]</i></span>
     </div>`;
 const customIconButtonsTemplate = html`
-    <paper-icon-button id="searcherButton" hidden$="[[searchingOrOpen]]" on-tap="_searchOnTap" icon="search" class="search-button custom-icon-buttons" tabIndex="-1" disabled$="[[_disabled]]" tooltip-text="Show search result"></paper-icon-button>
-    <paper-icon-button hidden$="[[searchingOrClosed]]" on-down="_done" icon="done" class="search-button custom-icon-buttons" tabIndex="-1" disabled$="[[_disabled]]" tooltip-text="Accept the selected entries"></paper-icon-button>
-    <paper-spinner active hidden$="[[!searching]]" class="custom-icon-buttons" tabIndex="-1" alt="searching..." disabled$="[[_disabled]]"></paper-spinner>`;
+    <paper-icon-button id="searcherButton" hidden$="[[searchingOrOpen]]" on-tap="_searchOnTap" icon="search" class="search-button custom-icon-buttons" tabindex="-1" disabled$="[[_disabled]]" tooltip-text="Show search result"></paper-icon-button>
+    <paper-icon-button id="acceptButton" hidden$="[[searchingOrClosed]]" on-down="_done" icon="done" class="search-button custom-icon-buttons" tabindex="-1" disabled$="[[_disabled]]" tooltip-text="Accept the selected entries"></paper-icon-button>
+    <paper-spinner id="progressSpinner" active hidden$="[[!searching]]" class="custom-icon-buttons" tabindex="-1" alt="searching..." disabled$="[[_disabled]]"></paper-spinner>`;
 const propertyActionTemplate = html`<slot name="property-action"></slot>`;
 
 /* several helper functions for string manipulation */
@@ -594,6 +594,8 @@ export class TgEntityEditor extends TgEditor {
         const activeElement = document.activeElement;
         const shadowActiveElement = this.shadowRoot.activeElement;
         if (this.$.searcherButton === shadowActiveElement ||     /* if autocompleter's button is in focus (this occurs in iOs when tapping on that button) */
+            this.$.acceptButton === shadowActiveElement   ||     /* this also might happen on iOS*/
+            this.$.progressSpinner === shadowActiveElement||     /* this also might happen on iOS*/
             this.$.input === shadowActiveElement          ||     /* or if autocompleter's input is in focus */
             document.body === activeElement               ||     /* or no other input or button in focus then show found values */
             this.$.result === activeElement               ){     /* or result dialog was in focus*/
