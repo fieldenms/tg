@@ -944,7 +944,7 @@ const _EPrototype = _createEntityPrototype(_EIPPrototype, _SPEPrototype, _isErro
 /**
  * Determines whether the specified object represents the entity.
  */
-const _isEntity = function (obj) {
+export const _isEntity = function (obj) {
     return obj !== null && (obj instanceof _EPrototype);
 };
 

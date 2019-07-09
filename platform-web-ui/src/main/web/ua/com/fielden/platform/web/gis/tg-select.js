@@ -1,4 +1,5 @@
 import { L } from '/resources/gis/leaflet/leaflet-lib.js';
+import { _isEntity } from '/app/tg-reflector.js';
 
 export const Select = function (_map, _getLayerById, _markerFactory, tgMap, findEntityBy, getLayerByGlobalId) {
     const self = this;
@@ -37,7 +38,7 @@ Select.prototype.select = function (layerId) {
         this._silentlySelect(layerId);
         this._prevId = layerId;
         const entity = this.findEntityBy(this._getLayerById(layerId).feature);
-        if (entity) {
+        if (_isEntity(entity)) {
             details.push({
                 entity: entity,
                 select: true
@@ -47,7 +48,7 @@ Select.prototype.select = function (layerId) {
         if (prevId !== null) {
             this._silentlyDeselect(prevId);
             const prevEntity = this.findEntityBy(this._getLayerById(prevId).feature);
-            if (prevEntity) {
+            if (_isEntity(prevEntity)) {
                 details.push({
                     entity: prevEntity,
                     select: false
@@ -55,7 +56,7 @@ Select.prototype.select = function (layerId) {
             }
         }
         if (details.length > 0) {
-            const event = new CustomEvent("tg-entity-selected", {
+            const event = new CustomEvent('tg-entity-selected', {
                 detail: {
                     shouldScrollToSelected: true,
                     entities: details
@@ -73,19 +74,22 @@ Select.prototype._deselect = function (layerId) {
     const layer = this._getLayerById(layerId);
     const feature = layer.feature;
 
-    const event = new CustomEvent("tg-entity-selected", {
-        detail: {
-            shouldScrollToSelected: true,
-            entities: [{
-                entity: this.findEntityBy(feature),
-                select: false
-            }]
-        },
-        bubbles: true,
-        composed: true,
-        cancelable: true
-    });
-    this._tgMap.getCustomEventTarget().dispatchEvent(event);
+    const entity = this.findEntityBy(feature);
+    if (_isEntity(entity)) {
+        const event = new CustomEvent('tg-entity-selected', {
+            detail: {
+                shouldScrollToSelected: true,
+                entities: [{
+                    entity: entity,
+                    select: false
+                }]
+            },
+            bubbles: true,
+            composed: true,
+            cancelable: true
+        });
+        this._tgMap.getCustomEventTarget().dispatchEvent(event);
+    }
 }
 
 Select.prototype._silentlySelectById = function (layerId) {
