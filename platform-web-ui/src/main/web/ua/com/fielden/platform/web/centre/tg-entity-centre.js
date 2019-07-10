@@ -391,6 +391,9 @@ Polymer({
     _expandContainer: function (element) {
         element.style.removeProperty("width");
         element.style.removeProperty("display");
+        if (element == this.$.rightInsertionPointContainer && this._rightWidth) {
+            this.$.rightInsertionPointContainer.style.width = this._rightWidth;
+        }
         this.notifyResize();
     },
 
