@@ -90,6 +90,7 @@ const template = html`
             grid-template-rows: auto auto auto;
             min-width: fit-content;
             min-height: fit-content;
+            z-index: 0;
         }
         .noselect {
             -webkit-touch-callout: none;
@@ -151,6 +152,12 @@ const template = html`
             flex-shrink: 0;
             @apply --layout-horizontal;
         }
+        .table-data-row[selected] {
+            background-color: #F5F5F5;
+        }
+        .table-data-row[over] {
+            background-color: #EEEEEE;
+        }
         .table-footer-row {
             z-index: 0;
             font-size: 0.9rem;
@@ -184,7 +191,7 @@ const template = html`
             @apply --layout-center;
             @apply --layout-relative;
         }
-        .drag-anchor[selected]:hover {
+        .table-data-row[selected] .drag-anchor:hover {
             cursor: move;
             /* fallback if grab cursor is unsupported */
             cursor: grab;
@@ -192,7 +199,7 @@ const template = html`
             cursor: -webkit-grab;
             color: var(--paper-light-blue-700);
         }
-        .drag-anchor[selected]:active {
+        .table-data-row[selected] .drag-anchor:active {
             cursor: grabbing;
             cursor: -moz-grabbing;
             cursor: -webkit-grabbing;
@@ -219,9 +226,6 @@ const template = html`
         paper-checkbox.body {
             --paper-checkbox-unchecked-color: var(--paper-grey-900);
             --paper-checkbox-unchecked-ink-color: var(--paper-grey-900);
-        }
-        .checkbox-cell {
-            width: 18px;
         }
         .table-cell {
             @apply --layout-horizontal;
@@ -307,10 +311,10 @@ const template = html`
                 <div id="top_left_egi" class="grid-layout-container sticky-container z-index-2" style$="[[_calcTopLeftContainerStyle(headerFixed, dragAnchorFixed)]]">
                     <div class="table-header-row"  on-touchmove="_handleTouchMove">
                         <div class="drag-anchor cell" hidden$="[[!canDragFrom]]"></div>
-                        <div class="table-cell cell" hidden$="[[!_checkboxFixed(checkboxVisible, checkboxesFixed)]]" tooltip-text$="[[_selectAllTooltip(selectedAll)]]">
+                        <div class="table-cell cell" hidden$="[[!_checkboxFixedAndVisible(checkboxVisible, checkboxesFixed)]]" style$="[[_calcSelectCheckBoxStyle(canDragFrom)]]" tooltip-text$="[[_selectAllTooltip(selectedAll)]]">
                             <paper-checkbox class="all-checkbox blue header" checked="[[selectedAll]]" semi-checked$="[[semiSelectedAll]]" on-change="_allSelectionChanged"></paper-checkbox>
                         </div>
-                        <div class="action-cell cell" hidden$="[[!_primaryActionFixed(primaryAction, checkboxesWithPrimaryActionsFixed)]]">
+                        <div class="action-cell cell" hidden$="[[!_primaryActionFixedAndVisible(primaryAction, checkboxesWithPrimaryActionsFixed)]]">
                             <!--Primary action stub header goes here-->
                         </div>
                         <template is="dom-repeat" items="[[fixedColumns]]">
@@ -323,10 +327,10 @@ const template = html`
                 </div>
                 <div id="top_egi" class="grid-layout-container sticky-container z-index-1" style$="[[_calcTopContainerStyle(headerFixed)]]">
                     <div class="table-header-row"  on-touchmove="_handleTouchMove">
-                        <div class="table-cell cell" hidden$="[[_checkboxFixed(checkboxVisible, checkboxesFixed)]]" tooltip-text$="[[_selectAllTooltip(selectedAll)]]">
+                        <div class="table-cell cell" hidden$="[[!_checkboxNotFixedAndVisible(checkboxVisible, checkboxesFixed)]]" style$="[[_calcSelectCheckBoxStyle(canDragFrom)]]" tooltip-text$="[[_selectAllTooltip(selectedAll)]]">
                             <paper-checkbox class="all-checkbox blue header" checked="[[selectedAll]]" semi-checked$="[[semiSelectedAll]]" on-change="_allSelectionChanged"></paper-checkbox>
                         </div>
-                        <div class="action-cell cell" hidden$="[[_primaryActionFixed(primaryAction, checkboxesWithPrimaryActionsFixed)]]">
+                        <div class="action-cell cell" hidden$="[[!_primaryActionNotFixedAndVisible(primaryAction, checkboxesWithPrimaryActionsFixed)]]">
                             <!--Primary action stub header goes here-->
                         </div>
                         <template is="dom-repeat" items="[[columns]]">
@@ -338,8 +342,8 @@ const template = html`
                     </div>
                 </div>
                 <div id="top_right_egi" class="grid-layout-container sticky-container z-index-2" style$="[[_calcTopRightContainerStyle(headerFixed, secondaryActionsFixed)]]">
-                    <div class="table-header-row">    
-                        <div class="action-cell cell">
+                    <div class="table-header-row" hidden$="[[secondaryActionPresent]]">    
+                        <div class="action-cell cell" hidden$="[[!_isSecondaryActionPresent]]">
                                 <!--Secondary actions header goes here-->
                         </div>
                     </div>
@@ -350,10 +354,10 @@ const template = html`
                             <div class="drag-anchor" draggable$="[[_isDraggable(egiEntity.selected)]]" hidden$="[[!canDragFrom]]">
                                 <iron-icon icon="tg-icons:dragVertical"></iron-icon>
                             </div>
-                            <div class="table-cell" hidden$="[[!_checkboxFixed(checkboxVisible, checkboxesFixed)]]" tooltip-text$="[[_selectTooltip(egiEntity.selected)]]">
+                            <div class="table-cell" hidden$="[[!_checkboxFixedAndVisible(checkboxVisible, checkboxesFixed)]]" style$="[[_calcSelectCheckBoxStyle(canDragFrom)]]" tooltip-text$="[[_selectTooltip(egiEntity.selected)]]">
                                 <paper-checkbox class="blue body" checked="[[egiEntity.selected]]" on-change="_selectionChanged" on-mousedown="_checkSelectionState" on-keydown="_checkSelectionState"></paper-checkbox>
                             </div>
-                            <div class="action-cell" hidden$="[[!_primaryActionFixed(primaryAction, checkboxesWithPrimaryActionsFixed)]]">
+                            <div class="action-cell" hidden$="[[!_primaryActionFixedAndVisible(primaryAction, checkboxesWithPrimaryActionsFixed)]]">
                                 <tg-ui-action class="action" show-dialog="[[primaryAction.showDialog]]" current-entity="[[egiEntity.entity]]" short-desc="[[primaryAction.shortDesc]]" long-desc="[[primaryAction.longDesc]]" icon="[[primaryAction.icon]]" component-uri="[[primaryAction.componentUri]]" element-name="[[primaryAction.elementName]]" action-kind="[[primaryAction.actionKind]]" number-of-action="[[primaryAction.numberOfAction]]" attrs="[[primaryAction.attrs]]" create-context-holder="[[primaryAction.createContextHolder]]" require-selection-criteria="[[primaryAction.requireSelectionCriteria]]" require-selected-entities="[[primaryAction.requireSelectedEntities]]" require-master-entity="[[primaryAction.requireMasterEntity]]" pre-action="[[primaryAction.preAction]]" post-action-success="[[primaryAction.postActionSuccess]]" post-action-error="[[primaryAction.postActionError]]" should-refresh-parent-centre-after-save="[[primaryAction.shouldRefreshParentCentreAfterSave]]" ui-role="[[primaryAction.uiRole]]" icon-style="[[primaryAction.iconStyle]]"></tg-ui-action>
                             </div>
                             <template is="dom-repeat" items="[[fixedColumns]]" as="column">
@@ -365,10 +369,10 @@ const template = html`
                 <div class="grid-layout-container z-index-0">
                     <template is="dom-repeat" items="[[egiModel]]" as="egiEntity" index-as="entityIndex" on-dom-change="_scrollContainerEntitiesStamped">
                         <div class="table-data-row" selected$="[[egiEntity.selected]]" over$="[[egiEntity.over]]" on-mouseenter="_mouseRowEnter" on-mouseleave="_mouseRowLeave">
-                            <div class="table-cell" hidden$="[[_checkboxFixed(checkboxVisible, checkboxesFixed)]]" tooltip-text$="[[_selectTooltip(egiEntity.selected)]]">
+                            <div class="table-cell" hidden$="[[!_checkboxNotFixedAndVisible(checkboxVisible, checkboxesFixed)]]" style$="[[_calcSelectCheckBoxStyle(canDragFrom)]]" tooltip-text$="[[_selectTooltip(egiEntity.selected)]]">
                                 <paper-checkbox class="blue body" checked="[[egiEntity.selected]]" on-change="_selectionChanged" on-mousedown="_checkSelectionState" on-keydown="_checkSelectionState"></paper-checkbox>
                             </div>
-                            <div class="action-cell" hidden$="[[_primaryActionFixed(primaryAction, checkboxesWithPrimaryActionsFixed)]]">
+                            <div class="action-cell" hidden$="[[!_primaryActionNotFixedAndVisible(primaryAction, checkboxesWithPrimaryActionsFixed)]]">
                                 <tg-ui-action class="action" show-dialog="[[primaryAction.showDialog]]" current-entity="[[egiEntity.entity]]" short-desc="[[primaryAction.shortDesc]]" long-desc="[[primaryAction.longDesc]]" icon="[[primaryAction.icon]]" component-uri="[[primaryAction.componentUri]]" element-name="[[primaryAction.elementName]]" action-kind="[[primaryAction.actionKind]]" number-of-action="[[primaryAction.numberOfAction]]" attrs="[[primaryAction.attrs]]" create-context-holder="[[primaryAction.createContextHolder]]" require-selection-criteria="[[primaryAction.requireSelectionCriteria]]" require-selected-entities="[[primaryAction.requireSelectedEntities]]" require-master-entity="[[primaryAction.requireMasterEntity]]" pre-action="[[primaryAction.preAction]]" post-action-success="[[primaryAction.postActionSuccess]]" post-action-error="[[primaryAction.postActionError]]" should-refresh-parent-centre-after-save="[[primaryAction.shouldRefreshParentCentreAfterSave]]" ui-role="[[primaryAction.uiRole]]" icon-style="[[primaryAction.iconStyle]]"></tg-ui-action>
                             </div>
                             <template is="dom-repeat" items="[[columns]]" as="column">
@@ -391,10 +395,10 @@ const template = html`
                         <template is="dom-repeat" items="[[_totalsRows]]" as="summaryRow" index-as="summaryIndex">
                             <div class="table-footer-row">
                                 <div class="drag-anchor" hidden$="[[!canDragFrom]]"></div>
-                                <div class="table-cell checkbox-cell" hidden$="[[!_checkboxFixed(checkboxVisible, checkboxesFixed)]]" tooltip-text$="[[_selectAllTooltip(selectedAll)]]">
+                                <div class="table-cell" hidden$="[[!_checkboxFixedAndVisible(checkboxVisible, checkboxesFixed)]]" style$="[[_calcSelectCheckBoxStyle(canDragFrom)]]" tooltip-text$="[[_selectAllTooltip(selectedAll)]]">
                                     <!--Footer's select checkbox stub goes here-->
                                 </div>
-                                <div class="action-cell" hidden$="[[!_primaryActionFixed(primaryAction, checkboxesWithPrimaryActionsFixed)]]">
+                                <div class="action-cell" hidden$="[[!_primaryActionFixedAndVisible(primaryAction, checkboxesWithPrimaryActionsFixed)]]">
                                     <!--Footer's primary action stub goes here-->
                                 </div>
                                 <template is="dom-repeat" items="[[summaryRow.0]]" as="column">
@@ -409,10 +413,10 @@ const template = html`
                     <div class="footer">
                         <template is="dom-repeat" items="[[_totalsRows]]" as="summaryRow" index-as="summaryIndex">
                             <div class="table-footer-row">
-                                <div class="table-cell checkbox-cell" hidden$="[[_checkboxFixed(checkboxVisible, checkboxesFixed)]]" tooltip-text$="[[_selectAllTooltip(selectedAll)]]">
+                                <div class="table-cell" hidden$="[[!_checkboxNotFixedAndVisible(checkboxVisible, checkboxesFixed)]]" style$="[[_calcSelectCheckBoxStyle(canDragFrom)]]" tooltip-text$="[[_selectAllTooltip(selectedAll)]]">
                                     <!--Footer's select checkbox stub goes here-->
                                 </div>
-                                <div class="action-cell" hidden$="[[_primaryActionFixed(primaryAction, checkboxesWithPrimaryActionsFixed)]]">
+                                <div class="action-cell" hidden$="[[!_primaryActionNotFixedAndVisible(primaryAction, checkboxesWithPrimaryActionsFixed)]]">
                                     <!--Footer's primary action stub goes here-->
                                 </div>
                                 <template is="dom-repeat" items="[[summaryRow.1]]" as="column">
@@ -708,11 +712,17 @@ Polymer({
     _calcBottomRightContainerStyle: function (summaryFixed, secondaryActionsFixed) {
         return (summaryFixed ? "bottom: 0;" : "") + (secondaryActionsFixed ? "right: 0" : "");
     },
-    _checkboxFixed: function (checkboxVisible, checkboxesFixed) {
-        return checkboxVisible && checkboxesFixed;
+    _checkboxFixedAndVisible: function (checkboxVisible, checkboxesFixed) {
+        return checkboxVisible && checkboxesFixed
     },
-    _primaryActionFixed: function (primaryAction, checkboxesWithPrimaryActionsFixed) {
+    _checkboxNotFixedAndVisible: function (checkboxVisible, checkboxesFixed) {
+        return checkboxVisible && !checkboxesFixed
+    },
+    _primaryActionFixedAndVisible: function (primaryAction, checkboxesWithPrimaryActionsFixed) {
         return primaryAction && checkboxesWithPrimaryActionsFixed;
+    },
+    _primaryActionNotFixedAndVisible: function (primaryAction, checkboxesWithPrimaryActionsFixed) {
+        return primaryAction && !checkboxesWithPrimaryActionsFixed;
     },
     /***********************/
 
@@ -1413,12 +1423,9 @@ Polymer({
         return canDragFrom ? this.getComputedStyleValue('--egi-drag-anchor-width').trim() || "1.5rem" : "0px";
     },
 
-    _calcSelectCheckBoxStyle: function (canDragFrom, checkboxesFixed, headerFixed) {
-        let style = checkboxesFixed || headerFixed ? "position: sticky; position: -webkit-sticky; z-index: 1; " : "";
-        style += checkboxesFixed ? "left: " + this._calcDragAnchorWidth(canDragFrom) + ";": "";
-        style += headerFixed ? "top: 0;" : "";
+    _calcSelectCheckBoxStyle: function (canDragFrom) {
         const cellPadding = this.getComputedStyleValue('--egi-cell-padding').trim() || "0.6rem";
-        return style + "width:18px; padding-left:" + (canDragFrom ? "0;" : cellPadding);
+        return "width:18px; padding-left:" + (canDragFrom ? "0;" : cellPadding);
     },
 
     _calcSelectionCheckboxWidth: function (canDragFrom, checkboxVisible) {
@@ -1679,7 +1686,7 @@ Polymer({
         updateSelectAll(this, this.egiModel);
         //Scroll to the selected one if it is the only one and should scroll is true.
         if (newSelection.shouldScrollToSelected && numOfSelected === 1 && lastSelectedIndex >= 0) {
-            const entityRows = this.$.baseContainer.querySelectorAll('.table-data-row');
+            const entityRows = this.$.left_egi.querySelectorAll('.table-data-row');
             const entityRow = entityRows[lastSelectedIndex];
             if (entityRow) {
                 entityRow.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'start' });
@@ -1687,7 +1694,7 @@ Polymer({
                 const oldAction = this._scrollContainerEntitiesStampedCustomAction;
                 this._scrollContainerEntitiesStampedCustomAction = (function () {
                     oldAction();
-                    const entityRows = this.$.baseContainer.querySelectorAll('.table-data-row');
+                    const entityRows = this.$.left_egi.querySelectorAll('.table-data-row');
                     const entityRow = entityRows[lastSelectedIndex];
                     entityRow.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'start' });
                     this._scrollContainerEntitiesStampedCustomAction = oldAction;
