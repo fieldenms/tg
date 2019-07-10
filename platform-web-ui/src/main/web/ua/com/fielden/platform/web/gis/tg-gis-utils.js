@@ -45,18 +45,20 @@ export const fitToBounds = function (map, markerClusterGroup, overlays) {
             let arcGisOverlaysCount = 0;
             Object.values(overlays).forEach(overlay => {
                 if (overlay.query) {
-                    arcGisOverlaysCount++;
-                    overlay.query().bounds(function (error, latlngbounds) {
-                        if (bounds) {
-                            bounds = bounds.extend(latlngbounds);
-                        } else {
-                            bounds = latlngbounds;
-                        }
-                        processedArcGisOverlaysCount++;
-                        if (processedArcGisOverlaysCount === arcGisOverlaysCount) {
-                            map.fitBounds(bounds);
-                        }
-                    });
+                    if (map.hasLayer(overlay)) {
+                        arcGisOverlaysCount++;
+                        overlay.query().bounds(function (error, latlngbounds) {
+                            if (bounds) {
+                                bounds = bounds.extend(latlngbounds);
+                            } else {
+                                bounds = latlngbounds;
+                            }
+                            processedArcGisOverlaysCount++;
+                            if (processedArcGisOverlaysCount === arcGisOverlaysCount) {
+                                map.fitBounds(bounds);
+                            }
+                        });
+                    }
                 }
             });
         }

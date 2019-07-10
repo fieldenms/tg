@@ -68,8 +68,8 @@ export const GisComponent = function (mapDiv, progressDiv, progressBarDiv, tgMap
     // create a factory for markers
     self._markerFactory = self.createMarkerFactory();
 
-    self._createEsriLayer = function (url, _featureType) {
-        return esri.featureLayer({
+    self._createEsriLayer = function (url, _featureType, checkedByDefault = false) {
+        const esriOverlay = esri.featureLayer({
             url: url,
             style: function (feature) {
                 return self._entityStyling.getStyle(feature);
@@ -94,6 +94,8 @@ export const GisComponent = function (mapDiv, progressDiv, progressBarDiv, tgMap
                 });
             }
         });
+        esriOverlay._checkedByDefault = checkedByDefault;
+        return esriOverlay;
     };
 
     const overlays = self.createOverlays();
@@ -425,11 +427,11 @@ GisComponent.prototype.createPopupContent = function (feature) {
     const element = template.content.firstChild;
     
     if (entity && entity.get('key') && feature.properties && feature.properties.GlobalID) {
-        const entityType = 'Asset';
+        const featureType = this.featureType(entity);
         const actionElement = element.children[0].querySelector('.this-row');
         if (actionElement) {
             actionElement.addEventListener('click', (function(e, details) {
-                const action = this._select._tgMap.parentElement.querySelector('tg-ui-action[short-desc="' + entityType + ' Master"]');
+                const action = this._select._tgMap.parentElement.querySelector('tg-ui-action[short-desc="' + featureType + ' Master"]');
                 action.modifyFunctionalEntity = (function (bindingEntity, master) {
                     action.modifyValue4Property('key', bindingEntity, entity.get('key'));
                 }).bind(this);

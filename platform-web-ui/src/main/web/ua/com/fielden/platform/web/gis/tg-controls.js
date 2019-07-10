@@ -168,7 +168,8 @@ export const Controls = function (_map, _markersClusterGroup, _baseLayers, _addi
     }
     
     _additionalOverlays['GEO-json'] = self._markersClusterGroup;
-    Object.values(_additionalOverlays).forEach(overlay => self._map.addLayer(overlay));
+    _additionalOverlays['GEO-json']._checkedByDefault = true;
+    Object.values(_additionalOverlays).filter(overlay => overlay._checkedByDefault).forEach(overlay => self._map.addLayer(overlay));
 
     const overlaysControl = L.control.layers(self._baseLayers.getBaseLayers(), _additionalOverlays);
     self._map.addControl(overlaysControl);
