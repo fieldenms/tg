@@ -275,6 +275,64 @@ const template = html`
             background-color: white;
             @apply --layout-vertical;
         }
+        /* .grid-layout-container[show-top-shadow] {
+            border-bottom: thin solid #e3e3e3;
+        }
+        .grid-layout-container[show-bottom-shadow] {
+            border-top: thin solid #e3e3e3;
+        }
+        .grid-layout-container[show-left-shadow] {
+            border-right: thin solid #e3e3e3;
+        }
+        .grid-layout-container[show-right-shadow] {
+            border-left: thin solid #e3e3e3;
+        } */
+        .grid-layout-container[show-top-shadow]:before {
+            content: "";
+            position: absolute;
+            bottom: -4px;
+            left: 0;
+            right: 0;
+            height:4px;
+            background: -moz-linear-gradient(bottom, rgba(0,0,0,0.4) 0%, rgba(0,0,0,0) 100%); 
+            background: -webkit-linear-gradient(bottom, rgba(0,0,0,0.4) 0%,rgba(0,0,0,0) 100%); 
+            background: linear-gradient(to bottom, rgba(0,0,0,0.4) 0%,rgba(0,0,0,0) 100%); 
+        }
+        .grid-layout-container[show-bottom-shadow]:before {
+            content: "";
+            position: absolute;
+            top: -4px;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: -moz-linear-gradient(top, rgba(0,0,0,0.4) 0%, rgba(0,0,0,0) 100%);
+            background: -webkit-linear-gradient(top, rgba(0,0,0,0.4) 0%,rgba(0,0,0,0) 100%); 
+            background: linear-gradient(to top, rgba(0,0,0,0.4) 0%,rgba(0,0,0,0) 100%); 
+        }
+        .grid-layout-container[show-left-shadow]:after {
+            content: "";
+            position: absolute;
+            bottom: 0;
+            top: 0;
+            right: -4px;
+            width: 4px;
+            background: transparent;
+            background: -moz-linear-gradient(right, rgba(0,0,0,0.4) 0%, rgba(0,0,0,0) 100%); 
+            background: -webkit-linear-gradient(right, rgba(0,0,0,0.4) 0%,rgba(0,0,0,0) 100%); 
+            background: linear-gradient(to right, rgba(0,0,0,0.4) 0%,rgba(0,0,0,0) 100%); 
+        }
+        .grid-layout-container[show-right-shadow]:after {
+            content: "";
+            position: absolute;
+            bottom: 0;
+            top: 0;
+            left: -4px;
+            width: 4px;
+            background: transparent;
+            background: -moz-linear-gradient(left, rgba(0,0,0,0.4) 0%, rgba(0,0,0,0) 100%); 
+            background: -webkit-linear-gradient(left, rgba(0,0,0,0.4) 0%,rgba(0,0,0,0) 100%); 
+            background: linear-gradient(to left, rgba(0,0,0,0.4) 0%,rgba(0,0,0,0) 100%); 
+        }
         .sticky-container {
             position: sticky;
             position: -webkit-sticky;
@@ -308,7 +366,7 @@ const template = html`
         </div>
         <div id="scrollableContainer" on-scroll="_handleScrollEvent">
             <div id="baseContainer">
-                <div id="top_left_egi" class="grid-layout-container sticky-container z-index-2" style$="[[_calcTopLeftContainerStyle(headerFixed, dragAnchorFixed)]]">
+                <div id="top_left_egi" show-top-shadow$="[[_showTopShadow]]" show-left-shadow$="[[_showLeftShadow]]" class="grid-layout-container sticky-container z-index-2" style$="[[_calcTopLeftContainerStyle(headerFixed, dragAnchorFixed)]]">
                     <div class="table-header-row"  on-touchmove="_handleTouchMove">
                         <div class="drag-anchor cell" hidden$="[[!canDragFrom]]"></div>
                         <div class="table-cell cell" hidden$="[[!_checkboxFixedAndVisible(checkboxVisible, checkboxesFixed)]]" style$="[[_calcSelectCheckBoxStyle(canDragFrom)]]" tooltip-text$="[[_selectAllTooltip(selectedAll)]]">
@@ -325,7 +383,7 @@ const template = html`
                         </template>
                     </div>
                 </div>
-                <div id="top_egi" class="grid-layout-container sticky-container z-index-1" style$="[[_calcTopContainerStyle(headerFixed)]]">
+                <div id="top_egi" show-top-shadow$="[[_showTopShadow]]" class="grid-layout-container sticky-container z-index-1" style$="[[_calcTopContainerStyle(headerFixed)]]">
                     <div class="table-header-row"  on-touchmove="_handleTouchMove">
                         <div class="table-cell cell" hidden$="[[!_checkboxNotFixedAndVisible(checkboxVisible, checkboxesFixed)]]" style$="[[_calcSelectCheckBoxStyle(canDragFrom)]]" tooltip-text$="[[_selectAllTooltip(selectedAll)]]">
                             <paper-checkbox class="all-checkbox blue header" checked="[[selectedAll]]" semi-checked$="[[semiSelectedAll]]" on-change="_allSelectionChanged"></paper-checkbox>
@@ -341,14 +399,14 @@ const template = html`
                         </template>
                     </div>
                 </div>
-                <div id="top_right_egi" class="grid-layout-container sticky-container z-index-2" style$="[[_calcTopRightContainerStyle(headerFixed, secondaryActionsFixed)]]">
+                <div id="top_right_egi" show-top-shadow$="[[_showTopShadow]]" show-right-shadow$="[[_showRightShadow]]" class="grid-layout-container sticky-container z-index-2" style$="[[_calcTopRightContainerStyle(headerFixed, secondaryActionsFixed)]]">
                     <div class="table-header-row" hidden$="[[secondaryActionPresent]]">    
                         <div class="action-cell cell" hidden$="[[!_isSecondaryActionPresent]]">
                                 <!--Secondary actions header goes here-->
                         </div>
                     </div>
                 </div>
-                <div id="left_egi" class="grid-layout-container sticky-container z-index-1" style$="[[_calcLeftContainerStyle(dragAnchorFixed)]]">
+                <div id="left_egi" show-left-shadow$="[[_showLeftShadow]]" class="grid-layout-container sticky-container z-index-1" style$="[[_calcLeftContainerStyle(dragAnchorFixed)]]">
                     <template is="dom-repeat" items="[[egiModel]]" as="egiEntity" index-as="entityIndex" on-dom-change="_scrollContainerEntitiesStamped">
                         <div class="table-data-row" selected$="[[egiEntity.selected]]" over$="[[egiEntity.over]]" on-mouseenter="_mouseRowEnter" on-mouseleave="_mouseRowLeave">
                             <div class="drag-anchor" draggable$="[[_isDraggable(egiEntity.selected)]]" hidden$="[[!canDragFrom]]">
@@ -381,7 +439,7 @@ const template = html`
                         </div>
                     </template>
                 </div>
-                <div class="grid-layout-container sticky-container z-index-1" style$="[[_calcRightContainerStyle(secondaryActionsFixed)]]">
+                <div class="grid-layout-container sticky-container z-index-1" show-right-shadow$="[[_showRightShadow]]" style$="[[_calcRightContainerStyle(secondaryActionsFixed)]]">
                     <template is="dom-repeat" items="[[egiModel]]" as="egiEntity" index-as="entityIndex" on-dom-change="_scrollContainerEntitiesStamped">
                         <div class="table-data-row" selected$="[[egiEntity.selected]]" over$="[[egiEntity.over]]" on-mouseenter="_mouseRowEnter" on-mouseleave="_mouseRowLeave">
                             <div class="action-cell" hidden$="[[!_isSecondaryActionPresent]]">
@@ -390,7 +448,7 @@ const template = html`
                         </div>
                     </template>
                 </div>
-                <div class="grid-layout-container sticky-container z-index-2" style$="[[_calcBottomLeftContainerStyle(summaryFixed, dragAnchorFixed)]]">
+                <div class="grid-layout-container sticky-container z-index-2" show-bottom-shadow$="[[_showBottomShadow]]" show-left-shadow$="[[_showLeftShadow]]" style$="[[_calcBottomLeftContainerStyle(summaryFixed, dragAnchorFixed)]]">
                     <div class="footer">
                         <template is="dom-repeat" items="[[_totalsRows]]" as="summaryRow" index-as="summaryIndex">
                             <div class="table-footer-row">
@@ -408,7 +466,7 @@ const template = html`
                         </template>
                     </div>
                 </div>
-                <div class="grid-layout-container sticky-container z-index-1" style$="[[_calcBottomContainerStyle(summaryFixed)]]">
+                <div class="grid-layout-container sticky-container z-index-1" show-bottom-shadow$="[[_showBottomShadow]]" style$="[[_calcBottomContainerStyle(summaryFixed)]]">
                     <!-- Table footer -->
                     <div class="footer">
                         <template is="dom-repeat" items="[[_totalsRows]]" as="summaryRow" index-as="summaryIndex">
@@ -426,7 +484,7 @@ const template = html`
                         </template>
                     </div>  
                 </div>
-                <div class="grid-layout-container sticky-container z-index-2" style$="[[_calcBottomRightContainerStyle(summaryFixed, secondaryActionsFixed)]]">
+                <div class="grid-layout-container sticky-container z-index-2" show-bottom-shadow$="[[_showBottomShadow]]" show-right-shadow$="[[_showRightShadow]]" style$="[[_calcBottomRightContainerStyle(summaryFixed, secondaryActionsFixed)]]">
                     <div class="footer">
                         <template is="dom-repeat" items="[[_totalsRows]]" as="summaryRow" index-as="summaryIndex">
                             <div class="table-footer-row">
@@ -689,7 +747,7 @@ Polymer({
 
     /**Experimental things */
     _calcTopLeftContainerStyle: function (headerFixed, dragAnchorFixed) {
-        return  (headerFixed ? "top: 0;" : "") + (dragAnchorFixed ? "left: 0" : "");
+        return (headerFixed ? "top: 0;" : "") + (dragAnchorFixed ? "left: 0;" : "");
     },
     _calcTopContainerStyle: function (headerFixed) {
         return headerFixed ? "top: 0;" : "";
