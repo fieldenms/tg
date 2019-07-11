@@ -1,5 +1,6 @@
 import '/resources/polymer/@polymer/polymer/lib/elements/custom-style.js';
 import { L, leafletStylesName } from '/resources/gis/leaflet/leaflet-lib.js';
+import { esri } from '/resources/gis/leaflet/esri/esri-leaflet-lib.js';
 import { _featureType } from '/resources/gis/tg-gis-utils.js';
 import { BaseLayers } from '/resources/gis/tg-base-layers.js';
 import { EntityStyling } from '/resources/gis/tg-entity-styling.js';
@@ -7,6 +8,7 @@ import { MarkerFactory, tgIconFactoryStylesName } from '/resources/gis/tg-marker
 import { MarkerCluster, leafletMarkerClusterStylesName, tgMarkerClusterStylesName } from '/resources/gis/tg-marker-cluster.js';
 import { Select } from '/resources/gis/tg-select.js';
 import { Controls, leafletDrawStylesName, leafletControlloadingStylesName, leafletEasybuttonStylesName } from '/resources/gis/tg-controls.js';
+import { _millisDateRepresentation } from '/resources/reflection/tg-date-utils.js';
 
 export const GisComponent = function (mapDiv, progressDiv, progressBarDiv, tgMap, ...otherStyles) {
     // IMPORTANT: use the following reference in cases when you need some properties of the 
@@ -47,6 +49,7 @@ export const GisComponent = function (mapDiv, progressDiv, progressBarDiv, tgMap
         // Please note that, centre running, refreshing, navigating between pages provides automatic fittingToBounds.
         self._markerCluster.setShouldFitToBounds(true);
     };
+    self.tgMap = tgMap;
 
     tgMap.columnPropertiesMapperHandler = function (newColumnPropertiesMapper) {
         self.columnPropertiesMapper = newColumnPropertiesMapper;
@@ -56,68 +59,136 @@ export const GisComponent = function (mapDiv, progressDiv, progressBarDiv, tgMap
     self._baseLayers = new BaseLayers();
 
     self._map = L.map(mapDiv, {
-        layers: [self._baseLayers.getBaseLayer("OpenStreetMap")], // only add one!
+        layers: [self._baseLayers.getBaseLayer(self.defaultBaseLayer())], // only add one!
         zoomControl: false, // add it later
-        loadingControl: false // add it later
-    }).setView([49.841919, 24.0316], 18); // Lviv (Rynok Sq) has been centered
+        loadingControl: false, // add it later
+        editable: true,
+        doubleClickZoom: false
+    }).setView(self.defaultCoordinates(), self.defaultZoomLevel()); // Auckland Airport has been centered (-37.003881, 174.783012)
+
+    // The following logic uses EdgeBuffer plugin to preload tiles (4) outside visible area to improve panning apperance during animation. This, however, sligthly slows down performance.
+    // L.EdgeBuffer = {
+    //     previousMethods: {
+    //       getTiledPixelBounds: L.GridLayer.prototype._getTiledPixelBounds
+    //     }
+    // };
+    // L.GridLayer.include({
+    //     _getTiledPixelBounds : function(center, zoom, tileZoom) {
+    //       var pixelBounds = L.EdgeBuffer.previousMethods.getTiledPixelBounds.call(this, center, zoom, tileZoom);
+    //       // Default is to buffer one tiles beyond the pixel bounds (edgeBufferTiles = 1).
+    //       var edgeBufferTiles = 4;
+    //       if ((this.options.edgeBufferTiles !== undefined) && (this.options.edgeBufferTiles !== null)) {
+    //         edgeBufferTiles = this.options.edgeBufferTiles;
+    //       }
+    //       if (edgeBufferTiles > 0) {
+    //         var pixelEdgeBuffer = L.GridLayer.prototype.getTileSize.call(this).multiplyBy(edgeBufferTiles);
+    //         pixelBounds = new L.Bounds(pixelBounds.min.subtract(pixelEdgeBuffer), pixelBounds.max.add(pixelEdgeBuffer));
+    //       }
+    //       return pixelBounds;
+    //     }
+    // });
+    // The following logic uses internal leaflet's map options to avoid 'clipping' of polylines when panning during animation.
+    // self._map.getRenderer(self._map).options.padding = 100;
 
     // create a factory for markers
     self._markerFactory = self.createMarkerFactory();
-    self._markerCluster = self.createMarkerCluster(self._map, self._markerFactory, progressDiv, progressBarDiv);
+
+    self._createEsriLayer = function (url, _featureType, checkedByDefault = false) {
+        const esriOverlay = esri.featureLayer({
+            url: url,
+            style: function (feature) {
+                return self._entityStyling.getStyle(feature);
+            },
+            pointToLayer: function (feature, latlng) {
+                feature.properties._featureType = _featureType;
+                return self._markerFactory.createFeatureMarker(feature, latlng);
+            },
+            onEachFeature: function (feature, layer) {
+                feature.properties._featureType = _featureType;
+                layer.on('mouseover', function () {
+                    if (!feature.properties.popupContentInitialised) { // initialise popupContent (text or even heavyweight HTMLElement) only once when mouseOver occurs
+                        layer.bindPopup(self.createPopupContent(feature));
+                        feature.properties.popupContentInitialised = true;
+                    }
+                });
+                layer.on('click', function () { // dblclick
+                    if (!feature.properties.layerId) {
+                        feature.properties.layerId = layer._leaflet_id;
+                    }
+                    self._select.select(feature.properties.layerId);
+                });
+            }
+        });
+        esriOverlay._checkedByDefault = checkedByDefault;
+        return esriOverlay;
+    };
+
+    const overlays = self.createOverlays();
+    self._markerCluster = self.createMarkerCluster(self._map, self._markerFactory, progressDiv, progressBarDiv, overlays);
 
     self._entityStyling = self.createEntityStyling();
     self._geoJsonOverlay = L.geoJson([], {
         style: function (feature) {
             return self._entityStyling.getStyle(feature);
         },
-
         pointToLayer: function (feature, latlng) {
             return self._markerFactory.createFeatureMarker(feature, latlng);
         },
-
         onEachFeature: function (feature, layer) {
             const layerId = self._geoJsonOverlay.getLayerId(layer);
-            // provide leafletId of the layer directly inside corresponding entity
             feature.properties.layerId = layerId;
-
             layer.on('mouseover', function () {
                 if (!feature.properties.popupContentInitialised) { // initialise popupContent (text or even heavyweight HTMLElement) only once when mouseOver occurs
                     layer.bindPopup(self.createPopupContent(feature));
                     feature.properties.popupContentInitialised = true;
                 }
             });
-
-            layer.on('mouseout', function () {
-                // console.debug("mouseout (leaved):");
-                // console.debug(layer);
-            });
-
             layer.on('click', function () { // dblclick
-                // console.debug("clicked:");
-                // console.debug(layer);
                 self._select.select(layerId);
             });
-            // if (layer instanceof CoordMarker) {
-            //     layer.setOpacity(0.0);
-            // }
         }
     });
 
-    self._controls = new Controls(self._map, self._markerCluster.getGisMarkerClusterGroup(), self._baseLayers);
+    self._controls = new Controls(self._map, self._markerCluster.getGisMarkerClusterGroup(), self._baseLayers, overlays, Object.values(overlays)[0]);
+
+    const findLayerByPredicate = function (overlay, predicate) {
+        if (overlay._layers) {
+            const foundKey = Object.keys(overlay._layers).find(function (key) {
+                const value = overlay._layers[key];
+                return value && predicate(value);
+            });
+            if (foundKey) {
+                return overlay._layers[foundKey];
+            }
+            return null;
+        } else {
+            return null;
+        }
+    };
+    const findLayerByPredicateIn = function (overlays, predicate) {
+        for (let i = 0; i < overlays.length; i++) {
+            const found = findLayerByPredicate(overlays[i], predicate);
+            if (found) {
+                return found;
+            }
+        }
+        return null;
+    };
 
     const getLayerById = function (layerId) {
+        const found = findLayerByPredicateIn(Object.values(overlays), value => value._leaflet_id === layerId);
+        if (found) {
+            return found;
+        }
         return self._geoJsonOverlay.getLayer(layerId);
-    }
-
-    self._select = new Select(self._map, getLayerById, self._markerFactory, tgMap);
-
+    };
+    const getLayerByGlobalId = function (globalId) {
+        return findLayerByPredicateIn(Object.values(overlays), value => value.feature.properties.GlobalID === globalId);
+    };
+    self._select = new Select(self._map, getLayerById, self._markerFactory, tgMap, self.findEntityBy.bind(self), getLayerByGlobalId);
     self._map.fire('dataloading');
-
     self.initialise();
-
     self._markerCluster.getGisMarkerClusterGroup().addLayer(self._geoJsonOverlay);
-    self._map.addLayer(self._markerCluster.getGisMarkerClusterGroup());
-
     self._map.fire('dataload');
 };
 
@@ -129,6 +200,22 @@ GisComponent.prototype.appendStyles = function (tgMap, ...styleModuleNames) {
     style.setAttribute('include', styleModuleNames.join(' '));
     styleWrapper.appendChild(style);
     tgMap.shadowRoot.appendChild(styleWrapper);
+};
+
+GisComponent.prototype.createOverlays = function () {
+    return {};
+};
+
+GisComponent.prototype.defaultBaseLayer = function () {
+    return 'Open Street Map';
+};
+
+GisComponent.prototype.defaultCoordinates = function () {
+    return [49.841919, 24.0316]; // Lviv (Rynok Sq) has been centered
+};
+
+GisComponent.prototype.defaultZoomLevel = function () {
+    return 18;
 };
 
 GisComponent.prototype.getTopEntityFor = function (feature) {
@@ -151,8 +238,8 @@ GisComponent.prototype.createMarkerFactory = function () {
     return new MarkerFactory();
 };
 
-GisComponent.prototype.createMarkerCluster = function (map, markerFactory, progressDiv, progressBarDiv) {
-    return new MarkerCluster(map, markerFactory, progressDiv, progressBarDiv);
+GisComponent.prototype.createMarkerCluster = function (map, markerFactory, progressDiv, progressBarDiv, overlays) {
+    return new MarkerCluster(map, markerFactory, progressDiv, progressBarDiv, overlays);
 };
 
 GisComponent.prototype.createEntityStyling = function () {
@@ -172,7 +259,9 @@ GisComponent.prototype.finishReload = function () {
 GisComponent.prototype.clearAll = function () {
     this._geoJsonOverlay.clearLayers();
     this._markerCluster.getGisMarkerClusterGroup().clearLayers();
-    this._select._prevId = null;
+    if (this._select) {
+        this._select._prevId = null;
+    }
 };
 
 GisComponent.prototype.promoteEntities = function (newEntities) {
@@ -185,23 +274,23 @@ GisComponent.prototype.promoteEntities = function (newEntities) {
         }
         entity.type = "Feature";
 
-        if (entity.properties) {
+         if (entity.properties) {
             console.warn('Entity already has "properties" object. Cannot continue with conversion into feature.');
         }
         entity.properties = entity.properties || {};
         entity.properties._parentFeature = null;
 
-        if (entity.geometry) {
+         if (entity.geometry) {
             throw 'Entity already has "geometry" object. Cannot continue with conversion into feature.';
         }
         entity.geometry = self.createGeometry(entity);
 
-        // console.debug('entity:');
+         // console.debug('entity:');
         // console.debug(entity);
         // console.debug('entity.geometry:');
         // console.debug(entity.geometry);
 
-        if (entity.geometry) {
+         if (entity.geometry) {
             self._geoJsonOverlay.addData(entity);
         } else {
             // TODO do nothing in case when the entity has no visual representation
@@ -314,15 +403,84 @@ GisComponent.prototype.createCoordinatesFromMessage = function (message) {
 
 GisComponent.prototype.createPopupContent = function (feature) {
     const self = this;
-    const columnPropertiesMapped = self.columnPropertiesMapper(feature);
-    let popupText = '';
-    for (let index = 0; index < columnPropertiesMapped.length; index++) {
-        const entry = columnPropertiesMapped[index];
-        const value = entry.value === true ? "&#x2714" : (entry.value === false ? "&#x2718" : entry.value);
-        const type = feature.constructor.prototype.type.call(feature);
-        popupText = popupText + "" + self.titleFor(feature, entry.dotNotation) + ": " + value + "<br>";
+    
+    const template = document.createElement('template');
+    let popupText = '<table>';
+    
+    const capitalizeFirstLetter = function (string) {
+        return string.charAt(0).toUpperCase() + string.slice(1);
     }
-    return popupText;
+    
+    const titleFor = function (key) {
+        if (key === 'angle') {
+            return 'Angle (°)';
+        } else if (key === 'speed') {
+            return 'Speed (km / h)';
+        } else if (key === 'altitude') {
+            return 'Altitude (m)';
+        } else if (key === 'gpstime') {
+            return 'GPS Time';
+        } else {
+            return capitalizeFirstLetter(key);
+        }
+    };
+    
+    if (feature.properties && feature.properties.GlobalID) { // this is ArcGIS feature
+        Object.keys(feature.properties).forEach(key => {
+            if (key !== 'layerId' && key !== 'popupContentInitialised' && key !== '_featureType' && (
+                    key === 'desc' || key === 'buildingLevel' || key === 'description' || key === 'criticality' || key === 'angle' || key === 'asset' || key === 'gpstime' || key === 'speed' || key === 'altitude'
+            )) {
+                if (feature.properties[key]) {
+                    popupText = popupText + '<tr><td>' + titleFor(key) + ':</td><td>' + (key === 'gpstime' ? _millisDateRepresentation(feature.properties[key]) : feature.properties[key]) + '</td></tr>';
+                }
+            }
+        });
+    }
+    
+    const entity = self.findEntityBy(feature);
+    if (entity) {
+        const columnPropertiesMapped = self.columnPropertiesMapper(entity);
+        
+        for (let index = 0; index < columnPropertiesMapped.length && index < 10; index++) {
+            const entry = columnPropertiesMapped[index];
+            const value = entry.value === true ? '&#x2714' : (entry.value === false ? '&#x2718' : entry.value);
+            const type = entity.constructor.prototype.type.call(entity);
+            popupText = popupText + '<tr' + (entry.dotNotation === '' ? ' class="this-row"' : '') + '><td>' + self.titleFor(entity, entry.dotNotation) + ':</td><td>' + value + '</td></tr>';
+        }
+    }
+    template.innerHTML = popupText + '</table>';
+    const element = template.content.firstChild;
+    
+    if (entity && entity.get('key') && feature.properties && feature.properties.GlobalID) {
+        const featureType = this.featureType(entity);
+        const actionElement = element.children[0].querySelector('.this-row');
+        if (actionElement) {
+            actionElement.addEventListener('click', (function(e, details) {
+                const action = this._select._tgMap.parentElement.querySelector('tg-ui-action[short-desc="' + featureType + ' Master"]');
+                action.modifyFunctionalEntity = (function (bindingEntity, master) {
+                    action.modifyValue4Property('key', bindingEntity, entity.get('key'));
+                }).bind(this);
+                action._run();
+            }).bind(this));
+        }
+    }
+    
+    return element;
+}
+
+GisComponent.prototype.findEntityBy = function (feature) {
+    if (feature.properties && feature.properties.GlobalID) { // this is ArcGIS feature
+        const globalId = feature.properties.GlobalID;
+        for (let i = 0; i < this._entities.length; i++) {
+            const entity = this._entities[i];
+            if (entity.get('arcGisId') === globalId) {
+                return entity;
+            }
+        }
+        return null;
+    } else { // simple feature-entity, does not have ArcGIS nature
+        return feature;
+    }
 }
 
 GisComponent.prototype.titleFor = function (feature, dotNotation) {

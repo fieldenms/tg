@@ -64,7 +64,8 @@ Polymer({
          * The entities retrieved when running parent centre of this map embedded into insertion point.
          */
         retrievedEntities: {
-            type: Array
+            type: Array,
+            notify: true
         },
 
         /**
