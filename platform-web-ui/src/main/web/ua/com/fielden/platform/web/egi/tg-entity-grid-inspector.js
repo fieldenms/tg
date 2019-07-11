@@ -1155,10 +1155,10 @@ Polymer({
     },
 
     _handleScrollEvent: function () {
-        this._showLeftShadow = this.$.scrollableContainer.scrollLeft !== 0;
-        this._showRightShadow = (this.$.scrollableContainer.clientWidth + this.$.scrollableContainer.scrollLeft) !== this.$.scrollableContainer.scrollWidth;
-        this._showTopShadow = this.$.scrollableContainer.scrollTop !== 0;
-        this._showBottomShadow = (this.$.scrollableContainer.clientHeight + this.$.scrollableContainer.scrollTop) !== this.$.scrollableContainer.scrollHeight;
+        this._showLeftShadow = this.$.scrollableContainer.scrollLeft > 0;
+        this._showRightShadow = (this.$.scrollableContainer.clientWidth + this.$.scrollableContainer.scrollLeft) < this.$.scrollableContainer.scrollWidth;
+        this._showTopShadow = this.$.scrollableContainer.scrollTop > 0;
+        this._showBottomShadow = (this.$.scrollableContainer.clientHeight + this.$.scrollableContainer.scrollTop) < this.$.scrollableContainer.scrollHeight;
     },
 
     _handleTouchMove: function (e) {
