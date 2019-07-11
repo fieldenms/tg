@@ -82,10 +82,9 @@ const template = html`
         .tile-toolbar[action-disabled] ::slotted(tg-ui-action) {
             pointer-events: none;
         }
-        .watermark {
-            text-align: right;
+        #watermark {
             @apply --tg-watermark-style;
-        }
+        }        
         .truncate {
             white-space: nowrap;
             overflow: hidden;
@@ -96,10 +95,11 @@ const template = html`
         <style include="iron-flex iron-flex-reverse iron-flex-alignment iron-flex-factors iron-positioning"></style>
     </custom-style>
 
+    <div id="watermark" hidden$="[[!_watermark]]">[[_watermark]]</div>
+
     <div id="toolbar" class="tool-bar">
         <tg-menu-search-input id="menuSearcher" menu="[[menuConfig.menu]]" tooltip="Application-wide menu search (tap or hit F3 to invoke)."></tg-menu-search-input>
         <div id="logoutContainer" class="layout horizontal center" style="display: contents">
-            <div class="flex truncate watermark" hidden$="[[!_watermark]]">[[_watermark]]</div>
             <span class="flex truncate" style="font-size:1rem; padding-right:4px; text-align: right;">[[menuConfig.userName]]</span>
             <paper-icon-button id="logoutButton" icon="icons:exit-to-app" tooltip-text="Logout" on-tap="_logout"></paper-icon-button>
         </div>

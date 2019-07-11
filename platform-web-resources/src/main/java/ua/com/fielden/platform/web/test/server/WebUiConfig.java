@@ -189,8 +189,8 @@ public class WebUiConfig extends AbstractWebUiConfig {
     private final String path;
     private final int port;
 
-    private final String panelColor;
-    private final String watermark;
+    private final String topPanelColour;
+    private final String appName;
     private final String watermarkCss;
 
     public WebUiConfig(final Properties props) {
@@ -202,9 +202,9 @@ public class WebUiConfig extends AbstractWebUiConfig {
         this.path = props.getProperty("web.path");
         this.port = Integer.valueOf(props.getProperty("port"));
 
-        this.panelColor = props.getProperty("panelColor");
-        this.watermark = props.getProperty("watermark");
-        this.watermarkCss = props.getProperty("watermarkCss");
+        this.topPanelColour = props.getProperty("app.topPanelColour");
+        this.appName = props.getProperty("app.name");
+        this.watermarkCss = props.getProperty("app.watermarkCss");
     }
 
     @Override
@@ -251,7 +251,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
         configApp()
             .setTimeFormat("HH:mm")
             .setTimeWithMillisFormat("HH:mm:ss.SSS")
-            .withTopPanelStyle(ofNullable(panelColor), ofNullable(watermark), ofNullable(watermarkCss));
+            .withTopPanelStyle(ofNullable(topPanelColour), ofNullable(appName), ofNullable(watermarkCss));
         // Add entity centres.
 
         TgMessageWebUiConfig.register(injector(), configApp());

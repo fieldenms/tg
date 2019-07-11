@@ -232,9 +232,12 @@ public class WebUiBuilder implements IWebUiBuilder {
         return this;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
-    public IWebUiBuilder withTopPanelStyle(final Optional<String> cssBackground, final Optional<String> watermark, final Optional<String> cssWatermark) {
-        this.panelColor = cssBackground;
+    public IWebUiBuilder withTopPanelStyle(final Optional<String> backgroundColour, final Optional<String> watermark, final Optional<String> cssWatermark) {
+        this.panelColor = backgroundColour;
         this.watermark = watermark;
         this.watermarkStyle = cssWatermark;
         return this;
