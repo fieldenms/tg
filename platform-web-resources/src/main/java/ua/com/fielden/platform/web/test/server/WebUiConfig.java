@@ -189,9 +189,9 @@ public class WebUiConfig extends AbstractWebUiConfig {
     private final String path;
     private final int port;
 
-    private final String topPanelColour;
-    private final String appName;
-    private final String watermarkCss;
+    private final String envTopPanelColour;
+    private final String envWatermarkText;
+    private final String envWatermarkCss;
 
     public WebUiConfig(final Properties props) {
         super("TG Test and Demo Application", Workflows.valueOf(props.getProperty("workflow")), new String[0]);
@@ -202,9 +202,9 @@ public class WebUiConfig extends AbstractWebUiConfig {
         this.path = props.getProperty("web.path");
         this.port = Integer.valueOf(props.getProperty("port"));
 
-        this.topPanelColour = props.getProperty("app.topPanelColour");
-        this.appName = props.getProperty("app.name");
-        this.watermarkCss = props.getProperty("app.watermarkCss");
+        this.envTopPanelColour = props.getProperty("env.topPanelColour");
+        this.envWatermarkText = props.getProperty("env.watermarkText");
+        this.envWatermarkCss = props.getProperty("env.watermarkCss");
     }
 
     @Override
@@ -251,7 +251,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
         configApp()
             .setTimeFormat("HH:mm")
             .setTimeWithMillisFormat("HH:mm:ss.SSS")
-            .withTopPanelStyle(ofNullable(topPanelColour), ofNullable(appName), ofNullable(watermarkCss));
+            .withTopPanelStyle(ofNullable(envTopPanelColour), ofNullable(envWatermarkText), ofNullable(envWatermarkCss));
         // Add entity centres.
 
         TgMessageWebUiConfig.register(injector(), configApp());
