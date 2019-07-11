@@ -625,8 +625,9 @@ const _createDynamicEntityKeyPrototype = function () {
      */
     DynamicEntityKey.prototype._convertDynamicEntityKey = function () {
         const compositeEntity = this._entity;
-        const compositeKeyNames = compositeEntity.type().compositeKeyNames();
-        const compositeKeySeparator = compositeEntity.type().compositeKeySeparator();
+        const type = compositeEntity.constructor.prototype.type.call(compositeEntity);
+        const compositeKeyNames = type.compositeKeyNames();
+        const compositeKeySeparator = type.compositeKeySeparator();
 
         let str = "";
         let first = true;

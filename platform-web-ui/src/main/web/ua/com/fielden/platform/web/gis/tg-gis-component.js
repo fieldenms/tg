@@ -49,6 +49,7 @@ export const GisComponent = function (mapDiv, progressDiv, progressBarDiv, tgMap
         // Please note that, centre running, refreshing, navigating between pages provides automatic fittingToBounds.
         self._markerCluster.setShouldFitToBounds(true);
     };
+    self.retrivedEntitiesHandler = tgMap.retrivedEntitiesHandler;
 
     tgMap.columnPropertiesMapperHandler = function (newColumnPropertiesMapper) {
         self.columnPropertiesMapper = newColumnPropertiesMapper;
