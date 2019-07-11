@@ -1,7 +1,5 @@
 package ua.com.fielden.platform.web.resources.webui;
 
-import static ua.com.fielden.platform.web.interfaces.DeviceProfile.DESKTOP;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -153,12 +151,13 @@ public abstract class AbstractWebUiConfig implements IWebUiConfig {
 
     @Override
     public final String genAppIndex() {
-        final String indexSource = ResourceLoader.getText("ua/com/fielden/platform/web/index.html").replace("@title", title);
+        final String indexSource = webUiBuilder.getAppIndex().replace("@title", title);
         if (isDevelopmentWorkflow(this.workflow)) {
             return indexSource.replace("@startupResources", "startup-resources-origin");
         } else {
             return indexSource.replace("@startupResources", "startup-resources-vulcanized");
         }
+
     }
 
     private static boolean isDevelopmentWorkflow(final Workflows workflow) {

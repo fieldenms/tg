@@ -38,7 +38,7 @@ const template = html`
             height: 44px;
             font-size: 18px;
             color: white;
-            background-color: var(--paper-light-blue-700);
+            background-color: var(--tg-main-pannel-color, var(--paper-light-blue-700));
             @apply --layout-horizontal;
             @apply --layout-center;
             @apply --layout-justified;
@@ -82,6 +82,10 @@ const template = html`
         .tile-toolbar[action-disabled] ::slotted(tg-ui-action) {
             pointer-events: none;
         }
+        .watermark {
+            text-align: right;
+            @apply --tg-watermark-style;
+        }
         .truncate {
             white-space: nowrap;
             overflow: hidden;
@@ -95,6 +99,7 @@ const template = html`
     <div id="toolbar" class="tool-bar">
         <tg-menu-search-input id="menuSearcher" menu="[[menuConfig.menu]]" tooltip="Application-wide menu search (tap or hit F3 to invoke)."></tg-menu-search-input>
         <div id="logoutContainer" class="layout horizontal center" style="display: contents">
+            <div class="flex truncate watermark" hidden$="[[!_watermark]]">[[_watermark]]</div>
             <span class="flex truncate" style="font-size:1rem; padding-right:4px; text-align: right;">[[menuConfig.userName]]</span>
             <paper-icon-button id="logoutButton" icon="icons:exit-to-app" tooltip-text="Logout" on-tap="_logout"></paper-icon-button>
         </div>
@@ -161,6 +166,7 @@ Polymer({
     ],
     
     ready: function () {
+        this._watermark = window.TG_APP.watermark;
         if (isMobileApp() && isIPhoneOs()) {
             this.$.toolbar.removeChild(this.$.menuSearcher);
             this.$.logoutContainer.insertBefore(this.$.menuSearcher, this.$.logoutButton);

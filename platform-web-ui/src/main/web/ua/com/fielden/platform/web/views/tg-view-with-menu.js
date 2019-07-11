@@ -135,9 +135,12 @@ const template = html`
             height: 44px;
             font-size: 18px;
             color: white;
-            background-color: var(--paper-light-blue-700);
+            background-color: var(--tg-main-pannel-color, var(--paper-light-blue-700));
             @apply --layout-horizontal;
             @apply --layout-center;
+        }
+        .watermark {
+            @apply --tg-watermark-style;
         }
         #viewToolbarContainer {
             @apply --layout-horizontal;
@@ -203,6 +206,7 @@ const template = html`
                     <paper-icon-button id="menuButton" icon="menu" tooltip-text="Module menu (tap or hit F2 to invoke)." on-tap="_togglePanel"></paper-icon-button>
                     <tg-menu-search-input id="menuSearcher" menu="[[menu]]" tooltip="Application-wide menu search (tap or hit F3 to invoke)."></tg-menu-search-input>
                     <div class="flex truncate" tooltip-text$="[[_calcSelectedPageDesc(_selectedPage, saveAsName, saveAsDesc)]]">[[_calcSelectedPageTitle(_selectedPage, saveAsName)]]</div>
+                    <div class="flex truncate watermark" hidden$="[[!_watermark]]">[[_watermark]]</div>
                     <paper-icon-button id="mainMenu" icon="apps" tooltip-text="Main menu" on-tap="_showMenu"></paper-icon-button>
                 </div>
             </div>
@@ -297,6 +301,7 @@ Polymer({
     },
     
     ready: function () {
+        this._watermark = window.TG_APP.watermark;
         this._focusNextMenuItem = this._focusNextMenuItem.bind(this.$.menu);
         this._focusPreviousMenuItem = this._focusPreviousMenuItem.bind(this.$.menu);
         this._menuEscKey = this._menuEscKey.bind(this);

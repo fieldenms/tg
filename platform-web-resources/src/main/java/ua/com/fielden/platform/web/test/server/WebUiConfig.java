@@ -238,7 +238,10 @@ public class WebUiConfig extends AbstractWebUiConfig {
     @Override
     public void initConfiguration() {
         super.initConfiguration();
-        configApp().setTimeFormat("HH:mm").setTimeWithMillisFormat("HH:mm:ss.SSS");
+        configApp()
+            .setTimeFormat("HH:mm")
+            .setTimeWithMillisFormat("HH:mm:ss.SSS")
+            .withTopPanelStyle(of("#44750c"), empty(), empty());
         // Add entity centres.
 
         TgMessageWebUiConfig.register(injector(), configApp());

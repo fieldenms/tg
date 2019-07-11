@@ -20,6 +20,16 @@ import ua.com.fielden.platform.web.view.master.EntityMaster;
 public interface IWebUiBuilder {
 
     /**
+     * Specifies the main environmental top panel style and it's water-mark.
+     *
+     * @param cssBackground
+     * @param watermark
+     * @param cssWatermark
+     * @return
+     */
+    IWebUiBuilder withTopPanelStyle(final Optional<String> cssBackground, final Optional<String> watermark, final Optional<String> cssWatermark);
+
+    /**
      * Set the minimal desktop width.
      *
      * @param width
