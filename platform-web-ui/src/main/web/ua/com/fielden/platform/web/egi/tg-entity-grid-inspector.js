@@ -37,6 +37,7 @@ const template = html`
             @apply --layout-vertical;
         }
         .grid-container {
+            z-index: 0;
             background-color: white;
             border-radius: 2px;
             @apply --layout-vertical;
@@ -47,12 +48,23 @@ const template = html`
             @apply --layout-flex;
         }
         .grid-toolbar {
+            z-index: 1;
             position: relative;
-            overflow: hidden;
             flex-grow: 0;
             flex-shrink: 0;
             @apply --layout-horizontal;
             @apply --layout-wrap;
+        }
+        .grid-toolbar[show-top-shadow]:after {
+            content: "";
+            position: absolute;
+            bottom: -4px;
+            left: 0;
+            right: 0;
+            height:4px;
+            background: -moz-linear-gradient(bottom, rgba(0,0,0,0.4) 0%, rgba(0,0,0,0) 100%); 
+            background: -webkit-linear-gradient(bottom, rgba(0,0,0,0.4) 0%,rgba(0,0,0,0) 100%); 
+            background: linear-gradient(to bottom, rgba(0,0,0,0.4) 0%,rgba(0,0,0,0) 100%);
         }
         paper-progress {
             position: absolute;
@@ -78,6 +90,7 @@ const template = html`
             margin-left: 30px;
         }
         #scrollableContainer {
+            z-index: 0;
             min-height: 0;
             overflow:auto;
             @apply --layout-vertical;
@@ -262,6 +275,7 @@ const template = html`
         }
         /*miscellanea styles*/
         .lock-layer {
+            z-index: 1;
             opacity: 0.5;
             display: none;
             background-color: white;
@@ -270,23 +284,10 @@ const template = html`
         .lock-layer[lock] {
             display: initial;
         }
-        /*experemenatl css*/
         .grid-layout-container {
             background-color: white;
             @apply --layout-vertical;
         }
-        /* .grid-layout-container[show-top-shadow] {
-            border-bottom: thin solid #e3e3e3;
-        }
-        .grid-layout-container[show-bottom-shadow] {
-            border-top: thin solid #e3e3e3;
-        }
-        .grid-layout-container[show-left-shadow] {
-            border-right: thin solid #e3e3e3;
-        }
-        .grid-layout-container[show-right-shadow] {
-            border-left: thin solid #e3e3e3;
-        } */
         .grid-layout-container[show-top-shadow]:before {
             content: "";
             position: absolute;
@@ -346,7 +347,6 @@ const template = html`
         .z-index-2 {
             z-index: 2;
         }
-        /******************/
     </style>
     <style include="iron-flex iron-flex-reverse iron-flex-alignment iron-flex-factors iron-positioning"></style>
     <!--configuring slotted elements-->
@@ -355,7 +355,7 @@ const template = html`
     <!--EGI template-->
     <div id="paperMaterial" class="grid-container" elevation="1" style$="[[_calcMaterialStyle(showMarginAround)]]" fit-to-height$="[[fitToHeight]]">
         <!--Table toolbar-->
-        <div class="grid-toolbar" style$="[[_calcToolbarStyle(canDragFrom)]]">
+        <div class="grid-toolbar" show-top-shadow$="[[_toolbarShadowVisible(_showTopShadow, headerFixed)]]" style$="[[_calcToolbarStyle(canDragFrom)]]">
             <paper-progress id="progressBar" hidden$="[[!_showProgress]]"></paper-progress>
             <div class="grid-toolbar-content">
                 <slot id="top_action_selctor" name="entity-specific-action"></slot>
@@ -366,7 +366,7 @@ const template = html`
         </div>
         <div id="scrollableContainer" on-scroll="_handleScrollEvent">
             <div id="baseContainer">
-                <div id="top_left_egi" show-top-shadow$="[[_showTopShadow]]" show-left-shadow$="[[_showLeftShadow]]" class="grid-layout-container sticky-container z-index-2" style$="[[_calcTopLeftContainerStyle(headerFixed, dragAnchorFixed)]]">
+                <div id="top_left_egi" show-top-shadow$="[[_topShadowVisible(_showTopShadow, headerFixed)]]" show-left-shadow$="[[_leftShadowVisible(_showLeftShadow, dragAnchorFixed)]]" class="grid-layout-container sticky-container z-index-2" style$="[[_calcTopLeftContainerStyle(headerFixed, dragAnchorFixed)]]">
                     <div class="table-header-row"  on-touchmove="_handleTouchMove">
                         <div class="drag-anchor cell" hidden$="[[!canDragFrom]]"></div>
                         <div class="table-cell cell" hidden$="[[!_checkboxFixedAndVisible(checkboxVisible, checkboxesFixed)]]" style$="[[_calcSelectCheckBoxStyle(canDragFrom)]]" tooltip-text$="[[_selectAllTooltip(selectedAll)]]">
@@ -383,7 +383,7 @@ const template = html`
                         </template>
                     </div>
                 </div>
-                <div id="top_egi" show-top-shadow$="[[_showTopShadow]]" class="grid-layout-container sticky-container z-index-1" style$="[[_calcTopContainerStyle(headerFixed)]]">
+                <div id="top_egi" show-top-shadow$="[[_topShadowVisible(_showTopShadow, headerFixed)]]" class="grid-layout-container sticky-container z-index-1" style$="[[_calcTopContainerStyle(headerFixed)]]">
                     <div class="table-header-row"  on-touchmove="_handleTouchMove">
                         <div class="table-cell cell" hidden$="[[!_checkboxNotFixedAndVisible(checkboxVisible, checkboxesFixed)]]" style$="[[_calcSelectCheckBoxStyle(canDragFrom)]]" tooltip-text$="[[_selectAllTooltip(selectedAll)]]">
                             <paper-checkbox class="all-checkbox blue header" checked="[[selectedAll]]" semi-checked$="[[semiSelectedAll]]" on-change="_allSelectionChanged"></paper-checkbox>
@@ -399,14 +399,14 @@ const template = html`
                         </template>
                     </div>
                 </div>
-                <div id="top_right_egi" show-top-shadow$="[[_showTopShadow]]" show-right-shadow$="[[_showRightShadow]]" class="grid-layout-container sticky-container z-index-2" style$="[[_calcTopRightContainerStyle(headerFixed, secondaryActionsFixed)]]">
+                <div id="top_right_egi" show-top-shadow$="[[_topShadowVisible(_showTopShadow, headerFixed)]]" show-right-shadow$="[[_rightShadowVisible(_showRightShadow, secondaryActionsFixed)]]" class="grid-layout-container sticky-container z-index-2" style$="[[_calcTopRightContainerStyle(headerFixed, secondaryActionsFixed)]]">
                     <div class="table-header-row" hidden$="[[secondaryActionPresent]]">    
                         <div class="action-cell cell" hidden$="[[!_isSecondaryActionPresent]]">
                                 <!--Secondary actions header goes here-->
                         </div>
                     </div>
                 </div>
-                <div id="left_egi" show-left-shadow$="[[_showLeftShadow]]" class="grid-layout-container sticky-container z-index-1" style$="[[_calcLeftContainerStyle(dragAnchorFixed)]]">
+                <div id="left_egi" show-left-shadow$="[[_leftShadowVisible(_showLeftShadow, dragAnchorFixed)]]" class="grid-layout-container sticky-container z-index-1" style$="[[_calcLeftContainerStyle(dragAnchorFixed)]]">
                     <template is="dom-repeat" items="[[egiModel]]" as="egiEntity" index-as="entityIndex" on-dom-change="_scrollContainerEntitiesStamped">
                         <div class="table-data-row" selected$="[[egiEntity.selected]]" over$="[[egiEntity.over]]" on-mouseenter="_mouseRowEnter" on-mouseleave="_mouseRowLeave">
                             <div class="drag-anchor" draggable$="[[_isDraggable(egiEntity.selected)]]" hidden$="[[!canDragFrom]]">
@@ -439,7 +439,7 @@ const template = html`
                         </div>
                     </template>
                 </div>
-                <div class="grid-layout-container sticky-container z-index-1" show-right-shadow$="[[_showRightShadow]]" style$="[[_calcRightContainerStyle(secondaryActionsFixed)]]">
+                <div class="grid-layout-container sticky-container z-index-1" show-right-shadow$="[[_rightShadowVisible(_showRightShadow, secondaryActionsFixed)]]" style$="[[_calcRightContainerStyle(secondaryActionsFixed)]]">
                     <template is="dom-repeat" items="[[egiModel]]" as="egiEntity" index-as="entityIndex" on-dom-change="_scrollContainerEntitiesStamped">
                         <div class="table-data-row" selected$="[[egiEntity.selected]]" over$="[[egiEntity.over]]" on-mouseenter="_mouseRowEnter" on-mouseleave="_mouseRowLeave">
                             <div class="action-cell" hidden$="[[!_isSecondaryActionPresent]]">
@@ -448,7 +448,7 @@ const template = html`
                         </div>
                     </template>
                 </div>
-                <div class="grid-layout-container sticky-container z-index-2" show-bottom-shadow$="[[_showBottomShadow]]" show-left-shadow$="[[_showLeftShadow]]" style$="[[_calcBottomLeftContainerStyle(summaryFixed, dragAnchorFixed)]]">
+                <div class="grid-layout-container sticky-container z-index-2" show-bottom-shadow$="[[_bottomShadowVisible(_showBottomShadow, summaryFixed)]]" show-left-shadow$="[[_leftShadowVisible(_showLeftShadow, dragAnchorFixed)]]" style$="[[_calcBottomLeftContainerStyle(summaryFixed, dragAnchorFixed)]]">
                     <div class="footer">
                         <template is="dom-repeat" items="[[_totalsRows]]" as="summaryRow" index-as="summaryIndex">
                             <div class="table-footer-row">
@@ -466,7 +466,7 @@ const template = html`
                         </template>
                     </div>
                 </div>
-                <div class="grid-layout-container sticky-container z-index-1" show-bottom-shadow$="[[_showBottomShadow]]" style$="[[_calcBottomContainerStyle(summaryFixed)]]">
+                <div class="grid-layout-container sticky-container z-index-1" show-bottom-shadow$="[[_bottomShadowVisible(_showBottomShadow, summaryFixed)]]" style$="[[_calcBottomContainerStyle(summaryFixed)]]">
                     <!-- Table footer -->
                     <div class="footer">
                         <template is="dom-repeat" items="[[_totalsRows]]" as="summaryRow" index-as="summaryIndex">
@@ -484,11 +484,11 @@ const template = html`
                         </template>
                     </div>  
                 </div>
-                <div class="grid-layout-container sticky-container z-index-2" show-bottom-shadow$="[[_showBottomShadow]]" show-right-shadow$="[[_showRightShadow]]" style$="[[_calcBottomRightContainerStyle(summaryFixed, secondaryActionsFixed)]]">
+                <div class="grid-layout-container sticky-container z-index-2" show-bottom-shadow$="[[_bottomShadowVisible(_showBottomShadow, summaryFixed)]]" show-right-shadow$="[[_rightShadowVisible(_showRightShadow, secondaryActionsFixed)]]" style$="[[_calcBottomRightContainerStyle(summaryFixed, secondaryActionsFixed)]]">
                     <div class="footer">
                         <template is="dom-repeat" items="[[_totalsRows]]" as="summaryRow" index-as="summaryIndex">
                             <div class="table-footer-row">
-                                <div class="action-cell cell" hidden$="[[!_isSecondaryActionPresent]]" style$="[[_calcSecondaryActionStyle(secondaryActionsFixed)]]">
+                                <div class="action-cell cell" hidden$="[[!_isSecondaryActionPresent]]">
                                     <!--Secondary actions footer goes here-->
                                 </div>
                             </div>
@@ -720,8 +720,6 @@ Polymer({
         _showTopShadow: Boolean,
         _showLeftShadow: Boolean,
         _showRightShadow: Boolean,
-        //Need when resizing column to recalculate styles.
-        _shouldTriggerShadowRecalculation: Boolean,
         //Range selection related properties
         _rangeSelection: {
             type: Boolean,
@@ -744,45 +742,6 @@ Polymer({
         "_columnsChanged(columns, fixedColumns)",
         "_heightRelatedPropertiesChanged(visibleRowCount, rowHeight, constantHeight, fitToHeight, summaryFixed, _totalsRowCount)"
     ],
-
-    /**Experimental things */
-    _calcTopLeftContainerStyle: function (headerFixed, dragAnchorFixed) {
-        return (headerFixed ? "top: 0;" : "") + (dragAnchorFixed ? "left: 0;" : "");
-    },
-    _calcTopContainerStyle: function (headerFixed) {
-        return headerFixed ? "top: 0;" : "";
-    },
-    _calcTopRightContainerStyle: function (headerFixed, secondaryActionsFixed) {
-        return  (headerFixed ? "top: 0;" : "") + (secondaryActionsFixed ? "right: 0" : "");
-    },
-    _calcLeftContainerStyle: function (dragAnchorFixed) {
-        return dragAnchorFixed ? "left: 0;" : "";
-    },
-    _calcRightContainerStyle: function (secondaryActionsFixed) {
-        return secondaryActionsFixed ? "right: 0;" : "";
-    },
-    _calcBottomLeftContainerStyle(summaryFixed, dragAnchorFixed) {
-        return  (summaryFixed ? "bottom: 0;" : "") + (dragAnchorFixed ? "left: 0" : "");
-    },
-    _calcBottomContainerStyle: function (summaryFixed) {
-        return  summaryFixed ? "bottom: 0;" : "";
-    },
-    _calcBottomRightContainerStyle: function (summaryFixed, secondaryActionsFixed) {
-        return (summaryFixed ? "bottom: 0;" : "") + (secondaryActionsFixed ? "right: 0" : "");
-    },
-    _checkboxFixedAndVisible: function (checkboxVisible, checkboxesFixed) {
-        return checkboxVisible && checkboxesFixed
-    },
-    _checkboxNotFixedAndVisible: function (checkboxVisible, checkboxesFixed) {
-        return checkboxVisible && !checkboxesFixed
-    },
-    _primaryActionFixedAndVisible: function (primaryAction, checkboxesWithPrimaryActionsFixed) {
-        return primaryAction && checkboxesWithPrimaryActionsFixed;
-    },
-    _primaryActionNotFixedAndVisible: function (primaryAction, checkboxesWithPrimaryActionsFixed) {
-        return primaryAction && !checkboxesWithPrimaryActionsFixed;
-    },
-    /***********************/
 
     created: function () {
         this._serialiser = new TgSerialiser();
@@ -1151,14 +1110,13 @@ Polymer({
     //Event listeners
     _resizeEventListener: function() {
         this._handleScrollEvent();
-        this._triggerShadowRecalculation();
     },
 
     _handleScrollEvent: function () {
         this._showLeftShadow = this.$.scrollableContainer.scrollLeft > 0;
-        this._showRightShadow = (this.$.scrollableContainer.clientWidth + this.$.scrollableContainer.scrollLeft) < this.$.scrollableContainer.scrollWidth;
+        this._showRightShadow = Math.ceil(this.$.scrollableContainer.clientWidth + this.$.scrollableContainer.scrollLeft) < this.$.scrollableContainer.scrollWidth;
         this._showTopShadow = this.$.scrollableContainer.scrollTop > 0;
-        this._showBottomShadow = (this.$.scrollableContainer.clientHeight + this.$.scrollableContainer.scrollTop) < this.$.scrollableContainer.scrollHeight;
+        this._showBottomShadow = Math.ceil(this.$.scrollableContainer.clientHeight + this.$.scrollableContainer.scrollTop) < this.$.scrollableContainer.scrollHeight;
     },
 
     _handleTouchMove: function (e) {
@@ -1288,7 +1246,7 @@ Polymer({
             otherColumnWidth: calculateColumnWidthExcept(this, e.currentTarget.hasAttribute("fixed") ? e.model.index : this.fixedColumns.length + e.model.index, columnElements, this.columns.length + this.fixedColumns.length, () => true, () => true, () => true, () => true),
             otherFixedColumnWidth :  calculateColumnWidthExcept(this, e.currentTarget.hasAttribute("fixed") ? e.model.index : -1, columnElements, this.numOfFixedCols, () => this.dragAnchorFixed, () => this.checkboxesFixed, () => this.checkboxesWithPrimaryActionsFixed, () => this.secondaryActionsFixed),
             widthCorrection: e.currentTarget.offsetWidth - e.currentTarget.firstElementChild.offsetWidth,
-            hasAnyFlex: this.columns.find((column, index) => index !== e.model.index && column.growFactor !== 0)
+            hasAnyFlex: this.columns.some((column, index) => index !== e.model.index && column.growFactor !== 0)
         };
     },
 
@@ -1376,10 +1334,6 @@ Polymer({
         }
     },
 
-    _triggerShadowRecalculation: function () {
-        this._shouldTriggerShadowRecalculation = !this._shouldTriggerShadowRecalculation;
-    },
-
     _updateFixedTotalRowWidth: function (colIndex, value) {
         if (this._totalsRows) {
             this._totalsRows.forEach((totalRow, totalIndex) => {
@@ -1462,23 +1416,52 @@ Polymer({
         return canDragFrom ? "padding-left: 8px;" : "";
     },
 
-    _calcHeaderStyle: function (headerFixed, _showTopShadow) {
-        let headerStyle = headerFixed ? "" : "";
-        if (_showTopShadow) {
-            headerStyle += "box-shadow: 0px 1px 6px -1px rgba(0,0,0,0.7);";
-        }
-        return headerStyle;
+    _calcTopLeftContainerStyle: function (headerFixed, dragAnchorFixed) {
+        return (headerFixed ? "top: 0;" : "") + (dragAnchorFixed ? "left: 0;" : "");
     },
 
-    _calcDragBoxStyle: function (dragAnchorFixed, headerFixed) {
-        let style =  dragAnchorFixed || headerFixed ? "position: sticky; position: -webkit-sticky; z-index: 1; " : "";
-        style += dragAnchorFixed ? "left:0;" : "";
-        style += headerFixed ? "top: 0;" : "";
-        return style;
+    _calcTopContainerStyle: function (headerFixed) {
+        return headerFixed ? "top: 0;" : "";
     },
 
-    _calcDragAnchorWidth: function (canDragFrom) {
-        return canDragFrom ? this.getComputedStyleValue('--egi-drag-anchor-width').trim() || "1.5rem" : "0px";
+    _calcTopRightContainerStyle: function (headerFixed, secondaryActionsFixed) {
+        return  (headerFixed ? "top: 0;" : "") + (secondaryActionsFixed ? "right: 0" : "");
+    },
+
+    _calcLeftContainerStyle: function (dragAnchorFixed) {
+        return dragAnchorFixed ? "left: 0;" : "";
+    },
+
+    _calcRightContainerStyle: function (secondaryActionsFixed) {
+        return secondaryActionsFixed ? "right: 0;" : "";
+    },
+
+    _calcBottomLeftContainerStyle(summaryFixed, dragAnchorFixed) {
+        return  (summaryFixed ? "bottom: 0;" : "") + (dragAnchorFixed ? "left: 0" : "");
+    },
+
+    _calcBottomContainerStyle: function (summaryFixed) {
+        return  summaryFixed ? "bottom: 0;" : "";
+    },
+
+    _calcBottomRightContainerStyle: function (summaryFixed, secondaryActionsFixed) {
+        return (summaryFixed ? "bottom: 0;" : "") + (secondaryActionsFixed ? "right: 0" : "");
+    },
+
+    _checkboxFixedAndVisible: function (checkboxVisible, checkboxesFixed) {
+        return checkboxVisible && checkboxesFixed
+    },
+
+    _checkboxNotFixedAndVisible: function (checkboxVisible, checkboxesFixed) {
+        return checkboxVisible && !checkboxesFixed
+    },
+
+    _primaryActionFixedAndVisible: function (primaryAction, checkboxesWithPrimaryActionsFixed) {
+        return primaryAction && checkboxesWithPrimaryActionsFixed;
+    },
+
+    _primaryActionNotFixedAndVisible: function (primaryAction, checkboxesWithPrimaryActionsFixed) {
+        return primaryAction && !checkboxesWithPrimaryActionsFixed;
     },
 
     _calcSelectCheckBoxStyle: function (canDragFrom) {
@@ -1486,56 +1469,24 @@ Polymer({
         return "width:18px; padding-left:" + (canDragFrom ? "0;" : cellPadding);
     },
 
-    _calcSelectionCheckboxWidth: function (canDragFrom, checkboxVisible) {
-        if (!checkboxVisible) {
-            return this._calcDragAnchorWidth(canDragFrom);
-        }
-        const cellPadding = this.getComputedStyleValue('--egi-cell-padding').trim() || "0.6rem";
-        return this._calcDragAnchorWidth(canDragFrom) + " + 18px + " + cellPadding + (canDragFrom ? "" : " * 2");
+    _toolbarShadowVisible: function (_showTopShadow, headerFixed) {
+        return _showTopShadow && !headerFixed;
     },
 
-    _calcPrimaryActionStyle: function (canDragFrom, checkboxVisible, checkboxesWithPrimaryActionsFixed, headerFixed) {
-        let style = checkboxesWithPrimaryActionsFixed || headerFixed ? "position: sticky; position: -webkit-sticky; z-index: 1;" : "";
-        if (checkboxesWithPrimaryActionsFixed) {
-            let calcStyle = "calc(" + this._calcSelectionCheckboxWidth(canDragFrom, checkboxVisible) + ")";
-            style += "left: " + calcStyle + ";"; 
-        } 
-        if (headerFixed) {
-            style += "top:0;";
-        }
-        return style;
+    _topShadowVisible: function (_showTopShadow, headerFixed) {
+        return _showTopShadow && headerFixed;
     },
 
-    _calcPrimaryActionWidth: function(canDragFrom, checkboxVisible, primaryAction) {
-        if (!primaryAction) {
-            return this._calcSelectionCheckboxWidth(canDragFrom, checkboxVisible);
-        }
-        const actionWidth = this.getComputedStyleValue('--egi-action-cell-width').trim() || "20px";
-        const actionPadding = this.getComputedStyleValue('--egi-action-cell-padding').trim() || "0.3rem * 2";
-        return this._calcSelectionCheckboxWidth(canDragFrom, checkboxVisible) + " + " + actionWidth + " + " + actionPadding;
+    _bottomShadowVisible: function (_showBottomShadow, summaryFixed) {
+        return _showBottomShadow && summaryFixed;
     },
 
-    _calcFixedColumnContainerStyle: function (canDragFrom, checkboxVisible, primaryAction, numOfFixedCols, headerFixed) {
-        let style = numOfFixedCols > 0 || headerFixed ? "position: sticky; position: -webkit-sticky; z-index: 1; " : "";
-        if (numOfFixedCols > 0) {
-            let calcStyle = "calc(" + this._calcPrimaryActionWidth(canDragFrom, checkboxVisible, primaryAction) + ")";
-            style += "left: " + calcStyle + ";";
-        }
-        if (headerFixed) {
-            style += "top:0;";
-        }
-        return style;
+    _leftShadowVisible: function (_showLeftShadow, dragAnchorFixed) {
+        return _showLeftShadow && dragAnchorFixed;
     },
 
-    _calcFixedColumnWidth: function (canDragFrom, checkboxVisible, primaryAction, numOfFixedCols) {
-        const columnsWithWidth = this.fixedColumns.filter(column => column.width > 0);
-        let columnStyleWidth = "";
-        if (numOfFixedCols > 0 && columnsWithWidth.length > 0) {
-            const cellPadding = this.getComputedStyleValue('--egi-cell-padding').trim() || "0.6rem";
-            const columnsWidth = columnsWithWidth.reduce((acc, curr) => acc + curr.width, 0);
-            columnStyleWidth = columnsWidth + "px + 2 * " + columnsWithWidth.length + " * " + cellPadding;
-        }
-        return this._calcPrimaryActionWidth(canDragFrom, checkboxVisible, primaryAction) + (columnStyleWidth ? " + " + columnStyleWidth : "");
+    _rightShadowVisible: function (_showRightShadow, secondaryActionsFixed) {
+        return _showRightShadow && secondaryActionsFixed;
     },
 
     _isDraggable: function (entitySelected) {
@@ -1560,59 +1511,6 @@ Polymer({
 
     _calcColumnStyle: function (item, itemWidth, columnGrowFactor, fixed) {
         return this._calcColumnHeaderStyle(item, itemWidth, columnGrowFactor, fixed);
-    },
-
-    _calcSecondaryActionStyle: function (secondaryActionsFixed) {
-        return secondaryActionsFixed ? "position: sticky; position: -webkit-sticky; z-index: 1; right: 0;" : "";
-    },
-
-    _calcFooterStyle: function (summaryFixed, fitToHeight, _showBottomShadow) {
-        let style = summaryFixed ? "position: sticky; position: -webkit-sticky; z-index: 1; bottom: 0;" : "";
-        style += (fitToHeight ? "margin-top:auto;" : "");
-        if (_showBottomShadow) {
-            style += "box-shadow: 0px -1px 6px -1px rgba(0,0,0,0.7);";
-        }
-        return style;
-    },
-
-    _calcLeftShadowStyle: function (canDragFrom, dragAnchorFixed, checkboxVisible, checkboxesFixed, primaryAction, checkboxesWithPrimaryActionsFixed, numOfFixedCols, _showLeftShadow, _shouldTriggerShadowRecalculation) {
-        let shadowStyle = "left:0;bottom:0;width:calc(@columnsWidth);height:@egiHeight;";
-        if (numOfFixedCols > 0) {
-            shadowStyle = shadowStyle.replace("@columnsWidth", this._calcFixedColumnWidth(canDragFrom, checkboxVisible, primaryAction, numOfFixedCols));
-        } else if (checkboxesWithPrimaryActionsFixed) {
-            shadowStyle = shadowStyle.replace("@columnsWidth", this._calcPrimaryActionWidth(canDragFrom, checkboxVisible, primaryAction));
-        } else if (checkboxesFixed) {
-            shadowStyle = shadowStyle.replace("@columnsWidth", this._calcSelectionCheckboxWidth(canDragFrom, checkboxVisible));
-        } else if (dragAnchorFixed) {
-            shadowStyle = shadowStyle.replace("@columnsWidth", this._calcDragAnchorWidth(canDragFrom));
-        } else {
-            shadowStyle = shadowStyle.replace("@columnsWidth", "0px");
-        }
-        shadowStyle = shadowStyle.replace("@egiHeight", this.$.scrollableContainer.scrollHeight + "px");
-        if (_showLeftShadow) {
-            shadowStyle += "box-shadow: 6px 0px 6px -5px rgba(0,0,0,0.7);";
-        }
-        return shadowStyle;
-    },
-
-    _calcRightShadowStyle: function (_isSecondaryActionPresent, secondaryActionsFixed, _showRightShadow, _shouldTriggerShadowRecalculation) {
-        let shadowStyle = "right:0;bottom:0;width:calc(@actionWidth);height:calc(@egiHeight);";
-        if (_isSecondaryActionPresent && secondaryActionsFixed) {
-            const actionWidth = this.getComputedStyleValue('--egi-action-cell-width').trim() || "20px";
-            const actionPadding = this.getComputedStyleValue('--egi-action-cell-padding').trim() || "0.3rem * 2";
-            shadowStyle = shadowStyle.replace("@actionWidth", actionWidth + " + " + actionPadding);
-        } else {
-            shadowStyle = shadowStyle.replace("@actionWidth", "0px");
-        }
-        shadowStyle = shadowStyle.replace("@egiHeight", this.$.scrollableContainer.scrollHeight + "px");
-        if (_showRightShadow) {
-            shadowStyle += "box-shadow: -6px 0px 6px -5px rgba(0,0,0,0.7);";
-        }
-        return shadowStyle;
-    },
-
-    _calcShadows: function (headerFixed, _showTopShadow) {
-        return "box-shadow: inset 0px " + (!headerFixed && _showTopShadow? "6px " : "0px") + " 6px " + (!headerFixed && _showTopShadow? "-5px " : "-200px ") + " rgba(0,0,0,0.7);position:absolute;top:0;left:0;right:0;height:5px;";
     },
 
     // Observers
