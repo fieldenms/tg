@@ -15,6 +15,7 @@ import javax.crypto.SecretKeyFactory;
 import javax.crypto.spec.PBEKeySpec;
 import javax.crypto.spec.SecretKeySpec;
 
+import org.apache.log4j.Logger;
 import org.joda.time.DateTime;
 import org.joda.time.Period;
 import org.joda.time.format.PeriodFormatter;
@@ -33,6 +34,7 @@ import org.joda.time.format.PeriodFormatterBuilder;
  */
 public final class SessionIdentifierGenerator {
     private static final String HMAC_SHA256_ALGORITHM = "HmacSHA256";
+    private static final Logger LOGGER = Logger.getLogger(SessionIdentifierGenerator.class);
     private SecureRandom random = new SecureRandom();
 
     /**
@@ -77,7 +79,7 @@ public final class SessionIdentifierGenerator {
     }
 
     /**
-     * Calculates a hash code for a given data using algorithm HMAC-SHA1 with the provided key.
+     * Calculates a hash code for a given data using algorithm HMAC-SHA256 with the provided key.
      *
      * @param data
      * @param key
@@ -138,9 +140,10 @@ public final class SessionIdentifierGenerator {
             
             // base64-encode the hmac
             result = HexString.bufferToHex(hashedPassword);
-
-        } catch (final Exception e) {
-            throw new SignatureException("Failed to generate HMAC : " + e.getMessage());
+        } catch (final Exception ex) {
+            final String msg = "Failed to generate HMAC.";
+            LOGGER.error(msg, ex);
+            throw new SignatureException(msg, ex);
         }
         return result;
     }
