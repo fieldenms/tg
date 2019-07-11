@@ -49,7 +49,7 @@ export const GisComponent = function (mapDiv, progressDiv, progressBarDiv, tgMap
         // Please note that, centre running, refreshing, navigating between pages provides automatic fittingToBounds.
         self._markerCluster.setShouldFitToBounds(true);
     };
-    self.retrivedEntitiesHandler = tgMap.retrivedEntitiesHandler;
+    self.tgMap = tgMap;
 
     tgMap.columnPropertiesMapperHandler = function (newColumnPropertiesMapper) {
         self.columnPropertiesMapper = newColumnPropertiesMapper;
@@ -65,6 +65,30 @@ export const GisComponent = function (mapDiv, progressDiv, progressBarDiv, tgMap
         editable: true,
         doubleClickZoom: false
     }).setView(self.defaultCoordinates(), self.defaultZoomLevel()); // Auckland Airport has been centered (-37.003881, 174.783012)
+
+    // The following logic uses EdgeBuffer plugin to preload tiles (4) outside visible area to improve panning apperance during animation. This, however, sligthly slows down performance.
+    // L.EdgeBuffer = {
+    //     previousMethods: {
+    //       getTiledPixelBounds: L.GridLayer.prototype._getTiledPixelBounds
+    //     }
+    // };
+    // L.GridLayer.include({
+    //     _getTiledPixelBounds : function(center, zoom, tileZoom) {
+    //       var pixelBounds = L.EdgeBuffer.previousMethods.getTiledPixelBounds.call(this, center, zoom, tileZoom);
+    //       // Default is to buffer one tiles beyond the pixel bounds (edgeBufferTiles = 1).
+    //       var edgeBufferTiles = 4;
+    //       if ((this.options.edgeBufferTiles !== undefined) && (this.options.edgeBufferTiles !== null)) {
+    //         edgeBufferTiles = this.options.edgeBufferTiles;
+    //       }
+    //       if (edgeBufferTiles > 0) {
+    //         var pixelEdgeBuffer = L.GridLayer.prototype.getTileSize.call(this).multiplyBy(edgeBufferTiles);
+    //         pixelBounds = new L.Bounds(pixelBounds.min.subtract(pixelEdgeBuffer), pixelBounds.max.add(pixelEdgeBuffer));
+    //       }
+    //       return pixelBounds;
+    //     }
+    // });
+    // The following logic uses internal leaflet's map options to avoid 'clipping' of polylines when panning during animation.
+    // self._map.getRenderer(self._map).options.padding = 100;
 
     // create a factory for markers
     self._markerFactory = self.createMarkerFactory();

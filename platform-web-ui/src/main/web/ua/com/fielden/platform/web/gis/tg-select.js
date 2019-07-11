@@ -121,7 +121,7 @@ Select.prototype._silentlyDeselect = function (layerId) {
 Select.prototype._silentlySelect = function (layerId) {
     const layer = this._getLayerById(layerId);
     if (layer instanceof this._markerFactory.ArrowMarker || layer instanceof this._markerFactory.CircleMarker) {
-        this._map.panTo(layer.getLatLng()); // centering of the marker (fitToBounds is not needed)
+        this._map.panTo(layer.getLatLng(), { animate: true, duration: 2.25 }); // centering of the marker (fitToBounds is not needed)
         layer.setSelected(true);
     } else if (layer instanceof L.Polygon) {
         this._map.fitBounds(layer.getBounds());
