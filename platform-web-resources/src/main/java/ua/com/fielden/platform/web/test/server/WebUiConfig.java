@@ -3,6 +3,7 @@ package ua.com.fielden.platform.web.test.server;
 import static java.lang.String.format;
 import static java.util.Optional.empty;
 import static java.util.Optional.of;
+import static java.util.Optional.ofNullable;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchOnly;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getEntityTitleAndDesc;
@@ -32,6 +33,7 @@ import java.math.BigDecimal;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
+import java.util.Properties;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
@@ -187,14 +189,22 @@ public class WebUiConfig extends AbstractWebUiConfig {
     private final String path;
     private final int port;
 
-    public WebUiConfig(final String domainName, final int port, final Workflows workflow, final String path) {
-        super("TG Test and Demo Application", workflow, new String[0]);
-        if (StringUtils.isEmpty(domainName) || StringUtils.isEmpty(path)) {
+    private final String envTopPanelColour;
+    private final String envWatermarkText;
+    private final String envWatermarkCss;
+
+    public WebUiConfig(final Properties props) {
+        super("TG Test and Demo Application", Workflows.valueOf(props.getProperty("workflow")), new String[0]);
+        if (StringUtils.isEmpty(props.getProperty("web.domain")) || StringUtils.isEmpty(props.getProperty("web.path"))) {
             throw new IllegalArgumentException("Both the domain name and application binding path should be specified.");
         }
-        this.domainName = domainName;
-        this.port = port;
-        this.path = path;
+        this.domainName = props.getProperty("web.domain");
+        this.path = props.getProperty("web.path");
+        this.port = Integer.valueOf(props.getProperty("port"));
+
+        this.envTopPanelColour = props.getProperty("env.topPanelColour");
+        this.envWatermarkText = props.getProperty("env.watermarkText");
+        this.envWatermarkCss = props.getProperty("env.watermarkCss");
     }
 
     @Override
@@ -238,7 +248,10 @@ public class WebUiConfig extends AbstractWebUiConfig {
     @Override
     public void initConfiguration() {
         super.initConfiguration();
-        configApp().setTimeFormat("HH:mm").setTimeWithMillisFormat("HH:mm:ss.SSS");
+        configApp()
+            .setTimeFormat("HH:mm")
+            .setTimeWithMillisFormat("HH:mm:ss.SSS")
+            .withTopPanelStyle(ofNullable(envTopPanelColour), ofNullable(envWatermarkText), ofNullable(envWatermarkCss));
         // Add entity centres.
 
         TgMessageWebUiConfig.register(injector(), configApp());
