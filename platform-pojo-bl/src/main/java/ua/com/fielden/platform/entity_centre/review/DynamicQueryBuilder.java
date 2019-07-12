@@ -811,7 +811,7 @@ public class DynamicQueryBuilder {
             // indicates whether nulls should be considered in a query
             final boolean considerNulls = negate ^ orNull;
             final IStandAloneConditionOperand<ET> whereAtGroup2 = considerNulls ? sc.isNull().or() : sc.isNotNull().and();
-            final ConditionModel subModel = buildAtomicCondition(property);
+            final ConditionModel subModel = buildAtomicCondition(property, property.getConditionBuildingName());
             return negate ? whereAtGroup2.negatedCondition(subModel).model() : whereAtGroup2.condition(subModel).model();
         }
     }
@@ -826,8 +826,7 @@ public class DynamicQueryBuilder {
      * @return
      */
     @SuppressWarnings("unchecked")
-    private static <ET extends AbstractEntity<?>> ConditionModel buildAtomicCondition(final QueryProperty property) {
-        final String propertyName = property.getConditionBuildingName();
+    public static <ET extends AbstractEntity<?>> ConditionModel buildAtomicCondition(final QueryProperty property, final String propertyName) {
 
         if (isRangeType(property.getType())) {
             if (isDate(property.getType()) && property.getDatePrefix() != null && property.getDateMnemonic() != null) {
