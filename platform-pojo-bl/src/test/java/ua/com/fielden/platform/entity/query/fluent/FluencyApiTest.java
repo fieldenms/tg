@@ -43,7 +43,7 @@ public class FluencyApiTest extends TestCase {
 			"allOfIParams", "allOfExpressions" };
 
 	private static final String[] exists = new String[] { "exists", "notExists", "existsAnyOf", "notExistsAnyOf",
-			"existsAllOf", "notExistsAllOf" };
+			"existsAllOf", "notExistsAllOf", "critCondition" };
 
 	private static final String model = "model";
 	private static final String modelAsAggregate = "modelAsAggregate";

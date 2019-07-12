@@ -3,13 +3,13 @@ package ua.com.fielden.platform.entity.query.fluent;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IComparisonOperand;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IComparisonOperator;
-import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IExistenceOperator;
+import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ISingleConditionOperator;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ILogicalOperator;
 import ua.com.fielden.platform.entity.query.model.QueryModel;
 
 abstract class ConditionalOperand<T1 extends IComparisonOperator<T2, ET>, T2 extends ILogicalOperator<?>, ET extends AbstractEntity<?>> //
 		extends ExpConditionalOperand<T1, ET> //
-		implements IComparisonOperand<T1, ET>, IExistenceOperator<T2> {
+		implements IComparisonOperand<T1, ET>, ISingleConditionOperator<T2> {
 
     protected ConditionalOperand(final Tokens tokens) {
         super(tokens);
@@ -45,5 +45,10 @@ abstract class ConditionalOperand<T1 extends IComparisonOperator<T2, ET>, T2 ext
 	@Override
 	public T2 notExistsAllOf(final QueryModel... subQueries) {
 		return nextForConditionalOperand(getTokens().existsAllOf(true, subQueries));
+	}
+	
+	@Override
+	public T2 critCondition(final String propName, final String critPropName) {
+	    return nextForConditionalOperand(getTokens().critCondition(propName, critPropName));
 	}
 }

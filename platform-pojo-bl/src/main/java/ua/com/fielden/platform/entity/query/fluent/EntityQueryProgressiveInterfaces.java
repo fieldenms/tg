@@ -299,7 +299,7 @@ public interface EntityQueryProgressiveInterfaces {
 															 */ {
 	}
 
-	interface IExistenceOperator<T extends ILogicalOperator<?>> {
+	interface ISingleConditionOperator<T extends ILogicalOperator<?>> {
 		T exists(QueryModel subQuery);
 
 		T notExists(QueryModel subQuery);
@@ -311,6 +311,8 @@ public interface EntityQueryProgressiveInterfaces {
 		T existsAllOf(QueryModel... subQueries);
 
 		T notExistsAllOf(QueryModel... subQueries);
+		
+		T critCondition(final String propName, final String critPropName);
 	}
 
 	interface IQuantifiedOperand<T, ET extends AbstractEntity<?>> //
@@ -585,7 +587,7 @@ public interface EntityQueryProgressiveInterfaces {
 
 	interface IWhereWithoutNesting<T1 extends IComparisonOperator<T2, ET>, T2 extends ILogicalOperator<?>, ET extends AbstractEntity<?>> //
 			extends IComparisonOperand<T1, ET>, //
-			/*    */IExistenceOperator<T2> {
+			/*    */ISingleConditionOperator<T2> {
 		T2 condition(ConditionModel condition);
 
 		T2 negatedCondition(ConditionModel condition);
@@ -612,7 +614,7 @@ public interface EntityQueryProgressiveInterfaces {
 
 	interface IJoinWhere3<ET extends AbstractEntity<?>> //
 			extends IComparisonOperand<IJoinComparisonOperator3<ET>, ET>, //
-			/*    */IExistenceOperator<IJoinCompoundCondition3<ET>> {
+			/*    */ISingleConditionOperator<IJoinCompoundCondition3<ET>> {
 	}
 
 	// -------------------------------------------
@@ -704,7 +706,7 @@ public interface EntityQueryProgressiveInterfaces {
 
 	interface IWhere3<ET extends AbstractEntity<?>> //
 			extends IComparisonOperand<IComparisonOperator3<ET>, ET>, //
-			/*    */IExistenceOperator<ICompoundCondition3<ET>> {
+			/*    */ISingleConditionOperator<ICompoundCondition3<ET>> {
 	}
 
 	////////////////////////////////////////////////////////// ---FUNCTION
@@ -730,7 +732,7 @@ public interface EntityQueryProgressiveInterfaces {
 
 	interface IFunctionWhere3<T, ET extends AbstractEntity<?>> //
 			extends IComparisonOperand<IFunctionComparisonOperator3<T, ET>, ET>, //
-			/*    */IExistenceOperator<IFunctionCompoundCondition3<T, ET>> {
+			/*    */ISingleConditionOperator<IFunctionCompoundCondition3<T, ET>> {
 	}
 
 	// -------------------------------------------

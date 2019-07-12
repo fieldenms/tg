@@ -18,6 +18,7 @@ import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.AN
 import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.ANY_OPERATOR;
 import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.COMPARISON_OPERATOR;
 import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.CONDITION;
+import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.CRIT_CONDITION_OPERATOR;
 import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.EQUERY_TOKENS;
 import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.EXISTS_OPERATOR;
 import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.EXPR;
@@ -65,7 +66,10 @@ import ua.com.fielden.platform.entity.query.generation.elements.NullTest;
 import ua.com.fielden.platform.entity.query.generation.elements.QuantifiedTest;
 import ua.com.fielden.platform.entity.query.generation.elements.Quantifier;
 import ua.com.fielden.platform.entity.query.generation.elements.SetTest;
+import ua.com.fielden.platform.entity.query.model.ConditionModel;
 import ua.com.fielden.platform.entity.query.model.QueryModel;
+import ua.com.fielden.platform.entity_centre.review.DynamicQueryBuilder;
+import ua.com.fielden.platform.entity_centre.review.DynamicQueryBuilder.QueryProperty;
 import ua.com.fielden.platform.utils.Pair;
 
 public class ConditionBuilder extends AbstractTokensBuilder {
@@ -84,6 +88,10 @@ public class ConditionBuilder extends AbstractTokensBuilder {
 
     protected ConditionBuilder(final AbstractTokensBuilder parent, final EntQueryGenerator queryBuilder, final Map<String, Object> paramValues) {
         super(parent, queryBuilder, paramValues);
+    }
+
+    private boolean isCritConditionTest() {
+        return getSize() == 1 && CRIT_CONDITION_OPERATOR == firstCat();
     }
 
     private boolean isPlainExistenceTest() {
@@ -160,7 +168,7 @@ public class ConditionBuilder extends AbstractTokensBuilder {
 
     @Override
     public boolean isClosing() {
-        return isPlainExistenceTest() || isMultipleExistenceTest() || isGroupOfConditions() || //
+        return isPlainExistenceTest() || isMultipleExistenceTest() || isGroupOfConditions() || isCritConditionTest() || //
                 isPlainNullTest() || isMultipleNullTest() || //
                 isPlainComparisonTest() || isMultipleVsSingleComparisonTest() || isMultipleVsMultipleComparisonTest() || isSingleVsMultiplePlainComparisonTest() || //
                 isPlainLikeTest() || isMultipleVsSingleLikeTest() || isMultipleVsMultipleLikeTest() || isSingleVsMultipleLikeTest() || //
@@ -175,6 +183,8 @@ public class ConditionBuilder extends AbstractTokensBuilder {
             return getMultipleNullTest();
         } else if (isGroupOfConditions()) {
             return getTokens().get(0).getValue();
+        } else if (isCritConditionTest()) {
+            return getCritConditionTest();
         } else if (isPlainExistenceTest()) {
             return getPlainExistenceTest();
         } else if (isMultipleExistenceTest()) {
@@ -364,6 +374,13 @@ public class ConditionBuilder extends AbstractTokensBuilder {
 
     private ExistenceTest getPlainExistenceTest() {
         return new ExistenceTest((Boolean) firstValue(), getQueryBuilder().generateEntQueryAsSubquery((QueryModel) secondValue(), getParamValues()));
+    }
+
+    private GroupedConditions getCritConditionTest() {
+        final Pair<String, String> props = (Pair<String, String>) firstValue();
+        final QueryProperty qp = (QueryProperty) getParamValue(props.getValue());
+        final ConditionModel cm = DynamicQueryBuilder.buildAtomicCondition(qp, props.getKey());
+        return new StandAloneConditionBuilder(getQueryBuilder(), getParamValues(), cm, false).getModel();
     }
 
     private SetTest getPlainSetTest() {
