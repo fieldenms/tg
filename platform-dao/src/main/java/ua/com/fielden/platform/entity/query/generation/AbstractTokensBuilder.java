@@ -154,8 +154,7 @@ public abstract class AbstractTokensBuilder implements ITokensBuilder {
                 setChild(new GroupedConditionsBuilder(this, queryBuilder, getParamValues(), (Boolean) value));
                 break;
             case CRIT_COND_OPERATOR: //
-                final ConditionModel cm = produceConditionModelForCritConditionOperator();
-                tokens.add(new Pair<TokenCategory, Object>(GROUPED_CONDITIONS, new StandAloneConditionBuilder(queryBuilder, getParamValues(), cm, false).getModel()));
+                tokens.add(new Pair<TokenCategory, Object>(GROUPED_CONDITIONS, new StandAloneConditionBuilder(queryBuilder, getParamValues(), critConditionOperatorModel(), false).getModel()));
                 break;
             case COND_TOKENS: //
                 tokens.add(new Pair<TokenCategory, Object>(GROUPED_CONDITIONS, new StandAloneConditionBuilder(queryBuilder, getParamValues(), (ConditionModel) value, false).getModel()));
@@ -177,7 +176,7 @@ public abstract class AbstractTokensBuilder implements ITokensBuilder {
         }
     }
     
-    private ConditionModel produceConditionModelForCritConditionOperator() {
+    private ConditionModel critConditionOperatorModel() {
         final Pair<String, String> props = (Pair<String, String>) firstValue();
         final QueryProperty qp = (QueryProperty) getParamValue(props.getValue());
         if (qp == null) {
