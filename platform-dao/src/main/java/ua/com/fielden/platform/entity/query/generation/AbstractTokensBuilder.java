@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.entity.query.generation;
 
+import static java.lang.String.format;
 import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.EQUERY_TOKENS;
 import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.EXPR_TOKENS;
 import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.GROUPED_CONDITIONS;
@@ -8,6 +9,7 @@ import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.IV
 import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.PARAM;
 import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.PROP;
 import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.VAL;
+import static ua.com.fielden.platform.entity_centre.review.DynamicQueryBuilder.buildAtomicCondition;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -16,6 +18,7 @@ import java.util.List;
 import java.util.Map;
 
 import ua.com.fielden.platform.entity.query.DbVersion;
+import ua.com.fielden.platform.entity.query.exceptions.EqlException;
 import ua.com.fielden.platform.entity.query.fluent.enums.Functions;
 import ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory;
 import ua.com.fielden.platform.entity.query.generation.elements.CountAll;
@@ -29,6 +32,8 @@ import ua.com.fielden.platform.entity.query.generation.elements.QueryBasedSet;
 import ua.com.fielden.platform.entity.query.model.ConditionModel;
 import ua.com.fielden.platform.entity.query.model.ExpressionModel;
 import ua.com.fielden.platform.entity.query.model.QueryModel;
+import ua.com.fielden.platform.entity_centre.review.DynamicQueryBuilder;
+import ua.com.fielden.platform.entity_centre.review.DynamicQueryBuilder.QueryProperty;
 import ua.com.fielden.platform.utils.Pair;
 
 /**
@@ -148,6 +153,10 @@ public abstract class AbstractTokensBuilder implements ITokensBuilder {
             case BEGIN_COND: //eats token
                 setChild(new GroupedConditionsBuilder(this, queryBuilder, getParamValues(), (Boolean) value));
                 break;
+            case CRIT_COND_OPERATOR: //
+                final ConditionModel cm = produceConditionModelForCritConditionOperator();
+                tokens.add(new Pair<TokenCategory, Object>(GROUPED_CONDITIONS, new StandAloneConditionBuilder(queryBuilder, getParamValues(), cm, false).getModel()));
+                break;
             case COND_TOKENS: //
                 tokens.add(new Pair<TokenCategory, Object>(GROUPED_CONDITIONS, new StandAloneConditionBuilder(queryBuilder, getParamValues(), (ConditionModel) value, false).getModel()));
                 break;
@@ -166,6 +175,15 @@ public abstract class AbstractTokensBuilder implements ITokensBuilder {
                 parent.finaliseChild();
             }
         }
+    }
+    
+    private ConditionModel produceConditionModelForCritConditionOperator() {
+        final Pair<String, String> props = (Pair<String, String>) firstValue();
+        final QueryProperty qp = (QueryProperty) getParamValue(props.getValue());
+        if (qp == null) {
+            throw new EqlException(format("Parameters map doesn't contain QueryProperty value for critOnly property [%s].", props.getValue()));
+        }
+        return buildAtomicCondition(qp, props.getKey());
     }
 
     @Override

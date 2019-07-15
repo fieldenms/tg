@@ -78,7 +78,7 @@ import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.EN
 import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.ENTITY_TYPE_AS_QRY_SOURCE;
 import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.EQUERY_TOKENS;
 import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.EXISTS_OPERATOR;
-import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.CRIT_CONDITION_OPERATOR;
+import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.CRIT_COND_OPERATOR;
 import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.EXPR_TOKENS;
 import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.EXT_PROP;
 import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.FUNCTION;
@@ -219,7 +219,7 @@ final class Tokens {
     }
 
     public Tokens critCondition(final String propName, final String critPropName) {
-        return add(CRIT_CONDITION_OPERATOR, new Pair<String, String>(propName, critPropName));
+        return add(CRIT_COND_OPERATOR, new Pair<String, String>(propName, critPropName));
     }
 
     public Tokens isNull(final boolean negated) {
