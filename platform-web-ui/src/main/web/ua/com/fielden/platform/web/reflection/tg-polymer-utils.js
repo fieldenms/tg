@@ -1,3 +1,5 @@
+import '/resources/ua-parser-js/ua-parser.min.js';
+
 /**
  * Generates the unique identifier.
  */
@@ -203,7 +205,8 @@ export class EntityStub {
  * TABLET is activated commonly when landscape orientation is used for mobile device.
  */
 export const isMobileApp = function () {
-    return window.navigator.userAgent.includes('Mobi'); // consistent with AbstractWebResource.calculateDeviceProfile method
+    const parser = new UAParser().getResult();
+    return parser.device.type === 'mobile' // consistent with AbstractWebResource.calculateDeviceProfile method
 };
 
 /**
@@ -211,7 +214,8 @@ export const isMobileApp = function () {
  * See https://deviceatlas.com/blog/mobile-browser-user-agent-strings for more details.
  */
 export const isIPhoneOs = function () {
-    return window.navigator.userAgent.includes('iPhone OS');
+    const parser = new UAParser().getResult();
+    return parser.device.type === 'mobile' && parser.os.name === 'iOS';
 };
 
 export const doWhenDimentionsAttainedAnd = function (self, conditionFun, doFun, time) {
