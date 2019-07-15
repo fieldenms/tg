@@ -38,7 +38,7 @@ const template = html`
             height: 44px;
             font-size: 18px;
             color: white;
-            background-color: var(--paper-light-blue-700);
+            background-color: var(--tg-main-pannel-color, var(--paper-light-blue-700));
             @apply --layout-horizontal;
             @apply --layout-center;
             @apply --layout-justified;
@@ -82,6 +82,9 @@ const template = html`
         .tile-toolbar[action-disabled] ::slotted(tg-ui-action) {
             pointer-events: none;
         }
+        #watermark {
+            @apply --tg-watermark-style;
+        }        
         .truncate {
             white-space: nowrap;
             overflow: hidden;
@@ -91,6 +94,8 @@ const template = html`
     <custom-style>
         <style include="iron-flex iron-flex-reverse iron-flex-alignment iron-flex-factors iron-positioning"></style>
     </custom-style>
+
+    <div id="watermark" hidden$="[[!_watermark]]">[[_watermark]]</div>
 
     <div id="toolbar" class="tool-bar">
         <tg-menu-search-input id="menuSearcher" menu="[[menuConfig.menu]]" tooltip="Application-wide menu search (tap or hit F3 to invoke)."></tg-menu-search-input>
@@ -161,6 +166,7 @@ Polymer({
     ],
     
     ready: function () {
+        this._watermark = window.TG_APP.watermark;
         if (isMobileApp() && isIPhoneOs()) {
             this.$.toolbar.removeChild(this.$.menuSearcher);
             this.$.logoutContainer.insertBefore(this.$.menuSearcher, this.$.logoutButton);
