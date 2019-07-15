@@ -5,6 +5,7 @@ import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfa
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IComparisonOperator;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ISingleConditionOperator;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ILogicalOperator;
+import ua.com.fielden.platform.entity.query.model.ConditionModel;
 import ua.com.fielden.platform.entity.query.model.QueryModel;
 
 abstract class ConditionalOperand<T1 extends IComparisonOperator<T2, ET>, T2 extends ILogicalOperator<?>, ET extends AbstractEntity<?>> //
@@ -51,4 +52,15 @@ abstract class ConditionalOperand<T1 extends IComparisonOperator<T2, ET>, T2 ext
 	public T2 critCondition(final String propName, final String critPropName) {
 	    return nextForConditionalOperand(getTokens().critCondition(propName, critPropName));
 	}
+	
+    
+    @Override
+    public T2 condition(final ConditionModel condition) {
+        return nextForConditionalOperand(getTokens().cond(condition));
+    }
+
+    @Override
+    public T2 negatedCondition(final ConditionModel condition) {
+        return nextForConditionalOperand(getTokens().negatedCond(condition));
+    }
 }

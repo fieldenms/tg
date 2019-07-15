@@ -312,7 +312,18 @@ public interface EntityQueryProgressiveInterfaces {
 
 		T notExistsAllOf(QueryModel... subQueries);
 		
+		/**
+		 * Applies value of crit-only property {@code critPropName}(including mnemonics) to persistent property {@code propName} and generates appropriate condition model (as per {@link ua.com.fielden.platform.entity_centre.review.DynamicQueryBuilder#buildAtomicCondition(ua.com.fielden.platform.entity_centre.review.DynamicQueryBuilder.QueryProperty, String)} logic).
+		 * 
+		 * @param propName
+		 * @param critPropName
+		 * @return
+		 */
 		T critCondition(final String propName, final String critPropName);
+		
+		T condition(ConditionModel condition);
+
+		T negatedCondition(ConditionModel condition);
 	}
 
 	interface IQuantifiedOperand<T, ET extends AbstractEntity<?>> //
@@ -588,9 +599,6 @@ public interface EntityQueryProgressiveInterfaces {
 	interface IWhereWithoutNesting<T1 extends IComparisonOperator<T2, ET>, T2 extends ILogicalOperator<?>, ET extends AbstractEntity<?>> //
 			extends IComparisonOperand<T1, ET>, //
 			/*    */ISingleConditionOperator<T2> {
-		T2 condition(ConditionModel condition);
-
-		T2 negatedCondition(ConditionModel condition);
 	}
 
 	interface ICompoundCondition<T1, T2> //
