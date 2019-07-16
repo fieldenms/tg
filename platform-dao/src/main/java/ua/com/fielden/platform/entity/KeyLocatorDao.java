@@ -2,6 +2,7 @@ package ua.com.fielden.platform.entity;
 
 import ua.com.fielden.platform.dao.CommonEntityDao;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
+import ua.com.fielden.platform.entity.fetch.IFetchProvider;
 import ua.com.fielden.platform.entity.query.IFilter;
 
 public class KeyLocatorDao<K extends AbstractEntity<?>, T extends KeyLocator<K>> extends CommonEntityDao<T> {
@@ -19,4 +20,8 @@ public class KeyLocatorDao<K extends AbstractEntity<?>, T extends KeyLocator<K>>
         return super.save(entity);
     }
 
+    @Override
+    protected IFetchProvider<T> createFetchProvider() {
+        return super.createFetchProvider().with("entityKey", "entity");
+    }
 }
