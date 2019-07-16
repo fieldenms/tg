@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.entity.query.generation;
 
 import static java.lang.String.format;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.emptyCondition;
 import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.EQUERY_TOKENS;
 import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.EXPR_TOKENS;
 import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.GROUPED_CONDITIONS;
@@ -19,6 +20,7 @@ import java.util.Map;
 
 import ua.com.fielden.platform.entity.query.DbVersion;
 import ua.com.fielden.platform.entity.query.exceptions.EqlException;
+import ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils;
 import ua.com.fielden.platform.entity.query.fluent.enums.Functions;
 import ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory;
 import ua.com.fielden.platform.entity.query.generation.elements.CountAll;
@@ -179,10 +181,7 @@ public abstract class AbstractTokensBuilder implements ITokensBuilder {
     private ConditionModel critConditionOperatorModel() {
         final Pair<String, String> props = (Pair<String, String>) firstValue();
         final QueryProperty qp = (QueryProperty) getParamValue(props.getValue());
-        if (qp == null) {
-            throw new EqlException(format("Parameters map doesn't contain QueryProperty value for critOnly property [%s].", props.getValue()));
-        }
-        return buildAtomicCondition(qp, props.getKey());
+        return qp == null ? emptyCondition() : buildAtomicCondition(qp, props.getKey());
     }
 
     @Override
