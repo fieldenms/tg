@@ -11,6 +11,7 @@ import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfa
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IStandAloneExprOperand;
 import ua.com.fielden.platform.entity.query.fluent.fetch.FetchCategory;
 import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
+import ua.com.fielden.platform.entity.query.model.ConditionModel;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 
 public class EntityQueryUtils {
@@ -107,5 +108,14 @@ public class EntityQueryUtils {
 
 	public static fetch<EntityAggregates> fetchAggregates() {
 		return new fetch<>(EntityAggregates.class, FetchCategory.NONE);
+	}
+	
+	/**
+	 * Generates empty condition model, which will be ignored during conditions processing.
+	 * 
+	 * @return
+	 */
+	public static ConditionModel emptyCondition() {
+	    return cond().iVal(null).eq().iVal(null).model();
 	}
 }
