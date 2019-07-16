@@ -793,10 +793,9 @@ public class DynamicQueryBuilder {
      *            -- indicates whether appropriate condition should be negated
      * @return
      */
-    private static <ET extends AbstractEntity<?>> ConditionModel buildCondition(final QueryProperty property, final boolean isNegated) {
+    public static <ET extends AbstractEntity<?>> ConditionModel buildCondition(final QueryProperty property, final String propertyName, final boolean isNegated) {
         final boolean orNull = Boolean.TRUE.equals(property.getOrNull());
         final boolean not = Boolean.TRUE.equals(property.getNot());
-        final String propertyName = property.getConditionBuildingName();
         // IMPORTANT : in order not to make extra joins properties like "alias.key", "alias.property1.key" and so on will be enhanced by
         // conditions like "alias is [not] null", "alias.property1 is [not] null" and so on (respectively).
         final IStandAloneConditionComparisonOperator<ET> sc = EntityQueryUtils.<ET> cond().prop(getPropertyNameWithoutKeyPart(propertyName));
@@ -811,11 +810,22 @@ public class DynamicQueryBuilder {
             // indicates whether nulls should be considered in a query
             final boolean considerNulls = negate ^ orNull;
             final IStandAloneConditionOperand<ET> whereAtGroup2 = considerNulls ? sc.isNull().or() : sc.isNotNull().and();
-            final ConditionModel subModel = buildAtomicCondition(property, property.getConditionBuildingName());
+            final ConditionModel subModel = buildAtomicCondition(property, propertyName);
             return negate ? whereAtGroup2.negatedCondition(subModel).model() : whereAtGroup2.condition(subModel).model();
         }
     }
 
+    /**
+     * More specific use of the previous method {@link #buildCondition(QueryProperty, String, boolean)}.
+     * 
+     * @param property
+     * @param isNegated
+     * @return
+     */
+    private static <ET extends AbstractEntity<?>> ConditionModel buildCondition(final QueryProperty property, final boolean isNegated) {
+        return buildCondition(property, property.getConditionBuildingName(), isNegated); 
+    }
+    
     /**
      * Builds atomic condition for some property like "is True", ">= and <", "like" etc. based on property type and assigned parameters.
      *
@@ -826,7 +836,7 @@ public class DynamicQueryBuilder {
      * @return
      */
     @SuppressWarnings("unchecked")
-    public static <ET extends AbstractEntity<?>> ConditionModel buildAtomicCondition(final QueryProperty property, final String propertyName) {
+    private static <ET extends AbstractEntity<?>> ConditionModel buildAtomicCondition(final QueryProperty property, final String propertyName) {
 
         if (isRangeType(property.getType())) {
             if (isDate(property.getType()) && property.getDatePrefix() != null && property.getDateMnemonic() != null) {

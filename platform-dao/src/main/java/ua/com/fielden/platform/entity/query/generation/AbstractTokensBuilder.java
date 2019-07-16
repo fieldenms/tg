@@ -1,6 +1,5 @@
 package ua.com.fielden.platform.entity.query.generation;
 
-import static java.lang.String.format;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.emptyCondition;
 import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.EQUERY_TOKENS;
 import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.EXPR_TOKENS;
@@ -10,7 +9,6 @@ import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.IV
 import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.PARAM;
 import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.PROP;
 import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.VAL;
-import static ua.com.fielden.platform.entity_centre.review.DynamicQueryBuilder.buildAtomicCondition;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -19,8 +17,6 @@ import java.util.List;
 import java.util.Map;
 
 import ua.com.fielden.platform.entity.query.DbVersion;
-import ua.com.fielden.platform.entity.query.exceptions.EqlException;
-import ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils;
 import ua.com.fielden.platform.entity.query.fluent.enums.Functions;
 import ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory;
 import ua.com.fielden.platform.entity.query.generation.elements.CountAll;
@@ -181,7 +177,7 @@ public abstract class AbstractTokensBuilder implements ITokensBuilder {
     private ConditionModel critConditionOperatorModel() {
         final Pair<String, String> props = (Pair<String, String>) firstValue();
         final QueryProperty qp = (QueryProperty) getParamValue(props.getValue());
-        return qp == null ? emptyCondition() : buildAtomicCondition(qp, props.getKey());
+        return qp == null ? emptyCondition() : DynamicQueryBuilder.buildCondition(qp, props.getKey(), false);
     }
 
     @Override
