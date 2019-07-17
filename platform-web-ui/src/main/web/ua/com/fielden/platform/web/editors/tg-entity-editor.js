@@ -452,6 +452,8 @@ export class TgEntityEditor extends TgEditor {
     }
 
     _search (defaultSearchQuery, dataPage) {
+        // let's first focus the input
+        this._focusInput();
         // What is the query string?
         let inputText = ''; // default value
         if (this.multi === false) {
@@ -486,9 +488,8 @@ export class TgEntityEditor extends TgEditor {
         const self = this;
         const result = self.$.result;
         result.searchQuery = self._searchQuery;
-        const container = self.$.container;
 
-        if (self._searchQuery /*&& this.hasFocus === true*/ ) {
+        if (self._searchQuery) {
             // if this is not a request to load more data then let's clear the current result, if any
             if (!dataPage) {
                 result.clearSelection();
@@ -504,8 +505,8 @@ export class TgEntityEditor extends TgEditor {
     }
 
     /*
-        * Displays the search result.
-        */
+     * Displays the search result.
+     */
     _onFound (entities) {
         const result = this.$.result;
         // make sure to assign reflector to the result object
@@ -593,12 +594,9 @@ export class TgEntityEditor extends TgEditor {
     _resultOpened (e) {
         const activeElement = document.activeElement;
         const shadowActiveElement = this.shadowRoot.activeElement;
-        if (this.$.searcherButton === shadowActiveElement ||     /* if autocompleter's button is in focus (this occurs in iOs when tapping on that button) */
-            this.$.acceptButton === shadowActiveElement   ||     /* this also might happen on iOS*/
-            this.$.progressSpinner === shadowActiveElement||     /* this also might happen on iOS*/
-            this.$.input === shadowActiveElement          ||     /* or if autocompleter's input is in focus */
-            document.body === activeElement               ||     /* or no other input or button in focus then show found values */
-            this.$.result === activeElement               ){     /* or result dialog was in focus*/
+        if (this.$.input === shadowActiveElement) { // only if autocompleter's input is in focus
+            // indicate that the autocompleter dialog was opened and
+            // highlight matched parts of the items found
             this.opened = true;
             this.$.result.highlightMatchedParts();
         } else {
@@ -606,7 +604,6 @@ export class TgEntityEditor extends TgEditor {
             this.$.result.cancel(e);
         }
         setTimeout(() => this.$.result.notifyResize(), 1);
-        console.log(document.activeElement)
     }
 
     _resultClosed (e) {
@@ -637,11 +634,11 @@ export class TgEntityEditor extends TgEditor {
         }
     }
 
-    /* This method handles an explicit user action for accepting selected values from an autocompleted list.
-        * However, there is no guarantee that there are actually selected values.
-        */
+    /*
+     * This method handles an explicit user action for accepting selected values from an autocompleted list.
+     * However, there is no guarantee that there are actually selected values.
+     */
     _done () {
-        console.log("_done:");
         const input = this.decoratedInput();
         const result = this.$.result;
 
