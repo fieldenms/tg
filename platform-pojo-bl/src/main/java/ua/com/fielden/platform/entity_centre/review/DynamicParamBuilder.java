@@ -40,7 +40,9 @@ public class DynamicParamBuilder {
         final Map<String, Object> params = new HashMap<>();
         for (final Entry<String, Pair<Object, Object>> propValEntry : propValues.entrySet()) {
             final QueryProperty qp = EntityQueryCriteriaUtils.createNotInitialisedQueryProperty(managedType, propValEntry.getKey());
-            params.putAll(getPropertyValues(qp, propValEntry));
+            if (qp.isCritOnly() && !qp.isCritOnlyWithMnemonics()) {
+                params.putAll(getPropertyValues(qp, propValEntry));    
+            }
         }
         return params;
     }
@@ -54,23 +56,21 @@ public class DynamicParamBuilder {
      */
     private static Map<String, Object> getPropertyValues(final QueryProperty qp, final Entry<String, Pair<Object, Object>> propValEntry) {
         final Map<String, Object> pairVals = new HashMap<>();
-        if (qp.isCritOnly()) {
-            if (qp.isSingle()) {
-                pairVals.put(propValEntry.getKey(), propValEntry.getValue().getKey());
-            } else if (EntityUtils.isRangeType(qp.getType())) {
-                pairVals.put(from(propValEntry.getKey()), propValEntry.getValue().getKey());
-                pairVals.put(to(propValEntry.getKey()), propValEntry.getValue().getValue());
-            } else if (EntityUtils.isBoolean(qp.getType())) {
-                pairVals.put(is(propValEntry.getKey()), propValEntry.getValue().getKey());
-                pairVals.put(not(propValEntry.getKey()), propValEntry.getValue().getValue());
-            } else if (!qp.isSingle()) { // It is assumed that not SINGLE means MULTI
-                if (EntityUtils.isEntityType(qp.getType())) {
-                    pairVals.put(propValEntry.getKey(), prepCritValuesForEntityTypedProp((List<String>) propValEntry.getValue().getKey()));
-                } else if (EntityUtils.isString(qp.getType())) {
-                    pairVals.put(propValEntry.getKey(), prepCritValuesForStringTypedProp((String) propValEntry.getValue().getKey()));
-                } else {
-                    throw new EntityCentreExecutionException(format("Selection criteria for property [%s] in type [%s] is not recognized as a valid.", propValEntry.getKey(), qp.getType().getName()));
-                }
+        if (qp.isSingle()) {
+            pairVals.put(propValEntry.getKey(), propValEntry.getValue().getKey());
+        } else if (EntityUtils.isRangeType(qp.getType())) {
+            pairVals.put(from(propValEntry.getKey()), propValEntry.getValue().getKey());
+            pairVals.put(to(propValEntry.getKey()), propValEntry.getValue().getValue());
+        } else if (EntityUtils.isBoolean(qp.getType())) {
+            pairVals.put(is(propValEntry.getKey()), propValEntry.getValue().getKey());
+            pairVals.put(not(propValEntry.getKey()), propValEntry.getValue().getValue());
+        } else if (!qp.isSingle()) { // It is assumed that not SINGLE means MULTI
+            if (EntityUtils.isEntityType(qp.getType())) {
+                pairVals.put(propValEntry.getKey(), prepCritValuesForEntityTypedProp((List<String>) propValEntry.getValue().getKey()));
+            } else if (EntityUtils.isString(qp.getType())) {
+                pairVals.put(propValEntry.getKey(), prepCritValuesForStringTypedProp((String) propValEntry.getValue().getKey()));
+            } else {
+                throw new EntityCentreExecutionException(format("Selection criteria for property [%s] in type [%s] is not recognized as a valid.", propValEntry.getKey(), qp.getType().getName()));
             }
         }
         return pairVals;

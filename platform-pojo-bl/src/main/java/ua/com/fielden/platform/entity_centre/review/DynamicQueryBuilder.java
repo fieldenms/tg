@@ -90,6 +90,7 @@ public class DynamicQueryBuilder {
         private final String propertyName;
         private final String conditionBuildingName;
         private final boolean critOnly;
+        private final boolean critOnlyWithMnemonics;
         private final boolean single;
         private final boolean aECritOnlyChild;
         private final Class<?> type;
@@ -151,11 +152,17 @@ public class DynamicQueryBuilder {
 
             final CritOnly critAnnotation = analyser.getPropertyFieldAnnotation(CritOnly.class);
             this.critOnly = critAnnotation != null;
+            this.critOnlyWithMnemonics = critOnly && critOnlyWithMnemonics(critAnnotation);
 
             final boolean isEntityItself = "".equals(propertyName); // empty property means "entity itself"
             final String penultPropertyName = PropertyTypeDeterminator.isDotNotation(propertyName) ? PropertyTypeDeterminator.penultAndLast(propertyName).getKey() : null;
             this.aECritOnlyChild = !isEntityItself && PropertyTypeDeterminator.isDotNotation(propertyName) && AnnotationReflector.isAnnotationPresentInHierarchy(CritOnly.class, this.entityClass, penultPropertyName);
             this.single = isCritOnly() && Type.SINGLE.equals(critAnnotation.value());
+        }
+        
+        private boolean critOnlyWithMnemonics(final CritOnly critAnnotation) {
+            final CritOnly.Mnemonics mnemonics = critAnnotation.mnemonics() == CritOnly.Mnemonics.DEFAULT ? critAnnotation.value().defaultMnemonics : critAnnotation.mnemonics();
+            return mnemonics == CritOnly.Mnemonics.WITH ? true : false;
         }
 
         public Object getValue() {
@@ -373,6 +380,15 @@ public class DynamicQueryBuilder {
             return critOnly;
         }
         
+        /**
+         * Returns <code>true</code> if property is crit-only with mnemonics, <code>false</code> otherwise.
+         *
+         * @return
+         */
+        public boolean isCritOnlyWithMnemonics() {
+            return critOnlyWithMnemonics;
+        }
+
         /**
          * Returns <code>true</code> if property is a child of crit-only AE property (dot-notated), <code>false</code> otherwise.
          *
