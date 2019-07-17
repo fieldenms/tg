@@ -162,7 +162,7 @@ public class DynamicQueryBuilder {
         
         private boolean critOnlyWithMnemonics(final CritOnly critAnnotation) {
             final CritOnly.Mnemonics mnemonics = critAnnotation.mnemonics() == CritOnly.Mnemonics.DEFAULT ? critAnnotation.value().defaultMnemonics : critAnnotation.mnemonics();
-            return mnemonics == CritOnly.Mnemonics.WITH ? true : false;
+            return mnemonics == CritOnly.Mnemonics.WITH;
         }
 
         public Object getValue() {
