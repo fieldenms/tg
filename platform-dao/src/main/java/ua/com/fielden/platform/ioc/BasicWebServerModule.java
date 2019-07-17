@@ -32,9 +32,11 @@ import ua.com.fielden.platform.entity.IEntityDeleteAction;
 import ua.com.fielden.platform.entity.IEntityEditAction;
 import ua.com.fielden.platform.entity.IEntityNavigationAction;
 import ua.com.fielden.platform.entity.IEntityNewAction;
+import ua.com.fielden.platform.entity.IKeyLocator;
 import ua.com.fielden.platform.entity.ISecurityMatrixInsertionPoint;
 import ua.com.fielden.platform.entity.ISecurityMatrixSaveAction;
 import ua.com.fielden.platform.entity.ISecurityTokenTreeNodeEntity;
+import ua.com.fielden.platform.entity.KeyLocatorDao;
 import ua.com.fielden.platform.entity.SecurityMatrixInsertionPointDao;
 import ua.com.fielden.platform.entity.SecurityMatrixSaveActionDao;
 import ua.com.fielden.platform.entity.SecurityTokenTreeNodeEntityDao;
@@ -229,6 +231,9 @@ public class BasicWebServerModule extends CommonFactoryModule {
         bind(IEntityEditAction.class).to(EntityEditActionDao.class);
         bind(IEntityNavigationAction.class).to(EntityNavigationActionDao.class);
         bind(IEntityDeleteAction.class).to(EntityDeleteActionDao.class);
+
+        //Bar Code Scanning
+        bind(IKeyLocator.class).to(KeyLocatorDao.class);
 
         // user security related bindings
         bind(IUser.class).to(UserDao.class);

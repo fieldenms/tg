@@ -213,6 +213,11 @@ Polymer({
         // in case where there is an open overlay we 1) close it on back 2) remain it open on forward. Still the history state will not be changed.
         if (typeof this.currentHistoryState === "undefined") {
             this._loadApplicationInfrastructureIntoHistory();
+        } else if (this._isBarCodeScanning(routePath))  {
+            window.history.replaceState({shouldSkip: true}, '', window.location.href);
+            window.history.back();
+        } else if (window.history.state.shouldSkip) {
+            window.history.back();
         } else {
             const currentOverlay = this._findFirstClosableDialog();
             const historySteps = this.currentHistoryState - window.history.state.currIndex; //Determine history steps (i.e whether user pressed back or forward or multiple back or forward or changed history in some other way. One should take into account that if history steps are greater than 0 then user went backward. If the history steps are less than 0 then user went forward. If history steps are equal to 0 then user chnaged history by clicking menu item it search menu or module menu etc.)
@@ -225,6 +230,8 @@ Polymer({
                                 window.history.go(historySteps);
                             } else { // otherwise the history changes already occured and just change the page
                                 this._changePage();
+                                this.currentHistoryState = window.history.state && window.history.state.currIndex;
+                                return;
                             }
                         } else { // 'single back' action
                             window.history.forward(); // to remain history not changed
@@ -241,6 +248,10 @@ Polymer({
             }
             this.currentHistoryState = window.history.state && window.history.state.currIndex;
         }
+    },
+
+    _isBarCodeScanning: function (hash) {
+        return hash.includes('?__zx__=');
     },
     
     _loadApplicationInfrastructureIntoHistory: function () {

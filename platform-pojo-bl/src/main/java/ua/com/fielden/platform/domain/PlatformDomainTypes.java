@@ -13,6 +13,7 @@ import ua.com.fielden.platform.entity.EntityEditAction;
 import ua.com.fielden.platform.entity.EntityExportAction;
 import ua.com.fielden.platform.entity.EntityNavigationAction;
 import ua.com.fielden.platform.entity.EntityNewAction;
+import ua.com.fielden.platform.entity.KeyLocator;
 import ua.com.fielden.platform.entity.SecurityMatrixInsertionPoint;
 import ua.com.fielden.platform.entity.SecurityMatrixSaveAction;
 import ua.com.fielden.platform.entity.SecurityTokenTreeNodeEntity;
@@ -119,6 +120,7 @@ public class PlatformDomainTypes {
         types.add(SecurityMatrixSaveAction.class);
         types.add(EntityNavigationAction.class);
         types.add(AttachmentPreviewEntityAction.class);
+        types.add(KeyLocator.class);
 
     }
 }

@@ -128,8 +128,9 @@ public class EntityMaster<T extends AbstractEntity<?>> implements IRenderable {
     public static <T extends AbstractFunctionalEntityWithCentreContext<?>> EntityMaster<T> noUiFunctionalMaster(
             final Class<T> entityType,
             final boolean saveOnActivation,
+            final JsCode customCode,
             final Injector injector) {
-        return new EntityMaster<>(entityType, null, new NoUiMaster<>(entityType, new JsCode(""), new JsCode(""), saveOnActivation), injector);
+        return new EntityMaster<>(entityType, null, new NoUiMaster<>(entityType, customCode, new JsCode(""), saveOnActivation), injector);
     }
 
     private IMaster<T> createDefaultConfig(final Class<T> entityType) {

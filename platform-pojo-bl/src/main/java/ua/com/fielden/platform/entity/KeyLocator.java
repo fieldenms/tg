@@ -2,13 +2,15 @@ package ua.com.fielden.platform.entity;
 
 import static ua.com.fielden.platform.entity.NoKey.NO_KEY;
 
+import ua.com.fielden.platform.entity.annotation.CompanionObject;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.KeyType;
 import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.entity.annotation.Title;
 
 @KeyType(NoKey.class)
-public class KeyLocator<T extends AbstractEntity<?>> extends AbstractFunctionalEntityWithCentreContext<NoKey> {
+@CompanionObject(IKeyLocator.class)
+public class KeyLocator extends AbstractFunctionalEntityWithCentreContext<NoKey> {
 
     @IsProperty
     @Title("Entity Key")
@@ -16,27 +18,28 @@ public class KeyLocator<T extends AbstractEntity<?>> extends AbstractFunctionalE
 
     @IsProperty
     @Title("Entity")
-    private T entity;
+    private AbstractEntity<?> entity;
 
-    private final Class<T> entityTypeAsClass;
+    @IsProperty
+    @Title("Entity Type")
+    private String entityType;
 
-    protected KeyLocator(final Class<T> entityTypeAsClass) {
+    protected KeyLocator() {
         setKey(NO_KEY);
-        this.entityTypeAsClass = entityTypeAsClass;
     }
 
     @Observable
-    public KeyLocator<T> setEntity(final T entity) {
+    public KeyLocator setEntity(final AbstractEntity<?> entity) {
         this.entity = entity;
         return this;
     }
 
-    public T getEntity() {
+    public AbstractEntity<?> getEntity() {
         return entity;
     }
 
     @Observable
-    public KeyLocator<T> setEntityKey(final String entityKey) {
+    public KeyLocator setEntityKey(final String entityKey) {
         this.entityKey = entityKey;
         return this;
     }
@@ -45,7 +48,13 @@ public class KeyLocator<T extends AbstractEntity<?>> extends AbstractFunctionalE
         return entityKey;
     }
 
-    public Class<T> getEntityTypeAsClass() {
-        return entityTypeAsClass;
+    public String getEntityType() {
+        return entityType;
+    }
+
+    @Observable
+    public KeyLocator setEntityType(final String entityType) {
+        this.entityType = entityType;
+        return this;
     }
 }
