@@ -93,7 +93,7 @@ const inputLayerTemplate = html`
     </div>`;
 const customIconButtonsTemplate = html`
     <paper-icon-button id="searcherButton" hidden$="[[searchingOrOpen]]" on-tap="_searchOnTap" icon="search" class="search-button custom-icon-buttons" tabindex="-1" disabled$="[[_disabled]]" tooltip-text="Show search result"></paper-icon-button>
-    <paper-icon-button id="acceptButton" hidden$="[[searchingOrClosed]]" on-down="_done" icon="done" class="search-button custom-icon-buttons" tabindex="-1" disabled$="[[_disabled]]" tooltip-text="Accept the selected entries"></paper-icon-button>
+    <paper-icon-button id="acceptButton" hidden$="[[searchingOrClosed]]" on-tap="_done" icon="done" class="search-button custom-icon-buttons" tabindex="-1" disabled$="[[_disabled]]" tooltip-text="Accept the selected entries"></paper-icon-button>
     <paper-spinner id="progressSpinner" active hidden$="[[!searching]]" class="custom-icon-buttons" tabindex="-1" alt="searching..." disabled$="[[_disabled]]"></paper-spinner>`;
 const propertyActionTemplate = html`<slot name="property-action"></slot>`;
 
@@ -292,7 +292,12 @@ export class TgEntityEditor extends TgEditor {
                    return (function (event) {
                        // clear any search request in already in progress
                        this._cancelSearch();
-                       this._asyncSearchHandle = setTimeout(() => this._search(''), 700);
+                       // and perform new search inly if input has some text in it
+                       if (this.decoratedInput().value) {
+                           this._asyncSearchHandle = setTimeout(() => this._search("*"), 700);
+                       } else { // otherwise, close the result dialog
+                           this.$.result.close();
+                       }
                    }).bind(this);
                }
            },
@@ -310,7 +315,7 @@ export class TgEntityEditor extends TgEditor {
                        if (event.keyCode === 13 && this.opened === true) { // 'Enter' has been pressed
                            this._done();
                        } else if ((event.keyCode === 38 /*up*/ || event.keyCode === 40 /*down*/) && !event.ctrlKey) { // up/down arrow keys
-                           // By devault up/down arrow keys work like home/end for and input field
+                           // By default up/down arrow keys work like home/end for and input field
                            // That's why this event should be suppressed.
                            tearDownEvent(event);
    
@@ -436,8 +441,11 @@ export class TgEntityEditor extends TgEditor {
     }
 
     /** Loads more matching values. */
-    _loadMore () {
+    _loadMore (moreButtonPressed) {
         if (!this.searching) {
+            if (moreButtonPressed) {
+                this._loadMoreButtonPressed = true;
+            }
             this._dataPage = this._dataPage + 1;
             this._search(this._searchQuery, this._dataPage);
         }
@@ -521,28 +529,32 @@ export class TgEntityEditor extends TgEditor {
         // let's disable the load more action in this case
         result.enableLoadMore = wasNewValueObserved;
 
-        // displaying of the result should happen only if there are not other result being displayed
+        // displaying of the result should happen only if there are no other result being displayed
         // for this we probe the #result element and check whether it is opened
-        // if #result does not exist or is not opened then we shall try to focus the most appropriate part of this entity editor
+        // if #result does not exist or is not opened and the entity editor is not focused then we shall try to focus the entity editor
         const elementExists = document.body.querySelector("#result");
-        if (!elementExists || !elementExists.opened) {
+        if ((!elementExists || !elementExists.opened) && !this._isFocused()) {
             this._focus();
         }
         // if this entity editor is focused we shall attempt to display the result
         if (this._isFocused()) {
-            // remove the old #result if it was present and add the current result to be displayed
-            if (elementExists) {
+            // remove the old #result if it was present and not the current one to keep the DOM clean
+            if (elementExists && elementExists !== result) {
                 document.body.removeChild(elementExists);
             }
-            document.body.appendChild(result);
+            // the current result needs to be added only if it was not added previously
+            if (elementExists !== result) {
+                document.body.appendChild(result);
+            }
 
-            // now let's open the dialog to display the result
+            // now let's open the dialog to display the result, but only if it is not opened yet...
             if (result.opened) {
                 this._resultOpened();
             } else {
                 if (result.visibleHeightUnderEditorIsSmall()) {
                     this.scrollIntoView({block: "center", inline: "center"}); // behavior: "smooth"
-                    setTimeout(function () { // need to wait at least 400 ms for smooth scrolling to complete... let's instead disable it
+                    // need to wait at least 400 ms for smooth scrolling to complete... let's instead disable it
+                    setTimeout(function () {
                         this._showResult(result);
                     }.bind(this), 100);
                 } else {
@@ -550,13 +562,15 @@ export class TgEntityEditor extends TgEditor {
                 }
             }
 
-            // TODO this code needs review as it does not seem to work reliably...            
-            // focus a new item, if any
-            // this should happen only if new values were loaded after pressing MORE
-            if (document.activeElement === result && result.shadowRoot.activeElement === result.loadMoreButton() && indexOfFirstNewValue >= 0) {
-                result.focusItemWithIndex(indexOfFirstNewValue);
+            // focus the first new item if new ones were found, but only if search was due to pressing button MORE
+            if (this._loadMoreButtonPressed && indexOfFirstNewValue >= 0) {
+                // timeout is required to allow the iron-list to load new items before they can be focused
+                setTimeout (() => result.focusItemWithIndex(indexOfFirstNewValue), 100);
             }
         }
+
+        // reset the fact that loading more data was due to pressing button MORE
+        this._loadMoreButtonPressed = false;
     }
 
     /* Displays the result dialog and notifies the resize event. */
@@ -596,6 +610,11 @@ export class TgEntityEditor extends TgEditor {
 
     _resultOpened (e) {
         if (this._isFocused()) {
+            // if input is not focused (we do not want to steal the focus from the input) then the result dialog should be focused.
+            // focusing the result dialog is required to correctly focus the result items
+            if (!this._isInputFocused()) {
+                this._focusResult();
+            }
             // indicate that the autocompleter dialog was opened and
             // highlight matched parts of the items found
             this.opened = true;
@@ -614,10 +633,7 @@ export class TgEntityEditor extends TgEditor {
             this.opened = false;
             this._onChange();
         }
-        const elementExists = document.body.querySelector("#result");
-        if (elementExists) {
-            document.body.removeChild(elementExists);
-        }
+        document.body.removeChild(this.$.result);
     }
 
     _resultCanceled (event, detail) {
@@ -687,14 +703,22 @@ export class TgEntityEditor extends TgEditor {
     }
 
     /**
-     * Identifies whether entity editor is focused by checking if any of its constituent parts are focused.
+     * Entity editor is considered to be focused if either the result dialog or any of the editors constituent parts are focused.
      */
     _isFocused () {
         const activeElement = this.shadowRoot.activeElement
-        return activeElement === this.$.input           ||
+        return activeElement === this.decoratedInput()  ||
                activeElement === this.$.progressSpinner ||
                activeElement === this.$.searcherButton  ||
-               activeElement === this.$.acceptButton;
+               activeElement === this.$.acceptButton    || 
+               document.activeElement === this.$.result;
+    }
+
+    /**
+     * Identifies if the input element is in focus.
+     */
+    _isInputFocused () {
+        return this.shadowRoot.activeElement === this.decoratedInput();
     }
 
     /**
@@ -710,6 +734,13 @@ export class TgEntityEditor extends TgEditor {
                 }
             }
         }
+    }
+
+    /**
+     * Focuses the result dialog.
+     */
+    _focusResult () {
+        this.$.result.focus();
     }
     
     /**
@@ -755,8 +786,7 @@ export class TgEntityEditor extends TgEditor {
             if (strValue === '') {
                 return []; // missing value for multi autocompliter is empty array []!
             } else {
-                var arr = strValue.split(this.separator);
-                return arr;
+                return strValue.split(this.separator);
             }
         } else {
             return strValue === '' ? null : strValue;
@@ -775,9 +805,9 @@ export class TgEntityEditor extends TgEditor {
         self.opened = true;
         self.$.result.close();
         self.processError(e, "search", function (errorResult) {
-                if (self.postSearchedDefaultError) {
+            if (self.postSearchedDefaultError) {
                 self.postSearchedDefaultError(errorResult);
-                }
+            }
         });
     }
 
