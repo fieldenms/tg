@@ -6,6 +6,7 @@ import static ua.com.fielden.platform.domaintree.impl.AbstractDomainTree.isDoubl
 import static ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeRepresentation.isShortCollection;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
+import static ua.com.fielden.platform.entity_centre.review.DynamicQueryBuilder.QueryProperty.queryPropertyParamName;
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.isDotNotation;
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.penultAndLast;
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.transform;
@@ -18,6 +19,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.apache.commons.lang.StringUtils;
@@ -239,8 +241,22 @@ public abstract class EntityQueryCriteria<C extends ICentreDomainTreeManagerAndE
     public Map<String, Object> getParameters () {
         final IAddToCriteriaTickManager criteriaTickManager = getCentreDomainTreeMangerAndEnhancer().getFirstTick();
         final Map<String, Pair<Object, Object>> paramMap = EntityQueryCriteriaUtils.createParamValuesMap(getEntityClass(), getManagedType(), criteriaTickManager);
-        return enhanceQueryParams(DynamicParamBuilder.buildParametersMap(getManagedType(), paramMap));
+        final Map<String, Object> resultMap = enhanceQueryParams(DynamicParamBuilder.buildParametersMap(getManagedType(), paramMap));
+        resultMap.putAll(getQueryPropertyParameters());
+        return resultMap;
+    }
 
+    /**
+     * Populates parameters map with instances of {@link QueryProperty} (should be used to expand mnemonics value into conditions from EQL critCondition operator).
+     *
+     * @return
+     */
+    private Map<String, QueryProperty> getQueryPropertyParameters() {
+        return getCentreDomainTreeMangerAndEnhancer().getFirstTick().checkedProperties(getEntityClass()).stream()
+                .filter(propName -> !AbstractDomainTree.isPlaceholder(propName))
+                .map(propName -> createQueryProperty(propName))
+                .filter(qp -> qp.isCritOnlyWithMnemonics() && !qp.isEmptyAndMnemonicless())
+                .collect(Collectors.toMap(qp -> queryPropertyParamName(qp.getPropertyName()), qp -> qp));
     }
     /**
      * Creates the fetch provider based on 'properties' of the 'managedType' and on custom fetch provider (if any).
@@ -804,10 +820,10 @@ public abstract class EntityQueryCriteria<C extends ICentreDomainTreeManagerAndE
     public ICompanionObjectFinder getControllerProvider() {
         return controllerProvider;
     }
-    
+
     /**
      * Initialises crit-only single prototype entity if it was not initialised before. Returns it as a result.
-     * 
+     *
      * @param entityType -- the type of the prototype (only for initialisation)
      * @param id -- id for the prototype (only for initialisation)
      * @return
@@ -821,23 +837,23 @@ public abstract class EntityQueryCriteria<C extends ICentreDomainTreeManagerAndE
         }
         return critOnlySinglePrototype();
     }
-    
+
     /**
      * Returns crit-only single prototype entity.
-     * 
+     *
      * @return
      */
     public AbstractEntity<?> critOnlySinglePrototype() {
         return critOnlySinglePrototype;
     }
-    
+
     /**
      * Returns crit-only single prototype entity if exists.
-     * 
+     *
      * @return
      */
     public Optional<AbstractEntity<?>> critOnlySinglePrototypeOptional() {
         return ofNullable(critOnlySinglePrototype());
     }
-    
+
 }

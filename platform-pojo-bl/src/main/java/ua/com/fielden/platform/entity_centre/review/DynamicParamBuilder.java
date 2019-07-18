@@ -23,16 +23,16 @@ import ua.com.fielden.platform.utils.Pair;
 
 /**
  * The utility class that is a responsible for creating the map between property names and it's values.
- * 
+ *
  * @author TG Team
- * 
+ *
  */
 public class DynamicParamBuilder {
     private DynamicParamBuilder() {}
 
     /**
      * Creates and returns the map between {@link CritOnly} property names and their values.
-     * 
+     *
      * @param managedType
      * @param propertyNames
      */
@@ -40,8 +40,8 @@ public class DynamicParamBuilder {
         final Map<String, Object> params = new HashMap<>();
         for (final Entry<String, Pair<Object, Object>> propValEntry : propValues.entrySet()) {
             final QueryProperty qp = EntityQueryCriteriaUtils.createNotInitialisedQueryProperty(managedType, propValEntry.getKey());
-            if (qp.isCritOnly() && !qp.isCritOnlyWithMnemonics()) {
-                params.putAll(getPropertyValues(qp, propValEntry));    
+            if (qp.isCritOnly()/* && !qp.isCritOnlyWithMnemonics()*/) {
+                params.putAll(getPropertyValues(qp, propValEntry));
             }
         }
         return params;
@@ -49,7 +49,7 @@ public class DynamicParamBuilder {
 
     /**
      * Returns the map between enhanced property names and it's values.
-     * 
+     *
      * @param qp
      * @param propValEntry
      * @return

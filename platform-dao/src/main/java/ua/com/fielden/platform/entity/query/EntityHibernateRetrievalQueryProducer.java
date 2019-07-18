@@ -11,9 +11,11 @@ import org.hibernate.Query;
 import org.hibernate.SQLQuery;
 import org.hibernate.Session;
 
+import ua.com.fielden.platform.entity_centre.review.DynamicQueryBuilder;
+
 public class EntityHibernateRetrievalQueryProducer {
     private static final Logger LOGGER = Logger.getLogger(EntityHibernateRetrievalQueryProducer.class);
-    
+
     public final String sql;
     private final SortedSet<HibernateScalar> retrievedColumns;
     private final Map<String, Object> queryParams;
@@ -46,7 +48,7 @@ public class EntityHibernateRetrievalQueryProducer {
         return sqlQuery.setReadOnly(true).setCacheable(false).setCacheMode(CacheMode.IGNORE);
     }
 
-    private void specifyResultingFieldsToHibernateQuery(SQLQuery query, final SortedSet<HibernateScalar> retrievedColumns) {
+    private void specifyResultingFieldsToHibernateQuery(final SQLQuery query, final SortedSet<HibernateScalar> retrievedColumns) {
         for (final HibernateScalar aliasEntry : retrievedColumns) {
             if (aliasEntry.hasHibType()) {
                 LOGGER.debug("adding scalar: alias = [" + aliasEntry.getColumnName() + "] type = [" + aliasEntry.getHibType() + "]");
@@ -58,12 +60,12 @@ public class EntityHibernateRetrievalQueryProducer {
         }
     }
 
-    private void specifyParamValuesToHibernateQuery(SQLQuery query, final Map<String, Object> queryParams) {
+    private void specifyParamValuesToHibernateQuery(final SQLQuery query, final Map<String, Object> queryParams) {
         LOGGER.debug("\nPARAMS:\n   " + queryParams + "\n");
         for (final Map.Entry<String, Object> paramEntry : queryParams.entrySet()) {
             if (paramEntry.getValue() instanceof Collection) {
                 throw new IllegalStateException("Should not have collectional param at this level: [" + paramEntry + "]");
-            } else {
+            } else if (!(paramEntry.getValue() instanceof DynamicQueryBuilder.QueryProperty)){
                 LOGGER.debug("setting param: name = [" + paramEntry.getKey() + "] value = [" + paramEntry.getValue() + "]");
                 query.setParameter(paramEntry.getKey(), paramEntry.getValue());
             }

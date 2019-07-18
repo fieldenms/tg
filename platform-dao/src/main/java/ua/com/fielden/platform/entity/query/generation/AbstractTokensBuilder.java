@@ -9,6 +9,7 @@ import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.IV
 import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.PARAM;
 import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.PROP;
 import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.VAL;
+import static ua.com.fielden.platform.entity_centre.review.DynamicQueryBuilder.QueryProperty.queryPropertyParamName;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -36,9 +37,9 @@ import ua.com.fielden.platform.utils.Pair;
 
 /**
  * Abstract builder to accumulate tokens until ready for respective model creation.
- * 
+ *
  * @author TG Team
- * 
+ *
  */
 public abstract class AbstractTokensBuilder implements ITokensBuilder {
     private final ITokensBuilder parent;
@@ -152,7 +153,7 @@ public abstract class AbstractTokensBuilder implements ITokensBuilder {
                 setChild(new GroupedConditionsBuilder(this, queryBuilder, getParamValues(), (Boolean) value));
                 break;
             case CRIT_COND_OPERATOR: //
-                tokens.add(new Pair<TokenCategory, Object>(GROUPED_CONDITIONS, new StandAloneConditionBuilder(queryBuilder, getParamValues(), critConditionOperatorModel(), false).getModel()));
+                tokens.add(new Pair<TokenCategory, Object>(GROUPED_CONDITIONS, new StandAloneConditionBuilder(queryBuilder, getParamValues(), critConditionOperatorModel(value), false).getModel()));
                 break;
             case COND_TOKENS: //
                 tokens.add(new Pair<TokenCategory, Object>(GROUPED_CONDITIONS, new StandAloneConditionBuilder(queryBuilder, getParamValues(), (ConditionModel) value, false).getModel()));
@@ -173,10 +174,10 @@ public abstract class AbstractTokensBuilder implements ITokensBuilder {
             }
         }
     }
-    
-    private ConditionModel critConditionOperatorModel() {
-        final Pair<String, String> props = (Pair<String, String>) firstValue();
-        final QueryProperty qp = (QueryProperty) getParamValue(props.getValue());
+
+    private ConditionModel critConditionOperatorModel(final Object value) {
+        final Pair<String, String> props = (Pair<String, String>) value;
+        final QueryProperty qp = (QueryProperty) getParamValue(queryPropertyParamName(props.getValue()));
         return qp == null ? emptyCondition() : DynamicQueryBuilder.buildCondition(qp, props.getKey(), false);
     }
 
@@ -432,5 +433,5 @@ public abstract class AbstractTokensBuilder implements ITokensBuilder {
     public DbVersion getDbVersion() {
         return getQueryBuilder().getDbVersion();
     }
-    
+
 }
