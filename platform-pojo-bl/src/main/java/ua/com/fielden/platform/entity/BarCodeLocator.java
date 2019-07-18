@@ -9,8 +9,8 @@ import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.entity.annotation.Title;
 
 @KeyType(NoKey.class)
-@CompanionObject(IKeyLocator.class)
-public class KeyLocator extends AbstractFunctionalEntityWithCentreContext<NoKey> {
+@CompanionObject(IBarCodeLocator.class)
+public class BarCodeLocator extends AbstractFunctionalEntityWithCentreContext<NoKey> {
 
     @IsProperty
     @Title("Entity Key")
@@ -24,12 +24,12 @@ public class KeyLocator extends AbstractFunctionalEntityWithCentreContext<NoKey>
     @Title("Entity Type")
     private String entityType;
 
-    protected KeyLocator() {
+    protected BarCodeLocator() {
         setKey(NO_KEY);
     }
 
     @Observable
-    public KeyLocator setEntity(final AbstractEntity<?> entity) {
+    public BarCodeLocator setEntity(final AbstractEntity<?> entity) {
         this.entity = entity;
         return this;
     }
@@ -39,7 +39,7 @@ public class KeyLocator extends AbstractFunctionalEntityWithCentreContext<NoKey>
     }
 
     @Observable
-    public KeyLocator setEntityKey(final String entityKey) {
+    public BarCodeLocator setEntityKey(final String entityKey) {
         this.entityKey = entityKey;
         return this;
     }
@@ -53,7 +53,7 @@ public class KeyLocator extends AbstractFunctionalEntityWithCentreContext<NoKey>
     }
 
     @Observable
-    public KeyLocator setEntityType(final String entityType) {
+    public BarCodeLocator setEntityType(final String entityType) {
         this.entityType = entityType;
         return this;
     }

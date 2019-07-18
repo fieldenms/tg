@@ -8,7 +8,7 @@ import java.util.function.Supplier;
 
 import ua.com.fielden.platform.dom.DomElement;
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.KeyLocator;
+import ua.com.fielden.platform.entity.BarCodeLocator;
 import ua.com.fielden.platform.reflection.TitlesDescsGetter;
 import ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig;
 import ua.com.fielden.platform.web.centre.api.actions.IEntityActionBuilder3;
@@ -20,16 +20,16 @@ import ua.com.fielden.platform.web.view.master.api.actions.post.IPostAction;
 import ua.com.fielden.platform.web.view.master.api.actions.pre.IPreAction;
 import ua.com.fielden.platform.web.view.master.exceptions.EntityMasterConfigurationException;
 
-public class BarCodeLocator <K extends AbstractEntity<?>> {
+public class BarCodeLocatorAction <K extends AbstractEntity<?>> {
 
     private final Supplier<Optional<EntityActionConfig>> openMasterActionSupplier;
 
-    BarCodeLocator(final Supplier<Optional<EntityActionConfig>> openMasterActionSupplier) {
+    BarCodeLocatorAction(final Supplier<Optional<EntityActionConfig>> openMasterActionSupplier) {
         this.openMasterActionSupplier = openMasterActionSupplier;
     }
 
     public IEntityActionBuilder3<AbstractEntity<?>> withContext(final CentreContextConfig context, final Class<K> entityMasterType) {
-        return action(KeyLocator.class)
+        return action(BarCodeLocator.class)
                 .withContext(context)
                 .preAction(createPreAction(entityMasterType))
                 .postActionSuccess(createActionPostAction(entityMasterType));
@@ -75,12 +75,12 @@ public class BarCodeLocator <K extends AbstractEntity<?>> {
 
     private IPostAction createActionPostAction(final Class<K> entityMasterType) {
         return () -> openMasterActionSupplier.get()
-                    .map(BarCodeLocator::generateFunctionalAction)
-                    .map(BarCodeLocator.this::generateCodeWithCustomAction)
+                    .map(BarCodeLocatorAction.this::generateFunctionalAction)
+                    .map(BarCodeLocatorAction.this::generateCodeWithCustomAction)
                     .orElse(generateCodeWithDefaultAction(entityMasterType));
     }
 
-    private static FunctionalActionElement generateFunctionalAction(final EntityActionConfig actionConfig) {
+    private FunctionalActionElement generateFunctionalAction(final EntityActionConfig actionConfig) {
         return new FunctionalActionElement(actionConfig, 0, FunctionalActionKind.TOP_LEVEL);
     }
 
@@ -99,7 +99,7 @@ public class BarCodeLocator <K extends AbstractEntity<?>> {
                 + "action.openMasterAction._run();\n";
     }
 
-    private static String generateDefaultAction(final Class<? extends AbstractEntity<?>> entityMasterType) {
+    private String generateDefaultAction(final Class<? extends AbstractEntity<?>> entityMasterType) {
         final String entityTitle = TitlesDescsGetter.getEntityTitleAndDesc(entityMasterType).getKey();
         return "if (!action.openMasterAction) {\n"
              + "    action.openMasterAction = document.createElement('tg-ui-action');\n"
@@ -120,7 +120,7 @@ public class BarCodeLocator <K extends AbstractEntity<?>> {
              + "}\n";
     }
 
-    private static String generateCustomAction(final FunctionalActionElement actionElement) {
+    private String generateCustomAction(final FunctionalActionElement actionElement) {
         final DomElement element = actionElement.render();
         return "if (!action.openMasterAction) {\n"
                 + "    action.openMasterAction = document.createElement('tg-ui-action');\n"

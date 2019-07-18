@@ -8,20 +8,20 @@ import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.entity.fetch.IFetchProvider;
 import ua.com.fielden.platform.entity.query.IFilter;
 
-@EntityType(KeyLocator.class)
-public class KeyLocatorDao extends CommonEntityDao<KeyLocator> implements IKeyLocator{
+@EntityType(BarCodeLocator.class)
+public class BarCodeLocatorDao extends CommonEntityDao<BarCodeLocator> implements IBarCodeLocator{
 
     private final ICompanionObjectFinder coFinder;
 
     @Inject
-    protected KeyLocatorDao(final IFilter filter, final ICompanionObjectFinder coFinder) {
+    protected BarCodeLocatorDao(final IFilter filter, final ICompanionObjectFinder coFinder) {
         super(filter);
         this.coFinder = coFinder;
     }
 
     @SuppressWarnings("unchecked")
     @Override
-    public KeyLocator save(final KeyLocator entity) {
+    public BarCodeLocator save(final BarCodeLocator entity) {
         try {
             entity.setEntity(coFinder.find((Class<AbstractEntity<?>>)Class.forName(entity.getEntityType()), true).findByKey(entity.getEntityKey()));
         } catch (final ClassNotFoundException e) {
@@ -31,7 +31,7 @@ public class KeyLocatorDao extends CommonEntityDao<KeyLocator> implements IKeyLo
     }
 
     @Override
-    protected IFetchProvider<KeyLocator> createFetchProvider() {
+    protected IFetchProvider<BarCodeLocator> createFetchProvider() {
         return super.createFetchProvider().with("entityKey", "entity", "entityType");
     }
 }
