@@ -12,6 +12,7 @@ import '/resources/editors/tg-entity-editor-result.js'
 import '/resources/serialisation/tg-serialiser.js'
 
 import {html} from '/resources/polymer/@polymer/polymer/polymer-element.js';
+import {microTask} from '/resources/polymer/@polymer/polymer/lib/utils/async.js';
 
 import { TgEditor, createEditorTemplate} from '/resources/editors/tg-editor.js';
 import { tearDownEvent, allDefined } from '/resources/reflection/tg-polymer-utils.js'
@@ -291,7 +292,7 @@ export class TgEntityEditor extends TgEditor {
                    return (function (event) {
                        // clear any search request in already in progress
                        this._cancelSearch();
-                       this._asyncSearchHandle = setTimeout(this._searchForOnInput.bind(this), 700);
+                       this._asyncSearchHandle = setTimeout(() => this._search(''), 700);
                    }).bind(this);
                }
            },
@@ -342,7 +343,7 @@ export class TgEntityEditor extends TgEditor {
                        console.log("_onChange (for entity editor):", event);
    
                        if (this.opened === false) {
-                           var parentFunction = TgEditor.properties._onChange.value.call(this);
+                           const parentFunction = TgEditor.properties._onChange.value.call(this);
                            parentFunction.call(this, event);
                        }
                    }).bind(this);
@@ -431,16 +432,7 @@ export class TgEntityEditor extends TgEditor {
     _searchOnTap (e) {
         // need to execute the tap action on async to ensure committing of any uncommitted
         // values in other property editors that might influence the matching logic at the server side
-        setTimeout((function () {
-            this._search('*');
-        }).bind(this), 10);
-
-    }
-
-    /* Invokes _search with an emply string as the default search value, which ensures what no search would happen
-        * if nothing was typed into the input field. */
-    _searchForOnInput () {
-        this._search('');
+        microTask.run(() => this._search('*'));
     }
 
     /** Loads more matching values. */
@@ -452,8 +444,6 @@ export class TgEntityEditor extends TgEditor {
     }
 
     _search (defaultSearchQuery, dataPage) {
-        // let's first focus the input
-        this._focusInput();
         // What is the query string?
         let inputText = ''; // default value
         if (this.multi === false) {
@@ -485,19 +475,18 @@ export class TgEntityEditor extends TgEditor {
         }
 
         // collect new matching values
-        const self = this;
-        const result = self.$.result;
-        result.searchQuery = self._searchQuery;
+        const result = this.$.result;
+        result.searchQuery = this._searchQuery;
 
-        if (self._searchQuery) {
+        if (this._searchQuery) {
             // if this is not a request to load more data then let's clear the current result, if any
             if (!dataPage) {
                 result.clearSelection();
             }
             // prepare the AJAX request based on the raw search string
-            const serialisedSearchQuery = self.$.serialiser.serialise(self.createContextHolder(self._searchQuery, dataPage));
-            self.$.ajaxSearcher.body = JSON.stringify(serialisedSearchQuery);
-            self.$.ajaxSearcher.generateRequest();
+            const serialisedSearchQuery = this.$.serialiser.serialise(this.createContextHolder(this._searchQuery, dataPage));
+            this.$.ajaxSearcher.body = JSON.stringify(serialisedSearchQuery);
+            this.$.ajaxSearcher.generateRequest();
         } else if (result.opened) { // make sure overlay is closed if no search is performed
             result.close();
             this._focusInput();
@@ -532,34 +521,48 @@ export class TgEntityEditor extends TgEditor {
         // let's disable the load more action in this case
         result.enableLoadMore = wasNewValueObserved;
 
-        // There is a need to check whether element already exists before appending it to document.body.
-        // Under Microsoft Edge appending the same element more than once blows up with exception HierarchyRequestError.
+        // displaying of the result should happen only if there are not other result being displayed
+        // for this we probe the #result element and check whether it is opened
+        // if #result does not exist or is not opened then we shall try to focus the most appropriate part of this entity editor
         const elementExists = document.body.querySelector("#result");
-        if (!elementExists) {
-            document.body.appendChild(this.$.result);
+        if (!elementExists || !elementExists.opened) {
+            this._focus();
         }
+        // if this entity editor is focused we shall attempt to display the result
+        if (this._isFocused()) {
+            // remove the old #result if it was present and add the current result to be displayed
+            if (elementExists) {
+                document.body.removeChild(elementExists);
+            }
+            document.body.appendChild(result);
 
-        setTimeout(function () {
+            // now let's open the dialog to display the result
             if (result.opened) {
                 this._resultOpened();
             } else {
                 if (result.visibleHeightUnderEditorIsSmall()) {
-                    this.scrollIntoView({block: "center", inline: "center", behavior: "smooth"}); // Safari (WebKit) does not support options object (smooth scrolling). We are aiming Chrome for iOS devices at this stage.
-                    setTimeout(function () { // need to wait at least 300 ms for scrolling to complete..
-                        result.open();
-                    }.bind(this), 300);
+                    this.scrollIntoView({block: "center", inline: "center"}); // behavior: "smooth"
+                    setTimeout(function () { // need to wait at least 400 ms for smooth scrolling to complete... let's instead disable it
+                        this._showResult(result);
+                    }.bind(this), 100);
                 } else {
-                    result.open();
+                    this._showResult(result);
                 }
             }
-            result.notifyResize();
 
+            // TODO this code needs review as it does not seem to work reliably...            
             // focus a new item, if any
             // this should happen only if new values were loaded after pressing MORE
             if (document.activeElement === result && result.shadowRoot.activeElement === result.loadMoreButton() && indexOfFirstNewValue >= 0) {
                 result.focusItemWithIndex(indexOfFirstNewValue);
             }
-        }.bind(this), 100);
+        }
+    }
+
+    /* Displays the result dialog and notifies the resize event. */
+    _showResult(result) {
+        result.open();
+        result.notifyResize();
     }
 
     /**
@@ -592,9 +595,7 @@ export class TgEntityEditor extends TgEditor {
     }
 
     _resultOpened (e) {
-        const activeElement = document.activeElement;
-        const shadowActiveElement = this.shadowRoot.activeElement;
-        if (this.$.input === shadowActiveElement) { // only if autocompleter's input is in focus
+        if (this._isFocused()) {
             // indicate that the autocompleter dialog was opened and
             // highlight matched parts of the items found
             this.opened = true;
@@ -603,12 +604,11 @@ export class TgEntityEditor extends TgEditor {
             this.opened = true;
             this.$.result.cancel(e);
         }
-        setTimeout(() => this.$.result.notifyResize(), 1);
     }
 
     _resultClosed (e) {
         // property this.opened controls whether overlay on-close event should
-        // perfrom on-change event handler that does all the validation megic
+        // perform on-change event handler that does all the validation magic
         this._dataPage = 1;
         if (this.opened === true) {
             this.opened = false;
@@ -616,7 +616,7 @@ export class TgEntityEditor extends TgEditor {
         }
         const elementExists = document.body.querySelector("#result");
         if (elementExists) {
-            document.body.removeChild(this.$.result);
+            document.body.removeChild(elementExists);
         }
     }
 
@@ -682,17 +682,43 @@ export class TgEntityEditor extends TgEditor {
         // Therefore, need to fire the change event.
         this._onChange();
 
-        // at the end let's focus the input...
+        // at the end let's focus...
         this._focusInput();
     }
 
-    /* This method is used to make sure the input is in focus */
+    /**
+     * Identifies whether entity editor is focused by checking if any of its constituent parts are focused.
+     */
+    _isFocused () {
+        const activeElement = this.shadowRoot.activeElement
+        return activeElement === this.$.input           ||
+               activeElement === this.$.progressSpinner ||
+               activeElement === this.$.searcherButton  ||
+               activeElement === this.$.acceptButton;
+    }
+
+    /**
+     * Attempts to focus entity editor by focusing one of its constituent parts in turn, with a preference for the input to be focused last.
+     */
+    _focus () {
+        if (!this._isFocused()) {
+            this.$.acceptButton.focus();
+            if (!this._isFocused()) {
+                this.$.searcherButton.focus();
+                if (!this._isFocused()) {
+                    this._focusInput();
+                }
+            }
+        }
+    }
+    
+    /**
+     * Focuses the input component of the entity editor.
+     */
     _focusInput () {
         // at the end let's focus the input...
         const input = this.decoratedInput();
-        setTimeout(() => {
-            input.focus();
-        }, 100);
+        input.focus();
     }
 
     get parent() {
