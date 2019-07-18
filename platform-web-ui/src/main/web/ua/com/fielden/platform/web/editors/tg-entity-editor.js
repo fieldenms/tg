@@ -452,6 +452,9 @@ export class TgEntityEditor extends TgEditor {
     }
 
     _search (defaultSearchQuery, dataPage) {
+        // cancel any other search
+        this._cancelSearchByOtherEditor();
+
         // What is the query string?
         let inputText = ''; // default value
         if (this.multi === false) {
@@ -601,10 +604,31 @@ export class TgEntityEditor extends TgEditor {
         return contextHolder;
     }
 
+    /**
+     * Cancels any pending or in-progress search request.
+     */
     _cancelSearch () {
         if (this._asyncSearchHandle) {
             clearTimeout(this._asyncSearchHandle);
             this._asyncSearchHandle = null;
+        }
+        this.searching = false;
+        const ajax = this.$.ajaxSearcher;
+        if (ajax.lastRequest) {
+          ajax.lastRequest.abort();
+        }
+    }
+
+    /**
+     * Cancels pending or in-progress search requests by other entity editors.
+     */
+    _cancelSearchByOtherEditor () {
+        let parent = this;
+        while (parent && parent.tagName !== 'TG-FLEX-LAYOUT') {
+            parent = parent.parentElement;
+        }
+        if (parent) {
+            parent.querySelectorAll('tg-entity-editor').forEach((currentValue, currentIndex, list) => {if (currentValue !== this && currentValue.searching) currentValue._cancelSearch();});
         }
     }
 
@@ -802,7 +826,8 @@ export class TgEntityEditor extends TgEditor {
 
     _processSearcherError (e) {
         const self = this;
-        self.opened = true;
+        self.opened = false;
+        self.searching = false;
         self.$.result.close();
         self.processError(e, "search", function (errorResult) {
             if (self.postSearchedDefaultError) {
