@@ -551,7 +551,7 @@ export class TgEntityEditorResult extends mixinBehaviors([IronOverlayBehavior, T
         }
     }
 
-    /* Iron reseze event listener for correct resizing and positioning of an open result overlay. */
+    /* Iron resize event listener for correct resizing and positioning of an open result overlay. */
     refit () {
         var clientRectAndOffsetHeight = this.retrieveContainerSizes();
         var rect = clientRectAndOffsetHeight[0]; // container.getBoundingClientRect();//getClientRects()[0];
