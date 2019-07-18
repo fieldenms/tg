@@ -658,6 +658,11 @@ export class TgEntityEditor extends TgEditor {
             this._onChange();
         }
         document.body.removeChild(this.$.result);
+
+        // there are situations where closing of the result dialog kicks in the content scrolled event
+        // this results in another search request for the content of the input
+        // it is harmless, but does not look good when the result dialog appears again immediately after selecting values
+        this._cancelSearch();
     }
 
     _resultCanceled (event, detail) {
