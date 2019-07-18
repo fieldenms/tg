@@ -20,6 +20,7 @@ import ua.com.fielden.platform.criteria.generator.impl.CriteriaReflector;
 import ua.com.fielden.platform.dom.DomElement;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.CritOnly;
+import ua.com.fielden.platform.entity_centre.review.DynamicQueryBuilder.QueryProperty;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.utils.EntityUtils;
@@ -63,8 +64,10 @@ public abstract class AbstractCriterionWidget implements IRenderable, IImportabl
         this.widgetName = extractNameFrom(widgetPath);
         this.widgetPath = widgetPath;
         this.propertyName = propertyName;
-        this.isCritOnly = isEmpty(propertyName) ? false : AnnotationReflector.getPropertyAnnotation(CritOnly.class, root, propertyName) != null;
-        this.mnemonicsVisible = !this.isCritOnly;
+
+        final CritOnly critOnlyAnnotation = isEmpty(propertyName) ? null : AnnotationReflector.getPropertyAnnotation(CritOnly.class, root, propertyName);
+        this.isCritOnly = critOnlyAnnotation != null;
+        this.mnemonicsVisible = !this.isCritOnly || QueryProperty.critOnlyWithMnemonics(critOnlyAnnotation);
         this.editors = new Pair<>(editors[0], null);
         if (editors.length > 1) {
             this.editors.setValue(editors[1]);
