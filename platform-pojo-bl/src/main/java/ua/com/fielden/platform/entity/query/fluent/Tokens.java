@@ -222,6 +222,10 @@ final class Tokens {
         return add(CRIT_COND_OPERATOR, new Pair<String, String>(propName, critPropName));
     }
 
+    public Tokens critCondition(final ConditionModel condition, final String critPropName) {
+        return add(CRIT_COND_OPERATOR, new Pair<ConditionModel, String>(condition, critPropName));
+    }
+
     public Tokens isNull(final boolean negated) {
         return add(NULL_OPERATOR, negated);
     }

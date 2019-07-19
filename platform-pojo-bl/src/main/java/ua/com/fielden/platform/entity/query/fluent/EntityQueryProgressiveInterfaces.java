@@ -321,6 +321,15 @@ public interface EntityQueryProgressiveInterfaces {
 		 */
 		T critCondition(final String propName, final String critPropName);
 		
+        /**
+         * Applies provided condition in case value of crit-only property {@code critPropName} is not empty.
+         * 
+         * @param condition
+         * @param critPropName
+         * @return
+         */
+		T critCondition(final ConditionModel condition, final String critPropName);
+
 		T condition(final ConditionModel condition);
 
 		T negatedCondition(final ConditionModel condition);
