@@ -133,7 +133,7 @@ const template = html`
     </div>
     <div class="toolbar layout horizontal wrap">
         <div class="toolbar-content layout horizontal center">
-            <paper-button tooltip-text="Load more matching values, if any" on-tap="loadMore" id="loadMoreButton" disabled$="[[!enableLoadMore]]">More</paper-button>
+            <paper-button tooltip-text="Load more matching values, if any" on-tap="_loadMore" id="loadMoreButton" disabled$="[[!enableLoadMore]]">More</paper-button>
         </div>
         <div class="toolbar-content layout horizontal center" style="margin-left:auto">
             <paper-button tooltip-text="Discard and close" on-tap="close">Cancel</paper-button>
@@ -262,6 +262,10 @@ export class TgEntityEditorResult extends mixinBehaviors([IronOverlayBehavior, T
 
     loadMoreButton () {
         return this.$.loadMoreButton;
+    }
+
+    _loadMore () {
+        this.loadMore(true);
     }
 
     clearSelection () {
@@ -467,6 +471,7 @@ export class TgEntityEditorResult extends mixinBehaviors([IronOverlayBehavior, T
         const id = this._makeId(index);
         const paperItem = this.shadowRoot.querySelector("#" + id);
         if (paperItem) {
+            paperItem.scrollIntoView({block: "center", inline: "center", behavior: "smooth"});
             paperItem.focus();
         }
     }
@@ -500,7 +505,6 @@ export class TgEntityEditorResult extends mixinBehaviors([IronOverlayBehavior, T
                 } 
             }
         }
-        this._scrollToSelected();
     }
 
     selectPrev () {
@@ -522,7 +526,6 @@ export class TgEntityEditorResult extends mixinBehaviors([IronOverlayBehavior, T
                 this.focusItemWithIndex(this._selectedIndex);
             }
         }
-        this._scrollToSelected();
     }
 
     /** Selects the currenlty focused item in the list if none was selected.
@@ -534,24 +537,7 @@ export class TgEntityEditorResult extends mixinBehaviors([IronOverlayBehavior, T
         }
     }
 
-    _scrollToSelected () {
-        if (!isNaN(this._selectedIndex)) {
-            const item = this.querySelectorAll(".tg-item")[this._selectedIndex];
-            // item is going to be undefined if there are no matching values
-            if (item) {
-                if (item.offsetTop + item.offsetHeight < this.scrollTop || item.offsetTop > this.scrollTop + this.clientHeight ||
-                    item.offsetTop < this.scrollTop || item.offsetTop + item.offsetHeight > this.scrollTop + this.clientHeight) {
-                    if (item.offsetTop < this.scrollTop) {
-                        this.scrollTop = item.offsetTop;
-                    } else {
-                        this.scrollTop += (item.offsetTop + item.offsetHeight) - (this.scrollTop + this.clientHeight);
-                    }
-                }
-            }
-        }
-    }
-
-    /* Iron reseze event listener for correct resizing and positioning of an open result overlay. */
+    /* Iron resize event listener for correct resizing and positioning of an open result overlay. */
     refit () {
         var clientRectAndOffsetHeight = this.retrieveContainerSizes();
         var rect = clientRectAndOffsetHeight[0]; // container.getBoundingClientRect();//getClientRects()[0];
