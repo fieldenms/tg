@@ -178,7 +178,7 @@ public abstract class AbstractTokensBuilder implements ITokensBuilder {
     private ConditionModel critConditionOperatorModel(final Object value) {
         final Pair<String, String> props = (Pair<String, String>) value;
         final QueryProperty qp = (QueryProperty) getParamValue(queryPropertyParamName(props.getValue()));
-        return qp == null ? emptyCondition() : DynamicQueryBuilder.buildCondition(qp, props.getKey(), false);
+        return qp.isEmptyAndMnemonicless() ? emptyCondition() : DynamicQueryBuilder.buildCondition(qp, props.getKey(), false);
     }
 
     @Override

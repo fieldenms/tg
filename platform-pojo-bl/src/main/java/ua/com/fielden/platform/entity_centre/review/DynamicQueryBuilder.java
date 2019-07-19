@@ -408,6 +408,15 @@ public class DynamicQueryBuilder {
         }
 
         /**
+         * Returns <code>true</code> if property is crit-only and without mnemonics, <code>false</code> otherwise.
+         *
+         * @return
+         */
+        public boolean isCritOnlyWithoutMnemonics() {
+            return critOnly && !critOnlyWithMnemonics;
+        }
+
+        /**
          * Returns <code>true</code> if property is a child of crit-only AE property (dot-notated), <code>false</code> otherwise.
          *
          * @return
