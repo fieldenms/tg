@@ -202,7 +202,7 @@ public interface EntityQueryProgressiveInterfaces {
 		 */
 		T iParam(final Enum<?> paramName);
 
-		T model(final SingleResultQueryModel model);
+		T model(final SingleResultQueryModel<?> model);
 
 		/**
 		 * Expression.
