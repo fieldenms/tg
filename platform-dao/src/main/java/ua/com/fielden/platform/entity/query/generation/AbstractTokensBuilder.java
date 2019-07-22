@@ -1,6 +1,5 @@
 package ua.com.fielden.platform.entity.query.generation;
 
-import static java.lang.String.format;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.emptyCondition;
 import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.EQUERY_TOKENS;
 import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.EXPR_TOKENS;
@@ -19,7 +18,6 @@ import java.util.List;
 import java.util.Map;
 
 import ua.com.fielden.platform.entity.query.DbVersion;
-import ua.com.fielden.platform.entity.query.exceptions.EqlException;
 import ua.com.fielden.platform.entity.query.fluent.enums.Functions;
 import ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory;
 import ua.com.fielden.platform.entity.query.generation.elements.CountAll;
@@ -183,9 +181,10 @@ public abstract class AbstractTokensBuilder implements ITokensBuilder {
         final String critOnlyPropParamName = queryPropertyParamName(critOnlyPropName);
         final QueryProperty qp = (QueryProperty) getParamValue(critOnlyPropParamName);
         if (qp == null) {
-            throw new EqlException(format("QueryProperty value for crit-only property [%s] has not been provided as EQL query parameter named [%s].", critOnlyPropName, critOnlyPropParamName));
+            return emptyCondition();
+            //throw new EqlException(format("QueryProperty value for crit-only property [%s] has not been provided as EQL query parameter named [%s].", critOnlyPropName, critOnlyPropParamName));
         } else {
-            return qp.isEmptyAndMnemonicless() ? emptyCondition() : 
+            return qp.isEmptyAndMnemonicless() ? emptyCondition() :
                 (props.getKey() instanceof ConditionModel ? (ConditionModel) props.getKey() : DynamicQueryBuilder.buildCondition(qp, (String) props.getKey(), false));
         }
     }
