@@ -1,6 +1,8 @@
 package ua.com.fielden.platform.entity_centre.review;
 
 import static java.lang.Boolean.TRUE;
+import static ua.com.fielden.platform.entity.AbstractEntity.ID;
+import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.cond;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.baseEntityType;
@@ -1072,7 +1074,7 @@ public class DynamicQueryBuilder {
      * @return
      */
     public static String getPropertyNameWithoutKeyPart(final String propertyName) {
-        return replaceLast(propertyName, ".key", "");
+        return KEY.equals(propertyName) ? ID : replaceLast(propertyName, ".key", "");
     }
 
     private static String replaceLast(final String s, final String what, final String byWhat) {
