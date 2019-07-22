@@ -1,5 +1,7 @@
 package ua.com.fielden.platform.utils;
 
+import static java.util.stream.Collectors.toMap;
+
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
 import java.io.File;
@@ -11,6 +13,8 @@ import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import java.util.Properties;
 import java.util.regex.Pattern;
 
@@ -75,6 +79,16 @@ public class MiscUtilities {
     }
 
     /**
+     * Extracts the parameters objects from optional values and returns map between their property names and extracted objects.
+     *
+     * @param params
+     * @return
+     */
+    public static Map<String, Object> extractExactParams(final Map<String, Optional<?>> params) {
+        return params.entrySet().stream().filter(entry -> entry.getValue().isPresent()).collect(toMap(entry -> entry.getKey(), entry -> entry.getValue().orElse(null)));
+    }
+
+    /**
      * Returns true if value matches valuePattern, false otherwise. This method behaves like autocompleter's value matcher
      *
      * @param value
@@ -103,7 +117,7 @@ public class MiscUtilities {
         }
         return autocompleterExp.replaceAll("\\*", "%").trim();
     }
-    
+
 
     /**
      * Converts the content of the input stream into a string.
@@ -144,7 +158,7 @@ public class MiscUtilities {
      *
      * @param fileName
      * @return
-     * @throws IOException 
+     * @throws IOException
      * @throws Exception
      */
     public static Properties propertyExtractor(final String fileName) throws IOException {
