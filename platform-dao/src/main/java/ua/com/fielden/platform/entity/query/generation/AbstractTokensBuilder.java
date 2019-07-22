@@ -183,7 +183,7 @@ public abstract class AbstractTokensBuilder implements ITokensBuilder {
         final String critOnlyPropParamName = queryPropertyParamName(critOnlyPropName);
         final QueryProperty qp = (QueryProperty) getParamValue(critOnlyPropParamName);
         if (qp == null) {
-            throw new EqlException(format("QueryProperty value for crit-only property [%] has not been provided as EQL query parameter named [%s].", critOnlyPropName, critOnlyPropParamName));
+            throw new EqlException(format("QueryProperty value for crit-only property [%s] has not been provided as EQL query parameter named [%s].", critOnlyPropName, critOnlyPropParamName));
         } else {
             return qp.isEmptyAndMnemonicless() ? emptyCondition() : 
                 (props.getKey() instanceof ConditionModel ? (ConditionModel) props.getKey() : DynamicQueryBuilder.buildCondition(qp, (String) props.getKey(), false));
