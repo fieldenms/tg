@@ -7,6 +7,7 @@ import static java.util.Optional.of;
 import static java.util.stream.Collectors.toCollection;
 import static ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader.isGenerated;
 import static ua.com.fielden.platform.reflection.asm.impl.DynamicTypeNamingService.APPENDIX;
+import static ua.com.fielden.platform.reflection.asm.impl.DynamicTypeNamingService.nextTypeName;
 import static ua.com.fielden.platform.types.tuples.T2.t2;
 import static ua.com.fielden.platform.utils.CollectionUtil.linkedMapOf;
 import static ua.com.fielden.platform.utils.Pair.pair;
@@ -49,7 +50,6 @@ import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.reflection.Reflector;
 import ua.com.fielden.platform.reflection.asm.api.NewProperty;
 import ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader;
-import ua.com.fielden.platform.reflection.asm.impl.DynamicTypeNamingService;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
 import ua.com.fielden.platform.ui.menu.MiTypeAnnotation;
 import ua.com.fielden.platform.ui.menu.MiWithConfigurationSupport;
@@ -434,7 +434,7 @@ public final class DomainTreeEnhancer extends AbstractDomainTree implements IDom
         for (final Entry<Class<?>, Map<String, Map<String, IProperty>>> entry : groupedCalculatedProperties.entrySet()) {
             final Class<?> originalRoot = entry.getKey();
             // generate predefined root type name for all calculated properties
-            final String predefinedRootTypeName = rootNameSuffix.isPresent() ? originalRoot.getName() + APPENDIX + "_" + rootNameSuffix.get() : new DynamicTypeNamingService().nextTypeName(originalRoot.getName());
+            final String predefinedRootTypeName = rootNameSuffix.isPresent() ? originalRoot.getName() + APPENDIX + "_" + rootNameSuffix.get() : nextTypeName(originalRoot.getName());
             if (entry.getValue() == null) {
                 final ByteArray newByteArray = new ByteArray(classLoader.getCachedByteArray(originalRoot.getName()));
                 originalAndEnhancedRootTypes.put(originalRoot, new Pair<Class<?>, Map<String, ByteArray>>(originalRoot,  linkedMapOf(t2("", newByteArray))));

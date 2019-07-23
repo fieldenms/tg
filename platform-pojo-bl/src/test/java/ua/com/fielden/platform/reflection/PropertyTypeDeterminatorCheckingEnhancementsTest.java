@@ -45,7 +45,7 @@ public class PropertyTypeDeterminatorCheckingEnhancementsTest {
     
     public PropertyTypeDeterminatorCheckingEnhancementsTest() throws ClassNotFoundException {
         entityType = TgOwnerEntity.class;
-        entityTypeGenerated = (Class<AbstractEntity<?>>) cl.startModification(entityType.getName()).modifyTypeName(new DynamicTypeNamingService().nextTypeName(entityType.getName())).endModification();
+        entityTypeGenerated = (Class<AbstractEntity<?>>) cl.startModification(entityType.getName()).modifyTypeName(DynamicTypeNamingService.nextTypeName(entityType.getName())).endModification();
     }
 
     //////////////////////////////////// isInstrumented ////////////////////////////////////

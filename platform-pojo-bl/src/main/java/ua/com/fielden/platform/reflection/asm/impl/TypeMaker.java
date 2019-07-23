@@ -29,7 +29,6 @@ public class TypeMaker {
     private static final String NEW_SUPERTYPE_NAME_IS_NULL_OR_EMPTY = "New supertype name is 'null' or empty.";
     private static final String CURRENT_TYPE_OR_NAME_ARE_NOT_SPECIFIED = "Current type or name are not specified.";
     private final DynamicEntityClassLoader cl;
-    private final DynamicTypeNamingService namingService = new DynamicTypeNamingService();
     private byte[] currentType;
     private String currentName;
 
@@ -93,7 +92,7 @@ public class TypeMaker {
         try {
             final ClassReader cr = new ClassReader(currentType);
             final ClassWriter cw = new ClassWriter(ClassWriter.COMPUTE_FRAMES);
-            final AdvancedAddPropertyAdapter cv = new AdvancedAddPropertyAdapter(cw, namingService, propertiesToAdd);
+            final AdvancedAddPropertyAdapter cv = new AdvancedAddPropertyAdapter(cw, propertiesToAdd);
             cr.accept(cv, ClassReader.SKIP_FRAMES);
             currentType = cw.toByteArray();
             currentName = cv.getEnhancedName().replace('/', '.');
@@ -142,7 +141,7 @@ public class TypeMaker {
        try {
            final ClassReader cr = new ClassReader(currentType);
            final ClassWriter cw = new ClassWriter(ClassWriter.COMPUTE_FRAMES);
-           final AdvancedAddClassAnnotationAdapter cv = new AdvancedAddClassAnnotationAdapter(cw, namingService, annotations);
+           final AdvancedAddClassAnnotationAdapter cv = new AdvancedAddClassAnnotationAdapter(cw, annotations);
            cr.accept(cv, ClassReader.SKIP_FRAMES);
            currentType = cw.toByteArray();
            currentName = cv.getEnhancedName().replace('/', '.');
@@ -223,7 +222,7 @@ public class TypeMaker {
        try {
            final ClassReader cr = new ClassReader(currentType);
            final ClassWriter cw = new ClassWriter(ClassWriter.COMPUTE_FRAMES);
-           final AdvancedModifyPropertyAdapter cv = new AdvancedModifyPropertyAdapter(cw, namingService, propertiesToAdapt);
+           final AdvancedModifyPropertyAdapter cv = new AdvancedModifyPropertyAdapter(cw, propertiesToAdapt);
            cr.accept(cv, ClassReader.SKIP_FRAMES);
            currentType = cw.toByteArray();
            currentName = cv.getEnhancedName().replace('/', '.');

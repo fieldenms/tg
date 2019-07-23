@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.domaintree.impl;
 
 import static java.lang.String.format;
+import static ua.com.fielden.platform.reflection.asm.impl.DynamicTypeNamingService.nextTypeName;
 import static ua.com.fielden.platform.utils.Pair.pair;
 
 import java.lang.annotation.Annotation;
@@ -168,7 +169,7 @@ public final class DomainTreeEnhancer0 extends AbstractDomainTree implements IDo
         for (final Entry<Class<?>, Map<String, Map<String, CalculatedProperty>>> entry : groupedCalculatedProperties.entrySet()) {
             final Class<?> originalRoot = entry.getKey();
             // generate predefined root type name for all calculated properties
-            final String predefinedRootTypeName = new DynamicTypeNamingService().nextTypeName(originalRoot.getName());
+            final String predefinedRootTypeName = nextTypeName(originalRoot.getName());
             if (entry.getValue() == null) {
                 final NewProperty[] markerProp = new NewProperty[1];
                 markerProp[0] = new NewProperty("aMarkerPropertyJustToMakeTheTypeEnhanced", Integer.class, false, "Marker to make root type 'enhanced'.", "This is a marker property that just makes the type, that have no calc props, enhanced.", createIgnore());
