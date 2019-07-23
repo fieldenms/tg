@@ -255,7 +255,7 @@ public abstract class EntityQueryCriteria<C extends ICentreDomainTreeManagerAndE
         return getCentreDomainTreeMangerAndEnhancer().getFirstTick().checkedProperties(getEntityClass()).stream()
                 .filter(propName -> !AbstractDomainTree.isPlaceholder(propName))
                 .map(propName -> createQueryProperty(propName))
-                .filter(qp -> qp.isCritOnly() /*&& !qp.isEmptyAndMnemonicless()*/)
+                .filter(qp -> qp.isCritOnly() || qp.isAECritOnlyChild() /*&& !qp.isEmptyAndMnemonicless()*/)
                 .collect(Collectors.toMap(qp -> queryPropertyParamName(qp.getPropertyName()), qp -> qp));
     }
     /**
