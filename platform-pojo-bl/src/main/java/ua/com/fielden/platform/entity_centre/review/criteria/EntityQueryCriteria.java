@@ -707,7 +707,7 @@ public abstract class EntityQueryCriteria<C extends ICentreDomainTreeManagerAndE
             final EntityResultQueryModel<T> queryWithIds = select(getManagedType())
                     .where().prop("id").in().values(ids)
                     .model();
-            qem = from(queryWithIds).with(queryModel.getFetchModel()).with(queryModel.getOrderModel()).lightweight().model();
+            qem = from(queryWithIds).with(queryModel.getFetchModel()).with(queryModel.getOrderModel()).with(queryModel.getParamValues()).lightweight().model();
         }
 
         if (getManagedType().equals(getEntityClass())) {
