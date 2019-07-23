@@ -457,7 +457,7 @@ public class SerialisationTestResource extends AbstractWebResource {
         final Class<AbstractEntity<?>> emptyEntityTypeEnhanced;
         try {
             emptyEntityTypeEnhanced = (Class<AbstractEntity<?>>) 
-                    cl.startModification(EmptyEntity.class.getName())
+                    cl.startModification(EmptyEntity.class)
                         .modifyTypeName(nextTypeName(EmptyEntity.class.getName()))
                         .addClassAnnotations(new MiTypeAnnotation().newInstance(MiEmptyEntity.class))
                     .endModification();

@@ -48,12 +48,12 @@ public class DynamicEntityClassLoader extends ClassLoader {
     /**
      * Initiates adaptation of the specified by name type. This could be either dynamic or static type (created manually by developer).
      *
-     * @param typeName
+     * @param origType
      * @return
      * @throws ClassNotFoundException
      */
-    public TypeMaker startModification(final String typeName) throws ClassNotFoundException {
-        return new TypeMaker(this).startModification(typeName);
+    public TypeMaker startModification(final Class<?> origType) throws ClassNotFoundException {
+        return new TypeMaker(this, origType).startModification();
     }
 
     protected final Class<?> defineType(final String name, final byte[] b, final int off, final int len) {

@@ -16,6 +16,8 @@ import java.util.List;
 import org.junit.Before;
 import org.junit.Test;
 
+import com.google.inject.Injector;
+
 import ua.com.fielden.platform.associations.one2many.DetailsEntityForOneToManyAssociation;
 import ua.com.fielden.platform.associations.one2many.MasterEntityWithOneToManyAssociation;
 import ua.com.fielden.platform.entity.AbstractEntity;
@@ -50,8 +52,6 @@ import ua.com.fielden.platform.reflection.asm.impl.entities.TopLevelEntity;
 import ua.com.fielden.platform.test.CommonTestEntityModuleWithPropertyFactory;
 import ua.com.fielden.platform.test.EntityModuleWithPropertyFactory;
 import ua.com.fielden.platform.types.Money;
-
-import com.google.inject.Injector;
 
 /**
  * A test case to ensure correct dynamic modification of entity types by means of adding new properties.
@@ -95,7 +95,7 @@ public class DynamicEntityTypeGenerationTest {
         
         assertEquals("Incorrect setter argument type.", Reflector.obtainPropertySetter(Entity.class, "entity").getParameterTypes()[0], Entity.class);
         
-        final Class<? extends AbstractEntity<String>> newType = (Class<? extends AbstractEntity<String>>) cl.startModification(Entity.class.getName()).modifyTypeName(Entity.class.getName()
+        final Class<? extends AbstractEntity<String>> newType = (Class<? extends AbstractEntity<String>>) cl.startModification(Entity.class).modifyTypeName(Entity.class.getName()
                 + "_enhanced1").endModification();
         assertTrue("Incorrect type name.", newType.getName().equals(Entity.class.getName() + "_enhanced1"));
         assertEquals("Incorrect inheritance.", Entity.class.getSuperclass(), newType.getSuperclass());
@@ -109,7 +109,7 @@ public class DynamicEntityTypeGenerationTest {
     @Test
     public void should_support_supertype_modification() throws Exception {
         assertEquals("Incorrect setter return type.", Reflector.obtainPropertySetter(Entity.class, "firstProperty").getReturnType(), Entity.class);
-        final Class<? extends AbstractEntity<String>> newType = (Class<? extends AbstractEntity<String>>) cl.startModification(Entity.class.getName()).modifyTypeName(Entity.class.getName()
+        final Class<? extends AbstractEntity<String>> newType = (Class<? extends AbstractEntity<String>>) cl.startModification(Entity.class).modifyTypeName(Entity.class.getName()
                 + "_enhanced2").modifySupertypeName(Entity.class.getName()).endModification();
         assertTrue("Incorrect type name.", newType.getName().equals(Entity.class.getName() + "_enhanced2"));
         assertEquals("Incorrect inheritance.", Entity.class, newType.getSuperclass());
@@ -128,7 +128,7 @@ public class DynamicEntityTypeGenerationTest {
     public void test_type_name_modification_after_properties_addition() throws Exception {
         assertEquals("Incorrect setter return type.", Reflector.obtainPropertySetter(Entity.class, "firstProperty").getReturnType(), Entity.class);
         final Class<? extends AbstractEntity<String>> newType = (Class<? extends AbstractEntity<String>>) cl.//
-        /*     */startModification(Entity.class.getName()).//
+        /*     */startModification(Entity.class).//
         /*          */addProperties(pd1).//
         /*          */modifyTypeName(Entity.class.getName() + "_enhanced3").//
         /*     */endModification();
@@ -142,7 +142,7 @@ public class DynamicEntityTypeGenerationTest {
     @Test
     public void test_type_name_modification_after_properties_modification() throws Exception {
         assertEquals("Incorrect setter return type.", Reflector.obtainPropertySetter(Entity.class, "firstProperty").getReturnType(), Entity.class);
-        final Class<? extends AbstractEntity<String>> newType = (Class<? extends AbstractEntity<String>>) cl.startModification(Entity.class.getName()).//
+        final Class<? extends AbstractEntity<String>> newType = (Class<? extends AbstractEntity<String>>) cl.startModification(Entity.class).//
         modifyProperties(NewProperty.changeType("firstProperty", BigDecimal.class)).//
         modifyTypeName(Entity.class.getName() + "_enhanced4").endModification();
         assertTrue("Incorrect type name.", newType.getName().equals(Entity.class.getName() + "_enhanced4"));
@@ -152,7 +152,7 @@ public class DynamicEntityTypeGenerationTest {
 
     @Test
     public void test_loading_and_inheritance_and_number_of_properties_in_generated_entity_type_with_one_new_property() throws Exception {
-        final Class<? extends AbstractEntity<String>> newType = (Class<? extends AbstractEntity<String>>) cl.startModification(Entity.class.getName()).addProperties(pd1).endModification();
+        final Class<? extends AbstractEntity<String>> newType = (Class<? extends AbstractEntity<String>>) cl.startModification(Entity.class).addProperties(pd1).endModification();
         assertTrue("Incorrect type name.", newType.getName().startsWith(Entity.class.getName() + DynamicTypeNamingService.APPENDIX + "_"));
         assertEquals("Incorrect inheritance.", AbstractEntity.class, newType.getSuperclass());
         assertEquals("Incorrect number of properties.", Finder.getPropertyDescriptors(Entity.class).size() + 1, Finder.getPropertyDescriptors(newType).size());
@@ -161,14 +161,14 @@ public class DynamicEntityTypeGenerationTest {
     @Test
     public void test_preconditions() {
         try {
-            final TypeMaker tp = new TypeMaker(cl);
+            final TypeMaker tp = new TypeMaker(cl, Entity.class);
             tp.addProperties(pd1).endModification();
             fail("An exception should have been thrown due to omitted startModification call.");
         } catch (final Exception e) {
         }
 
         try {
-            final TypeMaker tp = new TypeMaker(cl);
+            final TypeMaker tp = new TypeMaker(cl, Entity.class);
             tp.endModification();
             fail("An exception should have been thrown due to omitted startModification call.");
         } catch (final Exception e) {
@@ -177,7 +177,7 @@ public class DynamicEntityTypeGenerationTest {
 
     @Test
     public void test_to_ensure_primitive_boolean_new_property_can_be_added() throws Exception {
-        final Class<? extends AbstractEntity<String>> newType = (Class<? extends AbstractEntity<String>>) cl.startModification(Entity.class.getName()).addProperties(pdBool).endModification();
+        final Class<? extends AbstractEntity<String>> newType = (Class<? extends AbstractEntity<String>>) cl.startModification(Entity.class).addProperties(pdBool).endModification();
         assertEquals("Incorrect number of properties.", Finder.getPropertyDescriptors(Entity.class).size() + 1, Finder.getPropertyDescriptors(newType).size());
 
         final Field field = Finder.findFieldByName(newType, NEW_PROPERTY_BOOL);
@@ -190,13 +190,13 @@ public class DynamicEntityTypeGenerationTest {
 
     @Test
     public void test_to_ensure_that_duplicate_new_properties_are_eliminated() throws Exception {
-        final Class<? extends AbstractEntity<String>> newType = (Class<? extends AbstractEntity<String>>) cl.startModification(Entity.class.getName()).addProperties(pd1, pd1, pd1).endModification();
+        final Class<? extends AbstractEntity<String>> newType = (Class<? extends AbstractEntity<String>>) cl.startModification(Entity.class).addProperties(pd1, pd1, pd1).endModification();
         assertEquals("Incorrect number of properties.", Finder.getPropertyDescriptors(Entity.class).size() + 1, Finder.getPropertyDescriptors(newType).size());
     }
 
     @Test
     public void test_to_ensure_that_order_of_new_properties_are_exactly_the_same_as_provided_and_properties_appear_in_the_end_of_class() throws Exception {
-        final Class<? extends AbstractEntity<String>> newType = (Class<? extends AbstractEntity<String>>) cl.startModification(Entity.class.getName()).addProperties(pd1, pd2, pdBool).endModification();
+        final Class<? extends AbstractEntity<String>> newType = (Class<? extends AbstractEntity<String>>) cl.startModification(Entity.class).addProperties(pd1, pd2, pdBool).endModification();
         final int size = newType.getDeclaredFields().length;
         assertEquals("The last field of class should correspond to a last 'freshly added' property.", pdBool.name, newType.getDeclaredFields()[size - 1].getName());
         assertEquals("The last - 1 field of class should correspond to a last - 1 'freshly added' property.", pd2.name, newType.getDeclaredFields()[size - 2].getName());
@@ -205,7 +205,7 @@ public class DynamicEntityTypeGenerationTest {
 
     @Test
     public void precision_and_scale_are_generated_correctly_when_specified_as_part_of_new_property_definition() throws Exception {
-        final Class<? extends AbstractEntity<String>> newType = (Class<? extends AbstractEntity<String>>) cl.startModification(Entity.class.getName()).addProperties(pd1, pd2).endModification();
+        final Class<? extends AbstractEntity<String>> newType = (Class<? extends AbstractEntity<String>>) cl.startModification(Entity.class).addProperties(pd1, pd2).endModification();
         
         final IsProperty pd1PropAnnot = AnnotationReflector.getPropertyAnnotation(IsProperty.class, newType, pd1.name); 
         assertEquals(19, pd1PropAnnot.precision());
@@ -219,20 +219,20 @@ public class DynamicEntityTypeGenerationTest {
     @Test
     public void test_to_ensure_that_conflicting_new_properties_are_not_added() throws Exception {
         final NewProperty npConflicting = new NewProperty("firstProperty", Money.class, false, NEW_PROPERTY_TITLE, NEW_PROPERTY_DESC, calculated);
-        final Class<? extends AbstractEntity<String>> newType = (Class<? extends AbstractEntity<String>>) cl.startModification(Entity.class.getName()).addProperties(npConflicting).endModification();
+        final Class<? extends AbstractEntity<String>> newType = (Class<? extends AbstractEntity<String>>) cl.startModification(Entity.class).addProperties(npConflicting).endModification();
         assertEquals("Incorrect number of properties.", Finder.getPropertyDescriptors(Entity.class).size(), Finder.getPropertyDescriptors(newType).size());
     }
 
     @Test
     public void test_to_ensure_several_new_properties_can_be_added() throws Exception {
-        final Class<? extends AbstractEntity<String>> newType = (Class<? extends AbstractEntity<String>>) cl.startModification(Entity.class.getName()).addProperties(pd1, pd2).endModification();
+        final Class<? extends AbstractEntity<String>> newType = (Class<? extends AbstractEntity<String>>) cl.startModification(Entity.class).addProperties(pd1, pd2).endModification();
         assertEquals("Incorrect number of properties.", Finder.getPropertyDescriptors(Entity.class).size() + 2, Finder.getPropertyDescriptors(newType).size());
     }
 
     @Test
     public void test_sequential_addition_of_new_properties() throws Exception {
         final Class<? extends AbstractEntity<String>> newType = (Class<? extends AbstractEntity<String>>) //
-        cl.startModification(Entity.class.getName()).//
+        cl.startModification(Entity.class).//
         addProperties(pd1).//
         addProperties(pd2).//
         endModification();
@@ -241,8 +241,8 @@ public class DynamicEntityTypeGenerationTest {
 
     @Test
     public void test_addition_of_new_property_to_enhanced_type() throws Exception {
-        final Class<? extends AbstractEntity<String>> newType1 = (Class<? extends AbstractEntity<String>>) cl.startModification(Entity.class.getName()).addProperties(pd1).endModification();
-        final Class<? extends AbstractEntity<String>> newType2 = (Class<? extends AbstractEntity<String>>) cl.startModification(newType1.getName()).addProperties(pd2).endModification();
+        final Class<? extends AbstractEntity<String>> newType1 = (Class<? extends AbstractEntity<String>>) cl.startModification(Entity.class).addProperties(pd1).endModification();
+        final Class<? extends AbstractEntity<String>> newType2 = (Class<? extends AbstractEntity<String>>) cl.startModification(newType1).addProperties(pd2).endModification();
 
         assertTrue("Incorrect type name.", newType1.getName().startsWith(Entity.class.getName() + DynamicTypeNamingService.APPENDIX + "_"));
         assertTrue("Incorrect type name.", newType2.getName().startsWith(Entity.class.getName() + DynamicTypeNamingService.APPENDIX + "_"));
@@ -252,7 +252,7 @@ public class DynamicEntityTypeGenerationTest {
     @Test
     public void generation_of_type_with_overriden_method_should_succeed() throws Exception {
         final Class<? extends AbstractEntity<String>> newType1 = (Class<? extends AbstractEntity<String>>) cl.//
-        startModification(ChildEntity.class.getName()).//
+        startModification(ChildEntity.class).//
         addProperties(pd1).//
         endModification();
         assertTrue("Incorrect type name.", newType1.getName().startsWith(ChildEntity.class.getName() + DynamicTypeNamingService.APPENDIX + "_"));
@@ -267,7 +267,7 @@ public class DynamicEntityTypeGenerationTest {
     @Test
     public void test_instantiation_of_generated_entity_type_using_entity_factory() throws Exception {
         final Class<? extends AbstractEntity<String>> newType = (Class<? extends AbstractEntity<String>>) cl.//
-        /*    */startModification(Entity.class.getName()).//
+        /*    */startModification(Entity.class).//
         /*            */addProperties(pd1).//
         /*    */endModification();
         final AbstractEntity<?> entity = factory.newByKey(newType, "key");
@@ -276,16 +276,16 @@ public class DynamicEntityTypeGenerationTest {
 
     @Test
     public void test_new_type_name_generation() throws Exception {
-        final Class<? extends AbstractEntity<?>> newType1 = (Class<? extends AbstractEntity<?>>) cl.startModification(Entity.class.getName()).addProperties(pd1).endModification();
+        final Class<? extends AbstractEntity<?>> newType1 = (Class<? extends AbstractEntity<?>>) cl.startModification(Entity.class).addProperties(pd1).endModification();
         assertTrue("Incorrect type name.", newType1.getName().startsWith(Entity.class.getName() + DynamicTypeNamingService.APPENDIX + "_"));
 
-        final Class<? extends AbstractEntity<?>> newType2 = (Class<? extends AbstractEntity<?>>) cl.startModification(Entity.class.getName()).addProperties(pd1).endModification();
+        final Class<? extends AbstractEntity<?>> newType2 = (Class<? extends AbstractEntity<?>>) cl.startModification(Entity.class).addProperties(pd1).endModification();
         assertTrue("Incorrect type name.", newType2.getName().startsWith(Entity.class.getName() + DynamicTypeNamingService.APPENDIX + "_"));
     }
 
     @Test
     public void test_meta_data_for_new_property_in_instance_of_generated_entity_type() throws Exception {
-        final Class<? extends AbstractEntity<String>> newType = (Class<? extends AbstractEntity<String>>) cl.startModification(Entity.class.getName()).addProperties(pd1).endModification();
+        final Class<? extends AbstractEntity<String>> newType = (Class<? extends AbstractEntity<String>>) cl.startModification(Entity.class).addProperties(pd1).endModification();
 
         final Field field = Finder.findFieldByName(newType, NEW_PROPERTY_1);
         assertNotNull("The field should exist.", field);
@@ -303,7 +303,7 @@ public class DynamicEntityTypeGenerationTest {
 
     @Test
     public void test_observation_of_setter_for_new_property_in_instance_of_generated_entity_type() throws Exception {
-        final Class<? extends AbstractEntity<String>> newType = (Class<? extends AbstractEntity<String>>) cl.startModification(Entity.class.getName()).addProperties(pd1, pd1, pd1).endModification();
+        final Class<? extends AbstractEntity<String>> newType = (Class<? extends AbstractEntity<String>>) cl.startModification(Entity.class).addProperties(pd1, pd1, pd1).endModification();
         module.getDomainMetaPropertyConfig().setDefiner(newType, NEW_PROPERTY_1, new IAfterChangeEventHandler<Object>() {
             @Override
             public void handle(final MetaProperty<Object> property, final Object entityPropertyValue) {
@@ -363,7 +363,7 @@ public class DynamicEntityTypeGenerationTest {
         };
 
         final NewProperty pd = new NewProperty(NEW_PROPERTY_1, Money.class, false, NEW_PROPERTY_TITLE, NEW_PROPERTY_DESC, ad1, ad2);
-        final Class<? extends AbstractEntity<String>> newType = (Class<? extends AbstractEntity<String>>) cl.startModification(Entity.class.getName()).addProperties(pd).endModification();
+        final Class<? extends AbstractEntity<String>> newType = (Class<? extends AbstractEntity<String>>) cl.startModification(Entity.class).addProperties(pd).endModification();
 
         final Field field = Finder.findFieldByName(newType, NEW_PROPERTY_1);
         final Annotation1 an1 = AnnotationReflector.getAnnotation(field, Annotation1.class);
@@ -386,7 +386,7 @@ public class DynamicEntityTypeGenerationTest {
         final IsProperty isProperty = new IsPropertyAnnotation(String.class).newInstance();
 
         final NewProperty pd = new NewProperty("collectionalProperty", List.class, false, "Collectional Property", "Collectional Property Description", calculated, isProperty);
-        final Class<? extends AbstractEntity<String>> enhancedType = (Class<? extends AbstractEntity<String>>) cl.startModification(EntityBeingEnhanced.class.getName()).addProperties(pd).endModification();
+        final Class<? extends AbstractEntity<String>> enhancedType = (Class<? extends AbstractEntity<String>>) cl.startModification(EntityBeingEnhanced.class).addProperties(pd).endModification();
 
         // test the modified field attributes such as type and IsProperty annotation
         final Field collectionalPropertyField = Finder.findFieldByName(enhancedType, "collectionalProperty");
@@ -403,7 +403,7 @@ public class DynamicEntityTypeGenerationTest {
         final IsProperty isProperty = new IsPropertyAnnotation(String.class, "--stub-for-tests-to-be-passed--").newInstance();
 
         final NewProperty pd = new NewProperty("collectionalProperty", List.class, false, "Collectional Property", "Collectional Property Description", isProperty);
-        final Class<? extends AbstractEntity<String>> enhancedType = (Class<? extends AbstractEntity<String>>) cl.startModification(EntityBeingEnhanced.class.getName()).addProperties(pd).endModification();
+        final Class<? extends AbstractEntity<String>> enhancedType = (Class<? extends AbstractEntity<String>>) cl.startModification(EntityBeingEnhanced.class).addProperties(pd).endModification();
 
         final Method getter = Reflector.obtainPropertyAccessor(enhancedType, "collectionalProperty");
         assertEquals("Incorrect return type.", "java.util.List<java.lang.String>", getter.getGenericReturnType().toString());
@@ -418,7 +418,7 @@ public class DynamicEntityTypeGenerationTest {
         final IsProperty isProperty = new IsPropertyAnnotation(String.class, "--stub-for-tests-to-be-passed--").newInstance();
 
         final NewProperty pd = new NewProperty("collectionalProperty", List.class, false, "Collectional Property", "Collectional Property Description", isProperty);
-        final Class<? extends AbstractEntity<String>> enhancedType = (Class<? extends AbstractEntity<String>>) cl.startModification(EntityBeingEnhanced.class.getName()).addProperties(pd).endModification();
+        final Class<? extends AbstractEntity<String>> enhancedType = (Class<? extends AbstractEntity<String>>) cl.startModification(EntityBeingEnhanced.class).addProperties(pd).endModification();
 
         final Method setter = Reflector.obtainPropertySetter(enhancedType, "collectionalProperty");
         final java.lang.reflect.Type[] types = setter.getGenericParameterTypes();
@@ -440,7 +440,7 @@ public class DynamicEntityTypeGenerationTest {
         final String PROP_NAME = "prop_name";
         final NewProperty pd = new NewProperty(PROP_NAME, String.class, false, "title", "desc", bch);
 
-        final Class<? extends AbstractEntity<String>> enhancedType = (Class<? extends AbstractEntity<String>>) cl.startModification(EntityBeingEnhanced.class.getName()).addProperties(pd).endModification();
+        final Class<? extends AbstractEntity<String>> enhancedType = (Class<? extends AbstractEntity<String>>) cl.startModification(EntityBeingEnhanced.class).addProperties(pd).endModification();
 
         final Field field = Finder.findFieldByName(enhancedType, PROP_NAME);
         final BeforeChange bceAnnotation = AnnotationReflector.getAnnotation(field, BeforeChange.class);
@@ -469,7 +469,7 @@ public class DynamicEntityTypeGenerationTest {
     public void one2Many_special_case_property_should_have_been_generated_correctly() throws Exception {
         final IsProperty isProperty = new IsPropertyAnnotation(String.class, "key1").newInstance();
         final NewProperty pd = new NewProperty("one2manyAssociationSpecialCase2", DetailsEntityForOneToManyAssociation.class, false, "One2Many Special Case Association Property", "One2Many Special Case Association Property Description", isProperty);
-        final Class<? extends AbstractEntity<?>> enhancedType = (Class<? extends AbstractEntity<?>>) cl.startModification(MasterEntityWithOneToManyAssociation.class.getName()).addProperties(pd).endModification();
+        final Class<? extends AbstractEntity<?>> enhancedType = (Class<? extends AbstractEntity<?>>) cl.startModification(MasterEntityWithOneToManyAssociation.class).addProperties(pd).endModification();
 
         assertEquals("key1", AnnotationReflector.getAnnotation(Finder.findFieldByName(enhancedType, "one2manyAssociationSpecialCase2"), IsProperty.class).linkProperty());
     }
@@ -479,7 +479,7 @@ public class DynamicEntityTypeGenerationTest {
         final IsProperty isProperty = new IsPropertyAnnotation(DetailsEntityForOneToManyAssociation.class, "key1").newInstance();
 
         final NewProperty pd = new NewProperty("one2manyAssociationCollectional2", List.class, false, "One2Many Collectional Association Property", "One2Many Collectional Association Property Description", isProperty);
-        final Class<? extends AbstractEntity<String>> enhancedType = (Class<? extends AbstractEntity<String>>) cl.startModification(MasterEntityWithOneToManyAssociation.class.getName()).addProperties(pd).endModification();
+        final Class<? extends AbstractEntity<String>> enhancedType = (Class<? extends AbstractEntity<String>>) cl.startModification(MasterEntityWithOneToManyAssociation.class).addProperties(pd).endModification();
 
         assertEquals("key1", AnnotationReflector.getAnnotation(Finder.findFieldByName(enhancedType, "one2manyAssociationCollectional2"), IsProperty.class).linkProperty());
         assertEquals(DetailsEntityForOneToManyAssociation.class, AnnotationReflector.getAnnotation(Finder.findFieldByName(enhancedType, "one2manyAssociationCollectional2"), IsProperty.class).value());
@@ -488,7 +488,7 @@ public class DynamicEntityTypeGenerationTest {
     @Test
     public void test_to_ensure_that_property_name_with_dangerous_character_works() throws Exception {
         final NewProperty exoticProperty = new NewProperty("\\firstProperty\\", String.class, false, "title", "desc");
-        final Class<? extends AbstractEntity<String>> newType = (Class<? extends AbstractEntity<String>>) cl.startModification(Entity.class.getName()).addProperties(exoticProperty).endModification();
+        final Class<? extends AbstractEntity<String>> newType = (Class<? extends AbstractEntity<String>>) cl.startModification(Entity.class).addProperties(exoticProperty).endModification();
         try {
             Finder.findFieldByName(newType, "\\firstProperty\\");
         } catch (final Exception e) {
@@ -499,7 +499,7 @@ public class DynamicEntityTypeGenerationTest {
     @Test
     public void should_be_able_to_add_valid_annotation_to_class() throws Exception {
         final Class<? extends AbstractEntity<?>> newType = (Class<? extends AbstractEntity<?>>) cl
-                .startModification(TopLevelEntity.class.getName())
+                .startModification(TopLevelEntity.class)
                 .addClassAnnotations(new DescTitleAnnotation("Title", "Description").newInstance())
                 .endModification();
 
@@ -512,7 +512,7 @@ public class DynamicEntityTypeGenerationTest {
     @Test
     public void class_level_annotaton_replacement_should_not_be_possible() throws Exception {
         final Class<? extends AbstractEntity<?>> newType = (Class<? extends AbstractEntity<?>>) cl
-                .startModification(Entity.class.getName())
+                .startModification(Entity.class)
                 .addClassAnnotations(new DescTitleAnnotation("Title", "Description").newInstance())
                 .endModification();
 
@@ -525,7 +525,7 @@ public class DynamicEntityTypeGenerationTest {
     @Test
     public void adding_inappropriate_annotaton_to_class_should_fail() throws Exception {
         try {
-            cl.startModification(TopLevelEntity.class.getName())
+            cl.startModification(TopLevelEntity.class)
                     .addClassAnnotations(new IsPropertyAnnotation().newInstance())
                     .endModification();
             fail();
@@ -538,7 +538,7 @@ public class DynamicEntityTypeGenerationTest {
     @Test
     public void should_be_able_to_add_class_level_annotation_after_adding_properties() throws Exception {
         final Class<? extends AbstractEntity<String>> newType = (Class<? extends AbstractEntity<String>>) cl.//
-        /*     */startModification(TopLevelEntity.class.getName()).//
+        /*     */startModification(TopLevelEntity.class).//
         /*          */addProperties(pd1).//
         /*          */addClassAnnotations(new DescTitleAnnotation("Title", "Description").newInstance()).//
         /*     */endModification();

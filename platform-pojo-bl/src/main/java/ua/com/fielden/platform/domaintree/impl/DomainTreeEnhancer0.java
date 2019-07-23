@@ -174,7 +174,7 @@ public final class DomainTreeEnhancer0 extends AbstractDomainTree implements IDo
                 final NewProperty[] markerProp = new NewProperty[1];
                 markerProp[0] = new NewProperty("aMarkerPropertyJustToMakeTheTypeEnhanced", Integer.class, false, "Marker to make root type 'enhanced'.", "This is a marker property that just makes the type, that have no calc props, enhanced.", createIgnore());
                 try {
-                    final Class<?> rootEnhanced = classLoader.startModification(originalRoot.getName()).addProperties(markerProp).endModification();
+                    final Class<?> rootEnhanced = classLoader.startModification(originalRoot).addProperties(markerProp).endModification();
                     final ByteArray newByteArray = new ByteArray(classLoader.getCachedByteArray(rootEnhanced.getName()));
                     originalAndEnhancedRootTypes.put(originalRoot, new Pair<Class<?>, Map<String, ByteArray>>(rootEnhanced, new HashMap<String, ByteArray>() {
                         {
@@ -208,7 +208,7 @@ public final class DomainTreeEnhancer0 extends AbstractDomainTree implements IDo
                             final Map<String, ByteArray> existingByteArrays = new HashMap<String, ByteArray>(originalAndEnhancedRootTypes.get(originalRoot).getValue());
 
                             // generate & load new type enhanced by calculated properties
-                            final Class<?> realParentEnhanced = classLoader.startModification(realParentToBeEnhanced.getName()).addProperties(newProperties).endModification();
+                            final Class<?> realParentEnhanced = classLoader.startModification(realParentToBeEnhanced).addProperties(newProperties).endModification();
                             // propagate enhanced type to root
                             final Pair<Class<?>, Map<String, ByteArray>> rootAfterPropagationAndAdditionalByteArrays = propagateEnhancedTypeToRoot(realParentEnhanced, realRoot, path, classLoader);
                             final Class<?> rootAfterPropagation = rootAfterPropagationAndAdditionalByteArrays.getKey();
@@ -227,7 +227,7 @@ public final class DomainTreeEnhancer0 extends AbstractDomainTree implements IDo
             try {
                 // modify root type name with predefinedRootTypeName
                 final Pair<Class<?>, Map<String, ByteArray>> current = originalAndEnhancedRootTypes.get(originalRoot);
-                final Class<?> rootWithPredefinedName = classLoader.startModification(current.getKey().getName()).modifyTypeName(predefinedRootTypeName).endModification();
+                final Class<?> rootWithPredefinedName = classLoader.startModification(current.getKey()).modifyTypeName(predefinedRootTypeName).endModification();
                 final Map<String, ByteArray> byteArraysWithRenamedRoot = new HashMap<String, ByteArray>();
 
                 byteArraysWithRenamedRoot.putAll(current.getValue());
@@ -254,7 +254,7 @@ public final class DomainTreeEnhancer0 extends AbstractDomainTree implements IDo
 
         try {
             final String predefinedRootTypeName = root.getName() + DynamicTypeNamingService.APPENDIX + "_" + clientGeneratedTypeNameSuffix;
-            final Class<?> rootWithPredefinedName = classLoader.startModification(managedType.getName()).modifyTypeName(predefinedRootTypeName)./* TODO modifySupertypeName(originalRoot.getName()).*/endModification();
+            final Class<?> rootWithPredefinedName = classLoader.startModification(managedType).modifyTypeName(predefinedRootTypeName)./* TODO modifySupertypeName(originalRoot.getName()).*/endModification();
             
             final Map<String, ByteArray> byteArraysWithRenamedRoot = new LinkedHashMap<>();
             final Pair<Class<?>, Map<String, ByteArray>> currentByteArrays = originalAndEnhancedRootTypesAndArrays.get(root);
@@ -285,7 +285,7 @@ public final class DomainTreeEnhancer0 extends AbstractDomainTree implements IDo
         final DynamicEntityClassLoader classLoader = DynamicEntityClassLoader.getInstance(ClassLoader.getSystemClassLoader());
 
         try {
-            final Class<?> managedTypeWithAnnotations = classLoader.startModification(managedType.getName()).addClassAnnotations(additionalAnnotations).endModification();
+            final Class<?> managedTypeWithAnnotations = classLoader.startModification(managedType).addClassAnnotations(additionalAnnotations).endModification();
             
             final Map<String, ByteArray> byteArraysWithRenamedRoot = new LinkedHashMap<>();
             final Pair<Class<?>, Map<String, ByteArray>> currentByteArrays = originalAndEnhancedRootTypesAndArrays.get(root);
@@ -355,14 +355,14 @@ public final class DomainTreeEnhancer0 extends AbstractDomainTree implements IDo
         }
         final Pair<Class<?>, String> transformed = PropertyTypeDeterminator.transform(root, path);
 
-        final String nameOfTheTypeToAdapt = transformed.getKey().getName();
+        final Class<?> typeToAdapt = transformed.getKey();
         final String nameOfThePropertyToAdapt = transformed.getValue();
         try {
             // change type if simple field and change signature in case of collectional field
             final boolean isCollectional = Collection.class.isAssignableFrom(PropertyTypeDeterminator.determineClass(transformed.getKey(), transformed.getValue(), true, false));
             final NewProperty propertyToBeModified = !isCollectional ? NewProperty.changeType(nameOfThePropertyToAdapt, enhancedType)
                     : NewProperty.changeTypeSignature(nameOfThePropertyToAdapt, enhancedType);
-            final Class<?> nextEnhancedType = classLoader.startModification(nameOfTheTypeToAdapt).modifyProperties(propertyToBeModified).endModification();
+            final Class<?> nextEnhancedType = classLoader.startModification(typeToAdapt).modifyProperties(propertyToBeModified).endModification();
             final String nextProp = PropertyTypeDeterminator.isDotNotation(path) ? PropertyTypeDeterminator.penultAndLast(path).getKey() : "";
             final Pair<Class<?>, Map<String, ByteArray>> lastTypeThatIsRootAndPropagatedArrays = propagateEnhancedTypeToRoot(nextEnhancedType, root, nextProp, classLoader);
             additionalByteArrays.putAll(lastTypeThatIsRootAndPropagatedArrays.getValue());

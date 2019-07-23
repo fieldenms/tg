@@ -17,6 +17,8 @@ import java.util.Collection;
 import org.junit.Before;
 import org.junit.Test;
 
+import com.google.inject.Injector;
+
 import ua.com.fielden.platform.associations.one2many.DetailsEntityForOneToManyAssociation;
 import ua.com.fielden.platform.associations.one2many.MasterEntityWithOneToManyAssociation;
 import ua.com.fielden.platform.associations.one2many.MasterEntityWithOneToManyCollectionalAssociationProvidedWithLinkPropValue;
@@ -44,8 +46,6 @@ import ua.com.fielden.platform.reflection.asm.impl.entities.TopLevelEntity;
 import ua.com.fielden.platform.test.CommonTestEntityModuleWithPropertyFactory;
 import ua.com.fielden.platform.test.EntityModuleWithPropertyFactory;
 import ua.com.fielden.platform.types.Money;
-
-import com.google.inject.Injector;
 
 /**
  * A test case to ensure correct dynamic modification of entity types by means of changing existing properties.
@@ -77,11 +77,11 @@ public class DynamicEntityTypeModificationTest {
 
     @Test
     public void test_preconditions() throws Exception {
-        final Class<? extends AbstractEntity> entityBeingEnhancedEnhancedType = (Class<? extends AbstractEntity>) cl.startModification(EntityBeingEnhanced.class.getName()).addProperties(pd).endModification();
+        final Class<? extends AbstractEntity> entityBeingEnhancedEnhancedType = (Class<? extends AbstractEntity>) cl.startModification(EntityBeingEnhanced.class).addProperties(pd).endModification();
         // specify what property of what owning type should be replaced with the enhanced entity type
         final NewProperty mp = NewProperty.changeType("prop1", entityBeingEnhancedEnhancedType);
         try {
-            final TypeMaker tp = new TypeMaker(cl);
+            final TypeMaker tp = new TypeMaker(cl, EntityBeingEnhanced.class);
             tp.modifyProperties(mp).endModification();
             fail("An exception should have been thrown due to omitted startModification call.");
         } catch (final Exception e) {
@@ -91,16 +91,16 @@ public class DynamicEntityTypeModificationTest {
     @Test
     public void test_to_ensure_several_properties_can_be_modified() throws Exception {
         // get the enhanced EntityBeingEnhanced type
-        final Class<?> entityBeingEnhancedEnhancedType = cl.startModification(EntityBeingEnhanced.class.getName()).addProperties(pd).endModification();
+        final Class<?> entityBeingEnhancedEnhancedType = cl.startModification(EntityBeingEnhanced.class).addProperties(pd).endModification();
         // specify that what property prop1@EntityBeingModified should have its type replaced with entityBeingEnhancedEnhancedType
         final NewProperty mp = NewProperty.changeType("prop1", entityBeingEnhancedEnhancedType);
         // get the modified EntityBeingModified type
-        final Class<?> entityBeingModifiedModifiedType = cl.startModification(EntityBeingModified.class.getName()).modifyProperties(mp).endModification();
+        final Class<?> entityBeingModifiedModifiedType = cl.startModification(EntityBeingModified.class).modifyProperties(mp).endModification();
         // specify that properties prop1@TopLevelEntity and prop2@TopLevelEntity should have their type replaced with entityBeingModifiedModifiedType
         final NewProperty topLevelMp1 = NewProperty.changeType("prop1", entityBeingModifiedModifiedType);
         final NewProperty topLevelMp2 = NewProperty.changeType("prop2", entityBeingModifiedModifiedType);
         // get the modified TopLevelEntity type
-        final Class<?> topLevelEntityModifiedType = cl.startModification(TopLevelEntity.class.getName()).modifyProperties(topLevelMp1, topLevelMp2).endModification();
+        final Class<?> topLevelEntityModifiedType = cl.startModification(TopLevelEntity.class).modifyProperties(topLevelMp1, topLevelMp2).endModification();
 
         final Field prop1 = topLevelEntityModifiedType.getDeclaredField("prop1");
         final Field prop2 = topLevelEntityModifiedType.getDeclaredField("prop2");
@@ -112,16 +112,16 @@ public class DynamicEntityTypeModificationTest {
     @Test
     public void test_sequential_modificaton_of_properties() throws Exception {
         // get the enhanced EntityBeingEnhanced type
-        final Class<?> entityBeingEnhancedEnhancedType = cl.startModification(EntityBeingEnhanced.class.getName()).addProperties(pd).endModification();
+        final Class<?> entityBeingEnhancedEnhancedType = cl.startModification(EntityBeingEnhanced.class).addProperties(pd).endModification();
         // specify that what property prop1@EntityBeingModified should have its type replaced with entityBeingEnhancedEnhancedType
         final NewProperty mp = NewProperty.changeType("prop1", entityBeingEnhancedEnhancedType);
         // get the modified EntityBeingModified type
-        final Class<?> entityBeingModifiedModifiedType = cl.startModification(EntityBeingModified.class.getName()).modifyProperties(mp).endModification();
+        final Class<?> entityBeingModifiedModifiedType = cl.startModification(EntityBeingModified.class).modifyProperties(mp).endModification();
         // specify that properties prop1@TopLevelEntity and prop2@TopLevelEntity should have their type replaced with entityBeingModifiedModifiedType
         final NewProperty topLevelMp1 = NewProperty.changeType("prop1", entityBeingModifiedModifiedType);
         final NewProperty topLevelMp2 = NewProperty.changeType("prop2", entityBeingModifiedModifiedType);
         // get the modified TopLevelEntity type
-        final Class<?> topLevelEntityModifiedType = cl.startModification(TopLevelEntity.class.getName()).//
+        final Class<?> topLevelEntityModifiedType = cl.startModification(TopLevelEntity.class).//
         modifyProperties(topLevelMp1).//
         modifyProperties(topLevelMp2).//
         endModification();
@@ -136,17 +136,17 @@ public class DynamicEntityTypeModificationTest {
     @Test
     public void test_modification_of_properties_to_modified_type() throws Exception {
         // get the enhanced EntityBeingEnhanced type
-        final Class<?> entityBeingEnhancedEnhancedType = cl.startModification(EntityBeingEnhanced.class.getName()).addProperties(pd).endModification();
+        final Class<?> entityBeingEnhancedEnhancedType = cl.startModification(EntityBeingEnhanced.class).addProperties(pd).endModification();
         // specify that what property prop1@EntityBeingModified should have its type replaced with entityBeingEnhancedEnhancedType
         final NewProperty mp = NewProperty.changeType("prop1", entityBeingEnhancedEnhancedType);
         // get the modified EntityBeingModified type
-        final Class<?> entityBeingModifiedModifiedType = cl.startModification(EntityBeingModified.class.getName()).modifyProperties(mp).endModification();
+        final Class<?> entityBeingModifiedModifiedType = cl.startModification(EntityBeingModified.class).modifyProperties(mp).endModification();
         // specify that properties prop1@TopLevelEntity and prop2@TopLevelEntity should have their type replaced with entityBeingModifiedModifiedType
         final NewProperty topLevelMp1 = NewProperty.changeType("prop1", entityBeingModifiedModifiedType);
         final NewProperty topLevelMp2 = NewProperty.changeType("prop2", entityBeingModifiedModifiedType);
         // get the modified TopLevelEntity type
-        final Class<?> topLevelEntityModifiedType1 = cl.startModification(TopLevelEntity.class.getName()).modifyProperties(topLevelMp1).endModification();
-        final Class<?> topLevelEntityModifiedType2 = cl.startModification(topLevelEntityModifiedType1.getName()).modifyProperties(topLevelMp2).endModification();
+        final Class<?> topLevelEntityModifiedType1 = cl.startModification(TopLevelEntity.class).modifyProperties(topLevelMp1).endModification();
+        final Class<?> topLevelEntityModifiedType2 = cl.startModification(topLevelEntityModifiedType1).modifyProperties(topLevelMp2).endModification();
 
         final Field prop1 = topLevelEntityModifiedType2.getDeclaredField("prop1");
         final Field prop2 = topLevelEntityModifiedType2.getDeclaredField("prop2");
@@ -158,17 +158,17 @@ public class DynamicEntityTypeModificationTest {
     @Test
     public void test_new_type_name_generation() throws Exception {
         // get the enhanced EntityBeingEnhanced type
-        final Class<?> entityBeingEnhancedEnhancedType = cl.startModification(EntityBeingEnhanced.class.getName()).addProperties(pd).endModification();
+        final Class<?> entityBeingEnhancedEnhancedType = cl.startModification(EntityBeingEnhanced.class).addProperties(pd).endModification();
         // specify that what property prop1@EntityBeingModified should have its type replaced with entityBeingEnhancedEnhancedType
         final NewProperty mp = NewProperty.changeType("prop1", entityBeingEnhancedEnhancedType);
         // get the modified EntityBeingModified type
-        final Class<?> entityBeingModifiedModifiedType = cl.startModification(EntityBeingModified.class.getName()).modifyProperties(mp).endModification();
+        final Class<?> entityBeingModifiedModifiedType = cl.startModification(EntityBeingModified.class).modifyProperties(mp).endModification();
         // specify that properties prop1@TopLevelEntity and prop2@TopLevelEntity should have their type replaced with entityBeingModifiedModifiedType
         final NewProperty topLevelMp1 = NewProperty.changeType("prop1", entityBeingModifiedModifiedType);
         final NewProperty topLevelMp2 = NewProperty.changeType("prop2", entityBeingModifiedModifiedType);
         // get the modified TopLevelEntity type
-        final Class<?> topLevelEntityModifiedType1 = cl.startModification(TopLevelEntity.class.getName()).modifyProperties(topLevelMp1).endModification();
-        final Class<?> topLevelEntityModifiedType2 = cl.startModification(topLevelEntityModifiedType1.getName()).modifyProperties(topLevelMp2).endModification();
+        final Class<?> topLevelEntityModifiedType1 = cl.startModification(TopLevelEntity.class).modifyProperties(topLevelMp1).endModification();
+        final Class<?> topLevelEntityModifiedType2 = cl.startModification(topLevelEntityModifiedType1).modifyProperties(topLevelMp2).endModification();
 
         assertTrue("Incorrect type name.", entityBeingEnhancedEnhancedType.getName().startsWith(EntityBeingEnhanced.class.getName() + DynamicTypeNamingService.APPENDIX + "_"));
         assertTrue("Incorrect type name.", entityBeingModifiedModifiedType.getName().startsWith(EntityBeingModified.class.getName() + DynamicTypeNamingService.APPENDIX + "_"));
@@ -180,10 +180,10 @@ public class DynamicEntityTypeModificationTest {
 
     @Test
     public void test_instantiation_of_entity_being_modified() throws Exception {
-        final Class<? extends AbstractEntity> entityBeingEnhancedEnhancedType = (Class<? extends AbstractEntity>) cl.startModification(EntityBeingEnhanced.class.getName()).addProperties(pd).endModification();
+        final Class<? extends AbstractEntity> entityBeingEnhancedEnhancedType = (Class<? extends AbstractEntity>) cl.startModification(EntityBeingEnhanced.class).addProperties(pd).endModification();
         // specify what property of what owning type should be replaced with the enhanced entity type
         final NewProperty mp = NewProperty.changeType("prop1", entityBeingEnhancedEnhancedType);
-        final Class<?> entityBeingModifiedModifiedType = cl.startModification(EntityBeingModified.class.getName()).modifyProperties(mp).endModification();
+        final Class<?> entityBeingModifiedModifiedType = cl.startModification(EntityBeingModified.class).modifyProperties(mp).endModification();
         // create a new instance of the modified type
         final Object modifiedEntity = entityBeingModifiedModifiedType.newInstance();
         assertNotNull("Should not be null.", modifiedEntity);
@@ -191,10 +191,10 @@ public class DynamicEntityTypeModificationTest {
 
     @Test
     public void test_correct_modification_of_entity_being_modified() throws Exception {
-        final Class<?> entityBeingEnhancedEnhancedType = cl.startModification(EntityBeingEnhanced.class.getName()).addProperties(pd).endModification();
+        final Class<?> entityBeingEnhancedEnhancedType = cl.startModification(EntityBeingEnhanced.class).addProperties(pd).endModification();
         // specify what property of what owning type should be replaced with the enhanced entity type
         final NewProperty mp = NewProperty.changeType("prop1", entityBeingEnhancedEnhancedType);
-        final Class<?> entityBeingModifiedModifiedType = cl.startModification(EntityBeingModified.class.getName()).modifyProperties(mp).endModification();
+        final Class<?> entityBeingModifiedModifiedType = cl.startModification(EntityBeingModified.class).modifyProperties(mp).endModification();
         // create a new instance of the modified type
         final Object modifiedEntity = entityBeingModifiedModifiedType.newInstance();
         assertNotNull("Should not be null.", modifiedEntity);
@@ -218,16 +218,16 @@ public class DynamicEntityTypeModificationTest {
     @Test
     public void test_correct_modification_of_top_level_entity() throws Exception {
         // get the enhanced EntityBeingEnhanced type
-        final Class<?> entityBeingEnhancedEnhancedType = cl.startModification(EntityBeingEnhanced.class.getName()).addProperties(pd).endModification();
+        final Class<?> entityBeingEnhancedEnhancedType = cl.startModification(EntityBeingEnhanced.class).addProperties(pd).endModification();
         // specify that what property prop1@EntityBeingModified should have its type replaced with entityBeingEnhancedEnhancedType
         final NewProperty mp = NewProperty.changeType("prop1", entityBeingEnhancedEnhancedType);
         // get the modified EntityBeingModified type
-        final Class<?> entityBeingModifiedModifiedType = cl.startModification(EntityBeingModified.class.getName()).modifyProperties(mp).endModification();
+        final Class<?> entityBeingModifiedModifiedType = cl.startModification(EntityBeingModified.class).modifyProperties(mp).endModification();
         // specify that properties prop1@TopLevelEntity and prop2@TopLevelEntity should have their type replaced with entityBeingModifiedModifiedType
         final NewProperty topLevelMp1 = NewProperty.changeType("prop1", entityBeingModifiedModifiedType);
         final NewProperty topLevelMp2 = NewProperty.changeType("prop2", entityBeingModifiedModifiedType);
         // get the modified TopLevelEntity type
-        final Class<?> topLevelEntityModifiedType = cl.startModification(TopLevelEntity.class.getName()).modifyProperties(topLevelMp1, topLevelMp2).endModification();
+        final Class<?> topLevelEntityModifiedType = cl.startModification(TopLevelEntity.class).modifyProperties(topLevelMp1, topLevelMp2).endModification();
         // create a new instance of the modified TopLevelEntity type
         final Object topLevelEntity = topLevelEntityModifiedType.newInstance();
         assertNotNull("Should not be null.", topLevelEntity);
@@ -249,7 +249,7 @@ public class DynamicEntityTypeModificationTest {
     @Test
     public void test_observation_of_setter_for_new_property_in_instance_of_generated_entity_type_used_for_property_in_higher_order_type() throws Exception {
         // get the enhanced EntityBeingEnhanced type
-        final Class<? extends AbstractEntity> entityBeingEnhancedEnhancedType = (Class<? extends AbstractEntity>) cl.startModification(EntityBeingEnhanced.class.getName()).addProperties(pd).endModification();
+        final Class<? extends AbstractEntity> entityBeingEnhancedEnhancedType = (Class<? extends AbstractEntity>) cl.startModification(EntityBeingEnhanced.class).addProperties(pd).endModification();
         module.getDomainMetaPropertyConfig().setDefiner(entityBeingEnhancedEnhancedType, NEW_PROPERTY, new IAfterChangeEventHandler<Object>() {
             @Override
             public void handle(final MetaProperty<Object> property, final Object entityPropertyValue) {
@@ -259,12 +259,12 @@ public class DynamicEntityTypeModificationTest {
         // specify that what property prop1@EntityBeingModified should have its type replaced with entityBeingEnhancedEnhancedType
         final NewProperty mp = NewProperty.changeType("prop1", entityBeingEnhancedEnhancedType);
         // get the modified EntityBeingModified type
-        final Class<? extends AbstractEntity> entityBeingModifiedModifiedType = (Class<? extends AbstractEntity>) cl.startModification(EntityBeingModified.class.getName()).modifyProperties(mp).endModification();
+        final Class<? extends AbstractEntity> entityBeingModifiedModifiedType = (Class<? extends AbstractEntity>) cl.startModification(EntityBeingModified.class).modifyProperties(mp).endModification();
         // specify that properties prop1@TopLevelEntity and prop2@TopLevelEntity should have their type replaced with entityBeingModifiedModifiedType
         final NewProperty topLevelMp1 = NewProperty.changeType("prop1", entityBeingModifiedModifiedType);
         final NewProperty topLevelMp2 = NewProperty.changeType("prop2", entityBeingModifiedModifiedType);
         // get the modified TopLevelEntity type
-        final Class<? extends AbstractEntity> topLevelEntityModifiedType = (Class<? extends AbstractEntity>) cl.startModification(TopLevelEntity.class.getName()).modifyProperties(topLevelMp1, topLevelMp2).endModification();
+        final Class<? extends AbstractEntity> topLevelEntityModifiedType = (Class<? extends AbstractEntity>) cl.startModification(TopLevelEntity.class).modifyProperties(topLevelMp1, topLevelMp2).endModification();
 
         // create new instances of the modified TopLevelEntity and EntityBeingModified types using entity factory
         final AbstractEntity<?> topLevelEntity = factory.newByKey(topLevelEntityModifiedType, "key");
@@ -292,11 +292,11 @@ public class DynamicEntityTypeModificationTest {
         assertEquals("Incorrect signature for collectional property.", EntityBeingEnhanced.class, PropertyTypeDeterminator.determinePropertyType(EntityWithCollectionalPropety.class, "prop1"));
 
         // get the enhanced EntityBeingEnhanced type
-        final Class<? extends AbstractEntity> entityBeingEnhancedEnhancedType = (Class<? extends AbstractEntity>) cl.startModification(EntityBeingEnhanced.class.getName()).addProperties(pd).endModification();
+        final Class<? extends AbstractEntity> entityBeingEnhancedEnhancedType = (Class<? extends AbstractEntity>) cl.startModification(EntityBeingEnhanced.class).addProperties(pd).endModification();
 
         // modify type EntityWithCollectionalPropety by changing the signature of the collectional property
         final NewProperty collectionalPropModification = NewProperty.changeTypeSignature("prop1", entityBeingEnhancedEnhancedType);
-        final Class<? extends AbstractEntity> modifiedType = (Class<? extends AbstractEntity>) cl.startModification(EntityWithCollectionalPropety.class.getName()).modifyProperties(collectionalPropModification).endModification();
+        final Class<? extends AbstractEntity> modifiedType = (Class<? extends AbstractEntity>) cl.startModification(EntityWithCollectionalPropety.class).modifyProperties(collectionalPropModification).endModification();
 
         // test the modified field attributes such as type and IsProperty annotation
         final Field fieldOfModifiedType = Finder.findFieldByName(modifiedType, "prop1");
@@ -311,10 +311,10 @@ public class DynamicEntityTypeModificationTest {
     @Test
     public void test_getting_setting_and_observation_of_modified_collectional_property() throws Exception {
         // get the enhanced EntityBeingEnhanced type
-        final Class<? extends AbstractEntity> entityBeingEnhancedEnhancedType = (Class<? extends AbstractEntity>) cl.startModification(EntityBeingEnhanced.class.getName()).addProperties(pd).endModification();
+        final Class<? extends AbstractEntity> entityBeingEnhancedEnhancedType = (Class<? extends AbstractEntity>) cl.startModification(EntityBeingEnhanced.class).addProperties(pd).endModification();
         // modify type EntityWithCollectionalPropety by changing the signature of the collectional property
         final NewProperty collectionalPropModification = NewProperty.changeTypeSignature("prop1", entityBeingEnhancedEnhancedType);
-        final Class<? extends AbstractEntity> modifiedType = (Class<? extends AbstractEntity>) cl.startModification(EntityWithCollectionalPropety.class.getName()).modifyProperties(collectionalPropModification).endModification();
+        final Class<? extends AbstractEntity> modifiedType = (Class<? extends AbstractEntity>) cl.startModification(EntityWithCollectionalPropety.class).modifyProperties(collectionalPropModification).endModification();
         // get the enhanced EntityBeingEnhanced type
         module.getDomainMetaPropertyConfig().setDefiner(modifiedType, "prop1", new IAfterChangeEventHandler<Object>() {
             @Override
@@ -356,7 +356,7 @@ public class DynamicEntityTypeModificationTest {
     @Test
     public void test_inner_types_usage_in_generated_classes() throws Exception {
         final NewProperty mp = NewProperty.changeType("integerProp", BigInteger.class);
-        final Class<? extends AbstractEntity> entityBeingModifiedWithInnerType = (Class<? extends AbstractEntity>) cl.startModification(EntityBeingModifiedWithInnerTypes.class.getName()).modifyProperties(mp).endModification();
+        final Class<? extends AbstractEntity> entityBeingModifiedWithInnerType = (Class<? extends AbstractEntity>) cl.startModification(EntityBeingModifiedWithInnerTypes.class).modifyProperties(mp).endModification();
 
         // instance creation of the generated class with inner types does not fail
         final Object modifiedEntity1 = entityBeingModifiedWithInnerType.newInstance();
@@ -373,7 +373,7 @@ public class DynamicEntityTypeModificationTest {
     @Test
     public void test_generated_class_with_inner_types_instantiation() throws Exception {
         final NewProperty mp = NewProperty.changeType("integerProp", BigInteger.class);
-        final Class<? extends AbstractEntity> entityBeingModifiedWithInnerType = (Class<? extends AbstractEntity>) cl.startModification(EntityBeingModifiedWithInnerTypes.class.getName()).modifyProperties(mp).endModification();
+        final Class<? extends AbstractEntity> entityBeingModifiedWithInnerType = (Class<? extends AbstractEntity>) cl.startModification(EntityBeingModifiedWithInnerTypes.class).modifyProperties(mp).endModification();
         try {
             factory.newByKey(entityBeingModifiedWithInnerType, "key");
         } catch (final Throwable e) {
@@ -384,7 +384,7 @@ public class DynamicEntityTypeModificationTest {
 
     @Test
     public void test_to_ensure_that_type_modification_leads_to_correct_getter_modificaton() throws Exception {
-        final Class<?> enhancedType = cl.startModification(EntityName.class.getName()).addProperties(pd).endModification();
+        final Class<?> enhancedType = cl.startModification(EntityName.class).addProperties(pd).endModification();
 
         final Field prop = enhancedType.getDeclaredField("prop");
         assertEquals("Incorrect property type", EntityNameProperty.class, prop.getType());
@@ -395,19 +395,19 @@ public class DynamicEntityTypeModificationTest {
 
     @Test
     public void one2Many_special_case_property_should_have_been_generated_correctly() throws Exception {
-        final Class<? extends AbstractEntity> one2ManyEnhancedType = (Class<? extends AbstractEntity>) cl.startModification(DetailsEntityForOneToManyAssociation.class.getName()).addProperties(pd).endModification();
+        final Class<? extends AbstractEntity> one2ManyEnhancedType = (Class<? extends AbstractEntity>) cl.startModification(DetailsEntityForOneToManyAssociation.class).addProperties(pd).endModification();
         final NewProperty one2ManySpecialCasePropModification = NewProperty.changeType("one2manyAssociationSpecialCase", one2ManyEnhancedType);
-        final Class<? extends AbstractEntity> modifiedType = (Class<? extends AbstractEntity>) cl.startModification(MasterEntityWithOneToManyAssociation.class.getName()).modifyProperties(one2ManySpecialCasePropModification).endModification();
+        final Class<? extends AbstractEntity> modifiedType = (Class<? extends AbstractEntity>) cl.startModification(MasterEntityWithOneToManyAssociation.class).modifyProperties(one2ManySpecialCasePropModification).endModification();
 
         assertEquals("key1", AnnotationReflector.getAnnotation(Finder.findFieldByName(modifiedType, "one2manyAssociationSpecialCase"), IsProperty.class).linkProperty());
     }
 
     @Test
     public void one2Many_collectional_property_should_have_been_generated_correctly_when_isProperty_annotation_is_not_provided() throws Exception {
-        final Class<? extends AbstractEntity> one2ManyEnhancedType = (Class<? extends AbstractEntity>) cl.startModification(DetailsEntityForOneToManyAssociation.class.getName()).addProperties(pd).endModification();
+        final Class<? extends AbstractEntity> one2ManyEnhancedType = (Class<? extends AbstractEntity>) cl.startModification(DetailsEntityForOneToManyAssociation.class).addProperties(pd).endModification();
         final NewProperty one2ManyCollectionalPropModification = NewProperty.changeTypeSignature("one2manyAssociationCollectional", one2ManyEnhancedType);
 
-        final Class<? extends AbstractEntity> modifiedType = (Class<? extends AbstractEntity>) cl.startModification(MasterEntityWithOneToManyCollectionalAssociationProvidedWithLinkPropValue.class.getName()).modifyProperties(one2ManyCollectionalPropModification).endModification();
+        final Class<? extends AbstractEntity> modifiedType = (Class<? extends AbstractEntity>) cl.startModification(MasterEntityWithOneToManyCollectionalAssociationProvidedWithLinkPropValue.class).modifyProperties(one2ManyCollectionalPropModification).endModification();
 
         assertEquals("key1", AnnotationReflector.getAnnotation(Finder.findFieldByName(modifiedType, "one2manyAssociationCollectional"), IsProperty.class).linkProperty());
         assertEquals(one2ManyEnhancedType, AnnotationReflector.getAnnotation(Finder.findFieldByName(modifiedType, "one2manyAssociationCollectional"), IsProperty.class).value());

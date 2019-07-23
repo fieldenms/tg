@@ -469,7 +469,7 @@ public final class DomainTreeEnhancer extends AbstractDomainTree implements IDom
                             final Map<String, ByteArray> existingByteArrays = new LinkedHashMap<>(originalAndEnhancedRootTypes.get(originalRoot).getValue());
 
                             // generate & load new type enhanced by calculated properties
-                            final Class<?> realParentEnhanced = classLoader.startModification(realParentToBeEnhanced.getName()).addProperties(newProperties)./* TODO modifySupertypeName(realParentToBeEnhanced.getName()).*/endModification();
+                            final Class<?> realParentEnhanced = classLoader.startModification(realParentToBeEnhanced).addProperties(newProperties)./* TODO modifySupertypeName(realParentToBeEnhanced.getName()).*/endModification();
                             // propagate enhanced type to root
                             final Pair<Class<?>, Map<String, ByteArray>> rootAfterPropagationAndAdditionalByteArrays = propagateEnhancedTypeToRoot(realParentEnhanced, realRoot, path, classLoader);
                             final Class<?> rootAfterPropagation = rootAfterPropagationAndAdditionalByteArrays.getKey();
@@ -489,7 +489,7 @@ public final class DomainTreeEnhancer extends AbstractDomainTree implements IDom
                 final Pair<Class<?>, Map<String, ByteArray>> current = originalAndEnhancedRootTypes.get(originalRoot);
                 final Class<?> enhancedRoot = current.getKey();
                 if (originalRoot != enhancedRoot) { // calculated properties exist -- root type should be enhanced
-                    final Class<?> rootWithPredefinedName = classLoader.startModification(enhancedRoot.getName()).addClassAnnotations(rootAnnotations.toArray(new Annotation[rootAnnotations.size()])).modifyTypeName(predefinedRootTypeName)./* TODO modifySupertypeName(originalRoot.getName()).*/endModification();
+                    final Class<?> rootWithPredefinedName = classLoader.startModification(enhancedRoot).addClassAnnotations(rootAnnotations.toArray(new Annotation[rootAnnotations.size()])).modifyTypeName(predefinedRootTypeName)./* TODO modifySupertypeName(originalRoot.getName()).*/endModification();
                     final Map<String, ByteArray> byteArraysWithRenamedRoot = new LinkedHashMap<>();
 
                     byteArraysWithRenamedRoot.putAll(current.getValue());
@@ -585,14 +585,14 @@ public final class DomainTreeEnhancer extends AbstractDomainTree implements IDom
         }
         final Pair<Class<?>, String> transformed = PropertyTypeDeterminator.transform(root, path);
 
-        final String nameOfTheTypeToAdapt = transformed.getKey().getName();
+        final Class<?> typeToAdapt = transformed.getKey();
         final String nameOfThePropertyToAdapt = transformed.getValue();
         try {
             // change type if simple field and change signature in case of collectional field
             final boolean isCollectional = Collection.class.isAssignableFrom(PropertyTypeDeterminator.determineClass(transformed.getKey(), transformed.getValue(), true, false));
             final NewProperty propertyToBeModified = !isCollectional ? NewProperty.changeType(nameOfThePropertyToAdapt, enhancedType)
                     : NewProperty.changeTypeSignature(nameOfThePropertyToAdapt, enhancedType);
-            final Class<?> nextEnhancedType = classLoader.startModification(nameOfTheTypeToAdapt).modifyProperties(propertyToBeModified)./* TODO modifySupertypeName(nameOfTheTypeToAdapt).*/endModification();
+            final Class<?> nextEnhancedType = classLoader.startModification(typeToAdapt).modifyProperties(propertyToBeModified)./* TODO modifySupertypeName(nameOfTheTypeToAdapt).*/endModification();
             final String nextProp = PropertyTypeDeterminator.isDotNotation(path) ? PropertyTypeDeterminator.penultAndLast(path).getKey() : "";
             final Pair<Class<?>, Map<String, ByteArray>> lastTypeThatIsRootAndPropagatedArrays = propagateEnhancedTypeToRoot(nextEnhancedType, root, nextProp, classLoader);
             additionalByteArrays.putAll(lastTypeThatIsRootAndPropagatedArrays.getValue());

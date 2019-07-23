@@ -42,7 +42,7 @@ public class GetOriginalTypeStressTest {
     public static void main(final String[] args) throws Exception {
         final Supplier<Class<? extends AbstractEntity<String>>> fun = () -> {
             try {
-                return (Class<? extends AbstractEntity<String>>) DynamicEntityClassLoader.getInstance(ClassLoader.getSystemClassLoader()).startModification(Entity.class.getName())
+                return (Class<? extends AbstractEntity<String>>) DynamicEntityClassLoader.getInstance(ClassLoader.getSystemClassLoader()).startModification(Entity.class)
                         .modifyTypeName(DynamicTypeNamingService.nextTypeName(Entity.class.getName())).endModification();
             } catch (ClassNotFoundException e) {
                 e.printStackTrace();

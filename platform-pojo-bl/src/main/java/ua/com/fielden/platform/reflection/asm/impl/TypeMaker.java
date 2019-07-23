@@ -31,9 +31,11 @@ public class TypeMaker {
     private final DynamicEntityClassLoader cl;
     private byte[] currentType;
     private String currentName;
+    private final Class<?> origType;
 
-    public TypeMaker(final DynamicEntityClassLoader loader) {
+    public TypeMaker(final DynamicEntityClassLoader loader, final Class<?> origType) {
         this.cl = loader;
+        this.origType = origType;
     }
     
     /**
@@ -43,7 +45,8 @@ public class TypeMaker {
      * @return
      * @throws ClassNotFoundException
      */
-    public TypeMaker startModification(final String typeName) throws ClassNotFoundException {
+    public TypeMaker startModification() throws ClassNotFoundException {
+        final String typeName = origType.getName();
         if (skipAdaptation(typeName)) {
             throw new IllegalArgumentException("Java system classes should not be enhanced.");
         }

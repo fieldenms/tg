@@ -301,7 +301,7 @@ public class FactoryForTestingEntities {
         final Class<AbstractEntity<?>> entityTypeGenerated;
         try {
             entityTypeGenerated = (Class<AbstractEntity<?>>) 
-                    cl.startModification(entityType.getName())
+                    cl.startModification(entityType)
                     .modifyTypeName(nextTypeName(entityType.getName()))
                     .addClassAnnotations(new MiTypeAnnotation().newInstance(miType))
                 .endModification();
@@ -316,7 +316,7 @@ public class FactoryForTestingEntities {
         final Class<AbstractEntity<?>> entityTypeGenerated;
         try {
             entityTypeGenerated = (Class<AbstractEntity<?>>) 
-                    cl.startModification(entityType.getName())
+                    cl.startModification(entityType)
                     .modifyTypeName(nextTypeName(entityType.getName()))
                     .addClassAnnotations(new MiTypeAnnotation().newInstance(miType))
                 .endModification();
