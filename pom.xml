@@ -4,7 +4,7 @@
 	<groupId>fielden</groupId>
 	<artifactId>platform-parent</artifactId>
 	<packaging>pom</packaging>
-	<version>1.4</version>
+	<version>1.4.5-SNAPSHOT</version>
 	<name>Trident Genesis Platform Parent</name>
 	<description>
 		Trident Genesis is a software application platform designed for
@@ -246,7 +246,7 @@
 		<connection>scm:git:git@github.com:fieldenms/tg.git</connection>
 		<url>scm:git:git@github.com:fieldenms/tg.git</url>
 		<developerConnection>scm:git:git@github.com:fieldenms/tg.git</developerConnection>
-	  <tag>1.4</tag>
+	  <tag>HEAD</tag>
   </scm>
 
 </project>

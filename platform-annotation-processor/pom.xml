@@ -3,7 +3,7 @@
 	<parent>
 		<groupId>fielden</groupId>
 		<artifactId>platform-parent</artifactId>
-		<version>1.4</version>
+		<version>1.4.5-SNAPSHOT</version>
 	</parent>
 
 	<artifactId>platform-annotation-processor</artifactId>
