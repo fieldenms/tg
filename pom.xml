@@ -1,11 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>fielden</groupId>
 	<artifactId>platform-parent</artifactId>
 	<packaging>pom</packaging>
-	<version>1.4-SNAPSHOT</version>
+	<version>1.4</version>
 	<name>Trident Genesis Platform Parent</name>
 	<description>
 		Trident Genesis is a software application platform designed for
@@ -247,6 +246,7 @@
 		<connection>scm:git:git@github.com:fieldenms/tg.git</connection>
 		<url>scm:git:git@github.com:fieldenms/tg.git</url>
 		<developerConnection>scm:git:git@github.com:fieldenms/tg.git</developerConnection>
-	</scm>
+	  <tag>1.4</tag>
+  </scm>
 
 </project>
