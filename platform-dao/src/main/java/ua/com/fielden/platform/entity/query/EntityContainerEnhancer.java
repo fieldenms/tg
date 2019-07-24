@@ -86,7 +86,7 @@ public class EntityContainerEnhancer<E extends AbstractEntity<?>> {
                                 if (ppi.isEntityOfPersistedType() || ppi.isOne2OneId()) {
                                     enhanceProperty(entities, propName, propFetchModel);
                                 } else {
-                                    logger.debug(format("Property [%s] of type [%s] can't be fetched with model: %s.", propName, fetchModel.getEntityType(), entry.getValue()));
+                                    // logger.debug(format("Property [%s] of type [%s] can't be fetched with model: %s.", propName, fetchModel.getEntityType(), entry.getValue()));
                                 }
                             }
                         }
@@ -115,7 +115,7 @@ public class EntityContainerEnhancer<E extends AbstractEntity<?>> {
         final DateTime st = new DateTime();
         final Class<? extends T>  proxiedType = EntityProxyContainer.proxy(fetchModel.getEntityType(), fetchModel.getProxiedProps().toArray(new String[] {}));
         final Period pd = new Period(st, new DateTime());
-        logger.debug(format("Constructing proxy type [" + fetchModel.getEntityType().getSimpleName() + "] duration: %s m %s s %s ms.", pd.getMinutes(), pd.getSeconds(), pd.getMillis()));
+        // logger.debug(format("Constructing proxy type [" + fetchModel.getEntityType().getSimpleName() + "] duration: %s m %s s %s ms.", pd.getMinutes(), pd.getSeconds(), pd.getMillis()));
         return proxiedType;
     }
 

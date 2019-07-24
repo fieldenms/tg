@@ -19,7 +19,7 @@ public class EntityHibernateDeletionQueryProducer {
     }
 
     public Query produceHibernateQuery(Session session) {
-        logger.debug("\nSQL:\n   " + sql + "\n");
+        // logger.debug("\nSQL:\n   " + sql + "\n");
         final SQLQuery sqlQuery = session.createSQLQuery(sql);
         specifyParamValuesToHibernateQuery(sqlQuery, queryParams);
 
@@ -27,12 +27,12 @@ public class EntityHibernateDeletionQueryProducer {
     }
 
     private void specifyParamValuesToHibernateQuery(SQLQuery query, final Map<String, Object> queryParams) {
-        logger.debug("\nPARAMS:\n   " + queryParams + "\n");
+        // logger.debug("\nPARAMS:\n   " + queryParams + "\n");
         for (final Map.Entry<String, Object> paramEntry : queryParams.entrySet()) {
             if (paramEntry.getValue() instanceof Collection) {
                 throw new IllegalStateException("Should not have collectional param at this level: [" + paramEntry + "]");
             } else {
-                logger.debug("setting param: name = [" + paramEntry.getKey() + "] value = [" + paramEntry.getValue() + "]");
+                // logger.debug("setting param: name = [" + paramEntry.getKey() + "] value = [" + paramEntry.getValue() + "]");
                 query.setParameter(paramEntry.getKey(), paramEntry.getValue());
             }
         }
