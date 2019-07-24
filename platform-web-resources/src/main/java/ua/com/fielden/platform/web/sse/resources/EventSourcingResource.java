@@ -15,6 +15,7 @@ import org.restlet.Response;
 import org.restlet.resource.Get;
 import org.restlet.resource.ResourceException;
 
+import ua.com.fielden.platform.web.application.RequestInfo;
 import ua.com.fielden.platform.web.interfaces.IDeviceProvider;
 import ua.com.fielden.platform.web.resources.webui.AbstractWebResource;
 import ua.com.fielden.platform.web.sse.EventSourceEmitter;
@@ -58,7 +59,7 @@ public class EventSourcingResource extends AbstractWebResource {
             // Infinite timeout because the continuation is never resumed,
             // but only completed on close
             async.setTimeout(0);
-            final EventSourceEmitter emitter = new EventSourceEmitter(shouldKeepGoing, eventSource, async);
+            final EventSourceEmitter emitter = new EventSourceEmitter(shouldKeepGoing, eventSource, async, new RequestInfo(getRequest()));
             emitter.scheduleHeartBeat();
             eventSource.onOpen(emitter);
         } catch (final IOException ex) {

@@ -24,9 +24,10 @@ import ua.com.fielden.platform.serialisation.jackson.EntitySerialiser;
 public class CleanupFilter extends Filter {
 
     @Override
-    protected void afterHandle(Request request, Response response) {
+    protected void afterHandle(final Request request, final Response response) {
         Kryo.getContext().reset();
         EntitySerialiser.getContext().reset();
+
         super.afterHandle(request, response);
     }
 }

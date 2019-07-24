@@ -3,6 +3,7 @@
 <link rel="import" href="/resources/reflection/tg-polymer-utils.html">
 <link rel="import" href="/resources/binding/tg-entity-binder-behavior.html">
 <link rel="import" href="/resources/master/actions/tg-entity-master-closing-behavior.html">
+<link rel="import" href="/resources/components/tg-focus-traversal-behavior.html">
 
 <script>
     (function () {
@@ -476,7 +477,7 @@
                                 const saveButton = self.querySelector("tg-action[role='save']");
                                 self.save(functionalEntity, continuationProperty)
                                     .then(
-                                        Polymer.TgBehaviors.TgEntityMasterClosingBehavior.createEntityActionThenCallback(self.centreUuid, 'save', postal, null, saveButton.closeAfterExecution),
+                                        Polymer.TgBehaviors.TgEntityMasterClosingBehavior.createEntityActionThenCallback(self.centreUuid, 'save', postal, null, saveButton ? saveButton.closeAfterExecution : true),
                                         function (value) { console.log('AJAX PROMISE CATCH', value); }
                                     );
                             };
@@ -488,10 +489,10 @@
                             };
 
                             // newly created continuation action should be enhanced to be able to enable parent master view after action completion (when isActionInProgress becomes false)
-                            const old_actionProgressStatusChanged = action._actionProgressStatusChanged.bind(action);
+                            const oldIsActionInProgressChanged = action.isActionInProgressChanged.bind(action);
                             const _self = this;
-                            action._actionProgressStatusChanged = (function (newValue, oldValue) {
-                                old_actionProgressStatusChanged(newValue, oldValue);
+                            action.isActionInProgressChanged = (function (newValue, oldValue) {
+                                oldIsActionInProgressChanged(newValue, oldValue);
                                 if (newValue === false && !action.success) { // only enable parent master if action has failed (perhaps during retrieval or on save), otherwise leave enabling logic to the parent master itself (saving of parent master should govern that)
                                     _self.enableView();
                                     _self._savingInitiated = false;
@@ -643,7 +644,9 @@
                     const target = e.target || e.srcElement;
                     if (target === this) {
                         this.focusView();
-                        if (!this._hasEmbededView()) {
+                        // The next event (data-loaded-and-focused) should be fired only by masters that have an embedded master,
+                        // which should be visible (i.e. should be a UI master)
+                        if (!this._hasEmbededView() && !this.noUI) {
                             this.async(function () {
                                 this.fire('data-loaded-and-focused', this._currBindingEntity);
                             }, 100);
@@ -674,6 +677,17 @@
                         Polymer.dom.flush();
                     }
                 }
+            },
+            
+            /**
+             * Publishes a closure to be executed by an Entity Centre identified by centreUuid (opening centre).
+             */
+            publishExecute: function (closure) {
+                postal.publish({
+                    channel: "centre_" + this.centreUuid, 
+                    topic: "execute",
+                    data: closure.bind(this)
+                });
             },
 
             _modificationsChanged: function (_bindingEntityNotPersistentOrNotPersistedOrModified, _editedPropsExist) {
@@ -1049,6 +1063,7 @@
 
         Polymer.TgBehaviors.TgEntityMasterBehavior = [
             Polymer.TgBehaviors.TgEntityBinderBehavior,
+            Polymer.TgBehaviors.TgFocusTraversalBehavior,
             Polymer.TgBehaviors.TgEntityMasterBehaviorImpl
         ];
 

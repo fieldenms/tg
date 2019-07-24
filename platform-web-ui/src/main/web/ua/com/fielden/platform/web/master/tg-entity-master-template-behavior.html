@@ -5,6 +5,7 @@
 <link rel="import" href="/resources/master/tg-entity-master-behavior.html">
 <link rel="import" href="/resources/master/tg-entity-master-styles.html">
 <link rel="import" href="/resources/actions/tg-shortcut-processing-behavior.html">
+<link rel="import" href="/resources/reflection/tg-polymer-utils.html">
 
 <script>
     (function () {
@@ -20,7 +21,7 @@
                 
                 // the value for property uuid needs to be assign only if this has not been done yet
                 if (self.uuid === undefined) {
-                    self.uuid = self.is + '/' + self._reflector().generateUUID();
+                    self.uuid = self.is + '/' + generateUUID();
                 }
             },
             
@@ -80,10 +81,14 @@
                 }
                 Polymer.IronA11yKeysBehavior.removeOwnKeyBindings.call(this);
             },
+            
+            confirm: function (message, buttons) {
+                return this._masterDom().confirm(message, buttons);
+            },
 
             _shouldOverridePrefDim: function () {
                 var parent = this.parentElement;
-                while (parent && parent.tagName !== 'TG-CUSTOM-ACTION-DIALOG') {
+                while (parent && (parent.tagName !== 'TG-CUSTOM-ACTION-DIALOG' && parent.tagName !== 'TG-MENU-ITEM-VIEW')) {
                     if (parent.isMasterTemplate && parent.prefDim) {
                         return false;
                     }

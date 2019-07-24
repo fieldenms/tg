@@ -62,7 +62,6 @@ import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.security.user.IUser;
 import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.security.user.User;
-import ua.com.fielden.platform.serialisation.api.ISerialiser;
 import ua.com.fielden.platform.serialisation.jackson.DefaultValueContract;
 import ua.com.fielden.platform.ui.config.api.IEntityCentreConfig;
 import ua.com.fielden.platform.ui.config.api.IMainMenuItem;
@@ -444,7 +443,6 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
             final User user,
             final IUserProvider userProvider,
             final DeviceProfile device,
-            final ISerialiser serialiser,
             final IDomainTreeEnhancerCache domainTreeEnhancerCache,
             final IWebUiConfig webUiConfig,
             final IEntityCentreConfig eccCompanion,
@@ -458,22 +456,22 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
         // Functions for companion implementations:
         
         // returns an updated version of PREVIOUSLY_RUN centre
-        validationPrototype.setPreviouslyRunCentreSupplier(() -> updateCentre(user, userProvider, miType, PREVIOUSLY_RUN_CENTRE_NAME, saveAsName, device, serialiser, domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion));
+        validationPrototype.setPreviouslyRunCentreSupplier(() -> updateCentre(user, userProvider, miType, PREVIOUSLY_RUN_CENTRE_NAME, saveAsName, device, domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion, companionFinder));
         // returns whether centre is changed from previously saved (or the very original) version
         validationPrototype.setCentreChangedGetter(() -> isFreshCentreChanged(
-            updateCentre(user, userProvider, miType, FRESH_CENTRE_NAME, saveAsName, device, serialiser, domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion),
-            updateCentre(user, userProvider, miType, SAVED_CENTRE_NAME, saveAsName, device, serialiser, domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion)
+            updateCentre(user, userProvider, miType, FRESH_CENTRE_NAME, saveAsName, device, domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion, companionFinder),
+            updateCentre(user, userProvider, miType, SAVED_CENTRE_NAME, saveAsName, device, domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion, companionFinder)
         ));
         // creates criteria validation prototype for concrete saveAsName
         validationPrototype.setCriteriaValidationPrototypeCreator(validationPrototypeSaveAsName -> 
             createCriteriaValidationPrototype(
                 miType,
                 validationPrototypeSaveAsName,
-                updateCentre(user, userProvider, miType, FRESH_CENTRE_NAME, validationPrototypeSaveAsName, device, serialiser, domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion),
+                updateCentre(user, userProvider, miType, FRESH_CENTRE_NAME, validationPrototypeSaveAsName, device, domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion, companionFinder),
                 companionFinder, critGenerator, -1L,
                 user, userProvider,
                 device,
-                serialiser, domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion
+                domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion
             )
         );
         // creates custom object representing centre information for concrete criteriaEntity and saveAsName
@@ -482,7 +480,7 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
             // In both cases (criteria entity valid or not) create customObject with criteriaEntity to be returned and bound into tg-entity-centre after save.
             final Map<String, Object> customObject = createCriteriaMetaValuesCustomObjectWithSaveAsInfo(
                 createCriteriaMetaValues(freshCentre, getEntityType(miType)),
-                isFreshCentreChanged(freshCentre, updateCentre(user, userProvider, miType, SAVED_CENTRE_NAME, customObjectSaveAsName, device, serialiser, domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion)),
+                isFreshCentreChanged(freshCentre, updateCentre(user, userProvider, miType, SAVED_CENTRE_NAME, customObjectSaveAsName, device, domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion, companionFinder)),
                 of(customObjectSaveAsName),
                 of(validationPrototype.centreTitleAndDesc(customObjectSaveAsName).map(titleDesc -> titleDesc._2)),
                 empty()
@@ -492,32 +490,32 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
             return customObject;
         });
         // returns base centre for current one (it is either base user's version of inherited configuration or default configuration for all other situations)
-        validationPrototype.setBaseCentreSupplier(() -> baseCentre(user,userProvider, miType, saveAsName, device, serialiser, domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion));
+        validationPrototype.setBaseCentreSupplier(() -> baseCentre(user,userProvider, miType, saveAsName, device, domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion, companionFinder));
         // performs mutation function centreConsumer against FRESH and PREVIOUSLY_RUN centres and saves them into persistent storage
         validationPrototype.setCentreAdjuster(centreConsumer -> {
-            final ICentreDomainTreeManagerAndEnhancer freshCentre = updateCentre(user, userProvider, miType, FRESH_CENTRE_NAME, saveAsName, device, serialiser, domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion);
+            final ICentreDomainTreeManagerAndEnhancer freshCentre = updateCentre(user, userProvider, miType, FRESH_CENTRE_NAME, saveAsName, device, domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion, companionFinder);
             centreConsumer.accept(freshCentre);
-            commitCentre(user, userProvider, miType, FRESH_CENTRE_NAME, saveAsName, device, freshCentre, null /* newDesc */, serialiser, webUiConfig, eccCompanion, mmiCompanion, userCompanion);
+            commitCentre(user, userProvider, miType, FRESH_CENTRE_NAME, saveAsName, device, freshCentre, null /* newDesc */, webUiConfig, eccCompanion, mmiCompanion, userCompanion);
             
-            final ICentreDomainTreeManagerAndEnhancer previouslyRunCentre = updateCentre(user, userProvider, miType, PREVIOUSLY_RUN_CENTRE_NAME, saveAsName, device, serialiser, domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion);
+            final ICentreDomainTreeManagerAndEnhancer previouslyRunCentre = updateCentre(user, userProvider, miType, PREVIOUSLY_RUN_CENTRE_NAME, saveAsName, device, domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion, companionFinder);
             centreConsumer.accept(previouslyRunCentre);
-            commitCentre(user, userProvider, miType, PREVIOUSLY_RUN_CENTRE_NAME, saveAsName, device, previouslyRunCentre, null /* newDesc */, serialiser, webUiConfig, eccCompanion, mmiCompanion, userCompanion);
+            commitCentre(user, userProvider, miType, PREVIOUSLY_RUN_CENTRE_NAME, saveAsName, device, previouslyRunCentre, null /* newDesc */, webUiConfig, eccCompanion, mmiCompanion, userCompanion);
         });
         // performs mutation function centreConsumer (column widths adjustments) against PREVIOUSLY_RUN centre and copies column widths / grow factors directly to FRESH centre; saves them both into persistent storage
         validationPrototype.setCentreColumnWidthsAdjuster(centreConsumer -> {
             // we have diffs that need to be applied against 'previouslyRun' centre
-            final ICentreDomainTreeManagerAndEnhancer centre = updateCentre(user, userProvider, miType, PREVIOUSLY_RUN_CENTRE_NAME, saveAsName, device, serialiser, domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion);
+            final ICentreDomainTreeManagerAndEnhancer centre = updateCentre(user, userProvider, miType, PREVIOUSLY_RUN_CENTRE_NAME, saveAsName, device, domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion, companionFinder);
             centreConsumer.accept(centre);
-            commitCentre(user, userProvider, miType, PREVIOUSLY_RUN_CENTRE_NAME, saveAsName, device, centre, null /* newDesc */, serialiser, webUiConfig, eccCompanion, mmiCompanion, userCompanion);
+            commitCentre(user, userProvider, miType, PREVIOUSLY_RUN_CENTRE_NAME, saveAsName, device, centre, null /* newDesc */, webUiConfig, eccCompanion, mmiCompanion, userCompanion);
             
             // however those diffs are not applicable to 'fresh' centre due to ability of 'fresh' centre to differ from 'previouslyRun' centre
             // the only way to get such mismatch is to press Discard on selection criteria
             // that's why we need to carefully override only widths and grow factors of 'fresh' centre from 'previouslyRun' centre
             // all other unrelated to CentreColumnWidthConfigUpdater information should remain 'as is'
-            final ICentreDomainTreeManagerAndEnhancer previouslyRunCentre = updateCentre(user, userProvider, miType, PREVIOUSLY_RUN_CENTRE_NAME, saveAsName, device, serialiser, domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion);
-            final ICentreDomainTreeManagerAndEnhancer freshCentre = updateCentre(user, userProvider, miType, FRESH_CENTRE_NAME, saveAsName, device, serialiser, domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion);
+            final ICentreDomainTreeManagerAndEnhancer previouslyRunCentre = updateCentre(user, userProvider, miType, PREVIOUSLY_RUN_CENTRE_NAME, saveAsName, device, domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion, companionFinder);
+            final ICentreDomainTreeManagerAndEnhancer freshCentre = updateCentre(user, userProvider, miType, FRESH_CENTRE_NAME, saveAsName, device, domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion, companionFinder);
             freshCentre.getSecondTick().setWidthsAndGrowFactors(previouslyRunCentre. getSecondTick().getWidthsAndGrowFactors());
-            commitCentre(user, userProvider, miType, FRESH_CENTRE_NAME, saveAsName, device, freshCentre, null /* newDesc */, serialiser, webUiConfig, eccCompanion, mmiCompanion, userCompanion);
+            commitCentre(user, userProvider, miType, FRESH_CENTRE_NAME, saveAsName, device, freshCentre, null /* newDesc */, webUiConfig, eccCompanion, mmiCompanion, userCompanion);
         });
         // performs deletion of current owned configuration
         validationPrototype.setCentreDeleter(() -> 
@@ -526,13 +524,13 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
         );
         // overrides SAVED centre configuration by FRESH one -- 'saves' centre
         validationPrototype.setFreshCentreSaver(() -> {
-            final ICentreDomainTreeManagerAndEnhancer freshCentre = updateCentre(user, userProvider, miType, FRESH_CENTRE_NAME, saveAsName, device, serialiser, domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion);
-            commitCentre(user, userProvider, miType, SAVED_CENTRE_NAME, saveAsName, device, freshCentre, null, serialiser, webUiConfig, eccCompanion, mmiCompanion, userCompanion);
+            final ICentreDomainTreeManagerAndEnhancer freshCentre = updateCentre(user, userProvider, miType, FRESH_CENTRE_NAME, saveAsName, device, domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion, companionFinder);
+            commitCentreWithoutConflicts(user, userProvider, miType, SAVED_CENTRE_NAME, saveAsName, device, freshCentre, null, webUiConfig, eccCompanion, mmiCompanion, userCompanion);
         });
         // overrides FRESH default centre configuration by FRESH current centre configuration; makes default config as preferred -- 'duplicates' centre
         validationPrototype.setConfigDuplicateAction(() -> {
-            final ICentreDomainTreeManagerAndEnhancer freshCentre = updateCentre(user, userProvider, miType, FRESH_CENTRE_NAME, saveAsName, device, serialiser, domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion);
-            commitCentre(user, userProvider, miType, FRESH_CENTRE_NAME, empty(), device, freshCentre, null, serialiser, webUiConfig, eccCompanion, mmiCompanion, userCompanion);
+            final ICentreDomainTreeManagerAndEnhancer freshCentre = updateCentre(user, userProvider, miType, FRESH_CENTRE_NAME, saveAsName, device, domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion, companionFinder);
+            commitCentreWithoutConflicts(user, userProvider, miType, FRESH_CENTRE_NAME, empty(), device, freshCentre, null, webUiConfig, eccCompanion, mmiCompanion, userCompanion);
             // when switching to default configuration we need to make it preferred
             validationPrototype.makePreferredConfig(empty());
         }); 
@@ -542,16 +540,16 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
             final Optional<String> preferredConfigName = retrievePreferredConfigName(user, miType, device, companionFinder);
             // determine whether inherited configuration is changed
             final boolean centreChanged = isFreshCentreChanged(
-                updateCentre(user, userProvider, miType, FRESH_CENTRE_NAME, of(saveAsNameToLoad), device, serialiser, domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion),
-                updateCentre(user, userProvider, miType, SAVED_CENTRE_NAME, of(saveAsNameToLoad), device, serialiser, domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion)
+                updateCentre(user, userProvider, miType, FRESH_CENTRE_NAME, of(saveAsNameToLoad), device, domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion, companionFinder),
+                updateCentre(user, userProvider, miType, SAVED_CENTRE_NAME, of(saveAsNameToLoad), device, domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion, companionFinder)
             );
             if (centreChanged) { // if there are some user changes, only SAVED surrogate must be updated; if such centre will be discarded the base user changes will be loaded immediately
                 removeCentres(user, miType, device, of(saveAsNameToLoad), eccCompanion, SAVED_CENTRE_NAME);
             } else { // otherwise base user changes will be loaded immediately after centre loading
                 removeCentres(user, miType, device, of(saveAsNameToLoad), eccCompanion, FRESH_CENTRE_NAME, SAVED_CENTRE_NAME);
             }
-            updateCentre(user, userProvider, miType, FRESH_CENTRE_NAME, of(saveAsNameToLoad), device, serialiser, domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion);
-            updateCentre(user, userProvider, miType, SAVED_CENTRE_NAME, of(saveAsNameToLoad), device, serialiser, domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion);
+            updateCentre(user, userProvider, miType, FRESH_CENTRE_NAME, of(saveAsNameToLoad), device, domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion, companionFinder);
+            updateCentre(user, userProvider, miType, SAVED_CENTRE_NAME, of(saveAsNameToLoad), device, domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion, companionFinder);
             
             if (equalsEx(preferredConfigName, of(saveAsNameToLoad))) { // if inherited configuration being updated was preferred
                 makePreferred(user, miType, of(saveAsNameToLoad), device, companionFinder); // then must leave it preferred after deletion
@@ -560,12 +558,12 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
         // clears default centre and fully prepares it for usage
         validationPrototype.setDefaultCentreClearer(() -> {
             removeCentres(user, miType, device, empty(), eccCompanion, FRESH_CENTRE_NAME, SAVED_CENTRE_NAME, PREVIOUSLY_RUN_CENTRE_NAME);
-            updateCentre(user, userProvider, miType, FRESH_CENTRE_NAME, empty(), device, serialiser, domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion);
-            updateCentre(user, userProvider, miType, SAVED_CENTRE_NAME, empty(), device, serialiser, domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion);
+            updateCentre(user, userProvider, miType, FRESH_CENTRE_NAME, empty(), device, domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion, companionFinder);
+            updateCentre(user, userProvider, miType, SAVED_CENTRE_NAME, empty(), device, domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion, companionFinder);
         });
         // applies new criteria from client application against FRESH centre and returns respective criteria entity
         validationPrototype.setFreshCentreApplier((modifHolder) -> {
-            return createCriteriaEntity(modifHolder, companionFinder, critGenerator, miType, saveAsName, user, userProvider, device, serialiser, domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion);
+            return createCriteriaEntityWithoutConflicts(modifHolder, companionFinder, critGenerator, miType, saveAsName, user, userProvider, device, domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion);
         });
         // returns title / desc for named (inherited or owned) configuration and empty optional for unnamed (default) configuration
         validationPrototype.setCentreTitleAndDescGetter((saveAsNameForTitleAndDesc) -> {
@@ -576,21 +574,21 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
             editCentreTitleAndDesc(user, miType, saveAsName, device, newName, newDesc, eccCompanion);
             // currently loaded configuration should remain preferred -- no action is required
             return validationPrototype.centreCustomObject(
-                createCriteriaEntity(validationPrototype.centreContextHolder().getModifHolder(), companionFinder, critGenerator, miType, of(newName), user, userProvider, device, serialiser, domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion),
+                createCriteriaEntity(validationPrototype.centreContextHolder().getModifHolder(), companionFinder, critGenerator, miType, of(newName), user, userProvider, device, domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion),
                 of(newName)
             );
         });
         // performs copying of current configuration with the specified title / desc; makes it preferred; returns custom object containing centre information
         validationPrototype.setCentreSaver((newName, newDesc) -> {
             final Optional<String> newSaveAsName = of(newName);
-            final ICentreDomainTreeManagerAndEnhancer freshCentre = updateCentre(user, userProvider, miType, FRESH_CENTRE_NAME, saveAsName, device, serialiser, domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion);
+            final ICentreDomainTreeManagerAndEnhancer freshCentre = updateCentre(user, userProvider, miType, FRESH_CENTRE_NAME, saveAsName, device, domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion, companionFinder);
             // save the 'fresh' centre with a new name -- buttons SAVE / DISCARD will be disabled
-            commitCentre(user, userProvider, miType, FRESH_CENTRE_NAME, newSaveAsName, device, freshCentre, newDesc, serialiser, webUiConfig, eccCompanion, mmiCompanion, userCompanion);
-            commitCentre(user, userProvider, miType, SAVED_CENTRE_NAME, newSaveAsName, device, freshCentre, null, serialiser, webUiConfig, eccCompanion, mmiCompanion, userCompanion);
+            commitCentre(user, userProvider, miType, FRESH_CENTRE_NAME, newSaveAsName, device, freshCentre, newDesc, webUiConfig, eccCompanion, mmiCompanion, userCompanion);
+            commitCentre(user, userProvider, miType, SAVED_CENTRE_NAME, newSaveAsName, device, freshCentre, null, webUiConfig, eccCompanion, mmiCompanion, userCompanion);
             // when switching to new configuration we need to make it preferred
             validationPrototype.makePreferredConfig(newSaveAsName);
             return validationPrototype.centreCustomObject(
-                createCriteriaEntity(validationPrototype.centreContextHolder().getModifHolder(), companionFinder, critGenerator, miType, newSaveAsName, user, userProvider, device, serialiser, domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion),
+                createCriteriaEntity(validationPrototype.centreContextHolder().getModifHolder(), companionFinder, critGenerator, miType, newSaveAsName, user, userProvider, device, domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion),
                 newSaveAsName
             );
         });
@@ -732,7 +730,6 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
             final Optional<CentreContextConfig> contextConfig,
             final String chosenProperty,
             final DeviceProfile device,
-            final ISerialiser serialiser,
             final IDomainTreeEnhancerCache domainTreeEnhancerCache,
             final IEntityCentreConfig eccCompanion,
             final IMainMenuItem mmiCompanion,
@@ -747,7 +744,7 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
                 context.setSelectedEntities(!centreContextHolder.proxiedPropertyNames().contains("selectedEntities") ? (List<T>) centreContextHolder.getSelectedEntities() : new ArrayList<>());
             }
             if (config.withMasterEntity) {
-                context.setMasterEntity(restoreMasterFunctionalEntity(disregardOriginallyProducedEntities, webUiConfig, companionFinder, user, userProvider, critGenerator, entityFactory, centreContextHolder, 0, device, serialiser, domainTreeEnhancerCache, eccCompanion, mmiCompanion, userCompanion));
+                context.setMasterEntity(restoreMasterFunctionalEntity(disregardOriginallyProducedEntities, webUiConfig, companionFinder, user, userProvider, critGenerator, entityFactory, centreContextHolder, 0, device, domainTreeEnhancerCache, eccCompanion, mmiCompanion, userCompanion));
             }
             if (config.withComputation()) {
                 context.setComputation(config.computation.get());
@@ -808,7 +805,6 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
         final IWebUiConfig webUiConfig,
         final EntityFactory entityFactory,
         final DeviceProfile device,
-        final ISerialiser serialiser,
         final IDomainTreeEnhancerCache domainTreeEnhancerCache,
         final IEntityCentreConfig eccCompanion,
         final IMainMenuItem mmiCompanion,
@@ -827,8 +823,8 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
             throw new IllegalStateException(e);
         }
         
-        final M criteriaEntity = (M) createCriteriaEntityForPaginating(companionFinder, critGenerator, miType, saveAsName, user, userProvider, device, serialiser, domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion).setCentreContextHolder(centreContextHolder);
-        criteriaEntity.setExportQueryRunner(customObject -> stream(webUiConfig, user, userProvider, entityFactory, companionFinder, critGenerator, centreContextHolder, criteriaEntity, customObject, device, serialiser, domainTreeEnhancerCache, eccCompanion, mmiCompanion, userCompanion));
+        final M criteriaEntity = (M) createCriteriaEntityForPaginating(companionFinder, critGenerator, miType, saveAsName, user, userProvider, device, domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion).setCentreContextHolder(centreContextHolder);
+        criteriaEntity.setExportQueryRunner(customObject -> stream(webUiConfig, user, userProvider, entityFactory, companionFinder, critGenerator, centreContextHolder, criteriaEntity, customObject, device, domainTreeEnhancerCache, eccCompanion, mmiCompanion, userCompanion));
         return criteriaEntity;
     }
 
@@ -860,7 +856,6 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
         final EnhancedCentreEntityQueryCriteria<T, ? extends IEntityDao<T>> criteriaEntity, 
         final Map<String, Object> adhocParams,
         final DeviceProfile device,
-        final ISerialiser serialiser,
         final IDomainTreeEnhancerCache domainTreeEnhancerCache,
         final IEntityCentreConfig eccCompanion,
         final IMainMenuItem mmiCompanion,
@@ -892,7 +887,6 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
                                 centre.getQueryEnhancerConfig(),
                                 appliedCriteriaEntity,
                                 device,
-                                serialiser,
                                 domainTreeEnhancerCache,
                                 eccCompanion,
                                 mmiCompanion,
@@ -927,22 +921,69 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
             final User user,
             final IUserProvider userProvider,
             final DeviceProfile device,
-            final ISerialiser serialiser,
             final IDomainTreeEnhancerCache domainTreeEnhancerCache,
             final IWebUiConfig webUiConfig,
             final IEntityCentreConfig eccCompanion,
             final IMainMenuItem mmiCompanion,
             final IUser userCompanion) {
-        final ICentreDomainTreeManagerAndEnhancer updatedPreviouslyRunCentre = updateCentre(user, userProvider, miType, PREVIOUSLY_RUN_CENTRE_NAME, saveAsName, device, serialiser, domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion);
-        return createCriteriaValidationPrototype(miType, saveAsName, updatedPreviouslyRunCentre, companionFinder, critGenerator, 0L, user, userProvider, device, serialiser, domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion);
+        final ICentreDomainTreeManagerAndEnhancer updatedPreviouslyRunCentre = updateCentre(user, userProvider, miType, PREVIOUSLY_RUN_CENTRE_NAME, saveAsName, device, domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion, companionFinder);
+        return createCriteriaValidationPrototype(miType, saveAsName, updatedPreviouslyRunCentre, companionFinder, critGenerator, 0L, user, userProvider, device, domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion);
     }
-
+    
     /**
      * Creates selection criteria entity from <code>modifPropsHolder</code>.
      *
      * @return
      */
     protected static <T extends AbstractEntity<?>, M extends EnhancedCentreEntityQueryCriteria<T, ? extends IEntityDao<T>>> M createCriteriaEntity(
+        final Map<String, Object> modifiedPropertiesHolder,
+        final ICompanionObjectFinder companionFinder,
+        final ICriteriaGenerator critGenerator,
+        final Class<? extends MiWithConfigurationSupport<?>> miType,
+        final Optional<String> saveAsName,
+        final User user,
+        final IUserProvider userProvider,
+        final DeviceProfile device,
+        final IDomainTreeEnhancerCache domainTreeEnhancerCache,
+        final IWebUiConfig webUiConfig,
+        final IEntityCentreConfig eccCompanion,
+        final IMainMenuItem mmiCompanion,
+        final IUser userCompanion) {
+        return createCriteriaEntity(false, modifiedPropertiesHolder, companionFinder, critGenerator, miType, saveAsName, user, userProvider, device, domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion);
+    }
+    
+    /**
+     * Creates selection criteria entity from <code>modifPropsHolder</code>.
+     * <p>
+     * IMPORTANT WARNING: avoids centre config self-conflict checks; ONLY TO BE USED NOT IN ANOTHER SessionRequired TRANSACTION SCOPE.
+     *
+     * @return
+     */
+    protected static <T extends AbstractEntity<?>, M extends EnhancedCentreEntityQueryCriteria<T, ? extends IEntityDao<T>>> M createCriteriaEntityWithoutConflicts(
+        final Map<String, Object> modifiedPropertiesHolder,
+        final ICompanionObjectFinder companionFinder,
+        final ICriteriaGenerator critGenerator,
+        final Class<? extends MiWithConfigurationSupport<?>> miType,
+        final Optional<String> saveAsName,
+        final User user,
+        final IUserProvider userProvider,
+        final DeviceProfile device,
+        final IDomainTreeEnhancerCache domainTreeEnhancerCache,
+        final IWebUiConfig webUiConfig,
+        final IEntityCentreConfig eccCompanion,
+        final IMainMenuItem mmiCompanion,
+        final IUser userCompanion) {
+        return createCriteriaEntity(true, modifiedPropertiesHolder, companionFinder, critGenerator, miType, saveAsName, user, userProvider, device, domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion);
+    }
+    
+    /**
+     * Creates selection criteria entity from <code>modifPropsHolder</code>.
+     *
+     * @param withoutConflicts -- <code>true</code> to avoid self-conflict checks, <code>false</code> otherwise; <code>true</code> only to be used NOT IN another SessionRequired transaction scope
+     * @return
+     */
+    private static <T extends AbstractEntity<?>, M extends EnhancedCentreEntityQueryCriteria<T, ? extends IEntityDao<T>>> M createCriteriaEntity(
+            final boolean withoutConflicts,
             final Map<String, Object> modifiedPropertiesHolder,
             final ICompanionObjectFinder companionFinder,
             final ICriteriaGenerator critGenerator,
@@ -951,7 +992,6 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
             final User user,
             final IUserProvider userProvider,
             final DeviceProfile device,
-            final ISerialiser serialiser,
             final IDomainTreeEnhancerCache domainTreeEnhancerCache,
             final IWebUiConfig webUiConfig,
             final IEntityCentreConfig eccCompanion,
@@ -962,9 +1002,9 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
         }
         
         // load / update fresh centre if it is not loaded yet / stale
-        final ICentreDomainTreeManagerAndEnhancer originalCdtmae = updateCentre(user, userProvider, miType, FRESH_CENTRE_NAME, saveAsName, device, serialiser, domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion);
+        final ICentreDomainTreeManagerAndEnhancer originalCdtmae = updateCentre(user, userProvider, miType, FRESH_CENTRE_NAME, saveAsName, device, domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion, companionFinder);
         applyMetaValues(originalCdtmae, getEntityType(miType), modifiedPropertiesHolder);
-        final M validationPrototype = createCriteriaValidationPrototype(miType, saveAsName, originalCdtmae, companionFinder, critGenerator, getVersion(modifiedPropertiesHolder), user, userProvider, device, serialiser, domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion);
+        final M validationPrototype = createCriteriaValidationPrototype(miType, saveAsName, originalCdtmae, companionFinder, critGenerator, getVersion(modifiedPropertiesHolder), user, userProvider, device, domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion);
         final M appliedCriteriaEntity = constructCriteriaEntityAndResetMetaValues(
                 modifiedPropertiesHolder,
                 validationPrototype,
@@ -973,7 +1013,7 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
         ).getKey();
         
         // need to commit changed fresh centre after modifiedPropertiesHolder has been applied!
-        commitCentre(user, userProvider, miType, FRESH_CENTRE_NAME, saveAsName, device, originalCdtmae, null /* newDesc */, serialiser, webUiConfig, eccCompanion, mmiCompanion, userCompanion);
+        commitCentre(withoutConflicts, user, userProvider, miType, FRESH_CENTRE_NAME, saveAsName, device, originalCdtmae, null /* newDesc */, webUiConfig, eccCompanion, mmiCompanion, userCompanion);
         return appliedCriteriaEntity;
     }
 

@@ -86,6 +86,7 @@
             box-shadow: none;
             border: none;
             width: 100%;
+            font-size: 16px;
         }
 
         a {
@@ -129,12 +130,12 @@
         <div class="vertical-section">
             <paper-input-container id="in-username-container">
                 <label>User name</label>
-                <input id="in-username" is="iron-input" type="text" name="username" required prevent-invalid-input></input>
+                <input id="in-username" is="iron-input" autocomplete="off" type="text" name="username" required prevent-invalid-input></input>
             </paper-input-container>
 
             <paper-input-container id="in-passwd-container">
                 <label>Password</label>
-                <input id="in-passwd" is="iron-input" type="password" name="passwd" required prevent-invalid-input></input>
+                <input id="in-passwd" is="iron-input" autocomplete="off" type="password" name="passwd" required prevent-invalid-input></input>
             </paper-input-container>
 
             <!-- there seems still to be a problem with paper-checkbox not being submitted, hence the hack -->

@@ -36,7 +36,7 @@ public class CountAll implements ISingleOperand {
     }
 
     @Override
-    public Class type() {
+    public Class<?> type() {
         return null;
     }
 

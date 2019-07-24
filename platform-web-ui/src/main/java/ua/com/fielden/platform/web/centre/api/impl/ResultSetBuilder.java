@@ -11,6 +11,7 @@ import java.util.function.Supplier;
 import org.apache.commons.lang.StringUtils;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.fetch.IFetchProvider;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
@@ -35,6 +36,7 @@ import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder1aScrol
 import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder1bPageCapacity;
 import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder1cVisibleRows;
 import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder1dFitBehaviour;
+import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder1eRowHeight;
 import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder2Properties;
 import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder2aDraggable;
 import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder3Ordering;
@@ -155,14 +157,24 @@ class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilder
 
     @Override
     public IWithSummary<T> withSummary(final String alias, final String expression, final String titleAndDesc) {
+        this.builder.summaryExpressions.put(propName.get(), mkSummaryPropDef(alias, expression, titleAndDesc, IsProperty.DEFAULT_PRECISION, IsProperty.DEFAULT_SCALE));
+        return this;
+    }
+
+    @Override
+    public IWithSummary<T> withSummary(final String alias, final String expression, final String titleAndDesc, final int precision, final int scale) {
+        this.builder.summaryExpressions.put(propName.get(), mkSummaryPropDef(alias, expression, titleAndDesc, precision, scale));
+        return this;
+    }
+
+    private SummaryPropDef mkSummaryPropDef(final String alias, final String expression, final String titleAndDesc, final int precision, final int scale) {
         if (!propName.isPresent()) {
             throw new IllegalStateException("There is no property to associated the summary expression with. This indicated an out of secuquence call, which is most likely due to a programming mistake.");
         }
         final String[] td = titleAndDesc.split(":");
         final String title = td[0];
         final String desc = td.length > 1 ? td[1] : null;
-        this.builder.summaryExpressions.put(propName.get(), new SummaryPropDef(alias, expression, title, desc));
-        return this;
+        return new SummaryPropDef(alias, expression, title, desc, precision, scale);
     }
 
     @Override
@@ -470,8 +482,14 @@ class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilder
     }
 
     @Override
-    public IResultSetBuilder2Properties<T> fitToHeight() {
+    public IResultSetBuilder1eRowHeight<T> fitToHeight() {
         this.builder.fitToHeight = true;
+        return this;
+    }
+
+    @Override
+    public IResultSetBuilder2Properties<T> rowHeight(final String rowHeight) {
+        this.builder.rowHeight = rowHeight;
         return this;
     }
 }

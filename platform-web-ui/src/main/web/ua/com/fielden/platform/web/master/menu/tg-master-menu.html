@@ -87,9 +87,6 @@
                 border-right: 1px solid rgba(0, 0, 0, 0.14);
             }
         }
-        iron-pages {
-            padding: 8px 8px;
-        }
         .truncate {
             white-space: nowrap;
             overflow: hidden;
@@ -164,6 +161,12 @@
                 /* A menu route that should be activated when the master gets shoe*/
                 defaultRoute: {
                     type: String
+                },
+                
+                /* Indicates whether master menu should maintain previously opened menu item after the master was opened again.*/
+                maintainPreviouslyOpenedMenuItem: {
+                    type: Boolean,
+                    value: false
                 },
 
                 /**
@@ -551,10 +554,14 @@
                 }
 
                 if (this._isRefreshCycle === false) {
-                    if (this.route !== this.defaultRoute) {
-                        this.route = this.defaultRoute;
+                    if (this.maintainPreviouslyOpenedMenuItem) {
+                        this._sectionRouteChanged(this.route, this.route);
                     } else {
-                        this._sectionRouteChanged(this.defaultRoute, this.route);
+                        if (this.route !== this.defaultRoute) {
+                            this.route = this.defaultRoute;
+                        } else {
+                            this._sectionRouteChanged(this.defaultRoute, this.route);
+                        }
                     }
                 }
 

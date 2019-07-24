@@ -21,6 +21,7 @@
             -moz-appearance: textfield;
         }
         .input-layer {
+            cursor: text;
             text-align: right;
             text-overflow: ellipsis;
             overflow: hidden;
@@ -42,7 +43,8 @@
     		<input
     			id="input"
     			class="custom-input decimal-input"
-    			is="iron-input"
+                is="iron-input"
+                autocomplete="off"
     			type="number"
     			step="any"
     			prevent-invalid-input
@@ -56,7 +58,7 @@
     			on-blur="_outFocus"
     			disabled$="[[_disabled}}"
                 tooltip-text$="[[_getTooltip(_editingValue)]]"/>
-            <div class="input-layer">[[_formatText(_editingValue)]]</div>
+            <div class="input-layer" tooltip-text$="[[_getTooltip(_editingValue)]]">[[_formatText(_editingValue)]]</div>
     		<content class=".property-action"></content>
     	</tg-editor>
     </template>

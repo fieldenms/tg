@@ -118,7 +118,7 @@
                     <span class="title-text truncate" style="margin-left:16px;" tooltip-text$="[[longDesc]]">[[shortDesc]]</span>
                     <paper-icon-button class="title-bar-button expand-colapse-button" style="margin-left:10px;margin-right:2px;" icon="icons:open-in-new" on-tap="_expandColapseTap"></paper-icon-button>
                 </div>
-                <div id="loadableContent" class="relative flex">
+                <div id="loadableContent" class="relative">
                     <tg-element-loader id="elementLoader"></tg-element-loader>
                 </div>
                 <div id="custom_actions_container" class="layout horizontal center end-justified" style="padding-right:2px" hidden$="[[!detached]]">
@@ -136,10 +136,6 @@
 
             behaviors: [Polymer.IronResizableBehavior, Polymer.IronA11yKeysBehavior, Polymer.TgBehaviors.TgTooltipBehavior, Polymer.TgBehaviors.TgShortcutProcessingBehavior],
 
-            listeners: {
-                'iron-resize': '_onIronResize'
-            },
-            
             properties: {
                 activated: {
                     type: Boolean,
@@ -318,7 +314,6 @@
                 if (this.contextRetriever && this.contextRetriever().$.centreResultContainer) {
                     this.contextRetriever().$.centreResultContainer.focus();    
                 }
-                this.notifyResize();
             },
 
             _getElement: function (customAction) {
@@ -419,6 +414,7 @@
                             }
                         })
                         .catch(function (error) {
+                            console.error(error);
                             self.$.toaster.text = 'There was an error displaying view ' + customAction.elementName;
                             self.$.toaster.hasMore = true;
                             self.$.toaster.msgText = 'There was an error displaying the view.<br><br> \
@@ -443,10 +439,7 @@
                     this.$.loadableContent.style.height = "100%";
                 }
                 this.updateStyles();
-            },
-
-            _onIronResize: function () {
-                this._adjustView(this.detached);
+                this.notifyResize();
             },
 
             _expandColapseTap: function (event) {

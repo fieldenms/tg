@@ -7,6 +7,9 @@ import static ua.com.fielden.platform.web.utils.WebUiResourceUtils.handleUndesir
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.UnsupportedEncodingException;
+import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
 import java.util.Date;
 import java.util.Set;
 import java.util.function.Function;
@@ -25,7 +28,6 @@ import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.entity.AbstractEntityWithInputStream;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.rx.observables.ProcessingProgressSubject;
-import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.web.interfaces.IDeviceProvider;
 import ua.com.fielden.platform.web.resources.RestServerUtil;
 import ua.com.fielden.platform.web.rx.eventsources.ProcessingProgressEventSource;
@@ -43,7 +45,7 @@ public class FileProcessingResource<T extends AbstractEntityWithInputStream<?>> 
     private final EntityFactory factory;
     private final Function<EntityFactory, T> entityCreator;
     private final RestServerUtil restUtil;
-    private final long sizeLimit;
+    private final long sizeLimitBytes;
     private final Set<MediaType> types;
     private final Router router;
     private final String jobUid;
@@ -58,7 +60,7 @@ public class FileProcessingResource<T extends AbstractEntityWithInputStream<?>> 
             final EntityFactory factory, 
             final Function<EntityFactory, T> entityCreator, 
             final RestServerUtil restUtil, 
-            final long fileSizeLimit, 
+            final long fileSizeLimitBytes, 
             final Set<MediaType> types, 
             final IDeviceProvider deviceProvider,
             final Context context, 
@@ -70,7 +72,7 @@ public class FileProcessingResource<T extends AbstractEntityWithInputStream<?>> 
         this.factory = factory;
         this.entityCreator = entityCreator;
         this.restUtil = restUtil;
-        this.sizeLimit = fileSizeLimit;
+        this.sizeLimitBytes = fileSizeLimitBytes;
         this.deviceProvider = deviceProvider;
         this.types = types;
         
@@ -79,7 +81,12 @@ public class FileProcessingResource<T extends AbstractEntityWithInputStream<?>> 
             throw new IllegalArgumentException("jobUid is required");
         }
         
-        this.origFileName = request.getHeaders().getFirstValue("origFileName");
+        try {
+            this.origFileName = URLDecoder.decode(request.getHeaders().getFirstValue("origFileName"), StandardCharsets.UTF_8.toString());
+        } catch (final UnsupportedEncodingException ex) {
+            throw new IllegalArgumentException("Could not decode the value for origFileName.", ex);
+        }
+        
         if (isEmpty(origFileName)) {
             throw new IllegalArgumentException("origFileName is required");
         }
@@ -110,7 +117,7 @@ public class FileProcessingResource<T extends AbstractEntityWithInputStream<?>> 
         } else if (entity.getSize() == -1) {
             getResponse().setStatus(Status.CLIENT_ERROR_LENGTH_REQUIRED);
             return restUtil.errorJSONRepresentation("File size is required.");
-        } else if (entity.getSize() > sizeLimit) {
+        } else if (entity.getSize() > sizeLimitBytes) {
             getResponse().setStatus(Status.CLIENT_ERROR_REQUEST_ENTITY_TOO_LARGE);
             return restUtil.errorJSONRepresentation("File is too large.");
         } else {
@@ -149,7 +156,7 @@ public class FileProcessingResource<T extends AbstractEntityWithInputStream<?>> 
         final ProcessingProgressSubject subject = new ProcessingProgressSubject();
         final EventSourcingResourceFactory eventSource = new EventSourcingResourceFactory(new ProcessingProgressEventSource(subject), deviceProvider);
         final String baseUri = getRequest().getResourceRef().getPath(true);
-        router.attach(baseUri + "/" + jobUid, eventSource);
+        router.attach(baseUri + "/sse/" + jobUid, eventSource);
         
         try {
             final T entity = entityCreator.apply(factory);

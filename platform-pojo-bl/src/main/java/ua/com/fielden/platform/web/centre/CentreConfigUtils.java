@@ -1,7 +1,6 @@
 package ua.com.fielden.platform.web.centre;
 
 import static java.util.Optional.empty;
-import static java.util.Optional.of;
 import static ua.com.fielden.platform.error.Result.failure;
 import java.util.Map;
 import java.util.Optional;
@@ -24,28 +23,14 @@ public class CentreConfigUtils {
     /**
      * Applies modifHolder from <code>selectionCrit</code> against fresh centre.
      * 
+     * IMPORTANT WARNING: avoids centre config self-conflict checks; ONLY TO BE USED NOT IN ANOTHER SessionRequired TRANSACTION SCOPE.
+     * 
      * @param selectionCrit
      * @return
      */
     public static EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, ? extends IEntityDao<AbstractEntity<?>>> applyCriteria(final EnhancedCentreEntityQueryCriteria<?, ?> selectionCrit) {
         // get modifHolder and apply it against 'fresh' centre to be able to later identify validity of 'fresh' centre
         return selectionCrit.freshCentreApplier(selectionCrit.centreContextHolder().getModifHolder());
-    }
-    
-    /**
-     * Returns custom object with centre information in case where centre criteria is invalid, otherwise returns empty {@link Optional}. 
-     * 
-     * @param selectionCrit
-     * @param appliedCriteriaEntity
-     * @return
-     */
-    public static Optional<Map<String, Object>> invalidCustomObject(final EnhancedCentreEntityQueryCriteria<?, ?> selectionCrit, final EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, ? extends IEntityDao<AbstractEntity<?>>> appliedCriteriaEntity) {
-        // validate criteriaEntity
-        final Result validationResult = appliedCriteriaEntity.isValid();
-        if (!validationResult.isSuccessful()) { // if applied criteria entity is invalid then return corresponding custom object
-            return of(getCustomObject(selectionCrit, appliedCriteriaEntity));
-        }
-        return empty();
     }
     
     /**

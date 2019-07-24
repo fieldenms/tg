@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.entity;
 
+import static ua.com.fielden.platform.error.Result.failure;
 import static ua.com.fielden.platform.utils.Pair.pair;
 
 import java.util.LinkedHashMap;
@@ -18,6 +19,7 @@ import ua.com.fielden.platform.utils.Pair;
 import ua.com.fielden.platform.web.utils.EntityResourceUtils;
 
 public class EntityResourceContinuationsHelper {
+    public static final String ERR_NO_CHANGES_TO_SAVE = "There are no changes to save.";
     
     /**
      * Saves the <code>entity</code> with its <code>continuations</code>.
@@ -44,16 +46,16 @@ public class EntityResourceContinuationsHelper {
                 }
             }
         }
-
+        
         // 1) non-persistent entities should always be saved (isDirty will always be true)
         // 2) persistent but not persisted (new) entities should always be saved (isDirty will always be true)
         // 3) persistent+persisted+dirty (by means of dirty properties existence) entities should always be saved
         // 4) persistent+persisted+notDirty+inValid entities should always be saved: passed to companion 'save' method to process validation errors in domain-driven way by companion object itself
         // 5) persistent+persisted+notDirty+valid entities saving should be skipped
         if (!entity.isDirty() && validateWithoutCritOnlyRequired(entity)) { // this isValid validation does not really do additional validation (but, perhaps, cleared warnings could appear again), but is provided for additional safety
-            throw Result.failure("There are no changes to save.");
+            throw failure(ERR_NO_CHANGES_TO_SAVE);
         }
-
+        
         if (continuationsPresent) {
             co.setMoreData(continuations);
         } else {

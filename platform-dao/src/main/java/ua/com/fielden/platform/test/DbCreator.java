@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.test;
 
 import static java.lang.String.format;
+import static ua.com.fielden.platform.utils.DbUtils.batchExecSql;
 
 import java.io.File;
 import java.io.IOException;
@@ -9,7 +10,6 @@ import java.nio.charset.StandardCharsets;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
-import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
@@ -20,11 +20,11 @@ import java.util.Properties;
 import org.apache.log4j.Logger;
 import org.hibernate.dialect.Dialect;
 
-import com.google.common.collect.Iterators;
 import com.google.common.io.Files;
 
-import ua.com.fielden.platform.dao.DomainMetadata;
-import ua.com.fielden.platform.dao.PersistedEntityMetadata;
+import ua.com.fielden.platform.entity.query.DbVersion;
+import ua.com.fielden.platform.entity.query.metadata.DomainMetadata;
+import ua.com.fielden.platform.entity.query.metadata.PersistedEntityMetadata;
 import ua.com.fielden.platform.test.exceptions.DomainDriventTestException;
 
 /**
@@ -75,7 +75,7 @@ public abstract class DbCreator {
         if (execDdslScripts) {
             // recreate DB structures
             logger.info("CREATING DB SCHEMA...");
-            execSql(maybeDdl, conn, 0);
+            batchExecSql(maybeDdl, conn, 0);
             try {
                 conn.commit();
             } catch (final SQLException ex) {
@@ -84,6 +84,13 @@ public abstract class DbCreator {
             logger.info(" DONE!");
         }
     }
+
+    /**
+     * Identifies the database version that is used for testing.
+     *
+     * @return
+     */
+    public abstract DbVersion dbVersion();
 
     /**
      * Override to implement RDBMS specific DDL script generation.
@@ -111,7 +118,7 @@ public abstract class DbCreator {
         if (!dataScripts.isEmpty()) {
             // apply data population script
             logger.debug("Executing data population script.");
-            execSql(dataScripts, conn, 100);
+            batchExecSql(dataScripts, conn, 100);
             conn.commit();
         } else {
             try {
@@ -138,6 +145,7 @@ public abstract class DbCreator {
         }
 
         if (raisedEx.isPresent()) {
+            raisedEx.ifPresent(ex -> logger.fatal(ex.getMessage(), ex));
             throw new IllegalStateException("Population of the test data has failed.", raisedEx.get());
         }
 
@@ -149,7 +157,7 @@ public abstract class DbCreator {
      */
     public final void clearData() {
         try {
-            execSql(truncateScripts, conn, 100);
+            batchExecSql(truncateScripts, conn, 100);
             logger.debug("Executing tables truncation script.");
             conn.commit();
         } catch (final Exception ex) {
@@ -180,7 +188,7 @@ public abstract class DbCreator {
             }
             truncateScripts.addAll(Files.readLines(truncateTablesScriptFile, StandardCharsets.UTF_8));
 
-            execSql(dataScripts, conn, 100);
+            batchExecSql(dataScripts, conn, 100);
         } catch (final IOException ex) {
             throw new DomainDriventTestException("Could not resotre data population and truncation scripts from files.", ex);
         }
@@ -231,34 +239,6 @@ public abstract class DbCreator {
      */
     public abstract List<String> genInsertStmt(final Collection<PersistedEntityMetadata<?>> entityMetadata, final Connection conn) throws SQLException;
     
-    /**
-     * A helper function to execute SQL statements.
-     * Executes statements in batches of <code>batchSize</code>. 
-     * If <code>barchSize</code> is 0 or negative then no batching is used.
-     * 
-     * @param statements
-     * @param conn
-     * @param batchSize
-     */
-    public static void execSql(final List<String> statements, final Connection conn, final int batchSize) {
-        try (final Statement st = conn.createStatement()) {
-            Iterators.partition(statements.iterator(), batchSize > 0 ? batchSize : 1).forEachRemaining(batch -> {
-                try {
-                    for (final String stmt : batch) {
-                        st.addBatch(stmt);
-                    }
-                    st.executeBatch();
-                } catch (final Exception ex) {
-                    throw new DomainDriventTestException("Could not exec batched SQL statements.", ex);
-                }
-            });
-        } catch (final DomainDriventTestException ex) {
-            throw ex;
-        } catch (final SQLException ex) {
-            throw new DomainDriventTestException("Could not create statement.", ex);
-        }
-    }
-
     /**
      * Creates a new DB connection based on the provided properties.
      * 

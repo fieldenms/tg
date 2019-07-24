@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.web.resources.webui;
 
 import static ua.com.fielden.platform.web.security.AbstractWebResourceGuard.extractAuthenticator;
+import static ua.com.fielden.platform.web.security.AbstractWebResourceGuard.mkAuthenticationCookieToExpire;
 
 import java.io.ByteArrayInputStream;
 import java.util.Optional;
@@ -9,6 +10,7 @@ import org.apache.log4j.Logger;
 import org.restlet.Context;
 import org.restlet.Request;
 import org.restlet.Response;
+import org.restlet.data.CookieSetting;
 import org.restlet.data.Encoding;
 import org.restlet.data.MediaType;
 import org.restlet.engine.application.EncodeRepresentation;
@@ -24,6 +26,7 @@ import ua.com.fielden.platform.security.session.UserSession;
 import ua.com.fielden.platform.security.user.IUser;
 import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.utils.ResourceLoader;
+import ua.com.fielden.platform.web.security.AbstractWebResourceGuard;
 
 /**
  * A web resource handling explicit user logins.
@@ -40,21 +43,27 @@ public class LogoutResource extends ServerResource {
     private final IUserProvider userProvider;
     private final IUser coUser;
     private final IUserSession coUserSession;
+    private final String domainName;
+    private final String path;
 
     /**
      * Creates {@link LogoutResource}.
      */
-    public LogoutResource(//
+    public LogoutResource(
             final IUserProvider userProvider,
             final IUser coUser,
-            final IUserSession coUserSession,//
-            final Context context, //
-            final Request request, //
+            final IUserSession coUserSession,
+            final String domainName,
+            final String path,
+            final Context context,
+            final Request request,
             final Response response) {
         init(context, request, response);
         this.userProvider = userProvider;
         this.coUser = coUser;
         this.coUserSession = coUserSession;
+        this.domainName = domainName;
+        this.path = path;
     }
 
     @Get
@@ -80,6 +89,10 @@ public class LogoutResource extends ServerResource {
             logger.fatal(ex);
             getResponse().redirectSeeOther("/login");
             return new EmptyRepresentation();
+        } finally {
+            final Response response = getResponse();
+            response.getCookieSettings().clear();
+            response.getCookieSettings().add(mkAuthenticationCookieToExpire(domainName, path));
         }
     }
 

@@ -1,10 +1,11 @@
 package ua.com.fielden.platform.web.resources.webui;
 
+import static java.lang.String.format;
 import static ua.com.fielden.platform.utils.MiscUtilities.prepare;
 import static ua.com.fielden.platform.web.centre.CentreUpdater.FRESH_CENTRE_NAME;
 import static ua.com.fielden.platform.web.centre.CentreUpdater.updateCentre;
 import static ua.com.fielden.platform.web.resources.webui.CentreResourceUtils.createCentreContext;
-import static ua.com.fielden.platform.web.resources.webui.CentreResourceUtils.createCriteriaEntity;
+import static ua.com.fielden.platform.web.resources.webui.CentreResourceUtils.createCriteriaEntityWithoutConflicts;
 import static ua.com.fielden.platform.web.resources.webui.CentreResourceUtils.createCriteriaValidationPrototype;
 import static ua.com.fielden.platform.web.utils.WebUiResourceUtils.handleUndesiredExceptions;
 import static ua.com.fielden.platform.web.utils.WebUiResourceUtils.restoreCentreContextHolder;
@@ -33,7 +34,6 @@ import ua.com.fielden.platform.entity_centre.review.criteria.EnhancedCentreEntit
 import ua.com.fielden.platform.security.user.IUser;
 import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.security.user.User;
-import ua.com.fielden.platform.serialisation.api.ISerialiser;
 import ua.com.fielden.platform.ui.config.EntityCentreConfig;
 import ua.com.fielden.platform.ui.config.MainMenuItem;
 import ua.com.fielden.platform.ui.config.api.IEntityCentreConfig;
@@ -62,7 +62,6 @@ public class CriteriaEntityAutocompletionResource<T extends AbstractEntity<?>, M
     private final ICriteriaGenerator critGenerator;
     private final EntityCentre<T> centre;
     
-    private final ISerialiser serialiser;
     private final IDomainTreeEnhancerCache domainTreeEnhancerCache;
     private final IWebUiConfig webUiConfig;
     private final IUserProvider userProvider;
@@ -82,7 +81,6 @@ public class CriteriaEntityAutocompletionResource<T extends AbstractEntity<?>, M
             final String criterionPropertyName,
             final EntityCentre<T> centre,
             final RestServerUtil restUtil,
-            final ISerialiser serialiser,
             final IDomainTreeEnhancerCache domainTreeEnhancerCache,
             final Context context,
             final Request request,
@@ -100,7 +98,6 @@ public class CriteriaEntityAutocompletionResource<T extends AbstractEntity<?>, M
         this.webUiConfig = webUiConfig;
         this.userProvider = userProvider;
         this.entityFactory = entityFactory;
-        this.serialiser = serialiser;
         this.domainTreeEnhancerCache = domainTreeEnhancerCache;
     }
 
@@ -128,15 +125,15 @@ public class CriteriaEntityAutocompletionResource<T extends AbstractEntity<?>, M
                 criteriaEntity = null;
                 final M enhancedCentreEntityQueryCriteria = createCriteriaValidationPrototype(
                     miType, saveAsName,
-                    updateCentre(user, userProvider, miType, FRESH_CENTRE_NAME, saveAsName, device(), serialiser, domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion),
+                    updateCentre(user, userProvider, miType, FRESH_CENTRE_NAME, saveAsName, device(), domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion, companionFinder),
                     companionFinder, critGenerator, 0L, 
                     user, userProvider,
                     device(),
-                    serialiser, domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion
+                    domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion
                 );
                 criteriaType = (Class<M>) enhancedCentreEntityQueryCriteria.getClass();
             } else {
-                criteriaEntity = (M) createCriteriaEntity(modifHolder, companionFinder, critGenerator, miType, saveAsName, user, userProvider, device(), serialiser, domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion);
+                criteriaEntity = (M) createCriteriaEntityWithoutConflicts(modifHolder, companionFinder, critGenerator, miType, saveAsName, user, userProvider, device(), domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion);
                 criteriaType = (Class<M>) criteriaEntity.getClass();
             }
 
@@ -169,7 +166,6 @@ public class CriteriaEntityAutocompletionResource<T extends AbstractEntity<?>, M
                 contextConfig,
                 criterionPropertyName,
                 device(),
-                serialiser,
                 domainTreeEnhancerCache,
                 eccCompanion,
                 mmiCompanion,
@@ -186,9 +182,10 @@ public class CriteriaEntityAutocompletionResource<T extends AbstractEntity<?>, M
             // prepare search string
             final String searchStringVal = (String) centreContextHolder.getCustomObject().get("@@searchString"); // custom property inside customObject
             final String searchString = prepare(searchStringVal.contains("*") ? searchStringVal : searchStringVal + "*");
-            logger.debug(String.format("SEARCH STRING %s", searchString));
-
-            final List<? extends AbstractEntity<?>> entities = valueMatcher.findMatchesWithModel(searchString != null ? searchString : "%");
+            final int dataPage = centreContextHolder.getCustomObject().containsKey("@@dataPage") ? (Integer) centreContextHolder.getCustomObject().get("@@dataPage") : 1;
+            logger.debug(format("SEARCH STRING %s, PAGE %s", searchString, dataPage));
+            
+            final List<? extends AbstractEntity<?>> entities = valueMatcher.findMatchesWithModel(searchString != null ? searchString : "%", dataPage);
 
             logger.debug("CRITERIA_ENTITY_AUTOCOMPLETION_RESOURCE: search finished.");
             return restUtil.listJSONRepresentation(entities);

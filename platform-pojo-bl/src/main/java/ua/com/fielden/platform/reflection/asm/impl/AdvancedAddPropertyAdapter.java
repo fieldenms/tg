@@ -1,5 +1,7 @@
 package ua.com.fielden.platform.reflection.asm.impl;
 
+import static ua.com.fielden.platform.reflection.asm.impl.DynamicTypeNamingService.nextTypeName;
+
 import java.lang.annotation.Annotation;
 import java.util.List;
 import java.util.Map;
@@ -19,7 +21,6 @@ import ua.com.fielden.platform.entity.annotation.Generated;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.entity.annotation.Title;
-import ua.com.fielden.platform.entity.annotation.factory.IsPropertyAnnotation;
 import ua.com.fielden.platform.reflection.Reflector;
 import ua.com.fielden.platform.reflection.asm.api.NewProperty;
 import ua.com.fielden.platform.utils.Pair;
@@ -31,7 +32,13 @@ import ua.com.fielden.platform.utils.Pair;
  *
  */
 public class AdvancedAddPropertyAdapter extends ClassVisitor implements Opcodes {
-    private final IsPropertyAnnotation isPropertyAnnotation = new IsPropertyAnnotation();
+    private static final Generated GENERATED_ANNOTATION = new Generated() {
+        @Override
+        public Class<Generated> annotationType() {
+            return Generated.class;
+        }
+    };
+
     /**
      * Properties to be added.
      */
@@ -42,12 +49,9 @@ public class AdvancedAddPropertyAdapter extends ClassVisitor implements Opcodes 
     private String owner;
     private String enhancedName;
 
-    private final DynamicTypeNamingService namingService;
-
-    public AdvancedAddPropertyAdapter(final ClassVisitor cv, final DynamicTypeNamingService namingService, final Map<String, NewProperty> propertiesToAdd) {
+    public AdvancedAddPropertyAdapter(final ClassVisitor cv, final Map<String, NewProperty> propertiesToAdd) {
         super(Opcodes.ASM5, cv);
         this.propertiesToAdd = propertiesToAdd;
-        this.namingService = namingService;
     }
 
     /**
@@ -58,7 +62,7 @@ public class AdvancedAddPropertyAdapter extends ClassVisitor implements Opcodes 
     @Override
     public void visit(final int version, final int access, final String name, final String signature, final String superName, final String[] interfaces) {
         owner = name;
-        enhancedName = namingService.nextTypeName(name);
+        enhancedName = nextTypeName(name);
         super.visit(version, access, enhancedName, signature, superName, interfaces);
     }
 
@@ -135,17 +139,8 @@ public class AdvancedAddPropertyAdapter extends ClassVisitor implements Opcodes 
 
     private void addRequiredAnnotations(final NewProperty pd) {
         // mark the field as generated
-        pd.addAnnotation(new Generated() {
-            @Override
-            public Class<Generated> annotationType() {
-                return Generated.class;
-            }
-        });
+        pd.addAnnotation(GENERATED_ANNOTATION);
 
-        // the generated field should correspond to a property
-        // thus it should have annotation IsProperty, but the annotation descriptor list may already contain it
-        // therefore add IsProperty just in case -- it will not be added if already present
-        pd.addAnnotation(isPropertyAnnotation.newInstance());
         // the same goes about the Title annotation as property should have title and description
         pd.addAnnotation(new Title() {
             @Override

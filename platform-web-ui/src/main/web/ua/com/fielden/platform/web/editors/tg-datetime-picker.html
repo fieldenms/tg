@@ -42,6 +42,9 @@
 </style>
 <dom-module id="tg-datetime-picker">
     <style>
+        #input[disabled] {
+            cursor: text;
+        }
         .picker-button::shadow #ink {
             width: 1.9rem;
             height: 1.9rem;
@@ -85,7 +88,8 @@
         	<input
     			id="input"
     			class="custom-input date-input"
-    			is="iron-input"
+                is="iron-input"
+                autocomplete="off"
     			bind-value="{{_editingValue}}"
     			on-change="_onChange"
     			on-input="_onInput"
@@ -430,7 +434,7 @@
                         if (this._validMoment !== null) {
                             return _millisDateRepresentation(this._validMoment.valueOf(), this.timeZone, this.datePortion);
                         }
-                    } else if (this.timeZone === 'UTC') { //As the last resort try utc formatting
+                    } else if (this.timeZone === 'UTC' && dateEditingValue.indexOf('-') >= 0) { //As the last resort try utc formatting
                         this._validMoment = this._tryUTCFormats(dateEditingValue);
                         if (this._validMoment !== null) {
                             return _millisDateRepresentation(this._validMoment.valueOf(), this.timeZone, this.datePortion);

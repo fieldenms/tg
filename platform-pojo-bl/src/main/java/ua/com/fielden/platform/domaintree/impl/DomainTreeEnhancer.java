@@ -7,6 +7,7 @@ import static java.util.Optional.of;
 import static java.util.stream.Collectors.toCollection;
 import static ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader.isGenerated;
 import static ua.com.fielden.platform.reflection.asm.impl.DynamicTypeNamingService.APPENDIX;
+import static ua.com.fielden.platform.reflection.asm.impl.DynamicTypeNamingService.nextTypeName;
 import static ua.com.fielden.platform.types.tuples.T2.t2;
 import static ua.com.fielden.platform.utils.CollectionUtil.linkedMapOf;
 import static ua.com.fielden.platform.utils.Pair.pair;
@@ -37,9 +38,11 @@ import ua.com.fielden.platform.domaintree.IProperty;
 import ua.com.fielden.platform.domaintree.exceptions.DomainTreeException;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.Calculated;
+import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.Title;
 import ua.com.fielden.platform.entity.annotation.factory.CalculatedAnnotation;
 import ua.com.fielden.platform.entity.annotation.factory.CustomPropAnnotation;
+import ua.com.fielden.platform.entity.annotation.factory.IsPropertyAnnotation;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.reflection.Finder;
@@ -47,7 +50,6 @@ import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.reflection.Reflector;
 import ua.com.fielden.platform.reflection.asm.api.NewProperty;
 import ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader;
-import ua.com.fielden.platform.reflection.asm.impl.DynamicTypeNamingService;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
 import ua.com.fielden.platform.ui.menu.MiTypeAnnotation;
 import ua.com.fielden.platform.ui.menu.MiWithConfigurationSupport;
@@ -432,7 +434,7 @@ public final class DomainTreeEnhancer extends AbstractDomainTree implements IDom
         for (final Entry<Class<?>, Map<String, Map<String, IProperty>>> entry : groupedCalculatedProperties.entrySet()) {
             final Class<?> originalRoot = entry.getKey();
             // generate predefined root type name for all calculated properties
-            final String predefinedRootTypeName = rootNameSuffix.isPresent() ? originalRoot.getName() + APPENDIX + "_" + rootNameSuffix.get() : new DynamicTypeNamingService().nextTypeName(originalRoot.getName());
+            final String predefinedRootTypeName = rootNameSuffix.isPresent() ? originalRoot.getName() + APPENDIX + "_" + rootNameSuffix.get() : nextTypeName(originalRoot.getName());
             if (entry.getValue() == null) {
                 final ByteArray newByteArray = new ByteArray(classLoader.getCachedByteArray(originalRoot.getName()));
                 originalAndEnhancedRootTypes.put(originalRoot, new Pair<Class<?>, Map<String, ByteArray>>(originalRoot,  linkedMapOf(t2("", newByteArray))));
@@ -452,7 +454,10 @@ public final class DomainTreeEnhancer extends AbstractDomainTree implements IDom
                                 final CalculatedProperty prop = (CalculatedProperty) iProp;
                                 final String originationProperty = prop.getOriginationProperty() == null ? "" : prop.getOriginationProperty();
                                 final Annotation calcAnnotation = new CalculatedAnnotation().contextualExpression(prop.getContextualExpression()).rootTypeName(predefinedRootTypeName).contextPath(prop.getContextPath()).origination(originationProperty).attribute(prop.getAttribute()).category(prop.category()).newInstance();
-                                newProperties[i++] = new NewProperty(nameWithProp.getKey(), prop.resultType(), false, prop.getTitle(), prop.getDesc(), calcAnnotation);
+                                final IsProperty isPropAnnot = prop.getPrecision() != null && prop.getScale() != null ? new IsPropertyAnnotation(prop.getPrecision(), prop.getScale()).newInstance() : NewProperty.DEFAULT_IS_PROPERTY_ANNOTATION;
+                                newProperties[i++] = new NewProperty(nameWithProp.getKey(), prop.resultType(), false, prop.getTitle(), prop.getDesc(),
+                                                                     isPropAnnot,
+                                                                     calcAnnotation);
                             } else { // this should be CustomProperty!
                                 final CustomProperty prop = (CustomProperty) iProp;
                                 newProperties[i++] = new NewProperty(nameWithProp.getKey(), prop.resultType(), false, prop.getTitle(), prop.getDesc(), new CustomPropAnnotation().newInstance());
@@ -464,7 +469,7 @@ public final class DomainTreeEnhancer extends AbstractDomainTree implements IDom
                             final Map<String, ByteArray> existingByteArrays = new LinkedHashMap<>(originalAndEnhancedRootTypes.get(originalRoot).getValue());
 
                             // generate & load new type enhanced by calculated properties
-                            final Class<?> realParentEnhanced = classLoader.startModification(realParentToBeEnhanced.getName()).addProperties(newProperties)./* TODO modifySupertypeName(realParentToBeEnhanced.getName()).*/endModification();
+                            final Class<?> realParentEnhanced = classLoader.startModification(realParentToBeEnhanced).addProperties(newProperties)./* TODO modifySupertypeName(realParentToBeEnhanced.getName()).*/endModification();
                             // propagate enhanced type to root
                             final Pair<Class<?>, Map<String, ByteArray>> rootAfterPropagationAndAdditionalByteArrays = propagateEnhancedTypeToRoot(realParentEnhanced, realRoot, path, classLoader);
                             final Class<?> rootAfterPropagation = rootAfterPropagationAndAdditionalByteArrays.getKey();
@@ -484,7 +489,7 @@ public final class DomainTreeEnhancer extends AbstractDomainTree implements IDom
                 final Pair<Class<?>, Map<String, ByteArray>> current = originalAndEnhancedRootTypes.get(originalRoot);
                 final Class<?> enhancedRoot = current.getKey();
                 if (originalRoot != enhancedRoot) { // calculated properties exist -- root type should be enhanced
-                    final Class<?> rootWithPredefinedName = classLoader.startModification(enhancedRoot.getName()).addClassAnnotations(rootAnnotations.toArray(new Annotation[rootAnnotations.size()])).modifyTypeName(predefinedRootTypeName)./* TODO modifySupertypeName(originalRoot.getName()).*/endModification();
+                    final Class<?> rootWithPredefinedName = classLoader.startModification(enhancedRoot).addClassAnnotations(rootAnnotations.toArray(new Annotation[rootAnnotations.size()])).modifyTypeName(predefinedRootTypeName)./* TODO modifySupertypeName(originalRoot.getName()).*/endModification();
                     final Map<String, ByteArray> byteArraysWithRenamedRoot = new LinkedHashMap<>();
 
                     byteArraysWithRenamedRoot.putAll(current.getValue());
@@ -580,14 +585,14 @@ public final class DomainTreeEnhancer extends AbstractDomainTree implements IDom
         }
         final Pair<Class<?>, String> transformed = PropertyTypeDeterminator.transform(root, path);
 
-        final String nameOfTheTypeToAdapt = transformed.getKey().getName();
+        final Class<?> typeToAdapt = transformed.getKey();
         final String nameOfThePropertyToAdapt = transformed.getValue();
         try {
             // change type if simple field and change signature in case of collectional field
             final boolean isCollectional = Collection.class.isAssignableFrom(PropertyTypeDeterminator.determineClass(transformed.getKey(), transformed.getValue(), true, false));
             final NewProperty propertyToBeModified = !isCollectional ? NewProperty.changeType(nameOfThePropertyToAdapt, enhancedType)
                     : NewProperty.changeTypeSignature(nameOfThePropertyToAdapt, enhancedType);
-            final Class<?> nextEnhancedType = classLoader.startModification(nameOfTheTypeToAdapt).modifyProperties(propertyToBeModified)./* TODO modifySupertypeName(nameOfTheTypeToAdapt).*/endModification();
+            final Class<?> nextEnhancedType = classLoader.startModification(typeToAdapt).modifyProperties(propertyToBeModified)./* TODO modifySupertypeName(nameOfTheTypeToAdapt).*/endModification();
             final String nextProp = PropertyTypeDeterminator.isDotNotation(path) ? PropertyTypeDeterminator.penultAndLast(path).getKey() : "";
             final Pair<Class<?>, Map<String, ByteArray>> lastTypeThatIsRootAndPropagatedArrays = propagateEnhancedTypeToRoot(nextEnhancedType, root, nextProp, classLoader);
             additionalByteArrays.putAll(lastTypeThatIsRootAndPropagatedArrays.getValue());
@@ -648,8 +653,9 @@ public final class DomainTreeEnhancer extends AbstractDomainTree implements IDom
                     final Title titleAnnotation = AnnotationReflector.getAnnotation(calculatedField, Title.class);
                     final String title = titleAnnotation == null ? "" : titleAnnotation.value();
                     final String desc = titleAnnotation == null ? "" : titleAnnotation.desc();
+                    final IsProperty isPropertyAnnotation = AnnotationReflector.getAnnotation(calculatedField, IsProperty.class);
                     final CalculatedProperty calculatedProperty = CalculatedProperty.createCorrect(dte.getFactory(), root, calcAnnotation.contextPath(), calcAnnotation.value(), title, desc, calcAnnotation.attribute(), "".equals(calcAnnotation.origination()) ? null
-                            : calcAnnotation.origination(), dte, validateTitleContextOfExtractedProperties);
+                            : calcAnnotation.origination(), isPropertyAnnotation.precision(), isPropertyAnnotation.scale(), dte, validateTitleContextOfExtractedProperties);
 
                     // TODO tricky setting!
                     if (!EntityUtils.equalsEx(calculatedField.getName(), calculatedProperty.name())) {
@@ -717,8 +723,8 @@ public final class DomainTreeEnhancer extends AbstractDomainTree implements IDom
     }
 
     @Override
-    public IDomainTreeEnhancer addCustomProperty(final Class<?> root, final String contextPath, final String name, final String title, final String desc, final Class<?> type) {
-        addCustomProperty(new CustomProperty(root, getManagedType(root), contextPath, name, title, desc, type), customProperties);
+    public IDomainTreeEnhancer addCustomProperty(final Class<?> root, final String contextPath, final String name, final String title, final String desc, final Class<?> type, final Integer precision, final Integer scale) {
+        addCustomProperty(new CustomProperty(root, getManagedType(root), contextPath, name, title, desc, type, precision, scale), customProperties);
         return this;
     }
 
@@ -760,13 +766,13 @@ public final class DomainTreeEnhancer extends AbstractDomainTree implements IDom
     }
 
     @Override
-    public ICalculatedProperty addCalculatedProperty(final Class<?> root, final String contextPath, final String contextualExpression, final String title, final String desc, final CalculatedPropertyAttribute attribute, final String originationProperty) {
-        return addCalculatedProperty(CalculatedProperty.createCorrect(getFactory(), root, contextPath, contextualExpression, title, desc, attribute, originationProperty, this));
+    public ICalculatedProperty addCalculatedProperty(final Class<?> root, final String contextPath, final String contextualExpression, final String title, final String desc, final CalculatedPropertyAttribute attribute, final String originationProperty, final Integer precision, final Integer scale) {
+        return addCalculatedProperty(CalculatedProperty.createCorrect(getFactory(), root, contextPath, contextualExpression, title, desc, attribute, originationProperty, precision, scale, this));
     }
 
     @Override
-    public ICalculatedProperty addCalculatedProperty(final Class<?> root, final String contextPath, final String customPropertyName, final String contextualExpression, final String title, final String desc, final CalculatedPropertyAttribute attribute, final String originationProperty) {
-        return addCalculatedProperty(CalculatedProperty.createCorrect(getFactory(), root, contextPath, customPropertyName, contextualExpression, title, desc, attribute, originationProperty, this));
+    public ICalculatedProperty addCalculatedProperty(final Class<?> root, final String contextPath, final String customPropertyName, final String contextualExpression, final String title, final String desc, final CalculatedPropertyAttribute attribute, final String originationProperty, final Integer precision, final Integer scale) {
+        return addCalculatedProperty(CalculatedProperty.createCorrect(getFactory(), root, contextPath, customPropertyName, contextualExpression, title, desc, attribute, originationProperty, precision, scale, this));
     }
 
     @Override
@@ -863,7 +869,7 @@ public final class DomainTreeEnhancer extends AbstractDomainTree implements IDom
         for (final Entry<Class<?>, List<CalculatedProperty>> entry : calculatedProperties.entrySet()) {
             final Set<CalculatedPropertyInfo> set = new HashSet<>();
             for (final CalculatedProperty cp : entry.getValue()) {
-                set.add(new CalculatedPropertyInfo(cp.getRoot(), cp.getContextPath(), cp.getCustomPropertyName(), cp.getContextualExpression(), cp.getTitle(), cp.getAttribute(), cp.getOriginationProperty(), cp.getDesc()));
+                set.add(new CalculatedPropertyInfo(cp.getRoot(), cp.getContextPath(), cp.getCustomPropertyName(), cp.getContextualExpression(), cp.getTitle(), cp.getAttribute(), cp.getOriginationProperty(), cp.getDesc(), cp.getPrecision(), cp.getScale()));
             }
             map.put(entry.getKey(), set);
         }
@@ -883,7 +889,7 @@ public final class DomainTreeEnhancer extends AbstractDomainTree implements IDom
         for (final Entry<Class<?>, Set<CalculatedPropertyInfo>> entry : calculatedPropertiesInfo.entrySet()) {
             final List<CalculatedProperty> list = new ArrayList<>();
             for (final CalculatedPropertyInfo cpInfo : entry.getValue()) {
-                list.add(CalculatedProperty.createCorrect(dte.getSerialiser().factory(), cpInfo.getRoot(), cpInfo.getContextPath(), cpInfo.getCustomPropertyName(), cpInfo.getContextualExpression(), cpInfo.getTitle(), cpInfo.getDesc(), cpInfo.getAttribute(), cpInfo.getOriginationProperty(), dte, true));
+                list.add(CalculatedProperty.createCorrect(dte.getSerialiser().factory(), cpInfo.getRoot(), cpInfo.getContextPath(), cpInfo.getCustomPropertyName(), cpInfo.getContextualExpression(), cpInfo.getTitle(), cpInfo.getDesc(), cpInfo.getAttribute(), cpInfo.getOriginationProperty(), cpInfo.getPrecision(), cpInfo.getScale(), dte, true));
             }
             map.put(entry.getKey(), list);
         }

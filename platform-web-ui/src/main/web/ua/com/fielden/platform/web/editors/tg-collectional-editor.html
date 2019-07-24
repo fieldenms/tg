@@ -111,6 +111,12 @@
             --paper-checkbox-unchecked-color: var(--paper-grey-900:);
             --paper-checkbox-unchecked-ink-color: var(--paper-grey-900:);
         }
+
+        paper-checkbox[semi-checked] {
+            --paper-checkbox-checked-color: #acdbfe;
+            --paper-checkbox-checked-ink-color: var(--paper-light-blue-700);
+        }
+        
         .item.selected {
             background-color: var(--google-grey-100);
         }
@@ -173,9 +179,13 @@
             _on-change="[[_onChange]]"
             _on-input="[[_onInput]]"
             _on-keydown="[[_onKeydown]]">
-            <input id="searchInput" is="iron-input" placeholder="Type to search..." bind-value="{{_phraseForSearching}}" class="custom-input" on-input="_onInput" on-tap="_onTap" on-mousedown="_onTap" on-blur="_eventHandler" prevent-invalid-input>
+            <div class="layout horizontal custom-input center" style$="[[_computeInputStyle(_forReview)]]">
+                <div class="resizing-box" hidden$="[[!canReorderItems]]"></div>
+                <paper-checkbox class="select-all-checkbox" id="selectAllCheckbox" style$="[[_computeCheckAllStyle(canReorderItems, _multiSelection)]]" hidden$="[[_selectingIconHidden(_forReview)]]" checked="[[_selectedAll]]" semi-checked$="[[_semiCheckedAll]]" on-change="_allSelectionChanged"></paper-checkbox>
+                <input id="searchInput" is="iron-input" autocomplete="nope" placeholder="Type to search..." bind-value="{{_phraseForSearching}}" on-input="_onInput" on-tap="_onTap" on-mousedown="_onTap" on-blur="_eventHandler" prevent-invalid-input>
+            </div>
             <div class="custom-input layout vertical flex relative">
-                <iron-list id="input" class="collectional-input fit" items="[[_entities]]" selected-items="{{_selectedEntities}}" selected-item="{{_selectedEntity}}" selection-enabled="[[_isSelectionEnabled(_forReview)]]" multi-selection>
+                <iron-list id="input" class="collectional-input fit" items="[[_entities]]" selected-items="{{_selectedEntities}}" selected-item="{{_selectedEntity}}" selection-enabled="[[_isSelectionEnabled(_forReview)]]" multi-selection="[[_multiSelection]]">
                     <template>
                         <div class$="[[_computedItemClass(_disabled)]]" collectional-index$="[[index]]">
                             <div class="dummy-box fit" hidden$="[[!_isDummyBoxVisible(item, _draggingItem)]]"></div>
@@ -227,7 +237,23 @@
                 type: Boolean,
                 value: false
             },
-            
+
+            _multiSelection: {
+                type: Boolean,
+                value: true
+            },
+            /**
+             * controls select All checkbox
+             */
+            _selectedAll: {
+                type: Boolean
+            },
+
+            _semiCheckedAll: {
+                type: Boolean,
+                value: false
+            },
+
             /**
              * Indicates the item that is currently dragging. It might be null if there is no dragging item.
              */
@@ -326,6 +352,8 @@
         
         ready: function () {
             this._draggingItem = null;
+            this.$.editorDom._editorKind = "COLLECTIONAL";
+            this.$.editorDom.$.decorator.noLabelFloat = true;
             this._eventHandler = (function(e) {
             	// There is no need to proceed with search if user moved out of the search field
             	this._cancelSearch();
@@ -375,7 +403,7 @@
             
             if (this.reflector().isEntity(newValue)) {
                 if (newValue.type()._simpleClassName() === 'CentreConfigLoadAction') {
-                    this.$.input.multiSelection = false;
+                    this._multiSelection = false;
                 }
                 // _entities, _originalChosenIds, this.$.input should be initialised only once for the session of collectional editing.
                 // This session includes initial refresh, multiple validation cycles and finishing save / cancel.
@@ -541,7 +569,7 @@
         _sortingIconForItem: function (sorting) {
             return sorting === true ? 'arrow-drop-up' : (sorting === false ? 'arrow-drop-down' : 'arrow-drop-up');
         },
-        
+
         _selectingIconHidden: function (_forReview) {
             return _forReview;
         },
@@ -564,6 +592,16 @@
             let style = _forReview || _draggingItem ? '' : 'cursor: pointer;';
             style += canReorderItems ? "" : "padding-left: 22px;";
             return style;
+        },
+
+        _computeInputStyle: function (_forReview) {
+            return _forReview ? "" : "padding-bottom: 20px;";
+        },
+
+        _computeCheckAllStyle: function (canReorderItems, _multiSelection) {
+            let selectAllStyle = canReorderItems ? "" : "padding-left: 22px;padding-right:14px;";
+            selectAllStyle += _multiSelection ? "" : "visibility: hidden;";
+            return selectAllStyle;
         },
         
         _computeStyleForResizingBox : function (selected) {
@@ -770,6 +808,7 @@
                     }
                 }, self);
             }
+            this._updateSelectAll();
         },
         
         /**
@@ -894,6 +933,36 @@
         _makeListSelectable: function () {
             this.$.input.classList.toggle("noselect", false);
             document.body.style["cursor"] = '';
+        },
+
+        _updateSelectAll: function () {
+            if (this._multiSelection && this._selectedEntities && this._entities) {
+                const everySelected = this._entities.every(item => this._selectedEntities.includes(item));
+                const someSelected = this._entities.some(item => this._selectedEntities.includes(item));
+                if (someSelected || everySelected) {
+                    this._selectedAll = true;
+                    this._semiCheckedAll = !everySelected;
+                } else {
+                    this._selectedAll = false;
+                    this._semiCheckedAll = false;
+                }
+            }
+        },
+
+        _allSelectionChanged: function (e) {
+            const target = e.target || e.srcElement;
+            this.selectAll(target.checked);
+            this._selectedAll = target.checked;            
+        },
+
+        selectAll: function (select) {
+            this._entities.forEach(item => {
+                if (select) {
+                    this.$.input.selectItem(item);
+                } else {
+                    this.$.input.deselectItem(item);
+                }
+            });
         }
     });
 </script>

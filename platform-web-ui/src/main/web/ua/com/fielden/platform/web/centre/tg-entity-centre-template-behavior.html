@@ -21,28 +21,19 @@
             created: function () {
                 // bind SSE event handling method regardless of the fact whether this particulare
                 // centre is bound to some SSE url or not.
-                this.dataHandler = function (data) {
-                    var self = this;
-                    var msg = JSON.parse(data);
-                    // let's search for an item to update... 
-                    // if the current EGI model does not contain an updated entity then there is no need for a refresh...
-                    // TODO such update strategy might need to be revisited in future...
-                    var needsFullRefresh = true;
-                    for (var index = 0; index < this.$.egi.egiModel.length; index++) {
-                        var entity = this.$.egi.egiModel[index].entity;
-                        if (entity.get('id') === msg.id) {
+                this.dataHandler = function (msg) {
+                    const self = this;
+                    let needsFullRefresh = true;
+                    if (msg.id) {
+                        // let's search for an item to update...
+                        // if the current EGI model does not contain an updated entity then there is no need for a refresh...
+                        // TODO such update strategy might need to be revisited in future...
+                        const entry = this.$.egi.egiModel.find(entry => entry.entity.get('id') === msg.id);
+                        if (entry) {
                             needsFullRefresh = false;
-                            // let's give the browser a breathing chance...
-                            this.async(function () {
-                                try {
-                                    self.refreshEntities([entity]);
-                                } catch (e) {
-                                    console.warn(e);
-                                }
-                            }, 1);
-                            break;
+                            self.refreshEntities([entry.entity]);
                         }
-                    } // endfor
+                    }
                     if (needsFullRefresh === true) {
                         self.refreshEntities([]);
                     }
@@ -87,7 +78,7 @@
             _dom: function () {
                 return this.$.dom;
             },
-            
+
             /**
              * The iron-ajax component for centre discarding.
              */

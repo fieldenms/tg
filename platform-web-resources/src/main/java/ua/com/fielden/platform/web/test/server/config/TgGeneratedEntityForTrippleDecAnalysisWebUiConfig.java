@@ -7,6 +7,7 @@ import static ua.com.fielden.platform.web.centre.api.context.impl.EntityCentreCo
 import static ua.com.fielden.platform.web.layout.api.impl.LayoutBuilder.cell;
 import static ua.com.fielden.platform.web.layout.api.impl.LayoutComposer.CELL_LAYOUT;
 import static ua.com.fielden.platform.web.layout.api.impl.LayoutComposer.MARGIN;
+import static ua.com.fielden.platform.web.view.master.chart.decker.api.LabelOrientation.VERTICAL;
 
 import java.util.Optional;
 
@@ -134,26 +135,30 @@ public class TgGeneratedEntityForTrippleDecAnalysisWebUiConfig {
                 .forEntityWithSaveOnActivation(TgGeneratedEntityForTrippleDecAnalysisInsertionPoint.class)
                     .groupKeyProp("group")
                     .groupDescProp("desc")
-                    .addDeckForProperty(TgGeneratedEntityForTrippleDecAnalysis.class, "count")
+                    .addDeckFor(TgGeneratedEntityForTrippleDecAnalysis.class)
+                        .showLegend()
                         .withTitle("Count")
                         .withXAxisTitle("Groups")
+                        .withXAxisLabelOrientation(VERTICAL)
                         .withYAxisTitle("Number of Items")
-                        .withBarColour(new Colour("82B1FF"))
-                        .withAction(customAction)
+                        .withSeries("count").colour(new Colour("82B1FF")).title("Number of items").action(customAction)
+                        .withLine("count").colour(new Colour("82B1FF")).title("Number of items")
                         .also()
-                    .addDeckForProperty(TgGeneratedEntityForTrippleDecAnalysis.class, "cost")
+                    .addDeckFor(TgGeneratedEntityForTrippleDecAnalysis.class)
+                        .showLegend()
                         .withTitle("Cost")
                         .withXAxisTitle("Groups")
                         .withYAxisTitle("Cost $")
-                        .withBarColour(new Colour("A7FFEB"))
-                        .withAction(customAction)
+                        .withSeries("cost").colour(new Colour("A7FFEB")).title("Cost").action(customAction)
+                        .withLine("cost").colour(new Colour("A7FFEB")).title("Cost")
                         .also()
-                    .addDeckForProperty(TgGeneratedEntityForTrippleDecAnalysis.class, "hours")
+                    .addDeckFor(TgGeneratedEntityForTrippleDecAnalysis.class)
+                        .showLegend()
                         .withTitle("Hours")
                         .withXAxisTitle("Groups")
                         .withYAxisTitle("Hours")
-                        .withBarColour(new Colour("B388FF"))
-                        .withAction(customAction)
+                        .withSeries("hours").colour(new Colour("B388FF")).title("Hours").action(customAction)
+                        .withLine("hours").colour(new Colour("B388FF")).title("Hours")
                 .done();
         return new EntityMaster<>(TgGeneratedEntityForTrippleDecAnalysisInsertionPoint.class, TgGeneratedEntityForTrippleDecAnalysisInsertionPointProducer.class, config, injector);
     }

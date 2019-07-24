@@ -2,7 +2,6 @@ package ua.com.fielden.platform.web.centre;
 
 import static java.util.Optional.of;
 import static ua.com.fielden.platform.web.centre.CentreConfigUtils.applyCriteria;
-import static ua.com.fielden.platform.web.centre.CentreConfigUtils.invalidCustomObject;
 import static ua.com.fielden.platform.web.centre.CentreConfigUtils.isDefaultOrInherited;
 
 import java.util.Map;
@@ -26,6 +25,9 @@ public abstract class AbstractCentreConfigCommitActionProducer<T extends Abstrac
         super(factory, entityType, companionFinder);
     }
     
+    /**
+     * IMPORTANT WARNING: avoids centre config self-conflict checks; ONLY TO BE USED NOT IN ANOTHER SessionRequired TRANSACTION SCOPE.
+     */
     @Override
     protected final T provideDefaultValues(final T entity) {
         if (contextNotEmpty()) {
@@ -38,15 +40,7 @@ public abstract class AbstractCentreConfigCommitActionProducer<T extends Abstrac
             
             // apply criteria entity
             final EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, ? extends IEntityDao<AbstractEntity<?>>> appliedCriteriaEntity = applyCriteria(selectionCrit());
-            entity.setCustomObject(
-                // and avoid configuration saveAs / edit if centre is invalid
-                invalidCustomObject(selectionCrit(), appliedCriteriaEntity)
-                .map(customObj -> {
-                    entity.setSkipUi(true);
-                    return customObj;
-                })
-                .orElseGet(() -> performProduce(entity, selectionCrit(), appliedCriteriaEntity, isDefaultOrInherited))
-            );
+            entity.setCustomObject(performProduce(entity, selectionCrit(), appliedCriteriaEntity, isDefaultOrInherited));
         }
         return entity;
     }

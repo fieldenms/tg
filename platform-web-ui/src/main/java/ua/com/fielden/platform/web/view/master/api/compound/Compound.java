@@ -7,6 +7,7 @@ import static ua.com.fielden.platform.web.centre.api.actions.impl.EntityActionBu
 import static ua.com.fielden.platform.web.centre.api.context.impl.EntityCentreContextSelector.context;
 
 import java.util.Optional;
+import java.util.function.BiFunction;
 
 import org.apache.commons.lang.StringUtils;
 
@@ -17,6 +18,7 @@ import ua.com.fielden.platform.entity.AbstractFunctionalEntityForCompoundMenuIte
 import ua.com.fielden.platform.entity.AbstractFunctionalEntityWithCentreContext;
 import ua.com.fielden.platform.web.PrefDim;
 import ua.com.fielden.platform.web.action.pre.EntityNavigationPreAction;
+import ua.com.fielden.platform.web.centre.CentreContext;
 import ua.com.fielden.platform.web.centre.EntityCentre;
 import ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig;
 import ua.com.fielden.platform.web.centre.api.actions.IEntityActionBuilder1;
@@ -207,6 +209,28 @@ public class Compound {
             final PrefDim prefDim) {
         return open(openCompoundMasterActionType, of(new EntityNavigationPreAction(shortDesc)), ofNullable(icon), empty(), shortDesc, ofNullable(longDesc), prefDim, context().withCurrentEntity().build());
     }
+    
+    /**
+     * Creates action of opening compound master to edit entity with a custom computational context. Could be used as a secondary action on some centre.
+     *
+     * @param openCompoundMasterActionType -- functional entity type for compound master opening
+     * @param icon -- icon for action
+     * @param computation -- custom computation for action
+     * @param shortDesc -- short description of action
+     * @param longDesc -- long description of action
+     * @param prefDim - preferred dimension for compound master dialog
+     * @return
+     */
+    public static <K extends Comparable<?>, OPEN_ACTION extends AbstractFunctionalEntityWithCentreContext<K>> EntityActionConfig openEdit(
+            final Class<OPEN_ACTION> openCompoundMasterActionType,
+            final String icon,
+            final BiFunction<AbstractFunctionalEntityWithCentreContext<?>, CentreContext<AbstractEntity<?>, AbstractEntity<?>>, Object> computation,
+            final String shortDesc,
+            final String longDesc,
+            final PrefDim prefDim) {
+        return open(openCompoundMasterActionType, of(new EntityNavigationPreAction(shortDesc)), ofNullable(icon), empty(), shortDesc, ofNullable(longDesc), prefDim, context().withCurrentEntity().withComputation(computation).build());
+    }
+    
 
     private static <K extends Comparable<?>, OPEN_ACTION extends AbstractFunctionalEntityWithCentreContext<K>> EntityActionConfig open(
             final Class<OPEN_ACTION> openCompoundMasterActionType,

@@ -63,7 +63,7 @@
             margin-top: 4em;
         }
         form {
-            width: 300px;
+            width: 270px;
             margin: 2em auto;
             padding: 3em 2em 2em 2em;
             background: #fafafa;
@@ -96,6 +96,7 @@
             box-shadow: none;
             border: none;
             width: 100%;
+            font-size: 19px;
         }
 
         a {
@@ -139,12 +140,12 @@
         <div class="vertical-section">
             <paper-input-container id="in-passwd-container">
                 <label>New password</label>
-                <input id="in-passwd" is="iron-input" type="password" name="passwd" style="font-size:16pt" required prevent-invalid-input onCopy="return false" onDrag="return false" onDrop="return false" onPaste="return false"/>
+                <input id="in-passwd" is="iron-input" autocomplete="off" type="password" name="passwd" required prevent-invalid-input onCopy="return false" onDrag="return false" onDrop="return false" onPaste="return false"/>
             </paper-input-container>
 
             <paper-input-container id="in-passwd-confirm-container">
                 <label>Confirm new password</label>
-                <input id="in-passwd-confirm" is="iron-input" type="password" name="passwd-confirmed" style="font-size:16pt" required prevent-invalid-input onCopy="return false" onDrag="return false" onDrop="return false" onPaste="return false"/>
+                <input id="in-passwd-confirm" is="iron-input" autocomplete="off" type="password" name="passwd-confirmed" required prevent-invalid-input onCopy="return false" onDrag="return false" onDrop="return false" onPaste="return false"/>
             </paper-input-container>
 
             <input name='uuid' type='hidden' value='@uuid'/>

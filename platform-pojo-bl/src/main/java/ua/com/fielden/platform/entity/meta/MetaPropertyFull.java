@@ -1,12 +1,15 @@
 package ua.com.fielden.platform.entity.meta;
 
 import static java.lang.String.format;
+import static java.util.Optional.ofNullable;
 import static ua.com.fielden.platform.error.Result.successful;
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.isRequiredByDefinition;
 import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getEntityTitleAndDesc;
 import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getTitleAndDesc;
 import static ua.com.fielden.platform.reflection.TitlesDescsGetter.processReqErrorMsg;
 import static ua.com.fielden.platform.types.tuples.T2.t2;
+import static ua.com.fielden.platform.utils.EntityUtils.equalsEx;
+import static ua.com.fielden.platform.utils.EntityUtils.isCriteriaEntityType;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
@@ -191,7 +194,9 @@ public final class MetaPropertyFull<T> extends MetaProperty<T> {
     @Override
     public final Result validate(final T newValue, final Set<Annotation> applicableValidationAnnotations, final boolean ignoreRequiredness) {
         setLastInvalidValue(null);
-        if (!ignoreRequiredness && isRequired() && isNull(newValue, getValue())) {
+        // Validation for requiredness needs to be skipped for criteria entities.
+        // According to #979 issue requiredness needs to be processed as part of 'crit-only-single prototype' validation logic similar to all other validators.
+        if (!ignoreRequiredness && isRequired() && isNull(newValue, getValue()) && !isCriteriaEntityType(entity.getType())) {
             final Map<IBeforeChangeEventHandler<T>, Result> requiredHandler = getValidators().get(ValidationAnnotation.REQUIRED);
             if (requiredHandler == null || requiredHandler.size() > 1) {
                 throw new IllegalArgumentException("There are no or there is more than one REQUIRED validation handler for required property!");
@@ -220,7 +225,7 @@ public final class MetaPropertyFull<T> extends MetaProperty<T> {
         if (!StringUtils.isEmpty(reqErrorMsg)) {
             result = Result.failure(getEntity(), reqErrorMsg);
         } else {
-            final String msg = format("Required property [%s] is not specified for entity [%s].",
+            final String msg = format(ERR_REQUIRED,
                     getTitleAndDesc(name, getEntity().getType()).getKey(),
                     getEntityTitleAndDesc(getEntity().getType()).getKey());
 
@@ -647,13 +652,16 @@ public final class MetaPropertyFull<T> extends MetaProperty<T> {
      */
     @Override
     public final MetaPropertyFull<T> setPrevValue(final T value) {
-        incValueChangeCount();
         // just in case cater for correct processing of collection properties
         if (isCollectional()) {
             // set the shallow copy of collection into this.prevValue to be able to perform comparison between actual value and previous value of the collection
+            incValueChangeCount();
             this.prevValue = EntityUtils.copyCollectionalValue(value);
         } else {
-            this.prevValue = value;
+            if (!equalsEx(getValue(), value)) {
+                incValueChangeCount();
+                this.prevValue = value;
+            }
         }
         return this;
     }
@@ -679,7 +687,7 @@ public final class MetaPropertyFull<T> extends MetaProperty<T> {
      */
     private final boolean isChangedFrom(final T value) {
         try {
-            return !EntityUtils.equalsEx(getValue(), value);
+            return !equalsEx(getValue(), value);
         } catch (final Exception e) {
             logger.debug(e.getMessage(), e);
         }
@@ -824,16 +832,18 @@ public final class MetaPropertyFull<T> extends MetaProperty<T> {
         // if requirement changed from true to false, then update REQUIRED validation result to be successful
         if (!required && oldRequired) {
             if (containsRequiredValidator()) {
-                final Result result = getValidationResult(ValidationAnnotation.REQUIRED);
-                if (result != null && !result.isSuccessful()) {
+                // if both current and last attempted values are null then it can be safely assumed that the requiredness validation can be considered successful 
+                // the same holds if the assigned requiredness validation result already successful
+                if ((getValue() == null && getLastAttemptedValue() == null) || 
+                    ofNullable(getValidationResult(ValidationAnnotation.REQUIRED)).map(res -> res.isSuccessful()).orElse(true)) {
+                    setValidationResultNoSynch(ValidationAnnotation.REQUIRED, StubValidator.singleton(), new Result(this.getEntity(), "'Required' became false. The validation result cleared."));
+                } else { // otherwise, it is necessary to enforce reassignment of the last attempted value to trigger revalidation
                     setEnforceMutator(true);
                     try {
                         setValue(getLastAttemptedValue());
                     } finally {
                         setEnforceMutator(false);
                     }
-                } else { // associated a successful result with requiredness validator
-                    setValidationResultNoSynch(ValidationAnnotation.REQUIRED, StubValidator.singleton(), new Result(this.getEntity(), "'Required' became false. The validation result cleared."));
                 }
             } else {
                 throw new IllegalStateException("The metaProperty was required but RequiredValidator didn't exist.");

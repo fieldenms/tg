@@ -1,5 +1,7 @@
 package ua.com.fielden.platform.rx.spikes;
 
+import static rx.schedulers.Schedulers.from;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -9,6 +11,7 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
+import rx.Scheduler;
 import rx.Subscription;
 import rx.subjects.PublishSubject;
 import rx.subjects.SerializedSubject;
@@ -36,18 +39,26 @@ import rx.subjects.Subject;
  */
 public class DemoOfSubjectWithMultipleObserversAndConcurrentEventSubmissions {
     public static void main(final String[] args) throws Exception {
-
-        final Subject<Integer, Integer> stream = new SerializedSubject<>(PublishSubject.create());
-
-        stream.subscribe(v -> System.out.println("observer 1: " + v), ex -> System.out.println("error 1: " + ex), () -> System.out.println("completed 1"));
-        final Subscription subscirption2 = stream.subscribe(v -> System.out.println("observer 2: " + v), ex -> System.out.println("error 2: " + ex), () -> System.out.println("completed 2"));
-        stream.subscribe(v -> System.out.println("observer 3: " + v), ex -> System.out.println("error 3: " + ex), () -> System.out.println("completed 3"));
+        final ExecutorService subsribeOnExecutor = Executors.newSingleThreadExecutor();
+        // the same scheduler is used for 3 different subscriptions
+        // this example demonstrates that even in this case subscriptions are executed on different threads and
+        // different executions of the same subscription can also be executed on different threads
+        final Scheduler scheduler = from(subsribeOnExecutor);
+        final Subject<Integer, Integer> observable = new SerializedSubject<>(PublishSubject.create());
+        final Subscription subscirption1 = observable
+                                           .subscribeOn(scheduler)
+                                           .subscribe(v -> System.out.printf("observer 1: %s [%s]%n", v, Thread.currentThread().getName()), ex -> System.out.println("error 1: " + ex), () -> System.out.println("completed 1"));
+        final Subscription subscirption2 = observable
+                                           .subscribeOn(scheduler)
+                                           .subscribe(v -> System.out.printf("observer 2: %s [%s]%n", v, Thread.currentThread().getName()), ex -> System.out.println("error 2: " + ex), () -> System.out.println("completed 2"));
+        final Subscription subscirption3 = observable
+                                           .subscribeOn(scheduler)
+                                           .subscribe(v -> System.out.printf("observer 3: %s [%s]%n", v, Thread.currentThread().getName()), ex -> System.out.println("error 3: " + ex), () -> System.out.println("completed 3"));
 
         final ScheduledExecutorService exec = Executors.newScheduledThreadPool(5);
-
-        final ScheduledFuture<?> feature1 = exec.scheduleWithFixedDelay(new EventProducer("Event Producer 1", stream), 1, 2, TimeUnit.SECONDS);
-        final ScheduledFuture<?> feature2 = exec.scheduleWithFixedDelay(new EventProducer("Event Producer 2", stream), 1, 4, TimeUnit.SECONDS);
-        exec.schedule(new SubjectTerminator(exec, stream, feature1, feature2), 9, TimeUnit.SECONDS);
+        final ScheduledFuture<?> feature1 = exec.scheduleWithFixedDelay(new EventProducer("Event Producer 1", observable), 1, 2, TimeUnit.SECONDS);
+        final ScheduledFuture<?> feature2 = exec.scheduleWithFixedDelay(new EventProducer("Event Producer 2", observable), 1, 4, TimeUnit.SECONDS);
+        exec.schedule(new SubjectTerminator(exec, subsribeOnExecutor, observable, feature1, feature2), 9, TimeUnit.SECONDS);
 
         // bonus feature -- unsubscription
         Thread.sleep(5000);
@@ -62,11 +73,13 @@ public class DemoOfSubjectWithMultipleObserversAndConcurrentEventSubmissions {
         private final Subject<Integer, Integer> subject;
         private final List<ScheduledFuture<?>> toCancel = new ArrayList<>();
         private final ExecutorService exec;
+        private final ExecutorService subsribeOnExecutor;
 
-        private SubjectTerminator(final ExecutorService executor, final Subject<Integer, Integer> subject, final ScheduledFuture<?>... features) {
+        private SubjectTerminator(final ExecutorService executor, final ExecutorService subsribeOnExecutor, final Subject<Integer, Integer> subject, final ScheduledFuture<?>... features) {
             this.subject = subject;
             this.toCancel.addAll(Arrays.asList(features));
             this.exec = executor;
+            this.subsribeOnExecutor = subsribeOnExecutor;
         }
 
         @Override
@@ -78,6 +91,7 @@ public class DemoOfSubjectWithMultipleObserversAndConcurrentEventSubmissions {
             }
 
             exec.shutdown();
+            subsribeOnExecutor.shutdown();
         }
     }
 

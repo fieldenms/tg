@@ -60,6 +60,7 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
     private final int visibleRowsCount;
     private final String egiHeight;
     private final boolean fitToHeight;
+    private final String rowHeight;
 
     /////////////////////////////////////////////
     ///////////// TOP LEVEL ACTIONS /////////////
@@ -264,16 +265,22 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
         public final String expression;
         public final String title;
         public final String desc;
+        public final int precision;
+        public final int scale;
 
         public SummaryPropDef(
                 final String alias,
                 final String expression,
                 final String title,
-                final String desc) {
+                final String desc,
+                final int precision,
+                final int scale) {
             this.alias = alias;
             this.expression = expression;
             this.title = title;
             this.desc = desc;
+            this.precision = precision;
+            this.scale = scale;
         }
     }
 
@@ -333,6 +340,7 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
             final int visibleRowsCount,
             final String egiHeight,
             final boolean fitToHeight,
+            final String rowHeight,
 
             final List<Pair<EntityActionConfig, Optional<String>>> topLevelActions,
             final List<EntityActionConfig> frontActions,
@@ -399,6 +407,7 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
         this.visibleRowsCount = visibleRowsCount;
         this.egiHeight = egiHeight;
         this.fitToHeight = fitToHeight;
+        this.rowHeight = rowHeight;
 
         this.topLevelActions.addAll(topLevelActions);
         this.frontActions.addAll(frontActions);
@@ -530,11 +539,8 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
         return Optional.of(Collections.unmodifiableList(resultSetProperties));
     }
 
-    public Optional<ListMultimap<String, SummaryPropDef>> getSummaryExpressions() {
-        if (summaryExpressions == null || summaryExpressions.isEmpty()) {
-            return Optional.empty();
-        }
-        return Optional.of(ImmutableListMultimap.copyOf(summaryExpressions));
+    public ListMultimap<String, SummaryPropDef> getSummaryExpressions() {
+        return ImmutableListMultimap.copyOf(summaryExpressions);
     }
 
     public Optional<Map<String, Pair<Class<? extends IValueMatcherWithCentreContext<? extends AbstractEntity<?>>>, Optional<CentreContextConfig>>>> getValueMatchersForSelectionCriteria() {
@@ -832,5 +838,9 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
 
     public boolean isFitToHeight() {
         return fitToHeight;
+    }
+
+    public String getRowHeight() {
+        return rowHeight;
     }
 }

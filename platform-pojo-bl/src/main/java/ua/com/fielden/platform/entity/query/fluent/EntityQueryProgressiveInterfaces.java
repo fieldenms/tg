@@ -39,7 +39,25 @@ public interface EntityQueryProgressiveInterfaces {
 		 */
 		IComparisonOperand<T, ET> iLike();
 
-		IComparisonOperand<T, ET> notLike();
+        /**
+         * Like that casts its left operand to string in case it is integer.
+         * 
+         * @return
+         */
+        IComparisonOperand<T, ET> likeWithCast();
+
+        /**
+         * Case-insensitive 'like' that casts its left operand to string in case it is integer.
+         * 
+         * @return
+         */
+        IComparisonOperand<T, ET> iLikeWithCast();
+
+        IComparisonOperand<T, ET> notLike();
+
+        IComparisonOperand<T, ET> notLikeWithCast();
+
+        IComparisonOperand<T, ET> notILikeWithCast();
 
 		/**
 		 * Negated case-insensitive 'like'.

@@ -5,12 +5,12 @@
 	<meta charset="UTF-8">
 	<title>tg-numeric-utils tests</title>
 	<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-	
+
 	<script src="/resources/polymer/webcomponentsjs/webcomponents-lite.js"></script>
 	<script src="/resources/polymer/web-component-tester/browser.js"></script>
 	<script src="/resources/polymer/test-fixture/test-fixture-mocha.js"></script>
 	<script src="/resources/polymer/iron-test-helpers/mock-interactions.js"></script>
-	
+
 	<link rel="import" href="/resources/polymer/test-fixture/test-fixture.html">
 	<link rel="import" href="/resources/reflection/tg-numeric-utils.html">
 </head>
@@ -18,47 +18,53 @@
 <body>
     <script>
         suite('numeric utils', function() {
-            
+
             test('zeros truncation does not occur for empty string', function (done) {
                 assert.deepEqual(truncateInsignificantZeros(''), '');
                 done();
             });
-            
+
             test('zeros truncation does not occur for not a number string', function (done) {
                 assert.deepEqual(truncateInsignificantZeros('1k'), '1k');
                 done();
             });
-            
+
             test('zeros truncation does not occur for string without insignificant zeros', function (done) {
                 assert.deepEqual(truncateInsignificantZeros('-100'), '-100');
                 done();
             });
-            
+
             test('zeros truncation does occur for string with leading zero', function (done) {
                 assert.deepEqual(truncateInsignificantZeros('-0100'), '-100');
                 done();
             });
-            
+
             test('zeros truncation does occur for string with multiple leading zeros', function (done) {
                 assert.deepEqual(truncateInsignificantZeros('000100'), '100');
                 done();
             });
-            
+
             test('zeros truncation does occur for string with trailing zero', function (done) {
                 assert.deepEqual(truncateInsignificantZeros('-100.0'), '-100');
                 done();
             });
-            
+
             test('zeros truncation does occur for string with multiple trailing zeros', function (done) {
                 assert.deepEqual(truncateInsignificantZeros('-109.0000'), '-109');
                 done();
             });
-            
+
             test('zeros truncation does occur for string with leading and trailing zeros', function (done) {
                 assert.deepEqual(truncateInsignificantZeros('00109.0500'), '109.05');
                 done();
             });
-            
+
+            test('random(3) produces only values from range [0..3)', function (done) {
+				assert.include([0, 1, 2], random(3));
+				assert.include([0, 1, 2], random(3));
+				assert.include([0, 1, 2], random(3));
+				done();
+		    });
         });
     </script>
 </body>

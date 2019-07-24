@@ -55,6 +55,7 @@ public class CentreToolbar implements IToolbarConfig {
                 .attr("icon", "icons:filter-list")
                 .attr("on-tap", "_activateSelectionCriteriaView")
                 .attr("disabled$", "[[isRunning]]")
+                .attr("hidden$", "[[isSelectionCriteriaEmpty]]")
                 .attr("tooltip-text$", "[[computeConfigButtonTooltip(staleCriteriaMessage)]]");
     }
 

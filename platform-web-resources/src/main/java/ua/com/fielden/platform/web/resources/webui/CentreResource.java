@@ -6,7 +6,7 @@ import static java.util.Optional.ofNullable;
 import static ua.com.fielden.platform.web.centre.CentreConfigUtils.isInherited;
 import static ua.com.fielden.platform.web.centre.CentreUpdater.FRESH_CENTRE_NAME;
 import static ua.com.fielden.platform.web.centre.CentreUpdater.SAVED_CENTRE_NAME;
-import static ua.com.fielden.platform.web.centre.CentreUpdater.commitCentre;
+import static ua.com.fielden.platform.web.centre.CentreUpdater.commitCentreWithoutConflicts;
 import static ua.com.fielden.platform.web.centre.CentreUpdater.loadableConfigurations;
 import static ua.com.fielden.platform.web.centre.CentreUpdater.makePreferred;
 import static ua.com.fielden.platform.web.centre.CentreUpdater.removeCentres;
@@ -34,7 +34,6 @@ import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.security.user.IUser;
 import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.security.user.User;
-import ua.com.fielden.platform.serialisation.api.ISerialiser;
 import ua.com.fielden.platform.ui.config.EntityCentreConfig;
 import ua.com.fielden.platform.ui.config.MainMenuItem;
 import ua.com.fielden.platform.ui.config.api.IEntityCentreConfig;
@@ -65,7 +64,6 @@ public class CentreResource<CRITERIA_TYPE extends AbstractEntity<?>> extends Abs
     private final ICompanionObjectFinder companionFinder;
     private final ICriteriaGenerator critGenerator;
     
-    private final ISerialiser serialiser;
     private final IDomainTreeEnhancerCache domainTreeEnhancerCache;
     private final IWebUiConfig webUiConfig;
     
@@ -79,7 +77,6 @@ public class CentreResource<CRITERIA_TYPE extends AbstractEntity<?>> extends Abs
             final IDeviceProvider deviceProvider,
             final ICompanionObjectFinder companionFinder,
             final ICriteriaGenerator critGenerator,
-            final ISerialiser serialiser,
             final IDomainTreeEnhancerCache domainTreeEnhancerCache,
             final IWebUiConfig webUiConfig,
             
@@ -96,7 +93,6 @@ public class CentreResource<CRITERIA_TYPE extends AbstractEntity<?>> extends Abs
         this.userProvider = userProvider;
         this.companionFinder = companionFinder;
         this.critGenerator = critGenerator;
-        this.serialiser = serialiser;
         this.domainTreeEnhancerCache = domainTreeEnhancerCache;
         this.webUiConfig = webUiConfig;
     }
@@ -124,19 +120,19 @@ public class CentreResource<CRITERIA_TYPE extends AbstractEntity<?>> extends Abs
                 // remove cached instances of surrogate centres before updating from base user
                 removeCentres(user, miType, device(), saveAsName, eccCompanion, FRESH_CENTRE_NAME, SAVED_CENTRE_NAME);
                 // it is necessary to use "fresh" instance of cdtme (after the discarding process)
-                newFreshCentre = updateCentre(user, userProvider, miType, FRESH_CENTRE_NAME, saveAsName, device(), serialiser, domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion);
+                newFreshCentre = updateCentre(user, userProvider, miType, FRESH_CENTRE_NAME, saveAsName, device(), domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion, companionFinder);
                 // must leave current configuration preferred after deletion (only for named configs -- always true for inherited ones, and for non autoRun centres)
                 if (!centre.isRunAutomatically()) {
                     makePreferred(user, miType, saveAsName, device(), companionFinder);
                 }
             } else {
-                final ICentreDomainTreeManagerAndEnhancer updatedSavedCentre = updateCentre(user, userProvider, miType, SAVED_CENTRE_NAME, saveAsName, device(), serialiser, domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion);
+                final ICentreDomainTreeManagerAndEnhancer updatedSavedCentre = updateCentre(user, userProvider, miType, SAVED_CENTRE_NAME, saveAsName, device(), domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion, companionFinder);
                 // discards fresh centre's changes (fresh centre could have no changes)
-                newFreshCentre = commitCentre(user, userProvider, miType, FRESH_CENTRE_NAME, saveAsName, device(), updatedSavedCentre, null, serialiser, webUiConfig, eccCompanion, mmiCompanion, userCompanion);
+                newFreshCentre = commitCentreWithoutConflicts(user, userProvider, miType, FRESH_CENTRE_NAME, saveAsName, device(), updatedSavedCentre, null, webUiConfig, eccCompanion, mmiCompanion, userCompanion);
             }
             
-            final String staleCriteriaMessage = createStaleCriteriaMessage(wasRun, newFreshCentre, miType, saveAsName, user, userProvider, companionFinder, critGenerator, device(), serialiser, domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion);
-            return createCriteriaDiscardEnvelope(newFreshCentre, miType, saveAsName, user, userProvider, restUtil, companionFinder, critGenerator, staleCriteriaMessage, device(), isInherited ? of(ofNullable(updateCentreDesc(user, miType, saveAsName, device(), eccCompanion))) : empty(), serialiser, domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion);
+            final String staleCriteriaMessage = createStaleCriteriaMessage(wasRun, newFreshCentre, miType, saveAsName, user, userProvider, companionFinder, critGenerator, device(), domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion);
+            return createCriteriaDiscardEnvelope(newFreshCentre, miType, saveAsName, user, userProvider, restUtil, companionFinder, critGenerator, staleCriteriaMessage, device(), isInherited ? of(ofNullable(updateCentreDesc(user, miType, saveAsName, device(), eccCompanion))) : empty(), domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion);
         }, restUtil);
     }
     

@@ -1,6 +1,6 @@
 <link rel="import" href="/resources/polymer/polymer/polymer.html">
-<link rel="import" href="/resources/components/lodash-lib.html">
 <link rel="import" href="/resources/sse/tg-sse-behavior.html">
+<link rel="import" href="/resources/reflection/tg-polymer-utils.html">
 
 <script>
 	(function() {
@@ -111,9 +111,7 @@
 			/* A create callback to perform initialisation. */
 			created: function() {
 				// need to assign SSE data handler to reflect the server side file processing progress
-				this.dataHandler = function(data) {
-					const msg = JSON.parse(data);
-
+				this.dataHandler = function(msg) {
 					if (this.fpFileProcessingProgressEventHandler) {
 						this.fpFileProcessingProgressEventHandler(msg.prc);
 					}
@@ -149,18 +147,6 @@
 				// remove previously selected files
 				// the file input onchange is not invoked when assigning the value
 				this._uploadInput.value = '';
-			},
-
-			/* A utility method to generate SSE web resource URI suffix. */
-			generateUUID: function() {
-				var d = new Date().getTime();
-				var uuid = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
-					var r = (d + Math.random() * 16) % 16 | 0;
-					d = Math.floor(d / 16);
-					return (c == 'x' ? r : (r & 0x3 | 0x8)).toString(16);
-				});
-				// TODO It is worth while prepending the current user name to make the UUID event more unique
-				return uuid;
 			},
 
 			/**
@@ -220,12 +206,6 @@
 				this._debug_fileSize = sOutput + ' our of allowed ' + this.uploadSizeLimitKb + ' KiB ' + '(' + (maxAllowedBytes) + ' bytes)';
 				this._debug_mimeTypes = mimeTypes + ' (acceptable are ' + this.mimeTypesAccepted + ')';
 
-				// Moved mime type validation to the server side for better reliability
-				// if (!mimeTypes || _.contains(this.mimeTypesAccepted, mimeTypes) === false) {
-				// 	this._cleanup();
-				// 	throw new Error('Unsupported file type');
-				// }
-
 				// if the total number of bytes to be uploaded is greater than the limit
 				// then stop further processing by throwing an error
 				if (nBytes > maxAllowedBytes) {
@@ -248,10 +228,10 @@
 
 					// unique job UUID is required to register a progress update event source
 					// which is provided to the server as a header value
-					const jobUid = this.generateUUID();
+					const jobUid = generateUUID();
 					xhr.setRequestHeader('jobUid', jobUid);
 					// and also let's provide the original file meta-data
-					xhr.setRequestHeader('origFileName', file.name);
+					xhr.setRequestHeader('origFileName', encodeURIComponent(file.name));
 					xhr.setRequestHeader('lastModified', file.lastModified);
 					xhr.setRequestHeader('mime', mimeTypes);
 
@@ -287,7 +267,7 @@
 							}
 
 							// can now subscribe to a server side processing progress eventing source
-							this.uri = this.url + "/" + jobUid;
+							this.uri = this.url + "/sse/" + jobUid;
 						}
 
 					}.bind(this);

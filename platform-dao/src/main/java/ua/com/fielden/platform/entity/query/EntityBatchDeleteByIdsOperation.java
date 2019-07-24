@@ -7,8 +7,8 @@ import org.apache.commons.lang.StringUtils;
 import org.hibernate.Query;
 import org.hibernate.Session;
 
-import ua.com.fielden.platform.dao.PersistedEntityMetadata;
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.query.metadata.PersistedEntityMetadata;
 
 public class EntityBatchDeleteByIdsOperation<T extends AbstractEntity<?>> {
     private final Session session;

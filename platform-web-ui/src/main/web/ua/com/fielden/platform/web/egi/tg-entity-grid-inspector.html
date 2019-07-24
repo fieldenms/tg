@@ -32,7 +32,6 @@
     <style>
         :host {
             @apply(--layout-vertical);
-
         }
         /*miscellanea styles*/
         .lock-layer {
@@ -92,11 +91,13 @@
         }
         paper-material {
             border-radius: 2px;
+            min-height: 0;
         }
         paper-material[fit-to-height] {
             flex-grow: 1;
         }
         #scrollContainer {
+            min-height: 0;
             overflow: auto;
             -webkit-overflow-scrolling: touch;
         }
@@ -137,7 +138,7 @@
             font-size: 1rem;
             font-weight: 400;
             color: #212121;
-            height: 1.5rem;
+            height: var(--egi-row-height, 1.5rem);
             border-top: 1px solid #e3e3e3;
             -webkit-font-smoothing: antialiased;
             text-rendering: optimizeLegibility;
@@ -159,7 +160,7 @@
         .table-footer-row {
             font-size: 0.9rem;
             color: #757575;
-            height: 1.5rem;
+            height: var(--egi-row-height, 1.5rem);
             border-top: 1px solid #e3e3e3;
             -webkit-font-smoothing: antialiased;
             text-rendering: optimizeLegibility;
@@ -207,6 +208,7 @@
         .drag-anchor {
             --iron-icon-width: 1.5rem;
             --iron-icon-height: 1.5rem;
+            @apply(--layout-self-center);
         }
         .drag-anchor[selected]:hover {
             cursor: move;
@@ -264,7 +266,7 @@
         <tg-serialiser id="serialiser"></tg-serialiser>
 
         <paper-material elevation="1" style$="[[_calcMaterialStyle(showMarginAround)]]" fit-to-height$="[[fitToHeight]]" class="layout vertical">
-            <div class="layout vertical flex data-table">
+            <div class="layout vertical flex data-table" style="min-height:0;">
                 <!--Table toolbar-->
                 <div class="grid-toolbar layout horizontal wrap" hidden$="[[!toolbarVisible]]">
                     <paper-progress id="progressBar" hidden$="[[!_showProgress]]"></paper-progress>
@@ -275,7 +277,7 @@
                         <content select=".standart-action"></content>
                     </div>
                 </div>
-                <div id="baseContainer" class="relative layout horizontal flex" on-wheel="_handleWheel" on-focusin="_baseContainerFocusIn" on-focusout="_baseContainerFocusOut">
+                <div id="baseContainer" class="relative layout horizontal flex" style="min-height: 0;" on-wheel="_handleWheel" on-focusin="_baseContainerFocusIn" on-focusout="_baseContainerFocusOut">
                     <div id="scrollContainer" on-scroll="_handleScrollEvent" class="layout vertical flex">
                         <!-- Table header -->
                         <div class="layout horizontal table-header-row">
@@ -618,7 +620,7 @@
                                 </template>
                             </div>
                         </template>
-                        <div id="bottomShadow" class="absolute" hidden$="[[!_isSummaryPresentAndFixed(totals, summaryFixed)]]" style$="[[_calcBottomShadowStyle(_totalsRowCount, _showBottomShadow)]]"></div>
+                        <div id="bottomShadow" class="absolute" hidden$="[[!_isSummaryPresentAndFixed(totals, summaryFixed)]]" style$="[[_calcBottomShadowStyle(rowHeight, _totalsRowCount, _showBottomShadow)]]"></div>
                         <div id="topShadow" class="absolute" hidden$="[[!_isHeaderFixed(headerFixed)]]" style$="[[_calcTopShadowStyle(_showTopShadow)]]"></div>
                         <div id="tbShadow" class="absolute" hidden$="[[_isHeaderFixed(headerFixed)]]" style$="[[_calcTBShadowStyle(_showTopShadow)]]"></div>
                     </div>
@@ -631,42 +633,6 @@
 </dom-module>
 <script>
     (function () {
-        const _areEqual = function (a, b) {
-            return a && b && a.get('id') === b.get('id');
-        };
-        const _findEntity = function (entity, entities) {
-            for (var i = 0; i < entities.length; i += 1) {
-                if (_areEqual(entity, entities[i])) {
-                    return i;
-                }
-            }
-            return -1;
-        };
-        const _processEntitySelection = function (selectedEntities, entity, select) {
-            var selectedIndex = _findEntity(entity, selectedEntities);
-            if (select) {
-                if (selectedIndex < 0) {
-                    selectedEntities.push(entity);
-                }
-            } else {
-                if (selectedIndex >= 0) {
-                    selectedEntities.splice(selectedIndex, 1);
-                }
-            }
-        };
-        const generateShortCollection = function (entity, property, typeObject) {
-            var collectionValue = entity.get(property);
-            var containerPropertyValue = entity.get(property.substr(0, property.lastIndexOf('.')));
-            var keys = typeObject.compositeKeyNames();
-            return collectionValue.map(function (subEntity) {
-                var key = keys.find(function (key) {
-                    if (subEntity.get(key) !== containerPropertyValue) {
-                        return key;
-                    }
-                });
-                return subEntity.get(key);
-            });
-        };
         const calculateFixedColumnWidth = function (columns, numOfFixedColumns) {
             return columns.reduce((accum, curr, index) => accum += (index < numOfFixedColumns ? curr.width : 0), 0);
         };
@@ -869,6 +835,11 @@
                     type: String,
                     value: "20px"
                 },
+                rowHeight: {
+                    type: String,
+                    value: "1.5rem",
+                    observer: "_rowHeightChanged"
+                },
                 _cellPadding: {
                     type: String,
                     value: "1.2rem"
@@ -885,7 +856,7 @@
             },
 
             observers: [
-          '_heightRelatedPropertiesChanged(visibleRowCount, constantHeight, fitToHeight, summaryFixed, _totalsRowCount, _bottomMargin)'
+          '_heightRelatedPropertiesChanged(visibleRowCount, rowHeight, constantHeight, fitToHeight, summaryFixed, _totalsRowCount, _bottomMargin)'
             ],
 
             behaviors: [Polymer.TgBehaviors.TgTooltipBehavior, Polymer.IronResizableBehavior, Polymer.IronA11yKeysBehavior, Polymer.TgBehaviors.TgShortcutProcessingBehavior, Polymer.TgBehaviors.TgDragFromBehavior],
@@ -973,7 +944,6 @@
             },
 
             attached: function () {
-                var self = this;
                 this._updateTableSizeAsync();
                 this._ownKeyBindings = {};
                 if (this.customShortcuts) {
@@ -997,11 +967,44 @@
                 }, 1)
             },
 
+            _areEqual: function (a, b) {
+                if (a && b && a.get('id') && b.get('id')) {
+                    return a.get('id') === b.get('id');
+                }
+                try {
+                    return this.$.reflector.equalsEx(a, b);
+                } catch (e) {
+                    return false;
+                }
+            },
+            
+            _findEntity: function (entity, entities) {
+                for (let i = 0; i < entities.length; i += 1) {
+                    if (this._areEqual(entity, entities[i])) {
+                        return i;
+                    }
+                }
+                return -1;
+            },
+            
+            _processEntitySelection: function (entity, select) {
+                const selectedIndex = this._findEntity(entity, this.selectedEntities);
+                if (select) {
+                    if (selectedIndex < 0) {
+                        this.selectedEntities.push(entity);
+                    }
+                } else {
+                    if (selectedIndex >= 0) {
+                        this.selectedEntities.splice(selectedIndex, 1);
+                    }
+                }
+            },
+
             /**
              * Updates entity when some of the properties were changed.
              */
             updateEntity: function (entity, propPath) {
-                const entityIndex = _findEntity(entity, this.filteredEntities);
+                const entityIndex = this._findEntity(entity, this.filteredEntities);
                 if (entityIndex >= 0) {
                     const path = "egiModel." + entityIndex + ".entity" + (propPath.length > 0 ? "." + propPath : "");
                     this.notifyPath(path, entity.get(propPath));
@@ -1009,25 +1012,25 @@
             },
             
             findEntityIndex: function (entity) {
-                return _findEntity(entity, this.entities);
+                return this._findEntity(entity, this.entities);
             },
             
             findFilteredEntityIndex: function (entity) {
-                return _findEntity(entity, this.filteredEntities);
+                return this._findEntity(entity, this.filteredEntities);
             },
 
             setRenderingHints: function (entity, property, renderingHints) {
-                const entityIndex = _findEntity(entity, this.filteredEntities);
+                const entityIndex = this._findEntity(entity, this.filteredEntities);
                 if (entityIndex >= 0) {
                     this.set("egiModel." + entityIndex + ".renderingHints." + property, renderingHints);
                 }
             },
 
             selectEntity: function (entity, select) {
-                const entityIndex = _findEntity(entity, this.filteredEntities);
+                const entityIndex = this._findEntity(entity, this.filteredEntities);
                 if (entityIndex >= 0 && this.egiModel[entityIndex].selected !== select) {
                     this.set("egiModel." + entityIndex + ".selected", select);
-                    _processEntitySelection(this.selectedEntities, this.filteredEntities[entityIndex], select, this);
+                    this._processEntitySelection(this.filteredEntities[entityIndex], select);
                     this.fire("tg-entity-selected", {
                         shouldScrollToSelected: false,
                         entities: [{
@@ -1050,13 +1053,13 @@
 
             editEntity: function (entity) {
                 if (this.editingEntity) {
-                    const oldEntIndex = _findEntity(this.editingEntity, this.filteredEntities);
+                    const oldEntIndex = this._findEntity(this.editingEntity, this.filteredEntities);
                     if (oldEntIndex >= 0) {
                         this.editingEntity = null;
                         this.set("egiModel." + oldEntIndex + ".over", false);
                     }
                 }
-                const entIndex = _findEntity(entity, this.filteredEntities);
+                const entIndex = this._findEntity(entity, this.filteredEntities);
                 if (entIndex >= 0) {
                     this.editingEntity = entity;
                     this.set("egiModel." + entIndex + ".over", true);
@@ -1121,7 +1124,7 @@
 
             _mouseRowLeave: function (event, detail) {
                 var index = event.model.entityIndex;
-                if (!this.editingEntity  || !_areEqual(this.editingEntity, this.filteredEntities[index])) {
+                if (!this.editingEntity  || !this._areEqual(this.editingEntity, this.filteredEntities[index])) {
                     this.set("egiModel." + index + ".over", false);
                 }
             },
@@ -1294,7 +1297,11 @@
                 this._handleScrollEvent();
             },
 
-            _heightRelatedPropertiesChanged: function (visibleRowCount, constantHeight, fitToHeight, summaryFixed, _totalsRowCount, _bottomMargin) {
+            _rowHeightChanged: function (newValue, oldValue) {
+                this.updateStyles({"--egi-row-height": newValue});
+            },
+
+            _heightRelatedPropertiesChanged: function (visibleRowCount, rowHeight, constantHeight, fitToHeight, summaryFixed, _totalsRowCount, _bottomMargin) {
                 //Constant height take precedence over visible row count which takes precedence over default behaviour that extends the EGI's height to it's content height
                 this.style.removeProperty("height");
                 this.style.removeProperty("min-height");
@@ -1305,7 +1312,7 @@
                 } else if (visibleRowCount > 0) { //Set the height or max height for the scroll container so that only specified number of rows become visible.
                     this.style["min-height"] = "fit-content";
                     const rowCount = visibleRowCount + (summaryFixed ? _totalsRowCount : 0);
-                    const height = "calc(3rem + " + rowCount + " * 1.5rem + " + rowCount + "px" + (this.summaryFixed && this._totalsRowCount > 0 ? (" + " + this._bottomMargin) : "") + ")";
+                    const height = "calc(3rem + " + rowCount + " * " + rowHeight + " + " + rowCount + "px" + (this.summaryFixed && this._totalsRowCount > 0 ? (" + " + this._bottomMargin) : "") + ")";
                     if (fitToHeight) {
                         this.$.scrollContainer.style["height"] = height;
                     } else {
@@ -1575,26 +1582,25 @@
             },
 
             /**
-             * Observs the changes to entities property.
+             * Observes changes to an entity property.
              */
             _filteredEntitiesChanged: function (newValue, oldValue) {
                 const tempEgiModel = [];
-                const self = this;
-                newValue.forEach(function (newEntity) {
-                    const selectEntInd = _findEntity(newEntity, self.selectedEntities);
+                newValue.forEach(newEntity => {
+                    const selectEntInd = this._findEntity(newEntity, this.selectedEntities);
                     if (selectEntInd >= 0) {
-                        self.selectedEntities[selectEntInd] = newEntity;
+                        this.selectedEntities[selectEntInd] = newEntity;
                     }
-                    if (this.editingEntity && _areEqual(this.editingEntity, newEntity)) {
+                    if (this.editingEntity && this._areEqual(this.editingEntity, newEntity)) {
                         this.editingEntity = newEntity;
                     }
                 });
-                newValue.forEach(function (newEntity) {
-                    const isSelected = self.selectedEntities.indexOf(newEntity) > -1;
-                    const oldIndex = _findEntity(newEntity, oldValue);
-                    const newRendHints = oldIndex < 0 ? {} : (self.renderingHints && self.renderingHints[oldIndex]) || {};
+                newValue.forEach(newEntity => {
+                    const isSelected = this.selectedEntities.indexOf(newEntity) > -1;
+                    const oldIndex = this._findEntity(newEntity, oldValue);
+                    const newRendHints = oldIndex < 0 ? {} : (this.renderingHints && this.renderingHints[oldIndex]) || {};
                     const egiEntity = {
-                        over: _areEqual(this.editingEntity, newEntity),
+                        over: this._areEqual(this.editingEntity, newEntity),
                         selected: isSelected,
                         entity: newEntity,
                         renderingHints: newRendHints
@@ -1602,7 +1608,7 @@
                     tempEgiModel.push(egiEntity);
                 });
                 updateSelectAll(this, tempEgiModel);
-                self.egiModel = tempEgiModel;
+                this.egiModel = tempEgiModel;
                 this._updateTableSizeAsync();
                 this.fire("tg-egi-entities-loaded", newValue);
             },
@@ -1681,14 +1687,14 @@
                 let numOfSelected = 0;
                 let lastSelectedIndex = -1;
                 newSelection.entities.forEach(entitySelection => {
-                    const entityIndex = _findEntity(entitySelection.entity, this.filteredEntities);
+                    const entityIndex = this._findEntity(entitySelection.entity, this.filteredEntities);
                     if (entityIndex >= 0 && this.egiModel[entityIndex].selected !== entitySelection.select) {
                         this.set("egiModel." + entityIndex + ".selected", entitySelection.select);
-                        _processEntitySelection(this.selectedEntities, this.filteredEntities[entityIndex], entitySelection.select, this);
+                        this._processEntitySelection(this.filteredEntities[entityIndex], entitySelection.select);
                     } else {
-                        const hiddenEntityIndex = _findEntity(entitySelection.entity, this.entities);
+                        const hiddenEntityIndex = this._findEntity(entitySelection.entity, this.entities);
                         if (hiddenEntityIndex >= 0) {
-                            _processEntitySelection(this.selectedEntities, this.entities[hiddenEntityIndex], entitySelection.select, this);
+                            this._processEntitySelection(this.entities[hiddenEntityIndex], entitySelection.select);
                         }
                     }
                     if (entitySelection.select) {
@@ -1733,7 +1739,7 @@
                     for (let i = 0; i < this.egiModel.length; i += 1) {
                         if (this.egiModel[i].selected !== checked) {
                             this.set("egiModel." + i + ".selected", checked);
-                            _processEntitySelection(this.selectedEntities, this.filteredEntities[i], checked);
+                            this._processEntitySelection(this.filteredEntities[i], checked);
                             selectionDetails.push({
                                 entity: this.filteredEntities[i],
                                 select: checked
@@ -1762,7 +1768,7 @@
                         this._selectRange(this._lastSelectedIndex, index);
                     } else {
                         this.set("egiModel." + index + ".selected", target.checked);
-                        _processEntitySelection(this.selectedEntities, this.filteredEntities[index], target.checked, this);
+                        this._processEntitySelection(this.filteredEntities[index], target.checked);
                         this.fire("tg-entity-selected", {
                             shouldScrollToSelected: false,
                             entities: [{
@@ -1796,7 +1802,7 @@
                 for (let i = from; i <= to; i++) {
                     if (!this.egiModel[i].selected) {
                         this.set("egiModel." + i + ".selected", true);
-                        _processEntitySelection(this.selectedEntities, this.filteredEntities[i], true);
+                        this._processEntitySelection(this.filteredEntities[i], true);
                         selectionDetails.push({
                             entity: this.filteredEntities[i],
                             select: true
@@ -2058,7 +2064,7 @@
             containsAnyEntity: function (entitiesToSearch) {
                 var entityIndex;
                 for (entityIndex = 0; entityIndex < entitiesToSearch.length; entityIndex++) {
-                    if (_findEntity(entitiesToSearch[entityIndex], this.filteredEntities) !== -1) {
+                    if (this._findEntity(entitiesToSearch[entityIndex], this.filteredEntities) !== -1) {
                         return true;
                     }
                 }
@@ -2213,11 +2219,11 @@
             /*
              * Below are functions those are related to shadow style calculation.
              */
-            _calcBottomShadowStyle: function (_totalsRowCount, _showBottomShadow) {
-                var shadowStyle = "left:0;right:0;bottom:0;";
-                shadowStyle += "height:calc(1.5rem * " + _totalsRowCount + " + " + _totalsRowCount + "px);";
+            _calcBottomShadowStyle: function (rowHeight, _totalsRowCount, _showBottomShadow) {
+                let shadowStyle = "left:0;right:0;bottom:0;";
+                shadowStyle += "height:calc(" + rowHeight + " * " + _totalsRowCount + " + " + _totalsRowCount + "px);";
                 if (_showBottomShadow) {
-                    shadowStyle += "box-shadow: 0px -3px 6px -2px rgba(0,0,0,0.7);";
+                    shadowStyle += "box-shadow: 0px -6px 6px -5px rgba(0,0,0,0.7);";
                 }
                 return shadowStyle;
             },
@@ -2225,7 +2231,7 @@
             _calcTopShadowStyle: function (_showTopShadow) {
                 var shadowStyle = "left:0;right:0;top:0;height:3rem;";
                 if (_showTopShadow) {
-                    shadowStyle += "box-shadow: 0px 3px 6px -2px rgba(0,0,0,0.7);";
+                    shadowStyle += "box-shadow: 0px 6px 6px -5px rgba(0,0,0,0.7);";
                 }
                 return shadowStyle;
             },
@@ -2236,7 +2242,7 @@
                 const primaryActionFixed = this._isPrimaryActionsFixed(checkboxesWithPrimaryActionsFixed, numOfFixedCols);
                 let shadowStyle = "left:0;top:0;bottom:0;width:calc(" + this._calculateDragAnchorWidth(canDragFrom, anchorFixed) + " + " + this._calculateCheckboxWidth(canDragFrom, checkboxVisible, checkboxFixed) + " + " + this._calculatePrimaryActionWidth(primaryAction, primaryActionFixed) + " + " + this._calculateFixedColsWidth(numOfFixedCols) + ");";
                 if (_showLeftShadow) {
-                    shadowStyle += "box-shadow: 3px 0px 6px -2px rgba(0,0,0,0.7);";
+                    shadowStyle += "box-shadow: 6px 0px 6px -5px rgba(0,0,0,0.7);";
                 }
                 return shadowStyle;
             },
@@ -2244,7 +2250,7 @@
             _calcRightShadowStyle: function (secondaryActions, secondaryActionsFixed, _showRightShadow, _fixedColumnWidth, _scrollableColumnWidth) {
                 var shadowStyle = "right:0;top:0;bottom:0;width:calc(" + this._calculateSecondaryActionWidth(secondaryActions, secondaryActionsFixed) + ");";
                 if (_showRightShadow) {
-                    shadowStyle += "box-shadow: -3px 0px 6px -2px rgba(0,0,0,0.7);";
+                    shadowStyle += "box-shadow: -6px 0px 6px -5px rgba(0,0,0,0.7);";
                 }
                 return shadowStyle;
             },
@@ -2252,7 +2258,7 @@
             _calcTBShadowStyle: function (_showTopShadow) {
                 var shadowStyle = "left:0;right:0;top:-50px;height:50px;";
                 if (_showTopShadow) {
-                    shadowStyle += "box-shadow: 0px 3px 6px -2px rgba(0,0,0,0.7);";
+                    shadowStyle += "box-shadow: 0px 6px 6px -5px rgba(0,0,0,0.7);";
                 }
                 return shadowStyle;
             },
@@ -2293,7 +2299,6 @@
                 if (this._rightLockPanel && this._rightLockPanel.offsetParent !== null) {
                     containerWidth -= this._rightLockPanel.offsetWidth;
                 }
-                const self = this;
                 this._columnResizingObject = {
                     oldColumnWidth: e.model.item.width,
                     oldColumnGrowFactor: e.model.item.growFactor,

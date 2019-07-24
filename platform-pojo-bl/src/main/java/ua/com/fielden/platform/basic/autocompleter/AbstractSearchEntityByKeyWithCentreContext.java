@@ -27,7 +27,6 @@ import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.entity.query.model.ConditionModel;
 import ua.com.fielden.platform.entity.query.model.OrderingModel;
 import ua.com.fielden.platform.entity_centre.exceptions.EntityCentreExecutionException;
-import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.web.centre.CentreContext;
 
 /**
@@ -37,7 +36,7 @@ import ua.com.fielden.platform.web.centre.CentreContext;
  */
 public abstract class AbstractSearchEntityByKeyWithCentreContext<T extends AbstractEntity<?>> implements IValueMatcherWithCentreContext<T>, IValueMatcherWithFetch<T> {
 
-    private static final Supplier<? extends EntityCentreExecutionException> CO_MISSING_EXCEPTION_SUPPLIER = () -> new EntityCentreExecutionException("A companion is massing to perform this operation.");
+    private static final Supplier<? extends EntityCentreExecutionException> CO_MISSING_EXCEPTION_SUPPLIER = () -> new EntityCentreExecutionException("A companion is missing to perform this operation.");
 
     private final Optional<IEntityDao<T>> maybeCompanion;
     private final fetch<T> defaultFetchModel;
@@ -95,20 +94,20 @@ public abstract class AbstractSearchEntityByKeyWithCentreContext<T extends Abstr
     @Override
     public List<T> findMatches(final String searchString) {
         final IEntityDao<T> companion = maybeCompanion.orElseThrow(CO_MISSING_EXCEPTION_SUPPLIER);
-        return findMatches(searchString, companion, defaultFetchModel);
+        return findMatches(searchString, companion, defaultFetchModel, 1);
     }
 
     @Override
-    public List<T> findMatchesWithModel(final String searchString) {
+    public List<T> findMatchesWithModel(final String searchString, final int dataPage) {
         final IEntityDao<T> companion = maybeCompanion.orElseThrow(CO_MISSING_EXCEPTION_SUPPLIER);
-        return findMatches(searchString, companion, getFetch());
+        return findMatches(searchString, companion, getFetch(), dataPage);
     }
 
-    private List<T> findMatches(final String searchString, final IEntityDao<T> companion, final fetch<T> fetch) {
+    private List<T> findMatches(final String searchString, final IEntityDao<T> companion, final fetch<T> fetch, final int dataPage) {
         final ConditionModel searchCriteria = makeSearchCriteriaModel(getContext(), searchString);
         final OrderingModel ordering = composeOrderingModelForQuery(searchString, companion.getEntityType());
         final Map<String, Object> queryParams = fillParamsBasedOnContext(getContext());
-        return companion.getFirstEntities(createCommonQueryBuilderForFindMatches(companion.getEntityType(), searchCriteria, ordering, queryParams).with(fetch).model(), getPageSize());
+        return companion.getFirstEntities(createCommonQueryBuilderForFindMatches(companion.getEntityType(), searchCriteria, ordering, queryParams).with(fetch).model(), getPageSize() * dataPage);
     }
 
     @Override
