@@ -181,6 +181,7 @@ public class DynamicEntityTypeModificationTest {
     @Test
     public void test_instantiation_of_entity_being_modified() throws Exception {
         final Class<? extends AbstractEntity> entityBeingEnhancedEnhancedType = (Class<? extends AbstractEntity>) cl.startModification(EntityBeingEnhanced.class).addProperties(pd).endModification();
+        
         // specify what property of what owning type should be replaced with the enhanced entity type
         final NewProperty mp = NewProperty.changeType("prop1", entityBeingEnhancedEnhancedType);
         final Class<?> entityBeingModifiedModifiedType = cl.startModification(EntityBeingModified.class).modifyProperties(mp).endModification();

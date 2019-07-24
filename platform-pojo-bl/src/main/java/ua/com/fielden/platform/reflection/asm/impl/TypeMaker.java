@@ -28,6 +28,7 @@ public class TypeMaker {
 
     private static final String NEW_SUPERTYPE_NAME_IS_NULL_OR_EMPTY = "New supertype name is 'null' or empty.";
     private static final String CURRENT_TYPE_OR_NAME_ARE_NOT_SPECIFIED = "Current type or name are not specified.";
+    public static final String GET_ORIG_TYPE_METHOD_NAME = "_GET_ORIG_TYPE_METHOD_";
     private final DynamicEntityClassLoader cl;
     private byte[] currentType;
     private String currentName;
@@ -67,7 +68,7 @@ public class TypeMaker {
                 throw new ClassNotFoundException(typeName, e);
             }
         }
-
+        
         return this;
     }
 
@@ -236,7 +237,27 @@ public class TypeMaker {
        return this;
    }
 
+   /**
+    * Generates code to capture the original type.
+    */
+   private void recordOrigType() {
+       try {
+           final ClassReader cr = new ClassReader(currentType);
+           final ClassWriter cw = new ClassWriter(ClassWriter.COMPUTE_FRAMES);
+           final AdvancedRecordOriginalTypeAdapter cv = new AdvancedRecordOriginalTypeAdapter(cw, origType);
+           cr.accept(cv, ClassReader.SKIP_FRAMES);
+           currentType = cw.toByteArray();
+       } catch (final Exception e) {
+           throw new IllegalStateException(e);
+       }
+
+   }
+   
    public Class<?> endModification() {
+       if (!DynamicEntityClassLoader.isGenerated(origType)) {
+           recordOrigType();
+       }
+       
        final Class<?> klass = cl.defineType(currentName, currentType, 0, currentType.length);
        cl.registerClass(new Pair<Class<?>, byte[]>(klass, currentType));
 

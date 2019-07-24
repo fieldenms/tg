@@ -515,7 +515,6 @@ public class DynamicEntityTypeGenerationTest {
                 .startModification(Entity.class)
                 .addClassAnnotations(new DescTitleAnnotation("Title", "Description").newInstance())
                 .endModification();
-
         final DescTitle annot = newType.getAnnotation(DescTitle.class);
         assertNotNull(annot);
         assertEquals("Description", annot.value());
