@@ -41,11 +41,11 @@ public class DynamicModificationOfEntityTypesWithCircularDependencyTest {
     @Test
     public void test_correct_loading_of_modified_types_with_circular_dependencies() throws Exception {
         // get the enhanced CircularChild type
-        final Class<?> circularChildEnhancedType = cl.startModification(CircularChild.class.getName()).addProperties(pd).endModification();
+        final Class<?> circularChildEnhancedType = cl.startModification(CircularChild.class).addProperties(pd).endModification();
 
         // specify that what property prop1@CircularParent should have its type replaced with circularChildEnhancedType
         // get the modified CircularParent type
-        final Class<?> circularParentModifiedType = cl.startModification(CircularParent.class.getName()).modifyProperties(NewProperty.changeType("prop1", circularChildEnhancedType)).endModification();
+        final Class<?> circularParentModifiedType = cl.startModification(CircularParent.class).modifyProperties(NewProperty.changeType("prop1", circularChildEnhancedType)).endModification();
 
         // create a new instance of the modified TopLevelEntity type
         final Object circularParentEntity = circularParentModifiedType.newInstance();
