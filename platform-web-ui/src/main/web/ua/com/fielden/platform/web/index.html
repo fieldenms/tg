@@ -8,34 +8,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, minimum-scale=1.0, initial-scale=1.0, user-scalable=yes">
     <title>@title</title>
-    <style>
-        html {
-            font-size: 10pt;
-        }
-        body {
-            font-family: 'Roboto', 'Helvetica Neue', Helvetica, Arial, sans-serif;
-            font-size: 10pt;
-        }
-        tg-app-template {
-            height: 100vh;
-        }
-    </style>
-    <custom-style>
-        <style is="custom-style">
-            html {
-                @panelColor
-                --tg-watermark-style: {
-                    @cssStyle
-                };
-            }
-        </style>
-    </custom-style>
-    <!--<title>@title</title>-->
-    <script>
-        window.TG_APP = {
-            watermark: @watermark
-        };
-    </script>
+    
     <script src='/resources/polymer/@webcomponents/webcomponentsjs/webcomponents-bundle.js'></script>
     <script src='/resources/polymer/web-animations-js/web-animations-next-lite.min.js'></script>
     <script src="/resources/lodash/4.17.11/lodash.min.js"></script>
@@ -58,7 +31,33 @@
 
     <!-- Tile icon for Win8 (144x144) -->
     <meta name="msapplication-TileImage" content="/resources/icons/tg-icon144x144.png">
-
+    <style>
+        html {
+            font-size: 10pt;
+        }
+        body {
+            font-family: 'Roboto', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+            font-size: 10pt;
+        }
+        tg-app-template {
+            height: 100vh;
+        }
+    </style>
+    <custom-style>
+        <style is="custom-style">
+            html {
+                @panelColor
+                --tg-watermark-style: {
+                    @cssStyle
+                };
+            }
+        </style>
+    </custom-style>
+    <script>
+        window.TG_APP = {
+            watermark: @watermark
+        };
+    </script>
     <custom-style>
         <style include="iron-flex iron-flex-reverse iron-flex-alignment iron-flex-factors iron-positioning"></style>
     </custom-style>
