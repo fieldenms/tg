@@ -1,0 +1,232 @@
+<!doctype html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, minimum-scale=1.0, initial-scale=1.0, user-scalable=yes">
+    <title>Input performance spike with flex layout</title>
+    <script src='/resources/polymer/@webcomponents/webcomponentsjs/webcomponents-bundle.js'></script>
+    <script src='/resources/polymer/web-animations-js/web-animations-next-lite.min.js'></script>
+    <script src="/resources/lodash/4.17.11/lodash.min.js"></script>
+    <script src="/resources/postal/2.0.5/postal.min.js"></script>
+    <script src="/resources/filesaver/FileSaver.min.js"></script>
+    <script type="module">
+        import '/resources/polymer/@polymer/iron-flex-layout/iron-flex-layout-classes.js';
+        import '/resources/polymer/@polymer/paper-input/paper-input.js';
+        import '/resources/polymer/@polymer/paper-styles/paper-styles-classes.js';
+        import '/resources/layout/tg-flex-layout.js';
+        import '/resources/editors/tg-editor-example-entity.js';
+        // import '/resources/editors/tg-integer-editor.js';
+        // import '/resources/editors/tg-decimal-editor.js';
+        import '/resources/editors/tg-singleline-text-editor.js';
+        // import '/resources/editors/tg-multiline-text-editor.js';
+        // import '/resources/editors/tg-datetime-picker.js';
+        // import '/resources/editors/tg-boolean-editor.js';
+        // import '/resources/editors/tg-entity-editor.js';
+        // import '/resources/editors/tg-money-editor.js';
+        // import '/resources/editors/tg-hyperlink-editor.js';
+        // import '/resources/editors/tg-colour-picker.js';
+        import '/resources/editors/tg-lit-editor.js';
+    </script>
+    <link rel="stylesheet" href="/resources/editors/mdc.textfield.css">
+    <style>
+        html {
+            font-size: 10pt;
+        }
+        body {
+            font-family: 'Roboto', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+            font-size: 10pt;
+        }
+    </style>
+    <custom-style>
+        <style include="iron-flex iron-flex-reverse iron-flex-alignment iron-flex-factors iron-positioning"></style>
+    </custom-style>
+</head>
+<body unresolved class="fullbleed">
+    <dom-bind>
+        <template is="dom-bind">
+            <tg-editor-example-entity binding-entity="{{entity}}" validation-callback="{{validationCallback}}" process-response="{{processResponse}}" process-error="{{processError}}" or-null="{{orNull}}" not="{{not}}"></tg-editor-example-entity>
+            <tg-flex-layout when-desktop="[[_whenDesktop()]]" when-tablet="[[_whenTablet()]]" when-mobile="[[_whenMobile()]]">
+                <!-- <template is="dom-repeat" items="[[values]]"> </template>-->
+                    <!-- <div class="layout horizontal">
+                        <paper-input class="flex" label="floated label" always-float-label value="{{item.value}}" type="text" required error-message="{{item.errorMessage}}" char-counter auto-validate autofocus minlength="5" maxlength="50" name="[[item.name]]" placeholder="[[item.placeholder]]" size="50" autocapitalize="sentences" autocorrect="on"></paper-input>
+                        <paper-icon-button id="iconButton" on-tap="_showMetaValuesEditor" icon="more-horiz" tooltip-text="Show additional criteria constraints"></paper-icon-button>
+                    </div> -->
+                    <tg-lit-editor entity="[[entity]]" propertyname="stringProp" proptitle="String property title"></tg-lit-editor>
+                    <tg-lit-editor entity="[[entity]]" propertyname="stringProp" proptitle="String property title"></tg-lit-editor>
+                    <tg-lit-editor entity="[[entity]]" propertyname="stringProp" proptitle="String property title"></tg-lit-editor>
+                    <tg-lit-editor entity="[[entity]]" propertyname="stringProp" proptitle="String property title"></tg-lit-editor>
+                    <tg-lit-editor entity="[[entity]]" propertyname="stringProp" proptitle="String property title"></tg-lit-editor>
+                    <tg-lit-editor entity="[[entity]]" propertyname="stringProp" proptitle="String property title"></tg-lit-editor>
+                    <tg-lit-editor entity="[[entity]]" propertyname="stringProp" proptitle="String property title"></tg-lit-editor>
+                    <tg-lit-editor entity="[[entity]]" propertyname="stringProp" proptitle="String property title"></tg-lit-editor>
+                    <tg-lit-editor entity="[[entity]]" propertyname="stringProp" proptitle="String property title"></tg-lit-editor>
+                    <tg-lit-editor entity="[[entity]]" propertyname="stringProp" proptitle="String property title"></tg-lit-editor>
+                    <tg-lit-editor entity="[[entity]]" propertyname="stringProp" proptitle="String property title"></tg-lit-editor>
+                    <tg-lit-editor entity="[[entity]]" propertyname="stringProp" proptitle="String property title"></tg-lit-editor>
+                    <tg-lit-editor entity="[[entity]]" propertyname="stringProp" proptitle="String property title"></tg-lit-editor>
+                    <tg-lit-editor entity="[[entity]]" propertyname="stringProp" proptitle="String property title"></tg-lit-editor>
+                    <tg-lit-editor entity="[[entity]]" propertyname="stringProp" proptitle="String property title"></tg-lit-editor>
+                    <tg-lit-editor entity="[[entity]]" propertyname="stringProp" proptitle="String property title"></tg-lit-editor>
+                    <tg-lit-editor entity="[[entity]]" propertyname="stringProp" proptitle="String property title"></tg-lit-editor>
+                    <tg-lit-editor entity="[[entity]]" propertyname="stringProp" proptitle="String property title"></tg-lit-editor>
+                    <tg-lit-editor entity="[[entity]]" propertyname="stringProp" proptitle="String property title"></tg-lit-editor>
+                    <tg-lit-editor entity="[[entity]]" propertyname="stringProp" proptitle="String property title"></tg-lit-editor>
+                    <tg-lit-editor entity="[[entity]]" propertyname="stringProp" proptitle="String property title"></tg-lit-editor>
+                    <tg-lit-editor entity="[[entity]]" propertyname="stringProp" proptitle="String property title"></tg-lit-editor>
+                    <tg-lit-editor entity="[[entity]]" propertyname="stringProp" proptitle="String property title"></tg-lit-editor>
+                    <tg-lit-editor entity="[[entity]]" propertyname="stringProp" proptitle="String property title"></tg-lit-editor>
+                    <tg-lit-editor entity="[[entity]]" propertyname="stringProp" proptitle="String property title"></tg-lit-editor>
+                    <tg-lit-editor entity="[[entity]]" propertyname="stringProp" proptitle="String property title"></tg-lit-editor>
+                    <tg-lit-editor entity="[[entity]]" propertyname="stringProp" proptitle="String property title"></tg-lit-editor>
+                    <tg-lit-editor entity="[[entity]]" propertyname="stringProp" proptitle="String property title"></tg-lit-editor>
+                    <tg-lit-editor entity="[[entity]]" propertyname="stringProp" proptitle="String property title"></tg-lit-editor>
+                    <tg-lit-editor entity="[[entity]]" propertyname="stringProp" proptitle="String property title"></tg-lit-editor>
+                    <tg-lit-editor entity="[[entity]]" propertyname="stringProp" proptitle="String property title"></tg-lit-editor>
+                    <tg-lit-editor entity="[[entity]]" propertyname="stringProp" proptitle="String property title"></tg-lit-editor>
+                    <tg-lit-editor entity="[[entity]]" propertyname="stringProp" proptitle="String property title"></tg-lit-editor>
+                    <tg-lit-editor entity="[[entity]]" propertyname="stringProp" proptitle="String property title"></tg-lit-editor>
+                    <tg-lit-editor entity="[[entity]]" propertyname="stringProp" proptitle="String property title"></tg-lit-editor>
+                    <tg-lit-editor entity="[[entity]]" propertyname="stringProp" proptitle="String property title"></tg-lit-editor>
+                    <tg-lit-editor entity="[[entity]]" propertyname="stringProp" proptitle="String property title"></tg-lit-editor>
+                    <tg-lit-editor entity="[[entity]]" propertyname="stringProp" proptitle="String property title"></tg-lit-editor>
+                    <tg-lit-editor entity="[[entity]]" propertyname="stringProp" proptitle="String property title"></tg-lit-editor>
+                    <tg-lit-editor entity="[[entity]]" propertyname="stringProp" proptitle="String property title"></tg-lit-editor>
+                    <tg-lit-editor entity="[[entity]]" propertyname="stringProp" proptitle="String property title"></tg-lit-editor>
+                    <tg-lit-editor entity="[[entity]]" propertyname="stringProp" proptitle="String property title"></tg-lit-editor>
+                    <tg-lit-editor entity="[[entity]]" propertyname="stringProp" proptitle="String property title"></tg-lit-editor>
+                    <tg-lit-editor entity="[[entity]]" propertyname="stringProp" proptitle="String property title"></tg-lit-editor>
+                    <tg-lit-editor entity="[[entity]]" propertyname="stringProp" proptitle="String property title"></tg-lit-editor>
+                    <tg-lit-editor entity="[[entity]]" propertyname="stringProp" proptitle="String property title"></tg-lit-editor>
+                    <tg-lit-editor entity="[[entity]]" propertyname="stringProp" proptitle="String property title"></tg-lit-editor>
+                    <tg-lit-editor entity="[[entity]]" propertyname="stringProp" proptitle="String property title"></tg-lit-editor>
+                    <tg-lit-editor entity="[[entity]]" propertyname="stringProp" proptitle="String property title"></tg-lit-editor>
+                    <tg-lit-editor entity="[[entity]]" propertyname="stringProp" proptitle="String property title"></tg-lit-editor>
+                    <tg-lit-editor entity="[[entity]]" propertyname="stringProp" proptitle="String property title"></tg-lit-editor>
+                    <tg-lit-editor entity="[[entity]]" propertyname="stringProp" proptitle="String property title"></tg-lit-editor>
+                    <tg-lit-editor entity="[[entity]]" propertyname="stringProp" proptitle="String property title"></tg-lit-editor>
+                    <tg-lit-editor entity="[[entity]]" propertyname="stringProp" proptitle="String property title"></tg-lit-editor>
+                    <tg-lit-editor entity="[[entity]]" propertyname="stringProp" proptitle="String property title"></tg-lit-editor>
+                    <tg-lit-editor entity="[[entity]]" propertyname="stringProp" proptitle="String property title"></tg-lit-editor>
+                    <tg-lit-editor entity="[[entity]]" propertyname="stringProp" proptitle="String property title"></tg-lit-editor>
+                    <tg-lit-editor entity="[[entity]]" propertyname="stringProp" proptitle="String property title"></tg-lit-editor>
+                    <tg-lit-editor entity="[[entity]]" propertyname="stringProp" proptitle="String property title"></tg-lit-editor>
+                    <tg-lit-editor entity="[[entity]]" propertyname="stringProp" proptitle="String property title"></tg-lit-editor>
+                    <tg-lit-editor entity="[[entity]]" propertyname="stringProp" proptitle="String property title"></tg-lit-editor>
+                    <tg-lit-editor entity="[[entity]]" propertyname="stringProp" proptitle="String property title"></tg-lit-editor>
+                    <tg-lit-editor entity="[[entity]]" propertyname="stringProp" proptitle="String property title"></tg-lit-editor>
+                    <tg-lit-editor entity="[[entity]]" propertyname="stringProp" proptitle="String property title"></tg-lit-editor>
+                    <tg-lit-editor entity="[[entity]]" propertyname="stringProp" proptitle="String property title"></tg-lit-editor>
+                    <tg-lit-editor entity="[[entity]]" propertyname="stringProp" proptitle="String property title"></tg-lit-editor>
+                    <tg-lit-editor entity="[[entity]]" propertyname="stringProp" proptitle="String property title"></tg-lit-editor>
+                    <tg-lit-editor entity="[[entity]]" propertyname="stringProp" proptitle="String property title"></tg-lit-editor>
+                    <tg-lit-editor entity="[[entity]]" propertyname="stringProp" proptitle="String property title"></tg-lit-editor>
+                    <tg-lit-editor entity="[[entity]]" propertyname="stringProp" proptitle="String property title"></tg-lit-editor>
+                    <tg-lit-editor entity="[[entity]]" propertyname="stringProp" proptitle="String property title"></tg-lit-editor>
+                    <tg-lit-editor entity="[[entity]]" propertyname="stringProp" proptitle="String property title"></tg-lit-editor>
+                    <tg-lit-editor entity="[[entity]]" propertyname="stringProp" proptitle="String property title"></tg-lit-editor>
+                    <tg-lit-editor entity="[[entity]]" propertyname="stringProp" proptitle="String property title"></tg-lit-editor>
+                    <tg-lit-editor entity="[[entity]]" propertyname="stringProp" proptitle="String property title"></tg-lit-editor>
+                    <tg-lit-editor entity="[[entity]]" propertyname="stringProp" proptitle="String property title"></tg-lit-editor>
+                    <tg-lit-editor entity="[[entity]]" propertyname="stringProp" proptitle="String property title"></tg-lit-editor>
+                    <tg-lit-editor entity="[[entity]]" propertyname="stringProp" proptitle="String property title"></tg-lit-editor>
+                    <tg-lit-editor entity="[[entity]]" propertyname="stringProp" proptitle="String property title"></tg-lit-editor>
+                    <tg-lit-editor entity="[[entity]]" propertyname="stringProp" proptitle="String property title"></tg-lit-editor>
+                    <tg-lit-editor entity="[[entity]]" propertyname="stringProp" proptitle="String property title"></tg-lit-editor>
+                    <tg-lit-editor entity="[[entity]]" propertyname="stringProp" proptitle="String property title"></tg-lit-editor>
+                    <tg-lit-editor entity="[[entity]]" propertyname="stringProp" proptitle="String property title"></tg-lit-editor>
+                    <tg-lit-editor entity="[[entity]]" propertyname="stringProp" proptitle="String property title"></tg-lit-editor>
+                    <tg-lit-editor entity="[[entity]]" propertyname="stringProp" proptitle="String property title"></tg-lit-editor>
+                    <tg-lit-editor entity="[[entity]]" propertyname="stringProp" proptitle="String property title"></tg-lit-editor>
+                    <tg-lit-editor entity="[[entity]]" propertyname="stringProp" proptitle="String property title"></tg-lit-editor>
+                    <tg-lit-editor entity="[[entity]]" propertyname="stringProp" proptitle="String property title"></tg-lit-editor>
+                    <tg-lit-editor entity="[[entity]]" propertyname="stringProp" proptitle="String property title"></tg-lit-editor>
+                    <tg-lit-editor entity="[[entity]]" propertyname="stringProp" proptitle="String property title"></tg-lit-editor>
+                    <tg-lit-editor entity="[[entity]]" propertyname="stringProp" proptitle="String property title"></tg-lit-editor>
+                    <tg-lit-editor entity="[[entity]]" propertyname="stringProp" proptitle="String property title"></tg-lit-editor>
+                    <tg-lit-editor entity="[[entity]]" propertyname="stringProp" proptitle="String property title"></tg-lit-editor>
+                    <tg-lit-editor entity="[[entity]]" propertyname="stringProp" proptitle="String property title"></tg-lit-editor>
+                    <tg-lit-editor entity="[[entity]]" propertyname="stringProp" proptitle="String property title"></tg-lit-editor>
+                    <tg-lit-editor entity="[[entity]]" propertyname="stringProp" proptitle="String property title"></tg-lit-editor>
+                    <tg-lit-editor entity="[[entity]]" propertyname="stringProp" proptitle="String property title"></tg-lit-editor>
+                    <tg-lit-editor entity="[[entity]]" propertyname="stringProp" proptitle="String property title"></tg-lit-editor>
+                    <tg-lit-editor entity="[[entity]]" propertyname="stringProp" proptitle="String property title"></tg-lit-editor>
+                    <tg-lit-editor entity="[[entity]]" propertyname="stringProp" proptitle="String property title"></tg-lit-editor>
+                </tg-flex-layout>
+        </template>
+    </dom-bind>
+</body>
+<script>
+    const values = [];
+    for (let i = 0; i < 100; i++) {
+        values.push({
+            value: `value ${i}`,
+            errorMessage: `value ${i} with error`,
+            name: `value${i}`,
+            placeholder: `value ${i} placeholder`
+        });
+    }
+    const app = document.querySelector('dom-bind');
+    app.values = values;
+    app._whenDesktop = function () {
+        return ['padding:16px',
+                ['padding-bottom:20px',['flex','padding-right:20px'],['flex']],
+                ['padding-bottom:20px',['flex','padding-right:20px'],['flex']],
+                ['padding-bottom:20px',['flex','padding-right:20px'],['flex']],
+                ['padding-bottom:20px',['flex','padding-right:20px'],['flex']],
+                ['padding-bottom:20px',['flex','padding-right:20px'],['flex']],
+                ['padding-bottom:20px',['flex','padding-right:20px'],['flex']],
+                ['padding-bottom:20px',['flex','padding-right:20px'],['flex']],
+                ['padding-bottom:20px',['flex','padding-right:20px'],['flex']],
+                ['padding-bottom:20px',['flex','padding-right:20px'],['flex']],
+                ['padding-bottom:20px',['flex','padding-right:20px'],['flex']],
+                ['padding-bottom:20px',['flex','padding-right:20px'],['flex']],
+                ['padding-bottom:20px',['flex','padding-right:20px'],['flex']],
+                ['padding-bottom:20px',['flex','padding-right:20px'],['flex']],
+                ['padding-bottom:20px',['flex','padding-right:20px'],['flex']],
+                ['padding-bottom:20px',['flex','padding-right:20px'],['flex']],
+                ['padding-bottom:20px',['flex','padding-right:20px'],['flex']],
+                ['padding-bottom:20px',['flex','padding-right:20px'],['flex']],
+                ['padding-bottom:20px',['flex','padding-right:20px'],['flex']],
+                ['padding-bottom:20px',['flex','padding-right:20px'],['flex']],
+                ['padding-bottom:20px',['flex','padding-right:20px'],['flex']],
+                ['padding-bottom:20px',['flex','padding-right:20px'],['flex']],
+                ['padding-bottom:20px',['flex','padding-right:20px'],['flex']],
+                ['padding-bottom:20px',['flex','padding-right:20px'],['flex']],
+                ['padding-bottom:20px',['flex','padding-right:20px'],['flex']],
+                ['padding-bottom:20px',['flex','padding-right:20px'],['flex']],
+                ['padding-bottom:20px',['flex','padding-right:20px'],['flex']],
+                ['padding-bottom:20px',['flex','padding-right:20px'],['flex']],
+                ['padding-bottom:20px',['flex','padding-right:20px'],['flex']],
+                ['padding-bottom:20px',['flex','padding-right:20px'],['flex']],
+                ['padding-bottom:20px',['flex','padding-right:20px'],['flex']],
+                ['padding-bottom:20px',['flex','padding-right:20px'],['flex']],
+                ['padding-bottom:20px',['flex','padding-right:20px'],['flex']],
+                ['padding-bottom:20px',['flex','padding-right:20px'],['flex']],
+                ['padding-bottom:20px',['flex','padding-right:20px'],['flex']],
+                ['padding-bottom:20px',['flex','padding-right:20px'],['flex']],
+                ['padding-bottom:20px',['flex','padding-right:20px'],['flex']],
+                ['padding-bottom:20px',['flex','padding-right:20px'],['flex']],
+                ['padding-bottom:20px',['flex','padding-right:20px'],['flex']],
+                ['padding-bottom:20px',['flex','padding-right:20px'],['flex']],
+                ['padding-bottom:20px',['flex','padding-right:20px'],['flex']],
+                ['padding-bottom:20px',['flex','padding-right:20px'],['flex']],
+                ['padding-bottom:20px',['flex','padding-right:20px'],['flex']],
+                ['padding-bottom:20px',['flex','padding-right:20px'],['flex']],
+                ['padding-bottom:20px',['flex','padding-right:20px'],['flex']],
+                ['padding-bottom:20px',['flex','padding-right:20px'],['flex']],
+                ['padding-bottom:20px',['flex','padding-right:20px'],['flex']],
+                ['padding-bottom:20px',['flex','padding-right:20px'],['flex']],
+                ['padding-bottom:20px',['flex','padding-right:20px'],['flex']],
+                ['padding-bottom:20px',['flex','padding-right:20px'],['flex']],
+                ['padding-bottom:20px',['flex','padding-right:20px'],['flex']]
+               ];
+    };
+    app._whenTablet = app._whenDesktop;
+    app._whenMobile = app._whenDesktop;
+    app.requireSelectionCriteria = null;
+    app.requireSelectedEntities = null;
+    app.requireMasterEntity = null;
+</script>
+
+</html>

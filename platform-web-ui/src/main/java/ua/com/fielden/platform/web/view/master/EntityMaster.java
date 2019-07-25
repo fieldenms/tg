@@ -1,5 +1,7 @@
 package ua.com.fielden.platform.web.view.master;
 
+import static ua.com.fielden.platform.web.centre.EntityCentre.IMPORTS;
+
 import java.util.Optional;
 
 import com.google.inject.Injector;
@@ -35,6 +37,7 @@ import ua.com.fielden.platform.web.view.master.api.IMaster;
  *
  */
 public class EntityMaster<T extends AbstractEntity<?>> implements IRenderable {
+    public static final String ENTITY_TYPE = "@entity_type";
     private final Class<T> entityType;
     private final Class<? extends IEntityProducer<T>> entityProducerType;
     private final IMaster<T> masterConfig;
@@ -152,7 +155,7 @@ public class EntityMaster<T extends AbstractEntity<?>> implements IRenderable {
         if (AbstractFunctionalEntityForCompoundMenuItem.class.isAssignableFrom(entityType)) {
             return new DefaultEntityProducerForCompoundMenuItem(factory, entityType, coFinder);
         }
-        return new DefaultEntityProducerWithContext<T>(factory, entityType, coFinder);
+        return new DefaultEntityProducerWithContext<>(factory, entityType, coFinder);
     }
 
     /**
@@ -200,6 +203,10 @@ public class EntityMaster<T extends AbstractEntity<?>> implements IRenderable {
         return masterConfig.render().render();
     }
 
+    public static String flattenedNameOf(final Class<?> type) {
+        return type.getSimpleName().toLowerCase();
+    }
+
     /**
      * An entity master that has no UI. Its main purpose is to be used for functional entities that have no visual representation.
      *
@@ -216,9 +223,9 @@ public class EntityMaster<T extends AbstractEntity<?>> implements IRenderable {
         }
 
         public NoUiMaster(final Class<T> entityType, final JsCode customCode, final JsCode customCodeOnAttach) {
-            final String entityMasterStr = ResourceLoader.getText("ua/com/fielden/platform/web/master/tg-entity-master-template.html")
-                    .replace("<!--@imports-->", "")
-                    .replace("@entity_type", entityType.getSimpleName())
+            final String entityMasterStr = ResourceLoader.getText("ua/com/fielden/platform/web/master/tg-entity-master-template.js")
+                    .replace(IMPORTS, "")
+                    .replace(ENTITY_TYPE, flattenedNameOf(entityType))
                     .replace("<!--@tg-entity-master-content-->", "")
                     .replace("//@ready-callback", "")
                     .replace("//@master-is-ready-custom-code", customCode.toString())

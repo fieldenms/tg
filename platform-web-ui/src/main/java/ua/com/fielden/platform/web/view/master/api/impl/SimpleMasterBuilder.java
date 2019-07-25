@@ -1,7 +1,10 @@
 package ua.com.fielden.platform.web.view.master.api.impl;
 
 import static java.lang.String.format;
+import static ua.com.fielden.platform.web.centre.EntityCentre.IMPORTS;
 import static ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig.setRole;
+import static ua.com.fielden.platform.web.view.master.EntityMaster.ENTITY_TYPE;
+import static ua.com.fielden.platform.web.view.master.EntityMaster.flattenedNameOf;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -30,7 +33,7 @@ import ua.com.fielden.platform.web.view.master.api.IMaster;
 import ua.com.fielden.platform.web.view.master.api.ISimpleMasterBuilder;
 import ua.com.fielden.platform.web.view.master.api.actions.MasterActions;
 import ua.com.fielden.platform.web.view.master.api.actions.entity.IEntityActionConfig0;
-import ua.com.fielden.platform.web.view.master.api.actions.entity.IEntityActionConfig8;
+import ua.com.fielden.platform.web.view.master.api.actions.entity.IEntityActionConfig5;
 import ua.com.fielden.platform.web.view.master.api.actions.entity.impl.DefaultEntityAction;
 import ua.com.fielden.platform.web.view.master.api.actions.entity.impl.EntityActionConfig;
 import ua.com.fielden.platform.web.view.master.api.helpers.IActionBarLayoutConfig1;
@@ -43,7 +46,7 @@ import ua.com.fielden.platform.web.view.master.api.helpers.impl.WidgetSelector;
 import ua.com.fielden.platform.web.view.master.api.widgets.IDividerConfig;
 import ua.com.fielden.platform.web.view.master.api.widgets.IHtmlTextConfig;
 
-public class SimpleMasterBuilder<T extends AbstractEntity<?>> implements ISimpleMasterBuilder<T>, IPropertySelector<T>, ILayoutConfig<T>, ILayoutConfigWithDimensionsAndDone<T>, IEntityActionConfig8<T>, IActionBarLayoutConfig1<T> {
+public class SimpleMasterBuilder<T extends AbstractEntity<?>> implements ISimpleMasterBuilder<T>, IPropertySelector<T>, ILayoutConfig<T>, ILayoutConfigWithDimensionsAndDone<T>, IEntityActionConfig5<T>, IActionBarLayoutConfig1<T> {
 
     private final List<WidgetSelector<T>> widgets = new ArrayList<>();
     private final List<Object> entityActions = new ArrayList<>();
@@ -74,7 +77,7 @@ public class SimpleMasterBuilder<T extends AbstractEntity<?>> implements ISimple
     }
 
     @Override
-    public IEntityActionConfig8<T> addAction(final ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig action) {
+    public IEntityActionConfig5<T> addAction(final ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig action) {
         entityActions.add(setRole(action, UI_ROLE.BUTTON));
         return this;
     }
@@ -192,7 +195,7 @@ public class SimpleMasterBuilder<T extends AbstractEntity<?>> implements ISimple
     @Override
     public IMaster<T> done() {
         final LinkedHashSet<String> importPaths = new LinkedHashSet<>();
-        importPaths.add("polymer/polymer/polymer");
+        // importPaths.add("polymer/polymer/polymer"); // FIXME check and delete if all good -- this is not really needed due to tg-entity-master-template-behavior dependencies
 
         int funcActionSeq = 0; // used for both entity and property level functional actions
         final String prefix = ",\n";
@@ -200,7 +203,7 @@ public class SimpleMasterBuilder<T extends AbstractEntity<?>> implements ISimple
         final StringBuilder primaryActionObjects = new StringBuilder();
 
         final StringBuilder propertyActionsStr = new StringBuilder();
-        final DomElement editorContainer = layout.render().clazz("property-editors").attr("context", "[[_currEntity]]");
+        final DomElement editorContainer = layout.render().attr("slot", "property-editors").attr("context", "[[_currEntity]]");
         importPaths.add(layout.importPath());
         final StringBuilder shortcuts = new StringBuilder();
         for (final WidgetSelector<T> widget : widgets) {
@@ -217,14 +220,14 @@ public class SimpleMasterBuilder<T extends AbstractEntity<?>> implements ISimple
                     }
                     importPaths.add(el.importPath());
                     editorContainer.add(widget.widget().render()
-                            .add(el.render().clazz("property-action", "property-action-icon")));
+                            .add(el.render().attr("slot", "property-action").clazz("property-action-icon")));
                     primaryActionObjects.append(prefix + el.createActionObject());
                 }
             }
         }
 
         // entity actions should be type matched for rendering due to inclusion of both "standard" actions such as SAVE or CANCLE as well as the functional actions
-        final DomElement actionContainer = actionBarLayout.render().clazz("action-bar");
+        final DomElement actionContainer = actionBarLayout.render().attr("slot", "action-bar");
         final StringBuilder entityActionsStr = new StringBuilder();
         for (final Object action: entityActions) {
             if (action instanceof ua.com.fielden.platform.web.view.master.api.actions.entity.impl.EntityActionConfig) {
@@ -266,9 +269,9 @@ public class SimpleMasterBuilder<T extends AbstractEntity<?>> implements ISimple
         final String primaryActionObjectsString = primaryActionObjects.toString();
         final String dimensionsString = prefDimBuilder.toString();
 
-        final String entityMasterStr = ResourceLoader.getText("ua/com/fielden/platform/web/master/tg-entity-master-template.html")
-                .replace("<!--@imports-->", createImports(importPaths))
-                .replace("@entity_type", entityType.getSimpleName())
+        final String entityMasterStr = ResourceLoader.getText("ua/com/fielden/platform/web/master/tg-entity-master-template.js")
+                .replace(IMPORTS, createImports(importPaths))
+                .replace(ENTITY_TYPE, flattenedNameOf(entityType))
                 .replace("<!--@tg-entity-master-content-->", elementContainer.toString()) // TODO should contain prop actions
                 .replace("//@ready-callback",
                         layout.code().toString() + "\n"
@@ -317,7 +320,7 @@ public class SimpleMasterBuilder<T extends AbstractEntity<?>> implements ISimple
     public static String createImports(final LinkedHashSet<String> importPaths) {
         final StringBuilder sb = new StringBuilder();
         importPaths.forEach(path -> {
-            sb.append("<link rel='import' href='/resources/" + path + ".html'>\n");
+            sb.append("import '/resources/" + path + ".js';\n");
         });
         return sb.toString();
     }

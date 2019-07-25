@@ -5,10 +5,15 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, minimum-scale=1.0, initial-scale=1.0, user-scalable=yes">
     <title>Flex layout with subheader example</title>
-    <script src="/resources/polymer/webcomponentsjs/webcomponents-lite.js"></script>
-    <link rel="import" href="/resources/polymer/paper-styles/paper-styles-classes.html">
-    <link rel="import" href="tg-flex-layout.html">
-    <link rel="import" href="/resources/polymer/paper-input/paper-input.html">
+    <script src='/resources/polymer/@webcomponents/webcomponentsjs/webcomponents-bundle.js'></script>
+    <script src='/resources/moment//moment.js'></script>
+    <script src='/resources/moment//moment-with-locales.js'></script>
+    <script type="module">
+        import '/resources/polymer/@polymer/iron-flex-layout/iron-flex-layout-classes.js';
+        import '/resources/polymer/@polymer/paper-input/paper-input.js';
+        import '/resources/polymer/@polymer/paper-styles/paper-styles-classes.js';
+        import './tg-flex-layout.js';
+    </script>
 
     <style>
         html {
@@ -19,44 +24,47 @@
             font-size: 10pt;
         }
     </style>
-
+    <custom-style>
+        <style include="iron-flex iron-flex-reverse iron-flex-alignment iron-flex-factors iron-positioning"></style>
+    </custom-style>
 </head>
-
-<body unresolved>
-    <template id="app" is="dom-bind">
-        <tg-flex-layout when-desktop="[[_whenDesktop()]]" when-tablet="[[_whenTablet()]]" when-mobile="[[_whenMobile()]]">
-            <paper-input label="floated label" always-float-label></paper-input>
-            <paper-input label="floated label" always-float-label></paper-input>
-            <paper-input label="floated label" always-float-label></paper-input>
-            <paper-input label="floated label" always-float-label></paper-input>
-            <paper-input label="floated label" always-float-label></paper-input>
-            <paper-input label="floated label" always-float-label></paper-input>
-            <paper-input label="floated label" always-float-label></paper-input>
-            <paper-input label="floated label" always-float-label></paper-input>
-            <paper-input label="floated label" always-float-label></paper-input>
-            <paper-input label="floated label" always-float-label></paper-input>
-            <paper-input label="floated label" always-float-label></paper-input>
-            <paper-input label="floated label" always-float-label></paper-input>
-            <paper-input label="floated label" always-float-label></paper-input>
-            <paper-input label="floated label" always-float-label></paper-input>
-            <paper-input label="floated label" always-float-label></paper-input>
-            <paper-input label="floated label" always-float-label></paper-input>
-            <paper-input label="floated label" always-float-label></paper-input>
-            <paper-input label="floated label" always-float-label></paper-input>
-            <paper-input label="floated label" always-float-label></paper-input>
-            <paper-input label="floated label" always-float-label></paper-input>
-            <paper-input label="floated label" always-float-label></paper-input>
-            <paper-input label="floated label" always-float-label></paper-input>
-            <paper-input label="floated label" always-float-label></paper-input>
-        </tg-flex-layout>
-    </template>
+<body unresolved class="fullbleed">
+    <dom-bind>
+        <template is="dom-bind">
+            <tg-flex-layout when-desktop="[[_whenDesktop()]]" when-tablet="[[_whenTablet()]]" when-mobile="[[_whenMobile()]]" context="[[layoutContext]]">
+                <paper-input label="floated label" always-float-label></paper-input>
+                <paper-input label="floated label" always-float-label></paper-input>
+                <paper-input label="floated label" always-float-label></paper-input>
+                <paper-input label="floated label" always-float-label></paper-input>
+                <paper-input label="floated label" always-float-label></paper-input>
+                <paper-input label="floated label" always-float-label></paper-input>
+                <paper-input label="floated label" always-float-label></paper-input>
+                <paper-input label="floated label" always-float-label></paper-input>
+                <paper-input label="floated label" always-float-label></paper-input>
+                <paper-input label="floated label" always-float-label></paper-input>
+                <paper-input label="floated label" always-float-label></paper-input>
+                <paper-input label="floated label" always-float-label></paper-input>
+                <paper-input label="floated label" always-float-label></paper-input>
+                <paper-input label="floated label" always-float-label></paper-input>
+                <paper-input label="floated label" always-float-label></paper-input>
+                <paper-input label="floated label" always-float-label></paper-input>
+                <paper-input label="floated label" always-float-label></paper-input>
+                <paper-input label="floated label" always-float-label></paper-input>
+                <paper-input label="floated label" always-float-label></paper-input>
+                <paper-input label="floated label" always-float-label></paper-input>
+                <paper-input label="floated label" always-float-label></paper-input>
+                <paper-input label="floated label" always-float-label></paper-input>
+                <paper-input label="floated label" always-float-label></paper-input>
+            </tg-flex-layout>
+        </template>
+    </dom-bind>
 </body>
 <script>
-    var app = document.querySelector("#app");
+    var app = document.querySelector('dom-bind');
     app._whenDesktop = function () {
         return ['padding-left:16px',
                 /*['subheader:Subheader One','margin-top:0px','padding-bottom:32px'],*/
-                ['html:<span style="display: inline-block;color:blue;vertical-align: middle;"><img style="vertical-align: middle;height: 100%;display: inline-block;" src="/resources/icons/tg-icon.png"> Embedding images is easy.</span>', 'padding-top:8px','padding-bottom:8px'],
+                ['html:<span style="display: inline-block;color:blue;vertical-align: middle;"><img style="vertical-align: middle;height: 100%;display: inline-block;" src="/resources/icons/tg-icon.png"><span>[[embededText]]</span></span>', 'padding-top:8px','padding-bottom:8px'],
                 ['padding-left:32px',['flex','padding-right:20px'],['flex','padding-right:20px'],['flex']],
                 ['padding-left:32px',['flex','padding-right:20px'],['flex','padding-right:20px'],['flex']],
                 ['padding-top:8px','padding-bottom:8px', ['html:<span style="height: 100%;display: inline-block;vertical-align: middle;">This is an <span style="color:red">explanation</span> text</span>'],['html:<span style="display: inline-block;color:blue;vertical-align: middle;">, consisting of two parts.</span>']],
@@ -76,6 +84,9 @@
     };
     app._whenMobile = function () {
         return [[['flex','padding-right:20px'],['flex']],['subheader:Static title'],[['skip','flex','padding-right:20px'],['flex']],[['flex','padding-right:20px'],['flex']]];
+    };
+    app.layoutContext = {
+        embededText: " Embedding images is easy."
     };
 </script>
 

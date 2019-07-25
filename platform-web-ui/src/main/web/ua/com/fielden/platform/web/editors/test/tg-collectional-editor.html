@@ -6,15 +6,12 @@
     <title>tg-collectional-editor tests</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
     
-    <script src="/resources/polymer/webcomponentsjs/webcomponents-lite.js"></script>
-    <script src="/resources/polymer/web-component-tester/browser.js"></script>
-    <script src="/resources/polymer/test-fixture/test-fixture-mocha.js"></script>
-    <script src="/resources/polymer/iron-test-helpers/mock-interactions.js"></script>
-    
-    <link rel="import" href="/resources/polymer/test-fixture/test-fixture.html">
-    
-    <link rel="import" href="/app/tg-reflector.html">
-    <link rel="import" href="/resources/editors/tg-collectional-editor.html">
+    <script src="/resources/polymer/@webcomponents/webcomponentsjs/webcomponents-bundle.js"></script>
+    <script src='/resources/polymer/web-animations-js/web-animations-next-lite.min.js'></script>
+    <script src="/resources/lodash/4.17.11/lodash.min.js"></script>
+    <script src="/resources/postal/2.0.5/postal.min.js"></script>
+    <script src="/resources/filesaver/FileSaver.min.js"></script>
+    <script src="/resources/polymer/wct-browser-legacy/browser.js"></script>
 </head>
 
 <body>
@@ -29,7 +26,11 @@
         </template>
     </test-fixture>
 
-    <script>
+    <script type="module">
+
+    import '/app/tg-reflector.js';
+    import '/resources/editors/tg-collectional-editor.js';
+
         suite('collectional editor', function() {
             let editor, reflector;
             
@@ -67,13 +68,16 @@
                 originalEntity.roles = [one, two, three, four];
                 originalEntity.chosenIds = [];
                 
-                // perform initialisation
-                editor.entity = entity;
-                editor.originalEntity = originalEntity;
                 
-                // check the order
-                assert.deepEqual(editor._entities, [one, two, three, four]);
-                done();
+                setTimeout(() => {
+                    // perform initialisation
+                    editor.entity = entity;
+                    editor.originalEntity = originalEntity;
+
+                    // check the order
+                    assert.deepEqual(editor._entities, [one, two, three, four]);
+                    done();
+                },1);
             });
             
             test('places selected entities on top and unselected at the bottom and preserves the order in each group', function (done) {
@@ -97,13 +101,15 @@
                 originalEntity.roles = [one, two, three, four];
                 originalEntity.chosenIds = [];
                 
-                // perform initialisation
-                editor.entity = entity;
-                editor.originalEntity = originalEntity;
-                
-                // check the order
-                assert.deepEqual(editor._entities, [two, four, one, three]);
-                done();
+                setTimeout(() => {
+                    // perform initialisation
+                    editor.entity = entity;
+                    editor.originalEntity = originalEntity;
+                    
+                    // check the order
+                    assert.deepEqual(editor._entities, [two, four, one, three]);
+                    done();
+                },1);
             });
         });
     </script>

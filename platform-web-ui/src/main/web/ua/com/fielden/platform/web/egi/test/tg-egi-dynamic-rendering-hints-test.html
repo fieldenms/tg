@@ -6,27 +6,28 @@
     <title>entity grid inspector dynamic rendering hints</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 
-    <script src="/resources/polymer/webcomponentsjs/webcomponents-lite.js"></script>
-    <script src="/resources/polymer/web-component-tester/browser.js"></script>
-    <script src="/resources/polymer/test-fixture/test-fixture-mocha.js"></script>
-    <script src="/resources/polymer/iron-test-helpers/mock-interactions.js"></script>
-
-    <link rel="import" href="/resources/polymer/test-fixture/test-fixture.html">
-
-    <link rel="import" href="/resources/egi/tg-entity-grid-inspector.html">
-    <link rel="import" href="/resources/egi/tg-property-column.html">
+    <script src="/resources/polymer/@webcomponents/webcomponentsjs/webcomponents-bundle.js"></script>
+    <script src='/resources/polymer/web-animations-js/web-animations-next-lite.min.js'></script>
+    <script src="/resources/lodash/4.17.11/lodash.min.js"></script>
+    <script src="/resources/postal/2.0.5/postal.min.js"></script>
+    <script src="/resources/filesaver/FileSaver.min.js"></script>
+    <script src="/resources/polymer/wct-browser-legacy/browser.js"></script>
 </head>
 
 <body>
     <test-fixture id="EgiFixture">
         <template>
             <tg-entity-grid-inspector id="egi">
-                <tg-property-column property="test" width="60" min-width="60" grow-factor="0" type="String" column-title="Test" column-desc="Test"></tg-property-column>
+                <tg-property-column slot='property-column' property="test" width="60" min-width="60" grow-factor="0" type="String" column-title="Test" column-desc="Test"></tg-property-column>
             </tg-entity-grid-inspector>
         </template>
     </test-fixture>
 
-    <script>
+    <script type="module">
+
+        import '/resources/egi/tg-entity-grid-inspector.js';
+        import '/resources/egi/tg-property-column.js';
+
         suite('entity grid inspector', function () {
             const StubEntity = class {
 
@@ -56,7 +57,7 @@
                 //Create stub entity
                 const stubEntity = new StubEntity(1, "test value");
                 const columnRetriever = () => {
-                    const column = egi.$$(".table-data-cell");
+                    const column = egi.shadowRoot.querySelector("tg-egi-cell");
                     //Wait till data column cell won't be null
                     if (column === null) {
                         egi.async(columnRetriever, 100);
@@ -71,8 +72,8 @@
                             }
                         });
                         //Check whether style is ok
-                        assert.strictEqual("red", column.children[0].style.backgroundColor, "Cell background should be red");
-                        assert.strictEqual("white", column.children[3].style.color, "Cell foreground should be white");
+                        assert.strictEqual("red", column.shadowRoot.querySelector(".cell-background").style.backgroundColor, "Cell background should be red");
+                        assert.strictEqual("white", column.shadowRoot.querySelector(".value-container").style.color, "Cell foreground should be white");
                         done();
                     }
                 }
