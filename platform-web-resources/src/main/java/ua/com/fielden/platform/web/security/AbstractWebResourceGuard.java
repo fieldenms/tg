@@ -20,6 +20,8 @@ import com.google.inject.Injector;
 import ua.com.fielden.platform.security.session.Authenticator;
 import ua.com.fielden.platform.security.session.IUserSession;
 import ua.com.fielden.platform.security.session.UserSession;
+import ua.com.fielden.platform.security.user.IUser;
+import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.utils.IUniversalConstants;
 import ua.com.fielden.platform.web.sse.SseUtils;
@@ -69,11 +71,11 @@ public abstract class AbstractWebResourceGuard extends ChallengeAuthenticator {
     @Override
     public boolean authenticate(final Request request, final Response response) {
         // uncomment following lines to be able to use http (StartOverHttp) server instead of https (Start) server for development purposes:
-//        if(true) {
-//            final IUserProvider userProvider = injector.getInstance(IUserProvider.class);
-//            userProvider.setUsername(User.system_users.SU.name(), injector.getInstance(IUser.class));
-//            return true;
-//        }
+        if(true) {
+            final IUserProvider userProvider = injector.getInstance(IUserProvider.class);
+            userProvider.setUsername(User.system_users.SU.name(), injector.getInstance(IUser.class));
+            return true;
+        }
         try {
             logger.debug(format("Starting request authentication to a resource at URI %s (%s, %s, %s)", request.getResourceRef(), request.getClientInfo().getAddress(), request.getClientInfo().getAgentName(), request.getClientInfo().getAgentVersion()));
 
