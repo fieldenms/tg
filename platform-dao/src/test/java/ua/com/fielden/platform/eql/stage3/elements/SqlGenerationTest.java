@@ -24,7 +24,7 @@ import ua.com.fielden.platform.eql.stage3.elements.sources.IQrySource3;
 import ua.com.fielden.platform.eql.stage3.elements.sources.QrySource3BasedOnTable;
 import ua.com.fielden.platform.eql.stage3.elements.sources.Sources3;
 
-public class TestSqlGeneration {
+public class SqlGenerationTest {
 
     @Test
     public void simple_query_generates_sql() {
