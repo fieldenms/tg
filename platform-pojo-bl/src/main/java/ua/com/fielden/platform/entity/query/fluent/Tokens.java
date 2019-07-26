@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.entity.query.fluent;
 
+import static ua.com.fielden.platform.types.tuples.T2.t2;
 import static ua.com.fielden.platform.entity.query.fluent.enums.ArithmeticalOperator.ADD;
 import static ua.com.fielden.platform.entity.query.fluent.enums.ArithmeticalOperator.DIV;
 import static ua.com.fielden.platform.entity.query.fluent.enums.ArithmeticalOperator.MOD;
@@ -72,13 +73,13 @@ import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.CO
 import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.COMPARISON_OPERATOR;
 import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.COND_START;
 import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.COND_TOKENS;
+import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.CRIT_COND_OPERATOR;
 import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.END_COND;
 import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.END_EXPR;
 import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.END_FUNCTION;
 import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.ENTITY_TYPE_AS_QRY_SOURCE;
 import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.EQUERY_TOKENS;
 import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.EXISTS_OPERATOR;
-import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.CRIT_COND_OPERATOR;
 import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.EXPR_TOKENS;
 import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.EXT_PROP;
 import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.FUNCTION;
@@ -116,6 +117,7 @@ import org.apache.commons.lang.StringUtils;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.EntityAggregates;
+import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ICompoundCondition0;
 import ua.com.fielden.platform.entity.query.fluent.enums.Functions;
 import ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory;
 import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
@@ -126,6 +128,7 @@ import ua.com.fielden.platform.entity.query.model.OrderingModel;
 import ua.com.fielden.platform.entity.query.model.PrimitiveResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.QueryModel;
 import ua.com.fielden.platform.entity.query.model.SingleResultQueryModel;
+import ua.com.fielden.platform.types.tuples.T2;
 import ua.com.fielden.platform.utils.Pair;
 
 /**
@@ -224,6 +227,10 @@ final class Tokens {
 
     public Tokens critCondition(final ConditionModel condition, final String critPropName) {
         return add(CRIT_COND_OPERATOR, new Pair<ConditionModel, String>(condition, critPropName));
+    }
+
+    public Tokens critCondition(final ICompoundCondition0<?> collectionQueryStart, final String propName, final String critPropName) {
+        return add(CRIT_COND_OPERATOR, new Pair<T2<ICompoundCondition0<?>, String>, String>(t2(collectionQueryStart, propName), critPropName));
     }
 
     public Tokens isNull(final boolean negated) {

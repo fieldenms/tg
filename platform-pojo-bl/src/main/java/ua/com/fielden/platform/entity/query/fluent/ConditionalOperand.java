@@ -3,6 +3,7 @@ package ua.com.fielden.platform.entity.query.fluent;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IComparisonOperand;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IComparisonOperator;
+import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ICompoundCondition0;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ISingleConditionOperator;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ILogicalOperator;
 import ua.com.fielden.platform.entity.query.model.ConditionModel;
@@ -58,7 +59,11 @@ abstract class ConditionalOperand<T1 extends IComparisonOperator<T2, ET>, T2 ext
         return nextForConditionalOperand(getTokens().critCondition(condition, critPropName));
     }
 
-	
+    @Override
+    public T2 critCondition(final ICompoundCondition0<?> collectionQueryStart, final String propName, final String critPropName) {
+        return nextForConditionalOperand(getTokens().critCondition(collectionQueryStart, propName, critPropName));
+    }
+    
     @Override
     public T2 condition(final ConditionModel condition) {
         return nextForConditionalOperand(getTokens().cond(condition));

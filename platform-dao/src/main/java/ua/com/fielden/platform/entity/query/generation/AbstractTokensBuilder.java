@@ -1,6 +1,6 @@
 package ua.com.fielden.platform.entity.query.generation;
 
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.emptyCondition;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.*;
 import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.EQUERY_TOKENS;
 import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.EXPR_TOKENS;
 import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.GROUPED_CONDITIONS;
@@ -9,6 +9,7 @@ import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.IV
 import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.PARAM;
 import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.PROP;
 import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.VAL;
+import static ua.com.fielden.platform.entity_centre.review.DynamicQueryBuilder.buildCondition;
 import static ua.com.fielden.platform.entity_centre.review.DynamicQueryBuilder.QueryProperty.queryPropertyParamName;
 
 import java.util.ArrayList;
@@ -18,6 +19,7 @@ import java.util.List;
 import java.util.Map;
 
 import ua.com.fielden.platform.entity.query.DbVersion;
+import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ICompoundCondition0;
 import ua.com.fielden.platform.entity.query.fluent.enums.Functions;
 import ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory;
 import ua.com.fielden.platform.entity.query.generation.elements.CountAll;
@@ -29,10 +31,11 @@ import ua.com.fielden.platform.entity.query.generation.elements.ISingleOperand;
 import ua.com.fielden.platform.entity.query.generation.elements.OperandsBasedSet;
 import ua.com.fielden.platform.entity.query.generation.elements.QueryBasedSet;
 import ua.com.fielden.platform.entity.query.model.ConditionModel;
+import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.ExpressionModel;
 import ua.com.fielden.platform.entity.query.model.QueryModel;
-import ua.com.fielden.platform.entity_centre.review.DynamicQueryBuilder;
 import ua.com.fielden.platform.entity_centre.review.DynamicQueryBuilder.QueryProperty;
+import ua.com.fielden.platform.types.tuples.T2;
 import ua.com.fielden.platform.utils.Pair;
 
 /**
@@ -180,13 +183,58 @@ public abstract class AbstractTokensBuilder implements ITokensBuilder {
         final String critOnlyPropName = props.getValue();
         final String critOnlyPropParamName = queryPropertyParamName(critOnlyPropName);
         final QueryProperty qp = (QueryProperty) getParamValue(critOnlyPropParamName);
-        if (qp == null) {
+        if (qp == null || qp.isEmptyAndMnemonicless()) {
             return emptyCondition();
-            //throw new EqlException(format("QueryProperty value for crit-only property [%s] has not been provided as EQL query parameter named [%s].", critOnlyPropName, critOnlyPropParamName));
-        } else {
-            return qp.isEmptyAndMnemonicless() ? emptyCondition() :
-                (props.getKey() instanceof ConditionModel ? (ConditionModel) props.getKey() : DynamicQueryBuilder.buildCondition(qp, (String) props.getKey(), false));
+        } else if (props.getKey() instanceof ConditionModel) {
+            return (ConditionModel) props.getKey();
+        } else if (props.getKey() instanceof String)
+            return buildCondition(qp, (String) props.getKey(), false);
+        else {
+            final T2<ICompoundCondition0<?>, String> args =  (T2<ICompoundCondition0<?>, String>) props.getKey();
+            return collectionalCritConditionOperatorModel(args._1, args._2, qp);
         }
+    }
+
+    private ConditionModel prepareCollectionalCritCondition(final QueryProperty qp, final String propName) {
+        final Boolean originalOrNull = qp.getOrNull();
+        final Boolean originalNot = qp.getNot();
+        qp.setOrNull(null);
+        qp.setNot(null);
+        final ConditionModel result = buildCondition(qp, propName, false);
+        qp.setOrNull(originalOrNull);
+        qp.setNot(originalNot);
+        return result;
+    }
+    
+    private ConditionModel collectionalCritConditionOperatorModel(final ICompoundCondition0<?> collectionQueryStart, final String propName, final QueryProperty qp) {
+        final boolean orNull = Boolean.TRUE.equals(qp.getOrNull());
+        final boolean not = Boolean.TRUE.equals(qp.getNot());
+        final boolean empty = qp.isEmpty();
+
+        final ConditionModel criteriaCondition = prepareCollectionalCritCondition(qp, propName);
+        final EntityResultQueryModel<?> allCollection = collectionQueryStart.model();
+        final EntityResultQueryModel<?> conditionedCollection = collectionQueryStart.and().condition(criteriaCondition).model();
+        
+        if (empty) {
+            return !orNull ? emptyCondition() : (not ? cond().exists(allCollection).model() : cond().notExists(allCollection).model());
+        } else if (not){
+            return orNull ? cond().notExists(conditionedCollection).model() : cond().notExists(conditionedCollection).or().exists(allCollection).model();
+        } else {
+            return !orNull ? cond().exists(conditionedCollection).model() : cond().exists(conditionedCollection).or().notExists(allCollection).model();
+        }
+        
+        /*
+         * 
+v n m
++ + +  not (exists collectional element that matches any of the values || empty) == there are no collectional elements that match any of values && not empty
++ + -  not (exists collectional element that matches any of the values && not empty) == there are no collectional elements that match any of values || empty
++ - +  exists collectional element that matches any of the values || empty
++ - -  exists collectional element that matches any of the values && not empty
+- + +  not empty
+- + -  no condition
+- - +  empty
+- - -  no condition
+         * */
     }
 
     @Override
