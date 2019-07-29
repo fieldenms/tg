@@ -74,6 +74,7 @@ Polymer({
         
         // integer
         bindingView["@@origin"]['integerProp'] = 23;
+        this.$.reflector.convertPropertyValue(bindingView, 'integerProp', bindingView["@@origin"], null);
         bindingView['@integerProp_editable'] = true;
         
         /* bindingView.prop('integerProp');
@@ -81,34 +82,42 @@ Polymer({
         
         // decimal
         bindingView["@@origin"]['bigDecimalProp'] = 2.3;
+        this.$.reflector.convertPropertyValue(bindingView, 'bigDecimalProp', bindingView["@@origin"], null);
         bindingView['@bigDecimalProp_editable'] = true;
 
         // string
         bindingView["@@origin"]['stringProp'] = 'OK';
+        this.$.reflector.convertPropertyValue(bindingView, 'stringProp', bindingView["@@origin"], null);
         bindingView['@stringProp_editable'] = true;
         
         // date
         bindingView["@@origin"]['dateProp'] = 2000000000;
+        this.$.reflector.convertPropertyValue(bindingView, 'dateProp', bindingView["@@origin"], null);
         bindingView['@dateProp_editable'] = true;
 
         // entity
         bindingView["@@origin"]['entityProp'] = null;
+        this.$.reflector.convertPropertyValue(bindingView, 'entityProp', bindingView["@@origin"], null);
         bindingView['@entityProp_editable'] = true;
         
         // boolean
         bindingView["@@origin"]['booleanProp'] = true;
+        this.$.reflector.convertPropertyValue(bindingView, 'booleanProp', bindingView["@@origin"], null);
         bindingView['@booleanProp_editable'] = true;
 
         //money
         bindingView["@@origin"]['moneyProp'] = {'amount': 23.50, 'taxPercent': 0.0, 'currency': '$'};
+        this.$.reflector.convertPropertyValue(bindingView, 'moneyProp', bindingView["@@origin"], null);
         bindingView['@moneyProp_editable'] = true;
 
         //hyperlink
         bindingView["@@origin"]['hyperlinkProp'] = {value: "http://www.google.com"};
+        this.$.reflector.convertPropertyValue(bindingView, 'hyperlinkProp', bindingView["@@origin"], null);
         bindingView['@hyperlinkProp_editable'] = true;
 
         //colour
         bindingView["@@origin"]['colourProp'] = {hashlessUppercasedColourValue: "5DEFCE"};
+        this.$.reflector.convertPropertyValue(bindingView, 'colourProp', bindingView["@@origin"], null);
         bindingView['@colourProp_editable'] = true;
 
         console.log("this.bindingEntity", bindingView);
