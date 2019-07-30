@@ -200,7 +200,7 @@ public abstract class AbstractTokensBuilder implements ITokensBuilder {
         final Boolean originalNot = qp.getNot();
         qp.setOrNull(null);
         qp.setNot(null);
-        final ConditionModel result = buildCondition(qp, propName, false);
+        final ConditionModel result = qp == null || qp.isEmptyAndMnemonicless() ? emptyCondition() : buildCondition(qp, propName, false);
         qp.setOrNull(originalOrNull);
         qp.setNot(originalNot);
         return result;
