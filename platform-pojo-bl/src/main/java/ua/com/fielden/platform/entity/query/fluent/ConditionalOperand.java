@@ -55,11 +55,6 @@ abstract class ConditionalOperand<T1 extends IComparisonOperator<T2, ET>, T2 ext
 	}
 	
     @Override
-    public T2 critCondition(final ConditionModel condition, final String critPropName) {
-        return nextForConditionalOperand(getTokens().critCondition(condition, critPropName));
-    }
-
-    @Override
     public T2 critCondition(final ICompoundCondition0<?> collectionQueryStart, final String propName, final String critPropName) {
         return nextForConditionalOperand(getTokens().critCondition(collectionQueryStart, propName, critPropName));
     }

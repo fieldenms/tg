@@ -322,15 +322,33 @@ public interface EntityQueryProgressiveInterfaces {
 		T critCondition(final String propName, final String critPropName);
 		
         /**
-         * Applies provided condition in case value of crit-only property {@code critPropName} is not empty.
+         * Applies value of crit-only property {@code critPropName}(including mnemonics) to persistent collectional property {@code propName} represented by collection in {@code collectionQueryStart} and enhances this query with generated appropriate condition model (as per {@link ua.com.fielden.platform.entity_centre.review.DynamicQueryBuilder#buildAtomicCondition(ua.com.fielden.platform.entity_centre.review.DynamicQueryBuilder.QueryProperty, String)} logic).
+         * Rules for applying mnemonics and search values onto collectional properties have been specified as follows:
          * 
-         * @param condition
+         * v n m
+         * 
+         * + + +  not (exists collectional element that matches any of the values || empty) == there are no collectional elements that match any of values && not empty
+         * 
+         * + + -  not (exists collectional element that matches any of the values && not empty) == there are no collectional elements that match any of values || empty
+         * 
+         * + - +  exists collectional element that matches any of the values || empty
+         * 
+         * + - -  exists collectional element that matches any of the values && not empty
+         * 
+         * - + +  not empty
+         * 
+         * - + -  no condition
+         * 
+         * - - +  empty
+         * 
+         * - - -  no condition  
+         * 
+         * @param collectionQueryStart
+         * @param propName
          * @param critPropName
          * @return
          */
-		T critCondition(final ConditionModel condition, final String critPropName);
-
-        T critCondition(final ICompoundCondition0<?> collectionQueryStart, final String propName, final String critPropName);
+		T critCondition(final ICompoundCondition0<?> collectionQueryStart, final String propName, final String critPropName);
 
 		T condition(final ConditionModel condition);
 

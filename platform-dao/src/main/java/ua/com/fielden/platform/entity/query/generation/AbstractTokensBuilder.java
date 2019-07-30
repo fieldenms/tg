@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.entity.query.generation;
 
+import static java.lang.Boolean.TRUE;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.*;
 import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.EQUERY_TOKENS;
 import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.EXPR_TOKENS;
@@ -185,8 +186,6 @@ public abstract class AbstractTokensBuilder implements ITokensBuilder {
         final QueryProperty qp = (QueryProperty) getParamValue(critOnlyPropParamName);
         if (qp == null || qp.isEmptyAndMnemonicless()) {
             return emptyCondition();
-        } else if (props.getKey() instanceof ConditionModel) {
-            return (ConditionModel) props.getKey();
         } else if (props.getKey() instanceof String)
             return buildCondition(qp, (String) props.getKey(), false);
         else {
@@ -207,8 +206,8 @@ public abstract class AbstractTokensBuilder implements ITokensBuilder {
     }
     
     private ConditionModel collectionalCritConditionOperatorModel(final ICompoundCondition0<?> collectionQueryStart, final String propName, final QueryProperty qp) {
-        final boolean orNull = Boolean.TRUE.equals(qp.getOrNull());
-        final boolean not = Boolean.TRUE.equals(qp.getNot());
+        final boolean orNull = TRUE.equals(qp.getOrNull());
+        final boolean not = TRUE.equals(qp.getNot());
         final boolean empty = qp.isEmpty();
 
         final ConditionModel criteriaCondition = prepareCollectionalCritCondition(qp, propName);
@@ -224,17 +223,16 @@ public abstract class AbstractTokensBuilder implements ITokensBuilder {
         }
         
         /*
-         * 
-v n m
-+ + +  not (exists collectional element that matches any of the values || empty) == there are no collectional elements that match any of values && not empty
-+ + -  not (exists collectional element that matches any of the values && not empty) == there are no collectional elements that match any of values || empty
-+ - +  exists collectional element that matches any of the values || empty
-+ - -  exists collectional element that matches any of the values && not empty
-- + +  not empty
-- + -  no condition
-- - +  empty
-- - -  no condition
-         * */
+        v n m
+        + + +  not (exists collectional element that matches any of the values || empty) == there are no collectional elements that match any of values && not empty
+        + + -  not (exists collectional element that matches any of the values && not empty) == there are no collectional elements that match any of values || empty
+        + - +  exists collectional element that matches any of the values || empty
+        + - -  exists collectional element that matches any of the values && not empty
+        - + +  not empty
+        - + -  no condition
+        - - +  empty
+        - - -  no condition
+        */
     }
 
     @Override

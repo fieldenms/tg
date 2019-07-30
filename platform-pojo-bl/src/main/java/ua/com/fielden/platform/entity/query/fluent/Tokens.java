@@ -225,10 +225,6 @@ final class Tokens {
         return add(CRIT_COND_OPERATOR, new Pair<String, String>(propName, critPropName));
     }
 
-    public Tokens critCondition(final ConditionModel condition, final String critPropName) {
-        return add(CRIT_COND_OPERATOR, new Pair<ConditionModel, String>(condition, critPropName));
-    }
-
     public Tokens critCondition(final ICompoundCondition0<?> collectionQueryStart, final String propName, final String critPropName) {
         return add(CRIT_COND_OPERATOR, new Pair<T2<ICompoundCondition0<?>, String>, String>(t2(collectionQueryStart, propName), critPropName));
     }
