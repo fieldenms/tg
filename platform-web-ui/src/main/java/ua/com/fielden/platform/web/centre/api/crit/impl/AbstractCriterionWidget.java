@@ -7,6 +7,7 @@ import static ua.com.fielden.platform.criteria.generator.impl.CriteriaReflector.
 import static ua.com.fielden.platform.criteria.generator.impl.CriteriaReflector.not;
 import static ua.com.fielden.platform.criteria.generator.impl.CriteriaReflector.to;
 import static ua.com.fielden.platform.domaintree.impl.AbstractDomainTree.isDoubleCriterion;
+import static ua.com.fielden.platform.entity_centre.review.DynamicQueryBuilder.QueryProperty.critOnlyWithMnemonics;
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.determinePropertyType;
 import static ua.com.fielden.platform.utils.EntityUtils.isBoolean;
 
@@ -20,7 +21,6 @@ import ua.com.fielden.platform.criteria.generator.impl.CriteriaReflector;
 import ua.com.fielden.platform.dom.DomElement;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.CritOnly;
-import ua.com.fielden.platform.entity_centre.review.DynamicQueryBuilder.QueryProperty;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.utils.EntityUtils;
@@ -48,7 +48,6 @@ public abstract class AbstractCriterionWidget implements IRenderable, IImportabl
     private final String propertyName;
     private final String widgetName;
     private final String widgetPath;
-    private final boolean isCritOnly;
     private boolean debug = false;
     private final Pair<AbstractWidget, AbstractWidget> editors;
     private final boolean mnemonicsVisible;
@@ -65,9 +64,8 @@ public abstract class AbstractCriterionWidget implements IRenderable, IImportabl
         this.widgetPath = widgetPath;
         this.propertyName = propertyName;
 
-        final CritOnly critOnlyAnnotation = isEmpty(propertyName) ? null : AnnotationReflector.getPropertyAnnotation(CritOnly.class, root, propertyName);
-        this.isCritOnly = critOnlyAnnotation != null;
-        this.mnemonicsVisible = !this.isCritOnly || QueryProperty.critOnlyWithMnemonics(critOnlyAnnotation);
+        final CritOnly critOnlyAnnotation = isEmpty(propertyName) ? null : AnnotationReflector.getPropertyAnnotationInHierarchy(CritOnly.class, root, propertyName);
+        this.mnemonicsVisible = critOnlyAnnotation == null || critOnlyWithMnemonics(critOnlyAnnotation);
         this.editors = new Pair<>(editors[0], null);
         if (editors.length > 1) {
             this.editors.setValue(editors[1]);
@@ -120,9 +118,6 @@ public abstract class AbstractCriterionWidget implements IRenderable, IImportabl
         }
         attrs.put("id", "criterion_4_" + CriteriaReflector.generateCriteriaPropertyName(root, this.propertyName));
         attrs.put("validation-callback", "[[validate]]");
-        if (isCritOnly) {
-            attrs.put("crit-only", null);
-        }
         if (mnemonicsVisible) {
             attrs.put("mnemonics-visible", null);
         }

@@ -60,6 +60,18 @@ public class AnnotationReflectorTest {
     }
 
     @Test
+    public void crit_only_annotation_should_be_available_in_hierarchy_of_properties () {
+        assertNotNull("CritOnly annotation should have been determined for SecondLevelEntity.", AnnotationReflector.getPropertyAnnotationInHierarchy(CritOnly.class, SecondLevelEntity.class, "propertyTwo"));
+        assertNotNull("CritOnly annotation should have been determined for FirstLevelEntity.", AnnotationReflector.getPropertyAnnotationInHierarchy(CritOnly.class, FirstLevelEntity.class, "propertyTwo"));
+        assertNotNull("CritOnly annotation should have been determined for SecondLevelEntity.", AnnotationReflector.getPropertyAnnotationInHierarchy(CritOnly.class, SecondLevelEntity.class, "critOnlyAEProperty"));
+        assertNotNull("CritOnly annotation should have been determined for FirstLevelEntity.", AnnotationReflector.getPropertyAnnotationInHierarchy(CritOnly.class, FirstLevelEntity.class, "critOnlyAEProperty"));
+        assertNotNull("CritOnly annotation should have been determined for SecondLevelEntity.", AnnotationReflector.getPropertyAnnotationInHierarchy(CritOnly.class, SecondLevelEntity.class, "critOnlyAEProperty.property"));
+        assertNotNull("CritOnly annotation should have been determined for FirstLevelEntity.", AnnotationReflector.getPropertyAnnotationInHierarchy(CritOnly.class, FirstLevelEntity.class, "critOnlyAEProperty.property"));
+        assertNotNull("CritOnly annotation should have been determined for SecondLevelEntity.", AnnotationReflector.getPropertyAnnotationInHierarchy(CritOnly.class, SecondLevelEntity.class, "critOnlyAEProperty.propertyTwo"));
+        assertNotNull("CritOnly annotation should have been determined for FirstLevelEntity.", AnnotationReflector.getPropertyAnnotationInHierarchy(CritOnly.class, FirstLevelEntity.class, "critOnlyAEProperty.propertyTwo"));
+    }
+
+    @Test
     public void testPropertyAnnotationRetrieval() {
         // ordinary property tests
         assertNotNull("Property annotation should have been determined", AnnotationReflector.getPropertyAnnotation(Title.class, FirstLevelEntity.class, "property"));
@@ -75,7 +87,7 @@ public class AnnotationReflectorTest {
         assertNotNull("Property annotation should have been determined", AnnotationReflector.getPropertyAnnotation(Title.class, SecondLevelEntity.class, "propertyOfSelfType.property"));
         assertEquals("Incorrect property annotation value", "Property", AnnotationReflector.getPropertyAnnotation(Title.class, SecondLevelEntity.class, "propertyOfSelfType.property").value());
     }
-    
+
     @Test
     public void retrieval_of_annotations_for_non_existing_properties_succeeds_with_null_result() {
         assertNull(getPropertyAnnotation(Title.class, FirstLevelEntity.class, "property_that_does_not_exist"));

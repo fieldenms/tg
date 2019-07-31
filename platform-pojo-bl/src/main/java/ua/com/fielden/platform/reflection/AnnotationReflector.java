@@ -51,7 +51,7 @@ public final class AnnotationReflector {
     /** A global lazy static cache of annotations, which is used for annotation information retrieval. */
     private static final Cache<Class<?>, Map<String, Map<Class<? extends Annotation>, Annotation>>> METHOD_ANNOTATIONS = CacheBuilder.newBuilder().weakKeys().initialCapacity(1000).maximumSize(MAXIMUM_CACHE_SIZE).concurrencyLevel(50).build();
     private static final Cache<Class<?>, Map<String, Map<Class<? extends Annotation>, Annotation>>> FIELD_ANNOTATIONS = CacheBuilder.newBuilder().weakKeys().initialCapacity(1000).maximumSize(MAXIMUM_CACHE_SIZE).concurrencyLevel(50).build();
-    
+
     public static T2<Long, Long> cleanUp() {
         METHOD_ANNOTATIONS.cleanUp();
         FIELD_ANNOTATIONS.cleanUp();
@@ -157,7 +157,7 @@ public final class AnnotationReflector {
 
     /**
      * The same as {@link #getAnnotation(AnnotatedElement, Class)}, but with an {@link Optional} result.
-     * 
+     *
      * @param annotatedElement
      * @param annotationClass
      * @return
@@ -273,7 +273,7 @@ public final class AnnotationReflector {
         Class<?> runningType = forType;
         T annotation = null;
         while (annotation == null && runningType != null && runningType != Object.class) { // need to iterated thought entity hierarchy
-            annotation = runningType.getAnnotation(annotationType); 
+            annotation = runningType.getAnnotation(annotationType);
             runningType = runningType.getSuperclass();
         }
         return annotation;
@@ -333,10 +333,10 @@ public final class AnnotationReflector {
             return findFieldByNameOptionally(forType, dotNotationExp).map(field -> getAnnotation(field, annotationType)).orElse(null);
         }
     }
-    
+
     /**
      * The same as {@link #getPropertyAnnotation(Class, Class, String)}, but with an {@link Optional} result;
-     * 
+     *
      * @param annotationType
      * @param forType
      * @param dotNotationExp
@@ -401,6 +401,24 @@ public final class AnnotationReflector {
                 return false;
             }
         }
+    }
+
+    /**
+     * Returns the property annotation in dotNotationExp parameter if it exists otherwise returns null.
+     *
+     * @param annotationType
+     * @param superType
+     * @param dotNotationExp
+     * @return
+     */
+    public static <T extends Annotation> T getPropertyAnnotationInHierarchy (final Class<T> annotationType, final Class<?> forType, final String dotNotationExp) {
+        final T annotation = getPropertyAnnotation(annotationType, forType, dotNotationExp);
+        if (annotation != null) {
+            return annotation;
+        } else if (PropertyTypeDeterminator.isDotNotation(dotNotationExp)) {
+            return getPropertyAnnotationInHierarchy(annotationType, forType, PropertyTypeDeterminator.penultAndLast(dotNotationExp).getKey());
+        }
+        return null;
     }
 
     /**
