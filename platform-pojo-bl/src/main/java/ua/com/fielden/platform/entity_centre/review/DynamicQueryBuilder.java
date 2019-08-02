@@ -904,10 +904,25 @@ public class DynamicQueryBuilder {
         } else if (isString(property.getType())) {
             return cond().prop(propertyName).iLike().anyOfValues((Object[]) prepCritValuesForStringTypedProp((String) property.getValue())).model();
         } else if (isEntityType(property.getType())) {
-            return propertyLike(propertyName, (List<String>) property.getValue(), baseEntityType((Class<AbstractEntity<?>>) property.getType()));
+            if (property.isSingle()) {
+                return propertyLike(propertyName, property.getValue());
+            } else {
+                return propertyLike(propertyName, (List<String>) property.getValue(), baseEntityType((Class<AbstractEntity<?>>) property.getType()));
+            }
         } else {
             throw new UnsupportedTypeException(property.getType());
         }
+    }
+
+    /**
+     * Generates condition for single entity type property for property name and value.
+     *
+     * @param propertyName
+     * @param value
+     * @return
+     */
+    private static ConditionModel propertyLike(final String propertyName, final Object value) {
+        return cond().prop(propertyName).eq().val(value).model();
     }
 
     /**
