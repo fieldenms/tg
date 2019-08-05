@@ -5,6 +5,8 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
+import static ua.com.fielden.platform.entity.AbstractEntity.ID;
+import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
 import static ua.com.fielden.platform.entity_centre.review.DynamicQueryBuilder.getEmptyValue;
 
 import java.math.BigDecimal;
@@ -490,6 +492,7 @@ public class DynamicQueryBuilderTest {
 
     @Test
     public void test_QueryProperty_ignoring_key_part_not_to_do_extra_joins() {
+        assertEquals("Should be equal.", ID, DynamicQueryBuilder.getPropertyNameWithoutKeyPart(KEY));
         assertEquals("Should be equal.", "alias", DynamicQueryBuilder.getPropertyNameWithoutKeyPart("alias"));
         assertEquals("Should be equal.", "alias", DynamicQueryBuilder.getPropertyNameWithoutKeyPart("alias.key"));
         assertEquals("Should be equal.", "alias.prop", DynamicQueryBuilder.getPropertyNameWithoutKeyPart("alias.prop.key"));
