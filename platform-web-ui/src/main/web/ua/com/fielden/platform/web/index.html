@@ -16,6 +16,8 @@
     <script src="/resources/filesaver/FileSaver.min.js"></script>
     <script type="module" crossorigin="use-credentials">
         import '/resources/@startupResources.js';
+        import { calculateNodesForElement } from '/resources/reflection/tg-polymer-utils.js';
+        document.calculateNodesForElement = calculateNodesForElement;
     </script>
     
     <!-- Add to homescreen for Chrome on Android -->

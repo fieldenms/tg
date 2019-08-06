@@ -225,3 +225,29 @@ export const doWhenDimentionsAttainedAnd = function (self, conditionFun, doFun, 
         }
     }, time);
 };
+
+const calculateNodesCount = function (parents) {
+    let count = parents.length;
+    for (let i = 0; i < parents.length; i++) {
+        if (parents[i].shadowRoot) {
+            count += calculateNodesCount(parents[i].shadowRoot.querySelectorAll('*'));
+        }
+    }
+    return count;
+};
+
+/**
+ * Calculates count of nodes for 'element' including sub-nodes in its Shadow DOM (if it has Shadow DOM).
+ */
+export const calculateNodesForElement = function (element) {
+    const elements = element.querySelectorAll('*');
+    const result = [element];
+    elements.forEach(elem => {
+        if (elem.assignedNodes)  {
+            result.push(...elem.assignedNodes().flatMap(node => [node, ...node.querySelectorAll('*')]));
+        } else {
+            result.push(elem);
+        }
+    })
+    return calculateNodesCount(result);
+};
