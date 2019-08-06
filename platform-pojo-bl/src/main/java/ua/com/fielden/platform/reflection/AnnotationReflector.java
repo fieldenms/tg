@@ -1,7 +1,11 @@
 package ua.com.fielden.platform.reflection;
 
 import static java.lang.String.format;
+import static java.util.Optional.empty;
+import static java.util.Optional.of;
 import static ua.com.fielden.platform.reflection.Finder.findFieldByNameOptionally;
+import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.isDotNotation;
+import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.penultAndLast;
 import static ua.com.fielden.platform.reflection.Reflector.MAXIMUM_CACHE_SIZE;
 import static ua.com.fielden.platform.types.tuples.T2.t2;
 
@@ -411,14 +415,14 @@ public final class AnnotationReflector {
      * @param dotNotationExp
      * @return
      */
-    public static <T extends Annotation> T getPropertyAnnotationInHierarchy (final Class<T> annotationType, final Class<?> forType, final String dotNotationExp) {
+    public static <T extends Annotation> Optional<T> getPropertyAnnotationInHierarchy (final Class<T> annotationType, final Class<?> forType, final String dotNotationExp) {
         final T annotation = getPropertyAnnotation(annotationType, forType, dotNotationExp);
         if (annotation != null) {
-            return annotation;
-        } else if (PropertyTypeDeterminator.isDotNotation(dotNotationExp)) {
-            return getPropertyAnnotationInHierarchy(annotationType, forType, PropertyTypeDeterminator.penultAndLast(dotNotationExp).getKey());
+            return of(annotation);
+        } else if (isDotNotation(dotNotationExp)) {
+            return getPropertyAnnotationInHierarchy(annotationType, forType, penultAndLast(dotNotationExp).getKey());
         }
-        return null;
+        return empty();
     }
 
     /**
