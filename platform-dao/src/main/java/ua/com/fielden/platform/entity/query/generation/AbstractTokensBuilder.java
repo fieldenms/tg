@@ -186,13 +186,14 @@ public abstract class AbstractTokensBuilder implements ITokensBuilder {
         final QueryProperty qp = (QueryProperty) getParamValue(critOnlyPropParamName);
         if (qp == null || qp.isEmptyAndMnemonicless()) {
             return emptyCondition();
-        } else if (props.getKey() instanceof String)
+        } else if (props.getKey() instanceof String) {
             return buildCondition(qp, (String) props.getKey(), false);
-        else {
+        } else {
             final T2<ICompoundCondition0<?>, String> args =  (T2<ICompoundCondition0<?>, String>) props.getKey();
             return collectionalCritConditionOperatorModel(args._1, args._2, qp);
         }
     }
+
 
     private ConditionModel prepareCollectionalCritCondition(final QueryProperty qp, final String propName) {
         final Boolean originalOrNull = qp.getOrNull();
@@ -217,7 +218,7 @@ public abstract class AbstractTokensBuilder implements ITokensBuilder {
         if (empty) {
             return !orNull ? emptyCondition() : (not ? cond().exists(allCollection).model() : cond().notExists(allCollection).model());
         } else if (not){
-            return orNull ? cond().notExists(conditionedCollection).model() : cond().notExists(conditionedCollection).or().exists(allCollection).model();
+            return orNull ? cond().notExists(conditionedCollection).and().exists(allCollection).model() : cond().notExists(conditionedCollection).or().notExists(allCollection).model();
         } else {
             return !orNull ? cond().exists(conditionedCollection).model() : cond().exists(conditionedCollection).or().notExists(allCollection).model();
         }
