@@ -1,3 +1,5 @@
+console.error('load');
+console.time('load');
 import '/resources/polymer/@polymer/polymer/polymer-legacy.js';
 
 <!--@imports-->
@@ -45,6 +47,11 @@ Polymer({
     ready: function () {
         // LAYOUT CONFIG (GENERATED)
         //@layoutConfig
+    },
+
+    attached: function () {
+        console.error('load');
+        console.timeEnd('load');
     }
 });
 
@@ -151,7 +158,6 @@ Polymer({
             //gridLayoutConfig
 
             //@centre-has-been-attached-custom-code
-
         }, 1);
     },
 });

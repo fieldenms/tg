@@ -42,9 +42,14 @@ Polymer({
     
     ready: function () {
         this.bindingEntity = this.createBindingEntity();
-        
+        let count = 0;
+
         this.validationCallback = function () {
             console.log("	validationCallback2");
+            count++;
+            if (count === 100) {
+                console.timeEnd('load' + count);
+            }
         };
         
         this.maxTextAreaLength = 30;
