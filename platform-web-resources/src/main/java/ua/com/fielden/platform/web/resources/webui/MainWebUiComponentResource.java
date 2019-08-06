@@ -26,7 +26,7 @@ import ua.com.fielden.platform.web.interfaces.IDeviceProvider;
  */
 public class MainWebUiComponentResource  extends AbstractWebResource {
     private final ISourceController sourceController;
-    
+
     /**
      * Creates {@link MainWebUiComponentResource} instance.
      *
@@ -39,12 +39,12 @@ public class MainWebUiComponentResource  extends AbstractWebResource {
         super(context, request, response, deviceProvider);
         this.sourceController = sourceController;
     }
-    
+
     @Get
     @Override
     public Representation get() {
-        final String source = sourceController.loadSource("/app/tg-app.html", device());
-        return new EncodeRepresentation(Encoding.GZIP, new InputRepresentation(new ByteArrayInputStream(source.getBytes(Charsets.UTF_8)), MediaType.TEXT_HTML));
+        final String source = sourceController.loadSource("/app/tg-app.js");
+        return new EncodeRepresentation(Encoding.GZIP, new InputRepresentation(new ByteArrayInputStream(source.getBytes(Charsets.UTF_8)), MediaType.TEXT_JAVASCRIPT));
     }
-    
+
 }

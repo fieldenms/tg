@@ -31,8 +31,10 @@ import static ua.com.fielden.platform.web.centre.EgiConfigurations.SUMMARY_FIXED
 import static ua.com.fielden.platform.web.centre.EgiConfigurations.TOOLBAR_VISIBLE;
 import static ua.com.fielden.platform.web.centre.WebApiUtils.dslName;
 import static ua.com.fielden.platform.web.centre.WebApiUtils.treeName;
+import static ua.com.fielden.platform.web.interfaces.DeviceProfile.DESKTOP;
 import static ua.com.fielden.platform.web.utils.EntityResourceUtils.getOriginalPropertyName;
 import static ua.com.fielden.platform.web.utils.EntityResourceUtils.getOriginalType;
+import static ua.com.fielden.platform.web.view.master.EntityMaster.flattenedNameOf;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
@@ -152,7 +154,7 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
 
     private static final CentreContextConfig defaultCentreContextConfig = new CentreContextConfig(false, false, false, false, null);
 
-    private static final String IMPORTS = "<!--@imports-->";
+    public static final String IMPORTS = "<!--@imports-->";
     private static final String FULL_ENTITY_TYPE = "@full_entity_type";
     private static final String FULL_MI_TYPE = "@full_mi_type";
     private static final String MI_TYPE = "@mi_type";
@@ -830,17 +832,16 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
     }
 
     @Override
-    public IRenderable buildFor(final DeviceProfile device) {
-        logger.debug("Initiating fresh centre...");
-        return createRenderableRepresentation(getAssociatedEntityCentreManager(device));
+    public IRenderable buildFor() {
+        return createRenderableRepresentation(getAssociatedEntityCentreManager());
     }
 
-    private final ICentreDomainTreeManagerAndEnhancer getAssociatedEntityCentreManager(final DeviceProfile device) {
+    private final ICentreDomainTreeManagerAndEnhancer getAssociatedEntityCentreManager() {
         final User user = getUser();
         if (user == null) {
             return createUserUnspecificDefaultCentre(dslDefaultConfig, injector.getInstance(ISerialiser.class), postCentreCreated);
         } else {
-            return updateCentre(user, userProvider, miType, FRESH_CENTRE_NAME, empty(), device, domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion, companionFinder);
+            return updateCentre(user, userProvider, miType, FRESH_CENTRE_NAME, empty(), DESKTOP, domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion, companionFinder);
         }
     }
 
@@ -866,7 +867,6 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
     private IRenderable createRenderableRepresentation(final ICentreDomainTreeManagerAndEnhancer centre) {
 
         final LinkedHashSet<String> importPaths = new LinkedHashSet<>();
-        importPaths.add("polymer/polymer/polymer");
         importPaths.add("master/tg-entity-master");
 
         logger.debug("Initiating layout...");
@@ -955,12 +955,13 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
         final List<List<FunctionalActionElement>> actionGroups = new ArrayList<>();
         if (topLevelActions.isPresent()) {
 
-            final String currentGroup = null;
+            String currentGroup = null;
             for (int i = 0; i < topLevelActions.get().size(); i++) {
                 final Pair<EntityActionConfig, Optional<String>> topLevelAction = topLevelActions.get().get(i);
                 final String cg = getGroup(topLevelAction.getValue());
                 if (!EntityUtils.equalsEx(cg, currentGroup)) {
                     actionGroups.add(new ArrayList<>());
+                    currentGroup = cg;
                 }
                 addToLastGroup(actionGroups, topLevelAction.getKey(), i);
             }
@@ -971,9 +972,9 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
 
         final DomContainer functionalActionsDom = new DomContainer();
 
-        for (final List<FunctionalActionElement> group : actionGroups) {
-            final DomElement groupElement = new DomElement("div").clazz("entity-specific-action", "group");
-            for (final FunctionalActionElement el : group) {
+        for (int i = 0; i < actionGroups.size(); i++) {
+            final DomElement groupElement = new DomElement("div").attr("selectable-elements-container", null).attr("slot", "entity-specific-action").clazz("entity-specific-action", i == 0 ? "first-group" : "group");
+            for (final FunctionalActionElement el : actionGroups.get(i)) {
                 importPaths.add(el.importPath());
                 groupElement.add(el.render());
                 functionalActionsObjects.append(prefix + createActionObject(el));
@@ -991,7 +992,7 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
             final FunctionalActionElement el = new FunctionalActionElement(resultSetPrimaryEntityAction.get(), 0, FunctionalActionKind.PRIMARY_RESULT_SET);
 
             importPaths.add(el.importPath());
-            primaryActionDom.add(el.render().clazz("primary-action").attr("hidden", null));
+            primaryActionDom.add(el.render().attr("slot", "primary-action").clazz("primary-action").attr("hidden", null));
             primaryActionObject.append(prefix + createActionObject(el));
         }
         ////////////////////Primary result-set action [END] //////////////
@@ -1025,7 +1026,7 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
         final StringBuilder secondaryActionsObjects = new StringBuilder();
         for (final FunctionalActionElement el : secondaryActionElements) {
             importPaths.add(el.importPath());
-            secondaryActionsDom.add(el.render().clazz("secondary-action").attr("hidden", null));
+            secondaryActionsDom.add(el.render().attr("slot", "secondary-action").clazz("secondary-action"));
             secondaryActionsObjects.append(prefix + createActionObject(el));
         }
 
@@ -1094,13 +1095,13 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
         final Pair<String, String> gridLayoutConfig = generateGridLayoutConfig();
         final int prefixLength = prefix.length();
         logger.debug("Initiating template...");
-        final String text = ResourceLoader.getText("ua/com/fielden/platform/web/centre/tg-entity-centre-template.html");
+        final String text = ResourceLoader.getText("ua/com/fielden/platform/web/centre/tg-entity-centre-template.js");
         logger.debug("Replacing some parts...");
         final String entityCentreStr = text.
                 replace(IMPORTS, SimpleMasterBuilder.createImports(importPaths)).
                 replace(EGI_LAYOUT, gridLayoutConfig.getKey()).
                 replace(FULL_ENTITY_TYPE, entityType.getName()).
-                replace(MI_TYPE, miType.getSimpleName()).
+                replace(MI_TYPE, flattenedNameOf(miType)).
                 //egi related properties
                 replace(EGI_SHORTCUTS, shortcuts).
                 replace(EGI_DRAGGABLE, DRAGGABLE.eval(dslDefaultConfig.isDraggable())).

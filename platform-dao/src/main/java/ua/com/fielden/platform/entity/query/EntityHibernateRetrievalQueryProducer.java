@@ -39,7 +39,7 @@ public class EntityHibernateRetrievalQueryProducer {
     }
 
     public Query produceHibernateQuery(final Session session) {
-        LOGGER.debug("\nSQL:\n   " + sql + "\n");
+        // LOGGER.debug("\nSQL:\n   " + sql + "\n");
         final SQLQuery sqlQuery = session.createSQLQuery(sql);
         specifyResultingFieldsToHibernateQuery(sqlQuery, retrievedColumns);
         specifyParamValuesToHibernateQuery(sqlQuery, queryParams);
@@ -51,22 +51,22 @@ public class EntityHibernateRetrievalQueryProducer {
     private void specifyResultingFieldsToHibernateQuery(final SQLQuery query, final SortedSet<HibernateScalar> retrievedColumns) {
         for (final HibernateScalar aliasEntry : retrievedColumns) {
             if (aliasEntry.hasHibType()) {
-                LOGGER.debug("adding scalar: alias = [" + aliasEntry.getColumnName() + "] type = [" + aliasEntry.getHibType() + "]");
+                // LOGGER.debug("adding scalar: alias = [" + aliasEntry.getColumnName() + "] type = [" + aliasEntry.getHibType() + "]");
                 query.addScalar(aliasEntry.getColumnName(), aliasEntry.getHibType());
             } else {
-                LOGGER.debug("adding scalar: alias = [" + aliasEntry.getColumnName() + "]");
+                // LOGGER.debug("adding scalar: alias = [" + aliasEntry.getColumnName() + "]");
                 query.addScalar(aliasEntry.getColumnName());
             }
         }
     }
 
     private void specifyParamValuesToHibernateQuery(final SQLQuery query, final Map<String, Object> queryParams) {
-        LOGGER.debug("\nPARAMS:\n   " + queryParams + "\n");
+        // LOGGER.debug("\nPARAMS:\n   " + queryParams + "\n");
         for (final Map.Entry<String, Object> paramEntry : queryParams.entrySet()) {
             if (paramEntry.getValue() instanceof Collection) {
                 throw new IllegalStateException("Should not have collectional param at this level: [" + paramEntry + "]");
             } else if (!(paramEntry.getValue() instanceof DynamicQueryBuilder.QueryProperty)){
-                LOGGER.debug("setting param: name = [" + paramEntry.getKey() + "] value = [" + paramEntry.getValue() + "]");
+                // LOGGER.debug("setting param: name = [" + paramEntry.getKey() + "] value = [" + paramEntry.getValue() + "]");
                 query.setParameter(paramEntry.getKey(), paramEntry.getValue());
             }
         }

@@ -1,0 +1,71 @@
+{
+  "_from": "wct-mocha@^1.0.0-pre.3",
+  "_id": "wct-mocha@1.0.0",
+  "_inBundle": false,
+  "_integrity": "sha512-rvDjW4kJMV8/lpihKMDHMZwycT5ALtoLni/Q0Ggdg1rPRpIW5pjoslSR/UIl2gWRMYqAs9nFRVYxASwEYG6brA==",
+  "_location": "/wct-mocha",
+  "_phantomChildren": {},
+  "_requested": {
+    "type": "range",
+    "registry": true,
+    "raw": "wct-mocha@^1.0.0-pre.3",
+    "name": "wct-mocha",
+    "escapedName": "wct-mocha",
+    "rawSpec": "^1.0.0-pre.3",
+    "saveSpec": null,
+    "fetchSpec": "^1.0.0-pre.3"
+  },
+  "_requiredBy": [
+    "/"
+  ],
+  "_resolved": "https://registry.npmjs.org/wct-mocha/-/wct-mocha-1.0.0.tgz",
+  "_shasum": "2e83938572cb854740773cf1dc21f25358446c62",
+  "_spec": "wct-mocha@^1.0.0-pre.3",
+  "_where": "/home/oleh/workspace/tg/platform-web-ui/src/main/resources",
+  "author": {
+    "name": "The Polymer Project Authors"
+  },
+  "bugs": {
+    "url": "https://github.com/Polymer/tools/issues"
+  },
+  "bundleDependencies": false,
+  "dependencies": {},
+  "deprecated": false,
+  "description": "Client-side library for testing web-components with Mocha.",
+  "devDependencies": {
+    "@types/socket.io": "^1.4.36"
+  },
+  "files": [
+    "wct-mocha.js",
+    "lib/",
+    "LICENSE",
+    "README.md"
+  ],
+  "homepage": "https://github.com/Polymer/tools/tree/master/packages/web-component-tester",
+  "keywords": [
+    "wct",
+    "mocha",
+    "test",
+    "web-components"
+  ],
+  "license": "BSD-3-Clause",
+  "main": "lib/index.js",
+  "name": "wct-mocha",
+  "peerDependencies": {
+    "mocha": "*"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Polymer/tools.git"
+  },
+  "scripts": {
+    "build": "npm run build:compile && npm run build:browserjs",
+    "build:browserjs": "rollup -c",
+    "build:compile": "tsc",
+    "format": "find src -name \"*.ts\" | xargs clang-format --style=file -i",
+    "lint": "tslint -c tslint.json --project .",
+    "test": "npm run test:integration",
+    "test:integration": "cd test && npm run test:wct"
+  },
+  "version": "1.0.0"
+}

@@ -57,7 +57,7 @@ public class CustomViewResource extends AbstractWebResource {
     @Override
     public Representation get() {
         return handleUndesiredExceptions(getResponse(), () -> {
-            final String source = sourceController.loadSource("/custom_view/" + this.viewName, device());
+            final String source = sourceController.loadSource("/custom_view/" + this.viewName);
             return new EncodeRepresentation(Encoding.GZIP, new InputRepresentation(new ByteArrayInputStream(source.getBytes(Charsets.UTF_8)), MediaType.TEXT_HTML));
         }, restUtil);
     }

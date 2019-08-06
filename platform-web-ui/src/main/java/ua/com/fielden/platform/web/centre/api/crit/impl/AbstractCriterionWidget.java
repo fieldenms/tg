@@ -82,7 +82,7 @@ public abstract class AbstractCriterionWidget implements IRenderable, IImportabl
         final List<AbstractWidget> editors = editors0();
         final DomElement[] editorsDOM = new DomElement[editors.size()];
         for (int editorIndex = 0; editorIndex < editors.size(); editorIndex++) {
-            final DomElement editorElement = editors.get(editorIndex).render().clazz(getCriterionClass(editorIndex));
+            final DomElement editorElement = editors.get(editorIndex).render().clazz(getCriterionClass(editorIndex)).attr("slot", getCriterionClass(editorIndex));
             editorElement.clazz("flex", true);
             editorsDOM[editorIndex] = editorElement;
         }
@@ -135,7 +135,7 @@ public abstract class AbstractCriterionWidget implements IRenderable, IImportabl
      */
     protected Map<String, Object> createCustomAttributes() {
         return new LinkedHashMap<>();
-    };
+    }
 
     @Override
     public final DomElement render() {

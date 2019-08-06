@@ -51,6 +51,7 @@ import ua.com.fielden.platform.sample.domain.TgPersistentEntityWithProperties;
 import ua.com.fielden.platform.sample.domain.TgPersistentStatus;
 import ua.com.fielden.platform.sample.domain.TgPerson;
 import ua.com.fielden.platform.sample.domain.TgPolygon;
+import ua.com.fielden.platform.sample.domain.compound.TgCompoundEntity;
 import ua.com.fielden.platform.security.ISecurityToken;
 import ua.com.fielden.platform.security.provider.SecurityTokenNode;
 import ua.com.fielden.platform.security.provider.SecurityTokenProvider;
@@ -219,6 +220,12 @@ public class PopulateDb extends DomainDrivenDataPopulation {
         save(new_(TgCloseLeaveExample.class, "KEY4").setDesc("desc 4"));
         save(new_(TgCloseLeaveExample.class, "KEY5").setDesc("desc 5"));
         
+        save(new_(TgCompoundEntity.class, "KEY1").setActive(true).setDesc("desc 1"));
+        save(new_(TgCompoundEntity.class, "KEY2").setActive(true).setDesc("desc 2"));
+        save(new_(TgCompoundEntity.class, "KEY3").setActive(true).setDesc("desc 3"));
+        save(new_(TgCompoundEntity.class, "KEY4").setActive(true).setDesc("desc 4"));
+        save(new_(TgCompoundEntity.class, "KEY5").setActive(true).setDesc("desc 5"));
+        
         LOGGER.info("\tPopulating messages...");
         final Map<String, TgMachine> machines = new HashMap<>();
         try {
@@ -347,7 +354,7 @@ public class PopulateDb extends DomainDrivenDataPopulation {
             final SecurityTokenProvider provider = new SecurityTokenProvider(settings.pathToSecurityTokens(), settings.securityTokensPackageName()); //  IDomainDrivenTestCaseConfiguration.hbc.getProperty("tokens.path"), IDomainDrivenTestCaseConfiguration.hbc.getProperty("tokens.package")
             final SortedSet<SecurityTokenNode> topNodes = provider.getTopLevelSecurityTokenNodes();
             final SecurityTokenAssociator predicate = new SecurityTokenAssociator(admin, co$(SecurityRoleAssociation.class));
-            final ISearchAlgorithm<Class<? extends ISecurityToken>, SecurityTokenNode> alg = new BreadthFirstSearch<Class<? extends ISecurityToken>, SecurityTokenNode>();
+            final ISearchAlgorithm<Class<? extends ISecurityToken>, SecurityTokenNode> alg = new BreadthFirstSearch<>();
             for (final SecurityTokenNode securityNode : topNodes) {
                 alg.search(securityNode, predicate);
             }

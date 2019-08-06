@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta name="viewport" content="width=device-width, minimum-scale=1.0, initial-scale=1, user-scalable=yes">
+
+    <title>Polymer</title>
+
+    <script src='/resources/polymer/@webcomponents/webcomponentsjs/webcomponents-bundle.js'></script>
+    <script src='/resources/polymer/web-animations-js/web-animations-next-lite.min.js'></script>
+    <script type="module">
+        import { Polymer } from '/resources/polymer/@polymer/polymer/lib/legacy/polymer-fn.js';
+        import { html } from '/resources/polymer/@polymer/polymer/lib/utils/html-tag.js';
+
+        Polymer({
+                _template: html`<div></div>`,
+                is: 'x-sample',
+                properties: {
+                    opened: {
+                        type: Boolean,
+                        value: false,
+                        observer: '_openedChanged',
+                        reflectToAttribute: true
+                    }
+                },
+                created: function () {
+                    console.log('created!');
+                },
+                ready: function () {
+                    console.log('ready!');
+                },
+                attached: function () {
+                    console.log('attached!');
+                },
+                _openedChanged: function (opened) {
+                    console.log('_openedChanged: ' + opened);
+                    if (opened && !this.parentNode) {
+                        document.body.appendChild(this);
+                    }
+                },
+                attributeChanged: function(name, type) {
+                    console.log(this.localName + '#' + this.id + ' attribute ' + name + ' was changed to ' + this.getAttribute(name));
+                }
+            });
+
+
+            /* var el = document.createElement('x-sample');
+            el.opened = true; // does not trigger the observer! */
+    </script>
+</head>
+
+<body>
+    <x-sample></x-sample>
+    <!-- <dom-bind>
+        <template is="dom-bind">
+        </template>
+    </dom-bind> -->
+</body>
+
+</html>

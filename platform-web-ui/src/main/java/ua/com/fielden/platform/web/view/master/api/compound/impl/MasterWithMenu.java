@@ -1,6 +1,10 @@
 package ua.com.fielden.platform.web.view.master.api.compound.impl;
 
 import static java.lang.String.format;
+import static ua.com.fielden.platform.web.centre.EntityCentre.IMPORTS;
+import static ua.com.fielden.platform.web.view.master.EntityMaster.ENTITY_TYPE;
+import static ua.com.fielden.platform.web.view.master.EntityMaster.flattenedNameOf;
+import static ua.com.fielden.platform.web.view.master.api.impl.SimpleMasterBuilder.createImports;
 
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
@@ -21,7 +25,6 @@ import ua.com.fielden.platform.web.centre.api.resultset.impl.FunctionalActionEle
 import ua.com.fielden.platform.web.centre.api.resultset.impl.FunctionalActionKind;
 import ua.com.fielden.platform.web.interfaces.IRenderable;
 import ua.com.fielden.platform.web.view.master.api.IMaster;
-import ua.com.fielden.platform.web.view.master.api.impl.SimpleMasterBuilder;
 
 /**
  * A compound entity master that has a menu, that extends {@link IMaster} contract.
@@ -78,23 +81,24 @@ class MasterWithMenu<T extends AbstractEntity<?>, F extends AbstractFunctionalEn
             menuItemViewsDom.add(
                     new DomElement("tg-master-menu-item-section")
                     .attr("id", "mi" + el.numberOfAction)
-                    .attr("class", "menu-item-section")
+                    .attr("slot", "menu-item-section")
                     .attr("data-route", el.getDataRoute())
                     .attr("section-title", el.getShortDesc()));
             menuItemsDom.add(
                     new DomElement("paper-item")
-                            .attr("class", "menu-item").attr("data-route", el.getDataRoute())
+                            .attr("slot", "menu-item").attr("data-route", el.getDataRoute())
                             .attr("tooltip-text", el.conf().longDesc.orElse("NOT SPECIFIED"))
                             .attr("item-title", el.getShortDesc())
-                    .add(new DomElement("iron-icon").attr("icon", el.getIcon()).attr("style", "margin-right: 10px"))
+                            .style("padding: 0 16px")
+                    .add(new DomElement("iron-icon").attr("icon", el.getIcon()).attr("style", "margin-right: 32px"))
                     .add(new DomElement("span").add(new InnerTextElement(el.getShortDesc())))
                     );
         }
 
         // generate the final master with menu
-        final String entityMasterStr = ResourceLoader.getText("ua/com/fielden/platform/web/master/tg-entity-master-template.html")
-                .replace("<!--@imports-->", SimpleMasterBuilder.createImports(importPaths))
-                .replace("@entity_type", functionalEntityType.getSimpleName())
+        final String entityMasterStr = ResourceLoader.getText("ua/com/fielden/platform/web/master/tg-entity-master-template.js")
+                .replace(IMPORTS, createImports(importPaths))
+                .replace(ENTITY_TYPE, flattenedNameOf(functionalEntityType))
                 .replace("<!--@tg-entity-master-content-->",
                         format(""
                         + "<tg-master-menu\n"

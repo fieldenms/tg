@@ -6,15 +6,12 @@
     <title>entity-centre basic tests</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 
-    <script src="/resources/polymer/webcomponentsjs/webcomponents-lite.js"></script>
-    <script src="/resources/polymer/web-component-tester/browser.js"></script>
-    <script src="/resources/polymer/test-fixture/test-fixture-mocha.js"></script>
-    <script src="/resources/polymer/iron-test-helpers/mock-interactions.js"></script>
-
-    <link rel="import" href="/resources/polymer/test-fixture/test-fixture.html">
-
-    <link rel="import" href="/app/tg-reflector.html">
-    <link rel="import" href="/centre_ui/ua.com.fielden.platform.ui.menu.sample.MiTgPersistentEntityWithProperties1">
+    <script src="/resources/polymer/@webcomponents/webcomponentsjs/webcomponents-bundle.js"></script>
+    <script src='/resources/polymer/web-animations-js/web-animations-next-lite.min.js'></script>
+    <script src="/resources/lodash/4.17.11/lodash.min.js"></script>
+    <script src="/resources/postal/2.0.5/postal.min.js"></script>
+    <script src="/resources/filesaver/FileSaver.min.js"></script>
+    <script src="/resources/polymer/wct-browser-legacy/browser.js"></script>
 </head>
 
 <body>
@@ -25,50 +22,54 @@
         </template>
     </test-fixture>
 
-<script>
+<script type="module">
+
+    import '/app/tg-reflector.js';
+	import '/centre_ui/ua.com.fielden.platform.ui.menu.sample.MiTgPersistentEntityWithProperties1';
+
     suite('entity centre', function() {
-        var centre, reflector, noOfIterations, _calcConfidenceInterval;
+        let centre, reflector, noOfIterations, _calcConfidenceInterval;
 
         setup(function() {
             centre = fixture('CentreFixture');
             reflector = document.querySelector('#reflector');
             noOfIterations = 100;
             _calcConfidenceInterval = function (data) {
-                var n = data.length;
-                var sum = 0;
-                for (var index = 0; index < n; index++) {
+                const n = data.length;
+                let sum = 0;
+                for (let index = 0; index < n; index++) {
                     sum += data[index];
                 }
-                var x_ = sum * 1.0 / n; // "mean"
+                const x_ = sum * 1.0 / n; // "mean"
 
-                var sum = 0;
-                for (var index = 0; index < n; index++) {
-                    var diff = data[index] - x_;
+                sum = 0;
+                for (let index = 0; index < n; index++) {
+                    const diff = data[index] - x_;
                     sum += diff * diff;
                 }
                 sum = sum / n;
-                var sigma = Math.sqrt(sum); // standard deviation
+                const sigma = Math.sqrt(sum); // standard deviation
 
                 // The value of z(alfa / 2) is taken from z-table for confidence level of 95%, for example from here (http://www.statisticshowto.com/tables/z-table/).
                 // alfa = 0.95, alfa / 2 = 0.475, find that value inside the table and check intersections: 1.9 and 0.6 => z := 1.96
-                var z = 1.96;
-                var deltaX = z * (sigma / Math.sqrt(n));
+                const z = 1.96;
+                const deltaX = z * (sigma / Math.sqrt(n));
 
                 return [+((x_ - deltaX).toFixed(1)), +((x_ + deltaX).toFixed(1))];
             };
         });
 
         test('subsequent validations measuring', function (done) {
-            var start;
-            var count = 0;
-            var data = [];
+            let start;
+            let count = 0;
+            const data = [];
 
-            var _leftEditor = function (name) {
+            const _leftEditor = function (name) {
                 return centre.$.selection_criteria.$['editor_4_tgPersistentEntityWithProperties_' + name + '_is'];
             };
 
             centre.postRetrieved = function (entity, bindingEntity, customObject) {
-                var editor = _leftEditor('booleanProp');
+                const editor = _leftEditor('booleanProp');
 
                 start = new Date().getTime();
                 editor._editingValue = (editor._editingValue === 'true') ? 'false' : 'true';
@@ -79,7 +80,7 @@
                 newValidationPromise.then(function(value) {
                     count++;
 
-                    var time = new Date().getTime() - start;
+                    const time = new Date().getTime() - start;
                     data.push(time);
                     console.debug('Validated in ', time, ' millis (no ', count, ').');
 
@@ -87,7 +88,7 @@
                         console.debug('Validated in [c1; c2] = ', _calcConfidenceInterval(data));
                         setTimeout(done, 2000); // done();
                     } else {
-                        var editor = _leftEditor('booleanProp');
+                        const editor = _leftEditor('booleanProp');
 
                         start = new Date().getTime();
                         editor._editingValue = (editor._editingValue === 'true') ? 'false' : 'true';
@@ -102,16 +103,16 @@
         });
 
         test('subsequent savings measuring', function (done) {
-            var start;
-            var count = 0;
-            var data = [];
+            let start;
+            let count = 0;
+            const data = [];
 
-            var _leftEditor = function (name) {
+            const _leftEditor = function (name) {
                 return centre.$.selection_criteria.$['editor_4_tgPersistentEntityWithProperties_' + name + '_is'];
             };
 
             centre.postRetrieved = function (entity, bindingEntity, customObject) {
-                var editor = _leftEditor('booleanProp');
+                const editor = _leftEditor('booleanProp');
                 editor._editingValue = (editor._editingValue === 'true') ? 'false' : 'true';
                 editor.commit();
             };
@@ -125,7 +126,7 @@
                     saveAction.postActionSuccess = function(potentiallySavedOrNewEntity, self) {
                       count++;
 
-                      var time = new Date().getTime() - start;
+                      const time = new Date().getTime() - start;
                       data.push(time);
                       console.debug('Saved in ', time, ' millis (no ', count, ').');
 
@@ -133,7 +134,7 @@
                           console.debug('Saved in [c1; c2] = ', _calcConfidenceInterval(data));
                           setTimeout(done, 2000); // done();
                       } else {
-                          var editor = _leftEditor('booleanProp');
+                          const editor = _leftEditor('booleanProp');
                           editor._editingValue = (editor._editingValue === 'true') ? 'false' : 'true';
                           editor.commit();
                       }
@@ -150,16 +151,16 @@
         });
 
         test('subsequent discardings measuring', function (done) {
-            var start;
-            var count = 0;
-            var data = [];
+            let start;
+            let count = 0;
+            const data = [];
 
-            var _leftEditor = function (name) {
+            const _leftEditor = function (name) {
                 return centre.$.selection_criteria.$['editor_4_tgPersistentEntityWithProperties_' + name + '_is'];
             };
 
             centre.postRetrieved = function (entity, bindingEntity, customObject) {
-                var editor = _leftEditor('booleanProp');
+                const editor = _leftEditor('booleanProp');
                 editor._editingValue = (editor._editingValue === 'true') ? 'false' : 'true';
                 editor.commit();
             };
@@ -171,7 +172,7 @@
                     centre.discard().then(function(value) {
                         count++;
 
-                        var time = new Date().getTime() - start;
+                        const time = new Date().getTime() - start;
                         data.push(time);
                         console.debug('Discarded in ', time, ' millis (no ', count, ').');
 
@@ -179,7 +180,7 @@
                             console.debug('Discarded in [c1; c2] = ', _calcConfidenceInterval(data));
                             setTimeout(done, 2000); // done();
                         } else {
-                            var editor = _leftEditor('booleanProp');
+                            const editor = _leftEditor('booleanProp');
                             editor._editingValue = (editor._editingValue === 'true') ? 'false' : 'true';
                             editor.commit();
                         }
@@ -195,14 +196,14 @@
         });
 
         test('subsequent runnings measuring', function (done) {
-            var start;
-            var count = 0;
-            var data = [];
-            var _createPostRunFunction = function () {
+            let start;
+            let count = 0;
+            const data = [];
+            const _createPostRunFunction = function () {
                 return function(value) {
                     count++;
 
-                    var time = new Date().getTime() - start;
+                    const time = new Date().getTime() - start;
                     data.push(time);
                     console.debug('Running in ', time, ' millis (no ', count, ').');
 
