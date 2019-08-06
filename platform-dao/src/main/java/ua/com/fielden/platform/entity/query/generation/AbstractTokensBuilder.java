@@ -1,7 +1,8 @@
 package ua.com.fielden.platform.entity.query.generation;
 
 import static java.lang.Boolean.TRUE;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.*;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.cond;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.emptyCondition;
 import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.EQUERY_TOKENS;
 import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.EXPR_TOKENS;
 import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.GROUPED_CONDITIONS;
@@ -207,20 +208,20 @@ public abstract class AbstractTokensBuilder implements ITokensBuilder {
     }
     
     private ConditionModel collectionalCritConditionOperatorModel(final ICompoundCondition0<?> collectionQueryStart, final String propName, final QueryProperty qp) {
-        final boolean orNull = TRUE.equals(qp.getOrNull());
+        final boolean hasValue = !qp.isEmpty();
         final boolean not = TRUE.equals(qp.getNot());
-        final boolean empty = qp.isEmpty();
+        final boolean orNull = TRUE.equals(qp.getOrNull());
 
         final ConditionModel criteriaCondition = prepareCollectionalCritCondition(qp, propName);
-        final EntityResultQueryModel<?> allCollection = collectionQueryStart.model();
-        final EntityResultQueryModel<?> conditionedCollection = collectionQueryStart.and().condition(criteriaCondition).model();
+        final EntityResultQueryModel<?> anyItems = collectionQueryStart.model();
+        final EntityResultQueryModel<?> matchingItems = collectionQueryStart.and().condition(criteriaCondition).model();
         
-        if (empty) {
-            return !orNull ? emptyCondition() : (not ? cond().exists(allCollection).model() : cond().notExists(allCollection).model());
+        if (!hasValue) {
+            return !orNull ? emptyCondition()/*---,-+-*/ : (not ? cond().exists(anyItems).model()/*-++*/ : cond().notExists(anyItems).model())/*--+*/;
         } else if (not){
-            return orNull ? cond().notExists(conditionedCollection).and().exists(allCollection).model() : cond().notExists(conditionedCollection).or().notExists(allCollection).model();
+            return orNull ? cond().notExists(matchingItems).and().exists(anyItems).model()/*+++*/ : cond().notExists(matchingItems).or().notExists(anyItems).model()/*++-*/;
         } else {
-            return !orNull ? cond().exists(conditionedCollection).model() : cond().exists(conditionedCollection).or().notExists(allCollection).model();
+            return !orNull ? cond().exists(matchingItems).model()/*+--*/ : cond().exists(matchingItems).or().notExists(anyItems).model()/*+-+*/;
         }
         
         /*
