@@ -3,6 +3,7 @@ import '/resources/polymer/@polymer/polymer/polymer-legacy.js';
 import '/resources/polymer/@polymer/iron-flex-layout/iron-flex-layout.js';
 import '/resources/polymer/@polymer/iron-icon/iron-icon.js';
 import '/resources/polymer/@polymer/iron-icons/iron-icons.js';
+import '/resources/polymer/@polymer/iron-pages/iron-pages.js';
 
 import '/resources/polymer/@polymer/paper-styles/paper-styles.js';
 import '/resources/polymer/@polymer/paper-icon-button/paper-icon-button.js';
@@ -101,7 +102,7 @@ const template = html`
             --paper-listbox-color: var(--paper-light-blue-700);
             --checkbox-undone-color: var(--paper-light-blue-100);
         }
-        neon-animated-pages {
+        iron-pages {
             position: absolute;
             bottom: 0;
             left: 0;
@@ -203,7 +204,7 @@ const template = html`
                 </div>
             </div>
 
-            <neon-animated-pages id="pages" selected=[[_selectedPage]] attr-for-selected="page-name" entry-animation="fade-in-animation" exit-animation="fade-out-animation" on-neon-animation-finish="_animationFinished">
+            <iron-pages id="pages" selected=[[_selectedPage]] attr-for-selected="page-name" on-iron-select="_animationFinished">
                 <div class="menu-item-view" page-name="_"></div>
                 <template is="dom-repeat" items="[[menuItem.menu]]" as="firstLevelItem">
                     <template is="dom-if" if="[[!_isMenuPresent(firstLevelItem.menu)]]">
@@ -215,7 +216,7 @@ const template = html`
                         </template>
                     </template>
                 </template>
-            </neon-animated-pages>
+            </iron-pages>
         </div>
 
     </div>`;
@@ -627,7 +628,7 @@ Polymer({
 
     _animationFinished: function (e, detail, source) {
         if (this.$.pages.selected !== '_') {
-            const viewToLoad = detail.toPage;
+            const viewToLoad = detail.item;
             if (viewToLoad) {
                 if (!viewToLoad.wasLoaded()) {
                     viewToLoad.load(decodeURIComponent(this.submodule.substring(1)).split("?")[1]);
