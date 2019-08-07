@@ -54,16 +54,6 @@ const additionalTemplate = html`
             --tg-editor-default-input-layer-display: flex;
         }
     </style>
-    <tg-entity-editor-result id="result"
-                             tabindex="-1"
-                             no-auto-focus
-                             on-iron-overlay-opened="_resultOpened"
-                             on-iron-overlay-closed="_resultClosed"
-                             on-iron-overlay-canceled="_resultCanceled"
-                             retrieve-container-sizes="[[_retrieveContainerSizes]]"
-                             on-tap="_entitySelected"
-                             on-dblclick="_done"
-                             on-keydown="_onKeydown"></tg-entity-editor-result>
     <iron-ajax id="ajaxSearcher" loading="{{searching}}" url="[[_url]]" method="POST" handle-as="json" on-response="_processSearcherResponse" on-error="_processSearcherError"></iron-ajax>
     <tg-serialiser id="serialiser"></tg-serialiser>`;
 const customInputTemplate = html`
@@ -121,6 +111,10 @@ export class TgEntityEditor extends TgEditor {
            searching: {
                type: Boolean,
                value: false
+           },
+
+           result: {
+               type: Object
            },
    
            _searchQuery: {
@@ -296,7 +290,7 @@ export class TgEntityEditor extends TgEditor {
                        if (this.decoratedInput().value) {
                            this._asyncSearchHandle = setTimeout(() => this._search("*"), 700);
                        } else { // otherwise, close the result dialog
-                           this.$.result.close();
+                           this.result.$.resultDialog.close();
                        }
                    }).bind(this);
                }
@@ -379,14 +373,14 @@ export class TgEntityEditor extends TgEditor {
             // There is no need to proceed with search if user moved out of the search field
             this._cancelSearch();
 
-            // check whether relatedTarget has anything to do with this.$.result
-            // if it is then there is no need to cancel the overlay, which is this.$.result
+            // check whether relatedTarget has anything to do with this.result.$.resultDialog
+            // if it is then there is no need to cancel the overlay, which is this.result.$.resultDialog
             let parent = e.relatedTarget;
-            while (parent !== null && parent !== this.$.result) {
+            while (parent !== null && parent !== this.result.$.resultDialog) {
                 parent = parent.parentElement;
             }
-            if (this.$.result.opened && parent !== this.$.result) {
-                this.$.result.cancel(e);
+            if (this.result.$.resultDialog.opened && parent !== this.result.$.resultDialog) {
+                this.result.$.resultDialog.cancel(e);
             }
         }).bind(this);
 
@@ -394,17 +388,6 @@ export class TgEntityEditor extends TgEditor {
             const container = this.decorator();
             return [container.getBoundingClientRect(), container.offsetHeight];
         }.bind(this);
-    }
-
-    ready () {
-        super.ready();
-        const result = this.$.result;
-        result.acceptValues = this._done.bind(this);
-        result.loadMore = this._loadMore.bind(this);
-        result.multi = this.multi;
-        if (this.additionalProperties) {
-            result.additionalProperties = JSON.parse(this.additionalProperties);
-        }
     }
 
     /**
@@ -486,19 +469,21 @@ export class TgEntityEditor extends TgEditor {
         }
 
         // collect new matching values
-        const result = this.$.result;
-        result.searchQuery = this._searchQuery;
+        const result = this.result.$.resultDialog;
+        if (result) {
+            result.searchQuery = this._searchQuery;
+        }
 
         if (this._searchQuery) {
             // if this is not a request to load more data then let's clear the current result, if any
-            if (!dataPage) {
+            if (result && !dataPage) {
                 result.clearSelection();
             }
             // prepare the AJAX request based on the raw search string
             const serialisedSearchQuery = this.$.serialiser.serialise(this.createContextHolder(this._searchQuery, dataPage));
             this.$.ajaxSearcher.body = JSON.stringify(serialisedSearchQuery);
             this.$.ajaxSearcher.generateRequest();
-        } else if (result.opened) { // make sure overlay is closed if no search is performed
+        } else if (result && result.opened) { // make sure overlay is closed if no search is performed
             result.close();
             this._focusInput();
         }
@@ -508,7 +493,7 @@ export class TgEntityEditor extends TgEditor {
      * Displays the search result.
      */
     _onFound (entities) {
-        const result = this.$.result;
+        const result = this.result.$.resultDialog;
         // make sure to assign reflector to the result object
         result.reflector = this.reflector();
 
@@ -578,7 +563,7 @@ export class TgEntityEditor extends TgEditor {
 
     /* Displays the result dialog and notifies the resize event. */
     _showResult(result) {
-        result.open();
+        this._openResult();
         result.notifyResize();
     }
 
@@ -642,10 +627,10 @@ export class TgEntityEditor extends TgEditor {
             // indicate that the autocompleter dialog was opened and
             // highlight matched parts of the items found
             this.opened = true;
-            this.$.result.highlightMatchedParts();
+            this.result.$.resultDialog.highlightMatchedParts();
         } else {
             this.opened = true;
-            this.$.result.cancel(e);
+            this.result.$.resultDialog.cancel(e);
         }
     }
 
@@ -657,7 +642,7 @@ export class TgEntityEditor extends TgEditor {
             this.opened = false;
             this._onChange();
         }
-        document.body.removeChild(this.$.result);
+        document.body.removeChild(this.result.$.resultDialog);
 
         // there are situations where closing of the result dialog kicks in the content scrolled event
         // this results in another search request for the content of the input
@@ -674,7 +659,7 @@ export class TgEntityEditor extends TgEditor {
 
     _entitySelected () {
         // if this this is non-multi mode and the tap happened on a result item then it should be selected
-        if (!this.multi && this.$.result.shadowRoot.activeElement.classList.contains("tg-item")) {
+        if (!this.multi && this.result && this.result.$.resultDialog.shadowRoot.activeElement.classList.contains("tg-item")) {
             this._done();
         }
     }
@@ -685,7 +670,7 @@ export class TgEntityEditor extends TgEditor {
      */
     _done () {
         const input = this.decoratedInput();
-        const result = this.$.result;
+        const result = this.result.$.resultDialog;
 
         // let's make sure that at least one matching value is selected if _done()
         // this is mainly relevant for the case of multi autocompleter that has been focused, no values selected, but Enter/Accept is pressed
@@ -740,7 +725,7 @@ export class TgEntityEditor extends TgEditor {
                activeElement === this.$.progressSpinner ||
                activeElement === this.$.searcherButton  ||
                activeElement === this.$.acceptButton    || 
-               document.activeElement === this.$.result;
+               document.activeElement === this.result.$.resultDialog;
     }
 
     /**
@@ -769,7 +754,7 @@ export class TgEntityEditor extends TgEditor {
      * Focuses the result dialog.
      */
     _focusResult () {
-        this.$.result.focus();
+        this.result.$.resultDialog.focus();
     }
     
     /**
@@ -833,7 +818,7 @@ export class TgEntityEditor extends TgEditor {
         const self = this;
         self.opened = false;
         self.searching = false;
-        self.$.result.close();
+        self.result.$.resultDialog.close();
         self.processError(e, "search", function (errorResult) {
             if (self.postSearchedDefaultError) {
                 self.postSearchedDefaultError(errorResult);
@@ -842,18 +827,18 @@ export class TgEntityEditor extends TgEditor {
     }
 
     _selectNextOnKeyDown (e) {
-        if (this.$.result.opened) {
+        if (this.result.$.resultDialog.opened) {
             console.log('select next');
-            this.$.result.selectNext();
+            this.result.$.resultDialog.selectNext();
         } else {
             this._searchOnTap();
         }
     }
 
     _selectPrevOnKeyUp (e) {
-        if (this.$.result.opened) {
+        if (this.result.$.resultDialog.opened) {
             console.log('select prev');
-            this.$.result.selectPrev();
+            this.result.$.resultDialog.selectPrev();
         }
     }
 
@@ -981,6 +966,79 @@ export class TgEntityEditor extends TgEditor {
         } else {
             this._hasLayer = false;
         }
+    }
+
+    _openResult () {
+        if (!this.result) {
+            this.result = this._createResultDialog();
+        }
+        document.body.appendChild(this.result);
+
+        this.result.$.resultDialog.acceptValues = this._done.bind(this);
+        this.result.$.resultDialog.loadMore = this._loadMore.bind(this);
+        this.result.$.resultDialog.multi = this.multi;
+        if (this.additionalProperties) {
+            this.result.$.resultDialog.additionalProperties = JSON.parse(this.additionalProperties);
+        }
+
+        this.result.open();
+    }
+
+    /**
+     * Creates dynamically the 'dom-bind' template, which hold the dialog for the calendar.
+     */
+    _createResultDialog () {
+        const self = this;
+        const domBind = document.createElement('dom-bind');
+
+        domBind._closedBind = function (e) {
+            const dialog = this.$.resultDialog;
+
+            document.body.removeChild(dialog);
+            document.body.removeChild(this);
+        }.bind(domBind);
+
+        domBind.open = function () {
+            const dialog = this.$.resultDialog;
+            self.result = dialog;
+
+            // dialog.noCancelOnEscKey = false;
+
+            document.body.appendChild(dialog);
+            // let's open the dialog with magical async...
+            // this ensures that the dialog is opened after its relocation to body
+            setTimeout(function () {
+                dialog.open();
+            }.bind(this), 1);
+        }.bind(domBind);
+
+        domBind._resultOpened = self._resultOpened.bind(self);
+        domBind._resultClosed = self._resultClosed.bind(self);
+        domBind._resultCanceled = self._resultCanceled.bind(self);
+        domBind._retrieveContainerSizes = self._retrieveContainerSizes.bind(self);
+        domBind._entitySelected = self._entitySelected.bind(self);
+        domBind._done = self._done.bind(self);
+        domBind._onKeydown = self._onKeydown.bind(self);
+
+        domBind.timeZone = self.timeZone;
+
+        const dialogTemplate = document.createElement('template');
+        dialogTemplate.innerHTML = `
+            <tg-entity-editor-result id="resultDialog"
+                tabindex="-1"
+                no-auto-focus
+                on-iron-overlay-opened="_resultOpened"
+                on-iron-overlay-closed="_resultClosed"
+                on-iron-overlay-canceled="_resultCanceled"
+                retrieve-container-sizes="[[_retrieveContainerSizes]]"
+                on-tap="_entitySelected"
+                on-dblclick="_done"
+                on-keydown="_onKeydown">
+            </tg-entity-editor-result>
+        `;
+
+        domBind.appendChild(dialogTemplate);
+        return domBind;
     }
 }
 
