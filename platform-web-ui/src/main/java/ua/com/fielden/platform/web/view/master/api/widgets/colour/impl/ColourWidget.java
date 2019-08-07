@@ -17,6 +17,6 @@ public class ColourWidget extends AbstractWidget {
      * @param propertyName
      */
     public ColourWidget(final Pair<String, String> titleDesc, final String propertyName) {
-        super("polymer/@polymer/paper-input/paper-input", titleDesc, propertyName);
+        super("editors/tg-colour-picker", titleDesc, propertyName);
     }
 }

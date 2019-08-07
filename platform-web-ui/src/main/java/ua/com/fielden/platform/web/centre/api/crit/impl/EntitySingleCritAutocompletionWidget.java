@@ -19,7 +19,7 @@ public class EntitySingleCritAutocompletionWidget extends AbstractEntityCritAuto
     private final CentreContextConfig centreContextConfig;
 
     public EntitySingleCritAutocompletionWidget(final Pair<String, String> titleAndDesc, final String propertyName, final Class<? extends AbstractEntity<?>> propType, final CentreContextConfig centreContextConfig) {
-        super("polymer/@polymer/paper-input/paper-input", titleAndDesc, propertyName, propType);
+        super("editors/tg-entity-editor", titleAndDesc, propertyName, propType);
         this.centreContextConfig = centreContextConfig;
     }
 
@@ -31,7 +31,7 @@ public class EntitySingleCritAutocompletionWidget extends AbstractEntityCritAuto
         attrs.put("as-part-of-entity-master", false);
         addCentreContextBindings(attrs, centreContextConfig);
         return attrs;
-    }
+    };
 
     public boolean isShouldSearchByDescOnly() {
         return shouldSearchByDescOnly;

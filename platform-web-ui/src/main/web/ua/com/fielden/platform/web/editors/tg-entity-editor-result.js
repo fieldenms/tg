@@ -139,8 +139,7 @@ const template = html`
             <paper-button tooltip-text="Discard and close" on-tap="close">Cancel</paper-button>
             <paper-button tooltip-text="Accept selected" on-tap="acceptValues">Ok</paper-button>
         </div>
-    </div>
-    </tg-editor>`;
+    </div>`;
 
 export class TgEntityEditorResult extends mixinBehaviors([IronOverlayBehavior, TgTooltipBehavior], PolymerElement) {
 

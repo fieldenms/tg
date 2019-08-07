@@ -23,7 +23,7 @@ public class DateTimePickerWidget extends AbstractWidget {
      * @param propertyName
      */
     public DateTimePickerWidget(final Pair<String, String> titleDesc, final String propertyName, final boolean timePortionToBecomeEndOfDay, final String timeZone, final String datePortion) {
-        super("polymer/@polymer/paper-input/paper-input", titleDesc, propertyName);
+        super("editors/tg-datetime-picker", titleDesc, propertyName);
         this.timePortionToBecomeEndOfDay = timePortionToBecomeEndOfDay;
         this.timeZone = timeZone;
         this.datePortion = datePortion;
