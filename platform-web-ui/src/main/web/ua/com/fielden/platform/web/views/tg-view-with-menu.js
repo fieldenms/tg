@@ -167,9 +167,9 @@ const template = html`
     <custom-style>
         <style include="iron-flex iron-flex-reverse iron-flex-alignment iron-flex-factors iron-positioning"></style>
     </custom-style>
-    <app-drawer-layout id="drawerPanel" fullbleed force-narrow>
+    <div id="drawerPanel" class="layout horizontal" fullbleed>
 
-        <app-drawer disable-swipe="[[!mobile]]" slot="drawer">
+        <div style="position:absolute; left:0; top:0; bottom:0; width:356px;" hidden$="[[!drawerOpened]]">
             <div id="menuToolBar" class="tool-bar layout horizontal center">
                 <div class="flex">[[menuItem.key]]</div>
             </div>
@@ -189,9 +189,9 @@ const template = html`
                     </li>
                 </template>
             </ul>
-        </app-drawer>
+        </div>
 
-        <div class="main-content">
+        <div class="main-content flex">
 
             <div id="viewToolBar" class="tool-bar">
                 <div id="viewToolBarContainer" style="display: contents">
@@ -218,7 +218,7 @@ const template = html`
             </neon-animated-pages>
         </div>
 
-    </app-drawer-layout>`;
+    </div>`;
 
 function findMenuItem (itemName, menuItem) {
     return menuItem.menu && menuItem.menu.find(function (item) {
@@ -554,9 +554,9 @@ Polymer({
                 }
             }
             if (menuPath.menuItem && this._isMenuPresent(menuPath.menuItem.menu)) {
-                this.$.drawerPanel.drawer.opened = true;
+                this.drawerOpened = true;
             } else {
-                this.$.drawerPanel.drawer.opened = false;
+                this.drawerOpened = false;
             }
         }
     },
