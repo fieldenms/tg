@@ -74,13 +74,14 @@ const customInputTemplate = html`
             autocomplete="off"/>
     </iron-input>`;
 const inputLayerTemplate = html`
-    <div class="input-layer" tooltip-text$="[[_getTooltip(_editingValue, entity, focused)]]">
+    <!-- <div class="input-layer" tooltip-text$="[[_getTooltip(_editingValue, entity, focused)]]">
         <template is="dom-repeat" items="[[_customPropTitle]]">
             <span hidden$="[[!item.title]]" style="color:#737373; font-size:0.8rem; padding-right:2px;"><span>[[item.title]]</span>:  </span>
             <span style$="[[_valueStyle(item, index)]]">[[item.value]]</span>
         </template>
         <span style="color:#737373" hidden$="[[!_hasDesc(entity)]]">&nbsp;&ndash;&nbsp;<i>[[_formatDesc(entity)]]</i></span>
-    </div>`;
+    </div> -->
+`;
 const customIconButtonsTemplate = html`
     <paper-icon-button id="searcherButton" hidden$="[[searchingOrOpen]]" on-tap="_searchOnTap" icon="search" class="search-button custom-icon-buttons" tabindex="-1" disabled$="[[_disabled]]" tooltip-text="Show search result"></paper-icon-button>
     <paper-icon-button id="acceptButton" hidden$="[[searchingOrClosed]]" on-tap="_done" icon="done" class="search-button custom-icon-buttons" tabindex="-1" disabled$="[[_disabled]]" tooltip-text="Accept the selected entries"></paper-icon-button>
