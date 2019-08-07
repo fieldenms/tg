@@ -469,22 +469,21 @@ export class TgEntityEditor extends TgEditor {
         }
 
         // collect new matching values
-        const result = this.result.$.resultDialog;
-        if (result) {
-            result.searchQuery = this._searchQuery;
+        if (this.result) {
+            this.result.$.resultDialog.searchQuery = this._searchQuery;
         }
 
         if (this._searchQuery) {
             // if this is not a request to load more data then let's clear the current result, if any
-            if (result && !dataPage) {
-                result.clearSelection();
+            if (this.result && !dataPage) {
+                this.result.$.resultDialog.clearSelection();
             }
             // prepare the AJAX request based on the raw search string
             const serialisedSearchQuery = this.$.serialiser.serialise(this.createContextHolder(this._searchQuery, dataPage));
             this.$.ajaxSearcher.body = JSON.stringify(serialisedSearchQuery);
             this.$.ajaxSearcher.generateRequest();
-        } else if (result && result.opened) { // make sure overlay is closed if no search is performed
-            result.close();
+        } else if (this.result && this.result.$.resultDialog.opened) { // make sure overlay is closed if no search is performed
+            this.result.$.resultDialog.close();
             this._focusInput();
         }
     }
@@ -493,6 +492,8 @@ export class TgEntityEditor extends TgEditor {
      * Displays the search result.
      */
     _onFound (entities) {
+        this._openResult();
+
         const result = this.result.$.resultDialog;
         // make sure to assign reflector to the result object
         result.reflector = this.reflector();
@@ -563,7 +564,6 @@ export class TgEntityEditor extends TgEditor {
 
     /* Displays the result dialog and notifies the resize event. */
     _showResult(result) {
-        this._openResult();
         result.notifyResize();
     }
 
@@ -1000,8 +1000,6 @@ export class TgEntityEditor extends TgEditor {
 
         domBind.open = function () {
             const dialog = this.$.resultDialog;
-            self.result = dialog;
-
             // dialog.noCancelOnEscKey = false;
 
             document.body.appendChild(dialog);
