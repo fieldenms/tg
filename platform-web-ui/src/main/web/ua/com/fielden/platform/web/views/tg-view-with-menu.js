@@ -173,30 +173,22 @@ const template = html`
             <div id="menuToolBar" class="tool-bar layout horizontal center">
                 <div class="flex">[[menuItem.key]]</div>
             </div>
-            <paper-listbox id="menu" attr-for-selected="name" on-iron-activate="_itemActivated" style="overflow:auto;">
+            <ul id="menu" attr-for-selected="name" on-iron-activate="_itemActivated" style="overflow:auto;">
                 <template is="dom-repeat" items="[[menuItem.menu]]" as="firstLevelItem" index-as="groupIndex">
-                    <div name$="[[_calcItemPath(firstLevelItem)]]" opened={{firstLevelItem.opened}} on-focus="_focusSubmenu" on-focus-next-parent-item="_focusNextMenuItem" on-tg-submenu-module-esc="_closeDrawerOnEsc">
-                        <div tooltip-text$="[[firstLevelItem.desc]]" slot="trigger">
-                            <!-- <iron-icon class="menu-icon" icon="[[firstLevelItem.icon]]" has-no-any-icon$="[[!_hasSomeIcon]]" has-no-icon$="[[_calcHasNoIcon(firstLevelItem.icon)]]"></iron-icon> -->
-                            <span class="flex menu-item-title">[[firstLevelItem.key]]</span>
-                            <!-- <paper-checkbox class$="[[_calcGroupStyle(firstLevelItem)]]" group-item$="[[groupIndex]]" hidden$="[[!canEdit]]" checked="[[firstLevelItem.visible]]" on-change="_changeGroupVisibility" on-tap="_tapCheckbox" tooltip-text$="[[_calcCheckboxTooltip(firstLevelItem.menu, firstLevelItem.visible)]]"></paper-checkbox> -->
-                            <!-- <iron-icon class="submenu-trigger-icon" icon="[[_calcExpandCollapseIcon(firstLevelItem.opened)]]" opened$="[[firstLevelItem.opened]]" has-no-any-icon$="[[!_hasSomeMenu]]" without-menu$="[[!_isMenuPresent(firstLevelItem.menu)]]"></iron-icon> -->
-                        </div>
+                    <li>
+                        <span tooltip-text$="[[firstLevelItem.desc]]" class="flex menu-item-title">[[firstLevelItem.key]]</span>
                         <template is="dom-if" if="[[_isMenuPresent(firstLevelItem.menu)]]">
-                            <paper-listbox slot="content" name$="[[_calcItemPath(firstLevelItem)]]" attr-for-selected="name">
+                            <ul>
                                 <template is="dom-repeat" items="[[firstLevelItem.menu]]">
-                                    <div class="submenu-item" name$="[[_calcItemPath(firstLevelItem, item, groupIndex)]]" tooltip-text$="[[item.desc]]">
-                                        <!-- <iron-icon class="menu-icon" icon="[[item.icon]]" has-no-icon$="[[_calcHasNoIcon(item.icon)]]"></iron-icon> -->
-                                        <span class="flex menu-item-title">[[item.key]]</span>
-                                        <!-- <paper-checkbox hidden$="[[!canEdit]]" checked="[[item.visible]]" on-change="_changeVisibility" on-tap="_tapCheckbox" tooltip-text$="[[_calcCheckboxTooltip(item.menu, item.visible)]]"></paper-checkbox> -->
-                                        <!-- <iron-icon class="submenu-trigger-icon" without-menu></iron-icon> -->
-                                    </div>
+                                    <li>
+                                        <span class="flex menu-item-title" tooltip-text$="[[item.desc]]">[[item.key]]</span>
+                                    </li>
                                 </template>
-                            </paper-listbox>
+                            </ul>
                         </template>
-                    </div>
+                    </li>
                 </template>
-            </paper-listbox>
+            </ul>
         </app-drawer>
 
         <div class="main-content">
@@ -544,14 +536,14 @@ Polymer({
             menuPath = findNestedMenuItem(pagePath, this.menuItem);
             path = menuPath.path;
             pathParts = path.split('/');
-            topMenu = this.shadowRoot.querySelector("div[name='" + pathParts[0] + "']");
-            previousTopMenu = this.$.menu.selected && this.shadowRoot.querySelector("div[name='" + this.$.menu.selected + "']");
+            topMenu = this.shadowRoot.querySelector("li[name='" + pathParts[0] + "']");
+            previousTopMenu = this.$.menu.selected && this.shadowRoot.querySelector("li[name='" + this.$.menu.selected + "']");
             submenu = this.shadowRoot.querySelector("paper-sublist[name='" + pathParts[0] + "']");
             if (this.$.menu.selected !== pathParts[0]) {
                 // if (previousTopMenu) {
                 //     previousTopMenu.close();
                 // }
-                this.$.menu.select(pathParts[0]);
+                //this.$.menu.select(pathParts[0]);
                 //topMenu.open();
                 if (submenu) {
                     submenu.select(path);
