@@ -35,7 +35,7 @@ public class MultilineTextWidget extends AbstractWidget {
      * @param propertyName
      */
     public MultilineTextWidget(final Pair<String, String> titleDesc, final Class<? extends AbstractEntity<?>> entityType, final String propertyName) {
-        super("editors/tg-multiline-text-editor", titleDesc, propertyName);
+        super("polymer/@polymer/paper-input/paper-input", titleDesc, propertyName);
         this.entityType = entityType;
     }
 

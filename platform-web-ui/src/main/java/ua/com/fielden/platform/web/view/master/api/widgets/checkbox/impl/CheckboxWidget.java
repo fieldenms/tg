@@ -18,7 +18,7 @@ public class CheckboxWidget extends AbstractWidget {
      * @param propertyName
      */
     public CheckboxWidget(final Pair<String, String> titleDesc, final String propertyName) {
-        super("editors/tg-boolean-editor", titleDesc, propertyName);
+        super("polymer/@polymer/paper-checkbox/paper-checkbox", titleDesc, propertyName);
     }
 
 }

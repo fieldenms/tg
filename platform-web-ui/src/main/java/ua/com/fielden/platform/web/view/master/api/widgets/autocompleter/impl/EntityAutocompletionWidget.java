@@ -28,6 +28,6 @@ public class EntityAutocompletionWidget extends AbstractEntityAutocompletionWidg
         attrs.put("create-modified-properties-holder", "[[_createModifiedPropertiesHolder]]");
         attrs.put("originally-produced-entity", "[[_originallyProducedEntity]]");
         return attrs;
-    };
+    }
 
 }

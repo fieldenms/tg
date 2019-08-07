@@ -18,7 +18,7 @@ public class SpinnerWidget extends AbstractWidget {
      * @param propertyName
      */
     public SpinnerWidget(final Pair<String, String> titleDesc, final String propertyName) {
-        super("editors/tg-integer-editor", titleDesc, propertyName);
+        super("polymer/@polymer/paper-input/paper-input", titleDesc, propertyName);
     }
 
 }

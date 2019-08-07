@@ -17,6 +17,6 @@ public class SinglelineTextWidget extends AbstractWidget {
      * @param propertyName
      */
     public SinglelineTextWidget(final Pair<String, String> titleDesc, final String propertyName) {
-        super("editors/tg-singleline-text-editor", titleDesc, propertyName);
+        super("polymer/@polymer/paper-input/paper-input", titleDesc, propertyName);
     }
 }

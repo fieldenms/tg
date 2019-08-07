@@ -18,7 +18,7 @@ public class EntityMultiCritAutocompletionWidget extends AbstractEntityCritAutoc
     private final CentreContextConfig centreContextConfig;
 
     public EntityMultiCritAutocompletionWidget(final Pair<String, String> titleAndDesc, final String propertyName, final Class<? extends AbstractEntity<?>> propType, final CentreContextConfig centreContextConfig) {
-        super("editors/tg-entity-editor", titleAndDesc, propertyName, propType);
+        super("polymer/@polymer/paper-input/paper-input", titleAndDesc, propertyName, propType);
         this.centreContextConfig = centreContextConfig;
     }
 
@@ -30,6 +30,6 @@ public class EntityMultiCritAutocompletionWidget extends AbstractEntityCritAutoc
         attrs.put("multi", "true");
         addCentreContextBindings(attrs, centreContextConfig);
         return attrs;
-    };
+    }
 
 }

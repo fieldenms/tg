@@ -18,7 +18,7 @@ public class MoneyWidget extends AbstractWidget {
      * @param propertyName
      */
     public MoneyWidget(final Pair<String, String> titleDesc, final String propertyName) {
-        super("editors/tg-money-editor", titleDesc, propertyName);
+        super("polymer/@polymer/paper-input/paper-input", titleDesc, propertyName);
     }
 
 }

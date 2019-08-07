@@ -18,7 +18,7 @@ public class DecimalWidget extends AbstractWidget {
      * @param propertyName
      */
     public DecimalWidget(final Pair<String, String> titleDesc, final String propertyName) {
-        super("editors/tg-decimal-editor", titleDesc, propertyName);
+        super("polymer/@polymer/paper-input/paper-input", titleDesc, propertyName);
     }
 
 }

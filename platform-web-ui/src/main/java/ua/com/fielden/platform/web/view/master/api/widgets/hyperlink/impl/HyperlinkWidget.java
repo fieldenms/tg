@@ -13,6 +13,6 @@ import ua.com.fielden.platform.web.view.master.api.widgets.impl.AbstractWidget;
 public class HyperlinkWidget extends AbstractWidget {
 
     public HyperlinkWidget(final Pair<String, String> titleDesc, final String propertyName) {
-        super("editors/tg-hyperlink-editor", titleDesc, propertyName);
+        super("polymer/@polymer/paper-input/paper-input", titleDesc, propertyName);
     }
 }
