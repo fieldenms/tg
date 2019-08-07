@@ -175,7 +175,7 @@ const template = html`
             </div>
             <paper-listbox id="menu" attr-for-selected="name" on-iron-activate="_itemActivated" style="overflow:auto;">
                 <template is="dom-repeat" items="[[menuItem.menu]]" as="firstLevelItem" index-as="groupIndex">
-                    <tg-sublistbox name$="[[_calcItemPath(firstLevelItem)]]" opened={{firstLevelItem.opened}} on-focus="_focusSubmenu" on-focus-next-parent-item="_focusNextMenuItem" on-tg-submenu-module-esc="_closeDrawerOnEsc">
+                    <div name$="[[_calcItemPath(firstLevelItem)]]" opened={{firstLevelItem.opened}} on-focus="_focusSubmenu" on-focus-next-parent-item="_focusNextMenuItem" on-tg-submenu-module-esc="_closeDrawerOnEsc">
                         <div tooltip-text$="[[firstLevelItem.desc]]" slot="trigger">
                             <!-- <iron-icon class="menu-icon" icon="[[firstLevelItem.icon]]" has-no-any-icon$="[[!_hasSomeIcon]]" has-no-icon$="[[_calcHasNoIcon(firstLevelItem.icon)]]"></iron-icon> -->
                             <span class="flex menu-item-title">[[firstLevelItem.key]]</span>
@@ -194,7 +194,7 @@ const template = html`
                                 </template>
                             </paper-listbox>
                         </template>
-                    </tg-sublistbox>
+                    </div>
                 </template>
             </paper-listbox>
         </app-drawer>
@@ -544,15 +544,15 @@ Polymer({
             menuPath = findNestedMenuItem(pagePath, this.menuItem);
             path = menuPath.path;
             pathParts = path.split('/');
-            topMenu = this.shadowRoot.querySelector("tg-sublistbox[name='" + pathParts[0] + "']");
-            previousTopMenu = this.$.menu.selected && this.shadowRoot.querySelector("tg-sublistbox[name='" + this.$.menu.selected + "']");
+            topMenu = this.shadowRoot.querySelector("div[name='" + pathParts[0] + "']");
+            previousTopMenu = this.$.menu.selected && this.shadowRoot.querySelector("div[name='" + this.$.menu.selected + "']");
             submenu = this.shadowRoot.querySelector("paper-sublist[name='" + pathParts[0] + "']");
             if (this.$.menu.selected !== pathParts[0]) {
-                if (previousTopMenu) {
-                    previousTopMenu.close();
-                }
+                // if (previousTopMenu) {
+                //     previousTopMenu.close();
+                // }
                 this.$.menu.select(pathParts[0]);
-                topMenu.open();
+                //topMenu.open();
                 if (submenu) {
                     submenu.select(path);
                 }
