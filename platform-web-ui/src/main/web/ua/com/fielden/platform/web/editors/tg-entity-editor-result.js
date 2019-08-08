@@ -178,12 +178,6 @@ export class TgEntityEditorResult extends mixinBehaviors([IronOverlayBehavior, T
                 }
             },
     
-            /* Represents the search query string that was used to find resultant values to be displayed */
-            searchQuery: {
-                type: String,
-                value: ''
-            },
-    
             /* Should contain the names of additional properties to be displayed. */
             additionalProperties: {
                 type: Object,
@@ -331,7 +325,7 @@ export class TgEntityEditorResult extends mixinBehaviors([IronOverlayBehavior, T
 
     /* Highlights matched parts of autocompleted values.
      * Handles all properties that were specified as to be highlighted. */
-    highlightMatchedParts () {
+    highlightMatchedParts (searchQuery) {
         microTask.run(function() {
             this._foundSome = this._values.length > 0;
             for (let index = 0; index < this._values.length; index++) {
@@ -341,7 +335,7 @@ export class TgEntityEditorResult extends mixinBehaviors([IronOverlayBehavior, T
                 // add key value with highlighting of matching parts
                 const descProp = 'desc';
                 const withDesc = this.additionalProperties.hasOwnProperty(descProp);
-                html = html + this._addHighlightedKeyProp(v, withDesc);
+                html = html + this._addHighlightedKeyProp(v, withDesc, searchQuery);
 
                 // add values for additional properties with highlighting of matching parts if required
                 for (let propName in this.additionalProperties) {
@@ -349,7 +343,7 @@ export class TgEntityEditorResult extends mixinBehaviors([IronOverlayBehavior, T
                     if (propName !== descProp && this.additionalProperties.hasOwnProperty(propName)) {
                         // should highlight?
                         const highlight = this.additionalProperties[propName];
-                        html = html + this._addHighlightedPropByName(v, propName, highlight);
+                        html = html + this._addHighlightedPropByName(v, propName, highlight, searchQuery);
                     }
                 }
 
@@ -363,11 +357,11 @@ export class TgEntityEditorResult extends mixinBehaviors([IronOverlayBehavior, T
         }.bind(this));
     }
 
-    _addHighlightedKeyProp (v, withDesc) {
+    _addHighlightedKeyProp (v, withDesc, searchQuery) {
         let html = '<div style="white-space: nowrap">';
 
         // let's first handle the key
-        let parts = matchedParts(v.key, this.searchQuery);
+        let parts = matchedParts(v.key, searchQuery);
         if (parts.length === 0) {
             html = html + v.key;
         } else {
@@ -388,7 +382,7 @@ export class TgEntityEditorResult extends mixinBehaviors([IronOverlayBehavior, T
             let propValueAsString = this._propValueByName(v, 'desc');
             if (propValueAsString && propValueAsString !== 'null' && propValueAsString !== '') {
                 html = html + '<span style="color:#737373"> &ndash; <i>';
-                parts = matchedParts(propValueAsString, this.searchQuery);
+                parts = matchedParts(propValueAsString, searchQuery);
                 if (parts.length === 0) {
                     html = html + propValueAsString;
                 } else {
@@ -409,7 +403,7 @@ export class TgEntityEditorResult extends mixinBehaviors([IronOverlayBehavior, T
         return html + '</div>';
     }
 
-    _addHighlightedPropByName (v, propName, highlight) {
+    _addHighlightedPropByName (v, propName, highlight, searchQuery) {
         var html = '<div class="additional-prop">';
         // add prop title
         html = html + '<span class="prop-name"><span>' + this._propTitleByName(v, propName) + '</span>:</span>';
@@ -422,7 +416,7 @@ export class TgEntityEditorResult extends mixinBehaviors([IronOverlayBehavior, T
         } else {
             // matched parts should be in a separate div
             html = html + '<div style="white-space: nowrap;">';
-            let parts = matchedParts(propValueAsString, this.searchQuery);
+            let parts = matchedParts(propValueAsString, searchQuery);
             for (let index = 0; index < parts.length; index++) {
                 let part = parts[index];
                 if (part.matched) {
