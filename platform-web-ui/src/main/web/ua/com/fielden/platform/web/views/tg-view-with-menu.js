@@ -215,11 +215,11 @@ const template = html`
                 <div class="menu-item-view" page-name="_"></div>
                 <template is="dom-repeat" items="[[menuItem.menu]]" as="firstLevelItem">
                     <template is="dom-if" if="[[!_isMenuPresent(firstLevelItem.menu)]]">
-                        <tg-element-loader page-name$="[[_calcItemPath(firstLevelItem)]]" import="[[firstLevelItem.view.htmlImport]]" element-name="[[firstLevelItem.view.elementName]]" attrs="[[firstLevelItem.view.attrs]]" on-after-load="_afterLoadListener"></tg-element-loader>
+                        <tg-menu-item-view class="menu-item-view" page-name$="[[_calcItemPath(firstLevelItem)]]" menu-item="[[firstLevelItem]]" submodule-id="[[_calcSubmoduleId(firstLevelItem)]]" module-id="[[menuItem.key]]" selected-module="[[selectedModule]]" submodule="[[submodule]]"></tg-menu-item-view>
                     </template>
                     <template is="dom-if" if="[[_isMenuPresent(firstLevelItem.menu)]]">
                         <template is="dom-repeat" items="[[firstLevelItem.menu]]">
-                            <tg-element-loader page-name$="[[_calcItemPath(firstLevelItem, item)]]" import="[[item.view.htmlImport]]" element-name="[[item.view.elementName]]" attrs="[[item.view.attrs]]" on-after-load="_afterLoadListener"></tg-element-loader>
+                            <tg-menu-item-view class="menu-item-view" page-name$="[[_calcItemPath(firstLevelItem, item)]]" tooltip-text$="[[item.desc]]" menu-item="[[item]]" submodule-id="[[_calcSubmoduleId(firstLevelItem, item)]]" module-id="[[menuItem.key]]" selected-module="[[selectedModule]]" submodule="[[submodule]]"></tg-menu-item-view>
                         </template>
                     </template>
                 </template>
@@ -340,23 +340,6 @@ Polymer({
 
         this._hasSomeIcon = this._calcMenuIconsExistence(this.menuItem);
         this._hasSomeMenu = this._calcSomeMenuExistance(this.menuItem);
-    },
-
-    _afterLoadListener: function (e, detail, view) {
-        const oldPostRetrieved = detail.postRetrieved;
-        detail.postRetrieved = function (entity, bindingEntity, customObject) {
-            if (oldPostRetrieved) {
-                oldPostRetrieved(entity, bindingEntity, customObject);
-            }
-            detail._setQueryParams();
-            if (detail.autoRun || detail.queryPart) {
-                detail.run(!detail.queryPart); // identify autoRunning situation only in case where centre has autoRun as true but does not represent 'link' centre (has no URI criteria values)
-                delete detail.queryPart;
-            }
-            //self.fire("menu-item-view-loaded", self.menuItem);
-            detail.postRetrieved = oldPostRetrieved;
-        };
-        detail.retrieve();
     },
 
     _focusNextMenuItem: function () {
@@ -654,7 +637,7 @@ Polymer({
         if (this.$.pages.selected !== '_') {
             const viewToLoad = detail.toPage;
             if (viewToLoad) {
-                if (!viewToLoad.wasLoaded) {
+                if (!viewToLoad.wasLoaded()) {
                     viewToLoad.load(decodeURIComponent(this.submodule.substring(1)).split("?")[1]);
                     const currentState = window.history.state;
                     window.history.replaceState(currentState, "", window.location.href.split("?")[0]);
