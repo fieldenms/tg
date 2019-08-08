@@ -827,7 +827,7 @@ export class TgEntityEditor extends TgEditor {
     }
 
     _selectNextOnKeyDown (e) {
-        if (this.result.opened) {
+        if (this.result && this.result.opened) {
             console.log('select next');
             this.result.selectNext();
         } else {
@@ -836,7 +836,7 @@ export class TgEntityEditor extends TgEditor {
     }
 
     _selectPrevOnKeyUp (e) {
-        if (this.result.opened) {
+        if (this.result && this.result.opened) {
             console.log('select prev');
             this.result.selectPrev();
         }
