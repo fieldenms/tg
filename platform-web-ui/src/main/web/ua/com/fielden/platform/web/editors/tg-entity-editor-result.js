@@ -286,9 +286,7 @@ export class TgEntityEditorResult extends mixinBehaviors([IronOverlayBehavior, T
     /* Pushes the specified value into the tail of array _values if that value is not yet present.
      * Returns true if the value was new, false otherwise. */
     pushValue (value) {
-        const existingValue = _.find(this._values, function(obj) {
-            return obj.key === value.key;
-        });
+        const existingValue = this._values.find(obj => obj.key === value.key);
 
         if (!existingValue) {
             this.push('_values', value);
@@ -449,9 +447,7 @@ export class TgEntityEditorResult extends mixinBehaviors([IronOverlayBehavior, T
         this._selectedIndex = this._unmakeId(event.detail.item.id);
 
         const value = event.detail.item.getAttribute("value");
-        this.selectedValues[value] = _.find(this._values, function(obj) {
-            return obj.key === value;
-        });
+        this.selectedValues[value] = this._values.find(obj => obj.key === value);
     }
 
     _itemDeselected (event) {
