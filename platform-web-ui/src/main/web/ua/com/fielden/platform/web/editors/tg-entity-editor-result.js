@@ -13,6 +13,7 @@ import '/resources/serialisation/tg-serialiser.js';
 
 import { matchedParts } from '/resources/editors/tg-highlighter.js';
 import {TgTooltipBehavior} from '/resources/components/tg-tooltip-behavior.js';
+import { tearDownEvent } from '/resources/reflection/tg-polymer-utils.js'
 
 import { IronOverlayBehavior } from '/resources/polymer/@polymer/iron-overlay-behavior/iron-overlay-behavior.js';
 import {mixinBehaviors} from '/resources/polymer/@polymer/polymer/lib/legacy/class.js';
@@ -117,7 +118,7 @@ const template = html`
         <style include="iron-flex iron-flex-reverse iron-flex-alignment iron-flex-factors iron-positioning"></style>
     </custom-style>
     <tg-scrollable-component class="relative" end-of-scroll="[[_tryToLoadMore]]">
-        <iron-selector id="selector" class="tg-snatchback" multi$="[[multi]]" attr-for-selected="value" on-iron-deselect="_itemDeselected" on-iron-select="_itemSelected">
+        <iron-selector id="selector" class="tg-snatchback" multi$="[[multi]]" on-tap="selectionListTap" on-keydown="selectionListKeyDown" attr-for-selected="value" on-iron-deselect="_itemDeselected" on-iron-select="_itemSelected">
             <!-- begin of dom-repeat -->
             <template is="dom-repeat" items="[[_values]]" as="v">
                 <paper-item id$="[[_makeId(index)]]" value$="[[v.key]]" tabindex="-1" noink class="tg-item vertical-layout"> <!-- please note that union entities are not supported in autocompletion results and, most likely, will never be. Otherwise consider finding .key places here and adjust accordingly using property getter. -->
@@ -209,6 +210,20 @@ export class TgEntityEditorResult extends mixinBehaviors([IronOverlayBehavior, T
              * A function that retrives boundClientRect and offsetHeight from wrapping decorator (paper-input-container) from parent tg-entity-editor.
              */
             retrieveContainerSizes: {
+                type: Function
+            },
+
+            /**
+             * tap event handler for list of founded items (this event handler may accept tapped item if the list is sisngle selection).
+             */
+            selectionListTap: {
+                type: Function
+            },
+
+            /**
+             * key down event handler that allows user to navigate between items and accept.
+             */
+            selectionListKeyDown: {
                 type: Function
             },
     

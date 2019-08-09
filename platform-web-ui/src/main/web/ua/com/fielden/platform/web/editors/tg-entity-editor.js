@@ -564,7 +564,6 @@ export class TgEntityEditor extends TgEditor {
     /* Displays the result dialog and notifies the resize event. */
     _showResult(result) {
         result.open();
-        result.notifyResize();
     }
 
     /**
@@ -977,9 +976,9 @@ export class TgEntityEditor extends TgEditor {
         dialog.addEventListener("iron-overlay-opened", this._resultOpened.bind(this));
         dialog.addEventListener("iron-overlay-closed", this._resultClosed.bind(this));
         dialog.addEventListener("iron-overlay-canceled", this._resultCanceled.bind(this));
-        dialog.addEventListener("tap", this._entitySelected.bind(this));
         dialog.addEventListener("dblclick", this._done.bind(this));
-        dialog.addEventListener("keydown", this._onKeydown.bind(this));
+        dialog.selectionListKeyDown = this._onKeydown.bind(this);
+        dialog.selectionListTap = this._entitySelected.bind(this);
         dialog.retrieveContainerSizes = this._retrieveContainerSizes.bind(this);
         dialog.noAutoFocus =true;
         dialog.acceptValues = this._done.bind(this);
