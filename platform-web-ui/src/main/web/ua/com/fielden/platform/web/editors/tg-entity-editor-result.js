@@ -137,8 +137,8 @@ const template = html`
             <paper-button tooltip-text="Load more matching values, if any" on-tap="_loadMore" id="loadMoreButton" disabled$="[[!enableLoadMore]]">More</paper-button>
         </div>
         <div class="toolbar-content layout horizontal center" style="margin-left:auto">
-            <paper-button tooltip-text="Discard and close" on-tap="close">Cancel</paper-button>
-            <paper-button tooltip-text="Accept selected" on-tap="acceptValues">Ok</paper-button>
+            <paper-button tooltip-text="Discard and close" on-tap="_close">Cancel</paper-button>
+            <paper-button tooltip-text="Accept selected" on-tap="_acceptValues">Ok</paper-button>
         </div>
     </div>`;
 
@@ -272,8 +272,19 @@ export class TgEntityEditorResult extends mixinBehaviors([IronOverlayBehavior, T
         return this.$.loadMoreButton;
     }
 
-    _loadMore () {
+    _loadMore (e) {
         this.loadMore(true);
+        tearDownEvent(e);
+    }
+
+    _close (e) {
+        this.close();
+        tearDownEvent(e);
+    }
+
+    _acceptValues (e) {
+        this.acceptValues();
+        tearDownEvent(e);
     }
 
     clearSelection () {
