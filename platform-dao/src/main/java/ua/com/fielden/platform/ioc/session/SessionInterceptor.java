@@ -134,8 +134,8 @@ public class SessionInterceptor implements MethodInterceptor {
         return shouldCommit;
     }
 
-    private Exception completeTransactionWithError(final Session session, final Transaction tr, final Throwable e) {
-        LOGGER.warn(e);
+    private Exception completeTransactionWithError(final Session session, final Transaction tr, final Throwable ex) {
+        LOGGER.warn("Transaction completed (rolled back) with error.", ex);
         transactionGuid.remove();
         if (tr.isActive()) { // if transaction is active and there was an exception then it should be rollbacked
             LOGGER.debug("Rolling back DB transaction");
@@ -143,7 +143,7 @@ public class SessionInterceptor implements MethodInterceptor {
             LOGGER.debug("Rolled back DB transaction");
         }
         
-        return e instanceof Exception ? (Exception) e : new TransactionRollbackDueToThrowable(e);
+        return ex instanceof Exception ? (Exception) ex : new TransactionRollbackDueToThrowable(ex);
     }
 
     private void commitTransactionAndCloseSession(final Session session, final Transaction tr) {
