@@ -66,6 +66,14 @@ const template = html`
             background-color: #ffff46;
         }
 
+        paper-button {
+            color: var(--paper-light-blue-500);
+            --paper-button-flat-focus-color: var(--paper-light-blue-50);
+        }
+        paper-button:hover {
+            background: var(--paper-light-blue-50);
+        }
+
         .additional-prop {
             @apply --layout-horizontal;
             font-size: x-small;
