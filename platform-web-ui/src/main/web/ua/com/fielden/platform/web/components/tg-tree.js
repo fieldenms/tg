@@ -67,9 +67,7 @@ const template = html`
             white-space: nowrap;
         }
     </style>
-    <custom-style>
-        <style include="iron-flex iron-flex-reverse iron-flex-alignment iron-flex-factors iron-positioning"></style>
-    </custom-style>
+    <style is="custom-style" include="iron-flex iron-flex-reverse iron-flex-alignment iron-flex-factors iron-positioning"></style>
     <iron-list id="treeList" items="[[_entities]]" as="entity" selection-enabled>
         <template>
             <div class="layout horizontal tree-node no-wrap" selected$="[[selected]]" style$="[[_calcItemStyle(entity)]]">

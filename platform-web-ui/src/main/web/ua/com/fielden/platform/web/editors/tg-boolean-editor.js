@@ -39,9 +39,7 @@ const additionalTemplate = html`
             text-overflow: ellipsis;
         }
     </style>
-    <custom-style>
-        <style include="iron-flex iron-flex-reverse iron-flex-alignment iron-flex-factors iron-positioning"></style>
-    </custom-style>`;
+    <style is="custom-style" include="iron-flex iron-flex-reverse iron-flex-alignment iron-flex-factors iron-positioning"></style>`;
 const customInputTemplate = html`
     <paper-checkbox
             id="input"

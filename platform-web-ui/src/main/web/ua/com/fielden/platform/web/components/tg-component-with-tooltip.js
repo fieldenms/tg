@@ -17,9 +17,7 @@ const template = html`
             border: 1px dashed black;
         }
     </style>
-    <custom-style>
-        <style include="iron-flex iron-flex-reverse iron-flex-alignment iron-flex-factors iron-positioning"></style>
-    </custom-style>
+    <style is="custom-style" include="iron-flex iron-flex-reverse iron-flex-alignment iron-flex-factors iron-positioning"></style>
     <tg-flex-layout when-desktop="[[_whenDesktop]]" , when-tablet="[[_whenDesktop]]" , when-mobile="[[_whenDesktop]]">
         <div id="div_text" tooltip-text="Tooltip text for div">
             <span tooltip-text="Tooltip text for embeded span">Embeded component</span>

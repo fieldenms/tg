@@ -52,9 +52,7 @@ const template = html`
             min-height: fit-content;
         }
     </style>
-    <custom-style>
-        <style include="iron-flex iron-flex-reverse iron-flex-alignment iron-flex-factors iron-positioning"></style>
-    </custom-style>
+    <style is="custom-style" include="iron-flex iron-flex-reverse iron-flex-alignment iron-flex-factors iron-positioning"></style>
     <!--Selection view toolbar-->
     <div class="toolbar layout horizontal wrap">
         <div class="toolbar-content layout horizontal center">

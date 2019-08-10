@@ -81,9 +81,7 @@ const template = html`
             text-overflow: ellipsis;
         }
     </style>
-    <custom-style>
-        <style include="iron-flex iron-flex-reverse iron-flex-alignment iron-flex-factors iron-positioning paper-material-styles"></style>
-    </custom-style>
+    <style is="custom-style" include="iron-flex iron-flex-reverse iron-flex-alignment iron-flex-factors iron-positioning paper-material-styles"></style>
     <tg-app-config id="appConfig"></tg-app-config>
     <slot id="menuItemActions" name="menu-item-action"></slot>
 

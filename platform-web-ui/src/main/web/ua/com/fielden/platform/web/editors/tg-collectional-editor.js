@@ -154,9 +154,7 @@ const additionalTemplate = html`
             display: none;
         }
     </style>
-    <custom-style>
-        <style include="iron-flex iron-flex-reverse iron-flex-alignment iron-flex-factors iron-positioning"></style>
-    </custom-style>`;
+    <style is="custom-style" include="iron-flex iron-flex-reverse iron-flex-alignment iron-flex-factors iron-positioning"></style>`;
 const customInputTemplate = html`
     <div class="search-controls-wrapper" style$="[[_computeInputStyle(_forReview, canReorderItems)]]">
         <div class="resizing-box" hidden$="[[!canReorderItems]]"></div>
