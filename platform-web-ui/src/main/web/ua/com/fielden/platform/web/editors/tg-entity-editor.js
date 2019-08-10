@@ -643,7 +643,10 @@ export class TgEntityEditor extends TgEditor {
             this.opened = false;
             this._onChange();
         }
+
+        // let's now remove the result dialog from the DOM and delete a reference to it
         document.body.removeChild(this.result);
+        delete this.result;
 
         // there are situations where closing of the result dialog kicks in the content scrolled event
         // this results in another search request for the content of the input
