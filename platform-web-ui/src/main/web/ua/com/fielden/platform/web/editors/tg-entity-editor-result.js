@@ -74,6 +74,11 @@ const template = html`
             background: var(--paper-light-blue-50);
         }
 
+        paper-button[disabled] {
+            color: var(--paper-blue-grey-500);
+            background: var(--paper-blue-grey-50);
+        }
+
         .additional-prop {
             @apply --layout-horizontal;
             font-size: x-small;
