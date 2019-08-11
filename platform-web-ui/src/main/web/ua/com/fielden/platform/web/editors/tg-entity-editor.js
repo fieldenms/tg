@@ -448,7 +448,7 @@ export class TgEntityEditor extends TgEditor {
             inputText = this._prepInput(this.decoratedInput().value) || defaultSearchQuery;
         } else {
             // The following manipulations with indexes are required in case of multi selection
-            // in order to detremine what part of the input text should be used for search and
+            // in order to determine what part of the input text should be used for search and
             // also for later insertion of selected values (this._replaceFromIndex and this._replaceToIndex govern this).
 
             const text = this.decoratedInput().value;
@@ -754,10 +754,14 @@ export class TgEntityEditor extends TgEditor {
     }
 
     /**
-     * Focuses the result dialog.
+     * Focuses the result dialog, but only if it isn't an active element already.
      */
     _focusResult () {
-        this.result && this.result.focus();
+        // re-focusing result if one of the items in its iron-list is focused,
+        // effectively steals the focus from that element and breaks the intended behaviour such as keyboard navigation
+        if (this.result && document.activeElement != this.result) {
+            this.result.focus();
+        }
     }
     
     /**
@@ -983,7 +987,7 @@ export class TgEntityEditor extends TgEditor {
         dialog.selectionListKeyDown = this._onKeydown.bind(this);
         dialog.selectionListTap = this._entitySelected.bind(this);
         dialog.retrieveContainerSizes = this._retrieveContainerSizes.bind(this);
-        dialog.noAutoFocus =true;
+        dialog.noAutoFocus = true;
         dialog.acceptValues = this._done.bind(this);
         dialog.loadMore = this._loadMore.bind(this);
         dialog.multi = this.multi;
