@@ -699,7 +699,7 @@ export class TgEntityEditor extends TgEditor {
         // value accpetance logic...
         if (hasValuesToProcess) {
             // compose a string value, which would be a comma separated string in case of multi
-            const selectedValuesAsStr = result.selectedValues.map(obj => obj.key).join(this.separator);// 'key' field contains converted representation of the entity
+            const selectedValuesAsStr = Object.values(result.selectedValues).map(obj => obj.key).join(this.separator);// 'key' field contains converted representation of the entity
                 
 
             if (!this.multi) {
