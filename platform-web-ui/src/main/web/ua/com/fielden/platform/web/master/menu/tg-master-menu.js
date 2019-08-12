@@ -22,6 +22,7 @@ import { TgFocusRestorationBehavior } from '/resources/actions/tg-focus-restorat
 import { isInHierarchy, deepestActiveElement, tearDownEvent, isMobileApp } from '/resources/reflection/tg-polymer-utils.js';
 import { TgReflector } from '/app/tg-reflector.js';
 import '/app/tg-app-config.js';
+import '/resources/components/postal-lib.js';
 
 const template = html`
     <style>
