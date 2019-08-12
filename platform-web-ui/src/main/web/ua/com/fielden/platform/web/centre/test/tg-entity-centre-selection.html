@@ -41,7 +41,8 @@
                     assert.strictEqual(e.detail.shouldScrollToSelected, false, "It shouldn't be scrolled to seelected entity.");
                     assert.strictEqual(e.detail.entities[0].select, true, "First entity in egi should be selected.");
                     assert.strictEqual(e.detail.entities[0].entity, centre.$.egi.entities[0], "First entity in egi chnaged it's selection.");
-                    assert.strictEqual(centre.$.egi.selectedAll, false, "Select all should be false");
+                    assert.strictEqual(centre.$.egi.selectedAll, true, "Select all should be true");
+                    assert.strictEqual(centre.$.egi.semiSelectedAll, true, "Semi Select all should be true");
                     done();
                 });
 
@@ -71,6 +72,7 @@
                             assert.strictEqual(entity.entity, centre.$.egi.entities[index + 1], "" + (index + 1) + " entity in egi chnaged it's selection.");
                         });
                         assert.strictEqual(centre.$.egi.selectedAll, true, "Select all should be true");
+                        assert.strictEqual(centre.$.egi.semiSelectedAll, false, "Semi Select all should be false");
                         done();
                     });
                     centre.$.egi.selectAll(true);
@@ -95,6 +97,7 @@
                         assert.strictEqual(entity.entity, centre.$.egi.entities[index], "" + index + " entity in egi chnaged it's selection.");
                     });
                     assert.strictEqual(centre.$.egi.selectedAll, true, "Select all should be true");
+                    assert.strictEqual(centre.$.egi.semiSelectedAll, false, "Semi Select all should be false");
                     done();
                 });
 
@@ -124,7 +127,8 @@
                         assert.strictEqual(e.detail.shouldScrollToSelected, false, "It shouldn't be scrolled to seelected entity.");
                         assert.strictEqual(e.detail.entities[0].select, false, "First entity in egi shouldn't be selected.");
                         assert.strictEqual(e.detail.entities[0].entity, centre.$.egi.entities[0], "First entity in egi chnaged it's selection.");
-                        assert.strictEqual(centre.$.egi.selectedAll, false, "Select all should be false");
+                        assert.strictEqual(centre.$.egi.selectedAll, true, "Select all should be true");
+                        assert.strictEqual(centre.$.egi.semiSelectedAll, true, "Semi Select all should be true");
                         done();
                     });
                     centre.$.egi.selectEntity(resultEntities[0], false);
@@ -150,6 +154,7 @@
                             assert.strictEqual(entity.entity, centre.$.egi.entities[index], "" + index + " entity in egi chnaged it's selection.");
                         });
                         assert.strictEqual(centre.$.egi.selectedAll, false, "Select all should be false");
+                        assert.strictEqual(centre.$.egi.semiSelectedAll, false, "Semi Select all should be false");
                         done();
                     });
                     centre.$.egi.clearPageSelection();
@@ -177,6 +182,7 @@
                             assert.strictEqual(entity.entity, centre.$.egi.entities[index], "" + index + " entity in egi chnaged it's selection.");
                         });
                         assert.strictEqual(centre.$.egi.selectedAll, false, "Select all on fifth phase should be false");
+                        assert.strictEqual(centre.$.egi.semiSelectedAll, false, "Semi Select all should be false");
                         assert.strictEqual(centre.$.egi.selectedEntities.length, 0, "Selected entities should be empty");
                         done();
                     });

@@ -39,7 +39,7 @@
 		        const edProperty = master.$.editor_4_stringProp;
                 
 	            master.postValidated = function(validatedEntity, bindingEntity, customObject) {
-                    const bindedLabel = master.shadowRoot.querySelector("#stringProp_bind");
+                    const bindedLabel = master.$.masterDom.children[0].shadowRoot.querySelector("#stringProp_bind");
 	                assert.strictEqual(validatedEntity.get("stringProp"), "BINDING WORKS", "Property value should be: 'BINDING WORKS'");
                     assert.strictEqual(bindedLabel.innerHTML, "BINDING WORKS", "Value binded to label should be: 'BINDING WORKS'");
 	                done();
@@ -57,7 +57,7 @@
 		        const edProperty = master.$.editor_4_status;
                 
 	            master.postValidated = function(validatedEntity, bindingEntity, customObject) {
-                    const bindedLabel = master.shadowRoot.querySelector("#status_Desc_bind");
+                    const bindedLabel = master.$.masterDom.children[0].shadowRoot.querySelector("#status_Desc_bind");
 	                assert.strictEqual(validatedEntity.get("status.desc"), "Defect Smash Repair", "Property value should be: 'Defect Smash Repair'");
                     assert.strictEqual(bindedLabel.innerHTML, "Defect Smash Repair", "Value binded to label should be: 'Defect Smash Repair'");
 	                done();

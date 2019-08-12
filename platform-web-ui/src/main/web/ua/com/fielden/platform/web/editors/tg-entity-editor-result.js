@@ -130,8 +130,8 @@ const template = html`
     <custom-style>
         <style include="iron-flex iron-flex-reverse iron-flex-alignment iron-flex-factors iron-positioning"></style>
     </custom-style>
-    <tg-scrollable-component class="relative" end-of-scroll="[[_tryToLoadMore]]">
-        <iron-selector id="selector" class="tg-snatchback" multi$="[[multi]]" on-tap="selectionListTap" on-keydown="selectionListKeyDown" attr-for-selected="value" on-iron-deselect="_itemDeselected" on-iron-select="_itemSelected">
+    <tg-scrollable-component class="relative" end-of-scroll="[[_tryToLoadMore]]" on-tap="selectionListTap" on-keydown="selectionListKeyDown">
+        <iron-selector id="selector" class="tg-snatchback" multi$="[[multi]]" attr-for-selected="value" on-iron-deselect="_itemDeselected" on-iron-select="_itemSelected">
             <!-- begin of dom-repeat -->
             <template is="dom-repeat" items="[[_values]]" as="v">
                 <paper-item id$="[[_makeId(index)]]" value$="[[v.key]]" tabindex="-1" noink class="tg-item vertical-layout"> <!-- please note that union entities are not supported in autocompletion results and, most likely, will never be. Otherwise consider finding .key places here and adjust accordingly using property getter. -->
