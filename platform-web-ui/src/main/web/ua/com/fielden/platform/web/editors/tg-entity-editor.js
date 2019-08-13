@@ -687,9 +687,8 @@ export class TgEntityEditor extends TgEditor {
         // value accpetance logic...
         if (hasValuesToProcess) {
             // compose a string value, which would be a comma separated string in case of multi
-            const selectedValuesAsStr = _.map(this.result.selectedValues, function (obj) {
-                return obj.key; // 'key' field contains converted representation of the entity
-            }).join(this.separator);
+            const selectedValuesAsStr = Object.values(this.result.selectedValues).map(obj => obj.key).join(this.separator);// 'key' field contains converted representation of the entity
+                
 
             if (!this.multi) {
                 // if this is a single selection config then need to simply assign the value
