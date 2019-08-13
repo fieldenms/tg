@@ -13,6 +13,7 @@ import '/resources/serialisation/tg-serialiser.js';
 
 import { matchedParts } from '/resources/editors/tg-highlighter.js';
 import {TgTooltipBehavior} from '/resources/components/tg-tooltip-behavior.js';
+import { tearDownEvent } from '/resources/reflection/tg-polymer-utils.js'
 
 import { IronOverlayBehavior } from '/resources/polymer/@polymer/iron-overlay-behavior/iron-overlay-behavior.js';
 import {mixinBehaviors} from '/resources/polymer/@polymer/polymer/lib/legacy/class.js';
@@ -65,6 +66,19 @@ const template = html`
             background-color: #ffff46;
         }
 
+        paper-button {
+            color: var(--paper-light-blue-500);
+            --paper-button-flat-focus-color: var(--paper-light-blue-50);
+        }
+        paper-button:hover {
+            background: var(--paper-light-blue-50);
+        }
+
+        paper-button[disabled] {
+            color: var(--paper-blue-grey-500);
+            background: var(--paper-blue-grey-50);
+        }
+
         .additional-prop {
             @apply --layout-horizontal;
             font-size: x-small;
@@ -114,7 +128,7 @@ const template = html`
         }
     </style>
     <style include="iron-flex iron-flex-reverse iron-flex-alignment iron-flex-factors iron-positioning"></style>
-    <tg-scrollable-component class="relative" end-of-scroll="[[_tryToLoadMore]]">
+    <tg-scrollable-component class="relative" end-of-scroll="[[_tryToLoadMore]]" on-tap="selectionListTap" on-keydown="selectionListKeyDown">
         <iron-selector id="selector" class="tg-snatchback" multi$="[[multi]]" attr-for-selected="value" on-iron-deselect="_itemDeselected" on-iron-select="_itemSelected">
             <!-- begin of dom-repeat -->
             <template is="dom-repeat" items="[[_values]]" as="v">
@@ -134,11 +148,10 @@ const template = html`
             <paper-button tooltip-text="Load more matching values, if any" on-tap="_loadMore" id="loadMoreButton" disabled$="[[!enableLoadMore]]">More</paper-button>
         </div>
         <div class="toolbar-content layout horizontal center" style="margin-left:auto">
-            <paper-button tooltip-text="Discard and close" on-tap="close">Cancel</paper-button>
-            <paper-button tooltip-text="Accept selected" on-tap="acceptValues">Ok</paper-button>
+            <paper-button tooltip-text="Discard and close" on-tap="_close">Cancel</paper-button>
+            <paper-button tooltip-text="Accept selected" on-tap="_acceptValues">Ok</paper-button>
         </div>
-    </div>
-    </tg-editor>`;
+    </div>`;
 
 export class TgEntityEditorResult extends mixinBehaviors([IronOverlayBehavior, TgTooltipBehavior], PolymerElement) {
 
@@ -177,12 +190,6 @@ export class TgEntityEditorResult extends mixinBehaviors([IronOverlayBehavior, T
                 }
             },
     
-            /* Represents the search query string that was used to find resultant values to be displayed */
-            searchQuery: {
-                type: String,
-                value: ''
-            },
-    
             /* Should contain the names of additional properties to be displayed. */
             additionalProperties: {
                 type: Object,
@@ -214,6 +221,20 @@ export class TgEntityEditorResult extends mixinBehaviors([IronOverlayBehavior, T
              * A function that retrives boundClientRect and offsetHeight from wrapping decorator (paper-input-container) from parent tg-entity-editor.
              */
             retrieveContainerSizes: {
+                type: Function
+            },
+
+            /**
+             * tap event handler for list of founded items (this event handler may accept tapped item if the list is sisngle selection).
+             */
+            selectionListTap: {
+                type: Function
+            },
+
+            /**
+             * key down event handler that allows user to navigate between items and accept.
+             */
+            selectionListKeyDown: {
                 type: Function
             },
     
@@ -262,8 +283,19 @@ export class TgEntityEditorResult extends mixinBehaviors([IronOverlayBehavior, T
         return this.$.loadMoreButton;
     }
 
-    _loadMore () {
+    _loadMore (e) {
         this.loadMore(true);
+        tearDownEvent(e);
+    }
+
+    _close (e) {
+        this.close();
+        tearDownEvent(e);
+    }
+
+    _acceptValues (e) {
+        this.acceptValues();
+        tearDownEvent(e);
     }
 
     clearSelection () {
@@ -284,9 +316,7 @@ export class TgEntityEditorResult extends mixinBehaviors([IronOverlayBehavior, T
     /* Pushes the specified value into the tail of array _values if that value is not yet present.
      * Returns true if the value was new, false otherwise. */
     pushValue (value) {
-        const existingValue = _.find(this._values, function(obj) {
-            return obj.key === value.key;
-        });
+        const existingValue = this._values.find(obj => obj.key === value.key);
 
         if (!existingValue) {
             this.push('_values', value);
@@ -330,7 +360,7 @@ export class TgEntityEditorResult extends mixinBehaviors([IronOverlayBehavior, T
 
     /* Highlights matched parts of autocompleted values.
      * Handles all properties that were specified as to be highlighted. */
-    highlightMatchedParts () {
+    highlightMatchedParts (searchQuery) {
         microTask.run(function() {
             this._foundSome = this._values.length > 0;
             for (let index = 0; index < this._values.length; index++) {
@@ -340,7 +370,7 @@ export class TgEntityEditorResult extends mixinBehaviors([IronOverlayBehavior, T
                 // add key value with highlighting of matching parts
                 const descProp = 'desc';
                 const withDesc = this.additionalProperties.hasOwnProperty(descProp);
-                html = html + this._addHighlightedKeyProp(v, withDesc);
+                html = html + this._addHighlightedKeyProp(v, withDesc, searchQuery);
 
                 // add values for additional properties with highlighting of matching parts if required
                 for (let propName in this.additionalProperties) {
@@ -348,7 +378,7 @@ export class TgEntityEditorResult extends mixinBehaviors([IronOverlayBehavior, T
                     if (propName !== descProp && this.additionalProperties.hasOwnProperty(propName)) {
                         // should highlight?
                         const highlight = this.additionalProperties[propName];
-                        html = html + this._addHighlightedPropByName(v, propName, highlight);
+                        html = html + this._addHighlightedPropByName(v, propName, highlight, searchQuery);
                     }
                 }
 
@@ -362,11 +392,11 @@ export class TgEntityEditorResult extends mixinBehaviors([IronOverlayBehavior, T
         }.bind(this));
     }
 
-    _addHighlightedKeyProp (v, withDesc) {
+    _addHighlightedKeyProp (v, withDesc, searchQuery) {
         let html = '<div style="white-space: nowrap">';
 
         // let's first handle the key
-        let parts = matchedParts(v.key, this.searchQuery);
+        let parts = matchedParts(v.key, searchQuery);
         if (parts.length === 0) {
             html = html + v.key;
         } else {
@@ -387,7 +417,7 @@ export class TgEntityEditorResult extends mixinBehaviors([IronOverlayBehavior, T
             let propValueAsString = this._propValueByName(v, 'desc');
             if (propValueAsString && propValueAsString !== 'null' && propValueAsString !== '') {
                 html = html + '<span style="color:#737373"> &ndash; <i>';
-                parts = matchedParts(propValueAsString, this.searchQuery);
+                parts = matchedParts(propValueAsString, searchQuery);
                 if (parts.length === 0) {
                     html = html + propValueAsString;
                 } else {
@@ -408,7 +438,7 @@ export class TgEntityEditorResult extends mixinBehaviors([IronOverlayBehavior, T
         return html + '</div>';
     }
 
-    _addHighlightedPropByName (v, propName, highlight) {
+    _addHighlightedPropByName (v, propName, highlight, searchQuery) {
         var html = '<div class="additional-prop">';
         // add prop title
         html = html + '<span class="prop-name"><span>' + this._propTitleByName(v, propName) + '</span>:</span>';
@@ -421,7 +451,7 @@ export class TgEntityEditorResult extends mixinBehaviors([IronOverlayBehavior, T
         } else {
             // matched parts should be in a separate div
             html = html + '<div style="white-space: nowrap;">';
-            let parts = matchedParts(propValueAsString, this.searchQuery);
+            let parts = matchedParts(propValueAsString, searchQuery);
             for (let index = 0; index < parts.length; index++) {
                 let part = parts[index];
                 if (part.matched) {
@@ -447,9 +477,7 @@ export class TgEntityEditorResult extends mixinBehaviors([IronOverlayBehavior, T
         this._selectedIndex = this._unmakeId(event.detail.item.id);
 
         const value = event.detail.item.getAttribute("value");
-        this.selectedValues[value] = _.find(this._values, function(obj) {
-            return obj.key === value;
-        });
+        this.selectedValues[value] = this._values.find(obj => obj.key === value);
     }
 
     _itemDeselected (event) {

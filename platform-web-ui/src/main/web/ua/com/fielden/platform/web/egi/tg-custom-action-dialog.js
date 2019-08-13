@@ -13,6 +13,7 @@ import '/resources/polymer/@polymer/paper-styles/paper-styles-classes.js';
 import '/resources/element_loader/tg-element-loader.js';
 import '/resources/components/tg-toast.js';
 import '/resources/images/tg-icons.js';
+import '/resources/components/postal-lib.js';
 
 import {IronOverlayBehavior, IronOverlayBehaviorImpl} from '/resources/polymer/@polymer/iron-overlay-behavior/iron-overlay-behavior.js';
 import {IronA11yKeysBehavior} from '/resources/polymer/@polymer/iron-a11y-keys-behavior/iron-a11y-keys-behavior.js';

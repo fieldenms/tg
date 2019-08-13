@@ -3,6 +3,7 @@ import { TgSseBehavior } from '/resources/sse/tg-sse-behavior.js';
 import '/resources/egi/tg-custom-action-dialog.js';
 import { TgFocusRestorationBehavior } from '/resources/actions/tg-focus-restoration-behavior.js';
 import '/resources/actions/tg-ui-action.js';
+import '/resources/components/postal-lib.js';
 import { tearDownEvent, isInHierarchy, deepestActiveElement, FOCUSABLE_ELEMENTS_SELECTOR } from '/resources/reflection/tg-polymer-utils.js';
 import { TgReflector } from '/app/tg-reflector.js';
 import { TgElementSelectorBehavior, queryElements } from '/resources/components/tg-element-selector-behavior.js';

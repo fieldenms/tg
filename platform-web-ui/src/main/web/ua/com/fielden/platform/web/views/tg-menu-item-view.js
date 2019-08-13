@@ -16,6 +16,9 @@ const template = html`
         :host {
             @apply --layout-vertical;
         }
+        :host(:focus) {
+            outline: none;
+        }
         .view {
             background-color: white;
         }
