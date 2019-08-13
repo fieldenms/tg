@@ -19,7 +19,7 @@ import { tearDownEvent } from '/resources/reflection/tg-polymer-utils.js'
 
 const pickerStyle = html`
     <custom-style>
-        <style is="custom-style">
+        <style>
             .date-picker paper-button {
                 color: var(--paper-light-blue-500);
                 --paper-button-flat-focus-color: var(--paper-light-blue-50);
