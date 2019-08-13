@@ -62,7 +62,7 @@ const template = html`
             margin-bottom: 8px;
         }
     </style>
-    <style is="custom-style" include="iron-flex iron-flex-reverse iron-flex-alignment iron-flex-factors iron-positioning"></style>
+    <style include="iron-flex iron-flex-reverse iron-flex-alignment iron-flex-factors iron-positioning"></style>
     <div class="layout horizontal justified flex end">
         <div class="criterion-container relative layout horizontal justified flex end">
             <slot name="criterion-editors" id="components"></slot>

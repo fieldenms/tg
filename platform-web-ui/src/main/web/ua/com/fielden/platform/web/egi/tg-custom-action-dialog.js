@@ -147,7 +147,7 @@ const template = html`
             --paper-spinner-layer-4-color: white;
         }
     </style>
-    <style is="custom-style" include="iron-flex iron-flex-reverse iron-flex-alignment iron-flex-factors iron-positioning"></style>
+    <style include="iron-flex iron-flex-reverse iron-flex-alignment iron-flex-factors iron-positioning"></style>
     <div id="titleBar" class="title-bar layout horizontal justified center" on-track="_moveDialog">
         <paper-icon-button id="menuToggler" hidden icon="menu" tooltip-text="Menu" on-tap="_toggleMenu"></paper-icon-button>
         <div class="title-text layout horizontal center flex">

@@ -20,7 +20,7 @@ const template = html`
             color: white;
         }
     </style>
-    <style is="custom-style" include="iron-flex iron-flex-reverse iron-flex-alignment iron-flex-factors iron-positioning"></style>
+    <style include="iron-flex iron-flex-reverse iron-flex-alignment iron-flex-factors iron-positioning"></style>
     <iron-scroll-threshold class="fit" on-lower-threshold="_lowerThreshold" lower-threshold="10" upper-threshold="10" on-upper-threshold="_upperThreshold" id="threshold">
         <iron-list class="fit" id="list" items="[]" scroll-target="threshold">
             <template>

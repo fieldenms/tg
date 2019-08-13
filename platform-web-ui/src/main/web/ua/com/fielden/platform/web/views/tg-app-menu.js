@@ -91,7 +91,7 @@ const template = html`
             text-overflow: ellipsis;
         }
     </style>
-    <style is="custom-style" include="iron-flex iron-flex-reverse iron-flex-alignment iron-flex-factors iron-positioning"></style>
+    <style include="iron-flex iron-flex-reverse iron-flex-alignment iron-flex-factors iron-positioning"></style>
 
     <div id="watermark" hidden$="[[!_watermark]]">[[_watermark]]</div>
 

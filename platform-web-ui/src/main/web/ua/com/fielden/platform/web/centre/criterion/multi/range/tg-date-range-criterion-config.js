@@ -30,7 +30,7 @@ const template = html`
             --calculated-paper-radio-button-ink-size: 36px;
         }
     </style>
-    <style is="custom-style" include="iron-flex iron-flex-reverse iron-flex-alignment iron-flex-factors iron-positioning"></style>
+    <style include="iron-flex iron-flex-reverse iron-flex-alignment iron-flex-factors iron-positioning"></style>
     <template is="dom-repeat" items="{{_datePrefixes}}" as="prefix" index-as="pIndex">
         <tg-accordion id$="[[prefix]]" dont-close-on-tap heading="[[_getPrefixTitle(_prefixTitles, pIndex)]]" selected="[[_calcSelected(prefix, _datePrefix)]]" on-accordion-toggled="_accordionToggledListener">
             <div class="layout horizontal wrap">

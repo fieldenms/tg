@@ -28,7 +28,7 @@ import '/resources/centre/tg-entity-centre-insertion-point.js';
 
 const selectionCritTemplate = html`
     <style include="tg-selection-criteria-styles"></style>
-    <style is="custom-style" include="iron-flex iron-flex-reverse iron-flex-alignment iron-flex-factors iron-positioning"></style>
+    <style include="iron-flex iron-flex-reverse iron-flex-alignment iron-flex-factors iron-positioning"></style>
     <tg-selection-criteria id="masterDom" mi-type="[[miType]]" save-as-name="[[saveAsName]]" query-part="[[queryPart]]" is-running="{{isRunning}}" _post-validated-default="[[_postValidatedDefault]]" _post-validated-default-error="[[_postValidatedDefaultError]]" _process-response="[[_processResponse]]" _process-error="[[_processError]]" _process-retriever-response="[[_processRetrieverResponse]]" _process-retriever-error="[[_processRetrieverError]]" _process-runner-response="[[_processRunnerResponse]]" _process-runner-error="[[_processRunnerError]]">
         <!--CRITERIA EDITORS DOM (GENERATED)-->
         <!--@criteria_editors-->
@@ -55,7 +55,7 @@ Polymer({
 
 const entityCentreTemplate = html`
     <style include="tg-entity-centre-styles"></style>
-    <style is="custom-style" include="iron-flex iron-flex-reverse iron-flex-alignment iron-flex-factors iron-positioning"></style>
+    <style include="iron-flex iron-flex-reverse iron-flex-alignment iron-flex-factors iron-positioning"></style>
     <style>
         /*toolbarStyles*/
     </style>

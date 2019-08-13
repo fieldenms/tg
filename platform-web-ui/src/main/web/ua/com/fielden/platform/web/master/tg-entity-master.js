@@ -28,7 +28,7 @@ const template = html`
             };
         }
     </style>
-    <style is="custom-style" include="iron-flex iron-flex-reverse iron-flex-alignment iron-flex-factors iron-positioning"></style>
+    <style include="iron-flex iron-flex-reverse iron-flex-alignment iron-flex-factors iron-positioning"></style>
     <tg-entity-binder id="binderDom"></tg-entity-binder>
     <tg-confirmation-dialog id="confirmationDialog"></tg-confirmation-dialog>
     <tg-entity-validator id="validator"

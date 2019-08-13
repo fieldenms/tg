@@ -42,7 +42,7 @@ const template = html`
             transform: translate(0, -1.5px)rotate(90deg);
         }
     </style>
-    <style is="custom-style" include="iron-flex iron-flex-reverse iron-flex-alignment iron-flex-factors iron-positioning"></style>
+    <style include="iron-flex iron-flex-reverse iron-flex-alignment iron-flex-factors iron-positioning"></style>
     <div class="line layout horizontal center">
         <iron-icon icon="av:play-arrow" open$="[[!closed]]" collapsible$="[[collapsible]]"></iron-icon>
         <div hidden$="[[!subheaderTitle]]" class="title layout horizontal center" collapsible$="[[collapsible]]">[[subheaderTitle]]</div>

@@ -46,7 +46,7 @@ const template = html`
             height: 24px;
         }
     </style>
-    <style is="custom-style" include="iron-flex iron-flex-reverse iron-flex-alignment iron-flex-factors iron-positioning"></style>
+    <style include="iron-flex iron-flex-reverse iron-flex-alignment iron-flex-factors iron-positioning"></style>
     <div class="layout vertical">
     <div class="header month-shown layout horizontal justified center">
         <div>

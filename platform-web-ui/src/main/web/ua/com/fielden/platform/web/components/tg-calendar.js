@@ -60,7 +60,7 @@ const template = html`
             cursor: pointer;
         }
     </style>
-    <style is="custom-style" include="iron-flex iron-flex-reverse iron-flex-alignment iron-flex-factors iron-positioning"></style>
+    <style include="iron-flex iron-flex-reverse iron-flex-alignment iron-flex-factors iron-positioning"></style>
     <tg-app-config id="appConfig"></tg-app-config>
     <iron-media-query query="[[_calcMobileQuery()]]" query-matches="{{_phoneScreen}}"></iron-media-query>
     <div class$="[[_calcCalendarLayout(_phoneScreen)]]">
