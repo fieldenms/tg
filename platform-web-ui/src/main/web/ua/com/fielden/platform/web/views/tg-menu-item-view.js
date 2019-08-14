@@ -35,9 +35,7 @@ const template = html`
             @apply --shadow-elevation-2dp;
         }
     </style>
-    <custom-style>
-        <style include="iron-flex iron-flex-reverse iron-flex-alignment iron-flex-factors iron-positioning paper-material-styles"></style>
-    </custom-style>
+    <style include="iron-flex iron-flex-reverse iron-flex-alignment iron-flex-factors iron-positioning paper-material-styles"></style>
     <template is="dom-if" if="[[menuItem.view]]" restamp>
         <template is="dom-if" if="[[!_isCentre(menuItem)]]" on-dom-change="_viewWasDefined" restamp>
             <div class="master-container" id="customViewContainer">

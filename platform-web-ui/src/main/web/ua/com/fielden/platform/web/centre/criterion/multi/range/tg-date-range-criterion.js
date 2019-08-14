@@ -23,9 +23,7 @@ const template = html`
             margin-top: 28px;
         }
     </style>
-    <custom-style>
-        <style include="iron-flex iron-flex-reverse iron-flex-alignment iron-flex-factors iron-positioning"></style>
-    </custom-style>
+    <style include="iron-flex iron-flex-reverse iron-flex-alignment iron-flex-factors iron-positioning"></style>
     <tg-abstract-criterion id="dom"
         crit-only="[[critOnly]]"
         _cancel-meta-values="[[_cancelMetaValuesForBinding]]"

@@ -12,16 +12,13 @@
         import '/resources/polymer/@polymer/paper-styles/paper-styles-classes.js'; // Roboto font
         import '/master_ui/ua.com.fielden.platform.security.user.UserRolesUpdater.js';
     </script>
-    <style>
-        body {
-            font-family: 'Roboto', 'Helvetica Neue', Helvetica, Arial, sans-serif;
-            font-size: 10pt;
-        }
-    </style>
     <custom-style>
-        <style include="iron-flex iron-flex-reverse iron-flex-alignment iron-flex-factors iron-positioning"></style>
-        <style> /* tg-confirmation-dialog -specific */
-            .confirm-dialog paper-button {
+        <style include="iron-flex iron-flex-reverse iron-flex-alignment iron-flex-factors iron-positioning">
+            body {
+                font-family: 'Roboto', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+                font-size: 10pt;
+            }
+            .confirm-dialog paper-button { /* tg-confirmation-dialog -specific */
                 color: var(--paper-light-blue-500);
                 --paper-button-flat-focus-color: var(--paper-light-blue-50);
             }
