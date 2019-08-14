@@ -52,8 +52,8 @@ const template = html`
             position: relative;
             flex-grow: 0;
             flex-shrink: 0;
+            overflow: auto;
             @apply --layout-horizontal;
-            @apply --layout-wrap;
         }
         .grid-toolbar[show-top-shadow]:after {
             content: "";
@@ -84,6 +84,9 @@ const template = html`
             @apply --layout-center;
         }
         .grid-toolbar-content ::slotted(*) {
+            @apply --layout-horizontal;
+            @apply --layout-center;
+            white-space: nowrap;
             margin-top: 8px;
         }
         .grid-toolbar-content ::slotted(.group) {
