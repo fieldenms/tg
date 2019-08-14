@@ -111,7 +111,7 @@ public class EntityQueryUtils {
 	}
 	
 	/**
-	 * Generates empty condition model, which will be ignored during conditions processing.
+	 * Generates empty condition model for EQL models. This condition is more of a convenience and is simply ignored as part of the condition processing.
 	 * 
 	 * @return
 	 */

@@ -1,6 +1,5 @@
 package ua.com.fielden.platform.entity.query.fluent;
 
-import static ua.com.fielden.platform.types.tuples.T2.t2;
 import static ua.com.fielden.platform.entity.query.fluent.enums.ArithmeticalOperator.ADD;
 import static ua.com.fielden.platform.entity.query.fluent.enums.ArithmeticalOperator.DIV;
 import static ua.com.fielden.platform.entity.query.fluent.enums.ArithmeticalOperator.MOD;
@@ -107,7 +106,10 @@ import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.SO
 import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.VAL;
 import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.VALUES_AS_QRY_SOURCE;
 import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.ZERO_ARG_FUNCTION;
+import static ua.com.fielden.platform.types.tuples.T2.t2;
+import static ua.com.fielden.platform.utils.CollectionUtil.listOf;
 import static ua.com.fielden.platform.utils.EntityUtils.equalsEx;
+import static ua.com.fielden.platform.utils.Pair.pair;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -128,7 +130,6 @@ import ua.com.fielden.platform.entity.query.model.OrderingModel;
 import ua.com.fielden.platform.entity.query.model.PrimitiveResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.QueryModel;
 import ua.com.fielden.platform.entity.query.model.SingleResultQueryModel;
-import ua.com.fielden.platform.types.tuples.T2;
 import ua.com.fielden.platform.utils.Pair;
 
 /**
@@ -178,11 +179,7 @@ final class Tokens {
     }
 
     private <E extends Object> List<E> getListFromArray(final E... items) {
-        final List<E> result = new ArrayList<E>();
-        if (items != null) {
-            result.addAll(Arrays.asList(items));
-        }
-        return result;
+        return listOf(items);
     }
 
     public Tokens and() {
@@ -222,11 +219,11 @@ final class Tokens {
     }
 
     public Tokens critCondition(final String propName, final String critPropName) {
-        return add(CRIT_COND_OPERATOR, new Pair<String, String>(propName, critPropName));
+        return add(CRIT_COND_OPERATOR, pair(propName, critPropName));
     }
 
     public Tokens critCondition(final ICompoundCondition0<?> collectionQueryStart, final String propName, final String critPropName) {
-        return add(CRIT_COND_OPERATOR, new Pair<T2<ICompoundCondition0<?>, String>, String>(t2(collectionQueryStart, propName), critPropName));
+        return add(CRIT_COND_OPERATOR, pair(t2(collectionQueryStart, propName), critPropName));
     }
 
     public Tokens isNull(final boolean negated) {
