@@ -312,43 +312,43 @@ public interface EntityQueryProgressiveInterfaces {
 
 		T notExistsAllOf(final QueryModel... subQueries);
 		
-		/**
-		 * Applies value of crit-only property {@code critPropName}(including mnemonics) to persistent property {@code propName} and generates appropriate condition model (as per {@link ua.com.fielden.platform.entity_centre.review.DynamicQueryBuilder#buildAtomicCondition(ua.com.fielden.platform.entity_centre.review.DynamicQueryBuilder.QueryProperty, String)} logic).
-		 * 
-		 * @param propName
-		 * @param critPropName
-		 * @return
-		 */
-		T critCondition(final String propName, final String critPropName);
+        /**
+         * Applies value of crit-only property {@code critPropName} (including mnemonics) to persistent property {@code propName} and generates appropriate condition model (as per
+         * {@link ua.com.fielden.platform.entity_centre.review.DynamicQueryBuilder#buildAtomicCondition(ua.com.fielden.platform.entity_centre.review.DynamicQueryBuilder.QueryProperty, String)}
+         * logic).
+         * 
+         * @param propName
+         * @param critPropName
+         * @return
+         */
+        T critCondition(final String propName, final String critPropName);
 		
         /**
-         * Applies value of crit-only property {@code critPropName}(including mnemonics) to persistent collectional property {@code propName} represented by collection in {@code collectionQueryStart} and enhances this query with generated appropriate condition model (as per {@link ua.com.fielden.platform.entity_centre.review.DynamicQueryBuilder#buildAtomicCondition(ua.com.fielden.platform.entity_centre.review.DynamicQueryBuilder.QueryProperty, String)} logic).
-         * Rules for applying mnemonics and search values onto collectional properties have been specified as follows:
+         * Applies value of crit-only property {@code critPropName} (including mnemonics) to persistent collectional property {@code propName} represented by collection in
+         * {@code collectionQueryStart} and enhances this query with generated appropriate condition model (as per {@link ua.com.fielden.platform.entity_centre.review.DynamicQueryBuilder#buildAtomicCondition(ua.com.fielden.platform.entity_centre.review.DynamicQueryBuilder.QueryProperty, String)}
+         * logic).
+         * <p>
+         * Rules for applying mnemonics and search values onto collectional properties have been specified as follows, where {@code v} -- value, {@code n} -- negation,
+         * {@code m} -- indicates presence of mnemonics. For more information refer <a href="https://github.com/fieldenms/tg/issues/947">issue 947</a>.
          * 
+         * <pre>
          * v n m
-         * 
          * + + +  not (exists collectional element that matches any of the values || empty) == there are no collectional elements that match any of values && not empty
-         * 
          * + + -  not (exists collectional element that matches any of the values && not empty) == there are no collectional elements that match any of values || empty
-         * 
          * + - +  exists collectional element that matches any of the values || empty
-         * 
          * + - -  exists collectional element that matches any of the values && not empty
-         * 
          * - + +  not empty
-         * 
          * - + -  no condition
-         * 
          * - - +  empty
-         * 
-         * - - -  no condition  
+         * - - -  no condition
+         * </pre>
          * 
          * @param collectionQueryStart
          * @param propName
          * @param critPropName
          * @return
          */
-		T critCondition(final ICompoundCondition0<?> collectionQueryStart, final String propName, final String critPropName);
+        T critCondition(final ICompoundCondition0<?> collectionQueryStart, final String propName, final String critPropName);
 
 		T condition(final ConditionModel condition);
 
