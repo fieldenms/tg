@@ -84,16 +84,12 @@ public class CritConditionOperatorTest extends BaseEntQueryCompositionTCase {
     }
 
     @Test
-    public void single_operator_throws_exception_if_crit_prop_value_is_empty_and_negated() {
+    public void single_operator_generates_correct_condition_if_crit_prop_value_is_empty_and_negated() {
         final QueryProperty queryProperty = getQueryProperty(empty(), true, false);
         final Map<String, Object> paramValues = getParams(critProp, queryProperty);
-        try {
-            assertModelsEquals(//
-                    conditions(select_veh_where.condition(buildCondition(queryProperty, persistedProp, false)), paramValues), //
+        assertModelsEquals(//
+                    conditions(select_veh_where.condition(emptyCondition()), paramValues), //
                     conditions(select_veh_where.critCondition(persistedProp, critProp), paramValues));
-            fail("Should have failed while trying to expand critCondition operator with crit prop value being empty and negated");
-        } catch (final Exception e) {
-        }
     }
 
     @Test
