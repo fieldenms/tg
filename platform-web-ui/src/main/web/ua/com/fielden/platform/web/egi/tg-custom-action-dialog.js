@@ -13,6 +13,7 @@ import '/resources/polymer/@polymer/paper-styles/paper-styles-classes.js';
 import '/resources/element_loader/tg-element-loader.js';
 import '/resources/components/tg-toast.js';
 import '/resources/images/tg-icons.js';
+import '/resources/components/postal-lib.js';
 
 import {IronOverlayBehavior, IronOverlayBehaviorImpl} from '/resources/polymer/@polymer/iron-overlay-behavior/iron-overlay-behavior.js';
 import {IronA11yKeysBehavior} from '/resources/polymer/@polymer/iron-a11y-keys-behavior/iron-a11y-keys-behavior.js';
@@ -147,9 +148,7 @@ const template = html`
             --paper-spinner-layer-4-color: white;
         }
     </style>
-    <custom-style>
-        <style include="iron-flex iron-flex-reverse iron-flex-alignment iron-flex-factors iron-positioning"></style>
-    </custom-style>
+    <style include="iron-flex iron-flex-reverse iron-flex-alignment iron-flex-factors iron-positioning"></style>
     <div id="titleBar" class="title-bar layout horizontal justified center" on-track="_moveDialog">
         <paper-icon-button id="menuToggler" hidden icon="menu" tooltip-text="Menu" on-tap="_toggleMenu"></paper-icon-button>
         <div class="title-text layout horizontal center flex">

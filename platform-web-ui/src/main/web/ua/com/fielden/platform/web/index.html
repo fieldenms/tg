@@ -11,8 +11,6 @@
     
     <script src='/resources/polymer/@webcomponents/webcomponentsjs/webcomponents-bundle.js'></script>
     <script src='/resources/polymer/web-animations-js/web-animations-next-lite.min.js'></script>
-    <script src="/resources/lodash/4.17.11/lodash.min.js"></script>
-    <script src="/resources/postal/2.0.5/postal.min.js"></script>
     <script src="/resources/filesaver/FileSaver.min.js"></script>
     <script type="module" crossorigin="use-credentials">
         import '/resources/@startupResources.js';
@@ -32,35 +30,28 @@
 
     <!-- Tile icon for Win8 (144x144) -->
     <meta name="msapplication-TileImage" content="/resources/icons/tg-icon144x144.png">
-    <style>
-        html {
-            font-size: 10pt;
-        }
-        body {
-            font-family: 'Roboto', 'Helvetica Neue', Helvetica, Arial, sans-serif;
-            font-size: 10pt;
-        }
-        tg-app-template {
-            height: 100vh;
-        }
-    </style>
-    <custom-style>
-        <style is="custom-style">
-            html {
-                @panelColor
-                --tg-watermark-style: {
-                    @cssStyle
-                };
-            }
-        </style>
-    </custom-style>
     <script>
         window.TG_APP = {
             watermark: @watermark
         };
     </script>
     <custom-style>
-        <style include="iron-flex iron-flex-reverse iron-flex-alignment iron-flex-factors iron-positioning"></style>
+        <style include="iron-flex iron-flex-reverse iron-flex-alignment iron-flex-factors iron-positioning">
+            html {
+                font-size: 10pt;
+                @panelColor
+                --tg-watermark-style: {
+                    @cssStyle
+                };
+            }
+            body {
+                font-family: 'Roboto', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+                font-size: 10pt;
+            }
+            tg-app-template {
+                height: 100vh;
+            }
+        </style>
     </custom-style>
 </head>
 
