@@ -4,7 +4,6 @@ import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static java.util.Optional.empty;
 import static java.util.Optional.of;
-import static org.junit.Assert.fail;
 import static ua.com.fielden.platform.entity.AbstractEntity.ID;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.cond;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.emptyCondition;
@@ -19,6 +18,7 @@ import java.util.Optional;
 
 import org.junit.Test;
 
+import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ICompoundCondition0;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IWhere0;
 import ua.com.fielden.platform.entity.query.generation.BaseEntQueryCompositionTCase;
@@ -36,18 +36,6 @@ public class CritConditionOperatorTest extends BaseEntQueryCompositionTCase {
     private static final String persistedPropInCollection = "fuelType.key";
     private static final String D = "D";
     private static final ICompoundCondition0<TgFuelUsage> modelStart = select(TgFuelUsage.class).where().prop("vehicle").eq().extProp(ID);
-
-    private static Map<String, Object> getParams(final String critPropName, final QueryProperty queryProperty) {
-        return mapOf(t2(DynamicQueryBuilder.QueryProperty.queryPropertyParamName(critProp), queryProperty));
-    }
-
-    private static QueryProperty getQueryProperty(final Optional<String> value, final boolean negated, final boolean missing) {
-        final QueryProperty queryProperty = createNotInitialisedQueryProperty(VEHICLE, critProp);
-        queryProperty.setValue(value.map(v -> asList(v)).orElse(emptyList()));
-        queryProperty.setNot(negated);
-        queryProperty.setOrNull(missing);
-        return queryProperty;
-    }
 
     @Test
     public void single_operator_generates_correct_condition_if_crit_prop_param_not_available() {
@@ -70,7 +58,7 @@ public class CritConditionOperatorTest extends BaseEntQueryCompositionTCase {
         final QueryProperty queryProperty = getQueryProperty(empty(), false, true);
         final Map<String, Object> paramValues = getParams(critProp, queryProperty);
         assertModelsEquals(//
-                conditions(select_veh_where.condition(buildCondition(queryProperty, persistedProp, false)), paramValues), //
+                conditions(select_veh_where.condition(dqbBuildCondition(queryProperty, persistedProp)), paramValues), //
                 conditions(select_veh_where.critCondition(persistedProp, critProp), paramValues));
     }
 
@@ -79,7 +67,7 @@ public class CritConditionOperatorTest extends BaseEntQueryCompositionTCase {
         final QueryProperty queryProperty = getQueryProperty(empty(), true, true);
         final Map<String, Object> paramValues = getParams(critProp, queryProperty);
         assertModelsEquals(//
-                conditions(select_veh_where.condition(buildCondition(queryProperty, persistedProp, false)), paramValues), //
+                conditions(select_veh_where.condition(dqbBuildCondition(queryProperty, persistedProp)), paramValues), //
                 conditions(select_veh_where.critCondition(persistedProp, critProp), paramValues));
     }
 
@@ -97,7 +85,7 @@ public class CritConditionOperatorTest extends BaseEntQueryCompositionTCase {
         final QueryProperty queryProperty = getQueryProperty(of(D), false, false);
         final Map<String, Object> paramValues = getParams(critProp, queryProperty);
         assertModelsEquals(//
-                conditions(select_veh_where.condition(buildCondition(queryProperty, persistedProp, false)), paramValues), //
+                conditions(select_veh_where.condition(dqbBuildCondition(queryProperty, persistedProp)), paramValues), //
                 conditions(select_veh_where.critCondition(persistedProp, critProp), paramValues));
     }
 
@@ -106,7 +94,7 @@ public class CritConditionOperatorTest extends BaseEntQueryCompositionTCase {
         final QueryProperty queryProperty = getQueryProperty(of(D), false, true);
         final Map<String, Object> paramValues = getParams(critProp, queryProperty);
         assertModelsEquals(//
-                conditions(select_veh_where.condition(buildCondition(queryProperty, persistedProp, false)), paramValues), //
+                conditions(select_veh_where.condition(dqbBuildCondition(queryProperty, persistedProp)), paramValues), //
                 conditions(select_veh_where.critCondition(persistedProp, critProp), paramValues));
     }
 
@@ -115,7 +103,7 @@ public class CritConditionOperatorTest extends BaseEntQueryCompositionTCase {
         final QueryProperty queryProperty = getQueryProperty(of(D), true, false);
         final Map<String, Object> paramValues = getParams(critProp, queryProperty);
         assertModelsEquals(//
-                conditions(select_veh_where.condition(buildCondition(queryProperty, persistedProp, false)), paramValues), //
+                conditions(select_veh_where.condition(dqbBuildCondition(queryProperty, persistedProp)), paramValues), //
                 conditions(select_veh_where.critCondition(persistedProp, critProp), paramValues));
     }
 
@@ -124,7 +112,7 @@ public class CritConditionOperatorTest extends BaseEntQueryCompositionTCase {
         final QueryProperty queryProperty = getQueryProperty(of(D), true, true);
         final Map<String, Object> paramValues = getParams(critProp, queryProperty);
         assertModelsEquals(//
-                conditions(select_veh_where.condition(buildCondition(queryProperty, persistedProp, false)), paramValues), //
+                conditions(select_veh_where.condition(dqbBuildCondition(queryProperty, persistedProp)), paramValues), //
                 conditions(select_veh_where.critCondition(persistedProp, critProp), paramValues));
     }
 
@@ -133,7 +121,7 @@ public class CritConditionOperatorTest extends BaseEntQueryCompositionTCase {
         final QueryProperty queryProperty = getQueryProperty(of(D), false, false);
         final Map<String, Object> paramValues = getParams(critProp, queryProperty);
         assertModelsEquals(//
-                conditions(select_veh_where.condition(cond().exists(modelStart.and().condition(buildCondition(queryProperty, persistedPropInCollection, false)).model()).model()), paramValues), //
+                conditions(select_veh_where.condition(cond().exists(modelStart.and().condition(dqbBuildCondition(queryProperty, persistedPropInCollection)).model()).model()), paramValues), //
                 conditions(select_veh_where.critCondition(modelStart, persistedPropInCollection, critProp), paramValues));
     }
 
@@ -141,7 +129,7 @@ public class CritConditionOperatorTest extends BaseEntQueryCompositionTCase {
     public void collectional_operator_generates_correct_condition_if_crit_prop_value_is_not_empty_and_missing() {
         final QueryProperty queryProperty = getQueryProperty(of(D), false, true);
         final Map<String, Object> paramValues = getParams(critProp, queryProperty);
-        final ConditionModel valueCondition = buildCondition(getQueryProperty(of(D), false, false), persistedPropInCollection, false);
+        final ConditionModel valueCondition = dqbBuildCondition(getQueryProperty(of(D), false, false), persistedPropInCollection);
         assertModelsEquals(//
                 conditions(select_veh_where.condition(cond().exists(modelStart.and().condition(valueCondition).model()).//
                         or().notExists(modelStart.model()).model()), paramValues), //
@@ -152,7 +140,7 @@ public class CritConditionOperatorTest extends BaseEntQueryCompositionTCase {
     public void collectional_operator_generates_correct_condition_if_crit_prop_value_is_not_empty_and_negated() {
         final QueryProperty queryProperty = getQueryProperty(of(D), true, false);
         final Map<String, Object> paramValues = getParams(critProp, queryProperty);
-        final ConditionModel valueCondition = buildCondition(getQueryProperty(of(D), false, false), persistedPropInCollection, false);
+        final ConditionModel valueCondition = dqbBuildCondition(getQueryProperty(of(D), false, false), persistedPropInCollection);
         assertModelsEquals(//
                 conditions(select_veh_where.condition(cond().notExists(modelStart.and().condition(valueCondition).model()).//
                         or().notExists(modelStart.model()).model()), paramValues), //
@@ -163,7 +151,7 @@ public class CritConditionOperatorTest extends BaseEntQueryCompositionTCase {
     public void collectional_operator_generates_correct_condition_if_crit_prop_value_is_not_empty_and_negated_and_missing() {
         final QueryProperty queryProperty = getQueryProperty(of(D), true, true);
         final Map<String, Object> paramValues = getParams(critProp, queryProperty);
-        final ConditionModel valueCondition = buildCondition(getQueryProperty(of(D), false, false), persistedPropInCollection, false);
+        final ConditionModel valueCondition = dqbBuildCondition(getQueryProperty(of(D), false, false), persistedPropInCollection);
         assertModelsEquals(//
                 conditions(select_veh_where.condition(cond().notExists(modelStart.and().condition(valueCondition).model()).//
                         and().exists(modelStart.model()).model()), paramValues), //
@@ -212,4 +200,25 @@ public class CritConditionOperatorTest extends BaseEntQueryCompositionTCase {
                 conditions(select_veh_where.condition(emptyCondition())), //
                 conditions(select_veh_where.critCondition(modelStart, persistedPropInCollection, critProp)));
     }
+
+    //////////////////////////////////////////////////////
+    ///////////////// helper functions ///////////////////
+    //////////////////////////////////////////////////////
+    private static Map<String, Object> getParams(final String critPropName, final QueryProperty queryProperty) {
+        return mapOf(t2(DynamicQueryBuilder.QueryProperty.queryPropertyParamName(critProp), queryProperty));
+    }
+
+    private static QueryProperty getQueryProperty(final Optional<String> value, final boolean negated, final boolean missing) {
+        final QueryProperty queryProperty = createNotInitialisedQueryProperty(VEHICLE, critProp);
+        queryProperty.setValue(value.map(v -> asList(v)).orElse(emptyList()));
+        queryProperty.setNot(negated);
+        queryProperty.setOrNull(missing);
+        return queryProperty;
+    }
+    
+    /** A helper function to remove confusion that has to do with passing {@code false} as the last argument value for calls to {@link DynamicQueryBuilder#buildCondition(QueryProperty, String, boolean)}. */
+    public static <ET extends AbstractEntity<?>> ConditionModel dqbBuildCondition(final QueryProperty property, final String propertyName) {
+        return buildCondition(property, propertyName, false);
+    }
+
 }
