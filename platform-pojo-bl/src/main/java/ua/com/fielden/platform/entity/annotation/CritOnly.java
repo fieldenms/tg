@@ -19,7 +19,8 @@ import java.lang.annotation.Target;
 @Target({ ElementType.FIELD })
 public @interface CritOnly {
 
-    Type value() default Type.RANGE; // represents a choice by which boundary (left or right) the property should be selected.
+    /** Defines how associated property should be represented. */
+    Type value() default Type.RANGE;
 
     /** Only applicable to criteria only properties of BigDecimal type. */
     long precision() default -1;
@@ -27,14 +28,14 @@ public @interface CritOnly {
     /** Only applicable to criteria only properties of BigDecimal type. */
     long scale() default -1;
 
-    /***/
+    /** Attribute to specify applicability of mnemonics for a {@code CritOnly} property. */
     Mnemonics mnemonics() default Mnemonics.DEFAULT;
 
     /**
      * Mnemonic options for overriding default value deduced from critonly {@link Type}.
      */
     public enum Mnemonics {
-        /** The value for mnemonics should be deduced from type value. */
+        /** The value for mnemonics should be deduced from the value of {@code CritOnly.Type}. */
         DEFAULT,
         /** Critonly property should be with mnemonics. */
         WITH,
