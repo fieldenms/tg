@@ -15,6 +15,7 @@ import '/resources/images/tg-icons.js';
 
 import '/resources/actions/tg-ui-action.js';
 import '/resources/egi/tg-secondary-action-button.js';
+import '/resources/egi/tg-overflow-menu.js';
 import '/resources/egi/tg-secondary-action-dropdown.js';
 import '/resources/egi/tg-egi-cell.js';
 
@@ -374,6 +375,7 @@ const template = html`
                 </div>
                 <div class="grid-toolbar-content" style="margin-left:auto">
                     <slot name="standart-action"></slot>
+                    <tg-overflow-menu></tg-overflow-menu>
                 </div>
             </div>
         </div>
