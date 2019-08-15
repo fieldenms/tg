@@ -130,6 +130,10 @@ Polymer({
         return this.$.view.getSelectedPage();
     },
 
+    getSelectedPageTitle: function () {
+        return this.$.view.selectedPageTitle || this.menuItem.key;
+    },
+
     searchMenu: function () {
         this.$.view.searchMenu();
     },
