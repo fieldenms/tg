@@ -1,11 +1,13 @@
 package ua.com.fielden.platform.reflection;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static ua.com.fielden.platform.reflection.AnnotationReflector.getPropertyAnnotation;
 import static ua.com.fielden.platform.reflection.AnnotationReflector.getPropertyAnnotationInHierarchy;
+import static ua.com.fielden.platform.reflection.AnnotationReflector.isAnnotationPresentInHierarchy;
 
 import java.util.Optional;
 
@@ -18,6 +20,7 @@ import ua.com.fielden.platform.entity.annotation.KeyTitle;
 import ua.com.fielden.platform.entity.annotation.KeyType;
 import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.entity.annotation.Title;
+import ua.com.fielden.platform.entity.annotation.mutator.AfterChange;
 import ua.com.fielden.platform.reflection.test_entities.FirstLevelEntity;
 import ua.com.fielden.platform.reflection.test_entities.SecondLevelEntity;
 import ua.com.fielden.platform.reflection.test_entities.SimpleEntity;
@@ -47,29 +50,51 @@ public class AnnotationReflectorTest {
     }
 
     @Test
-    public void testHierarchicalPropertyAnnotationDetermination() {
-        // Property "propertyTwo" in FirstLevelEntity is annotated with @CritOnly; SecondLevelEntity is not, but it is derived from FirstLevelEntity
-        // Expect CritOnly from FirstLevelEntity to be picked up for SecondLevel
-        assertTrue("CritOnly annotation should have been determined for SecondLevelEntity.", AnnotationReflector.isAnnotationPresentInHierarchy(CritOnly.class, SecondLevelEntity.class, "propertyTwo"));
-        assertTrue("CritOnly annotation should have been determined for FirstLevelEntity.", AnnotationReflector.isAnnotationPresentInHierarchy(CritOnly.class, FirstLevelEntity.class, "propertyTwo"));
-        assertTrue("CritOnly annotation should have been determined for SecondLevelEntity.", AnnotationReflector.isAnnotationPresentInHierarchy(CritOnly.class, SecondLevelEntity.class, "critOnlyAEProperty"));
-        assertTrue("CritOnly annotation should have been determined for FirstLevelEntity.", AnnotationReflector.isAnnotationPresentInHierarchy(CritOnly.class, FirstLevelEntity.class, "critOnlyAEProperty"));
-        assertTrue("CritOnly annotation should have been determined for SecondLevelEntity.", AnnotationReflector.isAnnotationPresentInHierarchy(CritOnly.class, SecondLevelEntity.class, "critOnlyAEProperty.property"));
-        assertTrue("CritOnly annotation should have been determined for FirstLevelEntity.", AnnotationReflector.isAnnotationPresentInHierarchy(CritOnly.class, FirstLevelEntity.class, "critOnlyAEProperty.property"));
-        assertTrue("CritOnly annotation should have been determined for SecondLevelEntity.", AnnotationReflector.isAnnotationPresentInHierarchy(CritOnly.class, SecondLevelEntity.class, "critOnlyAEProperty.propertyTwo"));
-        assertTrue("CritOnly annotation should have been determined for FirstLevelEntity.", AnnotationReflector.isAnnotationPresentInHierarchy(CritOnly.class, FirstLevelEntity.class, "critOnlyAEProperty.propertyTwo"));
+    public void isAnnotationPresentInHierarchy_is_true_for_properties_with_annotations_at_different_levels_of_type_hierarchy() {
+        assertTrue(isAnnotationPresentInHierarchy(CritOnly.class, SecondLevelEntity.class, "propertyTwo"));
+        assertTrue(isAnnotationPresentInHierarchy(CritOnly.class, FirstLevelEntity.class, "propertyTwo"));
+        assertTrue(isAnnotationPresentInHierarchy(CritOnly.class, SecondLevelEntity.class, "critOnlyAEProperty"));
+        assertTrue(isAnnotationPresentInHierarchy(CritOnly.class, FirstLevelEntity.class, "critOnlyAEProperty"));
     }
 
     @Test
-    public void crit_only_annotation_should_be_available_in_hierarchy_of_properties () {
-        assertTrue("CritOnly annotation should have been determined for SecondLevelEntity.", getPropertyAnnotationInHierarchy(CritOnly.class, SecondLevelEntity.class, "propertyTwo").isPresent());
-        assertTrue("CritOnly annotation should have been determined for FirstLevelEntity.", getPropertyAnnotationInHierarchy(CritOnly.class, FirstLevelEntity.class, "propertyTwo").isPresent());
-        assertTrue("CritOnly annotation should have been determined for SecondLevelEntity.", getPropertyAnnotationInHierarchy(CritOnly.class, SecondLevelEntity.class, "critOnlyAEProperty").isPresent());
-        assertTrue("CritOnly annotation should have been determined for FirstLevelEntity.", getPropertyAnnotationInHierarchy(CritOnly.class, FirstLevelEntity.class, "critOnlyAEProperty").isPresent());
-        assertTrue("CritOnly annotation should have been determined for SecondLevelEntity.", getPropertyAnnotationInHierarchy(CritOnly.class, SecondLevelEntity.class, "critOnlyAEProperty.property").isPresent());
-        assertTrue("CritOnly annotation should have been determined for FirstLevelEntity.", getPropertyAnnotationInHierarchy(CritOnly.class, FirstLevelEntity.class, "critOnlyAEProperty.property").isPresent());
-        assertTrue("CritOnly annotation should have been determined for SecondLevelEntity.", getPropertyAnnotationInHierarchy(CritOnly.class, SecondLevelEntity.class, "critOnlyAEProperty.propertyTwo").isPresent());
-        assertTrue("CritOnly annotation should have been determined for FirstLevelEntity.", getPropertyAnnotationInHierarchy(CritOnly.class, FirstLevelEntity.class, "critOnlyAEProperty.propertyTwo").isPresent());
+    public void isAnnotationPresentInHierarchy_is_true_for_dotnotated_properties_with_annotations_at_different_levels_of_type_hierarchy() {
+        assertTrue(isAnnotationPresentInHierarchy(CritOnly.class, SecondLevelEntity.class, "critOnlyAEProperty.property"));
+        assertTrue(isAnnotationPresentInHierarchy(CritOnly.class, FirstLevelEntity.class, "critOnlyAEProperty.property"));
+        assertTrue(isAnnotationPresentInHierarchy(CritOnly.class, SecondLevelEntity.class, "critOnlyAEProperty.propertyTwo"));
+        assertTrue(isAnnotationPresentInHierarchy(CritOnly.class, FirstLevelEntity.class, "critOnlyAEProperty.propertyTwo"));
+    }
+
+    @Test
+    public void getPropertyAnnotationInHierarchy_returns_correct_annotation_for_properties_with_annotations_at_different_levels_of_type_hierarchy() {
+        assertEquals(CritOnly.class, getPropertyAnnotationInHierarchy(CritOnly.class, SecondLevelEntity.class, "propertyTwo").get().annotationType());
+        assertEquals(CritOnly.class, getPropertyAnnotationInHierarchy(CritOnly.class, FirstLevelEntity.class, "propertyTwo").get().annotationType());
+        assertEquals(CritOnly.class, getPropertyAnnotationInHierarchy(CritOnly.class, SecondLevelEntity.class, "critOnlyAEProperty").get().annotationType());
+        assertEquals(CritOnly.class, getPropertyAnnotationInHierarchy(CritOnly.class, FirstLevelEntity.class, "critOnlyAEProperty").get().annotationType());
+    }
+
+    @Test
+    public void getPropertyAnnotationInHierarchy_returns_empty_result_for_properties_without_annotations_at_different_levels_of_type_hierarchy() {
+        assertFalse(getPropertyAnnotationInHierarchy(AfterChange.class, SecondLevelEntity.class, "propertyTwo").isPresent());
+        assertFalse(getPropertyAnnotationInHierarchy(AfterChange.class, FirstLevelEntity.class, "propertyTwo").isPresent());
+        assertFalse(getPropertyAnnotationInHierarchy(AfterChange.class, SecondLevelEntity.class, "critOnlyAEProperty").isPresent());
+        assertFalse(getPropertyAnnotationInHierarchy(AfterChange.class, FirstLevelEntity.class, "critOnlyAEProperty").isPresent());
+    }
+
+    @Test
+    public void getPropertyAnnotationInHierarchy_returns_correct_annotation_for_dotnotated_properties_with_annotations_at_different_levels_of_type_hierarchy() {
+        assertEquals(CritOnly.class, getPropertyAnnotationInHierarchy(CritOnly.class, SecondLevelEntity.class, "critOnlyAEProperty.property").get().annotationType());
+        assertEquals(CritOnly.class, getPropertyAnnotationInHierarchy(CritOnly.class, FirstLevelEntity.class, "critOnlyAEProperty.property").get().annotationType());
+        assertEquals(CritOnly.class, getPropertyAnnotationInHierarchy(CritOnly.class, SecondLevelEntity.class, "critOnlyAEProperty.propertyTwo").get().annotationType());
+        assertEquals(CritOnly.class, getPropertyAnnotationInHierarchy(CritOnly.class, FirstLevelEntity.class, "critOnlyAEProperty.propertyTwo").get().annotationType());
+    }
+
+    @Test
+    public void getPropertyAnnotationInHierarchy_returns_empty_result_for_dotnotated_properties_without_annotations_at_different_levels_of_type_hierarchy() {
+        assertFalse(getPropertyAnnotationInHierarchy(AfterChange.class, SecondLevelEntity.class, "critOnlyAEProperty.property").isPresent());
+        assertFalse(getPropertyAnnotationInHierarchy(AfterChange.class, FirstLevelEntity.class, "critOnlyAEProperty.property").isPresent());
+        assertFalse(getPropertyAnnotationInHierarchy(AfterChange.class, SecondLevelEntity.class, "critOnlyAEProperty.propertyTwo").isPresent());
+        assertFalse(getPropertyAnnotationInHierarchy(AfterChange.class, FirstLevelEntity.class, "critOnlyAEProperty.propertyTwo").isPresent());
     }
 
     @Test
