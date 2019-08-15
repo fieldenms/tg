@@ -491,13 +491,13 @@ public class DynamicQueryBuilderTest {
     }
 
     @Test
-    public void test_QueryProperty_ignoring_key_part_not_to_do_extra_joins() {
-        assertEquals("Should be equal.", ID, DynamicQueryBuilder.getPropertyNameWithoutKeyPart(KEY));
-        assertEquals("Should be equal.", "alias", DynamicQueryBuilder.getPropertyNameWithoutKeyPart("alias"));
-        assertEquals("Should be equal.", "alias", DynamicQueryBuilder.getPropertyNameWithoutKeyPart("alias.key"));
-        assertEquals("Should be equal.", "alias.prop", DynamicQueryBuilder.getPropertyNameWithoutKeyPart("alias.prop.key"));
-        assertEquals("Should be equal.", "alias.key.prop", DynamicQueryBuilder.getPropertyNameWithoutKeyPart("alias.key.prop"));
-        assertEquals("Should be equal.", "alias.key.prop1.prop2", DynamicQueryBuilder.getPropertyNameWithoutKeyPart("alias.key.prop1.prop2"));
+    public void QueryProperty_ignoring_key_part_does_not_add_extra_joins() {
+        assertEquals(ID, DynamicQueryBuilder.getPropertyNameWithoutKeyPart(KEY));
+        assertEquals("alias", DynamicQueryBuilder.getPropertyNameWithoutKeyPart("alias"));
+        assertEquals("alias", DynamicQueryBuilder.getPropertyNameWithoutKeyPart("alias.key"));
+        assertEquals("alias.prop", DynamicQueryBuilder.getPropertyNameWithoutKeyPart("alias.prop.key"));
+        assertEquals("alias.key.prop", DynamicQueryBuilder.getPropertyNameWithoutKeyPart("alias.key.prop"));
+        assertEquals("alias.key.prop1.prop2", DynamicQueryBuilder.getPropertyNameWithoutKeyPart("alias.key.prop1.prop2"));
     }
 
     @Test
