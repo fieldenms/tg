@@ -904,7 +904,15 @@ public class CentreUpdater {
      * @return
      */
     private static <T> Object nullOrConvert(final Object value, final Function<T, ?> conversionFunc) {
-        return value == null ? null : conversionFunc.apply((T) value);
+        if (value == null) {
+            return null;
+        }
+        try {
+            return conversionFunc.apply((T) value);
+        } catch (final Exception ex) {
+            logger.warn("Error converting value.", ex);
+            return null;
+        }
     }
     
     /**
