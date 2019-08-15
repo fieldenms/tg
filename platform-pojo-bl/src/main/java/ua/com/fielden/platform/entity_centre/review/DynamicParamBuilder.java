@@ -7,6 +7,7 @@ import static ua.com.fielden.platform.criteria.generator.impl.CriteriaReflector.
 import static ua.com.fielden.platform.criteria.generator.impl.CriteriaReflector.to;
 import static ua.com.fielden.platform.entity_centre.review.DynamicQueryBuilder.prepCritValuesForEntityTypedProp;
 import static ua.com.fielden.platform.entity_centre.review.DynamicQueryBuilder.prepCritValuesForStringTypedProp;
+import static ua.com.fielden.platform.entity_centre.review.criteria.EntityQueryCriteriaUtils.createNotInitialisedQueryProperty;
 
 import java.util.HashMap;
 import java.util.List;
@@ -17,7 +18,6 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.CritOnly;
 import ua.com.fielden.platform.entity_centre.exceptions.EntityCentreExecutionException;
 import ua.com.fielden.platform.entity_centre.review.DynamicQueryBuilder.QueryProperty;
-import ua.com.fielden.platform.entity_centre.review.criteria.EntityQueryCriteriaUtils;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
 
@@ -39,8 +39,8 @@ public class DynamicParamBuilder {
     public static <T extends AbstractEntity<?>> Map<String, Object> buildParametersMap(final Class<T> managedType, final Map<String, Pair<Object, Object>> propValues) {
         final Map<String, Object> params = new HashMap<>();
         for (final Entry<String, Pair<Object, Object>> propValEntry : propValues.entrySet()) {
-            final QueryProperty qp = EntityQueryCriteriaUtils.createNotInitialisedQueryProperty(managedType, propValEntry.getKey());
-            if (qp.isCritOnly()/* && !qp.isCritOnlyWithMnemonics()*/) {
+            final QueryProperty qp = createNotInitialisedQueryProperty(managedType, propValEntry.getKey());
+            if (qp.isCritOnly()) {
                 params.putAll(getPropertyValues(qp, propValEntry));
             }
         }

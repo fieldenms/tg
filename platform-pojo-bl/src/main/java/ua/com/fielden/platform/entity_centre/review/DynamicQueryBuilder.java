@@ -77,6 +77,7 @@ public class DynamicQueryBuilder {
      *
      */
     public static class QueryProperty {
+        private static final String QP_PREFIX = "QP_";
         private Object value = null;
         private Object value2 = null;
         private Boolean exclusive = null;
@@ -114,7 +115,7 @@ public class DynamicQueryBuilder {
          * @return
          */
         public static String queryPropertyParamName(final String propertyName) {
-            return "QP_" + propertyName;
+            return QP_PREFIX + propertyName;
         }
 
         public QueryProperty(final Class<?> entityClass, final String propertyName) {
@@ -287,7 +288,7 @@ public class DynamicQueryBuilder {
          * @return
          */
         public boolean shouldBeIgnored() {
-            return isCritOnly() || isAECritOnlyChild() || isEmptyAndMnemonicless();
+            return isCritOnly() || isAECritOnlyChild() || isEmptyWithoutMnemonics();
         }
 
         /**
@@ -295,7 +296,7 @@ public class DynamicQueryBuilder {
          *
          * @return
          */
-        public boolean isEmptyAndMnemonicless() {
+        public boolean isEmptyWithoutMnemonics() {
             return isEmpty() && !TRUE.equals(orNull);
         }
 
