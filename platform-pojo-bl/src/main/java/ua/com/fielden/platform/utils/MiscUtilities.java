@@ -79,16 +79,6 @@ public class MiscUtilities {
     }
 
     /**
-     * Extracts the parameters objects from optional values and returns map between their property names and extracted objects.
-     *
-     * @param params
-     * @return
-     */
-    public static Map<String, Object> extractExactParams(final Map<String, Optional<?>> params) {
-        return params.entrySet().stream().filter(entry -> entry.getValue().isPresent()).collect(toMap(entry -> entry.getKey(), entry -> entry.getValue().orElse(null)));
-    }
-
-    /**
      * Returns true if value matches valuePattern, false otherwise. This method behaves like autocompleter's value matcher
      *
      * @param value

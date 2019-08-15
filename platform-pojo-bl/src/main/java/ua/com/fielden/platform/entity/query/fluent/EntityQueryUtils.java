@@ -1,5 +1,10 @@
 package ua.com.fielden.platform.entity.query.fluent;
 
+import static java.util.stream.Collectors.toMap;
+
+import java.util.Map;
+import java.util.Optional;
+
 import ua.com.fielden.platform.dao.QueryExecutionModel;
 import ua.com.fielden.platform.dao.QueryExecutionModel.Builder;
 import ua.com.fielden.platform.entity.AbstractEntity;
@@ -118,4 +123,15 @@ public class EntityQueryUtils {
 	public static ConditionModel emptyCondition() {
 	    return cond().iVal(null).eq().iVal(null).model();
 	}
+
+    /**
+     * Extracts parameters from optional values and returns a map between property names and extracted parameter values.
+     *
+     * @param params
+     * @return
+     */
+    public static Map<String, Object> extractExactParams(final Map<String, Optional<?>> params) {
+        return params.entrySet().stream().filter(entry -> entry.getValue().isPresent()).collect(toMap(entry -> entry.getKey(), entry -> entry.getValue().orElse(null)));
+    }
+
 }
