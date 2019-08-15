@@ -131,7 +131,7 @@ Polymer({
     },
 
     getSelectedPageTitle: function () {
-        return this.$.view.selectedPageTitle;
+        return this.$.view.selectedPageTitle || this.menuItem.key;
     },
 
     searchMenu: function () {
