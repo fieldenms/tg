@@ -150,6 +150,7 @@ Polymer({
 
     properties: {
         menuConfig: Object,
+        appTitle: String,
         animationConfig: {
             value: function () {
                 return {};
@@ -204,6 +205,10 @@ Polymer({
                     nodes: Array.prototype.slice.call(nodeList)
                 }];
         }
+    },
+
+    getSelectedPageTitle: function () {
+        return this.appTitle;
     },
 
     /**
