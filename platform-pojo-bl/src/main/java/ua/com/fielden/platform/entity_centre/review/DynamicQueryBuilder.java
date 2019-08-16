@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.entity_centre.review;
 
 import static java.lang.Boolean.TRUE;
+import static java.util.stream.Collectors.groupingBy;
 import static ua.com.fielden.platform.entity.AbstractEntity.ID;
 import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.cond;
@@ -22,7 +23,6 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
@@ -934,8 +934,8 @@ public class DynamicQueryBuilder {
      * @param propType
      * @return
      */
-    public static ConditionModel propertyLike(final String propertyNameWithKey, final List<String> searchValues, final Class<? extends AbstractEntity<?>> propType) {
-        final Map<Boolean, List<String>> searchVals = searchValues.stream().collect(Collectors.groupingBy(str -> str.contains("*")));
+    private static ConditionModel propertyLike(final String propertyNameWithKey, final List<String> searchValues, final Class<? extends AbstractEntity<?>> propType) {
+        final Map<Boolean, List<String>> searchVals = searchValues.stream().collect(groupingBy(str -> str.contains("*")));
         final String propertyNameWithoutKey = getPropertyNameWithoutKeyPart(propertyNameWithKey);
         if (searchVals.containsKey(false) && searchVals.containsKey(true)) {
             return cond()
