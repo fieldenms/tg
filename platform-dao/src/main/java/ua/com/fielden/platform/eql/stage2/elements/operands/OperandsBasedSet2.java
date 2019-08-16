@@ -19,14 +19,14 @@ public class OperandsBasedSet2 implements ISetOperand2<OperandsBasedSet3> {
     @Override
     public TransformationResult<OperandsBasedSet3> transform(final TransformationContext context) {
         final List<ISingleOperand3> transformedOperands = new ArrayList<>();
-        TransformationContext currentResolutionContext = context;
+        TransformationContext currentContext = context;
         for (final ISingleOperand2<? extends ISingleOperand3> singleOperand : operands) {
             final TransformationResult<? extends ISingleOperand3> operandTransformationResult = singleOperand.transform(context);
             transformedOperands.add(operandTransformationResult.item);
-            currentResolutionContext = operandTransformationResult.updatedContext;
+            currentContext = operandTransformationResult.updatedContext;
         }
 
-        return new TransformationResult<OperandsBasedSet3>(new OperandsBasedSet3(transformedOperands), currentResolutionContext);
+        return new TransformationResult<OperandsBasedSet3>(new OperandsBasedSet3(transformedOperands), currentContext);
     }
 
     @Override

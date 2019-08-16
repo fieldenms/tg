@@ -25,13 +25,13 @@ public class Yields2 {
     
     public TransformationResult<Yields3> transform(final TransformationContext context) {
         final List<Yield3> yieldsList = new ArrayList<>(); 
-        TransformationContext currentResolutionContext = context;
+        TransformationContext currentContext = context;
         for (final Yield2 yield : yieldsMap.values()) {
-            final TransformationResult<Yield3> yieldTransformationResult = yield.transform(currentResolutionContext);
-            currentResolutionContext = yieldTransformationResult.updatedContext;
+            final TransformationResult<Yield3> yieldTransformationResult = yield.transform(currentContext);
+            currentContext = yieldTransformationResult.updatedContext;
             yieldsList.add(yieldTransformationResult.item);
         }
-        return new TransformationResult<Yields3>(new Yields3(yieldsList), currentResolutionContext);
+        return new TransformationResult<Yields3>(new Yields3(yieldsList), currentContext);
     }
 
     @Override

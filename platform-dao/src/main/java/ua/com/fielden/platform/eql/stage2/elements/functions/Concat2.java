@@ -26,13 +26,13 @@ public class Concat2 extends AbstractFunction2<Concat3> {
     @Override
     public TransformationResult<Concat3> transform(final TransformationContext context) {
         final List<ISingleOperand3> transformed = new ArrayList<>();
-        TransformationContext currentResolutionContext = context;
+        TransformationContext currentContext = context;
         for (final ISingleOperand2<? extends ISingleOperand3> operand : operands) {
             final TransformationResult<? extends ISingleOperand3> operandTransformationResult = operand.transform(context);
             transformed.add(operandTransformationResult.item);
-            currentResolutionContext = operandTransformationResult.updatedContext;
+            currentContext = operandTransformationResult.updatedContext;
         }
-        return new TransformationResult<Concat3>(new Concat3(transformed), currentResolutionContext);
+        return new TransformationResult<Concat3>(new Concat3(transformed), currentContext);
     }
 
     @Override

@@ -35,15 +35,15 @@ public class CaseWhen2 extends AbstractFunction2<CaseWhen3> {
     @Override
     public TransformationResult<CaseWhen3> transform(final TransformationContext context) {
         final List<Pair<ICondition3, ISingleOperand3>> transformedWhenThenPairs = new ArrayList<>();
-        TransformationContext currentResolutionContext = context;
+        TransformationContext currentContext = context;
         for (final Pair<ICondition2<? extends ICondition3>, ISingleOperand2<? extends ISingleOperand3>> pair : whenThenPairs) {
-            final TransformationResult<? extends ICondition3> conditionTransformationResult = pair.getKey().transform(currentResolutionContext);
-            currentResolutionContext = conditionTransformationResult.updatedContext;
-            final TransformationResult<? extends ISingleOperand3> operandTransformationResult = pair.getValue().transform(currentResolutionContext);
-            currentResolutionContext = operandTransformationResult.updatedContext;
+            final TransformationResult<? extends ICondition3> conditionTransformationResult = pair.getKey().transform(currentContext);
+            currentContext = conditionTransformationResult.updatedContext;
+            final TransformationResult<? extends ISingleOperand3> operandTransformationResult = pair.getValue().transform(currentContext);
+            currentContext = operandTransformationResult.updatedContext;
             transformedWhenThenPairs.add(new Pair<ICondition3, ISingleOperand3>(conditionTransformationResult.item, operandTransformationResult.item));
         }
-        final TransformationResult<? extends ISingleOperand3> elseOperandTransformationResult = elseOperand.transform(currentResolutionContext);
+        final TransformationResult<? extends ISingleOperand3> elseOperandTransformationResult = elseOperand.transform(currentContext);
         
         return new TransformationResult<CaseWhen3>(new CaseWhen3(transformedWhenThenPairs, elseOperandTransformationResult.item, typeCast), elseOperandTransformationResult.updatedContext);
     }

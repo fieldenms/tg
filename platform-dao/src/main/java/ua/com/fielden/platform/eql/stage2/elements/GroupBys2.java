@@ -16,13 +16,13 @@ public class GroupBys2 {
 
     public TransformationResult<GroupBys3> transform(final TransformationContext context) {
             final List<GroupBy3> transformed = new ArrayList<>();
-            TransformationContext currentResolutionContext = context;
+            TransformationContext currentContext = context;
             for (final GroupBy2 groupBy : groups) {
-                final TransformationResult<GroupBy3> groupByTransformationResult = groupBy.transform(currentResolutionContext);
+                final TransformationResult<GroupBy3> groupByTransformationResult = groupBy.transform(currentContext);
                 transformed.add(groupByTransformationResult.item);
-                currentResolutionContext = groupByTransformationResult.updatedContext;
+                currentContext = groupByTransformationResult.updatedContext;
             }
-            return new TransformationResult<GroupBys3>(new GroupBys3(transformed), currentResolutionContext);
+            return new TransformationResult<GroupBys3>(new GroupBys3(transformed), currentContext);
     }
 
     @Override

@@ -25,13 +25,13 @@ public class Expression2 implements ISingleOperand2<Expression3> {
     public TransformationResult<Expression3> transform(final TransformationContext context) {
         final List<CompoundSingleOperand3> transformed = new ArrayList<>();
         final TransformationResult<? extends ISingleOperand3> firstTransformationResult = first.transform(context);
-        TransformationContext currentResolutionContext = firstTransformationResult.updatedContext;
+        TransformationContext currentContext = firstTransformationResult.updatedContext;
         for (final CompoundSingleOperand2 item : items) {
-            final TransformationResult<? extends ISingleOperand3> itemTransformationResult = item.operand.transform(currentResolutionContext);
+            final TransformationResult<? extends ISingleOperand3> itemTransformationResult = item.operand.transform(currentContext);
             transformed.add(new CompoundSingleOperand3(itemTransformationResult.item, item.operator));
-            currentResolutionContext = itemTransformationResult.updatedContext;
+            currentContext = itemTransformationResult.updatedContext;
         }
-        return new TransformationResult<Expression3>(new Expression3(firstTransformationResult.item, transformed), currentResolutionContext);
+        return new TransformationResult<Expression3>(new Expression3(firstTransformationResult.item, transformed), currentContext);
     }
     
     @Override

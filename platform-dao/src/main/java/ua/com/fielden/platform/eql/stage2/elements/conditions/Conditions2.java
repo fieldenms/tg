@@ -32,28 +32,28 @@ public class Conditions2 extends AbstractCondition2<Conditions3> {
     @Override
     public TransformationResult<Conditions3> transform(final TransformationContext context) {
         final List<List<? extends ICondition3>> result = new ArrayList<>();
-        TransformationContext currentResolutionContext = context;
+        TransformationContext currentContext = context;
         
         for (final List<? extends ICondition2> andGroup : allConditionsAsDnf) {
             final List<ICondition3> transformedAndGroup = new ArrayList<>(); 
             for (final ICondition2<? extends ICondition3> andGroupCondition : andGroup) {
-                final TransformationResult<? extends ICondition3> andGroupConditionTransformationResult = andGroupCondition.transform(currentResolutionContext);
+                final TransformationResult<? extends ICondition3> andGroupConditionTransformationResult = andGroupCondition.transform(currentContext);
                 transformedAndGroup.add(andGroupConditionTransformationResult.item);
-                currentResolutionContext = andGroupConditionTransformationResult.updatedContext;
+                currentContext = andGroupConditionTransformationResult.updatedContext;
             }
             result.add(transformedAndGroup);
         }
         
 //        final List<List<? extends ICondition2>> transformed = formDnf().stream()
 //                .map(andGroup -> 
-//                                  andGroup.stream().map(cond -> cond.transform(resolutionContext))
+//                                  andGroup.stream().map(cond -> cond.transform(currentContext))
 //                                                   .filter(cond -> !cond.ignore())
 //                                                   .collect(toList())
 //                    )
 //                .filter(andGroup -> !andGroup.isEmpty())
 //                .collect(toList());
         
-        return new TransformationResult<Conditions3>(new Conditions3(negated, result), currentResolutionContext);
+        return new TransformationResult<Conditions3>(new Conditions3(negated, result), currentContext);
     }
 
     @Override

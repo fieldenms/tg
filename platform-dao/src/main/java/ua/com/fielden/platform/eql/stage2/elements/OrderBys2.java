@@ -16,13 +16,13 @@ public class OrderBys2 {
 
     public TransformationResult<OrderBys3> transform(final TransformationContext context) {
             final List<OrderBy3> transformed = new ArrayList<>();
-            TransformationContext currentResolutionContext = context;
+            TransformationContext currentContext = context;
             for (final OrderBy2 orderBy : models) {
-                final TransformationResult<OrderBy3> orderByTransformationResult = orderBy.transform(currentResolutionContext);
+                final TransformationResult<OrderBy3> orderByTransformationResult = orderBy.transform(currentContext);
                 transformed.add(orderByTransformationResult.item);
-                currentResolutionContext = orderByTransformationResult.updatedContext;
+                currentContext = orderByTransformationResult.updatedContext;
             }
-            return new TransformationResult<OrderBys3>(new OrderBys3(transformed), currentResolutionContext);
+            return new TransformationResult<OrderBys3>(new OrderBys3(transformed), currentContext);
     }
 
     @Override
