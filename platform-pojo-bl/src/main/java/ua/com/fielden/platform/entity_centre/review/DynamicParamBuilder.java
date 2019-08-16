@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.entity_centre.review;
 
 import static java.lang.String.format;
+import static java.util.Collections.emptyList;
 import static ua.com.fielden.platform.criteria.generator.impl.CriteriaReflector.from;
 import static ua.com.fielden.platform.criteria.generator.impl.CriteriaReflector.is;
 import static ua.com.fielden.platform.criteria.generator.impl.CriteriaReflector.not;
@@ -8,6 +9,7 @@ import static ua.com.fielden.platform.criteria.generator.impl.CriteriaReflector.
 import static ua.com.fielden.platform.entity_centre.review.DynamicQueryBuilder.prepCritValuesForEntityTypedProp;
 import static ua.com.fielden.platform.entity_centre.review.DynamicQueryBuilder.prepCritValuesForStringTypedProp;
 import static ua.com.fielden.platform.entity_centre.review.criteria.EntityQueryCriteriaUtils.createNotInitialisedQueryProperty;
+import static ua.com.fielden.platform.utils.CollectionUtil.listOf;
 
 import java.util.HashMap;
 import java.util.List;
@@ -66,7 +68,7 @@ public class DynamicParamBuilder {
             pairVals.put(not(propValEntry.getKey()), propValEntry.getValue().getValue());
         } else if (!qp.isSingle()) { // It is assumed that not SINGLE means MULTI
             if (EntityUtils.isEntityType(qp.getType())) {
-                pairVals.put(propValEntry.getKey(), prepCritValuesForEntityTypedProp((List<String>) propValEntry.getValue().getKey()));
+                pairVals.put(propValEntry.getKey(), prepCritValuesForEntityTypedProp(convertToStringList(propValEntry.getValue().getKey())));
             } else if (EntityUtils.isString(qp.getType())) {
                 pairVals.put(propValEntry.getKey(), prepCritValuesForStringTypedProp((String) propValEntry.getValue().getKey()));
             } else {
@@ -74,5 +76,22 @@ public class DynamicParamBuilder {
             }
         }
         return pairVals;
+    }
+
+    /**
+     * There are edge cases, such as when a domain model changes and {@code CritOnly} properties change from type {@code SINGLE} to {@code MULTI}, where the value passed is not a list, but a string.
+     * It is important to handle such situations gracefully.
+     *
+     * @param key
+     * @return
+     */
+    private static List<String> convertToStringList(final Object value) {
+        if (value == null) {
+            return emptyList();
+        } else if (value instanceof List) {
+            return (List<String>) value;
+        } else {
+            return listOf(value + "");
+        }
     }
 }
