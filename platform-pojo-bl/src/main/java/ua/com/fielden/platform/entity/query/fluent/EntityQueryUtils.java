@@ -15,20 +15,20 @@ import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 
 public class EntityQueryUtils {
 	public static <T extends AbstractEntity<?>> IFromAlias<T> select(final Class<T> entityType) {
-		return new FromAlias<T>(new Tokens().from(entityType));
+		return new FromAlias<>(new Tokens().from(entityType));
 	}
 
 	@SafeVarargs
     public static <T extends AbstractEntity<?>> IFromAlias<T> select(final EntityResultQueryModel<T>... sourceQueryModels) {
-		return new FromAlias<T>(new Tokens().from(sourceQueryModels));
+		return new FromAlias<>(new Tokens().from(sourceQueryModels));
 	}
 
 	public static IFromAlias<EntityAggregates> select(final AggregatedResultQueryModel... sourceQueryModels) {
-		return new FromAlias<EntityAggregates>(new Tokens().from(sourceQueryModels));
+		return new FromAlias<>(new Tokens().from(sourceQueryModels));
 	}
 
     public static <T extends AbstractEntity<?>> IFromNone<T> select() {
-        return new FromNone<T>(new Tokens().from());
+        return new FromNone<>(new Tokens().from());
     }
 
 	//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

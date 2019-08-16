@@ -8,6 +8,7 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig;
 import ua.com.fielden.platform.web.centre.api.resultset.impl.FunctionalActionKind;
 import ua.com.fielden.platform.web.interfaces.IRenderable;
+import ua.com.fielden.platform.web.view.master.api.helpers.impl.WidgetSelector;
 
 /**
  *
@@ -44,4 +45,6 @@ public interface IMaster<T extends AbstractEntity<?>> {
      * @return
      */
     EntityActionConfig actionConfig(final FunctionalActionKind actionKind, final int actionNumber);
+    
+    public Optional<WidgetSelector> widgetFor(final String propertyName);
 }

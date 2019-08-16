@@ -2,7 +2,7 @@ package ua.com.fielden.platform.entity.fetch;
 
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchKeyAndDescOnly;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchKeyAndDescOnlyAndInstrument;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchOnly;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchNone;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchOnlyAndInstrument;
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.determinePropertyType;
 
@@ -223,7 +223,7 @@ class FetchProvider<T extends AbstractEntity<?>> implements IFetchProvider<T> {
      * @return
      */
     private FetchProvider<T> copy(final boolean withKeyAndDesc, final boolean instrumented) {
-        return new FetchProvider<T>(entityType, copyPropertyProviders(), withKeyAndDesc, instrumented);
+        return new FetchProvider<>(entityType, copyPropertyProviders(), withKeyAndDesc, instrumented);
     }
 
     private LinkedHashMap<String, FetchProvider<AbstractEntity<?>>> copyPropertyProviders() {
@@ -236,7 +236,7 @@ class FetchProvider<T extends AbstractEntity<?>> implements IFetchProvider<T> {
 
     @Override
     public <V extends AbstractEntity<?>> IFetchProvider<V> copy(final Class<V> managedType) {
-        return new FetchProvider<V>(managedType, copyPropertyProviders(), withKeyAndDesc, instrumented);
+        return new FetchProvider<>(managedType, copyPropertyProviders(), withKeyAndDesc, instrumented);
     }
 
     /**
@@ -318,7 +318,7 @@ class FetchProvider<T extends AbstractEntity<?>> implements IFetchProvider<T> {
 
     private static FetchProvider<AbstractEntity<?>> createDefaultFetchProviderForEntityTypedProperty(final Class<AbstractEntity<?>> propertyType) {
         // default fetch provider for entity-typed property should be with key and desc properties and without instrumentation
-        return new FetchProvider<AbstractEntity<?>>(propertyType, true, false);
+        return new FetchProvider<>(propertyType, true, false);
     }
 
     /**
@@ -371,8 +371,8 @@ class FetchProvider<T extends AbstractEntity<?>> implements IFetchProvider<T> {
         final FetchProvider<T> providerWithoutCritOnlyProps = excludeCritOnlyProps(this);
         final Class<T> entityType = providerWithoutCritOnlyProps.entityType;
         fetch<T> fetchModel = instrumented ?
-                (withKeyAndDesc ? fetchKeyAndDescOnlyAndInstrument(entityType) : fetchOnlyAndInstrument(entityType)) :
-                (withKeyAndDesc ? fetchKeyAndDescOnly(entityType) : fetchOnly(entityType));
+                (withKeyAndDesc ? fetchKeyAndDescOnlyAndInstrument(entityType) : fetchNone(entityType)) :
+                (withKeyAndDesc ? fetchKeyAndDescOnly(entityType) : fetchNone(entityType));
         for (final Map.Entry<String, FetchProvider<AbstractEntity<?>>> entry : providerWithoutCritOnlyProps.propertyProviders.entrySet()) {
             final FetchProvider<AbstractEntity<?>> propModel = entry.getValue();
             if (propModel == null || PropertyDescriptor.class.isAssignableFrom(determinePropertyType(entityType, entry.getKey()))) {

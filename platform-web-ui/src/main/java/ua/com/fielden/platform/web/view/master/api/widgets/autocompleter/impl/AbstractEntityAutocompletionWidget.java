@@ -31,7 +31,7 @@ public abstract class AbstractEntityAutocompletionWidget extends AbstractWidget 
     private Class<? extends IValueMatcher> matcherType;
     private boolean lightDesc = false;
 
-    private final Map<String, Boolean> additionalProps = new LinkedHashMap<>();
+    public final Map<String, Boolean> additionalProps = new LinkedHashMap<>();
     private final Map<String, Boolean> defaultAdditionalProps = new LinkedHashMap<>();
 
     protected AbstractEntityAutocompletionWidget(
@@ -91,7 +91,7 @@ public abstract class AbstractEntityAutocompletionWidget extends AbstractWidget 
         attrs.put("process-error", "[[_processError]]");
         attrs.put("post-searched-default-error", "[[_postSearchedDefaultError]]");
         return attrs;
-    };
+    }
 
     @SuppressWarnings("rawtypes")
     public AbstractEntityAutocompletionWidget setMatcherType(final Class<? extends IValueMatcher> matcherType) {

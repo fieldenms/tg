@@ -21,14 +21,18 @@ import ua.com.fielden.platform.entity.IEntityProducer;
 import ua.com.fielden.platform.entity.annotation.SkipEntityExistsValidation;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
+import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
+import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.ResourceLoader;
 import ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig;
 import ua.com.fielden.platform.web.centre.api.resultset.impl.FunctionalActionKind;
 import ua.com.fielden.platform.web.interfaces.IRenderable;
 import ua.com.fielden.platform.web.minijs.JsCode;
 import ua.com.fielden.platform.web.view.master.api.IMaster;
+import ua.com.fielden.platform.web.view.master.api.helpers.impl.WidgetSelector;
+import ua.com.fielden.platform.web.view.master.api.widgets.autocompleter.impl.AbstractEntityAutocompletionWidget;
 
 /**
  * Represents entity master.
@@ -172,6 +176,28 @@ public class EntityMaster<T extends AbstractEntity<?>> implements IRenderable {
 
         return createDefaultValueMatcher(propertyName, entityType, coFinder);
     }
+    
+    /**
+     * Creates fetch model for entity-typed autocompleted values. Fetches only properties specified in Master DSL configuration.
+     *
+     * @param originalPropertyName
+     * @param propType
+     * @return
+     */
+    public <V extends AbstractEntity<?>> fetch<V> createFetchModelForAutocompleter(final String originalPropertyName, final Class<V> propType) {
+        final Optional<WidgetSelector> widgetSelectorOpt = masterConfig.widgetFor(originalPropertyName);
+        if (widgetSelectorOpt.isPresent()) {
+            final WidgetSelector widgetSelector = widgetSelectorOpt.get();
+            if (widgetSelector.widget() instanceof AbstractEntityAutocompletionWidget) {
+                final AbstractEntityAutocompletionWidget widget = (AbstractEntityAutocompletionWidget) widgetSelector.widget();
+                return EntityUtils.fetch(propType)
+                        .with(
+                                widget.additionalProps.keySet()
+                         ).fetchModel();
+            }
+        }
+        return null;
+    }
 
     /**
      * Creates default value matcher with context for the specified entity property.
@@ -250,6 +276,12 @@ public class EntityMaster<T extends AbstractEntity<?>> implements IRenderable {
         @Override
         public EntityActionConfig actionConfig(final FunctionalActionKind actionKind, final int actionNumber) {
             throw new UnsupportedOperationException("Getting of action configuration is not supported.");
+        }
+        
+        @Override
+        public Optional<WidgetSelector> widgetFor(final String propertyName) {
+            // TODO Auto-generated method stub
+            return null;
         }
     }
     

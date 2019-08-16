@@ -351,6 +351,16 @@ public class SimpleMasterBuilder<T extends AbstractEntity<?>> implements ISimple
         public Optional<Class<? extends IValueMatcherWithContext<T, ?>>> matcherTypeFor(final String propName) {
             return Optional.ofNullable(valueMatcherForProps.get(propName));
         }
+        
+        @Override
+        public Optional<WidgetSelector> widgetFor(final String propertyName) {
+            for (final WidgetSelector widgetSelector: widgets) {
+                if (widgetSelector.propertyName.equals(propertyName)) {
+                    return Optional.of(widgetSelector);
+                }
+            }
+            return Optional.empty();
+        }
 
         /**
          * Returns action configuration for concrete action kind and its number in that kind's space.
