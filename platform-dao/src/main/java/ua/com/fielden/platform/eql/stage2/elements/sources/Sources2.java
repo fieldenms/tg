@@ -1,14 +1,15 @@
 package ua.com.fielden.platform.eql.stage2.elements.sources;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
 import ua.com.fielden.platform.eql.stage2.elements.TransformationContext;
 import ua.com.fielden.platform.eql.stage2.elements.TransformationResult;
-import ua.com.fielden.platform.eql.stage3.elements.sources.CompoundSource3;
+import ua.com.fielden.platform.eql.stage3.elements.conditions.Conditions3;
 import ua.com.fielden.platform.eql.stage3.elements.sources.IQrySource3;
-import ua.com.fielden.platform.eql.stage3.elements.sources.Sources3;
+import ua.com.fielden.platform.eql.stage3.elements.sources.IQrySources3;
+import ua.com.fielden.platform.eql.stage3.elements.sources.JoinedQrySource3;
+import ua.com.fielden.platform.eql.stage3.elements.sources.SingleQrySource3;
 
 public class Sources2 {
     public final IQrySource2<? extends IQrySource3> main;
@@ -19,19 +20,19 @@ public class Sources2 {
         this.compounds = compounds;
     }
 
-    public TransformationResult<Sources3> transform(final TransformationContext context) {
+    public TransformationResult<IQrySources3> transform(final TransformationContext context) {
         final TransformationResult<? extends IQrySource3> mainTransformationResult = main.transform(context);    
-        
-        final List<CompoundSource3> transformed = new ArrayList<>();
-        TransformationContext currentResolutionContext = mainTransformationResult.updatedContext;
+        TransformationContext currentContext = mainTransformationResult.updatedContext;
+        IQrySources3 currentResult = new SingleQrySource3(mainTransformationResult.item);
         
         for (final CompoundSource2 compoundSource : compounds) {
-            final TransformationResult<CompoundSource3> compoundSourceTransformationResult = compoundSource.transform(currentResolutionContext);
-            
-            transformed.add(compoundSourceTransformationResult.item);
-            currentResolutionContext = compoundSourceTransformationResult.updatedContext;
+            final TransformationResult<IQrySource3> compSrcTransformationResult = compoundSource.source.transform(currentContext);
+            final TransformationResult<Conditions3> compConditionsTransformationResult = compoundSource.joinConditions.transform(compSrcTransformationResult.updatedContext);
+            currentResult = new JoinedQrySource3(currentResult, new SingleQrySource3(compSrcTransformationResult.item), compoundSource.joinType, compConditionsTransformationResult.item);
+            currentContext = compConditionsTransformationResult.updatedContext;
         }
-        return new TransformationResult<Sources3>(new Sources3(mainTransformationResult.item, transformed), currentResolutionContext);
+        
+        return new TransformationResult<IQrySources3>(currentResult, currentContext);
     }
 
     @Override

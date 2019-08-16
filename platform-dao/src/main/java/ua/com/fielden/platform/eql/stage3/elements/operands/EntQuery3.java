@@ -10,11 +10,11 @@ import ua.com.fielden.platform.eql.stage3.elements.GroupBys3;
 import ua.com.fielden.platform.eql.stage3.elements.OrderBys3;
 import ua.com.fielden.platform.eql.stage3.elements.Yields3;
 import ua.com.fielden.platform.eql.stage3.elements.conditions.Conditions3;
-import ua.com.fielden.platform.eql.stage3.elements.sources.Sources3;
+import ua.com.fielden.platform.eql.stage3.elements.sources.IQrySources3;
 
 public class EntQuery3 implements ISingleOperand3 {
 
-    public final Sources3 sources;
+    public final IQrySources3 sources;
     public final Conditions3 conditions;
     public final Yields3 yields;
     public final GroupBys3 groups;
@@ -34,6 +34,7 @@ public class EntQuery3 implements ISingleOperand3 {
         final String yieldsSql = yields.sql(dbVersion);
         sb.append("SELECT\n");
         sb.append(isNotEmpty(yieldsSql) ? yieldsSql : " * "); 
+        sb.append("\nFROM\n");
         sb.append(sources.sql(dbVersion));
         final String conditionsSql = conditions.sql(dbVersion);
         if (isNotEmpty(conditionsSql)) {
@@ -52,6 +53,8 @@ public class EntQuery3 implements ISingleOperand3 {
         result = prime * result + ((conditions == null) ? 0 : conditions.hashCode());
         result = prime * result + ((yields == null) ? 0 : yields.hashCode());
         result = prime * result + ((sources == null) ? 0 : sources.hashCode());
+        result = prime * result + ((groups == null) ? 0 : groups.hashCode());
+        result = prime * result + ((orderings == null) ? 0 : orderings.hashCode());
         return result;
     }
 
@@ -69,6 +72,8 @@ public class EntQuery3 implements ISingleOperand3 {
         
         return  Objects.equals(sources, other.sources) &&
                 Objects.equals(yields, other.yields) &&
-                Objects.equals(conditions, other.conditions);
+                Objects.equals(conditions, other.conditions) &&
+                Objects.equals(groups, other.groups) &&
+                Objects.equals(orderings, other.orderings);
     }
 }

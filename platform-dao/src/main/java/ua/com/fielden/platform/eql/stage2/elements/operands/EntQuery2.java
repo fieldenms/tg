@@ -18,7 +18,7 @@ import ua.com.fielden.platform.eql.stage3.elements.OrderBys3;
 import ua.com.fielden.platform.eql.stage3.elements.Yields3;
 import ua.com.fielden.platform.eql.stage3.elements.conditions.Conditions3;
 import ua.com.fielden.platform.eql.stage3.elements.operands.EntQuery3;
-import ua.com.fielden.platform.eql.stage3.elements.sources.Sources3;
+import ua.com.fielden.platform.eql.stage3.elements.sources.IQrySources3;
 
 public class EntQuery2 implements ISingleOperand2<EntQuery3> {
 
@@ -42,7 +42,7 @@ public class EntQuery2 implements ISingleOperand2<EntQuery3> {
 
     @Override
     public TransformationResult<EntQuery3> transform(final TransformationContext context) {
-        final TransformationResult<Sources3> sourcesTransformationResult =  sources.transform(context);
+        final TransformationResult<IQrySources3> sourcesTransformationResult =  sources.transform(context);
         final TransformationResult<Conditions3> conditionsTransformationResult =  conditions.transform(sourcesTransformationResult.updatedContext);
         final TransformationResult<Yields3> yieldsTransformationResult =  yields.transform(conditionsTransformationResult.updatedContext);
         final TransformationResult<GroupBys3> groupsTransformationResult =  groups.transform(yieldsTransformationResult.updatedContext);
