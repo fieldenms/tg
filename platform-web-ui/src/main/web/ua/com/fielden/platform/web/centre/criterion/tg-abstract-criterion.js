@@ -67,7 +67,7 @@ const template = html`
         <div class="criterion-container relative layout horizontal justified flex end">
             <slot name="criterion-editors" id="components"></slot>
             <slot name="date-mnemonic"></slot>
-            <div id ="or_null_layer" class="fit mnemonic-layer or-null" hidden$="[[!_orNullVisible(mnemonicsVisible, _orNull)]]"></div>
+            <div id ="or_null_layer" class="fit mnemonic-layer or-null" hidden$="[[!_orNullVisible(mnemonicsVisible, excludeMissing, _orNull)]]"></div>
             <div id ="not_layer" class="fit mnemonic-layer not" hidden$="[[!_notVisible(mnemonicsVisible, _not)]]"></div>
             <div id ="crossed_layer" class="fit mnemonic-layer crossed" hidden$="[[!_notVisible(mnemonicsVisible, _not)]]"></div>
         </div>
@@ -109,13 +109,21 @@ Polymer({
          */
         mnemonicsVisible: {
             type: Boolean
+        },
+
+        /**
+         * Indicates whether to exclude missing value mnemonic. 
+         */
+        excludeMissing: {
+            type: Boolean,
+            value: false
         }
     },
 
 
     attached: function () {
         // we need to use this trick to enforce invisibility after component has been attached... simple attribute binding does not work
-        this.$.or_null_layer.hidden = !this._orNullVisible(this.mnemonicsVisible, this._orNull);
+        this.$.or_null_layer.hidden = !this._orNullVisible(this.mnemonicsVisible, this.excludeMissing, this._orNull);
         this.$.not_layer.hidden = !this._notVisible(this.mnemonicsVisible, this._not);
         this.$.crossed_layer.hidden = !this._notVisible(this.mnemonicsVisible, this._not);
     },
@@ -123,8 +131,8 @@ Polymer({
     /**
      * Returns 'true' if orNull meta value exists and date layer should be present, 'false' otherwise.
      */
-    _orNullVisible: function (mnemonicsVisible, _orNull) {
-        return mnemonicsVisible && _orNull === true;
+    _orNullVisible: function (mnemonicsVisible, excludeMissing, _orNull) {
+        return mnemonicsVisible && !excludeMissing && _orNull === true;
     },
 
     /**

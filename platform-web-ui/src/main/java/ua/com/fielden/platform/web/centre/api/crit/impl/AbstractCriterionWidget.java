@@ -53,6 +53,7 @@ public abstract class AbstractCriterionWidget implements IRenderable, IImportabl
     private boolean debug = false;
     private final Pair<AbstractWidget, AbstractWidget> editors;
     private final boolean mnemonicsVisible;
+    private final boolean excludeMissing;
 
     /**
      * Creates {@link AbstractCriterionWidget} from <code>entityType</code> type and <code>propertyName</code> and the name&path of widget.
@@ -68,6 +69,7 @@ public abstract class AbstractCriterionWidget implements IRenderable, IImportabl
 
         final Optional<CritOnly> optionalCritOnlyAnnotation = isEmpty(propertyName) ? empty(): getPropertyAnnotationInHierarchy(CritOnly.class, root, propertyName);
         this.mnemonicsVisible = optionalCritOnlyAnnotation.map(val -> critOnlyWithMnemonics(val)).orElse(true);
+        this.excludeMissing = optionalCritOnlyAnnotation.map(val -> val.excludeMissing()).orElse(false);
         this.editors = new Pair<>(editors[0], null);
         if (editors.length > 1) {
             this.editors.setValue(editors[1]);
@@ -122,6 +124,9 @@ public abstract class AbstractCriterionWidget implements IRenderable, IImportabl
         attrs.put("validation-callback", "[[validate]]");
         if (mnemonicsVisible) {
             attrs.put("mnemonics-visible", null);
+        }
+        if (excludeMissing) {
+            attrs.put("exclude-missing", null);
         }
         return attrs;
     }

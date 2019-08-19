@@ -7,6 +7,7 @@ import { TgAbstractMultiCriterionBehavior } from '/resources/centre/criterion/mu
 const template = html`
     <tg-abstract-criterion id="dom"
         mnemonics-visible="[[mnemonicsVisible]]"
+        exclude-missing="[[excludeMissing]]"
         _cancel-meta-values="[[_cancelMetaValuesForBinding]]"
         _accept-meta-values="[[_acceptMetaValuesForBinding]]"
         _show-meta-values-editor="[[_showMetaValuesEditor]]"
