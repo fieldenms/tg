@@ -31,6 +31,9 @@ public @interface CritOnly {
     /** Attribute to specify applicability of mnemonics for a {@code CritOnly} property. */
     Mnemonics mnemonics() default Mnemonics.DEFAULT;
 
+    /** Attribute that determines whether to exclude missing mnemonic or not.*/
+    boolean excludeMissing() default false;
+
     /**
      * Mnemonic options for overriding default value deduced from critonly {@link Type}.
      */
