@@ -30,8 +30,8 @@ public class EntityTypePropInfo<T extends AbstractEntity<?>, PARENT extends Abst
     }
 
     @Override
-    public AbstractPropInfo<?, ?> resolve(final String dotNotatedSubPropName) {
-        return dotNotatedSubPropName != null ? getPropEntityInfo().resolve(dotNotatedSubPropName) : this;
+    public ResolutionResult resolve(final ResolutionContext context) {
+        return context.pending.isEmpty() ? new ResolutionResult(context) : getPropEntityInfo().resolve(context);
     }
 
     @Override

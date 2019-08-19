@@ -4,8 +4,6 @@ import java.util.SortedMap;
 import java.util.TreeMap;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.utils.EntityUtils;
-import ua.com.fielden.platform.utils.Pair;
 
 public class EntityInfo<T extends AbstractEntity<?>> implements IResolvable<T> {
     private final Class<T> javaType;
@@ -18,10 +16,12 @@ public class EntityInfo<T extends AbstractEntity<?>> implements IResolvable<T> {
     }
 
     @Override
-    public AbstractPropInfo<?, ?> resolve(final String dotNotatedPropName) {
-        final Pair<String, String> parts = EntityUtils.splitPropByFirstDot(dotNotatedPropName);
-        final AbstractPropInfo<?, ?> foundPart = props.get(parts.getKey());
-        return foundPart == null ? null : foundPart.resolve(parts.getValue());
+    public ResolutionResult resolve(final ResolutionContext context) {
+        if (context.pending.isEmpty()) {
+            return new ResolutionResult(context);
+        }
+        final AbstractPropInfo<?, ?> foundPart = props.get(context.pending.get(0));
+        return foundPart == null ? new ResolutionResult(context) : foundPart.resolve(context.registerResolutionAndClone(foundPart));
     }
 
     public EntityInfo<T> addProp(final AbstractPropInfo<?, ?> propInfo) { 

@@ -22,12 +22,12 @@ public class ComponentTypePropInfo extends AbstractPropInfo {
     }
 
     @Override
-    public AbstractPropInfo resolve(final String dotNotatedSubPropName) {
-        return dotNotatedSubPropName != null ? getPropEntityInfo().resolve(dotNotatedSubPropName) : this;
+    public Class javaType() {
+        return propEntityInfo.javaType();
     }
 
     @Override
-    public Class javaType() {
-        return propEntityInfo.javaType();
+    public ResolutionResult resolve(final ResolutionContext context) {
+        return context.pending.isEmpty() ? new ResolutionResult(context) : getPropEntityInfo().resolve(context);
     }
 }

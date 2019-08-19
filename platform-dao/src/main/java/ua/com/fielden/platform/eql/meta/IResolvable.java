@@ -1,7 +1,6 @@
 package ua.com.fielden.platform.eql.meta;
 
 public interface IResolvable<T> {
-    AbstractPropInfo<?, ?> resolve(final String dotNotatedPropName);
-
+    ResolutionResult resolve(final ResolutionContext context);
     Class<T> javaType();
 }

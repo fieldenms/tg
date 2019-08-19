@@ -1,5 +1,10 @@
 package ua.com.fielden.platform.eql.stage1.elements;
 
+import static java.util.Collections.unmodifiableList;
+
+import java.util.List;
+
+import ua.com.fielden.platform.eql.meta.AbstractPropInfo;
 import ua.com.fielden.platform.eql.stage2.elements.sources.IQrySource2;
 import ua.com.fielden.platform.eql.stage3.elements.sources.IQrySource3;
 
@@ -7,11 +12,13 @@ public class PropResolution {
     private final String aliaslessName;
     private final IQrySource2<? extends IQrySource3> source;
     private final Class<?> type;
+    private final List<AbstractPropInfo<?, ?>> path;
 
-    public PropResolution(final String aliaslessName, final IQrySource2<? extends IQrySource3> source, final Class<?> type) {
+    public PropResolution(final String aliaslessName, final IQrySource2<? extends IQrySource3> source, final Class<?> type, final List<AbstractPropInfo<?, ?>> path) {
         this.aliaslessName = aliaslessName;
         this.source = source;
         this.type = type;
+        this.path = path;
     }
 
     public String getAliaslessName() {
@@ -26,6 +33,10 @@ public class PropResolution {
         return type;
     }
     
+    public List<AbstractPropInfo<?, ?>> getPath() {
+        return unmodifiableList(path);
+    }
+
     @Override
     public String toString() {
         return source + "  " + type;

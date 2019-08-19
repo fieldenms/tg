@@ -1,7 +1,6 @@
 package ua.com.fielden.platform.eql.meta;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.query.exceptions.EqlException;
 
 public class PrimTypePropInfo<T, PARENT extends AbstractEntity<?>> extends AbstractPropInfo<T, PARENT> {
     private final Class<T> propType;
@@ -12,13 +11,10 @@ public class PrimTypePropInfo<T, PARENT extends AbstractEntity<?>> extends Abstr
     }
 
     @Override
-    public AbstractPropInfo<?, ?> resolve(final String dotNotatedSubPropName) {
-        if (dotNotatedSubPropName != null) {
-            throw new EqlException("Resolve method should get [null] as parameter instead of [" + dotNotatedSubPropName + "].\nAdditional info: name = " + getName() + "; propType = " + propType + ";");
-        }
-        return this;
+    public ResolutionResult resolve(final ResolutionContext context) {
+        return new ResolutionResult(context);
     }
-
+    
     @Override
     public Class<T> javaType() {
         return propType;
