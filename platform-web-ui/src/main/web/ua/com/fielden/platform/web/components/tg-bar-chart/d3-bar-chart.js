@@ -175,7 +175,7 @@ class BarChart {
             .translateExtent([[0, 0], [0, this._actualHeight]])
             .extent([[0, 0], [0, this._actualHeight]])
             .filter(() => {
-                return !d3.event.button && (d3.event.type !== "wheel" || d3.event.ctrlKey || d3.event.metaKey);
+                return !d3.event.button && (d3.event.type !== "wheel" || d3.event.altKey);
             })
             .on("zoom", () => {
                 this._currentTransform = d3.event.transform;
