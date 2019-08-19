@@ -16,7 +16,7 @@ const template = html`
             --paper-checkbox-checked-ink-color: #0288D1;
         }
     </style>
-    <paper-checkbox checked="{{_orNull}}" hidden$="[[_excludeMissing]]">Missing value</paper-checkbox>
+    <paper-checkbox checked="{{_orNull}}" hidden$="[[_excludeMissing]]">Missing</paper-checkbox>
     <paper-checkbox checked="{{_not}}">Not</paper-checkbox>
 `;
 
