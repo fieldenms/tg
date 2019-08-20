@@ -4,11 +4,12 @@ import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static ua.com.fielden.platform.types.tuples.T2.t2;
+import static ua.com.fielden.platform.utils.CollectionUtil.linkedMapOf;
 import static ua.com.fielden.platform.utils.CollectionUtil.listOf;
 import static ua.com.fielden.platform.utils.CollectionUtil.mapOf;
-import static ua.com.fielden.platform.utils.CollectionUtil.linkedMapOf;
 import static ua.com.fielden.platform.utils.CollectionUtil.tail;
 
 import java.util.LinkedHashMap;
@@ -29,6 +30,19 @@ public class CollectionUtilTest {
         final List<String> list = listOf("one");
         list.add("two");
         assertEquals(2, list.size());
+    }
+
+    @Test
+    public void listOf_null_is_the_same_as_listOf_with_no_arguments() {
+        assertEquals(0, listOf(null).size());
+    }
+
+    @Test
+    public void listOf_with_more_than_one_null_arugment_produces_a_list_of_null_values() {
+        final List<Object> list = listOf(null, null);
+        assertEquals(2, list.size());
+        assertNull(list.get(0));
+        assertNull(list.get(1));
     }
 
     @Test

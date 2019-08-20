@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.web.centre.api.crit.impl;
 
+import static java.util.Optional.empty;
 import static org.apache.commons.lang.StringUtils.isEmpty;
 import static ua.com.fielden.platform.criteria.generator.impl.CriteriaReflector.from;
 import static ua.com.fielden.platform.criteria.generator.impl.CriteriaReflector.generateCriteriaPropertyName;
@@ -7,6 +8,8 @@ import static ua.com.fielden.platform.criteria.generator.impl.CriteriaReflector.
 import static ua.com.fielden.platform.criteria.generator.impl.CriteriaReflector.not;
 import static ua.com.fielden.platform.criteria.generator.impl.CriteriaReflector.to;
 import static ua.com.fielden.platform.domaintree.impl.AbstractDomainTree.isDoubleCriterion;
+import static ua.com.fielden.platform.entity_centre.review.DynamicQueryBuilder.QueryProperty.critOnlyWithMnemonics;
+import static ua.com.fielden.platform.reflection.AnnotationReflector.getPropertyAnnotationInHierarchy;
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.determinePropertyType;
 import static ua.com.fielden.platform.utils.EntityUtils.isBoolean;
 
@@ -14,13 +17,13 @@ import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import ua.com.fielden.platform.criteria.generator.impl.CriteriaReflector;
 import ua.com.fielden.platform.dom.DomElement;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.CritOnly;
-import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
@@ -47,10 +50,10 @@ public abstract class AbstractCriterionWidget implements IRenderable, IImportabl
     private final String propertyName;
     private final String widgetName;
     private final String widgetPath;
-    private final boolean isCritOnly;
     private boolean debug = false;
     private final Pair<AbstractWidget, AbstractWidget> editors;
     private final boolean mnemonicsVisible;
+    private final boolean excludeMissing;
 
     /**
      * Creates {@link AbstractCriterionWidget} from <code>entityType</code> type and <code>propertyName</code> and the name&path of widget.
@@ -63,8 +66,10 @@ public abstract class AbstractCriterionWidget implements IRenderable, IImportabl
         this.widgetName = extractNameFrom(widgetPath);
         this.widgetPath = widgetPath;
         this.propertyName = propertyName;
-        this.isCritOnly = isEmpty(propertyName) ? false : AnnotationReflector.getPropertyAnnotation(CritOnly.class, root, propertyName) != null;
-        this.mnemonicsVisible = !this.isCritOnly;
+
+        final Optional<CritOnly> optionalCritOnlyAnnotation = isEmpty(propertyName) ? empty(): getPropertyAnnotationInHierarchy(CritOnly.class, root, propertyName);
+        this.mnemonicsVisible = optionalCritOnlyAnnotation.map(val -> critOnlyWithMnemonics(val)).orElse(true);
+        this.excludeMissing = optionalCritOnlyAnnotation.map(val -> val.excludeMissing()).orElse(false);
         this.editors = new Pair<>(editors[0], null);
         if (editors.length > 1) {
             this.editors.setValue(editors[1]);
@@ -79,7 +84,7 @@ public abstract class AbstractCriterionWidget implements IRenderable, IImportabl
         final List<AbstractWidget> editors = editors0();
         final DomElement[] editorsDOM = new DomElement[editors.size()];
         for (int editorIndex = 0; editorIndex < editors.size(); editorIndex++) {
-            final DomElement editorElement = editors.get(editorIndex).render().clazz(getCriterionClass(editorIndex));
+            final DomElement editorElement = editors.get(editorIndex).render().clazz(getCriterionClass(editorIndex)).attr("slot", getCriterionClass(editorIndex));
             editorElement.clazz("flex", true);
             editorsDOM[editorIndex] = editorElement;
         }
@@ -117,11 +122,11 @@ public abstract class AbstractCriterionWidget implements IRenderable, IImportabl
         }
         attrs.put("id", "criterion_4_" + CriteriaReflector.generateCriteriaPropertyName(root, this.propertyName));
         attrs.put("validation-callback", "[[validate]]");
-        if (isCritOnly) {
-            attrs.put("crit-only", null);
-        }
         if (mnemonicsVisible) {
             attrs.put("mnemonics-visible", null);
+        }
+        if (excludeMissing) {
+            attrs.put("exclude-missing", null);
         }
         return attrs;
     }
@@ -135,7 +140,7 @@ public abstract class AbstractCriterionWidget implements IRenderable, IImportabl
      */
     protected Map<String, Object> createCustomAttributes() {
         return new LinkedHashMap<>();
-    };
+    }
 
     @Override
     public final DomElement render() {

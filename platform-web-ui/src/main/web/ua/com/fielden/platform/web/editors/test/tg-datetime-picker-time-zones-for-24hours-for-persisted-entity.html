@@ -6,16 +6,10 @@
     <title>tg-datetime-picker tests for time-zone-aware properties</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
     
-    <script src="/resources/polymer/webcomponentsjs/webcomponents-lite.js"></script>
-    <script src="/resources/polymer/web-component-tester/browser.js"></script>
-    <script src="/resources/polymer/test-fixture/test-fixture-mocha.js"></script>
-    <script src="/resources/polymer/iron-test-helpers/mock-interactions.js"></script>
-    
-    <link rel="import" href="/resources/polymer/test-fixture/test-fixture.html">
-    
-    <link rel="import" href="/app/tg-reflector.html">
-    <link rel="import" href="/resources/reflection/tg-date-utils.html">
-    <link rel="import" href="/master_ui/ua.com.fielden.platform.sample.domain.TgEntityWithTimeZoneDates">
+    <script src="/resources/polymer/@webcomponents/webcomponentsjs/webcomponents-bundle.js"></script>
+    <script src='/resources/polymer/web-animations-js/web-animations-next-lite.min.js'></script>
+    <script src="/resources/filesaver/FileSaver.min.js"></script>
+    <script src="/resources/polymer/wct-browser-legacy/browser.js"></script>
 </head>
 
 <body>
@@ -31,21 +25,26 @@
         </template>
     </test-fixture>
 
-    <script>
+    <script type="module">
+
+        import '/app/tg-reflector.js';
+        import { _millisDateRepresentation } from '/resources/reflection/tg-date-utils.js';
+        import '/master_ui/ua.com.fielden.platform.sample.domain.TgEntityWithTimeZoneDates';
+
 	    suite('millis converts from ', function() {
-	        var master, reflector;
+	        let master, reflector;
 	
 	        setup(function() {
 	            master = fixture('MasterFixture');
 	            reflector = document.querySelector('#reflector');
 	        });
 	        
-	        var correctlyApproximates = function (done, expectedMillis, expectedText, entityId) {
+	        const correctlyApproximates = function (done, expectedMillis, expectedText, entityId) {
 	            master.entityId = entityId;
-	            var edUtc = master.$.editor_4_datePropUtc;
+	            const edUtc = master.$.editor_4_datePropUtc;
 
 	            master.postRetrieved = function (entity, bindingEntity, customObject) {
-	                var utcMoment = _millisDateRepresentation(expectedMillis, 'UTC'); /* 05/09/2016 06:33:24.000 in UTC (UTC+00:00) */
+	                const utcMoment = _millisDateRepresentation(expectedMillis, 'UTC'); /* 05/09/2016 06:33:24.000 in UTC (UTC+00:00) */
 	                assert.strictEqual(utcMoment, expectedText, "Date representation should not have millis but should have seconds.");
 	                assert.strictEqual(edUtc._editingValue, expectedText, "_editingValue should not have millis but should have seconds.");
 	                assert.strictEqual(edUtc._commValue, expectedText, "_commValue should not have millis but should have seconds.");
@@ -77,7 +76,7 @@
 	    });
         
         suite('UTC property value approximates from', function() {
-            var master, reflector;
+            let master, reflector;
 
             setup(function() {
                 master = fixture('MasterFixture');
@@ -85,7 +84,7 @@
                 reflector = document.querySelector('#reflector');
             });
             
-            var correctlyApproximates = function (done, targetEditingValueInUtc, approximatedEditingValueInUtc, approximatedEditingValueInLocal, concreteAcceptedMillis, laterDuplicatedDaylightSavingHour) {
+            const correctlyApproximates = function (done, targetEditingValueInUtc, approximatedEditingValueInUtc, approximatedEditingValueInLocal, concreteAcceptedMillis, laterDuplicatedDaylightSavingHour) {
                 /* var allZones = moment.tz.names();
                 console.debug('zones =', allZones);
                 var auZones = [];
@@ -101,14 +100,14 @@
                 //  "Australia/Lord_Howe", "Australia/Melbourne", "Australia/NSW", "Australia/North", "Australia/Perth", 
                 //  "Australia/Queensland", "Australia/South", "Australia/Sydney", "Australia/Tasmania", "Australia/Victoria", "Australia/West", "Australia/Yancowinna"]
                 
-                var neededTimeZones = ['Australia/Brisbane', 'Australia/Canberra', 'Australia/Hobart', 'Australia/Melbourne', 'Australia/Sydney'];
-                var guessedTimeZone = moment.tz.guess();
+                const neededTimeZones = ['Australia/Brisbane', 'Australia/Canberra', 'Australia/Hobart', 'Australia/Melbourne', 'Australia/Sydney'];
+                const guessedTimeZone = moment.tz.guess();
                 if (neededTimeZones.indexOf(guessedTimeZone) === -1) {
                     throw new Error('This test should be invoked in following timezones: ' + neededTimeZones + '; your timezone is ' + guessedTimeZone + '.');
                 }
                 
-                var ed = master.$.editor_4_dateProp;
-                var edUtc = master.$.editor_4_datePropUtc;
+                const ed = master.$.editor_4_dateProp;
+                const edUtc = master.$.editor_4_datePropUtc;
 
                 master.postValidated = function (validatedEntity, bindingEntity, customObject) {
                     assert.strictEqual(edUtc._editingValue, approximatedEditingValueInUtc, "_editingValue should be correct.");
@@ -116,7 +115,7 @@
                     assert.strictEqual(ed._editingValue, approximatedEditingValueInLocal, "_editingValue should be correct.");
                     assert.strictEqual(ed._commValue, approximatedEditingValueInLocal, "_commValue should be correct.");
                     
-                    var acceptedValue = edUtc._acceptedValue;
+                    const acceptedValue = edUtc._acceptedValue;
                     assert.isNotNull(acceptedValue, "_acceptedValue should be non-empty.");
                     if (concreteAcceptedMillis) {
                         assert.strictEqual(acceptedValue, concreteAcceptedMillis, "_acceptedValue should be correct.");
@@ -136,11 +135,11 @@
                 };
 
                 master.postRetrieved = function (entity, bindingEntity, customObject) {
-                    var localisedMomentOf3609999 = _millisDateRepresentation(3609999); /* 01/01/1970 12:00:09.999 in Melbourne locale (UTC+10:00, NO DST at that time) */
+                    const localisedMomentOf3609999 = _millisDateRepresentation(3609999); /* 01/01/1970 12:00:09.999 in Melbourne locale (UTC+10:00, NO DST at that time) */
                     assert.strictEqual(ed._editingValue, localisedMomentOf3609999, "_editingValue should be non-empty on start.");
                     assert.strictEqual(ed._commValue, localisedMomentOf3609999, "_commValue should be non-empty on start.");
                     assert.strictEqual(ed._acceptedValue, 3609999, "_acceptedValue should be non-empty on start.");
-                    var utcMomentOf3609999 = _millisDateRepresentation(3609999, 'UTC'); /* 01/01/1970 01:00:09.999 in UTC (UTC+00:00) */
+                    const utcMomentOf3609999 = _millisDateRepresentation(3609999, 'UTC'); /* 01/01/1970 01:00:09.999 in UTC (UTC+00:00) */
                     assert.strictEqual(edUtc._editingValue, utcMomentOf3609999, "_editingValue should be non-empty on start.");
                     assert.strictEqual(edUtc._commValue, utcMomentOf3609999, "_commValue should be non-empty on start.");
                     assert.strictEqual(edUtc._acceptedValue, 3609999, "_acceptedValue should be non-empty on start.");
@@ -211,7 +210,7 @@
         });
         
         suite('LOCAL property value approximates from', function() {
-            var master, reflector;
+            let master, reflector;
 
             setup(function() {
                 master = fixture('MasterFixture');
@@ -219,15 +218,15 @@
                 reflector = document.querySelector('#reflector');
             });
 
-            var correctlyApproximatesFromLocal = function (done, targetEditingValueInLocal, approximatedEditingValueInLocal, approximatedEditingValueInUtc, concreteAcceptedMillis) {
-                var neededTimeZones = ['Australia/Brisbane', 'Australia/Canberra', 'Australia/Hobart', 'Australia/Melbourne', 'Australia/Sydney'];
-                var guessedTimeZone = moment.tz.guess();
+            const correctlyApproximatesFromLocal = function (done, targetEditingValueInLocal, approximatedEditingValueInLocal, approximatedEditingValueInUtc, concreteAcceptedMillis) {
+                const neededTimeZones = ['Australia/Brisbane', 'Australia/Canberra', 'Australia/Hobart', 'Australia/Melbourne', 'Australia/Sydney'];
+                const guessedTimeZone = moment.tz.guess();
                 if (neededTimeZones.indexOf(guessedTimeZone) === -1) {
                     throw new Error('This test should be invoked in following timezones: ' + neededTimeZones + '; your timezone is ' + guessedTimeZone + '.');
                 }
                 
-                var ed = master.$.editor_4_dateProp;
-                var edUtc = master.$.editor_4_datePropUtc;
+                const ed = master.$.editor_4_dateProp;
+                const edUtc = master.$.editor_4_datePropUtc;
 
                 master.postValidated = function (validatedEntity, bindingEntity, customObject) {
                     assert.strictEqual(edUtc._editingValue, approximatedEditingValueInUtc, "_editingValue should be correct.");
@@ -235,7 +234,7 @@
                     assert.strictEqual(ed._editingValue, approximatedEditingValueInLocal, "_editingValue should be correct.");
                     assert.strictEqual(ed._commValue, approximatedEditingValueInLocal, "_commValue should be correct.");
                     
-                    var acceptedValue = edUtc._acceptedValue;
+                    const acceptedValue = edUtc._acceptedValue;
                     assert.isNotNull(acceptedValue, "_acceptedValue should be non-empty.");
                     if (concreteAcceptedMillis) {
                         assert.strictEqual(acceptedValue, concreteAcceptedMillis, "_acceptedValue should be correct.");
@@ -251,11 +250,11 @@
                 };
 
                 master.postRetrieved = function (entity, bindingEntity, customObject) {
-                    var localisedMomentOf3609999 = _millisDateRepresentation(3609999); /* 01/01/1970 12:00:09.999 in Melbourne locale (UTC+10:00, no DST at that time) */
+                    const localisedMomentOf3609999 = _millisDateRepresentation(3609999); /* 01/01/1970 12:00:09.999 in Melbourne locale (UTC+10:00, no DST at that time) */
                     assert.strictEqual(ed._editingValue, localisedMomentOf3609999, "_editingValue should be non-empty on start.");
                     assert.strictEqual(ed._commValue, localisedMomentOf3609999, "_commValue should be non-empty on start.");
                     assert.strictEqual(ed._acceptedValue, 3609999, "_acceptedValue should be non-empty on start.");
-                    var utcMomentOf3609999 = _millisDateRepresentation(3609999, 'UTC'); /* 01/01/1970 01:00:09.999 in UTC (UTC+00:00) */
+                    const utcMomentOf3609999 = _millisDateRepresentation(3609999, 'UTC'); /* 01/01/1970 01:00:09.999 in UTC (UTC+00:00) */
                     assert.strictEqual(edUtc._editingValue, utcMomentOf3609999, "_editingValue should be non-empty on start.");
                     assert.strictEqual(edUtc._commValue, utcMomentOf3609999, "_commValue should be non-empty on start.");
                     assert.strictEqual(edUtc._acceptedValue, 3609999, "_acceptedValue should be non-empty on start.");

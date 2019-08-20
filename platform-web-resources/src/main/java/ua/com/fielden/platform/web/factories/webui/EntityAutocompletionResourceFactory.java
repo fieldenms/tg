@@ -20,7 +20,6 @@ import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.reflection.ClassesRetriever;
 import ua.com.fielden.platform.security.user.IUserProvider;
-import ua.com.fielden.platform.serialisation.api.ISerialiser;
 import ua.com.fielden.platform.ui.menu.MiWithConfigurationSupport;
 import ua.com.fielden.platform.web.app.IWebUiConfig;
 import ua.com.fielden.platform.web.centre.EntityCentre;
@@ -41,7 +40,6 @@ import ua.com.fielden.platform.web.view.master.EntityMaster;
 public class EntityAutocompletionResourceFactory extends Restlet {
     private final RestServerUtil restUtil;
     private final EntityFactory factory;
-    private final ISerialiser serialiser;
     private final IDomainTreeEnhancerCache domainTreeEnhancerCache;
     private final IWebUiConfig webUiConfig;
     private final ICriteriaGenerator critGenerator;
@@ -56,7 +54,6 @@ public class EntityAutocompletionResourceFactory extends Restlet {
      * @param injector
      */
     public EntityAutocompletionResourceFactory(final IWebUiConfig webUiConfig, final Injector injector) {
-        this.serialiser = injector.getInstance(ISerialiser.class);
         this.domainTreeEnhancerCache = injector.getInstance(IDomainTreeEnhancerCache.class);
         this.webUiConfig = webUiConfig;
         this.restUtil = injector.getInstance(RestServerUtil.class);
@@ -97,7 +94,6 @@ public class EntityAutocompletionResourceFactory extends Restlet {
                         criterionPropertyName,
                         centre,
                         restUtil,
-                        serialiser,
                         domainTreeEnhancerCache,
                         getContext(),
                         request,

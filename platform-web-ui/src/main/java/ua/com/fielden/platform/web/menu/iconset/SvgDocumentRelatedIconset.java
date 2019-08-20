@@ -9,7 +9,7 @@ public class SvgDocumentRelatedIconset {
         final String srcFolder = "src/main/resources/images/document-related";
         final String iconsetId = "tg-document-related-icons";
         final int svgWidth = 24;
-        final String outputFile = "src/main/resources/images/tg-document-related-icons.html";
+        final String outputFile = "src/main/resources/images/tg-document-related-icons.js";
 
         final IronIconsetUtility iconsetUtility = new IronIconsetUtility(iconsetId, svgWidth, srcFolder);
         iconsetUtility.createSvgIconset(outputFile);

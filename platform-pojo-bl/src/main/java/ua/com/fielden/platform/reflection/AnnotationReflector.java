@@ -1,7 +1,12 @@
 package ua.com.fielden.platform.reflection;
 
 import static java.lang.String.format;
+import static java.util.Optional.empty;
+import static java.util.Optional.of;
 import static ua.com.fielden.platform.reflection.Finder.findFieldByNameOptionally;
+import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.isDotNotation;
+import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.penultAndLast;
+import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.transform;
 import static ua.com.fielden.platform.reflection.Reflector.MAXIMUM_CACHE_SIZE;
 import static ua.com.fielden.platform.types.tuples.T2.t2;
 
@@ -51,7 +56,7 @@ public final class AnnotationReflector {
     /** A global lazy static cache of annotations, which is used for annotation information retrieval. */
     private static final Cache<Class<?>, Map<String, Map<Class<? extends Annotation>, Annotation>>> METHOD_ANNOTATIONS = CacheBuilder.newBuilder().weakKeys().initialCapacity(1000).maximumSize(MAXIMUM_CACHE_SIZE).concurrencyLevel(50).build();
     private static final Cache<Class<?>, Map<String, Map<Class<? extends Annotation>, Annotation>>> FIELD_ANNOTATIONS = CacheBuilder.newBuilder().weakKeys().initialCapacity(1000).maximumSize(MAXIMUM_CACHE_SIZE).concurrencyLevel(50).build();
-    
+
     public static T2<Long, Long> cleanUp() {
         METHOD_ANNOTATIONS.cleanUp();
         FIELD_ANNOTATIONS.cleanUp();
@@ -157,7 +162,7 @@ public final class AnnotationReflector {
 
     /**
      * The same as {@link #getAnnotation(AnnotatedElement, Class)}, but with an {@link Optional} result.
-     * 
+     *
      * @param annotatedElement
      * @param annotationClass
      * @return
@@ -271,13 +276,12 @@ public final class AnnotationReflector {
      */
     public static <T extends Annotation> T getAnnotationForClass(final Class<T> annotationType, final Class<?> forType) {
         Class<?> runningType = forType;
-        while (runningType != null && !runningType.equals(Object.class)) { // need to iterated thought entity hierarchy
-            if (runningType.isAnnotationPresent(annotationType)) {
-                return runningType.getAnnotation(annotationType);
-            }
+        T annotation = null;
+        while (annotation == null && runningType != null && runningType != Object.class) { // need to iterated thought entity hierarchy
+            annotation = runningType.getAnnotation(annotationType);
             runningType = runningType.getSuperclass();
         }
-        return null;
+        return annotation;
     }
 
     /**
@@ -317,27 +321,18 @@ public final class AnnotationReflector {
      * @return
      */
     public static <T extends Annotation> T getPropertyAnnotation(final Class<T> annotationType, final Class<?> forType, final String dotNotationExp) {
-        // if (AbstractEntity.KEY.equals(dotNotationExp) || AbstractEntity.DESC.equals(dotNotationExp)) {
-        // return getAnnotation(annotationType, forType);
-        // }
-        // if (dotNotationExp.endsWith("." + AbstractEntity.KEY) || dotNotationExp.endsWith("." + AbstractEntity.DESC)) {
-        // final String containingPropertyName = dotNotationExp.endsWith("." + AbstractEntity.KEY) ? dotNotationExp.substring(0, dotNotationExp.length() - 4) :
-        // dotNotationExp.substring(
-        // 0, dotNotationExp.length() - 5);
-        // return getAnnotation(annotationType, PropertyTypeDeterminator.determinePropertyType(forType, containingPropertyName));
-        if (dotNotationExp.endsWith(AbstractEntity.KEY) && KeyType.class.equals(annotationType) || //
-        dotNotationExp.endsWith(AbstractEntity.KEY) && KeyTitle.class.equals(annotationType) || //
-        dotNotationExp.endsWith(AbstractEntity.DESC) && DescTitle.class.equals(annotationType)) {
-            final Pair<Class<?>, String> transformed = PropertyTypeDeterminator.transform(forType, dotNotationExp);
-            return getAnnotationForClass(annotationType, transformed.getKey());
+        if (dotNotationExp.endsWith(AbstractEntity.KEY) && KeyType.class.equals(annotationType) ||
+            dotNotationExp.endsWith(AbstractEntity.KEY) && KeyTitle.class.equals(annotationType) ||
+            dotNotationExp.endsWith(AbstractEntity.DESC) && DescTitle.class.equals(annotationType)) {
+            return getAnnotationForClass(annotationType, transform(forType, dotNotationExp).getKey());
         } else {
             return findFieldByNameOptionally(forType, dotNotationExp).map(field -> getAnnotation(field, annotationType)).orElse(null);
         }
     }
-    
+
     /**
      * The same as {@link #getPropertyAnnotation(Class, Class, String)}, but with an {@link Optional} result;
-     * 
+     *
      * @param annotationType
      * @param forType
      * @param dotNotationExp
@@ -378,30 +373,36 @@ public final class AnnotationReflector {
      * Returns true if any property in dotNotationExp parameter has an annotation specified with annotationType.
      *
      * @param annotationType
-     * @param superType
+     * @param forType
      * @param dotNotationExp
      * @return
      */
-    public static boolean isAnnotationPresentInHierarchy(final Class<? extends Annotation> annotationType, final Class<?> superType, final String dotNotationExp) {
-        //	String propertyName = dotNotationExp;
-        //	while (!StringUtils.isEmpty(propertyName)) {
-        //	    final Field resField = Finder.findFieldByName(superType, propertyName);
-        //	    if (resField.isAnnotationPresent(annotationType)) {
-        //		return true;
-        //	    }
-        //	    final int lastPointIndex = propertyName.lastIndexOf(PropertyTypeDeterminator.PROPERTY_SPLITTER); // "."
-        //	    propertyName = propertyName.substring(0, lastPointIndex < 0 ? 0 : lastPointIndex);
-        //	}
-        //	return false;
-        if (isPropertyAnnotationPresent(annotationType, superType, dotNotationExp)) {
+    public static boolean isAnnotationPresentInHierarchy(final Class<? extends Annotation> annotationType, final Class<?> forType, final String dotNotationExp) {
+        if (isPropertyAnnotationPresent(annotationType, forType, dotNotationExp)) {
             return true;
+        } else if (PropertyTypeDeterminator.isDotNotation(dotNotationExp)) {
+            return isAnnotationPresentInHierarchy(annotationType, forType, PropertyTypeDeterminator.penultAndLast(dotNotationExp).getKey());
         } else {
-            if (PropertyTypeDeterminator.isDotNotation(dotNotationExp)) {
-                return isAnnotationPresentInHierarchy(annotationType, superType, PropertyTypeDeterminator.penultAndLast(dotNotationExp).getKey());
-            } else {
-                return false;
-            }
+            return false;
         }
+    }
+
+    /**
+     * Returns an optional annotation value of type {@code annotationType} for a property specified by {@code dotNotationExp} in a type hierarchy starting with {@code forType}.
+     *
+     * @param annotationType
+     * @param forType
+     * @param dotNotationExp
+     * @return
+     */
+    public static <T extends Annotation> Optional<T> getPropertyAnnotationInHierarchy (final Class<T> annotationType, final Class<?> forType, final String dotNotationExp) {
+        final T annotation = getPropertyAnnotation(annotationType, forType, dotNotationExp);
+        if (annotation != null) {
+            return of(annotation);
+        } else if (isDotNotation(dotNotationExp)) {
+            return getPropertyAnnotationInHierarchy(annotationType, forType, penultAndLast(dotNotationExp).getKey());
+        }
+        return empty();
     }
 
     /**

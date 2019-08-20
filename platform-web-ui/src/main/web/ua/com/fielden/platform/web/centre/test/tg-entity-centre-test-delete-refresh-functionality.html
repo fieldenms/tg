@@ -6,15 +6,10 @@
     <title>entity-centre basic tests</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 
-    <script src="/resources/polymer/webcomponentsjs/webcomponents-lite.js"></script>
-    <script src="/resources/polymer/web-component-tester/browser.js"></script>
-    <script src="/resources/polymer/test-fixture/test-fixture-mocha.js"></script>
-    <script src="/resources/polymer/iron-test-helpers/mock-interactions.js"></script>
-
-    <link rel="import" href="/resources/polymer/test-fixture/test-fixture.html">
-
-    <link rel="import" href="/app/tg-reflector.html">
-    <link rel="import" href="/centre_ui/ua.com.fielden.platform.ui.menu.sample.MiDeletionTestEntity">
+    <script src="/resources/polymer/@webcomponents/webcomponentsjs/webcomponents-bundle.js"></script>
+    <script src='/resources/polymer/web-animations-js/web-animations-next-lite.min.js'></script>
+    <script src="/resources/filesaver/FileSaver.min.js"></script>
+    <script src="/resources/polymer/wct-browser-legacy/browser.js"></script>
 </head>
 
 <body>
@@ -25,9 +20,13 @@
         </template>
     </test-fixture>
 
-    <script>
+    <script type="module">
+        
+        import '/app/tg-reflector.js';
+        import '/centre_ui/ua.com.fielden.platform.ui.menu.sample.MiDeletionTestEntity';
+
         suite('entity centre refresh after delete', function () {
-            var centre, reflector;
+            let centre, reflector;
 
             setup(function () {
                 centre = fixture('CentreFixture');
@@ -35,8 +34,8 @@
             });
 
             test('refresh after entity deletion works', function (done) {
-                var old_postRun = centre._postRun;
-                var deleteAction, newAction, testingPhase, keyEditor, descEditor;
+                const old_postRun = centre._postRun;
+                let deleteAction, newAction, testingPhase, keyEditor, descEditor;
 
                 centre._postRun = function (criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, summary, columnWidths, visibleColumnsWithOrder) {
                     old_postRun(criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, summary, columnWidths, visibleColumnsWithOrder); 
@@ -55,9 +54,8 @@
                         newAction._run();
                     } else if (testingPhase === 'third') {
                         assert.strictEqual(resultEntities.length, 2, "The number of refreshed entities is incorrect should be 2 but wass: " + resultEntities.length + ".");
-                        var entities = centre.$.egi.egiModel;
-                        var index;
-                        for (index = 0; index < entities.length; index++) {
+                        const entities = centre.$.egi.egiModel;
+                        for (let index = 0; index < entities.length; index++) {
                             entities[index].selected = true;
                         }
                         testingPhase = 'finish';
@@ -70,18 +68,18 @@
                 };
 
                 centre.postRetrieved = function (entity, bindingEntity, customObject) {
-                    newAction = Polymer.dom(centre.$.egi.$$("#top_action_selctor")).getDistributedNodes()[0].children[0];
+                    newAction = centre.$.egi.$.top_action_selctor.assignedNodes()[0].children[0];
                     newAction._masterReferenceForTestingChanged = function (newValue) {
                         newValue.addEventListener('after-load', function (event) {
-                            var embeddedMaster = event.detail;
+                            const embeddedMaster = event.detail;
 
                             embeddedMaster.postValidated = function (validatedEntity, bindingEntity, customObject) {};
 
                             embeddedMaster.postRetrieved = function (entity, bindingEntity, customObject) {
                                 this.async(function () {
-                                    var saveButton = embeddedMaster.querySelector("tg-action[role='save']");
-                                    var keyEditor = embeddedMaster.$.editor_4_key;
-                                    var descEditor = embeddedMaster.$.editor_4_desc;
+                                    const saveButton = embeddedMaster.shadowRoot.querySelector("tg-action[role='save']");
+                                    const keyEditor = embeddedMaster.$.editor_4_key;
+                                    const descEditor = embeddedMaster.$.editor_4_desc;
                                     if (testingPhase === 'first') {
                                         keyEditor._editingValue = 'DE1';
                                         keyEditor.commit();
@@ -101,7 +99,7 @@
                             };
                         });
                     };
-                    deleteAction = Polymer.dom(centre.$.egi.$$("#top_action_selctor")).getDistributedNodes()[0].children[1];
+                    deleteAction = centre.$.egi.$.top_action_selctor.assignedNodes()[0].children[1];
                     testingPhase = 'zero';
                     centre.run();
                 };

@@ -22,6 +22,7 @@ import ua.com.fielden.platform.criteria.generator.ICriteriaGenerator;
 import ua.com.fielden.platform.domaintree.IDomainTreeEnhancerCache;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.entity_centre.review.criteria.EntityQueryCriteria;
 import ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader;
 import ua.com.fielden.platform.reflection.asm.impl.DynamicTypeNamingService;
@@ -30,7 +31,6 @@ import ua.com.fielden.platform.security.user.IUser;
 import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.serialisation.api.ISerialisationTypeEncoder;
-import ua.com.fielden.platform.serialisation.api.ISerialiser;
 import ua.com.fielden.platform.serialisation.api.ISerialiserEngine;
 import ua.com.fielden.platform.serialisation.api.impl.TgJackson;
 import ua.com.fielden.platform.serialisation.jackson.EntityTypeInfoGetter;
@@ -50,33 +50,33 @@ public class SerialisationTypeEncoder implements ISerialisationTypeEncoder {
     private final IDeviceProvider deviceProvider;
     private final ICriteriaGenerator criteriaGenerator;
     private final IUserProvider userProvider;
-    private final ISerialiser serialiser;
     private final IDomainTreeEnhancerCache domainTreeEnhancerCache;
     private final IWebUiConfig webUiConfig;
     private final IEntityCentreConfig eccCompanion;
     private final IMainMenuItem mmiCompanion;
     private final IUser userCompanion;
+    private final ICompanionObjectFinder companionFinder;
     
     @Inject
     public SerialisationTypeEncoder(
             final IDeviceProvider deviceProvider,
             final ICriteriaGenerator criteriaGenerator,
             final IUserProvider userProvider,
-            final ISerialiser serialiser,
             final IDomainTreeEnhancerCache domainTreeEnhancerCache,
             final IWebUiConfig webUiConfig,
             final IEntityCentreConfig eccCompanion,
             final IMainMenuItem mmiCompanion,
-            final IUser userCompanion) {
+            final IUser userCompanion,
+            final ICompanionObjectFinder companionFinder) {
         this.deviceProvider = deviceProvider;
         this.criteriaGenerator = criteriaGenerator;
         this.userProvider = userProvider;
-        this.serialiser = serialiser;
         this.domainTreeEnhancerCache = domainTreeEnhancerCache;
         this.webUiConfig = webUiConfig;
         this.eccCompanion = eccCompanion;
         this.mmiCompanion = mmiCompanion;
         this.userCompanion = userCompanion;
+        this.companionFinder = companionFinder;
     }
     
     @Override
@@ -121,7 +121,7 @@ public class SerialisationTypeEncoder implements ISerialisationTypeEncoder {
                 }
                 final String[] originalAndSuffix = entityTypeName.split(Pattern.quote(DynamicTypeNamingService.APPENDIX + "_"));
                 
-                final ICentreDomainTreeManagerAndEnhancer previouslyRunCentre = updateCentre(user, userProvider, miType, PREVIOUSLY_RUN_CENTRE_NAME, saveAsName, deviceProvider.getDeviceProfile(), serialiser, domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion);
+                final ICentreDomainTreeManagerAndEnhancer previouslyRunCentre = updateCentre(user, userProvider, miType, PREVIOUSLY_RUN_CENTRE_NAME, saveAsName, deviceProvider.getDeviceProfile(), domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion, companionFinder);
                 final Class<?> root = findClass(originalAndSuffix[0]);
                 if (EntityQueryCriteria.class.isAssignableFrom(root)) {
                     // In the case where fully fledged criteria entity type does not exist on this server node, and thus could not yet be deserialised, we need to generate criteria type with exact correspondence to 'previouslyRunCentre'.
@@ -132,7 +132,7 @@ public class SerialisationTypeEncoder implements ISerialisationTypeEncoder {
                     try {
                         // The type name from client-side needs to be promoted to this server node very similarly as it is done below for centre managed types ('adjustManagedTypeName' call).
                         final String predefinedTypeName = root.getName() + DynamicTypeNamingService.APPENDIX + "_" + originalAndSuffix[1];
-                        decodedEntityType = (Class<T>) classLoader.startModification(managedType.getName()).modifyTypeName(predefinedTypeName).endModification();
+                        decodedEntityType = (Class<T>) classLoader.startModification(managedType).modifyTypeName(predefinedTypeName).endModification();
                     } catch (final ClassNotFoundException e) {
                         throw new SerialisationTypeEncoderException(e.getMessage());
                     }

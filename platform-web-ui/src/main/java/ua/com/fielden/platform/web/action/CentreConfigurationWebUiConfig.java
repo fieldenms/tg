@@ -134,7 +134,7 @@ public class CentreConfigurationWebUiConfig {
                                     + "    if (shouldRunCentre) {\n"
                                     + "        return self.retrieve().then(function () { self.run(undefined, true); });\n"
                                     + "    } else {\n"
-                                    + "        self.$.egi._adjustColumns(functionalEntity.get('chosenIds').map(column => column === 'this' ? '' : column));\n"
+                                    + "        self.$.egi.adjustColumnsVisibility(functionalEntity.get('chosenIds').map(column => column === 'this' ? '' : column));\n"
                                     + "        self._centreChanged = functionalEntity.get('centreChanged');\n"
                                     + "    }\n"
                                     + ""))
@@ -188,7 +188,7 @@ public class CentreConfigurationWebUiConfig {
             .setLayoutFor(DESKTOP, empty(), layout)
             .setLayoutFor(TABLET, empty(), layout)
             .setLayoutFor(MOBILE, empty(), layout)
-            .withDimensions(mkDim(400, 256))
+            .withDimensions(mkDim(400, 260))
             .done();
     }
     /**

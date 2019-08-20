@@ -2,62 +2,47 @@
 <html>
 
 <head>
-    <meta charset="utf-8">
+    <!--meta charset="utf-8"-->
     <title>Generated Master</title>
-
-    <script src="/resources/polymer/webcomponentsjs/webcomponents-lite.js"></script>
-    
-    <!-- <link rel="import" href="/resources/editors/tg-integer-editor.html"> -->
-
-    <link rel="import" href="/master_ui/ua.com.fielden.platform.sample.domain.TgPersistentEntityWithProperties">
+    <script src='/resources/polymer/@webcomponents/webcomponentsjs/webcomponents-bundle.js'></script>
+    <script src='/resources/polymer/web-animations-js/web-animations-next-lite.min.js'></script>
+    <script src="/resources/filesaver/FileSaver.min.js"></script>
+    <script type="module">
+        import '/resources/polymer/@polymer/iron-flex-layout/iron-flex-layout-classes.js'; // fullbleed class
+        import '/resources/polymer/@polymer/paper-styles/paper-styles-classes.js'; // Roboto font
+        import '/master_ui/ua.com.fielden.platform.sample.domain.TgPersistentEntityWithProperties.js';
+    </script>
+    <custom-style>
+        <style include="iron-flex iron-flex-reverse iron-flex-alignment iron-flex-factors iron-positioning">
+            body {
+                font-family: 'Roboto', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+                font-size: 10pt;
+            }
+        </style>
+    </custom-style>
 </head>
 
-<body>
-    <tg-TgPersistentEntityWithProperties-master 
-    	id="master" 
-    	entity-type="ua.com.fielden.platform.sample.domain.TgPersistentEntityWithProperties" 
-    	entity-id="15" 
-    	current-state="EDIT">
-    </tg-TgPersistentEntityWithProperties-master>
-    
-        <!-- <tg-integer-editor
-      	    id="editor" 
-  	    	entity="null" 
-  	    	property-name="integerProp" 
-  	    	current-state="EDIT" 
-  	    	debug 
-  	    	prop-title="Integer property title" 
-  	    	prop-desc="Integer property desc"
-  	    	action="null" 
-  	    	validation-callback="null">
-  	    </tg-integer-editor> -->
-    
-    <!-- uuid centre-uuid -->
-
+<body unresolved class="fullbleed">
+    <tg-tgpersistententitywithproperties-master id="master" entity-type="ua.com.fielden.platform.sample.domain.TgPersistentEntityWithProperties"
+        entity-id="15" current-state="EDIT">
+    </tg-tgpersistententitywithproperties-master>
     <script>
-        (function () {            
-        	window.addEventListener('WebComponentsReady', function(e) {
-        		// imports are loaded and elements have been registered
-        		console.log('Components are ready');
-        		
-        		/* var editor = document.querySelector('#editor'); */
-        		
-                var master = document.querySelector('#master'); 
-
-                master.postRetrieved = function(entity, bindingEntity, customObject) {
+        (function () {
+            window.addEventListener('WebComponentsReady', function (e) {
+                // imports are loaded and elements have been registered
+                console.log('Components are ready');
+                const master = document.querySelector('#master');
+                master.postRetrieved = function (entity, bindingEntity, customObject) {
                     console.log("postRetrieved");
                 };
-
-                master.postValidated = function(validatedEntity, bindingEntity, customObject) {
+                master.postValidated = function (validatedEntity, bindingEntity, customObject) {
                     console.log("postValidated");
                 };
-
-                master.postSaved = function(potentiallySavedOrNewEntity, newBindingEntity) {
+                master.postSaved = function (potentiallySavedOrNewEntity, newBindingEntity) {
                     console.log("postSaved");
                 };
-
                 master.retrieve();
-        	});
+            });
         })();
     </script>
 </body>

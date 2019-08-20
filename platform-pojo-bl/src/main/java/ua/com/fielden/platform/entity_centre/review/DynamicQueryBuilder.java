@@ -1,6 +1,9 @@
 package ua.com.fielden.platform.entity_centre.review;
 
 import static java.lang.Boolean.TRUE;
+import static java.util.stream.Collectors.groupingBy;
+import static ua.com.fielden.platform.entity.AbstractEntity.ID;
+import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.cond;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.baseEntityType;
@@ -20,7 +23,6 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
@@ -47,7 +49,6 @@ import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.types.Money;
 import ua.com.fielden.platform.utils.EntityUtils;
-import ua.com.fielden.platform.utils.MiscUtilities;
 import ua.com.fielden.platform.utils.Pair;
 import ua.com.fielden.platform.web.centre.CentreContext;
 import ua.com.fielden.platform.web.centre.IQueryEnhancer;
@@ -65,7 +66,7 @@ public class DynamicQueryBuilder {
     private static final Logger logger = Logger.getLogger(DynamicQueryBuilder.class);
 
     private DynamicQueryBuilder() {}
-    
+
     /**
      * This is a class which represents high-level abstraction for criterion in dynamic criteria. <br>
      * <br>
@@ -76,6 +77,7 @@ public class DynamicQueryBuilder {
      *
      */
     public static class QueryProperty {
+        private static final String QP_PREFIX = "QP_";
         private Object value = null;
         private Object value2 = null;
         private Boolean exclusive = null;
@@ -90,6 +92,7 @@ public class DynamicQueryBuilder {
         private final String propertyName;
         private final String conditionBuildingName;
         private final boolean critOnly;
+        private final boolean critOnlyWithMnemonics;
         private final boolean single;
         private final boolean aECritOnlyChild;
         private final Class<?> type;
@@ -104,6 +107,16 @@ public class DynamicQueryBuilder {
         private final String unionGroup;
         /** Determines the union and collection nested properties */
         private final Boolean inNestedUnionAndCollections;
+
+        /**
+         * Creates parameter name for {@link QueryProperty} instance (should be used to expand mnemonics value into conditions from EQL critCondition operator).
+         *
+         * @param propertyName
+         * @return
+         */
+        public static String queryPropertyParamName(final String propertyName) {
+            return QP_PREFIX + propertyName;
+        }
 
         public QueryProperty(final Class<?> entityClass, final String propertyName) {
             this.entityClass = entityClass;
@@ -151,11 +164,17 @@ public class DynamicQueryBuilder {
 
             final CritOnly critAnnotation = analyser.getPropertyFieldAnnotation(CritOnly.class);
             this.critOnly = critAnnotation != null;
+            this.critOnlyWithMnemonics = critOnly && critOnlyWithMnemonics(critAnnotation);
 
             final boolean isEntityItself = "".equals(propertyName); // empty property means "entity itself"
             final String penultPropertyName = PropertyTypeDeterminator.isDotNotation(propertyName) ? PropertyTypeDeterminator.penultAndLast(propertyName).getKey() : null;
             this.aECritOnlyChild = !isEntityItself && PropertyTypeDeterminator.isDotNotation(propertyName) && AnnotationReflector.isAnnotationPresentInHierarchy(CritOnly.class, this.entityClass, penultPropertyName);
             this.single = isCritOnly() && Type.SINGLE.equals(critAnnotation.value());
+        }
+
+        public static boolean critOnlyWithMnemonics(final CritOnly critAnnotation) {
+            final CritOnly.Mnemonics mnemonics = critAnnotation.mnemonics() == CritOnly.Mnemonics.DEFAULT ? critAnnotation.value().defaultMnemonics : critAnnotation.mnemonics();
+            return mnemonics == CritOnly.Mnemonics.WITH;
         }
 
         public Object getValue() {
@@ -269,7 +288,16 @@ public class DynamicQueryBuilder {
          * @return
          */
         public boolean shouldBeIgnored() {
-            return isCritOnly() || isAECritOnlyChild() || isEmpty() && !TRUE.equals(orNull);
+            return isCritOnly() || isAECritOnlyChild() || isEmptyWithoutMnemonics();
+        }
+
+        /**
+         * No values have been assigned and no mnemonics have been used.
+         *
+         * @return
+         */
+        public boolean isEmptyWithoutMnemonics() {
+            return isEmpty() && !TRUE.equals(orNull);
         }
 
         /**
@@ -372,7 +400,25 @@ public class DynamicQueryBuilder {
         public boolean isCritOnly() {
             return critOnly;
         }
-        
+
+        /**
+         * Returns <code>true</code> if property is crit-only with mnemonics, <code>false</code> otherwise.
+         *
+         * @return
+         */
+        public boolean isCritOnlyWithMnemonics() {
+            return critOnlyWithMnemonics;
+        }
+
+        /**
+         * Returns <code>true</code> if property is crit-only and without mnemonics, <code>false</code> otherwise.
+         *
+         * @return
+         */
+        public boolean isCritOnlyWithoutMnemonics() {
+            return critOnly && !critOnlyWithMnemonics;
+        }
+
         /**
          * Returns <code>true</code> if property is a child of crit-only AE property (dot-notated), <code>false</code> otherwise.
          *
@@ -663,7 +709,7 @@ public class DynamicQueryBuilder {
         }
         return crits;
     }
-    
+
     /**
      * Creates new array based on the passed list of string. This method also changes * to % for every element of the passed list.
      *
@@ -793,10 +839,9 @@ public class DynamicQueryBuilder {
      *            -- indicates whether appropriate condition should be negated
      * @return
      */
-    private static <ET extends AbstractEntity<?>> ConditionModel buildCondition(final QueryProperty property, final boolean isNegated) {
+    public static <ET extends AbstractEntity<?>> ConditionModel buildCondition(final QueryProperty property, final String propertyName, final boolean isNegated) {
         final boolean orNull = Boolean.TRUE.equals(property.getOrNull());
         final boolean not = Boolean.TRUE.equals(property.getNot());
-        final String propertyName = property.getConditionBuildingName();
         // IMPORTANT : in order not to make extra joins properties like "alias.key", "alias.property1.key" and so on will be enhanced by
         // conditions like "alias is [not] null", "alias.property1 is [not] null" and so on (respectively).
         final IStandAloneConditionComparisonOperator<ET> sc = EntityQueryUtils.<ET> cond().prop(getPropertyNameWithoutKeyPart(propertyName));
@@ -811,9 +856,20 @@ public class DynamicQueryBuilder {
             // indicates whether nulls should be considered in a query
             final boolean considerNulls = negate ^ orNull;
             final IStandAloneConditionOperand<ET> whereAtGroup2 = considerNulls ? sc.isNull().or() : sc.isNotNull().and();
-            final ConditionModel subModel = buildAtomicCondition(property);
+            final ConditionModel subModel = buildAtomicCondition(property, propertyName);
             return negate ? whereAtGroup2.negatedCondition(subModel).model() : whereAtGroup2.condition(subModel).model();
         }
+    }
+
+    /**
+     * More specific use of the previous method {@link #buildCondition(QueryProperty, String, boolean)}.
+     *
+     * @param property
+     * @param isNegated
+     * @return
+     */
+    private static <ET extends AbstractEntity<?>> ConditionModel buildCondition(final QueryProperty property, final boolean isNegated) {
+        return buildCondition(property, property.getConditionBuildingName(), isNegated);
     }
 
     /**
@@ -826,8 +882,7 @@ public class DynamicQueryBuilder {
      * @return
      */
     @SuppressWarnings("unchecked")
-    private static <ET extends AbstractEntity<?>> ConditionModel buildAtomicCondition(final QueryProperty property) {
-        final String propertyName = property.getConditionBuildingName();
+    private static <ET extends AbstractEntity<?>> ConditionModel buildAtomicCondition(final QueryProperty property, final String propertyName) {
 
         if (isRangeType(property.getType())) {
             if (isDate(property.getType()) && property.getDatePrefix() != null && property.getDateMnemonic() != null) {
@@ -850,22 +905,37 @@ public class DynamicQueryBuilder {
         } else if (isString(property.getType())) {
             return cond().prop(propertyName).iLike().anyOfValues((Object[]) prepCritValuesForStringTypedProp((String) property.getValue())).model();
         } else if (isEntityType(property.getType())) {
-            return propertyLike(propertyName, (List<String>) property.getValue(), baseEntityType((Class<AbstractEntity<?>>) property.getType()));
+            if (property.isSingle()) {
+                return propertyLike(propertyName, property.getValue());
+            } else {
+                return propertyLike(propertyName, (List<String>) property.getValue(), baseEntityType((Class<AbstractEntity<?>>) property.getType()));
+            }
         } else {
             throw new UnsupportedTypeException(property.getType());
         }
     }
-    
+
+    /**
+     * Generates condition for single entity type property for property name and value.
+     *
+     * @param propertyName
+     * @param value
+     * @return
+     */
+    private static ConditionModel propertyLike(final String propertyName, final Object value) {
+        return cond().prop(propertyName).eq().val(value).model();
+    }
+
     /**
      * Generates condition for entity-typed property with type <code>propType</code> and criteria <code>searchValues</code>.
-     * 
+     *
      * @param propertyNameWithKey -- the name of property concatenated with ".key"
      * @param searchValues
      * @param propType
      * @return
      */
-    public static ConditionModel propertyLike(final String propertyNameWithKey, final List<String> searchValues, final Class<? extends AbstractEntity<?>> propType) {
-        final Map<Boolean, List<String>> searchVals = searchValues.stream().collect(Collectors.groupingBy(str -> str.contains("*")));
+    private static ConditionModel propertyLike(final String propertyNameWithKey, final List<String> searchValues, final Class<? extends AbstractEntity<?>> propType) {
+        final Map<Boolean, List<String>> searchVals = searchValues.stream().collect(groupingBy(str -> str.contains("*")));
         final String propertyNameWithoutKey = getPropertyNameWithoutKeyPart(propertyNameWithKey);
         if (searchVals.containsKey(false) && searchVals.containsKey(true)) {
             return cond()
@@ -878,7 +948,7 @@ public class DynamicQueryBuilder {
             return cond().prop(propertyNameWithKey).iLike().anyOfValues(prepCritValuesForEntityTypedProp(searchVals.get(true))).model();
         }
     }
-    
+
     /**
      * Indicates the unsupported type exception for dynamic criteria.
      *
@@ -1020,7 +1090,7 @@ public class DynamicQueryBuilder {
      * @return
      */
     public static String getPropertyNameWithoutKeyPart(final String propertyName) {
-        return replaceLast(propertyName, ".key", "");
+        return KEY.equals(propertyName) ? ID : replaceLast(propertyName, ".key", "");
     }
 
     private static String replaceLast(final String s, final String what, final String byWhat) {

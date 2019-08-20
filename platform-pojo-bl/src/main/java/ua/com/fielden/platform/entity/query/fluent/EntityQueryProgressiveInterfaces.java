@@ -147,69 +147,69 @@ public interface EntityQueryProgressiveInterfaces {
 		 * 
 		 * @return
 		 */
-		T prop(String propertyName);
+		T prop(final String propertyName);
 
 		/**
 		 * Property.
 		 * 
 		 * @return
 		 */
-		T prop(Enum propertyName);
+		T prop(final Enum<?> propertyName);
 
 		/**
 		 * External property (property from master query(ies).
 		 * 
 		 * @return
 		 */
-		T extProp(String propertyName);
+		T extProp(final String propertyName);
 
 		/**
 		 * External property (property from master query(ies).
 		 * 
 		 * @return
 		 */
-		T extProp(Enum propertyName);
+		T extProp(final Enum<?> propertyName);
 
 		/**
 		 * Value.
 		 * 
 		 * @return
 		 */
-		T val(Object value);
+		T val(final Object value);
 
 		/**
 		 * Ignore value -- ignore condition with this operator if null is passed as an argument.
 		 * 
 		 * @return
 		 */
-		T iVal(Object value);
+		T iVal(final Object value);
 
-		T param(String paramName);
+		T param(final String paramName);
 
-		T param(Enum paramName);
-
-		/**
-		 * Ignore parameter -- ignore condition with this operator if null is passed as an argument.
-		 * 
-		 * @return
-		 */
-		T iParam(String paramName);
+		T param(final Enum<?> paramName);
 
 		/**
 		 * Ignore parameter -- ignore condition with this operator if null is passed as an argument.
 		 * 
 		 * @return
 		 */
-		T iParam(Enum paramName);
+		T iParam(final String paramName);
 
-		T model(SingleResultQueryModel<?> model);
+		/**
+		 * Ignore parameter -- ignore condition with this operator if null is passed as an argument.
+		 * 
+		 * @return
+		 */
+		T iParam(final Enum<?> paramName);
+
+		T model(final SingleResultQueryModel<?> model);
 
 		/**
 		 * Expression.
 		 * 
 		 * @return
 		 */
-		T expr(ExpressionModel Expr);
+		T expr(final ExpressionModel Expr);
 
 		// built-in SQL functions
 		T now();
@@ -256,39 +256,39 @@ public interface EntityQueryProgressiveInterfaces {
 
 	interface IMultipleOperand<T, ET extends AbstractEntity<?>> //
 			extends ISingleOperand<T, ET> {
-		T anyOfProps(String... propertyNames);
+		T anyOfProps(final String... propertyNames);
 
-		T anyOfValues(Object... values);
+		T anyOfValues(final Object... values);
 
-		T anyOfParams(String... paramNames);
+		T anyOfParams(final String... paramNames);
 
 		/**
 		 * Shortcut for the group of OR-ed iParam(..) calls.
 		 * 
 		 * @return
 		 */
-		T anyOfIParams(String... paramNames);
+		T anyOfIParams(final String... paramNames);
 
-		T anyOfModels(PrimitiveResultQueryModel... models);
+		T anyOfModels(final PrimitiveResultQueryModel... models);
 
-		T anyOfExpressions(ExpressionModel... Expressions);
+		T anyOfExpressions(final ExpressionModel... Expressions);
 
-		T allOfProps(String... propertyNames);
+		T allOfProps(final String... propertyNames);
 
-		T allOfValues(Object... values);
+		T allOfValues(final Object... values);
 
-		T allOfParams(String... paramNames);
+		T allOfParams(final String... paramNames);
 
 		/**
 		 * Shortcut for the group of AND-ed iParam(..) calls.
 		 * 
 		 * @return
 		 */
-		T allOfIParams(String... paramNames);
+		T allOfIParams(final String... paramNames);
 
-		T allOfModels(PrimitiveResultQueryModel... models);
+		T allOfModels(final PrimitiveResultQueryModel... models);
 
-		T allOfExpressions(ExpressionModel... expressions);
+		T allOfExpressions(final ExpressionModel... expressions);
 	}
 
 	interface IComparisonOperand<T, ET extends AbstractEntity<?>> //
@@ -299,25 +299,67 @@ public interface EntityQueryProgressiveInterfaces {
 															 */ {
 	}
 
-	interface IExistenceOperator<T extends ILogicalOperator<?>> {
-		T exists(QueryModel subQuery);
+	interface ISingleConditionOperator<T extends ILogicalOperator<?>> {
+		T exists(final QueryModel subQuery);
 
-		T notExists(QueryModel subQuery);
+		T notExists(final QueryModel subQuery);
 
-		T existsAnyOf(QueryModel... subQueries);
+		T existsAnyOf(final QueryModel... subQueries);
 
-		T notExistsAnyOf(QueryModel... subQueries);
+		T notExistsAnyOf(final QueryModel... subQueries);
 
-		T existsAllOf(QueryModel... subQueries);
+		T existsAllOf(final QueryModel... subQueries);
 
-		T notExistsAllOf(QueryModel... subQueries);
+		T notExistsAllOf(final QueryModel... subQueries);
+		
+        /**
+         * Applies value of crit-only property {@code critPropName} (including mnemonics) to persistent property {@code propName} and generates appropriate condition model (as per
+         * {@link ua.com.fielden.platform.entity_centre.review.DynamicQueryBuilder#buildAtomicCondition(ua.com.fielden.platform.entity_centre.review.DynamicQueryBuilder.QueryProperty, String)}
+         * logic).
+         * 
+         * @param propName
+         * @param critPropName
+         * @return
+         */
+        T critCondition(final String propName, final String critPropName);
+		
+        /**
+         * Applies value of crit-only property {@code critPropName} (including mnemonics) to persistent collectional property {@code propName} represented by collection in
+         * {@code collectionQueryStart} and enhances this query with generated appropriate condition model (as per {@link ua.com.fielden.platform.entity_centre.review.DynamicQueryBuilder#buildAtomicCondition(ua.com.fielden.platform.entity_centre.review.DynamicQueryBuilder.QueryProperty, String)}
+         * logic).
+         * <p>
+         * Rules for applying mnemonics and search values onto collectional properties have been specified as follows, where {@code v} -- value, {@code n} -- negation,
+         * {@code m} -- indicates presence of mnemonics. For more information refer <a href="https://github.com/fieldenms/tg/issues/947">issue 947</a>.
+         * 
+         * <pre>
+         * v n m
+         * + + +  not (exists collectional element that matches any of the values || empty) == there are no collectional elements that match any of values && not empty
+         * + + -  not (exists collectional element that matches any of the values && not empty) == there are no collectional elements that match any of values || empty
+         * + - +  exists collectional element that matches any of the values || empty
+         * + - -  exists collectional element that matches any of the values && not empty
+         * - + +  not empty
+         * - + -  no condition
+         * - - +  empty
+         * - - -  no condition
+         * </pre>
+         * 
+         * @param collectionQueryStart
+         * @param propName
+         * @param critPropName
+         * @return
+         */
+        T critCondition(final ICompoundCondition0<?> collectionQueryStart, final String propName, final String critPropName);
+
+		T condition(final ConditionModel condition);
+
+		T negatedCondition(final ConditionModel condition);
 	}
 
 	interface IQuantifiedOperand<T, ET extends AbstractEntity<?>> //
 			extends IMultipleOperand<T, ET> {
-		T all(SingleResultQueryModel subQuery);
+		T all(final SingleResultQueryModel subQuery);
 
-		T any(SingleResultQueryModel subQuery);
+		T any(final SingleResultQueryModel subQuery);
 	}
 
 	interface IComparisonQuantifiedOperand<T, ET extends AbstractEntity<?>> //
@@ -329,15 +371,15 @@ public interface EntityQueryProgressiveInterfaces {
 	}
 
 	interface IComparisonSetOperand<T> {
-		<E extends Object> T values(E... values);
+		<E extends Object> T values(final E... values);
 
-		T props(String... properties);
+		T props(final String... properties);
 
-		T params(String... paramNames);
+		T params(final String... paramNames);
 
-		T iParams(String... paramNames);
+		T iParams(final String... paramNames);
 
-		T model(SingleResultQueryModel model);
+		T model(final SingleResultQueryModel model);
 		// beginSet();
 	}
 
@@ -410,9 +452,9 @@ public interface EntityQueryProgressiveInterfaces {
 
 		T endAsBool();
 
-		T endAsStr(int length);
+		T endAsStr(final int length);
 
-		T endAsDecimal(int scale, int presicion);
+		T endAsDecimal(final int scale, final int presicion);
 	}
 
 	interface ICaseWhenFunctionElseEnd<T, ET extends AbstractEntity<?>> //
@@ -456,17 +498,17 @@ public interface EntityQueryProgressiveInterfaces {
 	}
 
 	interface IRoundFunctionTo<T> {
-		T to(Integer precision);
+		T to(final Integer precision);
 	}
 
 	interface IFirstYieldedItemAlias<T> {
-		T as(String alias);
+		T as(final String alias);
 
-		T as(Enum alias);
+		T as(final Enum<?> alias);
 
-		T asRequired(String alias);
+		T asRequired(final String alias);
 
-		T asRequired(Enum alias);
+		T asRequired(final Enum<?> alias);
 
 		<E extends AbstractEntity<?>> EntityResultQueryModel<E> modelAsEntity(final Class<E> entityType);
 
@@ -474,13 +516,13 @@ public interface EntityQueryProgressiveInterfaces {
 	}
 
 	interface ISubsequentYieldedItemAlias<T> /* extends ICompletedAndYielded */ {
-		T as(String alias);
+		T as(final String alias);
 
-		T as(Enum alias);
+		T as(final Enum<?> alias);
 
-		T asRequired(String alias);
+		T asRequired(final String alias);
 
-		T asRequired(Enum alias);
+		T asRequired(final Enum<?> alias);
 	}
 
 	interface IArithmeticalOperator<T> {
@@ -522,12 +564,12 @@ public interface EntityQueryProgressiveInterfaces {
 
 	interface IJoinAlias<ET extends AbstractEntity<?>> //
 			extends IJoinCondition<ET> {
-		IJoinCondition<ET> as(String alias);
+		IJoinCondition<ET> as(final String alias);
 	}
 
 	interface IFromAlias<ET extends AbstractEntity<?>> //
 			extends IJoin<ET> {
-		IJoin<ET> as(String alias);
+		IJoin<ET> as(final String alias);
 	}
 	
     interface IFromNone<ET extends AbstractEntity<?>> //
@@ -566,7 +608,7 @@ public interface EntityQueryProgressiveInterfaces {
 
 	public interface ICompletedCommon<ET extends AbstractEntity<?>> {
 		//////////////////// RETURN /////////////////////////
-		<T extends AbstractEntity<?>> EntityResultQueryModel<T> modelAsEntity(Class<T> resultType);
+		<T extends AbstractEntity<?>> EntityResultQueryModel<T> modelAsEntity(final Class<T> resultType);
 
 		AggregatedResultQueryModel modelAsAggregate();
 	}
@@ -585,10 +627,7 @@ public interface EntityQueryProgressiveInterfaces {
 
 	interface IWhereWithoutNesting<T1 extends IComparisonOperator<T2, ET>, T2 extends ILogicalOperator<?>, ET extends AbstractEntity<?>> //
 			extends IComparisonOperand<T1, ET>, //
-			/*    */IExistenceOperator<T2> {
-		T2 condition(ConditionModel condition);
-
-		T2 negatedCondition(ConditionModel condition);
+			/*    */ISingleConditionOperator<T2> {
 	}
 
 	interface ICompoundCondition<T1, T2> //
@@ -612,7 +651,7 @@ public interface EntityQueryProgressiveInterfaces {
 
 	interface IJoinWhere3<ET extends AbstractEntity<?>> //
 			extends IComparisonOperand<IJoinComparisonOperator3<ET>, ET>, //
-			/*    */IExistenceOperator<IJoinCompoundCondition3<ET>> {
+			/*    */ISingleConditionOperator<IJoinCompoundCondition3<ET>> {
 	}
 
 	// -------------------------------------------
@@ -704,7 +743,7 @@ public interface EntityQueryProgressiveInterfaces {
 
 	interface IWhere3<ET extends AbstractEntity<?>> //
 			extends IComparisonOperand<IComparisonOperator3<ET>, ET>, //
-			/*    */IExistenceOperator<ICompoundCondition3<ET>> {
+			/*    */ISingleConditionOperator<ICompoundCondition3<ET>> {
 	}
 
 	////////////////////////////////////////////////////////// ---FUNCTION
@@ -730,7 +769,7 @@ public interface EntityQueryProgressiveInterfaces {
 
 	interface IFunctionWhere3<T, ET extends AbstractEntity<?>> //
 			extends IComparisonOperand<IFunctionComparisonOperator3<T, ET>, ET>, //
-			/*    */IExistenceOperator<IFunctionCompoundCondition3<T, ET>> {
+			/*    */ISingleConditionOperator<IFunctionCompoundCondition3<T, ET>> {
 	}
 
 	// -------------------------------------------
@@ -948,7 +987,7 @@ public interface EntityQueryProgressiveInterfaces {
 	interface IOrderingItem //
 			extends
 			IExprOperand<ISingleOperandOrderable, IExprOperand0<ISingleOperandOrderable, AbstractEntity<?>>, AbstractEntity<?>> {
-		ISingleOperandOrderable yield(String yieldAlias);
-		IOrderingItemCloseable order(OrderingModel model);
+		ISingleOperandOrderable yield(final String yieldAlias);
+		IOrderingItemCloseable order(final OrderingModel model);
 	}
 }

@@ -39,6 +39,20 @@ public class ModuleMenuItem extends AbstractEntity<String> implements IMenuManag
     @Title(value = "Visible?", desc = "Is menu item visible?")
     private boolean visible = true;
 
+    @IsProperty
+    @Title(value = "Icon", desc = "Menu item icon")
+    private String icon;
+
+    @Observable
+    public ModuleMenuItem setIcon(final String icon) {
+        this.icon = icon;
+        return this;
+    }
+
+    public String getIcon() {
+        return icon;
+    }
+
     @Observable
     public ModuleMenuItem setVisible(final boolean isVisible) {
         this.visible = isVisible;

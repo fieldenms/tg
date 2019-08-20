@@ -19,7 +19,7 @@ import ua.com.fielden.platform.web.factories.webui.CentreComponentResourceFactor
 import ua.com.fielden.platform.web.factories.webui.CentreResourceFactory;
 import ua.com.fielden.platform.web.factories.webui.CriteriaResourceFactory;
 import ua.com.fielden.platform.web.factories.webui.CustomViewResourceFactory;
-import ua.com.fielden.platform.web.factories.webui.DesktopApplicationStartupResourcesComponentResourceFactory;
+import ua.com.fielden.platform.web.factories.webui.ApplicationStartupResourcesComponentResourceFactory;
 import ua.com.fielden.platform.web.factories.webui.EgiExampleResourceFactory;
 import ua.com.fielden.platform.web.factories.webui.EntityAutocompletionResourceFactory;
 import ua.com.fielden.platform.web.factories.webui.EntityResourceFactory;
@@ -29,7 +29,6 @@ import ua.com.fielden.platform.web.factories.webui.MainWebUiComponentResourceFac
 import ua.com.fielden.platform.web.factories.webui.MasterComponentResourceFactory;
 import ua.com.fielden.platform.web.factories.webui.MasterTestsComponentResourceFactory;
 import ua.com.fielden.platform.web.factories.webui.SerialisationTestResourceFactory;
-import ua.com.fielden.platform.web.factories.webui.TgElementLoaderComponentResourceFactory;
 import ua.com.fielden.platform.web.factories.webui.TgReflectorComponentResourceFactory;
 import ua.com.fielden.platform.web.factories.webui.WebUiPreferencesResourceFactory;
 import ua.com.fielden.platform.web.interfaces.IDeviceProvider;
@@ -112,18 +111,17 @@ public abstract class AbstractWebUiResources extends Application {
     @Override
     public final Restlet createInboundRoot() {
         // Create router and web application for registering resources.
-        final Router router = new Router(getContext());
+        final Router router = new ResourceRouter(getContext());
 
         final RestServerUtil restUtil = injector.getInstance(RestServerUtil.class);
 
         // Attach main application resource.
         router.attach("/", new AppIndexResourceFactory(sourceController, webApp, userProvider, deviceProvider));
-        router.attach("/app/tg-app-config.html", new WebUiPreferencesResourceFactory(sourceController, deviceProvider));
-        router.attach("/app/tg-app.html", new MainWebUiComponentResourceFactory(sourceController, deviceProvider));
+        router.attach("/app/tg-app-config.js", new WebUiPreferencesResourceFactory(sourceController, deviceProvider));
+        router.attach("/app/tg-app.js", new MainWebUiComponentResourceFactory(sourceController, deviceProvider));
         // type meta info resource
-        router.attach("/app/tg-reflector.html", new TgReflectorComponentResourceFactory(sourceController, deviceProvider));
-        router.attach("/app/tg-element-loader.html", new TgElementLoaderComponentResourceFactory(sourceController, deviceProvider));
-        router.attach("/app/desktop-application-startup-resources.html", new DesktopApplicationStartupResourcesComponentResourceFactory(sourceController, deviceProvider));
+        router.attach("/app/tg-reflector.js", new TgReflectorComponentResourceFactory(sourceController, deviceProvider));
+        router.attach("/app/application-startup-resources.js", new ApplicationStartupResourcesComponentResourceFactory(sourceController, deviceProvider));
 
         // serialisation testing resource
         router.attach("/test/serialisation", new SerialisationTestResourceFactory(injector));

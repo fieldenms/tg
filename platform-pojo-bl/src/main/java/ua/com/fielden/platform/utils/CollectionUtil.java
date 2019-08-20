@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.utils;
 
 import static java.util.Arrays.asList;
+import static java.util.Collections.emptyList;
 import static java.util.Collections.unmodifiableList;
 import static java.util.Collections.unmodifiableSet;
 
@@ -48,7 +49,7 @@ public final class CollectionUtil {
     
     @SafeVarargs
     public static <T> List<T> listOf(final T ... elements) {
-        return new ArrayList<>(asList(elements));
+        return elements != null ? new ArrayList<>(asList(elements)) : emptyList();
     }
     
     @SafeVarargs

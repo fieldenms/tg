@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.domaintree.impl;
 
 import static java.lang.String.format;
+import static ua.com.fielden.platform.reflection.asm.impl.DynamicTypeNamingService.nextTypeName;
 import static ua.com.fielden.platform.utils.Pair.pair;
 
 import java.lang.annotation.Annotation;
@@ -28,6 +29,7 @@ import ua.com.fielden.platform.domaintree.impl.DomainTreeEnhancer.ByteArray;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.Calculated;
 import ua.com.fielden.platform.entity.annotation.Ignore;
+import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.Title;
 import ua.com.fielden.platform.entity.annotation.factory.CalculatedAnnotation;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
@@ -167,12 +169,12 @@ public final class DomainTreeEnhancer0 extends AbstractDomainTree implements IDo
         for (final Entry<Class<?>, Map<String, Map<String, CalculatedProperty>>> entry : groupedCalculatedProperties.entrySet()) {
             final Class<?> originalRoot = entry.getKey();
             // generate predefined root type name for all calculated properties
-            final String predefinedRootTypeName = new DynamicTypeNamingService().nextTypeName(originalRoot.getName());
+            final String predefinedRootTypeName = nextTypeName(originalRoot.getName());
             if (entry.getValue() == null) {
                 final NewProperty[] markerProp = new NewProperty[1];
                 markerProp[0] = new NewProperty("aMarkerPropertyJustToMakeTheTypeEnhanced", Integer.class, false, "Marker to make root type 'enhanced'.", "This is a marker property that just makes the type, that have no calc props, enhanced.", createIgnore());
                 try {
-                    final Class<?> rootEnhanced = classLoader.startModification(originalRoot.getName()).addProperties(markerProp).endModification();
+                    final Class<?> rootEnhanced = classLoader.startModification(originalRoot).addProperties(markerProp).endModification();
                     final ByteArray newByteArray = new ByteArray(classLoader.getCachedByteArray(rootEnhanced.getName()));
                     originalAndEnhancedRootTypes.put(originalRoot, new Pair<Class<?>, Map<String, ByteArray>>(rootEnhanced, new HashMap<String, ByteArray>() {
                         {
@@ -206,7 +208,7 @@ public final class DomainTreeEnhancer0 extends AbstractDomainTree implements IDo
                             final Map<String, ByteArray> existingByteArrays = new HashMap<String, ByteArray>(originalAndEnhancedRootTypes.get(originalRoot).getValue());
 
                             // generate & load new type enhanced by calculated properties
-                            final Class<?> realParentEnhanced = classLoader.startModification(realParentToBeEnhanced.getName()).addProperties(newProperties).endModification();
+                            final Class<?> realParentEnhanced = classLoader.startModification(realParentToBeEnhanced).addProperties(newProperties).endModification();
                             // propagate enhanced type to root
                             final Pair<Class<?>, Map<String, ByteArray>> rootAfterPropagationAndAdditionalByteArrays = propagateEnhancedTypeToRoot(realParentEnhanced, realRoot, path, classLoader);
                             final Class<?> rootAfterPropagation = rootAfterPropagationAndAdditionalByteArrays.getKey();
@@ -225,7 +227,7 @@ public final class DomainTreeEnhancer0 extends AbstractDomainTree implements IDo
             try {
                 // modify root type name with predefinedRootTypeName
                 final Pair<Class<?>, Map<String, ByteArray>> current = originalAndEnhancedRootTypes.get(originalRoot);
-                final Class<?> rootWithPredefinedName = classLoader.startModification(current.getKey().getName()).modifyTypeName(predefinedRootTypeName).endModification();
+                final Class<?> rootWithPredefinedName = classLoader.startModification(current.getKey()).modifyTypeName(predefinedRootTypeName).endModification();
                 final Map<String, ByteArray> byteArraysWithRenamedRoot = new HashMap<String, ByteArray>();
 
                 byteArraysWithRenamedRoot.putAll(current.getValue());
@@ -252,7 +254,7 @@ public final class DomainTreeEnhancer0 extends AbstractDomainTree implements IDo
 
         try {
             final String predefinedRootTypeName = root.getName() + DynamicTypeNamingService.APPENDIX + "_" + clientGeneratedTypeNameSuffix;
-            final Class<?> rootWithPredefinedName = classLoader.startModification(managedType.getName()).modifyTypeName(predefinedRootTypeName)./* TODO modifySupertypeName(originalRoot.getName()).*/endModification();
+            final Class<?> rootWithPredefinedName = classLoader.startModification(managedType).modifyTypeName(predefinedRootTypeName)./* TODO modifySupertypeName(originalRoot.getName()).*/endModification();
             
             final Map<String, ByteArray> byteArraysWithRenamedRoot = new LinkedHashMap<>();
             final Pair<Class<?>, Map<String, ByteArray>> currentByteArrays = originalAndEnhancedRootTypesAndArrays.get(root);
@@ -283,7 +285,7 @@ public final class DomainTreeEnhancer0 extends AbstractDomainTree implements IDo
         final DynamicEntityClassLoader classLoader = DynamicEntityClassLoader.getInstance(ClassLoader.getSystemClassLoader());
 
         try {
-            final Class<?> managedTypeWithAnnotations = classLoader.startModification(managedType.getName()).addClassAnnotations(additionalAnnotations).endModification();
+            final Class<?> managedTypeWithAnnotations = classLoader.startModification(managedType).addClassAnnotations(additionalAnnotations).endModification();
             
             final Map<String, ByteArray> byteArraysWithRenamedRoot = new LinkedHashMap<>();
             final Pair<Class<?>, Map<String, ByteArray>> currentByteArrays = originalAndEnhancedRootTypesAndArrays.get(root);
@@ -353,14 +355,14 @@ public final class DomainTreeEnhancer0 extends AbstractDomainTree implements IDo
         }
         final Pair<Class<?>, String> transformed = PropertyTypeDeterminator.transform(root, path);
 
-        final String nameOfTheTypeToAdapt = transformed.getKey().getName();
+        final Class<?> typeToAdapt = transformed.getKey();
         final String nameOfThePropertyToAdapt = transformed.getValue();
         try {
             // change type if simple field and change signature in case of collectional field
             final boolean isCollectional = Collection.class.isAssignableFrom(PropertyTypeDeterminator.determineClass(transformed.getKey(), transformed.getValue(), true, false));
             final NewProperty propertyToBeModified = !isCollectional ? NewProperty.changeType(nameOfThePropertyToAdapt, enhancedType)
                     : NewProperty.changeTypeSignature(nameOfThePropertyToAdapt, enhancedType);
-            final Class<?> nextEnhancedType = classLoader.startModification(nameOfTheTypeToAdapt).modifyProperties(propertyToBeModified).endModification();
+            final Class<?> nextEnhancedType = classLoader.startModification(typeToAdapt).modifyProperties(propertyToBeModified).endModification();
             final String nextProp = PropertyTypeDeterminator.isDotNotation(path) ? PropertyTypeDeterminator.penultAndLast(path).getKey() : "";
             final Pair<Class<?>, Map<String, ByteArray>> lastTypeThatIsRootAndPropagatedArrays = propagateEnhancedTypeToRoot(nextEnhancedType, root, nextProp, classLoader);
             additionalByteArrays.putAll(lastTypeThatIsRootAndPropagatedArrays.getValue());
@@ -420,8 +422,9 @@ public final class DomainTreeEnhancer0 extends AbstractDomainTree implements IDo
                     final Title titleAnnotation = AnnotationReflector.getAnnotation(calculatedField, Title.class);
                     final String title = titleAnnotation == null ? "" : titleAnnotation.value();
                     final String desc = titleAnnotation == null ? "" : titleAnnotation.desc();
+                    final IsProperty isPropertyAnnotation = AnnotationReflector.getAnnotation(calculatedField, IsProperty.class);
                     final CalculatedProperty calculatedProperty = CalculatedProperty.createCorrect(dte.getFactory(), root, calcAnnotation.contextPath(), calcAnnotation.value(), title, desc, calcAnnotation.attribute(), "".equals(calcAnnotation.origination()) ? null
-                            : calcAnnotation.origination(), dte, validateTitleContextOfExtractedProperties);
+                            : calcAnnotation.origination(), isPropertyAnnotation.precision(), isPropertyAnnotation.scale(), dte, validateTitleContextOfExtractedProperties);
 
                     // TODO tricky setting!
                     calculatedProperty.setNameVeryTricky(calculatedField.getName());
@@ -509,13 +512,13 @@ public final class DomainTreeEnhancer0 extends AbstractDomainTree implements IDo
     }
 
     @Override
-    public ICalculatedProperty addCalculatedProperty(final Class<?> root, final String contextPath, final String contextualExpression, final String title, final String desc, final CalculatedPropertyAttribute attribute, final String originationProperty) {
-        return addCalculatedProperty(CalculatedProperty.createCorrect(getFactory(), root, contextPath, contextualExpression, title, desc, attribute, originationProperty, this));
+    public ICalculatedProperty addCalculatedProperty(final Class<?> root, final String contextPath, final String contextualExpression, final String title, final String desc, final CalculatedPropertyAttribute attribute, final String originationProperty, final Integer precision, final Integer scale) {
+        return addCalculatedProperty(CalculatedProperty.createCorrect(getFactory(), root, contextPath, contextualExpression, title, desc, attribute, originationProperty, precision, scale, this));
     }
 
     @Override
-    public ICalculatedProperty addCalculatedProperty(final Class<?> root, final String contextPath, final String customPropertyName, final String contextualExpression, final String title, final String desc, final CalculatedPropertyAttribute attribute, final String originationProperty) {
-        return addCalculatedProperty(CalculatedProperty.createCorrect(getFactory(), root, contextPath, customPropertyName, contextualExpression, title, desc, attribute, originationProperty, this));
+    public ICalculatedProperty addCalculatedProperty(final Class<?> root, final String contextPath, final String customPropertyName, final String contextualExpression, final String title, final String desc, final CalculatedPropertyAttribute attribute, final String originationProperty, final Integer precision, final Integer scale) {
+        return addCalculatedProperty(CalculatedProperty.createCorrect(getFactory(), root, contextPath, customPropertyName, contextualExpression, title, desc, attribute, originationProperty, precision, scale, this));
     }
 
     @Override
@@ -678,7 +681,7 @@ public final class DomainTreeEnhancer0 extends AbstractDomainTree implements IDo
     }
 
     @Override
-    public IDomainTreeEnhancer addCustomProperty(final Class<?> root, final String contextPath, final String name, final String title, final String desc, final Class<?> type) {
+    public IDomainTreeEnhancer addCustomProperty(final Class<?> root, final String contextPath, final String name, final String title, final String desc, final Class<?> type, final Integer precision, final Integer scale) {
         throw new UnsupportedOperationException("Need not to be supported in deprecated enhancer0.");
     }
 

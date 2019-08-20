@@ -6,16 +6,10 @@
     <title>entity-master conflict resolution tests</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
     
-    <script src="/resources/polymer/webcomponentsjs/webcomponents-lite.js"></script>
-    <script src="/resources/polymer/web-component-tester/browser.js"></script>
-    <script src="/resources/polymer/test-fixture/test-fixture-mocha.js"></script>
-    <script src="/resources/polymer/iron-test-helpers/mock-interactions.js"></script>
-    
-    <link rel="import" href="/resources/polymer/test-fixture/test-fixture.html">
-    
-    <link rel="import" href="/app/tg-reflector.html">
-    <link rel="import" href="/resources/reflection/tg-date-utils.html">
-    <link rel="import" href="/master_ui/ua.com.fielden.platform.sample.domain.TgPersistentEntityWithProperties"> <!-- Test_TgPersistentEntityWithProperties -->
+    <script src="/resources/polymer/@webcomponents/webcomponentsjs/webcomponents-bundle.js"></script>
+    <script src='/resources/polymer/web-animations-js/web-animations-next-lite.min.js'></script>
+    <script src="/resources/filesaver/FileSaver.min.js"></script>
+    <script src="/resources/polymer/wct-browser-legacy/browser.js"></script>
 </head>
 
 <body>
@@ -41,9 +35,13 @@
         </template>
     </test-fixture>
     
-    <script>
+    <script type="module">
+
+        import '/app/tg-reflector.js';
+        import '/master_ui/ua.com.fielden.platform.sample.domain.TgPersistentEntityWithProperties';
+
         suite('conflict resolution', function() {
-            var master, auxiliaryMaster, reflector, originalVersion;
+            let master, auxiliaryMaster, reflector, originalVersion;
             
             const _editProperties = function (master, property, propEditingValue, postValidationAction) {
                 return new Promise(function(resolve, reject) {

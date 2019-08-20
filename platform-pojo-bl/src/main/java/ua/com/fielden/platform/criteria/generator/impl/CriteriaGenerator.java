@@ -11,7 +11,6 @@ import static ua.com.fielden.platform.domaintree.impl.AbstractDomainTree.isCritO
 import static ua.com.fielden.platform.domaintree.impl.AbstractDomainTree.isDoubleCriterion;
 import static ua.com.fielden.platform.reflection.AnnotationReflector.getAnnotation;
 import static ua.com.fielden.platform.types.tuples.T2.t2;
-import static ua.com.fielden.platform.web.utils.EntityResourceUtils.disregardCritOnlyRequiredProperties;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
@@ -47,6 +46,7 @@ import ua.com.fielden.platform.entity.annotation.factory.EntityTypeAnnotation;
 import ua.com.fielden.platform.entity.annotation.factory.FirstParamAnnotation;
 import ua.com.fielden.platform.entity.annotation.factory.IsPropertyAnnotation;
 import ua.com.fielden.platform.entity.annotation.factory.SecondParamAnnotation;
+import ua.com.fielden.platform.entity.annotation.factory.SkipEntityExistsValidationAnnotation;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
@@ -115,35 +115,35 @@ public class CriteriaGenerator implements ICriteriaGenerator {
                 }
                 final DynamicEntityClassLoader cl = DynamicEntityClassLoader.getInstance(ClassLoader.getSystemClassLoader());
 
-                queryCriteriaClass = (Class<? extends EntityQueryCriteria<CDTME, T, IEntityDao<T>>>) cl.startModification(entityClass.getName()).addClassAnnotations(customAnnotations).addProperties(newProperties.toArray(new NewProperty[0])).endModification();
+                queryCriteriaClass = (Class<? extends EntityQueryCriteria<CDTME, T, IEntityDao<T>>>) cl.startModification(entityClass).addClassAnnotations(customAnnotations).addProperties(newProperties.toArray(new NewProperty[0])).endModification();
                 generatedClasses.put(miType, queryCriteriaClass);
             }
 
-            final DefaultEntityProducerWithContext<EntityQueryCriteria<CDTME, T, IEntityDao<T>>> entityProducer = new DefaultEntityProducerWithContext<>(entityFactory, (Class<EntityQueryCriteria<CDTME, T, IEntityDao<T>>>) queryCriteriaClass, coFinder);
-            final EntityQueryCriteria<CDTME, T, IEntityDao<T>> entity = entityProducer.newEntity();
-            entity.beginInitialising();
-            entity.setKey("not required");
-            entity.endInitialising();
+            final DefaultEntityProducerWithContext<EntityQueryCriteria<CDTME, T, IEntityDao<T>>> criteriaEntityProducer = new DefaultEntityProducerWithContext<>(entityFactory, (Class<EntityQueryCriteria<CDTME, T, IEntityDao<T>>>) queryCriteriaClass, coFinder);
+            final EntityQueryCriteria<CDTME, T, IEntityDao<T>> criteriaEntity = criteriaEntityProducer.newEntity();
+            criteriaEntity.beginInitialising();
+            criteriaEntity.setKey("not required");
+            criteriaEntity.endInitialising();
 
             //Set dao for generated entity query criteria.
             final Field daoField = Finder.findFieldByName(EntityQueryCriteria.class, "dao");
             final boolean isDaoAccessable = daoField.isAccessible();
             daoField.setAccessible(true);
-            daoField.set(entity, coFinder.find(root));
+            daoField.set(criteriaEntity, coFinder.find(root));
             daoField.setAccessible(isDaoAccessable);
 
             //Set domain tree manager for entity query criteria.
             final Field dtmField = Finder.findFieldByName(EntityQueryCriteria.class, "cdtme");
             final boolean isCdtmeAccessable = dtmField.isAccessible();
             dtmField.setAccessible(true);
-            dtmField.set(entity, cdtme);
+            dtmField.set(criteriaEntity, cdtme);
             dtmField.setAccessible(isCdtmeAccessable);
 
             //Add change support to the entity query criteria instance
             //in order to synchronise entity query criteria values with model values
-            synchroniseWithModel(entity);
+            synchroniseWithModel(criteriaEntity);
 
-            return entity;
+            return criteriaEntity;
         } catch (final Exception e) {
             LOGGER.error(e.getMessage(), e);
             throw new IllegalStateException(e);
@@ -163,7 +163,7 @@ public class CriteriaGenerator implements ICriteriaGenerator {
         final Class<?> propertyType = isEntityItself ? managedType : PropertyTypeDeterminator.determinePropertyType(managedType, propertyName);
         final CritOnly critOnlyAnnotation = isEntityItself ? null : AnnotationReflector.getPropertyAnnotation(CritOnly.class, managedType, propertyName);
         final Pair<String, String> titleAndDesc = CriteriaReflector.getCriteriaTitleAndDesc(managedType, propertyName);
-        final List<NewProperty> generatedProperties = new ArrayList<NewProperty>();
+        final List<NewProperty> generatedProperties = new ArrayList<>();
         
         final IsProperty isPropertyAnnotation = isEntityItself ? null : AnnotationReflector.getPropertyAnnotation(IsProperty.class, managedType, propertyName);
         if (isDoubleCriterion(managedType, propertyName)) {
@@ -190,7 +190,10 @@ public class CriteriaGenerator implements ICriteriaGenerator {
         final boolean isSingle = critOnlyAnnotation != null && Type.SINGLE.equals(critOnlyAnnotation.value());
         final Class<?> newPropertyType = isEntity ? (isSingle ? propertyType : List.class) : (EntityUtils.isBoolean(propertyType) ? boolean.class : propertyType);
 
-        final List<Annotation> annotations = new ArrayList<Annotation>();
+        final List<Annotation> annotations = new ArrayList<>();
+        if (isEntity && isSingle) {
+            annotations.add(new SkipEntityExistsValidationAnnotation(false, false).newInstance());
+        }
         if (isEntity && !isSingle && EntityUtils.isCollectional(newPropertyType)) {
             annotations.add(new IsPropertyAnnotation(String.class, "--stub-link-property--").newInstance());
             annotations.add(new EntityTypeAnnotation((Class<? extends AbstractEntity<?>>) propertyType).newInstance());
@@ -250,41 +253,60 @@ public class CriteriaGenerator implements ICriteriaGenerator {
     /**
      * Synchronises entity query criteria property values with domain tree model.
      *
-     * @param entity
+     * @param criteriaEntity
      */
-    private static <T extends AbstractEntity<?>, CDTME extends ICentreDomainTreeManagerAndEnhancer> void synchroniseWithModel(final EntityQueryCriteria<CDTME, T, IEntityDao<T>> entity) {
-        // LOGGER.debug(format("synchroniseWithModel started..."));
-        final Class<T> root = entity.getEntityClass();
-        final IAddToCriteriaTickManager ftm = entity.getCentreDomainTreeMangerAndEnhancer().getFirstTick();
-        CriteriaReflector.getCriteriaProperties(entity.getType()).stream().map(propertyField -> {
+    private static <T extends AbstractEntity<?>, CDTME extends ICentreDomainTreeManagerAndEnhancer> void synchroniseWithModel(final EntityQueryCriteria<CDTME, T, IEntityDao<T>> criteriaEntity) {
+        // LOGGER.error(format("synchroniseWithModel started..."));
+        final Class<T> root = criteriaEntity.getEntityClass();
+        final IAddToCriteriaTickManager ftm = criteriaEntity.getCentreDomainTreeMangerAndEnhancer().getFirstTick();
+        CriteriaReflector.getCriteriaProperties(criteriaEntity.getType()).stream().map(propertyField -> {
             final String critPropName = getAnnotation(propertyField, CriteriaProperty.class).propertyName();
             return t2(propertyField, getAnnotation(propertyField, SecondParam.class) == null ? ftm.getValue(root, critPropName) : ftm.getValue2(root, critPropName));
         }).collect(toList()).forEach(fieldAndVal -> { // there is a need to collect all results BEFORE forEach processing due to mutable nature of 'getValue*' methods
             final Field field = fieldAndVal._1;
             try {
-                // LOGGER.debug(format("\tsynchroniseWithModel prop [%s] setting... val = [%s]", field.getName(), fieldAndVal._2));
+                // LOGGER.error(format("\tsynchroniseWithModel prop [%s] setting... val = [%s]", field.getName(), fieldAndVal._2));
                 // need to enforce the setting to ensure invocation of SynchroniseCriteriaWithModelHandler; this will ensure application of editable / required (and other) attributes and integrity of property dependencies
-                entity.getProperty(field.getName()).setValue(fieldAndVal._2, true);
-                // LOGGER.debug("\tsynchroniseWithModel. valResult = " + entity.getProperty(field.getName()).getFirstFailure());
+                criteriaEntity.getProperty(field.getName()).setValue(fieldAndVal._2, true);
+                // LOGGER.error("\tsynchroniseWithModel. valResult = " + criteriaEntity.getProperty(field.getName()).getFirstFailure());
             } catch (final Exception ex) {
                 LOGGER.warn(format("\tCould not assign crit value to [%s] in root [%s].", field.getName(), root.getName()));
             } 
-            // finally { LOGGER.debug(format("\tsynchroniseWithModel prop [%s] setting...done", field.getName())); }
+            // finally { LOGGER.error(format("\tsynchroniseWithModel prop [%s] setting...done", field.getName())); }
         });
-        
-        // LOGGER.debug(format("\tsynchroniseWithModel: clearing requiredness..."));
-        entity.critOnlySinglePrototypeOptional().map(cosPrototype -> {
-            final Class<AbstractEntity<?>> entityType = (Class<AbstractEntity<?>>) entity.getEntityClass();
+        criteriaEntity.critOnlySinglePrototypeOptional().ifPresent(cosPrototype -> {
+            // At this stage 'cosPrototype' is in initialising phase, aka 'cosPrototype.isInitialising() == true'.
+            // This was done deliberately to prevent invoking of cosPrototype's definers with 'isInitialising == false' marker, that triggers defining (changing) of other properties, sometimes in badly "overriding" order.
+            // Still, we need to validate and define (with isInitialising == true) all properties.
+            final Class<AbstractEntity<?>> entityType = (Class<AbstractEntity<?>>) root;
             
-            disregardCritOnlyRequiredProperties(cosPrototype);
+            // Validation need be performed first - we must avoid defining for invalid properties, that are really possible in cdtmae from which criteria entity is derived.
+            // For that purpose we invoke meta-property revalidation.
+            // MetaPropertyFull.revalidate implementation requires 'assigned == true' for revalidation to be actually performed.
+            // ObservableMutatorInterceptor guarantees that 'assigned == true' if value is set in isInitialising phase.
+            // Thus we can be sure that all crit-only single props will be revalidated.
+            cosPrototype.endInitialising(); // this initialising:=false setting is made to ensure that if revalidate method is changed (aka made dependent on isInitialising flag) revalidation still will be processed
+            cosPrototype.nonProxiedProperties().filter(mp -> isCritOnlySingle(entityType, mp.getName())).forEach(mp -> {
+                // LOGGER.error(format("\t\trevalidate... property [%s]", mp.getName()));
+                mp.revalidate(true); // it is very handy to ignore requiredness here instead of making some special clearing after revalidation
+            });
+            cosPrototype.beginInitialising();
+            
+            // Only valid crit-only single properties should be defined.
+            // DefinersExecutor is not applicable for the following reasons:
+            //  1. setOriginalValue should not be actioned, because original values we leave empty.
+            //  2. do not need to process entity-typed values; they can even be instrumented for some reason, however DefinersExecutor does not allow this.
+            cosPrototype.nonProxiedProperties().filter(mp -> isCritOnlySingle(entityType, mp.getName()) && mp.isValid()).forEach(mp -> {
+                final MetaProperty<Object> metaProp = (MetaProperty<Object>) mp;
+                metaProp.define(metaProp.getValue());
+            });
+            cosPrototype.endInitialising();
+            
             // take a snapshot of all needed crit-only single prop information to be applied back against criteriaEntity
-            final Stream<MetaProperty<?>> snapshot = entity.critOnlySinglePrototype().nonProxiedProperties().filter(metaProp -> isCritOnlySingle(entityType, metaProp.getName()));
+            final Stream<MetaProperty<?>> snapshot = criteriaEntity.critOnlySinglePrototype().nonProxiedProperties().filter(metaProp -> isCritOnlySingle(entityType, metaProp.getName()));
             // apply the snapshot against criteriaEntity
-            applySnapshot(entity, snapshot);
-            return cosPrototype;
+            applySnapshot(criteriaEntity, snapshot);
         });
-        // LOGGER.debug(format("\tsynchroniseWithModel: clearing requiredness...done"));
-        
-        // LOGGER.debug(format("synchroniseWithModel started...done"));
+        // LOGGER.error(format("synchroniseWithModel started...done"));
     }
 }

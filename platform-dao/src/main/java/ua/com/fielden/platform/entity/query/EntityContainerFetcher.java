@@ -58,7 +58,7 @@ public class EntityContainerFetcher {
         }
         
         final List<EntityContainer<E>> result = listContainersAsIs(modelResult, pageNumber, pageCapacity);
-        logger.debug("Fetch model:\n" + modelResult.getFetchModel());
+        // logger.debug("Fetch model:\n" + modelResult.getFetchModel());
         return new EntityContainerEnhancer<E>(this, domainMetadataAnalyser, executionContext.getIdOnlyProxiedEntityTypeCache()).enhance(result, modelResult.getFetchModel());
     }
     
@@ -71,7 +71,7 @@ public class EntityContainerFetcher {
         }
         
         final Stream<List<EntityContainer<E>>> stream = streamContainersAsIs(modelResult, fetchSize);
-        logger.debug("Fetch model:\n" + modelResult.getFetchModel());
+        // logger.debug("Fetch model:\n" + modelResult.getFetchModel());
         
         final EntityContainerEnhancer<E> entityContainerEnhancer = new EntityContainerEnhancer<>(this, domainMetadataAnalyser, executionContext.getIdOnlyProxiedEntityTypeCache());
         

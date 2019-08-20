@@ -1,10 +1,14 @@
 package ua.com.fielden.platform.web.security;
 
+import static ua.com.fielden.platform.utils.CollectionUtil.linkedSetOf;
+import static ua.com.fielden.platform.web.centre.EntityCentre.IMPORTS;
+import static ua.com.fielden.platform.web.view.master.EntityMaster.ENTITY_TYPE;
+import static ua.com.fielden.platform.web.view.master.EntityMaster.flattenedNameOf;
 import static ua.com.fielden.platform.web.view.master.api.actions.MasterActions.SAVE;
+import static ua.com.fielden.platform.web.view.master.api.impl.SimpleMasterBuilder.createImports;
 import static ua.com.fielden.platform.web.view.master.api.impl.SimpleMasterBuilder.getPostAction;
 import static ua.com.fielden.platform.web.view.master.api.impl.SimpleMasterBuilder.getPostActionError;
 
-import java.util.LinkedHashSet;
 import java.util.Optional;
 
 import ua.com.fielden.platform.basic.IValueMatcherWithContext;
@@ -17,7 +21,6 @@ import ua.com.fielden.platform.web.centre.api.resultset.impl.FunctionalActionKin
 import ua.com.fielden.platform.web.interfaces.IRenderable;
 import ua.com.fielden.platform.web.view.master.api.IMaster;
 import ua.com.fielden.platform.web.view.master.api.actions.entity.impl.DefaultEntityAction;
-import ua.com.fielden.platform.web.view.master.api.impl.SimpleMasterBuilder;
 
 /**
  * An entity master that represents a chart for {@link VehiclePmCostSavingsChart}.
@@ -32,14 +35,10 @@ public class SecurityMatrixInsertionPointMaster implements IMaster<SecurityMatri
     private final DefaultEntityAction realodActionConfig;
 
     public SecurityMatrixInsertionPointMaster() {
-
-        final LinkedHashSet<String> importPaths = new LinkedHashSet<>();
-        importPaths.add("components/tg-security-matrix");
-        importPaths.add("editors/tg-singleline-text-editor");
-
         final DomElement tokenFilter = new DomElement("tg-singleline-text-editor")
                 .attr("id", "tokenFilter")
                 .attr("class", "filter-element")
+                .attr("slot", "filter-element")
                 .attr("entity", "{{_currBindingEntity}}")
                 .attr("original-entity", "{{_originalBindingEntity}}")
                 .attr("previous-modified-properties-holder", "[[_previousModifiedPropertiesHolder]]")
@@ -52,6 +51,7 @@ public class SecurityMatrixInsertionPointMaster implements IMaster<SecurityMatri
         final DomElement roleFilter = new DomElement("tg-singleline-text-editor")
                 .attr("id", "roleFilter")
                 .attr("class", "filter-element")
+                .attr("slot", "filter-element")
                 .attr("entity", "{{_currBindingEntity}}")
                 .attr("original-entity", "{{_originalBindingEntity}}")
                 .attr("previous-modified-properties-holder", "[[_previousModifiedPropertiesHolder]]")
@@ -64,7 +64,7 @@ public class SecurityMatrixInsertionPointMaster implements IMaster<SecurityMatri
         realodActionConfig = new DefaultEntityAction(SAVE.name(), getPostAction(SAVE), getPostActionError(SAVE));
         realodActionConfig.setShortDesc("Reload");
         realodActionConfig.setLongDesc("Cancels changes and reloads security matrix");
-        final DomElement reloadAction = realodActionConfig.render().attr("id", "reloadAction");
+        final DomElement reloadAction = realodActionConfig.render().attr("slot", "reload-action");
 
         final DomElement securityMatrix = new DomElement("tg-security-matrix")
                 .attr("id", "securityMatrix")
@@ -79,9 +79,10 @@ public class SecurityMatrixInsertionPointMaster implements IMaster<SecurityMatri
                 .attr("lock", "[[lock]]")
                 .add(tokenFilter, roleFilter, reloadAction);
 
-        final String entityMasterStr = ResourceLoader.getText("ua/com/fielden/platform/web/master/tg-entity-master-template.html")
-                .replace("<!--@imports-->", SimpleMasterBuilder.createImports(importPaths))
-                .replace("@entity_type", SecurityMatrixInsertionPoint.class.getSimpleName())
+        final String entityMasterStr = ResourceLoader.getText("ua/com/fielden/platform/web/master/tg-entity-master-template.js")
+                .replace(IMPORTS, createImports(linkedSetOf("components/tg-security-matrix", "editors/tg-singleline-text-editor"))
+                        + "import { TgEntityBinderBehavior } from '/resources/binding/tg-entity-binder-behavior.js';\n")
+                .replace(ENTITY_TYPE, flattenedNameOf(SecurityMatrixInsertionPoint.class))
                 .replace("<!--@tg-entity-master-content-->", securityMatrix.toString())
                 .replace("//generatedPrimaryActions", "")
                 .replace("//@ready-callback", readyCallback())
@@ -141,12 +142,12 @@ public class SecurityMatrixInsertionPointMaster implements IMaster<SecurityMatri
                 + "}.bind(self);\n"
                 + "//Locks/Unlocks tg-security-matrix lock layer during insertion point activation.\n"
                 + "self.disableViewForDescendants = function () {\n"
-                + "    Polymer.TgBehaviors.TgEntityBinderBehavior.disableViewForDescendants.call(this);\n"
+                + "    TgEntityBinderBehavior.disableViewForDescendants.call(this);\n"
                 + "    self.lock = true;\n"
                 + "    self.showDataLoadingPromt();\n"
                 + "};\n"
                 + "self.enableViewForDescendants = function () {\n"
-                + "    Polymer.TgBehaviors.TgEntityBinderBehavior.enableViewForDescendants.call(this);\n"
+                + "    TgEntityBinderBehavior.enableViewForDescendants.call(this);\n"
                 + "    self.lock = false;"
                 + "    self.showDataLoadedPromt();\n"
                 + "};\n"

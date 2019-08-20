@@ -67,7 +67,7 @@ public class AppIndexResource extends AbstractWebResource {
             webUiConfig.initConfiguration();
         }
         
-        final String source = sourceController.loadSource("/app/tg-app-index.html", device());
+        final String source = sourceController.loadSource("/app/tg-app-index.html");
         return new EncodeRepresentation(Encoding.GZIP, new InputRepresentation(new ByteArrayInputStream(source.getBytes(Charsets.UTF_8)), MediaType.TEXT_HTML));
     }
 

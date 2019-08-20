@@ -64,6 +64,14 @@ import ua.com.fielden.platform.sample.domain.TgWagonClass;
 import ua.com.fielden.platform.sample.domain.TgWagonSlot;
 import ua.com.fielden.platform.sample.domain.TgWorkshop;
 import ua.com.fielden.platform.sample.domain.UnionEntity;
+import ua.com.fielden.platform.sample.domain.compound.TgCompoundEntity;
+import ua.com.fielden.platform.sample.domain.compound.TgCompoundEntityChild;
+import ua.com.fielden.platform.sample.domain.compound.TgCompoundEntityDetail;
+import ua.com.fielden.platform.sample.domain.compound.TgCompoundEntityLocator;
+import ua.com.fielden.platform.sample.domain.compound.master.menu.actions.TgCompoundEntityMaster_OpenMain_MenuItem;
+import ua.com.fielden.platform.sample.domain.compound.master.menu.actions.TgCompoundEntityMaster_OpenTgCompoundEntityChild_MenuItem;
+import ua.com.fielden.platform.sample.domain.compound.master.menu.actions.TgCompoundEntityMaster_OpenTgCompoundEntityDetail_MenuItem;
+import ua.com.fielden.platform.sample.domain.compound.ui_actions.OpenTgCompoundEntityMasterAction;
 import ua.com.fielden.platform.sample.domain.stream_processors.DumpCsvTxtProcessor;
 import ua.com.fielden.platform.serialisation.jackson.entities.OtherEntity;
 import ua.com.fielden.platform.web.test.server.master_action.NewEntityAction;
@@ -149,6 +157,14 @@ public class ApplicationDomain implements IApplicationDomainProvider {
         add(TgCloseLeaveExampleDetail.class);
         add(TgCloseLeaveExampleDetailUnpersisted.class);
         add(TgCloseLeaveExampleMaster_OpenDetailUnpersisted_MenuItem.class);
+        add(TgCompoundEntity.class);
+        add(TgCompoundEntityLocator.class);
+        add(TgCompoundEntityDetail.class);
+        add(TgCompoundEntityChild.class);
+        add(OpenTgCompoundEntityMasterAction.class);
+        add(TgCompoundEntityMaster_OpenMain_MenuItem.class);
+        add(TgCompoundEntityMaster_OpenTgCompoundEntityDetail_MenuItem.class);
+        add(TgCompoundEntityMaster_OpenTgCompoundEntityChild_MenuItem.class);
     }
 
     @Override

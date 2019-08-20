@@ -1,10 +1,8 @@
 package ua.com.fielden.platform.web.menu.module.impl;
 
 import ua.com.fielden.platform.menu.ModuleMenuItem;
-import ua.com.fielden.platform.web.interfaces.IExecutable;
-import ua.com.fielden.platform.web.minijs.JsCode;
 
-public class WebSubMenuItem implements IExecutable {
+public class WebSubMenuItem {
 
     private final String title;
     private String description;
@@ -20,20 +18,6 @@ public class WebSubMenuItem implements IExecutable {
 
     public void view(final WebView view) {
         this.view = view;
-    }
-
-    @Override
-    public JsCode code() {
-        final String code = "{ title: \"" + this.title + "\", " +
-                "description: \"" + this.description + "\"" +
-                (this.view != null ? ", view: " + view.code() : "") +
-                "}";
-        return new JsCode(code);
-    }
-
-    @Override
-    public String toString() {
-        return code().toString();
     }
 
     public ModuleMenuItem getMenuItem() {

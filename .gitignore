@@ -33,6 +33,7 @@ target
 *.vrb
 *.old
 *.xwm
+.bin
 
 # Package Files #
 *.jar

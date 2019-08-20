@@ -13,6 +13,7 @@ import ua.com.fielden.platform.entity.annotation.Calculated;
 import ua.com.fielden.platform.entity.annotation.factory.CalculatedAnnotation;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.proxy.EntityProxyContainer;
+import ua.com.fielden.platform.entity.proxy.MockNotFoundEntityMaker;
 import ua.com.fielden.platform.entity.proxy.TgOwnerEntity;
 import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
 import ua.com.fielden.platform.reflection.asm.api.NewProperty;
@@ -44,7 +45,7 @@ public class PropertyTypeDeterminatorCheckingEnhancementsTest {
     
     public PropertyTypeDeterminatorCheckingEnhancementsTest() throws ClassNotFoundException {
         entityType = TgOwnerEntity.class;
-        entityTypeGenerated = (Class<AbstractEntity<?>>) cl.startModification(entityType.getName()).modifyTypeName(new DynamicTypeNamingService().nextTypeName(entityType.getName())).endModification();
+        entityTypeGenerated = (Class<AbstractEntity<?>>) cl.startModification(entityType).modifyTypeName(DynamicTypeNamingService.nextTypeName(entityType.getName())).endModification();
     }
 
     //////////////////////////////////// isInstrumented ////////////////////////////////////
@@ -247,7 +248,14 @@ public class PropertyTypeDeterminatorCheckingEnhancementsTest {
         final AbstractEntity<?> entity = factory.newEntity(EntityProxyContainer.proxy(entityTypeGenerated, "entityProp"), 1L);
         assertEquals(entityTypeGenerated, PropertyTypeDeterminator.stripIfNeeded(entity.getClass()));
     }
-    
+
+    @Test
+    public void stripIfNeeded_returns_original_type_for_mock_not_found_entity() {
+        final Class<? extends TgOwnerEntity> mockType = MockNotFoundEntityMaker.mock(TgOwnerEntity.class);
+        final AbstractEntity<?> entity = factory.newEntity(mockType, 1L);
+        assertEquals(TgOwnerEntity.class, PropertyTypeDeterminator.stripIfNeeded(entity.getClass()));
+    }
+
     @Test
     public void baseEntityType_correctly_determines_the_base_type_for_dynamically_generated_entity_types() throws Exception {
         final DynamicEntityClassLoader cl = DynamicEntityClassLoader.getInstance(ClassLoader.getSystemClassLoader());
@@ -259,9 +267,9 @@ public class PropertyTypeDeterminatorCheckingEnhancementsTest {
         final NewProperty pd1 = new NewProperty(NEW_PROPERTY, Money.class, false, NEW_PROPERTY_TITLE, NEW_PROPERTY_DESC, calculated);
         final NewProperty pd2 = new NewProperty(NEW_PROPERTY + 1, Money.class, false, NEW_PROPERTY_TITLE, NEW_PROPERTY_DESC, calculated);
         // first enhancement
-        final Class<? extends AbstractEntity<?>> oneTimeEnhancedType = (Class<? extends AbstractEntity<?>>) cl.startModification(EntityBeingEnhanced.class.getName()).addProperties(pd1).endModification();
+        final Class<? extends AbstractEntity<?>> oneTimeEnhancedType = (Class<? extends AbstractEntity<?>>) cl.startModification(EntityBeingEnhanced.class).addProperties(pd1).endModification();
         // second enhancement
-        final Class<? extends AbstractEntity<?>> twoTimesEnhancedType = (Class<? extends AbstractEntity<?>>) cl.startModification(oneTimeEnhancedType.getName()).addProperties(pd2).endModification();
+        final Class<? extends AbstractEntity<?>> twoTimesEnhancedType = (Class<? extends AbstractEntity<?>>) cl.startModification(oneTimeEnhancedType).addProperties(pd2).endModification();
 
         // both enhanced types should have EntityBeingEnhanced as their base type
         assertEquals(EntityBeingEnhanced.class, PropertyTypeDeterminator.baseEntityType(oneTimeEnhancedType));

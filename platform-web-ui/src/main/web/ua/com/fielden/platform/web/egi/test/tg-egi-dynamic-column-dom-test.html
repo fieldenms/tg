@@ -6,14 +6,11 @@
     <title>entity grid inspector dynamic column DOM</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 
-    <script src="/resources/polymer/webcomponentsjs/webcomponents-lite.js"></script>
-    <script src="/resources/polymer/web-component-tester/browser.js"></script>
-    <script src="/resources/polymer/test-fixture/test-fixture-mocha.js"></script>
-    <script src="/resources/polymer/iron-test-helpers/mock-interactions.js"></script>
+    <script src="/resources/polymer/@webcomponents/webcomponentsjs/webcomponents-bundle.js"></script>
+    <script src='/resources/polymer/web-animations-js/web-animations-next-lite.min.js'></script>
+    <script src="/resources/filesaver/FileSaver.min.js"></script>
+    <script src="/resources/polymer/wct-browser-legacy/browser.js"></script>
 
-    <link rel="import" href="/resources/polymer/test-fixture/test-fixture.html">
-
-    <link rel="import" href="/resources/egi/tg-entity-grid-inspector.html">
 </head>
 
 <body>
@@ -23,7 +20,10 @@
         </template>
     </test-fixture>
 
-    <script>
+    <script type="module">
+
+        import '/resources/egi/tg-entity-grid-inspector.js';
+
         suite('entity grid inspector', function () {
             let egi;
 
@@ -32,51 +32,68 @@
             });
 
             test('egi column dom modification works', function (done) {
+
                 //Check whether egi has no column at the beginning.
                 assert.strictEqual(0, egi.allColumns.length, "At the begining all columns should be empty");
                 assert.strictEqual(0, egi.columns.length, "At the begining columns should be empty");
+                assert.strictEqual(0, egi.fixedColumns.length, "Egi fixed columns should be empty");
 
                 //Add first "Test" column
-                const testColumn = document.createElement("tg-property-column");
-                testColumn.property = "test";
-                testColumn.width = 80;
-                testColumn.minWidth = 60;
-                testColumn.columnTitle = "Test";
-                testColumn.columnDesc = "Test";
-                Polymer.dom(egi).appendChild(testColumn);
-                Polymer.dom.flush();
-
-                assert.strictEqual(1, egi.allColumns.length, "Egi allColumns should have one column");
-                assert.strictEqual(1, egi.columns.length, "Egi columns should have one column");
-                assert.strictEqual("test", egi.allColumns[0].property, "Egi's all columns list has test column as the first one");
-                assert.strictEqual("test", egi.columns[0].property, "Egi's column list has test column as the first one");
+                setTimeout(() => {
+                    const testColumn = document.createElement("tg-property-column");
+                    testColumn.property = "test";
+                    testColumn.width = 80;
+                    testColumn.minWidth = 60;
+                    testColumn.columnTitle = "Test";
+                    testColumn.columnDesc = "Test";
+                    testColumn.setAttribute("slot", "property-column");
+                    egi.appendChild(testColumn);
+                },1);
+                
+                setTimeout(() => {
+                    assert.strictEqual(1, egi.allColumns.length, "Egi allColumns should have one column");
+                    assert.strictEqual(1, egi.columns.length, "Egi columns should have one column");
+                    assert.strictEqual(0, egi.fixedColumns.length, "Egi fixed columns should be empty");
+                    assert.strictEqual("test", egi.allColumns[0].property, "Egi's all columns list has test column as the first one");
+                    assert.strictEqual("test", egi.columns[0].property, "Egi's column list has test column as the first one");
+                },1);
+                
 
                 //Add second "Test1" column
-                const test1Column = document.createElement("tg-property-column");
-                test1Column.property = "test1";
-                test1Column.width = 80;
-                test1Column.minWidth = 60;
-                test1Column.columnTitle = "Test1";
-                test1Column.columnDesc = "Test1";
-                Polymer.dom(egi).insertBefore(test1Column, Polymer.dom(egi).children[0]);
-                Polymer.dom.flush();
+                setTimeout(() => {
+                    const test1Column = document.createElement("tg-property-column");
+                    test1Column.property = "test1";
+                    test1Column.width = 80;
+                    test1Column.minWidth = 60;
+                    test1Column.columnTitle = "Test1";
+                    test1Column.columnDesc = "Test1";
+                    test1Column.setAttribute("slot", "property-column");
+                    egi.insertBefore(test1Column, egi.children[0]);
+                },1);
 
-                assert.strictEqual(2, egi.allColumns.length, "Egi allColumns should have two column");
-                assert.strictEqual(2, egi.columns.length, "Egi columns should have two column");
-                assert.strictEqual("test", egi.allColumns[0].property, "Egi's all columns list has test column as the first one");
-                assert.strictEqual("test", egi.columns[0].property, "Egi's column list has test column as the first one");
-                assert.strictEqual("test1", egi.allColumns[1].property, "Egi's all columns list has test1 column as the second one");
-                assert.strictEqual("test1", egi.columns[1].property, "Egi's column list  has test1 column as the second one");
+                setTimeout(() => {
+                    assert.strictEqual(2, egi.allColumns.length, "Egi allColumns should have two column");
+                    assert.strictEqual(2, egi.columns.length, "Egi columns should have two column");
+                    assert.strictEqual(0, egi.fixedColumns.length, "Egi fixed columns should be empty");
+                    assert.strictEqual("test", egi.allColumns[0].property, "Egi's all columns list has test column as the first one");
+                    assert.strictEqual("test", egi.columns[0].property, "Egi's column list has test column as the first one");
+                    assert.strictEqual("test1", egi.allColumns[1].property, "Egi's all columns list has test1 column as the second one");
+                    assert.strictEqual("test1", egi.columns[1].property, "Egi's column list  has test1 column as the second one");
+                },1);
 
                 //Remove the first child and check whether columns number is ok.
-                Polymer.dom(egi).removeChild(Polymer.dom(egi).children[0]);
-                Polymer.dom.flush();
+                setTimeout(() => {
+                    egi.removeChild(egi.children[0]);
+                },1);
 
-                assert.strictEqual(1, egi.allColumns.length, "The first child was removed and all columns list should have one element");
-                assert.strictEqual(1, egi.columns.length, "The first child was removed and columns list should have one element");
-                assert.strictEqual("test", egi.allColumns[0].property, "test column should remains in all columns list");
-                assert.strictEqual("test", egi.columns[0].property, "test column should remain in columns list");
-                done();
+                setTimeout(() => {
+                    assert.strictEqual(1, egi.allColumns.length, "The first child was removed and all columns list should have one element");
+                    assert.strictEqual(1, egi.columns.length, "The first child was removed and columns list should have one element");
+                    assert.strictEqual(0, egi.fixedColumns.length, "Egi fixed columns should be empty");
+                    assert.strictEqual("test", egi.allColumns[0].property, "test column should remains in all columns list");
+                    assert.strictEqual("test", egi.columns[0].property, "test column should remain in columns list");
+                    done();
+                },1);
             });
         })
     </script>
