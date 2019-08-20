@@ -116,8 +116,8 @@ export const TgSseBehavior = {
             if (e.eventPhase === EventSource.CLOSED) {
                 // Connection was closed by the server
                 self.closeEventSource();
-                // Let's kick a timer for reconnection and we have not tried hard enough...
-                _timerIdForReconnection = setTimeout(() => {
+                // Let's kick a timer for reconnection...
+                self._timerIdForReconnection = setTimeout(() => {
                     try {
                         self._registerEventSourceHandlers();
                     } finally {
