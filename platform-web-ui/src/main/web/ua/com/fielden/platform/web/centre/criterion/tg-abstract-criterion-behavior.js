@@ -52,20 +52,22 @@ const TgAbstractCriterionBehaviorImpl = {
         },
 
         /**
-         * Indicates whether criterion for entity property has critOnly annotation or not.
-         */
-        critOnly: {
-            type: Boolean,
-            value: false
-        },
-
-        /**
          * Indicates whether mnemonics should be visible or not.
          */
         mnemonicsVisible: {
             type: Boolean,
             value: false
         },
+
+        /**
+         * Indicates whether to exclude missing value mnemonic. 
+         */
+        excludeMissing: {
+            type: Boolean,
+            value: false
+        },
+
+
 
         /////////////////////////////////////////////////////////////////////////////////////////////////////////
         //////////////////////////////////////////// INNER PROPERTIES ///////////////////////////////////////////
@@ -130,6 +132,7 @@ const TgAbstractCriterionBehaviorImpl = {
         const domBind = document.createElement('dom-bind');
 
         domBind._orNullBind = self._orNull;
+        domBind._excludeMissingBind = self.excludeMissing;
         domBind._notBind = self._not;
         domBind._exclusiveBind = self._exclusive;
         domBind._exclusive2Bind = self._exclusive2;
