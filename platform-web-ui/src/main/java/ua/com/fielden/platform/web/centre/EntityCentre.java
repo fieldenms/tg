@@ -1378,7 +1378,7 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
     private <V extends AbstractEntity<?>> fetch<V> createFetchModelForAutocompleter(final String originalPropertyName, final Class<V> propType) {
         final Set<String> nonDefaultAdditionalProperties = dslDefaultConfig.getAdditionalPropsForAutocompleter(originalPropertyName).stream().map(Pair::getKey).collect(toSet());
         final Set<String> additionalProperties = nonDefaultAdditionalProperties.isEmpty() ? createDefaultAdditionalProps(propType).keySet() : nonDefaultAdditionalProperties;
-        return createFetchModelForAutocompleter(propType, additionalProperties);
+        return createFetchModelForAutocompleterFrom(propType, additionalProperties);
     }
     
     /**
@@ -1390,7 +1390,7 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
      * @param additionalProperties
      * @return
      */
-    public static <V extends AbstractEntity<?>> fetch<V> createFetchModelForAutocompleter(final Class<V> propType, final Set<String> additionalProperties) {
+    public static <V extends AbstractEntity<?>> fetch<V> createFetchModelForAutocompleterFrom(final Class<V> propType, final Set<String> additionalProperties) {
         final IFetchProvider<V> fetchProvider = fetchNone(propType).with(additionalProperties);
         fetchProvider.addKeysTo(""); // adding deep keys for entity itself
         for (final String additionalProperty: additionalProperties) {

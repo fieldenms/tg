@@ -1,15 +1,19 @@
 package ua.com.fielden.platform.web.view.master.api;
 
+import static java.util.Collections.EMPTY_SET;
 import static java.util.Optional.empty;
+import static ua.com.fielden.platform.utils.CollectionUtil.setOf;
 
+import java.util.Collections;
 import java.util.Optional;
+import java.util.Set;
 
 import ua.com.fielden.platform.basic.IValueMatcherWithContext;
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.utils.CollectionUtil;
 import ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig;
 import ua.com.fielden.platform.web.centre.api.resultset.impl.FunctionalActionKind;
 import ua.com.fielden.platform.web.interfaces.IRenderable;
-import ua.com.fielden.platform.web.view.master.api.helpers.impl.WidgetSelector;
 
 /**
  *
@@ -47,7 +51,14 @@ public interface IMaster<T extends AbstractEntity<?>> {
      */
     EntityActionConfig actionConfig(final FunctionalActionKind actionKind, final int actionNumber);
     
-    default Optional<WidgetSelector> widgetFor(final String propertyName) {
-        return empty();
+    /**
+     * Returns <code>additionalProperties</code> for autocompleter configuration for property <code>propertyName</code>.
+     * Returns empty set if property is not entity-typed or if the property was not added to master configuration.
+     * 
+     * @param propertyName
+     * @return
+     */
+    default Set<String> additionalAutocompleterPropertiesFor(final String propertyName) {
+        return setOf(); // empty by default
     }
 }

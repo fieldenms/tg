@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.web.view.master.api.impl;
 
 import static java.lang.String.format;
+import static ua.com.fielden.platform.utils.CollectionUtil.setOf;
 import static ua.com.fielden.platform.web.centre.EntityCentre.IMPORTS;
 import static ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig.setRole;
 import static ua.com.fielden.platform.web.view.master.EntityMaster.ENTITY_TYPE;
@@ -12,12 +13,14 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 
 import ua.com.fielden.platform.basic.IValueMatcherWithContext;
 import ua.com.fielden.platform.dom.DomContainer;
 import ua.com.fielden.platform.dom.DomElement;
 import ua.com.fielden.platform.dom.InnerTextElement;
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.utils.CollectionUtil;
 import ua.com.fielden.platform.utils.ResourceLoader;
 import ua.com.fielden.platform.web.PrefDim;
 import ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig.UI_ROLE;
@@ -45,6 +48,7 @@ import ua.com.fielden.platform.web.view.master.api.helpers.IWidgetSelector;
 import ua.com.fielden.platform.web.view.master.api.helpers.impl.WidgetSelector;
 import ua.com.fielden.platform.web.view.master.api.widgets.IDividerConfig;
 import ua.com.fielden.platform.web.view.master.api.widgets.IHtmlTextConfig;
+import ua.com.fielden.platform.web.view.master.api.widgets.autocompleter.impl.AbstractEntityAutocompletionWidget;
 
 public class SimpleMasterBuilder<T extends AbstractEntity<?>> implements ISimpleMasterBuilder<T>, IPropertySelector<T>, ILayoutConfig<T>, ILayoutConfigWithDimensionsAndDone<T>, IEntityActionConfig5<T>, IActionBarLayoutConfig1<T> {
 
@@ -353,13 +357,18 @@ public class SimpleMasterBuilder<T extends AbstractEntity<?>> implements ISimple
         }
         
         @Override
-        public Optional<WidgetSelector> widgetFor(final String propertyName) {
-            for (final WidgetSelector widgetSelector: widgets) {
-                if (widgetSelector.propertyName.equals(propertyName)) {
-                    return Optional.of(widgetSelector);
+        public Set<String> additionalAutocompleterPropertiesFor(final String propertyName) {
+            for (final WidgetSelector<T> widgetSelector: widgets) {
+                if (widgetSelector.propertyName != null && widgetSelector.propertyName.equals(propertyName)) {
+                    if (widgetSelector.widget() instanceof AbstractEntityAutocompletionWidget) {
+                        final AbstractEntityAutocompletionWidget widget = (AbstractEntityAutocompletionWidget) widgetSelector.widget();
+                        return widget.additionalProps().keySet();
+                    } else {
+                        return setOf();
+                    }
                 }
             }
-            return Optional.empty();
+            return setOf();
         }
 
         /**

@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.web.view.master.api.widgets.autocompleter.impl;
 
 import static java.lang.String.format;
+import static java.util.Collections.unmodifiableMap;
 import static java.util.stream.Collectors.joining;
 import static ua.com.fielden.platform.entity.AbstractEntity.DESC;
 import static ua.com.fielden.platform.reflection.Finder.getKeyMembers;
@@ -8,6 +9,7 @@ import static ua.com.fielden.platform.utils.EntityUtils.hasDescProperty;
 import static ua.com.fielden.platform.utils.EntityUtils.isCompositeEntity;
 
 import java.lang.reflect.Field;
+import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -128,8 +130,14 @@ public abstract class AbstractEntityAutocompletionWidget extends AbstractWidget 
         this.lightDesc = shouldSearchByDesc;
     }
     
+    /**
+     * Additional properties (except key) for autocompleter. This includes description if the type contains it.
+     * Also this includes key members if the type is composite.
+     * 
+     * @return
+     */
     public Map<String, Boolean> additionalProps() {
-        return additionalProps;
+        return unmodifiableMap(additionalProps);
     }
     
 }

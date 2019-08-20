@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.web.view.master;
 
 import static ua.com.fielden.platform.web.centre.EntityCentre.IMPORTS;
+import static ua.com.fielden.platform.web.centre.EntityCentre.createFetchModelForAutocompleterFrom;
 
 import java.util.Optional;
 
@@ -180,21 +181,12 @@ public class EntityMaster<T extends AbstractEntity<?>> implements IRenderable {
     /**
      * Creates fetch model for entity-typed autocompleted values. Fetches only properties specified in Master DSL configuration.
      *
-     * @param originalPropertyName
+     * @param propertyName
      * @param propType
      * @return
      */
-    public <V extends AbstractEntity<?>> fetch<V> createFetchModelForAutocompleter(final String originalPropertyName, final Class<V> propType) {
-        // TODO complete this change
-        final Optional<WidgetSelector> widgetSelectorOpt = masterConfig.widgetFor(originalPropertyName);
-        if (widgetSelectorOpt.isPresent()) {
-            final WidgetSelector widgetSelector = widgetSelectorOpt.get();
-            if (widgetSelector.widget() instanceof AbstractEntityAutocompletionWidget) {
-                final AbstractEntityAutocompletionWidget widget = (AbstractEntityAutocompletionWidget) widgetSelector.widget();
-                return EntityCentre.createFetchModelForAutocompleter(propType, widget.additionalProps().keySet());
-            }
-        }
-        return null;
+    public <V extends AbstractEntity<?>> fetch<V> createFetchModelForAutocompleter(final String propertyName, final Class<V> propType) {
+        return createFetchModelForAutocompleterFrom(propType, masterConfig.additionalAutocompleterPropertiesFor(propertyName));
     }
     
     /**
