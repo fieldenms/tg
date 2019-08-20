@@ -5,6 +5,8 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchKeyAndDescOnly;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchNone;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchNoneAndInstrument;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchOnly;
 import static ua.com.fielden.platform.utils.EntityUtils.fetchWithKeyAndDesc;
 
@@ -22,7 +24,7 @@ import ua.com.fielden.platform.utils.EntityUtils;
 public class FetchProviderTest {
 
     private static Set<String> set(final String... props) {
-        final Set<String> set = new LinkedHashSet<String>();
+        final Set<String> set = new LinkedHashSet<>();
         set.addAll(Arrays.asList(props));
         return set;
     }
@@ -250,4 +252,75 @@ public class FetchProviderTest {
                 ,
                 fp.fetchModel());
     }
+    
+    @Test
+    public void fetchNone_provider_generates_uninstrumented_fetchNone_EQL_model() {
+        final IFetchProvider<TgPersistentEntityWithProperties> fp = EntityUtils.fetchNone(TgPersistentEntityWithProperties.class);
+        
+        assertEquals(set(), fp.allProperties());
+        assertEquals(fetchNone(TgPersistentEntityWithProperties.class), fp.fetchModel());
+    }
+    
+    @Test
+    public void fetchNone_provider_with_instrumentation_generates_instrumented_fetchNone_EQL_model() {
+        final IFetchProvider<TgPersistentEntityWithProperties> fp = EntityUtils.fetchNone(TgPersistentEntityWithProperties.class, true);
+        
+        assertEquals(set(), fp.allProperties());
+        assertEquals(fetchNoneAndInstrument(TgPersistentEntityWithProperties.class), fp.fetchModel());
+    }
+    
+    @Test
+    public void fetchNone_provider_generates_fetchNone_EQL_model_with_regular_property() {
+        final IFetchProvider<TgPersistentEntityWithProperties> fp = EntityUtils.fetchNone(TgPersistentEntityWithProperties.class).with("integerProp");
+        
+        assertEquals(set("integerProp"), fp.allProperties());
+        assertEquals(fetchNone(TgPersistentEntityWithProperties.class).with("integerProp"), fp.fetchModel());
+    }
+    
+    @Test
+    public void fetchNone_provider_generates_fetchNone_EQL_model_with_concrete_subprovider() {
+        final IFetchProvider<TgPersistentEntityWithProperties> fp = 
+            EntityUtils.fetchNone(TgPersistentEntityWithProperties.class)
+                .with("entityProp", EntityUtils.fetchWithKeyAndDesc(TgPersistentEntityWithProperties.class));
+        
+        assertEquals(set("entityProp"), fp.allProperties());
+        assertEquals(fetchNone(TgPersistentEntityWithProperties.class).with("entityProp", fetchKeyAndDescOnly(TgPersistentEntityWithProperties.class)), fp.fetchModel());
+    }
+    
+    @Test
+    public void fetchNone_provider_generates_fetchNone_EQL_model_with_default_NONE_subprovider() {
+        final IFetchProvider<TgPersistentEntityWithProperties> fp = EntityUtils.fetchNone(TgPersistentEntityWithProperties.class).with("entityProp");
+        
+        assertEquals(set("entityProp"), fp.allProperties());
+        assertEquals(fetchNone(TgPersistentEntityWithProperties.class).with("entityProp", fetchNone(TgPersistentEntityWithProperties.class)), fp.fetchModel());
+    }
+    
+    @Test
+    public void fetchNone_provider_generates_fetchNone_EQL_model_with_default_NONE_subproviders_for_dotNotated_property_and_concrete_subprovider() {
+        final IFetchProvider<TgPersistentEntityWithProperties> fp = EntityUtils.fetchNone(TgPersistentEntityWithProperties.class).with("entityProp.entityProp.entityProp", EntityUtils.fetch(TgPersistentEntityWithProperties.class));
+        
+        assertEquals(set("entityProp", "entityProp.entityProp", "entityProp.entityProp.entityProp"), fp.allProperties());
+        assertEquals(
+            fetchNone(TgPersistentEntityWithProperties.class)
+                .with("entityProp", fetchNone(TgPersistentEntityWithProperties.class)
+                        .with("entityProp", fetchNone(TgPersistentEntityWithProperties.class)
+                                .with("entityProp", fetchOnly(TgPersistentEntityWithProperties.class)))),
+            fp.fetchModel()
+        );
+    }
+    
+    @Test
+    public void fetchNone_provider_generates_fetchNone_EQL_model_with_default_NONE_subproviders_for_dotNotated_property() {
+        final IFetchProvider<TgPersistentEntityWithProperties> fp = EntityUtils.fetchNone(TgPersistentEntityWithProperties.class).with("entityProp.entityProp.entityProp");
+        
+        assertEquals(set("entityProp", "entityProp.entityProp", "entityProp.entityProp.entityProp"), fp.allProperties());
+        assertEquals(
+            fetchNone(TgPersistentEntityWithProperties.class)
+                .with("entityProp", fetchNone(TgPersistentEntityWithProperties.class)
+                        .with("entityProp", fetchNone(TgPersistentEntityWithProperties.class)
+                                .with("entityProp", fetchNone(TgPersistentEntityWithProperties.class)))),
+            fp.fetchModel()
+        );
+    }
+    
 }

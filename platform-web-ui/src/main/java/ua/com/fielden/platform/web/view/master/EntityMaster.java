@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.web.view.master;
 
+import static ua.com.fielden.platform.utils.EntityUtils.fetchNone;
 import static ua.com.fielden.platform.web.centre.EntityCentre.IMPORTS;
 
 import java.util.Optional;
@@ -21,6 +22,7 @@ import ua.com.fielden.platform.entity.IEntityProducer;
 import ua.com.fielden.platform.entity.annotation.SkipEntityExistsValidation;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
+import ua.com.fielden.platform.entity.fetch.IFetchProvider;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
@@ -190,10 +192,14 @@ public class EntityMaster<T extends AbstractEntity<?>> implements IRenderable {
             final WidgetSelector widgetSelector = widgetSelectorOpt.get();
             if (widgetSelector.widget() instanceof AbstractEntityAutocompletionWidget) {
                 final AbstractEntityAutocompletionWidget widget = (AbstractEntityAutocompletionWidget) widgetSelector.widget();
-                return EntityUtils.fetch(propType)
-                        .with(
-                                widget.additionalProps.keySet()
-                         ).fetchModel();
+                final IFetchProvider<V> fetchProvider = fetchNone(propType).with(widget.additionalProps.keySet());
+                fetchProvider.addKeysTo("");
+                for (final String additionalProperty: widget.additionalProps.keySet()) {
+                    fetchProvider.addKeysTo(additionalProperty);
+                }
+                System.out.println("fetchProvider = " + fetchProvider);
+                System.out.println("fetchModel = " + fetchProvider.fetchModel());
+                return fetchProvider.fetchModel();
             }
         }
         return null;

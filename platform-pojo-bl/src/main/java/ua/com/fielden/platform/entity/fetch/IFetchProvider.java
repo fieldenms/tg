@@ -124,4 +124,6 @@ public interface IFetchProvider<T extends AbstractEntity<?>> {
      * @return
      */
     boolean instrumented();
+    
+    FetchProvider<T> addKeysTo(final String dotNotationProperty);
 }

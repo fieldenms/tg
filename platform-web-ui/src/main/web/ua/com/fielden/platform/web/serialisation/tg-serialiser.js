@@ -95,7 +95,7 @@ export const TgSerialiser = Polymer({
                 return deserialisedObject;
             },
             copyProperties = function (deserialisedObject, obj) {
-                const exceptionalNames = ['@pdString', '@uninstrumented', '@id', '@instanceTypes', '@instanceType', '@resultType', '@id_ref']; // reserved names that can not represent metaProperty name
+                const exceptionalNames = ['@pdString', '@_i', '@id', '@instanceTypes', '@instanceType', '@resultType', '@id_ref']; // reserved names that can not represent metaProperty name
                 for (let property in obj) {
                     if (property[0] === "@" && exceptionalNames.indexOf(property) === -1 && obj[property] !== null && typeof obj[property] === 'object' && !Array.isArray(obj[property])) { // starts with @, non-null object value (perhaps empty)
                         deserialisedObject[property] = deserialiseMetaProperty(obj[property]);

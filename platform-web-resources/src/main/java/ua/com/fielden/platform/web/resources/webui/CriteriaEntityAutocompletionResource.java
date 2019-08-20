@@ -188,7 +188,7 @@ public class CriteriaEntityAutocompletionResource<T extends AbstractEntity<?>, M
             final List<? extends AbstractEntity<?>> entities = valueMatcher.findMatchesWithModel(searchString != null ? searchString : "%", dataPage);
 
             logger.debug("CRITERIA_ENTITY_AUTOCOMPLETION_RESOURCE: search finished.");
-            return restUtil.listJSONRepresentation(entities);
+            return restUtil.listJSONRepresentationWithoutIdAndVersion(entities);
         }, restUtil);
     }
 

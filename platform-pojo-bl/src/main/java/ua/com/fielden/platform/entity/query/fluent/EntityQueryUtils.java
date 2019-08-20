@@ -89,13 +89,17 @@ public class EntityQueryUtils {
 		return new fetch<>(entityType, FetchCategory.ID_AND_VERSION);
 	}
 
-	public static <T extends AbstractEntity<?>> fetch<T> fetchNone(final Class<T> entityType) {
-		return new fetch<>(entityType, FetchCategory.NONE);
-	}
-
 	public static <T extends AbstractEntity<?>> fetch<T> fetchOnlyAndInstrument(final Class<T> entityType) {
 		return new fetch<>(entityType, FetchCategory.ID_AND_VERSION, true);
 	}
+	
+    public static <T extends AbstractEntity<?>> fetch<T> fetchNone(final Class<T> entityType) {
+        return new fetch<>(entityType, FetchCategory.NONE);
+    }
+	
+    public static <T extends AbstractEntity<?>> fetch<T> fetchNoneAndInstrument(final Class<T> entityType) {
+        return new fetch<>(entityType, FetchCategory.NONE, true);
+    }
 
 	public static <T extends AbstractEntity<?>> fetch<T> fetchKeyAndDescOnly(final Class<T> entityType) {
 		return new fetch<>(entityType, FetchCategory.KEY_AND_DESC);

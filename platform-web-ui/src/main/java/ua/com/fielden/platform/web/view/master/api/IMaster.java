@@ -1,7 +1,8 @@
 package ua.com.fielden.platform.web.view.master.api;
 
+import static java.util.Optional.empty;
+
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 import ua.com.fielden.platform.basic.IValueMatcherWithContext;
 import ua.com.fielden.platform.entity.AbstractEntity;
@@ -46,5 +47,7 @@ public interface IMaster<T extends AbstractEntity<?>> {
      */
     EntityActionConfig actionConfig(final FunctionalActionKind actionKind, final int actionNumber);
     
-    public Optional<WidgetSelector> widgetFor(final String propertyName);
+    default Optional<WidgetSelector> widgetFor(final String propertyName) {
+        return empty();
+    }
 }

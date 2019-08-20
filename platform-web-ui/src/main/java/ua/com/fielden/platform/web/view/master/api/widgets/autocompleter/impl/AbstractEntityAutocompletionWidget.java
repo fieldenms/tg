@@ -40,7 +40,15 @@ public abstract class AbstractEntityAutocompletionWidget extends AbstractWidget 
             final String propName,
             final Class<? extends AbstractEntity<?>> propType) {
         super(widgetPath, titleAndDesc, propName);
-
+        
+        defaultAdditionalProps.putAll(createDefaultAdditionalProps(propType));
+        
+        // assigned the collected default props 
+        additionalProps.putAll(defaultAdditionalProps);
+    }
+    
+    public static Map<String, Boolean> createDefaultAdditionalProps(final Class<? extends AbstractEntity<?>> propType) {
+        final Map<String, Boolean> defaultAdditionalProps = new LinkedHashMap<>();
         // let's provide some sensible defaults for additional properties
         // in most cases description is included if it exists for the type... also it is searched by default
         if (EntityUtils.hasDescProperty(propType)) {
@@ -56,9 +64,7 @@ public abstract class AbstractEntityAutocompletionWidget extends AbstractWidget 
                 }
             }
         }
-        
-        // assigned the collected default props 
-        additionalProps.putAll(defaultAdditionalProps);
+        return defaultAdditionalProps;
     }
 
     public AbstractEntityAutocompletionWidget setAdditionalProps(final List<Pair<String, Boolean>> pairs) {

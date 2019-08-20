@@ -17,6 +17,7 @@ import com.esotericsoftware.kryo.Kryo;
 public class JacksonContext {
     private final HashMap<String, Object> map = new HashMap<>();
     private final HashMap<String, Object> tempMap = new HashMap<>();
+    private boolean excludeIdAndVersion;
 
     /**
      * Stores an object in thread local storage. This allows serializers to easily make repeated use of objects that are not thread safe.
@@ -57,7 +58,7 @@ public class JacksonContext {
      */
     public void reset() {
         if (tempMap != null) {
-            for (Object el : tempMap.values()) {
+            for (final Object el : tempMap.values()) {
                 if (el instanceof References) {
                     ((References) el).reset();
                 }
@@ -66,7 +67,7 @@ public class JacksonContext {
         }
         
         if (map != null) {
-            for (Object el : map.values()) {
+            for (final Object el : map.values()) {
                 if (el instanceof References) {
                     ((References) el).reset();
                 }
@@ -78,5 +79,13 @@ public class JacksonContext {
         if (TRACE) {
             trace("kryo", "Context reset.");
         }
+    }
+    
+    public void setExcludeIdAndVersion(final boolean excludeIdAndVersion) {
+        this.excludeIdAndVersion = excludeIdAndVersion;
+    }
+    
+    public boolean excludeIdAndVersion() {
+        return excludeIdAndVersion;
     }
 }

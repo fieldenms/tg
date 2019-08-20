@@ -8,6 +8,7 @@ import static ua.com.fielden.platform.domaintree.impl.AbstractDomainTree.validat
 import static ua.com.fielden.platform.domaintree.impl.CalculatedProperty.generateNameFrom;
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.determinePropertyType;
 import static ua.com.fielden.platform.types.tuples.T2.t2;
+import static ua.com.fielden.platform.utils.EntityUtils.fetchNone;
 import static ua.com.fielden.platform.utils.EntityUtils.fetchWithKeyAndDesc;
 import static ua.com.fielden.platform.utils.EntityUtils.isBoolean;
 import static ua.com.fielden.platform.utils.EntityUtils.isDate;
@@ -35,6 +36,7 @@ import static ua.com.fielden.platform.web.interfaces.DeviceProfile.DESKTOP;
 import static ua.com.fielden.platform.web.utils.EntityResourceUtils.getOriginalPropertyName;
 import static ua.com.fielden.platform.web.utils.EntityResourceUtils.getOriginalType;
 import static ua.com.fielden.platform.web.view.master.EntityMaster.flattenedNameOf;
+import static ua.com.fielden.platform.web.view.master.api.widgets.autocompleter.impl.AbstractEntityAutocompletionWidget.createDefaultAdditionalProps;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
@@ -142,6 +144,7 @@ import ua.com.fielden.platform.web.layout.FlexLayout;
 import ua.com.fielden.platform.web.minijs.JsCode;
 import ua.com.fielden.platform.web.utils.EntityResourceUtils;
 import ua.com.fielden.platform.web.view.master.api.impl.SimpleMasterBuilder;
+import ua.com.fielden.platform.web.view.master.api.widgets.autocompleter.impl.AbstractEntityAutocompletionWidget;
 import ua.com.fielden.snappy.DateRangeConditionEnum;
 
 /**
@@ -1373,12 +1376,16 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
      * @return
      */
     private <V extends AbstractEntity<?>> fetch<V> createFetchModelForAutocompleter(final String originalPropertyName, final Class<V> propType) {
-        return fetchWithKeyAndDesc(propType)
-            .with(
-                dslDefaultConfig.getAdditionalPropsForAutocompleter(originalPropertyName).stream()
-                .map(Pair::getKey)
-                .collect(toSet())
-            ).fetchModel();
+        final Set<String> nonDefaultAdditionalProperties = dslDefaultConfig.getAdditionalPropsForAutocompleter(originalPropertyName).stream().map(Pair::getKey).collect(toSet());
+        final Set<String> additionalProperties = nonDefaultAdditionalProperties.isEmpty() ? createDefaultAdditionalProps(propType).keySet() : nonDefaultAdditionalProperties;
+        final IFetchProvider<V> fetchProvider = fetchNone(propType).with(additionalProperties);
+        fetchProvider.addKeysTo("");
+        for (final String additionalProperty: additionalProperties) {
+            fetchProvider.addKeysTo(additionalProperty);
+        }
+        System.out.println("fetchProvider = " + fetchProvider);
+        System.out.println("fetchModel = " + fetchProvider.fetchModel());
+        return fetchProvider.fetchModel();
     }
 
     public Optional<Class<? extends ICustomPropsAssignmentHandler>> getCustomPropertiesAsignmentHandler() {
