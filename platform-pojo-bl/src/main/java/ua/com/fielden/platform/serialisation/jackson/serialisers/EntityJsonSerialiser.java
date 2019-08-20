@@ -14,7 +14,6 @@ import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract
 import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.isValidationResultDefault;
 import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.isValueChangeCountDefault;
 import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.isVisibleDefault;
-import static ua.com.fielden.platform.serialisation.jackson.EntitySerialiser.EXCLUDE_ID_AND_VERSION;
 import static ua.com.fielden.platform.serialisation.jackson.EntitySerialiser.ID_ONLY_PROXY_PREFIX;
 import static ua.com.fielden.platform.utils.EntityUtils.isDecimal;
 import static ua.com.fielden.platform.utils.EntityUtils.isInteger;

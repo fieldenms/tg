@@ -7,16 +7,20 @@ import java.util.HashMap;
 
 import com.esotericsoftware.kryo.Kryo;
 
+import ua.com.fielden.platform.entity.AbstractEntity;
+
 /**
  * Serves as thread local storage for serializers. A serializer instance can be used by multiple threads simultaneously, so should be thread safe. This class provides scratch
  * buffers and object storage that serializers can use to remain thread safe.
  *
- * @see Kryo#getContext()
  * @author TG Team
  */
 public class JacksonContext {
     private final HashMap<String, Object> map = new HashMap<>();
     private final HashMap<String, Object> tempMap = new HashMap<>();
+    /**
+     * Controls ability to exclude {@link AbstractEntity#ID} and {@link AbstractEntity#VERSION} properties during serialisation.
+     */
     private boolean excludeIdAndVersion;
 
     /**
@@ -81,10 +85,20 @@ public class JacksonContext {
         }
     }
     
+    /**
+     * Controls ability to exclude {@link AbstractEntity#ID} and {@link AbstractEntity#VERSION} properties during serialisation.
+     * 
+     * @param excludeIdAndVersion
+     */
     public void setExcludeIdAndVersion(final boolean excludeIdAndVersion) {
         this.excludeIdAndVersion = excludeIdAndVersion;
     }
     
+    /**
+     * Controls ability to exclude {@link AbstractEntity#ID} and {@link AbstractEntity#VERSION} properties during serialisation.
+     * 
+     * @return
+     */
     public boolean excludeIdAndVersion() {
         return excludeIdAndVersion;
     }

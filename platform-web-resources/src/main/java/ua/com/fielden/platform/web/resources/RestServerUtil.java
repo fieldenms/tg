@@ -1,10 +1,10 @@
 package ua.com.fielden.platform.web.resources;
 
 import static java.lang.String.format;
+import static org.restlet.data.MediaType.APPLICATION_JSON;
 import static ua.com.fielden.platform.error.Result.failure;
 import static ua.com.fielden.platform.error.Result.successful;
 import static ua.com.fielden.platform.serialisation.api.SerialiserEngines.JACKSON;
-import static ua.com.fielden.platform.serialisation.jackson.EntitySerialiser.EXCLUDE_ID_AND_VERSION;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -43,7 +43,6 @@ import ua.com.fielden.platform.roa.HttpHeaders;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
 import ua.com.fielden.platform.serialisation.api.SerialiserEngines;
 import ua.com.fielden.platform.serialisation.jackson.EntitySerialiser;
-import ua.com.fielden.platform.serialisation.jackson.JacksonContext;
 import ua.com.fielden.platform.snappy.SnappyQuery;
 import ua.com.fielden.platform.utils.StreamCouldNotBeResolvedException;
 
@@ -239,12 +238,11 @@ public class RestServerUtil {
     }
     
     /**
-     * Composes representation of a list of entities.
+     * Composes representation of a list of entities, serialising them without id / version properties.
      *
      * @return
      */
     public <T extends AbstractEntity> Representation listJSONRepresentationWithoutIdAndVersion(final List<T> entities) {
-        logger.debug("Start building JSON entities representation.");
         if (entities == null) {
             throw new IllegalArgumentException("The provided list of entities is null.");
         }
@@ -254,7 +252,7 @@ public class RestServerUtil {
         try {
             final byte[] bytes = serialiser.serialise(result, JACKSON);
             EntitySerialiser.getContext().setExcludeIdAndVersion(false);
-            return encodedRepresentation(new ByteArrayInputStream(bytes), MediaType.APPLICATION_JSON /*, bytes.length*/);
+            return encodedRepresentation(new ByteArrayInputStream(bytes), APPLICATION_JSON);
         } catch (final Throwable t) {
             EntitySerialiser.getContext().setExcludeIdAndVersion(false);
             throw t;

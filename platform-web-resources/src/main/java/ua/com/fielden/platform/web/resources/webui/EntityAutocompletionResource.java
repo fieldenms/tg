@@ -92,7 +92,7 @@ public class EntityAutocompletionResource<CONTEXT extends AbstractEntity<?>, T e
             logger.debug(format("SEARCH STRING %s, PAGE %s", searchString, dataPage));
            
             valueMatcher.setContext(context);
-            final fetch<T> fetch = (fetch<T>) master.createFetchModelForAutocompleter(propertyName, "".equals(propertyName) ? (Class<AbstractEntity>) entityType : (Class<AbstractEntity>) determinePropertyType(entityType, propertyName)); //EntityResourceUtils.<CONTEXT, T> fetchForProperty(coFinder, entityType, propertyName).fetchModel();
+            final fetch<T> fetch = (fetch<T>) master.createFetchModelForAutocompleter(propertyName, "".equals(propertyName) ? (Class<AbstractEntity>) entityType : (Class<AbstractEntity>) determinePropertyType(entityType, propertyName));
             valueMatcher.setFetch(fetch);
             final List<? extends AbstractEntity<?>> entities = valueMatcher.findMatchesWithModel(searchString != null ? searchString : "%", dataPage);
 

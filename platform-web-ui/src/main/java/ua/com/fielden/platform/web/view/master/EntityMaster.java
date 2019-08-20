@@ -1,6 +1,5 @@
 package ua.com.fielden.platform.web.view.master;
 
-import static ua.com.fielden.platform.utils.EntityUtils.fetchNone;
 import static ua.com.fielden.platform.web.centre.EntityCentre.IMPORTS;
 
 import java.util.Optional;
@@ -22,12 +21,11 @@ import ua.com.fielden.platform.entity.IEntityProducer;
 import ua.com.fielden.platform.entity.annotation.SkipEntityExistsValidation;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
-import ua.com.fielden.platform.entity.fetch.IFetchProvider;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
-import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.ResourceLoader;
+import ua.com.fielden.platform.web.centre.EntityCentre;
 import ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig;
 import ua.com.fielden.platform.web.centre.api.resultset.impl.FunctionalActionKind;
 import ua.com.fielden.platform.web.interfaces.IRenderable;
@@ -187,24 +185,18 @@ public class EntityMaster<T extends AbstractEntity<?>> implements IRenderable {
      * @return
      */
     public <V extends AbstractEntity<?>> fetch<V> createFetchModelForAutocompleter(final String originalPropertyName, final Class<V> propType) {
+        // TODO complete this change
         final Optional<WidgetSelector> widgetSelectorOpt = masterConfig.widgetFor(originalPropertyName);
         if (widgetSelectorOpt.isPresent()) {
             final WidgetSelector widgetSelector = widgetSelectorOpt.get();
             if (widgetSelector.widget() instanceof AbstractEntityAutocompletionWidget) {
                 final AbstractEntityAutocompletionWidget widget = (AbstractEntityAutocompletionWidget) widgetSelector.widget();
-                final IFetchProvider<V> fetchProvider = fetchNone(propType).with(widget.additionalProps.keySet());
-                fetchProvider.addKeysTo("");
-                for (final String additionalProperty: widget.additionalProps.keySet()) {
-                    fetchProvider.addKeysTo(additionalProperty);
-                }
-                System.out.println("fetchProvider = " + fetchProvider);
-                System.out.println("fetchModel = " + fetchProvider.fetchModel());
-                return fetchProvider.fetchModel();
+                return EntityCentre.createFetchModelForAutocompleter(propType, widget.additionalProps().keySet());
             }
         }
         return null;
     }
-
+    
     /**
      * Creates default value matcher with context for the specified entity property.
      *
@@ -282,12 +274,6 @@ public class EntityMaster<T extends AbstractEntity<?>> implements IRenderable {
         @Override
         public EntityActionConfig actionConfig(final FunctionalActionKind actionKind, final int actionNumber) {
             throw new UnsupportedOperationException("Getting of action configuration is not supported.");
-        }
-        
-        @Override
-        public Optional<WidgetSelector> widgetFor(final String propertyName) {
-            // TODO Auto-generated method stub
-            return null;
         }
     }
     

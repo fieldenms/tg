@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.serialisation.jackson;
 
+import static java.lang.String.format;
 import static ua.com.fielden.platform.entity.factory.EntityFactory.newPlainEntity;
 import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.getTimeZone;
 import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.isCompositeKeySeparatorDefault;
@@ -46,8 +47,11 @@ import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.reflection.Reflector;
 import ua.com.fielden.platform.reflection.TitlesDescsGetter;
+import ua.com.fielden.platform.security.user.UserSecret;
 import ua.com.fielden.platform.serialisation.api.ISerialisationTypeEncoder;
+import ua.com.fielden.platform.serialisation.exceptions.SerialisationException;
 import ua.com.fielden.platform.serialisation.jackson.deserialisers.EntityJsonDeserialiser;
+import ua.com.fielden.platform.serialisation.jackson.exceptions.EntitySerialisationException;
 import ua.com.fielden.platform.serialisation.jackson.serialisers.EntityJsonSerialiser;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
@@ -59,7 +63,6 @@ import ua.com.fielden.platform.utils.Pair;
  *
  */
 public class EntitySerialiser<T extends AbstractEntity<?>> {
-    public static final String EXCLUDE_ID_AND_VERSION = "EXCLUDE_ID_AND_VERSION";
     public static final String ENTITY_JACKSON_REFERENCES = "entity-references";
     public static final String ID_ONLY_PROXY_PREFIX = "_______id_only_proxy_______";
     private final List<CachedProperty> properties;

@@ -1378,13 +1378,24 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
     private <V extends AbstractEntity<?>> fetch<V> createFetchModelForAutocompleter(final String originalPropertyName, final Class<V> propType) {
         final Set<String> nonDefaultAdditionalProperties = dslDefaultConfig.getAdditionalPropsForAutocompleter(originalPropertyName).stream().map(Pair::getKey).collect(toSet());
         final Set<String> additionalProperties = nonDefaultAdditionalProperties.isEmpty() ? createDefaultAdditionalProps(propType).keySet() : nonDefaultAdditionalProperties;
+        return createFetchModelForAutocompleter(propType, additionalProperties);
+    }
+    
+    /**
+     * Creates lean fetch model for autocompleted values with deep keys for entity itself and deep keys for every <code>additionalProperties</code>.
+     * <p>
+     * Deep keys are needed for conversion of entity itself and its additional properties to string in client application.
+     * 
+     * @param propType
+     * @param additionalProperties
+     * @return
+     */
+    public static <V extends AbstractEntity<?>> fetch<V> createFetchModelForAutocompleter(final Class<V> propType, final Set<String> additionalProperties) {
         final IFetchProvider<V> fetchProvider = fetchNone(propType).with(additionalProperties);
-        fetchProvider.addKeysTo("");
+        fetchProvider.addKeysTo(""); // adding deep keys for entity itself
         for (final String additionalProperty: additionalProperties) {
-            fetchProvider.addKeysTo(additionalProperty);
+            fetchProvider.addKeysTo(additionalProperty); // adding deep keys for additional property (possibly, dot-notated)
         }
-        System.out.println("fetchProvider = " + fetchProvider);
-        System.out.println("fetchModel = " + fetchProvider.fetchModel());
         return fetchProvider.fetchModel();
     }
 

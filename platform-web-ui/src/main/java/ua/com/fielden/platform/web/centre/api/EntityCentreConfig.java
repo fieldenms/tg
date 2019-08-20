@@ -552,9 +552,7 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
 
     public List<Pair<String, Boolean>> getAdditionalPropsForAutocompleter(final String critName) {
         final List<Pair<String, Boolean>> props = additionalPropsForAutocompleter.get(StringUtils.isEmpty(critName) ? "this" : critName);
-        final List<Pair<String, Boolean>> result = props != null ? props : new ArrayList<>();
-        System.out.println("AdditionalProps = " + result);
-        return result;
+        return props != null ? props : new ArrayList<>();
     }
 
     public Optional<Class<? extends AbstractEntity<?>>> getProvidedTypeForAutocompletedSelectionCriterion(final String critName) {

@@ -6,9 +6,9 @@ import static ua.com.fielden.platform.entity.AbstractEntity.ID;
 import static ua.com.fielden.platform.entity.AbstractEntity.VERSION;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchKeyAndDescOnly;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchKeyAndDescOnlyAndInstrument;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchOnly;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchNone;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchNoneAndInstrument;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchOnly;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchOnlyAndInstrument;
 import static ua.com.fielden.platform.entity.query.fluent.fetch.FetchCategory.ID_AND_VERSION;
 import static ua.com.fielden.platform.entity.query.fluent.fetch.FetchCategory.KEY_AND_DESC;
@@ -28,8 +28,6 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 import java.util.stream.Collectors;
-
-import org.apache.log4j.Logger;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.CritOnly;
@@ -54,14 +52,14 @@ class FetchProvider<T extends AbstractEntity<?>> implements IFetchProvider<T> {
     private final LinkedHashMap<String, FetchProvider<AbstractEntity<?>>> propertyProviders;
     private fetch<T> fetchModel;
     /**
-     * EQL fetch category to be used when converting this fetch provider to EQL fetch model. At this stage only three categories are supported: KEY_AND_DESC, ID_AND_VERSION and NONE.
+     * EQL {@link FetchCategory} to be used when converting this fetch provider to EQL fetch model. At this stage only three categories are supported:
+     * {@link FetchCategory#KEY_AND_DESC}, {@link FetchCategory#ID_AND_VERSION} and {@link FetchCategory#NONE}.
      * <p>
-     * Important: please note that KEY_AND_DESC (EntityRetrievalModel.includeKeyAndDescOnly) and ID_AND_VERSION (EntityRetrievalModel.includeIdAndVersionOnly) categories include many 
-     * more properties then its name states. Please, use FetchCategory.NONE in combination with methods {@link #with(String, IFetchProvider)} if more granular approach is needed.
+     * Important: please note that {@link FetchCategory#KEY_AND_DESC} (see EntityRetrievalModel.includeKeyAndDescOnly) and {@link FetchCategory#ID_AND_VERSION} (see EntityRetrievalModel.includeIdAndVersionOnly) 
+     * categories include many more properties then their names state. Please, use {@link FetchCategory#NONE} in combination with methods {@link #with(String, IFetchProvider)} if more granular approach is needed.
      */
     private final FetchCategory fetchCategory;
     private final boolean instrumented;
-    private final Logger logger = Logger.getLogger(getClass());
 
     /**
      * Constructs empty {@link FetchProvider}.
@@ -75,9 +73,17 @@ class FetchProvider<T extends AbstractEntity<?>> implements IFetchProvider<T> {
         this(entityType, new LinkedHashMap<>(), fetchCategory, instrumented);
     }
 
-    private FetchProvider(final Class<T> entityType, final LinkedHashMap<String, FetchProvider<AbstractEntity<?>>> propertyStrategies, final FetchCategory fetchCategory, final boolean instrumented) {
+    /**
+     * Full {@link FetchProvider}'s constructor for internal purposes.
+     * 
+     * @param entityType
+     * @param propertyProviders -- fetch providers for properties mapped by names (or <code>null</code>s for regular props)
+     * @param fetchCategory -- EQL fetch category
+     * @param instrumented -- indicates whether fetched instances should be instrumented
+     */
+    private FetchProvider(final Class<T> entityType, final LinkedHashMap<String, FetchProvider<AbstractEntity<?>>> propertyProviders, final FetchCategory fetchCategory, final boolean instrumented) {
         this.entityType = entityType;
-        this.propertyProviders = propertyStrategies;
+        this.propertyProviders = propertyProviders;
         this.fetchCategory = fetchCategory;
         this.instrumented = instrumented;
     }
@@ -145,7 +151,7 @@ class FetchProvider<T extends AbstractEntity<?>> implements IFetchProvider<T> {
             throw new IllegalStateException(String.format("The property [%s] does not exist in entity type [%s].", dotNotationProperty, entityType.getSimpleName()));
         }
 
-        if (!AnnotationReflector.isAnnotationPresentInHierarchy(IsProperty.class, entityType, dotNotationProperty) && !ID.equals(dotNotationProperty) && !VERSION.equals(dotNotationProperty)) {
+        if (!AnnotationReflector.isAnnotationPresentInHierarchy(IsProperty.class, entityType, dotNotationProperty) && !ID.equals(dotNotationProperty) && !VERSION.equals(dotNotationProperty)) { // ID and VERSION do not have @IsProperty but can be added explicitly when FetchCategory.NONE is used
             throw new IllegalStateException(String.format("The field [%s] is not TG property (@IsProperty annotation is missing) in entity type [%s].", dotNotationProperty, entityType.getSimpleName()));
         }
         return propType;
@@ -213,6 +219,13 @@ class FetchProvider<T extends AbstractEntity<?>> implements IFetchProvider<T> {
         return copy;
     }
     
+    /**
+     * Merges two fetch categories taking into account that NONE < ID_AND_VERSION < KEY_AND_DESC.
+     * 
+     * @param fetchCategory1
+     * @param fetchCategory2
+     * @return
+     */
     private static FetchCategory mergeFetchCategories(final FetchCategory fetchCategory1, final FetchCategory fetchCategory2) {
         if (KEY_AND_DESC == fetchCategory1 || KEY_AND_DESC == fetchCategory2) {
             return KEY_AND_DESC;
@@ -356,7 +369,7 @@ class FetchProvider<T extends AbstractEntity<?>> implements IFetchProvider<T> {
      * <p>
      * The exception from that rule is when parent has {@link FetchCategory#NONE} category: we use the same lean category for child fetch providers including those that are constructed
      * on dot-notated pathway. This ensures the leanest possible tree children when using methods {@link #with(String, String...)} and {@link #with(Set)}. However, there is possibility
-     * even for lean parent to provide "thick" child: just use explicit {@link #with(String, IFetchProvider)} method.
+     * to provide "thick" child even for lean parent: just use explicit {@link #with(String, IFetchProvider)} method.
      * 
      * @return
      */
@@ -364,6 +377,13 @@ class FetchProvider<T extends AbstractEntity<?>> implements IFetchProvider<T> {
         return NONE == fetchCategory ? NONE : KEY_AND_DESC;
     }
 
+    /**
+     * Creates default fetch provider for entity-typed property with type <code>propertyType</code> and concrete <code>fetchCategory</code>.
+     * 
+     * @param propertyType
+     * @param fetchCategory
+     * @return
+     */
     private static FetchProvider<AbstractEntity<?>> createDefaultFetchProviderForEntityTypedProperty(final Class<AbstractEntity<?>> propertyType, final FetchCategory fetchCategory) {
         // default fetch provider for entity-typed property should be without instrumentation
         return new FetchProvider<>(propertyType, fetchCategory, false);
@@ -527,7 +547,7 @@ class FetchProvider<T extends AbstractEntity<?>> implements IFetchProvider<T> {
     /**
      * Adds (mutably) key properties to the fetch provider of <code>dotNotationProperty</code> in case it is entity-typed.
      * <p>
-     * This method is based on a premise that property already has is provider if it is entity-typed.
+     * This method is based on a premise that property already has its provider (with NONE fetch category) if it is entity-typed.
      * 
      * @param dotNotationProperty
      * @return
@@ -547,7 +567,7 @@ class FetchProvider<T extends AbstractEntity<?>> implements IFetchProvider<T> {
                     }
                     // otherwise, nothing to add here (regular property)
                     return this;
-                } else if (provider.fetchCategory != NONE) {
+                } else if (NONE != provider.fetchCategory) {
                     throw new IllegalArgumentException(format("Property provider for %s has fetch category other than NONE.", firstName));
                 } else {
                     // return this.copy().enhanceWith(firstName, provider.addKeysTo(restDotNotation));
@@ -558,12 +578,15 @@ class FetchProvider<T extends AbstractEntity<?>> implements IFetchProvider<T> {
                 throw new IllegalArgumentException(format("Property %s was not included into this provider.", firstName));
             }
         } else { // dotNotationProperty = "" (aka 'this')
+            // only composite parts for composite entity and only 'key' otherwise
             final List<String> keyMemberNames = getKeyMembers(entityType).stream().map(Field::getName).collect(toList());
             for (final String keyMemberName: keyMemberNames) {
                 enhanceWith(keyMemberName);
                 addKeysTo(keyMemberName);
             }
+            // ID is needed at this stage to perform query -- that's why we must include it (later this property can be trimmed, for example during serialisation)
             enhanceWith(ID);
+            // VERSION is needed not to convert entity values to IdOnlyProxies -- that's why we must include it (later this property can be trimmed, for example during serialisation)
             enhanceWith(VERSION);
             return this;
         }
