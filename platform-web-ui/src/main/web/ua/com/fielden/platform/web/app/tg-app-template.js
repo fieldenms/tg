@@ -37,7 +37,7 @@ const template = html`
     <tg-message-panel></tg-message-panel>
     <div class="relative flex">
         <neon-animated-pages id="pages" class="fit" attr-for-selected="name" on-neon-animation-finish="_animationFinished" animate-initial-selection>
-            <tg-app-menu class="fit" name="menu" menu-config="[[menuConfig]]">
+            <tg-app-menu class="fit" name="menu" menu-config="[[menuConfig]]" app-title="[[appTitle]]">
                 <!--menu action dom-->
             </tg-app-menu>
             <template is="dom-repeat" items="[[menuConfig.menu]]" on-dom-change="_modulesRendered">
@@ -129,7 +129,7 @@ Polymer({
                 return document.body;
             }
         },
-        
+        appTitle: String,
         entityType: String,
         _manager: {
             type: Object,
@@ -313,6 +313,7 @@ Polymer({
     },
 
     _showMainMenu: function (e) {
+        document.title = this.appTitle;
         this.set("_route.path", "/menu");
     },
 
@@ -356,6 +357,9 @@ Polymer({
             if (elementToSelect) {
                 elementToSelect.configureEntryAnimation(currentlySelected);
                 this.$.pages.selected = selected;
+                if (elementToSelect.getSelectedPageTitle()) {
+                    document.title = elementToSelect.getSelectedPageTitle();
+                }
                 return;
             }
         }
