@@ -68,7 +68,7 @@ const template = html`
         }
     </style>
     <style include="iron-flex iron-flex-reverse iron-flex-alignment iron-flex-factors iron-positioning"></style>
-    <iron-list id="treeList" items="[[_entities]]" as="entity" selection-enabled>
+    <iron-list id="treeList" items="[[_entities]]" as="entity" default-physical-count="500" selection-enabled>
         <template>
             <div class="layout horizontal tree-node no-wrap" selected$="[[selected]]" style$="[[_calcItemStyle(entity)]]">
                 <iron-icon class="expand-button" icon="av:play-arrow" style="flex-grow:0;flex-shrink:0;" invisible$="[[!entity.entity.hasChildren]]" collapsed$="[[!entity.opened]]" on-tap="_toggle"></iron-icon>
