@@ -18,6 +18,7 @@ import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.determ
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.firstAndRest;
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.isDotNotation;
 import static ua.com.fielden.platform.utils.EntityUtils.isEntityType;
+import static ua.com.fielden.platform.utils.EntityUtils.isPersistedEntityType;
 import static ua.com.fielden.platform.utils.Pair.pair;
 
 import java.lang.reflect.Field;
@@ -584,10 +585,13 @@ class FetchProvider<T extends AbstractEntity<?>> implements IFetchProvider<T> {
                 enhanceWith(keyMemberName);
                 addKeysTo(keyMemberName);
             }
-            // ID is needed at this stage to perform query -- that's why we must include it (later this property can be trimmed, for example during serialisation)
-            enhanceWith(ID);
-            // VERSION is needed not to convert entity values to IdOnlyProxies -- that's why we must include it (later this property can be trimmed, for example during serialisation)
-            enhanceWith(VERSION);
+            
+            if (isPersistedEntityType(entityType)) {
+                // ID is needed at this stage to perform query -- that's why we must include it (later this property can be trimmed, for example during serialisation)
+                enhanceWith(ID);
+                // VERSION is needed not to convert entity values to IdOnlyProxies -- that's why we must include it (later this property can be trimmed, for example during serialisation)
+                enhanceWith(VERSION);
+            }
             return this;
         }
     }
