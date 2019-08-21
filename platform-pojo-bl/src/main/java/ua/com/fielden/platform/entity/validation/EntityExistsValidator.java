@@ -27,7 +27,6 @@ import ua.com.fielden.platform.entity.meta.MetaProperty;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.error.Result;
-import ua.com.fielden.platform.reflection.TitlesDescsGetter;
 
 /**
  * Validator that checks entity value for existence using an {@link IEntityDao} instance.
@@ -79,7 +78,7 @@ public class EntityExistsValidator<T extends AbstractEntity<?>> implements IBefo
                 if (seevAnnotation != null && seevAnnotation.skipNew() && !newValue.isPersisted()) {
                     return successful(entity);
                 }
-                final String entityTitle = TitlesDescsGetter.getEntityTitleAndDesc(newValue.getType()).getKey();
+                final String entityTitle = getEntityTitleAndDesc(newValue.getType()).getKey();
                 return failure(entity, format(DIRTY_ERR, newValue, entityTitle));
             }
             
