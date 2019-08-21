@@ -22,6 +22,7 @@ import { TgFocusRestorationBehavior } from '/resources/actions/tg-focus-restorat
 import { isInHierarchy, deepestActiveElement, tearDownEvent, isMobileApp } from '/resources/reflection/tg-polymer-utils.js';
 import { TgReflector } from '/app/tg-reflector.js';
 import '/app/tg-app-config.js';
+import '/resources/components/postal-lib.js';
 
 const template = html`
     <style>
@@ -81,9 +82,7 @@ const template = html`
             text-overflow: ellipsis;
         }
     </style>
-    <custom-style>
-        <style include="iron-flex iron-flex-reverse iron-flex-alignment iron-flex-factors iron-positioning paper-material-styles"></style>
-    </custom-style>
+    <style include="iron-flex iron-flex-reverse iron-flex-alignment iron-flex-factors iron-positioning paper-material-styles"></style>
     <tg-app-config id="appConfig"></tg-app-config>
     <slot id="menuItemActions" name="menu-item-action"></slot>
 

@@ -91,9 +91,7 @@ const template = html`
             text-overflow: ellipsis;
         }
     </style>
-    <custom-style>
-        <style include="iron-flex iron-flex-reverse iron-flex-alignment iron-flex-factors iron-positioning"></style>
-    </custom-style>
+    <style include="iron-flex iron-flex-reverse iron-flex-alignment iron-flex-factors iron-positioning"></style>
 
     <div id="watermark" hidden$="[[!_watermark]]">[[_watermark]]</div>
 
@@ -152,6 +150,7 @@ Polymer({
 
     properties: {
         menuConfig: Object,
+        appTitle: String,
         animationConfig: {
             value: function () {
                 return {};
@@ -206,6 +205,10 @@ Polymer({
                     nodes: Array.prototype.slice.call(nodeList)
                 }];
         }
+    },
+
+    getSelectedPageTitle: function () {
+        return this.appTitle;
     },
 
     /**

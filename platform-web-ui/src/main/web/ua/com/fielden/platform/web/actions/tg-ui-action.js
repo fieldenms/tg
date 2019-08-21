@@ -6,10 +6,11 @@ import '/resources/polymer/@polymer/paper-button/paper-button.js';
 import '/resources/polymer/@polymer/paper-spinner/paper-spinner.js';
 import '/resources/polymer/@polymer/paper-styles/color.js';
 
+import '/resources/components/postal-lib.js';
+
 import { TgFocusRestorationBehavior } from '/resources/actions/tg-focus-restoration-behavior.js';
 import { TgElementSelectorBehavior } from '/resources/components/tg-element-selector-behavior.js';
 import { tearDownEvent, allDefined } from '/resources/reflection/tg-polymer-utils.js';
-// depends on '/resources/postal/2.0.5/postal.min.js' 
 import { TgReflector } from '/app/tg-reflector.js';
 
 const template = html`
