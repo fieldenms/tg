@@ -1,5 +1,10 @@
 package ua.com.fielden.platform.entity.query.fluent;
 
+import static java.util.stream.Collectors.toMap;
+
+import java.util.Map;
+import java.util.Optional;
+
 import ua.com.fielden.platform.dao.QueryExecutionModel;
 import ua.com.fielden.platform.dao.QueryExecutionModel.Builder;
 import ua.com.fielden.platform.entity.AbstractEntity;
@@ -11,6 +16,7 @@ import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfa
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IStandAloneExprOperand;
 import ua.com.fielden.platform.entity.query.fluent.fetch.FetchCategory;
 import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
+import ua.com.fielden.platform.entity.query.model.ConditionModel;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 
 public class EntityQueryUtils {
@@ -108,4 +114,24 @@ public class EntityQueryUtils {
 	public static fetch<EntityAggregates> fetchAggregates() {
 		return new fetch<>(EntityAggregates.class, FetchCategory.NONE);
 	}
+	
+	/**
+	 * Generates empty condition model for EQL models. This condition is more of a convenience and is simply ignored as part of the condition processing.
+	 * 
+	 * @return
+	 */
+	public static ConditionModel emptyCondition() {
+	    return cond().iVal(null).eq().iVal(null).model();
+	}
+
+    /**
+     * Extracts parameters from optional values and returns a map between property names and extracted parameter values.
+     *
+     * @param params
+     * @return
+     */
+    public static Map<String, Object> extractExactParams(final Map<String, Optional<?>> params) {
+        return params.entrySet().stream().filter(entry -> entry.getValue().isPresent()).collect(toMap(entry -> entry.getKey(), entry -> entry.getValue().orElse(null)));
+    }
+
 }

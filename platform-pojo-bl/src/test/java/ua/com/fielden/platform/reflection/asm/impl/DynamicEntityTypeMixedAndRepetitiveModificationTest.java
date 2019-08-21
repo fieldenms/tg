@@ -48,10 +48,10 @@ public class DynamicEntityTypeMixedAndRepetitiveModificationTest {
     public void test_complex_class_loading_with_multiple_repetative_enhancements() throws Exception {
         // first enhancement
         // get the enhanced EntityBeingEnhanced type
-        final Class<?> oneTimeEnhancedType = cl.startModification(EntityBeingEnhanced.class.getName()).addProperties(pd1).endModification();
+        final Class<?> oneTimeEnhancedType = cl.startModification(EntityBeingEnhanced.class).addProperties(pd1).endModification();
         // second enhancement
         // get the enhanced EntityBeingEnhanced type
-        final Class<?> twoTimesEnhancedType = cl.startModification(oneTimeEnhancedType.getName()).addProperties(pd2).endModification();
+        final Class<?> twoTimesEnhancedType = cl.startModification(oneTimeEnhancedType).addProperties(pd2).endModification();
 
         assertTrue("Incorrect name.", oneTimeEnhancedType.getName().startsWith(EntityBeingEnhanced.class.getName() + APPENDIX + "_"));
         assertEquals("Incorrect parent.", AbstractEntity.class, oneTimeEnhancedType.getSuperclass());
@@ -69,7 +69,7 @@ public class DynamicEntityTypeMixedAndRepetitiveModificationTest {
     public void test_sequential_multiple_enhancements_and_modification() throws Exception {
         // get the enhanced EntityBeingEnhanced type
         final Class<?> entityBeingEnhancedEnhancedType = //
-        cl.startModification(EntityBeingEnhanced.class.getName()).//
+        cl.startModification(EntityBeingEnhanced.class).//
         addProperties(pd1).//
         addProperties(pd2).//
         endModification();
@@ -78,7 +78,7 @@ public class DynamicEntityTypeMixedAndRepetitiveModificationTest {
 
         // get the modified and enhanced EntityBeingModified type
         final Class<?> entityBeingModifiedModifiedType = //
-        cl.startModification(EntityBeingModified.class.getName()).//
+        cl.startModification(EntityBeingModified.class).//
         addProperties(pd1).//
         modifyProperties(NewProperty.changeType("prop1", entityBeingEnhancedEnhancedType)).//
         endModification();
@@ -87,7 +87,7 @@ public class DynamicEntityTypeMixedAndRepetitiveModificationTest {
 
         // get the modified TopLevelEntity type
         final Class<?> topLevelEntityModifiedType = //
-        cl.startModification(TopLevelEntity.class.getName()).//
+        cl.startModification(TopLevelEntity.class).//
         addProperties(pd1).//
         addProperties(pd2).//
         modifyProperties(NewProperty.changeType("prop1", entityBeingModifiedModifiedType)).//

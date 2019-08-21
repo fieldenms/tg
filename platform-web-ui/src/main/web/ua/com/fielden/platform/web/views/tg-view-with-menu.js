@@ -164,9 +164,7 @@ const template = html`
             flex-direction: row-reverse;
         }
     </style>
-    <custom-style>
-        <style include="iron-flex iron-flex-reverse iron-flex-alignment iron-flex-factors iron-positioning"></style>
-    </custom-style>
+    <style include="iron-flex iron-flex-reverse iron-flex-alignment iron-flex-factors iron-positioning"></style>
     <app-drawer-layout id="drawerPanel" fullbleed force-narrow>
 
         <app-drawer disable-swipe="[[!mobile]]" slot="drawer">
@@ -205,9 +203,9 @@ const template = html`
                 <div id="viewToolBarContainer" style="display: contents">
                     <paper-icon-button id="menuButton" icon="menu" tooltip-text="Module menu (tap or hit F2 to invoke)." on-tap="_togglePanel"></paper-icon-button>
                     <tg-menu-search-input id="menuSearcher" menu="[[menu]]" tooltip="Application-wide menu search (tap or hit F3 to invoke)."></tg-menu-search-input>
-                    <div class="flex truncate" tooltip-text$="[[_calcSelectedPageDesc(_selectedPage, saveAsName, saveAsDesc)]]">[[_calcSelectedPageTitle(_selectedPage, saveAsName)]]</div>
+                    <div class="flex truncate" tooltip-text$="[[_calcSelectedPageDesc(_selectedPage, saveAsName, saveAsDesc)]]">[[selectedPageTitle]]</div>
                     <div class="flex truncate watermark" hidden$="[[!_watermark]]">[[_watermark]]</div>
-                    <paper-icon-button id="mainMenu" icon="apps" tooltip-text="Main menu" on-tap="_showMenu"></paper-icon-button>
+                    <paper-icon-button id="mainMenu" icon="apps" tooltip-text="Main menu (tap or hit F10 to invoke)." on-tap="_showMenu"></paper-icon-button>
                 </div>
             </div>
 
@@ -272,6 +270,10 @@ Polymer({
         _selectedPage: {
             type: String,
             observer: '_selectedPageChanged'
+        },
+        selectedPageTitle: {
+            type: String,
+            computed: '_calcSelectedPageTitle(_selectedPage, saveAsName)'
         },
         _hasSomeIcon: Boolean,
         _hasSomeMenu: Boolean,
@@ -588,10 +590,11 @@ Polymer({
         if (!allDefined(arguments)) {
             return;
         }
-        if (page === '_') {
-            return '';
+        const pageTitle = page === '_' ? '' : (decodeURIComponent(page.split('/').pop()) + (saveAsName !== '' ? ' (' + saveAsName + ')' : ''));
+        if (pageTitle) {
+            document.title = pageTitle;
         }
-        return decodeURIComponent(page.split('/').pop()) + (saveAsName !== '' ? ' (' + saveAsName + ')' : '');
+        return pageTitle;
     },
     
     _calcSelectedPageDesc: function (page, saveAsName, saveAsDesc) {

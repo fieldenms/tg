@@ -172,7 +172,7 @@ public class EntQuery implements ISingleOperand {
             yields.addYield(new Yield(new EntValue(0), ""));
         } else if (allPropsYieldEnhancementRequired()) {
             final String yieldPropAliasPrefix = getSources().getMain().getAlias() == null ? "" : getSources().getMain().getAlias() + DOT;
-            LOGGER.debug("enhanceYieldsModel.allPropsYieldEnhancementRequired");
+            // LOGGER.debug("enhanceYieldsModel.allPropsYieldEnhancementRequired");
             if (mainSourceIsTypeBased()) {
                 final Class<? extends AbstractEntity<?>> mainSourceType = getSources().getMain().sourceType();
                 for (final PropertyMetadata ppi : domainMetadataAnalyser.getPropertyMetadatasForEntity(mainSourceType)) {
@@ -181,7 +181,7 @@ public class EntQuery implements ISingleOperand {
                             ppi.isCollection() ||
                             (ppi.isAggregatedExpression() && !isResultQuery());
                     if (!skipProperty) {
-                        LOGGER.debug(" add yield: " + ppi);
+                        // LOGGER.debug(" add yield: " + ppi);
                         yields.addYield(new Yield(new EntProp(yieldPropAliasPrefix + ppi.getName()), ppi.getName()));
                     }
                 }
@@ -267,17 +267,17 @@ public class EntQuery implements ISingleOperand {
 
     private void adjustYieldsModelAccordingToFetchModel(final IRetrievalModel fetchModel) {
         if (fetchModel == null) {
-            LOGGER.debug("adjustYieldsModelAccordingToFetchModel: no fetch model was provided -- nothing was removed");
+            // LOGGER.debug("adjustYieldsModelAccordingToFetchModel: no fetch model was provided -- nothing was removed");
         } else {
-            LOGGER.debug("adjustYieldsModelAccordingToFetchModel: fetchModel\n" + fetchModel);
+            // LOGGER.debug("adjustYieldsModelAccordingToFetchModel: fetchModel\n" + fetchModel);
             final Set<Yield> toBeRemoved = new HashSet<>();
 
             for (final Yield yield : yields.getYields()) {
                 if (shouldYieldBeRemoved(fetchModel, yield)) {
                     toBeRemoved.add(yield);
-                    LOGGER.debug("adjustYieldsModelAccordingToFetchModel: removing property [" + yield.getAlias() + "]");
+                    // LOGGER.debug("adjustYieldsModelAccordingToFetchModel: removing property [" + yield.getAlias() + "]");
                 } else {
-                    LOGGER.debug("adjustYieldsModelAccordingToFetchModel: retaining property [" + yield.getAlias() + "]");
+                    // LOGGER.debug("adjustYieldsModelAccordingToFetchModel: retaining property [" + yield.getAlias() + "]");
                 }
             }
             yields.removeYields(toBeRemoved);
@@ -456,7 +456,7 @@ public class EntQuery implements ISingleOperand {
         if (filterable && filter != null) {
             final ConditionModel filteringCondition = filter.enhance(mainSource.sourceType(), mainSource.getAlias(), username);
             if (filteringCondition != null) {
-                LOGGER.debug("\nApplied user-driven-filter to query main source type [" + mainSource.sourceType().getSimpleName() + "]");
+                // LOGGER.debug("\nApplied user-driven-filter to query main source type [" + mainSource.sourceType().getSimpleName() + "]");
                 final GroupedConditions userDateFilteringCondition = new StandAloneConditionBuilder(generator, paramValues, filteringCondition, false).getModel();
                 return originalConditions.ignore()
                        ? new Conditions(userDateFilteringCondition)

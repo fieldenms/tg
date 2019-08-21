@@ -6,11 +6,10 @@ import { TgAbstractMultiCriterionBehavior } from '/resources/centre/criterion/mu
 import '/resources/polymer/@polymer/iron-flex-layout/iron-flex-layout-classes.js';
 
 const template = html`
-    <custom-style>
-        <style include="iron-flex iron-flex-reverse iron-flex-alignment iron-flex-factors iron-positioning"></style>
-    </custom-style>
+    <style include="iron-flex iron-flex-reverse iron-flex-alignment iron-flex-factors iron-positioning"></style>
     <tg-abstract-criterion id="dom"
-        crit-only="[[critOnly]]"
+        mnemonics-visible="[[mnemonicsVisible]]"
+        exclude-missing="[[excludeMissing]]"
         _cancel-meta-values="[[_cancelMetaValuesForBinding]]"
         _accept-meta-values="[[_acceptMetaValuesForBinding]]"
         _show-meta-values-editor="[[_showMetaValuesEditor]]"

@@ -18,7 +18,6 @@ import ua.com.fielden.platform.error.Result;
 @DescTitle(value = "Description", desc = "Description Property")
 @DescRequired
 public class ChildEntity extends AbstractEntity<String> {
-    private static final long serialVersionUID = 1L;
 
     protected ChildEntity() {
         setDesc("lala");

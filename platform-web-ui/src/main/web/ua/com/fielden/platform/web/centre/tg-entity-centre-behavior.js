@@ -3,6 +3,7 @@ import { TgSseBehavior } from '/resources/sse/tg-sse-behavior.js';
 import '/resources/egi/tg-custom-action-dialog.js';
 import { TgFocusRestorationBehavior } from '/resources/actions/tg-focus-restoration-behavior.js';
 import '/resources/actions/tg-ui-action.js';
+import '/resources/components/postal-lib.js';
 import { tearDownEvent, isInHierarchy, deepestActiveElement, FOCUSABLE_ELEMENTS_SELECTOR } from '/resources/reflection/tg-polymer-utils.js';
 import { TgReflector } from '/app/tg-reflector.js';
 import { TgElementSelectorBehavior, queryElements } from '/resources/components/tg-element-selector-behavior.js';
@@ -608,12 +609,23 @@ const TgEntityCentreBehaviorImpl = {
             });
         }).bind(self);
 
+        /**
+         * A function to cancel active autocompletion search request.
+         */
+        self._cancelAutocompletion = () => this.$.selection_criteria._dom().querySelectorAll('tg-entity-editor').forEach((currentValue, currentIndex, list) => {if (currentValue.searching) currentValue._cancelSearch();});
+
+        /**
+         * A function to run the entity centre.
+         */
         self.run = (function (isAutoRunning, isSortingAction, forceRegeneration) {
             if (this._criteriaLoaded === false) {
                 throw "Cannot run centre (not initialised criteria).";
             }
 
             const self = this;
+            // cancel any autocompleter searches
+            self._cancelAutocompletion();
+
             self._actionInProgress = true;
             self.$.egi.clearSelection();
             self._triggerRun = true;
@@ -660,14 +672,18 @@ const TgEntityCentreBehaviorImpl = {
                 this._activateInsertionPoint('ip' + action.numberOfAction, action);
             }.bind(self), 1);
         }).bind(self);
+
         /**
-         * Activate the view with the result set.
+         * A function to activate the view with the result set (EGI and insertion points).
          */
         self._activateResultSetView = (function () {
             self.async(function () {
                 if (self._criteriaLoaded === false) {
                     throw "Cannot activate result-set view (not initialised criteria).";
                 }
+                // cancel any autocompleter searches
+                self._cancelAutocompletion();
+
                 self.$.dom.persistActiveElement();
                 self._selectedView = 1;
             }, 100);

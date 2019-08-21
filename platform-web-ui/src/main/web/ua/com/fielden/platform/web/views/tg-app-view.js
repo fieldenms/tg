@@ -25,9 +25,7 @@ const template = html`
             width: 100%;
         }
     </style>
-    <custom-style>
-        <style include="iron-flex iron-flex-reverse iron-flex-alignment iron-flex-factors iron-positioning"></style>
-    </custom-style>
+    <style include="iron-flex iron-flex-reverse iron-flex-alignment iron-flex-factors iron-positioning"></style>
     <div class="fit layout vertical center-center" style$="[[_calcStyleForItem(menuItem)]]">
         <div class="item-bg relative">
             <iron-icon class="fit" style$="[[_calcSvgStyleForItem(menuItem)]]" icon="[[menuItem.detailIcon]]"></iron-icon>
@@ -130,6 +128,10 @@ Polymer({
 
     getSelectedPage: function () {
         return this.$.view.getSelectedPage();
+    },
+
+    getSelectedPageTitle: function () {
+        return this.$.view.selectedPageTitle || this.menuItem.key;
     },
 
     searchMenu: function () {
