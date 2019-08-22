@@ -4,6 +4,9 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
+import static ua.com.fielden.platform.entity.AbstractEntity.ID;
+import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
+import static ua.com.fielden.platform.entity.AbstractEntity.VERSION;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchKeyAndDescOnly;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchNone;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchNoneAndInstrument;
@@ -17,8 +20,14 @@ import java.util.Set;
 import org.junit.Test;
 
 import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
+import ua.com.fielden.platform.sample.domain.TgAuthor;
+import ua.com.fielden.platform.sample.domain.TgAuthorRoyalty;
+import ua.com.fielden.platform.sample.domain.TgAuthorship;
+import ua.com.fielden.platform.sample.domain.TgAverageFuelUsage;
 import ua.com.fielden.platform.sample.domain.TgPersistentCompositeEntity;
 import ua.com.fielden.platform.sample.domain.TgPersistentEntityWithProperties;
+import ua.com.fielden.platform.sample.domain.TgPersonName;
+import ua.com.fielden.platform.sample.domain.TgReVehicleModel;
 import ua.com.fielden.platform.utils.EntityUtils;
 
 public class FetchProviderTest {
@@ -319,6 +328,122 @@ public class FetchProviderTest {
                 .with("entityProp", fetchNone(TgPersistentEntityWithProperties.class)
                         .with("entityProp", fetchNone(TgPersistentEntityWithProperties.class)
                                 .with("entityProp", fetchNone(TgPersistentEntityWithProperties.class)))),
+            fp.fetchModel()
+        );
+    }
+    
+    /////////////////////////////////////////////////////////// addKeysTo method: ///////////////////////////////////////////////////////////
+    
+    // Adding keys to root of the tree:
+    @Test(expected = FetchProviderException.class)
+    public void keys_cannot_be_added_into_provider_with_category_other_than_NONE() {
+        final FetchProvider<TgPersistentEntityWithProperties> fp = (FetchProvider<TgPersistentEntityWithProperties>) EntityUtils.fetch(TgPersistentEntityWithProperties.class);
+        fp.addKeysTo("");
+    }
+    
+    @Test
+    public void single_regular_key_is_added_into_provider_for_entity_with_such_key() {
+        final FetchProvider<TgPersistentEntityWithProperties> fp = (FetchProvider<TgPersistentEntityWithProperties>) EntityUtils.fetchNone(TgPersistentEntityWithProperties.class);
+        fp.addKeysTo("");
+        
+        assertEquals(set(KEY, ID, VERSION), fp.allProperties()); // persistent entity type also requires ID and VERSION
+    }
+    
+    @Test
+    public void single_regular_key_is_added_into_provider_for_synthetic_based_on_persistent_entity_with_such_key() {
+        final FetchProvider<TgReVehicleModel> fp = (FetchProvider<TgReVehicleModel>) EntityUtils.fetchNone(TgReVehicleModel.class);
+        fp.addKeysTo("");
+        
+        assertEquals(set(KEY, ID), fp.allProperties()); // synthetic entity type based on persistent type requires ID
+    }
+    
+    @Test
+    public void entity_typed_key_with_own_keys_are_added_into_provider_for_synthetic_entity_with_such_key() {
+        final FetchProvider<TgAverageFuelUsage> fp = (FetchProvider<TgAverageFuelUsage>) EntityUtils.fetchNone(TgAverageFuelUsage.class);
+        fp.addKeysTo("");
+        
+        assertEquals(set(KEY, // synthetic entity type does not require neither ID nor VERSION
+            KEY + "." + KEY, KEY + "." + ID, KEY + "." + VERSION // subkey and ID / VERSION for key of persistent TgVehicle type 
+        ), fp.allProperties());
+    }
+    
+    @Test
+    public void composite_keys_with_own_keys_are_added_into_provider_for_composite_entity_with_such_keys() {
+        final FetchProvider<TgAuthor> fp = (FetchProvider<TgAuthor>) EntityUtils.fetchNone(TgAuthor.class);
+        fp.addKeysTo("");
+        
+        assertEquals(set("name", "name." + KEY, "name." + ID, "name." + VERSION, // subkey and ID / VERSION for 'name' of persistent TgPersonName type
+                "surname", "patronymic",
+                ID, VERSION
+        ), fp.allProperties());
+    }
+    
+    // Adding keys to first-level property:
+    @Test(expected = FetchProviderException.class)
+    public void key_cannot_be_added_into_property_subprovider_if_does_not_exist() {
+        final FetchProvider<TgAuthor> fp = (FetchProvider<TgAuthor>) EntityUtils.fetchNone(TgAuthor.class);
+        fp.addKeysTo("name");
+    }
+    
+    @Test(expected = FetchProviderException.class)
+    public void key_cannot_be_added_into_property_subprovider_if_it_has_category_other_than_NONE() {
+        final FetchProvider<TgAuthor> fp = (FetchProvider<TgAuthor>) EntityUtils.fetchNone(TgAuthor.class).with("name", EntityUtils.fetch(TgPersonName.class));
+        fp.addKeysTo("name");
+    }
+    
+    @Test
+    public void key_is_added_into_property_subprovider() {
+        final FetchProvider<TgAuthor> fp = (FetchProvider<TgAuthor>) EntityUtils.fetchNone(TgAuthor.class).with("name");
+        fp.addKeysTo("name");
+        
+        assertEquals(set("name", "name." + KEY, "name." + ID, "name." + VERSION // subkey and ID / VERSION for 'name' property of persistent TgPersonName type
+        ), fp.allProperties());
+    }
+    
+    // Adding keys to deep-level property:
+    @Test(expected = FetchProviderException.class)
+    public void key_cannot_be_added_into_deep_property_subprovider_if_does_not_exist() {
+        final FetchProvider<TgAuthorRoyalty> fp = (FetchProvider<TgAuthorRoyalty>) EntityUtils.fetchNone(TgAuthorRoyalty.class);
+        fp.addKeysTo("name");
+    }
+    
+    @Test(expected = FetchProviderException.class)
+    public void key_cannot_be_added_into_deep_property_subprovider_if_it_has_category_other_than_NONE() {
+        final FetchProvider<TgAuthorRoyalty> fp = (FetchProvider<TgAuthorRoyalty>) EntityUtils.fetchNone(TgAuthorRoyalty.class).with("authorship.author.name", EntityUtils.fetch(TgPersonName.class));
+        fp.addKeysTo("authorship.author.name");
+    }
+    
+    @Test
+    public void key_is_added_into_deep_property_subprovider() {
+        final FetchProvider<TgAuthorRoyalty> fp = (FetchProvider<TgAuthorRoyalty>) EntityUtils.fetchNone(TgAuthorRoyalty.class).with("authorship.author.name");
+        fp.addKeysTo("authorship.author.name");
+        
+        assertEquals(set("authorship", "authorship.author", "authorship.author.name", "authorship.author.name." + KEY, "authorship.author.name." + ID, "authorship.author.name." + VERSION // subkey and ID / VERSION for 'name' property of persistent TgPersonName type
+        ), fp.allProperties());
+    }
+    
+    @Test
+    public void neighbour_branches_do_not_interfere_when_adding_keys() {
+        final FetchProvider<TgAuthorRoyalty> fp = (FetchProvider<TgAuthorRoyalty>) EntityUtils.fetchNone(TgAuthorRoyalty.class).with("authorship.author.name");
+        fp.addKeysTo("authorship.author");
+        fp.addKeysTo("authorship.author.name");
+        
+        assertEquals(set("authorship", "authorship.author",
+                "authorship.author", /*name is a key of author */ "authorship.author.surname", "authorship.author.patronymic",  "authorship.author." + ID, "authorship.author." + VERSION,
+                "authorship.author.name", "authorship.author.name." + KEY, "authorship.author.name." + ID, "authorship.author.name." + VERSION // subkey and ID / VERSION for 'name' property of persistent TgPersonName type
+        ), fp.allProperties());
+        assertEquals(
+            fetchNone(TgAuthorRoyalty.class)
+                .with("authorship", fetchNone(TgAuthorship.class)
+                        .with("author", fetchNone(TgAuthor.class)
+                                .with("surname")
+                                .with("patronymic")
+                                .with(ID)
+                                .with(VERSION)
+                                .with("name", fetchNone(TgPersonName.class)
+                                        .with(KEY)
+                                        .with(ID)
+                                        .with(VERSION)))),
             fp.fetchModel()
         );
     }

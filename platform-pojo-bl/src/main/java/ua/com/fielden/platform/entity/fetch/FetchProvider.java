@@ -19,6 +19,7 @@ import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.firstA
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.isDotNotation;
 import static ua.com.fielden.platform.utils.EntityUtils.isEntityType;
 import static ua.com.fielden.platform.utils.EntityUtils.isPersistedEntityType;
+import static ua.com.fielden.platform.utils.EntityUtils.isSyntheticBasedOnPersistentEntityType;
 import static ua.com.fielden.platform.utils.Pair.pair;
 
 import java.lang.reflect.Field;
@@ -564,21 +565,24 @@ class FetchProvider<T extends AbstractEntity<?>> implements IFetchProvider<T> {
                 final FetchProvider<AbstractEntity<?>> provider = propertyProviders.get(firstName);
                 if (provider == null) {
                     if (isDotNotation(dotNotationProperty)) {
-                        throw new IllegalArgumentException(format("Property provider for %s is somehow empty.", firstName));
+                        throw new FetchProviderException(format("Property provider for %s is somehow empty.", firstName));
                     }
                     // otherwise, nothing to add here (regular property)
                     return this;
                 } else if (NONE != provider.fetchCategory) {
-                    throw new IllegalArgumentException(format("Property provider for %s has fetch category other than NONE.", firstName));
+                    throw new FetchProviderException(format("Property provider for %s has fetch category other than NONE.", firstName));
                 } else {
-                    // return this.copy().enhanceWith(firstName, provider.addKeysTo(restDotNotation));
                     provider.addKeysTo(restDotNotation);
                     return this;
                 }
             } else {
-                throw new IllegalArgumentException(format("Property %s was not included into this provider.", firstName));
+                throw new FetchProviderException(format("Property %s was not included into this provider.", firstName));
             }
         } else { // dotNotationProperty = "" (aka 'this')
+            if (NONE != fetchCategory) {
+                throw new FetchProviderException("Root provider has fetch category other than NONE.");
+            } 
+            
             // only composite parts for composite entity and only 'key' otherwise
             final List<String> keyMemberNames = getKeyMembers(entityType).stream().map(Field::getName).collect(toList());
             for (final String keyMemberName: keyMemberNames) {
@@ -591,6 +595,9 @@ class FetchProvider<T extends AbstractEntity<?>> implements IFetchProvider<T> {
                 enhanceWith(ID);
                 // VERSION is needed not to convert entity values to IdOnlyProxies -- that's why we must include it (later this property can be trimmed, for example during serialisation)
                 enhanceWith(VERSION);
+            } else if (isSyntheticBasedOnPersistentEntityType(entityType)) {
+                // ID is needed at this stage to perform query -- that's why we must include it (later this property can be trimmed, for example during serialisation)
+                enhanceWith(ID);
             }
             return this;
         }

@@ -3,7 +3,6 @@ package ua.com.fielden.platform.web.resources.webui;
 import static java.lang.String.format;
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.determinePropertyType;
 import static ua.com.fielden.platform.utils.MiscUtilities.prepare;
-import static ua.com.fielden.platform.web.utils.EntityResourceUtils.getOriginalType;
 import static ua.com.fielden.platform.web.utils.WebUiResourceUtils.handleUndesiredExceptions;
 import static ua.com.fielden.platform.web.utils.WebUiResourceUtils.restoreCentreContextHolder;
 
@@ -92,7 +91,7 @@ public class EntityAutocompletionResource<CONTEXT extends AbstractEntity<?>, T e
             logger.debug(format("SEARCH STRING %s, PAGE %s", searchString, dataPage));
            
             valueMatcher.setContext(context);
-            final fetch<T> fetch = (fetch<T>) master.createFetchModelForAutocompleter(propertyName, "".equals(propertyName) ? (Class<AbstractEntity>) entityType : (Class<AbstractEntity>) determinePropertyType(entityType, propertyName));
+            final fetch<T> fetch = master.createFetchModelForAutocompleter(propertyName, (Class<T>) ("".equals(propertyName) ? entityType : determinePropertyType(entityType, propertyName)));
             valueMatcher.setFetch(fetch);
             final List<? extends AbstractEntity<?>> entities = valueMatcher.findMatchesWithModel(searchString != null ? searchString : "%", dataPage);
 
