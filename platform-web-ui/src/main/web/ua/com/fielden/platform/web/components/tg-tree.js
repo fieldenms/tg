@@ -34,7 +34,7 @@ const template = html`
             font-weight: bold;
         }
         .tree-item {
-            padding: 1px 4px;
+            padding: 0px 4px;
         }
         .tree-node[selected],
         .tree-node[selected] > .tree-item-actions {
