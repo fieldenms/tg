@@ -40,8 +40,8 @@ const template = html`
         .tree-node[selected] > .tree-item-actions {
             background-color: #F5F5F5;
         }
-        .tree-node:hover,
-        .tree-node:hover > .tree-item-actions {
+        .tree-node[over],
+        .tree-node[over] > .tree-item-actions {
             background-color: #EEEEEE
         }
         .tree-item-actions {
@@ -59,7 +59,7 @@ const template = html`
             flex-direction: row;
         }
         .tree-node[selected] > .tree-item-actions, 
-        .tree-node:hover > .tree-item-actions {
+        .tree-node[over] > .tree-item-actions {
             display: flex;
         }
         .no-wrap {
@@ -70,7 +70,7 @@ const template = html`
     <style include="iron-flex iron-flex-reverse iron-flex-alignment iron-flex-factors iron-positioning"></style>
     <iron-list id="treeList" items="[[_entities]]" as="entity" default-physical-count="500" selection-enabled>
         <template>
-            <div class="layout horizontal tree-node no-wrap" selected$="[[_isSelected(entity, selected, index)]]" on-mouseenter="_mouseItemEnter" on-mouseleave="_mouseItemLeave" style$="[[_calcItemStyle(entity)]]">
+            <div class="layout horizontal tree-node no-wrap" over$="[[entity.over]]" selected$="[[_isSelected(entity, selected, index)]]" on-mouseenter="_mouseItemEnter" on-mouseleave="_mouseItemLeave" style$="[[_calcItemStyle(entity)]]">
                     <iron-icon class="expand-button" icon="av:play-arrow" style="flex-grow:0;flex-shrink:0;" invisible$="[[!entity.entity.hasChildren]]" collapsed$="[[!entity.opened]]" on-tap="_toggle"></iron-icon>
                     <span class="tree-item" highlighted$="[[entity.highlight]]" inner-h-t-m-l="[[contentBuilder(entity, entity.opened)]]"></span>
                     <span class="tree-item-actions" on-tap="actionRunner" mobile$="[[mobile]]" inner-h-t-m-l="[[actionBuilder(entity)]]"></span>
@@ -283,23 +283,54 @@ Polymer({
     },
 
     _isSelected: function (entity, selected, index) {
-        if (entity.additionalInfoNodes) {
+        if (entity.additionalInfoNodes && !entity.loaderIndicator) {
             entity.additionalInfoNodes.forEach(function (item, idx) {
                 this.modelForElement(this._physicalItems[this._getPhysicalIndex(index + idx + 1)])[this.selectedAs] = selected;
             }.bind(this.$.treeList));
         } else if (entity.isAdditionalInfo) {
-            const idx = entity.relatedTo.additionalInfoNodes.indexOf(entity);
-            this.$.treeList.modelForElement(this.$.treeList._physicalItems[this.$.treeList._getPhysicalIndex(index - idx - 1)])[this.$.treeList.selectedAs] = selected;
+            this.$.treeList.modelForElement(this.$.treeList._physicalItems[this.$.treeList._getPhysicalIndex(this._getBaseEntityIdx(index))])[this.$.treeList.selectedAs] = selected;
         }
         return selected;
     },
 
     _mouseItemEnter: function (e) {
-        console.log("mouse enter for: " + e.detail.model.index, e);
+        const entity = e.model.entity;
+        if (entity.additionalInfoNodes && !entity.loaderIndicator) {
+            this._setOver(e.model.index, true);
+        } else if (entity.isAdditionalInfo) {
+            this._setOver(this._getBaseEntityIdx(e.model.index), true);
+        }
     },
-    
+
     _mouseItemLeave: function (e) {
-        console.log("mouse eleave for: " + e.detail.model.index, e);
+        const fromEntity = e.model.entity.isAdditionalInfo ? e.model.entity.relatedTo : e.model.entity;
+        let toElement = e.toElement;
+        while (toElement && !toElement.classList.contains("tree-node")) {
+            toElement = toElement.parentElement;
+        }
+        const entityModel = this.$.treeList.modelForElement(toElement);
+        const entity = entityModel && entityModel.entity;
+        const toEntity = entity && entity.isAdditionalInfo ? entity.relatedTo : entity;
+        if (fromEntity !== toEntity) {
+            this._setOver(this._getBaseEntityIdx(e.model.index), false);
+        }
+    },
+
+    _getBaseEntityIdx: function (idx) {
+        const entity = this._entities[idx];
+        if (entity.isAdditionalInfo) {
+            const additionalInfoIdx = entity.relatedTo.additionalInfoNodes.indexOf(entity);
+            return idx - additionalInfoIdx - 1;
+        }
+        return idx;
+    },
+
+    _setOver: function (idx, over) {
+        const entity = this._entities[idx];
+        this.set("_entities." + idx + ".over", over);
+        entity.additionalInfoNodes.forEach((item, additionalInfoIdx) => {
+            this.set("_entities." + (additionalInfoIdx + idx + 1) + ".over", over);
+        });
     },
     
     _filterSubTree: function (text, subtree, expand) {
