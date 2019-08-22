@@ -70,7 +70,7 @@ const template = html`
     <style include="iron-flex iron-flex-reverse iron-flex-alignment iron-flex-factors iron-positioning"></style>
     <iron-list id="treeList" items="[[_entities]]" as="entity" default-physical-count="500" selection-enabled>
         <template>
-            <div class="layout horizontal tree-node no-wrap" selected$="[[_isSelected(entity, selected, index)]]" style$="[[_calcItemStyle(entity)]]">
+            <div class="layout horizontal tree-node no-wrap" selected$="[[_isSelected(entity, selected, index)]]" on-mouseenter="_mouseItemEnter" on-mouseleave="_mouseItemLeave" style$="[[_calcItemStyle(entity)]]">
                     <iron-icon class="expand-button" icon="av:play-arrow" style="flex-grow:0;flex-shrink:0;" invisible$="[[!entity.entity.hasChildren]]" collapsed$="[[!entity.opened]]" on-tap="_toggle"></iron-icon>
                     <span class="tree-item" highlighted$="[[entity.highlight]]" inner-h-t-m-l="[[contentBuilder(entity, entity.opened)]]"></span>
                     <span class="tree-item-actions" on-tap="actionRunner" mobile$="[[mobile]]" inner-h-t-m-l="[[actionBuilder(entity)]]"></span>
@@ -130,7 +130,6 @@ const generateChildrenModel = function (children, parentEntity, additionalInfoCb
             opened: false,
             visible: true,
             highlight: false,
-            selected: false,
             over: false
         };
         if (child.hasChildren) {
@@ -142,7 +141,6 @@ const generateChildrenModel = function (children, parentEntity, additionalInfoCb
         }
         parent.additionalInfoNodes = additionalInfoCb(parent).map(entity => {
             entity.relatedTo = parent;
-            entity.selected = false;
             entity.over = false;
             return entity;
         });
@@ -186,7 +184,6 @@ const generateLoadingIndicator = function (parent) {
         parent: parent,
         additionalInfoNodes: [],
         loaderIndicator: true,
-        selected: false,
         over: false
     };
 };
@@ -295,6 +292,14 @@ Polymer({
             this.$.treeList.modelForElement(this.$.treeList._physicalItems[this.$.treeList._getPhysicalIndex(index - idx - 1)])[this.$.treeList.selectedAs] = selected;
         }
         return selected;
+    },
+
+    _mouseItemEnter: function (e) {
+        console.log("mouse enter for: " + e.detail.model.index, e);
+    },
+    
+    _mouseItemLeave: function (e) {
+        console.log("mouse eleave for: " + e.detail.model.index, e);
     },
     
     _filterSubTree: function (text, subtree, expand) {
