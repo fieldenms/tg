@@ -68,9 +68,9 @@ const template = html`
         }
     </style>
     <style include="iron-flex iron-flex-reverse iron-flex-alignment iron-flex-factors iron-positioning"></style>
-    <iron-list id="treeList" items="[[_entities]]" as="entity" default-physical-count="500" selection-enabled>
+    <iron-list id="treeList" items="[[_entities]]" as="entity" selected-item="{{selectedEntity}}" default-physical-count="500" selection-enabled>
         <template>
-            <div class="layout horizontal tree-node no-wrap" over$="[[entity.over]]" selected$="[[_isSelected(entity, selected, index)]]" on-mouseenter="_mouseItemEnter" on-mouseleave="_mouseItemLeave" style$="[[_calcItemStyle(entity)]]">
+            <div class="layout horizontal tree-node no-wrap" over$="[[entity.over]]" selected$="[[_isSelected(selectedEntity, entity)]]" on-mouseenter="_mouseItemEnter" on-mouseleave="_mouseItemLeave" style$="[[_calcItemStyle(entity)]]">
                     <iron-icon class="expand-button" icon="av:play-arrow" style="flex-grow:0;flex-shrink:0;" invisible$="[[!entity.entity.hasChildren]]" collapsed$="[[!entity.opened]]" on-tap="_toggle"></iron-icon>
                     <span class="tree-item" highlighted$="[[entity.highlight]]" inner-h-t-m-l="[[contentBuilder(entity, entity.opened)]]"></span>
                     <span class="tree-item-actions" on-tap="actionRunner" mobile$="[[mobile]]" inner-h-t-m-l="[[actionBuilder(entity)]]"></span>
@@ -130,6 +130,7 @@ const generateChildrenModel = function (children, parentEntity, additionalInfoCb
             opened: false,
             visible: true,
             highlight: false,
+            selected: false,
             over: false
         };
         if (child.hasChildren) {
@@ -184,6 +185,7 @@ const generateLoadingIndicator = function (parent) {
         parent: parent,
         additionalInfoNodes: [],
         loaderIndicator: true,
+        selected: false,
         over: false
     };
 };
@@ -282,15 +284,15 @@ Polymer({
         }
     },
 
-    _isSelected: function (entity, selected, index) {
-        if (entity.additionalInfoNodes && !entity.loaderIndicator) {
-            entity.additionalInfoNodes.forEach(function (item, idx) {
-                this.modelForElement(this._physicalItems[this._getPhysicalIndex(index + idx + 1)])[this.selectedAs] = selected;
-            }.bind(this.$.treeList));
-        } else if (entity.isAdditionalInfo) {
-            this.$.treeList.modelForElement(this.$.treeList._physicalItems[this.$.treeList._getPhysicalIndex(this._getBaseEntityIdx(index))])[this.$.treeList.selectedAs] = selected;
+    _isSelected: function (selectedEntity, entity) {
+        if (entity !== selectedEntity) {
+            if (entity.additionalInfoNodes) {
+                return entity.additionalInfoNodes.indexOf(selectedEntity) >= 0;
+            } else if (entity.isAdditionalInfo) {
+                return entity.relatedTo === selectedEntity || entity.relatedTo.additionalInfoNodes.indexOf(selectedEntity) >= 0
+            }
         }
-        return selected;
+        return entity === selectedEntity && !entity.loaderIndicator;
     },
 
     _mouseItemEnter: function (e) {
