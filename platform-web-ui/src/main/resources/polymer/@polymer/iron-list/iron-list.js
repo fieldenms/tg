@@ -397,14 +397,6 @@ Polymer({
     scrollOffset: {
       type: Number,
       value: 0
-    },
-
-    /**
-     * This is default size of phisical elements if defined it limits the maximal number of phisical items.
-     */
-    defaultPhysicalCount: { 
-      type: Number, 
-      value: DEFAULT_PHYSICAL_COUNT 
     }
   },
   observers: ['_itemsChanged(items.*)', '_selectionEnabledChanged(selectionEnabled)', '_multiSelectionChanged(multiSelection)', '_setOverflow(scrollTarget, scrollOffset)'],
@@ -977,8 +969,7 @@ Polymer({
    * Increases the pool size.
    */
   _increasePoolIfNeeded: function (count) {
-    var nextPhysicalCount = this._clamp(this._physicalCount + count, this.defaultPhysicalCount, this._virtualCount - this._virtualStart);
-    var autoIncrease = this.defaultPhysicalCount == DEFAULT_PHYSICAL_COUNT;
+    var nextPhysicalCount = this._clamp(this._physicalCount + count, DEFAULT_PHYSICAL_COUNT, this._virtualCount - this._virtualStart);
 
     nextPhysicalCount = this._convertIndexToCompleteRow(nextPhysicalCount);
 
@@ -1027,9 +1018,9 @@ Polymer({
 
 
     if (this._virtualEnd >= this._virtualCount - 1 || nextIncrease === 0) {// Do nothing.
-    } else if (!this._isClientFull() && autoIncrease) {
+    } else if (!this._isClientFull()) {
       this._debounce('_increasePoolIfNeeded', this._increasePoolIfNeeded.bind(this, nextIncrease), microTask);
-    } else if (this._physicalSize < this._optPhysicalSize && autoIncrease) {
+    } else if (this._physicalSize < this._optPhysicalSize) {
       // Yield and increase the pool during idle time until the physical size is
       // optimal.
       this._debounce('_increasePoolIfNeeded', this._increasePoolIfNeeded.bind(this, this._clamp(Math.round(50 / this._templateCost), 1, nextIncrease)), idlePeriod);
@@ -1060,7 +1051,7 @@ Polymer({
       // Initial render
       this.updateViewportBoundaries();
 
-      this._increasePoolIfNeeded(this.defaultPhysicalCount);
+      this._increasePoolIfNeeded(DEFAULT_PHYSICAL_COUNT);
     }
   },
 
