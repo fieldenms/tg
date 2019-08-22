@@ -337,13 +337,13 @@ public class FetchProviderTest {
     // Adding keys to root of the tree:
     @Test(expected = FetchProviderException.class)
     public void keys_cannot_be_added_into_provider_with_category_other_than_NONE() {
-        final FetchProvider<TgPersistentEntityWithProperties> fp = (FetchProvider<TgPersistentEntityWithProperties>) EntityUtils.fetch(TgPersistentEntityWithProperties.class);
+        final IFetchProvider<TgPersistentEntityWithProperties> fp = EntityUtils.fetch(TgPersistentEntityWithProperties.class);
         fp.addKeysTo("");
     }
     
     @Test
     public void single_regular_key_is_added_into_provider_for_entity_with_such_key() {
-        final FetchProvider<TgPersistentEntityWithProperties> fp = (FetchProvider<TgPersistentEntityWithProperties>) EntityUtils.fetchNone(TgPersistentEntityWithProperties.class);
+        final IFetchProvider<TgPersistentEntityWithProperties> fp = EntityUtils.fetchNone(TgPersistentEntityWithProperties.class);
         fp.addKeysTo("");
         
         assertEquals(set(KEY, ID, VERSION), fp.allProperties()); // persistent entity type also requires ID and VERSION
@@ -351,7 +351,7 @@ public class FetchProviderTest {
     
     @Test
     public void single_regular_key_is_added_into_provider_for_synthetic_based_on_persistent_entity_with_such_key() {
-        final FetchProvider<TgReVehicleModel> fp = (FetchProvider<TgReVehicleModel>) EntityUtils.fetchNone(TgReVehicleModel.class);
+        final IFetchProvider<TgReVehicleModel> fp = EntityUtils.fetchNone(TgReVehicleModel.class);
         fp.addKeysTo("");
         
         assertEquals(set(KEY, ID), fp.allProperties()); // synthetic entity type based on persistent type requires ID
@@ -359,7 +359,7 @@ public class FetchProviderTest {
     
     @Test
     public void entity_typed_key_with_own_keys_are_added_into_provider_for_synthetic_entity_with_such_key() {
-        final FetchProvider<TgAverageFuelUsage> fp = (FetchProvider<TgAverageFuelUsage>) EntityUtils.fetchNone(TgAverageFuelUsage.class);
+        final IFetchProvider<TgAverageFuelUsage> fp = EntityUtils.fetchNone(TgAverageFuelUsage.class);
         fp.addKeysTo("");
         
         assertEquals(set(KEY, // synthetic entity type does not require neither ID nor VERSION
@@ -369,7 +369,7 @@ public class FetchProviderTest {
     
     @Test
     public void composite_keys_with_own_keys_are_added_into_provider_for_composite_entity_with_such_keys() {
-        final FetchProvider<TgAuthor> fp = (FetchProvider<TgAuthor>) EntityUtils.fetchNone(TgAuthor.class);
+        final IFetchProvider<TgAuthor> fp = EntityUtils.fetchNone(TgAuthor.class);
         fp.addKeysTo("");
         
         assertEquals(set("name", "name." + KEY, "name." + ID, "name." + VERSION, // subkey and ID / VERSION for 'name' of persistent TgPersonName type
@@ -381,19 +381,19 @@ public class FetchProviderTest {
     // Adding keys to first-level property:
     @Test(expected = FetchProviderException.class)
     public void key_cannot_be_added_into_property_subprovider_if_does_not_exist() {
-        final FetchProvider<TgAuthor> fp = (FetchProvider<TgAuthor>) EntityUtils.fetchNone(TgAuthor.class);
+        final IFetchProvider<TgAuthor> fp = EntityUtils.fetchNone(TgAuthor.class);
         fp.addKeysTo("name");
     }
     
     @Test(expected = FetchProviderException.class)
     public void key_cannot_be_added_into_property_subprovider_if_it_has_category_other_than_NONE() {
-        final FetchProvider<TgAuthor> fp = (FetchProvider<TgAuthor>) EntityUtils.fetchNone(TgAuthor.class).with("name", EntityUtils.fetch(TgPersonName.class));
+        final IFetchProvider<TgAuthor> fp = EntityUtils.fetchNone(TgAuthor.class).with("name", EntityUtils.fetch(TgPersonName.class));
         fp.addKeysTo("name");
     }
     
     @Test
     public void key_is_added_into_property_subprovider() {
-        final FetchProvider<TgAuthor> fp = (FetchProvider<TgAuthor>) EntityUtils.fetchNone(TgAuthor.class).with("name");
+        final IFetchProvider<TgAuthor> fp = EntityUtils.fetchNone(TgAuthor.class).with("name");
         fp.addKeysTo("name");
         
         assertEquals(set("name", "name." + KEY, "name." + ID, "name." + VERSION // subkey and ID / VERSION for 'name' property of persistent TgPersonName type
@@ -403,19 +403,19 @@ public class FetchProviderTest {
     // Adding keys to deep-level property:
     @Test(expected = FetchProviderException.class)
     public void key_cannot_be_added_into_deep_property_subprovider_if_does_not_exist() {
-        final FetchProvider<TgAuthorRoyalty> fp = (FetchProvider<TgAuthorRoyalty>) EntityUtils.fetchNone(TgAuthorRoyalty.class);
+        final IFetchProvider<TgAuthorRoyalty> fp = EntityUtils.fetchNone(TgAuthorRoyalty.class);
         fp.addKeysTo("name");
     }
     
     @Test(expected = FetchProviderException.class)
     public void key_cannot_be_added_into_deep_property_subprovider_if_it_has_category_other_than_NONE() {
-        final FetchProvider<TgAuthorRoyalty> fp = (FetchProvider<TgAuthorRoyalty>) EntityUtils.fetchNone(TgAuthorRoyalty.class).with("authorship.author.name", EntityUtils.fetch(TgPersonName.class));
+        final IFetchProvider<TgAuthorRoyalty> fp = EntityUtils.fetchNone(TgAuthorRoyalty.class).with("authorship.author.name", EntityUtils.fetch(TgPersonName.class));
         fp.addKeysTo("authorship.author.name");
     }
     
     @Test
     public void key_is_added_into_deep_property_subprovider() {
-        final FetchProvider<TgAuthorRoyalty> fp = (FetchProvider<TgAuthorRoyalty>) EntityUtils.fetchNone(TgAuthorRoyalty.class).with("authorship.author.name");
+        final IFetchProvider<TgAuthorRoyalty> fp = EntityUtils.fetchNone(TgAuthorRoyalty.class).with("authorship.author.name");
         fp.addKeysTo("authorship.author.name");
         
         assertEquals(set("authorship", "authorship.author", "authorship.author.name", "authorship.author.name." + KEY, "authorship.author.name." + ID, "authorship.author.name." + VERSION // subkey and ID / VERSION for 'name' property of persistent TgPersonName type
@@ -424,7 +424,7 @@ public class FetchProviderTest {
     
     @Test
     public void neighbour_branches_do_not_interfere_when_adding_keys() {
-        final FetchProvider<TgAuthorRoyalty> fp = (FetchProvider<TgAuthorRoyalty>) EntityUtils.fetchNone(TgAuthorRoyalty.class).with("authorship.author.name");
+        final IFetchProvider<TgAuthorRoyalty> fp = EntityUtils.fetchNone(TgAuthorRoyalty.class).with("authorship.author.name");
         fp.addKeysTo("authorship.author");
         fp.addKeysTo("authorship.author.name");
         

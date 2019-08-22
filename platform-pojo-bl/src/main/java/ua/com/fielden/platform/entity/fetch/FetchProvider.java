@@ -590,14 +590,12 @@ class FetchProvider<T extends AbstractEntity<?>> implements IFetchProvider<T> {
                 addKeysTo(keyMemberName);
             }
             
+            // The following lines are needed to make query execution possible. These properties can be trimmed at later stage (for example during serialisation).
             if (isPersistedEntityType(entityType)) {
-                // ID is needed at this stage to perform query -- that's why we must include it (later this property can be trimmed, for example during serialisation)
-                enhanceWith(ID);
-                // VERSION is needed not to convert entity values to IdOnlyProxies -- that's why we must include it (later this property can be trimmed, for example during serialisation)
-                enhanceWith(VERSION);
+                enhanceWith(ID); // ID is needed at this stage to perform query for persistent entity types.
+                enhanceWith(VERSION); // VERSION is needed not to convert entity values to idOnlyProxies during query execution.
             } else if (isSyntheticBasedOnPersistentEntityType(entityType)) {
-                // ID is needed at this stage to perform query -- that's why we must include it (later this property can be trimmed, for example during serialisation)
-                enhanceWith(ID);
+                enhanceWith(ID); // synthetic based on persistent types require ID (see EntityRetrievalModel.includeKeyAndDescOnly)
             }
             return this;
         }
