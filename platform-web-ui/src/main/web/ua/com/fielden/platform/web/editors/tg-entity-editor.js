@@ -784,13 +784,13 @@ export class TgEntityEditor extends TgEditor {
      *
      * Therefore, it is expected that the passed in value is either a null or a String (if not multi)
      * or an empty array [] or an array of Strings (if multi).
+     * However, there are exceptional situations where null values might be passed even in case of MULTI.
      */
     convertToString (value) {
-        if (this.multi === true) {
-            return value.join(this.separator); // for empty array it will return "". 'value' should never be 'null'!
-        } else {
-            return value === null ? "" : "" + value;
-        }
+        // there are cases where value might be null even for MULTI selection criteria
+        // this happens when a crit-only property changes from type SINGLE to MULTI
+        // joining on an empty array evaluates to an empty string
+        return value === null ? "" : (this.multi === true ? value.join(this.separator) : "" + value);
     }
 
     /**
