@@ -19,6 +19,7 @@ import org.junit.Test;
 
 import ua.com.fielden.platform.entity.annotation.mutator.BeforeChange;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
+import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.entity.validation.UserAlmostUniqueEmailValidator;
 import ua.com.fielden.platform.property.validator.EmailValidator;
 import ua.com.fielden.platform.property.validator.StringValidator;
@@ -318,7 +319,7 @@ public class UserTestCase extends AbstractDaoTestCase {
         
         assertFalse(coUser.assignPasswordResetUuid("NON-EXISTING-USER").isPresent());
     }
-    
+
     @Test
     public void password_reset_for_inactive_user_fails() {
         final UniversalConstantsForTesting consts = (UniversalConstantsForTesting) getInstance(IUniversalConstants.class);
@@ -329,7 +330,6 @@ public class UserTestCase extends AbstractDaoTestCase {
         assertFalse(coUser.assignPasswordResetUuid(inactiveUser.getKey()).isPresent());
     }
 
-    
     @Test 
     public void unit_test_user_cannot_be_persisted() {
         final IUser coUser = co$(User.class);
@@ -523,10 +523,11 @@ public class UserTestCase extends AbstractDaoTestCase {
         coUser.lockoutUser("USER3");
         final User inactiveUser = coUser.findUser("USER3");
         assertFalse(inactiveUser.isActive());
+        assertFalse(coUserSecret.findByIdOptional(inactiveUser.getId()).isPresent());
         
         save(inactiveUser.setActive(true));
         
-        final Optional<UserSecret> maybeSecret = coUserSecret.findByIdOptional(inactiveUser.getId(), coUserSecret.getFetchProvider().fetchModel());
+        final Optional<UserSecret> maybeSecret = coUserSecret.findByIdOptional(inactiveUser.getId());
         assertTrue(maybeSecret.isPresent());
         assertNotNull(maybeSecret.get().getResetUuid());
     }
@@ -536,6 +537,17 @@ public class UserTestCase extends AbstractDaoTestCase {
         final String username = "NON-EXISTING-USER-TO-LOCKOUT";
         assertNull(coUser.findUser(username));
         coUser.lockoutUser(username);
+    }
+
+    @Test
+    public void deactivating_active_users_removes_their_secretes() {
+        final User user = coUser.findUser("USER3");
+        assertTrue(user.isActive());
+        assertTrue(coUserSecret.findByIdOptional(user.getId()).isPresent());
+        
+        save(user.setActive(false));
+        
+        assertFalse(coUserSecret.findByIdOptional(user.getId()).isPresent());
     }
 
     @Override
