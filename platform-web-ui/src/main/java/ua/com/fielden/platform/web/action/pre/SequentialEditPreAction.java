@@ -15,7 +15,7 @@ public class SequentialEditPreAction implements IPreAction {
     public JsCode build() {
         return new JsCode("\n"
                 + "if(!self.seqEditIds) {\n"
-                + "    if (self.$.egi.getSelectedEntities().length == 0) {\n"
+                + "    if (self.$.egi.getSelectedEntities().length === 0) {\n"
                 + "        self.$.egi.selectAll(true);\n"
                 + "    }\n"
                 + "    self.seqEditIds = self.$.egi.getSelectedEntities();\n"
@@ -44,7 +44,7 @@ public class SequentialEditPreAction implements IPreAction {
                 + "        if (nextEntity) {\n"
                 + "            setEntityAndReload(nextEntity, shouldUnselect ? null : 'skipNext');\n"
                 + "        } else {\n"
-                + "            cancelEditing(shouldUnselect);\n"
+                + "            cancelEditing();\n"
                 + "        }\n"
                 + "    }).bind(self);\n"
                 + "    const setEntityAndReload = function (entity, spinnerInvoked) {\n"
