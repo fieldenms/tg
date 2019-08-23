@@ -40,7 +40,7 @@ public class EgiExampleResource extends AbstractWebResource {
     @Get
     @Override
     public Representation get() {
-        return restUtil.listJSONRepresentation(this.entities);
+        return restUtil.listJsonRepresentation(this.entities);
     }
 
     private static List<AbstractEntity<?>> createEntities(final EntityFactory entityFactory) {

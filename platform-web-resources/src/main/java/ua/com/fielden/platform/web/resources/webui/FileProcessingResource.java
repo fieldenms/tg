@@ -110,16 +110,16 @@ public class FileProcessingResource<T extends AbstractEntityWithInputStream<?>> 
         final Representation response;
         if (entity == null) {
             getResponse().setStatus(Status.CLIENT_ERROR_BAD_REQUEST);
-            return restUtil.errorJSONRepresentation("The file content is empty, which is prohibited.");
+            return restUtil.errorJsonRepresentation("The file content is empty, which is prohibited.");
         } else if (!isMediaTypeSupported(entity.getMediaType())) {
             getResponse().setStatus(Status.CLIENT_ERROR_BAD_REQUEST);
-            return restUtil.errorJSONRepresentation(format("Unexpected media type [%s].", entity.getMediaType()));
+            return restUtil.errorJsonRepresentation(format("Unexpected media type [%s].", entity.getMediaType()));
         } else if (entity.getSize() == -1) {
             getResponse().setStatus(Status.CLIENT_ERROR_LENGTH_REQUIRED);
-            return restUtil.errorJSONRepresentation("File size is required.");
+            return restUtil.errorJsonRepresentation("File size is required.");
         } else if (entity.getSize() > sizeLimitBytes) {
             getResponse().setStatus(Status.CLIENT_ERROR_REQUEST_ENTITY_TOO_LARGE);
-            return restUtil.errorJSONRepresentation("File is too large.");
+            return restUtil.errorJsonRepresentation("File is too large.");
         } else {
             final InputStream stream = entity.getStream();
             response = handleUndesiredExceptions(getResponse(), () -> tryToProcess(stream, getMime(entity.getMediaType())), restUtil);
@@ -167,7 +167,7 @@ public class FileProcessingResource<T extends AbstractEntityWithInputStream<?>> 
             entity.setMime(mime);
 
             final T applied = companion.save(entity);
-            return restUtil.singleJSONRepresentation(applied);
+            return restUtil.singleJsonRepresentation(applied);
         } finally {
             router.detach(eventSource);
         }

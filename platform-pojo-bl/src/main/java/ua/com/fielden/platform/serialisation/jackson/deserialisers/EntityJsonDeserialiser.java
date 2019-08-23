@@ -111,8 +111,8 @@ public class EntityJsonDeserialiser<T extends AbstractEntity<?>> extends StdDese
             final JsonNode idJsonNode = node.get(AbstractEntity.ID); // the node should not be null itself
             final Long id = idJsonNode.isNull() ? null : idJsonNode.asLong();
             
-            final JsonNode uninstrumentedJsonNode = node.get("@uninstrumented");
-            final boolean uninstrumented = uninstrumentedJsonNode != null;
+            final JsonNode instrumentedJsonNode = node.get("@_i");
+            final boolean uninstrumented = instrumentedJsonNode == null;
 
             final String[] proxiedProps = properties.stream()
                     .map(cachedProp -> cachedProp.field().getName())

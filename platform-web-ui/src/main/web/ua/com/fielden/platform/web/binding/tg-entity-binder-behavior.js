@@ -505,7 +505,7 @@ export const TgEntityBinderBehavior = {
                             e.detail.entityId = deserialisedInstance.get('id');
                             e.detail.entityPersistent = deserialisedInstance.type().isPersistent();
                             e.detail.entityContinuation = deserialisedInstance.type().isContinuation();
-                        } else if (Array.isArray(deserialisedInstance) && this._reflector().isEntity(deserialisedInstance[0])) {
+                        } else if (Array.isArray(deserialisedInstance) && this._reflector().isEntity(deserialisedInstance[0]) && typeof this._reflector().isEntity(deserialisedInstance[0])['id'] !== 'undefined') {
                             e.detail.entityId = deserialisedInstance[0].get('id');
                         }
                     }
