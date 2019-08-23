@@ -174,6 +174,9 @@ class BarChart {
             .scaleExtent([1, 10])
             .translateExtent([[0, 0], [0, this._actualHeight]])
             .extent([[0, 0], [0, this._actualHeight]])
+            .filter(() => {
+                return !d3.event.button && (d3.event.type !== "wheel" || d3.event.altKey);
+            })
             .on("zoom", () => {
                 this._currentTransform = d3.event.transform;
                 this._yAxisGroup.call(this._yAxis.scale(this._currentTransform.rescaleY(this._ys)));
@@ -181,7 +184,7 @@ class BarChart {
                 this._barContainer.attr("transform", "translate(0, " + this._currentTransform.y + ")scale(1, " + this._currentTransform.k + ")");
                 this._unscale();
             });
-        this._chartArea.call(this._zoom).on("dblclick.zoom", null);
+        this._chartArea.call(this._zoom).on("dblclick.zoom", null).on("wheel", function() { d3.event.altKey && d3.event.preventDefault(); });
     }
 
     repaint(resetState) {
