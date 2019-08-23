@@ -15,7 +15,7 @@ public class SequentialEditPreAction implements IPreAction {
     public JsCode build() {
         return new JsCode("\n"
                 + "if(!self.seqEditIds) {\n"
-                + "    if (self.$.egi.getSelectedEntities() == 0) {\n"
+                + "    if (self.$.egi.getSelectedEntities().length == 0) {\n"
                 + "        self.$.egi.selectAll(true);\n"
                 + "    }\n"
                 + "    self.seqEditIds = self.$.egi.getSelectedEntities();\n"
