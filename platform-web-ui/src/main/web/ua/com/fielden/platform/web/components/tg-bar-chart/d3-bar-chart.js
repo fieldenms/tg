@@ -184,7 +184,7 @@ class BarChart {
                 this._barContainer.attr("transform", "translate(0, " + this._currentTransform.y + ")scale(1, " + this._currentTransform.k + ")");
                 this._unscale();
             });
-        this._chartArea.call(this._zoom).on("dblclick.zoom", null);
+        this._chartArea.call(this._zoom).on("dblclick.zoom", null).on("wheel", function() { d3.event.altKey && d3.event.preventDefault(); });
     }
 
     repaint(resetState) {
