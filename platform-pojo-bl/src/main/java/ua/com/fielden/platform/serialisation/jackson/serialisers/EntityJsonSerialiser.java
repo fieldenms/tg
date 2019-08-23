@@ -58,6 +58,7 @@ import ua.com.fielden.platform.utils.Pair;
  * @param <T>
  */
 public class EntityJsonSerialiser<T extends AbstractEntity<?>> extends StdSerializer<T> {
+    private static final long serialVersionUID = 1L;
 
     public static final String ERR_RESTRICTED_TYPE_SERIALISATION_DUE_TO_PROP_TYPE = "Type [%s] containst property [%s] that is not permitted for serialisation.";
 

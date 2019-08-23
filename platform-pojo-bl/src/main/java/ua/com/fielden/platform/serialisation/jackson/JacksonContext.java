@@ -5,8 +5,6 @@ import static com.esotericsoftware.minlog.Log.trace;
 
 import java.util.HashMap;
 
-import com.esotericsoftware.kryo.Kryo;
-
 import ua.com.fielden.platform.entity.AbstractEntity;
 
 /**
@@ -19,7 +17,7 @@ public class JacksonContext {
     private final HashMap<String, Object> map = new HashMap<>();
     private final HashMap<String, Object> tempMap = new HashMap<>();
     /**
-     * Controls ability to exclude {@link AbstractEntity#ID} and {@link AbstractEntity#VERSION} properties during serialisation.
+     * Controls the ability to exclude {@link AbstractEntity#ID} and {@link AbstractEntity#VERSION} properties during serialisation.
      */
     private boolean excludeIdAndVersion;
 
@@ -32,8 +30,6 @@ public class JacksonContext {
 
     /**
      * Returns an object from thread local storage, or null.
-     *
-     * @see #put(Serializer, String, Object)
      */
     public Object get(final String key) {
         return map.get(key);
@@ -49,15 +45,13 @@ public class JacksonContext {
 
     /**
      * Returns a temporary object from thread local storage, or null.
-     *
-     * @see #put(Serializer, String, Object)
      */
     public Object getTemp(final String key) {
         return tempMap.get(key);
     }
 
     /**
-     * Clears temporary values that are only needed for serialization or deserialization per object graph. When using the {@link Kryo} read and write methods, the context is
+     * Clears temporary values that are only needed for serialization or deserialization per object graph. When using the read and write methods, the context is
      * automatically reset after an entire object graph is serialized or deserialized.
      */
     public void reset() {
@@ -81,7 +75,7 @@ public class JacksonContext {
         }
 
         if (TRACE) {
-            trace("kryo", "Context reset.");
+            trace("Jackson", "Context reset.");
         }
     }
     
