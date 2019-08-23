@@ -70,7 +70,7 @@ const template = html`
     <style include="iron-flex iron-flex-reverse iron-flex-alignment iron-flex-factors iron-positioning"></style>
     <iron-list id="treeList" items="[[_entities]]" as="entity" selected-item="{{selectedEntity}}" default-physical-count="500" selection-enabled>
         <template>
-            <div class="layout horizontal tree-node no-wrap" over$="[[entity.over]]" selected$="[[_isSelected(selectedEntity, entity)]]" on-mouseenter="_mouseItemEnter" on-mouseleave="_mouseItemLeave" style$="[[_calcItemStyle(entity)]]">
+            <div class="layout horizontal center tree-node no-wrap" over$="[[entity.over]]" selected$="[[_isSelected(selectedEntity, entity)]]" on-mouseenter="_mouseItemEnter" on-mouseleave="_mouseItemLeave" style$="[[_calcItemStyle(entity)]]">
                     <iron-icon class="expand-button" icon="av:play-arrow" style="flex-grow:0;flex-shrink:0;" invisible$="[[!entity.entity.hasChildren]]" collapsed$="[[!entity.opened]]" on-tap="_toggle"></iron-icon>
                     <span class="tree-item" highlighted$="[[entity.highlight]]" inner-h-t-m-l="[[contentBuilder(entity, entity.opened)]]"></span>
                     <span class="tree-item-actions" on-tap="actionRunner" mobile$="[[mobile]]" inner-h-t-m-l="[[actionBuilder(entity)]]"></span>
@@ -401,7 +401,7 @@ Polymer({
         let paddingLeft = 0;
         let parent = entity.entity ? entity.parent : entity.relatedTo.parent;
         while (parent) {
-            paddingLeft += 16;
+            paddingLeft += 32;
             parent = parent.parent;
         }
         return "padding-left: " + paddingLeft + "px";
