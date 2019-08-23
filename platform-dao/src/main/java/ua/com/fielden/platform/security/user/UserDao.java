@@ -26,7 +26,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
-import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 
 import com.google.inject.Inject;
@@ -58,7 +57,6 @@ import ua.com.fielden.platform.security.tokens.user.User_CanSave_Token;
 import ua.com.fielden.platform.ui.config.EntityCentreConfig;
 import ua.com.fielden.platform.ui.config.EntityLocatorConfig;
 import ua.com.fielden.platform.ui.config.EntityMasterConfig;
-import ua.com.fielden.platform.utils.CollectionUtil;
 
 /**
  * DAO implementation of {@link IUser}.
