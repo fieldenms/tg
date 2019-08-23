@@ -429,6 +429,8 @@ Polymer({
             self._isSpinnerRequired = master.noUI;
             // action execution started
             self.isActionInProgress = true;
+            // Set master for this action.
+            self._masterReferenceForTesting = master;
 
             // master.disableView();
 
@@ -439,6 +441,7 @@ Polymer({
             master.postRetrievedError = function (errorResult) {
                 // actions completes even if the retrieval fails, i.e. it never gets to the saving stage
                 self.isActionInProgress = false;
+                self.restoreActionState();
             };
 
             master.postValidated = function (validatedEntity, bindingEntity, customObject) {
@@ -516,7 +519,6 @@ Polymer({
                     if (self.modifyFunctionalEntity) {
                         self.modifyFunctionalEntity(master._currBindingEntity, master, self);
                     }
-                    self._masterReferenceForTesting = master;
                     if (master.saveOnActivation === true) {
                         return master.save(); // saving promise
                     }
