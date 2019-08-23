@@ -11,11 +11,8 @@ import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetch
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchNone;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchNoneAndInstrument;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchOnly;
+import static ua.com.fielden.platform.utils.CollectionUtil.linkedSetOf;
 import static ua.com.fielden.platform.utils.EntityUtils.fetchWithKeyAndDesc;
-
-import java.util.Arrays;
-import java.util.LinkedHashSet;
-import java.util.Set;
 
 import org.junit.Test;
 
@@ -31,12 +28,6 @@ import ua.com.fielden.platform.sample.domain.TgReVehicleModel;
 import ua.com.fielden.platform.utils.EntityUtils;
 
 public class FetchProviderTest {
-
-    private static Set<String> set(final String... props) {
-        final Set<String> set = new LinkedHashSet<>();
-        set.addAll(Arrays.asList(props));
-        return set;
-    }
 
     @Test
     public void empty_fetch_provider_generates_empty_fetch_only_model() {
@@ -57,7 +48,7 @@ public class FetchProviderTest {
         } catch (final IllegalStateException e) {
         }
 
-        assertEquals("Incorrect allProperties list.", set(), fp.allProperties());
+        assertEquals("Incorrect allProperties list.", linkedSetOf(), fp.allProperties());
         assertEquals("Incorrect fetch model has been generated.", fetchOnly(TgPersistentEntityWithProperties.class), fp.fetchModel());
     }
 
@@ -79,7 +70,7 @@ public class FetchProviderTest {
         } catch (final IllegalStateException e) {
         }
 
-        assertEquals("Incorrect allProperties list.", set(), fp.allProperties());
+        assertEquals("Incorrect allProperties list.", linkedSetOf(), fp.allProperties());
         assertEquals("Incorrect fetch model has been generated.", fetchKeyAndDescOnly(TgPersistentEntityWithProperties.class), fp.fetchModel());
     }
     
@@ -153,7 +144,7 @@ public class FetchProviderTest {
         } catch (final IllegalArgumentException e) {
         }
 
-        assertEquals("Incorrect allProperties list.", set("integerProp"), fp.allProperties());
+        assertEquals("Incorrect allProperties list.", linkedSetOf("integerProp"), fp.allProperties());
         assertEquals("Incorrect fetch model has been generated.",
                 fetchOnly(TgPersistentEntityWithProperties.class).with("integerProp"),
                 fp.fetchModel());
@@ -168,7 +159,7 @@ public class FetchProviderTest {
 
         assertEquals("Incorrect property provider.", EntityUtils.fetchWithKeyAndDesc(TgPersistentEntityWithProperties.class, false), fp.fetchFor("entityProp"));
 
-        assertEquals("Incorrect allProperties list.", set("entityProp"), fp.allProperties());
+        assertEquals("Incorrect allProperties list.", linkedSetOf("entityProp"), fp.allProperties());
         assertEquals("Incorrect fetch model has been generated.",
                 fetchOnly(TgPersistentEntityWithProperties.class).
                 with("entityProp", fetchKeyAndDescOnly(TgPersistentEntityWithProperties.class)),
@@ -184,7 +175,7 @@ public class FetchProviderTest {
 
         assertEquals("Incorrect property provider.", EntityUtils.fetchWithKeyAndDesc(TgPersistentCompositeEntity.class, false), fp.fetchFor("compositeProp"));
 
-        assertEquals("Incorrect allProperties list.", set("compositeProp"), fp.allProperties());
+        assertEquals("Incorrect allProperties list.", linkedSetOf("compositeProp"), fp.allProperties());
         assertEquals("Incorrect fetch model has been generated.",
                 fetchOnly(TgPersistentEntityWithProperties.class).
                 with("compositeProp", fetchKeyAndDescOnly(TgPersistentCompositeEntity.class)),
@@ -213,7 +204,7 @@ public class FetchProviderTest {
                 EntityUtils.fetch(TgPersistentEntityWithProperties.class),
                 fp.fetchFor("compositeProp.key1"));
 
-        assertEquals("Incorrect allProperties list.", set("compositeProp", "compositeProp.key1"), fp.allProperties());
+        assertEquals("Incorrect allProperties list.", linkedSetOf("compositeProp", "compositeProp.key1"), fp.allProperties());
         assertEquals("Incorrect fetch model has been generated.",
                 fetchOnly(TgPersistentEntityWithProperties.class).
                         with("compositeProp",
@@ -251,7 +242,7 @@ public class FetchProviderTest {
                 EntityUtils.fetch(TgPersistentEntityWithProperties.class),
                 fp.fetchFor("compositeProp.key1"));
 
-        assertEquals("Incorrect allProperties list.", set("compositeProp", "compositeProp.key1", "compositeProp.key2"), fp.allProperties());
+        assertEquals("Incorrect allProperties list.", linkedSetOf("compositeProp", "compositeProp.key1", "compositeProp.key2"), fp.allProperties());
         assertEquals("Incorrect fetch model has been generated.",
                 fetchOnly(TgPersistentEntityWithProperties.class).
                         with("compositeProp",
@@ -266,7 +257,7 @@ public class FetchProviderTest {
     public void fetchNone_provider_generates_uninstrumented_fetchNone_EQL_model() {
         final IFetchProvider<TgPersistentEntityWithProperties> fp = EntityUtils.fetchNone(TgPersistentEntityWithProperties.class);
         
-        assertEquals(set(), fp.allProperties());
+        assertEquals(linkedSetOf(), fp.allProperties());
         assertEquals(fetchNone(TgPersistentEntityWithProperties.class), fp.fetchModel());
     }
     
@@ -274,7 +265,7 @@ public class FetchProviderTest {
     public void fetchNone_provider_with_instrumentation_generates_instrumented_fetchNone_EQL_model() {
         final IFetchProvider<TgPersistentEntityWithProperties> fp = EntityUtils.fetchNone(TgPersistentEntityWithProperties.class, true);
         
-        assertEquals(set(), fp.allProperties());
+        assertEquals(linkedSetOf(), fp.allProperties());
         assertEquals(fetchNoneAndInstrument(TgPersistentEntityWithProperties.class), fp.fetchModel());
     }
     
@@ -282,7 +273,7 @@ public class FetchProviderTest {
     public void fetchNone_provider_generates_fetchNone_EQL_model_with_regular_property() {
         final IFetchProvider<TgPersistentEntityWithProperties> fp = EntityUtils.fetchNone(TgPersistentEntityWithProperties.class).with("integerProp");
         
-        assertEquals(set("integerProp"), fp.allProperties());
+        assertEquals(linkedSetOf("integerProp"), fp.allProperties());
         assertEquals(fetchNone(TgPersistentEntityWithProperties.class).with("integerProp"), fp.fetchModel());
     }
     
@@ -290,9 +281,9 @@ public class FetchProviderTest {
     public void fetchNone_provider_generates_fetchNone_EQL_model_with_concrete_subprovider() {
         final IFetchProvider<TgPersistentEntityWithProperties> fp = 
             EntityUtils.fetchNone(TgPersistentEntityWithProperties.class)
-                .with("entityProp", EntityUtils.fetchWithKeyAndDesc(TgPersistentEntityWithProperties.class));
+                .with("entityProp", fetchWithKeyAndDesc(TgPersistentEntityWithProperties.class));
         
-        assertEquals(set("entityProp"), fp.allProperties());
+        assertEquals(linkedSetOf("entityProp"), fp.allProperties());
         assertEquals(fetchNone(TgPersistentEntityWithProperties.class).with("entityProp", fetchKeyAndDescOnly(TgPersistentEntityWithProperties.class)), fp.fetchModel());
     }
     
@@ -300,7 +291,7 @@ public class FetchProviderTest {
     public void fetchNone_provider_generates_fetchNone_EQL_model_with_default_NONE_subprovider() {
         final IFetchProvider<TgPersistentEntityWithProperties> fp = EntityUtils.fetchNone(TgPersistentEntityWithProperties.class).with("entityProp");
         
-        assertEquals(set("entityProp"), fp.allProperties());
+        assertEquals(linkedSetOf("entityProp"), fp.allProperties());
         assertEquals(fetchNone(TgPersistentEntityWithProperties.class).with("entityProp", fetchNone(TgPersistentEntityWithProperties.class)), fp.fetchModel());
     }
     
@@ -308,7 +299,7 @@ public class FetchProviderTest {
     public void fetchNone_provider_generates_fetchNone_EQL_model_with_default_NONE_subproviders_for_dotNotated_property_and_concrete_subprovider() {
         final IFetchProvider<TgPersistentEntityWithProperties> fp = EntityUtils.fetchNone(TgPersistentEntityWithProperties.class).with("entityProp.entityProp.entityProp", EntityUtils.fetch(TgPersistentEntityWithProperties.class));
         
-        assertEquals(set("entityProp", "entityProp.entityProp", "entityProp.entityProp.entityProp"), fp.allProperties());
+        assertEquals(linkedSetOf("entityProp", "entityProp.entityProp", "entityProp.entityProp.entityProp"), fp.allProperties());
         assertEquals(
             fetchNone(TgPersistentEntityWithProperties.class)
                 .with("entityProp", fetchNone(TgPersistentEntityWithProperties.class)
@@ -322,7 +313,7 @@ public class FetchProviderTest {
     public void fetchNone_provider_generates_fetchNone_EQL_model_with_default_NONE_subproviders_for_dotNotated_property() {
         final IFetchProvider<TgPersistentEntityWithProperties> fp = EntityUtils.fetchNone(TgPersistentEntityWithProperties.class).with("entityProp.entityProp.entityProp");
         
-        assertEquals(set("entityProp", "entityProp.entityProp", "entityProp.entityProp.entityProp"), fp.allProperties());
+        assertEquals(linkedSetOf("entityProp", "entityProp.entityProp", "entityProp.entityProp.entityProp"), fp.allProperties());
         assertEquals(
             fetchNone(TgPersistentEntityWithProperties.class)
                 .with("entityProp", fetchNone(TgPersistentEntityWithProperties.class)
@@ -346,7 +337,7 @@ public class FetchProviderTest {
         final IFetchProvider<TgPersistentEntityWithProperties> fp = EntityUtils.fetchNone(TgPersistentEntityWithProperties.class);
         fp.addKeysTo("");
         
-        assertEquals(set(KEY, ID, VERSION), fp.allProperties()); // persistent entity type also requires ID and VERSION
+        assertEquals(linkedSetOf(KEY, ID, VERSION), fp.allProperties()); // persistent entity type also requires ID and VERSION
     }
     
     @Test
@@ -354,7 +345,7 @@ public class FetchProviderTest {
         final IFetchProvider<TgReVehicleModel> fp = EntityUtils.fetchNone(TgReVehicleModel.class);
         fp.addKeysTo("");
         
-        assertEquals(set(KEY, ID), fp.allProperties()); // synthetic entity type based on persistent type requires ID
+        assertEquals(linkedSetOf(KEY, ID), fp.allProperties()); // synthetic entity type based on persistent type requires ID
     }
     
     @Test
@@ -362,7 +353,7 @@ public class FetchProviderTest {
         final IFetchProvider<TgAverageFuelUsage> fp = EntityUtils.fetchNone(TgAverageFuelUsage.class);
         fp.addKeysTo("");
         
-        assertEquals(set(KEY, // synthetic entity type does not require neither ID nor VERSION
+        assertEquals(linkedSetOf(KEY, // synthetic entity type does not require neither ID nor VERSION
             KEY + "." + KEY, KEY + "." + ID, KEY + "." + VERSION // subkey and ID / VERSION for key of persistent TgVehicle type 
         ), fp.allProperties());
     }
@@ -372,7 +363,7 @@ public class FetchProviderTest {
         final IFetchProvider<TgAuthor> fp = EntityUtils.fetchNone(TgAuthor.class);
         fp.addKeysTo("");
         
-        assertEquals(set("name", "name." + KEY, "name." + ID, "name." + VERSION, // subkey and ID / VERSION for 'name' of persistent TgPersonName type
+        assertEquals(linkedSetOf("name", "name." + KEY, "name." + ID, "name." + VERSION, // subkey and ID / VERSION for 'name' of persistent TgPersonName type
                 "surname", "patronymic",
                 ID, VERSION
         ), fp.allProperties());
@@ -396,7 +387,7 @@ public class FetchProviderTest {
         final IFetchProvider<TgAuthor> fp = EntityUtils.fetchNone(TgAuthor.class).with("name");
         fp.addKeysTo("name");
         
-        assertEquals(set("name", "name." + KEY, "name." + ID, "name." + VERSION // subkey and ID / VERSION for 'name' property of persistent TgPersonName type
+        assertEquals(linkedSetOf("name", "name." + KEY, "name." + ID, "name." + VERSION // subkey and ID / VERSION for 'name' property of persistent TgPersonName type
         ), fp.allProperties());
     }
     
@@ -418,7 +409,7 @@ public class FetchProviderTest {
         final IFetchProvider<TgAuthorRoyalty> fp = EntityUtils.fetchNone(TgAuthorRoyalty.class).with("authorship.author.name");
         fp.addKeysTo("authorship.author.name");
         
-        assertEquals(set("authorship", "authorship." + ID, "authorship." + VERSION,
+        assertEquals(linkedSetOf("authorship", "authorship." + ID, "authorship." + VERSION,
                 "authorship.author", "authorship.author." + ID, "authorship.author." + VERSION,
                 "authorship.author.name", "authorship.author.name." + KEY, "authorship.author.name." + ID, "authorship.author.name." + VERSION // subkey and ID / VERSION for 'name' property of persistent TgPersonName type
         ), fp.allProperties());
@@ -430,7 +421,7 @@ public class FetchProviderTest {
         fp.addKeysTo("authorship.author");
         fp.addKeysTo("authorship.author.name");
         
-        assertEquals(set("authorship", "authorship." + ID, "authorship." + VERSION,
+        assertEquals(linkedSetOf("authorship", "authorship." + ID, "authorship." + VERSION,
                 "authorship.author", /*name is a key of author */ "authorship.author.surname", "authorship.author.patronymic",  "authorship.author." + ID, "authorship.author." + VERSION,
                 "authorship.author.name", "authorship.author.name." + KEY, "authorship.author.name." + ID, "authorship.author.name." + VERSION // subkey and ID / VERSION for 'name' property of persistent TgPersonName type
         ), fp.allProperties());
