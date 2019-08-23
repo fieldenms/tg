@@ -53,17 +53,15 @@ import ua.com.fielden.platform.utils.StreamCouldNotBeResolvedException;
  *
  */
 public class RestServerUtil {
+    private static final String HEADERS_KEY = "org.restlet.http.headers";
 
     private final ISerialiser serialiser;
+    private final Logger logger = Logger.getLogger(RestServerUtil.class);
 
     @Inject
     public RestServerUtil(final ISerialiser serialiser) {
         this.serialiser = serialiser;
     }
-
-    private final Logger logger = Logger.getLogger(RestServerUtil.class);
-
-    private static final String HEADERS_KEY = "org.restlet.http.headers";
 
     private static Series<Header> getMessageHeaders(final Message message) {
         final ConcurrentMap<String, Object> attrs = message.getAttributes();
@@ -108,10 +106,10 @@ public class RestServerUtil {
      * @return
      * @throws JsonProcessingException
      */
-    public Representation errorJSONRepresentation(final String string) {
-        logger.debug("Start building error JSON representation:" + new DateTime());
+    public Representation errorJsonRepresentation(final String string) {
+        // logger.debug("Start building error JSON representation:" + new DateTime());
         final byte[] bytes = serialiser.serialise(new Result(null, new Exception(string)), SerialiserEngines.JACKSON);
-        logger.debug("SIZE: " + bytes.length);
+        // logger.debug("SIZE: " + bytes.length);
         return encodedRepresentation(new ByteArrayInputStream(bytes), MediaType.APPLICATION_JSON /*, bytes.length */);
     }
 
@@ -122,9 +120,9 @@ public class RestServerUtil {
      * @return
      */
     public Representation errorRepresentation(final String string) {
-        logger.debug("Start building error representation:" + new DateTime());
+        // logger.debug("Start building error representation:" + new DateTime());
         final byte[] bytes = serialiser.serialise(new Result(null, new Exception(string)));
-        logger.debug("SIZE: " + bytes.length);
+        // logger.debug("SIZE: " + bytes.length);
         return new InputRepresentation(new ByteArrayInputStream(bytes), MediaType.APPLICATION_OCTET_STREAM, bytes.length);
     }
 
@@ -135,9 +133,9 @@ public class RestServerUtil {
      * @return
      */
     public Representation errorRepresentation(final Exception ex) {
-        logger.debug("Start building error representation:" + new DateTime());
+        // logger.debug("Start building error representation:" + new DateTime());
         final byte[] bytes = serialiser.serialise(new Result(ex));
-        logger.debug("SIZE: " + bytes.length);
+        // logger.debug("SIZE: " + bytes.length);
         return new InputRepresentation(new ByteArrayInputStream(bytes), MediaType.APPLICATION_OCTET_STREAM, bytes.length);
     }
 
@@ -149,9 +147,9 @@ public class RestServerUtil {
      * @throws JsonProcessingException
      */
     public Representation errorJSONRepresentation(final Exception ex) {
-        logger.debug("Start building error JSON representation:" + new DateTime());
+        // logger.debug("Start building error JSON representation:" + new DateTime());
         final byte[] bytes = serialiser.serialise(ex instanceof Result ? ex : new Result(ex), SerialiserEngines.JACKSON);
-        logger.debug("SIZE: " + bytes.length);
+        // logger.debug("SIZE: " + bytes.length);
         return encodedRepresentation(new ByteArrayInputStream(bytes), MediaType.APPLICATION_JSON /*, bytes.length*/);
     }
 
@@ -162,9 +160,9 @@ public class RestServerUtil {
      * @return
      */
     public Representation resultRepresentation(final Result result) {
-        logger.debug("Start building result representation:" + new DateTime());
+        // logger.debug("Start building result representation:" + new DateTime());
         final byte[] bytes = serialiser.serialise(result);
-        logger.debug("SIZE: " + bytes.length);
+        // logger.debug("SIZE: " + bytes.length);
         return new InputRepresentation(new ByteArrayInputStream(bytes), MediaType.APPLICATION_OCTET_STREAM, bytes.length);
     }
 
@@ -176,9 +174,9 @@ public class RestServerUtil {
      * @throws JsonProcessingException
      */
     public Representation resultJSONRepresentation(final Result result) {
-        logger.debug("Start building result JSON representation:" + new DateTime());
+        // logger.debug("Start building result JSON representation:" + new DateTime());
         final byte[] bytes = serialiser.serialise(result, SerialiserEngines.JACKSON);
-        logger.debug("SIZE: " + bytes.length);
+        // logger.debug("SIZE: " + bytes.length);
         return encodedRepresentation(new ByteArrayInputStream(bytes), MediaType.APPLICATION_JSON /* , bytes.length */);
     }
 
@@ -189,11 +187,11 @@ public class RestServerUtil {
      * @return
      */
     public Representation snappyResultRepresentation(final List filteredEntities) {
-        logger.debug("Start building snappy result representation:" + new DateTime());
+        // logger.debug("Start building snappy result representation:" + new DateTime());
         try {
             // create a Result enclosing entity list
             final byte[] bytes = serialiser.serialise(new Result(new ArrayList(filteredEntities), "Snappy pair is Ok"));
-            logger.debug("SIZE: " + bytes.length);
+            // logger.debug("SIZE: " + bytes.length);
             return new InputRepresentation(new ByteArrayInputStream(bytes), MediaType.APPLICATION_OCTET_STREAM, bytes.length);
         } catch (final Exception ex) {
             logger.error(ex);
@@ -207,12 +205,12 @@ public class RestServerUtil {
      * @return
      */
     public <T extends AbstractEntity> Representation listRepresentation(final List<T> entities) {
-        logger.debug("Start building entities representation.");
+        // logger.debug("Start building entities representation.");
         try {
             // create a Result enclosing entity list
             final Result result = new Result(new ArrayList<>(entities), "All is cool");
             final byte[] bytes = serialiser.serialise(result);
-            logger.debug("SIZE: " + bytes.length);
+            // logger.debug("SIZE: " + bytes.length);
             return new InputRepresentation(new ByteArrayInputStream(bytes), MediaType.APPLICATION_OCTET_STREAM, bytes.length);
         } catch (final Exception ex) {
             logger.error(ex);
@@ -225,16 +223,16 @@ public class RestServerUtil {
      *
      * @return
      */
-    public <T extends AbstractEntity> Representation listJSONRepresentation(final List<T> entities) {
-        logger.debug("Start building JSON entities representation.");
+    public <T extends AbstractEntity<?>> Representation listJsonRepresentation(final List<T> entities) {
+        // logger.debug("Start building JSON entities representation.");
         if (entities == null) {
             throw new IllegalArgumentException("The provided list of entities is null.");
         }
         // create a Result enclosing entity list
         final Result result = new Result(new ArrayList<>(entities), "All is cool");
         final byte[] bytes = serialiser.serialise(result, SerialiserEngines.JACKSON);
-        logger.debug("SIZE: " + bytes.length);
-        return encodedRepresentation(new ByteArrayInputStream(bytes), MediaType.APPLICATION_JSON /*, bytes.length*/);
+        // logger.debug("SIZE: " + bytes.length);
+        return encodedRepresentation(new ByteArrayInputStream(bytes), MediaType.APPLICATION_JSON);
     }
     
     /**
@@ -242,7 +240,7 @@ public class RestServerUtil {
      *
      * @return
      */
-    public <T extends AbstractEntity> Representation listJSONRepresentationWithoutIdAndVersion(final List<T> entities) {
+    public <T extends AbstractEntity<?>> Representation listJsonRepresentationWithoutIdAndVersion(final List<T> entities) {
         if (entities == null) {
             throw new IllegalArgumentException("The provided list of entities is null.");
         }
@@ -264,16 +262,16 @@ public class RestServerUtil {
      *
      * @return
      */
-    public Representation rawListJSONRepresentation(final Object... objects) {
-        logger.debug("Start building JSON list representation.");
+    public Representation rawListJsonRepresentation(final Object... objects) {
+        // logger.debug("Start building JSON list representation.");
         if (objects.length <= 0) {
             throw new IllegalArgumentException("Empty objects.");
         }
         // create a Result enclosing entity list
         final Result result = new Result(new ArrayList<>(Arrays.asList(objects)), "All is cool");
         final byte[] bytes = serialiser.serialise(result, SerialiserEngines.JACKSON);
-        logger.debug("SIZE: " + bytes.length);
-        return encodedRepresentation(new ByteArrayInputStream(bytes), MediaType.APPLICATION_JSON /*, bytes.length*/);
+        // logger.debug("SIZE: " + bytes.length);
+        return encodedRepresentation(new ByteArrayInputStream(bytes), MediaType.APPLICATION_JSON);
     }
 
     /**
@@ -281,13 +279,13 @@ public class RestServerUtil {
      *
      * @return
      */
-    public Representation mapJSONRepresentation(final Map<?, ?> map) {
-        logger.debug("Start building JSON map representation.");
+    public Representation mapJsonRepresentation(final Map<?, ?> map) {
+        // logger.debug("Start building JSON map representation.");
         // create a Result enclosing map
         final Result result = new Result(new LinkedHashMap<>(map), "All is cool");
         final byte[] bytes = serialiser.serialise(result, SerialiserEngines.JACKSON);
-        logger.debug("SIZE: " + bytes.length);
-        return encodedRepresentation(new ByteArrayInputStream(bytes), MediaType.APPLICATION_JSON /*, bytes.length*/);
+        // logger.debug("SIZE: " + bytes.length);
+        return encodedRepresentation(new ByteArrayInputStream(bytes), MediaType.APPLICATION_JSON);
     }
 
     /**
@@ -296,12 +294,12 @@ public class RestServerUtil {
      * @return
      */
     public Representation mapRepresentation(final Map<?, ?> map) {
-        logger.debug("Start building map representation.");
+        // logger.debug("Start building map representation.");
         try {
             // create a Result enclosing entity list
             final Result result = new Result(new HashMap<>(map), "All is cool");
             final byte[] bytes = serialiser.serialise(result);
-            logger.debug("SIZE: " + bytes.length);
+            // logger.debug("SIZE: " + bytes.length);
             return new InputRepresentation(new ByteArrayInputStream(bytes), MediaType.APPLICATION_OCTET_STREAM, bytes.length);
         } catch (final Exception ex) {
             logger.error(ex);
@@ -315,12 +313,12 @@ public class RestServerUtil {
      * @return
      */
     public <T extends AbstractEntity<?>> Representation lifecycleRepresentation(final LifecycleModel<T> lifecycleModel) {
-        logger.debug("Start building lifecycle representation:" + new DateTime());
+        // logger.debug("Start building lifecycle representation:" + new DateTime());
         try {
             // create a Result enclosing lifecycle data
             final Result result = new Result(lifecycleModel, "All is cool");
             final byte[] bytes = serialiser.serialise(result);
-            logger.debug("SIZE: " + bytes.length);
+            // logger.debug("SIZE: " + bytes.length);
             return new InputRepresentation(new ByteArrayInputStream(bytes), MediaType.APPLICATION_OCTET_STREAM, bytes.length);
         } catch (final Exception ex) {
             logger.error(ex);
@@ -351,7 +349,7 @@ public class RestServerUtil {
      * @return
      * @throws JsonProcessingException
      */
-    public <T extends AbstractEntity<?>> Representation singleJSONRepresentation(final T entity) {
+    public <T extends AbstractEntity<?>> Representation singleJsonRepresentation(final T entity) {
         // create a Result enclosing entity list
         final Result result;
         if (entity != null) {
@@ -362,7 +360,7 @@ public class RestServerUtil {
             result = new Result(null, new Exception("Could not find entity."));
         }
         final byte[] bytes = serialiser.serialise(result, SerialiserEngines.JACKSON);
-        return encodedRepresentation(new ByteArrayInputStream(bytes), MediaType.APPLICATION_JSON /* TODO , bytes.length*/);
+        return encodedRepresentation(new ByteArrayInputStream(bytes), MediaType.APPLICATION_JSON);
     }
     
     /**
@@ -371,7 +369,7 @@ public class RestServerUtil {
      * @return
      * @throws JsonProcessingException
      */
-    public <T extends AbstractEntity<?>> Representation singleJSONRepresentation(final T entity, final Optional<Exception> savingException) {
+    public <T extends AbstractEntity<?>> Representation singleJsonRepresentation(final T entity, final Optional<Exception> savingException) {
         if (entity != null && savingException.isPresent()) {
             final Exception ex = savingException.get();
             final Result result;
@@ -405,7 +403,7 @@ public class RestServerUtil {
             final byte[] bytes = serialiser.serialise(result, SerialiserEngines.JACKSON);
             return encodedRepresentation(new ByteArrayInputStream(bytes), MediaType.APPLICATION_JSON /* TODO , bytes.length*/);
         } else {
-            return singleJSONRepresentation(entity);
+            return singleJsonRepresentation(entity);
         }
     }
 
@@ -449,7 +447,7 @@ public class RestServerUtil {
      * @param representation
      * @return
      */
-    public Result restoreJSONResult(final Representation representation) {
+    public Result restoreJsonResult(final Representation representation) {
         return serialiser.deserialise(getStream(representation), Result.class, SerialiserEngines.JACKSON);
     }
 
@@ -462,7 +460,7 @@ public class RestServerUtil {
      * @param type
      * @return
      */
-    public <T extends AbstractEntity> T restoreEntity(final Representation representation, final Class<T> type) {
+    public <T extends AbstractEntity<?>> T restoreEntity(final Representation representation, final Class<T> type) {
         return serialiser.deserialise(getStream(representation), type);
     }
 
@@ -475,7 +473,7 @@ public class RestServerUtil {
      * @param type
      * @return
      */
-    public <T extends AbstractEntity> T restoreJSONEntity(final Representation representation, final Class<T> type) {
+    public <T extends AbstractEntity<?>> T restoreJsonEntity(final Representation representation, final Class<T> type) {
         return serialiser.deserialise(getStream(representation), type, SerialiserEngines.JACKSON);
     }
 
@@ -495,7 +493,7 @@ public class RestServerUtil {
      * @param representation
      * @return
      */
-    public Map<?, ?> restoreJSONMap(final Representation representation) {
+    public Map<?, ?> restoreJsonMap(final Representation representation) {
         return serialiser.deserialise(getStream(representation), Map.class, SerialiserEngines.JACKSON);
     }
     
