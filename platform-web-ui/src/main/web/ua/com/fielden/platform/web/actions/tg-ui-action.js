@@ -429,8 +429,6 @@ Polymer({
             self._isSpinnerRequired = master.noUI;
             // action execution started
             self.isActionInProgress = true;
-            // Set master for this action.
-            self._masterReferenceForTesting = master;
 
             // master.disableView();
 
@@ -519,6 +517,10 @@ Polymer({
                     if (self.modifyFunctionalEntity) {
                         self.modifyFunctionalEntity(master._currBindingEntity, master, self);
                     }
+
+                    // Set master for this action.
+                    self._masterReferenceForTesting = master;
+
                     if (master.saveOnActivation === true) {
                         return master.save(); // saving promise
                     }
