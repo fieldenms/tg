@@ -163,7 +163,7 @@ public class EntityResource<T extends AbstractEntity<?>> extends AbstractWebReso
             final IUser userCompanion = companionFinder.find(User.class);
             
             final Pair<T, Optional<Exception>> potentiallySavedWithException = tryToSave(savingInfoHolder, entityType, factory, companionFinder, critGenerator, webUiConfig, user, userProvider, companion, device(), domainTreeEnhancerCache, eccCompanion, mmiCompanion, userCompanion);
-            return restUtil.singleJSONRepresentation(potentiallySavedWithException.getKey(), potentiallySavedWithException.getValue());
+            return restUtil.singleJsonRepresentation(potentiallySavedWithException.getKey(), potentiallySavedWithException.getValue());
         }, restUtil);
         LOGGER.debug("ENTITY_RESOURCE: save finished.");
         return result;
@@ -208,7 +208,7 @@ public class EntityResource<T extends AbstractEntity<?>> extends AbstractWebReso
                             producer
                             );
                     LOGGER.debug("ENTITY_RESOURCE: retrieve finished.");
-                    return restUtil.rawListJSONRepresentation(entity);
+                    return restUtil.rawListJsonRepresentation(entity);
                 } else {
                     final CentreContextHolder centreContextHolder = restoreCentreContextHolder(envelope, restUtil);
                     
@@ -229,11 +229,11 @@ public class EntityResource<T extends AbstractEntity<?>> extends AbstractWebReso
                             producer
                             );
                     LOGGER.debug("ENTITY_RESOURCE: retrieve finished.");
-                    return restUtil.rawListJSONRepresentation(entity);
+                    return restUtil.rawListJsonRepresentation(entity);
                 }
             } else {
                 LOGGER.debug("ENTITY_RESOURCE: retrieve finished.");
-                return restUtil.rawListJSONRepresentation(EntityRestorationUtils.createValidationPrototype(entityId, emptyOriginallyProducedEntity, companion, producer));
+                return restUtil.rawListJsonRepresentation(EntityRestorationUtils.createValidationPrototype(entityId, emptyOriginallyProducedEntity, companion, producer));
             }
         }, restUtil);
     }

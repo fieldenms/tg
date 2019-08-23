@@ -77,26 +77,26 @@ public class EntityAutocompletionResource<CONTEXT extends AbstractEntity<?>, T e
     @Override
     public Representation post(final Representation envelope) {
         return handleUndesiredExceptions(getResponse(), () -> {
-            logger.debug("ENTITY_AUTOCOMPLETION_RESOURCE: search started.");
+            // logger.debug("ENTITY_AUTOCOMPLETION_RESOURCE: search started.");
             final CentreContextHolder centreContextHolder = restoreCentreContextHolder(envelope, restUtil);
 
             final Map<String, Object> modifHolder = !centreContextHolder.proxiedPropertyNames().contains("modifHolder") ? centreContextHolder.getModifHolder() : new HashMap<>();
             final CONTEXT originallyProducedEntity = !centreContextHolder.proxiedPropertyNames().contains("originallyProducedEntity") ? (CONTEXT) centreContextHolder.getOriginallyProducedEntity() : null;
             final CONTEXT context = EntityRestorationUtils.constructEntity(modifHolder, originallyProducedEntity, companion, producer, coFinder).getKey();
-            logger.debug("context = " + context);
+            // logger.debug("context = " + context);
 
             final String searchStringVal = (String) centreContextHolder.getCustomObject().get("@@searchString"); // custom property inside paramsHolder
             final String searchString = prepare(searchStringVal.contains("*") ? searchStringVal : searchStringVal + "*");
             final int dataPage = centreContextHolder.getCustomObject().containsKey("@@dataPage") ? (Integer) centreContextHolder.getCustomObject().get("@@dataPage") : 1;
-            logger.debug(format("SEARCH STRING %s, PAGE %s", searchString, dataPage));
+            // logger.debug(format("SEARCH STRING %s, PAGE %s", searchString, dataPage));
            
             valueMatcher.setContext(context);
             final fetch<T> fetch = master.createFetchModelForAutocompleter(propertyName, (Class<T>) ("".equals(propertyName) ? entityType : determinePropertyType(entityType, propertyName)));
             valueMatcher.setFetch(fetch);
             final List<? extends AbstractEntity<?>> entities = valueMatcher.findMatchesWithModel(searchString != null ? searchString : "%", dataPage);
 
-            logger.debug("ENTITY_AUTOCOMPLETION_RESOURCE: search finished.");
-            return restUtil.listJSONRepresentationWithoutIdAndVersion(entities);
+            // logger.debug("ENTITY_AUTOCOMPLETION_RESOURCE: search finished.");
+            return restUtil.listJsonRepresentationWithoutIdAndVersion(entities);
         }, restUtil);
     }
     

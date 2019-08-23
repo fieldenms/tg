@@ -108,7 +108,7 @@ public class CriteriaEntityAutocompletionResource<T extends AbstractEntity<?>, M
     @Override
     public Representation post(final Representation envelope) {
         return handleUndesiredExceptions(getResponse(), () -> {
-            logger.debug("CRITERIA_ENTITY_AUTOCOMPLETION_RESOURCE: search started.");
+            // logger.debug("CRITERIA_ENTITY_AUTOCOMPLETION_RESOURCE: search started.");
             //            // NOTE: the following line can be the example how 'entity search' server errors manifest to the client application
             //            throw new IllegalStateException("Illegal state during criteria entity searching.");
             final CentreContextHolder centreContextHolder = restoreCentreContextHolder(envelope, restUtil);
@@ -172,7 +172,7 @@ public class CriteriaEntityAutocompletionResource<T extends AbstractEntity<?>, M
                 userCompanion
             );
             if (context.isPresent()) {
-                logger.debug("context for prop [" + criterionPropertyName + "] = " + context);
+                // logger.debug("context for prop [" + criterionPropertyName + "] = " + context);
                 valueMatcher.setContext(context.get());
             } else {
                 // TODO check whether such setting is needed (need to test autocompletion in centres without that setting) or can be removed:
@@ -183,12 +183,12 @@ public class CriteriaEntityAutocompletionResource<T extends AbstractEntity<?>, M
             final String searchStringVal = (String) centreContextHolder.getCustomObject().get("@@searchString"); // custom property inside customObject
             final String searchString = prepare(searchStringVal.contains("*") ? searchStringVal : searchStringVal + "*");
             final int dataPage = centreContextHolder.getCustomObject().containsKey("@@dataPage") ? (Integer) centreContextHolder.getCustomObject().get("@@dataPage") : 1;
-            logger.debug(format("SEARCH STRING %s, PAGE %s", searchString, dataPage));
+            // logger.debug(format("SEARCH STRING %s, PAGE %s", searchString, dataPage));
             
             final List<? extends AbstractEntity<?>> entities = valueMatcher.findMatchesWithModel(searchString != null ? searchString : "%", dataPage);
 
-            logger.debug("CRITERIA_ENTITY_AUTOCOMPLETION_RESOURCE: search finished.");
-            return restUtil.listJSONRepresentationWithoutIdAndVersion(entities);
+            // logger.debug("CRITERIA_ENTITY_AUTOCOMPLETION_RESOURCE: search finished.");
+            return restUtil.listJsonRepresentationWithoutIdAndVersion(entities);
         }, restUtil);
     }
 

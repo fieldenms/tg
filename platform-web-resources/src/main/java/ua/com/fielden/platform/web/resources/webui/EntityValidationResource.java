@@ -91,7 +91,7 @@ public class EntityValidationResource<T extends AbstractEntity<?>> extends Abstr
             final T applied = restoreEntityFrom(false, savingInfoHolder, entityType, entityFactory, webUiConfig, companionFinder, user, userProvider, critGenerator, 0, device(), domainTreeEnhancerCache, eccCompanion, mmiCompanion, userCompanion);
             
             logger.debug("ENTITY_VALIDATION_RESOURCE: validate finished.");
-            return restUtil.rawListJSONRepresentation(applied);
+            return restUtil.rawListJsonRepresentation(applied);
         }, restUtil);
     }
 }

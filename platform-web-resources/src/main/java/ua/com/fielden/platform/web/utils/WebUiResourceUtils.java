@@ -23,7 +23,7 @@ public class WebUiResourceUtils {
      * @return
      */
     public static Map<String, Object> restoreModifiedPropertiesHolderFrom(final Representation envelope, final RestServerUtil restUtil) {
-        return (Map<String, Object>) restUtil.restoreJSONMap(envelope);
+        return (Map<String, Object>) restUtil.restoreJsonMap(envelope);
     }
 
     /**
@@ -33,7 +33,7 @@ public class WebUiResourceUtils {
      * @return
      */
     public static CentreContextHolder restoreCentreContextHolder(final Representation envelope, final RestServerUtil restUtil) {
-        return restUtil.restoreJSONEntity(envelope, CentreContextHolder.class);
+        return restUtil.restoreJsonEntity(envelope, CentreContextHolder.class);
     }
 
     /**
@@ -43,7 +43,7 @@ public class WebUiResourceUtils {
      * @return
      */
     public static Result restoreJSONResult(final Representation envelope, final RestServerUtil restUtil) {
-        return restUtil.restoreJSONResult(envelope);
+        return restUtil.restoreJsonResult(envelope);
     }
 
     /**
@@ -53,7 +53,7 @@ public class WebUiResourceUtils {
      * @return
      */
     public static SavingInfoHolder restoreSavingInfoHolder(final Representation envelope, final RestServerUtil restUtil) {
-        return restUtil.restoreJSONEntity(envelope, SavingInfoHolder.class);
+        return restUtil.restoreJsonEntity(envelope, SavingInfoHolder.class);
     }
 
     /**

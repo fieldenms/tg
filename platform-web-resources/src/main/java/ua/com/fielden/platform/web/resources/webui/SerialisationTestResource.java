@@ -91,7 +91,7 @@ public class SerialisationTestResource extends AbstractWebResource {
     @Get
     public Representation sendSerialisedEntities() {
         return handleUndesiredExceptions(getResponse(), () -> {
-            return restUtil.listJSONRepresentation(this.entities);
+            return restUtil.listJsonRepresentation(this.entities);
         }, restUtil);
     }
 

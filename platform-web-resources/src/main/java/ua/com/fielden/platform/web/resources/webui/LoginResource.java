@@ -156,7 +156,7 @@ public class LoginResource extends ServerResource {
             }
         } catch (final Exception ex) {
             LOGGER.fatal(ex);
-            getResponse().setEntity(restUtil.errorJSONRepresentation(ex.getMessage()));
+            getResponse().setEntity(restUtil.errorJsonRepresentation(ex.getMessage()));
             getResponse().setStatus(Status.SERVER_ERROR_INTERNAL);
         } finally {
             LOGGER.debug(format("LOGIN ATTEMPT RESPONSE TIME: %s%n", TimeUnit.MILLISECONDS.convert(System.nanoTime() - nanoStart, TimeUnit.NANOSECONDS)));
