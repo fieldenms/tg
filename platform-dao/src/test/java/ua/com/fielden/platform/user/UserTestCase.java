@@ -19,7 +19,6 @@ import org.junit.Test;
 
 import ua.com.fielden.platform.entity.annotation.mutator.BeforeChange;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
-import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.entity.validation.UserAlmostUniqueEmailValidator;
 import ua.com.fielden.platform.property.validator.EmailValidator;
 import ua.com.fielden.platform.property.validator.StringValidator;
@@ -550,6 +549,22 @@ public class UserTestCase extends AbstractDaoTestCase {
         assertFalse(coUserSecret.findByIdOptional(user.getId()).isPresent());
     }
 
+    @Test
+    public void deactivating_user_with_active_dependencies_fails() {
+        final User user3 = coUser.findUser("USER3");
+        assertEquals(Integer.valueOf(0), user3.getRefCount());
+        
+        coUser.save(coUser.findUser("USER5").setBasedOnUser(user3).setActive(true));
+        final User user3_1 = coUser.findUser("USER3");
+        assertEquals(Integer.valueOf(1), user3_1.getRefCount());
+        try {
+           coUser.save(user3_1.setActive(false));
+           fail("Saving invalid user should have failed.");
+        } catch (final Exception ex) {
+            
+        }
+    }
+    
     @Override
     protected void populateDomain() {
         super.populateDomain();

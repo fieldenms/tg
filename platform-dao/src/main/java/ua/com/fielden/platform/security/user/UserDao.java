@@ -45,6 +45,7 @@ import ua.com.fielden.platform.entity.query.IFilter;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.OrderingModel;
+import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.menu.WebMenuItemInvisibility;
 import ua.com.fielden.platform.pagination.IPage;
 import ua.com.fielden.platform.security.Authorise;
@@ -104,6 +105,7 @@ public class UserDao extends CommonEntityDao<User> implements IUser {
 
     @Authorise(User_CanSave_Token.class)
     protected User ordinarySave(final User user) {
+        user.isValid().ifFailure(Result::throwRuntime);
         // remove all authenticated sessions in case the user is being deactivated
         if (user.isPersisted() && !user.isActive() && user.getProperty(ACTIVE).isDirty()) {
             final IUserSession coUserSession = co(UserSession.class);
