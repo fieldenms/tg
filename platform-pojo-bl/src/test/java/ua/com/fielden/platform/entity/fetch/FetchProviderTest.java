@@ -418,7 +418,9 @@ public class FetchProviderTest {
         final IFetchProvider<TgAuthorRoyalty> fp = EntityUtils.fetchNone(TgAuthorRoyalty.class).with("authorship.author.name");
         fp.addKeysTo("authorship.author.name");
         
-        assertEquals(set("authorship", "authorship.author", "authorship.author.name", "authorship.author.name." + KEY, "authorship.author.name." + ID, "authorship.author.name." + VERSION // subkey and ID / VERSION for 'name' property of persistent TgPersonName type
+        assertEquals(set("authorship", "authorship." + ID, "authorship." + VERSION,
+                "authorship.author", "authorship.author." + ID, "authorship.author." + VERSION,
+                "authorship.author.name", "authorship.author.name." + KEY, "authorship.author.name." + ID, "authorship.author.name." + VERSION // subkey and ID / VERSION for 'name' property of persistent TgPersonName type
         ), fp.allProperties());
     }
     
@@ -428,13 +430,15 @@ public class FetchProviderTest {
         fp.addKeysTo("authorship.author");
         fp.addKeysTo("authorship.author.name");
         
-        assertEquals(set("authorship", "authorship.author",
+        assertEquals(set("authorship", "authorship." + ID, "authorship." + VERSION,
                 "authorship.author", /*name is a key of author */ "authorship.author.surname", "authorship.author.patronymic",  "authorship.author." + ID, "authorship.author." + VERSION,
                 "authorship.author.name", "authorship.author.name." + KEY, "authorship.author.name." + ID, "authorship.author.name." + VERSION // subkey and ID / VERSION for 'name' property of persistent TgPersonName type
         ), fp.allProperties());
         assertEquals(
             fetchNone(TgAuthorRoyalty.class)
                 .with("authorship", fetchNone(TgAuthorship.class)
+                        .with(ID)
+                        .with(VERSION)
                         .with("author", fetchNone(TgAuthor.class)
                                 .with("surname")
                                 .with("patronymic")

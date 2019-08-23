@@ -572,6 +572,7 @@ class FetchProvider<T extends AbstractEntity<?>> implements IFetchProvider<T> {
                 } else if (NONE != provider.fetchCategory) {
                     throw new FetchProviderException(format("Property provider for %s has fetch category other than NONE.", firstName));
                 } else {
+                    extendWithIdAndVersion(provider);
                     provider.addKeysTo(restDotNotation);
                     return this;
                 }
@@ -590,14 +591,23 @@ class FetchProvider<T extends AbstractEntity<?>> implements IFetchProvider<T> {
                 addKeysTo(keyMemberName);
             }
             
-            // The following lines are needed to make query execution possible. These properties can be trimmed at later stage (for example during serialisation).
-            if (isPersistedEntityType(entityType)) {
-                enhanceWith(ID); // ID is needed at this stage to perform query for persistent entity types.
-                enhanceWith(VERSION); // VERSION is needed not to convert entity values to idOnlyProxies during query execution.
-            } else if (isSyntheticBasedOnPersistentEntityType(entityType)) {
-                enhanceWith(ID); // synthetic based on persistent types require ID (see EntityRetrievalModel.includeKeyAndDescOnly)
-            }
+            extendWithIdAndVersion(this);
             return this;
+        }
+    }
+
+    /**
+     * Extends <code>provider</code> with id / version for the case of persistent entity types and id for synthetic based on persistent.
+     * 
+     * @param provider
+     */
+    private static <T extends AbstractEntity<?>> void extendWithIdAndVersion(final FetchProvider<T> provider) {
+        // The following lines are needed to make query execution possible. These properties can be trimmed at later stage (for example during serialisation).
+        if (isPersistedEntityType(provider.entityType)) {
+            provider.enhanceWith(ID); // ID is needed at this stage to perform query for persistent entity types.
+            provider.enhanceWith(VERSION); // VERSION is needed not to convert entity values to idOnlyProxies during query execution.
+        } else if (isSyntheticBasedOnPersistentEntityType(provider.entityType)) {
+            provider.enhanceWith(ID); // synthetic based on persistent types require ID (see EntityRetrievalModel.includeKeyAndDescOnly)
         }
     }
     
