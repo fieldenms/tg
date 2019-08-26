@@ -15,7 +15,6 @@ import '/resources/images/tg-icons.js';
 
 import '/resources/actions/tg-ui-action.js';
 import '/resources/egi/tg-secondary-action-button.js';
-import '/resources/egi/tg-overflow-menu.js';
 import '/resources/egi/tg-secondary-action-dropdown.js';
 import '/resources/egi/tg-egi-cell.js';
 
@@ -48,14 +47,15 @@ const template = html`
         .grid-container[fit-to-height] {
             @apply --layout-flex;
         }
-        .grid-toolbar-container {
-            position: relative;
-            height: 48px;
+        .grid-toolbar {
             z-index: 1;
+            position: relative;
             flex-grow: 0;
             flex-shrink: 0;
+            @apply --layout-horizontal;
+            @apply --layout-wrap;
         }
-        .grid-toolbar-container[show-top-shadow]:after {
+        .grid-toolbar[show-top-shadow]:after {
             content: "";
             position: absolute;
             bottom: -4px;
@@ -65,15 +65,6 @@ const template = html`
             background: -moz-linear-gradient(bottom, rgba(0,0,0,0.4) 0%, rgba(0,0,0,0) 100%); 
             background: -webkit-linear-gradient(bottom, rgba(0,0,0,0.4) 0%,rgba(0,0,0,0) 100%); 
             background: linear-gradient(to bottom, rgba(0,0,0,0.4) 0%,rgba(0,0,0,0) 100%);
-        }
-        .grid-toolbar {
-            position: absolute;
-            top: 0;
-            bottom: 0;
-            right: 0;
-            left: 0;
-            overflow: auto;
-            @apply --layout-horizontal;
         }
         paper-progress {
             position: absolute;
@@ -93,9 +84,6 @@ const template = html`
             @apply --layout-center;
         }
         .grid-toolbar-content ::slotted(*) {
-            @apply --layout-horizontal;
-            @apply --layout-center;
-            white-space: nowrap;
             margin-top: 8px;
         }
         .grid-toolbar-content ::slotted(.group) {
@@ -367,17 +355,14 @@ const template = html`
     <!--EGI template-->
     <div id="paperMaterial" class="grid-container" elevation="1" style$="[[_calcMaterialStyle(showMarginAround)]]" fit-to-height$="[[fitToHeight]]">
         <!--Table toolbar-->
-        <div class="grid-toolbar-container" show-top-shadow$="[[_toolbarShadowVisible(_showTopShadow, headerFixed)]]">
-            <div class="grid-toolbar" style$="[[_calcToolbarStyle(canDragFrom)]]">
+        <div class="grid-toolbar" show-top-shadow$="[[_toolbarShadowVisible(_showTopShadow, headerFixed)]]" style$="[[_calcToolbarStyle(canDragFrom)]]">
                 <paper-progress id="progressBar" hidden$="[[!_showProgress]]"></paper-progress>
                 <div class="grid-toolbar-content">
                     <slot id="top_action_selctor" name="entity-specific-action"></slot>
                 </div>
                 <div class="grid-toolbar-content" style="margin-left:auto">
                     <slot name="standart-action"></slot>
-                    <tg-overflow-menu></tg-overflow-menu>
                 </div>
-            </div>
         </div>
         <div id="scrollableContainer" on-scroll="_handleScrollEvent">
             <div id="baseContainer">
