@@ -12,6 +12,9 @@ const template = html`
         :host {
             @apply --layout-vertical;
         }
+        [hidden] {
+            display: none !important;
+        }
         #chartContainer, svg {
             min-height: 0;
             @apply --layout-horizontal;

@@ -12,6 +12,9 @@ import static ua.com.fielden.platform.entity.AbstractEntity.DESC;
 import static ua.com.fielden.platform.entity.AbstractEntity.ID;
 import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
 import static ua.com.fielden.platform.entity.AbstractEntity.VERSION;
+import static ua.com.fielden.platform.entity.fetch.FetchProviderFactory.createDefaultFetchProvider;
+import static ua.com.fielden.platform.entity.fetch.FetchProviderFactory.createEmptyFetchProvider;
+import static ua.com.fielden.platform.entity.fetch.FetchProviderFactory.createFetchProviderWithKeyAndDesc;
 import static ua.com.fielden.platform.reflection.AnnotationReflector.getKeyType;
 import static ua.com.fielden.platform.reflection.Finder.getKeyMembers;
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.PROPERTY_SPLITTER;
@@ -959,7 +962,7 @@ public class EntityUtils {
     }
 
     public static class BigDecimalWithTwoPlaces {
-    };
+    }
 
     public static SortedSet<String> getFirstLevelProps(final Set<String> allProps) {
         final SortedSet<String> result = new TreeSet<>();
@@ -1011,7 +1014,9 @@ public class EntityUtils {
         //                (freshValue != null && !freshValue.equals(staleOriginalValue) && !freshValue.equals(staleNewValue));
         return isStale(staleOriginalValue, freshValue) && !EntityUtils.equalsEx(staleNewValue, freshValue);
     }
-
+    
+    ////////////////////////////////////////////// ID_AND_VERSION ////////////////////////////////////////////// 
+    
     /**
      * Creates empty {@link IFetchProvider} for concrete <code>entityType</code> with instrumentation.
      *
@@ -1020,13 +1025,25 @@ public class EntityUtils {
      * @return
      */
     public static <T extends AbstractEntity<?>> IFetchProvider<T> fetch(final Class<T> entityType, final boolean instumented) {
-        return FetchProviderFactory.createDefaultFetchProvider(entityType, instumented);
+        return createDefaultFetchProvider(entityType, instumented);
     }
 
     public static <T extends AbstractEntity<?>> IFetchProvider<T> fetch(final Class<T> entityType) {
-        return FetchProviderFactory.createDefaultFetchProvider(entityType, false);
+        return createDefaultFetchProvider(entityType, false);
     }
-
+    
+    /**
+     * Creates empty {@link IFetchProvider} for concrete <code>entityType</code> <b>without</b> instrumentation.
+     *
+     * @param entityType
+     * @return
+     */
+    public static <T extends AbstractEntity<?>> IFetchProvider<T> fetchNotInstrumented(final Class<T> entityType) {
+        return createDefaultFetchProvider(entityType, false);
+    }
+    
+    ////////////////////////////////////////////// KEY_AND_DESC ////////////////////////////////////////////// 
+    
     /**
      * Creates {@link IFetchProvider} for concrete <code>entityType</code> with 'key' and 'desc' (analog of {@link EntityQueryUtils#fetchKeyAndDescOnly(Class)}) with instrumentation.
      *
@@ -1035,24 +1052,13 @@ public class EntityUtils {
      * @return
      */
     public static <T extends AbstractEntity<?>> IFetchProvider<T> fetchWithKeyAndDesc(final Class<T> entityType, final boolean instrumented) {
-        return FetchProviderFactory.createFetchProviderWithKeyAndDesc(entityType, instrumented);
+        return createFetchProviderWithKeyAndDesc(entityType, instrumented);
     }
-
+    
     public static <T extends AbstractEntity<?>> IFetchProvider<T> fetchWithKeyAndDesc(final Class<T> entityType) {
-        return FetchProviderFactory.createFetchProviderWithKeyAndDesc(entityType, false);
+        return createFetchProviderWithKeyAndDesc(entityType, false);
     }
-
-
-    /**
-     * Creates empty {@link IFetchProvider} for concrete <code>entityType</code> <b>without</b> instrumentation.
-     *
-     * @param entityType
-     * @return
-     */
-    public static <T extends AbstractEntity<?>> IFetchProvider<T> fetchNotInstrumented(final Class<T> entityType) {
-        return FetchProviderFactory.createDefaultFetchProvider(entityType, false);
-    }
-
+    
     /**
      * Creates {@link IFetchProvider} for concrete <code>entityType</code> with 'key' and 'desc' (analog of {@link EntityQueryUtils#fetchKeyAndDescOnly(Class)}) <b>without</b> instrumentation.
      *
@@ -1060,9 +1066,31 @@ public class EntityUtils {
      * @return
      */
     public static <T extends AbstractEntity<?>> IFetchProvider<T> fetchNotInstrumentedWithKeyAndDesc(final Class<T> entityType) {
-        return FetchProviderFactory.createFetchProviderWithKeyAndDesc(entityType, false);
+        return createFetchProviderWithKeyAndDesc(entityType, false);
     }
-
+    
+    ////////////////////////////////////////////// NONE ////////////////////////////////////////////// 
+    /**
+     * Creates {@link IFetchProvider} for concrete <code>entityType</code> with no properties and concrete instrumentation.
+     *
+     * @param entityType
+     * @param instrumented
+     * @return
+     */
+    public static <T extends AbstractEntity<?>> IFetchProvider<T> fetchNone(final Class<T> entityType, final boolean instrumented) {
+        return createEmptyFetchProvider(entityType, instrumented);
+    }
+    
+    /**
+     * Creates un-instrumented {@link IFetchProvider} for concrete <code>entityType</code> with no properties.
+     *
+     * @param entityType
+     * @return
+     */
+    public static <T extends AbstractEntity<?>> IFetchProvider<T> fetchNone(final Class<T> entityType) {
+        return fetchNone(entityType, false);
+    }
+    
     /**
      * Tries to perform shallow copy of collectional value. If unsuccessful, throws unsuccessful {@link Result} describing the error.
      *

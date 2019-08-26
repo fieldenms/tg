@@ -45,7 +45,7 @@ public class PropertyTypeDeterminatorCheckingEnhancementsTest {
     
     public PropertyTypeDeterminatorCheckingEnhancementsTest() throws ClassNotFoundException {
         entityType = TgOwnerEntity.class;
-        entityTypeGenerated = (Class<AbstractEntity<?>>) cl.startModification(entityType.getName()).modifyTypeName(new DynamicTypeNamingService().nextTypeName(entityType.getName())).endModification();
+        entityTypeGenerated = (Class<AbstractEntity<?>>) cl.startModification(entityType).modifyTypeName(DynamicTypeNamingService.nextTypeName(entityType.getName())).endModification();
     }
 
     //////////////////////////////////// isInstrumented ////////////////////////////////////
@@ -267,9 +267,9 @@ public class PropertyTypeDeterminatorCheckingEnhancementsTest {
         final NewProperty pd1 = new NewProperty(NEW_PROPERTY, Money.class, false, NEW_PROPERTY_TITLE, NEW_PROPERTY_DESC, calculated);
         final NewProperty pd2 = new NewProperty(NEW_PROPERTY + 1, Money.class, false, NEW_PROPERTY_TITLE, NEW_PROPERTY_DESC, calculated);
         // first enhancement
-        final Class<? extends AbstractEntity<?>> oneTimeEnhancedType = (Class<? extends AbstractEntity<?>>) cl.startModification(EntityBeingEnhanced.class.getName()).addProperties(pd1).endModification();
+        final Class<? extends AbstractEntity<?>> oneTimeEnhancedType = (Class<? extends AbstractEntity<?>>) cl.startModification(EntityBeingEnhanced.class).addProperties(pd1).endModification();
         // second enhancement
-        final Class<? extends AbstractEntity<?>> twoTimesEnhancedType = (Class<? extends AbstractEntity<?>>) cl.startModification(oneTimeEnhancedType.getName()).addProperties(pd2).endModification();
+        final Class<? extends AbstractEntity<?>> twoTimesEnhancedType = (Class<? extends AbstractEntity<?>>) cl.startModification(oneTimeEnhancedType).addProperties(pd2).endModification();
 
         // both enhanced types should have EntityBeingEnhanced as their base type
         assertEquals(EntityBeingEnhanced.class, PropertyTypeDeterminator.baseEntityType(oneTimeEnhancedType));

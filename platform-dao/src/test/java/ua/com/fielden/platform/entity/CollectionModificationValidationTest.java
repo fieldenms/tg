@@ -16,9 +16,19 @@ import ua.com.fielden.platform.dao.IUserAndRoleAssociation;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.security.tokens.AlwaysAccessibleToken;
+import ua.com.fielden.platform.security.tokens.CompoundModuleToken;
 import ua.com.fielden.platform.security.tokens.attachment.AttachmentDownload_CanExecute_Token;
 import ua.com.fielden.platform.security.tokens.attachment.Attachment_CanDelete_Token;
 import ua.com.fielden.platform.security.tokens.attachment.Attachment_CanSave_Token;
+import ua.com.fielden.platform.security.tokens.compound_master_menu.TgCompoundEntityMaster_OpenMain_MenuItem_CanAccess_Token;
+import ua.com.fielden.platform.security.tokens.compound_master_menu.TgCompoundEntityMaster_OpenTgCompoundEntityChild_MenuItem_CanAccess_Token;
+import ua.com.fielden.platform.security.tokens.compound_master_menu.TgCompoundEntityMaster_OpenTgCompoundEntityDetail_MenuItem_CanAccess_Token;
+import ua.com.fielden.platform.security.tokens.open_compound_master.OpenTgCompoundEntityMasterAction_CanOpen_Token;
+import ua.com.fielden.platform.security.tokens.persistent.TgCompoundEntityChild_CanDelete_Token;
+import ua.com.fielden.platform.security.tokens.persistent.TgCompoundEntityChild_CanSave_Token;
+import ua.com.fielden.platform.security.tokens.persistent.TgCompoundEntityDetail_CanSave_Token;
+import ua.com.fielden.platform.security.tokens.persistent.TgCompoundEntity_CanDelete_Token;
+import ua.com.fielden.platform.security.tokens.persistent.TgCompoundEntity_CanSave_Token;
 import ua.com.fielden.platform.security.tokens.user.UserRoleTokensUpdater_CanExecute_Token;
 import ua.com.fielden.platform.security.tokens.user.UserRole_CanDelete_Token;
 import ua.com.fielden.platform.security.tokens.user.UserRole_CanSave_Token;
@@ -280,6 +290,17 @@ public class CollectionModificationValidationTest extends AbstractDaoTestCase {
         final SecurityTokenInfo attachmentSave = EntityFactory.newPlainEntity(SecurityTokenInfo.class, null).setKey(Attachment_CanSave_Token.class.getName());
         final SecurityTokenInfo attachmentDelete = EntityFactory.newPlainEntity(SecurityTokenInfo.class, null).setKey(Attachment_CanDelete_Token.class.getName());
         final SecurityTokenInfo attachmentDownload = EntityFactory.newPlainEntity(SecurityTokenInfo.class, null).setKey(AttachmentDownload_CanExecute_Token.class.getName());
+        
+        final SecurityTokenInfo compoundModule = EntityFactory.newPlainEntity(SecurityTokenInfo.class, null).setKey(CompoundModuleToken.class.getName());
+        final SecurityTokenInfo tgComoundEntity_CanDelete = EntityFactory.newPlainEntity(SecurityTokenInfo.class, null).setKey(TgCompoundEntity_CanDelete_Token.class.getName());
+        final SecurityTokenInfo tgCompoundEntity_CanSave = EntityFactory.newPlainEntity(SecurityTokenInfo.class, null).setKey(TgCompoundEntity_CanSave_Token.class.getName());
+        final SecurityTokenInfo tgCompoundEntityChild_CanDelete = EntityFactory.newPlainEntity(SecurityTokenInfo.class, null).setKey(TgCompoundEntityChild_CanDelete_Token.class.getName());
+        final SecurityTokenInfo tgCompoundEntityChild_CanSave = EntityFactory.newPlainEntity(SecurityTokenInfo.class, null).setKey(TgCompoundEntityChild_CanSave_Token.class.getName());
+        final SecurityTokenInfo tgCompoundEntityDetail_CanSave = EntityFactory.newPlainEntity(SecurityTokenInfo.class, null).setKey(TgCompoundEntityDetail_CanSave_Token.class.getName());
+        final SecurityTokenInfo openTgCompoundEntityMasterAction_CanOpen = EntityFactory.newPlainEntity(SecurityTokenInfo.class, null).setKey(OpenTgCompoundEntityMasterAction_CanOpen_Token.class.getName());
+        final SecurityTokenInfo tgCompoundEntityMaster_OpenMain_MenuItem_CanAccess = EntityFactory.newPlainEntity(SecurityTokenInfo.class, null).setKey(TgCompoundEntityMaster_OpenMain_MenuItem_CanAccess_Token.class.getName());
+        final SecurityTokenInfo tgCompoundEntityMaster_OpenTgCompoundEntityChild_MenuItem_CanAccess = EntityFactory.newPlainEntity(SecurityTokenInfo.class, null).setKey(TgCompoundEntityMaster_OpenTgCompoundEntityChild_MenuItem_CanAccess_Token.class.getName());
+        final SecurityTokenInfo tgCompoundEntityMaster_OpenTgCompoundEntityDetail_MenuItem_CanAccess = EntityFactory.newPlainEntity(SecurityTokenInfo.class, null).setKey(TgCompoundEntityMaster_OpenTgCompoundEntityDetail_MenuItem_CanAccess_Token.class.getName());
 
         final UserRoleTokensUpdater updater = createUpdater(userRole);
         final HashSet<SecurityTokenInfo> expectedTokens = setOf(
@@ -287,7 +308,9 @@ public class CollectionModificationValidationTest extends AbstractDaoTestCase {
             userDelete, userSave,
             userRoleDelete, userRoleSave,
             userRolesUpdater_CanExecute, userRoleTokensUpdater_CanExecute,
-            attachmentSave, attachmentDelete, attachmentDownload
+            attachmentSave, attachmentDelete, attachmentDownload,
+            compoundModule, tgComoundEntity_CanDelete, tgCompoundEntity_CanSave, tgCompoundEntityChild_CanDelete, tgCompoundEntityChild_CanSave, tgCompoundEntityDetail_CanSave, openTgCompoundEntityMasterAction_CanOpen, 
+            tgCompoundEntityMaster_OpenMain_MenuItem_CanAccess, tgCompoundEntityMaster_OpenTgCompoundEntityChild_MenuItem_CanAccess, tgCompoundEntityMaster_OpenTgCompoundEntityDetail_MenuItem_CanAccess
         );
         assertEquals(expectedTokens, updater.getTokens());
         

@@ -213,3 +213,15 @@ export const isMobileApp = function () {
 export const isIPhoneOs = function () {
     return window.navigator.userAgent.includes('iPhone OS');
 };
+
+export const doWhenDimentionsAttainedAnd = function (self, conditionFun, doFun, time) {
+    conditionFun.bind(self);
+    doFun.bind(self);
+    self.async(function () {
+        if (self.offsetWidth && self.offsetHeight && conditionFun()) {
+            doFun();
+        } else {
+            doWhenDimentionsAttainedAnd(self, conditionFun, doFun, 100);
+        }
+    }, time);
+};

@@ -8,7 +8,6 @@ import com.google.inject.Injector;
 import com.google.inject.binder.AnnotatedBindingBuilder;
 
 import ua.com.fielden.platform.basic.config.IApplicationDomainProvider;
-import ua.com.fielden.platform.basic.config.Workflows;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.IFilter;
 import ua.com.fielden.platform.serialisation.api.ISerialisationClassProvider;
@@ -22,10 +21,7 @@ import ua.com.fielden.platform.web.ioc.IBasicWebApplicationServerModule;
  */
 public class TgTestWebApplicationServerModule extends TgTestApplicationServerModule implements IBasicWebApplicationServerModule {
 
-    private final String domainName;
-    private final String path;
-    private final int port;
-    private final Workflows workflow;
+    private final Properties props;
 
     public TgTestWebApplicationServerModule(
             final Map<Class, Class> defaultHibernateTypes,
@@ -35,16 +31,13 @@ public class TgTestWebApplicationServerModule extends TgTestApplicationServerMod
             final Class<? extends IFilter> automaticDataFilterType,
             final Properties props) throws Exception {
         super(defaultHibernateTypes, applicationDomainProvider, domainTypes, serialisationClassProviderType, automaticDataFilterType, props);
-        this.domainName = props.getProperty("web.domain");
-        this.path = props.getProperty("web.path");
-        this.port = Integer.valueOf(props.getProperty("port"));
-        this.workflow = Workflows.valueOf(props.getProperty("workflow"));
+        this.props = props;
     }
 
     @Override
     protected void configure() {
         super.configure();
-        bindWebAppResources(new WebUiConfig(domainName, port, workflow, path));
+        bindWebAppResources(new WebUiConfig(props));
     }
 
     @Override

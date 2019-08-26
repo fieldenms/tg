@@ -12,6 +12,7 @@ import {html} from '/resources/polymer/@polymer/polymer/polymer-element.js';
 
 import { matchedParts } from '/resources/editors/tg-highlighter.js';
 import { TgEditor, createEditorTemplate } from '/resources/editors/tg-editor.js';
+import {GestureEventListeners} from '/resources/polymer/@polymer/polymer/lib/mixins/gesture-event-listeners.js';
 import { tearDownEvent} from '/resources/reflection/tg-polymer-utils.js';
 
 const additionalTemplate = html`
@@ -153,19 +154,17 @@ const additionalTemplate = html`
             display: none;
         }
     </style>
-    <custom-style>
-        <style include="iron-flex iron-flex-reverse iron-flex-alignment iron-flex-factors iron-positioning"></style>
-    </custom-style>`;
+    <style include="iron-flex iron-flex-reverse iron-flex-alignment iron-flex-factors iron-positioning"></style>`;
 const customInputTemplate = html`
     <div class="search-controls-wrapper" style$="[[_computeInputStyle(_forReview, canReorderItems)]]">
         <div class="resizing-box" hidden$="[[!canReorderItems]]"></div>
         <iron-input bind-value="{{_phraseForSearching}}" class="custom-input-wrapper" >
             <input id="searchInput" class="custom-input" placeholder="Type to search..." on-input="_onInput" on-mouseup="_onMouseUp" on-mousedown="_onMouseDown" on-blur="_eventHandler" autocomplete="off">
         </iron-input>
-        <paper-checkbox class="select-all-checkbox" style$="[[_computeSelectAllCheckboxStyle(_scrollBarWidth)]]" id="selectAllCheckbox" hidden$="[[_selectingIconHidden(_forReview)]]" checked="[[_selectedAll]]" semi-checked$="[[_semiCheckedAll]]" on-change="_allSelectionChanged"></paper-checkbox>
+        <paper-checkbox class="select-all-checkbox" style$="[[_computeSelectAllCheckboxStyle(_scrollBarWidth, _multiSelection)]]" id="selectAllCheckbox" hidden$="[[_selectingIconHidden(_forReview)]]" checked="[[_selectedAll]]" semi-checked$="[[_semiCheckedAll]]" on-change="_allSelectionChanged"></paper-checkbox>
     </div>
     <div class="layout vertical flex relative">
-        <iron-list id="input" class="collectional-input fit" items="[[_entities]]" selected-items="{{_selectedEntities}}" selected-item="{{_selectedEntity}}" selection-enabled="[[_isSelectionEnabled(_forReview)]]" multi-selection>
+        <iron-list id="input" class="collectional-input fit" items="[[_entities]]" selected-items="{{_selectedEntities}}" selected-item="{{_selectedEntity}}" selection-enabled="[[_isSelectionEnabled(_forReview)]]" multi-selection="[[_multiSelection]]">
             <template>
                 <div class$="[[_computedItemClass(_disabled)]]" collectional-index$="[[index]]">
                     <div class="dummy-box fit" hidden$="[[!_isDummyBoxVisible(item, _draggingItem)]]"></div>
@@ -187,7 +186,7 @@ const customInputTemplate = html`
         </iron-list>
     </div>`;
 
-export class TgCollectionalEditor extends TgEditor {
+export class TgCollectionalEditor extends GestureEventListeners(TgEditor) {
 
     static get template () { 
         return createEditorTemplate(additionalTemplate, html``, customInputTemplate, html``, html``, html``);
@@ -236,7 +235,11 @@ export class TgCollectionalEditor extends TgEditor {
             _selectedEntities: {
                 type: Array
             },
-    
+            
+            _multiSelection: {
+                type: Boolean,
+                value: true
+            },
             /**
              * controls select All checkbox
              */
@@ -405,7 +408,7 @@ export class TgCollectionalEditor extends TgEditor {
         
         if (this.reflector().isEntity(newValue)) {
             if (newValue.type()._simpleClassName() === 'CentreConfigLoadAction') {
-                this.$.input.multiSelection = false;
+                this._multiSelection = false;
             }
             // _entities, _originalChosenIds, this.$.input should be initialised only once for the session of collectional editing.
             // This session includes initial refresh, multiple validation cycles and finishing save / cancel.
@@ -584,8 +587,10 @@ export class TgCollectionalEditor extends TgEditor {
         return style;
     }
 
-    _computeSelectAllCheckboxStyle (_scrollBarWidth) {
-        return "padding-right: " + ( _scrollBarWidth + 16 ) + "px";
+    _computeSelectAllCheckboxStyle (_scrollBarWidth, _multiSelection) {
+        let selectAllStyle = "padding-right: " + ( _scrollBarWidth + 16 ) + "px;";
+        selectAllStyle += _multiSelection ? "" : "visibility: hidden;";
+        return selectAllStyle;
     }
 
     _computeSortingIconStyle (sorting)  {
@@ -866,17 +871,11 @@ export class TgCollectionalEditor extends TgEditor {
                this._endItemReordering(e);
                break;
        }
-       if (e.stopPropagation) e.stopPropagation();
-       if (e.preventDefault) e.preventDefault();
-       e.cancelBubble = true;
-       e.returnValue = false;
+       tearDownEvent(e);
     }
     
     _disableScrolling (e) {
-        if (e.stopPropagation) e.stopPropagation();
-       if (e.preventDefault) e.preventDefault();
-       e.cancelBubble = true;
-       e.returnValue = false;
+        tearDownEvent(e);
     }
     
     _startItemReordering (e) {
@@ -936,7 +935,7 @@ export class TgCollectionalEditor extends TgEditor {
     }
 
     _updateSelectAll () {
-        if (this._selectedEntities && this._entities) {
+        if (this._multiSelection && this._selectedEntities && this._entities) {
             const everySelected = this._entities.every(item => this._selectedEntities.includes(item));
             const someSelected = this._entities.some(item => this._selectedEntities.includes(item));
             if (someSelected || everySelected) {

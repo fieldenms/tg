@@ -71,11 +71,15 @@ Polymer({
   _template: html`
     <iron-query-params params-string="{{__query}}" params-object="{{queryParams}}">
     </iron-query-params>
-    <iron-location path="{{__path}}" query="{{__query}}" hash="{{__hash}}" url-space-regex="[[urlSpaceRegex]]" dwell-time="[[dwellTime]]">
+    <iron-location no-decode="[[noDecode]] "path="{{__path}}" query="{{__query}}" hash="{{__hash}}" url-space-regex="[[urlSpaceRegex]]" dwell-time="[[dwellTime]]">
     </iron-location>
   `,
   is: 'app-location',
   properties: {
+    noDecode: {
+      type: Boolean,
+      value: false 
+    },
     /**
      * A model representing the deserialized path through the route tree, as
      * well as the current queryParams.

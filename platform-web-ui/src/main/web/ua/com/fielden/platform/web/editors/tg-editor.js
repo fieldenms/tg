@@ -16,6 +16,9 @@ export function createEditorTemplate (additionalTemplate, customPrefixAttribute,
     return html`
         <style>
             :host {
+                --paper-input-container-input-color: var(--paper-grey-900);
+                --paper-input-container-focus-color: var(--paper-indigo-500);
+                --paper-input-container-color: var(--light-theme-secondary-color);
                 --paper-input-container-disabled: {
                     opacity: 1;
                     pointer-events: auto;
@@ -89,9 +92,7 @@ export function createEditorTemplate (additionalTemplate, customPrefixAttribute,
                 --paper-input-container-color: var(--google-red-500);
             }
         </style>
-        <custom-style>
-            <style include="iron-flex iron-flex-reverse iron-flex-alignment iron-flex-factors iron-positioning"></style>
-        </custom-style>
+        <style include="iron-flex iron-flex-reverse iron-flex-alignment iron-flex-factors iron-positioning"></style>
         ${additionalTemplate}
         <paper-input-container id="decorator" always-float-label has-layer$="[[_hasLayer]]" invalid="[[_invalid]]" is-invalid$="[[_invalid]]" disabled$="[[_disabled]]" focused$="[[focused]]">
             <!-- flex auto  for textarea! -->

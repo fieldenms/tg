@@ -127,9 +127,7 @@ const template = html`
                                   supported by Chrome and Opera */
         }
     </style>
-    <custom-style>
-        <style include="paper-material-styles iron-flex iron-flex-reverse iron-flex-alignment iron-flex-factors iron-positioning"></style>
-    </custom-style>
+    <style include="paper-material-styles iron-flex iron-flex-reverse iron-flex-alignment iron-flex-factors iron-positioning"></style>
     <tg-serialiser id="serialiser"></tg-serialiser>
 
     <iron-ajax id="ajaxDiscarder" url="[[_url]]" method="PUT" handle-as="json" on-response="_processDiscarderResponse" on-error="_processDiscarderError"></iron-ajax>
@@ -391,6 +389,9 @@ Polymer({
     _expandContainer: function (element) {
         element.style.removeProperty("width");
         element.style.removeProperty("display");
+        if (element == this.$.rightInsertionPointContainer && this._rightWidth) {
+            this.$.rightInsertionPointContainer.style.width = this._rightWidth;
+        }
         this.notifyResize();
     },
 
@@ -448,9 +449,9 @@ Polymer({
 
     _configViewBindings: function (prevView, newView) {
         prevView.removeOwnKeyBindings();
-        const keyBindings = newView.keyBindings;
-        for (let shortcuts in keyBindings) {
-            newView.addOwnKeyBinding(shortcuts, keyBindings[shortcuts]);
+        const ownKeyBindings = newView._ownKeyBindings;
+        for (let shortcuts in ownKeyBindings) {
+            newView.addOwnKeyBinding(shortcuts, ownKeyBindings[shortcuts]);
         }
     },
 

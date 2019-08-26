@@ -1,9 +1,12 @@
-export const ProgressBarUpdater = function (_map, _getMarkers, progressDiv, progressBarDiv) {
+import { fitToBounds } from '/resources/gis/tg-gis-utils.js';
+
+export const ProgressBarUpdater = function (_map, _getMarkers, progressDiv, progressBarDiv, overlays) {
     this._map = _map;
     this._getMarkers = _getMarkers;
     this._progress = progressDiv;
     this._progressBar = progressBarDiv;
     this._shouldFitToBounds = true;
+    this._overlays = overlays;
 };
 
 ProgressBarUpdater.prototype.updateProgressBar = function (processed, total, elapsed) {
@@ -29,10 +32,7 @@ ProgressBarUpdater.prototype.updateProgressBar = function (processed, total, ela
         this._progress.style.display = 'none';
 
         if (this._shouldFitToBounds) {
-            const self = this;
-            window.setTimeout(function () {
-                self._map.fitBounds(self._getMarkers().getBounds());
-            }, 1);
+            fitToBounds(this._map, this._getMarkers(), this._overlays);
         }
 
         // iteration = 1;

@@ -80,7 +80,7 @@ public class UserSessionCacheEvictionStrategyTestCase extends AbstractDaoTestCas
             final int millisInc = rnd.nextInt(2000 - 500 + 1) + 500; // a most 2000 and at least 500 milliseconds
             requestTime = new DateTime(requestTime.getMillis() + millisInc);
             constants.setNow(requestTime);
-            final Optional<UserSession> session = coSession.currentSession(currUser, newAuthenticator);
+            final Optional<UserSession> session = coSession.currentSession(currUser, newAuthenticator, false);
             assertTrue(session.isPresent());
             assertEquals("Authenticator should not have been reset", newAuthenticator, session.get().getAuthenticator().get().toString());
             assertEquals(1, coSession.getCache().size());
@@ -104,7 +104,7 @@ public class UserSessionCacheEvictionStrategyTestCase extends AbstractDaoTestCas
             final int millisInc = rnd.nextInt(2000 - 500 + 1) + 500; // a most 2000 and at least 500 milliseconds
             requestTime = new DateTime(requestTime.getMillis() + millisInc);
             constants.setNow(requestTime);
-            final Optional<UserSession> session = coSession.currentSession(currUser, newAuthenticator);
+            final Optional<UserSession> session = coSession.currentSession(currUser, newAuthenticator, false);
             assertTrue(session.isPresent());
             assertEquals("Authenticator should not have been reset.", newAuthenticator, session.get().getAuthenticator().get().toString());
             assertEquals(1, coSession.getCache().size());
@@ -134,7 +134,7 @@ public class UserSessionCacheEvictionStrategyTestCase extends AbstractDaoTestCas
         // try to get the current session using the evicted, but valid authenticator
         // this should lead to creation of a new authenticator and registration of a new session
         // that would be associated with the presented and new authenticators in cache
-        final Optional<UserSession> session = coSession.currentSession(currUser, authenticator);
+        final Optional<UserSession> session = coSession.currentSession(currUser, authenticator, false);
         assertTrue(session.isPresent());
         final String newAuthenticator = session.get().getAuthenticator().get().toString();
         assertNotEquals("Authenticator should have been reset.", authenticator, newAuthenticator);
@@ -154,7 +154,7 @@ public class UserSessionCacheEvictionStrategyTestCase extends AbstractDaoTestCas
             requestTime = new DateTime(requestTime.getMillis() + millisInc);
             constants.setNow(requestTime);
             // the original authenticator is presented!
-            final Optional<UserSession> ss = coSession.currentSession(currUser, authenticator);
+            final Optional<UserSession> ss = coSession.currentSession(currUser, authenticator, false);
             assertTrue(ss.isPresent());
             assertEquals("A regenerated authentication is expected, which ensures that responses provide the latest authenticator.", newAuthenticator, ss.get().getAuthenticator().get().toString());
             assertEquals(2, coSession.getCache().size());
@@ -185,7 +185,7 @@ public class UserSessionCacheEvictionStrategyTestCase extends AbstractDaoTestCas
         constants.setNow(dateTime("2015-04-23 13:06:00"));
 
         // emulate a new request, which presents valid, but evicted authenticator
-        final Optional<UserSession> session = coSession.currentSession(currUser, authenticator);
+        final Optional<UserSession> session = coSession.currentSession(currUser, authenticator, false);
         assertTrue(session.isPresent());
         // make sure both original and regenerated authenticators have been cached
         final String newAuthenticator = session.get().getAuthenticator().get().toString();
@@ -201,7 +201,7 @@ public class UserSessionCacheEvictionStrategyTestCase extends AbstractDaoTestCas
         constants.setNow(dateTime("2015-04-23 13:16:00"));
 
         // making a request with the original authenticator should lead to blocking of user sessions due to suspected stolen authenticator
-        final Optional<UserSession> ss = coSession.currentSession(currUser, authenticator);
+        final Optional<UserSession> ss = coSession.currentSession(currUser, authenticator, false);
         assertFalse(ss.isPresent());
         final EntityResultQueryModel<UserSession> currUserSessions = select(UserSession.class).where().prop("user").eq().val(currUser).model();
         assertEquals(0, coSession.count(currUserSessions));

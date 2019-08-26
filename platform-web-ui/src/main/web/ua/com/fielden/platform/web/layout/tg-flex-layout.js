@@ -20,9 +20,7 @@ const template = html`
             display: none !important;
         }
     </style>
-    <custom-style>
-        <style include="iron-flex iron-flex-reverse iron-flex-alignment iron-flex-factors iron-positioning"></style>
-    </custom-style>
+    <style include="iron-flex iron-flex-reverse iron-flex-alignment iron-flex-factors iron-positioning"></style>
     <tg-app-config id="appConfig"></tg-app-config>
     <iron-media-query query="[[_calcMobileQuery()]]" on-query-matches-changed="_mobileChanged"></iron-media-query>
     <iron-media-query query="[[_calcTabletQuery()]]" on-query-matches-changed="_tabletChanged"></iron-media-query>
@@ -36,9 +34,9 @@ template.setAttribute('strip-whitespace', '');
     };
     const stampTemplate = function (template, model) {
         if (template && model) {
-            for (let prop in model) {
+            Object.keys(model).forEach(prop => {
                 template[prop] = model[prop];
-            }
+            });
         }
     };
     const forEachPropValue = function (obj, callback) {

@@ -52,9 +52,7 @@ const template = html`
             min-height: fit-content;
         }
     </style>
-    <custom-style>
-        <style include="iron-flex iron-flex-reverse iron-flex-alignment iron-flex-factors iron-positioning"></style>
-    </custom-style>
+    <style include="iron-flex iron-flex-reverse iron-flex-alignment iron-flex-factors iron-positioning"></style>
     <!--Selection view toolbar-->
     <div class="toolbar layout horizontal wrap">
         <div class="toolbar-content layout horizontal center">
@@ -124,8 +122,8 @@ Polymer({
                 customShortcuts.push(item.getAttribute("shortcut"));
             }
         }.bind(this));
-        this.keyBindings = {};
-        this.keyBindings[customShortcuts.join(" ") + (customShortcuts.length > 0 ? " " : "") + "ctrl+s ctrl+e ctrl+r f5"] = '_shortcutPressed';
+        this._ownKeyBindings = {};
+        this._ownKeyBindings[customShortcuts.join(" ") + (customShortcuts.length > 0 ? " " : "") + "ctrl+s ctrl+e ctrl+r f5"] = '_shortcutPressed';
     },
 
     attached: function () {

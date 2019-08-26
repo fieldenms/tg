@@ -7,6 +7,7 @@ import '/resources/polymer/@polymer/iron-pages/iron-pages.js';
 import '/resources/polymer/@polymer/iron-selector/iron-selector.js';
 import '/resources/polymer/@polymer/iron-flex-layout/iron-flex-layout-classes.js';
 import { IronA11yKeysBehavior } from '/resources/polymer/@polymer/iron-a11y-keys-behavior/iron-a11y-keys-behavior.js';
+import { afterNextRender } from "/resources/polymer/@polymer/polymer/lib/utils/render-status.js";
 /* Paper elements */
 import '/resources/polymer/@polymer/paper-styles/color.js';
 import '/resources/polymer/@polymer/app-layout/app-drawer-layout/app-drawer-layout.js';
@@ -21,6 +22,7 @@ import { TgFocusRestorationBehavior } from '/resources/actions/tg-focus-restorat
 import { isInHierarchy, deepestActiveElement, tearDownEvent, isMobileApp } from '/resources/reflection/tg-polymer-utils.js';
 import { TgReflector } from '/app/tg-reflector.js';
 import '/app/tg-app-config.js';
+import '/resources/components/postal-lib.js';
 
 const template = html`
     <style>
@@ -80,9 +82,7 @@ const template = html`
             text-overflow: ellipsis;
         }
     </style>
-    <custom-style>
-        <style include="iron-flex iron-flex-reverse iron-flex-alignment iron-flex-factors iron-positioning paper-material-styles"></style>
-    </custom-style>
+    <style include="iron-flex iron-flex-reverse iron-flex-alignment iron-flex-factors iron-positioning paper-material-styles"></style>
     <tg-app-config id="appConfig"></tg-app-config>
     <slot id="menuItemActions" name="menu-item-action"></slot>
 
@@ -293,7 +293,30 @@ Polymer({
         this.$.drawerPanel.responsiveWidth = this.$.appConfig.minDesktopWidth + 'px';
         //Add listener for custom event that was thrown when section is about to lost focus, then this focus should go to the menu if it is opened.
         this.addEventListener("tg-last-item-focused", this._focusMenuAndTearDown.bind(this));
-    }, // end of ready 
+        //Configure track events for drawer
+        const oldTrackStart = this.$.drawer._trackStart.bind(this.$.drawer);
+        const oldTrackMove = this.$.drawer._trackMove.bind(this.$.drawer);
+        const oldTrackEnd = this.$.drawer._trackEnd.bind(this.$.drawer);
+        this.$.drawer._trackStart = function (e) {
+            if (Math.abs(e.detail.dy) > Math.abs(e.detail.dx)) {
+                this._menuScrolling = true;
+            } else {
+                oldTrackStart(e);
+            }
+        }
+        this.$.drawer._trackMove = function (e) {
+            if (!this._menuScrolling) {
+                oldTrackMove(e);
+            } 
+        }
+        this.$.drawer._trackEnd = function (e) {
+            if (!this._menuScrolling) {
+                oldTrackEnd(e);
+            } else {
+                this._menuScrolling = false;
+            }
+        }
+    },
 
     attached: function () {
         const self = this;
@@ -389,6 +412,10 @@ Polymer({
         self.async(function () {
             self.keyEventTarget = getKeyEventTarget(self);
         }, 1);
+        //Reset narrow state to remove no-transition attribute
+        afterNextRender(this, () => {
+            this.$.drawerPanel._narrowChanged();
+        });
     },
 
     _entityChanged: function (newBindingEntity, oldOne) {
@@ -428,7 +455,7 @@ Polymer({
     },
 
     isMenuVisible: function () {
-        return !this.$.drawerPanel.narrow || this.$.drawerPanel.selected === "drawer";
+        return !this.$.drawerPanel.narrow || this.$.drawer.opened;
     },
 
     _menuKeyDown: function (e) {
@@ -444,7 +471,7 @@ Polymer({
     },
 
     _handleCentreRefresh: function (e) {
-        const menuItemSection = findMenuItemSection(e.path);
+        const menuItemSection = findMenuItemSection(e.composedPath());
         if (menuItemSection) {
             this._setHighlightMenuItem(menuItemSection.sectionTitle, e.detail.entities && e.detail.entities.length > 0 && e.detail.pageCount > 0);
         }
@@ -462,7 +489,7 @@ Polymer({
     _activateIfPossible: function (paperMenuItem) {
         if (paperMenuItem.getAttribute("data-route") === this.sectionRoute) {
             if (this.$.drawerPanel.narrow) {
-                this.$.drawerPanel.selected = 'main'; // select main if drawer is in narrow mode
+                this.$.drawer.close(); // select main if drawer is in narrow mode
             }
             this.focusView();
         }
@@ -485,7 +512,7 @@ Polymer({
     },
 
     _closeMenu: function () {
-        if (this.$.drawerPanel.narrow && this.$.drawerPanel.selected === "drawer") {
+        if (this.$.drawerPanel.narrow && this.$.drawer.opened) {
             this._toggleMenu();
         }
     },
@@ -603,7 +630,7 @@ Polymer({
     },
 
     _focusNextSectionView: function (e) {
-        if (this.sectionRoute !== undefined && (!this.$.drawerPanel.narrow || this.$.drawerPanel.selected === "main")) {
+        if (this.sectionRoute !== undefined && (!this.$.drawerPanel.narrow || !this.$.drawer.opened)) {
             const section = this.querySelector('tg-master-menu-item-section[data-route=' + this.sectionRoute + ']');
             section.focusNextView(e);
         } else {
@@ -615,7 +642,7 @@ Polymer({
     },
 
     _focusPreviousSectionView: function (e) {
-        if (this.sectionRoute !== undefined && (!this.$.drawerPanel.narrow || this.$.drawerPanel.selected === "main")) {
+        if (this.sectionRoute !== undefined && (!this.$.drawerPanel.narrow || !this.$.drawer.opened)) {
             const section = this.querySelector('tg-master-menu-item-section[data-route=' + this.sectionRoute + ']');
             section.focusPreviousView(e);
         } else if (this.isMenuVisible()) {
@@ -699,7 +726,7 @@ Polymer({
 
     _sectionRouteChanged: function (newRoute, oldRoute) {
         if (!this.desktopMode()) {
-            this.$.drawerPanel.selected = 'main'; // close drawer in tablet|mobile mode when section route changes (menu item has been actioned by user)
+            this.$.drawer.close(); // close drawer in tablet|mobile mode when section route changes (menu item has been actioned by user)
         }
 
         const oldSection = this.querySelector('tg-master-menu-item-section[data-route=' + oldRoute + ']');

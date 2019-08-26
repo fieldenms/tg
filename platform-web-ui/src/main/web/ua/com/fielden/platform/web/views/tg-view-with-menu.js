@@ -36,7 +36,6 @@ const template = html`
     <style>
         :host {
             @apply --layout-vertical;
-            --paper-listbox-color: var(--paper-blue-grey-500);
             --paper-listbox: {
                 padding: 0;
                 margin: 0;
@@ -48,7 +47,7 @@ const template = html`
                 cursor: pointer;
                 transition: all 300ms ease-in-out;
             };
-            --app-drawer-width: auto;
+            --app-drawer-width: 356px;
             --app-drawer-content-container: {
                 max-width: 100%;
                 @apply --layout-vertical;
@@ -74,19 +73,6 @@ const template = html`
             border-top: 2px solid var(--paper-blue-grey-100);
             border-bottom: 2px solid var(--paper-blue-grey-100);
         }
-        tg-sublistbox[opened] paper-item[slot=trigger] {
-            color: var(--paper-light-blue-700);
-        }
-        tg-sublistbox[opened] paper-item[slot=trigger] paper-checkbox {
-            --paper-checkbox-unchecked-color: var(--paper-light-blue-700);
-            --paper-checkbox-unchecked-ink-color: var(--paper-light-blue-700);
-            --paper-checkbox-checked-color: var(--paper-light-blue-700);
-            --paper-checkbox-checked-ink-color: var(--paper-light-blue-700);
-        }
-        tg-sublistbox[opened] paper-item[slot=trigger] paper-checkbox.undone {
-            --paper-checkbox-checked-color: var(--paper-light-blue-100);
-            --paper-checkbox-checked-ink-color: var(--paper-light-blue-100);
-        }
         .main-content {
             @apply --layout-vertical;
         }
@@ -102,8 +88,18 @@ const template = html`
             }
         }
         paper-checkbox.undone {
-            --paper-checkbox-checked-color: var(--paper-blue-grey-100);
-            --paper-checkbox-checked-ink-color: var(--paper-listbox-color);
+            --paper-checkbox-checked-color: var(--checkbox-undone-color);
+            --paper-checkbox-checked-ink-color: var(--checkbox-undone-color);
+        }
+        paper-item {
+            color: var(--paper-blue-grey-500);
+            --paper-listbox-color: var(--paper-blue-grey-500);
+            --checkbox-undone-color: var(--paper-blue-grey-100);
+        }
+        paper-item.iron-selected:not([focused]) {
+            color: var(--paper-light-blue-700);
+            --paper-listbox-color: var(--paper-light-blue-700);
+            --checkbox-undone-color: var(--paper-light-blue-100);
         }
         neon-animated-pages {
             position: absolute;
@@ -139,9 +135,12 @@ const template = html`
             height: 44px;
             font-size: 18px;
             color: white;
-            background-color: var(--paper-light-blue-700);
+            background-color: var(--tg-main-pannel-color, var(--paper-light-blue-700));
             @apply --layout-horizontal;
             @apply --layout-center;
+        }
+        .watermark {
+            @apply --tg-watermark-style;
         }
         #viewToolbarContainer {
             @apply --layout-horizontal;
@@ -165,9 +164,7 @@ const template = html`
             flex-direction: row-reverse;
         }
     </style>
-    <custom-style>
-        <style include="iron-flex iron-flex-reverse iron-flex-alignment iron-flex-factors iron-positioning"></style>
-    </custom-style>
+    <style include="iron-flex iron-flex-reverse iron-flex-alignment iron-flex-factors iron-positioning"></style>
     <app-drawer-layout id="drawerPanel" fullbleed force-narrow>
 
         <app-drawer disable-swipe="[[!mobile]]" slot="drawer">
@@ -206,8 +203,9 @@ const template = html`
                 <div id="viewToolBarContainer" style="display: contents">
                     <paper-icon-button id="menuButton" icon="menu" tooltip-text="Module menu (tap or hit F2 to invoke)." on-tap="_togglePanel"></paper-icon-button>
                     <tg-menu-search-input id="menuSearcher" menu="[[menu]]" tooltip="Application-wide menu search (tap or hit F3 to invoke)."></tg-menu-search-input>
-                    <div class="flex truncate" tooltip-text$="[[_calcSelectedPageDesc(_selectedPage, saveAsName, saveAsDesc)]]">[[_calcSelectedPageTitle(_selectedPage, saveAsName)]]</div>
-                    <paper-icon-button id="mainMenu" icon="apps" tooltip-text="Main menu" on-tap="_showMenu"></paper-icon-button>
+                    <div class="flex truncate" tooltip-text$="[[_calcSelectedPageDesc(_selectedPage, saveAsName, saveAsDesc)]]">[[selectedPageTitle]]</div>
+                    <div class="flex truncate watermark" hidden$="[[!_watermark]]">[[_watermark]]</div>
+                    <paper-icon-button id="mainMenu" icon="apps" tooltip-text="Main menu (tap or hit F10 to invoke)." on-tap="_showMenu"></paper-icon-button>
                 </div>
             </div>
 
@@ -273,6 +271,10 @@ Polymer({
             type: String,
             observer: '_selectedPageChanged'
         },
+        selectedPageTitle: {
+            type: String,
+            computed: '_calcSelectedPageTitle(_selectedPage, saveAsName)'
+        },
         _hasSomeIcon: Boolean,
         _hasSomeMenu: Boolean,
         saveAsName: {
@@ -301,6 +303,7 @@ Polymer({
     },
     
     ready: function () {
+        this._watermark = window.TG_APP.watermark;
         this._focusNextMenuItem = this._focusNextMenuItem.bind(this.$.menu);
         this._focusPreviousMenuItem = this._focusPreviousMenuItem.bind(this.$.menu);
         this._menuEscKey = this._menuEscKey.bind(this);
@@ -522,14 +525,9 @@ Polymer({
             return;
         }
         const submodulePart = submodule.substring(1).split("?")[0];
-        /* This decoding is needed because the submodule part might be enoceded or decoded. It will encoded if user click some menu item
-         * amd will be decoded when refreshing the page*/
-        const parts = submodulePart.split('/').map(part => decodeURIComponent(part))
         if (menuItem.key === decodeURIComponent(this.selectedModule)) {
-            /* Encoding and joining path parts back in order to select proper menu item and page */
-            const fixedPath = parts.map(part => encodeURIComponent(part)).join('/');
-            this._selectMenu(fixedPath);
-            this._selectPage(fixedPath);
+            this._selectMenu(submodulePart);
+            this._selectPage(submodulePart);
         }
     },
 
@@ -592,10 +590,11 @@ Polymer({
         if (!allDefined(arguments)) {
             return;
         }
-        if (page === '_') {
-            return '';
+        const pageTitle = page === '_' ? '' : (decodeURIComponent(page.split('/').pop()) + (saveAsName !== '' ? ' (' + saveAsName + ')' : ''));
+        if (pageTitle) {
+            document.title = pageTitle;
         }
-        return decodeURIComponent(page.split('/').pop()) + (saveAsName !== '' ? ' (' + saveAsName + ')' : '');
+        return pageTitle;
     },
     
     _calcSelectedPageDesc: function (page, saveAsName, saveAsDesc) {

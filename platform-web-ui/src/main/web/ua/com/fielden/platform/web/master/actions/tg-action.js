@@ -5,12 +5,13 @@ import '/resources/polymer/@polymer/paper-button/paper-button.js';
 import '/resources/polymer/@polymer/paper-spinner/paper-spinner.js';
 import '/resources/polymer/@polymer/paper-styles/color.js';
 
+import '/resources/components/postal-lib.js';
+
 import { TgFocusRestorationBehavior } from '/resources/actions/tg-focus-restoration-behavior.js';
 import { createEntityActionThenCallback } from '/resources/master/actions/tg-entity-master-closing-utils.js';
 import { TgElementSelectorBehavior } from '/resources/components/tg-element-selector-behavior.js';
 import { allDefined } from '/resources/reflection/tg-polymer-utils.js';
 // depends on '/resources/filesaver/FileSaver.min.js' 
-// depends on '/resources/postal/2.0.5/postal.min.js' 
 
 const template = html`
     <style>

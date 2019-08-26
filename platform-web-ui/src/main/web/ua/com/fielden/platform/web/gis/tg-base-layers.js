@@ -1,4 +1,5 @@
 import { L } from '/resources/gis/leaflet/leaflet-lib.js';
+import { esri } from '/resources/gis/leaflet/esri/esri-leaflet-lib.js';
 import { googleMutant } from '/resources/gis/leaflet/providers/leaflet-google-maps-lib.js';
 
 export const BaseLayers = function () {
@@ -11,6 +12,11 @@ export const BaseLayers = function () {
     const osmAttrib = '&copy; ' + osmLink + ' Contributors';
     const landUrl = 'https://{s}.tile.thunderforest.com/landscape/{z}/{x}/{y}.png';
     const thunAttrib = '&copy; ' + osmLink + ' Contributors & ' + thunLink;
+    
+    const esriTopographicMap = esri.basemapLayer('Topographic');
+    const esriStreetsMap = esri.basemapLayer('Streets');
+    const esriImageryMap = esri.basemapLayer('Imagery');
+    const esriDarkGrayMap = esri.basemapLayer('DarkGray');
 
     // initialise different BaseLayers for different tile providers
     const osmMap = L.tileLayer(osmUrl, {
@@ -42,26 +48,13 @@ export const BaseLayers = function () {
         type:'terrain'
     });
 
-    /*const googleRoadMap = new Google('ROADMAP', {
-        maxZoom: 21,
-        minZoom: 0
-    });
-    const googleSatelliteMap = new Google('SATELLITE', {
-        maxZoom: 19,
-        minZoom: 0
-    });
-    const googleHybridMap = new Google('HYBRID', {
-        maxZoom: 19,
-        minZoom: 0
-    });
-    const googleTerrainMap = new Google('TERRAIN', {
-        maxZoom: 15,
-        minZoom: 0
-    });*/
     self._baseLayers = {
-        "OpenStreetMap": osmMap,
+        "Esri Topographic": esriTopographicMap,
+        "Esri Streets": esriStreetsMap,
+        "Esri Imagery": esriImageryMap,
+        "Esri Dark Gray": esriDarkGrayMap,
+        "Open Street Map": osmMap,
         "Landscape": landMap,
-        // "Bing": bingMap,	
         "Google Roadmap": googleRoadMap,
         "Google Sattelite": googleSatelliteMap,
         "Google Hybrid": googleHybridMap,

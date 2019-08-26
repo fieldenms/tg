@@ -69,7 +69,7 @@ const TgAbstractMultiCriterionBehaviorImpl = {
     _createMetaValueEditors: function () {
         console.log("tg-abstract-multi-criterion-behavior: _createMetaValueEditors");
         return TgAbstractCriterionBehavior[1]._createMetaValueEditors.call(this) +
-            '<tg-multi-criterion-config class="layout vertical" _or-null="{{_orNullBind}}" _not="{{_notBind}}"></tg-multi-criterion-config>';
+            '<tg-multi-criterion-config class="layout vertical" _exclude-missing="[[_excludeMissingBind]]" _or-null="{{_orNullBind}}" _not="{{_notBind}}"></tg-multi-criterion-config>';
     },
 
     _orNullChanged: function (newValue, oldValue) {

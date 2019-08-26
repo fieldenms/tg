@@ -57,6 +57,8 @@ Polymer({
 
       #a11yWrapper {
         visibility: hidden;
+        overflow: hidden;
+        text-overflow: ellipsis;
       }
 
       :host([invalid]) #a11yWrapper {

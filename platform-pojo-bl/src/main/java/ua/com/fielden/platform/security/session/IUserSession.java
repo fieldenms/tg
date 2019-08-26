@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.security.session;
 
+import java.util.Date;
 import java.util.Optional;
 
 import ua.com.fielden.platform.dao.IEntityDao;
@@ -14,37 +15,42 @@ import ua.com.fielden.platform.security.user.User;
 public interface IUserSession extends IEntityDao<UserSession> {
 
     /**
-     * Constructs an updated user session for the specified user, but only if the provided <code>authenticator</code> is valid for the
+     * Constructs an updated user session for the specified user, but only if the provided {@code authenticator} is valid for the
      * specified <code>user</code> and associated with one of the active user sessions.
      * <p>
-     * The process of authenticator validation includes hash verification using the specified <code>key</code>, expirations and user association checks.
+     * The process of authenticator validation includes hash verification, expirations and user association checks.
      * <p>
      * An empty result is returned if the authenticator does not pass validation.
      * If a stale user session was discovered as part of the validation process, it gets deleted.
-     * All user sessions get cleared in case of suspected authenticator theft.
+     * All user sessions get cleared in case of a suspected authenticator theft.
      * <p>
-     * A non-empty result contains an updated user session with a new <code>authenticator</code>.
+     * A non-empty result contains an updated user session with a new {@code authenticator}.
+     * However, authenticator/session pairs get cached for a short period of time (e.g. 2 minutes) for performance reasons.
+     * All cached values are considered valid.
+     * Cache hits return the same results without re-generation.
      * <p>
      * Authenticator theft scenario: in case of successful recognition, but unsuccessful authenticator location in the database, all sessions for the same user get invalidated.
      *
+     * @param user
      * @param authenticator
-     * @param key
      * @param shouldConsiderTheftScenario -- if <code>true</code> then authenticator theft scenario is on.
+     * @param skipRegeneration -- if {@code true} then a new authenticator will NOT be generated to replace the current one; if {@code false} then regeneration may take place depending whether values are cached.
      * @return
      */
-    Optional<UserSession> currentSession(final User user, final String authenticator, final boolean shouldConsiderTheftScenario);
+    Optional<UserSession> currentSession(final User user, final String authenticator, final boolean shouldConsiderTheftScenario, final boolean skipRegeneration);
 
     /**
-     * The same as {@link IUserSession#currentSession(User, String, boolean)} with the last argument set to <code>true</code>.
+     * The same as {@link IUserSession#currentSession(User, String, boolean, boolean)} with argument {@code shouldConsiderTheftScenario} set to {@code true}.
      *
      * @param user
      * @param authenticator
+     * @param skipRegeneration -- if {@code true} then a new authenticator will NOT be generated to replace the current one; if {@code false} then regeneration may take place depending whether values are cached.
      * @return
      */
-    Optional<UserSession> currentSession(final User user, final String authenticator);
+    Optional<UserSession> currentSession(final User user, final String authenticator, final boolean skipRegeneration);
 
     /**
-     * This method creates a new session for the provided users.
+     * This method creates and persists a new session for the provided users.
      * It is assumed that the user has been explicitly authenticated by the system before making a call to this method.
      * <p>
      * It is considered that a new user session can always be created for the provided user.
@@ -53,13 +59,29 @@ public interface IUserSession extends IEntityDao<UserSession> {
      * <p>
      * Argument <code>isDeviceTruested</code> indicates whether the session is being established from trusted or untrusted devices.
      * This provides hints to the system to establish a long or short lived sessions.
-     * <p>
-     * The <code>key</code> is used to produce the authenticator and to encode the dynamically generated series id for the session.
      *
-     * @param key
+     * @param user
+     * @param isDeviceTrusted
      * @return
      */
     UserSession newSession(final User user, final boolean isDeviceTrusted);
+
+    /**
+     * Generates cryptographically strong series that is used as session id.
+     *
+     * @return
+     */
+    String genSeriesId();
+
+    /**
+     * Makes a session authenticator from {@code user}, {@code seriesId} and {@code expiryTime}.
+     *
+     * @param user
+     * @param seriesId
+     * @param expiryTime
+     * @return
+     */
+    Authenticator mkAuthenticator(final User user, final String seriesId, final Date expiryTime);
 
     /**
      * Invalidates the specified user session. 

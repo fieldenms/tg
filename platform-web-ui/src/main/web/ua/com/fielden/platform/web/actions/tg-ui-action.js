@@ -6,10 +6,11 @@ import '/resources/polymer/@polymer/paper-button/paper-button.js';
 import '/resources/polymer/@polymer/paper-spinner/paper-spinner.js';
 import '/resources/polymer/@polymer/paper-styles/color.js';
 
+import '/resources/components/postal-lib.js';
+
 import { TgFocusRestorationBehavior } from '/resources/actions/tg-focus-restoration-behavior.js';
 import { TgElementSelectorBehavior } from '/resources/components/tg-element-selector-behavior.js';
 import { tearDownEvent, allDefined } from '/resources/reflection/tg-polymer-utils.js';
-// depends on '/resources/postal/2.0.5/postal.min.js' 
 import { TgReflector } from '/app/tg-reflector.js';
 
 const template = html`
@@ -438,6 +439,7 @@ Polymer({
             master.postRetrievedError = function (errorResult) {
                 // actions completes even if the retrieval fails, i.e. it never gets to the saving stage
                 self.isActionInProgress = false;
+                self.restoreActionState();
             };
 
             master.postValidated = function (validatedEntity, bindingEntity, customObject) {
@@ -515,7 +517,10 @@ Polymer({
                     if (self.modifyFunctionalEntity) {
                         self.modifyFunctionalEntity(master._currBindingEntity, master, self);
                     }
+
+                    // Set master for this action.
                     self._masterReferenceForTesting = master;
+
                     if (master.saveOnActivation === true) {
                         return master.save(); // saving promise
                     }

@@ -1,5 +1,8 @@
 package ua.com.fielden.platform.entity.annotation;
 
+import static ua.com.fielden.platform.entity.annotation.CritOnly.Mnemonics.WITH;
+import static ua.com.fielden.platform.entity.annotation.CritOnly.Mnemonics.WITHOUT;
+
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
@@ -16,7 +19,8 @@ import java.lang.annotation.Target;
 @Target({ ElementType.FIELD })
 public @interface CritOnly {
 
-    Type value() default Type.RANGE; // represents a choice by which boundary (left or right) the property should be selected.
+    /** Defines how associated property should be represented. */
+    Type value() default Type.RANGE;
 
     /** Only applicable to criteria only properties of BigDecimal type. */
     long precision() default -1;
@@ -24,15 +28,39 @@ public @interface CritOnly {
     /** Only applicable to criteria only properties of BigDecimal type. */
     long scale() default -1;
 
+    /** Attribute to specify applicability of mnemonics for a {@code CritOnly} property. */
+    Mnemonics mnemonics() default Mnemonics.DEFAULT;
+
+    /** Attribute that determines whether to exclude missing mnemonic or not.*/
+    boolean excludeMissing() default false;
+
     /**
-     * Enumeration for specifying the type of a crit-only selection criterion. 
+     * Mnemonic options for overriding default value deduced from critonly {@link Type}.
+     */
+    public enum Mnemonics {
+        /** The value for mnemonics should be deduced from the value of {@code CritOnly.Type}. */
+        DEFAULT,
+        /** Critonly property should be with mnemonics. */
+        WITH,
+        /** Critonly property should be without mnemonics. */
+        WITHOUT
+    }
+
+    /**
+     * Enumeration for specifying the type of a crit-only selection criterion.
      */
     public enum Type {
         /** Indicates that property should be selected by left and right boundary (if it is range property) and by single boundary (if it is single property). */
-        RANGE,
+        RANGE(WITH),
         /** Indicates that property should be selected only by single boundary (even if it is range property). */
-        SINGLE,
+        SINGLE(WITHOUT),
         /** Specifies whether associated crit-only property should represent a multi valued selection criterion. */
-        MULTI
+        MULTI(WITH);
+
+        public final Mnemonics defaultMnemonics;
+
+        private Type (final Mnemonics mnemonics) {
+            this.defaultMnemonics = mnemonics;
+        }
     }
 }

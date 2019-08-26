@@ -1,5 +1,6 @@
 import { Polymer } from '/resources/polymer/@polymer/polymer/lib/legacy/polymer-fn.js';
 import { html } from '/resources/polymer/@polymer/polymer/lib/utils/html-tag.js';
+import { IronResizableBehavior } from '/resources/polymer/@polymer/iron-resizable-behavior/iron-resizable-behavior.js';
 
 import '/resources/polymer/@polymer/iron-ajax/iron-ajax.js';
 import '/resources/polymer/@polymer/iron-flex-layout/iron-flex-layout-classes.js';
@@ -17,17 +18,17 @@ const template = html`
         }
         #masterContainer {
             @apply --master-with-dimensions-mixin;
+            overflow-x: hidden;
             overflow-y: auto; /* vertical scrollbar is needed in case where master content does not fit into parent container; this works as a fallback when editorContainer has been shrinked to zero height */
         }
         tg-scrollable-component {
             --tg-scrollable-layout: {
                 flex: 1;
+                @apply --master-with-dimensions-mixin;
             };
         }
     </style>
-    <custom-style>
-        <style include="iron-flex iron-flex-reverse iron-flex-alignment iron-flex-factors iron-positioning"></style>
-    </custom-style>
+    <style include="iron-flex iron-flex-reverse iron-flex-alignment iron-flex-factors iron-positioning"></style>
     <tg-entity-binder id="binderDom"></tg-entity-binder>
     <tg-confirmation-dialog id="confirmationDialog"></tg-confirmation-dialog>
     <tg-entity-validator id="validator"
@@ -107,6 +108,8 @@ Polymer({
         }
     },
 
+    behaviors: [IronResizableBehavior],
+    
     observers: ['_masterLoaded(_bodyLoaded, _actionBarLoaded)'],
 
     ready: function () {

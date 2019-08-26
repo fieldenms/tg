@@ -253,8 +253,9 @@ public class TgWorkOrder extends AbstractEntity<String> {
     }
 
     @Observable
-    public void setImportantProperty(final PropertyDescriptor<TgWorkOrder> importantProperty) {
+    public TgWorkOrder setImportantProperty(final PropertyDescriptor<TgWorkOrder> importantProperty) {
         this.importantProperty = importantProperty;
+        return this;
     }
 
     public TgVehicle getVehicle() {

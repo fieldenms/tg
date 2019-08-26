@@ -17,6 +17,7 @@ const additionalTemplate = html`
             user-select: none;
             -o-user-select: none;
             font-family: 'Roboto', 'Noto', sans-serif;
+            --paper-checkbox-unchecked-color: var(--paper-grey-900);
             --paper-checkbox-checked-color: var(--paper-light-blue-700);
             --paper-checkbox-checked-ink-color: var(--paper-light-blue-700);
             height: 24px;
@@ -38,9 +39,7 @@ const additionalTemplate = html`
             text-overflow: ellipsis;
         }
     </style>
-    <custom-style>
-        <style include="iron-flex iron-flex-reverse iron-flex-alignment iron-flex-factors iron-positioning"></style>
-    </custom-style>`;
+    <style include="iron-flex iron-flex-reverse iron-flex-alignment iron-flex-factors iron-positioning"></style>`;
 const customInputTemplate = html`
     <paper-checkbox
             id="input"

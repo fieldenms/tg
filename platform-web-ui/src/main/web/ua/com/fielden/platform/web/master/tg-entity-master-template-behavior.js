@@ -49,7 +49,7 @@ const TgEntityMasterTemplateBehaviorImpl = {
     },
 
     addOwnKeyBindings: function () {
-        const keyBindings = this.keyBindings;
+        const keyBindings = this._ownKeyBindings;
         if (this.$.loader) {
             if (this.$.loader.wasLoaded) {
                 if (typeof this.$.loader.loadedElement.addOwnKeyBindings === 'function') {

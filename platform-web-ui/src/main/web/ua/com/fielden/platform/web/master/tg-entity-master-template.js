@@ -5,9 +5,7 @@ import { TgEntityMasterTemplateBehavior, Polymer, html } from '/resources/master
 
 const template = html`<!-- TODO layout vertical -->
     <style include="tg-entity-master-styles"></style> <!-- imported as part of tg-entity-master-template-behavior to reduce the size of resultant generated file -->
-    <custom-style>
-        <style include="iron-flex iron-flex-reverse iron-flex-alignment iron-flex-factors iron-positioning"></style>
-    </custom-style>
+    <style include="iron-flex iron-flex-reverse iron-flex-alignment iron-flex-factors iron-positioning"></style>
     <tg-entity-master
         id="masterDom"
         entity-type="[[entityType]]"
@@ -80,7 +78,7 @@ Polymer({
     /**
      * Generated shortcut bindings to single function _shortcutPressed, which locates appropriate tg-action / tg-ui-action and invokes its function 'shortcutPressed'.
      */
-    keyBindings: {
+    _ownKeyBindings: {
         '@SHORTCUTS': '_shortcutPressed'
     }
 });

@@ -54,6 +54,11 @@ milliseconds.
 Polymer({
   is: 'iron-location',
   properties: {
+    //Indicates whether uri should be docoded on window.location changes or not.
+    noDecode: {
+      type: Boolean,
+      value: false 
+    },
     /**
      * The pathname component of the URL.
      */
@@ -61,7 +66,7 @@ Polymer({
       type: String,
       notify: true,
       value: function () {
-        return window.decodeURIComponent(window.location.pathname);
+        return this.noDecode ? window.location.pathname : window.decodeURIComponent(window.location.pathname);
       }
     },
 
@@ -83,7 +88,7 @@ Polymer({
       type: String,
       notify: true,
       value: function () {
-        return window.decodeURIComponent(window.location.hash.slice(1));
+        return this.noDecode ? window.location.hash.slice(1) : window.decodeURIComponent(window.location.hash.slice(1));
       }
     },
 
@@ -178,9 +183,39 @@ Polymer({
     this._initialized = false;
   },
   _hashChanged: function () {
+    if (this.noDecode) {
+      this._hashChangedOld();
+    } else {
+      this._hashChangedNew();
+    }
+  },  
+  _hashChangedOld: function () {
+    this.hash = window.location.hash.substring(1);
+  },
+  _hashChangedNew: function () {
     this.hash = window.decodeURIComponent(this.__location.hash.substring(1));
   },
   _urlChanged: function () {
+    if (this.noDecode) {
+      this._urlChangedOld();
+    } else {
+      this._urlChangedNew();
+    }
+  },
+  _urlChangedOld: function () {
+    // We want to extract all info out of the updated URL before we
+    // try to write anything back into it.
+    //
+    // i.e. without _dontUpdateUrl we'd overwrite the new path with the old
+    // one when we set this.hash. Likewise for query.
+    this._dontUpdateUrl = true;
+    this._hashChanged();
+    this.path = window.location.pathname;
+    this.query = window.location.search.substring(1);
+    this._dontUpdateUrl = false;
+    this._updateUrl();
+  },
+  _urlChangedNew: function () {
     // We want to extract all info out of the updated URL before we
     // try to write anything back into it.
     //
@@ -197,6 +232,24 @@ Polymer({
     this._updateUrl();
   },
   _getUrl: function () {
+    if (this.noDecode) {
+      return this._getUrlOld();
+    } else {
+      return this._getUrlNew();
+    }
+  },
+  _getUrlOld: function() {
+    var url = this.path;
+    var query = this.query;
+    if (query) {
+      url += '?' + query;
+    }
+    if (this.hash) {
+      url += '#' + this.hash;
+    }
+    return url;
+  },
+  _getUrlNew: function () {
     var partiallyEncodedPath = window.encodeURI(this.path).replace(/\#/g, '%23').replace(/\?/g, '%3F');
     var partiallyEncodedQuery = '';
 
@@ -219,7 +272,42 @@ Polymer({
 
     return partiallyEncodedPath + partiallyEncodedQuery + partiallyEncodedHash;
   },
-  _updateUrl: function () {
+  _updateUrl: function() {
+    if (this.noDecode) {
+      this._updateUrlOld();
+    } else {
+      this._updateUrlNew();
+    }
+  },
+  _updateUrlOld: function() {
+    if (this._dontUpdateUrl || !this._initialized) {
+      return;
+    }
+    var newUrl = this._getUrl();
+    var currentUrl = (
+        window.location.pathname +
+        window.location.search +
+        window.location.hash
+    );
+    if (newUrl == currentUrl) {
+      // nothing to do, the URL didn't change
+      return;
+    }
+    // Need to use a full URL in case the containing page has a base URI.
+    var fullNewUrl = new URL(
+        newUrl, window.location.protocol + '//' + window.location.host).href;
+    var now = window.performance.now();
+    var shouldReplace =
+        this._lastChangedAt + this.dwellTime > now;
+    this._lastChangedAt = now;
+    if (shouldReplace) {
+      window.history.replaceState({}, '', fullNewUrl);
+    } else {
+      window.history.pushState({}, '', fullNewUrl);
+    }
+    this.fire('location-changed', {}, {node: window});
+  },
+  _updateUrlNew: function () {
     if (this._dontUpdateUrl || !this._initialized) {
       return;
     }
@@ -247,7 +335,7 @@ Polymer({
       node: window
     });
   },
-
+  
   /**
    * A necessary evil so that links work as expected. Does its best to
    * bail out early if possible.

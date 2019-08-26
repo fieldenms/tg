@@ -7,8 +7,6 @@
     <title>Input performance spike with flex layout</title>
     <script src='/resources/polymer/@webcomponents/webcomponentsjs/webcomponents-bundle.js'></script>
     <script src='/resources/polymer/web-animations-js/web-animations-next-lite.min.js'></script>
-    <script src="/resources/lodash/4.17.11/lodash.min.js"></script>
-    <script src="/resources/postal/2.0.5/postal.min.js"></script>
     <script src="/resources/filesaver/FileSaver.min.js"></script>
     <script type="module">
         import '/resources/polymer/@polymer/iron-flex-layout/iron-flex-layout-classes.js';
@@ -27,18 +25,16 @@
         // import '/resources/editors/tg-hyperlink-editor.js';
         // import '/resources/editors/tg-colour-picker.js';
     </script>
-
-    <style>
-        html {
-            font-size: 10pt;
-        }
-        body {
-            font-family: 'Roboto', 'Helvetica Neue', Helvetica, Arial, sans-serif;
-            font-size: 10pt;
-        }
-    </style>
     <custom-style>
-        <style include="iron-flex iron-flex-reverse iron-flex-alignment iron-flex-factors iron-positioning"></style>
+        <style include="iron-flex iron-flex-reverse iron-flex-alignment iron-flex-factors iron-positioning">
+            html {
+                font-size: 10pt;
+            }
+            body {
+                font-family: 'Roboto', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+                font-size: 10pt;
+            }
+        </style>
     </custom-style>
 </head>
 <body unresolved class="fullbleed">

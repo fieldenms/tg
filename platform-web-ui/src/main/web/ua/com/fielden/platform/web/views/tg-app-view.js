@@ -8,6 +8,7 @@ import '/resources/views/tg-view-with-menu.js';
 
 import { Polymer } from '/resources/polymer/@polymer/polymer/lib/legacy/polymer-fn.js';
 import { html } from '/resources/polymer/@polymer/polymer/lib/utils/html-tag.js';
+import { IronResizableBehavior } from '/resources/polymer/@polymer/iron-resizable-behavior/iron-resizable-behavior.js';
 import { NeonAnimatableBehavior } from '/resources/polymer/@polymer/neon-animation/neon-animatable-behavior.js';
 
 import { TgAppAnimationBehavior } from '/resources/views/tg-app-animation-behavior.js'; 
@@ -24,9 +25,7 @@ const template = html`
             width: 100%;
         }
     </style>
-    <custom-style>
-        <style include="iron-flex iron-flex-reverse iron-flex-alignment iron-flex-factors iron-positioning"></style>
-    </custom-style>
+    <style include="iron-flex iron-flex-reverse iron-flex-alignment iron-flex-factors iron-positioning"></style>
     <div class="fit layout vertical center-center" style$="[[_calcStyleForItem(menuItem)]]">
         <div class="item-bg relative">
             <iron-icon class="fit" style$="[[_calcSvgStyleForItem(menuItem)]]" icon="[[menuItem.detailIcon]]"></iron-icon>
@@ -67,6 +66,7 @@ Polymer({
     },
 
     behaviors: [
+        IronResizableBehavior,
         NeonAnimatableBehavior,
         TgAppAnimationBehavior
     ],
@@ -128,6 +128,10 @@ Polymer({
 
     getSelectedPage: function () {
         return this.$.view.getSelectedPage();
+    },
+
+    getSelectedPageTitle: function () {
+        return this.$.view.selectedPageTitle || this.menuItem.key;
     },
 
     searchMenu: function () {

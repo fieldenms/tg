@@ -13,9 +13,7 @@ class TgScrollableComponentExample extends PolymerElement {
                     height: 450px;
                 }
             </style>
-            <custom-style>
-                <style include="iron-flex iron-flex-reverse iron-flex-alignment iron-flex-factors iron-positioning"></style>
-            </custom-style>
+            <style include="iron-flex iron-flex-reverse iron-flex-alignment iron-flex-factors iron-positioning"></style>
             <tg-scrollable-component class="fit">
                 <div class="layout vertical" style="min-height:fit-content">
                     <div>TEST</div>

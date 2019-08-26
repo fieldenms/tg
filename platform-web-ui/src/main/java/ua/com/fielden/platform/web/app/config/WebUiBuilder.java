@@ -1,7 +1,6 @@
 package ua.com.fielden.platform.web.app.config;
 
 import static java.lang.String.format;
-import static ua.com.fielden.platform.web.interfaces.DeviceProfile.MOBILE;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -19,7 +18,6 @@ import ua.com.fielden.platform.web.app.exceptions.WebUiBuilderException;
 import ua.com.fielden.platform.web.centre.EntityCentre;
 import ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig;
 import ua.com.fielden.platform.web.custom_view.AbstractCustomView;
-import ua.com.fielden.platform.web.interfaces.DeviceProfile;
 import ua.com.fielden.platform.web.view.master.EntityMaster;
 
 /**
@@ -40,6 +38,9 @@ public class WebUiBuilder implements IWebUiBuilder {
     private String dateFormat = "DD/MM/YYYY";
     private String timeFormat = "h:mm A";
     private String timeWithMillisFormat = "h:mm:ss.SSS A";
+    private Optional<String> panelColor = Optional.empty();
+    private Optional<String> watermark = Optional.empty();
+    private Optional<String> watermarkStyle = Optional.empty();
 
     /**
      * Holds the map between master's entity type and its master component.
@@ -218,9 +219,27 @@ public class WebUiBuilder implements IWebUiBuilder {
                 replace("@timeWithMillisFormat", "\"" + this.timeWithMillisFormat + "\"");
     }
 
+    public String getAppIndex () {
+        return ResourceLoader.getText("ua/com/fielden/platform/web/index.html")
+                .replace("@panelColor", panelColor.map(val -> "--tg-main-pannel-color: " + val + ";").orElse(""))
+                .replace("@watermark", "'" + watermark.orElse("") + "'")
+                .replace("@cssStyle", watermarkStyle.orElse("") );
+    }
+
     @Override
     public IWebUiBuilder addCustomView(final AbstractCustomView customView) {
         viewMap.put(customView.getViewName(), customView);
+        return this;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public IWebUiBuilder withTopPanelStyle(final Optional<String> backgroundColour, final Optional<String> watermark, final Optional<String> cssWatermark) {
+        this.panelColor = backgroundColour;
+        this.watermark = watermark;
+        this.watermarkStyle = cssWatermark;
         return this;
     }
 }

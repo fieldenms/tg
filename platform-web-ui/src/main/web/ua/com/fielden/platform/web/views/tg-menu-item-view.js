@@ -9,11 +9,15 @@ import '/resources/element_loader/tg-element-loader.js';
 
 import { Polymer } from '/resources/polymer/@polymer/polymer/lib/legacy/polymer-fn.js';
 import { html } from '/resources/polymer/@polymer/polymer/lib/utils/html-tag.js';
+import { IronResizableBehavior } from '/resources/polymer/@polymer/iron-resizable-behavior/iron-resizable-behavior.js';
 
 const template = html`
     <style>
         :host {
             @apply --layout-vertical;
+        }
+        :host(:focus) {
+            outline: none;
         }
         .view {
             background-color: white;
@@ -31,9 +35,7 @@ const template = html`
             @apply --shadow-elevation-2dp;
         }
     </style>
-    <custom-style>
-        <style include="iron-flex iron-flex-reverse iron-flex-alignment iron-flex-factors iron-positioning paper-material-styles"></style>
-    </custom-style>
+    <style include="iron-flex iron-flex-reverse iron-flex-alignment iron-flex-factors iron-positioning paper-material-styles"></style>
     <template is="dom-if" if="[[menuItem.view]]" restamp>
         <template is="dom-if" if="[[!_isCentre(menuItem)]]" on-dom-change="_viewWasDefined" restamp>
             <div class="master-container" id="customViewContainer">
@@ -85,6 +87,8 @@ Polymer({
             observer: "_prefDimChanged"
         }
     },
+
+    behaviors: [IronResizableBehavior],
 
     hostAttributes: {
         "tabindex": "0"

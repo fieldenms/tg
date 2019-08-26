@@ -1,5 +1,7 @@
 package ua.com.fielden.platform.reflection.asm.impl;
 
+import static ua.com.fielden.platform.reflection.asm.impl.DynamicTypeNamingService.nextTypeName;
+
 import java.lang.annotation.Annotation;
 import java.util.List;
 import java.util.Map;
@@ -19,7 +21,6 @@ import ua.com.fielden.platform.entity.annotation.Generated;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.entity.annotation.Title;
-import ua.com.fielden.platform.entity.annotation.factory.IsPropertyAnnotation;
 import ua.com.fielden.platform.reflection.Reflector;
 import ua.com.fielden.platform.reflection.asm.api.NewProperty;
 import ua.com.fielden.platform.utils.Pair;
@@ -48,12 +49,9 @@ public class AdvancedAddPropertyAdapter extends ClassVisitor implements Opcodes 
     private String owner;
     private String enhancedName;
 
-    private final DynamicTypeNamingService namingService;
-
-    public AdvancedAddPropertyAdapter(final ClassVisitor cv, final DynamicTypeNamingService namingService, final Map<String, NewProperty> propertiesToAdd) {
+    public AdvancedAddPropertyAdapter(final ClassVisitor cv, final Map<String, NewProperty> propertiesToAdd) {
         super(Opcodes.ASM5, cv);
         this.propertiesToAdd = propertiesToAdd;
-        this.namingService = namingService;
     }
 
     /**
@@ -64,7 +62,7 @@ public class AdvancedAddPropertyAdapter extends ClassVisitor implements Opcodes 
     @Override
     public void visit(final int version, final int access, final String name, final String signature, final String superName, final String[] interfaces) {
         owner = name;
-        enhancedName = namingService.nextTypeName(name);
+        enhancedName = nextTypeName(name);
         super.visit(version, access, enhancedName, signature, superName, interfaces);
     }
 

@@ -1,4 +1,5 @@
 import '/resources/polymer/@polymer/polymer/polymer-legacy.js';
+import { random } from '/resources/reflection/tg-numeric-utils.js'
 
 export const TgSseBehavior = {
 
@@ -42,12 +43,6 @@ export const TgSseBehavior = {
         _timerIdForReconnection: {
             type: Number,
             value: null
-        },
-
-        /* Counts the number of attempts to reconnect to the server. */
-        _reconnectAttempts: {
-            type: Number,
-            value: 0
         }
     },
 
@@ -121,17 +116,14 @@ export const TgSseBehavior = {
             if (e.eventPhase === EventSource.CLOSED) {
                 // Connection was closed by the server
                 self.closeEventSource();
-                // Let's kick a timer for reconnection and we have not tried hard enough...
-                if (self._reconnectAttempts < 10) {
-                    self._reconnectAttempts = self._reconnectAttempts + 1;
-                    _timerIdForReconnection = setTimeout(() => {
-                        try {
-                            self._registerEventSourceHandlers();
-                        } finally {
-                            self._timerIdForReconnection = null;
-                        }
-                    }, 15000);
-                }
+                // Let's kick a timer for reconnection...
+                self._timerIdForReconnection = setTimeout(() => {
+                    try {
+                        self._registerEventSourceHandlers();
+                    } finally {
+                        self._timerIdForReconnection = null;
+                    }
+                }, 15000);
             }
 
             // invoke error handler if provided

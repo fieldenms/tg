@@ -7,8 +7,6 @@
     <title>d3 chart spike</title>
     <script src='/resources/polymer/@webcomponents/webcomponentsjs/webcomponents-bundle.js'></script>
     <script src='/resources/polymer/web-animations-js/web-animations-next-lite.min.js'></script>
-    <script src="/resources/lodash/4.17.11/lodash.min.js"></script>
-    <script src="/resources/postal/2.0.5/postal.min.js"></script>
     <script src="/resources/filesaver/FileSaver.min.js"></script>
     <script type="module">
         import '/resources/polymer/@polymer/iron-flex-layout/iron-flex-layout-classes.js';
@@ -17,14 +15,13 @@
         import '/app/tg-reflector.js';
         import '/resources/components/tg-bar-chart/tg-bar-chart.js'
     </script>
-    <style>
-        tg-bar-chart {
-            min-width: 500px;
-            min-height: 200px;
-        }
-    </style>
     <custom-style>
-        <style include="iron-flex iron-flex-reverse iron-flex-alignment iron-flex-factors iron-positioning"></style>
+        <style include="iron-flex iron-flex-reverse iron-flex-alignment iron-flex-factors iron-positioning">
+            tg-bar-chart {
+                min-width: 500px;
+                min-height: 200px;
+            }
+        </style>
     </custom-style>
 </head>
 

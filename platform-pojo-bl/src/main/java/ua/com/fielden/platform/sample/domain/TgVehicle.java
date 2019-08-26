@@ -13,6 +13,8 @@ import org.junit.Ignore;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.Calculated;
 import ua.com.fielden.platform.entity.annotation.CompanionObject;
+import ua.com.fielden.platform.entity.annotation.CritOnly;
+import ua.com.fielden.platform.entity.annotation.CritOnly.Type;
 import ua.com.fielden.platform.entity.annotation.DescTitle;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.KeyType;
@@ -145,15 +147,11 @@ public class TgVehicle extends AbstractEntity<String> {
     @Calculated
     @Title("Calc Model")
     private TgVehicleModel calcModel;
-    
-    @Observable
-    public TgVehicle setCalcModel(final TgVehicleModel calcModel) {
-        this.calcModel = calcModel;
-        return this;
-    }
-
     protected static final ExpressionModel calcModel_ = expr().prop("model").model();
 
+    @IsProperty
+    @CritOnly(Type.MULTI)
+    private TgFuelType fuelTypeCrit;
 
     @IsProperty
     @Title(value = "Financial details", desc = "Fin Details")
@@ -168,10 +166,26 @@ public class TgVehicle extends AbstractEntity<String> {
     //    private BigDecimal aggregated;
     //    private static final ExpressionModel aggregated_ = expr().sumOf().prop("purchasePrice.amount").model();
     //  public BigDecimal getAggregated() {
-    //	return aggregated;
+    //  return aggregated;
     //  }
 
 
+    @Observable
+    public TgVehicle setFuelTypeCrit(final TgFuelType fuelTypeCrit) {
+        this.fuelTypeCrit = fuelTypeCrit;
+        return this;
+    }
+
+    public TgFuelType getFuelTypeCrit() {
+        return fuelTypeCrit;
+    }
+
+    @Observable
+    public TgVehicle setCalcModel(final TgVehicleModel calcModel) {
+        this.calcModel = calcModel;
+        return this;
+    }
+    
     @Observable
     public TgVehicle setFinDetails(final TgVehicleFinDetails finDetails) {
         this.finDetails = finDetails;
@@ -209,7 +223,7 @@ public class TgVehicle extends AbstractEntity<String> {
     }
 
     //    public TgVehicleMake getCalcMake() {
-    //	return calcMake;
+    //  return calcMake;
     //    }
 
     public Money getSumOfPrices() {

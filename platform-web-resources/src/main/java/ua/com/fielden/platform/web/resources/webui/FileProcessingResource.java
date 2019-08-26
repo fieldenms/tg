@@ -7,6 +7,9 @@ import static ua.com.fielden.platform.web.utils.WebUiResourceUtils.handleUndesir
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.UnsupportedEncodingException;
+import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
 import java.util.Date;
 import java.util.Set;
 import java.util.function.Function;
@@ -25,7 +28,6 @@ import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.entity.AbstractEntityWithInputStream;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.rx.observables.ProcessingProgressSubject;
-import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.web.interfaces.IDeviceProvider;
 import ua.com.fielden.platform.web.resources.RestServerUtil;
 import ua.com.fielden.platform.web.rx.eventsources.ProcessingProgressEventSource;
@@ -79,7 +81,12 @@ public class FileProcessingResource<T extends AbstractEntityWithInputStream<?>> 
             throw new IllegalArgumentException("jobUid is required");
         }
         
-        this.origFileName = request.getHeaders().getFirstValue("origFileName");
+        try {
+            this.origFileName = URLDecoder.decode(request.getHeaders().getFirstValue("origFileName"), StandardCharsets.UTF_8.toString());
+        } catch (final UnsupportedEncodingException ex) {
+            throw new IllegalArgumentException("Could not decode the value for origFileName.", ex);
+        }
+        
         if (isEmpty(origFileName)) {
             throw new IllegalArgumentException("origFileName is required");
         }
@@ -103,16 +110,16 @@ public class FileProcessingResource<T extends AbstractEntityWithInputStream<?>> 
         final Representation response;
         if (entity == null) {
             getResponse().setStatus(Status.CLIENT_ERROR_BAD_REQUEST);
-            return restUtil.errorJSONRepresentation("The file content is empty, which is prohibited.");
+            return restUtil.errorJsonRepresentation("The file content is empty, which is prohibited.");
         } else if (!isMediaTypeSupported(entity.getMediaType())) {
             getResponse().setStatus(Status.CLIENT_ERROR_BAD_REQUEST);
-            return restUtil.errorJSONRepresentation(format("Unexpected media type [%s].", entity.getMediaType()));
+            return restUtil.errorJsonRepresentation(format("Unexpected media type [%s].", entity.getMediaType()));
         } else if (entity.getSize() == -1) {
             getResponse().setStatus(Status.CLIENT_ERROR_LENGTH_REQUIRED);
-            return restUtil.errorJSONRepresentation("File size is required.");
+            return restUtil.errorJsonRepresentation("File size is required.");
         } else if (entity.getSize() > sizeLimitBytes) {
             getResponse().setStatus(Status.CLIENT_ERROR_REQUEST_ENTITY_TOO_LARGE);
-            return restUtil.errorJSONRepresentation("File is too large.");
+            return restUtil.errorJsonRepresentation("File is too large.");
         } else {
             final InputStream stream = entity.getStream();
             response = handleUndesiredExceptions(getResponse(), () -> tryToProcess(stream, getMime(entity.getMediaType())), restUtil);
@@ -149,7 +156,7 @@ public class FileProcessingResource<T extends AbstractEntityWithInputStream<?>> 
         final ProcessingProgressSubject subject = new ProcessingProgressSubject();
         final EventSourcingResourceFactory eventSource = new EventSourcingResourceFactory(new ProcessingProgressEventSource(subject), deviceProvider);
         final String baseUri = getRequest().getResourceRef().getPath(true);
-        router.attach(baseUri + "/" + jobUid, eventSource);
+        router.attach(baseUri + "/sse/" + jobUid, eventSource);
         
         try {
             final T entity = entityCreator.apply(factory);
@@ -160,7 +167,7 @@ public class FileProcessingResource<T extends AbstractEntityWithInputStream<?>> 
             entity.setMime(mime);
 
             final T applied = companion.save(entity);
-            return restUtil.singleJSONRepresentation(applied);
+            return restUtil.singleJsonRepresentation(applied);
         } finally {
             router.detach(eventSource);
         }

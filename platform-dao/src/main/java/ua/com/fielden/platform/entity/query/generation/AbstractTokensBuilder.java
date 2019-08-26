@@ -1,5 +1,8 @@
 package ua.com.fielden.platform.entity.query.generation;
 
+import static java.lang.Boolean.TRUE;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.cond;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.emptyCondition;
 import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.EQUERY_TOKENS;
 import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.EXPR_TOKENS;
 import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.GROUPED_CONDITIONS;
@@ -8,6 +11,9 @@ import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.IV
 import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.PARAM;
 import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.PROP;
 import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.VAL;
+import static ua.com.fielden.platform.entity_centre.review.DynamicQueryBuilder.buildCondition;
+import static ua.com.fielden.platform.entity_centre.review.DynamicQueryBuilder.QueryProperty.queryPropertyParamName;
+import static ua.com.fielden.platform.utils.Pair.pair;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -16,6 +22,7 @@ import java.util.List;
 import java.util.Map;
 
 import ua.com.fielden.platform.entity.query.DbVersion;
+import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ICompoundCondition0;
 import ua.com.fielden.platform.entity.query.fluent.enums.Functions;
 import ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory;
 import ua.com.fielden.platform.entity.query.generation.elements.CountAll;
@@ -27,15 +34,18 @@ import ua.com.fielden.platform.entity.query.generation.elements.ISingleOperand;
 import ua.com.fielden.platform.entity.query.generation.elements.OperandsBasedSet;
 import ua.com.fielden.platform.entity.query.generation.elements.QueryBasedSet;
 import ua.com.fielden.platform.entity.query.model.ConditionModel;
+import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.ExpressionModel;
 import ua.com.fielden.platform.entity.query.model.QueryModel;
+import ua.com.fielden.platform.entity_centre.review.DynamicQueryBuilder.QueryProperty;
+import ua.com.fielden.platform.types.tuples.T2;
 import ua.com.fielden.platform.utils.Pair;
 
 /**
  * Abstract builder to accumulate tokens until ready for respective model creation.
- * 
+ *
  * @author TG Team
- * 
+ *
  */
 public abstract class AbstractTokensBuilder implements ITokensBuilder {
     private final ITokensBuilder parent;
@@ -148,23 +158,84 @@ public abstract class AbstractTokensBuilder implements ITokensBuilder {
             case BEGIN_COND: //eats token
                 setChild(new GroupedConditionsBuilder(this, queryBuilder, getParamValues(), (Boolean) value));
                 break;
+            case CRIT_COND_OPERATOR: //
+                tokens.add(pair(GROUPED_CONDITIONS, new StandAloneConditionBuilder(queryBuilder, getParamValues(), critConditionOperatorModel((Pair<Object, String>) value), false).getModel()));
+                break;
             case COND_TOKENS: //
-                tokens.add(new Pair<TokenCategory, Object>(GROUPED_CONDITIONS, new StandAloneConditionBuilder(queryBuilder, getParamValues(), (ConditionModel) value, false).getModel()));
+                tokens.add(pair(GROUPED_CONDITIONS, new StandAloneConditionBuilder(queryBuilder, getParamValues(), (ConditionModel) value, false).getModel()));
                 break;
             case NEGATED_COND_TOKENS: //
-                tokens.add(new Pair<TokenCategory, Object>(GROUPED_CONDITIONS, new StandAloneConditionBuilder(queryBuilder, getParamValues(), (ConditionModel) value, true).getModel()));
+                tokens.add(pair(GROUPED_CONDITIONS, new StandAloneConditionBuilder(queryBuilder, getParamValues(), (ConditionModel) value, true).getModel()));
                 break;
             case LOGICAL_OPERATOR:
                 setChild(new CompoundConditionBuilder(this, queryBuilder, getParamValues(), cat, value));
                 break;
             default:
-                tokens.add(new Pair<TokenCategory, Object>(cat, value));
+                tokens.add(pair(cat, value));
                 break;
             }
 
             if (isClosing()) {
                 parent.finaliseChild();
             }
+        }
+    }
+
+    private ConditionModel critConditionOperatorModel(final Pair<Object, String> props) {
+        final String critOnlyPropName = props.getValue();
+        final String critOnlyPropParamName = queryPropertyParamName(critOnlyPropName);
+        final QueryProperty qp = (QueryProperty) getParamValue(critOnlyPropParamName);
+        if (qp == null || qp.isEmptyWithoutMnemonics()) {
+            return emptyCondition();
+        } else if (props.getKey() instanceof String) {
+            return buildCondition(qp, (String) props.getKey(), false);
+        } else {
+            final T2<ICompoundCondition0<?>, String> args =  (T2<ICompoundCondition0<?>, String>) props.getKey();
+            return collectionalCritConditionOperatorModel(args._1, args._2, qp);
+        }
+    }
+
+
+    private ConditionModel prepareCollectionalCritCondition(final QueryProperty qp, final String propName) {
+        final Boolean originalOrNull = qp.getOrNull();
+        final Boolean originalNot = qp.getNot();
+        qp.setOrNull(null);
+        qp.setNot(null);
+        final ConditionModel result = qp == null || qp.isEmptyWithoutMnemonics() ? emptyCondition() : buildCondition(qp, propName, false);
+        qp.setOrNull(originalOrNull);
+        qp.setNot(originalNot);
+        return result;
+    }
+    
+    /**
+     * The following rules are used to build {@code ConditionModel}.
+     * <pre>
+     * v n m
+     * + + +  not (exists collectional element that matches any of the values || empty) == there are no collectional elements that match any of values && not empty
+     * + + -  not (exists collectional element that matches any of the values && not empty) == there are no collectional elements that match any of values || empty
+     * + - +  exists collectional element that matches any of the values || empty
+     * + - -  exists collectional element that matches any of the values && not empty
+     * - + +  not empty
+     * - + -  no condition
+     * - - +  empty
+     * - - -  no condition
+     * </pre>
+     */
+    private ConditionModel collectionalCritConditionOperatorModel(final ICompoundCondition0<?> collectionQueryStart, final String propName, final QueryProperty qp) {
+        final boolean hasValue = !qp.isEmpty();
+        final boolean not = TRUE.equals(qp.getNot());
+        final boolean orNull = TRUE.equals(qp.getOrNull());
+
+        final ConditionModel criteriaCondition = prepareCollectionalCritCondition(qp, propName);
+        final EntityResultQueryModel<?> anyItems = collectionQueryStart.model();
+        final EntityResultQueryModel<?> matchingItems = collectionQueryStart.and().condition(criteriaCondition).model();
+        
+        if (!hasValue) {
+            return !orNull ? emptyCondition()/*---,-+-*/ : (not ? cond().exists(anyItems).model()/*-++*/ : cond().notExists(anyItems).model())/*--+*/;
+        } else if (not){
+            return orNull ? cond().notExists(matchingItems).and().exists(anyItems).model()/*+++*/ : cond().notExists(matchingItems).or().notExists(anyItems).model()/*++-*/;
+        } else {
+            return !orNull ? cond().exists(matchingItems).model()/*+--*/ : cond().exists(matchingItems).or().notExists(anyItems).model()/*+-+*/;
         }
     }
 
@@ -220,11 +291,11 @@ public abstract class AbstractTokensBuilder implements ITokensBuilder {
     }
 
     protected TokenCategory getLastCat() {
-        return tokens.size() > 0 ? tokens.get(tokens.size() - 1).getKey() : null;
+        return !tokens.isEmpty() ? tokens.get(tokens.size() - 1).getKey() : null;
     }
 
     protected Object getLastValue() {
-        return tokens.size() > 0 ? tokens.get(tokens.size() - 1).getValue() : null;
+        return !tokens.isEmpty() ? tokens.get(tokens.size() - 1).getValue() : null;
     }
 
     protected ITokensBuilder getChild() {
@@ -307,7 +378,7 @@ public abstract class AbstractTokensBuilder implements ITokensBuilder {
             for (final Object object : iterable) {
                 final Object furtherPreprocessed = preprocessValue(object);
                 if (furtherPreprocessed instanceof List) {
-                    values.addAll((List) furtherPreprocessed);
+                    values.addAll((List<?>) furtherPreprocessed);
                 } else {
                     values.add(furtherPreprocessed);
                 }
@@ -420,5 +491,5 @@ public abstract class AbstractTokensBuilder implements ITokensBuilder {
     public DbVersion getDbVersion() {
         return getQueryBuilder().getDbVersion();
     }
-    
+
 }

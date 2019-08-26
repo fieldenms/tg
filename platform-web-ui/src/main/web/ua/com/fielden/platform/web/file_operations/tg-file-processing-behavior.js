@@ -227,7 +227,7 @@ const TgFileProcessingBehaviorImpl = {
             const jobUid = generateUUID();
             xhr.setRequestHeader('jobUid', jobUid);
             // and also let's provide the original file meta-data
-            xhr.setRequestHeader('origFileName', file.name);
+            xhr.setRequestHeader('origFileName', encodeURIComponent(file.name));
             xhr.setRequestHeader('lastModified', file.lastModified);
             xhr.setRequestHeader('mime', mimeTypes);
 
@@ -263,7 +263,7 @@ const TgFileProcessingBehaviorImpl = {
                     }
 
                     // can now subscribe to a server side processing progress eventing source
-                    this.uri = this.url + "/" + jobUid;
+                    this.uri = this.url + "/sse/" + jobUid;
                 }
 
             }.bind(this);

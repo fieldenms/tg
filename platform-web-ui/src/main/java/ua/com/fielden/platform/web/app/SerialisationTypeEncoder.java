@@ -132,7 +132,7 @@ public class SerialisationTypeEncoder implements ISerialisationTypeEncoder {
                     try {
                         // The type name from client-side needs to be promoted to this server node very similarly as it is done below for centre managed types ('adjustManagedTypeName' call).
                         final String predefinedTypeName = root.getName() + DynamicTypeNamingService.APPENDIX + "_" + originalAndSuffix[1];
-                        decodedEntityType = (Class<T>) classLoader.startModification(managedType.getName()).modifyTypeName(predefinedTypeName).endModification();
+                        decodedEntityType = (Class<T>) classLoader.startModification(managedType).modifyTypeName(predefinedTypeName).endModification();
                     } catch (final ClassNotFoundException e) {
                         throw new SerialisationTypeEncoderException(e.getMessage());
                     }

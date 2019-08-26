@@ -23,7 +23,7 @@ export const TgEgiDataRetrievalBehavior = {
     },
 
     getAttachmentIfPossible: function (entity, property) {
-        if (entity.type && entity.type().notEnhancedFullClassName() === "ua.com.fielden.platform.attachment.Attachment") {
+        if (entity.type && entity.constructor.prototype.type.call(entity).notEnhancedFullClassName() === "ua.com.fielden.platform.attachment.Attachment") {
             return entity;
         } else if (this.getValueFromEntity(entity, property) && this.getValueFromEntity(entity, property).type &&
             this.getValueFromEntity(entity, property).type().notEnhancedFullClassName() === "ua.com.fielden.platform.attachment.Attachment") {

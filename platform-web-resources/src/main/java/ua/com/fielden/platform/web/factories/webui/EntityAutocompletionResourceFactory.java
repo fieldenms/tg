@@ -120,6 +120,7 @@ public class EntityAutocompletionResourceFactory extends Restlet {
                         companionFinder,
                         restUtil,
                         deviceProvider,
+                        master,
                         getContext(),
                         request,
                         response //

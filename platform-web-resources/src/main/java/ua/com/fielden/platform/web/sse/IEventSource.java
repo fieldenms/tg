@@ -20,11 +20,11 @@ public interface IEventSource {
      * @throws IOException
      *             if the implementation of the method throws such exception
      */
-    public void onOpen(final IEmitter emitter) throws IOException;
+    void onOpen(final IEmitter emitter) throws IOException;
 
     /**
      * Callback method invoked when an event source connection is closed.
      */
-    public void onClose();
+    void onClose();
 
 }

@@ -1,12 +1,13 @@
 package ua.com.fielden.platform.error;
 
 import static java.lang.String.format;
+import static java.util.Objects.requireNonNull;
 
+import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Consumer;
+import java.util.function.Function;
 import java.util.function.Supplier;
-
-import com.google.common.base.Objects;
 
 /**
  * Represents a result (an error or success) of some custom logic. That could been the result of some validation or application of some other business rules.
@@ -166,6 +167,20 @@ public class Result extends RuntimeException {
     public <T> T getInstance(final Class<T> expectedType) {
         return expectedType.cast(instance);
     }
+
+    /**
+     * Mapping over a successful result.
+     * <p>
+     * Function {@code f} is applied to {@code this} if it is successful, and the returned result is the result of {@code f(this)}.
+     * Otherwise, {@code this} is returned.
+     *
+     * @param f
+     * @return
+     */
+    public Result map(final Function<? super Result, ? extends Result> f) {
+        requireNonNull(f);
+        return this.isSuccessful() ? f.apply(this) : this;
+    }
     
     /**
      * A convenient method to get an instance associated with a successful result or throw an exception otherwise.
@@ -247,4 +262,39 @@ public class Result extends RuntimeException {
         return getMessage();
     }
 
+    @Override
+    public int hashCode() {
+        if (ex == null && message == null && instance == null) {
+            return 0;
+        }
+
+        int result = 1;       
+        result = 31 * result + (ex == null ? 0 : (ex.getClass().hashCode() + (ex.getMessage() != null ? ex.getMessage().hashCode() : 0)));
+        result = 31 * result + (message == null ? 0 : message.hashCode());
+        result = 31 * result + (instance == null ? 0 : instance.hashCode());
+        return result;
+    }
+
+    /**
+     * There are three significant fields -- {@code ex}, {@code message} and {@code instance} -- that determine uniqueness of {@code Result} instance.
+     * Exceptions may not have {@code equals} overridden for them.
+     * This is why, two values of field {@code ex} are considered equal if their types and messages are identical.
+     * Equality of fields {@code message} and {@code instance} rely upon their respective implementations of {@code equals}.
+     */
+    @Override
+    public boolean equals(final Object obj) {
+        if (this == obj) {
+            return true;
+        }
+        
+        if (!(obj instanceof Result)) {
+            return false;
+        }
+
+        final Result that = (Result) obj;
+        return (this.ex == null && that.ex == null || 
+                (this.ex != null && that.ex != null && Objects.equals(this.ex.getClass(), that.ex.getClass()) && Objects.equals(this.ex.getMessage(), that.ex.getMessage()))) &&
+               Objects.equals(this.message, that.message) &&
+               Objects.equals(this.instance, that.instance);
+    }
 }

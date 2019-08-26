@@ -23,7 +23,7 @@ public class GreaterValidator implements IBeforeChangeEventHandler<Object> {
     @Override
     public Result handle(final MetaProperty<Object> property, final Object newValue, final Set<Annotation> mutatorAnnotations) {
         if (newValue == null) {
-            return new Result(null, "Value is null and thus not applicable for validation.");
+            return successful("Value is null and thus not applicable for validation.");
         }
         // Money new value should be correctly converted.
         final String strValue = (newValue instanceof Money) ? ((Money) newValue).getAmount().toString() : newValue.toString();

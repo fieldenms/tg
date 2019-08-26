@@ -10,7 +10,7 @@ import { TgFocusRestorationBehavior } from '/resources/actions/tg-focus-restorat
 
 const confirmationDialogStyle = html`
     <custom-style>
-        <style is="custom-style">
+        <style>
             .confirm-dialog paper-button {
                 color: var(--paper-light-blue-500);
                 --paper-button-flat-focus-color: var(--paper-light-blue-50);

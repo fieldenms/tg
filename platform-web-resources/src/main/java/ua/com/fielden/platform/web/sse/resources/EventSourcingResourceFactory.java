@@ -10,6 +10,8 @@ import com.google.inject.Injector;
 import rx.Observable;
 import ua.com.fielden.platform.web.interfaces.IDeviceProvider;
 import ua.com.fielden.platform.web.sse.AbstractEventSource;
+import ua.com.fielden.platform.web.sse.SseUtils;
+import ua.com.fielden.platform.web.sse.exceptions.InvalidSseUriException;
 
 /**
  * A factory for a web resource {@link EventSourcingResource} that provides a general purpose implementation for the server-side eventing
@@ -44,6 +46,9 @@ public class EventSourcingResourceFactory extends Restlet {
     public void handle(final Request request, final Response response) {
 
         if (Method.GET == request.getMethod()) {
+            if (!SseUtils.isEventSourceRequest(request)) {
+                throw new InvalidSseUriException(String.format("URI [%s] is not valid for SSE.", request.getResourceRef().toString()));
+            }
             if (this.eventSource != null) {
                 new EventSourcingResource(eventSource, deviceProvider, getContext(), request, response).handle();
             } else {

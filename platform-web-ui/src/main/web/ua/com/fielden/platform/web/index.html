@@ -8,8 +8,8 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, minimum-scale=1.0, initial-scale=1.0, user-scalable=yes">
     <title>@title</title>
-    <!--<title>@title</title>-->
-    <script>
+    
+    <script crossorigin="use-credentials">
         const loadJavaScriptSync = function (filePath) {
             const req = new XMLHttpRequest();
             req.open("GET", filePath, false); // 'false': synchronous.
@@ -62,29 +62,40 @@
 
     <!-- Add to homescreen for Safari on iOS -->
     <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <meta name="apple-mobile-web-app-title" content="@title">
-    <link rel="apple-touch-icon" href="/resources/icons/tg-icon.png">
+    <link rel="apple-touch-startup-image" href="/resources/icons/tg-icon192x192.png">
+    <link rel="apple-touch-icon" href="/resources/icons/tg-icon192x192.png">
 
     <!-- Tile icon for Win8 (144x144) -->
     <meta name="msapplication-TileImage" content="/resources/icons/tg-icon144x144.png">
-
-    <style>
-        html {
-            font-size: 10pt;
-        }
-        body {
-            font-family: 'Roboto', 'Helvetica Neue', Helvetica, Arial, sans-serif;
-            font-size: 10pt;
-        }
-    </style>
+    <script>
+        window.TG_APP = {
+            watermark: @watermark
+        };
+    </script>
     <custom-style>
-        <style include="iron-flex iron-flex-reverse iron-flex-alignment iron-flex-factors iron-positioning"></style>
+        <style include="iron-flex iron-flex-reverse iron-flex-alignment iron-flex-factors iron-positioning">
+            html {
+                font-size: 10pt;
+                @panelColor
+                --tg-watermark-style: {
+                    @cssStyle
+                };
+            }
+            body {
+                font-family: 'Roboto', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+                font-size: 10pt;
+            }
+            tg-app-template {
+                height: 100vh;
+            }
+        </style>
     </custom-style>
 </head>
 
-<body unresolved class="fullbleed relative">
-    <tg-app-template class="fit layout vertical"></tg-app-template>
+<body unresolved class="fullbleed">
+    <tg-app-template class="layout vertical" app-title="@title"></tg-app-template>
 </body>
 
 </html>

@@ -2,15 +2,20 @@ import { L, leafletStylesName } from '/resources/gis/leaflet/leaflet-lib.js';
 import { LeafletDraw, leafletDrawStylesName } from '/resources/gis/leaflet/draw/leaflet-draw-lib.js';
 import { controlLoading, leafletControlloadingStylesName } from '/resources/gis/leaflet/controlloading/leaflet-controlloading-lib.js';
 import { easyButton, leafletEasybuttonStylesName } from '/resources/gis/leaflet/easybutton/leaflet-easybutton-lib.js';
+import '/resources/gis/leaflet/editable/leaflet-editable-lib.js';
+import '/resources/gis/leaflet/pathdrag/leaflet-pathdrag-lib.js';
+import { fitToBounds } from '/resources/gis/tg-gis-utils.js';
 
 export { leafletStylesName, leafletDrawStylesName, leafletControlloadingStylesName, leafletEasybuttonStylesName };
 
-export const Controls = function (_map, _markersClusterGroup, _baseLayers) {
+export const Controls = function (_map, _markersClusterGroup, _baseLayers, _additionalOverlays, _editableArcGisOverlay, ... customControls) {
     const self = this;
 
     self._map = _map;
     self._markersClusterGroup = _markersClusterGroup;
     self._baseLayers = _baseLayers;
+
+    customControls.forEach(customControl => self._map.addControl(customControl));
 
     // firebug control
     /*const firebugControl = new easyButton(
@@ -26,7 +31,7 @@ export const Controls = function (_map, _markersClusterGroup, _baseLayers) {
     const fitToBoundsControl = easyButton(
         'fa-compress',
         function () {
-            self._map.fitBounds(self._markersClusterGroup.getBounds());
+            fitToBounds(self._map, self._markersClusterGroup, _additionalOverlays);
         },
         'Fit to bounds',
         self._map
@@ -54,44 +59,118 @@ export const Controls = function (_map, _markersClusterGroup, _baseLayers) {
     });
     self._map.addControl(scaleControl);
 
-    // leaflet draw controls
-    const drawControl = new LeafletDraw({
-        position: 'bottomleft',
+//    // leaflet draw controls
+//    const drawControl = new LeafletDraw({
+//        position: 'bottomleft',
+//
+//        edit: {
+//            featureGroup: self._markersClusterGroup // drawnItems
+//        },
+//
+//        draw: {
+//            polygon: {
+//                shapeOptions: {
+//                    color: 'purple'
+//                },
+//                allowIntersection: false,
+//                drawError: {
+//                    color: 'orange',
+//                    timeout: 1000
+//                },
+//                showArea: true,
+//                metric: true
+//            }
+//        }
+//    });
+//    self._map.addControl(drawControl);
+//
+//    self._map.on('draw:created', function (e) {
+//        const type = e.layerType;
+//        const layer = e.layer;
+//        self._markersClusterGroup.addLayer(layer);
+//        // self._markersClusterGroup.refreshClusters();
+//    });
+    
+    if (_editableArcGisOverlay) {
+        // Editable plugin + Path.Drag.js plugin + ArcGIS backend
 
-        edit: {
-            featureGroup: self._markersClusterGroup // drawnItems
-        },
-
-        draw: {
-            polygon: {
-                shapeOptions: {
-                    color: 'purple'
-                },
-                allowIntersection: false,
-                drawError: {
-                    color: 'orange',
-                    timeout: 1000
-                },
-                showArea: true,
-                metric: true
+        // create a generic control to invoke editing
+        L.EditControl = L.Control.extend({
+            options: {
+                position: 'topleft',
+                callback: null,
+                kind: '',
+                html: ''
+            },
+            // when the control is added to the map, wire up its DOM dynamically and add a click listener
+            onAdd: function (map) {
+                const container = L.DomUtil.create('div', 'leaflet-control leaflet-bar');
+                const link = L.DomUtil.create('a', '', container);
+                link.href = '#';
+                link.title = 'Create a new ' + this.options.kind;
+                link.innerHTML = this.options.html;
+                L.DomEvent
+                    .on(link, 'click', L.DomEvent.stop)
+                    .on(link, 'click', function () {
+                        window.LAYER = this.options.callback.call(map.editTools);
+                    }, this);
+                return container;
             }
-        }
-    });
-    self._map.addControl(drawControl);
+        });
 
-    self._map.on('draw:created', function (e) {
-        const type = e.layerType;
-        const layer = e.layer;
-        self._markersClusterGroup.addLayer(layer);
-        // self._markersClusterGroup.refreshClusters();
-    });
+        // extend the control to draw polygons
+        L.NewPolygonControl = L.EditControl.extend({
+            options: {
+                position: 'topleft',
+                callback: self._map.editTools.startPolygon,
+                kind: 'polygon',
+                html: '▰'
+            }
+        });
 
-    const overlays = {
-        'GEO-json': self._markersClusterGroup
-        // 'GPS-tracks': gpsTracksOverlay,
-        // 'Traffic': self._baseLayers.getYTrafficLayer()
-    };
+        // extend the control to draw rectangles
+        L.NewRectangleControl = L.EditControl.extend({
+            options: {
+                position: 'topleft',
+                callback: self._map.editTools.startRectangle,
+                kind: 'rectangle',
+                html: '⬛'
+            }
+        });
+        
+        // add the two new controls to the map
+        self._map.addControl(new L.NewPolygonControl());
+        self._map.addControl(new L.NewRectangleControl());
+        
+        // when users CMD/CTRL click an editable feature, remove it from the map and delete it from the service
+        _editableArcGisOverlay.on('click', function (e) {
+            if ((e.originalEvent.ctrlKey || e.originalEvent.metaKey) && e.layer.editEnabled()) {
+                e.layer.editor.deleteShapeAt(e.latlng);
+                // delete expects an id, not the whole geojson object
+                _editableArcGisOverlay.deleteFeature(e.layer.feature.id);
+            }
+        });
 
-    const overlaysControl = L.control.layers(self._baseLayers.getBaseLayers(), overlays);
+        // when users double click a graphic toggle its editable status
+        // when deselecting, pass the geometry update to the service
+        _editableArcGisOverlay.on('dblclick', function (e) {
+            e.layer.toggleEdit();
+            if (!e.layer.editEnabled()) {
+                _editableArcGisOverlay.updateFeature(e.layer.toGeoJSON());
+            }
+        });
+
+        // when a new feature is drawn using one of the custom controls, pass the edit to the service
+        self._map.on('editable:drawing:commit', function (e) {
+            _editableArcGisOverlay.addFeature(e.layer.toGeoJSON());
+            e.layer.toggleEdit();
+        });
+    }
+    
+    _additionalOverlays['GEO-json'] = self._markersClusterGroup;
+    _additionalOverlays['GEO-json']._checkedByDefault = true;
+    Object.values(_additionalOverlays).filter(overlay => overlay._checkedByDefault).forEach(overlay => self._map.addLayer(overlay));
+
+    const overlaysControl = L.control.layers(self._baseLayers.getBaseLayers(), _additionalOverlays);
     self._map.addControl(overlaysControl);
 };

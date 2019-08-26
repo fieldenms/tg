@@ -1,7 +1,9 @@
 package ua.com.fielden.platform.reflection.asm.impl;
 
+import static ua.com.fielden.platform.reflection.asm.impl.TypeMaker.GET_ORIG_TYPE_METHOD_NAME;
 import static ua.com.fielden.platform.utils.Pair.pair;
 
+import java.lang.reflect.Method;
 import java.util.Optional;
 
 import org.kohsuke.asm5.ClassReader;
@@ -48,12 +50,12 @@ public class DynamicEntityClassLoader extends ClassLoader {
     /**
      * Initiates adaptation of the specified by name type. This could be either dynamic or static type (created manually by developer).
      *
-     * @param typeName
+     * @param origType
      * @return
      * @throws ClassNotFoundException
      */
-    public TypeMaker startModification(final String typeName) throws ClassNotFoundException {
-        return new TypeMaker(this).startModification(typeName);
+    public TypeMaker startModification(final Class<?> origType) throws ClassNotFoundException {
+        return new TypeMaker(this, origType).startModification();
     }
 
     protected final Class<?> defineType(final String name, final byte[] b, final int off, final int len) {
@@ -100,13 +102,15 @@ public class DynamicEntityClassLoader extends ClassLoader {
      */
     @SuppressWarnings("unchecked")
     public static <T extends AbstractEntity<?>> Class<T> getOriginalType(final Class<?> type) {
-        final String typeName = type.getName();
+        
         if (isGenerated(type)) {
-            final String originalTypeName = typeName.substring(0, typeName.indexOf(DynamicTypeNamingService.APPENDIX));
             try {
-                return (Class<T>) ClassLoader.getSystemClassLoader().loadClass(originalTypeName);
-            } catch (final ClassNotFoundException e) {
-                throw new IllegalStateException(e);
+                final Method getOrigType = type.getMethod(GET_ORIG_TYPE_METHOD_NAME);
+                return (Class<T>) getOrigType.invoke(null);
+            } catch (final RuntimeException ex) {
+                throw ex;
+            } catch (final Exception ex) {
+                throw new IllegalStateException(ex);
             }
         } else {
             return (Class<T>) type;
