@@ -92,6 +92,7 @@ import ua.com.fielden.platform.sample.domain.TgPublishedYearly;
 import ua.com.fielden.platform.sample.domain.TgTimesheet;
 import ua.com.fielden.platform.sample.domain.TgVehicle;
 import ua.com.fielden.platform.sample.domain.TgVehicleFinDetails;
+import ua.com.fielden.platform.sample.domain.TgVehicleFuelUsage;
 import ua.com.fielden.platform.sample.domain.TgVehicleMake;
 import ua.com.fielden.platform.sample.domain.TgVehicleModel;
 import ua.com.fielden.platform.sample.domain.TgWagon;
@@ -1407,6 +1408,27 @@ public class EntityQueryExecutionTest extends AbstractDaoTestCase {
         assertEquals("Incorrect key", "316", vehicle.getModel().getKey());
         assertEquals("Incorrect key", "MERC", vehicle.getModel().getMake().getKey());
         assertEquals("Incorrect number of fuel-usages", 2, vehicle.getFuelUsages().size());
+    }
+    
+    @Test
+    public void vehicle_is_fetched_with_persisted_collectional_association() {
+        final EntityResultQueryModel<TgVehicle> qry = select(TgVehicle.class).where().prop("key").eq().val("CAR2").model();
+        final fetch<TgVehicle> fetchModel = fetch(TgVehicle.class).with("model", fetch(TgVehicleModel.class).with("make")).with("vehicleFuelUsages", fetchAll(TgVehicleFuelUsage.class));
+        final List<TgVehicle> vehicles = coVehicle.getAllEntities(from(qry).with(fetchModel).model());
+        final TgVehicle vehicle = vehicles.get(0);
+        assertEquals("Incorrect number of vehicle-fuel-usages", 2, vehicle.getVehicleFuelUsages().size());
+    }
+
+    @Test
+    public void vehicle_is_fetched_with_synthetic_parameterised_collectional_association() {
+        final EntityResultQueryModel<TgVehicle> qry = select(TgVehicle.class).where().prop("key").eq().val("CAR2").model();
+        final fetch<TgVehicle> fetchModel = fetch(TgVehicle.class).with("model", fetch(TgVehicleModel.class).with("make")).with("vehicleFuelUsages", fetchAll(TgVehicleFuelUsage.class));
+        final List<TgVehicle> vehicles = coVehicle.getAllEntities(from(qry).with(fetchModel)
+                .with("datePeriod.from", new DateTime(2008, 01, 01, 0, 0).toDate()) //
+                .with("datePeriod.to", new DateTime(2010, 01, 01, 0, 0).toDate()) //
+                .model());
+        final TgVehicle vehicle = vehicles.get(0);
+        assertEquals("Incorrect number of vehicle-fuel-usages", 1, vehicle.getVehicleFuelUsages().size());
     }
 
     @Test

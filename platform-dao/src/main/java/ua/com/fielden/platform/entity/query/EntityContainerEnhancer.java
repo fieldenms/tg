@@ -305,7 +305,6 @@ public class EntityContainerEnhancer<E extends AbstractEntity<?>> {
             }
             final Long[] batch = Arrays.copyOfRange(allParentIds, from, to);
             final EntityResultQueryModel<T> currTypePropertyModel = select(fetchModel.getEntityType()).where().prop(idProp).in().values(batch).model();
-            System.out.println(paramValues);
             final QueryProcessingModel<T, ?> qpm = new QueryProcessingModel<>(currTypePropertyModel, null, fetchModel, paramValues, false);
             final List<EntityContainer<T>> properties = fetcher.listAndEnhanceContainers(qpm, null, null);
             result.addAll(properties);
