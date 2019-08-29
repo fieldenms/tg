@@ -7,6 +7,7 @@ import ua.com.fielden.platform.attachment.Attachment;
 import ua.com.fielden.platform.attachment.AttachmentPreviewEntityAction;
 import ua.com.fielden.platform.attachment.AttachmentUploader;
 import ua.com.fielden.platform.attachment.AttachmentsUploadAction;
+import ua.com.fielden.platform.egi.PropertyColumn;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.EntityDeleteAction;
 import ua.com.fielden.platform.entity.EntityEditAction;
@@ -119,6 +120,7 @@ public class PlatformDomainTypes {
         types.add(SecurityMatrixSaveAction.class);
         types.add(EntityNavigationAction.class);
         types.add(AttachmentPreviewEntityAction.class);
+        types.add(PropertyColumn.class);
 
     }
 }

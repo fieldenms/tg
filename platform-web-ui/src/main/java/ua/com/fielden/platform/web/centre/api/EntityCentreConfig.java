@@ -35,6 +35,7 @@ import ua.com.fielden.platform.web.centre.api.crit.defaults.mnemonics.SingleCrit
 import ua.com.fielden.platform.web.centre.api.crit.defaults.mnemonics.SingleCritOtherValueMnemonic;
 import ua.com.fielden.platform.web.centre.api.insertion_points.InsertionPointConfig;
 import ua.com.fielden.platform.web.centre.api.resultset.ICustomPropsAssignmentHandler;
+import ua.com.fielden.platform.web.centre.api.resultset.IDynamicPropDefiner;
 import ua.com.fielden.platform.web.centre.api.resultset.IRenderingCustomiser;
 import ua.com.fielden.platform.web.centre.api.resultset.PropDef;
 import ua.com.fielden.platform.web.centre.api.resultset.impl.FunctionalActionKind;
@@ -214,20 +215,26 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
         public final Optional<String> propName;
         public final Optional<String> tooltipProp;
         public final Optional<PropDef<?>> propDef;
+        public final Optional<IDynamicPropDefiner<?>> dynamicPropDefiner;
         public final Supplier<Optional<EntityActionConfig>> propAction;
         public final int width;
         public final boolean isFlexible;
 
         public static ResultSetProp propByName(final String propName, final int width, final boolean isFlexible, final String tooltipProp, final Supplier<Optional<EntityActionConfig>> propAction) {
-            return new ResultSetProp(propName, width, isFlexible, tooltipProp, null, propAction);
+            return new ResultSetProp(propName, Optional.empty(), width, isFlexible, tooltipProp, null, propAction);
         }
 
         public static ResultSetProp propByDef(final PropDef<?> propDef, final int width, final boolean isFlexible, final String tooltipProp, final Supplier<Optional<EntityActionConfig>> propAction) {
-            return new ResultSetProp(null, width, isFlexible, tooltipProp, propDef, propAction);
+            return new ResultSetProp(null, Optional.empty(), width, isFlexible, tooltipProp, propDef, propAction);
+        }
+
+        public static ResultSetProp dynamicProps(final String collectionalPropertyName, final IDynamicPropDefiner<?> dynamicPropDefiner) {
+            return new ResultSetProp(collectionalPropertyName, Optional.of(dynamicPropDefiner), 0, false, null, null, () -> Optional.empty());
         }
 
         private ResultSetProp(
                 final String propName,
+                final Optional<IDynamicPropDefiner<?>> dynamicPropDefiner,
                 final int width,
                 final boolean isFlexible,
                 final String tooltipProp,
@@ -252,6 +259,7 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
             this.tooltipProp = Optional.ofNullable(tooltipProp);
             this.propDef = Optional.ofNullable(propDef);
             this.propAction = propAction;
+            this.dynamicPropDefiner = dynamicPropDefiner;
         }
 
     }

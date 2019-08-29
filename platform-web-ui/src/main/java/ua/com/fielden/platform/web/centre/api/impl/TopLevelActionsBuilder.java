@@ -9,6 +9,8 @@ import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
 import ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig;
 import ua.com.fielden.platform.web.centre.api.crit.ISelectionCritKindSelector;
+import ua.com.fielden.platform.web.centre.api.resultset.IAlsoProp;
+import ua.com.fielden.platform.web.centre.api.resultset.IDynamicPropDefiner;
 import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder1Toolbar;
 import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder1aScroll;
 import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder1bPageCapacity;
@@ -155,5 +157,10 @@ class TopLevelActionsBuilder<T extends AbstractEntity<?>> implements ICentreTopL
     @Override
     public IResultSetBuilder2Properties<T> rowHeight(final String rowHeight) {
         return new ResultSetBuilder<>(builder).rowHeight(rowHeight);
+    }
+
+    @Override
+    public IAlsoProp<T> addProps(final String propName, final IDynamicPropDefiner<T> propDefiner) {
+        return new ResultSetBuilder<>(builder).addProps(propName, propDefiner);
     }
 }

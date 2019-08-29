@@ -21,4 +21,12 @@ public interface IResultSetBuilder2Properties<T extends AbstractEntity<?>> {
 
     IResultSetBuilder4aWidth<T> addProp(final PropDef<?> propDef);
 
+    /**
+     * Provides definer for dynamic properties those depends on centre context
+     *
+     * @param propDefiner
+     * @return
+     */
+    IAlsoProp<T> addProps(final String propName, IDynamicPropDefiner<T> propDefiner);
+
 }

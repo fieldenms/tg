@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.web.centre.api.impl;
 
 import static java.lang.String.format;
+import static ua.com.fielden.platform.web.centre.api.EntityCentreConfig.ResultSetProp.dynamicProps;
 import static ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig.mkInsertionPoint;
 import static ua.com.fielden.platform.web.centre.api.insertion_points.InsertionPointConfig.configInsertionPoint;
 import static ua.com.fielden.platform.web.centre.api.insertion_points.InsertionPointConfig.configInsertionPointWithPagination;
@@ -29,6 +30,7 @@ import ua.com.fielden.platform.web.centre.api.query_enhancer.IQueryEnhancerSette
 import ua.com.fielden.platform.web.centre.api.resultset.IAlsoProp;
 import ua.com.fielden.platform.web.centre.api.resultset.IAlsoSecondaryAction;
 import ua.com.fielden.platform.web.centre.api.resultset.ICustomPropsAssignmentHandler;
+import ua.com.fielden.platform.web.centre.api.resultset.IDynamicPropDefiner;
 import ua.com.fielden.platform.web.centre.api.resultset.IRenderingCustomiser;
 import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder0Checkbox;
 import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder1Toolbar;
@@ -95,6 +97,13 @@ class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilder
         this.propDef = Optional.empty();
         this.orderSeq = null;
         this.entityActionConfig = Optional::empty;
+        return this;
+    }
+
+    @Override
+    public IAlsoProp<T> addProps(final String propName, final IDynamicPropDefiner<T> propDefiner) {
+        final ResultSetProp prop = dynamicProps(propName, propDefiner);
+        this.builder.resultSetProperties.add(prop);
         return this;
     }
 
