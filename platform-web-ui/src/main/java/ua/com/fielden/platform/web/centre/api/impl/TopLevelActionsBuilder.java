@@ -160,7 +160,7 @@ class TopLevelActionsBuilder<T extends AbstractEntity<?>> implements ICentreTopL
     }
 
     @Override
-    public IAlsoProp<T> addProps(final String propName, final IDynamicPropDefiner<T> propDefiner) {
+    public IAlsoProp<T> addProps(final String propName, final Class<? extends IDynamicPropDefiner<T>> propDefiner) {
         return new ResultSetBuilder<>(builder).addProps(propName, propDefiner);
     }
 }

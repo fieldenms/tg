@@ -27,6 +27,6 @@ public interface IResultSetBuilder2Properties<T extends AbstractEntity<?>> {
      * @param propDefiner
      * @return
      */
-    IAlsoProp<T> addProps(final String propName, IDynamicPropDefiner<T> propDefiner);
+    IAlsoProp<T> addProps(final String propName, Class<? extends IDynamicPropDefiner<T>> propDefiner);
 
 }

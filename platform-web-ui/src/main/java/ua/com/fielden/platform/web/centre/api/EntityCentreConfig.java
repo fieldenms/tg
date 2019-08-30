@@ -215,7 +215,7 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
         public final Optional<String> propName;
         public final Optional<String> tooltipProp;
         public final Optional<PropDef<?>> propDef;
-        public final Optional<IDynamicPropDefiner<?>> dynamicPropDefiner;
+        public final Optional<Class<? extends IDynamicPropDefiner<?>>> dynamicPropDefinerClass;
         public final Supplier<Optional<EntityActionConfig>> propAction;
         public final int width;
         public final boolean isFlexible;
@@ -228,13 +228,13 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
             return new ResultSetProp(null, Optional.empty(), width, isFlexible, tooltipProp, propDef, propAction);
         }
 
-        public static ResultSetProp dynamicProps(final String collectionalPropertyName, final IDynamicPropDefiner<?> dynamicPropDefiner) {
-            return new ResultSetProp(collectionalPropertyName, Optional.of(dynamicPropDefiner), 0, false, null, null, () -> Optional.empty());
+        public static ResultSetProp dynamicProps(final String collectionalPropertyName, final Class<? extends IDynamicPropDefiner<?>> dynamicPropDefinerClass) {
+            return new ResultSetProp(collectionalPropertyName, Optional.of(dynamicPropDefinerClass), 0, false, null, null, () -> Optional.empty());
         }
 
         private ResultSetProp(
                 final String propName,
-                final Optional<IDynamicPropDefiner<?>> dynamicPropDefiner,
+                final Optional<Class<? extends IDynamicPropDefiner<?>>> dynamicPropDefinerClass,
                 final int width,
                 final boolean isFlexible,
                 final String tooltipProp,
@@ -259,7 +259,7 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
             this.tooltipProp = Optional.ofNullable(tooltipProp);
             this.propDef = Optional.ofNullable(propDef);
             this.propAction = propAction;
-            this.dynamicPropDefiner = dynamicPropDefiner;
+            this.dynamicPropDefinerClass = dynamicPropDefinerClass;
         }
 
     }

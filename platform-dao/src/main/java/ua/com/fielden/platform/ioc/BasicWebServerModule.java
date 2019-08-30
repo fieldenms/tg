@@ -24,8 +24,6 @@ import ua.com.fielden.platform.dao.IGeneratedEntityController;
 import ua.com.fielden.platform.dao.ISecurityRoleAssociation;
 import ua.com.fielden.platform.dao.IUserAndRoleAssociation;
 import ua.com.fielden.platform.dao.IUserRole;
-import ua.com.fielden.platform.egi.IPropertyColumn;
-import ua.com.fielden.platform.egi.PropertyColumnDao;
 import ua.com.fielden.platform.entity.EntityDeleteActionDao;
 import ua.com.fielden.platform.entity.EntityEditActionDao;
 import ua.com.fielden.platform.entity.EntityNavigationActionDao;
@@ -216,9 +214,6 @@ public class BasicWebServerModule extends CommonFactoryModule {
         bind(IEntityMasterView.class).to(EntityMasterViewDao.class);
         bind(IMenuSaveAction.class).to(MenuSaveActionDao.class);
         bind(IWebMenuItemInvisibility.class).to(WebMenuItemInvisibilityDao.class);
-
-        //Configure dynamic egi column related bindings
-        bind(IPropertyColumn.class).to(PropertyColumnDao.class);
 
         // configuration related binding
         bind(IMainMenuItem.class).to(MainMenuItemDao.class);
