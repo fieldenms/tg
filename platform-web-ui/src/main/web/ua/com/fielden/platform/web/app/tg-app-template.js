@@ -456,6 +456,7 @@ Polymer({
         //Init master related functions.
         this.postRetrieved = function (entity, bindingEntity, customObject) {
             this.menuConfig = entity;
+            document.querySelectorAll('.splash').forEach(item => item.setAttribute('invisible', true)); // hide splash items
         }.bind(this);
         this.postValidated = function (validatedEntity, bindingEntity, customObject) {};
         this.postSaved = function (potentiallySavedOrNewEntity, newBindingEntity) {};
