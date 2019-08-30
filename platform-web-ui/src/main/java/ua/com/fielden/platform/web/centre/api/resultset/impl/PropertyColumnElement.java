@@ -20,7 +20,8 @@ import ua.com.fielden.platform.web.interfaces.IRenderable;
  */
 public class PropertyColumnElement implements IRenderable, IImportable {
     //The minimal column width. It is used only when specified width is greater than minimal.
-    private final int MIN_COLUMN_WIDTH = 16;
+    public static final int MIN_COLUMN_WIDTH = 16;
+    public static final int DEFAULT_COLUMN_WIDTH = 80;
 
     private final String propertyName;
     private final Optional<String> underlyingPropertyName;
