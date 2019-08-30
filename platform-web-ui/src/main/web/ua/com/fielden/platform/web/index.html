@@ -3,25 +3,26 @@
 
 <head>
     <!-- Startup configuration -->
-    <link rel="manifest" href="/resources/manifest.webmanifest">
-    
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, minimum-scale=1.0, initial-scale=1.0, user-scalable=yes">
     <title>@title</title>
     
     <script crossorigin="use-credentials">
-        const loadJavaScript = function (filePath, async) {
+        const loadTag = function (tagName, ...propertyAndValue) {
             const headElement = document.getElementsByTagName('head')[0];
-            const newScriptElement = document.createElement('script');
-            newScriptElement.type = 'text/javascript';
-            newScriptElement.src = filePath;
-            newScriptElement.async = async;
-            headElement.appendChild(newScriptElement);
+            const newElement = document.createElement(tagName);
+            propertyAndValue.forEach(propAndValue => newElement[propAndValue[0]] = propAndValue[1]);
+            headElement.appendChild(newElement);
         };
         const loadScripts = function () {
-            loadJavaScript('/resources/polymer/@webcomponents/webcomponentsjs/webcomponents-bundle.js', 'true');
-            loadJavaScript('/resources/polymer/web-animations-js/web-animations-next-lite.min.js', 'true');
-            loadJavaScript('/resources/filesaver/FileSaver.min.js', 'true');
+            loadTag('link', ['rel', 'manifest'], ['href', '/resources/manifest.webmanifest']);
+            loadTag('link', ['rel', 'icon'], ['sizes', '192x192'], ['href', '/resources/icons/tg-icon192x192.png']);
+            loadTag('link', ['rel', 'apple-touch-startup-image'], ['href', '/resources/icons/tg-icon192x192.png']);
+            loadTag('link', ['rel', 'apple-touch-icon'], ['href', '/resources/icons/tg-icon192x192.png']);
+            loadTag('meta', ['name', 'msapplication-TileImage'], ['content', '/resources/icons/tg-icon144x144.png']); // Tile icon for Win8 (144x144)
+            loadTag('script', ['src', '/resources/polymer/@webcomponents/webcomponentsjs/webcomponents-bundle.js'], ['async', 'true']);
+            loadTag('script', ['src', '/resources/polymer/web-animations-js/web-animations-next-lite.min.js'], ['async', 'true']);
+            loadTag('script', ['src', '/resources/filesaver/FileSaver.min.js'], ['async', 'true']);
             import('/resources/@startupResources.js');
         };
         if (@service-worker && 'serviceWorker' in navigator) {
@@ -45,17 +46,11 @@
     <!-- Add to homescreen for Chrome on Android -->
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="application-name" content="@title">
-    <link rel="icon" sizes="192x192" href="/resources/icons/tg-icon192x192.png">
 
     <!-- Add to homescreen for Safari on iOS -->
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <meta name="apple-mobile-web-app-title" content="@title">
-    <link rel="apple-touch-startup-image" href="/resources/icons/tg-icon192x192.png">
-    <link rel="apple-touch-icon" href="/resources/icons/tg-icon192x192.png">
-
-    <!-- Tile icon for Win8 (144x144) -->
-    <meta name="msapplication-TileImage" content="/resources/icons/tg-icon144x144.png">
     <script>
         window.TG_APP = {
             watermark: @watermark
