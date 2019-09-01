@@ -172,6 +172,12 @@ public class VulcanizingUtility {
         LOGGER.info("Vulcanized.");
     }
     
+    /**
+     * Generates SHA1 checksums for specified <code>paths</code>.
+     * 
+     * @param paths
+     * @return
+     */
     private static Map<String, String> generateChecksums(final String ... paths) {
         final Map<String, String> checksums = new LinkedHashMap<>();
         for (final String path: asList(paths)) {
@@ -259,7 +265,7 @@ public class VulcanizingUtility {
      */
     private static void downloadGeneratedResources(final IWebUiConfig webUiConfig, final ISourceController sourceController) {
         LOGGER.info("\tDownloading generated resources...");
-        downloadSource("app", "tg-app-index.html", sourceController, null);
+        downloadSource("app", "tg-app-index.html", sourceController, null); // used for checksum generation
         downloadSource("app", "tg-reflector.js", sourceController, null);
         for (final Class<? extends AbstractEntity<?>> masterType : webUiConfig.getMasters().keySet()) {
             downloadSource("master_ui", masterType.getName() + ".js", sourceController, null);
@@ -308,7 +314,7 @@ public class VulcanizingUtility {
         LOGGER.info("\t\tMove vulcanized file to its destination...");
         try {
             copyFile(new File(prefix + "startup-resources-vulcanized-minified.js"), new File(targetAppSpecificPath + prefix + "startup-resources-vulcanized.js"));
-            copyFile(new File(prefix + "startup-resources-vulcanized-minified.js"), new File("vulcan/resources/" + prefix + "startup-resources-vulcanized.js"));
+            copyFile(new File(prefix + "startup-resources-vulcanized-minified.js"), new File("vulcan/resources/" + prefix + "startup-resources-vulcanized.js")); // used for checksum generation
         } catch (final IOException e) {
             LOGGER.error(e.getMessage(), e);
             throw new IllegalStateException(e);

@@ -12,6 +12,7 @@ import static ua.com.fielden.platform.web.resources.RestServerUtil.encodedRepres
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.util.List;
+import java.util.function.Supplier;
 
 import org.restlet.Context;
 import org.restlet.Request;
@@ -62,10 +63,38 @@ public class FileResource extends AbstractWebResource {
         }
     }
     
-    private static Representation createStreamRepresentation(final ISourceController sourceController, final List<String> resourcePaths, final MediaType mediaType, final String path, final String remainingPart) {
+    /**
+     * Returns checksum representation for the resource in case where checksum has been requested.
+     * Otherwise, creates representation using <code>createRepresentation</code> callback.
+     * 
+     * @param createRepresentation
+     * @param sourceController
+     * @param mediaType
+     * @param path
+     * @param remainingPart
+     * @return
+     */
+    private static Representation returnChecksumRepresentationOr(final Supplier<Representation> createRepresentation, final ISourceController sourceController, final MediaType mediaType, final String path, final String remainingPart) {
         if (remainingPart.endsWith("?checksum=true")) {
             return encodedRepresentation(new ByteArrayInputStream(sourceController.checksum(path).orElse("").getBytes(UTF_8)), mediaType);
         } else {
+            return createRepresentation.get();
+        }
+    }
+    
+    /**
+     * Returns checksum representation for the resource in case where checksum has been requested.
+     * Otherwise, creates stream-based representation for resources like images.
+     *  
+     * @param sourceController
+     * @param resourcePaths
+     * @param mediaType
+     * @param path
+     * @param remainingPart
+     * @return
+     */
+    private static Representation createStreamRepresentation(final ISourceController sourceController, final List<String> resourcePaths, final MediaType mediaType, final String path, final String remainingPart) {
+        return returnChecksumRepresentationOr(() -> {
             final String filePath = generateFileName(resourcePaths, remainingPart);
             final InputStream stream = sourceController.loadStreamWithFilePath(filePath);
             if (stream != null) {
@@ -73,19 +102,27 @@ public class FileResource extends AbstractWebResource {
             } else {
                 return null;
             }
-        }
+        }, sourceController, mediaType, path, remainingPart);
     }
     
+    /**
+     * Returns checksum representation for the resource in case where checksum has been requested.
+     * Otherwise, creates textual representation for text-like resources. 
+     * 
+     * @param sourceController
+     * @param mediaType
+     * @param path
+     * @param remainingPart
+     * @return
+     */
     public static Representation createRepresentation(final ISourceController sourceController, final MediaType mediaType, final String path, final String remainingPart) {
-        if (remainingPart.endsWith("?checksum=true")) {
-            return encodedRepresentation(new ByteArrayInputStream(sourceController.checksum(path).orElse("").getBytes(UTF_8)), mediaType);
-        } else {
+        return returnChecksumRepresentationOr(() -> {
             final String source = sourceController.loadSource(path);
             if (source != null) {
                 return encodedRepresentation(new ByteArrayInputStream(source.getBytes(UTF_8)), mediaType);
             }
             return null;
-        }
+        }, sourceController, mediaType, path, remainingPart);
     }
 
     /**
