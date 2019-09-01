@@ -78,7 +78,7 @@ public class SourceControllerImpl implements ISourceController {
         if ("/app/application-startup-resources.js".equalsIgnoreCase(resourceURI)) {
             return getApplicationStartupResourcesSource(webUiConfig, this);
         } else if ("/app/tg-app-index.html".equalsIgnoreCase(resourceURI)) {
-            return getTgAppIndexSource(webUiConfig.genAppIndex(), this);
+            return injectServiceWorkerScriptInto(webUiConfig.genAppIndex(), this);
         } else if ("/app/tg-app-config.js".equalsIgnoreCase(resourceURI)) {
             return webUiConfig.genWebUiPreferences();
         } else if ("/app/tg-app.js".equalsIgnoreCase(resourceURI)) {
@@ -110,8 +110,35 @@ public class SourceControllerImpl implements ISourceController {
         return originalSource.replace("@typeTable", typeTableRepresentation);
     }
     
-    private static String getTgAppIndexSource(final String originalSource, final SourceControllerImpl sourceControllerImpl) {
-        return originalSource.replace("@service-worker", "" + (sourceControllerImpl.vulcanizingMode || sourceControllerImpl.deploymentMode));
+    /**
+     * Injects service worker registration script with lazy tags loading after sw registration (deployment mode).
+     * Injects lazy tags loading (development mode).
+     * 
+     * @param originalSource
+     * @param sourceControllerImpl
+     * @return
+     */
+    private static String injectServiceWorkerScriptInto(final String originalSource, final SourceControllerImpl sourceControllerImpl) {
+        return originalSource.replace("@service-worker", 
+            sourceControllerImpl.deploymentMode ?
+            "        if ('serviceWorker' in navigator) {\n" + 
+            "            navigator.serviceWorker.register('/service-worker.js').then(function (registration) {\n" + 
+            "                if (registration.active) {\n" + 
+            "                    loadTags();\n" + 
+            "                } else {\n" + 
+            "                    registration.onupdatefound = function () {\n" + 
+            "                        const installingWorker = registration.installing;\n" + 
+            "                        installingWorker.onstatechange = function () {\n" + 
+            "                            if (installingWorker.state === 'activated') {\n" + 
+            "                                loadTags();\n" + 
+            "                            }\n" + 
+            "                        };\n" + 
+            "                    };\n" + 
+            "                }\n" + 
+            "            });\n" + 
+            "        }\n" :
+            "        loadTags();\n"
+        );
     }
     
     private static String getApplicationStartupResourcesSource(final IWebUiConfig webUiConfig, final SourceControllerImpl sourceControllerImpl) {

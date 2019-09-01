@@ -11,7 +11,7 @@ import ua.com.fielden.platform.web.interfaces.IDeviceProvider;
 import ua.com.fielden.platform.web.resources.webui.ServiceWorkerResource;
 
 /**
- * The resource factory for service worker resource.
+ * Resource factory for service worker resource.
  *
  * @author TG Team
  *

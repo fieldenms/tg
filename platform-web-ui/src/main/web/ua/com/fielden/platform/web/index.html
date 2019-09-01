@@ -11,13 +11,16 @@
     <link rel="stylesheet" type="text/css" crossOrigin="anonymous" href="https://fonts.googleapis.com/css?family=Roboto+Mono:400,700|Roboto:400,300,300italic,400italic,500,500italic,700,700italic"></link>
     <script crossorigin="use-credentials">
         window.polymerSkipLoadingFontRoboto = true; // skip loading of Roboto font later on
+        window.TG_APP = {
+            watermark: @watermark
+        };
         const loadTag = function (tagName, ...propertyAndValue) {
             const headElement = document.getElementsByTagName('head')[0];
             const newElement = document.createElement(tagName);
             propertyAndValue.forEach(propAndValue => newElement[propAndValue[0]] = propAndValue[1]);
             headElement.appendChild(newElement);
         };
-        const loadScripts = function () {
+        const loadTags = function () {
             loadTag('link', ['rel', 'manifest'], ['href', '/resources/manifest.webmanifest']);
             loadTag('link', ['rel', 'icon'], ['sizes', '192x192'], ['href', '/resources/icons/tg-icon192x192.png']);
             loadTag('link', ['rel', 'apple-touch-startup-image'], ['href', '/resources/icons/tg-icon192x192.png']);
@@ -28,22 +31,7 @@
             loadTag('script', ['src', '/resources/filesaver/FileSaver.min.js'], ['async', 'true']);
             import('/resources/@startupResources.js');
         };
-        if (@service-worker && 'serviceWorker' in navigator) {
-            navigator.serviceWorker.register('/service-worker.js').then(function (registration) {
-                if (registration.active) {
-                    loadScripts();
-                } else {
-                    registration.onupdatefound = function () {
-                        const installingWorker = registration.installing;
-                        installingWorker.onstatechange = function () {
-                            if (installingWorker.state === 'activated') {
-                                loadScripts();
-                            }
-                        };
-                    };
-                }
-            });
-        }
+@service-worker
     </script>
     
     <!-- Add to homescreen for Chrome on Android -->
@@ -54,11 +42,6 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <meta name="apple-mobile-web-app-title" content="@title">
-    <script>
-        window.TG_APP = {
-            watermark: @watermark
-        };
-    </script>
     <custom-style>
         <style include="iron-flex iron-flex-reverse iron-flex-alignment iron-flex-factors iron-positioning">
             html {
