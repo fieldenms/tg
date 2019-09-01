@@ -1,11 +1,24 @@
-console.debug('Service worker script...started');
+/**
+ * The name for resources cache.
+ */
+const cacheName = 'tg-deployment-cache';
+/**
+ * The name for separate cache of resource checksums.
+ */
+const checksumCacheName = 'tg-deployment-cache-checksums';
 
-const cacheName = 'tg-air-dev-cache';
-const checksumCacheName = 'tg-air-dev-cache-checksums';
-
+/**
+ * Determines whether request 'url' represents static resource, i.e. such resource that does not change between releases.
+ * 
+ * Please note that for deployment mode only '/', '/logout' and '/resources/...' are needed.
+ * However, we have listed all possible resources here to avoid the change to service worker later.
+ * 
+ * @param url 
+ */
 const isStatic = function (url) {
     const pathname = new URL(url).pathname;
     return pathname === '/' ||
+        pathname === '/logout' ||
         pathname.startsWith('/resources/') ||
         pathname.startsWith('/app/') ||
         pathname.startsWith('/centre_ui/') ||
@@ -13,14 +26,24 @@ const isStatic = function (url) {
         pathname.startsWith('/custom_view/');
 };
 
+/**
+ * Creates response indicating that client application is stale and is needed to be refreshed fully.
+ */
 const staleResponse = function () {
     return new Response('STALE', {status: 412, statusText: 'BAD', headers: {'Content-Type': 'text/plain'}});
 };
 
+/**
+ * Indicates whether response is successful.
+ */
 const isResponseSuccessful = function (response) {
     return response && response.status === 200 && response.type === 'basic';
 };
 
+/**
+ * Caches the specified 'response' and its checksum ('checksumResponseToCache') in case where they are both successful.
+ * Returns promise resolving to 'response'.
+ */
 const cacheIfSuccessful = function (response, checksumRequest, checksumResponseToCache, url, cache, checksumCache) {
     if (isResponseSuccessful(response) && isResponseSuccessful(checksumResponseToCache)) { // cache response if it is successful
         // IMPORTANT: Clone the response. A response is a stream
@@ -107,5 +130,3 @@ self.addEventListener('fetch', function (event) {
         }());
     } // all non-static resources should be bypassed by service worker, just ignoring them in 'fetch' event; this will trigger default logic
 });
-
-console.debug('Service worker script...completed');

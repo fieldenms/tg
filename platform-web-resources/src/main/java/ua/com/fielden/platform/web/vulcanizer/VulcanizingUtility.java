@@ -155,7 +155,12 @@ public class VulcanizingUtility {
                 "/resources/filesaver/FileSaver.min.js",
                 "/resources/manifest.webmanifest",
                 "/resources/icons/tg-icon192x192.png",
-                "/resources/icons/tg-icon144x144.png"
+                "/resources/icons/tg-icon144x144.png",
+                // Other page trees (logout.html, login.html, ...). Please note that login.html can not go through service worker caching due to the need to redirect to index.html when authenticator appears.
+                "/app/logout.html",
+                "/resources/zxcvbn/zxcvbn.js",
+                "/resources/login-startup-resources-vulcanized.js",
+                "/resources/icons/tg-icon.png"
             );
             try {
                 final ObjectMapper objectMapper = new ObjectMapper();
@@ -266,6 +271,7 @@ public class VulcanizingUtility {
     private static void downloadGeneratedResources(final IWebUiConfig webUiConfig, final ISourceController sourceController) {
         LOGGER.info("\tDownloading generated resources...");
         downloadSource("app", "tg-app-index.html", sourceController, null); // used for checksum generation
+        downloadSource("app", "logout.html", sourceController, null); // used for checksum generation
         downloadSource("app", "tg-reflector.js", sourceController, null);
         for (final Class<? extends AbstractEntity<?>> masterType : webUiConfig.getMasters().keySet()) {
             downloadSource("master_ui", masterType.getName() + ".js", sourceController, null);

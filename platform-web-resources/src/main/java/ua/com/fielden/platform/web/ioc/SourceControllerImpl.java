@@ -15,6 +15,7 @@ import static ua.com.fielden.platform.web.factories.webui.ResourceFactoryUtils.g
 import static ua.com.fielden.platform.web.factories.webui.ResourceFactoryUtils.getEntityMaster;
 import static ua.com.fielden.platform.web.resources.webui.FileResource.generateFileName;
 
+import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -22,6 +23,10 @@ import java.util.List;
 import java.util.Optional;
 
 import org.apache.log4j.Logger;
+import org.restlet.data.Encoding;
+import org.restlet.data.MediaType;
+import org.restlet.engine.application.EncodeRepresentation;
+import org.restlet.representation.InputRepresentation;
 
 import com.google.inject.Inject;
 
@@ -30,6 +35,7 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
 import ua.com.fielden.platform.serialisation.api.impl.TgJackson;
 import ua.com.fielden.platform.ui.menu.MiWithConfigurationSupport;
+import ua.com.fielden.platform.utils.ResourceLoader;
 import ua.com.fielden.platform.web.app.ISourceController;
 import ua.com.fielden.platform.web.app.IWebUiConfig;
 import ua.com.fielden.platform.web.centre.EntityCentre;
@@ -79,6 +85,8 @@ public class SourceControllerImpl implements ISourceController {
             return getApplicationStartupResourcesSource(webUiConfig, this);
         } else if ("/app/tg-app-index.html".equalsIgnoreCase(resourceURI)) {
             return injectServiceWorkerScriptInto(webUiConfig.genAppIndex(), this);
+        } else if ("/app/logout.html".equalsIgnoreCase(resourceURI)) {
+            return getFileSource("/resources/logout.html", webUiConfig.resourcePaths()).replaceAll("@title", "Logout");
         } else if ("/app/tg-app-config.js".equalsIgnoreCase(resourceURI)) {
             return webUiConfig.genWebUiPreferences();
         } else if ("/app/tg-app.js".equalsIgnoreCase(resourceURI)) {
