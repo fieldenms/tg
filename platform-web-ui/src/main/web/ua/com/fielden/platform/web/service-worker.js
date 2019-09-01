@@ -19,6 +19,7 @@ const isStatic = function (url) {
     const pathname = new URL(url).pathname;
     return pathname === '/' ||
         pathname === '/logout' ||
+        pathname === '/forgotten' ||
         pathname.startsWith('/resources/') ||
         pathname.startsWith('/app/') ||
         pathname.startsWith('/centre_ui/') ||

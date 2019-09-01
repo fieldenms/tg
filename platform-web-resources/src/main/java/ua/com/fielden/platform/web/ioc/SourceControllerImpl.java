@@ -87,6 +87,8 @@ public class SourceControllerImpl implements ISourceController {
             return injectServiceWorkerScriptInto(webUiConfig.genAppIndex(), this);
         } else if ("/app/logout.html".equalsIgnoreCase(resourceURI)) {
             return getFileSource("/resources/logout.html", webUiConfig.resourcePaths()).replaceAll("@title", "Logout");
+        } else if ("/app/login-initiate-reset.html".equalsIgnoreCase(resourceURI)) {
+            return getFileSource("/resources/login-initiate-reset.html", webUiConfig.resourcePaths()).replaceAll("@title", "Login Reset Request");
         } else if ("/app/tg-app-config.js".equalsIgnoreCase(resourceURI)) {
             return webUiConfig.genWebUiPreferences();
         } else if ("/app/tg-app.js".equalsIgnoreCase(resourceURI)) {
