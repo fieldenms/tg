@@ -131,7 +131,12 @@ public interface IWebUiConfig extends IMenuRetriever {
     Workflows workflow();
     
     /**
-     * Loads checksum for resource.
+     * Loads checksum for resource if available. Otherwise, returns empty {@link Optional}.
+     * <p>
+     * Checksums are available for static resources in deployment mode. 'startup-resources-vulcanized.js' file is primary in this category.
+     * Client-side Service Worker script intercepts requests to get checksum first to compare whether resource has changed.
+     * If that is true then full resource will be re-downloaded and re-cached on the client side.
+     * Otherwise the cached resource will be used straight away.
      * 
      * @param resourceURI
      * @return
