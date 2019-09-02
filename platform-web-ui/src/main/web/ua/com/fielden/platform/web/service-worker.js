@@ -10,7 +10,7 @@ const checksumCacheName = 'tg-deployment-cache-checksums';
 /**
  * Determines whether request 'url' represents static resource, i.e. such resource that does not change between releases.
  * 
- * Please note that for deployment mode only '/', '/logout' and '/resources/...' are needed.
+ * Please note that for deployment mode only '/', '/logout', '/forgotten' and '/resources/...' are needed.
  * However, we have listed all possible resources here to avoid the change to service worker later.
  * 
  * @param url
@@ -39,43 +39,44 @@ const staleResponse = function () {
  * Indicates whether response is successful.
  */
 const isResponseSuccessful = function (response) {
-    return response && response.status === 200 && response.type === 'basic';
+    return response && response.ok;
 };
 
 /**
- * Caches the specified 'response' and its checksum ('checksumResponseToCache') in case where they are both successful.
+ * Caches the specified 'response' and its checksum ('checksumResponse') in case where they are both successful.
  * Returns promise resolving to 'response'.
  */
-const cacheIfSuccessful = function (response, checksumRequest, checksumResponseToCache, url, cache, checksumCache) {
-    if (isResponseSuccessful(response) && isResponseSuccessful(checksumResponseToCache)) { // cache response if it is successful
-        // IMPORTANT: Clone the response. A response is a stream
-        // and because we want the browser to consume the response
-        // as well as the cache consuming the response, we need
-        // to clone it so we have two streams.
-        const responseToCache = response.clone();
-        return cache.put(url, responseToCache).then(function() {
-            return checksumCache.put(checksumRequest, checksumResponseToCache).then(function () {
+const cacheIfSuccessful = function (response, checksumRequest, checksumResponse, url, cache, checksumCache) {
+    if (isResponseSuccessful(response)) { // cache response if it is successful; 'checksumResponse' is successful at this stage
+        // IMPORTANT: Clone the response. A response is a stream and because we want the browser to consume the response
+        // as well as the cache consuming the response, we need to clone it so we have two streams.
+        return cache.put(url, response.clone()).then(function() { // cache response; it should not fail (otherwise bad response will be returned)
+            return checksumCache.put(checksumRequest, checksumResponse).then(function () { // cache checksum; it should not fail (otherwise bad response will be returned)
                 return response;
             });
         });
     }
-    return Promise.resolve(response);
+    return Promise.resolve(response); // do not blow up response if for some reason response was not successful; just return it as if the request was not intercepted by service worker
 };
 
 /**
- * Returns promise resolving to reponse text if successful, otherwise to empty string.
+ * Returns promise resolving to response text if successful, otherwise returns rejection promise containing unsuccessful response.
  * 
- * @param {*} serverChecksumResponse 
+ * @param response 
  */
-const serverChecksumPromise = function (serverChecksumResponse) {
-    if (isResponseSuccessful(serverChecksumResponse)) {
-        return serverChecksumResponse.text();
+const getTextFrom = function (response) {
+    if (isResponseSuccessful(response)) {
+        return response.clone().text(); // perform cloning here to leave original 'response' stream unaffected
     } else {
-        return Promise.resolve(''); // empty serverChecksum
+        return Promise.reject(response);
     }
 };
 
 self.addEventListener('activate', event => {
+    // By default the page's fetches will not go through service worker if it was not fetched through service worker.
+    // This is the case for the very first time index.html loading.
+    // However we can enforce service worker to take full control as soon as first activation performs.
+    // This makes [immediate caching of index.html dependencies] possible.
     clients.claim();
 });
 
@@ -83,30 +84,29 @@ self.addEventListener('fetch', function (event) {
     const request = event.request;
     const urlObj = new URL(request.url);
     const url = urlObj.origin + urlObj.pathname;
-    if (isStatic(url, request.method)) {
+    if (isStatic(url, request.method)) { // only consider intercepting for static resources
         event.respondWith(function() {
-            return caches.open(cacheName).then(function (cache) {
+            return caches.open(cacheName).then(function (cache) { // open main cache; it should not fail (otherwise bad response will be returned)
                 const serverChecksumRequest = new Request(url + '?checksum=true', { method: 'GET' });
-                return fetch(serverChecksumRequest).then(function(serverChecksumResponse) {
-                    return cache.match(url).then(function (cachedResponse) {
-                        return caches.open(checksumCacheName).then(function (checksumCache) {
-                            return checksumCache.match(url + '?checksum=true').then(function (cachedChecksumResponse) {
-                                const serverChecksumResponseToCache = isResponseSuccessful(serverChecksumResponse) && serverChecksumResponse.clone();
-                                return serverChecksumPromise(serverChecksumResponse).then(function (serverChecksum) {
+                return fetch(serverChecksumRequest).then(function(serverChecksumResponse) { // fetch checksum for the intercepted resource; it should not fail (otherwise bad response will be returned)
+                    return cache.match(url).then(function (cachedResponse) { // match resource in main cache; it should not fail (otherwise bad response will be returned)
+                        return caches.open(checksumCacheName).then(function (checksumCache) { // open checksum cache; it should not fail (otherwise bad response will be returned)
+                            return checksumCache.match(url + '?checksum=true').then(function (cachedChecksumResponse) { // match resource's checksum in checksum cache; it should not fail (otherwise bad response will be returned)
+                                return getTextFrom(serverChecksumResponse).then(function (serverChecksum) { // get checksum text; checksum response should be successful (otherwise bad response will be returned)
                                     if (cachedResponse && cachedChecksumResponse) { // cached entry exists and it has proper checksum too
-                                        return cachedChecksumResponse.text().then(function (cachedChecksum) {
+                                        return cachedChecksumResponse.text().then(function (cachedChecksum) { // cachedChecksumResponse always is successful, because only successful checksumResponse can be cached
                                             if (!serverChecksum) { // resource has been deleted on server
                                                 console.warn(`Resource ${url} has been deleted on server.`);
                                                 return cache.delete(url).then(function (deleted) {
                                                     if (!deleted) {
-                                                        console.error(`Cached resource [${url}] was not deleted.`);
+                                                        console.warn(`Cached resource [${url}] was not deleted.`); // do not blow up response if for some reason deletion was not successful; but it should be unsuccessful
                                                     }
                                                     return staleResponse();
                                                 });
                                             } else if (serverChecksum !== cachedChecksum) { // resource has been modified on server
                                                 console.warn(`Resource ${url} has been modified on server. CachedChecksum ${cachedChecksum} vs serverChecksum ${serverChecksum}. MODIFIED RESOURCE WILL BE RE-CACHED.`);
                                                 return fetch(url).then(function (fetchedResponse) {
-                                                    return cacheIfSuccessful(fetchedResponse, serverChecksumRequest, serverChecksumResponseToCache, url, cache, checksumCache);
+                                                    return cacheIfSuccessful(fetchedResponse, serverChecksumRequest, serverChecksumResponse, url, cache, checksumCache);
                                                 });
                                             } else { // serverChecksum === cachedChecksum; resource is the same on server and in client cache
                                                 return cachedResponse;
@@ -119,7 +119,7 @@ self.addEventListener('fetch', function (event) {
                                         } else { // resource exists on server
                                             console.warn(`Resource ${url} exists on server. ServerChecksum ${serverChecksum}. NEW RESOURCE WILL BE CACHED.`);
                                             return fetch(url).then(function (fetchedResponse) {
-                                                return cacheIfSuccessful(fetchedResponse, serverChecksumRequest, serverChecksumResponseToCache, url, cache, checksumCache);
+                                                return cacheIfSuccessful(fetchedResponse, serverChecksumRequest, serverChecksumResponse, url, cache, checksumCache);
                                             });
                                         }
                                     }
