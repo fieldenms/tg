@@ -118,7 +118,6 @@ public abstract class AbstractWebUiResources extends Application {
 
         // Attach main application resource.
         router.attach("/", new AppIndexResourceFactory(sourceController, webApp, userProvider, deviceProvider));
-        router.attach("/service-worker.js", new ServiceWorkerResourceFactory(sourceController, deviceProvider));
         router.attach("/app/tg-app-config.js", new WebUiPreferencesResourceFactory(sourceController, deviceProvider));
         router.attach("/app/tg-app.js", new MainWebUiComponentResourceFactory(sourceController, deviceProvider));
         // type meta info resource
@@ -159,6 +158,7 @@ public abstract class AbstractWebUiResources extends Application {
         // standard Polymer components and other resources should not be guarded
         // Register resources those are in resource paths.
         attachResources(mainRouter);
+        mainRouter.attach("/service-worker.js", new ServiceWorkerResourceFactory(sourceController, deviceProvider));
 
         mainRouter.attach(guard);
 
