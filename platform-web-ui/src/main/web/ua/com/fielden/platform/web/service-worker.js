@@ -13,18 +13,19 @@ const checksumCacheName = 'tg-deployment-cache-checksums';
  * Please note that for deployment mode only '/', '/logout' and '/resources/...' are needed.
  * However, we have listed all possible resources here to avoid the change to service worker later.
  * 
- * @param url 
+ * @param url
+ * @param method
  */
-const isStatic = function (url) {
+const isStatic = function (url, method) {
     const pathname = new URL(url).pathname;
-    return pathname === '/' ||
+    return 'GET' === method && (pathname === '/' ||
         pathname === '/logout' ||
         pathname === '/forgotten' ||
         pathname.startsWith('/resources/') ||
         pathname.startsWith('/app/') ||
         pathname.startsWith('/centre_ui/') ||
         pathname.startsWith('/master_ui/') ||
-        pathname.startsWith('/custom_view/');
+        pathname.startsWith('/custom_view/'));
 };
 
 /**
@@ -82,7 +83,7 @@ self.addEventListener('fetch', function (event) {
     const request = event.request;
     const urlObj = new URL(request.url);
     const url = urlObj.origin + urlObj.pathname;
-    if (isStatic(url)) {
+    if (isStatic(url, request.method)) {
         event.respondWith(function() {
             return caches.open(cacheName).then(function (cache) {
                 const serverChecksumRequest = new Request(url + '?checksum=true', { method: 'GET' });
