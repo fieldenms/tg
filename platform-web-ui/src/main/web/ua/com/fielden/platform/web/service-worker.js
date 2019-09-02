@@ -99,7 +99,7 @@ self.addEventListener('fetch', function (event) {
                                                 console.warn(`Resource ${url} has been deleted on server.`);
                                                 return cache.delete(url).then(function (deleted) {
                                                     if (!deleted) {
-                                                        console.warn(`Cached resource [${url}] was not deleted.`); // do not blow up response if for some reason deletion was not successful; but it should be unsuccessful
+                                                        console.warn(`Cached resource [${url}] was not deleted.`); // do not blow up response if for some reason deletion was not successful; but it should be successful
                                                     }
                                                     return staleResponse();
                                                 });
