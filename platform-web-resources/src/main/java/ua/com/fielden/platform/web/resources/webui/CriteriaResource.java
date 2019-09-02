@@ -36,6 +36,7 @@ import static ua.com.fielden.platform.web.utils.WebUiResourceUtils.restoreModifi
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -438,6 +439,15 @@ public class CriteriaResource extends AbstractWebResource {
                 pair.getKey().put("renderingHints", new ArrayList<>());
             }
 
+            //Build dynamic properties object
+            final Map<String, List<Map<String, String>>> dynamicColumns = new HashMap<>();
+            centre.getDynamicProperties().forEach(prop -> {
+                centre.getDynamicPropertyDefinerFor(prop).ifPresent(propDefiner -> {
+                    queryEnhancerAndContext.ifPresent(queryContextPair -> dynamicColumns.put(prop + "Columns", propDefiner.getColumns(queryContextPair.getValue()).build()));
+                });
+            });
+            pair.getKey().put("dynamicColumns", dynamicColumns);
+
             final Stream<AbstractEntity<?>> processedEntities = enhanceResultEntitiesWithCustomPropertyValues(
                     centre,
                     centre.getCustomPropertiesDefinitions(),
@@ -549,7 +559,7 @@ public class CriteriaResource extends AbstractWebResource {
      */
     public static Stream<AbstractEntity<?>> enhanceResultEntitiesWithCustomPropertyValues(
             final EntityCentre<AbstractEntity<?>> centre,
-            final Optional<List<ResultSetProp>> propertiesDefinitions,
+            final Optional<List<ResultSetProp<AbstractEntity<?>>>> propertiesDefinitions,
             final Optional<Class<? extends ICustomPropsAssignmentHandler>> customPropertiesAsignmentHandler,
             final Stream<AbstractEntity<?>> entities) {
 
@@ -560,7 +570,7 @@ public class CriteriaResource extends AbstractWebResource {
         final Stream<AbstractEntity<?>> assignedEntities = assignedEntitiesOp.orElse(entities);
 
         final Optional<Stream<AbstractEntity<?>>> completedEntitiesOp = propertiesDefinitions.map(customProps -> assignedEntities.map(entity -> {
-            for (final ResultSetProp customProp : customProps) {
+            for (final ResultSetProp<AbstractEntity<?>> customProp : customProps) {
                 if (customProp.propDef.isPresent()) {
                     final PropDef<?> propDef = customProp.propDef.get();
                     final String propertyName = CalculatedProperty.generateNameFrom(propDef.title);

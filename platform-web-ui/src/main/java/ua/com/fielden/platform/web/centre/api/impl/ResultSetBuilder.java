@@ -102,7 +102,7 @@ class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilder
 
     @Override
     public IAlsoProp<T> addProps(final String propName, final Class<? extends IDynamicPropDefiner<T>> propDefiner) {
-        final ResultSetProp prop = dynamicProps(propName, propDefiner);
+        final ResultSetProp<T> prop = dynamicProps(propName, propDefiner);
         this.builder.resultSetProperties.add(prop);
         return this;
     }

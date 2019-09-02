@@ -15,7 +15,7 @@ Polymer({
 
     properties: {
         property: String,
-        underlyingProperty: String,
+        valueProperty: String,
         tooltipProperty: String,
         type: String,
         width: Number,
