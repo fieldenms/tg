@@ -216,25 +216,27 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
         public final Optional<String> tooltipProp;
         public final Optional<PropDef<?>> propDef;
         public final Optional<Class<? extends IDynamicPropDefiner<T>>> dynamicPropDefinerClass;
+        public final Optional<CentreContextConfig> contextConfig;
         public final Supplier<Optional<EntityActionConfig>> propAction;
         public final int width;
         public final boolean isFlexible;
 
          public static <T extends AbstractEntity<?>> ResultSetProp<T> propByName(final String propName, final int width, final boolean isFlexible, final String tooltipProp, final Supplier<Optional<EntityActionConfig>> propAction) {
-            return new ResultSetProp<T>(propName, Optional.empty(), width, isFlexible, tooltipProp, null, propAction);
+            return new ResultSetProp<T>(propName, Optional.empty(), Optional.empty(), width, isFlexible, tooltipProp, null, propAction);
         }
 
         public static <T extends AbstractEntity<?>> ResultSetProp<T> propByDef(final PropDef<?> propDef, final int width, final boolean isFlexible, final String tooltipProp, final Supplier<Optional<EntityActionConfig>> propAction) {
-            return new ResultSetProp<T>(null, Optional.empty(), width, isFlexible, tooltipProp, propDef, propAction);
+            return new ResultSetProp<T>(null, Optional.empty(), Optional.empty(), width, isFlexible, tooltipProp, propDef, propAction);
         }
 
-        public static <T extends AbstractEntity<?>> ResultSetProp<T> dynamicProps(final String collectionalPropertyName, final Class<? extends IDynamicPropDefiner<T>> dynamicPropDefinerClass) {
-            return new ResultSetProp<T>(collectionalPropertyName, Optional.of(dynamicPropDefinerClass), 0, false, null, null, () -> Optional.empty());
+        public static <T extends AbstractEntity<?>> ResultSetProp<T> dynamicProps(final String collectionalPropertyName, final Class<? extends IDynamicPropDefiner<T>> dynamicPropDefinerClass, final CentreContextConfig contextConfig) {
+            return new ResultSetProp<T>(collectionalPropertyName, Optional.of(dynamicPropDefinerClass), Optional.of(contextConfig), 0, false, null, null, () -> Optional.empty());
         }
 
         private ResultSetProp(
                 final String propName,
                 final Optional<Class<? extends IDynamicPropDefiner<T>>> dynamicPropDefinerClass,
+                final Optional<CentreContextConfig> contextConfig,
                 final int width,
                 final boolean isFlexible,
                 final String tooltipProp,
@@ -260,6 +262,7 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
             this.propDef = Optional.ofNullable(propDef);
             this.propAction = propAction;
             this.dynamicPropDefinerClass = dynamicPropDefinerClass;
+            this.contextConfig = contextConfig;
         }
 
     }

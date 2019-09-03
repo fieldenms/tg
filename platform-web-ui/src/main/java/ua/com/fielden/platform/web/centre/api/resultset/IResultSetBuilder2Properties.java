@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.web.centre.api.resultset;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.web.centre.api.context.CentreContextConfig;
 
 /**
  *
@@ -27,6 +28,6 @@ public interface IResultSetBuilder2Properties<T extends AbstractEntity<?>> {
      * @param propDefiner
      * @return
      */
-    IAlsoProp<T> addProps(final String propName, Class<? extends IDynamicPropDefiner<T>> propDefiner);
+    IAlsoProp<T> addProps(final String propName, final Class<? extends IDynamicPropDefiner<T>> propDefiner, final CentreContextConfig contextConfig);
 
 }

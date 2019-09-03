@@ -440,13 +440,19 @@ public class CriteriaResource extends AbstractWebResource {
             }
 
             //Build dynamic properties object
-            final Map<String, List<Map<String, String>>> dynamicColumns = new HashMap<>();
-            centre.getDynamicProperties().forEach(prop -> {
-                centre.getDynamicPropertyDefinerFor(prop).ifPresent(propDefiner -> {
-                    queryEnhancerAndContext.ifPresent(queryContextPair -> dynamicColumns.put(prop + "Columns", propDefiner.getColumns(queryContextPair.getValue()).build()));
-                });
-            });
-            pair.getKey().put("dynamicColumns", dynamicColumns);
+            pair.getKey().put("dynamicColumns", createDynamicProperties(webUiConfig,
+                    companionFinder,
+                    user,
+                    userProvider,
+                    critGenerator,
+                    entityFactory,
+                    centreContextHolder,
+                    previouslyRunCriteriaEntity,
+                    device(),
+                    domainTreeEnhancerCache,
+                    eccCompanion,
+                    mmiCompanion,
+                    userCompanion));
 
             final Stream<AbstractEntity<?>> processedEntities = enhanceResultEntitiesWithCustomPropertyValues(
                     centre,
@@ -467,6 +473,21 @@ public class CriteriaResource extends AbstractWebResource {
             logger.debug("CRITERIA_RESOURCE: run finished.");
             return restUtil.rawListJsonRepresentation(list.toArray());
         }, restUtil);
+    }
+
+    private Object createDynamicProperties(final IWebUiConfig webUiConfig, final ICompanionObjectFinder companionFinder, final User user, final IUserProvider userProvider, final ICriteriaGenerator critGenerator, final EntityFactory entityFactory, final CentreContextHolder centreContextHolder, final EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, ?> previouslyRunCriteriaEntity, final DeviceProfile device, final IDomainTreeEnhancerCache domainTreeEnhancerCache, final IEntityCentreConfig eccCompanion, final IMainMenuItem mmiCompanion, final IUser userCompanion) {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    private Map<String, List<Map<String, String>>> createDynamicProperties(final Optional<Pair<IQueryEnhancer<AbstractEntity<?>>, Optional<CentreContext<AbstractEntity<?>, ?>>>> queryEnhancerAndContext) {
+        final Map<String, List<Map<String, String>>> dynamicColumns = new HashMap<>();
+        centre.getDynamicProperties().forEach(prop -> {
+            centre.getDynamicPropertyDefinerFor(prop).ifPresent(propDefiner -> {
+                queryEnhancerAndContext.ifPresent(queryContextPair -> dynamicColumns.put(prop + "Columns", propDefiner.getColumns(queryContextPair.getValue()).build()));
+            });
+        });
+        return dynamicColumns;
     }
 
     /**

@@ -8,6 +8,7 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
 import ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig;
+import ua.com.fielden.platform.web.centre.api.context.CentreContextConfig;
 import ua.com.fielden.platform.web.centre.api.crit.ISelectionCritKindSelector;
 import ua.com.fielden.platform.web.centre.api.resultset.IAlsoProp;
 import ua.com.fielden.platform.web.centre.api.resultset.IDynamicPropDefiner;
@@ -160,7 +161,7 @@ class TopLevelActionsBuilder<T extends AbstractEntity<?>> implements ICentreTopL
     }
 
     @Override
-    public IAlsoProp<T> addProps(final String propName, final Class<? extends IDynamicPropDefiner<T>> propDefiner) {
-        return new ResultSetBuilder<>(builder).addProps(propName, propDefiner);
+    public IAlsoProp<T> addProps(final String propName, final Class<? extends IDynamicPropDefiner<T>> propDefiner, final CentreContextConfig contextConfig) {
+        return new ResultSetBuilder<>(builder).addProps(propName, propDefiner, contextConfig);
     }
 }
