@@ -834,19 +834,14 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
         }
     }
 
-    public Optional<IDynamicPropDefiner<T>> getDynamicPropertyDefinerFor(final String collectionalPropertyName) {
-        return dslDefaultConfig.getResultSetProperties()
-            .orElse(new ArrayList<>()).stream()
-            .filter(resProp -> resProp.propName.isPresent() && collectionalPropertyName.equals(resProp.propName.get()))
-            .findFirst()
-            .flatMap(res -> res.dynamicPropDefinerClass.map(clazz -> injector.getInstance(clazz)));
+    public Optional<IDynamicPropDefiner<T>> getDynamicPropertyDefinerFor(final ResultSetProp<T> resProp) {
+        return resProp.dynamicPropDefinerClass.map(clazz -> injector.getInstance(clazz));
     }
 
-    public List<String> getDynamicProperties () {
+    public List<ResultSetProp<T>> getDynamicProperties () {
         return dslDefaultConfig.getResultSetProperties()
                 .orElse(new ArrayList<>()).stream()
-                .filter(resProp -> resProp.dynamicPropDefinerClass.isPresent())
-                .map(resProp -> resProp.propName.get()).collect(Collectors.toList());
+                .filter(resProp -> resProp.dynamicPropDefinerClass.isPresent()).collect(Collectors.toList());
     }
 
     @Override

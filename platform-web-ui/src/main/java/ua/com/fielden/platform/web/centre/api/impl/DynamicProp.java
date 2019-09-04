@@ -22,9 +22,9 @@ public class DynamicProp<T extends AbstractEntity<?>> implements IDynamicPropBui
     private final String type;
 
     private String valueProp;
-    private Optional<String> tooltipProp;
+    private Optional<String> tooltipProp = Optional.empty();
     private String title;
-    private Optional<String> desc;
+    private Optional<String> desc = Optional.empty();
     private int width = DEFAULT_COLUMN_WIDTH;
     private int minWidth = MIN_COLUMN_WIDTH;
 

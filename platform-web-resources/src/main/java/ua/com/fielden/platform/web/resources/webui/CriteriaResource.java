@@ -440,16 +440,10 @@ public class CriteriaResource extends AbstractWebResource {
             }
 
             //Build dynamic properties object
-            pair.getKey().put("dynamicColumns", createDynamicProperties(webUiConfig,
-                    companionFinder,
+            pair.getKey().put("dynamicColumns", createDynamicProperties(
                     user,
-                    userProvider,
-                    critGenerator,
-                    entityFactory,
                     centreContextHolder,
                     previouslyRunCriteriaEntity,
-                    device(),
-                    domainTreeEnhancerCache,
                     eccCompanion,
                     mmiCompanion,
                     userCompanion));
@@ -475,16 +469,37 @@ public class CriteriaResource extends AbstractWebResource {
         }, restUtil);
     }
 
-    private Object createDynamicProperties(final IWebUiConfig webUiConfig, final ICompanionObjectFinder companionFinder, final User user, final IUserProvider userProvider, final ICriteriaGenerator critGenerator, final EntityFactory entityFactory, final CentreContextHolder centreContextHolder, final EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, ?> previouslyRunCriteriaEntity, final DeviceProfile device, final IDomainTreeEnhancerCache domainTreeEnhancerCache, final IEntityCentreConfig eccCompanion, final IMainMenuItem mmiCompanion, final IUser userCompanion) {
-        // TODO Auto-generated method stub
-        return null;
-    }
-
-    private Map<String, List<Map<String, String>>> createDynamicProperties(final Optional<Pair<IQueryEnhancer<AbstractEntity<?>>, Optional<CentreContext<AbstractEntity<?>, ?>>>> queryEnhancerAndContext) {
+    private Object createDynamicProperties(
+            final User user,
+            final CentreContextHolder centreContextHolder,
+            final EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, ?> criteriaEntity,
+            final IEntityCentreConfig eccCompanion,
+            final IMainMenuItem mmiCompanion,
+            final IUser userCompanion) {
         final Map<String, List<Map<String, String>>> dynamicColumns = new HashMap<>();
-        centre.getDynamicProperties().forEach(prop -> {
-            centre.getDynamicPropertyDefinerFor(prop).ifPresent(propDefiner -> {
-                queryEnhancerAndContext.ifPresent(queryContextPair -> dynamicColumns.put(prop + "Columns", propDefiner.getColumns(queryContextPair.getValue()).build()));
+        centre.getDynamicProperties().forEach(resProp -> {
+            resProp.dynamicPropDefinerClass.ifPresent(propDefinerClass -> {
+                final Optional<CentreContext<AbstractEntity<?>, ?>> optionalCentreContext = CentreResourceUtils.createCentreContext(
+                        true, // full context, fully-fledged restoration. This means that IQueryEnhancer descendants (centre query enhancers) could use IContextDecomposer for context decomposition on deep levels.
+                        webUiConfig,
+                        companionFinder,
+                        user,
+                        userProvider,
+                        critGenerator,
+                        entityFactory,
+                        centreContextHolder,
+                        criteriaEntity,
+                        resProp.contextConfig,
+                        null, /* chosenProperty is not applicable in queryEnhancer context */
+                        device(),
+                        domainTreeEnhancerCache,
+                        eccCompanion,
+                        mmiCompanion,
+                        userCompanion
+                    );
+                centre.getDynamicPropertyDefinerFor(resProp).ifPresent(propDefiner -> {
+                    dynamicColumns.put(resProp.propName.get() + "Columns", propDefiner.getColumns(optionalCentreContext).build());
+                });
             });
         });
         return dynamicColumns;
