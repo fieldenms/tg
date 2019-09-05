@@ -117,6 +117,7 @@ public class UserWebUiConfig {
                 .addAction(MasterActions.SAVE)
                 .setActionBarLayoutFor(Device.DESKTOP, Optional.empty(), format(bottomButtonPanel, actionButton, actionButton))
                 .setLayoutFor(Device.DESKTOP, Optional.empty(), layout)
+                .withDimensions(mkDim(400, 324))
                 .done();
         return new EntityMaster<User>(
                 User.class,

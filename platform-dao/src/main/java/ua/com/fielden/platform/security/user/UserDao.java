@@ -1,6 +1,9 @@
 package ua.com.fielden.platform.security.user;
 
 import static java.lang.String.format;
+import static java.util.Optional.empty;
+import static java.util.Optional.of;
+import static java.util.Optional.ofNullable;
 import static org.apache.commons.lang.StringUtils.isEmpty;
 import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
 import static ua.com.fielden.platform.entity.ActivatableAbstractEntity.ACTIVE;
@@ -14,6 +17,7 @@ import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.selec
 import static ua.com.fielden.platform.security.user.User.EMAIL;
 import static ua.com.fielden.platform.security.user.UserSecret.RESER_UUID_EXPIRATION_IN_MUNUTES;
 import static ua.com.fielden.platform.security.user.UserSecret.SECRET_RESET_UUID_SEPERATOR;
+import static ua.com.fielden.platform.utils.CollectionUtil.listOf;
 
 import java.util.Collection;
 import java.util.HashSet;
@@ -22,7 +26,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
-import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 
 import com.google.inject.Inject;
@@ -42,6 +45,7 @@ import ua.com.fielden.platform.entity.query.IFilter;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.OrderingModel;
+import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.menu.WebMenuItemInvisibility;
 import ua.com.fielden.platform.pagination.IPage;
 import ua.com.fielden.platform.security.Authorise;
@@ -101,9 +105,13 @@ public class UserDao extends CommonEntityDao<User> implements IUser {
 
     @Authorise(User_CanSave_Token.class)
     protected User ordinarySave(final User user) {
+        user.isValid().ifFailure(Result::throwRuntime);
         // remove all authenticated sessions in case the user is being deactivated
         if (user.isPersisted() && !user.isActive() && user.getProperty(ACTIVE).isDirty()) {
-            this.<IUserSession, UserSession>co$(UserSession.class).clearAll(user);
+            final IUserSession coUserSession = co(UserSession.class);
+            coUserSession.clearAll(user);
+            final IUserSecret coUserSecrete = co(UserSecret.class);
+            coUserSecrete.batchDelete(listOf(user.getId()));
         }
 
         // if a new active user is being created then need to send an activation email
@@ -282,13 +290,13 @@ public class UserDao extends CommonEntityDao<User> implements IUser {
 
     @Override
     public Optional<User> findUserByResetUuid(final String uuid) {
-        if (StringUtils.isEmpty(uuid)) {
+        if (isEmpty(uuid)) {
             throw new SecurityException("User password resetting UUID cannot be empty.");
         }
 
         final String[] uuidParts = uuid.split(SECRET_RESET_UUID_SEPERATOR);
         if (uuidParts.length != 3) {
-            return Optional.empty();
+            return empty();
         }
         final String userName = uuidParts[0];
         
@@ -299,7 +307,7 @@ public class UserDao extends CommonEntityDao<User> implements IUser {
                 .yield().prop("key").modelAsEntity(User.class);
         
         final User user = getEntity(from(query).with(fetchAll(User.class)).model());
-        return Optional.ofNullable(user);
+        return ofNullable(user);
     }
 
     @Override
@@ -323,10 +331,10 @@ public class UserDao extends CommonEntityDao<User> implements IUser {
             final UserSecret secret = findOrCreateNewSecret(user, co$UserSecret);
             
             final String uuid = format("%s%s%s%s%s", user.getKey(), SECRET_RESET_UUID_SEPERATOR, crypto.nextSessionId(), SECRET_RESET_UUID_SEPERATOR, getUniversalConstants().now().plusMinutes(RESER_UUID_EXPIRATION_IN_MUNUTES).getMillis());
-            return Optional.of(co$UserSecret.save(secret.setResetUuid(uuid)));
+            return of(co$UserSecret.save(secret.setResetUuid(uuid)));
         }
 
-        return Optional.empty();
+        return empty();
     }
 
     @Override
