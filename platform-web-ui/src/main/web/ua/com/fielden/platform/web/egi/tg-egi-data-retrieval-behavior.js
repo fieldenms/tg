@@ -10,28 +10,33 @@ export const TgEgiDataRetrievalBehavior = {
         this._appConfig = new TgAppConfig();
     },
 
-    isHyperlinkProp: function (entity, property, type) {
-        return type === 'Hyperlink' && this.getValueFromEntity(entity, property) !== null
+    isHyperlinkProp: function (entity, column) {
+        return column.type === 'Hyperlink' && this.getValueFromEntity(entity, column) !== null
     },
 
-    isBooleanProp: function (entity, property, type) {
-        return type === 'Boolean' && this.getValueFromEntity(entity, property) !== null
+    isBooleanProp: function (entity, column) {
+        return column.type === 'Boolean' && this.getValueFromEntity(entity, column) !== null
     },
 
-    isNotBooleanOrHyperlinkProp: function (entity, property, type) {
-        return !(this.isBooleanProp(entity, property, type) || this.isHyperlinkProp(entity, property, type));
+    isNotBooleanOrHyperlinkProp: function (entity, column) {
+        return !(this.isBooleanProp(entity, column) || this.isHyperlinkProp(entity, column));
     },
 
-    getAttachmentIfPossible: function (entity, property) {
+    getAttachmentIfPossible: function (entity, column) {
+        const valueFromEntity = this.getValueFromEntity(entity, column);
         if (entity.type && entity.constructor.prototype.type.call(entity).notEnhancedFullClassName() === "ua.com.fielden.platform.attachment.Attachment") {
             return entity;
-        } else if (this.getValueFromEntity(entity, property) && this.getValueFromEntity(entity, property).type &&
-            this.getValueFromEntity(entity, property).type().notEnhancedFullClassName() === "ua.com.fielden.platform.attachment.Attachment") {
-            return this.getValueFromEntity(entity, property);
-        } else if (this._reflector.entityPropOwner(entity, property)) {
-            const owner = this._reflector.entityPropOwner(entity, property);
-            if (owner.type().notEnhancedFullClassName() === "ua.com.fielden.platform.attachment.Attachment") {
-                return owner;
+        } else if (valueFromEntity && valueFromEntity.type &&
+            valueFromEntity.type().notEnhancedFullClassName() === "ua.com.fielden.platform.attachment.Attachment") {
+            return valueFromEntity;
+        } else if (valueFromEntity) {
+            const entityPropOwner = column.collectionalProperty ? 
+                this._reflector.entityPropOwner(valueFromEntity, column.valueProperty) : 
+                this._reflector.entityPropOwner(entity, column.property);
+            if (entityPropOwner) {
+                if (owner.type().notEnhancedFullClassName() === "ua.com.fielden.platform.attachment.Attachment") {
+                    return owner;
+                }
             }
             return null;
         } else {
@@ -39,12 +44,31 @@ export const TgEgiDataRetrievalBehavior = {
         }
     },
 
-    getValueFromEntity: function (entity, property) {
-        return entity && entity.get(property);
+    getCollectionalItem: function (entity, column) {
+        if (column.collectionalProperty) {
+            const collection = entity.get(column.collectionalProperty);
+            const item = collection.find(cItem => column.property === cItem[column.keyProperty]);
+            return item;
+        }
     },
 
-    getBindedValue: function (entity, property, type) {
-        return this.getValue(entity, property, type);
+    getValueFromEntity: function (entity, column) {
+        if (entity) {
+            if (!column.collectionalProperty) {
+                return  entity.get(column.property);
+            } else {
+                const item = this.getCollectionalItem(entity, column);
+                return item && item.get(column.valueProperty);
+            }
+        }
+        return entity;
+    },
+
+    getBindedValue: function (entity, column) {
+        if (!column.collectionalProperty) {
+            return this.getValue(entity, column.property, column.type);
+        } 
+        return this.getValue(this.getCollectionalItem(entity, column), column.valueProperty, column.type);
     },
 
     getValue: function (entity, property, type) {

@@ -9,18 +9,20 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.web.centre.api.IDynamicPropConfig;
 import ua.com.fielden.platform.web.centre.api.dynamicprops.IAlsoDynamicProp;
 import ua.com.fielden.platform.web.centre.api.dynamicprops.IDynamicPropBuilderAddProp;
+import ua.com.fielden.platform.web.centre.api.dynamicprops.IDynamicPropBuilderKeyProp;
 import ua.com.fielden.platform.web.centre.api.dynamicprops.IDynamicPropBuilderValueProp;
 import ua.com.fielden.platform.web.centre.api.dynamicprops.IDynamicPropBuilderWidth;
 import ua.com.fielden.platform.web.centre.api.dynamicprops.IDynamicPropBuilderWithDesc;
 import ua.com.fielden.platform.web.centre.api.dynamicprops.IDynamicPropBuilderWithTitle;
 import ua.com.fielden.platform.web.centre.api.dynamicprops.IDynamicPropBuilderWithTooltipProp;
 
-public class DynamicProp<T extends AbstractEntity<?>> implements IDynamicPropBuilderValueProp, IDynamicPropBuilderWithTooltipProp, IDynamicPropBuilderWithDesc {
+public class DynamicProp<T extends AbstractEntity<?>> implements IDynamicPropBuilderKeyProp, IDynamicPropBuilderValueProp, IDynamicPropBuilderWithTooltipProp, IDynamicPropBuilderWithDesc {
 
     private final DynamicPropBuilder<T> dynamicPropBuilder;
-    private final String keyProp;
+    private final String keyPropValue;
     private final String type;
 
+    private String keyProp;
     private String valueProp;
     private Optional<String> tooltipProp = Optional.empty();
     private String title;
@@ -28,10 +30,16 @@ public class DynamicProp<T extends AbstractEntity<?>> implements IDynamicPropBui
     private int width = DEFAULT_COLUMN_WIDTH;
     private int minWidth = MIN_COLUMN_WIDTH;
 
-    public DynamicProp(final DynamicPropBuilder<T> dynamicPropBuilder, final String keyProp, final String type) {
+    public DynamicProp(final DynamicPropBuilder<T> dynamicPropBuilder, final String keyPropValue, final String type) {
         this.dynamicPropBuilder = dynamicPropBuilder;
-        this.keyProp = keyProp;
+        this.keyPropValue = keyPropValue;
         this.type = type;
+    }
+
+    @Override
+    public IDynamicPropBuilderValueProp keyProp(final String keyProp) {
+        this.keyProp = keyProp;
+        return this;
     }
 
     @Override
@@ -80,8 +88,8 @@ public class DynamicProp<T extends AbstractEntity<?>> implements IDynamicPropBui
         return this;
     }
 
-    public String getKeyProp() {
-        return keyProp;
+    public String getKeyPropValue() {
+        return keyPropValue;
     }
 
     public String getType() {
@@ -112,5 +120,7 @@ public class DynamicProp<T extends AbstractEntity<?>> implements IDynamicPropBui
         return minWidth;
     }
 
-
+    public String getKeyProp() {
+        return keyProp;
+    }
 }

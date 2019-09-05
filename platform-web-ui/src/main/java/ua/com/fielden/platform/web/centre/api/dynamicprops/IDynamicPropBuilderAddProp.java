@@ -2,5 +2,5 @@ package ua.com.fielden.platform.web.centre.api.dynamicprops;
 
 public interface IDynamicPropBuilderAddProp {
 
-    IDynamicPropBuilderValueProp addProp(final String keyProp, final String type);
+    IDynamicPropBuilderKeyProp addProp(final String keyPropValue, final String type);
 }

@@ -805,7 +805,7 @@ Polymer({
                 const column = this.columns[index];
                 const entry = {
                     dotNotation: column.property,
-                    value: this.getValue(entity, column.property, column.type)
+                    value: this.getBindedValue(entity, column)
                 };
                 result.push(entry);
             }
@@ -896,7 +896,7 @@ Polymer({
     },
 
     hasAction: function (entity, column) {
-        return column.customAction || this.isHyperlinkProp(entity, column.property, column.type) === true || this.getAttachmentIfPossible(entity, column.property);
+        return column.customAction || this.isHyperlinkProp(entity, column) === true || this.getAttachmentIfPossible(entity, column);
     },
 
     isVisible: function (entity) {
@@ -1044,12 +1044,12 @@ Polymer({
         if (column.runAction(entity) === false) {
             // if the clicked property is a hyperlink and there was no custom action associted with it
             // then let's open the linked resources
-            if (this.isHyperlinkProp(entity, column.property, column.type) === true) {
-                const url = this.getValue(entity, column.property, column.type);
+            if (this.isHyperlinkProp(entity, column) === true) {
+                const url = this.getBindedValue(entity, column);
                 const win = window.open(url, '_blank');
                 win.focus();
             } else {
-                const attachment = this.getAttachmentIfPossible(entity, column.property);
+                const attachment = this.getAttachmentIfPossible(entity, column);
                 if (attachment && this.downloadAttachment) {
                     this.downloadAttachment(attachment);
                 }
@@ -1682,16 +1682,22 @@ Polymer({
     },
 
     getValueTooltip: function (entity, column) {
-        const validationResult = entity.prop(column.property).validationResult();
+        const validationResult = (column.collectionalProperty ? 
+            this.getCollectionalItem(entity, column).prop(column.valueProperty) : 
+            entity.prop(column.property))
+        .validationResult();
         if (this._reflector.isWarning(validationResult) || this._reflector.isError(validationResult)) {
             return validationResult.message && ("<b>" + validationResult.message + "</b>");
         } else if (column.tooltipProperty) {
-            const value = this.getValue(entity, column.tooltipProperty, "String").toString();
+            const value = (column.collectionalProperty ? 
+                this.getValue(this.getCollectionalItem(entity, column), column.tooltipProperty, "String") :
+                this.getValue(entity, column.tooltipProperty, "String"))
+            .toString();
             return value && ("<b>" + value + "</b>");
         } else if (this._reflector.findTypeByName(column.type)) {
             return this._generateEntityTooltip(entity, column);
         } else {
-            const value = this.getValue(entity, column.property, column.type).toString();
+            const value = this.getBindedValue(entity, column).toString();
             return value && ("<b>" + value + "</b>");
         }
         return "";
@@ -1707,7 +1713,7 @@ Polymer({
     getActionTooltip: function (entity, column, action) {
         if (action && (action.shortDesc || action.longDesc)) {
             return this._generateActionTooltip(action);
-        } else if (this.getAttachmentIfPossible(entity, column.property)) {
+        } else if (this.getAttachmentIfPossible(entity, column)) {
             return this._generateActionTooltip({
                 shortDesc: 'Download',
                 longDesc: 'Click to download attachment.'
@@ -1717,10 +1723,10 @@ Polymer({
     },
     
     _generateEntityTooltip: function (entity, column) {
-        var key = this.getValue(entity, column.property, column.type);
-        var desc;
+        const key = this.getBindedValue(entity, column);
+        let desc;
         try {
-            if (Array.isArray(this.getValueFromEntity(entity, column.property))) {
+            if (Array.isArray(this.getValueFromEntity(entity, column))) {
                 desc = generateShortCollection(entity, column.property, this._reflector.findTypeByName(column.type))
                     .map(function (subEntity) {
                         return subEntity.get("desc");
@@ -1847,7 +1853,7 @@ Polymer({
     getElementToDragFrom: function (target) {
         const elem = document.createElement('div');
         const entities = this.getSelectedEntities();
-        elem.innerHTML = entities.map(entity => this.getValueFromEntity(entity, "key")).join(", ");
+        elem.innerHTML = entities.map(entity => this.getValueFromEntity(entity, {property: "key"})).join(", ");
         elem.style["white-space"] = "nowrap";
         elem.style["overflow"] = "hidden";
         elem.style["text-overflow"] = "ellipsis";

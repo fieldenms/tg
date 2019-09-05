@@ -11,15 +11,15 @@ import java.util.stream.Collectors;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.web.centre.api.IDynamicPropConfig;
 import ua.com.fielden.platform.web.centre.api.dynamicprops.IDynamicPropBuilderAddProp;
-import ua.com.fielden.platform.web.centre.api.dynamicprops.IDynamicPropBuilderValueProp;
+import ua.com.fielden.platform.web.centre.api.dynamicprops.IDynamicPropBuilderKeyProp;
 
 public class DynamicPropBuilder<T extends AbstractEntity<?>> implements IDynamicPropBuilderAddProp, IDynamicPropConfig {
 
     private List<DynamicProp<T>> dynamicProps = new ArrayList<>();
 
     @Override
-    public IDynamicPropBuilderValueProp addProp(final String keyProp, final String type) {
-        final DynamicProp<T> prop = new DynamicProp<>(this, keyProp, type);
+    public IDynamicPropBuilderKeyProp addProp(final String keyPropValue, final String type) {
+        final DynamicProp<T> prop = new DynamicProp<>(this, keyPropValue, type);
         dynamicProps.add(prop);
         return prop;
     }
@@ -28,8 +28,9 @@ public class DynamicPropBuilder<T extends AbstractEntity<?>> implements IDynamic
     public List<Map<String, String>> build() {
         return dynamicProps.stream().map(dynamicProp -> {
             final Map<String, String> res = new HashMap<>();
-            res.put("keyProp", dynamicProp.getKeyProp());
+            res.put("keyPropValue", dynamicProp.getKeyPropValue());
             res.put("type", dynamicProp.getType());
+            res.put("keyProp", dynamicProp.getKeyProp());
             res.put("valueProp", dynamicProp.getValueProp());
             res.put("tooltipProp", dynamicProp.getTooltipProp().orElse(""));
             res.put("title", dynamicProp.getTitle());

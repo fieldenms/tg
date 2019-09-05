@@ -118,6 +118,7 @@ public class PropertyColumnElement implements IRenderable, IImportable {
         attrs.put("tooltip-property", tooltipBinding());
         attrs.put("property", propertyNameBinding()); // TODO the problem appears for "" property => translates to 'property' not 'property=""'
         attrs.put("collectional-property", collectionalPropertyNameBinding());
+        attrs.put("key-property", keyPropertyBinding());
         attrs.put("value-property", valuePropertyBinding());
         attrs.put("slot", "property-column");
         attrs.put("width", widthBinding());
@@ -127,6 +128,10 @@ public class PropertyColumnElement implements IRenderable, IImportable {
         attrs.put("column-title", titleBinding());
         attrs.put("column-desc", descBinding());
         return attrs;
+    }
+
+    private String keyPropertyBinding() {
+        return isDynamic ? "[[item.keyProp]]" : "";
     }
 
     private String collectionalPropertyNameBinding() {
@@ -162,7 +167,7 @@ public class PropertyColumnElement implements IRenderable, IImportable {
     }
 
     private String propertyNameBinding() {
-        return isDynamic ? "[[item.keyProp]]" : this.propertyName();
+        return isDynamic ? "[[item.keyPropValue]]" : this.propertyName();
     }
 
     private String tooltipBinding() {

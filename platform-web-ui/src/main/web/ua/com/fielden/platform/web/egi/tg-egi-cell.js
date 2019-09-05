@@ -122,21 +122,21 @@ Polymer({
      * Determines whether property is boolean or not.
      */
     _isBooleanProp: function (_hostComponent, _entity, column) {
-        return _hostComponent && this._isProperty(column) && column.type && _entity && _hostComponent.isBooleanProp(_entity, column.property, column.type);
+        return _hostComponent && this._isProperty(column) && column.type && _entity && _hostComponent.isBooleanProp(_entity, column);
     },
 
     /**
      * Determines whether property is Hypelink or not.
      */
     _isHyperlinkProp: function (_hostComponent, _entity, column) {
-        return _hostComponent && this._isProperty(column) && column.type && _entity && _hostComponent.isHyperlinkProp(_entity, column.property, column.type);
+        return _hostComponent && this._isProperty(column) && column.type && _entity && _hostComponent.isHyperlinkProp(_entity, column);
     },
 
     /**
      * Determines whether property is not boolean property or is.
      */
     _isNotBooleanOrHyperlinkProp: function (_hostComponent, _entity, column) {
-        return _hostComponent && this._isProperty(column) && column.type && _entity && _hostComponent.isNotBooleanOrHyperlinkProp(_entity, column.property, column.type);
+        return _hostComponent && this._isProperty(column) && column.type && _entity && _hostComponent.isNotBooleanOrHyperlinkProp(_entity, column);
     },
 
     /**
@@ -154,11 +154,11 @@ Polymer({
      * Returns the property value of the specified _entity.
      */
     _getValueFromEntity: function (_hostComponent, _entity, column) {
-        return _hostComponent && this._isProperty(column) && _entity && _hostComponent.getValueFromEntity(_entity, column.property);
+        return _hostComponent && this._isProperty(column) && _entity && _hostComponent.getValueFromEntity(_entity, column);
     },
 
     _getBindedValue: function (_hostComponent, _entity, column) {
-        return _hostComponent && this._isProperty(column) && column.type && _entity && _hostComponent.getBindedValue(_entity, column.property, column.type);
+        return _hostComponent && this._isProperty(column) && column.type && _entity && _hostComponent.getBindedValue(_entity, column);
     },
 
     //Observers implementation
