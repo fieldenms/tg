@@ -1011,13 +1011,13 @@ Polymer({
      * Adjusts widths for columns based on current widths values, which could be altered by dragging column right border.
      */
     adjustColumnWidths: function (columnWidths) {
-        this.columns.forEach((column, columnIndex) => {
+        this.columns.filter(column => !column.collectionalProperty).forEach((column, columnIndex) => {
             this.set("columns." + columnIndex + ".growFactor", columnWidths[column.property].newGrowFactor);
             this.set("columns." + columnIndex + ".width", columnWidths[column.property].newWidth);
             this._updateTotalRowGrowFactor(columnIndex, columnWidths[column.property].newGrowFactor);
             this._updateTotalRowWidth(columnIndex, columnWidths[column.property].newWidth);
         });
-        this.fixedColumns.forEach((column, columnIndex) => {
+        this.fixedColumns.filter(column => !column.collectionalProperty).forEach((column, columnIndex) => {
             this.set("fixedColumns." + columnIndex + ".growFactor", columnWidths[column.property].newGrowFactor);
             this.set("fixedColumns." + columnIndex + ".width", columnWidths[column.property].newWidth);
             this._updateFixedTotalRowGrowFactor(columnIndex, columnWidths[column.property].newGrowFactor);
@@ -1037,6 +1037,8 @@ Polymer({
                 resultantColumns.push(column);
             }
         });
+        const dynamicColumns = this.allColumns.filter(column => column.collectionalProperty);
+        resultantColumns.push(...dynamicColumns)
         this._updateColumns(resultantColumns);
     },
 
@@ -1682,17 +1684,11 @@ Polymer({
     },
 
     getValueTooltip: function (entity, column) {
-        const validationResult = (column.collectionalProperty ? 
-            this.getCollectionalItem(entity, column).prop(column.valueProperty) : 
-            entity.prop(column.property))
-        .validationResult();
+        const validationResult = this.getRealEntity(entity, column).prop(this.getRealProperty(column)).validationResult();
         if (this._reflector.isWarning(validationResult) || this._reflector.isError(validationResult)) {
             return validationResult.message && ("<b>" + validationResult.message + "</b>");
         } else if (column.tooltipProperty) {
-            const value = (column.collectionalProperty ? 
-                this.getValue(this.getCollectionalItem(entity, column), column.tooltipProperty, "String") :
-                this.getValue(entity, column.tooltipProperty, "String"))
-            .toString();
+            const value = this.getValue(this.getRealEntity(entity, column), column.tooltipProperty, "String").toString();
             return value && ("<b>" + value + "</b>");
         } else if (this._reflector.findTypeByName(column.type)) {
             return this._generateEntityTooltip(entity, column);
@@ -1727,7 +1723,7 @@ Polymer({
         let desc;
         try {
             if (Array.isArray(this.getValueFromEntity(entity, column))) {
-                desc = generateShortCollection(entity, column.property, this._reflector.findTypeByName(column.type))
+                desc = generateShortCollection(this.getRealEntity(entity, column), this.getRealProperty(column), this._reflector.findTypeByName(column.type))
                     .map(function (subEntity) {
                         return subEntity.get("desc");
                     }).join(", ");

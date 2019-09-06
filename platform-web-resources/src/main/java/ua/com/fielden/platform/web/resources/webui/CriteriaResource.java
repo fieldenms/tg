@@ -36,6 +36,7 @@ import static ua.com.fielden.platform.web.utils.WebUiResourceUtils.restoreModifi
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -447,6 +448,13 @@ public class CriteriaResource extends AbstractWebResource {
                     eccCompanion,
                     mmiCompanion,
                     userCompanion));
+
+            centre.getDynamicProperties().forEach(resProp -> {
+                for (final Object entity : pair.getValue()) {
+                    final Collection<? extends AbstractEntity<?>> collection = ((AbstractEntity<?>) entity).get(resProp.propName.get());
+                    collection.forEach(e -> resProp.consumer.get().accept(e));
+                }
+            });
 
             final Stream<AbstractEntity<?>> processedEntities = enhanceResultEntitiesWithCustomPropertyValues(
                     centre,

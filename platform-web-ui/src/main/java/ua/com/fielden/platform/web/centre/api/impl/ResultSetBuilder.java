@@ -7,6 +7,7 @@ import static ua.com.fielden.platform.web.centre.api.insertion_points.InsertionP
 import static ua.com.fielden.platform.web.centre.api.insertion_points.InsertionPointConfig.configInsertionPointWithPagination;
 
 import java.util.Optional;
+import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 import org.apache.commons.lang.StringUtils;
@@ -46,6 +47,7 @@ import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder4Orderi
 import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder4aWidth;
 import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder7SecondaryAction;
 import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder9RenderingCustomiser;
+import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilderAlsoDynamicProps;
 import ua.com.fielden.platform.web.centre.api.resultset.PropDef;
 import ua.com.fielden.platform.web.centre.api.resultset.layout.ICollapsedCardLayoutConfig;
 import ua.com.fielden.platform.web.centre.api.resultset.layout.IExpandedCardLayoutConfig;
@@ -65,7 +67,7 @@ import ua.com.fielden.platform.web.interfaces.ILayout.Orientation;
  *
  * @param <T>
  */
-class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilder0Checkbox<T>, IResultSetBuilder3Ordering<T>, IResultSetBuilder4OrderingDirection<T>, IResultSetBuilder7SecondaryAction<T>, IExpandedCardLayoutConfig<T>, ISummaryCardLayout<T> {
+class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilderAlsoDynamicProps<T>, IResultSetBuilder0Checkbox<T>, IResultSetBuilder3Ordering<T>, IResultSetBuilder4OrderingDirection<T>, IResultSetBuilder7SecondaryAction<T>, IExpandedCardLayoutConfig<T>, ISummaryCardLayout<T> {
 
     private final EntityCentreBuilder<T> builder;
     private final ResultSetSecondaryActionsBuilder secondaryActionBuilder = new ResultSetSecondaryActionsBuilder();
@@ -101,8 +103,8 @@ class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilder
     }
 
     @Override
-    public IAlsoProp<T> addProps(final String propName, final Class<? extends IDynamicPropDefiner<T>> propDefiner, final CentreContextConfig contextConfig) {
-        final ResultSetProp<T> prop = dynamicProps(propName, propDefiner, contextConfig);
+    public <M extends AbstractEntity<?>> IResultSetBuilderAlsoDynamicProps<T> addProps(final String propName, final Class<? extends IDynamicPropDefiner<T>> propDefiner, final CentreContextConfig contextConfig, final Consumer<M> consumer) {
+        final ResultSetProp<T> prop = dynamicProps(propName, propDefiner, contextConfig, consumer);
         this.builder.resultSetProperties.add(prop);
         return this;
     }
@@ -204,12 +206,6 @@ class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilder
         }
 
         this.entityActionConfig = actionConfigSupplier;
-        completePropIfNeeded();
-        return this;
-    }
-
-    @Override
-    public IResultSetBuilder2Properties<T> also() {
         completePropIfNeeded();
         return this;
     }
@@ -499,6 +495,12 @@ class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilder
     @Override
     public IResultSetBuilder2Properties<T> rowHeight(final String rowHeight) {
         this.builder.rowHeight = rowHeight;
+        return this;
+    }
+
+    @Override
+    public IResultSetBuilder2Properties<T> also() {
+        completePropIfNeeded();
         return this;
     }
 }

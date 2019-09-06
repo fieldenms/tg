@@ -29,14 +29,10 @@ export const TgEgiDataRetrievalBehavior = {
         } else if (valueFromEntity && valueFromEntity.type &&
             valueFromEntity.type().notEnhancedFullClassName() === "ua.com.fielden.platform.attachment.Attachment") {
             return valueFromEntity;
-        } else if (valueFromEntity) {
-            const entityPropOwner = column.collectionalProperty ? 
-                this._reflector.entityPropOwner(valueFromEntity, column.valueProperty) : 
-                this._reflector.entityPropOwner(entity, column.property);
-            if (entityPropOwner) {
-                if (owner.type().notEnhancedFullClassName() === "ua.com.fielden.platform.attachment.Attachment") {
-                    return owner;
-                }
+        } else if (this._reflector.entityPropOwner(this.getRealEntity(entity, column), this.getRealProperty(column))) {
+            const owner = this._reflector.entityPropOwner(this.getRealEntity(entity, column), this.getRealProperty(column));
+            if (owner.type().notEnhancedFullClassName() === "ua.com.fielden.platform.attachment.Attachment") {
+                return owner;
             }
             return null;
         } else {
@@ -44,38 +40,37 @@ export const TgEgiDataRetrievalBehavior = {
         }
     },
 
+    getRealEntity: function (entity, column) {
+        return entity && column.collectionalProperty ? this.getCollectionalItem(entity, column) : entity;
+    },
+
+    getRealProperty: function (column) {
+        return column.collectionalProperty ? column.valueProperty : column.property;
+    },
+
     getCollectionalItem: function (entity, column) {
         if (column.collectionalProperty) {
             const collection = entity.get(column.collectionalProperty);
             const item = collection.find(cItem => column.property === cItem[column.keyProperty]);
-            return item;
+            return item || null;
         }
     },
 
     getValueFromEntity: function (entity, column) {
-        if (entity) {
-            if (!column.collectionalProperty) {
-                return  entity.get(column.property);
-            } else {
-                const item = this.getCollectionalItem(entity, column);
-                return item && item.get(column.valueProperty);
-            }
-        }
-        return entity;
+        const realEntity = this.getRealEntity(entity, column);
+        const realProperty = this.getRealProperty(column);
+        return realEntity && realEntity.get(realProperty);
     },
 
     getBindedValue: function (entity, column) {
-        if (!column.collectionalProperty) {
-            return this.getValue(entity, column.property, column.type);
-        } 
-        return this.getValue(this.getCollectionalItem(entity, column), column.valueProperty, column.type);
+        return this.getValue(this.getRealEntity(entity, column), this.getRealProperty(column), column.type);
     },
 
     getValue: function (entity, property, type) {
-        if (entity === null || property === null || type === null || this.getValueFromEntity(entity, property) === null) {
+        if (entity === null || property === null || type === null || this.getValueFromEntity(entity, {property: property}) === null) {
             return "";
         } else if (this._reflector.findTypeByName(type)) {
-            var propertyValue = this.getValueFromEntity(entity, property);
+            var propertyValue = this.getValueFromEntity(entity, {property: property});
             if (Array.isArray(propertyValue)) {
                 propertyValue = generateShortCollection(entity, property, this._reflector.findTypeByName(type));
             }

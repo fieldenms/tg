@@ -8,6 +8,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.function.Consumer;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
@@ -217,26 +218,28 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
         public final Optional<PropDef<?>> propDef;
         public final Optional<Class<? extends IDynamicPropDefiner<T>>> dynamicPropDefinerClass;
         public final Optional<CentreContextConfig> contextConfig;
+        public final Optional<Consumer> consumer;
         public final Supplier<Optional<EntityActionConfig>> propAction;
         public final int width;
         public final boolean isFlexible;
 
          public static <T extends AbstractEntity<?>> ResultSetProp<T> propByName(final String propName, final int width, final boolean isFlexible, final String tooltipProp, final Supplier<Optional<EntityActionConfig>> propAction) {
-            return new ResultSetProp<T>(propName, Optional.empty(), Optional.empty(), width, isFlexible, tooltipProp, null, propAction);
+            return new ResultSetProp<T>(propName, Optional.empty(), Optional.empty(), Optional.empty(), width, isFlexible, tooltipProp, null, propAction);
         }
 
         public static <T extends AbstractEntity<?>> ResultSetProp<T> propByDef(final PropDef<?> propDef, final int width, final boolean isFlexible, final String tooltipProp, final Supplier<Optional<EntityActionConfig>> propAction) {
-            return new ResultSetProp<T>(null, Optional.empty(), Optional.empty(), width, isFlexible, tooltipProp, propDef, propAction);
+            return new ResultSetProp<T>(null, Optional.empty(), Optional.empty(), Optional.empty(), width, isFlexible, tooltipProp, propDef, propAction);
         }
 
-        public static <T extends AbstractEntity<?>> ResultSetProp<T> dynamicProps(final String collectionalPropertyName, final Class<? extends IDynamicPropDefiner<T>> dynamicPropDefinerClass, final CentreContextConfig contextConfig) {
-            return new ResultSetProp<T>(collectionalPropertyName, Optional.of(dynamicPropDefinerClass), Optional.of(contextConfig), 0, false, null, null, () -> Optional.empty());
+        public static <T extends AbstractEntity<?>> ResultSetProp<T> dynamicProps(final String collectionalPropertyName, final Class<? extends IDynamicPropDefiner<T>> dynamicPropDefinerClass, final CentreContextConfig contextConfig, final Consumer<? extends AbstractEntity<?>> consumer) {
+            return new ResultSetProp<T>(collectionalPropertyName, Optional.of(dynamicPropDefinerClass), Optional.of(contextConfig), Optional.of(consumer), 0, false, null, null, () -> Optional.empty());
         }
 
         private ResultSetProp(
                 final String propName,
                 final Optional<Class<? extends IDynamicPropDefiner<T>>> dynamicPropDefinerClass,
                 final Optional<CentreContextConfig> contextConfig,
+                final Optional<Consumer> consumer,
                 final int width,
                 final boolean isFlexible,
                 final String tooltipProp,
@@ -263,6 +266,7 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
             this.propAction = propAction;
             this.dynamicPropDefinerClass = dynamicPropDefinerClass;
             this.contextConfig = contextConfig;
+            this.consumer = consumer;
         }
 
     }

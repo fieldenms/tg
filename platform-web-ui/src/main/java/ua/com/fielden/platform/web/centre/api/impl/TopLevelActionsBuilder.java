@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.web.centre.api.impl;
 
 import java.util.Optional;
+import java.util.function.Consumer;
 
 import org.apache.commons.lang.StringUtils;
 
@@ -10,7 +11,6 @@ import ua.com.fielden.platform.utils.Pair;
 import ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig;
 import ua.com.fielden.platform.web.centre.api.context.CentreContextConfig;
 import ua.com.fielden.platform.web.centre.api.crit.ISelectionCritKindSelector;
-import ua.com.fielden.platform.web.centre.api.resultset.IAlsoProp;
 import ua.com.fielden.platform.web.centre.api.resultset.IDynamicPropDefiner;
 import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder1Toolbar;
 import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder1aScroll;
@@ -22,6 +22,7 @@ import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder2Proper
 import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder2aDraggable;
 import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder3Ordering;
 import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder4aWidth;
+import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilderAlsoDynamicProps;
 import ua.com.fielden.platform.web.centre.api.resultset.PropDef;
 import ua.com.fielden.platform.web.centre.api.resultset.scrolling.IScrollConfig;
 import ua.com.fielden.platform.web.centre.api.resultset.toolbar.IToolbarConfig;
@@ -161,7 +162,8 @@ class TopLevelActionsBuilder<T extends AbstractEntity<?>> implements ICentreTopL
     }
 
     @Override
-    public IAlsoProp<T> addProps(final String propName, final Class<? extends IDynamicPropDefiner<T>> propDefiner, final CentreContextConfig contextConfig) {
-        return new ResultSetBuilder<>(builder).addProps(propName, propDefiner, contextConfig);
+    public <M extends AbstractEntity<?>> IResultSetBuilderAlsoDynamicProps<T> addProps(final String propName, final Class<? extends IDynamicPropDefiner<T>> propDefiner, final CentreContextConfig contextConfig, final Consumer<M> consumer) {
+        return new ResultSetBuilder<>(builder).addProps(propName, propDefiner, contextConfig, consumer);
     }
+
 }
