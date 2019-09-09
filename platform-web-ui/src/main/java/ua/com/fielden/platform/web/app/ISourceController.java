@@ -15,6 +15,8 @@ public interface ISourceController {
      * Loads the text representation of the resource with the specified 'resourceURI'.
      * <p>
      * Please, note that the resources should be accessed through the '/resources' prefix or one of the prefixes for generated resources: '/app', '/master_ui' or '/centre_ui'.
+     * <p>
+     * An exception is thrown is the specified resources do not exists.
      *
      * @param resourceURI
      *

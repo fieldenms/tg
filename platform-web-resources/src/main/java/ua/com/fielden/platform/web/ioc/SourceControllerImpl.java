@@ -3,6 +3,7 @@ package ua.com.fielden.platform.web.ioc;
 import static com.google.common.base.Charsets.UTF_8;
 import static java.lang.String.format;
 import static java.util.Collections.sort;
+import static java.util.Optional.ofNullable;
 import static java.util.regex.Pattern.quote;
 import static org.apache.commons.lang.StringUtils.isEmpty;
 import static ua.com.fielden.platform.basic.config.Workflows.deployment;
@@ -37,6 +38,7 @@ import ua.com.fielden.platform.web.custom_view.AbstractCustomView;
 import ua.com.fielden.platform.web.ioc.exceptions.MissingCentreConfigurationException;
 import ua.com.fielden.platform.web.ioc.exceptions.MissingCustomViewConfigurationException;
 import ua.com.fielden.platform.web.ioc.exceptions.MissingMasterConfigurationException;
+import ua.com.fielden.platform.web.ioc.exceptions.MissingWebResourceException;
 import ua.com.fielden.platform.web.view.master.EntityMaster;
 
 /**
@@ -76,19 +78,19 @@ public class SourceControllerImpl implements ISourceController {
     
     private String getSource(final String resourceURI) {
         if ("/app/application-startup-resources.js".equalsIgnoreCase(resourceURI)) {
-            return getApplicationStartupResourcesSource(webUiConfig, this);
+            return getApplicationStartupResourcesSource(webUiConfig, this).orElseThrow(() -> new MissingWebResourceException("Application startup resources are missing."));
         } else if ("/app/tg-app-index.html".equalsIgnoreCase(resourceURI)) {
-            return injectServiceWorkerScriptInto(webUiConfig.genAppIndex(), this);
+            return injectServiceWorkerScriptInto(webUiConfig.genAppIndex(), this).orElseThrow(() -> new MissingWebResourceException("Service worker resource is missing."));
         } else if ("/app/logout.html".equalsIgnoreCase(resourceURI)) {
-            return getFileSource("/resources/logout.html", webUiConfig.resourcePaths()).replaceAll("@title", "Logout");
+            return getFileSource("/resources/logout.html", webUiConfig.resourcePaths()).map(src -> src.replaceAll("@title", "Logout")).orElseThrow(() -> new MissingWebResourceException("Logout resource is missing."));
         } else if ("/app/login-initiate-reset.html".equalsIgnoreCase(resourceURI)) {
-            return getFileSource("/resources/login-initiate-reset.html", webUiConfig.resourcePaths()).replaceAll("@title", "Login Reset Request");
+            return getFileSource("/resources/login-initiate-reset.html", webUiConfig.resourcePaths()).map(src -> src.replaceAll("@title", "Login Reset Request")).orElseThrow(() -> new MissingWebResourceException("Login reset request resource is missing."));
         } else if ("/app/tg-app-config.js".equalsIgnoreCase(resourceURI)) {
-            return webUiConfig.genWebUiPreferences();
+            return ofNullable(webUiConfig.genWebUiPreferences()).orElseThrow(() -> new MissingWebResourceException("Web UI references are missing."));
         } else if ("/app/tg-app.js".equalsIgnoreCase(resourceURI)) {
-            return webUiConfig.genMainWebUIComponent();
+            return ofNullable(webUiConfig.genMainWebUIComponent()).orElseThrow(() -> new MissingWebResourceException("The main Web UI component is missing."));
         } else if ("/app/tg-reflector.js".equalsIgnoreCase(resourceURI)) {
-            return getReflectorSource(serialiser, tgJackson);
+            return getReflectorSource(serialiser, tgJackson).orElseThrow(() -> new MissingWebResourceException("The reflector resource is missing."));
         } else if (resourceURI.startsWith("/master_ui")) {
             return getMasterSource(resourceURI.replaceFirst(quote("/master_ui/"), "").replaceFirst(quote(".js"), ""), webUiConfig);
         } else if (resourceURI.startsWith("/centre_ui")) {
@@ -96,10 +98,11 @@ public class SourceControllerImpl implements ISourceController {
         } else if (resourceURI.startsWith("/custom_view")) {
             return getCustomViewSource(resourceURI.replaceFirst("/custom_view/", ""), webUiConfig);
         } else if (resourceURI.startsWith("/resources/")) {
-            return getFileSource(resourceURI, webUiConfig.resourcePaths());
+            return getFileSource(resourceURI, webUiConfig.resourcePaths()).orElseThrow(() -> new MissingWebResourceException("Web UI resources are missing."));
         } else {
-            logger.error("The URI is not known: [" + resourceURI + "].");
-            return null;
+            final String msg = format("URI is not known: [%s].", resourceURI);
+            logger.error(msg);
+            throw new MissingWebResourceException(msg);
         }
     }
     
@@ -108,10 +111,9 @@ public class SourceControllerImpl implements ISourceController {
         return webUiConfig.checksum(resourceURI);
     }
     
-    private static String getReflectorSource(final ISerialiser serialiser, final TgJackson tgJackson) {
-        final String typeTableRepresentation = new String(serialiser.serialise(tgJackson.getTypeTable(), JACKSON), UTF_8);
-        final String originalSource = getText("ua/com/fielden/platform/web/reflection/tg-reflector.js");
-        return originalSource.replace("@typeTable", typeTableRepresentation);
+    private static Optional<String> getReflectorSource(final ISerialiser serialiser, final TgJackson tgJackson) {
+        final Optional<String> originalSource = ofNullable(getText("ua/com/fielden/platform/web/reflection/tg-reflector.js"));
+        return originalSource.map(src -> src.replace("@typeTable", new String(serialiser.serialise(tgJackson.getTypeTable(), JACKSON), UTF_8)));
     }
     
     /**
@@ -122,38 +124,34 @@ public class SourceControllerImpl implements ISourceController {
      * @param sourceControllerImpl
      * @return
      */
-    private static String injectServiceWorkerScriptInto(final String originalSource, final SourceControllerImpl sourceControllerImpl) {
-        return originalSource.replace("@service-worker", 
-            sourceControllerImpl.deploymentMode
-            ? // deployment?
-            "        if ('serviceWorker' in navigator) {\n" + 
-            "            navigator.serviceWorker.register('/service-worker.js').then(function (registration) {\n" + 
-            "                if (registration.active) {\n" + 
-            "                    loadTags();\n" + 
-            "                } else {\n" + 
-            "                    registration.onupdatefound = function () {\n" + 
-            "                        const installingWorker = registration.installing;\n" + 
-            "                        installingWorker.onstatechange = function () {\n" + 
-            "                            if (installingWorker.state === 'activated') {\n" + 
-            "                                loadTags();\n" + 
-            "                            }\n" + 
-            "                        };\n" + 
-            "                    };\n" + 
-            "                }\n" + 
-            "            });\n" + 
-            "        }\n"
-            : // development?
-            "        loadTags();\n"
-        );
+    private static Optional<String> injectServiceWorkerScriptInto(final String originalSource, final SourceControllerImpl sourceControllerImpl) {
+        return ofNullable(originalSource.replace("@service-worker", 
+                          sourceControllerImpl.deploymentMode
+                          ? // deployment?
+                          "        if ('serviceWorker' in navigator) {\n" + 
+                          "            navigator.serviceWorker.register('/service-worker.js').then(function (registration) {\n" + 
+                          "                if (registration.active) {\n" + 
+                          "                    loadTags();\n" + 
+                          "                } else {\n" + 
+                          "                    registration.onupdatefound = function () {\n" + 
+                          "                        const installingWorker = registration.installing;\n" + 
+                          "                        installingWorker.onstatechange = function () {\n" + 
+                          "                            if (installingWorker.state === 'activated') {\n" + 
+                          "                                loadTags();\n" + 
+                          "                            }\n" + 
+                          "                        };\n" + 
+                          "                    };\n" + 
+                          "                }\n" + 
+                          "            });\n" + 
+                          "        }\n"
+                          : // development?
+                          "        loadTags();\n"
+                        ));
     }
     
-    private static String getApplicationStartupResourcesSource(final IWebUiConfig webUiConfig, final SourceControllerImpl sourceControllerImpl) {
-        final String source = getFileSource("/resources/application-startup-resources.js", webUiConfig.resourcePaths());
-        if (sourceControllerImpl.vulcanizingMode || sourceControllerImpl.deploymentMode) {
-            return appendMastersAndCentresImportURIs(source, webUiConfig);
-        } else {
-            return source;
-        }
+    private static Optional<String> getApplicationStartupResourcesSource(final IWebUiConfig webUiConfig, final SourceControllerImpl sourceControllerImpl) {
+        return getFileSource("/resources/application-startup-resources.js", webUiConfig.resourcePaths())
+               .map(src -> sourceControllerImpl.vulcanizingMode || sourceControllerImpl.deploymentMode ? appendMastersAndCentresImportURIs(src, webUiConfig) : src);
     }
     
     /**
@@ -238,19 +236,19 @@ public class SourceControllerImpl implements ISourceController {
     }
     
     ////////////////////////////////// Getting file source //////////////////////////////////
-    private static String getFileSource(final String resourceURI, final List<String> resourcePaths) {
+    private static Optional<String> getFileSource(final String resourceURI, final List<String> resourcePaths) {
         final String originalPath = resourceURI.replaceFirst("/resources/", "");
         final String filePath = generateFileName(resourcePaths, originalPath);
         if (isEmpty(filePath)) {
             logger.error(format("The requested resource (%s) wasn't found.", originalPath));
-            return null;
+            return Optional.empty();
         } else {
             return getFileSource(filePath);
         }
     }
     
-    private static String getFileSource(final String filePath) {
-        return getText(filePath);
+    private static Optional<String> getFileSource(final String filePath) {
+        return Optional.ofNullable(getText(filePath));
     }
     
 }
