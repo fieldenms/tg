@@ -9,7 +9,7 @@ import org.restlet.Response;
 import org.restlet.representation.Representation;
 import org.restlet.resource.Get;
 
-import ua.com.fielden.platform.web.app.ISourceController;
+import ua.com.fielden.platform.web.app.IWebResourceLoader;
 import ua.com.fielden.platform.web.interfaces.IDeviceProvider;
 
 /**
@@ -19,9 +19,9 @@ import ua.com.fielden.platform.web.interfaces.IDeviceProvider;
  *
  */
 public class WebUiPreferencesResource extends AbstractWebResource {
-    private final ISourceController sourceController;
+    private final IWebResourceLoader sourceController;
 
-    public WebUiPreferencesResource(final ISourceController sourceController, final IDeviceProvider deviceProvider, final Context context, final Request request, final Response response) {
+    public WebUiPreferencesResource(final IWebResourceLoader sourceController, final IDeviceProvider deviceProvider, final Context context, final Request request, final Response response) {
         super(context, request, response, deviceProvider);
         this.sourceController = sourceController;
     }

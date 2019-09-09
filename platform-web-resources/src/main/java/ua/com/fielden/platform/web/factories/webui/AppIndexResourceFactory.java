@@ -6,7 +6,7 @@ import org.restlet.Restlet;
 import org.restlet.data.Method;
 
 import ua.com.fielden.platform.security.user.IUserProvider;
-import ua.com.fielden.platform.web.app.ISourceController;
+import ua.com.fielden.platform.web.app.IWebResourceLoader;
 import ua.com.fielden.platform.web.app.IWebUiConfig;
 import ua.com.fielden.platform.web.interfaces.IDeviceProvider;
 import ua.com.fielden.platform.web.resources.webui.AppIndexResource;
@@ -18,13 +18,13 @@ import ua.com.fielden.platform.web.resources.webui.AppIndexResource;
  *
  */
 public class AppIndexResourceFactory extends Restlet {
-    private final ISourceController sourceController;
+    private final IWebResourceLoader sourceController;
     private final IWebUiConfig webUiConfig;
     private final IUserProvider userProvider;
     private final IDeviceProvider deviceProvider;
     
     public AppIndexResourceFactory(
-            final ISourceController sourceController, 
+            final IWebResourceLoader sourceController, 
             final IWebUiConfig webUiConfig,
             final IUserProvider userProvider,
             final IDeviceProvider deviceProvider) {

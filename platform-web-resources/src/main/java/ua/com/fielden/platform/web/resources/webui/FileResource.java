@@ -22,7 +22,7 @@ import org.restlet.representation.Representation;
 import org.restlet.resource.Get;
 
 import ua.com.fielden.platform.utils.ResourceLoader;
-import ua.com.fielden.platform.web.app.ISourceController;
+import ua.com.fielden.platform.web.app.IWebResourceLoader;
 import ua.com.fielden.platform.web.interfaces.IDeviceProvider;
 
 /**
@@ -33,7 +33,7 @@ import ua.com.fielden.platform.web.interfaces.IDeviceProvider;
  */
 public class FileResource extends AbstractWebResource {
     private final List<String> resourcePaths;
-    private final ISourceController sourceController;
+    private final IWebResourceLoader sourceController;
 
     /**
      * Creates an instance of {@link FileResource} with custom resource paths.
@@ -43,7 +43,7 @@ public class FileResource extends AbstractWebResource {
      * @param request
      * @param response
      */
-    public FileResource(final ISourceController sourceController, final List<String> resourcePaths, final IDeviceProvider deviceProvider, final Context context, final Request request, final Response response) {
+    public FileResource(final IWebResourceLoader sourceController, final List<String> resourcePaths, final IDeviceProvider deviceProvider, final Context context, final Request request, final Response response) {
         super(context, request, response, deviceProvider);
         this.resourcePaths = resourcePaths;
         this.sourceController = sourceController;
@@ -74,7 +74,7 @@ public class FileResource extends AbstractWebResource {
      * @param remainingPart
      * @return
      */
-    private static Representation returnChecksumRepresentationOr(final Supplier<Representation> createRepresentation, final ISourceController sourceController, final MediaType mediaType, final String path, final String remainingPart) {
+    private static Representation returnChecksumRepresentationOr(final Supplier<Representation> createRepresentation, final IWebResourceLoader sourceController, final MediaType mediaType, final String path, final String remainingPart) {
         if (remainingPart.endsWith("?checksum=true")) {
             return encodedRepresentation(new ByteArrayInputStream(sourceController.checksum(path).orElse("").getBytes(UTF_8)), mediaType);
         } else {
@@ -93,7 +93,7 @@ public class FileResource extends AbstractWebResource {
      * @param remainingPart
      * @return
      */
-    private static Representation createStreamRepresentation(final ISourceController sourceController, final List<String> resourcePaths, final MediaType mediaType, final String path, final String remainingPart) {
+    private static Representation createStreamRepresentation(final IWebResourceLoader sourceController, final List<String> resourcePaths, final MediaType mediaType, final String path, final String remainingPart) {
         return returnChecksumRepresentationOr(() -> {
             final String filePath = generateFileName(resourcePaths, remainingPart);
             final InputStream stream = sourceController.loadStreamWithFilePath(filePath);
@@ -115,7 +115,7 @@ public class FileResource extends AbstractWebResource {
      * @param remainingPart
      * @return
      */
-    public static Representation createRepresentation(final ISourceController sourceController, final MediaType mediaType, final String path, final String remainingPart) {
+    public static Representation createRepresentation(final IWebResourceLoader sourceController, final MediaType mediaType, final String path, final String remainingPart) {
         return returnChecksumRepresentationOr(() -> {
             final String source = sourceController.loadSource(path);
             if (source != null) {

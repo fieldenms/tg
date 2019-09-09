@@ -14,7 +14,7 @@ import org.restlet.resource.Get;
 import ua.com.fielden.platform.basic.config.Workflows;
 import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.security.user.User;
-import ua.com.fielden.platform.web.app.ISourceController;
+import ua.com.fielden.platform.web.app.IWebResourceLoader;
 import ua.com.fielden.platform.web.app.IWebUiConfig;
 import ua.com.fielden.platform.web.interfaces.IDeviceProvider;
 
@@ -29,7 +29,7 @@ import ua.com.fielden.platform.web.interfaces.IDeviceProvider;
 public class AppIndexResource extends AbstractWebResource {
     private final IWebUiConfig webUiConfig;
     private final IUserProvider userProvider;
-    private final ISourceController sourceController;
+    private final IWebResourceLoader sourceController;
     
     /**
      * Creates {@link AppIndexResource} instance.
@@ -39,7 +39,7 @@ public class AppIndexResource extends AbstractWebResource {
      * @param response
      */
     public AppIndexResource(
-            final ISourceController sourceController,
+            final IWebResourceLoader sourceController,
             final IWebUiConfig webUiConfig,
             final IUserProvider userProvider,
             final IDeviceProvider deviceProvider,

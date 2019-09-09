@@ -9,7 +9,7 @@ import java.util.Optional;
  * @author TG Team
  *
  */
-public interface ISourceController {
+public interface IWebResourceLoader {
     
     /**
      * Loads the text representation of the resource with the specified 'resourceURI'.

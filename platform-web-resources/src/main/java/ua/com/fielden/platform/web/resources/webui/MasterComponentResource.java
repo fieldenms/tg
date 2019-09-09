@@ -10,7 +10,7 @@ import org.restlet.Response;
 import org.restlet.representation.Representation;
 import org.restlet.resource.Get;
 
-import ua.com.fielden.platform.web.app.ISourceController;
+import ua.com.fielden.platform.web.app.IWebResourceLoader;
 import ua.com.fielden.platform.web.interfaces.IDeviceProvider;
 import ua.com.fielden.platform.web.resources.RestServerUtil;
 
@@ -22,7 +22,7 @@ import ua.com.fielden.platform.web.resources.RestServerUtil;
  */
 public class MasterComponentResource extends AbstractWebResource {
     private final String entityTypeString;
-    private final ISourceController sourceController;
+    private final IWebResourceLoader sourceController;
     private final RestServerUtil restUtil;
     
     /**
@@ -34,7 +34,7 @@ public class MasterComponentResource extends AbstractWebResource {
      * @param response
      */
     public MasterComponentResource(
-            final ISourceController sourceController,//
+            final IWebResourceLoader sourceController,//
             final RestServerUtil restUtil,
             final IDeviceProvider deviceProvider,
             final Context context,

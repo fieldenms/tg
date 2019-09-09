@@ -38,7 +38,7 @@ import com.google.inject.Injector;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.types.tuples.T3;
 import ua.com.fielden.platform.ui.menu.MiWithConfigurationSupport;
-import ua.com.fielden.platform.web.app.ISourceController;
+import ua.com.fielden.platform.web.app.IWebResourceLoader;
 import ua.com.fielden.platform.web.app.IWebUiConfig;
 import ua.com.fielden.platform.web.interfaces.DeviceProfile;
 import ua.com.fielden.platform.web.vulcanizer.exceptions.VulcanisationException;
@@ -123,7 +123,7 @@ public class VulcanizingUtility {
         
         try {
             LOGGER.info("Vulcanizing...");
-            final ISourceController sourceController = injector.getInstance(ISourceController.class);
+            final IWebResourceLoader sourceController = injector.getInstance(IWebResourceLoader.class);
             final IWebUiConfig webUiConfig = injector.getInstance(IWebUiConfig.class);
 
             // create the directory in which all needed resources will reside
@@ -207,7 +207,7 @@ public class VulcanizingUtility {
      * @param logger
      * @param profile
      */
-    private static void adjustRootResources(final ISourceController sourceController, final String profile) {
+    private static void adjustRootResources(final IWebResourceLoader sourceController, final String profile) {
         try {
             FileUtils.copyFile(new File("vulcan/resources/rollup.config.js"), new File("rollup.config.js"));
             adjustFileContents("rollup.config.js", profile);
@@ -270,7 +270,7 @@ public class VulcanizingUtility {
      * @param webUiConfig
      * @param sourceController
      */
-    private static void downloadGeneratedResources(final IWebUiConfig webUiConfig, final ISourceController sourceController) {
+    private static void downloadGeneratedResources(final IWebUiConfig webUiConfig, final IWebResourceLoader sourceController) {
         LOGGER.info("\tDownloading generated resources...");
         downloadSource("app", "tg-app-index.html", sourceController, null); // used for checksum generation
         downloadSource("app", "logout.html", sourceController, null); // used for checksum generation
@@ -304,7 +304,7 @@ public class VulcanizingUtility {
      */
     private static void vulcanizeStartupResourcesFor(
             final String prefix,
-            final ISourceController sourceController,
+            final IWebResourceLoader sourceController,
             final String targetAppSpecificPath,
             final String[] vulcanizeCommands,
             final String[] minifyCommands,
@@ -408,7 +408,7 @@ public class VulcanizingUtility {
      * @param sourceController
      * @param deviceProfile
      */
-    private static void downloadSource(final String dir, final String name, final ISourceController sourceController, final DeviceProfile deviceProfile) {
+    private static void downloadSource(final String dir, final String name, final IWebResourceLoader sourceController, final DeviceProfile deviceProfile) {
         PrintStream ps;
         try {
             final File directory = new File("vulcan/" + dir);

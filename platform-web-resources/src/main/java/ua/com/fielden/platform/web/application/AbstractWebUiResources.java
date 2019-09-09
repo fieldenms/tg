@@ -12,7 +12,7 @@ import org.restlet.security.Authenticator;
 import com.google.inject.Injector;
 
 import ua.com.fielden.platform.security.user.IUserProvider;
-import ua.com.fielden.platform.web.app.ISourceController;
+import ua.com.fielden.platform.web.app.IWebResourceLoader;
 import ua.com.fielden.platform.web.app.IWebUiConfig;
 import ua.com.fielden.platform.web.factories.webui.AppIndexResourceFactory;
 import ua.com.fielden.platform.web.factories.webui.ApplicationStartupResourcesComponentResourceFactory;
@@ -50,7 +50,7 @@ public abstract class AbstractWebUiResources extends Application {
 
     protected final Logger logger = Logger.getLogger(getClass());
     private final IWebUiConfig webApp;
-    private final ISourceController sourceController;
+    private final IWebResourceLoader sourceController;
     protected final IUserProvider userProvider;
     protected final IDeviceProvider deviceProvider;
 
@@ -85,7 +85,7 @@ public abstract class AbstractWebUiResources extends Application {
         // --> TODO not so elegant and flexible. There should be more elegant version for development and deployment. Use application.props file.
         this.injector = injector;
 
-        this.sourceController = injector.getInstance(ISourceController.class);
+        this.sourceController = injector.getInstance(IWebResourceLoader.class);
         this.userProvider = injector.getInstance(IUserProvider.class);
         this.deviceProvider = injector.getInstance(IDeviceProvider.class);
 

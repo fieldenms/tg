@@ -12,7 +12,7 @@ import ua.com.fielden.platform.security.session.IUserSession;
 import ua.com.fielden.platform.security.user.IUser;
 import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.security.user.User;
-import ua.com.fielden.platform.web.app.ISourceController;
+import ua.com.fielden.platform.web.app.IWebResourceLoader;
 import ua.com.fielden.platform.web.resources.webui.LogoutResource;
 
 /**
@@ -43,7 +43,7 @@ public class LogoutResourceFactory extends Restlet {
             final IUser coUser = coFinder.find(User.class, true);
             
             new LogoutResource(
-                    injector.getInstance(ISourceController.class),
+                    injector.getInstance(IWebResourceLoader.class),
                     injector.getInstance(IUserProvider.class),
                     coUser,
                     injector.getInstance(IUserSession.class),

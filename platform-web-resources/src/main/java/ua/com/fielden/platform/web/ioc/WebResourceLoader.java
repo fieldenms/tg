@@ -3,6 +3,7 @@ package ua.com.fielden.platform.web.ioc;
 import static com.google.common.base.Charsets.UTF_8;
 import static java.lang.String.format;
 import static java.util.Collections.sort;
+import static java.util.Optional.empty;
 import static java.util.Optional.ofNullable;
 import static java.util.regex.Pattern.quote;
 import static org.apache.commons.lang.StringUtils.isEmpty;
@@ -31,7 +32,7 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
 import ua.com.fielden.platform.serialisation.api.impl.TgJackson;
 import ua.com.fielden.platform.ui.menu.MiWithConfigurationSupport;
-import ua.com.fielden.platform.web.app.ISourceController;
+import ua.com.fielden.platform.web.app.IWebResourceLoader;
 import ua.com.fielden.platform.web.app.IWebUiConfig;
 import ua.com.fielden.platform.web.centre.EntityCentre;
 import ua.com.fielden.platform.web.custom_view.AbstractCustomView;
@@ -42,21 +43,21 @@ import ua.com.fielden.platform.web.ioc.exceptions.MissingWebResourceException;
 import ua.com.fielden.platform.web.view.master.EntityMaster;
 
 /**
- * {@link ISourceController} implementation.
+ * {@link IWebResourceLoader} implementation.
  *
  * @author TG Team
  *
  */
-public class SourceControllerImpl implements ISourceController {
+public class WebResourceLoader implements IWebResourceLoader {
     private final IWebUiConfig webUiConfig;
     private final ISerialiser serialiser;
     private final TgJackson tgJackson;
-    private static final Logger logger = Logger.getLogger(SourceControllerImpl.class);
+    private static final Logger logger = Logger.getLogger(WebResourceLoader.class);
     private final boolean deploymentMode;
     private final boolean vulcanizingMode;
     
     @Inject
-    public SourceControllerImpl(final IWebUiConfig webUiConfig, final ISerialiser serialiser) {
+    public WebResourceLoader(final IWebUiConfig webUiConfig, final ISerialiser serialiser) {
         this.webUiConfig = webUiConfig;
         this.serialiser = serialiser;
         this.tgJackson = (TgJackson) serialiser.getEngine(JACKSON);
@@ -100,7 +101,7 @@ public class SourceControllerImpl implements ISourceController {
         } else if (resourceURI.startsWith("/resources/")) {
             return getFileSource(resourceURI, webUiConfig.resourcePaths()).orElseThrow(() -> new MissingWebResourceException("Web UI resources are missing."));
         } else {
-            final String msg = format("URI is not known: [%s].", resourceURI);
+            final String msg = format("URI is unknown: [%s].", resourceURI);
             logger.error(msg);
             throw new MissingWebResourceException(msg);
         }
@@ -124,7 +125,7 @@ public class SourceControllerImpl implements ISourceController {
      * @param sourceControllerImpl
      * @return
      */
-    private static Optional<String> injectServiceWorkerScriptInto(final String originalSource, final SourceControllerImpl sourceControllerImpl) {
+    private static Optional<String> injectServiceWorkerScriptInto(final String originalSource, final WebResourceLoader sourceControllerImpl) {
         return ofNullable(originalSource.replace("@service-worker", 
                           sourceControllerImpl.deploymentMode
                           ? // deployment?
@@ -149,7 +150,7 @@ public class SourceControllerImpl implements ISourceController {
                         ));
     }
     
-    private static Optional<String> getApplicationStartupResourcesSource(final IWebUiConfig webUiConfig, final SourceControllerImpl sourceControllerImpl) {
+    private static Optional<String> getApplicationStartupResourcesSource(final IWebUiConfig webUiConfig, final WebResourceLoader sourceControllerImpl) {
         return getFileSource("/resources/application-startup-resources.js", webUiConfig.resourcePaths())
                .map(src -> sourceControllerImpl.vulcanizingMode || sourceControllerImpl.deploymentMode ? appendMastersAndCentresImportURIs(src, webUiConfig) : src);
     }
@@ -241,14 +242,14 @@ public class SourceControllerImpl implements ISourceController {
         final String filePath = generateFileName(resourcePaths, originalPath);
         if (isEmpty(filePath)) {
             logger.error(format("The requested resource (%s) wasn't found.", originalPath));
-            return Optional.empty();
+            return empty();
         } else {
             return getFileSource(filePath);
         }
     }
     
     private static Optional<String> getFileSource(final String filePath) {
-        return Optional.ofNullable(getText(filePath));
+        return ofNullable(getText(filePath));
     }
     
 }

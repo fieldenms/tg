@@ -32,7 +32,7 @@ import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.security.user.UserSecret;
 import ua.com.fielden.platform.utils.IUniversalConstants;
 import ua.com.fielden.platform.web.annotations.AppUri;
-import ua.com.fielden.platform.web.app.ISourceController;
+import ua.com.fielden.platform.web.app.IWebResourceLoader;
 
 /**
  * A web resource to initiate user login recovery procedure.
@@ -46,7 +46,7 @@ public class LoginInitiateResetResource extends ServerResource {
 
     private final Logger logger = Logger.getLogger(LoginInitiateResetResource.class);
 
-    private final ISourceController sourceController;
+    private final IWebResourceLoader sourceController;
     private final String appUri;
     private final ICompanionObjectFinder coFinder;
     private final IUserProvider up;
@@ -56,7 +56,7 @@ public class LoginInitiateResetResource extends ServerResource {
      * Creates {@link LoginInitiateResetResource}.
      */
     public LoginInitiateResetResource(
-            final ISourceController sourceController,
+            final IWebResourceLoader sourceController,
             @AppUri final String appUri,
             final IUniversalConstants constants,
             final ICompanionObjectFinder coFinder,
@@ -77,7 +77,7 @@ public class LoginInitiateResetResource extends ServerResource {
         return pageToProvideUsernameForPasswordReset("Login Reset Request", logger, sourceController, getReference());
     }
 
-    private static Representation pageToProvideUsernameForPasswordReset(final String title, final Logger logger, final ISourceController sourceController, final Reference reference) {
+    private static Representation pageToProvideUsernameForPasswordReset(final String title, final Logger logger, final IWebResourceLoader sourceController, final Reference reference) {
         try {
             return createRepresentation(sourceController, TEXT_HTML, "/app/login-initiate-reset.html", reference.getRemainingPart());
         } catch (final Exception ex) {

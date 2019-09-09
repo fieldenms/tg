@@ -11,7 +11,7 @@ import ua.com.fielden.platform.entity.proxy.IIdOnlyProxiedEntityTypeCache;
 import ua.com.fielden.platform.menu.IMenuRetriever;
 import ua.com.fielden.platform.serialisation.api.ISerialisationTypeEncoder;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
-import ua.com.fielden.platform.web.app.ISourceController;
+import ua.com.fielden.platform.web.app.IWebResourceLoader;
 import ua.com.fielden.platform.web.app.IWebUiConfig;
 import ua.com.fielden.platform.web.app.SerialisationTypeEncoder;
 import ua.com.fielden.platform.web.app.ThreadLocalDeviceProvider;
@@ -60,7 +60,7 @@ public interface IBasicWebApplicationServerModule {
         bindType(IMenuRetriever.class).toInstance(webApp);
 
         // bind ISourceController to its implementation as singleton
-        bindType(ISourceController.class).to(SourceControllerImpl.class).in(Scopes.SINGLETON);
+        bindType(IWebResourceLoader.class).to(WebResourceLoader.class).in(Scopes.SINGLETON);
 
         // bind ISerialisationTypeEncoder to its implementation as singleton -- it is dependent on IServerGlobalDomainTreeManager and IUserProvider
         bindType(ISerialisationTypeEncoder.class).to(SerialisationTypeEncoder.class).in(Scopes.SINGLETON);

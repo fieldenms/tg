@@ -6,7 +6,7 @@ import org.restlet.Request;
 import org.restlet.Response;
 import org.restlet.Restlet;
 
-import ua.com.fielden.platform.web.app.ISourceController;
+import ua.com.fielden.platform.web.app.IWebResourceLoader;
 import ua.com.fielden.platform.web.interfaces.IDeviceProvider;
 import ua.com.fielden.platform.web.resources.webui.ServiceWorkerResource;
 
@@ -17,11 +17,11 @@ import ua.com.fielden.platform.web.resources.webui.ServiceWorkerResource;
  *
  */
 public class ServiceWorkerResourceFactory extends Restlet {
-    private final ISourceController sourceController;
+    private final IWebResourceLoader sourceController;
     private final IDeviceProvider deviceProvider;
     
     public ServiceWorkerResourceFactory(
-            final ISourceController sourceController, 
+            final IWebResourceLoader sourceController, 
             final IDeviceProvider deviceProvider) {
         this.sourceController = sourceController;
         this.deviceProvider = deviceProvider;

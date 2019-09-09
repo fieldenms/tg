@@ -21,7 +21,7 @@ import ua.com.fielden.platform.security.session.IUserSession;
 import ua.com.fielden.platform.security.session.UserSession;
 import ua.com.fielden.platform.security.user.IUser;
 import ua.com.fielden.platform.security.user.IUserProvider;
-import ua.com.fielden.platform.web.app.ISourceController;
+import ua.com.fielden.platform.web.app.IWebResourceLoader;
 
 /**
  * A web resource handling explicit user logins.
@@ -35,7 +35,7 @@ public class LogoutResource extends ServerResource {
     
     private final Logger logger = Logger.getLogger(LogoutResource.class);
 
-    private final ISourceController sourceController;
+    private final IWebResourceLoader sourceController;
     private final IUserProvider userProvider;
     private final IUser coUser;
     private final IUserSession coUserSession;
@@ -46,7 +46,7 @@ public class LogoutResource extends ServerResource {
      * Creates {@link LogoutResource}.
      */
     public LogoutResource(
-            final ISourceController sourceController,
+            final IWebResourceLoader sourceController,
             final IUserProvider userProvider,
             final IUser coUser,
             final IUserSession coUserSession,

@@ -12,7 +12,7 @@ import org.restlet.Response;
 import org.restlet.representation.Representation;
 import org.restlet.resource.Get;
 
-import ua.com.fielden.platform.web.app.ISourceController;
+import ua.com.fielden.platform.web.app.IWebResourceLoader;
 import ua.com.fielden.platform.web.interfaces.IDeviceProvider;
 
 /**
@@ -22,7 +22,7 @@ import ua.com.fielden.platform.web.interfaces.IDeviceProvider;
  *
  */
 public class ServiceWorkerResource extends AbstractWebResource {
-    private final ISourceController sourceController;
+    private final IWebResourceLoader sourceController;
     
     /**
      * Creates {@link ServiceWorkerResource} instance.
@@ -32,7 +32,7 @@ public class ServiceWorkerResource extends AbstractWebResource {
      * @param response
      */
     public ServiceWorkerResource(
-            final ISourceController sourceController,
+            final IWebResourceLoader sourceController,
             final IDeviceProvider deviceProvider,
             final Context context, 
             final Request request, 

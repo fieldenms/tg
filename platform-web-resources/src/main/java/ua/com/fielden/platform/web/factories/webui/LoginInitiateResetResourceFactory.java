@@ -14,7 +14,7 @@ import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.utils.IUniversalConstants;
 import ua.com.fielden.platform.web.annotations.AppUri;
-import ua.com.fielden.platform.web.app.ISourceController;
+import ua.com.fielden.platform.web.app.IWebResourceLoader;
 import ua.com.fielden.platform.web.resources.webui.LoginInitiateResetResource;
 
 /**
@@ -36,7 +36,7 @@ public class LoginInitiateResetResourceFactory extends Restlet {
         super.handle(request, response);
         if (GET.equals(request.getMethod()) || POST.equals(request.getMethod())) {
             new LoginInitiateResetResource(
-                    injector.getInstance(ISourceController.class),
+                    injector.getInstance(IWebResourceLoader.class),
                     injector.getInstance(Key.get(String.class, AppUri.class)),
                     injector.getInstance(IUniversalConstants.class),
                     injector.getInstance(ICompanionObjectFinder.class),
