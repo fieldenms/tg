@@ -15,7 +15,6 @@ import static ua.com.fielden.platform.web.factories.webui.ResourceFactoryUtils.g
 import static ua.com.fielden.platform.web.factories.webui.ResourceFactoryUtils.getEntityMaster;
 import static ua.com.fielden.platform.web.resources.webui.FileResource.generateFileName;
 
-import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -23,10 +22,6 @@ import java.util.List;
 import java.util.Optional;
 
 import org.apache.log4j.Logger;
-import org.restlet.data.Encoding;
-import org.restlet.data.MediaType;
-import org.restlet.engine.application.EncodeRepresentation;
-import org.restlet.representation.InputRepresentation;
 
 import com.google.inject.Inject;
 
@@ -35,7 +30,6 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
 import ua.com.fielden.platform.serialisation.api.impl.TgJackson;
 import ua.com.fielden.platform.ui.menu.MiWithConfigurationSupport;
-import ua.com.fielden.platform.utils.ResourceLoader;
 import ua.com.fielden.platform.web.app.ISourceController;
 import ua.com.fielden.platform.web.app.IWebUiConfig;
 import ua.com.fielden.platform.web.centre.EntityCentre;
@@ -130,7 +124,8 @@ public class SourceControllerImpl implements ISourceController {
      */
     private static String injectServiceWorkerScriptInto(final String originalSource, final SourceControllerImpl sourceControllerImpl) {
         return originalSource.replace("@service-worker", 
-            sourceControllerImpl.deploymentMode ?
+            sourceControllerImpl.deploymentMode
+            ? // deployment?
             "        if ('serviceWorker' in navigator) {\n" + 
             "            navigator.serviceWorker.register('/service-worker.js').then(function (registration) {\n" + 
             "                if (registration.active) {\n" + 
@@ -146,7 +141,8 @@ public class SourceControllerImpl implements ISourceController {
             "                    };\n" + 
             "                }\n" + 
             "            });\n" + 
-            "        }\n" :
+            "        }\n"
+            : // development?
             "        loadTags();\n"
         );
     }
