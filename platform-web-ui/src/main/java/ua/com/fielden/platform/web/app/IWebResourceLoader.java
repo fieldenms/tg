@@ -16,22 +16,24 @@ public interface IWebResourceLoader {
      * <p>
      * Please, note that the resources should be accessed through the '/resources' prefix or one of the prefixes for generated resources: '/app', '/master_ui' or '/centre_ui'.
      * <p>
-     * An exception is thrown is the specified resources do not exists.
+     * An exception is thrown is the specified resource does not exist.
      *
-     * @param resourceURI
+     * @param resourceUri
      *
      * @return
      */
-    String loadSource(final String resourceURI);
+    String loadSource(final String resourceUri);
     
     /**
-     * Loads input stream representation of the resource with the specified 'filePath'.
+     * Loads input stream for the resource identified with {@code resourceUri}.
+     * <p>
+     * An exception is thrown is the specified resource does not exist.
      *
-     * @param resourceURI
+     * @param resourceUri
      *
      * @return
      */
-    InputStream loadStreamWithFilePath(final String filePath);
+    InputStream loadStream(final String resourceUri);
     
     /**
      * Loads checksum for resource if available. Otherwise, returns empty {@link Optional}.
@@ -41,9 +43,9 @@ public interface IWebResourceLoader {
      * If that is true then full resource will be re-downloaded and re-cached on the client side.
      * Otherwise the cached resource will be used straight away.
      * 
-     * @param resourceURI
+     * @param resourceUri
      * @return
      */
-    Optional<String> checksum(final String resourceURI);
+    Optional<String> checksum(final String resourceUri);
     
 }

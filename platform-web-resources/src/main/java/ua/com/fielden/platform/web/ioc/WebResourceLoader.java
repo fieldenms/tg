@@ -73,35 +73,35 @@ public class WebResourceLoader implements IWebResourceLoader {
     }
     
     @Override
-    public InputStream loadStreamWithFilePath(final String filePath) {
-        return getStream(filePath);
+    public InputStream loadStream(final String resourceUri) {
+        return ofNullable(getStream(resourceUri)).orElseThrow(() -> new MissingWebResourceException( format("URI is unknown: [%s].", resourceUri)));
     }
     
-    private String getSource(final String resourceURI) {
-        if ("/app/application-startup-resources.js".equalsIgnoreCase(resourceURI)) {
-            return getApplicationStartupResourcesSource(webUiConfig, this).orElseThrow(() -> new MissingWebResourceException("Application startup resources are missing."));
-        } else if ("/app/tg-app-index.html".equalsIgnoreCase(resourceURI)) {
-            return injectServiceWorkerScriptInto(webUiConfig.genAppIndex(), this).orElseThrow(() -> new MissingWebResourceException("Service worker resource is missing."));
-        } else if ("/app/logout.html".equalsIgnoreCase(resourceURI)) {
+    private String getSource(final String resourceUri) {
+        if ("/app/application-startup-resources.js".equalsIgnoreCase(resourceUri)) {
+            return getApplicationStartupResourcesSource(webUiConfig).orElseThrow(() -> new MissingWebResourceException("Application startup resources are missing."));
+        } else if ("/app/tg-app-index.html".equalsIgnoreCase(resourceUri)) {
+            return injectServiceWorkerScriptInto(webUiConfig.genAppIndex()).orElseThrow(() -> new MissingWebResourceException("Service worker resource is missing."));
+        } else if ("/app/logout.html".equalsIgnoreCase(resourceUri)) {
             return getFileSource("/resources/logout.html", webUiConfig.resourcePaths()).map(src -> src.replaceAll("@title", "Logout")).orElseThrow(() -> new MissingWebResourceException("Logout resource is missing."));
-        } else if ("/app/login-initiate-reset.html".equalsIgnoreCase(resourceURI)) {
+        } else if ("/app/login-initiate-reset.html".equalsIgnoreCase(resourceUri)) {
             return getFileSource("/resources/login-initiate-reset.html", webUiConfig.resourcePaths()).map(src -> src.replaceAll("@title", "Login Reset Request")).orElseThrow(() -> new MissingWebResourceException("Login reset request resource is missing."));
-        } else if ("/app/tg-app-config.js".equalsIgnoreCase(resourceURI)) {
+        } else if ("/app/tg-app-config.js".equalsIgnoreCase(resourceUri)) {
             return ofNullable(webUiConfig.genWebUiPreferences()).orElseThrow(() -> new MissingWebResourceException("Web UI references are missing."));
-        } else if ("/app/tg-app.js".equalsIgnoreCase(resourceURI)) {
+        } else if ("/app/tg-app.js".equalsIgnoreCase(resourceUri)) {
             return ofNullable(webUiConfig.genMainWebUIComponent()).orElseThrow(() -> new MissingWebResourceException("The main Web UI component is missing."));
-        } else if ("/app/tg-reflector.js".equalsIgnoreCase(resourceURI)) {
+        } else if ("/app/tg-reflector.js".equalsIgnoreCase(resourceUri)) {
             return getReflectorSource(serialiser, tgJackson).orElseThrow(() -> new MissingWebResourceException("The reflector resource is missing."));
-        } else if (resourceURI.startsWith("/master_ui")) {
-            return getMasterSource(resourceURI.replaceFirst(quote("/master_ui/"), "").replaceFirst(quote(".js"), ""), webUiConfig);
-        } else if (resourceURI.startsWith("/centre_ui")) {
-            return getCentreSource(resourceURI.replaceFirst(quote("/centre_ui/"), "").replaceFirst(quote(".js"), ""), webUiConfig);
-        } else if (resourceURI.startsWith("/custom_view")) {
-            return getCustomViewSource(resourceURI.replaceFirst("/custom_view/", ""), webUiConfig);
-        } else if (resourceURI.startsWith("/resources/")) {
-            return getFileSource(resourceURI, webUiConfig.resourcePaths()).orElseThrow(() -> new MissingWebResourceException("Web UI resources are missing."));
+        } else if (resourceUri.startsWith("/master_ui")) {
+            return getMasterSource(resourceUri.replaceFirst(quote("/master_ui/"), "").replaceFirst(quote(".js"), ""), webUiConfig);
+        } else if (resourceUri.startsWith("/centre_ui")) {
+            return getCentreSource(resourceUri.replaceFirst(quote("/centre_ui/"), "").replaceFirst(quote(".js"), ""), webUiConfig);
+        } else if (resourceUri.startsWith("/custom_view")) {
+            return getCustomViewSource(resourceUri.replaceFirst("/custom_view/", ""), webUiConfig);
+        } else if (resourceUri.startsWith("/resources/")) {
+            return getFileSource(resourceUri, webUiConfig.resourcePaths()).orElseThrow(() -> new MissingWebResourceException("Web UI resources are missing."));
         } else {
-            final String msg = format("URI is unknown: [%s].", resourceURI);
+            final String msg = format("URI is unknown: [%s].", resourceUri);
             logger.error(msg);
             throw new MissingWebResourceException(msg);
         }
@@ -122,12 +122,12 @@ public class WebResourceLoader implements IWebResourceLoader {
      * Injects lazy tags loading (development mode).
      * 
      * @param originalSource
-     * @param sourceControllerImpl
+     * @param webResourceLoader
      * @return
      */
-    private static Optional<String> injectServiceWorkerScriptInto(final String originalSource, final WebResourceLoader sourceControllerImpl) {
+    private Optional<String> injectServiceWorkerScriptInto(final String originalSource) {
         return ofNullable(originalSource.replace("@service-worker", 
-                          sourceControllerImpl.deploymentMode
+                          this.deploymentMode
                           ? // deployment?
                           "        if ('serviceWorker' in navigator) {\n" + 
                           "            navigator.serviceWorker.register('/service-worker.js').then(function (registration) {\n" + 
@@ -150,9 +150,9 @@ public class WebResourceLoader implements IWebResourceLoader {
                         ));
     }
     
-    private static Optional<String> getApplicationStartupResourcesSource(final IWebUiConfig webUiConfig, final WebResourceLoader sourceControllerImpl) {
+    private Optional<String> getApplicationStartupResourcesSource(final IWebUiConfig webUiConfig) {
         return getFileSource("/resources/application-startup-resources.js", webUiConfig.resourcePaths())
-               .map(src -> sourceControllerImpl.vulcanizingMode || sourceControllerImpl.deploymentMode ? appendMastersAndCentresImportURIs(src, webUiConfig) : src);
+               .map(src -> vulcanizingMode || deploymentMode ? appendMastersAndCentresImportURIs(src, webUiConfig) : src);
     }
     
     /**
