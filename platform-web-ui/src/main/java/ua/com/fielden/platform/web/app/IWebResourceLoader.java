@@ -4,7 +4,7 @@ import java.io.InputStream;
 import java.util.Optional;
 
 /**
- * The contract for loading resources by their URIs of filePaths.
+ * The contract for loading resources by their URIs.
  *
  * @author TG Team
  *
@@ -12,11 +12,11 @@ import java.util.Optional;
 public interface IWebResourceLoader {
     
     /**
-     * Loads the text representation of the resource with the specified 'resourceURI'.
+     * Loads the text representation of the resource with the specified 'resourceUri'.
      * <p>
      * Please, note that the resources should be accessed through the '/resources' prefix or one of the prefixes for generated resources: '/app', '/master_ui' or '/centre_ui'.
      * <p>
-     * An exception is thrown is the specified resource does not exist.
+     * An exception is thrown if the specified resource does not exist.
      *
      * @param resourceUri
      *
@@ -27,7 +27,7 @@ public interface IWebResourceLoader {
     /**
      * Loads input stream for the resource identified with {@code resourceUri}.
      * <p>
-     * An exception is thrown is the specified resource does not exist.
+     * An exception is thrown if the specified resource does not exist.
      *
      * @param resourceUri
      *

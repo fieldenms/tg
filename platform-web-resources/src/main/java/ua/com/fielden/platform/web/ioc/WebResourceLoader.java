@@ -74,20 +74,20 @@ public class WebResourceLoader implements IWebResourceLoader {
     
     @Override
     public InputStream loadStream(final String resourceUri) {
-        return ofNullable(getStream(resourceUri)).orElseThrow(() -> new MissingWebResourceException( format("URI is unknown: [%s].", resourceUri)));
+        return ofNullable(getStream(resourceUri)).orElseThrow(() -> new MissingWebResourceException(format("URI is unknown: [%s].", resourceUri)));
     }
     
     private String getSource(final String resourceUri) {
         if ("/app/application-startup-resources.js".equalsIgnoreCase(resourceUri)) {
             return getApplicationStartupResourcesSource(webUiConfig).orElseThrow(() -> new MissingWebResourceException("Application startup resources are missing."));
         } else if ("/app/tg-app-index.html".equalsIgnoreCase(resourceUri)) {
-            return injectServiceWorkerScriptInto(webUiConfig.genAppIndex()).orElseThrow(() -> new MissingWebResourceException("Service worker resource is missing."));
+            return injectServiceWorkerScriptInto(webUiConfig.genAppIndex()).orElseThrow(() -> new MissingWebResourceException("Application index resource is missing."));
         } else if ("/app/logout.html".equalsIgnoreCase(resourceUri)) {
             return getFileSource("/resources/logout.html", webUiConfig.resourcePaths()).map(src -> src.replaceAll("@title", "Logout")).orElseThrow(() -> new MissingWebResourceException("Logout resource is missing."));
         } else if ("/app/login-initiate-reset.html".equalsIgnoreCase(resourceUri)) {
             return getFileSource("/resources/login-initiate-reset.html", webUiConfig.resourcePaths()).map(src -> src.replaceAll("@title", "Login Reset Request")).orElseThrow(() -> new MissingWebResourceException("Login reset request resource is missing."));
         } else if ("/app/tg-app-config.js".equalsIgnoreCase(resourceUri)) {
-            return ofNullable(webUiConfig.genWebUiPreferences()).orElseThrow(() -> new MissingWebResourceException("Web UI references are missing."));
+            return ofNullable(webUiConfig.genWebUiPreferences()).orElseThrow(() -> new MissingWebResourceException("Web UI preferences are missing."));
         } else if ("/app/tg-app.js".equalsIgnoreCase(resourceUri)) {
             return ofNullable(webUiConfig.genMainWebUIComponent()).orElseThrow(() -> new MissingWebResourceException("The main Web UI component is missing."));
         } else if ("/app/tg-reflector.js".equalsIgnoreCase(resourceUri)) {
@@ -99,7 +99,7 @@ public class WebResourceLoader implements IWebResourceLoader {
         } else if (resourceUri.startsWith("/custom_view")) {
             return getCustomViewSource(resourceUri.replaceFirst("/custom_view/", ""), webUiConfig);
         } else if (resourceUri.startsWith("/resources/")) {
-            return getFileSource(resourceUri, webUiConfig.resourcePaths()).orElseThrow(() -> new MissingWebResourceException("Web UI resources are missing."));
+            return getFileSource(resourceUri, webUiConfig.resourcePaths()).orElseThrow(() -> new MissingWebResourceException("Web UI resource is missing."));
         } else {
             final String msg = format("URI is unknown: [%s].", resourceUri);
             logger.error(msg);
@@ -122,7 +122,6 @@ public class WebResourceLoader implements IWebResourceLoader {
      * Injects lazy tags loading (development mode).
      * 
      * @param originalSource
-     * @param webResourceLoader
      * @return
      */
     private Optional<String> injectServiceWorkerScriptInto(final String originalSource) {
