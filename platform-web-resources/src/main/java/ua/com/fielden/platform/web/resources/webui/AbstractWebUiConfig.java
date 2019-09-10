@@ -1,10 +1,9 @@
 package ua.com.fielden.platform.web.resources.webui;
 
-import static ua.com.fielden.platform.web.interfaces.DeviceProfile.DESKTOP;
 import static java.util.Optional.ofNullable;
 import static ua.com.fielden.platform.utils.ResourceLoader.getStream;
 import static ua.com.fielden.platform.web.resources.webui.FileResource.generateFileName;
-import java.io.IOException;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -42,6 +41,7 @@ import ua.com.fielden.platform.web.app.config.WebUiBuilder;
 import ua.com.fielden.platform.web.centre.EntityCentre;
 import ua.com.fielden.platform.web.custom_view.AbstractCustomView;
 import ua.com.fielden.platform.web.interfaces.DeviceProfile;
+import ua.com.fielden.platform.web.ioc.exceptions.MissingWebResourceException;
 import ua.com.fielden.platform.web.menu.IMainMenuBuilder;
 import ua.com.fielden.platform.web.menu.impl.MainMenuBuilder;
 import ua.com.fielden.platform.web.minijs.JsCode;
@@ -96,8 +96,8 @@ public abstract class AbstractWebUiConfig implements IWebUiConfig {
         final ObjectMapper objectMapper = new ObjectMapper();
         try {
             checksums = objectMapper.readValue(getStream(generateFileName(resourcePaths, "checksums.json")), LinkedHashMap.class);
-        } catch (final IOException ex) {
-            throw new IllegalStateException("Could not read checksums from file.", ex);
+        } catch (final Exception ex) {
+            throw new MissingWebResourceException("Could not read checksums from file.", ex);
         }
     }
 

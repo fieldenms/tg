@@ -12,6 +12,7 @@ import static org.apache.commons.io.FileUtils.copyFile;
 import static org.apache.commons.io.FileUtils.deleteDirectory;
 import static org.apache.log4j.xml.DOMConfigurator.configure;
 import static ua.com.fielden.platform.cypher.Checksum.sha1;
+import static ua.com.fielden.platform.types.tuples.T3.t3;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -39,7 +40,6 @@ import ua.com.fielden.platform.types.tuples.T3;
 import ua.com.fielden.platform.ui.menu.MiWithConfigurationSupport;
 import ua.com.fielden.platform.web.app.IWebResourceLoader;
 import ua.com.fielden.platform.web.app.IWebUiConfig;
-import ua.com.fielden.platform.web.interfaces.DeviceProfile;
 import ua.com.fielden.platform.web.vulcanizer.exceptions.VulcanisationException;
 
 /**
@@ -76,7 +76,7 @@ public class VulcanizingUtility {
         try {
             final Properties props = retrieveApplicationPropertiesAndConfigureLogging(propertyFile);
             final String[] additionalPaths = paths.split(pathSeparator);
-            return T3.t3(props, additionalPaths, envVars);
+            return t3(props, additionalPaths, envVars);
         } catch (final IOException ex) {
             LOGGER.fatal(format("Application property file %s could not be located or its values are not recognised.", propertyFile), ex);
             throw ex;
@@ -117,7 +117,7 @@ public class VulcanizingUtility {
             final String[] additionalPaths,
             final String[] envVarPairs) {
         if (LOGGER == null) {
-            throw new IllegalArgumentException("Logger is a required argumet.");
+            throw new VulcanisationException("Logger is a required argumet.");
         }
         
         try {
@@ -166,9 +166,10 @@ public class VulcanizingUtility {
             try {
                 final ObjectMapper objectMapper = new ObjectMapper();
                 objectMapper.writeValue(new File(mobileAndDesktopAppSpecificPath + prefix + "checksums.json"), checksums);
-            } catch (final IOException e) {
-                LOGGER.error(e.getMessage(), e);
-                throw new IllegalStateException(e);
+            } catch (final IOException ex) {
+                final String msg = "Could not write checksum.json";
+                LOGGER.error(msg, ex);
+                throw new VulcanisationException(msg, ex);
             }
             
             LOGGER.info(format("\tGenerated checksums... [%s]", checksums));
@@ -192,8 +193,9 @@ public class VulcanizingUtility {
                 final String sha = sha1(fileInputStream).getKey();
                 checksums.put(path, sha);
             } catch (final Exception ex) {
-                LOGGER.error(format("Could not generate checksum for resource [%s].", path), ex);
-                throw new IllegalStateException(ex);
+                final String msg = format("Could not generate checksum for resource [%s].", path);
+                LOGGER.error(msg, ex);
+                throw new VulcanisationException(msg, ex);
             }
         }
         return checksums;
@@ -213,9 +215,10 @@ public class VulcanizingUtility {
             copyFile(new File("vulcan/resources/minify-script.bat"), new File("minify-script.bat"));
             adjustFileContents("minify-script.bat", profile);
             copyFile(new File("vulcan/resources/" + profile + "startup-resources-origin.js"), new File(profile + "startup-resources-origin.js"));
-        } catch (final IOException e) {
-            LOGGER.error(e.getMessage(), e);
-            throw new IllegalStateException(e);
+        } catch (final Exception ex) {
+            final String msg = "Error occurred while adjusting root resources.";
+            LOGGER.error(msg, ex);
+            throw new VulcanisationException(msg, ex);
         }
     }
     
@@ -226,16 +229,21 @@ public class VulcanizingUtility {
      * @param profile
      */
     private static void adjustFileContents(final String fileName, final String profile) {
-        try {
-            final FileInputStream fileInputStream = new FileInputStream(fileName);
-            final String contents = IOUtils.toString(fileInputStream, UTF_8.name());
-            fileInputStream.close();
-            final PrintStream ps = new PrintStream(fileName);
+        final String contents;
+        try (final FileInputStream fileInputStream = new FileInputStream(fileName)) {
+            contents = IOUtils.toString(fileInputStream, UTF_8.name());
+        } catch (final Exception ex) {
+            final String msg = format("Could not read file [%s].", fileName);
+            LOGGER.error(msg, ex);
+            throw new VulcanisationException(msg, ex);
+        }
+        
+        try (final PrintStream ps = new PrintStream(fileName)) {
             ps.print(contents.replace("@profile-", profile));
-            ps.close();
-        } catch (final IOException e) {
-            LOGGER.error(e.getMessage(), e);
-            throw new IllegalStateException(e);
+        } catch (final Exception ex) {
+            final String msg = format("Could not write file [%s].", fileName);
+            LOGGER.error(msg, ex);
+            throw new VulcanisationException(msg, ex);
         }
     }
     
@@ -256,9 +264,10 @@ public class VulcanizingUtility {
             new File("startup-resources-origin.js").delete();
             new File("startup-resources-vulcanized.js").delete();
             new File("startup-resources-vulcanized-minified.js").delete();
-        } catch (final IOException e) {
-            LOGGER.error(e.getMessage(), e);
-            throw new IllegalStateException(e);
+        } catch (final Exception ex) {
+            final String msg = "Exception occurred while cleaning resources after vulcanisation.";
+            LOGGER.error(msg, ex);
+            throw new VulcanisationException(msg, ex);
         }
         LOGGER.info("\tCleared obsolete files.");
     }
@@ -271,23 +280,23 @@ public class VulcanizingUtility {
      */
     private static void downloadGeneratedResources(final IWebUiConfig webUiConfig, final IWebResourceLoader webResourceLoader) {
         LOGGER.info("\tDownloading generated resources...");
-        downloadSource("app", "tg-app-index.html", webResourceLoader, null); // used for checksum generation
-        downloadSource("app", "logout.html", webResourceLoader, null); // used for checksum generation
-        downloadSource("app", "login-initiate-reset.html", webResourceLoader, null); // used for checksum generation
-        downloadSource("app", "tg-reflector.js", webResourceLoader, null);
+        downloadSource("app", "tg-app-index.html", webResourceLoader); // used for checksum generation
+        downloadSource("app", "logout.html", webResourceLoader); // used for checksum generation
+        downloadSource("app", "login-initiate-reset.html", webResourceLoader); // used for checksum generation
+        downloadSource("app", "tg-reflector.js", webResourceLoader);
         for (final Class<? extends AbstractEntity<?>> masterType : webUiConfig.getMasters().keySet()) {
-            downloadSource("master_ui", masterType.getName() + ".js", webResourceLoader, null);
+            downloadSource("master_ui", masterType.getName() + ".js", webResourceLoader);
         }
         for (final String viewName : webUiConfig.getCustomViews().keySet()) {
-            downloadSource("custom_view", viewName, webResourceLoader, null);
+            downloadSource("custom_view", viewName, webResourceLoader);
         }
         for (final Class<? extends MiWithConfigurationSupport<?>> centreMiType : webUiConfig.getCentres().keySet()) {
-            downloadSource("centre_ui", centreMiType.getName() + ".js", webResourceLoader, null);
+            downloadSource("centre_ui", centreMiType.getName() + ".js", webResourceLoader);
         }
-        downloadSource("app", "tg-app-config.js", webResourceLoader, null);
-        downloadSource("app", "tg-app.js", webResourceLoader, null);
+        downloadSource("app", "tg-app-config.js", webResourceLoader);
+        downloadSource("app", "tg-app.js", webResourceLoader);
         LOGGER.info("\t\t\tDownloading generated resource 'application-startup-resources.js'...");
-        downloadSource("app", "application-startup-resources.js", webResourceLoader, null);
+        downloadSource("app", "application-startup-resources.js", webResourceLoader);
         LOGGER.info("\tDownloaded generated resources.");
     }
     
@@ -309,7 +318,7 @@ public class VulcanizingUtility {
             final String[] envVarPairs,
             final File dir) {
         if (additionalPaths == null) {
-            throw new IllegalArgumentException("Argument additionalPaths cannot be null, but can be empty if no additiona paths are required for the PATH env. variable.");
+            throw new VulcanisationException("Argument additionalPaths cannot be null, but can be empty if no additiona paths are required for the PATH env. variable.");
         }
         LOGGER.info("\t\tVulcanizing [" + prefix + "]...");
         processCommands(vulcanizeCommands, additionalPaths, envVarPairs);
@@ -321,9 +330,10 @@ public class VulcanizingUtility {
         try {
             copyFile(new File(prefix + "startup-resources-vulcanized-minified.js"), new File(targetAppSpecificPath + prefix + "startup-resources-vulcanized.js"));
             copyFile(new File(prefix + "startup-resources-vulcanized-minified.js"), new File("vulcan/resources/" + prefix + "startup-resources-vulcanized.js")); // used for checksum generation
-        } catch (final IOException e) {
-            LOGGER.error(e.getMessage(), e);
-            throw new IllegalStateException(e);
+        } catch (final IOException ex) {
+            final String msg = "Error occurred during the vulcanization of startup recources.";
+            LOGGER.error(msg, ex);
+            throw new VulcanisationException(msg, ex);
         }
         LOGGER.info("\t\tMoved vulcanized file to its destination.");
     }
@@ -356,15 +366,16 @@ public class VulcanizingUtility {
             // should would include errors and any other output produced by the process
             try (final BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));) {
                 final String output = reader.lines().collect(joining("\n"));
-                System.out.printf("OUTPUT: \n%s\n", output);
+                LOGGER.info(format("OUTPUT: %n%s%n", output));
             }
             // wait for the process to complete before doing anything else...
             process.waitFor();
-        } catch (final IOException | InterruptedException e) {
-            LOGGER.error(e.getMessage(), e);
+        } catch (final IOException | InterruptedException ex) {
+            final String msg = "Exception occurred while processing commands.";
+            LOGGER.error(msg, ex);
             // need to clear obsolete resources in case of failure
             clearObsoleteResources();
-            throw new IllegalStateException(e);
+            throw new VulcanisationException(msg, ex);
         }
     }
     
@@ -390,9 +401,10 @@ public class VulcanizingUtility {
                 copyDirectory(new File(appWebUiResourcesPath), new File("vulcan/resources"));
             }
             copyFile(new File("vulcan/resources/build-script.bat"), new File("build-script.bat"));
-        } catch (final IOException e) {
-            LOGGER.error(e.getMessage(), e);
-            throw new IllegalStateException(e);
+        } catch (final IOException ex) {
+            final String msg = "Exception occurred while copying static resoruces.";
+            LOGGER.error(msg, ex);
+            throw new VulcanisationException(msg, ex);
         }
         LOGGER.info("\tCopied static resources.");
     }
@@ -403,9 +415,8 @@ public class VulcanizingUtility {
      * @param dir
      * @param name
      * @param webResourceLoader
-     * @param deviceProfile
      */
-    private static void downloadSource(final String dir, final String name, final IWebResourceLoader webResourceLoader, final DeviceProfile deviceProfile) {
+    private static void downloadSource(final String dir, final String name, final IWebResourceLoader webResourceLoader) {
         final File directory = new File("vulcan/" + dir);
         if (!directory.exists()) {
             directory.mkdir();
@@ -414,9 +425,10 @@ public class VulcanizingUtility {
 
         try(final PrintStream ps = new PrintStream("vulcan" + pathAndName)) {
             ps.println(webResourceLoader.loadSource(pathAndName));
-        } catch (final FileNotFoundException e) {
-            LOGGER.error(e.getMessage(), e);
-            throw new IllegalStateException(e);
+        } catch (final FileNotFoundException ex) {
+            final String msg = "Exception occurred while downloading web resources.";
+            LOGGER.error(msg, ex);
+            throw new VulcanisationException(msg, ex);
         }
     }
     
