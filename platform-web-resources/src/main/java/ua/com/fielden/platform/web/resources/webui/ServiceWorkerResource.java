@@ -22,7 +22,7 @@ import ua.com.fielden.platform.web.interfaces.IDeviceProvider;
  *
  */
 public class ServiceWorkerResource extends AbstractWebResource {
-    private final IWebResourceLoader sourceController;
+    private final IWebResourceLoader webResourceLoader;
     
     /**
      * Creates {@link ServiceWorkerResource} instance.
@@ -32,19 +32,19 @@ public class ServiceWorkerResource extends AbstractWebResource {
      * @param response
      */
     public ServiceWorkerResource(
-            final IWebResourceLoader sourceController,
+            final IWebResourceLoader webResourceLoader,
             final IDeviceProvider deviceProvider,
             final Context context, 
             final Request request, 
             final Response response) {
         super(context, request, response, deviceProvider);
-        this.sourceController = sourceController;
+        this.webResourceLoader = webResourceLoader;
     }
     
     @Get
     @Override
     public Representation get() {
-        return encodedRepresentation(new ByteArrayInputStream(sourceController.loadSource("/resources/service-worker.js").getBytes(UTF_8)), TEXT_JAVASCRIPT);
+        return encodedRepresentation(new ByteArrayInputStream(webResourceLoader.loadSource("/resources/service-worker.js").getBytes(UTF_8)), TEXT_JAVASCRIPT);
     }
     
 }

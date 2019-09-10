@@ -18,17 +18,17 @@ import ua.com.fielden.platform.web.resources.webui.AppIndexResource;
  *
  */
 public class AppIndexResourceFactory extends Restlet {
-    private final IWebResourceLoader sourceController;
+    private final IWebResourceLoader webResourceLoader;
     private final IWebUiConfig webUiConfig;
     private final IUserProvider userProvider;
     private final IDeviceProvider deviceProvider;
     
     public AppIndexResourceFactory(
-            final IWebResourceLoader sourceController, 
+            final IWebResourceLoader webResourceLoader, 
             final IWebUiConfig webUiConfig,
             final IUserProvider userProvider,
             final IDeviceProvider deviceProvider) {
-        this.sourceController = sourceController;
+        this.webResourceLoader = webResourceLoader;
         this.webUiConfig = webUiConfig;
         this.userProvider = userProvider;
         this.deviceProvider = deviceProvider;
@@ -39,7 +39,7 @@ public class AppIndexResourceFactory extends Restlet {
         super.handle(request, response);
 
         if (Method.GET == request.getMethod()) {
-            new AppIndexResource(sourceController, webUiConfig, userProvider, deviceProvider, getContext(), request, response).handle();
+            new AppIndexResource(webResourceLoader, webUiConfig, userProvider, deviceProvider, getContext(), request, response).handle();
         }
     }
 

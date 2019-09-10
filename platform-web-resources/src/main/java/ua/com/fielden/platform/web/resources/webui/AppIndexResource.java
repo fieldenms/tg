@@ -29,7 +29,7 @@ import ua.com.fielden.platform.web.interfaces.IDeviceProvider;
 public class AppIndexResource extends AbstractWebResource {
     private final IWebUiConfig webUiConfig;
     private final IUserProvider userProvider;
-    private final IWebResourceLoader sourceController;
+    private final IWebResourceLoader webResourceLoader;
     
     /**
      * Creates {@link AppIndexResource} instance.
@@ -39,7 +39,7 @@ public class AppIndexResource extends AbstractWebResource {
      * @param response
      */
     public AppIndexResource(
-            final IWebResourceLoader sourceController,
+            final IWebResourceLoader webResourceLoader,
             final IWebUiConfig webUiConfig,
             final IUserProvider userProvider,
             final IDeviceProvider deviceProvider,
@@ -49,7 +49,7 @@ public class AppIndexResource extends AbstractWebResource {
         super(context, request, response, deviceProvider);
         this.webUiConfig = webUiConfig;
         this.userProvider = userProvider;
-        this.sourceController = sourceController;
+        this.webResourceLoader = webResourceLoader;
     }
 
     @Get
@@ -62,7 +62,7 @@ public class AppIndexResource extends AbstractWebResource {
             webUiConfig.clearConfiguration();
             webUiConfig.initConfiguration();
         }
-        return createRepresentation(sourceController, TEXT_HTML, "/app/tg-app-index.html", getReference().getRemainingPart());
+        return createRepresentation(webResourceLoader, TEXT_HTML, "/app/tg-app-index.html", getReference().getRemainingPart());
     }
 
     /**

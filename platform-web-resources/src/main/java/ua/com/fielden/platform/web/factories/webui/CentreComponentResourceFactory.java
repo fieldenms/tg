@@ -19,7 +19,7 @@ import ua.com.fielden.platform.web.resources.webui.CentreComponentResource;
  *
  */
 public class CentreComponentResourceFactory extends Restlet {
-    private final IWebResourceLoader sourceController;
+    private final IWebResourceLoader webResourceLoader;
     private final RestServerUtil restUtil;
     private final IDeviceProvider deviceProvider;
 
@@ -28,8 +28,8 @@ public class CentreComponentResourceFactory extends Restlet {
      *
      * @param centres
      */
-    public CentreComponentResourceFactory(final IWebResourceLoader sourceController, final RestServerUtil restUtil, final IDeviceProvider deviceProvider) {
-        this.sourceController = sourceController;
+    public CentreComponentResourceFactory(final IWebResourceLoader webResourceLoader, final RestServerUtil restUtil, final IDeviceProvider deviceProvider) {
+        this.webResourceLoader = webResourceLoader;
         this.restUtil = restUtil;
         this.deviceProvider = deviceProvider;
     }
@@ -43,7 +43,7 @@ public class CentreComponentResourceFactory extends Restlet {
 
         if (Method.GET.equals(request.getMethod())) {
             new CentreComponentResource(
-                    sourceController,
+                    webResourceLoader,
                     restUtil,
                     deviceProvider,
                     getContext(),

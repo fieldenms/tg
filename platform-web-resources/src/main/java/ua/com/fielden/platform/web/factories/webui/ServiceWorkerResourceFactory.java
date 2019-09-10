@@ -17,13 +17,13 @@ import ua.com.fielden.platform.web.resources.webui.ServiceWorkerResource;
  *
  */
 public class ServiceWorkerResourceFactory extends Restlet {
-    private final IWebResourceLoader sourceController;
+    private final IWebResourceLoader webResourceLoader;
     private final IDeviceProvider deviceProvider;
     
     public ServiceWorkerResourceFactory(
-            final IWebResourceLoader sourceController, 
+            final IWebResourceLoader webResourceLoader, 
             final IDeviceProvider deviceProvider) {
-        this.sourceController = sourceController;
+        this.webResourceLoader = webResourceLoader;
         this.deviceProvider = deviceProvider;
     }
     
@@ -32,7 +32,7 @@ public class ServiceWorkerResourceFactory extends Restlet {
         super.handle(request, response);
         
         if (GET == request.getMethod()) {
-            new ServiceWorkerResource(sourceController, deviceProvider, getContext(), request, response).handle();
+            new ServiceWorkerResource(webResourceLoader, deviceProvider, getContext(), request, response).handle();
         }
     }
     

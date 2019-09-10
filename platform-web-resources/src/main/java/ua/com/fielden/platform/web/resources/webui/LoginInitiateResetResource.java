@@ -46,7 +46,7 @@ public class LoginInitiateResetResource extends ServerResource {
 
     private final Logger logger = Logger.getLogger(LoginInitiateResetResource.class);
 
-    private final IWebResourceLoader sourceController;
+    private final IWebResourceLoader webResourceLoader;
     private final String appUri;
     private final ICompanionObjectFinder coFinder;
     private final IUserProvider up;
@@ -56,7 +56,7 @@ public class LoginInitiateResetResource extends ServerResource {
      * Creates {@link LoginInitiateResetResource}.
      */
     public LoginInitiateResetResource(
-            final IWebResourceLoader sourceController,
+            final IWebResourceLoader webResourceLoader,
             @AppUri final String appUri,
             final IUniversalConstants constants,
             final ICompanionObjectFinder coFinder,
@@ -65,7 +65,7 @@ public class LoginInitiateResetResource extends ServerResource {
             final Request request, //
             final Response response) {
         init(context, request, response);
-        this.sourceController = sourceController;
+        this.webResourceLoader = webResourceLoader;
         this.appUri = appUri;
         this.coFinder = coFinder;
         this.constants = constants;
@@ -74,12 +74,12 @@ public class LoginInitiateResetResource extends ServerResource {
 
     @Override
     protected Representation get() {
-        return pageToProvideUsernameForPasswordReset("Login Reset Request", logger, sourceController, getReference());
+        return pageToProvideUsernameForPasswordReset("Login Reset Request", logger, webResourceLoader, getReference());
     }
 
-    private static Representation pageToProvideUsernameForPasswordReset(final String title, final Logger logger, final IWebResourceLoader sourceController, final Reference reference) {
+    private static Representation pageToProvideUsernameForPasswordReset(final String title, final Logger logger, final IWebResourceLoader webResourceLoader, final Reference reference) {
         try {
-            return createRepresentation(sourceController, TEXT_HTML, "/app/login-initiate-reset.html", reference.getRemainingPart());
+            return createRepresentation(webResourceLoader, TEXT_HTML, "/app/login-initiate-reset.html", reference.getRemainingPart());
         } catch (final Exception ex) {
             logger.fatal(ex);
             throw new IllegalStateException(ex);

@@ -50,7 +50,7 @@ public abstract class AbstractWebUiResources extends Application {
 
     protected final Logger logger = Logger.getLogger(getClass());
     private final IWebUiConfig webApp;
-    private final IWebResourceLoader sourceController;
+    private final IWebResourceLoader webResourceLoader;
     protected final IUserProvider userProvider;
     protected final IDeviceProvider deviceProvider;
 
@@ -85,7 +85,7 @@ public abstract class AbstractWebUiResources extends Application {
         // --> TODO not so elegant and flexible. There should be more elegant version for development and deployment. Use application.props file.
         this.injector = injector;
 
-        this.sourceController = injector.getInstance(IWebResourceLoader.class);
+        this.webResourceLoader = injector.getInstance(IWebResourceLoader.class);
         this.userProvider = injector.getInstance(IUserProvider.class);
         this.deviceProvider = injector.getInstance(IDeviceProvider.class);
 
@@ -117,12 +117,12 @@ public abstract class AbstractWebUiResources extends Application {
         final RestServerUtil restUtil = injector.getInstance(RestServerUtil.class);
 
         // Attach main application resource.
-        router.attach("/", new AppIndexResourceFactory(sourceController, webApp, userProvider, deviceProvider));
-        router.attach("/app/tg-app-config.js", new WebUiPreferencesResourceFactory(sourceController, deviceProvider));
-        router.attach("/app/tg-app.js", new MainWebUiComponentResourceFactory(sourceController, deviceProvider));
+        router.attach("/", new AppIndexResourceFactory(webResourceLoader, webApp, userProvider, deviceProvider));
+        router.attach("/app/tg-app-config.js", new WebUiPreferencesResourceFactory(webResourceLoader, deviceProvider));
+        router.attach("/app/tg-app.js", new MainWebUiComponentResourceFactory(webResourceLoader, deviceProvider));
         // type meta info resource
-        router.attach("/app/tg-reflector.js", new TgReflectorComponentResourceFactory(sourceController, deviceProvider));
-        router.attach("/app/application-startup-resources.js", new ApplicationStartupResourcesComponentResourceFactory(sourceController, deviceProvider));
+        router.attach("/app/tg-reflector.js", new TgReflectorComponentResourceFactory(webResourceLoader, deviceProvider));
+        router.attach("/app/application-startup-resources.js", new ApplicationStartupResourcesComponentResourceFactory(webResourceLoader, deviceProvider));
 
         // serialisation testing resource
         router.attach("/test/serialisation", new SerialisationTestResourceFactory(injector));
@@ -158,7 +158,7 @@ public abstract class AbstractWebUiResources extends Application {
         // standard Polymer components and other resources should not be guarded
         // Register resources those are in resource paths.
         attachResources(mainRouter);
-        mainRouter.attach("/service-worker.js", new ServiceWorkerResourceFactory(sourceController, deviceProvider));
+        mainRouter.attach("/service-worker.js", new ServiceWorkerResourceFactory(webResourceLoader, deviceProvider));
 
         mainRouter.attach(guard);
 
@@ -176,11 +176,11 @@ public abstract class AbstractWebUiResources extends Application {
         router.attach("/entity/{entityType}/{entity-id}", new EntityResourceFactory(webUiConfig, injector));
         router.attach("/validation/{entityType}", new EntityValidationResourceFactory(webUiConfig, injector));
         router.attach("/master_ui/Test_TgPersistentEntityWithProperties", new MasterTestsComponentResourceFactory(injector));
-        router.attach("/master_ui/{entityType}", new MasterComponentResourceFactory(sourceController, restUtil, deviceProvider));
+        router.attach("/master_ui/{entityType}", new MasterComponentResourceFactory(webResourceLoader, restUtil, deviceProvider));
     }
 
     private void attachCustomViewResources(final Router router, final RestServerUtil restUtil) {
-        router.attach("/custom_view/{viewName}", new CustomViewResourceFactory(sourceController, restUtil, deviceProvider));
+        router.attach("/custom_view/{viewName}", new CustomViewResourceFactory(webResourceLoader, restUtil, deviceProvider));
     }
 
     /**
@@ -204,7 +204,7 @@ public abstract class AbstractWebUiResources extends Application {
         logger.info("\t\tCentre resources attaching...");
         router.attach("/criteria/{mitype}/{saveAsName}", new CriteriaResourceFactory(webUiConfig, injector));
         router.attach("/centre/{mitype}/{saveAsName}", new CentreResourceFactory(webUiConfig, injector));
-        router.attach("/centre_ui/{mitype}", new CentreComponentResourceFactory(sourceController, restUtil, deviceProvider));
+        router.attach("/centre_ui/{mitype}", new CentreComponentResourceFactory(webResourceLoader, restUtil, deviceProvider));
     }
 
     /**
@@ -214,6 +214,6 @@ public abstract class AbstractWebUiResources extends Application {
      */
     private void attachResources(final Router router) {
         logger.info("\t\tResources attaching for following resource paths:" + "\n\t\t|" + StringUtils.join(webApp.resourcePaths(), "|\n\t\t|") + "|\n");
-        router.attach("/resources/", new FileResourceFactory(sourceController, webApp.resourcePaths(), deviceProvider), Template.MODE_STARTS_WITH);
+        router.attach("/resources/", new FileResourceFactory(webResourceLoader, webApp.resourcePaths(), deviceProvider), Template.MODE_STARTS_WITH);
     }
 }

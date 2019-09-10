@@ -22,7 +22,7 @@ import ua.com.fielden.platform.web.resources.RestServerUtil;
  */
 public class MasterComponentResource extends AbstractWebResource {
     private final String entityTypeString;
-    private final IWebResourceLoader sourceController;
+    private final IWebResourceLoader webResourceLoader;
     private final RestServerUtil restUtil;
     
     /**
@@ -34,25 +34,23 @@ public class MasterComponentResource extends AbstractWebResource {
      * @param response
      */
     public MasterComponentResource(
-            final IWebResourceLoader sourceController,//
+            final IWebResourceLoader webResourceLoader,
             final RestServerUtil restUtil,
             final IDeviceProvider deviceProvider,
             final Context context,
             final Request request,
-            final Response response //
+            final Response response
     ) {
         super(context, request, response, deviceProvider);
         this.entityTypeString = (String) request.getAttributes().get("entityType");
-        this.sourceController = sourceController;
+        this.webResourceLoader = webResourceLoader;
         this.restUtil = restUtil;
     }
     
     @Get
     @Override
     public Representation get() {
-        return handleUndesiredExceptions(getResponse(), () -> {
-            return createRepresentation(sourceController, TEXT_JAVASCRIPT, "/master_ui/" + this.entityTypeString, getReference().getRemainingPart());
-        }, restUtil);
+        return handleUndesiredExceptions(getResponse(), () -> createRepresentation(webResourceLoader, TEXT_JAVASCRIPT, "/master_ui/" + this.entityTypeString, getReference().getRemainingPart()), restUtil);
     }
     
 }

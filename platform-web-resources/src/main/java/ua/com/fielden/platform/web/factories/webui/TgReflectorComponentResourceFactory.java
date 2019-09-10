@@ -16,11 +16,11 @@ import ua.com.fielden.platform.web.resources.webui.TgReflectorComponentResource;
  *
  */
 public class TgReflectorComponentResourceFactory extends Restlet {
-    private final IWebResourceLoader sourceController;
+    private final IWebResourceLoader webResourceLoader;
     private final IDeviceProvider deviceProvider;
 
-    public TgReflectorComponentResourceFactory(final IWebResourceLoader sourceController, final IDeviceProvider deviceProvider) {
-        this.sourceController = sourceController;
+    public TgReflectorComponentResourceFactory(final IWebResourceLoader webResourceLoader, final IDeviceProvider deviceProvider) {
+        this.webResourceLoader = webResourceLoader;
         this.deviceProvider = deviceProvider;
     }
 
@@ -29,7 +29,7 @@ public class TgReflectorComponentResourceFactory extends Restlet {
         super.handle(request, response);
 
         if (Method.GET == request.getMethod()) {
-            final TgReflectorComponentResource resource = new TgReflectorComponentResource(sourceController, deviceProvider, getContext(), request, response);
+            final TgReflectorComponentResource resource = new TgReflectorComponentResource(webResourceLoader, deviceProvider, getContext(), request, response);
             resource.handle();
         }
     }

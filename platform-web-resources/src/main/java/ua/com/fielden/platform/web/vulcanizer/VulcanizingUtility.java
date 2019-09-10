@@ -21,7 +21,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.PrintStream;
-import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Properties;
@@ -123,7 +122,7 @@ public class VulcanizingUtility {
         
         try {
             LOGGER.info("Vulcanizing...");
-            final IWebResourceLoader sourceController = injector.getInstance(IWebResourceLoader.class);
+            final IWebResourceLoader webResourceLoader = injector.getInstance(IWebResourceLoader.class);
             final IWebUiConfig webUiConfig = injector.getInstance(IWebUiConfig.class);
 
             // create the directory in which all needed resources will reside
@@ -134,16 +133,16 @@ public class VulcanizingUtility {
 
             final String loginPrefix = "login-";
             LOGGER.info(format("\tVulcanizing [%s] resources...", loginPrefix));
-            adjustRootResources(sourceController, loginPrefix);
-            vulcanizeStartupResourcesFor(loginPrefix, sourceController, loginTargetPlatformSpecificPath, commandMaker.apply("build"), commandMaker.apply("minify"), additionalPaths, envVarPairs, dir);
+            adjustRootResources(webResourceLoader, loginPrefix);
+            vulcanizeStartupResourcesFor(loginPrefix, loginTargetPlatformSpecificPath, commandMaker.apply("build"), commandMaker.apply("minify"), additionalPaths, envVarPairs, dir);
             LOGGER.info(format("\tVulcanized [%s] resources.", loginPrefix));
 
-            downloadGeneratedResources(webUiConfig, sourceController);
+            downloadGeneratedResources(webUiConfig, webResourceLoader);
 
             final String prefix = "";
             LOGGER.info(format("\tVulcanizing [%s] resources...", prefix));
-            adjustRootResources(sourceController, prefix);
-            vulcanizeStartupResourcesFor(prefix, sourceController, mobileAndDesktopAppSpecificPath, commandMaker.apply("build"), commandMaker.apply("minify"), additionalPaths, envVarPairs, dir);
+            adjustRootResources(webResourceLoader, prefix);
+            vulcanizeStartupResourcesFor(prefix, mobileAndDesktopAppSpecificPath, commandMaker.apply("build"), commandMaker.apply("minify"), additionalPaths, envVarPairs, dir);
             LOGGER.info(format("\tVulcanized [%s] resources...", prefix));
             
             LOGGER.info(format("\tGenerating checksums..."));
@@ -203,11 +202,11 @@ public class VulcanizingUtility {
     /**
      * Copies template for 'rollup.config.js' and adjusts it according to <code>profile</code>.
      * 
-     * @param sourceController
+     * @param webResourceLoader
      * @param logger
      * @param profile
      */
-    private static void adjustRootResources(final IWebResourceLoader sourceController, final String profile) {
+    private static void adjustRootResources(final IWebResourceLoader webResourceLoader, final String profile) {
         try {
             FileUtils.copyFile(new File("vulcan/resources/rollup.config.js"), new File("rollup.config.js"));
             adjustFileContents("rollup.config.js", profile);
@@ -268,27 +267,27 @@ public class VulcanizingUtility {
      * Downloads generated resources.
      * 
      * @param webUiConfig
-     * @param sourceController
+     * @param webResourceLoader
      */
-    private static void downloadGeneratedResources(final IWebUiConfig webUiConfig, final IWebResourceLoader sourceController) {
+    private static void downloadGeneratedResources(final IWebUiConfig webUiConfig, final IWebResourceLoader webResourceLoader) {
         LOGGER.info("\tDownloading generated resources...");
-        downloadSource("app", "tg-app-index.html", sourceController, null); // used for checksum generation
-        downloadSource("app", "logout.html", sourceController, null); // used for checksum generation
-        downloadSource("app", "login-initiate-reset.html", sourceController, null); // used for checksum generation
-        downloadSource("app", "tg-reflector.js", sourceController, null);
+        downloadSource("app", "tg-app-index.html", webResourceLoader, null); // used for checksum generation
+        downloadSource("app", "logout.html", webResourceLoader, null); // used for checksum generation
+        downloadSource("app", "login-initiate-reset.html", webResourceLoader, null); // used for checksum generation
+        downloadSource("app", "tg-reflector.js", webResourceLoader, null);
         for (final Class<? extends AbstractEntity<?>> masterType : webUiConfig.getMasters().keySet()) {
-            downloadSource("master_ui", masterType.getName() + ".js", sourceController, null);
+            downloadSource("master_ui", masterType.getName() + ".js", webResourceLoader, null);
         }
         for (final String viewName : webUiConfig.getCustomViews().keySet()) {
-            downloadSource("custom_view", viewName, sourceController, null);
+            downloadSource("custom_view", viewName, webResourceLoader, null);
         }
         for (final Class<? extends MiWithConfigurationSupport<?>> centreMiType : webUiConfig.getCentres().keySet()) {
-            downloadSource("centre_ui", centreMiType.getName() + ".js", sourceController, null);
+            downloadSource("centre_ui", centreMiType.getName() + ".js", webResourceLoader, null);
         }
-        downloadSource("app", "tg-app-config.js", sourceController, null);
-        downloadSource("app", "tg-app.js", sourceController, null);
+        downloadSource("app", "tg-app-config.js", webResourceLoader, null);
+        downloadSource("app", "tg-app.js", webResourceLoader, null);
         LOGGER.info("\t\t\tDownloading generated resource 'application-startup-resources.js'...");
-        downloadSource("app", "application-startup-resources.js", sourceController, null);
+        downloadSource("app", "application-startup-resources.js", webResourceLoader, null);
         LOGGER.info("\tDownloaded generated resources.");
     }
     
@@ -296,7 +295,6 @@ public class VulcanizingUtility {
      * Executes vulcanisation process.
      * 
      * @param prefix
-     * @param sourceController
      * @param targetAppSpecificPath
      * @param vulcanizeCommands
      * @param additionalPaths
@@ -304,7 +302,6 @@ public class VulcanizingUtility {
      */
     private static void vulcanizeStartupResourcesFor(
             final String prefix,
-            final IWebResourceLoader sourceController,
             final String targetAppSpecificPath,
             final String[] vulcanizeCommands,
             final String[] minifyCommands,
@@ -405,20 +402,18 @@ public class VulcanizingUtility {
      * 
      * @param dir
      * @param name
-     * @param sourceController
+     * @param webResourceLoader
      * @param deviceProfile
      */
-    private static void downloadSource(final String dir, final String name, final IWebResourceLoader sourceController, final DeviceProfile deviceProfile) {
-        PrintStream ps;
-        try {
-            final File directory = new File("vulcan/" + dir);
-            if (!directory.exists()) {
-                directory.mkdir();
-            }
-            final String pathAndName = "/" + dir + "/" + name;
-            ps = new PrintStream("vulcan" + pathAndName);
-            ps.println(sourceController.loadSource(pathAndName));
-            ps.close();
+    private static void downloadSource(final String dir, final String name, final IWebResourceLoader webResourceLoader, final DeviceProfile deviceProfile) {
+        final File directory = new File("vulcan/" + dir);
+        if (!directory.exists()) {
+            directory.mkdir();
+        }
+        final String pathAndName = "/" + dir + "/" + name;
+
+        try(final PrintStream ps = new PrintStream("vulcan" + pathAndName)) {
+            ps.println(webResourceLoader.loadSource(pathAndName));
         } catch (final FileNotFoundException e) {
             LOGGER.error(e.getMessage(), e);
             throw new IllegalStateException(e);

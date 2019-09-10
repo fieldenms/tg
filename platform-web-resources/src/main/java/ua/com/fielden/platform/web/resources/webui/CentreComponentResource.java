@@ -22,7 +22,7 @@ import ua.com.fielden.platform.web.resources.RestServerUtil;
  */
 public class CentreComponentResource extends AbstractWebResource {
     private final String mitypeString;
-    private final IWebResourceLoader sourceController;
+    private final IWebResourceLoader webResourceLoader;
     private final RestServerUtil restUtil;
     
     /**
@@ -34,23 +34,21 @@ public class CentreComponentResource extends AbstractWebResource {
      * @param response
      */
     public CentreComponentResource(
-            final IWebResourceLoader sourceController,//
+            final IWebResourceLoader webResourceLoader,
             final RestServerUtil restUtil,
             final IDeviceProvider deviceProvider,
-            final Context context, //
-            final Request request, //
+            final Context context,
+            final Request request,
             final Response response) {
         super(context, request, response, deviceProvider);
         this.mitypeString = (String) request.getAttributes().get("mitype");
-        this.sourceController = sourceController;
+        this.webResourceLoader = webResourceLoader;
         this.restUtil = restUtil;
     }
 
     @Get
     @Override
     public Representation get() {
-        return handleUndesiredExceptions(getResponse(), () -> {
-            return createRepresentation(sourceController, TEXT_JAVASCRIPT, "/centre_ui/" + this.mitypeString, getReference().getRemainingPart());
-        }, restUtil);
+        return handleUndesiredExceptions(getResponse(), () -> createRepresentation(webResourceLoader, TEXT_JAVASCRIPT, "/centre_ui/" + this.mitypeString, getReference().getRemainingPart()), restUtil);
     }
 }

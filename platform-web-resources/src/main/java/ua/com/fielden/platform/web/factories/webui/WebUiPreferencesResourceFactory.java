@@ -10,11 +10,11 @@ import ua.com.fielden.platform.web.interfaces.IDeviceProvider;
 import ua.com.fielden.platform.web.resources.webui.WebUiPreferencesResource;
 
 public class WebUiPreferencesResourceFactory extends Restlet {
-    private final IWebResourceLoader sourceController;
+    private final IWebResourceLoader webResourceLoader;
     private final IDeviceProvider deviceProvider;
 
-    public WebUiPreferencesResourceFactory(final IWebResourceLoader sourceController, final IDeviceProvider deviceProvider) {
-        this.sourceController = sourceController;
+    public WebUiPreferencesResourceFactory(final IWebResourceLoader webResourceLoader, final IDeviceProvider deviceProvider) {
+        this.webResourceLoader = webResourceLoader;
         this.deviceProvider = deviceProvider;
     }
 
@@ -23,7 +23,7 @@ public class WebUiPreferencesResourceFactory extends Restlet {
         super.handle(request, response);
 
         if (Method.GET.equals(request.getMethod())) {
-            new WebUiPreferencesResource(sourceController, deviceProvider, getContext(), request, response).handle();
+            new WebUiPreferencesResource(webResourceLoader, deviceProvider, getContext(), request, response).handle();
         }
     }
 

@@ -22,7 +22,7 @@ import ua.com.fielden.platform.web.resources.RestServerUtil;
  */
 public class CustomViewResource extends AbstractWebResource {
     private final String viewName;
-    private final IWebResourceLoader sourceController;
+    private final IWebResourceLoader webResourceLoader;
     private final RestServerUtil restUtil;
     
     /**
@@ -34,24 +34,22 @@ public class CustomViewResource extends AbstractWebResource {
      * @param response
      */
     public CustomViewResource(
-            final IWebResourceLoader sourceController,//
+            final IWebResourceLoader webResourceLoader,
             final RestServerUtil restUtil,
             final IDeviceProvider deviceProvider,
             final Context context,
             final Request request,
-            final Response response //
+            final Response response
     ) {
         super(context, request, response, deviceProvider);
         this.viewName = (String) request.getAttributes().get("viewName");
-        this.sourceController = sourceController;
+        this.webResourceLoader = webResourceLoader;
         this.restUtil = restUtil;
     }
 
     @Get
     @Override
     public Representation get() {
-        return handleUndesiredExceptions(getResponse(), () -> {
-            return createRepresentation(sourceController, TEXT_HTML, "/custom_view/" + this.viewName, getReference().getRemainingPart());
-        }, restUtil);
+        return handleUndesiredExceptions(getResponse(), () -> createRepresentation(webResourceLoader, TEXT_HTML, "/custom_view/" + this.viewName, getReference().getRemainingPart()), restUtil);
     }
 }

@@ -19,7 +19,7 @@ import ua.com.fielden.platform.web.resources.webui.MasterComponentResource;
  *
  */
 public class MasterComponentResourceFactory extends Restlet {
-    private final IWebResourceLoader sourceController;
+    private final IWebResourceLoader webResourceLoader;
     private final RestServerUtil restUtil;
     private final IDeviceProvider deviceProvider;
 
@@ -28,8 +28,8 @@ public class MasterComponentResourceFactory extends Restlet {
      *
      * @param centres
      */
-    public MasterComponentResourceFactory(final IWebResourceLoader sourceController, final RestServerUtil restUtil, final IDeviceProvider deviceProvider) {
-        this.sourceController = sourceController;
+    public MasterComponentResourceFactory(final IWebResourceLoader webResourceLoader, final RestServerUtil restUtil, final IDeviceProvider deviceProvider) {
+        this.webResourceLoader = webResourceLoader;
         this.restUtil = restUtil;
         this.deviceProvider = deviceProvider;
     }
@@ -40,7 +40,7 @@ public class MasterComponentResourceFactory extends Restlet {
 
         if (Method.GET.equals(request.getMethod())) {
             new MasterComponentResource(
-                    sourceController,
+                    webResourceLoader,
                     restUtil,
                     deviceProvider,
                     getContext(),

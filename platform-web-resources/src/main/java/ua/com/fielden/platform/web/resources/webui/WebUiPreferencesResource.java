@@ -19,17 +19,17 @@ import ua.com.fielden.platform.web.interfaces.IDeviceProvider;
  *
  */
 public class WebUiPreferencesResource extends AbstractWebResource {
-    private final IWebResourceLoader sourceController;
+    private final IWebResourceLoader webResourceLoader;
 
-    public WebUiPreferencesResource(final IWebResourceLoader sourceController, final IDeviceProvider deviceProvider, final Context context, final Request request, final Response response) {
+    public WebUiPreferencesResource(final IWebResourceLoader webResourceLoader, final IDeviceProvider deviceProvider, final Context context, final Request request, final Response response) {
         super(context, request, response, deviceProvider);
-        this.sourceController = sourceController;
+        this.webResourceLoader = webResourceLoader;
     }
 
     @Get
     @Override
     public Representation get() {
-        return createRepresentation(sourceController, TEXT_JAVASCRIPT, "/app/tg-app-config.js", getReference().getRemainingPart());
+        return createRepresentation(webResourceLoader, TEXT_JAVASCRIPT, "/app/tg-app-config.js", getReference().getRemainingPart());
     }
 
 }

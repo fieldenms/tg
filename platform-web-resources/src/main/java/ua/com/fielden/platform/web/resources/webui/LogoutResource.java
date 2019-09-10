@@ -35,7 +35,7 @@ public class LogoutResource extends ServerResource {
     
     private final Logger logger = Logger.getLogger(LogoutResource.class);
 
-    private final IWebResourceLoader sourceController;
+    private final IWebResourceLoader webResourceLoader;
     private final IUserProvider userProvider;
     private final IUser coUser;
     private final IUserSession coUserSession;
@@ -46,7 +46,7 @@ public class LogoutResource extends ServerResource {
      * Creates {@link LogoutResource}.
      */
     public LogoutResource(
-            final IWebResourceLoader sourceController,
+            final IWebResourceLoader webResourceLoader,
             final IUserProvider userProvider,
             final IUser coUser,
             final IUserSession coUserSession,
@@ -56,7 +56,7 @@ public class LogoutResource extends ServerResource {
             final Request request,
             final Response response) {
         init(context, request, response);
-        this.sourceController = sourceController;
+        this.webResourceLoader = webResourceLoader;
         this.userProvider = userProvider;
         this.coUser = coUser;
         this.coUserSession = coUserSession;
@@ -96,7 +96,7 @@ public class LogoutResource extends ServerResource {
 
     public Representation loggedOutPage() {
         try {
-            return createRepresentation(sourceController, TEXT_HTML, "/app/logout.html", getReference().getRemainingPart());
+            return createRepresentation(webResourceLoader, TEXT_HTML, "/app/logout.html", getReference().getRemainingPart());
         } catch (final Exception ex) {
             logger.fatal(ex);
             throw new IllegalStateException(ex);

@@ -19,7 +19,7 @@ import ua.com.fielden.platform.web.resources.webui.FileResource;
  *
  */
 public class FileResourceFactory extends Restlet {
-    private final IWebResourceLoader sourceController;
+    private final IWebResourceLoader webResourceLoader;
     private final List<String> resourcePaths;
     private final IDeviceProvider deviceProvider;
 
@@ -28,8 +28,8 @@ public class FileResourceFactory extends Restlet {
      *
      * @param resourcePaths
      */
-    public FileResourceFactory(final IWebResourceLoader sourceController, final List<String> resourcePaths, final IDeviceProvider deviceProvider) {
-        this.sourceController = sourceController;
+    public FileResourceFactory(final IWebResourceLoader webResourceLoader, final List<String> resourcePaths, final IDeviceProvider deviceProvider) {
+        this.webResourceLoader = webResourceLoader;
         this.resourcePaths = resourcePaths;
         this.deviceProvider = deviceProvider;
     }
@@ -42,7 +42,7 @@ public class FileResourceFactory extends Restlet {
         super.handle(request, response);
 
         if (Method.GET.equals(request.getMethod())) {
-            new FileResource(sourceController, Collections.unmodifiableList(resourcePaths), deviceProvider, getContext(), request, response).handle();
+            new FileResource(webResourceLoader, Collections.unmodifiableList(resourcePaths), deviceProvider, getContext(), request, response).handle();
         }
     }
 

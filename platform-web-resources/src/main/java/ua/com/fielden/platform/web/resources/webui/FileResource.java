@@ -10,7 +10,6 @@ import static org.restlet.data.MediaType.TEXT_JAVASCRIPT;
 import static ua.com.fielden.platform.web.resources.RestServerUtil.encodedRepresentation;
 
 import java.io.ByteArrayInputStream;
-import java.io.InputStream;
 import java.util.List;
 import java.util.function.Supplier;
 
@@ -33,7 +32,7 @@ import ua.com.fielden.platform.web.interfaces.IDeviceProvider;
  */
 public class FileResource extends AbstractWebResource {
     private final List<String> resourcePaths;
-    private final IWebResourceLoader sourceController;
+    private final IWebResourceLoader webResourceLoader;
 
     /**
      * Creates an instance of {@link FileResource} with custom resource paths.
@@ -43,10 +42,10 @@ public class FileResource extends AbstractWebResource {
      * @param request
      * @param response
      */
-    public FileResource(final IWebResourceLoader sourceController, final List<String> resourcePaths, final IDeviceProvider deviceProvider, final Context context, final Request request, final Response response) {
+    public FileResource(final IWebResourceLoader webResourceLoader, final List<String> resourcePaths, final IDeviceProvider deviceProvider, final Context context, final Request request, final Response response) {
         super(context, request, response, deviceProvider);
         this.resourcePaths = resourcePaths;
-        this.sourceController = sourceController;
+        this.webResourceLoader = webResourceLoader;
     }
 
     /**
@@ -57,9 +56,9 @@ public class FileResource extends AbstractWebResource {
         final String extension = getReference().getExtensions();
         final MediaType mediaType = determineMediaType(extension);
         if (IMAGE_PNG.equals(mediaType) || ALL.equals(mediaType)) {
-            return createStreamRepresentation(sourceController, resourcePaths, mediaType, getReference().getPath(), getReference().getRemainingPart());
+            return createStreamRepresentation(webResourceLoader, resourcePaths, mediaType, getReference().getPath(), getReference().getRemainingPart());
         } else {
-            return createRepresentation(sourceController, mediaType, getReference().getPath(), getReference().getRemainingPart());
+            return createRepresentation(webResourceLoader, mediaType, getReference().getPath(), getReference().getRemainingPart());
         }
     }
     
@@ -68,15 +67,15 @@ public class FileResource extends AbstractWebResource {
      * Otherwise, creates representation using <code>createRepresentation</code> callback.
      * 
      * @param createRepresentation
-     * @param sourceController
+     * @param webResourceLoader
      * @param mediaType
      * @param path
      * @param remainingPart
      * @return
      */
-    private static Representation returnChecksumRepresentationOr(final Supplier<Representation> createRepresentation, final IWebResourceLoader sourceController, final MediaType mediaType, final String path, final String remainingPart) {
+    private static Representation returnChecksumRepresentationOr(final Supplier<Representation> createRepresentation, final IWebResourceLoader webResourceLoader, final MediaType mediaType, final String path, final String remainingPart) {
         if (remainingPart.endsWith("?checksum=true")) {
-            return encodedRepresentation(new ByteArrayInputStream(sourceController.checksum(path).orElse("").getBytes(UTF_8)), mediaType);
+            return encodedRepresentation(new ByteArrayInputStream(webResourceLoader.checksum(path).orElse("").getBytes(UTF_8)), mediaType);
         } else {
             return createRepresentation.get();
         }
@@ -86,43 +85,35 @@ public class FileResource extends AbstractWebResource {
      * Returns checksum representation for the resource in case where checksum has been requested.
      * Otherwise, creates stream-based representation for resources like images.
      *  
-     * @param sourceController
+     * @param webResourceLoader
      * @param resourcePaths
      * @param mediaType
      * @param path
      * @param remainingPart
      * @return
      */
-    private static Representation createStreamRepresentation(final IWebResourceLoader sourceController, final List<String> resourcePaths, final MediaType mediaType, final String path, final String remainingPart) {
+    private static Representation createStreamRepresentation(final IWebResourceLoader webResourceLoader, final List<String> resourcePaths, final MediaType mediaType, final String path, final String remainingPart) {
         return returnChecksumRepresentationOr(() -> {
             final String filePath = generateFileName(resourcePaths, remainingPart);
-            final InputStream stream = sourceController.loadStreamWithFilePath(filePath);
-            if (stream != null) {
-                return encodedRepresentation(stream, mediaType);
-            } else {
-                return null;
-            }
-        }, sourceController, mediaType, path, remainingPart);
+            return encodedRepresentation(webResourceLoader.loadStream(filePath), mediaType);
+        }, webResourceLoader, mediaType, path, remainingPart);
     }
     
     /**
      * Returns checksum representation for the resource in case where checksum has been requested.
      * Otherwise, creates textual representation for text-like resources. 
      * 
-     * @param sourceController
+     * @param webResourceLoader
      * @param mediaType
      * @param path
      * @param remainingPart
      * @return
      */
-    public static Representation createRepresentation(final IWebResourceLoader sourceController, final MediaType mediaType, final String path, final String remainingPart) {
+    public static Representation createRepresentation(final IWebResourceLoader webResourceLoader, final MediaType mediaType, final String path, final String remainingPart) {
         return returnChecksumRepresentationOr(() -> {
-            final String source = sourceController.loadSource(path);
-            if (source != null) {
-                return encodedRepresentation(new ByteArrayInputStream(source.getBytes(UTF_8)), mediaType);
-            }
-            return null;
-        }, sourceController, mediaType, path, remainingPart);
+            final String source = webResourceLoader.loadSource(path);
+            return encodedRepresentation(new ByteArrayInputStream(source.getBytes(UTF_8)), mediaType);
+        }, webResourceLoader, mediaType, path, remainingPart);
     }
 
     /**

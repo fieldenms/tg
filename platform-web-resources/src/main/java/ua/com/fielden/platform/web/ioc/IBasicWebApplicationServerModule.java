@@ -59,7 +59,7 @@ public interface IBasicWebApplicationServerModule {
         bindType(IWebUiConfig.class).toInstance(webApp);
         bindType(IMenuRetriever.class).toInstance(webApp);
 
-        // bind ISourceController to its implementation as singleton
+        // bind IWebResourceLoader to its implementation as singleton
         bindType(IWebResourceLoader.class).to(WebResourceLoader.class).in(Scopes.SINGLETON);
 
         // bind ISerialisationTypeEncoder to its implementation as singleton -- it is dependent on IServerGlobalDomainTreeManager and IUserProvider
