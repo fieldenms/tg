@@ -441,18 +441,19 @@ public class CriteriaResource extends AbstractWebResource {
             }
 
             //Build dynamic properties object
-            pair.getKey().put("dynamicColumns", createDynamicProperties(
-                    user,
+            final List<Pair<ResultSetProp<AbstractEntity<?>>, Optional<CentreContext<AbstractEntity<?>, ?>>>> resPropsWithContext = getDynamicResultProperties(user,
                     centreContextHolder,
                     previouslyRunCriteriaEntity,
                     eccCompanion,
                     mmiCompanion,
-                    userCompanion));
+                    userCompanion);
 
-            centre.getDynamicProperties().forEach(resProp -> {
+            pair.getKey().put("dynamicColumns", createDynamicProperties(resPropsWithContext));
+
+            resPropsWithContext.forEach(resPropWithContext -> {
                 for (final Object entity : pair.getValue()) {
-                    final Collection<? extends AbstractEntity<?>> collection = ((AbstractEntity<?>) entity).get(resProp.propName.get());
-                    collection.forEach(e -> resProp.consumer.get().accept(e));
+                    final Collection<? extends AbstractEntity<?>> collection = ((AbstractEntity<?>) entity).get(resPropWithContext.getKey().propName.get());
+                    collection.forEach(e -> resPropWithContext.getKey().consumer.get().accept(e, resPropWithContext.getValue()));
                 }
             });
 
@@ -477,14 +478,13 @@ public class CriteriaResource extends AbstractWebResource {
         }, restUtil);
     }
 
-    private Object createDynamicProperties(
-            final User user,
+    private List<Pair<ResultSetProp<AbstractEntity<?>>, Optional<CentreContext<AbstractEntity<?>, ?>>>> getDynamicResultProperties(final User user,
             final CentreContextHolder centreContextHolder,
             final EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, ?> criteriaEntity,
             final IEntityCentreConfig eccCompanion,
             final IMainMenuItem mmiCompanion,
             final IUser userCompanion) {
-        final Map<String, List<Map<String, String>>> dynamicColumns = new HashMap<>();
+        final List<Pair<ResultSetProp<AbstractEntity<?>>, Optional<CentreContext<AbstractEntity<?>, ?>>>> resList = new ArrayList<>();
         centre.getDynamicProperties().forEach(resProp -> {
             resProp.dynamicPropDefinerClass.ifPresent(propDefinerClass -> {
                 final Optional<CentreContext<AbstractEntity<?>, ?>> optionalCentreContext = CentreResourceUtils.createCentreContext(
@@ -505,9 +505,17 @@ public class CriteriaResource extends AbstractWebResource {
                         mmiCompanion,
                         userCompanion
                     );
-                centre.getDynamicPropertyDefinerFor(resProp).ifPresent(propDefiner -> {
-                    dynamicColumns.put(resProp.propName.get() + "Columns", propDefiner.getColumns(optionalCentreContext).build());
-                });
+                resList.add(new Pair<>(resProp, optionalCentreContext));
+            });
+        });
+        return resList;
+    }
+
+    private Map<String, List<Map<String, String>>> createDynamicProperties(final List<Pair<ResultSetProp<AbstractEntity<?>>, Optional<CentreContext<AbstractEntity<?>, ?>>>> resPropsWithContext) {
+        final Map<String, List<Map<String, String>>> dynamicColumns = new HashMap<>();
+        resPropsWithContext.forEach(resPropWithContext -> {
+            centre.getDynamicPropertyDefinerFor(resPropWithContext.getKey()).ifPresent(propDefiner -> {
+                dynamicColumns.put(resPropWithContext.getKey().propName.get() + "Columns", propDefiner.getColumns(resPropWithContext.getValue()).build());
             });
         });
         return dynamicColumns;
