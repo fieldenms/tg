@@ -167,6 +167,10 @@ const TgEntityCentreBehaviorImpl = {
             observer: '_saveAsNameChanged'
         },
 
+        dynamicColumns: {
+            type: Object
+        },
+
         /**
          * Universal identifier of this element instance (used for pub / sub communication).
          *
@@ -630,6 +634,7 @@ const TgEntityCentreBehaviorImpl = {
             self._actionInProgress = true;
             self.$.egi.clearSelection();
             self._triggerRun = true;
+            self.dynamicColumns = {};
 
             // let's register a timer to kickoff a spinner if the run action is taking too long...
             if (self._startSpinnerTimer) {
