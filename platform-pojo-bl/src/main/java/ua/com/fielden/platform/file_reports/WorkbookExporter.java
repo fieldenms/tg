@@ -10,6 +10,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -31,6 +32,7 @@ import org.apache.poi.ss.usermodel.CreationHelper;
 import org.joda.time.DateTime;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity_centre.review.criteria.DynamicPropForExport;
 import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.serialisation.xstream.GZipOutputStreamEx;
 import ua.com.fielden.platform.utils.EntityUtils;
@@ -48,14 +50,35 @@ public class WorkbookExporter {
     private static final int MAX_ROWS = SpreadsheetVersion.EXCEL97.getLastRowIndex();
 
     private WorkbookExporter() {}
-    
+
+    public static <M extends AbstractEntity<?>> HSSFWorkbook export(final Stream<M> entities, final String[] propertyNames, final String[] propertyTitles, final List<List<DynamicPropForExport>> dynamicProperties) {
+        final List<Pair<String, String>> propNamesAndTitles = new ArrayList<>();
+
+        for (int index = 0; index < propertyNames.length && index < propertyTitles.length; index++) {
+            propNamesAndTitles.add(new Pair<String, String>(propertyNames[index], propertyTitles[index]));
+        }
+        //Add property names and titles for dynamic properties
+        final Map<String, DynamicPropForExport> collectionalProps = new LinkedHashMap<>();
+        dynamicProperties.forEach(listOfProps -> {
+            listOfProps.forEach(prop -> {
+                propNamesAndTitles.add(new Pair<>(prop.getKeyPropValue(), prop.getTitle()));
+                collectionalProps.put(prop.getKeyPropValue(), prop);
+            });
+        });
+
+        final DataForWorkbookSheet<M> dataForWorkbookSheet = new DataForWorkbookSheet<>("Exported data", entities, propNamesAndTitles, collectionalProps);
+        final List<DataForWorkbookSheet<? extends AbstractEntity<?>>> sheetsData = new ArrayList<>();
+        sheetsData.add(dataForWorkbookSheet);
+        return export(sheetsData);
+    }
+
     public static <M extends AbstractEntity<?>> HSSFWorkbook export(final Stream<M> entities, final String[] propertyNames, final String[] propertyTitles) {
         final List<Pair<String, String>> propNamesAndTitles = new ArrayList<>();
 
         for (int index = 0; index < propertyNames.length && index < propertyTitles.length; index++) {
             propNamesAndTitles.add(new Pair<String, String>(propertyNames[index], propertyTitles[index]));
         }
-        final DataForWorkbookSheet<M> dataForWorkbookSheet = new DataForWorkbookSheet<>("Exported data", entities, propNamesAndTitles);
+        final DataForWorkbookSheet<M> dataForWorkbookSheet = new DataForWorkbookSheet<>("Exported data", entities, propNamesAndTitles, new LinkedHashMap<>());
         final List<DataForWorkbookSheet<? extends AbstractEntity<?>>> sheetsData = new ArrayList<>();
         sheetsData.add(dataForWorkbookSheet);
         return export(sheetsData);
@@ -139,7 +162,7 @@ public class WorkbookExporter {
         sheet.createFreezePane(0, 1);
     }
 
-    private static <M extends AbstractEntity<?>> void addRow(final AtomicInteger index, M entity, final DataForWorkbookSheet<M> sheetData, final HSSFSheet sheet, final CellStyle dateCellStyle, final Map<String, String> shortCollectionalProps, final HSSFCellStyle dataCellStyle) {
+    private static <M extends AbstractEntity<?>> void addRow(final AtomicInteger index, final M entity, final DataForWorkbookSheet<M> sheetData, final HSSFSheet sheet, final CellStyle dateCellStyle, final Map<String, String> shortCollectionalProps, final HSSFCellStyle dataCellStyle) {
         final HSSFRow row = sheet.createRow(index.incrementAndGet()); // new row starting with 1
         // iterate through values in the current table row and populate the sheet row
         for (int propIndex = 0; propIndex < sheetData.getPropNames().size(); propIndex++) {
@@ -148,7 +171,7 @@ public class WorkbookExporter {
                 cell.setCellStyle(dataCellStyle);
             }
             final String propertyName = sheetData.getPropNames().get(propIndex);
-            final Object value = StringUtils.isEmpty(propertyName) ? entity : entity.get(propertyName); // get the value
+            final Object value = StringUtils.isEmpty(propertyName) ? entity : sheetData.getValue(entity, propertyName); // get the value
             // need to try to do the best job with types
             if (shortCollectionalProps.containsKey(propertyName)) {
                 cell.setCellType(HSSFCell.CELL_TYPE_STRING);

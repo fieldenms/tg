@@ -19,11 +19,11 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.apache.commons.lang.StringUtils;
@@ -56,7 +56,6 @@ import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.entity_centre.review.DynamicFetchBuilder;
 import ua.com.fielden.platform.entity_centre.review.DynamicOrderingBuilder;
-import ua.com.fielden.platform.entity_centre.review.DynamicParamBuilder;
 import ua.com.fielden.platform.entity_centre.review.DynamicQueryBuilder;
 import ua.com.fielden.platform.entity_centre.review.DynamicQueryBuilder.QueryProperty;
 import ua.com.fielden.platform.equery.lifecycle.LifecycleModel;
@@ -87,6 +86,7 @@ public abstract class EntityQueryCriteria<C extends ICentreDomainTreeManagerAndE
     private Optional<IQueryEnhancer<T>> additionalQueryEnhancer = Optional.empty();
     private Optional<CentreContext<T, ?>> centreContextForQueryEnhancer = Optional.empty();
     private Optional<User> createdByUserConstraint = Optional.empty();
+    private final List<List<DynamicPropForExport>> dynamicProperties = new ArrayList<>();
     private AbstractEntity<?> critOnlySinglePrototype;
 
     @SuppressWarnings({ "unchecked", "rawtypes" })
@@ -859,6 +859,15 @@ public abstract class EntityQueryCriteria<C extends ICentreDomainTreeManagerAndE
      */
     public Optional<AbstractEntity<?>> critOnlySinglePrototypeOptional() {
         return ofNullable(critOnlySinglePrototype());
+    }
+
+    public void setDynamicProperties (final List<List<DynamicPropForExport>> dynamicProperties) {
+        this.dynamicProperties.clear();
+        this.dynamicProperties.addAll(dynamicProperties);
+    }
+
+    public List<List<DynamicPropForExport>> getDynamicProperties() {
+        return Collections.unmodifiableList(dynamicProperties);
     }
 
 }

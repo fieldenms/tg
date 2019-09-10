@@ -1,8 +1,8 @@
 package ua.com.fielden.platform.web.centre.api.dynamicprops;
 
-public interface IDynamicPropBuilderWidth extends IAlsoDynamicProp{
+public interface IDynamicPropBuilderWidth  extends IDynamicPropBuilderDone{
 
-    IAlsoDynamicProp width(int width);
+    IDynamicPropBuilderDone width(int width);
 
-    IAlsoDynamicProp minWidth(int width);
+    IDynamicPropBuilderDone minWidth(int width);
 }

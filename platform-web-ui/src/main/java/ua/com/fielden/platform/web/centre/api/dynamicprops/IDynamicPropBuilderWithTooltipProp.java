@@ -1,6 +1,6 @@
 package ua.com.fielden.platform.web.centre.api.dynamicprops;
 
-public interface IDynamicPropBuilderWithTooltipProp extends IDynamicPropBuilderWithTitle{
+public interface IDynamicPropBuilderWithTooltipProp extends IDynamicPropBuilderAddProp, IDynamicPropBuilderDone{
 
-    IDynamicPropBuilderWithTitle tooltipProp (String tooltipProp);
+    IDynamicPropBuilderAddProp withTooltipProp (String tooltipProp);
 }
