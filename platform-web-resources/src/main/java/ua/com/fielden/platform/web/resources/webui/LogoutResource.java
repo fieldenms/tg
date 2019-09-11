@@ -1,21 +1,17 @@
 package ua.com.fielden.platform.web.resources.webui;
 
+import static org.restlet.data.MediaType.TEXT_HTML;
+import static ua.com.fielden.platform.web.resources.webui.FileResource.createRepresentation;
 import static ua.com.fielden.platform.web.security.AbstractWebResourceGuard.extractAuthenticator;
 import static ua.com.fielden.platform.web.security.AbstractWebResourceGuard.mkAuthenticationCookieToExpire;
 
-import java.io.ByteArrayInputStream;
 import java.util.Optional;
 
 import org.apache.log4j.Logger;
 import org.restlet.Context;
 import org.restlet.Request;
 import org.restlet.Response;
-import org.restlet.data.CookieSetting;
-import org.restlet.data.Encoding;
-import org.restlet.data.MediaType;
-import org.restlet.engine.application.EncodeRepresentation;
 import org.restlet.representation.EmptyRepresentation;
-import org.restlet.representation.InputRepresentation;
 import org.restlet.representation.Representation;
 import org.restlet.resource.Get;
 import org.restlet.resource.ServerResource;
@@ -25,8 +21,7 @@ import ua.com.fielden.platform.security.session.IUserSession;
 import ua.com.fielden.platform.security.session.UserSession;
 import ua.com.fielden.platform.security.user.IUser;
 import ua.com.fielden.platform.security.user.IUserProvider;
-import ua.com.fielden.platform.utils.ResourceLoader;
-import ua.com.fielden.platform.web.security.AbstractWebResourceGuard;
+import ua.com.fielden.platform.web.app.IWebResourceLoader;
 
 /**
  * A web resource handling explicit user logins.
@@ -40,6 +35,7 @@ public class LogoutResource extends ServerResource {
     
     private final Logger logger = Logger.getLogger(LogoutResource.class);
 
+    private final IWebResourceLoader webResourceLoader;
     private final IUserProvider userProvider;
     private final IUser coUser;
     private final IUserSession coUserSession;
@@ -50,6 +46,7 @@ public class LogoutResource extends ServerResource {
      * Creates {@link LogoutResource}.
      */
     public LogoutResource(
+            final IWebResourceLoader webResourceLoader,
             final IUserProvider userProvider,
             final IUser coUser,
             final IUserSession coUserSession,
@@ -59,6 +56,7 @@ public class LogoutResource extends ServerResource {
             final Request request,
             final Response response) {
         init(context, request, response);
+        this.webResourceLoader = webResourceLoader;
         this.userProvider = userProvider;
         this.coUser = coUser;
         this.coUserSession = coUserSession;
@@ -98,8 +96,7 @@ public class LogoutResource extends ServerResource {
 
     public Representation loggedOutPage() {
         try {
-            final byte[] body = ResourceLoader.getText("ua/com/fielden/platform/web/logout.html").replaceAll("@title", "Logout").getBytes("UTF-8");
-            return new EncodeRepresentation(Encoding.GZIP, new InputRepresentation(new ByteArrayInputStream(body), MediaType.TEXT_HTML));
+            return createRepresentation(webResourceLoader, TEXT_HTML, "/app/logout.html", getReference().getRemainingPart());
         } catch (final Exception ex) {
             logger.fatal(ex);
             throw new IllegalStateException(ex);
