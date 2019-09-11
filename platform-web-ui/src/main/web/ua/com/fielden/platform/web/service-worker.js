@@ -123,6 +123,16 @@ self.addEventListener('fetch', function (event) {
                                             });
                                         }
                                     }
+                                }, function (serverChecksumResponseError) { // it is very important not to chain catch clause but to use onRejected callback; this is because we need to process errors only from getTextFrom(...) promise and not from getTextFrom(...).then(...) promise.
+                                    if (serverChecksumResponseError instanceof Response && !isResponseSuccessful(serverChecksumResponseError) && serverChecksumResponseError.status === 403) {
+                                        // If server checksum response is Forbidden (403) then we need to respond with redirection response to login page.
+                                        // This redirection will be provided for index page, that is loaded as entry point for application pages, even those that has something after # in its URI.
+                                        // So, refreshing of client application with stale authenticator will be redirected to login page.
+                                        // Loginning to that page will preserve the part after # and desired context will be navigated immediately.
+                                        return Response.redirect(url + 'login/');
+                                    } else {
+                                        throw serverChecksumResponseError; // rethrow the error in other cases as if there was no onRejected clause here; this would lead to promise rejection
+                                    }
                                 });
                             });
                         });
