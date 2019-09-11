@@ -457,8 +457,9 @@ Polymer({
         this.postRetrieved = function (entity, bindingEntity, customObject) {
             this.menuConfig = entity;
             // make splash related elements invisible
-            document.querySelector("#splash-background").style.display = 'none'; // background
-            document.querySelector("#splash-text").style.display = 'none'; // text
+            // selection happens by id, but for all for safety reasons; for example, for web tests these elements do not exist
+            document.querySelectorAll("#splash-background").forEach(bg => bg.style.display = 'none'); // background
+            document.querySelectorAll("#splash-text").forEach(txt => txt.style.display = 'none'); // text
         }.bind(this);
         this.postValidated = function (validatedEntity, bindingEntity, customObject) {};
         this.postSaved = function (potentiallySavedOrNewEntity, newBindingEntity) {};
