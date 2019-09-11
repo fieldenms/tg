@@ -76,13 +76,13 @@ public class FileProcessingResource<T extends AbstractEntityWithInputStream<?>> 
         this.deviceProvider = deviceProvider;
         this.types = types;
         
-        this.jobUid = request.getHeaders().getFirstValue("jobUid");
+        this.jobUid = request.getHeaders().getFirstValue("jobUid", /*ignore case*/ true);
         if (StringUtils.isEmpty(jobUid)) {
             throw new IllegalArgumentException("jobUid is required");
         }
         
         try {
-            this.origFileName = URLDecoder.decode(request.getHeaders().getFirstValue("origFileName"), StandardCharsets.UTF_8.toString());
+            this.origFileName = URLDecoder.decode(request.getHeaders().getFirstValue("origFileName", /*ignore case*/ true), StandardCharsets.UTF_8.toString());
         } catch (final UnsupportedEncodingException ex) {
             throw new IllegalArgumentException("Could not decode the value for origFileName.", ex);
         }
@@ -91,12 +91,12 @@ public class FileProcessingResource<T extends AbstractEntityWithInputStream<?>> 
             throw new IllegalArgumentException("origFileName is required");
         }
         
-        this.mimeAsProvided = request.getHeaders().getFirstValue("mime");
+        this.mimeAsProvided = request.getHeaders().getFirstValue("mime", /*ignore case*/ true);
         if (isEmpty(this.mimeAsProvided)) {
             throw new IllegalArgumentException("File MIME type is missing.");
         }
         
-        final long lastModified = Long.parseLong(request.getHeaders().getFirstValue("lastModified"));
+        final long lastModified = Long.parseLong(request.getHeaders().getFirstValue("lastModified", /*ignore case*/ true));
         this.fileLastModified = new Date(lastModified);
     }
 
