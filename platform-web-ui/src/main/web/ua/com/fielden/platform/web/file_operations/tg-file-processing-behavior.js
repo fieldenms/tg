@@ -108,11 +108,13 @@ const TgFileProcessingBehaviorImpl = {
     /* A create callback to perform initialisation. */
     created: function () {
         // need to assign SSE data handler to reflect the server side file processing progress
-        this.dataHandler = function (msg) {
+        this.dataHandler = (msg) => {
             if (this.fpFileProcessingProgressEventHandler) {
                 this.fpFileProcessingProgressEventHandler(msg.prc);
             }
-        }.bind(this);
+        }
+        // SSE error handler to prevent reconnection
+        this.errorHandler = (e) => { this.shouldReconnectWhenError = false }
 
         // let's create a dummy file input element to be used for opening a file dialog
         this._uploadInput = document.createElement('input');
