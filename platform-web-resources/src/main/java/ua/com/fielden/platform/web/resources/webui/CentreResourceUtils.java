@@ -912,7 +912,7 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
                                 eccCompanion,
                                 mmiCompanion,
                                 userCompanion),
-                        CriteriaResource.createDynamicPropertiesForExport(centre, resPropsWithContext),
+                        createDynamicPropertiesForExport(centre, resPropsWithContext),
                         // There could be cases where the generated data and the queried data would have different types.
                         // For example, the queried data could be modelled by a synthesized entity that includes a subquery based on some generated data.
                         // In such cases, it is unpossible to enhance the final query with a user related condition automatically.
@@ -927,6 +927,17 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
                 stream);
 
         return CriteriaResource.enhanceResultEntitiesWithDynamicPropertyValues(entities, resPropsWithContext);
+    }
+
+
+    private static List<List<DynamicPropForExport>> createDynamicPropertiesForExport(final EntityCentre<AbstractEntity<?>> centre, final List<Pair<ResultSetProp<AbstractEntity<?>>, Optional<CentreContext<AbstractEntity<?>, ?>>>> resPropsWithContext) {
+        final List<List<DynamicPropForExport>> dynamicColumns = new ArrayList<>();
+        resPropsWithContext.forEach(resPropWithContext -> {
+            centre.getDynamicPropertyDefinerFor(resPropWithContext.getKey()).ifPresent(propDefiner -> {
+                dynamicColumns.add(propDefiner.getColumns(resPropWithContext.getValue()).buildToExport());
+            });
+        });
+        return dynamicColumns;
     }
 
     /**

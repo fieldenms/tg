@@ -66,7 +66,6 @@ import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.entity.functional.centre.CentreContextHolder;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
-import ua.com.fielden.platform.entity_centre.review.criteria.DynamicPropForExport;
 import ua.com.fielden.platform.entity_centre.review.criteria.EnhancedCentreEntityQueryCriteria;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.security.user.IUser;
@@ -457,7 +456,7 @@ public class CriteriaResource extends AbstractWebResource {
                     mmiCompanion,
                     userCompanion);
 
-            pair.getKey().put("dynamicColumns", createDynamicProperties(centre, resPropsWithContext));
+            pair.getKey().put("dynamicColumns", createDynamicProperties(resPropsWithContext));
 
             Stream<AbstractEntity<?>> processedEntities = enhanceResultEntitiesWithCustomPropertyValues(
                     centre,
@@ -535,21 +534,11 @@ public class CriteriaResource extends AbstractWebResource {
         return resList;
     }
 
-    private static Map<String, List<Map<String, String>>> createDynamicProperties(final EntityCentre<AbstractEntity<?>> centre, final List<Pair<ResultSetProp<AbstractEntity<?>>, Optional<CentreContext<AbstractEntity<?>, ?>>>> resPropsWithContext) {
+    private Map<String, List<Map<String, String>>> createDynamicProperties(final List<Pair<ResultSetProp<AbstractEntity<?>>, Optional<CentreContext<AbstractEntity<?>, ?>>>> resPropsWithContext) {
         final Map<String, List<Map<String, String>>> dynamicColumns = new LinkedHashMap<>();
         resPropsWithContext.forEach(resPropWithContext -> {
             centre.getDynamicPropertyDefinerFor(resPropWithContext.getKey()).ifPresent(propDefiner -> {
                 dynamicColumns.put(resPropWithContext.getKey().propName.get() + "Columns", propDefiner.getColumns(resPropWithContext.getValue()).build());
-            });
-        });
-        return dynamicColumns;
-    }
-
-    public static List<List<DynamicPropForExport>> createDynamicPropertiesForExport(final EntityCentre<AbstractEntity<?>> centre, final List<Pair<ResultSetProp<AbstractEntity<?>>, Optional<CentreContext<AbstractEntity<?>, ?>>>> resPropsWithContext) {
-        final List<List<DynamicPropForExport>> dynamicColumns = new ArrayList<>();
-        resPropsWithContext.forEach(resPropWithContext -> {
-            centre.getDynamicPropertyDefinerFor(resPropWithContext.getKey()).ifPresent(propDefiner -> {
-                dynamicColumns.add(propDefiner.getColumns(resPropWithContext.getValue()).buildToExport());
             });
         });
         return dynamicColumns;
