@@ -150,8 +150,8 @@ public class PropertyColumnElement implements IRenderable, IImportable {
         return isDynamic ? "[[item.type]]" : this.propertyType;
     }
 
-    private int growFactorBinding() {
-        return isDynamic ? 0 : (isFlexible ? growFactor : 0);
+    private String growFactorBinding() {
+        return isDynamic ? "[[item.growFactor]]" : (isFlexible ? String.valueOf(growFactor) : "0");
     }
 
     private String minWidthBinding() {

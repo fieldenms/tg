@@ -21,6 +21,7 @@ public class DynamicProp<T extends AbstractEntity<?>> implements IDynamicPropBui
     private Optional<String> desc = Optional.empty();
     private int width = DEFAULT_COLUMN_WIDTH;
     private int minWidth = MIN_COLUMN_WIDTH;
+    private int growFactor = 1;
 
     public DynamicProp(final DynamicPropBuilder<T> dynamicPropBuilder, final String keyPropValue) {
         this.dynamicPropBuilder = dynamicPropBuilder;
@@ -42,6 +43,7 @@ public class DynamicProp<T extends AbstractEntity<?>> implements IDynamicPropBui
     @Override
     public IDynamicPropBuilderDone width(final int width) {
         this.width = width;
+        this.growFactor = 0;
         return this;
     }
 
@@ -74,6 +76,10 @@ public class DynamicProp<T extends AbstractEntity<?>> implements IDynamicPropBui
 
     public int getMinWidth() {
         return minWidth;
+    }
+
+    public int getGrowFactor() {
+        return growFactor;
     }
 
     @Override

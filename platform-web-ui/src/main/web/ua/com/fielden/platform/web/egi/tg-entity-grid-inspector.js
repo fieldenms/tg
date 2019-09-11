@@ -1238,7 +1238,7 @@ Polymer({
         e.currentTarget.classList.toggle("resizing-action", true);
         //Calculate all properties needed for column resizing logic and create appropriate resizing object
         const columnElements = this._getHeaderColumns();
-        const leftFixedContainerWidth = calculateColumnWidthExcept (this, -1, columnElements, this.numOfFixedCols, () => this.dragAnchorFixed, () => this.checkboxesFixed, () => this.checkboxesWithPrimaryActionsFixed, () => false);
+        const leftFixedContainerWidth = calculateColumnWidthExcept (this, -1, columnElements, this.fixedColumns.length, () => this.dragAnchorFixed, () => this.checkboxesFixed, () => this.checkboxesWithPrimaryActionsFixed, () => false);
         const containerWithoutFixedSecondaryActionWidth = this.$.scrollableContainer.clientWidth - (this._isSecondaryActionPresent && this.secondaryActionsFixed ? columnElements[columnElements.length - 1].offsetWidth : 0);
         this._columnResizingObject = {
             oldColumnWidth: e.model.item.width,
@@ -1246,7 +1246,7 @@ Polymer({
             leftFixedContainerWidth: leftFixedContainerWidth,
             containerWithoutFixedSecondaryActionWidth: containerWithoutFixedSecondaryActionWidth,
             otherColumnWidth: calculateColumnWidthExcept(this, e.currentTarget.hasAttribute("fixed") ? e.model.index : this.fixedColumns.length + e.model.index, columnElements, this.columns.length + this.fixedColumns.length, () => true, () => true, () => true, () => true),
-            otherFixedColumnWidth :  calculateColumnWidthExcept(this, e.currentTarget.hasAttribute("fixed") ? e.model.index : -1, columnElements, this.numOfFixedCols, () => this.dragAnchorFixed, () => this.checkboxesFixed, () => this.checkboxesWithPrimaryActionsFixed, () => this.secondaryActionsFixed),
+            otherFixedColumnWidth :  calculateColumnWidthExcept(this, e.currentTarget.hasAttribute("fixed") ? e.model.index : -1, columnElements, this.fixedColumns.length, () => this.dragAnchorFixed, () => this.checkboxesFixed, () => this.checkboxesWithPrimaryActionsFixed, () => this.secondaryActionsFixed),
             widthCorrection: e.currentTarget.offsetWidth - e.currentTarget.firstElementChild.offsetWidth,
             hasAnyFlex: this.columns.some((column, index) => index !== e.model.index && column.growFactor !== 0)
         };

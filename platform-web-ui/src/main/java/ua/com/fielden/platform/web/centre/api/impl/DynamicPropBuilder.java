@@ -68,6 +68,7 @@ public class DynamicPropBuilder<T extends AbstractEntity<?>> implements IDynamic
             res.put("desc", dynamicProp.getDesc().orElse(dynamicProp.getTitle()));
             res.put("width", valueOf(dynamicProp.getWidth()));
             res.put("minWidth", valueOf(dynamicProp.getMinWidth()));
+            res.put("growFactor", valueOf(dynamicProp.getGrowFactor()));
             return res;
         }).collect(Collectors.toList());
     }
