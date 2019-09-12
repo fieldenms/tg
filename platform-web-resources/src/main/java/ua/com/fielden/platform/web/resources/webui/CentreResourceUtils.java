@@ -12,6 +12,7 @@ import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract
 import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.isExclusiveDefault;
 import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.isNotDefault;
 import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.isOrNullDefault;
+import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.isOrGroupDefault;
 import static ua.com.fielden.platform.types.tuples.T2.t2;
 import static ua.com.fielden.platform.utils.EntityUtils.equalsEx;
 import static ua.com.fielden.platform.web.centre.AbstractCentreConfigAction.APPLIED_CRITERIA_ENTITY_NAME;
@@ -314,7 +315,7 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
     @SuppressWarnings("serial")
     private static Map<String, Map<String, Integer>> createColumnWidths(final IAddToResultTickManager secondTick, final Class<?> root) {
         final Map<String, Map<String, Integer>> columnWidths = secondTick.checkedProperties(root).stream()
-        .map(property -> new Pair<String, Map<String, Integer>>(property, new HashMap<String, Integer>() {{
+        .map(property -> new Pair<>(property, new HashMap<String, Integer>() {{
                             put("newWidth", secondTick.getWidth(root, property));
                             put("newGrowFactor", secondTick.getGrowFactor(root, property));
                         }}))
@@ -389,6 +390,10 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
         if (!isNotDefault(not)) {
             metaValues.put("not", not);
         }
+        final Integer orGroup = tickManager.getOrGroup(root, prop);
+        if (!isOrGroupDefault(orGroup)) {
+            metaValues.put("orGroup", orGroup);
+        }
 
         return metaValues;
     }
@@ -420,6 +425,7 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
 
             cdtmae.getFirstTick().setOrNull(root, prop, mValues.get("orNull") != null ? (Boolean) mValues.get("orNull") : null);
             cdtmae.getFirstTick().setNot(root, prop, mValues.get("not") != null ? (Boolean) mValues.get("not") : null);
+            cdtmae.getFirstTick().setOrGroup(root, prop, mValues.get("orGroup") != null ? (Integer) mValues.get("orGroup") : null);
         }
     }
     

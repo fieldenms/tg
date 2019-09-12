@@ -82,8 +82,8 @@ const TgAbstractRangeCriterionBehaviorImpl = {
     /**
      * Returns 'true' if criterion has no meta values assigned, 'false' otherwise.
      */
-    _hasNoMetaValues: function (orNull, not, exclusive, exclusive2, datePrefix, dateMnemonic, andBefore) {
-        return TgAbstractMultiCriterionBehavior[1]._hasNoMetaValues.call(this, orNull, not, exclusive, exclusive2, datePrefix, dateMnemonic, andBefore) &&
+    _hasNoMetaValues: function (orNull, not, orGroup, exclusive, exclusive2, datePrefix, dateMnemonic, andBefore) {
+        return TgAbstractMultiCriterionBehavior[1]._hasNoMetaValues.call(this, orNull, not, orGroup, exclusive, exclusive2, datePrefix, dateMnemonic, andBefore) &&
             exclusive === false && exclusive2 === false;
     }
 };

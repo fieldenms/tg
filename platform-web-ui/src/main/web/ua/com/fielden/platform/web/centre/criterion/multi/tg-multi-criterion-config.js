@@ -6,6 +6,7 @@ import { Polymer } from '/resources/polymer/@polymer/polymer/lib/legacy/polymer-
 import { html } from '/resources/polymer/@polymer/polymer/lib/utils/html-tag.js';
 
 import '/resources/polymer/@polymer/paper-checkbox/paper-checkbox.js';
+import '/resources/polymer/@polymer/paper-input/paper-input.js';
 
 const template = html`
     <style>
@@ -18,6 +19,7 @@ const template = html`
     </style>
     <paper-checkbox checked="{{_orNull}}" hidden$="[[_excludeMissing]]">Missing</paper-checkbox>
     <paper-checkbox checked="{{_not}}">Not</paper-checkbox>
+    <paper-input value="{{_orGroupStr}}" label="Group"></paper-input>
 `;
 
 Polymer({
@@ -34,8 +36,38 @@ Polymer({
             type: Boolean,
             notify: true
         },
+        /**
+         * Number of the group of conditions [glued together through logical OR] that this criterion belongs to.
+         * 'null' if this criterion does not belong to any group.
+         */
+        _orGroup: {
+            type: Number,
+            notify: true,
+            observer: '_orGroupChanged'
+        },
+        /**
+         * String representation of '_orGroup'.
+         */
+        _orGroupStr: {
+            type: String,
+            notify: true,
+            observer: '_orGroupStrChanged'
+        },
+
         _excludeMissing: {
             type: Boolean
         }
+    },
+
+    _orGroupStrChanged: function (newValue) {
+        if (newValue && newValue !== '') {
+            this._orGroup = +newValue;
+        } else {
+            this._orGroup = null;
+        }
+    },
+
+    _orGroupChanged: function (newValue) {
+        this._orGroupStr = newValue === null ? '' : (newValue + '');
     }
 });

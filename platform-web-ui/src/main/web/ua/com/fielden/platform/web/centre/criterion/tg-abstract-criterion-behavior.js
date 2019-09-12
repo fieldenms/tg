@@ -92,7 +92,7 @@ const TgAbstractCriterionBehaviorImpl = {
     },
 
     observers: [
-        '_updateIconButtonStyle(orNull, not)'
+        '_updateIconButtonStyle(orNull, not, orGroup)'
     ],
 
     ready: function () {
@@ -119,6 +119,7 @@ const TgAbstractCriterionBehaviorImpl = {
         this._exclusive2 = false;
         this._orNull = false;
         this._not = false;
+        this._orGroup = null;
         this._acceptMetaValues(false);
     },
 
@@ -134,6 +135,7 @@ const TgAbstractCriterionBehaviorImpl = {
         domBind._orNullBind = self._orNull;
         domBind._excludeMissingBind = self.excludeMissing;
         domBind._notBind = self._not;
+        domBind._orGroupBind = self._orGroup;
         domBind._exclusiveBind = self._exclusive;
         domBind._exclusive2Bind = self._exclusive2;
         domBind._datePrefixBind = self._datePrefix;
@@ -167,6 +169,7 @@ const TgAbstractCriterionBehaviorImpl = {
         domBind._clearMetaValues = function () {
             domBind._orNullBind = false;
             domBind._notBind = false;
+            domBind._orGroupBind = null;
             domBind._exclusiveBind = false;
             domBind._exclusive2Bind = false;
             domBind._datePrefixBind = null;
@@ -178,6 +181,7 @@ const TgAbstractCriterionBehaviorImpl = {
             self._cancelMetaValues();
             domBind._orNullBind = self._orNull;
             domBind._notBind = self._not;
+            domBind._orGroupBind = self._orGroup;
             domBind._exclusiveBind = self._exclusive;
             domBind._exclusive2Bind = self._exclusive2;
             domBind._datePrefixBind = self._datePrefix;
@@ -193,6 +197,7 @@ const TgAbstractCriterionBehaviorImpl = {
             self._exclusive2 = domBind._exclusive2Bind;
             self._orNull = domBind._orNullBind;
             self._not = domBind._notBind;
+            self._orGroup = domBind._orGroupBind;
             self._acceptMetaValues(true);
         };
 
@@ -258,16 +263,16 @@ const TgAbstractCriterionBehaviorImpl = {
     /**
      * Returns 'true' if criterion has no meta values assigned, 'false' otherwise. Should be overridden to provide functionality in specific descendants.
      */
-    _hasNoMetaValues: function (orNull, not, exclusive, exclusive2, datePrefix, dateMnemonic, andBefore) {
+    _hasNoMetaValues: function (orNull, not, orGroup, exclusive, exclusive2, datePrefix, dateMnemonic, andBefore) {
         return true;
     },
 
-    _updateIconButtonStyle: function (orNull, not, exclusive, exclusive2, datePrefix, dateMnemonic, andBefore) {
-        this._dom().$.iconButton.setAttribute('style', this._computeIconButtonStyle(this.orNull, this.not, this.exclusive, this.exclusive2, this.datePrefix, this.dateMnemonic, this.andBefore));
+    _updateIconButtonStyle: function (orNull, not, orGroup, exclusive, exclusive2, datePrefix, dateMnemonic, andBefore) {
+        this._dom().$.iconButton.setAttribute('style', this._computeIconButtonStyle(this.orNull, this.not, this.orGroup, this.exclusive, this.exclusive2, this.datePrefix, this.dateMnemonic, this.andBefore));
     },
 
-    _computeIconButtonStyle: function (orNull, not, exclusive, exclusive2, datePrefix, dateMnemonic, andBefore) {
-        return 'visibility:' + (!this._iconButtonVisible() ? 'hidden' : 'inherit') + '; color:' + (this._hasNoMetaValues(orNull, not, exclusive, exclusive2, datePrefix, dateMnemonic, andBefore) ? '#757575' : '#0288D1') + ';';
+    _computeIconButtonStyle: function (orNull, not, orGroup, exclusive, exclusive2, datePrefix, dateMnemonic, andBefore) {
+        return 'visibility:' + (!this._iconButtonVisible() ? 'hidden' : 'inherit') + '; color:' + (this._hasNoMetaValues(orNull, not, orGroup, exclusive, exclusive2, datePrefix, dateMnemonic, andBefore) ? '#757575' : (/* TODO */ orGroup > 0 ? 'red' : '#0288D1')) + ';';
     },
 
     /**

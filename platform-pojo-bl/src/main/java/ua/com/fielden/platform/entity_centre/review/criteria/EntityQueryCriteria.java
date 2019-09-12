@@ -785,6 +785,7 @@ public abstract class EntityQueryCriteria<C extends ICentreDomainTreeManagerAndE
         }
         queryProperty.setOrNull(tickManager.getOrNull(root, actualProperty));
         queryProperty.setNot(tickManager.getNot(root, actualProperty));
+        queryProperty.setOrGroup(tickManager.getOrGroup(root, actualProperty));
         return queryProperty;
     }
 

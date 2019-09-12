@@ -23,6 +23,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.TreeMap;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
@@ -71,7 +72,7 @@ public class DynamicQueryBuilder {
      * This is a class which represents high-level abstraction for criterion in dynamic criteria. <br>
      * <br>
      * Consists of one or possibly two (for "from"/"to" or "is"/"is not") values / exclusiveness-flags, <br>
-     * and strictly single datePrefix/Mnemonic pair, "orNull", "not" and "all" flags, and other stuff, which are necessary for query composition.
+     * and strictly single datePrefix/Mnemonic/AndBefore triplet, "orNull" and "not" flags, and other stuff, which are necessary for query composition.
      *
      * @author TG Team
      *
@@ -87,6 +88,7 @@ public class DynamicQueryBuilder {
         private Boolean andBefore = null;
         private Boolean orNull = null;
         private Boolean not = null;
+        private Integer orGroup = null;
 
         private final Class<?> entityClass;
         private final String propertyName;
@@ -247,6 +249,14 @@ public class DynamicQueryBuilder {
 
         public void setNot(final Boolean not) {
             this.not = not;
+        }
+
+        public Integer getOrGroup() {
+            return orGroup;
+        }
+
+        public void setOrGroup(final Integer orGroup) {
+            this.orGroup = orGroup;
         }
 
         /**
@@ -472,9 +482,9 @@ public class DynamicQueryBuilder {
 
         public CollectionProperties(final Class<? extends AbstractEntity<?>> collectionContatinerType) {
             this.collectionContatinerType = collectionContatinerType;
-            anyProperties = new ArrayList<QueryProperty>();
-            allProperties = new ArrayList<QueryProperty>();
-            filteringProperties = new ArrayList<QueryProperty>();
+            anyProperties = new ArrayList<>();
+            allProperties = new ArrayList<>();
+            filteringProperties = new ArrayList<>();
         }
 
         /**
@@ -566,6 +576,8 @@ public class DynamicQueryBuilder {
         final Map<Class<? extends AbstractEntity<?>>, CollectionProperties> collectionalProperties = new LinkedHashMap<>();
         // map for union properties.
         final Map<String, Map<String, List<QueryProperty>>> unionProperties = new LinkedHashMap<>();
+        // map for OR groups of properties.
+        final Map<Integer, List<QueryProperty>> orGroups = new TreeMap<>(); // lets have it sorted by group number
         // traverse all properties to enhance resulting query
         for (final QueryProperty property : properties) {
             if (!property.shouldBeIgnored()) {
@@ -587,11 +599,23 @@ public class DynamicQueryBuilder {
                         unionSubGroup.put(property.getUnionGroup(), groupProps);
                     }
                     groupProps.add(property);
+                } else if (property.getOrGroup() != null && property.getOrGroup() >= 1 && property.getOrGroup() <= 9) {
+                    List<QueryProperty> orGroupProps = orGroups.get(property.getOrGroup());
+                    if (orGroupProps == null) {
+                        orGroupProps = new ArrayList<>();
+                        orGroups.put(property.getOrGroup(), orGroupProps);
+                    }
+                    orGroupProps.add(property);
                 } else { // main query should be enhanced in case of simple property
                     compoundCondition = getConditionOperator(condOperand, compoundCondition).condition(buildCondition(property, false));
                 }
             }
         }
+        // enhances query with OR groups
+        for (final List<QueryProperty> orGroup : orGroups.values()) {
+            compoundCondition = getConditionOperator(condOperand, compoundCondition).condition(buildOrGroup(orGroup));
+        }
+        
         //enhances query with union property condition
         for (final Map<String, List<QueryProperty>> unionGroup : unionProperties.values()) {
             compoundCondition = getConditionOperator(condOperand, compoundCondition).condition(buildUnion(unionGroup));
@@ -626,6 +650,21 @@ public class DynamicQueryBuilder {
         IStandAloneConditionCompoundCondition<ET> compoundCondition = null;
         for (final List<QueryProperty> properties : unionGroup.values()) {
             compoundCondition = getConditionOperatorOr(condOperand, compoundCondition).condition(buildUnionGroup(properties));
+        }
+        return compoundCondition.model();
+    }
+    
+    /**
+     * Creates condition model for OR group.
+     *
+     * @param orGroup
+     * @return
+     */
+    private static <ET extends AbstractEntity<?>> ConditionModel buildOrGroup(final List<QueryProperty> properties) {
+        final IStandAloneConditionOperand<ET> condOperand = EntityQueryUtils.<ET> cond();
+        IStandAloneConditionCompoundCondition<ET> compoundCondition = null;
+        for (final QueryProperty qp : properties) {
+            compoundCondition = getConditionOperatorOr(condOperand, compoundCondition).condition(buildCondition(qp, false));
         }
         return compoundCondition.model();
     }

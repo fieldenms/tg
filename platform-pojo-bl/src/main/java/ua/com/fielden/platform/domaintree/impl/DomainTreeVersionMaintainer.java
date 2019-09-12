@@ -73,7 +73,7 @@ public class DomainTreeVersionMaintainer extends AbstractDomainTree {
             logger.debug("\tA default locator instance for [" + elcKey + "] is of CURRENT (1) version and has been succesfully deserialised.");
             // all is okay -- the version is current
             logger.debug("Ended maintaining the version of default locator instance for [" + elcKey + "].");
-            return new Pair<LocatorDomainTreeManagerAndEnhancer, Boolean>(ldtmae, false);
+            return new Pair<>(ldtmae, false);
         } catch (final Exception e) {
             System.out.println("EXCEPTION:" + e.getMessage());
             //e.printStackTrace();
@@ -85,7 +85,7 @@ public class DomainTreeVersionMaintainer extends AbstractDomainTree {
             final LocatorDomainTreeManagerAndEnhancer ldtmae = convert(ldtmae0, serialiser);
             logger.warn("\tA default locator instance for [" + elcKey + "] has been converted succesfully to CURRENT (1) version from OLD (0) version.");
 
-            return new Pair<LocatorDomainTreeManagerAndEnhancer, Boolean>(ldtmae, true);
+            return new Pair<>(ldtmae, true);
         }
     }
 
@@ -122,7 +122,7 @@ public class DomainTreeVersionMaintainer extends AbstractDomainTree {
             logger.debug("\tA centre instance for [" + eccKey + "] is of CURRENT (1) version and has been succesfully deserialised.");
             // all is okay -- the version is current
             logger.debug("Ended maintaining the version of centre instance for [" + eccKey + "].");
-            return new Pair<CentreDomainTreeManagerAndEnhancer, Boolean>(cdtmae, false);
+            return new Pair<>(cdtmae, false);
         } catch (final Exception e) {
             logger.debug("Ended maintaining the version of centre instance for [" + eccKey + "] -- the exception has occured.");
             throw e;
@@ -172,7 +172,7 @@ public class DomainTreeVersionMaintainer extends AbstractDomainTree {
             logger.debug("\tA master instance for [" + emcKey + "] is of CURRENT (1) version and has been succesfully deserialised.");
             // all is okay -- the version is current
             logger.debug("Ended maintaining the version of master instance for [" + emcKey + "].");
-            return new Pair<MasterDomainTreeManager, Boolean>(mdtm, false);
+            return new Pair<>(mdtm, false);
         } catch (final Exception e) {
             System.out.println("EXCEPTION:" + e.getMessage());
             //e.printStackTrace();
@@ -184,7 +184,7 @@ public class DomainTreeVersionMaintainer extends AbstractDomainTree {
             final MasterDomainTreeManager mdtm = convert(mdtm0, serialiser);
             logger.warn("\tA master instance for [" + emcKey + "] has been converted succesfully to CURRENT (1) version from OLD (0) version.");
 
-            return new Pair<MasterDomainTreeManager, Boolean>(mdtm, true);
+            return new Pair<>(mdtm, true);
         }
     }
 
