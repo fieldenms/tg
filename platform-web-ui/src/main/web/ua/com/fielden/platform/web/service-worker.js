@@ -72,7 +72,12 @@ const getTextFrom = function (response) {
     }
 };
 
+self.addEventListener('install', event => {
+    console.error('SW install: ', event);
+});
+
 self.addEventListener('activate', event => {
+    console.error('SW activate: ', event);
     // By default the page's fetches will not go through service worker if it was not fetched through service worker.
     // This is the case for the very first time index.html loading.
     // However we can enforce service worker to take full control as soon as first activation performs.

@@ -13,6 +13,7 @@ import static org.apache.commons.io.FileUtils.deleteDirectory;
 import static org.apache.log4j.xml.DOMConfigurator.configure;
 import static ua.com.fielden.platform.cypher.Checksum.sha1;
 import static ua.com.fielden.platform.types.tuples.T3.t3;
+import static ua.com.fielden.platform.web.ioc.WebResourceLoader.getAppIndexResource;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -40,6 +41,7 @@ import ua.com.fielden.platform.types.tuples.T3;
 import ua.com.fielden.platform.ui.menu.MiWithConfigurationSupport;
 import ua.com.fielden.platform.web.app.IWebResourceLoader;
 import ua.com.fielden.platform.web.app.IWebUiConfig;
+import ua.com.fielden.platform.web.ioc.WebResourceLoader;
 import ua.com.fielden.platform.web.vulcanizer.exceptions.VulcanisationException;
 
 /**
@@ -280,7 +282,7 @@ public class VulcanizingUtility {
      */
     private static void downloadGeneratedResources(final IWebUiConfig webUiConfig, final IWebResourceLoader webResourceLoader) {
         LOGGER.info("\tDownloading generated resources...");
-        downloadSource("app", "tg-app-index.html", webResourceLoader); // used for checksum generation
+        downloadSource("app", "tg-app-index.html", pathAndName -> getAppIndexResource(webUiConfig, true)); // used for checksum generation
         downloadSource("app", "logout.html", webResourceLoader); // used for checksum generation
         downloadSource("app", "login-initiate-reset.html", webResourceLoader); // used for checksum generation
         downloadSource("app", "tg-reflector.js", webResourceLoader);
@@ -410,13 +412,13 @@ public class VulcanizingUtility {
     }
     
     /**
-     * Downloads source into 'vulcan' directory based on concrete <code>deviceProfile</code>.
+     * Downloads source into 'vulcan' directory using <code>loadSource</code> function.
      * 
      * @param dir
      * @param name
-     * @param webResourceLoader
+     * @param loadSource
      */
-    private static void downloadSource(final String dir, final String name, final IWebResourceLoader webResourceLoader) {
+    private static void downloadSource(final String dir, final String name, final Function<String, String> loadSource) {
         final File directory = new File("vulcan/" + dir);
         if (!directory.exists()) {
             directory.mkdir();
@@ -424,12 +426,23 @@ public class VulcanizingUtility {
         final String pathAndName = "/" + dir + "/" + name;
 
         try(final PrintStream ps = new PrintStream("vulcan" + pathAndName)) {
-            ps.println(webResourceLoader.loadSource(pathAndName));
+            ps.println(loadSource.apply(pathAndName));
         } catch (final FileNotFoundException ex) {
             final String msg = "Exception occurred while downloading web resources.";
             LOGGER.error(msg, ex);
             throw new VulcanisationException(msg, ex);
         }
+    }
+    
+    /**
+     * Downloads source into 'vulcan' directory.
+     * 
+     * @param dir
+     * @param name
+     * @param webResourceLoader
+     */
+    private static void downloadSource(final String dir, final String name, final IWebResourceLoader webResourceLoader) {
+        downloadSource(dir, name, pathAndName -> webResourceLoader.loadSource(pathAndName));
     }
     
 }

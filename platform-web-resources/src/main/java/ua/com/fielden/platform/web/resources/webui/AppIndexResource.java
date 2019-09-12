@@ -1,8 +1,12 @@
 package ua.com.fielden.platform.web.resources.webui;
 
+import static com.google.common.base.Charsets.UTF_8;
 import static org.restlet.data.MediaType.TEXT_HTML;
+import static ua.com.fielden.platform.cypher.Checksum.sha1;
+import static ua.com.fielden.platform.web.resources.RestServerUtil.encodedRepresentation;
 import static ua.com.fielden.platform.web.resources.webui.FileResource.createRepresentation;
 
+import java.io.ByteArrayInputStream;
 import java.lang.management.ManagementFactory;
 
 import org.restlet.Context;
@@ -56,11 +60,15 @@ public class AppIndexResource extends AbstractWebResource {
     @Override
     public Representation get() {
         final User currentUser = userProvider.getUser();
-        if (!Workflows.deployment.equals(webUiConfig.workflow()) && !Workflows.vulcanizing.equals(webUiConfig.workflow()) && isDebugMode() && currentUser != null) {
+        final boolean developmentMode = !Workflows.deployment.equals(webUiConfig.workflow()) && !Workflows.vulcanizing.equals(webUiConfig.workflow());
+        if (developmentMode && isDebugMode() && currentUser != null) {
             // if application user hits refresh -- all configurations will be cleared. This is useful when using with JRebel / Eclipse Debug -- no need to restart server after 
             //  changing Web UI configurations (all configurations should exist in scope of IWebUiConfig.initConfiguration() method).
             webUiConfig.clearConfiguration();
             webUiConfig.initConfiguration();
+        }
+        if (developmentMode && getReference().getRemainingPart().endsWith("?checksum=true")) {
+            return encodedRepresentation(new ByteArrayInputStream(sha1(webResourceLoader.loadSource("/app/tg-app-index.html")).getBytes(UTF_8)), TEXT_HTML);
         }
         return createRepresentation(webResourceLoader, TEXT_HTML, "/app/tg-app-index.html", getReference().getRemainingPart());
     }

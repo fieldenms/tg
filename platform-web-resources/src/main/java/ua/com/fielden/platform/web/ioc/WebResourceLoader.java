@@ -81,7 +81,7 @@ public class WebResourceLoader implements IWebResourceLoader {
         if ("/app/application-startup-resources.js".equalsIgnoreCase(resourceUri)) {
             return getApplicationStartupResourcesSource(webUiConfig).orElseThrow(() -> new MissingWebResourceException("Application startup resources are missing."));
         } else if ("/app/tg-app-index.html".equalsIgnoreCase(resourceUri)) {
-            return injectServiceWorkerScriptInto(webUiConfig.genAppIndex()).orElseThrow(() -> new MissingWebResourceException("Application index resource is missing."));
+            return getAppIndexResource(webUiConfig, deploymentMode);
         } else if ("/app/logout.html".equalsIgnoreCase(resourceUri)) {
             return getFileSource("/resources/logout.html", webUiConfig.resourcePaths()).map(src -> src.replaceAll("@title", "Logout")).orElseThrow(() -> new MissingWebResourceException("Logout resource is missing."));
         } else if ("/app/login-initiate-reset.html".equalsIgnoreCase(resourceUri)) {
@@ -118,15 +118,28 @@ public class WebResourceLoader implements IWebResourceLoader {
     }
     
     /**
-     * Injects service worker registration script with lazy tags loading after sw registration (deployment mode).
-     * Injects lazy tags loading (development mode).
+     * Generates app index resource with service worker specifics: registration (deployment mode) or unregistration (development / vulcanizing mode).
      * 
-     * @param originalSource
+     * @param webUiConfig
+     * @param deploymentMode
      * @return
      */
-    private Optional<String> injectServiceWorkerScriptInto(final String originalSource) {
+    public static String getAppIndexResource(final IWebUiConfig webUiConfig, final boolean deploymentMode) {
+        System.out.println("deploymentMode = " + deploymentMode + "; appIndex = " + injectServiceWorkerScriptInto(webUiConfig.genAppIndex(), deploymentMode));
+        return injectServiceWorkerScriptInto(webUiConfig.genAppIndex(), deploymentMode).orElseThrow(() -> new MissingWebResourceException("Application index resource is missing."));
+    }
+    
+    /**
+     * Injects service worker registration script with lazy tags loading after sw registration (deployment mode).
+     * Injects service worker unregistration script with lazy tags loading after sw unregistration (development mode).
+     * 
+     * @param originalSource
+     * @param deploymentMode -- indicates whether serviceWorker-related script should be added for deployment mode or not (development or vulcanizing modes)
+     * @return
+     */
+    private static Optional<String> injectServiceWorkerScriptInto(final String originalSource, final boolean deploymentMode) {
         return ofNullable(originalSource.replace("@service-worker", 
-                          this.deploymentMode
+                          deploymentMode
                           ? // deployment?
                           "        if ('serviceWorker' in navigator) {\n" + 
                           "            navigator.serviceWorker.register('/service-worker.js').then(function (registration) {\n" + 
@@ -145,7 +158,27 @@ public class WebResourceLoader implements IWebResourceLoader {
                           "            });\n" + 
                           "        }\n"
                           : // development?
-                          "        loadTags();\n"
+                          "        if ('serviceWorker' in navigator) {\n" + 
+                          "            console.error('unregister-sw');\n" +
+                          "            console.time('unregister-sw');\n" +
+                          "            navigator.serviceWorker.getRegistrations().then(function (registrations) {\n" + 
+                          "                Promise.all(\n" +
+                          "                    registrations.map(registration => registration.unregister().then(function() {\n" +
+                          "                        return Promise.resolve([]);// registration.clients.matchAll();\n" +
+                          "                    }).then(function(clients) {\n" +
+                          "                        clients.forEach(client => {\n" +
+                          "                            if (client.url && 'navigate' in client) {\n" +
+                          "                                client.navigate(client.url);\n" +
+                          "                            }\n" +
+                          "                        });\n" +
+                          "                    }))\n" + 
+                          "                ).then(function () {\n" +
+                          "                    console.error('unregister-sw');\n" +
+                          "                    console.timeEnd('unregister-sw');\n" +
+                          "                    loadTags();\n" +
+                          "                });\n" + 
+                          "            })\n" +
+                          "        }\n"
                         ));
     }
     
