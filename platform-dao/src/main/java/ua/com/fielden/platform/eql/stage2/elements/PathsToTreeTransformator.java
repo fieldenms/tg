@@ -45,18 +45,18 @@ public class PathsToTreeTransformator {
         return result;
     }
 
-    private static Map<AbstractPropInfo<?, ?>, Map<String, List<AbstractPropInfo<?, ?>>>> generateChildrenPlus(final Map<String, List<AbstractPropInfo<?, ?>>> props) {
+    private static Map<AbstractPropInfo<?, ?>, Map<String, List<AbstractPropInfo<?, ?>>>> groupByFirstProp(final Map<String, List<AbstractPropInfo<?, ?>>> props) {
         final Map<AbstractPropInfo<?, ?>, Map<String, List<AbstractPropInfo<?, ?>>>> result = new HashMap<>();
 
-        for (final Entry<String, List<AbstractPropInfo<?, ?>>> propList : props.entrySet()) {
-            final AbstractPropInfo<?, ?> first = propList.getValue().get(0);
+        for (final Entry<String, List<AbstractPropInfo<?, ?>>> propEntry : props.entrySet()) {
+            final AbstractPropInfo<?, ?> first = propEntry.getValue().get(0);
             Map<String, List<AbstractPropInfo<?, ?>>> existing = result.get(first);
             if (existing == null) {
                 existing = new HashMap<>();
                 result.put(first, existing);
             }
 
-            existing.put(propList.getKey(), propList.getValue());
+            existing.put(propEntry.getKey(), propEntry.getValue());
         }
 
         return result;
@@ -64,14 +64,14 @@ public class PathsToTreeTransformator {
 
     private static SortedSet<Child> generateChildren(final Map<String, List<AbstractPropInfo<?, ?>>> props, final List<String> context) {
         final SortedSet<Child> result = new TreeSet<>();
-        for (final Entry<AbstractPropInfo<?, ?>, Map<String, List<AbstractPropInfo<?, ?>>>> propEntry : generateChildrenPlus(props).entrySet()) {
-            final Map<String, List<AbstractPropInfo<?, ?>>> propsTr = new HashMap<>();
+        for (final Entry<AbstractPropInfo<?, ?>, Map<String, List<AbstractPropInfo<?, ?>>>> propEntry : groupByFirstProp(props).entrySet()) {
+            final Map<String, List<AbstractPropInfo<?, ?>>> nextProps = new HashMap<>();
             String path = null;
-            for (final Entry<String, List<AbstractPropInfo<?, ?>>> list2 : propEntry.getValue().entrySet()) {
-                if (list2.getValue().size() > 1) {
-                    propsTr.put(list2.getKey(), list2.getValue().subList(1, list2.getValue().size()));
+            for (final Entry<String, List<AbstractPropInfo<?, ?>>> subpropEntry : propEntry.getValue().entrySet()) {
+                if (subpropEntry.getValue().size() > 1) {
+                    nextProps.put(subpropEntry.getKey(), subpropEntry.getValue().subList(1, subpropEntry.getValue().size()));
                 } else {
-                    path = list2.getKey();
+                    path = subpropEntry.getKey();
                 }
             }
             final List<String> newContext = new ArrayList<>(context);
@@ -79,7 +79,7 @@ public class PathsToTreeTransformator {
 
             final boolean required = propEntry.getKey() instanceof EntityTypePropInfo ? ((EntityTypePropInfo) propEntry.getKey()).required : false;
 
-            result.add(new Child(propEntry.getKey(), generateChildren(propsTr, newContext), path, newContext.stream().collect(joining("_")), required));
+            result.add(new Child(propEntry.getKey(), generateChildren(nextProps, newContext), path, newContext.stream().collect(joining("_")), required));
         }
 
         return result;
