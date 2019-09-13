@@ -1,5 +1,7 @@
 package ua.com.fielden.platform.eql.stage3.elements.sources;
 
+import static org.apache.commons.lang.StringUtils.isEmpty;
+
 import java.util.Objects;
 
 import ua.com.fielden.platform.entity.query.DbVersion;
@@ -9,10 +11,16 @@ import ua.com.fielden.platform.eql.stage3.elements.Table;
 public class QrySource3BasedOnTable implements IQrySource3 {
     public final Table table;
     public final int contextId;
+    public final String subcontextId;
     
     public QrySource3BasedOnTable(final Table table, final int contextId) {
+        this(table, contextId, "");
+    }
+
+    public QrySource3BasedOnTable(final Table table, final int contextId, final String subcontextId) {
         this.table = table;
         this.contextId = contextId;
+        this.subcontextId = subcontextId;
     }
 
     @Override
@@ -22,7 +30,7 @@ public class QrySource3BasedOnTable implements IQrySource3 {
 
     @Override
     public String sqlAlias() {
-        return "T_" + contextId;
+        return "T_" + contextId + (!isEmpty(subcontextId) ? "_" + subcontextId : "");
     }
 
     @Override
@@ -31,11 +39,17 @@ public class QrySource3BasedOnTable implements IQrySource3 {
     }
 
     @Override
+    public int contextId() {
+        return contextId;
+    }
+    
+    @Override
     public int hashCode() {
         final int prime = 31;
         int result = 1;
         result = prime * result + contextId;
-        result = prime * result + ((table == null) ? 0 : table.hashCode());
+        result = prime * result + subcontextId.hashCode();
+        result = prime * result + table.hashCode();
         return result;
     }
 
@@ -51,6 +65,6 @@ public class QrySource3BasedOnTable implements IQrySource3 {
         
         final QrySource3BasedOnTable other = (QrySource3BasedOnTable) obj;
         
-        return Objects.equals(table, other.table) && Objects.equals(contextId, other.contextId);
+        return Objects.equals(table, other.table) && Objects.equals(contextId, other.contextId) && Objects.equals(subcontextId, other.subcontextId);
     }
 }

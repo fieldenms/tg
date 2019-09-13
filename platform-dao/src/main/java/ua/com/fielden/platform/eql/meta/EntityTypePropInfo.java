@@ -1,5 +1,7 @@
 package ua.com.fielden.platform.eql.meta;
 
+import java.util.Objects;
+
 import ua.com.fielden.platform.entity.AbstractEntity;
 
 /**
@@ -12,6 +14,7 @@ import ua.com.fielden.platform.entity.AbstractEntity;
  */
 public class EntityTypePropInfo<T extends AbstractEntity<?>, PARENT extends AbstractEntity<?>> extends AbstractPropInfo<T, PARENT> {
     private final EntityInfo<T> propEntityInfo;
+    public final boolean required;
 
     /**
      * Principal constructor.
@@ -20,18 +23,15 @@ public class EntityTypePropInfo<T extends AbstractEntity<?>, PARENT extends Abst
      * @param propEntityInfo -- entity info for property.  
      * @param parent - property holder structure, which represents either query source or query-able entity of type <code>PARENT</code>.
      */
-    public EntityTypePropInfo(final String name, final EntityInfo<T> propEntityInfo, final EntityInfo<PARENT> parent) {
+    public EntityTypePropInfo(final String name, final EntityInfo<T> propEntityInfo, final EntityInfo<PARENT> parent, final boolean required) {
         super(name, parent);
         this.propEntityInfo = propEntityInfo;
-    }
-
-    protected EntityInfo<T> getPropEntityInfo() {
-        return propEntityInfo;
+        this.required = required;
     }
 
     @Override
-    public ResolutionResult resolve(final ResolutionContext context) {
-        return context.pending.isEmpty() ? new ResolutionResult(context) : getPropEntityInfo().resolve(context);
+    public ResolutionContext resolve(final ResolutionContext context) {
+        return context.isSuccessful() ? context : propEntityInfo.resolve(context);
     }
 
     @Override
@@ -48,7 +48,8 @@ public class EntityTypePropInfo<T extends AbstractEntity<?>, PARENT extends Abst
     public int hashCode() {
         final int prime = 31;
         int result = super.hashCode();
-        result = prime * result + ((propEntityInfo == null) ? 0 : propEntityInfo.hashCode());
+        result = prime * result + propEntityInfo.hashCode();
+        result = prime * result + (required ? 1231 : 1237);
         return result;
     }
 
@@ -57,20 +58,17 @@ public class EntityTypePropInfo<T extends AbstractEntity<?>, PARENT extends Abst
         if (this == obj) {
             return true;
         }
+
         if (!super.equals(obj)) {
             return false;
         }
+
         if (!(obj instanceof EntityTypePropInfo)) {
             return false;
         }
+
         final EntityTypePropInfo other = (EntityTypePropInfo) obj;
-        if (propEntityInfo == null) {
-            if (other.propEntityInfo != null) {
-                return false;
-            }
-        } else if (!propEntityInfo.equals(other.propEntityInfo)) {
-            return false;
-        }
-        return true;
+
+        return Objects.equals(propEntityInfo, other.propEntityInfo) && Objects.equals(required, other.required);
     }
 }

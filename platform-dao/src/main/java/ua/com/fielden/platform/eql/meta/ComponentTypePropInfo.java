@@ -27,7 +27,7 @@ public class ComponentTypePropInfo extends AbstractPropInfo {
     }
 
     @Override
-    public ResolutionResult resolve(final ResolutionContext context) {
-        return context.pending.isEmpty() ? new ResolutionResult(context) : getPropEntityInfo().resolve(context);
+    public ResolutionContext resolve(final ResolutionContext context) {
+        return context.isSuccessful() ? context : getPropEntityInfo().resolve(context);
     }
 }

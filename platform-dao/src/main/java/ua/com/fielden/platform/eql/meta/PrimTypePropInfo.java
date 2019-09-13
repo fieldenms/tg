@@ -1,5 +1,7 @@
 package ua.com.fielden.platform.eql.meta;
 
+import java.util.Objects;
+
 import ua.com.fielden.platform.entity.AbstractEntity;
 
 public class PrimTypePropInfo<T, PARENT extends AbstractEntity<?>> extends AbstractPropInfo<T, PARENT> {
@@ -11,8 +13,8 @@ public class PrimTypePropInfo<T, PARENT extends AbstractEntity<?>> extends Abstr
     }
 
     @Override
-    public ResolutionResult resolve(final ResolutionContext context) {
-        return new ResolutionResult(context);
+    public ResolutionContext resolve(final ResolutionContext context) {
+        return context;
     }
     
     @Override
@@ -29,7 +31,7 @@ public class PrimTypePropInfo<T, PARENT extends AbstractEntity<?>> extends Abstr
     public int hashCode() {
         final int prime = 31;
         int result = super.hashCode();
-        result = prime * result + ((propType == null) ? 0 : propType.hashCode());
+        result = prime * result + propType.hashCode();
         return result;
     }
 
@@ -38,20 +40,17 @@ public class PrimTypePropInfo<T, PARENT extends AbstractEntity<?>> extends Abstr
         if (this == obj) {
             return true;
         }
+
         if (!super.equals(obj)) {
             return false;
         }
+
         if (!(obj instanceof PrimTypePropInfo)) {
             return false;
         }
+
         final PrimTypePropInfo other = (PrimTypePropInfo) obj;
-        if (propType == null) {
-            if (other.propType != null) {
-                return false;
-            }
-        } else if (!propType.equals(other.propType)) {
-            return false;
-        }
-        return true;
+
+        return Objects.equals(propType, other.propType);
     }
 }

@@ -24,7 +24,7 @@ public abstract class AbstractPropInfo<T, PARENT extends AbstractEntity<?>> impl
         parent.addProp(this);
     }
 
-    protected String getName() {
+    public String getName() {
         return name;
     }
 

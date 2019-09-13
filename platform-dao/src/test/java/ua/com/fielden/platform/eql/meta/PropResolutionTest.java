@@ -20,6 +20,7 @@ import org.junit.Ignore;
 import org.junit.Test;
 
 import ua.com.fielden.platform.entity.query.DbVersion;
+import ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils;
 import ua.com.fielden.platform.entity.query.fluent.enums.JoinType;
 import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
@@ -40,7 +41,6 @@ import ua.com.fielden.platform.eql.stage2.elements.GroupBy2;
 import ua.com.fielden.platform.eql.stage2.elements.GroupBys2;
 import ua.com.fielden.platform.eql.stage2.elements.OrderBy2;
 import ua.com.fielden.platform.eql.stage2.elements.OrderBys2;
-import ua.com.fielden.platform.eql.stage2.elements.TransformationContext;
 import ua.com.fielden.platform.eql.stage2.elements.Yields2;
 import ua.com.fielden.platform.eql.stage2.elements.conditions.ComparisonTest2;
 import ua.com.fielden.platform.eql.stage2.elements.conditions.Conditions2;
@@ -53,8 +53,6 @@ import ua.com.fielden.platform.eql.stage2.elements.operands.Expression2;
 import ua.com.fielden.platform.eql.stage2.elements.sources.CompoundSource2;
 import ua.com.fielden.platform.eql.stage2.elements.sources.QrySource2BasedOnPersistentType;
 import ua.com.fielden.platform.eql.stage2.elements.sources.Sources2;
-import ua.com.fielden.platform.eql.stage3.elements.Column;
-import ua.com.fielden.platform.eql.stage3.elements.Table;
 import ua.com.fielden.platform.eql.stage3.elements.operands.EntQuery3;
 import ua.com.fielden.platform.sample.domain.TgAuthor;
 import ua.com.fielden.platform.sample.domain.TgAuthorRoyalty;
@@ -75,9 +73,9 @@ import ua.com.fielden.platform.sample.domain.TgWorkshop;
 
 public class PropResolutionTest extends BaseEntQueryTCase1 {
     
-    private static GroupBys2 emptyGroupBys2 = new GroupBys2(emptyList());
-    private static OrderBys2 emptyOrderBys2 = new OrderBys2(emptyList());
-    private static Yields2 emptyYields2 = new Yields2(emptyList());
+    private static final GroupBys2 emptyGroupBys2 = new GroupBys2(emptyList());
+    private static final OrderBys2 emptyOrderBys2 = new OrderBys2(emptyList());
+    private static final Yields2 emptyYields2 = new Yields2(emptyList());
     
     private static TransformationResult<EntQuery2> transform(final EntityResultQueryModel qry) {
         return entResultQry2(qry, new PropsResolutionContext(metadata));
@@ -94,24 +92,56 @@ public class PropResolutionTest extends BaseEntQueryTCase1 {
                 yield().prop("veh.key").as("vehicle-key").
                 yield().prop("rbv.key").as("replacedByVehicle-key").
                 modelAsAggregate();
-        
-        final Map<String, Table> tables = new HashMap<>();
-        
-        final Map<String, Column> columns = new HashMap<>();
-        columns.put("id", new Column("_ID"));
-        columns.put("key", new Column("KEY_"));
-        columns.put("replacedBy", new Column("REPLACED_BY_"));
-        final Table vehT = new Table("EQDET", columns);
-        tables.put(TgVehicle.class.getName(), vehT);
-        final ua.com.fielden.platform.eql.stage2.elements.TransformationResult<EntQuery3> qry3 = entResultQry3(qry,  new PropsResolutionContext(metadata), new TransformationContext(tables));
-       
+        final ua.com.fielden.platform.eql.stage2.elements.TransformationResult<EntQuery3> qry3 = entResultQry3(qry,  new PropsResolutionContext(metadata), tables);
         System.out.println(qry3.item.sql(DbVersion.H2));
     }
     
     public static EntQueryBlocks1 qb1(final Sources1 sources, final Conditions1 conditions) {
         return new EntQueryBlocks1(sources, conditions, new Yields1(emptyList()), new GroupBys1(emptyList()), new OrderBys1(emptyList()));
     }
+    
+    @Test
+    public void dot_notation_works_01() {
+        final EntityResultQueryModel<TgVehicle> qry = select(TgVehicle.class).where().anyOfProps("initDate", "station.name", "station.parent.name", "replacedBy.initDate").isNotNull().model();
+        final ua.com.fielden.platform.eql.stage2.elements.TransformationResult<EntQuery3> qry3 = entResultQry3(qry, new PropsResolutionContext(metadata), tables);
+        System.out.println(qry3.item.sql(DbVersion.H2));
+    }
 
+    @Test
+    public void dot_notation_works_02() {
+        final EntityResultQueryModel<TgVehicle> qry = select(TgVehicle.class).where().anyOfProps("key", "replacedBy.key").isNotNull().model();
+        final ua.com.fielden.platform.eql.stage2.elements.TransformationResult<EntQuery3> qry3 = entResultQry3(qry, new PropsResolutionContext(metadata), tables);
+        System.out.println(qry3.item.sql(DbVersion.H2));
+    }
+
+    @Test
+    public void dot_notation_works_03() {
+        final EntityResultQueryModel<TgVehicle> qry = select(TgVehicle.class).as("veh").join(TgOrgUnit5.class).as("ou5").on().condition(EntityQueryUtils.emptyCondition()).
+                where().anyOfProps("veh.key", "veh.replacedBy.key").isNotNull().model();
+        final ua.com.fielden.platform.eql.stage2.elements.TransformationResult<EntQuery3> qry3 = entResultQry3(qry, new PropsResolutionContext(metadata), tables);
+        System.out.println(qry3.item.sql(DbVersion.H2));
+    }
+    
+    @Test
+    public void dot_notation_works_04() {
+        final EntityResultQueryModel<TgVehicle> qry = select(TgVehicle.class).as("veh").
+                join(TgOrgUnit5.class).as("st").on().prop("station").eq().prop("st.id").
+                where().anyOfProps("veh.key", "replacedBy.key", "initDate", "station.name", "station.parent.name", "st.parent.name").isNotNull().model();
+        final ua.com.fielden.platform.eql.stage2.elements.TransformationResult<EntQuery3> qry3 = entResultQry3(qry, new PropsResolutionContext(metadata), tables);
+        System.out.println(qry3.item.sql(DbVersion.H2));
+
+    }
+    
+    @Test
+    public void dot_notation_works_05() {
+        final EntityResultQueryModel<TgVehicle> qry = select(TgVehicle.class).as("veh").
+                join(TgOrgUnit1.class).as("st").on().prop("station.parent.parent.parent.parent").eq().prop("st.id").
+                where().anyOfProps("veh.key", "replacedBy.key", "initDate", "station.name", "station.parent.name", "st.key").isNotNull().model();
+        final ua.com.fielden.platform.eql.stage2.elements.TransformationResult<EntQuery3> qry3 = entResultQry3(qry, new PropsResolutionContext(metadata), tables);
+        System.out.println(qry3.item.sql(DbVersion.H2));
+
+    }
+    
     @Test
     public void prop_paths_are_correctly_resolved() {
         final EntityResultQueryModel<TgVehicle> qry = select(TgVehicle.class).where().
@@ -201,7 +231,7 @@ public class PropResolutionTest extends BaseEntQueryTCase1 {
         final Sources2 sources = new Sources2(source, emptyList());
         final List<List<? extends ICondition2<?>>> allConditions = new ArrayList<>();
         final List<ICondition2<?>> firstAndConditionsGroup = new ArrayList<>();
-        final EntProp2 makeProp2 = new EntProp2("make.key", source, String.class, 2, asList(metadata.get(TgVehicleModel.class).getProps().get("make"), 
+        final EntProp2 makeProp2 = new EntProp2(source, 2, asList(metadata.get(TgVehicleModel.class).getProps().get("make"), 
                 metadata.get(TgVehicleMake.class).getProps().get("key")));
         firstAndConditionsGroup.add(new NullTest2(makeProp2, true));
         allConditions.add(firstAndConditionsGroup);
@@ -232,7 +262,7 @@ public class PropResolutionTest extends BaseEntQueryTCase1 {
         final Sources2 sources = new Sources2(source, emptyList());
         final List<List<? extends ICondition2<?>>> allConditions = new ArrayList<>();
         final List<ICondition2<?>> firstAndConditionsGroup = new ArrayList<>();
-        final EntProp2 makeProp2 = new EntProp2("make", source, TgVehicleMake.class, 2, asList(metadata.get(TgVehicleModel.class).getProps().get("make")));
+        final EntProp2 makeProp2 = new EntProp2(source, 2, asList(metadata.get(TgVehicleModel.class).getProps().get("make")));
         firstAndConditionsGroup.add(new NullTest2(makeProp2, true));
         allConditions.add(firstAndConditionsGroup);
         final Conditions2 conditions = new Conditions2(false, allConditions);
@@ -329,7 +359,7 @@ public class PropResolutionTest extends BaseEntQueryTCase1 {
         final List<List<? extends ICondition2<?>>> allConditions = new ArrayList<>();
         final List<ICondition2<?>> firstAndConditionsGroup = new ArrayList<>();
         // TODO make utility method for easy creation of Conditions2 with only one condition
-        firstAndConditionsGroup.add(new NullTest2(new EntProp2("key", source, String.class, 1, asList(metadata.get(WORKSHOP).getProps().get("key"))), true));
+        firstAndConditionsGroup.add(new NullTest2(new EntProp2(source, 1, asList(metadata.get(WORKSHOP).getProps().get("key"))), true));
         allConditions.add(firstAndConditionsGroup);
 
         final Conditions2 conditions = new Conditions2(false, allConditions);
@@ -385,7 +415,7 @@ public class PropResolutionTest extends BaseEntQueryTCase1 {
         final Sources2 sources = new Sources2(source, emptyList());
         final List<List<? extends ICondition2<?>>> allConditions = new ArrayList<>();
         final List<ICondition2<?>> firstAndConditionsGroup = new ArrayList<>();
-        firstAndConditionsGroup.add(new NullTest2(new EntProp2("surname", source, String.class, 1, asList(metadata.get(TgAuthor.class).getProps().get("surname"))), true));
+        firstAndConditionsGroup.add(new NullTest2(new EntProp2(source, 1, asList(metadata.get(TgAuthor.class).getProps().get("surname"))), true));
         allConditions.add(firstAndConditionsGroup);
         final Conditions2 conditions = new Conditions2(false, allConditions);
 
@@ -467,7 +497,7 @@ public class PropResolutionTest extends BaseEntQueryTCase1 {
         final Sources2 sources = new Sources2(source, emptyList());
         final List<List<? extends ICondition2<?>>> allConditions = new ArrayList<>();
         final List<ICondition2<?>> firstAndConditionsGroup = new ArrayList<>();
-        firstAndConditionsGroup.add(new NullTest2(new EntProp2("make", source, TgVehicleMake.class, 1, asList(metadata.get(TgVehicleModelWithCalc.class).getProps().get("make"))), true));
+        firstAndConditionsGroup.add(new NullTest2(new EntProp2(source, 1, asList(metadata.get(TgVehicleModelWithCalc.class).getProps().get("make"))), true));
         allConditions.add(firstAndConditionsGroup);
         final Conditions2 conditions = new Conditions2(false, allConditions);
 
@@ -492,7 +522,7 @@ public class PropResolutionTest extends BaseEntQueryTCase1 {
         final Sources2 sources = new Sources2(source, Collections.<CompoundSource2> emptyList());
         final List<List<? extends ICondition2<?>>> allConditions = new ArrayList<>();
         final List<ICondition2<?>> firstAndConditionsGroup = new ArrayList<>();
-        firstAndConditionsGroup.add(new NullTest2(new EntProp2("surname", source, String.class, 1, asList(metadata.get(TgAuthor.class).getProps().get("surname"))), true));
+        firstAndConditionsGroup.add(new NullTest2(new EntProp2(source, 1, asList(metadata.get(TgAuthor.class).getProps().get("surname"))), true));
         allConditions.add(firstAndConditionsGroup);
         final Conditions2 conditions = new Conditions2(false, allConditions);
 
@@ -512,7 +542,7 @@ public class PropResolutionTest extends BaseEntQueryTCase1 {
         final Sources2 sources = new Sources2(source, Collections.<CompoundSource2> emptyList());
         final List<List<? extends ICondition2<?>>> allConditions = new ArrayList<>();
         final List<ICondition2<?>> firstAndConditionsGroup = new ArrayList<>();
-        firstAndConditionsGroup.add(new NullTest2(new EntProp2("surname", source, String.class, 1, asList(metadata.get(TgAuthor.class).getProps().get("surname"))), true));
+        firstAndConditionsGroup.add(new NullTest2(new EntProp2(source, 1, asList(metadata.get(TgAuthor.class).getProps().get("surname"))), true));
         allConditions.add(firstAndConditionsGroup);
         final Conditions2 conditions = new Conditions2(false, allConditions);
 
@@ -532,7 +562,7 @@ public class PropResolutionTest extends BaseEntQueryTCase1 {
         final Sources2 sources = new Sources2(source, Collections.<CompoundSource2> emptyList());
         final List<List<? extends ICondition2<?>>> allConditions = new ArrayList<>();
         final List<ICondition2<?>> firstAndConditionsGroup = new ArrayList<>();
-        firstAndConditionsGroup.add(new NullTest2(new EntProp2("surname", source, String.class, 1, asList(metadata.get(TgAuthor.class).getProps().get("surname"))), true));
+        firstAndConditionsGroup.add(new NullTest2(new EntProp2(source, 1, asList(metadata.get(TgAuthor.class).getProps().get("surname"))), true));
         allConditions.add(firstAndConditionsGroup);
         final Conditions2 conditions = new Conditions2(false, allConditions);
 
@@ -554,7 +584,7 @@ public class PropResolutionTest extends BaseEntQueryTCase1 {
         final Sources2 sources = new Sources2(source, Collections.<CompoundSource2> emptyList());
         final List<List<? extends ICondition2<?>>> allConditions = new ArrayList<>();
         final List<ICondition2<?>> firstAndConditionsGroup = new ArrayList<>();
-        firstAndConditionsGroup.add(new ComparisonTest2(new EntProp2("surname", source, String.class, 1, asList(metadata.get(TgAuthor.class).getProps().get("surname"))), EQ, new EntValue2(1)));
+        firstAndConditionsGroup.add(new ComparisonTest2(new EntProp2(source, 1, asList(metadata.get(TgAuthor.class).getProps().get("surname"))), EQ, new EntValue2(1)));
         allConditions.add(firstAndConditionsGroup);
         final Conditions2 conditions = new Conditions2(false, allConditions);
 
@@ -576,9 +606,9 @@ public class PropResolutionTest extends BaseEntQueryTCase1 {
 
         final List<List<? extends ICondition2<?>>> allConditions = new ArrayList<>();
         final List<ICondition2<?>> firstAndConditionsGroup = new ArrayList<>();
-        firstAndConditionsGroup.add(new ComparisonTest2(new EntProp2("name", source, TgPersonName.class, 1, asList(metadata.get(TgAuthor.class).getProps().get("name"))), //
+        firstAndConditionsGroup.add(new ComparisonTest2(new EntProp2(source, 1, asList(metadata.get(TgAuthor.class).getProps().get("name"))), //
                 EQ, // 
-                new EntProp2("id", source2, Long.class, 1, asList(metadata.get(TgPersonName.class).getProps().get("id")))));
+                new EntProp2(source2, 1, asList(metadata.get(TgPersonName.class).getProps().get("id")))));
         allConditions.add(firstAndConditionsGroup);
         final Conditions2 joinConditions = new Conditions2(false, allConditions);
 
@@ -588,7 +618,7 @@ public class PropResolutionTest extends BaseEntQueryTCase1 {
         final Sources2 sources = new Sources2(source, compounds);
         final List<List<? extends ICondition2<?>>> allConditions2 = new ArrayList<>();
         final List<ICondition2<?>> firstAndConditionsGroup2 = new ArrayList<>();
-        firstAndConditionsGroup2.add(new ComparisonTest2(new EntProp2("surname", source, String.class, 1, asList(metadata.get(TgAuthor.class).getProps().get("surname"))), EQ, new EntValue2(1)));
+        firstAndConditionsGroup2.add(new ComparisonTest2(new EntProp2(source, 1, asList(metadata.get(TgAuthor.class).getProps().get("surname"))), EQ, new EntValue2(1)));
         allConditions2.add(firstAndConditionsGroup2);
         final Conditions2 conditions = new Conditions2(false, allConditions2);
 
@@ -611,8 +641,8 @@ public class PropResolutionTest extends BaseEntQueryTCase1 {
 
         final List<List<? extends ICondition2<?>>> lrAllConditions2 = new ArrayList<>();
         final List<ICondition2<?>> lrFirstAndConditionsGroup2 = new ArrayList<>();
-        lrFirstAndConditionsGroup2.add(new ComparisonTest2(new EntProp2("authorship.author", sourceAuthorRoyalty, TgAuthor.class, 1, asList(null)), EQ,
-                new EntProp2("id", sourceAuthor, Long.class, 1, asList(null))));
+        lrFirstAndConditionsGroup2.add(new ComparisonTest2(new EntProp2(sourceAuthorRoyalty, 1, asList(null)), EQ,
+                new EntProp2(sourceAuthor, 1, asList(null))));
         lrAllConditions2.add(lrFirstAndConditionsGroup2);
         final Conditions2 lrConditions = new Conditions2(false, lrAllConditions2);
 
@@ -623,7 +653,7 @@ public class PropResolutionTest extends BaseEntQueryTCase1 {
 
         final List<List<? extends ICondition2<?>>> allConditions = new ArrayList<>();
         final List<ICondition2<?>> firstAndConditionsGroup = new ArrayList<>();
-        firstAndConditionsGroup.add(new ComparisonTest2(new EntProp2("name", sourceAuthor, TgPersonName.class, 1, asList(null)), EQ, new EntProp2("id", sourcePersonName, Long.class, 1, asList(null))));
+        firstAndConditionsGroup.add(new ComparisonTest2(new EntProp2(sourceAuthor, 1, asList(null)), EQ, new EntProp2(sourcePersonName, 1, asList(null))));
         allConditions.add(firstAndConditionsGroup);
         final Conditions2 joinConditions = new Conditions2(false, allConditions);
 
@@ -635,7 +665,7 @@ public class PropResolutionTest extends BaseEntQueryTCase1 {
         final List<ICondition2<?>> firstAndConditionsGroup2 = new ArrayList<>();
 
         final Expression2 lrExpr = new Expression2(lastRoyaltySubqry, emptyList());
-        firstAndConditionsGroup2.add(new ComparisonTest2(new EntProp2("lastRoyalty", sourceAuthor, TgAuthorRoyalty.class, 1, asList(null)), EQ, new EntValue2(1)));
+        firstAndConditionsGroup2.add(new ComparisonTest2(new EntProp2(sourceAuthor, 1, asList(null)), EQ, new EntValue2(1)));
         allConditions2.add(firstAndConditionsGroup2);
         final Conditions2 conditions = new Conditions2(false, allConditions2);
 

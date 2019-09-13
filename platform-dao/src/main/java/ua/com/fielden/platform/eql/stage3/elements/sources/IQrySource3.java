@@ -7,4 +7,5 @@ public interface IQrySource3 {
     Column column(final String colName);
     String sqlAlias();
     String sql(final DbVersion dbVersion);
+    int contextId();
 }

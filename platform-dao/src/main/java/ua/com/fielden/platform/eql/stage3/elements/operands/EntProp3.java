@@ -23,8 +23,8 @@ public class EntProp3 implements ISingleOperand3 {
     public int hashCode() {
         final int prime = 31;
         int result = super.hashCode();
-        result = prime * result + ((name == null) ? 0 : name.hashCode());
-        result = prime * result + ((source == null) ? 0 : source.hashCode());
+        result = prime * result + name.hashCode();
+        result = prime * result + source.hashCode();
         return result;
     }
 
@@ -40,7 +40,6 @@ public class EntProp3 implements ISingleOperand3 {
         
         final EntProp3 other = (EntProp3) obj;
         
-        return Objects.equals(name, other.name) &&
-                Objects.equals(source, other.source);
+        return Objects.equals(name, other.name) && Objects.equals(source, other.source);
     }
 }

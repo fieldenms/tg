@@ -17,15 +17,16 @@ public abstract class AbstractElement2 {
 
     @Override
     public boolean equals(Object obj) {
-        if (this == obj)
+        if (this == obj) {
             return true;
-        if (obj == null)
+        }
+
+        if (!(obj instanceof AbstractElement2)) {
             return false;
-        if (getClass() != obj.getClass())
-            return false;
-        AbstractElement2 other = (AbstractElement2) obj;
-        if (contextId != other.contextId)
-            return false;
-        return true;
-    }
+        }
+        
+        final AbstractElement2 other = (AbstractElement2) obj;
+        
+        return contextId == other.contextId;
+   }
 }

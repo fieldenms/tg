@@ -2,6 +2,7 @@ package ua.com.fielden.platform.eql.stage3.elements.sources;
 
 import static org.apache.commons.lang.StringUtils.isNotEmpty;
 
+
 import java.util.Objects;
 
 import ua.com.fielden.platform.entity.query.DbVersion;

@@ -1,26 +1,40 @@
 package ua.com.fielden.platform.eql.meta;
 
 import static java.util.Arrays.asList;
+import static java.util.Collections.unmodifiableList;
 
 import java.util.ArrayList;
 import java.util.List;
 
 public class ResolutionContext {
-    public final List<AbstractPropInfo<?, ?>> resolved = new ArrayList<>();
-    public final List<String> pending;
+    private final List<AbstractPropInfo<?, ?>> resolved = new ArrayList<>();
+    private final List<String> pending = new ArrayList<>();
 
-    public ResolutionContext(final List<String> pending) {
-        this.pending = pending;
-    }
-    
     public ResolutionContext(final String pendingAsOneDotNotatedProp) {
-        this.pending = asList(pendingAsOneDotNotatedProp.split("\\."));
+        this.pending.addAll(asList(pendingAsOneDotNotatedProp.split("\\.")));
+    }
+
+    private ResolutionContext(final List<String> pending, final List<AbstractPropInfo<?, ?>> resolved) {
+        this.pending.addAll(pending);
+        this.resolved.addAll(resolved);
     }
 
     public ResolutionContext registerResolutionAndClone(final AbstractPropInfo<?, ?> propResolutionStep) {
-        final ResolutionContext result = new ResolutionContext(pending.subList(1, pending.size()));
-        result.resolved.addAll(resolved);
-        result.resolved.add(propResolutionStep);
-        return result;
+        final List<AbstractPropInfo<?, ?>> updatedResolved = new ArrayList<>(); 
+        updatedResolved.addAll(resolved);
+        updatedResolved.add(propResolutionStep);
+        return new ResolutionContext(pending.subList(1, pending.size()), updatedResolved);
+    }
+    
+    public boolean isSuccessful() {
+        return pending.isEmpty();
+    }
+    
+    public List<AbstractPropInfo<?, ?>> getResolved() {
+        return unmodifiableList(resolved);
+    }
+    
+    public String getNextPending() {
+        return pending.get(0);
     }
 }

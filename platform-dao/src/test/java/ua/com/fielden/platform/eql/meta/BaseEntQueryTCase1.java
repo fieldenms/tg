@@ -45,6 +45,7 @@ import ua.com.fielden.platform.eql.stage1.elements.operands.OperandsBasedSet1;
 import ua.com.fielden.platform.eql.stage2.elements.TransformationContext;
 import ua.com.fielden.platform.eql.stage2.elements.operands.EntQuery2;
 import ua.com.fielden.platform.eql.stage2.elements.operands.ISingleOperand2;
+import ua.com.fielden.platform.eql.stage3.elements.Table;
 import ua.com.fielden.platform.eql.stage3.elements.operands.EntQuery3;
 import ua.com.fielden.platform.ioc.HibernateUserTypesModule;
 import ua.com.fielden.platform.persistence.types.DateTimeType;
@@ -99,7 +100,8 @@ public class BaseEntQueryTCase1 {
 
     public static final Map<Class, Class> hibTypeDefaults = new HashMap<>();
     public static final Map<Class<? extends AbstractEntity<?>>, EntityInfo<?>> metadata = new HashMap<>();
-
+    public static final MetadataGenerator mdg = new MetadataGenerator(null);
+    public static final Map<String, Table> tables = new HashMap<>();
 
     protected static Type hibtype(final String name) {
         return typeResolver.basic(name);
@@ -112,13 +114,16 @@ public class BaseEntQueryTCase1 {
 
     protected static final DomainMetadataAnalyser DOMAIN_METADATA_ANALYSER = new DomainMetadataAnalyser(DOMAIN_METADATA);
 
-    protected static final EntQueryGenerator qb = new EntQueryGenerator();
+    protected static final EntQueryGenerator qb() {
+        return new EntQueryGenerator();
+    }
 
     static {
         hibTypeDefaults.put(Date.class, DateTimeType.class);
         hibTypeDefaults.put(Money.class, SimpleMoneyType.class);
         try {
-            metadata.putAll(new MetadataGenerator(null).generate(new HashSet<>(PlatformTestDomainTypes.entityTypes)));
+            metadata.putAll(mdg.generate(new HashSet<>(PlatformTestDomainTypes.entityTypes)));
+            tables.putAll(mdg.generateTables(PlatformTestDomainTypes.entityTypes));
         } catch (final Exception e) {
             // TODO Auto-generated catch block
             e.printStackTrace();
@@ -128,11 +133,11 @@ public class BaseEntQueryTCase1 {
     //private static final EntQueryGenerator1 qbwf = new EntQueryGenerator1(DOMAIN_METADATA_ANALYSER, new SimpleUserFilter(), null);
 
     protected static EntQuery1 entSourceQry(final QueryModel qryModel) {
-        return qb.generateEntQueryAsSourceQuery(qryModel, Optional.empty());
+        return qb().generateEntQueryAsSourceQuery(qryModel, Optional.empty());
     }
     
     protected static EntQuery2 entSourceQry(final QueryModel qryModel, final PropsResolutionContext transformator) {
-        return qb.generateEntQueryAsSourceQuery(qryModel, Optional.empty()).transform(transformator).item;
+        return qb().generateEntQueryAsSourceQuery(qryModel, Optional.empty()).transform(transformator).item;
     }
 
     //    protected static EntQuery1 entSourceQry(final QueryModel qryModel, final Map<String, Object> paramValues) {
@@ -140,14 +145,14 @@ public class BaseEntQueryTCase1 {
     //    }
 
     protected static Expression1 entQryExpression(final ExpressionModel exprModel) {
-        return (Expression1) new StandAloneExpressionBuilder(qb, exprModel).getResult().getValue();
+        return (Expression1) new StandAloneExpressionBuilder(qb(), exprModel).getResult().getValue();
     }
 
     protected static EntQuery1 entResultQry(final QueryModel qryModel) {
         if (qryModel instanceof EntityResultQueryModel) {
-            return qb.generateEntQueryAsResultQuery(from((EntityResultQueryModel) qryModel).model());
+            return qb().generateEntQueryAsResultQuery(from((EntityResultQueryModel) qryModel).model());
         } else if (qryModel instanceof AggregatedResultQueryModel) {
-            return qb.generateEntQueryAsResultQuery(from((AggregatedResultQueryModel) qryModel).model());
+            return qb().generateEntQueryAsResultQuery(from((AggregatedResultQueryModel) qryModel).model());
         } else {
             throw new IllegalArgumentException("Instance of incorrect QueryModel descendant");
         }
@@ -155,38 +160,43 @@ public class BaseEntQueryTCase1 {
 
     protected static TransformationResult<EntQuery2> entResultQry2(final QueryModel qryModel, final PropsResolutionContext transformator) {
         if (qryModel instanceof EntityResultQueryModel) {
-            return qb.generateEntQueryAsResultQuery(from((EntityResultQueryModel) qryModel).model()).transform(transformator);
+            return qb().generateEntQueryAsResultQuery(from((EntityResultQueryModel) qryModel).model()).transform(transformator);
         } else if (qryModel instanceof AggregatedResultQueryModel) {
-            return qb.generateEntQueryAsResultQuery(from((AggregatedResultQueryModel) qryModel).model()).transform(transformator);
+            return qb().generateEntQueryAsResultQuery(from((AggregatedResultQueryModel) qryModel).model()).transform(transformator);
         }
         throw new IllegalStateException("Not implemented yet");
     }
     
-    protected static ua.com.fielden.platform.eql.stage2.elements.TransformationResult<EntQuery3> entResultQry3(final QueryModel qryModel, final PropsResolutionContext transformator, final TransformationContext context) {
+    protected static ua.com.fielden.platform.eql.stage2.elements.TransformationResult<EntQuery3> entResultQry3(final QueryModel qryModel, final PropsResolutionContext transformator, final Map<String, Table> tables) {
+        final TransformationResult<EntQuery2> s1r;
         if (qryModel instanceof EntityResultQueryModel) {
-            return qb.generateEntQueryAsResultQuery(from((EntityResultQueryModel) qryModel).model()).transform(transformator).item.transform(context);
+            s1r = qb().generateEntQueryAsResultQuery(from((EntityResultQueryModel) qryModel).model()).transform(transformator);
         } else if (qryModel instanceof AggregatedResultQueryModel) {
-            return qb.generateEntQueryAsResultQuery(from((AggregatedResultQueryModel) qryModel).model()).transform(transformator).item.transform(context);
+            s1r = qb().generateEntQueryAsResultQuery(from((AggregatedResultQueryModel) qryModel).model()).transform(transformator); 
+        } else {
+            throw new IllegalStateException("Not implemented yet");
         }
-        throw new IllegalStateException("Not implemented yet");
+        
+        final TransformationContext context = new TransformationContext(tables, s1r.updatedContext);
+        return s1r.item.transform(context);
     }
 
     protected static EntQuery1 entResultQry(final EntityResultQueryModel qryModel, final OrderingModel orderModel) {
-        return qb.generateEntQueryAsResultQuery(from(qryModel).with(orderModel).model());
+        return qb().generateEntQueryAsResultQuery(from(qryModel).with(orderModel).model());
     }
 
     protected static EntQuery1 entResultQry(final QueryModel qryModel, final Map<String, Object> paramValues) {
         if (qryModel instanceof EntityResultQueryModel) {
-            return qb.generateEntQueryAsResultQuery(from((EntityResultQueryModel) qryModel).with(paramValues).model());
+            return qb().generateEntQueryAsResultQuery(from((EntityResultQueryModel) qryModel).with(paramValues).model());
         } else if (qryModel instanceof AggregatedResultQueryModel) {
-            return qb.generateEntQueryAsResultQuery(from((AggregatedResultQueryModel) qryModel).with(paramValues).model());
+            return qb().generateEntQueryAsResultQuery(from((AggregatedResultQueryModel) qryModel).with(paramValues).model());
         } else {
             throw new IllegalArgumentException("Instance of incorrect QueryModel descendant");
         }
     }
 
     protected static EntQuery1 entSubQry(final QueryModel qryModel) {
-        return qb.generateEntQueryAsSubquery(qryModel);
+        return qb().generateEntQueryAsSubquery(qryModel);
     }
 
     //    protected static EntQuery1 entResultQryWithUserFilter(final QueryModel qryModel) {

@@ -35,7 +35,6 @@ public class EntityQueryExecutionTestForEql3 extends AbstractDaoTestCase {
                 yield().prop("veh.key").as("vehiclekey").
                 yield().prop("rbv.key").as("replacedByVehiclekey").
                 yield().countAll().as("allCount").
-                yield().caseWhen().prop("veh.key").eq().prop("rbv.key").then().prop("veh.id").otherwise().prop("rbv.id").endAsInt().as("cwti").
                 yield().caseWhen().prop("veh.key").eq().prop("rbv.key").then().prop("veh.key").otherwise().prop("rbv.key").endAsStr(5).as("cwts").
                 modelAsAggregate();
         
@@ -44,10 +43,47 @@ public class EntityQueryExecutionTestForEql3 extends AbstractDaoTestCase {
         assertEquals("CAR2", vehicles.get(0).get("vehiclekey"));
         assertEquals("CAR1", vehicles.get(0).get("replacedByVehiclekey"));
         assertEquals("1", vehicles.get(0).get("allCount").toString());
-        assertEquals("1000031", vehicles.get(0).get("cwti").toString());
         assertEquals("CAR1", vehicles.get(0).get("cwts").toString());
     }
-
+    
+    @Test
+    public void eql3_query_executes_correctly2() {
+        final AggregatedResultQueryModel qry = select(TgVehicle.class).as("veh").
+                where().prop("veh.replacedBy").isNotNull().and().notExists(
+                        select(TgVehicle.class).where().prop("replacedBy").eq().extProp("veh.id").model()).
+                yield().prop("veh.key").as("vehiclekey").
+                yield().prop("veh.replacedBy.key").as("replacedByVehiclekey").
+                yield().countAll().as("allCount").
+                yield().caseWhen().prop("veh.key").eq().prop("veh.replacedBy.key").then().prop("veh.key").otherwise().prop("veh.replacedBy.key").endAsStr(5).as("cwts").
+                modelAsAggregate();
+        
+        final List<EntityAggregates> vehicles = aggregateDao.getAllEntities(from(qry).with("EQL3", null).model());
+        
+        assertEquals("CAR2", vehicles.get(0).get("vehiclekey"));
+        assertEquals("CAR1", vehicles.get(0).get("replacedByVehiclekey"));
+        assertEquals("1", vehicles.get(0).get("allCount").toString());
+        assertEquals("CAR1", vehicles.get(0).get("cwts").toString());
+    }
+    
+    @Test
+    public void eql3_query_executes_correctly3() {
+        final AggregatedResultQueryModel qry = select(TgVehicle.class).as("veh").
+                join(TgOrgUnit1.class).as("st").on().prop("station.parent.parent.parent.parent").eq().prop("st.id").
+                where().anyOfProps("veh.key", "replacedBy.key", "initDate", "station.name", "station.parent.name", "st.key", "st.id", "model.make.key", "replacedBy.model.make.key").isNotNull().
+                yield().prop("veh.key").as("vehiclekey").
+                yield().prop("veh.replacedBy.key").as("replacedByVehiclekey").
+                yield().countAll().as("allCount").
+                yield().caseWhen().prop("veh.key").eq().prop("veh.replacedBy.key").then().prop("veh.key").otherwise().prop("veh.replacedBy.key").endAsStr(5).as("cwts").
+                modelAsAggregate();
+        
+        final List<EntityAggregates> vehicles = aggregateDao.getAllEntities(from(qry).with("EQL3", null).model());
+        
+        assertEquals("CAR2", vehicles.get(0).get("vehiclekey"));
+        assertEquals("CAR1", vehicles.get(0).get("replacedByVehiclekey"));
+        assertEquals("1", vehicles.get(0).get("allCount").toString());
+        assertEquals("CAR1", vehicles.get(0).get("cwts").toString());
+    }
+    
     @Override
     protected void populateDomain() {
         super.populateDomain();

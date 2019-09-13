@@ -26,6 +26,8 @@ import static ua.com.fielden.platform.utils.EntityUtils.isSyntheticEntityType;
 import static ua.com.fielden.platform.utils.EntityUtils.isUnionEntityType;
 
 import java.lang.reflect.Field;
+import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -45,7 +47,10 @@ import ua.com.fielden.platform.entity.query.model.ExpressionModel;
 import ua.com.fielden.platform.eql.stage1.builders.EntQueryGenerator;
 import ua.com.fielden.platform.eql.stage1.builders.StandAloneExpressionBuilder;
 import ua.com.fielden.platform.eql.stage1.elements.operands.Expression1;
+import ua.com.fielden.platform.eql.stage3.elements.Column;
+import ua.com.fielden.platform.eql.stage3.elements.Table;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
+import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.utils.EntityUtils;
 
 public class MetadataGenerator {
@@ -77,6 +82,14 @@ public class MetadataGenerator {
         return result;
     }
 
+    public final Map<String, Table> generateTables(final Collection<Class<? extends AbstractEntity<?>>> entities) throws Exception {
+        final Map<String, Table> result = entities.stream()
+                .filter(t -> isPersistedEntityType(t))
+                .collect(toMap(k -> k.getName(), k -> new Table(getTableClause(k), getColumns(k))));
+        //result.values().stream().forEach(ei -> addProps(ei, result));
+        return result;
+    }
+    
     private <ET extends AbstractEntity<?>> EntityCategory determineCategory(final Class<ET> entityType) {
 
         final String tableClause = getTableClause(entityType);
@@ -152,7 +165,9 @@ public class MetadataGenerator {
             final Class<?> javaType = determinePropertyType(entityInfo.javaType(), field.getName()); // redetermines prop type in platform understanding (e.g. type of Set<MeterReading> readings property will be MeterReading;
 
             if (AbstractEntity.class.isAssignableFrom(javaType)) {
-                entityInfo.addProp(new EntityTypePropInfo(field.getName(), allEntitiesInfo.get(javaType), entityInfo));
+                final boolean required = PropertyTypeDeterminator.isRequiredByDefinition(field, javaType);
+
+                entityInfo.addProp(new EntityTypePropInfo(field.getName(), allEntitiesInfo.get(javaType), entityInfo, required));
             } else {
                 entityInfo.addProp(new PrimTypePropInfo(field.getName(), javaType, entityInfo));
             }
@@ -184,6 +199,19 @@ public class MetadataGenerator {
 //            //		}
 //            //	    }
 //        }
+    }
+
+    private <T extends AbstractEntity<?>> Map<String, Column> getColumns(final Class<? extends AbstractEntity<?>> entityType) {
+        final Map<String, Column> result = new HashMap<>();
+        result.put("id", new Column("_ID"));
+        result.put("version", new Column("_VERSION"));
+        
+        EntityUtils.getRealProperties(entityType).stream()
+        .filter(f -> f.isAnnotationPresent(MapTo.class)).forEach(field -> {
+            result.put(field.getName(), new Column(field.getName().toUpperCase() + "_"));
+        });
+        
+        return result;
     }
 
     /**
