@@ -28,7 +28,9 @@ import org.apache.poi.hssf.usermodel.HSSFRow;
 import org.apache.poi.hssf.usermodel.HSSFSheet;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.apache.poi.ss.SpreadsheetVersion;
+import org.apache.poi.ss.usermodel.BorderStyle;
 import org.apache.poi.ss.usermodel.CellStyle;
+import org.apache.poi.ss.usermodel.CellType;
 import org.apache.poi.ss.usermodel.CreationHelper;
 import org.joda.time.DateTime;
 
@@ -122,16 +124,16 @@ public class WorkbookExporter {
         final HSSFFont font = wb.createFont();
         font.setFontHeightInPoints((short) 11);
         font.setFontName("Courier New");
-        font.setBoldweight((short) 1000);
+        font.setBold(true);
         // Fonts are set into a style so create a new one to use
         final HSSFCellStyle headerCellStyle = wb.createCellStyle();
         headerCellStyle.setFont(font);
-        headerCellStyle.setBorderBottom(HSSFCellStyle.BORDER_THIN);
+        headerCellStyle.setBorderBottom(BorderStyle.THIN);
         headerCellStyle.setWrapText(true);
         final HSSFCellStyle headerInnerCellStyle = wb.createCellStyle();
         headerInnerCellStyle.setFont(font);
-        headerInnerCellStyle.setBorderBottom(HSSFCellStyle.BORDER_THIN);
-        headerInnerCellStyle.setBorderRight(HSSFCellStyle.BORDER_HAIR);
+        headerInnerCellStyle.setBorderBottom(BorderStyle.THIN);
+        headerInnerCellStyle.setBorderRight(BorderStyle.HAIR);
         headerInnerCellStyle.setWrapText(true);
         // Create cells and put column names there
         for (int index = 0; index < sheetData.getPropTitles().size(); index++) {
@@ -147,7 +149,7 @@ public class WorkbookExporter {
         // let's make cell style to handle borders
         final Map<String, String> shortCollectionalProps = new HashMap<>();
         final HSSFCellStyle dataCellStyle = wb.createCellStyle();
-        dataCellStyle.setBorderRight(HSSFCellStyle.BORDER_HAIR);
+        dataCellStyle.setBorderRight(BorderStyle.HAIR);
         final AtomicInteger index = new AtomicInteger(0);
         sheetData.getEntities().limit(MAX_ROWS).forEach(entity -> addRow(index, entity, sheetData, sheet, dateCellStyle, shortCollectionalProps, dataCellStyle));
 
@@ -177,7 +179,7 @@ public class WorkbookExporter {
             final Object value = StringUtils.isEmpty(propertyName) ? entity : sheetData.getValue(entity, propertyName); // get the value
             // need to try to do the best job with types
             if (shortCollectionalProps.containsKey(propertyName)) {
-                cell.setCellType(HSSFCell.CELL_TYPE_STRING);
+                cell.setCellType(CellType.STRING);
                 cell.setCellValue(join(createShortColection((Collection<AbstractEntity<?>>) value, shortCollectionalProps.get(propertyName)), ", "));
             } else if (value instanceof Date) {
                 cell.setCellValue((Date) value);
@@ -186,15 +188,15 @@ public class WorkbookExporter {
                 cell.setCellValue(((DateTime) value).toDate());
                 cell.setCellStyle(dateCellStyle);
             } else if (value instanceof Number) {
-                cell.setCellType(HSSFCell.CELL_TYPE_NUMERIC);
+                cell.setCellType(CellType.NUMERIC);
                 cell.setCellValue(((Number) value).doubleValue());
             } else if (value instanceof Boolean) {
-                cell.setCellType(HSSFCell.CELL_TYPE_BOOLEAN);
+                cell.setCellType(CellType.BOOLEAN);
                 cell.setCellValue((Boolean) value);
-            } else if (value == null) { // if null then leave call blank
-                cell.setCellType(HSSFCell.CELL_TYPE_BLANK);
+            } else if (value == null) { // if null then leave the cell blank
+                cell.setCellType(CellType.BLANK);
             } else { // otherwise treat value as String
-                cell.setCellType(HSSFCell.CELL_TYPE_STRING);
+                cell.setCellType(CellType.STRING);
                 if (EntityUtils.isCollectional(value.getClass())) {
                     final Optional<String> keyToInclude = findKeyToExclude((Collection<?>) value);
                     if (keyToInclude.isPresent()) {
