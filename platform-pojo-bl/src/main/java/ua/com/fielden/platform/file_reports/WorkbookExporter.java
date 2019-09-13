@@ -3,6 +3,7 @@ package ua.com.fielden.platform.file_reports;
 import static java.lang.Math.min;
 import static java.lang.Math.round;
 import static org.apache.commons.lang.StringUtils.join;
+import static ua.com.fielden.platform.types.tuples.T2.t2;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -35,8 +36,8 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity_centre.review.criteria.DynamicPropForExport;
 import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.serialisation.xstream.GZipOutputStreamEx;
+import ua.com.fielden.platform.types.tuples.T2;
 import ua.com.fielden.platform.utils.EntityUtils;
-import ua.com.fielden.platform.utils.Pair;
 
 /**
  * A set of utility methods for exporting data into MS Excel.
@@ -48,37 +49,39 @@ public class WorkbookExporter {
 
     private static final int MAX_COLUMN_WIDTH = 255 * 256;
     private static final int MAX_ROWS = SpreadsheetVersion.EXCEL97.getLastRowIndex();
+    private static final String DEFAULT_SHEET_TITLE = "Exported data";
 
     private WorkbookExporter() {}
 
     public static <M extends AbstractEntity<?>> HSSFWorkbook export(final Stream<M> entities, final String[] propertyNames, final String[] propertyTitles, final List<List<DynamicPropForExport>> dynamicProperties) {
-        final List<Pair<String, String>> propNamesAndTitles = new ArrayList<>();
+        final List<T2<String, String>> propNamesAndTitles = new ArrayList<>();
 
         for (int index = 0; index < propertyNames.length && index < propertyTitles.length; index++) {
-            propNamesAndTitles.add(new Pair<String, String>(propertyNames[index], propertyTitles[index]));
+            propNamesAndTitles.add(t2(propertyNames[index], propertyTitles[index]));
         }
-        //Add property names and titles for dynamic properties
+        
+        // add property names and titles for dynamic properties
         final Map<String, DynamicPropForExport> collectionalProps = new LinkedHashMap<>();
         dynamicProperties.forEach(listOfProps -> {
             listOfProps.forEach(prop -> {
-                propNamesAndTitles.add(new Pair<>(prop.getKeyPropValue(), prop.getTitle()));
+                propNamesAndTitles.add(t2(prop.getKeyPropValue(), prop.getTitle()));
                 collectionalProps.put(prop.getKeyPropValue(), prop);
             });
         });
 
-        final DataForWorkbookSheet<M> dataForWorkbookSheet = new DataForWorkbookSheet<>("Exported data", entities, propNamesAndTitles, collectionalProps);
+        final DataForWorkbookSheet<M> dataForWorkbookSheet = new DataForWorkbookSheet<>(DEFAULT_SHEET_TITLE, entities, propNamesAndTitles, collectionalProps);
         final List<DataForWorkbookSheet<? extends AbstractEntity<?>>> sheetsData = new ArrayList<>();
         sheetsData.add(dataForWorkbookSheet);
         return export(sheetsData);
     }
 
     public static <M extends AbstractEntity<?>> HSSFWorkbook export(final Stream<M> entities, final String[] propertyNames, final String[] propertyTitles) {
-        final List<Pair<String, String>> propNamesAndTitles = new ArrayList<>();
-
+        final List<T2<String, String>> propNamesAndTitles = new ArrayList<>();
         for (int index = 0; index < propertyNames.length && index < propertyTitles.length; index++) {
-            propNamesAndTitles.add(new Pair<String, String>(propertyNames[index], propertyTitles[index]));
+            propNamesAndTitles.add(t2(propertyNames[index], propertyTitles[index]));
         }
-        final DataForWorkbookSheet<M> dataForWorkbookSheet = new DataForWorkbookSheet<>("Exported data", entities, propNamesAndTitles, new LinkedHashMap<>());
+        
+        final DataForWorkbookSheet<M> dataForWorkbookSheet = new DataForWorkbookSheet<>(DEFAULT_SHEET_TITLE, entities, propNamesAndTitles, new LinkedHashMap<>());
         final List<DataForWorkbookSheet<? extends AbstractEntity<?>>> sheetsData = new ArrayList<>();
         sheetsData.add(dataForWorkbookSheet);
         return export(sheetsData);

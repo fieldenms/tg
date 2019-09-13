@@ -12,6 +12,7 @@ import java.util.stream.Stream;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity_centre.review.criteria.DynamicPropForExport;
+import ua.com.fielden.platform.types.tuples.T2;
 import ua.com.fielden.platform.utils.Pair;
 
 /**
@@ -28,12 +29,12 @@ class DataForWorkbookSheet<E extends AbstractEntity<?>> {
     private final List<String> propTitles = new ArrayList<>();
     private final Map<String, DynamicPropForExport> collectionalProperties = new LinkedHashMap<>();
 
-    public DataForWorkbookSheet(final String sheetTitle, final Stream<E> entities, final List<Pair<String, String>> propertyNamesAndTitles, final Map<String, DynamicPropForExport> collectionalProperties) {
+    public DataForWorkbookSheet(final String sheetTitle, final Stream<E> entities, final List<T2<String, String>> propertyNamesAndTitles, final Map<String, DynamicPropForExport> collectionalProperties) {
         this.sheetTitle = sheetTitle;
         this.entities = entities;
-        for (final Pair<String, String> pair : propertyNamesAndTitles) {
-            propNames.add(pair.getKey());
-            propTitles.add(pair.getValue());
+        for (final T2<String, String> pair : propertyNamesAndTitles) {
+            propNames.add(pair._1);
+            propTitles.add(pair._2);
         }
         this.collectionalProperties.putAll(collectionalProperties);
     }
