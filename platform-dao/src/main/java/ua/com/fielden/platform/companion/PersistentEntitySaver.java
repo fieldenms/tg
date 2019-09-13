@@ -16,6 +16,7 @@ import static ua.com.fielden.platform.reflection.ActivatableEntityRetrospectionH
 import static ua.com.fielden.platform.reflection.ActivatableEntityRetrospectionHelper.isNotSpecialActivatableToBeSkipped;
 import static ua.com.fielden.platform.reflection.Reflector.isMethodOverriddenOrDeclared;
 import static ua.com.fielden.platform.utils.DbUtils.nextIdValue;
+import static ua.com.fielden.platform.utils.EntityUtils.areEqual;
 import static ua.com.fielden.platform.utils.EntityUtils.equalsEx;
 import static ua.com.fielden.platform.utils.Validators.findActiveDeactivatableDependencies;
 
@@ -147,10 +148,16 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
             throw new EntityCompanionException(format("Only non-null persistent entities are permitted for saving. Ether type [%s] is not persistent or entity is null.", entityType.getName()));
         } else if (!entity.isInstrumented()) {
             throw new EntityCompanionException(format("Uninstrumented entity of type [%s] cannot be saved.", entityType.getName()));
-        } else if (!entity.isDirty() && validateEntity(entity).isSuccessful()) {
-            //logger.debug(format("Entity [%s] is not dirty (ID = %s). Saving is skipped. Entity refetched.", entity, entity.getId()));
-            return skipRefetching.get() ? entity : findById.apply(entity.getId(), FetchModelReconstructor.reconstruct(entity));
+        } else if (!entity.isDirty()) {
+            final Result isValid = validateEntity(entity);
+            if (isValid.isSuccessful()) {
+                //logger.debug(format("Entity [%s] is not dirty (ID = %s). Saving is skipped. Entity refetched.", entity, entity.getId()));
+                return skipRefetching.get() ? entity : findById.apply(entity.getId(), FetchModelReconstructor.reconstruct(entity));
+            } else {
+                throw isValid;
+            }
         }
+
         // logger.debug(format("Start saving entity %s (ID = %s)", entity, entity.getId())); is taking too much time for many saves
 
         // need to capture names of dirty properties before the actual saving takes place and makes all properties not dirty
@@ -303,7 +310,7 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
             final ActivatableAbstractEntity<?> origValue = (ActivatableAbstractEntity<?>) entity.getProperty(propName).getOriginalValue();
             final ActivatableAbstractEntity<?> persistedValue = (ActivatableAbstractEntity<?>) session.get().load(prop.getType(), origValue.getId(), UPGRADE);
             // if persistedValue active and does not equal to the entity being saving then need to decrement its refCount
-            if (!beingActivated && persistedValue.isActive() && !entity.equals(persistedValue)) { // avoid counting self-references
+            if (!beingActivated && persistedValue.isActive() && !areEqual(entity, persistedValue)) { // avoid counting self-references
                 persistedValue.setIgnoreEditableState(true);
                 session.get().update(persistedValue.decRefCount());
             }
@@ -313,14 +320,14 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
         } else { // otherwise there could be either referencing (i.e. before property was null) or a reference change (i.e. from one value to some other)
             // need to process previous property value
             final AbstractEntity<?> origValue = (ActivatableAbstractEntity<?>) entity.getProperty(propName).getOriginalValue();
-            if (origValue != null && !entity.equals(origValue)) { // need to decrement refCount for the dereferenced entity, but avoid counting self-references
+            if (origValue != null && !areEqual(entity, origValue)) { // need to decrement refCount for the dereferenced entity, but avoid counting self-references
                 final ActivatableAbstractEntity<?> persistedValue = (ActivatableAbstractEntity<?>) session.get().load(prop.getType(), origValue.getId(), UPGRADE);
                 persistedValue.setIgnoreEditableState(true);
                 session.get().update(persistedValue.decRefCount());
             }
             // also need increment refCount for a newly referenced activatable
             final ActivatableAbstractEntity<?> persistedValue = (ActivatableAbstractEntity<?>) session.get().load(prop.getType(), ((AbstractEntity<?>) value).getId(), UPGRADE);
-            if (!entity.equals(persistedValue)) { // avoid counting self-references
+            if (!areEqual(entity, persistedValue)) { // avoid counting self-references
                 // now let's check if the entity itself is an active activatable
                 // as this influences the decision to increment refCount for the newly referenced activatable
                 // because, if it's not then there is no reason to increment refCout for the referenced instance
@@ -360,7 +367,7 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
                     // if activatable property value is not a self-reference
                     // then need to check if it is active and if so increment its refCount
                     // otherwise, if activatable is not active then we've got an erroneous situation that should prevent activation of entity
-                    if (!entity.equals(persistedValue)) {
+                    if (!areEqual(entity, persistedValue)) {
                         if (activeProp.getValue()) { // is entity being activated?
                             if (!persistedValue.isActive()) { // if activatable is not active then this is an error
                                 final String entityTitle = TitlesDescsGetter.getEntityTitleAndDesc(entity.getType()).getKey();
