@@ -17,11 +17,11 @@ import ua.com.fielden.platform.types.tuples.T2;
 
 public class EntProp2 extends AbstractElement2 implements ISingleOperand2<EntProp3> {
     public final IQrySource2<? extends IQrySource3> source;
-    private final List<AbstractPropInfo<?, ?>> path;
+    private final List<AbstractPropInfo<?>> path;
     public final String name;
     public final Class<?> type;
 
-    public EntProp2(final IQrySource2<? extends IQrySource3> source, final int contextId, final List<AbstractPropInfo<?, ?>> path) {
+    public EntProp2(final IQrySource2<? extends IQrySource3> source, final int contextId, final List<AbstractPropInfo<?>> path) {
         super(contextId);
         this.source = source;
         this.path = path;
@@ -36,7 +36,7 @@ public class EntProp2 extends AbstractElement2 implements ISingleOperand2<EntPro
         return new TransformationResult<EntProp3>(transformedProp, context);
     }
 
-    public List<AbstractPropInfo<?, ?>> getPath() {
+    public List<AbstractPropInfo<?>> getPath() {
         return unmodifiableList(path);
     }
 

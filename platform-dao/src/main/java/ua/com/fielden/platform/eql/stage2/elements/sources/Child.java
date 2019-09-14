@@ -6,13 +6,13 @@ import java.util.Set;
 import ua.com.fielden.platform.eql.meta.AbstractPropInfo;
 
 public class Child implements Comparable<Child> {
-    final AbstractPropInfo<?, ?> main;
+    final AbstractPropInfo<?> main;
     final boolean required;
     final Set<Child> items;
     final String fullPath; //not null if given child represents explicit prop that needs resolution 
     final String context; //indicates context for table being joined within main (explicit) table (aka dot.notation being resolved by joining this table)
     
-    public Child(final AbstractPropInfo<?, ?> main, final Set<Child> items, final String fullPath, final String context, final boolean required) {
+    public Child(final AbstractPropInfo<?> main, final Set<Child> items, final String fullPath, final String context, final boolean required) {
         this.main = main;
         this.items = items;
         this.fullPath = fullPath;

@@ -10,8 +10,8 @@ public class ComponentTypePropInfo extends AbstractPropInfo {
         return super.toString() + ": " + propEntityInfo;
     }
 
-    public ComponentTypePropInfo(final String name, final EntityInfo parent, final EntityInfo propEntityInfo) {
-        super(name, parent);
+    public ComponentTypePropInfo(final String name, final EntityInfo propEntityInfo) {
+        super(name);
         //TODO this class should be refactored to support components.
         throw new EqlException("Not yet.");
 //        this.propEntityInfo = propEntityInfo;

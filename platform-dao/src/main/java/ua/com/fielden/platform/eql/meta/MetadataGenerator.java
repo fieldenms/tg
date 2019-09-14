@@ -132,33 +132,33 @@ public class MetadataGenerator {
         return (Expression1) new StandAloneExpressionBuilder(qb, exprModel).getResult().getValue();
     }
 
-    private <T extends AbstractEntity<?>> Optional<PrimTypePropInfo<?,?>> generateIdPropertyMetadata(final Class<T> entityType, final EntityInfo<T> entityInfo) {
-        switch (entityInfo.getCategory()) {
+    private <T extends AbstractEntity<?>> Optional<PrimTypePropInfo<?>> generateIdPropertyMetadata(final Class<T> entityType, final EntityCategory category) {
+        switch (category) {
         case PERSISTED:
             //TODO Need to handle expression for one-2-one case.
-            return of(isOneToOne(entityType) ? new PrimTypePropInfo<Long, T>(ID, Long.class, entityInfo)
-                    : new PrimTypePropInfo<Long, T>(ID, Long.class, entityInfo)); 
+            return of(isOneToOne(entityType) ? new PrimTypePropInfo<Long>(ID, Long.class)
+                    : new PrimTypePropInfo<Long>(ID, Long.class)); 
         case QUERY_BASED:
             if (EntityUtils.isSyntheticBasedOnPersistentEntityType(entityType)) {
                 if (isEntityType(getKeyType(entityType))) {
                     throw new EntityDefinitionException(format("Entity [%s] is recognised as synthetic that is based on a persystent type with an entity-typed key. This is not supported.", entityType.getName()));
                 }
-                return of(new PrimTypePropInfo<Long, T>(ID, Long.class, entityInfo));
+                return of(new PrimTypePropInfo<Long>(ID, Long.class));
             } else if (isEntityType(getKeyType(entityType))) {
-                return of(new PrimTypePropInfo<Long, T>(ID, Long.class, entityInfo)); //TODO need to move this to createYieldAllQueryModel -- entQryExpression(expr().prop("key").model())));
+                return of(new PrimTypePropInfo<Long>(ID, Long.class)); //TODO need to move this to createYieldAllQueryModel -- entQryExpression(expr().prop("key").model())));
             } else {
                 return empty();
             }
         case UNION:
             throw new EqlException("Not yet"); //TODO uncomment; new PropertyMetadata.Builder(AbstractEntity.ID, Long.class, false).hibType(typeResolver.basic("long")).expression(dmeg.generateUnionEntityPropertyExpression((Class<? extends AbstractUnionEntity>) entityType, "id")).type(EXPRESSION).build();
         default:
-            throw new EqlException(format("Generation of ID property metadata is not supported for category [%s] on entity [%s].", entityInfo.getCategory(), entityType.getName()));
+            throw new EqlException(format("Generation of ID property metadata is not supported for category [%s] on entity [%s].", category, entityType.getName()));
         }
     }
 
     private <T extends AbstractEntity<?>> void addProps(final EntityInfo<T> entityInfo, final Map<Class<? extends AbstractEntity<?>>, EntityInfo<?>> allEntitiesInfo) {
-        generateIdPropertyMetadata(entityInfo.javaType(), entityInfo).ifPresent(id -> entityInfo.addProp(id));
-        entityInfo.addProp(new PrimTypePropInfo<Long, T>(VERSION, Long.class, entityInfo));
+        generateIdPropertyMetadata(entityInfo.javaType(), entityInfo.getCategory()).ifPresent(id -> entityInfo.addProp(id));
+        entityInfo.addProp(new PrimTypePropInfo<Long>(VERSION, Long.class));
         
         EntityUtils.getRealProperties(entityInfo.javaType()).stream()
         .filter(f -> f.isAnnotationPresent(MapTo.class) || f.isAnnotationPresent(Calculated.class)).forEach(field -> {
@@ -167,9 +167,9 @@ public class MetadataGenerator {
             if (AbstractEntity.class.isAssignableFrom(javaType)) {
                 final boolean required = PropertyTypeDeterminator.isRequiredByDefinition(field, javaType);
 
-                entityInfo.addProp(new EntityTypePropInfo(field.getName(), allEntitiesInfo.get(javaType), entityInfo, required));
+                entityInfo.addProp(new EntityTypePropInfo(field.getName(), allEntitiesInfo.get(javaType), required));
             } else {
-                entityInfo.addProp(new PrimTypePropInfo(field.getName(), javaType, entityInfo));
+                entityInfo.addProp(new PrimTypePropInfo(field.getName(), javaType));
             }
 
         });

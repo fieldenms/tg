@@ -8,7 +8,7 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 
 public class EntityInfo<T extends AbstractEntity<?>> implements IResolvable<T> {
     private final Class<T> javaType;
-    private final SortedMap<String, AbstractPropInfo<?, ?>> props = new TreeMap<>();
+    private final SortedMap<String, AbstractPropInfo<?>> props = new TreeMap<>();
     private final EntityCategory category;
 
     public EntityInfo(final Class<T> javaType, final EntityCategory category) {
@@ -21,17 +21,17 @@ public class EntityInfo<T extends AbstractEntity<?>> implements IResolvable<T> {
         if (context.isSuccessful()) {
             return context;
         } else {
-            final AbstractPropInfo<?, ?> foundPart = props.get(context.getNextPending());
+            final AbstractPropInfo<?> foundPart = props.get(context.getNextPending());
             return foundPart == null ? context : foundPart.resolve(context.registerResolutionAndClone(foundPart));
         }
     }
 
-    public EntityInfo<T> addProp(final AbstractPropInfo<?, ?> propInfo) { 
+    public EntityInfo<T> addProp(final AbstractPropInfo<?> propInfo) { 
         props.put(propInfo.getName(), propInfo);
         return this;
     }
     
-    public SortedMap<String, AbstractPropInfo<?, ?>> getProps() {
+    public SortedMap<String, AbstractPropInfo<?>> getProps() {
         return props;
     }
     

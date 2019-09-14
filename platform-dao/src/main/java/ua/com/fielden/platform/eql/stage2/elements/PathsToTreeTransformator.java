@@ -23,18 +23,18 @@ public class PathsToTreeTransformator {
     static final Map<IQrySource2<?>, SortedSet<Child>> transform(final Set<EntProp2> props) {
         final Map<IQrySource2<?>, SortedSet<Child>> sourceChildren = new HashMap<>();
 
-        for (final Entry<IQrySource2<?>, Map<String, List<AbstractPropInfo<?, ?>>>> sourceProps : groupBySource(props).entrySet()) {
+        for (final Entry<IQrySource2<?>, Map<String, List<AbstractPropInfo<?>>>> sourceProps : groupBySource(props).entrySet()) {
             sourceChildren.put(sourceProps.getKey(), generateChildren(sourceProps.getValue(), emptyList()));
         }
 
         return sourceChildren;
     }
 
-    static final Map<IQrySource2<?>, Map<String, List<AbstractPropInfo<?, ?>>>> groupBySource(final Set<EntProp2> props) {
-        final Map<IQrySource2<?>, Map<String, List<AbstractPropInfo<?, ?>>>> result = new HashMap<>();
+    static final Map<IQrySource2<?>, Map<String, List<AbstractPropInfo<?>>>> groupBySource(final Set<EntProp2> props) {
+        final Map<IQrySource2<?>, Map<String, List<AbstractPropInfo<?>>>> result = new HashMap<>();
 
         for (final EntProp2 prop : props) {
-            Map<String, List<AbstractPropInfo<?, ?>>> existing = result.get(prop.source);
+            Map<String, List<AbstractPropInfo<?>>> existing = result.get(prop.source);
             if (existing == null) {
                 existing = new HashMap<>();
                 result.put(prop.source, existing);
@@ -45,12 +45,12 @@ public class PathsToTreeTransformator {
         return result;
     }
 
-    private static Map<AbstractPropInfo<?, ?>, Map<String, List<AbstractPropInfo<?, ?>>>> groupByFirstProp(final Map<String, List<AbstractPropInfo<?, ?>>> props) {
-        final Map<AbstractPropInfo<?, ?>, Map<String, List<AbstractPropInfo<?, ?>>>> result = new HashMap<>();
+    private static Map<AbstractPropInfo<?>, Map<String, List<AbstractPropInfo<?>>>> groupByFirstProp(final Map<String, List<AbstractPropInfo<?>>> props) {
+        final Map<AbstractPropInfo<?>, Map<String, List<AbstractPropInfo<?>>>> result = new HashMap<>();
 
-        for (final Entry<String, List<AbstractPropInfo<?, ?>>> propEntry : props.entrySet()) {
-            final AbstractPropInfo<?, ?> first = propEntry.getValue().get(0);
-            Map<String, List<AbstractPropInfo<?, ?>>> existing = result.get(first);
+        for (final Entry<String, List<AbstractPropInfo<?>>> propEntry : props.entrySet()) {
+            final AbstractPropInfo<?> first = propEntry.getValue().get(0);
+            Map<String, List<AbstractPropInfo<?>>> existing = result.get(first);
             if (existing == null) {
                 existing = new HashMap<>();
                 result.put(first, existing);
@@ -62,12 +62,12 @@ public class PathsToTreeTransformator {
         return result;
     }
 
-    private static SortedSet<Child> generateChildren(final Map<String, List<AbstractPropInfo<?, ?>>> props, final List<String> context) {
+    private static SortedSet<Child> generateChildren(final Map<String, List<AbstractPropInfo<?>>> props, final List<String> context) {
         final SortedSet<Child> result = new TreeSet<>();
-        for (final Entry<AbstractPropInfo<?, ?>, Map<String, List<AbstractPropInfo<?, ?>>>> propEntry : groupByFirstProp(props).entrySet()) {
-            final Map<String, List<AbstractPropInfo<?, ?>>> nextProps = new HashMap<>();
+        for (final Entry<AbstractPropInfo<?>, Map<String, List<AbstractPropInfo<?>>>> propEntry : groupByFirstProp(props).entrySet()) {
+            final Map<String, List<AbstractPropInfo<?>>> nextProps = new HashMap<>();
             String path = null;
-            for (final Entry<String, List<AbstractPropInfo<?, ?>>> subpropEntry : propEntry.getValue().entrySet()) {
+            for (final Entry<String, List<AbstractPropInfo<?>>> subpropEntry : propEntry.getValue().entrySet()) {
                 if (subpropEntry.getValue().size() > 1) {
                     nextProps.put(subpropEntry.getKey(), subpropEntry.getValue().subList(1, subpropEntry.getValue().size()));
                 } else {

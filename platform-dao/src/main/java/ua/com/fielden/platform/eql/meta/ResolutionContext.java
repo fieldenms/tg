@@ -7,20 +7,20 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class ResolutionContext {
-    private final List<AbstractPropInfo<?, ?>> resolved = new ArrayList<>();
+    private final List<AbstractPropInfo<?>> resolved = new ArrayList<>();
     private final List<String> pending = new ArrayList<>();
 
     public ResolutionContext(final String pendingAsOneDotNotatedProp) {
         this.pending.addAll(asList(pendingAsOneDotNotatedProp.split("\\.")));
     }
 
-    private ResolutionContext(final List<String> pending, final List<AbstractPropInfo<?, ?>> resolved) {
+    private ResolutionContext(final List<String> pending, final List<AbstractPropInfo<?>> resolved) {
         this.pending.addAll(pending);
         this.resolved.addAll(resolved);
     }
 
-    public ResolutionContext registerResolutionAndClone(final AbstractPropInfo<?, ?> propResolutionStep) {
-        final List<AbstractPropInfo<?, ?>> updatedResolved = new ArrayList<>(); 
+    public ResolutionContext registerResolutionAndClone(final AbstractPropInfo<?> propResolutionStep) {
+        final List<AbstractPropInfo<?>> updatedResolved = new ArrayList<>(); 
         updatedResolved.addAll(resolved);
         updatedResolved.add(propResolutionStep);
         return new ResolutionContext(pending.subList(1, pending.size()), updatedResolved);
@@ -30,7 +30,7 @@ public class ResolutionContext {
         return pending.isEmpty();
     }
     
-    public List<AbstractPropInfo<?, ?>> getResolved() {
+    public List<AbstractPropInfo<?>> getResolved() {
         return unmodifiableList(resolved);
     }
     

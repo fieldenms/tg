@@ -12,7 +12,7 @@ import ua.com.fielden.platform.entity.AbstractEntity;
  * @param <T>
  * @param <PARENT>
  */
-public class EntityTypePropInfo<T extends AbstractEntity<?>, PARENT extends AbstractEntity<?>> extends AbstractPropInfo<T, PARENT> {
+public class EntityTypePropInfo<T extends AbstractEntity<?>> extends AbstractPropInfo<T> {
     private final EntityInfo<T> propEntityInfo;
     public final boolean required;
 
@@ -23,8 +23,8 @@ public class EntityTypePropInfo<T extends AbstractEntity<?>, PARENT extends Abst
      * @param propEntityInfo -- entity info for property.  
      * @param parent - property holder structure, which represents either query source or query-able entity of type <code>PARENT</code>.
      */
-    public EntityTypePropInfo(final String name, final EntityInfo<T> propEntityInfo, final EntityInfo<PARENT> parent, final boolean required) {
-        super(name, parent);
+    public EntityTypePropInfo(final String name, final EntityInfo<T> propEntityInfo, final boolean required) {
+        super(name);
         this.propEntityInfo = propEntityInfo;
         this.required = required;
     }
