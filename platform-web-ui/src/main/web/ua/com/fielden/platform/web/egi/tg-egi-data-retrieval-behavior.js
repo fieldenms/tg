@@ -10,26 +10,27 @@ export const TgEgiDataRetrievalBehavior = {
         this._appConfig = new TgAppConfig();
     },
 
-    isHyperlinkProp: function (entity, property, type) {
-        return type === 'Hyperlink' && this.getValueFromEntity(entity, property) !== null
+    isHyperlinkProp: function (entity, column) {
+        return column.type === 'Hyperlink' && this.getValueFromEntity(entity, column) !== null
     },
 
-    isBooleanProp: function (entity, property, type) {
-        return type === 'Boolean' && this.getValueFromEntity(entity, property) !== null
+    isBooleanProp: function (entity, column) {
+        return column.type === 'Boolean' && this.getValueFromEntity(entity, column) !== null
     },
 
-    isNotBooleanOrHyperlinkProp: function (entity, property, type) {
-        return !(this.isBooleanProp(entity, property, type) || this.isHyperlinkProp(entity, property, type));
+    isNotBooleanOrHyperlinkProp: function (entity, column) {
+        return !(this.isBooleanProp(entity, column) || this.isHyperlinkProp(entity, column));
     },
 
-    getAttachmentIfPossible: function (entity, property) {
+    getAttachmentIfPossible: function (entity, column) {
+        const valueFromEntity = this.getValueFromEntity(entity, column);
         if (entity.type && entity.constructor.prototype.type.call(entity).notEnhancedFullClassName() === "ua.com.fielden.platform.attachment.Attachment") {
             return entity;
-        } else if (this.getValueFromEntity(entity, property) && this.getValueFromEntity(entity, property).type &&
-            this.getValueFromEntity(entity, property).type().notEnhancedFullClassName() === "ua.com.fielden.platform.attachment.Attachment") {
-            return this.getValueFromEntity(entity, property);
-        } else if (this._reflector.entityPropOwner(entity, property)) {
-            const owner = this._reflector.entityPropOwner(entity, property);
+        } else if (valueFromEntity && valueFromEntity.type &&
+            valueFromEntity.type().notEnhancedFullClassName() === "ua.com.fielden.platform.attachment.Attachment") {
+            return valueFromEntity;
+        } else if (this._reflector.entityPropOwner(this.getRealEntity(entity, column), this.getRealProperty(column))) {
+            const owner = this._reflector.entityPropOwner(this.getRealEntity(entity, column), this.getRealProperty(column));
             if (owner.type().notEnhancedFullClassName() === "ua.com.fielden.platform.attachment.Attachment") {
                 return owner;
             }
@@ -39,19 +40,37 @@ export const TgEgiDataRetrievalBehavior = {
         }
     },
 
-    getValueFromEntity: function (entity, property) {
-        return entity && entity.get(property);
+    getRealEntity: function (entity, column) {
+        return entity && column.collectionalProperty ? this.getCollectionalItem(entity, column) : entity;
     },
 
-    getBindedValue: function (entity, property, type) {
-        return this.getValue(entity, property, type);
+    getRealProperty: function (column) {
+        return column.collectionalProperty ? column.valueProperty : column.property;
+    },
+
+    getCollectionalItem: function (entity, column) {
+        if (column.collectionalProperty) {
+            const collection = entity.get(column.collectionalProperty);
+            const item = collection.find(cItem => column.property === cItem[column.keyProperty]);
+            return item || null;
+        }
+    },
+
+    getValueFromEntity: function (entity, column) {
+        const realEntity = this.getRealEntity(entity, column);
+        const realProperty = this.getRealProperty(column);
+        return realEntity && realEntity.get(realProperty);
+    },
+
+    getBindedValue: function (entity, column) {
+        return this.getValue(this.getRealEntity(entity, column), this.getRealProperty(column), column.type);
     },
 
     getValue: function (entity, property, type) {
-        if (entity === null || property === null || type === null || this.getValueFromEntity(entity, property) === null) {
+        if (entity === null || property === null || type === null || this.getValueFromEntity(entity, {property: property}) === null) {
             return "";
         } else if (this._reflector.findTypeByName(type)) {
-            var propertyValue = this.getValueFromEntity(entity, property);
+            var propertyValue = this.getValueFromEntity(entity, {property: property});
             if (Array.isArray(propertyValue)) {
                 propertyValue = generateShortCollection(entity, property, this._reflector.findTypeByName(type));
             }

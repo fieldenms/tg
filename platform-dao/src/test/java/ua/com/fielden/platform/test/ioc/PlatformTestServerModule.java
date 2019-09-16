@@ -65,6 +65,7 @@ import ua.com.fielden.platform.sample.domain.ITgSystem;
 import ua.com.fielden.platform.sample.domain.ITgTimesheet;
 import ua.com.fielden.platform.sample.domain.ITgVehicle;
 import ua.com.fielden.platform.sample.domain.ITgVehicleFinDetails;
+import ua.com.fielden.platform.sample.domain.ITgVehicleFuelUsage;
 import ua.com.fielden.platform.sample.domain.ITgVehicleMake;
 import ua.com.fielden.platform.sample.domain.ITgVehicleModel;
 import ua.com.fielden.platform.sample.domain.ITgWagon;
@@ -110,6 +111,7 @@ import ua.com.fielden.platform.sample.domain.TgSystemDao;
 import ua.com.fielden.platform.sample.domain.TgTimesheetDao;
 import ua.com.fielden.platform.sample.domain.TgVehicleDao;
 import ua.com.fielden.platform.sample.domain.TgVehicleFinDetailsDao;
+import ua.com.fielden.platform.sample.domain.TgVehicleFuelUsageDao;
 import ua.com.fielden.platform.sample.domain.TgVehicleMakeDao;
 import ua.com.fielden.platform.sample.domain.TgVehicleModelDao;
 import ua.com.fielden.platform.sample.domain.TgWagonClassCompatibilityDao;
@@ -222,6 +224,7 @@ public class PlatformTestServerModule extends BasicWebServerModule {
 
         bind(ITgMakeCount.class).to(TgMakeCountDao.class);
         bind(ITgAverageFuelUsage.class).to(TgAverageFuelUsageDao.class);
+        bind(ITgVehicleFuelUsage.class).to(TgVehicleFuelUsageDao.class);
         bind(ITgEntityWithComplexSummaries.class).to(TgEntityWithComplexSummariesDao.class);
         
         bind(ITgAuthorship.class).to(TgAuthorshipDao.class);
