@@ -67,7 +67,13 @@ const TgAbstractCriterionBehaviorImpl = {
             value: false
         },
 
-
+        /**
+         * Indicates whether to exclude or-group mnemonic.
+         */
+        excludeOrGroup: {
+            type: Boolean,
+            value: false
+        },
 
         /////////////////////////////////////////////////////////////////////////////////////////////////////////
         //////////////////////////////////////////// INNER PROPERTIES ///////////////////////////////////////////
@@ -135,6 +141,7 @@ const TgAbstractCriterionBehaviorImpl = {
         domBind._orNullBind = self._orNull;
         domBind._excludeMissingBind = self.excludeMissing;
         domBind._notBind = self._not;
+        domBind._excludeOrGroupBind = self.excludeOrGroup;
         domBind._orGroupBind = self._orGroup;
         domBind._exclusiveBind = self._exclusive;
         domBind._exclusive2Bind = self._exclusive2;

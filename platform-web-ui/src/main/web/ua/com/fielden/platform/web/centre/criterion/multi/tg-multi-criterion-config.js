@@ -19,7 +19,7 @@ const template = html`
     </style>
     <paper-checkbox checked="{{_orNull}}" hidden$="[[_excludeMissing]]">Missing</paper-checkbox>
     <paper-checkbox checked="{{_not}}">Not</paper-checkbox>
-    <paper-input value="{{_orGroupStr}}" label="Group"></paper-input>
+    <paper-input value="{{_orGroupStr}}" label="Group" hidden$="[[_excludeOrGroup]]"></paper-input>
 `;
 
 Polymer({
@@ -54,6 +54,9 @@ Polymer({
         },
 
         _excludeMissing: {
+            type: Boolean
+        },
+        _excludeOrGroup: {
             type: Boolean
         }
     },
