@@ -71,12 +71,12 @@ public class PropertyColumnElement implements IRenderable, IImportable {
     }
 
     /**
-     * Determines whether this {@link PropertyColumnElement} instance has totals or not.
+     * Determines whether this {@link PropertyColumnElement} instance has summary.
      *
      * @return
      */
     public boolean hasSummary() {
-        return summary.size() > 0;
+        return !summary.isEmpty();
     }
 
     /**
@@ -211,9 +211,7 @@ public class PropertyColumnElement implements IRenderable, IImportable {
         if (action.isPresent() && action.get().getFunctionalActionKind() == FunctionalActionKind.PROP) {
             columnElement.add(action.get().render().attr("slot", "property-action"));
         }
-        if (hasSummary()) {
-            summary.forEach(summary -> columnElement.add(summary.render()));
-        }
+        summary.forEach(summary -> columnElement.add(summary.render()));
         return columnElement;
     }
 
