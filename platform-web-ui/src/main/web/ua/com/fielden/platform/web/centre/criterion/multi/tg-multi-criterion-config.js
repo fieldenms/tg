@@ -50,7 +50,6 @@ Polymer({
          */
         _orGroupStr: {
             type: String,
-            notify: true,
             observer: '_orGroupStrChanged'
         },
 

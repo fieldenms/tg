@@ -610,35 +610,6 @@ public interface ICentreDomainTreeManager extends IDomainTreeManager {
          * @return -- a criteria tick manager
          */
         IAddToCriteriaTickManager setOrNull(final Class<?> root, final String property, final Boolean orNull);
-        
-        /**
-         * Gets an "or group" number of a criteria property. <br>
-         * <br>
-         *
-         * Throws {@link DomainTreeException} when the property is not checked (see {@link #isChecked(Class, String)} method).
-         *
-         * @param root
-         *            -- a root type that contains property.
-         * @param property
-         *            -- a dot-notation expression that defines a property.
-         * @return
-         */
-        Integer getOrGroup(final Class<?> root, final String property);
-
-        /**
-         * Sets an "or group" number of a criteria property. <br>
-         * <br>
-         *
-         * Throws {@link DomainTreeException} when the property is not checked (see {@link #isChecked(Class, String)} method).
-         *
-         * @param root
-         *            -- a root type that contains property.
-         * @param property
-         *            -- a dot-notation expression that defines a property.
-         * @param orGroup
-         * @return -- a criteria tick manager
-         */
-        IAddToCriteriaTickManager setOrGroup(final Class<?> root, final String property, final Integer orGroup);
 
         /**
          * Gets a "not" flag (negation) of a criteria property. <br>
@@ -668,6 +639,35 @@ public interface ICentreDomainTreeManager extends IDomainTreeManager {
          * @return -- a criteria tick manager
          */
         IAddToCriteriaTickManager setNot(final Class<?> root, final String property, final Boolean not);
+
+        /**
+         * Gets an "or group" number of a criteria property. <br>
+         * <br>
+         *
+         * Throws {@link DomainTreeException} when the property is not checked (see {@link #isChecked(Class, String)} method).
+         *
+         * @param root
+         *            -- a root type that contains property.
+         * @param property
+         *            -- a dot-notation expression that defines a property.
+         * @return
+         */
+        Integer getOrGroup(final Class<?> root, final String property);
+
+        /**
+         * Sets an "or group" number of a criteria property. <br>
+         * <br>
+         *
+         * Throws {@link DomainTreeException} when the property is not checked (see {@link #isChecked(Class, String)} method).
+         *
+         * @param root
+         *            -- a root type that contains property.
+         * @param property
+         *            -- a dot-notation expression that defines a property.
+         * @param orGroup
+         * @return -- a criteria tick manager
+         */
+        IAddToCriteriaTickManager setOrGroup(final Class<?> root, final String property, final Integer orGroup);
 
         // Boolean getAll(final Class<?> root, final String property);
         // ICriteriaTickManager setAll(final Class<?> root, final String property, final Boolean all);

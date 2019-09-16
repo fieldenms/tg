@@ -50,7 +50,7 @@ import ua.com.fielden.platform.utils.Pair;
 public abstract class AbstractTokensBuilder implements ITokensBuilder {
     private final ITokensBuilder parent;
     private ITokensBuilder child;
-    private final List<Pair<TokenCategory, Object>> tokens = new ArrayList<>();
+    private final List<Pair<TokenCategory, Object>> tokens = new ArrayList<Pair<TokenCategory, Object>>();
     private final Map<String, Object> paramValues;
     private final EntQueryGenerator queryBuilder;
 
@@ -199,14 +199,11 @@ public abstract class AbstractTokensBuilder implements ITokensBuilder {
     private ConditionModel prepareCollectionalCritCondition(final QueryProperty qp, final String propName) {
         final Boolean originalOrNull = qp.getOrNull();
         final Boolean originalNot = qp.getNot();
-        final Integer originalOrGroup = qp.getOrGroup();
         qp.setOrNull(null);
         qp.setNot(null);
-        qp.setOrGroup(null);
         final ConditionModel result = qp == null || qp.isEmptyWithoutMnemonics() ? emptyCondition() : buildCondition(qp, propName, false);
         qp.setOrNull(originalOrNull);
         qp.setNot(originalNot);
-        qp.setOrGroup(originalOrGroup);
         return result;
     }
     
@@ -228,8 +225,6 @@ public abstract class AbstractTokensBuilder implements ITokensBuilder {
         final boolean hasValue = !qp.isEmpty();
         final boolean not = TRUE.equals(qp.getNot());
         final boolean orNull = TRUE.equals(qp.getOrNull());
-        final Integer orGroup = qp.getOrGroup();
-        // TODO orGroup handling?
 
         final ConditionModel criteriaCondition = prepareCollectionalCritCondition(qp, propName);
         final EntityResultQueryModel<?> anyItems = collectionQueryStart.model();
@@ -354,7 +349,7 @@ public abstract class AbstractTokensBuilder implements ITokensBuilder {
     }
 
     protected List<ISingleOperand> getModelForArrayParam(final TokenCategory cat, final Object value) {
-        final List<ISingleOperand> result = new ArrayList<>();
+        final List<ISingleOperand> result = new ArrayList<ISingleOperand>();
         final Object paramValue = getParamValue((String) value);
 
         if (!(paramValue instanceof List)) {
@@ -427,7 +422,7 @@ public abstract class AbstractTokensBuilder implements ITokensBuilder {
             throw new RuntimeException("Unrecognised token category for SingleOperand: " + cat);
         }
 
-        final List<ISingleOperand> result = new ArrayList<>();
+        final List<ISingleOperand> result = new ArrayList<ISingleOperand>();
 
         for (final Object singleValue : (List<Object>) value) {
             if (singleCat == PARAM || singleCat == IPARAM) {
@@ -445,7 +440,7 @@ public abstract class AbstractTokensBuilder implements ITokensBuilder {
     }
 
     protected List<ISingleOperand> getModelForMultipleOperands(final TokenCategory cat, final Object value) {
-        final List<ISingleOperand> result = new ArrayList<>();
+        final List<ISingleOperand> result = new ArrayList<ISingleOperand>();
 
         TokenCategory singleCat;
 

@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.domaintree.centre.impl;
 
+import static java.lang.String.format;
 import static ua.com.fielden.platform.criteria.generator.impl.SynchroniseCriteriaWithModelHandler.areDifferent;
 import static ua.com.fielden.platform.types.tuples.T2.t2;
 
@@ -526,15 +527,13 @@ public class CentreDomainTreeManager extends AbstractDomainTreeManager implement
         
         @Override
         public Integer getOrGroup(final Class<?> root, final String property) {
-            illegalUncheckedProperties(this, root, property, "Could not get an 'or group' for 'unchecked' property [" + property + "] in type ["
-                    + root.getSimpleName() + "].");
+            illegalUncheckedProperties(this, root, property, format("Could not get an 'or group' for 'unchecked' property [%s] in type [%s].", property, root.getSimpleName()));
             return (propertiesOrGroups.containsKey(key(root, property))) ? propertiesOrGroups.get(key(root, property)) : null;
         }
         
         @Override
         public IAddToCriteriaTickManager setOrGroup(final Class<?> root, final String property, final Integer orGroup) {
-            illegalUncheckedProperties(this, root, property, "Could not set an 'or group' for 'unchecked' property [" + property + "] in type ["
-                    + root.getSimpleName() + "].");
+            illegalUncheckedProperties(this, root, property, format("Could not set an 'or group' for 'unchecked' property [%s] in type [%s].", property, root.getSimpleName()));
             if (orGroup == null) {
                 propertiesOrGroups.remove(key(root, property));
             } else {
@@ -542,7 +541,7 @@ public class CentreDomainTreeManager extends AbstractDomainTreeManager implement
             }
             return this;
         }
-
+        
         /////////////////// Checked properties with placeholders ///////////////////
         @Override
         public IAddToCriteriaTickManager swap(final Class<?> root, final String property1, final String property2) {
@@ -722,9 +721,9 @@ public class CentreDomainTreeManager extends AbstractDomainTreeManager implement
             result = prime * result + ((propertiesExclusive1 == null) ? 0 : propertiesExclusive1.hashCode());
             result = prime * result + ((propertiesExclusive2 == null) ? 0 : propertiesExclusive2.hashCode());
             result = prime * result + ((propertiesMetaValuePresences == null) ? 0 : propertiesMetaValuePresences.hashCode());
+            result = prime * result + ((propertiesOrGroups == null) ? 0 : propertiesOrGroups.hashCode());
             result = prime * result + ((propertiesNots == null) ? 0 : propertiesNots.hashCode());
             result = prime * result + ((propertiesOrNulls == null) ? 0 : propertiesOrNulls.hashCode());
-            result = prime * result + ((propertiesOrGroups == null) ? 0 : propertiesOrGroups.hashCode());
             result = prime * result + ((propertiesValues1 == null) ? 0 : propertiesValues1.hashCode());
             result = prime * result + ((propertiesValues2 == null) ? 0 : propertiesValues2.hashCode());
             return result;
@@ -798,6 +797,13 @@ public class CentreDomainTreeManager extends AbstractDomainTreeManager implement
             } else if (!propertiesMetaValuePresences.equals(other.propertiesMetaValuePresences)) {
                 return false;
             }
+            if (propertiesOrGroups == null) {
+                if (other.propertiesOrGroups != null) {
+                    return false;
+                }
+            } else if (!propertiesOrGroups.equals(other.propertiesOrGroups)) {
+                return false;
+            }
             if (propertiesNots == null) {
                 if (other.propertiesNots != null) {
                     return false;
@@ -810,13 +816,6 @@ public class CentreDomainTreeManager extends AbstractDomainTreeManager implement
                     return false;
                 }
             } else if (!propertiesOrNulls.equals(other.propertiesOrNulls)) {
-                return false;
-            }
-            if (propertiesOrGroups == null) {
-                if (other.propertiesOrGroups != null) {
-                    return false;
-                }
-            } else if (!propertiesOrGroups.equals(other.propertiesOrGroups)) {
                 return false;
             }
             if (propertiesValues1 == null) {

@@ -88,13 +88,13 @@ const TgAbstractMultiCriterionBehaviorImpl = {
             '<tg-multi-criterion-config class="layout vertical" _exclude-missing="[[_excludeMissingBind]]" _or-null="{{_orNullBind}}" _not="{{_notBind}}" _or-group="{{_orGroupBind}}"></tg-multi-criterion-config>';
     },
 
-    _orNullChanged: function (newValue, oldValue) {
+    _orNullChanged: function (newValue) {
         this._orNull = newValue;
     },
-    _notChanged: function (newValue, oldValue) {
+    _notChanged: function (newValue) {
         this._not = newValue;
     },
-    _orGroupChanged: function (newValue, oldValue) {
+    _orGroupChanged: function (newValue) {
         this._orGroup = newValue;
     },
 

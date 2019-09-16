@@ -72,7 +72,7 @@
                     assert.strictEqual(editor._commValue, "DEFAULT_KEY 10", "The composite prop value should be: DEMO00,DEMO01");
                     assert.strictEqual(criterion.orNull, true, "The orNull mnemonic for composite prop should be: true");
                     assert.strictEqual(criterion.not, false, "The not mnemonic for composite prop should be: false");
-                    assert.strictEqual(criterion.orGroup, 1, "The orGroup mnemonic for composite prop should be: 1");
+                    assert.strictEqual(criterion.orGroup, null, "The orGroup mnemonic for composite prop should be: null");
                     //Restoring
                     editor._editingValue = oldValue;
                     editor.commit();
