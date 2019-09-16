@@ -2,6 +2,7 @@ import { html } from '/resources/polymer/@polymer/polymer/lib/utils/html-tag.js'
 import '/resources/polymer/@polymer/paper-styles/paper-styles.js';
 import { TgFocusRestorationBehavior } from '/resources/actions/tg-focus-restoration-behavior.js';
 import '/resources/components/tg-scrollable-component.js';
+import '/resources/images/tg-icons.js';
 
 const criterionBehaviorStyle = html`
     <custom-style>
@@ -276,6 +277,7 @@ const TgAbstractCriterionBehaviorImpl = {
 
     _updateIconButtonStyle: function (orNull, not, orGroup, exclusive, exclusive2, datePrefix, dateMnemonic, andBefore) {
         this._dom().$.iconButton.setAttribute('style', this._computeIconButtonStyle(this.orNull, this.not, this.orGroup, this.exclusive, this.exclusive2, this.datePrefix, this.dateMnemonic, this.andBefore));
+        this._dom().$.iconButton.icon = (this.orGroup !== null) && (this.orGroup > 0) ? ('tg-icons:number' + this.orGroup) : 'more-horiz';
     },
 
     _computeIconButtonStyle: function (orNull, not, orGroup, exclusive, exclusive2, datePrefix, dateMnemonic, andBefore) {
