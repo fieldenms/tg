@@ -35,7 +35,7 @@ import org.apache.poi.ss.usermodel.CreationHelper;
 import org.joda.time.DateTime;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity_centre.review.criteria.DynamicPropForExport;
+import ua.com.fielden.platform.entity_centre.review.criteria.DynamicColumnForExport;
 import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.serialisation.xstream.GZipOutputStreamEx;
 import ua.com.fielden.platform.types.tuples.T2;
@@ -55,7 +55,7 @@ public class WorkbookExporter {
 
     private WorkbookExporter() {}
 
-    public static <M extends AbstractEntity<?>> HSSFWorkbook export(final Stream<M> entities, final String[] propertyNames, final String[] propertyTitles, final List<List<DynamicPropForExport>> dynamicProperties) {
+    public static <M extends AbstractEntity<?>> HSSFWorkbook export(final Stream<M> entities, final String[] propertyNames, final String[] propertyTitles, final List<List<DynamicColumnForExport>> dynamicProperties) {
         final List<T2<String, String>> propNamesAndTitles = new ArrayList<>();
 
         for (int index = 0; index < propertyNames.length && index < propertyTitles.length; index++) {
@@ -63,11 +63,11 @@ public class WorkbookExporter {
         }
         
         // add property names and titles for dynamic properties
-        final Map<String, DynamicPropForExport> collectionalProps = new LinkedHashMap<>();
+        final Map<String, DynamicColumnForExport> collectionalProps = new LinkedHashMap<>();
         dynamicProperties.forEach(listOfProps -> {
             listOfProps.forEach(prop -> {
-                propNamesAndTitles.add(t2(prop.getKeyPropValue(), prop.getTitle()));
-                collectionalProps.put(prop.getKeyPropValue(), prop);
+                propNamesAndTitles.add(t2(prop.getGroupPropValue(), prop.getTitle()));
+                collectionalProps.put(prop.getGroupPropValue(), prop);
             });
         });
 

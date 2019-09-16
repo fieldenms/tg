@@ -86,7 +86,7 @@ public abstract class EntityQueryCriteria<C extends ICentreDomainTreeManagerAndE
     private Optional<IQueryEnhancer<T>> additionalQueryEnhancer = Optional.empty();
     private Optional<CentreContext<T, ?>> centreContextForQueryEnhancer = Optional.empty();
     private Optional<User> createdByUserConstraint = Optional.empty();
-    private final List<List<DynamicPropForExport>> dynamicProperties = new ArrayList<>();
+    private final List<List<DynamicColumnForExport>> dynamicProperties = new ArrayList<>();
     private AbstractEntity<?> critOnlySinglePrototype;
 
     @SuppressWarnings({ "unchecked", "rawtypes" })
@@ -861,12 +861,12 @@ public abstract class EntityQueryCriteria<C extends ICentreDomainTreeManagerAndE
         return ofNullable(critOnlySinglePrototype());
     }
 
-    public void setDynamicProperties (final List<List<DynamicPropForExport>> dynamicProperties) {
+    public void setDynamicProperties (final List<List<DynamicColumnForExport>> dynamicProperties) {
         this.dynamicProperties.clear();
         this.dynamicProperties.addAll(dynamicProperties);
     }
 
-    public List<List<DynamicPropForExport>> getDynamicProperties() {
+    public List<List<DynamicColumnForExport>> getDynamicProperties() {
         return Collections.unmodifiableList(dynamicProperties);
     }
 

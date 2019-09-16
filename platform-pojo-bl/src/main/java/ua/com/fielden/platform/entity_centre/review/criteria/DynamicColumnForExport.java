@@ -6,12 +6,12 @@ package ua.com.fielden.platform.entity_centre.review.criteria;
  * @author TG Team
  *
  */
-public class DynamicPropForExport {
+public class DynamicColumnForExport {
 
     private String collectionalPropertyName;
-    private String keyProp;
-    private String keyPropValue;
-    private String valueProp;
+    private String groupProp;
+    private String groupPropValue;
+    private String displayProp;
     private String title;
 
     /**
@@ -23,7 +23,7 @@ public class DynamicPropForExport {
         return collectionalPropertyName;
     }
 
-    public DynamicPropForExport setCollectionalPropertyName(final String collectionalPropertyName) {
+    public DynamicColumnForExport setCollectionalPropertyName(final String collectionalPropertyName) {
         this.collectionalPropertyName = collectionalPropertyName;
         return this;
     }
@@ -33,12 +33,12 @@ public class DynamicPropForExport {
      *
      * @return
      */
-    public String getKeyProp() {
-        return keyProp;
+    public String getGroupProp() {
+        return groupProp;
     }
 
-    public DynamicPropForExport setKeyProp(final String keyProp) {
-        this.keyProp = keyProp;
+    public DynamicColumnForExport setGroupProp(final String groupProp) {
+        this.groupProp = groupProp;
         return this;
     }
 
@@ -47,26 +47,26 @@ public class DynamicPropForExport {
      *
      * @return
      */
-    public String getKeyPropValue() {
-        return keyPropValue;
+    public String getGroupPropValue() {
+        return groupPropValue;
     }
 
-    public DynamicPropForExport setKeyPropValue(final String keyPropValue) {
-        this.keyPropValue = keyPropValue;
+    public DynamicColumnForExport setGroupPropValue(final String groupPropValue) {
+        this.groupPropValue = groupPropValue;
         return this;
     }
 
     /**
-     * Returns the entity property name that contains the value for group represented by {@link DynamicPropForExport#getKeyPropValue()}
+     * Returns the entity property name that contains the value for group represented by {@link DynamicColumnForExport#getGroupPropValue()}
      *
      * @return
      */
-    public String getValueProp() {
-        return valueProp;
+    public String getDisplayProp() {
+        return displayProp;
     }
 
-    public DynamicPropForExport setValueProp(final String valueProp) {
-        this.valueProp = valueProp;
+    public DynamicColumnForExport setDisplayProp(final String displayProp) {
+        this.displayProp = displayProp;
         return this;
     }
 
@@ -79,7 +79,7 @@ public class DynamicPropForExport {
         return title;
     }
 
-    public DynamicPropForExport setTitle(final String title) {
+    public DynamicColumnForExport setTitle(final String title) {
         this.title = title;
         return this;
     }

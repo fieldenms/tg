@@ -1,24 +1,34 @@
 package ua.com.fielden.platform.web.centre.api.impl;
 
 import static java.lang.String.valueOf;
+import static java.util.stream.Collectors.toList;
+import static ua.com.fielden.platform.web.centre.api.impl.DynamicColumn.DYN_COL_DESC;
+import static ua.com.fielden.platform.web.centre.api.impl.DynamicColumn.DYN_COL_DISPLAY_PROP;
+import static ua.com.fielden.platform.web.centre.api.impl.DynamicColumn.DYN_COL_GROUP_PROP;
+import static ua.com.fielden.platform.web.centre.api.impl.DynamicColumn.DYN_COL_GROUP_PROP_VALUE;
+import static ua.com.fielden.platform.web.centre.api.impl.DynamicColumn.DYN_COL_GROW_FACTOR;
+import static ua.com.fielden.platform.web.centre.api.impl.DynamicColumn.DYN_COL_MIN_WIDTH;
+import static ua.com.fielden.platform.web.centre.api.impl.DynamicColumn.DYN_COL_TITLE;
+import static ua.com.fielden.platform.web.centre.api.impl.DynamicColumn.DYN_COL_TOOLTIP_PROP;
+import static ua.com.fielden.platform.web.centre.api.impl.DynamicColumn.DYN_COL_TYPE;
+import static ua.com.fielden.platform.web.centre.api.impl.DynamicColumn.DYN_COL_WIDTH;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity_centre.review.criteria.DynamicPropForExport;
+import ua.com.fielden.platform.entity_centre.review.criteria.DynamicColumnForExport;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.serialisation.jackson.DefaultValueContract;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.web.centre.EntityCentre;
 import ua.com.fielden.platform.web.centre.api.IDynamicColumnConfig;
 import ua.com.fielden.platform.web.centre.api.dynamic_columns.IDynamicColumnBuilderAddProp;
-import ua.com.fielden.platform.web.centre.api.dynamic_columns.IDynamicColumnBuilderGroupProp;
 import ua.com.fielden.platform.web.centre.api.dynamic_columns.IDynamicColumnBuilderDisplayProp;
+import ua.com.fielden.platform.web.centre.api.dynamic_columns.IDynamicColumnBuilderGroupProp;
 import ua.com.fielden.platform.web.centre.api.dynamic_columns.IDynamicColumnBuilderWithTitle;
 import ua.com.fielden.platform.web.centre.api.dynamic_columns.IDynamicColumnBuilderWithTooltipProp;
 
@@ -31,16 +41,16 @@ import ua.com.fielden.platform.web.centre.api.dynamic_columns.IDynamicColumnBuil
  */
 public class DynamicColumnBuilder<T extends AbstractEntity<?>> implements IDynamicColumnBuilderAddProp, IDynamicColumnBuilderGroupProp, IDynamicColumnBuilderDisplayProp, IDynamicColumnBuilderWithTooltipProp, IDynamicColumnConfig {
 
-    private final List<DynamicColumn<T>> dynamicProps = new ArrayList<>();
+    private final List<DynamicColumn<T>> dynamicColumns = new ArrayList<>();
     private final Class<T> type;
 
     private final String collectionalPropertyName;
-    private String keyProp;
-    private String valueProp;
+    private String groupProp;
+    private String displayProp;
     private Optional<String> tooltipProp = Optional.empty();
 
     /**
-     * 
+     * This is the entry to the Dynamic Column Builder API.
      * @param type
      * @param collectionalPropertyName
      * @return
@@ -55,35 +65,35 @@ public class DynamicColumnBuilder<T extends AbstractEntity<?>> implements IDynam
     }
 
     @Override
-    public IDynamicColumnBuilderWithTitle addColumn(final String keyPropValue) {
-        final DynamicColumn<T> prop = new DynamicColumn<>(this, keyPropValue);
-        dynamicProps.add(prop);
-        return prop;
+    public IDynamicColumnBuilderWithTitle addColumn(final String groupPropValue) {
+        final DynamicColumn<T> column = new DynamicColumn<>(this, groupPropValue);
+        dynamicColumns.add(column);
+        return column;
     }
 
     @Override
     public List<Map<String, String>> build() {
         final Class<?> collectionalPropertyType = PropertyTypeDeterminator.determinePropertyType(type, collectionalPropertyName);
-        final Class<?> propertyType = PropertyTypeDeterminator.determinePropertyType(collectionalPropertyType, valueProp);
+        final Class<?> propertyType = PropertyTypeDeterminator.determinePropertyType(collectionalPropertyType, displayProp);
         final String type = EntityCentre.egiRepresentationFor(
                 propertyType,
-                Optional.ofNullable(EntityUtils.isDate(propertyType) ? DefaultValueContract.getTimeZone(collectionalPropertyType, valueProp) : null),
-                Optional.ofNullable(EntityUtils.isDate(propertyType) ? DefaultValueContract.getTimePortionToDisplay(collectionalPropertyType, valueProp) : null));
+                Optional.ofNullable(EntityUtils.isDate(propertyType) ? DefaultValueContract.getTimeZone(collectionalPropertyType, displayProp) : null),
+                Optional.ofNullable(EntityUtils.isDate(propertyType) ? DefaultValueContract.getTimePortionToDisplay(collectionalPropertyType, displayProp) : null));
 
-        return dynamicProps.stream().map(dynamicProp -> {
+        return dynamicColumns.stream().map(dynamicProp -> {
             final Map<String, String> res = new HashMap<>();
-            res.put("keyPropValue", dynamicProp.getGroupPropValue());
-            res.put("type", type);
-            res.put("keyProp", keyProp);
-            res.put("valueProp", valueProp);
-            res.put("tooltipProp", tooltipProp.orElse(""));
-            res.put("title", dynamicProp.getTitle());
-            res.put("desc", dynamicProp.getDesc().orElse(dynamicProp.getTitle()));
-            res.put("width", valueOf(dynamicProp.getWidth()));
-            res.put("minWidth", valueOf(dynamicProp.getMinWidth()));
-            res.put("growFactor", valueOf(dynamicProp.getGrowFactor()));
+            res.put(DYN_COL_GROUP_PROP_VALUE, dynamicProp.getGroupPropValue());
+            res.put(DYN_COL_TYPE, type);
+            res.put(DYN_COL_GROUP_PROP, groupProp);
+            res.put(DYN_COL_DISPLAY_PROP, displayProp);
+            res.put(DYN_COL_TOOLTIP_PROP, tooltipProp.orElse(""));
+            res.put(DYN_COL_TITLE, dynamicProp.getTitle());
+            res.put(DYN_COL_DESC, dynamicProp.getDesc().orElse(dynamicProp.getTitle()));
+            res.put(DYN_COL_WIDTH, valueOf(dynamicProp.getWidth()));
+            res.put(DYN_COL_MIN_WIDTH, valueOf(dynamicProp.getMinWidth()));
+            res.put(DYN_COL_GROW_FACTOR, valueOf(dynamicProp.getGrowFactor()));
             return res;
-        }).collect(Collectors.toList());
+        }).collect(toList());
     }
 
     @Override
@@ -93,27 +103,27 @@ public class DynamicColumnBuilder<T extends AbstractEntity<?>> implements IDynam
     }
 
     @Override
-    public IDynamicColumnBuilderWithTooltipProp withDisplayProp(final String valueProp) {
-        this.valueProp = valueProp;
+    public IDynamicColumnBuilderWithTooltipProp withDisplayProp(final String displayProp) {
+        this.displayProp = displayProp;
         return this;
     }
 
     @Override
-    public IDynamicColumnBuilderDisplayProp withGroupProp(final String keyProp) {
-        this.keyProp = keyProp;
+    public IDynamicColumnBuilderDisplayProp withGroupProp(final String groupProp) {
+        this.groupProp = groupProp;
         return this;
     }
 
     @Override
-    public List<DynamicPropForExport> buildToExport() {
-        return dynamicProps.stream().map(dynamicProp -> {
-            return new DynamicPropForExport()
+    public List<DynamicColumnForExport> buildToExport() {
+        return dynamicColumns.stream().map(dynamicProp -> {
+            return new DynamicColumnForExport()
                     .setCollectionalPropertyName(collectionalPropertyName)
-                    .setKeyProp(keyProp)
-                    .setKeyPropValue(dynamicProp.getGroupPropValue())
+                    .setGroupProp(groupProp)
+                    .setGroupPropValue(dynamicProp.getGroupPropValue())
                     .setTitle(dynamicProp.getTitle())
-                    .setValueProp(valueProp);
-        }).collect(Collectors.toList());
+                    .setDisplayProp(displayProp);
+        }).collect(toList());
     }
 
     @Override

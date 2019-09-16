@@ -14,7 +14,18 @@ import ua.com.fielden.platform.web.centre.api.dynamic_columns.IDynamicColumnBuil
 import ua.com.fielden.platform.web.centre.api.dynamic_columns.IDynamicColumnBuilderWithTitle;
 
 public class DynamicColumn<T extends AbstractEntity<?>> implements IDynamicColumnBuilderWithTitle, IDynamicColumnBuilderWithDesc {
+    public static final String DYN_COL_GROUP_PROP_VALUE = "keyPropValue";
+    public static final String DYN_COL_TYPE = "type";
+    public static final String DYN_COL_GROUP_PROP = "keyProp";
+    public static final String DYN_COL_DISPLAY_PROP = "valueProp";
+    public static final String DYN_COL_TOOLTIP_PROP = "tooltipProp";
+    public static final String DYN_COL_TITLE = "title";
+    public static final String DYN_COL_DESC = "desc";
+    public static final String DYN_COL_WIDTH = "width";
+    public static final String DYN_COL_MIN_WIDTH = "minWidth";
+    public static final String DYN_COL_GROW_FACTOR = "growFactor";
 
+    
     private final DynamicColumnBuilder<T> dynamicColumnBuilder;
     private final String groupPropValue;
 
@@ -84,8 +95,8 @@ public class DynamicColumn<T extends AbstractEntity<?>> implements IDynamicColum
     }
 
     @Override
-    public IDynamicColumnBuilderWithTitle addColumn(final String keyPropValue) {
-        return dynamicColumnBuilder.addColumn(keyPropValue);
+    public IDynamicColumnBuilderWithTitle addColumn(final String groupPropValue) {
+        return dynamicColumnBuilder.addColumn(groupPropValue);
     }
 
 }

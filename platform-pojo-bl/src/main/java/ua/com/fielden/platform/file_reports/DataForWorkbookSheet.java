@@ -11,7 +11,7 @@ import java.util.Optional;
 import java.util.stream.Stream;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity_centre.review.criteria.DynamicPropForExport;
+import ua.com.fielden.platform.entity_centre.review.criteria.DynamicColumnForExport;
 import ua.com.fielden.platform.types.tuples.T2;
 import ua.com.fielden.platform.utils.Pair;
 
@@ -27,9 +27,9 @@ class DataForWorkbookSheet<E extends AbstractEntity<?>> {
     private final Stream<E> entities;
     private final List<String> propNames = new ArrayList<>();
     private final List<String> propTitles = new ArrayList<>();
-    private final Map<String, DynamicPropForExport> collectionalProperties = new LinkedHashMap<>();
+    private final Map<String, DynamicColumnForExport> collectionalProperties = new LinkedHashMap<>();
 
-    public DataForWorkbookSheet(final String sheetTitle, final Stream<E> entities, final List<T2<String, String>> propertyNamesAndTitles, final Map<String, DynamicPropForExport> collectionalProperties) {
+    public DataForWorkbookSheet(final String sheetTitle, final Stream<E> entities, final List<T2<String, String>> propertyNamesAndTitles, final Map<String, DynamicColumnForExport> collectionalProperties) {
         this.sheetTitle = sheetTitle;
         this.entities = entities;
         for (final T2<String, String> pair : propertyNamesAndTitles) {
@@ -65,12 +65,12 @@ class DataForWorkbookSheet<E extends AbstractEntity<?>> {
      */
     public <M extends AbstractEntity<?>> Object getValue(final M entity, final String propName) {
         if (collectionalProperties.containsKey(propName)) {
-            final DynamicPropForExport collectionalProperty = collectionalProperties.get(propName);
+            final DynamicColumnForExport collectionalProperty = collectionalProperties.get(propName);
             final Collection<? extends AbstractEntity<?>> collection = entity.get(collectionalProperty.getCollectionalPropertyName());
             final Optional<? extends AbstractEntity<?>> subEntity = collection.stream()
-                    .filter(e -> equalsEx(e.get(collectionalProperty.getKeyProp()), collectionalProperty.getKeyPropValue()))
+                    .filter(e -> equalsEx(e.get(collectionalProperty.getGroupProp()), collectionalProperty.getGroupPropValue()))
                     .findFirst();
-            return subEntity.map(e -> e.get(collectionalProperty.getValueProp())).orElse(null);
+            return subEntity.map(e -> e.get(collectionalProperty.getDisplayProp())).orElse(null);
         }
         return entity.get(propName);
     }

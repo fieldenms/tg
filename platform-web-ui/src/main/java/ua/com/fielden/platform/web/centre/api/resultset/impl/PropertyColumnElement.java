@@ -1,5 +1,17 @@
 package ua.com.fielden.platform.web.centre.api.resultset.impl;
 
+import static java.lang.String.format;
+import static ua.com.fielden.platform.web.centre.api.impl.DynamicColumn.DYN_COL_DESC;
+import static ua.com.fielden.platform.web.centre.api.impl.DynamicColumn.DYN_COL_DISPLAY_PROP;
+import static ua.com.fielden.platform.web.centre.api.impl.DynamicColumn.DYN_COL_GROUP_PROP;
+import static ua.com.fielden.platform.web.centre.api.impl.DynamicColumn.DYN_COL_GROUP_PROP_VALUE;
+import static ua.com.fielden.platform.web.centre.api.impl.DynamicColumn.DYN_COL_GROW_FACTOR;
+import static ua.com.fielden.platform.web.centre.api.impl.DynamicColumn.DYN_COL_MIN_WIDTH;
+import static ua.com.fielden.platform.web.centre.api.impl.DynamicColumn.DYN_COL_TITLE;
+import static ua.com.fielden.platform.web.centre.api.impl.DynamicColumn.DYN_COL_TOOLTIP_PROP;
+import static ua.com.fielden.platform.web.centre.api.impl.DynamicColumn.DYN_COL_TYPE;
+import static ua.com.fielden.platform.web.centre.api.impl.DynamicColumn.DYN_COL_WIDTH;
+
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -130,48 +142,48 @@ public class PropertyColumnElement implements IRenderable, IImportable {
         return attrs;
     }
 
-    private String keyPropertyBinding() {
-        return isDynamic ? "[[item.keyProp]]" : "";
-    }
-
     private String collectionalPropertyNameBinding() {
         return isDynamic ? this.propertyName() : "";
     }
+    
+    private String keyPropertyBinding() {
+        return isDynamic ? format("[[item.%s]]", DYN_COL_GROUP_PROP) : "";
+    }
 
     private String descBinding() {
-        return isDynamic ? "[[item.desc]]" : this.titleDesc.getValue();
+        return isDynamic ? format("[[item.%s]]", DYN_COL_DESC) : this.titleDesc.getValue();
     }
 
     private String titleBinding() {
-        return isDynamic ? "[[item.title]]" : this.titleDesc.getKey();
+        return isDynamic ? format("[[item.%s]]", DYN_COL_TITLE) : this.titleDesc.getKey();
     }
 
     private Object propertyTypeBinding() {
-        return isDynamic ? "[[item.type]]" : this.propertyType;
+        return isDynamic ? format("[[item.%s]]", DYN_COL_TYPE) : this.propertyType;
     }
 
     private String growFactorBinding() {
-        return isDynamic ? "[[item.growFactor]]" : (isFlexible ? String.valueOf(growFactor) : "0");
+        return isDynamic ? format("[[item.%s]]", DYN_COL_GROW_FACTOR) : (isFlexible ? String.valueOf(growFactor) : "0");
     }
 
     private String minWidthBinding() {
-        return isDynamic ? "[[item.minWidth]]" : String.valueOf(MIN_COLUMN_WIDTH > width ? width : MIN_COLUMN_WIDTH);
+        return isDynamic ? format("[[item.%s]]", DYN_COL_MIN_WIDTH) : String.valueOf(MIN_COLUMN_WIDTH > width ? width : MIN_COLUMN_WIDTH);
     }
 
     private String widthBinding() {
-        return isDynamic ? "[[item.width]]" : String.valueOf(width);
+        return isDynamic ? format("[[item.%s]]", DYN_COL_WIDTH) : String.valueOf(width);
     }
 
     private String valuePropertyBinding() {
-        return isDynamic ? "[[item.valueProp]]" : "";
+        return isDynamic ? format("[[item.%s]]", DYN_COL_DISPLAY_PROP) : "";
     }
 
     private String propertyNameBinding() {
-        return isDynamic ? "[[item.keyPropValue]]" : this.propertyName();
+        return isDynamic ? format("[[item.%s]]", DYN_COL_GROUP_PROP_VALUE) : this.propertyName();
     }
 
     private String tooltipBinding() {
-        return isDynamic ? "[[item.tooltipProp]]" : this.tooltipProp.orElse("");
+        return isDynamic ? format("[[item.%s]]", DYN_COL_TOOLTIP_PROP) : this.tooltipProp.orElse("");
     }
 
     private Map<String, Object> createDynamicColumnsAttributes() {
