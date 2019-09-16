@@ -784,7 +784,7 @@ Polymer({
                 const column = this.columns[index];
                 const entry = {
                     dotNotation: column.property,
-                    value: this.getValue(entity, column.property, column.type)
+                    value: this.getBindedValue(entity, column)
                 };
                 result.push(entry);
             }
@@ -875,7 +875,7 @@ Polymer({
     },
 
     hasAction: function (entity, column) {
-        return column.customAction || this.isHyperlinkProp(entity, column.property, column.type) === true || this.getAttachmentIfPossible(entity, column.property);
+        return column.customAction || this.isHyperlinkProp(entity, column) === true || this.getAttachmentIfPossible(entity, column);
     },
 
     isVisible: function (entity) {
@@ -990,13 +990,13 @@ Polymer({
      * Adjusts widths for columns based on current widths values, which could be altered by dragging column right border.
      */
     adjustColumnWidths: function (columnWidths) {
-        this.columns.forEach((column, columnIndex) => {
+        this.columns.filter(column => !column.collectionalProperty).forEach((column, columnIndex) => {
             this.set("columns." + columnIndex + ".growFactor", columnWidths[column.property].newGrowFactor);
             this.set("columns." + columnIndex + ".width", columnWidths[column.property].newWidth);
             this._updateTotalRowGrowFactor(columnIndex, columnWidths[column.property].newGrowFactor);
             this._updateTotalRowWidth(columnIndex, columnWidths[column.property].newWidth);
         });
-        this.fixedColumns.forEach((column, columnIndex) => {
+        this.fixedColumns.filter(column => !column.collectionalProperty).forEach((column, columnIndex) => {
             this.set("fixedColumns." + columnIndex + ".growFactor", columnWidths[column.property].newGrowFactor);
             this.set("fixedColumns." + columnIndex + ".width", columnWidths[column.property].newWidth);
             this._updateFixedTotalRowGrowFactor(columnIndex, columnWidths[column.property].newGrowFactor);
@@ -1016,6 +1016,8 @@ Polymer({
                 resultantColumns.push(column);
             }
         });
+        const dynamicColumns = this.allColumns.filter(column => column.collectionalProperty);
+        resultantColumns.push(...dynamicColumns)
         this._updateColumns(resultantColumns);
     },
 
@@ -1023,12 +1025,12 @@ Polymer({
         if (column.runAction(entity) === false) {
             // if the clicked property is a hyperlink and there was no custom action associted with it
             // then let's open the linked resources
-            if (this.isHyperlinkProp(entity, column.property, column.type) === true) {
-                const url = this.getValue(entity, column.property, column.type);
+            if (this.isHyperlinkProp(entity, column) === true) {
+                const url = this.getBindedValue(entity, column);
                 const win = window.open(url, '_blank');
                 win.focus();
             } else {
-                const attachment = this.getAttachmentIfPossible(entity, column.property);
+                const attachment = this.getAttachmentIfPossible(entity, column);
                 if (attachment && this.downloadAttachment) {
                     this.downloadAttachment(attachment);
                 }
@@ -1215,7 +1217,7 @@ Polymer({
         e.currentTarget.classList.toggle("resizing-action", true);
         //Calculate all properties needed for column resizing logic and create appropriate resizing object
         const columnElements = this._getHeaderColumns();
-        const leftFixedContainerWidth = calculateColumnWidthExcept (this, -1, columnElements, this.numOfFixedCols, () => this.dragAnchorFixed, () => this.checkboxesFixed, () => this.checkboxesWithPrimaryActionsFixed, () => false);
+        const leftFixedContainerWidth = calculateColumnWidthExcept (this, -1, columnElements, this.fixedColumns.length, () => this.dragAnchorFixed, () => this.checkboxesFixed, () => this.checkboxesWithPrimaryActionsFixed, () => false);
         const containerWithoutFixedSecondaryActionWidth = this.$.scrollableContainer.clientWidth - (this._isSecondaryActionPresent && this.secondaryActionsFixed ? columnElements[columnElements.length - 1].offsetWidth : 0);
         this._columnResizingObject = {
             oldColumnWidth: e.model.item.width,
@@ -1223,7 +1225,7 @@ Polymer({
             leftFixedContainerWidth: leftFixedContainerWidth,
             containerWithoutFixedSecondaryActionWidth: containerWithoutFixedSecondaryActionWidth,
             otherColumnWidth: calculateColumnWidthExcept(this, e.currentTarget.hasAttribute("fixed") ? e.model.index : this.fixedColumns.length + e.model.index, columnElements, this.columns.length + this.fixedColumns.length, () => true, () => true, () => true, () => true),
-            otherFixedColumnWidth :  calculateColumnWidthExcept(this, e.currentTarget.hasAttribute("fixed") ? e.model.index : -1, columnElements, this.numOfFixedCols, () => this.dragAnchorFixed, () => this.checkboxesFixed, () => this.checkboxesWithPrimaryActionsFixed, () => this.secondaryActionsFixed),
+            otherFixedColumnWidth :  calculateColumnWidthExcept(this, e.currentTarget.hasAttribute("fixed") ? e.model.index : -1, columnElements, this.fixedColumns.length, () => this.dragAnchorFixed, () => this.checkboxesFixed, () => this.checkboxesWithPrimaryActionsFixed, () => this.secondaryActionsFixed),
             widthCorrection: e.currentTarget.offsetWidth - e.currentTarget.firstElementChild.offsetWidth,
             hasAnyFlex: this.columns.some((column, index) => index !== e.model.index && column.growFactor !== 0)
         };
@@ -1661,16 +1663,16 @@ Polymer({
     },
 
     getValueTooltip: function (entity, column) {
-        const validationResult = entity.prop(column.property).validationResult();
+        const validationResult = this.getRealEntity(entity, column).prop(this.getRealProperty(column)).validationResult();
         if (this._reflector.isWarning(validationResult) || this._reflector.isError(validationResult)) {
             return validationResult.message && ("<b>" + validationResult.message + "</b>");
         } else if (column.tooltipProperty) {
-            const value = this.getValue(entity, column.tooltipProperty, "String").toString();
+            const value = this.getValue(this.getRealEntity(entity, column), column.tooltipProperty, "String").toString();
             return value && ("<b>" + value + "</b>");
         } else if (this._reflector.findTypeByName(column.type)) {
             return this._generateEntityTooltip(entity, column);
         } else {
-            const value = this.getValue(entity, column.property, column.type).toString();
+            const value = this.getBindedValue(entity, column).toString();
             return value && ("<b>" + value + "</b>");
         }
         return "";
@@ -1686,7 +1688,7 @@ Polymer({
     getActionTooltip: function (entity, column, action) {
         if (action && (action.shortDesc || action.longDesc)) {
             return this._generateActionTooltip(action);
-        } else if (this.getAttachmentIfPossible(entity, column.property)) {
+        } else if (this.getAttachmentIfPossible(entity, column)) {
             return this._generateActionTooltip({
                 shortDesc: 'Download',
                 longDesc: 'Click to download attachment.'
@@ -1696,11 +1698,11 @@ Polymer({
     },
     
     _generateEntityTooltip: function (entity, column) {
-        var key = this.getValue(entity, column.property, column.type);
-        var desc;
+        const key = this.getBindedValue(entity, column);
+        let desc;
         try {
-            if (Array.isArray(this.getValueFromEntity(entity, column.property))) {
-                desc = generateShortCollection(entity, column.property, this._reflector.findTypeByName(column.type))
+            if (Array.isArray(this.getValueFromEntity(entity, column))) {
+                desc = generateShortCollection(this.getRealEntity(entity, column), this.getRealProperty(column), this._reflector.findTypeByName(column.type))
                     .map(function (subEntity) {
                         return subEntity.get("desc");
                     }).join(", ");
@@ -1826,7 +1828,7 @@ Polymer({
     getElementToDragFrom: function (target) {
         const elem = document.createElement('div');
         const entities = this.getSelectedEntities();
-        elem.innerHTML = entities.map(entity => this.getValueFromEntity(entity, "key")).join(", ");
+        elem.innerHTML = entities.map(entity => this.getValueFromEntity(entity, {property: "key"})).join(", ");
         elem.style["white-space"] = "nowrap";
         elem.style["overflow"] = "hidden";
         elem.style["text-overflow"] = "ellipsis";

@@ -224,12 +224,13 @@ const TgSelectionCriteriaBehaviorImpl = {
                 const metaValues = customObject.metaValues;
                 const centreChanged = customObject.isCentreChanged;
                 const renderingHints = customObject.renderingHints || [];
+                const dynamicColumns = customObject.dynamicColumns || {};
                 const summary = customObject.summary;
                 const staleCriteriaMessage = customObject.staleCriteriaMessage;
                 const columnWidths = customObject.columnWidths;
                 const visibleColumnsWithOrder = customObject.visibleColumnsWithOrder;
 
-                self._postRunDefault(criteriaEntity, resultEntities, pageNumber, pageCount, metaValues, centreChanged, renderingHints, summary, staleCriteriaMessage, columnWidths, visibleColumnsWithOrder);
+                self._postRunDefault(criteriaEntity, resultEntities, pageNumber, pageCount, metaValues, centreChanged, renderingHints, dynamicColumns, summary, staleCriteriaMessage, columnWidths, visibleColumnsWithOrder);
             });
         };
 
@@ -240,7 +241,7 @@ const TgSelectionCriteriaBehaviorImpl = {
         };
 
         // calbacks, that will potentially be augmented by tg-action child elements: 
-        self._postRunDefault = (function (criteriaEntity, resultEntities, pageNumber, pageCount, metaValues, centreChanged, renderingHints, summary, staleCriteriaMessage, columnWidths, visibleColumnsWithOrder) {
+        self._postRunDefault = (function (criteriaEntity, resultEntities, pageNumber, pageCount, metaValues, centreChanged, renderingHints, dynamicColumns, summary, staleCriteriaMessage, columnWidths, visibleColumnsWithOrder) {
             this.fire('egi-entities-appeared', resultEntities);
 
             if (typeof staleCriteriaMessage !== 'undefined') { // if staleCriteriaMessage is defined (i.e. it can be 'null' or 'Selection criteria have been changed, but ...' message) -- then populate it into config button tooltip / colour
@@ -258,7 +259,7 @@ const TgSelectionCriteriaBehaviorImpl = {
                 const msg = "Running completed successfully.";
                 this._openToastWithoutEntity(msg, false, msg, false);
 
-                this.postRun(null, null, resultEntities, pageCount, renderingHints, summary, columnWidths, visibleColumnsWithOrder);
+                this.postRun(null, null, resultEntities, pageCount, renderingHints, dynamicColumns, summary, columnWidths, visibleColumnsWithOrder);
             } else {
                 this._setPropertyModel(metaValues);
                 this._centreChanged = centreChanged;
@@ -267,7 +268,7 @@ const TgSelectionCriteriaBehaviorImpl = {
                 this._openToast(criteriaEntity, msg, !criteriaEntity.isValid() || criteriaEntity.isValidWithWarning(), msg, false);
 
                 const newBindingEntity = this._postEntityReceived(criteriaEntity, false);
-                this.postRun(criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, summary, columnWidths, visibleColumnsWithOrder);
+                this.postRun(criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, dynamicColumns, summary, columnWidths, visibleColumnsWithOrder);
             }
         }).bind(self);
 

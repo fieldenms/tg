@@ -124,7 +124,7 @@ public class EntityCentreBuilder<T extends AbstractEntity<?>> implements IEntity
     ////////////// RESULT SET ///////////////
     /////////////////////////////////////////
 
-    protected final List<ResultSetProp> resultSetProperties = new ArrayList<>();
+    protected final List<ResultSetProp<T>> resultSetProperties = new ArrayList<>();
     protected final SortedMap<Integer, Pair<String, OrderDirection>> resultSetOrdering = new TreeMap<>();
     protected final ListMultimap<String, SummaryPropDef> summaryExpressions = ArrayListMultimap.create();
     protected EntityActionConfig resultSetPrimaryEntityAction;

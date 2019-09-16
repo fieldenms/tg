@@ -10,7 +10,7 @@ import ua.com.fielden.platform.entity.AbstractEntity;
  *
  * @param <T>
  */
-public interface IResultSetBuilder2Properties<T extends AbstractEntity<?>> {
+public interface IResultSetBuilder2Properties<T extends AbstractEntity<?>> extends IResultSetBuilderDynamicProps<T>{
 
     /**
      * Adds property of ant level to the result set.
@@ -20,5 +20,4 @@ public interface IResultSetBuilder2Properties<T extends AbstractEntity<?>> {
     IResultSetBuilder3Ordering<T> addProp(final String propName);
 
     IResultSetBuilder4aWidth<T> addProp(final PropDef<?> propDef);
-
 }
