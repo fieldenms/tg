@@ -130,7 +130,7 @@ import ua.com.fielden.platform.web.centre.api.insertion_points.InsertionPointBui
 import ua.com.fielden.platform.web.centre.api.insertion_points.InsertionPointConfig;
 import ua.com.fielden.platform.web.centre.api.insertion_points.InsertionPoints;
 import ua.com.fielden.platform.web.centre.api.resultset.ICustomPropsAssignmentHandler;
-import ua.com.fielden.platform.web.centre.api.resultset.IDynamicPropDefiner;
+import ua.com.fielden.platform.web.centre.api.resultset.IDynamicColumnBuilder;
 import ua.com.fielden.platform.web.centre.api.resultset.IRenderingCustomiser;
 import ua.com.fielden.platform.web.centre.api.resultset.PropDef;
 import ua.com.fielden.platform.web.centre.api.resultset.impl.FunctionalActionElement;
@@ -379,7 +379,7 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
             final Map<String, Integer> growFactors = calculateGrowFactors(resultSetProps.get());
             for (final ResultSetProp<T> property : resultSetProps.get()) {
                 final String propertyName = getPropName(property);
-                if (!property.dynamicPropDefinerClass.isPresent()) {
+                if (!property.dynamicColBuilderType.isPresent()) {
                     cdtmae.getSecondTick().check(entityType, propertyName, true);
                     cdtmae.getSecondTick().use(entityType, propertyName, true);
                     cdtmae.getSecondTick().setWidth(entityType, propertyName, property.width);
@@ -834,14 +834,14 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
         }
     }
 
-    public Optional<IDynamicPropDefiner<T>> getDynamicPropertyDefinerFor(final ResultSetProp<T> resProp) {
-        return resProp.dynamicPropDefinerClass.map(clazz -> injector.getInstance(clazz));
+    public Optional<IDynamicColumnBuilder<T>> getDynamicColumnBuilderFor(final ResultSetProp<T> resProp) {
+        return resProp.dynamicColBuilderType.map(clazz -> injector.getInstance(clazz));
     }
 
     public List<ResultSetProp<T>> getDynamicProperties () {
         return dslDefaultConfig.getResultSetProperties()
                 .orElse(new ArrayList<>()).stream()
-                .filter(resProp -> resProp.dynamicPropDefinerClass.isPresent()).collect(Collectors.toList());
+                .filter(resProp -> resProp.dynamicColBuilderType.isPresent()).collect(Collectors.toList());
     }
 
     @Override
@@ -927,7 +927,7 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
                 }
 
                 final PropertyColumnElement el = new PropertyColumnElement(resultPropName,
-                        resultProp.dynamicPropDefinerClass.isPresent(),
+                        resultProp.dynamicColBuilderType.isPresent(),
                         resultProp.width,
                         centre.getSecondTick().getGrowFactor(root, resultPropName),
                         resultProp.isFlexible,

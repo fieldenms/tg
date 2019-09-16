@@ -486,7 +486,7 @@ public class CriteriaResource extends AbstractWebResource {
         return stream.map(entity -> {
             resPropsWithContext.forEach(resPropWithContext -> {
                 final Collection<? extends AbstractEntity<?>> collection = ((AbstractEntity<?>) entity).get(resPropWithContext.getKey().propName.get());
-                collection.forEach(e -> resPropWithContext.getKey().consumer.get().accept(e, resPropWithContext.getValue()));
+                collection.forEach(e -> resPropWithContext.getKey().entityPreProcessor.get().accept(e, resPropWithContext.getValue()));
             });
             return entity;
         });
@@ -509,7 +509,7 @@ public class CriteriaResource extends AbstractWebResource {
             final IUser userCompanion) {
         final List<Pair<ResultSetProp<AbstractEntity<?>>, Optional<CentreContext<AbstractEntity<?>, ?>>>> resList = new ArrayList<>();
         centre.getDynamicProperties().forEach(resProp -> {
-            resProp.dynamicPropDefinerClass.ifPresent(propDefinerClass -> {
+            resProp.dynamicColBuilderType.ifPresent(propDefinerClass -> {
                 final Optional<CentreContext<AbstractEntity<?>, ?>> optionalCentreContext = CentreResourceUtils.createCentreContext(
                         true, // full context, fully-fledged restoration. This means that IQueryEnhancer descendants (centre query enhancers) could use IContextDecomposer for context decomposition on deep levels.
                         webUiConfig,
@@ -537,9 +537,9 @@ public class CriteriaResource extends AbstractWebResource {
     private Map<String, List<Map<String, String>>> createDynamicProperties(final List<Pair<ResultSetProp<AbstractEntity<?>>, Optional<CentreContext<AbstractEntity<?>, ?>>>> resPropsWithContext) {
         final Map<String, List<Map<String, String>>> dynamicColumns = new LinkedHashMap<>();
         resPropsWithContext.forEach(resPropWithContext -> {
-            centre.getDynamicPropertyDefinerFor(resPropWithContext.getKey()).ifPresent(propDefiner -> {
-                dynamicColumns.put(resPropWithContext.getKey().propName.get() + "Columns", propDefiner.getColumns(resPropWithContext.getValue()).build());
-            });
+            centre.getDynamicColumnBuilderFor(resPropWithContext.getKey()).ifPresent(propDefiner -> 
+                propDefiner.getColumnsConfig(resPropWithContext.getValue()).ifPresent(config -> dynamicColumns.put(resPropWithContext.getKey().propName.get() + "Columns", config.build()))
+            );
         });
         return dynamicColumns;
     }

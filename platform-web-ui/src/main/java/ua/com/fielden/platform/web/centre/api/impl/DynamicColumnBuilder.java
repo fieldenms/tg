@@ -15,16 +15,23 @@ import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.serialisation.jackson.DefaultValueContract;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.web.centre.EntityCentre;
-import ua.com.fielden.platform.web.centre.api.IDynamicPropConfig;
-import ua.com.fielden.platform.web.centre.api.dynamicprops.IDynamicPropBuilderAddProp;
-import ua.com.fielden.platform.web.centre.api.dynamicprops.IDynamicPropBuilderKeyProp;
-import ua.com.fielden.platform.web.centre.api.dynamicprops.IDynamicPropBuilderValueProp;
-import ua.com.fielden.platform.web.centre.api.dynamicprops.IDynamicPropBuilderWithTitle;
-import ua.com.fielden.platform.web.centre.api.dynamicprops.IDynamicPropBuilderWithTooltipProp;
+import ua.com.fielden.platform.web.centre.api.IDynamicColumnConfig;
+import ua.com.fielden.platform.web.centre.api.dynamic_columns.IDynamicColumnBuilderAddProp;
+import ua.com.fielden.platform.web.centre.api.dynamic_columns.IDynamicColumnBuilderGroupProp;
+import ua.com.fielden.platform.web.centre.api.dynamic_columns.IDynamicColumnBuilderDisplayProp;
+import ua.com.fielden.platform.web.centre.api.dynamic_columns.IDynamicColumnBuilderWithTitle;
+import ua.com.fielden.platform.web.centre.api.dynamic_columns.IDynamicColumnBuilderWithTooltipProp;
 
-public class DynamicPropBuilder<T extends AbstractEntity<?>> implements IDynamicPropBuilderAddProp, IDynamicPropBuilderKeyProp, IDynamicPropBuilderValueProp, IDynamicPropBuilderWithTooltipProp, IDynamicPropConfig {
+/**
+ * Implementation and the entry point for dynamic column building API. It is used to define dynamic columns that are used for representing collectional properties in-line with the main entity.
+ *
+ * @author TG Team
+ *
+ * @param <T>
+ */
+public class DynamicColumnBuilder<T extends AbstractEntity<?>> implements IDynamicColumnBuilderAddProp, IDynamicColumnBuilderGroupProp, IDynamicColumnBuilderDisplayProp, IDynamicColumnBuilderWithTooltipProp, IDynamicColumnConfig {
 
-    private final List<DynamicProp<T>> dynamicProps = new ArrayList<>();
+    private final List<DynamicColumn<T>> dynamicProps = new ArrayList<>();
     private final Class<T> type;
 
     private final String collectionalPropertyName;
@@ -32,18 +39,24 @@ public class DynamicPropBuilder<T extends AbstractEntity<?>> implements IDynamic
     private String valueProp;
     private Optional<String> tooltipProp = Optional.empty();
 
-    public static <M extends AbstractEntity<?>> IDynamicPropBuilderKeyProp forProperty(final Class<M> type, final String collectionalPropertyName) {
-        return new DynamicPropBuilder<M>(type, collectionalPropertyName);
+    /**
+     * 
+     * @param type
+     * @param collectionalPropertyName
+     * @return
+     */
+    public static <M extends AbstractEntity<?>> IDynamicColumnBuilderGroupProp forProperty(final Class<M> type, final String collectionalPropertyName) {
+        return new DynamicColumnBuilder<M>(type, collectionalPropertyName);
     }
 
-    private DynamicPropBuilder(final Class<T> type, final String collectionalPropertyName) {
+    private DynamicColumnBuilder(final Class<T> type, final String collectionalPropertyName) {
         this.type = type;
         this.collectionalPropertyName = collectionalPropertyName;
     }
 
     @Override
-    public IDynamicPropBuilderWithTitle addProp(final String keyPropValue) {
-        final DynamicProp<T> prop = new DynamicProp<>(this, keyPropValue);
+    public IDynamicColumnBuilderWithTitle addColumn(final String keyPropValue) {
+        final DynamicColumn<T> prop = new DynamicColumn<>(this, keyPropValue);
         dynamicProps.add(prop);
         return prop;
     }
@@ -59,7 +72,7 @@ public class DynamicPropBuilder<T extends AbstractEntity<?>> implements IDynamic
 
         return dynamicProps.stream().map(dynamicProp -> {
             final Map<String, String> res = new HashMap<>();
-            res.put("keyPropValue", dynamicProp.getKeyPropValue());
+            res.put("keyPropValue", dynamicProp.getGroupPropValue());
             res.put("type", type);
             res.put("keyProp", keyProp);
             res.put("valueProp", valueProp);
@@ -74,19 +87,19 @@ public class DynamicPropBuilder<T extends AbstractEntity<?>> implements IDynamic
     }
 
     @Override
-    public IDynamicPropBuilderAddProp withTooltipProp(final String tooltipProp) {
+    public IDynamicColumnBuilderAddProp withTooltipProp(final String tooltipProp) {
         this.tooltipProp = Optional.of(tooltipProp);
         return this;
     }
 
     @Override
-    public IDynamicPropBuilderWithTooltipProp withValueProp(final String valueProp) {
+    public IDynamicColumnBuilderWithTooltipProp withDisplayProp(final String valueProp) {
         this.valueProp = valueProp;
         return this;
     }
 
     @Override
-    public IDynamicPropBuilderValueProp withKeyProp(final String keyProp) {
+    public IDynamicColumnBuilderDisplayProp withGroupProp(final String keyProp) {
         this.keyProp = keyProp;
         return this;
     }
@@ -97,14 +110,14 @@ public class DynamicPropBuilder<T extends AbstractEntity<?>> implements IDynamic
             return new DynamicPropForExport()
                     .setCollectionalPropertyName(collectionalPropertyName)
                     .setKeyProp(keyProp)
-                    .setKeyPropValue(dynamicProp.getKeyPropValue())
+                    .setKeyPropValue(dynamicProp.getGroupPropValue())
                     .setTitle(dynamicProp.getTitle())
                     .setValueProp(valueProp);
         }).collect(Collectors.toList());
     }
 
     @Override
-    public IDynamicPropConfig done() {
+    public IDynamicColumnConfig done() {
         return this;
     }
 }

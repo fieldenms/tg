@@ -933,8 +933,8 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
     private static List<List<DynamicPropForExport>> createDynamicPropertiesForExport(final EntityCentre<AbstractEntity<?>> centre, final List<Pair<ResultSetProp<AbstractEntity<?>>, Optional<CentreContext<AbstractEntity<?>, ?>>>> resPropsWithContext) {
         final List<List<DynamicPropForExport>> dynamicColumns = new ArrayList<>();
         resPropsWithContext.forEach(resPropWithContext -> {
-            centre.getDynamicPropertyDefinerFor(resPropWithContext.getKey()).ifPresent(propDefiner -> {
-                dynamicColumns.add(propDefiner.getColumns(resPropWithContext.getValue()).buildToExport());
+            centre.getDynamicColumnBuilderFor(resPropWithContext.getKey()).ifPresent(colBuilder -> {
+                colBuilder.getColumnsConfig(resPropWithContext.getValue()).ifPresent(config -> dynamicColumns.add(config.buildToExport()));
             });
         });
         return dynamicColumns;

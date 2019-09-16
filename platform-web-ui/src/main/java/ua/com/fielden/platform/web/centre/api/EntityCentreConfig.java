@@ -1,5 +1,8 @@
 package ua.com.fielden.platform.web.centre.api;
 
+import static java.util.Optional.empty;
+import static java.util.Optional.of;
+
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -37,7 +40,7 @@ import ua.com.fielden.platform.web.centre.api.crit.defaults.mnemonics.SingleCrit
 import ua.com.fielden.platform.web.centre.api.crit.defaults.mnemonics.SingleCritOtherValueMnemonic;
 import ua.com.fielden.platform.web.centre.api.insertion_points.InsertionPointConfig;
 import ua.com.fielden.platform.web.centre.api.resultset.ICustomPropsAssignmentHandler;
-import ua.com.fielden.platform.web.centre.api.resultset.IDynamicPropDefiner;
+import ua.com.fielden.platform.web.centre.api.resultset.IDynamicColumnBuilder;
 import ua.com.fielden.platform.web.centre.api.resultset.IRenderingCustomiser;
 import ua.com.fielden.platform.web.centre.api.resultset.PropDef;
 import ua.com.fielden.platform.web.centre.api.resultset.impl.FunctionalActionKind;
@@ -217,30 +220,30 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
         public final Optional<String> propName;
         public final Optional<String> tooltipProp;
         public final Optional<PropDef<?>> propDef;
-        public final Optional<Class<? extends IDynamicPropDefiner<T>>> dynamicPropDefinerClass;
+        public final Optional<Class<? extends IDynamicColumnBuilder<T>>> dynamicColBuilderType;
         public final Optional<CentreContextConfig> contextConfig;
-        public final Optional<BiConsumer> consumer;
+        public final Optional<BiConsumer> entityPreProcessor;
         public final Supplier<Optional<EntityActionConfig>> propAction;
         public final int width;
         public final boolean isFlexible;
 
          public static <T extends AbstractEntity<?>> ResultSetProp<T> propByName(final String propName, final int width, final boolean isFlexible, final String tooltipProp, final Supplier<Optional<EntityActionConfig>> propAction) {
-            return new ResultSetProp<T>(propName, Optional.empty(), Optional.empty(), Optional.empty(), width, isFlexible, tooltipProp, null, propAction);
+            return new ResultSetProp<T>(propName, empty(), empty(), empty(), width, isFlexible, tooltipProp, null, propAction);
         }
 
         public static <T extends AbstractEntity<?>> ResultSetProp<T> propByDef(final PropDef<?> propDef, final int width, final boolean isFlexible, final String tooltipProp, final Supplier<Optional<EntityActionConfig>> propAction) {
-            return new ResultSetProp<T>(null, Optional.empty(), Optional.empty(), Optional.empty(), width, isFlexible, tooltipProp, propDef, propAction);
+            return new ResultSetProp<T>(null, empty(), empty(), empty(), width, isFlexible, tooltipProp, propDef, propAction);
         }
 
-        public static <T extends AbstractEntity<?>> ResultSetProp<T> dynamicProps(final String collectionalPropertyName, final Class<? extends IDynamicPropDefiner<T>> dynamicPropDefinerClass, final CentreContextConfig contextConfig, final BiConsumer<? extends AbstractEntity<?>, Optional<CentreContext<T, ?>>> consumer) {
-            return new ResultSetProp<T>(collectionalPropertyName, Optional.of(dynamicPropDefinerClass), Optional.of(contextConfig), Optional.of(consumer), 0, false, null, null, () -> Optional.empty());
+        public static <T extends AbstractEntity<?>> ResultSetProp<T> dynamicProps(final String collectionalPropertyName, final Class<? extends IDynamicColumnBuilder<T>> dynamicPropDefinerClass, final BiConsumer<? extends AbstractEntity<?>, Optional<CentreContext<T, ?>>> entityPreProcessor, final CentreContextConfig contextConfig) {
+            return new ResultSetProp<T>(collectionalPropertyName, of(dynamicPropDefinerClass), of(contextConfig), of(entityPreProcessor), 0, false, null, null, () -> Optional.empty());
         }
 
         private ResultSetProp(
                 final String propName,
-                final Optional<Class<? extends IDynamicPropDefiner<T>>> dynamicPropDefinerClass,
+                final Optional<Class<? extends IDynamicColumnBuilder<T>>> dynColBuilderType,
                 final Optional<CentreContextConfig> contextConfig,
-                final Optional<BiConsumer> consumer,
+                final Optional<BiConsumer> entityPreProcessor,
                 final int width,
                 final boolean isFlexible,
                 final String tooltipProp,
@@ -265,9 +268,9 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
             this.tooltipProp = Optional.ofNullable(tooltipProp);
             this.propDef = Optional.ofNullable(propDef);
             this.propAction = propAction;
-            this.dynamicPropDefinerClass = dynamicPropDefinerClass;
+            this.dynamicColBuilderType = dynColBuilderType;
             this.contextConfig = contextConfig;
-            this.consumer = consumer;
+            this.entityPreProcessor = entityPreProcessor;
         }
 
     }
