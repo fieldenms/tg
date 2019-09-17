@@ -8,14 +8,16 @@ import ua.com.fielden.platform.eql.stage3.elements.operands.ISingleOperand3;
 public class Yield3 {
     public final ISingleOperand3 operand;
     public final String alias;
+    public final Column column;
 
     public Yield3(final ISingleOperand3 operand, final String alias) {
         this.operand = operand;
         this.alias = alias;
+        this.column = new Column(alias.toUpperCase() + "_");
     }
 
     public String sql(final DbVersion dbVersion) {
-        return operand.sql(dbVersion) + " AS " + alias;
+        return operand.sql(dbVersion) + " AS " + column.name;
     }
     
     @Override

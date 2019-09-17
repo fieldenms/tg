@@ -167,7 +167,7 @@ public class EntityContainerFetcher {
     private SortedSet<ResultQueryYieldDetails> getResultPropsInfos(final Yields3 model) {
         final SortedSet<ResultQueryYieldDetails> result = new TreeSet<>();
         for (final Yield3 yield : model.getYields()) {
-            result.add(new ResultQueryYieldDetails(yield.alias, null, null, yield.alias, YieldDetailsType.USUAL_PROP));
+            result.add(new ResultQueryYieldDetails(yield.alias, null, null, yield.column.name, YieldDetailsType.USUAL_PROP));
         }
         return result;
     }

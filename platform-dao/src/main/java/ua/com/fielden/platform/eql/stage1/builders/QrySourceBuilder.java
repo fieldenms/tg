@@ -9,10 +9,17 @@ import static ua.com.fielden.platform.utils.EntityUtils.isSyntheticBasedOnPersis
 import static ua.com.fielden.platform.utils.EntityUtils.isSyntheticEntityType;
 import static ua.com.fielden.platform.utils.Pair.pair;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
+
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.exceptions.EqlStage1ProcessingException;
 import ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory;
+import ua.com.fielden.platform.entity.query.model.QueryModel;
+import ua.com.fielden.platform.eql.stage1.elements.operands.EntQuery1;
 import ua.com.fielden.platform.eql.stage1.elements.sources.QrySource1BasedOnPersistentType;
+import ua.com.fielden.platform.eql.stage1.elements.sources.QrySource1BasedOnSubqueries;
 import ua.com.fielden.platform.utils.Pair;
 
 /**
@@ -65,12 +72,23 @@ public class QrySourceBuilder extends AbstractTokensBuilder {
         }
     }
 
+    private Pair<TokenCategory, Object> buildResultForQrySourceBasedOnSubqueries() {
+        final List<EntQuery1> queries = new ArrayList<>();
+        final String alias = secondValue();
+        final List<QueryModel<AbstractEntity<?>>> models = firstValue();
+        for (final QueryModel<AbstractEntity<?>> qryModel : models) {
+            queries.add(getQueryBuilder().generateEntQueryAsSourceQuery(qryModel, /*resultType = */ Optional.empty()));
+        }
+
+        return pair(QRY_SOURCE, new QrySource1BasedOnSubqueries(alias, queries, getQueryBuilder().nextCondtextId()));
+    }
+
     @Override
     public Pair<TokenCategory, Object> getResult() {
         if (isEntityTypeAsSource() || isEntityTypeAsSourceWithoutAlias()) {
             return buildResultForQrySourceBasedOnEntityType();
         } else if (isSubqueriesAsSource() || isSubqueriesAsSourceWithoutAlias()) {
-            throw new EqlStage1ProcessingException("Not yet.");
+            return buildResultForQrySourceBasedOnSubqueries();
         } else {
             throw new RuntimeException("Unable to get result - unrecognised state.");
         }

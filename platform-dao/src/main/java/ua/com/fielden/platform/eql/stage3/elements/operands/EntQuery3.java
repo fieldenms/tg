@@ -35,7 +35,7 @@ public class EntQuery3 implements ISingleOperand3 {
         sb.append("SELECT\n");
         sb.append(isNotEmpty(yieldsSql) ? yieldsSql : " * "); 
         sb.append("\nFROM\n");
-        sb.append(sources.sql(dbVersion));
+        sb.append(sources.sql(dbVersion, true));
         final String conditionsSql = conditions.sql(dbVersion);
         if (isNotEmpty(conditionsSql)) {
             sb.append("\nWHERE ");

@@ -2,7 +2,6 @@ package ua.com.fielden.platform.eql.stage3.elements.sources;
 
 import static org.apache.commons.lang.StringUtils.isNotEmpty;
 
-
 import java.util.Objects;
 
 import ua.com.fielden.platform.entity.query.DbVersion;
@@ -23,9 +22,9 @@ public class JoinedQrySource3 implements IQrySources3 {
     }
 
     @Override
-    public String sql(final DbVersion dbVersion) {
+    public String sql(final DbVersion dbVersion, final boolean atFromStmt) {
         final String joinConditionsSql = joinConditions.sql(dbVersion);
-        return "(" + leftSource.sql(dbVersion) + "\n  " + joinType + "\n" + rightSource.sql(dbVersion) + (isNotEmpty(joinConditionsSql) ? "  ON " : "") + joinConditionsSql + ")";
+        return (atFromStmt ? "" : "(") + leftSource.sql(dbVersion, false) + "\n  " + joinType + "\n" + rightSource.sql(dbVersion, false) + (isNotEmpty(joinConditionsSql) ? "  ON " : "") + joinConditionsSql + (atFromStmt ? "" : ")");
     }
     
     @Override

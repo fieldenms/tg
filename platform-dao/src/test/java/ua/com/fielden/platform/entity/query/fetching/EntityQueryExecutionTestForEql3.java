@@ -84,6 +84,74 @@ public class EntityQueryExecutionTestForEql3 extends AbstractDaoTestCase {
         assertEquals("CAR1", vehicles.get(0).get("cwts").toString());
     }
     
+    @Test
+    public void eql3_query_executes_correctly4() {
+        final AggregatedResultQueryModel qry = select(TgVehicle.class).as("veh").
+                join(TgOrgUnit1.class).as("st").on().prop("station.parent.parent.parent.parent").eq().prop("st.id").
+                where().anyOfProps("veh.key", "replacedBy.key", "initDate", "station.name", "station.parent.name", "st.key", "st.id", "model.make.key", "replacedBy.model.make.key").isNotNull().
+                yield().prop("veh.key").as("vehicleKey").
+                yield().prop("veh.replacedBy.key").as("replacedByVehiclekey").
+                yield().countAll().as("allCount").
+                yield().caseWhen().prop("veh.key").eq().prop("veh.replacedBy.key").then().prop("veh.key").otherwise().prop("veh.replacedBy.key").endAsStr(5).as("cwts").
+                modelAsAggregate();
+        
+        final AggregatedResultQueryModel qry2 = select(qry).yield().prop("vehicleKey").as("vk").modelAsAggregate();
+        
+        final List<EntityAggregates> vehicles = aggregateDao.getAllEntities(from(qry2).with("EQL3", null).model());
+        
+        assertEquals("CAR2", vehicles.get(0).get("vk"));
+    }
+
+    @Test
+    public void eql3_query_executes_correctly5() {
+        final AggregatedResultQueryModel qry = select(TgVehicle.class).as("veh").
+                join(TgOrgUnit1.class).as("st").on().prop("station.parent.parent.parent.parent").eq().prop("st.id").
+                where().anyOfProps("veh.key", "replacedBy.key", "initDate", "station.name", "station.parent.name", "st.key", "st.id", "model.make.key", "replacedBy.model.make.key").isNotNull().
+                yield().prop("veh.replacedBy").as("vehicle").
+                yield().prop("veh.replacedBy.key").as("replacedByVehiclekey").
+                yield().countAll().as("allCount").
+                yield().caseWhen().prop("veh.key").eq().prop("veh.replacedBy.key").then().prop("veh.key").otherwise().prop("veh.replacedBy.key").endAsStr(5).as("cwts").
+                modelAsAggregate();
+        
+        final AggregatedResultQueryModel qry2 = select(qry).where().prop("vehicle").isNotNull().yield().prop("vehicle.key").as("vk").modelAsAggregate();
+        
+        final List<EntityAggregates> vehicles = aggregateDao.getAllEntities(from(qry2).with("EQL3", null).model());
+        
+        assertEquals("CAR1", vehicles.get(0).get("vk"));
+    }
+
+    @Test
+    public void eql3_query_executes_correctly6() {
+        final AggregatedResultQueryModel qry = select(TgVehicle.class).as("veh").
+                where().prop("veh.replacedBy").isNotNull().and().notExists(
+                        select(TgVehicle.class).where().prop("replacedBy").eq().extProp("veh.id").model()).
+                yield().prop("veh.replacedBy").as("vehicle").
+                modelAsAggregate();
+        
+        final AggregatedResultQueryModel qry2 = select(qry).where().prop("vehicle").isNotNull().yield().prop("vehicle.key").as("vk").modelAsAggregate();
+        
+        final List<EntityAggregates> vehicles = aggregateDao.getAllEntities(from(qry2).with("EQL3", null).model());
+        
+        assertEquals("CAR1", vehicles.get(0).get("vk"));
+    }
+
+    @Test
+    public void eql3_query_executes_correctly7() {
+        final AggregatedResultQueryModel qry = select(TgVehicle.class).as("veh").
+                where().prop("veh.replacedBy").isNotNull().and().notExists(
+                        select(TgVehicle.class).where().prop("replacedBy").eq().extProp("veh.id").model()).
+                yield().prop("veh.replacedBy").as("vehicle").
+                modelAsAggregate();
+        
+        final AggregatedResultQueryModel qry2 = select(qry).where().prop("vehicle.station.name").isNull().yield().prop("vehicle").as("vk").modelAsAggregate();
+        
+        final AggregatedResultQueryModel qry3 = select(qry2).where().prop("vk.model").isNotNull().yield().prop("vk.model.make.key").as("makeKey").modelAsAggregate();
+        
+        final List<EntityAggregates> vehicles = aggregateDao.getAllEntities(from(qry3).with("EQL3", null).model());
+        
+        assertEquals("AUDI", vehicles.get(0).get("makeKey"));
+    }
+
     @Override
     protected void populateDomain() {
         super.populateDomain();
