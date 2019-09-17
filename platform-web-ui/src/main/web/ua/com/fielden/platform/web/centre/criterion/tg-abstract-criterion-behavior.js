@@ -282,8 +282,10 @@ const TgAbstractCriterionBehaviorImpl = {
 
     _computeIconButtonStyle: function (orNull, not, orGroup, exclusive, exclusive2, datePrefix, dateMnemonic, andBefore) {
         const hasNoMetaValues = this._hasNoMetaValues(orNull, not, orGroup, exclusive, exclusive2, datePrefix, dateMnemonic, andBefore);
+        const foregroundColor = hasNoMetaValues ? '#757575;' : '#0288D1;';
         return 'visibility:' + (!this._iconButtonVisible() ? 'hidden;' : 'inherit;') +
-            'color:' + (hasNoMetaValues ? '#757575;' : '#0288D1;') + // '--paper-light-blue-700' for existing mnemonics
+            'color:' + foregroundColor + // '--paper-light-blue-700' for existing mnemonics
+            '--paper-icon-button-ink-color: ' + foregroundColor + // '--paper-light-blue-700' for existing mnemonics in paper-ripple (#ink)
             (orGroup !== null ? 'border-radius: 50%; background-color: #e1f5fe; box-shadow: 0 0 2px #0288D1;' : ''); // '--paper-light-blue-700' for border and number of group, --paper-light-blue-50 for background; also make paper-icon-button look like circle
     },
 
