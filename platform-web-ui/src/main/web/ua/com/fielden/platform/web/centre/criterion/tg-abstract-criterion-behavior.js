@@ -277,11 +277,14 @@ const TgAbstractCriterionBehaviorImpl = {
 
     _updateIconButtonStyle: function (orNull, not, orGroup, exclusive, exclusive2, datePrefix, dateMnemonic, andBefore) {
         this._dom().$.iconButton.setAttribute('style', this._computeIconButtonStyle(this.orNull, this.not, this.orGroup, this.exclusive, this.exclusive2, this.datePrefix, this.dateMnemonic, this.andBefore));
-        this._dom().$.iconButton.icon = (this.orGroup !== null) && (this.orGroup > 0) ? ('tg-icons:number' + this.orGroup) : 'more-horiz';
+        this._dom().$.iconButton.icon = this.orGroup !== null ? 'tg-icons:number' + this.orGroup : 'more-horiz';
     },
 
     _computeIconButtonStyle: function (orNull, not, orGroup, exclusive, exclusive2, datePrefix, dateMnemonic, andBefore) {
-        return 'visibility:' + (!this._iconButtonVisible() ? 'hidden' : 'inherit') + '; color:' + (this._hasNoMetaValues(orNull, not, orGroup, exclusive, exclusive2, datePrefix, dateMnemonic, andBefore) ? '#757575' : (/* TODO */ orGroup > 0 ? 'red' : '#0288D1')) + ';';
+        const hasNoMetaValues = this._hasNoMetaValues(orNull, not, orGroup, exclusive, exclusive2, datePrefix, dateMnemonic, andBefore);
+        return 'visibility:' + (!this._iconButtonVisible() ? 'hidden;' : 'inherit;') +
+            'color:' + (hasNoMetaValues ? '#757575;' : '#0288D1;') + // '--paper-light-blue-700' for existing mnemonics
+            (orGroup !== null ? 'border-radius: 50%; background-color: #e1f5fe; box-shadow: 0 0 2px #0288D1;' : ''); // '--paper-light-blue-700' for border and number of group, --paper-light-blue-50 for background; also make paper-icon-button look like circle
     },
 
     /**
