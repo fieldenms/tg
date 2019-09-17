@@ -6,7 +6,7 @@ const template = html`<iron-iconset-svg name='tg-icons' size='24'>
  <defs> 
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <svg id="number8" xmlns="http://www.w3.org/2000/svg" height="24" width="24" version="1.1">
-    <text x="6" y="19" style="font-size:15pt;">8</text>
+    <text x="7" y="19" style="font-size:13pt;">8</text>
 </svg><?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <!-- Created with Inkscape (http://www.inkscape.org/) -->
 <svg id="expandMin" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns="http://www.w3.org/2000/svg" height="24" width="24" version="1.1" xmlns:cc="http://creativecommons.org/ns#" xmlns:dc="http://purl.org/dc/elements/1.1/">
@@ -72,13 +72,13 @@ const template = html`<iron-iconset-svg name='tg-icons' size='24'>
 <path d="M9,3H11V5H9V3M13,3H15V5H13V3M9,7H11V9H9V7M13,7H15V9H13V7M9,11H11V13H9V11M13,11H15V13H13V11M9,15H11V17H9V15M13,15H15V17H13V15M9,19H11V21H9V19M13,19H15V21H13V19Z" />
 </svg><?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <svg id="number5" xmlns="http://www.w3.org/2000/svg" height="24" width="24" version="1.1">
-    <text x="6" y="19" style="font-size:15pt;">5</text>
+    <text x="7" y="19" style="font-size:13pt;">5</text>
 </svg><?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <svg id="number3" xmlns="http://www.w3.org/2000/svg" height="24" width="24" version="1.1">
-    <text x="6" y="19" style="font-size:15pt;">3</text>
+    <text x="7" y="19" style="font-size:13pt;">3</text>
 </svg><?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <svg id="number1" xmlns="http://www.w3.org/2000/svg" height="24" width="24" version="1.1">
-    <text x="6" y="19" style="font-size:15pt;">1</text>
+    <text x="7" y="19" style="font-size:13pt;">1</text>
 </svg><?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <!-- Created with Inkscape (http://www.inkscape.org/) -->
 <svg id="expand" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns="http://www.w3.org/2000/svg" height="24" width="24" version="1.1" xmlns:cc="http://creativecommons.org/ns#" xmlns:dc="http://purl.org/dc/elements/1.1/">
@@ -122,10 +122,10 @@ const template = html`<iron-iconset-svg name='tg-icons' size='24'>
 </svg>
 <g id="crop-square"><path d="M18 4H6c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 14H6V6h12v12z"></path></g> <!-- from https://poly-icon.appspot.com --><?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <svg id="number7" xmlns="http://www.w3.org/2000/svg" height="24" width="24" version="1.1">
-    <text x="6" y="19" style="font-size:15pt;">7</text>
+    <text x="7" y="19" style="font-size:13pt;">7</text>
 </svg><?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <svg id="number9" xmlns="http://www.w3.org/2000/svg" height="24" width="24" version="1.1">
-    <text x="6" y="19" style="font-size:15pt;">9</text>
+    <text x="7" y="19" style="font-size:13pt;">9</text>
 </svg><?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <!-- Created with Inkscape (http://www.inkscape.org/) -->
 <svg id="collapseLeft" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns="http://www.w3.org/2000/svg" height="24" width="24" version="1.1" xmlns:cc="http://creativecommons.org/ns#" xmlns:dc="http://purl.org/dc/elements/1.1/">
@@ -160,7 +160,7 @@ const template = html`<iron-iconset-svg name='tg-icons' size='24'>
 </svg>
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <svg id="number4" xmlns="http://www.w3.org/2000/svg" height="24" width="24" version="1.1">
-    <text x="6" y="19" style="font-size:15pt;">4</text>
+    <text x="7" y="19" style="font-size:13pt;">4</text>
 </svg><?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <!-- Created with Inkscape (http://www.inkscape.org/) -->
 <svg id="expandInverted" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns="http://www.w3.org/2000/svg" height="24" width="24" version="1.1" xmlns:cc="http://creativecommons.org/ns#" xmlns:dc="http://purl.org/dc/elements/1.1/">
@@ -178,7 +178,7 @@ const template = html`<iron-iconset-svg name='tg-icons' size='24'>
 </svg>
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <svg id="number6" xmlns="http://www.w3.org/2000/svg" height="24" width="24" version="1.1">
-    <text x="6" y="19" style="font-size:15pt;">6</text>
+    <text x="7" y="19" style="font-size:13pt;">6</text>
 </svg><?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <!-- Created with Inkscape (http://www.inkscape.org/) -->
 <svg id="expandInvertedLeft" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns="http://www.w3.org/2000/svg" height="24" width="24" version="1.1" xmlns:cc="http://creativecommons.org/ns#" xmlns:dc="http://purl.org/dc/elements/1.1/">
@@ -213,7 +213,7 @@ const template = html`<iron-iconset-svg name='tg-icons' size='24'>
 </svg>
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <svg id="number2" xmlns="http://www.w3.org/2000/svg" height="24" width="24" version="1.1">
-    <text x="6" y="19" style="font-size:15pt;">2</text>
+    <text x="7" y="19" style="font-size:13pt;">2</text>
 </svg></defs> 
  </svg> 
  </iron-iconset-svg>`;
