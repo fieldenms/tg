@@ -36,6 +36,7 @@ import static ua.com.fielden.platform.web.utils.WebUiResourceUtils.restoreModifi
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -438,11 +439,33 @@ public class CriteriaResource extends AbstractWebResource {
                 pair.getKey().put("renderingHints", new ArrayList<>());
             }
 
-            final Stream<AbstractEntity<?>> processedEntities = enhanceResultEntitiesWithCustomPropertyValues(
+            //Build dynamic properties object
+            final List<Pair<ResultSetProp<AbstractEntity<?>>, Optional<CentreContext<AbstractEntity<?>, ?>>>> resPropsWithContext = getDynamicResultProperties(
+                    centre,
+                    webUiConfig,
+                    companionFinder,
+                    user,
+                    userProvider,
+                    critGenerator,
+                    entityFactory,
+                    centreContextHolder,
+                    previouslyRunCriteriaEntity,
+                    device(),
+                    domainTreeEnhancerCache,
+                    eccCompanion,
+                    mmiCompanion,
+                    userCompanion);
+
+            pair.getKey().put("dynamicColumns", createDynamicProperties(resPropsWithContext));
+
+            Stream<AbstractEntity<?>> processedEntities = enhanceResultEntitiesWithCustomPropertyValues(
                     centre,
                     centre.getCustomPropertiesDefinitions(),
                     centre.getCustomPropertiesAsignmentHandler(),
                     ((List<AbstractEntity<?>>) pair.getValue()).stream());
+
+            //Enhance entities with values defined with consumer in each dynamic property.
+            processedEntities = enhanceResultEntitiesWithDynamicPropertyValues(processedEntities, resPropsWithContext);
 
             final ArrayList<Object> list = new ArrayList<>();
             list.add(isRunning ? previouslyRunCriteriaEntity : null);
@@ -457,6 +480,68 @@ public class CriteriaResource extends AbstractWebResource {
             logger.debug("CRITERIA_RESOURCE: run finished.");
             return restUtil.rawListJsonRepresentation(list.toArray());
         }, restUtil);
+    }
+
+    public static Stream<AbstractEntity<?>> enhanceResultEntitiesWithDynamicPropertyValues(final Stream<AbstractEntity<?>> stream, final List<Pair<ResultSetProp<AbstractEntity<?>>, Optional<CentreContext<AbstractEntity<?>, ?>>>> resPropsWithContext) {
+        return stream.map(entity -> {
+            resPropsWithContext.forEach(resPropWithContext -> {
+                final Collection<? extends AbstractEntity<?>> collection = ((AbstractEntity<?>) entity).get(resPropWithContext.getKey().propName.get());
+                collection.forEach(e -> resPropWithContext.getKey().entityPreProcessor.get().accept(e, resPropWithContext.getValue()));
+            });
+            return entity;
+        });
+    }
+
+    public static List<Pair<ResultSetProp<AbstractEntity<?>>, Optional<CentreContext<AbstractEntity<?>, ?>>>> getDynamicResultProperties(
+            final EntityCentre<AbstractEntity<?>> centre,
+            final IWebUiConfig webUiConfig,
+            final ICompanionObjectFinder companionFinder,
+            final User user,
+            final IUserProvider userProvider,
+            final ICriteriaGenerator critGenerator,
+            final EntityFactory entityFactory,
+            final CentreContextHolder centreContextHolder,
+            final EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, ?> criteriaEntity,
+            final DeviceProfile device,
+            final IDomainTreeEnhancerCache domainTreeEnhancerCache,
+            final IEntityCentreConfig eccCompanion,
+            final IMainMenuItem mmiCompanion,
+            final IUser userCompanion) {
+        final List<Pair<ResultSetProp<AbstractEntity<?>>, Optional<CentreContext<AbstractEntity<?>, ?>>>> resList = new ArrayList<>();
+        centre.getDynamicProperties().forEach(resProp -> {
+            resProp.dynamicColBuilderType.ifPresent(propDefinerClass -> {
+                final Optional<CentreContext<AbstractEntity<?>, ?>> optionalCentreContext = CentreResourceUtils.createCentreContext(
+                        true, // full context, fully-fledged restoration. This means that IQueryEnhancer descendants (centre query enhancers) could use IContextDecomposer for context decomposition on deep levels.
+                        webUiConfig,
+                        companionFinder,
+                        user,
+                        userProvider,
+                        critGenerator,
+                        entityFactory,
+                        centreContextHolder,
+                        criteriaEntity,
+                        resProp.contextConfig,
+                        null, /* chosenProperty is not applicable in queryEnhancer context */
+                        device,
+                        domainTreeEnhancerCache,
+                        eccCompanion,
+                        mmiCompanion,
+                        userCompanion
+                    );
+                resList.add(new Pair<>(resProp, optionalCentreContext));
+            });
+        });
+        return resList;
+    }
+
+    private Map<String, List<Map<String, String>>> createDynamicProperties(final List<Pair<ResultSetProp<AbstractEntity<?>>, Optional<CentreContext<AbstractEntity<?>, ?>>>> resPropsWithContext) {
+        final Map<String, List<Map<String, String>>> dynamicColumns = new LinkedHashMap<>();
+        resPropsWithContext.forEach(resPropWithContext -> {
+            centre.getDynamicColumnBuilderFor(resPropWithContext.getKey()).ifPresent(dynColumnBuilder -> 
+                dynColumnBuilder.getColumnsConfig(resPropWithContext.getValue()).ifPresent(config -> dynamicColumns.put(resPropWithContext.getKey().propName.get() + "Columns", config.build()))
+            );
+        });
+        return dynamicColumns;
     }
 
     /**
@@ -549,7 +634,7 @@ public class CriteriaResource extends AbstractWebResource {
      */
     public static Stream<AbstractEntity<?>> enhanceResultEntitiesWithCustomPropertyValues(
             final EntityCentre<AbstractEntity<?>> centre,
-            final Optional<List<ResultSetProp>> propertiesDefinitions,
+            final Optional<List<ResultSetProp<AbstractEntity<?>>>> propertiesDefinitions,
             final Optional<Class<? extends ICustomPropsAssignmentHandler>> customPropertiesAsignmentHandler,
             final Stream<AbstractEntity<?>> entities) {
 
@@ -560,7 +645,7 @@ public class CriteriaResource extends AbstractWebResource {
         final Stream<AbstractEntity<?>> assignedEntities = assignedEntitiesOp.orElse(entities);
 
         final Optional<Stream<AbstractEntity<?>>> completedEntitiesOp = propertiesDefinitions.map(customProps -> assignedEntities.map(entity -> {
-            for (final ResultSetProp customProp : customProps) {
+            for (final ResultSetProp<AbstractEntity<?>> customProp : customProps) {
                 if (customProp.propDef.isPresent()) {
                     final PropDef<?> propDef = customProp.propDef.get();
                     final String propertyName = CalculatedProperty.generateNameFrom(propDef.title);

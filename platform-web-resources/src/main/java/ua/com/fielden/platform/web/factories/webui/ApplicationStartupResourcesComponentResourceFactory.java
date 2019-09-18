@@ -5,7 +5,7 @@ import org.restlet.Response;
 import org.restlet.Restlet;
 import org.restlet.data.Method;
 
-import ua.com.fielden.platform.web.app.ISourceController;
+import ua.com.fielden.platform.web.app.IWebResourceLoader;
 import ua.com.fielden.platform.web.interfaces.IDeviceProvider;
 import ua.com.fielden.platform.web.resources.webui.ApplicationStartupResourcesComponentResource;
 
@@ -16,11 +16,11 @@ import ua.com.fielden.platform.web.resources.webui.ApplicationStartupResourcesCo
  *
  */
 public class ApplicationStartupResourcesComponentResourceFactory extends Restlet {
-    private final ISourceController sourceController;
+    private final IWebResourceLoader webResourceLoader;
     private final IDeviceProvider deviceProvider;
 
-    public ApplicationStartupResourcesComponentResourceFactory(final ISourceController sourceController, final IDeviceProvider deviceProvider) {
-        this.sourceController = sourceController;
+    public ApplicationStartupResourcesComponentResourceFactory(final IWebResourceLoader webResourceLoader, final IDeviceProvider deviceProvider) {
+        this.webResourceLoader = webResourceLoader;
         this.deviceProvider = deviceProvider;
     }
 
@@ -29,7 +29,7 @@ public class ApplicationStartupResourcesComponentResourceFactory extends Restlet
         super.handle(request, response);
 
         if (Method.GET == request.getMethod()) {
-            final ApplicationStartupResourcesComponentResource resource = new ApplicationStartupResourcesComponentResource(sourceController, deviceProvider, getContext(), request, response);
+            final ApplicationStartupResourcesComponentResource resource = new ApplicationStartupResourcesComponentResource(webResourceLoader, deviceProvider, getContext(), request, response);
             resource.handle();
         }
     }

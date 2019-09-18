@@ -3,6 +3,8 @@ package ua.com.fielden.platform.web.ioc;
 import static com.google.common.base.Charsets.UTF_8;
 import static java.lang.String.format;
 import static java.util.Collections.sort;
+import static java.util.Optional.empty;
+import static java.util.Optional.ofNullable;
 import static java.util.regex.Pattern.quote;
 import static org.apache.commons.lang.StringUtils.isEmpty;
 import static ua.com.fielden.platform.basic.config.Workflows.deployment;
@@ -17,9 +19,9 @@ import static ua.com.fielden.platform.web.resources.webui.FileResource.generateF
 
 import java.io.InputStream;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Optional;
 
 import org.apache.log4j.Logger;
 
@@ -30,31 +32,32 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
 import ua.com.fielden.platform.serialisation.api.impl.TgJackson;
 import ua.com.fielden.platform.ui.menu.MiWithConfigurationSupport;
-import ua.com.fielden.platform.web.app.ISourceController;
+import ua.com.fielden.platform.web.app.IWebResourceLoader;
 import ua.com.fielden.platform.web.app.IWebUiConfig;
 import ua.com.fielden.platform.web.centre.EntityCentre;
 import ua.com.fielden.platform.web.custom_view.AbstractCustomView;
 import ua.com.fielden.platform.web.ioc.exceptions.MissingCentreConfigurationException;
 import ua.com.fielden.platform.web.ioc.exceptions.MissingCustomViewConfigurationException;
 import ua.com.fielden.platform.web.ioc.exceptions.MissingMasterConfigurationException;
+import ua.com.fielden.platform.web.ioc.exceptions.MissingWebResourceException;
 import ua.com.fielden.platform.web.view.master.EntityMaster;
 
 /**
- * {@link ISourceController} implementation.
+ * {@link IWebResourceLoader} implementation.
  *
  * @author TG Team
  *
  */
-public class SourceControllerImpl implements ISourceController {
+public class WebResourceLoader implements IWebResourceLoader {
     private final IWebUiConfig webUiConfig;
     private final ISerialiser serialiser;
     private final TgJackson tgJackson;
-    private static final Logger logger = Logger.getLogger(SourceControllerImpl.class);
+    private static final Logger logger = Logger.getLogger(WebResourceLoader.class);
     private final boolean deploymentMode;
     private final boolean vulcanizingMode;
     
     @Inject
-    public SourceControllerImpl(final IWebUiConfig webUiConfig, final ISerialiser serialiser) {
+    public WebResourceLoader(final IWebUiConfig webUiConfig, final ISerialiser serialiser) {
         this.webUiConfig = webUiConfig;
         this.serialiser = serialiser;
         this.tgJackson = (TgJackson) serialiser.getEngine(JACKSON);
@@ -70,53 +73,85 @@ public class SourceControllerImpl implements ISourceController {
     }
     
     @Override
-    public String loadSourceWithFilePath(final String filePath) {
-        return getFileSource(filePath);
+    public InputStream loadStream(final String resourceUri) {
+        return ofNullable(getStream(resourceUri)).orElseThrow(() -> new MissingWebResourceException(format("URI is unknown: [%s].", resourceUri)));
+    }
+    
+    private String getSource(final String resourceUri) {
+        if ("/app/application-startup-resources.js".equalsIgnoreCase(resourceUri)) {
+            return getApplicationStartupResourcesSource(webUiConfig).orElseThrow(() -> new MissingWebResourceException("Application startup resources are missing."));
+        } else if ("/app/tg-app-index.html".equalsIgnoreCase(resourceUri)) {
+            return injectServiceWorkerScriptInto(webUiConfig.genAppIndex()).orElseThrow(() -> new MissingWebResourceException("Application index resource is missing."));
+        } else if ("/app/logout.html".equalsIgnoreCase(resourceUri)) {
+            return getFileSource("/resources/logout.html", webUiConfig.resourcePaths()).map(src -> src.replaceAll("@title", "Logout")).orElseThrow(() -> new MissingWebResourceException("Logout resource is missing."));
+        } else if ("/app/login-initiate-reset.html".equalsIgnoreCase(resourceUri)) {
+            return getFileSource("/resources/login-initiate-reset.html", webUiConfig.resourcePaths()).map(src -> src.replaceAll("@title", "Login Reset Request")).orElseThrow(() -> new MissingWebResourceException("Login reset request resource is missing."));
+        } else if ("/app/tg-app-config.js".equalsIgnoreCase(resourceUri)) {
+            return ofNullable(webUiConfig.genWebUiPreferences()).orElseThrow(() -> new MissingWebResourceException("Web UI preferences are missing."));
+        } else if ("/app/tg-app.js".equalsIgnoreCase(resourceUri)) {
+            return ofNullable(webUiConfig.genMainWebUIComponent()).orElseThrow(() -> new MissingWebResourceException("The main Web UI component is missing."));
+        } else if ("/app/tg-reflector.js".equalsIgnoreCase(resourceUri)) {
+            return getReflectorSource(serialiser, tgJackson).orElseThrow(() -> new MissingWebResourceException("The reflector resource is missing."));
+        } else if (resourceUri.startsWith("/master_ui")) {
+            return getMasterSource(resourceUri.replaceFirst(quote("/master_ui/"), "").replaceFirst(quote(".js"), ""), webUiConfig);
+        } else if (resourceUri.startsWith("/centre_ui")) {
+            return getCentreSource(resourceUri.replaceFirst(quote("/centre_ui/"), "").replaceFirst(quote(".js"), ""), webUiConfig);
+        } else if (resourceUri.startsWith("/custom_view")) {
+            return getCustomViewSource(resourceUri.replaceFirst("/custom_view/", ""), webUiConfig);
+        } else if (resourceUri.startsWith("/resources/")) {
+            return getFileSource(resourceUri, webUiConfig.resourcePaths()).orElseThrow(() -> new MissingWebResourceException("Web UI resource is missing."));
+        } else {
+            final String msg = format("URI is unknown: [%s].", resourceUri);
+            logger.error(msg);
+            throw new MissingWebResourceException(msg);
+        }
     }
     
     @Override
-    public InputStream loadStreamWithFilePath(final String filePath) {
-        return getStream(filePath);
+    public Optional<String> checksum(final String resourceURI) {
+        return webUiConfig.checksum(resourceURI);
     }
     
-    private String getSource(final String resourceURI) {
-        if ("/app/application-startup-resources.js".equalsIgnoreCase(resourceURI)) {
-            return getApplicationStartupResourcesSource(webUiConfig, this);
-        } else if ("/app/tg-app-index.html".equalsIgnoreCase(resourceURI)) {
-            return webUiConfig.genAppIndex();
-        } else if ("/app/tg-app-config.js".equalsIgnoreCase(resourceURI)) {
-            return webUiConfig.genWebUiPreferences();
-        } else if ("/app/tg-app.js".equalsIgnoreCase(resourceURI)) {
-            return webUiConfig.genMainWebUIComponent();
-        } else if ("/app/tg-reflector.js".equalsIgnoreCase(resourceURI)) {
-            return getReflectorSource(serialiser, tgJackson);
-        } else if (resourceURI.startsWith("/master_ui")) {
-            return getMasterSource(resourceURI.replaceFirst(quote("/master_ui/"), "").replaceFirst(quote(".js"), ""), webUiConfig);
-        } else if (resourceURI.startsWith("/centre_ui")) {
-            return getCentreSource(resourceURI.replaceFirst(quote("/centre_ui/"), "").replaceFirst(quote(".js"), ""), webUiConfig);
-        } else if (resourceURI.startsWith("/custom_view")) {
-            return getCustomViewSource(resourceURI.replaceFirst("/custom_view/", ""), webUiConfig);
-        } else if (resourceURI.startsWith("/resources/")) {
-            return getFileSource(resourceURI, webUiConfig.resourcePaths());
-        } else {
-            logger.error("The URI is not known: [" + resourceURI + "].");
-            return null;
-        }
+    private static Optional<String> getReflectorSource(final ISerialiser serialiser, final TgJackson tgJackson) {
+        final Optional<String> originalSource = ofNullable(getText("ua/com/fielden/platform/web/reflection/tg-reflector.js"));
+        return originalSource.map(src -> src.replace("@typeTable", new String(serialiser.serialise(tgJackson.getTypeTable(), JACKSON), UTF_8)));
     }
     
-    private static String getReflectorSource(final ISerialiser serialiser, final TgJackson tgJackson) {
-        final String typeTableRepresentation = new String(serialiser.serialise(tgJackson.getTypeTable(), JACKSON), UTF_8);
-        final String originalSource = getText("ua/com/fielden/platform/web/reflection/tg-reflector.js");
-        return originalSource.replace("@typeTable", typeTableRepresentation);
+    /**
+     * Injects service worker registration script with lazy tags loading after sw registration (deployment mode).
+     * Injects lazy tags loading (development mode).
+     * 
+     * @param originalSource
+     * @return
+     */
+    private Optional<String> injectServiceWorkerScriptInto(final String originalSource) {
+        return ofNullable(originalSource.replace("@service-worker", 
+                          this.deploymentMode
+                          ? // deployment?
+                          "        if ('serviceWorker' in navigator) {\n" + 
+                          "            navigator.serviceWorker.register('/service-worker.js').then(function (registration) {\n" + 
+                          "                if (registration.active) {\n" + 
+                          "                    loadTags();\n" + 
+                          "                } else {\n" + 
+                          "                    registration.onupdatefound = function () {\n" + 
+                          "                        const installingWorker = registration.installing;\n" + 
+                          "                        installingWorker.onstatechange = function () {\n" + 
+                          "                            if (installingWorker.state === 'activated') {\n" + 
+                          "                                loadTags();\n" + 
+                          "                            }\n" + 
+                          "                        };\n" + 
+                          "                    };\n" + 
+                          "                }\n" + 
+                          "            });\n" + 
+                          "        }\n"
+                          : // development?
+                          "        loadTags();\n"
+                        ));
     }
     
-    private static String getApplicationStartupResourcesSource(final IWebUiConfig webUiConfig, final SourceControllerImpl sourceControllerImpl) {
-        final String source = getFileSource("/resources/application-startup-resources.js", webUiConfig.resourcePaths());
-        if (sourceControllerImpl.vulcanizingMode || sourceControllerImpl.deploymentMode) {
-            return appendMastersAndCentresImportURIs(source, webUiConfig);
-        } else {
-            return source;
-        }
+    private Optional<String> getApplicationStartupResourcesSource(final IWebUiConfig webUiConfig) {
+        return getFileSource("/resources/application-startup-resources.js", webUiConfig.resourcePaths())
+               .map(src -> vulcanizingMode || deploymentMode ? appendMastersAndCentresImportURIs(src, webUiConfig) : src);
     }
     
     /**
@@ -201,26 +236,19 @@ public class SourceControllerImpl implements ISourceController {
     }
     
     ////////////////////////////////// Getting file source //////////////////////////////////
-    private static String getFileSource(final String resourceURI, final List<String> resourcePaths) {
-        final String rest = resourceURI.replaceFirst("/resources/", "");
-        final int lastDotIndex = rest.lastIndexOf(".");
-        final String originalPath = rest.substring(0);
-        final String extension = rest.substring(lastDotIndex + 1);
-        return getFileSource(originalPath, extension, resourcePaths);
-    }
-    
-    private static String getFileSource(final String originalPath, final String extension, final List<String> resourcePaths) {
-        final String filePath = generateFileName(resourcePaths, originalPath, extension);
+    private static Optional<String> getFileSource(final String resourceURI, final List<String> resourcePaths) {
+        final String originalPath = resourceURI.replaceFirst("/resources/", "");
+        final String filePath = generateFileName(resourcePaths, originalPath);
         if (isEmpty(filePath)) {
-            logger.error(format("The requested resource (%s + %s) wasn't found.", originalPath, extension));
-            return null;
+            logger.error(format("The requested resource (%s) wasn't found.", originalPath));
+            return empty();
         } else {
             return getFileSource(filePath);
         }
     }
     
-    private static String getFileSource(final String filePath) {
-        return getText(filePath);
+    private static Optional<String> getFileSource(final String filePath) {
+        return ofNullable(getText(filePath));
     }
     
 }

@@ -27,6 +27,12 @@ export const TgSseBehavior = {
             type: Function
         },
 
+        /* Can be used to influence the default behaviour to reconnect when an error occurs. */
+        shouldReconnectWhenError: {
+            type: Boolean,
+            value: true
+        },
+
         /* A reference to an established EventSource object. */
         _source: {
             type: Object,
@@ -110,10 +116,16 @@ export const TgSseBehavior = {
         }, false);
 
         source.addEventListener('error', function (e) {
-            // TODO Might need to implement some error recovery strategy to reconnect to the server-side observable
             console.log('an error occurred: ', e);
 
-            if (e.eventPhase === EventSource.CLOSED) {
+            // invoke error handler if provided
+            if (self.errorHandler) {
+                self.errorHandler(e);
+            }
+
+            // only after custom error handling should we attempt to reconnect
+            // this is because the decision to reconnect can be made in the custom error handler
+            if (self.shouldReconnectWhenError === true && e.eventPhase === EventSource.CLOSED) {
                 // Connection was closed by the server
                 self.closeEventSource();
                 // Let's kick a timer for reconnection...
@@ -124,11 +136,6 @@ export const TgSseBehavior = {
                         self._timerIdForReconnection = null;
                     }
                 }, 15000);
-            }
-
-            // invoke error handler if provided
-            if (self.errorHandler) {
-                self.errorHandler(e);
             }
 
         }, false);
