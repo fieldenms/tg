@@ -36,10 +36,8 @@ const template = html`
             --calculated-paper-radio-button-ink-size: 36px;
         }
     </style>
-    <paper-checkbox checked="{{_orNull}}" hidden$="[[_excludeMissing]]">Missing</paper-checkbox>
-    <paper-checkbox checked="{{_not}}">Not</paper-checkbox>
     <tg-accordion id="orGroupAccordion" heading="OR grouping" hidden$="[[_excludeOrGroup]]" selected="[[_calcSelected(_orGroup)]]">
-        <div class="layout horizontal wrap">
+        <div class="layout horizontal wrap justified">
             <template is="dom-repeat" items="{{_columns}}" as="column">
                 <div class="layout vertical">
                     <template is="dom-repeat" items="{{_rows}}" as="row">
@@ -49,6 +47,8 @@ const template = html`
             </template>
         </div>
     </tg-accordion>
+    <paper-checkbox checked="{{_orNull}}" hidden$="[[_excludeMissing]]">Missing</paper-checkbox>
+    <paper-checkbox checked="{{_not}}">Not</paper-checkbox>
 `;
 
 Polymer({
