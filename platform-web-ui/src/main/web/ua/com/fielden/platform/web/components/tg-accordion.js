@@ -55,7 +55,7 @@ const template = html`
             <a>[[heading]]</a>
             <iron-icon icon="[[_calcIcon(opened)]]"></iron-icon>
         </div>
-        <iron-collapse opened="{{opened}}" id="collapse">
+        <iron-collapse opened="{{opened}}" id="collapse" transitioning="{{transitioning}}">
             <slot></slot>
         </iron-collapse>
     </div>
@@ -90,6 +90,17 @@ Polymer({
             type: Boolean,
             value: false,
             reflectToAttribute: true
+        },
+
+        /**
+         * Returns 'true' if the accordion is transitioning its opened state. Otherwise, returns 'false' which indicates that it has finished opening / closing.
+         * 
+         * Please note that accordion also fires event 'accordion-transitioning-completed' when transitioning completes.
+         */
+        transitioning: {
+            type: Boolean,
+            notify: true,
+            observer: '_transitioningChanged'
         }
     },
 
@@ -115,6 +126,12 @@ Polymer({
     _openedChanged: function (newValue, oldValue) {
         if (newValue !== undefined) {
             this.fire('accordion-toggled', newValue);
+        }
+    },
+
+    _transitioningChanged: function (newValue, oldValue) {
+        if (newValue === false && oldValue === true) {
+            this.fire('accordion-transitioning-completed');
         }
     }
 });

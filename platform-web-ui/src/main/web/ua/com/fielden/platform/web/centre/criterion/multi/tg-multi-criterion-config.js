@@ -36,7 +36,7 @@ const template = html`
             --calculated-paper-radio-button-ink-size: 36px;
         }
     </style>
-    <tg-accordion id="orGroupAccordion" heading="OR grouping" hidden$="[[_excludeOrGroup]]" selected="[[_calcSelected(_orGroup)]]">
+    <tg-accordion id="orGroupAccordion" heading="OR grouping" hidden$="[[_excludeOrGroup]]" selected="[[_calcSelected(_orGroup)]]" on-accordion-transitioning-completed="_orGroupAccordionToggled">
         <div class="layout horizontal wrap justified">
             <template is="dom-repeat" items="{{_columns}}" as="column">
                 <div class="layout vertical">
@@ -120,5 +120,16 @@ Polymer({
 
     _calcSelected: function (_orGroup) {
         return _orGroup !== null;
+    },
+
+    /**
+     * Fires 'iron-resize' event to trigger shadow repainting and dialog re-centering when accordion changes its open state.
+     */
+    _orGroupAccordionToggled: function (event) {
+        this.fire('iron-resize', {
+            node: this,
+            bubbles: true,
+            composed: true
+        });
     }
 });
