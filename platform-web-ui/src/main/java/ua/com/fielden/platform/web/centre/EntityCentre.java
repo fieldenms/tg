@@ -9,7 +9,6 @@ import static ua.com.fielden.platform.domaintree.impl.CalculatedProperty.generat
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.determinePropertyType;
 import static ua.com.fielden.platform.types.tuples.T2.t2;
 import static ua.com.fielden.platform.utils.EntityUtils.fetchNone;
-import static ua.com.fielden.platform.utils.EntityUtils.fetchWithKeyAndDesc;
 import static ua.com.fielden.platform.utils.EntityUtils.isBoolean;
 import static ua.com.fielden.platform.utils.EntityUtils.isDate;
 import static ua.com.fielden.platform.utils.EntityUtils.isEntityType;
@@ -131,20 +130,19 @@ import ua.com.fielden.platform.web.centre.api.insertion_points.InsertionPointBui
 import ua.com.fielden.platform.web.centre.api.insertion_points.InsertionPointConfig;
 import ua.com.fielden.platform.web.centre.api.insertion_points.InsertionPoints;
 import ua.com.fielden.platform.web.centre.api.resultset.ICustomPropsAssignmentHandler;
+import ua.com.fielden.platform.web.centre.api.resultset.IDynamicColumnBuilder;
 import ua.com.fielden.platform.web.centre.api.resultset.IRenderingCustomiser;
 import ua.com.fielden.platform.web.centre.api.resultset.PropDef;
 import ua.com.fielden.platform.web.centre.api.resultset.impl.FunctionalActionElement;
 import ua.com.fielden.platform.web.centre.api.resultset.impl.FunctionalActionKind;
 import ua.com.fielden.platform.web.centre.api.resultset.impl.PropertyColumnElement;
 import ua.com.fielden.platform.web.centre.exceptions.PropertyDefinitionException;
-import ua.com.fielden.platform.web.interfaces.DeviceProfile;
 import ua.com.fielden.platform.web.interfaces.ILayout.Device;
 import ua.com.fielden.platform.web.interfaces.IRenderable;
 import ua.com.fielden.platform.web.layout.FlexLayout;
 import ua.com.fielden.platform.web.minijs.JsCode;
 import ua.com.fielden.platform.web.utils.EntityResourceUtils;
 import ua.com.fielden.platform.web.view.master.api.impl.SimpleMasterBuilder;
-import ua.com.fielden.platform.web.view.master.api.widgets.autocompleter.impl.AbstractEntityAutocompletionWidget;
 import ua.com.fielden.snappy.DateRangeConditionEnum;
 
 /**
@@ -307,11 +305,11 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
      * @param summaryExpressions
      * @return
      */
-    private static T2<Map<Class<?>, Set<CalculatedPropertyInfo>>, Map<Class<?>, List<CustomProperty>>> createCalculatedAndCustomProperties(final Class<?> entityType, final Optional<List<ResultSetProp>> resultSetProps, final ListMultimap<String, SummaryPropDef> summaryExpressions) {
+    private static <T extends AbstractEntity<?>>T2<Map<Class<?>, Set<CalculatedPropertyInfo>>, Map<Class<?>, List<CustomProperty>>> createCalculatedAndCustomProperties(final Class<?> entityType, final Optional<List<ResultSetProp<T>>> resultSetProps, final ListMultimap<String, SummaryPropDef> summaryExpressions) {
         final Map<Class<?>, List<CustomProperty>> customProperties = new LinkedHashMap<>();
         customProperties.put(entityType, new ArrayList<CustomProperty>());
         if (resultSetProps.isPresent()) {
-            for (final ResultSetProp property : resultSetProps.get()) {
+            for (final ResultSetProp<T> property : resultSetProps.get()) {
                 if (!property.propName.isPresent()) {
                     if (property.propDef.isPresent()) { // represents the 'custom' property
                         final PropDef<?> propDef = property.propDef.get();
@@ -329,7 +327,7 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
         for (final Entry<String, Collection<SummaryPropDef>> entry : summaryExpressions.asMap().entrySet()) {
             final String originationProperty = treeName(entry.getKey());
             for (final SummaryPropDef summaryProp : entry.getValue()) {
-                calculatedPropertiesInfo.get(entityType).add(new CalculatedPropertyInfo(entityType, "", summaryProp.alias, 
+                calculatedPropertiesInfo.get(entityType).add(new CalculatedPropertyInfo(entityType, "", summaryProp.alias,
                         summaryProp.expression,
                         summaryProp.title,
                         CalculatedPropertyAttribute.NO_ATTR,
@@ -360,8 +358,8 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
         final IDomainTreeEnhancerCache domainTreeEnhancerCache,
         final Class<? extends MiWithConfigurationSupport<?>> miType,
         final Injector injector) {
-        
-        final Optional<List<ResultSetProp>> resultSetProps = dslDefaultConfig.getResultSetProperties();
+
+        final Optional<List<ResultSetProp<T>>> resultSetProps = dslDefaultConfig.getResultSetProperties();
         final ListMultimap<String, SummaryPropDef> summaryExpressions = dslDefaultConfig.getSummaryExpressions();
 
         final ICentreDomainTreeManagerAndEnhancer cdtmae = createEmptyCentre(entityType, serialiser, domainTreeEnhancerCache, createCalculatedAndCustomProperties(entityType, resultSetProps, summaryExpressions), miType);
@@ -370,7 +368,7 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
         if (selectionCriteria.isPresent()) {
             for (final String property : selectionCriteria.get()) {
                 cdtmae.getFirstTick().check(entityType, treeName(property), true);
-                
+
                 if (userSpecific) {
                     provideDefaultsFor(property, cdtmae, dslDefaultConfig, entityType, injector);
                 }
@@ -379,13 +377,15 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
 
         if (resultSetProps.isPresent()) {
             final Map<String, Integer> growFactors = calculateGrowFactors(resultSetProps.get());
-            for (final ResultSetProp property : resultSetProps.get()) {
+            for (final ResultSetProp<T> property : resultSetProps.get()) {
                 final String propertyName = getPropName(property);
-                cdtmae.getSecondTick().check(entityType, propertyName, true);
-                cdtmae.getSecondTick().use(entityType, propertyName, true);
-                cdtmae.getSecondTick().setWidth(entityType, propertyName, property.width);
-                if (growFactors.containsKey(propertyName)) {
-                    cdtmae.getSecondTick().setGrowFactor(entityType, propertyName, growFactors.get(propertyName));
+                if (!property.dynamicColBuilderType.isPresent()) {
+                    cdtmae.getSecondTick().check(entityType, propertyName, true);
+                    cdtmae.getSecondTick().use(entityType, propertyName, true);
+                    cdtmae.getSecondTick().setWidth(entityType, propertyName, property.width);
+                    if (growFactors.containsKey(propertyName)) {
+                        cdtmae.getSecondTick().setGrowFactor(entityType, propertyName, growFactors.get(propertyName));
+                    }
                 }
             }
         }
@@ -394,16 +394,16 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
                 cdtmae.getSecondTick().check(entityType, summaryProp.alias, true);
             }
         }
-        
+
         final Optional<Map<String, OrderDirection>> propOrdering = dslDefaultConfig.getResultSetOrdering();
         if (propOrdering.isPresent()) {
-            
+
             // by default ordering occurs by "this" that is why it needs to be switched off in the presence of alternative ordering configuration
             if (cdtmae.getSecondTick().isChecked(entityType, "")) {
                 cdtmae.getSecondTick().toggleOrdering(entityType, "");
                 cdtmae.getSecondTick().toggleOrdering(entityType, "");
             }
-            
+
             // let's now apply the ordering as per configuration
             for (final Map.Entry<String, OrderDirection> propAndOrderDirection : propOrdering.get().entrySet()) {
                 if (OrderDirection.ASC == propAndOrderDirection.getValue()) {
@@ -413,13 +413,13 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
                 }
             }
         }
-        
+
         return postCentreCreated == null ? cdtmae : postCentreCreated.apply(cdtmae);
     }
-    
+
     /**
      * Creates default centre from Centre DSL configuration by adding calculated / custom props, applying selection crit defaults, EGI column widths / ordering etc.
-     * 
+     *
      * @param dslDefaultConfig
      * @param serialiser
      * @param postCentreCreated
@@ -437,7 +437,7 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
      * @param property
      * @return
      */
-    private static String getPropName(final ResultSetProp property) {
+    private static <T extends AbstractEntity<?>> String getPropName(final ResultSetProp<T> property) {
         if (property.propName.isPresent()) {
             return treeName(property.propName.get());
         } else {
@@ -449,14 +449,14 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
             }
         }
     }
-    
+
     private static <T extends AbstractEntity<?>> void provideDefaultsFor(final String dslProperty, final ICentreDomainTreeManagerAndEnhancer cdtmae, final EntityCentreConfig<T> dslDefaultConfig, final Class<T> entityType, final Injector injector) {
         final String property = treeName(dslProperty);
         final Class<?> managedType = cdtmae.getEnhancer().getManagedType(entityType);
-        
+
         final boolean isEntityItself = "".equals(property); // empty property means "entity itself"
         final Class<?> propertyType = isEntityItself ? managedType : PropertyTypeDeterminator.determinePropertyType(managedType, property);
-        
+
         if (isCritOnlySingle(managedType, property)) {
             if (isEntityType(propertyType)) {
                 provideDefaultsEntitySingle(() -> dslDefaultConfig.getDefaultSingleValuesForEntitySelectionCriteria(), () -> dslDefaultConfig.getDefaultSingleValueAssignersForEntitySelectionCriteria(), dslProperty, cdtmae, entityType, injector);
@@ -489,7 +489,7 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
             }
         }
     }
-    
+
     private static <T extends AbstractEntity<?>> void provideDefaultsEntityOrString(final Supplier<Optional<Map<String, MultiCritStringValueMnemonic>>> mnemonicSupplier, final Supplier<Optional<Map<String, Class<? extends IValueAssigner<MultiCritStringValueMnemonic, T>>>>> assignerSupplier, final String dslProperty, final ICentreDomainTreeManagerAndEnhancer cdtmae, final boolean isString, final Class<T> entityType, final Injector injector) {
         final String property = treeName(dslProperty);
         if (mnemonicSupplier.get().isPresent() && mnemonicSupplier.get().get().get(dslProperty) != null) {
@@ -834,6 +834,16 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
         }
     }
 
+    public Optional<IDynamicColumnBuilder<T>> getDynamicColumnBuilderFor(final ResultSetProp<T> resProp) {
+        return resProp.dynamicColBuilderType.map(clazz -> injector.getInstance(clazz));
+    }
+
+    public List<ResultSetProp<T>> getDynamicProperties () {
+        return dslDefaultConfig.getResultSetProperties()
+                .orElse(new ArrayList<>()).stream()
+                .filter(resProp -> resProp.dynamicColBuilderType.isPresent()).collect(Collectors.toList());
+    }
+
     @Override
     public IRenderable buildFor() {
         return createRenderableRepresentation(getAssociatedEntityCentreManager());
@@ -848,7 +858,7 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
         }
     }
 
-    private String egiRepresentationFor(final Class<?> propertyType, final Optional<String> timeZone, final Optional<String> timePortionToDisplay) {
+    public static String egiRepresentationFor(final Class<?> propertyType, final Optional<String> timeZone, final Optional<String> timePortionToDisplay) {
         final Class<?> type = DynamicEntityClassLoader.getOriginalType(propertyType);
         String typeRes = EntityUtils.isEntityType(type) ? type.getName() : (EntityUtils.isBoolean(type) ? "Boolean" : type.getSimpleName());
         if (Date.class.isAssignableFrom(type)) {
@@ -896,12 +906,12 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
         logger.debug("Initiating property columns...");
 
         final List<PropertyColumnElement> propertyColumns = new ArrayList<>();
-        final Optional<List<ResultSetProp>> resultProps = dslDefaultConfig.getResultSetProperties();
+        final Optional<List<ResultSetProp<T>>> resultProps = dslDefaultConfig.getResultSetProperties();
         final ListMultimap<String, SummaryPropDef> summaryProps = dslDefaultConfig.getSummaryExpressions();
         final Class<?> managedType = centre.getEnhancer().getManagedType(root);
         if (resultProps.isPresent()) {
             int actionIndex = 0;
-            for (final ResultSetProp resultProp : resultProps.get()) {
+            for (final ResultSetProp<T> resultProp : resultProps.get()) {
                 final String tooltipProp = resultProp.tooltipProp.isPresent() ? resultProp.tooltipProp.get() : null;
                 final String resultPropName = getPropName(resultProp);
                 final boolean isEntityItself = "".equals(resultPropName); // empty property means "entity itself"
@@ -917,7 +927,7 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
                 }
 
                 final PropertyColumnElement el = new PropertyColumnElement(resultPropName,
-                        null,
+                        resultProp.dynamicColBuilderType.isPresent(),
                         resultProp.width,
                         centre.getSecondTick().getGrowFactor(root, resultPropName),
                         resultProp.isFlexible,
@@ -1166,7 +1176,7 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
     /**
      * Calculates the relative grow factor for all columns.
      */
-    private static Map<String, Integer> calculateGrowFactors(final List<ResultSetProp> propertyColumns) {
+    private static <T extends AbstractEntity<?>> Map<String, Integer> calculateGrowFactors(final List<ResultSetProp<T>> propertyColumns) {
         // Searching for the minimal column width which are not flexible and their width is greater than 0.
         final int minWidth = propertyColumns.stream()
                 .filter(column -> column.isFlexible && column.width > 0)
@@ -1380,12 +1390,12 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
         final Set<String> additionalProperties = nonDefaultAdditionalProperties.isEmpty() ? createDefaultAdditionalProps(propType).keySet() : nonDefaultAdditionalProperties;
         return createFetchModelForAutocompleterFrom(propType, additionalProperties);
     }
-    
+
     /**
      * Creates lean fetch model for autocompleted values with deep keys for entity itself and deep keys for every <code>additionalProperties</code>.
      * <p>
      * Deep keys are needed for conversion of entity itself and its additional properties to string in client application.
-     * 
+     *
      * @param propType
      * @param additionalProperties
      * @return
@@ -1403,7 +1413,7 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
         return dslDefaultConfig.getResultSetCustomPropAssignmentHandlerType();
     }
 
-    public Optional<List<ResultSetProp>> getCustomPropertiesDefinitions() {
+    public Optional<List<ResultSetProp<T>>> getCustomPropertiesDefinitions() {
         return dslDefaultConfig.getResultSetProperties();
     }
 
@@ -1422,7 +1432,7 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
      */
     public Optional<IFetchProvider<T>> getAdditionalFetchProviderForTooltipProperties() {
         final Set<String> tooltipProps = new LinkedHashSet<>();
-        final Optional<List<ResultSetProp>> resultSetProps = dslDefaultConfig.getResultSetProperties();
+        final Optional<List<ResultSetProp<T>>> resultSetProps = dslDefaultConfig.getResultSetProperties();
         resultSetProps.ifPresent(resultProps ->
             resultProps.stream().forEach(property -> {
                 if (property.tooltipProp.isPresent()) {

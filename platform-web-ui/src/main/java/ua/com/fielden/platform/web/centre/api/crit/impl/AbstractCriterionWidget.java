@@ -3,7 +3,7 @@ package ua.com.fielden.platform.web.centre.api.crit.impl;
 import static java.util.Optional.empty;
 import static org.apache.commons.lang.StringUtils.isEmpty;
 import static ua.com.fielden.platform.criteria.generator.impl.CriteriaReflector.from;
-import static ua.com.fielden.platform.criteria.generator.impl.CriteriaReflector.generateCriteriaPropertyName;
+import static ua.com.fielden.platform.criteria.generator.impl.CriteriaReflector.critName;
 import static ua.com.fielden.platform.criteria.generator.impl.CriteriaReflector.is;
 import static ua.com.fielden.platform.criteria.generator.impl.CriteriaReflector.not;
 import static ua.com.fielden.platform.criteria.generator.impl.CriteriaReflector.to;
@@ -142,7 +142,7 @@ public abstract class AbstractCriterionWidget implements IRenderable, IImportabl
         if (isDebug()) {
             attrs.put("debug", "true");
         }
-        attrs.put("id", "criterion_4_" + CriteriaReflector.generateCriteriaPropertyName(root, this.propertyName));
+        attrs.put("id", "criterion_4_" + CriteriaReflector.critName(root, this.propertyName));
         attrs.put("validation-callback", "[[validate]]");
         if (mnemonicsVisible) {
             attrs.put("mnemonics-visible", null);
@@ -206,10 +206,10 @@ public abstract class AbstractCriterionWidget implements IRenderable, IImportabl
 
         final String firstPropertyName, secondPropertyName;
         if (isDoubleCriterion(managedType, propertyName)) {
-            firstPropertyName = generateCriteriaPropertyName(root, isBoolean(propertyType) ? is(propertyName) : from(propertyName));
-            secondPropertyName = generateCriteriaPropertyName(root, isBoolean(propertyType) ? not(propertyName) : to(propertyName));
+            firstPropertyName = critName(root, isBoolean(propertyType) ? is(propertyName) : from(propertyName));
+            secondPropertyName = critName(root, isBoolean(propertyType) ? not(propertyName) : to(propertyName));
         } else {
-            firstPropertyName = generateCriteriaPropertyName(root, propertyName);
+            firstPropertyName = critName(root, propertyName);
             secondPropertyName = null;
         }
         return new Pair<>(firstPropertyName, secondPropertyName);

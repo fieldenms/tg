@@ -167,6 +167,10 @@ const TgEntityCentreBehaviorImpl = {
             observer: '_saveAsNameChanged'
         },
 
+        dynamicColumns: {
+            type: Object
+        },
+
         /**
          * Universal identifier of this element instance (used for pub / sub communication).
          *
@@ -486,12 +490,13 @@ const TgEntityCentreBehaviorImpl = {
         const insertionPoints = this.shadowRoot.querySelectorAll('tg-entity-centre-insertion-point');
         this.$.egi.showMarginAround = insertionPoints.length > 0;
 
-        self._postRun = (function (criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, summary, columnWidths, visibleColumnsWithOrder) {
+        self._postRun = (function (criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, dynamicColumns, summary, columnWidths, visibleColumnsWithOrder) {
             if (criteriaEntity === null || criteriaEntity.isValidWithoutException()) {
                 if (typeof summary !== 'undefined') {
                     this.retrievedTotals = summary;
                 }
                 this.retrievedEntities = resultEntities;
+                this.dynamicColumns = dynamicColumns;
                 this.selectionCriteriaEntity = criteriaEntity;
                 this.$.egi.renderingHints = renderingHints;
                 this.$.egi.adjustColumnWidths(columnWidths);
@@ -629,6 +634,7 @@ const TgEntityCentreBehaviorImpl = {
             self._actionInProgress = true;
             self.$.egi.clearSelection();
             self._triggerRun = true;
+            self.dynamicColumns = {};
 
             // let's register a timer to kickoff a spinner if the run action is taking too long...
             if (self._startSpinnerTimer) {

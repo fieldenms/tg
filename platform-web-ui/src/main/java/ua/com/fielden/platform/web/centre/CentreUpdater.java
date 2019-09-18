@@ -717,15 +717,19 @@ public class CentreUpdater {
                 // diff centre does not exist in persistent storage yet -- initialise EMPTY diff
                 resultantDiff = saveNewEntityCentreManager(createEmptyDifferences(), miType, user, deviceSpecificDiffName, null, eccCompanion, mmiCompanion);
             } else { // non-base user
-                // diff centre does not exist in persistent storage yet -- create a diff by comparing basedOnCentre (configuration created by base user) and default centre
-                final User baseUser = beginBaseUserOperations(userProvider, user, userCompanion);
-                final ICentreDomainTreeManagerAndEnhancer baseCentre = getBaseCentre(baseUser, userProvider, miType, saveAsName, device, domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion, companionFinder);
-                // find description of the centre configuration to be copied from
-                final String upstreamDesc = updateCentreDesc(baseUser, miType, saveAsName, device, eccCompanion);
-                // creates differences centre from the differences between base user's 'default centre' (which can be user specific, see IValueAssigner for properties dependent on User) and 'baseCentre'
-                final Map<String, Object> differences = createDifferences(baseCentre, getDefaultCentre(miType, webUiConfig), getEntityType(miType));
-                endBaseUserOperations(user, userProvider);
-                
+                final String upstreamDesc;
+                final Map<String, Object> differences;
+                try {
+                    // diff centre does not exist in persistent storage yet -- create a diff by comparing basedOnCentre (configuration created by base user) and default centre
+                    final User baseUser = beginBaseUserOperations(userProvider, user, userCompanion);
+                    final ICentreDomainTreeManagerAndEnhancer baseCentre = getBaseCentre(baseUser, userProvider, miType, saveAsName, device, domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion, companionFinder);
+                    // find description of the centre configuration to be copied from
+                    upstreamDesc = updateCentreDesc(baseUser, miType, saveAsName, device, eccCompanion);
+                    // creates differences centre from the differences between base user's 'default centre' (which can be user specific, see IValueAssigner for properties dependent on User) and 'baseCentre'
+                    differences = createDifferences(baseCentre, getDefaultCentre(miType, webUiConfig), getEntityType(miType));
+                } finally {
+                    endBaseUserOperations(user, userProvider);
+                }
                 // promotes diff to local cache and saves it into persistent storage
                 resultantDiff = saveNewEntityCentreManager(differences, miType, user, deviceSpecificDiffName, upstreamDesc, eccCompanion, mmiCompanion);
             }
@@ -817,10 +821,13 @@ public class CentreUpdater {
         if (user.isBase()) {
             return getDefaultCentre(miType, webUiConfig);
         } else {
-            final User baseUser = beginBaseUserOperations(userProvider, user, userCompanion);
-            final ICentreDomainTreeManagerAndEnhancer baseCentre = getBaseCentre(baseUser, userProvider, miType, saveAsName, device, domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion, companionFinder);
-            endBaseUserOperations(user, userProvider);
-            return baseCentre;
+            try {
+                final User baseUser = beginBaseUserOperations(userProvider, user, userCompanion);
+                return getBaseCentre(baseUser, userProvider, miType, saveAsName, device, domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion, companionFinder);
+            } finally {
+                endBaseUserOperations(user, userProvider);
+            }
+            
         }
     }
     

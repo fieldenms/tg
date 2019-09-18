@@ -78,6 +78,10 @@ public class TgVehicle extends AbstractEntity<String> {
     @Title("Fuel usages")
     private Set<TgFuelUsage> fuelUsages = new HashSet<TgFuelUsage>();
 
+    @IsProperty(value = TgVehicleFuelUsage.class, linkProperty = "vehicle")
+    @Title("Vehicle Fuel usages")
+    private Set<TgVehicleFuelUsage> vehicleFuelUsages = new HashSet<TgVehicleFuelUsage>();
+
     @IsProperty(precision = 10, scale = 3)
     @MapTo
     @Title("Last meter reading")
@@ -169,6 +173,21 @@ public class TgVehicle extends AbstractEntity<String> {
     //  return aggregated;
     //  }
 
+    
+    @IsProperty
+    @CritOnly
+    @Title("Date period")
+    private Date datePeriod;
+
+    @Observable
+    public TgVehicle setDatePeriod(final Date datePeriod) {
+        this.datePeriod = datePeriod;
+        return this;
+    }
+
+    public Date getDatePeriod() {
+        return datePeriod;
+    }
 
     @Observable
     public TgVehicle setFuelTypeCrit(final TgFuelType fuelTypeCrit) {
@@ -267,6 +286,15 @@ public class TgVehicle extends AbstractEntity<String> {
 
     public Set<TgFuelUsage> getFuelUsages() {
         return fuelUsages;
+    }
+
+    @Observable
+    public void setVehicleFuelUsages(final Set<TgVehicleFuelUsage> vehicleFuelUsages) {
+        this.vehicleFuelUsages = vehicleFuelUsages;
+    }
+
+    public Set<TgVehicleFuelUsage> getVehicleFuelUsages() {
+        return vehicleFuelUsages;
     }
 
     @Observable
