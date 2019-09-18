@@ -613,7 +613,7 @@ public class DynamicQueryBuilder {
         }
         // enhances query with OR groups
         for (final List<QueryProperty> orGroup : orGroups.values()) {
-            compoundCondition = getConditionOperator(condOperand, compoundCondition).condition(buildOrGroup(orGroup));
+            compoundCondition = getConditionOperator(condOperand, compoundCondition).condition(buildOrGroup(orGroup)); // please note that '.condition(' construction adds parentheses itself when converting to SQL -- no need to provide explicit parentheses
         }
         
         //enhances query with union property condition

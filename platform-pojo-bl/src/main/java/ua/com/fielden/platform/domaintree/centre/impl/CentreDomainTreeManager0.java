@@ -120,6 +120,7 @@ public class CentreDomainTreeManager0 extends AbstractDomainTreeManager implemen
          * Used for the first time instantiation. IMPORTANT : To use this tick it should be passed into manager constructor, which will initialise "dtr", "tr" and "serialiser"
          * fields.
          */
+        @Deprecated
         public AddToCriteriaTickManager0(final ISerialiser0 serialiser, final Set<Class<?>> rootTypes) {
             this(AbstractDomainTree.<List<String>> createRootsMap(), serialiser, AbstractDomainTree.<Object> createPropertiesMap(), AbstractDomainTree.<Object> createPropertiesMap(), AbstractDomainTree.<Boolean> createPropertiesMap(), AbstractDomainTree.<Boolean> createPropertiesMap(), AbstractDomainTree.<DateRangePrefixEnum> createPropertiesMap(), AbstractDomainTree.<MnemonicEnum> createPropertiesMap(), AbstractDomainTree.<Boolean> createPropertiesMap(), AbstractDomainTree.<Boolean> createPropertiesMap(), AbstractDomainTree.<Boolean> createPropertiesMap(), AbstractDomainTree.<Integer> createPropertiesMap(), null, new LocatorManager0(serialiser, rootTypes), AbstractDomainTree.<Set<MetaValueType>> createPropertiesMap());
         }
@@ -129,6 +130,7 @@ public class CentreDomainTreeManager0 extends AbstractDomainTreeManager implemen
          *
          * @param serialiser
          */
+        @Deprecated
         protected AddToCriteriaTickManager0(final Map<Class<?>, List<String>> checkedProperties, final ISerialiser0 serialiser, final Map<Pair<Class<?>, String>, Object> propertiesValues1, final Map<Pair<Class<?>, String>, Object> propertiesValues2, final Map<Pair<Class<?>, String>, Boolean> propertiesExclusive1, final Map<Pair<Class<?>, String>, Boolean> propertiesExclusive2, final Map<Pair<Class<?>, String>, DateRangePrefixEnum> propertiesDatePrefixes, final Map<Pair<Class<?>, String>, MnemonicEnum> propertiesDateMnemonics, final Map<Pair<Class<?>, String>, Boolean> propertiesAndBefore, final Map<Pair<Class<?>, String>, Boolean> propertiesOrNulls, final Map<Pair<Class<?>, String>, Boolean> propertiesNots, final Map<Pair<Class<?>, String>, Integer> propertiesOrGroups, final Integer columnsNumber, final LocatorManager0 locatorManager, final Map<Pair<Class<?>, String>, Set<MetaValueType>> propertiesMetaValuePresences) {
             super(checkedProperties);
             this.serialiser = serialiser;
@@ -687,7 +689,7 @@ public class CentreDomainTreeManager0 extends AbstractDomainTreeManager implemen
             result = prime * result + ((propertiesDatePrefixes == null) ? 0 : propertiesDatePrefixes.hashCode());
             result = prime * result + ((propertiesExclusive1 == null) ? 0 : propertiesExclusive1.hashCode());
             result = prime * result + ((propertiesExclusive2 == null) ? 0 : propertiesExclusive2.hashCode());
-            result = prime * result + ((propertiesOrGroups == null) ? 0 : propertiesOrGroups.hashCode());
+            result = prime * result + propertiesOrGroups.hashCode();
             result = prime * result + ((propertiesNots == null) ? 0 : propertiesNots.hashCode());
             result = prime * result + ((propertiesOrNulls == null) ? 0 : propertiesOrNulls.hashCode());
             result = prime * result + ((propertiesValues1 == null) ? 0 : propertiesValues1.hashCode());
@@ -756,11 +758,7 @@ public class CentreDomainTreeManager0 extends AbstractDomainTreeManager implemen
             } else if (!propertiesExclusive2.equals(other.propertiesExclusive2)) {
                 return false;
             }
-            if (propertiesOrGroups == null) {
-                if (other.propertiesOrGroups != null) {
-                    return false;
-                }
-            } else if (!propertiesOrGroups.equals(other.propertiesOrGroups)) {
+            if (!propertiesOrGroups.equals(other.propertiesOrGroups)) {
                 return false;
             }
             if (propertiesNots == null) {

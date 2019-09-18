@@ -641,29 +641,23 @@ public interface ICentreDomainTreeManager extends IDomainTreeManager {
         IAddToCriteriaTickManager setNot(final Class<?> root, final String property, final Boolean not);
 
         /**
-         * Gets an "or group" number of a criteria property. <br>
-         * <br>
-         *
+         * Gets an "or group" number of a criteria property.
+         * <p>
          * Throws {@link DomainTreeException} when the property is not checked (see {@link #isChecked(Class, String)} method).
          *
-         * @param root
-         *            -- a root type that contains property.
-         * @param property
-         *            -- a dot-notation expression that defines a property.
+         * @param root -- a root type that contains property.
+         * @param property -- a dot-notation expression that defines a property.
          * @return
          */
         Integer getOrGroup(final Class<?> root, final String property);
 
         /**
-         * Sets an "or group" number of a criteria property. <br>
-         * <br>
-         *
+         * Sets an "or group" number of a criteria property.
+         * <p>
          * Throws {@link DomainTreeException} when the property is not checked (see {@link #isChecked(Class, String)} method).
          *
-         * @param root
-         *            -- a root type that contains property.
-         * @param property
-         *            -- a dot-notation expression that defines a property.
+         * @param root -- a root type that contains property.
+         * @param property -- a dot-notation expression that defines a property.
          * @param orGroup
          * @return -- a criteria tick manager
          */

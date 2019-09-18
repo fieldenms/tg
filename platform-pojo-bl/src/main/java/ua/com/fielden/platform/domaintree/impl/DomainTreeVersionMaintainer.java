@@ -43,6 +43,7 @@ import ua.com.fielden.platform.utils.Pair;
  * @author TG Team
  *
  */
+@Deprecated
 public class DomainTreeVersionMaintainer extends AbstractDomainTree {
     private final static Logger logger = Logger.getLogger(DomainTreeVersionMaintainer.class);
 

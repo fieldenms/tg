@@ -505,7 +505,7 @@ public class CentreDomainTreeManager extends AbstractDomainTreeManager implement
             }
             return this;
         }
-        
+
         @Override
         public Boolean getNot(final Class<?> root, final String property) {
             illegalUncheckedProperties(this, root, property, "Could not get a 'not' for 'unchecked' property [" + property + "] in type ["
@@ -715,17 +715,17 @@ public class CentreDomainTreeManager extends AbstractDomainTreeManager implement
             int result = super.hashCode();
             result = prime * result + ((columnsNumber == null) ? 0 : columnsNumber.hashCode());
             result = prime * result + ((locatorManager == null) ? 0 : locatorManager.hashCode());
-            result = prime * result + ((propertiesAndBefore == null) ? 0 : propertiesAndBefore.hashCode());
-            result = prime * result + ((propertiesDateMnemonics == null) ? 0 : propertiesDateMnemonics.hashCode());
-            result = prime * result + ((propertiesDatePrefixes == null) ? 0 : propertiesDatePrefixes.hashCode());
-            result = prime * result + ((propertiesExclusive1 == null) ? 0 : propertiesExclusive1.hashCode());
-            result = prime * result + ((propertiesExclusive2 == null) ? 0 : propertiesExclusive2.hashCode());
-            result = prime * result + ((propertiesMetaValuePresences == null) ? 0 : propertiesMetaValuePresences.hashCode());
-            result = prime * result + ((propertiesOrGroups == null) ? 0 : propertiesOrGroups.hashCode());
-            result = prime * result + ((propertiesNots == null) ? 0 : propertiesNots.hashCode());
-            result = prime * result + ((propertiesOrNulls == null) ? 0 : propertiesOrNulls.hashCode());
-            result = prime * result + ((propertiesValues1 == null) ? 0 : propertiesValues1.hashCode());
-            result = prime * result + ((propertiesValues2 == null) ? 0 : propertiesValues2.hashCode());
+            result = prime * result + propertiesAndBefore.hashCode();
+            result = prime * result + propertiesDateMnemonics.hashCode();
+            result = prime * result + propertiesDatePrefixes.hashCode();
+            result = prime * result + propertiesExclusive1.hashCode();
+            result = prime * result + propertiesExclusive2.hashCode();
+            result = prime * result + propertiesMetaValuePresences.hashCode();
+            result = prime * result + propertiesOrGroups.hashCode();
+            result = prime * result + propertiesNots.hashCode();
+            result = prime * result + propertiesOrNulls.hashCode();
+            result = prime * result + propertiesValues1.hashCode();
+            result = prime * result + propertiesValues2.hashCode();
             return result;
         }
 
@@ -755,81 +755,37 @@ public class CentreDomainTreeManager extends AbstractDomainTreeManager implement
             } else if (!locatorManager.equals(other.locatorManager)) {
                 return false;
             }
-            if (propertiesAndBefore == null) {
-                if (other.propertiesAndBefore != null) {
-                    return false;
-                }
-            } else if (!propertiesAndBefore.equals(other.propertiesAndBefore)) {
+            if (!propertiesAndBefore.equals(other.propertiesAndBefore)) {
                 return false;
             }
-            if (propertiesDateMnemonics == null) {
-                if (other.propertiesDateMnemonics != null) {
-                    return false;
-                }
-            } else if (!propertiesDateMnemonics.equals(other.propertiesDateMnemonics)) {
+            if (!propertiesDateMnemonics.equals(other.propertiesDateMnemonics)) {
                 return false;
             }
-            if (propertiesDatePrefixes == null) {
-                if (other.propertiesDatePrefixes != null) {
-                    return false;
-                }
-            } else if (!propertiesDatePrefixes.equals(other.propertiesDatePrefixes)) {
+            if (!propertiesDatePrefixes.equals(other.propertiesDatePrefixes)) {
                 return false;
             }
-            if (propertiesExclusive1 == null) {
-                if (other.propertiesExclusive1 != null) {
-                    return false;
-                }
-            } else if (!propertiesExclusive1.equals(other.propertiesExclusive1)) {
+            if (!propertiesExclusive1.equals(other.propertiesExclusive1)) {
                 return false;
             }
-            if (propertiesExclusive2 == null) {
-                if (other.propertiesExclusive2 != null) {
-                    return false;
-                }
-            } else if (!propertiesExclusive2.equals(other.propertiesExclusive2)) {
+            if (!propertiesExclusive2.equals(other.propertiesExclusive2)) {
                 return false;
             }
-            if (propertiesMetaValuePresences == null) {
-                if (other.propertiesMetaValuePresences != null) {
-                    return false;
-                }
-            } else if (!propertiesMetaValuePresences.equals(other.propertiesMetaValuePresences)) {
+            if (!propertiesMetaValuePresences.equals(other.propertiesMetaValuePresences)) {
                 return false;
             }
-            if (propertiesOrGroups == null) {
-                if (other.propertiesOrGroups != null) {
-                    return false;
-                }
-            } else if (!propertiesOrGroups.equals(other.propertiesOrGroups)) {
+            if (!propertiesOrGroups.equals(other.propertiesOrGroups)) {
                 return false;
             }
-            if (propertiesNots == null) {
-                if (other.propertiesNots != null) {
-                    return false;
-                }
-            } else if (!propertiesNots.equals(other.propertiesNots)) {
+            if (!propertiesNots.equals(other.propertiesNots)) {
                 return false;
             }
-            if (propertiesOrNulls == null) {
-                if (other.propertiesOrNulls != null) {
-                    return false;
-                }
-            } else if (!propertiesOrNulls.equals(other.propertiesOrNulls)) {
+            if (!propertiesOrNulls.equals(other.propertiesOrNulls)) {
                 return false;
             }
-            if (propertiesValues1 == null) {
-                if (other.propertiesValues1 != null) {
-                    return false;
-                }
-            } else if (propertyValuesDifferent(propertiesValues1, other.propertiesValues1)) {
+            if (propertyValuesDifferent(propertiesValues1, other.propertiesValues1)) {
                 return false;
             }
-            if (propertiesValues2 == null) {
-                if (other.propertiesValues2 != null) {
-                    return false;
-                }
-            } else if (!propertiesValues2.equals(other.propertiesValues2)) {
+            if (!propertiesValues2.equals(other.propertiesValues2)) {
                 return false;
             }
             return true;
