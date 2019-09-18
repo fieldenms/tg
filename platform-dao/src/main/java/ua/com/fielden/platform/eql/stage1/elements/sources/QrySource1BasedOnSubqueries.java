@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.exceptions.EqlStage1ProcessingException;
@@ -20,7 +21,7 @@ public class QrySource1BasedOnSubqueries extends AbstractQrySource1<QrySource2Ba
 
     public QrySource1BasedOnSubqueries(final String alias, final List<EntQuery1> models, final int contextId) {
         super(alias, contextId);
-        if (models == null || models.isEmpty()) {
+        if (models.isEmpty()) {
             throw new IllegalArgumentException("Couldn't produce instance of QueryBasedSource due to zero models passed to constructor!");
         }
 
@@ -61,9 +62,9 @@ public class QrySource1BasedOnSubqueries extends AbstractQrySource1<QrySource2Ba
         PropsResolutionContext currentResolutionContext = resolutionContext;
 
         for (final EntQuery1 model : models) {
-            final TransformationResult<EntQuery2> modelTransformationResult = model.transform(currentResolutionContext/*.produceNewOne() // as already invoked as part of EntQuery1.transform(..)*/);
-            transformedQueries.add(modelTransformationResult.item);
-            currentResolutionContext = modelTransformationResult.updatedContext; // TODO should be just resolutionContext with propsResolutions added from this model transformation   
+            final TransformationResult<EntQuery2> modelTr = model.transform(currentResolutionContext/*.produceNewOne() // as already invoked as part of EntQuery1.transform(..)*/);
+            transformedQueries.add(modelTr.item);
+            currentResolutionContext = modelTr.updatedContext; // TODO should be just resolutionContext with propsResolutions added from this model transformation   
         }
            
         final QrySource2BasedOnSubqueries transformedSource = new QrySource2BasedOnSubqueries(transformedQueries, alias, resolutionContext.getDomainInfo(), contextId);
@@ -83,7 +84,7 @@ public class QrySource1BasedOnSubqueries extends AbstractQrySource1<QrySource2Ba
     public int hashCode() {
         final int prime = 31;
         int result = super.hashCode();
-        result = prime * result + ((models == null) ? 0 : models.hashCode());
+        result = prime * result + models.hashCode();
         return result;
     }
 
@@ -92,21 +93,18 @@ public class QrySource1BasedOnSubqueries extends AbstractQrySource1<QrySource2Ba
         if (this == obj) {
             return true;
         }
+        
         if (!super.equals(obj)) {
             return false;
         }
+        
         if (!(obj instanceof QrySource1BasedOnSubqueries)) {
             return false;
         }
+
         final QrySource1BasedOnSubqueries other = (QrySource1BasedOnSubqueries) obj;
-        if (models == null) {
-            if (other.models != null) {
-                return false;
-            }
-        } else if (!models.equals(other.models)) {
-            return false;
-        }
-        return true;
+
+        return Objects.equals(models, other.models);
     }
 
     public List<EntQuery1> getModels() {

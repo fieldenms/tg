@@ -22,9 +22,9 @@ public class OperandsBasedSet1 implements ISetOperand1<OperandsBasedSet2> {
         final List<ISingleOperand2<? extends ISingleOperand3>> transformedOperands = new ArrayList<>();
         PropsResolutionContext currentResolutionContext = context;
         for (final ISingleOperand1<? extends ISingleOperand2<?>> singleOperand : operands) {
-            final TransformationResult<? extends ISingleOperand2<?>> operandTransformationResult = singleOperand.transform(context);
-            transformedOperands.add(operandTransformationResult.item);
-            currentResolutionContext = operandTransformationResult.updatedContext;
+            final TransformationResult<? extends ISingleOperand2<?>> operandTr = singleOperand.transform(context);
+            transformedOperands.add(operandTr.item);
+            currentResolutionContext = operandTr.updatedContext;
         }
 
         return new TransformationResult<OperandsBasedSet2>(new OperandsBasedSet2(transformedOperands), currentResolutionContext);
@@ -34,7 +34,7 @@ public class OperandsBasedSet1 implements ISetOperand1<OperandsBasedSet2> {
     public int hashCode() {
         final int prime = 31;
         int result = 1;
-        result = prime * result + ((operands == null) ? 0 : operands.hashCode());
+        result = prime * result + operands.hashCode();
         return result;
     }
 

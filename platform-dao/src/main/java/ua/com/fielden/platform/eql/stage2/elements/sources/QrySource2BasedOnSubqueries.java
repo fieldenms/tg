@@ -94,7 +94,7 @@ public class QrySource2BasedOnSubqueries extends AbstractElement2 implements IQr
     public int hashCode() {
         final int prime = 31;
         int result = 1;
-        result = prime * result + ((models == null) ? 0 : models.hashCode());
+        result = prime * result + models.hashCode();
         return result;
     }
 
@@ -156,9 +156,9 @@ public class QrySource2BasedOnSubqueries extends AbstractElement2 implements IQr
         TransformationContext currentResolutionContext = context;
 
         for (final EntQuery2 model : models) {
-            final TransformationResult<EntQuery3> modelTransformationResult = model.transform(currentResolutionContext/*.produceNewOne() // as already invoked as part of EntQuery1.transform(..)*/);
-            transformedQueries.add(modelTransformationResult.item);
-            currentResolutionContext = modelTransformationResult.updatedContext; // TODO should be just resolutionContext with propsResolutions added from this model transformation   
+            final TransformationResult<EntQuery3> modelTr = model.transform(currentResolutionContext/*.produceNewOne() // as already invoked as part of EntQuery1.transform(..)*/);
+            transformedQueries.add(modelTr.item);
+            currentResolutionContext = modelTr.updatedContext; // TODO should be just resolutionContext with propsResolutions added from this model transformation   
         }
            
         final QrySource3BasedOnSubqueries transformedSource = new QrySource3BasedOnSubqueries(transformedQueries, contextId);//resolutionContext.getDomainInfo());

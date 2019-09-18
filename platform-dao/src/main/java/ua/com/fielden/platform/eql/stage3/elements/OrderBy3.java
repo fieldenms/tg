@@ -23,7 +23,7 @@ public class OrderBy3 {
         final int prime = 31;
         int result = 1;
         result = prime * result + (isDesc ? 1231 : 1237);
-        result = prime * result + ((operand == null) ? 0 : operand.hashCode());
+        result = prime * result + operand.hashCode();
         return result;
     }
 

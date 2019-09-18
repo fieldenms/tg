@@ -24,7 +24,7 @@ public class OperandsBasedSet3 implements ISetOperand3 {
     public int hashCode() {
         final int prime = 31;
         int result = 1;
-        result = prime * result + ((operands == null) ? 0 : operands.hashCode());
+        result = prime * result + operands.hashCode();
         return result;
     }
 

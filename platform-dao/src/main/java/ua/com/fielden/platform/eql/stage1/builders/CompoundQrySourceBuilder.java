@@ -1,5 +1,7 @@
 package ua.com.fielden.platform.eql.stage1.builders;
 
+import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.QRY_COMPOUND_SOURCE;
+
 import ua.com.fielden.platform.entity.query.fluent.enums.JoinType;
 import ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory;
 import ua.com.fielden.platform.eql.stage1.elements.sources.CompoundSource1;
@@ -44,9 +46,9 @@ public class CompoundQrySourceBuilder extends AbstractTokensBuilder {
         if (getChild() != null) {
             final ITokensBuilder last = getChild();
             setChild(null);
-            return new Pair<TokenCategory, Object>(TokenCategory.QRY_COMPOUND_SOURCE, new CompoundSource1((IQrySource1) secondValue(), (JoinType) firstValue(), ((ConditionsBuilder) last).getModel()));
+            return new Pair<TokenCategory, Object>(QRY_COMPOUND_SOURCE, new CompoundSource1((IQrySource1) secondValue(), (JoinType) firstValue(), ((ConditionsBuilder) last).getModel()));
         } else {
-            return new Pair<TokenCategory, Object>(TokenCategory.QRY_COMPOUND_SOURCE, new CompoundSource1((IQrySource1) secondValue(), (JoinType) firstValue(), null));
+            return new Pair<TokenCategory, Object>(QRY_COMPOUND_SOURCE, new CompoundSource1((IQrySource1) secondValue(), (JoinType) firstValue(), null));
         }
     }
 }

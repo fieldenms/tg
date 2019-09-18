@@ -18,8 +18,8 @@ public class CompoundCondition1 {
     public int hashCode() {
         final int prime = 31;
         int result = 1;
-        result = prime * result + ((condition == null) ? 0 : condition.hashCode());
-        result = prime * result + ((logicalOperator == null) ? 0 : logicalOperator.hashCode());
+        result = prime * result + condition.hashCode();
+        result = prime * result + logicalOperator.hashCode();
         return result;
     }
 
@@ -28,14 +28,13 @@ public class CompoundCondition1 {
         if (this == obj) {
             return true;
         }
-        
+
         if (!(obj instanceof CompoundCondition1)) {
             return false;
         }
-        
+
         final CompoundCondition1 other = (CompoundCondition1) obj;
 
-        return Objects.equals(logicalOperator, other.logicalOperator) &&
-                Objects.equals(condition, other.condition);
+        return Objects.equals(logicalOperator, other.logicalOperator) && Objects.equals(condition, other.condition);
     }
 }

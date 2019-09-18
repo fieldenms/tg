@@ -18,9 +18,9 @@ public class GroupBys2 {
             final List<GroupBy3> transformed = new ArrayList<>();
             TransformationContext currentContext = context;
             for (final GroupBy2 groupBy : groups) {
-                final TransformationResult<GroupBy3> groupByTransformationResult = groupBy.transform(currentContext);
-                transformed.add(groupByTransformationResult.item);
-                currentContext = groupByTransformationResult.updatedContext;
+                final TransformationResult<GroupBy3> groupByTr = groupBy.transform(currentContext);
+                transformed.add(groupByTr.item);
+                currentContext = groupByTr.updatedContext;
             }
             return new TransformationResult<GroupBys3>(new GroupBys3(transformed), currentContext);
     }
@@ -29,7 +29,7 @@ public class GroupBys2 {
     public int hashCode() {
         final int prime = 31;
         int result = 1;
-        result = prime * result + ((groups == null) ? 0 : groups.hashCode());
+        result = prime * result + groups.hashCode();
         return result;
     }
 

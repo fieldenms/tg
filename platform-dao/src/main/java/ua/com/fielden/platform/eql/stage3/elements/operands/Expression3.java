@@ -31,8 +31,8 @@ public class Expression3 implements ISingleOperand3 {
     public int hashCode() {
         final int prime = 31;
         int result = 1;
-        result = prime * result + ((first == null) ? 0 : first.hashCode());
-        result = prime * result + ((items == null) ? 0 : items.hashCode());
+        result = prime * result + first.hashCode();
+        result = prime * result + items.hashCode();
         return result;
     }
 
@@ -48,7 +48,6 @@ public class Expression3 implements ISingleOperand3 {
         
         final Expression3 other = (Expression3) obj;
         
-        return Objects.equals(first, other.first) &&
-                Objects.equals(items, other.items);
+        return Objects.equals(first, other.first) && Objects.equals(items, other.items);
     }
 }

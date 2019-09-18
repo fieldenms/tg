@@ -16,8 +16,8 @@ public class OrderBy2 {
     }
 
     public TransformationResult<OrderBy3> transform(final TransformationContext context) {
-        final TransformationResult<? extends ISingleOperand3> operandTransformationResult = operand.transform(context);
-        return new TransformationResult<OrderBy3>(new OrderBy3(operandTransformationResult.item, isDesc), operandTransformationResult.updatedContext);
+        final TransformationResult<? extends ISingleOperand3> operandTr = operand.transform(context);
+        return new TransformationResult<OrderBy3>(new OrderBy3(operandTr.item, isDesc), operandTr.updatedContext);
     }
     
     @Override
@@ -25,7 +25,7 @@ public class OrderBy2 {
         final int prime = 31;
         int result = 1;
         result = prime * result + (isDesc ? 1231 : 1237);
-        result = prime * result + ((operand == null) ? 0 : operand.hashCode());
+        result = prime * result + operand.hashCode();
         return result;
     }
 
@@ -41,7 +41,6 @@ public class OrderBy2 {
         
         final OrderBy2 other = (OrderBy2) obj;
 
-        return Objects.equals(isDesc, other.isDesc) &&
-                Objects.equals(operand, other.operand);
+        return (isDesc == other.isDesc) && Objects.equals(operand, other.operand);
     }
 }

@@ -72,12 +72,7 @@ public class EntQuery1 extends AbstractElement1 implements ISingleOperand1<EntQu
         final TransformationResult<GroupBys2> groupsTr =  groups.transform(yieldsTr.updatedContext);
         final TransformationResult<OrderBys2> orderingsTr =  orderings.transform(groupsTr.updatedContext);
 
-        final EntQueryBlocks2 entQueryBlocks = new EntQueryBlocks2(
-                sourcesTr.item, 
-                conditionsTr.item, 
-                yieldsTr.item, 
-                groupsTr.item, 
-                orderingsTr.item);
+        final EntQueryBlocks2 entQueryBlocks = new EntQueryBlocks2(sourcesTr.item, conditionsTr.item, yieldsTr.item, groupsTr.item, orderingsTr.item);
 
         final PropsResolutionContext resultResolutionContext = (isSubQuery() || isSourceQuery()) ? 
                 new PropsResolutionContext(orderingsTr.updatedContext.getDomainInfo(), orderingsTr.updatedContext.getSources(), orderingsTr.updatedContext.getResolvedProps()) :
@@ -90,13 +85,13 @@ public class EntQuery1 extends AbstractElement1 implements ISingleOperand1<EntQu
     public int hashCode() {
         final int prime = 31;
         int result = 1;
-        result = prime * result + ((category == null) ? 0 : category.hashCode());
-        result = prime * result + ((conditions == null) ? 0 : conditions.hashCode());
-        result = prime * result + ((groups == null) ? 0 : groups.hashCode());
-        result = prime * result + ((orderings == null) ? 0 : orderings.hashCode());
+        result = prime * result + category.hashCode();
+        result = prime * result + conditions.hashCode();
+        result = prime * result + groups.hashCode();
+        result = prime * result + orderings.hashCode();
         result = prime * result + ((resultType == null) ? 0 : resultType.hashCode());
-        result = prime * result + ((sources == null) ? 0 : sources.hashCode());
-        result = prime * result + ((yields == null) ? 0 : yields.hashCode());
+        result = prime * result + sources.hashCode();
+        result = prime * result + yields.hashCode();
         return result;
     }
 

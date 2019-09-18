@@ -50,7 +50,7 @@ public class QrySource2BasedOnPersistentType extends AbstractElement2 implements
     public int hashCode() {
         final int prime = 31;
         int result = super.hashCode();
-        result = prime * result + ((sourceType == null) ? 0 : sourceType.hashCode());
+        result = prime * result + sourceType.hashCode();
         result = prime * result + ((alias == null) ? 0 : alias.hashCode());
         return result;
     }

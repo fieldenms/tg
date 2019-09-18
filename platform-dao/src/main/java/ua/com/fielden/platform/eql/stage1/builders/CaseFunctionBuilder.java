@@ -1,5 +1,9 @@
 package ua.com.fielden.platform.eql.stage1.builders;
 
+import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.END_FUNCTION;
+import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.FUNCTION_MODEL;
+import static ua.com.fielden.platform.types.tuples.T2.t2;
+
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -11,6 +15,7 @@ import ua.com.fielden.platform.eql.stage1.elements.functions.CaseWhen1;
 import ua.com.fielden.platform.eql.stage1.elements.operands.ISingleOperand1;
 import ua.com.fielden.platform.eql.stage2.elements.conditions.ICondition2;
 import ua.com.fielden.platform.eql.stage2.elements.operands.ISingleOperand2;
+import ua.com.fielden.platform.types.tuples.T2;
 import ua.com.fielden.platform.utils.Pair;
 
 public class CaseFunctionBuilder extends AbstractTokensBuilder {
@@ -34,7 +39,7 @@ public class CaseFunctionBuilder extends AbstractTokensBuilder {
 
     @Override
     public boolean isClosing() {
-        return TokenCategory.END_FUNCTION.equals(getLastCat());
+        return getLastCat() == END_FUNCTION;
     }
 
     @Override
@@ -45,11 +50,11 @@ public class CaseFunctionBuilder extends AbstractTokensBuilder {
     public CaseWhen1 getModel() {
         final Object lastValue = getLastValue();
         
-        if (TokenCategory.END_FUNCTION.equals(getLastCat())) {
+        if (isClosing()) {
             getTokens().remove(getSize() - 1);
         }
 
-        final List<Pair<ICondition1<? extends ICondition2<?>>, ISingleOperand1<? extends ISingleOperand2<?>>>> whenThens = new ArrayList<>();
+        final List<T2<ICondition1<? extends ICondition2<?>>, ISingleOperand1<? extends ISingleOperand2<?>>>> whenThens = new ArrayList<>();
         ISingleOperand1<? extends ISingleOperand2<?>> elseOperand = null;
 
         for (final Iterator<Pair<TokenCategory, Object>> iterator = getTokens().iterator(); iterator.hasNext();) {
@@ -57,7 +62,7 @@ public class CaseFunctionBuilder extends AbstractTokensBuilder {
             final Pair<TokenCategory, Object> secondTokenPair = iterator.hasNext() ? iterator.next() : null;
 
             if (secondTokenPair != null) {
-                whenThens.add(new Pair<ICondition1<? extends ICondition2<?>>, ISingleOperand1<? extends ISingleOperand2<?>>>((ICondition1<?>) firstTokenPair.getValue(), getModelForSingleOperand(secondTokenPair)));
+                whenThens.add(t2((ICondition1<?>) firstTokenPair.getValue(), getModelForSingleOperand(secondTokenPair)));
             } else {
                 elseOperand = getModelForSingleOperand(firstTokenPair);
             }
@@ -68,6 +73,6 @@ public class CaseFunctionBuilder extends AbstractTokensBuilder {
 
     @Override
     public Pair<TokenCategory, Object> getResult() {
-        return new Pair<TokenCategory, Object>(TokenCategory.FUNCTION_MODEL, getModel());
+        return new Pair<TokenCategory, Object>(FUNCTION_MODEL, getModel());
     }
 }

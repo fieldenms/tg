@@ -24,8 +24,8 @@ public class NullTest2 extends AbstractCondition2<NullTest3> {
 
     @Override
     public TransformationResult<NullTest3> transform(final TransformationContext context) {
-        final TransformationResult<? extends ISingleOperand3> operandTransformationResult = operand.transform(context);
-        return new TransformationResult<NullTest3>(new NullTest3(operandTransformationResult.item, negated), operandTransformationResult.updatedContext);
+        final TransformationResult<? extends ISingleOperand3> operandTr = operand.transform(context);
+        return new TransformationResult<NullTest3>(new NullTest3(operandTr.item, negated), operandTr.updatedContext);
     }
 
     @Override
@@ -33,7 +33,7 @@ public class NullTest2 extends AbstractCondition2<NullTest3> {
         final int prime = 31;
         int result = 1;
         result = prime * result + (negated ? 1231 : 1237);
-        result = prime * result + ((operand == null) ? 0 : operand.hashCode());
+        result = prime * result + operand.hashCode();
         return result;
     }
 
@@ -49,6 +49,6 @@ public class NullTest2 extends AbstractCondition2<NullTest3> {
         
         final NullTest2 other = (NullTest2) obj;
         
-        return Objects.equals(negated, other.negated) && Objects.equals(operand, other.operand);
+        return (negated == other.negated) && Objects.equals(operand, other.operand);
     }
 }

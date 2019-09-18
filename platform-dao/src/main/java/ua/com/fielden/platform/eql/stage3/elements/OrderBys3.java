@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.eql.stage3.elements;
 
+import static java.util.Collections.unmodifiableList;
 import static java.util.stream.Collectors.joining;
 
 import java.util.List;
@@ -15,14 +16,23 @@ public class OrderBys3 {
     }
 
     public List<OrderBy3> getModels() {
-        return models;
+        return unmodifiableList(models);
+    }
+
+    public String sql(final DbVersion dbVersion) {
+        final StringBuffer sb = new StringBuffer();
+        if (models.size() > 0) {
+            sb.append("\nORDER BY ");
+            sb.append(models.stream().map(y -> y.sql(dbVersion)).collect(joining(", ")));
+        }
+        return sb.toString();    
     }
 
     @Override
     public int hashCode() {
         final int prime = 31;
         int result = 1;
-        result = prime * result + ((models == null) ? 0 : models.hashCode());
+        result = prime * result + models.hashCode();
         return result;
     }
 
@@ -39,14 +49,5 @@ public class OrderBys3 {
         final OrderBys3 other = (OrderBys3) obj;
         
         return Objects.equals(models, other.models);
-    }
-
-    public String sql(final DbVersion dbVersion) {
-        final StringBuffer sb = new StringBuffer();
-        if (models.size() > 0) {
-            sb.append("\nORDER BY ");
-            sb.append(models.stream().map(y -> y.sql(dbVersion)).collect(joining(", ")));
-        }
-        return sb.toString();    
     }
 }

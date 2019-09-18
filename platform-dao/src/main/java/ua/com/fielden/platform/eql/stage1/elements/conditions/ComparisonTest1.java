@@ -22,18 +22,18 @@ public class ComparisonTest1 implements ICondition1<ComparisonTest2> {
 
     @Override
     public TransformationResult<ComparisonTest2> transform(final PropsResolutionContext context) {
-        final TransformationResult<? extends ISingleOperand2<?>> leftOperandTransformationResult = leftOperand.transform(context);
-        final TransformationResult<? extends ISingleOperand2<?>> rightOperandTransformationResult = rightOperand.transform(leftOperandTransformationResult.updatedContext);
-        return new TransformationResult<ComparisonTest2>(new ComparisonTest2(leftOperandTransformationResult.item, operator, rightOperandTransformationResult.item), rightOperandTransformationResult.updatedContext);
+        final TransformationResult<? extends ISingleOperand2<?>> leftOperandTr = leftOperand.transform(context);
+        final TransformationResult<? extends ISingleOperand2<?>> rightOperandTr = rightOperand.transform(leftOperandTr.updatedContext);
+        return new TransformationResult<ComparisonTest2>(new ComparisonTest2(leftOperandTr.item, operator, rightOperandTr.item), rightOperandTr.updatedContext);
     }
 
     @Override
     public int hashCode() {
         final int prime = 31;
         int result = 1;
-        result = prime * result + ((leftOperand == null) ? 0 : leftOperand.hashCode());
-        result = prime * result + ((operator == null) ? 0 : operator.hashCode());
-        result = prime * result + ((rightOperand == null) ? 0 : rightOperand.hashCode());
+        result = prime * result + leftOperand.hashCode();
+        result = prime * result + operator.hashCode();
+        result = prime * result + rightOperand.hashCode();
         return result;
     }
 
@@ -42,13 +42,13 @@ public class ComparisonTest1 implements ICondition1<ComparisonTest2> {
         if (this == obj) {
             return true;
         }
-        
+
         if (!(obj instanceof ComparisonTest1)) {
             return false;
         }
-        
+
         final ComparisonTest1 other = (ComparisonTest1) obj;
-        
+
         return Objects.equals(leftOperand, other.leftOperand) &&
                 Objects.equals(rightOperand, other.rightOperand) &&
                 Objects.equals(operator, other.operator);

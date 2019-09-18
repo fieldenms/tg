@@ -26,9 +26,9 @@ public class Yields1 {
         final List<Yield2> yieldsList = new ArrayList<>(); 
         PropsResolutionContext currentResolutionContext = context;
         for (final Yield1 yield : yieldsMap.values()) {
-            final TransformationResult<Yield2> yieldTransformationResult = yield.transform(currentResolutionContext);
-            currentResolutionContext = yieldTransformationResult.updatedContext;
-            yieldsList.add(yieldTransformationResult.item);
+            final TransformationResult<Yield2> yieldTr = yield.transform(currentResolutionContext);
+            currentResolutionContext = yieldTr.updatedContext;
+            yieldsList.add(yieldTr.item);
         }
         return new TransformationResult<Yields2>(new Yields2(yieldsList), currentResolutionContext);
     }
@@ -48,7 +48,7 @@ public class Yields1 {
     public int hashCode() {
         final int prime = 31;
         int result = 1;
-        result = prime * result + ((yieldsMap == null) ? 0 : yieldsMap.hashCode());
+        result = prime * result + yieldsMap.hashCode();
         return result;
     }
 

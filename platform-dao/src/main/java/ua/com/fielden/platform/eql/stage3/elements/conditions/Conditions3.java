@@ -35,7 +35,7 @@ public class Conditions3 implements ICondition3 {
     public int hashCode() {
         final int prime = 31;
         int result = 1;
-        result = prime * result + ((allConditionsAsDnf == null) ? 0 : allConditionsAsDnf.hashCode());
+        result = prime * result + allConditionsAsDnf.hashCode();
         result = prime * result + (negated ? 1231 : 1237);
         return result;
     }
@@ -52,7 +52,6 @@ public class Conditions3 implements ICondition3 {
         
         final Conditions3 other = (Conditions3) obj;
         
-        return Objects.equals(allConditionsAsDnf, other.allConditionsAsDnf) &&
-                Objects.equals(negated, other.negated);
+        return Objects.equals(allConditionsAsDnf, other.allConditionsAsDnf) && (negated == other.negated);
     }
 }

@@ -27,20 +27,20 @@ public class QuantifiedTest1 implements ICondition1<QuantifiedTest2> {
 
     @Override
     public TransformationResult<QuantifiedTest2> transform(final PropsResolutionContext context) {
-        final TransformationResult<? extends ISingleOperand2<?>> leftOperandTransformationResult = leftOperand.transform(context);
-        final TransformationResult<EntQuery2> rightOperandTransformationResult = rightOperand.transform(leftOperandTransformationResult.updatedContext);
+        final TransformationResult<? extends ISingleOperand2<?>> leftOperandTr = leftOperand.transform(context);
+        final TransformationResult<EntQuery2> rightOperandTr = rightOperand.transform(leftOperandTr.updatedContext);
         
-        return new TransformationResult<QuantifiedTest2>(new QuantifiedTest2(leftOperandTransformationResult.item, operator, quantifier, rightOperandTransformationResult.item), rightOperandTransformationResult.updatedContext);
+        return new TransformationResult<QuantifiedTest2>(new QuantifiedTest2(leftOperandTr.item, operator, quantifier, rightOperandTr.item), rightOperandTr.updatedContext);
     }
 
     @Override
     public int hashCode() {
         final int prime = 31;
         int result = 1;
-        result = prime * result + ((leftOperand == null) ? 0 : leftOperand.hashCode());
-        result = prime * result + ((operator == null) ? 0 : operator.hashCode());
-        result = prime * result + ((quantifier == null) ? 0 : quantifier.hashCode());
-        result = prime * result + ((rightOperand == null) ? 0 : rightOperand.hashCode());
+        result = prime * result + leftOperand.hashCode();
+        result = prime * result + operator.hashCode();
+        result = prime * result + quantifier.hashCode();
+        result = prime * result + rightOperand.hashCode();
         return result;
     }
 

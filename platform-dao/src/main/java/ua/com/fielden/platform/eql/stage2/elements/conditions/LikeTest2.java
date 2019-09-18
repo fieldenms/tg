@@ -27,18 +27,18 @@ public class LikeTest2 extends AbstractCondition2<LikeTest3> {
 
     @Override
     public TransformationResult<LikeTest3> transform(final TransformationContext context) {
-        final TransformationResult<? extends ISingleOperand3> leftOperandTransformationResult = leftOperand.transform(context);
-        final TransformationResult<? extends ISingleOperand3> rightOperandTransformationResult = rightOperand.transform(leftOperandTransformationResult.updatedContext);
-        return new TransformationResult<LikeTest3>(new LikeTest3(leftOperandTransformationResult.item, rightOperandTransformationResult.item, options), rightOperandTransformationResult.updatedContext);
+        final TransformationResult<? extends ISingleOperand3> leftOperandTr = leftOperand.transform(context);
+        final TransformationResult<? extends ISingleOperand3> rightOperandTr = rightOperand.transform(leftOperandTr.updatedContext);
+        return new TransformationResult<LikeTest3>(new LikeTest3(leftOperandTr.item, rightOperandTr.item, options), rightOperandTr.updatedContext);
     }
 
     @Override
     public int hashCode() {
         final int prime = 31;
         int result = 1;
-        result = prime * result + ((leftOperand == null) ? 0 : leftOperand.hashCode());
-        result = prime * result + ((options == null) ? 0 : options.hashCode());
-        result = prime * result + ((rightOperand == null) ? 0 : rightOperand.hashCode());
+        result = prime * result + leftOperand.hashCode();
+        result = prime * result + options.hashCode();
+        result = prime * result + rightOperand.hashCode();
         return result;
     }
 
@@ -47,11 +47,11 @@ public class LikeTest2 extends AbstractCondition2<LikeTest3> {
         if (this == obj) {
             return true;
         }
-        
+
         if (!(obj instanceof LikeTest2)) {
             return false;
         }
-        
+
         final LikeTest2 other = (LikeTest2) obj;
 
         return Objects.equals(leftOperand, other.leftOperand) &&

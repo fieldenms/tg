@@ -21,9 +21,9 @@ public class OperandsBasedSet2 implements ISetOperand2<OperandsBasedSet3> {
         final List<ISingleOperand3> transformedOperands = new ArrayList<>();
         TransformationContext currentContext = context;
         for (final ISingleOperand2<? extends ISingleOperand3> singleOperand : operands) {
-            final TransformationResult<? extends ISingleOperand3> operandTransformationResult = singleOperand.transform(context);
-            transformedOperands.add(operandTransformationResult.item);
-            currentContext = operandTransformationResult.updatedContext;
+            final TransformationResult<? extends ISingleOperand3> operandTr = singleOperand.transform(context);
+            transformedOperands.add(operandTr.item);
+            currentContext = operandTr.updatedContext;
         }
 
         return new TransformationResult<OperandsBasedSet3>(new OperandsBasedSet3(transformedOperands), currentContext);
@@ -33,7 +33,7 @@ public class OperandsBasedSet2 implements ISetOperand2<OperandsBasedSet3> {
     public int hashCode() {
         final int prime = 31;
         int result = 1;
-        result = prime * result + ((operands == null) ? 0 : operands.hashCode());
+        result = prime * result + operands.hashCode();
         return result;
     }
 

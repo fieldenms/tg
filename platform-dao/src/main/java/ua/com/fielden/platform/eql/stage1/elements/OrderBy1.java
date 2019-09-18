@@ -16,8 +16,8 @@ public class OrderBy1 {
     }
 
     public TransformationResult<OrderBy2> transform(final PropsResolutionContext context) {
-        final TransformationResult<? extends ISingleOperand2<?>> operandTransformationResult = operand.transform(context);
-        return new TransformationResult<OrderBy2>(new OrderBy2(operandTransformationResult.item, isDesc), operandTransformationResult.updatedContext);
+        final TransformationResult<? extends ISingleOperand2<?>> operandTr = operand.transform(context);
+        return new TransformationResult<OrderBy2>(new OrderBy2(operandTr.item, isDesc), operandTr.updatedContext);
     }
 
     @Override
@@ -25,7 +25,7 @@ public class OrderBy1 {
         final int prime = 31;
         int result = 1;
         result = prime * result + (isDesc ? 1231 : 1237);
-        result = prime * result + ((operand == null) ? 0 : operand.hashCode());
+        result = prime * result + operand.hashCode();
         return result;
     }
 
@@ -41,7 +41,6 @@ public class OrderBy1 {
         
         final OrderBy1 other = (OrderBy1) obj;
 
-        return Objects.equals(isDesc, other.isDesc) &&
-                Objects.equals(operand, other.operand);
+        return Objects.equals(operand, other.operand) && (isDesc == other.isDesc);
     }
 }

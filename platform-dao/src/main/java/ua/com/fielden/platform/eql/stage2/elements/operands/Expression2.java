@@ -24,14 +24,14 @@ public class Expression2 implements ISingleOperand2<Expression3> {
     @Override
     public TransformationResult<Expression3> transform(final TransformationContext context) {
         final List<CompoundSingleOperand3> transformed = new ArrayList<>();
-        final TransformationResult<? extends ISingleOperand3> firstTransformationResult = first.transform(context);
-        TransformationContext currentContext = firstTransformationResult.updatedContext;
+        final TransformationResult<? extends ISingleOperand3> firstTr = first.transform(context);
+        TransformationContext currentContext = firstTr.updatedContext;
         for (final CompoundSingleOperand2 item : items) {
-            final TransformationResult<? extends ISingleOperand3> itemTransformationResult = item.operand.transform(currentContext);
-            transformed.add(new CompoundSingleOperand3(itemTransformationResult.item, item.operator));
-            currentContext = itemTransformationResult.updatedContext;
+            final TransformationResult<? extends ISingleOperand3> itemTr = item.operand.transform(currentContext);
+            transformed.add(new CompoundSingleOperand3(itemTr.item, item.operator));
+            currentContext = itemTr.updatedContext;
         }
-        return new TransformationResult<Expression3>(new Expression3(firstTransformationResult.item, transformed), currentContext);
+        return new TransformationResult<Expression3>(new Expression3(firstTr.item, transformed), currentContext);
     }
     
     @Override
@@ -50,7 +50,7 @@ public class Expression2 implements ISingleOperand2<Expression3> {
         final int prime = 31;
         int result = 1;
         result = prime * result + ((first == null) ? 0 : first.hashCode());
-        result = prime * result + ((items == null) ? 0 : items.hashCode());
+        result = prime * result + items.hashCode();
         return result;
     }
 

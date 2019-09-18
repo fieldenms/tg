@@ -1,5 +1,7 @@
 package ua.com.fielden.platform.eql.stage3.elements.functions;
 
+import static java.lang.String.format;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -8,15 +10,15 @@ import ua.com.fielden.platform.entity.query.DbVersion;
 import ua.com.fielden.platform.entity.query.fluent.ITypeCast;
 import ua.com.fielden.platform.eql.stage3.elements.conditions.ICondition3;
 import ua.com.fielden.platform.eql.stage3.elements.operands.ISingleOperand3;
-import ua.com.fielden.platform.utils.Pair;
+import ua.com.fielden.platform.types.tuples.T2;
 
 public class CaseWhen3 extends AbstractFunction3 {
 
-    private List<Pair<ICondition3, ISingleOperand3>> whenThenPairs = new ArrayList<Pair<ICondition3, ISingleOperand3>>();
+    private List<T2<ICondition3, ISingleOperand3>> whenThenPairs = new ArrayList<>();
     private final ISingleOperand3 elseOperand;
     private final ITypeCast typeCast;
 
-    public CaseWhen3(final List<Pair<ICondition3, ISingleOperand3>> whenThenPairs, final ISingleOperand3 elseOperand, final ITypeCast typeCast) {
+    public CaseWhen3(final List<T2<ICondition3, ISingleOperand3>> whenThenPairs, final ISingleOperand3 elseOperand, final ITypeCast typeCast) {
         this.whenThenPairs.addAll(whenThenPairs);
         this.elseOperand = elseOperand;
         this.typeCast = typeCast;
@@ -26,14 +28,18 @@ public class CaseWhen3 extends AbstractFunction3 {
     public String sql(final DbVersion dbVersion) {
         final StringBuffer sb = new StringBuffer();
         sb.append("CASE");
-        for (final Pair<ICondition3, ISingleOperand3> whenThen : whenThenPairs) {
-            sb.append(" WHEN " + whenThen.getKey().sql(dbVersion) + " THEN " + (typeCast == null ? whenThen.getValue().sql(dbVersion) : typeCast.typecast(whenThen.getValue().sql(dbVersion), dbVersion)));
+        for (final T2<ICondition3, ISingleOperand3> whenThen : whenThenPairs) {
+            sb.append(format(" WHEN %s THEN %s", whenThen._1.sql(dbVersion), getOperandSql(whenThen._2, dbVersion)));
         }
         if (elseOperand != null) {
-            sb.append(" ELSE " + (typeCast == null ? elseOperand.sql(dbVersion) : typeCast.typecast(elseOperand.sql(dbVersion), dbVersion)));
+            sb.append(format(" ELSE %s", getOperandSql(elseOperand, dbVersion)));
         }
         sb.append(" END");
         return sb.toString();
+    }
+    
+    private String getOperandSql(final ISingleOperand3 operand, final DbVersion dbVersion) {
+        return typeCast == null ? operand.sql(dbVersion) : typeCast.typecast(operand.sql(dbVersion), dbVersion);
     }
     
     @Override
@@ -42,7 +48,7 @@ public class CaseWhen3 extends AbstractFunction3 {
         int result = 1;
         result = prime * result + ((elseOperand == null) ? 0 : elseOperand.hashCode());
         result = prime * result + ((typeCast == null) ? 0 : typeCast.hashCode());
-        result = prime * result + ((whenThenPairs == null) ? 0 : whenThenPairs.hashCode());
+        result = prime * result + whenThenPairs.hashCode();
         return result;
     }
 

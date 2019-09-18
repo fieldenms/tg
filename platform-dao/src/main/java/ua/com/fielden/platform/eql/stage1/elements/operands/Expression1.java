@@ -23,22 +23,22 @@ public class Expression1 implements ISingleOperand1<Expression2> {
     @Override
     public TransformationResult<Expression2> transform(final PropsResolutionContext context) {
         final List<CompoundSingleOperand2> transformed = new ArrayList<>();
-        final TransformationResult<? extends ISingleOperand2<?>> firstTransformationResult = first.transform(context);
-        PropsResolutionContext currentResolutionContext = firstTransformationResult.updatedContext;
+        final TransformationResult<? extends ISingleOperand2<?>> firstTr = first.transform(context);
+        PropsResolutionContext currentResolutionContext = firstTr.updatedContext;
         for (final CompoundSingleOperand1 item : items) {
-            final TransformationResult<? extends ISingleOperand2<?>> itemTransformationResult = item.operand.transform(currentResolutionContext);
-            transformed.add(new CompoundSingleOperand2(itemTransformationResult.item, item.operator));
-            currentResolutionContext = itemTransformationResult.updatedContext;
+            final TransformationResult<? extends ISingleOperand2<?>> itemTr = item.operand.transform(currentResolutionContext);
+            transformed.add(new CompoundSingleOperand2(itemTr.item, item.operator));
+            currentResolutionContext = itemTr.updatedContext;
         }
-        return new TransformationResult<Expression2>(new Expression2(firstTransformationResult.item, transformed), currentResolutionContext);
+        return new TransformationResult<Expression2>(new Expression2(firstTr.item, transformed), currentResolutionContext);
     }
 
     @Override
     public int hashCode() {
         final int prime = 31;
         int result = 1;
-        result = prime * result + ((first == null) ? 0 : first.hashCode());
-        result = prime * result + ((items == null) ? 0 : items.hashCode());
+        result = prime * result + first.hashCode();
+        result = prime * result + items.hashCode();
         return result;
     }
 

@@ -16,15 +16,15 @@ public class QueryBasedSet2 implements ISetOperand2<QueryBasedSet3> {
 
     @Override
     public TransformationResult<QueryBasedSet3> transform(final TransformationContext context) {
-        final TransformationResult<EntQuery3> modelTransformationResult = model.transform(context);
-        return new TransformationResult<QueryBasedSet3>(new QueryBasedSet3(modelTransformationResult.item), modelTransformationResult.updatedContext);
+        final TransformationResult<EntQuery3> modelTr = model.transform(context);
+        return new TransformationResult<QueryBasedSet3>(new QueryBasedSet3(modelTr.item), modelTr.updatedContext);
     }
 
     @Override
     public int hashCode() {
         final int prime = 31;
         int result = 1;
-        result = prime * result + ((model == null) ? 0 : model.hashCode());
+        result = prime * result + model.hashCode();
         return result;
     }
 

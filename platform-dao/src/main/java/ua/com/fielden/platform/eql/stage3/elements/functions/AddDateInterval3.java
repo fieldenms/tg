@@ -34,7 +34,7 @@ public class AddDateInterval3 extends TwoOperandsFunction3 {
     public int hashCode() {
         final int prime = 31;
         final int result = super.hashCode();
-        return prime * result + ((intervalUnit) == null ? 0 : intervalUnit.hashCode());
+        return prime * result + intervalUnit.hashCode();
     }
 
     @Override

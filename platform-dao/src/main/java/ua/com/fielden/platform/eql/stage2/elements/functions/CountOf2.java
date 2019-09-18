@@ -21,8 +21,8 @@ public class CountOf2 extends SingleOperandFunction2<CountOf3> {
 
     @Override
     public TransformationResult<CountOf3> transform(final TransformationContext context) {
-        final TransformationResult<? extends ISingleOperand3> operandTransformationResult = operand.transform(context);
-        return new TransformationResult<CountOf3>(new CountOf3(operandTransformationResult.item, distinct), operandTransformationResult.updatedContext);
+        final TransformationResult<? extends ISingleOperand3> operandTr = operand.transform(context);
+        return new TransformationResult<CountOf3>(new CountOf3(operandTr.item, distinct), operandTr.updatedContext);
     }
     
     @Override

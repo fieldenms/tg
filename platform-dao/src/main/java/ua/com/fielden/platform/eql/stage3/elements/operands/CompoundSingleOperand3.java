@@ -22,8 +22,8 @@ public class CompoundSingleOperand3 {
     public int hashCode() {
         final int prime = 31;
         int result = 1;
-        result = prime * result + ((operand == null) ? 0 : operand.hashCode());
-        result = prime * result + ((operator == null) ? 0 : operator.hashCode());
+        result = prime * result + operand.hashCode();
+        result = prime * result + operator.hashCode();
         return result;
     }
 
@@ -39,7 +39,6 @@ public class CompoundSingleOperand3 {
         
         final CompoundSingleOperand3 other = (CompoundSingleOperand3) obj;
         
-        return Objects.equals(operand, other.operand) &&
-                Objects.equals(operator, other.operator);
+        return Objects.equals(operand, other.operand) && Objects.equals(operator, other.operator);
     }
 }

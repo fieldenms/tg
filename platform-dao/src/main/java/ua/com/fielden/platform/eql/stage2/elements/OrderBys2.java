@@ -18,9 +18,9 @@ public class OrderBys2 {
             final List<OrderBy3> transformed = new ArrayList<>();
             TransformationContext currentContext = context;
             for (final OrderBy2 orderBy : models) {
-                final TransformationResult<OrderBy3> orderByTransformationResult = orderBy.transform(currentContext);
-                transformed.add(orderByTransformationResult.item);
-                currentContext = orderByTransformationResult.updatedContext;
+                final TransformationResult<OrderBy3> orderByTr = orderBy.transform(currentContext);
+                transformed.add(orderByTr.item);
+                currentContext = orderByTr.updatedContext;
             }
             return new TransformationResult<OrderBys3>(new OrderBys3(transformed), currentContext);
     }
@@ -29,7 +29,7 @@ public class OrderBys2 {
     public int hashCode() {
         final int prime = 31;
         int result = 1;
-        result = prime * result + ((models == null) ? 0 : models.hashCode());
+        result = prime * result + models.hashCode();
         return result;
     }
 

@@ -1,5 +1,7 @@
 package ua.com.fielden.platform.eql.stage1.builders;
 
+import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.COMPOUND_CONDITION;
+
 import ua.com.fielden.platform.entity.query.fluent.enums.LogicalOperator;
 import ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory;
 import ua.com.fielden.platform.eql.stage1.elements.conditions.CompoundCondition1;
@@ -21,7 +23,7 @@ public class CompoundConditionBuilder extends AbstractTokensBuilder {
 
     @Override
     public Pair<TokenCategory, Object> getResult() {
-        return new Pair<TokenCategory, Object>(TokenCategory.COMPOUND_CONDITION, new CompoundCondition1((LogicalOperator) getTokens().get(0).getValue(), (ICondition1) getTokens().get(1).getValue()));
+        return new Pair<TokenCategory, Object>(COMPOUND_CONDITION, new CompoundCondition1((LogicalOperator) getTokens().get(0).getValue(), (ICondition1) getTokens().get(1).getValue()));
     }
 
 }

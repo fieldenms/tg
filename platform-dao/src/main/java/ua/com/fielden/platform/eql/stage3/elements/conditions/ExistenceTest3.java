@@ -24,7 +24,7 @@ public class ExistenceTest3 implements ICondition3 {
         final int prime = 31;
         int result = 1;
         result = prime * result + (negated ? 1231 : 1237);
-        result = prime * result + ((subQuery == null) ? 0 : subQuery.hashCode());
+        result = prime * result + subQuery.hashCode();
         return result;
     }
 
@@ -40,6 +40,6 @@ public class ExistenceTest3 implements ICondition3 {
         
         final ExistenceTest3 other = (ExistenceTest3) obj;
         
-        return Objects.equals(negated, other.negated) && Objects.equals(subQuery, other.subQuery);
+        return (negated == other.negated) && Objects.equals(subQuery, other.subQuery);
     }
 }

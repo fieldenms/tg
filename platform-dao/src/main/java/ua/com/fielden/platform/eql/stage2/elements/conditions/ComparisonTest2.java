@@ -27,18 +27,18 @@ public class ComparisonTest2 extends AbstractCondition2<ComparisonTest3> {
 
     @Override
     public TransformationResult<ComparisonTest3> transform(final TransformationContext context) {
-        final TransformationResult<? extends ISingleOperand3> leftOperandTransformationResult = leftOperand.transform(context);
-        final TransformationResult<? extends ISingleOperand3> rightOperandTransformationResult = rightOperand.transform(leftOperandTransformationResult.updatedContext);
-        return new TransformationResult<ComparisonTest3>(new ComparisonTest3(leftOperandTransformationResult.item, operator, rightOperandTransformationResult.item), rightOperandTransformationResult.updatedContext);
+        final TransformationResult<? extends ISingleOperand3> leftOperandTr = leftOperand.transform(context);
+        final TransformationResult<? extends ISingleOperand3> rightOperandTr = rightOperand.transform(leftOperandTr.updatedContext);
+        return new TransformationResult<ComparisonTest3>(new ComparisonTest3(leftOperandTr.item, operator, rightOperandTr.item), rightOperandTr.updatedContext);
     }
 
     @Override
     public int hashCode() {
         final int prime = 31;
         int result = 1;
-        result = prime * result + ((leftOperand == null) ? 0 : leftOperand.hashCode());
-        result = prime * result + ((operator == null) ? 0 : operator.hashCode());
-        result = prime * result + ((rightOperand == null) ? 0 : rightOperand.hashCode());
+        result = prime * result + leftOperand.hashCode();
+        result = prime * result + operator.hashCode();
+        result = prime * result + rightOperand.hashCode();
         return result;
     }
 

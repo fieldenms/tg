@@ -24,16 +24,16 @@ public class AddDateInterval2 extends TwoOperandsFunction2<AddDateInterval3> {
 
     @Override
     public TransformationResult<AddDateInterval3> transform(final TransformationContext context) {
-        final TransformationResult<? extends ISingleOperand3> firstOperandTransformationResult = operand1.transform(context);
-        final TransformationResult<? extends ISingleOperand3> secondOperandTransformationResult = operand2.transform(firstOperandTransformationResult.updatedContext);
-        return new TransformationResult<AddDateInterval3>(new AddDateInterval3(firstOperandTransformationResult.item, intervalUnit, secondOperandTransformationResult.item), secondOperandTransformationResult.updatedContext);
+        final TransformationResult<? extends ISingleOperand3> firstOperandTr = operand1.transform(context);
+        final TransformationResult<? extends ISingleOperand3> secondOperandTr = operand2.transform(firstOperandTr.updatedContext);
+        return new TransformationResult<AddDateInterval3>(new AddDateInterval3(firstOperandTr.item, intervalUnit, secondOperandTr.item), secondOperandTr.updatedContext);
     }
     
     @Override
     public int hashCode() {
         final int prime = 31;
         final int result = super.hashCode();
-        return prime * result + ((intervalUnit) == null ? 0 : intervalUnit.hashCode());
+        return prime * result + intervalUnit.hashCode();
     }
 
     @Override

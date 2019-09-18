@@ -42,21 +42,16 @@ public class EntQuery2 implements ISingleOperand2<EntQuery3> {
 
     @Override
     public TransformationResult<EntQuery3> transform(final TransformationContext context) {
-        final TransformationResult<IQrySources3> sourcesTransformationResult =  sources.transform(context);
-        final TransformationResult<Conditions3> conditionsTransformationResult =  conditions.transform(sourcesTransformationResult.updatedContext);
-        final TransformationResult<Yields3> yieldsTransformationResult =  yields.transform(conditionsTransformationResult.updatedContext);
-        final TransformationResult<GroupBys3> groupsTransformationResult =  groups.transform(yieldsTransformationResult.updatedContext);
-        final TransformationResult<OrderBys3> orderingsTransformationResult =  orderings.transform(groupsTransformationResult.updatedContext);
+        final TransformationResult<IQrySources3> sourcesTr = sources.transform(context);
+        final TransformationResult<Conditions3> conditionsTr = conditions.transform(sourcesTr.updatedContext);
+        final TransformationResult<Yields3> yieldsTr = yields.transform(conditionsTr.updatedContext);
+        final TransformationResult<GroupBys3> groupsTr = groups.transform(yieldsTr.updatedContext);
+        final TransformationResult<OrderBys3> orderingsTr = orderings.transform(groupsTr.updatedContext);
 
-        final EntQueryBlocks3 entQueryBlocks = new EntQueryBlocks3(
-                sourcesTransformationResult.item, 
-                conditionsTransformationResult.item, 
-                yieldsTransformationResult.item, 
-                groupsTransformationResult.item, 
-                orderingsTransformationResult.item);
+        final EntQueryBlocks3 entQueryBlocks = new EntQueryBlocks3(sourcesTr.item, conditionsTr.item, yieldsTr.item, groupsTr.item, orderingsTr.item);
 
-        return new TransformationResult<EntQuery3>(new EntQuery3(entQueryBlocks), orderingsTransformationResult.updatedContext);
-    }    
+        return new TransformationResult<EntQuery3>(new EntQuery3(entQueryBlocks), orderingsTr.updatedContext);
+    }
 
     @Override
     public Class<? extends AbstractEntity<?>> type() {
@@ -72,13 +67,13 @@ public class EntQuery2 implements ISingleOperand2<EntQuery3> {
     public int hashCode() {
         final int prime = 31;
         int result = 1;
-        result = prime * result + ((conditions == null) ? 0 : conditions.hashCode());
-        result = prime * result + ((groups == null) ? 0 : groups.hashCode());
-        result = prime * result + ((category == null) ? 0 : category.hashCode());
+        result = prime * result + conditions.hashCode();
+        result = prime * result + groups.hashCode();
+        result = prime * result + category.hashCode();
         result = prime * result + ((resultType == null) ? 0 : resultType.hashCode());
-        result = prime * result + ((sources == null) ? 0 : sources.hashCode());
-        result = prime * result + ((yields == null) ? 0 : yields.hashCode());
-        result = prime * result + ((orderings == null) ? 0 : orderings.hashCode());
+        result = prime * result + sources.hashCode();
+        result = prime * result + yields.hashCode();
+        result = prime * result + orderings.hashCode();
         return result;
     }
 
@@ -91,9 +86,9 @@ public class EntQuery2 implements ISingleOperand2<EntQuery3> {
         if (!(obj instanceof EntQuery2)) {
             return false;
         }
-        
+
         final EntQuery2 other = (EntQuery2) obj;
-        
+
         return Objects.equals(category, other.category) &&
                 Objects.equals(resultType, other.resultType) &&
                 Objects.equals(sources, other.sources) &&

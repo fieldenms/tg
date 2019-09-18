@@ -20,7 +20,7 @@ public class QueryBasedSet3 implements ISetOperand3 {
     public int hashCode() {
         final int prime = 31;
         int result = 1;
-        result = prime * result + ((model == null) ? 0 : model.hashCode());
+        result = prime * result + model.hashCode();
         return result;
     }
 

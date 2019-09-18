@@ -31,7 +31,7 @@ public class Yield2 {
         final int prime = 31;
         int result = 1;
         result = prime * result + ((alias == null) ? 0 : alias.hashCode());
-        result = prime * result + ((operand == null) ? 0 : operand.hashCode());
+        result = prime * result + operand.hashCode();
         result = prime * result + (hasRequiredHint ? 1231 : 1237);
         return result;
     }

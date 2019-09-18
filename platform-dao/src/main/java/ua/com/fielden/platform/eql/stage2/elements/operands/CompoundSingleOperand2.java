@@ -18,8 +18,8 @@ public class CompoundSingleOperand2 {
     public int hashCode() {
         final int prime = 31;
         int result = 1;
-        result = prime * result + ((operand == null) ? 0 : operand.hashCode());
-        result = prime * result + ((operator == null) ? 0 : operator.hashCode());
+        result = prime * result + operand.hashCode();
+        result = prime * result + operator.hashCode();
         return result;
     }
 

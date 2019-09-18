@@ -23,8 +23,8 @@ public class AverageOf2 extends SingleOperandFunction2<AverageOf3> {
 
     @Override
     public TransformationResult<AverageOf3> transform(final TransformationContext context) {
-        final TransformationResult<? extends ISingleOperand3> operandTransformationResult = operand.transform(context);
-        return new TransformationResult<AverageOf3>(new AverageOf3(operandTransformationResult.item, distinct), operandTransformationResult.updatedContext);
+        final TransformationResult<? extends ISingleOperand3> operandTr = operand.transform(context);
+        return new TransformationResult<AverageOf3>(new AverageOf3(operandTr.item, distinct), operandTr.updatedContext);
     }
     
     @Override

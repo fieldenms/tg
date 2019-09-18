@@ -26,9 +26,9 @@ public class SetTest3 implements ICondition3 {
     public int hashCode() {
         final int prime = 31;
         int result = 1;
-        result = prime * result + ((leftOperand == null) ? 0 : leftOperand.hashCode());
+        result = prime * result + leftOperand.hashCode();
         result = prime * result + (negated ? 1231 : 1237);
-        result = prime * result + ((rightOperand == null) ? 0 : rightOperand.hashCode());
+        result = prime * result + rightOperand.hashCode();
         return result;
     }
 
@@ -46,6 +46,6 @@ public class SetTest3 implements ICondition3 {
         
         return Objects.equals(leftOperand, other.leftOperand) &&
                 Objects.equals(rightOperand, other.rightOperand) &&
-                Objects.equals(negated, other.negated);
+                (negated == other.negated);
     }
 }

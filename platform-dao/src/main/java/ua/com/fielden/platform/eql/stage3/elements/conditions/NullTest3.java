@@ -24,7 +24,7 @@ public class NullTest3 implements ICondition3 {
         final int prime = 31;
         int result = 1;
         result = prime * result + (negated ? 1231 : 1237);
-        result = prime * result + ((operand == null) ? 0 : operand.hashCode());
+        result = prime * result + operand.hashCode();
         return result;
     }
 
@@ -39,6 +39,6 @@ public class NullTest3 implements ICondition3 {
         }
         final NullTest3 other = (NullTest3) obj;
 
-        return Objects.equals(negated, other.negated) && Objects.equals(operand, other.operand);
+        return (negated == other.negated) && Objects.equals(operand, other.operand);
     }
 }

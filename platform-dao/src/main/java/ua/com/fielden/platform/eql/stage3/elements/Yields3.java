@@ -1,9 +1,9 @@
 package ua.com.fielden.platform.eql.stage3.elements;
 
+import static java.util.Collections.unmodifiableCollection;
 import static java.util.stream.Collectors.joining;
 
 import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
 import java.util.SortedMap;
 import java.util.TreeMap;
@@ -20,7 +20,7 @@ public class Yields3 {
     }
     
     public Collection<Yield3> getYields() {
-        return Collections.unmodifiableCollection(yieldsMap.values());
+        return unmodifiableCollection(yieldsMap.values());
     }
 
     public String sql(final DbVersion dbVersion) {
@@ -31,7 +31,7 @@ public class Yields3 {
     public int hashCode() {
         final int prime = 31;
         int result = 1;
-        result = prime * result + ((yieldsMap == null) ? 0 : yieldsMap.hashCode());
+        result = prime * result + yieldsMap.hashCode();
         return result;
     }
 

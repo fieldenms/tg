@@ -19,8 +19,8 @@ public class ExistenceTest1 implements ICondition1<ExistenceTest2> {
 
     @Override
     public TransformationResult<ExistenceTest2> transform(final PropsResolutionContext context) {
-        final TransformationResult<EntQuery2> subQueryTransformationResult = subQuery.transform(context);
-        return new TransformationResult<ExistenceTest2>(new ExistenceTest2(negated, subQueryTransformationResult.item), subQueryTransformationResult.updatedContext);
+        final TransformationResult<EntQuery2> subQueryTr = subQuery.transform(context);
+        return new TransformationResult<ExistenceTest2>(new ExistenceTest2(negated, subQueryTr.item), subQueryTr.updatedContext);
     }
 
     @Override
@@ -28,7 +28,7 @@ public class ExistenceTest1 implements ICondition1<ExistenceTest2> {
         final int prime = 31;
         int result = 1;
         result = prime * result + (negated ? 1231 : 1237);
-        result = prime * result + ((subQuery == null) ? 0 : subQuery.hashCode());
+        result = prime * result + subQuery.hashCode();
         return result;
     }
 

@@ -18,9 +18,9 @@ public class OrderBys1 {
         final List<OrderBy2> transformed = new ArrayList<>();
         PropsResolutionContext currentResolutionContext = context;
         for (final OrderBy1 orderBy : models) {
-            final TransformationResult<OrderBy2> orderByTransformationResult = orderBy.transform(currentResolutionContext);
-            transformed.add(orderByTransformationResult.item);
-            currentResolutionContext = orderByTransformationResult.updatedContext;
+            final TransformationResult<OrderBy2> orderByTr = orderBy.transform(currentResolutionContext);
+            transformed.add(orderByTr.item);
+            currentResolutionContext = orderByTr.updatedContext;
         }
         return new TransformationResult<OrderBys2>(new OrderBys2(transformed), currentResolutionContext);
     }
@@ -29,7 +29,7 @@ public class OrderBys1 {
     public int hashCode() {
         final int prime = 31;
         int result = 1;
-        result = prime * result + ((models == null) ? 0 : models.hashCode());
+        result = prime * result + models.hashCode();
         return result;
     }
 

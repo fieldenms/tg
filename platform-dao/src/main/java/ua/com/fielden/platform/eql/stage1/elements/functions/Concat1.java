@@ -24,9 +24,9 @@ public class Concat1 extends AbstractFunction1<Concat2> {
         final List<ISingleOperand2<? extends ISingleOperand3>> transformed = new ArrayList<>();
         PropsResolutionContext currentResolutionContext = context;
         for (final ISingleOperand1<? extends ISingleOperand2<? extends ISingleOperand3>> operand : operands) {
-            final TransformationResult<? extends ISingleOperand2<? extends ISingleOperand3>> operandTransformationResult = operand.transform(context);
-            transformed.add(operandTransformationResult.item);
-            currentResolutionContext = operandTransformationResult.updatedContext;
+            final TransformationResult<? extends ISingleOperand2<? extends ISingleOperand3>> operandTr = operand.transform(context);
+            transformed.add(operandTr.item);
+            currentResolutionContext = operandTr.updatedContext;
         }
         return new TransformationResult<Concat2>(new Concat2(transformed), currentResolutionContext);
     }
@@ -35,7 +35,7 @@ public class Concat1 extends AbstractFunction1<Concat2> {
     public int hashCode() {
         final int prime = 31;
         int result = 1;
-        result = prime * result + ((operands == null) ? 0 : operands.hashCode());
+        result = prime * result + operands.hashCode();
         return result;
     }
 

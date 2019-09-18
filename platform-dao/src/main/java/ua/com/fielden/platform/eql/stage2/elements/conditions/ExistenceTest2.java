@@ -24,8 +24,8 @@ public class ExistenceTest2 extends AbstractCondition2<ExistenceTest3> {
 
     @Override
     public TransformationResult<ExistenceTest3> transform(final TransformationContext context) {
-        final TransformationResult<EntQuery3> subQueryTransformationResult = subQuery.transform(context);
-        return new TransformationResult<ExistenceTest3>(new ExistenceTest3(negated, subQueryTransformationResult.item), subQueryTransformationResult.updatedContext);
+        final TransformationResult<EntQuery3> subQueryTr = subQuery.transform(context);
+        return new TransformationResult<ExistenceTest3>(new ExistenceTest3(negated, subQueryTr.item), subQueryTr.updatedContext);
     }
 
     @Override
@@ -33,7 +33,7 @@ public class ExistenceTest2 extends AbstractCondition2<ExistenceTest3> {
         final int prime = 31;
         int result = 1;
         result = prime * result + (negated ? 1231 : 1237);
-        result = prime * result + ((subQuery == null) ? 0 : subQuery.hashCode());
+        result = prime * result + subQuery.hashCode();
         return result;
     }
 
@@ -49,6 +49,6 @@ public class ExistenceTest2 extends AbstractCondition2<ExistenceTest3> {
         
         final ExistenceTest2 other = (ExistenceTest2) obj;
         
-        return Objects.equals(negated, other.negated) && Objects.equals(subQuery, other.subQuery);
+        return Objects.equals(subQuery, other.subQuery) && (negated == other.negated);
     }
 }

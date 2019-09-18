@@ -1,5 +1,8 @@
 package ua.com.fielden.platform.eql.stage1.builders;
 
+import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.END_COND;
+import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.GROUPED_CONDITIONS;
+
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -23,22 +26,22 @@ public class GroupedConditionsBuilder extends AbstractTokensBuilder {
 
     @Override
     public boolean isClosing() {
-        return getLastCat().equals(TokenCategory.END_COND);
+        return getLastCat() == END_COND;
     }
 
     @Override
     public Pair<TokenCategory, Object> getResult() {
-        if (TokenCategory.END_COND.equals(getLastCat())) {
+        if (isClosing()) {
             getTokens().remove(getSize() - 1);
         }
         final Iterator<Pair<TokenCategory, Object>> iterator = getTokens().iterator();
         final ICondition1<? extends ICondition2<?>> firstCondition = (ICondition1<? extends ICondition2<?>>) iterator.next().getValue();
-        final List<CompoundCondition1> otherConditions = new ArrayList<CompoundCondition1>();
+        final List<CompoundCondition1> otherConditions = new ArrayList<>();
         for (; iterator.hasNext();) {
             final CompoundCondition1 subsequentCompoundCondition = (CompoundCondition1) iterator.next().getValue();
             otherConditions.add(subsequentCompoundCondition);
         }
-        return new Pair<TokenCategory, Object>(TokenCategory.GROUPED_CONDITIONS, new Conditions1(negated, firstCondition, otherConditions));
+        return new Pair<TokenCategory, Object>(GROUPED_CONDITIONS, new Conditions1(negated, firstCondition, otherConditions));
     }
 
     @Override

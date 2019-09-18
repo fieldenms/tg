@@ -1,5 +1,7 @@
 package ua.com.fielden.platform.eql.stage1.builders;
 
+import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.QRY_GROUP;
+
 import ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory;
 import ua.com.fielden.platform.eql.stage1.elements.GroupBy1;
 import ua.com.fielden.platform.eql.stage1.elements.operands.ISingleOperand1;
@@ -19,6 +21,6 @@ public class GroupBuilder extends AbstractTokensBuilder {
     @Override
     public Pair<TokenCategory, Object> getResult() {
         final ISingleOperand1 operand = getModelForSingleOperand(firstCat(), firstValue());
-        return new Pair<TokenCategory, Object>(TokenCategory.QRY_GROUP, new GroupBy1(operand));
+        return new Pair<TokenCategory, Object>(QRY_GROUP, new GroupBy1(operand));
     }
 }

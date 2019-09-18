@@ -17,8 +17,8 @@ public class CountOf1 extends SingleOperandFunction1<CountOf2> {
 
     @Override
     public TransformationResult<CountOf2> transform(final PropsResolutionContext context) {
-        final TransformationResult<? extends ISingleOperand2<? extends ISingleOperand3>> operandTransformationResult = operand.transform(context);
-        return new TransformationResult<CountOf2>(new CountOf2(operandTransformationResult.item, distinct), operandTransformationResult.updatedContext);
+        final TransformationResult<? extends ISingleOperand2<? extends ISingleOperand3>> operandTr = operand.transform(context);
+        return new TransformationResult<CountOf2>(new CountOf2(operandTr.item, distinct), operandTr.updatedContext);
     }
     
     @Override

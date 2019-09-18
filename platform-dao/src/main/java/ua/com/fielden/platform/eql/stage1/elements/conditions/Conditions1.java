@@ -96,7 +96,7 @@ public class Conditions1 implements ICondition1<Conditions2> {
         int result = 1;
         result = prime * result + ((firstCondition == null) ? 0 : firstCondition.hashCode());
         result = prime * result + (negated ? 1231 : 1237);
-        result = prime * result + ((otherConditions == null) ? 0 : otherConditions.hashCode());
+        result = prime * result + otherConditions.hashCode();
         return result;
     }
 

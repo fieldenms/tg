@@ -23,18 +23,18 @@ public class SetTest1 implements ICondition1<SetTest2> {
 
     @Override
     public TransformationResult<SetTest2> transform(final PropsResolutionContext context) {
-        final TransformationResult<? extends ISingleOperand2<?>> leftOperandTransformationResult = leftOperand.transform(context);
-        final TransformationResult<? extends ISetOperand2<?>> rightOperandTransformationResult = rightOperand.transform(leftOperandTransformationResult.updatedContext);
-        return new TransformationResult<SetTest2>(new SetTest2(leftOperandTransformationResult.item, negated, rightOperandTransformationResult.item), rightOperandTransformationResult.updatedContext);
+        final TransformationResult<? extends ISingleOperand2<?>> leftOperandTr = leftOperand.transform(context);
+        final TransformationResult<? extends ISetOperand2<?>> rightOperandTr = rightOperand.transform(leftOperandTr.updatedContext);
+        return new TransformationResult<SetTest2>(new SetTest2(leftOperandTr.item, negated, rightOperandTr.item), rightOperandTr.updatedContext);
     }
 
     @Override
     public int hashCode() {
         final int prime = 31;
         int result = 1;
-        result = prime * result + ((leftOperand == null) ? 0 : leftOperand.hashCode());
+        result = prime * result + leftOperand.hashCode();
         result = prime * result + (negated ? 1231 : 1237);
-        result = prime * result + ((rightOperand == null) ? 0 : rightOperand.hashCode());
+        result = prime * result + rightOperand.hashCode();
         return result;
     }
 

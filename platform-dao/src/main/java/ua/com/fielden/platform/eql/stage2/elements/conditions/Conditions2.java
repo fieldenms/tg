@@ -37,9 +37,9 @@ public class Conditions2 extends AbstractCondition2<Conditions3> {
         for (final List<? extends ICondition2> andGroup : allConditionsAsDnf) {
             final List<ICondition3> transformedAndGroup = new ArrayList<>(); 
             for (final ICondition2<? extends ICondition3> andGroupCondition : andGroup) {
-                final TransformationResult<? extends ICondition3> andGroupConditionTransformationResult = andGroupCondition.transform(currentContext);
-                transformedAndGroup.add(andGroupConditionTransformationResult.item);
-                currentContext = andGroupConditionTransformationResult.updatedContext;
+                final TransformationResult<? extends ICondition3> andGroupConditionTr = andGroupCondition.transform(currentContext);
+                transformedAndGroup.add(andGroupConditionTr.item);
+                currentContext = andGroupConditionTr.updatedContext;
             }
             result.add(transformedAndGroup);
         }
@@ -60,7 +60,7 @@ public class Conditions2 extends AbstractCondition2<Conditions3> {
     public int hashCode() {
         final int prime = 31;
         int result = 1;
-        result = prime * result + ((allConditionsAsDnf == null) ? 0 : allConditionsAsDnf.hashCode());
+        result = prime * result + allConditionsAsDnf.hashCode();
         result = prime * result + (negated ? 1231 : 1237);
         return result;
     }
@@ -77,6 +77,6 @@ public class Conditions2 extends AbstractCondition2<Conditions3> {
         
         final Conditions2 other = (Conditions2) obj;
         
-        return Objects.equals(allConditionsAsDnf, other.allConditionsAsDnf) && Objects.equals(negated, other.negated);
+        return Objects.equals(allConditionsAsDnf, other.allConditionsAsDnf) && (negated == other.negated);
     }
 }

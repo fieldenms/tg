@@ -1,5 +1,7 @@
 package ua.com.fielden.platform.eql.stage1.builders;
 
+import static ua.com.fielden.platform.entity.query.fluent.enums.QueryTokens.ASC;
+import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.QRY_YIELD;
 import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.YIELD;
 
 import ua.com.fielden.platform.entity.query.exceptions.EqlStage1ProcessingException;
@@ -29,7 +31,7 @@ public class OrderByBuilder extends AbstractTokensBuilder {
             throw new EqlStage1ProcessingException("Not yet.");
         } else {
             final ISingleOperand1<? extends ISingleOperand2<?>> operand = getModelForSingleOperand(firstCat(), firstValue());
-            return new Pair<TokenCategory, Object>(TokenCategory.QRY_YIELD, new OrderBy1(operand, QueryTokens.ASC.equals(orderDirection) ? false : true));
+            return new Pair<TokenCategory, Object>(QRY_YIELD, new OrderBy1(operand, ASC.equals(orderDirection) ? false : true));
         }
     }
 }

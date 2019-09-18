@@ -1,8 +1,9 @@
 package ua.com.fielden.platform.eql.stage2.elements;
 
+import static java.util.Collections.unmodifiableCollection;
+
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
 import java.util.SortedMap;
 import java.util.TreeMap;
@@ -20,16 +21,16 @@ public class Yields2 {
     }
     
     public Collection<Yield2> getYields() {
-        return Collections.unmodifiableCollection(yieldsMap.values());
+        return unmodifiableCollection(yieldsMap.values());
     }
     
     public TransformationResult<Yields3> transform(final TransformationContext context) {
         final List<Yield3> yieldsList = new ArrayList<>(); 
         TransformationContext currentContext = context;
         for (final Yield2 yield : yieldsMap.values()) {
-            final TransformationResult<Yield3> yieldTransformationResult = yield.transform(currentContext);
-            currentContext = yieldTransformationResult.updatedContext;
-            yieldsList.add(yieldTransformationResult.item);
+            final TransformationResult<Yield3> yieldTr = yield.transform(currentContext);
+            currentContext = yieldTr.updatedContext;
+            yieldsList.add(yieldTr.item);
         }
         return new TransformationResult<Yields3>(new Yields3(yieldsList), currentContext);
     }
@@ -38,7 +39,7 @@ public class Yields2 {
     public int hashCode() {
         final int prime = 31;
         int result = 1;
-        result = prime * result + ((yieldsMap == null) ? 0 : yieldsMap.hashCode());
+        result = prime * result + yieldsMap.hashCode();
         return result;
     }
 

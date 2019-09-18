@@ -14,15 +14,15 @@ public class GroupBy1 {
     }
 
     public TransformationResult<GroupBy2> transform(final PropsResolutionContext context) {
-        final TransformationResult<? extends ISingleOperand2<?>> operandTransformationResult = operand.transform(context);
-        return new TransformationResult<GroupBy2>(new GroupBy2(operandTransformationResult.item), operandTransformationResult.updatedContext);
+        final TransformationResult<? extends ISingleOperand2<?>> operandTr = operand.transform(context);
+        return new TransformationResult<GroupBy2>(new GroupBy2(operandTr.item), operandTr.updatedContext);
     }
 
     @Override
     public int hashCode() {
         final int prime = 31;
         int result = 1;
-        result = prime * result + ((operand == null) ? 0 : operand.hashCode());
+        result = prime * result + operand.hashCode();
         return result;
     }
 

@@ -19,8 +19,8 @@ public class NullTest1 implements ICondition1<NullTest2> {
 
     @Override
     public TransformationResult<NullTest2> transform(final PropsResolutionContext context) {
-        final TransformationResult<? extends ISingleOperand2<?>> operandTransformationResult = operand.transform(context);
-        return new TransformationResult<NullTest2>(new NullTest2(operandTransformationResult.item, negated), operandTransformationResult.updatedContext);
+        final TransformationResult<? extends ISingleOperand2<?>> operandTr = operand.transform(context);
+        return new TransformationResult<NullTest2>(new NullTest2(operandTr.item, negated), operandTr.updatedContext);
     }
 
     @Override
@@ -28,7 +28,7 @@ public class NullTest1 implements ICondition1<NullTest2> {
         final int prime = 31;
         int result = 1;
         result = prime * result + (negated ? 1231 : 1237);
-        result = prime * result + ((operand == null) ? 0 : operand.hashCode());
+        result = prime * result + operand.hashCode();
         return result;
     }
 

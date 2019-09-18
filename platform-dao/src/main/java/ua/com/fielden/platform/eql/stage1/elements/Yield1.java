@@ -18,8 +18,8 @@ public class Yield1 {
     }
     
     public TransformationResult<Yield2> transform(final PropsResolutionContext context) {
-        final TransformationResult<? extends ISingleOperand2<?>> operandTransformationResult = operand.transform(context);
-        return new TransformationResult<Yield2>(new Yield2(operandTransformationResult.item, alias, hasRequiredHint), operandTransformationResult.updatedContext);
+        final TransformationResult<? extends ISingleOperand2<?>> operandTr = operand.transform(context);
+        return new TransformationResult<Yield2>(new Yield2(operandTr.item, alias, hasRequiredHint), operandTr.updatedContext);
     }
 
     @Override
@@ -28,7 +28,7 @@ public class Yield1 {
         int result = 1;
         result = prime * result + ((alias == null) ? 0 : alias.hashCode());
         result = prime * result + (hasRequiredHint ? 1231 : 1237);
-        result = prime * result + ((operand == null) ? 0 : operand.hashCode());
+        result = prime * result + operand.hashCode();
         return result;
     }
 

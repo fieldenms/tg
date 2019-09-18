@@ -1,5 +1,8 @@
 package ua.com.fielden.platform.eql.stage1.builders;
 
+import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.END_FUNCTION;
+import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.FUNCTION_MODEL;
+
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -18,12 +21,12 @@ public class ConcatFunctionBuilder extends AbstractTokensBuilder {
 
     @Override
     public boolean isClosing() {
-        return TokenCategory.END_FUNCTION.equals(getLastCat());
+        return getLastCat() == END_FUNCTION;
     }
 
     @Override
     public Pair<TokenCategory, Object> getResult() {
-        if (TokenCategory.END_FUNCTION.equals(getLastCat())) {
+        if (isClosing()) {
             getTokens().remove(getSize() - 1);
         }
         final Iterator<Pair<TokenCategory, Object>> iterator = getTokens().iterator();
@@ -37,6 +40,6 @@ public class ConcatFunctionBuilder extends AbstractTokensBuilder {
             items.add(subsequentOperand);
         }
 
-        return new Pair<TokenCategory, Object>(TokenCategory.FUNCTION_MODEL, new Concat1(items));
+        return new Pair<TokenCategory, Object>(FUNCTION_MODEL, new Concat1(items));
     }
 }
