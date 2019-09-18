@@ -6,31 +6,14 @@ import { Polymer } from '/resources/polymer/@polymer/polymer/lib/legacy/polymer-
 import { html } from '/resources/polymer/@polymer/polymer/lib/utils/html-tag.js';
 
 import '/resources/polymer/@polymer/iron-flex-layout/iron-flex-layout-classes.js';
-
-import '/resources/polymer/@polymer/paper-styles/color.js';
+import '/resources/polymer/@polymer/polymer/lib/elements/dom-repeat.js';
 import '/resources/polymer/@polymer/paper-radio-button/paper-radio-button.js';
 
+import '/resources/centre/criterion/multi/tg-accordion-with-radio-buttons-styles.js';
 import '/resources/components/tg-accordion.js';
 
 const template = html`
-    <style>
-        tg-accordion {
-            margin-bottom: 20px;
-            --tg-accordion-selected-heading-background-color: var(--paper-light-blue-700);
-            --tg-accordion-selected-heading-color: white;
-            --tg-accordion-selected-label-color: white;
-        }
-        paper-radio-button {
-            margin: 10px;
-            --paper-radio-button-checked-color: var(--paper-light-blue-700);
-            --paper-radio-button-checked-ink-color: var(--paper-light-blue-700);
-            font-family: 'Roboto', 'Noto', sans-serif;
-        }
-        paper-radio-button {
-            --calculated-paper-radio-button-ink-size: 36px;
-        }
-    </style>
-    <style include="iron-flex iron-flex-reverse iron-flex-alignment iron-flex-factors iron-positioning"></style>
+    <style include="iron-flex tg-accordion-with-radio-buttons-styles"></style>
     <template is="dom-repeat" items="{{_datePrefixes}}" as="prefix" index-as="pIndex">
         <tg-accordion id$="[[prefix]]" dont-close-on-tap heading="[[_getPrefixTitle(_prefixTitles, pIndex)]]" selected="[[_calcSelected(prefix, _datePrefix)]]" on-accordion-toggled="_accordionToggledListener">
             <div class="layout horizontal wrap">
