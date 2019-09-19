@@ -245,7 +245,19 @@ public class DynamicQueryBuilderSqlTest {
         assertEquals("Incorrect query model has been built.", expected.model(), actual.model());
         //assertEquals("Incorrect query parameter values has been built.", expected.model().getFinalModelResult(mappingExtractor).getParamValues(), actual.model().getFinalModelResult(mappingExtractor).getParamValues());
     }
-
+    
+    @Test
+    public void empty_queryProperties_generate_empty_query_even_with_non_empty_orGroups() {
+        queryProperties.get("dateProp").setOrGroup(1);
+        queryProperties.get("entityProp").setOrGroup(1);
+        queryProperties.get("booleanProp").setOrGroup(2);
+        
+        final ICompleted<? extends AbstractEntity<?>> expected = //
+        /**/iJoin; //
+        final ICompleted<? extends AbstractEntity<?>> actual = createQuery(masterKlass, new ArrayList<>(queryProperties.values()));
+        assertEquals(expected.model(), actual.model());
+    }
+    
     ////////////////////////////////////////////////////////////////////////////////////////////
     ////////////////////////////////// 1. Atomic level /////////////////////////////////////////
     ////////////////////////////////////////////////////////////////////////////////////////////
@@ -834,7 +846,82 @@ public class DynamicQueryBuilderSqlTest {
         assertEquals("Incorrect query model has been built.", expected.model(), actual.model());
         //assertEquals("Incorrect query parameter values has been built.", expected.model().getFinalModelResult(mappingExtractor).getParamValues(), actual.model().getFinalModelResult(mappingExtractor).getParamValues());
     }
-
+    
+    @Test
+    public void query_is_composed_from_a_sequence_of_nonOrGrouped_conditions_followed_by_orGroup_conditions_with_increasing_group_number_and_wrapped_by_separate_EQL_condition_construct() {
+        // Properties sequence is the following:
+        //
+        // integerProp
+        // doubleProp
+        // bigDecimalProp
+        // moneyProp
+        // dateProp
+        // booleanProp
+        // stringProp
+        // entityProp
+        // ...
+        // entityProp.booleanProp
+        // ...
+        
+        // with OR groups
+        queryProperties.get("bigDecimalProp").setValue(3);
+        queryProperties.get("bigDecimalProp").setValue2(7);
+        queryProperties.get("bigDecimalProp").setOrGroup(1);
+        
+        queryProperties.get("integerProp").setOrNull(true);
+        queryProperties.get("integerProp").setOrGroup(9);
+        
+        queryProperties.get("dateProp").setOrNull(true);
+        queryProperties.get("dateProp").setNot(true);
+        queryProperties.get("dateProp").setOrGroup(1);
+        
+        // with invalid OR groups
+        queryProperties.get("moneyProp").setOrNull(true);
+        queryProperties.get("moneyProp").setOrGroup(0);
+        
+        queryProperties.get("entityProp.booleanProp").setOrNull(true);
+        queryProperties.get("entityProp.booleanProp").setOrGroup(10);
+        
+        // without OR groups
+        queryProperties.get("stringProp").setOrNull(true);
+        
+        queryProperties.get("entityProp").setOrNull(true);
+        
+        final String moneyProp = queryProperties.get("moneyProp").getConditionBuildingName();
+        final String stringProp = queryProperties.get("stringProp").getConditionBuildingName();
+        final String entityProp = queryProperties.get("entityProp").getConditionBuildingName();
+        final String entityProp_booleanProp = queryProperties.get("entityProp.booleanProp").getConditionBuildingName();
+        final String bigDecimalProp = queryProperties.get("bigDecimalProp").getConditionBuildingName();
+        final String dateProp = queryProperties.get("dateProp").getConditionBuildingName();
+        final String integerProp = queryProperties.get("integerProp").getConditionBuildingName();
+        
+        final ICompleted<? extends AbstractEntity<?>> expected =
+        /**/iJoin.where().condition(cond()
+        /*  */.condition(cond().prop(getPropertyNameWithoutKeyPart(moneyProp)).isNull().model())
+        /*  */.and()
+        /*  */.condition(cond().prop(getPropertyNameWithoutKeyPart(stringProp)).isNull().model())
+        /*  */.and()
+        /*  */.condition(cond().prop(getPropertyNameWithoutKeyPart(entityProp)).isNull().model())
+        /*  */.and()
+        /*  */.condition(cond().prop(getPropertyNameWithoutKeyPart(entityProp_booleanProp)).isNull().model())
+        /*  */.and()
+        /*  */.condition(cond() // Group 1
+        /*    */.condition(cond().prop(getPropertyNameWithoutKeyPart(bigDecimalProp)).isNotNull().and()
+        /*      */.condition(cond().prop(bigDecimalProp).ge().iVal(3).and().prop(bigDecimalProp).le().iVal(7).model())
+        /*    */.model())
+        /*    */.or()
+        /*    */.condition(cond().prop(getPropertyNameWithoutKeyPart(dateProp)).isNotNull().model())
+        /*  */.model())
+        /*  */.and()
+        /*  */.condition(cond() // Group 9
+        /*    */.condition(cond().prop(getPropertyNameWithoutKeyPart(integerProp)).isNull().model())
+        /*  */.model())
+        /**/.model());
+        final ICompleted<? extends AbstractEntity<?>> actual = createQuery(masterKlass, new ArrayList<>(queryProperties.values()));
+        
+        assertEquals(expected.model(), actual.model());
+    }
+    
     ////////////////////////////////// 3.2. Collectional ///////////////////////////////////
     @Test
     public void test_conditions_query_composition_with_a_couple_of_collectional_conditions_that_are_irrelevant_without_ALL_or_ANY_condition() {
