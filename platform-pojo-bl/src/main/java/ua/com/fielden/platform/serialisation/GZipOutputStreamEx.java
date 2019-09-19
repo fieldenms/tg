@@ -1,4 +1,4 @@
-package ua.com.fielden.platform.serialisation.xstream;
+package ua.com.fielden.platform.serialisation;
 
 import java.io.IOException;
 import java.io.OutputStream;
