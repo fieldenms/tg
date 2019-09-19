@@ -37,7 +37,7 @@ import org.joda.time.DateTime;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity_centre.review.criteria.DynamicColumnForExport;
 import ua.com.fielden.platform.reflection.Finder;
-import ua.com.fielden.platform.serialisation.xstream.GZipOutputStreamEx;
+import ua.com.fielden.platform.serialisation.GZipOutputStreamEx;
 import ua.com.fielden.platform.types.tuples.T2;
 import ua.com.fielden.platform.utils.EntityUtils;
 
