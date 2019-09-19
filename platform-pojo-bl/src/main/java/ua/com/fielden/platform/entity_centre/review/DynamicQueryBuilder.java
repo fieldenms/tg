@@ -657,16 +657,16 @@ public class DynamicQueryBuilder {
     /**
      * Creates condition model for OR group.
      *
-     * @param orGroup
+     * @param properties -- non-empty {@link QueryProperty} list depicting the group of OR-glued conditions
      * @return
      */
     private static <ET extends AbstractEntity<?>> ConditionModel buildOrGroup(final List<QueryProperty> properties) {
-        final IStandAloneConditionOperand<ET> condOperand = EntityQueryUtils.<ET> cond();
-        IStandAloneConditionCompoundCondition<ET> compoundCondition = null;
-        for (final QueryProperty qp : properties) {
-            compoundCondition = getConditionOperatorOr(condOperand, compoundCondition).condition(buildCondition(qp, false));
-        }
-        return compoundCondition.model();
+        final IStandAloneConditionOperand<ET> cond = EntityQueryUtils.<ET> cond(); // to avoid creating it each time accumulator function is performed
+        return properties.stream()
+            .reduce((IStandAloneConditionCompoundCondition<ET>) null,
+                    (partialCompoundCondition, queryProperty) -> getConditionOperatorOr(cond, partialCompoundCondition).condition(buildCondition(queryProperty, false)),
+                    (c1, c2) -> {throw new UnsupportedOperationException("Combining is not applicable here.");}
+            ).model(); // 'properties' are never empty, so it is NPE-safe
     }
 
     /**
