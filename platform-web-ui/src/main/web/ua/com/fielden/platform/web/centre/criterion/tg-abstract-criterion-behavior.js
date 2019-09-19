@@ -3,6 +3,7 @@ import '/resources/polymer/@polymer/paper-styles/paper-styles.js';
 import { TgFocusRestorationBehavior } from '/resources/actions/tg-focus-restoration-behavior.js';
 import '/resources/components/tg-scrollable-component.js';
 import '/resources/images/tg-icons.js';
+import { tearDownEvent } from '/resources/reflection/tg-polymer-utils.js';
 
 const criterionBehaviorStyle = html`
     <custom-style>
@@ -158,15 +159,21 @@ const TgAbstractCriterionBehaviorImpl = {
             }
         }.bind(domBind);
 
+        domBind._onIronResize = function (event) {
+            tearDownEvent(event);
+        };
+
         domBind._openedBind = function (e) {
             document.addEventListener('keydown', this._onCaptureKeyDown, true);
+            this.$.scrollableComponent.addEventListener('iron-resize', this._onIronResize); // prevent 'paper-dialog' re-centering by preventing propagation of 'iron-resize' event further to scrollableComponent's parent
         }.bind(domBind);
 
         domBind._closedBind = function (e) {
-            const dialog = this.$.metaValueEditor;
-            //Remove registered listeners on document.
+            // Remove registered listeners on document and scrollable component.
+            this.$.scrollableComponent.removeEventListener('iron-resize', this._onIronResize);
             document.removeEventListener('keydown', this._onCaptureKeyDown, true);
 
+            const dialog = this.$.metaValueEditor;
             document.body.removeChild(dialog);
             document.body.removeChild(this);
             //Restoring focus and icon button state.
@@ -229,7 +236,7 @@ const TgAbstractCriterionBehaviorImpl = {
                     entry-animation="scale-up-animation" exit-animation="fade-out-animation"
                     on-iron-overlay-closed="_closedBind"
                     on-iron-overlay-opened="_openedBind">
-                    <tg-scrollable-component class="relative">
+                    <tg-scrollable-component id="scrollableComponent" class="relative">
                         <div class="metavalue-editor layout vertical">`
                             + self._createMetaValueEditors() +
                         `</div>
