@@ -4,7 +4,6 @@ import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.isDotN
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.penultAndLast;
 
 import java.lang.reflect.Field;
-import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
@@ -424,25 +423,6 @@ public abstract class AbstractDomainTreeManager extends AbstractDomainTree imple
     @Override
     public IDomainTreeRepresentation getRepresentation() {
         return dtr;
-    }
-
-    /**
-     * A specific Kryo serialiser for {@link AbstractDomainTreeManager}.
-     *
-     * @author TG Team
-     *
-     */
-    protected abstract static class AbstractDomainTreeManagerSerialiser<T extends AbstractDomainTreeManager> extends AbstractDomainTreeSerialiser<T> {
-        public AbstractDomainTreeManagerSerialiser(final ISerialiser serialiser) {
-            super(serialiser);
-        }
-
-        @Override
-        public void write(final ByteBuffer buffer, final T manager) {
-            writeValue(buffer, manager.getDtr());
-            writeValue(buffer, manager.getFirstTick());
-            writeValue(buffer, manager.getSecondTick());
-        }
     }
 
     @Override

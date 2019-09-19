@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.serialisation.jackson;
 
 import static junit.framework.Assert.fail;
+import static org.junit.Assert.assertEquals;
 
 import java.util.HashSet;
 
@@ -9,7 +10,6 @@ import org.junit.Test;
 
 import com.google.inject.Injector;
 
-import junit.framework.Assert;
 import ua.com.fielden.platform.domaintree.centre.impl.CentreDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.domaintree.impl.DomainTreeEnhancerCache;
 import ua.com.fielden.platform.domaintree.testing.ClassProviderForTestingPurposes;
@@ -22,7 +22,7 @@ import ua.com.fielden.platform.sample.domain.crit_gen.ThirdLevelEntity;
 import ua.com.fielden.platform.sample.domain.crit_gen.TopLevelEntity;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
 import ua.com.fielden.platform.serialisation.api.SerialiserEngines;
-import ua.com.fielden.platform.serialisation.api.impl.SerialiserForDomainTreesTestingPurposes;
+import ua.com.fielden.platform.serialisation.api.impl.Serialiser;
 
 public class CentreManagerToJsonSerialisationTest {
 
@@ -34,7 +34,7 @@ public class CentreManagerToJsonSerialisationTest {
     private final EntityFactory entityFactory = injector.getInstance(EntityFactory.class);
 
     private final ClassProviderForTestingPurposes provider = new ClassProviderForTestingPurposes(TopLevelEntity.class, LastLevelEntity.class, SecondLevelEntity.class, ThirdLevelEntity.class);
-    private final ISerialiser serialiser = new SerialiserForDomainTreesTestingPurposes(entityFactory, provider, DomainTreeEnhancerCache.CACHE);
+    private final ISerialiser serialiser = new Serialiser(entityFactory, provider, DomainTreeEnhancerCache.CACHE);
 
     @SuppressWarnings("serial")
     private final CentreDomainTreeManagerAndEnhancer cdtm = new CentreDomainTreeManagerAndEnhancer(serialiser, new HashSet<Class<?>>() {
@@ -79,7 +79,7 @@ public class CentreManagerToJsonSerialisationTest {
                     + "\"stringProp\"," + "\"\"," + "\"entityProp\"," + "\"entityProp.entityProp.dateProp\"," + "\"entityProp.entityProp.simpleEntityProp\"" + "],"
                     + "\"resultProperties\":[" + "\"integerProp\"," + "\"moneyProp\"," + "\"booleanProp\"," + "\"stringProp\"," + "\"\"," + "\"entityProp\","
                     + "\"entityProp.entityProp.dateProp\"," + "\"entityProp.entityProp.simpleEntityProp\"" + "]" + "}";
-            Assert.assertEquals("The serialised object isn't correct", expectedJson, /* tgToJson.writeValueAsString(cdtm) */
+            assertEquals("The serialised object isn't correct", expectedJson, /* tgToJson.writeValueAsString(cdtm) */
                     new String(serialiser.serialise(cdtm, SerialiserEngines.JACKSON)));
         } catch (final Exception e) {
             e.printStackTrace();

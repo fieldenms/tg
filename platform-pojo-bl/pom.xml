@@ -38,31 +38,7 @@
 			<version>2.10</version>
 		</dependency>
 
-		<!-- start of Kryo specific libs -->
-		<dependency>
-			<groupId>com.googlecode</groupId>
-			<artifactId>kryo</artifactId>
-			<version>1.04</version>
-		</dependency>
-		<dependency>
-			<groupId>com.googlecode</groupId>
-			<artifactId>reflectasm</artifactId>
-			<version>1.01</version>
-		</dependency>
-		<dependency>
-			<groupId>commons-collections</groupId>
-			<artifactId>commons-collections</artifactId>
-			<version>3.2.2</version>
-		</dependency>
-		<dependency>
-			<groupId>com.googlecode</groupId>
-			<artifactId>minlog</artifactId>
-			<version>1.2</version>
-		</dependency>
-		<!-- end of Kryo specific libs -->
-
 		<!-- Jackson dependencies -->
-
 		<dependency>
 			<groupId>com.fasterxml.jackson.core</groupId>
 			<artifactId>jackson-annotations</artifactId>

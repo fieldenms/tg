@@ -48,7 +48,7 @@ import ua.com.fielden.platform.sample.domain.crit_gen.SecondLevelEntity;
 import ua.com.fielden.platform.sample.domain.crit_gen.ThirdLevelEntity;
 import ua.com.fielden.platform.sample.domain.crit_gen.TopLevelEntity;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
-import ua.com.fielden.platform.serialisation.api.impl.SerialiserForDomainTreesTestingPurposes;
+import ua.com.fielden.platform.serialisation.api.impl.Serialiser;
 import ua.com.fielden.platform.types.Money;
 import ua.com.fielden.platform.utils.Pair;
 
@@ -62,7 +62,7 @@ public class CriteriaGeneratorTest {
     private final ICriteriaGenerator cg = injector.getInstance(ICriteriaGenerator.class);
 
     private final ClassProviderForTestingPurposes provider = new ClassProviderForTestingPurposes(TopLevelEntity.class, LastLevelEntity.class, SecondLevelEntity.class, ThirdLevelEntity.class);
-    private final ISerialiser serialiser = new SerialiserForDomainTreesTestingPurposes(entityFactory, provider, DomainTreeEnhancerCache.CACHE);
+    private final ISerialiser serialiser = new Serialiser(entityFactory, provider, DomainTreeEnhancerCache.CACHE);
 
     @SuppressWarnings("serial")
     private final CentreDomainTreeManagerAndEnhancer cdtm = new CentreDomainTreeManagerAndEnhancer(serialiser, new HashSet<Class<?>>() {

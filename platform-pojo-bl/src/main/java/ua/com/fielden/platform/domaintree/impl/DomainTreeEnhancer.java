@@ -896,40 +896,6 @@ public final class DomainTreeEnhancer extends AbstractDomainTree implements IDom
         return map;
     }
 
-    /**
-     * A specific Kryo serialiser for {@link DomainTreeEnhancer}.
-     *
-     * @author TG Team
-     *
-     */
-    public static class DomainTreeEnhancerSerialiser extends AbstractDomainTreeSerialiser<DomainTreeEnhancer> {
-        private final IDomainTreeEnhancerCache domainTreeEnhancerCache;
-        
-        public DomainTreeEnhancerSerialiser(final ISerialiser serialiser, final IDomainTreeEnhancerCache domainTreeEnhancerCache) {
-            super(serialiser);
-            this.domainTreeEnhancerCache = domainTreeEnhancerCache;
-        }
-        
-        @Override
-        public DomainTreeEnhancer read(final ByteBuffer buffer) {
-            // IMPORTANT : rootTypes() and calculatedPropertiesInfo() are the mirror for "calculatedProperties".
-            // So they should be used for serialisation, comparison and hashCode() implementation.
-            final Set<Class<?>> rootTypes = readValue(buffer, LinkedHashSet.class);
-            final Map<Class<?>, Set<CalculatedPropertyInfo>> calculatedPropertiesInfo = readValue(buffer, LinkedHashMap.class);
-            final Map<Class<?>, List<CustomProperty>> customProperties = readValue(buffer, LinkedHashMap.class);
-            return createFrom(serialiser(), domainTreeEnhancerCache, rootTypes, calculatedPropertiesInfo, customProperties, empty());
-        }
-        
-        @Override
-        public void write(final ByteBuffer buffer, final DomainTreeEnhancer domainTreeEnhancer) {
-            // IMPORTANT : rootTypes() and calculatedPropertiesInfo() are the mirror for "calculatedProperties".
-            // So they should be used for serialisation, comparison and hashCode() implementation.
-            writeValue(buffer, domainTreeEnhancer.rootTypes());
-            writeValue(buffer, domainTreeEnhancer.calculatedPropertiesInfo());
-            writeValue(buffer, domainTreeEnhancer.customProperties());
-        }
-    }
-
     @Override
     public int hashCode() {
         final int prime = 31;

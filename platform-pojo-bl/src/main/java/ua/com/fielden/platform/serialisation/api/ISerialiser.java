@@ -58,5 +58,5 @@ public interface ISerialiser extends ISerialiserEngine {
      */
     ISerialiserEngine getEngine(final SerialiserEngines serialiserEngine);
 
-    void initJacksonEngine(final ISerialisationTypeEncoder serialisationTypeEncoder, final IIdOnlyProxiedEntityTypeCache idOnlyProxiedEntityTypeCache);
+    ISerialiser initJacksonEngine(final ISerialisationTypeEncoder serialisationTypeEncoder, final IIdOnlyProxiedEntityTypeCache idOnlyProxiedEntityTypeCache);
 }

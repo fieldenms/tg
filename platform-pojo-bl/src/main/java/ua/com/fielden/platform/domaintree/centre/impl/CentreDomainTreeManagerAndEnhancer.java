@@ -5,7 +5,6 @@ import static ua.com.fielden.platform.domaintree.impl.AbstractDomainTree.validat
 import static ua.com.fielden.platform.domaintree.impl.DomainTreeEnhancer.createFrom;
 
 import java.lang.reflect.Field;
-import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -14,8 +13,6 @@ import java.util.Map;
 import java.util.Set;
 
 import org.apache.log4j.Logger;
-
-import com.esotericsoftware.kryo.Kryo;
 
 import ua.com.fielden.platform.domaintree.ICalculatedProperty.CalculatedPropertyAttribute;
 import ua.com.fielden.platform.domaintree.IDomainTreeEnhancer;
@@ -48,17 +45,15 @@ import ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeManager.TickMan
 import ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeRepresentation;
 import ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeRepresentation.AbstractTickRepresentation;
-import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.domaintree.impl.CalculatedProperty;
 import ua.com.fielden.platform.domaintree.impl.CalculatedPropertyInfo;
 import ua.com.fielden.platform.domaintree.impl.CustomProperty;
 import ua.com.fielden.platform.domaintree.impl.DomainTreeEnhancer;
 import ua.com.fielden.platform.domaintree.impl.EnhancementPropertiesMap;
+import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.equery.lifecycle.LifecycleModel.GroupingPeriods;
 import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
-import ua.com.fielden.platform.serialisation.api.SerialiserEngines;
-import ua.com.fielden.platform.serialisation.kryo.serialisers.TgSimpleSerializer;
 import ua.com.fielden.platform.types.tuples.T2;
 import ua.com.fielden.platform.ui.menu.MiWithConfigurationSupport;
 import ua.com.fielden.platform.utils.EntityUtils;
@@ -1051,48 +1046,6 @@ public class CentreDomainTreeManagerAndEnhancer extends AbstractDomainTreeManage
 
     protected Map<String, IAbstractAnalysisDomainTreeManager> freezedAnalyses() {
         return freezedAnalyses;
-    }
-
-    /**
-     * A specific Kryo serialiser for {@link CentreDomainTreeManagerAndEnhancer} with transient "current" and "freezed" analyses.
-     *
-     * @author TG Team
-     *
-     */
-    public static class CentreDomainTreeManagerAndEnhancerWithTransientAnalysesSerialiser extends TgSimpleSerializer<CentreDomainTreeManagerAndEnhancer> {
-        private final ISerialiser serialiser;
-
-        public CentreDomainTreeManagerAndEnhancerWithTransientAnalysesSerialiser(final ISerialiser serialiser) {
-            super((Kryo) serialiser.getEngine(SerialiserEngines.KRYO));
-            this.serialiser = serialiser;
-        }
-
-        @Override
-        public CentreDomainTreeManagerAndEnhancer read(final ByteBuffer buffer) {
-            final CentreDomainTreeManager base = readValue(buffer, CentreDomainTreeManager.class);
-            final DomainTreeEnhancer enhancer = readValue(buffer, DomainTreeEnhancer.class);
-
-            final Map<String, IAbstractAnalysisDomainTreeManager> persistentAnalyses = readValue(buffer, LinkedHashMap.class);
-            //	    for (final Entry<String, IAbstractAnalysisDomainTreeManagerAndEnhancer> entry : persistentAnalyses.entrySet()) {
-            //		EntityUtils.deepCopy(entry.getValue(), new TgKryoForDomainTreesTestingPurposes(kryo().factory(), new ClassProviderForTestingPurposes()));
-            //	    }
-            final Map<String, IAbstractAnalysisDomainTreeManager> currentAnalyses = readValue(buffer, LinkedHashMap.class);
-            final Map<String, IAbstractAnalysisDomainTreeManager> freezedAnalyses = readValue(buffer, LinkedHashMap.class);
-            return new CentreDomainTreeManagerAndEnhancer(serialiser(), base, enhancer, persistentAnalyses, currentAnalyses, freezedAnalyses);
-        }
-
-        @Override
-        public void write(final ByteBuffer buffer, final CentreDomainTreeManagerAndEnhancer manager) {
-            writeValue(buffer, manager.base());
-            writeValue(buffer, manager.enhancer());
-            writeValue(buffer, manager.persistentAnalyses);
-            writeValue(buffer, manager.currentAnalyses);
-            writeValue(buffer, manager.freezedAnalyses);
-        }
-
-        public ISerialiser serialiser() {
-            return serialiser;
-        }
     }
 
     public ISerialiser getSerialiser() {

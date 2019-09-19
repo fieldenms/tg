@@ -3,8 +3,6 @@ package ua.com.fielden.platform.domaintree.impl;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchOnly;
 import static ua.com.fielden.platform.utils.CollectionUtil.setOf;
 
-import java.util.HashSet;
-
 import org.apache.log4j.Logger;
 
 import ua.com.fielden.platform.domaintree.IGlobalDomainTreeRepresentation;
@@ -14,12 +12,10 @@ import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
-import ua.com.fielden.platform.serialisation.api.ISerialiser0;
 import ua.com.fielden.platform.ui.config.EntityLocatorConfig;
 import ua.com.fielden.platform.ui.config.api.IEntityCentreConfig;
 import ua.com.fielden.platform.ui.config.api.IEntityLocatorConfig;
 import ua.com.fielden.platform.ui.config.api.IEntityMasterConfig;
-import ua.com.fielden.platform.utils.CollectionUtil;
 
 /**
  * A global domain tree implementation.
@@ -34,12 +30,12 @@ public class GlobalDomainTreeRepresentation extends AbstractDomainTree implement
     private final IEntityLocatorConfig elcController;
     private final DomainTreeVersionMaintainer versionMaintainer;
 
-    public GlobalDomainTreeRepresentation(final ISerialiser serialiser, final ISerialiser0 serialiser0, final EntityFactory factory, final IUserProvider userProvider, final IEntityCentreConfig entityCentreConfigController, final IEntityMasterConfig entityMasterConfigController, final IEntityLocatorConfig entityLocatorConfigController) {
+    public GlobalDomainTreeRepresentation(final ISerialiser serialiser, final EntityFactory factory, final IUserProvider userProvider, final IEntityCentreConfig entityCentreConfigController, final IEntityMasterConfig entityMasterConfigController, final IEntityLocatorConfig entityLocatorConfigController) {
         super(serialiser);
         this.factory = factory;
         this.userProvider = userProvider;
         this.elcController = entityLocatorConfigController;
-        this.versionMaintainer = new DomainTreeVersionMaintainer(serialiser, serialiser0, elcController, entityCentreConfigController, entityMasterConfigController);
+        this.versionMaintainer = new DomainTreeVersionMaintainer(serialiser, elcController, entityCentreConfigController, entityMasterConfigController);
     }
 
     @Override

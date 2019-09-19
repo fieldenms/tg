@@ -1,6 +1,5 @@
 package ua.com.fielden.platform.domaintree.centre.impl;
 
-import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -13,7 +12,6 @@ import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeRepresentation
 import ua.com.fielden.platform.domaintree.centre.IOrderingRepresentation;
 import ua.com.fielden.platform.domaintree.centre.IWidthRepresentation;
 import ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeRepresentation;
-import ua.com.fielden.platform.domaintree.impl.EnhancementLinkedRootsSet;
 import ua.com.fielden.platform.domaintree.impl.EnhancementPropertiesMap;
 import ua.com.fielden.platform.domaintree.impl.EnhancementRootsMap;
 import ua.com.fielden.platform.domaintree.impl.EnhancementSet;
@@ -380,27 +378,6 @@ public class CentreDomainTreeRepresentation extends AbstractDomainTreeRepresenta
                 return false;
             }
             return true;
-        }
-    }
-
-    /**
-     * A specific Kryo serialiser for {@link CentreDomainTreeRepresentation}.
-     *
-     * @author TG Team
-     *
-     */
-    public static class CentreDomainTreeRepresentationSerialiser extends AbstractDomainTreeRepresentationSerialiser<CentreDomainTreeRepresentation> {
-        public CentreDomainTreeRepresentationSerialiser(final ISerialiser serialiser) {
-            super(serialiser);
-        }
-
-        @Override
-        public CentreDomainTreeRepresentation read(final ByteBuffer buffer) {
-            final EnhancementLinkedRootsSet rootTypes = readValue(buffer, EnhancementLinkedRootsSet.class);
-            final EnhancementSet excludedProperties = readValue(buffer, EnhancementSet.class);
-            final AddToCriteriaTick firstTick = readValue(buffer, AddToCriteriaTick.class);
-            final AddToResultSetTick secondTick = readValue(buffer, AddToResultSetTick.class);
-            return new CentreDomainTreeRepresentation(serialiser(), rootTypes, excludedProperties, firstTick, secondTick);
         }
     }
 }

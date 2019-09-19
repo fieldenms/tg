@@ -1,12 +1,9 @@
 package ua.com.fielden.platform.domaintree.testing;
 
-import java.nio.ByteBuffer;
 import java.util.Set;
 
 import ua.com.fielden.platform.domaintree.impl.AbstractDomainTree;
 import ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeRepresentation;
-import ua.com.fielden.platform.domaintree.impl.EnhancementLinkedRootsSet;
-import ua.com.fielden.platform.domaintree.impl.EnhancementSet;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
 import ua.com.fielden.platform.utils.Pair;
 
@@ -34,27 +31,6 @@ public class DomainTreeRepresentation1 extends AbstractDomainTreeRepresentation 
          */
         public TickRepresentationForTest() {
             super();
-        }
-    }
-
-    /**
-     * A specific Kryo serialiser for {@link DomainTreeRepresentation1}.
-     * 
-     * @author TG Team
-     * 
-     */
-    public static class DomainTreeRepresentationForTestSerialiser extends AbstractDomainTreeRepresentationSerialiser<DomainTreeRepresentation1> {
-        public DomainTreeRepresentationForTestSerialiser(final ISerialiser serialiser) {
-            super(serialiser);
-        }
-
-        @Override
-        public DomainTreeRepresentation1 read(final ByteBuffer buffer) {
-            final EnhancementLinkedRootsSet rootTypes = readValue(buffer, EnhancementLinkedRootsSet.class);
-            final EnhancementSet excludedProperties = readValue(buffer, EnhancementSet.class);
-            final TickRepresentationForTest firstTick = readValue(buffer, TickRepresentationForTest.class);
-            final TickRepresentationForTest secondTick = readValue(buffer, TickRepresentationForTest.class);
-            return new DomainTreeRepresentation1(serialiser(), rootTypes, excludedProperties, firstTick, secondTick);
         }
     }
 }

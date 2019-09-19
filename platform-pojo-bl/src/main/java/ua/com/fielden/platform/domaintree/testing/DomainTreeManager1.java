@@ -1,9 +1,7 @@
 package ua.com.fielden.platform.domaintree.testing;
 
-import java.nio.ByteBuffer;
 import java.util.Set;
 
-import ua.com.fielden.platform.domaintree.centre.analyses.impl.PivotDomainTreeManager;
 import ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeManager;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
 
@@ -44,26 +42,6 @@ public class DomainTreeManager1 extends AbstractDomainTreeManager {
         @Override
         protected boolean isCheckedMutably(final Class<?> root, final String property) {
             return property.endsWith("mutablyCheckedProp");
-        }
-    }
-
-    /**
-     * A specific Kryo serialiser for {@link PivotDomainTreeManager}.
-     * 
-     * @author TG Team
-     * 
-     */
-    public static class DomainTreeManagerForTestSerialiser extends AbstractDomainTreeManagerSerialiser<DomainTreeManager1> {
-        public DomainTreeManagerForTestSerialiser(final ISerialiser serialiser) {
-            super(serialiser);
-        }
-
-        @Override
-        public DomainTreeManager1 read(final ByteBuffer buffer) {
-            final DomainTreeRepresentation1 dtr = readValue(buffer, DomainTreeRepresentation1.class);
-            final TickManager1ForTest firstTick = readValue(buffer, TickManager1ForTest.class);
-            final TickManager secondTick = readValue(buffer, TickManager.class);
-            return new DomainTreeManager1(serialiser(), dtr, firstTick, secondTick);
         }
     }
 }

@@ -1,11 +1,8 @@
 package ua.com.fielden.platform.domaintree.centre.analyses.impl;
 
-import java.nio.ByteBuffer;
 import java.util.Set;
 
 import ua.com.fielden.platform.domaintree.centre.analyses.ILifecycleDomainTreeRepresentation;
-import ua.com.fielden.platform.domaintree.impl.EnhancementLinkedRootsSet;
-import ua.com.fielden.platform.domaintree.impl.EnhancementSet;
 import ua.com.fielden.platform.entity.annotation.Calculated;
 import ua.com.fielden.platform.entity.annotation.Monitoring;
 import ua.com.fielden.platform.equery.lifecycle.LifecycleModel.GroupingPeriods;
@@ -151,24 +148,4 @@ public class LifecycleDomainTreeRepresentation extends AbstractAnalysisDomainTre
     public void provideMetaStateForLifecycleAnalysesDatePeriodProperties() {
     }
 
-    /**
-     * A specific Kryo serialiser for {@link LifecycleDomainTreeRepresentation}.
-     * 
-     * @author TG Team
-     * 
-     */
-    public static class LifecycleDomainTreeRepresentationSerialiser extends AbstractDomainTreeRepresentationSerialiser<LifecycleDomainTreeRepresentation> {
-        public LifecycleDomainTreeRepresentationSerialiser(final ISerialiser serialiser) {
-            super(serialiser);
-        }
-
-        @Override
-        public LifecycleDomainTreeRepresentation read(final ByteBuffer buffer) {
-            final EnhancementLinkedRootsSet rootTypes = readValue(buffer, EnhancementLinkedRootsSet.class);
-            final EnhancementSet excludedProperties = readValue(buffer, EnhancementSet.class);
-            final LifecycleAddToDistributionTickRepresentation firstTick = readValue(buffer, LifecycleAddToDistributionTickRepresentation.class);
-            final LifecycleAddToCategoriesTickRepresentation secondTick = readValue(buffer, LifecycleAddToCategoriesTickRepresentation.class);
-            return new LifecycleDomainTreeRepresentation(serialiser(), rootTypes, excludedProperties, firstTick, secondTick);
-        }
-    }
 }

@@ -52,7 +52,9 @@ import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
 import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.reflection.Reflector;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
-import ua.com.fielden.platform.serialisation.api.impl.SerialiserForDomainTreesTestingPurposes;
+import ua.com.fielden.platform.serialisation.api.impl.IdOnlyProxiedEntityTypeCacheForTests;
+import ua.com.fielden.platform.serialisation.api.impl.SerialisationTypeEncoder;
+import ua.com.fielden.platform.serialisation.api.impl.Serialiser;
 import ua.com.fielden.platform.test.CommonTestEntityModuleWithPropertyFactory;
 import ua.com.fielden.platform.test.EntityModuleWithPropertyFactory;
 import ua.com.fielden.platform.utils.EntityUtils;
@@ -113,7 +115,7 @@ public abstract class AbstractDomainTreeTest {
 
     private static ISerialiser createSerialiser(final EntityFactory factory) {
         final ClassProviderForTestingPurposes provider = new ClassProviderForTestingPurposes();
-        return new SerialiserForDomainTreesTestingPurposes(factory, provider, DomainTreeEnhancerCache.CACHE);
+        return new Serialiser(factory, provider, DomainTreeEnhancerCache.CACHE);
     }
 
     /**
@@ -182,7 +184,9 @@ public abstract class AbstractDomainTreeTest {
             }
             final EntityFactory factory = createFactory();
             serialiser = serialiserCreator == null ? createSerialiser(factory) : (ISerialiser) serialiserCreator.invoke(null, factory);
+            serialiser.initJacksonEngine(new SerialisationTypeEncoder(), new IdOnlyProxiedEntityTypeCacheForTests());
             otherSerialiser = serialiserCreator == null ? createSerialiser(factory) : (ISerialiser) serialiserCreator.invoke(null, factory);
+            otherSerialiser.initJacksonEngine(new SerialisationTypeEncoder(), new IdOnlyProxiedEntityTypeCacheForTests());
 
             irrelevantDtm = Reflector.getMethod(testCaseClass, CREATE_IRRELEVANT_DTM_FOR + testCaseClass.getSimpleName()).invoke(null);
 

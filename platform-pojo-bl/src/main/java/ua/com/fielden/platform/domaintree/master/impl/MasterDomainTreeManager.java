@@ -1,6 +1,5 @@
 package ua.com.fielden.platform.domaintree.master.impl;
 
-import java.nio.ByteBuffer;
 import java.util.List;
 import java.util.Set;
 
@@ -101,29 +100,6 @@ public class MasterDomainTreeManager extends AbstractDomainTree implements IMast
     @Override
     public List<Pair<Class<?>, String>> locatorKeys() {
         return locatorManager.locatorKeys();
-    }
-
-    /**
-     * A specific Kryo serialiser for {@link MasterDomainTreeManager}.
-     * 
-     * @author TG Team
-     * 
-     */
-    public static class MasterDomainTreeManagerSerialiser extends AbstractDomainTreeSerialiser<MasterDomainTreeManager> {
-        public MasterDomainTreeManagerSerialiser(final ISerialiser serialiser) {
-            super(serialiser);
-        }
-
-        @Override
-        public MasterDomainTreeManager read(final ByteBuffer buffer) {
-            final LocatorManager locatorManager = readValue(buffer, LocatorManager.class);
-            return new MasterDomainTreeManager(serialiser(), locatorManager);
-        }
-
-        @Override
-        public void write(final ByteBuffer buffer, final MasterDomainTreeManager manager) {
-            writeValue(buffer, manager.locatorManager);
-        }
     }
 
     @Override

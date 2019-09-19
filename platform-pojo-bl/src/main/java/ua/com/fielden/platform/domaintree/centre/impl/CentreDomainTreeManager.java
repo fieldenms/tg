@@ -3,7 +3,6 @@ package ua.com.fielden.platform.domaintree.centre.impl;
 import static ua.com.fielden.platform.criteria.generator.impl.SynchroniseCriteriaWithModelHandler.areDifferent;
 import static ua.com.fielden.platform.types.tuples.T2.t2;
 
-import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.LinkedHashSet;
@@ -11,8 +10,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-
-import com.esotericsoftware.kryo.Kryo;
 
 import ua.com.fielden.platform.domaintree.ILocatorManager;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager;
@@ -30,8 +27,6 @@ import ua.com.fielden.platform.domaintree.impl.EnhancementPropertiesMap;
 import ua.com.fielden.platform.domaintree.impl.EnhancementRootsMap;
 import ua.com.fielden.platform.domaintree.impl.LocatorManager;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
-import ua.com.fielden.platform.serialisation.api.SerialiserEngines;
-import ua.com.fielden.platform.serialisation.kryo.serialisers.TgSimpleSerializer;
 import ua.com.fielden.platform.types.tuples.T2;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
@@ -632,60 +627,6 @@ public class CentreDomainTreeManager extends AbstractDomainTreeManager implement
             return serialiser;
         }
 
-        /**
-         * A specific Kryo serialiser for {@link AddToCriteriaTickManager}.
-         *
-         * @author TG Team
-         *
-         */
-        public static class AddToCriteriaTickManagerSerialiser extends TgSimpleSerializer<AddToCriteriaTickManager> {
-            private final ISerialiser serialiser;
-
-            public AddToCriteriaTickManagerSerialiser(final ISerialiser serialiser) {
-                super((Kryo) serialiser.getEngine(SerialiserEngines.KRYO));
-                this.serialiser = serialiser;
-            }
-
-            protected ISerialiser serialiser() {
-                return serialiser;
-            }
-
-            @Override
-            public AddToCriteriaTickManager read(final ByteBuffer buffer) {
-                final EnhancementRootsMap<List<String>> checkedProperties = readValue(buffer, EnhancementRootsMap.class);
-                final EnhancementPropertiesMap<Object> propertiesValues1 = readValue(buffer, EnhancementPropertiesMap.class);
-                final EnhancementPropertiesMap<Object> propertiesValues2 = readValue(buffer, EnhancementPropertiesMap.class);
-                final EnhancementPropertiesMap<Boolean> propertiesExclusive1 = readValue(buffer, EnhancementPropertiesMap.class);
-                final EnhancementPropertiesMap<Boolean> propertiesExclusive2 = readValue(buffer, EnhancementPropertiesMap.class);
-                final EnhancementPropertiesMap<DateRangePrefixEnum> propertiesDatePrefixes = readValue(buffer, EnhancementPropertiesMap.class);
-                final EnhancementPropertiesMap<MnemonicEnum> propertiesDateMnemonics = readValue(buffer, EnhancementPropertiesMap.class);
-                final EnhancementPropertiesMap<Boolean> propertiesAndBefore = readValue(buffer, EnhancementPropertiesMap.class);
-                final EnhancementPropertiesMap<Boolean> propertiesOrNulls = readValue(buffer, EnhancementPropertiesMap.class);
-                final EnhancementPropertiesMap<Boolean> propertiesNots = readValue(buffer, EnhancementPropertiesMap.class);
-                final Integer columnsNumber = readValue(buffer, Integer.class);
-                final LocatorManager locatorManager = readValue(buffer, LocatorManager.class);
-                final EnhancementPropertiesMap<Set<MetaValueType>> propertiesMetaValuePresences = readValue(buffer, EnhancementPropertiesMap.class);
-                return new AddToCriteriaTickManager(checkedProperties, serialiser(), propertiesValues1, propertiesValues2, propertiesExclusive1, propertiesExclusive2, propertiesDatePrefixes, propertiesDateMnemonics, propertiesAndBefore, propertiesOrNulls, propertiesNots, columnsNumber, locatorManager, propertiesMetaValuePresences);
-            }
-
-            @Override
-            public void write(final ByteBuffer buffer, final AddToCriteriaTickManager manager) {
-                writeValue(buffer, manager.checkedProperties());
-                writeValue(buffer, manager.propertiesValues1);
-                writeValue(buffer, manager.propertiesValues2);
-                writeValue(buffer, manager.propertiesExclusive1);
-                writeValue(buffer, manager.propertiesExclusive2);
-                writeValue(buffer, manager.propertiesDatePrefixes);
-                writeValue(buffer, manager.propertiesDateMnemonics);
-                writeValue(buffer, manager.propertiesAndBefore);
-                writeValue(buffer, manager.propertiesOrNulls);
-                writeValue(buffer, manager.propertiesNots);
-                writeValue(buffer, manager.columnsNumber);
-                writeValue(buffer, manager.locatorManager);
-                writeValue(buffer, manager.propertiesMetaValuePresences);
-            }
-        }
-
         @Override
         public int hashCode() {
             final int prime = 31;
@@ -992,33 +933,6 @@ public class CentreDomainTreeManager extends AbstractDomainTreeManager implement
     public ICentreDomainTreeManager setRunAutomatically(final boolean runAutomatically) {
         this.runAutomatically = runAutomatically;
         return this;
-    }
-
-    /**
-     * A specific Kryo serialiser for {@link CentreDomainTreeManager}.
-     *
-     * @author TG Team
-     *
-     */
-    public static class CentreDomainTreeManagerSerialiser extends AbstractDomainTreeManagerSerialiser<CentreDomainTreeManager> {
-        public CentreDomainTreeManagerSerialiser(final ISerialiser serialiser) {
-            super(serialiser);
-        }
-
-        @Override
-        public CentreDomainTreeManager read(final ByteBuffer buffer) {
-            final CentreDomainTreeRepresentation dtr = readValue(buffer, CentreDomainTreeRepresentation.class);
-            final AddToCriteriaTickManager firstTick = readValue(buffer, AddToCriteriaTickManager.class);
-            final AddToResultTickManager secondTick = readValue(buffer, AddToResultTickManager.class);
-            final Boolean runAutomatically = readValue(buffer, Boolean.class);
-            return new CentreDomainTreeManager(serialiser(), dtr, firstTick, secondTick, runAutomatically);
-        }
-
-        @Override
-        public void write(final ByteBuffer buffer, final CentreDomainTreeManager manager) {
-            super.write(buffer, manager);
-            writeValue(buffer, manager.runAutomatically);
-        }
     }
 
     @Override

@@ -1,6 +1,5 @@
 package ua.com.fielden.platform.domaintree.centre.analyses.impl;
 
-import java.nio.ByteBuffer;
 import java.util.Set;
 
 import ua.com.fielden.platform.domaintree.centre.analyses.IAnalysisDomainTreeManager.IAnalysisAddToAggregationTickManager;
@@ -56,24 +55,4 @@ public class MultipleDecDomainTreeManager extends AbstractAnalysisDomainTreeMana
         return (IMultipleDecDomainTreeRepresentation) super.getRepresentation();
     }
 
-    /**
-     * A specific Kryo serialiser for {@link MultipleDecDomainTreeManager}.
-     * 
-     * @author TG Team
-     * 
-     */
-    public static class MultipleDecDomainTreeManagerSerialiser extends AbstractAnalysisDomainTreeManagerSerialiser<MultipleDecDomainTreeManager> {
-        public MultipleDecDomainTreeManagerSerialiser(final ISerialiser serialiser) {
-            super(serialiser);
-        }
-
-        @Override
-        public MultipleDecDomainTreeManager read(final ByteBuffer buffer) {
-            final MultipleDecDomainTreeRepresentation dtr = readValue(buffer, MultipleDecDomainTreeRepresentation.class);
-            final AnalysisAddToDistributionTickManager firstTick = readValue(buffer, AnalysisAddToDistributionTickManager.class);
-            final AnalysisAddToAggregationTickManager secondTick = readValue(buffer, AnalysisAddToAggregationTickManager.class);
-            final Boolean visible = readValue(buffer, Boolean.class);
-            return new MultipleDecDomainTreeManager(serialiser(), dtr, visible, firstTick, secondTick);
-        }
-    }
 }

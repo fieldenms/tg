@@ -8,8 +8,6 @@ import java.util.Set;
 
 import org.apache.log4j.Logger;
 
-import com.esotericsoftware.kryo.Kryo;
-
 import ua.com.fielden.platform.domaintree.IDomainTreeManager.ITickManager;
 import ua.com.fielden.platform.domaintree.IUsageManager;
 import ua.com.fielden.platform.domaintree.exceptions.DomainTreeException;
@@ -21,8 +19,6 @@ import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
-import ua.com.fielden.platform.serialisation.api.SerialiserEngines;
-import ua.com.fielden.platform.serialisation.kryo.serialisers.TgSimpleSerializer;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
 
@@ -299,31 +295,6 @@ public abstract class AbstractDomainTree {
         return new Pair<>(root, property);
     }
 
-    /**
-     * A specific Kryo serialiser for {@link AbstractDomainTree}.
-     *
-     * @author TG Team
-     *
-     */
-    protected abstract static class AbstractDomainTreeSerialiser<T> extends TgSimpleSerializer<T> {
-        private final ISerialiser serialiser;
-        private final EntityFactory factory;
-
-        public AbstractDomainTreeSerialiser(final ISerialiser serialiser) {
-            super((Kryo) serialiser.getEngine(SerialiserEngines.KRYO));
-            this.serialiser = serialiser;
-            this.factory = serialiser.factory();
-        }
-
-        protected ISerialiser serialiser() {
-            return serialiser;
-        }
-
-        protected EntityFactory factory() {
-            return factory;
-        }
-    }
-    
     /**
      * Returns <code>true</code> when the property can represent criterion with two editors, <code>false</code> otherwise.
      *

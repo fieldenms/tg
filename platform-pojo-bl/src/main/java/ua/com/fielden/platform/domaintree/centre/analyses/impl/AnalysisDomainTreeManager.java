@@ -1,6 +1,5 @@
 package ua.com.fielden.platform.domaintree.centre.analyses.impl;
 
-import java.nio.ByteBuffer;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
@@ -97,34 +96,6 @@ public class AnalysisDomainTreeManager extends AbstractAnalysisDomainTreeManager
         @Override
         protected AnalysisAddToAggregationTickRepresentation tr() {
             return (AnalysisAddToAggregationTickRepresentation) super.tr();
-        }
-    }
-
-    /**
-     * A specific Kryo serialiser for {@link AnalysisDomainTreeManager}.
-     *
-     * @author TG Team
-     *
-     */
-    public static class AnalysisDomainTreeManagerSerialiser extends AbstractAnalysisDomainTreeManagerSerialiser<AnalysisDomainTreeManager> {
-        public AnalysisDomainTreeManagerSerialiser(final ISerialiser serialiser) {
-            super(serialiser);
-        }
-
-        @Override
-        public AnalysisDomainTreeManager read(final ByteBuffer buffer) {
-            final AnalysisDomainTreeRepresentation dtr = readValue(buffer, AnalysisDomainTreeRepresentation.class);
-            final AnalysisAddToDistributionTickManager firstTick = readValue(buffer, AnalysisAddToDistributionTickManager.class);
-            final AnalysisAddToAggregationTickManager secondTick = readValue(buffer, AnalysisAddToAggregationTickManager.class);
-            final Boolean visible = readValue(buffer, Boolean.class);
-            final Integer visibleDistributedValuesNumber = readValue(buffer, Integer.class);
-            return new AnalysisDomainTreeManager(serialiser(), dtr, visible, firstTick, secondTick, visibleDistributedValuesNumber);
-        }
-
-        @Override
-        public void write(final ByteBuffer buffer, final AnalysisDomainTreeManager manager) {
-            super.write(buffer, manager);
-            writeValue(buffer, manager.visibleDistributedValuesNumber);
         }
     }
 

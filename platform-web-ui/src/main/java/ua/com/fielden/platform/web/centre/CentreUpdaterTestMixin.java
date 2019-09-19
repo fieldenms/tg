@@ -42,7 +42,7 @@ import ua.com.fielden.platform.serialisation.api.ISerialisationTypeEncoder;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
 import ua.com.fielden.platform.serialisation.api.impl.IdOnlyProxiedEntityTypeCacheForTests;
 import ua.com.fielden.platform.serialisation.api.impl.SerialisationTypeEncoder;
-import ua.com.fielden.platform.serialisation.api.impl.SerialiserForDomainTreesTestingPurposes;
+import ua.com.fielden.platform.serialisation.api.impl.Serialiser;
 import ua.com.fielden.platform.test.CommonTestEntityModuleWithPropertyFactory;
 import ua.com.fielden.platform.test.EntityModuleWithPropertyFactory;
 import ua.com.fielden.platform.types.tuples.T2;
@@ -63,7 +63,7 @@ public class CentreUpdaterTestMixin {
     private static final EntityModuleWithPropertyFactory MODULE = new CommonTestEntityModuleWithPropertyFactory();
     private static final Injector INJECTOR = new ApplicationInjectorFactory().add(MODULE).getInjector();
     private static final EntityFactory FACTORY = INJECTOR.getInstance(EntityFactory.class);
-    private static final ISerialiser SERIALISER = new SerialiserForDomainTreesTestingPurposes(FACTORY, new ClassProviderForTestingPurposes(), CACHE);
+    private static final ISerialiser SERIALISER = new Serialiser(FACTORY, new ClassProviderForTestingPurposes(), CACHE);
     private static final ISerialisationTypeEncoder serialisationTypeEncoder = new SerialisationTypeEncoder();
     private static final IIdOnlyProxiedEntityTypeCache idOnlyProxiedEntityTypeCache = new IdOnlyProxiedEntityTypeCacheForTests();
     static final Date d2018 = new DateTime(2018, 1, 1, 0, 0).toDate();

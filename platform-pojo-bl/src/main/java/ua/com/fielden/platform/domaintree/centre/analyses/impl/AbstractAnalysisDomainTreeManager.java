@@ -1,6 +1,5 @@
 package ua.com.fielden.platform.domaintree.centre.analyses.impl;
 
-import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -382,24 +381,6 @@ public abstract class AbstractAnalysisDomainTreeManager extends AbstractDomainTr
                 return false;
             }
             return true;
-        }
-    }
-
-    /**
-     * A specific Kryo serialiser for {@link AbstractDomainTreeManager}.
-     * 
-     * @author TG Team
-     * 
-     */
-    protected abstract static class AbstractAnalysisDomainTreeManagerSerialiser<T extends AbstractAnalysisDomainTreeManager> extends AbstractDomainTreeManagerSerialiser<T> {
-        public AbstractAnalysisDomainTreeManagerSerialiser(final ISerialiser serialiser) {
-            super(serialiser);
-        }
-
-        @Override
-        public void write(final ByteBuffer buffer, final T manager) {
-            super.write(buffer, manager);
-            writeValue(buffer, manager.getVisible());
         }
     }
 

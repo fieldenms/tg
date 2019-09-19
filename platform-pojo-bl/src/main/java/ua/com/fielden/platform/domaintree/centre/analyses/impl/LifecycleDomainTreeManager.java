@@ -1,6 +1,5 @@
 package ua.com.fielden.platform.domaintree.centre.analyses.impl;
 
-import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -234,38 +233,6 @@ public class LifecycleDomainTreeManager extends AbstractAnalysisDomainTreeManage
                 }
             }
             return res;
-        }
-    }
-
-    /**
-     * A specific Kryo serialiser for {@link LifecycleDomainTreeManager}.
-     *
-     * @author TG Team
-     *
-     */
-    public static class LifecycleDomainTreeManagerSerialiser extends AbstractAnalysisDomainTreeManagerSerialiser<LifecycleDomainTreeManager> {
-        public LifecycleDomainTreeManagerSerialiser(final ISerialiser serialiser) {
-            super(serialiser);
-        }
-
-        @Override
-        public LifecycleDomainTreeManager read(final ByteBuffer buffer) {
-            final LifecycleDomainTreeRepresentation dtr = readValue(buffer, LifecycleDomainTreeRepresentation.class);
-            final LifecycleAddToDistributionTickManager firstTick = readValue(buffer, LifecycleAddToDistributionTickManager.class);
-            final LifecycleAddToCategoriesTickManager secondTick = readValue(buffer, LifecycleAddToCategoriesTickManager.class);
-            final Boolean visible = readValue(buffer, Boolean.class);
-            final Date from = readValue(buffer, Date.class);
-            final Date to = readValue(buffer, Date.class);
-            final Boolean total = readValue(buffer, Boolean.class);
-            return new LifecycleDomainTreeManager(serialiser(), dtr, visible, firstTick, secondTick, from, to, total);
-        }
-
-        @Override
-        public void write(final ByteBuffer buffer, final LifecycleDomainTreeManager manager) {
-            super.write(buffer, manager);
-            writeValue(buffer, manager.from);
-            writeValue(buffer, manager.to);
-            writeValue(buffer, manager.total);
         }
     }
 

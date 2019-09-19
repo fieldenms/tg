@@ -60,7 +60,8 @@ public class StubSerialiser implements ISerialiser {
     }
     
     @Override
-    public void initJacksonEngine(final ISerialisationTypeEncoder serialisationTypeEncoder, final IIdOnlyProxiedEntityTypeCache idOnlyProxiedEntityTypeCache) {
+    public ISerialiser initJacksonEngine(final ISerialisationTypeEncoder serialisationTypeEncoder, final IIdOnlyProxiedEntityTypeCache idOnlyProxiedEntityTypeCache) {
         // TODO Auto-generated method stub
+        return this;
     }
 }

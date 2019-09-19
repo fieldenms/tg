@@ -7,7 +7,6 @@ import static ua.com.fielden.platform.domaintree.ILocatorManager.Type.GLOBAL;
 import static ua.com.fielden.platform.domaintree.ILocatorManager.Type.LOCAL;
 
 import java.lang.reflect.Field;
-import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -348,36 +347,6 @@ public class LocatorManager extends AbstractDomainTree implements ILocatorManage
      */
     private void unfreeze(final Class<?> root, final String property) {
         persistentLocators.put(key(root, property), freezedLocators.remove(key(root, property)));
-    }
-
-    /**
-     * A specific Kryo serialiser for {@link LocatorManager}.
-     *
-     * @author TG Team
-     *
-     */
-    public static class LocatorManagerSerialiser extends AbstractDomainTreeSerialiser<LocatorManager> {
-        public LocatorManagerSerialiser(final ISerialiser serialiser) {
-            super(serialiser);
-        }
-
-        @Override
-        public LocatorManager read(final ByteBuffer buffer) {
-            final EnhancementLinkedRootsSet rootTypes = readValue(buffer, EnhancementLinkedRootsSet.class);
-            final EnhancementPropertiesMap<LocatorDomainTreeManagerAndEnhancer> persistentLocators = readValue(buffer, EnhancementPropertiesMap.class);
-
-            //	    for (final LocatorDomainTreeManagerAndEnhancer loc : persistentLocators.values()) {
-            //		EntityUtils.deepCopy(loc, kryo());
-            //	    }
-
-            return new LocatorManager(serialiser(), rootTypes, persistentLocators);
-        }
-
-        @Override
-        public void write(final ByteBuffer buffer, final LocatorManager manager) {
-            writeValue(buffer, manager.rootTypes);
-            writeValue(buffer, manager.persistentLocators);
-        }
     }
 
     @Override

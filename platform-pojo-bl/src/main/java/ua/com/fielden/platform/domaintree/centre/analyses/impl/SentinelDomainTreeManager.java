@@ -1,6 +1,5 @@
 package ua.com.fielden.platform.domaintree.centre.analyses.impl;
 
-import java.nio.ByteBuffer;
 import java.util.Set;
 
 import ua.com.fielden.platform.domaintree.IUsageManager;
@@ -139,31 +138,4 @@ public class SentinelDomainTreeManager extends AnalysisDomainTreeManager impleme
         }
     }
 
-    /**
-     * A specific Kryo serialiser for {@link SentinelDomainTreeManager}.
-     * 
-     * @author TG Team
-     * 
-     */
-    public static class SentinelDomainTreeManagerSerialiser extends AbstractAnalysisDomainTreeManagerSerialiser<SentinelDomainTreeManager> {
-        public SentinelDomainTreeManagerSerialiser(final ISerialiser serialiser) {
-            super(serialiser);
-        }
-
-        @Override
-        public SentinelDomainTreeManager read(final ByteBuffer buffer) {
-            final SentinelDomainTreeRepresentation dtr = readValue(buffer, SentinelDomainTreeRepresentation.class);
-            final SentinelAddToDistributionTickManager firstTick = readValue(buffer, SentinelAddToDistributionTickManager.class);
-            final SentinelAddToAggregationTickManager secondTick = readValue(buffer, SentinelAddToAggregationTickManager.class);
-            final Boolean visible = readValue(buffer, Boolean.class);
-            final Integer visibleDistributedValuesNumber = readValue(buffer, Integer.class);
-            return new SentinelDomainTreeManager(serialiser(), dtr, visible, firstTick, secondTick, visibleDistributedValuesNumber);
-        }
-
-        @Override
-        public void write(final ByteBuffer buffer, final SentinelDomainTreeManager manager) {
-            super.write(buffer, manager);
-            writeValue(buffer, manager.visibleDistributedValuesNumber());
-        }
-    }
 }

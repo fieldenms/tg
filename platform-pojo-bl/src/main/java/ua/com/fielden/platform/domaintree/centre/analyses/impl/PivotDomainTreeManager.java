@@ -1,6 +1,5 @@
 package ua.com.fielden.platform.domaintree.centre.analyses.impl;
 
-import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -268,24 +267,4 @@ public class PivotDomainTreeManager extends AbstractAnalysisDomainTreeManager im
         }
     }
 
-    /**
-     * A specific Kryo serialiser for {@link PivotDomainTreeManager}.
-     *
-     * @author TG Team
-     *
-     */
-    public static class PivotDomainTreeManagerSerialiser extends AbstractAnalysisDomainTreeManagerSerialiser<PivotDomainTreeManager> {
-        public PivotDomainTreeManagerSerialiser(final ISerialiser serialiser) {
-            super(serialiser);
-        }
-
-        @Override
-        public PivotDomainTreeManager read(final ByteBuffer buffer) {
-            final PivotDomainTreeRepresentation dtr = readValue(buffer, PivotDomainTreeRepresentation.class);
-            final PivotAddToDistributionTickManager firstTick = readValue(buffer, PivotAddToDistributionTickManager.class);
-            final PivotAddToAggregationTickManager secondTick = readValue(buffer, PivotAddToAggregationTickManager.class);
-            final Boolean visible = readValue(buffer, Boolean.class);
-            return new PivotDomainTreeManager(serialiser(), dtr, visible, firstTick, secondTick);
-        }
-    }
 }

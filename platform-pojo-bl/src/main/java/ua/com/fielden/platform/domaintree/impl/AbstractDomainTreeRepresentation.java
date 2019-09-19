@@ -5,7 +5,6 @@ import static ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoad
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
-import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -809,26 +808,6 @@ public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTre
     private static boolean isCalculatedAndOriginatedFromNotIntegerType(final Class<?> root, final String property) {
         final Calculated calculatedAnnotation = AnnotationReflector.getPropertyAnnotation(Calculated.class, root, property);
         return calculatedAnnotation != null && !Integer.class.isAssignableFrom(PropertyTypeDeterminator.determinePropertyType(root, calculatedAnnotation.origination()));
-    }
-
-    /**
-     * A specific Kryo serialiser for {@link AbstractDomainTreeRepresentation}.
-     *
-     * @author TG Team
-     *
-     */
-    protected abstract static class AbstractDomainTreeRepresentationSerialiser<T extends AbstractDomainTreeRepresentation> extends AbstractDomainTreeSerialiser<T> {
-        public AbstractDomainTreeRepresentationSerialiser(final ISerialiser serialiser) {
-            super(serialiser);
-        }
-
-        @Override
-        public void write(final ByteBuffer buffer, final T representation) {
-            writeValue(buffer, representation.getRootTypes());
-            writeValue(buffer, representation.getManuallyExcludedProperties());
-            writeValue(buffer, representation.getFirstTick());
-            writeValue(buffer, representation.getSecondTick());
-        }
     }
 
     @Override
