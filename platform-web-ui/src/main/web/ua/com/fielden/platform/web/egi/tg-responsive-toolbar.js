@@ -37,6 +37,9 @@ const template = html`
         #expandToolbarButton.invisible {
             display: none;
         }
+        paper-icon-button.revers {
+            transform: scale(-1, 1);
+        }
     </style>
     <div id="toolbar" class="grid-toolbar">
         <slot></slot>
@@ -48,7 +51,7 @@ const template = html`
             <paper-icon-button id="expandToolbarButton" icon="more-vert" on-tap="_showMoreActions" class="invisible"></paper-icon-button>
         </div>
     </div>
-    <iron-dropdown id="dropdown" horizontal-align="right" vertical-align="middle">
+    <iron-dropdown id="dropdown" horizontal-align="right" vertical-offset="8">
         <div id="hiddenToolbar" class="dropdown-content" slot="dropdown-content">
             <div id="specificActionContainer"></div>
             <div id="standartActionContainer"></div>
