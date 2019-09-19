@@ -16,7 +16,7 @@ public class GroupBys3 {
 
     public String sql(final DbVersion dbVersion) {
         final StringBuffer sb = new StringBuffer();
-        if (groups.size() > 0) {
+        if (!groups.isEmpty()) {
             sb.append("\nGROUP BY ");
             sb.append(groups.stream().map(y -> y.sql(dbVersion)).collect(joining(", ")));
         }

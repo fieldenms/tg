@@ -36,7 +36,7 @@ public class QryOrderingsBuilder extends AbstractTokensBuilder {
     }
 
     public OrderBys1 getModel() {
-        if (getChild() != null && getSize() == 0) {
+        if (getChild() != null && getTokens().isEmpty()) {
             finaliseChild();
             //throw new RuntimeException("Unable to produce result - unfinished model state!");
         }

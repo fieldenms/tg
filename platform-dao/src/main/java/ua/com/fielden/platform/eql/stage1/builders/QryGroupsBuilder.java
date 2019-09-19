@@ -20,7 +20,7 @@ public class QryGroupsBuilder extends AbstractTokensBuilder {
     }
 
     public GroupBys1 getModel() {
-        if (getChild() != null && getSize() == 0) {
+        if (getChild() != null && getTokens().isEmpty()) {
             throw new RuntimeException("Unable to produce result - unfinished model state!");
         }
         final List<GroupBy1> groups = new ArrayList<>();

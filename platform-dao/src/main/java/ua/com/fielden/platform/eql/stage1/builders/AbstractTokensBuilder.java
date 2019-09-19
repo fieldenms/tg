@@ -186,7 +186,7 @@ public abstract class AbstractTokensBuilder implements ITokensBuilder {
     }
 
     public TokenCategory firstCat() {
-        return tokens.size() < 1 ? null : tokens.get(0).getKey();
+        return tokens.isEmpty() ? null : tokens.get(0).getKey();
     }
 
     public TokenCategory secondCat() {
@@ -198,7 +198,7 @@ public abstract class AbstractTokensBuilder implements ITokensBuilder {
     }
 
     public <V> V firstValue() {
-        return tokens.size() < 1 ? null : (V) tokens.get(0).getValue();
+        return tokens.isEmpty() ? null : (V) tokens.get(0).getValue();
     }
 
     public <V> V secondValue() {
@@ -209,7 +209,7 @@ public abstract class AbstractTokensBuilder implements ITokensBuilder {
         return tokens.size() < 3 ? null : (V) tokens.get(2).getValue();
     }
 
-    public List<Pair<TokenCategory, Object>> getTokens() {
+    protected List<Pair<TokenCategory, Object>> getTokens() {
         return tokens;
     }
 
@@ -218,11 +218,11 @@ public abstract class AbstractTokensBuilder implements ITokensBuilder {
     }
 
     protected TokenCategory getLastCat() {
-        return tokens.size() > 0 ? tokens.get(tokens.size() - 1).getKey() : null;
+        return !tokens.isEmpty() ? tokens.get(tokens.size() - 1).getKey() : null;
     }
     
     protected Object getLastValue() {
-        return tokens.size() > 0 ? tokens.get(tokens.size() - 1).getValue() : null;
+        return !tokens.isEmpty() ? tokens.get(tokens.size() - 1).getValue() : null;
     }
 
     protected ITokensBuilder getChild() {

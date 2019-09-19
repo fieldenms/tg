@@ -21,7 +21,7 @@ public class OrderBys3 {
 
     public String sql(final DbVersion dbVersion) {
         final StringBuffer sb = new StringBuffer();
-        if (models.size() > 0) {
+        if (!models.isEmpty()) {
             sb.append("\nORDER BY ");
             sb.append(models.stream().map(y -> y.sql(dbVersion)).collect(joining(", ")));
         }

@@ -98,7 +98,7 @@ public class MetadataGenerator {
         }
 
         final List<EntityResultQueryModel<ET>> entityModels = getEntityModelsOfQueryBasedEntityType(entityType);
-        if (entityModels.size() > 0) {
+        if (!entityModels.isEmpty()) {
             return QUERY_BASED;
         }
 

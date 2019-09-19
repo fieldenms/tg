@@ -22,7 +22,7 @@ public class QryYieldsBuilder extends AbstractTokensBuilder {
     // TODO handle yield().entity(String joinAlias) properly
 
     public Yields1 getModel() {
-        if (getChild() != null && getSize() == 0) {
+        if (getChild() != null && getTokens().isEmpty()) {
             finaliseChild();
             //throw new RuntimeException("Unable to produce result - unfinished model state!");
         }
