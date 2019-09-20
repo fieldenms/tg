@@ -3,6 +3,7 @@ package ua.com.fielden.platform.eql.meta;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static org.junit.Assert.assertEquals;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.emptyCondition;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 import static ua.com.fielden.platform.entity.query.fluent.enums.ComparisonOperator.EQ;
 import static ua.com.fielden.platform.entity.query.fluent.enums.JoinType.LJ;
@@ -20,7 +21,6 @@ import org.junit.Ignore;
 import org.junit.Test;
 
 import ua.com.fielden.platform.entity.query.DbVersion;
-import ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils;
 import ua.com.fielden.platform.entity.query.fluent.enums.JoinType;
 import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
@@ -39,7 +39,6 @@ import ua.com.fielden.platform.eql.stage1.elements.sources.Sources1;
 import ua.com.fielden.platform.eql.stage2.elements.EntQueryBlocks2;
 import ua.com.fielden.platform.eql.stage2.elements.GroupBy2;
 import ua.com.fielden.platform.eql.stage2.elements.GroupBys2;
-import ua.com.fielden.platform.eql.stage2.elements.OrderBy2;
 import ua.com.fielden.platform.eql.stage2.elements.OrderBys2;
 import ua.com.fielden.platform.eql.stage2.elements.Yields2;
 import ua.com.fielden.platform.eql.stage2.elements.conditions.ComparisonTest2;
@@ -60,10 +59,6 @@ import ua.com.fielden.platform.sample.domain.TgAuthorship;
 import ua.com.fielden.platform.sample.domain.TgAverageFuelUsage;
 import ua.com.fielden.platform.sample.domain.TgEntityWithLoopedCalcProps;
 import ua.com.fielden.platform.sample.domain.TgOrgUnit1;
-import ua.com.fielden.platform.sample.domain.TgOrgUnit2;
-import ua.com.fielden.platform.sample.domain.TgOrgUnit3;
-import ua.com.fielden.platform.sample.domain.TgOrgUnit4;
-import ua.com.fielden.platform.sample.domain.TgOrgUnit5;
 import ua.com.fielden.platform.sample.domain.TgPersonName;
 import ua.com.fielden.platform.sample.domain.TgVehicle;
 import ua.com.fielden.platform.sample.domain.TgVehicleMake;
@@ -91,7 +86,7 @@ public class PropResolutionTest extends BaseEntQueryTCase1 {
     
     @Test
     public void test_q21_s1s3() {
-        final AggregatedResultQueryModel qry = select(TgVehicle.class).as("veh").leftJoin(TgVehicle.class).as("rbv").
+        final AggregatedResultQueryModel qry = select(VEHICLE).as("veh").leftJoin(VEHICLE).as("rbv").
                 on().prop("veh.replacedBy").eq().prop("rbv.id").or().prop("veh.replacedBy").ne().prop("rbv.id").
                 yield().prop("veh.key").as("vehicle-key").
                 yield().prop("rbv.key").as("replacedByVehicle-key").
@@ -106,21 +101,21 @@ public class PropResolutionTest extends BaseEntQueryTCase1 {
     
     @Test
     public void dot_notation_works_01() {
-        final EntityResultQueryModel<TgVehicle> qry = select(TgVehicle.class).where().anyOfProps("initDate", "station.name", "station.parent.name", "replacedBy.initDate").isNotNull().model();
+        final EntityResultQueryModel<TgVehicle> qry = select(VEHICLE).where().anyOfProps("initDate", "station.name", "station.parent.name", "replacedBy.initDate").isNotNull().model();
         final ua.com.fielden.platform.eql.stage2.elements.TransformationResult<EntQuery3> qry3 = entResultQry3(qry, new PropsResolutionContext(metadata), tables);
         System.out.println(qry3.item.sql(DbVersion.H2));
     }
 
     @Test
     public void dot_notation_works_02() {
-        final EntityResultQueryModel<TgVehicle> qry = select(TgVehicle.class).where().anyOfProps("key", "replacedBy.key").isNotNull().model();
+        final EntityResultQueryModel<TgVehicle> qry = select(VEHICLE).where().anyOfProps("key", "replacedBy.key").isNotNull().model();
         final ua.com.fielden.platform.eql.stage2.elements.TransformationResult<EntQuery3> qry3 = entResultQry3(qry, new PropsResolutionContext(metadata), tables);
         System.out.println(qry3.item.sql(DbVersion.H2));
     }
 
     @Test
     public void dot_notation_works_03() {
-        final EntityResultQueryModel<TgVehicle> qry = select(TgVehicle.class).as("veh").join(TgOrgUnit5.class).as("ou5").on().condition(EntityQueryUtils.emptyCondition()).
+        final EntityResultQueryModel<TgVehicle> qry = select(VEHICLE).as("veh").join(ORG5).as("ou5").on().condition(emptyCondition()).
                 where().anyOfProps("veh.key", "veh.replacedBy.key").isNotNull().model();
         final ua.com.fielden.platform.eql.stage2.elements.TransformationResult<EntQuery3> qry3 = entResultQry3(qry, new PropsResolutionContext(metadata), tables);
         System.out.println(qry3.item.sql(DbVersion.H2));
@@ -128,8 +123,8 @@ public class PropResolutionTest extends BaseEntQueryTCase1 {
     
     @Test
     public void dot_notation_works_04() {
-        final EntityResultQueryModel<TgVehicle> qry = select(TgVehicle.class).as("veh").
-                join(TgOrgUnit5.class).as("st").on().prop("station").eq().prop("st.id").
+        final EntityResultQueryModel<TgVehicle> qry = select(VEHICLE).as("veh").
+                join(ORG5).as("st").on().prop("station").eq().prop("st.id").
                 where().anyOfProps("veh.key", "replacedBy.key", "initDate", "station.name", "station.parent.name", "st.parent.name").isNotNull().model();
         final ua.com.fielden.platform.eql.stage2.elements.TransformationResult<EntQuery3> qry3 = entResultQry3(qry, new PropsResolutionContext(metadata), tables);
         System.out.println(qry3.item.sql(DbVersion.H2));
@@ -138,8 +133,8 @@ public class PropResolutionTest extends BaseEntQueryTCase1 {
     
     @Test
     public void dot_notation_works_05() {
-        final EntityResultQueryModel<TgVehicle> qry = select(TgVehicle.class).as("veh").
-                join(TgOrgUnit1.class).as("st").on().prop("station.parent.parent.parent.parent").eq().prop("st.id").
+        final EntityResultQueryModel<TgVehicle> qry = select(VEHICLE).as("veh").
+                join(ORG1).as("st").on().prop("station.parent.parent.parent.parent").eq().prop("st.id").
                 where().anyOfProps("veh.key", "replacedBy.key", "initDate", "station.name", "station.parent.name", "st.key").isNotNull().model();
         final ua.com.fielden.platform.eql.stage2.elements.TransformationResult<EntQuery3> qry3 = entResultQry3(qry, new PropsResolutionContext(metadata), tables);
         System.out.println(qry3.item.sql(DbVersion.H2));
@@ -148,7 +143,7 @@ public class PropResolutionTest extends BaseEntQueryTCase1 {
     
     @Test
     public void prop_paths_are_correctly_resolved() {
-        final EntityResultQueryModel<TgVehicle> qry = select(TgVehicle.class).where().
+        final EntityResultQueryModel<TgVehicle> qry = select(VEHICLE).where().
                 anyOfProps("initDate", "station.name", "station.parent.name", "replacedBy.initDate").isNotNull().model();
         
         final TransformationResult<EntQuery2> a = transform(qry);
@@ -158,15 +153,15 @@ public class PropResolutionTest extends BaseEntQueryTCase1 {
             paths.put(prop.name, prop.getPath());
         }
        
-        assertEquals(asList(pi(TgVehicle.class, "initDate")), paths.get("initDate"));
-        assertEquals(asList(pi(TgVehicle.class, "station"), pi(TgOrgUnit5.class, "name")), paths.get("station.name"));
-        assertEquals(asList(pi(TgVehicle.class, "station"), pi(TgOrgUnit5.class, "parent"), pi(TgOrgUnit4.class, "name")), paths.get("station.parent.name"));
-        assertEquals(asList(pi(TgVehicle.class, "replacedBy"), pi(TgVehicle.class, "initDate")), paths.get("replacedBy.initDate"));
+        assertEquals(asList(pi(VEHICLE, "initDate")), paths.get("initDate"));
+        assertEquals(asList(pi(VEHICLE, "station"), pi(ORG5, "name")), paths.get("station.name"));
+        assertEquals(asList(pi(VEHICLE, "station"), pi(ORG5, "parent"), pi(ORG4, "name")), paths.get("station.parent.name"));
+        assertEquals(asList(pi(VEHICLE, "replacedBy"), pi(VEHICLE, "initDate")), paths.get("replacedBy.initDate"));
     }
     
     @Test
     public void prop_paths_without_aliases_with_aliased_source_are_correctly_resolved() {
-        final EntityResultQueryModel<TgVehicle> qry = select(TgVehicle.class).as("v").where().
+        final EntityResultQueryModel<TgVehicle> qry = select(VEHICLE).as("v").where().
                 anyOfProps("initDate", "station.name", "station.parent.name", "replacedBy.initDate").isNotNull().model();
         
         final TransformationResult<EntQuery2> a = transform(qry);
@@ -176,15 +171,15 @@ public class PropResolutionTest extends BaseEntQueryTCase1 {
             paths.put(prop.name, prop.getPath());
         }
        
-        assertEquals(asList(pi(TgVehicle.class, "initDate")), paths.get("initDate"));
-        assertEquals(asList(pi(TgVehicle.class, "station"), pi(TgOrgUnit5.class, "name")), paths.get("station.name"));
-        assertEquals(asList(pi(TgVehicle.class, "station"), pi(TgOrgUnit5.class, "parent"), pi(TgOrgUnit4.class, "name")), paths.get("station.parent.name"));
-        assertEquals(asList(pi(TgVehicle.class, "replacedBy"), pi(TgVehicle.class, "initDate")), paths.get("replacedBy.initDate"));
+        assertEquals(asList(pi(VEHICLE, "initDate")), paths.get("initDate"));
+        assertEquals(asList(pi(VEHICLE, "station"), pi(ORG5, "name")), paths.get("station.name"));
+        assertEquals(asList(pi(VEHICLE, "station"), pi(ORG5, "parent"), pi(ORG4, "name")), paths.get("station.parent.name"));
+        assertEquals(asList(pi(VEHICLE, "replacedBy"), pi(VEHICLE, "initDate")), paths.get("replacedBy.initDate"));
     }
 
     @Test
     public void prop_paths_with_some_aliases_with_aliased_source_are_correctly_resolved() {
-        final EntityResultQueryModel<TgVehicle> qry = select(TgVehicle.class).as("v").where().
+        final EntityResultQueryModel<TgVehicle> qry = select(VEHICLE).as("v").where().
                 anyOfProps("v.initDate", "station.name", "station.parent.name", "v.replacedBy.initDate").isNotNull().model();
         
         final TransformationResult<EntQuery2> a = transform(qry);
@@ -194,15 +189,15 @@ public class PropResolutionTest extends BaseEntQueryTCase1 {
             paths.put(prop.name, prop.getPath());
         }
        
-        assertEquals(asList(pi(TgVehicle.class, "initDate")), paths.get("initDate"));
-        assertEquals(asList(pi(TgVehicle.class, "station"), pi(TgOrgUnit5.class, "name")), paths.get("station.name"));
-        assertEquals(asList(pi(TgVehicle.class, "station"), pi(TgOrgUnit5.class, "parent"), pi(TgOrgUnit4.class, "name")), paths.get("station.parent.name"));
-        assertEquals(asList(pi(TgVehicle.class, "replacedBy"), pi(TgVehicle.class, "initDate")), paths.get("replacedBy.initDate"));
+        assertEquals(asList(pi(VEHICLE, "initDate")), paths.get("initDate"));
+        assertEquals(asList(pi(VEHICLE, "station"), pi(ORG5, "name")), paths.get("station.name"));
+        assertEquals(asList(pi(VEHICLE, "station"), pi(ORG5, "parent"), pi(ORG4, "name")), paths.get("station.parent.name"));
+        assertEquals(asList(pi(VEHICLE, "replacedBy"), pi(VEHICLE, "initDate")), paths.get("replacedBy.initDate"));
     }
     
     @Test
     public void prop_paths_in_qry_with_two_sources_are_correctly_resolved() {
-        final EntityResultQueryModel<TgVehicle> qry = select(TgVehicle.class).as("v").join(TgVehicle.class).as("rv").on().prop("v.replacedBy").eq().prop("rv.id").
+        final EntityResultQueryModel<TgVehicle> qry = select(VEHICLE).as("v").join(VEHICLE).as("rv").on().prop("v.replacedBy").eq().prop("rv.id").
                 where().anyOfProps("v.initDate", "rv.station.name", "v.station.parent.name", "rv.replacedBy.initDate").isNotNull().model();
         
         final TransformationResult<EntQuery2> a = transform(qry);
@@ -212,36 +207,36 @@ public class PropResolutionTest extends BaseEntQueryTCase1 {
             paths.put(prop.name, prop.getPath());
         }
        
-        assertEquals(asList(pi(TgVehicle.class, "initDate")), paths.get("initDate"));
-        assertEquals(asList(pi(TgVehicle.class, "station"), pi(TgOrgUnit5.class, "name")), paths.get("station.name"));
-        assertEquals(asList(pi(TgVehicle.class, "station"), pi(TgOrgUnit5.class, "parent"), pi(TgOrgUnit4.class, "name")), paths.get("station.parent.name"));
-        assertEquals(asList(pi(TgVehicle.class, "replacedBy"), pi(TgVehicle.class, "initDate")), paths.get("replacedBy.initDate"));
+        assertEquals(asList(pi(VEHICLE, "initDate")), paths.get("initDate"));
+        assertEquals(asList(pi(VEHICLE, "station"), pi(ORG5, "name")), paths.get("station.name"));
+        assertEquals(asList(pi(VEHICLE, "station"), pi(ORG5, "parent"), pi(ORG4, "name")), paths.get("station.parent.name"));
+        assertEquals(asList(pi(VEHICLE, "replacedBy"), pi(VEHICLE, "initDate")), paths.get("replacedBy.initDate"));
     }
 
     @Test
     public void test_q21_s1s2_() {
-        final EntityResultQueryModel<TgVehicleModel> qry = select(TgVehicleModel.class).where().prop("make.key").isNotNull().model();
+        final EntityResultQueryModel<TgVehicleModel> qry = select(MODEL).where().prop("make.key").isNotNull().model();
         
         
-        final Sources1 sources1 = new Sources1(new QrySource1BasedOnPersistentType(TgVehicleModel.class, 1), emptyList());
+        final Sources1 sources1 = new Sources1(new QrySource1BasedOnPersistentType(MODEL, 1), emptyList());
         final Conditions1 conditions1 = new Conditions1(false, new NullTest1(new EntProp1("make.key", 2), true), emptyList());
 
         final EntQueryBlocks1 parts1 = qb1(sources1, conditions1);
-        final EntQuery1 expQry1 = new EntQuery1(parts1, TgVehicleModel.class, RESULT_QUERY, 3);
+        final EntQuery1 expQry1 = new EntQuery1(parts1, MODEL, RESULT_QUERY, 3);
 
         assertEquals(expQry1, entResultQry(qry));
         
-        final QrySource2BasedOnPersistentType source = new QrySource2BasedOnPersistentType(TgVehicleModel.class, metadata.get(TgVehicleModel.class), 1);
+        final QrySource2BasedOnPersistentType source = new QrySource2BasedOnPersistentType(MODEL, metadata.get(MODEL), 1);
         final Sources2 sources = new Sources2(source, emptyList());
         final List<List<? extends ICondition2<?>>> allConditions = new ArrayList<>();
         final List<ICondition2<?>> firstAndConditionsGroup = new ArrayList<>();
-        final EntProp2 makeProp2 = new EntProp2(source, 2, asList(pi(TgVehicleModel.class, "make"), pi(TgVehicleMake.class, "key")));
+        final EntProp2 makeProp2 = new EntProp2(source, 2, asList(pi(MODEL, "make"), pi(TgVehicleMake.class, "key")));
         firstAndConditionsGroup.add(new NullTest2(makeProp2, true));
         allConditions.add(firstAndConditionsGroup);
         final Conditions2 conditions = new Conditions2(false, allConditions);
 
         final EntQueryBlocks2 parts = new EntQueryBlocks2(sources, conditions, emptyYields2, emptyGroupBys2, emptyOrderBys2);
-        final EntQuery2 expQry2 = new EntQuery2(parts, TgVehicleModel.class, RESULT_QUERY);
+        final EntQuery2 expQry2 = new EntQuery2(parts, MODEL, RESULT_QUERY);
 
         final TransformationResult<EntQuery2> trQry2 = expQry1.transform(new PropsResolutionContext(metadata));
         assertEquals(expQry2, trQry2.item);
@@ -250,28 +245,28 @@ public class PropResolutionTest extends BaseEntQueryTCase1 {
 
     @Test
     public void test_q21_s1s2() {
-        final EntityResultQueryModel<TgVehicleModel> qry = select(TgVehicleModel.class).where().prop("make").isNotNull().model();
+        final EntityResultQueryModel<TgVehicleModel> qry = select(MODEL).where().prop("make").isNotNull().model();
         
         
-        final Sources1 sources1 = new Sources1(new QrySource1BasedOnPersistentType(TgVehicleModel.class, 1), emptyList());
+        final Sources1 sources1 = new Sources1(new QrySource1BasedOnPersistentType(MODEL, 1), emptyList());
         final Conditions1 conditions1 = new Conditions1(false, new NullTest1(new EntProp1("make", 2), true), emptyList());
 
         final EntQueryBlocks1 parts1 = qb1(sources1, conditions1);
-        final EntQuery1 expQry1 = new EntQuery1(parts1, TgVehicleModel.class, RESULT_QUERY, 3);
+        final EntQuery1 expQry1 = new EntQuery1(parts1, MODEL, RESULT_QUERY, 3);
 
         assertEquals(expQry1, entResultQry(qry));
         
-        final QrySource2BasedOnPersistentType source = new QrySource2BasedOnPersistentType(TgVehicleModel.class, metadata.get(TgVehicleModel.class), 1);
+        final QrySource2BasedOnPersistentType source = new QrySource2BasedOnPersistentType(MODEL, metadata.get(MODEL), 1);
         final Sources2 sources = new Sources2(source, emptyList());
         final List<List<? extends ICondition2<?>>> allConditions = new ArrayList<>();
         final List<ICondition2<?>> firstAndConditionsGroup = new ArrayList<>();
-        final EntProp2 makeProp2 = new EntProp2(source, 2, asList(pi(TgVehicleModel.class, "make")));
+        final EntProp2 makeProp2 = new EntProp2(source, 2, asList(pi(MODEL, "make")));
         firstAndConditionsGroup.add(new NullTest2(makeProp2, true));
         allConditions.add(firstAndConditionsGroup);
         final Conditions2 conditions = new Conditions2(false, allConditions);
 
         final EntQueryBlocks2 parts = new EntQueryBlocks2(sources, conditions, emptyYields2, emptyGroupBys2, emptyOrderBys2);
-        final EntQuery2 expQry2 = new EntQuery2(parts, TgVehicleModel.class, RESULT_QUERY);
+        final EntQuery2 expQry2 = new EntQuery2(parts, MODEL, RESULT_QUERY);
 
         final TransformationResult<EntQuery2> trQry2 = expQry1.transform(new PropsResolutionContext(metadata));
         assertEquals(expQry2, trQry2.item);
@@ -280,8 +275,8 @@ public class PropResolutionTest extends BaseEntQueryTCase1 {
     
     @Test
     public void test_18_1() {
-        final EntityResultQueryModel<TgOrgUnit1> qry = select(TgOrgUnit1.class).where().exists( //
-                select(TgOrgUnit2.class).where().prop("parent").eq().extProp("id"). //
+        final EntityResultQueryModel<TgOrgUnit1> qry = select(ORG1).where().exists( //
+                select(ORG2).where().prop("parent").eq().extProp("id"). //
                 model()). //
                 model();  
         final TransformationResult<EntQuery2> qry2 = entResultQry2(qry, new PropsResolutionContext(metadata));
@@ -291,11 +286,11 @@ public class PropResolutionTest extends BaseEntQueryTCase1 {
     @Test
     public void test_18() {
         transform(//
-        select(TgOrgUnit1.class).where().exists( //
-        select(TgOrgUnit2.class).where().prop("parent").eq().extProp("id").and().exists( //
-        select(TgOrgUnit3.class).where().prop("parent").eq().extProp("id").and().exists( // 
-        select(TgOrgUnit4.class).where().prop("parent").eq().extProp("id").and().exists( //
-        select(TgOrgUnit5.class).where().prop("parent").eq().extProp("id").and().prop("key").isNotNull(). //
+        select(ORG1).where().exists( //
+        select(ORG2).where().prop("parent").eq().extProp("id").and().exists( //
+        select(ORG3).where().prop("parent").eq().extProp("id").and().exists( // 
+        select(ORG4).where().prop("parent").eq().extProp("id").and().exists( //
+        select(ORG5).where().prop("parent").eq().extProp("id").and().prop("key").isNotNull(). //
         model()). //
         model()). //
         model()). //
@@ -306,11 +301,11 @@ public class PropResolutionTest extends BaseEntQueryTCase1 {
     @Test
     public void test_19() {
         transform(//
-        select(TgOrgUnit1.class).as("L1").where().exists( //
-        select(TgOrgUnit2.class).as("L2").where().prop("parent").eq().extProp("L1.id").and().exists( //
-        select(TgOrgUnit3.class).as("L3").where().prop("parent").eq().extProp("L2.id").and().exists( // 
-        select(TgOrgUnit4.class).as("L4").where().prop("parent").eq().extProp("L3.id").and().exists( //
-        select(TgOrgUnit5.class).as("L5").where().prop("parent").eq().extProp("L4.id").and().prop("key").isNotNull(). //
+        select(ORG1).as("L1").where().exists( //
+        select(ORG2).as("L2").where().prop("parent").eq().extProp("L1.id").and().exists( //
+        select(ORG3).as("L3").where().prop("parent").eq().extProp("L2.id").and().exists( // 
+        select(ORG4).as("L4").where().prop("parent").eq().extProp("L3.id").and().exists( //
+        select(ORG5).as("L5").where().prop("parent").eq().extProp("L4.id").and().prop("key").isNotNull(). //
         model()). //
         model()). //
         model()). //
@@ -322,11 +317,11 @@ public class PropResolutionTest extends BaseEntQueryTCase1 {
     @Ignore
     public void test_20() {
         transform(//
-        select(TgOrgUnit1.class).as("L1").where().exists( //
-        select(TgOrgUnit2.class).as("L2").where().prop("parent").eq().extProp("L1.id").and().exists( //
-        select(TgOrgUnit3.class).as("L3").where().prop("parent").eq().extProp("L2.id").and().exists( // 
-        select(TgOrgUnit4.class).as("L4").where().prop("parent").eq().extProp("L3.id").and().exists( //
-        select(TgOrgUnit5.class).as("L5").where().prop("parent").eq().extProp("L4").and().prop("key").isNotNull(). //
+        select(ORG1).as("L1").where().exists( //
+        select(ORG2).as("L2").where().prop("parent").eq().extProp("L1.id").and().exists( //
+        select(ORG3).as("L3").where().prop("parent").eq().extProp("L2.id").and().exists( // 
+        select(ORG4).as("L4").where().prop("parent").eq().extProp("L3.id").and().exists( //
+        select(ORG5).as("L5").where().prop("parent").eq().extProp("L4").and().prop("key").isNotNull(). //
         model()). //
         model()). //
         model()). //
@@ -338,11 +333,11 @@ public class PropResolutionTest extends BaseEntQueryTCase1 {
     @Test
     public void test_21() {
         transform(//
-        select(TgOrgUnit1.class).as("L1").where().exists( //
-        select(TgOrgUnit2.class).as("L2").where().prop("parent").eq().extProp("L1.id").and().exists( //
-        select(TgOrgUnit3.class).as("L3").where().prop("parent").eq().extProp("L1.id").and().exists( // 
-        select(TgOrgUnit4.class).as("L4").where().prop("parent").eq().extProp("L1.id").and().exists( //
-        select(TgOrgUnit5.class).as("L5").where().prop("parent").eq().extProp("L1.id").and().prop("key").isNotNull(). //
+        select(ORG1).as("L1").where().exists( //
+        select(ORG2).as("L2").where().prop("parent").eq().extProp("L1.id").and().exists( //
+        select(ORG3).as("L3").where().prop("parent").eq().extProp("L1.id").and().exists( // 
+        select(ORG4).as("L4").where().prop("parent").eq().extProp("L1.id").and().exists( //
+        select(ORG5).as("L5").where().prop("parent").eq().extProp("L1.id").and().prop("key").isNotNull(). //
         model()). //
         model()). //
         model()). //
@@ -373,11 +368,11 @@ public class PropResolutionTest extends BaseEntQueryTCase1 {
 
 //    @Test
 //    public void test_q1() {
-//        final EntityResultQueryModel<TgAuthor> qry = select(TgAuthor.class).where().prop("surname").isNotNull().or().prop("surname").eq().iVal(null).model();
+//        final EntityResultQueryModel<TgAuthor> qry = select(AUTHOR).where().prop("surname").isNotNull().or().prop("surname").eq().iVal(null).model();
 //        final EntQuery2 qry2 = entResultQry2(qry, new TransformatorToS2(metadata));
 //
-//        final EntQuery2 authorSourceQry = entResultQry2(MetadataGenerator.createYieldAllQueryModel(TgAuthor.class), new TransformatorToS2(metadata));
-//        final QrySource2BasedOnPersistentTypeWithCalcProps source = new QrySource2BasedOnPersistentTypeWithCalcProps(TgAuthor.class, authorSourceQry);
+//        final EntQuery2 authorSourceQry = entResultQry2(MetadataGenerator.createYieldAllQueryModel(AUTHOR), new TransformatorToS2(metadata));
+//        final QrySource2BasedOnPersistentTypeWithCalcProps source = new QrySource2BasedOnPersistentTypeWithCalcProps(AUTHOR, authorSourceQry);
 //        final Sources2 sources = new Sources2(source);
 //
 //        final List<List<? extends ICondition2>> allConditions1 = new ArrayList<>();
@@ -399,7 +394,7 @@ public class PropResolutionTest extends BaseEntQueryTCase1 {
 //        final Conditions2 conditions = new Conditions2(false, allConditions);
 //
 //        final EntQueryBlocks2 parts = new EntQueryBlocks2(sources, conditions, emptyYields2, new GroupBys2(emptyList()), new OrderBys2(null));
-//        final EntQuery2 exp = new EntQuery2(parts, TgAuthor.class, RESULT_QUERY, null);
+//        final EntQuery2 exp = new EntQuery2(parts, AUTHOR, RESULT_QUERY, null);
 //        System.out.println(qry2.getConditions().equals(exp.getConditions()));
 //        System.out.println(qry2.getGroups().equals(exp.getGroups()));
 //        System.out.println(qry2.getYields().equals(exp.getYields()));
@@ -411,19 +406,19 @@ public class PropResolutionTest extends BaseEntQueryTCase1 {
     @Test
     @Ignore
     public void test_q2() {
-        final EntityResultQueryModel<TgAuthor> qry = select(TgAuthor.class).where().prop("surname").isNotNull().model();
+        final EntityResultQueryModel<TgAuthor> qry = select(AUTHOR).where().prop("surname").isNotNull().model();
         final TransformationResult<EntQuery2> qry2 = entResultQry2(qry, new PropsResolutionContext(metadata));
 
-        final QrySource2BasedOnPersistentType source = new QrySource2BasedOnPersistentType(TgAuthor.class, metadata.get(TgAuthor.class), null, 0);
+        final QrySource2BasedOnPersistentType source = new QrySource2BasedOnPersistentType(AUTHOR, metadata.get(AUTHOR), null, 0);
         final Sources2 sources = new Sources2(source, emptyList());
         final List<List<? extends ICondition2<?>>> allConditions = new ArrayList<>();
         final List<ICondition2<?>> firstAndConditionsGroup = new ArrayList<>();
-        firstAndConditionsGroup.add(new NullTest2(new EntProp2(source, 1, asList(pi(TgAuthor.class, "surname"))), true));
+        firstAndConditionsGroup.add(new NullTest2(new EntProp2(source, 1, asList(pi(AUTHOR, "surname"))), true));
         allConditions.add(firstAndConditionsGroup);
         final Conditions2 conditions = new Conditions2(false, allConditions);
 
-        final EntQueryBlocks2 parts = new EntQueryBlocks2(sources, conditions, emptyYields2, new GroupBys2(Collections.<GroupBy2> emptyList()), new OrderBys2(null));
-        final EntQuery2 exp = new EntQuery2(parts, TgAuthor.class, RESULT_QUERY);
+        final EntQueryBlocks2 parts = new EntQueryBlocks2(sources, conditions, emptyYields2, emptyGroupBys2, emptyOrderBys2);
+        final EntQuery2 exp = new EntQuery2(parts, AUTHOR, RESULT_QUERY);
 
         System.out.println(qry2.item.conditions.equals(exp.conditions));
         System.out.println(qry2.item.groups.equals(exp.groups));
@@ -441,7 +436,7 @@ public class PropResolutionTest extends BaseEntQueryTCase1 {
 //
 //
 //        
-////        final QrySource2BasedOnPersistentType source = new QrySource2BasedOnPersistentType(TgVehicleModel.class);
+////        final QrySource2BasedOnPersistentType source = new QrySource2BasedOnPersistentType(MODEL);
 ////        final Sources2 sources = new Sources2(source);
 ////        final List<List<? extends ICondition2>> allConditions = new ArrayList<>();
 ////        final List<ICondition2> firstAndConditionsGroup = new ArrayList<>();
@@ -472,24 +467,6 @@ public class PropResolutionTest extends BaseEntQueryTCase1 {
 //    }
     
     
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-
     @Test
     @Ignore
     public void test_q212_copy() {
@@ -504,7 +481,7 @@ public class PropResolutionTest extends BaseEntQueryTCase1 {
         allConditions.add(firstAndConditionsGroup);
         final Conditions2 conditions = new Conditions2(false, allConditions);
 
-        final EntQueryBlocks2 parts = new EntQueryBlocks2(sources, conditions, emptyYields2, new GroupBys2(Collections.<GroupBy2> emptyList()), new OrderBys2(Collections.<OrderBy2> emptyList()));
+        final EntQueryBlocks2 parts = new EntQueryBlocks2(sources, conditions, emptyYields2, emptyGroupBys2, emptyOrderBys2);
         final EntQuery2 exp = new EntQuery2(parts, TgVehicleModelWithCalc.class, RESULT_QUERY);
 
         System.out.println(qry2.item.conditions.equals(exp.conditions));
@@ -518,19 +495,19 @@ public class PropResolutionTest extends BaseEntQueryTCase1 {
     @Test
     @Ignore
     public void test_q3() {
-        final EntityResultQueryModel<TgAuthor> qry = select(TgAuthor.class).as("a").where().prop("a.surname").isNotNull().model();
+        final EntityResultQueryModel<TgAuthor> qry = select(AUTHOR).as("a").where().prop("a.surname").isNotNull().model();
         final TransformationResult<EntQuery2> qry2 = entResultQry2(qry, new PropsResolutionContext(metadata));
 
-        final QrySource2BasedOnPersistentType source = new QrySource2BasedOnPersistentType(TgAuthor.class, metadata.get(TgAuthor.class), "a", 0);
+        final QrySource2BasedOnPersistentType source = new QrySource2BasedOnPersistentType(AUTHOR, metadata.get(AUTHOR), "a", 0);
         final Sources2 sources = new Sources2(source, Collections.<CompoundSource2> emptyList());
         final List<List<? extends ICondition2<?>>> allConditions = new ArrayList<>();
         final List<ICondition2<?>> firstAndConditionsGroup = new ArrayList<>();
-        firstAndConditionsGroup.add(new NullTest2(new EntProp2(source, 1, asList(pi(TgAuthor.class, "surname"))), true));
+        firstAndConditionsGroup.add(new NullTest2(new EntProp2(source, 1, asList(pi(AUTHOR, "surname"))), true));
         allConditions.add(firstAndConditionsGroup);
         final Conditions2 conditions = new Conditions2(false, allConditions);
 
-        final EntQueryBlocks2 parts = new EntQueryBlocks2(sources, conditions, emptyYields2, new GroupBys2(Collections.<GroupBy2> emptyList()), new OrderBys2(null));
-        final EntQuery2 exp = new EntQuery2(parts, TgAuthor.class, RESULT_QUERY);
+        final EntQueryBlocks2 parts = new EntQueryBlocks2(sources, conditions, emptyYields2, emptyGroupBys2, emptyOrderBys2);
+        final EntQuery2 exp = new EntQuery2(parts, AUTHOR, RESULT_QUERY);
 
         assertEquals(qry2.item, exp);
     }
@@ -538,19 +515,19 @@ public class PropResolutionTest extends BaseEntQueryTCase1 {
     @Test
     @Ignore
     public void test_q4() {
-        final EntityResultQueryModel<TgAuthor> qry = select(TgAuthor.class).where().prop("surname").isNotNull().and().prop("name").eq().iVal(null).model();
+        final EntityResultQueryModel<TgAuthor> qry = select(AUTHOR).where().prop("surname").isNotNull().and().prop("name").eq().iVal(null).model();
         final TransformationResult<EntQuery2> qry2 = entResultQry2(qry, new PropsResolutionContext(metadata));
 
-        final QrySource2BasedOnPersistentType source = new QrySource2BasedOnPersistentType(TgAuthor.class, metadata.get(TgAuthor.class), null, 0);
+        final QrySource2BasedOnPersistentType source = new QrySource2BasedOnPersistentType(AUTHOR, metadata.get(AUTHOR), null, 0);
         final Sources2 sources = new Sources2(source, Collections.<CompoundSource2> emptyList());
         final List<List<? extends ICondition2<?>>> allConditions = new ArrayList<>();
         final List<ICondition2<?>> firstAndConditionsGroup = new ArrayList<>();
-        firstAndConditionsGroup.add(new NullTest2(new EntProp2(source, 1, asList(pi(TgAuthor.class, "surname"))), true));
+        firstAndConditionsGroup.add(new NullTest2(new EntProp2(source, 1, asList(pi(AUTHOR, "surname"))), true));
         allConditions.add(firstAndConditionsGroup);
         final Conditions2 conditions = new Conditions2(false, allConditions);
 
-        final EntQueryBlocks2 parts = new EntQueryBlocks2(sources, conditions, emptyYields2, new GroupBys2(Collections.<GroupBy2> emptyList()), new OrderBys2(null));
-        final EntQuery2 exp = new EntQuery2(parts, TgAuthor.class, RESULT_QUERY);
+        final EntQueryBlocks2 parts = new EntQueryBlocks2(sources, conditions, emptyYields2, emptyGroupBys2, emptyOrderBys2);
+        final EntQuery2 exp = new EntQuery2(parts, AUTHOR, RESULT_QUERY);
 
         assertEquals(qry2.item, exp);
     }
@@ -558,19 +535,19 @@ public class PropResolutionTest extends BaseEntQueryTCase1 {
     @Test
     @Ignore
     public void test_q5() {
-        final EntityResultQueryModel<TgAuthor> qry = select(TgAuthor.class).where().prop("surname").isNotNull().and().prop("name").eq().iParam("param").model();
+        final EntityResultQueryModel<TgAuthor> qry = select(AUTHOR).where().prop("surname").isNotNull().and().prop("name").eq().iParam("param").model();
         final TransformationResult<EntQuery2> qry2 = entResultQry2(qry, new PropsResolutionContext(metadata));
 
-        final QrySource2BasedOnPersistentType source = new QrySource2BasedOnPersistentType(TgAuthor.class, metadata.get(TgAuthor.class), null, 0);
+        final QrySource2BasedOnPersistentType source = new QrySource2BasedOnPersistentType(AUTHOR, metadata.get(AUTHOR), null, 0);
         final Sources2 sources = new Sources2(source, Collections.<CompoundSource2> emptyList());
         final List<List<? extends ICondition2<?>>> allConditions = new ArrayList<>();
         final List<ICondition2<?>> firstAndConditionsGroup = new ArrayList<>();
-        firstAndConditionsGroup.add(new NullTest2(new EntProp2(source, 1, asList(pi(TgAuthor.class, "surname"))), true));
+        firstAndConditionsGroup.add(new NullTest2(new EntProp2(source, 1, asList(pi(AUTHOR, "surname"))), true));
         allConditions.add(firstAndConditionsGroup);
         final Conditions2 conditions = new Conditions2(false, allConditions);
 
-        final EntQueryBlocks2 parts = new EntQueryBlocks2(sources, conditions, emptyYields2, new GroupBys2(Collections.<GroupBy2> emptyList()), new OrderBys2(null));
-        final EntQuery2 exp = new EntQuery2(parts, TgAuthor.class, RESULT_QUERY);
+        final EntQueryBlocks2 parts = new EntQueryBlocks2(sources, conditions, emptyYields2, emptyGroupBys2, emptyOrderBys2);
+        final EntQuery2 exp = new EntQuery2(parts, AUTHOR, RESULT_QUERY);
 
         assertEquals(qry2.item, exp);
     }
@@ -578,21 +555,21 @@ public class PropResolutionTest extends BaseEntQueryTCase1 {
     @Test
     @Ignore
     public void test_q6() {
-        final EntityResultQueryModel<TgAuthor> qry = select(TgAuthor.class).where().prop("surname").eq().param("param").model();
+        final EntityResultQueryModel<TgAuthor> qry = select(AUTHOR).where().prop("surname").eq().param("param").model();
         final Map<String, Object> params = new HashMap<>();
         params.put("param", 1);
         final TransformationResult<EntQuery2> qry2 = entResultQry2(qry, new PropsResolutionContext(metadata));
 
-        final QrySource2BasedOnPersistentType source = new QrySource2BasedOnPersistentType(TgAuthor.class, metadata.get(TgAuthor.class), null, 0);
+        final QrySource2BasedOnPersistentType source = new QrySource2BasedOnPersistentType(AUTHOR, metadata.get(AUTHOR), null, 0);
         final Sources2 sources = new Sources2(source, Collections.<CompoundSource2> emptyList());
         final List<List<? extends ICondition2<?>>> allConditions = new ArrayList<>();
         final List<ICondition2<?>> firstAndConditionsGroup = new ArrayList<>();
-        firstAndConditionsGroup.add(new ComparisonTest2(new EntProp2(source, 1, asList(pi(TgAuthor.class, "surname"))), EQ, new EntValue2(1)));
+        firstAndConditionsGroup.add(new ComparisonTest2(new EntProp2(source, 1, asList(pi(AUTHOR, "surname"))), EQ, new EntValue2(1)));
         allConditions.add(firstAndConditionsGroup);
         final Conditions2 conditions = new Conditions2(false, allConditions);
 
-        final EntQueryBlocks2 parts = new EntQueryBlocks2(sources, conditions, emptyYields2, new GroupBys2(Collections.<GroupBy2> emptyList()), new OrderBys2(null));
-        final EntQuery2 exp = new EntQuery2(parts, TgAuthor.class, RESULT_QUERY);
+        final EntQueryBlocks2 parts = new EntQueryBlocks2(sources, conditions, emptyYields2, emptyGroupBys2, emptyOrderBys2);
+        final EntQuery2 exp = new EntQuery2(parts, AUTHOR, RESULT_QUERY);
 
         assertEquals(exp, qry2.item);
     }
@@ -600,16 +577,16 @@ public class PropResolutionTest extends BaseEntQueryTCase1 {
     @Test
     @Ignore
     public void test_q7() {
-        final EntityResultQueryModel<TgAuthor> qry = select(TgAuthor.class).leftJoin(TgPersonName.class).as("pn").on().prop("name").eq().prop("pn.id"). //
+        final EntityResultQueryModel<TgAuthor> qry = select(AUTHOR).leftJoin(TgPersonName.class).as("pn").on().prop("name").eq().prop("pn.id"). //
         where().prop("surname").eq().val(1).model();
         final TransformationResult<EntQuery2> qry2 = entResultQry2(qry, new PropsResolutionContext(metadata));
 
-        final QrySource2BasedOnPersistentType source = new QrySource2BasedOnPersistentType(TgAuthor.class, metadata.get(TgAuthor.class), null, 0);
+        final QrySource2BasedOnPersistentType source = new QrySource2BasedOnPersistentType(AUTHOR, metadata.get(AUTHOR), null, 0);
         final QrySource2BasedOnPersistentType source2 = new QrySource2BasedOnPersistentType(TgPersonName.class, metadata.get(TgPersonName.class), "pn", 0);
 
         final List<List<? extends ICondition2<?>>> allConditions = new ArrayList<>();
         final List<ICondition2<?>> firstAndConditionsGroup = new ArrayList<>();
-        firstAndConditionsGroup.add(new ComparisonTest2(new EntProp2(source, 1, asList(pi(TgAuthor.class, "name"))), //
+        firstAndConditionsGroup.add(new ComparisonTest2(new EntProp2(source, 1, asList(pi(AUTHOR, "name"))), //
                 EQ, // 
                 new EntProp2(source2, 1, asList(metadata.get(TgPersonName.class).getProps().get("id")))));
         allConditions.add(firstAndConditionsGroup);
@@ -621,12 +598,12 @@ public class PropResolutionTest extends BaseEntQueryTCase1 {
         final Sources2 sources = new Sources2(source, compounds);
         final List<List<? extends ICondition2<?>>> allConditions2 = new ArrayList<>();
         final List<ICondition2<?>> firstAndConditionsGroup2 = new ArrayList<>();
-        firstAndConditionsGroup2.add(new ComparisonTest2(new EntProp2(source, 1, asList(pi(TgAuthor.class, "surname"))), EQ, new EntValue2(1)));
+        firstAndConditionsGroup2.add(new ComparisonTest2(new EntProp2(source, 1, asList(pi(AUTHOR, "surname"))), EQ, new EntValue2(1)));
         allConditions2.add(firstAndConditionsGroup2);
         final Conditions2 conditions = new Conditions2(false, allConditions2);
 
-        final EntQueryBlocks2 parts = new EntQueryBlocks2(sources, conditions, emptyYields2, new GroupBys2(Collections.<GroupBy2> emptyList()), new OrderBys2(null));
-        final EntQuery2 exp = new EntQuery2(parts, TgAuthor.class, RESULT_QUERY);
+        final EntQueryBlocks2 parts = new EntQueryBlocks2(sources, conditions, emptyYields2, emptyGroupBys2, emptyOrderBys2);
+        final EntQuery2 exp = new EntQuery2(parts, AUTHOR, RESULT_QUERY);
 
         assertEquals(exp, qry2.item);
     }
@@ -634,11 +611,11 @@ public class PropResolutionTest extends BaseEntQueryTCase1 {
     @Test
     @Ignore
     public void test_q8() {
-        final EntityResultQueryModel<TgAuthor> qry = select(TgAuthor.class).leftJoin(TgPersonName.class).as("pn").on().prop("name").eq().prop("pn.id"). //
+        final EntityResultQueryModel<TgAuthor> qry = select(AUTHOR).leftJoin(TgPersonName.class).as("pn").on().prop("name").eq().prop("pn.id"). //
         where().prop("lastRoyalty").eq().val(1).model();
         final TransformationResult<EntQuery2> qry2 = entResultQry2(qry, new PropsResolutionContext(metadata));
 
-        final QrySource2BasedOnPersistentType sourceAuthor = new QrySource2BasedOnPersistentType(TgAuthor.class, metadata.get(TgAuthor.class), null, 0);
+        final QrySource2BasedOnPersistentType sourceAuthor = new QrySource2BasedOnPersistentType(AUTHOR, metadata.get(AUTHOR), null, 0);
 
         final QrySource2BasedOnPersistentType sourceAuthorRoyalty = new QrySource2BasedOnPersistentType(TgAuthorRoyalty.class, metadata.get(TgAuthorRoyalty.class), null, 0);
 
@@ -672,26 +649,25 @@ public class PropResolutionTest extends BaseEntQueryTCase1 {
         allConditions2.add(firstAndConditionsGroup2);
         final Conditions2 conditions = new Conditions2(false, allConditions2);
 
-        final EntQueryBlocks2 parts = new EntQueryBlocks2(sources, conditions, emptyYields2, new GroupBys2(Collections.<GroupBy2> emptyList()), new OrderBys2(null));
-        final EntQuery2 exp = new EntQuery2(parts, TgAuthor.class, RESULT_QUERY);
+        final EntQueryBlocks2 parts = new EntQueryBlocks2(sources, conditions, emptyYields2, emptyGroupBys2, emptyOrderBys2);
+        final EntQuery2 exp = new EntQuery2(parts, AUTHOR, RESULT_QUERY);
 
         assertEquals(exp, qry2.item);
     }
 
     @Test
     public void test_00() {
-        transform(select(TgAuthor.class).where().prop("lastRoyalty").isNotNull().model());
+        transform(select(AUTHOR).where().prop("lastRoyalty").isNotNull().model());
     }
 
     @Test
     public void test_01() {
-        transform(select(TgAuthor.class).as("aa").where().prop("lastRoyalty").isNotNull().and().prop("aa.surname").isNull().model());
+        transform(select(AUTHOR).as("aa").where().prop("lastRoyalty").isNotNull().and().prop("aa.surname").isNull().model());
     }
 
     @Test
-    @Ignore
     public void test_02() {
-        transform(select(TgAuthorship.class).where().exists(select(TgAuthor.class).where().prop("lastRoyalty").isNotNull().model()).model());
+        transform(select(TgAuthorship.class).where().exists(select(AUTHOR).where().prop("lastRoyalty").isNotNull().model()).model());
     }
 
     @Test
@@ -706,7 +682,7 @@ public class PropResolutionTest extends BaseEntQueryTCase1 {
 
     @Test
     public void test_05() {
-        transform(select(TgAuthor.class).where().exists(select(TgAuthorRoyalty.class).where().prop("authorship.author").eq().extProp("id").model()).model());
+        transform(select(AUTHOR).where().exists(select(TgAuthorRoyalty.class).where().prop("authorship.author").eq().extProp("id").model()).model());
     }
 
     @Test
@@ -715,19 +691,16 @@ public class PropResolutionTest extends BaseEntQueryTCase1 {
     }
 
     @Test
-    @Ignore
     public void test_07() {
         transform(select(select(TgAuthorship.class).where().prop("title").isNotNull().model()).where().prop("author.surname").eq().val("Date").or().prop("author.name.key").eq().val("Chris").model());
     }
 
     @Test
-    @Ignore
     public void test_08() {
         transform(select(select(TgAuthorRoyalty.class).where().prop("authorship.author.surname").isNotNull().model()).as("ar").where().prop("authorship.author.surname").eq().val("Date").or().prop("ar.authorship.author.name.key").eq().val("Chris").model());
     }
 
     @Test
-    @Ignore
     public void test09() {
         transform(select(select(TgAuthorRoyalty.class).where().prop("authorship.author.surname").isNotNull().yield().prop("authorship.author").modelAsEntity(TgAuthorship.class)).where().prop("author.surname").eq().val("Date").or().prop("author.name.key").eq().val("Chris").model());
     }
@@ -740,7 +713,7 @@ public class PropResolutionTest extends BaseEntQueryTCase1 {
 
     @Test
     public void test_11() {
-        transform(select(TgAuthorship.class).where().beginExpr().val(100).mult().model(select(TgAuthor.class).yield().countAll().modelAsPrimitive()).endExpr().ge().val(1000).model());
+        transform(select(TgAuthorship.class).where().beginExpr().val(100).mult().model(select(AUTHOR).yield().countAll().modelAsPrimitive()).endExpr().ge().val(1000).model());
     }
 
 
@@ -752,7 +725,7 @@ public class PropResolutionTest extends BaseEntQueryTCase1 {
 
     @Test
     public void test_14() {
-        transform(select(TgAuthor.class).where().prop("hasMultiplePublications").eq().val(true).model());
+        transform(select(AUTHOR).where().prop("hasMultiplePublications").eq().val(true).model());
     }
 
     @Test
@@ -766,12 +739,12 @@ public class PropResolutionTest extends BaseEntQueryTCase1 {
     @Ignore
     public void test_16() {
         // TODO EQL.3
-        transform(select(TgAuthor.class).leftJoin(TgPersonName.class).as("pn").on().prop("name").eq().prop("pn").where().prop("lastRoyalty").eq().val(1).model());
+        transform(select(AUTHOR).leftJoin(TgPersonName.class).as("pn").on().prop("name").eq().prop("pn").where().prop("lastRoyalty").eq().val(1).model());
     }
 
     @Test
     public void test_17() {
-        transform(select(TgAuthor.class).where().prop("name").isNotNull().groupBy().prop("name").yield().prop("name").modelAsEntity(TgPersonName.class));
+        transform(select(AUTHOR).where().prop("name").isNotNull().groupBy().prop("name").yield().prop("name").modelAsEntity(TgPersonName.class));
     }
 
     @Test
@@ -786,9 +759,8 @@ public class PropResolutionTest extends BaseEntQueryTCase1 {
     }
 
     @Test
-    @Ignore
     public void test_24() {
-        transform(select(select(TgVehicle.class).yield().prop("key").as("key").yield().prop("desc").as("desc").yield().prop("model.make").as("model-make").modelAsAggregate()).where().prop("model-make").isNotNull().model());
+        transform(select(select(VEHICLE).yield().prop("key").as("key").yield().prop("desc").as("desc").yield().prop("model.make").as("model-make").modelAsAggregate()).where().prop("model-make").isNotNull().model());
     }
 
     

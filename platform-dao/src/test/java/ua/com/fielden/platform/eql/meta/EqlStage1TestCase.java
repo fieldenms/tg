@@ -1,0 +1,77 @@
+package ua.com.fielden.platform.eql.meta;
+
+import static java.util.Arrays.asList;
+import static java.util.Collections.emptyList;
+import static ua.com.fielden.platform.entity.query.fluent.enums.LogicalOperator.AND;
+import static ua.com.fielden.platform.entity.query.fluent.enums.LogicalOperator.OR;
+
+import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.eql.stage1.elements.EntQueryBlocks1;
+import ua.com.fielden.platform.eql.stage1.elements.GroupBys1;
+import ua.com.fielden.platform.eql.stage1.elements.OrderBys1;
+import ua.com.fielden.platform.eql.stage1.elements.Yields1;
+import ua.com.fielden.platform.eql.stage1.elements.conditions.CompoundCondition1;
+import ua.com.fielden.platform.eql.stage1.elements.conditions.Conditions1;
+import ua.com.fielden.platform.eql.stage1.elements.conditions.ICondition1;
+import ua.com.fielden.platform.eql.stage1.elements.conditions.NullTest1;
+import ua.com.fielden.platform.eql.stage1.elements.operands.EntProp1;
+import ua.com.fielden.platform.eql.stage1.elements.operands.ISingleOperand1;
+import ua.com.fielden.platform.eql.stage1.elements.sources.IQrySource1;
+import ua.com.fielden.platform.eql.stage1.elements.sources.QrySource1BasedOnPersistentType;
+import ua.com.fielden.platform.eql.stage1.elements.sources.Sources1;
+import ua.com.fielden.platform.eql.stage2.elements.sources.IQrySource2;
+
+public class EqlStage1TestCase extends EqlTestCase {
+
+    static int contextId = 0;
+    
+    protected static int nextId() {
+        contextId = contextId + 1;
+        return contextId;
+    }
+    
+    protected static EntQueryBlocks1 qb1(final Sources1 sources, final Conditions1 conditions) {
+        return new EntQueryBlocks1(sources, conditions, new Yields1(emptyList()), new GroupBys1(emptyList()), new OrderBys1(emptyList()));
+    }
+
+    protected static Conditions1 conditions(final ICondition1<?> firstCondition, final CompoundCondition1... otherConditions) {
+        return new Conditions1(false, firstCondition, asList(otherConditions));
+    }
+    
+    protected static Sources1 sources(final IQrySource1<? extends IQrySource2<?>> main) {
+        return new Sources1(main, emptyList());
+    }
+
+    protected static CompoundCondition1 and(final ICondition1<?> condition) {
+        return new CompoundCondition1(AND, condition);
+    }
+
+    protected static CompoundCondition1 or(final ICondition1<?> condition) {
+        return new CompoundCondition1(OR, condition);
+    }
+
+    protected static NullTest1 isNull(final ISingleOperand1 operand) {
+        return new NullTest1(operand, false);
+    }
+
+    protected static NullTest1 isNotNull(final ISingleOperand1 operand) {
+        return new NullTest1(operand, true);
+    }
+
+    protected static EntProp1 prop(final String name) {
+        return new EntProp1(name, false, nextId());
+    }
+
+    protected static EntProp1 extProp(final String name) {
+        return new EntProp1(name, true, nextId());
+    }
+
+    protected static QrySource1BasedOnPersistentType source(final Class<? extends AbstractEntity<?>> sourceType, final String alias) {
+        return new QrySource1BasedOnPersistentType(sourceType, alias, nextId());
+    }
+
+    protected static QrySource1BasedOnPersistentType source(final Class<? extends AbstractEntity<?>> sourceType) {
+        return new QrySource1BasedOnPersistentType(sourceType, nextId());
+    }
+
+}

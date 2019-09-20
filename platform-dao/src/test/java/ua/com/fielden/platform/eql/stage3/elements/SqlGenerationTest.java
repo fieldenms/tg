@@ -1,33 +1,57 @@
 package ua.com.fielden.platform.eql.stage3.elements;
 
 
-import static java.util.Arrays.asList;
-import static ua.com.fielden.platform.entity.query.fluent.enums.ComparisonOperator.EQ;
-import static ua.com.fielden.platform.entity.query.fluent.enums.ComparisonOperator.NE;
+import static org.junit.Assert.assertEquals;
+import static ua.com.fielden.platform.entity.AbstractEntity.ID;
 
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 import org.junit.Test;
 
 import ua.com.fielden.platform.entity.query.DbVersion;
-import ua.com.fielden.platform.entity.query.fluent.enums.JoinType;
+import ua.com.fielden.platform.eql.meta.EqlStage3TestCase;
+import ua.com.fielden.platform.eql.stage1.elements.conditions.Conditions1;
+import ua.com.fielden.platform.eql.stage1.elements.sources.QrySource1BasedOnPersistentType;
+import ua.com.fielden.platform.eql.stage1.elements.sources.Sources1;
 import ua.com.fielden.platform.eql.stage3.elements.conditions.ComparisonTest3;
 import ua.com.fielden.platform.eql.stage3.elements.conditions.Conditions3;
-import ua.com.fielden.platform.eql.stage3.elements.conditions.ICondition3;
 import ua.com.fielden.platform.eql.stage3.elements.operands.EntProp3;
 import ua.com.fielden.platform.eql.stage3.elements.operands.EntQuery3;
-import ua.com.fielden.platform.eql.stage3.elements.sources.IQrySource3;
 import ua.com.fielden.platform.eql.stage3.elements.sources.IQrySources3;
-import ua.com.fielden.platform.eql.stage3.elements.sources.JoinedQrySource3;
 import ua.com.fielden.platform.eql.stage3.elements.sources.QrySource3BasedOnTable;
-import ua.com.fielden.platform.eql.stage3.elements.sources.SingleQrySource3;
 
-public class SqlGenerationTest {
+public class SqlGenerationTest extends EqlStage3TestCase {
 
+    @Test
+    public void dot_notated_props_are_correctly_transformed() {
+        final QrySource1BasedOnPersistentType veh1 = source(VEHICLE);
+        final Sources1 sources1 = sources(veh1);
+        final Conditions1 conditions1 = conditions(isNotNull(prop("initDate")), //
+                or(isNotNull(prop("station.name"))), //
+                or(isNotNull(prop("station.parent.name"))), //
+                or(isNotNull(prop("replacedBy.initDate"))) //
+        );
 
+        final EntQuery3 actQry = query(sources1, conditions1, VEHICLE);
+        
+        final QrySource3BasedOnTable veh = source(VEHICLE, veh1);
+        final QrySource3BasedOnTable repVeh = source3(VEHICLE, veh1, "replacedBy");
+        final QrySource3BasedOnTable org5 = source3(ORG5, veh1, "station");
+        final QrySource3BasedOnTable org4 = source3(ORG4, veh1, "station_parent");
+        
+        final IQrySources3 sources = lj(
+                lj(
+                        veh, repVeh, cond(eq(prop("replacedBy", veh), prop(ID, repVeh)))), 
+                ij(
+                        org5, org4, cond(eq(prop("parent", org5), prop(ID, org4)))), 
+                cond(eq(prop("station", veh), prop(ID, org5))));
+        final Conditions3 conditions = or(isNotNull(prop("initDate", veh)), isNotNull(prop("name", org5)), isNotNull(prop("name", org4)), isNotNull(prop("initDate", repVeh)));
+        final EntQuery3 expQry = qry(sources, conditions);
+        
+        assertEquals(expQry, actQry);
+    }
+    
     @Test
     public void query_with_one_join_generates_sql() {
          final Map<String, Column> eqdetColumns = new HashMap<>();
@@ -51,7 +75,7 @@ public class SqlGenerationTest {
          final ComparisonTest3 cond1 = eq(pc1, pc2);
          final ComparisonTest3 cond2 = ne(pc1, pc2);
          
-         final IQrySources3 sources = sources(veh, JoinType.LJ, replacingVeh, orConditions(andConditions(cond1), andConditions(cond2)));
+         final IQrySources3 sources = lj(veh, replacingVeh, or(cond1, cond2));
 
          final EntQuery3 qry = qry(sources, yields(y1, y2));
          
@@ -89,75 +113,10 @@ public class SqlGenerationTest {
          final ComparisonTest3 cond3 = eq(pc3, pc4);
          final ComparisonTest3 cond4 = ne(pc3, pc4);
          
-         final IQrySources3 sources = sources(veh, JoinType.LJ, replacingVeh, orConditions(andConditions(cond1), andConditions(cond2)), JoinType.LJ, replacedByVeh, orConditions(andConditions(cond3), andConditions(cond4)));
+         final IQrySources3 sources = lj(lj(veh, replacingVeh, or(cond1, cond2)), replacedByVeh, or(cond3, cond4));
 
          final EntQuery3 qry = qry(sources, yields(y1, y2, y3));
          
          System.out.println(qry.sql(DbVersion.H2));
-    }
-    
-    static ComparisonTest3 eq(final EntProp3 op1, final EntProp3 op2) {
-        return new ComparisonTest3(op1, EQ, op2);
-    }
-    
-    static ComparisonTest3 ne(final EntProp3 op1, final EntProp3 op2) {
-        return new ComparisonTest3(op1, NE, op2);
-    }
-        
-    static Conditions3 cond(final ICondition3 condition) {
-        final List<List<? extends ICondition3>> disjunctiveConds = new ArrayList<>();
-        final List<ICondition3> firstConjunctiveGroup = new ArrayList<>();
-        firstConjunctiveGroup.add(condition);
-        disjunctiveConds.add(firstConjunctiveGroup);
-        return new Conditions3(false, disjunctiveConds);
-    }
-
-    static IQrySources3 sources(final IQrySource3 main, final JoinType jt1, final IQrySource3 src1, final Conditions3 conditions1, final JoinType jt2, final IQrySource3 src2, final Conditions3 conditions2) {
-        final JoinedQrySource3 a = new JoinedQrySource3(sources(main), sources(src1), jt1, conditions1);
-        return new JoinedQrySource3(a, sources(src2), jt2, conditions2);
-    }
-    
-    static IQrySources3 sources(final IQrySource3 main, final JoinType jt, final IQrySource3 second, final Conditions3 conditions) {
-        return new JoinedQrySource3(sources(main), sources(second), jt, conditions);
-    }
-    
-    static IQrySources3 sources(final IQrySource3 main, final JoinType jt, final IQrySource3 second, final ICondition3 condition) {
-        return new JoinedQrySource3(sources(main), sources(second), jt, cond(condition));
-    }
-
-    static IQrySources3 sources(final IQrySource3 main) {
-        return new SingleQrySource3(main);
-    }
-    
-    static EntQuery3 qry(final IQrySources3 sources) {
-        return new EntQuery3(new EntQueryBlocks3(sources, new Conditions3(), yields(), groups(), orders()));
-    }
-
-    static EntQuery3 qry(final IQrySources3 sources, final Yields3 yields) {
-        return new EntQuery3(new EntQueryBlocks3(sources, new Conditions3(), yields, groups(), orders()));
-    }
-
-    static Yields3 yields(final Yield3 ... yields) {
-        return new Yields3(asList(yields));
-    }
-
-    static GroupBys3 groups(final GroupBy3 ... groups) {
-        return new GroupBys3(asList(groups));
-    }
-
-    static OrderBys3 orders(final OrderBy3 ... orders) {
-        return new OrderBys3(asList(orders));
-    }
-
-    static List<? extends ICondition3> andConditions(final ICondition3 ... conditions) {
-        return asList(conditions);
-    }
-
-    static Conditions3 orConditions(final List<? extends ICondition3> ... conditions) {
-        final List<List<? extends ICondition3>> list = new ArrayList<>();
-        for (final List<? extends ICondition3> condList : conditions) {
-            list.add(condList);
-        }
-        return new Conditions3(false, list);
     }
  }
