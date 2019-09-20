@@ -47,6 +47,11 @@ public class EntQuery3 implements ISingleOperand3 {
     }
 
     @Override
+    public String toString() {
+        return sql(DbVersion.H2);
+    }
+    
+    @Override
     public int hashCode() {
         final int prime = 31;
         int result = 1;

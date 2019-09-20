@@ -43,30 +43,4 @@ public class GroupedConditionsBuilder extends AbstractTokensBuilder {
         }
         return new Pair<TokenCategory, Object>(GROUPED_CONDITIONS, new Conditions1(negated, firstCondition, otherConditions));
     }
-
-    @Override
-    public int hashCode() {
-        final int prime = 31;
-        int result = 1;
-        result = prime * result + (negated ? 1231 : 1237);
-        return result;
-    }
-
-    @Override
-    public boolean equals(final Object obj) {
-        if (this == obj) {
-            return true;
-        }
-        if (obj == null) {
-            return false;
-        }
-        if (!(obj instanceof GroupedConditionsBuilder)) {
-            return false;
-        }
-        final GroupedConditionsBuilder other = (GroupedConditionsBuilder) obj;
-        if (negated != other.negated) {
-            return false;
-        }
-        return true;
-    }
 }
