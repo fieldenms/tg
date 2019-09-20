@@ -7,6 +7,9 @@ import '/resources/polymer/@polymer/iron-flex-layout/iron-flex-layout-classes.js
 
 const template = html`
     <style>
+        :host([hidden]) {
+            display: none !important;
+        }
         :host {
             position: relative;
             display: block;
