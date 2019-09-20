@@ -56,6 +56,10 @@ const template = html`
         </div>
     </iron-dropdown>`;
 
+/**
+ * Represents the element of linked list it has links to next and previous elements. 
+ * The element has indicators for group index and whether element is standrat action or not. 
+ */
 class ToolbarElement {
 
     constructor(element, standartAction, groupIndex) {
@@ -71,7 +75,7 @@ class ToolbarElement {
         return this._width;
     }
 
-    addAfter(element, standartAction, groupIndex) {
+    addNext(element, standartAction, groupIndex) {
         this.after = new ToolbarElement(element, standartAction, groupIndex);
         this.after.previous = this;
         return this.after;
@@ -92,28 +96,37 @@ export class TgResponsiveToolbar extends mixinBehaviors([IronResizableBehavior],
 
     static get properties () {
         return {
-            toolbarElement: Object,
+            //Points to last visible action on toolbar.
+            _lastVisibleToolbarElement: Object,
+            //The host element that contains action which were slotted into this responsive toolbar. 
             _slottedElementParent: Object,
         };
     }
 
     ready () {
         super.ready();
-
-        this.toolbarElement = new ToolbarElement(null, false);
+        //Need to create list of all buttons that can be hidden start  from the specific action, those are in the left side of toolbar
+        //Keep in mind that actions might be grouped.
+        //First element of the list should be empty it indicates the end of list
+        this._lastVisibleToolbarElement = new ToolbarElement(null, false);
         let groupIndex = 0;
         this.$.top_action_selctor.assignedNodes({ flatten: true }).forEach(node => {
             const specificActionSelector = ".entity-specific-action:not(.group):not(.first-group)";
             if (node.matches(specificActionSelector)) {
+                //that is not a group just an action.
                 this._addToolbarAction(node, false);
             } else {
+                //That is a group, in this case get all children in the group and add them as a separate actions.
                 node.setAttribute("group-index", groupIndex);
                 this._addToolbarActions([...node.querySelectorAll(specificActionSelector)], groupIndex);
                 groupIndex += 1;
             }
         });
+        //Now add actions those are in the right side of the egi that is standrat action (i.e. config, navigation and refresh actions)
+        //This actions shouldn't be group so add them as separate items.
         this.$.standard_action_selector.assignedNodes({ flatten: true }).forEach(node => {
             const standartActionSelector = "[slot=standart-action]";
+            //Define the host element (i.e. element from which actions were slotted into this responsive toolbar)
             if (!this._slottedElementParent) {
                 this._slottedElementParent = node.parentElement;
             }
@@ -121,7 +134,8 @@ export class TgResponsiveToolbar extends mixinBehaviors([IronResizableBehavior],
                 this._addToolbarStandratAction(node)
             }
         });
-        this.toolbarElement.addAfter(null, false);
+        //Add last one empty toolbar element as an end list indicator.
+        this._lastVisibleToolbarElement.addNext(null, false);
 
         //Initialising resize event listeners.
         this.addEventListener("iron-resize", this._resizeEventListener.bind(this));
@@ -131,14 +145,26 @@ export class TgResponsiveToolbar extends mixinBehaviors([IronResizableBehavior],
         this.$.dropdown.open();
     }
 
+    /**
+     * Adds new action to the list of actions that can be hidden. 
+     *
+     */
     _addToolbarAction (node, standartAction, groupIndex) {
-        this.toolbarElement = this.toolbarElement.addAfter(node, standartAction, groupIndex);
+        this._lastVisibleToolbarElement = this._lastVisibleToolbarElement.addNext(node, standartAction, groupIndex);
     }
 
+    /**
+     * Adds new action to the list of actions that can be hidden that should be within group woth specified index.
+     * 
+     */
     _addToolbarActions (nodes, groupIndex) {
         nodes.forEach(node => this._addToolbarAction(node, false, groupIndex));
     }
 
+    /**
+     * Adds the standrat action to the list of actions those can be hidden.
+     *  
+     */
     _addToolbarStandratAction (standratAction) {
         this._addToolbarAction(standratAction, true);
     }
@@ -158,17 +184,24 @@ export class TgResponsiveToolbar extends mixinBehaviors([IronResizableBehavior],
 
     _hideButtons (widthOfButtonsToHide) {
         let expandButtonWidth = 0;
+        //If button that shows dropdown list is invisible (invisible elements (i.e. display style is none) don't have offsetParent set.)
+        //Then make this button visible.
         if (this.$.expandToolbarButton.offsetParent === null) {
             this.$.expandToolbarButton.classList.toggle("invisible", false);
             expandButtonWidth = this.$.expandToolbarButton.offsetWidth;
         }
+        //Subtract expand button width in order to hide more buttons, because expand button has become visible
         let totalWidth = 0 - expandButtonWidth;
         const elementsToHide = [];
-        while (totalWidth < widthOfButtonsToHide && this.toolbarElement.element) {
-            elementsToHide.push(this.toolbarElement);
-            totalWidth += this.toolbarElement.width;
-            this.toolbarElement = this.toolbarElement.previous;
+        while (totalWidth < widthOfButtonsToHide && this._lastVisibleToolbarElement.element) {
+            elementsToHide.push(this._lastVisibleToolbarElement);
+            totalWidth += this._lastVisibleToolbarElement.width;
+            this._lastVisibleToolbarElement = this._lastVisibleToolbarElement.previous;
         }
+        //Iterate over the the elements  to hide and hide them (i.e. move to the dropdown list) This elements should be moved as:
+        //Standrat action
+        //specific action (the one that was added in the centre configurtion)
+        //As action in group. The group are also defined by end application developer.
         elementsToHide.forEach(element => {
             if (element.standartAction) {
                 this.$.standartActionContainer.prepend(element.element);                
@@ -193,21 +226,30 @@ export class TgResponsiveToolbar extends mixinBehaviors([IronResizableBehavior],
     }
 
     _showButtons (widthOfButtonsToshow) {
-        if (this.toolbarElement.after.element !== null && this.$.expandToolbarButton.offsetParent !== null) {
+        //Show buttons if there is buttons to show and expand dropdown list button is visible,
+        if (this._lastVisibleToolbarElement.after.element !== null && this.$.expandToolbarButton.offsetParent !== null) {
             let totalWidth =  widthOfButtonsToshow;
             const elementsToShow = [];
-            while (this.toolbarElement.after.element !== null && totalWidth -  this.toolbarElement.after.width > 0) {
-                this.toolbarElement = this.toolbarElement.after;
-                elementsToShow.push(this.toolbarElement);
-                totalWidth -= this.toolbarElement.width;
+            //Create the list of elements to show.
+            while (this._lastVisibleToolbarElement.after.element !== null && totalWidth -  this._lastVisibleToolbarElement.after.width > 0) {
+                this._lastVisibleToolbarElement = this._lastVisibleToolbarElement.after;
+                elementsToShow.push(this._lastVisibleToolbarElement);
+                totalWidth -= this._lastVisibleToolbarElement.width;
             }
-            if (this.toolbarElement.after.element === null) {
+            //If there are no more elements to show then hide expand dropdown list button. 
+            if (this._lastVisibleToolbarElement.after.element === null) {
                 this.$.expandToolbarButton.classList.toggle("invisible", true);
-            } else if (this.toolbarElement.after.after.element === null) {
-                elementsToShow.push(this.toolbarElement.after);
-                this.toolbarElement = this.toolbarElement.after;
+            } //If there is left only one hidden button then make it visible and hide expand dropdown list button.  
+            else if (this._lastVisibleToolbarElement.after.after.element === null) {
+                elementsToShow.push(this._lastVisibleToolbarElement.after);
+                this._lastVisibleToolbarElement = this._lastVisibleToolbarElement.after;
                 this.$.expandToolbarButton.classList.toggle("invisible", true);
             }
+            //Iterate over the elemnts to show and add them to the host element (the element from which actions were slotted into this responsive toolbar)
+            //The element should be added as:
+            //1. Single specific element
+            //2. Specific element (the one that is defined by end application user in the centre configuration) in the group.
+            //3. Standrat action (navigation and confg actions)
             elementsToShow.forEach(element => {
                 if (element.standartAction || typeof element.groupIndex !== 'undefined') {
                     this._slottedElementParent.append(element.element);                
