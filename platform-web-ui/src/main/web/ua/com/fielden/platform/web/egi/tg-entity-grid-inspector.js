@@ -48,6 +48,12 @@ const template = html`
         .grid-container[fit-to-height] {
             @apply --layout-flex;
         }
+        tg-responsive-toolbar {
+            flex-grow: 0;
+            flex-shrink: 0;
+            z-index: 1;
+            position: relative;
+        }
         tg-responsive-toolbar[show-top-shadow]:after {
             content: "";
             position: absolute;

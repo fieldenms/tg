@@ -12,8 +12,6 @@ const template = html`
             @apply --layout-vertical;
         }
         .grid-toolbar {
-            flex-grow: 0;
-            flex-shrink: 0;
             @apply --layout-horizontal;
         }
         .grid-toolbar-content {
