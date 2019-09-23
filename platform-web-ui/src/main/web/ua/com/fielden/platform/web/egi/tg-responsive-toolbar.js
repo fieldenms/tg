@@ -19,6 +19,9 @@ const template = html`
             @apply --layout-horizontal;
             @apply --layout-center;
         }
+        .pagintaion-text:first-child {
+            padding-left:8px;
+        }
         .grid-toolbar-content ::slotted(*) {
             margin-top: 8px;
         }
@@ -35,6 +38,21 @@ const template = html`
         #expandToolbarButton.invisible {
             display: none;
         }
+        #specificActionContainer * {
+            flex-shrink: 0;
+        }
+        #specificActionContainer {
+            flex-shrink:0;
+            @apply --layout-horizontal;
+            @apply --layout-center;
+        }
+        #standartActionContainer * {
+            flex-shrink: 0;
+        }
+        #standartActionContainer {
+            @apply --layout-horizontal;
+            @apply --layout-center;
+        }
         paper-icon-button.revers {
             transform: scale(-1, 1);
         }
@@ -46,7 +64,7 @@ const template = html`
         </div>
         <div id="rightToolbarContainer" class="grid-toolbar-content" style="margin-left:auto">
             <slot id="standard_action_selector" name="standart-action"></slot>
-            <paper-icon-button id="expandToolbarButton" icon="more-vert" on-tap="_showMoreActions" class="invisible"></paper-icon-button>
+            <paper-icon-button id="expandToolbarButton" tooltip-text="Show other actions." icon="more-vert" on-tap="_showMoreActions" class="invisible"></paper-icon-button>
         </div>
     </div>
     <iron-dropdown id="dropdown" horizontal-align="right" vertical-offset="8">
