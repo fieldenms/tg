@@ -3,7 +3,6 @@ package ua.com.fielden.platform.eql.meta;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static org.junit.Assert.assertEquals;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.emptyCondition;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 import static ua.com.fielden.platform.entity.query.fluent.enums.ComparisonOperator.EQ;
 import static ua.com.fielden.platform.entity.query.fluent.enums.JoinType.LJ;
@@ -97,48 +96,6 @@ public class PropResolutionTest extends BaseEntQueryTCase1 {
     
     public static EntQueryBlocks1 qb1(final Sources1 sources, final Conditions1 conditions) {
         return new EntQueryBlocks1(sources, conditions, new Yields1(emptyList()), new GroupBys1(emptyList()), new OrderBys1(emptyList()));
-    }
-    
-    @Test
-    public void dot_notation_works_01() {
-        final EntityResultQueryModel<TgVehicle> qry = select(VEHICLE).where().anyOfProps("initDate", "station.name", "station.parent.name", "replacedBy.initDate").isNotNull().model();
-        final ua.com.fielden.platform.eql.stage2.elements.TransformationResult<EntQuery3> qry3 = entResultQry3(qry, new PropsResolutionContext(metadata), tables);
-        System.out.println(qry3.item.sql(DbVersion.H2));
-    }
-
-    @Test
-    public void dot_notation_works_02() {
-        final EntityResultQueryModel<TgVehicle> qry = select(VEHICLE).where().anyOfProps("key", "replacedBy.key").isNotNull().model();
-        final ua.com.fielden.platform.eql.stage2.elements.TransformationResult<EntQuery3> qry3 = entResultQry3(qry, new PropsResolutionContext(metadata), tables);
-        System.out.println(qry3.item.sql(DbVersion.H2));
-    }
-
-    @Test
-    public void dot_notation_works_03() {
-        final EntityResultQueryModel<TgVehicle> qry = select(VEHICLE).as("veh").join(ORG5).as("ou5").on().condition(emptyCondition()).
-                where().anyOfProps("veh.key", "veh.replacedBy.key").isNotNull().model();
-        final ua.com.fielden.platform.eql.stage2.elements.TransformationResult<EntQuery3> qry3 = entResultQry3(qry, new PropsResolutionContext(metadata), tables);
-        System.out.println(qry3.item.sql(DbVersion.H2));
-    }
-    
-    @Test
-    public void dot_notation_works_04() {
-        final EntityResultQueryModel<TgVehicle> qry = select(VEHICLE).as("veh").
-                join(ORG5).as("st").on().prop("station").eq().prop("st.id").
-                where().anyOfProps("veh.key", "replacedBy.key", "initDate", "station.name", "station.parent.name", "st.parent.name").isNotNull().model();
-        final ua.com.fielden.platform.eql.stage2.elements.TransformationResult<EntQuery3> qry3 = entResultQry3(qry, new PropsResolutionContext(metadata), tables);
-        System.out.println(qry3.item.sql(DbVersion.H2));
-
-    }
-    
-    @Test
-    public void dot_notation_works_05() {
-        final EntityResultQueryModel<TgVehicle> qry = select(VEHICLE).as("veh").
-                join(ORG1).as("st").on().prop("station.parent.parent.parent.parent").eq().prop("st.id").
-                where().anyOfProps("veh.key", "replacedBy.key", "initDate", "station.name", "station.parent.name", "st.key").isNotNull().model();
-        final ua.com.fielden.platform.eql.stage2.elements.TransformationResult<EntQuery3> qry3 = entResultQry3(qry, new PropsResolutionContext(metadata), tables);
-        System.out.println(qry3.item.sql(DbVersion.H2));
-
     }
     
     @Test

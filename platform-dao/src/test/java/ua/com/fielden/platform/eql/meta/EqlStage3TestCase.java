@@ -48,7 +48,7 @@ public class EqlStage3TestCase extends EqlStage1TestCase {
         return new QrySource3BasedOnTable(tables.get(sourceType.getName()), sourceForContextId.contextId);
     }
 
-    protected static QrySource3BasedOnTable source3(final Class<? extends AbstractEntity<?>> sourceType, final QrySource1BasedOnPersistentType sourceForContextId, final String subcontextId) {
+    protected static QrySource3BasedOnTable source(final Class<? extends AbstractEntity<?>> sourceType, final QrySource1BasedOnPersistentType sourceForContextId, final String subcontextId) {
         return new QrySource3BasedOnTable(tables.get(sourceType.getName()), sourceForContextId.contextId, subcontextId);
     }
     
@@ -78,11 +78,7 @@ public class EqlStage3TestCase extends EqlStage1TestCase {
     }
 
     protected static Conditions3 cond(final ICondition3 condition) {
-        final List<List<? extends ICondition3>> disjunctiveConds = new ArrayList<>();
-        final List<ICondition3> firstConjunctiveGroup = new ArrayList<>();
-        firstConjunctiveGroup.add(condition);
-        disjunctiveConds.add(firstConjunctiveGroup);
-        return new Conditions3(false, disjunctiveConds);
+        return new Conditions3(false, asList(asList(condition)));
     }
 
     protected static IQrySources3 sources(final IQrySources3 main, final JoinType jt, final IQrySources3 second, final Conditions3 conditions) {
@@ -222,11 +218,7 @@ public class EqlStage3TestCase extends EqlStage1TestCase {
     }
 
     protected static Conditions3 or(final List<? extends ICondition3> ... conditions) {
-        final List<List<? extends ICondition3>> list = new ArrayList<>();
-        for (final List<? extends ICondition3> condList : conditions) {
-            list.add(condList);
-        }
-        return new Conditions3(false, list);
+        return new Conditions3(false, asList(conditions));
     }
     
     protected static ua.com.fielden.platform.eql.stage2.elements.TransformationResult<EntQuery3> entResultQry3(final EntQuery1 qryModel, final PropsResolutionContext transformator, final Map<String, Table> tables) {
@@ -234,5 +226,4 @@ public class EqlStage3TestCase extends EqlStage1TestCase {
         final TransformationContext context = new TransformationContext(tables, s1r.updatedContext);
         return s1r.item.transform(context);
     }
-
 }

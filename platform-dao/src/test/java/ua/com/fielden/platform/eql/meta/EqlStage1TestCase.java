@@ -2,6 +2,10 @@ package ua.com.fielden.platform.eql.meta;
 
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
+import static ua.com.fielden.platform.entity.query.fluent.enums.ComparisonOperator.EQ;
+import static ua.com.fielden.platform.entity.query.fluent.enums.ComparisonOperator.NE;
+import static ua.com.fielden.platform.entity.query.fluent.enums.JoinType.IJ;
+import static ua.com.fielden.platform.entity.query.fluent.enums.JoinType.LJ;
 import static ua.com.fielden.platform.entity.query.fluent.enums.LogicalOperator.AND;
 import static ua.com.fielden.platform.entity.query.fluent.enums.LogicalOperator.OR;
 
@@ -10,12 +14,14 @@ import ua.com.fielden.platform.eql.stage1.elements.EntQueryBlocks1;
 import ua.com.fielden.platform.eql.stage1.elements.GroupBys1;
 import ua.com.fielden.platform.eql.stage1.elements.OrderBys1;
 import ua.com.fielden.platform.eql.stage1.elements.Yields1;
+import ua.com.fielden.platform.eql.stage1.elements.conditions.ComparisonTest1;
 import ua.com.fielden.platform.eql.stage1.elements.conditions.CompoundCondition1;
 import ua.com.fielden.platform.eql.stage1.elements.conditions.Conditions1;
 import ua.com.fielden.platform.eql.stage1.elements.conditions.ICondition1;
 import ua.com.fielden.platform.eql.stage1.elements.conditions.NullTest1;
 import ua.com.fielden.platform.eql.stage1.elements.operands.EntProp1;
 import ua.com.fielden.platform.eql.stage1.elements.operands.ISingleOperand1;
+import ua.com.fielden.platform.eql.stage1.elements.sources.CompoundSource1;
 import ua.com.fielden.platform.eql.stage1.elements.sources.IQrySource1;
 import ua.com.fielden.platform.eql.stage1.elements.sources.QrySource1BasedOnPersistentType;
 import ua.com.fielden.platform.eql.stage1.elements.sources.Sources1;
@@ -37,11 +43,35 @@ public class EqlStage1TestCase extends EqlTestCase {
     protected static Conditions1 conditions(final ICondition1<?> firstCondition, final CompoundCondition1... otherConditions) {
         return new Conditions1(false, firstCondition, asList(otherConditions));
     }
+
+    protected static Conditions1 conditions(final ICondition1<?> firstCondition) {
+        return new Conditions1(false, firstCondition, emptyList());
+    }
     
     protected static Sources1 sources(final IQrySource1<? extends IQrySource2<?>> main) {
         return new Sources1(main, emptyList());
     }
 
+    protected static Sources1 sources(final IQrySource1<? extends IQrySource2<?>> main, final CompoundSource1... otherSources) {
+        return new Sources1(main, asList(otherSources));
+    }
+
+    protected static CompoundSource1 lj(final IQrySource1<? extends IQrySource2<?>> source, final Conditions1 conditions) {
+        return new CompoundSource1(source, LJ, conditions);
+    }
+
+    protected static CompoundSource1 ij(final IQrySource1<? extends IQrySource2<?>> source, final Conditions1 conditions) {
+        return new CompoundSource1(source, IJ, conditions);
+    }
+
+    protected static CompoundSource1 lj(final IQrySource1<? extends IQrySource2<?>> source, final ICondition1<?> firstCondition) {
+        return new CompoundSource1(source, LJ, conditions(firstCondition));
+    }
+
+    protected static CompoundSource1 ij(final IQrySource1<? extends IQrySource2<?>> source, final ICondition1<?> firstCondition) {
+        return new CompoundSource1(source, IJ, conditions(firstCondition));
+    }
+    
     protected static CompoundCondition1 and(final ICondition1<?> condition) {
         return new CompoundCondition1(AND, condition);
     }
@@ -58,6 +88,15 @@ public class EqlStage1TestCase extends EqlTestCase {
         return new NullTest1(operand, true);
     }
 
+    protected static ComparisonTest1 eq(final EntProp1 op1, final EntProp1 op2) {
+        return new ComparisonTest1(op1, EQ, op2);
+    }
+    
+    protected static ComparisonTest1 ne(final EntProp1 op1, final EntProp1 op2) {
+        return new ComparisonTest1(op1, NE, op2);
+    }
+
+    
     protected static EntProp1 prop(final String name) {
         return new EntProp1(name, false, nextId());
     }

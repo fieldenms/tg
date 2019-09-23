@@ -3,6 +3,7 @@ package ua.com.fielden.platform.eql.stage3.elements;
 
 import static org.junit.Assert.assertEquals;
 import static ua.com.fielden.platform.entity.AbstractEntity.ID;
+import static ua.com.fielden.platform.entity.query.DbVersion.H2;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -23,8 +24,36 @@ import ua.com.fielden.platform.eql.stage3.elements.sources.QrySource3BasedOnTabl
 
 public class SqlGenerationTest extends EqlStage3TestCase {
 
+    
     @Test
-    public void dot_notated_props_are_correctly_transformed() {
+    public void dot_notated_props_are_correctly_transformed_01() {
+        // select(VEHICLE).
+        // where().anyOfProps("key", "replacedBy.key").isNotNull().model();
+        
+        final QrySource1BasedOnPersistentType veh1 = source(VEHICLE);
+        final Sources1 sources1 = sources(veh1);
+        final Conditions1 conditions1 = conditions(isNotNull(prop("key")), //
+                or(isNotNull(prop("replacedBy.key"))) //
+        );
+
+        final EntQuery3 actQry = query(sources1, conditions1, VEHICLE);
+        
+        final QrySource3BasedOnTable veh = source(VEHICLE, veh1);
+        final QrySource3BasedOnTable repVeh = source(VEHICLE, veh1, "replacedBy");
+        
+        final IQrySources3 sources = lj(veh, repVeh, cond(eq(prop("replacedBy", veh), prop(ID, repVeh))));
+        final Conditions3 conditions = or(isNotNull(prop("key", veh)), isNotNull(prop("key", repVeh)));
+        final EntQuery3 expQry = qry(sources, conditions);
+        
+        assertEquals(expQry, actQry);
+        System.out.println(expQry.sql(H2));
+    }
+
+    @Test
+    public void dot_notated_props_are_correctly_transformed_02() {
+        // select(VEHICLE).
+        // where().anyOfProps("initDate", "station.name", "station.parent.name", "replacedBy.initDate").isNotNull().model();
+        
         final QrySource1BasedOnPersistentType veh1 = source(VEHICLE);
         final Sources1 sources1 = sources(veh1);
         final Conditions1 conditions1 = conditions(isNotNull(prop("initDate")), //
@@ -36,9 +65,9 @@ public class SqlGenerationTest extends EqlStage3TestCase {
         final EntQuery3 actQry = query(sources1, conditions1, VEHICLE);
         
         final QrySource3BasedOnTable veh = source(VEHICLE, veh1);
-        final QrySource3BasedOnTable repVeh = source3(VEHICLE, veh1, "replacedBy");
-        final QrySource3BasedOnTable org5 = source3(ORG5, veh1, "station");
-        final QrySource3BasedOnTable org4 = source3(ORG4, veh1, "station_parent");
+        final QrySource3BasedOnTable repVeh = source(VEHICLE, veh1, "replacedBy");
+        final QrySource3BasedOnTable org5 = source(ORG5, veh1, "station");
+        final QrySource3BasedOnTable org4 = source(ORG4, veh1, "station_parent");
         
         final IQrySources3 sources = lj(
                 lj(
@@ -50,6 +79,142 @@ public class SqlGenerationTest extends EqlStage3TestCase {
         final EntQuery3 expQry = qry(sources, conditions);
         
         assertEquals(expQry, actQry);
+        System.out.println(expQry.sql(H2));
+    }
+    
+    @Test
+    public void dot_notated_props_are_correctly_transformed_03() {
+        // select(VEHICLE).as("veh").join(ORG5).as("ou5e").on().prop("veh.station").eq().prop("ou5e.id").
+        // where().anyOfProps("veh.key", "veh.replacedBy.key").isNotNull().model();
+        
+        final QrySource1BasedOnPersistentType veh1 = source(VEHICLE, "veh");
+        final QrySource1BasedOnPersistentType ou5e1 = source(ORG5, "ou5e");
+        final Sources1 sources1 = sources(veh1, ij(ou5e1, conditions(eq(prop("veh.station"), prop("ou5e.id")))));
+        
+        final Conditions1 conditions1 = conditions(isNotNull(prop("veh.key")), //
+                or(isNotNull(prop("veh.replacedBy.key"))) //
+        );
+
+        final EntQuery3 actQry = query(sources1, conditions1, VEHICLE);
+
+        final QrySource3BasedOnTable veh = source(VEHICLE, veh1);
+        final QrySource3BasedOnTable repVeh = source(VEHICLE, veh1, "replacedBy");
+        final QrySource3BasedOnTable ou5e = source(ORG5, ou5e1);
+
+        final IQrySources3 sources = ij(
+                lj(
+                        veh, repVeh, cond(eq(prop("replacedBy", veh), prop(ID, repVeh)))),
+                ou5e,
+                cond(eq(prop("station", veh), prop(ID, ou5e))));
+        final Conditions3 conditions = or(isNotNull(prop("key", veh)), isNotNull(prop("key", repVeh)));
+        final EntQuery3 expQry = qry(sources, conditions);
+
+        assertEquals(expQry, actQry);
+        System.out.println(expQry.sql(H2));
+    }
+    
+    @Test
+    public void dot_notated_props_are_correctly_transformed_04() {
+        // select(VEHICLE).as("veh").
+        // join(ORG5).as("ou5e").on().prop("station").eq().prop("ou5e.id").
+        // where().anyOfProps("veh.key", "replacedBy.key", "initDate", "station.name", "station.parent.name", "ou5e.parent.name").isNotNull().model();
+        
+        final QrySource1BasedOnPersistentType veh1 = source(VEHICLE, "veh");
+        final QrySource1BasedOnPersistentType ou5e1 = source(ORG5, "ou5e");
+        final Sources1 sources1 = sources(veh1, ij(ou5e1, conditions(eq(prop("station"), prop("ou5e.id")))));
+        
+        final Conditions1 conditions1 = conditions(isNotNull(prop("veh.key")), //
+                or(isNotNull(prop("replacedBy.key"))), //
+                or(isNotNull(prop("initDate"))), //
+                or(isNotNull(prop("station.name"))), //
+                or(isNotNull(prop("station.parent.name"))), //
+                or(isNotNull(prop("ou5e.parent.name"))) //
+        );
+
+        final EntQuery3 actQry = query(sources1, conditions1, VEHICLE);
+
+        final QrySource3BasedOnTable veh = source(VEHICLE, veh1);
+        final QrySource3BasedOnTable repVeh = source(VEHICLE, veh1, "replacedBy");
+        final QrySource3BasedOnTable ou5e = source(ORG5, ou5e1);
+        final QrySource3BasedOnTable ou5eou4 = source(ORG4, ou5e1, "parent");
+        final QrySource3BasedOnTable ou5 = source(ORG5, veh1, "station");
+        final QrySource3BasedOnTable ou4 = source(ORG4, veh1, "station_parent");
+
+        final IQrySources3 sources = ij(
+                lj(
+                        lj(
+                                veh, repVeh, cond(eq(prop("replacedBy", veh), prop(ID, repVeh)))), 
+                        ij(
+                                ou5, ou4, cond(eq(prop("parent", ou5), prop(ID, ou4)))), 
+                        cond(eq(prop("station", veh), prop(ID, ou5)))),
+                ij(
+                        ou5e, ou5eou4, cond(eq(prop("parent", ou5e), prop(ID, ou5eou4)))),
+                cond(eq(prop("station", veh), prop(ID, ou5e))));
+        final Conditions3 conditions = or(
+                isNotNull(prop("key", veh)),
+                isNotNull(prop("key", repVeh)), 
+                isNotNull(prop("initDate", veh)), 
+                isNotNull(prop("name", ou5)), 
+                isNotNull(prop("name", ou4)),
+                isNotNull(prop("name", ou5eou4)));
+        final EntQuery3 expQry = qry(sources, conditions);
+
+        assertEquals(expQry, actQry);
+        System.out.println(expQry.sql(H2));
+    }
+
+    @Test
+    public void dot_notated_props_are_correctly_transformed_05() {
+    
+        // select(VEHICLE).
+        // join(ORG2).as("ou2e").on().prop("station.parent.parent.parent").eq().prop("ou2e.id").
+        // where().anyOfProps("initDate", "replacedBy.initDate", "station.name", "station.parent.name", "ou2e.parent.key").isNotNull().model();
+        
+        final QrySource1BasedOnPersistentType veh1 = source(VEHICLE);
+        final QrySource1BasedOnPersistentType ou2e1 = source(ORG2, "ou2e");
+        final Sources1 sources1 = sources(veh1, ij(ou2e1, conditions(eq(prop("station.parent.parent.parent"), prop("ou2e.id")))));
+        
+        final Conditions1 conditions1 = conditions(isNotNull(prop("initDate")), //
+                or(isNotNull(prop("replacedBy.initDate"))), //
+                or(isNotNull(prop("station.name"))), //
+                or(isNotNull(prop("station.parent.name"))), //
+                or(isNotNull(prop("ou2e.parent.key"))) //
+        );
+        
+        final EntQuery3 actQry = query(sources1, conditions1, VEHICLE);
+        
+        
+        final QrySource3BasedOnTable veh = source(VEHICLE, veh1);
+        final QrySource3BasedOnTable repVeh = source(VEHICLE, veh1, "replacedBy");
+        final QrySource3BasedOnTable ou5 = source(ORG5, veh1, "station");
+        final QrySource3BasedOnTable ou4 = source(ORG4, veh1, "station_parent");
+        final QrySource3BasedOnTable ou3 = source(ORG3, veh1, "station_parent_parent");
+        final QrySource3BasedOnTable ou2e = source(ORG2, ou2e1);
+        final QrySource3BasedOnTable ou2eou1 = source(ORG1, ou2e1, "parent");
+
+        final IQrySources3 sources = ij(
+                lj(
+                        lj(
+                                veh, repVeh, cond(eq(prop("replacedBy", veh), prop(ID, repVeh)))), 
+                        ij(
+                                ou5, 
+                                ij(ou4, ou3, cond(eq(prop("parent", ou4), prop(ID, ou3)))), 
+                                cond(eq(prop("parent", ou5), prop(ID, ou4)))), 
+                        cond(eq(prop("station", veh), prop(ID, ou5)))),
+                ij(
+                        ou2e, ou2eou1, cond(eq(prop("parent", ou2e), prop(ID, ou2eou1)))),
+                cond(eq(prop("parent", ou3), prop(ID, ou2e))));
+        final Conditions3 conditions = or(
+                isNotNull(prop("initDate", veh)),
+                isNotNull(prop("initDate", repVeh)), 
+                isNotNull(prop("name", ou5)), 
+                isNotNull(prop("name", ou4)),
+                isNotNull(prop("key", ou2eou1)));
+        final EntQuery3 expQry = qry(sources, conditions);
+
+        assertEquals(expQry, actQry);
+        System.out.println(expQry.sql(H2));
+        
     }
     
     @Test
