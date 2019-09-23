@@ -76,14 +76,14 @@ class ToolbarElement {
     }
 
     addNext(element, standartAction, groupIndex) {
-        this.after = new ToolbarElement(element, standartAction, groupIndex);
-        this.after.previous = this;
-        return this.after;
+        this.next = new ToolbarElement(element, standartAction, groupIndex);
+        this.next.previous = this;
+        return this.next;
     }
 
     addPrevious(element, standartAction, groupIndex) {
         this.previous = new ToolbarElement(element, standartAction, groupIndex);
-        this.previous.after = this;
+        this.previous.next = this;
         return this.previous;
     }
 }
@@ -227,22 +227,22 @@ export class TgResponsiveToolbar extends mixinBehaviors([IronResizableBehavior],
 
     _showButtons (widthOfButtonsToshow) {
         //Show buttons if there is buttons to show and expand dropdown list button is visible,
-        if (this._lastVisibleToolbarElement.after.element !== null && this.$.expandToolbarButton.offsetParent !== null) {
+        if (this._lastVisibleToolbarElement.next.element !== null && this.$.expandToolbarButton.offsetParent !== null) {
             let totalWidth =  widthOfButtonsToshow;
             const elementsToShow = [];
             //Create the list of elements to show.
-            while (this._lastVisibleToolbarElement.after.element !== null && totalWidth -  this._lastVisibleToolbarElement.after.width > 0) {
-                this._lastVisibleToolbarElement = this._lastVisibleToolbarElement.after;
+            while (this._lastVisibleToolbarElement.next.element !== null && totalWidth -  this._lastVisibleToolbarElement.next.width > 0) {
+                this._lastVisibleToolbarElement = this._lastVisibleToolbarElement.next;
                 elementsToShow.push(this._lastVisibleToolbarElement);
                 totalWidth -= this._lastVisibleToolbarElement.width;
             }
             //If there are no more elements to show then hide expand dropdown list button. 
-            if (this._lastVisibleToolbarElement.after.element === null) {
+            if (this._lastVisibleToolbarElement.next.element === null) {
                 this.$.expandToolbarButton.classList.toggle("invisible", true);
             } //If there is left only one hidden button then make it visible and hide expand dropdown list button.  
-            else if (this._lastVisibleToolbarElement.after.after.element === null) {
-                elementsToShow.push(this._lastVisibleToolbarElement.after);
-                this._lastVisibleToolbarElement = this._lastVisibleToolbarElement.after;
+            else if (this._lastVisibleToolbarElement.next.next.element === null) {
+                elementsToShow.push(this._lastVisibleToolbarElement.next);
+                this._lastVisibleToolbarElement = this._lastVisibleToolbarElement.next;
                 this.$.expandToolbarButton.classList.toggle("invisible", true);
             }
             //Iterate over the elemnts to show and add them to the host element (the element from which actions were slotted into this responsive toolbar)
