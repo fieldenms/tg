@@ -8,6 +8,7 @@ import static org.junit.Assert.fail;
 import static ua.com.fielden.platform.entity.AbstractEntity.ID;
 import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
 import static ua.com.fielden.platform.entity_centre.review.DynamicQueryBuilder.getEmptyValue;
+import static ua.com.fielden.platform.utils.CollectionUtil.listOf;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
@@ -21,6 +22,7 @@ import ua.com.fielden.platform.entity_centre.review.DynamicQueryBuilder;
 import ua.com.fielden.platform.entity_centre.review.DynamicQueryBuilder.QueryProperty;
 import ua.com.fielden.platform.entity_centre.review.DynamicQueryBuilder.UnsupportedTypeException;
 import ua.com.fielden.platform.types.Money;
+import ua.com.fielden.platform.utils.CollectionUtil;
 import ua.com.fielden.snappy.DateRangePrefixEnum;
 import ua.com.fielden.snappy.MnemonicEnum;
 
@@ -290,6 +292,16 @@ public class DynamicQueryBuilderTest {
         qp.setValue(null);
         assertTrue(qp.getType().getSimpleName() + " property with null value should recognised be empty.", qp.isEmpty());
     }
+    
+    @Test
+    public void queryProperty_is_still_considered_empty_if_orGroup_is_not_empty () {
+        final QueryProperty qp = new QueryProperty(EntityForQueryPropertyTesting.class, "entity1");
+        qp.setValue(listOf());
+        qp.setOrGroup(1);
+        
+        assertTrue(qp.isEmpty());
+        assertTrue(qp.isEmptyWithoutMnemonics());
+    }
 
     @SuppressWarnings("serial")
     @Test
@@ -441,7 +453,34 @@ public class DynamicQueryBuilderTest {
         qp.setValue(null);
         assertTrue(qp.getType().getSimpleName() + " property with null value should be ignored.", qp.shouldBeIgnored());
     }
-
+    
+    @Test
+    public void queryProperty_still_shouldBeIgnored_if_orGroup_is_not_empty () {
+        final QueryProperty qp = new QueryProperty(EntityForQueryPropertyTesting.class, "entity1");
+        qp.setValue(listOf());
+        qp.setOrGroup(1);
+        
+        assertTrue(qp.shouldBeIgnored());
+    }
+    
+    @Test
+    public void critOnly_queryProperty_still_shouldBeIgnored_if_orGroup_is_not_empty () {
+        final QueryProperty qp = new QueryProperty(EntityForQueryPropertyTesting.class, "entity2");
+        qp.setValue(listOf());
+        qp.setOrGroup(1);
+        
+        assertTrue(qp.shouldBeIgnored());
+    }
+    
+    @Test
+    public void critOnlyAEChild_queryProperty_still_shouldBeIgnored_if_orGroup_is_not_empty () {
+        final QueryProperty qp = new QueryProperty(EntityForQueryPropertyTesting.class, "entity2.entity1");
+        qp.setValue(listOf());
+        qp.setOrGroup(1);
+        
+        assertTrue(qp.shouldBeIgnored());
+    }
+    
     @Test
     public void test_QueryProperty_meta_information_determination() {
         final Class<?> klass = EntityForQueryPropertyTesting.class;

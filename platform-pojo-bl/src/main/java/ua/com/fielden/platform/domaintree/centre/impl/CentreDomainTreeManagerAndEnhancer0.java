@@ -90,13 +90,13 @@ public class CentreDomainTreeManagerAndEnhancer0 extends AbstractDomainTreeManag
         super(base, enhancer);
 
         this.serialiser = serialiser;
-        this.persistentAnalyses = new LinkedHashMap<String, IAbstractAnalysisDomainTreeManager>();
+        this.persistentAnalyses = new LinkedHashMap<>();
         this.persistentAnalyses.putAll(persistentAnalyses);
         // VERY IMPORTANT : Please note that deepCopy operation is not applicable here, because deserialisation process cannot be mixed with serialisation.
         // This constructor is explicitly used in deserialisation.
-        this.currentAnalyses = new LinkedHashMap<String, IAbstractAnalysisDomainTreeManager>();
+        this.currentAnalyses = new LinkedHashMap<>();
         this.currentAnalyses.putAll(currentAnalyses);
-        this.freezedAnalyses = new LinkedHashMap<String, IAbstractAnalysisDomainTreeManager>();
+        this.freezedAnalyses = new LinkedHashMap<>();
         this.freezedAnalyses.putAll(freezedAnalyses);
 
         for (final IAbstractAnalysisDomainTreeManager analysisManager : this.persistentAnalyses.values()) {
@@ -444,7 +444,7 @@ public class CentreDomainTreeManagerAndEnhancer0 extends AbstractDomainTreeManag
 
     @Override
     public List<String> analysisKeys() {
-        return new ArrayList<String>(currentAnalyses.keySet());
+        return new ArrayList<>(currentAnalyses.keySet());
     }
 
     @Override
@@ -735,6 +735,19 @@ public class CentreDomainTreeManagerAndEnhancer0 extends AbstractDomainTreeManag
         public IAddToCriteriaTickManager setNot(final Class<?> root, final String property, final Boolean not) {
             // inject an enhanced type into method implementation
             base().setNot(enhancer().getManagedType(root), property, not);
+            return this;
+        }
+
+        @Override
+        public Integer getOrGroup(final Class<?> root, final String property) {
+            // inject an enhanced type into method implementation
+            return base().getOrGroup(enhancer().getManagedType(root), property);
+        }
+
+        @Override
+        public IAddToCriteriaTickManager setOrGroup(final Class<?> root, final String property, final Integer orGroup) {
+            // inject an enhanced type into method implementation
+            base().setOrGroup(enhancer().getManagedType(root), property, orGroup);
             return this;
         }
 

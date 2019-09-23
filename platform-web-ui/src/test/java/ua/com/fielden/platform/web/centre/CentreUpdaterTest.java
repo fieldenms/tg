@@ -8,6 +8,7 @@ import static ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager
 import static ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.IAddToCriteriaTickManager.MetaValueType.EXCLUSIVE2;
 import static ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.IAddToCriteriaTickManager.MetaValueType.NOT;
 import static ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.IAddToCriteriaTickManager.MetaValueType.OR_NULL;
+import static ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.IAddToCriteriaTickManager.MetaValueType.OR_GROUP;
 import static ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.IAddToCriteriaTickManager.MetaValueType.VALUE;
 import static ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.IAddToCriteriaTickManager.MetaValueType.VALUE2;
 import static ua.com.fielden.platform.types.tuples.T2.t2;
@@ -90,6 +91,13 @@ public class CentreUpdaterTest extends CentreUpdaterTestMixin {
     @Test
     public void default_negation() {
         testDiffCreationAndApplication(CentreUpdaterTest::create, centre -> centre.getFirstTick().setNot(ROOT, "datePropDefault", null), expectedDiffWithValue("datePropDefault", NOT.name(), null));
+    }
+    
+    // OR condition group
+    
+    @Test
+    public void or_condition_group() {
+        testDiffCreationAndApplication(CentreUpdaterTest::create, centre -> centre.getFirstTick().setOrGroup(ROOT, "dateProp", 1), expectedDiffWithValue("dateProp", OR_GROUP.name(), 1));
     }
     
     // exclusiveness
@@ -286,7 +294,7 @@ public class CentreUpdaterTest extends CentreUpdaterTestMixin {
     
     @Test
     public void crit_single_propertyDescriptor_value() {
-        final PropertyDescriptor<TgCentreDiffSerialisationPersistentChild> propertyVal = new PropertyDescriptor<TgCentreDiffSerialisationPersistentChild>(TgCentreDiffSerialisationPersistentChild.class, "stringProp");
+        final PropertyDescriptor<TgCentreDiffSerialisationPersistentChild> propertyVal = new PropertyDescriptor<>(TgCentreDiffSerialisationPersistentChild.class, "stringProp");
         testDiffCreationAndApplication(CentreUpdaterTest::create, centre -> centre.getFirstTick().setValue(ROOT, "propertyDescriptorPropCritSingle", propertyVal), expectedDiffWithValue("propertyDescriptorPropCritSingle", VALUE.name(), propertyVal.toString()));
     }
     
