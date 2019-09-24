@@ -25,7 +25,7 @@ const template = html`
         }
     </style>
     <tg-accordion id="orGroupAccordion" heading="OR grouping" hidden$="[[_excludeOrGroup]]" selected="[[_calcSelected(_orGroup)]]" on-accordion-transitioning-completed="_orGroupAccordionToggled">
-        <tg-flex-layout when-desktop="[[_layout]]">
+        <tg-flex-layout when-desktop="[[_layout]]" on-layout-finished="_layoutChanged">
             <template is="dom-repeat" items="[[_groups]]" as="group">
                 <paper-radio-button toggles on-change="_multiMetaValueChanged" checked="[[_checked(_orGroup, group)]]">[[_radioTitle(group)]]</paper-radio-button>
             </template>
@@ -94,6 +94,13 @@ Polymer({
             const accordion = this.shadowRoot.querySelector('#orGroupAccordion'); // by default the fist accordion should be open
             accordion.opened = accordion.selected;
         }.bind(this), 1);
+    },
+
+    _layoutChanged: function (e) {
+        const parentDialog = this._getParentDialog();
+        if (parentDialog) {
+            parentDialog.refit();
+        }
     },
 
     /**
