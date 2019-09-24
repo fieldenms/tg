@@ -10,6 +10,7 @@ import '/resources/polymer/@polymer/iron-flex-layout/iron-flex-layout-classes.js
 import '/resources/polymer/@polymer/polymer/lib/elements/dom-repeat.js';
 import '/resources/polymer/@polymer/paper-radio-button/paper-radio-button.js';
 
+import '/resources/layout/tg-flex-layout.js';
 import '/resources/centre/criterion/multi/tg-accordion-with-radio-buttons-styles.js';
 import '/resources/components/tg-accordion.js';
 
@@ -23,15 +24,11 @@ const template = html`
         }
     </style>
     <tg-accordion id="orGroupAccordion" heading="OR grouping" hidden$="[[_excludeOrGroup]]" selected="[[_calcSelected(_orGroup)]]" on-accordion-transitioning-completed="_orGroupAccordionToggled">
-        <div class="layout horizontal wrap justified">
-            <template is="dom-repeat" items="{{_columns}}" as="column">
-                <div class="layout vertical">
-                    <template is="dom-repeat" items="{{_rows}}" as="row">
-                        <paper-radio-button _multicriterionrow="[[row]]" _multicriterioncolumn="[[column]]" toggles on-change="_multiMetaValueChanged" checked="[[_checked(_orGroup, row, column)]]">[[_radioTitle(row, column)]]</paper-radio-button>
-                    </template>
-                </div>
+        <tg-flex-layout when-desktop="[[_whenDesktop]]" when-tablet="[[_whenDesktop]]" when-mobile="[[_whenMobile]]">
+            <template is="dom-repeat" items="[[_groups]]" as="group">
+                <paper-radio-button toggles on-change="_multiMetaValueChanged" checked="[[_checked(_orGroup, group)]]">[[_radioTitle(group)]]</paper-radio-button>
             </template>
-        </div>
+        </tg-flex-layout>
     </tg-accordion>
     <paper-checkbox checked="{{_orNull}}" hidden$="[[_excludeMissing]]">Missing</paper-checkbox>
     <paper-checkbox checked="{{_not}}">Not</paper-checkbox>
@@ -65,16 +62,15 @@ Polymer({
         },
         _excludeOrGroup: {
             type: Boolean
-        }
+        },
+        _whenDesktop: Array,
+        _whenMobile: Array,
     },
 
     ready: function () {
-        // using following layout for orGroups:
-        // Group 1  Group 4  Group 7
-        // Group 2  Group 5  Group 8
-        // Group 3  Group 6  Group 9
-        this._columns = [0, 1, 2]; // zero-based
-        this._rows = [1, 2, 3]; // one-based
+        this._groups = [1, 2, 3, 4, 5, 6, 7, 8, 9]; // one-based
+        this._whenDesktop = [["justified", [],[],[]], ["justified", [],[],[]], ["justified", [],[],[]]];
+        this._whenMobile = [["justified", [],[]], ["justified", [],[]], ["justified", [],[]], ["justified", [],[]], ["justified", [],["skip"]]];
     },
 
     attached: function () {
@@ -90,34 +86,27 @@ Polymer({
     /**
      * Event for toggling 'paper-radio-button' states. Changes main property 'orGroup'.
      */
-    _multiMetaValueChanged: function (e, detail) {
+    _multiMetaValueChanged: function (e) {
         const source = e.target || e.srcElement;
         if (source.checked) {
-            this._orGroup = this._groupNumber(source._multicriterionrow, source._multicriterioncolumn);
+            this._orGroup = e.model.group;
         } else {
             this._orGroup = null;
         }
     },
 
     /**
-     * Calculates group number based on 'row' (one-based) and 'column' (zero-based).
-     */
-    _groupNumber: function (row, column) {
-        return row + column * 3;
-    },
-
-    /**
      * Title for radio button being in [row; column] place.
      */
-    _radioTitle: function (row, column) {
-        return 'Group ' + this._groupNumber(row, column);
+    _radioTitle: function (group) {
+        return 'Group ' + group;
     },
 
     /**
      * Checked state for radio button being in [row; column] place.
      */
-    _checked: function (_orGroup, row, column) {
-        return this._groupNumber(row, column) === _orGroup; // _orGroup can be 'null' here
+    _checked: function (_orGroup, group) {
+        return group === _orGroup; // _orGroup can be 'null' here
     },
 
     /**
