@@ -272,6 +272,7 @@ const template = html`
         }
         .lock-layer[lock] {
             display: initial;
+            pointer-events: none;
         }
         .grid-layout-container {
             background-color: white;

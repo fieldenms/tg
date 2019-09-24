@@ -19,6 +19,9 @@ const template = html`
             @apply --layout-horizontal;
             @apply --layout-center;
         }
+        .pagintaion-text:first-child {
+            padding-left:8px;
+        }
         .grid-toolbar-content ::slotted(*) {
             margin-top: 8px;
         }
@@ -35,6 +38,20 @@ const template = html`
         #expandToolbarButton.invisible {
             display: none;
         }
+        #specificActionContainer * {
+            flex-shrink: 0;
+        }
+        #specificActionContainer {
+            @apply --layout-horizontal;
+            @apply --layout-center;
+        }
+        #standartActionContainer * {
+            flex-shrink: 0;
+        }
+        #standartActionContainer {
+            @apply --layout-horizontal;
+            @apply --layout-center;
+        }
         paper-icon-button.revers {
             transform: scale(-1, 1);
         }
@@ -46,7 +63,7 @@ const template = html`
         </div>
         <div id="rightToolbarContainer" class="grid-toolbar-content" style="margin-left:auto">
             <slot id="standard_action_selector" name="standart-action"></slot>
-            <paper-icon-button id="expandToolbarButton" icon="more-vert" on-tap="_showMoreActions" class="invisible"></paper-icon-button>
+            <paper-icon-button id="expandToolbarButton" tooltip-text="Show other actions." icon="more-vert" on-tap="_showMoreActions" class="invisible"></paper-icon-button>
         </div>
     </div>
     <iron-dropdown id="dropdown" horizontal-align="right" vertical-offset="8">
@@ -139,6 +156,19 @@ export class TgResponsiveToolbar extends mixinBehaviors([IronResizableBehavior],
 
         //Initialising resize event listeners.
         this.addEventListener("iron-resize", this._resizeEventListener.bind(this));
+
+        //Initiate observer that will listen when data in responsive toolbar chages in order to properly resize.
+        const observer = new MutationObserver(mutations => {
+            if (this.$.dropdown.opened) {
+                this.$.dropdown.notifyResize();
+            }
+        });
+        const config = {
+            characterData: true,
+            subtree: true
+        };
+        observer.observe(this.$.dropdown, config);
+        return observer;
     }
 
     _showMoreActions () {
@@ -172,13 +202,15 @@ export class TgResponsiveToolbar extends mixinBehaviors([IronResizableBehavior],
     _resizeEventListener (e) {
         const thisComponentWidth = this.offsetWidth;
         const widthOfToolbar = this.$.leftToolbarContainer.offsetWidth + this.$.rightToolbarContainer.offsetWidth;
-        if (e.composedPath()[0] !== this.$.dropdown && this.$.dropdown.opened) {
-            this.$.dropdown.close();
-        }
-        if (thisComponentWidth < widthOfToolbar) {
-            this._hideButtons(widthOfToolbar - thisComponentWidth);
-        } else {
-            this._showButtons(thisComponentWidth - widthOfToolbar);
+        if (e.composedPath()[0] !== this.$.dropdown) {
+            if (this.$.dropdown.opened) {
+                this.$.dropdown.close();
+            }
+            if (thisComponentWidth < widthOfToolbar) {
+                this._hideButtons(widthOfToolbar - thisComponentWidth);
+            } else {
+                this._showButtons(thisComponentWidth - widthOfToolbar);
+            }
         }
     }
 
