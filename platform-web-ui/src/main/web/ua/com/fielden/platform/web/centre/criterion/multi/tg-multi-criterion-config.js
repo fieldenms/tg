@@ -75,10 +75,13 @@ Polymer({
         const threeColumnLayout = [["justified", [],[],[]], ["justified", [],[],[]], ["justified", [],[],[]]];
         const twoColumnLayout = [["justified", [],[]], ["justified", [],[]], ["justified", [],[]], ["justified", [],[]], ["justified", [],["skip"]]];
         this.addEventListener("iron-resize", () => {
-            if (this.$.orGroupAccordion.offsetWidth < 285) {
-                this._layout = twoColumnLayout;
-            } else {
-                this._layout = threeColumnLayout;
+            const parentDialog = this._getParentDialog();
+            if (parentDialog) {
+                if (parseInt(parentDialog.style.maxWidth) < 333) {
+                    this._layout = twoColumnLayout;
+                } else {
+                    this._layout = threeColumnLayout;
+                }
             }
         });
     },
@@ -135,5 +138,13 @@ Polymer({
             bubbles: true,
             composed: true
         });
+    },
+
+    _getParentDialog: function () {
+        let parentNode = this;
+        while (parentNode && parentNode.tagName !== "PAPER-DIALOG" && parentNode.getAttribute("id") !== "metaValueEditor") {
+            parentNode = parentNode.parentElement;
+        }
+        return parentNode;
     }
 });
