@@ -25,7 +25,7 @@ const template = html`
         }
     </style>
     <tg-accordion id="orGroupAccordion" heading="OR grouping" hidden$="[[_excludeOrGroup]]" selected="[[_calcSelected(_orGroup)]]" on-accordion-transitioning-completed="_orGroupAccordionToggled">
-        <tg-flex-layout when-desktop="[[_layout]]" on-layout-finished="_layoutChanged">
+        <tg-flex-layout when-desktop="[[_threeColumnLayout]]" when-mobile="[[_twoColumnLayout]]">
             <template is="dom-repeat" items="[[_groups]]" as="group">
                 <paper-radio-button toggles on-change="_multiMetaValueChanged" checked="[[_checked(_orGroup, group)]]">[[_radioTitle(group)]]</paper-radio-button>
             </template>
@@ -64,26 +64,16 @@ Polymer({
         _excludeOrGroup: {
             type: Boolean
         },
-        _layout: Array,
-        _whenMobile: Array,
+        _threeColumnLayout: Array,
+        _twoColumnLayout: Array,
     },
 
     behaviors: [IronResizableBehavior],
 
     ready: function () {
         this._groups = [1, 2, 3, 4, 5, 6, 7, 8, 9]; // one-based
-        const threeColumnLayout = [["justified", [],[],[]], ["justified", [],[],[]], ["justified", [],[],[]]];
-        const twoColumnLayout = [["justified", [],[]], ["justified", [],[]], ["justified", [],[]], ["justified", [],[]], ["justified", [],["skip"]]];
-        this.addEventListener("iron-resize", () => {
-            const parentDialog = this._getParentDialog();
-            if (parentDialog) {
-                if (parseInt(parentDialog.style.maxWidth) < 333) {
-                    this._layout = twoColumnLayout;
-                } else {
-                    this._layout = threeColumnLayout;
-                }
-            }
-        });
+        this._threeColumnLayout = [[["flex"],["flex"],["flex"]], [["flex"],["flex"],["flex"]], [["flex"],["flex"],["flex"]]];
+        this._twoColumnLayout = [[["flex"],["flex"]], [["flex"],["flex"]], [["flex"],["flex"]], [["flex"],["flex"]], [["flex"],["skip", "flex"]]];
     },
 
     attached: function () {
@@ -94,13 +84,6 @@ Polymer({
             const accordion = this.shadowRoot.querySelector('#orGroupAccordion'); // by default the fist accordion should be open
             accordion.opened = accordion.selected;
         }.bind(this), 1);
-    },
-
-    _layoutChanged: function (e) {
-        const parentDialog = this._getParentDialog();
-        if (parentDialog) {
-            parentDialog.refit();
-        }
     },
 
     /**
@@ -145,13 +128,5 @@ Polymer({
             bubbles: true,
             composed: true
         });
-    },
-
-    _getParentDialog: function () {
-        let parentNode = this;
-        while (parentNode && parentNode.tagName !== "PAPER-DIALOG" && parentNode.getAttribute("id") !== "metaValueEditor") {
-            parentNode = parentNode.parentElement;
-        }
-        return parentNode;
     }
 });
